@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/*.db
+data/*.sqlite
+credentials.json
+token.json
+*.log
+.DS_Store
+.vscode/
+.idea/
