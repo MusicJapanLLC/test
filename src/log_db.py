@@ -1,6 +1,16 @@
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+JST = timezone(timedelta(hours=9))
+
+
+def _now_jst_iso() -> str:
+    return datetime.now(JST).isoformat()
+
+
+def _today_jst_prefix() -> str:
+    return datetime.now(JST).strftime("%Y-%m-%d")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS send_log (
@@ -36,10 +46,9 @@ class LogDB:
         return cur.fetchone() is not None
 
     def sent_today_count(self) -> int:
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         cur = self.conn.execute(
             "SELECT COUNT(*) FROM send_log WHERE status = 'sent' AND sent_at LIKE ?",
-            (f"{today}%",),
+            (f"{_today_jst_prefix()}%",),
         )
         return cur.fetchone()[0]
 
@@ -63,7 +72,7 @@ class LogDB:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                datetime.now(timezone.utc).isoformat(),
+                _now_jst_iso(),
                 company,
                 contact_name,
                 email,

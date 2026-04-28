@@ -60,8 +60,30 @@ cp .env.example .env
 ## 実行
 
 ```bash
-python -m src.main --dry-run   # 送信せずに内容確認
-python -m src.main             # 本番送信
+# Gmail OAuth 初期セットアップ（1回のみ）
+python -m scripts.gmail_auth --credentials ./gmail_credentials.json
+
+# 内容確認（送信なし）
+python -m src.main --dry-run
+python -m src.main --dry-run --csv ./leads.csv
+
+# 段階配信（最初は5通だけ）
+python -m src.main --confirm --limit 5
+
+# 本番送信（DAILY_SEND_LIMIT まで）
+python -m src.main --confirm
+
+# テスト
+pytest
+```
+
+### CSV フォーマット
+
+`fetch_leads_from_csv` は1行目をヘッダとして扱い、列順は以下:
+
+```
+company,contact_name,email,title,note
+株式会社A,鈴木一郎,suzuki@example.com,法務部長,既存接点あり
 ```
 
 ## ロードマップ
