@@ -1,0 +1,17 @@
+.header {
+  padding: 1rem clamp(1.25rem, 5vw, 2rem);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.link {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  color: var(--color-text);
+  opacity: 0.85;
+}
+
+.link:hover {
+  opacity: 1;
+}

@@ -1,0 +1,56 @@
+:root {
+  --font-serif: ui-serif, Georgia, "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Courier New", monospace;
+
+  --color-bg: #0b0b10;
+  --color-bg-raised: #131319;
+  --color-text: #f4f2ef;
+  --color-text-muted: #9c9aa5;
+  --color-accent: #f2336b;
+  --color-border: #232330;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-serif);
+  font-size: 17px;
+  line-height: 1.8;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+img,
+svg {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 5vw, 2rem);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

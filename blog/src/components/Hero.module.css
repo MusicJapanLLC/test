@@ -1,0 +1,42 @@
+.hero {
+  position: relative;
+  min-height: clamp(420px, 78vh, 880px);
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background: #05050a;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  padding: 2.5rem clamp(1.25rem, 5vw, 4rem) clamp(2.5rem, 6vw, 4.5rem);
+  color: #f4f2ef;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.55);
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f2336b;
+  margin: 0 0 0.9rem;
+}
+
+.title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: clamp(2.1rem, 6vw, 4rem);
+  line-height: 1.15;
+  margin: 0 0 0.9rem;
+  max-width: 18ch;
+}
+
+.tagline {
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+  line-height: 1.7;
+  max-width: 46ch;
+  color: rgba(244, 242, 239, 0.82);
+  margin: 0;
+}

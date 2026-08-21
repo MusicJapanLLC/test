@@ -1,0 +1,70 @@
+name: Deploy blog to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "blog/**"
+      - ".github/workflows/deploy-blog.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: blog/package-lock.json
+
+      - name: Install dependencies
+        working-directory: blog
+        run: npm ci
+
+      - name: Lint
+        working-directory: blog
+        run: npm run lint
+
+      # Project pages (<owner>.github.io/<repo>/) need that /<repo> baked
+      # into every asset URL at build time. A user/org page repo
+      # (<owner>.github.io) is served from the root instead.
+      - name: Resolve base path
+        id: base_path
+        run: |
+          if [[ "${{ github.event.repository.name }}" == *.github.io ]]; then
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=/${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build
+        working-directory: blog
+        env:
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.base_path.outputs.value }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: blog/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

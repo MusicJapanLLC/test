@@ -1,0 +1,15 @@
+.footer {
+  border-top: 1px solid var(--color-border);
+  padding: 2.5rem clamp(1.25rem, 5vw, 2rem) 3rem;
+  margin-top: 4rem;
+}
+
+.text {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  margin: 0;
+  max-width: 780px;
+  margin-inline: auto;
+}
