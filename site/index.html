@@ -3,27 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Music Japan | AI×人のハイブリッド営業代行</title>
-<meta name="description" content="眠っているリストを、アポに変える。AIが送り、人が仕上げるMusic Japanのハイブリッド営業代行。まずは無料相談から。">
+<title>Standment | WebGL・3DCGで作る体験型Webサイト制作</title>
+<meta name="description" content="魅力を、体験に。WebGL・3DCG・アニメーションを活用し、商品やブランドの魅力をWeb上で体験できる形に変えるサイト制作、Standment。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0a0908;
-    --bg-elevated: #15130f;
-    --bg-card: #1b1813;
-    --ink: #f3ede2;
-    --ink-dim: #a89e8d;
-    --ink-faint: #6f6656;
-    --accent: #ff6a39;
-    --accent-soft: #e8a75d;
-    --accent-dim: #8a5a3a;
-    --line: rgba(243,237,226,0.12);
-    --line-strong: rgba(243,237,226,0.22);
-    --shadow: 0 20px 60px rgba(0,0,0,0.45);
-    --radius: 18px;
-    --maxw: 1120px;
+    --bg: #0a0a0b;
+    --bg-elevated: #131315;
+    --bg-card: #17171a;
+    --ink: #f2f1ec;
+    --ink-dim: #9b9a95;
+    --ink-faint: #5c5b57;
+    --accent: #d4af6a;
+    --accent-dim: #8a7248;
+    --line: rgba(242,241,236,0.10);
+    --line-strong: rgba(242,241,236,0.20);
+    --maxw: 1180px;
   }
 
   *{ box-sizing: border-box; }
@@ -37,621 +34,366 @@
     margin: 0;
     background: var(--bg);
     color: var(--ink);
-    font-family: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", sans-serif;
-    line-height: 1.75;
+    font-family: "Noto Sans JP", "Hiragino Kaku Gothic ProN", sans-serif;
+    line-height: 1.8;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
   }
 
   .mono{ font-family: "JetBrains Mono", ui-monospace, monospace; }
+  .display{ font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; }
 
-  h1, h2, h3{
-    font-family: "Zen Old Mincho", serif;
-    font-weight: 700;
-    text-wrap: balance;
-    margin: 0;
-  }
-
+  h1, h2{ font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+  h3{ font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700; margin: 0; }
   p{ margin: 0; }
-
   a{ color: inherit; }
 
-  #signal-field{
-    position: fixed;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    display: block;
-  }
-
-  .veil{
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse 120% 60% at 50% 100%, rgba(10,9,8,0.95) 0%, rgba(10,9,8,0.55) 45%, rgba(10,9,8,0) 75%),
-      linear-gradient(180deg, rgba(10,9,8,0.35) 0%, rgba(10,9,8,0) 18%, rgba(10,9,8,0) 82%, rgba(10,9,8,0.85) 100%);
-  }
-
-  .content{ position: relative; z-index: 2; }
-
-  .wrap{
-    max-width: var(--maxw);
-    margin: 0 auto;
-    padding: 0 clamp(20px, 5vw, 48px);
-  }
+  .wrap{ max-width: var(--maxw); margin: 0 auto; padding: 0 clamp(20px, 5vw, 56px); }
 
   /* ---------- header ---------- */
   header{
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 10;
-    padding: clamp(14px, 2.5vw, 22px) clamp(20px, 5vw, 48px);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: background 0.4s ease, border-color 0.4s ease, backdrop-filter 0.4s ease;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+    padding: clamp(14px, 2.5vw, 22px) clamp(20px, 5vw, 56px);
+    display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.4s ease, border-color 0.4s ease;
     border-bottom: 1px solid transparent;
   }
   header.scrolled{
-    background: rgba(10,9,8,0.72);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: rgba(10,10,11,0.78);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--line);
   }
-  .logo{
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    line-height: 1;
-    text-decoration: none;
-  }
-  .logo .name{
-    font-family: "Zen Old Mincho", serif;
-    font-size: 19px;
-    letter-spacing: 0.04em;
-    color: var(--ink);
-  }
-  .logo .tag{
-    font-size: 9.5px;
-    letter-spacing: 0.22em;
-    color: var(--accent-soft);
-  }
+  .logo{ display: flex; flex-direction: column; gap: 3px; line-height: 1; text-decoration: none; }
+  .logo .name{ font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900; font-size: 18px; letter-spacing: 0.02em; }
+  .logo .tag{ font-size: 9px; letter-spacing: 0.2em; color: var(--accent); }
+
   .btn{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border-radius: 999px;
-    padding: 12px 22px;
-    font-size: 14.5px;
-    font-weight: 700;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1px solid transparent;
-    transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease, border-color .25s ease;
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 8px;
+    border-radius: 999px; padding: 13px 26px;
+    font-size: 14px; font-weight: 500; text-decoration: none; cursor: pointer;
+    border: 1px solid var(--line-strong); background: transparent; color: var(--ink);
+    transition: transform 0.25s ease, background 0.25s ease, border-color .25s ease, color .25s ease;
+    white-space: nowrap; font-family: "Noto Sans JP", sans-serif;
   }
-  .btn-primary{
-    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-soft) 100%);
-    color: #17110a;
-  }
-  .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255,106,57,0.35); }
-  .btn-ghost{
-    background: transparent;
-    border-color: var(--line-strong);
-    color: var(--ink);
-    font-size: 13.5px;
-    padding: 10px 18px;
-  }
-  .btn-ghost:hover{ border-color: var(--accent-soft); color: var(--accent-soft); }
-  .btn-small{ padding: 9px 16px; font-size: 13px; }
+  .btn-primary{ background: var(--accent); border-color: var(--accent); color: #171208; font-weight: 600; }
+  .btn-primary:hover{ transform: translateY(-2px); background: #e2c081; }
+  .btn-ghost:hover{ border-color: var(--accent); color: var(--accent); }
+  .btn-small{ padding: 10px 20px; font-size: 13px; }
 
   /* ---------- hero ---------- */
   .hero{
+    position: relative;
     min-height: 100dvh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding-top: 120px;
-    padding-bottom: 80px;
-  }
-  .eyebrow{
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 11.5px;
-    letter-spacing: 0.24em;
-    color: var(--accent-soft);
-    margin-bottom: 28px;
-  }
-  .eyebrow::before{
-    content: "";
-    width: 26px; height: 1px;
-    background: var(--accent-soft);
-  }
-  .hero h1{
-    font-size: clamp(34px, 6.6vw, 76px);
-    line-height: 1.28;
-    letter-spacing: 0.01em;
-  }
-  .hero h1 em{
-    font-style: normal;
-    color: var(--accent);
-  }
-  .hero-sub{
-    margin-top: 30px;
-    max-width: 560px;
-    font-size: clamp(15.5px, 1.7vw, 18px);
-    color: var(--ink-dim);
-  }
-  .hero-actions{
-    margin-top: 44px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: center;
-  }
-  .hero-note{
-    font-size: 12.5px;
-    color: var(--ink-faint);
-    letter-spacing: 0.02em;
-  }
-  .scroll-cue{
-    position: absolute;
-    left: clamp(20px, 5vw, 48px);
-    bottom: 34px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 10.5px;
-    letter-spacing: 0.28em;
-    color: var(--ink-faint);
-  }
-  .scroll-cue .line{
-    width: 1px; height: 40px;
-    background: linear-gradient(180deg, var(--accent-soft), transparent);
-  }
-
-  /* ---------- sections ---------- */
-  section{ padding: clamp(70px, 11vw, 140px) 0; }
-  .section-head{
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    margin-bottom: clamp(44px, 6vw, 72px);
-    max-width: 640px;
-  }
-  .section-head .eyebrow{ margin-bottom: 0; }
-  .section-head h2{
-    font-size: clamp(26px, 3.6vw, 42px);
-    line-height: 1.4;
-  }
-  .section-lede{
-    color: var(--ink-dim);
-    font-size: 15.5px;
-    max-width: 560px;
-  }
-
-  .reveal{
-    opacity: 0;
-    transform: translateY(22px);
-    transition: opacity 0.8s cubic-bezier(.2,.7,.2,1), transform 0.8s cubic-bezier(.2,.7,.2,1);
-  }
-  .reveal.in{ opacity: 1; transform: none; }
-
-  /* problem grid */
-  .problem-grid{
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
+    padding: 140px clamp(20px, 5vw, 56px) 90px;
     overflow: hidden;
   }
-  .problem-card{
-    background: var(--bg-elevated);
-    padding: 30px 26px;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    min-height: 178px;
+  #hero-gl{ position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  .hero-veil{
+    position: absolute; inset: 0; z-index: 1; pointer-events: none;
+    background: linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,0) 38%, rgba(10,10,11,0.6) 62%, rgba(10,10,11,0.9) 100%);
   }
-  .problem-card .mark{
-    font-family: "Zen Old Mincho", serif;
-    font-size: 26px;
+  .hero-inner{ position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+  .eyebrow{ font-size: 11.5px; letter-spacing: 0.22em; color: var(--accent); margin-bottom: 26px; }
+  .hero h1{ font-size: clamp(42px, 9vw, 108px); line-height: 1.08; letter-spacing: 0.02em; }
+  .hero-sub{ margin-top: 28px; max-width: 480px; font-size: clamp(15px, 1.7vw, 17px); color: var(--ink-dim); }
+  .hero-actions{ margin-top: 42px; }
+  .scroll-cue{
+    position: absolute; left: 50%; bottom: 30px; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    font-size: 10px; letter-spacing: 0.26em; color: var(--ink-faint); z-index: 1;
+  }
+  .scroll-cue .line{ width: 1px; height: 38px; background: linear-gradient(180deg, var(--accent), transparent); }
+
+  /* ---------- sections ---------- */
+  section{ padding: clamp(80px, 12vw, 160px) 0; position: relative; }
+  .section-head{ display: flex; flex-direction: column; gap: 18px; margin-bottom: clamp(48px, 6vw, 80px); }
+  .section-head.center{ align-items: center; text-align: center; margin-left: auto; margin-right: auto; max-width: 620px; }
+  .section-head h2{ font-size: clamp(28px, 4vw, 48px); line-height: 1.35; }
+
+  .reveal{ opacity: 0; transform: translateY(20px); transition: opacity 0.8s cubic-bezier(.2,.7,.2,1), transform 0.8s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in{ opacity: 1; transform: none; }
+
+  /* problem */
+  #problem{ background: var(--bg-elevated); }
+  .word-stack{ display: flex; flex-direction: column; gap: 4px; }
+  .word-stack span{
+    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 700;
+    font-size: clamp(22px, 4.4vw, 40px); color: var(--ink-faint);
+    opacity: 0; transform: translateX(-14px);
+    transition: opacity 0.6s ease, color 0.6s ease, transform 0.6s ease;
+  }
+  .word-stack span.in{ opacity: 1; color: var(--ink); transform: none; }
+  .closing-line{ margin-top: 44px; font-size: 17px; color: var(--ink-dim); max-width: 480px; }
+
+  /* solution */
+  .word-row{
+    display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(14px, 3vw, 36px);
+    font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900;
+    font-size: clamp(20px, 4vw, 36px); color: var(--ink-dim);
+  }
+  .word-row span{ position: relative; }
+  .word-row span:not(:last-child)::after{
+    content: "・"; position: absolute; right: calc(-1 * clamp(10px, 2vw, 22px));
     color: var(--accent-dim);
   }
-  .problem-card p{ font-size: 14.5px; color: var(--ink-dim); }
+  .word-row.compact span:not(:last-child)::after{ content: ""; }
 
-  /* approach list */
-  .approach-list{
-    display: flex;
-    flex-direction: column;
+  /* experience */
+  #experience{ padding-top: clamp(50px, 8vw, 80px); }
+  .exp-label{ text-align: center; font-size: 15px; color: var(--ink-dim); margin-bottom: 8px; }
+  .exp-stage{
+    position: relative;
+    width: 100%;
+    height: clamp(400px, 62vw, 720px);
+    max-height: 78vh;
+    touch-action: none;
+    cursor: grab;
+    margin-top: 30px;
   }
-  .approach-item{
-    display: grid;
-    grid-template-columns: 96px 1fr;
-    gap: 28px;
-    padding: 34px 0;
-    border-top: 1px solid var(--line);
-    align-items: start;
+  .exp-stage:active{ cursor: grabbing; }
+  #experience-gl{ position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .drag-hint{
+    position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
+    font-size: 10.5px; letter-spacing: 0.24em; color: var(--ink-faint);
+    display: flex; align-items: center; gap: 10px;
+    opacity: 1; transition: opacity 0.6s ease;
+    pointer-events: none;
   }
-  .approach-item:last-child{ border-bottom: 1px solid var(--line); }
-  .approach-num{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 13px;
-    color: var(--accent-soft);
-    letter-spacing: 0.05em;
-    padding-top: 6px;
+  .drag-hint.hidden{ opacity: 0; }
+  .drag-hint .dot{ width: 5px; height: 5px; border-radius: 50%; background: var(--accent); animation: pulse-dot 1.6s ease-in-out infinite; }
+  @keyframes pulse-dot{ 0%,100%{ transform: scale(1); opacity: 1;} 50%{ transform: scale(1.6); opacity: 0.4;} }
+
+  /* positioning band */
+  .positioning{
+    background: var(--bg-elevated);
+    text-align: center;
+    padding: clamp(70px, 11vw, 130px) clamp(20px, 6vw, 56px);
   }
-  .approach-body h3{
-    font-family: "Zen Kaku Gothic New", sans-serif;
-    font-weight: 900;
-    font-size: clamp(19px, 2.4vw, 24px);
-    margin-bottom: 10px;
-  }
-  .approach-body p{
-    color: var(--ink-dim);
-    font-size: 15px;
-    max-width: 620px;
+  .positioning p{ max-width: 720px; margin: 0 auto; }
+  .positioning .dim{ font-size: clamp(17px, 2.4vw, 24px); color: var(--ink-dim); line-height: 1.9; }
+  .positioning .strong{
+    margin-top: 26px; font-family: "Zen Kaku Gothic New", sans-serif; font-weight: 900;
+    font-size: clamp(22px, 3.2vw, 32px); color: var(--ink); line-height: 1.6;
   }
 
-  /* strengths bento */
-  .strength-grid{
-    display: grid;
-    grid-template-columns: 1.3fr 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 16px;
+  /* use case */
+  .usecase-grid{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); }
+  .usecase-card{ background: var(--bg); padding: 40px 30px; display: flex; flex-direction: column; gap: 14px; min-height: 168px; justify-content: center; }
+  .usecase-card .en{ font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.18em; color: var(--accent); }
+  .usecase-card .jp{ font-size: 17px; font-weight: 500; }
+  .tag-row{ margin-top: 34px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+  .tag-row span{
+    font-size: 12.5px; color: var(--ink-dim); border: 1px solid var(--line-strong);
+    border-radius: 999px; padding: 8px 16px;
   }
-  .strength-card{
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .strength-card.wide{ grid-column: span 1; grid-row: span 2; justify-content: space-between; }
-  .strength-card h3{
-    font-family: "Zen Kaku Gothic New", sans-serif;
-    font-weight: 700;
-    font-size: 18px;
-  }
-  .strength-card p{ color: var(--ink-dim); font-size: 14px; }
-  .strength-icon{
-    width: 38px; height: 38px;
-    border-radius: 10px;
-    background: rgba(255,106,57,0.12);
-    display: flex; align-items: center; justify-content: center;
-    color: var(--accent);
-  }
-  .strength-icon svg{ width: 19px; height: 19px; }
 
-  /* faq */
-  .faq-list{ display: flex; flex-direction: column; }
-  details.faq-item{
-    border-top: 1px solid var(--line);
-    padding: 22px 0;
+  /* business */
+  #business{ background: var(--bg-elevated); }
+  .pill-row{ display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 8px; }
+  .pill-row span{
+    font-family: "JetBrains Mono", monospace; font-size: 12.5px; letter-spacing: 0.05em;
+    color: var(--accent); border: 1px solid var(--accent-dim); border-radius: 999px; padding: 9px 18px;
   }
-  details.faq-item:last-child{ border-bottom: 1px solid var(--line); }
-  details.faq-item summary{
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 20px;
-    font-size: 16px;
-    font-weight: 700;
+  .philosophy-note{
+    margin-top: 56px; text-align: center; font-size: 13.5px; color: var(--ink-faint);
+    max-width: 460px; margin-left: auto; margin-right: auto;
   }
-  details.faq-item summary::-webkit-details-marker{ display: none; }
-  details.faq-item summary .q-mark{
-    font-family: "JetBrains Mono", monospace;
-    font-size: 18px;
-    color: var(--accent-soft);
-    flex-shrink: 0;
-    transition: transform 0.3s ease;
+
+  /* process */
+  .process-list{ display: flex; flex-direction: column; max-width: 760px; margin: 0 auto; }
+  .process-item{
+    display: grid; grid-template-columns: 84px 1fr; gap: 26px;
+    padding: 28px 0; border-top: 1px solid var(--line); align-items: baseline;
   }
-  details.faq-item[open] summary .q-mark{ transform: rotate(45deg); }
-  details.faq-item .faq-a{
-    padding-top: 16px;
-    color: var(--ink-dim);
-    font-size: 14.5px;
-    max-width: 640px;
-  }
+  .process-item:last-child{ border-bottom: 1px solid var(--line); }
+  .process-num{ font-family: "JetBrains Mono", monospace; font-size: 13px; color: var(--accent); }
+  .process-body h3{ font-size: 17px; margin-bottom: 6px; }
+  .process-body p{ font-size: 14px; color: var(--ink-dim); }
 
   /* contact */
-  .contact-grid{
-    display: grid;
-    grid-template-columns: 0.85fr 1.15fr;
-    gap: clamp(30px, 5vw, 64px);
-    align-items: start;
-  }
+  .contact-grid{ display: grid; grid-template-columns: 0.85fr 1.15fr; gap: clamp(30px, 5vw, 64px); align-items: start; }
   .contact-side p{ color: var(--ink-dim); font-size: 15px; margin-top: 18px; }
-  .contact-steps{
-    margin-top: 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 18px;
-  }
-  .contact-steps div{
-    display: flex;
-    gap: 14px;
-    align-items: baseline;
-    font-size: 13.5px;
-    color: var(--ink-dim);
-  }
-  .contact-steps span{
-    font-family: "JetBrains Mono", monospace;
-    color: var(--accent-soft);
-    font-size: 12px;
-  }
-  form{
-    background: var(--bg-card);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: clamp(26px, 4vw, 40px);
-    box-shadow: var(--shadow);
-  }
+  form{ background: var(--bg-card); border: 1px solid var(--line); border-radius: 16px; padding: clamp(26px, 4vw, 40px); }
   .field{ margin-bottom: 20px; }
-  .field label{
-    display: block;
-    font-size: 12.5px;
-    letter-spacing: 0.05em;
-    color: var(--ink-dim);
-    margin-bottom: 8px;
-  }
+  .field label{ display: block; font-size: 12.5px; letter-spacing: 0.04em; color: var(--ink-dim); margin-bottom: 8px; }
   .field .opt{ color: var(--ink-faint); font-weight: 400; }
   .field input, .field textarea{
-    width: 100%;
-    background: rgba(0,0,0,0.28);
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
-    padding: 13px 14px;
-    color: var(--ink);
-    font-family: inherit;
-    font-size: 15px;
-    resize: vertical;
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--line-strong); border-radius: 10px;
+    padding: 13px 14px; color: var(--ink); font-family: inherit; font-size: 15px; resize: vertical;
   }
   .field textarea{ min-height: 108px; }
-  .field input:focus, .field textarea:focus{
-    outline: none;
-    border-color: var(--accent-soft);
-    box-shadow: 0 0 0 3px rgba(232,167,93,0.18);
-  }
-  .field input:invalid:not(:placeholder-shown){ border-color: #c65b4a; }
-  form .btn-primary{ width: 100%; justify-content: center; margin-top: 6px; padding: 15px; font-size: 15.5px; }
-  .form-note{
-    margin-top: 14px;
-    font-size: 12px;
-    color: var(--ink-faint);
-    text-align: center;
-  }
+  .field input:focus, .field textarea:focus{ outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(212,175,106,0.18); }
+  form .btn-primary{ width: 100%; justify-content: center; margin-top: 6px; padding: 15px; font-size: 15px; }
+  .form-note{ margin-top: 14px; font-size: 12px; color: var(--ink-faint); text-align: center; }
 
   /* footer */
-  footer{
-    border-top: 1px solid var(--line);
-    padding: 40px 0 clamp(96px, 10vw, 48px);
-  }
-  .footer-row{
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    gap: 20px;
-    align-items: center;
-  }
-  footer .logo .name{ font-size: 16px; }
-  .footer-meta{
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    align-items: flex-end;
-    font-size: 12.5px;
-    color: var(--ink-faint);
-  }
+  footer{ border-top: 1px solid var(--line); padding: 46px 0 clamp(100px, 10vw, 50px); }
+  .footer-row{ display: flex; flex-wrap: wrap; justify-content: space-between; gap: 20px; align-items: flex-start; }
+  .footer-meta{ display: flex; flex-direction: column; gap: 6px; align-items: flex-end; font-size: 12.5px; color: var(--ink-faint); }
   .footer-meta a{ color: var(--ink-dim); text-decoration: none; }
-  .footer-meta a:hover{ color: var(--accent-soft); }
+  .footer-meta a:hover{ color: var(--accent); }
 
-  /* mobile sticky cta */
   .sticky-cta{
-    display: none;
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 20;
+    display: none; position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
     padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, rgba(10,9,8,0) 0%, rgba(10,9,8,0.92) 30%, rgba(10,9,8,0.98) 100%);
+    background: linear-gradient(180deg, rgba(10,10,11,0) 0%, rgba(10,10,11,0.94) 32%, rgba(10,10,11,0.98) 100%);
   }
   .sticky-cta .btn{ width: 100%; justify-content: center; }
 
   @media (max-width: 900px){
-    .problem-grid{ grid-template-columns: repeat(2, 1fr); }
-    .strength-grid{ grid-template-columns: 1fr 1fr; }
-    .strength-card.wide{ grid-column: span 2; grid-row: span 1; }
+    .usecase-grid{ grid-template-columns: 1fr 1fr; }
     .contact-grid{ grid-template-columns: 1fr; }
   }
   @media (max-width: 640px){
-    .problem-grid{ grid-template-columns: 1fr; }
-    .strength-grid{ grid-template-columns: 1fr; }
-    .strength-card.wide{ grid-column: span 1; }
-    .approach-item{ grid-template-columns: 1fr; gap: 10px; }
+    .usecase-grid{ grid-template-columns: 1fr; }
+    .process-item{ grid-template-columns: 1fr; gap: 8px; }
     .btn-ghost{ display: none; }
     .sticky-cta{ display: block; }
-    body{ padding-bottom: 0; }
-    section{ padding: 56px 0; }
+    section{ padding: 64px 0; }
   }
 </style>
 </head>
 <body>
 
-<canvas id="signal-field"></canvas>
-<div class="veil"></div>
-
-<div class="content">
-
   <header id="site-header">
     <a class="logo" href="#top">
-      <span class="name">Music Japan</span>
-      <span class="tag mono">SALES AUTOMATION</span>
+      <span class="name">Standment</span>
+      <span class="tag mono">WEBGL / 3DCG / INTERACTIVE WEB</span>
     </a>
     <nav style="display:flex; gap:12px; align-items:center;">
-      <a class="btn btn-ghost" href="#approach">サービス</a>
-      <a class="btn btn-primary btn-small" href="#contact">無料相談</a>
+      <a class="btn btn-ghost" href="#experience">体験を見る</a>
+      <a class="btn btn-primary btn-small" href="#contact">相談する</a>
     </nav>
   </header>
 
   <main>
     <section class="hero" id="top">
-      <div class="wrap" style="position:relative;">
-        <div class="eyebrow mono">AI × HUMAN HYBRID OUTREACH</div>
-        <h1>眠っているリストを、<br><em>「アポ」</em>に変える。</h1>
-        <p class="hero-sub">
-          送るはずだったメールも、フォローできなかった見込み客も、まだ商談になれる。
-          AIが配信し、人が仕上げる——Music Japanのハイブリッド営業代行です。
-        </p>
+      <canvas id="hero-gl"></canvas>
+      <div class="hero-veil"></div>
+      <div class="hero-inner">
+        <div class="eyebrow mono">WEBGL × 3DCG × INTERACTIVE WEB</div>
+        <h1>魅力を、<br>体験に。</h1>
+        <p class="hero-sub">見るだけのホームページから、<br>触れて、動いて、記憶に残るWeb体験へ。</p>
         <div class="hero-actions">
-          <a class="btn btn-primary" href="#contact">無料相談を申し込む</a>
-          <span class="hero-note">相談無料 ・ 最短数日で稼働開始</span>
+          <a class="btn btn-primary" href="#contact">制作について相談する</a>
         </div>
       </div>
-      <div class="scroll-cue">
-        <span class="line"></span>
-        <span>SCROLL</span>
-      </div>
+      <div class="scroll-cue"><span class="line"></span><span>SCROLL</span></div>
     </section>
 
     <section id="problem">
       <div class="wrap">
         <div class="section-head reveal">
           <div class="eyebrow mono">PROBLEM</div>
-          <h2>こんな状態で止まっていませんか。</h2>
-          <p class="section-lede">見込み客リストはあるのに、動かせていない。よくある話です。</p>
+          <h2>良い会社なのに、<br>Webでは「普通」に見えていませんか？</h2>
         </div>
-        <div class="problem-grid reveal">
-          <div class="problem-card">
-            <span class="mark">一</span>
-            <p>リストはあるのに、送信・フォローの手が回らない</p>
-          </div>
-          <div class="problem-card">
-            <span class="mark">二</span>
-            <p>文面を都度つくるのに時間がかかり、配信が続かない</p>
-          </div>
-          <div class="problem-card">
-            <span class="mark">三</span>
-            <p>返信が来ても、誰が・いつ返したか管理できていない</p>
-          </div>
-          <div class="problem-card">
-            <span class="mark">四</span>
-            <p>営業担当を増やす余裕はないが、商談は増やしたい</p>
-          </div>
+        <div class="word-stack" id="word-stack">
+          <span>写真。</span>
+          <span>文章。</span>
+          <span>会社概要。</span>
+          <span>サービス紹介。</span>
+          <span>競合企業と、同じ構成。</span>
+        </div>
+        <p class="closing-line reveal">それだけで、本当に御社の魅力は伝わるでしょうか。</p>
+      </div>
+    </section>
+
+    <section id="solution">
+      <div class="wrap">
+        <div class="section-head center reveal">
+          <div class="eyebrow mono">SOLUTION</div>
+          <h2>Webサイトそのものを、<br>体験にする。</h2>
+        </div>
+        <div class="word-row reveal">
+          <span>3D</span><span>Animation</span><span>Interaction</span><span>Sound</span><span>Scroll</span>
+        </div>
+        <p class="closing-line reveal" style="text-align:center; margin-left:auto; margin-right:auto;">Web上に、ブランドの世界をつくる。</p>
+      </div>
+    </section>
+
+    <section id="experience">
+      <div class="wrap">
+        <div class="eyebrow mono" style="text-align:center;">EXPERIENCE</div>
+        <p class="exp-label reveal">説明しません。触ってください。</p>
+      </div>
+      <div class="exp-stage" id="exp-stage">
+        <canvas id="experience-gl"></canvas>
+        <div class="drag-hint" id="drag-hint"><span class="dot"></span><span>DRAG TO EXPLORE</span></div>
+      </div>
+    </section>
+
+    <section class="positioning reveal">
+      <p class="dim">Standmentは、<br>Web制作会社でも、CG制作会社でも、<br>動画制作会社でもありません。</p>
+      <p class="strong">企業の魅力を、<br>Web上の体験に変える会社です。</p>
+    </section>
+
+    <section id="usecase">
+      <div class="wrap">
+        <div class="section-head center reveal">
+          <div class="eyebrow mono">USE CASE</div>
+          <h2>こんな見せ方ができます。</h2>
+        </div>
+        <div class="usecase-grid reveal">
+          <div class="usecase-card"><span class="en mono">PRODUCT</span><span class="jp">商品を触る。</span></div>
+          <div class="usecase-card"><span class="en mono">SPACE</span><span class="jp">空間を歩く。</span></div>
+          <div class="usecase-card"><span class="en mono">BRAND</span><span class="jp">世界観を感じる。</span></div>
+          <div class="usecase-card"><span class="en mono">TECHNOLOGY</span><span class="jp">技術を可視化する。</span></div>
+          <div class="usecase-card"><span class="en mono">RECRUIT</span><span class="jp">会社の未来を体験する。</span></div>
+        </div>
+        <div class="tag-row reveal">
+          <span>メーカー・製造業</span><span>不動産・建築・住宅</span><span>ホテル・観光・施設</span>
+          <span>SaaS・IT</span><span>採用サイト</span><span>ブランド・ファッション・美容</span>
         </div>
       </div>
     </section>
 
-    <section id="approach">
+    <section id="business">
       <div class="wrap">
-        <div class="section-head reveal">
-          <div class="eyebrow mono">APPROACH</div>
-          <h2>AIが送り、人が仕上げる。<br>4つのステップ。</h2>
-          <p class="section-lede">全工程をブラックボックスにしません。配信状況はすべてログに残ります。</p>
+        <div class="section-head center reveal">
+          <div class="eyebrow mono">BUSINESS</div>
+          <h2>美しいだけでは、終わらせない。</h2>
+          <p class="closing-line" style="text-align:center;">営業導線まで、ひとつのWeb体験として設計します。</p>
         </div>
-        <div class="approach-list reveal">
-          <div class="approach-item">
-            <div class="approach-num mono">01 / LIST</div>
-            <div class="approach-body">
-              <h3>リスト精査・ターゲット設計</h3>
-              <p>お手持ちのリストや商材内容を伺い、誰に・何を届けるかを設計します。リストがない場合はゼロからご相談も可能です。</p>
-            </div>
-          </div>
-          <div class="approach-item">
-            <div class="approach-num mono">02 / SEND</div>
-            <div class="approach-body">
-              <h3>パーソナライズ配信</h3>
-              <p>会社名・担当者名を差し込んだ文面をAIが生成し、自動で配信。手作業のテンプレ調整に時間を取られません。</p>
-            </div>
-          </div>
-          <div class="approach-item">
-            <div class="approach-num mono">03 / LOG</div>
-            <div class="approach-body">
-              <h3>反応をすべて記録</h3>
-              <p>開封・返信・アポ獲得までを記録し、どこで止まっているかが見える状態にします。</p>
-            </div>
-          </div>
-          <div class="approach-item">
-            <div class="approach-num mono">04 / CLOSE</div>
-            <div class="approach-body">
-              <h3>人によるフォロー・仕上げ</h3>
-              <p>温度感の高い相手には、人が返信・調整をおこないます。機械的なやり取りで商談を逃しません。</p>
-            </div>
-          </div>
+        <div class="pill-row reveal">
+          <span>Service</span><span>Portfolio</span><span>Company</span><span>Contact</span><span>Schedule</span>
         </div>
+        <p class="philosophy-note reveal">3Dを入れることが目的ではありません。<br>必要な場所に、必要なだけ。</p>
       </div>
     </section>
 
-    <section id="strengths">
+    <section id="process">
       <div class="wrap">
-        <div class="section-head reveal">
-          <div class="eyebrow mono">WHY MUSIC JAPAN</div>
-          <h2>選ばれる理由。</h2>
+        <div class="section-head center reveal">
+          <div class="eyebrow mono">PROCESS</div>
+          <h2>制作の流れ。</h2>
         </div>
-        <div class="strength-grid reveal">
-          <div class="strength-card wide">
-            <div>
-              <div class="strength-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 12h4l2-7 4 14 2-7h4"/></svg></div>
-              <h3 style="margin-top:16px;">配信ログをすべて可視化</h3>
-              <p style="margin-top:8px;">送信数・開封・返信の状況をお渡しし、成果が見えない不安をなくします。</p>
-            </div>
+        <div class="process-list reveal">
+          <div class="process-item">
+            <div class="process-num mono">01</div>
+            <div class="process-body"><h3>Concept</h3><p>目的・商品・ブランド・ターゲットを整理する。</p></div>
           </div>
-          <div class="strength-card">
-            <div class="strength-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
-            <h3>最短数日で稼働開始</h3>
-            <p>ヒアリングから配信開始まで、余計な工程を挟みません。</p>
+          <div class="process-item">
+            <div class="process-num mono">02</div>
+            <div class="process-body"><h3>Experience Design</h3><p>何を、どう体験させるかを設計する。</p></div>
           </div>
-          <div class="strength-card">
-            <div class="strength-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21c-4-3-8-6.5-8-11a5 5 0 0 1 9-3 5 5 0 0 1 9 3c0 4.5-4 8-8 11z"/></svg></div>
-            <h3>人の目によるチェック</h3>
-            <p>全文面・全返信を人が確認。機械的な印象を与えません。</p>
+          <div class="process-item">
+            <div class="process-num mono">03</div>
+            <div class="process-body"><h3>3DCG</h3><p>世界観・モデル・質感を制作する。</p></div>
           </div>
-          <div class="strength-card">
-            <div class="strength-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 6h16M4 12h10M4 18h13"/></svg></div>
-            <h3>商材に合わせて設計</h3>
-            <p>業種・商材ごとにリストとテンプレートをカスタムします。</p>
+          <div class="process-item">
+            <div class="process-num mono">04</div>
+            <div class="process-body"><h3>WebGL</h3><p>ブラウザ上で動く体験として実装する。</p></div>
           </div>
-          <div class="strength-card">
-            <div class="strength-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 12h4l2 8 4-16 2 8h6"/></svg></div>
-            <h3>まずは無料相談から</h3>
-            <p>体制や予算に応じて、必要な範囲だけご依頼いただけます。</p>
+          <div class="process-item">
+            <div class="process-num mono">05</div>
+            <div class="process-body"><h3>Website</h3><p>事業説明・実績・導線を統合する。</p></div>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="faq">
-      <div class="wrap">
-        <div class="section-head reveal">
-          <div class="eyebrow mono">FAQ</div>
-          <h2>よくあるご質問。</h2>
-        </div>
-        <div class="faq-list reveal">
-          <details class="faq-item">
-            <summary>導入までどれくらいかかりますか？<span class="q-mark mono">+</span></summary>
-            <p class="faq-a">ヒアリング後、リスト・文面の準備が整い次第、最短数日で配信を開始できます。</p>
-          </details>
-          <details class="faq-item">
-            <summary>送信先リストがなくても依頼できますか？<span class="q-mark mono">+</span></summary>
-            <p class="faq-a">はい。ターゲットの条件を伺った上で、リストの設計段階からご相談いただけます。</p>
-          </details>
-          <details class="faq-item">
-            <summary>どんな業種・商材に対応していますか？<span class="q-mark mono">+</span></summary>
-            <p class="faq-a">法人向け（BtoB）商材を中心に、幅広い業種でご相談を承っています。まずは商材の内容をお聞かせください。</p>
-          </details>
-          <details class="faq-item">
-            <summary>料金はどのように決まりますか？<span class="q-mark mono">+</span></summary>
-            <p class="faq-a">商材の内容や配信規模によって最適な形が異なるため、無料相談の中でお見積もりします。</p>
-          </details>
+          <div class="process-item">
+            <div class="process-num mono">06</div>
+            <div class="process-body"><h3>Launch</h3><p>営業・広告・採用などで活用を開始する。</p></div>
+          </div>
         </div>
       </div>
     </section>
@@ -661,37 +403,16 @@
         <div class="contact-grid">
           <div class="contact-side reveal">
             <div class="eyebrow mono">CONTACT</div>
-            <h2 style="font-size:clamp(24px,3vw,34px);">まずは無料相談から、<br>お話を聞かせてください。</h2>
-            <p>リストの有無や商材の状況にかかわらず、まずは現状をお伺いします。営業を強要することはありません。</p>
-            <div class="contact-steps">
-              <div><span class="mono">01</span>下記フォームより送信</div>
-              <div><span class="mono">02</span>担当よりメールでご連絡</div>
-              <div><span class="mono">03</span>オンラインで無料ヒアリング</div>
-            </div>
+            <h2 style="font-size:clamp(24px,3vw,34px);">御社の魅力を、<br>Web上の体験に<br>しませんか。</h2>
+            <p>商材やブランドの状況にかかわらず、まずは現状をお伺いします。</p>
           </div>
-
           <form id="contact-form" class="reveal" novalidate>
-            <div class="field">
-              <label for="company">会社名</label>
-              <input id="company" name="company" type="text" required placeholder="株式会社◯◯">
-            </div>
-            <div class="field">
-              <label for="fullname">ご担当者名</label>
-              <input id="fullname" name="fullname" type="text" required placeholder="山田 太郎">
-            </div>
-            <div class="field">
-              <label for="email">メールアドレス</label>
-              <input id="email" name="email" type="email" required placeholder="you@example.com">
-            </div>
-            <div class="field">
-              <label for="phone">電話番号 <span class="opt">(任意)</span></label>
-              <input id="phone" name="phone" type="tel" placeholder="090-0000-0000">
-            </div>
-            <div class="field">
-              <label for="message">ご相談内容</label>
-              <textarea id="message" name="message" placeholder="現在の営業課題や商材について、簡単にお聞かせください"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">無料相談を申し込む</button>
+            <div class="field"><label for="company">会社名</label><input id="company" name="company" type="text" required placeholder="株式会社◯◯"></div>
+            <div class="field"><label for="fullname">ご担当者名</label><input id="fullname" name="fullname" type="text" required placeholder="山田 太郎"></div>
+            <div class="field"><label for="email">メールアドレス</label><input id="email" name="email" type="email" required placeholder="you@example.com"></div>
+            <div class="field"><label for="phone">電話番号 <span class="opt">(任意)</span></label><input id="phone" name="phone" type="tel" placeholder="090-0000-0000"></div>
+            <div class="field"><label for="message">ご相談内容</label><textarea id="message" name="message" placeholder="商材やブランド、実現したい体験について、簡単にお聞かせください"></textarea></div>
+            <button type="submit" class="btn btn-primary">制作について相談する</button>
             <p class="form-note">送信するとメールアプリが開き、内容を確認のうえ送信できます。</p>
           </form>
         </div>
@@ -703,11 +424,11 @@
     <div class="wrap">
       <div class="footer-row">
         <a class="logo" href="#top">
-          <span class="name">Music Japan</span>
-          <span class="tag mono">SALES AUTOMATION</span>
+          <span class="name">Standment</span>
+          <span class="tag mono">WEBGL / 3DCG / INTERACTIVE WEB DEVELOPMENT</span>
         </a>
         <div class="footer-meta">
-          <span>合同会社Music Japan</span>
+          <span>運営: 合同会社Music Japan</span>
           <a href="mailto:music.japan.llc@gmail.com">music.japan.llc@gmail.com</a>
           <span>&copy; 2026 Music Japan LLC.</span>
         </div>
@@ -715,15 +436,13 @@
     </div>
   </footer>
 
-</div>
-
-<div class="sticky-cta">
-  <a class="btn btn-primary" href="#contact">無料相談を申し込む</a>
-</div>
+  <div class="sticky-cta"><a class="btn btn-primary" href="#contact">制作について相談する</a></div>
 
 <script>
 (function(){
   "use strict";
+
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------- header scroll state ---------- */
   var header = document.getElementById("site-header");
@@ -735,20 +454,32 @@
   onScroll();
 
   /* ---------- scroll reveal ---------- */
-  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var revealEls = document.querySelectorAll(".reveal");
   if (reduceMotion || !("IntersectionObserver" in window)) {
     revealEls.forEach(function(el){ el.classList.add("in"); });
   } else {
     var io = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
-        if (entry.isIntersecting) {
-          entry.target.classList.add("in");
-          io.unobserve(entry.target);
-        }
+        if (entry.isIntersecting) { entry.target.classList.add("in"); io.unobserve(entry.target); }
       });
     }, { threshold: 0.14, rootMargin: "0px 0px -8% 0px" });
     revealEls.forEach(function(el){ io.observe(el); });
+  }
+
+  /* ---------- problem word stack stagger ---------- */
+  var words = document.querySelectorAll("#word-stack span");
+  if (reduceMotion || !("IntersectionObserver" in window)) {
+    words.forEach(function(w){ w.classList.add("in"); });
+  } else {
+    var wio = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if (entry.isIntersecting) {
+          words.forEach(function(w, i){ setTimeout(function(){ w.classList.add("in"); }, i * 130); });
+          wio.disconnect();
+        }
+      });
+    }, { threshold: 0.5 });
+    if (words.length) wio.observe(document.getElementById("word-stack"));
   }
 
   /* ---------- contact form -> mailto ---------- */
@@ -762,168 +493,384 @@
       "ご担当者名: " + f.get("fullname"),
       "メールアドレス: " + f.get("email"),
       "電話番号: " + (f.get("phone") || "(未入力)"),
-      "",
-      "ご相談内容:",
-      f.get("message") || "(未入力)"
+      "", "ご相談内容:", f.get("message") || "(未入力)"
     ];
-    var subject = encodeURIComponent("【無料相談】" + f.get("company") + " 様より");
+    var subject = encodeURIComponent("【制作相談】" + f.get("company") + " 様より");
     var body = encodeURIComponent(lines.join("\n"));
     window.location.href = "mailto:music.japan.llc@gmail.com?subject=" + subject + "&body=" + body;
   });
 
-  /* ---------- WebGL signal field ---------- */
-  var canvas = document.getElementById("signal-field");
-  var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+  /* =========================================================
+     WebGL 3D engine — icosphere mesh + point field, no deps
+     ========================================================= */
 
-  if (!gl) {
-    canvas.style.display = "none";
-    document.body.style.background = "radial-gradient(ellipse at 50% 20%, #241a10 0%, #0a0908 60%)";
-    return;
+  function normalize3(v){
+    var l = Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]) || 1;
+    return [v[0]/l, v[1]/l, v[2]/l];
+  }
+  function sub3(a,b){ return [a[0]-b[0], a[1]-b[1], a[2]-b[2]]; }
+  function cross3(a,b){ return [a[1]*b[2]-a[2]*b[1], a[2]*b[0]-a[0]*b[2], a[0]*b[1]-a[1]*b[0]]; }
+  function faceNormal(a,b,c){ return normalize3(cross3(sub3(b,a), sub3(c,a))); }
+
+  function buildIcosphere(subdivisions){
+    var t = (1 + Math.sqrt(5)) / 2;
+    var verts = [
+      [-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],
+      [0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],
+      [t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]
+    ].map(normalize3);
+    var faces = [
+      [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+      [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+      [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+      [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+    ];
+    for (var s = 0; s < subdivisions; s++){
+      var midCache = {};
+      var midpoint = function(i1, i2){
+        var key = Math.min(i1,i2) + "_" + Math.max(i1,i2);
+        if (midCache[key] !== undefined) return midCache[key];
+        var a = verts[i1], b = verts[i2];
+        var m = normalize3([(a[0]+b[0])/2, (a[1]+b[1])/2, (a[2]+b[2])/2]);
+        verts.push(m);
+        var idx = verts.length - 1;
+        midCache[key] = idx;
+        return idx;
+      };
+      var newFaces = [];
+      faces.forEach(function(f){
+        var a = f[0], b = f[1], c = f[2];
+        var ab = midpoint(a,b), bc = midpoint(b,c), ca = midpoint(c,a);
+        newFaces.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);
+      });
+      faces = newFaces;
+    }
+    var positions = [], normals = [];
+    faces.forEach(function(f){
+      var a = verts[f[0]], b = verts[f[1]], c = verts[f[2]];
+      var n = faceNormal(a,b,c);
+      [a,b,c].forEach(function(v){
+        positions.push(v[0], v[1], v[2]);
+        normals.push(n[0], n[1], n[2]);
+      });
+    });
+    return { positions: new Float32Array(positions), normals: new Float32Array(normals), count: positions.length/3 };
   }
 
-  var vertSrc =
-    "attribute vec2 aPos;" +
-    "void main(){ gl_Position = vec4(aPos, 0.0, 1.0); }";
+  function m4Identity(){ return [1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1]; }
+  function m4Perspective(fovy, aspect, near, far){
+    var f = 1 / Math.tan(fovy/2), nf = 1 / (near - far);
+    return [ f/aspect,0,0,0, 0,f,0,0, 0,0,(far+near)*nf,-1, 0,0,(2*far*near)*nf,0 ];
+  }
+  function m4Translate(m, x, y, z){
+    var out = m.slice();
+    out[12] = m[0]*x + m[4]*y + m[8]*z  + m[12];
+    out[13] = m[1]*x + m[5]*y + m[9]*z  + m[13];
+    out[14] = m[2]*x + m[6]*y + m[10]*z + m[14];
+    out[15] = m[3]*x + m[7]*y + m[11]*z + m[15];
+    return out;
+  }
+  function m4RotateY(m, rad){
+    var c = Math.cos(rad), s = Math.sin(rad);
+    var a00=m[0],a01=m[1],a02=m[2],a03=m[3], a20=m[8],a21=m[9],a22=m[10],a23=m[11];
+    var out = m.slice();
+    out[0]=a00*c - a20*s; out[1]=a01*c - a21*s; out[2]=a02*c - a22*s; out[3]=a03*c - a23*s;
+    out[8]=a00*s + a20*c; out[9]=a01*s + a21*c; out[10]=a02*s + a22*c; out[11]=a03*s + a23*c;
+    return out;
+  }
+  function m4RotateX(m, rad){
+    var c = Math.cos(rad), s = Math.sin(rad);
+    var a10=m[4],a11=m[5],a12=m[6],a13=m[7], a20=m[8],a21=m[9],a22=m[10],a23=m[11];
+    var out = m.slice();
+    out[4]=a10*c + a20*s; out[5]=a11*c + a21*s; out[6]=a12*c + a22*s; out[7]=a13*c + a23*s;
+    out[8]=a20*c - a10*s; out[9]=a21*c - a11*s; out[10]=a22*c - a12*s; out[11]=a23*c - a13*s;
+    return out;
+  }
 
-  var fragSrc =
-    "precision highp float;" +
-    "uniform vec2 uRes;" +
-    "uniform float uTime;" +
-    "uniform vec2 uMouse;" +
-
-    "float hash(vec2 p){" +
-    "  p = fract(p * vec2(123.34, 456.21));" +
-    "  p += dot(p, p + 45.32);" +
-    "  return fract(p.x * p.y);" +
-    "}" +
-    "float noise(vec2 p){" +
-    "  vec2 i = floor(p); vec2 f = fract(p);" +
-    "  float a = hash(i);" +
-    "  float b = hash(i + vec2(1.0, 0.0));" +
-    "  float c = hash(i + vec2(0.0, 1.0));" +
-    "  float d = hash(i + vec2(1.0, 1.0));" +
-    "  vec2 u = f * f * (3.0 - 2.0 * f);" +
-    "  return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;" +
-    "}" +
-    "float fbm(vec2 p){" +
-    "  float v = 0.0; float amp = 0.5;" +
-    "  for (int i = 0; i < 4; i++) {" +
-    "    v += amp * noise(p);" +
-    "    p *= 2.02;" +
-    "    amp *= 0.55;" +
-    "  }" +
-    "  return v;" +
-    "}" +
-
+  var MESH_VS =
+    "attribute vec3 aPos; attribute vec3 aNormal;" +
+    "uniform mat4 uModel, uView, uProj; uniform mat3 uNormalMat;" +
+    "varying vec3 vNormal; varying vec3 vViewPos;" +
     "void main(){" +
-    "  vec2 uv = gl_FragCoord.xy / uRes.xy;" +
-    "  vec2 p = uv - 0.5;" +
-    "  p.x *= uRes.x / uRes.y;" +
+    "  vec4 world = uModel * vec4(aPos, 1.0);" +
+    "  vec4 vp = uView * world;" +
+    "  gl_Position = uProj * vp;" +
+    "  vNormal = normalize(uNormalMat * aNormal);" +
+    "  vViewPos = vp.xyz;" +
+    "}";
 
-    "  vec2 focus = vec2(0.18, -0.06) + uMouse * 0.05;" +
-    "  vec2 q = p - focus;" +
-    "  float dist = length(q);" +
-
-    "  float warp = fbm(q * 2.4 + uTime * 0.03) * 0.14;" +
-    "  float rings = sin((dist + warp) * 26.0 - uTime * 0.9);" +
-    "  rings = smoothstep(0.72, 1.0, rings);" +
-
-    "  float falloff = exp(-dist * 2.1);" +
-    "  float signal = rings * falloff;" +
-
-    "  float wave = 0.0;" +
-    "  float bandY = 0.02 * sin(uTime * 0.15);" +
-    "  float bandDist = abs(p.y - bandY - sin(p.x * 6.0 + uTime * 0.6) * 0.02 * fbm(vec2(p.x * 3.0, uTime * 0.1)));" +
-    "  wave = smoothstep(0.006, 0.0, bandDist) * (0.5 + 0.5 * sin(uTime * 0.4));" +
-
-    "  vec3 ink = vec3(0.039, 0.035, 0.031);" +
-    "  vec3 amber = vec3(1.0, 0.42, 0.22);" +
-    "  vec3 copper = vec3(0.91, 0.65, 0.36);" +
-
-    "  vec3 col = ink;" +
-    "  col += amber * signal * 0.55;" +
-    "  col += copper * wave * 0.6;" +
-    "  col += copper * falloff * 0.05;" +
-
-    "  float grain = (hash(gl_FragCoord.xy + uTime) - 0.5) * 0.02;" +
-    "  col += grain;" +
-
-    "  float vignette = smoothstep(1.05, 0.25, length(p * vec2(1.0, 1.3)));" +
-    "  col *= mix(0.7, 1.0, vignette);" +
-
+  var MESH_FS =
+    "precision highp float;" +
+    "varying vec3 vNormal; varying vec3 vViewPos;" +
+    "uniform vec3 uAccent;" +
+    "void main(){" +
+    "  vec3 N = normalize(vNormal);" +
+    "  vec3 V = normalize(-vViewPos);" +
+    "  float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.5);" +
+    "  float key = max(dot(N, normalize(vec3(0.4, 0.65, 0.7))), 0.0);" +
+    "  float fill = max(dot(N, normalize(vec3(-0.5, -0.2, 0.4))), 0.0) * 0.28;" +
+    "  vec3 base = mix(vec3(0.05,0.05,0.055), vec3(0.86,0.88,0.9), key);" +
+    "  base += fill * vec3(0.28, 0.3, 0.34);" +
+    "  vec3 col = base + uAccent * fresnel * 1.3;" +
     "  gl_FragColor = vec4(col, 1.0);" +
     "}";
 
-  function compile(type, src) {
+  var PTS_VS =
+    "attribute vec3 aPos; attribute float aSize;" +
+    "uniform mat4 uModel, uView, uProj;" +
+    "varying float vAlpha;" +
+    "void main(){" +
+    "  vec4 vp = uView * uModel * vec4(aPos, 1.0);" +
+    "  gl_Position = uProj * vp;" +
+    "  float dist = -vp.z;" +
+    "  gl_PointSize = clamp(aSize * (60.0 / dist), 1.0, 12.0);" +
+    "  vAlpha = clamp(1.0 - dist / 12.0, 0.08, 0.75);" +
+    "}";
+
+  var PTS_FS =
+    "precision mediump float;" +
+    "varying float vAlpha;" +
+    "uniform vec3 uColor;" +
+    "void main(){" +
+    "  vec2 c = gl_PointCoord - vec2(0.5);" +
+    "  float d = length(c);" +
+    "  if (d > 0.5) discard;" +
+    "  gl_FragColor = vec4(uColor, smoothstep(0.5, 0.05, d) * vAlpha);" +
+    "}";
+
+  function compileShader(gl, type, src){
     var s = gl.createShader(type);
     gl.shaderSource(s, src);
     gl.compileShader(s);
     return s;
   }
-
-  var vs = compile(gl.VERTEX_SHADER, vertSrc);
-  var fs = compile(gl.FRAGMENT_SHADER, fragSrc);
-  var prog = gl.createProgram();
-  gl.attachShader(prog, vs);
-  gl.attachShader(prog, fs);
-  gl.linkProgram(prog);
-
-  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
-    canvas.style.display = "none";
-    return;
+  function linkProgram(gl, vsSrc, fsSrc){
+    var prog = gl.createProgram();
+    gl.attachShader(prog, compileShader(gl, gl.VERTEX_SHADER, vsSrc));
+    gl.attachShader(prog, compileShader(gl, gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return null;
+    return prog;
   }
 
-  gl.useProgram(prog);
+  function createScene(canvas, opts){
+    var gl = canvas.getContext("webgl", { antialias: true, alpha: false }) ||
+              canvas.getContext("experimental-webgl", { antialias: true, alpha: false });
+    if (!gl) return null;
 
-  var quad = new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]);
-  var buf = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-  gl.bufferData(gl.ARRAY_BUFFER, quad, gl.STATIC_DRAW);
+    var meshProg = linkProgram(gl, MESH_VS, MESH_FS);
+    var ptsProg = linkProgram(gl, PTS_VS, PTS_FS);
+    if (!meshProg || (opts.particles && !ptsProg)) return null;
 
-  var aPos = gl.getAttribLocation(prog, "aPos");
-  gl.enableVertexAttribArray(aPos);
-  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    var mesh = buildIcosphere(opts.subdivisions);
+    var meshBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.positions, gl.STATIC_DRAW);
+    var normBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, mesh.normals, gl.STATIC_DRAW);
 
-  var uRes = gl.getUniformLocation(prog, "uRes");
-  var uTime = gl.getUniformLocation(prog, "uTime");
-  var uMouse = gl.getUniformLocation(prog, "uMouse");
+    var meshLoc = {
+      aPos: gl.getAttribLocation(meshProg, "aPos"),
+      aNormal: gl.getAttribLocation(meshProg, "aNormal"),
+      uModel: gl.getUniformLocation(meshProg, "uModel"),
+      uView: gl.getUniformLocation(meshProg, "uView"),
+      uProj: gl.getUniformLocation(meshProg, "uProj"),
+      uNormalMat: gl.getUniformLocation(meshProg, "uNormalMat"),
+      uAccent: gl.getUniformLocation(meshProg, "uAccent")
+    };
 
-  var mouse = { x: 0, y: 0 };
-  var targetMouse = { x: 0, y: 0 };
-  window.addEventListener("pointermove", function(e){
-    targetMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-    targetMouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
-  }, { passive: true });
-
-  function resize(){
-    var dpr = Math.min(window.devicePixelRatio || 1, 1.75);
-    var w = Math.floor(window.innerWidth * dpr);
-    var h = Math.floor(window.innerHeight * dpr);
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
+    var ptsCount = opts.particles ? opts.particleCount : 0;
+    var ptsPos, ptsSize, ptsPosBuf, ptsSizeBuf, ptsLoc;
+    if (opts.particles) {
+      ptsPos = new Float32Array(ptsCount * 3);
+      ptsSize = new Float32Array(ptsCount);
+      for (var i = 0; i < ptsCount; i++){
+        var r = opts.particleRadiusMin + Math.random() * (opts.particleRadiusMax - opts.particleRadiusMin);
+        var theta = Math.random() * Math.PI * 2;
+        var phi = Math.acos(2 * Math.random() - 1);
+        ptsPos[i*3]   = r * Math.sin(phi) * Math.cos(theta);
+        ptsPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
+        ptsPos[i*3+2] = r * Math.cos(phi);
+        ptsSize[i] = 1.4 + Math.random() * 2.2;
+      }
+      ptsPosBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, ptsPosBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, ptsPos, gl.STATIC_DRAW);
+      ptsSizeBuf = gl.createBuffer();
+      gl.bindBuffer(gl.ARRAY_BUFFER, ptsSizeBuf);
+      gl.bufferData(gl.ARRAY_BUFFER, ptsSize, gl.STATIC_DRAW);
+      ptsLoc = {
+        aPos: gl.getAttribLocation(ptsProg, "aPos"),
+        aSize: gl.getAttribLocation(ptsProg, "aSize"),
+        uModel: gl.getUniformLocation(ptsProg, "uModel"),
+        uView: gl.getUniformLocation(ptsProg, "uView"),
+        uProj: gl.getUniformLocation(ptsProg, "uProj"),
+        uColor: gl.getUniformLocation(ptsProg, "uColor")
+      };
     }
-    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    var rotY = 0, rotX = opts.initialTiltX || 0;
+    var velY = 0, velX = 0;
+    var dragging = false, lastX = 0, lastY = 0;
+    var lastInteraction = 0;
+    var proj = m4Identity();
+    var w = 1, h = 1;
+
+    function resize(){
+      var rect = canvas.getBoundingClientRect();
+      var dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+      w = Math.max(1, Math.floor(rect.width * dpr));
+      h = Math.max(1, Math.floor(rect.height * dpr));
+      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      gl.viewport(0, 0, w, h);
+      proj = m4Perspective(Math.PI/4, w/h, 0.1, 100);
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    if (opts.interactive) {
+      canvas.style.touchAction = "none";
+      canvas.addEventListener("pointerdown", function(e){
+        dragging = true; lastX = e.clientX; lastY = e.clientY;
+        velX = 0; velY = 0;
+        canvas.setPointerCapture(e.pointerId);
+        var hint = document.getElementById("drag-hint");
+        if (hint) hint.classList.add("hidden");
+      });
+      canvas.addEventListener("pointermove", function(e){
+        if (!dragging) return;
+        var dx = e.clientX - lastX, dy = e.clientY - lastY;
+        lastX = e.clientX; lastY = e.clientY;
+        rotY += dx * 0.008;
+        rotX = Math.max(-1.1, Math.min(1.1, rotX + dy * 0.008));
+        velY = dx * 0.008; velX = dy * 0.008;
+        lastInteraction = performance.now();
+      });
+      var endDrag = function(){ dragging = false; lastInteraction = performance.now(); };
+      canvas.addEventListener("pointerup", endDrag);
+      canvas.addEventListener("pointercancel", endDrag);
+    }
+
+    var accentColor = opts.accentColor || [0.83, 0.69, 0.42];
+    var particleColor = opts.particleColor || [0.83, 0.69, 0.42];
+    var bg = opts.bgColor || [0.039, 0.039, 0.043];
+    gl.clearColor(bg[0], bg[1], bg[2], 1.0);
+    gl.enable(gl.DEPTH_TEST);
+
+    var mouseNX = 0, mouseNY = 0;
+    if (!opts.interactive) {
+      window.addEventListener("pointermove", function(e){
+        mouseNX = (e.clientX / window.innerWidth) * 2 - 1;
+        mouseNY = (e.clientY / window.innerHeight) * 2 - 1;
+      }, { passive: true });
+    }
+
+    var running = false, rafId = null, start = performance.now();
+
+    function frame(now){
+      if (!running) return;
+      var t = (now - start) / 1000;
+      var idleFor = now - lastInteraction;
+
+      if (opts.interactive) {
+        if (!dragging) {
+          rotY += velY;
+          rotX += velX;
+          rotX = Math.max(-1.1, Math.min(1.1, rotX));
+          velY *= 0.94; velX *= 0.94;
+          if (!reduceMotion && idleFor > 2200) rotY += opts.autoSpeed * (1/60);
+        }
+      } else {
+        if (!reduceMotion) rotY += opts.autoSpeed * (1/60);
+        rotX += ((mouseNY * 0.18) - rotX) * 0.04;
+      }
+
+      var view = m4Translate(m4Identity(), 0, opts.viewOffsetY || 0, -opts.cameraDist);
+      var model = m4RotateX(m4RotateY(m4Identity(), rotY), rotX);
+      var normalMat = [model[0],model[1],model[2], model[4],model[5],model[6], model[8],model[9],model[10]];
+
+      gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+      if (opts.particles) {
+        gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        gl.useProgram(ptsProg);
+        var pModel = m4RotateY(m4Identity(), rotY * 0.4);
+        gl.uniformMatrix4fv(ptsLoc.uModel, false, pModel);
+        gl.uniformMatrix4fv(ptsLoc.uView, false, view);
+        gl.uniformMatrix4fv(ptsLoc.uProj, false, proj);
+        gl.uniform3fv(ptsLoc.uColor, particleColor);
+        gl.bindBuffer(gl.ARRAY_BUFFER, ptsPosBuf);
+        gl.enableVertexAttribArray(ptsLoc.aPos);
+        gl.vertexAttribPointer(ptsLoc.aPos, 3, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, ptsSizeBuf);
+        gl.enableVertexAttribArray(ptsLoc.aSize);
+        gl.vertexAttribPointer(ptsLoc.aSize, 1, gl.FLOAT, false, 0, 0);
+        gl.drawArrays(gl.POINTS, 0, ptsCount);
+        gl.disable(gl.BLEND);
+      }
+
+      gl.enable(gl.DEPTH_TEST);
+      gl.useProgram(meshProg);
+      gl.uniformMatrix4fv(meshLoc.uModel, false, model);
+      gl.uniformMatrix4fv(meshLoc.uView, false, view);
+      gl.uniformMatrix4fv(meshLoc.uProj, false, proj);
+      gl.uniformMatrix3fv(meshLoc.uNormalMat, false, normalMat);
+      gl.uniform3fv(meshLoc.uAccent, accentColor);
+      gl.bindBuffer(gl.ARRAY_BUFFER, meshBuf);
+      gl.enableVertexAttribArray(meshLoc.aPos);
+      gl.vertexAttribPointer(meshLoc.aPos, 3, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, normBuf);
+      gl.enableVertexAttribArray(meshLoc.aNormal);
+      gl.vertexAttribPointer(meshLoc.aNormal, 3, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLES, 0, mesh.count);
+
+      rafId = requestAnimationFrame(frame);
+    }
+
+    function start_(){ if (running) return; running = true; rafId = requestAnimationFrame(frame); }
+    function stop(){ running = false; if (rafId) cancelAnimationFrame(rafId); }
+
+    return { start: start_, stop: stop, resize: resize };
   }
-  window.addEventListener("resize", resize);
-  resize();
 
-  var start = performance.now();
-  var frozen = reduceMotion;
+  var heroCanvas = document.getElementById("hero-gl");
+  var heroScene = heroCanvas ? createScene(heroCanvas, {
+    subdivisions: 1, interactive: false, autoSpeed: 0.12, cameraDist: 7.2,
+    viewOffsetY: 1.35, initialTiltX: 0.15, particles: true, particleCount: 380,
+    particleRadiusMin: 3.4, particleRadiusMax: 6.2,
+    accentColor: [0.83, 0.69, 0.42], particleColor: [0.83, 0.69, 0.42],
+    bgColor: [0.039, 0.039, 0.043]
+  }) : null;
 
-  function frame(now){
-    mouse.x += (targetMouse.x - mouse.x) * 0.04;
-    mouse.y += (targetMouse.y - mouse.y) * 0.04;
+  var expCanvas = document.getElementById("experience-gl");
+  var expScene = expCanvas ? createScene(expCanvas, {
+    subdivisions: 2, interactive: true, autoSpeed: 0.08, cameraDist: 4.4,
+    initialTiltX: 0.1, particles: false,
+    accentColor: [0.83, 0.69, 0.42],
+    bgColor: [0.039, 0.039, 0.043]
+  }) : null;
 
-    var t = frozen ? 0 : (now - start) / 1000;
-    gl.uniform2f(uRes, canvas.width, canvas.height);
-    gl.uniform1f(uTime, t);
-    gl.uniform2f(uMouse, mouse.x, mouse.y);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-    requestAnimationFrame(frame);
+  if (!heroCanvas.getContext("webgl") && !heroCanvas.getContext("experimental-webgl")) {
+    document.body.classList.add("no-webgl");
   }
-  requestAnimationFrame(frame);
+
+  [{ el: heroCanvas, scene: heroScene }, { el: expCanvas, scene: expScene }].forEach(function(entry){
+    if (!entry.el || !entry.scene) return;
+    if ("IntersectionObserver" in window) {
+      var vio = new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if (en.isIntersecting) { entry.scene.resize(); entry.scene.start(); }
+          else entry.scene.stop();
+        });
+      }, { threshold: 0.05 });
+      vio.observe(entry.el);
+    } else {
+      entry.scene.start();
+    }
+  });
 })();
 </script>
 </body>
