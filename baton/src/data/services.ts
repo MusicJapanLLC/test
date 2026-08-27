@@ -155,10 +155,7 @@ export const services: Service[] = [
       { label: '活用シーン', value: '幅広く', unit: '', note: 'ブランディング・集客・採用広報' },
     ],
     links: [
-      {
-        label: '制作実績',
-        url: 'https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#experience',
-      },
+      { label: '制作実績', url: 'https://standment-portfolio.watagon-0220.chatgpt.site/' },
     ],
     survey: {
       questions: [
