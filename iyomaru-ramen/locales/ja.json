@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "htmlLang": "ja",
+    "dir": "ltr",
+    "ogLocale": "ja_JP",
+    "title": "てうちラーメン いよ丸水産｜北海道富良野の手打ちラーメン",
+    "description": "北海道富良野市、JR富良野駅から徒歩2〜3分。漁師直営店だからこその新鮮な海鮮と、富良野産小麦の手打ち麺が自慢のラーメン店です。",
+    "ogTitle": "てうちラーメン いよ丸水産｜富良野の手打ちラーメン",
+    "ogDescription": "富良野産小麦の手打ち麺と、漁師直営だからこその新鮮な海の幸。北海道富良野で愛される一杯を。"
+  },
+  "a11y": {
+    "skipToContent": "本文へスキップ",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる",
+    "openLightbox": "拡大表示",
+    "closeLightbox": "閉じる",
+    "prevImage": "前の写真",
+    "nextImage": "次の写真",
+    "langSwitcherLabel": "言語を選択"
+  },
+  "nav": {
+    "menu": "メニュー",
+    "concept": "こだわり",
+    "hours": "営業時間・アクセス",
+    "gallery": "店内の様子",
+    "news": "お知らせ",
+    "call": "電話する"
+  },
+  "langSwitcher": { "ja": "日本語", "en": "English", "zh": "简体中文", "ko": "한국어" },
+  "hero": {
+    "eyebrow": "北海道・富良野",
+    "titleLines": ["てうちラーメン", "いよ丸水産"],
+    "tagline": "富良野産小麦の手打ち麺と、漁師直営だからこその海の恵み。",
+    "ctaMenu": "メニューを見る",
+    "ctaHours": "営業時間・アクセス",
+    "scrollHint": "SCROLL",
+    "ratingBadge": "Google評価 4.4（328件のクチコミ）",
+    "ratingNote": "※評価・件数は変動します。最新情報はGoogleマップをご確認ください。"
+  },
+  "concept": {
+    "eyebrow": "こだわり",
+    "title": "いよ丸水産が、いよ丸水産である理由",
+    "items": [
+      {
+        "icon": "wheat",
+        "title": "富良野産小麦の手打ち麺",
+        "text": "富良野産小麦「ハルユタカ」と地元産の卵を使い、毎日手作業で仕込む自家製麺。もちもちとした食感とのど越しにこだわりました。"
+      },
+      {
+        "icon": "field",
+        "title": "富良野産にこだわる食材",
+        "text": "野菜や卵も、できる限り富良野産のものを使用。北海道の大地が育んだ素材の味を、スープと麺の一杯に閉じ込めています。"
+      },
+      {
+        "icon": "fish",
+        "title": "漁師直営だからこその鮮度",
+        "text": "店主は現役の漁師。だから届く魚介の鮮度が違います。エビ・タコ・カニなど、市場を通さない新鮮な海の幸をたっぷりと。"
+      }
+    ]
+  },
+  "menu": {
+    "eyebrow": "メニュー",
+    "title": "看板メニュー",
+    "priceNote": "※価格は現在確認中のため仮表示です。最新の価格は店頭またはお電話にてご確認ください。",
+    "items": [
+      {
+        "tag": "看板",
+        "name": "蟹出汁みそラーメン",
+        "desc": "毛蟹やタラバガニから丁寧に引いた蟹出汁と、コクのある自家製味噌を合わせた一杯。海の旨みが凝縮されています。",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "看板",
+        "name": "背脂みそラーメン",
+        "desc": "旨みたっぷりの背脂を効かせた、こってり系の味噌ラーメン。富良野産小麦の手打ち麺との相性は抜群です。",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "名物",
+        "name": "いよ丸SPECIAL",
+        "desc": "日高産の海鮮3種をぜいたくに盛り付けた、いよ丸水産だからこその一杯。漁師直営店の自信作です。",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "サイド",
+        "name": "たこ飯",
+        "desc": "ふっくら炊き上げた、蛸の旨みが染み込む名物たこ飯。ラーメンと合わせてどうぞ。",
+        "price": "¥○○○"
+      }
+    ]
+  },
+  "hours": {
+    "eyebrow": "営業時間・アクセス",
+    "title": "営業時間・アクセス",
+    "hoursLabel": "営業時間",
+    "days": [
+      { "label": "月", "hours": "11:00–21:00", "closed": false },
+      { "label": "火", "hours": "11:00–21:00", "closed": false },
+      { "label": "水", "hours": "11:00–21:00", "closed": false },
+      { "label": "木", "hours": "11:00–21:00", "closed": false },
+      { "label": "金", "hours": "定休日", "closed": true },
+      { "label": "土", "hours": "11:00–21:30", "closed": false },
+      { "label": "日", "hours": "11:00–21:30", "closed": false }
+    ],
+    "closedNote": "定休日：金曜日",
+    "varyNote": "営業時間は変更となる場合がございます。ご来店前にお電話にてご確認ください。",
+    "addressLabel": "住所",
+    "address": "〒076-0025 北海道富良野市日の出町11-5",
+    "accessLabel": "アクセス",
+    "access": "JR富良野駅から徒歩2〜3分（旭川信用金庫の向かい）",
+    "parkingLabel": "駐車場",
+    "parking": "専用駐車場あり（近隣「鉄板焼きマサヤ」裏、約5台）",
+    "seatsLabel": "席数",
+    "seats": "全14席（カウンター4席・テーブル席あり）／貸切対応可（20名以下）",
+    "featuresLabel": "設備",
+    "features": ["全席禁煙", "無料Wi-Fi完備", "電源あり", "落ち着いた店内空間"],
+    "paymentLabel": "お支払い方法",
+    "payments": ["クレジットカード", "電子マネー", "PayPay", "Alipay", "WeChat Pay 等 各種QRコード決済"],
+    "mapCaption": "地図アプリで開く",
+    "callCta": "電話をかける"
+  },
+  "gallery": {
+    "eyebrow": "店内の様子",
+    "title": "店内の雰囲気",
+    "items": [
+      { "caption": "落ち着いたカウンター席" },
+      { "caption": "富良野産小麦の手打ち麺" },
+      { "caption": "こだわりのスープ" },
+      { "caption": "漁師直営ならではの新鮮な魚介" },
+      { "caption": "テーブル席のある店内" },
+      { "caption": "JR富良野駅からすぐの立地" }
+    ]
+  },
+  "news": {
+    "eyebrow": "お知らせ",
+    "title": "お知らせ",
+    "items": [
+      { "date": "2024.06.30", "text": "富良野市山部より現在地（日の出町）へ移転オープンいたしました。" },
+      { "date": "2026.08.27", "text": "公式サイトをリニューアルいたしました。" }
+    ]
+  },
+  "footer": {
+    "instagramLabel": "Instagram",
+    "phoneLabel": "お電話",
+    "addressLabel": "住所",
+    "note": "",
+    "rightsText": "© 2026 てうちラーメン いよ丸水産",
+    "disclaimer": "掲載内容は変更となる場合がございます。最新情報は店舗までお問い合わせください。"
+  },
+  "ui": { "showPaymentBadge": false, "paymentBadgeText": "" }
+}
