@@ -2,8 +2,7 @@ export const site = {
   name: 'Baton',
   nameJa: 'Baton -バトン-',
   tagline: '一つひとつ、確かめて選んだ6つ。',
-  description:
-    '合同会社Music Japanが提携する6つのサービスを並べています。選ぶのは、見ている方です。',
+  description: '合同会社Music Japanが提携する6つのサービスをまとめています。',
   operator: {
     name: '合同会社Music Japan',
     representative: '代表社員 壁谷友生',

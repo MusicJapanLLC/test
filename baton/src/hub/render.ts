@@ -80,10 +80,10 @@ function renderIndexSection(): HTMLElement {
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: 'Index', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '並べています。', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '6つのサービス', 'data-reveal': true }),
         el('p', {
           class: 'hub-intro section__note',
-          text: site.description,
+          text: '合同会社Music Japanが提携しています。気になったものから開いてください。',
           'data-reveal': true,
         }),
       ]),

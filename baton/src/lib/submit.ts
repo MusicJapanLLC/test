@@ -10,6 +10,9 @@ export type SurveyPayload = {
 const ENDPOINT = (import.meta.env.VITE_GAS_ENDPOINT ?? '').trim();
 const TIMEOUT_MS = 15000;
 
+/** プレビュー用。送信先を持たずに、通しで動きだけ確かめたいとき */
+const DEMO = (import.meta.env.VITE_DEMO ?? '') === '1';
+
 /**
  * GAS の Web App へ送る。
  * CORS プリフライトを避けるため mode:'no-cors' + text/plain。
@@ -19,13 +22,19 @@ const TIMEOUT_MS = 15000;
  * ネットワークまで届いたかどうかだけを成否として扱う。
  */
 export async function submitSurvey(payload: SurveyPayload): Promise<void> {
+  if (DEMO) {
+    console.info('[baton] プレビューのため送信していません。内容:', payload);
+    await new Promise((r) => setTimeout(r, 700));
+    return;
+  }
+
   if (!ENDPOINT) {
     if (import.meta.env.DEV) {
       console.warn('[baton] VITE_GAS_ENDPOINT が未設定です。送信内容:', payload);
       await new Promise((r) => setTimeout(r, 600));
       return;
     }
-    throw new Error('送信先が設定されていません。');
+    throw new Error('送信先がまだ設定されていません。');
   }
 
   const controller = new AbortController();

@@ -7,8 +7,8 @@
   --hub-muted: #6b6b6b;
   --hub-line: rgba(26, 26, 26, 0.12);
 
-  --font-sans: system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'Hiragino Sans',
-    'Yu Gothic Medium', 'Yu Gothic', 'Noto Sans JP', Meiryo, sans-serif;
+  --font-sans: 'Zen Kaku Gothic New', system-ui, -apple-system, 'Hiragino Kaku Gothic ProN',
+    'Hiragino Sans', 'Yu Gothic Medium', 'Yu Gothic', 'Noto Sans JP', Meiryo, sans-serif;
   --font-display: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
 
   --step-0: clamp(0.94rem, 0.9rem + 0.2vw, 1rem);
