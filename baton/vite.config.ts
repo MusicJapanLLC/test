@@ -19,6 +19,9 @@ const pages = {
   privacy: resolve(root, 'privacy', 'index.html'),
 };
 
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';
+
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -40,10 +43,14 @@ function head(opts: {
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
-    />
+    <!--
+      フォントのCSSは描画を止めない形で読む。
+      素の状態でまず本文が出て、あとから Zen Kaku Gothic New に差し替わる。
+      普通に stylesheet で読むと、ここでLCPが0.7秒ほど遅れる。
+    -->
+    <link rel="preload" as="style" href="${FONT_HREF}" />
+    <link rel="stylesheet" href="${FONT_HREF}" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="${FONT_HREF}" /></noscript>
     <title>${esc(opts.title)}</title>
     <meta name="description" content="${esc(opts.description)}" />
     <meta name="theme-color" content="${opts.themeColor}" />

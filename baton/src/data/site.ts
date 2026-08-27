@@ -14,7 +14,7 @@ export const site = {
   producer: {
     name: 'Standment',
     credit: 'このサイトはStandmentが制作しています',
-    works: 'https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#experience',
+    works: 'https://standment-portfolio.watagon-0220.chatgpt.site/',
   },
   theme: {
     bg: '#FFFFFF',

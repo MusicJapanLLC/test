@@ -373,7 +373,8 @@ body.service {
   font-weight: 500;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: var(--primary);
+  /* 明るいテーマ色だと小さな文字が読みづらいので、地の色を少し混ぜる */
+  color: color-mix(in srgb, var(--primary) 72%, var(--text));
 }
 
 .survey__question {

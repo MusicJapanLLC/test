@@ -58,7 +58,7 @@ var SERVICES = {
     ]
   },
   webgl: {
-    name: 'Standment',
+    name: 'Standment（合同会社Music Japan）',
     hasCapital: true,
     questions: [
       '今のサイトはいつ作られましたか',
@@ -270,4 +270,47 @@ function notify(serviceId, profile, answers, data) {
     subject: '【Baton】' + config.name + ' に新規回答',
     body: lines.join('\n')
   });
+}
+
+/**
+ * 動作確認用。
+ * この関数を実行すると、engineer シートにテスト行が1件入り、
+ * 通知メールが1通届く。サイトを公開する前に、書き込みと通知を確かめられる。
+ *
+ * 確認できたら、入ったテスト行は手で削除してよい。
+ */
+function testSubmission() {
+  var fake = {
+    postData: {
+      contents: JSON.stringify({
+        serviceId: 'engineer',
+        timestamp: new Date().toISOString(),
+        answers: {
+          q1: ['フロントエンド', 'バックエンド'],
+          q2: '今すぐ',
+          q3: ['採用に時間がかかる'],
+          q4: ['単価の相場']
+        },
+        profile: {
+          company: '【テスト】株式会社サンプル',
+          name: 'テスト太郎',
+          email: 'test@example.com',
+          role: '代表取締役',
+          capital: '1,000万円未満'
+        },
+        comment: 'これは動作確認用のテスト送信です。',
+        contactMethod: 'メール'
+      })
+    }
+  };
+
+  var result = doPost(fake).getContent();
+  Logger.log('結果: ' + result);
+
+  if (result === 'OK') {
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+      'engineer シートに1件入りました。メールも確認してください', 'テスト成功', 8);
+  } else {
+    SpreadsheetApp.getActiveSpreadsheet().toast('失敗: ' + result, 'テスト', 8);
+  }
 }

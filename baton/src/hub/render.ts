@@ -30,9 +30,7 @@ function card(index: number, id: string): HTMLAnchorElement {
       el('span', { class: 'hub-card__index', text: pad2(index + 1) }),
       el('div', { class: 'hub-card__names' }, [
         el('p', { class: 'hub-card__name', text: s.serviceName }),
-        s.company === s.serviceName
-          ? null
-          : el('p', { class: 'hub-card__company', text: s.company }),
+        el('p', { class: 'hub-card__company', text: s.company }),
       ]),
       el('p', { class: 'hub-card__tagline', text: s.tagline }),
       stat
