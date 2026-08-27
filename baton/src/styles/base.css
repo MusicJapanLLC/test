@@ -189,11 +189,13 @@ textarea {
 
 .footer__logo {
   width: auto;
-  max-width: 148px;
-  max-height: 44px;
+  max-width: 264px;
+  max-height: 80px;
+  margin-left: -0.6rem;
   object-fit: contain;
   object-position: left center;
   flex: none;
+  mix-blend-mode: multiply;
 }
 
 /* 実ロゴが無いときの文字組み */

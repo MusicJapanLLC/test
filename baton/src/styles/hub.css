@@ -283,8 +283,10 @@ body.hub {
 
 .hub-about__logo {
   width: auto;
-  max-width: clamp(190px, 22vw, 260px);
-  max-height: 72px;
+  max-width: clamp(300px, 34vw, 430px);
+  max-height: 132px;
+  margin-left: -0.9rem;
+  mix-blend-mode: multiply;
   object-fit: contain;
   object-position: left center;
 }
