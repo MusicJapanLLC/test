@@ -122,7 +122,7 @@ export const services: Service[] = [
   {
     id: 'webgl',
     slug: 'webgl',
-    company: 'Standment',
+    company: '合同会社Music Japan',
     serviceName: 'Standment',
     tagline: '見るサイトから、体験するサイトへ',
     description:

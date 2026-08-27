@@ -58,7 +58,7 @@ var SERVICES = {
     ]
   },
   webgl: {
-    name: 'Standment',
+    name: 'Standment（合同会社Music Japan）',
     hasCapital: true,
     questions: [
       '今のサイトはいつ作られましたか',

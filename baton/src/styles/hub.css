@@ -282,8 +282,19 @@ body.hub {
 }
 
 .hub-about__logo {
-  width: clamp(72px, 8vw, 96px);
-  height: auto;
+  width: auto;
+  max-width: clamp(190px, 22vw, 260px);
+  max-height: 72px;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.hub-about__logo.wordmark .wordmark__name {
+  font-size: clamp(1.05rem, 0.9rem + 0.6vw, 1.4rem);
+}
+
+.hub-about__logo.wordmark .wordmark__sub {
+  font-size: 0.72rem;
 }
 
 .hub-about__text {

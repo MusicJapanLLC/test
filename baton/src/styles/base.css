@@ -188,10 +188,37 @@ textarea {
 }
 
 .footer__logo {
-  width: 40px;
-  height: 40px;
+  width: auto;
+  max-width: 148px;
+  max-height: 44px;
   object-fit: contain;
+  object-position: left center;
   flex: none;
+}
+
+/* 実ロゴが無いときの文字組み */
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  white-space: nowrap;
+}
+
+.wordmark__name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.wordmark__sub {
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--hub-muted);
+}
+
+.wordmark--standment .wordmark__name {
+  color: #1b3a6b;
 }
 
 .footer__credit p {
