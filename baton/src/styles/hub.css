@@ -1,0 +1,306 @@
+/* ── ハブ（Baton）───────────────────────────────────────────── */
+
+body.hub {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+/* ヒーロー */
+
+.hub-hero {
+  position: relative;
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--hub-bg);
+}
+
+/* WebGL が使えないときの静的フォールバック */
+.hub-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 6%, rgba(26, 26, 26, 0.045), transparent 58%),
+    radial-gradient(70% 55% at 14% 90%, rgba(200, 16, 46, 0.025), transparent 60%),
+    linear-gradient(180deg, #ffffff 0%, #fafafa 55%, #ffffff 100%);
+}
+
+.hub-hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+.hub-hero__canvas.is-ready {
+  opacity: 1;
+}
+
+.hub-hero__inner {
+  position: relative;
+  text-align: center;
+  padding-inline: var(--pad-x);
+}
+
+.hub-hero__title {
+  font-family: var(--font-display);
+  font-size: var(--step-4);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  margin-right: -0.16em;
+}
+
+.hub-hero__tagline {
+  margin-top: clamp(1.1rem, 0.8rem + 1.2vw, 1.9rem);
+  color: var(--hub-muted);
+  font-size: var(--step-1);
+  letter-spacing: 0.1em;
+}
+
+.hub-hero__scroll {
+  position: absolute;
+  bottom: clamp(1.6rem, 3vh, 3rem);
+  left: 50%;
+  translate: -50% 0;
+  width: 1px;
+  height: 56px;
+  background: var(--hub-line);
+  overflow: hidden;
+}
+
+.hub-hero__scroll span {
+  position: absolute;
+  inset-inline: 0;
+  top: -56px;
+  height: 56px;
+  background: var(--hub-accent);
+  animation: hub-scroll 2.4s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+
+@keyframes hub-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  60%,
+  100% {
+    transform: translateY(112px);
+  }
+}
+
+/* 目次 */
+
+.hub-intro {
+  max-width: 40ch;
+  color: var(--hub-muted);
+}
+
+.hub-card:first-child {
+  border-top: 1px solid var(--hub-line);
+}
+
+.hub-card {
+  position: relative;
+  display: block;
+  text-decoration: none;
+  border-bottom: 1px solid var(--hub-line);
+  padding-block: clamp(1.75rem, 1.1rem + 2.4vw, 2.9rem);
+  isolation: isolate;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hub-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 clamp(-2rem, -1vw, -0.75rem);
+  z-index: -1;
+  background: linear-gradient(
+    100deg,
+    color-mix(in srgb, var(--card-primary) 9%, transparent),
+    color-mix(in srgb, var(--card-accent) 5%, transparent)
+  );
+  opacity: 0;
+  transform: scaleX(0.94);
+  transform-origin: left center;
+  transition:
+    opacity 0.5s ease,
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hub-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 1px;
+  width: 100%;
+  background: var(--card-primary);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hub-card:hover::before,
+.hub-card:focus-visible::before {
+  opacity: 1;
+  transform: none;
+}
+
+.hub-card:hover::after,
+.hub-card:focus-visible::after {
+  transform: none;
+}
+
+.hub-card__row {
+  display: grid;
+  gap: 0.4rem 1.5rem;
+  grid-template-columns: auto 1fr;
+  align-items: baseline;
+}
+
+@media (min-width: 900px) {
+  .hub-card__row {
+    grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 0.85fr) auto;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+.hub-card__index {
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  color: var(--hub-muted);
+  transition: color 0.4s ease;
+}
+
+.hub-card:hover .hub-card__index {
+  color: var(--card-primary);
+}
+
+.hub-card__names {
+  min-width: 0;
+}
+
+.hub-card__name {
+  font-size: var(--step-2);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+}
+
+.hub-card__company {
+  font-size: 0.8rem;
+  color: var(--hub-muted);
+  letter-spacing: 0.06em;
+}
+
+.hub-card__tagline {
+  grid-column: 1 / -1;
+  color: color-mix(in srgb, var(--hub-text) 78%, transparent);
+  line-height: 1.7;
+}
+
+@media (min-width: 900px) {
+  .hub-card__tagline {
+    grid-column: auto;
+  }
+}
+
+.hub-card__stat {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  font-family: var(--font-display);
+  color: var(--card-primary);
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  .hub-card__stat {
+    grid-column: auto;
+    justify-content: flex-end;
+  }
+}
+
+.hub-card__unit {
+  color: var(--card-primary) !important;
+  font-size: 0.85rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+.hub-card__stat b {
+  font-size: var(--step-2);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.hub-card__stat span {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--hub-muted);
+}
+
+.hub-card__arrow {
+  position: absolute;
+  right: 0;
+  top: clamp(1.75rem, 1.1rem + 2.4vw, 2.9rem);
+  color: var(--hub-muted);
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.4s ease;
+}
+
+@media (min-width: 900px) {
+  .hub-card__arrow {
+    display: none;
+  }
+}
+
+.hub-card:hover .hub-card__arrow {
+  transform: translateX(5px);
+  color: var(--card-primary);
+}
+
+/* Music Japan について */
+
+.hub-about {
+  background: #fff;
+}
+
+.hub-about__inner {
+  display: grid;
+  gap: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  justify-items: start;
+}
+
+.hub-about__logo {
+  width: clamp(72px, 8vw, 96px);
+  height: auto;
+}
+
+.hub-about__text {
+  max-width: 46ch;
+  color: var(--hub-muted);
+}
+
+.hub-about__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  border-bottom: 1px solid var(--hub-line);
+  padding-bottom: 3px;
+  transition: border-color 0.3s ease;
+}
+
+.hub-about__link:hover {
+  border-color: var(--hub-accent);
+}
