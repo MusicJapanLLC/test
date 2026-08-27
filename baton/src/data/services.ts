@@ -27,7 +27,7 @@ const PROFILE_WITH_CAPITAL: ProfileField[] = [
 ];
 
 /** 全サービス共通・アンケート末尾（ひとこと＋連絡方法）は survey.ts 側で固定表示 */
-export const CONTACT_METHODS = ['メール', '電話', 'いまは資料だけ'] as const;
+export const CONTACT_METHODS = ['メール', '電話', 'LINE'] as const;
 
 export const services: Service[] = [
   {

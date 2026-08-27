@@ -14,6 +14,18 @@ const TIMEOUT_MS = 15000;
 const DEMO = (import.meta.env.VITE_DEMO ?? '') === '1';
 
 /**
+ * ?debug=1 を付けて開くと、実際に焼き込まれた送信先をコンソールに出す。
+ * no-cors 送信は成否が読めないので、環境変数が正しいかを確かめる唯一の手段になる。
+ */
+if (typeof window !== 'undefined' && new URLSearchParams(location.search).has('debug')) {
+  console.info(
+    '[baton] 送信先:',
+    ENDPOINT || '(未設定)',
+    DEMO ? '/ デモモード（送信しません）' : '',
+  );
+}
+
+/**
  * GAS の Web App へ送る。
  * CORS プリフライトを避けるため mode:'no-cors' + text/plain。
  * GAS 側は e.postData.contents を JSON.parse する前提。
