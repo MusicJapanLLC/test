@@ -100,8 +100,6 @@ const blobVertex = /* glsl */ `
 `;
 
 const blobFragment = /* glsl */ `
-  precision highp float;
-
   uniform vec3  uPrimary;
   uniform vec3  uAccent;
   uniform vec3  uBg;

@@ -37,7 +37,7 @@ body.service {
   opacity: 1;
 }
 
-.hero--heavy::after {
+.hero::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -52,7 +52,7 @@ body.service {
 }
 
 @media (max-width: 720px) {
-  .hero--heavy::after {
+  .hero::after {
     background: linear-gradient(
       180deg,
       var(--bg) 0%,

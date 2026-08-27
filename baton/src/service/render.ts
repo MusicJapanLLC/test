@@ -105,7 +105,7 @@ function surveySection(service: Service): HTMLElement {
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: 'Survey', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '話を聞いてみますか', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '現在の状況について教えてください', 'data-reveal': true }),
         el('p', {
           class: 'section__note',
           text: '4問と、ご連絡先だけ。1分ほどで終わります。',

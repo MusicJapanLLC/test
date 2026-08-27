@@ -76,7 +76,7 @@ function route(): void {
       dispose = service
         ? service.heavyWebGL
           ? mountStandmentScene(canvas, service.theme)
-          : mountLightScene(canvas, service.theme)
+          : mountLightScene(canvas, service.theme, service.monument)
         : mountHubScene(canvas);
     }, 1200);
   }

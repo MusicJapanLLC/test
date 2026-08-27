@@ -41,7 +41,7 @@ export function mountServicePage(serviceId: string): void {
             )
         : () =>
             import('./scene-light').then(({ mountLightScene }) =>
-              mountLightScene(canvas, service.theme),
+              mountLightScene(canvas, service.theme, service.monument),
             );
 
       whenIdle(() => void load().catch(() => {}), 1500);

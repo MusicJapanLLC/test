@@ -1,11 +1,15 @@
+# Baton は Vercel で配信する。これは予備の経路。
+#
+# 自動実行はしない。理由は2つ:
+#  1. このリポジトリの GitHub Pages 枠は、いよ丸水産のサイトが使っている。
+#     Pages はリポジトリに1つしか持てないので、走らせると上書きしてしまう
+#  2. github-pages 環境は既定でデフォルトブランチからのデプロイしか許可しない。
+#     Baton のブランチは弾かれる
+#
+# どうしても Pages で出すなら、上の2点を先に片付けてから手動で実行する。
 name: Deploy Baton to GitHub Pages
 
 on:
-  push:
-    branches: [claude/baton-site-setup-srybks]
-    paths:
-      - 'baton/**'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:

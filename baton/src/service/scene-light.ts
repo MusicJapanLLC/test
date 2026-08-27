@@ -1,10 +1,21 @@
-import { Color, Mesh, OrthographicCamera, PlaneGeometry, Scene, ShaderMaterial } from 'three';
-import type { Theme } from '../types';
+import {
+  Color,
+  Mesh,
+  OrthographicCamera,
+  PerspectiveCamera,
+  PlaneGeometry,
+  Scene,
+  ShaderMaterial,
+} from 'three';
+import type { MonumentKind, Theme } from '../types';
+import { isLowPower } from '../lib/motion';
 import { makeRenderer, onResize, pointerTracker, startLoop } from '../lib/webgl';
+import { createMonument } from './monument';
 
 /**
- * サービスページの軽量背景。
- * フルスクリーンの板1枚だけ。3Dモデルは使わない（スマホの表示速度優先）。
+ * サービスページのヒーロー。
+ * 背景はフルスクリーンの板1枚、その上に小さな立体を並べたモニュメントを1つ。
+ * 3Dモデルは読み込まず、描画は2パスだけ。スマホの表示速度を優先する。
  */
 
 const vertexShader = /* glsl */ `
@@ -16,8 +27,6 @@ const vertexShader = /* glsl */ `
 `;
 
 const fragmentShader = /* glsl */ `
-  precision mediump float;
-
   varying vec2 vUv;
 
   uniform float uTime;
@@ -55,8 +64,15 @@ const fragmentShader = /* glsl */ `
   }
 `;
 
-export function mountLightScene(canvas: HTMLCanvasElement, theme: Theme): () => void {
+export function mountLightScene(
+  canvas: HTMLCanvasElement,
+  theme: Theme,
+  kind?: MonumentKind,
+): () => void {
+  const low = isLowPower();
   const renderer = makeRenderer(canvas);
+  renderer.autoClear = false;
+
   const scene = new Scene();
   const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
@@ -79,11 +95,39 @@ export function mountLightScene(canvas: HTMLCanvasElement, theme: Theme): () => 
   mesh.frustumCulled = false;
   scene.add(mesh);
 
+  // 前面: サービスごとの立体
+  const front = new Scene();
+  const frontCamera = new PerspectiveCamera(42, 1, 0.1, 100);
+  frontCamera.position.set(0, 0, 12.5);
+  const monument = kind ? createMonument(kind, theme, low) : null;
+  if (monument) front.add(monument.mesh);
+
   const pointer = pointerTracker(canvas);
+
+  let scroll = 0;
+  const readScroll = () => {
+    const h = canvas.getBoundingClientRect().height || window.innerHeight;
+    scroll = Math.min(window.scrollY / h, 1);
+  };
+  if (monument) {
+    window.addEventListener('scroll', readScroll, { passive: true });
+    readScroll();
+  }
 
   const stopResize = onResize(canvas, (w, h) => {
     renderer.setSize(w, h, false);
     material.uniforms.uAspect.value = w / h;
+
+    const narrow = w / h < 0.85;
+    frontCamera.aspect = w / h;
+    frontCamera.fov = narrow ? 54 : 42;
+    frontCamera.updateProjectionMatrix();
+
+    if (monument) {
+      // 文字は左に置くので、立体は右へ逃がす
+      monument.mesh.position.x = narrow ? 0.3 : 3.4;
+      monument.mesh.position.y = narrow ? -1.6 : 0;
+    }
   });
 
   canvas.classList.add('is-ready');
@@ -93,13 +137,23 @@ export function mountLightScene(canvas: HTMLCanvasElement, theme: Theme): () => 
     material.uniforms.uTime.value = elapsed;
     (material.uniforms.uMouse.value as number[])[0] = m.x;
     (material.uniforms.uMouse.value as number[])[1] = m.y;
+
+    renderer.clear();
     renderer.render(scene, camera);
+
+    if (monument) {
+      monument.update(elapsed, scroll, m);
+      renderer.clearDepth();
+      renderer.render(front, frontCamera);
+    }
   });
 
   return () => {
     loop.stop();
     stopResize();
     pointer.dispose();
+    window.removeEventListener('scroll', readScroll);
+    monument?.dispose();
     mesh.geometry.dispose();
     material.dispose();
     renderer.dispose();

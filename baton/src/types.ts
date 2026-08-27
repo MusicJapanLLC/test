@@ -26,6 +26,15 @@ export type Theme = {
   text: string;
 };
 
+/**
+ * stack   積み上がる      … 人やスキルが集まって形になる
+ * lattice 組み合わさる    … 部品が噛み合ってシステムになる
+ * cluster 寄り集まる      … 人が集まって輪になる
+ * shield  包む            … 中心を層で守る
+ * funnel  絞り込まれる    … 集めて、つないで、決まる
+ */
+export type MonumentKind = 'stack' | 'lattice' | 'cluster' | 'shield' | 'funnel';
+
 export type Item = { title: string; detail: string };
 
 export type Stat = { label: string; value: string; unit: string; note?: string };
@@ -51,4 +60,9 @@ export type Service = {
   };
   /** true のときだけ 3D をフルに使う（Standment のページ＝そのままデモになる） */
   heavyWebGL?: boolean;
+  /**
+   * ヒーローに置く立体のかたち。サービスの中身を抽象化したもの。
+   * heavyWebGL のページでは使わない（あちらは専用の立体を持つ）。
+   */
+  monument?: MonumentKind;
 };

@@ -39,6 +39,7 @@ export const services: Service[] = [
     description:
       'ITエンジニア・クリエイターに特化した人材支援を行い、フリーランス人材紹介サービス「テクフリ」を運営。必要なスキルを、必要なタイミングで確保できるよう支援しています。',
     theme: { primary: '#1A4FA0', accent: '#4A86D8', bg: '#F7FAFF', text: '#16233A' },
+    monument: 'stack',
     problems: [
       { title: 'IT人材が足りない', detail: '開発・制作リソースが不足している' },
       { title: '採用に時間がかかる', detail: '急ぎの案件に間に合わない' },
@@ -211,6 +212,7 @@ export const services: Service[] = [
     description:
       'エンジニア支援と受託開発の両輪で、企業のIT課題を解決するシステム開発会社。エンジニアリソースの提供から、業務システムの企画・開発、AI活用支援まで対応しています。',
     theme: { primary: '#E8621C', accent: '#F59B4A', bg: '#FFF9F4', text: '#2A1A0F' },
+    monument: 'lattice',
     problems: [
       { title: 'エンジニアが足りない', detail: '開発案件はあるのに社内リソースが不足' },
       { title: '業務がアナログ', detail: '紙・手作業・属人的運用で非効率になっている' },
@@ -294,6 +296,7 @@ export const services: Service[] = [
     description:
       '学生を集めるだけで終わらせず、企業のファンを育てることで新卒採用につなげる採用支援サービス。継続的な接点をつくり、自然応募・紹介・採用へとつなげます。',
     theme: { primary: '#E85A6E', accent: '#F2919F', bg: '#FFF7F8', text: '#3A1620' },
+    monument: 'cluster',
     problems: [
       { title: '学生が集まりにくい', detail: '毎年ゼロから母集団形成が必要' },
       { title: '接点が一過性', detail: '説明会やスカウトで終わりやすい' },
@@ -376,6 +379,7 @@ export const services: Service[] = [
     description:
       '「Webサイトを資産に変える」を掲げ、WordPressサイトを作る・育てる・守るWebの専門企業。引越しから保守、セキュリティ、障害時の復旧まで一括対応します。',
     theme: { primary: '#1B5AAE', accent: '#4E8FD6', bg: '#F6FAFF', text: '#15263D' },
+    monument: 'shield',
     problems: [
       { title: 'サーバー移転が不安', detail: '移行時の事故やSEO影響が心配' },
       { title: '保守管理が後回し', detail: '本業が忙しく更新・点検に手が回らない' },
@@ -456,6 +460,7 @@ export const services: Service[] = [
     description:
       '人材紹介会社の採用決定を最大化する、人材紹介特化型のワンストップCRM/MAツール。求職者・求人・選考進捗の一元管理から、AIマッチング、追客の自動化まで対応します。',
     theme: { primary: '#147F6E', accent: '#34A392', bg: '#F5FBF9', text: '#10322C' },
+    monument: 'funnel',
     problems: [
       { title: '情報が分散', detail: 'スプレッドシート管理が煩雑' },
       { title: '追客が属人化', detail: '担当者次第で対応品質に差が出る' },
