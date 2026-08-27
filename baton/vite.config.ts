@@ -6,6 +6,9 @@ import type { Service } from './src/types';
 
 const root = process.cwd();
 
+/** サブパス配信するときだけ設定する。例: GitHub Pages なら /test/ */
+const base = process.env.VITE_BASE ?? '/';
+
 /** 6サービス + ハブ + プライバシーポリシー = 8エントリ */
 const pages = {
   main: resolve(root, 'index.html'),
@@ -32,7 +35,6 @@ function head(opts: {
   themeColor: string;
   path: string;
   vars: string;
-  noindex?: boolean;
 }) {
   return `
     <title>${esc(opts.title)}</title>
@@ -42,9 +44,8 @@ function head(opts: {
     <meta property="og:site_name" content="${esc(site.nameJa)}" />
     <meta property="og:title" content="${esc(opts.title)}" />
     <meta property="og:description" content="${esc(opts.description)}" />
-    <meta property="og:url" content="${opts.path}" />
+    <meta property="og:url" content="${siteUrl()}${(base + opts.path.replace(/^\//, '')).replace(/\/{2,}/g, '/')}" />
     <meta name="twitter:card" content="summary_large_image" />
-    ${opts.noindex ? '<meta name="robots" content="noindex" />' : ''}
     <style>:root{${opts.vars}}</style>`.trim();
 }
 
@@ -57,7 +58,7 @@ function serviceHero(s: Service) {
 <header class="hero${s.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="hero__inner">
-    <p class="hero__eyebrow"><a class="hero__back" href="/">Baton</a><span aria-hidden="true">/</span><span>${esc(s.company)}</span></p>
+    <p class="hero__eyebrow"><a class="hero__back" href="${base}">Baton</a><span aria-hidden="true">/</span><span>${esc(s.company)}</span></p>
     <h1 class="hero__title">${esc(s.serviceName)}</h1>
     <p class="hero__tagline">${esc(s.tagline)}</p>
     <p class="hero__desc">${esc(s.description)}</p>
@@ -76,6 +77,50 @@ function hubHero() {
   </div>
   <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
 </header>`.trim();
+}
+
+/**
+ * 本番のドメイン。Vercel なら VERCEL_PROJECT_PRODUCTION_URL が入る。
+ * 独自ドメインを当てたら VITE_SITE_URL で上書きする。
+ */
+function siteUrl(): string {
+  const explicit = process.env.VITE_SITE_URL;
+  if (explicit) return explicit.replace(/\/$/, '');
+  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+  return vercel ? `https://${vercel}` : 'http://localhost:4173';
+}
+
+/** robots.txt と sitemap.xml はビルド時に services から作る。手で直す場所を増やさない */
+function batonSeoFiles(): Plugin {
+  return {
+    name: 'baton-seo-files',
+    apply: 'build',
+    generateBundle() {
+      const siteBase = siteUrl();
+      const paths = ['', ...services.map((s) => `${s.slug}/`), 'privacy/'].map(
+        (p) => `${base}${p}`.replace(/\/{2,}/g, '/'),
+      );
+
+      this.emitFile({
+        type: 'asset',
+        fileName: 'robots.txt',
+        source: `User-agent: *\nAllow: /\n\nSitemap: ${siteBase}${base}sitemap.xml\n`.replace(
+          /([^:])\/{2,}/g,
+          '$1/',
+        ),
+      });
+
+      this.emitFile({
+        type: 'asset',
+        fileName: 'sitemap.xml',
+        source:
+          '<?xml version="1.0" encoding="UTF-8"?>\n' +
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+          paths.map((p) => `  <url><loc>${siteBase}${p}</loc></url>`).join('\n') +
+          '\n</urlset>\n',
+      });
+    },
+  };
 }
 
 function batonPages(): Plugin {
@@ -121,7 +166,6 @@ function batonPages(): Plugin {
               themeColor: site.theme.bg,
               path: isPrivacy ? '/privacy/' : '/',
               vars,
-              noindex: isPrivacy,
             }),
           )
           .replace('<!--BATON:HERO-->', isPrivacy ? '' : hubHero());
@@ -131,7 +175,8 @@ function batonPages(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [batonPages()],
+  base,
+  plugins: [batonPages(), batonSeoFiles()],
   build: {
     target: 'es2020',
     cssCodeSplit: true,

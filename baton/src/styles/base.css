@@ -130,7 +130,7 @@ textarea {
 
 .section__note {
   margin-top: 0.85rem;
-  color: color-mix(in srgb, currentColor 60%, transparent);
+  color: color-mix(in srgb, currentColor 74%, transparent);
   max-width: var(--measure);
 }
 

@@ -192,7 +192,7 @@ export function mountStandmentScene(canvas: HTMLCanvasElement, theme: Theme): ()
     },
   });
 
-  const blob = new Mesh(new IcosahedronGeometry(2.35, low ? 4 : 6), blobMaterial);
+  const blob = new Mesh(new IcosahedronGeometry(2.35, low ? 3 : 5), blobMaterial);
   scene.add(blob);
 
   const shellMaterial = blobMaterial.clone();

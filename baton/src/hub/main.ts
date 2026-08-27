@@ -4,7 +4,7 @@ import '../styles/hub.css';
 import { services } from '../data/services';
 import { site } from '../data/site';
 import { initAnalytics, trackServiceClick } from '../lib/analytics';
-import { append, el, externalAttrs, pad2 } from '../lib/dom';
+import { append, el, externalAttrs, pad2, withBase } from '../lib/dom';
 import { renderFooter } from '../lib/footer';
 import { logo } from '../lib/logo';
 import { gsap, initSmoothScroll, isCoarsePointer, prefersReducedMotion, revealOnScroll } from '../lib/motion';
@@ -24,7 +24,7 @@ function card(index: number, id: string): HTMLAnchorElement {
 
   const link = el('a', {
     class: 'hub-card',
-    href: `/${s.slug}/`,
+    href: withBase(`/${s.slug}/`),
     'data-reveal': true,
     'data-service': s.id,
     style: `--card-primary:${s.theme.primary};--card-accent:${s.theme.accent}`,

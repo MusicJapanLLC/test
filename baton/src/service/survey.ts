@@ -4,7 +4,7 @@ import {
   trackSurveyProgress,
   trackSurveyStart,
 } from '../lib/analytics';
-import { append, el } from '../lib/dom';
+import { append, el, withBase } from '../lib/dom';
 import { gsap, prefersReducedMotion } from '../lib/motion';
 import { submitSurvey, type SurveyPayload } from '../lib/submit';
 import type { ProfileField, Service, SurveyQuestion } from '../types';
@@ -449,7 +449,7 @@ function doneStep(service: Service): HTMLElement {
           ]),
         ])
       : null,
-    el('a', { class: 'done__back', href: '/', text: 'Baton へ戻る' }),
+    el('a', { class: 'done__back', href: withBase('/'), text: 'Baton へ戻る' }),
   ]);
 
   return step;

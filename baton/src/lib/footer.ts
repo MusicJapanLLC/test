@@ -1,5 +1,5 @@
 import { site } from '../data/site';
-import { el, externalAttrs, frag } from './dom';
+import { el, externalAttrs, frag, withBase } from './dom';
 import { logo } from './logo';
 
 /** 全ページ共通のフッター。制作クレジット・プライバシーポリシー・事業者情報 */
@@ -12,8 +12,8 @@ export function renderFooter(mount: HTMLElement, opts: { backToHub?: boolean } =
       el('p', { text: site.producer.credit }),
       el('div', { class: 'footer__links' }, [
         el('a', { href: site.producer.works, ...externalAttrs, text: 'Standment 制作実績' }),
-        opts.backToHub ? el('a', { href: '/', text: 'Baton トップへ' }) : null,
-        el('a', { href: site.privacyPath, text: 'プライバシーポリシー' }),
+        opts.backToHub ? el('a', { href: withBase('/'), text: 'Baton トップへ' }) : null,
+        el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
       ]),
     ]),
   ]);

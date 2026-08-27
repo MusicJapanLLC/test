@@ -1,0 +1,71 @@
+name: Deploy Baton to GitHub Pages
+
+on:
+  push:
+    branches: [claude/baton-site-setup-srybks]
+    paths:
+      - 'baton/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: baton/package-lock.json
+
+      # enablement: true で Pages 自体も有効化する（設定画面を触らずに済む）
+      - name: Configure Pages
+        id: pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      # base_path はプロジェクトサイトなら /test、ユーザーサイトなら / になる。
+      # 末尾スラッシュを足したうえで // を潰す
+      - name: Resolve base path
+        run: |
+          RAW='${{ steps.pages.outputs.base_path }}/'
+          echo "VITE_BASE=$(echo "$RAW" | sed 's://*:/:g')" >> "$GITHUB_ENV"
+
+      - name: Install
+        working-directory: baton
+        run: npm ci
+
+      - name: Build
+        working-directory: baton
+        env:
+          VITE_SITE_URL: ${{ steps.pages.outputs.origin }}
+          VITE_GAS_ENDPOINT: ${{ secrets.VITE_GAS_ENDPOINT }}
+          VITE_GA4_ID: ${{ secrets.VITE_GA4_ID }}
+          VITE_META_PIXEL_ID: ${{ secrets.VITE_META_PIXEL_ID }}
+        run: npm run build
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: baton/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

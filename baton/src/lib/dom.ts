@@ -39,3 +39,12 @@ export function append(parent: Node, children: (Node | string | null | undefined
     parent.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
   });
 }
+
+/**
+ * サイト内リンクは必ずこれを通す。
+ * ルート直下（Vercel）でもサブパス配信（GitHub Pages の /test/）でも同じコードで動く。
+ */
+export function withBase(path: string): string {
+  const base = import.meta.env.BASE_URL || '/';
+  return `${base.replace(/\/$/, '')}/${path.replace(/^\//, '')}`.replace(/\/{2,}/g, '/');
+}
