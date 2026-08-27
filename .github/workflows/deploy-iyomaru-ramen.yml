@@ -2,7 +2,7 @@ name: Deploy Iyomaru Ramen site
 
 on:
   push:
-    branches: [main]
+    branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - "iyomaru-ramen/**"
       - ".github/workflows/deploy-iyomaru-ramen.yml"

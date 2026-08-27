@@ -48,7 +48,7 @@ npm run dev     # ビルド後 http://localhost:5173 でプレビュー
 `dist/` の中身をそのままアップロードするだけで公開できます。
 
 - **GitHub Pages**: 本リポジトリに `.github/workflows/deploy-iyomaru-ramen.yml` を同梱済み。
-  `main` ブランチへのpushで自動ビルド・自動デプロイされます（初回のみ下記の手動設定が必要）。
+  デフォルトブランチ（`claude/employee-onboarding-setup-udm86`）へのpushで自動ビルド・自動デプロイされます（初回のみ下記の手動設定が必要）。
 - **Netlify / Vercel**: Build command `node build.mjs` / Publish directory `dist`（Base directory `iyomaru-ramen`）を指定するだけ。
 - **レンタルサーバー等**: `npm run build` 実行後、`dist/` の中身をFTP等でアップロード。
 
@@ -59,7 +59,7 @@ GitHub Pagesの有効化はリポジトリ管理者の操作が必要で、Claud
 
 1. GitHubで対象リポジトリの **Settings → Pages** を開く
 2. "Build and deployment" の **Source** を **GitHub Actions** に変更
-3. `main` ブランチにこの変更がマージされると、自動でビルド・公開されます
+3. デフォルトブランチにこの変更がマージされると、自動でビルド・公開されます
 4. 公開URLは `https://musicjapanllc.github.io/test/` になります
    （これは本番用の正式ドメインではなく、動作確認用のURLです。実際の
    独自ドメインが決まったら `config/site.json` の `siteUrl` と `basePath`
