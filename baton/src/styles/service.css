@@ -1,0 +1,811 @@
+/* ── サービスページ共通テンプレート ─────────────────────────── */
+/* 色は :root の --primary / --accent / --bg / --text をビルド時に注入 */
+
+body.service {
+  background: var(--bg);
+  color: var(--text);
+}
+
+.hero {
+  position: relative;
+  min-height: min(92svh, 780px);
+  display: grid;
+  align-items: center;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(110% 80% at 82% 12%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+    radial-gradient(90% 70% at 8% 92%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%),
+    linear-gradient(170deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 82%, var(--primary)) 100%);
+}
+
+.hero__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.1s ease;
+}
+
+.hero__canvas.is-ready {
+  opacity: 1;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    98deg,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--bg) 90%, transparent) 32%,
+    color-mix(in srgb, var(--bg) 45%, transparent) 52%,
+    transparent 72%
+  );
+}
+
+@media (max-width: 720px) {
+  .hero::after {
+    background: linear-gradient(
+      180deg,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 82%, transparent) 46%,
+      transparent 78%
+    );
+  }
+}
+
+.hero__inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 1160px);
+  margin-inline: auto;
+  padding: clamp(6rem, 4rem + 8vw, 9rem) var(--pad-x) clamp(4rem, 3rem + 4vw, 6rem);
+}
+
+.hero__eyebrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+  margin-bottom: clamp(1.25rem, 1rem + 1vw, 2rem);
+}
+
+.hero__back {
+  font-family: var(--font-display);
+  text-decoration: none;
+  letter-spacing: 0.18em;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.3s ease;
+}
+
+.hero__back:hover {
+  border-color: currentColor;
+}
+
+.hero__title {
+  font-size: var(--step-4);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  color: var(--primary);
+}
+
+.hero__tagline {
+  margin-top: clamp(0.9rem, 0.7rem + 1vw, 1.5rem);
+  font-size: var(--step-2);
+  font-weight: 500;
+  line-height: 1.6;
+  max-width: 22ch;
+}
+
+.hero__desc {
+  margin-top: clamp(1.1rem, 0.9rem + 1vw, 1.75rem);
+  max-width: 52ch;
+  color: color-mix(in srgb, var(--text) 76%, transparent);
+}
+
+.hero__scroll {
+  position: absolute;
+  bottom: 2rem;
+  left: var(--pad-x);
+  width: 1px;
+  height: 48px;
+  background: color-mix(in srgb, var(--text) 18%, transparent);
+  overflow: hidden;
+}
+
+.hero__scroll span {
+  position: absolute;
+  inset-inline: 0;
+  top: -48px;
+  height: 48px;
+  background: var(--primary);
+  animation: svc-scroll 2.4s cubic-bezier(0.7, 0, 0.3, 1) infinite;
+}
+
+@keyframes svc-scroll {
+  0% {
+    transform: translateY(0);
+  }
+  60%,
+  100% {
+    transform: translateY(96px);
+  }
+}
+
+/* カードグリッド（problems / features / strengths） */
+
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 620px) {
+  .grid--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 960px) {
+  .grid--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.card {
+  position: relative;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  border-radius: var(--radius);
+  padding: clamp(1.4rem, 1.1rem + 1.2vw, 2.1rem);
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.5s ease,
+    border-color 0.4s ease;
+}
+
+.card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--primary) 32%, transparent);
+  box-shadow: 0 18px 40px -28px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+
+.card__num {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: color-mix(in srgb, var(--primary) 88%, transparent);
+}
+
+.card__title {
+  margin-top: 0.6rem;
+  font-size: var(--step-1);
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.card__detail {
+  margin-top: 0.5rem;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+  line-height: 1.85;
+}
+
+.section--problems {
+  background: color-mix(in srgb, var(--primary) 4%, var(--bg));
+}
+
+/* 数字 */
+
+.stats {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 760px) {
+  .stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.stat {
+  border-top: 2px solid var(--primary);
+  padding-top: clamp(1.1rem, 0.9rem + 1vw, 1.6rem);
+}
+
+.stat__label {
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--text) 76%, transparent);
+}
+
+.stat__value {
+  margin-top: 0.55rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  color: var(--primary);
+}
+
+.stat__num {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.3rem);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: 0.005em;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__num--text {
+  font-family: var(--font-sans);
+  font-size: clamp(1.5rem, 1.1rem + 1.5vw, 2.2rem);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.stat__unit {
+  font-size: var(--step-1);
+  font-weight: 500;
+}
+
+.stat__note {
+  margin-top: 0.7rem;
+  font-size: 0.75rem;
+  line-height: 1.7;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+}
+
+/* 公式サイト */
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.4rem;
+  border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: 999px;
+  text-decoration: none;
+  background: #fff;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease,
+    border-color 0.35s ease;
+}
+
+.link-chip:hover {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.link-chip svg {
+  flex: none;
+}
+
+/* ── アンケート（カード送り式） ─────────────────────────────── */
+/* フォーム然とさせない。ページの他の面と同じ、静かな組みにする */
+
+.section--survey {
+  background: color-mix(in srgb, var(--primary) 5%, var(--bg));
+  scroll-margin-top: 0;
+}
+
+.survey {
+  width: min(100%, 680px);
+}
+
+.survey__progress {
+  position: relative;
+  height: 1px;
+  background: color-mix(in srgb, var(--text) 12%, transparent);
+  overflow: hidden;
+  margin-bottom: clamp(1.75rem, 1.4rem + 1.6vw, 2.75rem);
+}
+
+.survey__bar {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: var(--primary);
+  transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.survey__stage {
+  position: relative;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--primary) 11%, transparent);
+  border-radius: 6px;
+  padding: clamp(1.75rem, 1.2rem + 2.4vw, 3.25rem) clamp(1.5rem, 1rem + 2.4vw, 3.25rem);
+}
+
+.survey__step {
+  animation: survey-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes survey-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.survey__step.is-leaving {
+  animation: survey-out 0.28s ease both;
+}
+
+@keyframes survey-out {
+  to {
+    opacity: 0;
+    transform: translate3d(0, -12px, 0);
+  }
+}
+
+.survey__count {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.survey__question {
+  margin-top: 0.9rem;
+  font-size: clamp(1.25rem, 1rem + 1.1vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.015em;
+}
+
+.survey__hint {
+  margin-top: 0.7rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+/* 選択肢: 箱を並べず、罫線で区切った一覧にする */
+
+.survey__options {
+  margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+.opt {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+  padding: 1.05rem 0.25rem;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  background: none;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--text) 88%, transparent);
+  transition:
+    color 0.25s ease,
+    padding-left 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.opt:hover {
+  color: var(--primary);
+  padding-left: 0.7rem;
+}
+
+.opt__mark {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  border: 1px solid color-mix(in srgb, var(--text) 30%, transparent);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.opt--multi .opt__mark {
+  border-radius: 3px;
+}
+
+.opt__mark::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: inherit;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.opt:hover .opt__mark {
+  border-color: var(--primary);
+}
+
+.opt.is-selected {
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.opt.is-selected .opt__mark {
+  border-color: var(--primary);
+}
+
+.opt.is-selected .opt__mark::after {
+  background: var(--primary);
+}
+
+/* 入力欄 */
+
+.survey__fields {
+  margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  display: grid;
+  gap: 1.25rem;
+}
+
+.field label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+  margin-bottom: 0.5rem;
+}
+
+.field__req {
+  margin-left: 0.5rem;
+  font-size: 0.66rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+}
+
+.field__opt {
+  margin-left: 0.5rem;
+  font-size: 0.66rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 0.72rem 0.85rem;
+  border: 0;
+  border-bottom: 1.5px solid color-mix(in srgb, var(--text) 24%, transparent);
+  border-radius: 4px 4px 0 0;
+  background: color-mix(in srgb, var(--primary) 4%, #fff);
+  font-size: 1rem;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.field input:hover,
+.field select:hover,
+.field textarea:hover {
+  background: color-mix(in srgb, var(--primary) 7%, #fff);
+}
+
+.field select {
+  appearance: none;
+  padding-right: 1.6rem;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+    linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% + 1px),
+    calc(100% - 11px) calc(50% + 1px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+}
+
+.field textarea {
+  min-height: 96px;
+  resize: vertical;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: color-mix(in srgb, var(--text) 42%, transparent);
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.field.is-invalid input,
+.field.is-invalid select,
+.field.is-invalid textarea {
+  border-color: #c0392b;
+}
+
+.field__error {
+  margin-top: 0.45rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+  color: #b83227;
+  display: none;
+}
+
+.field.is-invalid .field__error {
+  display: block;
+}
+
+/* 送り */
+
+.survey__nav {
+  margin-top: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.85rem 2.1rem;
+  border-radius: 999px;
+  font-size: 0.92rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  transition:
+    background 0.3s ease,
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.btn--primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn--primary:hover {
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--primary) 86%, #000);
+}
+
+.btn--primary[disabled] {
+  opacity: 0.35;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn--ghost {
+  padding-inline: 0.25rem;
+  font-size: 0.84rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+.btn--ghost:hover {
+  color: var(--primary);
+}
+
+.btn--ghost[hidden] {
+  display: none;
+}
+
+.survey__spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.survey__error {
+  margin-top: 1.25rem;
+  padding: 0.85rem 1rem;
+  border-left: 2px solid #c0392b;
+  background: color-mix(in srgb, #c0392b 4%, #fff);
+  color: #8e2b22;
+  font-size: 0.84rem;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+}
+
+/* 完了画面 */
+
+.done {
+  text-align: center;
+  padding-block: clamp(1rem, 0.6rem + 2vw, 2rem);
+}
+
+.done__mark {
+  width: 46px;
+  height: 46px;
+  margin: 0 auto clamp(1.2rem, 1rem + 1vw, 1.75rem);
+  border-radius: 50%;
+  border: 1.5px solid var(--primary);
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+}
+
+.done__title {
+  font-size: var(--step-2);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.done__stat {
+  margin-top: clamp(1.75rem, 1.4rem + 1.6vw, 2.75rem);
+  padding-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  border-top: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+}
+
+.done__stat .stat {
+  border: 0;
+  padding: 0;
+  display: grid;
+  justify-items: center;
+}
+
+.done__stat .stat__value {
+  justify-content: center;
+}
+
+.done__back {
+  display: inline-block;
+  margin-top: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  text-decoration: none;
+  font-family: var(--font-display);
+  letter-spacing: 0.16em;
+  font-size: 0.8rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 20%, transparent);
+  padding-bottom: 3px;
+  transition: border-color 0.3s ease;
+}
+
+.done__back:hover {
+  border-color: var(--primary);
+}
+
+/* ── プライバシーポリシー ───────────────────────────────────── */
+
+body.doc {
+  background: #fff;
+  color: var(--hub-text);
+}
+
+.doc__header {
+  padding-block: clamp(4rem, 3rem + 5vw, 7rem) clamp(2rem, 1.5rem + 2vw, 3rem);
+  border-bottom: 1px solid var(--hub-line);
+}
+
+.doc__title {
+  font-size: var(--step-3);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.doc__meta {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: var(--hub-muted);
+}
+
+.doc__body {
+  padding-block: clamp(2.5rem, 2rem + 3vw, 4.5rem);
+  max-width: var(--measure);
+}
+
+.doc__body section + section {
+  margin-top: clamp(2rem, 1.5rem + 2vw, 3rem);
+}
+
+.doc__body h2 {
+  font-size: var(--step-1);
+  font-weight: 600;
+  line-height: 1.6;
+  margin-bottom: 0.8rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--hub-accent);
+}
+
+.doc__body p + p,
+.doc__body ul + p,
+.doc__body p + ul {
+  margin-top: 0.9rem;
+}
+
+.doc__body ul {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.doc__body li {
+  padding-left: 1.1rem;
+  position: relative;
+}
+
+.doc__body li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.85em;
+  width: 5px;
+  height: 1px;
+  background: var(--hub-accent);
+}
+
+.doc__body dl {
+  display: grid;
+  gap: 0.5rem 1.5rem;
+  margin-top: 0.9rem;
+}
+
+@media (min-width: 620px) {
+  .doc__body dl {
+    grid-template-columns: 8rem 1fr;
+  }
+}
+
+.doc__body dt {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--hub-muted);
+}
+
+.doc__body a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--hub-line);
+}
+
+.doc__body a:hover {
+  text-decoration-color: var(--hub-accent);
+}
