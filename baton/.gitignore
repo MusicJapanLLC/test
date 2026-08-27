@@ -10,3 +10,4 @@ dist/
 .idea/
 *.log
 npm-debug.log*
+dist-preview/

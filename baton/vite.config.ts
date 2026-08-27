@@ -2,6 +2,7 @@ import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
 import { services } from './src/data/services';
 import { site } from './src/data/site';
+import { hubHeroHtml, serviceHeroHtml } from './src/lib/hero';
 import type { Service } from './src/types';
 
 const root = process.cwd();
@@ -47,36 +48,6 @@ function head(opts: {
     <meta property="og:url" content="${siteUrl()}${(base + opts.path.replace(/^\//, '')).replace(/\/{2,}/g, '/')}" />
     <meta name="twitter:card" content="summary_large_image" />
     <style>:root{${opts.vars}}</style>`.trim();
-}
-
-/**
- * ヒーローだけはビルド時に静的HTMLとして焼き込む。
- * LCP要素がJS待ちにならないようにするため。中身の出どころは services.ts のまま。
- */
-function serviceHero(s: Service) {
-  return `
-<header class="hero${s.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
-  <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
-  <div class="hero__inner">
-    <p class="hero__eyebrow"><a class="hero__back" href="${base}">Baton</a><span aria-hidden="true">/</span><span>${esc(s.company)}</span></p>
-    <h1 class="hero__title">${esc(s.serviceName)}</h1>
-    <p class="hero__tagline">${esc(s.tagline)}</p>
-    <p class="hero__desc">${esc(s.description)}</p>
-  </div>
-  <div class="hero__scroll" aria-hidden="true"><span></span></div>
-</header>`.trim();
-}
-
-function hubHero() {
-  return `
-<header class="hub-hero" data-hero>
-  <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
-  <div class="hub-hero__inner">
-    <h1 class="hub-hero__title">${esc(site.name)}</h1>
-    <p class="hub-hero__tagline">${esc(site.tagline)}</p>
-  </div>
-  <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
-</header>`.trim();
 }
 
 /**
@@ -148,7 +119,7 @@ function batonPages(): Plugin {
                 vars,
               }),
             )
-            .replace('<!--BATON:HERO-->', serviceHero(s));
+            .replace('<!--BATON:HERO-->', serviceHeroHtml(s, base));
         }
 
         const isPrivacy = ctx.filename.replace(/\\/g, '/').includes('/privacy/');
@@ -168,7 +139,7 @@ function batonPages(): Plugin {
               vars,
             }),
           )
-          .replace('<!--BATON:HERO-->', isPrivacy ? '' : hubHero());
+          .replace('<!--BATON:HERO-->', isPrivacy ? '' : hubHeroHtml());
       },
     },
   };

@@ -1,7 +1,7 @@
 /* ── サービスページ共通テンプレート ─────────────────────────── */
 /* 色は :root の --primary / --accent / --bg / --text をビルド時に注入 */
 
-body {
+body.service {
   background: var(--bg);
   color: var(--text);
 }
