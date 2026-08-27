@@ -20,9 +20,10 @@ const PROFILE_WITH_CAPITAL: ProfileField[] = [
   {
     id: 'capital',
     label: '資本金',
-    type: 'select',
+    type: 'number',
     required: true,
-    options: ['1,000万円未満', '1,000万〜5,000万円', '5,000万〜1億円', '1億円以上', '非公開'],
+    unit: '万円',
+    placeholder: '1000',
   },
 ];
 
