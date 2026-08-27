@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "htmlLang": "en",
+    "dir": "ltr",
+    "ogLocale": "en_US",
+    "title": "Teuchi Ramen Iyomaru Suisan | Handmade Ramen in Furano, Hokkaido",
+    "description": "A fisherman-run ramen shop in Furano, Hokkaido, 2-3 min walk from JR Furano Station. Handmade noodles from Furano wheat, paired with seafood fresh off the boat.",
+    "ogTitle": "Teuchi Ramen Iyomaru Suisan | Handmade Ramen in Furano",
+    "ogDescription": "Handmade noodles from Furano wheat, and seafood so fresh it comes straight from the owner's own boat."
+  },
+  "a11y": {
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "openLightbox": "View larger image",
+    "closeLightbox": "Close",
+    "prevImage": "Previous photo",
+    "nextImage": "Next photo",
+    "langSwitcherLabel": "Select language"
+  },
+  "nav": {
+    "menu": "Menu",
+    "concept": "Our Craft",
+    "hours": "Hours & Access",
+    "gallery": "Gallery",
+    "news": "News",
+    "call": "Call"
+  },
+  "langSwitcher": { "ja": "日本語", "en": "English", "zh": "简体中文", "ko": "한국어" },
+  "hero": {
+    "eyebrow": "Furano, Hokkaido",
+    "titleLines": ["Teuchi Ramen", "Iyomaru Suisan"],
+    "tagline": "Handmade Ramen, Straight from Furano's Fishing Boats.",
+    "ctaMenu": "View the Menu",
+    "ctaHours": "Hours & Access",
+    "scrollHint": "SCROLL",
+    "ratingBadge": "4.4 on Google (328 reviews)",
+    "ratingNote": "Ratings change over time — check Google Maps for the latest."
+  },
+  "concept": {
+    "eyebrow": "Our Craft",
+    "title": "What Makes Us, Us",
+    "items": [
+      {
+        "icon": "wheat",
+        "title": "Handmade Noodles",
+        "text": "Made fresh in-house every day using Haruyutaka wheat and eggs from Furano. Chewy, springy, and full of character."
+      },
+      {
+        "icon": "field",
+        "title": "Furano-Grown Ingredients",
+        "text": "From the wheat to the eggs, we lean on what Furano's soil does best — real Hokkaido flavor, bowl after bowl."
+      },
+      {
+        "icon": "fish",
+        "title": "Straight From Our Own Boats",
+        "text": "The owner is an actual fisherman, so the seafood arrives fresher than most. Shrimp, octopus, crab — piled on generously, no middleman required."
+      }
+    ]
+  },
+  "menu": {
+    "eyebrow": "Menu",
+    "title": "Signature Bowls",
+    "priceNote": "Prices shown are placeholders pending final confirmation — please ask in-store or by phone for current pricing.",
+    "items": [
+      {
+        "tag": "Signature",
+        "name": "Crab Miso Ramen",
+        "desc": "A rich miso broth built on a slow-simmered crab stock from hairy crab and king crab. The sea, concentrated in one bowl.",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "Signature",
+        "name": "Backfat Miso Ramen",
+        "desc": "A hearty, rich miso ramen finished with savory pork backfat — a perfect match for our handmade Furano-wheat noodles.",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "House Specialty",
+        "name": "Iyomaru SPECIAL",
+        "desc": "Three kinds of Hidaka seafood, piled on generously. This is what a fisherman-run ramen shop can do.",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "Side",
+        "name": "Octopus Rice",
+        "desc": "Rice slow-cooked with octopus, soaking up all that flavor. The perfect companion to your ramen.",
+        "price": "¥○○○"
+      }
+    ]
+  },
+  "hours": {
+    "eyebrow": "Hours & Access",
+    "title": "Hours & Access",
+    "hoursLabel": "Hours",
+    "days": [
+      { "label": "Mon", "hours": "11:00–21:00", "closed": false },
+      { "label": "Tue", "hours": "11:00–21:00", "closed": false },
+      { "label": "Wed", "hours": "11:00–21:00", "closed": false },
+      { "label": "Thu", "hours": "11:00–21:00", "closed": false },
+      { "label": "Fri", "hours": "Closed", "closed": true },
+      { "label": "Sat", "hours": "11:00–21:30", "closed": false },
+      { "label": "Sun", "hours": "11:00–21:30", "closed": false }
+    ],
+    "closedNote": "Closed on Fridays",
+    "varyNote": "Hours may change seasonally — please call ahead to confirm before visiting.",
+    "addressLabel": "Address",
+    "address": "11-5 Hinodemachi, Furano, Hokkaido 076-0025, Japan",
+    "accessLabel": "Access",
+    "access": "2–3 min walk from JR Furano Station (across from Asahikawa Shinkin Bank)",
+    "parkingLabel": "Parking",
+    "parking": "Free parking available (approx. 5 spaces, behind \"Teppanyaki Masaya\" nearby)",
+    "seatsLabel": "Seating",
+    "seats": "14 seats total (4 counter seats + tables) — private bookings available for up to 20 guests",
+    "featuresLabel": "Amenities",
+    "features": ["Non-smoking throughout", "Free Wi-Fi", "Power outlets available", "A calm, relaxed dining space"],
+    "paymentLabel": "Payment",
+    "payments": ["Credit cards", "IC / e-money cards", "PayPay, Alipay, WeChat Pay & other QR payments"],
+    "mapCaption": "Open in Maps",
+    "callCta": "Call now"
+  },
+  "gallery": {
+    "eyebrow": "Gallery",
+    "title": "Inside the Shop",
+    "items": [
+      { "caption": "A quiet spot at the counter" },
+      { "caption": "Handmade noodles from Furano wheat" },
+      { "caption": "Our signature broth" },
+      { "caption": "Seafood as fresh as it gets — fisherman-run" },
+      { "caption": "Table seating inside" },
+      { "caption": "Steps from JR Furano Station" }
+    ]
+  },
+  "news": {
+    "eyebrow": "News",
+    "title": "News",
+    "items": [
+      { "date": "2024.06.30", "text": "We relocated from Yamabe to our current location in Hinodemachi, Furano." },
+      { "date": "2026.08.27", "text": "Our official website has been renewed." }
+    ]
+  },
+  "footer": {
+    "instagramLabel": "Instagram",
+    "phoneLabel": "Phone",
+    "addressLabel": "Address",
+    "note": "Fresh off the boat and into the bowl — that's about as short as our supply chain gets.",
+    "rightsText": "© 2026 Teuchi Ramen Iyomaru Suisan",
+    "disclaimer": "Details are subject to change. Please contact us directly for the latest information."
+  },
+  "ui": { "showPaymentBadge": false, "paymentBadgeText": "" }
+}

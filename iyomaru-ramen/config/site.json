@@ -1,0 +1,21 @@
+{
+  "storeName": {
+    "ja": "てうちラーメン いよ丸水産",
+    "en": "Teuchi Ramen Iyomaru Suisan",
+    "zh": "手打拉面 伊予丸水产",
+    "ko": "테우치 라멘 이요마루 스이산"
+  },
+  "defaultLocale": "ja",
+  "locales": ["ja", "en", "zh", "ko"],
+  "siteUrl": "https://iyomaru-ramen.example.com",
+  "basePath": "/",
+  "phoneDisplay": "080-8913-6095",
+  "phoneHref": "+818089136095",
+  "instagramUrl": "https://www.instagram.com/teuchiiyomaru/",
+  "instagramHandle": "@teuchiiyomaru",
+  "addressJa": "〒076-0025 北海道富良野市日の出町11-5",
+  "mapsQuery": "てうちラーメン いよ丸水産 北海道富良野市日の出町11-5",
+  "priceRange": "¥¥",
+  "latitude": 43.3417,
+  "longitude": 142.3823
+}
