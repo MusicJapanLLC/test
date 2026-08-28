@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.vercel/
+.env
+.env.local
+.env.*.local
+*.local
+.DS_Store
+.vscode/
+.idea/
+*.log
+npm-debug.log*
+dist-preview/

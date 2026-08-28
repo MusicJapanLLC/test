@@ -1,0 +1,286 @@
+/* ── Baton 共通トークン & リセット ───────────────────────────── */
+
+:root {
+  --hub-bg: #ffffff;
+  --hub-text: #1a1a1a;
+  --hub-accent: #c8102e;
+  --hub-muted: #6b6b6b;
+  --hub-line: rgba(26, 26, 26, 0.12);
+
+  --font-sans: 'Zen Kaku Gothic New', system-ui, -apple-system, 'Hiragino Kaku Gothic ProN',
+    'Hiragino Sans', 'Yu Gothic Medium', 'Yu Gothic', 'Noto Sans JP', Meiryo, sans-serif;
+  --font-display: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+
+  --step-0: clamp(0.94rem, 0.9rem + 0.2vw, 1rem);
+  --step-1: clamp(1.05rem, 0.98rem + 0.36vw, 1.25rem);
+  --step-2: clamp(1.3rem, 1.1rem + 0.9vw, 1.85rem);
+  --step-3: clamp(1.7rem, 1.3rem + 1.9vw, 2.8rem);
+  --step-4: clamp(2.4rem, 1.5rem + 4.4vw, 5rem);
+
+  --gap: clamp(1rem, 0.7rem + 1.4vw, 1.75rem);
+  --pad-x: clamp(1.25rem, 0.6rem + 3.2vw, 3.5rem);
+  --section-y: clamp(4rem, 2.4rem + 7vw, 9rem);
+  --measure: 68ch;
+  --radius: 14px;
+
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg, var(--hub-bg));
+  color: var(--text, var(--hub-text));
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+p,
+figure,
+ul,
+ol,
+dl,
+dd {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+img,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.wrap {
+  width: min(100%, 1160px);
+  margin-inline: auto;
+  padding-inline: var(--pad-x);
+}
+
+.section {
+  padding-block: var(--section-y);
+}
+
+.section__head {
+  margin-bottom: clamp(2rem, 1.2rem + 3vw, 3.75rem);
+}
+
+.section__label {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--primary, var(--hub-accent));
+  margin-bottom: 0.9rem;
+}
+
+.section__title {
+  font-size: var(--step-3);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  font-weight: 600;
+}
+
+.section__note {
+  margin-top: 0.85rem;
+  color: color-mix(in srgb, currentColor 74%, transparent);
+  max-width: var(--measure);
+}
+
+/* 汎用: スクロールで現れる要素の初期状態（JS が .is-in を付ける） */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  clip-path: inset(50%);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* ── フッター（全ページ共通） ────────────────────────────────── */
+
+.footer {
+  background: #ffffff;
+  color: var(--hub-text);
+  border-top: 1px solid var(--hub-line);
+  padding-block: clamp(2.75rem, 2rem + 3vw, 4.5rem);
+  font-size: 0.86rem;
+  line-height: 2;
+}
+
+.footer__grid {
+  display: grid;
+  gap: clamp(1.75rem, 1rem + 3vw, 3.5rem);
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 720px) {
+  .footer__grid {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: start;
+  }
+}
+
+.footer__credit {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.footer__logo {
+  width: auto;
+  max-width: 264px;
+  max-height: 80px;
+  margin-left: -0.6rem;
+  object-fit: contain;
+  object-position: left center;
+  flex: none;
+  mix-blend-mode: multiply;
+}
+
+/* 実ロゴが無いときの文字組み */
+.wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  white-space: nowrap;
+}
+
+.wordmark__name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+}
+
+.wordmark__sub {
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  color: var(--hub-muted);
+}
+
+.wordmark--standment .wordmark__name {
+  color: #1b3a6b;
+}
+
+.footer__credit p {
+  line-height: 1.6;
+}
+
+.footer__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.5rem;
+  margin-top: 1.25rem;
+}
+
+.footer__links a {
+  text-decoration: none;
+  border-bottom: 1px solid var(--hub-line);
+  padding-bottom: 2px;
+  transition: border-color 0.3s ease;
+}
+
+.footer__links a:hover {
+  border-color: currentColor;
+}
+
+.footer__org {
+  color: var(--hub-muted);
+}
+
+.footer__org strong {
+  display: block;
+  color: var(--hub-text);
+  font-weight: 600;
+}
+
+.footer__bottom {
+  margin-top: clamp(2rem, 1.4rem + 2vw, 3rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--hub-line);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  justify-content: space-between;
+  color: var(--hub-muted);
+  font-size: 0.78rem;
+}
+
+/* ── 動きを減らす設定への対応 ─────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
