@@ -1,0 +1,43 @@
+# Tests
+
+## Test 1 - 未ログイン時は本番データを表示しない [sanity]
+Viewport: mobile
+Covers: authentication gate, anonymous data protection, responsive login
+Description: 未認証ユーザーに案件や営業イベントを見せず、ログイン画面だけを表示する。
+Steps:
+1. 未ログイン状態でアプリを開く
+2. 画面の主要コンテンツを確認する
+3. 案件一覧が表示されていないことを確認する
+Expected: 「Googleでログインして開始」が表示され、案件・営業イベントの実データは表示されない。
+
+## Test 2 - ログイン後に案件を作成して保存できる
+Viewport: desktop
+Covers: AppDeploy auth, POST /api/deals, database create, GET /api/dashboard, persisted deal UI
+Description: 認証ユーザーが実案件を作成し、保存後に案件一覧へ反映できることを確認する。
+Steps:
+1. Googleでログインする
+2. 「案件追加」を開き、会社名「QA株式会社」、見込金額「120000」、次アクション「提案書送付」を入力して保存する
+3. 案件一覧を確認する
+Expected: 「QA株式会社」と「￥120,000」が案件一覧に表示される。
+
+## Test 3 - 案件ステージを更新できる
+Viewport: desktop
+Covers: PUT /api/deals/:id, database update, pipeline calculation
+Description: 保存済み案件のステージ変更が永続化され、受注集計へ反映されることを確認する。
+Setup:
+1. Googleでログインし、「Stage QA株式会社」を金額「50000」、ステージ「新規」で作成する
+Steps:
+1. 「Stage QA株式会社」のステージを「受注」に変更する
+2. 画面を更新する
+3. 受注カードを確認する
+Expected: 案件のステージが「受注」のまま保持され、受注金額に￥50,000以上が反映される。
+
+## Test 4 - 連携キー発行と内部受信テストが機能する
+Viewport: desktop
+Covers: POST /api/integration-token, hashed integration token storage, POST /api/events/test, event persistence
+Description: 認証ユーザーが外部連携キーを発行でき、内部のイベント保存経路を確認できることを検証する。
+Steps:
+1. Googleでログインする
+2. 「連携キーを発行」を押し、Endpoint・X-User-Id・X-Ingest-Tokenが表示されることを確認する
+3. 「受信テスト」を押す
+Expected: 営業イベント欄に「受信テスト成功」が表示される。
