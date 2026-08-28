@@ -20,9 +20,10 @@ const PROFILE_WITH_CAPITAL: ProfileField[] = [
   {
     id: 'capital',
     label: '資本金',
-    type: 'select',
+    type: 'number',
     required: true,
-    options: ['1,000万円未満', '1,000万〜5,000万円', '5,000万〜1億円', '1億円以上', '非公開'],
+    unit: '万円',
+    placeholder: '1000',
   },
 ];
 
@@ -193,7 +194,14 @@ export const services: Service[] = [
           id: 'q4',
           label: '想定している予算はどのくらいですか',
           type: 'single',
-          options: ['〜100万円', '100〜300万円', '300〜500万円', '500万円〜', 'これから検討'],
+          options: [
+            '〜10万円',
+            '10〜30万円',
+            '30〜50万円',
+            '50〜100万円',
+            '100万円以上',
+            'これから検討',
+          ],
         },
       ],
       profileFields: PROFILE_WITH_CAPITAL,

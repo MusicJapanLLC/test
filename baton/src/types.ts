@@ -14,9 +14,12 @@ export type SurveyQuestion = {
 export type ProfileField = {
   id: string;
   label: string;
-  type: 'text' | 'email' | 'tel' | 'select';
+  type: 'text' | 'email' | 'tel' | 'select' | 'number';
   required: boolean;
   options?: string[];
+  /** number のとき、入力欄の右に出す単位（例: 万円）。送信値にも付く */
+  unit?: string;
+  placeholder?: string;
 };
 
 export type Theme = {

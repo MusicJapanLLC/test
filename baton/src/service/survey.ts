@@ -223,6 +223,26 @@ export function renderSurvey(mount: HTMLElement, service: Service): void {
       );
       select.value = state.profile[field.id] ?? '';
       control = select;
+    } else if (field.type === 'number') {
+      // 数字だけ入れてもらう。単位は欄の外に固定で見せる
+      const input = el('input', {
+        id: inputId,
+        type: 'text',
+        inputmode: 'numeric',
+        autocomplete: 'off',
+        placeholder: field.placeholder,
+      }) as HTMLInputElement;
+      input.value = (state.profile[field.id] ?? '').replace(/[^\d,]/g, '');
+
+      input.addEventListener('input', () => {
+        // 全角数字と、数字以外の文字は落とす
+        const cleaned = input.value
+          .replace(/[０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+          .replace(/[^\d]/g, '');
+        input.value = cleaned ? Number(cleaned).toLocaleString('en-US') : '';
+      });
+
+      control = input;
     } else {
       const input = el('input', {
         id: inputId,
@@ -243,12 +263,21 @@ export function renderSurvey(mount: HTMLElement, service: Service): void {
 
     const error = el('p', { class: 'field__error' });
 
+    /** 数値欄は単位を付けて送る（シート側の列がそのまま読める形になる） */
+    const readValue = (): string => {
+      const raw = control.value.trim();
+      if (!raw) return '';
+      return field.type === 'number' && field.unit ? `${raw}${field.unit}` : raw;
+    };
+
     const validate = (): boolean => {
-      const value = control.value.trim();
+      const value = readValue();
       state.profile[field.id] = value;
 
       let message = '';
-      if (field.required && !value) message = '入力してください';
+      if (field.required && !control.value.trim()) message = '入力してください';
+      else if (field.type === 'number' && control.value.trim() && !/\d/.test(control.value))
+        message = '数字で入力してください';
       else if (field.type === 'email' && value && !EMAIL_RE.test(value))
         message = 'メールアドレスの形式をご確認ください';
 
@@ -258,15 +287,26 @@ export function renderSurvey(mount: HTMLElement, service: Service): void {
     };
 
     control.addEventListener('input', () => {
-      state.profile[field.id] = control.value.trim();
+      state.profile[field.id] = readValue();
       if (wrap.classList.contains('is-invalid')) validate();
     });
     control.addEventListener('change', () => {
-      state.profile[field.id] = control.value.trim();
+      state.profile[field.id] = readValue();
       if (wrap.classList.contains('is-invalid')) validate();
     });
 
-    wrap.append(label, control, error);
+    if (field.type === 'number' && field.unit) {
+      wrap.append(
+        label,
+        el('span', { class: 'field__with-unit' }, [
+          control,
+          el('span', { class: 'field__unit', text: field.unit }),
+        ]),
+        error,
+      );
+    } else {
+      wrap.append(label, control, error);
+    }
     return { wrap, validate };
   }
 

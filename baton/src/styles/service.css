@@ -543,6 +543,27 @@ body.service {
   resize: vertical;
 }
 
+.field__with-unit {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+
+.field__with-unit input {
+  flex: 1;
+  min-width: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.field__unit {
+  flex: none;
+  align-self: center;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
 .field input::placeholder,
 .field textarea::placeholder {
   color: color-mix(in srgb, var(--text) 42%, transparent);
