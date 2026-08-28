@@ -1,0 +1,14 @@
+{
+  "methods": ["google"],
+  "headline": "営業司令室 30",
+  "subtitle": "案件・追客・営業イベントを1か所で管理",
+  "style": {
+    "mode": "light",
+    "accentColor": "#161815",
+    "backgroundColor": "#f7f7f4",
+    "panelColor": "#ffffff",
+    "textColor": "#161815",
+    "fontFamily": "Inter, system-ui, sans-serif",
+    "borderRadius": 16
+  }
+}
