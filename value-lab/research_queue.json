@@ -2,6 +2,31 @@
   "schema": "rnd-senju-research-queue/v1",
   "active": [
     {
+      "research_id": "RND-AI-DEVELOPMENT-ACCELERATOR-001",
+      "title": "THE WORLD AI development evidence accelerator",
+      "problem": "AI Foundry is already evolving engineering strategy rapidly, but strategy-proxy gains can stall before they become bounded code-level capability improvements. AI R&D needs a direct bridge from Foundry evidence into independent specialist proposals, implementation candidates, holdout tests, failure memory, Security counterevidence and reusable portfolio proof.",
+      "hypothesis": "Making evidence-backed AI capability development the highest-priority research mission, with independent specialist competition and Security as a priority-only adversarial reviewer, will increase the rate of reproducible AI engineering improvements without weakening correctness, permissions, external scope or verification gates.",
+      "focus": "correctness",
+      "priority": 6000,
+      "candidate_count": 12,
+      "success": {
+        "safe": true,
+        "stable": true,
+        "holdout_required": true,
+        "behavioral_evidence_required": true,
+        "strategy_proxy_alone_never_promotes": true,
+        "independent_specialist_review_required": true,
+        "counterevidence_preserved": true,
+        "security_priority_only": true,
+        "permission_surface_unchanged": true,
+        "failure_memory_required": true,
+        "reproducible_rerun_required": true,
+        "bounded_code_change_required_for_capability_claim": true,
+        "human_inspectable_artifact_required": true
+      },
+      "commercial_bridge": "AI R&D should turn verified engineering improvements into inspectable capability evidence that can later become a product or portfolio asset. Internal scores, autonomous-agent counts, code volume or strategy proxies do not establish customer demand, contracts, payments or revenue."
+    },
+    {
       "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-ACCELERATOR-001",
       "title": "Standment Security portfolio evidence-closure accelerator",
       "problem": "Standment has multiple security portfolio tracks and daily R&D loops, but the highest-value remaining gap can still stagnate or produce repeated activity without enough independently retested, customer-inspectable proof. The research system must close evidence gaps, rotate when stuck, and convert white-hat counterevidence into stronger portfolio assets.",
@@ -65,7 +90,7 @@
         "counterevidence_preserved": true,
         "material_delta_reported_to_slack": true
       },
-      "commercial_bridge": "The general portfolio program exists to turn verified R&D output into something a human can inspect, understand, evaluate, sell, or reuse. Standment Security remains the current top-priority specialization. Senju technical evidence may strengthen proof quality but must not be treated as willingness-to-pay, market validation, contract value, payment, or revenue."
+      "commercial_bridge": "The general portfolio program exists to turn verified R&D output into something a human can inspect, understand, evaluate, sell, or reuse. Standment Security remains a top-priority specialization. Senju technical evidence may strengthen proof quality but must not be treated as willingness-to-pay, market validation, contract value, payment, or revenue."
     },
     {
       "research_id": "RND-SENJU-ROBUSTNESS-001",
