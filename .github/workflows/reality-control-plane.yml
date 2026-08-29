@@ -1,0 +1,63 @@
+name: THE WORLD Reality Control Plane
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+  push:
+    paths:
+      - "ops/reality-control-plane/**"
+      - ".github/workflows/reality-control-plane.yml"
+      - "commercial-events.json"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: the-world-reality-control-plane
+  cancel-in-progress: true
+
+jobs:
+  audit-runtime-truth:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Generate evidence-based reality audit
+        run: |
+          set -euo pipefail
+          python ops/reality-control-plane/reality_audit.py
+          cat reports/reality-audit/latest.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload reality audit evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: the-world-reality-audit
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            reports/reality-audit/latest.json
+            reports/reality-audit/latest.md
+
+      - name: Enforce no-fake-completion invariant
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report=json.loads(Path('reports/reality-audit/latest.json').read_text())
+          print('Reality state:', report['overall'])
+          for core in report['cores']:
+              print(core['id'], core['runtime_state'])
+          # UNPROVEN is a valid measured state: audit must publish it, not hide it.
+          # This step fails only if the report itself is structurally untrustworthy.
+          allowed={'PROVEN','ACTIVE','FAILED_RECENT','STALE','CONFIG_ONLY'}
+          assert report['cores'], 'no cores audited'
+          assert all(c['runtime_state'] in allowed for c in report['cores'])
+          assert report['verified_cash_yen'] >= 0
+          PY
