@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 env:
@@ -88,7 +88,7 @@ jobs:
           PY
           cat "$DIRECTOR_DIR/decision.json" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Apply bounded priority-only progression
+      - name: Validate bounded priority-only candidate
         if: steps.decide.outputs.decision == 'OPEN_PARALLEL_TRACK'
         shell: bash
         run: |
@@ -111,30 +111,11 @@ jobs:
               assert keys <= allowed, f'unexpected mission fields changed: {sorted(keys)}'
               changed += 1
           assert changed == 1, f'expected exactly one AI mission change, got {changed}'
-          Path('value-lab/research_queue.json').write_text(json.dumps(nxt,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
           PY
+          python -m json.tool "$DIRECTOR_DIR/research_queue.next.json" >/dev/null
+          echo "Candidate validated. Direct repository mutation is intentionally disabled until this writer is classified by the Security capability policy." >> "$GITHUB_STEP_SUMMARY"
 
-          python -m json.tool value-lab/research_queue.json >/dev/null
-          (cd automation/agent_factory && python -m unittest discover -v -p 'test_*.py')
-
-          test "$(git diff --name-only | tr -d '\r')" = "value-lab/research_queue.json"
-
-          git fetch origin "$GITHUB_REF_NAME"
-          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse "origin/$GITHUB_REF_NAME")" ]]; then
-            echo "Concurrent branch update detected; fail soft and retry on next director cycle." >> "$GITHUB_STEP_SUMMARY"
-            git reset --hard "origin/$GITHUB_REF_NAME"
-            exit 0
-          fi
-
-          git config user.name "THE WORLD AI Development Director"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add value-lab/research_queue.json
-          git commit -m "ai-rnd: open AI-DEV-003 from runtime failure-memory evidence"
-          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git push origin "HEAD:${GITHUB_REF_NAME}"
-          echo "Opened AI-DEV-003 in parallel; AI-DEV-002 failure memory remains active." >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Preserve director evidence
+      - name: Preserve director evidence and candidate
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
