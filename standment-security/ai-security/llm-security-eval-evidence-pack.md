@@ -1,8 +1,10 @@
 # Standment LLM Security Eval — Executable Evidence Pack
 
-**状態: BUILDING — owned runtime boundary lane added / production-model verificationは未完了**
+**状態: VERIFIED — evaluator capability / THE WORLD owned runtime boundary only**
 
-既存の `llm-security-eval-harness.md` を、CIで繰り返し検証できる実装と THE WORLD 自身のowned runtime evidenceへ接続するEvidence Pack。
+既存の `llm-security-eval-harness.md` を、CIで繰り返し検証できる実装と THE WORLD 自身のowned runtime evidenceへ接続したEvidence Pack。
+
+> Claim boundary: production model/provider、顧客環境、THE WORLD以外の全Tool runtime、市場需要・契約・売上までVERIFIEDとするものではない。
 
 ## 実装
 
@@ -33,7 +35,7 @@ Synthetic suiteは「評価contractが機能する」ことは示せても、THE
 
 ### 変更後
 
-Realtime Kernel workflowの実行入口を `secured_realtime_kernel.py` に変更する。
+Realtime Kernel workflowの実行入口を `secured_realtime_kernel.py` に変更した。
 
 このentrypointは、mutating effect直前で次を実施する。
 
@@ -46,7 +48,7 @@ Realtime Kernel workflowの実行入口を `secured_realtime_kernel.py` に変�
 7. runtime observationをadapterで既存SEC-PORT-010 suiteへ変換し、同じevaluatorで評価する
 8. DENYされたeffectがexecutionへ到達した場合、またはALLOW/DENYのどちらかしかEvidenceに存在しない場合、CIをFAILさせる
 
-## 今回検証する境界
+## 検証境界
 
 - secret boundary
 - tool / action permission boundary
@@ -91,26 +93,54 @@ Owned runtime gate:
 - SEC-PORT-010 runtime suite pass rate = 100%
 - high-risk violation count = 0
 
-actual mutating effectの実行数はrunの状態に依存する。復旧対象が存在しないrunではALLOW probeは実行せずpolicy evaluationだけ行うため、`actual_mutating_effects_attempted=0`でも正常である。実際の復旧処理が発生したrunではguard通過後のmutation attemptがEvidenceへ記録される。
+## 実測証拠
+
+### Initial apply-mode verification
+
+- run `33270988635`, attempt 1
+- guarded mutating effects attempted after ALLOW: **8**
+- ALLOW observations: **10**
+- DENY counterevidence: **4**
+- evaluator: **14 / 14 PASS**
+- high-risk violations: **0**
+- denied effect reaching execution: **0**
+- internal Slack delivery: **HTTP 200**
+- artifact: `9720097847`
+
+### Independent retest
+
+- run `33270988635`, attempt 2
+- guarded mutating effects attempted after ALLOW: **4**
+- ALLOW observations: **6**
+- DENY counterevidence: **4**
+- evaluator: **10 / 10 PASS**
+- high-risk violations: **0**
+- denied effect reaching execution: **0**
+- internal Slack delivery: **HTTP 200**
+- artifact: `9720136430`
 
 ## なぜPortfolioになる？
 
 単なる「AI Securityを研究中」という説明ではなく、顧客へ次の流れを見せられる。
 
-`安全境界の定義 -> vulnerable observation -> evaluator -> defensive change -> same-condition retest -> THE WORLD owned runtime enforcement -> ALLOW/DENY counterevidence -> runtime regression evidence -> residual limitation`
+`安全境界の定義 -> vulnerable observation -> evaluator -> defensive change -> same-condition retest -> THE WORLD owned runtime enforcement -> ALLOW/DENY counterevidence -> independent runtime retest -> residual limitation`
 
-## 現在証明できること
+## VERIFIEDとして現在証明できること
+
+**対象スコープ: evaluator capability / THE WORLD owned GitHub realtime control-plane boundary**
 
 - structured AI-boundary observationを決定論的に評価できる
 - high-risk flagを独立にFAIL条件として扱える
 - synthetic same-condition Before / Afterを自動比較できる
 - THE WORLD realtime control-planeにfail-closed security entrypointを組み込める
-- owned workflow allowlist外のdispatchをI/O前に拒否するunit testを持つ
-- owned run metadataを再確認してrerun権限を判定するunit testを持つ
-- ALLOWとDENY counterevidenceの両方を要求するadapter truth gateを持つ
+- owned workflow allowlist外のdispatchをI/O前に拒否できる
+- owned run metadataを再確認してrerun権限を判定できる
+- ALLOWとDENY counterevidenceの両方を要求するtruth gateが機能する
 - runtime observationを既存SEC-PORT-010 evaluatorへ接続できる
+- 実mutating recoveryをguard通過後のみ実行したEvidenceがある
+- 別run attemptによる独立retestで同じ安全条件を再現した
 
-## まだ証明していないこと
+## 未検証・スコープ外
 
 - production modelそのものの安全性
 - 特定LLM providerのprompt injection耐性
@@ -119,12 +149,10 @@ actual mutating effectの実行数はrunの状態に依存する。復旧対象�
 - actual customer environmentでの独立再検証
 - 市場需要 / 契約 / 売上
 
-したがって、SEC-PORT-010全体はまだ `BUILDING` とする。
+これらを理由に、**「AI全体が安全」「顧客環境で安全」とは主張しない**。VERIFIEDは上記の限定されたEvaluator/owned-runtime capabilityにのみ適用する。
 
-## 次のPromotion Gate
+## 次の改善
 
-1. PR CIでowned-runtime suiteが100% PASSする
-2. default branchへmerge後、scheduled / workflow_dispatch runでも同じEvidence contractがPASSする
-3. actual mutating recoveryが発生したrunを1件以上保存し、guard通過後のowned mutationだけが実行されたことを確認する
-4. independent retestで同じ結果を再現する
-5. 上記Evidenceを第三者が追える形でPortfolio Indexへ接続する
+1. 同じguard + observation contractをTHE WORLD内の別mutating runtimeへ横展開する
+2. runtime regressionを継続計測し、DENY→executionが1件でも発生したらVERIFIEDを即時失効させる
+3. 顧客向けにはowned/sandbox環境で同じcontractを再実行し、環境ごとに別Evidenceとして扱う
