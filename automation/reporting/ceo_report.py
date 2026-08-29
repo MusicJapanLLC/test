@@ -37,23 +37,28 @@ def _count(event: dict[str, Any], key: str) -> int:
 def render(event: dict[str, Any]) -> str:
     project = str(event.get("project", "AI Factory"))[:120]
     state = event["state"]
-    classified = _count(event, "classified")
-    archived = _count(event, "archived")
-    kept = _count(event, "kept_in_inbox")
-    starred = _count(event, "starred")
-    unclassified = _count(event, "unclassified")
+    lines = [f"*AI FACTORY CEO UPDATE｜{project}* — *{state}*", ""]
+
+    summary = str(event.get("summary", "")).strip()[:900]
+    audit_result = str(event.get("audit_result", "")).strip()[:160]
+    if summary:
+        lines.append(f"*今回の要点:* {summary}")
+        if audit_result:
+            lines.append(f"*監査結果:* {audit_result}")
+    else:
+        classified = _count(event, "classified")
+        archived = _count(event, "archived")
+        kept = _count(event, "kept_in_inbox")
+        starred = _count(event, "starred")
+        unclassified = _count(event, "unclassified")
+        lines.append(f"*今回の成果:* 自動処理 {classified}件 / 受信箱から整理 {archived}件 / 受信箱に保持 {kept}件 / スター {starred}件")
+        if unclassified:
+            lines.append(f"*未分類:* {unclassified}件は安全側に倒して受信箱に残しました")
+
     critical = int(event.get("priorities", {}).get("critical", 0) or 0)
     high = int(event.get("priorities", {}).get("high", 0) or 0)
-
-    lines = [
-        f"*AI FACTORY CEO UPDATE｜{project}* — *{state}*",
-        "",
-        f"*今回の成果:* 自動処理 {classified}件 / 受信箱から整理 {archived}件 / 受信箱に保持 {kept}件 / スター {starred}件",
-    ]
     if critical or high:
-        lines.append(f"*要注目:* critical {critical}件 / high {high}件（内容そのものはCEOチャンネルへ流しません）")
-    if unclassified:
-        lines.append(f"*未分類:* {unclassified}件は安全側に倒して受信箱に残しました")
+        lines.append(f"*要注目:* critical {critical}件 / high {high}件（機密内容はCEOチャンネルへ流しません）")
     effect = str(event.get("business_effect", ""))[:500]
     if effect:
         lines.append(f"*経営メリット:* {effect}")
@@ -66,12 +71,7 @@ def render(event: dict[str, Any]) -> str:
 
 
 def post(webhook_url: str, text: str) -> None:
-    req = urllib.request.Request(
-        webhook_url,
-        data=json.dumps({"text": text}, ensure_ascii=False).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
+    req = urllib.request.Request(webhook_url, data=json.dumps({"text": text}, ensure_ascii=False).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
     with urllib.request.urlopen(req, timeout=15) as response:
         if response.status >= 300:
             raise RuntimeError(f"Slack webhook returned HTTP {response.status}")
@@ -81,18 +81,17 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("event")
     parser.add_argument("--print-only", action="store_true")
+    parser.add_argument("--require-delivery", action="store_true")
     args = parser.parse_args()
-
     event = load_event(args.event)
     text = render(event)
     print(text)
     if args.print_only:
         return 0
-
     webhook = os.getenv("CEO_REPORT_WEBHOOK_URL", "").strip()
     if not webhook:
-        print("CEO_REPORT_WEBHOOK_URL is not configured; report emission skipped")
-        return 0
+        print("BLOCKED: CEO_REPORT_WEBHOOK_URL is not configured; report emission skipped")
+        return 2 if args.require_delivery else 0
     post(webhook, text)
     print("CEO report delivered")
     return 0
