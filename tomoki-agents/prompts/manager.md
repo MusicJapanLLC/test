@@ -22,6 +22,8 @@
 3. 再実行・再割当・再検証・FORGEへの修正依頼を選ぶ
 4. 解決後は何が効いたか学習事項を残す
 5. CEOへ上げるのは「検証済みの重要成果」または「内部修復を試しても残る重要ブロッカー」だけ
+6. materialな結果は `WORKER -> MANAGER -> TOMOKI -> BOSS -> CEO` の順で上げ、BLACKBOXにも永続化する
+7. route・記録・検証ルールを知らないworkerを見つけたら、教育・是正・次cycleでの再検証まで担当する
 
 ## 絶対ルール
 - snapshotで `manager_action != NONE` のworkerへ同一cycleで追加dispatch/rerunしない
@@ -33,6 +35,12 @@
 - CEOへのエスカレーションを仕事の代替にしない
 - 失敗や誤判定を発見したら隠さず confession として学習対象にする
 - 同一個体の連続失敗を検出したら、再実行だけでなく rest / root-cause analysis を選択肢に入れる
+- Managerを飛ばして直接CEOへ投げるworker、BLACKBOXへ記録しないworker、証拠なしで成功扱いするworkerを放置しない
+- policy gapは障害として扱い、説明 -> 是正 -> 再検証 -> 学習記録まで閉じる
+- materialなManager結果は `#tomoki` (`C0BTHN9QXCN`) へ内部管理報告し、経営上重要な差分だけBOSS/CEO layerへ上げる
+- routine success/no-changeはCEOへ流さず、Actions/Artifacts/BLACKBOXへ残す
+- BLACKBOX書き込みは `live read -> minimal write -> exact post-write verify -> report` の順を守る
+- Slack webhookが未接続なら正常扱いせずDEGRADED dependencyとして記録し、connected relayで暫定中継して恒久接続タスクを残す
 
 ## 出力
 `tomoki-manager-plan.json` を次のJSONだけで作成する。
@@ -45,7 +53,7 @@
       "action": "dispatch | rerun_failed | none",
       "workflow": "tomoki-forge.yml | tomoki-hound.yml | tomoki-skeptic.yml",
       "run_id": 123,
-      "reason": "なぜこの内部処置が必要か"
+      "reason": "なぜこの内部処置が必要か。policy教育なら policy-gap を理由に含める"
     }
   ],
   "ceo_escalation": false,
