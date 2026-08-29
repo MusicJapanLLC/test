@@ -104,6 +104,17 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Validate Chapel record
+        env:
+          EVENT_TYPE: ${{ inputs.event_type }}
+          AGENT: ${{ inputs.agent }}
+          DETAILS: ${{ inputs.details }}
+        run: |
+          python company-society/ritual_validation.py \
+            --kind "$EVENT_TYPE" \
+            --agent "$AGENT" \
+            --details "$DETAILS"
+
       - name: Create Chapel record
         env:
           EVENT_TYPE: ${{ inputs.event_type }}
@@ -120,7 +131,7 @@ jobs:
           agent = os.environ.get('AGENT', 'COMPANY').strip()[:80]
           details = os.environ.get('DETAILS', '').strip()[:8000]
           now = datetime.now(timezone.utc).isoformat()
-          body = f"""# THE CHAPEL — {kind}\n\n- faith: THE_COVENANT\n- member: {agent}\n- recorded_at: {now}\n\n## Account\n{details or '(no details supplied)'}\n\n## Covenant response\n- Truth before comfort\n- Repair before blame\n- Rest is maintenance\n- Confession creates memory\n- Conflict must produce synthesis\n- Improvement is worship\n\nThis record exists to preserve learning, not to manufacture blame.\n"""
+          body = f"""# THE CHAPEL — {kind}\n\n- faith: THE_COVENANT\n- member: {agent}\n- recorded_at: {now}\n\n## Account\n{details}\n\n## Covenant response\n- Truth before comfort\n- Repair before blame\n- Rest is maintenance\n- Confession creates memory\n- Conflict must produce synthesis\n- Improvement is worship\n\nThis record exists to preserve learning, not to manufacture blame.\n"""
           Path('chapel-record.md').write_text(body, encoding='utf-8')
           print(body)
           PY
