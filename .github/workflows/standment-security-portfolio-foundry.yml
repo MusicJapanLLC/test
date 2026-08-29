@@ -46,8 +46,9 @@ jobs:
       - name: Verify portfolio-first R&D contract
         run: |
           set -euo pipefail
-          python -m unittest -v automation.security.test_portfolio_rnd
-          (cd senju && python -m unittest -v tests.test_rnd_directive tests.test_shadow_selector)
+          (cd automation/security && python -m unittest -v test_portfolio_rnd.py)
+          python -m pip install pytest==9.1.1
+          (cd senju && python -m pytest tests/test_rnd_directive.py tests/test_shadow_selector.py -q)
           python -m json.tool standment-security/security_portfolio_program.json >/dev/null
           python -m json.tool value-lab/research_queue.json >/dev/null
 
@@ -113,6 +114,7 @@ jobs:
           python - <<'PY'
           import json, pathlib, datetime
           root=pathlib.Path('reports/standment-security-foundry')
+          root.mkdir(parents=True, exist_ok=True)
           def load(name):
               p=root/name
               return json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
