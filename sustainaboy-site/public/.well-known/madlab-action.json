@@ -1,0 +1,15 @@
+{
+  "schema": "madlab-safe-action/v1",
+  "enabled": true,
+  "owner_only": true,
+  "bridge": "madlab-hosted/v1",
+  "target_origin": "https://sustainaboy-works.onrender.com",
+  "endpoint": "https://madlab-guard-0i24yt.v2.appdeploy.ai/api/hosted-target-action",
+  "actions": [
+    {
+      "id": "diagnostic_marker",
+      "label": "Diagnostic marker",
+      "description": "Persist one harmless owner-approved proof state for SUSTAINABOY WORKS so MADLAB can verify a real write path before enabling broader remediation actions."
+    }
+  ]
+}
