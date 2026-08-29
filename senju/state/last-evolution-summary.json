@@ -29,7 +29,7 @@
   "source_evidence_present": true,
   "rnd_coupling": {
     "schema": "senju-rnd-applied/v1",
-    "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-001",
+    "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-ACCELERATOR-001",
     "focus": "efficiency",
     "candidate_count": 9,
     "changes": {
