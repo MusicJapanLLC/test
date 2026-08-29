@@ -19,7 +19,9 @@ Its job is to record **what actually happened** across the world so a human can 
   - `06_MEMBERS`
   - `07_SOCIAL_RULES`
   - `08_SOURCES`
+  - `09_ECONOMY`
 - GitHub: evidence URLs, run IDs, commit SHAs, PRs, issues, artifacts, and logs remain the primary technical evidence
+- Supabase: when a subsystem declares a runtime database source of truth, read-only runtime evidence outranks documentation snapshots
 
 `Music Japan｜AI OPERATIONS BLACKBOX` → `10_THE_WORLD` is legacy history only. New World events use the independent World Ledger.
 
@@ -32,6 +34,35 @@ Its job is to record **what actually happened** across the world so a human can 
 5. The observer does not replace MANAGER/BOSS/TOMOKI judgment
 6. The observer may identify missing evidence, but must not manufacture it
 7. Prefer human-readable summaries with direct evidence links
+
+## Coordination before write
+
+**Every World-related observer run starts by synchronizing with work already in progress.**
+
+Before creating, replacing, or materially changing a World artifact, inspect the relevant shared state:
+
+1. recent GitHub commits / issues / workflow evidence for the subject
+2. the relevant canonical `THE WORLD｜World Ledger` tab and existing event IDs
+3. recent `#the-world` messages for active handoffs, blockers, and completed work
+4. the runtime source of truth when one exists (for example Supabase for the WLD economy)
+
+If another worker already owns or has implemented the same area, **do not recreate or overwrite it**. Prefer a non-overlapping support action:
+
+- independently verify the runtime or claim
+- test / QA the implementation
+- add missing evidence or context
+- repair a clearly bounded gap without taking ownership away
+- record the resulting event in `01_WORLD_LOG`
+- communicate the handoff with `HELP -> WHO -> WHY -> SUCCESS`
+
+After meaningful support, synchronize the human-observable surfaces:
+
+- durable fact → `01_WORLD_LOG`
+- subsystem snapshot → its existing dedicated tab (do not create a duplicate tab)
+- meaningful state/collaboration change → `#the-world`
+- technical implementation/evidence → GitHub or the subsystem runtime source of truth
+
+A stale Sheet or Slack view must not be allowed to overwrite a newer runtime truth. A reporting outage must not be treated as a subsystem outage unless runtime evidence also shows failure.
 
 ## Event identity
 
