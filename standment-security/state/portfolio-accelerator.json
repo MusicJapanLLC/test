@@ -1,6 +1,6 @@
 {
   "schema": "standment-security-portfolio-accelerator/v1",
-  "generated_at_jst": "2026-08-30T06:03:53+09:00",
+  "generated_at_jst": "2026-08-30T06:07:20+09:00",
   "company_priority": "P0",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
   "primary": {
@@ -79,15 +79,15 @@
     "closure_score": 1690,
     "ai_native": true
   },
-  "stagnation_streak": 0,
+  "stagnation_streak": 1,
   "rotated": false,
-  "selection_reason": "MATERIAL_PROGRESS",
+  "selection_reason": "HIGHEST_EVIDENCE_CLOSURE_SCORE",
   "next_action": "Convert the strongest white-hat candidate into a bounded reproduction -> remediation -> independent retest evidence bundle.",
   "north_star": {
     "tracks_total": 11,
     "tracks_verified": 2,
-    "tracks_full_evidence": 6,
-    "average_evidence_ratio": 0.876,
+    "tracks_full_evidence": 7,
+    "average_evidence_ratio": 0.894,
     "whitehat_candidates_open": 4,
     "unfinished_tracks": 9
   },
@@ -133,21 +133,20 @@
       "id": "SEC-PORT-003",
       "title": "Software supply-chain evidence portfolio",
       "priority": 1040,
-      "status": "ABSENT",
-      "evidence_ratio": 0.8,
+      "status": "VISIBLE",
+      "evidence_ratio": 1.0,
       "evidence_present": [
         ".github/workflows/codeql.yml",
         ".github/workflows/dependency-review.yml",
         ".github/workflows/standment-security-gate.yml",
-        "scripts/security/sbom_from_lock.py"
-      ],
-      "evidence_missing": [
+        "scripts/security/sbom_from_lock.py",
         "standment-security/evidence-packs/supply-chain/README.md"
       ],
+      "evidence_missing": [],
       "whitehat_candidates": 0,
       "senju_focus": "robustness",
       "customer_usefulness": "A customer or reviewer can inspect dependency, code-analysis and build-chain evidence in one place and understand what is checked automatically on each change.",
-      "closure_score": 1416,
+      "closure_score": 1540,
       "ai_native": false
     },
     {

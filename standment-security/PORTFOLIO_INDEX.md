@@ -2,13 +2,13 @@
 
 **Mission:** 顧客が開いて確認できる、防御的かつ再現可能なSecurity Evidenceを毎日増やす。
 
-Latest autonomous lab note: `standment-security/lab-notes/2026-08-30/SEC-PORT-001.md`
+Latest autonomous lab note: `standment-security/lab-notes/2026-08-30/SEC-PORT-003.md`
 
 | Track | Portfolio | Priority | Evidence | Senju |
 |---|---|---:|---:|---|
 | `SEC-PORT-001` | Standment Security Scan dogfood + Before/After case study | 1200 | 100% | robustness |
 | `SEC-PORT-002` | Customer Security Evidence Pack | 1060 | 100% | efficiency |
-| `SEC-PORT-003` | Software supply-chain evidence portfolio | 1040 | 80% | robustness |
+| `SEC-PORT-003` | Software supply-chain evidence portfolio | 1040 | 100% | robustness |
 | `SEC-PORT-004` | Auth / tenant / RLS defensive evidence kit | 1020 | 67% | learning |
 | `SEC-PORT-005` | Autonomous-agent security and auditability pack | 1100 | 100% | balance |
 | `SEC-PORT-006` | Incident readiness and recovery evidence pack | 980 | 67% | robustness |
