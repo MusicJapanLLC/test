@@ -95,15 +95,16 @@ jobs:
               raise SystemExit(0)
           text = p.read_text(encoding='utf-8')
           required = [
-              'models: read',
               'contents: write',
-              'pull-requests: write',
+              'actions: read',
               'workflow_dispatch:',
               'schedule:',
               'senju/state/champion.json',
               'senju/state/strategy.json',
               'senju/state/last-evolution-summary.json',
               'senju/state/last-evolution-plan.md',
+              'CURRENT_BASE_SHA=',
+              'force=false',
           ]
           for item in required:
               if item not in text:
@@ -112,6 +113,7 @@ jobs:
               'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
               'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
               'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
+              'pull-requests: write', 'models: write',
           ]
           for item in forbidden:
               if item in text:
