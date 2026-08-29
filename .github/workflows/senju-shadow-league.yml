@@ -1,0 +1,103 @@
+name: Senju Shadow Stability League
+
+on:
+  workflow_run:
+    workflows: ["Senju GitHub Native Autonomous Improver"]
+    types: [completed]
+  schedule:
+    - cron: "50 22 * * *" # 07:50 JST fallback
+  workflow_dispatch:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/scripts/shadow_league.py"
+      - "senju/tests/test_shadow_league.py"
+      - ".github/workflows/senju-shadow-league.yml"
+
+permissions:
+  contents: read
+
+env:
+  SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+concurrency:
+  group: senju-shadow-stability-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shadow:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Run Senju tests and isolation guard
+        working-directory: senju
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          python -m pytest tests -q
+          python -m senju.cli safety-check sim://shadow-target
+          if python -m senju.cli safety-check https://example.com; then exit 1; fi
+          if python -m senju.cli safety-check 8.8.8.8; then exit 1; fi
+
+      - name: Run multi-seed shadow league
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python scripts/shadow_league.py \
+            --state state/champion.json \
+            --out reports/shadow \
+            --seeds 5 \
+            --require-stable
+          cat reports/shadow/stability.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload shadow evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-shadow-stability
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            senju/reports/shadow/stability.json
+            senju/reports/shadow/stability.md
+
+      - name: Report delta to Slack
+        if: always() && env.SLACK_WEBHOOK_URL != '' && github.event_name != 'pull_request'
+        working-directory: senju
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          try:
+              d=json.load(open('reports/shadow/stability.json', encoding='utf-8'))
+              text=(
+                  f"*Senju Shadow League* — {os.environ.get('JOB_STATUS')}\n"
+                  f"stable={d['stable']} safe={d['safe']} runs={d['runs']}\n"
+                  f"mean={d['mean_score']} worst={d['worst_score']} stdev={d['score_stdev']}\n"
+                  f"reason={d['reason']}"
+              )
+          except Exception:
+              text=f"*Senju Shadow League* — {os.environ.get('JOB_STATUS')} / report unavailable"
+          req=urllib.request.Request(
+              os.environ['SLACK_WEBHOOK_URL'],
+              data=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type': 'application/json'},
+          )
+          with urllib.request.urlopen(req, timeout=10) as r:
+              print('slack status', r.status)
+          PY
