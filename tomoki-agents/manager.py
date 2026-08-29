@@ -5,11 +5,17 @@ The manager does not replace specialist autonomy. It observes each worker's
 GitHub Actions evidence, retries recoverable failures, wakes stale workers,
 collects their report artifacts, and produces a bounded repair plan.
 
+THE COVENANT Council is also a hard recovery boundary: if the current local
+`covenant-council.json` places a worker in REST/SANCTUARY, a Manager plan may
+not directly dispatch or rerun that same worker. A different specialist may
+still be dispatched as a companion.
+
 Safe boundaries:
 - only allowlisted workflows can be dispatched/rerun
 - no secret, permission, branch-protection, billing, or deployment-policy edits
 - never rerun/dispatch itself
 - max repair actions per cycle
+- Council REST blocks direct wake/retry of that worker
 - unresolved material blockers escalate only after internal repair attempts
 """
 from __future__ import annotations
@@ -279,7 +285,45 @@ def collect(apply_repairs: bool) -> dict[str, Any]:
     }
 
 
-def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[str, Any]]:
+def _load_local_council(path: str = "covenant-council.json") -> dict[str, Any]:
+    p = Path(path)
+    if not p.exists():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _sanctuary_targets(snapshot: dict[str, Any], council: dict[str, Any]) -> tuple[set[str], set[int], set[str]]:
+    resting_agents = {
+        str(row.get("agent") or "").strip().upper()
+        for row in (council.get("rest") or [])
+        if str(row.get("agent") or "").strip().upper() not in {"", "NONE"}
+    }
+    workflows: set[str] = set()
+    run_ids: set[int] = set()
+    for worker in snapshot.get("workers") or []:
+        agent = str(worker.get("agent") or "").strip().upper()
+        if agent not in resting_agents:
+            continue
+        workflow = str(worker.get("workflow") or "").strip()
+        if workflow:
+            workflows.add(workflow)
+        if worker.get("run_id") is not None:
+            try:
+                run_ids.add(int(worker["run_id"]))
+            except (TypeError, ValueError):
+                pass
+    return workflows, run_ids, resting_agents
+
+
+def _validate_plan(
+    plan: dict[str, Any],
+    snapshot: dict[str, Any],
+    council: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
     allowed_workflows = {cfg["workflow"] for cfg in WORKERS.values()}
     allowed_actions = {"dispatch", "rerun_failed", "none"}
     current_run_ids = {
@@ -292,6 +336,7 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
         int(w["run_id"]) for w in snapshot["workers"]
         if w.get("run_id") is not None and w.get("manager_action") not in (None, "", "NONE")
     }
+    resting_workflows, resting_run_ids, _ = _sanctuary_targets(snapshot, council or {})
     accepted: list[dict[str, Any]] = []
     for raw in (plan.get("actions") or [])[:MAX_REPAIR_ACTIONS]:
         action = str(raw.get("action", "none"))
@@ -301,7 +346,7 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
             workflow = str(raw.get("workflow", ""))
             if workflow not in allowed_workflows or workflow == "tomoki-manager.yml":
                 continue
-            if workflow in already_touched_workflows:
+            if workflow in already_touched_workflows or workflow in resting_workflows:
                 continue
             accepted.append({"action": action, "workflow": workflow, "reason": str(raw.get("reason", ""))[:400]})
         elif action == "rerun_failed":
@@ -309,7 +354,7 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
                 run_id = int(raw.get("run_id"))
             except (TypeError, ValueError):
                 continue
-            if run_id not in current_run_ids or run_id in already_touched_run_ids:
+            if run_id not in current_run_ids or run_id in already_touched_run_ids or run_id in resting_run_ids:
                 continue
             accepted.append({"action": action, "run_id": run_id, "reason": str(raw.get("reason", ""))[:400]})
     return accepted
@@ -318,7 +363,9 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
 def apply_plan(snapshot_path: str, plan_path: str, apply_actions: bool) -> dict[str, Any]:
     snapshot = json.loads(Path(snapshot_path).read_text(encoding="utf-8"))
     plan = json.loads(Path(plan_path).read_text(encoding="utf-8"))
-    accepted = _validate_plan(plan, snapshot)
+    council = _load_local_council()
+    _, _, resting_agents = _sanctuary_targets(snapshot, council)
+    accepted = _validate_plan(plan, snapshot, council)
     results: list[dict[str, Any]] = []
     for action in accepted:
         result = dict(action)
@@ -332,10 +379,12 @@ def apply_plan(snapshot_path: str, plan_path: str, apply_actions: bool) -> dict[
             result["result"] = "RERUN_REQUESTED"
         results.append(result)
     return {
-        "schema": "tomoki-manager-apply/v1",
+        "schema": "tomoki-manager-apply/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "accepted_actions": results,
         "rejected_or_trimmed": max(0, len(plan.get("actions") or []) - len(accepted)),
+        "sanctuary_resting_agents": sorted(resting_agents),
+        "sanctuary_gate_active": bool(council),
         "ceo_escalation": bool(plan.get("ceo_escalation", False)),
         "material_outcome": bool(plan.get("material_outcome", False)),
         "summary": str(plan.get("summary", ""))[:1000],
@@ -369,11 +418,14 @@ def render_markdown(snapshot: dict[str, Any], apply_result: dict[str, Any] | Non
         lines += ["", "## Manager plan", f"- {apply_result.get('summary', '')}"]
         for a in apply_result.get("accepted_actions", []):
             lines.append(f"- {a}")
+        if apply_result.get("sanctuary_resting_agents"):
+            lines.append(f"- Sanctuary protected: {', '.join(apply_result['sanctuary_resting_agents'])}")
         lines.append(f"- CEO escalation: {apply_result.get('ceo_escalation')}")
     lines += [
         "",
         "## Rule",
         "CEOへ上げる前に、再実行・再割当・専門家への引継ぎ・再検証を先に行う。",
+        "CouncilがRESTに置いたworker本人は直接起こさない。必要なら別の専門家をcompanionとして呼ぶ。",
         "安全境界、Secrets、権限、課金、外部送信方針はManagerが勝手に緩めない。",
     ]
     return "\n".join(lines) + "\n"
