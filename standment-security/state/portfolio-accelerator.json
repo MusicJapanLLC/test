@@ -1,113 +1,114 @@
 {
   "schema": "standment-security-portfolio-accelerator/v1",
-  "generated_at_jst": "2026-08-30T05:51:56+09:00",
+  "generated_at_jst": "2026-08-30T06:03:53+09:00",
   "company_priority": "P0",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
   "primary": {
-    "id": "SEC-PORT-009",
-    "title": "AI Agent Permission Boundary Lab",
-    "priority": 1160,
-    "status": "BUILDING",
+    "id": "SEC-PORT-001",
+    "title": "Standment Security Scan dogfood + Before/After case study",
+    "priority": 1200,
+    "status": "VISIBLE",
     "evidence_ratio": 1.0,
     "evidence_present": [
-      "company-society/AUTONOMY.md",
-      "automation/security/workflow_policy.py",
-      "standment-security/ai-security/agent-permission-boundary-lab.md"
+      "PORTFOLIO.md",
+      "security/STANDMENT_SECURITY_STANDARD.md",
+      "standment-security/SECURITY_BASELINE.md",
+      "standment-security/case-studies/security-scan-before-after/README.md"
     ],
     "evidence_missing": [],
-    "whitehat_candidates": 0,
+    "whitehat_candidates": 4,
     "senju_focus": "robustness",
-    "customer_usefulness": "An AI product team can inspect exactly what an agent may do, what it is blocked from doing, and whether controls fail closed under adverse inputs.",
-    "closure_score": 1750,
-    "ai_native": true
+    "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
+    "closure_score": 1880,
+    "ai_native": false
   },
   "verification_lane": {
-    "id": "SEC-PORT-009",
-    "title": "AI Agent Permission Boundary Lab",
-    "priority": 1160,
-    "status": "BUILDING",
+    "id": "SEC-PORT-001",
+    "title": "Standment Security Scan dogfood + Before/After case study",
+    "priority": 1200,
+    "status": "VISIBLE",
     "evidence_ratio": 1.0,
     "evidence_present": [
-      "company-society/AUTONOMY.md",
-      "automation/security/workflow_policy.py",
-      "standment-security/ai-security/agent-permission-boundary-lab.md"
+      "PORTFOLIO.md",
+      "security/STANDMENT_SECURITY_STANDARD.md",
+      "standment-security/SECURITY_BASELINE.md",
+      "standment-security/case-studies/security-scan-before-after/README.md"
     ],
     "evidence_missing": [],
-    "whitehat_candidates": 0,
+    "whitehat_candidates": 4,
     "senju_focus": "robustness",
-    "customer_usefulness": "An AI product team can inspect exactly what an agent may do, what it is blocked from doing, and whether controls fail closed under adverse inputs.",
-    "closure_score": 1750,
-    "ai_native": true
+    "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
+    "closure_score": 1880,
+    "ai_native": false
   },
   "whitehat_lane": {
     "id": "SEC-PORT-001",
     "title": "Standment Security Scan dogfood + Before/After case study",
     "priority": 1200,
-    "status": "ABSENT",
-    "evidence_ratio": 0.75,
+    "status": "VISIBLE",
+    "evidence_ratio": 1.0,
     "evidence_present": [
       "PORTFOLIO.md",
       "security/STANDMENT_SECURITY_STANDARD.md",
-      "standment-security/SECURITY_BASELINE.md"
-    ],
-    "evidence_missing": [
+      "standment-security/SECURITY_BASELINE.md",
       "standment-security/case-studies/security-scan-before-after/README.md"
     ],
+    "evidence_missing": [],
     "whitehat_candidates": 4,
     "senju_focus": "robustness",
     "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
-    "closure_score": 1740,
+    "closure_score": 1880,
     "ai_native": false
   },
   "ai_native_lane": {
-    "id": "SEC-PORT-009",
-    "title": "AI Agent Permission Boundary Lab",
-    "priority": 1160,
-    "status": "BUILDING",
+    "id": "SEC-PORT-005",
+    "title": "Autonomous-agent security and auditability pack",
+    "priority": 1100,
+    "status": "VISIBLE",
     "evidence_ratio": 1.0,
     "evidence_present": [
       "company-society/AUTONOMY.md",
       "automation/security/workflow_policy.py",
-      "standment-security/ai-security/agent-permission-boundary-lab.md"
+      ".github/workflows/security-guard.yml",
+      "standment-security/evidence-packs/agent-auditability/README.md"
     ],
     "evidence_missing": [],
     "whitehat_candidates": 0,
-    "senju_focus": "robustness",
-    "customer_usefulness": "An AI product team can inspect exactly what an agent may do, what it is blocked from doing, and whether controls fail closed under adverse inputs.",
-    "closure_score": 1750,
+    "senju_focus": "balance",
+    "customer_usefulness": "An operator can inspect what an autonomous AI was allowed to do, what it actually did, what failed, and how evidence was preserved for review.",
+    "closure_score": 1690,
     "ai_native": true
   },
   "stagnation_streak": 0,
   "rotated": false,
-  "selection_reason": "HIGHEST_EVIDENCE_CLOSURE_SCORE",
-  "next_action": "Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.",
+  "selection_reason": "MATERIAL_PROGRESS",
+  "next_action": "Convert the strongest white-hat candidate into a bounded reproduction -> remediation -> independent retest evidence bundle.",
   "north_star": {
     "tracks_total": 11,
-    "tracks_verified": 1,
-    "tracks_full_evidence": 5,
-    "average_evidence_ratio": 0.853,
+    "tracks_verified": 2,
+    "tracks_full_evidence": 6,
+    "average_evidence_ratio": 0.876,
     "whitehat_candidates_open": 4,
-    "unfinished_tracks": 10
+    "unfinished_tracks": 9
   },
   "all_tracks": [
     {
       "id": "SEC-PORT-001",
       "title": "Standment Security Scan dogfood + Before/After case study",
       "priority": 1200,
-      "status": "ABSENT",
-      "evidence_ratio": 0.75,
+      "status": "VISIBLE",
+      "evidence_ratio": 1.0,
       "evidence_present": [
         "PORTFOLIO.md",
         "security/STANDMENT_SECURITY_STANDARD.md",
-        "standment-security/SECURITY_BASELINE.md"
-      ],
-      "evidence_missing": [
+        "standment-security/SECURITY_BASELINE.md",
         "standment-security/case-studies/security-scan-before-after/README.md"
       ],
+      "evidence_missing": [],
       "whitehat_candidates": 4,
       "senju_focus": "robustness",
       "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
-      "closure_score": 1740,
+      "closure_score": 1880,
       "ai_native": false
     },
     {
@@ -250,18 +251,26 @@
       "id": "SEC-PORT-009",
       "title": "AI Agent Permission Boundary Lab",
       "priority": 1160,
-      "status": "BUILDING",
+      "status": "VERIFIED",
       "evidence_ratio": 1.0,
       "evidence_present": [
         "company-society/AUTONOMY.md",
         "automation/security/workflow_policy.py",
-        "standment-security/ai-security/agent-permission-boundary-lab.md"
+        "automation/security/workflow_policy_entrypoint.py",
+        "automation/security/agent_permission_boundary_eval.py",
+        "automation/security/test_agent_permission_boundary_eval.py",
+        "automation/security/test_workflow_policy_entrypoint_semantics.py",
+        "automation/world/secured_realtime_kernel.py",
+        ".github/workflows/the-world-realtime-kernel.yml",
+        ".github/workflows/standment-agent-permission-boundary.yml",
+        "standment-security/ai-security/agent-permission-boundary-lab.md",
+        "standment-security/ai-security/agent-permission-boundary-evidence-pack.md"
       ],
       "evidence_missing": [],
       "whitehat_candidates": 0,
       "senju_focus": "robustness",
       "customer_usefulness": "An AI product team can inspect exactly what an agent may do, what it is blocked from doing, and whether controls fail closed under adverse inputs.",
-      "closure_score": 1750,
+      "closure_score": -3430,
       "ai_native": true
     },
     {
