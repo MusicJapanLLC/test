@@ -1,6 +1,6 @@
 # Standment Security Evidence Dashboard
 
-**状態: BUILDING**
+Status: **BUILDING**
 
 ## Purpose
 
