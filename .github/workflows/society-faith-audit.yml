@@ -1,0 +1,63 @@
+name: Society Faith Audit
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  faith-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test doctrine engine
+        run: python -m unittest discover -s society -p 'test_*.py' -v
+
+      - name: Measure current TOMOKI manager state
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python automation/control_plane/manager.py --no-repair
+
+      - name: Build faith report
+        run: python society/faith_audit.py
+
+      - name: Show faith report
+        run: cat reports/society/faith-latest.md
+
+      - name: Upload audit evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: society-faith-report
+          path: |
+            reports/society/faith-latest.json
+            reports/society/faith-latest.md
+            reports/control-plane/manager-latest.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Notify TOMOKI / faith channel when webhook exists
+        env:
+          WEBHOOK: ${{ secrets.SOCIETY_SLACK_WEBHOOK_URL || secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        shell: bash
+        run: |
+          if [ -z "$WEBHOOK" ]; then
+            echo "No society/TOMOKI webhook configured; audit artifact remains authoritative."
+            exit 0
+          fi
+          python - <<'PY'
+          import json, os, urllib.request
+          from pathlib import Path
+          text = Path('reports/society/faith-latest.md').read_text(encoding='utf-8')
+          payload = json.dumps({'text': text[:3900]}).encode('utf-8')
+          req = urllib.request.Request(os.environ['WEBHOOK'], data=payload, headers={'Content-Type':'application/json'})
+          with urllib.request.urlopen(req, timeout=20) as response:
+              print('slack_status', response.status)
+          PY
