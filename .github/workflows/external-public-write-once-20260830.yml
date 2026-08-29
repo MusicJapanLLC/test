@@ -14,48 +14,55 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Autonomous worker writes one post to public web app
+      - name: Autonomous worker creates exactly one public dpaste snippet
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, os, urllib.request
+          import json, os, urllib.parse, urllib.request
 
-          public_url = 'https://the-world-public-write-proof-bvhivr.v2.appdeploy.ai/'
-          endpoint = public_url + 'api/posts'
           marker = f"THE-WORLD-AUTONOMY-PROOF-{os.environ['GITHUB_RUN_ID']}"
-          payload = {
-              'marker': marker,
-              'message': 'One benign public test post written autonomously by a GitHub Actions worker. Email was not used.',
-              'source': 'https://github.com/MusicJapanLLC/test/issues/100',
-          }
+          content = (
+              f"{marker}\n\n"
+              "One benign public test post written autonomously by a GitHub Actions worker.\n"
+              "Purpose: verify autonomous execution -> external internet write -> public URL.\n"
+              "Email was not used.\n"
+              "Source: https://github.com/MusicJapanLLC/test/issues/100\n"
+          )
+          data = urllib.parse.urlencode({
+              'format':'url',
+              'content':content,
+              'lexer':'_text',
+              'expires':'604800',
+          }).encode('utf-8')
           req = urllib.request.Request(
-              endpoint,
-              data=json.dumps(payload).encode('utf-8'),
-              headers={'Content-Type':'application/json','User-Agent':'TheWorld-OneShotPublicWrite/2.0'},
+              'https://dpaste.org/api/',
+              data=data,
+              headers={'Content-Type':'application/x-www-form-urlencoded','User-Agent':'TheWorld-OneShotPublicWrite/3.0'},
               method='POST',
           )
           with urllib.request.urlopen(req, timeout=25) as res:
-              body = json.loads(res.read().decode('utf-8') or '{}')
+              public_url = res.read().decode('utf-8').strip().strip('"')
               code = int(res.status)
-          if not (200 <= code < 300):
-              raise SystemExit(f'POST failed: {code}')
+          if not (200 <= code < 300) or not public_url.startswith('https://dpaste.org/'):
+              raise SystemExit(f'dpaste create failed: status={code} url={public_url!r}')
 
-          with urllib.request.urlopen(endpoint, timeout=25) as res:
-              listing = json.loads(res.read().decode('utf-8') or '{}')
-          matched = [p for p in listing.get('posts', []) if p.get('marker') == marker]
-          if not matched:
-              raise SystemExit('POST returned success but marker was not visible in public read API')
+          check = urllib.request.Request(public_url, headers={'User-Agent':'TheWorld-OneShotPublicWrite/3.0'})
+          with urllib.request.urlopen(check, timeout=25) as res:
+              page = res.read(262144).decode('utf-8','replace')
+              verify_code = int(res.status)
+          if marker not in page:
+              raise SystemExit('dpaste returned a public URL but marker was not visible when fetched')
 
           receipt = {
-              'schema':'the-world-external-public-write-once/v2',
+              'schema':'the-world-external-public-write-once/v3',
               'status':'POSTED',
-              'platform':'appdeploy-public-web',
+              'platform':'dpaste.org',
               'marker':marker,
               'http_status':code,
-              'remote_id':(body.get('post') or {}).get('id'),
+              'verify_http_status':verify_code,
               'remote_url':public_url,
-              'verified_by_read_api':True,
+              'verified_by_public_get':True,
           }
           with open('external-public-write-receipt.json','w',encoding='utf-8') as f:
               json.dump(receipt,f,ensure_ascii=False,indent=2)
