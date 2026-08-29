@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""OIDC bridge between GitHub Actions and THE WORLD task/experiment ledger.
+"""OIDC bridge between GitHub Actions and THE WORLD task/experiment/research ledger.
 
 No Supabase service secret is stored in GitHub. GitHub Actions obtains a short-lived
 OIDC identity token and the Edge Function verifies an allowlisted repository/workflow
-before bounded task and experiment operations are accepted.
+before bounded task, experiment, research, and observation operations are accepted.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
-GATEWAY_PROTOCOL = "oidc-repository-v6-parallel-learning"
+GATEWAY_PROTOCOL = "oidc-repository-v7-autonomous-research"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
 
 
@@ -98,6 +98,14 @@ def main() -> int:
     q.add_argument("--workflow", required=True)
     q.add_argument("--policy-key", default="SENJU_MASS_SHADOW")
     q.add_argument("--out", default=None)
+
+    q = sub.add_parser("research-config")
+    q.add_argument("--out", required=True)
+    q.add_argument("--history-limit", type=int, default=80)
+
+    q = sub.add_parser("record-research")
+    q.add_argument("--result", required=True)
+    q.add_argument("--out", default=None)
     args = p.parse_args()
 
     if args.cmd == "claim":
@@ -135,6 +143,31 @@ def main() -> int:
             "workflow": args.workflow,
             "summary": selection,
             "candidates": candidates,
+        })
+        if args.out:
+            _write(args.out, data)
+        print(json.dumps(data, ensure_ascii=False))
+        return 0 if data.get("recorded") else 1
+
+    if args.cmd == "research-config":
+        data = _edge({"action": "research_config", "history_limit": max(10, min(200, args.history_limit))})
+        _write(args.out, data)
+        due = [p.get("program_key") for p in (data.get("programs") or []) if p.get("due")]
+        print(json.dumps({
+            "active_labs": len(data.get("programs") or []),
+            "due_labs": due,
+            "recent_findings": len(data.get("recent_findings") or []),
+            "open_replications": len(data.get("open_replications") or []),
+        }, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "record-research":
+        result = _read(args.result)
+        data = _edge({
+            "action": "record_research",
+            "program_key": result.get("program_key"),
+            "lab_slot": int(result.get("lab_slot") or 0),
+            "result": result,
         })
         if args.out:
             _write(args.out, data)
