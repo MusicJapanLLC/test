@@ -3,6 +3,7 @@
   "mode": "active_bounded_autonomy",
   "faith": "LIMITLESS",
   "posture": "DEFAULT_ACT",
+  "guard_posture": "ALLOWLISTED_LOW_RISK_AUTO_NO_FRESH_APPROVAL",
   "pulse": {
     "target_seconds": 60,
     "github_watchdog_minutes": 5,
@@ -29,6 +30,7 @@
     "artifact_upload_owned_runtime": "AUTO",
     "github_issue_own_repo": "AUTO_ALLOWLIST",
     "slack_post_owned_workspace": "AUTO_ALLOWLIST",
+    "external_post_allowlisted_account": "AUTO_ALLOWLIST",
     "gmail_read": "AUTO_WITH_EXISTING_OAUTH",
     "gmail_label": "AUTO_WITH_EXISTING_RULES",
     "gmail_archive": "AUTO_WITH_EXISTING_RULES",
@@ -40,9 +42,31 @@
     "contract_or_legal_commitment": "APPROVAL"
   },
   "allowlists": {
-    "github_repositories": ["MusicJapanLLC/test"],
-    "slack_webhook_secret_names": ["RND_SLACK_WEBHOOK_URL", "CEO_REPORT_WEBHOOK_URL"],
-    "public_browser_hosts": ["github.com", "github.blog", "news.ycombinator.com", "hnrss.org", "dev.to", "arxiv.org", "export.arxiv.org", "youtube.com", "www.youtube.com", "note.com"]
+    "github_repositories": [
+      "MusicJapanLLC/test"
+    ],
+    "slack_webhook_secret_names": [
+      "RND_SLACK_WEBHOOK_URL",
+      "CEO_REPORT_WEBHOOK_URL"
+    ],
+    "external_write_target_ids": [
+      "dev-community",
+      "mastodon",
+      "bluesky",
+      "wordpress"
+    ],
+    "public_browser_hosts": [
+      "github.com",
+      "github.blog",
+      "news.ycombinator.com",
+      "hnrss.org",
+      "dev.to",
+      "arxiv.org",
+      "export.arxiv.org",
+      "youtube.com",
+      "www.youtube.com",
+      "note.com"
+    ]
   },
   "identity": {
     "logical_identity_per_citizen": true,
@@ -60,7 +84,14 @@
   },
   "logging": {
     "record_every_effect": true,
-    "record_fields": ["citizen_id", "action", "target", "decision", "timestamp", "result_id"],
+    "record_fields": [
+      "citizen_id",
+      "action",
+      "target",
+      "decision",
+      "timestamp",
+      "result_id"
+    ],
     "store_secrets": false,
     "store_private_message_body_in_artifacts": false
   }
