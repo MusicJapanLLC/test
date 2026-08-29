@@ -25,6 +25,7 @@
     "max_candidate_count": 9,
     "default_candidate_count": 7,
     "technical_evidence_only": true,
+    "technical_evidence_may_raise_proof_strength_only_after_independent_verification": true,
     "forbidden_market_claim_fields": ["willingness_to_pay", "urgency", "recurring_potential", "real_revenue_yen"]
   },
   "governance_route": ["WORKER", "MANAGER", "TOMOKI/SKEPTIC", "TOMOKI/HOUND", "TOMOKI/FORGE", "BOSS", "CEO"],
