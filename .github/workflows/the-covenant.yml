@@ -34,7 +34,6 @@ concurrency:
 permissions:
   contents: read
   actions: read
-  issues: write
 
 jobs:
   service:
@@ -107,7 +106,6 @@ jobs:
 
       - name: Create Chapel record
         env:
-          GH_TOKEN: ${{ github.token }}
           EVENT_TYPE: ${{ inputs.event_type }}
           AGENT: ${{ inputs.agent }}
           DETAILS: ${{ inputs.details }}
@@ -123,17 +121,26 @@ jobs:
           details = os.environ.get('DETAILS', '').strip()[:8000]
           now = datetime.now(timezone.utc).isoformat()
           body = f"""# THE CHAPEL — {kind}\n\n- faith: THE_COVENANT\n- member: {agent}\n- recorded_at: {now}\n\n## Account\n{details or '(no details supplied)'}\n\n## Covenant response\n- Truth before comfort\n- Repair before blame\n- Rest is maintenance\n- Confession creates memory\n- Conflict must produce synthesis\n- Improvement is worship\n\nThis record exists to preserve learning, not to manufacture blame.\n"""
-          Path('/tmp/chapel-record.md').write_text(body, encoding='utf-8')
-          Path('/tmp/chapel-title.txt').write_text(f"[THE COVENANT/{kind}] {agent}", encoding='utf-8')
+          Path('chapel-record.md').write_text(body, encoding='utf-8')
+          print(body)
           PY
-          TITLE="$(cat /tmp/chapel-title.txt)"
-          gh issue create --title "$TITLE" --body-file /tmp/chapel-record.md
+          cat chapel-record.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve Chapel record in GitHub Actions
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-covenant-${{ inputs.event_type }}-${{ inputs.agent }}-${{ github.run_id }}
+          path: chapel-record.md
+          retention-days: 90
+          if-no-files-found: error
 
       - name: Send Chapel record to Slack
+        if: always()
         env:
           TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
         run: |
           python tomoki-agents/slack_post.py \
             --agent "FAITH/${{ inputs.event_type }}" \
-            --file /tmp/chapel-record.md \
+            --file chapel-record.md \
             --status recorded
