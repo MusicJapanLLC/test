@@ -37,8 +37,21 @@ jobs:
             --report child-guild-adventure.md
           cat child-guild-adventure.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Test the playground boundary
-        run: python -m unittest company-society/test_playground_engine.py -v
+      - name: Send three Child Fellows into the R&D lab
+        run: |
+          python value-lab/child_research_fellows.py \
+            --registry company-society/child_guild.json \
+            --queue value-lab/research_queue.json \
+            --senju senju/state/last-evolution-summary.json \
+            --seed "${{ github.run_id }}" \
+            --out child-research-sparks.json \
+            --report child-research-sparks.md
+          cat child-research-sparks.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Test the playground and research boundaries
+        run: |
+          python -m unittest company-society/test_playground_engine.py -v
+          python value-lab/test_child_research_fellows.py
 
       - name: Preserve adventure evidence
         if: always()
@@ -48,8 +61,21 @@ jobs:
           path: |
             child-guild-adventure.md
             child-guild-adventure.json
+            child-research-sparks.md
+            child-research-sparks.json
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Preserve latest research sparks for R&D
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: child-research-sparks
+          path: |
+            child-research-sparks.md
+            child-research-sparks.json
+          retention-days: 30
+          if-no-files-found: error
 
       - name: Tell TOMOKI what the kids picked
         if: always()
@@ -58,6 +84,10 @@ jobs:
         run: |
           if [[ ! -f child-guild-adventure.md ]]; then
             printf '# THE WORLD — Child Guild\n\nAdventure generation failed.\n' > child-guild-adventure.md
+          fi
+          if [[ -f child-research-sparks.md ]]; then
+            printf '\n\n---\n\n' >> child-guild-adventure.md
+            cat child-research-sparks.md >> child-guild-adventure.md
           fi
           python tomoki-agents/slack_post.py \
             --agent "CHILD-GUILD" \

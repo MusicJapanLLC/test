@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Bidirectional R&D <-> Senju exchange.
+"""Bidirectional R&D <-> Senju exchange with bounded Child Guild stimulus.
 
-R&D may choose a bounded technical research focus and candidate budget. Senju returns
-technical evidence. The bridge never treats simulator strength as willingness to pay,
-market demand, contract value, or real revenue.
+R&D chooses the research question. Child Guild fellows may challenge a *stable* baseline
+with one alternate bounded technical focus. Senju returns technical evidence. No layer
+may treat simulator strength as willingness to pay, market demand, contract value, or
+real revenue.
 """
 from __future__ import annotations
 
@@ -17,6 +18,10 @@ ALLOWED_FOCUS = {"robustness", "learning", "balance", "efficiency"}
 ALLOWED_RESEARCH_KEYS = {
     "research_id", "title", "problem", "hypothesis", "focus", "priority",
     "candidate_count", "success", "commercial_bridge",
+}
+ALLOWED_CHILD_KEYS = {
+    "schema", "fictional_personas", "research_id", "research_title", "current_focus",
+    "challenge_focus", "candidate_bonus", "fellows", "questions", "reason", "guardrail",
 }
 FORBIDDEN_DIRECTIVE_KEYS = {
     "target", "url", "host", "network", "scope", "permission", "secret",
@@ -119,10 +124,75 @@ def technical_evidence(senju: dict[str, Any], shadow: dict[str, Any]) -> dict[st
     return evidence
 
 
-def build_exchange(queue: dict[str, Any], senju: dict[str, Any], shadow: dict[str, Any]) -> dict[str, Any]:
+def sanitize_child_sparks(raw: dict[str, Any]) -> tuple[dict[str, Any], str | None]:
+    if not raw:
+        return {}, "no child research spark available"
+    extra = set(raw) - ALLOWED_CHILD_KEYS
+    if extra:
+        return {}, f"forbidden child spark keys: {sorted(extra)}"
+    if raw.get("fictional_personas") is not True:
+        return {}, "child fellows must be explicitly fictional personas"
+    focus = str(raw.get("challenge_focus", ""))
+    if focus not in ALLOWED_FOCUS:
+        return {}, "child challenge focus is outside bounded R&D focus set"
+    try:
+        bonus = max(0, min(2, int(raw.get("candidate_bonus", 0) or 0)))
+    except Exception:
+        return {}, "invalid child candidate bonus"
+    fellows = raw.get("fellows") if isinstance(raw.get("fellows"), list) else []
+    questions = raw.get("questions") if isinstance(raw.get("questions"), list) else []
+    clean = {
+        "research_id": str(raw.get("research_id", "")),
+        "challenge_focus": focus,
+        "candidate_bonus": bonus,
+        "fellows": [
+            {"id": str(x.get("id", ""))[:80], "name": str(x.get("name", ""))[:80], "role": str(x.get("role", ""))[:80]}
+            for x in fellows[:5] if isinstance(x, dict)
+        ],
+        "questions": [str(x)[:400] for x in questions[:5]],
+        "reason": str(raw.get("reason", ""))[:500],
+    }
+    return clean, None
+
+
+def apply_child_stimulus(research: dict[str, Any], evidence: dict[str, Any], child_raw: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    child, error = sanitize_child_sparks(child_raw)
+    effective = dict(research)
+    meta = {
+        "available": bool(child_raw),
+        "valid": error is None,
+        "applied": False,
+        "reason": error or "baseline not yet eligible for child challenge",
+        "requested_focus": child.get("challenge_focus") if child else None,
+        "fellows": child.get("fellows", []) if child else [],
+        "questions": child.get("questions", []) if child else [],
+    }
+    if error:
+        return effective, meta
+    if child.get("research_id") and child["research_id"] != str(research.get("research_id", "")):
+        meta["reason"] = "child spark belongs to a different research question"
+        return effective, meta
+    if evidence.get("shadow_stable") is not True or evidence.get("shadow_safe") is not True:
+        meta["reason"] = "adult R&D focus retained until the current baseline is safe and stable"
+        return effective, meta
+
+    effective["focus"] = child["challenge_focus"]
+    effective["candidate_count"] = max(3, min(9, int(research.get("candidate_count", 7) or 7) + int(child["candidate_bonus"])))
+    effective["hypothesis"] = (
+        f"{research.get('hypothesis', '')} Child Fellow challenge: test {child['challenge_focus']} as a bounded alternate lens."
+    )[:600]
+    meta["applied"] = True
+    meta["reason"] = child.get("reason") or "stable baseline opened one bounded novelty slot"
+    meta["effective_focus"] = effective["focus"]
+    meta["effective_candidate_count"] = effective["candidate_count"]
+    return effective, meta
+
+
+def build_exchange(queue: dict[str, Any], senju: dict[str, Any], shadow: dict[str, Any], child_sparks: dict[str, Any] | None = None) -> dict[str, Any]:
     research = choose_research(queue)
-    directive = build_directive(research)
     evidence = technical_evidence(senju, shadow)
+    effective_research, child_meta = apply_child_stimulus(research, evidence, child_sparks or {})
+    directive = build_directive(effective_research)
     counterevidence: list[str] = []
     if evidence["shadow_stable"] is False:
         counterevidence.append("multi-seed/holdout stability failed")
@@ -132,22 +202,27 @@ def build_exchange(queue: dict[str, Any], senju: dict[str, Any], shadow: dict[st
         counterevidence.append("seed-sensitive competitive imbalance")
     if evidence["worst_learning_signal"] is not None and evidence["worst_learning_signal"] < 0.05:
         counterevidence.append("weak worst-case learning signal")
+    if child_meta["available"] and not child_meta["valid"]:
+        counterevidence.append("Child Fellow stimulus rejected by research boundary")
+    if counterevidence:
+        next_step = "mutate/retest under the same research question"
+    elif child_meta.get("applied"):
+        next_step = "run the bounded Child Fellow challenge, preserve counterevidence, then compare against the adult R&D baseline"
+    else:
+        next_step = "preserve evidence and test whether it improves a customer-facing deliverable"
     return {
-        "schema": "rnd-senju-exchange/v1",
+        "schema": "rnd-senju-exchange/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "research": {k: research.get(k) for k in ALLOWED_RESEARCH_KEYS if k in research},
+        "child_stimulus": child_meta,
         "directive_to_senju": directive,
         "technical_evidence_from_senju": evidence,
         "counterevidence": counterevidence,
-        "rnd_next": (
-            "mutate/retest under the same research question"
-            if counterevidence
-            else "preserve evidence and test whether it improves a customer-facing deliverable"
-        ),
+        "rnd_next": next_step,
         "market_truth": {
             "market_validated": False,
             "real_revenue_yen": 0,
-            "rule": "Senju technical evidence can strengthen proof, but cannot create willingness-to-pay, market validation, contracts, payments, or revenue.",
+            "rule": "Senju or Child Guild technical evidence can strengthen proof, but cannot create willingness-to-pay, market validation, contracts, payments, or revenue.",
         },
     }
 
@@ -156,10 +231,13 @@ def render(report: dict[str, Any]) -> str:
     r = report["research"]
     e = report["technical_evidence_from_senju"]
     d = report["directive_to_senju"]
+    c = report["child_stimulus"]
+    fellows = ", ".join(x.get("name", "") for x in c.get("fellows", [])) or "NONE"
     lines = [
         "# R&D x Senju Exchange",
         "",
         f"- research: **{r.get('research_id')}** — {r.get('title')}",
+        f"- Child Fellows: **{fellows}** / applied={c.get('applied')} / requested={c.get('requested_focus')}",
         f"- focus sent to Senju: **{d.get('focus')}** / candidates={d.get('candidate_count')}",
         f"- Senju safe: **{e.get('senju_safe')}**",
         f"- shadow stable: **{e.get('shadow_stable')}**",
@@ -169,7 +247,7 @@ def render(report: dict[str, Any]) -> str:
         f"- counterevidence: {', '.join(report['counterevidence']) or 'NONE'}",
         f"- R&D next: {report['rnd_next']}",
         "",
-        "> Senjuの強さは技術証拠。顧客需要・契約・入金は別証拠が必要。",
+        "> 子供は前提を揺らす。実行境界は揺らさない。技術の強さと市場価値も混同しない。",
         "",
     ]
     return "\n".join(lines)
@@ -180,10 +258,11 @@ def main() -> int:
     ap.add_argument("--queue", default="value-lab/research_queue.json")
     ap.add_argument("--senju", default="senju/state/last-evolution-summary.json")
     ap.add_argument("--shadow", default=None)
+    ap.add_argument("--child-sparks", default=None)
     ap.add_argument("--out", default="reports/rnd-senju")
     args = ap.parse_args()
 
-    report = build_exchange(load_json(args.queue), load_json(args.senju), load_json(args.shadow))
+    report = build_exchange(load_json(args.queue), load_json(args.senju), load_json(args.shadow), load_json(args.child_sparks))
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "exchange.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -193,6 +272,7 @@ def main() -> int:
         "research_id": report["directive_to_senju"]["research_id"],
         "focus": report["directive_to_senju"]["focus"],
         "candidate_count": report["directive_to_senju"]["candidate_count"],
+        "child_applied": report["child_stimulus"]["applied"],
         "counterevidence": len(report["counterevidence"]),
     }, ensure_ascii=False))
     return 0
