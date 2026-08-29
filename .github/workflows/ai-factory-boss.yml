@@ -1,0 +1,91 @@
+name: AI Factory - BOSS Watchdog
+
+on:
+  schedule:
+    - cron: '3,33 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/ai-factory-boss.yml'
+      - '.github/workflows/tomoki-manager.yml'
+      - '.github/agents/ai-factory-boss.agent.md'
+      - 'automation/control_plane/**'
+      - 'docs/AI_COMPANY_SUPERVISION_CONTRACT.md'
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: ai-factory-boss-watchdog
+  cancel-in-progress: false
+
+jobs:
+  boss:
+    name: Watch MANAGER -> Recover -> Escalate
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: BOSS checks MANAGER and repairs first
+        run: |
+          python automation/control_plane/manager.py \
+            --config automation/control_plane/boss_workers.json \
+            --out reports/control-plane/boss-watchdog.json
+          python automation/control_plane/boss_gate.py \
+            reports/control-plane/boss-watchdog.json \
+            --out reports/ceo-events/boss-watchdog.json
+
+      - name: Publish BOSS evidence
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('reports/control-plane/boss-watchdog.json', encoding='utf-8'))
+          s=d['summary']
+          print('## AI FACTORY BOSS')
+          print(f"- incidents={s['incidents']}")
+          print(f"- recovery_actions={s['internal_recovery_actions']}")
+          print(f"- recovering={s['recovering']}")
+          print(f"- unresolved={s['unresolved']}")
+          for row in d['workers']:
+              print(f"- {row['name']}: {row['before']} -> {row['after']} / actions={row['actions']}")
+          PY
+
+      - name: Escalate only after internal recovery fails or P0 recovery matters
+        shell: bash
+        run: |
+          SHOULD=$(python - <<'PY'
+          import json
+          d=json.load(open('reports/ceo-events/boss-watchdog.json',encoding='utf-8'))
+          print('true' if d.get('should_report') else 'false')
+          PY
+          )
+          if [[ "$SHOULD" == "true" && -n "${CEO_REPORT_WEBHOOK_URL:-}" ]]; then
+            python automation/reporting/ceo_report.py reports/ceo-events/boss-watchdog.json
+          fi
+
+      - name: Upload BOSS evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: ai-factory-boss-evidence
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            reports/control-plane/boss-watchdog.json
+            reports/ceo-events/boss-watchdog.json
