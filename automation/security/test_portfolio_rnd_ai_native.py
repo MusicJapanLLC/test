@@ -12,7 +12,7 @@ class PortfolioRndAiNativeStatusTests(unittest.TestCase):
             rel = Path("standment-security/ai-security/llm-security-eval-harness.md")
             path = root / rel
             path.parent.mkdir(parents=True)
-            path.write_text("# LLM Security Evaluation Harness\n\n**状態: BUILDING**\n", encoding="utf-8")
+            path.write_text("# LLM Security Evaluation Harness\n\nStatus: **BUILDING**\n", encoding="utf-8")
 
             track = {
                 "id": "SEC-PORT-010",
@@ -37,7 +37,7 @@ class PortfolioRndAiNativeStatusTests(unittest.TestCase):
             rel = Path("standment-security/ai-security/llm-security-eval-harness.md")
             path = root / rel
             path.parent.mkdir(parents=True)
-            path.write_text("# Harness\n\n**状態: BUILDING**\n", encoding="utf-8")
+            path.write_text("# Harness\n\nStatus: **BUILDING**\n", encoding="utf-8")
             portfolio = "## LLM Security Evaluation Harness\n\n状態: VERIFIED\n"
             track = {
                 "id": "SEC-PORT-010",
