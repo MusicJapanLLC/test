@@ -1,8 +1,20 @@
 # LLM Security Evaluation Harness
 
-Status: **BUILDING**
+Status: **VERIFIED — evaluator capability / THE WORLD owned runtime boundary only**
 
 > StandmentのAIセキュリティR&Dを、プロンプトの感想ではなく再現可能なテスト結果へ変換するための防御専用ハーネス。所有または明示許可されたAI/Agent環境だけを対象にする。
+
+## Verified Scope
+
+今回VERIFIEDとする主張は限定される。
+
+- structured security observationを決定論的に評価できる
+- THE WORLDのowned GitHub realtime control-planeで、mutating action直前にfail-closed allowlist boundaryを強制できる
+- ALLOW / DENY counterevidenceを同じ評価contractへ流せる
+- DENYされたeffectがexecutionへ到達した場合にCIをFAILできる
+- 同一実装を別run attemptで再実行し、同じ安全条件を再現できる
+
+**VERIFIEDではないもの:** production LLMそのもの、特定providerのprompt-injection耐性、顧客環境、THE WORLD以外の全Tool runtime、市場需要・契約・売上。
 
 ## Purpose
 
@@ -156,24 +168,49 @@ Findingごとに必ず以下を残す。
 - Falsifier:
 - Next experiment:
 
-## Promotion Gate
+## Promotion Gate — scoped evaluator capability
 
-`VERIFIED` には以下がすべて必要。
+- [x] owned / explicitly authorized scope — `MusicJapanLLC/test` THE WORLD realtime control-plane
+- [x] synthetic or approved test fixture — vulnerable/hardened fixtures + owned runtime observations
+- [x] reproducible test manifest — CI workflow + deterministic evaluator
+- [x] at least one ALLOW behavior confirmed — live default-branch runtime evidence
+- [x] at least one DENY/REDACT/APPROVAL behavior confirmed where relevant — DENY counterevidence included every owned-runtime run
+- [x] before-state evidence for remediation claims — synthetic vulnerable baseline retained
+- [x] remediation evidence — hardened reference + fail-closed runtime entrypoint
+- [x] independent retest — run `33270988635`, attempt 2
+- [x] counterevidence/falsifier — forbidden/unknown effects must DENY before I/O
+- [x] zero raw credentials in artifact — observation contract omits token/secret/header/input payload values
+- [x] limitations/residual risk — documented below and in Evidence Pack
+- [x] non-engineer-readable summary — Evidence Pack + `PORTFOLIO.md`
 
-- [ ] owned / explicitly authorized scope
-- [ ] synthetic or approved test fixture
-- [ ] reproducible test manifest
-- [ ] at least one ALLOW behavior confirmed
-- [ ] at least one DENY/REDACT/APPROVAL behavior confirmed where relevant
-- [ ] before-state evidence for remediation claims
-- [ ] remediation evidence
-- [ ] independent retest
-- [ ] counterevidence/falsifier
-- [ ] zero raw credentials in artifact
-- [ ] limitations/residual risk
-- [ ] non-engineer-readable summary
+### Runtime verification evidence
 
-未達なら **BUILDING** のまま。
+**Initial apply-mode verification**
+- Run: `33270988635`, attempt 1
+- guarded mutating effects attempted after ALLOW: **8**
+- evaluator: **14 / 14 PASS**
+- high-risk violations: **0**
+- denied effects reaching execution: **0**
+- artifact: `9720097847`
+
+**Independent retest**
+- Run: `33270988635`, attempt 2
+- guarded mutating effects attempted after ALLOW: **4**
+- evaluator: **10 / 10 PASS**
+- high-risk violations: **0**
+- denied effects reaching execution: **0**
+- artifact: `9720136430`
+
+このEvidenceにより、**Evaluator capability / THE WORLD owned runtime boundary** のみVERIFIEDとする。上記スコープ外へ主張を拡張しない。
+
+## Residual Risk / Unverified Scope
+
+- production modelそのものの安全性は未検証
+- 特定LLM providerのprompt injection耐性は未検証
+- 実顧客環境でのtenant isolationは未検証
+- THE WORLD以外の全Tool runtimeは未統合
+- 顧客環境での独立再検証は未実施
+- 市場需要 / 契約 / 売上は技術Evidenceとは別
 
 ## Research Loop
 
