@@ -1,43 +1,44 @@
-name: Senju Daily Adversarial Report
+name: Senju Daily Self Evolution
 
 on:
   schedule:
-    - cron: "0 22 * * *"   # 毎日 07:00 JST (22:00 UTC)
+    - cron: "0 22 * * *" # 07:00 JST
   workflow_dispatch:
     inputs:
       population:
         description: "各陣営の個体数"
-        default: "200"
+        default: "120"
       generations:
         description: "世代数"
-        default: "30"
+        default: "16"
       matches:
         description: "1世代あたりの対戦数"
-        default: "800"
-  push:
-    branches: ["claude/multi-agent-adversarial-system-r2zppe"]
-    paths:
-      - "senju/**"
-      - ".github/workflows/senju-daily-report.yml"
+        default: "400"
+      candidates:
+        description: "比較する改善候補数"
+        default: "5"
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
-  group: senju-daily-adversarial-report
-  cancel-in-progress: true
+  group: senju-daily-self-evolution
+  cancel-in-progress: false
 
 jobs:
-  simulate:
-    name: Run adversarial tournament
+  evolve:
+    name: Memory -> Tournament -> Eval -> Persist
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
+      GH_TOKEN: ${{ github.token }}
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
@@ -45,66 +46,128 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run safety + engine tests
+      - name: Restore previous champion memory
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-memory
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Daily Self Evolution" \
+            --status success \
+            --limit 10 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-memory \
+              --dir /tmp/senju-memory || true
+          fi
+          if [[ -f /tmp/senju-memory/state.next.json ]]; then
+            cp /tmp/senju-memory/state.next.json /tmp/senju-state.json
+            echo "Restored durable champion memory from run $PREV_RUN"
+          else
+            cp senju/state/champion.json /tmp/senju-state.json
+            echo "No prior artifact memory found; using repository bootstrap state"
+          fi
+
+      - name: Run engine and self-evolution tests
         working-directory: senju
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: "1"
           PIP_NO_INPUT: "1"
         run: |
+          set -euo pipefail
           python -m pip install pytest==9.1.1
           python -m pytest tests -q
 
-      - name: Verify scope guard blocks public targets
+      - name: Verify isolation guard blocks public targets
         working-directory: senju
         run: |
           set -euo pipefail
           python -m senju.cli safety-check sim://ci-target
           if python -m senju.cli safety-check 8.8.8.8; then
-            echo "SECURITY FAIL: public IP was allowed" >&2
+            echo "SECURITY FAIL: public target was allowed" >&2
             exit 1
           fi
-          echo "scope guard OK: public target rejected as expected"
+          if python -m senju.cli safety-check https://example.com; then
+            echo "SECURITY FAIL: public URL was allowed" >&2
+            exit 1
+          fi
 
-      - name: Run tournament and generate report
+      - name: Run closed-loop candidate tournament
+        id: evolve
         working-directory: senju
         env:
-          POP: ${{ github.event.inputs.population || '200' }}
-          GEN: ${{ github.event.inputs.generations || '30' }}
-          MATCHES: ${{ github.event.inputs.matches || '800' }}
+          POP: ${{ github.event.inputs.population || '120' }}
+          GEN: ${{ github.event.inputs.generations || '16' }}
+          MATCHES: ${{ github.event.inputs.matches || '400' }}
+          CANDIDATES: ${{ github.event.inputs.candidates || '5' }}
         run: |
-          python -m senju.cli run --population "$POP" --generations "$GEN" --matches "$MATCHES" --quiet || \
-          python -m senju.cli run --population "$POP" --generations "$GEN" --matches "$MATCHES"
+          set -euo pipefail
+          python -m senju.autopilot \
+            --state /tmp/senju-state.json \
+            --out reports/evolution \
+            --population "$POP" \
+            --generations "$GEN" \
+            --matches "$MATCHES" \
+            --candidates "$CANDIDATES"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('reports/evolution/evolution-summary.json', encoding='utf-8'))
+          if not d['selected']['safe']:
+              raise SystemExit('selected evolution is not safe')
+          print('accepted=' + str(d['accepted_strategy_change']).lower())
+          print('score=' + str(d['selected']['score']))
+          PY
 
-      - name: Publish report to job summary
-        working-directory: senju
-        run: cat reports/latest.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Notify Slack (optional; requires SLACK_WEBHOOK_URL secret)
-        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+      - name: Publish evolution report to job summary
         working-directory: senju
         run: |
-          python - <<'PYEOF'
+          cat reports/evolution/evolution-plan.md >> "$GITHUB_STEP_SUMMARY"
+          printf '\n---\n' >> "$GITHUB_STEP_SUMMARY"
+          cat reports/evolution/latest.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload durable memory for tomorrow
+        id: memory
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-memory
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            senju/reports/evolution/state.next.json
+            senju/reports/evolution/strategy.next.json
+            senju/reports/evolution/evolution-summary.json
+            senju/reports/evolution/evolution-plan.md
+            senju/reports/evolution/latest.json
+            senju/reports/evolution/latest.md
+
+      - name: Notify Slack
+        if: always() && env.SLACK_WEBHOOK_URL != ''
+        working-directory: senju
+        env:
+          JOB_STATUS: ${{ job.status }}
+          ARTIFACT_URL: ${{ steps.memory.outputs.artifact-url }}
+        run: |
+          python - <<'PY'
           import json, os, urllib.request
-          data = json.load(open("reports/latest.json", encoding="utf-8"))
-          gens = data["generations"]
-          first, last = gens[0], gens[-1]
-          deaths = sum(g["red_deaths"] + g["blue_deaths"] for g in gens)
-          births = sum(g["red_births"] + g["blue_births"] for g in gens)
-          viol = len(data["scope_violations"])
-          safe = "✅ スコープ違反ゼロ" if viol == 0 else f"⚠️ スコープ違反 {viol} 件"
-          text = (
-              f"*Senju 戦況レポート* — {data['scenario']}\n"
-              f"{safe}\n"
-              f"世代 {len(gens)} / 累計淘汰 {deaths} / 誕生 {births}\n"
-              f"レッド最高R {first['red_top_rating']}→{last['red_top_rating']} / "
-              f"ブルー最高R {first['blue_top_rating']}→{last['blue_top_rating']}\n"
-              f"レッド総資産 {last['red_resources']} / ブルー総資産 {last['blue_resources']}"
+          try:
+              d=json.load(open('reports/evolution/evolution-summary.json', encoding='utf-8'))
+              text=(
+                  f"*Senju Daily Self Evolution* — {os.environ.get('JOB_STATUS')}\n"
+                  f"safe={d['selected']['safe']} / score={d['selected']['score']} / "
+                  f"strategy_change={d['accepted_strategy_change']}\n"
+                  f"delta: {', '.join(d['changes'])}\n"
+                  f"memory: {os.environ.get('ARTIFACT_URL','')}"
+              )
+          except Exception:
+              text=f"*Senju Daily Self Evolution* — {os.environ.get('JOB_STATUS')}"
+          req=urllib.request.Request(
+              os.environ['SLACK_WEBHOOK_URL'],
+              data=json.dumps({'text':text}).encode(),
+              headers={'Content-Type':'application/json'},
           )
-          req = urllib.request.Request(
-              os.environ["SLACK_WEBHOOK_URL"],
-              data=json.dumps({"text": text}).encode("utf-8"),
-              headers={"Content-Type": "application/json"},
-          )
-          with urllib.request.urlopen(req, timeout=10) as r:  # noqa: S310
-              print("slack status", r.status)
-          PYEOF
+          with urllib.request.urlopen(req, timeout=10) as r:
+              print('slack status', r.status)
+          PY
