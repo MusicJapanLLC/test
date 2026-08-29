@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from portfolio_evolution import build_plan, choose_primary, parse_portfolio
+from automation.reporting.portfolio_evolution import build_plan, choose_primary, parse_portfolio
 
 
 SAMPLE = """
