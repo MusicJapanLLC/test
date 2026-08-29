@@ -73,7 +73,11 @@ class AgentFactoryTests(unittest.TestCase):
             "role": role,
             "stance": "INDEPENDENT",
             "hypothesis": "Adding a deterministic manifest makes reruns easier to compare",
-            "evidence_refs": ["standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "automation/security/portfolio_rnd.py"],
+            "evidence_refs": [
+                "standment-security/CONTROL_EVIDENCE_TEMPLATE.md",
+                "automation/security/portfolio_rnd.py",
+                "value-lab/research_queue.json",
+            ],
             "observations": ["Evidence exists but comparison is manual", "Current artifact has a stable contract"],
             "counterevidence": ["If current artifact already has deterministic hashing this change adds little"],
             "proposed_change": {
