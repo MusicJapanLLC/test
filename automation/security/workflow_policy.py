@@ -25,6 +25,10 @@ UNSAFE = (
 )
 PIN_RE = re.compile(r'uses:\s+([^\s#]+)')
 FULL_SHA = re.compile(r'^[0-9a-f]{40}$')
+GATEWAY_PROTOCOL_RE = re.compile(
+    r'(?m)^GATEWAY_PROTOCOL\s*=\s*"oidc-repository-v(?P<version>\d+)-(?P<label>[a-z0-9][a-z0-9-]*)"\s*$'
+)
+MIN_GATEWAY_PROTOCOL_VERSION = 4
 
 
 def writes(body: str) -> set[str]:
@@ -85,6 +89,10 @@ def validate_pages_lanes() -> set[str]:
         ):
             if item not in body:
                 raise SystemExit(f'{name}: Pages lane missing invariant: {item}')
+        if body.count('pages: write') != 1 or body.count('id-token: write') != 1:
+            raise SystemExit(f'{name}: Pages/OIDC write permissions must occur exactly once')
+        if 'schedule:' in body:
+            raise SystemExit(f'{name}: Pages deployment must not be schedule-triggered')
         if 'pull_request:' in body and "if: github.event_name != 'pull_request'" not in body:
             raise SystemExit(f'{name}: PR-triggered Pages workflow must suppress deployment on PR events')
         if 'push:' in body and 'paths:' not in body:
@@ -108,7 +116,8 @@ def validate_task_worker(page_lanes: set[str]) -> None:
         raise SystemExit(f'the-world-task-worker.yml: unexpected writes {sorted(writes(body))}')
 
     oidc_lanes = {name for name, text in WORKFLOWS.items() if 'id-token' in writes(text)}
-    unexpected = oidc_lanes - page_lanes - {'the-world-task-worker.yml'}
+    explicit_oidc = {'the-world-task-worker.yml', 'senju-mass-shadow-learning.yml'}
+    unexpected = oidc_lanes - page_lanes - explicit_oidc
     if unexpected:
         raise SystemExit(f'Unexpected OIDC write lanes: {sorted(unexpected)}')
 
@@ -119,7 +128,6 @@ def validate_task_worker(page_lanes: set[str]) -> None:
     client = Path('automation/world/task_worker.py').read_text(encoding='utf-8')
     for item in (
         'AUDIENCE = "the-world-worker"',
-        'GATEWAY_PROTOCOL = "oidc-repository-v4-audited"',
         'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
         'method="POST"',
         'https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker',
@@ -127,10 +135,24 @@ def validate_task_worker(page_lanes: set[str]) -> None:
         if item not in client:
             raise SystemExit(f'task_worker.py: missing OIDC/gateway invariant: {item}')
 
+    protocol = GATEWAY_PROTOCOL_RE.search(client)
+    if protocol is None:
+        raise SystemExit('task_worker.py: gateway protocol must use oidc-repository-vN-<label> form')
+    version = int(protocol.group('version'))
+    if version < MIN_GATEWAY_PROTOCOL_VERSION:
+        raise SystemExit(
+            f'task_worker.py: gateway protocol version regressed: {version} < {MIN_GATEWAY_PROTOCOL_VERSION}'
+        )
+    if '_oidc_token()' not in client or 'Authorization": f"Bearer {_oidc_token()}"' not in client:
+        raise SystemExit('task_worker.py: Edge requests must authenticate with a fresh GitHub OIDC token')
+    if 'urllib.parse.urlencode({"audience": AUDIENCE})' not in client:
+        raise SystemExit('task_worker.py: OIDC token request must bind the configured audience')
+
 
 def validate_explicit_lanes() -> set[str]:
     expected = {
         'senju-autonomous-improver.yml': {'contents'},
+        'senju-mass-shadow-learning.yml': {'contents', 'id-token'},
         'tomoki-forge.yml': {'contents', 'pull-requests', 'copilot-requests'},
         'tomoki-manager.yml': {'actions', 'copilot-requests'},
         'tomoki-hound.yml': {'copilot-requests'},
@@ -165,6 +187,24 @@ def validate_explicit_lanes() -> set[str]:
     if observed != allowed:
         raise SystemExit(f'Senju autonomous write allowlist mismatch: {sorted(observed)}')
 
+    mass_shadow = WORKFLOWS['senju-mass-shadow-learning.yml']
+    for item in (
+        'contents: write', 'actions: read', 'id-token: write',
+        'python -m senju.cli safety-check sim://mass-shadow',
+        'if python -m senju.cli safety-check https://example.com; then exit 1; fi',
+        '--policy-key SENJU_MASS_SHADOW',
+        'assert int(report[\'trial_multiplier_target\']) <= 100',
+        "forbidden=('target','network','credential','secret','permission')",
+        'CHANGED="$(gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq \'[.files[].filename]\')"',
+        'if [[ "$CHANGED" != \'["senju/state/strategy.json"]\' ]]; then',
+        'if [[ "$CURRENT_BASE_SHA" != "$BASE_SHA" ]]; then',
+        '-F force=false',
+    ):
+        if item not in mass_shadow:
+            raise SystemExit(f'senju-mass-shadow-learning.yml: missing bounded mass-shadow invariant: {item}')
+    if ('$' + '{{' + ' secrets.') in mass_shadow:
+        raise SystemExit('senju-mass-shadow-learning.yml: long-lived Actions secrets are forbidden')
+
     forge = WORKFLOWS['tomoki-forge.yml']
     for item in ('python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
                  'git add -A -- sales-command-30', 'gh pr create'):
@@ -184,7 +224,7 @@ def validate_explicit_lanes() -> set[str]:
         copilot = [x.strip() for x in body.splitlines() if x.strip().startswith('copilot -p ')]
         if len(copilot) != 1 or '--allow-tool=write' not in copilot[0] or 'shell(' in copilot[0]:
             raise SystemExit(f'{name}: auditor may write its report but may not receive autonomous shell access')
-        if 'continue-on-error: true' in body or 'copilot -p' in body and '|| true' in copilot[0]:
+        if 'continue-on-error: true' in body or ('copilot -p' in body and '|| true' in copilot[0]):
             raise SystemExit(f'{name}: auditor failures must not be hidden')
 
     reality = WORKFLOWS['world-reality-agency.yml']
