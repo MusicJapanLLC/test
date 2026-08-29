@@ -55,6 +55,20 @@ Each project update should use this format:
 
 The CEO channel must not become a log stream. Post only material outcomes, product milestones, critical blockers and twice-daily executive summaries.
 
+## Standard Autonomous Reporting Contract
+
+All autonomous workers should converge on one reporting interface instead of inventing their own Slack format.
+
+1. A worker performs and verifies its task.
+2. Raw technical evidence stays in GitHub Actions / artifacts / operational Slack channels.
+3. When an owner-visible material outcome exists, the worker emits an aggregate JSON event using schema `ai-factory-ceo-event/v1`.
+4. `automation/reporting/ceo_report.py` converts that event into owner-facing Japanese and delivers it through the GitHub Secret `CEO_REPORT_WEBHOOK_URL` to `#ai-ceo-brief`.
+5. Routine successful cycles with no material change should not notify the CEO channel.
+
+The event may contain aggregate counts, state, business effect, next improvement and one owner action. It must not contain raw email bodies, customer messages, secrets, tokens, webhook URLs or other sensitive payloads.
+
+This contract is the default for new autonomous GitHub workers. Existing workers should migrate owner-facing reporting to this path while keeping technical logs in their existing operational channels.
+
 ## Portfolio Rule
 
 `PORTFOLIO.md` is the human-readable index of what the AI factory has actually built.
