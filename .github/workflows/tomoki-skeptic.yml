@@ -1,4 +1,5 @@
 name: TOMOKI - SKEPTIC
+
 on:
   workflow_dispatch:
   schedule:
@@ -8,6 +9,8 @@ on:
     paths:
       - '.github/workflows/tomoki-skeptic.yml'
       - 'tomoki-agents/**'
+      - 'automation/reporting/**'
+
 permissions:
   contents: read
   actions: read
@@ -15,40 +18,110 @@ permissions:
   pull-requests: read
   security-events: read
   copilot-requests: write
+
+concurrency:
+  group: tomoki-skeptic-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   skeptic:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 18
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+      CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           fetch-depth: 0
           persist-credentials: false
+
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '22'
+
       - name: Install Copilot CLI
         run: npm install -g @github/copilot@1.0.80
-      - name: Run SKEPTIC
+
+      - name: Restore previous SKEPTIC memory
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/tomoki-prev && mkdir -p /tmp/tomoki-prev
+          PREV_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow 'TOMOKI - SKEPTIC' --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" --repo "$GITHUB_REPOSITORY" --name tomoki-skeptic-report --dir /tmp/tomoki-prev >/dev/null 2>&1 || true
+          fi
+          if [[ -f /tmp/tomoki-prev/tomoki-report.md ]]; then
+            cp /tmp/tomoki-prev/tomoki-report.md tomoki-previous-report.md
+            echo "Restored previous SKEPTIC report from run $PREV_RUN" >> "$GITHUB_STEP_SUMMARY"
+          else
+            : > tomoki-previous-report.md
+            echo "No previous SKEPTIC artifact available" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Run SKEPTIC adversarial audit
+        id: audit
         continue-on-error: true
         env:
           COPILOT_GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          rm -f tomoki-report.md
           copilot -p "$(cat tomoki-agents/prompts/skeptic.md)" -s --allow-tool=write --allow-tool='shell(git:*)' --allow-tool='shell(gh:*)' --no-ask-user > /tmp/tomoki-copilot.log 2>&1 || true
-          if [[ ! -f tomoki-report.md ]]; then printf 'Copilot run failed or produced no report.\n' > tomoki-report.md; fi
-      - name: Persist SKEPTIC evidence for Manager
+          if [[ ! -f tomoki-report.md ]]; then
+            printf 'SKEPTIC failed to produce a report.\n\n## 判定\nBAD / confidence 100\n' > tomoki-report.md
+            echo 'result=report-missing' >> "$GITHUB_OUTPUT"
+          else
+            echo 'result=report-produced' >> "$GITHUB_OUTPUT"
+          fi
+          if ! git diff --quiet; then
+            printf '\n\nTRACKED MUTATION DETECTED: SKEPTIC is read-only. Changes were discarded.\n' >> tomoki-report.md
+            git reset --hard HEAD
+            echo 'result=tracked-mutation-reverted' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create CEO-safe audit event
+        id: event
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        shell: bash
+        env:
+          AUDIT_STATUS: ${{ steps.audit.outputs.result || 'workflow-failure' }}
+        run: |
+          set -euo pipefail
+          mkdir -p reports/ceo-events
+          python tomoki-agents/ceo_event.py --agent SKEPTIC --file tomoki-report.md --status "$AUDIT_STATUS" --out reports/ceo-events/tomoki-skeptic.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('reports/ceo-events/tomoki-skeptic.json', encoding='utf-8'))
+          print('notify=' + str(bool(d.get('notify_ceo'))).lower())
+          print('state=' + str(d.get('state','BUILDING')))
+          PY
+
+      - name: Publish audit to job summary
+        if: always()
+        run: cat tomoki-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload durable SKEPTIC evidence for Manager
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
           name: tomoki-skeptic-report
-          path: tomoki-report.md
-          retention-days: 14
-          if-no-files-found: warn
-      - name: Report to TOMOKI Slack
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            tomoki-report.md
+            reports/ceo-events/tomoki-skeptic.json
+
+      - name: Report to TOMOKI Slack — delivery required
         if: always()
         env:
-          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
-        run: python tomoki-agents/slack_post.py --agent SKEPTIC --file tomoki-report.md --status "${{ job.status }}"
+          AUDIT_STATUS: ${{ steps.event.outputs.state || steps.audit.outputs.result || job.status }}
+        run: python tomoki-agents/slack_post.py --required --agent SKEPTIC --file tomoki-report.md --status "$AUDIT_STATUS"
+
+      - name: Escalate material SKEPTIC result to CEO layer
+        if: always() && steps.event.outputs.notify == 'true'
+        run: python automation/reporting/ceo_report.py --require-delivery reports/ceo-events/tomoki-skeptic.json
