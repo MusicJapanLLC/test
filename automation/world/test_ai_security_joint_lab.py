@@ -16,12 +16,28 @@ class JointLabTests(unittest.TestCase):
         self.assertTrue(packet["promotion_blockers"])
         self.assertEqual(packet["owner_action"], "NONE")
 
+        handoff = packet["handoff"]
+        self.assertEqual(handoff["schema"], "the-world-ai-security-handoff/v1")
+        self.assertEqual(handoff["authority"], "priority_only")
+        self.assertEqual(handoff["guidance"]["ai_priority_focus"], "reliability")
+        self.assertEqual(handoff["guidance"]["security_priority_lens"], "RECOVERY")
+        self.assertEqual(handoff["guidance"]["security_priority_stage"], "RETEST")
+        self.assertEqual(handoff["guidance"]["research_bias"], "RESILIENCE")
+        self.assertEqual(handoff["freshness"]["max_consumer_cycles"], 2)
+        self.assertTrue(handoff["constraints"]["promotion_gate_unchanged"])
+        self.assertTrue(handoff["constraints"]["permission_surface_unchanged"])
+        self.assertTrue(handoff["constraints"]["external_scope_unchanged"])
+        self.assertTrue(handoff["constraints"]["verification_authority_unchanged"])
+        self.assertTrue(handoff["constraints"]["external_target_expansion_forbidden"])
+
     def test_missing_sources_fail_soft_and_are_deterministic(self):
         a = joint.build_packet({}, {}, {})
         b = joint.build_packet({}, {}, {})
         self.assertEqual(a["assist_seed"], b["assist_seed"])
         self.assertEqual(a["joint_focus"]["security_lens"], "UNKNOWN")
         self.assertEqual(a["status"], "BUILDING")
+        self.assertEqual(a["handoff"]["guidance"]["ai_priority_focus"], "security")
+        self.assertEqual(a["handoff"]["freshness"]["stale_behavior"], "ignore_and_fall_back_to_local_evidence")
 
     def test_security_boundary_biases_governance(self):
         packet = joint.build_packet(
@@ -30,6 +46,17 @@ class JointLabTests(unittest.TestCase):
             {},
         )
         self.assertEqual(packet["joint_focus"]["research_bias"], "GOVERNANCE")
+        self.assertEqual(packet["handoff"]["guidance"]["research_bias"], "GOVERNANCE")
+
+    def test_handoff_cannot_inherit_unknown_ai_focus(self):
+        packet = joint.build_packet(
+            {"weakest_next_focus": "invent-new-permissions"},
+            {"priority_next": {"lens_id": "AI-CAPABILITY-DIFF", "stage": "DISCOVERY", "artifact": "Capability Diff"}},
+            {},
+        )
+        self.assertEqual(packet["joint_focus"]["ai"], "invent-new-permissions")
+        self.assertEqual(packet["handoff"]["guidance"]["ai_priority_focus"], "security")
+        self.assertEqual(packet["handoff"]["authority"], "priority_only")
 
 
 if __name__ == "__main__":
