@@ -8,6 +8,7 @@
       "workflow": "gmail-autonomous-sorter.yml",
       "expected_minutes": 20,
       "priority": "P0",
+      "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
       "forge_allowed": true
@@ -18,6 +19,7 @@
       "workflow": "tomoki-skeptic.yml",
       "expected_minutes": 90,
       "priority": "P1",
+      "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml"],
       "forge_allowed": false
@@ -28,6 +30,7 @@
       "workflow": "tomoki-hound.yml",
       "expected_minutes": 90,
       "priority": "P1",
+      "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-skeptic.yml"],
       "forge_allowed": false
@@ -38,6 +41,7 @@
       "workflow": "tomoki-forge.yml",
       "expected_minutes": 90,
       "priority": "P1",
+      "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-skeptic.yml"],
       "forge_allowed": false
@@ -48,6 +52,7 @@
       "workflow": "senju-daily-report.yml",
       "expected_minutes": 1560,
       "priority": "P2",
+      "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
       "forge_allowed": false
