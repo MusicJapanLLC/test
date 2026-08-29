@@ -1,0 +1,128 @@
+name: White-Hat Portfolio R&D
+
+on:
+  schedule:
+    - cron: "15 */6 * * *"
+  workflow_dispatch:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "autonomous_redteam_lab/**"
+      - "automation/security/whitehat_portfolio_bridge.py"
+      - "automation/security/test_whitehat_portfolio_bridge.py"
+      - "automation/security/WHITEHAT_PORTFOLIO_CONTRACT.md"
+      - ".github/workflows/whitehat-portfolio-rnd.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: whitehat-portfolio-rnd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Test White-Hat safety and portfolio bridge
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          PYTHONPATH=autonomous_redteam_lab python -m unittest discover -s autonomous_redteam_lab/tests -v
+          python -m pytest automation/security/test_whitehat_portfolio_bridge.py -q
+
+      - name: Prove public-target fail-closed behavior
+        env:
+          PYTHONPATH: autonomous_redteam_lab
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from cyber_lab.core import assert_local_target
+          try:
+              assert_local_target('https://8.8.8.8')
+          except ValueError:
+              print('PASS: public target refused')
+          else:
+              raise SystemExit('FAIL: public target was not refused')
+          PY
+
+      - name: Run zero-network adversarial planning
+        env:
+          PYTHONPATH: autonomous_redteam_lab
+        run: |
+          set -euo pipefail
+          mkdir -p reports/whitehat-portfolio
+          python -m cyber_lab.core \
+            --findings autonomous_redteam_lab/examples/findings.json \
+            --plan-only \
+            --out reports/whitehat-portfolio/whitehat-plan.md \
+            --json-out reports/whitehat-portfolio/whitehat-plan.json
+          python automation/security/whitehat_portfolio_bridge.py \
+            --report reports/whitehat-portfolio/whitehat-plan.json \
+            --out reports/whitehat-portfolio/portfolio-evidence.md \
+            --json-out reports/whitehat-portfolio/portfolio-evidence.json
+
+      - name: Run bounded localhost validation
+        env:
+          PYTHONPATH: autonomous_redteam_lab
+        run: |
+          set -euo pipefail
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/whitehat-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 1
+          python -m cyber_lab.core \
+            --findings autonomous_redteam_lab/examples/findings.json \
+            --target http://127.0.0.1:8765 \
+            --out reports/whitehat-portfolio/local-validation.md \
+            --json-out reports/whitehat-portfolio/local-validation.json
+          python automation/security/whitehat_portfolio_bridge.py \
+            --report reports/whitehat-portfolio/local-validation.json \
+            --out reports/whitehat-portfolio/local-portfolio-evidence.md \
+            --json-out reports/whitehat-portfolio/local-portfolio-evidence.json
+          cat reports/whitehat-portfolio/local-portfolio-evidence.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate evidence invariants
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          plan=json.loads(Path('reports/whitehat-portfolio/whitehat-plan.json').read_text())
+          local=json.loads(Path('reports/whitehat-portfolio/local-validation.json').read_text())
+          bridge=json.loads(Path('reports/whitehat-portfolio/local-portfolio-evidence.json').read_text())
+          assert plan['mode'] == 'plan-only'
+          assert plan['network_requests'] == 0
+          assert local['mode'] == 'local-validation'
+          assert 0 < local['network_requests'] <= 12
+          assert bridge['behavioral_evidence_present'] is True
+          assert bridge['promotion_ready'] is False
+          print('PASS: safe research evidence generated without auto-promotion')
+          PY
+
+      - name: Preserve White-Hat portfolio evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: whitehat-portfolio-rnd-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            reports/whitehat-portfolio/whitehat-plan.md
+            reports/whitehat-portfolio/whitehat-plan.json
+            reports/whitehat-portfolio/portfolio-evidence.md
+            reports/whitehat-portfolio/portfolio-evidence.json
+            reports/whitehat-portfolio/local-validation.md
+            reports/whitehat-portfolio/local-validation.json
+            reports/whitehat-portfolio/local-portfolio-evidence.md
+            reports/whitehat-portfolio/local-portfolio-evidence.json
