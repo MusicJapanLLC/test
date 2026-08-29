@@ -25,11 +25,6 @@ permissions:
   contents: write
   actions: read
 
-env:
-  GH_TOKEN: ${{ github.token }}
-  RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
-  PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
-
 jobs:
   portfolio-rnd:
     runs-on: ubuntu-latest
@@ -38,7 +33,7 @@ jobs:
       - name: Checkout THE WORLD
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          persist-credentials: true
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Setup Python
@@ -53,6 +48,8 @@ jobs:
           python -m unittest -v test_portfolio_rnd.py test_portfolio_autobuilder.py
 
       - name: Restore previous successful portfolio R&D memory
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -185,6 +182,8 @@ jobs:
           PY
 
       - name: Commit material portfolio artifacts back to THE WORLD
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
@@ -201,6 +200,7 @@ jobs:
           else
             TRACK="$(python -c "import json; print(json.load(open('reports/standment-security-rnd/evolution.json'))['track'])")"
             git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
+            git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin "HEAD:${GITHUB_REF_NAME}"
             echo "Autonomous portfolio artifact committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -227,6 +227,9 @@ jobs:
 
       - name: Deliver daily portfolio evolution digest to Slack
         if: always()
+        env:
+          RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+          PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
         run: |
           python - <<'PY'
           import json, os
