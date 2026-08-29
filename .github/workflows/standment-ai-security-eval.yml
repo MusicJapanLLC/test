@@ -4,6 +4,22 @@ on:
   schedule:
     - cron: '35 * * * *' # hourly cross-lane evaluation
   workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/standment-ai-security-eval.yml'
+      - '.github/workflows/ai-dev-minute-foundry.yml'
+      - '.github/workflows/security-continuous-whitehat.yml'
+      - 'automation/ai_foundry/**'
+      - 'automation/security/llm_security_eval.py'
+      - 'automation/security/test_llm_security_eval.py'
+      - 'automation/security/ai_security_feedback.py'
+      - 'automation/security/test_ai_security_feedback.py'
+      - 'automation/security/elite_whitehat_continuous.py'
+      - 'automation/security/test_elite_whitehat_continuous.py'
+      - 'standment-security/security_research_frontier.json'
+      - 'standment-security/security_framework_crosswalk.json'
+      - 'standment-security/ai-security/**'
   pull_request:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
