@@ -2,7 +2,7 @@ name: Standment Security - Portfolio First R&D
 
 on:
   schedule:
-    # 06:50 JST daily, before the 07:20 JST R&D x Senju coupled loop.
+    # 06:50 JST daily, before the 07:05 white-hat cycle and 07:20 R&D x Senju loop.
     - cron: '50 21 * * *'
   workflow_dispatch:
   push:
@@ -13,7 +13,11 @@ on:
       - 'automation/security/test_portfolio_rnd.py'
       - 'automation/security/portfolio_autobuilder.py'
       - 'automation/security/test_portfolio_autobuilder.py'
+      - 'automation/security/portfolio_accelerator.py'
+      - 'automation/security/test_portfolio_accelerator.py'
       - 'standment-security/security_portfolio_program.json'
+      - 'standment-security/whitehat-candidates/**'
+      - 'standment-security/ai-security/**'
       - 'value-lab/research_queue.json'
       - 'PORTFOLIO.md'
 
@@ -28,7 +32,7 @@ permissions:
 jobs:
   portfolio-rnd:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout THE WORLD
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -41,11 +45,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify portfolio planner and Auto-Builder
+      - name: Verify portfolio planner Auto-Builder and Accelerator
         working-directory: automation/security
         run: |
           set -euo pipefail
-          python -m unittest -v test_portfolio_rnd.py test_portfolio_autobuilder.py
+          python -m unittest -v \
+            test_portfolio_rnd.py \
+            test_portfolio_autobuilder.py \
+            test_portfolio_accelerator.py
 
       - name: Restore previous successful portfolio R&D memory
         env:
@@ -140,6 +147,18 @@ jobs:
           cat /tmp/build-summary.md >> "$GITHUB_STEP_SUMMARY"
           cat reports/standment-security-rnd/daily.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Accelerate evidence closure and anti-stagnation rotation
+        run: |
+          set -euo pipefail
+          python automation/security/portfolio_accelerator.py \
+            --program standment-security/security_portfolio_program.json \
+            --repo-root . \
+            --candidate-dir standment-security/whitehat-candidates \
+            --state standment-security/state/portfolio-accelerator.json \
+            --dashboard standment-security/PORTFOLIO_ACCELERATION.md \
+            --outbox reports/standment-security-rnd/accelerator-outbox.json
+          cat standment-security/PORTFOLIO_ACCELERATION.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Verify R&D x Senju boundary compatibility
         run: |
           set -euo pipefail
@@ -155,6 +174,7 @@ jobs:
           queue=json.loads(Path('value-lab/research_queue.json').read_text(encoding='utf-8'))
           daily=json.loads(Path('reports/standment-security-rnd/daily.json').read_text(encoding='utf-8'))
           evolution=json.loads(Path('reports/standment-security-rnd/evolution.json').read_text(encoding='utf-8'))
+          accelerator=json.loads(Path('standment-security/state/portfolio-accelerator.json').read_text(encoding='utf-8'))
 
           research_id=str(directive['research_id'])
           assert research_id.startswith(('RND-PORTFOLIO-P0', 'RND-STANDMENT-SECURITY-PORTFOLIO'))
@@ -168,9 +188,12 @@ jobs:
               if str(item.get('research_id','')).startswith('RND-STANDMENT-SECURITY-PORTFOLIO')
           ]
           assert security_tracks, 'Standment Security portfolio research is missing from the live queue'
-          assert max(int(item.get('priority',0)) for item in security_tracks) >= 4000
+          assert max(int(item.get('priority',0)) for item in security_tracks) >= 5000
           assert daily.get('portfolio_first') is True
           assert evolution.get('verification_claimed') is False
+          assert accelerator.get('company_priority') == 'P0'
+          assert accelerator.get('verification_claimed') is False
+          assert str(accelerator.get('ai_native_lane',{}).get('id','')).startswith('SEC-PORT-')
           assert daily.get('delta',{}).get('kind') in {
               'BASELINE_CAPTURED','RESEARCH_REFOCUS','VERIFIED_PORTFOLIO_DELTA','NO_VERIFIED_DELTA'
           }
@@ -178,7 +201,7 @@ jobs:
               'NORMAL','VERIFY_NEXT_MISSING_EVIDENCE','REFRAME_AND_COUNTEREVIDENCE','SWITCH_EVIDENCE_PATH'
           }
 
-          print(f'Portfolio P0/Security priority active: {research_id}; daily build and Senju boundary intact.')
+          print(f'Portfolio P0/Security priority active: {research_id}; Auto-Builder, Accelerator and Senju boundary intact.')
           PY
 
       - name: Materialize Slack outbox for Make
@@ -196,26 +219,40 @@ jobs:
 
           report=Path('reports/standment-security-rnd/daily.md')
           evolution=Path('reports/standment-security-rnd/evolution.json')
-          if not report.exists():
-              raise SystemExit('daily.md is required before outbox materialization')
+          accelerator=Path('standment-security/state/portfolio-accelerator.json')
+          if not report.exists() or not accelerator.exists():
+              raise SystemExit('daily.md and portfolio accelerator state are required before outbox materialization')
 
           evo=json.loads(evolution.read_text(encoding='utf-8')) if evolution.exists() else {}
+          acc=json.loads(accelerator.read_text(encoding='utf-8'))
           created=', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'
+          p=acc.get('primary') or {}
+          ns=acc.get('north_star') or {}
           now=datetime.now(ZoneInfo('Asia/Tokyo'))
+          accelerator_summary=(
+              '\n*Portfolio Accelerator*\n'
+              + f"P0 primary: {p.get('id')} / status={p.get('status')} / evidence={float(p.get('evidence_ratio') or 0):.0%}\n"
+              + f"White-hat candidates: {p.get('whitehat_candidates',0)} / Senju focus: {p.get('senju_focus')}\n"
+              + f"AI-native lane: {(acc.get('ai_native_lane') or {}).get('id')}\n"
+              + f"Verified: {ns.get('tracks_verified',0)}/{ns.get('tracks_total',0)} / avg evidence={float(ns.get('average_evidence_ratio') or 0):.0%}\n"
+              + f"Stagnation: {acc.get('stagnation_streak',0)} / rotated={acc.get('rotated',False)}\n"
+              + f"Next: {acc.get('next_action')}\n"
+          )
           message=(
               '*STANDMENT SECURITY｜AUTONOMOUS PORTFOLIO EVOLUTION*\n'
               + report.read_text(encoding='utf-8')
               + f"\n*Auto-Builder*\n生成/更新: {created}\n"
+              + accelerator_summary
               + 'VERIFIED自動昇格: なし（Evidence Gate維持）\n'
-              + '\n*Delivery*\nGitHub → durable outbox → Make → Slack\n'
+              + '\n*Delivery*\nGitHub → durable outbox → Make → Slack R&D\n'
           )[:30000]
 
           payload={
-              'schema':'standment-security-slack-outbox-v1',
+              'schema':'standment-security-slack-outbox-v2',
               'report_date_jst':now.strftime('%Y-%m-%d'),
               'generated_at_jst':now.isoformat(timespec='seconds'),
-              'channel_id':'C0BTJ38SNNA',
-              'source':'standment-security-portfolio-rnd',
+              'channel_id':'C0BTFSCDDE1',
+              'source':'standment-security-portfolio-rnd+accelerator',
               'delivery_mode':'make-pull-no-github-secret',
               'github_run_id':os.getenv('RUN_ID',''),
               'github_run_attempt':os.getenv('RUN_ATTEMPT',''),
@@ -224,7 +261,7 @@ jobs:
           out=Path('automation/reporting/outbox/standment-security-latest.json')
           out.parent.mkdir(parents=True, exist_ok=True)
           out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-          print(f'Wrote {out} for Make delivery; no Slack secret is required in GitHub.')
+          print(f'Wrote {out} for R&D Slack delivery; no Slack secret is required in GitHub.')
           PY
 
       - name: Commit material portfolio artifacts and Slack outbox back to THE WORLD
@@ -237,6 +274,8 @@ jobs:
           git config user.email "standment-rnd-bot@users.noreply.github.com"
           git add \
             standment-security/PORTFOLIO_INDEX.md \
+            standment-security/PORTFOLIO_ACCELERATION.md \
+            standment-security/state/portfolio-accelerator.json \
             standment-security/lab-notes \
             standment-security/case-studies \
             standment-security/evidence-packs \
@@ -249,7 +288,7 @@ jobs:
             git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
             git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin "HEAD:${GITHUB_REF_NAME}"
-            echo "Autonomous portfolio artifacts + Make delivery outbox committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
+            echo "Autonomous portfolio artifacts + accelerator state + Make delivery outbox committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Preserve daily R&D evidence
@@ -264,10 +303,13 @@ jobs:
             reports/standment-security-rnd/daily.md
             reports/standment-security-rnd/senju-research-item.json
             reports/standment-security-rnd/evolution.json
+            reports/standment-security-rnd/accelerator-outbox.json
             reports/standment-security-rnd/before/daily.json
             reports/standment-security-rnd/before/daily.md
             reports/standment-security-rnd/after/daily.json
             reports/standment-security-rnd/after/daily.md
+            standment-security/state/portfolio-accelerator.json
+            standment-security/PORTFOLIO_ACCELERATION.md
             automation/reporting/outbox/standment-security-latest.json
             /tmp/standment-rnd-senju/exchange.json
             /tmp/standment-rnd-senju/exchange.md
@@ -277,7 +319,7 @@ jobs:
         if: always()
         run: |
           if [[ -f automation/reporting/outbox/standment-security-latest.json ]]; then
-            echo "Slack delivery handoff ready: Make pulls the durable outbox using its existing Slack connection." >> "$GITHUB_STEP_SUMMARY"
+            echo "Slack delivery handoff ready: Make pulls the durable R&D outbox using its existing Slack connection." >> "$GITHUB_STEP_SUMMARY"
             echo "No PORTFOLIO_SLACK_WEBHOOK_URL / RND_SLACK_WEBHOOK_URL is required in GitHub Actions." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Slack outbox was not produced because an earlier R&D step failed." >> "$GITHUB_STEP_SUMMARY"
