@@ -4,6 +4,9 @@
 Only BOSS-final events may reach the owner channel. TOMOKI/MANAGER/worker events are
 internal supervision evidence and are intentionally rejected here even if a workflow
 accidentally invokes this script.
+
+Owner-visible reports are state-delta reports: BEFORE -> AFTER -> capability -> benefit
+-> evidence -> next measurable evolution. Raw activity belongs at the bottom.
 """
 from __future__ import annotations
 
@@ -16,6 +19,14 @@ from typing import Any
 
 ALLOWED_STATES = {"RUNNING", "VERIFIED", "BUILDING", "BLOCKED", "EXPERIMENT"}
 OWNER_ROUTE = "boss-final"
+STAGE_LABELS = {
+    0: "IDEA",
+    1: "INSPECTABLE",
+    2: "VERIFIED ONCE",
+    3: "REPEATABLE",
+    4: "AUTONOMOUS",
+    5: "EXTERNAL VALUE",
+}
 
 
 def load_event(path: str) -> dict[str, Any]:
@@ -34,29 +45,129 @@ def _count(event: dict[str, Any], key: str) -> int:
         return 0
 
 
+def _text(event: dict[str, Any], key: str, fallback: str = "") -> str:
+    value = event.get(key)
+    return str(value if value not in (None, "") else fallback).strip()
+
+
+def _stage(value: Any) -> int | None:
+    try:
+        stage = int(value)
+    except (TypeError, ValueError):
+        return None
+    return stage if stage in STAGE_LABELS else None
+
+
+def _render_metrics(event: dict[str, Any]) -> list[str]:
+    metrics = event.get("metrics") or []
+    lines: list[str] = []
+    if isinstance(metrics, list):
+        for metric in metrics[:6]:
+            if not isinstance(metric, dict) or not metric.get("name"):
+                continue
+            name = str(metric.get("name"))
+            before = metric.get("before", "?")
+            after = metric.get("after", "?")
+            unit = str(metric.get("unit", "")).strip()
+            suffix = f" {unit}" if unit else ""
+            lines.append(f"• {name}: `{before}{suffix} -> {after}{suffix}`")
+    if not lines:
+        measurement_next = _text(event, "measurement_next")
+        if measurement_next:
+            lines.append(f"• `UNMEASURED` — 次回計測: {measurement_next}")
+    return lines
+
+
+def _render_portfolio_moves(event: dict[str, Any]) -> list[str]:
+    moves = event.get("portfolio_moves") or []
+    lines: list[str] = []
+    if not isinstance(moves, list):
+        return lines
+    for move in moves[:3]:
+        if not isinstance(move, dict):
+            continue
+        title = str(move.get("title") or "artifact")[:120]
+        before = move.get("before_stage", "?")
+        after = move.get("after_stage", "?")
+        effect = str(move.get("effect") or move.get("value") or "")[:240]
+        suffix = f" — {effect}" if effect else ""
+        lines.append(f"• {title}: `L{before} -> L{after}`{suffix}")
+    return lines
+
+
 def render(event: dict[str, Any]) -> str:
     project = str(event.get("project", "AI Company"))[:120]
     state = str(event.get("state", "RUNNING"))
-    summary = str(event.get("executive_summary") or event.get("business_effect") or "重要な変化を検出")[:700]
-    business_effect = str(event.get("business_effect", ""))[:500]
-    owner_action = str(event.get("owner_action", "NONE"))[:400]
-    next_improvement = str(event.get("next_improvement", ""))[:500]
+    summary = _text(event, "change_summary", _text(event, "executive_summary", _text(event, "business_effect", "重要な変化を検出")))[:700]
+    before_state = _text(event, "before_state")[:700]
+    after_state = _text(event, "after_state")[:700]
+    capability_gain = _text(event, "capability_gain")[:600]
+    owner_benefit = _text(event, "owner_benefit")[:600]
+    business_effect = _text(event, "business_effect")[:600]
+    residual_risk = _text(event, "residual_risk", _text(event, "remaining_risk"))[:600]
+    owner_action = _text(event, "owner_action", "NONE")[:400]
+    next_target = _text(event, "next_target", _text(event, "next_improvement"))[:600]
+    success_criteria = _text(event, "success_criteria")[:600]
+    evidence = _text(event, "evidence")[:1000]
     unresolved = _count(event, "unresolved")
     critical = int(event.get("priorities", {}).get("critical", 0) or 0)
     high = int(event.get("priorities", {}).get("high", 0) or 0)
+    stage_before = _stage(event.get("evolution_stage_before"))
+    stage_after = _stage(event.get("evolution_stage_after"))
 
     lines = [
-        f"*CEO FINAL REPORT｜{project}*",
-        f"*結論:* {summary}",
+        f"*CEO EVOLUTION REPORT｜{project}*",
+        f"*結論 / Company delta:* {summary}",
         f"*状態:* {state}",
     ]
-    if unresolved or critical or high:
-        lines.append(f"*未解決:* {unresolved}件（P0 {critical} / P1 {high}）")
-    if business_effect and business_effect != summary:
-        lines.append(f"*経営への影響:* {business_effect}")
-    lines.append(f"*あなたの判断:* {'不要' if owner_action == 'NONE' else owner_action}")
-    if next_improvement:
-        lines.append(f"*次:* {next_improvement}")
+
+    if before_state or after_state:
+        lines += [
+            "",
+            "*何が変わった*",
+            f"• Before: {before_state or 'UNMEASURED / baseline missing'}",
+            f"• After: {after_state or 'UNMEASURED / current verification missing'}",
+        ]
+
+    if stage_before is not None or stage_after is not None:
+        before_label = STAGE_LABELS.get(stage_before, "UNKNOWN")
+        after_label = STAGE_LABELS.get(stage_after, "UNKNOWN")
+        lines.append(f"• Evolution: `L{stage_before} {before_label} -> L{stage_after} {after_label}`")
+
+    if capability_gain:
+        lines += ["", "*新しく可能になったこと*", capability_gain]
+
+    if owner_benefit or business_effect:
+        lines += ["", "*経営メリット*"]
+        if owner_benefit:
+            lines.append(f"• Owner/User: {owner_benefit}")
+        if business_effect:
+            lines.append(f"• Business: {business_effect}")
+
+    metric_lines = _render_metrics(event)
+    if metric_lines:
+        lines += ["", "*実測差分*", *metric_lines]
+
+    portfolio_lines = _render_portfolio_moves(event)
+    if portfolio_lines:
+        lines += ["", "*Portfolio movement*", *portfolio_lines]
+
+    if unresolved or critical or high or residual_risk:
+        lines += ["", "*残る問題 / リスク*"]
+        if unresolved or critical or high:
+            lines.append(f"• 未解決: {unresolved}件（P0 {critical} / P1 {high}）")
+        if residual_risk:
+            lines.append(f"• {residual_risk}")
+
+    lines += ["", f"*あなたの判断:* {'不要' if owner_action == 'NONE' else owner_action}"]
+
+    if next_target:
+        lines += ["", "*次の進化*", next_target]
+    if success_criteria:
+        lines.append(f"*成功条件:* {success_criteria}")
+    if evidence:
+        lines += ["", "*Evidence*", evidence]
+
     return "\n".join(lines)
 
 
