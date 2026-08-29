@@ -1,16 +1,16 @@
 # Tests
 
-## Test 1 - 休眠案件が回収キューに保存される [sanity]
+## Test 1 - 過去案件をまとめて回収キューへ入れられる [sanity]
 Viewport: desktop
-Covers: authentication, deal creation, database persistence, recovery score, dashboard metrics
-Description: 実案件を登録すると保存され、回収優先度付きでキューに現れることを確認する。
+Covers: authentication, POST /api/deals/import, bulk import, database persistence, recovery score, dashboard metrics
+Description: 営業リストを貼り付けるだけで複数案件を保存し、回収優先度付きキューを作れることを確認する。
 
 Steps:
-1. Googleでログインし、案件追加を開く
-2. 会社名「Recovery Test」、見込金額「300000」、状態「休眠」を入力して保存する
+1. Googleでログインし「まとめて追加」を開く
+2. 2行のタブ区切り案件データを貼り付けて「回収キューへ追加」を押す
 3. ページを更新する
 
-Expected: 「Recovery Test」が回収キューと全案件に残り、0より大きい回収スコアが表示される。
+Expected: 追加件数が表示され、2案件が回収キューと全案件に残り、それぞれ回収スコアが表示される。
 
 ## Test 2 - AIが次アクションと追客文を生成する
 Viewport: desktop
