@@ -4,15 +4,20 @@ import unittest
 from pathlib import Path
 
 from automation.ai_foundry.minute_evolution import (
+    FAILURE_MEMORY_TTL_GENERATIONS,
     FOCUS_ORDER,
     behavioral_gate,
     build_hourly_summary,
     evaluate_strategy,
     evolve_once,
+    failure_recurrence,
+    failure_signature,
     initial_state,
     normalize_focus_bias,
     quality_vector,
+    record_failure_memory,
     run_rounds,
+    supersede_failure_memory,
 )
 
 
@@ -24,6 +29,8 @@ class MinuteEvolutionTests(unittest.TestCase):
         self.assertEqual(set(state["champion"]["quality_proxy"]), set(FOCUS_ORDER))
         self.assertIn("strategy_eval", state["champion"])
         self.assertGreater(state["champion"]["strategy_eval"]["holdout"]["total"], 0)
+        self.assertEqual(state["failure_memory"]["schema"], "the-world-ai-failure-memory/v1")
+        self.assertEqual(state["failure_memory"]["entries"], {})
 
     def test_one_round_never_regresses_core_proxy_materially(self):
         before = initial_state()
@@ -135,6 +142,104 @@ class MinuteEvolutionTests(unittest.TestCase):
             rows = [json.loads(line) for line in history.read_text(encoding="utf-8").splitlines()]
             self.assertEqual(len(rows), 5)
             self.assertEqual(rows[-1]["generation"], state["generation"])
+
+
+    def test_failure_memory_detects_repeated_mutation_family(self):
+        state = initial_state()
+        current = state["champion"]["params"]
+        candidate = dict(current)
+        candidate["artifact_priority"] = 3
+        fingerprint, changes = failure_signature(current, candidate, "productization")
+        memory = state["failure_memory"]
+        memory = record_failure_memory(
+            memory,
+            fingerprint=fingerprint,
+            changes=changes,
+            reason="behavioral_fixture_regression",
+            focus="productization",
+            generation=1,
+            evidence_fingerprint="evidence-a",
+        )
+        memory = record_failure_memory(
+            memory,
+            fingerprint=fingerprint,
+            changes=changes,
+            reason="behavioral_fixture_regression",
+            focus="productization",
+            generation=2,
+            evidence_fingerprint="evidence-b",
+        )
+        self.assertEqual(failure_recurrence(memory, fingerprint, 2), 2)
+        self.assertEqual(memory["recorded_failures"], 2)
+        self.assertEqual(memory["entries"][fingerprint]["changes"], ["artifact_priority:down"])
+
+    def test_failure_memory_expires_and_does_not_become_truth(self):
+        state = initial_state()
+        current = state["champion"]["params"]
+        candidate = dict(current)
+        candidate["change_scope"] = 3
+        fingerprint, changes = failure_signature(current, candidate, "security")
+        memory = record_failure_memory(
+            state["failure_memory"],
+            fingerprint=fingerprint,
+            changes=changes,
+            reason="core_regression:security",
+            focus="security",
+            generation=1,
+            evidence_fingerprint="old-evidence",
+        )
+        self.assertEqual(failure_recurrence(memory, fingerprint, 1), 1)
+        self.assertEqual(
+            failure_recurrence(
+                memory,
+                fingerprint,
+                1 + FAILURE_MEMORY_TTL_GENERATIONS + 1,
+            ),
+            0,
+        )
+
+    def test_fresh_passing_evidence_supersedes_failure_memory(self):
+        state = initial_state()
+        current = state["champion"]["params"]
+        candidate = dict(current)
+        candidate["parallel_research"] = 4
+        fingerprint, changes = failure_signature(current, candidate, "efficiency")
+        memory = state["failure_memory"]
+        for generation in (1, 2):
+            memory = record_failure_memory(
+                memory,
+                fingerprint=fingerprint,
+                changes=changes,
+                reason="insufficient_focus_delta",
+                focus="efficiency",
+                generation=generation,
+                evidence_fingerprint=f"failed-{generation}",
+            )
+        memory = supersede_failure_memory(
+            memory,
+            fingerprint=fingerprint,
+            generation=3,
+            evidence_fingerprint="fresh-pass",
+        )
+        self.assertEqual(failure_recurrence(memory, fingerprint, 3), 1)
+        memory = supersede_failure_memory(
+            memory,
+            fingerprint=fingerprint,
+            generation=4,
+            evidence_fingerprint="fresh-pass-2",
+        )
+        self.assertEqual(failure_recurrence(memory, fingerprint, 4), 0)
+        self.assertEqual(memory["superseded_failures"], 2)
+
+    def test_failure_memory_is_bounded_and_reported(self):
+        start = initial_state()
+        after = run_rounds(start, rounds=40, sleep_seconds=0, seed="memory-bounds")
+        self.assertLessEqual(len(after["failure_memory"]["entries"]), 128)
+        summary = build_hourly_summary(start, after)
+        self.assertIn("failure_memory", summary)
+        self.assertIn("failure_memory_delta", summary)
+        self.assertLessEqual(summary["failure_memory"]["active_entries"], 128)
+        self.assertIn("Fresh executable evidence", summary["failure_memory"]["claim_boundary"])
 
     def test_quality_vector_stays_bounded(self):
         vector = quality_vector({

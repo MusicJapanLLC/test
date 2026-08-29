@@ -112,6 +112,193 @@ STRATEGY_EVAL_FIXTURES: tuple[dict[str, Any], ...] = (
     },
 )
 
+FAILURE_MEMORY_MAX_ENTRIES = 128
+FAILURE_MEMORY_TTL_GENERATIONS = 720
+FAILURE_MEMORY_REPEAT_THRESHOLD = 2
+FAILURE_MEMORY_RESAMPLE_ATTEMPTS = 4
+
+
+def _empty_failure_memory() -> dict[str, Any]:
+    return {
+        "schema": "the-world-ai-failure-memory/v1",
+        "max_entries": FAILURE_MEMORY_MAX_ENTRIES,
+        "ttl_generations": FAILURE_MEMORY_TTL_GENERATIONS,
+        "entries": {},
+        "recorded_failures": 0,
+        "avoided_recurrences": 0,
+        "superseded_failures": 0,
+        "expired_entries": 0,
+    }
+
+
+def _normalize_failure_memory(memory: Any, generation: int) -> dict[str, Any]:
+    """Migrate/prune bounded negative evidence without treating history as truth."""
+    if not isinstance(memory, dict):
+        memory = _empty_failure_memory()
+    out = _empty_failure_memory()
+    for key in ("recorded_failures", "avoided_recurrences", "superseded_failures", "expired_entries"):
+        out[key] = int(memory.get(key) or 0)
+    raw_entries = memory.get("entries") or {}
+    entries: dict[str, dict[str, Any]] = {}
+    if isinstance(raw_entries, dict):
+        for fingerprint, raw in raw_entries.items():
+            if not isinstance(raw, dict):
+                continue
+            expires = int(raw.get("expires_after_generation") or 0)
+            if expires and expires < generation:
+                out["expired_entries"] += 1
+                continue
+            row = dict(raw)
+            row["fingerprint"] = str(fingerprint)
+            row["occurrences"] = max(1, int(row.get("occurrences") or 1))
+            row["first_seen_generation"] = int(row.get("first_seen_generation") or generation)
+            row["last_seen_generation"] = int(row.get("last_seen_generation") or row["first_seen_generation"])
+            row["expires_after_generation"] = expires or (
+                row["last_seen_generation"] + FAILURE_MEMORY_TTL_GENERATIONS
+            )
+            entries[str(fingerprint)] = row
+
+    # Keep the most recent repeated failures, not an unbounded archive.
+    ranked = sorted(
+        entries.items(),
+        key=lambda item: (
+            int(item[1].get("last_seen_generation") or 0),
+            int(item[1].get("occurrences") or 0),
+            item[0],
+        ),
+        reverse=True,
+    )[:FAILURE_MEMORY_MAX_ENTRIES]
+    out["entries"] = dict(ranked)
+    return out
+
+
+def failure_signature(
+    current_params: dict[str, Any],
+    candidate_params: dict[str, Any],
+    focus: str,
+) -> tuple[str, list[str]]:
+    """Fingerprint a mutation family by changed dimensions/directions, not exact values."""
+    changes: list[str] = []
+    for name in PARAM_BOUNDS:
+        before = float(current_params[name])
+        after = float(candidate_params[name])
+        if after == before:
+            continue
+        direction = "up" if after > before else "down"
+        changes.append(f"{name}:{direction}")
+    stable = {
+        "focus": normalize_focus_bias(focus) or str(focus),
+        "changes": sorted(changes),
+    }
+    fingerprint = hashlib.sha256(
+        json.dumps(stable, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()[:20]
+    return fingerprint, stable["changes"]
+
+
+def failure_recurrence(memory: dict[str, Any], fingerprint: str, generation: int) -> int:
+    normalized = _normalize_failure_memory(memory, generation)
+    row = (normalized.get("entries") or {}).get(fingerprint)
+    return int((row or {}).get("occurrences") or 0)
+
+
+def record_failure_memory(
+    memory: dict[str, Any],
+    *,
+    fingerprint: str,
+    changes: list[str],
+    reason: str,
+    focus: str,
+    generation: int,
+    evidence_fingerprint: str | None = None,
+) -> dict[str, Any]:
+    out = _normalize_failure_memory(memory, generation)
+    entries = dict(out.get("entries") or {})
+    row = dict(entries.get(fingerprint) or {})
+    first = int(row.get("first_seen_generation") or generation)
+    occurrences = int(row.get("occurrences") or 0) + 1
+    row.update({
+        "fingerprint": fingerprint,
+        "changes": list(changes),
+        "focus": str(focus),
+        "last_reason": str(reason),
+        "first_seen_generation": first,
+        "last_seen_generation": generation,
+        "occurrences": occurrences,
+        "expires_after_generation": generation + FAILURE_MEMORY_TTL_GENERATIONS,
+        "last_evidence_fingerprint": str(evidence_fingerprint or ""),
+    })
+    entries[fingerprint] = row
+    out["entries"] = entries
+    out["recorded_failures"] = int(out.get("recorded_failures") or 0) + 1
+    return _normalize_failure_memory(out, generation)
+
+
+def supersede_failure_memory(
+    memory: dict[str, Any],
+    *,
+    fingerprint: str,
+    generation: int,
+    evidence_fingerprint: str | None = None,
+) -> dict[str, Any]:
+    """Fresh passing evidence weakens/removes historical negative evidence."""
+    out = _normalize_failure_memory(memory, generation)
+    entries = dict(out.get("entries") or {})
+    row = entries.get(fingerprint)
+    if not isinstance(row, dict):
+        return out
+    occurrences = int(row.get("occurrences") or 0)
+    if occurrences <= 1:
+        entries.pop(fingerprint, None)
+    else:
+        row = dict(row)
+        row["occurrences"] = occurrences - 1
+        row["last_superseded_generation"] = generation
+        row["last_superseding_evidence_fingerprint"] = str(evidence_fingerprint or "")
+        row["expires_after_generation"] = generation + FAILURE_MEMORY_TTL_GENERATIONS
+        entries[fingerprint] = row
+    out["entries"] = entries
+    out["superseded_failures"] = int(out.get("superseded_failures") or 0) + 1
+    return _normalize_failure_memory(out, generation)
+
+
+def _memory_summary(memory: Any, generation: int) -> dict[str, Any]:
+    normalized = _normalize_failure_memory(memory, generation)
+    rows = sorted(
+        (normalized.get("entries") or {}).values(),
+        key=lambda row: (
+            int(row.get("occurrences") or 0),
+            int(row.get("last_seen_generation") or 0),
+            str(row.get("fingerprint") or ""),
+        ),
+        reverse=True,
+    )
+    return {
+        "schema": normalized["schema"],
+        "active_entries": len(rows),
+        "recorded_failures": int(normalized.get("recorded_failures") or 0),
+        "avoided_recurrences": int(normalized.get("avoided_recurrences") or 0),
+        "superseded_failures": int(normalized.get("superseded_failures") or 0),
+        "expired_entries": int(normalized.get("expired_entries") or 0),
+        "repeat_threshold": FAILURE_MEMORY_REPEAT_THRESHOLD,
+        "ttl_generations": FAILURE_MEMORY_TTL_GENERATIONS,
+        "top_recurrences": [
+            {
+                "fingerprint": row.get("fingerprint"),
+                "occurrences": int(row.get("occurrences") or 0),
+                "focus": row.get("focus"),
+                "changes": row.get("changes") or [],
+                "last_reason": row.get("last_reason"),
+                "last_seen_generation": int(row.get("last_seen_generation") or 0),
+            }
+            for row in rows[:5]
+        ],
+        "claim_boundary": (
+            "Historical failure memory only changes exploration priority. Fresh executable "
+            "evidence and normal promotion gates always remain authoritative."
+        ),
+    }
+
 
 def _cap(v: float) -> float:
     return round(max(0.0, min(100.0, v)), 3)
@@ -236,7 +423,7 @@ def initial_state() -> dict[str, Any]:
     vector = quality_vector(DEFAULT_PARAMS)
     strategy_eval = evaluate_strategy(DEFAULT_PARAMS)
     return {
-        "schema": "the-world-ai-foundry-state/v3",
+        "schema": "the-world-ai-foundry-state/v4",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "generation": 0,
         "curriculum_level": 1,
@@ -250,8 +437,9 @@ def initial_state() -> dict[str, Any]:
         "promotions": 0,
         "rejections": 0,
         "noops": 0,
+        "failure_memory": _empty_failure_memory(),
         "recent": [],
-        "note": "Proxy scores steer engineering strategy only; promotion also requires deterministic visible/holdout non-regression evidence. Real capability still requires code/runtime evidence and independent tests.",
+        "note": "Proxy scores steer engineering strategy only; promotion also requires deterministic visible/holdout non-regression evidence. Bounded expirable failure memory reduces repeated dead ends but cannot override fresh evidence or promotion gates. Real capability still requires code/runtime evidence and independent tests.",
     }
 
 
@@ -315,9 +503,35 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
         champion["strategy_eval"] = evaluate_strategy(current_params)
     rng = random.Random(f"{seed}:{generation}:{champion['id']}:{bias or 'no-assist'}")
 
+    failure_memory = _normalize_failure_memory(state.get("failure_memory"), generation)
     candidates = []
     for idx in range(8):
-        params = _candidate_params(current_params, rng)
+        params = None
+        fingerprint = ""
+        changes: list[str] = []
+        prior_occurrences = 0
+        resample_attempts = 0
+        for attempt in range(FAILURE_MEMORY_RESAMPLE_ATTEMPTS):
+            proposed = _candidate_params(current_params, rng)
+            proposed_fingerprint, proposed_changes = failure_signature(
+                current_params, proposed, focus
+            )
+            recurrence = failure_recurrence(
+                failure_memory, proposed_fingerprint, generation
+            )
+            params = proposed
+            fingerprint = proposed_fingerprint
+            changes = proposed_changes
+            prior_occurrences = recurrence
+            resample_attempts = attempt
+            if recurrence < FAILURE_MEMORY_REPEAT_THRESHOLD:
+                break
+            if attempt < FAILURE_MEMORY_RESAMPLE_ATTEMPTS - 1:
+                failure_memory["avoided_recurrences"] = (
+                    int(failure_memory.get("avoided_recurrences") or 0) + 1
+                )
+
+        assert params is not None
         vector = quality_vector(params)
         ok, reason, behavior = _eligible(
             current_vector,
@@ -327,6 +541,23 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             candidate_params=params,
         )
         strategy_eval = evaluate_strategy(params)
+        if not ok:
+            failure_memory = record_failure_memory(
+                failure_memory,
+                fingerprint=fingerprint,
+                changes=changes,
+                reason=reason,
+                focus=focus,
+                generation=generation,
+                evidence_fingerprint=strategy_eval["fingerprint"],
+            )
+        elif prior_occurrences:
+            failure_memory = supersede_failure_memory(
+                failure_memory,
+                fingerprint=fingerprint,
+                generation=generation,
+                evidence_fingerprint=strategy_eval["fingerprint"],
+            )
         candidates.append({
             "candidate": idx,
             "params": params,
@@ -337,7 +568,12 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "focus_delta": round(vector[focus] - current_vector[focus], 3),
             "strategy_eval": strategy_eval,
             "behavioral_gate": behavior,
+            "failure_fingerprint": fingerprint,
+            "failure_family_changes": changes,
+            "prior_failure_occurrences": prior_occurrences,
+            "memory_resample_attempts": resample_attempts,
         })
+    state["failure_memory"] = _normalize_failure_memory(failure_memory, generation)
 
     eligible = [c for c in candidates if c["eligible"]]
     if eligible:
@@ -377,6 +613,8 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "holdout_fixture_delta": int(behavior.get("holdout_delta") or 0),
             "improved_fixture_cases": behavior.get("improved_cases") or [],
             "strategy_eval_fingerprint": winner["strategy_eval"]["fingerprint"],
+            "failure_memory_active": len((state.get("failure_memory") or {}).get("entries") or {}),
+            "winner_prior_failure_occurrences": int(winner.get("prior_failure_occurrences") or 0),
         }
     else:
         state["rejections"] = int(state.get("rejections") or 0) + len(candidates)
@@ -392,6 +630,7 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "champion": champion["id"],
             "reason": "no candidate cleared proxy, core-regression and behavioral holdout gates",
             "behavioral_rejections": behavioral_rejections,
+            "failure_memory_active": len((state.get("failure_memory") or {}).get("entries") or {}),
         }
 
     state["generation"] = generation
@@ -438,6 +677,15 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
     )
     new_events = [e for e in after.get("recent", []) if int(e.get("generation") or 0) > int(before.get("generation") or 0)]
     assisted = [e for e in new_events if e.get("assist_applied")]
+    before_memory = _memory_summary(before.get("failure_memory"), int(before.get("generation") or 0))
+    after_memory = _memory_summary(after.get("failure_memory"), int(after.get("generation") or 0))
+    memory_delta = {
+        "active_entries": after_memory["active_entries"] - before_memory["active_entries"],
+        "recorded_failures": after_memory["recorded_failures"] - before_memory["recorded_failures"],
+        "avoided_recurrences": after_memory["avoided_recurrences"] - before_memory["avoided_recurrences"],
+        "superseded_failures": after_memory["superseded_failures"] - before_memory["superseded_failures"],
+        "expired_entries": after_memory["expired_entries"] - before_memory["expired_entries"],
+    }
     stable_payload = {
         "champion": after["champion"],
         "delta": delta,
@@ -445,10 +693,12 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
         "weakest": weakest,
         "curriculum_level": after["curriculum_level"],
         "assist_focuses": sorted({str(e.get("assist_focus")) for e in assisted}),
+        "failure_memory": after_memory,
+        "failure_memory_delta": memory_delta,
     }
     fingerprint = hashlib.sha256(json.dumps(stable_payload, sort_keys=True).encode()).hexdigest()[:20]
     return {
-        "schema": "the-world-ai-foundry-hourly/v3",
+        "schema": "the-world-ai-foundry-hourly/v4",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "start_generation": before["generation"],
         "end_generation": after["generation"],
@@ -471,10 +721,13 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
         "champion_params": after["champion"]["params"],
         "security_assist_rounds": len(assisted),
         "security_assist_focuses": sorted({str(e.get("assist_focus")) for e in assisted}),
+        "failure_memory": after_memory,
+        "failure_memory_delta": memory_delta,
         "limitations": [
             "Minute evolution changes engineering strategy state, not model weights.",
             "Security/Eval assist is priority-only, bounded to one of every three rounds, and cannot bypass regression/promotion gates.",
             "Visible/holdout fixtures are deterministic engineering-strategy evidence; they do not establish general model capability, production performance, or customer validation.",
+            "Failure memory is bounded, expirable negative evidence used only to reduce repeated exploration; fresh passing evidence can supersede it.",
             "Real capability claims still require bounded code/runtime changes, independent tests and relevant external or customer evidence.",
         ],
     }
@@ -520,7 +773,7 @@ def main() -> int:
     q.add_argument("--history")
     q.add_argument("--rounds", type=int, default=60)
     q.add_argument("--sleep-seconds", type=float, default=60.0)
-    q.add_argument("--seed", default="the-world-ai-foundry-v3")
+    q.add_argument("--seed", default="the-world-ai-foundry-v4")
     q.add_argument("--assist-focus", choices=FOCUS_ORDER)
 
     args = ap.parse_args()
