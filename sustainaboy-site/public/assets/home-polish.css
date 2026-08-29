@@ -1,71 +1,137 @@
-/* Homepage-only finishing layer.
-   Keeps the landing page mobile-first, minimal, and image-light without touching BATON or subpages. */
-@media (max-width: 759px){
-  .hero{
-    min-height:100svh;
-    display:flex;
-    align-items:center;
-    padding-top:122px;
-    padding-bottom:104px;
-  }
-  .hero-grid>div:first-child{max-width:560px}
-  .hero-lead{max-width:34em}
+/* Homepage-only polish layer.
+   Direction: Apple-like restraint + Linear-like hierarchy + Japanese brand-world spacing.
+   BATON is reference-only and is not modified. */
 
-  /* Never let the founder image become a tall poster on mobile. */
-  .story-grid .portrait{
-    width:100%;
-    max-width:none;
-    aspect-ratio:16/10;
-  }
-  .story-grid .portrait img{
-    width:100%;
-    height:100%;
-    aspect-ratio:auto;
-    object-fit:cover;
-    object-position:50% 22%;
-  }
+:root{--sbw-ease:cubic-bezier(.22,1,.36,1)}
 
-  /* One calm, persistent action. Safe-area aware for iPhone. */
-  .mobile-sticky-cta{
-    position:fixed;
-    left:0;
-    right:0;
-    bottom:0;
-    z-index:120;
-    padding:10px 14px calc(10px + env(safe-area-inset-bottom));
-    background:linear-gradient(180deg,rgba(4,19,43,0),rgba(4,19,43,.86) 24%,rgba(4,19,43,.96));
-    pointer-events:none;
-  }
-  .mobile-sticky-cta a{
-    min-height:50px;
-    width:min(100%,520px);
-    margin-inline:auto;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:16px;
-    padding:0 18px;
-    border:1px solid rgba(255,212,93,.34);
-    border-radius:14px;
-    background:rgba(240,185,47,.97);
-    color:#061a36;
-    box-shadow:0 16px 42px rgba(0,0,0,.22);
-    font-size:14px;
-    font-weight:750;
-    letter-spacing:.04em;
-    pointer-events:auto;
-    -webkit-tap-highlight-color:transparent;
-  }
-  .mobile-sticky-cta a span{
-    font-size:18px;
-    line-height:1;
-  }
+/* Header: transparent in the hero, compact glass once the page moves. */
+.site-header{position:fixed;top:0;left:0;right:0;transition:background .35s var(--sbw-ease),border-color .35s var(--sbw-ease),backdrop-filter .35s var(--sbw-ease),box-shadow .35s var(--sbw-ease)}
+.site-header.is-scrolled{background:rgba(4,19,43,.78);backdrop-filter:saturate(145%) blur(18px);-webkit-backdrop-filter:saturate(145%) blur(18px);border-bottom:1px solid rgba(255,255,255,.07);box-shadow:0 12px 36px rgba(0,0,0,.12)}
+
+/* Hero: no image. The brand world is built only with type, light, orbit and a north star. */
+.hero{isolation:isolate;min-height:100svh;display:flex;align-items:center;padding:128px 0 104px;background:
+  radial-gradient(circle at 72% 20%,rgba(255,205,82,.14),transparent 18%),
+  radial-gradient(circle at 50% 72%,rgba(35,91,151,.18),transparent 33%),
+  linear-gradient(180deg,#031126 0%,#061a36 62%,#082449 100%)}
+.hero:before{right:-142px;top:10vh;width:440px;height:440px;border-color:rgba(255,212,93,.12);box-shadow:inset 0 0 0 64px rgba(255,255,255,.012),inset 0 0 0 128px rgba(255,255,255,.008);animation:sbw-orbit 36s linear infinite}
+.hero:after{right:7%;top:19vh;width:150px;height:46vh;max-height:430px;border-right:1.5px solid rgba(255,212,93,.82);filter:drop-shadow(0 0 10px rgba(240,185,47,.32));opacity:.78;animation:sbw-path 8s ease-in-out infinite alternate}
+.hero .wrap{position:relative}
+.hero .wrap:before{content:"";position:absolute;z-index:1;right:11%;top:2%;width:7px;height:7px;border-radius:50%;background:#fff4bf;box-shadow:0 0 0 1px rgba(255,212,93,.45),0 0 18px 4px rgba(255,212,93,.52),0 0 52px 12px rgba(255,212,93,.16);animation:sbw-star 3.8s ease-in-out infinite}
+.hero .wrap:after{content:"N";position:absolute;right:10.2%;top:calc(2% + 18px);font-size:9px;font-weight:700;letter-spacing:.24em;color:rgba(255,223,137,.56)}
+.hero-grid{width:100%}
+.hero-grid>div:first-child{position:relative;z-index:3;max-width:720px}
+.hero .eyebrow{max-width:none;margin-bottom:30px;font-size:11px;font-weight:650;letter-spacing:.15em;line-height:1.7;color:rgba(240,246,252,.8)}
+.hero .eyebrow:after{width:32px;height:1px;margin-top:16px;background:rgba(255,212,93,.78)}
+.hero h1{max-width:860px;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","YuGothic","Meiryo",system-ui,sans-serif;font-size:clamp(46px,12.8vw,72px);font-weight:720;line-height:1.13;letter-spacing:-.045em;text-wrap:balance}
+.hero h1 em{color:#f4c54b;text-shadow:0 0 30px rgba(240,185,47,.13)}
+.hero-lead{max-width:36em;margin:28px 0 30px;font-size:15px;line-height:1.92;letter-spacing:.015em;color:#c8d5e3}
+.hero .actions{max-width:460px;gap:10px}
+.hero .btn{min-height:52px;border-radius:999px;padding-inline:22px;font-size:13px;letter-spacing:.025em;transition:transform .25s var(--sbw-ease),background .25s var(--sbw-ease),border-color .25s var(--sbw-ease),box-shadow .25s var(--sbw-ease)}
+.hero .btn-primary{background:#f0b92f;box-shadow:0 10px 34px rgba(240,185,47,.14)}
+.hero .btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 38px rgba(240,185,47,.2)}
+.hero .btn-secondary{border-color:rgba(255,212,93,.38);color:#f7cf66}
+.hero-note{margin-top:14px;color:#94a9bf;letter-spacing:.03em}
+
+/* Page rhythm: fewer visual tricks, more hierarchy and negative space. */
+.section{padding-top:92px;padding-bottom:92px}
+.section-head{margin-bottom:42px}
+.kicker{font-size:10px;letter-spacing:.22em}
+h2{letter-spacing:-.025em;text-wrap:balance}
+.problem-grid,.one-mm,.no-answer,.os-grid,.story-grid,.price-wrap{max-width:1040px;margin-inline:auto}
+.quote-block{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","YuGothic","Meiryo",system-ui,sans-serif;font-weight:680;letter-spacing:-.025em}
+.check-list li{padding-top:17px;padding-bottom:17px;font-size:14px;line-height:1.75}
+.check-list li:before{width:6px;height:6px;top:26px;background:#d3a52f;box-shadow:0 0 0 4px rgba(240,185,47,.09)}
+
+/* Steps: closer to editorial/product design than template cards. */
+.flow{border-top-color:#d7e0e8}
+.step{padding-top:26px;padding-bottom:26px}
+.step .num{color:#8e9dab;font-variant-numeric:tabular-nums}
+.step h3{font-weight:700;letter-spacing:-.02em}
+.step p{line-height:1.78}
+
+.section-dark{background:radial-gradient(circle at 85% 20%,rgba(240,185,47,.07),transparent 24%),linear-gradient(180deg,#05172f,#07203f)}
+.big-statement{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","YuGothic","Meiryo",system-ui,sans-serif;font-weight:710;line-height:1.28;letter-spacing:-.04em}
+.philosophy-list div{padding-block:20px}
+
+.pills{gap:7px}
+.pill{background:#fff;border-color:#dfe6ec;color:#37536a;padding:7px 12px}
+.mm-line:before{background:#d8aa31}
+
+/* Founder image is supporting evidence, never the visual hero. */
+.story-grid .portrait{overflow:hidden;background:#eef3f7;border-radius:22px}
+.story-grid .portrait img{width:100%;height:100%;object-fit:cover;object-position:50% 20%;filter:saturate(.86) contrast(1.02)}
+.timeline span{background:transparent;border-color:#d7e0e7;padding:6px 10px;font-size:11px}
+.field{border-left-width:1px;padding-left:18px}
+
+/* Pricing is intentionally quiet: value first, sales UI second. */
+.price-card{border-radius:18px;border-color:#dfe5ea;box-shadow:none;padding:22px 20px}
+.price-card strong{font-size:16px;letter-spacing:-.01em}
+.price{font-size:28px;letter-spacing:-.035em}
+.detail-box{border-top-color:#dfe5ea}
+.cta{border-radius:24px;background:radial-gradient(circle at 85% 20%,rgba(240,185,47,.15),transparent 30%),linear-gradient(135deg,#04152d,#09284d);box-shadow:0 30px 70px rgba(6,26,54,.12)}
+.cta .btn{border-radius:999px}
+
+/* Scroll entrance: one restrained movement, not a bag of animations. */
+.reveal{transform:translateY(18px);filter:blur(5px);transition:opacity .72s var(--sbw-ease),transform .72s var(--sbw-ease),filter .72s var(--sbw-ease)}
+.reveal.is-visible{filter:blur(0)}
+
+/* Mobile-first decisions */
+@media(max-width:759px){
+  .site-header.is-scrolled .header-inner{height:64px}
+  .header-inner{transition:height .3s var(--sbw-ease)}
+  .brand img{width:36px;height:36px}
+  .brand span{font-size:10px;letter-spacing:.075em}
+  .brand small{font-size:8px}
+  .hero{padding-top:116px;padding-bottom:108px}
+  .hero:before{right:-190px;top:18%;width:360px;height:360px}
+  .hero:after{right:-1%;top:25%;height:340px;opacity:.6}
+  .hero .wrap:before{right:14%;top:0}
+  .hero .wrap:after{right:12.7%;top:20px}
+  .hero h1{max-width:9.8em}
+  .hero-lead br{display:none}
+  .hero .actions{display:grid;grid-template-columns:1fr;max-width:none}
+  .section{padding-top:82px;padding-bottom:82px}
+  .problem-grid,.one-mm,.no-answer,.os-grid,.story-grid,.price-wrap{gap:38px}
+  .quote-block{font-size:30px;line-height:1.42}
+  .big-statement{font-size:36px}
+
+  /* The low-res portrait should never become a tall poster on phones. */
+  .story-grid .portrait{width:100%;max-width:none;aspect-ratio:16/10}
+  .story-grid .portrait img{aspect-ratio:auto}
+
+  /* Apple-like glass action dock instead of a giant colored bar. */
+  .mobile-sticky-cta{position:fixed;left:0;right:0;bottom:0;z-index:120;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(3,17,38,0),rgba(3,17,38,.56) 28%,rgba(3,17,38,.84));pointer-events:none}
+  .mobile-sticky-cta a{min-height:48px;width:min(100%,520px);margin-inline:auto;display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 17px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(10,30,58,.82);backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%);color:#f4cb62;box-shadow:0 16px 42px rgba(0,0,0,.22);font-size:13px;font-weight:700;letter-spacing:.03em;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+  .mobile-sticky-cta a span{font-size:17px;line-height:1;transition:transform .25s var(--sbw-ease)}
+  .mobile-sticky-cta a:active span{transform:translateX(3px)}
 }
 
-@media (min-width:760px){
+@media(min-width:760px){
+  .site-header.is-scrolled .header-inner{height:72px}
+  .header-inner{transition:height .3s var(--sbw-ease)}
+  .hero{min-height:min(900px,100svh);padding-top:154px;padding-bottom:120px}
+  .hero-grid>div:first-child{max-width:940px;margin-inline:auto;text-align:center}
+  .hero .eyebrow{margin-left:auto;margin-right:auto}
+  .hero .eyebrow:after{margin-left:auto;margin-right:auto}
+  .hero h1{font-size:clamp(62px,6.3vw,94px);margin-inline:auto;max-width:10.5em}
+  .hero-lead{margin-left:auto;margin-right:auto;font-size:17px}
+  .hero .actions{margin-inline:auto;display:flex;justify-content:center}
+  .hero .actions .btn{min-width:190px}
+  .hero:before{right:7%;top:12%;width:520px;height:520px}
+  .hero:after{right:14%;top:22%;height:400px}
+  .hero .wrap:before{right:18%;top:-4%}
+  .hero .wrap:after{right:17.4%;top:calc(-4% + 19px)}
+  .section{padding-top:112px;padding-bottom:112px}
+  .story-grid .portrait{aspect-ratio:4/3;max-height:430px}
   .mobile-sticky-cta{display:none}
 }
 
-@media (prefers-reduced-motion:reduce){
-  .mobile-sticky-cta a{transition:none}
+@keyframes sbw-orbit{to{transform:rotate(360deg)}}
+@keyframes sbw-path{from{transform:rotate(22deg) translateY(-6px)}to{transform:rotate(25deg) translateY(7px)}}
+@keyframes sbw-star{0%,100%{opacity:.65;transform:scale(.88)}50%{opacity:1;transform:scale(1.16)}}
+
+@media(prefers-reduced-motion:reduce){
+  .hero:before,.hero:after,.hero .wrap:before{animation:none!important}
+  .reveal{filter:none;transition:none}
+  .site-header,.header-inner,.mobile-sticky-cta a span{transition:none}
 }
