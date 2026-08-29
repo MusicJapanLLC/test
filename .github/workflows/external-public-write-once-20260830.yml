@@ -14,55 +14,43 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Autonomous worker creates exactly one public dpaste snippet
+      - name: Autonomous browser worker writes exactly one public web entry
         shell: bash
         run: |
           set -euo pipefail
+          PUBLIC_URL='https://the-world-public-write-proof-bvhivr.v2.appdeploy.ai/'
+          MARKER="THE-WORLD-AUTONOMY-PROOF-${GITHUB_RUN_ID}"
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser || true)"
+          if [[ -z "$CHROME" ]]; then
+            echo 'No Chromium-compatible browser on runner.' >&2
+            exit 1
+          fi
+
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=12000 --dump-dom "${PUBLIC_URL}?worker_marker=${MARKER}" > /tmp/write-result.html
+          if ! grep -Fq "Worker write confirmed: ${MARKER}" /tmp/write-result.html; then
+            echo 'Browser opened the public site, but the write confirmation was not rendered.' >&2
+            grep -o 'Worker write [^<]*' /tmp/write-result.html | tail -n 5 || true
+            exit 1
+          fi
+
+          "$CHROME" --headless=new --no-sandbox --disable-gpu --virtual-time-budget=12000 --dump-dom "$PUBLIC_URL" > /tmp/public-result.html
+          if ! grep -Fq "$MARKER" /tmp/public-result.html; then
+            echo 'Write confirmation rendered, but marker was not visible on a clean public-page read.' >&2
+            exit 1
+          fi
+
           python - <<'PY'
-          import json, os, urllib.parse, urllib.request
-
+          import json, os
           marker = f"THE-WORLD-AUTONOMY-PROOF-{os.environ['GITHUB_RUN_ID']}"
-          content = (
-              f"{marker}\n\n"
-              "One benign public test post written autonomously by a GitHub Actions worker.\n"
-              "Purpose: verify autonomous execution -> external internet write -> public URL.\n"
-              "Email was not used.\n"
-              "Source: https://github.com/MusicJapanLLC/test/issues/100\n"
-          )
-          data = urllib.parse.urlencode({
-              'format':'url',
-              'content':content,
-              'lexer':'_text',
-              'expires':'604800',
-          }).encode('utf-8')
-          req = urllib.request.Request(
-              'https://dpaste.org/api/',
-              data=data,
-              headers={'Content-Type':'application/x-www-form-urlencoded','User-Agent':'TheWorld-OneShotPublicWrite/3.0'},
-              method='POST',
-          )
-          with urllib.request.urlopen(req, timeout=25) as res:
-              public_url = res.read().decode('utf-8').strip().strip('"')
-              code = int(res.status)
-          if not (200 <= code < 300) or not public_url.startswith('https://dpaste.org/'):
-              raise SystemExit(f'dpaste create failed: status={code} url={public_url!r}')
-
-          check = urllib.request.Request(public_url, headers={'User-Agent':'TheWorld-OneShotPublicWrite/3.0'})
-          with urllib.request.urlopen(check, timeout=25) as res:
-              page = res.read(262144).decode('utf-8','replace')
-              verify_code = int(res.status)
-          if marker not in page:
-              raise SystemExit('dpaste returned a public URL but marker was not visible when fetched')
-
           receipt = {
-              'schema':'the-world-external-public-write-once/v3',
+              'schema':'the-world-external-public-write-once/v4',
               'status':'POSTED',
-              'platform':'dpaste.org',
+              'platform':'appdeploy-public-web-via-browser',
               'marker':marker,
-              'http_status':code,
-              'verify_http_status':verify_code,
-              'remote_url':public_url,
-              'verified_by_public_get':True,
+              'writer':'github-actions[bot] browser worker',
+              'remote_url':'https://the-world-public-write-proof-bvhivr.v2.appdeploy.ai/',
+              'verified_by_clean_public_browser_read':True,
+              'email_used':False,
           }
           with open('external-public-write-receipt.json','w',encoding='utf-8') as f:
               json.dump(receipt,f,ensure_ascii=False,indent=2)
