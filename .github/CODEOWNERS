@@ -1,0 +1,9 @@
+# Default owner
+* @MusicJapanLLC
+
+# Security-critical repository controls
+/.github/workflows/ @MusicJapanLLC
+/.github/dependabot.yml @MusicJapanLLC
+/.github/CODEOWNERS @MusicJapanLLC
+/SECURITY.md @MusicJapanLLC
+/.gitignore @MusicJapanLLC
