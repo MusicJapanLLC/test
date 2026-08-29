@@ -2,6 +2,19 @@ const btn=document.querySelector('.menu-btn');
 const nav=document.querySelector('.nav');
 const header=document.querySelector('.site-header');
 
+/* Keep navigation language natural across every page. URLs stay stable for SEO,
+   but visible labels avoid internal jargon and person-name-heavy navigation. */
+const naturalLabels=[
+  ['/method/','考え方'],
+  ['/story/','ストーリー'],
+  ['/about/','ブランドについて']
+];
+naturalLabels.forEach(([href,label])=>{
+  document.querySelectorAll(`a[href="${href}"]`).forEach(a=>{
+    if(!a.classList.contains('brand')) a.textContent=label;
+  });
+});
+
 if(btn&&nav){
   btn.addEventListener('click',()=>{
     const open=nav.classList.toggle('open');
@@ -41,7 +54,7 @@ if(!reduceMotion&&'IntersectionObserver'in window){
 const isPaperHome=document.body.classList.contains('paper-home');
 if(isPaperHome&&!reduceMotion){
   const stage=document.querySelector('.paper-stage');
-  const notes=[...document.querySelectorAll('.sticky-note')];
+  const notes=[...document.querySelectorAll('.paper-sheet > .sticky-note')];
   if(stage&&notes.length){
     stage.addEventListener('pointermove',e=>{
       if(innerWidth<760)return;
