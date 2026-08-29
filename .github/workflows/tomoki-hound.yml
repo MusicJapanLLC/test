@@ -39,6 +39,14 @@ jobs:
         run: |
           copilot -p "$(cat tomoki-agents/prompts/hound.md)" -s --allow-tool=write --allow-tool='shell(git:*)' --allow-tool='shell(gh:*)' --no-ask-user > /tmp/tomoki-copilot.log 2>&1 || true
           if [[ ! -f tomoki-report.md ]]; then printf 'Copilot run failed or produced no report.\n' > tomoki-report.md; fi
+      - name: Persist HOUND evidence for Manager
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tomoki-hound-report
+          path: tomoki-report.md
+          retention-days: 14
+          if-no-files-found: warn
       - name: Report to TOMOKI Slack
         if: always()
         env:
