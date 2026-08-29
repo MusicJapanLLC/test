@@ -36,6 +36,39 @@ def _load(path: str | None) -> dict[str, Any]:
         return {}
 
 
+def _is_auditability_evidence(value: dict[str, Any]) -> bool:
+    return (
+        value.get("schema") == "standment-agent-auditability-evidence/v1"
+        and value.get("track") == "SEC-PORT-005"
+    )
+
+
+def _load_auditability(path: str | None) -> dict[str, Any]:
+    """Load only canonical SEC-PORT-005 evidence.
+
+    Runtime evidence artifacts intentionally preserve nested evidence from their source
+    run. A broad ``find result.json`` can therefore pick another product's result first.
+    Reject that ambiguity and, when the caller supplied the Joint Lab staging file,
+    recover only from the canonical root auditability result in the downloaded artifact.
+    """
+    direct = _load(path)
+    if _is_auditability_evidence(direct):
+        return direct
+    if not path:
+        return {}
+
+    requested = Path(path)
+    candidates = [
+        requested.parent / "sources" / "auditability" / "result.json",
+        requested.parent / "sources" / "auditability" / "primary" / "result.json",
+    ]
+    for candidate in candidates:
+        value = _load(str(candidate))
+        if _is_auditability_evidence(value):
+            return value
+    return {}
+
+
 def _first(*values: Any, default: Any = None) -> Any:
     for value in values:
         if value not in (None, "", [], {}):
@@ -336,7 +369,7 @@ def main() -> int:
         _load(args.ai_summary),
         _load(args.security_index),
         _load(args.research_batch),
-        _load(args.auditability),
+        _load_auditability(args.auditability),
     )
     out = Path(args.out)
     report = Path(args.report)
