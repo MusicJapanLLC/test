@@ -10,6 +10,24 @@ from urllib.parse import urlparse
 CODE_SUFFIXES = {".py", ".js", ".ts", ".tsx", ".jsx", ".go", ".rs", ".java", ".c", ".cpp", ".h", ".yml", ".yaml", ".json", ".md"}
 REQUIRED = {"title", "artifact_type", "artifact_url", "status", "what_it_is", "why_it_matters", "proof", "source_system", "owner"}
 ALLOWED_STATUS = {"EXPERIMENT", "BUILDING", "VERIFIED"}
+NON_ARTIFACT_TYPES = {"code", "source code", "source_code", "pr", "pull request", "pull_request"}
+PRIVATE_SHELL_HOSTS = {"mail.google.com"}
+PRIVATE_SHELL_PATH_MARKERS = ("/mail/", "/login", "/signin", "/account")
+PRIVATE_SHELL_FRAGMENT_MARKERS = ("inbox", "sent", "drafts")
+
+
+def _private_shell_reason(url: str) -> str | None:
+    parsed = urlparse(url)
+    host = parsed.netloc.lower().split(":", 1)[0]
+    path = parsed.path.lower()
+    fragment = parsed.fragment.lower()
+    if host in PRIVATE_SHELL_HOSTS:
+        return "artifact_url points to a private inbox/account surface, not a portfolio artifact"
+    if any(marker in path for marker in PRIVATE_SHELL_PATH_MARKERS):
+        return "artifact_url looks like a login/account shell, not a portfolio artifact"
+    if any(marker == fragment or fragment.startswith(marker + "/") for marker in PRIVATE_SHELL_FRAGMENT_MARKERS):
+        return "artifact_url points to an inbox-like private shell, not a portfolio artifact"
+    return None
 
 
 def validate(event: dict[str, Any]) -> list[str]:
@@ -22,6 +40,10 @@ def validate(event: dict[str, Any]) -> list[str]:
     if status and status not in ALLOWED_STATUS:
         errors.append("invalid status")
 
+    artifact_type = str(event.get("artifact_type", "")).strip().lower()
+    if artifact_type in NON_ARTIFACT_TYPES:
+        errors.append("source code / pull requests are evidence, not portfolio artifacts")
+
     url = str(event.get("artifact_url", ""))
     if url:
         parsed = urlparse(url)
@@ -30,8 +52,11 @@ def validate(event: dict[str, Any]) -> list[str]:
         suffix = Path(parsed.path).suffix.lower()
         if suffix in CODE_SUFFIXES:
             errors.append("artifact_url points to a code/text source file; portfolio requires a human-inspectable artifact")
-        if "github.com" in parsed.netloc and "/blob/" in parsed.path:
+        if "github.com" in parsed.netloc.lower() and "/blob/" in parsed.path:
             errors.append("GitHub blob pages are evidence, not portfolio artifacts")
+        shell_reason = _private_shell_reason(url)
+        if shell_reason:
+            errors.append(shell_reason)
 
     if status == "VERIFIED" and not event.get("proof"):
         errors.append("VERIFIED requires proof")
