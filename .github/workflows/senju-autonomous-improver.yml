@@ -135,7 +135,7 @@ jobs:
           PY
 
       - name: Upload validated promotion bundle
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: senju-validated-promotion
           retention-days: 14
@@ -146,8 +146,8 @@ jobs:
             /tmp/promotion/last-evolution-summary.json
             /tmp/promotion/last-evolution-plan.md
 
-  promote:
-    name: Create audited PR and merge validated state
+  open-promotion-pr:
+    name: Create audited state-only PR
     needs: propose-and-validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -165,7 +165,7 @@ jobs:
           persist-credentials: false
 
       - name: Download validated promotion bundle
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
           name: senju-validated-promotion
           path: /tmp/promotion
@@ -196,7 +196,7 @@ jobs:
           put_file /tmp/promotion/last-evolution-summary.json senju/state/last-evolution-summary.json
           put_file /tmp/promotion/last-evolution-plan.md senju/state/last-evolution-plan.md
 
-          PR_URL="$(gh pr create --repo "$REPO" --base "$BASE" --head "$BRANCH" --title "chore(senju): autonomous champion promotion" --body "GitHub-native autonomous promotion. Candidate was generated with GitHub Models, restricted to the strategy allowlist, then passed Senju pytest, ScopeGuard public-target rejection, and a bounded autopilot smoke evaluation before this PR was created. Only senju/state/* promotion files are changed.")"
+          PR_URL="$(gh pr create --repo "$REPO" --base "$BASE" --head "$BRANCH" --title "chore(senju): autonomous champion promotion" --body "GitHub-native autonomous promotion. Candidate was generated with GitHub Models, restricted to the strategy allowlist, then passed Senju pytest, ScopeGuard public-target rejection, and a bounded autopilot smoke evaluation before this PR was created. Only senju/state/* promotion files are changed. Final merge authority belongs to the deterministic Senju Promotion Gate, not the AI proposal job.")"
           PR_NUMBER="$(gh pr view "$PR_URL" --repo "$REPO" --json number --jq '.number')"
 
           CHANGED="$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only | sort)"
@@ -206,5 +206,4 @@ jobs:
             exit 1
           fi
 
-          gh pr merge "$PR_NUMBER" --repo "$REPO" --merge --admin
-          echo "Promoted validated Senju state via PR #$PR_NUMBER"
+          echo "Opened validated Senju state PR #$PR_NUMBER. The deterministic promotion gate will independently revalidate it before any merge."
