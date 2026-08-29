@@ -1,6 +1,6 @@
 # AI Factory Portfolio
 
-最終更新: 2026-08-29 JST
+最終更新: 2026-08-30 JST
 
 このファイルは、Music Japan / Standment のAI開発工場が**実際に作ったもの**を社長・営業・非エンジニア向けに説明するための一覧です。
 
@@ -250,3 +250,50 @@ GitHub側の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN
 
 ### 次の改善
 初回の実Gmail scheduled runを確認し、未分類だけを低コストAI判定へ回すfallbackを追加する。
+
+---
+
+## 8. Standment Security Autonomous Portfolio R&D Engine v1
+
+**状態: BUILDING**
+
+### 作ったもの
+Standmentをセキュリティ会社へ寄せるため、The worldの研究優先順位を**セキュリティ・ポートフォリオ最優先**へ固定する専用R&Dレーン。毎日、既存ポートフォリオとEvidenceを読み、最も価値の高い未完成テーマを自動選定し、R&Dと千寿へ接続する。
+
+### 何に使える？
+「研究した」「コードを書いた」で終了せず、顧客に見せられる診断レポート、Before/Afterケーススタディ、Evidence Pack、Supply-chain assurance、Auth/RLS evidence、AI Agent security evidenceへ研究を収束させる。
+
+### すでにできていること
+- 5つのSecurity Portfolio研究トラックを優先度付きで定義
+- 毎日06:50 JSTにポートフォリオの状態・Evidence不足を採点するGitHub Actionsを追加
+- 既存07:20 JSTのR&D × Senju coupled loopより先に研究テーマを選定
+- `value-lab/research_queue.json` の最優先をStandment Security Portfolioへ変更（priority 2000）
+- 千寿には `robustness / learning / balance / efficiency` の研究品質改善だけを依頼し、第三者target・credential・exploit instructionを渡さない境界を維持
+- Human-inspectable artifact / verification / counterevidence / reproducibilityをPortfolio Promotion Gateとして必須化
+- 「source codeだけ」「自己申告だけ」はPortfolio成果に昇格させない
+- 日次研究EvidenceをGitHub Actions artifactとして90日保存する設計
+- Customer-facing `Control Evidence Pack v1` を強化し、Before/After・反証・再現性・Evidence Manifestを標準化
+
+### 最優先研究トラック
+1. **SEC-PORT-001** — Standment Security Scan dogfood + Before/After case study
+2. **SEC-PORT-002** — Customer Security Evidence Pack
+3. **SEC-PORT-003** — Software supply-chain evidence portfolio
+4. **SEC-PORT-004** — Auth / tenant / RLS defensive evidence kit
+5. **SEC-PORT-005** — Autonomous-agent security and auditability pack
+
+### Evidence
+- `.github/workflows/standment-security-portfolio-rnd.yml`
+- `standment-security/security_portfolio_program.json`
+- `automation/security/portfolio_rnd.py`
+- `automation/security/test_portfolio_rnd.py`
+- `value-lab/research_queue.json`
+- `standment-security/CONTROL_EVIDENCE_TEMPLATE.md`
+
+### 現在の残り
+初回のWorkflow実行結果を確認し、GitHub → Slackの `RND_SLACK_WEBHOOK_URL` が実際に設定済みか検証する。未設定の場合でも研究Evidence自体はartifactへ保存し、配送だけをBLOCKEDとして扱う。
+
+### 経営メリット
+The world全体の研究量を増やすだけでなく、**Standmentが営業・提案・顧客説明に使えるセキュリティ実績へ毎日近づくように研究優先順位を固定**した。
+
+### 次の改善
+Security Scanを所有資産でdogfoodし、Control Evidence PackへBefore/After証拠を入れ、最初の顧客提示可能なケーススタディをVERIFIEDへ昇格させる。
