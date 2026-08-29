@@ -8,7 +8,7 @@
   "repair_workflow": "tomoki-forge.yml",
   "repair_exclude_workflows": ["tomoki-forge.yml"],
   "workers": [
-    {"name":"SECURITY_CONTINUOUS_WHITEHAT","workflow":"security-continuous-whitehat.yml","stale_minutes":12,"director_min_interval_minutes":5,"priority":145,"autostart":true},
+    {"name":"SECURITY_CONTINUOUS_WHITEHAT","workflow":"security-continuous-whitehat.yml","stale_minutes":18,"director_min_interval_minutes":5,"priority":145,"autostart":true},
     {"name":"AI_DEV_MINUTE_FOUNDRY","workflow":"ai-dev-minute-foundry.yml","stale_minutes":72,"director_min_interval_minutes":60,"priority":144,"autostart":true},
     {"name":"STANDMENT_AI_SECURITY_EVAL","workflow":"standment-ai-security-eval.yml","stale_minutes":80,"director_min_interval_minutes":60,"priority":143,"autostart":true},
     {"name":"WORLD_RESEARCH_FABRIC","workflow":"the-world-autonomous-research-fabric.yml","stale_minutes":35,"director_min_interval_minutes":15,"priority":136,"autostart":true},
