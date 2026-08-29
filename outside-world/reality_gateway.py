@@ -64,7 +64,7 @@ def post_json(url: str, payload: dict[str, Any], headers: dict[str, str] | None 
     body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json", **(headers or {})}, method="POST")
     with urllib.request.urlopen(req, timeout=20) as res:
-        return int(res.status), res.read(2048).decode("utf-8", "replace")
+        return int(res.status), res.read(4096).decode("utf-8", "replace")
 
 
 def post_slack(text: str, policy: dict[str, Any]) -> dict[str, Any]:
@@ -100,7 +100,7 @@ def create_daily_issue(finding: dict[str, Any], policy: dict[str, Any], previous
     )
     status, response = post_json(
         f"https://api.github.com/repos/{repo}/issues",
-        {"title": title, "body": body, "labels": ["world-field-note"]},
+        {"title": title, "body": body},
         {
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
