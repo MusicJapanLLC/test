@@ -48,6 +48,12 @@ def manager_change_header(status: str) -> str:
     )
     recovering = sum(1 for w in workers if str(w.get('action_result')) == 'RECOVERING')
     healthy_after = sum(1 for w in workers if str(w.get('action_result')) in {'HEALTHY', 'SUCCESS'})
+    problematic_before = sum(
+        1 for w in workers if str(w.get('status') or 'UNKNOWN') not in {'HEALTHY', 'ACTIVE', 'SUCCESS'}
+    )
+    problematic_after = sum(
+        1 for w in workers if str(w.get('action_result') or 'UNKNOWN') not in {'HEALTHY', 'ACTIVE', 'SUCCESS'}
+    )
 
     if unresolved:
         conclusion = f'内部修復後も未解決が{unresolved}件残存。診断と実修復を分離し、未解決を成功扱いしていない。'
@@ -90,7 +96,7 @@ def manager_change_header(status: str) -> str:
         f'*Reliability / autonomy gain:* {capability}',
         f'*Owner benefit:* {owner_benefit}',
         f'*Business effect:* {business}',
-        f'*Measured delta:* unresolved `{len([w for w in workers if str(w.get("status")) not in {"HEALTHY", "ACTIVE"}])} -> {unresolved}` / repairs `0 -> {repairs}`',
+        f'*Measured delta:* problematic workers `{problematic_before} -> {problematic_after}` / unresolved-now `{unresolved}` / repairs `0 -> {repairs}`',
         f'*Regression risk:* {risk}',
         f'*Next verification:* {next_target}',
         f'*Success criteria:* {success}',
