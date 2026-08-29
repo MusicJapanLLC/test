@@ -1,0 +1,68 @@
+name: Gmail Service Health
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'runtime/nerve/gmail-heartbeat.json'
+      - '.github/workflows/gmail-service-health.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gmail-service-health
+  cancel-in-progress: true
+
+jobs:
+  health:
+    name: Verify authenticated Gmail execution heartbeat
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify heartbeat freshness and safety
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, subprocess, time
+          from pathlib import Path
+
+          p=Path('runtime/nerve/gmail-heartbeat.json')
+          if not p.exists():
+              raise SystemExit('GMAIL_SERVICE_UNHEALTHY: heartbeat missing')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          if d.get('status') != 'VERIFIED':
+              raise SystemExit('GMAIL_SERVICE_UNHEALTHY: heartbeat status is not VERIFIED')
+          safety=d.get('safety', {})
+          if int(safety.get('deleted', 0) or 0) != 0:
+              raise SystemExit('GMAIL_SERVICE_UNHEALTHY: deletion safety invariant violated')
+          if int(safety.get('customer_messages_sent', 0) or 0) != 0:
+              raise SystemExit('GMAIL_SERVICE_UNHEALTHY: outbound safety invariant violated')
+          ts=int(subprocess.check_output([
+              'git','log','-1','--format=%ct','--','runtime/nerve/gmail-heartbeat.json'
+          ], text=True).strip())
+          age=(int(time.time())-ts)/60
+          print(f'heartbeat_age_minutes={age:.1f}')
+          print(f'execution_runtime={d.get("execution_runtime")}')
+          if age > 90:
+              raise SystemExit(f'GMAIL_SERVICE_STALE: heartbeat age {age:.1f}m > 90m')
+          PY
+
+      - name: Explain runtime split
+        run: |
+          cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+          ## Gmail service health
+          - Product health is proven by the authenticated Gmail execution heartbeat.
+          - GitHub-native Gmail OAuth is an optional execution runtime and may be BLOCKED independently.
+          - MANAGER should escalate only if the service heartbeat becomes stale/unsafe, not merely because one runtime lacks credentials.
+          EOF
