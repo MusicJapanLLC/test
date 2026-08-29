@@ -71,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      - name: Enforce safe workflow triggers and permissions
+      - name: Block unsafe workflow triggers and runners
         shell: bash
         run: |
           set -euo pipefail
@@ -79,131 +79,130 @@ jobs:
             echo "Unsafe workflow trigger, broad permission, or self-hosted runner detected."
             exit 1
           fi
-          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows --exclude='security-guard.yml' --exclude='senju-autonomous-improver.yml' --exclude='tomoki-forge.yml'; then
-            echo "Broad repository write permission detected. Use a narrowly scoped dedicated job instead."
-            exit 1
-          fi
 
-      - name: Validate Senju autonomous improver blast radius
+      - name: Enforce privileged permission allowlist
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
+          import re
           from pathlib import Path
-          p = Path('.github/workflows/senju-autonomous-improver.yml')
-          if not p.exists():
-              raise SystemExit(0)
-          text = p.read_text(encoding='utf-8')
-          required = [
-              'contents: write',
-              'actions: read',
-              'workflow_dispatch:',
-              'schedule:',
-              'senju/state/champion.json',
-              'senju/state/strategy.json',
-              'senju/state/last-evolution-summary.json',
-              'senju/state/last-evolution-plan.md',
-              'CURRENT_BASE_SHA=',
-              'force=false',
-          ]
-          for item in required:
-              if item not in text:
-                  raise SystemExit(f'autonomous improver missing required guardrail: {item}')
-          forbidden = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
-              'pull-requests: write', 'models: write',
-          ]
-          for item in forbidden:
-              if item in text:
-                  raise SystemExit(f'autonomous improver contains forbidden capability: {item}')
+
           allowed = {
+              '.github/workflows/codeql.yml': {'security-events'},
+              '.github/workflows/deploy-iyomaru-ramen.yml': {'pages', 'id-token'},
+              '.github/workflows/pages.yml': {'pages', 'id-token'},
+              '.github/workflows/release-provenance.yml': {'attestations', 'id-token'},
+              '.github/workflows/senju-autonomous-improver.yml': {'contents', 'pull-requests'},
+              '.github/workflows/senju-promotion-gate.yml': {'contents', 'pull-requests'},
+              '.github/workflows/tomoki-forge.yml': {'contents', 'pull-requests', 'copilot-requests'},
+              '.github/workflows/tomoki-forge-promotion-gate.yml': {'contents', 'pull-requests'},
+          }
+          failures=[]
+          pattern=re.compile(r'^\s+([a-z0-9-]+):\s*write\s*(?:#.*)?$')
+          for path in sorted(Path('.github/workflows').glob('*.y*ml')):
+              if path.name == 'security-guard.yml':
+                  continue
+              permitted=allowed.get(str(path), set())
+              for lineno, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                  m=pattern.match(line)
+                  if not m:
+                      continue
+                  scope=m.group(1)
+                  if scope not in permitted:
+                      failures.append(f'{path}:{lineno}: unauthorized {scope}: write')
+          if failures:
+              raise SystemExit('\n'.join(failures))
+          PY
+
+      - name: Block administrative bypass and destructive workflow Git operations
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R -nE 'gh[[:space:]]+pr[[:space:]]+merge[^\n]*--admin|git[[:space:]]+push[^\n]*(--force|-f([[:space:]]|$))|gh[[:space:]]+api[^\n]*-X[[:space:]]+DELETE' .github/workflows --exclude='security-guard.yml'; then
+            echo "Administrative bypass, forced push, or destructive GitHub API operation detected."
+            exit 1
+          fi
+
+      - name: Enforce Senju two-key boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          proposal_path=Path('.github/workflows/senju-autonomous-improver.yml')
+          gate_path=Path('.github/workflows/senju-promotion-gate.yml')
+          if not proposal_path.exists() or not gate_path.exists():
+              raise SystemExit('Senju two-key workflows must both exist')
+          proposal=proposal_path.read_text(encoding='utf-8')
+          gate=gate_path.read_text(encoding='utf-8')
+          if 'gh pr merge' in proposal or '/pulls/$PR/merge' in proposal:
+              raise SystemExit('Senju proposal workflow must never hold merge authority')
+          if 'secrets.' in proposal:
+              raise SystemExit('Senju proposal workflow must not receive repository secrets')
+          if 'models:' in gate or 'secrets.' in gate or 'copilot-requests:' in gate:
+              raise SystemExit('Senju deterministic gate must not receive AI/model access or repository secrets')
+          if 'actions/checkout@' in gate:
+              raise SystemExit('Senju promotion gate must not checkout candidate code')
+          if '--admin' in proposal or '--admin' in gate:
+              raise SystemExit('Senju may not use administrator merge bypass')
+          expected={
               'senju/state/champion.json',
               'senju/state/strategy.json',
               'senju/state/last-evolution-summary.json',
               'senju/state/last-evolution-plan.md',
           }
-          write_lines = [line.strip() for line in text.splitlines() if line.strip().startswith('put_file ')]
-          observed = {line.split()[-1] for line in write_lines}
-          if observed != allowed:
-              raise SystemExit(f'autonomous write allowlist mismatch: {sorted(observed)}')
+          destinations=set()
+          for line in proposal.splitlines():
+              m=re.search(r'^\s*put_file\s+\S+\s+(senju/state/\S+)\s*$', line)
+              if m:
+                  destinations.add(m.group(1))
+          if destinations != expected:
+              raise SystemExit(f'Senju proposal write surface changed: {sorted(destinations)}')
           PY
 
-      - name: Validate TOMOKI FORGE blast radius
+      - name: Enforce TOMOKI FORGE three-zone isolation
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
 
-          workflow = Path('.github/workflows/tomoki-forge.yml')
-          gate = Path('tomoki-agents/policy_gate.py')
-          verifier = Path('tomoki-agents/verify.sh')
-          if not workflow.exists():
-              raise SystemExit(0)
-          if not gate.exists() or not verifier.exists():
-              raise SystemExit('TOMOKI FORGE guardrail files are missing')
+          wf=Path('.github/workflows/tomoki-forge.yml')
+          gate=Path('.github/workflows/tomoki-forge-promotion-gate.yml')
+          verifier=Path('.github/workflows/tomoki-forge-pr-verify.yml')
+          if not wf.exists() or not gate.exists() or not verifier.exists():
+              raise SystemExit('FORGE isolation workflows must all exist')
+          text=wf.read_text(encoding='utf-8')
+          gate_text=gate.read_text(encoding='utf-8')
+          verify_text=verifier.read_text(encoding='utf-8')
 
-          text = workflow.read_text(encoding='utf-8')
-          required = [
-              'contents: write',
-              'pull-requests: write',
-              'copilot-requests: write',
-              'workflow_dispatch:',
-              'schedule:',
-              'persist-credentials: false',
-              '@github/copilot@1.0.80',
-              'COPILOT_GITHUB_TOKEN:',
-              'cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py',
-              'cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh',
-              'git add -N -- sales-command-30',
-              'python /tmp/tomoki-policy-gate.py',
-              'bash /tmp/tomoki-verify.sh',
-              'git add -A -- sales-command-30',
-              'gh auth setup-git',
-              'git push origin "$BRANCH"',
-              'gh pr create',
-          ]
-          for item in required:
-              if item not in text:
-                  raise SystemExit(f'TOMOKI FORGE missing required guardrail: {item}')
+          if '\n  propose:\n' not in text or '\n  publish:\n' not in text or '\n  report:\n' not in text:
+              raise SystemExit('FORGE must keep propose/publish/report jobs separated')
+          propose=text.split('\n  propose:\n',1)[1].split('\n  publish:\n',1)[0]
+          publish=text.split('\n  publish:\n',1)[1].split('\n  report:\n',1)[0]
+          report=text.split('\n  report:\n',1)[1]
 
-          forbidden = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
-              '--allow-all', '--allow-all-tools', '--yolo', "--allow-tool='shell'", '--allow-tool=shell',
-              'git push --force', 'git push -f',
-          ]
-          for item in forbidden:
-              if item in text:
-                  raise SystemExit(f'TOMOKI FORGE contains forbidden capability: {item}')
-
-          copilot_lines = [line.strip() for line in text.splitlines() if line.strip().startswith('copilot -p ')]
-          if len(copilot_lines) != 1:
-              raise SystemExit('TOMOKI FORGE must have exactly one Copilot execution line')
-          if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
-              raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
-
-          gate_text = gate.read_text(encoding='utf-8')
-          gate_required = [
-              "'sales-command-30/src/'",
-              "'sales-command-30/tests/'",
-              "'sales-command-30/README.md'",
-              'if len(names) > 3:',
-              'if changed_lines > 250:',
-              'FORBIDDEN_PATTERNS',
-          ]
-          for item in gate_required:
-              if item not in gate_text:
-                  raise SystemExit(f'TOMOKI policy gate missing invariant: {item}')
-          if "'.github/" in gate_text or '".github/' in gate_text:
-              raise SystemExit('TOMOKI policy gate must never allow .github writes')
-
-          verify_text = verifier.read_text(encoding='utf-8')
-          if "npm run build" not in verify_text or 'py_compile' not in verify_text:
-              raise SystemExit('TOMOKI verifier must retain compile/build checks')
+          if 'copilot-requests: write' not in propose or 'contents: write' in propose or 'pull-requests: write' in propose:
+              raise SystemExit('FORGE AI proposal zone may access Copilot but must not have repository write authority')
+          if 'COPILOT_GITHUB_TOKEN:' not in propose or '--allow-tool=write' not in propose:
+              raise SystemExit('FORGE proposal invariant changed unexpectedly')
+          if 'contents: write' not in publish or 'pull-requests: write' not in publish:
+              raise SystemExit('FORGE publisher must hold only explicit PR publication authority')
+          if 'copilot-requests: write' in publish or 'COPILOT_GITHUB_TOKEN:' in publish or 'secrets.' in publish:
+              raise SystemExit('FORGE publisher must never receive AI credentials or repository secrets')
+          if 'gh pr merge' in text or '--admin' in text:
+              raise SystemExit('FORGE generator/publisher may never merge its own PR')
+          if 'TOMOKI_SLACK_WEBHOOK_URL' not in report or 'contents: write' in report or 'copilot-requests: write' in report:
+              raise SystemExit('FORGE Slack reporting must remain isolated from AI and repository-write authority')
+          if 'actions/checkout@' in gate_text or 'secrets.' in gate_text or 'copilot-requests:' in gate_text:
+              raise SystemExit('FORGE deterministic merge gate must not checkout candidate code or receive AI/secrets')
+          if '-f sha="$HEAD"' not in gate_text or '--admin' in gate_text:
+              raise SystemExit('FORGE merge gate must bind merge to exact candidate SHA without admin bypass')
+          if 'permissions:\n  contents: read' not in verify_text:
+              raise SystemExit('FORGE PR verifier must remain read-only')
           PY
 
       - name: Block remote shell execution patterns
@@ -247,7 +246,6 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
           failures = []
           for path in Path('.github/workflows').glob('*.y*ml'):
               lines = path.read_text(encoding='utf-8').splitlines()
