@@ -9,8 +9,8 @@
       "focus": "correctness",
       "priority": 6000,
       "candidate_count": 12,
-      "preferred_track_id": "AI-DEV-002",
-      "current_phase": "persistent_failure_and_learning_memory",
+      "preferred_track_id": "AI-DEV-003",
+      "current_phase": "multi_agent_specialist_league_with_persistent_failure_memory",
       "success": {
         "safe": true,
         "stable": true,
@@ -30,7 +30,11 @@
         "bounded_code_change_required_for_capability_claim": true,
         "human_inspectable_artifact_required": true
       },
-      "commercial_bridge": "AI R&D should turn verified engineering improvements into inspectable capability evidence that can later become a product or portfolio asset. Internal scores, autonomous-agent counts, code volume, historical failure memory or strategy proxies do not establish customer demand, contracts, payments or revenue."
+      "commercial_bridge": "AI R&D should turn verified engineering improvements into inspectable capability evidence that can later become a product or portfolio asset. Internal scores, autonomous-agent counts, code volume, historical failure memory or strategy proxies do not establish customer demand, contracts, payments or revenue.",
+      "previous_track_id": "AI-DEV-002",
+      "progression_rule": "failure_memory_runtime_parallel_ready_v1",
+      "failure_memory_continues": true,
+      "progression_source_fingerprint": "bee8ae7148bb070ab439"
     },
     {
       "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-ACCELERATOR-001",
