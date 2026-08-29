@@ -18,7 +18,7 @@ class PortfolioAcceleratorTests(unittest.TestCase):
                 {
                     "id": "SEC-PORT-001",
                     "title": "Scan",
-                    "priority": 1200,
+                    "priority": 1400,
                     "senju_focus": "robustness",
                     "customer_usefulness": "buyer sees before/after",
                     "evidence_files": ["a.md", "b.md"],
