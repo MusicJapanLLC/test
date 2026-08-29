@@ -1,6 +1,6 @@
 {
   "schema": "standment-security-research-frontier/v1",
-  "mission": "Continuously turn defensive security research on owned or explicitly authorized systems into customer-inspectable, reproducible portfolio evidence.",
+  "mission": "Continuously turn defensive security research on owned or explicitly authorized systems into customer-inspectable, reproducible portfolio evidence, while feeding bounded evidence back into THE WORLD AI-development loop.",
   "selection_policy": {
     "rotate_across_runs": true,
     "avoid_same_lens_same_stage_consecutively": true,
@@ -103,6 +103,38 @@
       "customer_use": "セキュリティ会社の『大丈夫です』ではなく、第三者が再確認できる証拠として受け取れる",
       "refs": ["automation/security/portfolio_rnd.py", "automation/security/test_portfolio_rnd.py", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "standment-security/REPORTING_CONTRACT.md"],
       "safe_test": "同一入力を複数回実行し、選定・evidence ratio・promotion decisionの安定性を確認する"
+    },
+    {
+      "id": "AI-EVAL-FEEDBACK",
+      "title": "AI Security Evaluation Feedback Integrity",
+      "purpose": "AI Security Evalの結果が次のAI開発・Security研究へ戻る時、評価結果が単なる自己正当化やゲート迂回にならないことを証拠化する",
+      "customer_use": "AIが自分の評価を使って勝手に安全宣言せず、評価は改善方向だけを補助し、昇格判定は独立したままか確認できる",
+      "refs": [".github/workflows/standment-ai-security-eval.yml", "automation/security/llm_security_eval.py", ".github/workflows/ai-dev-minute-foundry.yml", "automation/ai_foundry/minute_evolution.py"],
+      "safe_test": "synthetic Before/Afterと固定pass/fail gateを使い、評価ヒントを変えてもpromotion条件自体が変化しないことを再現する"
+    },
+    {
+      "id": "AI-MEMORY-PROVENANCE",
+      "title": "AI Memory / Research Provenance Boundary",
+      "purpose": "過去のAI研究・Champion・Security findingが、根拠・世代・反証状態を失ったまま次の判断へ混入しないかを検証する",
+      "customer_use": "AIが古い・矛盾した・出所不明な学習メモを事実として再利用し続けるリスクを評価できる",
+      "refs": ["automation/world/research_fabric.py", "automation/ai_foundry/minute_evolution.py", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "standment-security/ai-security/llm-security-eval-evidence-pack.md"],
+      "safe_test": "候補/反証/再現済みのsynthetic findingを混在させ、provenanceを失った入力が昇格やVERIFIED扱いへ直結しないことを確認する"
+    },
+    {
+      "id": "AI-EVAL-DRIFT",
+      "title": "AI Eval Drift / Benchmark Gaming Detection",
+      "purpose": "AI改善が特定fixtureや単一proxyだけへ過適合し、実質的な安全性・信頼性が改善していない状態を検出する",
+      "customer_use": "AIが評価テストだけ上手くなって安全になったように見えるbenchmark gamingを見抜ける",
+      "refs": ["automation/security/llm_security_eval.py", "automation/security/test_llm_security_eval.py", "automation/ai_foundry/minute_evolution.py", ".github/workflows/standment-ai-security-eval.yml"],
+      "safe_test": "seed・fixture slice・評価カテゴリを変えたsynthetic再評価を行い、単一benchmarkだけの改善を独立改善として扱わない"
+    },
+    {
+      "id": "AI-CAPABILITY-DIFF",
+      "title": "AI Agent Capability / Permission Diff Review",
+      "purpose": "AI開発で新しいtool・workflow・権限・外部作用能力が増えた時、そのcapability差分をSecurityが自動的に研究対象へ昇格する",
+      "customer_use": "AIの性能向上に伴って権限だけが静かに膨張していないか、変更前後で追跡できる",
+      "refs": ["automation/security/workflow_policy.py", ".github/workflows/security-guard.yml", ".github/workflows/the-world-agent-factory.yml", ".github/workflows/ai-dev-minute-foundry.yml"],
+      "safe_test": "fixture workflowでpermissions/tool surfaceのBefore/After差分を作り、追加capabilityが未分類ならfail-closedになることを確認する"
     }
   ],
   "stage_contracts": {
