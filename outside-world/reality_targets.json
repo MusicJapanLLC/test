@@ -1,12 +1,26 @@
 {
-  "schema": "the-world-reality-targets/v1",
+  "schema": "the-world-reality-targets/v2",
+  "selection_principle": "LIMITLESS: favor diverse public evidence that can become an artifact, customer insight, operational improvement, publication, or revenue step",
   "targets": [
     {"id": "github-trending", "category": "builders", "url": "https://github.com/trending", "weight": 1.0},
+    {"id": "github-ai-ml", "category": "builders", "url": "https://github.blog/ai-and-ml/", "weight": 0.9},
     {"id": "hacker-news-newest", "category": "weird-tech", "url": "https://news.ycombinator.com/newest", "weight": 1.0},
+    {"id": "hacker-news-show", "category": "products", "url": "https://news.ycombinator.com/show", "weight": 1.0},
     {"id": "devto-ai", "category": "builders", "url": "https://dev.to/t/ai", "weight": 0.9},
     {"id": "arxiv-ai", "category": "research", "url": "https://arxiv.org/list/cs.AI/recent", "weight": 1.0},
+    {"id": "arxiv-security", "category": "defensive-security", "url": "https://arxiv.org/list/cs.CR/recent", "weight": 0.9},
+    {"id": "huggingface-trending", "category": "models", "url": "https://huggingface.co/models?sort=trending", "weight": 1.0},
+    {"id": "stackoverflow-openai-api", "category": "failure-modes", "url": "https://stackoverflow.com/questions/tagged/openai-api", "weight": 0.8},
+    {"id": "vercel-changelog", "category": "platform", "url": "https://vercel.com/changelog", "weight": 0.8},
+    {"id": "cloudflare-ai", "category": "platform", "url": "https://blog.cloudflare.com/tag/ai/", "weight": 0.8},
+    {"id": "mdn-ai", "category": "builders", "url": "https://developer.mozilla.org/en-US/blog/", "weight": 0.6},
+    {"id": "pypi-ai-agent", "category": "tools", "url": "https://pypi.org/search/?q=ai+agent", "weight": 0.8},
+    {"id": "npm-ai-agent", "category": "tools", "url": "https://www.npmjs.com/search?q=ai%20agent", "weight": 0.8},
+    {"id": "producthunt-ai", "category": "products", "url": "https://www.producthunt.com/topics/artificial-intelligence", "weight": 0.9},
     {"id": "youtube-ai-agents", "category": "video-research", "url": "https://www.youtube.com/results?search_query=AI+agents", "weight": 0.8},
     {"id": "youtube-browser-agents", "category": "video-research", "url": "https://www.youtube.com/results?search_query=browser+agents", "weight": 0.8},
-    {"id": "note-ai", "category": "japan-research", "url": "https://note.com/hashtag/AI", "weight": 0.8}
+    {"id": "youtube-ai-automation-business", "category": "revenue", "url": "https://www.youtube.com/results?search_query=AI+automation+business", "weight": 0.9},
+    {"id": "note-ai", "category": "japan-research", "url": "https://note.com/hashtag/AI", "weight": 0.8},
+    {"id": "note-startup", "category": "japan-products", "url": "https://note.com/hashtag/%E3%82%B9%E3%82%BF%E3%83%BC%E3%83%88%E3%82%A2%E3%83%83%E3%83%97", "weight": 0.7}
   ]
 }
