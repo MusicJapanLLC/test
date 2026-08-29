@@ -13,6 +13,7 @@ on:
       - 'standment-security/ai-security/llm-security-eval-harness.md'
       - 'standment-security/ai-security/llm-security-eval-evidence-pack.md'
       - 'standment-security/ai-security/fixtures/**'
+      - 'standment-security/security_portfolio_program.json'
 
 permissions:
   contents: read
