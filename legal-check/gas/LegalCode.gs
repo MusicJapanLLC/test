@@ -106,6 +106,17 @@ function book() {
 }
 
 /**
+ * 画面右下の通知。独立プロジェクトでは出せないので、その場合は黙って飛ばす。
+ */
+function toast(message, title) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (ss) ss.toast(message, title, 8);
+  } catch (ignore) {}
+  Logger.log(title + ': ' + message);
+}
+
+/**
  * 'legal' シートを取得。なければ作る。
  * 既にあれば作り直さない。他のシートには一切触れない。
  */
@@ -130,10 +141,9 @@ function legalSheet() {
  */
 function setupLegalSheet() {
   var sheet = legalSheet();
-  SpreadsheetApp.getActiveSpreadsheet().toast(
+  toast(
     "'" + SHEET_NAME + "' シートを用意しました（既存シートは変更していません）",
-    'リーガルチェック',
-    6
+    'リーガルチェック'
   );
   return sheet.getName();
 }
@@ -294,6 +304,6 @@ function testLegalSubmission() {
   };
 
   var result = doPost(fake).getContent();
-  Logger.log('結果: ' + result);
-  SpreadsheetApp.getActiveSpreadsheet().toast('結果: ' + result, 'テスト', 8);
+  toast('結果: ' + result, 'テスト');
+  return result;
 }
