@@ -1,0 +1,37 @@
+name: SBW IndexNow
+
+on:
+  push:
+    branches: [sustainaboy-public]
+    paths:
+      - 'sustainaboy-site/public/**'
+  workflow_dispatch:
+
+jobs:
+  notify-indexnow:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for Render deploy
+        run: sleep 75
+      - name: Notify IndexNow
+        run: |
+          curl --fail --silent --show-error --retry 3 \
+            -X POST 'https://api.indexnow.org/indexnow' \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            --data-binary @- <<'JSON'
+          {
+            "host": "sustainaboy-works.onrender.com",
+            "key": "03cfb762d9e6cd0f46857f1494e3e5b1",
+            "keyLocation": "https://sustainaboy-works.onrender.com/03cfb762d9e6cd0f46857f1494e3e5b1.txt",
+            "urlList": [
+              "https://sustainaboy-works.onrender.com/",
+              "https://sustainaboy-works.onrender.com/about/",
+              "https://sustainaboy-works.onrender.com/neutral-thought-work/",
+              "https://sustainaboy-works.onrender.com/thinking-organize/",
+              "https://sustainaboy-works.onrender.com/overthinking/",
+              "https://sustainaboy-works.onrender.com/method/",
+              "https://sustainaboy-works.onrender.com/story/",
+              "https://sustainaboy-works.onrender.com/community/"
+            ]
+          }
+          JSON
