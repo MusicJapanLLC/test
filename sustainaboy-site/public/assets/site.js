@@ -31,39 +31,27 @@ const revealEls=[...document.querySelectorAll('.reveal')];
 if(!reduceMotion&&'IntersectionObserver'in window){
   const io=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
-      if(entry.isIntersecting){
-        entry.target.classList.add('is-visible');
-        io.unobserve(entry.target);
-      }
+      if(entry.isIntersecting){entry.target.classList.add('is-visible');io.unobserve(entry.target)}
     });
   },{threshold:.1,rootMargin:'0px 0px -6% 0px'});
   revealEls.forEach(el=>io.observe(el));
-}else{
-  revealEls.forEach(el=>el.classList.add('is-visible'));
-}
+}else{revealEls.forEach(el=>el.classList.add('is-visible'))}
 
-const isHome=location.pathname==='/'||location.pathname==='/index.html';
-if(isHome){
-  ensureStyle('/assets/human-editorial.css');
-
-  let sticky=document.querySelector('.mobile-sticky-cta');
-  if(!sticky){
-    sticky=document.createElement('aside');
-    sticky.className='mobile-sticky-cta';
-    sticky.setAttribute('aria-label','体験会へのショートカット');
-    sticky.innerHTML='<a href="#price">体験会を見る<span aria-hidden="true">↗</span></a>';
-    document.body.appendChild(sticky);
+const isPaperHome=document.body.classList.contains('paper-home');
+if(isPaperHome&&!reduceMotion){
+  const stage=document.querySelector('.paper-stage');
+  const notes=[...document.querySelectorAll('.sticky-note')];
+  if(stage&&notes.length){
+    stage.addEventListener('pointermove',e=>{
+      if(innerWidth<760)return;
+      const r=stage.getBoundingClientRect();
+      const x=(e.clientX-r.left)/r.width-.5;
+      const y=(e.clientY-r.top)/r.height-.5;
+      notes.forEach((note,i)=>{
+        const m=(i+1)*2.2;
+        note.style.translate=`${x*m}px ${y*m}px`;
+      });
+    });
+    stage.addEventListener('pointerleave',()=>notes.forEach(note=>note.style.translate='0 0'));
   }
-
-  const hero=document.querySelector('.home-hero,.hero');
-  const price=document.querySelector('#price');
-  let heroVisible=true;
-  let priceVisible=false;
-  const syncSticky=()=>sticky.classList.toggle('is-visible',!heroVisible&&!priceVisible&&innerWidth<760);
-
-  if('IntersectionObserver'in window){
-    if(hero)new IntersectionObserver(entries=>{heroVisible=entries[0]?.isIntersecting??true;syncSticky()},{threshold:.06}).observe(hero);
-    if(price)new IntersectionObserver(entries=>{priceVisible=entries[0]?.isIntersecting??false;syncSticky()},{threshold:.05}).observe(price);
-  }
-  addEventListener('resize',syncSticky,{passive:true});
 }
