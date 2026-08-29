@@ -2,14 +2,18 @@ name: Senju GitHub Native Autonomous Improver
 
 on:
   schedule:
-    - cron: "30 22 * * *" # 07:30 JST, after the 07:00 tournament
+    - cron: "30 22 * * *" # 07:30 JST, after R&D coupling at 07:20
   workflow_dispatch:
   push:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - ".github/workflows/senju-autonomous-improver.yml"
+      - ".github/workflows/rnd-senju-coupled-loop.yml"
       - "senju/scripts/github_native_improver.py"
       - "senju/scripts/shadow_league.py"
+      - "senju/scripts/shadow_selector.py"
+      - "senju/scripts/apply_rnd_directive.py"
+      - "value-lab/**"
 
 concurrency:
   group: senju-github-native-autonomous-improver
@@ -17,7 +21,7 @@ concurrency:
 
 jobs:
   propose-and-validate:
-    name: Evidence -> bounded proposal -> validate
+    name: R&D directive -> evidence -> shadow league -> holdout
     runs-on: ubuntu-latest
     timeout-minutes: 35
     permissions:
@@ -62,6 +66,28 @@ jobs:
             printf '{}\n' > /tmp/evolution-summary.json
           fi
 
+      - name: Restore latest R&D research directive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/rnd-senju
+          RND_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "R&D x Senju Coupled Loop" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RND_RUN" ]]; then
+            gh run download "$RND_RUN" --repo "$GITHUB_REPOSITORY" --name rnd-senju-exchange --dir /tmp/rnd-senju || true
+          fi
+          DIRECTIVE="$(find /tmp/rnd-senju -name directive.json -print -quit || true)"
+          if [[ -n "$DIRECTIVE" ]]; then
+            cp "$DIRECTIVE" /tmp/rnd-directive.json
+            echo "R&D directive restored from run $RND_RUN" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No prior R&D artifact; building current bounded directive from repository queue." >> "$GITHUB_STEP_SUMMARY"
+            python value-lab/senju_bridge.py \
+              --queue value-lab/research_queue.json \
+              --senju senju/state/last-evolution-summary.json \
+              --out /tmp/current-rnd
+            cp /tmp/current-rnd/directive.json /tmp/rnd-directive.json
+          fi
+
       - name: Run engine and guard tests before proposal
         working-directory: senju
         env:
@@ -83,6 +109,32 @@ jobs:
             --evolution-summary /tmp/evolution-summary.json \
             --output-dir /tmp/promotion
 
+      - name: Apply bounded R&D research focus to Senju proposal
+        run: |
+          set -euo pipefail
+          cp /tmp/promotion/strategy.json /tmp/pre-rnd-strategy.json
+          python -m senju.scripts.apply_rnd_directive \
+            --strategy /tmp/promotion/strategy.json \
+            --directive /tmp/rnd-directive.json \
+            --out /tmp/rnd-strategy.json \
+            --audit /tmp/rnd-applied.json
+          cp /tmp/rnd-strategy.json /tmp/promotion/strategy.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary=json.loads(Path('/tmp/promotion/last-evolution-summary.json').read_text())
+          applied=json.loads(Path('/tmp/rnd-applied.json').read_text())
+          strategy=json.loads(Path('/tmp/promotion/strategy.json').read_text())
+          summary['rnd_coupling']=applied
+          summary['next_strategy']=strategy
+          summary['changes']=(summary.get('changes') or []) + [
+              f"R&D/{applied['focus']} {k}: {v['before']} -> {v['after']}"
+              for k,v in applied.get('changes',{}).items()
+          ]
+          Path('/tmp/promotion/last-evolution-summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2)+'\n')
+          PY
+          cat /tmp/rnd-applied.json >> "$GITHUB_STEP_SUMMARY"
+
       - name: Enforce autonomous promotion allowlist
         shell: bash
         run: |
@@ -99,8 +151,7 @@ jobs:
               'blue_budget': (6, 24),
               'seed': (1, 2147483647),
           }
-          p = Path('/tmp/promotion/strategy.json')
-          s = json.loads(p.read_text())
+          s = json.loads(Path('/tmp/promotion/strategy.json').read_text())
           assert set(s) == set(allowed), set(s)
           for k, (lo, hi) in allowed.items():
               assert lo <= float(s[k]) <= hi, (k, s[k])
@@ -114,6 +165,7 @@ jobs:
               'changes': summary.get('changes'),
               'previous_strategy': summary.get('previous_strategy'),
               'next_strategy': summary.get('next_strategy'),
+              'rnd_coupling': summary.get('rnd_coupling'),
           }
           text = json.dumps(evidence_fields, ensure_ascii=False).lower()
           for word in forbidden:
@@ -125,7 +177,7 @@ jobs:
           printf '%s\n' champion.json last-evolution-plan.md last-evolution-summary.json strategy.json | sort > /tmp/expected.txt
           diff -u /tmp/expected.txt /tmp/files.txt
 
-      - name: Smoke-test next generation using proposed strategy
+      - name: Smoke-test R&D-shaped strategy
         working-directory: senju
         run: |
           set -euo pipefail
@@ -139,17 +191,39 @@ jobs:
               raise SystemExit('candidate smoke evaluation was unsafe')
           PY
 
-      - name: Shadow-test proposed strategy across multiple seeds
+      - name: Run multi-candidate Shadow Champion selection and unseen holdout
         working-directory: senju
+        shell: bash
         run: |
           set -euo pipefail
-          python -m scripts.shadow_league \
+          CANDIDATES="$(python - <<'PY'
+          import json
+          print(max(3,min(9,int(json.load(open('/tmp/rnd-applied.json')).get('candidate_count',7)))))
+          PY
+          )"
+          python -m scripts.shadow_selector \
             --state /tmp/promotion/champion.json \
             --strategy /tmp/promotion/strategy.json \
             --out /tmp/promotion-shadow \
-            --seeds 5 \
-            --require-stable
-          cat /tmp/promotion-shadow/stability.md >> "$GITHUB_STEP_SUMMARY"
+            --selected /tmp/shadow-selected-strategy.json \
+            --candidates "$CANDIDATES"
+          cp /tmp/shadow-selected-strategy.json /tmp/promotion/strategy.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary=json.loads(Path('/tmp/promotion/last-evolution-summary.json').read_text())
+          selection=json.loads(Path('/tmp/promotion-shadow/selection.json').read_text())
+          strategy=json.loads(Path('/tmp/promotion/strategy.json').read_text())
+          summary['shadow_champion']={
+              'selected': selection.get('selected'),
+              'reason': selection.get('reason'),
+              'candidate_count': selection.get('candidate_count'),
+              'holdout': selection.get('holdout'),
+          }
+          summary['next_strategy']=strategy
+          Path('/tmp/promotion/last-evolution-summary.json').write_text(json.dumps(summary, ensure_ascii=False, indent=2)+'\n')
+          PY
+          cat /tmp/promotion-shadow/selection.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload validated promotion bundle
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
@@ -163,15 +237,17 @@ jobs:
             /tmp/promotion/last-evolution-summary.json
             /tmp/promotion/last-evolution-plan.md
 
-      - name: Upload pre-promotion shadow evidence
+      - name: Upload R&D and Shadow selection evidence
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: senju-prepromotion-shadow
           retention-days: 30
           if-no-files-found: error
           path: |
-            /tmp/promotion-shadow/stability.json
-            /tmp/promotion-shadow/stability.md
+            /tmp/rnd-directive.json
+            /tmp/rnd-applied.json
+            /tmp/promotion-shadow/selection.json
+            /tmp/promotion-shadow/selection.md
 
   promote:
     name: State-only branch -> verify diff -> fast-forward promote
@@ -196,7 +272,7 @@ jobs:
           name: senju-validated-promotion
           path: /tmp/promotion
 
-      - name: Create state-only branch, verify allowed diff, and fast-forward default
+      - name: Create state-only branch, verify allowed diff, and fast-forward promote
         shell: bash
         run: |
           set -euo pipefail
