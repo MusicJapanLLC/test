@@ -47,7 +47,8 @@ jobs:
           set -euo pipefail
           python -m unittest \
             automation.control_plane.test_performance_board \
-            automation.revenue_bridge.test_bridge -v
+            automation.revenue_bridge.test_bridge \
+            automation.revenue_bridge.test_proof_pack -v
 
       - name: Restore previous BOSS memory
         if: github.event_name != 'pull_request'
@@ -131,6 +132,14 @@ jobs:
             --out-md reports/revenue-bridge/latest.md
           cat reports/revenue-bridge/latest.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Generate evidence-gated customer proof pack
+        run: |
+          set -euo pipefail
+          python automation/revenue_bridge/proof_pack.py \
+            --bridge reports/revenue-bridge/latest.json \
+            --out reports/revenue-bridge/customer-proof-pack.md
+          cat reports/revenue-bridge/customer-proof-pack.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload BOSS memory and evidence
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
@@ -144,16 +153,19 @@ jobs:
             reports/performance/board.md
             reports/revenue-bridge/latest.json
             reports/revenue-bridge/latest.md
+            reports/revenue-bridge/customer-proof-pack.md
 
       - name: Report executive internal brief to Slack
         if: github.event_name != 'pull_request' && env.TOMOKI_SLACK_WEBHOOK_URL != ''
         run: |
           python - <<'PY'
           import json, os, urllib.request
+          from automation.revenue_bridge.proof_pack import classify
           v=json.load(open('reports/value-loop/daily-value.json', encoding='utf-8'))
           perf=json.load(open('reports/performance/board.json', encoding='utf-8'))
           rev=json.load(open('reports/revenue-bridge/latest.json', encoding='utf-8'))
           bridge=(rev.get('bridges') or [{}])[0]
+          sell_status,_=classify(bridge)
           weak=[r for r in perf.get('workers', []) if r.get('band') in {'COACH','WATCH','REASSIGN'}][:3]
           weak_text=' / '.join(f"{r['name']}:{r['band']}({r['score']})" for r in weak) or 'NONE'
           p=v['pillars']; s=v['senju']
@@ -165,8 +177,8 @@ jobs:
               f"業務={p['operations']} / Security={p['security']} / AI={p['ai_evolution']} / Faith→Value={p['faith_to_value']}\n"
               f"Senju safe={s['safe']} stable={s['stable']} score={s['score']}\n"
               f"要しごき/再配置候補: {weak_text}\n"
-              f"商品: {bridge.get('product','NONE')} / target={bridge.get('named_prospect','NONE')} / proof={bridge.get('proof_strength',0)}/100 / {bridge.get('revenue_distance','D6')}\n"
-              f"verified commercial stage={bridge.get('verified_commercial_stage') or 'NONE'}\n"
+              f"商品: {bridge.get('product','NONE')} / target={bridge.get('named_prospect','NONE')} / proof={bridge.get('proof_strength',0)}/100 / sales-gate={sell_status}\n"
+              f"distance={bridge.get('revenue_distance','D6')} / verified stage={bridge.get('verified_commercial_stage') or 'NONE'}\n"
               f"次の実売上アクション: {bridge.get('next_action','検証を続行')}\n"
               "※WLD・研究スコア・商談・提案・契約は現金ではない。verified paymentのみD0"
           )
