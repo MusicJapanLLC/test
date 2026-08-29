@@ -22,6 +22,7 @@ GOVERNANCE_REFS = [
     "company-society/RESEARCH_FREEDOM_DOCTRINE.md",
     "company-society/AUTONOMY.md",
     "standment-security/ELITE_WHITEHAT_CELL.md",
+    "standment-security/WHITEHAT_PORTFOLIO_OPERATING_PLAN.md",
 ]
 
 
@@ -138,6 +139,25 @@ def render(worker: dict[str, Any], plan: dict[str, Any], now: datetime, fp: str)
     ])
 
 
+def render_index(output_dir: Path, now: datetime) -> str:
+    candidates = sorted(p for p in output_dir.glob("*.md") if p.name != "INDEX.md")
+    rows = [f"| [{p.stem}]({p.name}) | WHITEHAT_CANDIDATE | NOT VERIFIED |" for p in candidates]
+    return "\n".join([
+        "# Standment Security — White-Hat Candidate Index",
+        "",
+        f"Updated JST: `{now.astimezone(JST).isoformat()}`",
+        "",
+        "These are adversarial R&D portfolio candidates, not verified customer claims.",
+        "",
+        "| Candidate | Stage | Verification |",
+        "|---|---|---|",
+        *(rows or ["| none | - | - |"]),
+        "",
+        "Promotion follows `WHITEHAT_PORTFOLIO_OPERATING_PLAN.md` and requires before/after evidence plus independent retest.",
+        "",
+    ])
+
+
 def build(plan: dict[str, Any], workers_dir: Path, output_dir: Path, now: datetime) -> dict[str, Any]:
     worker = select_whitehat(load_workers(workers_dir))
     mission = str((plan.get("mission") or {}).get("research_id") or "UNKNOWN")
@@ -148,11 +168,20 @@ def build(plan: dict[str, Any], workers_dir: Path, output_dir: Path, now: dateti
     if not path.exists():
         path.write_text(render(worker, plan, now, fp), encoding="utf-8")
         created = True
+
+    index = output_dir / "INDEX.md"
+    index_text = render_index(output_dir, now)
+    index_updated = not index.exists() or index.read_text(encoding="utf-8") != index_text
+    if index_updated:
+        index.write_text(index_text, encoding="utf-8")
+
     result = {
-        "schema": "standment-whitehat-portfolio-bridge/v1",
+        "schema": "standment-whitehat-portfolio-bridge/v2",
         "fingerprint": fp,
         "candidate_path": str(path.as_posix()),
+        "index_path": str(index.as_posix()),
         "created": created,
+        "index_updated": index_updated,
         "role": "elite_whitehat",
         "eligible": bool(worker.get("eligible")),
         "score": int(worker.get("score") or 0),
