@@ -27,14 +27,23 @@ class ChildGuildTests(unittest.TestCase):
         self.assertEqual(1, packet["side_effect_budget"])
         pe.validate(packet)
 
-    def test_only_owner_controlled_modes(self):
-        allowed = {"slack_message", "slack_reaction", "github_artifact", "email_owner"}
+    def test_external_play_requires_gates(self):
+        allowed = {"slack_message", "github_artifact", "email_owner", "external_exploration"}
         for seed in [str(i) for i in range(100)]:
             packet = pe.build(self.registry, seed)
             self.assertIn(packet["action"]["kind"], allowed)
-            self.assertTrue(packet["constraints"]["owner_controlled_targets_only"])
-            self.assertFalse(packet["constraints"]["third_party_contact"])
-            self.assertFalse(packet["constraints"]["destructive_actions"])
+            constraints = packet["constraints"]
+            self.assertTrue(constraints["lawful"])
+            self.assertTrue(constraints["ethical"])
+            self.assertTrue(constraints["terms_compliant"])
+            self.assertTrue(constraints["authorized_account_or_connector"])
+            self.assertEqual("authorized_or_opted_in_only", constraints["third_party_email"])
+            self.assertFalse(constraints["destructive_actions"])
+            self.assertFalse(constraints["impersonation"])
+            self.assertFalse(constraints["panic_pranks"])
+            self.assertFalse(constraints["credential_or_secret_access"])
+            self.assertFalse(constraints["harassment"])
+            self.assertFalse(constraints["spam"])
 
 
 if __name__ == "__main__":
