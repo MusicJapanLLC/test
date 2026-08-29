@@ -3,6 +3,11 @@ name: Senju Daily Self Evolution
 on:
   schedule:
     - cron: "0 22 * * *" # 07:00 JST
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/**"
+      - ".github/workflows/senju-daily-report.yml"
   workflow_dispatch:
     inputs:
       population:
@@ -23,8 +28,8 @@ permissions:
   actions: read
 
 concurrency:
-  group: senju-daily-self-evolution
-  cancel-in-progress: false
+  group: senju-daily-self-evolution-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   evolve:
