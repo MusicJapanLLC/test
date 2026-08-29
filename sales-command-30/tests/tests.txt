@@ -56,12 +56,12 @@ Expected: 「Invalid Test」は作成されず、「Delete Test」は削除後�
 
 ## Test 5 - 外部連携キーと受信テストが機能する
 Viewport: desktop
-Covers: integration token issuance, POST /api/events/test, event persistence, integration UI
-Description: 外部イベント連携の入口が発行でき、内部受信経路が保存まで動作する。
+Covers: integration token issuance, POST /api/events/test, external ingest security contract, event persistence, integration UI
+Description: 外部イベント連携の入口が発行でき、内部受信経路が保存まで動作し、UIに重複・異常時刻・許可外source・過剰送信の防御方針が表示される。
 
 Steps:
 1. 「Gmail / Calendar連携」を開き「キー発行」を押す
 2. Endpoint、X-User-Id、X-Ingest-Tokenが表示されることを確認する
-3. 「受信テスト」を押す
+3. 連携説明に重複再送・異常時刻・許可外source・過剰送信を拒否する旨が表示されることを確認し、「受信テスト」を押す
 
 Expected: 直近イベントに「受信テスト成功」が表示される。
