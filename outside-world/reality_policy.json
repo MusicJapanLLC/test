@@ -1,12 +1,15 @@
 {
-  "schema": "the-world-reality-policy/v1",
-  "mode": "active_bounded_autonomy",
+  "schema": "the-world-reality-policy/v2",
+  "mode": "aggressive_bounded_autonomy",
+  "prime_doctrine": "LIMITLESS",
+  "operating_loop": "ACT_VERIFY_LOG_LEARN_IMPROVE",
+  "approval_boundary": "T4_MATERIAL_COMMITMENT_ONLY_UNLESS_A_SERVICE_SPECIFIC_RULE_REQUIRES_MORE",
   "pulse": {
     "target_seconds": 60,
     "github_watchdog_minutes": 5,
-    "max_citizens_per_pulse": 16,
-    "max_observations_per_pulse": 24,
-    "max_publications_per_pulse": 2
+    "max_citizens_per_pulse": 48,
+    "max_observations_per_pulse": 36,
+    "max_publications_per_pulse": 4
   },
   "actions": {
     "public_web_observe": "AUTO",
@@ -16,37 +19,70 @@
     "draft_external_post": "AUTO",
     "github_issue_own_repo": "AUTO_ALLOWLIST",
     "slack_post_owned_workspace": "AUTO_ALLOWLIST",
+    "upload_workflow_artifact": "AUTO",
     "gmail_read": "AUTO_WITH_EXISTING_OAUTH",
     "gmail_label": "AUTO_WITH_EXISTING_RULES",
     "gmail_archive": "AUTO_WITH_EXISTING_RULES",
-    "gmail_send": "APPROVAL",
-    "general_external_post": "APPROVAL",
+    "gmail_send": "AUTO_IF_PREAUTHORIZED_BUSINESS_FLOW_ELSE_APPROVAL",
+    "general_external_post": "AUTO_IF_DESIGNATED_IDENTITY_AND_ALLOWLISTED_SURFACE_ELSE_APPROVAL",
+    "preauthorized_business_contact": "AUTO_WITH_EXISTING_TARGETING_VOLUME_AND_OPTOUT_RULES",
     "new_service_identity": "APPROVAL",
     "purchase_or_payment": "APPROVAL",
-    "contract_or_legal_commitment": "APPROVAL"
+    "contract_or_legal_commitment": "APPROVAL",
+    "credential_or_permission_change": "APPROVAL",
+    "irreversible_delete": "APPROVAL"
   },
   "allowlists": {
     "github_repositories": ["MusicJapanLLC/test"],
     "slack_webhook_secret_names": ["RND_SLACK_WEBHOOK_URL", "CEO_REPORT_WEBHOOK_URL"],
-    "public_browser_hosts": ["github.com", "github.blog", "news.ycombinator.com", "hnrss.org", "dev.to", "arxiv.org", "export.arxiv.org", "youtube.com", "www.youtube.com", "note.com"]
+    "public_browser_hosts": [
+      "github.com",
+      "github.blog",
+      "news.ycombinator.com",
+      "hnrss.org",
+      "dev.to",
+      "arxiv.org",
+      "export.arxiv.org",
+      "youtube.com",
+      "www.youtube.com",
+      "note.com",
+      "huggingface.co",
+      "stackoverflow.com",
+      "developer.mozilla.org",
+      "vercel.com",
+      "cloudflare.com",
+      "blog.cloudflare.com",
+      "openai.com",
+      "platform.openai.com",
+      "pypi.org",
+      "npmjs.com",
+      "www.npmjs.com",
+      "producthunt.com",
+      "www.producthunt.com"
+    ]
   },
   "identity": {
     "logical_identity_per_citizen": true,
     "credentials": "secret_reference_only",
     "human_identity_impersonation": false,
-    "service_identity_creation": "approval"
+    "service_identity_creation": "approval",
+    "designated_existing_identity_may_act": true
   },
   "browser": {
-    "authenticated_sessions": "explicit_capability_required",
+    "authenticated_sessions": "existing_authorized_connector_or_designated_account_only",
     "respect_service_limits": true,
     "respect_access_controls": true,
+    "respect_service_terms": true,
     "engagement_manipulation": false,
-    "bulk_unsolicited_messaging": false
+    "bulk_unsolicited_messaging": false,
+    "terms_or_moderation_evasion": false,
+    "default_when_uncertain": "READ_ONLY_RESEARCH"
   },
   "logging": {
     "record_every_effect": true,
     "record_fields": ["citizen_id", "action", "target", "decision", "timestamp", "result_id"],
     "store_secrets": false,
-    "store_private_message_body_in_artifacts": false
+    "store_private_message_body_in_artifacts": false,
+    "record_limitless_conversion_goal": true
   }
 }
