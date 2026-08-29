@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""OIDC bridge between GitHub Actions and THE WORLD task ledger.
+"""OIDC bridge between GitHub Actions and THE WORLD task/experiment ledger.
 
 No Supabase service secret is stored in GitHub. GitHub Actions obtains a short-lived
-OIDC identity token and the Edge Function verifies repository ownership before
-allowing bounded task claim/release/dispatch/reconciliation operations.
+OIDC identity token and the Edge Function verifies an allowlisted repository/workflow
+before bounded task and experiment operations are accepted.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
-GATEWAY_PROTOCOL = "oidc-repository-v4-audited"
+GATEWAY_PROTOCOL = "oidc-repository-v5-experiment-learning"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
 
 
@@ -71,20 +71,33 @@ def main() -> int:
     for name in ("claim", "review"):
         q = sub.add_parser(name)
         q.add_argument("--out", required=True)
+
     q = sub.add_parser("release")
     q.add_argument("--claim", required=True)
     q.add_argument("--delay", type=int, default=15)
     q.add_argument("--reason", default="execution lane busy")
+
     q = sub.add_parser("dispatched")
     q.add_argument("--claim", required=True)
     q.add_argument("--workflow", required=True)
     q.add_argument("--run-id", type=int, required=True)
     q.add_argument("--run-url", required=True)
+
     q = sub.add_parser("finish-review")
     q.add_argument("--review", required=True)
     q.add_argument("--result", required=True)
     q.add_argument("--success", action="store_true")
     q.add_argument("--error", default=None)
+
+    q = sub.add_parser("experiment-config")
+    q.add_argument("--out", required=True)
+    q.add_argument("--policy-key", default="SENJU_MASS_SHADOW")
+
+    q = sub.add_parser("record-experiment")
+    q.add_argument("--selection", required=True)
+    q.add_argument("--workflow", required=True)
+    q.add_argument("--policy-key", default="SENJU_MASS_SHADOW")
+    q.add_argument("--out", default=None)
     args = p.parse_args()
 
     if args.cmd in {"claim", "review"}:
@@ -93,6 +106,32 @@ def main() -> int:
         task = data.get("task")
         print("NO_TASK" if not task else f"{args.cmd.upper()} {task.get('id')} {task.get('title')}")
         return 0
+
+    if args.cmd == "experiment-config":
+        data = _edge({"action": "experiment_config", "policy_key": args.policy_key})
+        _write(args.out, data)
+        policy = data.get("policy") or {}
+        print(json.dumps({
+            "trial_multiplier": policy.get("trial_multiplier"),
+            "exploration_rate": policy.get("exploration_rate"),
+            "history_runs": len(data.get("history") or []),
+        }, ensure_ascii=False))
+        return 0
+
+    if args.cmd == "record-experiment":
+        selection = _read(args.selection)
+        candidates = list(selection.get("top_candidates") or [])[:100]
+        data = _edge({
+            "action": "record_experiment",
+            "policy_key": args.policy_key,
+            "workflow": args.workflow,
+            "summary": selection,
+            "candidates": candidates,
+        })
+        if args.out:
+            _write(args.out, data)
+        print(json.dumps(data, ensure_ascii=False))
+        return 0 if data.get("recorded") else 1
 
     if args.cmd == "release":
         c = _read(args.claim)
@@ -114,15 +153,18 @@ def main() -> int:
         print(json.dumps(data, ensure_ascii=False))
         return 0 if data.get("marked") else 1
 
-    review = _read(args.review)
-    t = review.get("task") or {}
-    result = _read(args.result)
-    data = _edge({
-        "action": "finish_review", "task_id": t.get("id"), "success": bool(args.success),
-        "result": result, "error": args.error,
-    })
-    print(json.dumps(data, ensure_ascii=False))
-    return 0 if data.get("finished") else 1
+    if args.cmd == "finish-review":
+        review = _read(args.review)
+        t = review.get("task") or {}
+        result = _read(args.result)
+        data = _edge({
+            "action": "finish_review", "task_id": t.get("id"), "success": bool(args.success),
+            "result": result, "error": args.error,
+        })
+        print(json.dumps(data, ensure_ascii=False))
+        return 0 if data.get("finished") else 1
+
+    raise RuntimeError(f"unsupported command: {args.cmd}")
 
 
 if __name__ == "__main__":
