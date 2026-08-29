@@ -10,6 +10,7 @@ on:
       - "automation/control_plane/value_loop.py"
       - "automation/control_plane/value_policy.json"
       - "automation/control_plane/performance_board.py"
+      - "automation/control_plane/test_performance_board.py"
       - "automation/revenue_bridge/**"
       - ".github/workflows/boss-daily-value-loop.yml"
       - ".github/agents/ai-factory-boss.agent.md"
@@ -40,6 +41,13 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
+
+      - name: Test BOSS performance and revenue machinery
+        run: |
+          set -euo pipefail
+          python -m unittest \
+            automation.control_plane.test_performance_board \
+            automation.revenue_bridge.test_bridge -v
 
       - name: Restore previous BOSS memory
         if: github.event_name != 'pull_request'
