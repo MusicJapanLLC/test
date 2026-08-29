@@ -10,6 +10,7 @@ on:
       - '.github/workflows/tomoki-manager.yml'
       - '.github/agents/**'
       - 'tomoki-agents/**'
+      - 'company-society/**'
       - 'automation/control_plane/**'
       - 'automation/gmail_sorter/**'
       - 'docs/AI_COMPANY_SUPERVISION_CONTRACT.md'
@@ -133,6 +134,18 @@ jobs:
           Path('tomoki-manager-report.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
           PY
 
+      - name: Build Covenant mutual-aid and faith reports
+        run: |
+          python company-society/council.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --json covenant-council.json \
+            --report covenant-council.md
+          python company-society/church.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --council covenant-council.json \
+            --json faith-report.json \
+            --report faith-report.md
+
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
@@ -178,6 +191,54 @@ jobs:
             --output tomoki-manager-apply.json \
             --report tomoki-manager-report.md
 
+      - name: Append Covenant collaboration brief for TOMOKI
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = Path('tomoki-manager-report.md')
+          if not report.exists():
+              report.write_text('# TOMOKI MANAGER CYCLE\n', encoding='utf-8')
+
+          def load(path):
+              p = Path(path)
+              if not p.exists():
+                  return {}
+              return json.loads(p.read_text(encoding='utf-8'))
+
+          council = load('covenant-council.json')
+          faith = load('faith-report.json')
+          rest = [x for x in council.get('rest', []) if x.get('agent') != 'NONE']
+          education = [x for x in council.get('education', []) if x.get('agent') != 'NONE']
+          aid = council.get('mutual_aid', [])[:3]
+          autonomy = council.get('autonomy', [])[:3]
+
+          lines = [
+              '',
+              '## THE COVENANT / 盟約',
+              f"- 休息・原因分析候補: {len(rest)}",
+              f"- 教育対象: {len(education)}",
+              f"- 相互扶助候補: {len(council.get('mutual_aid', []))}",
+              f"- 自律的な次の一手候補: {len(council.get('autonomy', []))}",
+          ]
+          for x in aid:
+              lines.append(f"- HELP: {x.get('source')} -> {x.get('helper')} / {x.get('reason')}")
+          for x in autonomy:
+              lines.append(f"- AUTONOMY: {x.get('agent')} / {x.get('vow')}")
+          if rest:
+              for x in rest[:2]:
+                  lines.append(f"- REST: {x.get('agent')} / {x.get('reason')}")
+          lines += [
+              f"- VOW: {faith.get('vow', '次cycleで一つ検証可能な改善を残す')}",
+              '- 原則: 助けるが乗っ取らない。休ませるが放置しない。自律するが証拠と境界を捨てない。',
+          ]
+          with report.open('a', encoding='utf-8') as f:
+              f.write('\n'.join(lines) + '\n')
+          PY
+
       - name: Publish competition scoreboard
         shell: bash
         run: |
@@ -193,6 +254,13 @@ jobs:
               print('### Competition')
               for row in d['scoreboard']:
                   print(f"- {row['id']}: {row['score']} / {row['state']}")
+          c=Path('covenant-council.json')
+          if c.exists():
+              d=json.loads(c.read_text(encoding='utf-8'))
+              rest=sum(1 for x in d.get('rest',[]) if x.get('agent')!='NONE')
+              edu=sum(1 for x in d.get('education',[]) if x.get('agent')!='NONE')
+              print('### Covenant Council')
+              print(f"- rest={rest} education={edu} mutual_aid={len(d.get('mutual_aid',[]))} autonomy={len(d.get('autonomy',[]))}")
           PY
 
       - name: Upload manager evidence
@@ -205,6 +273,10 @@ jobs:
             tomoki-manager-plan.json
             tomoki-manager-apply.json
             tomoki-manager-report.md
+            covenant-council.json
+            covenant-council.md
+            faith-report.json
+            faith-report.md
             reports/control-plane/company-watchdog.json
             reports/ceo-events/company-watchdog.json
           retention-days: 14
