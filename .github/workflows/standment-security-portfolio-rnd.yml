@@ -2,8 +2,9 @@ name: Standment Security - Portfolio First R&D
 
 on:
   schedule:
-    # 06:50 JST daily, before the 07:20 JST R&D x Senju coupled loop.
-    - cron: '50 21 * * *'
+    # Four autonomous portfolio cycles/day JST: 00:50, 06:50, 12:50, 18:50.
+    # The 06:50 run still feeds the 07:20 R&D x Senju coupled loop.
+    - cron: '50 3,9,15,21 * * *'
   workflow_dispatch:
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
@@ -13,7 +14,12 @@ on:
       - 'automation/security/test_portfolio_rnd.py'
       - 'automation/security/portfolio_autobuilder.py'
       - 'automation/security/test_portfolio_autobuilder.py'
+      - 'automation/security/portfolio_batch_autobuilder.py'
+      - 'automation/security/test_portfolio_batch_autobuilder.py'
+      - 'automation/security/llm_security_eval.py'
+      - 'automation/security/test_llm_security_eval.py'
       - 'standment-security/security_portfolio_program.json'
+      - 'standment-security/ai-security/**'
       - 'value-lab/research_queue.json'
       - 'PORTFOLIO.md'
 
@@ -41,11 +47,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify portfolio planner and Auto-Builder
+      - name: Verify portfolio planner, batch Auto-Builder and AI-security eval
         working-directory: automation/security
         run: |
           set -euo pipefail
-          python -m unittest -v test_portfolio_rnd.py test_portfolio_autobuilder.py
+          python -m unittest -v \
+            test_portfolio_rnd.py \
+            test_portfolio_autobuilder.py \
+            test_portfolio_batch_autobuilder.py
+          cd ../..
+          python -m unittest -v automation.security.test_llm_security_eval
 
       - name: Restore previous successful portfolio R&D memory
         env:
@@ -97,13 +108,14 @@ jobs:
           cp reports/standment-security-rnd/daily.md reports/standment-security-rnd/before/daily.md
           cp reports/standment-security-rnd/senju-research-item.json reports/standment-security-rnd/before/senju-research-item.json
 
-      - name: Materialize one portfolio improvement
+      - name: Materialize up to three portfolio improvements
         run: |
           set -euo pipefail
-          python automation/security/portfolio_autobuilder.py \
-            --report reports/standment-security-rnd/before/daily.json \
+          python automation/security/portfolio_batch_autobuilder.py \
             --program standment-security/security_portfolio_program.json \
+            --portfolio PORTFOLIO.md \
             --repo-root . \
+            --max-tracks 3 \
             --out reports/standment-security-rnd/evolution.json
 
       - name: Re-measure portfolio after autonomous build
@@ -130,10 +142,11 @@ jobs:
           evo=json.loads(Path('reports/standment-security-rnd/evolution.json').read_text(encoding='utf-8'))
           b=before.get('selected') or {}
           a=after.get('selected') or {}
-          print('## Autonomous Portfolio Build', file=open('/tmp/build-summary.md','w',encoding='utf-8'))
+          print('## Autonomous Portfolio Batch', file=open('/tmp/build-summary.md','w',encoding='utf-8'))
           with open('/tmp/build-summary.md','a',encoding='utf-8') as f:
-              f.write(f"\n- before: {b.get('id')} evidence={b.get('evidence_ratio')} status={b.get('portfolio_status')}\n")
-              f.write(f"- after: {a.get('id')} evidence={a.get('evidence_ratio')} status={a.get('portfolio_status')}\n")
+              f.write(f"\n- deep primary before: {b.get('id')} evidence={b.get('evidence_ratio')} status={b.get('portfolio_status')}\n")
+              f.write(f"- deep primary after: {a.get('id')} evidence={a.get('evidence_ratio')} status={a.get('portfolio_status')}\n")
+              f.write(f"- batch tracks: {', '.join(evo.get('tracks') or []) or 'NONE'}\n")
               f.write(f"- generated: {', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'}\n")
               f.write('- verification claimed by autobuilder: false\n')
           PY
@@ -168,9 +181,10 @@ jobs:
               if str(item.get('research_id','')).startswith('RND-STANDMENT-SECURITY-PORTFOLIO')
           ]
           assert security_tracks, 'Standment Security portfolio research is missing from the live queue'
-          assert max(int(item.get('priority',0)) for item in security_tracks) >= 4000
+          assert max(int(item.get('priority',0)) for item in security_tracks) >= 5000
           assert daily.get('portfolio_first') is True
           assert evolution.get('verification_claimed') is False
+          assert 1 <= len(evolution.get('tracks') or []) <= 3
           assert daily.get('delta',{}).get('kind') in {
               'BASELINE_CAPTURED','RESEARCH_REFOCUS','VERIFIED_PORTFOLIO_DELTA','NO_VERIFIED_DELTA'
           }
@@ -178,7 +192,7 @@ jobs:
               'NORMAL','VERIFY_NEXT_MISSING_EVIDENCE','REFRAME_AND_COUNTEREVIDENCE','SWITCH_EVIDENCE_PATH'
           }
 
-          print(f'Portfolio P0/Security priority active: {research_id}; daily build and Senju boundary intact.')
+          print(f'AI Security Portfolio P0 active: {research_id}; batch portfolio build + Senju boundary intact.')
           PY
 
       - name: Materialize Slack outbox for Make
@@ -201,17 +215,18 @@ jobs:
 
           evo=json.loads(evolution.read_text(encoding='utf-8')) if evolution.exists() else {}
           created=', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'
+          tracks=', '.join(evo.get('tracks') or []) or 'NONE'
           now=datetime.now(ZoneInfo('Asia/Tokyo'))
           message=(
               '*STANDMENT SECURITY｜AUTONOMOUS PORTFOLIO EVOLUTION*\n'
               + report.read_text(encoding='utf-8')
-              + f"\n*Auto-Builder*\n生成/更新: {created}\n"
+              + f"\n*Batch Auto-Builder*\n対象: {tracks}\n生成/更新: {created}\n"
               + 'VERIFIED自動昇格: なし（Evidence Gate維持）\n'
               + '\n*Delivery*\nGitHub → durable outbox → Make → Slack\n'
           )[:30000]
 
           payload={
-              'schema':'standment-security-slack-outbox-v1',
+              'schema':'standment-security-slack-outbox-v2',
               'report_date_jst':now.strftime('%Y-%m-%d'),
               'generated_at_jst':now.isoformat(timespec='seconds'),
               'channel_id':'C0BTJ38SNNA',
@@ -219,6 +234,7 @@ jobs:
               'delivery_mode':'make-pull-no-github-secret',
               'github_run_id':os.getenv('RUN_ID',''),
               'github_run_attempt':os.getenv('RUN_ATTEMPT',''),
+              'batch_tracks':evo.get('tracks') or [],
               'message':message,
           }
           out=Path('automation/reporting/outbox/standment-security-latest.json')
@@ -246,13 +262,13 @@ jobs:
             echo "No repository artifact or delivery outbox delta to commit." >> "$GITHUB_STEP_SUMMARY"
           else
             TRACK="$(python -c "import json; print(json.load(open('reports/standment-security-rnd/evolution.json'))['track'])")"
-            git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
+            git commit -m "rnd(security): batch-evolve ${TRACK} portfolio evidence"
             git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin "HEAD:${GITHUB_REF_NAME}"
             echo "Autonomous portfolio artifacts + Make delivery outbox committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Preserve daily R&D evidence
+      - name: Preserve R&D evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
