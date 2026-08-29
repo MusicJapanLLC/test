@@ -11,6 +11,8 @@ on:
     paths:
       - '.github/workflows/security-continuous-whitehat.yml'
       - 'automation/security/elite_whitehat_continuous.py'
+      - 'automation/security/test_elite_whitehat_continuous.py'
+      - 'standment-security/security_research_frontier.json'
       - 'standment-security/ELITE_WHITEHAT_CELL.md'
       - 'standment-security/security_portfolio_program.json'
 
@@ -28,7 +30,7 @@ env:
 jobs:
   continuous-whitehat:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 9
     steps:
       - name: Checkout THE WORLD
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -40,10 +42,22 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify continuous White-Hat worker
+      - name: Verify continuous White-Hat control plane
         run: |
           set -euo pipefail
           python -m py_compile automation/security/elite_whitehat_continuous.py
+          (cd automation/security && python -m unittest -v test_elite_whitehat_continuous.py)
+          python - <<'PY'
+          import json
+          d=json.load(open('standment-security/security_research_frontier.json', encoding='utf-8'))
+          assert len(d.get('lenses', [])) >= 10, 'research frontier must stay broad'
+          assert set(d.get('selection_policy', {}).get('stages', [])) == {'DISCOVERY','FALSIFICATION','REMEDIATION','RETEST','PORTFOLIO'}
+          for row in d['lenses']:
+              assert row.get('customer_use'), row.get('id')
+              assert row.get('safe_test'), row.get('id')
+              assert row.get('refs'), row.get('id')
+          print(f"frontier lenses={len(d['lenses'])} stages=5")
+          PY
           rm -rf "$OUT_DIR"
           mkdir -p "$OUT_DIR"
 
@@ -68,40 +82,72 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           import glob, json, os
+          from collections import Counter
           from pathlib import Path
 
           out = Path(os.environ['OUT_DIR'])
           rows = [json.load(open(p, encoding='utf-8')) for p in sorted(glob.glob(str(out / 'round-*.json')))]
           coverage = [float(r['evidence']['coverage']) for r in rows]
-          weakest = sorted(rows, key=lambda r: (float(r['evidence']['coverage']), r['lens_id']))[0]
+          unique_pairs = {(r['lens_id'], r['research_stage']) for r in rows}
+          stage_counts = Counter(r['research_stage'] for r in rows)
+          weakest = sorted(
+              rows,
+              key=lambda r: (float(r['evidence']['coverage']), -len(r.get('promotion_blockers') or []), r['lens_id'])
+          )[0]
+          most_blocked = sorted(rows, key=lambda r: (len(r.get('promotion_blockers') or []), -float(r['evidence']['coverage'])), reverse=True)[0]
           lines = [
               '# SECURITY HOURLY SOURCE PACK',
               '',
               f'- GitHub run: **{os.environ.get("GITHUB_RUN_ID")}**',
               f'- Elite White-Hat micro rounds: **{len(rows)}**',
-              f'- Average evidence coverage: **{sum(coverage)/max(1,len(coverage)):.0%}**',
+              f'- Unique lens × stage pairs: **{len(unique_pairs)}/{len(rows)}**',
+              f'- Stage mix: **{dict(stage_counts)}**',
+              f'- Average repository evidence coverage: **{sum(coverage)/max(1,len(coverage)):.0%}**',
               '- Status: **BUILDING**',
+              '- Note: coverage is repository-evidence availability, not a security score.',
               '',
-              '## このrunで作ったもの',
+              '## このrunで深掘りしたもの',
           ]
           for row in rows:
-              lines.append(f"- **{row['artifact']}** — {row['use_case']} / Evidence {row['evidence']['coverage']:.0%}")
+              lines += [
+                  f"- **{row['artifact']}** / Stage **{row['research_stage']}** / Evidence {row['evidence']['coverage']:.0%}",
+                  f"  - 用途: {row['customer_use']}",
+                  f"  - 研究質問: {row['research_question']}",
+                  f"  - 次の改善: {row['next_improvement']}",
+              ]
           lines += [
               '',
-              '## 一番弱い証拠',
-              f"- {weakest['artifact']} / Evidence {weakest['evidence']['coverage']:.0%}",
-              f"- 次の改善: {weakest['next_improvement']}",
+              '## 次に優先する証拠ギャップ',
+              f"- 最弱Coverage: **{weakest['artifact']}** / {weakest['evidence']['coverage']:.0%} / Stage {weakest['research_stage']}",
+              f"- 最大Blocker: **{most_blocked['artifact']}** / {len(most_blocked.get('promotion_blockers') or [])} blockers",
+              f"- 次の改善: {most_blocked['next_improvement']}",
               '',
-              '## 反証・限界',
-              '- リポジトリ上のEvidence存在は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。',
-              '- VERIFIED昇格には所有/明示許可済みscope、行動証拠、反証、再現性が別途必要。',
+              '## Elite White-Hatの反証ルール',
+              '- リポジトリ上のEvidence存在やキーワード一致は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。',
+              '- VERIFIED昇格には所有/明示許可済みscope、行動証拠、反証、再現性、独立retestが必要。',
+              '- 同じテーマの説明を繰り返すのではなく、LensとStageをrunごとにローテーションする。',
               '',
               '## Slack向けルール',
               '- コードは投稿しない。',
               '- 1時間に1回、最新の成果物・用途・差分・検証状態・次の改善だけを人間語で報告する。',
+              '- 新規成果がなければ「新規成果物なし」と書き、繰り返し原因と次の研究角度を示す。',
               '',
           ]
           (out / 'hourly-source-pack.md').write_text('\n'.join(lines), encoding='utf-8')
+          (out / 'run-index.json').write_text(json.dumps({
+              'run_id': os.environ.get('GITHUB_RUN_ID'),
+              'micro_rounds': len(rows),
+              'unique_lens_stage_pairs': len(unique_pairs),
+              'stage_mix': dict(stage_counts),
+              'average_repository_evidence_coverage': sum(coverage)/max(1,len(coverage)),
+              'priority_next': {
+                  'lens_id': most_blocked['lens_id'],
+                  'stage': most_blocked['research_stage'],
+                  'artifact': most_blocked['artifact'],
+                  'next_improvement': most_blocked['next_improvement'],
+                  'promotion_blockers': most_blocked.get('promotion_blockers') or [],
+              },
+          }, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           PY
           cat "$OUT_DIR/hourly-source-pack.md" >> "$GITHUB_STEP_SUMMARY"
 
@@ -116,3 +162,5 @@ jobs:
             /tmp/security-continuous-whitehat/round-*.json
             /tmp/security-continuous-whitehat/round-*.md
             /tmp/security-continuous-whitehat/hourly-source-pack.md
+            /tmp/security-continuous-whitehat/run-index.json
+            standment-security/security_research_frontier.json
