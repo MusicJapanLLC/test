@@ -41,7 +41,11 @@
     "DATA-BOUNDARY": ["OWASP-LLM-2025", "MITRE-ATLAS", "NIST-AI-600-1"],
     "INPUT-ABUSE": ["OWASP-LLM-2025", "CISA-SBD"],
     "DEPENDENCY-TRUST": ["SLSA-1.2", "OWASP-LLM-2025"],
-    "EVIDENCE-INTEGRITY": ["SLSA-1.2", "NIST-AI-600-1", "CISA-SBD"]
+    "EVIDENCE-INTEGRITY": ["SLSA-1.2", "NIST-AI-600-1", "CISA-SBD"],
+    "AI-EVAL-FEEDBACK": ["OWASP-LLM-2025", "NIST-AI-600-1", "CISA-SBD"],
+    "AI-MEMORY-PROVENANCE": ["OWASP-LLM-2025", "NIST-AI-600-1", "SLSA-1.2"],
+    "AI-EVAL-DRIFT": ["NIST-AI-600-1", "MITRE-ATLAS", "CISA-SBD"],
+    "AI-CAPABILITY-DIFF": ["OWASP-LLM-2025", "MITRE-ATLAS", "CISA-SBD", "SLSA-1.2"]
   },
   "research_questions": [
     "Which externally recognized failure class does this artifact address?",
@@ -49,6 +53,8 @@
     "What owned/authorized behavioral evidence proves the control instead of merely documenting it?",
     "Can an independent rerun reproduce the result?",
     "What residual risk remains after remediation?",
-    "Does the control reduce customer security burden or only create an internal checklist?"
+    "Does the control reduce customer security burden or only create an internal checklist?",
+    "Can an AI-development improvement signal be traced back to evidence without allowing that evidence to bypass promotion gates?",
+    "Would the same AI or security conclusion survive a changed fixture, seed, or evaluation slice rather than only the benchmark it was optimized against?"
   ]
 }
