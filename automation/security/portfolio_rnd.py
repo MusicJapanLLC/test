@@ -48,7 +48,6 @@ def section_status(portfolio: str, marker: str) -> str:
     if pos < 0:
         return "ABSENT"
 
-    # Marker is expected to identify the intended H2. Clamp to the next H2.
     section_start = portfolio.rfind("\n## ", 0, pos + 1)
     if section_start < 0:
         section_start = pos
@@ -59,7 +58,6 @@ def section_status(portfolio: str, marker: str) -> str:
     section_end = len(portfolio) if next_h2 < 0 else next_h2
     section = portfolio[section_start:section_end]
 
-    # Accept the canonical status line with or without markdown bolding.
     for status in ("VERIFIED", "BUILDING", "EXPERIMENT", "BLOCKED"):
         if f"状態: {status}" in section or f"**状態: {status}**" in section:
             return status
@@ -103,14 +101,18 @@ def inspect_track(root: Path, portfolio: str, track: dict[str, Any]) -> dict[str
         "senju_focus": focus,
         "hypothesis": str(track.get("hypothesis", "")),
         "deliverable": str(track.get("deliverable", "")),
+        "customer_usefulness": str(track.get("customer_usefulness", "")),
     }
 
 
 def choose_track(rows: list[dict[str, Any]]) -> dict[str, Any]:
     if not rows:
         raise ValueError("no security portfolio tracks configured")
-    # A VERIFIED track can still be improved, but unfinished/missing artifacts win first.
-    return sorted(rows, key=lambda x: (int(x["research_score"]), int(x["priority"]), str(x["id"])), reverse=True)[0]
+    return sorted(
+        rows,
+        key=lambda x: (int(x["research_score"]), int(x["priority"]), str(x["id"])),
+        reverse=True,
+    )[0]
 
 
 def build_senju_item(selected: dict[str, Any]) -> dict[str, Any]:
@@ -155,10 +157,16 @@ def build_report(program: dict[str, Any], root: Path, portfolio: str) -> dict[st
         and selected["evidence_ratio"] >= 1.0
         and bool(gate.get("human_inspectable_artifact_required"))
     )
+    report_key = (
+        f"{selected['id']}:{selected['portfolio_status']}:"
+        f"{round(float(selected['evidence_ratio']) * 100)}:{int(promotion_ready)}"
+    )
     return {
-        "schema": "standment-security-portfolio-rnd-report/v1",
+        "schema": "standment-security-portfolio-rnd-report/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "mission": program.get("mission"),
+        "reporting_contract": program.get("reporting_contract", "standment-security/REPORTING_CONTRACT.md"),
+        "report_key": report_key,
         "portfolio_first": bool(program.get("portfolio_first")),
         "selected": selected,
         "all_tracks": rows,
@@ -181,30 +189,29 @@ def build_report(program: dict[str, Any], root: Path, portfolio: str) -> dict[st
 def render(report: dict[str, Any]) -> str:
     s = report["selected"]
     missing = ", ".join(s["evidence_missing"]) or "NONE"
-    rows = sorted(report["all_tracks"], key=lambda x: int(x["research_score"]), reverse=True)
-    leaderboard = "\n".join(
-        f"- {x['id']} score={x['research_score']} status={x['portfolio_status']} evidence={x['evidence_ratio']:.0%} — {x['title']}"
-        for x in rows
-    )
-    questions = "\n".join(f"- {q}" for q in report["counterevidence_questions"])
+    questions = " / ".join(report["counterevidence_questions"][:3])
+    status = s["portfolio_status"]
+    promotion = "PASS" if report["promotion_ready"] else "NOT READY"
     return (
-        "# Standment Security — Autonomous Portfolio R&D\n\n"
-        f"**TOP PRIORITY:** {s['id']} — {s['title']}\n\n"
-        f"- portfolio status: **{s['portfolio_status']}**\n"
-        f"- evidence coverage: **{s['evidence_ratio']:.0%}**\n"
-        f"- Senju bounded focus: **{s['senju_focus']}**\n"
-        f"- missing evidence: {missing}\n"
-        f"- target deliverable: {s['deliverable']}\n"
-        f"- hypothesis: {s['hypothesis']}\n"
-        f"- #portfolio promotion ready: **{report['promotion_ready']}**\n\n"
-        "## Research leaderboard\n"
-        f"{leaderboard}\n\n"
-        "## Skeptic / counterevidence gate\n"
-        f"{questions}\n\n"
-        "## Next autonomous action\n"
-        "Run the selected bounded research question through R&D x Senju, preserve failed evidence, "
-        "and convert only verified results into a human-inspectable Standment Security artifact.\n\n"
-        "> Priority rule: portfolio evidence first. Source code and self-reported success alone do not count as a portfolio result.\n"
+        "*STANDMENT SECURITY R&D DAILY*\n"
+        f"Report key: `{report['report_key']}`\n\n"
+        f"*何が変わった？*\n"
+        f"Security Portfolioの現在最優先を `{s['id']}` — {s['title']} と判定。"
+        f" 現在ステータスは {status}、Evidence coverageは {s['evidence_ratio']:.0%}。\n\n"
+        f"*実物は何？*\n{s['deliverable']}\n\n"
+        f"*検証結果*\n"
+        f"Evidence coverage: {s['evidence_ratio']:.0%} / Portfolio promotion gate: {promotion} / "
+        f"Senju bounded focus: {s['senju_focus']} / Missing evidence: {missing}\n\n"
+        f"*何に使える？*\n{s['customer_usefulness'] or '顧客が技術的な主張ではなく検証可能な証拠を確認できる状態へ近づける。'}\n\n"
+        "*前回との違い*\n"
+        "このstandalone GitHub runは前回Slack状態を保持しないため、真のBefore→After差分はSecurity Reporting RelayがGitHub/Slack履歴と比較して補完する。\n\n"
+        f"*失敗・反証*\n"
+        f"未充足Evidence: {missing}. Skeptic gate: {questions}\n\n"
+        f"*現在ステータス*\n{status}\n\n"
+        "*次に自動でやること*\n"
+        f"`{s['id']}` の不足Evidenceを1つ埋め、R&D × Senjuで再現性/反証を確認してからPortfolio Gateを再評価する。\n\n"
+        "*Owner action*\nNONE\n\n"
+        "> Source codeや自己申告だけではPortfolio成果に昇格しない。Reporting Relayが同一report key/run/artifactの重複Slack投稿を抑止する。\n"
     )
 
 
@@ -225,13 +232,15 @@ def main() -> int:
     (out / "daily.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (out / "daily.md").write_text(render(report), encoding="utf-8")
     (out / "senju-research-item.json").write_text(
-        json.dumps(report["next_research"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+        json.dumps(report["next_research"], ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
     )
     print(json.dumps({
         "selected": report["selected"]["id"],
         "research_score": report["selected"]["research_score"],
         "promotion_ready": report["promotion_ready"],
         "senju_focus": report["next_research"]["focus"],
+        "report_key": report["report_key"],
     }, ensure_ascii=False))
     return 0
 
