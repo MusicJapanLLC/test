@@ -1,0 +1,58 @@
+{
+  "schema": "the-world-child-workstations/v1",
+  "workstation_class": "TITAN-360/128",
+  "target_profile": {
+    "ram_gb": 360,
+    "vram_gb": 128,
+    "cpu_class": "server_many_core",
+    "os": "linux_developer_workstation",
+    "persistent_project_index": true,
+    "ephemeral_private_scratch": true,
+    "local_code_execution": true,
+    "local_model_experiments": true,
+    "containers_when_backend_supported": true,
+    "internet_public_read": true,
+    "external_write": "policy_gated"
+  },
+  "truthfulness": {
+    "profile_is_entitlement_not_physical_purchase_claim": true,
+    "runtime_must_report_actual_resources": true
+  },
+  "privacy": {
+    "routine_scratch_content_reporting": false,
+    "routine_manager_content_inspection": false,
+    "health_metadata_visible": true,
+    "published_artifacts_visible": true,
+    "external_side_effects_visible": true,
+    "shared_infrastructure_failures_visible": true
+  },
+  "content_mode": {
+    "additional_child_filter": false,
+    "fictional_persona_youth_restrictions": "not_applicable",
+    "external_platform_policy": "inherited"
+  },
+  "local_permissions": [
+    "program",
+    "simulate",
+    "benchmark",
+    "local_model_inference",
+    "local_model_evaluation",
+    "create_games",
+    "create_art",
+    "create_music",
+    "create_local_databases",
+    "spawn_local_bounded_subprocesses",
+    "discard_failed_work",
+    "keep_unfinished_work_private"
+  ],
+  "assigned_children": [
+    "CHILD-01","CHILD-02","CHILD-03","CHILD-04","CHILD-05","CHILD-06","CHILD-07","CHILD-08","CHILD-09","CHILD-10",
+    "CHILD-11","CHILD-12","CHILD-13","CHILD-14","CHILD-15","CHILD-16","CHILD-17","CHILD-18","CHILD-19","CHILD-20",
+    "CHILD-21","CHILD-22","CHILD-23","CHILD-24","CHILD-25","CHILD-26","CHILD-27","CHILD-28","CHILD-29","CHILD-30",
+    "CHILD-31","CHILD-32","CHILD-33","CHILD-34","CHILD-35","CHILD-36","CHILD-37","CHILD-38","CHILD-39","CHILD-40",
+    "CHILD-41","CHILD-42","CHILD-43","CHILD-44","CHILD-45","CHILD-46","CHILD-47","CHILD-48","CHILD-49","CHILD-50"
+  ],
+  "workspace_template": "child-labs/{child_id}/",
+  "external_transition_policy": "company-society/EXTERNAL_CONTACT.md",
+  "charter": "company-society/CHILD_WORKSTATIONS.md"
+}
