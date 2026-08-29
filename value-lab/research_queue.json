@@ -2,6 +2,24 @@
   "schema": "rnd-senju-research-queue/v1",
   "active": [
     {
+      "research_id": "RND-PORTFOLIO-P0-001",
+      "title": "Portfolio proof-to-artifact conversion",
+      "problem": "R&D can generate strong internal research while too little of it becomes a human-inspectable, evidence-backed portfolio artifact that an owner, buyer, or operator can actually judge.",
+      "hypothesis": "Making portfolio conversion the highest-priority research question, choosing one material proof gap per day, and coupling that gap to bounded Senju technical improvement will increase the rate at which BUILDING outputs become genuinely VERIFIED without increasing reporting noise.",
+      "focus": "efficiency",
+      "priority": 1000,
+      "candidate_count": 7,
+      "success": {
+        "one_primary_portfolio_bet_per_day": true,
+        "human_inspectable_artifact_required": true,
+        "behavioral_evidence_required_for_verified": true,
+        "code_or_pr_alone_is_not_portfolio": true,
+        "counterevidence_preserved": true,
+        "material_delta_reported_to_slack": true
+      },
+      "commercial_bridge": "The portfolio exists to turn verified R&D output into something a human can inspect, understand, evaluate, sell, or reuse. Senju technical evidence may strengthen proof quality but must not be treated as willingness-to-pay, market validation, contract value, payment, or revenue."
+    },
+    {
       "research_id": "RND-SENJU-ROBUSTNESS-001",
       "title": "Seed-robust Senju champion selection",
       "problem": "A strategy can look strong in one tournament yet fail multi-seed stability, slowing safe autonomous promotion.",
