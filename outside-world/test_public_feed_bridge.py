@@ -1,8 +1,12 @@
+import importlib.util
+import pathlib
 import unittest
 
-from outside_world_import_shim import load_module
-
-bridge = load_module('outside-world/public_feed_bridge.py', 'public_feed_bridge')
+MODULE_PATH = pathlib.Path(__file__).with_name('public_feed_bridge.py')
+spec = importlib.util.spec_from_file_location('public_feed_bridge', MODULE_PATH)
+assert spec and spec.loader
+bridge = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(bridge)
 
 
 class PublicFeedBridgeTests(unittest.TestCase):
