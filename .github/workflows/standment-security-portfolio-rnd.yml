@@ -11,6 +11,7 @@ on:
       - '.github/workflows/standment-security-portfolio-rnd.yml'
       - 'automation/security/portfolio_rnd.py'
       - 'automation/security/test_portfolio_rnd.py'
+      - 'automation/security/test_portfolio_rnd_ai_native.py'
       - 'automation/security/portfolio_autobuilder.py'
       - 'automation/security/test_portfolio_autobuilder.py'
       - 'automation/security/portfolio_accelerator.py'
@@ -51,6 +52,7 @@ jobs:
           set -euo pipefail
           python -m unittest -v \
             test_portfolio_rnd.py \
+            test_portfolio_rnd_ai_native.py \
             test_portfolio_autobuilder.py \
             test_portfolio_accelerator.py
 
