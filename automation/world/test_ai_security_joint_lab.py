@@ -59,6 +59,51 @@ class JointLabTests(unittest.TestCase):
         self.assertEqual(packet["handoff"]["guidance"]["ai_priority_focus"], "security")
         self.assertEqual(packet["handoff"]["authority"], "priority_only")
 
+    def test_failed_auditability_biases_ai_priority_to_observability_only(self):
+        packet = joint.build_packet(
+            {"weakest_next_focus": "efficiency", "report_fingerprint": "ai-audit"},
+            {"run_id": "sec-audit", "priority_next": {"lens_id": "AGENT-AUDIT", "stage": "RETEST", "artifact": "Audit Pack"}},
+            {},
+            {
+                "track": "SEC-PORT-005",
+                "status": "FAIL",
+                "verification_state": "BUILDING",
+                "auditability_score": 0.75,
+                "actual_mutations": 2,
+                "deny_reached_execution": 0,
+                "gaps": ["AUD-06-structured-trace"],
+                "fingerprint": "audit-gap",
+                "source_run": "321",
+            },
+        )
+        self.assertEqual(packet["joint_focus"]["ai"], "observability")
+        self.assertEqual(packet["joint_focus"]["auditability_pressure"], "OBSERVABILITY_GAP")
+        self.assertEqual(packet["handoff"]["guidance"]["ai_priority_focus"], "observability")
+        self.assertEqual(packet["handoff"]["authority"], "priority_only")
+        self.assertTrue(packet["handoff"]["constraints"]["permission_surface_unchanged"])
+        self.assertTrue(packet["handoff"]["constraints"]["external_scope_unchanged"])
+        self.assertIn("AUD-06-structured-trace", packet["contracts"]["ai_assist"])
+
+    def test_passing_auditability_preserves_upstream_ai_priority(self):
+        packet = joint.build_packet(
+            {"weakest_next_focus": "architecture"},
+            {},
+            {},
+            {
+                "track": "SEC-PORT-005",
+                "status": "PASS",
+                "verification_state": "SCOPED_VERIFIED_CANDIDATE",
+                "auditability_score": 1.0,
+                "actual_mutations": 3,
+                "deny_reached_execution": 0,
+                "gaps": [],
+                "fingerprint": "audit-pass",
+            },
+        )
+        self.assertEqual(packet["joint_focus"]["ai"], "architecture")
+        self.assertEqual(packet["joint_focus"]["auditability_pressure"], "REGRESSION_WATCH")
+        self.assertEqual(packet["handoff"]["guidance"]["ai_priority_focus"], "architecture")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -9,21 +9,27 @@ on:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
       - '.github/workflows/ai-security-joint-lab.yml'
+      - '.github/workflows/standment-agent-auditability.yml'
       - 'automation/world/ai_security_joint_lab.py'
       - 'automation/world/test_ai_security_joint_lab.py'
       - 'automation/ai_foundry/**'
+      - 'automation/security/agent_auditability_eval.py'
+      - 'automation/security/test_agent_auditability_eval.py'
       - 'automation/security/elite_whitehat_continuous.py'
       - 'automation/security/test_elite_whitehat_continuous.py'
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
       - '.github/workflows/ai-security-joint-lab.yml'
+      - '.github/workflows/standment-agent-auditability.yml'
       - 'automation/world/ai_security_joint_lab.py'
       - 'automation/world/test_ai_security_joint_lab.py'
       - 'automation/ai_foundry/minute_evolution.py'
+      - 'automation/security/agent_auditability_eval.py'
       - 'automation/security/elite_whitehat_continuous.py'
       - 'standment-security/security_research_frontier.json'
       - 'standment-security/security_framework_crosswalk.json'
+      - 'standment-security/evidence-packs/agent-auditability/**'
 
 concurrency:
   group: the-world-ai-security-joint-lab-${{ github.event.pull_request.number || github.ref }}
@@ -57,16 +63,23 @@ jobs:
           set -euo pipefail
           python -m unittest -v automation.world.test_ai_security_joint_lab
           python -m unittest -v automation.ai_foundry.test_minute_evolution
+          python -m unittest -v automation.security.test_agent_auditability_eval
           (cd automation/security && python -m unittest -v test_elite_whitehat_continuous.py)
 
-      - name: Load latest AI, Security, and Research evidence
+      - name: Load latest AI, Security, Research, and Auditability evidence
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$JOINT_DIR/sources/ai" "$JOINT_DIR/sources/security" "$JOINT_DIR/sources/research" "$JOINT_DIR/sources/joint-prev"
+          mkdir -p \
+            "$JOINT_DIR/sources/ai" \
+            "$JOINT_DIR/sources/security" \
+            "$JOINT_DIR/sources/research" \
+            "$JOINT_DIR/sources/auditability" \
+            "$JOINT_DIR/sources/joint-prev"
           printf '%s\n' '{}' > "$JOINT_DIR/ai-summary.json"
           printf '%s\n' '{}' > "$JOINT_DIR/security-index.json"
           printf '%s\n' '{}' > "$JOINT_DIR/research-batch.json"
+          printf '%s\n' '{}' > "$JOINT_DIR/auditability-result.json"
 
           # Prefer the prior joint champion so this collaboration lane has continuity.
           joint_prev="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ai-security-joint-lab.yml --status success --limit 8 --json databaseId --jq '.[].databaseId' | grep -v "^${GITHUB_RUN_ID}$" | head -n1 || true)"
@@ -101,6 +114,18 @@ jobs:
             if [[ -n "$candidate" ]]; then cp "$candidate" "$JOINT_DIR/research-batch.json"; fi
           fi
 
+          # SEC-PORT-005 evidence is optional on PRs and required only as a priority signal.
+          # Missing evidence falls back to the existing local AI/Security signals.
+          audit_run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow standment-agent-auditability.yml --status success --limit 12 --json databaseId --jq '.[].databaseId' | head -n1 || true)"
+          if [[ -n "$audit_run" ]]; then
+            gh run download "$audit_run" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "sec-port-005-agent-auditability-${audit_run}-primary" \
+              --dir "$JOINT_DIR/sources/auditability" || true
+            candidate="$(find "$JOINT_DIR/sources/auditability" -type f -name result.json | head -n1 || true)"
+            if [[ -n "$candidate" ]]; then cp "$candidate" "$JOINT_DIR/auditability-result.json"; fi
+          fi
+
           if [[ ! -f "$JOINT_DIR/ai-start.json" ]]; then
             python automation/ai_foundry/minute_evolution.py init --out "$JOINT_DIR/ai-start.json"
           fi
@@ -108,6 +133,7 @@ jobs:
           echo "AI source run: ${ai_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
           echo "Security source run: ${security_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
           echo "Research source run: ${research_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Agent auditability source run: ${audit_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build cross-assist packet
         run: |
@@ -116,6 +142,7 @@ jobs:
             --ai-summary "$JOINT_DIR/ai-summary.json" \
             --security-index "$JOINT_DIR/security-index.json" \
             --research-batch "$JOINT_DIR/research-batch.json" \
+            --auditability "$JOINT_DIR/auditability-result.json" \
             --out "$JOINT_DIR/assist-packet.json" \
             --report "$JOINT_DIR/assist-packet.md"
           cat "$JOINT_DIR/assist-packet.md" >> "$GITHUB_STEP_SUMMARY"
@@ -158,11 +185,13 @@ jobs:
           for p in sorted(glob.glob(str(root/'security-assisted/round-*.json'))):
               rounds.append(json.loads(Path(p).read_text(encoding='utf-8')))
           pairs={(r.get('lens_id'),r.get('research_stage')) for r in rounds}
+          audit=packet['source'].get('agent_auditability') or {}
           result={
-              'schema':'the-world-ai-security-joint-result/v1',
+              'schema':'the-world-ai-security-joint-result/v2',
               'status':'BUILDING',
               'assist_seed_short':packet['assist_seed_short'],
               'joint_focus':packet['joint_focus'],
+              'agent_auditability':audit,
               'ai_micro_assist':{
                   'rounds':ai.get('rounds'),
                   'promotions_delta':ai.get('promotions_delta'),
@@ -181,6 +210,7 @@ jobs:
               'claim_boundary':[
                   'Joint Lab output is research evidence, not customer validation.',
                   'AI quality values are strategy proxies and do not prove model-weight improvement.',
+                  'Agent auditability evidence covers only the owned GitHub realtime control plane.',
                   'Security rounds remain BUILDING unless independent behavioral/retest evidence satisfies their gates.',
                   'No external target testing is authorized by this workflow.',
               ],
@@ -193,6 +223,8 @@ jobs:
               f"- AI promotions: {result['ai_micro_assist']['promotions_delta']}",
               f"- Security micro rounds: {result['security_micro_assist']['rounds']}",
               f"- Unique Security lens×stage: {result['security_micro_assist']['unique_lens_stage_pairs']}",
+              f"- Auditability pressure: {audit.get('pressure') or 'NONE'}",
+              f"- Auditability score: {float(audit.get('auditability_score') or 0):.2f}",
               f"- Research source program count: {result['research_input'].get('program_count') or 0}",
               '- Status: BUILDING (cross-assist evidence only)',
           ]
@@ -217,6 +249,7 @@ jobs:
             /tmp/the-world-ai-security-joint/ai-assisted-summary.json
             /tmp/the-world-ai-security-joint/ai-assisted-history.jsonl
             /tmp/the-world-ai-security-joint/security-index.json
+            /tmp/the-world-ai-security-joint/auditability-result.json
             /tmp/the-world-ai-security-joint/security-assisted/*.json
             /tmp/the-world-ai-security-joint/security-assisted/*.md
             /tmp/the-world-ai-security-joint/research-batch.json
