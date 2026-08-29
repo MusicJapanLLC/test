@@ -13,7 +13,6 @@ naturalLabels.forEach(([href,label])=>{
   });
 });
 
-/* Keep internal jargon out of the visible UI while retaining stable URLs. */
 if(document.body.classList.contains('subpage-v2')){
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
   const nodes=[];
@@ -23,6 +22,13 @@ if(document.body.classList.contains('subpage-v2')){
       node.nodeValue=node.nodeValue.replaceAll('SUSTAINABOY OS','この考え方');
     }
   });
+  document.querySelectorAll('.byline').forEach(el=>{
+    const span=el.querySelector('span');
+    const img=el.querySelector('img');
+    if(span&&span.textContent.includes('壁谷')) span.textContent='SUSTAINABOY WORKS';
+    if(img) img.alt='SUSTAINABOY WORKS';
+  });
+  document.querySelectorAll('.footer-bottom').forEach(el=>el.textContent='© SUSTAINABOY WORKS');
 }
 
 if(document.body.classList.contains('paper-home')){
