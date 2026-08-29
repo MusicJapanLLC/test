@@ -2,27 +2,27 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-08-30T05:46:18+09:00`
+Updated JST: `2026-08-30T05:51:56+09:00`
 
 ## TODAY'S PRIMARY BET
-- `SEC-PORT-005` — Autonomous-agent security and auditability pack
-- status: **VISIBLE**
+- `SEC-PORT-009` — AI Agent Permission Boundary Lab
+- status: **BUILDING**
 - evidence coverage: **100%**
 - white-hat candidates: **0**
-- Senju focus: **balance**
-- selection: `ROTATED_AFTER_STAGNATION:SEC-PORT-009->SEC-PORT-005`
+- Senju focus: **robustness**
+- selection: `HIGHEST_EVIDENCE_CLOSURE_SCORE`
 - next material action: Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.
 
 ## THREE-LANE R&D
 - Verification closure: `SEC-PORT-009`
-- White-hat challenge: `SEC-PORT-001` (2 candidates)
+- White-hat challenge: `SEC-PORT-001` (4 candidates)
 - AI-native security: `SEC-PORT-009`
 
 ## NORTH STAR
 - verified: **1/11**
 - full evidence-file coverage: **5/11**
 - average evidence coverage: **85%**
-- open white-hat candidates: **2**
+- open white-hat candidates: **4**
 - unfinished tracks: **10**
 - stagnation streak: **0**
 
