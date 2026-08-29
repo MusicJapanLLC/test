@@ -19,6 +19,7 @@ class JointLabTests(unittest.TestCase):
         handoff = packet["handoff"]
         self.assertEqual(handoff["schema"], "the-world-ai-security-handoff/v1")
         self.assertEqual(handoff["authority"], "priority_only")
+        self.assertEqual(handoff["handoff_token"], packet["assist_seed_short"])
         self.assertEqual(handoff["guidance"]["ai_priority_focus"], "reliability")
         self.assertEqual(handoff["guidance"]["security_priority_lens"], "RECOVERY")
         self.assertEqual(handoff["guidance"]["security_priority_stage"], "RETEST")
