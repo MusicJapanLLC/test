@@ -1,0 +1,30 @@
+name: cyber-lab-ci
+
+on:
+  push:
+    paths:
+      - "autonomous_redteam_lab/cyber_lab/**"
+      - "autonomous_redteam_lab/tests/**"
+      - ".github/workflows/cyber-lab-ci.yml"
+  pull_request:
+    paths:
+      - "autonomous_redteam_lab/cyber_lab/**"
+      - "autonomous_redteam_lab/tests/**"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: autonomous_redteam_lab
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
