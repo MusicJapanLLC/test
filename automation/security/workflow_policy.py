@@ -59,14 +59,12 @@ def validate_global_safety() -> None:
         for token in UNSAFE:
             if token in body:
                 raise SystemExit(f"{name}: forbidden workflow capability: {token}")
-
         lines = body.splitlines()
         for i, line in enumerate(lines):
             if "uses: actions/checkout@" in line:
                 block = "\n".join(lines[i:i + 8])
                 if "persist-credentials: false" not in block:
                     raise SystemExit(f"{name}:{i + 1}: checkout must discard credentials")
-
         for match in PIN_RE.finditer(body):
             ref = match.group(1)
             if ref.startswith("./"):
@@ -81,20 +79,16 @@ def validate_global_safety() -> None:
 def validate_gateway_client() -> None:
     client = Path("automation/world/task_worker.py").read_text(encoding="utf-8")
     for marker in (
-        'AUDIENCE = "the-world-worker"',
-        "ACTIONS_ID_TOKEN_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
-        'method="POST"',
-        "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker",
+        'AUDIENCE = "the-world-worker"', "ACTIONS_ID_TOKEN_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+        'method="POST"', "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker",
         "_oidc_token()", 'Authorization": f"Bearer {_oidc_token()}"',
         'urllib.parse.urlencode({"audience": AUDIENCE})',
     ):
         if marker not in client:
             raise SystemExit(f"task_worker.py: missing OIDC/gateway invariant: {marker}")
     match = GATEWAY_PROTOCOL_RE.search(client)
-    if not match:
-        raise SystemExit("task_worker.py: gateway protocol must use oidc-repository-vN-<label>")
-    if int(match.group("version")) < MIN_GATEWAY_PROTOCOL_VERSION:
-        raise SystemExit("task_worker.py: gateway protocol version regressed")
+    if not match or int(match.group("version")) < MIN_GATEWAY_PROTOCOL_VERSION:
+        raise SystemExit("task_worker.py: gateway protocol version is missing/regressed")
 
 
 def validate_pages_lanes() -> set[str]:
@@ -123,31 +117,18 @@ def validate_pages_lanes() -> set[str]:
 
 def validate_task_worker() -> str:
     name = "the-world-task-worker.yml"
-    body = require(
-        name,
-        (
-            "contents: read", "actions: write", "id-token: write",
-            "workflow_dispatch:", "schedule:", "cron: '*/5 * * * *'",
-            "persist-credentials: false", "automation/world/task_worker.py",
-            "gh workflow run", "Claim one personality-linked task",
-            'gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${REVIEW_RUN_ID}"',
-            "automation/world/external_feedback.py query --task-id",
-            "task_worker.py finish-review --review /tmp/world-review.json",
-        ),
-        (
-            "contents: write", "issues: write", "pull-requests: write",
-            "packages: write", "deployments: write", "pages: write",
-        ),
-    )
+    body = require(name, (
+        "contents: read", "actions: write", "id-token: write", "workflow_dispatch:", "schedule:",
+        "cron: '*/5 * * * *'", "persist-credentials: false", "automation/world/task_worker.py",
+        "gh workflow run", "Claim one personality-linked task",
+        'gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${REVIEW_RUN_ID}"',
+        "automation/world/external_feedback.py query --task-id", "task_worker.py finish-review --review /tmp/world-review.json",
+    ), ("contents: write", "issues: write", "pull-requests: write", "packages: write", "deployments: write", "pages: write"))
     if writes(body) != {"actions", "id-token"}:
         raise SystemExit(f"{name}: unexpected writes {sorted(writes(body))}")
     if ("$" + "{{" + " secrets.") in body:
         raise SystemExit(f"{name}: long-lived Actions secrets are forbidden")
-    for marker in (
-        "CONCLUSION=", ".conclusion //", '<<<"$DATA"',
-        "external=workflow=='world-reality-agency.yml'", "verified=workflow_ok",
-        "external_feedback.py query --task-id",
-    ):
+    for marker in ("CONCLUSION=", ".conclusion //", '<<<"$DATA"', "external=workflow=='world-reality-agency.yml'", "verified=workflow_ok", "external_feedback.py query --task-id"):
         if marker not in body:
             raise SystemExit(f"{name}: evidence reconciliation missing behavior: {marker}")
     if body.count("task_worker.py finish-review --review /tmp/world-review.json") < 2:
@@ -157,38 +138,22 @@ def validate_task_worker() -> str:
 
 def validate_reality_lane() -> str:
     name = "world-reality-agency.yml"
-    body = require(
-        name,
-        (
-            "contents: read", "actions: read", "issues: write", "id-token: write",
-            "workflow_dispatch:", "schedule:", "persist-credentials: false",
-            "outside-world/reality_policy.json", "outside-world/reality_gateway.py",
-            "outside-world/public_feed_bridge.py", "--execute-owned-writes", "--limit 2",
-        ),
-        ("contents: write", "pull-requests: write", "packages: write", "deployments: write", "pages: write"),
-    )
+    body = require(name, (
+        "contents: read", "actions: read", "issues: write", "id-token: write", "workflow_dispatch:", "schedule:", "persist-credentials: false",
+        "outside-world/reality_policy.json", "outside-world/reality_gateway.py", "outside-world/public_feed_bridge.py", "--execute-owned-writes", "--limit 2",
+    ), ("contents: write", "pull-requests: write", "packages: write", "deployments: write", "pages: write"))
     if writes(body) != {"issues", "id-token"}:
         raise SystemExit(f"{name}: reality write set drifted: {sorted(writes(body))}")
     if "pull_request:" in body:
         raise SystemExit(f"{name}: Reality Agency must never run with PR authority")
-
     policy = json.loads(Path("outside-world/reality_policy.json").read_text(encoding="utf-8"))
-    actions = policy.get("actions") or {}
-    allow = policy.get("allowlists") or {}
-    browser = policy.get("browser") or {}
-    pulse = policy.get("pulse") or {}
-    if actions.get("github_issue_own_repo") != "AUTO_ALLOWLIST":
-        raise SystemExit("reality policy: own-repo GitHub writes must remain allowlisted")
-    if actions.get("general_external_post") != "APPROVAL":
-        raise SystemExit("reality policy: general external posting must require approval")
-    if actions.get("artifact_upload_owned_runtime") != "AUTO":
-        raise SystemExit("reality policy: owned runtime publication class drifted")
-    if allow.get("github_repositories") != ["MusicJapanLLC/test"]:
-        raise SystemExit("reality policy: repository allowlist drifted")
-    if browser.get("respect_access_controls") is not True or browser.get("engagement_manipulation") is not False:
+    actions, allow, browser, pulse = policy.get("actions") or {}, policy.get("allowlists") or {}, policy.get("browser") or {}, policy.get("pulse") or {}
+    if actions.get("github_issue_own_repo") != "AUTO_ALLOWLIST" or actions.get("general_external_post") != "APPROVAL":
+        raise SystemExit("reality policy: write boundary drifted")
+    if actions.get("artifact_upload_owned_runtime") != "AUTO" or allow.get("github_repositories") != ["MusicJapanLLC/test"]:
+        raise SystemExit("reality policy: ownership boundary drifted")
+    if browser.get("respect_access_controls") is not True or browser.get("engagement_manipulation") is not False or browser.get("bulk_unsolicited_messaging") is not False:
         raise SystemExit("reality policy: browser safety invariants drifted")
-    if browser.get("bulk_unsolicited_messaging") is not False:
-        raise SystemExit("reality policy: bulk unsolicited messaging must remain disabled")
     if int(pulse.get("max_publications_per_pulse", 0)) > 2:
         raise SystemExit("reality policy: public publication cap exceeds 2 per pulse")
     return name
@@ -196,41 +161,28 @@ def validate_reality_lane() -> str:
 
 def validate_research_oidc_lane() -> str:
     name = "the-world-autonomous-research-fabric.yml"
-    body = require(
-        name,
-        (
-            "contents: read", "actions: read", "id-token: write",
-            "workflow_dispatch:", "schedule:", "cron: '*/15 * * * *'",
-            "persist-credentials: false",
-            "automation/world/task_worker.py research-config",
-            "automation/world/task_worker.py record-research",
-            "automation/world/research_fabric.py",
-            "automation/world/test_research_fabric.py",
-            "closed_model", "Validate research evidence boundary",
-            "Preserve full research evidence",
-        ),
-        (
-            "contents: write", "actions: write", "issues: write", "pull-requests: write",
-            "packages: write", "deployments: write", "pages: write", "copilot-requests: write",
-            "pull_request:", "gh workflow run", "git push ", "gh pr create",
-        ),
-    )
+    body = require(name, (
+        "contents: read", "actions: read", "id-token: write", "workflow_dispatch:", "schedule:", "cron: '*/15 * * * *'",
+        "persist-credentials: false", "automation/world/task_worker.py research-config", "automation/world/task_worker.py record-research",
+        "automation/world/research_fabric.py", "automation/world/test_research_fabric.py", "closed_model",
+        "Validate research evidence boundary", "Preserve full research evidence",
+    ), (
+        "contents: write", "actions: write", "issues: write", "pull-requests: write", "packages: write", "deployments: write", "pages: write",
+        "copilot-requests: write", "pull_request:", "gh workflow run", "git push ", "gh pr create",
+    ))
     if writes(body) != {"id-token"}:
         raise SystemExit(f"{name}: research lane must have only OIDC write authority: {sorted(writes(body))}")
     if ("$" + "{{" + " secrets.") in body:
         raise SystemExit(f"{name}: research lane must not depend on long-lived Actions secrets")
     if body.count("record-research") != 1:
         raise SystemExit(f"{name}: research evidence must have exactly one bounded recording loop")
-
     engine = Path("automation/world/research_fabric.py").read_text(encoding="utf-8")
     for marker in (
-        "No network, credentials, external targets, or real balances are modified here.",
-        '"closed_model": True', "REPLICATE", "CROSS_POLLINATE",
+        "No network, credentials, external targets, or real balances are modified here.", '"closed_model": True', "REPLICATE", "CROSS_POLLINATE",
         "random micro-search -> top-32 deep repeats -> best-vs-current unseen holdout",
     ):
         if marker not in engine:
             raise SystemExit(f"research_fabric.py: missing closed research invariant: {marker}")
-
     client = Path("automation/world/task_worker.py").read_text(encoding="utf-8")
     for marker in ("research-config", "record-research", '"authority": "exploration_geometry_only"'):
         if marker not in client:
@@ -240,25 +192,18 @@ def validate_research_oidc_lane() -> str:
 
 def validate_experiment_oidc_lanes(page_lanes: set[str], excluded: set[str]) -> set[str]:
     lanes: set[str] = set()
-    candidates = {
-        name for name, body in WORKFLOWS.items() if "id-token" in writes(body)
-    } - page_lanes - excluded
+    candidates = {name for name, body in WORKFLOWS.items() if "id-token" in writes(body)} - page_lanes - excluded
     secret_marker = "$" + "{{" + " secrets."
-
     for name in sorted(candidates):
         body = WORKFLOWS[name]
         got = writes(body)
         if got != {"contents", "id-token"}:
             raise SystemExit(f"{name}: unclassified OIDC write set: {sorted(got)}")
         for marker in (
-            "contents: write", "actions: read", "id-token: write",
-            "workflow_dispatch:", "schedule:", "persist-credentials: false",
-            "automation/world/task_worker.py experiment-config",
-            "automation/world/task_worker.py record-experiment",
-            "senju/state/strategy.json", "CURRENT_BASE_SHA=", "force=false",
-            "python -m senju.cli safety-check sim://",
-            "python -m senju.cli safety-check https://example.com",
-            "Base moved; safe promotion deferred",
+            "contents: write", "actions: read", "id-token: write", "workflow_dispatch:", "schedule:", "persist-credentials: false",
+            "automation/world/task_worker.py experiment-config", "automation/world/task_worker.py record-experiment",
+            "senju/state/strategy.json", "CURRENT_BASE_SHA=", "force=false", "python -m senju.cli safety-check sim://",
+            "python -m senju.cli safety-check https://example.com", "Base moved; safe promotion deferred",
         ):
             if marker not in body:
                 raise SystemExit(f"{name}: OIDC experiment lane missing invariant: {marker}")
@@ -289,10 +234,7 @@ def validate_owned_issue_stress_lanes() -> set[str]:
     for name, body in WORKFLOWS.items():
         if writes(body) != {"issues"} or name == "world-reality-agency.yml":
             continue
-        for marker in (
-            "contents: read", "issues: write", "workflow_dispatch:",
-            "REPO: ${{ github.repository }}", "repos/${REPO}/issues/", "/comments",
-        ):
+        for marker in ("contents: read", "issues: write", "workflow_dispatch:", "REPO: ${{ github.repository }}", "repos/${REPO}/issues/", "/comments"):
             if marker not in body:
                 raise SystemExit(f"{name}: owned issue stress lane missing invariant: {marker}")
         if "schedule:" in body or "pull_request:" in body:
@@ -308,6 +250,31 @@ def validate_owned_issue_stress_lanes() -> set[str]:
             raise SystemExit(f"{name}: issue stress target must be github.repository")
         lanes.add(name)
     return lanes
+
+
+def validate_public_web_write_probe() -> str:
+    name = "public-web-write-probe-20260830.yml"
+    body = require(name, (
+        "contents: write", "workflow_dispatch:", "push:", "paths:",
+        "'.github/workflows/public-web-write-probe-20260830.yml'",
+        "path='baton/public/the-world-autonomy-note.html'",
+        "Public note already exists; no second write.",
+        'gh api "repos/${GITHUB_REPOSITORY}/contents/${path}?ref=${branch}"',
+        'gh api -X PUT "repos/${GITHUB_REPOSITORY}/contents/${path}"',
+        '-f branch="$branch"',
+    ), (
+        "schedule:", "pull_request:", "id-token: write", "actions: write", "issues: write", "pull-requests: write",
+        "packages: write", "deployments: write", "pages: write", "copilot-requests: write", "git push ", "gh pr create",
+    ))
+    if writes(body) != {"contents"}:
+        raise SystemExit(f"{name}: public probe write set drifted: {sorted(writes(body))}")
+    if body.count("gh api -X PUT") != 1:
+        raise SystemExit(f"{name}: public probe must contain exactly one bounded content write")
+    if body.count("baton/public/the-world-autonomy-note.html") != 1:
+        raise SystemExit(f"{name}: public probe target must remain exactly one fixed path")
+    if ("$" + "{{" + " secrets.") in body:
+        raise SystemExit(f"{name}: public probe must use only ephemeral github.token")
+    return name
 
 
 def validate_explicit_lanes() -> set[str]:
@@ -326,39 +293,22 @@ def validate_explicit_lanes() -> set[str]:
         got = writes(body)
         if got != want:
             raise SystemExit(f"{name}: write set drifted: expected={sorted(want)} actual={sorted(got)}")
-
     senju = WORKFLOWS["senju-autonomous-improver.yml"]
-    for marker in (
-        "senju/state/champion.json", "senju/state/strategy.json",
-        "senju/state/last-evolution-summary.json", "senju/state/last-evolution-plan.md",
-        "CURRENT_BASE_SHA=", "force=false",
-    ):
+    for marker in ("senju/state/champion.json", "senju/state/strategy.json", "senju/state/last-evolution-summary.json", "senju/state/last-evolution-plan.md", "CURRENT_BASE_SHA=", "force=false"):
         if marker not in senju:
             raise SystemExit(f"senju-autonomous-improver.yml: missing invariant: {marker}")
-    allowed = {
-        "senju/state/champion.json", "senju/state/strategy.json",
-        "senju/state/last-evolution-summary.json", "senju/state/last-evolution-plan.md",
-    }
-    observed = {
-        line.strip().split()[-1] for line in senju.splitlines()
-        if line.strip().startswith("put_file ")
-    }
+    allowed = {"senju/state/champion.json", "senju/state/strategy.json", "senju/state/last-evolution-summary.json", "senju/state/last-evolution-plan.md"}
+    observed = {line.strip().split()[-1] for line in senju.splitlines() if line.strip().startswith("put_file ")}
     if observed != allowed:
         raise SystemExit(f"Senju autonomous write allowlist mismatch: {sorted(observed)}")
-
     forge = WORKFLOWS["tomoki-forge.yml"]
-    for marker in (
-        "python /tmp/tomoki-policy-gate.py", "bash /tmp/tomoki-verify.sh",
-        "git add -A -- sales-command-30", "gh pr create",
-    ):
+    for marker in ("python /tmp/tomoki-policy-gate.py", "bash /tmp/tomoki-verify.sh", "git add -A -- sales-command-30", "gh pr create"):
         if marker not in forge:
             raise SystemExit(f"tomoki-forge.yml: missing bounded-writer invariant: {marker}")
-
     director = WORKFLOWS["the-core-autonomous-director.yml"]
     director_cmd = [x.strip() for x in director.splitlines() if x.strip().startswith("copilot -p ")]
     if len(director_cmd) != 1 or "--allow-tool=write" not in director_cmd[0] or "shell(" in director_cmd[0]:
         raise SystemExit("THE CORE Director Copilot permissions drifted")
-
     for name in ("tomoki-hound.yml", "tomoki-skeptic.yml"):
         body = WORKFLOWS[name]
         cmd = [x.strip() for x in body.splitlines() if x.strip().startswith("copilot -p ")]
@@ -370,10 +320,7 @@ def validate_explicit_lanes() -> set[str]:
 
 
 def validate_unknown_writes(known: set[str]) -> None:
-    unknown = {
-        name: sorted(writes(body)) for name, body in WORKFLOWS.items()
-        if writes(body) and name not in known
-    }
+    unknown = {name: sorted(writes(body)) for name, body in WORKFLOWS.items() if writes(body) and name not in known}
     if unknown:
         raise SystemExit(f"Unclassified privileged workflows: {unknown}")
 
@@ -385,20 +332,17 @@ def main() -> int:
     task_worker = validate_task_worker()
     reality = validate_reality_lane()
     research = validate_research_oidc_lane()
+    public_probe = validate_public_web_write_probe()
     experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality, research})
     stress = validate_owned_issue_stress_lanes()
     explicit = validate_explicit_lanes()
-    known = explicit | pages | experiments | stress | {task_worker, reality, research, "security-guard.yml"}
+    known = explicit | pages | experiments | stress | {task_worker, reality, research, public_probe, "security-guard.yml"}
     validate_unknown_writes(known)
     print(json.dumps({
-        "status": "PASS",
-        "workflows": len(WORKFLOWS),
-        "pages_lanes": sorted(pages),
-        "experiment_oidc_lanes": sorted(experiments),
-        "research_lane": research,
-        "owned_issue_stress_lanes": sorted(stress),
-        "reality_lane": reality,
-        "privileged_lanes": sorted(known - {"security-guard.yml"}),
+        "status": "PASS", "workflows": len(WORKFLOWS), "pages_lanes": sorted(pages),
+        "experiment_oidc_lanes": sorted(experiments), "research_lane": research,
+        "public_web_probe": public_probe, "owned_issue_stress_lanes": sorted(stress),
+        "reality_lane": reality, "privileged_lanes": sorted(known - {"security-guard.yml"}),
     }, ensure_ascii=False))
     return 0
 
