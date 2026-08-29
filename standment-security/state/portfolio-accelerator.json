@@ -1,6 +1,6 @@
 {
   "schema": "standment-security-portfolio-accelerator/v1",
-  "generated_at_jst": "2026-08-30T06:07:20+09:00",
+  "generated_at_jst": "2026-08-30T08:34:55+09:00",
   "company_priority": "P0",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
   "primary": {
@@ -79,15 +79,15 @@
     "closure_score": 1690,
     "ai_native": true
   },
-  "stagnation_streak": 1,
+  "stagnation_streak": 2,
   "rotated": false,
   "selection_reason": "HIGHEST_EVIDENCE_CLOSURE_SCORE",
   "next_action": "Convert the strongest white-hat candidate into a bounded reproduction -> remediation -> independent retest evidence bundle.",
   "north_star": {
     "tracks_total": 11,
     "tracks_verified": 2,
-    "tracks_full_evidence": 7,
-    "average_evidence_ratio": 0.894,
+    "tracks_full_evidence": 9,
+    "average_evidence_ratio": 0.947,
     "whitehat_candidates_open": 4,
     "unfinished_tracks": 9
   },
@@ -153,19 +153,18 @@
       "id": "SEC-PORT-004",
       "title": "Auth / tenant / RLS defensive evidence kit",
       "priority": 1020,
-      "status": "ABSENT",
-      "evidence_ratio": 0.667,
+      "status": "VISIBLE",
+      "evidence_ratio": 1.0,
       "evidence_present": [
         "security/STANDMENT_SECURITY_STANDARD.md",
-        "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"
-      ],
-      "evidence_missing": [
+        "standment-security/CONTROL_EVIDENCE_TEMPLATE.md",
         "standment-security/evidence-packs/auth-tenant-rls/README.md"
       ],
+      "evidence_missing": [],
       "whitehat_candidates": 0,
       "senju_focus": "learning",
       "customer_usefulness": "Teams can verify who is allowed to access what, see before/after authorization evidence, and reduce the risk of tenant or policy mistakes on owned systems.",
-      "closure_score": 1353,
+      "closure_score": 1520,
       "ai_native": false
     },
     {
@@ -230,20 +229,19 @@
       "id": "SEC-PORT-008",
       "title": "Security architecture review pack for AI and SaaS systems",
       "priority": 1000,
-      "status": "ABSENT",
-      "evidence_ratio": 0.75,
+      "status": "VISIBLE",
+      "evidence_ratio": 1.0,
       "evidence_present": [
         "security/STANDMENT_SECURITY_STANDARD.md",
         "standment-security/SECURITY_BASELINE.md",
-        "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"
-      ],
-      "evidence_missing": [
+        "standment-security/CONTROL_EVIDENCE_TEMPLATE.md",
         "standment-security/evidence-packs/architecture-review/README.md"
       ],
+      "evidence_missing": [],
       "whitehat_candidates": 0,
       "senju_focus": "learning",
       "customer_usefulness": "A customer can receive a structured architecture review that explains risks, evidence, remediation priority and residual uncertainty in a consistent format.",
-      "closure_score": 1360,
+      "closure_score": 1500,
       "ai_native": false
     },
     {

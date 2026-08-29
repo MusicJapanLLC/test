@@ -2,7 +2,7 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-08-30T06:07:20+09:00`
+Updated JST: `2026-08-30T08:34:55+09:00`
 
 ## TODAY'S PRIMARY BET
 - `SEC-PORT-001` — Standment Security Scan dogfood + Before/After case study
@@ -20,11 +20,11 @@ Updated JST: `2026-08-30T06:07:20+09:00`
 
 ## NORTH STAR
 - verified: **2/11**
-- full evidence-file coverage: **7/11**
-- average evidence coverage: **89%**
+- full evidence-file coverage: **9/11**
+- average evidence coverage: **95%**
 - open white-hat candidates: **4**
 - unfinished tracks: **9**
-- stagnation streak: **1**
+- stagnation streak: **2**
 
 ## ANTI-STAGNATION
 No material progress for three consecutive selections => automatically rotate to another high-value evidence path. Repeating unchanged activity does not count as R&D progress.
