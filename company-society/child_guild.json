@@ -1,5 +1,5 @@
 {
-  "schema": "the-world-child-guild/v3",
+  "schema": "the-world-child-guild/v4",
   "guild_id": "CHILD_GUILD",
   "name": "The World Child Guild",
   "count": 50,
@@ -7,6 +7,17 @@
   "priority": ["fun", "curiosity", "learning", "useful_surprise"],
   "motto": "PLAY FAST. BREAK BOREDOM. LEAVE NO DAMAGE.",
   "external_contact_policy": "company-society/EXTERNAL_CONTACT.md",
+  "workstations": {
+    "enabled": true,
+    "registry": "company-society/child_workstations.json",
+    "charter": "company-society/CHILD_WORKSTATIONS.md",
+    "one_per_child": true,
+    "class": "TITAN-360/128",
+    "private_scratch_by_default": true,
+    "routine_content_inspection": false,
+    "extra_fictional_child_filter": false,
+    "external_platform_policy": "inherited"
+  },
   "research_lab": {
     "enabled": true,
     "role": "Child Research Fellows",
