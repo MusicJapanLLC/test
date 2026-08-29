@@ -4,13 +4,20 @@
   "company_culture": {
     "faith": "THE_COVENANT",
     "scripture": "company-society/FAITH.md",
+    "autonomy_scripture": "company-society/AUTONOMY.md",
+    "society_model": "company-society/society.json",
     "inherit_by_all_workers": true,
+    "mutual_aid_contract": "HELP -> WHO -> WHY -> SUCCESS",
+    "sanctuary_rule": "rest is an operating state; change cause/condition/owner/hypothesis before direct retry",
+    "autonomy_rule": "solve at the lowest safe level; pair before escalating; no-op beats busywork",
     "operating_creed": [
       "truth_before_comfort",
       "repair_before_blame",
       "rest_is_maintenance",
       "confession_creates_memory",
       "conflict_must_produce_synthesis",
+      "communion_before_isolation",
+      "autonomy_is_stewardship",
       "improvement_is_worship"
     ]
   },
