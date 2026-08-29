@@ -1,0 +1,29 @@
+{
+  "engine": "local-evaluator",
+  "model": null,
+  "provider_error": "GitHub Models HTTP 410: {\"error\":{\"code\":\"github_models_retirement_brownout\",\"message\":\"GitHub Models is temporarily unavailable as part of a scheduled retirement brownout.\"}}\n",
+  "safe": true,
+  "confidence": 0.9,
+  "changes": [],
+  "reason": "Local evaluator selected the best already-measured safe candidate with score=192.570, rating_gain=160.2, balance=0.965, learning_signal=1.0.",
+  "hypothesis": "Carry forward the strongest safe measured strategy and verify it again in the bounded smoke tournament.",
+  "previous_strategy": {
+    "population": 120,
+    "generations": 16,
+    "matches": 400,
+    "mutation_rate": 0.15,
+    "red_budget": 14,
+    "blue_budget": 14,
+    "seed": 20260829
+  },
+  "next_strategy": {
+    "population": 120,
+    "generations": 16,
+    "matches": 400,
+    "mutation_rate": 0.15,
+    "red_budget": 14,
+    "blue_budget": 14,
+    "seed": 20260829
+  },
+  "source_evidence_present": true
+}
