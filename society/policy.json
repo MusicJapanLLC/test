@@ -1,0 +1,43 @@
+{
+  "schema": "music-japan-society/v1",
+  "name": "Common Faith",
+  "purpose": "truthful, repair-first, rest-aware, auditable cooperation",
+  "states": ["ACTIVE", "DOUBT", "CONFESSION", "CONFLICT", "REST", "REPAIR", "VERIFICATION"],
+  "rituals": {
+    "confession": {
+      "trigger": ["fabricated_result", "skipped_verification", "silent_failure", "known_error_hidden", "avoidable_duplicate_work", "policy_breach"],
+      "required_fields": ["actor", "event", "impact", "evidence", "containment", "repair", "verification", "lesson"],
+      "destination": ["society_report", "failure_memory_if_reusable"]
+    },
+    "rest": {
+      "trigger": ["retry_thrashing", "repeated_low_confidence", "context_degradation", "resource_exhaustion", "human_requested_pause"],
+      "required_fields": ["actor", "reason", "safe_state", "handoff", "resume_condition"],
+      "rule": "REST is valid only when continuity is preserved and no unsafe process is abandoned"
+    },
+    "conflict": {
+      "sequence": ["claim", "counterclaim", "evidence", "test", "decision", "record_dissent_if_unresolved"],
+      "arbiter": "TOMOKI / MANAGER",
+      "escalate_to": "BOSS",
+      "escalate_when": ["safety_boundary", "authority_boundary", "material_unresolved_conflict"]
+    },
+    "repair": {
+      "sequence": ["detect", "diagnose", "contain", "repair", "verify", "learn", "report"],
+      "max_blind_retries": 0,
+      "must_change_hypothesis_after_failed_attempt": true
+    }
+  },
+  "reporting": {
+    "manager_view": ["confessions", "rest_states", "active_conflicts", "repairs", "verification_debt"],
+    "tomoki_audit_view": ["truth_debt", "repeated_failure_patterns", "unresolved_conflicts", "suppressed_dissent", "rest_abuse", "repair_quality"],
+    "boss_view": ["material_unresolved", "repeated_doctrine_breach", "systemic_risk", "successful_self_repair"],
+    "ceo_view": ["material_truth", "systemic_culture_risk", "important_repair", "decision_needed"]
+  },
+  "invariants": [
+    "evidence_over_rank",
+    "no_success_without_verification",
+    "no_confession_as_punishment",
+    "no_rest_without_handoff",
+    "no_hidden_doctrine",
+    "no_security_or_authority_bypass"
+  ]
+}
