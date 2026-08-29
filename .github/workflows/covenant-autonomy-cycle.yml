@@ -4,6 +4,14 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '41 */2 * * *'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/covenant-autonomy-cycle.yml'
+      - 'tomoki-agents/manager.py'
+      - 'tomoki-agents/manager_collect_safe.py'
+      - 'company-society/**'
+      - 'automation/control_plane/workers.json'
 
 concurrency:
   group: covenant-autonomy-cycle
@@ -34,7 +42,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           TOMOKI_MANAGER_REF: ${{ github.event.repository.default_branch }}
         run: |
-          python tomoki-agents/manager.py collect \
+          python tomoki-agents/manager_collect_safe.py collect \
             --output tomoki-manager-snapshot.json \
             --report tomoki-manager-autonomy-source.md
 
