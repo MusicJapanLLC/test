@@ -53,6 +53,13 @@ def build_council(snapshot: dict[str, Any]) -> tuple[dict[str, Any], str]:
 
     seen_aid: set[tuple[str, str, str]] = set()
     seen_dispatch: set[str] = set()
+    resting_agents: set[str] = set()
+
+    def add_rest(agent: str, reason: str, reentry: str) -> None:
+        if not agent or agent in resting_agents:
+            return
+        resting_agents.add(agent)
+        rest.append({"agent": agent, "reason": reason, "reentry": reentry})
 
     def aid(source: str, helper: str, reason: str, success: str) -> None:
         key = (source, helper, reason)
@@ -82,16 +89,23 @@ def build_council(snapshot: dict[str, Any]) -> tuple[dict[str, Any], str]:
         conclusion = str(w.get("conclusion") or "none").lower()
         quality = str(w.get("report_quality") or "MISSING").upper()
         action = str(w.get("manager_action") or "NONE")
+        action_result = str(w.get("action_result") or "NONE").upper()
         attempts = int(w.get("run_attempt") or 0)
         material = bool(w.get("material_signal"))
         verified = bool(w.get("verified_signal"))
 
         if attempts >= 2 and _bad_conclusion(conclusion):
-            rest.append({
-                "agent": agent,
-                "reason": "連続失敗。無限retryより原因分析・小さな復旧・休息を優先",
-                "reentry": "原因か条件が変わった証拠を確認してから再開",
-            })
+            add_rest(
+                agent,
+                "連続失敗。無限retryより原因分析・小さな復旧・休息を優先",
+                "原因か条件が変わった証拠を確認してから再開",
+            )
+        elif conclusion == "unresolved" or action_result == "UNRESOLVED":
+            add_rest(
+                agent,
+                "内部のbounded recovery後も未解決。本人を直接起こすより、別専門家の証拠・原因分析を優先",
+                "原因・条件・担当・仮説のいずれかが変わった証拠を確認してから再開",
+            )
 
         if quality in {"MISSING", "BAD"}:
             education.append({
@@ -107,10 +121,10 @@ def build_council(snapshot: dict[str, Any]) -> tuple[dict[str, Any], str]:
         if agent == "SKEPTIC" and material and not verified:
             aid("SKEPTIC", "HOUND", "未検証の重要シグナルについて過去の再発・放置履歴を照合", "再発性と影響範囲が証拠付きで整理される")
             recommend("HOUND", "SKEPTICが見つけた未検証の重要シグナルの再発履歴を追う")
-        elif agent == "HOUND" and (_bad_conclusion(conclusion) or material):
+        elif agent == "HOUND" and (_bad_conclusion(conclusion) or conclusion == "unresolved" or material):
             aid("HOUND", "SKEPTIC", "再発・未完了の主張を独立検証し誤検知を除く", "再発が事実か、単なる古いノイズか判定できる")
             recommend("SKEPTIC", "HOUNDの再発・未完了シグナルを独立検証する")
-        elif agent == "FORGE" and _bad_conclusion(conclusion):
+        elif agent == "FORGE" and (_bad_conclusion(conclusion) or conclusion == "unresolved"):
             aid("FORGE", "HOUND", "失敗実験をfailure memoryへつなぎ同じ失敗を繰り返さない", "次回は条件変更か別仮説で試せる")
             aid("FORGE", "SKEPTIC", "失敗境界と回帰の有無を確認", "失敗原因が推測ではなく検証済みになる")
             recommend("HOUND", "FORGEの失敗実験を再発防止メモリへ残す")
@@ -125,6 +139,12 @@ def build_council(snapshot: dict[str, Any]) -> tuple[dict[str, Any], str]:
     for item in unresolved:
         agent = str(item.get("agent") or "UNKNOWN").upper()
         reason = str(item.get("reason") or "未解決")[:500]
+        if agent in WORKFLOW:
+            add_rest(
+                agent,
+                f"MANAGER cycleで未解決: {reason}",
+                "新しい証拠、別専門家、変更された仮説のいずれかを得てから本人を再起動",
+            )
         if agent == "FORGE":
             aid("FORGE", "SKEPTIC", f"未解決の修正結果を独立検証: {reason}", "KEEP/REVERTの判断根拠が得られる")
             recommend("SKEPTIC", "FORGE未解決事項の独立検証")
@@ -155,7 +175,7 @@ def build_council(snapshot: dict[str, Any]) -> tuple[dict[str, Any], str]:
 
     generated = datetime.now(timezone.utc).isoformat()
     data = {
-        "schema": "the-covenant-council/v1",
+        "schema": "the-covenant-council/v2",
         "generated_at": generated,
         "principles": ["truth", "repair", "rest", "memory", "communion", "autonomy", "improvement"],
         "rest": rest,
