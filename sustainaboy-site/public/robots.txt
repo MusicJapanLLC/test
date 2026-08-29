@@ -1,3 +1,4 @@
+# SUSTAINABOY WORKS search discovery policy
 User-agent: OAI-SearchBot
 Allow: /
 
