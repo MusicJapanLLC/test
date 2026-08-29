@@ -30,6 +30,22 @@ class RitualValidationTests(unittest.TestCase):
         )
         self.assertEqual(errors, [])
 
+    def test_valid_communion_passes(self):
+        errors = MODULE.validate_record(
+            "communion",
+            "HOUND",
+            "HELP -> SKEPTIC -> verify recurrence claim -> independent PASS/FAIL evidence",
+        )
+        self.assertEqual(errors, [])
+
+    def test_valid_autonomy_passes(self):
+        errors = MODULE.validate_record(
+            "autonomy",
+            "FORGE",
+            "Selected one evidence-backed reversible improvement within the existing allowlist.",
+        )
+        self.assertEqual(errors, [])
+
 
 if __name__ == "__main__":
     unittest.main()
