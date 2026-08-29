@@ -97,6 +97,22 @@ def _highest_track(program: dict[str, Any]) -> dict[str, Any] | None:
     return sorted(rows, key=lambda x: (int(x.get("priority") or 0), str(x.get("id") or "")), reverse=True)[0]
 
 
+def _track_by_id(program: dict[str, Any], preferred_track_id: str | None) -> dict[str, Any] | None:
+    """Select an explicitly requested bounded R&D track, otherwise fail soft to priority.
+
+    A mission may advance to the next research phase without editing the AI/Security
+    program itself. A missing/invalid id never creates a track and never changes
+    authority; the normal highest-priority track is used instead.
+    """
+    preferred = str(preferred_track_id or "").strip()
+    rows = [x for x in (program.get("tracks") or []) if isinstance(x, dict)]
+    if preferred:
+        for row in rows:
+            if str(row.get("id") or "") == preferred:
+                return row
+    return _highest_track(program)
+
+
 def _mission_family(mission: dict[str, Any]) -> str:
     blob = " ".join(str(mission.get(k) or "") for k in ("research_id", "title", "problem", "hypothesis")).upper()
     if "AI-DEVELOP" in blob or " AI " in f" {blob} " or "AI FOUNDRY" in blob:
@@ -138,7 +154,7 @@ def _role_order(run_id: str, mission_id: str, count: int, family: str) -> list[t
     mandatory = [ROLE_MAP[name] for name in mandatory_names]
     mandatory_set = set(mandatory_names)
     rest = [item for item in ROLE_POOL if item[0] not in mandatory_set]
-    seed = hashlib.sha256(f"{run_id}:{mission_id}:{family}:agent-factory-v3".encode()).digest()
+    seed = hashlib.sha256(f"{run_id}:{mission_id}:{family}:agent-factory-v4".encode()).digest()
     ranked = sorted(rest, key=lambda item: hashlib.sha256(seed + item[0].encode()).digest())
     return (mandatory + ranked)[:count]
 
@@ -149,8 +165,9 @@ def build_plan(root: Path, run_id: str) -> dict[str, Any]:
     ai_program = _load_optional(root / "automation/ai_foundry/ai_development_program.json")
     mission = _priority_mission(queue)
     family = _mission_family(mission)
-    security_track = _highest_track(security_program)
-    ai_track = _highest_track(ai_program)
+    preferred_track_id = str(mission.get("preferred_track_id") or "").strip()
+    security_track = _track_by_id(security_program, preferred_track_id if family == "security" else None)
+    ai_track = _track_by_id(ai_program, preferred_track_id if family == "ai" else None)
     if family == "ai" and ai_track:
         primary_track_kind = "ai_development"
         primary_track = ai_track
@@ -175,7 +192,7 @@ def build_plan(root: Path, run_id: str) -> dict[str, Any]:
         ))
 
     return {
-        "schema": "the-world-agent-factory-plan/v3",
+        "schema": "the-world-agent-factory-plan/v4",
         "run_id": run_id,
         "mission_family": family,
         "mission": {
@@ -185,6 +202,8 @@ def build_plan(root: Path, run_id: str) -> dict[str, Any]:
             "hypothesis": mission.get("hypothesis"),
             "priority": int(mission.get("priority") or 0),
             "focus": mission.get("focus"),
+            "preferred_track_id": preferred_track_id or None,
+            "current_phase": mission.get("current_phase"),
         },
         "primary_track_kind": primary_track_kind,
         "primary_track": primary_track,
@@ -257,6 +276,8 @@ problem: {mission.get('problem')}
 hypothesis: {mission.get('hypothesis')}
 focus: {mission.get('focus')}
 priority: {mission.get('priority')}
+current_phase: {mission.get('current_phase')}
+preferred_track_id: {mission.get('preferred_track_id')}
 
 CURRENT PRIMARY R&D TRACK
 kind: {plan.get('primary_track_kind')}
