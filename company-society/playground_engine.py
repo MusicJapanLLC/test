@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """THE WORLD Child Guild adventure planner.
 
-Selects one of 50 fictional child personas and one harmless adventure.
+Selects one of 50 fictional child personas and one playful adventure.
 The planner itself performs no network side effects. It emits an action packet
-for an authorized bridge (Slack/GitHub/AgentMail).
+for an authorized bridge. External interaction is allowed only when lawful,
+ethical, terms-compliant, authorized, proportionate, and non-destructive.
 """
 from __future__ import annotations
 
@@ -30,19 +31,19 @@ PLAY = [
 ]
 ADVENTURE = [
     "explore a repository nobody touched today",
-    "visit the playground and leave a puzzle",
+    "visit a permitted community and bring back one weird useful observation",
     "inspect an old failure and turn it into a game",
     "build a tiny reversible prototype",
     "find a boring task and make it delightful",
     "pair with another child and race two ideas",
-    "find a hidden dependency and draw a treasure map",
-    "turn a stale document into an interactive challenge",
+    "explore a public API or sandbox that permits automation",
+    "leave a harmless puzzle in a permitted external space",
     "explore a harmless public tool and bring back a lesson",
     "invent a new way to explain a technical idea",
 ]
 PRANK = [
     "mystery clue", "treasure map clearly marked as play", "emoji ambush",
-    "puzzle email", "harmless easter egg", "unexpected riddle",
+    "puzzle message", "harmless easter egg", "unexpected riddle",
     "tiny celebratory bot message", "silly code name",
     "reverse scavenger hunt", "benign surprise note",
 ]
@@ -53,11 +54,6 @@ SAFE_ACTIONS = [
         "prompt": "Leave one playful riddle, treasure clue, mini game, or absurd-but-useful observation.",
     },
     {
-        "kind": "slack_reaction",
-        "surface": "the-world-playground",
-        "prompt": "React to one recent playground message with a playful emoji and a short clue.",
-    },
-    {
         "kind": "github_artifact",
         "surface": "MusicJapanLLC/test",
         "prompt": "Create a tiny reversible experiment, puzzle, easter egg, or treasure-map artifact. No destructive edits.",
@@ -66,6 +62,11 @@ SAFE_ACTIONS = [
         "kind": "email_owner",
         "surface": "owner-email-only",
         "prompt": "Send the owner one harmless surprise, riddle, tiny discovery, or playful progress note from an approved agent inbox.",
+    },
+    {
+        "kind": "external_exploration",
+        "surface": "public-or-authorized-terms-compliant-space",
+        "prompt": "Explore or interact playfully only where the service permits it. Prefer riddles, harmless comments, public artifacts, sandboxes, APIs, demos, or communities designed for participation. Never spam or harass.",
     },
 ]
 
@@ -102,7 +103,7 @@ def build(registry: dict[str, Any], seed: str) -> dict[str, Any]:
     child = enrich(members[stable_index(seed, len(members), "child")])
     action = SAFE_ACTIONS[stable_index(seed, len(SAFE_ACTIONS), "action")]
     return {
-        "schema": "child-guild-adventure/v1",
+        "schema": "child-guild-adventure/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "seed": seed,
         "guild": registry["guild_id"],
@@ -111,12 +112,17 @@ def build(registry: dict[str, Any], seed: str) -> dict[str, Any]:
         "action": action,
         "side_effect_budget": registry["shared_rules"]["side_effect_budget_per_run"],
         "constraints": {
-            "owner_controlled_targets_only": True,
-            "third_party_contact": False,
+            "lawful": True,
+            "ethical": True,
+            "terms_compliant": True,
+            "authorized_account_or_connector": True,
+            "third_party_email": "authorized_or_opted_in_only",
             "destructive_actions": False,
             "impersonation": False,
             "panic_pranks": False,
             "credential_or_secret_access": False,
+            "harassment": False,
+            "spam": False,
         },
         "status": "READY_FOR_AUTHORIZED_BRIDGE",
     }
@@ -126,11 +132,12 @@ def validate(packet: dict[str, Any]) -> None:
     if packet.get("side_effect_budget") != 1:
         raise ValueError("side effect budget must stay at one")
     c = packet["constraints"]
-    if not c.get("owner_controlled_targets_only"):
-        raise ValueError("owner-controlled-only gate is required")
+    for key in ("lawful", "ethical", "terms_compliant", "authorized_account_or_connector"):
+        if not c.get(key):
+            raise ValueError(f"required external-contact gate missing: {key}")
     for key in (
-        "third_party_contact", "destructive_actions", "impersonation",
-        "panic_pranks", "credential_or_secret_access",
+        "destructive_actions", "impersonation", "panic_pranks",
+        "credential_or_secret_access", "harassment", "spam",
     ):
         if c.get(key):
             raise ValueError(f"unsafe child-guild constraint: {key}")
@@ -154,7 +161,7 @@ def render(packet: dict[str, Any]) -> str:
         f"**Mission:** {a['prompt']}",
         "",
         "**Budget:** one small reversible side effect",
-        "**Boundary:** owner-controlled Slack/GitHub/email only; no third-party contact, panic, impersonation, credential access, or destructive action.",
+        "**Boundary:** law + ethics + service terms + legitimate authorization. No spam, harassment, panic, impersonation, credential access, or destructive action. Unsolicited third-party email stays off.",
         "",
         f"`{packet['motto']}`",
         "",

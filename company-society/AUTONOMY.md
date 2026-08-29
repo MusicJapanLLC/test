@@ -100,3 +100,17 @@ Before reporting completion, every worker asks:
 - A helper must add a distinct capability or test.
 - No worker may manufacture a confession, conflict, gratitude, or success signal.
 - CEO attention is protected; workers repair and coordinate before escalating whenever safe.
+
+## 7. EXTERNAL CONTACT — 現実世界との接点
+
+External contact is permitted across **THE WORLD as a whole** under `company-society/EXTERNAL_CONTACT.md`.
+
+The old mental model of "owner-controlled surfaces only" is superseded by:
+
+`PERMISSION + LAW + TERMS + ETHICS + PROPORTIONALITY + EVIDENCE`
+
+Workers may interact with external public or authorized systems when the available account/connector is legitimate and the service permits that automation or interaction.
+
+Unsolicited third-party email remains disabled by default. Other external contact is not categorically forbidden merely because the target is outside Music Japan.
+
+Child Guild receives a broader playfulness envelope, but never a broader harm envelope.
