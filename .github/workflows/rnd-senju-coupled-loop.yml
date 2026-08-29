@@ -11,6 +11,7 @@ on:
       - "senju/scripts/apply_rnd_directive.py"
       - "senju/scripts/shadow_selector.py"
       - "senju/tests/test_rnd_directive.py"
+      - "senju/tests/test_shadow_selector.py"
       - ".github/workflows/rnd-senju-coupled-loop.yml"
       - ".github/workflows/senju-autonomous-improver.yml"
 
@@ -46,7 +47,7 @@ jobs:
           set -euo pipefail
           (cd value-lab && python -m unittest -v)
           python -m pip install pytest==9.1.1
-          (cd senju && python -m pytest tests/test_rnd_directive.py -q)
+          (cd senju && python -m pytest tests/test_rnd_directive.py tests/test_shadow_selector.py -q)
           python -m json.tool value-lab/policy.json >/dev/null
           python -m json.tool value-lab/research_queue.json >/dev/null
 
