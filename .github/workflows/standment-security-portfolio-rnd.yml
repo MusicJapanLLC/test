@@ -1,0 +1,121 @@
+name: Standment Security - Portfolio First R&D
+
+on:
+  schedule:
+    # 06:50 JST daily, before the 07:20 JST R&D x Senju coupled loop.
+    - cron: '50 21 * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/standment-security-portfolio-rnd.yml'
+      - 'automation/security/portfolio_rnd.py'
+      - 'automation/security/test_portfolio_rnd.py'
+      - 'standment-security/security_portfolio_program.json'
+      - 'value-lab/research_queue.json'
+      - 'PORTFOLIO.md'
+
+concurrency:
+  group: standment-security-portfolio-rnd
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+
+jobs:
+  portfolio-rnd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify portfolio-first planner
+        working-directory: automation/security
+        run: |
+          set -euo pipefail
+          python -m unittest -v test_portfolio_rnd.py
+
+      - name: Rank Standment Security portfolio gaps
+        run: |
+          set -euo pipefail
+          python automation/security/portfolio_rnd.py \
+            --program standment-security/security_portfolio_program.json \
+            --portfolio PORTFOLIO.md \
+            --out reports/standment-security-rnd
+          cat reports/standment-security-rnd/daily.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify R&D x Senju boundary compatibility
+        run: |
+          set -euo pipefail
+          python value-lab/senju_bridge.py \
+            --queue value-lab/research_queue.json \
+            --senju senju/state/last-evolution-summary.json \
+            --out /tmp/standment-rnd-senju
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('/tmp/standment-rnd-senju/directive.json')
+          d=json.loads(p.read_text(encoding='utf-8'))
+          assert d['research_id'].startswith('RND-STANDMENT-SECURITY-PORTFOLIO')
+          assert d['focus'] in {'robustness','learning','balance','efficiency'}
+          assert 3 <= int(d['candidate_count']) <= 9
+          forbidden={'target','url','host','network','scope','permission','secret','credential','exploit','victim'}
+          assert not (set(d) & forbidden)
+          print('Standment portfolio priority is active and Senju boundary is intact.')
+          PY
+
+      - name: Preserve daily R&D evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: standment-security-portfolio-rnd-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            reports/standment-security-rnd/daily.json
+            reports/standment-security-rnd/daily.md
+            reports/standment-security-rnd/senju-research-item.json
+            /tmp/standment-rnd-senju/exchange.json
+            /tmp/standment-rnd-senju/exchange.md
+            /tmp/standment-rnd-senju/directive.json
+
+      - name: Deliver daily R&D digest to Slack
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from urllib import request, error
+
+          webhook=os.getenv('RND_SLACK_WEBHOOK_URL','').strip()
+          report=Path('reports/standment-security-rnd/daily.md')
+          if not report.exists():
+              print('R&D report missing; see workflow failure above.')
+              raise SystemExit(0)
+          if not webhook:
+              print('BLOCKED_NO_CAPABILITY: RND_SLACK_WEBHOOK_URL is not configured. Artifact evidence was preserved.')
+              raise SystemExit(0)
+          text=report.read_text(encoding='utf-8')[:30000]
+          payload=json.dumps({'text': '*Standment Security / DAILY PORTFOLIO R&D*\n'+text}, ensure_ascii=False).encode('utf-8')
+          req=request.Request(webhook, data=payload, headers={'Content-Type':'application/json'}, method='POST')
+          try:
+              with request.urlopen(req, timeout=15) as res:
+                  if not 200 <= res.status < 300:
+                      raise RuntimeError(f'HTTP {res.status}')
+          except (error.URLError, RuntimeError) as exc:
+              print(f'Slack delivery failed: {type(exc).__name__}')
+              raise SystemExit(1)
+          print('Daily Standment Security portfolio R&D delivered to Slack.')
+          PY
