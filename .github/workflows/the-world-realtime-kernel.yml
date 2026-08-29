@@ -4,14 +4,6 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - 'TOMOKI - MANAGER'
-      - 'AI Factory - BOSS Watchdog'
-      - 'R&D x Senju Coupled Loop'
-      - 'Senju GitHub Native Autonomous Improver'
-      - 'THE WORLD - Child Guild Adventure'
-    types: [completed]
 
 concurrency:
   group: the-world-realtime-kernel
