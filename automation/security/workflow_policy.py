@@ -25,6 +25,10 @@ UNSAFE = (
 )
 PIN_RE = re.compile(r'uses:\s+([^\s#]+)')
 FULL_SHA = re.compile(r'^[0-9a-f]{40}$')
+GATEWAY_PROTOCOL_RE = re.compile(
+    r'(?m)^GATEWAY_PROTOCOL\s*=\s*"oidc-repository-v(?P<version>\d+)-(?P<label>[a-z0-9][a-z0-9-]*)"\s*$'
+)
+MIN_GATEWAY_PROTOCOL_VERSION = 4
 
 
 def writes(body: str) -> set[str]:
@@ -85,6 +89,10 @@ def validate_pages_lanes() -> set[str]:
         ):
             if item not in body:
                 raise SystemExit(f'{name}: Pages lane missing invariant: {item}')
+        if body.count('pages: write') != 1 or body.count('id-token: write') != 1:
+            raise SystemExit(f'{name}: Pages/OIDC write permissions must occur exactly once')
+        if 'schedule:' in body:
+            raise SystemExit(f'{name}: Pages deployment must not be schedule-triggered')
         if 'pull_request:' in body and "if: github.event_name != 'pull_request'" not in body:
             raise SystemExit(f'{name}: PR-triggered Pages workflow must suppress deployment on PR events')
         if 'push:' in body and 'paths:' not in body:
@@ -119,13 +127,25 @@ def validate_task_worker(page_lanes: set[str]) -> None:
     client = Path('automation/world/task_worker.py').read_text(encoding='utf-8')
     for item in (
         'AUDIENCE = "the-world-worker"',
-        'GATEWAY_PROTOCOL = "oidc-repository-v4-audited"',
         'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
         'method="POST"',
         'https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker',
     ):
         if item not in client:
             raise SystemExit(f'task_worker.py: missing OIDC/gateway invariant: {item}')
+
+    protocol = GATEWAY_PROTOCOL_RE.search(client)
+    if protocol is None:
+        raise SystemExit('task_worker.py: gateway protocol must use oidc-repository-vN-<label> form')
+    version = int(protocol.group('version'))
+    if version < MIN_GATEWAY_PROTOCOL_VERSION:
+        raise SystemExit(
+            f'task_worker.py: gateway protocol version regressed: {version} < {MIN_GATEWAY_PROTOCOL_VERSION}'
+        )
+    if '_oidc_token()' not in client or 'Authorization": f"Bearer {_oidc_token()}"' not in client:
+        raise SystemExit('task_worker.py: Edge requests must authenticate with a fresh GitHub OIDC token')
+    if 'urllib.parse.urlencode({"audience": AUDIENCE})' not in client:
+        raise SystemExit('task_worker.py: OIDC token request must bind the configured audience')
 
 
 def validate_explicit_lanes() -> set[str]:
@@ -184,7 +204,7 @@ def validate_explicit_lanes() -> set[str]:
         copilot = [x.strip() for x in body.splitlines() if x.strip().startswith('copilot -p ')]
         if len(copilot) != 1 or '--allow-tool=write' not in copilot[0] or 'shell(' in copilot[0]:
             raise SystemExit(f'{name}: auditor may write its report but may not receive autonomous shell access')
-        if 'continue-on-error: true' in body or 'copilot -p' in body and '|| true' in copilot[0]:
+        if 'continue-on-error: true' in body or ('copilot -p' in body and '|| true' in copilot[0]):
             raise SystemExit(f'{name}: auditor failures must not be hidden')
 
     reality = WORKFLOWS['world-reality-agency.yml']
