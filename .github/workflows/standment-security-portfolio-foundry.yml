@@ -91,7 +91,7 @@ jobs:
           PY
           )"
           set +e
-          python senju/scripts/shadow_selector.py \
+          PYTHONPATH=. python senju/scripts/shadow_selector.py \
             --state senju/state/champion.json \
             --strategy reports/standment-security-foundry/proposed-strategy.json \
             --out reports/standment-security-foundry/senju-shadow \
