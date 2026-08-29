@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
 """Fail-closed entrypoint for privileged workflow policy.
 
-The canonical workflow policy intentionally rejects unknown OIDC lanes.  The
+The canonical workflow policy intentionally rejects unknown OIDC lanes. The
 TOMOKI Manager queue is a narrower OIDC-only gateway lane, so it is validated
 here with its own exact capability contract before the generic policy runs.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from automation.security import workflow_policy as policy
 
@@ -18,8 +23,6 @@ def validate_manager_queue_oidc_lane() -> str:
     if not body:
         raise SystemExit(f"{name}: required manager OIDC lane is missing")
 
-    # This lane may mint only a GitHub OIDC token.  It has no repository,
-    # Actions, issue, PR, deployment, package, Pages, or Copilot write power.
     got = policy.writes(body)
     if got != {"id-token"}:
         raise SystemExit(f"{name}: manager queue write set drifted: {sorted(got)}")
@@ -57,7 +60,7 @@ def validate_manager_queue_oidc_lane() -> str:
         if marker in body:
             raise SystemExit(f"{name}: forbidden manager OIDC capability: {marker}")
 
-    client = Path("automation/control_plane/manager_queue.py").read_text(encoding="utf-8")
+    client = (ROOT / "automation/control_plane/manager_queue.py").read_text(encoding="utf-8")
     client_required = (
         'AUDIENCE = "the-world-worker"',
         "ACTIONS_ID_TOKEN_REQUEST_URL",
@@ -79,9 +82,6 @@ def validate_manager_queue_oidc_lane() -> str:
 
 def main() -> int:
     manager = validate_manager_queue_oidc_lane()
-    # The generic policy remains fail-closed for every other privileged lane.
-    # Removing this single workflow happens only after the exact validator above
-    # has succeeded, so the lane is classified rather than silently ignored.
     policy.WORKFLOWS.pop(manager, None)
     return policy.main()
 
