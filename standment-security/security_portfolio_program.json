@@ -1,5 +1,5 @@
 {
-  "schema": "standment-security-portfolio-rnd/v1",
+  "schema": "standment-security-portfolio-rnd/v2",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment.",
   "portfolio_first": true,
   "senju_collaboration": {
@@ -23,6 +23,24 @@
       "hypothesis": "Repeated dogfooding on owned assets plus before/after evidence will turn Security Scan from a build artifact into a credible customer-facing case study.",
       "deliverable": "Human-readable scan report, before/after remediation evidence, reproducibility notes and bounded limitations.",
       "evidence_files": ["PORTFOLIO.md", "security/STANDMENT_SECURITY_STANDARD.md", "standment-security/SECURITY_BASELINE.md"]
+    },
+    {
+      "id": "SEC-PORT-006",
+      "title": "Autonomous defensive intelligence and owned-control audit",
+      "priority": 990,
+      "senju_focus": "learning",
+      "hypothesis": "Daily passive vulnerability intelligence plus an owned-control evidence audit will reduce the delay between a new public defensive signal and a reproducible Standment action plan.",
+      "deliverable": "Daily human-readable threat-intelligence digest, owned-control coverage report and bounded research seed with preserved machine evidence.",
+      "evidence_files": ["automation/security/standment_defensive_intel.py", ".github/workflows/standment-security-portfolio-rnd.yml", "reports/standment-security-rnd/intel.json"]
+    },
+    {
+      "id": "SEC-PORT-007",
+      "title": "Adaptive autonomous security R&D operating loop",
+      "priority": 980,
+      "senju_focus": "efficiency",
+      "hypothesis": "Selecting the highest portfolio evidence gap each day and routing it into a bounded Senju research directive will improve portfolio conversion speed without expanding execution authority.",
+      "deliverable": "Auditable daily chain from portfolio gap to research directive to counterevidence to preserved artifact and Slack report.",
+      "evidence_files": ["automation/security/portfolio_rnd.py", "automation/security/standment_defensive_intel.py", "value-lab/senju_bridge.py", ".github/workflows/standment-security-portfolio-rnd.yml"]
     },
     {
       "id": "SEC-PORT-002",
