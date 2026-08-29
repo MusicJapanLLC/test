@@ -5,7 +5,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from automation.security.security_reactor import MAX_HISTORY, run_session
+try:
+    from automation.security.security_reactor import MAX_HISTORY, run_session
+except ModuleNotFoundError:
+    # The portfolio R&D workflow intentionally runs tests from automation/security,
+    # while other CI paths may invoke this module from the repository root.
+    from security_reactor import MAX_HISTORY, run_session
 
 
 PROGRAM = {
