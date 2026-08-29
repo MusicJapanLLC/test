@@ -9,6 +9,8 @@ on:
     paths:
       - 'automation/security/portfolio_rnd.py'
       - 'automation/security/test_portfolio_rnd.py'
+      - 'automation/security/portfolio_daily_report.py'
+      - 'automation/security/test_portfolio_daily_report.py'
       - 'standment-security/**'
       - 'security/**'
       - 'PORTFOLIO.md'
@@ -26,6 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  GH_TOKEN: ${{ github.token }}
   RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
 
 jobs:
@@ -43,14 +46,30 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify portfolio-first R&D contract
+      - name: Verify portfolio-first R&D and detailed reporting contracts
         run: |
           set -euo pipefail
-          (cd automation/security && python -m unittest -v test_portfolio_rnd.py)
+          (cd automation/security && python -m unittest -v test_portfolio_rnd.py test_portfolio_daily_report.py)
           python -m pip install pytest==9.1.1
           (cd senju && python -m pytest tests/test_rnd_directive.py tests/test_shadow_selector.py -q)
           python -m json.tool standment-security/security_portfolio_program.json >/dev/null
           python -m json.tool value-lab/research_queue.json >/dev/null
+
+      - name: Restore previous successful Foundry baseline
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/previous-foundry reports/standment-security-foundry
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Standment Security Portfolio Foundry" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" && "$RUN_ID" != "$GITHUB_RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --dir /tmp/previous-foundry || true
+          fi
+          PREV_DAILY="$(find /tmp/previous-foundry -name daily.json -path '*standment-security*' -print -quit || true)"
+          PREV_EVIDENCE="$(find /tmp/previous-foundry -name evidence.json -path '*standment-security*' -print -quit || true)"
+          [[ -n "$PREV_DAILY" ]] && cp "$PREV_DAILY" reports/standment-security-foundry/previous-daily.json || true
+          [[ -n "$PREV_EVIDENCE" ]] && cp "$PREV_EVIDENCE" reports/standment-security-foundry/previous-evidence.json || true
+          echo "previous_foundry_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Rank Standment security portfolio gaps
         run: |
@@ -60,6 +79,24 @@ jobs:
             --portfolio PORTFOLIO.md \
             --out reports/standment-security-foundry
           cat reports/standment-security-foundry/daily.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Attach customer and commercial context to selected research track
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          plan_path=pathlib.Path('reports/standment-security-foundry/daily.json')
+          program_path=pathlib.Path('standment-security/security_portfolio_program.json')
+          plan=json.loads(plan_path.read_text(encoding='utf-8'))
+          program=json.loads(program_path.read_text(encoding='utf-8'))
+          selected=plan.get('selected') or {}
+          track=next((x for x in program.get('tracks',[]) if x.get('id') == selected.get('id')), {})
+          for key in ('customer_problem','customer_value','commercial_use','success_criteria'):
+              if track.get(key):
+                  selected[key]=track[key]
+          plan['selected']=selected
+          plan_path.write_text(json.dumps(plan,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
 
       - name: Convert top portfolio gap into bounded Senju directive
         run: |
@@ -108,71 +145,34 @@ jobs:
             exit "$RC"
           fi
 
-      - name: Build daily evidence digest
+      - name: Build detailed owner-readable daily evidence digest
         if: always()
+        shell: bash
         run: |
-          python - <<'PY'
-          import json, pathlib, datetime
-          root=pathlib.Path('reports/standment-security-foundry')
-          root.mkdir(parents=True, exist_ok=True)
-          def load(name):
-              p=root/name
-              return json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
-          plan=load('daily.json')
-          audit=load('directive-audit.json')
-          selection=load('senju-shadow/selection.json')
-          selected=plan.get('selected') or {}
-          holdout=selection.get('holdout') or {}
-          result={
-              'schema':'standment-security-portfolio-foundry-evidence/v1',
-              'generated_at':datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
-              'portfolio_first':bool(plan.get('portfolio_first')),
-              'portfolio_track':selected.get('id'),
-              'portfolio_title':selected.get('title'),
-              'portfolio_status':selected.get('portfolio_status'),
-              'evidence_ratio':selected.get('evidence_ratio'),
-              'promotion_ready':bool(plan.get('promotion_ready')),
-              'senju_focus':audit.get('focus'),
-              'senju_candidate_count':selection.get('candidate_count'),
-              'senju_selected':bool(selection.get('selected')),
-              'holdout_safe':holdout.get('safe'),
-              'holdout_stable':holdout.get('stable'),
-              'robust_score':holdout.get('robust_score'),
-              'what_remains_unproven':'Technical reproducibility does not prove customer demand, payment, production deployment, or market value.',
-              'next_action':'Strengthen the selected human-inspectable artifact with verified before/after evidence; preserve negative evidence if the holdout fails.'
-          }
-          (root/'evidence.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-          md=(
-              '# R&D PORTFOLIO DAILY — Standment Security\n\n'
-              f"- top track: **{result['portfolio_track']} — {result['portfolio_title']}**\n"
-              f"- portfolio status: **{result['portfolio_status']}** / evidence={result['evidence_ratio']}\n"
-              f"- Senju: focus={result['senju_focus']} candidates={result['senju_candidate_count']} selected={result['senju_selected']}\n"
-              f"- holdout: safe={result['holdout_safe']} stable={result['holdout_stable']} robust={result['robust_score']}\n"
-              f"- promotion ready: **{result['promotion_ready']}**\n"
-              f"- unproven: {result['what_remains_unproven']}\n"
-              f"- next: {result['next_action']}\n"
-          )
-          (root/'evidence.md').write_text(md,encoding='utf-8')
-          print(md)
-          PY
+          set -euo pipefail
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          python automation/security/portfolio_daily_report.py \
+            --plan reports/standment-security-foundry/daily.json \
+            --audit reports/standment-security-foundry/directive-audit.json \
+            --selection reports/standment-security-foundry/senju-shadow/selection.json \
+            --previous-plan reports/standment-security-foundry/previous-daily.json \
+            --previous-evidence reports/standment-security-foundry/previous-evidence.json \
+            --run-url "$RUN_URL" \
+            --out-json reports/standment-security-foundry/evidence.json \
+            --out-md reports/standment-security-foundry/evidence.md
           cat reports/standment-security-foundry/evidence.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Report material daily portfolio R&D delta to Slack
+      - name: Report detailed daily portfolio R&D delta to Slack
         if: github.event_name != 'pull_request' && env.RND_SLACK_WEBHOOK_URL != ''
         run: |
           python - <<'PY'
-          import json, os, urllib.request
-          d=json.load(open('reports/standment-security-foundry/evidence.json',encoding='utf-8'))
-          text=(
-              f"*R&D PORTFOLIO DAILY｜Standment Security*\n"
-              f"最優先={d.get('portfolio_track')} / {d.get('portfolio_title')}\n"
-              f"状態={d.get('portfolio_status')} / evidence={d.get('evidence_ratio')} / promotion={d.get('promotion_ready')}\n"
-              f"Senju focus={d.get('senju_focus')} / candidates={d.get('senju_candidate_count')} / selected={d.get('senju_selected')}\n"
-              f"holdout safe={d.get('holdout_safe')} / stable={d.get('holdout_stable')} / robust={d.get('robust_score')}\n"
-              f"次={d.get('next_action')}\n"
-              "※技術検証と市場価値は分離。人間が確認できる証拠だけをportfolioへ昇格"
+          import json, os, pathlib, urllib.request
+          text=pathlib.Path('reports/standment-security-foundry/evidence.md').read_text(encoding='utf-8')
+          req=urllib.request.Request(
+              os.environ['RND_SLACK_WEBHOOK_URL'],
+              data=json.dumps({'text':text},ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type':'application/json'},
           )
-          req=urllib.request.Request(os.environ['RND_SLACK_WEBHOOK_URL'],data=json.dumps({'text':text},ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
           with urllib.request.urlopen(req,timeout=10) as res:
               print('slack status',res.status)
           PY
