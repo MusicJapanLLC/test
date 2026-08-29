@@ -1,4 +1,5 @@
 name: TOMOKI - FORGE
+
 on:
   workflow_dispatch:
   schedule:
@@ -8,92 +9,349 @@ on:
     paths:
       - '.github/workflows/tomoki-forge.yml'
       - 'tomoki-agents/**'
+      - 'automation/reporting/**'
+      - 'sales-command-30/**'
+
 permissions:
-  contents: write
-  pull-requests: write
-  actions: read
-  issues: read
-  copilot-requests: write
+  contents: read
+
+concurrency:
+  group: tomoki-forge-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
-  forge:
+  propose:
+    name: AI competition + bounded proposal
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      actions: read
+      issues: read
+      pull-requests: read
+      copilot-requests: write
+    outputs:
+      result: ${{ steps.experiment.outputs.result }}
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Checkout
+      - name: Checkout trusted base read-only
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           fetch-depth: 0
           persist-credentials: false
+
       - name: Setup Node
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: '22'
-      - name: Install Copilot CLI
+
+      - name: Install pinned Copilot CLI
         run: npm install -g @github/copilot@1.0.80
-      - name: Snapshot fixed guardrails
+
+      - name: Restore FORGE + SKEPTIC + HOUND memory
+        shell: bash
         run: |
+          set -euo pipefail
+          restore() {
+            local workflow="$1" artifact="$2" destination="$3"
+            local dir="/tmp/memory-${artifact}"
+            rm -rf "$dir" && mkdir -p "$dir"
+            local run
+            run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run" ]]; then
+              gh run download "$run" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir "$dir" >/dev/null 2>&1 || true
+            fi
+            if [[ -f "$dir/tomoki-report.md" ]]; then cp "$dir/tomoki-report.md" "$destination"; else : > "$destination"; fi
+          }
+          restore 'TOMOKI - FORGE' tomoki-forge-memory tomoki-previous-report.md
+          restore 'TOMOKI - SKEPTIC' tomoki-skeptic-memory tomoki-skeptic-latest.md
+          restore 'TOMOKI - HOUND' tomoki-hound-memory tomoki-hound-latest.md
+          printf 'FORGE memory bytes=%s / SKEPTIC=%s / HOUND=%s\n' "$(wc -c < tomoki-previous-report.md)" "$(wc -c < tomoki-skeptic-latest.md)" "$(wc -c < tomoki-hound-latest.md)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Snapshot fixed guardrails outside AI write surface
+        run: |
+          set -euo pipefail
           cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py
           cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh
           chmod 500 /tmp/tomoki-policy-gate.py /tmp/tomoki-verify.sh
-      - name: Run FORGE experiment
+
+      - name: Generate one winner from three competing experiments
         id: experiment
-        continue-on-error: true
         env:
           COPILOT_GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ github.token }}
         run: |
-          rm -f tomoki-forge-report.md
+          set -euo pipefail
+          rm -f /tmp/forge.patch /tmp/tomoki-forge-report.md tomoki-forge-report.md
           copilot -p "$(cat tomoki-agents/prompts/forge.md)" -s --allow-tool=write --no-ask-user > /tmp/tomoki-copilot.log 2>&1 || true
-          if [[ -f tomoki-forge-report.md ]]; then cp tomoki-forge-report.md /tmp/tomoki-forge-report.md; rm tomoki-forge-report.md; fi
+          if [[ -f tomoki-forge-report.md ]]; then
+            cp tomoki-forge-report.md /tmp/tomoki-forge-report.md
+            rm tomoki-forge-report.md
+          fi
           git add -N -- sales-command-30 2>/dev/null || true
           if git diff --quiet; then
-            printf '今回は安全に採用できる変更なし。コード変更は0件。\n' > /tmp/tomoki-forge-report.md
+            printf '今回は安全に採用できる変更なし。3案を比較したうえでコード変更は0件。\n' > /tmp/tomoki-forge-report.md
+            : > /tmp/forge.patch
             echo 'result=no-change' >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if ! python /tmp/tomoki-policy-gate.py > /tmp/tomoki-policy.txt 2>&1; then
-            printf '\n\n**POLICY: REVERTED**\n' >> /tmp/tomoki-forge-report.md
+            printf 'POLICY: REVERTED\n' >> /tmp/tomoki-forge-report.md
             cat /tmp/tomoki-policy.txt >> /tmp/tomoki-forge-report.md
             git reset --hard HEAD
             git clean -fd -- sales-command-30
+            : > /tmp/forge.patch
             echo 'result=reverted-policy' >> "$GITHUB_OUTPUT"
             exit 0
           fi
           if ! bash /tmp/tomoki-verify.sh > /tmp/tomoki-verify.txt 2>&1; then
-            printf '\n\n**VERIFY: REVERTED**\n' >> /tmp/tomoki-forge-report.md
+            printf '\nVERIFY: REVERTED\n' >> /tmp/tomoki-forge-report.md
             tail -80 /tmp/tomoki-verify.txt >> /tmp/tomoki-forge-report.md
             git reset --hard HEAD
             git clean -fd -- sales-command-30
+            : > /tmp/forge.patch
             echo 'result=reverted-verify' >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          printf '\n\n**POLICY: PASS / VERIFY: PASS**\n' >> /tmp/tomoki-forge-report.md
-          BRANCH="tomoki/forge-${GITHUB_RUN_ID}"
+          git diff --binary -- sales-command-30 > /tmp/forge.patch
+          test -s /tmp/forge.patch
+          printf '\nPOLICY: PASS / VERIFY: PASS / candidate isolated for independent publisher\n' >> /tmp/tomoki-forge-report.md
+          echo 'result=validated-patch' >> "$GITHUB_OUTPUT"
+
+      - name: Upload isolated proposal bundle
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: tomoki-forge-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          if-no-files-found: error
+          path: |
+            /tmp/forge.patch
+            /tmp/tomoki-forge-report.md
+
+  publish:
+    name: Deterministic publisher opens PR
+    needs: propose
+    if: always() && needs.propose.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    outputs:
+      result: ${{ steps.publish.outputs.result }}
+      pr_url: ${{ steps.publish.outputs.pr_url }}
+      pr_number: ${{ steps.publish.outputs.pr_number }}
+      head_branch: ${{ steps.publish.outputs.head_branch }}
+      head_sha: ${{ steps.publish.outputs.head_sha }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout trusted repository state
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download validated patch bundle
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        with:
+          name: tomoki-forge-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/forge-candidate
+
+      - name: Revalidate patch and open state-bound PR
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          PATCH=/tmp/forge-candidate/forge.patch
+          if [[ ! -s "$PATCH" ]]; then
+            echo 'result=no-change' >> "$GITHUB_OUTPUT"
+            echo 'pr_url=' >> "$GITHUB_OUTPUT"
+            echo 'pr_number=' >> "$GITHUB_OUTPUT"
+            echo 'head_branch=' >> "$GITHUB_OUTPUT"
+            echo 'head_sha=' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py
+          cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh
+          chmod 500 /tmp/tomoki-policy-gate.py /tmp/tomoki-verify.sh
+          git apply --whitespace=error "$PATCH"
+          git add -N -- sales-command-30 2>/dev/null || true
+          python /tmp/tomoki-policy-gate.py
+          bash /tmp/tomoki-verify.sh
+
+          BASE="$(gh repo view "$GITHUB_REPOSITORY" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          BASE_SHA="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/$BASE" --jq '.object.sha')"
+          CURRENT_SHA="$(git rev-parse HEAD)"
+          if [[ "$CURRENT_SHA" != "$BASE_SHA" ]]; then
+            echo 'Default branch moved after proposal creation; refusing stale publish.'
+            exit 1
+          fi
+
+          BRANCH="tomoki/forge-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git config user.name 'TOMOKI-FORGE[bot]'
           git config user.email 'tomoki-forge@users.noreply.github.com'
           git checkout -b "$BRANCH"
           git add -A -- sales-command-30
-          git commit -m "chore(tomoki-forge): autonomous verified improvement ${GITHUB_RUN_ID}"
+          git commit -m "chore(tomoki-forge): validated improvement ${GITHUB_RUN_ID}"
+          HEAD_SHA="$(git rev-parse HEAD)"
           gh auth setup-git
           git push origin "$BRANCH"
-          PR_URL=$(gh pr create --base "${GITHUB_REF_NAME}" --head "$BRANCH" --title "TOMOKI/FORGE: verified autonomous improvement #${GITHUB_RUN_ID}" --body 'Autonomous low-risk improvement. Policy gate and local verification passed. Generated by TOMOKI/FORGE.' 2>/dev/null || true)
-          if [[ -n "$PR_URL" ]]; then
-            printf '\nPR: %s\n' "$PR_URL" >> /tmp/tomoki-forge-report.md
-            if gh pr merge "$PR_URL" --squash --delete-branch >/tmp/tomoki-merge.txt 2>&1; then
-              printf 'MERGE: KEEP\n' >> /tmp/tomoki-forge-report.md
-              echo 'result=merged' >> "$GITHUB_OUTPUT"
-            else
-              printf 'MERGE: PR作成済み・自動マージ不可。レビュー待ち。\n' >> /tmp/tomoki-forge-report.md
-              echo 'result=pr-created' >> "$GITHUB_OUTPUT"
-            fi
-          else
-            printf '\nPR作成がGitHub設定で拒否された。branchはpush済み。\n' >> /tmp/tomoki-forge-report.md
-            echo 'result=branch-only' >> "$GITHUB_OUTPUT"
-          fi
-      - name: Report to TOMOKI Slack
-        if: always()
+          PR_URL="$(gh pr create --base "$BASE" --head "$BRANCH" --title "TOMOKI/FORGE: verified autonomous improvement #${GITHUB_RUN_ID}" --body 'Three candidate experiments were compared. The selected patch was produced without repository write authority, passed the fixed policy gate and verifier, then was independently re-applied and re-validated by a deterministic publisher. A separate read-only verification job must pass before deterministic promotion.')"
+          PR_NUMBER="$(gh pr view "$PR_URL" --json number --jq '.number')"
+          echo 'result=pr-created' >> "$GITHUB_OUTPUT"
+          echo "pr_url=$PR_URL" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+
+  verify_candidate:
+    name: Independent candidate verification
+    needs: publish
+    if: needs.publish.outputs.result == 'pr-created'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    outputs:
+      verified_sha: ${{ steps.verify.outputs.verified_sha }}
+    steps:
+      - name: Checkout candidate read-only
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ needs.publish.outputs.head_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact candidate SHA with fixed gate + build
+        id: verify
+        shell: bash
         env:
-          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+          EXPECTED_SHA: ${{ needs.publish.outputs.head_sha }}
         run: |
-          if [[ ! -f /tmp/tomoki-forge-report.md ]]; then printf 'FORGE run failed before report generation.\n' > /tmp/tomoki-forge-report.md; fi
-          python tomoki-agents/slack_post.py --agent FORGE --file /tmp/tomoki-forge-report.md --status "${{ steps.experiment.outputs.result || job.status }}"
+          set -euo pipefail
+          ACTUAL_SHA="$(git rev-parse HEAD)"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+          python tomoki-agents/policy_gate.py
+          bash tomoki-agents/verify.sh
+          echo "verified_sha=$ACTUAL_SHA" >> "$GITHUB_OUTPUT"
+
+  promote:
+    name: Deterministic exact-SHA promotion
+    needs: [publish, verify_candidate]
+    if: needs.verify_candidate.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      result: ${{ steps.promote.outputs.result }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ needs.publish.outputs.pr_number }}
+      VERIFIED_SHA: ${{ needs.verify_candidate.outputs.verified_sha }}
+    steps:
+      - name: Merge only the independently verified exact SHA
+        id: promote
+        shell: bash
+        run: |
+          set -euo pipefail
+          CURRENT_HEAD="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.head.sha')"
+          CURRENT_STATE="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.state')"
+          test "$CURRENT_STATE" = 'open'
+          test "$CURRENT_HEAD" = "$VERIFIED_SHA"
+          RESPONSE="$(gh api -X PUT "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/merge" -f sha="$VERIFIED_SHA" -f merge_method='squash')"
+          MERGED="$(printf '%s' "$RESPONSE" | python -c 'import json,sys; print(str(bool(json.load(sys.stdin).get("merged"))).lower())')"
+          if [[ "$MERGED" != 'true' ]]; then
+            printf '%s\n' "$RESPONSE"
+            echo 'result=promotion-blocked' >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo 'result=merged' >> "$GITHUB_OUTPUT"
+
+  report:
+    name: Durable memory + Slack + CEO reporting
+    needs: [propose, publish, verify_candidate, promote]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      actions: read
+    env:
+      TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+      CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+      PROPOSE_RESULT: ${{ needs.propose.outputs.result }}
+      PUBLISH_RESULT: ${{ needs.publish.outputs.result }}
+      PROMOTE_RESULT: ${{ needs.promote.outputs.result }}
+      PR_URL: ${{ needs.publish.outputs.pr_url }}
+    steps:
+      - name: Checkout reporting code read-only
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Download FORGE proposal report
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+        continue-on-error: true
+        with:
+          name: tomoki-forge-candidate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/forge-candidate
+
+      - name: Finalize auditable FORGE report
+        id: final
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f /tmp/forge-candidate/tomoki-forge-report.md ]]; then
+            cp /tmp/forge-candidate/tomoki-forge-report.md tomoki-report.md
+          else
+            printf 'FORGE proposal report missing.\n' > tomoki-report.md
+          fi
+          FINAL="${PROMOTE_RESULT:-}"
+          if [[ -z "$FINAL" ]]; then FINAL="${PUBLISH_RESULT:-${PROPOSE_RESULT:-workflow-failure}}"; fi
+          {
+            printf '\n\n## 最終実行証拠\n'
+            printf -- '- propose: %s\n' "${PROPOSE_RESULT:-unknown}"
+            printf -- '- publish: %s\n' "${PUBLISH_RESULT:-unknown}"
+            printf -- '- promote: %s\n' "${PROMOTE_RESULT:-not-run}"
+            printf -- '- PR: %s\n' "${PR_URL:-(none)}"
+          } >> tomoki-report.md
+          echo "status=$FINAL" >> "$GITHUB_OUTPUT"
+
+      - name: Create CEO-safe FORGE event
+        id: event
+        shell: bash
+        env:
+          FINAL_STATUS: ${{ steps.final.outputs.status }}
+        run: |
+          mkdir -p reports/ceo-events
+          python tomoki-agents/ceo_event.py --agent FORGE --file tomoki-report.md --status "$FINAL_STATUS" --out reports/ceo-events/tomoki-forge.json
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('reports/ceo-events/tomoki-forge.json', encoding='utf-8'))
+          print('notify=' + str(bool(d.get('notify_ceo'))).lower())
+          print('state=' + str(d.get('state','EXPERIMENT')))
+          PY
+
+      - name: Upload durable FORGE memory
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: tomoki-forge-memory
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            tomoki-report.md
+            reports/ceo-events/tomoki-forge.json
+
+      - name: Report to TOMOKI Slack — delivery required
+        env:
+          FINAL_STATE: ${{ steps.event.outputs.state }}
+        run: python tomoki-agents/slack_post.py --required --agent FORGE --file tomoki-report.md --status "$FINAL_STATE"
+
+      - name: Escalate material FORGE result to CEO layer
+        if: steps.event.outputs.notify == 'true'
+        run: python automation/reporting/ceo_report.py --require-delivery reports/ceo-events/tomoki-forge.json
