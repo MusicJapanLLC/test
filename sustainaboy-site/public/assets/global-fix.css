@@ -1,0 +1,8 @@
+/* Small compatibility layer for light pages after the mobile-first redesign. */
+.btn-secondary{color:#061a36;border-color:#cfd9e2;background:#fff}
+.hero .btn-secondary,.section-dark .btn-secondary{color:#f0b92f;border-color:rgba(240,185,47,.72);background:transparent}
+body:has(.community-hero) .site-header .brand{color:#061a36}
+body:has(.community-hero) .site-header .brand small{color:#9a7519}
+body:has(.community-hero) .site-header .menu-btn{color:#061a36;background-image:linear-gradient(#061a36,#061a36)}
+body:has(.community-hero) .site-header .menu-btn:before,body:has(.community-hero) .site-header .menu-btn:after{background:#061a36}
+@media(min-width:760px){body:has(.community-hero) .site-header .nav a{color:#061a36}body:has(.community-hero) .site-header .nav-cta{color:#9a7519!important;border-color:rgba(154,117,25,.45)}}
