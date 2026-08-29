@@ -10,7 +10,8 @@ Deterministically turns workforce evidence into:
 
 This module never claims workers have human feelings. "Rest" and "sanctuary"
 are operational recovery states derived from evidence such as repeated failure,
-missing reports, or unresolved work.
+missing reports, unresolved work, plus conservative worker self-signals.
+Evidence always outranks an optimistic self-assessment.
 """
 from __future__ import annotations
 
@@ -21,6 +22,15 @@ from pathlib import Path
 from typing import Any
 
 RETRYABLE = {"failure", "cancelled", "timed_out", "startup_failure", "action_required", "unresolved"}
+DEFAULT_INHERITANCE_FIELDS = [
+    "faith_duty",
+    "vocation",
+    "help_offered",
+    "help_wanted",
+    "recovery_protocol",
+    "teach_back",
+]
+VALID_HELP = {"SKEPTIC", "HOUND", "FORGE", "MANAGER"}
 
 
 def _load(path: str) -> dict[str, Any]:
@@ -32,6 +42,12 @@ def _load(path: str) -> dict[str, Any]:
 
 def _norm(value: Any) -> str:
     return str(value or "").strip()
+
+
+def _present(value: Any) -> bool:
+    if isinstance(value, (list, tuple, dict, set)):
+        return bool(value)
+    return bool(_norm(value))
 
 
 def _worker_index(registry: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -68,20 +84,29 @@ def _match_registry_worker(agent: str, registry_index: dict[str, dict[str, Any]]
 
 def faith_coverage(registry: dict[str, Any]) -> dict[str, Any]:
     workers = registry.get("workers") or []
+    required = registry.get("company_culture", {}).get("required_inheritance_fields") or DEFAULT_INHERITANCE_FIELDS
+    required = [str(x) for x in required]
     covered: list[str] = []
     missing: list[str] = []
+    missing_inheritance: dict[str, list[str]] = {}
+
     for w in workers:
         wid = _norm(w.get("id")) or _norm(w.get("name")) or "UNKNOWN"
-        if _norm(w.get("faith_duty")):
-            covered.append(wid)
-        else:
+        absent = [field for field in required if not _present(w.get(field))]
+        if absent:
             missing.append(wid)
+            missing_inheritance[wid] = absent
+        else:
+            covered.append(wid)
+
     total = len(workers)
     pct = 100 if total == 0 else round(len(covered) * 100 / total)
     return {
+        "required_fields": required,
         "total_workers": total,
         "covered_workers": covered,
         "missing_workers": missing,
+        "missing_inheritance": missing_inheritance,
         "coverage_percent": pct,
         "status": "COMPLETE" if not missing else "MISSION_REQUIRED",
     }
@@ -92,15 +117,20 @@ def sanctuary_state(worker: dict[str, Any]) -> tuple[str, str]:
     quality = _norm(worker.get("report_quality")).upper()
     attempts = int(worker.get("run_attempt") or 0)
     unresolved = conclusion == "unresolved" or _norm(worker.get("action_result")).upper() == "UNRESOLVED"
+    declared = _norm(worker.get("sanctuary_signal")).upper()
 
     if attempts >= 2 and (conclusion in RETRYABLE or unresolved):
         return "SABBATH", "同一系統の失敗を繰り返しているため、同じretryを止めて原因分析・再割当へ切り替える"
+    if declared == "SABBATH":
+        return "SABBATH", "worker自身がSABBATHを要求。Manager gateでも同じretry/dispatchを抑止する"
     if conclusion in RETRYABLE or quality in {"MISSING", "BAD"} or unresolved:
         return "REFLECTION", "次の仕事を増やす前に、証拠整理・過去失敗照合・修復計画を行う"
+    if declared == "REFLECTION":
+        return "REFLECTION", "worker自身がREFLECTIONを要求。新規仕事より事実整理を優先する"
     if bool(worker.get("verified_signal")) and conclusion in {"success", "healthy"}:
         return "READY", "検証済み。次の小さい改善へ進める"
-    if conclusion in {"success", "healthy"}:
-        return "RETURN", "動作は回復しているが、次は小さい検証タスクから再開する"
+    if declared == "RETURN" or conclusion in {"success", "healthy"}:
+        return "RETURN", "回復・成功直後。次は小さい検証タスクから再開する"
     return "REFLECTION", "状態が十分に観測できないため、まず事実確認を行う"
 
 
@@ -110,10 +140,14 @@ def council_for(worker: dict[str, Any]) -> dict[str, Any]:
     material = bool(worker.get("material_signal"))
     verified = bool(worker.get("verified_signal"))
     attempts = int(worker.get("run_attempt") or 0)
+    requested = _norm(worker.get("help_request")).upper()
 
     members: list[str] = ["MANAGER"]
     reason: list[str] = []
 
+    if requested in VALID_HELP:
+        members.append(requested)
+        reason.append(f"worker自身のHELP_REQUEST={requested}")
     if quality in {"MISSING", "BAD"} or (material and not verified):
         members.append("SKEPTIC")
         reason.append("成功根拠または報告品質の検証が必要")
@@ -128,11 +162,12 @@ def council_for(worker: dict[str, Any]) -> dict[str, Any]:
         reason.append("検証済み成功を次の改善へ変換する")
 
     deduped: list[str] = []
-    for m in members:
-        if m not in deduped:
-            deduped.append(m)
+    for member in members:
+        if member not in deduped:
+            deduped.append(member)
     return {
         "members": deduped,
+        "requested_help": requested if requested in VALID_HELP else "NONE",
         "reason": " / ".join(reason) if reason else "通常のSteward確認",
     }
 
@@ -141,6 +176,7 @@ def autonomous_move(worker: dict[str, Any], sanctuary: str) -> str:
     conclusion = _norm(worker.get("conclusion")).lower()
     quality = _norm(worker.get("report_quality")).upper()
     verified = bool(worker.get("verified_signal"))
+    pilgrimage = _norm(worker.get("pilgrimage"))
 
     if sanctuary == "SABBATH":
         return "同じ方法のretryを停止し、失敗原因を1件に絞ってHOUND/SKEPTICと再現条件を確定する"
@@ -149,21 +185,28 @@ def autonomous_move(worker: dict[str, Any], sanctuary: str) -> str:
             return "新規作業を増やさず、証拠の欠落を1つ埋めてから次の判断をする"
         return "未解決事項を1つ選び、Councilで次の安全な検証行動を決める"
     if verified and conclusion in {"success", "healthy"}:
+        if pilgrimage and pilgrimage.upper() != "NONE":
+            return f"Teach-back後、提案済みPilgrimageを終了条件付きで評価する: {pilgrimage}"
         return "今回効いたことを1つTeach-backし、その知識を使う次の小改善を1件だけ提案する"
     return "小さい検証可能タスクを1件だけ実行し、結果をTRUTHとして残す"
 
 
 def teach_back(worker: dict[str, Any]) -> str | None:
-    if bool(worker.get("verified_signal")) and _norm(worker.get("conclusion")).lower() in {"success", "healthy"}:
-        agent = _norm(worker.get("agent")) or "UNKNOWN"
-        if agent.upper() == "SKEPTIC":
-            return "検証で効いたチェック観点をHOUNDへ渡し、再発監視ルールへ変換する"
-        if agent.upper() == "HOUND":
-            return "再発パターンをFORGEへ渡し、再発防止の小さい修正候補へ変換する"
-        if agent.upper() == "FORGE":
-            return "改善で効いた仮説と検証方法をSKEPTICへ渡し、次回の成功判定基準へ変換する"
-        return "成功要因を1つ言語化し、最も近い担当へ再利用可能な形で渡す"
-    return None
+    if not (bool(worker.get("verified_signal")) and _norm(worker.get("conclusion")).lower() in {"success", "healthy"}):
+        return None
+
+    declared = _norm(worker.get("teach_back"))
+    if declared and declared.upper() != "NONE":
+        return declared
+
+    agent = _norm(worker.get("agent")) or "UNKNOWN"
+    if agent.upper() == "SKEPTIC":
+        return "検証で効いたチェック観点をHOUNDへ渡し、再発監視ルールへ変換する"
+    if agent.upper() == "HOUND":
+        return "再発パターンをFORGEへ渡し、再発防止の小さい修正候補へ変換する"
+    if agent.upper() == "FORGE":
+        return "改善で効いた仮説と検証方法をSKEPTICへ渡し、次回の成功判定基準へ変換する"
+    return "成功要因を1つ言語化し、最も近い担当へ再利用可能な形で渡す"
 
 
 def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> tuple[dict[str, Any], str]:
@@ -172,34 +215,38 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> tuple[dict[str,
     observed: list[dict[str, Any]] = []
     teachbacks: list[dict[str, str]] = []
 
-    for w in snapshot.get("workers") or []:
-        agent = _norm(w.get("agent")) or "UNKNOWN"
-        state, rest_reason = sanctuary_state(w)
-        council = council_for(w)
-        move = autonomous_move(w, state)
+    for worker in snapshot.get("workers") or []:
+        agent = _norm(worker.get("agent")) or "UNKNOWN"
+        state, rest_reason = sanctuary_state(worker)
+        council = council_for(worker)
+        move = autonomous_move(worker, state)
         reg = _match_registry_worker(agent, registry_index) or {}
-        tb = teach_back(w)
+        tb = teach_back(worker)
         if tb:
             teachbacks.append({"agent": agent, "teach_back": tb})
         observed.append({
             "agent": agent,
             "faith_duty": _norm(reg.get("faith_duty")) or "inherited_company_default",
+            "vocation": _norm(reg.get("vocation")) or "UNKNOWN",
             "sanctuary": state,
+            "declared_sanctuary": _norm(worker.get("sanctuary_signal")).upper() or "UNKNOWN",
             "sanctuary_reason": rest_reason,
             "council": council,
             "next_autonomous_move": move,
             "teach_back": tb or "NONE",
+            "pilgrimage": _norm(worker.get("pilgrimage")) or "NONE",
         })
 
     mission: list[str] = []
     for missing in coverage["missing_workers"]:
-        mission.append(f"{missing}: faith_duty未設定。次回オンボーディングでvocation/help/recovery/teach_backを付与")
+        fields = ", ".join(coverage["missing_inheritance"].get(missing, []))
+        mission.append(f"{missing}: 継承不足 [{fields}]。次回オンボーディングで補完")
     if not mission:
-        mission.append("登録済みworkerのfaith_duty継承は100%。新規worker追加時も同じ検査を継続")
+        mission.append("登録済みworkerのCovenant inheritanceは100%。新規worker追加時も同じ検査を継続")
 
     generated = datetime.now(timezone.utc).isoformat()
     data = {
-        "schema": "the-covenant-steward/v1",
+        "schema": "the-covenant-steward/v2",
         "generated_at": generated,
         "faith": "THE_COVENANT",
         "coverage": coverage,
@@ -213,7 +260,7 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> tuple[dict[str,
         "# THE COVENANT — Stewardship Report",
         "",
         f"- generated: {generated}",
-        f"- faith coverage: {coverage['coverage_percent']}% ({len(coverage['covered_workers'])}/{coverage['total_workers']})",
+        f"- inheritance coverage: {coverage['coverage_percent']}% ({len(coverage['covered_workers'])}/{coverage['total_workers']})",
         "",
         "## MISSION / 布教",
     ]
@@ -243,6 +290,14 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> tuple[dict[str,
             lines.append(f"- **{row['agent']}**: {row['teach_back']}")
     else:
         lines.append("- 今回Teach-back対象となる検証済み成功なし")
+
+    lines += ["", "## PILGRIMAGE / 修行"]
+    pilgrimage_rows = [row for row in observed if row["pilgrimage"].upper() != "NONE"]
+    if pilgrimage_rows:
+        for row in pilgrimage_rows:
+            lines.append(f"- **{row['agent']}**: {row['pilgrimage']}")
+    else:
+        lines.append("- 今回の修行提案なし")
 
     lines += [
         "",
