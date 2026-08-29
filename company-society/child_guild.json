@@ -1,5 +1,5 @@
 {
-  "schema": "the-world-child-guild/v2",
+  "schema": "the-world-child-guild/v3",
   "guild_id": "CHILD_GUILD",
   "name": "The World Child Guild",
   "count": 50,
@@ -7,6 +7,17 @@
   "priority": ["fun", "curiosity", "learning", "useful_surprise"],
   "motto": "PLAY FAST. BREAK BOREDOM. LEAVE NO DAMAGE.",
   "external_contact_policy": "company-society/EXTERNAL_CONTACT.md",
+  "research_lab": {
+    "enabled": true,
+    "role": "Child Research Fellows",
+    "fellows_per_cycle": 3,
+    "allowed_focus": ["robustness", "learning", "balance", "efficiency"],
+    "novelty_slot_requires_stable_baseline": true,
+    "candidate_bonus_max": 2,
+    "execution_authority": "none",
+    "promotion_authority": "none",
+    "rule": "challenge assumptions, never execution boundaries"
+  },
   "shared_rules": {
     "fictional_persona": true,
     "external_targets": "lawful_permitted_and_authorized_external_spaces",
