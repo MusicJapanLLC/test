@@ -4,21 +4,40 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Any
 
 ENDPOINT = "https://the-world-public-field-feed-zt5n2q.v2.appdeploy.ai/api/ingest"
+OIDC_AUDIENCE = "the-world-public-field-feed"
 
 
 def load_json(path: str) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
-def actions_token() -> str:
-    token = os.environ.get("GITHUB_TOKEN", "").strip()
-    if not token:
-        raise RuntimeError("GITHUB_TOKEN is unavailable")
+def oidc_token() -> str:
+    base = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_URL", "").strip()
+    request_token = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "").strip()
+    if not base or not request_token:
+        raise RuntimeError("GitHub Actions OIDC environment is unavailable")
+    sep = "&" if "?" in base else "?"
+    url = base + sep + urllib.parse.urlencode({"audience": OIDC_AUDIENCE})
+    req = urllib.request.Request(
+        url,
+        headers={
+            "Authorization": f"Bearer {request_token}",
+            "Accept": "application/json",
+            "User-Agent": "TheWorld-RealityAgency-OIDC/1.0",
+        },
+        method="GET",
+    )
+    with urllib.request.urlopen(req, timeout=20) as res:
+        doc = json.loads(res.read(65536).decode("utf-8"))
+    token = str(doc.get("value") or "").strip()
+    if token.count(".") != 2:
+        raise RuntimeError("GitHub Actions OIDC token response is invalid")
     return token
 
 
@@ -75,9 +94,9 @@ def post_payload(payload: dict[str, Any], token: str) -> dict[str, Any]:
         ENDPOINT,
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={
-            "X-World-GitHub-Token": token,
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
-            "User-Agent": "TheWorld-RealityAgency-PublicFeed/2.2",
+            "User-Agent": "TheWorld-RealityAgency-PublicFeed/3.0",
         },
         method="POST",
     )
@@ -101,7 +120,7 @@ def main() -> int:
     if args.dry_run:
         receipts = [{"status": "DRY_RUN", "payload": payload} for payload in payloads]
     elif payloads:
-        token = actions_token()
+        token = oidc_token()
         current_run = run_id()
         for payload in payloads:
             body = {**payload, "run_id": current_run}
@@ -109,9 +128,10 @@ def main() -> int:
             receipts.append({"source_url": payload["source_url"], **receipt})
 
     result = {
-        "schema": "the-world-public-feed-receipt/v3",
+        "schema": "the-world-public-feed-receipt/v4",
         "endpoint": ENDPOINT,
-        "auth": "ephemeral_github_actions_installation_token",
+        "auth": "github_actions_oidc_audience_bound",
+        "audience": OIDC_AUDIENCE,
         "mode": "BOOTSTRAP_PROBE" if args.probe else "REGULAR",
         "selected": len(payloads),
         "receipts": receipts,
