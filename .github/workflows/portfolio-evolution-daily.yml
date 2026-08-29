@@ -10,8 +10,11 @@ on:
       - "PORTFOLIO.md"
       - "automation/reporting/PORTFOLIO_CONTRACT.md"
       - "automation/reporting/PORTFOLIO_EVOLUTION.md"
+      - "automation/reporting/PORTFOLIO_ACCELERATION_WEEK.md"
       - "automation/reporting/portfolio_evolution.py"
+      - "automation/reporting/portfolio_acceleration.py"
       - "automation/reporting/test_portfolio_evolution.py"
+      - "automation/reporting/test_portfolio_acceleration.py"
       - "value-lab/research_queue.json"
       - "value-lab/senju_bridge.py"
       - "senju/scripts/apply_rnd_directive.py"
@@ -43,17 +46,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Test portfolio gates and daily selector
+      - name: Test portfolio gates, selector and acceleration ladder
         run: |
           set -euo pipefail
           python -m pip install pytest==9.1.1
           python -m pytest \
             automation/reporting/test_portfolio_report.py \
             automation/reporting/test_portfolio_evolution.py \
+            automation/reporting/test_portfolio_acceleration.py \
             -q
           python -m json.tool value-lab/research_queue.json >/dev/null
 
-      - name: Choose today's single portfolio bet
+      - name: Choose today's deep primary portfolio bet
         run: |
           set -euo pipefail
           python automation/reporting/portfolio_evolution.py \
@@ -62,6 +66,16 @@ jobs:
             --slack reports/portfolio-evolution/slack.md \
             --directive reports/portfolio-evolution/directive.json
           cat reports/portfolio-evolution/slack.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build seven-day acceleration batch
+        run: |
+          set -euo pipefail
+          python automation/reporting/portfolio_acceleration.py \
+            --portfolio PORTFOLIO.md \
+            --out reports/portfolio-evolution/acceleration.json \
+            --slack reports/portfolio-evolution/acceleration.md
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          cat reports/portfolio-evolution/acceleration.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Validate bounded Senju collaboration
         run: |
@@ -84,6 +98,8 @@ jobs:
             reports/portfolio-evolution/plan.json
             reports/portfolio-evolution/slack.md
             reports/portfolio-evolution/directive.json
+            reports/portfolio-evolution/acceleration.json
+            reports/portfolio-evolution/acceleration.md
             reports/portfolio-evolution/senju-candidate-strategy.json
             reports/portfolio-evolution/senju-audit.json
 
@@ -100,7 +116,9 @@ jobs:
           fi
           WEBHOOK="$webhook" python - <<'PY'
           import json, os, urllib.request
-          text=open('reports/portfolio-evolution/slack.md', encoding='utf-8').read().strip()
+          primary=open('reports/portfolio-evolution/slack.md', encoding='utf-8').read().strip()
+          acceleration=open('reports/portfolio-evolution/acceleration.md', encoding='utf-8').read().strip()
+          text=primary + '\n\n' + acceleration
           req=urllib.request.Request(
               os.environ['WEBHOOK'],
               data=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8'),
