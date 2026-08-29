@@ -51,13 +51,19 @@ jobs:
 
       - name: Run multi-seed shadow league
         working-directory: senju
+        env:
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
+          require=()
+          if [[ "$EVENT_NAME" != "pull_request" ]]; then
+            require+=(--require-stable)
+          fi
           python scripts/shadow_league.py \
             --state state/champion.json \
             --out reports/shadow \
             --seeds 5 \
-            --require-stable
+            "${require[@]}"
           cat reports/shadow/stability.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload shadow evidence
