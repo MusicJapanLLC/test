@@ -4,6 +4,22 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+  pull_request:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-realtime-kernel.yml'
+      - 'automation/world/realtime_kernel.py'
+      - 'automation/world/secured_realtime_kernel.py'
+      - 'automation/world/realtime_plan.json'
+      - 'automation/world/test_realtime_kernel.py'
+      - 'automation/world/test_secured_realtime_kernel.py'
+      - 'automation/world/test_perpetual_autonomy.py'
+      - 'automation/world/self_heal_engine.py'
+      - 'automation/security/world_runtime_observation_adapter.py'
+      - 'automation/security/test_world_runtime_observation_adapter.py'
+      - 'automation/security/llm_security_eval.py'
+      - 'automation/security/test_llm_security_eval.py'
+      - 'standment-security/ai-security/llm-security-eval-evidence-pack.md'
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     # Control-plane changes self-verify immediately; schedule keeps the loop alive afterward.
@@ -23,7 +39,7 @@ on:
       - 'standment-security/ai-security/llm-security-eval-evidence-pack.md'
 
 concurrency:
-  group: the-world-realtime-kernel
+  group: the-world-realtime-kernel-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -61,13 +77,18 @@ jobs:
             automation.security.test_llm_security_eval \
             -v
       - name: Pulse with fail-closed runtime security boundary
+        shell: bash
         run: |
           set -euo pipefail
+          apply_args=()
+          if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
+            apply_args+=(--apply)
+          fi
           python automation/world/secured_realtime_kernel.py \
             --plan automation/world/realtime_plan.json \
             --json world-realtime-pulse.json \
             --report world-realtime-pulse.md \
-            --apply
+            "${apply_args[@]}"
           cat world-realtime-pulse.md >> "$GITHUB_STEP_SUMMARY"
       - name: Convert owned runtime observations into SEC-PORT-010 evidence
         run: |
@@ -109,7 +130,7 @@ jobs:
           )
           PY
       - name: Report material pulse to internal Slack
-        if: always()
+        if: always() && github.event_name != 'pull_request'
         shell: bash
         run: |
           python - <<'PY'
