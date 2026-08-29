@@ -1,0 +1,137 @@
+name: SBW SEO Regression Guard
+
+on:
+  push:
+    branches: [sustainaboy-public]
+    paths:
+      - 'sustainaboy-site/public/**'
+      - '.github/workflows/sbw-seo-regression.yml'
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  seo-static-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate canonical SEO files
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT='sustainaboy-site/public'
+          required=(
+            index.html
+            about/index.html
+            neutral-thought-work/index.html
+            thinking-organize/index.html
+            overthinking/index.html
+            method/index.html
+            story/index.html
+            community/index.html
+            privacy/index.html
+            robots.txt
+            sitemap.xml
+            sitemap.md
+            llms.txt
+            llms-full.txt
+            AGENTS.md
+          )
+          for f in "${required[@]}"; do
+            test -f "$ROOT/$f" || { echo "Missing: $ROOT/$f"; exit 1; }
+          done
+
+      - name: Validate page-level SEO signals
+        shell: python
+        run: |
+          from pathlib import Path
+          import re, sys
+
+          root = Path('sustainaboy-site/public')
+          pages = [
+              ('/', root/'index.html'),
+              ('/about/', root/'about/index.html'),
+              ('/neutral-thought-work/', root/'neutral-thought-work/index.html'),
+              ('/thinking-organize/', root/'thinking-organize/index.html'),
+              ('/overthinking/', root/'overthinking/index.html'),
+              ('/method/', root/'method/index.html'),
+              ('/story/', root/'story/index.html'),
+              ('/community/', root/'community/index.html'),
+              ('/privacy/', root/'privacy/index.html'),
+          ]
+          failures=[]
+          for url,path in pages:
+              s=path.read_text(encoding='utf-8')
+              checks={
+                  'title': bool(re.search(r'<title>.+?</title>',s,re.S|re.I)),
+                  'description': 'name="description"' in s,
+                  'canonical': 'rel="canonical"' in s,
+                  'robots': 'name="robots"' in s,
+                  'h1': '<h1' in s.lower(),
+              }
+              if url != '/privacy/':
+                  checks['jsonld']='application/ld+json' in s
+              for name,ok in checks.items():
+                  if not ok: failures.append(f'{url}: missing {name}')
+          if failures:
+              print('\n'.join(failures)); sys.exit(1)
+          print(f'OK: {len(pages)} canonical pages have core SEO signals')
+
+      - name: Validate sitemap, crawler policy and entity targets
+        shell: python
+        run: |
+          from pathlib import Path
+          import sys
+          root=Path('sustainaboy-site/public')
+          sitemap=(root/'sitemap.xml').read_text(encoding='utf-8')
+          robots=(root/'robots.txt').read_text(encoding='utf-8')
+          llms=(root/'llms.txt').read_text(encoding='utf-8')
+          story=(root/'story/index.html').read_text(encoding='utf-8')
+          about=(root/'about/index.html').read_text(encoding='utf-8')
+          urls=['/','/about/','/neutral-thought-work/','/thinking-organize/','/overthinking/','/method/','/story/','/community/','/privacy/']
+          base='https://sustainaboy-works.onrender.com'
+          errors=[]
+          for u in urls:
+              full=base + (u if u != '/' else '/')
+              if full not in sitemap: errors.append(f'sitemap missing {full}')
+          for token in ['Googlebot','Googlebot-Image','OAI-SearchBot','ChatGPT-User','PerplexityBot','Sitemap:']:
+              if token not in robots: errors.append(f'robots missing {token}')
+          for token in ['SUSTAINABOY WORKS','サスティナボーイワークス','壁谷 望','ストーリー']:
+              if token not in llms: errors.append(f'llms missing {token}')
+          for token in ['壁谷望','壁谷 望','Nozomi Kabeya','ProfilePage']:
+              if token not in story: errors.append(f'story entity missing {token}')
+          for token in ['SUSTAINABOY WORKS','サスティナボーイワークス','サスティナブル ワーク']:
+              if token not in about: errors.append(f'about spelling coverage missing {token}')
+          if errors:
+              print('\n'.join(errors)); sys.exit(1)
+          print('OK: sitemap, crawler policy, person entity and brand spellings')
+
+  live-audit:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify public endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://sustainaboy-works.onrender.com'
+          paths=(/ /about/ /neutral-thought-work/ /thinking-organize/ /overthinking/ /method/ /story/ /community/ /privacy/ /robots.txt /sitemap.xml /llms.txt /llms-full.txt /AGENTS.md /story.md /about.md)
+          for p in "${paths[@]}"; do
+            code=$(curl -L -sS -o /tmp/body -w '%{http_code}' "$BASE$p")
+            echo "$code $p"
+            test "$code" = '200'
+          done
+
+      - name: Verify live brand/person signals
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL 'https://sustainaboy-works.onrender.com/story/' | grep -q '壁谷望'
+          curl -fsSL 'https://sustainaboy-works.onrender.com/about/' | grep -q 'サスティナブル ワーク'
+          curl -fsSL 'https://sustainaboy-works.onrender.com/robots.txt' | grep -q 'OAI-SearchBot'
+          curl -fsSL 'https://sustainaboy-works.onrender.com/sitemap.xml' | grep -q 'story/'
+          echo 'Live SEO regression checks passed.'
