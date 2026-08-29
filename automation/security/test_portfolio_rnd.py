@@ -1,4 +1,3 @@
-import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,7 +10,7 @@ class PortfolioRndTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "proof.md").write_text("proof", encoding="utf-8")
-            portfolio = "## Standment Security Scan v1\n\n**状態: BUILDING**\n"
+            portfolio = "## 3. Standment Security Scan v1\n\n**状態: BUILDING**\n"
             program = {
                 "mission": "test",
                 "portfolio_first": True,
@@ -44,6 +43,30 @@ class PortfolioRndTests(unittest.TestCase):
             self.assertIn(report["next_research"]["focus"], portfolio_rnd.ALLOWED_SENJU_FOCUS)
             self.assertNotIn("target", report["next_research"])
             self.assertNotIn("credential", report["next_research"])
+
+    def test_status_does_not_bleed_from_neighboring_verified_section(self):
+        portfolio = (
+            "## 3. Standment Security Scan v1\n\n"
+            "**状態: BUILDING**\n\n"
+            "Scan is not verified yet.\n\n"
+            "## 4. Another Artifact\n\n"
+            "**状態: VERIFIED**\n"
+        )
+        self.assertEqual(
+            portfolio_rnd.section_status(portfolio, "## 3. Standment Security Scan v1"),
+            "BUILDING",
+        )
+
+    def test_missing_dedicated_section_stays_absent_despite_incidental_mention(self):
+        portfolio = (
+            "## 1. Existing Artifact\n\n"
+            "**状態: VERIFIED**\n"
+            "Next we may create a Standment Security Evidence Pack later.\n"
+        )
+        self.assertEqual(
+            portfolio_rnd.section_status(portfolio, "## Standment Security Evidence Pack"),
+            "ABSENT",
+        )
 
     def test_rejects_unbounded_senju_focus(self):
         with tempfile.TemporaryDirectory() as tmp:
