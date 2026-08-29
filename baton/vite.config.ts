@@ -43,14 +43,7 @@ function head(opts: {
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!--
-      フォントのCSSは描画を止めない形で読む。
-      素の状態でまず本文が出て、あとから Zen Kaku Gothic New に差し替わる。
-      普通に stylesheet で読むと、ここでLCPが0.7秒ほど遅れる。
-    -->
-    <link rel="preload" as="style" href="${FONT_HREF}" />
-    <link rel="stylesheet" href="${FONT_HREF}" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="${FONT_HREF}" /></noscript>
+    <link rel="stylesheet" href="${FONT_HREF}" />
     <title>${esc(opts.title)}</title>
     <meta name="description" content="${esc(opts.description)}" />
     <meta name="theme-color" content="${opts.themeColor}" />
