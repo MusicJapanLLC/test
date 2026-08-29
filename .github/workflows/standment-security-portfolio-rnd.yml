@@ -181,7 +181,53 @@ jobs:
           print(f'Portfolio P0/Security priority active: {research_id}; daily build and Senju boundary intact.')
           PY
 
-      - name: Commit material portfolio artifacts back to THE WORLD
+      - name: Materialize Slack outbox for Make
+        env:
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from datetime import datetime
+          from pathlib import Path
+          from zoneinfo import ZoneInfo
+
+          report=Path('reports/standment-security-rnd/daily.md')
+          evolution=Path('reports/standment-security-rnd/evolution.json')
+          if not report.exists():
+              raise SystemExit('daily.md is required before outbox materialization')
+
+          evo=json.loads(evolution.read_text(encoding='utf-8')) if evolution.exists() else {}
+          created=', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'
+          now=datetime.now(ZoneInfo('Asia/Tokyo'))
+          message=(
+              '*STANDMENT SECURITY｜AUTONOMOUS PORTFOLIO EVOLUTION*\n'
+              + report.read_text(encoding='utf-8')
+              + f"\n*Auto-Builder*\n生成/更新: {created}\n"
+              + 'VERIFIED自動昇格: なし（Evidence Gate維持）\n'
+              + '\n*Delivery*\nGitHub → durable outbox → Make → Slack\n'
+          )[:30000]
+
+          payload={
+              'schema':'standment-security-slack-outbox-v1',
+              'report_date_jst':now.strftime('%Y-%m-%d'),
+              'generated_at_jst':now.isoformat(timespec='seconds'),
+              'channel_id':'C0BTJ38SNNA',
+              'source':'standment-security-portfolio-rnd',
+              'delivery_mode':'make-pull-no-github-secret',
+              'github_run_id':os.getenv('RUN_ID',''),
+              'github_run_attempt':os.getenv('RUN_ATTEMPT',''),
+              'message':message,
+          }
+          out=Path('automation/reporting/outbox/standment-security-latest.json')
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          print(f'Wrote {out} for Make delivery; no Slack secret is required in GitHub.')
+          PY
+
+      - name: Commit material portfolio artifacts and Slack outbox back to THE WORLD
         env:
           GITHUB_TOKEN: ${{ github.token }}
         shell: bash
@@ -194,15 +240,16 @@ jobs:
             standment-security/lab-notes \
             standment-security/case-studies \
             standment-security/evidence-packs \
-            standment-security/ai-security 2>/dev/null || true
+            standment-security/ai-security \
+            automation/reporting/outbox/standment-security-latest.json 2>/dev/null || true
           if git diff --cached --quiet; then
-            echo "No repository artifact delta to commit." >> "$GITHUB_STEP_SUMMARY"
+            echo "No repository artifact or delivery outbox delta to commit." >> "$GITHUB_STEP_SUMMARY"
           else
             TRACK="$(python -c "import json; print(json.load(open('reports/standment-security-rnd/evolution.json'))['track'])")"
             git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
             git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin "HEAD:${GITHUB_REF_NAME}"
-            echo "Autonomous portfolio artifact committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
+            echo "Autonomous portfolio artifacts + Make delivery outbox committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Preserve daily R&D evidence
@@ -221,47 +268,17 @@ jobs:
             reports/standment-security-rnd/before/daily.md
             reports/standment-security-rnd/after/daily.json
             reports/standment-security-rnd/after/daily.md
+            automation/reporting/outbox/standment-security-latest.json
             /tmp/standment-rnd-senju/exchange.json
             /tmp/standment-rnd-senju/exchange.md
             /tmp/standment-rnd-senju/directive.json
 
-      - name: Deliver daily portfolio evolution digest to Slack
+      - name: Confirm Slack delivery handoff
         if: always()
-        env:
-          RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
-          PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
         run: |
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          from urllib import request, error
-
-          webhook=(os.getenv('PORTFOLIO_SLACK_WEBHOOK_URL','').strip()
-                   or os.getenv('RND_SLACK_WEBHOOK_URL','').strip())
-          report=Path('reports/standment-security-rnd/daily.md')
-          evolution=Path('reports/standment-security-rnd/evolution.json')
-          if not report.exists():
-              print('R&D report missing; see workflow failure above.')
-              raise SystemExit(0)
-          evo=json.loads(evolution.read_text(encoding='utf-8')) if evolution.exists() else {}
-          created=', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'
-          text=(
-              '*STANDMENT SECURITY｜AUTONOMOUS PORTFOLIO EVOLUTION*\n'
-              + report.read_text(encoding='utf-8')
-              + f"\n*Auto-Builder*\n生成/更新: {created}\n"
-              + 'VERIFIED自動昇格: なし（Evidence Gate維持）\n'
-          )[:30000]
-          if not webhook:
-              print('BLOCKED_NO_CAPABILITY: PORTFOLIO_SLACK_WEBHOOK_URL / RND_SLACK_WEBHOOK_URL is not configured. Artifact evidence was preserved.')
-              raise SystemExit(0)
-          payload=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8')
-          req=request.Request(webhook, data=payload, headers={'Content-Type':'application/json'}, method='POST')
-          try:
-              with request.urlopen(req, timeout=15) as res:
-                  if not 200 <= res.status < 300:
-                      raise RuntimeError(f'HTTP {res.status}')
-          except (error.URLError, RuntimeError) as exc:
-              print(f'Slack delivery failed: {type(exc).__name__}')
-              raise SystemExit(1)
-          print('Daily Standment Security autonomous portfolio evolution delivered to Slack.')
-          PY
+          if [[ -f automation/reporting/outbox/standment-security-latest.json ]]; then
+            echo "Slack delivery handoff ready: Make pulls the durable outbox using its existing Slack connection." >> "$GITHUB_STEP_SUMMARY"
+            echo "No PORTFOLIO_SLACK_WEBHOOK_URL / RND_SLACK_WEBHOOK_URL is required in GitHub Actions." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Slack outbox was not produced because an earlier R&D step failed." >> "$GITHUB_STEP_SUMMARY"
+          fi
