@@ -87,7 +87,8 @@ jobs:
             --exclude='ai-factory-boss.yml' \
             --exclude='the-world-realtime-kernel.yml' \
             --exclude='the-core-autonomous-director.yml' \
-            --exclude='the-world-task-worker.yml'; then
+            --exclude='the-world-task-worker.yml' \
+            --exclude='world-reality-agency.yml'; then
             echo "Repository write permission exists outside an explicitly validated privileged workflow."
             exit 1
           fi
@@ -217,6 +218,22 @@ jobs:
               ],
               common_forbidden + [
                   'contents: write', 'issues: write', 'pull-requests: write',
+                  'checks: write', 'deployments: write', 'packages: write',
+                  'id-token: write', 'copilot-requests: write',
+              ],
+          )
+
+          reality = text('world-reality-agency.yml')
+          require(
+              'THE WORLD Reality Agency', reality,
+              [
+                  'contents: read', 'actions: read', 'issues: write',
+                  'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
+                  'outside-world/browser_runner.py', 'outside-world/reality_gateway.py',
+                  '--execute-owned-writes', 'world-reality-agency-state',
+              ],
+              common_forbidden + [
+                  'contents: write', 'actions: write', 'pull-requests: write',
                   'checks: write', 'deployments: write', 'packages: write',
                   'id-token: write', 'copilot-requests: write',
               ],
