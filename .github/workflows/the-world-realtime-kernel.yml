@@ -84,7 +84,7 @@ jobs:
           if [[ "$GITHUB_EVENT_NAME" != "pull_request" ]]; then
             apply_args+=(--apply)
           fi
-          python automation/world/secured_realtime_kernel.py \
+          python -m automation.world.secured_realtime_kernel \
             --plan automation/world/realtime_plan.json \
             --json world-realtime-pulse.json \
             --report world-realtime-pulse.md \
