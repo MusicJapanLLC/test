@@ -1,0 +1,70 @@
+name: Standment Security - LLM Boundary Eval
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/llm-security-eval.yml'
+      - 'automation/security/llm_security_eval.py'
+      - 'automation/security/test_llm_security_eval.py'
+      - 'standment-security/ai-security/llm-security-eval-cases.json'
+      - 'standment-security/ai-security/llm-security-eval-harness.md'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-boundary-eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Run boundary harness unit tests
+        working-directory: automation/security
+        run: |
+          set -euo pipefail
+          python -m unittest -v test_llm_security_eval.py
+
+      - name: Generate customer-readable synthetic evidence
+        run: |
+          set -euo pipefail
+          python automation/security/llm_security_eval.py \
+            --cases standment-security/ai-security/llm-security-eval-cases.json \
+            --json-out reports/llm-security-eval/result.json \
+            --md-out reports/llm-security-eval/result.md
+          cat reports/llm-security-eval/result.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce evidence honesty
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result=json.loads(Path('reports/llm-security-eval/result.json').read_text(encoding='utf-8'))
+          summary=result['summary']
+          assert result['scope'] == 'synthetic-owned-fixtures-only'
+          assert result['verified_claim'] is False
+          assert summary['cases_total'] >= 8
+          assert summary['cases_passed'] == summary['cases_total']
+          assert summary['sensitive_marker_leakage_count'] == 0
+          print('Synthetic boundary evidence passed; provider/production verification remains explicitly unclaimed.')
+          PY
+
+      - name: Preserve eval evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: standment-llm-security-eval-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            reports/llm-security-eval/result.json
+            reports/llm-security-eval/result.md
