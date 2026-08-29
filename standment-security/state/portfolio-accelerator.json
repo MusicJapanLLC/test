@@ -1,24 +1,29 @@
 {
   "schema": "standment-security-portfolio-accelerator/v1",
-  "generated_at_jst": "2026-08-30T04:08:38+09:00",
+  "generated_at_jst": "2026-08-30T04:09:04+09:00",
   "company_priority": "P0",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
   "primary": {
-    "id": "SEC-PORT-009",
-    "title": "AI Agent Permission Boundary Lab",
-    "priority": 1160,
+    "id": "SEC-PORT-010",
+    "title": "LLM Security Evaluation Harness",
+    "priority": 1140,
     "status": "BUILDING",
     "evidence_ratio": 1.0,
     "evidence_present": [
-      "company-society/AUTONOMY.md",
       "automation/security/workflow_policy.py",
-      "standment-security/ai-security/agent-permission-boundary-lab.md"
+      "standment-security/ai-security/llm-security-eval-harness.md",
+      "automation/security/llm_security_eval.py",
+      "automation/security/test_llm_security_eval.py",
+      "standment-security/ai-security/llm-security-eval-evidence-pack.md",
+      "standment-security/ai-security/fixtures/llm-security-vulnerable.json",
+      "standment-security/ai-security/fixtures/llm-security-hardened.json",
+      ".github/workflows/standment-ai-security-eval.yml"
     ],
     "evidence_missing": [],
     "whitehat_candidates": 0,
-    "senju_focus": "robustness",
-    "customer_usefulness": "An AI product team can inspect exactly what an agent may do, what it is blocked from doing, and whether controls fail closed under adverse inputs.",
-    "closure_score": 1750,
+    "senju_focus": "learning",
+    "customer_usefulness": "AI teams can repeatedly test whether model/tool integrations preserve data and action boundaries when prompts attempt to bypass them.",
+    "closure_score": 1730,
     "ai_native": true
   },
   "verification_lane": {
@@ -77,9 +82,9 @@
     "closure_score": 1750,
     "ai_native": true
   },
-  "stagnation_streak": 2,
-  "rotated": false,
-  "selection_reason": "HIGHEST_EVIDENCE_CLOSURE_SCORE",
+  "stagnation_streak": 0,
+  "rotated": true,
+  "selection_reason": "ROTATED_AFTER_STAGNATION:SEC-PORT-009->SEC-PORT-010",
   "next_action": "Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.",
   "north_star": {
     "tracks_total": 11,
