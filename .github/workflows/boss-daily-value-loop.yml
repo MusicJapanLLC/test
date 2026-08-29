@@ -126,6 +126,7 @@ jobs:
             --value reports/value-loop/daily-value.json \
             --performance reports/performance/board.json \
             --previous previous-revenue-bridge.json \
+            --events commercial-events.json \
             --out-json reports/revenue-bridge/latest.json \
             --out-md reports/revenue-bridge/latest.md
           cat reports/revenue-bridge/latest.md >> "$GITHUB_STEP_SUMMARY"
@@ -156,14 +157,18 @@ jobs:
           weak=[r for r in perf.get('workers', []) if r.get('band') in {'COACH','WATCH','REASSIGN'}][:3]
           weak_text=' / '.join(f"{r['name']}:{r['band']}({r['score']})" for r in weak) or 'NONE'
           p=v['pillars']; s=v['senju']
+          cash=int(rev.get('real_revenue_yen',0) or 0)
+          potential=int(bridge.get('potential_first_month_yen',0) or 0)
           text=(
               "*BOSS DAILY COMMAND｜活動量ではなく現金までの距離*\n"
+              f"現実売上(verified cash)=¥{cash:,} / 商品初月ポテンシャル=¥{potential:,}\n"
               f"業務={p['operations']} / Security={p['security']} / AI={p['ai_evolution']} / Faith→Value={p['faith_to_value']}\n"
               f"Senju safe={s['safe']} stable={s['stable']} score={s['score']}\n"
               f"要しごき/再配置候補: {weak_text}\n"
-              f"商品: {bridge.get('product','NONE')} / proof={bridge.get('proof_strength',0)}/100 / {bridge.get('revenue_distance','D6')}\n"
+              f"商品: {bridge.get('product','NONE')} / target={bridge.get('named_prospect','NONE')} / proof={bridge.get('proof_strength',0)}/100 / {bridge.get('revenue_distance','D6')}\n"
+              f"verified commercial stage={bridge.get('verified_commercial_stage') or 'NONE'}\n"
               f"次の実売上アクション: {bridge.get('next_action','検証を続行')}\n"
-              "※商談・提案・契約・入金の実イベントが無い限り、売上達成とは数えない"
+              "※WLD・研究スコア・商談・提案・契約は現金ではない。verified paymentのみD0"
           )
           req=urllib.request.Request(
               os.environ['TOMOKI_SLACK_WEBHOOK_URL'],
