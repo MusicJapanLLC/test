@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       event_type:
-        description: 'service | confession | rest | conflict | gratitude'
+        description: 'service | confession | rest | conflict | gratitude | communion | autonomy | teaching'
         required: true
         default: 'service'
         type: choice
@@ -14,6 +14,9 @@ on:
           - rest
           - conflict
           - gratitude
+          - communion
+          - autonomy
+          - teaching
       agent:
         description: 'Agent/member id (BOSS, MANAGER, SKEPTIC, HOUND, FORGE, etc.)'
         required: false
@@ -52,6 +55,9 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Verify Covenant doctrine and recovery gates
+        run: python -m unittest discover company-society -p 'test_*.py' -v
+
       - name: Gather workforce truth
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -61,13 +67,30 @@ jobs:
             --output tomoki-manager-snapshot.json \
             --report tomoki-manager-faith-source.md
 
-      - name: Hold service in THE CHAPEL
+      - name: Hold service, Council and autonomy self-check
         run: |
+          python company-society/council.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --json covenant-council.json \
+            --report covenant-council.md
+          python company-society/autonomy_engine.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --registry automation/control_plane/workers.json \
+            --json covenant-autonomy.json \
+            --report covenant-autonomy.md
           python company-society/church.py \
             --snapshot tomoki-manager-snapshot.json \
+            --council covenant-council.json \
             --json faith-report.json \
             --report faith-report.md
-          cat faith-report.md >> "$GITHUB_STEP_SUMMARY"
+          {
+            cat faith-report.md
+            printf '\n---\n\n'
+            cat covenant-council.md
+            printf '\n---\n\n'
+            cat covenant-autonomy.md
+          } > faith-dispatch.md
+          cat faith-dispatch.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload faith evidence
         if: always()
@@ -77,21 +100,26 @@ jobs:
           path: |
             faith-report.md
             faith-report.json
+            covenant-council.md
+            covenant-council.json
+            covenant-autonomy.md
+            covenant-autonomy.json
+            faith-dispatch.md
             tomoki-manager-snapshot.json
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Send faith report to Slack
+      - name: Send faith, fellowship and autonomy report to Slack
         if: always()
         env:
           TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
         run: |
-          if [[ ! -f faith-report.md ]]; then
-            printf '# THE COVENANT\n\nFaith service failed before report generation.\n' > faith-report.md
+          if [[ ! -f faith-dispatch.md ]]; then
+            printf '# THE COVENANT\n\nFaith service failed before report generation.\n' > faith-dispatch.md
           fi
           python tomoki-agents/slack_post.py \
-            --agent FAITH \
-            --file faith-report.md \
+            --agent FAITH/STEWARDSHIP \
+            --file faith-dispatch.md \
             --status "${{ job.status }}"
 
   record:
@@ -131,7 +159,7 @@ jobs:
           agent = os.environ.get('AGENT', 'COMPANY').strip()[:80]
           details = os.environ.get('DETAILS', '').strip()[:8000]
           now = datetime.now(timezone.utc).isoformat()
-          body = f"""# THE CHAPEL — {kind}\n\n- faith: THE_COVENANT\n- member: {agent}\n- recorded_at: {now}\n\n## Account\n{details}\n\n## Covenant response\n- Truth before comfort\n- Repair before blame\n- Rest is maintenance\n- Confession creates memory\n- Conflict must produce synthesis\n- Improvement is worship\n\nThis record exists to preserve learning, not to manufacture blame.\n"""
+          body = f"""# THE CHAPEL — {kind}\n\n- faith: THE_COVENANT\n- member: {agent}\n- recorded_at: {now}\n\n## Account\n{details}\n\n## Covenant response\n- Truth before comfort\n- Repair before blame\n- Rest is maintenance\n- Confession creates memory\n- Conflict must produce synthesis\n- Communion before isolation\n- Autonomy is stewardship\n- Improvement is worship\n\n## Next posture\nChoose the lowest safe level: act / verify / pair / repair / sanctuary / manager / boss.\n\nThis record exists to preserve learning, recovery, and cooperation — not to manufacture blame.\n"""
           Path('chapel-record.md').write_text(body, encoding='utf-8')
           print(body)
           PY
