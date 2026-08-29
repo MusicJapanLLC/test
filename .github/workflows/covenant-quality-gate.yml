@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'company-society/**'
+      - 'tomoki-agents/prompts/**'
       - '.github/workflows/the-covenant.yml'
       - '.github/workflows/covenant-autonomy-cycle.yml'
       - '.github/workflows/covenant-quality-gate.yml'
@@ -12,6 +13,7 @@ on:
   push:
     paths:
       - 'company-society/**'
+      - 'tomoki-agents/prompts/**'
       - '.github/workflows/the-covenant.yml'
       - '.github/workflows/covenant-autonomy-cycle.yml'
       - '.github/workflows/covenant-quality-gate.yml'
