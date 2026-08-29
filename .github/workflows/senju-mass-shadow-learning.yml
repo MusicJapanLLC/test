@@ -1,4 +1,5 @@
 name: Senju 100x Mass Shadow Learning
+# gateway-v7 restart marker
 
 on:
   schedule:
