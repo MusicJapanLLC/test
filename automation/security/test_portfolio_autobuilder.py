@@ -1,4 +1,3 @@
-import json
 import tempfile
 import unittest
 from datetime import datetime
@@ -57,8 +56,8 @@ class PortfolioAutobuilderTest(unittest.TestCase):
     def test_is_idempotent_for_same_day(self):
         report = {
             "selected": {
-                "id": "SEC-PORT-006",
-                "title": "Agent permission boundary lab",
+                "id": "SEC-PORT-009",
+                "title": "AI Agent Permission Boundary Lab",
                 "research_score": 900,
                 "portfolio_status": "ABSENT",
                 "evidence_ratio": 0.0,
@@ -71,8 +70,8 @@ class PortfolioAutobuilderTest(unittest.TestCase):
             "counterevidence_questions": [],
         }
         program = {"tracks": [{
-            "id": "SEC-PORT-006",
-            "title": "Agent permission boundary lab",
+            "id": "SEC-PORT-009",
+            "title": "AI Agent Permission Boundary Lab",
             "priority": 850,
             "senju_focus": "robustness",
             "evidence_files": [],
