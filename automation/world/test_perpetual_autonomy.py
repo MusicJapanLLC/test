@@ -43,15 +43,17 @@ class PerpetualAutonomyContractTests(unittest.TestCase):
 
     def test_ai_and_security_are_top_priority_collaboration_lanes(self) -> None:
         ordered = sorted(self.plan["workers"], key=lambda row: int(row.get("priority", 0)), reverse=True)
-        top_three = [row["workflow"] for row in ordered[:3]]
+        top_four = [row["workflow"] for row in ordered[:4]]
         self.assertEqual(
-            top_three,
+            top_four,
             [
+                "ai-security-joint-lab.yml",
                 "security-continuous-whitehat.yml",
                 "ai-dev-minute-foundry.yml",
                 "standment-ai-security-eval.yml",
             ],
         )
+        self.assertLessEqual(int(self.workers["ai-security-joint-lab.yml"]["director_min_interval_minutes"]), 10)
         self.assertLessEqual(int(self.workers["security-continuous-whitehat.yml"]["director_min_interval_minutes"]), 5)
         self.assertLessEqual(int(self.workers["ai-dev-minute-foundry.yml"]["director_min_interval_minutes"]), 60)
         self.assertLessEqual(int(self.workers["standment-ai-security-eval.yml"]["director_min_interval_minutes"]), 60)
@@ -72,8 +74,8 @@ class PerpetualAutonomyContractTests(unittest.TestCase):
         self.assertIn("cron: '*/15 * * * *'", fabric)
         self.assertIn("record-research", fabric)
         self.assertIn("cron: '*/5 * * * *'", whitehat)
-        self.assertIn("Ten accelerated Elite White-Hat R&D rounds", whitehat)
-        self.assertIn("seq 1 10", whitehat)
+        self.assertIn("rounds=12", whitehat)
+        self.assertIn("seq 1 \"$rounds\"", whitehat)
         self.assertIn("Copilot", agent_factory)
         self.assertTrue(self.workers["the-world-autonomous-research-fabric.yml"]["autostart"])
         self.assertTrue(self.workers["security-continuous-whitehat.yml"]["autostart"])
@@ -84,7 +86,8 @@ class PerpetualAutonomyContractTests(unittest.TestCase):
         evaluator = (ROOT / ".github/workflows/standment-ai-security-eval.yml").read_text(encoding="utf-8")
         self.assertIn("Load latest Security R&D assist evidence", ai)
         self.assertIn("--rounds \"$rounds\"", ai)
-        self.assertIn("rounds=120", ai)
+        self.assertIn("rounds=9", ai)
+        self.assertIn("rounds=36", ai)
         self.assertIn("Load latest AI Foundry assist evidence", security)
         self.assertIn("ai_assist_source_run", security)
         self.assertIn("cron: '35 * * * *'", evaluator)
