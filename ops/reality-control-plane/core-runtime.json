@@ -1,8 +1,9 @@
 {
   "schema": "the-world-core-runtime/v1",
-  "updated_at": "2026-08-29T23:18:00+09:00",
+  "updated_at": "2026-08-29T23:22:00+09:00",
   "truth_order": [
     "verified_external_business_event",
+    "verified_external_runtime_evidence",
     "github_actions_run_and_artifact",
     "repository_configuration",
     "slack_notification",
@@ -13,7 +14,8 @@
     "slack_is_authority": false,
     "static_verified_is_runtime_proof": false,
     "completion_requires_runtime_evidence": true,
-    "revenue_requires_verified_payment_event": true,
+    "revenue_requires_verified_commercial_event": true,
+    "cash_requires_verified_payment_event": true,
     "allowed_runtime_states": ["PROVEN", "ACTIVE", "FAILED_RECENT", "STALE", "CONFIG_ONLY"]
   },
   "cores": [
@@ -22,8 +24,9 @@
       "name": "Shared Knowledge / Company Memory",
       "system_ids": ["company-memory", "integration-os"],
       "expected_workflows": [],
+      "external_evidence_id": "shared-knowledge",
       "freshness_hours": 24,
-      "proof_requirement": "A repeatable sync/query run with canonical entity resolution and durable audit evidence. Repository files or a PR alone are CONFIG_ONLY."
+      "proof_requirement": "A current external database check or repeatable sync/query run proving the canonical memory substrate exists. Repository files or a PR alone are CONFIG_ONLY."
     },
     {
       "id": "autonomous-execution",
@@ -32,22 +35,21 @@
       "expected_workflows": [
         ".github/workflows/the-world-task-worker.yml",
         ".github/workflows/the-world-realtime-kernel.yml",
-        ".github/workflows/the-core-autonomous-director.yml",
         ".github/workflows/senju-autonomous-improver.yml"
       ],
       "freshness_hours": 6,
-      "proof_requirement": "Recent successful run. A current failure outranks an older success. Concurrency rejection is recovery-needed evidence, not completion."
+      "proof_requirement": "Recent successful run from every critical worker lane. A current failure outranks an older success. Unused experimental/director workflows do not count as critical runtime dependencies."
     },
     {
       "id": "execution-audit",
       "name": "Execution Logs / Audit / CEO Truth",
       "system_ids": ["ceo-reporting"],
       "expected_workflows": [
-        ".github/workflows/ai-factory-boss.yml",
+        ".github/workflows/reality-control-plane.yml",
         ".github/workflows/boss-daily-value-loop.yml"
       ],
       "freshness_hours": 24,
-      "proof_requirement": "Recent successful evidence-producing reporting run. Static registry labels cannot promote runtime status."
+      "proof_requirement": "Reality Control Plane and BOSS value evidence both have recent successful runs. Static registry labels cannot promote runtime status."
     },
     {
       "id": "revenue-agent",
