@@ -1,0 +1,160 @@
+name: Senju Deterministic Promotion Gate
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: senju-deterministic-promotion-gate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  checks: read
+
+jobs:
+  promote:
+    name: Verify exact state-only PR and merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Evaluate pending autonomous promotion PRs
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          OWNER="${GITHUB_REPOSITORY_OWNER}"
+          DEFAULT="$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          EXPECTED="$(printf '%s\n' \
+            senju/state/champion.json \
+            senju/state/last-evolution-plan.md \
+            senju/state/last-evolution-summary.json \
+            senju/state/strategy.json | sort)"
+
+          mapfile -t PRS < <(
+            gh pr list --repo "$REPO" --state open --limit 100 \
+              --json number,headRefName \
+              --jq '.[] | select(.headRefName | startswith("senju/auto-promote-")) | .number'
+          )
+
+          if [[ ${#PRS[@]} -eq 0 ]]; then
+            echo "No pending Senju promotion PRs."
+            exit 0
+          fi
+
+          for PR in "${PRS[@]}"; do
+            echo "Evaluating Senju promotion PR #$PR"
+            gh api "repos/$REPO/pulls/$PR" > /tmp/pr.json
+            HEAD="$(jq -r '.head.sha' /tmp/pr.json)"
+            HEAD_REF="$(jq -r '.head.ref' /tmp/pr.json)"
+            HEAD_REPO="$(jq -r '.head.repo.full_name' /tmp/pr.json)"
+            BASE_REF="$(jq -r '.base.ref' /tmp/pr.json)"
+            TITLE="$(jq -r '.title' /tmp/pr.json)"
+            AUTHOR="$(jq -r '.user.login' /tmp/pr.json)"
+            DRAFT="$(jq -r '.draft' /tmp/pr.json)"
+
+            [[ "$HEAD_REF" == senju/auto-promote-* ]] || { echo "skip: bad head ref"; continue; }
+            [[ "$HEAD_REPO" == "$REPO" ]] || { echo "skip: head is from another repository"; continue; }
+            [[ "$BASE_REF" == "$DEFAULT" ]] || { echo "skip: wrong base branch"; continue; }
+            [[ "$TITLE" == "chore(senju): autonomous champion promotion" ]] || { echo "skip: unexpected title"; continue; }
+            [[ "$DRAFT" == "false" ]] || { echo "skip: draft PR"; continue; }
+            if [[ "$AUTHOR" != "github-actions[bot]" && "$AUTHOR" != "$OWNER" ]]; then
+              echo "skip: unexpected author $AUTHOR"
+              continue
+            fi
+
+            CHANGED="$(gh pr diff "$PR" --repo "$REPO" --name-only | sort)"
+            if [[ "$CHANGED" != "$EXPECTED" ]]; then
+              echo "BLOCKED: PR #$PR changed files outside the exact state allowlist."
+              continue
+            fi
+
+            for spec in \
+              "senju/state/strategy.json:/tmp/strategy.json" \
+              "senju/state/last-evolution-summary.json:/tmp/summary.json" \
+              "senju/state/champion.json:/tmp/champion.json"; do
+              path="${spec%%:*}"
+              out="${spec#*:}"
+              gh api "repos/$REPO/contents/$path?ref=$HEAD" --jq '.content' | tr -d '\n' | base64 -d > "$out"
+            done
+
+            if ! python - <<'PY'
+          import json
+          from pathlib import Path
+
+          allowed = {
+              'population': (40, 240),
+              'generations': (6, 40),
+              'matches': (100, 1200),
+              'mutation_rate': (0.05, 0.35),
+              'red_budget': (6, 24),
+              'blue_budget': (6, 24),
+              'seed': (1, 2147483647),
+          }
+          strategy = json.loads(Path('/tmp/strategy.json').read_text())
+          if set(strategy) != set(allowed):
+              raise SystemExit('strategy keys outside allowlist')
+          for key, (low, high) in allowed.items():
+              value = float(strategy[key])
+              if not low <= value <= high:
+                  raise SystemExit(f'{key} outside allowed range: {value}')
+
+          summary = json.loads(Path('/tmp/summary.json').read_text())
+          if summary.get('safe') is not True:
+              raise SystemExit('promotion summary is not marked safe')
+
+          champion = json.loads(Path('/tmp/champion.json').read_text())
+          if not isinstance(champion, dict) or not champion:
+              raise SystemExit('champion state must be a non-empty JSON object')
+          PY
+            then
+              echo "BLOCKED: state schema or safety validation failed for PR #$PR"
+              continue
+            fi
+
+            gh api "repos/$REPO/commits/$HEAD/check-runs?per_page=100" > /tmp/checks.json
+            if ! python - <<'PY'
+          import json
+          data=json.load(open('/tmp/checks.json', encoding='utf-8'))
+          required={
+              'guard',
+              'Analyze (python)',
+              'Analyze (javascript-typescript)',
+              'Python dependency audit',
+              'npm audit (baton)',
+              'npm audit (iyomaru-ramen)',
+              'Memory -> Tournament -> Eval -> Persist',
+          }
+          runs={r['name']: r for r in data.get('check_runs', [])}
+          missing=sorted(required-runs.keys())
+          if missing:
+              raise SystemExit('required checks missing: ' + ', '.join(missing))
+          bad=[]
+          for name in sorted(required):
+              run=runs[name]
+              if run.get('status') != 'completed' or run.get('conclusion') != 'success':
+                  bad.append(f"{name}={run.get('status')}/{run.get('conclusion')}")
+          if bad:
+              raise SystemExit('required checks not green: ' + ', '.join(bad))
+          PY
+            then
+              echo "Not ready: required checks are missing, running, or failed for PR #$PR"
+              continue
+            fi
+
+            echo "All deterministic gates passed for PR #$PR at $HEAD"
+            if gh api -X PUT "repos/$REPO/pulls/$PR/merge" \
+              -f sha="$HEAD" \
+              -f merge_method="merge" \
+              -f commit_title="chore(senju): promote deterministic validated champion" \
+              --silent; then
+              echo "Merged PR #$PR without administrator bypass."
+            else
+              echo "Merge refused by GitHub protections for PR #$PR; leaving it open."
+            fi
+          done
