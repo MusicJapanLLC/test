@@ -12,11 +12,17 @@ on:
       - '.github/workflows/security-continuous-whitehat.yml'
       - 'automation/security/elite_whitehat_continuous.py'
       - 'automation/security/test_elite_whitehat_continuous.py'
+      - 'automation/security/portfolio_rnd.py'
+      - 'automation/security/test_portfolio_rnd.py'
       - 'standment-security/security_research_frontier.json'
       - 'standment-security/security_framework_crosswalk.json'
       - 'standment-security/SECURITY_EXTERNAL_BASELINE.md'
       - 'standment-security/ELITE_WHITEHAT_CELL.md'
+      - 'standment-security/CONTROL_EVIDENCE_TEMPLATE.md'
       - 'standment-security/security_portfolio_program.json'
+      - 'standment-security/ai-security/**'
+      - 'standment-security/evidence-packs/**'
+      - 'security/STANDMENT_SECURITY_STANDARD.md'
 
 concurrency:
   group: security-continuous-whitehat
