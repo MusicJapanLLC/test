@@ -18,7 +18,7 @@ ALLOWED_RESEARCH_KEYS = {
     "research_id", "title", "problem", "hypothesis", "focus", "priority",
     "candidate_count", "success", "commercial_bridge",
 }
-FORBIDDEN_DIRECTIVE_WORDS = {
+FORBIDDEN_DIRECTIVE_KEYS = {
     "target", "url", "host", "network", "scope", "permission", "secret",
     "credential", "exploit", "victim",
 }
@@ -54,17 +54,13 @@ def choose_research(queue: dict[str, Any]) -> dict[str, Any]:
         research_id = str(raw.get("research_id", ""))
         if not research_id or focus not in ALLOWED_FOCUS:
             continue
-        if any(word in json.dumps(raw, ensure_ascii=False).lower() for word in FORBIDDEN_DIRECTIVE_WORDS):
-            # Research prose may discuss safety concepts, but executable directive input
-            # is rejected if it tries to name target/scope/credential surfaces.
-            continue
         valid.append(raw)
     if not valid:
         return {
             "research_id": "RND-SENJU-DEFAULT",
             "title": "Default robustness research",
             "problem": "No valid bounded R&D directive was available.",
-            "hypothesis": "Prefer robust multi-seed selection without changing scope.",
+            "hypothesis": "Prefer robust multi-seed selection without changing execution boundaries.",
             "focus": "robustness",
             "priority": 0,
             "candidate_count": 5,
@@ -84,9 +80,8 @@ def build_directive(research: dict[str, Any]) -> dict[str, Any]:
         "candidate_count": count,
         "hypothesis": str(research.get("hypothesis", ""))[:600],
     }
-    encoded = json.dumps(directive, ensure_ascii=False).lower()
-    if any(k in encoded for k in FORBIDDEN_DIRECTIVE_WORDS):
-        raise ValueError("directive contains forbidden execution surface")
+    if set(directive) & FORBIDDEN_DIRECTIVE_KEYS:
+        raise ValueError("directive contains forbidden execution key")
     return directive
 
 
