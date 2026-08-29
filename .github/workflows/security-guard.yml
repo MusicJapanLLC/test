@@ -201,7 +201,7 @@ jobs:
                'automation/world/task_worker.py', 'gh workflow run',
                'Claim one personality-linked task', 'Reconcile downstream GitHub evidence'],
               common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write',
-                                  'copilot-requests: write', '${{ secrets.'],
+                                  'copilot-requests: write', '$' + '{{ secrets.'],
           )
           if task_worker:
               client = Path('automation/world/task_worker.py').read_text(encoding='utf-8')
