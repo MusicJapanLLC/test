@@ -67,7 +67,9 @@ jobs:
           fi
 
       - name: Run Gmail sorter
+        id: sorter
         if: steps.preflight.outputs.ready == 'true'
+        continue-on-error: true
         shell: bash
         env:
           DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
@@ -96,6 +98,25 @@ jobs:
           }
           JSON
 
+      - name: Write blocked event when Gmail worker fails
+        if: steps.preflight.outputs.ready == 'true' && steps.sorter.outcome == 'failure'
+        shell: bash
+        run: |
+          mkdir -p reports/ceo-events
+          cat > reports/ceo-events/gmail-sorter-latest.json <<'JSON'
+          {
+            "schema": "ai-factory-ceo-event/v1",
+            "project": "Gmail Autonomous Sorter",
+            "state": "BLOCKED",
+            "privacy": "aggregate-only; no email content",
+            "counts": {},
+            "priorities": {},
+            "owner_action": "NONE",
+            "business_effect": "Gmail自動整理workerが実行時エラーで停止。メール内容や認証情報はCEOレポートへ出していない。",
+            "next_improvement": "GitHub Actionsの技術ログで原因を修復し、同じ分類テストを通して再実行する。"
+          }
+          JSON
+
       - name: Publish aggregate result to job summary
         if: always()
         shell: bash
@@ -112,20 +133,25 @@ jobs:
           fi
 
       - name: Decide whether CEO channel needs an immediate update
-        if: steps.preflight.outputs.ready == 'true'
+        if: always()
         id: notify
         shell: bash
         run: |
+          if [[ ! -f reports/ceo-events/gmail-sorter-latest.json ]]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json
           d=json.load(open('reports/ceo-events/gmail-sorter-latest.json', encoding='utf-8'))
           p=d.get('priorities', {})
           urgent=int(p.get('critical',0) or 0)+int(p.get('high',0) or 0)
-          print('needed=' + ('true' if urgent > 0 else 'false'))
+          blocked=d.get('state') == 'BLOCKED'
+          print('needed=' + ('true' if blocked or urgent > 0 else 'false'))
           PY
 
       - name: Send material outcome to CEO Reporting Layer
-        if: steps.notify.outputs.needed == 'true' && env.CEO_REPORT_WEBHOOK_URL != ''
+        if: always() && steps.notify.outputs.needed == 'true' && env.CEO_REPORT_WEBHOOK_URL != ''
         run: python automation/reporting/ceo_report.py reports/ceo-events/gmail-sorter-latest.json
 
       - name: Upload aggregate evidence
@@ -136,3 +162,7 @@ jobs:
           retention-days: 14
           if-no-files-found: ignore
           path: reports/ceo-events/gmail-sorter-latest.json
+
+      - name: Fail job after reporting worker failure
+        if: steps.preflight.outputs.ready == 'true' && steps.sorter.outcome == 'failure'
+        run: exit 1
