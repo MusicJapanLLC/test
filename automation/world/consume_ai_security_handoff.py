@@ -106,7 +106,14 @@ def build_result(contract: dict[str, Any], ai_summary: dict[str, Any], security_
             continue
         security_rows.append(row)
     pairs = sorted({(str(r.get("lens_id") or ""), str(r.get("research_stage") or "")) for r in security_rows})
-    assisted = [r for r in security_rows if r.get("selection_source") == "ai_security_eval"]
+    preferred = str(contract["security_priority_lens"])
+    assisted = [
+        r
+        for r in security_rows
+        if str(r.get("preferred_lens") or "") == preferred
+        and str(r.get("lens_id") or "") == preferred
+        and int(r.get("round") or 0) in {1, 6}
+    ]
     return {
         "schema": "the-world-ai-security-handoff-consumption/v1",
         "status": "BUILDING",
@@ -122,10 +129,11 @@ def build_result(contract: dict[str, Any], ai_summary: dict[str, Any], security_
             "report_fingerprint": ai_summary.get("report_fingerprint"),
         },
         "security": {
-            "preferred_lens": contract["security_priority_lens"],
+            "preferred_lens": preferred,
             "preferred_stage_context": contract["security_priority_stage"],
             "rounds": len(security_rows),
-            "assisted_rounds": len(assisted),
+            "handoff_directed_rounds": len(assisted),
+            "broad_rotation_rounds": max(0, len(security_rows) - len(assisted)),
             "unique_lens_stage_pairs": len(pairs),
             "pairs": [{"lens": lens, "stage": stage} for lens, stage in pairs],
         },
