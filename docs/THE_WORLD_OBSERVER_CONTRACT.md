@@ -9,8 +9,19 @@ Its job is to record **what actually happened** across the world so a human can 
 ## Canonical outputs
 
 - Slack: `#the-world` (`C0BTMPGFW1X`) for concise event reports
-- Google Sheets: `Music Japan｜AI OPERATIONS BLACKBOX` → `10_THE_WORLD` for durable event history
+- Google Sheets: `THE WORLD｜World Ledger` → `01_WORLD_LOG` for durable event history
+  - Spreadsheet: https://docs.google.com/spreadsheets/d/1QtpELUXrgxqsJMyjcIpqAZmsIyljspWm_4BqjPZjUHg/edit
+- Google Sheets religion/society registry in the same independent workbook:
+  - `02_THE_COVENANT`
+  - `03_THE_CHAPEL`
+  - `04_DAILY_SERVICE`
+  - `05_CONFESSION`
+  - `06_MEMBERS`
+  - `07_SOCIAL_RULES`
+  - `08_SOURCES`
 - GitHub: evidence URLs, run IDs, commit SHAs, PRs, issues, artifacts, and logs remain the primary technical evidence
+
+`Music Japan｜AI OPERATIONS BLACKBOX` → `10_THE_WORLD` is legacy history only. New World events use the independent World Ledger.
 
 ## Observation rules
 
@@ -35,7 +46,7 @@ Examples:
 
 ## Required event fields
 
-The durable record maps to `10_THE_WORLD!A:R`:
+The durable record maps to `01_WORLD_LOG!A:R`:
 
 1. observed_at
 2. event_id
