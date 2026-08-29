@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """GitHub-native bounded improvement planner for Senju.
 
-Uses GitHub Models with the ephemeral GITHUB_TOKEN. The model is advisory only:
-it may propose values for a small allowlisted strategy surface. This module validates,
-clamps, and serializes the proposal; it cannot alter targets, network scope, workflows,
-permissions, executable code, or the ScopeGuard.
+The durable core does not require an external LLM. It first tries an optional model
+provider, then falls back to the tournament's own evaluator evidence. Either path may
+modify only a small allowlisted strategy surface. Targets, network scope, workflows,
+permissions, executable code and ScopeGuard are outside the autonomous surface.
 """
 from __future__ import annotations
 
@@ -114,6 +114,67 @@ def bounded_strategy(base: dict[str, Any], proposed: dict[str, Any]) -> dict[str
     return out
 
 
+def local_evaluator_proposal(base: dict[str, Any], summary: dict[str, Any]) -> dict[str, Any]:
+    """Select the strongest safe strategy already measured by Senju's evaluator.
+
+    This is deliberately evidence-only: no new target, behavior, payload, or code is
+    invented. If no trustworthy candidate evidence exists, it keeps the current
+    strategy unchanged.
+    """
+    candidates = summary.get("candidate_scores") or []
+    ranked: list[tuple[float, dict[str, Any], dict[str, Any]]] = []
+    for item in candidates:
+        if not isinstance(item, dict):
+            continue
+        candidate = item.get("strategy")
+        evaluation = item.get("evaluation")
+        if not isinstance(candidate, dict) or not isinstance(evaluation, dict):
+            continue
+        if evaluation.get("safe") is not True:
+            continue
+        try:
+            score = float(evaluation.get("score", float("-inf")))
+        except (TypeError, ValueError):
+            continue
+        ranked.append((score, candidate, evaluation))
+
+    if ranked:
+        ranked.sort(key=lambda x: x[0], reverse=True)
+        score, candidate, evaluation = ranked[0]
+        proposed = {k: candidate[k] for k in ALLOWED if k in candidate and candidate[k] != base.get(k)}
+        return {
+            "strategy": proposed,
+            "reason": (
+                f"Local evaluator selected the best already-measured safe candidate "
+                f"with score={score:.3f}, rating_gain={evaluation.get('rating_gain')}, "
+                f"balance={evaluation.get('balance')}, learning_signal={evaluation.get('learning_signal')}."
+            ),
+            "hypothesis": "Carry forward the strongest safe measured strategy and verify it again in the bounded smoke tournament.",
+            "confidence": 0.90,
+            "engine": "local-evaluator",
+        }
+
+    selected_strategy = summary.get("selected_strategy")
+    selected = summary.get("selected") or {}
+    if isinstance(selected_strategy, dict) and isinstance(selected, dict) and selected.get("safe") is True:
+        proposed = {k: selected_strategy[k] for k in ALLOWED if k in selected_strategy and selected_strategy[k] != base.get(k)}
+        return {
+            "strategy": proposed,
+            "reason": "Reused the latest safe selected strategy from the durable Senju evolution summary.",
+            "hypothesis": "Revalidate the latest safe selected strategy before promotion.",
+            "confidence": 0.80,
+            "engine": "local-evaluator",
+        }
+
+    return {
+        "strategy": {},
+        "reason": "No trustworthy safe comparative evidence was available; retaining the current strategy.",
+        "hypothesis": "Collect another isolated tournament before changing strategy.",
+        "confidence": 0.50,
+        "engine": "local-evaluator",
+    }
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--strategy", required=True)
@@ -123,9 +184,6 @@ def main() -> int:
     args = ap.parse_args()
 
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
-    if not token:
-        raise SystemExit("GH_TOKEN/GITHUB_TOKEN is required")
-
     strategy = load_json(args.strategy, {})
     if set(strategy) != set(ALLOWED):
         raise SystemExit(f"bootstrap strategy keys must exactly match allowlist: {sorted(ALLOWED)}")
@@ -151,21 +209,36 @@ Return exactly this JSON shape:
 }}
 """.strip()
 
-    raw = call_model(token, args.model, prompt)
+    provider_error = None
+    raw: dict[str, Any]
+    if token:
+        try:
+            raw = call_model(token, args.model, prompt)
+            raw["engine"] = "github-models"
+        except (RuntimeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            provider_error = str(exc)[:1200]
+            raw = local_evaluator_proposal(strategy, summary)
+    else:
+        provider_error = "No model token available"
+        raw = local_evaluator_proposal(strategy, summary)
+
     proposed = raw.get("strategy", {})
     if not isinstance(proposed, dict):
-        raise SystemExit("model strategy must be an object")
+        raise SystemExit("strategy proposal must be an object")
     next_strategy = bounded_strategy(strategy, proposed)
 
     confidence = float(raw.get("confidence", 0.0))
     confidence = max(0.0, min(1.0, confidence))
     changes = [f"{k}: {strategy[k]} -> {next_strategy[k]}" for k in strategy if strategy[k] != next_strategy[k]]
+    engine = str(raw.get("engine", "unknown"))
 
     out = Path(args.output_dir)
     out.mkdir(parents=True, exist_ok=True)
     (out / "strategy.json").write_text(json.dumps(next_strategy, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     result = {
-        "model": args.model,
+        "engine": engine,
+        "model": args.model if engine == "github-models" else None,
+        "provider_error": provider_error,
         "safe": True,
         "confidence": confidence,
         "changes": changes,
@@ -179,13 +252,14 @@ Return exactly this JSON shape:
     plan = [
         "# Senju GitHub-native improvement plan",
         "",
-        f"- model: `{args.model}`",
+        f"- engine: `{engine}`",
         f"- safe: `{result['safe']}`",
         f"- confidence: `{confidence:.2f}`",
         f"- evidence present: `{bool(summary)}`",
-        "",
-        "## Accepted bounded changes",
     ]
+    if provider_error:
+        plan += [f"- optional provider unavailable: `{provider_error[:300]}`", "- fallback: `local-evaluator`"]
+    plan += ["", "## Accepted bounded changes"]
     plan += [f"- {c}" for c in changes] or ["- No parameter change; retain current strategy."]
     plan += ["", "## Reason", result["reason"] or "No reason supplied.", "", "## Next-run hypothesis", result["hypothesis"] or "No hypothesis supplied.", ""]
     (out / "last-evolution-plan.md").write_text("\n".join(plan), encoding="utf-8")
