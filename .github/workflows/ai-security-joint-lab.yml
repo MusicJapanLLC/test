@@ -5,6 +5,9 @@ on:
     # Fast cross-assist cadence. This lab is read-only and produces evidence artifacts.
     - cron: '*/10 * * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['Standment - Autonomous Agent Auditability Evidence']
+    types: [completed]
   pull_request:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
@@ -32,7 +35,10 @@ on:
       - 'standment-security/evidence-packs/agent-auditability/**'
 
 concurrency:
-  group: the-world-ai-security-joint-lab-${{ github.event.pull_request.number || github.ref }}
+  # Push/schedule and the follow-up workflow_run share the same default-branch group.
+  # A fresh successful auditability completion therefore replaces any older in-flight
+  # Joint Lab evaluation that may have started before its evidence artifact existed.
+  group: the-world-ai-security-joint-lab-${{ github.event.pull_request.number || github.event.workflow_run.head_branch || github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -45,6 +51,10 @@ env:
 
 jobs:
   joint-lab:
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'claude/employee-onboarding-setup-udm86')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -134,6 +144,7 @@ jobs:
           echo "Security source run: ${security_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
           echo "Research source run: ${research_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
           echo "Agent auditability source run: ${audit_run:-NONE}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Trigger source: ${GITHUB_EVENT_NAME}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build cross-assist packet
         run: |
