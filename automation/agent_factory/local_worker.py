@@ -19,6 +19,7 @@ CORE_EVIDENCE = [
     "automation/security/test_portfolio_rnd.py",
     "standment-security/CONTROL_EVIDENCE_TEMPLATE.md",
     "standment-security/security_portfolio_program.json",
+    "standment-security/ELITE_WHITEHAT_CELL.md",
     "value-lab/research_queue.json",
     ".github/workflows/standment-security-portfolio-rnd.yml",
 ]
@@ -53,6 +54,12 @@ ROLE_CHANGE = {
         ["automation/security/portfolio_rnd.py"],
         ["run planner tests", "simulate VERIFIED label with missing evidence and require non-promotion"],
         "the planner makes promotion decisions from proof coverage rather than status text alone",
+    ),
+    "elite_whitehat": (
+        "Add an adversarial-validation contract that forces every security finding to include an owned/authorized attack-path hypothesis, safe reproduction conditions, remediation, independent retest and residual-risk evidence.",
+        ["standment-security/ELITE_WHITEHAT_CELL.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"],
+        ["verify authorization basis is present before any active test", "verify each finding contains reproduction/remediation/retest/residual-risk fields", "verify unknown authorization fails closed"],
+        "R&D findings become reproducible defensive evidence instead of severity labels or security theater",
     ),
     "portfolio_translator": (
         "Make the customer evidence pack expose a compact before-after-verification summary before technical detail.",
@@ -152,6 +159,8 @@ def build_worker(root: Path, plan: dict[str, Any], slot: int) -> dict[str, Any]:
         observations.append("missing configured evidence: " + ", ".join(missing[:5]))
     else:
         observations.append("all configured evidence paths exist, but path existence alone does not prove runtime behavior")
+    if role == "elite_whitehat":
+        observations.append("elite white-hat output is valid only for owned/explicitly authorized scope and must terminate in remediation + retest")
 
     return {
         "schema": "agent-factory-worker/v1",
