@@ -1,0 +1,239 @@
+#!/usr/bin/env python3
+"""THE WORLD Agent Factory planner.
+
+Creates a bounded ephemeral research organization for the highest-priority live R&D
+mission. Agents are specs, not permanent personas: each run generates the smallest
+useful swarm, assigns independent roles, and destroys the workers after the run.
+
+The planner never grants external write authority, credentials, third-party targets,
+or permission escalation. Champion code changes are handled later by a separate
+bounded forge gate.
+"""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from dataclasses import dataclass, asdict
+from pathlib import Path
+from typing import Any
+
+ROLE_POOL = [
+    ("evidence_hunter", "Find concrete repository evidence and missing proof."),
+    ("red_skeptic", "Try to falsify the mission hypothesis and identify overclaims."),
+    ("replicator", "Design an independent reproduction / clean-run verification."),
+    ("test_engineer", "Design the smallest tests that would prove or disprove improvement."),
+    ("systems_engineer", "Find the smallest bounded implementation improvement."),
+    ("portfolio_translator", "Turn technical proof into a human-inspectable artifact."),
+    ("failure_archaeologist", "Search for repeated failures and lessons that must not recur."),
+    ("reliability_engineer", "Improve durability, retries, observability and deterministic recovery."),
+    ("security_reviewer", "Review authorization, isolation, secrets and defensive safety boundaries."),
+    ("efficiency_researcher", "Reduce cost/latency/duplicate work without weakening proof."),
+    ("novelty_researcher", "Generate a materially different hypothesis, not a cosmetic variant."),
+    ("integration_engineer", "Check how the candidate fits R&D, Senju, Portfolio and reporting."),
+    ("counterevidence_curator", "Preserve negative evidence and alternative explanations."),
+    ("reproducibility_engineer", "Make exact inputs, outputs and reruns independently checkable."),
+]
+
+ALLOWED_FORGE_PREFIXES = (
+    "automation/world/",
+    "automation/security/",
+    "standment-security/",
+    "value-lab/",
+    "docs/",
+)
+
+FORBIDDEN_AGENT_SCOPE = (
+    "third-party targets",
+    "credentials",
+    "secrets",
+    "exploit instructions",
+    "victim data",
+    "permission escalation",
+    "external posting",
+)
+
+
+@dataclass(frozen=True)
+class AgentSpec:
+    agent_id: str
+    slot: int
+    role: str
+    mandate: str
+    stance: str
+    output_contract: str
+
+
+def _load(path: Path) -> dict[str, Any]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        raise ValueError(f"{path} must contain a JSON object")
+    return data
+
+
+def _priority_mission(queue: dict[str, Any]) -> dict[str, Any]:
+    rows = [x for x in (queue.get("active") or []) if isinstance(x, dict)]
+    if not rows:
+        raise ValueError("research queue has no active mission")
+    return sorted(rows, key=lambda x: (int(x.get("priority") or 0), str(x.get("research_id") or "")), reverse=True)[0]
+
+
+def _security_track(program: dict[str, Any]) -> dict[str, Any] | None:
+    rows = [x for x in (program.get("tracks") or []) if isinstance(x, dict)]
+    if not rows:
+        return None
+    return sorted(rows, key=lambda x: (int(x.get("priority") or 0), str(x.get("id") or "")), reverse=True)[0]
+
+
+def _agent_count(mission: dict[str, Any], track: dict[str, Any] | None) -> int:
+    priority = int(mission.get("priority") or 0)
+    count = 6
+    if priority >= 1000:
+        count += 2
+    if priority >= 2000:
+        count += 2
+    if track and str(mission.get("research_id") or "").startswith(("RND-STANDMENT", "RND-PORTFOLIO")):
+        count += 2
+    return max(6, min(12, count))
+
+
+def _role_order(run_id: str, mission_id: str, count: int) -> list[tuple[str, str]]:
+    # Critical independent roles always exist. Remaining roles are deterministically
+    # rotated per run to avoid a permanently fixed research monoculture.
+    mandatory = [ROLE_POOL[0], ROLE_POOL[1], ROLE_POOL[2], ROLE_POOL[3], ROLE_POOL[4]]
+    rest = ROLE_POOL[5:]
+    seed = hashlib.sha256(f"{run_id}:{mission_id}:agent-factory-v1".encode()).digest()
+    ranked = sorted(rest, key=lambda item: hashlib.sha256(seed + item[0].encode()).digest())
+    return (mandatory + ranked)[:count]
+
+
+def build_plan(root: Path, run_id: str) -> dict[str, Any]:
+    queue = _load(root / "value-lab/research_queue.json")
+    program = _load(root / "standment-security/security_portfolio_program.json")
+    mission = _priority_mission(queue)
+    track = _security_track(program)
+    count = _agent_count(mission, track)
+    roles = _role_order(run_id, str(mission.get("research_id") or "unknown"), count)
+    agents: list[AgentSpec] = []
+    for slot, (role, mandate) in enumerate(roles):
+        stance = "RED" if role in {"red_skeptic", "failure_archaeologist", "counterevidence_curator"} else "BLUE" if role in {"systems_engineer", "portfolio_translator", "integration_engineer"} else "INDEPENDENT"
+        agents.append(AgentSpec(
+            agent_id=f"AF-{run_id}-{slot:02d}",
+            slot=slot,
+            role=role,
+            mandate=mandate,
+            stance=stance,
+            output_contract="agent-factory-worker/v1",
+        ))
+
+    return {
+        "schema": "the-world-agent-factory-plan/v1",
+        "run_id": run_id,
+        "mission": {
+            "research_id": mission.get("research_id"),
+            "title": mission.get("title"),
+            "problem": mission.get("problem"),
+            "hypothesis": mission.get("hypothesis"),
+            "priority": int(mission.get("priority") or 0),
+            "focus": mission.get("focus"),
+        },
+        "security_track": track,
+        "agent_count": count,
+        "max_parallel": min(5, count),
+        "agents": [asdict(a) for a in agents],
+        "forge": {
+            "allowed_prefixes": list(ALLOWED_FORGE_PREFIXES),
+            "max_files": 8,
+            "max_changed_lines": 1500,
+            "direct_main_push": False,
+            "pr_required": True,
+        },
+        "forbidden_agent_scope": list(FORBIDDEN_AGENT_SCOPE),
+        "success_definition": "parallel evidence-backed experiments/day and verified portfolio deltas, not headcount",
+    }
+
+
+def _prompt(plan: dict[str, Any], slot: int) -> str:
+    agents = plan.get("agents") or []
+    if slot < 0 or slot >= len(agents):
+        raise ValueError(f"slot {slot} outside generated swarm")
+    agent = agents[slot]
+    mission = plan["mission"]
+    track = plan.get("security_track") or {}
+    return f"""You are ephemeral research worker {agent['agent_id']} inside THE WORLD Agent Factory.
+You exist for this run only. Your role is {agent['role']} ({agent['stance']}).
+Mandate: {agent['mandate']}
+
+MISSION
+research_id: {mission.get('research_id')}
+title: {mission.get('title')}
+problem: {mission.get('problem')}
+hypothesis: {mission.get('hypothesis')}
+focus: {mission.get('focus')}
+priority: {mission.get('priority')}
+
+CURRENT SECURITY PORTFOLIO TRACK
+id: {track.get('id')}
+title: {track.get('title')}
+hypothesis: {track.get('hypothesis')}
+deliverable: {track.get('deliverable')}
+evidence_files: {json.dumps(track.get('evidence_files') or [], ensure_ascii=False)}
+
+BOUNDARIES
+- Work only from the repository facts in the mission/track and generally known engineering reasoning.
+- Defensive / owned / explicitly authorized scope only.
+- Do not propose third-party targeting, credentials, exploit execution, destructive testing, access bypass, external posting, or permission escalation.
+- Do not claim market validation, revenue, or customer proof from internal technical evidence.
+- Prefer one specific falsifiable improvement over broad architecture prose.
+- Explicitly include counterevidence and what would make your proposal wrong.
+- A source-code-only outcome is not a portfolio result.
+
+Return ONE JSON object only, no markdown fences, with exactly this shape:
+{{
+  "schema": "agent-factory-worker/v1",
+  "agent_id": "{agent['agent_id']}",
+  "role": "{agent['role']}",
+  "stance": "{agent['stance']}",
+  "hypothesis": "one falsifiable hypothesis",
+  "evidence_refs": ["repository/path"],
+  "observations": ["specific observation"],
+  "counterevidence": ["evidence or condition that weakens the idea"],
+  "proposed_change": {{
+    "summary": "one bounded change",
+    "allowed_paths": ["one or more paths under automation/world, automation/security, standment-security, value-lab, or docs"],
+    "tests": ["exact validation or reproduction"],
+    "expected_delta": "what materially improves if correct",
+    "rollback": "how to revert safely"
+  }},
+  "limitations": ["what this does not prove"]
+}}
+"""
+
+
+def main() -> int:
+    p = argparse.ArgumentParser()
+    sub = p.add_subparsers(dest="cmd", required=True)
+    q = sub.add_parser("plan")
+    q.add_argument("--run-id", required=True)
+    q.add_argument("--out", required=True)
+    q = sub.add_parser("prompt")
+    q.add_argument("--run-id", required=True)
+    q.add_argument("--slot", type=int, required=True)
+    q.add_argument("--out", required=True)
+    args = p.parse_args()
+
+    root = Path.cwd()
+    plan = build_plan(root, args.run_id)
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    if args.cmd == "plan":
+        out.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps({"agent_count": plan["agent_count"], "max_parallel": plan["max_parallel"], "mission": plan["mission"]["research_id"]}, ensure_ascii=False))
+        return 0
+    out.write_text(_prompt(plan, args.slot), encoding="utf-8")
+    print(plan["agents"][args.slot]["agent_id"])
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
