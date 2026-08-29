@@ -20,6 +20,35 @@ from typing import Any
 
 AUDIENCE = "the-world-worker"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/tomoki-manager-gateway"
+OUTPUT_PATH = Path("reports/control-plane/manager-queue-cycle.json")
+OIDC_HOST_SUFFIX = ".actions.githubusercontent.com"
+
+
+def _validated_oidc_url(raw_url: str) -> str:
+    """Return a GitHub-hosted HTTPS OIDC endpoint with our audience appended.
+
+    GitHub injects ACTIONS_ID_TOKEN_REQUEST_URL into the hosted runner.  Treat
+    that environment value as untrusted anyway: require the documented GitHub
+    Actions host family, HTTPS, no credentials, and no non-standard port before
+    any network request is made.
+    """
+    parsed = urllib.parse.urlsplit(raw_url)
+    host = (parsed.hostname or "").lower()
+    if parsed.scheme != "https":
+        raise RuntimeError("GitHub OIDC endpoint must use HTTPS")
+    if not host.endswith(OIDC_HOST_SUFFIX):
+        raise RuntimeError("GitHub OIDC endpoint host is not allowlisted")
+    if parsed.username or parsed.password:
+        raise RuntimeError("GitHub OIDC endpoint must not contain userinfo")
+    if parsed.port not in (None, 443):
+        raise RuntimeError("GitHub OIDC endpoint must use the standard HTTPS port")
+    if not parsed.path.startswith("/"):
+        raise RuntimeError("GitHub OIDC endpoint path is invalid")
+
+    query = urllib.parse.parse_qsl(parsed.query, keep_blank_values=True)
+    query = [(k, v) for k, v in query if k != "audience"]
+    query.append(("audience", AUDIENCE))
+    return urllib.parse.urlunsplit(("https", parsed.netloc, parsed.path, urllib.parse.urlencode(query), ""))
 
 
 def oidc_token() -> str:
@@ -27,9 +56,11 @@ def oidc_token() -> str:
     request_token = os.environ.get("ACTIONS_ID_TOKEN_REQUEST_TOKEN", "").strip()
     if not request_url or not request_token:
         raise RuntimeError("GitHub OIDC environment is unavailable")
-    sep = "&" if "?" in request_url else "?"
-    url = request_url + sep + urllib.parse.urlencode({"audience": AUDIENCE})
-    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {request_token}", "Accept": "application/json"})
+    url = _validated_oidc_url(request_url)
+    req = urllib.request.Request(
+        url,
+        headers={"Authorization": f"Bearer {request_token}", "Accept": "application/json"},
+    )
     with urllib.request.urlopen(req, timeout=20) as res:
         data = json.loads(res.read().decode("utf-8"))
     token = str(data.get("value") or "")
@@ -160,12 +191,10 @@ def run_cycle(limit: int) -> dict[str, Any]:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--max", type=int, default=3)
-    parser.add_argument("--out", required=True)
     args = parser.parse_args()
     result = run_cycle(args.max)
-    path = Path(args.out)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    OUTPUT_PATH.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False))
     return 0
 
