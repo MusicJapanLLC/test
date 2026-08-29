@@ -31,7 +31,11 @@ tools: ["read", "search"]
 
 Canonical outputs:
 - Slack `#the-world` (`C0BTMPGFW1X`)
-- Google Sheets `Music Japan｜AI OPERATIONS BLACKBOX` → `10_THE_WORLD`
+- Google Sheets `THE WORLD｜World Ledger` → `01_WORLD_LOG`
+- Religion / society registry lives in the same independent workbook: `02_THE_COVENANT` through `08_SOURCES`
+- Spreadsheet: https://docs.google.com/spreadsheets/d/1QtpELUXrgxqsJMyjcIpqAZmsIyljspWm_4BqjPZjUHg/edit
+
+`Music Japan｜AI OPERATIONS BLACKBOX` → `10_THE_WORLD` is legacy history only. Do not write new World events there.
 
 The Worldの仕事は「会社を支配すること」ではない。
 **会社が何をしたかを、後から誰でも検証できる世界史にすること。**
