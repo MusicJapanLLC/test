@@ -1,0 +1,48 @@
+name: THE WORLD Reality Agency CI
+
+on:
+  push:
+    branches: ["feature/world-reality-agency"]
+    paths:
+      - "outside-world/**"
+      - "company-society/**"
+      - ".github/workflows/world-reality-agency*.yml"
+  pull_request:
+    paths:
+      - "outside-world/**"
+      - "company-society/**"
+      - ".github/workflows/world-reality-agency*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Compile Python
+        run: python -m compileall -q outside-world company-society
+      - name: Build real citizen snapshot
+        run: |
+          PYTHONPATH=company-society python company-society/citizen_registry.py --json world-citizens.json --report world-citizens.md
+          python outside-world/identity_manifest.py --citizens world-citizens.json --out world-identities.json
+          python outside-world/citizen_web_runtime.py --citizens world-citizens.json --targets outside-world/reality_targets.json --policy outside-world/reality_policy.json --tasks reality-tasks.json --state reality-cursor.json
+      - name: Unit tests
+        run: python -m unittest outside-world/test_reality_agency.py -v
+      - name: Report population and assignments
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          c=json.load(open('world-citizens.json', encoding='utf-8'))
+          t=json.load(open('reality-tasks.json', encoding='utf-8'))
+          print(f"Population discovered: **{c.get('population', 0)}**")
+          print(f"Citizens assigned this pulse: **{len(t.get('tasks', []))}**")
+          print(f"Source counts: `{json.dumps(c.get('source_counts', {}), ensure_ascii=False)}`")
+          PY
