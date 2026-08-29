@@ -65,6 +65,61 @@ def _read(path: str) -> dict[str, Any]:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
+def _apply_research_hints(data: dict[str, Any]) -> dict[str, Any]:
+    """Convert shared research memory into a small, bounded exploration nudge.
+
+    Research findings never mutate Senju target/scope/permissions. Candidate findings
+    have weak influence; replicated findings can have stronger influence; contested
+    findings push toward caution. The full hint list stays in the config as evidence.
+    """
+    policy = dict(data.get("policy") or {})
+    hints = [h for h in (data.get("research_hints") or []) if isinstance(h, dict)]
+    try:
+        base = float(policy.get("exploration_rate") or 0.35)
+    except Exception:
+        base = 0.35
+
+    candidate_pressure = 0.0
+    replicated_pressure = 0.0
+    contested_pressure = 0.0
+    used: list[str] = []
+    for hint in hints[:24]:
+        try:
+            confidence = max(0.0, min(1.0, float(hint.get("confidence") or 0.0)))
+            novelty = max(0.0, min(1.0, float(hint.get("novelty") or 0.0)))
+        except Exception:
+            continue
+        quality = confidence * novelty
+        status = str(hint.get("canon_status") or "CANDIDATE")
+        finding_id = str(hint.get("finding_id") or "")
+        if finding_id:
+            used.append(finding_id)
+        if status == "REPLICATED":
+            replicated_pressure += quality
+        elif status == "CONTESTED":
+            contested_pressure += quality
+        else:
+            candidate_pressure += quality
+
+    # Weak preliminary learning, stronger replicated learning, strong caution for contradiction.
+    nudge = min(0.015, candidate_pressure * 0.0015) + min(0.040, replicated_pressure * 0.006) - min(0.040, contested_pressure * 0.008)
+    adjusted = max(0.05, min(0.80, base + nudge))
+    policy["exploration_rate"] = round(adjusted, 6)
+    data["policy"] = policy
+    data["research_feedback"] = {
+        "base_exploration_rate": round(base, 6),
+        "adjusted_exploration_rate": round(adjusted, 6),
+        "bounded_nudge": round(nudge, 6),
+        "candidate_pressure": round(candidate_pressure, 6),
+        "replicated_pressure": round(replicated_pressure, 6),
+        "contested_pressure": round(contested_pressure, 6),
+        "hint_count": len(hints),
+        "used_finding_ids": used[:24],
+        "authority": "exploration_geometry_only",
+    }
+    return data
+
+
 def main() -> int:
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -124,13 +179,16 @@ def main() -> int:
         return 0
 
     if args.cmd == "experiment-config":
-        data = _edge({"action": "experiment_config", "policy_key": args.policy_key})
+        data = _apply_research_hints(_edge({"action": "experiment_config", "policy_key": args.policy_key}))
         _write(args.out, data)
         policy = data.get("policy") or {}
+        feedback = data.get("research_feedback") or {}
         print(json.dumps({
             "trial_multiplier": policy.get("trial_multiplier"),
             "exploration_rate": policy.get("exploration_rate"),
             "history_runs": len(data.get("history") or []),
+            "research_hints": len(data.get("research_hints") or []),
+            "research_nudge": feedback.get("bounded_nudge"),
         }, ensure_ascii=False))
         return 0
 
