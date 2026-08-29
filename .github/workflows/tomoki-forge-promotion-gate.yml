@@ -1,0 +1,132 @@
+name: TOMOKI FORGE Deterministic Promotion Gate
+
+on:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: tomoki-forge-deterministic-promotion-gate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  checks: read
+
+jobs:
+  promote:
+    name: Verify bounded FORGE PR and merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Evaluate pending FORGE PRs
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          OWNER="$GITHUB_REPOSITORY_OWNER"
+          DEFAULT="$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+
+          mapfile -t PRS < <(
+            gh pr list --repo "$REPO" --state open --limit 100 \
+              --json number,headRefName,title \
+              --jq '.[] | select((.headRefName | startswith("tomoki/forge-")) and (.title | startswith("TOMOKI/FORGE: verified autonomous improvement #"))) | .number'
+          )
+
+          if [[ ${#PRS[@]} -eq 0 ]]; then
+            echo 'No pending FORGE promotion PRs.'
+            exit 0
+          fi
+
+          for PR in "${PRS[@]}"; do
+            gh api "repos/$REPO/pulls/$PR" > /tmp/pr.json
+            HEAD="$(jq -r '.head.sha' /tmp/pr.json)"
+            HEAD_REF="$(jq -r '.head.ref' /tmp/pr.json)"
+            HEAD_REPO="$(jq -r '.head.repo.full_name' /tmp/pr.json)"
+            BASE_REF="$(jq -r '.base.ref' /tmp/pr.json)"
+            AUTHOR="$(jq -r '.user.login' /tmp/pr.json)"
+            DRAFT="$(jq -r '.draft' /tmp/pr.json)"
+
+            [[ "$HEAD_REF" == tomoki/forge-* ]] || { echo "skip #$PR: bad head ref"; continue; }
+            [[ "$HEAD_REPO" == "$REPO" ]] || { echo "skip #$PR: foreign head repo"; continue; }
+            [[ "$BASE_REF" == "$DEFAULT" ]] || { echo "skip #$PR: wrong base"; continue; }
+            [[ "$DRAFT" == 'false' ]] || { echo "skip #$PR: draft"; continue; }
+            if [[ "$AUTHOR" != 'github-actions[bot]' && "$AUTHOR" != "$OWNER" ]]; then
+              echo "skip #$PR: unexpected author $AUTHOR"
+              continue
+            fi
+
+            gh api "repos/$REPO/pulls/$PR/files?per_page=100" > /tmp/files.json
+            if ! python - <<'PY'
+          import json
+          files=json.load(open('/tmp/files.json', encoding='utf-8'))
+          allowed_exact={
+              'sales-command-30/README.md',
+              'sales-command-30/PRODUCT.md',
+              'sales-command-30/SALES.md',
+              'sales-command-30/OPS.md',
+          }
+          allowed_prefix=('sales-command-30/src/', 'sales-command-30/tests/')
+          if not 1 <= len(files) <= 3:
+              raise SystemExit(f'FORGE PR must change 1-3 files, got {len(files)}')
+          total=0
+          for f in files:
+              path=f['filename']
+              if path not in allowed_exact and not path.startswith(allowed_prefix):
+                  raise SystemExit(f'forbidden FORGE path: {path}')
+              total += int(f.get('additions', 0)) + int(f.get('deletions', 0))
+          if total > 250:
+              raise SystemExit(f'FORGE diff too large: {total} > 250 changed lines')
+          print(f'FORGE diff bounded: {len(files)} file(s), {total} changed lines')
+          PY
+            then
+              echo "BLOCKED #$PR: bounded-diff policy failed"
+              continue
+            fi
+
+            gh api "repos/$REPO/commits/$HEAD/check-runs?per_page=100" > /tmp/checks.json
+            if ! python - <<'PY'
+          import json
+          data=json.load(open('/tmp/checks.json', encoding='utf-8'))
+          required={
+              'guard',
+              'Analyze (python)',
+              'Analyze (javascript-typescript)',
+              'Python dependency audit',
+              'npm audit (baton)',
+              'npm audit (iyomaru-ramen)',
+              'dependency-review',
+              'Secure build / WebGL / policy / SBOM',
+              'TOMOKI/FORGE policy + verification',
+          }
+          runs={r['name']:r for r in data.get('check_runs', [])}
+          missing=sorted(required-runs.keys())
+          if missing:
+              raise SystemExit('required checks missing: ' + ', '.join(missing))
+          bad=[]
+          for name in sorted(required):
+              r=runs[name]
+              if r.get('status') != 'completed' or r.get('conclusion') != 'success':
+                  bad.append(f"{name}={r.get('status')}/{r.get('conclusion')}")
+          if bad:
+              raise SystemExit('required checks not green: ' + ', '.join(bad))
+          PY
+            then
+              echo "Not ready #$PR: required checks missing/running/failed"
+              continue
+            fi
+
+            if gh api -X PUT "repos/$REPO/pulls/$PR/merge" \
+              -f sha="$HEAD" \
+              -f merge_method='squash' \
+              -f commit_title="TOMOKI/FORGE: promote deterministic validated improvement" \
+              --silent; then
+              echo "Merged FORGE PR #$PR at exact head $HEAD without admin bypass."
+            else
+              echo "GitHub protections refused FORGE PR #$PR; leaving it open."
+            fi
+          done
