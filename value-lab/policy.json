@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "purpose": "Real-world customer value outranks internal sophistication.",
+  "candidate_limit": 3,
+  "weights": {
+    "willingness_to_pay": 0.20,
+    "urgency": 0.12,
+    "measurable_outcome": 0.14,
+    "delivery_feasibility": 0.12,
+    "recurring_potential": 0.10,
+    "differentiation": 0.10,
+    "proof_strength": 0.14,
+    "owner_effort_inverse": 0.05,
+    "safety_inverse": 0.03
+  },
+  "promotion": {
+    "manager_review_min_evidence": 50,
+    "demo_ready_min_evidence": 60,
+    "demo_ready_min_buyer_value": 60,
+    "validated_min_evidence": 80,
+    "validated_min_buyer_value": 75
+  },
+  "governance_route": [
+    "WORKER",
+    "MANAGER",
+    "TOMOKI/SKEPTIC",
+    "TOMOKI/HOUND",
+    "TOMOKI/FORGE",
+    "BOSS",
+    "CEO"
+  ],
+  "wld_stage_rewards": {
+    "demo_ready": 20,
+    "market_test": 40,
+    "validated": 100
+  }
+}
