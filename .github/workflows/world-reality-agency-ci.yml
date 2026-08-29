@@ -16,6 +16,10 @@ on:
 permissions:
   contents: read
 
+env:
+  SUPABASE_URL: https://czwdtjgunsafcifjhpwt.supabase.co
+  SUPABASE_PUBLISHABLE_KEY: sb_publishable_vvPbYKjFFrc-OPM2yHFKaQ_9dtTu2EM
+
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -29,9 +33,9 @@ jobs:
           python-version: '3.12'
       - name: Compile Python
         run: python -m compileall -q outside-world company-society
-      - name: Build real citizen snapshot
+      - name: Load canonical live population
         run: |
-          PYTHONPATH=company-society python company-society/citizen_registry.py --json world-citizens.json --report world-citizens.md
+          python outside-world/supabase_directory.py --out world-citizens.json --require-min 100
           python outside-world/identity_manifest.py --citizens world-citizens.json --out world-identities.json
           python outside-world/citizen_web_runtime.py --citizens world-citizens.json --targets outside-world/reality_targets.json --policy outside-world/reality_policy.json --tasks reality-tasks.json --state reality-cursor.json
       - name: Unit tests
@@ -42,7 +46,7 @@ jobs:
           import json
           c=json.load(open('world-citizens.json', encoding='utf-8'))
           t=json.load(open('reality-tasks.json', encoding='utf-8'))
-          print(f"Population discovered: **{c.get('population', 0)}**")
+          print(f"Canonical population discovered: **{c.get('population', 0)}**")
           print(f"Citizens assigned this pulse: **{len(t.get('tasks', []))}**")
           print(f"Source counts: `{json.dumps(c.get('source_counts', {}), ensure_ascii=False)}`")
           PY
