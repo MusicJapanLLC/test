@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Fail-closed policy for GitHub Actions and autonomous control-plane workflows.
 
-The policy classifies privileged workflows by capability, validates bounded lanes,
-and rejects any new write/OIDC lane until it has an explicit policy. Keeping this
-logic outside YAML makes the security gate reviewable and testable without fragile
-inline scripts.
+Privileged workflows are classified by *capability*, not by a growing pile of
+filename exceptions. Known bounded classes (Pages deploys, THE WORLD OIDC task
+worker, closed-simulator experiment lanes, and owned-repository issue stress
+lanes) are validated against structural invariants. Anything else with write
+or OIDC authority is denied until it fits a reviewed capability class.
 """
 from __future__ import annotations
 
@@ -29,6 +30,7 @@ GATEWAY_PROTOCOL_RE = re.compile(
     r'(?m)^GATEWAY_PROTOCOL\s*=\s*"oidc-repository-v(?P<version>\d+)-(?P<label>[a-z0-9][a-z0-9-]*)"\s*$'
 )
 MIN_GATEWAY_PROTOCOL_VERSION = 4
+MAX_OWNED_STRESS_WRITES = 100
 
 
 def writes(body: str) -> set[str]:
@@ -100,7 +102,7 @@ def validate_pages_lanes() -> set[str]:
     return page_lanes
 
 
-def validate_task_worker(page_lanes: set[str]) -> None:
+def validate_task_worker() -> str:
     body = require(
         'the-world-task-worker.yml',
         (
@@ -114,11 +116,6 @@ def validate_task_worker(page_lanes: set[str]) -> None:
     )
     if writes(body) != {'actions', 'id-token'}:
         raise SystemExit(f'the-world-task-worker.yml: unexpected writes {sorted(writes(body))}')
-
-    oidc_lanes = {name for name, text in WORKFLOWS.items() if 'id-token' in writes(text)}
-    unexpected = oidc_lanes - page_lanes - {'the-world-task-worker.yml'}
-    if unexpected:
-        raise SystemExit(f'Unexpected OIDC write lanes: {sorted(unexpected)}')
 
     secrets_marker = '$' + '{{' + ' secrets.'
     if secrets_marker in body:
@@ -146,6 +143,93 @@ def validate_task_worker(page_lanes: set[str]) -> None:
         raise SystemExit('task_worker.py: Edge requests must authenticate with a fresh GitHub OIDC token')
     if 'urllib.parse.urlencode({"audience": AUDIENCE})' not in client:
         raise SystemExit('task_worker.py: OIDC token request must bind the configured audience')
+    return 'the-world-task-worker.yml'
+
+
+def validate_experiment_oidc_lanes(page_lanes: set[str], task_worker: str) -> set[str]:
+    """Classify closed-simulator experiment workers without filename exceptions.
+
+    These lanes may read/write only experiment strategy state in the owned repo
+    and may call THE WORLD gateway with a fresh GitHub OIDC token. The promotion
+    path must prove that exactly one numeric strategy file changed and must use a
+    non-force ref update. Any OIDC workflow that does not satisfy all invariants
+    remains denied.
+    """
+    experiment_lanes: set[str] = set()
+    oidc_lanes = {name for name, text in WORKFLOWS.items() if 'id-token' in writes(text)}
+    candidates = oidc_lanes - page_lanes - {task_worker}
+    secrets_marker = '$' + '{{' + ' secrets.'
+
+    for name in sorted(candidates):
+        body = WORKFLOWS[name]
+        got = writes(body)
+        if got != {'contents', 'id-token'}:
+            raise SystemExit(f'{name}: unclassified OIDC write set: {sorted(got)}')
+        required = (
+            'contents: write', 'actions: read', 'id-token: write',
+            'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
+            'automation/world/task_worker.py experiment-config',
+            'automation/world/task_worker.py record-experiment',
+            'senju/state/strategy.json',
+            'CURRENT_BASE_SHA=', 'force=false',
+            'python -m senju.cli safety-check sim://',
+            'python -m senju.cli safety-check https://example.com',
+            'Base moved; safe promotion deferred',
+        )
+        for item in required:
+            if item not in body:
+                raise SystemExit(f'{name}: OIDC experiment lane missing invariant: {item}')
+        if secrets_marker in body:
+            raise SystemExit(f'{name}: OIDC experiment lane may not use long-lived Actions secrets')
+        if 'pull_request:' in body:
+            raise SystemExit(f'{name}: OIDC experiment lane must not run with pull_request authority')
+        if 'git push ' in body or 'gh pr create' in body:
+            raise SystemExit(f'{name}: experiment promotion must use the bounded GitHub API ref path')
+        if body.count('senju/state/strategy.json') < 2:
+            raise SystemExit(f'{name}: strategy promotion must fetch and verify the same bounded state file')
+        if '[.files[].filename]' not in body or "'[\"senju/state/strategy.json\"]'" not in body:
+            raise SystemExit(f'{name}: promotion diff must prove strategy.json is the only changed file')
+        experiment_lanes.add(name)
+    return experiment_lanes
+
+
+def _stress_write_count(body: str) -> int | None:
+    match = re.search(r'for\s+\w+\s+in\s+\$\(seq\s+(\d+)\s+(\d+)\)', body)
+    if not match:
+        return None
+    start, end = int(match.group(1)), int(match.group(2))
+    if start < 1 or end < start:
+        return None
+    return end - start + 1
+
+
+def validate_owned_issue_stress_lanes() -> set[str]:
+    """Recognize bounded write-load tests that can touch only this repo's issue comments."""
+    lanes: set[str] = set()
+    for name, body in WORKFLOWS.items():
+        if writes(body) != {'issues'}:
+            continue
+        if name == 'world-reality-agency.yml':
+            continue
+        # This capability class is intentionally narrow: manual/self-file push,
+        # no schedule, same-repository token, one fixed issue, <=100 comments.
+        for item in (
+            'contents: read', 'issues: write', 'workflow_dispatch:',
+            'REPO: ${{ github.repository }}', 'repos/${REPO}/issues/', '/comments',
+        ):
+            if item not in body:
+                raise SystemExit(f'{name}: owned issue stress lane missing invariant: {item}')
+        if 'schedule:' in body or 'pull_request:' in body:
+            raise SystemExit(f'{name}: owned issue stress lane must not be scheduled or PR-triggered')
+        if 'push:' in body and f'".github/workflows/{name}"' not in body and f"'.github/workflows/{name}'" not in body:
+            raise SystemExit(f'{name}: push trigger must be scoped to the workflow file itself')
+        count = _stress_write_count(body)
+        if count is None or count > MAX_OWNED_STRESS_WRITES:
+            raise SystemExit(f'{name}: owned issue stress loop must be explicit and <= {MAX_OWNED_STRESS_WRITES}')
+        if re.search(r'repos/[^$][^\s"\']*/issues/', body):
+            raise SystemExit(f'{name}: issue stress target must come from github.repository, not a hard-coded external repo')
+        lanes.add(name)
+    return lanes
 
 
 def validate_explicit_lanes() -> set[str]:
@@ -250,8 +334,7 @@ def validate_explicit_lanes() -> set[str]:
     return set(expected)
 
 
-def validate_unknown_writes(page_lanes: set[str], explicit: set[str]) -> None:
-    known = explicit | page_lanes | {'the-world-task-worker.yml', 'security-guard.yml'}
+def validate_unknown_writes(known: set[str]) -> None:
     unknown = {
         name: sorted(writes(body))
         for name, body in WORKFLOWS.items()
@@ -264,14 +347,19 @@ def validate_unknown_writes(page_lanes: set[str], explicit: set[str]) -> None:
 def main() -> int:
     validate_global_safety()
     page_lanes = validate_pages_lanes()
-    validate_task_worker(page_lanes)
+    task_worker = validate_task_worker()
+    experiment_lanes = validate_experiment_oidc_lanes(page_lanes, task_worker)
+    issue_stress_lanes = validate_owned_issue_stress_lanes()
     explicit = validate_explicit_lanes()
-    validate_unknown_writes(page_lanes, explicit)
+    known = explicit | page_lanes | experiment_lanes | issue_stress_lanes | {task_worker, 'security-guard.yml'}
+    validate_unknown_writes(known)
     print(json.dumps({
         'status': 'PASS',
         'workflows': len(WORKFLOWS),
         'pages_lanes': sorted(page_lanes),
-        'privileged_lanes': sorted(explicit | {'the-world-task-worker.yml'}),
+        'experiment_oidc_lanes': sorted(experiment_lanes),
+        'owned_issue_stress_lanes': sorted(issue_stress_lanes),
+        'privileged_lanes': sorted(known - {'security-guard.yml'}),
     }, ensure_ascii=False))
     return 0
 
