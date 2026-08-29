@@ -84,7 +84,9 @@ jobs:
             --exclude='senju-autonomous-improver.yml' \
             --exclude='tomoki-forge.yml' \
             --exclude='tomoki-manager.yml' \
-            --exclude='ai-factory-boss.yml'; then
+            --exclude='ai-factory-boss.yml' \
+            --exclude='the-world-realtime-kernel.yml' \
+            --exclude='the-core-autonomous-director.yml'; then
             echo "Repository write permission exists outside an explicitly validated privileged workflow."
             exit 1
           fi
@@ -187,6 +189,43 @@ jobs:
                   'contents: write', 'issues: write', 'pull-requests: write',
               ],
           )
+
+          realtime = text('the-world-realtime-kernel.yml')
+          require(
+              'THE WORLD Realtime Kernel', realtime,
+              [
+                  'contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
+                  "cron: '*/5 * * * *'", 'persist-credentials: false',
+                  'automation/world/realtime_kernel.py', '--apply',
+                  'WORLD_REALTIME_REF:', 'world-realtime-pulse.json',
+              ],
+              common_forbidden + [
+                  'contents: write', 'issues: write', 'pull-requests: write',
+                  'checks: write', 'deployments: write', 'packages: write',
+              ],
+          )
+
+          director = text('the-core-autonomous-director.yml')
+          require(
+              'THE CORE Autonomous Director', director,
+              [
+                  'contents: read', 'actions: write', 'copilot-requests: write',
+                  'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
+                  '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
+                  'automation/world/core_director.py', '--apply',
+                  '--allow-tool=write', '--no-ask-user', 'core-director-plan.json',
+              ],
+              common_forbidden + [
+                  'contents: write', 'issues: write', 'pull-requests: write',
+                  'checks: write', 'deployments: write', 'packages: write',
+              ],
+          )
+          if director:
+              copilot_lines = [x.strip() for x in director.splitlines() if x.strip().startswith('copilot -p ')]
+              if len(copilot_lines) != 1:
+                  raise SystemExit('THE CORE Director must have exactly one Copilot execution line')
+              if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
+                  raise SystemExit('THE CORE Director Copilot may write its plan but may not receive autonomous shell permission')
           PY
 
       - name: Validate TOMOKI FORGE file policy remains bounded
