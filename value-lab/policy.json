@@ -1,0 +1,32 @@
+{
+  "schema_version": 2,
+  "purpose": "Real-world customer value outranks internal sophistication. Senju may strengthen technical evidence but may not invent market evidence.",
+  "candidate_limit": 3,
+  "weights": {
+    "willingness_to_pay": 0.20,
+    "urgency": 0.12,
+    "measurable_outcome": 0.14,
+    "delivery_feasibility": 0.12,
+    "recurring_potential": 0.10,
+    "differentiation": 0.10,
+    "proof_strength": 0.14,
+    "owner_effort_inverse": 0.05,
+    "safety_inverse": 0.03
+  },
+  "promotion": {
+    "manager_review_min_evidence": 50,
+    "demo_ready_min_evidence": 60,
+    "demo_ready_min_buyer_value": 60,
+    "validated_min_evidence": 80,
+    "validated_min_buyer_value": 75
+  },
+  "senju_coupling": {
+    "allowed_research_focus": ["robustness", "learning", "balance", "efficiency"],
+    "max_candidate_count": 9,
+    "default_candidate_count": 7,
+    "technical_evidence_only": true,
+    "forbidden_market_claim_fields": ["willingness_to_pay", "urgency", "recurring_potential", "real_revenue_yen"]
+  },
+  "governance_route": ["WORKER", "MANAGER", "TOMOKI/SKEPTIC", "TOMOKI/HOUND", "TOMOKI/FORGE", "BOSS", "CEO"],
+  "wld_stage_rewards": {"demo_ready": 20, "market_test": 40, "validated": 100}
+}
