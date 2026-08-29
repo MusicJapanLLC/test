@@ -19,10 +19,6 @@ concurrency:
 permissions:
   contents: read
 
-concurrency:
-  group: standment-security-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   secure-build:
     name: Secure build / WebGL / policy / SBOM
