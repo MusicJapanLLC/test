@@ -96,10 +96,10 @@ jobs:
             timeout 180s copilot \
               -p "$(cat "$FACTORY_DIR/prompts/${slot}.md")" \
               -s \
-              --allow-tool="read" \
-              --deny-tool="write" \
-              --deny-tool="shell" \
-              --deny-tool="url" \
+              --allow-tool=read \
+              --deny-tool=write \
+              --deny-tool=shell \
+              --deny-tool=url \
               --no-ask-user \
               > "$FACTORY_DIR/raw/${slot}.txt" 2>&1 || true
 
@@ -166,9 +166,10 @@ jobs:
           timeout 420s copilot \
             -p "$(cat "$FACTORY_DIR/forge-prompt.md")" \
             -s \
-            --allow-tool="read,write" \
-            --deny-tool="shell" \
-            --deny-tool="url" \
+            --allow-tool=read \
+            --allow-tool=write \
+            --deny-tool=shell \
+            --deny-tool=url \
             --no-ask-user \
             > "$FACTORY_DIR/forge.log" 2>&1 || true
 
@@ -176,7 +177,7 @@ jobs:
           # without staging them for commit yet.
           git add -N -- automation/world automation/security standment-security value-lab docs 2>/dev/null || true
 
-          if git diff --quiet -- "$BASE_SHA" --; then
+          if git diff --quiet "$BASE_SHA" --; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Champion produced no repository change." >> "$GITHUB_STEP_SUMMARY"
             exit 0
