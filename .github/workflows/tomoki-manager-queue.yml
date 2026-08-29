@@ -35,9 +35,7 @@ jobs:
 
       - name: Heartbeat and move up to three P100 Manager tasks into independent review
         run: |
-          python automation/control_plane/manager_queue.py \
-            --max 3 \
-            --out reports/control-plane/manager-queue-cycle.json
+          python automation/control_plane/manager_queue.py --max 3
 
       - name: Queue bridge summary
         if: always()
