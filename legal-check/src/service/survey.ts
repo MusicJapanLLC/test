@@ -413,6 +413,38 @@ export function renderSurvey(mount: HTMLElement, service: Service): void {
     return step;
   }
 
+  /**
+   * 最後の画面に、ここまで入力された内容を並べる。
+   * 送る側が「何を渡すのか」を見たうえで送信できるようにするため。
+   */
+  function summary(): HTMLElement {
+    const rows = fields
+      .map((f) => ({ label: f.label, value: state.profile[f.id] ?? '' }))
+      .filter((r) => r.value);
+
+    const back = el('button', {
+      type: 'button',
+      class: 'survey__summary-edit',
+      text: '修正する',
+    }) as HTMLButtonElement;
+    back.addEventListener('click', () => goTo(questions.length));
+
+    return el('div', { class: 'survey__summary' }, [
+      el('div', { class: 'survey__summary-head' }, [
+        el('p', { class: 'survey__summary-title', text: 'お送りする内容' }),
+        back,
+      ]),
+      el(
+        'dl',
+        { class: 'survey__summary-list' },
+        rows.flatMap((r) => [
+          el('dt', { text: r.label }),
+          el('dd', { text: r.value }),
+        ]),
+      ),
+    ]);
+  }
+
   // ── ひとこと＋連絡方法 ───────────────────────────────────
   function finalStep(): HTMLElement {
     const step = el('div', { class: 'survey__step' });
@@ -517,6 +549,7 @@ export function renderSurvey(mount: HTMLElement, service: Service): void {
       el('h3', { class: 'survey__question', text: 'ご連絡の方法を選んでください' }),
       contactOptions,
       el('div', { class: 'survey__fields' }, [commentField]),
+      summary(),
       errorBox,
       nav,
     );

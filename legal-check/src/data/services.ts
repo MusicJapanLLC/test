@@ -12,6 +12,25 @@ import type { ProfileField, Service } from '../types';
 const PROFILE: ProfileField[] = [
   { id: 'company', label: '会社名', type: 'text', required: true, group: '会社について' },
   {
+    id: 'industry',
+    label: '業種',
+    type: 'select',
+    required: true,
+    options: [
+      '情報通信・IT',
+      '製造業',
+      '建設・不動産',
+      '卸売・小売',
+      '金融・保険',
+      '運輸・物流',
+      '医療・福祉',
+      '人材・サービス',
+      'コンサル・士業',
+      'その他',
+    ],
+    group: '会社について',
+  },
+  {
     id: 'capital',
     label: '資本金',
     type: 'number',
@@ -131,6 +150,12 @@ export const services: Service[] = [
             'ChatGPTなど生成AIとの違い',
             '導入の流れとサポート体制',
           ],
+        },
+        {
+          id: 'q5',
+          label: '導入を考えている時期はいつ頃ですか',
+          type: 'single',
+          options: ['今すぐ', '3ヶ月以内', '半年以内', '1年以内', '情報収集の段階'],
         },
       ],
       profileFields: PROFILE,

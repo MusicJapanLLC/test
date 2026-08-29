@@ -112,7 +112,7 @@ function surveySection(service: Service): HTMLElement {
         el('h2', { class: 'section__title', text: '現在の状況について教えてください', 'data-reveal': true }),
         el('p', {
           class: 'section__note',
-          text: '4問と、ご連絡先だけ。1分ほどで終わります。',
+          text: `${service.survey.questions.length}問と、ご連絡先だけ。1分ほどで終わります。`,
           'data-reveal': true,
         }),
       ]),

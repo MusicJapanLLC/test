@@ -51,6 +51,13 @@
  *  5. あとは上の 4〜10 と同じ
  *
  * ───────────────────────────────────────────────────────────────
+ *  ■ 列を増やしたときの注意
+ *     すでに 'legal' シートがある状態でヘッダーを増やしても、
+ *     1行目は自動では書き換わりません。
+ *     列構成を変えたら 'legal' シートを一度削除してから
+ *     setupLegalSheet を実行し直してください。
+ *     （テスト行しか無いうちに済ませること）
+ *
  *  ■ 疎通確認
  *     コピーしたURLをブラウザで開いて「OK」と出れば届いています。
  *
@@ -78,12 +85,14 @@ var QUESTIONS = [
   '契約書は月にどのくらい見ますか',
   'いまの法務体制はどれが近いですか',
   '契約書のレビューで感じていることはどれですか',
-  '知りたいことはどれですか'
+  '知りたいことはどれですか',
+  '導入を考えている時期はいつ頃ですか'
 ];
 
 var HEADERS = [
   '送信日時',
   '会社名',
+  '業種',
   'ご担当者名',
   'メールアドレス',
   '電話番号',
@@ -94,6 +103,7 @@ var HEADERS = [
   'Q2 法務体制',
   'Q3 課題',
   'Q4 知りたいこと',
+  'Q5 検討時期',
   'ひとこと',
   '連絡方法'
 ];
@@ -195,6 +205,7 @@ function doPost(e) {
     legalSheet().appendRow([
       nowJst(),
       flatten(profile.company),
+      flatten(profile.industry),
       flatten(profile.name),
       flatten(profile.email),
       flatten(profile.tel),
@@ -205,6 +216,7 @@ function doPost(e) {
       flatten(answers.q2),
       flatten(answers.q3),
       flatten(answers.q4),
+      flatten(answers.q5),
       flatten(data.comment),
       flatten(data.contactMethod)
     ]);
@@ -243,11 +255,13 @@ function notify(profile, answers, data) {
   lines.push('');
   lines.push('受信日時 : ' + nowJst());
   lines.push('会社名   : ' + company);
+  lines.push('業種     : ' + flatten(profile.industry));
   lines.push('担当者名 : ' + flatten(profile.name));
   lines.push('メール   : ' + flatten(profile.email));
   lines.push('役職     : ' + flatten(profile.role));
   lines.push('資本金   : ' + flatten(profile.capital));
   lines.push('従業員数 : ' + flatten(profile.employees));
+  lines.push('検討時期 : ' + flatten(answers.q5));
   lines.push('連絡方法 : ' + flatten(data.contactMethod));
   lines.push('');
   lines.push('── 回答 ──────────────────────');
@@ -286,10 +300,12 @@ function testLegalSubmission() {
           q1: '5〜10件',
           q2: '法務担当が1〜3名いる',
           q3: ['時間がかかる', '見落としがないか不安'],
-          q4: ['料金プラン', '同業種の導入事例']
+          q4: ['料金プラン', '同業種の導入事例'],
+          q5: '3ヶ月以内'
         },
         profile: {
           company: '【テスト】株式会社サンプル',
+          industry: '情報通信・IT',
           name: 'テスト太郎',
           email: 'test@example.com',
           tel: '070-0000-0000',

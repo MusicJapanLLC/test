@@ -624,6 +624,73 @@ body.service {
   display: block;
 }
 
+/* 最後の画面に出す、入力済みの内容 */
+
+.survey__summary {
+  margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  padding-top: clamp(1.25rem, 1rem + 1.2vw, 1.75rem);
+  border-top: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.survey__summary-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.survey__summary-title {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--text) 74%, transparent);
+}
+
+.survey__summary-edit {
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 40%, transparent);
+  padding-bottom: 1px;
+  transition: border-color 0.25s ease;
+}
+
+.survey__summary-edit:hover {
+  border-color: var(--primary);
+}
+
+.survey__summary-list {
+  display: grid;
+  gap: 0.35rem 1.25rem;
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.7;
+}
+
+@media (min-width: 560px) {
+  .survey__summary-list {
+    grid-template-columns: 7.5rem 1fr;
+  }
+}
+
+.survey__summary-list dt {
+  color: color-mix(in srgb, var(--text) 58%, transparent);
+  font-size: 0.78rem;
+}
+
+.survey__summary-list dd {
+  margin: 0;
+  color: var(--text);
+  word-break: break-all;
+}
+
+@media (max-width: 559px) {
+  .survey__summary-list dd {
+    margin-bottom: 0.5rem;
+  }
+}
+
 /* 送り */
 
 .survey__nav {
