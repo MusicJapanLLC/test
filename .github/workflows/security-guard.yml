@@ -71,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      - name: Enforce safe workflow triggers and permissions
+      - name: Block unsafe workflow triggers and runners
         shell: bash
         run: |
           set -euo pipefail
@@ -79,54 +79,88 @@ jobs:
             echo "Unsafe workflow trigger, broad permission, or self-hosted runner detected."
             exit 1
           fi
-          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows --exclude='security-guard.yml' --exclude='senju-autonomous-improver.yml'; then
-            echo "Broad repository write permission detected. Use a narrowly scoped dedicated job instead."
-            exit 1
-          fi
 
-      - name: Validate Senju autonomous improver blast radius
+      - name: Enforce privileged permission allowlist
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
+          import re
           from pathlib import Path
-          p = Path('.github/workflows/senju-autonomous-improver.yml')
-          if not p.exists():
-              raise SystemExit(0)
-          text = p.read_text(encoding='utf-8')
-          required = [
-              'models: read',
-              'contents: write',
-              'pull-requests: write',
-              'workflow_dispatch:',
-              'schedule:',
-              'senju/state/champion.json',
-              'senju/state/strategy.json',
-              'senju/state/last-evolution-summary.json',
-              'senju/state/last-evolution-plan.md',
-          ]
-          for item in required:
-              if item not in text:
-                  raise SystemExit(f'autonomous improver missing required guardrail: {item}')
-          forbidden = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
-          ]
-          for item in forbidden:
-              if item in text:
-                  raise SystemExit(f'autonomous improver contains forbidden capability: {item}')
-          # The promotion job may write only the four state/audit files below.
+
           allowed = {
+              '.github/workflows/codeql.yml': {'security-events'},
+              '.github/workflows/deploy-iyomaru-ramen.yml': {'pages', 'id-token'},
+              '.github/workflows/pages.yml': {'pages', 'id-token'},
+              '.github/workflows/release-provenance.yml': {'attestations', 'id-token'},
+              '.github/workflows/senju-autonomous-improver.yml': {'contents', 'pull-requests'},
+              '.github/workflows/senju-promotion-gate.yml': {'contents', 'pull-requests'},
+          }
+          failures=[]
+          pattern=re.compile(r'^\s+([a-z0-9-]+):\s*write\s*(?:#.*)?$')
+          for path in sorted(Path('.github/workflows').glob('*.y*ml')):
+              if path.name == 'security-guard.yml':
+                  continue
+              permitted=allowed.get(str(path), set())
+              for lineno, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                  m=pattern.match(line)
+                  if not m:
+                      continue
+                  scope=m.group(1)
+                  if scope not in permitted:
+                      failures.append(f'{path}:{lineno}: unauthorized {scope}: write')
+          if failures:
+              raise SystemExit('\n'.join(failures))
+          PY
+
+      - name: Block administrative bypass and destructive workflow Git operations
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R -nE 'gh[[:space:]]+pr[[:space:]]+merge[^\n]*--admin|git[[:space:]]+push[^\n]*(--force|-f([[:space:]]|$))|gh[[:space:]]+api[^\n]*-X[[:space:]]+DELETE' .github/workflows --exclude='security-guard.yml'; then
+            echo "Administrative bypass, forced push, or destructive GitHub API operation detected."
+            exit 1
+          fi
+
+      - name: Enforce Senju AI two-key boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          proposal_path=Path('.github/workflows/senju-autonomous-improver.yml')
+          gate_path=Path('.github/workflows/senju-promotion-gate.yml')
+          if not proposal_path.exists() or not gate_path.exists():
+              raise SystemExit('Senju two-key workflows must both exist')
+          proposal=proposal_path.read_text(encoding='utf-8')
+          gate=gate_path.read_text(encoding='utf-8')
+
+          if 'gh pr merge' in proposal or '/pulls/$PR/merge' in proposal:
+              raise SystemExit('AI proposal workflow must never hold merge authority')
+          if 'secrets.' in proposal:
+              raise SystemExit('privileged AI proposal workflow must not receive repository secrets')
+          if 'models:' in gate or 'secrets.' in gate:
+              raise SystemExit('deterministic promotion gate must not receive model access or repository secrets')
+          if 'actions/checkout@' in gate:
+              raise SystemExit('promotion gate must not checkout candidate code')
+          if '--admin' in proposal or '--admin' in gate:
+              raise SystemExit('Senju may not bypass GitHub protections with administrator merge')
+
+          expected={
               'senju/state/champion.json',
               'senju/state/strategy.json',
               'senju/state/last-evolution-summary.json',
               'senju/state/last-evolution-plan.md',
           }
-          write_lines = [line.strip() for line in text.splitlines() if line.strip().startswith('put_file ')]
-          observed = {line.split()[-1] for line in write_lines}
-          if observed != allowed:
-              raise SystemExit(f'autonomous write allowlist mismatch: {sorted(observed)}')
+          destinations=set()
+          for line in proposal.splitlines():
+              m=re.search(r'^\s*put_file\s+\S+\s+(senju/state/\S+)\s*$', line)
+              if m:
+                  destinations.add(m.group(1))
+          if destinations != expected:
+              raise SystemExit(f'AI proposal write surface changed: {sorted(destinations)}')
           PY
 
       - name: Block remote shell execution patterns
