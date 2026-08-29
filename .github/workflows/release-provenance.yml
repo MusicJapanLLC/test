@@ -1,0 +1,123 @@
+name: Supply Chain Provenance
+
+on:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "baton/**"
+      - "iyomaru-ramen/**"
+      - "scripts/security/**"
+      - ".github/workflows/release-provenance.yml"
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "baton/**"
+      - "iyomaru-ramen/**"
+      - "scripts/security/**"
+      - ".github/workflows/release-provenance.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: supply-chain-provenance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Reproducible release candidates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: baton/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Build Baton from lockfile
+        working-directory: baton
+        env:
+          VITE_SITE_URL: https://baton-liart.vercel.app
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+
+      - name: Build Iyomaru from source
+        working-directory: iyomaru-ramen
+        env:
+          SITE_URL: https://musicjapanllc.github.io
+          SITE_BASE_PATH: /test/
+        run: |
+          set -euo pipefail
+          node build.mjs
+
+      - name: Generate Baton SBOM
+        run: |
+          set -euo pipefail
+          mkdir -p provenance-out
+          python scripts/security/sbom_from_lock.py baton/package-lock.json --output provenance-out/baton.cdx.json
+
+      - name: Package deterministic release candidates
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -czf provenance-out/baton-dist.tgz -C baton/dist .
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -czf provenance-out/iyomaru-dist.tgz -C iyomaru-ramen/dist .
+          (cd provenance-out && sha256sum baton-dist.tgz iyomaru-dist.tgz baton.cdx.json > SHA256SUMS)
+
+      - name: Upload release candidates
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: release-candidates-${{ github.sha }}
+          path: provenance-out/
+          if-no-files-found: error
+          retention-days: 30
+
+  attest:
+    name: Sign provenance and SBOM
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download release candidates
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: release-candidates-${{ github.sha }}
+          path: provenance-out
+
+      - name: Attest Baton build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: provenance-out/baton-dist.tgz
+
+      - name: Attest Iyomaru build provenance
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: provenance-out/iyomaru-dist.tgz
+
+      - name: Attest Baton SBOM
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        with:
+          subject-path: provenance-out/baton-dist.tgz
+          sbom-path: provenance-out/baton.cdx.json
