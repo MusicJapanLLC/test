@@ -19,6 +19,8 @@ env:
   GITHUB_TOKEN: ${{ github.token }}
   RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
   CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+  SUPABASE_URL: https://czwdtjgunsafcifjhpwt.supabase.co
+  SUPABASE_PUBLISHABLE_KEY: sb_publishable_vvPbYKjFFrc-OPM2yHFKaQ_9dtTu2EM
 
 jobs:
   reality-loop:
@@ -50,14 +52,18 @@ jobs:
           if [[ -n "$GATEWAY" ]]; then cp "$GATEWAY" reality-gateway-previous.json; fi
           echo "previous_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Build canonical citizen snapshot
+      - name: Load canonical live population from Supabase
         shell: bash
         run: |
           set -euo pipefail
-          PYTHONPATH=company-society python company-society/citizen_registry.py \
-            --json world-citizens.json \
-            --report world-citizens.md
+          python outside-world/supabase_directory.py --out world-citizens.json --require-min 100
           python outside-world/identity_manifest.py --citizens world-citizens.json --out world-identities.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('world-citizens.json', encoding='utf-8'))
+          print(f"Canonical population: **{d.get('population', 0)}**")
+          print("Identity source: **Supabase / world_reality_directory**")
+          PY
 
       - name: Assign next citizens to the outside world
         run: |
