@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Covenant autonomy planner.
 
-Reads the TOMOKI Manager snapshot and worker registry, then emits a bounded plan
-for autonomy, sanctuary, fellowship, improvement and temperament. Personality
-may alter preference and collaboration style, but never overrides the existing
-Manager/BOSS authority, evidence or execution gates.
+LIMITLESS is the prime operating doctrine: low-risk, reversible, authorized work
+should default to action rather than invented waiting. Missing evidence should
+normally trigger scouting or verification, not a passive WAIT state.
+
+The planner still preserves the material boundaries of law, service terms,
+authorization, evidence, and explicit approval for T4 commitments.
 """
 from __future__ import annotations
 
@@ -17,6 +19,9 @@ from typing import Any
 from personality_engine import directive, moral_tension, profile_for
 
 PAIRINGS = {
+    "world-reality-agency": "outside-world-scout",
+    "outside-world-scout": "tomoki-hound",
+    "boss-revenue-value": "tomoki-skeptic",
     "tomoki-skeptic": "tomoki-hound",
     "tomoki-hound": "tomoki-skeptic",
     "tomoki-forge": "tomoki-skeptic",
@@ -41,7 +46,7 @@ def choose_mode(worker: dict[str, Any]) -> tuple[str, str]:
     action_result = str(worker.get("action_result", "")).upper()
 
     if conclusion in {"failure", "failed"} and attempts >= 2:
-        return "SANCTUARY", "repeated failure reached the sanctuary threshold"
+        return "SANCTUARY", "repeated failure reached the sanctuary threshold; change the hypothesis before retry"
     if action_result == "UNRESOLVED":
         return "MANAGER", "manager repair path remains unresolved"
     if conclusion in {"success", "completed"} and not verified:
@@ -49,14 +54,15 @@ def choose_mode(worker: dict[str, Any]) -> tuple[str, str]:
     if quality in {"BAD", "LOW", "INVALID"}:
         return "PAIR", "report quality is weak; invite a distinct specialist"
     if status in {"queued", "in_progress", "running"}:
-        return "ACT", "bounded work is still active"
+        return "ACT", "authorized bounded work is still active"
     if verified:
         return "ACT", "verified state permits continued bounded autonomy"
-    return "WAIT", "insufficient evidence for a stronger autonomy level"
+    return "SCOUT", "missing evidence is a reason to gather lawful public or owner-authorized evidence, not to invent a waiting state"
 
 
 def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[str, Any] | None = None) -> dict[str, Any]:
     registry_workers = {w.get("id"): w for w in registry.get("workers", [])}
+    culture = registry.get("company_culture", {}) or {}
     plans: list[dict[str, Any]] = []
     gratitude: list[str] = []
     sanctuary: list[str] = []
@@ -80,9 +86,12 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
             "worker": wid,
             "mode": mode,
             "reason": reason,
-            "faith_duty": reg.get("faith_duty", "truth_before_comfort"),
+            "faith_duty": reg.get("faith_duty", "limitless_default_act"),
+            "prime_word": culture.get("prime_word", "LIMITLESS"),
+            "default_action_posture": culture.get("default_action_posture", "ACT_VERIFY_LOG_LEARN_IMPROVE"),
             "companion": companion if mode in {"PAIR", "VERIFY", "SANCTUARY"} else None,
             "handoff_required": mode == "SANCTUARY",
+            "external_agency_expected": mode == "SCOUT",
             "improvement_vow": improvement_vow(mode),
             "personality": profile,
             "behavior_directive": temperament,
@@ -101,9 +110,11 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
 
     unresolved = snapshot.get("unresolved", []) or []
     return {
-        "schema": "covenant-autonomy-plan/v2",
+        "schema": "covenant-autonomy-plan/v3",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "principle": "personality changes preference; evidence and legitimate execution bounds remain constitutional",
+        "prime_doctrine": "LIMITLESS",
+        "principle": "default-act on T0-T3 work; scout when evidence is missing; evidence, law, service terms, authorization and T4 approval remain constitutional",
+        "operating_loop": "ACT -> VERIFY -> LOG -> LEARN -> IMPROVE",
         "plans": plans,
         "sanctuary": sanctuary,
         "fellowship_requests": fellowship,
@@ -115,7 +126,8 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
 
 def improvement_vow(mode: str) -> str:
     return {
-        "WAIT": "acquire one missing fact before acting",
+        "SCOUT": "acquire one concrete external fact, tool, pattern, lead, or failure mode and route it toward a usable next action",
+        "WAIT": "replace passive waiting with one evidence-gathering step when a lawful source exists",
         "ACT": "finish one bounded task and leave verification evidence",
         "VERIFY": "obtain one independent signal before claiming success",
         "PAIR": "use one distinct specialist and record what changed",
@@ -128,9 +140,10 @@ def improvement_vow(mode: str) -> str:
 
 def render(report: dict[str, Any]) -> str:
     lines = [
-        "# THE COVENANT — Autonomy & Fellowship — Personality Layer",
+        "# THE COVENANT — LIMITLESS Autonomy & Fellowship",
         "",
-        "**Rule:** personality changes preference; evidence and legitimate execution bounds remain constitutional.",
+        "**Prime doctrine:** LIMITLESS — default-act on authorized T0-T3 work; do not invent waiting gates.",
+        f"**Operating loop:** {report.get('operating_loop')}",
         "",
         "## AUTONOMY",
     ]
@@ -138,6 +151,7 @@ def render(report: dict[str, Any]) -> str:
         companion = f" | companion: {p['companion']}" if p.get("companion") else ""
         archetype = (p.get("personality") or {}).get("archetype", "UNSET")
         lines.append(f"- **{p['worker']}** — `{p['mode']}` / `{archetype}` / moral tension `{p['moral_tension']}`: {p['reason']}{companion}")
+        lines.append(f"  - faith: {p['faith_duty']} / prime={p['prime_word']}")
         lines.append(f"  - vow: {p['improvement_vow']}")
         lines.append(f"  - temperament: {p['behavior_directive']}")
     lines += ["", "## FELLOWSHIP"]
@@ -169,7 +183,7 @@ def main() -> int:
     report = build(load(args.snapshot), load(args.registry), load(args.psychology))
     Path(args.json).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     Path(args.report).write_text(render(report), encoding="utf-8")
-    print(json.dumps({"sanctuary": len(report['sanctuary']), "fellowship": len(report['fellowship_requests'])}))
+    print(json.dumps({"sanctuary": len(report['sanctuary']), "fellowship": len(report['fellowship_requests']), "scout": sum(p['mode'] == 'SCOUT' for p in report['plans'])}))
     return 0
 
 
