@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/the-world-task-worker.yml'
       - 'automation/world/task_worker.py'
+      - 'automation/world/external_feedback.py'
 
 concurrency:
   group: the-world-resident-task-worker
@@ -27,7 +28,7 @@ jobs:
       matrix:
         slot: [0, 1, 2, 3]
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
@@ -52,20 +53,20 @@ jobs:
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json
           d=json.load(open('/tmp/world-review.json',encoding='utf-8'))
-          t=d.get('task') or {}
-          r=t.get('result') or {}
+          t=d.get('task') or {}; r=t.get('result') or {}
           print('has_review=' + ('true' if t else 'false'))
           print('task_id=' + str(t.get('id') or ''))
           print('run_id=' + str(r.get('github_run_id') or ''))
           print('workflow=' + str(r.get('workflow') or ''))
           PY
 
-      - name: Reconcile downstream GitHub evidence
+      - name: Reconcile downstream GitHub and reality evidence
         if: matrix.slot == 0 && steps.review.outputs.has_review == 'true'
         shell: bash
         env:
           REVIEW_RUN_ID: ${{ steps.review.outputs.run_id }}
           REVIEW_WORKFLOW: ${{ steps.review.outputs.workflow }}
+          REVIEW_TASK_ID: ${{ steps.review.outputs.task_id }}
         run: |
           set -euo pipefail
           DATA="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${REVIEW_RUN_ID}")"
@@ -74,29 +75,39 @@ jobs:
           URL="$(jq -r '.html_url' <<<"$DATA")"
           if [[ "$STATUS" != "completed" ]]; then
             echo "Downstream run ${REVIEW_RUN_ID} is still ${STATUS}; leave task in review." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          if [[ "$REVIEW_WORKFLOW" == "world-reality-agency.yml" && "$CONCLUSION" == "success" ]]; then
+            python automation/world/external_feedback.py query --task-id "$REVIEW_TASK_ID" --out /tmp/world-external-result.json
           else
-            python - "$STATUS" "$CONCLUSION" "$URL" "$REVIEW_WORKFLOW" <<'PY'
+            printf '{"observation":{}}\n' > /tmp/world-external-result.json
+          fi
+
+          python - "$STATUS" "$CONCLUSION" "$URL" "$REVIEW_WORKFLOW" /tmp/world-external-result.json <<'PY'
           import json,sys
-          status,conclusion,url,workflow=sys.argv[1:]
-          ok=status=='completed' and conclusion=='success'
-          d={
-            'schema':'the-world-task-result/v1',
-            'status':'DONE' if ok else 'FAILED',
-            'summary':f'Deterministic owned workflow {workflow} completed with {conclusion}.',
-            'verified':ok,
-            'produced_change':ok,
-            'evidence':[f'github_run:{url}',f'workflow:{workflow}',f'conclusion:{conclusion}'],
-            'changed_files':[],
-            'tests':[],
-            'next_action':'NONE' if ok else 'retry through bounded lane',
+          status,conclusion,url,workflow,path=sys.argv[1:]
+          obs=(json.load(open(path,encoding='utf-8')).get('observation') or {})
+          external=workflow=='world-reality-agency.yml'
+          workflow_ok=status=='completed' and conclusion=='success'
+          verified=workflow_ok and (bool(obs.get('verified')) if external else True)
+          produced=bool(obs.get('external_effect')) if external else workflow_ok
+          evidence=[f'github_run:{url}',f'workflow:{workflow}',f'conclusion:{conclusion}']
+          if obs: evidence.append({'external_observation':obs})
+          result={
+            'schema':'the-world-task-result/v2','status':'DONE' if verified else 'FAILED',
+            'summary':('Reality Agency returned verified external evidence.' if external and verified else f'Workflow {workflow} completed with {conclusion}.'),
+            'verified':verified,'produced_change':produced,'external_effect':bool(obs.get('external_effect')) if external else False,
+            'evidence':evidence,'changed_files':[],'tests':[],
+            'next_action':'NONE' if verified else ('retry: external feedback missing' if external and workflow_ok else 'retry bounded lane'),
           }
-          open('/tmp/world-review-result.json','w',encoding='utf-8').write(json.dumps(d,ensure_ascii=False,indent=2)+'\n')
+          open('/tmp/world-review-result.json','w',encoding='utf-8').write(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PY
-            if [[ "$CONCLUSION" == "success" ]]; then
-              python automation/world/task_worker.py finish-review --review /tmp/world-review.json --result /tmp/world-review-result.json --success
-            else
-              python automation/world/task_worker.py finish-review --review /tmp/world-review.json --result /tmp/world-review-result.json --error "downstream workflow conclusion=${CONCLUSION}"
-            fi
+          VERIFIED="$(jq -r '.verified' /tmp/world-review-result.json)"
+          if [[ "$VERIFIED" == "true" ]]; then
+            python automation/world/task_worker.py finish-review --review /tmp/world-review.json --result /tmp/world-review-result.json --success
+          else
+            python automation/world/task_worker.py finish-review --review /tmp/world-review.json --result /tmp/world-review-result.json --error "downstream or external evidence not verified"
           fi
 
       - name: Claim one personality-linked task
@@ -110,9 +121,10 @@ jobs:
           t=d.get('task') or {}
           print('has_task=' + ('true' if t else 'false'))
           print('task_id=' + str(t.get('id') or ''))
+          print('external_lane=' + str(d.get('external_lane') or 'INTERNAL'))
           PY
 
-      - name: Select deterministic execution lane from personality and intent
+      - name: Select execution lane from personality, intent and learned reality outcomes
         if: steps.claim.outputs.has_task == 'true'
         id: route
         shell: bash
@@ -121,24 +133,20 @@ jobs:
           import json,zlib
           d=json.load(open('/tmp/world-claim.json',encoding='utf-8'))
           t=d.get('task') or {}; r=d.get('resident') or {}; c=t.get('context') or {}
-          identity=str(r.get('identity_class') or '').lower()
-          role=str(r.get('role') or '').lower()
-          unit=str(r.get('unit') or '').lower()
-          runtime=str(r.get('runtime_id') or c.get('runtime_id') or '').lower()
-          intent=str(c.get('intent_type') or '').upper()
-          resident=str(r.get('resident_key') or c.get('world_resident_key') or '')
-          bucket=zlib.crc32(resident.encode('utf-8')) % 4 if resident else 0
-          if identity == 'fictional_child_persona':
+          identity=str(r.get('identity_class') or '').lower(); role=str(r.get('role') or '').lower()
+          unit=str(r.get('unit') or '').lower(); runtime=str(r.get('runtime_id') or c.get('runtime_id') or '').lower()
+          intent=str(c.get('intent_type') or '').upper(); resident=str(r.get('resident_key') or c.get('world_resident_key') or '')
+          external=str(d.get('external_lane') or 'INTERNAL').upper(); bucket=zlib.crc32(resident.encode())%4 if resident else 0
+          if external=='REALITY_AGENCY':
+              wf='world-reality-agency.yml'
+          elif identity == 'fictional_child_persona':
               wf='child-guild-adventure.yml'
           elif 'security' in role or 'security' in unit or 'security' in runtime:
               wf='security-guard.yml'
           elif identity == 'security_society':
-              if intent in {'RESEARCH','EXPLORE','LEARN','SHARE_SURPRISE'}:
-                  wf='rnd-senju-coupled-loop.yml'
-              elif intent == 'SEEK_VERIFIED_CONTRIBUTION' and bucket == 0:
-                  wf='senju-mass-shadow-learning.yml'
-              else:
-                  wf='senju-autonomous-improver.yml'
+              if intent in {'RESEARCH','EXPLORE','LEARN','SHARE_SURPRISE'}: wf='rnd-senju-coupled-loop.yml'
+              elif intent == 'SEEK_VERIFIED_CONTRIBUTION' and bucket == 0: wf='senju-mass-shadow-learning.yml'
+              else: wf='senju-autonomous-improver.yml'
           elif intent in {'RESEARCH','EXPLORE','LEARN','SHARE_SURPRISE'}:
               wf='rnd-senju-coupled-loop.yml'
           elif identity in {'management_identity','executive_identity'} or 'manager' in role:
@@ -147,10 +155,7 @@ jobs:
               wf='the-world-realtime-kernel.yml'
           else:
               wf='ai-factory-boss.yml'
-          print('workflow='+wf)
-          print('intent='+intent)
-          print('resident='+resident)
-          print('bucket='+str(bucket))
+          print('workflow='+wf); print('intent='+intent); print('resident='+resident); print('external_lane='+external)
           PY
 
       - name: Dispatch one owned execution lane
@@ -159,96 +164,89 @@ jobs:
         shell: bash
         env:
           TARGET_WORKFLOW: ${{ steps.route.outputs.workflow }}
+          RESIDENT_KEY: ${{ steps.route.outputs.resident }}
+          TASK_ID: ${{ steps.claim.outputs.task_id }}
         run: |
           set -euo pipefail
           case "$TARGET_WORKFLOW" in
-            ai-factory-boss.yml|child-guild-adventure.yml|security-guard.yml|rnd-senju-coupled-loop.yml|senju-mass-shadow-learning.yml|senju-autonomous-improver.yml|tomoki-manager.yml|the-world-realtime-kernel.yml)
-              ;;
+            ai-factory-boss.yml|child-guild-adventure.yml|security-guard.yml|rnd-senju-coupled-loop.yml|senju-mass-shadow-learning.yml|senju-autonomous-improver.yml|tomoki-manager.yml|the-world-realtime-kernel.yml|world-reality-agency.yml) ;;
             *)
-              echo "::error::Refusing non-allowlisted workflow: ${TARGET_WORKFLOW}"
               python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 60 --reason "non-allowlisted execution lane refused"
-              echo 'dispatched=false' >> "$GITHUB_OUTPUT"
-              exit 1
-              ;;
+              echo 'dispatched=false' >> "$GITHUB_OUTPUT"; exit 1 ;;
           esac
 
           BUSY="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$TARGET_WORKFLOW" --limit 10 --json status --jq '[.[] | select(.status != "completed")] | length')"
           if [[ "${BUSY:-0}" -gt 0 ]]; then
             python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 15 --reason "execution lane ${TARGET_WORKFLOW} busy"
-            echo 'dispatched=false' >> "$GITHUB_OUTPUT"
-            echo "Slot ${WORLD_WORKER_SLOT}: lane ${TARGET_WORKFLOW} busy; task returned without attempt penalty." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo 'dispatched=false' >> "$GITHUB_OUTPUT"; exit 0
           fi
 
-          DISPATCH_OUTPUT="$(gh workflow run "$TARGET_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" 2>&1)"
+          if [[ "$TARGET_WORKFLOW" == "world-reality-agency.yml" ]]; then
+            DISPATCH_OUTPUT="$(gh workflow run "$TARGET_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" -f resident_key="$RESIDENT_KEY" -f source_task_id="$TASK_ID" 2>&1)"
+          else
+            DISPATCH_OUTPUT="$(gh workflow run "$TARGET_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" 2>&1)"
+          fi
           printf '%s\n' "$DISPATCH_OUTPUT"
-          RUN_URL="$(printf '%s\n' "$DISPATCH_OUTPUT" | grep -Eo 'https://github\.com/[^ ]+/actions/runs/[0-9]+' | tail -n1 || true)"
-          RUN_ID="${RUN_URL##*/}"
+          RUN_URL="$(printf '%s\n' "$DISPATCH_OUTPUT" | grep -Eo 'https://github\.com/[^ ]+/actions/runs/[0-9]+' | tail -n1 || true)"; RUN_ID="${RUN_URL##*/}"
           if [[ -z "$RUN_URL" || ! "$RUN_ID" =~ ^[0-9]+$ ]]; then
             sleep 2
             ROW="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$TARGET_WORKFLOW" --branch "$GITHUB_REF_NAME" --event workflow_dispatch --limit 1 --json databaseId,url --jq '.[0] // {}')"
-            RUN_ID="$(jq -r '.databaseId // empty' <<<"$ROW")"
-            RUN_URL="$(jq -r '.url // empty' <<<"$ROW")"
+            RUN_ID="$(jq -r '.databaseId // empty' <<<"$ROW")"; RUN_URL="$(jq -r '.url // empty' <<<"$ROW")"
           fi
           if [[ -z "$RUN_ID" || -z "$RUN_URL" ]]; then
             python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 10 --reason "workflow dispatch accepted but run id not observed"
-            echo 'dispatched=false' >> "$GITHUB_OUTPUT"
-            exit 0
+            echo 'dispatched=false' >> "$GITHUB_OUTPUT"; exit 0
           fi
           python automation/world/task_worker.py dispatched --claim /tmp/world-claim.json --workflow "$TARGET_WORKFLOW" --run-id "$RUN_ID" --run-url "$RUN_URL"
-          echo 'dispatched=true' >> "$GITHUB_OUTPUT"
-          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
-          echo "run_url=$RUN_URL" >> "$GITHUB_OUTPUT"
-          echo "Slot=${WORLD_WORKER_SLOT} Resident=${{ steps.route.outputs.resident }} intent=${{ steps.route.outputs.intent }} -> ${TARGET_WORKFLOW} -> ${RUN_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo 'dispatched=true' >> "$GITHUB_OUTPUT"; echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"; echo "run_url=$RUN_URL" >> "$GITHUB_OUTPUT"
+          echo "Resident=${RESIDENT_KEY} intent=${{ steps.route.outputs.intent }} reality=${{ steps.route.outputs.external_lane }} -> ${TARGET_WORKFLOW} -> ${RUN_URL}" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Close freshly dispatched task when downstream finishes quickly
+      - name: Close freshly dispatched task only with verified evidence
         if: steps.dispatch.outputs.dispatched == 'true'
         shell: bash
         env:
           RUN_ID: ${{ steps.dispatch.outputs.run_id }}
           RUN_URL: ${{ steps.dispatch.outputs.run_url }}
           TARGET_WORKFLOW: ${{ steps.route.outputs.workflow }}
+          TASK_ID: ${{ steps.claim.outputs.task_id }}
         run: |
           set -euo pipefail
-          STATUS=''
-          CONCLUSION=''
-          for i in {1..24}; do
-            DATA="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")"
-            STATUS="$(jq -r '.status' <<<"$DATA")"
-            CONCLUSION="$(jq -r '.conclusion // ""' <<<"$DATA")"
+          STATUS=''; CONCLUSION=''
+          for i in {1..36}; do
+            DATA="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")"; STATUS="$(jq -r '.status' <<<"$DATA")"; CONCLUSION="$(jq -r '.conclusion // ""' <<<"$DATA")"
             if [[ "$STATUS" == "completed" ]]; then break; fi
             sleep 10
           done
           if [[ "$STATUS" != "completed" ]]; then
-            echo "Downstream run ${RUN_ID} still ${STATUS}; slot 0 will reconcile next cycle." >> "$GITHUB_STEP_SUMMARY"
-            exit 0
+            echo "Downstream run ${RUN_ID} still ${STATUS}; slot 0 will reconcile next cycle." >> "$GITHUB_STEP_SUMMARY"; exit 0
           fi
-          python - "$CONCLUSION" "$RUN_URL" "$TARGET_WORKFLOW" "${{ steps.claim.outputs.task_id }}" <<'PY'
+          if [[ "$TARGET_WORKFLOW" == "world-reality-agency.yml" && "$CONCLUSION" == "success" ]]; then
+            python automation/world/external_feedback.py query --task-id "$TASK_ID" --out /tmp/world-external-result.json
+          else
+            printf '{"observation":{}}\n' > /tmp/world-external-result.json
+          fi
+          python - "$CONCLUSION" "$RUN_URL" "$TARGET_WORKFLOW" "$TASK_ID" /tmp/world-external-result.json <<'PY'
           import json,sys
-          conclusion,url,workflow,task_id=sys.argv[1:]
-          ok=conclusion=='success'
-          result={
-            'schema':'the-world-task-result/v1',
-            'status':'DONE' if ok else 'FAILED',
-            'summary':f'Deterministic owned workflow {workflow} completed with {conclusion}.',
-            'verified':ok,
-            'produced_change':ok,
-            'evidence':[f'github_run:{url}',f'workflow:{workflow}',f'conclusion:{conclusion}'],
-            'changed_files':[],
-            'tests':[],
-            'next_action':'NONE' if ok else 'retry through bounded lane',
-          }
+          conclusion,url,workflow,task_id,path=sys.argv[1:]
+          obs=(json.load(open(path,encoding='utf-8')).get('observation') or {})
+          external=workflow=='world-reality-agency.yml'; workflow_ok=conclusion=='success'
+          verified=workflow_ok and (bool(obs.get('verified')) if external else True)
+          produced=bool(obs.get('external_effect')) if external else workflow_ok
+          ev=[f'github_run:{url}',f'workflow:{workflow}',f'conclusion:{conclusion}']
+          if obs: ev.append({'external_observation':obs})
+          result={'schema':'the-world-task-result/v2','status':'DONE' if verified else 'FAILED','summary':('Verified reality feedback received.' if external and verified else f'{workflow} completed with {conclusion}.'),'verified':verified,'produced_change':produced,'external_effect':bool(obs.get('external_effect')) if external else False,'evidence':ev,'changed_files':[],'tests':[],'next_action':'NONE' if verified else 'retry until evidence returns'}
           open('/tmp/world-self-review.json','w',encoding='utf-8').write(json.dumps({'task':{'id':task_id}},ensure_ascii=False)+'\n')
           open('/tmp/world-self-result.json','w',encoding='utf-8').write(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
           PY
-          if [[ "$CONCLUSION" == "success" ]]; then
+          VERIFIED="$(jq -r '.verified' /tmp/world-self-result.json)"
+          if [[ "$VERIFIED" == "true" ]]; then
             python automation/world/task_worker.py finish-review --review /tmp/world-self-review.json --result /tmp/world-self-result.json --success
           else
-            python automation/world/task_worker.py finish-review --review /tmp/world-self-review.json --result /tmp/world-self-result.json --error "downstream workflow conclusion=${CONCLUSION}"
+            python automation/world/task_worker.py finish-review --review /tmp/world-self-review.json --result /tmp/world-self-result.json --error "external evidence absent or workflow failed"
           fi
 
       - name: Motor cortex heartbeat
         if: always()
         run: |
           echo "THE WORLD motor cortex slot ${WORLD_WORKER_SLOT} completed run $GITHUB_RUN_ID." >> "$GITHUB_STEP_SUMMARY"
-          echo "Four parallel slots claim independently; only slot 0 reconciles prior review tasks." >> "$GITHUB_STEP_SUMMARY"
+          echo "External tasks require Supabase reality evidence before completion; external_effect controls reward eligibility." >> "$GITHUB_STEP_SUMMARY"
