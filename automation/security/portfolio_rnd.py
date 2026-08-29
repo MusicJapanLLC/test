@@ -15,12 +15,16 @@ from pathlib import Path
 from typing import Any
 
 ALLOWED_SENJU_FOCUS = {"robustness", "learning", "balance", "efficiency"}
+
+# These markers intentionally point at dedicated human-facing portfolio sections.
+# If a track has no dedicated section yet, it stays ABSENT rather than inheriting
+# status words from a nearby section or from an incidental mention elsewhere.
 PORTFOLIO_MARKERS = {
-    "SEC-PORT-001": "Standment Security Scan v1",
-    "SEC-PORT-002": "Evidence Pack",
-    "SEC-PORT-003": "supply-chain",
-    "SEC-PORT-004": "RLS",
-    "SEC-PORT-005": "Autonomous-agent security",
+    "SEC-PORT-001": "## 3. Standment Security Scan v1",
+    "SEC-PORT-002": "## Standment Security Evidence Pack",
+    "SEC-PORT-003": "## Standment Security Supply-Chain Evidence Portfolio",
+    "SEC-PORT-004": "## Standment Security Auth / Tenant / RLS Evidence Kit",
+    "SEC-PORT-005": "## Standment Autonomous-Agent Security & Auditability Pack",
 }
 
 
@@ -32,12 +36,32 @@ def load_json(path: Path) -> dict[str, Any]:
 
 
 def section_status(portfolio: str, marker: str) -> str:
-    pos = portfolio.lower().find(marker.lower())
+    """Return status from exactly one markdown H2 section.
+
+    A previous implementation inspected a fixed-size text window. That allowed a
+    later section's `状態: VERIFIED` to bleed into an earlier BUILDING artifact.
+    Promotion decisions must never depend on neighboring text, so this function
+    clamps inspection to the matched H2 section only.
+    """
+    lower = portfolio.lower()
+    pos = lower.find(marker.lower())
     if pos < 0:
         return "ABSENT"
-    window = portfolio[pos : pos + 1800]
+
+    # Marker is expected to identify the intended H2. Clamp to the next H2.
+    section_start = portfolio.rfind("\n## ", 0, pos + 1)
+    if section_start < 0:
+        section_start = pos
+    else:
+        section_start += 1
+
+    next_h2 = portfolio.find("\n## ", max(pos + len(marker), section_start + 3))
+    section_end = len(portfolio) if next_h2 < 0 else next_h2
+    section = portfolio[section_start:section_end]
+
+    # Accept the canonical status line with or without markdown bolding.
     for status in ("VERIFIED", "BUILDING", "EXPERIMENT", "BLOCKED"):
-        if f"状態: {status}" in window or f"**状態: {status}**" in window:
+        if f"状態: {status}" in section or f"**状態: {status}**" in section:
             return status
     return "VISIBLE"
 
