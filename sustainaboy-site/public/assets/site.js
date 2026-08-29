@@ -13,6 +13,18 @@ naturalLabels.forEach(([href,label])=>{
   });
 });
 
+/* Keep internal jargon out of the visible UI while retaining stable URLs. */
+if(document.body.classList.contains('subpage-v2')){
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node=>{
+    if(node.nodeValue&&node.nodeValue.includes('SUSTAINABOY OS')){
+      node.nodeValue=node.nodeValue.replaceAll('SUSTAINABOY OS','この考え方');
+    }
+  });
+}
+
 if(document.body.classList.contains('paper-home')){
   const founderLabel=document.querySelector('.founder-card-copy .section-mini');
   if(founderLabel) founderLabel.textContent='このワークについて';
