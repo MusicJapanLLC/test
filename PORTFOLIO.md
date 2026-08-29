@@ -253,47 +253,41 @@ GitHub側の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN
 
 ---
 
-## 8. Standment Security Autonomous Portfolio R&D Engine v1
+## 8. Standment Security — Autonomous Defensive R&D Fabric
 
 **状態: BUILDING**
 
 ### 作ったもの
-Standmentをセキュリティ会社へ寄せるため、The worldの研究優先順位を**セキュリティ・ポートフォリオ最優先**へ固定する専用R&Dレーン。毎日、既存ポートフォリオとEvidenceを読み、最も価値の高い未完成テーマを自動選定し、R&Dと千寿へ接続する。
+Standmentのセキュリティ研究を、毎日「公開防御情報を読む → 自社の防御証拠を監査する → ポートフォリオの一番弱い箇所を選ぶ → Senjuへ限定研究テーマとして渡す → 反証と証拠を保存する → Slackへ人間語で報告する」という1本の自律ループへ統合。
 
 ### 何に使える？
-「研究した」「コードを書いた」で終了せず、顧客に見せられる診断レポート、Before/Afterケーススタディ、Evidence Pack、Supply-chain assurance、Auth/RLS evidence、AI Agent security evidenceへ研究を収束させる。
+新しい脆弱性ニュースを眺めるだけで終わらせず、Standment自身のCI/CD・依存関係・認証・AI Agent運用・Evidence Packへ結び付ける。研究量ではなく、**顧客が確認できる防御証拠が毎日増える方向**へR&Dの優先順位を寄せる。
 
 ### すでにできていること
-- 5つのSecurity Portfolio研究トラックを優先度付きで定義
-- 毎日06:50 JSTにポートフォリオの状態・Evidence不足を採点するGitHub Actionsを追加
-- 既存07:20 JSTのR&D × Senju coupled loopより先に研究テーマを選定
-- `value-lab/research_queue.json` の最優先をStandment Security Portfolioへ変更（priority 2000）
-- 千寿には `robustness / learning / balance / efficiency` の研究品質改善だけを依頼し、第三者target・credential・exploit instructionを渡さない境界を維持
-- Human-inspectable artifact / verification / counterevidence / reproducibilityをPortfolio Promotion Gateとして必須化
-- 「source codeだけ」「自己申告だけ」はPortfolio成果に昇格させない
-- 日次研究EvidenceをGitHub Actions artifactとして90日保存する設計
-- Customer-facing `Control Evidence Pack v1` を強化し、Before/After・反証・再現性・Evidence Manifestを標準化
+- CISA KEV / GitHub Advisory Databaseからの受動的な防御情報収集
+- 自社リポジトリのSecurity Guard / CodeQL / Dependency Review / Security Gate / R&D基盤の証拠カバレッジ監査
+- Portfolio gapを日次でランキング
+- その日の最優先gapをAdaptive Research Queueの最上位へ昇格
+- Senjuへ渡す研究directiveからtarget / URL / credential / exploit等の実行情報を除外
+- counterevidence / reproducibilityを昇格条件として維持
+- JSON + Markdownの研究証拠を90日Artifact保存
+- 通常運用ではSlackへ日次R&D digestを配送
+- PR時にも同じテストと境界検証を走らせ、Slack通知だけ抑制
 
-### 最優先研究トラック
-1. **SEC-PORT-001** — Standment Security Scan dogfood + Before/After case study
-2. **SEC-PORT-002** — Customer Security Evidence Pack
-3. **SEC-PORT-003** — Software supply-chain evidence portfolio
-4. **SEC-PORT-004** — Auth / tenant / RLS defensive evidence kit
-5. **SEC-PORT-005** — Autonomous-agent security and auditability pack
+### 現在の残り
+この強化版はPR上で統合検証中。Security Guard / Standment Security Gate / unit tests / 実際のPortfolio R&D workflowが通り、最初の日次実行証拠を確認するまではVERIFIEDとは呼ばない。
+
+### 経営メリット
+「セキュリティ会社にしたい」を、単発の診断ツールではなく**毎日研究して証拠を増やす会社内R&D工程**へ変える。将来、Security Scan、Evidence Pack、AI Agent Security、Supply-chain Assuranceを同じ改善サイクルで育てられる。
 
 ### Evidence
 - `.github/workflows/standment-security-portfolio-rnd.yml`
-- `standment-security/security_portfolio_program.json`
 - `automation/security/portfolio_rnd.py`
-- `automation/security/test_portfolio_rnd.py`
-- `value-lab/research_queue.json`
-- `standment-security/CONTROL_EVIDENCE_TEMPLATE.md`
-
-### 現在の残り
-初回のWorkflow実行結果を確認し、GitHub → Slackの `RND_SLACK_WEBHOOK_URL` が実際に設定済みか検証する。未設定の場合でも研究Evidence自体はartifactへ保存し、配送だけをBLOCKEDとして扱う。
-
-### 経営メリット
-The world全体の研究量を増やすだけでなく、**Standmentが営業・提案・顧客説明に使えるセキュリティ実績へ毎日近づくように研究優先順位を固定**した。
+- `automation/security/standment_defensive_intel.py`
+- `automation/security/test_standment_defensive_intel.py`
+- `standment-security/security_portfolio_program.json`
+- `value-lab/senju_bridge.py`
+- `.github/workflows/the-world-autonomous-research-fabric.yml`
 
 ### 次の改善
-Security Scanを所有資産でdogfoodし、Control Evidence PackへBefore/After証拠を入れ、最初の顧客提示可能なケーススタディをVERIFIEDへ昇格させる。
+PR検証を通した後、最初の06:50 JST日次runで生成されたIntel / Research Seed / Senju Directive / Counterevidenceを保存し、Evidence PackとBefore/Afterケーススタディへ昇格させる。
