@@ -11,6 +11,8 @@ on:
       - '.github/workflows/standment-security-portfolio-rnd.yml'
       - 'automation/security/portfolio_rnd.py'
       - 'automation/security/test_portfolio_rnd.py'
+      - 'automation/security/portfolio_autobuilder.py'
+      - 'automation/security/test_portfolio_autobuilder.py'
       - 'standment-security/security_portfolio_program.json'
       - 'value-lab/research_queue.json'
       - 'PORTFOLIO.md'
@@ -20,7 +22,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 env:
@@ -31,26 +33,26 @@ env:
 jobs:
   portfolio-rnd:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - name: Checkout THE WORLD
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          persist-credentials: false
+          persist-credentials: true
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
 
-      - name: Verify portfolio-first planner
+      - name: Verify portfolio planner and Auto-Builder
         working-directory: automation/security
         run: |
           set -euo pipefail
-          python -m unittest -v test_portfolio_rnd.py
+          python -m unittest -v test_portfolio_rnd.py test_portfolio_autobuilder.py
 
       - name: Restore previous successful portfolio R&D memory
-        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
@@ -80,7 +82,7 @@ jobs:
             echo "No previous successful R&D state found; this run becomes the comparison baseline." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Rank Standment Security portfolio gaps and compare yesterday
+      - name: Rank portfolio gaps before autonomous build
         shell: bash
         run: |
           set -euo pipefail
@@ -93,6 +95,52 @@ jobs:
             --portfolio PORTFOLIO.md \
             "${previous[@]}" \
             --out reports/standment-security-rnd
+          mkdir -p reports/standment-security-rnd/before
+          cp reports/standment-security-rnd/daily.json reports/standment-security-rnd/before/daily.json
+          cp reports/standment-security-rnd/daily.md reports/standment-security-rnd/before/daily.md
+          cp reports/standment-security-rnd/senju-research-item.json reports/standment-security-rnd/before/senju-research-item.json
+
+      - name: Materialize one portfolio improvement
+        run: |
+          set -euo pipefail
+          python automation/security/portfolio_autobuilder.py \
+            --report reports/standment-security-rnd/before/daily.json \
+            --program standment-security/security_portfolio_program.json \
+            --repo-root . \
+            --out reports/standment-security-rnd/evolution.json
+
+      - name: Re-measure portfolio after autonomous build
+        shell: bash
+        run: |
+          set -euo pipefail
+          previous=()
+          if [[ -n "${PREVIOUS_RND_STATE:-}" && -f "${PREVIOUS_RND_STATE}" ]]; then
+            previous+=(--previous "${PREVIOUS_RND_STATE}")
+          fi
+          python automation/security/portfolio_rnd.py \
+            --program standment-security/security_portfolio_program.json \
+            --portfolio PORTFOLIO.md \
+            "${previous[@]}" \
+            --out reports/standment-security-rnd/after
+          cp reports/standment-security-rnd/after/daily.json reports/standment-security-rnd/daily.json
+          cp reports/standment-security-rnd/after/daily.md reports/standment-security-rnd/daily.md
+          cp reports/standment-security-rnd/after/senju-research-item.json reports/standment-security-rnd/senju-research-item.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          before=json.loads(Path('reports/standment-security-rnd/before/daily.json').read_text(encoding='utf-8'))
+          after=json.loads(Path('reports/standment-security-rnd/after/daily.json').read_text(encoding='utf-8'))
+          evo=json.loads(Path('reports/standment-security-rnd/evolution.json').read_text(encoding='utf-8'))
+          b=before.get('selected') or {}
+          a=after.get('selected') or {}
+          print('## Autonomous Portfolio Build', file=open('/tmp/build-summary.md','w',encoding='utf-8'))
+          with open('/tmp/build-summary.md','a',encoding='utf-8') as f:
+              f.write(f"\n- before: {b.get('id')} evidence={b.get('evidence_ratio')} status={b.get('portfolio_status')}\n")
+              f.write(f"- after: {a.get('id')} evidence={a.get('evidence_ratio')} status={a.get('portfolio_status')}\n")
+              f.write(f"- generated: {', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'}\n")
+              f.write('- verification claimed by autobuilder: false\n')
+          PY
+          cat /tmp/build-summary.md >> "$GITHUB_STEP_SUMMARY"
           cat reports/standment-security-rnd/daily.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify R&D x Senju boundary compatibility
@@ -109,6 +157,7 @@ jobs:
           directive=json.loads(Path('/tmp/standment-rnd-senju/directive.json').read_text(encoding='utf-8'))
           queue=json.loads(Path('value-lab/research_queue.json').read_text(encoding='utf-8'))
           daily=json.loads(Path('reports/standment-security-rnd/daily.json').read_text(encoding='utf-8'))
+          evolution=json.loads(Path('reports/standment-security-rnd/evolution.json').read_text(encoding='utf-8'))
 
           research_id=str(directive['research_id'])
           assert research_id.startswith(('RND-PORTFOLIO-P0', 'RND-STANDMENT-SECURITY-PORTFOLIO'))
@@ -124,6 +173,7 @@ jobs:
           assert security_tracks, 'Standment Security portfolio research is missing from the live queue'
           assert max(int(item.get('priority',0)) for item in security_tracks) >= 4000
           assert daily.get('portfolio_first') is True
+          assert evolution.get('verification_claimed') is False
           assert daily.get('delta',{}).get('kind') in {
               'BASELINE_CAPTURED','RESEARCH_REFOCUS','VERIFIED_PORTFOLIO_DELTA','NO_VERIFIED_DELTA'
           }
@@ -131,8 +181,29 @@ jobs:
               'NORMAL','VERIFY_NEXT_MISSING_EVIDENCE','REFRAME_AND_COUNTEREVIDENCE','SWITCH_EVIDENCE_PATH'
           }
 
-          print(f'Portfolio P0/Security priority active: {research_id}; daily comparison memory and Senju boundary intact.')
+          print(f'Portfolio P0/Security priority active: {research_id}; daily build and Senju boundary intact.')
           PY
+
+      - name: Commit material portfolio artifacts back to THE WORLD
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "standment-rnd-bot"
+          git config user.email "standment-rnd-bot@users.noreply.github.com"
+          git add \
+            standment-security/PORTFOLIO_INDEX.md \
+            standment-security/lab-notes \
+            standment-security/case-studies \
+            standment-security/evidence-packs \
+            standment-security/ai-security 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No repository artifact delta to commit." >> "$GITHUB_STEP_SUMMARY"
+          else
+            TRACK="$(python -c "import json; print(json.load(open('reports/standment-security-rnd/evolution.json'))['track'])")"
+            git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+            echo "Autonomous portfolio artifact committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Preserve daily R&D evidence
         if: always()
@@ -145,6 +216,11 @@ jobs:
             reports/standment-security-rnd/daily.json
             reports/standment-security-rnd/daily.md
             reports/standment-security-rnd/senju-research-item.json
+            reports/standment-security-rnd/evolution.json
+            reports/standment-security-rnd/before/daily.json
+            reports/standment-security-rnd/before/daily.md
+            reports/standment-security-rnd/after/daily.json
+            reports/standment-security-rnd/after/daily.md
             /tmp/standment-rnd-senju/exchange.json
             /tmp/standment-rnd-senju/exchange.md
             /tmp/standment-rnd-senju/directive.json
@@ -160,13 +236,21 @@ jobs:
           webhook=(os.getenv('PORTFOLIO_SLACK_WEBHOOK_URL','').strip()
                    or os.getenv('RND_SLACK_WEBHOOK_URL','').strip())
           report=Path('reports/standment-security-rnd/daily.md')
+          evolution=Path('reports/standment-security-rnd/evolution.json')
           if not report.exists():
               print('R&D report missing; see workflow failure above.')
               raise SystemExit(0)
+          evo=json.loads(evolution.read_text(encoding='utf-8')) if evolution.exists() else {}
+          created=', '.join(evo.get('created_or_updated') or []) or 'NO FILE DELTA'
+          text=(
+              '*STANDMENT SECURITY｜AUTONOMOUS PORTFOLIO EVOLUTION*\n'
+              + report.read_text(encoding='utf-8')
+              + f"\n*Auto-Builder*\n生成/更新: {created}\n"
+              + 'VERIFIED自動昇格: なし（Evidence Gate維持）\n'
+          )[:30000]
           if not webhook:
               print('BLOCKED_NO_CAPABILITY: PORTFOLIO_SLACK_WEBHOOK_URL / RND_SLACK_WEBHOOK_URL is not configured. Artifact evidence was preserved.')
               raise SystemExit(0)
-          text=report.read_text(encoding='utf-8')[:30000]
           payload=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8')
           req=request.Request(webhook, data=payload, headers={'Content-Type':'application/json'}, method='POST')
           try:
@@ -176,5 +260,5 @@ jobs:
           except (error.URLError, RuntimeError) as exc:
               print(f'Slack delivery failed: {type(exc).__name__}')
               raise SystemExit(1)
-          print('Daily Standment Security portfolio evolution delivered to Slack.')
+          print('Daily Standment Security autonomous portfolio evolution delivered to Slack.')
           PY
