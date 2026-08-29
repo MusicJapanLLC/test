@@ -1,0 +1,19 @@
+{
+  "schema": "gmail-service-heartbeat/v1",
+  "status": "VERIFIED",
+  "execution_runtime": "ChatGPT Nerve / connected Gmail",
+  "evidence": "interactive bootstrap run; repository commit time is the heartbeat timestamp",
+  "aggregate": {
+    "github_machine_archived": 31,
+    "github_failures_labeled": 27,
+    "vercel_machine_archived": 3,
+    "security_actionable_starred": 1,
+    "promotions_archived": 1
+  },
+  "safety": {
+    "deleted": 0,
+    "customer_messages_sent": 0,
+    "ambiguous_mail_archived": 0
+  },
+  "next_runtime": "AI Revenue Nerve Watch updates this file after each successful Gmail sorting cycle"
+}
