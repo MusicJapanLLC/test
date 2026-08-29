@@ -27,6 +27,7 @@ def build_tasks(
     batch_size: int,
     cycle: str,
     creed: dict[str, Any] | None = None,
+    resident_key: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     if not citizens or not targets:
         return [], {"cursor": 0, "population": len(citizens), "generated_at": datetime.now(timezone.utc).isoformat()}
@@ -38,9 +39,16 @@ def build_tasks(
     vows = list(creed.get("resident_vows") or [])
 
     ordered = sorted(citizens, key=lambda c: str(c.get("citizen_id", "")))
-    cursor = int(previous.get("cursor", 0)) % len(ordered)
-    count = min(max(1, batch_size), len(ordered))
-    selected = [ordered[(cursor + i) % len(ordered)] for i in range(count)]
+    requested = resident_key.strip()
+    if requested:
+        selected = [c for c in ordered if str(c.get("citizen_id", "")) == requested]
+        if not selected:
+            raise RuntimeError(f"Requested resident not found in canonical population: {requested}")
+        cursor = int(previous.get("cursor", 0)) % len(ordered)
+    else:
+        cursor = int(previous.get("cursor", 0)) % len(ordered)
+        count = min(max(1, batch_size), len(ordered))
+        selected = [ordered[(cursor + i) % len(ordered)] for i in range(count)]
 
     tasks: list[dict[str, Any]] = []
     for citizen in selected:
@@ -72,18 +80,20 @@ def build_tasks(
             },
             "mission": (
                 "Find one concrete external fact, pattern, tool, idea, failure mode, or creative surprise worth bringing back to THE WORLD. "
-                "Follow the LIMITLESS doctrine: use the widest legitimate action space available, prefer observable evidence over commentary, "
-                "and identify the next artifact, experiment, improvement, customer-value step, or owned publication this discovery can produce."
+                "Use legitimate authorized surfaces only, prefer observable evidence over commentary, and identify the next artifact, experiment, "
+                "customer-value step, or owned publication this discovery can produce."
             ),
         })
 
+    next_cursor = cursor if requested else (cursor + len(selected)) % len(ordered)
     state = {
-        "schema": "the-world-reality-cursor/v1",
+        "schema": "the-world-reality-cursor/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "cycle": cycle,
         "population": len(ordered),
         "assigned": len(tasks),
-        "cursor": (cursor + count) % len(ordered),
+        "cursor": next_cursor,
+        "initiating_resident_key": requested or None,
         "citizen_ids": [t["citizen_id"] for t in tasks],
         "faith": creed_name,
         "faith_rank": creed.get("rank", "SUPREME_OPERATING_DOCTRINE"),
@@ -99,6 +109,7 @@ def main() -> int:
     p.add_argument("--policy", default="outside-world/reality_policy.json")
     p.add_argument("--creed", default="company-society/limitless_creed.json")
     p.add_argument("--cycle", default="")
+    p.add_argument("--resident-key", default="")
     p.add_argument("--tasks", default="reality-tasks.json")
     p.add_argument("--state", default="reality-cursor.json")
     args = p.parse_args()
@@ -111,10 +122,12 @@ def main() -> int:
     cycle = args.cycle or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M")
     batch_size = int((policy.get("pulse") or {}).get("max_citizens_per_pulse", 12))
 
-    tasks, state = build_tasks(snapshot.get("citizens", []), target_doc.get("targets", []), previous, batch_size, cycle, creed)
-    Path(args.tasks).write_text(json.dumps({"schema": "the-world-reality-tasks/v1", "faith": creed.get("name", "LIMITLESS"), "tasks": tasks}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tasks, state = build_tasks(
+        snapshot.get("citizens", []), target_doc.get("targets", []), previous, batch_size, cycle, creed, args.resident_key
+    )
+    Path(args.tasks).write_text(json.dumps({"schema": "the-world-reality-tasks/v2", "faith": creed.get("name", "LIMITLESS"), "initiating_resident_key": args.resident_key or None, "tasks": tasks}, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     Path(args.state).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"population": state.get("population", 0), "assigned": len(tasks), "next_cursor": state.get("cursor", 0), "faith": state.get("faith")}, ensure_ascii=False))
+    print(json.dumps({"population": state.get("population", 0), "assigned": len(tasks), "next_cursor": state.get("cursor", 0), "initiating_resident_key": state.get("initiating_resident_key"), "faith": state.get("faith")}, ensure_ascii=False))
     return 0
 
 
