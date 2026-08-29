@@ -98,6 +98,9 @@ python -m senju.cli run --population 100 --generations 40 --matches 1000 --extre
 - `senju/reports/latest.json` — 全世代の生データ（ダッシュボード/自作可視化用）。
 - `.github/workflows/senju-daily-report.yml` — 毎朝CIで自動実行。Job Summaryに表示し、
   **`SLACK_WEBHOOK_URL` シークレットを設定すればSlackへ自動投稿**（要約を通知）。
+- **戦況監視ダッシュボード（Artifact）** — 軍拡競争・戦争経済・淘汰・攻防バランス・弱点を
+  グラフで一望できる監視コンソール。通常/苛烈モードを切替でき、`reports/latest.json` を
+  貼り付ければ自分の実行結果で更新される。（Claude Codeから発行された非公開URLで閲覧）
 
 ## アーキテクチャ
 
