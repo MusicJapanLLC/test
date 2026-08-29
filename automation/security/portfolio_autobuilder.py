@@ -22,9 +22,12 @@ STARTER_ARTIFACTS = {
     "SEC-PORT-003": "standment-security/evidence-packs/supply-chain/README.md",
     "SEC-PORT-004": "standment-security/evidence-packs/auth-tenant-rls/README.md",
     "SEC-PORT-005": "standment-security/evidence-packs/agent-auditability/README.md",
-    "SEC-PORT-006": "standment-security/ai-security/agent-permission-boundary-lab.md",
-    "SEC-PORT-007": "standment-security/ai-security/llm-security-eval-harness.md",
-    "SEC-PORT-008": "standment-security/ai-security/security-evidence-dashboard.md",
+    "SEC-PORT-006": "standment-security/evidence-packs/incident-readiness/README.md",
+    "SEC-PORT-007": "standment-security/evidence-packs/continuous-retainer/README.md",
+    "SEC-PORT-008": "standment-security/evidence-packs/architecture-review/README.md",
+    "SEC-PORT-009": "standment-security/ai-security/agent-permission-boundary-lab.md",
+    "SEC-PORT-010": "standment-security/ai-security/llm-security-eval-harness.md",
+    "SEC-PORT-011": "standment-security/ai-security/security-evidence-dashboard.md",
 }
 
 
@@ -70,11 +73,11 @@ def build_lab_note(report: dict[str, Any], now: datetime, starter_path: str | No
         "",
         "## Evidence Present",
         *(f"- `{x}`" for x in present),
-        *( ["- NONE"] if not present else [] ),
+        *(["- NONE"] if not present else []),
         "",
         "## Evidence Missing",
         *(f"- [ ] `{x}`" for x in missing),
-        *( ["- NONE"] if not missing else [] ),
+        *(["- NONE"] if not missing else []),
         "",
         "## 顧客向け成果物",
         str(selected.get("deliverable", "")),
@@ -156,7 +159,7 @@ def evolve(report: dict[str, Any], program: dict[str, Any], repo_root: Path, now
         created.append(index_rel)
 
     return {
-        "schema": "standment-security-portfolio-autobuilder/v1",
+        "schema": "standment-security-portfolio-autobuilder/v2",
         "track": track_id,
         "created_or_updated": created,
         "latest_note": note_rel,
