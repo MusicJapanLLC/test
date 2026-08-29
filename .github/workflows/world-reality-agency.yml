@@ -106,6 +106,21 @@ jobs:
             --execute-owned-writes
           cat reality-field-report.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Publish successful field notes to non-GitHub public web
+        run: |
+          set -euo pipefail
+          python outside-world/public_feed_bridge.py \
+            --events reality-events.json \
+            --out public-feed-receipt.json \
+            --limit 2
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('public-feed-receipt.json', encoding='utf-8'))
+          print(f"External public-feed writes selected: **{d.get('selected', 0)}**")
+          for r in d.get('receipts', []):
+              print(f"- {r.get('source_url', '')}: `{r.get('status')}`")
+          PY
+
       - name: Preserve citizen identities, memory, evidence and effects
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -122,3 +137,4 @@ jobs:
             reality-field-report.md
             reality-events.json
             reality-gateway-state.json
+            public-feed-receipt.json
