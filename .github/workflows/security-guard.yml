@@ -67,11 +67,11 @@ jobs:
             git show --format= --unified=0 "$CURRENT_SHA" -- . ':!.github/workflows/security-guard.yml' > "$diff_file" || true
           fi
           if grep '^+' "$diff_file" | grep -v '^+++' | grep -E -- "$patterns"; then
-            echo "Potential secret introduced by this change. Rotate it if it was real, then remove it from history before merging."
+            echo "Potential secret introduced by this change."
             exit 1
           fi
 
-      - name: Enforce safe workflow triggers and permissions
+      - name: Enforce safe triggers and least privilege by default
         shell: bash
         run: |
           set -euo pipefail
@@ -79,130 +79,141 @@ jobs:
             echo "Unsafe workflow trigger, broad permission, or self-hosted runner detected."
             exit 1
           fi
-          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows --exclude='security-guard.yml' --exclude='senju-autonomous-improver.yml' --exclude='tomoki-forge.yml'; then
-            echo "Broad repository write permission detected. Use a narrowly scoped dedicated job instead."
+          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows \
+            --exclude='security-guard.yml' \
+            --exclude='senju-autonomous-improver.yml' \
+            --exclude='tomoki-forge.yml' \
+            --exclude='tomoki-manager.yml' \
+            --exclude='ai-factory-boss.yml'; then
+            echo "Repository write permission exists outside an explicitly validated privileged workflow."
             exit 1
           fi
 
-      - name: Validate Senju autonomous improver blast radius
+      - name: Validate privileged workflow blast radii
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-          p = Path('.github/workflows/senju-autonomous-improver.yml')
-          if not p.exists():
-              raise SystemExit(0)
-          text = p.read_text(encoding='utf-8')
-          required = [
-              'contents: write',
-              'actions: read',
-              'workflow_dispatch:',
-              'schedule:',
-              'senju/state/champion.json',
-              'senju/state/strategy.json',
-              'senju/state/last-evolution-summary.json',
-              'senju/state/last-evolution-plan.md',
-              'CURRENT_BASE_SHA=',
-              'force=false',
-          ]
-          for item in required:
-              if item not in text:
-                  raise SystemExit(f'autonomous improver missing required guardrail: {item}')
-          forbidden = [
+
+          def text(name: str) -> str:
+              p = Path('.github/workflows') / name
+              return p.read_text(encoding='utf-8') if p.exists() else ''
+
+          def require(name: str, body: str, required: list[str], forbidden: list[str]) -> None:
+              if not body:
+                  return
+              for item in required:
+                  if item not in body:
+                      raise SystemExit(f'{name} missing required guardrail: {item}')
+              for item in forbidden:
+                  if item in body:
+                      raise SystemExit(f'{name} contains forbidden capability: {item}')
+
+          common_forbidden = [
               'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
-              'pull-requests: write', 'models: write',
+              'runs-on: self-hosted', 'write-all', 'packages: write', 'deployments: write',
+              'checks: write', 'statuses: write', 'security-events: write',
+              'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
           ]
-          for item in forbidden:
-              if item in text:
-                  raise SystemExit(f'autonomous improver contains forbidden capability: {item}')
-          allowed = {
-              'senju/state/champion.json',
-              'senju/state/strategy.json',
-              'senju/state/last-evolution-summary.json',
-              'senju/state/last-evolution-plan.md',
-          }
-          write_lines = [line.strip() for line in text.splitlines() if line.strip().startswith('put_file ')]
-          observed = {line.split()[-1] for line in write_lines}
-          if observed != allowed:
-              raise SystemExit(f'autonomous write allowlist mismatch: {sorted(observed)}')
+
+          senju = text('senju-autonomous-improver.yml')
+          require(
+              'Senju autonomous improver', senju,
+              [
+                  'contents: write', 'actions: read', 'workflow_dispatch:', 'schedule:',
+                  'persist-credentials: false', 'senju/state/champion.json',
+                  'senju/state/strategy.json', 'senju/state/last-evolution-summary.json',
+                  'senju/state/last-evolution-plan.md', 'CURRENT_BASE_SHA=', 'force=false',
+              ],
+              common_forbidden + ['issues: write', 'pull-requests: write', 'models: write'],
+          )
+          if senju:
+              allowed = {
+                  'senju/state/champion.json',
+                  'senju/state/strategy.json',
+                  'senju/state/last-evolution-summary.json',
+                  'senju/state/last-evolution-plan.md',
+              }
+              observed = {
+                  line.strip().split()[-1]
+                  for line in senju.splitlines()
+                  if line.strip().startswith('put_file ')
+              }
+              if observed != allowed:
+                  raise SystemExit(f'Senju autonomous write allowlist mismatch: {sorted(observed)}')
+
+          forge = text('tomoki-forge.yml')
+          require(
+              'TOMOKI FORGE', forge,
+              [
+                  'contents: write', 'pull-requests: write', 'copilot-requests: write',
+                  'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
+                  '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
+                  'python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
+                  'git add -A -- sales-command-30', 'gh auth setup-git', 'gh pr create',
+              ],
+              common_forbidden + ['issues: write'],
+          )
+          if forge:
+              copilot_lines = [x.strip() for x in forge.splitlines() if x.strip().startswith('copilot -p ')]
+              if len(copilot_lines) != 1:
+                  raise SystemExit('TOMOKI FORGE must have exactly one Copilot execution line')
+              if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
+                  raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
+
+          manager = text('tomoki-manager.yml')
+          require(
+              'TOMOKI MANAGER', manager,
+              [
+                  'contents: read', 'actions: write', 'issues: read', 'pull-requests: read',
+                  'security-events: read', 'copilot-requests: write', 'workflow_dispatch:',
+                  'schedule:', 'persist-credentials: false', 'TOMOKI_MANAGER_MAX_ACTIONS:',
+                  "TOMOKI_MANAGER_MAX_ACTIONS: '3'", 'apply-plan', '--apply-actions',
+              ],
+              common_forbidden + [
+                  'contents: write', 'issues: write', 'pull-requests: write',
+              ],
+          )
+
+          boss = text('ai-factory-boss.yml')
+          require(
+              'AI FACTORY BOSS', boss,
+              [
+                  'contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
+                  'persist-credentials: false', 'boss_gate.py', 'ceo_report.py',
+              ],
+              common_forbidden + [
+                  'contents: write', 'issues: write', 'pull-requests: write',
+              ],
+          )
           PY
 
-      - name: Validate TOMOKI FORGE blast radius
+      - name: Validate TOMOKI FORGE file policy remains bounded
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
-          workflow = Path('.github/workflows/tomoki-forge.yml')
           gate = Path('tomoki-agents/policy_gate.py')
           verifier = Path('tomoki-agents/verify.sh')
+          workflow = Path('.github/workflows/tomoki-forge.yml')
           if not workflow.exists():
               raise SystemExit(0)
           if not gate.exists() or not verifier.exists():
               raise SystemExit('TOMOKI FORGE guardrail files are missing')
-
-          text = workflow.read_text(encoding='utf-8')
-          required = [
-              'contents: write',
-              'pull-requests: write',
-              'copilot-requests: write',
-              'workflow_dispatch:',
-              'schedule:',
-              'persist-credentials: false',
-              '@github/copilot@1.0.80',
-              'COPILOT_GITHUB_TOKEN:',
-              'cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py',
-              'cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh',
-              'git add -N -- sales-command-30',
-              'python /tmp/tomoki-policy-gate.py',
-              'bash /tmp/tomoki-verify.sh',
-              'git add -A -- sales-command-30',
-              'gh auth setup-git',
-              'git push origin "$BRANCH"',
-              'gh pr create',
-          ]
-          for item in required:
-              if item not in text:
-                  raise SystemExit(f'TOMOKI FORGE missing required guardrail: {item}')
-
-          forbidden = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
-              '--allow-all', '--allow-all-tools', '--yolo', "--allow-tool='shell'", '--allow-tool=shell',
-              'git push --force', 'git push -f',
-          ]
-          for item in forbidden:
-              if item in text:
-                  raise SystemExit(f'TOMOKI FORGE contains forbidden capability: {item}')
-
-          copilot_lines = [line.strip() for line in text.splitlines() if line.strip().startswith('copilot -p ')]
-          if len(copilot_lines) != 1:
-              raise SystemExit('TOMOKI FORGE must have exactly one Copilot execution line')
-          if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
-              raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
-
           gate_text = gate.read_text(encoding='utf-8')
-          gate_required = [
-              "'sales-command-30/src/'",
-              "'sales-command-30/tests/'",
-              "'sales-command-30/README.md'",
-              'if len(names) > 3:',
-              'if changed_lines > 250:',
-              'FORBIDDEN_PATTERNS',
-          ]
-          for item in gate_required:
+          for item in [
+              "'sales-command-30/src/'", "'sales-command-30/tests/'",
+              "'sales-command-30/README.md'", 'if len(names) > 3:',
+              'if changed_lines > 250:', 'FORBIDDEN_PATTERNS',
+          ]:
               if item not in gate_text:
                   raise SystemExit(f'TOMOKI policy gate missing invariant: {item}')
           if "'.github/" in gate_text or '".github/' in gate_text:
               raise SystemExit('TOMOKI policy gate must never allow .github writes')
-
           verify_text = verifier.read_text(encoding='utf-8')
-          if "npm run build" not in verify_text or 'py_compile' not in verify_text:
+          if 'npm run build' not in verify_text or 'py_compile' not in verify_text:
               raise SystemExit('TOMOKI verifier must retain compile/build checks')
           PY
 
@@ -220,7 +231,7 @@ jobs:
         run: |
           set -euo pipefail
           if grep -R -nE '\$\{\{[[:space:]]*github\.event\.(issue|comment|pull_request)\.(title|body)' .github/workflows --exclude='security-guard.yml'; then
-            echo "Untrusted event text is directly interpolated into a workflow. Pass it through env/input handling instead."
+            echo "Untrusted event text is directly interpolated into a workflow."
             exit 1
           fi
 
@@ -247,7 +258,6 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
           failures = []
           for path in Path('.github/workflows').glob('*.y*ml'):
               lines = path.read_text(encoding='utf-8').splitlines()

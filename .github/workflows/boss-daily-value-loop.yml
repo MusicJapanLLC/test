@@ -1,0 +1,123 @@
+name: BOSS Daily Value Loop
+
+on:
+  schedule:
+    - cron: "15 23 * * *" # 08:15 JST, after Senju morning cycle
+  workflow_dispatch:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "automation/control_plane/value_loop.py"
+      - "automation/control_plane/value_policy.json"
+      - ".github/workflows/boss-daily-value-loop.yml"
+      - ".github/agents/ai-factory-boss.agent.md"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+
+concurrency:
+  group: boss-daily-value-loop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  value-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Listen to latest TOMOKI/MANAGER evidence
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/manager
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "TOMOKI - MANAGER" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name tomoki-manager-cycle --dir /tmp/manager || true
+          fi
+          for f in tomoki-manager-snapshot.json covenant-council.json faith-report.json; do
+            if [[ -f "/tmp/manager/$f" ]]; then cp "/tmp/manager/$f" "$f"; fi
+          done
+          echo "manager_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Listen to latest Senju shadow evidence
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-shadow senju/reports/shadow
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Senju Shadow Stability League" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name senju-shadow-stability --dir /tmp/senju-shadow || true
+          fi
+          FOUND="$(find /tmp/senju-shadow -name stability.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" senju/reports/shadow/stability.json; fi
+          echo "senju_shadow_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build BOSS daily value brief
+        run: |
+          set -euo pipefail
+          python automation/control_plane/value_loop.py \
+            --policy automation/control_plane/value_policy.json \
+            --manager tomoki-manager-snapshot.json \
+            --council covenant-council.json \
+            --faith faith-report.json \
+            --senju senju/state/last-evolution-summary.json \
+            --stability senju/reports/shadow/stability.json \
+            --out-json reports/value-loop/daily-value.json \
+            --out-md reports/value-loop/daily-value.md
+          cat reports/value-loop/daily-value.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload daily evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: boss-daily-value
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            reports/value-loop/daily-value.json
+            reports/value-loop/daily-value.md
+
+      - name: Report concise value brief to internal Slack
+        if: github.event_name != 'pull_request' && env.TOMOKI_SLACK_WEBHOOK_URL != ''
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          d=json.load(open('reports/value-loop/daily-value.json', encoding='utf-8'))
+          actions=d.get('top_actions', [])[:3]
+          action_text='\n'.join(
+              f"{i+1}. {a['owner']} / {a['revenue_distance']} — {a['action']}"
+              for i,a in enumerate(actions)
+          )
+          p=d['pillars']
+          s=d['senju']
+          text=(
+              "*BOSS DAILY VALUE｜売上までの距離を縮める*\n"
+              f"operations={p['operations']} / security={p['security']} / AI={p['ai_evolution']} / faith={p['faith_to_value']}\n"
+              f"workers={d['manager']['workers_seen']} unresolved={d['manager']['unresolved']} verified={d['manager']['verified_signals']}\n"
+              f"Senju safe={s['safe']} stable={s['stable']} score={s['score']}\n"
+              "*今日やる価値の高いこと*\n" + action_text +
+              "\n※活動量ではなく、D6→D0（入金）へ近づいた証拠だけを評価"
+          )
+          req=urllib.request.Request(
+              os.environ['TOMOKI_SLACK_WEBHOOK_URL'],
+              data=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type':'application/json'},
+          )
+          with urllib.request.urlopen(req, timeout=10) as r:
+              print('slack status', r.status)
+          PY
