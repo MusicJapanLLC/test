@@ -9,7 +9,8 @@
     "max_citizens_per_pulse": 24,
     "max_observations_per_pulse": 24,
     "max_publications_per_pulse": 2,
-    "owned_publication_interval_hours": 6
+    "owned_publication_interval_hours": 6,
+    "owned_publication_daily_cap": 8
   },
   "autonomy_tiers": {
     "T0_OBSERVE": "AUTO",
