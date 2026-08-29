@@ -8,6 +8,12 @@
   "repair_workflow": "tomoki-forge.yml",
   "repair_exclude_workflows": ["tomoki-forge.yml"],
   "workers": [
+    {"name":"SECURITY_CONTINUOUS_WHITEHAT","workflow":"security-continuous-whitehat.yml","stale_minutes":18,"director_min_interval_minutes":5,"priority":140,"autostart":true},
+    {"name":"WORLD_RESEARCH_FABRIC","workflow":"the-world-autonomous-research-fabric.yml","stale_minutes":35,"director_min_interval_minutes":15,"priority":136,"autostart":true},
+    {"name":"WORLD_AGENT_FACTORY","workflow":"the-world-agent-factory.yml","stale_minutes":300,"director_min_interval_minutes":240,"priority":134,"autostart":true},
+    {"name":"STANDMENT_WHITEHAT_PORTFOLIO","workflow":"standment-whitehat-portfolio-cycle.yml","stale_minutes":1560,"director_min_interval_minutes":1440,"priority":132,"autostart":true},
+    {"name":"STANDMENT_SECURITY_PORTFOLIO_RND","workflow":"standment-security-portfolio-rnd.yml","stale_minutes":1560,"director_min_interval_minutes":1440,"priority":130,"autostart":true},
+    {"name":"STANDMENT_SECURITY_PORTFOLIO_FOUNDRY","workflow":"standment-security-portfolio-foundry.yml","stale_minutes":1560,"director_min_interval_minutes":1440,"priority":128,"autostart":true},
     {"name":"WORLD_TASK_MOTOR_CORTEX","workflow":"the-world-task-worker.yml","stale_minutes":18,"director_min_interval_minutes":10,"priority":120,"autostart":true},
     {"name":"WORLD_EXTERNAL_PRESENCE","workflow":"the-world-external-presence.yml","stale_minutes":25,"director_min_interval_minutes":10,"priority":119,"autostart":true},
     {"name":"WORLD_REALITY_AGENCY","workflow":"world-reality-agency.yml","stale_minutes":40,"director_min_interval_minutes":20,"priority":118,"autostart":true},
