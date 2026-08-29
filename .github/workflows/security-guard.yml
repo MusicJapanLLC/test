@@ -86,7 +86,8 @@ jobs:
             --exclude='tomoki-manager.yml' \
             --exclude='ai-factory-boss.yml' \
             --exclude='the-world-realtime-kernel.yml' \
-            --exclude='the-core-autonomous-director.yml'; then
+            --exclude='the-core-autonomous-director.yml' \
+            --exclude='the-world-task-worker.yml'; then
             echo "Repository write permission exists outside an explicitly validated privileged workflow."
             exit 1
           fi
@@ -202,6 +203,22 @@ jobs:
               common_forbidden + [
                   'contents: write', 'issues: write', 'pull-requests: write',
                   'checks: write', 'deployments: write', 'packages: write',
+              ],
+          )
+
+          task_worker = text('the-world-task-worker.yml')
+          require(
+              'THE WORLD Resident Task Worker', task_worker,
+              [
+                  'contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
+                  "cron: '*/5 * * * *'", 'persist-credentials: false',
+                  'automation/world/task_worker.py', 'gh workflow run',
+                  'Claim one personality-linked task', 'Reconcile downstream GitHub evidence',
+              ],
+              common_forbidden + [
+                  'contents: write', 'issues: write', 'pull-requests: write',
+                  'checks: write', 'deployments: write', 'packages: write',
+                  'id-token: write', 'copilot-requests: write',
               ],
           )
 
