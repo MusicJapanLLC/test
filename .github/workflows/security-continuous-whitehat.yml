@@ -1,0 +1,116 @@
+name: SECURITY - Continuous Elite White-Hat Portfolio
+
+on:
+  schedule:
+    # GitHub scheduled workflows support 5-minute granularity. Each run performs
+    # five one-minute evidence rounds so the research loop keeps a minute cadence.
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/security-continuous-whitehat.yml'
+      - 'automation/security/elite_whitehat_continuous.py'
+      - 'standment-security/ELITE_WHITEHAT_CELL.md'
+      - 'standment-security/security_portfolio_program.json'
+
+concurrency:
+  group: security-continuous-whitehat
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  OUT_DIR: /tmp/security-continuous-whitehat
+
+jobs:
+  continuous-whitehat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify continuous White-Hat worker
+        run: |
+          set -euo pipefail
+          python -m py_compile automation/security/elite_whitehat_continuous.py
+          rm -rf "$OUT_DIR"
+          mkdir -p "$OUT_DIR"
+
+      - name: Five one-minute Elite White-Hat R&D rounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          for round in 1 2 3 4 5; do
+            echo "## Elite White-Hat minute round ${round}" >> "$GITHUB_STEP_SUMMARY"
+            python automation/security/elite_whitehat_continuous.py \
+              --round "$round" \
+              --run-id "${GITHUB_RUN_ID}-${round}" \
+              --out-dir "$OUT_DIR"
+            cat "$OUT_DIR/round-0${round}.md" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$round" != "5" ]]; then
+              sleep 60
+            fi
+          done
+
+      - name: Build human-readable portfolio digest
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import glob, json, os
+          from pathlib import Path
+
+          out = Path(os.environ['OUT_DIR'])
+          rows = [json.load(open(p, encoding='utf-8')) for p in sorted(glob.glob(str(out / 'round-*.json')))]
+          coverage = [float(r['evidence']['coverage']) for r in rows]
+          weakest = sorted(rows, key=lambda r: (float(r['evidence']['coverage']), r['lens_id']))[0]
+          lines = [
+              '# SECURITY HOURLY SOURCE PACK',
+              '',
+              f'- GitHub run: **{os.environ.get("GITHUB_RUN_ID")}**',
+              f'- Elite White-Hat micro rounds: **{len(rows)}**',
+              f'- Average evidence coverage: **{sum(coverage)/max(1,len(coverage)):.0%}**',
+              '- Status: **BUILDING**',
+              '',
+              '## このrunで作ったもの',
+          ]
+          for row in rows:
+              lines.append(f"- **{row['artifact']}** — {row['use_case']} / Evidence {row['evidence']['coverage']:.0%}")
+          lines += [
+              '',
+              '## 一番弱い証拠',
+              f"- {weakest['artifact']} / Evidence {weakest['evidence']['coverage']:.0%}",
+              f"- 次の改善: {weakest['next_improvement']}",
+              '',
+              '## 反証・限界',
+              '- リポジトリ上のEvidence存在は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。',
+              '- VERIFIED昇格には所有/明示許可済みscope、行動証拠、反証、再現性が別途必要。',
+              '',
+              '## Slack向けルール',
+              '- コードは投稿しない。',
+              '- 1時間に1回、最新の成果物・用途・差分・検証状態・次の改善だけを人間語で報告する。',
+              '',
+          ]
+          (out / 'hourly-source-pack.md').write_text('\n'.join(lines), encoding='utf-8')
+          PY
+          cat "$OUT_DIR/hourly-source-pack.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve White-Hat portfolio evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: security-whitehat-continuous-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            /tmp/security-continuous-whitehat/round-*.json
+            /tmp/security-continuous-whitehat/round-*.md
+            /tmp/security-continuous-whitehat/hourly-source-pack.md
