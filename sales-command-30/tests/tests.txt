@@ -1,43 +1,67 @@
 # Tests
 
-## Test 1 - 未ログイン時は本番データを表示しない [sanity]
-Viewport: mobile
-Covers: authentication gate, anonymous data protection, responsive login
-Description: 未認証ユーザーに案件や営業イベントを見せず、ログイン画面だけを表示する。
-Steps:
-1. 未ログイン状態でアプリを開く
-2. 画面の主要コンテンツを確認する
-3. 案件一覧が表示されていないことを確認する
-Expected: 「Googleでログインして開始」が表示され、案件・営業イベントの実データは表示されない。
-
-## Test 2 - ログイン後に案件を作成して保存できる
+## Test 1 - 休眠案件が回収キューに保存される [sanity]
 Viewport: desktop
-Covers: AppDeploy auth, POST /api/deals, database create, GET /api/dashboard, persisted deal UI
-Description: 認証ユーザーが実案件を作成し、保存後に案件一覧へ反映できることを確認する。
-Steps:
-1. Googleでログインする
-2. 「案件追加」を開き、会社名「QA株式会社」、見込金額「120000」、次アクション「提案書送付」を入力して保存する
-3. 案件一覧を確認する
-Expected: 「QA株式会社」と「￥120,000」が案件一覧に表示される。
+Covers: authentication, deal creation, database persistence, recovery score, dashboard metrics
+Description: 実案件を登録すると保存され、回収優先度付きでキューに現れることを確認する。
 
-## Test 3 - 案件ステージを更新できる
+Steps:
+1. Googleでログインし、案件追加を開く
+2. 会社名「Recovery Test」、見込金額「300000」、状態「休眠」を入力して保存する
+3. ページを更新する
+
+Expected: 「Recovery Test」が回収キューと全案件に残り、0より大きい回収スコアが表示される。
+
+## Test 2 - AIが次アクションと追客文を生成する
 Viewport: desktop
-Covers: PUT /api/deals/:id, database update, pipeline calculation
-Description: 保存済み案件のステージ変更が永続化され、受注集計へ反映されることを確認する。
+Covers: POST /api/recovery/scan, AI generation, database update, rendered recovery action and draft
+Description: 優先案件をAI分析し、実行可能な次アクションと送信ドラフトを保存する。
+
 Setup:
-1. Googleでログインし、「Stage QA株式会社」を金額「50000」、ステージ「新規」で作成する
-Steps:
-1. 「Stage QA株式会社」のステージを「受注」に変更する
-2. 画面を更新する
-3. 受注カードを確認する
-Expected: 案件のステージが「受注」のまま保持され、受注金額に￥50,000以上が反映される。
+1. 会社名「AI Scan Test」、見込金額「500000」、状態「提案済」、メモ「見積送付後に返信が止まった」を登録する
 
-## Test 4 - 連携キー発行と内部受信テストが機能する
-Viewport: desktop
-Covers: POST /api/integration-token, hashed integration token storage, POST /api/events/test, event persistence
-Description: 認証ユーザーが外部連携キーを発行でき、内部のイベント保存経路を確認できることを検証する。
 Steps:
-1. Googleでログインする
-2. 「連携キーを発行」を押し、Endpoint・X-User-Id・X-Ingest-Tokenが表示されることを確認する
+1. 「AIで回収候補を更新」を押す
+2. AI処理完了後に「AI Scan Test」を確認する
+3. ページを更新する
+
+Expected: 「次の一手」と「送信ドラフト」に具体的な日本語が表示され、更新後も残る。
+
+## Test 3 - 復活結果が学習ログと見込額へ反映される
+Viewport: desktop
+Covers: POST /api/deals/:id/outcome, outcome persistence, adaptive learning data, revived pipeline metric
+Description: 回収成功を記録すると次回学習用データとして保存され、復活見込額へ反映される。
+
+Setup:
+1. 会社名「Revived Test」、見込金額「200000」、状態「休眠」を登録する
+
+Steps:
+1. 「Revived Test」の「復活」を押す
+2. 「復活見込額」と「学習ログ」を確認する
+3. ページを更新する
+
+Expected: 「復活見込額」が200000円以上増え、学習ログが1件以上増え、「Revived Test」の状態が「商談予定」になる。
+
+## Test 4 - 不正な案件と削除を正しく処理する
+Viewport: mobile
+Covers: create validation, DELETE /api/deals/:id, destructive confirmation, mobile workflow
+Description: 不正な金額は保存せず、正常案件は確認後に削除できる。
+
+Steps:
+1. 案件追加で会社名「Invalid Test」、見込金額「-1」を入力して保存する
+2. エラー表示を確認した後、会社名「Delete Test」、見込金額「10000」で正常登録する
+3. 全案件から「Delete Test」を削除して確認ダイアログを承認する
+
+Expected: 「Invalid Test」は作成されず、「Delete Test」は削除後に一覧から消える。
+
+## Test 5 - 外部連携キーと受信テストが機能する
+Viewport: desktop
+Covers: integration token issuance, POST /api/events/test, event persistence, integration UI
+Description: 外部イベント連携の入口が発行でき、内部受信経路が保存まで動作する。
+
+Steps:
+1. 「Gmail / Calendar連携」を開き「キー発行」を押す
+2. Endpoint、X-User-Id、X-Ingest-Tokenが表示されることを確認する
 3. 「受信テスト」を押す
-Expected: 営業イベント欄に「受信テスト成功」が表示される。
+
+Expected: 直近イベントに「受信テスト成功」が表示される。
