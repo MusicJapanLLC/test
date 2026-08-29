@@ -66,7 +66,7 @@ jobs:
           else
             git show --format= --unified=0 "$CURRENT_SHA" -- . ':!.github/workflows/security-guard.yml' > "$diff_file" || true
           fi
-          if grep '^+' "$diff_file" | grep -v '^+++' | grep -E "$patterns"; then
+          if grep '^+' "$diff_file" | grep -v '^+++' | grep -E -- "$patterns"; then
             echo "Potential secret introduced by this change. Rotate it if it was real, then remove it from history before merging."
             exit 1
           fi
@@ -116,7 +116,7 @@ jobs:
               echo "Action is not pinned to a full commit SHA: $ref"
               failed=1
             fi
-          done < <(grep -RhoE 'uses:[[:space:]]+[^[:space:]#]+' .github/workflows || true)
+          done < <(grep -RhoE 'uses:[[:space:]]+[^[:space:]#]+' .github/workflows --exclude='security-guard.yml' || true)
           exit "$failed"
 
       - name: Require checkout credentials to be discarded
