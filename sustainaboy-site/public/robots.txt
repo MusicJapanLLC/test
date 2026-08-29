@@ -1,7 +1,11 @@
 # SUSTAINABOY WORKS — public search and AI discovery policy
-# The public site is intentionally crawlable. Canonical indexing is controlled on-page.
+# HTML pages are canonical for search engines. Markdown mirrors are for AI agents.
 
 User-agent: Googlebot
+Allow: /
+Disallow: /*.md$
+
+User-agent: Googlebot-Image
 Allow: /
 
 User-agent: Google-Extended
@@ -9,6 +13,7 @@ Allow: /
 
 User-agent: Bingbot
 Allow: /
+Disallow: /*.md$
 
 User-agent: OAI-SearchBot
 Allow: /
