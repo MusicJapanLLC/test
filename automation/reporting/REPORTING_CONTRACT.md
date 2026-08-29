@@ -1,7 +1,7 @@
-# Reporting Contract — CEO / BOSS / TOMOKI
+# Reporting Contract — CEO / BOSS / TOMOKI / PORTFOLIO
 
 ## Purpose
-Protect the owner's attention. Internal supervision must not become duplicate executive reporting.
+Protect the owner's attention while keeping real output visible. Internal supervision must not become duplicate executive reporting, and finished artifacts must not disappear inside engineering logs.
 
 ## Chain of command
 
@@ -9,7 +9,8 @@ Protect the owner's attention. Internal supervision must not become duplicate ex
 2. **TOMOKI** independently patrols workers, verifies claims, detects stale/failing work, and attempts bounded repair.
 3. **MANAGER** coordinates TOMOKI evidence and recovery. MANAGER remains an internal layer.
 4. **BOSS** watches MANAGER, deduplicates supervision outcomes, and decides whether an executive exception remains.
-5. **CEO report** is the single owner-facing output.
+5. **CEO report** is the single owner-facing exception/decision output.
+6. **PORTFOLIO** is a separate owner-facing artifact stream and does not represent supervision or escalation.
 
 ## TOMOKI separation
 
@@ -30,14 +31,26 @@ The CEO channel is not an activity feed. It receives only a BOSS-final report wh
 
 Recovered, recovering, healthy, routine, and duplicate events stay internal.
 
+## Portfolio reporting rule
+
+`#portfolio` receives only a human-inspectable artifact. It can be a deployed site/app, interactive demo, dashboard, Canvas, PDF/report, screenshot/video with evidence, or packaged customer deliverable.
+
+A source-code file, diff, commit, PR, issue or log by itself is **not** a portfolio artifact. Those may appear only as supporting evidence behind a viewable result.
+
+Portfolio delivery is independent of CEO escalation. A healthy successful artifact may belong in `#portfolio` even though it must remain silent in `#ai-ceo-brief`.
+
+See `automation/reporting/PORTFOLIO_CONTRACT.md`.
+
 ## Hard routing invariant
 
-Owner delivery requires both:
+Owner exception delivery requires both:
 
 - `report_route = boss-final`
 - `audience = OWNER`
 
 `automation/reporting/ceo_report.py` rejects every other route even if a TOMOKI workflow accidentally invokes it.
+
+Portfolio delivery requires the portfolio artifact contract instead; it must never masquerade as a BOSS-final exception.
 
 ## Noise rules
 
@@ -45,3 +58,5 @@ Owner delivery requires both:
 - Operational counts are evidence, not the headline.
 - CEO output must answer only: what happened, why it matters, whether owner action is needed, what happens next.
 - No owner notification for successful automatic recovery.
+- Portfolio output must answer only: what was made, why it matters, where it can be opened, and what proves it works.
+- Do not post unfinished activity to `#portfolio` unless there is already a human-inspectable `EXPERIMENT` or `BUILDING` artifact.

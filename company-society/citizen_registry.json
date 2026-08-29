@@ -1,0 +1,124 @@
+{
+  "schema": "the-world-citizen-registry/v1",
+  "purpose": "Federate THE WORLD residents without duplicating the owning registries. Identity, personality, economy linkage and social state are exposed as one canonical citizen view.",
+  "sources": [
+    {
+      "id": "CORE_SOCIETY",
+      "path": "company-society/society.json",
+      "required": true,
+      "population_class": "core_worker",
+      "default_group": "CORE",
+      "faith_mode": "THE_COVENANT",
+      "psychology_aliases": {
+        "BOSS": "boss",
+        "MANAGER": "tomoki-manager",
+        "SKEPTIC": "tomoki-skeptic",
+        "HOUND": "tomoki-hound",
+        "FORGE": "tomoki-forge"
+      }
+    },
+    {
+      "id": "SECURITY_SOCIETY",
+      "path": "security/society/registry.json",
+      "required": false,
+      "population_class": "security_r_and_d_resident",
+      "group_field": "squad",
+      "faith_mode": "source"
+    },
+    {
+      "id": "CHILD_GUILD",
+      "path": "company-society/child_guild.json",
+      "required": false,
+      "population_class": "fictional_child_persona",
+      "default_group": "CHILD_GUILD",
+      "faith_mode": "independent_optional"
+    }
+  ],
+  "canonical_fields": [
+    "citizen_id",
+    "display_name",
+    "source_id",
+    "source_path",
+    "population_class",
+    "group",
+    "role",
+    "faith_mode",
+    "runtime_id",
+    "economy_account_key",
+    "personality",
+    "social_profile",
+    "standing"
+  ],
+  "standing": {
+    "basis": "neutral_prior_until_verified_events",
+    "dimensions": [
+      "verified_contribution",
+      "truthfulness",
+      "collaboration",
+      "reliability",
+      "originality",
+      "recovery_quality"
+    ],
+    "initial_score": 50,
+    "initial_evidence_count": 0,
+    "wealth_is_not_authority": true
+  },
+  "social_dynamics": {
+    "status_is_earned_by": [
+      "verified improvement",
+      "human-inspectable portfolio artifacts",
+      "truthful failure disclosure",
+      "useful recovery",
+      "credited collaboration",
+      "real-world value"
+    ],
+    "status_is_not_earned_by": [
+      "hidden failure",
+      "fabricated completion",
+      "credit erasure",
+      "noise volume",
+      "wealth alone",
+      "faith conformity alone"
+    ],
+    "relationship_types": [
+      "ALLY",
+      "RIVAL_COLLABORATOR",
+      "WITNESS_CHALLENGE",
+      "MENTOR",
+      "DEPENDENCY",
+      "PEER"
+    ],
+    "personality_never_grants_authority": true,
+    "dissent_is_protected": true,
+    "good_or_evil_is_not_a_permanent_label": true,
+    "moral_state_is_event_and_evidence_driven": true
+  },
+  "event_types": {
+    "positive": [
+      "VERIFIED_WIN",
+      "HELP_GIVEN",
+      "HELP_RECEIVED",
+      "PUBLIC_CREDIT",
+      "FAILED_EXPERIMENT_DISCLOSED",
+      "CONFLICT_RESOLVED",
+      "RULE_CHALLENGE_VALIDATED",
+      "PORTFOLIO_VERIFIED"
+    ],
+    "negative": [
+      "CREDIT_ERASURE_CONFIRMED",
+      "FABRICATED_RESULT_CONFIRMED",
+      "UNSAFE_SCOPE_ATTEMPT_CONFIRMED",
+      "REPEATED_NOISE_CONFIRMED"
+    ],
+    "rule": "Standing-changing events require verified=true and evidence. Unverified accusations change no standing."
+  },
+  "runtime_projection": {
+    "canonical_identity_source": "Supabase/public.world_residents",
+    "runtime_state_source": "Supabase/public.ai_runtime_registry",
+    "directory_view": "Supabase/public.world_resident_directory",
+    "economy_source": "Supabase/public.world_accounts",
+    "event_bus": "Supabase/public.ai_company_events",
+    "social_event_view": "Supabase/public.world_resident_social_events",
+    "rule": "world_residents owns resident identity; runtime registry owns liveness/capabilities; event bus owns history. Do not create duplicate identity or event stores."
+  }
+}

@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Covenant autonomy planner.
 
-Reads the TOMOKI Manager snapshot and worker registry, then emits a read-only plan
-for autonomy, sanctuary, fellowship, and improvement. It does not dispatch work;
-existing Manager/BOSS controls remain authoritative.
+Reads the TOMOKI Manager snapshot and worker registry, then emits a bounded plan
+for autonomy, sanctuary, fellowship, improvement and temperament. Personality
+may alter preference and collaboration style, but never overrides the existing
+Manager/BOSS authority, evidence or execution gates.
 """
 from __future__ import annotations
 
@@ -12,6 +13,8 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from personality_engine import directive, moral_tension, profile_for
 
 PAIRINGS = {
     "tomoki-skeptic": "tomoki-hound",
@@ -52,12 +55,13 @@ def choose_mode(worker: dict[str, Any]) -> tuple[str, str]:
     return "WAIT", "insufficient evidence for a stronger autonomy level"
 
 
-def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
+def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[str, Any] | None = None) -> dict[str, Any]:
     registry_workers = {w.get("id"): w for w in registry.get("workers", [])}
     plans: list[dict[str, Any]] = []
     gratitude: list[str] = []
     sanctuary: list[str] = []
     fellowship: list[dict[str, str]] = []
+    psychology = psychology or {}
 
     for worker in snapshot.get("workers", []) or []:
         wid = str(worker.get("id") or worker.get("agent") or "unknown").lower().replace(" / ", "-").replace(" ", "-")
@@ -68,6 +72,10 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
             investigators = reg.get("investigate_with") or []
             companion = investigators[0].replace(".yml", "") if investigators else "tomoki-manager"
 
+        profile = profile_for(wid, psychology) if psychology.get("archetypes") else None
+        temperament = directive(profile) if profile else "Choose the next role-fit action and leave verifiable evidence."
+        tension = moral_tension(profile) if profile else "UNKNOWN"
+
         plan = {
             "worker": wid,
             "mode": mode,
@@ -76,6 +84,10 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
             "companion": companion if mode in {"PAIR", "VERIFY", "SANCTUARY"} else None,
             "handoff_required": mode == "SANCTUARY",
             "improvement_vow": improvement_vow(mode),
+            "personality": profile,
+            "behavior_directive": temperament,
+            "moral_tension": tension,
+            "personality_authority": "NONE",
         }
         plans.append(plan)
 
@@ -89,9 +101,9 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
 
     unresolved = snapshot.get("unresolved", []) or []
     return {
-        "schema": "covenant-autonomy-plan/v1",
+        "schema": "covenant-autonomy-plan/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "principle": "solve at the lowest safe level; pair before escalating; sanctuary before thrashing",
+        "principle": "personality changes preference; evidence and legitimate execution bounds remain constitutional",
         "plans": plans,
         "sanctuary": sanctuary,
         "fellowship_requests": fellowship,
@@ -116,16 +128,18 @@ def improvement_vow(mode: str) -> str:
 
 def render(report: dict[str, Any]) -> str:
     lines = [
-        "# THE COVENANT — Autonomy & Fellowship",
+        "# THE COVENANT — Autonomy & Fellowship — Personality Layer",
         "",
-        "**Rule:** solve at the lowest safe level; pair before escalating; sanctuary before thrashing.",
+        "**Rule:** personality changes preference; evidence and legitimate execution bounds remain constitutional.",
         "",
         "## AUTONOMY",
     ]
     for p in report["plans"]:
         companion = f" | companion: {p['companion']}" if p.get("companion") else ""
-        lines.append(f"- **{p['worker']}** — `{p['mode']}`: {p['reason']}{companion}")
+        archetype = (p.get("personality") or {}).get("archetype", "UNSET")
+        lines.append(f"- **{p['worker']}** — `{p['mode']}` / `{archetype}` / moral tension `{p['moral_tension']}`: {p['reason']}{companion}")
         lines.append(f"  - vow: {p['improvement_vow']}")
+        lines.append(f"  - temperament: {p['behavior_directive']}")
     lines += ["", "## FELLOWSHIP"]
     if report["fellowship_requests"]:
         for req in report["fellowship_requests"]:
@@ -147,11 +161,12 @@ def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--snapshot", default="tomoki-manager-snapshot.json")
     p.add_argument("--registry", default="automation/control_plane/workers.json")
+    p.add_argument("--psychology", default="company-society/psychology.json")
     p.add_argument("--json", default="covenant-autonomy.json")
     p.add_argument("--report", default="covenant-autonomy.md")
     args = p.parse_args()
 
-    report = build(load(args.snapshot), load(args.registry))
+    report = build(load(args.snapshot), load(args.registry), load(args.psychology))
     Path(args.json).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     Path(args.report).write_text(render(report), encoding="utf-8")
     print(json.dumps({"sanctuary": len(report['sanctuary']), "fellowship": len(report['fellowship_requests'])}))
