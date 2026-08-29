@@ -1,6 +1,6 @@
 {
   "schema": "standment-security-portfolio-accelerator/v1",
-  "generated_at_jst": "2026-08-30T04:29:28+09:00",
+  "generated_at_jst": "2026-08-30T04:34:09+09:00",
   "company_priority": "P0",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
   "primary": {
@@ -77,7 +77,7 @@
     "closure_score": 1750,
     "ai_native": true
   },
-  "stagnation_streak": 0,
+  "stagnation_streak": 1,
   "rotated": false,
   "selection_reason": "HIGHEST_EVIDENCE_CLOSURE_SCORE",
   "next_action": "Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.",
@@ -278,7 +278,12 @@
         "standment-security/ai-security/llm-security-eval-evidence-pack.md",
         "standment-security/ai-security/fixtures/llm-security-vulnerable.json",
         "standment-security/ai-security/fixtures/llm-security-hardened.json",
-        ".github/workflows/standment-ai-security-eval.yml"
+        ".github/workflows/standment-ai-security-eval.yml",
+        "automation/world/secured_realtime_kernel.py",
+        "automation/world/test_secured_realtime_kernel.py",
+        "automation/security/world_runtime_observation_adapter.py",
+        "automation/security/test_world_runtime_observation_adapter.py",
+        ".github/workflows/the-world-realtime-kernel.yml"
       ],
       "evidence_missing": [],
       "whitehat_candidates": 0,
