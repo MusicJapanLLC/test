@@ -8,7 +8,8 @@
   "repair_workflow": "tomoki-forge.yml",
   "repair_exclude_workflows": ["tomoki-forge.yml"],
   "workers": [
-    {"name":"WORLD_TASK_MOTOR_CORTEX","workflow":"the-world-task-worker.yml","stale_minutes":18,"director_min_interval_minutes":10,"priority":114,"autostart":true},
+    {"name":"WORLD_TASK_MOTOR_CORTEX","workflow":"the-world-task-worker.yml","stale_minutes":18,"director_min_interval_minutes":10,"priority":116,"autostart":true},
+    {"name":"WORLD_REALITY_AGENCY","workflow":"world-reality-agency.yml","stale_minutes":40,"director_min_interval_minutes":20,"priority":115,"autostart":true},
     {"name":"THE_CORE_DIRECTOR","workflow":"the-core-autonomous-director.yml","stale_minutes":75,"director_min_interval_minutes":30,"priority":112,"autostart":true},
     {"name":"BOSS_REVENUE_VALUE","workflow":"boss-daily-value-loop.yml","stale_minutes":270,"director_min_interval_minutes":240,"priority":110,"autostart":true},
     {"name":"RND_SENJU_COUPLED","workflow":"rnd-senju-coupled-loop.yml","stale_minutes":90,"director_min_interval_minutes":45,"priority":108,"autostart":true},
