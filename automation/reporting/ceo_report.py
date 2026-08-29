@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Shared owner-facing report emitter for the AI Factory.
+"""Owner-facing final report emitter for the AI Company.
 
-Input: ai-factory-ceo-event/v1 JSON produced by any worker.
-Output: concise Japanese Slack message through CEO_REPORT_WEBHOOK_URL.
-
-Never send raw logs, stack traces, email subjects/bodies, secrets or customer data.
+Only BOSS-final events may reach the owner channel. TOMOKI/MANAGER/worker events are
+internal supervision evidence and are intentionally rejected here even if a workflow
+accidentally invokes this script.
 """
 from __future__ import annotations
 
@@ -16,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 ALLOWED_STATES = {"RUNNING", "VERIFIED", "BUILDING", "BLOCKED", "EXPERIMENT"}
+OWNER_ROUTE = "boss-final"
 
 
 def load_event(path: str) -> dict[str, Any]:
@@ -35,33 +35,28 @@ def _count(event: dict[str, Any], key: str) -> int:
 
 
 def render(event: dict[str, Any]) -> str:
-    project = str(event.get("project", "AI Factory"))[:120]
-    state = event["state"]
-    classified = _count(event, "classified")
-    archived = _count(event, "archived")
-    kept = _count(event, "kept_in_inbox")
-    starred = _count(event, "starred")
-    unclassified = _count(event, "unclassified")
+    project = str(event.get("project", "AI Company"))[:120]
+    state = str(event.get("state", "RUNNING"))
+    summary = str(event.get("executive_summary") or event.get("business_effect") or "重要な変化を検出")[:700]
+    business_effect = str(event.get("business_effect", ""))[:500]
+    owner_action = str(event.get("owner_action", "NONE"))[:400]
+    next_improvement = str(event.get("next_improvement", ""))[:500]
+    unresolved = _count(event, "unresolved")
     critical = int(event.get("priorities", {}).get("critical", 0) or 0)
     high = int(event.get("priorities", {}).get("high", 0) or 0)
 
     lines = [
-        f"*AI FACTORY CEO UPDATE｜{project}* — *{state}*",
-        "",
-        f"*今回の成果:* 自動処理 {classified}件 / 受信箱から整理 {archived}件 / 受信箱に保持 {kept}件 / スター {starred}件",
+        f"*CEO FINAL REPORT｜{project}*",
+        f"*結論:* {summary}",
+        f"*状態:* {state}",
     ]
-    if critical or high:
-        lines.append(f"*要注目:* critical {critical}件 / high {high}件（内容そのものはCEOチャンネルへ流しません）")
-    if unclassified:
-        lines.append(f"*未分類:* {unclassified}件は安全側に倒して受信箱に残しました")
-    effect = str(event.get("business_effect", ""))[:500]
-    if effect:
-        lines.append(f"*経営メリット:* {effect}")
-    next_improvement = str(event.get("next_improvement", ""))[:500]
+    if unresolved or critical or high:
+        lines.append(f"*未解決:* {unresolved}件（P0 {critical} / P1 {high}）")
+    if business_effect and business_effect != summary:
+        lines.append(f"*経営への影響:* {business_effect}")
+    lines.append(f"*あなたの判断:* {'不要' if owner_action == 'NONE' else owner_action}")
     if next_improvement:
-        lines.append(f"*次の改善:* {next_improvement}")
-    owner_action = str(event.get("owner_action", "NONE"))[:300]
-    lines.append(f"*Owner action:* {owner_action}")
+        lines.append(f"*次:* {next_improvement}")
     return "\n".join(lines)
 
 
@@ -84,6 +79,16 @@ def main() -> int:
     args = parser.parse_args()
 
     event = load_event(args.event)
+
+    # Hard separation: a TOMOKI workflow can accidentally call this file, but it still
+    # cannot reach the owner unless the BOSS gate stamped the final route.
+    if event.get("report_route") != OWNER_ROUTE or event.get("audience") != "OWNER":
+        print("CEO delivery skipped: event is not BOSS-final owner report")
+        return 0
+    if not event.get("should_report", True):
+        print("CEO delivery skipped: should_report=false")
+        return 0
+
     text = render(event)
     print(text)
     if args.print_only:
@@ -94,7 +99,7 @@ def main() -> int:
         print("CEO_REPORT_WEBHOOK_URL is not configured; report emission skipped")
         return 0
     post(webhook, text)
-    print("CEO report delivered")
+    print("CEO final report delivered")
     return 0
 
 
