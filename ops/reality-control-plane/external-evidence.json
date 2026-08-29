@@ -1,0 +1,23 @@
+{
+  "schema": "the-world-external-evidence/v1",
+  "evidence": [
+    {
+      "id": "shared-knowledge",
+      "verified": true,
+      "verified_at": "2026-08-29T23:21:30+09:00",
+      "source": "connected-supabase-direct-query",
+      "freshness_hours": 24,
+      "scope": "Company Memory substrate existence and query surface only",
+      "checks": [
+        "Supabase project status ACTIVE_HEALTHY",
+        "cm_core schema contains durable tables for people, organizations, opportunities, referrals, meetings, tasks, invoices and payments",
+        "database functions cm_memory_search and cm_person_brief exist"
+      ],
+      "limitations": [
+        "This does not prove every external source is syncing continuously",
+        "This does not prove PR #32 is merged into the default branch",
+        "Evidence expires unless re-verified"
+      ]
+    }
+  ]
+}
