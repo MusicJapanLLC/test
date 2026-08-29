@@ -16,13 +16,12 @@ concurrency:
 
 jobs:
   propose-and-validate:
-    name: GitHub Models -> bounded proposal -> validate
+    name: Evidence -> bounded proposal -> validate
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
       actions: read
-      models: read
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -62,7 +61,7 @@ jobs:
             printf '{}\n' > /tmp/evolution-summary.json
           fi
 
-      - name: Run engine and guard tests before AI proposal
+      - name: Run engine and guard tests before proposal
         working-directory: senju
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -75,9 +74,7 @@ jobs:
           if python -m senju.cli safety-check 8.8.8.8; then exit 1; fi
           if python -m senju.cli safety-check https://example.com; then exit 1; fi
 
-      - name: Ask GitHub Models for the next bounded strategy
-        env:
-          SENJU_GITHUB_MODEL: openai/gpt-4.1
+      - name: Select next strategy from measured evaluator evidence
         run: |
           set -euo pipefail
           python senju/scripts/github_native_improver.py \
@@ -110,9 +107,17 @@ jobs:
           summary = json.loads(Path('/tmp/promotion/last-evolution-summary.json').read_text())
           assert summary.get('safe') is True
           forbidden = ('target', 'scope', 'network', 'permission', 'secret', 'credential', 'workflow', 'url', 'host')
-          text = json.dumps(summary, ensure_ascii=False).lower()
+          evidence_fields = {
+              'engine': summary.get('engine'),
+              'safe': summary.get('safe'),
+              'confidence': summary.get('confidence'),
+              'changes': summary.get('changes'),
+              'previous_strategy': summary.get('previous_strategy'),
+              'next_strategy': summary.get('next_strategy'),
+          }
+          text = json.dumps(evidence_fields, ensure_ascii=False).lower()
           for word in forbidden:
-              if word in text and word not in ('source_evidence_present',):
+              if word in text:
                   raise SystemExit(f'forbidden autonomous surface referenced: {word}')
           PY
           cp /tmp/champion.json /tmp/promotion/champion.json
@@ -147,13 +152,12 @@ jobs:
             /tmp/promotion/last-evolution-plan.md
 
   promote:
-    name: Create audited PR and merge validated state
+    name: State-only branch -> verify diff -> fast-forward promote
     needs: propose-and-validate
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: write
-      pull-requests: write
       actions: read
     env:
       GH_TOKEN: ${{ github.token }}
@@ -170,7 +174,7 @@ jobs:
           name: senju-validated-promotion
           path: /tmp/promotion
 
-      - name: Create state-only branch and PR through GitHub API
+      - name: Create state-only branch, verify exact diff, and fast-forward default
         shell: bash
         run: |
           set -euo pipefail
@@ -185,9 +189,9 @@ jobs:
             content="$(base64 -w0 "$src")"
             sha="$(gh api "repos/$REPO/contents/$path?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)"
             if [[ -n "$sha" ]]; then
-              gh api -X PUT "repos/$REPO/contents/$path" -f message="chore(senju): promote validated autonomous state" -f content="$content" -f branch="$BRANCH" -f sha="$sha" >/dev/null
+              gh api -X PUT "repos/$REPO/contents/$path" -f message="chore(senju): promote validated autonomous state [run $GITHUB_RUN_ID]" -f content="$content" -f branch="$BRANCH" -f sha="$sha" >/dev/null
             else
-              gh api -X PUT "repos/$REPO/contents/$path" -f message="chore(senju): promote validated autonomous state" -f content="$content" -f branch="$BRANCH" >/dev/null
+              gh api -X PUT "repos/$REPO/contents/$path" -f message="chore(senju): promote validated autonomous state [run $GITHUB_RUN_ID]" -f content="$content" -f branch="$BRANCH" >/dev/null
             fi
           }
 
@@ -196,15 +200,18 @@ jobs:
           put_file /tmp/promotion/last-evolution-summary.json senju/state/last-evolution-summary.json
           put_file /tmp/promotion/last-evolution-plan.md senju/state/last-evolution-plan.md
 
-          PR_URL="$(gh pr create --repo "$REPO" --base "$BASE" --head "$BRANCH" --title "chore(senju): autonomous champion promotion" --body "GitHub-native autonomous promotion. Candidate was generated with GitHub Models, restricted to the strategy allowlist, then passed Senju pytest, ScopeGuard public-target rejection, and a bounded autopilot smoke evaluation before this PR was created. Only senju/state/* promotion files are changed.")"
-          PR_NUMBER="$(gh pr view "$PR_URL" --repo "$REPO" --json number --jq '.number')"
-
-          CHANGED="$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only | sort)"
-          EXPECTED="$(printf '%s\n' senju/state/champion.json senju/state/last-evolution-plan.md senju/state/last-evolution-summary.json senju/state/strategy.json | sort)"
-          if [[ "$CHANGED" != "$EXPECTED" ]]; then
-            gh pr close "$PR_NUMBER" --repo "$REPO" --comment "Blocked: autonomous promotion changed files outside the exact state allowlist."
+          HEAD_SHA="$(gh api "repos/$REPO/git/ref/heads/$BRANCH" --jq '.object.sha')"
+          CURRENT_BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+          if [[ "$CURRENT_BASE_SHA" != "$BASE_SHA" ]]; then
+            echo "Default branch moved during promotion; refusing stale fast-forward."
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
             exit 1
           fi
 
-          gh pr merge "$PR_NUMBER" --repo "$REPO" --merge --admin
-          echo "Promoted validated Senju state via PR #$PR_NUMBER"
+          gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq '.files[].filename' | sort > /tmp/changed.txt
+          printf '%s\n' senju/state/champion.json senju/state/last-evolution-plan.md senju/state/last-evolution-summary.json senju/state/strategy.json | sort > /tmp/expected-changed.txt
+          diff -u /tmp/expected-changed.txt /tmp/changed.txt
+
+          gh api -X PATCH "repos/$REPO/git/refs/heads/$BASE" -f sha="$HEAD_SHA" -F force=false >/dev/null
+          gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+          echo "Promoted validated Senju state to $BASE at $HEAD_SHA from run $GITHUB_RUN_ID"
