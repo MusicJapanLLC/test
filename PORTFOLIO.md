@@ -155,7 +155,7 @@ Revenue Recoveryを「AIデモ」から、外部サービスと接続して継�
 
 ## 5. Company Memory v1
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
 ### 作ったもの
 会社・人物・案件・紹介履歴などをSupabaseへ集約し、「どれが最新の事実か」「同一人物か」をAIが追える共通知識基盤。
@@ -172,19 +172,26 @@ AIに毎回同じ人物・会社・案件説明をやり直す時間を減らし
 - AI change audit
 - retry / dead-letter設計
 - 日本語全文検索
-- `cm_person_brief`
+- `cm_person_brief` / `cm_memory_search`
 - JWT必須 `memory-query`
 - 本番Supabase migration
-- 実データで検索・更新監査を実測
+- 実データと監査履歴を保持
+- 全Company MemoryテーブルでRLS有効
+
+### 検証
+2026-08-30に本番Supabaseを再実測。`cm_core` 24 tables / `cm_memory` 11 / `cm_ops` 5 / `cm_audit` 3の計43テーブルが存在し、43/43でRLS有効。個人データを開示せず集計だけ確認した結果、1 workspace / 15 entities / 6 aliases / 3 opportunities / 11 source records / 130 audit eventsを保持。Edge Function `memory-query` はACTIVEかつ `verify_jwt=true`。public RPC `cm_person_brief` と `cm_memory_search` も本番に存在し、どちらもSECURITY DEFINERではない。
 
 ### 現在の残り
-GitHub側PR #32はDraft。公開test repoなので、private repoへの分離が望ましい。
+GitHub側PR #32はDraftのまま。公開test repoから専用private repoへ分離することは引き続き望ましいが、これはコア機能の動作可否ではなくhardening / repository hygieneの改善項目として扱う。
 
 ### 経営メリット
-AI社員の最大の弱点である「毎回忘れる」を、プロンプトではなく**データ基盤で解決する**方向へ進んでいる。
+AI社員の最大の弱点である「毎回忘れる」を、プロンプトではなく**稼働中のデータ基盤で解決する**。
 
 ### Evidence
 - PR #32 draft: `Company Memory v1: canonical data model and query API`
+- Production Supabase project: ACTIVE_HEALTHY
+- `memory-query`: ACTIVE / JWT required
+- Production aggregate verification: 43 RLS-enabled tables / 130 audit events
 
 ### 次の改善
 専用private repo化と、営業・議事録・Revenue Opsからの自動同期を安定化する。
