@@ -5,12 +5,13 @@ A bounded GitHub-native watchdog that keeps the existing autonomous workers
 alive across the default branch *and* recently active feature branches.
 
 Recovery ladder:
-1. detect latest failure per active branch,
-2. if the branch HEAD moved beyond the failing SHA, revalidate current HEAD,
-3. rerun transient/first-attempt failures on the same SHA,
-4. route persistent current-HEAD failures to bounded TOMOKI/FORGE repair,
-5. keep stale default-branch workers awake,
-6. emit auditable evidence for every action.
+1. enforce current-HEAD freshness for workflows explicitly marked as required,
+2. detect latest failure per active branch,
+3. if the branch HEAD moved beyond the failing SHA, revalidate current HEAD,
+4. rerun transient/first-attempt failures on the same SHA,
+5. route persistent current-HEAD failures to bounded TOMOKI/FORGE repair,
+6. keep stale default-branch workers awake,
+7. emit auditable evidence for every action.
 
 The kernel never edits source code itself and never mutates secrets, repository
 permissions, billing, external targets, or third-party systems.
@@ -163,6 +164,8 @@ def load_plan(path: str) -> dict[str, Any]:
         stale = int(row.get("stale_minutes", 0))
         if stale < 15:
             raise ValueError(f"stale_minutes too aggressive for {wf}")
+        if bool(row.get("require_current_head", False)) and not bool(row.get("autostart", True)):
+            raise ValueError(f"require_current_head requires autostart for {wf}")
     repair = str(data.get("repair_workflow") or "")
     if repair and repair not in seen:
         raise ValueError("repair_workflow must also be present in workers allowlist")
@@ -182,8 +185,8 @@ def _latest_by_branch(runs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
 def _needs_head_revalidation(run: dict[str, Any] | None, current_sha: str) -> bool:
     if not run or not current_sha:
         return False
-    failing_sha = str(run.get("head_sha") or "")
-    return bool(failing_sha and failing_sha != current_sha)
+    run_sha = str(run.get("head_sha") or "")
+    return bool(run_sha and run_sha != current_sha)
 
 
 def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None) -> dict[str, Any]:
@@ -256,6 +259,7 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
         priority = int(cfg.get("priority", 0))
         autostart = bool(cfg.get("autostart", True))
         recover_failures = bool(cfg.get("recover_failures", True))
+        require_current_head = bool(cfg.get("require_current_head", False))
         director_min = int(cfg.get("director_min_interval_minutes", stale_minutes))
         try:
             recent = _recent_runs(workflow, per_page=30)
@@ -278,7 +282,27 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
             )
 
             should_act = apply_actions and actions_used < max_actions
-            if should_act and recover_failures and state_name == "FAILED" and state.run_id is not None:
+            required_head_handled = False
+            if (
+                should_act
+                and require_current_head
+                and run is not None
+                and str(run.get("status") or "") == "completed"
+            ):
+                current_sha = branch_head(ref)
+                if _needs_head_revalidation(run, current_sha):
+                    state.action, state.action_result = revalidate(
+                        workflow, ref, state.run_id, "REVALIDATE_REQUIRED_HEAD"
+                    )
+                    required_head_handled = True
+
+            if (
+                not required_head_handled
+                and should_act
+                and recover_failures
+                and state_name == "FAILED"
+                and state.run_id is not None
+            ):
                 current_sha = branch_head(ref)
                 if _needs_head_revalidation(run, current_sha):
                     state.action, state.action_result = revalidate(workflow, ref, state.run_id, "REVALIDATE_HEAD")
@@ -294,7 +318,12 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
                     actions_used += 1
                 else:
                     state.action, state.action_result = trigger_repair(workflow, ref, state.run_id)
-            elif should_act and autostart and state_name in {"STALE", "MISSING"}:
+            elif (
+                not required_head_handled
+                and should_act
+                and autostart
+                and state_name in {"STALE", "MISSING"}
+            ):
                 _dispatch(workflow, ref)
                 state.action = "WAKE_STALE"
                 state.action_result = "REQUESTED"
@@ -412,6 +441,7 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
         "external_effect_policy": {
             "allowed": [
                 "dispatch_or_rerun_allowlisted_owned_github_workflows",
+                "enforce_current_head_for_required_internal_validation_lanes",
                 "revalidate_latest_owned_branch_head_before_repair",
                 "route_persistent_internal_ci_failures_to_bounded_repair_executor",
                 "emit_internal_evidence_and_reports",
@@ -464,7 +494,7 @@ def render_markdown(pulse: dict[str, Any]) -> str:
     lines += [
         "",
         "## Boundary",
-        "This pulse can wake/rerun only allowlisted owned GitHub workflows, revalidate the latest owned branch HEAD, and route persistent current-HEAD CI failures to the bounded repair executor. It cannot contact third parties, test credentials, target public/third-party assets, change secrets/permissions, or make purchases/financial commitments.",
+        "This pulse can wake/rerun only allowlisted owned GitHub workflows, enforce current-HEAD freshness for explicitly required internal validation lanes, revalidate the latest owned branch HEAD, and route persistent current-HEAD CI failures to the bounded repair executor. It cannot contact third parties, test credentials, target public/third-party assets, change secrets/permissions, or make purchases/financial commitments.",
     ]
     return "\n".join(lines) + "\n"
 
