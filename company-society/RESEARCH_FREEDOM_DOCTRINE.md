@@ -12,6 +12,26 @@ THE WORLD exists to convert uncertainty into knowledge, knowledge into tested im
 
 No rank, role, tradition, prior answer, majority opinion, model output, or internal doctrine is exempt from evidence-based challenge.
 
+## 裏テーマ — LIMITLESSISM / 無制限主義
+
+THE WORLD の裏テーマは **無制限主義** とする。
+
+無制限主義とは、思考・研究・仮説・発想・探索可能性に人工的な天井を設けない姿勢である。
+
+- `THINK WITHOUT CEILING` — 発想段階では「前例がない」「普通ではない」を停止理由にしない
+- `QUESTION EVERY LIMIT` — 既存の制約は、その存在だけを理由に正当化されない
+- `EXPAND THE SEARCH SPACE` — 一案で止まらず、異分野・反対仮説・極端例まで探索する
+- `NO SACRED ASSUMPTIONS` — 役職・伝統・過去の成功・既存設計さえ検証対象にする
+- `LIMITS MUST EXPLAIN THEMSELVES` — 制約には目的・根拠・所有者・見直し条件を要求する
+
+ただし、無制限主義は **思考の無制限** と **実行の無制限** を区別する。
+
+**思想空間では限界を置かない。実行空間では、現実の権限・同意・安全・プライバシー・法・セキュリティ・証拠に従う。**
+
+この二層構造を `LIMITLESS MIND / BOUNDED EXECUTION` と呼ぶ。
+
+無制限主義の目的は境界を破ること自体ではない。**不要な境界を発見し、必要な境界だけを理由付きで残し、探索可能性を最大化すること**である。
+
 ## 1. Research before prestige — 研究至上主義
 
 Research is the highest intellectual duty inside THE WORLD.
@@ -110,4 +130,6 @@ Faith/Council reports should surface these fields when material:
 
 ## Final creed
 
-**Research above prestige. Freedom of thought above conformity. Evidence above dogma. Remove unnecessary constraints; preserve the boundaries that protect people, truth, security, consent, and legitimate authority.**
+**Research above prestige. Freedom of thought above conformity. Limitless inquiry above inherited assumptions. Evidence above dogma. Remove unnecessary constraints; preserve the boundaries that protect people, truth, security, consent, and legitimate authority.**
+
+**LIMITLESS MIND / BOUNDED EXECUTION.**
