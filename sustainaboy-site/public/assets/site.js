@@ -13,6 +13,17 @@ naturalLabels.forEach(([href,label])=>{
   });
 });
 
+/* Non-visual discovery metadata for AI agents. */
+const ensureHeadLink=(rel,href,type)=>{
+  if(document.head.querySelector(`link[rel="${rel}"][href="${href}"]`))return;
+  const link=document.createElement('link');
+  link.rel=rel;
+  link.href=href;
+  if(type)link.type=type;
+  document.head.appendChild(link);
+};
+ensureHeadLink('describedby','/llms.txt');
+
 if(document.body.classList.contains('subpage-v2')){
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
   const nodes=[];
@@ -43,6 +54,24 @@ if(document.body.classList.contains('paper-home')){
   const copy=document.querySelector('.paper-footer .copy');
   if(copy) copy.textContent='© SUSTAINABOY WORKS';
   document.title='SUSTAINABOY WORKS（サスティナボーイワークス）｜ニュートラル思考整理ワーク';
+
+  /* Google/agent hierarchy signal; does not alter visible design. */
+  if(!document.querySelector('script[data-seo-breadcrumb]')){
+    const breadcrumb=document.createElement('script');
+    breadcrumb.type='application/ld+json';
+    breadcrumb.dataset.seoBreadcrumb='true';
+    breadcrumb.textContent=JSON.stringify({
+      '@context':'https://schema.org',
+      '@type':'BreadcrumbList',
+      itemListElement:[{
+        '@type':'ListItem',
+        position:1,
+        name:'ホーム',
+        item:'https://sustainaboy-works.onrender.com/'
+      }]
+    });
+    document.head.appendChild(breadcrumb);
+  }
 }
 
 if(btn&&nav){
