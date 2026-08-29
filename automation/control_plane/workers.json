@@ -1,0 +1,62 @@
+{
+  "schema": "ai-factory-worker-registry/v1",
+  "default_branch": "claude/employee-onboarding-setup-udm86",
+  "workers": [
+    {
+      "id": "gmail-sorter",
+      "name": "Gmail Autonomous Sorter",
+      "workflow": "gmail-autonomous-sorter.yml",
+      "expected_minutes": 20,
+      "priority": "P0",
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
+      "forge_allowed": true
+    },
+    {
+      "id": "tomoki-skeptic",
+      "name": "TOMOKI / SKEPTIC",
+      "workflow": "tomoki-skeptic.yml",
+      "expected_minutes": 90,
+      "priority": "P1",
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": ["tomoki-hound.yml"],
+      "forge_allowed": false
+    },
+    {
+      "id": "tomoki-hound",
+      "name": "TOMOKI / HOUND",
+      "workflow": "tomoki-hound.yml",
+      "expected_minutes": 90,
+      "priority": "P1",
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": ["tomoki-skeptic.yml"],
+      "forge_allowed": false
+    },
+    {
+      "id": "tomoki-forge",
+      "name": "TOMOKI / FORGE",
+      "workflow": "tomoki-forge.yml",
+      "expected_minutes": 90,
+      "priority": "P1",
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": ["tomoki-skeptic.yml"],
+      "forge_allowed": false
+    },
+    {
+      "id": "senju-daily",
+      "name": "Senju Daily Self Evolution",
+      "workflow": "senju-daily-report.yml",
+      "expected_minutes": 1560,
+      "priority": "P2",
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
+      "forge_allowed": false
+    }
+  ],
+  "retry_budget_per_incident": 2,
+  "boss_escalation": {
+    "unresolved_priorities": ["P0", "P1"],
+    "report_resolved_p0": true,
+    "report_resolved_p1": false
+  }
+}
