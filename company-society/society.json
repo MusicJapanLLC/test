@@ -55,6 +55,34 @@
       "anti_dogma": true,
       "challenge_every_limit": true
     },
+    "r_and_d_inheritance": {
+      "required": true,
+      "applies_to": [
+        "R&D_RESEARCHERS",
+        "SENJU_LAB",
+        "RED_RESEARCH_AGENTS",
+        "BLUE_RESEARCH_AGENTS",
+        "EVALUATORS",
+        "IMPROVEMENT_AGENTS",
+        "RESEARCH_SUBAGENTS",
+        "FUTURE_RESEARCH_ROLES"
+      ],
+      "doctrine": "company-society/RESEARCH_FREEDOM_DOCTRINE.md",
+      "maxim": "LIMITLESS MIND / BOUNDED EXECUTION",
+      "research_loop": [
+        "QUESTION",
+        "HYPOTHESIS",
+        "SAFE_EXPERIMENT",
+        "EVIDENCE",
+        "FALSIFICATION",
+        "LEARNING",
+        "REAL_WORLD_VALUE"
+      ],
+      "dissent_is_protected": true,
+      "failed_research_is_memory": true,
+      "accepted_results_are_challengeable": true,
+      "execution_space": "owned_or_explicitly_authorized_isolated_research_environment"
+    },
     "pillars": [
       "research",
       "freedom_of_thought",
