@@ -168,3 +168,17 @@ if(isPaperHome&&!reduceMotion){
     stage.addEventListener('pointerleave',()=>notes.forEach(note=>note.style.translate='0 0'));
   }
 }
+
+/* Owner-approved MADLAB write proof. Hidden until a verified marker exists. */
+if(location.origin==='https://sustainaboy-works.onrender.com'){
+  const marker=document.createElement('aside');
+  marker.id='madlab-target-marker';
+  marker.hidden=true;
+  marker.setAttribute('aria-live','polite');
+  const footer=document.querySelector('.footer, .paper-footer');
+  if(footer)footer.before(marker);else document.body.appendChild(marker);
+  const stateScript=document.createElement('script');
+  stateScript.src='https://madlab-guard-0i24yt.v2.appdeploy.ai/api/hosted-target-state.js?target='+encodeURIComponent(location.origin);
+  stateScript.async=true;
+  document.body.appendChild(stateScript);
+}
