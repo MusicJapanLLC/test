@@ -2,24 +2,22 @@ name: Standment Security - White-Hat Portfolio Cycle
 
 on:
   schedule:
-    # 07:05 JST daily: after Portfolio First R&D, before the coupled R&D x Senju loop.
     - cron: '5 22 * * *'
   workflow_dispatch:
   push:
-    branches: ['claude/employee-onboarding-setup-udm86']
+    branches:
+      - claude/employee-onboarding-setup-udm86
     paths:
-      - '.github/workflows/standment-whitehat-portfolio-cycle.yml'
-      - 'automation/agent_factory/**'
-      - 'automation/security/whitehat_portfolio_bridge.py'
-      - 'automation/security/test_whitehat_portfolio_bridge.py'
-      - 'automation/security/whitehat_lab_adapter.py'
-      - 'automation/security/test_whitehat_lab_adapter.py'
-      - 'autonomous_redteam_lab/**'
-      - 'standment-security/ELITE_WHITEHAT_CELL.md'
-      - 'standment-security/WHITEHAT_PORTFOLIO_OPERATING_PLAN.md'
-      - 'standment-security/security_portfolio_program.json'
-      - 'company-society/FAITH.md'
-      - 'company-society/RESEARCH_FREEDOM_DOCTRINE.md'
+      - .github/workflows/standment-whitehat-portfolio-cycle.yml
+      - automation/agent_factory/**
+      - automation/security/whitehat_portfolio_bridge.py
+      - automation/security/test_whitehat_portfolio_bridge.py
+      - automation/security/whitehat_slack_report.py
+      - standment-security/ELITE_WHITEHAT_CELL.md
+      - standment-security/WHITEHAT_PORTFOLIO_OPERATING_PLAN.md
+      - standment-security/security_portfolio_program.json
+      - company-society/FAITH.md
+      - company-society/RESEARCH_FREEDOM_DOCTRINE.md
 
 concurrency:
   group: standment-whitehat-portfolio-cycle
@@ -31,8 +29,6 @@ permissions:
 
 env:
   WHITEHAT_DIR: /tmp/standment-whitehat-portfolio
-  RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
-  PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
 
 jobs:
   whitehat-portfolio:
@@ -50,131 +46,34 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify white-hat control plane, bridge and lab
+      - name: Verify white-hat control plane and bridge
         shell: bash
         run: |
           set -euo pipefail
-          (cd automation/agent_factory && python -m unittest -v test_agent_factory.py)
-          (cd automation/security && python -m unittest -v test_whitehat_portfolio_bridge.py)
-          python -m unittest -v automation.security.test_whitehat_lab_adapter
-          PYTHONPATH=autonomous_redteam_lab python -m unittest discover -s autonomous_redteam_lab/tests -v
+          cd automation/agent_factory
+          python -m unittest -v test_agent_factory.py
+          cd ../security
+          python -m unittest -v test_whitehat_portfolio_bridge.py
 
       - name: Generate current P0 research swarm plan
+        shell: bash
         run: |
           set -euo pipefail
           mkdir -p "$WHITEHAT_DIR/workers" reports/standment-security-rnd
-          python automation/agent_factory/factory.py plan \
-            --run-id "daily-${GITHUB_RUN_ID}" \
-            --out "$WHITEHAT_DIR/plan.json"
-          cat "$WHITEHAT_DIR/plan.json" >> "$GITHUB_STEP_SUMMARY"
+          python automation/agent_factory/factory.py plan --run-id "daily-${GITHUB_RUN_ID}" --out "$WHITEHAT_DIR/plan.json"
 
       - name: Run mandatory quota-independent elite white-hat review
-        id: whitehat
         shell: bash
         run: |
           set -euo pipefail
-          slot="$(python - <<'PY'
-          import json, os
-          d=json.load(open(os.environ['WHITEHAT_DIR']+'/plan.json', encoding='utf-8'))
-          for a in d.get('agents') or []:
-              if a.get('role') == 'elite_whitehat':
-                  print(a['slot'])
-                  break
-          else:
-              raise SystemExit('elite_whitehat missing from generated plan')
-          PY
-          )"
-          echo "slot=$slot" >> "$GITHUB_OUTPUT"
-          python automation/agent_factory/local_worker.py \
-            --plan "$WHITEHAT_DIR/plan.json" \
-            --slot "$slot" \
-            --out "$WHITEHAT_DIR/workers/elite-whitehat.json"
-          cat "$WHITEHAT_DIR/workers/elite-whitehat.json" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Convert elite white-hat output into bounded lab findings
-        shell: bash
-        run: |
-          set -euo pipefail
-          python automation/security/whitehat_lab_adapter.py \
-            --worker "$WHITEHAT_DIR/workers/elite-whitehat.json" \
-            --out "$WHITEHAT_DIR/lab-findings.json"
-          cat "$WHITEHAT_DIR/lab-findings.json" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Generate zero-network falsification plan
-        env:
-          PYTHONPATH: autonomous_redteam_lab
-        shell: bash
-        run: |
-          set -euo pipefail
-          python -m cyber_lab.core \
-            --findings "$WHITEHAT_DIR/lab-findings.json" \
-            --plan-only \
-            --out "$WHITEHAT_DIR/falsification-plan.md" \
-            --json-out "$WHITEHAT_DIR/falsification-plan.json"
-          python - <<'PY'
-          import json, os
-          p=os.path.join(os.environ['WHITEHAT_DIR'],'falsification-plan.json')
-          d=json.load(open(p, encoding='utf-8'))
-          assert d['mode'] == 'plan-only'
-          assert d['network_requests'] == 0
-          assert d['probe_results'] == []
-          print(f"White-Hat falsification plan: hypotheses={len(d['hypotheses'])}, network_requests=0")
-          PY
-          cat "$WHITEHAT_DIR/falsification-plan.md" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Prove active validation stays local and bounded
-        env:
-          PYTHONPATH: autonomous_redteam_lab
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from cyber_lab.core import assert_local_target
-          try:
-              assert_local_target('https://8.8.8.8')
-          except ValueError:
-              print('PASS: public active target refused')
-          else:
-              raise SystemExit('FAIL: public active target was accepted')
-          PY
-          python -m http.server 8765 --bind 127.0.0.1 >/tmp/whitehat-local-http.log 2>&1 &
-          server_pid=$!
-          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
-          sleep 1
-          python -m cyber_lab.core \
-            --findings "$WHITEHAT_DIR/lab-findings.json" \
-            --target http://127.0.0.1:8765 \
-            --out "$WHITEHAT_DIR/local-lab-evidence.md" \
-            --json-out "$WHITEHAT_DIR/local-lab-evidence.json"
-          python - <<'PY'
-          import json, os
-          p=os.path.join(os.environ['WHITEHAT_DIR'],'local-lab-evidence.json')
-          d=json.load(open(p, encoding='utf-8'))
-          assert d['mode'] == 'local-validation'
-          assert 0 < int(d['network_requests']) <= 12
-          assert d['policy']['target_scope'] == 'loopback/private/link-local only'
-          print(f"Local lab harness evidence: requests={d['network_requests']} / 12")
-          PY
-          cat "$WHITEHAT_DIR/local-lab-evidence.md" >> "$GITHUB_STEP_SUMMARY"
+          SLOT="$(python -c "import json,os; d=json.load(open(os.environ['WHITEHAT_DIR']+'/plan.json',encoding='utf-8')); print(next(a['slot'] for a in d['agents'] if a['role']=='elite_whitehat'))")"
+          python automation/agent_factory/local_worker.py --plan "$WHITEHAT_DIR/plan.json" --slot "$SLOT" --out "$WHITEHAT_DIR/workers/elite-whitehat.json"
 
       - name: Convert white-hat research into persistent portfolio candidate
-        id: bridge
         shell: bash
         run: |
           set -euo pipefail
-          python automation/security/whitehat_portfolio_bridge.py \
-            --plan "$WHITEHAT_DIR/plan.json" \
-            --workers-dir "$WHITEHAT_DIR/workers" \
-            --output-dir standment-security/whitehat-candidates \
-            --json reports/standment-security-rnd/whitehat-bridge.json
-          python - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
-          d=json.load(open('reports/standment-security-rnd/whitehat-bridge.json', encoding='utf-8'))
-          print('created=' + ('true' if d.get('created') else 'false'))
-          print('candidate=' + str(d.get('candidate_path') or ''))
-          print('fingerprint=' + str(d.get('fingerprint') or ''))
-          PY
-          cat reports/standment-security-rnd/whitehat-bridge.json >> "$GITHUB_STEP_SUMMARY"
+          python automation/security/whitehat_portfolio_bridge.py --plan "$WHITEHAT_DIR/plan.json" --workers-dir "$WHITEHAT_DIR/workers" --output-dir standment-security/whitehat-candidates --json reports/standment-security-rnd/whitehat-bridge.json
 
       - name: Commit white-hat portfolio evidence
         env:
@@ -186,12 +85,11 @@ jobs:
           git config user.email "standment-whitehat-rnd-bot@users.noreply.github.com"
           git add standment-security/whitehat-candidates
           if git diff --cached --quiet; then
-            echo "No new white-hat portfolio delta to commit." >> "$GITHUB_STEP_SUMMARY"
+            echo "No new white-hat portfolio delta to commit."
           else
-            git commit -m "rnd(security): preserve white-hat portfolio candidate ${{ steps.bridge.outputs.fingerprint }}"
+            git commit -m "rnd(security): preserve white-hat portfolio candidate"
             git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
             git push origin "HEAD:${GITHUB_REF_NAME}"
-            echo "White-hat portfolio candidate committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Preserve full white-hat R&D evidence
@@ -204,95 +102,20 @@ jobs:
           path: |
             /tmp/standment-whitehat-portfolio/plan.json
             /tmp/standment-whitehat-portfolio/workers/elite-whitehat.json
-            /tmp/standment-whitehat-portfolio/lab-findings.json
-            /tmp/standment-whitehat-portfolio/falsification-plan.md
-            /tmp/standment-whitehat-portfolio/falsification-plan.json
-            /tmp/standment-whitehat-portfolio/local-lab-evidence.md
-            /tmp/standment-whitehat-portfolio/local-lab-evidence.json
             reports/standment-security-rnd/whitehat-bridge.json
-            standment-security/whitehat-candidates/INDEX.md
-            ${{ steps.bridge.outputs.candidate }}
+            reports/standment-security-rnd/whitehat-slack.md
+            standment-security/whitehat-candidates/
 
       - name: Report white-hat portfolio delta to Slack
         if: always()
+        env:
+          RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+          PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
         shell: bash
         run: |
-          python - <<'PY'
-          import json, os
-          from pathlib import Path
-          from urllib import request, error
-
-          webhook=(os.getenv('PORTFOLIO_SLACK_WEBHOOK_URL','').strip()
-                   or os.getenv('RND_SLACK_WEBHOOK_URL','').strip())
-          base=Path(os.environ['WHITEHAT_DIR'])
-          plan_path=base/'plan.json'
-          worker_path=base/'workers/elite-whitehat.json'
-          bridge_path=Path('reports/standment-security-rnd/whitehat-bridge.json')
-          falsification_path=base/'falsification-plan.json'
-          local_path=base/'local-lab-evidence.json'
-          if not (plan_path.exists() and worker_path.exists() and bridge_path.exists()):
-              print('White-hat report inputs incomplete; workflow evidence will show the failing step.')
-              raise SystemExit(0)
-
-          plan=json.loads(plan_path.read_text(encoding='utf-8'))
-          worker=json.loads(worker_path.read_text(encoding='utf-8'))
-          bridge=json.loads(bridge_path.read_text(encoding='utf-8'))
-          falsification=json.loads(falsification_path.read_text(encoding='utf-8')) if falsification_path.exists() else {}
-          local=json.loads(local_path.read_text(encoding='utf-8')) if local_path.exists() else {}
-          proposed=worker.get('proposed_change') or {}
-          track=plan.get('security_track') or {}
-          evidence=', '.join(worker.get('evidence_refs') or []) or 'NONE'
-          tests=' / '.join(proposed.get('tests') or []) or 'NOT DEFINED'
-          created='NEW CANDIDATE' if bridge.get('created') else 'EXISTING CANDIDATE REUSED'
-
-          text=f'''*STANDMENT SECURITY｜WHITE-HAT PORTFOLIO REPORT*
-
-*WHAT CHANGED*
-{created}: `{bridge.get('candidate_path')}`
-White-hat candidate index: `{bridge.get('index_path')}`
-Adversarial falsification plan: hypotheses={len(falsification.get('hypotheses') or [])}, network_requests={falsification.get('network_requests','UNMEASURED')}
-Local safety harness: requests={local.get('network_requests','NOT RUN')} / 12
-
-*WHY IT MATTERS*
-The white-hat is no longer only generating an adversarial idea. Each cycle now converts its output into a zero-network falsification plan and proves that active validation stays inside a bounded local lab before remediation/retest work is allowed to count.
-
-*PORTFOLIO DELTA*
-Track: `{track.get('id')}` — {track.get('title')}
-Fingerprint: `{bridge.get('fingerprint')}`
-Stage: `WHITEHAT_CANDIDATE / NOT VERIFIED`
-
-*WHITE-HAT FINDING / HYPOTHESIS*
-{worker.get('hypothesis')}
-
-*RETEST STATUS*
-Candidate-specific remediation retest: NOT RUN unless separately evidenced.
-Required tests: {tests}
-Local lab harness evidence does NOT prove the candidate vulnerability; it proves the bounded validation machinery and creates the next falsifiable evidence path.
-
-*EVIDENCE REFERENCES*
-{evidence}
-
-*REAL-WORLD VALUE*
-Standment can turn an internal security claim into evidence a buyer/operator can inspect: challenged boundary, falsification plan, before evidence, remediation, same-condition retest and residual uncertainty.
-
-*TRUTH / LIMITATION*
-No automatic VERIFIED promotion. Plan-only mode uses zero network requests. Active validation remains loopback/private/link-local only and the generic local harness is not customer-target proof.
-
-*NEXT MOVE*
-Map the highest-impact hypothesis to owned source/config or an authorized local fixture, implement the smallest defensive remediation, then rerun the same test condition for a real Before/After portfolio delta.
-'''
-          print(text)
-          if not webhook:
-              print('BLOCKED_NO_CAPABILITY: portfolio/R&D Slack webhook is not configured; GitHub evidence remains preserved.')
-              raise SystemExit(0)
-          payload=json.dumps({'text': text[:30000]}, ensure_ascii=False).encode('utf-8')
-          req=request.Request(webhook, data=payload, headers={'Content-Type':'application/json'}, method='POST')
-          try:
-              with request.urlopen(req, timeout=15) as res:
-                  if not 200 <= res.status < 300:
-                      raise RuntimeError(f'HTTP {res.status}')
-          except (error.URLError, RuntimeError) as exc:
-              print(f'Slack delivery failed: {type(exc).__name__}')
-              raise SystemExit(1)
-          print('White-hat portfolio report delivered to Slack.')
-          PY
+          set -euo pipefail
+          if [[ -f "$WHITEHAT_DIR/plan.json" && -f "$WHITEHAT_DIR/workers/elite-whitehat.json" && -f reports/standment-security-rnd/whitehat-bridge.json ]]; then
+            python automation/security/whitehat_slack_report.py --plan "$WHITEHAT_DIR/plan.json" --worker "$WHITEHAT_DIR/workers/elite-whitehat.json" --bridge reports/standment-security-rnd/whitehat-bridge.json
+          else
+            echo "White-hat report inputs incomplete; failing step remains visible in Actions evidence."
+          fi
