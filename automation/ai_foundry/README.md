@@ -2,24 +2,23 @@
 
 ## Purpose
 
-`#ai-dev` is the human-facing AI development channel. The Minute Foundry keeps one bounded AI Developer champion strategy evolving at roughly minute scale, then hands material hours to the existing Agent Factory for code-level improvement.
+`#ai-dev` is the human-facing AI development channel. The Minute Foundry keeps one bounded AI Developer champion strategy evolving at roughly minute scale. Real repository modification remains exclusively behind the already-reviewed `THE WORLD - Agent Factory Tournament` lane.
 
 This system does **not** retrain or rewrite model weights. It improves the engineering system around the models: verification depth, tests, adversarial review, observability, memory reuse, artifact priority, research parallelism, safe change scope and exploration.
 
 ## Runtime
 
 - GitHub workflow: `.github/workflows/ai-dev-minute-foundry.yml`
-- state branch: `ai-foundry-state`
-- state path: `state/ai-dev/champion.json`
-- hourly evidence: `hourly-summary.json`, `hourly-summary.md`, `latest-hour-history.jsonl`
+- state persistence: previous successful Actions evidence artifact
+- hourly evidence: `start.json`, `champion.json`, `hourly-summary.json`, `hourly-summary.md`, `history.jsonl`
 - Slack: `#ai-dev` / `C0BT25UCSBV`
 
-GitHub Actions cron is not a real-time scheduler. The hourly job itself performs 60 internal ticks separated by 60 seconds. A delayed runner can therefore shift wall-clock timing; the evidence records actual generations rather than pretending exact timing.
+GitHub Actions cron is not a real-time scheduler. The hourly job itself performs 60 internal ticks separated by 60 seconds. A delayed runner can therefore shift wall-clock timing; evidence records actual generations rather than pretending exact wall-clock timing.
 
 ## Two-speed improvement
 
-1. **Minute layer** — generate 8 bounded strategy mutations, reject regressions, promote only an eligible champion, rotate the active engineering focus, preserve every promotion/no-op as JSONL evidence.
-2. **Hour layer** — if the hour produced a material champion delta, trigger the existing `THE WORLD - Agent Factory Tournament` workflow. Real repository changes still require its tournament, policy, tests and PR gate.
+1. **Minute layer** — generate 8 bounded strategy mutations, reject regressions, promote only an eligible champion, rotate the active engineering focus, preserve every promotion/no-op as JSONL evidence. This lane is read-only to the repository.
+2. **Code layer** — the existing `THE WORLD - Agent Factory Tournament` remains the sole autonomous repository forge. Its tournament, policy, tests and PR gate remain authoritative. AI Foundry hourly evidence is an R&D input/reporting signal, not permission to bypass those gates.
 
 Minute strategy proxies are not accepted as proof of real AI capability. Real capability is evidenced only by code changes plus behavioral tests / independent verification.
 
@@ -32,7 +31,7 @@ An hourly owner report should contain only:
 - prior champion -> current champion;
 - number of minute rounds and promotions;
 - material quality-proxy deltas;
-- actual code-level PR/test outcome when available;
+- actual code-level Agent Factory PR/test outcome when available;
 - one weakest next focus;
 - failed/rejected hypotheses when material;
 - what remains unproven.
@@ -41,7 +40,9 @@ No activity-only messages, no repeated fingerprints, no claim that proxy scores 
 
 ## Safety / stability
 
-- minute layer changes isolated strategy state, not production code;
+- Minute Foundry has `contents: read` + `actions: read` only;
+- champion continuity is restored from prior evidence artifacts, not a writable state branch;
+- minute layer changes strategy state, not production code;
 - real code changes stay behind existing Agent Factory guards;
 - no secret/credential expansion;
 - no third-party attack scope;
