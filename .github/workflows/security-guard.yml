@@ -102,6 +102,7 @@ jobs:
               'the-world-realtime-kernel.yml',
               'the-core-autonomous-director.yml',
               'the-world-task-worker.yml',
+              'world-reality-agency.yml',
           }
           write_re = re.compile(r'(?m)^\s+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses|id-token):\s*write\s*$')
           for name, body in workflows.items():
@@ -216,6 +217,16 @@ jobs:
               ]:
                   if item not in client:
                       raise SystemExit(f'task_worker.py: missing OIDC/gateway invariant: {item}')
+
+          require(
+              'world-reality-agency.yml',
+              ['contents: read', 'actions: read', 'issues: write', 'workflow_dispatch:', 'schedule:',
+               'persist-credentials: false', 'outside-world/browser_runner.py',
+               'outside-world/reality_gateway.py', '--execute-owned-writes',
+               'world-reality-agency-state'],
+              common_forbidden + ['contents: write', 'actions: write', 'pull-requests: write',
+                                  'id-token: write', 'copilot-requests: write'],
+          )
 
           director = require(
               'the-core-autonomous-director.yml',
