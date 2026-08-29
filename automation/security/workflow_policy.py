@@ -287,6 +287,9 @@ def validate_explicit_lanes() -> set[str]:
         "ai-factory-boss.yml": {"actions"},
         "the-world-realtime-kernel.yml": {"actions"},
         "the-core-autonomous-director.yml": {"actions", "copilot-requests"},
+        "the-world-agent-factory.yml": {"contents", "pull-requests", "copilot-requests"},
+        "standment-security-portfolio-rnd.yml": {"contents"},
+        "standment-whitehat-portfolio-cycle.yml": {"contents"},
     }
     for name, want in expected.items():
         body = require(name, ("workflow_dispatch:", "schedule:", "persist-credentials: false"))
@@ -316,6 +319,40 @@ def validate_explicit_lanes() -> set[str]:
             raise SystemExit(f"{name}: auditor write/shell capability drifted")
         if "continue-on-error: true" in body or "|| true" in cmd[0]:
             raise SystemExit(f"{name}: auditor failures must not be hidden")
+
+    factory = WORKFLOWS["the-world-agent-factory.yml"]
+    for marker in (
+        "automation/agent_factory/policy.py",
+        "--deny-tool=shell",
+        "--deny-tool=url",
+        "Revert champion if policy rejects it",
+        "Validate champion against existing R&D systems",
+    ):
+        if marker not in factory:
+            raise SystemExit(f"the-world-agent-factory.yml: missing bounded-factory invariant: {marker}")
+
+    portfolio = WORKFLOWS["standment-security-portfolio-rnd.yml"]
+    for marker in (
+        "automation/security/portfolio_autobuilder.py",
+        "value-lab/senju_bridge.py",
+        "verification_claimed",
+        "Portfolio Auto-Builder",
+    ):
+        if marker not in portfolio:
+            raise SystemExit(f"standment-security-portfolio-rnd.yml: missing portfolio invariant: {marker}")
+
+    whitehat = WORKFLOWS["standment-whitehat-portfolio-cycle.yml"]
+    for marker in (
+        "automation/agent_factory/local_worker.py",
+        "elite_whitehat",
+        "automation/security/whitehat_portfolio_bridge.py",
+        "standment-security/whitehat-candidates",
+    ):
+        if marker not in whitehat:
+            raise SystemExit(f"standment-whitehat-portfolio-cycle.yml: missing white-hat invariant: {marker}")
+    if "pull_request:" in whitehat or "issues: write" in whitehat or "id-token: write" in whitehat:
+        raise SystemExit("standment-whitehat-portfolio-cycle.yml: white-hat lane authority expanded")
+
     return set(expected)
 
 
