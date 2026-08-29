@@ -94,6 +94,12 @@ def publication_due(previous: dict[str, Any], interval_hours: int, now: datetime
     return last is None or now - last >= timedelta(hours=max(1, interval_hours))
 
 
+def daily_publication_count(previous: dict[str, Any], now: datetime | None = None) -> int:
+    now = now or datetime.now(timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+    return sum(1 for day in previous.get("github_issue_days") or [] if day == today)
+
+
 def publishable_findings(findings: list[dict[str, Any]], previous: dict[str, Any], limit: int) -> list[dict[str, Any]]:
     recent = set(previous.get("recent_source_urls") or [])
     out: list[dict[str, Any]] = []
@@ -114,7 +120,8 @@ def create_field_issue(finding: dict[str, Any], policy: dict[str, Any], ordinal:
     if not repo or repo not in allowed or not token:
         return {"kind": "github_issue", "status": "SKIPPED_NO_CAPABILITY", "source_url": finding.get("url")}
 
-    stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y-%m-%d %H:%M UTC")
     title = f"WORLD FIELD NOTE — {finding['title'][:115]}"
     body = (
         "Automated public field note from **THE WORLD Reality Agency**.\n\n"
@@ -136,7 +143,7 @@ def create_field_issue(finding: dict[str, Any], policy: dict[str, Any], ordinal:
             "Authorization": f"Bearer {token}",
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "TheWorld-RealityGateway/2.0",
+            "User-Agent": "TheWorld-RealityGateway/2.1",
         },
     )
     issue = json.loads(response) if response else {}
@@ -146,7 +153,8 @@ def create_field_issue(finding: dict[str, Any], policy: dict[str, Any], ordinal:
         "number": issue.get("number"),
         "url": issue.get("html_url"),
         "source_url": finding.get("url"),
-        "published_at": datetime.now(timezone.utc).isoformat(),
+        "published_at": now.isoformat(),
+        "day": now.strftime("%Y-%m-%d"),
     }
 
 
@@ -174,6 +182,8 @@ def main() -> int:
     pulse = policy.get("pulse") or {}
     max_publications = int(pulse.get("max_publications_per_pulse", 2) or 2)
     publication_interval = int(pulse.get("owned_publication_interval_hours", 6) or 6)
+    daily_cap = int(pulse.get("owned_publication_daily_cap", 8) or 8)
+    today_count = daily_publication_count(previous, now)
 
     if args.execute_owned_writes and findings:
         summary = "*THE WORLD / REALITY PULSE / LIMITLESS*\n" + "\n".join(
@@ -184,8 +194,11 @@ def main() -> int:
         except Exception as exc:
             effects.append({"kind": "slack", "status": "ERROR", "error": type(exc).__name__})
 
-        if publication_due(previous, publication_interval, now):
-            candidates = publishable_findings(findings, previous, max_publications)
+        if today_count >= daily_cap:
+            effects.append({"kind": "github_issue", "status": "SKIPPED_DAILY_LIMIT", "daily_cap": daily_cap})
+        elif publication_due(previous, publication_interval, now):
+            remaining_today = max(0, daily_cap - today_count)
+            candidates = publishable_findings(findings, previous, min(max_publications, remaining_today))
             for ordinal, finding in enumerate(candidates, 1):
                 try:
                     effects.append(create_field_issue(finding, policy, ordinal))
@@ -205,22 +218,32 @@ def main() -> int:
 
     recent_urls = list(previous.get("recent_source_urls") or [])
     last_publication = previous.get("last_owned_publication_at")
+    github_issue_days = list(previous.get("github_issue_days") or [])
     for effect in effects:
         status = effect.get("status")
         if effect.get("kind") == "github_issue" and isinstance(status, int) and 200 <= status < 300:
             if effect.get("source_url"):
                 recent_urls.append(effect["source_url"])
+            if effect.get("day"):
+                github_issue_days.append(effect["day"])
             last_publication = effect.get("published_at") or now.isoformat()
     state = {
         "schema": "the-world-reality-gateway-state/v2",
         "generated_at": now.isoformat(),
         "faith": "LIMITLESS",
         "last_owned_publication_at": last_publication,
+        "github_issue_days": github_issue_days[-90:],
         "recent_source_urls": list(dict.fromkeys(recent_urls))[-120:],
         "last_effects": effects,
     }
     Path(args.state).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"findings": len(findings), "effects": effects, "publication_interval_hours": publication_interval}, ensure_ascii=False))
+    print(json.dumps({
+        "findings": len(findings),
+        "effects": effects,
+        "publication_interval_hours": publication_interval,
+        "daily_cap": daily_cap,
+        "today_count_before": today_count,
+    }, ensure_ascii=False))
     return 0
 
 
