@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
-EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
+EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-external-feedback"
 
 
 def _oidc_token() -> str:
