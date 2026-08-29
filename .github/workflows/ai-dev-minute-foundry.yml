@@ -9,7 +9,10 @@ on:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
       - '.github/workflows/ai-dev-minute-foundry.yml'
+      - '.github/workflows/standment-ai-security-eval.yml'
       - 'automation/ai_foundry/**'
+      - 'automation/security/ai_security_feedback.py'
+      - 'automation/security/test_ai_security_feedback.py'
 
 concurrency:
   group: ai-dev-minute-foundry
@@ -46,6 +49,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m unittest -v automation.ai_foundry.test_minute_evolution
+          python -m unittest -v automation.security.test_ai_security_feedback
 
       - name: Restore previous AI Developer champion from evidence
         if: github.event_name != 'pull_request'
@@ -133,6 +137,56 @@ jobs:
           echo "source_run=$source_run" >> "$GITHUB_OUTPUT"
           echo "Security assist source run: ${source_run:-NONE}; token: $token" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Load latest AI Security Eval coaching evidence
+        id: eval_assist
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR/eval-assist"
+          printf '%s\n' '{"status":"NO_EVAL_ASSIST"}' > "$STATE_DIR/eval-assist.json"
+          token="no-eval-assist"
+          focus="NONE"
+          source_run=""
+
+          if [[ "${GITHUB_EVENT_NAME}" != "pull_request" ]]; then
+            prev="$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow standment-ai-security-eval.yml \
+              --status success \
+              --limit 12 \
+              --json databaseId \
+              --jq '.[].databaseId' | head -n1 || true)"
+            if [[ -n "$prev" ]]; then
+              if gh run download "$prev" \
+                --repo "$GITHUB_REPOSITORY" \
+                --name "standment-ai-security-eval-${prev}" \
+                --dir "$STATE_DIR/eval-assist"; then
+                candidate="$(find "$STATE_DIR/eval-assist" -type f -name feedback.json | head -n1 || true)"
+                if [[ -n "$candidate" ]]; then
+                  cp "$candidate" "$STATE_DIR/eval-assist.json"
+                  source_run="$prev"
+                  read -r token focus < <(python - <<'PY'
+          import json, os
+          p=os.environ['STATE_DIR']+'/eval-assist.json'
+          d=json.load(open(p, encoding='utf-8'))
+          c=d.get('constraints') or {}
+          assert d.get('authority') == 'priority_only'
+          assert c.get('promotion_gate_unchanged') is True
+          assert c.get('permission_surface_unchanged') is True
+          assert c.get('external_scope_unchanged') is True
+          print(str(d.get('feedback_token') or 'no-eval-assist'), str((d.get('guidance') or {}).get('ai_priority_focus') or 'NONE'))
+          PY
+          )
+                fi
+              fi
+            fi
+          fi
+
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+          echo "focus=$focus" >> "$GITHUB_OUTPUT"
+          echo "source_run=$source_run" >> "$GITHUB_OUTPUT"
+          echo "AI Security Eval assist source run: ${source_run:-NONE}; priority focus: $focus; token: $token" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Snapshot starting champion
         run: cp "$STATE_DIR/champion.json" "$STATE_DIR/start.json"
 
@@ -157,7 +211,7 @@ jobs:
             --history "$STATE_DIR/history.jsonl" \
             --rounds "$rounds" \
             --sleep-seconds "$sleep_seconds" \
-            --seed "${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${{ steps.security_assist.outputs.token }}"
+            --seed "${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${{ steps.security_assist.outputs.token }}:${{ steps.eval_assist.outputs.token }}"
 
           mv "$STATE_DIR/champion-next.json" "$STATE_DIR/champion.json"
           python - <<'PY' >> "$GITHUB_OUTPUT"
@@ -175,6 +229,9 @@ jobs:
         env:
           SECURITY_ASSIST_TOKEN: ${{ steps.security_assist.outputs.token }}
           SECURITY_ASSIST_SOURCE_RUN: ${{ steps.security_assist.outputs.source_run }}
+          EVAL_ASSIST_TOKEN: ${{ steps.eval_assist.outputs.token }}
+          EVAL_ASSIST_SOURCE_RUN: ${{ steps.eval_assist.outputs.source_run }}
+          EVAL_ASSIST_FOCUS: ${{ steps.eval_assist.outputs.focus }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -191,6 +248,9 @@ jobs:
               f"- next weakest focus: {d['weakest_next_focus']}",
               f"- security assist source run: {os.getenv('SECURITY_ASSIST_SOURCE_RUN') or 'NONE'}",
               f"- security assist token: {os.getenv('SECURITY_ASSIST_TOKEN') or 'NONE'}",
+              f"- AI Security Eval assist run: {os.getenv('EVAL_ASSIST_SOURCE_RUN') or 'NONE'}",
+              f"- Eval suggested focus: {os.getenv('EVAL_ASSIST_FOCUS') or 'NONE'}",
+              f"- Eval feedback token: {os.getenv('EVAL_ASSIST_TOKEN') or 'NONE'}",
               f"- report fingerprint: {d['report_fingerprint']}",
               '',
               '## Quality proxy delta',
@@ -199,7 +259,8 @@ jobs:
               lines.append(f'- {k}: {v:+.3f}')
           lines += [
               '',
-              '> Security evidence changes the deterministic candidate search seed; it does not bypass promotion gates.',
+              '> Security + Eval evidence changes deterministic candidate search geometry only; it does not bypass promotion gates.',
+              '> Eval focus is advisory metadata in this lane. Gates, permissions and external scope remain unchanged.',
               '> These are strategy-proxy deltas, not proof that model weights or real-world capability improved. Code-level capability is verified separately by Agent Factory tests/PR gates.',
           ]
           text='\n'.join(lines)+'\n'
@@ -212,6 +273,8 @@ jobs:
         if: github.event_name != 'pull_request'
         env:
           SECURITY_ASSIST_SOURCE_RUN: ${{ steps.security_assist.outputs.source_run }}
+          EVAL_ASSIST_SOURCE_RUN: ${{ steps.eval_assist.outputs.source_run }}
+          EVAL_ASSIST_FOCUS: ${{ steps.eval_assist.outputs.focus }}
         shell: bash
         run: |
           set -euo pipefail
@@ -233,10 +296,11 @@ jobs:
               f"Curriculum: L{d['curriculum_level']}\n"
               f"Next weakest focus: {d['weakest_next_focus']}\n"
               f"Security assist run: {os.getenv('SECURITY_ASSIST_SOURCE_RUN') or 'NONE'}\n"
+              f"AI Security Eval assist: {os.getenv('EVAL_ASSIST_SOURCE_RUN') or 'NONE'} / focus {os.getenv('EVAL_ASSIST_FOCUS') or 'NONE'}\n"
               f"Material delta: {str(d['material_delta']).lower()}\n"
               f"Fingerprint: `{d['report_fingerprint']}`\n"
               "*Quality proxy delta*\n" + q + "\n"
-              "_Note: strategy-proxy delta only; this is not proof that model weights or real-world capability improved._"
+              "_Note: strategy-proxy delta only; Eval/Security feedback cannot change promotion gates or permissions._"
           )
           json.dump({'text': text}, open(os.environ['STATE_DIR']+'/slack-payload.json','w',encoding='utf-8'), ensure_ascii=False)
           PY
@@ -261,6 +325,7 @@ jobs:
             /tmp/ai-dev-foundry/hourly-summary.md
             /tmp/ai-dev-foundry/history.jsonl
             /tmp/ai-dev-foundry/security-assist.json
+            /tmp/ai-dev-foundry/eval-assist.json
             /tmp/ai-dev-foundry/slack-payload.json
 
       - name: Final foundry status
@@ -274,5 +339,7 @@ jobs:
           echo "- promotions: ${{ steps.evolve.outputs.promotions }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- next focus: ${{ steps.evolve.outputs.next_focus }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- security assist run: ${{ steps.security_assist.outputs.source_run }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- AI Security Eval assist run: ${{ steps.eval_assist.outputs.source_run }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Eval suggested focus: ${{ steps.eval_assist.outputs.focus }}" >> "$GITHUB_STEP_SUMMARY"
           echo "- privilege: read-only; real repository modifications stay behind Agent Factory" >> "$GITHUB_STEP_SUMMARY"
           echo "- identical fingerprints must not produce duplicate Slack reports" >> "$GITHUB_STEP_SUMMARY"
