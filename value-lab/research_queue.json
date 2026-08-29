@@ -1,0 +1,24 @@
+{
+  "schema": "rnd-senju-research-queue/v1",
+  "active": [
+    {
+      "research_id": "RND-SENJU-ROBUSTNESS-001",
+      "title": "Seed-robust Senju champion selection",
+      "problem": "A strategy can look strong in one tournament yet fail multi-seed stability, slowing safe autonomous promotion.",
+      "hypothesis": "A bounded multi-candidate league plus unseen holdout selection will produce more stable champions than single-candidate promotion.",
+      "focus": "robustness",
+      "priority": 100,
+      "candidate_count": 7,
+      "success": {
+        "safe": true,
+        "stable": true,
+        "holdout_required": true,
+        "worst_score_positive": true,
+        "worst_balance_min": 0.35,
+        "worst_learning_min": 0.05,
+        "score_stdev_max": 35.0
+      },
+      "commercial_bridge": "If repeatedly verified, package the stability/quality-control method as evidence of reliable AI operations. This is not market validation by itself."
+    }
+  ]
+}
