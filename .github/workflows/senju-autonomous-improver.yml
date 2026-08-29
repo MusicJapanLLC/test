@@ -1,0 +1,205 @@
+name: Senju GitHub Native Autonomous Improver
+
+on:
+  schedule:
+    - cron: "30 22 * * *" # 07:30 JST, after the 07:00 tournament
+  workflow_dispatch:
+
+concurrency:
+  group: senju-github-native-autonomous-improver
+  cancel-in-progress: false
+
+jobs:
+  propose-and-validate:
+    name: GitHub Models -> bounded proposal -> validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      models: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Restore latest Senju memory artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-memory
+          PREV_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Senju Daily Self Evolution" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" --repo "$GITHUB_REPOSITORY" --name senju-memory --dir /tmp/senju-memory || true
+          fi
+          if [[ -f /tmp/senju-memory/strategy.next.json ]]; then
+            cp /tmp/senju-memory/strategy.next.json /tmp/base-strategy.json
+          else
+            cp senju/state/strategy.json /tmp/base-strategy.json
+          fi
+          if [[ -f /tmp/senju-memory/state.next.json ]]; then
+            cp /tmp/senju-memory/state.next.json /tmp/champion.json
+          else
+            cp senju/state/champion.json /tmp/champion.json
+          fi
+          if [[ -f /tmp/senju-memory/evolution-summary.json ]]; then
+            cp /tmp/senju-memory/evolution-summary.json /tmp/evolution-summary.json
+          else
+            printf '{}\n' > /tmp/evolution-summary.json
+          fi
+
+      - name: Run engine and guard tests before AI proposal
+        working-directory: senju
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          python -m pytest tests -q
+          python -m senju.cli safety-check sim://ci-target
+          if python -m senju.cli safety-check 8.8.8.8; then exit 1; fi
+          if python -m senju.cli safety-check https://example.com; then exit 1; fi
+
+      - name: Ask GitHub Models for the next bounded strategy
+        env:
+          SENJU_GITHUB_MODEL: openai/gpt-4.1
+        run: |
+          set -euo pipefail
+          python senju/scripts/github_native_improver.py \
+            --strategy /tmp/base-strategy.json \
+            --evolution-summary /tmp/evolution-summary.json \
+            --output-dir /tmp/promotion
+
+      - name: Enforce autonomous promotion allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          allowed = {
+              'population': (40, 240),
+              'generations': (6, 40),
+              'matches': (100, 1200),
+              'mutation_rate': (0.05, 0.35),
+              'red_budget': (6, 24),
+              'blue_budget': (6, 24),
+              'seed': (1, 2147483647),
+          }
+          p = Path('/tmp/promotion/strategy.json')
+          s = json.loads(p.read_text())
+          assert set(s) == set(allowed), set(s)
+          for k, (lo, hi) in allowed.items():
+              assert lo <= float(s[k]) <= hi, (k, s[k])
+          summary = json.loads(Path('/tmp/promotion/last-evolution-summary.json').read_text())
+          assert summary.get('safe') is True
+          forbidden = ('target', 'scope', 'network', 'permission', 'secret', 'credential', 'workflow', 'url', 'host')
+          text = json.dumps(summary, ensure_ascii=False).lower()
+          for word in forbidden:
+              if word in text and word not in ('source_evidence_present',):
+                  raise SystemExit(f'forbidden autonomous surface referenced: {word}')
+          PY
+          cp /tmp/champion.json /tmp/promotion/champion.json
+          find /tmp/promotion -maxdepth 1 -type f -printf '%f\n' | sort > /tmp/files.txt
+          printf '%s\n' champion.json last-evolution-plan.md last-evolution-summary.json strategy.json | sort > /tmp/expected.txt
+          diff -u /tmp/expected.txt /tmp/files.txt
+
+      - name: Smoke-test next generation using proposed strategy
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, subprocess
+          s=json.load(open('/tmp/promotion/strategy.json'))
+          cmd=['python','-m','senju.autopilot','--state','/tmp/promotion/champion.json','--out','/tmp/verify','--population',str(s['population']),'--generations',str(min(s['generations'],8)),'--matches',str(min(s['matches'],250)),'--candidates','3']
+          subprocess.run(cmd, check=True)
+          d=json.load(open('/tmp/verify/evolution-summary.json'))
+          if not d['selected']['safe']:
+              raise SystemExit('candidate smoke evaluation was unsafe')
+          PY
+
+      - name: Upload validated promotion bundle
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-validated-promotion
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            /tmp/promotion/champion.json
+            /tmp/promotion/strategy.json
+            /tmp/promotion/last-evolution-summary.json
+            /tmp/promotion/last-evolution-plan.md
+
+  promote:
+    name: Create audited PR and merge validated state
+    needs: propose-and-validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download validated promotion bundle
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: senju-validated-promotion
+          path: /tmp/promotion
+
+      - name: Create state-only branch and PR through GitHub API
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          BASE="$(gh repo view "$REPO" --json defaultBranchRef --jq '.defaultBranchRef.name')"
+          BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+          BRANCH="senju/auto-promote-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BRANCH" -f sha="$BASE_SHA" >/dev/null
+
+          put_file() {
+            local src="$1" path="$2" sha content
+            content="$(base64 -w0 "$src")"
+            sha="$(gh api "repos/$REPO/contents/$path?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)"
+            if [[ -n "$sha" ]]; then
+              gh api -X PUT "repos/$REPO/contents/$path" -f message="chore(senju): promote validated autonomous state" -f content="$content" -f branch="$BRANCH" -f sha="$sha" >/dev/null
+            else
+              gh api -X PUT "repos/$REPO/contents/$path" -f message="chore(senju): promote validated autonomous state" -f content="$content" -f branch="$BRANCH" >/dev/null
+            fi
+          }
+
+          put_file /tmp/promotion/champion.json senju/state/champion.json
+          put_file /tmp/promotion/strategy.json senju/state/strategy.json
+          put_file /tmp/promotion/last-evolution-summary.json senju/state/last-evolution-summary.json
+          put_file /tmp/promotion/last-evolution-plan.md senju/state/last-evolution-plan.md
+
+          PR_URL="$(gh pr create --repo "$REPO" --base "$BASE" --head "$BRANCH" --title "chore(senju): autonomous champion promotion" --body "GitHub-native autonomous promotion. Candidate was generated with GitHub Models, restricted to the strategy allowlist, then passed Senju pytest, ScopeGuard public-target rejection, and a bounded autopilot smoke evaluation before this PR was created. Only senju/state/* promotion files are changed.")"
+          PR_NUMBER="$(gh pr view "$PR_URL" --repo "$REPO" --json number --jq '.number')"
+
+          CHANGED="$(gh pr diff "$PR_NUMBER" --repo "$REPO" --name-only | sort)"
+          EXPECTED="$(printf '%s\n' senju/state/champion.json senju/state/last-evolution-plan.md senju/state/last-evolution-summary.json senju/state/strategy.json | sort)"
+          if [[ "$CHANGED" != "$EXPECTED" ]]; then
+            gh pr close "$PR_NUMBER" --repo "$REPO" --comment "Blocked: autonomous promotion changed files outside the exact state allowlist."
+            exit 1
+          fi
+
+          gh pr merge "$PR_NUMBER" --repo "$REPO" --merge --admin
+          echo "Promoted validated Senju state via PR #$PR_NUMBER"
