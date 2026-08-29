@@ -44,6 +44,8 @@ if(!reduceMotion&&'IntersectionObserver'in window){
 
 const isHome=location.pathname==='/'||location.pathname==='/index.html';
 if(isHome){
+  ensureStyle('/assets/human-editorial.css');
+
   let sticky=document.querySelector('.mobile-sticky-cta');
   if(!sticky){
     sticky=document.createElement('aside');
