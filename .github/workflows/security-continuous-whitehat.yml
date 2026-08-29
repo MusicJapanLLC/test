@@ -13,6 +13,8 @@ on:
       - 'automation/security/elite_whitehat_continuous.py'
       - 'automation/security/test_elite_whitehat_continuous.py'
       - 'standment-security/security_research_frontier.json'
+      - 'standment-security/security_framework_crosswalk.json'
+      - 'standment-security/SECURITY_EXTERNAL_BASELINE.md'
       - 'standment-security/ELITE_WHITEHAT_CELL.md'
       - 'standment-security/security_portfolio_program.json'
 
@@ -49,14 +51,22 @@ jobs:
           (cd automation/security && python -m unittest -v test_elite_whitehat_continuous.py)
           python - <<'PY'
           import json
-          d=json.load(open('standment-security/security_research_frontier.json', encoding='utf-8'))
-          assert len(d.get('lenses', [])) >= 10, 'research frontier must stay broad'
-          assert set(d.get('selection_policy', {}).get('stages', [])) == {'DISCOVERY','FALSIFICATION','REMEDIATION','RETEST','PORTFOLIO'}
-          for row in d['lenses']:
-              assert row.get('customer_use'), row.get('id')
-              assert row.get('safe_test'), row.get('id')
-              assert row.get('refs'), row.get('id')
-          print(f"frontier lenses={len(d['lenses'])} stages=5")
+          frontier=json.load(open('standment-security/security_research_frontier.json', encoding='utf-8'))
+          crosswalk=json.load(open('standment-security/security_framework_crosswalk.json', encoding='utf-8'))
+          assert len(frontier.get('lenses', [])) >= 10, 'research frontier must stay broad'
+          assert set(frontier.get('selection_policy', {}).get('stages', [])) == {'DISCOVERY','FALSIFICATION','REMEDIATION','RETEST','PORTFOLIO'}
+          frameworks=crosswalk.get('frameworks', {})
+          mappings=crosswalk.get('lens_mapping', {})
+          assert {'OWASP-LLM-2025','NIST-AI-600-1','MITRE-ATLAS','SLSA-1.2','CISA-SBD'} <= set(frameworks), 'external benchmark set incomplete'
+          for row in frontier['lenses']:
+              lens_id=row.get('id')
+              assert row.get('customer_use'), lens_id
+              assert row.get('safe_test'), lens_id
+              assert row.get('refs'), lens_id
+              mapped=mappings.get(lens_id, [])
+              assert mapped, f'{lens_id} has no external framework mapping'
+              assert all(x in frameworks for x in mapped), f'{lens_id} maps unknown framework'
+          print(f"frontier lenses={len(frontier['lenses'])} stages=5 frameworks={len(frameworks)}")
           PY
           rm -rf "$OUT_DIR"
           mkdir -p "$OUT_DIR"
@@ -90,6 +100,7 @@ jobs:
           coverage = [float(r['evidence']['coverage']) for r in rows]
           unique_pairs = {(r['lens_id'], r['research_stage']) for r in rows}
           stage_counts = Counter(r['research_stage'] for r in rows)
+          framework_counts = Counter(f['id'] for r in rows for f in r.get('external_frameworks', []))
           weakest = sorted(
               rows,
               key=lambda r: (float(r['evidence']['coverage']), -len(r.get('promotion_blockers') or []), r['lens_id'])
@@ -102,16 +113,19 @@ jobs:
               f'- Elite White-Hat micro rounds: **{len(rows)}**',
               f'- Unique lens × stage pairs: **{len(unique_pairs)}/{len(rows)}**',
               f'- Stage mix: **{dict(stage_counts)}**',
+              f'- External benchmark mix: **{dict(framework_counts)}**',
               f'- Average repository evidence coverage: **{sum(coverage)/max(1,len(coverage)):.0%}**',
               '- Status: **BUILDING**',
-              '- Note: coverage is repository-evidence availability, not a security score.',
+              '- Note: coverage and framework alignment are research signals, not a security score or certification.',
               '',
               '## このrunで深掘りしたもの',
           ]
           for row in rows:
+              frameworks=', '.join(x['id'] for x in row.get('external_frameworks', [])) or 'NONE'
               lines += [
                   f"- **{row['artifact']}** / Stage **{row['research_stage']}** / Evidence {row['evidence']['coverage']:.0%}",
                   f"  - 用途: {row['customer_use']}",
+                  f"  - 外部基準: {frameworks}",
                   f"  - 研究質問: {row['research_question']}",
                   f"  - 次の改善: {row['next_improvement']}",
               ]
@@ -123,13 +137,13 @@ jobs:
               f"- 次の改善: {most_blocked['next_improvement']}",
               '',
               '## Elite White-Hatの反証ルール',
-              '- リポジトリ上のEvidence存在やキーワード一致は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。',
+              '- リポジトリ上のEvidence存在、キーワード一致、外部フレームワーク対応表は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。',
               '- VERIFIED昇格には所有/明示許可済みscope、行動証拠、反証、再現性、独立retestが必要。',
               '- 同じテーマの説明を繰り返すのではなく、LensとStageをrunごとにローテーションする。',
               '',
               '## Slack向けルール',
               '- コードは投稿しない。',
-              '- 1時間に1回、最新の成果物・用途・差分・検証状態・次の改善だけを人間語で報告する。',
+              '- 1時間に1回、最新の成果物・用途・差分・外部基準・検証状態・次の改善だけを人間語で報告する。',
               '- 新規成果がなければ「新規成果物なし」と書き、繰り返し原因と次の研究角度を示す。',
               '',
           ]
@@ -139,11 +153,13 @@ jobs:
               'micro_rounds': len(rows),
               'unique_lens_stage_pairs': len(unique_pairs),
               'stage_mix': dict(stage_counts),
+              'external_framework_mix': dict(framework_counts),
               'average_repository_evidence_coverage': sum(coverage)/max(1,len(coverage)),
               'priority_next': {
                   'lens_id': most_blocked['lens_id'],
                   'stage': most_blocked['research_stage'],
                   'artifact': most_blocked['artifact'],
+                  'external_frameworks': [x['id'] for x in most_blocked.get('external_frameworks', [])],
                   'next_improvement': most_blocked['next_improvement'],
                   'promotion_blockers': most_blocked.get('promotion_blockers') or [],
               },
@@ -164,3 +180,5 @@ jobs:
             /tmp/security-continuous-whitehat/hourly-source-pack.md
             /tmp/security-continuous-whitehat/run-index.json
             standment-security/security_research_frontier.json
+            standment-security/security_framework_crosswalk.json
+            standment-security/SECURITY_EXTERNAL_BASELINE.md
