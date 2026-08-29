@@ -91,7 +91,8 @@ jobs:
             --tasks reality-tasks.json \
             --policy outside-world/reality_policy.json \
             --out reality-observations.json \
-            --limit 16
+            --limit 24 \
+            --parallel 6
 
       - name: Convert observations into owned-channel effects
         run: |

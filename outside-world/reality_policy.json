@@ -4,7 +4,7 @@
   "pulse": {
     "target_seconds": 60,
     "github_watchdog_minutes": 5,
-    "max_citizens_per_pulse": 16,
+    "max_citizens_per_pulse": 24,
     "max_observations_per_pulse": 24,
     "max_publications_per_pulse": 2
   },
