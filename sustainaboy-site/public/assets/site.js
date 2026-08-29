@@ -15,6 +15,21 @@ naturalLabels.forEach(([href,label])=>{
   });
 });
 
+/* Home copy lock: approved hero stays untouched. Only normalize labels around it. */
+if(document.body.classList.contains('paper-home')){
+  const founderLabel=document.querySelector('.founder-card-copy .section-mini');
+  if(founderLabel) founderLabel.textContent='このワークについて';
+  const founderAlt=document.querySelector('.founder-image img');
+  if(founderAlt) founderAlt.alt='SUSTAINABOY WORKS 思考整理ワークの案内';
+  const storyLabel=document.querySelector('.story-copy .section-mini');
+  if(storyLabel) storyLabel.textContent='ストーリー';
+  const storyLink=document.querySelector('.story-copy a[href="/story/"]');
+  if(storyLink) storyLink.innerHTML='ストーリーを読む <span>→</span>';
+  const copy=document.querySelector('.paper-footer .copy');
+  if(copy) copy.textContent='© SUSTAINABOY WORKS';
+  document.title='SUSTAINABOY WORKS（サスティナボーイワークス）｜ニュートラル思考整理ワーク';
+}
+
 if(btn&&nav){
   btn.addEventListener('click',()=>{
     const open=nav.classList.toggle('open');
