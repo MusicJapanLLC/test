@@ -5,11 +5,16 @@ The manager does not replace specialist autonomy. It observes each worker's
 GitHub Actions evidence, retries recoverable failures, wakes stale workers,
 collects their report artifacts, and produces a bounded repair plan.
 
+THE COVENANT signals are carried as structured fields so workers can request
+help, enter recovery, and teach back lessons without those signals being lost
+when report excerpts are truncated.
+
 Safe boundaries:
 - only allowlisted workflows can be dispatched/rerun
 - no secret, permission, branch-protection, billing, or deployment-policy edits
 - never rerun/dispatch itself
 - max repair actions per cycle
+- SABBATH workers cannot be rerun or directly dispatched by Manager plans
 - unresolved material blockers escalate only after internal repair attempts
 """
 from __future__ import annotations
@@ -77,6 +82,12 @@ VERIFIED_PATTERNS = [
     re.compile(r"VERIFY:\s*PASS", re.I),
     re.compile(r"\bVERIFIED\b", re.I),
 ]
+COVENANT_SIGNAL = re.compile(
+    r"^(SANCTUARY|HELP_REQUEST|TEACH_BACK|PILGRIMAGE):\s*(.*?)\s*$",
+    re.I | re.M,
+)
+VALID_SANCTUARY = {"READY", "REFLECTION", "SABBATH", "RETURN"}
+VALID_HELP_REQUESTS = {"NONE", "SKEPTIC", "HOUND", "FORGE", "MANAGER"}
 
 
 @dataclass
@@ -92,6 +103,10 @@ class WorkerState:
     report_quality: str
     material_signal: bool
     verified_signal: bool
+    sanctuary_signal: str = "UNKNOWN"
+    help_request: str = "NONE"
+    teach_back: str = "NONE"
+    pilgrimage: str = "NONE"
     manager_action: str = "NONE"
     action_result: str = "NONE"
 
@@ -170,6 +185,29 @@ def _classify_report(text: str) -> tuple[str, bool, bool]:
     return ("BAD" if bad else "OK"), material, verified
 
 
+def _extract_covenant_signals(text: str) -> dict[str, str]:
+    signals = {
+        "sanctuary_signal": "UNKNOWN",
+        "help_request": "NONE",
+        "teach_back": "NONE",
+        "pilgrimage": "NONE",
+    }
+    for key, raw_value in COVENANT_SIGNAL.findall(text or ""):
+        value = raw_value.strip()[:800]
+        normalized_key = key.upper()
+        if normalized_key == "SANCTUARY":
+            candidate = value.upper()
+            signals["sanctuary_signal"] = candidate if candidate in VALID_SANCTUARY else "UNKNOWN"
+        elif normalized_key == "HELP_REQUEST":
+            candidate = value.upper()
+            signals["help_request"] = candidate if candidate in VALID_HELP_REQUESTS else "NONE"
+        elif normalized_key == "TEACH_BACK":
+            signals["teach_back"] = value or "NONE"
+        elif normalized_key == "PILGRIMAGE":
+            signals["pilgrimage"] = value or "NONE"
+    return signals
+
+
 def _dispatch(workflow: str) -> None:
     _request("POST", f"/actions/workflows/{workflow}/dispatches", {"ref": REF})
 
@@ -212,6 +250,7 @@ def collect(apply_repairs: bool) -> dict[str, Any]:
         run_id = int(run["id"])
         report = _artifact_report(run_id, cfg["artifact"])
         quality, material, verified = _classify_report(report)
+        covenant = _extract_covenant_signals(report)
         state = WorkerState(
             agent=agent,
             workflow=cfg["workflow"],
@@ -224,6 +263,7 @@ def collect(apply_repairs: bool) -> dict[str, Any]:
             report_quality=quality,
             material_signal=material,
             verified_signal=verified,
+            **covenant,
         )
 
         retryable = state.conclusion in CONCLUSIONS_RETRYABLE
@@ -235,26 +275,29 @@ def collect(apply_repairs: bool) -> dict[str, Any]:
         bad_report = state.status == "completed" and state.conclusion == "success" and quality == "BAD"
 
         if apply_repairs and repairs_used < MAX_REPAIR_ACTIONS:
-            if retryable and state.run_attempt < MAX_RERUN_ATTEMPTS:
+            if retryable and state.run_attempt < MAX_RERUN_ATTEMPTS and state.sanctuary_signal != "SABBATH":
                 _rerun_failed(run_id)
                 repairs_used += 1
                 state.manager_action = "RERUN_FAILED"
                 state.action_result = "RERUN_REQUESTED"
-            elif stale:
+            elif stale and state.sanctuary_signal != "SABBATH":
                 _dispatch(cfg["workflow"])
                 repairs_used += 1
                 state.manager_action = "WAKE_STALE"
                 state.action_result = "DISPATCHED"
-            elif bad_report:
+            elif bad_report and state.sanctuary_signal != "SABBATH":
                 _dispatch(cfg["workflow"])
                 repairs_used += 1
                 state.manager_action = "REGENERATE_REPORT"
                 state.action_result = "DISPATCHED"
 
         if retryable and state.manager_action == "NONE":
+            reason = f"workflow {state.conclusion}; attempts={state.run_attempt}"
+            if state.sanctuary_signal == "SABBATH":
+                reason += "; worker requested SABBATH — same retry suppressed"
             unresolved.append({
                 "agent": agent,
-                "reason": f"workflow {state.conclusion}; attempts={state.run_attempt}",
+                "reason": reason,
                 "run_id": run_id,
             })
         if quality == "MISSING" and state.status == "completed" and state.conclusion == "success":
@@ -267,7 +310,7 @@ def collect(apply_repairs: bool) -> dict[str, Any]:
         states.append(state)
 
     return {
-        "schema": "tomoki-manager-cycle/v1",
+        "schema": "tomoki-manager-cycle/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repository": REPO,
         "ref": REF,
@@ -292,6 +335,14 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
         int(w["run_id"]) for w in snapshot["workers"]
         if w.get("run_id") is not None and w.get("manager_action") not in (None, "", "NONE")
     }
+    sabbath_workflows = {
+        str(w["workflow"]) for w in snapshot["workers"]
+        if str(w.get("sanctuary_signal", "")).upper() == "SABBATH"
+    }
+    sabbath_run_ids = {
+        int(w["run_id"]) for w in snapshot["workers"]
+        if w.get("run_id") is not None and str(w.get("sanctuary_signal", "")).upper() == "SABBATH"
+    }
     accepted: list[dict[str, Any]] = []
     for raw in (plan.get("actions") or [])[:MAX_REPAIR_ACTIONS]:
         action = str(raw.get("action", "none"))
@@ -301,7 +352,7 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
             workflow = str(raw.get("workflow", ""))
             if workflow not in allowed_workflows or workflow == "tomoki-manager.yml":
                 continue
-            if workflow in already_touched_workflows:
+            if workflow in already_touched_workflows or workflow in sabbath_workflows:
                 continue
             accepted.append({"action": action, "workflow": workflow, "reason": str(raw.get("reason", ""))[:400]})
         elif action == "rerun_failed":
@@ -309,7 +360,7 @@ def _validate_plan(plan: dict[str, Any], snapshot: dict[str, Any]) -> list[dict[
                 run_id = int(raw.get("run_id"))
             except (TypeError, ValueError):
                 continue
-            if run_id not in current_run_ids or run_id in already_touched_run_ids:
+            if run_id not in current_run_ids or run_id in already_touched_run_ids or run_id in sabbath_run_ids:
                 continue
             accepted.append({"action": action, "run_id": run_id, "reason": str(raw.get("reason", ""))[:400]})
     return accepted
@@ -359,8 +410,14 @@ def render_markdown(snapshot: dict[str, Any], apply_result: dict[str, Any] | Non
         lines.append(
             f"- **{w['agent']}**: {w['status']}/{w.get('conclusion')} "
             f"age={w.get('age_minutes')}m report={w['report_quality']} "
+            f"sanctuary={w.get('sanctuary_signal', 'UNKNOWN')} "
+            f"help={w.get('help_request', 'NONE')} "
             f"manager={w['manager_action']} -> {w['action_result']}"
         )
+        if w.get("teach_back") not in (None, "", "NONE"):
+            lines.append(f"  - Teach-back: {w.get('teach_back')}")
+        if w.get("pilgrimage") not in (None, "", "NONE"):
+            lines.append(f"  - Pilgrimage: {w.get('pilgrimage')}")
     if snapshot["unresolved"]:
         lines += ["", "## Unresolved after internal repair"]
         for item in snapshot["unresolved"]:
@@ -374,6 +431,7 @@ def render_markdown(snapshot: dict[str, Any], apply_result: dict[str, Any] | Non
         "",
         "## Rule",
         "CEOへ上げる前に、再実行・再割当・専門家への引継ぎ・再検証を先に行う。",
+        "SABBATH中のworkerへ同じretry/dispatchを強制しない。助け要請は自律性として扱う。",
         "安全境界、Secrets、権限、課金、外部送信方針はManagerが勝手に緩めない。",
     ]
     return "\n".join(lines) + "\n"
