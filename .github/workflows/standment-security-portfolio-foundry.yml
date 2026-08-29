@@ -1,0 +1,195 @@
+name: Standment Security Portfolio Foundry
+
+on:
+  schedule:
+    - cron: '45 22 * * *' # 07:45 JST, after R&D x Senju and before daily value loop
+  workflow_dispatch:
+  pull_request:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'automation/security/portfolio_rnd.py'
+      - 'automation/security/test_portfolio_rnd.py'
+      - 'standment-security/**'
+      - 'security/**'
+      - 'PORTFOLIO.md'
+      - 'senju/scripts/apply_rnd_directive.py'
+      - 'senju/scripts/shadow_selector.py'
+      - 'senju/state/**'
+      - '.github/workflows/standment-security-portfolio-foundry.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: standment-security-portfolio-foundry-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+
+jobs:
+  portfolio-rnd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify portfolio-first R&D contract
+        run: |
+          set -euo pipefail
+          python -m unittest -v automation.security.test_portfolio_rnd
+          (cd senju && python -m unittest -v tests.test_rnd_directive tests.test_shadow_selector)
+          python -m json.tool standment-security/security_portfolio_program.json >/dev/null
+          python -m json.tool value-lab/research_queue.json >/dev/null
+
+      - name: Rank Standment security portfolio gaps
+        run: |
+          set -euo pipefail
+          python automation/security/portfolio_rnd.py \
+            --program standment-security/security_portfolio_program.json \
+            --portfolio PORTFOLIO.md \
+            --out reports/standment-security-foundry
+          cat reports/standment-security-foundry/daily.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Convert top portfolio gap into bounded Senju directive
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('reports/standment-security-foundry')
+          item=json.loads((root/'senju-research-item.json').read_text(encoding='utf-8'))
+          directive={k:item[k] for k in ('research_id','focus','candidate_count','hypothesis')}
+          directive['schema']='rnd-to-senju-directive/v1'
+          (root/'senju-directive.json').write_text(json.dumps(directive,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          python senju/scripts/apply_rnd_directive.py \
+            --strategy senju/state/strategy.json \
+            --directive reports/standment-security-foundry/senju-directive.json \
+            --out reports/standment-security-foundry/proposed-strategy.json \
+            --audit reports/standment-security-foundry/directive-audit.json
+
+      - name: Senju shadow competition and unseen holdout
+        id: senju
+        shell: bash
+        run: |
+          set -uo pipefail
+          mkdir -p reports/standment-security-foundry/senju-shadow
+          CANDIDATES="$(python - <<'PY'
+          import json
+          d=json.load(open('reports/standment-security-foundry/senju-directive.json',encoding='utf-8'))
+          print(max(3,min(9,int(d.get('candidate_count',7)))))
+          PY
+          )"
+          set +e
+          python senju/scripts/shadow_selector.py \
+            --state senju/state/champion.json \
+            --strategy reports/standment-security-foundry/proposed-strategy.json \
+            --out reports/standment-security-foundry/senju-shadow \
+            --selected reports/standment-security-foundry/senju-selected-strategy.json \
+            --candidates "$CANDIDATES"
+          RC=$?
+          set -e
+          echo "selector_rc=$RC" >> "$GITHUB_OUTPUT"
+          if [[ -f reports/standment-security-foundry/senju-shadow/selection.md ]]; then
+            cat reports/standment-security-foundry/senju-shadow/selection.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [[ "$RC" -ne 0 && "$RC" -ne 2 ]]; then
+            echo "Unexpected Senju selector failure: $RC" >&2
+            exit "$RC"
+          fi
+
+      - name: Build daily evidence digest
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib, datetime
+          root=pathlib.Path('reports/standment-security-foundry')
+          def load(name):
+              p=root/name
+              return json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+          plan=load('daily.json')
+          audit=load('directive-audit.json')
+          selection=load('senju-shadow/selection.json')
+          selected=plan.get('selected') or {}
+          holdout=selection.get('holdout') or {}
+          result={
+              'schema':'standment-security-portfolio-foundry-evidence/v1',
+              'generated_at':datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+              'portfolio_first':bool(plan.get('portfolio_first')),
+              'portfolio_track':selected.get('id'),
+              'portfolio_title':selected.get('title'),
+              'portfolio_status':selected.get('portfolio_status'),
+              'evidence_ratio':selected.get('evidence_ratio'),
+              'promotion_ready':bool(plan.get('promotion_ready')),
+              'senju_focus':audit.get('focus'),
+              'senju_candidate_count':selection.get('candidate_count'),
+              'senju_selected':bool(selection.get('selected')),
+              'holdout_safe':holdout.get('safe'),
+              'holdout_stable':holdout.get('stable'),
+              'robust_score':holdout.get('robust_score'),
+              'what_remains_unproven':'Technical reproducibility does not prove customer demand, payment, production deployment, or market value.',
+              'next_action':'Strengthen the selected human-inspectable artifact with verified before/after evidence; preserve negative evidence if the holdout fails.'
+          }
+          (root/'evidence.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          md=(
+              '# R&D PORTFOLIO DAILY — Standment Security\n\n'
+              f"- top track: **{result['portfolio_track']} — {result['portfolio_title']}**\n"
+              f"- portfolio status: **{result['portfolio_status']}** / evidence={result['evidence_ratio']}\n"
+              f"- Senju: focus={result['senju_focus']} candidates={result['senju_candidate_count']} selected={result['senju_selected']}\n"
+              f"- holdout: safe={result['holdout_safe']} stable={result['holdout_stable']} robust={result['robust_score']}\n"
+              f"- promotion ready: **{result['promotion_ready']}**\n"
+              f"- unproven: {result['what_remains_unproven']}\n"
+              f"- next: {result['next_action']}\n"
+          )
+          (root/'evidence.md').write_text(md,encoding='utf-8')
+          print(md)
+          PY
+          cat reports/standment-security-foundry/evidence.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Report material daily portfolio R&D delta to Slack
+        if: github.event_name != 'pull_request' && env.RND_SLACK_WEBHOOK_URL != ''
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          d=json.load(open('reports/standment-security-foundry/evidence.json',encoding='utf-8'))
+          text=(
+              f"*R&D PORTFOLIO DAILY｜Standment Security*\n"
+              f"最優先={d.get('portfolio_track')} / {d.get('portfolio_title')}\n"
+              f"状態={d.get('portfolio_status')} / evidence={d.get('evidence_ratio')} / promotion={d.get('promotion_ready')}\n"
+              f"Senju focus={d.get('senju_focus')} / candidates={d.get('senju_candidate_count')} / selected={d.get('senju_selected')}\n"
+              f"holdout safe={d.get('holdout_safe')} / stable={d.get('holdout_stable')} / robust={d.get('robust_score')}\n"
+              f"次={d.get('next_action')}\n"
+              "※技術検証と市場価値は分離。人間が確認できる証拠だけをportfolioへ昇格"
+          )
+          req=urllib.request.Request(os.environ['RND_SLACK_WEBHOOK_URL'],data=json.dumps({'text':text},ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
+          with urllib.request.urlopen(req,timeout=10) as res:
+              print('slack status',res.status)
+          PY
+
+      - name: Preserve portfolio R&D evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: standment-security-portfolio-foundry-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            reports/standment-security-foundry/daily.json
+            reports/standment-security-foundry/daily.md
+            reports/standment-security-foundry/senju-research-item.json
+            reports/standment-security-foundry/senju-directive.json
+            reports/standment-security-foundry/proposed-strategy.json
+            reports/standment-security-foundry/directive-audit.json
+            reports/standment-security-foundry/senju-shadow/selection.json
+            reports/standment-security-foundry/senju-shadow/selection.md
+            reports/standment-security-foundry/evidence.json
+            reports/standment-security-foundry/evidence.md
