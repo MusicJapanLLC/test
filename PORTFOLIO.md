@@ -14,7 +14,7 @@
 
 ## 1. Senju — GitHub-native Self-Improving Engineering Lab
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
 ### 作ったもの
 GitHub Actions上で、前日のChampionを引き継ぎ、候補戦略を生成・比較・評価し、安全条件を通った状態だけを次世代へ昇格させる自己改善ループ。
@@ -30,19 +30,24 @@ AIエージェントの戦略や評価方法を、毎回人間が手で試すの
 - AIが変更できる範囲を限定
 - GitHub自身をscheduler/orchestratorとして使う
 - state-only PRを作る昇格フロー
+- R&D directiveをbounded numeric strategyへ適用
+- multi-seed stability / unseen holdoutを使って不安定な候補を落とす
 
-### 現在の残り
-コードとPRはmerge済み。**最初の完全な定期自動サイクル成功証拠を確認するまではVERIFIED運用とは呼ばない。**
+### 検証
+GitHub-native autonomous improverがdefault branch上でvalidated stateを自律昇格した実走証拠を確認済み。run `33253144926` / promoted commit `97528375730751784f213eab6291c4cfa70780f7`。最新の `senju/state/last-evolution-summary.json` でもsafe=true、source evidenceあり、shadow holdout stable/safeを保持している。
 
 ### 経営メリット
-AI改善を「思いついた時だけ」ではなく定期工程に変えられる。将来的にはAI Engineer / Security / QAなどの改善評価にも再利用可能。
+AI改善を「思いついた時だけ」ではなく定期工程に変えられる。AI Engineer / Security / QAなどの改善評価へ再利用できる。
 
 ### Evidence
 - PR #35: Senju v2 durable daily self-evolution loop
 - PR #36: Senju v3 GitHub-native autonomous improvement loop
+- PR #67 merged: autonomous promotion evidence / run `33253144926`
+- `senju/state/last-evolution-summary.json`
+- `senju/state/last-evolution-plan.md`
 
 ### 次の改善
-最初のscheduled runを観測し、成功/失敗・Champion差分・改善量をCEO Reporterへ配送する。
+自律昇格の成功率・no-op率・holdout失敗率を継続計測し、Portfolio / CEO Reportingへ人間向け差分だけ配送する。
 
 ---
 
@@ -102,16 +107,17 @@ Webサイト/SaaSの最低限のセキュリティ状態を自動確認し、日
 - security-critical change control
 
 ### 現在の残り
-PR #31はopen。最終mergeと本番dogfooding結果の確定が必要。
+旧PR #31は現在のTHE WORLD本線から341コミット遅れていたため、そのままmergeせず最新ベースへ再構築。replacement PR #114でcurrent-base CI / authorized Baton dogfood / human-readable reportを再検証中。これらが揃うまではVERIFIEDへ上げない。
 
 ### 経営メリット
 「セキュリティ対策できます」という営業トークではなく、**実際に顧客へ見せられる診断物**になり始めている。
 
 ### Evidence
-- PR #31 open: `security: productize Standment Security Scan v1`
+- PR #31: stale original implementation
+- PR #114: current-base rebuild / portfolio blitz replacement
 
 ### 次の改善
-Baton等の所有資産でレポート品質をdogfoodし、Before/Afterの改善証拠をケーススタディ化する。
+PR #114のCIとBaton dogfood evidenceを確定し、Before/After改善証拠をケーススタディ化する。
 
 ---
 
@@ -149,7 +155,7 @@ Revenue Recoveryを「AIデモ」から、外部サービスと接続して継�
 
 ## 5. Company Memory v1
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
 ### 作ったもの
 会社・人物・案件・紹介履歴などをSupabaseへ集約し、「どれが最新の事実か」「同一人物か」をAIが追える共通知識基盤。
@@ -166,19 +172,26 @@ AIに毎回同じ人物・会社・案件説明をやり直す時間を減らし
 - AI change audit
 - retry / dead-letter設計
 - 日本語全文検索
-- `cm_person_brief`
+- `cm_person_brief` / `cm_memory_search`
 - JWT必須 `memory-query`
 - 本番Supabase migration
-- 実データで検索・更新監査を実測
+- 実データと監査履歴を保持
+- 全Company MemoryテーブルでRLS有効
+
+### 検証
+2026-08-30に本番Supabaseを再実測。`cm_core` 24 tables / `cm_memory` 11 / `cm_ops` 5 / `cm_audit` 3の計43テーブルが存在し、43/43でRLS有効。個人データを開示せず集計だけ確認した結果、1 workspace / 15 entities / 6 aliases / 3 opportunities / 11 source records / 130 audit eventsを保持。Edge Function `memory-query` はACTIVEかつ `verify_jwt=true`。public RPC `cm_person_brief` と `cm_memory_search` も本番に存在し、どちらもSECURITY DEFINERではない。
 
 ### 現在の残り
-GitHub側PR #32はDraft。公開test repoなので、private repoへの分離が望ましい。
+GitHub側PR #32はDraftのまま。公開test repoから専用private repoへ分離することは引き続き望ましいが、これはコア機能の動作可否ではなくhardening / repository hygieneの改善項目として扱う。
 
 ### 経営メリット
-AI社員の最大の弱点である「毎回忘れる」を、プロンプトではなく**データ基盤で解決する**方向へ進んでいる。
+AI社員の最大の弱点である「毎回忘れる」を、プロンプトではなく**稼働中のデータ基盤で解決する**。
 
 ### Evidence
 - PR #32 draft: `Company Memory v1: canonical data model and query API`
+- Production Supabase project: ACTIVE_HEALTHY
+- `memory-query`: ACTIVE / JWT required
+- Production aggregate verification: 43 RLS-enabled tables / 130 audit events
 
 ### 次の改善
 専用private repo化と、営業・議事録・Revenue Opsからの自動同期を安定化する。
@@ -255,7 +268,7 @@ GitHub側の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN
 
 ## 8. Standment Security Autonomous Portfolio R&D Engine v1
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
 ### 作ったもの
 Standmentをセキュリティ会社へ寄せるため、The worldの研究優先順位を**セキュリティ・ポートフォリオ最優先**へ固定する専用R&Dレーン。毎日、既存ポートフォリオとEvidenceを読み、最も価値の高い未完成テーマを自動選定し、R&Dと千寿へ接続する。
@@ -265,13 +278,12 @@ Standmentをセキュリティ会社へ寄せるため、The worldの研究優�
 
 ### すでにできていること
 - 5つのSecurity Portfolio研究トラックを優先度付きで定義
-- 毎日06:50 JSTにポートフォリオの状態・Evidence不足を採点するGitHub Actionsを追加
-- 既存07:20 JSTのR&D × Senju coupled loopより先に研究テーマを選定
-- `value-lab/research_queue.json` の最優先をStandment Security Portfolioへ変更（priority 2000）
-- 千寿には `robustness / learning / balance / efficiency` の研究品質改善だけを依頼し、第三者target・credential・exploit instructionを渡さない境界を維持
+- Portfolio gapを自動採点し最優先トラックを選定
+- R&D仮説をbounded Senju directiveへ変換
+- 千寿候補をcompetition / holdoutへ通し、negative resultも保存
 - Human-inspectable artifact / verification / counterevidence / reproducibilityをPortfolio Promotion Gateとして必須化
 - 「source codeだけ」「自己申告だけ」はPortfolio成果に昇格させない
-- 日次研究EvidenceをGitHub Actions artifactとして90日保存する設計
+- 日次研究EvidenceをGitHub Actions artifactとして保存
 - Customer-facing `Control Evidence Pack v1` を強化し、Before/After・反証・再現性・Evidence Manifestを標準化
 
 ### 最優先研究トラック
@@ -281,19 +293,21 @@ Standmentをセキュリティ会社へ寄せるため、The worldの研究優�
 4. **SEC-PORT-004** — Auth / tenant / RLS defensive evidence kit
 5. **SEC-PORT-005** — Autonomous-agent security and auditability pack
 
+### 検証
+`Standment Security Portfolio Foundry` run `33265121118` がSUCCESS。R&D contract 3 tests + Senju directive/shadow 8 tests PASS。SEC-PORT-001を選定し、bounded Senju 9候補を実行。stable candidateなしというnegative resultも隠さず保存し、human-readable `evidence.md` を含む10ファイルをartifact `9718410706` に保存した。Slack配送だけは `RND_SLACK_WEBHOOK_URL` が空のためskippedしたが、エンジン本体の研究→競争→反証→Evidence生成は実測済み。
+
 ### Evidence
+- PR #113 merged: `security: add daily Standment portfolio R&D foundry`
+- Workflow run `33265121118`: SUCCESS
+- Artifact `9718410706`: 10 evidence files
 - `.github/workflows/standment-security-portfolio-rnd.yml`
 - `standment-security/security_portfolio_program.json`
 - `automation/security/portfolio_rnd.py`
 - `automation/security/test_portfolio_rnd.py`
-- `value-lab/research_queue.json`
 - `standment-security/CONTROL_EVIDENCE_TEMPLATE.md`
-
-### 現在の残り
-初回のWorkflow実行結果を確認し、GitHub → Slackの `RND_SLACK_WEBHOOK_URL` が実際に設定済みか検証する。未設定の場合でも研究Evidence自体はartifactへ保存し、配送だけをBLOCKEDとして扱う。
 
 ### 経営メリット
 The world全体の研究量を増やすだけでなく、**Standmentが営業・提案・顧客説明に使えるセキュリティ実績へ毎日近づくように研究優先順位を固定**した。
 
 ### 次の改善
-Security Scanを所有資産でdogfoodし、Control Evidence PackへBefore/After証拠を入れ、最初の顧客提示可能なケーススタディをVERIFIEDへ昇格させる。
+Slack webhookを回復しつつ、Security Scanを所有資産でdogfoodしてControl Evidence PackへBefore/After証拠を入れ、最初の顧客提示可能なケーススタディを増やす。
