@@ -3,7 +3,7 @@
   "generations": 16,
   "matches": 400,
   "mutation_rate": 0.15,
-  "red_budget": 12,
-  "blue_budget": 12,
+  "red_budget": 14,
+  "blue_budget": 14,
   "seed": 20260829
 }
