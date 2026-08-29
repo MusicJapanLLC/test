@@ -1,0 +1,1 @@
+{"version":3,"files":[".github/workflows/gmail-autonomous-sorter.yml",".github/workflows/tomoki-forge.yml",".github/workflows/tomoki-hound.yml",".github/workflows/tomoki-skeptic.yml","automation/reporting/ceo_report.py","tomoki-agents/ceo_event.py","tomoki-agents/prompts/forge.md","tomoki-agents/prompts/hound.md","tomoki-agents/prompts/skeptic.md","tomoki-agents/slack_post.py"]}
