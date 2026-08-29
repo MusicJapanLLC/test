@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
-GATEWAY_PROTOCOL = "oidc-repository-v3"
+GATEWAY_PROTOCOL = "oidc-repository-v4-audited"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
 
 
