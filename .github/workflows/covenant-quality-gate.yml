@@ -6,12 +6,14 @@ on:
     paths:
       - 'company-society/**'
       - '.github/workflows/the-covenant.yml'
+      - '.github/workflows/covenant-autonomy-cycle.yml'
       - '.github/workflows/covenant-quality-gate.yml'
       - 'automation/control_plane/workers.json'
   push:
     paths:
       - 'company-society/**'
       - '.github/workflows/the-covenant.yml'
+      - '.github/workflows/covenant-autonomy-cycle.yml'
       - '.github/workflows/covenant-quality-gate.yml'
       - 'automation/control_plane/workers.json'
 
@@ -33,9 +35,12 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile Chapel code
+      - name: Compile Covenant code
         run: |
-          python -m py_compile company-society/church.py company-society/ritual_validation.py
+          python -m py_compile \
+            company-society/church.py \
+            company-society/ritual_validation.py \
+            company-society/autonomy_engine.py
 
       - name: Validate society registry JSON
         run: |
@@ -59,6 +64,7 @@ jobs:
             "workers": [
               {
                 "agent": "FORGE",
+                "id": "tomoki-forge",
                 "status": "completed",
                 "conclusion": "success",
                 "run_id": 1,
@@ -78,3 +84,13 @@ jobs:
           python company-society/church.py --snapshot /tmp/covenant-snapshot.json --json /tmp/faith.json --report /tmp/faith.md
           grep -q 'THE COVENANT' /tmp/faith.md
           grep -q '検証済みシグナル' /tmp/faith.md
+
+      - name: Smoke-test Autonomy rendering
+        run: |
+          python company-society/autonomy_engine.py \
+            --snapshot /tmp/covenant-snapshot.json \
+            --registry automation/control_plane/workers.json \
+            --json /tmp/autonomy.json \
+            --report /tmp/autonomy.md
+          grep -q 'Autonomy & Fellowship' /tmp/autonomy.md
+          grep -q 'tomoki-forge' /tmp/autonomy.md
