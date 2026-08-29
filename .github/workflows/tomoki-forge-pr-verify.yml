@@ -1,0 +1,53 @@
+name: TOMOKI FORGE PR Verify
+
+on:
+  pull_request:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'sales-command-30/**'
+      - 'tomoki-agents/policy_gate.py'
+      - 'tomoki-agents/verify.sh'
+      - '.github/workflows/tomoki-forge-pr-verify.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tomoki-forge-pr-verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: TOMOKI/FORGE policy + verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+
+      - name: Reconstruct candidate patch on trusted base
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --binary "$BASE_SHA...$HEAD_SHA" -- sales-command-30 > /tmp/forge-pr.patch
+          test -s /tmp/forge-pr.patch
+          git checkout --detach "$BASE_SHA"
+          git apply --whitespace=error /tmp/forge-pr.patch
+          git add -N -- sales-command-30 2>/dev/null || true
+
+      - name: Enforce fixed policy gate
+        run: python tomoki-agents/policy_gate.py
+
+      - name: Run fixed verifier
+        run: bash tomoki-agents/verify.sh
