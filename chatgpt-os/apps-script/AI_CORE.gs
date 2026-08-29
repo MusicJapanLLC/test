@@ -1,194 +1,232 @@
 /*
- * Music Japan AI CORE observer
+ * Music Japan AI OPERATIONS BLACKBOX observer
  *
- * Companion module for Code.gs. Keeps 90_AI_CORE useful after deployment
- * without turning email or inferred signals into business truth.
+ * Companion module for Code.gs.
+ * Human-facing operational truth remains in the integration/KPI/partner sources.
+ * Machine continuity, cache, worklog, handoff, failure memory and eval state live
+ * in a separate spreadsheet so AI scratch/telemetry never pollutes the human UI.
  *
- * Run setupEverything() instead of setupMusicJapanAutomation() on first deploy.
+ * First deploy: run setupEverything() once.
  */
 
-const MJ_AI_CORE = Object.freeze({
-  SHEET: '90_AI_CORE',
-  SIGNATURE_PROPERTY: 'MJ_AI_CORE_SIGNATURE',
-  VERSION: '1.0.0',
-  WORKLOG_START_ROW: 92,
-  WORKLOG_COLS: 14
+const MJ_AI = Object.freeze({
+  BLACKBOX_ID: '1sXZwm0ZhgNU1EnWP4MneSkM4TQeCmoqehV56uAU0yE4',
+  TZ: 'Asia/Tokyo',
+  VERSION: '2.0.0',
+  SIGNATURE_PROPERTY: 'MJ_AI_BLACKBOX_SIGNATURE',
+  SHEETS: Object.freeze({
+    BOOT: '00_BOOT',
+    SOURCES: '01_SOURCE_MAP',
+    CACHE: '02_HOT_CACHE',
+    WORKLOG: '03_WORKLOG',
+    FAILURES: '04_FAILURE_MEMORY',
+    RULES: '05_DECISION_RULES',
+    HANDOFF: '06_HANDOFF_QUEUE',
+    EVAL: '07_AGENT_EVAL',
+    CHANGES: '08_CHANGE_LEDGER',
+    SNAPSHOTS: '09_SNAPSHOT_INDEX',
+    HEALTH: '99_HEALTH'
+  })
 });
 
-/** One-shot setup entrypoint for the whole Apps Script project. */
+/** Initialize both the human OS automation and the separate AI blackbox observer. */
 function setupEverything() {
   const base = setupMusicJapanAutomation();
-  const observer = setupAiCoreObserver();
-  recordAiCoreWorklog_(
-    'GAS setupEverything',
-    'Initialized base automation + AI CORE observer',
-    'Code.gs / AI_CORE.gs / 90_AI_CORE',
-    'IMPLEMENTED',
+  const blackbox = setupAiBlackboxObserver();
+  appendAiWorklog_(
+    'SETUP',
+    'Initialize AI blackbox observer',
+    'Installed hourly observer and refreshed machine cache',
+    'AI_CORE.gs + dedicated BLACKBOX',
+    'SUCCESS',
     '',
-    'Observer records state changes only; no direct CRM mutation',
+    'Runtime must be verified from trigger executions; source-ready is not proof of live execution',
     ''
   );
-  return { ok: true, base: base, aiCore: observer, aiCoreVersion: MJ_AI_CORE.VERSION };
+  return { ok: true, base: base, blackbox: blackbox, aiVersion: MJ_AI.VERSION };
 }
 
-/** Install a low-noise hourly observer. It logs only when the state signature changes. */
-function setupAiCoreObserver() {
+/** Low-noise observer: hourly, with worklog append only on material state change. */
+function setupAiBlackboxObserver() {
   return withScriptLock_(function () {
+    assertAiBlackbox_();
     ScriptApp.getProjectTriggers().forEach(function (trigger) {
+      if (trigger.getHandlerFunction() === 'aiBlackboxObserver') ScriptApp.deleteTrigger(trigger);
       if (trigger.getHandlerFunction() === 'aiCoreObserver') ScriptApp.deleteTrigger(trigger);
     });
-    ScriptApp.newTrigger('aiCoreObserver').timeBased().everyHours(1).create();
-    const first = aiCoreSnapshot_();
-    PropertiesService.getScriptProperties().setProperty(MJ_AI_CORE.SIGNATURE_PROPERTY, first.signature);
-    return { ok: true, schedule: 'hourly', signature: first.signature };
+    ScriptApp.newTrigger('aiBlackboxObserver').timeBased().everyHours(1).create();
+    const snapshot = refreshAiBlackbox_();
+    PropertiesService.getScriptProperties().setProperty(MJ_AI.SIGNATURE_PROPERTY, snapshot.signature);
+    markSourceHealth_('src_gas', 'PASS', 'Apps Script observer installed / AI v' + MJ_AI.VERSION);
+    return { ok: true, schedule: 'hourly', signature: snapshot.signature, version: MJ_AI.VERSION };
   });
 }
 
-/** Observe health/signals. Append a worklog row only when material state changes. */
-function aiCoreObserver() {
+function aiBlackboxObserver() {
   try {
     return withScriptLock_(function () {
-      const ss = getSs_();
-      const core = ss.getSheetByName(MJ_AI_CORE.SHEET);
-      if (!core) throw new Error('90_AI_CORE is missing.');
-
-      const snapshot = aiCoreSnapshot_();
+      const snapshot = refreshAiBlackbox_();
       const props = PropertiesService.getScriptProperties();
-      const previous = props.getProperty(MJ_AI_CORE.SIGNATURE_PROPERTY) || '';
-
-      // B8 is LastRecalc/heartbeat. Once GAS is live this becomes a stable runtime timestamp.
-      core.getRange('B8').setValue(new Date());
-      core.getRange('B8').setNumberFormat('yyyy/mm/dd hh:mm:ss');
+      const previous = props.getProperty(MJ_AI.SIGNATURE_PROPERTY) || '';
 
       if (snapshot.signature !== previous) {
-        recordAiCoreWorklog_(
-          'AI CORE state change',
+        appendAiWorklog_(
+          'OBSERVE',
+          'Material system state changed',
           snapshot.summary,
-          '90_AI_CORE / 16_SYSTEM_HEALTH / 99_チェック / 24_SIGNAL_INBOX',
+          'Central OS > BLACKBOX cache/health',
           snapshot.status === 'FAIL' ? 'FAIL' : 'OBSERVED',
           snapshot.status === 'FAIL' ? snapshot.summary : '',
-          'Resolve FAIL first; then process NEW signals by evidence/confidence',
+          'Resolve FAIL first, then P0/P1 handoffs, then verified NEW signals',
           ''
         );
-        props.setProperty(MJ_AI_CORE.SIGNATURE_PROPERTY, snapshot.signature);
+        props.setProperty(MJ_AI.SIGNATURE_PROPERTY, snapshot.signature);
       }
-
       return snapshot;
     });
   } catch (err) {
     try {
-      recordAiCoreWorklog_(
-        'AI CORE observer failure',
-        'Observer threw an exception',
-        'AI_CORE.gs',
-        'FAIL',
-        String(err && err.stack ? err.stack : err),
-        'Inspect source health and Apps Script execution logs',
-        ''
-      );
+      appendAiFailure_('ai_blackbox_observer', 'AI blackbox observer exception', String(err && err.stack ? err.stack : err));
+      appendAiWorklog_('OBSERVE', 'AI blackbox observer failed', 'AI_CORE.gs', 'Apps Script', 'FAIL', String(err), 'Inspect execution logs and source permissions', '');
     } catch (logErr) {
-      console.error('AI CORE failure logger also failed: ' + logErr);
+      console.error('Blackbox failure logger also failed: ' + logErr);
     }
     throw err;
   }
 }
 
-/** Durable snapshot used to avoid noisy repeated logs. */
-function aiCoreSnapshot_() {
-  const ss = getSs_();
-  const core = ss.getSheetByName(MJ_AI_CORE.SHEET);
-  if (!core) throw new Error('90_AI_CORE is missing.');
+/** Refresh only compact high-signal cache. Source-of-truth stays outside this workbook. */
+function refreshAiBlackbox_() {
+  const central = getSs_();
+  const blackbox = getAiBlackbox_();
+  const boot = blackbox.getSheetByName(MJ_AI.SHEETS.BOOT);
+  const cache = blackbox.getSheetByName(MJ_AI.SHEETS.CACHE);
+  if (!boot || !cache) throw new Error('BLACKBOX BOOT/CACHE missing.');
 
   SpreadsheetApp.flush();
-  const values = core.getRange('B9:B17').getDisplayValues().map(function (r) { return String(r[0] || ''); });
-  const status = values[0] || 'UNKNOWN';
-  const contract = values[1] || 'UNKNOWN';
-  const newSignals = values[2] || '0';
-  const openReferrals = values[3] || '0';
-  const stale7d = values[4] || '0';
-  const sourceWarnings = values[5] || '0';
-  const gasRuntime = values[6] || 'UNKNOWN';
-  const revenue = values[7] || '0';
-  const pressure = values[8] || '0';
+  const centralChecks = central.getSheetByName('99_チェック');
+  const health = central.getSheetByName('16_SYSTEM_HEALTH');
+  const top = central.getSheetByName('00_統合TOP');
+  if (!centralChecks || !health || !top) throw new Error('Central health sheets missing.');
 
-  const signature = [status, contract, newSignals, openReferrals, stale7d, sourceWarnings, gasRuntime, revenue, pressure].join('|');
+  const values = {
+    'system.status': centralChecks.getRange('B3').getDisplayValue() || 'UNKNOWN',
+    'system.data_contract': health.getRange('M2').getDisplayValue() || 'UNKNOWN',
+    'system.new_signals': health.getRange('L2').getValue() || 0,
+    'system.open_referrals': health.getRange('D2').getValue() || 0,
+    'revenue.external_aug': top.getRange('A7').getValue() || 0,
+    'system.gas_runtime': 'LIVE'
+  };
+
+  const now = new Date();
+  updateCacheRows_(cache, values, now);
+  boot.getRange('B20').setValue(now).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+  markSourceHealth_('src_os', values['system.status'] === 'FAIL' ? 'FAIL' : (values['system.status'] === 'PASS' ? 'PASS' : 'WARN'), 'Central OS refreshed by GAS');
+  markSourceHealth_('src_gas', 'PASS', 'Observer heartbeat ' + Utilities.formatDate(now, MJ_AI.TZ, 'yyyy-MM-dd HH:mm:ss'));
+
+  SpreadsheetApp.flush();
+  const overall = blackbox.getSheetByName(MJ_AI.SHEETS.HEALTH).getRange('D11').getDisplayValue() || 'UNKNOWN';
+  const openHandoffs = Number(boot.getRange('B15').getValue() || 0);
+  const openFailures = Number(boot.getRange('B16').getValue() || 0);
+  const staleCache = Number(boot.getRange('B17').getValue() || 0);
+  const sourceWarnings = Number(boot.getRange('B18').getValue() || 0);
+  const signature = [overall, values['system.status'], values['system.data_contract'], values['system.new_signals'], values['system.open_referrals'], values['revenue.external_aug'], openHandoffs, openFailures, staleCache, sourceWarnings].join('|');
   const summary = [
-    'status=' + status,
-    'contract=' + contract,
-    'newSignals=' + newSignals,
-    'openReferrals=' + openReferrals,
-    'stale7d=' + stale7d,
-    'sourceWarnings=' + sourceWarnings,
-    'gas=' + gasRuntime,
-    'externalRevenue=' + revenue,
-    'pressure=' + pressure
+    'blackbox=' + overall,
+    'central=' + values['system.status'],
+    'contract=' + values['system.data_contract'],
+    'newSignals=' + values['system.new_signals'],
+    'openReferrals=' + values['system.open_referrals'],
+    'externalRevenue=' + values['revenue.external_aug'],
+    'handoffs=' + openHandoffs,
+    'openFailures=' + openFailures,
+    'staleCache=' + staleCache,
+    'sourceWarnings=' + sourceWarnings
   ].join('; ');
 
-  return {
-    ok: status !== 'FAIL' && contract !== 'FAIL',
-    status: status,
-    contract: contract,
-    newSignals: newSignals,
-    openReferrals: openReferrals,
-    stale7d: stale7d,
-    sourceWarnings: sourceWarnings,
-    gasRuntime: gasRuntime,
-    externalRevenue: revenue,
-    pressure: pressure,
-    signature: signature,
-    summary: summary,
-    observedAt: new Date().toISOString()
-  };
+  return { ok: overall !== 'FAIL', status: overall, signature: signature, summary: summary, observedAt: now.toISOString() };
 }
 
-/** Public helper for future agents/automation modules to record a verified mutation. */
-function recordAiCoreWorklog(objective, changes, evidence, result, failures, nextAction, githubCommit) {
-  return withScriptLock_(function () {
-    return recordAiCoreWorklog_(objective, changes, evidence, result, failures, nextAction, githubCommit);
+function updateCacheRows_(sheet, valueMap, now) {
+  if (sheet.getLastRow() < 2) return;
+  const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 20).getValues();
+  rows.forEach(function (r, idx) {
+    const key = String(r[0] || '');
+    if (!Object.prototype.hasOwnProperty.call(valueMap, key)) return;
+    const row = idx + 2;
+    sheet.getRange(row, 4).setValue(valueMap[key]);
+    sheet.getRange(row, 8).setValue(now).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+    sheet.getRange(row, 12).setValue('VERIFIED');
   });
 }
 
-function recordAiCoreWorklog_(objective, changes, evidence, result, failures, nextAction, githubCommit) {
-  const ss = getSs_();
-  const core = ss.getSheetByName(MJ_AI_CORE.SHEET);
-  if (!core) throw new Error('90_AI_CORE is missing.');
-
-  const row = nextBlankWorklogRow_(core);
-  const now = new Date();
-  const systemStatus = core.getRange('B9').getDisplayValue() || 'UNKNOWN';
-  const dataContract = core.getRange('B10').getDisplayValue() || 'UNKNOWN';
-  const sessionId = 'gas_' + Utilities.formatDate(now, MJ.TZ, 'yyyyMMdd_HHmmss') + '_' + Utilities.getUuid().slice(0, 8);
-
-  const values = [[
-    sessionId,
-    now,
-    'Google Apps Script',
-    String(objective || ''),
-    String(changes || ''),
-    String(evidence || ''),
-    String(result || ''),
-    String(failures || ''),
-    String(nextAction || ''),
-    String(githubCommit || ''),
-    dataContract,
-    systemStatus,
-    'AI_CORE observer v' + MJ_AI_CORE.VERSION,
-    now
-  ]];
-
-  core.getRange(row, 1, 1, MJ_AI_CORE.WORKLOG_COLS).setValues(values);
-  core.getRange(row, 2).setNumberFormat('yyyy/mm/dd hh:mm:ss');
-  core.getRange(row, 14).setNumberFormat('yyyy/mm/dd hh:mm:ss');
-  return { ok: true, row: row, sessionId: sessionId };
+function markSourceHealth_(sourceId, state, note) {
+  const blackbox = getAiBlackbox_();
+  const sheet = blackbox.getSheetByName(MJ_AI.SHEETS.SOURCES);
+  if (!sheet || sheet.getLastRow() < 2) return;
+  const ids = sheet.getRange(2, 1, sheet.getLastRow() - 1, 1).getDisplayValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]) !== String(sourceId)) continue;
+    const row = i + 2;
+    sheet.getRange(row, 12).setValue(new Date()).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+    sheet.getRange(row, 13).setValue(state);
+    if (note) sheet.getRange(row, 16).setValue(note);
+    return;
+  }
 }
 
-function nextBlankWorklogRow_(sheet) {
-  const start = MJ_AI_CORE.WORKLOG_START_ROW;
-  const count = Math.max(1, sheet.getMaxRows() - start + 1);
-  const values = sheet.getRange(start, 1, count, 1).getValues();
-  for (let i = 0; i < values.length; i++) {
-    if (!values[i][0]) return start + i;
+/** Public helper for future scripts to log verified material work. */
+function recordAiWorklog(kind, objective, action, evidence, result, failure, nextAction, commitSha) {
+  return withScriptLock_(function () {
+    return appendAiWorklog_(kind, objective, action, evidence, result, failure, nextAction, commitSha);
+  });
+}
+
+function appendAiWorklog_(kind, objective, action, evidence, result, failure, nextAction, commitSha) {
+  const blackbox = getAiBlackbox_();
+  const sheet = blackbox.getSheetByName(MJ_AI.SHEETS.WORKLOG);
+  if (!sheet) throw new Error('03_WORKLOG missing.');
+  const now = new Date();
+  const workId = 'work_' + Utilities.formatDate(now, MJ_AI.TZ, 'yyyyMMdd_HHmmss') + '_' + Utilities.getUuid().slice(0, 8);
+  const sessionId = 'gas_' + Utilities.formatDate(now, MJ_AI.TZ, 'yyyyMMdd_HHmmss');
+  const row = [
+    workId, sessionId, now, now, 'Google Apps Script', String(kind || ''), String(objective || ''), String(action || ''),
+    'AI BLACKBOX / Central OS', String(evidence || ''), String(result || ''), String(result || ''), String(failure || ''),
+    String(nextAction || ''), String(commitSha || ''), '', '', 'AI observer v' + MJ_AI.VERSION
+  ];
+  sheet.appendRow(row);
+  const last = sheet.getLastRow();
+  sheet.getRange(last, 3, 1, 2).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+  return { ok: true, workId: workId, row: last };
+}
+
+function appendAiFailure_(failureKey, symptom, evidence) {
+  const blackbox = getAiBlackbox_();
+  const sheet = blackbox.getSheetByName(MJ_AI.SHEETS.FAILURES);
+  if (!sheet) return;
+  const now = new Date();
+  const rows = sheet.getLastRow() > 1 ? sheet.getRange(2, 1, sheet.getLastRow() - 1, 14).getValues() : [];
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][0]) !== String(failureKey)) continue;
+    const row = i + 2;
+    sheet.getRange(row, 3).setValue(now).setNumberFormat('yyyy/mm/dd hh:mm:ss');
+    const recurrence = Number(sheet.getRange(row, 10).getValue() || 0);
+    sheet.getRange(row, 10).setValue(recurrence + 1);
+    sheet.getRange(row, 13).setValue(evidence);
+    return;
   }
-  sheet.insertRowsAfter(sheet.getMaxRows(), 100);
-  return sheet.getMaxRows() - 99;
+  sheet.appendRow([failureKey, now, now, 'AUTOMATION', symptom, 'UNKNOWN', 'Investigate before retrying identical path', 'Apps Script exception', 'Inspect execution logs/source permissions', 1, 'HIGH', 'OPEN', evidence, 'Auto-created by observer']);
+}
+
+function getAiBlackbox_() {
+  return SpreadsheetApp.openById(MJ_AI.BLACKBOX_ID);
+}
+
+function assertAiBlackbox_() {
+  const ss = getAiBlackbox_();
+  Object.keys(MJ_AI.SHEETS).forEach(function (k) {
+    const name = MJ_AI.SHEETS[k];
+    if (!ss.getSheetByName(name)) throw new Error('AI BLACKBOX missing sheet: ' + name);
+  });
+  return ss;
 }
