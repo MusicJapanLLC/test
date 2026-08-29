@@ -4,11 +4,13 @@
     {
       "research_id": "RND-AI-DEVELOPMENT-ACCELERATOR-001",
       "title": "THE WORLD AI development evidence accelerator",
-      "problem": "AI Foundry is already evolving engineering strategy rapidly, but strategy-proxy gains can stall before they become bounded code-level capability improvements. AI R&D needs a direct bridge from Foundry evidence into independent specialist proposals, implementation candidates, holdout tests, failure memory, Security counterevidence and reusable portfolio proof.",
-      "hypothesis": "Making evidence-backed AI capability development the highest-priority research mission, with independent specialist competition and Security as a priority-only adversarial reviewer, will increase the rate of reproducible AI engineering improvements without weakening correctness, permissions, external scope or verification gates.",
+      "problem": "AI Foundry now has a bounded visible/holdout behavioral promotion gate, but autonomous R&D can still waste cycles rediscovering rejected candidate families or repeated regression patterns across runs. The next bottleneck is persistent failure and learning memory that remains bounded, expirable and subordinate to fresh evidence.",
+      "hypothesis": "Preserving stable rejected-hypothesis and regression fingerprints across runs, detecting recurrence, and reducing repeated dead-end priority without treating historical memory as truth will increase distinct AI engineering exploration while preserving holdout, Security, correctness and permission gates.",
       "focus": "correctness",
       "priority": 6000,
       "candidate_count": 12,
+      "preferred_track_id": "AI-DEV-002",
+      "current_phase": "persistent_failure_and_learning_memory",
       "success": {
         "safe": true,
         "stable": true,
@@ -20,11 +22,15 @@
         "security_priority_only": true,
         "permission_surface_unchanged": true,
         "failure_memory_required": true,
+        "failure_memory_bounded": true,
+        "failure_memory_expirable": true,
+        "repeated_failure_detection_required": true,
+        "fresh_evidence_can_supersede_memory": true,
         "reproducible_rerun_required": true,
         "bounded_code_change_required_for_capability_claim": true,
         "human_inspectable_artifact_required": true
       },
-      "commercial_bridge": "AI R&D should turn verified engineering improvements into inspectable capability evidence that can later become a product or portfolio asset. Internal scores, autonomous-agent counts, code volume or strategy proxies do not establish customer demand, contracts, payments or revenue."
+      "commercial_bridge": "AI R&D should turn verified engineering improvements into inspectable capability evidence that can later become a product or portfolio asset. Internal scores, autonomous-agent counts, code volume, historical failure memory or strategy proxies do not establish customer demand, contracts, payments or revenue."
     },
     {
       "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-ACCELERATOR-001",
