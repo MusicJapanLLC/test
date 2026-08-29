@@ -17,6 +17,7 @@ if(btn&&nav){
 
 const ensureStyle=href=>{if(!document.querySelector(`link[href="${href}"]`)){const link=document.createElement('link');link.rel='stylesheet';link.href=href;document.head.appendChild(link)}};
 ensureStyle('/assets/global-fix.css');
+ensureStyle('/assets/mobile-fixes.css');
 
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
