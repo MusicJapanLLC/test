@@ -1,0 +1,22 @@
+{
+  "schema": "ai-factory-worker-registry/v1",
+  "default_branch": "claude/employee-onboarding-setup-udm86",
+  "workers": [
+    {
+      "id": "tomoki-manager",
+      "name": "TOMOKI / MANAGER",
+      "workflow": "tomoki-manager.yml",
+      "expected_minutes": 25,
+      "priority": "P0",
+      "operational_events": ["schedule", "workflow_dispatch"],
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": [],
+      "forge_allowed": false
+    }
+  ],
+  "retry_budget_per_incident": 2,
+  "boss_escalation": {
+    "unresolved_priorities": ["P0"],
+    "report_resolved_p0": true
+  }
+}
