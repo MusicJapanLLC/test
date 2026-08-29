@@ -12,6 +12,7 @@ on:
       - 'automation/world/realtime_kernel.py'
       - 'automation/world/realtime_plan.json'
       - 'automation/world/test_realtime_kernel.py'
+      - 'automation/world/test_perpetual_autonomy.py'
       - 'automation/world/self_heal_engine.py'
 
 concurrency:
@@ -42,8 +43,8 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Test realtime boundary
-        run: python -m unittest automation.world.test_realtime_kernel -v
+      - name: Test realtime and perpetual-autonomy boundaries
+        run: python -m unittest automation.world.test_realtime_kernel automation.world.test_perpetual_autonomy -v
       - name: Pulse and bounded recovery
         run: |
           python automation/world/realtime_kernel.py --plan automation/world/realtime_plan.json --json world-realtime-pulse.json --report world-realtime-pulse.md --apply
