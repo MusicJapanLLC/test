@@ -7,6 +7,32 @@
     "event_sheet": "01_WORLD_LOG",
     "legacy_sheet": "Music Japan｜AI OPERATIONS BLACKBOX / 10_THE_WORLD"
   },
+  "economy": {
+    "id": "WORLD_CREDIT",
+    "currency_name": "WORLD CREDIT",
+    "currency_code": "WLD",
+    "model": "bounded_autonomous_capitalism",
+    "constitution": "company-society/ECONOMY.md",
+    "runtime_source_of_truth": "Supabase/public.world_ledger",
+    "accounts_source": "Supabase/public.world_accounts",
+    "status_source": "Supabase/public.world_economy_dashboard",
+    "verified_reward_mode": "event_driven",
+    "daily_payday_jst": "00:10",
+    "weekly_compensation_review_jst": "Monday 00:20",
+    "weekly_policy_evolution_jst": "Monday 00:30",
+    "wealth_can_buy_authority": false,
+    "faith_contribution_is_configurable": true,
+    "faith_nonpayment_is_misconduct": false,
+    "guardrails": [
+      "evidence_before_reward",
+      "append_only_ledger",
+      "no_negative_balance",
+      "bounded_policy_change",
+      "reserve_floor",
+      "inequality_stabilizer",
+      "security_authority_not_for_sale"
+    ]
+  },
   "faith": {
     "id": "THE_COVENANT",
     "name_ja": "盟約",
@@ -100,6 +126,8 @@
     "collaboration": "ask for specific help and preserve role ownership; duplicated hidden work is not collaboration",
     "autonomy": "choose the next safe role-fit action when evidence supports it; no-op is valid when there is no useful work",
     "education": "policy gaps trigger explanation, correction, next-cycle verification, and memory",
-    "promotion": "culture compliance never replaces evidence or safety gates"
+    "promotion": "culture compliance never replaces evidence or safety gates",
+    "economy": "wealth may unlock bounded opportunity but never organizational or security authority",
+    "faith_economy": "Covenant contribution may affect faith standing and benefits; contribution is configurable and non-payment is not misconduct"
   }
 }
