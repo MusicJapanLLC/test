@@ -1,4 +1,107 @@
 {
   "version": 1,
-  "history": []
+  "updated_at": "2026-08-29T09:48:42+00:00",
+  "strategy": {
+    "population": 120,
+    "generations": 16,
+    "matches": 400,
+    "mutation_rate": 0.15,
+    "red_budget": 14,
+    "blue_budget": 14,
+    "seed": 20260829
+  },
+  "score": 192.57,
+  "evaluation": {
+    "score": 192.57,
+    "safe": true,
+    "rating_gain": 160.2,
+    "balance": 0.965,
+    "learning_signal": 1.0,
+    "reason": "safe balanced learning run"
+  },
+  "red_champion": {
+    "side": "red",
+    "rating": 1207.4,
+    "resources": 97.65658977597822,
+    "generation": 1,
+    "genome": {
+      "kind": "red",
+      "focus": {
+        "sqli": 0.06,
+        "nosqli": 0.724,
+        "xss": 0.436,
+        "csrf": 0.325,
+        "auth_bypass": 0.926,
+        "jwt_weak": 0.685,
+        "idor": 0.576,
+        "priv_esc": 0.96,
+        "ssrf": 0.642,
+        "rce": 0.121,
+        "path_trav": 0.528,
+        "deserial": 0.628,
+        "xxe": 0.423,
+        "ssti": 0.564,
+        "race_condition": 0.346,
+        "secrets_exposure": 0.824,
+        "misconfig": 0.042
+      },
+      "skill": 0.656,
+      "stealth": 0.695,
+      "aggression": 0.306
+    }
+  },
+  "blue_champion": {
+    "side": "blue",
+    "rating": 1014.7,
+    "resources": 106.50272749424806,
+    "generation": 1,
+    "genome": {
+      "kind": "blue",
+      "harden": {
+        "sqli": 0.14,
+        "nosqli": 0.605,
+        "xss": 0.507,
+        "csrf": 0.895,
+        "auth_bypass": 0.968,
+        "jwt_weak": 0.217,
+        "idor": 0.721,
+        "priv_esc": 0.982,
+        "ssrf": 0.959,
+        "rce": 0.801,
+        "path_trav": 0.816,
+        "deserial": 0.76,
+        "xxe": 0.662,
+        "ssti": 0.519,
+        "race_condition": 0.878,
+        "secrets_exposure": 0.369,
+        "misconfig": 0.395
+      },
+      "detection": 0.682,
+      "patch_speed": 0.55,
+      "coverage": 0.637
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T09:34:28+00:00",
+      "baseline_score": 199.79,
+      "best_score": 213.075,
+      "selected_score": 213.075,
+      "accepted_strategy_change": true,
+      "changes": [
+        "red_budget: 12 -> 14",
+        "blue_budget: 12 -> 14"
+      ]
+    },
+    {
+      "at": "2026-08-29T09:48:42+00:00",
+      "baseline_score": 192.57,
+      "best_score": 192.57,
+      "selected_score": 192.57,
+      "accepted_strategy_change": false,
+      "changes": [
+        "no strategy change"
+      ]
+    }
+  ]
 }
