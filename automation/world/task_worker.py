@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""GitHub-native execution bridge for THE WORLD.
+"""OIDC bridge between GitHub Actions and THE WORLD task ledger.
 
-The worker authenticates to the Supabase Edge Function with GitHub Actions OIDC,
-claims exactly one canonical ai_tasks row, and reconciles an evidence-bearing
-result. It never stores a Supabase service key in GitHub.
+No Supabase service secret is stored in GitHub. GitHub Actions obtains a short-lived
+OIDC identity token and the Edge Function verifies repository ownership before
+allowing bounded task claim/release/dispatch/reconciliation operations.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
-GATEWAY_PROTOCOL = "oidc-repository-v2"
+GATEWAY_PROTOCOL = "oidc-repository-v3"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
 
 
@@ -27,10 +27,7 @@ def _oidc_token() -> str:
         raise RuntimeError("GitHub OIDC environment is unavailable")
     sep = "&" if "?" in request_url else "?"
     url = request_url + sep + urllib.parse.urlencode({"audience": AUDIENCE})
-    req = urllib.request.Request(
-        url,
-        headers={"Authorization": f"Bearer {request_token}", "Accept": "application/json"},
-    )
+    req = urllib.request.Request(url, headers={"Authorization": f"Bearer {request_token}", "Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=20) as res:
         data = json.loads(res.read().decode("utf-8"))
     token = str(data.get("value") or "")
@@ -40,12 +37,11 @@ def _oidc_token() -> str:
 
 
 def _edge(payload: dict[str, Any]) -> dict[str, Any]:
-    token = _oidc_token()
     req = urllib.request.Request(
         EDGE_URL,
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {_oidc_token()}",
             "Content-Type": "application/json",
             "User-Agent": f"the-world-github-task-worker/{GATEWAY_PROTOCOL}",
         },
@@ -59,65 +55,74 @@ def _edge(payload: dict[str, Any]) -> dict[str, Any]:
         raise RuntimeError(f"worker gateway HTTP {exc.code}: {body}") from exc
 
 
-def claim(out: Path) -> int:
-    data = _edge({"action": "claim"})
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    task = data.get("task")
-    if not task:
-        print("NO_TASK")
-        return 0
-    print(f"CLAIMED {task.get('id')} {task.get('title')}")
-    return 0
+def _write(path: str, data: dict[str, Any]) -> None:
+    p = Path(path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def finish(claim_path: Path, result_path: Path, success: bool, error: str | None) -> int:
-    claim_data = json.loads(claim_path.read_text(encoding="utf-8"))
-    task = claim_data.get("task") or {}
-    worker = str(claim_data.get("worker") or "")
-    task_id = str(task.get("id") or "")
-    if not task_id or not worker:
-        raise RuntimeError("claim file does not contain task/worker identity")
-    if result_path.exists():
-        result = json.loads(result_path.read_text(encoding="utf-8"))
-    else:
-        result = {
-            "schema": "the-world-task-result/v1",
-            "status": "FAILED",
-            "summary": "Worker produced no result document.",
-            "verified": False,
-            "produced_change": False,
-            "evidence": [],
-        }
-        success = False
-    data = _edge(
-        {
-            "action": "finish",
-            "task_id": task_id,
-            "worker": worker,
-            "success": bool(success),
-            "result": result,
-            "error": error,
-        }
-    )
-    print(json.dumps(data, ensure_ascii=False))
-    return 0 if data.get("finished") else 1
+def _read(path: str) -> dict[str, Any]:
+    return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
 def main() -> int:
     p = argparse.ArgumentParser()
     sub = p.add_subparsers(dest="cmd", required=True)
-    pc = sub.add_parser("claim")
-    pc.add_argument("--out", required=True)
-    pf = sub.add_parser("finish")
-    pf.add_argument("--claim", required=True)
-    pf.add_argument("--result", required=True)
-    pf.add_argument("--success", action="store_true")
-    pf.add_argument("--error", default=None)
+    for name in ("claim", "review"):
+        q = sub.add_parser(name)
+        q.add_argument("--out", required=True)
+    q = sub.add_parser("release")
+    q.add_argument("--claim", required=True)
+    q.add_argument("--delay", type=int, default=15)
+    q.add_argument("--reason", default="execution lane busy")
+    q = sub.add_parser("dispatched")
+    q.add_argument("--claim", required=True)
+    q.add_argument("--workflow", required=True)
+    q.add_argument("--run-id", type=int, required=True)
+    q.add_argument("--run-url", required=True)
+    q = sub.add_parser("finish-review")
+    q.add_argument("--review", required=True)
+    q.add_argument("--result", required=True)
+    q.add_argument("--success", action="store_true")
+    q.add_argument("--error", default=None)
     args = p.parse_args()
-    if args.cmd == "claim":
-        return claim(Path(args.out))
-    return finish(Path(args.claim), Path(args.result), args.success, args.error)
+
+    if args.cmd in {"claim", "review"}:
+        data = _edge({"action": args.cmd})
+        _write(args.out, data)
+        task = data.get("task")
+        print("NO_TASK" if not task else f"{args.cmd.upper()} {task.get('id')} {task.get('title')}")
+        return 0
+
+    if args.cmd == "release":
+        c = _read(args.claim)
+        t = c.get("task") or {}
+        data = _edge({
+            "action": "release", "task_id": t.get("id"), "worker": c.get("worker"),
+            "delay_minutes": args.delay, "reason": args.reason,
+        })
+        print(json.dumps(data, ensure_ascii=False))
+        return 0 if data.get("released") else 1
+
+    if args.cmd == "dispatched":
+        c = _read(args.claim)
+        t = c.get("task") or {}
+        data = _edge({
+            "action": "dispatched", "task_id": t.get("id"), "worker": c.get("worker"),
+            "workflow": args.workflow, "run_id": args.run_id, "run_url": args.run_url,
+        })
+        print(json.dumps(data, ensure_ascii=False))
+        return 0 if data.get("marked") else 1
+
+    review = _read(args.review)
+    t = review.get("task") or {}
+    result = _read(args.result)
+    data = _edge({
+        "action": "finish_review", "task_id": t.get("id"), "success": bool(args.success),
+        "result": result, "error": args.error,
+    })
+    print(json.dumps(data, ensure_ascii=False))
+    return 0 if data.get("finished") else 1
 
 
 if __name__ == "__main__":
