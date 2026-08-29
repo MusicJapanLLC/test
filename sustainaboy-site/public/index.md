@@ -1,3 +1,11 @@
+---
+title: SUSTAINABOY WORKS（サスティナボーイワークス）
+description: 頭と心を整理し、現在地を確認して次の小さな一手を自分で選ぶニュートラル思考整理ワーク。
+canonical: https://sustainaboy-works.onrender.com/
+last_updated: 2026-08-30
+language: ja
+---
+
 # SUSTAINABOY WORKS
 
 > 頭と心の大掃除。次の1ミリを、自分で選ぶ。
@@ -36,3 +44,7 @@ SUSTAINABOY WORKS（サスティナボーイワークス／SBW）は、頭の中
 - [考えすぎで頭がいっぱいな時の整理](https://sustainaboy-works.onrender.com/overthinking/)
 - [ブランドについて](https://sustainaboy-works.onrender.com/about/)
 - [ストーリー](https://sustainaboy-works.onrender.com/story/)
+
+## Sitemap
+
+See the full [sitemap](https://sustainaboy-works.onrender.com/sitemap.md) for all pages.
