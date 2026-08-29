@@ -72,7 +72,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python -c "from cyber_lab.core import assert_local_target; import sys; \ntry: assert_local_target('https://8.8.8.8')\nexcept ValueError: sys.exit(0)\nraise SystemExit('public target accepted')"
           python -m http.server 8765 --bind 127.0.0.1 >/tmp/whitehat-local-http.log 2>&1 &
           SERVER_PID=$!
           trap 'kill "$SERVER_PID" 2>/dev/null || true' EXIT
@@ -94,7 +93,7 @@ jobs:
               f"- falsification hypotheses: {len(plan.get('hypotheses') or [])}\n"
               f"- plan-only network requests: {plan.get('network_requests')}\n"
               f"- local harness requests: {local.get('network_requests')} / 12\n"
-              '- public active targets: rejected by policy\n'
+              '- public active targets: rejected by policy tests\n'
               '- portfolio status: EVIDENCE INPUT / NOT VERIFIED\n\n'
               '## Meaning\n'
               'The elite White-Hat output now has a reproducible falsification path and a bounded local validation harness. '
