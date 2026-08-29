@@ -2,15 +2,15 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-08-30T04:09:04+09:00`
+Updated JST: `2026-08-30T04:29:28+09:00`
 
 ## TODAY'S PRIMARY BET
-- `SEC-PORT-010` — LLM Security Evaluation Harness
+- `SEC-PORT-009` — AI Agent Permission Boundary Lab
 - status: **BUILDING**
 - evidence coverage: **100%**
 - white-hat candidates: **0**
-- Senju focus: **learning**
-- selection: `ROTATED_AFTER_STAGNATION:SEC-PORT-009->SEC-PORT-010`
+- Senju focus: **robustness**
+- selection: `HIGHEST_EVIDENCE_CLOSURE_SCORE`
 - next material action: Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.
 
 ## THREE-LANE R&D
