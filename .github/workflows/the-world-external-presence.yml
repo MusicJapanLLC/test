@@ -49,19 +49,13 @@ jobs:
           import json
           from pathlib import Path
           d=json.load(open('world-citizens.json', encoding='utf-8'))
-          lines=[
-              '# THE WORLD — Canonical Citizens',
-              '',
-              f"- population: **{d.get('population', 0)}**",
-              '- source: `Supabase/public.world_reality_directory`',
-              '',
-          ]
+          lines=['# THE WORLD — Canonical Citizens','',f"- population: **{d.get('population', 0)}**",'- source: `Supabase/public.world_reality_directory`','']
           for c in d.get('citizens', []):
               lines.append(f"- `{c.get('citizen_id')}` — {c.get('display_name')} / {c.get('role')} / {c.get('group')}")
           Path('world-citizens.md').write_text('\n'.join(lines)+'\n', encoding='utf-8')
           PY
 
-      - name: Issue one external-world mission to every canonical citizen
+      - name: Issue one LIMITLESS external-world mission to every canonical citizen
         run: |
           set -euo pipefail
           python outside-world/external_presence.py \
@@ -76,23 +70,24 @@ jobs:
       - name: Verify external presence invariants
         run: python -m unittest outside-world/test_external_presence.py -v
 
-      - name: Dispatch read-only missions to authorized external executor
+      - name: Dispatch bounded read and authorized-write missions to external executor
         if: success() && env.WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL != ''
         run: |
           python - <<'PY'
           import json, os, urllib.request
           plan=json.load(open('outside-world-presence-plan.json', encoding='utf-8'))
           payload={
-              'schema':'the-world-external-mission-batch/v1',
+              'schema':'the-world-external-mission-batch/v2',
               'generated_at':plan['generated_at'],
               'principle':plan['principle'],
+              'execution_contract':{
+                  'public_or_authorized_reads':'ALLOW_AUTO',
+                  'writes':'DRAFT_ONLY_UNTIL_ADAPTER_CONFIRMS_REQUIRED_GATE',
+                  'never_send_credentials_in_payload':True,
+              },
               'missions':plan['missions'],
           }
-          req=urllib.request.Request(
-              os.environ['WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL'],
-              data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-              headers={'Content-Type':'application/json'},
-          )
+          req=urllib.request.Request(os.environ['WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL'],data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
           with urllib.request.urlopen(req, timeout=15) as res:
               if res.status < 200 or res.status >= 300:
                   raise RuntimeError(f'External executor HTTP {res.status}')
@@ -110,18 +105,8 @@ jobs:
               counts[m['lane']]=counts.get(m['lane'],0)+1
           lanes=' / '.join(f'{k}:{v}' for k,v in sorted(counts.items()))
           executor='CONNECTED' if os.environ.get('WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL') else 'WAITING_FOR_EXECUTOR_SECRET'
-          text=(
-              f"*THE WORLD / EXTERNAL PRESENCE*\n"
-              f"citizens={plan['profiles_count']} / missions={plan['missions_count']}\n"
-              f"lanes={lanes}\n"
-              f"executor={executor}\n"
-              f"principle={plan['principle']}"
-          )
-          req=urllib.request.Request(
-              os.environ['RND_SLACK_WEBHOOK_URL'],
-              data=json.dumps({'text':text}, ensure_ascii=False).encode('utf-8'),
-              headers={'Content-Type':'application/json'},
-          )
+          text=(f"*THE WORLD / LIMITLESS EXTERNAL PRESENCE*\n" f"citizens={plan['profiles_count']} / missions={plan['missions_count']} / reads={plan.get('read_missions_count',0)} / write_intents={plan.get('write_missions_count',0)}\n" f"lanes={lanes}\n" f"executor={executor}\n" f"principle={plan['principle']}")
+          req=urllib.request.Request(os.environ['RND_SLACK_WEBHOOK_URL'],data=json.dumps({'text':text}, ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
           with urllib.request.urlopen(req, timeout=10) as res:
               print('slack status', res.status)
           PY
