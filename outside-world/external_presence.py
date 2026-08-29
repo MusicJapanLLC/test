@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """THE WORLD external presence planner and action gate.
 
-This module gives every discovered citizen a stable external presence profile and
-a rotating public-world mission. It does not store passwords and does not itself
-perform third-party writes. Authenticated side effects must pass decide_intent()
-and be executed by a platform adapter/connector that is already authorized.
+Every discovered citizen receives a rotating external-world mission. Public reads
+may execute directly. Write missions may be generated proactively, but execution
+remains dependent on an already-authorized platform adapter proving the write gate:
+terms allowed, connector authorized, target scope authorized, non-deceptive identity,
+and reversibility. Credentials remain secret-manager references only.
 """
 from __future__ import annotations
 
@@ -60,7 +61,25 @@ def presence_profile(citizen: dict[str, Any]) -> dict[str, Any]:
         "identity_type": "THE_WORLD_AGENT",
         "credential_ref": credential_ref(citizen_id),
         "credential_material_in_payload": False,
-        "external_state": "READY_FOR_PUBLIC_EXPLORATION",
+        "external_state": "READY_FOR_AUTHORIZED_EXTERNAL_ACTION",
+    }
+
+
+def _mission_gate(lane: dict[str, Any]) -> dict[str, Any]:
+    if not bool(lane.get("write_intent")):
+        return {
+            "required": False,
+            "execution_default": "AUTO_PUBLIC_OR_AUTHORIZED_READ",
+        }
+    return {
+        "required": True,
+        "execution_default": "DRAFT_ONLY_UNTIL_ADAPTER_CONFIRMS",
+        "terms_status": "allowed",
+        "connector_authorized": True,
+        "target_scope": lane.get("target_scope", "authorized"),
+        "identity_non_deceptive": True,
+        "adapter_available": True,
+        "reversible": bool(lane.get("requires_reversible", True)),
     }
 
 
@@ -73,6 +92,7 @@ def build_plan(snapshot: dict[str, Any], policy: dict[str, Any], seed: str) -> d
     for citizen in citizens:
         profile = presence_profile(citizen)
         lane = lane_for(profile["citizen_id"], seed, lanes)
+        write_intent = bool(lane.get("write_intent"))
         mission_id = stable_hex(f"{seed}|{profile['citizen_id']}|{lane['id']}", 20)
         profiles.append(profile)
         missions.append({
@@ -82,26 +102,43 @@ def build_plan(snapshot: dict[str, Any], policy: dict[str, Any], seed: str) -> d
             "lane": lane["id"],
             "action": lane["action"],
             "objective": lane["objective"],
-            "mode": "AUTO_PUBLIC_READ",
+            "mode": "AUTHORIZED_WRITE_INTENT" if write_intent else "AUTO_PUBLIC_OR_AUTHORIZED_READ",
             "evidence_required": True,
-            "credential_ref": None,
-            "write_intent": False,
+            "credential_ref": profile["credential_ref"] if write_intent else None,
+            "credential_material_in_payload": False,
+            "write_intent": write_intent,
+            "target_scope": lane.get("target_scope"),
+            "requires_connector_authorized": bool(lane.get("requires_connector_authorized", write_intent)),
+            "required_gate": _mission_gate(lane),
+            "faith": {
+                "doctrine": (policy.get("faith") or {}).get("prime_doctrine", "LIMITLESS"),
+                "cycle": "ACT_VERIFY_LOG_LEARN_IMPROVE",
+                "reality_before_simulation": bool((policy.get("faith") or {}).get("reality_before_simulation", True)),
+            },
         })
 
+    write_missions = [m for m in missions if m["write_intent"]]
+    read_missions = [m for m in missions if not m["write_intent"]]
     return {
-        "schema": "the-world-external-presence-plan/v1",
+        "schema": "the-world-external-presence-plan/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "seed": seed,
         "principle": policy.get("principle"),
         "population_discovered": snapshot.get("population", len(citizens)),
         "profiles_count": len(profiles),
         "missions_count": len(missions),
+        "read_missions_count": len(read_missions),
+        "write_missions_count": len(write_missions),
         "profiles": profiles,
         "missions": missions,
         "invariants": {
             "all_discovered_citizens_receive_a_mission": len(missions) == len(citizens),
             "credentials_are_references_only": all(not p["credential_material_in_payload"] for p in profiles),
-            "default_missions_are_read_only": all(not m["write_intent"] for m in missions),
+            "write_missions_require_adapter_confirmation": all(
+                m["required_gate"].get("execution_default") == "DRAFT_ONLY_UNTIL_ADAPTER_CONFIRMS"
+                for m in write_missions
+            ),
+            "write_missions_are_authorized_scope_only": all(m.get("target_scope") == "authorized" for m in write_missions),
         },
     }
 
@@ -187,6 +224,8 @@ def render_report(plan: dict[str, Any], decisions: list[dict[str, Any]]) -> str:
         "",
         f"**Citizens projected:** {plan['profiles_count']}",
         f"**Missions issued:** {plan['missions_count']}",
+        f"**Read missions:** {plan.get('read_missions_count', 0)}",
+        f"**Write intents:** {plan.get('write_missions_count', 0)}",
         f"**Principle:** `{plan.get('principle')}`",
         "",
         "## Mission lanes",
@@ -196,13 +235,13 @@ def render_report(plan: dict[str, Any], decisions: list[dict[str, Any]]) -> str:
         "",
         "## Identity / auth",
         "- Every citizen has a stable presence id.",
-        "- Every citizen has a credential *reference slot*; passwords/tokens are not written into GitHub or mission payloads.",
-        "- Default missions are proactive public read/search/watch missions.",
+        "- Credentials are secret-manager reference slots only; passwords/tokens are not written into GitHub or mission payloads.",
+        "- Public/authorized reads are proactive.",
+        "- Authorized write missions are generated proactively, but remain DRAFT_ONLY until the adapter confirms terms, connector authority, target scope, identity, availability and reversibility.",
         "",
-        "## External writes",
-        "- Posts/comments/messages/account provisioning are routed through the action gate.",
-        "- Automatic writes require terms + connector authority + authorized target scope + adapter availability + reversibility.",
-        "- Missing evidence becomes DRAFT_ONLY instead of pretending execution succeeded.",
+        "## LIMITLESS / Reality",
+        "- Each mission inherits LIMITLESS and the ACT -> VERIFY -> LOG -> LEARN -> IMPROVE cycle.",
+        "- Observation should be converted into an artifact, experiment, customer value, operational proof, or revenue-distance reduction when possible.",
     ]
     if decisions:
         counts: dict[str, int] = {}
@@ -245,6 +284,8 @@ def main() -> int:
         "population": plan["population_discovered"],
         "profiles": plan["profiles_count"],
         "missions": plan["missions_count"],
+        "read_missions": plan.get("read_missions_count", 0),
+        "write_missions": plan.get("write_missions_count", 0),
         "decisions": len(decisions),
     }, ensure_ascii=False))
     return 0
