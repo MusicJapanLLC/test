@@ -1,0 +1,151 @@
+name: TOMOKI - MANAGER
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '57 * * * *'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/tomoki-manager.yml'
+      - '.github/agents/tomoki-manager.agent.md'
+      - 'tomoki-agents/manager.py'
+      - 'tomoki-agents/company.json'
+      - 'tomoki-agents/prompts/manager.md'
+
+concurrency:
+  group: tomoki-manager
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+  issues: read
+  pull-requests: read
+  security-events: read
+  copilot-requests: write
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+
+      - name: Collect workforce evidence and repair mechanical stalls
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOMOKI_MANAGER_REF: ${{ github.event.repository.default_branch }}
+          TOMOKI_MANAGER_MAX_ACTIONS: '3'
+        run: |
+          python tomoki-agents/manager.py collect \
+            --apply-repairs \
+            --output tomoki-manager-snapshot.json \
+            --report tomoki-manager-report.md
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot@1.0.80
+
+      - name: Manager judgment
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f tomoki-manager-plan.json
+          copilot -p "$(cat tomoki-agents/prompts/manager.md)" \
+            -s --allow-tool=write --no-ask-user > /tmp/tomoki-manager-copilot.log 2>&1 || true
+          if [[ ! -f tomoki-manager-plan.json ]]; then
+            cat > tomoki-manager-plan.json <<'JSON'
+          {
+            "schema": "tomoki-manager-plan/v1",
+            "summary": "Manager judgment produced no valid plan; deterministic repair results only are retained.",
+            "actions": [],
+            "ceo_escalation": false,
+            "material_outcome": false,
+            "business_effect": "",
+            "next_improvement": "Re-run manager judgment on the next cycle.",
+            "owner_action": "NONE"
+          }
+          JSON
+          fi
+
+      - name: Validate and apply bounded delegation plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOMOKI_MANAGER_REF: ${{ github.event.repository.default_branch }}
+          TOMOKI_MANAGER_MAX_ACTIONS: '3'
+        run: |
+          python tomoki-agents/manager.py apply-plan \
+            --snapshot tomoki-manager-snapshot.json \
+            --plan tomoki-manager-plan.json \
+            --apply-actions \
+            --output tomoki-manager-apply.json \
+            --report tomoki-manager-report.md
+
+      - name: Upload manager evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tomoki-manager-cycle
+          path: |
+            tomoki-manager-snapshot.json
+            tomoki-manager-plan.json
+            tomoki-manager-apply.json
+            tomoki-manager-report.md
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Report operations to TOMOKI Slack
+        if: always()
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ ! -f tomoki-manager-report.md ]]; then
+            printf 'Manager failed before report generation.\n' > tomoki-manager-report.md
+          fi
+          python tomoki-agents/slack_post.py \
+            --agent MANAGER \
+            --file tomoki-manager-report.md \
+            --status "${{ job.status }}"
+
+      - name: Escalate only material or unresolved outcomes to CEO layer
+        if: always()
+        env:
+          CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+        run: |
+          if [[ ! -f tomoki-manager-apply.json ]]; then exit 0; fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('tomoki-manager-apply.json').read_text(encoding='utf-8'))
+          if not (result.get('ceo_escalation') or result.get('material_outcome')):
+              raise SystemExit(0)
+
+          event = {
+              "schema": "ai-factory-ceo-event/v1",
+              "project": "TOMOKI Autonomous Company",
+              "state": "BLOCKED" if result.get("ceo_escalation") and not result.get("material_outcome") else "RUNNING",
+              "counts": {},
+              "priorities": {},
+              "business_effect": result.get("business_effect") or result.get("summary") or "内部管理ループで重要な変化を検出",
+              "next_improvement": result.get("next_improvement") or "Managerが次の内部改善を継続",
+              "owner_action": result.get("owner_action") or "NONE",
+          }
+          Path('tomoki-manager-ceo-event.json').write_text(
+              json.dumps(event, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+          if [[ -f tomoki-manager-ceo-event.json ]]; then
+            python automation/reporting/ceo_report.py tomoki-manager-ceo-event.json
+          fi
