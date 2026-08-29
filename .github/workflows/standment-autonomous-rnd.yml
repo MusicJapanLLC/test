@@ -1,0 +1,59 @@
+name: Standment Autonomous Security R&D
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 0 * * *" # daily, 09:17 JST
+
+permissions:
+  contents: write
+
+concurrency:
+  group: standment-autonomous-rnd
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate R&D system
+        run: python standment-rnd/test_rnd.py
+
+      - name: Run daily defensive R&D
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLACK_RND_WEBHOOK_URL: ${{ secrets.SLACK_RND_WEBHOOK_URL }}
+        run: python standment-rnd/run_daily_rnd.py
+
+      - name: Rebuild security portfolio
+        run: python standment-rnd/portfolio_builder.py
+
+      - name: Show generated summary
+        run: |
+          echo "--- portfolio ---"
+          sed -n '1,120p' STANDMENT_SECURITY_PORTFOLIO.md
+          echo "--- git diff ---"
+          git status --short
+
+      - name: Persist R&D memory and portfolio
+        run: |
+          git config user.name "standment-rnd-bot"
+          git config user.email "standment-rnd-bot@users.noreply.github.com"
+          git add standment-rnd STANDMENT_SECURITY_PORTFOLIO.md
+          if git diff --cached --quiet; then
+            echo "No R&D state changes to commit"
+            exit 0
+          fi
+          git commit -m "chore(rnd): daily Standment security research"
+          git push
