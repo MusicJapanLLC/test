@@ -71,7 +71,7 @@ jobs:
             exit 1
           fi
 
-      - name: Validate workflow trust boundaries and privileged lanes
+      - name: Validate privileged workflow blast radii
         shell: bash
         run: |
           set -euo pipefail
@@ -81,8 +81,11 @@ jobs:
 
           root = Path('.github/workflows')
           workflows = {p.name: p.read_text(encoding='utf-8') for p in root.glob('*.y*ml')}
+          write_re = re.compile(
+              r'(?m)^\s+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses|pages|id-token|copilot-requests):\s*write\s*$'
+          )
 
-          unsafe_tokens = [
+          unsafe = [
               'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
               'runs-on: self-hosted', 'permissions: write-all', 'write-all',
               'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
@@ -90,30 +93,14 @@ jobs:
           for name, body in workflows.items():
               if name == 'security-guard.yml':
                   continue
-              for token in unsafe_tokens:
+              for token in unsafe:
                   if token in body:
                       raise SystemExit(f'{name}: forbidden workflow capability: {token}')
 
-          privileged = {
-              'senju-autonomous-improver.yml',
-              'tomoki-forge.yml',
-              'tomoki-manager.yml',
-              'ai-factory-boss.yml',
-              'the-world-realtime-kernel.yml',
-              'the-core-autonomous-director.yml',
-              'the-world-task-worker.yml',
-              'pages.yml',
-          }
-          oidc_allowed = {'the-world-task-worker.yml', 'pages.yml'}
-          write_re = re.compile(r'(?m)^\s+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses|pages|id-token):\s*write\s*$')
-          for name, body in workflows.items():
-              writes = [(m.group(1), m.group(0).strip()) for m in write_re.finditer(body)]
-              if writes and name not in privileged and name != 'security-guard.yml':
-                  raise SystemExit(f'{name}: write permission outside validated privileged lane: {writes}')
-              if any(kind == 'id-token' for kind, _ in writes) and name not in oidc_allowed:
-                  raise SystemExit(f'{name}: OIDC id-token write is outside the explicit allowlist')
+          def writes(body: str) -> set[str]:
+              return {m.group(1) for m in write_re.finditer(body)}
 
-          def require(name: str, required: list[str], forbidden: list[str]) -> str:
+          def require(name: str, required: list[str], forbidden: list[str] = []) -> str:
               body = workflows.get(name, '')
               if not body:
                   return ''
@@ -125,76 +112,32 @@ jobs:
                       raise SystemExit(f'{name}: contains forbidden capability: {item}')
               return body
 
-          common_forbidden = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'packages: write', 'deployments: write',
-              'checks: write', 'statuses: write', 'security-events: write',
-              'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
-          ]
+          # GitHub Pages is a legitimate OIDC use. Validate it by capability rather than filename
+          # so every current/future Pages deployment gets the same bounded policy automatically.
+          page_lanes = set()
+          for name, body in workflows.items():
+              w = writes(body)
+              if 'pages' not in w:
+                  continue
+              page_lanes.add(name)
+              if w - {'pages', 'id-token'}:
+                  raise SystemExit(f'{name}: Pages lane has unrelated write permissions: {sorted(w)}')
+              for item in [
+                  'contents: read', 'pages: write', 'id-token: write', 'name: github-pages',
+                  'actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128',
+              ]:
+                  if item not in body:
+                      raise SystemExit(f'{name}: Pages lane missing invariant: {item}')
+              if 'pull_request:' in body and "if: github.event_name != 'pull_request'" not in body:
+                  raise SystemExit(f'{name}: PR-triggered Pages workflow must suppress deployment on PR events')
+              if 'push:' in body and 'paths:' not in body:
+                  raise SystemExit(f'{name}: auto Pages deployment must be path-scoped')
 
-          senju = require(
-              'senju-autonomous-improver.yml',
-              ['contents: write', 'actions: read', 'workflow_dispatch:', 'schedule:',
-               'persist-credentials: false', 'senju/state/champion.json',
-               'senju/state/strategy.json', 'senju/state/last-evolution-summary.json',
-               'senju/state/last-evolution-plan.md', 'CURRENT_BASE_SHA=', 'force=false'],
-              common_forbidden + ['issues: write', 'pull-requests: write', 'models: write', 'id-token: write'],
-          )
-          if senju:
-              allowed = {
-                  'senju/state/champion.json',
-                  'senju/state/strategy.json',
-                  'senju/state/last-evolution-summary.json',
-                  'senju/state/last-evolution-plan.md',
-              }
-              observed = {
-                  line.strip().split()[-1]
-                  for line in senju.splitlines()
-                  if line.strip().startswith('put_file ')
-              }
-              if observed != allowed:
-                  raise SystemExit(f'Senju autonomous write allowlist mismatch: {sorted(observed)}')
-
-          forge = require(
-              'tomoki-forge.yml',
-              ['contents: write', 'pull-requests: write', 'copilot-requests: write',
-               'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
-               '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
-               'python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
-               'git add -A -- sales-command-30', 'gh auth setup-git', 'gh pr create'],
-              common_forbidden + ['issues: write', 'id-token: write'],
-          )
-          if forge:
-              copilot_lines = [x.strip() for x in forge.splitlines() if x.strip().startswith('copilot -p ')]
-              if len(copilot_lines) != 1:
-                  raise SystemExit('TOMOKI FORGE must have exactly one Copilot execution line')
-              if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
-                  raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
-
-          require(
-              'tomoki-manager.yml',
-              ['contents: read', 'actions: write', 'issues: read', 'pull-requests: read',
-               'security-events: read', 'copilot-requests: write', 'workflow_dispatch:',
-               'schedule:', 'persist-credentials: false', 'TOMOKI_MANAGER_MAX_ACTIONS:',
-               "TOMOKI_MANAGER_MAX_ACTIONS: '3'", 'apply-plan', '--apply-actions'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
-
-          require(
-              'ai-factory-boss.yml',
-              ['contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-               'persist-credentials: false', 'boss_gate.py', 'ceo_report.py'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
-
-          require(
-              'the-world-realtime-kernel.yml',
-              ['contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-               "cron: '*/5 * * * *'", 'persist-credentials: false',
-               'automation/world/realtime_kernel.py', '--apply',
-               'WORLD_REALTIME_REF:', 'world-realtime-pulse.json'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
+          # OIDC is allowed only for the resident worker or validated Pages lanes.
+          oidc_lanes = {name for name, body in workflows.items() if 'id-token' in writes(body)}
+          unexpected_oidc = oidc_lanes - page_lanes - {'the-world-task-worker.yml'}
+          if unexpected_oidc:
+              raise SystemExit(f'Unexpected OIDC write lanes: {sorted(unexpected_oidc)}')
 
           task_worker = require(
               'the-world-task-worker.yml',
@@ -202,53 +145,88 @@ jobs:
                "cron: '*/5 * * * *'", 'persist-credentials: false',
                'automation/world/task_worker.py', 'gh workflow run',
                'Claim one personality-linked task', 'Reconcile downstream GitHub evidence'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write',
-                                  'copilot-requests: write', '$' + '{{ secrets.'],
+              ['contents: write', 'issues: write', 'pull-requests: write', 'packages: write',
+               'deployments: write', 'pages: write'],
           )
           if task_worker:
+              if writes(task_worker) != {'actions', 'id-token'}:
+                  raise SystemExit(f'the-world-task-worker.yml: unexpected writes {sorted(writes(task_worker))}')
+              # Build the marker in pieces so GitHub does not interpret it inside this policy script.
+              secrets_marker = '$' + '{{' + ' secrets.'
+              if secrets_marker in task_worker:
+                  raise SystemExit('the-world-task-worker.yml: long-lived Actions secrets are forbidden')
               client = Path('automation/world/task_worker.py').read_text(encoding='utf-8')
               for item in [
                   'AUDIENCE = "the-world-worker"',
                   'GATEWAY_PROTOCOL = "oidc-repository-v4-audited"',
-                  'ACTIONS_ID_TOKEN_REQUEST_URL',
-                  'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
-                  'Authorization": f"Bearer {_oidc_token()}"',
+                  'ACTIONS_ID_TOKEN_REQUEST_URL', 'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
                   'method="POST"',
                   'https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker',
               ]:
                   if item not in client:
                       raise SystemExit(f'task_worker.py: missing OIDC/gateway invariant: {item}')
 
-          pages = require(
-              'pages.yml',
-              ['workflow_dispatch:', 'contents: read', 'pages: write', 'id-token: write',
-               'persist-credentials: false', 'name: github-pages',
-               'actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b',
-               'actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b',
-               'actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128'],
-              common_forbidden + ['contents: write', 'actions: write', 'issues: write',
-                                  'pull-requests: write', 'packages: write'],
-          )
-          if pages:
-              for forbidden_trigger in ['schedule:', 'push:', 'pull_request:']:
-                  if forbidden_trigger in pages:
-                      raise SystemExit(f'pages.yml: backup deployment must remain manual-only: {forbidden_trigger}')
+          explicit = {
+              'senju-autonomous-improver.yml': {'contents'},
+              'tomoki-forge.yml': {'contents', 'pull-requests', 'copilot-requests'},
+              'tomoki-manager.yml': {'actions', 'copilot-requests'},
+              'ai-factory-boss.yml': {'actions'},
+              'the-world-realtime-kernel.yml': {'actions'},
+              'the-core-autonomous-director.yml': {'actions', 'copilot-requests'},
+          }
+          for name, expected in explicit.items():
+              body = workflows.get(name, '')
+              if not body:
+                  continue
+              actual = writes(body)
+              if actual != expected:
+                  raise SystemExit(f'{name}: privileged write set drifted: expected={sorted(expected)} actual={sorted(actual)}')
+              for invariant in ['workflow_dispatch:', 'schedule:', 'persist-credentials: false']:
+                  if invariant not in body:
+                      raise SystemExit(f'{name}: missing privileged-lane invariant: {invariant}')
 
-          director = require(
-              'the-core-autonomous-director.yml',
-              ['contents: read', 'actions: write', 'copilot-requests: write',
-               'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
-               '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
-               'automation/world/core_director.py', '--apply', '--allow-tool=write',
-               '--no-ask-user', 'core-director-plan.json'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
+          # Preserve the tightest file-level restrictions on autonomous code writers.
+          senju = workflows.get('senju-autonomous-improver.yml', '')
+          if senju:
+              for item in [
+                  'senju/state/champion.json', 'senju/state/strategy.json',
+                  'senju/state/last-evolution-summary.json', 'senju/state/last-evolution-plan.md',
+                  'CURRENT_BASE_SHA=', 'force=false',
+              ]:
+                  if item not in senju:
+                      raise SystemExit(f'senju-autonomous-improver.yml: missing invariant: {item}')
+              allowed = {
+                  'senju/state/champion.json', 'senju/state/strategy.json',
+                  'senju/state/last-evolution-summary.json', 'senju/state/last-evolution-plan.md',
+              }
+              observed = {
+                  line.strip().split()[-1] for line in senju.splitlines()
+                  if line.strip().startswith('put_file ')
+              }
+              if observed != allowed:
+                  raise SystemExit(f'Senju autonomous write allowlist mismatch: {sorted(observed)}')
+
+          forge = workflows.get('tomoki-forge.yml', '')
+          if forge:
+              for item in ['python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
+                           'git add -A -- sales-command-30', 'gh pr create']:
+                  if item not in forge:
+                      raise SystemExit(f'tomoki-forge.yml: missing bounded-writer invariant: {item}')
+              copilot_lines = [x.strip() for x in forge.splitlines() if x.strip().startswith('copilot -p ')]
+              if len(copilot_lines) != 1 or '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
+                  raise SystemExit('TOMOKI FORGE Copilot permissions drifted')
+
+          director = workflows.get('the-core-autonomous-director.yml', '')
           if director:
               copilot_lines = [x.strip() for x in director.splitlines() if x.strip().startswith('copilot -p ')]
-              if len(copilot_lines) != 1:
-                  raise SystemExit('THE CORE Director must have exactly one Copilot execution line')
-              if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
-                  raise SystemExit('THE CORE Director Copilot may write its plan but may not receive autonomous shell permission')
+              if len(copilot_lines) != 1 or '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
+                  raise SystemExit('THE CORE Director Copilot permissions drifted')
+
+          # Anything else with repository-affecting writes is denied by default.
+          known = set(explicit) | page_lanes | {'the-world-task-worker.yml', 'security-guard.yml'}
+          unknown = {name: sorted(writes(body)) for name, body in workflows.items() if writes(body) and name not in known}
+          if unknown:
+              raise SystemExit(f'Unclassified privileged workflows: {unknown}')
           PY
 
       - name: Validate TOMOKI FORGE file policy remains bounded
