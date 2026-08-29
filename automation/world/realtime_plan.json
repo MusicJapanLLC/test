@@ -9,10 +9,10 @@
   "repair_exclude_workflows": ["tomoki-forge.yml"],
   "workers": [
     {"name":"THE_CORE_DIRECTOR","workflow":"the-core-autonomous-director.yml","stale_minutes":75,"director_min_interval_minutes":30,"priority":110,"autostart":true},
+    {"name":"RND_SENJU_COUPLED","workflow":"rnd-senju-coupled-loop.yml","stale_minutes":90,"director_min_interval_minutes":45,"priority":108,"autostart":true},
     {"name":"TOMOKI_MANAGER","workflow":"tomoki-manager.yml","stale_minutes":25,"director_min_interval_minutes":20,"priority":105,"autostart":true},
     {"name":"TOMOKI_FORGE","workflow":"tomoki-forge.yml","stale_minutes":110,"director_min_interval_minutes":60,"priority":102,"autostart":true},
     {"name":"BOSS_WATCHDOG","workflow":"ai-factory-boss.yml","stale_minutes":45,"director_min_interval_minutes":30,"priority":100,"autostart":true},
-    {"name":"RND_SENJU_COUPLED","workflow":"rnd-senju-coupled-loop.yml","stale_minutes":150,"director_min_interval_minutes":60,"priority":96,"autostart":true},
     {"name":"SENJU_AUTONOMOUS_IMPROVER","workflow":"senju-autonomous-improver.yml","stale_minutes":300,"director_min_interval_minutes":120,"priority":94,"autostart":true},
     {"name":"TOMOKI_SKEPTIC","workflow":"tomoki-skeptic.yml","stale_minutes":110,"director_min_interval_minutes":60,"priority":88,"autostart":true},
     {"name":"TOMOKI_HOUND","workflow":"tomoki-hound.yml","stale_minutes":110,"director_min_interval_minutes":60,"priority":86,"autostart":true},
