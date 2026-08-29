@@ -53,7 +53,7 @@ jobs:
           rm -rf /tmp/tomoki-prev && mkdir -p /tmp/tomoki-prev
           PREV_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow 'TOMOKI - SKEPTIC' --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
           if [[ -n "$PREV_RUN" ]]; then
-            gh run download "$PREV_RUN" --repo "$GITHUB_REPOSITORY" --name tomoki-skeptic-memory --dir /tmp/tomoki-prev >/dev/null 2>&1 || true
+            gh run download "$PREV_RUN" --repo "$GITHUB_REPOSITORY" --name tomoki-skeptic-report --dir /tmp/tomoki-prev >/dev/null 2>&1 || true
           fi
           if [[ -f /tmp/tomoki-prev/tomoki-report.md ]]; then
             cp /tmp/tomoki-prev/tomoki-report.md tomoki-previous-report.md
@@ -78,7 +78,7 @@ jobs:
           else
             echo 'result=report-produced' >> "$GITHUB_OUTPUT"
           fi
-          if ! git diff --quiet -- . ':!tomoki-report.md' ':!tomoki-previous-report.md'; then
+          if ! git diff --quiet; then
             printf '\n\nTRACKED MUTATION DETECTED: SKEPTIC is read-only. Changes were discarded.\n' >> tomoki-report.md
             git reset --hard HEAD
             echo 'result=tracked-mutation-reverted' >> "$GITHUB_OUTPUT"
@@ -105,11 +105,11 @@ jobs:
         if: always()
         run: cat tomoki-report.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload durable SKEPTIC memory
+      - name: Upload durable SKEPTIC memory for Manager
         if: always()
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
         with:
-          name: tomoki-skeptic-memory
+          name: tomoki-skeptic-report
           retention-days: 30
           if-no-files-found: error
           path: |
