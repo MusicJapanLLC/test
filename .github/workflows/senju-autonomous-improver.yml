@@ -9,6 +9,7 @@ on:
     paths:
       - ".github/workflows/senju-autonomous-improver.yml"
       - "senju/scripts/github_native_improver.py"
+      - "senju/scripts/shadow_league.py"
 
 concurrency:
   group: senju-github-native-autonomous-improver
@@ -18,7 +19,7 @@ jobs:
   propose-and-validate:
     name: Evidence -> bounded proposal -> validate
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     permissions:
       contents: read
       actions: read
@@ -89,7 +90,6 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-
           allowed = {
               'population': (40, 240),
               'generations': (6, 40),
@@ -139,6 +139,18 @@ jobs:
               raise SystemExit('candidate smoke evaluation was unsafe')
           PY
 
+      - name: Shadow-test proposed strategy across multiple seeds
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m scripts.shadow_league \
+            --state /tmp/promotion/champion.json \
+            --strategy /tmp/promotion/strategy.json \
+            --out /tmp/promotion-shadow \
+            --seeds 5 \
+            --require-stable
+          cat /tmp/promotion-shadow/stability.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Upload validated promotion bundle
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
@@ -150,6 +162,16 @@ jobs:
             /tmp/promotion/strategy.json
             /tmp/promotion/last-evolution-summary.json
             /tmp/promotion/last-evolution-plan.md
+
+      - name: Upload pre-promotion shadow evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-prepromotion-shadow
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            /tmp/promotion-shadow/stability.json
+            /tmp/promotion-shadow/stability.md
 
   promote:
     name: State-only branch -> verify diff -> fast-forward promote
