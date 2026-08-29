@@ -90,6 +90,14 @@ jobs:
             printf '\nPR作成がGitHub設定で拒否された。branchはpush済み。\n' >> /tmp/tomoki-forge-report.md
             echo 'result=branch-only' >> "$GITHUB_OUTPUT"
           fi
+      - name: Persist FORGE evidence for Manager
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tomoki-forge-report
+          path: /tmp/tomoki-forge-report.md
+          retention-days: 14
+          if-no-files-found: warn
       - name: Report to TOMOKI Slack
         if: always()
         env:
