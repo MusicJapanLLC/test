@@ -37,7 +37,7 @@ jobs:
             exit 1
           fi
 
-      - name: Block obvious credential material in tracked source
+      - name: Block obvious credential material
         shell: bash
         run: |
           set -euo pipefail
@@ -71,47 +71,57 @@ jobs:
             exit 1
           fi
 
-      - name: Enforce safe triggers and least privilege by default
-        shell: bash
-        run: |
-          set -euo pipefail
-          if grep -R -nE 'pull_request_target:|workflow_run:|issue_comment:|repository_dispatch:|permissions:[[:space:]]*write-all|runs-on:[[:space:]]*self-hosted' .github/workflows --exclude='security-guard.yml'; then
-            echo "Unsafe workflow trigger, broad permission, or self-hosted runner detected."
-            exit 1
-          fi
-          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows \
-            --exclude='security-guard.yml' \
-            --exclude='senju-autonomous-improver.yml' \
-            --exclude='tomoki-forge.yml' \
-            --exclude='tomoki-manager.yml' \
-            --exclude='ai-factory-boss.yml' \
-            --exclude='the-world-realtime-kernel.yml' \
-            --exclude='the-core-autonomous-director.yml' \
-            --exclude='the-world-task-worker.yml'; then
-            echo "Repository write permission exists outside an explicitly validated privileged workflow."
-            exit 1
-          fi
-
-      - name: Validate privileged workflow blast radii
+      - name: Validate workflow trust boundaries and privileged lanes
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import re
 
-          def text(name: str) -> str:
-              p = Path('.github/workflows') / name
-              return p.read_text(encoding='utf-8') if p.exists() else ''
+          root = Path('.github/workflows')
+          workflows = {p.name: p.read_text(encoding='utf-8') for p in root.glob('*.y*ml')}
 
-          def require(name: str, body: str, required: list[str], forbidden: list[str]) -> None:
+          unsafe_tokens = [
+              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
+              'runs-on: self-hosted', 'permissions: write-all', 'write-all',
+              'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
+          ]
+          for name, body in workflows.items():
+              if name == 'security-guard.yml':
+                  continue
+              for token in unsafe_tokens:
+                  if token in body:
+                      raise SystemExit(f'{name}: forbidden workflow capability: {token}')
+
+          privileged = {
+              'senju-autonomous-improver.yml',
+              'tomoki-forge.yml',
+              'tomoki-manager.yml',
+              'ai-factory-boss.yml',
+              'the-world-realtime-kernel.yml',
+              'the-core-autonomous-director.yml',
+              'the-world-task-worker.yml',
+          }
+          write_re = re.compile(r'(?m)^\s+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses|id-token):\s*write\s*$')
+          for name, body in workflows.items():
+              writes = [(m.group(1), m.group(0).strip()) for m in write_re.finditer(body)]
+              if writes and name not in privileged and name != 'security-guard.yml':
+                  raise SystemExit(f'{name}: write permission outside validated privileged lane: {writes}')
+              if any(kind == 'id-token' for kind, _ in writes) and name != 'the-world-task-worker.yml':
+                  raise SystemExit(f'{name}: OIDC id-token write is reserved for the resident task worker')
+
+          def require(name: str, required: list[str], forbidden: list[str]) -> str:
+              body = workflows.get(name, '')
               if not body:
-                  return
+                  return ''
               for item in required:
                   if item not in body:
-                      raise SystemExit(f'{name} missing required guardrail: {item}')
+                      raise SystemExit(f'{name}: missing required guardrail: {item}')
               for item in forbidden:
                   if item in body:
-                      raise SystemExit(f'{name} contains forbidden capability: {item}')
+                      raise SystemExit(f'{name}: contains forbidden capability: {item}')
+              return body
 
           common_forbidden = [
               'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
@@ -120,16 +130,13 @@ jobs:
               'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
           ]
 
-          senju = text('senju-autonomous-improver.yml')
-          require(
-              'Senju autonomous improver', senju,
-              [
-                  'contents: write', 'actions: read', 'workflow_dispatch:', 'schedule:',
-                  'persist-credentials: false', 'senju/state/champion.json',
-                  'senju/state/strategy.json', 'senju/state/last-evolution-summary.json',
-                  'senju/state/last-evolution-plan.md', 'CURRENT_BASE_SHA=', 'force=false',
-              ],
-              common_forbidden + ['issues: write', 'pull-requests: write', 'models: write'],
+          senju = require(
+              'senju-autonomous-improver.yml',
+              ['contents: write', 'actions: read', 'workflow_dispatch:', 'schedule:',
+               'persist-credentials: false', 'senju/state/champion.json',
+               'senju/state/strategy.json', 'senju/state/last-evolution-summary.json',
+               'senju/state/last-evolution-plan.md', 'CURRENT_BASE_SHA=', 'force=false'],
+              common_forbidden + ['issues: write', 'pull-requests: write', 'models: write', 'id-token: write'],
           )
           if senju:
               allowed = {
@@ -146,17 +153,14 @@ jobs:
               if observed != allowed:
                   raise SystemExit(f'Senju autonomous write allowlist mismatch: {sorted(observed)}')
 
-          forge = text('tomoki-forge.yml')
-          require(
-              'TOMOKI FORGE', forge,
-              [
-                  'contents: write', 'pull-requests: write', 'copilot-requests: write',
-                  'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
-                  '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
-                  'python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
-                  'git add -A -- sales-command-30', 'gh auth setup-git', 'gh pr create',
-              ],
-              common_forbidden + ['issues: write'],
+          forge = require(
+              'tomoki-forge.yml',
+              ['contents: write', 'pull-requests: write', 'copilot-requests: write',
+               'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
+               '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
+               'python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
+               'git add -A -- sales-command-30', 'gh auth setup-git', 'gh pr create'],
+              common_forbidden + ['issues: write', 'id-token: write'],
           )
           if forge:
               copilot_lines = [x.strip() for x in forge.splitlines() if x.strip().startswith('copilot -p ')]
@@ -165,77 +169,62 @@ jobs:
               if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
                   raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
 
-          manager = text('tomoki-manager.yml')
           require(
-              'TOMOKI MANAGER', manager,
-              [
-                  'contents: read', 'actions: write', 'issues: read', 'pull-requests: read',
-                  'security-events: read', 'copilot-requests: write', 'workflow_dispatch:',
-                  'schedule:', 'persist-credentials: false', 'TOMOKI_MANAGER_MAX_ACTIONS:',
-                  "TOMOKI_MANAGER_MAX_ACTIONS: '3'", 'apply-plan', '--apply-actions',
-              ],
-              common_forbidden + [
-                  'contents: write', 'issues: write', 'pull-requests: write',
-              ],
+              'tomoki-manager.yml',
+              ['contents: read', 'actions: write', 'issues: read', 'pull-requests: read',
+               'security-events: read', 'copilot-requests: write', 'workflow_dispatch:',
+               'schedule:', 'persist-credentials: false', 'TOMOKI_MANAGER_MAX_ACTIONS:',
+               "TOMOKI_MANAGER_MAX_ACTIONS: '3'", 'apply-plan', '--apply-actions'],
+              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
           )
 
-          boss = text('ai-factory-boss.yml')
           require(
-              'AI FACTORY BOSS', boss,
-              [
-                  'contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-                  'persist-credentials: false', 'boss_gate.py', 'ceo_report.py',
-              ],
-              common_forbidden + [
-                  'contents: write', 'issues: write', 'pull-requests: write',
-              ],
+              'ai-factory-boss.yml',
+              ['contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
+               'persist-credentials: false', 'boss_gate.py', 'ceo_report.py'],
+              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
           )
 
-          realtime = text('the-world-realtime-kernel.yml')
           require(
-              'THE WORLD Realtime Kernel', realtime,
-              [
-                  'contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-                  "cron: '*/5 * * * *'", 'persist-credentials: false',
-                  'automation/world/realtime_kernel.py', '--apply',
-                  'WORLD_REALTIME_REF:', 'world-realtime-pulse.json',
-              ],
-              common_forbidden + [
-                  'contents: write', 'issues: write', 'pull-requests: write',
-                  'checks: write', 'deployments: write', 'packages: write',
-              ],
+              'the-world-realtime-kernel.yml',
+              ['contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
+               "cron: '*/5 * * * *'", 'persist-credentials: false',
+               'automation/world/realtime_kernel.py', '--apply',
+               'WORLD_REALTIME_REF:', 'world-realtime-pulse.json'],
+              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
           )
 
-          task_worker = text('the-world-task-worker.yml')
-          require(
-              'THE WORLD Resident Task Worker', task_worker,
-              [
-                  'contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-                  "cron: '*/5 * * * *'", 'persist-credentials: false',
-                  'automation/world/task_worker.py', 'gh workflow run',
-                  'Claim one personality-linked task', 'Reconcile downstream GitHub evidence',
-              ],
-              common_forbidden + [
-                  'contents: write', 'issues: write', 'pull-requests: write',
-                  'checks: write', 'deployments: write', 'packages: write',
-                  'id-token: write', 'copilot-requests: write',
-              ],
+          task_worker = require(
+              'the-world-task-worker.yml',
+              ['contents: read', 'actions: write', 'id-token: write', 'workflow_dispatch:', 'schedule:',
+               "cron: '*/5 * * * *'", 'persist-credentials: false',
+               'automation/world/task_worker.py', 'gh workflow run',
+               'Claim one personality-linked task', 'Reconcile downstream GitHub evidence'],
+              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write',
+                                  'copilot-requests: write', '${{ secrets.'],
           )
+          if task_worker:
+              client = Path('automation/world/task_worker.py').read_text(encoding='utf-8')
+              for item in [
+                  'AUDIENCE = "the-world-worker"',
+                  'GATEWAY_PROTOCOL = "oidc-repository-v4-audited"',
+                  'ACTIONS_ID_TOKEN_REQUEST_URL',
+                  'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
+                  'Authorization": f"Bearer {_oidc_token()}"',
+                  'method="POST"',
+                  'https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker',
+              ]:
+                  if item not in client:
+                      raise SystemExit(f'task_worker.py: missing OIDC/gateway invariant: {item}')
 
-          director = text('the-core-autonomous-director.yml')
-          require(
-              'THE CORE Autonomous Director', director,
-              [
-                  'contents: read', 'actions: write', 'copilot-requests: write',
-                  'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
-                  '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
-                  'automation/world/core_director.py', '--apply',
-                  '--allow-tool=write', '--no-ask-user', 'core-director-plan.json',
-              ],
-              common_forbidden + [
-                  'contents: write', 'issues: write', 'pull-requests: write',
-                  'checks: write', 'deployments: write', 'packages: write',
-              ],
+          director = require(
+              'the-core-autonomous-director.yml',
+              ['contents: read', 'actions: write', 'copilot-requests: write',
+               'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
+               '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
+               'automation/world/core_director.py', '--apply', '--allow-tool=write',
+               '--no-ask-user', 'core-director-plan.json'],
+              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
           )
           if director:
               copilot_lines = [x.strip() for x in director.splitlines() if x.strip().startswith('copilot -p ')]
