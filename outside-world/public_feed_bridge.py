@@ -75,9 +75,9 @@ def post_payload(payload: dict[str, Any], token: str) -> dict[str, Any]:
         ENDPOINT,
         data=json.dumps(payload, ensure_ascii=False).encode("utf-8"),
         headers={
-            "Authorization": f"Bearer {token}",
+            "X-World-GitHub-Token": token,
             "Content-Type": "application/json",
-            "User-Agent": "TheWorld-RealityAgency-PublicFeed/2.1",
+            "User-Agent": "TheWorld-RealityAgency-PublicFeed/2.2",
         },
         method="POST",
     )
