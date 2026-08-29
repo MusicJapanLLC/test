@@ -13,6 +13,13 @@ on:
       - 'automation/ai_foundry/**'
       - 'automation/security/ai_security_feedback.py'
       - 'automation/security/test_ai_security_feedback.py'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/ai-dev-minute-foundry.yml'
+      - 'automation/ai_foundry/**'
+      - 'automation/security/ai_security_feedback.py'
+      - 'automation/security/test_ai_security_feedback.py'
 
 concurrency:
   group: ai-dev-minute-foundry-${{ github.event.pull_request.number || github.ref }}
