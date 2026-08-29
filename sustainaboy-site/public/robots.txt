@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://sustainaboy-works.onrender.com/sitemap.xml
