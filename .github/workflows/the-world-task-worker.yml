@@ -17,6 +17,7 @@ concurrency:
 permissions:
   contents: read
   actions: write
+  id-token: write
 
 jobs:
   motor-cortex:
@@ -153,18 +154,17 @@ jobs:
             exit 0
           fi
 
-          START="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          gh workflow run "$TARGET_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME"
-          RUN_ID=''
-          RUN_URL=''
-          for i in {1..12}; do
-            ROW="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$TARGET_WORKFLOW" --branch "$GITHUB_REF_NAME" --event workflow_dispatch --limit 10 --json databaseId,url,createdAt --jq --arg start "$START" '[.[] | select(.createdAt >= $start)] | sort_by(.createdAt) | last // {}')"
+          DISPATCH_OUTPUT="$(gh workflow run "$TARGET_WORKFLOW" --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" 2>&1)"
+          printf '%s\n' "$DISPATCH_OUTPUT"
+          RUN_URL="$(printf '%s\n' "$DISPATCH_OUTPUT" | grep -Eo 'https://github\.com/[^ ]+/actions/runs/[0-9]+' | tail -n1 || true)"
+          RUN_ID="${RUN_URL##*/}"
+          if [[ -z "$RUN_URL" || ! "$RUN_ID" =~ ^[0-9]+$ ]]; then
+            sleep 2
+            ROW="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$TARGET_WORKFLOW" --branch "$GITHUB_REF_NAME" --event workflow_dispatch --limit 1 --json databaseId,url --jq '.[0] // {}')"
             RUN_ID="$(jq -r '.databaseId // empty' <<<"$ROW")"
             RUN_URL="$(jq -r '.url // empty' <<<"$ROW")"
-            [[ -n "$RUN_ID" ]] && break
-            sleep 2
-          done
-          if [[ -z "$RUN_ID" ]]; then
+          fi
+          if [[ -z "$RUN_ID" || -z "$RUN_URL" ]]; then
             python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 10 --reason "workflow dispatch accepted but run id not observed"
             echo 'dispatched=false' >> "$GITHUB_OUTPUT"
             exit 0
