@@ -1,19 +1,36 @@
 {
-  "schema": "standment-security-portfolio-rnd/v2",
-  "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment.",
+  "schema": "standment-security-portfolio-rnd/v3",
+  "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible security portfolio assets.",
   "portfolio_first": true,
   "reporting_contract": "standment-security/REPORTING_CONTRACT.md",
+  "operating_policy": {
+    "daily_material_improvement_target": 1,
+    "max_primary_tracks_per_day": 1,
+    "compare_with_previous_successful_run": true,
+    "no_verified_delta_must_change_next_research": true,
+    "stagnation_reframe_after_days": 2,
+    "stagnation_switch_evidence_path_after_days": 3,
+    "portfolio_promotion_requires_customer_inspectable_proof": true,
+    "north_star_metrics": [
+      "tracks_inspectable",
+      "tracks_verified",
+      "tracks_full_evidence",
+      "average_evidence_ratio",
+      "unfinished_tracks"
+    ]
+  },
   "senju_collaboration": {
     "enabled": true,
     "allowed_focus": ["robustness", "learning", "balance", "efficiency"],
-    "rule": "Senju improves research-process quality and reproducibility. It never receives third-party targets, credentials, exploit instructions, or authorization scope."
+    "rule": "Senju improves research-process quality, reproducibility, counterevidence and selection robustness. It never receives third-party targets, credentials, exploit instructions, authorization scope, or permission to alter external systems."
   },
   "promotion_gate": {
     "human_inspectable_artifact_required": true,
     "verification_evidence_required": true,
     "counterevidence_required": true,
     "reproducibility_required": true,
-    "source_code_alone_is_not_portfolio": true
+    "source_code_alone_is_not_portfolio": true,
+    "technical_score_is_not_market_validation": true
   },
   "tracks": [
     {
@@ -65,6 +82,36 @@
       "deliverable": "Agent-security architecture note plus auditable run evidence, failure cases and independent verification.",
       "customer_usefulness": "An operator can inspect what an autonomous AI was allowed to do, what it actually did, what failed, and how evidence was preserved for review.",
       "evidence_files": ["company-society/AUTONOMY.md", "automation/security/workflow_policy.py", ".github/workflows/security-guard.yml"]
+    },
+    {
+      "id": "SEC-PORT-006",
+      "title": "Incident readiness and recovery evidence pack",
+      "priority": 840,
+      "senju_focus": "robustness",
+      "hypothesis": "A repeatable recovery-evidence package for owned systems will make incident readiness demonstrable instead of policy-only.",
+      "deliverable": "Customer-readable incident readiness pack covering detection assumptions, rollback, backup/restore evidence, recovery objectives, retest results and known limitations.",
+      "customer_usefulness": "A buyer can inspect whether recovery procedures are actually evidenced and repeatable rather than relying on a statement that backups or rollback exist.",
+      "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"]
+    },
+    {
+      "id": "SEC-PORT-007",
+      "title": "Continuous security retainer scorecard",
+      "priority": 820,
+      "senju_focus": "efficiency",
+      "hypothesis": "A compact recurring scorecard that links findings, remediation, retest and evidence freshness will make Standment security work easier to operate as an ongoing service.",
+      "deliverable": "Human-readable monthly/continuous security scorecard with evidence freshness, open risks, resolved risks, regressions and next remediation priorities.",
+      "customer_usefulness": "A customer can understand what improved since the previous review, what regressed, and what needs attention next without reading engineering logs.",
+      "evidence_files": ["automation/security/portfolio_rnd.py", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "security/STANDMENT_SECURITY_STANDARD.md"]
+    },
+    {
+      "id": "SEC-PORT-008",
+      "title": "Security architecture review pack for AI and SaaS systems",
+      "priority": 800,
+      "senju_focus": "learning",
+      "hypothesis": "A standardized architecture-review evidence pack can convert Standment's internal defensive standards into a reusable customer-facing assessment format.",
+      "deliverable": "Architecture review pack covering trust boundaries, identity, data classification, external ingest, secrets, CI/CD, observability, recovery and evidence-backed recommendations.",
+      "customer_usefulness": "A customer can receive a structured architecture review that explains risks, evidence, remediation priority and residual uncertainty in a consistent format.",
+      "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/SECURITY_BASELINE.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"]
     }
   ]
 }
