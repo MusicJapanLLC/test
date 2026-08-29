@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "society_id": "defensive-security-society-v1",
+  "issue": 55,
+  "total_slots": 100,
+  "materialization": "on-demand",
+  "default_network_scope": "simulated-only",
+  "external_public_targets": "forbidden",
+  "existing_systems": {
+    "simulation_and_lab": "senju/",
+    "security_gate": ".github/workflows/security-guard.yml",
+    "reporting_contract": "automation/reporting/REPORTING_CONTRACT.md",
+    "world_observer_contract": "docs/THE_WORLD_OBSERVER_CONTRACT.md",
+    "event_bus": "existing ai_company_events durable bus; append + dedupe only"
+  },
+  "reporting_route": [
+    "WORKER",
+    "MANAGER",
+    "TOMOKI",
+    "BOSS",
+    "CEO"
+  ],
+  "coordination": {
+    "rule": "coordination-before-write",
+    "shared_state_policy": "append-or-isolated-branch",
+    "world_ownership": "observer-only; do not replace WORLD/WLD/Covenant owners",
+    "ceo_policy": "material-outcomes-only"
+  },
+  "subagent_right": {
+    "enabled": true,
+    "per_child_manager_approval": false,
+    "bounded_by_parent_grant": true,
+    "default_ttl_minutes": 120,
+    "default_max_children": 8,
+    "secrets_self_service": false,
+    "production_write_self_service": false,
+    "external_network_self_service": false,
+    "private_lab_requires_issue_42_remediation": true,
+    "kill_switch_required": true,
+    "evidence_required": true
+  },
+  "guilds": [
+    {
+      "code": "APPSEC",
+      "name": "AppSec & Secure Review",
+      "slots": 10,
+      "capabilities": ["secure_code_review", "sast_triage", "dependency_review", "remediation_design"]
+    },
+    {
+      "code": "IAM",
+      "name": "Cloud / IAM Defense",
+      "slots": 10,
+      "capabilities": ["iam_review", "least_privilege_design", "config_review", "access_evidence"]
+    },
+    {
+      "code": "SUPPLY",
+      "name": "Supply Chain / SBOM",
+      "slots": 10,
+      "capabilities": ["sbom_analysis", "dependency_risk", "provenance_review", "update_planning"]
+    },
+    {
+      "code": "DETECT",
+      "name": "Detection Engineering",
+      "slots": 10,
+      "capabilities": ["detection_design", "log_analysis", "alert_tuning", "coverage_mapping"]
+    },
+    {
+      "code": "IR",
+      "name": "Incident Response / Forensics",
+      "slots": 10,
+      "capabilities": ["incident_triage", "timeline_analysis", "evidence_preservation", "recovery_planning"]
+    },
+    {
+      "code": "INTEL",
+      "name": "Threat Intelligence & Exposure Research",
+      "slots": 10,
+      "capabilities": ["public_threat_research", "cve_research", "exposure_modeling", "defense_prioritization"]
+    },
+    {
+      "code": "ARCH",
+      "name": "Secure Architecture",
+      "slots": 10,
+      "capabilities": ["threat_modeling", "trust_boundary_review", "secure_design", "control_mapping"]
+    },
+    {
+      "code": "DATA",
+      "name": "Data Protection / Privacy Engineering",
+      "slots": 10,
+      "capabilities": ["data_flow_review", "retention_review", "privacy_control_design", "secret_hygiene_review"]
+    },
+    {
+      "code": "SRE",
+      "name": "Resilience / SRE / Recovery",
+      "slots": 10,
+      "capabilities": ["reliability_review", "backup_validation", "recovery_testing", "safe_chaos_design"]
+    },
+    {
+      "code": "SIM",
+      "name": "Adversary Simulation — Sandbox Only",
+      "slots": 10,
+      "capabilities": ["attack_path_modeling", "scenario_design", "control_validation", "detection_validation"],
+      "target_scope": ["sim://", "authorized-private-lab-after-issue-42"]
+    }
+  ]
+}
