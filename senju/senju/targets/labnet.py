@@ -16,10 +16,22 @@ senju.targets.labnet — 隔離ラボネット上の実標的アダプタ（安�
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 from pathlib import Path
 
 from .base import ARCHETYPES, Surface
+
+
+def _is_allowed_liveness_host(host: object) -> bool:
+    """Return True only for literal non-public IP destinations used by the isolated lab."""
+    if not isinstance(host, str):
+        return False
+    try:
+        ip = ipaddress.ip_address(host.strip())
+    except ValueError:
+        return False
+    return bool(ip.is_loopback or ip.is_private or ip.is_link_local)
 
 
 class LabNetTarget:
@@ -51,12 +63,11 @@ class LabNetTarget:
         return self._surfaces
 
     def liveness(self, timeout: float = 2.0) -> bool:
-        """ラボ内ホストの生存確認のみ（攻撃ではない）。到達不能なら False。"""
-        if not self.host:
+        """ラボ内ホストの生存確認のみ。公開IP/hostnameはfail-closedで拒否する。"""
+        if not _is_allowed_liveness_host(self.host):
             return False
         import urllib.request
 
-        # ラボ内プライベートアドレスのみ（http, 平文, タイムアウト厳格）。
         url = f"http://{self.host}/"
         try:
             with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310
