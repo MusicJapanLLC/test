@@ -2,7 +2,7 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-08-30T04:02:05+09:00`
+Updated JST: `2026-08-30T04:05:40+09:00`
 
 ## TODAY'S PRIMARY BET
 - `SEC-PORT-009` — AI Agent Permission Boundary Lab
@@ -15,16 +15,16 @@ Updated JST: `2026-08-30T04:02:05+09:00`
 
 ## THREE-LANE R&D
 - Verification closure: `SEC-PORT-009`
-- White-hat challenge: `SEC-PORT-001` (1 candidates)
+- White-hat challenge: `SEC-PORT-001` (2 candidates)
 - AI-native security: `SEC-PORT-009`
 
 ## NORTH STAR
 - verified: **0/11**
-- full evidence-file coverage: **4/11**
-- average evidence coverage: **82%**
-- open white-hat candidates: **1**
+- full evidence-file coverage: **5/11**
+- average evidence coverage: **85%**
+- open white-hat candidates: **2**
 - unfinished tracks: **11**
-- stagnation streak: **0**
+- stagnation streak: **1**
 
 ## ANTI-STAGNATION
 No material progress for three consecutive selections => automatically rotate to another high-value evidence path. Repeating unchanged activity does not count as R&D progress.

@@ -1,6 +1,6 @@
 {
   "schema": "standment-security-portfolio-accelerator/v1",
-  "generated_at_jst": "2026-08-30T04:02:05+09:00",
+  "generated_at_jst": "2026-08-30T04:05:40+09:00",
   "company_priority": "P0",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
   "primary": {
@@ -53,10 +53,10 @@
     "evidence_missing": [
       "standment-security/case-studies/security-scan-before-after/README.md"
     ],
-    "whitehat_candidates": 1,
+    "whitehat_candidates": 2,
     "senju_focus": "robustness",
     "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
-    "closure_score": 1605,
+    "closure_score": 1650,
     "ai_native": false
   },
   "ai_native_lane": {
@@ -77,16 +77,16 @@
     "closure_score": 1750,
     "ai_native": true
   },
-  "stagnation_streak": 0,
+  "stagnation_streak": 1,
   "rotated": false,
   "selection_reason": "HIGHEST_EVIDENCE_CLOSURE_SCORE",
   "next_action": "Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.",
   "north_star": {
     "tracks_total": 11,
     "tracks_verified": 0,
-    "tracks_full_evidence": 4,
-    "average_evidence_ratio": 0.823,
-    "whitehat_candidates_open": 1,
+    "tracks_full_evidence": 5,
+    "average_evidence_ratio": 0.853,
+    "whitehat_candidates_open": 2,
     "unfinished_tracks": 11
   },
   "all_tracks": [
@@ -104,29 +104,28 @@
       "evidence_missing": [
         "standment-security/case-studies/security-scan-before-after/README.md"
       ],
-      "whitehat_candidates": 1,
+      "whitehat_candidates": 2,
       "senju_focus": "robustness",
       "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
-      "closure_score": 1605,
+      "closure_score": 1650,
       "ai_native": false
     },
     {
       "id": "SEC-PORT-002",
       "title": "Customer Security Evidence Pack",
       "priority": 1060,
-      "status": "ABSENT",
-      "evidence_ratio": 0.667,
+      "status": "VISIBLE",
+      "evidence_ratio": 1.0,
       "evidence_present": [
         "standment-security/CONTROL_EVIDENCE_TEMPLATE.md",
-        "security/STANDMENT_SECURITY_STANDARD.md"
-      ],
-      "evidence_missing": [
+        "security/STANDMENT_SECURITY_STANDARD.md",
         "standment-security/evidence-packs/customer-security/README.md"
       ],
+      "evidence_missing": [],
       "whitehat_candidates": 0,
       "senju_focus": "efficiency",
       "customer_usefulness": "Security work can be handed to a customer as a consistent evidence package instead of a loose collection of code, screenshots and engineering notes.",
-      "closure_score": 1393,
+      "closure_score": 1560,
       "ai_native": false
     },
     {
@@ -273,7 +272,13 @@
       "evidence_ratio": 1.0,
       "evidence_present": [
         "automation/security/workflow_policy.py",
-        "standment-security/ai-security/llm-security-eval-harness.md"
+        "standment-security/ai-security/llm-security-eval-harness.md",
+        "automation/security/llm_security_eval.py",
+        "automation/security/test_llm_security_eval.py",
+        "standment-security/ai-security/llm-security-eval-evidence-pack.md",
+        "standment-security/ai-security/fixtures/llm-security-vulnerable.json",
+        "standment-security/ai-security/fixtures/llm-security-hardened.json",
+        ".github/workflows/standment-ai-security-eval.yml"
       ],
       "evidence_missing": [],
       "whitehat_candidates": 0,
