@@ -161,6 +161,17 @@ jobs:
           TARGET_WORKFLOW: ${{ steps.route.outputs.workflow }}
         run: |
           set -euo pipefail
+          case "$TARGET_WORKFLOW" in
+            ai-factory-boss.yml|child-guild-adventure.yml|security-guard.yml|rnd-senju-coupled-loop.yml|senju-mass-shadow-learning.yml|senju-autonomous-improver.yml|tomoki-manager.yml|the-world-realtime-kernel.yml)
+              ;;
+            *)
+              echo "::error::Refusing non-allowlisted workflow: ${TARGET_WORKFLOW}"
+              python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 60 --reason "non-allowlisted execution lane refused"
+              echo 'dispatched=false' >> "$GITHUB_OUTPUT"
+              exit 1
+              ;;
+          esac
+
           BUSY="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$TARGET_WORKFLOW" --limit 10 --json status --jq '[.[] | select(.status != "completed")] | length')"
           if [[ "${BUSY:-0}" -gt 0 ]]; then
             python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 15 --reason "execution lane ${TARGET_WORKFLOW} busy"
