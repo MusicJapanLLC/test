@@ -9,8 +9,9 @@ Its job is to record **what actually happened** across the world so a human can 
 ## Canonical outputs
 
 - Slack: `#the-world` (`C0BTMPGFW1X`) for concise event reports
-- Google Sheets: `THE WORLD｜World Ledger` → `01_WORLD_LOG` for durable event history
+- Google Sheets: `THE WORLD｜World Ledger` → `01_WORLD_LOG` for durable human-readable event history
   - Spreadsheet: https://docs.google.com/spreadsheets/d/1QtpELUXrgxqsJMyjcIpqAZmsIyljspWm_4BqjPZjUHg/edit
+- Supabase: `public.ai_company_events` is the existing durable cross-agent event bus for multi-writer coordination and deduplication
 - Google Sheets religion/society registry in the same independent workbook:
   - `02_THE_COVENANT`
   - `03_THE_CHAPEL`
@@ -21,7 +22,7 @@ Its job is to record **what actually happened** across the world so a human can 
   - `08_SOURCES`
   - `09_ECONOMY`
 - GitHub: evidence URLs, run IDs, commit SHAs, PRs, issues, artifacts, and logs remain the primary technical evidence
-- Supabase: when a subsystem declares a runtime database source of truth, read-only runtime evidence outranks documentation snapshots
+- Supabase subsystem truth: when a subsystem declares a runtime database source of truth, read-only runtime evidence outranks documentation snapshots
 
 `Music Japan｜AI OPERATIONS BLACKBOX` → `10_THE_WORLD` is legacy history only. New World events use the independent World Ledger.
 
@@ -30,7 +31,7 @@ Its job is to record **what actually happened** across the world so a human can 
 1. Facts before evaluation
 2. Record success, failure, stall, recovery, improvement, handoff, deployment, rollback, and meaningful no-op
 3. Never claim completion without evidence
-4. Never duplicate the same event; dedupe using event ID + evidence URL + timestamp
+4. Never duplicate the same event; use a stable event ID and durable dedupe key
 5. The observer does not replace MANAGER/BOSS/TOMOKI judgment
 6. The observer may identify missing evidence, but must not manufacture it
 7. Prefer human-readable summaries with direct evidence links
@@ -45,6 +46,7 @@ Before creating, replacing, or materially changing a World artifact, inspect the
 2. the relevant canonical `THE WORLD｜World Ledger` tab and existing event IDs
 3. recent `#the-world` messages for active handoffs, blockers, and completed work
 4. the runtime source of truth when one exists (for example Supabase for the WLD economy)
+5. `public.ai_company_events` for the same `dedupe_key` when the event may be emitted by more than one worker
 
 If another worker already owns or has implemented the same area, **do not recreate or overwrite it**. Prefer a non-overlapping support action:
 
@@ -52,12 +54,27 @@ If another worker already owns or has implemented the same area, **do not recrea
 - test / QA the implementation
 - add missing evidence or context
 - repair a clearly bounded gap without taking ownership away
-- record the resulting event in `01_WORLD_LOG`
+- record the resulting event
 - communicate the handoff with `HELP -> WHO -> WHY -> SUCCESS`
+
+### Multi-writer rule
+
+`01_WORLD_LOG` is a human projection, not a safe lock service.
+
+When multiple workers can emit events concurrently:
+
+1. persist the event in `public.ai_company_events` with the World event ID as `source_id` / `dedupe_key` where appropriate
+2. rely on the existing unique `dedupe_key` constraint to reject duplicate event identities
+3. project the event to `01_WORLD_LOG` using append semantics
+4. **never choose a fixed “next empty row” from an earlier read and then write to that row**
+5. if a concurrent Sheet write appears, preserve both events, record the collision, and switch the writer to append semantics rather than overwriting the other worker
+
+Subsystem-specific buses remain separate. For example, `public.world_event_outbox` is the durable WLD economic delivery queue and must not be repurposed as the generic World event bus.
 
 After meaningful support, synchronize the human-observable surfaces:
 
-- durable fact → `01_WORLD_LOG`
+- durable cross-agent event → `public.ai_company_events`
+- human-readable event projection → `01_WORLD_LOG`
 - subsystem snapshot → its existing dedicated tab (do not create a duplicate tab)
 - meaningful state/collaboration change → `#the-world`
 - technical implementation/evidence → GitHub or the subsystem runtime source of truth
@@ -77,7 +94,7 @@ Examples:
 
 ## Required event fields
 
-The durable record maps to `01_WORLD_LOG!A:R`:
+The durable human record maps to `01_WORLD_LOG!A:R`:
 
 1. observed_at
 2. event_id
