@@ -4,6 +4,10 @@
 The engine is read-only. It inspects allowlisted GitHub Actions workflows,
 selects one recent persistent failure, and captures failed job logs for the
 bounded repair executor (TOMOKI/FORGE). It never edits repository state.
+
+GitHub serves job logs through a temporary redirect to object storage. The
+GitHub bearer token must never be forwarded to that different host; the signed
+redirect URL is fetched without the GitHub Authorization header.
 """
 from __future__ import annotations
 
@@ -26,6 +30,13 @@ REPAIR_BRANCH_PREFIX = "the-world/self-heal-"
 MAX_LOG_CHARS = 60000
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Expose GitHub's temporary redirect so auth can be stripped cross-host."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # type: ignore[override]
+        return None
+
+
 def _parse_time(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -40,26 +51,68 @@ def _age_minutes(run: dict[str, Any], now: datetime | None = None) -> int:
     return max(0, int((now - dt).total_seconds() // 60))
 
 
+def _github_headers() -> dict[str, str]:
+    return {
+        "Authorization": f"Bearer {TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "the-world-self-heal-engine",
+    }
+
+
 def _request(method: str, path: str) -> bytes:
     if not TOKEN:
         raise RuntimeError("GITHUB_TOKEN/GH_TOKEN is required")
     url = path if path.startswith("http") else API + path
-    req = urllib.request.Request(
-        url,
-        headers={
-            "Authorization": f"Bearer {TOKEN}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "the-world-self-heal-engine",
-        },
-        method=method,
-    )
+    req = urllib.request.Request(url, headers=_github_headers(), method=method)
     try:
         with urllib.request.urlopen(req, timeout=30) as res:
             return res.read()
     except urllib.error.HTTPError as exc:
         body = exc.read().decode("utf-8", errors="replace")[:1000]
         raise RuntimeError(f"GitHub API {method} {url} -> {exc.code}: {body}") from exc
+
+
+def _download_redirected_github_asset(path: str) -> bytes:
+    """Download a GitHub asset without leaking GitHub auth to object storage."""
+    if not TOKEN:
+        raise RuntimeError("GITHUB_TOKEN/GH_TOKEN is required")
+    url = path if path.startswith("http") else API + path
+    req = urllib.request.Request(url, headers=_github_headers(), method="GET")
+    opener = urllib.request.build_opener(_NoRedirect())
+    location = ""
+    try:
+        with opener.open(req, timeout=30) as res:
+            # Future GitHub behavior may return the bytes directly.
+            return res.read()
+    except urllib.error.HTTPError as exc:
+        if exc.code not in {301, 302, 303, 307, 308}:
+            body = exc.read().decode("utf-8", errors="replace")[:1000]
+            raise RuntimeError(f"GitHub asset GET {url} -> {exc.code}: {body}") from exc
+        location = str(exc.headers.get("Location") or "").strip()
+        if not location:
+            raise RuntimeError(f"GitHub asset GET {url} redirected without Location") from exc
+
+    source_host = urllib.parse.urlparse(url).netloc.lower()
+    target_host = urllib.parse.urlparse(location).netloc.lower()
+    if not target_host:
+        raise RuntimeError("GitHub asset redirect target has no host")
+    if target_host == source_host:
+        # Same-host redirects may keep auth, but job-log/object-store redirects
+        # are expected to be cross-host. Handle this safely and explicitly.
+        follow_headers = _github_headers()
+    else:
+        follow_headers = {"User-Agent": "the-world-self-heal-engine"}
+
+    follow = urllib.request.Request(location, headers=follow_headers, method="GET")
+    try:
+        with urllib.request.urlopen(follow, timeout=30) as res:
+            return res.read()
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="replace")[:1000]
+        raise RuntimeError(
+            f"GitHub asset redirected download -> {exc.code} host={target_host}: {body}"
+        ) from exc
 
 
 def _json(path: str) -> dict[str, Any]:
@@ -83,7 +136,9 @@ def _failed_job_logs(run_id: int) -> list[dict[str, Any]]:
         text = ""
         if remaining > 0:
             try:
-                text = _request("GET", f"/actions/jobs/{job_id}/logs").decode("utf-8", errors="replace")
+                text = _download_redirected_github_asset(
+                    f"/actions/jobs/{job_id}/logs"
+                ).decode("utf-8", errors="replace")
             except Exception as exc:
                 text = f"[log unavailable: {type(exc).__name__}: {exc}]"
             text = text[-min(remaining, 20000):]
