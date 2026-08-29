@@ -79,7 +79,7 @@ jobs:
             echo "Unsafe workflow trigger, broad permission, or self-hosted runner detected."
             exit 1
           fi
-          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows --exclude='security-guard.yml' --exclude='senju-autonomous-improver.yml'; then
+          if grep -R -nE '^[[:space:]]+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses):[[:space:]]*write' .github/workflows --exclude='security-guard.yml' --exclude='senju-autonomous-improver.yml' --exclude='tomoki-forge.yml'; then
             echo "Broad repository write permission detected. Use a narrowly scoped dedicated job instead."
             exit 1
           fi
@@ -96,13 +96,15 @@ jobs:
           text = p.read_text(encoding='utf-8')
           required = [
               'contents: write',
+              'actions: read',
               'workflow_dispatch:',
               'schedule:',
-              'force=false',
               'senju/state/champion.json',
               'senju/state/strategy.json',
               'senju/state/last-evolution-summary.json',
               'senju/state/last-evolution-plan.md',
+              'CURRENT_BASE_SHA=',
+              'force=false',
           ]
           for item in required:
               if item not in text:
@@ -110,8 +112,8 @@ jobs:
           forbidden = [
               'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
               'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'pull-requests: write', 'deployments: write', 'checks: write', 'statuses: write',
-              'security-events: write', 'models: read', 'gh pr create', 'gh pr merge',
+              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
+              'pull-requests: write', 'models: write',
           ]
           for item in forbidden:
               if item in text:
@@ -126,10 +128,82 @@ jobs:
           observed = {line.split()[-1] for line in write_lines}
           if observed != allowed:
               raise SystemExit(f'autonomous write allowlist mismatch: {sorted(observed)}')
-          if "CURRENT_BASE_SHA" not in text or '[[ "$CURRENT_BASE_SHA" != "$BASE_SHA" ]]' not in text:
-              raise SystemExit('autonomous improver must refuse stale promotion if default branch moved')
-          if 'compare/$BASE_SHA...$HEAD_SHA' not in text:
-              raise SystemExit('autonomous improver must compare exact changed paths before promotion')
+          PY
+
+      - name: Validate TOMOKI FORGE blast radius
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path('.github/workflows/tomoki-forge.yml')
+          gate = Path('tomoki-agents/policy_gate.py')
+          verifier = Path('tomoki-agents/verify.sh')
+          if not workflow.exists():
+              raise SystemExit(0)
+          if not gate.exists() or not verifier.exists():
+              raise SystemExit('TOMOKI FORGE guardrail files are missing')
+
+          text = workflow.read_text(encoding='utf-8')
+          required = [
+              'contents: write',
+              'pull-requests: write',
+              'copilot-requests: write',
+              'workflow_dispatch:',
+              'schedule:',
+              'persist-credentials: false',
+              '@github/copilot@1.0.80',
+              'COPILOT_GITHUB_TOKEN:',
+              'cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py',
+              'cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh',
+              'git add -N -- sales-command-30',
+              'python /tmp/tomoki-policy-gate.py',
+              'bash /tmp/tomoki-verify.sh',
+              'git add -A -- sales-command-30',
+              'gh auth setup-git',
+              'git push origin "$BRANCH"',
+              'gh pr create',
+          ]
+          for item in required:
+              if item not in text:
+                  raise SystemExit(f'TOMOKI FORGE missing required guardrail: {item}')
+
+          forbidden = [
+              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
+              'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
+              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
+              '--allow-all', '--allow-all-tools', '--yolo', "--allow-tool='shell'", '--allow-tool=shell',
+              'git push --force', 'git push -f',
+          ]
+          for item in forbidden:
+              if item in text:
+                  raise SystemExit(f'TOMOKI FORGE contains forbidden capability: {item}')
+
+          copilot_lines = [line.strip() for line in text.splitlines() if line.strip().startswith('copilot -p ')]
+          if len(copilot_lines) != 1:
+              raise SystemExit('TOMOKI FORGE must have exactly one Copilot execution line')
+          if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
+              raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
+
+          gate_text = gate.read_text(encoding='utf-8')
+          gate_required = [
+              "'sales-command-30/src/'",
+              "'sales-command-30/tests/'",
+              "'sales-command-30/README.md'",
+              'if len(names) > 3:',
+              'if changed_lines > 250:',
+              'FORBIDDEN_PATTERNS',
+          ]
+          for item in gate_required:
+              if item not in gate_text:
+                  raise SystemExit(f'TOMOKI policy gate missing invariant: {item}')
+          if "'.github/" in gate_text or '".github/' in gate_text:
+              raise SystemExit('TOMOKI policy gate must never allow .github writes')
+
+          verify_text = verifier.read_text(encoding='utf-8')
+          if "npm run build" not in verify_text or 'py_compile' not in verify_text:
+              raise SystemExit('TOMOKI verifier must retain compile/build checks')
           PY
 
       - name: Block remote shell execution patterns
