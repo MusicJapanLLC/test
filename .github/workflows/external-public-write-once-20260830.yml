@@ -5,104 +5,62 @@ on:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - ".github/workflows/external-public-write-once-20260830.yml"
-  workflow_dispatch:
 
 permissions:
   contents: read
-
-env:
-  DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
-  MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
-  MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
-  BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
-  BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
-  BLUESKY_PDS_URL: ${{ secrets.BLUESKY_PDS_URL }}
-  WORDPRESS_BASE_URL: ${{ secrets.WORDPRESS_BASE_URL }}
-  WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
-  WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
 
 jobs:
   publish-exactly-one:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Publish one benign authorized test post
+      - name: Autonomous worker writes one post to public web app
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import base64, json, os, urllib.parse, urllib.request
-          from datetime import datetime, timezone
+          import json, os, urllib.request
 
-          ua = 'TheWorld-OneShotPublicWrite/1.0'
+          public_url = 'https://the-world-public-write-proof-bvhivr.v2.appdeploy.ai/'
+          endpoint = public_url + 'api/posts'
           marker = f"THE-WORLD-AUTONOMY-PROOF-{os.environ['GITHUB_RUN_ID']}"
-          source = 'https://github.com/MusicJapanLLC/test/issues/100'
-          short = (
-              f"THE WORLD autonomous public write proof. {marker}. "
-              "This is one benign test post written by a GitHub Actions worker through an authorized account. "
-              f"Source: {source}"
+          payload = {
+              'marker': marker,
+              'message': 'One benign public test post written autonomously by a GitHub Actions worker. Email was not used.',
+              'source': 'https://github.com/MusicJapanLLC/test/issues/100',
+          }
+          req = urllib.request.Request(
+              endpoint,
+              data=json.dumps(payload).encode('utf-8'),
+              headers={'Content-Type':'application/json','User-Agent':'TheWorld-OneShotPublicWrite/2.0'},
+              method='POST',
           )
-          long_body = (
-              f"# THE WORLD autonomous public write proof\n\n"
-              f"{marker}\n\n"
-              "This is one benign test post written by a GitHub Actions worker through an authorized account.\n\n"
-              "Purpose: verify autonomous execution → external write → public URL.\n\n"
-              f"Source: {source}\n\n"
-              "Email was not used."
-          )
+          with urllib.request.urlopen(req, timeout=25) as res:
+              body = json.loads(res.read().decode('utf-8') or '{}')
+              code = int(res.status)
+          if not (200 <= code < 300):
+              raise SystemExit(f'POST failed: {code}')
 
-          def req_json(url, payload, headers=None, form=False):
-              headers = dict(headers or {})
-              if form:
-                  data = urllib.parse.urlencode(payload).encode()
-                  headers.setdefault('Content-Type','application/x-www-form-urlencoded')
-              else:
-                  data = json.dumps(payload, ensure_ascii=False).encode()
-                  headers.setdefault('Content-Type','application/json')
-              headers['User-Agent'] = ua
-              req = urllib.request.Request(url, data=data, headers=headers, method='POST')
-              with urllib.request.urlopen(req, timeout=25) as res:
-                  raw = res.read(32768).decode('utf-8','replace')
-                  return int(res.status), json.loads(raw or '{}')
+          with urllib.request.urlopen(endpoint, timeout=25) as res:
+              listing = json.loads(res.read().decode('utf-8') or '{}')
+          matched = [p for p in listing.get('posts', []) if p.get('marker') == marker]
+          if not matched:
+              raise SystemExit('POST returned success but marker was not visible in public read API')
 
-          receipt = {'schema':'the-world-external-public-write-once/v1','marker':marker,'status':'NO_CREDENTIAL'}
-
-          mastodon_base = os.getenv('MASTODON_BASE_URL','').strip().rstrip('/')
-          mastodon_token = os.getenv('MASTODON_ACCESS_TOKEN','').strip()
-          devto = os.getenv('DEVTO_API_KEY','').strip()
-          bsky_handle = os.getenv('BLUESKY_HANDLE','').strip()
-          bsky_pw = os.getenv('BLUESKY_APP_PASSWORD','').strip()
-          wp_base = os.getenv('WORDPRESS_BASE_URL','').strip().rstrip('/')
-          wp_user = os.getenv('WORDPRESS_USERNAME','').strip()
-          wp_pw = os.getenv('WORDPRESS_APP_PASSWORD','').strip()
-
-          if mastodon_base and mastodon_token:
-              code, body = req_json(f'{mastodon_base}/api/v1/statuses', {'status': short[:480], 'visibility':'public'}, {'Authorization':f'Bearer {mastodon_token}'}, form=True)
-              receipt.update(platform='mastodon', http_status=code, remote_id=body.get('id'), remote_url=body.get('url'), status='POSTED' if 200 <= code < 300 else 'ERROR')
-          elif devto:
-              code, body = req_json('https://dev.to/api/articles', {'article':{'title':f'THE WORLD autonomous public write proof — {os.environ["GITHUB_RUN_ID"]}','published':True,'body_markdown':long_body,'tags':['ai','automation']}}, {'api-key':devto})
-              receipt.update(platform='devto', http_status=code, remote_id=body.get('id'), remote_url=body.get('url'), status='POSTED' if 200 <= code < 300 else 'ERROR')
-          elif bsky_handle and bsky_pw:
-              service = os.getenv('BLUESKY_PDS_URL','').strip().rstrip('/') or 'https://bsky.social'
-              _, session = req_json(f'{service}/xrpc/com.atproto.server.createSession', {'identifier':bsky_handle,'password':bsky_pw})
-              access, did = session['accessJwt'], session['did']
-              now = datetime.now(timezone.utc).isoformat().replace('+00:00','Z')
-              code, body = req_json(f'{service}/xrpc/com.atproto.repo.createRecord', {'repo':did,'collection':'app.bsky.feed.post','record':{'$type':'app.bsky.feed.post','text':short[:280],'createdAt':now}}, {'Authorization':f'Bearer {access}'})
-              uri = body.get('uri') or ''
-              rkey = uri.rsplit('/',1)[-1] if uri else ''
-              public = f'https://bsky.app/profile/{urllib.parse.quote(bsky_handle, safe=".")}/post/{rkey}' if rkey else None
-              receipt.update(platform='bluesky', http_status=code, remote_id=uri, remote_url=public, status='POSTED' if 200 <= code < 300 else 'ERROR')
-          elif wp_base and wp_user and wp_pw:
-              auth = base64.b64encode(f'{wp_user}:{wp_pw}'.encode()).decode()
-              code, body = req_json(f'{wp_base}/wp-json/wp/v2/posts', {'title':f'THE WORLD autonomous public write proof — {os.environ["GITHUB_RUN_ID"]}','content':long_body,'status':'publish'}, {'Authorization':f'Basic {auth}'})
-              receipt.update(platform='wordpress', http_status=code, remote_id=body.get('id'), remote_url=body.get('link'), status='POSTED' if 200 <= code < 300 else 'ERROR')
-
+          receipt = {
+              'schema':'the-world-external-public-write-once/v2',
+              'status':'POSTED',
+              'platform':'appdeploy-public-web',
+              'marker':marker,
+              'http_status':code,
+              'remote_id':(body.get('post') or {}).get('id'),
+              'remote_url':public_url,
+              'verified_by_read_api':True,
+          }
           with open('external-public-write-receipt.json','w',encoding='utf-8') as f:
               json.dump(receipt,f,ensure_ascii=False,indent=2)
               f.write('\n')
           print(json.dumps(receipt,ensure_ascii=False))
-          if receipt['status'] != 'POSTED' or not receipt.get('remote_url'):
-              raise SystemExit('No verified public post URL was produced')
           PY
 
       - name: Preserve public-write receipt
