@@ -177,6 +177,8 @@ jobs:
 
       - name: Deliver AI Dev joint delta to Slack
         if: github.event_name != 'pull_request'
+        env:
+          SECURITY_ASSIST_FOCUS: ${{ steps.security_assist.outputs.focus }}
         shell: bash
         run: |
           set -euo pipefail
@@ -188,15 +190,9 @@ jobs:
           import json,os
           d=json.load(open(os.environ['STATE_DIR']+'/hourly-summary.json',encoding='utf-8'))
           q='\n'.join(f"• {k}: {v:+.3f}" for k,v in d['quality_proxy_delta'].items())
-          text=("*AI DEV × SECURITY｜JOINT FOUNDRY*\n"+f"Rounds: {d['rounds']} / Security-assisted: {d.get('security_assist_rounds',0)}\n"+f"Champion: {d['start_champion']} → {d['end_champion']}\n"+f"Promotions: {d['promotions_delta']} / Next focus: {d['weakest_next_focus']}\n"+f"Security assist focus: ${{{{ steps.security_assist.outputs.focus }}}}\n"+f"Material delta: {str(d['material_delta']).lower()}\n"+f"Fingerprint: `{d['report_fingerprint']}`\n*Quality proxy delta*\n"+q+"\n_Note: strategy proxy only; real capability remains gated by code/tests._")
+          focus=os.getenv('SECURITY_ASSIST_FOCUS') or 'NONE'
+          text=("*AI DEV × SECURITY｜JOINT FOUNDRY*\n"+f"Rounds: {d['rounds']} / Security-assisted: {d.get('security_assist_rounds',0)}\n"+f"Champion: {d['start_champion']} → {d['end_champion']}\n"+f"Promotions: {d['promotions_delta']} / Next focus: {d['weakest_next_focus']}\n"+f"Security assist focus: {focus}\n"+f"Material delta: {str(d['material_delta']).lower()}\n"+f"Fingerprint: `{d['report_fingerprint']}`\n*Quality proxy delta*\n"+q+"\n_Note: strategy proxy only; real capability remains gated by code/tests._")
           json.dump({'text':text},open(os.environ['STATE_DIR']+'/slack-payload.json','w',encoding='utf-8'),ensure_ascii=False)
-          PY
-          # Replace the literal expression above with the resolved workflow value in a separate safe field.
-          python - <<'PY'
-          import json,os
-          p=os.environ['STATE_DIR']+'/slack-payload.json'; d=json.load(open(p,encoding='utf-8'))
-          d['text']=d['text'].replace('${{ steps.security_assist.outputs.focus }}', '${{ steps.security_assist.outputs.focus }}')
-          json.dump(d,open(p,'w',encoding='utf-8'),ensure_ascii=False)
           PY
           curl --fail-with-body --silent --show-error -H 'Content-Type: application/json' --data-binary "@$STATE_DIR/slack-payload.json" "$AI_DEV_SLACK_WEBHOOK_URL"
           echo "AI Dev Slack delivery OK" | tee -a "$GITHUB_STEP_SUMMARY"
