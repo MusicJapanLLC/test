@@ -29,6 +29,8 @@ UNSAFE = (
 )
 MIN_GATEWAY_PROTOCOL_VERSION = 4
 MAX_OWNED_STRESS_WRITES = 100
+PUBLIC_FEED_ENDPOINT = "https://the-world-public-field-feed-zt5n2q.v2.appdeploy.ai/api/ingest"
+PUBLIC_FEED_AUDIENCE = "the-world-public-field-feed"
 
 
 def writes(body: str) -> set[str]:
@@ -134,7 +136,6 @@ def validate_task_worker() -> str:
         raise SystemExit(f"{name}: verified prior review cannot be committed")
     if "finish-review --review /tmp/world-review.json --result /tmp/world-review-result.json --error" not in body:
         raise SystemExit(f"{name}: failed prior review cannot be recorded")
-
     if ("$" + "{{" + " secrets.") in body:
         raise SystemExit(f"{name}: long-lived Actions secrets are forbidden")
 
@@ -157,12 +158,75 @@ def validate_task_worker() -> str:
     return name
 
 
-def validate_experiment_oidc_lanes(page_lanes: set[str], task_worker: str) -> set[str]:
+def validate_reality_lane() -> str:
+    name = "world-reality-agency.yml"
+    body = require(
+        name,
+        (
+            "contents: read", "actions: read", "issues: write", "id-token: write",
+            "workflow_dispatch:", "schedule:", "persist-credentials: false",
+            "outside-world/reality_policy.json", "outside-world/reality_gateway.py",
+            "outside-world/public_feed_bridge.py", "--execute-owned-writes", "--limit 2",
+        ),
+        ("contents: write", "pull-requests: write", "packages: write", "deployments: write", "pages: write"),
+    )
+    if writes(body) != {"issues", "id-token"}:
+        raise SystemExit(f"{name}: reality write set drifted: {sorted(writes(body))}")
+    if "pull_request:" in body:
+        raise SystemExit(f"{name}: Reality Agency must never run with PR authority")
+
+    policy = json.loads(Path("outside-world/reality_policy.json").read_text(encoding="utf-8"))
+    actions = policy.get("actions") or {}
+    allow = policy.get("allowlists") or {}
+    browser = policy.get("browser") or {}
+    pulse = policy.get("pulse") or {}
+    if actions.get("github_issue_own_repo") != "AUTO_ALLOWLIST":
+        raise SystemExit("reality policy: own-repo GitHub writes must remain allowlisted")
+    if actions.get("general_external_post") != "APPROVAL":
+        raise SystemExit("reality policy: general external posting must require approval")
+    if actions.get("artifact_upload_owned_runtime") != "AUTO":
+        raise SystemExit("reality policy: owned runtime publication class drifted")
+    if allow.get("github_repositories") != ["MusicJapanLLC/test"]:
+        raise SystemExit("reality policy: repository allowlist drifted")
+    if browser.get("respect_access_controls") is not True or browser.get("engagement_manipulation") is not False:
+        raise SystemExit("reality policy: browser safety invariants drifted")
+    if browser.get("bulk_unsolicited_messaging") is not False:
+        raise SystemExit("reality policy: bulk unsolicited messaging must remain disabled")
+    if int(pulse.get("max_publications_per_pulse", 0)) > 2:
+        raise SystemExit("reality policy: public publication cap exceeds 2 per pulse")
+
+    gateway = Path("outside-world/reality_gateway.py").read_text(encoding="utf-8")
+    for marker in (
+        "repo not in allowed", "SKIPPED_DAILY_LIMIT",
+        "https://api.github.com/repos/{repo}/issues", "github_issue_days",
+    ):
+        if marker not in gateway:
+            raise SystemExit(f"reality_gateway.py: missing owned-write guard: {marker}")
+
+    bridge = Path("outside-world/public_feed_bridge.py").read_text(encoding="utf-8")
+    for marker in (
+        f'ENDPOINT = "{PUBLIC_FEED_ENDPOINT}"',
+        f'OIDC_AUDIENCE = "{PUBLIC_FEED_AUDIENCE}"',
+        "ACTIONS_ID_TOKEN_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+        'urllib.parse.urlencode({"audience": OIDC_AUDIENCE})',
+        '"Authorization": f"Bearer {request_token}"',
+        '"Authorization": f"Bearer {token}"',
+        '"auth": "github_actions_oidc_audience_bound"',
+    ):
+        if marker not in bridge:
+            raise SystemExit(f"public_feed_bridge.py: missing OIDC invariant: {marker}")
+    for forbidden in ("X-World-GitHub-Token", "GITHUB_TOKEN", "actions_token()"):
+        if forbidden in bridge:
+            raise SystemExit(f"public_feed_bridge.py: forbidden GitHub credential export marker: {forbidden}")
+    return name
+
+
+def validate_experiment_oidc_lanes(page_lanes: set[str], excluded: set[str]) -> set[str]:
     lanes: set[str] = set()
     candidates = {
         name for name, body in WORKFLOWS.items()
         if "id-token" in writes(body)
-    } - page_lanes - {task_worker}
+    } - page_lanes - excluded
     secret_marker = "$" + "{{" + " secrets."
 
     for name in sorted(candidates):
@@ -218,10 +282,7 @@ def validate_owned_issue_stress_lanes() -> set[str]:
         if "schedule:" in body or "pull_request:" in body:
             raise SystemExit(f"{name}: issue stress lane must not be scheduled/PR-triggered")
         if "push:" in body:
-            quoted = (
-                f'".github/workflows/{name}"' in body
-                or f"'.github/workflows/{name}'" in body
-            )
+            quoted = f'".github/workflows/{name}"' in body or f"'.github/workflows/{name}'" in body
             if not quoted:
                 raise SystemExit(f"{name}: push trigger must be scoped to itself")
         count = _stress_write_count(body)
@@ -243,7 +304,6 @@ def validate_explicit_lanes() -> set[str]:
         "ai-factory-boss.yml": {"actions"},
         "the-world-realtime-kernel.yml": {"actions"},
         "the-core-autonomous-director.yml": {"actions", "copilot-requests"},
-        "world-reality-agency.yml": {"issues"},
     }
     for name, want in expected.items():
         body = require(name, ("workflow_dispatch:", "schedule:", "persist-credentials: false"))
@@ -292,37 +352,8 @@ def validate_explicit_lanes() -> set[str]:
         cmd = [x.strip() for x in body.splitlines() if x.strip().startswith("copilot -p ")]
         if len(cmd) != 1 or "--allow-tool=write" not in cmd[0] or "shell(" in cmd[0]:
             raise SystemExit(f"{name}: auditor write/shell capability drifted")
-        if "continue-on-error: true" in body or ("|| true" in cmd[0]):
+        if "continue-on-error: true" in body or "|| true" in cmd[0]:
             raise SystemExit(f"{name}: auditor failures must not be hidden")
-
-    reality = WORKFLOWS["world-reality-agency.yml"]
-    for marker in (
-        "outside-world/reality_policy.json", "outside-world/reality_gateway.py",
-        "--execute-owned-writes", "issues: write", "contents: read", "actions: read",
-    ):
-        if marker not in reality:
-            raise SystemExit(f"world-reality-agency.yml: missing invariant: {marker}")
-
-    reality_policy = json.loads(Path("outside-world/reality_policy.json").read_text(encoding="utf-8"))
-    actions = reality_policy.get("actions") or {}
-    allow = reality_policy.get("allowlists") or {}
-    browser = reality_policy.get("browser") or {}
-    if actions.get("github_issue_own_repo") != "AUTO_ALLOWLIST":
-        raise SystemExit("reality policy: own-repo GitHub writes must remain allowlisted")
-    if actions.get("general_external_post") != "APPROVAL":
-        raise SystemExit("reality policy: general external posting must require approval")
-    if allow.get("github_repositories") != ["MusicJapanLLC/test"]:
-        raise SystemExit("reality policy: repository allowlist drifted")
-    if browser.get("respect_access_controls") is not True or browser.get("engagement_manipulation") is not False:
-        raise SystemExit("reality policy: browser safety invariants drifted")
-
-    gateway = Path("outside-world/reality_gateway.py").read_text(encoding="utf-8")
-    for marker in (
-        "repo not in allowed", "SKIPPED_DAILY_LIMIT",
-        "https://api.github.com/repos/{repo}/issues", "github_issue_days",
-    ):
-        if marker not in gateway:
-            raise SystemExit(f"reality_gateway.py: missing owned-write guard: {marker}")
 
     gate = Path("tomoki-agents/policy_gate.py").read_text(encoding="utf-8")
     verifier = Path("tomoki-agents/verify.sh").read_text(encoding="utf-8")
@@ -354,10 +385,11 @@ def main() -> int:
     validate_global_safety()
     pages = validate_pages_lanes()
     task_worker = validate_task_worker()
-    experiments = validate_experiment_oidc_lanes(pages, task_worker)
+    reality = validate_reality_lane()
+    experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality})
     stress = validate_owned_issue_stress_lanes()
     explicit = validate_explicit_lanes()
-    known = explicit | pages | experiments | stress | {task_worker, "security-guard.yml"}
+    known = explicit | pages | experiments | stress | {task_worker, reality, "security-guard.yml"}
     validate_unknown_writes(known)
     print(json.dumps({
         "status": "PASS",
@@ -365,6 +397,7 @@ def main() -> int:
         "pages_lanes": sorted(pages),
         "experiment_oidc_lanes": sorted(experiments),
         "owned_issue_stress_lanes": sorted(stress),
+        "reality_lane": reality,
         "privileged_lanes": sorted(known - {"security-guard.yml"}),
     }, ensure_ascii=False))
     return 0
