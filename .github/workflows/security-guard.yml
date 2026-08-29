@@ -103,6 +103,7 @@ jobs:
               'the-core-autonomous-director.yml',
               'the-world-task-worker.yml',
               'pages.yml',
+              'world-reality-agency.yml',
           }
           oidc_allowed = {'the-world-task-worker.yml', 'pages.yml'}
           write_re = re.compile(r'(?m)^\s+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses|pages|id-token):\s*write\s*$')
@@ -233,6 +234,16 @@ jobs:
               for forbidden_trigger in ['schedule:', 'push:', 'pull_request:']:
                   if forbidden_trigger in pages:
                       raise SystemExit(f'pages.yml: backup deployment must remain manual-only: {forbidden_trigger}')
+
+          require(
+              'world-reality-agency.yml',
+              ['contents: read', 'actions: read', 'issues: write', 'workflow_dispatch:', 'schedule:',
+               'persist-credentials: false', 'outside-world/browser_runner.py',
+               'outside-world/reality_gateway.py', '--execute-owned-writes',
+               'world-reality-agency-state'],
+              common_forbidden + ['contents: write', 'actions: write', 'pull-requests: write',
+                                  'id-token: write', 'copilot-requests: write'],
+          )
 
           director = require(
               'the-core-autonomous-director.yml',
