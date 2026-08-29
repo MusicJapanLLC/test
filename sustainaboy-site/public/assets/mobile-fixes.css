@@ -1,0 +1,120 @@
+/* SBW mobile QA fixes — 2026-08-29
+   Scope: phone typography, non-overlapping sticky notes, founder card, and uniform presentation. */
+
+@media (max-width: 599px){
+  /* ===== HOME / PAPER HERO ===== */
+  body.paper-home .paper-hero{padding-top:88px;padding-bottom:42px}
+  body.paper-home .paper-stage{padding-top:18px}
+  body.paper-home .paper-sheet{margin:0 2px;padding:42px 18px 22px}
+  body.paper-home .paperclip{left:24px;top:4px;transform:rotate(17deg) scale(.9)}
+  body.paper-home .compass-watermark{right:-38px;top:24px;width:142px;height:142px;opacity:.55}
+
+  body.paper-home .hero-kicker{margin-bottom:16px;font-size:8.5px;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  body.paper-home .paper-title{font-size:34px!important;line-height:1.48!important;letter-spacing:-.035em!important;font-weight:600}
+  body.paper-home .paper-title .underline{white-space:nowrap}
+  body.paper-home .paper-title .underline:after{height:3px;bottom:2px}
+  body.paper-home .paper-divider{margin:18px 0 15px}
+  body.paper-home .hero-description{font-size:12px;line-height:1.9}
+
+  /* Put hero notes in normal flow on phones. No note is allowed to cover copy. */
+  body.paper-home .note-yellow,
+  body.paper-home .note-blue{
+    position:relative!important;
+    display:inline-flex!important;
+    align-items:center;
+    vertical-align:top;
+    top:auto!important;right:auto!important;left:auto!important;bottom:auto!important;
+    width:calc(50% - 8px)!important;
+    min-height:82px!important;
+    margin:18px 4px 0!important;
+    padding:13px 11px 11px!important;
+    font-size:11px!important;
+    line-height:1.65!important;
+    box-shadow:0 7px 14px rgba(0,0,0,.12)!important;
+    translate:none!important;
+  }
+  body.paper-home .note-yellow{transform:rotate(-2.5deg)!important}
+  body.paper-home .note-blue{transform:rotate(2.5deg)!important}
+  body.paper-home .note-bottom{display:none!important}
+
+  body.paper-home .hero-steps{margin-top:18px;border-radius:12px}
+  body.paper-home .hero-step{padding:14px 4px 13px}
+  body.paper-home .step-no{font-size:16px;margin-bottom:5px}
+  body.paper-home .step-icon{width:44px;height:44px;margin-bottom:7px;font-size:19px}
+  body.paper-home .hero-step h3{font-size:13px;margin-bottom:4px}
+  body.paper-home .hero-step p{font-size:8.5px;line-height:1.5}
+  body.paper-home .hero-actions{margin-top:18px;max-width:310px}
+  body.paper-home .hero-primary{min-height:50px;font-size:14px}
+
+  /* ===== HOME / FOUNDER ===== */
+  body.paper-home .founder-card{
+    grid-template-columns:1fr!important;
+    min-height:0!important;
+    border-radius:22px!important;
+    overflow:hidden;
+  }
+  body.paper-home .founder-card-copy{padding:24px 22px 20px!important}
+  body.paper-home .founder-card-copy h2{font-size:24px!important;line-height:1.5!important}
+  body.paper-home .founder-card-copy p{font-size:12px;line-height:1.8}
+  body.paper-home .founder-image{aspect-ratio:16/10!important;min-height:0!important}
+  body.paper-home .founder-image img{width:100%;height:100%;object-fit:cover;object-position:50% 17%}
+  body.paper-home .founder-card .sticky-note{display:none!important}
+
+  body.paper-home .section-title{font-size:30px!important;line-height:1.45!important}
+  body.paper-home .section-lead{font-size:13px;line-height:1.85}
+
+  /* ===== SUBPAGES ===== */
+  body.subpage-v2 .wrap{width:min(calc(100% - 36px),1120px)}
+  body.subpage-v2 .subhero{padding:112px 0 58px!important}
+  body.subpage-v2 .eyebrow{margin-bottom:26px;font-size:8.5px;letter-spacing:.11em}
+  body.subpage-v2 .subhero h1{
+    max-width:none!important;
+    font-size:32px!important;
+    line-height:1.5!important;
+    letter-spacing:-.025em!important;
+    text-wrap:pretty;
+  }
+  body.subpage-v2 .hero-lead{margin-top:22px;font-size:14px;line-height:1.85}
+  body.subpage-v2 h2{font-size:28px!important;line-height:1.5!important}
+  body.subpage-v2 .prose h2{font-size:27px!important;line-height:1.55!important;margin-top:42px}
+  body.subpage-v2 .section-head p,
+  body.subpage-v2 .prose p,
+  body.subpage-v2 .prose li{font-size:14px;line-height:1.9}
+
+  /* ===== STORY / UNIFORM ===== */
+  body.story-page .uniform-grid{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:18px!important;
+    margin:30px 0 48px!important;
+  }
+  body.story-page .uniform-grid img{
+    display:block;
+    width:100%!important;
+    height:auto!important;
+    max-height:330px!important;
+    aspect-ratio:4/3!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    padding:10px!important;
+    background:#f4f2ec!important;
+    border:1px solid #d8d2c7!important;
+    border-radius:10px!important;
+  }
+  body.story-page .uniform-grid img:first-child,
+  body.story-page .uniform-grid img:nth-child(2){object-fit:contain!important}
+}
+
+@media (min-width:600px) and (max-width:759px){
+  body.subpage-v2 .subhero h1{font-size:42px!important;line-height:1.42!important}
+}
+
+@media (min-width:760px){
+  /* Keep product shots readable on desktop as well. */
+  body.story-page .uniform-grid{align-items:stretch}
+  body.story-page .uniform-grid img{
+    width:100%;height:100%;max-height:520px;aspect-ratio:4/3;
+    object-fit:contain!important;object-position:center!important;
+    padding:16px;background:#f4f2ec;border:1px solid #d8d2c7;border-radius:12px;
+  }
+}
