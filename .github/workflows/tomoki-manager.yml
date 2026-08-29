@@ -3,15 +3,16 @@ name: TOMOKI - MANAGER
 on:
   workflow_dispatch:
   schedule:
-    - cron: '57 * * * *'
+    - cron: '*/15 * * * *'
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
       - '.github/workflows/tomoki-manager.yml'
-      - '.github/agents/tomoki-manager.agent.md'
-      - 'tomoki-agents/manager.py'
-      - 'tomoki-agents/company.json'
-      - 'tomoki-agents/prompts/manager.md'
+      - '.github/agents/**'
+      - 'tomoki-agents/**'
+      - 'automation/control_plane/**'
+      - 'automation/gmail_sorter/**'
+      - 'docs/AI_COMPANY_SUPERVISION_CONTRACT.md'
 
 concurrency:
   group: tomoki-manager
@@ -36,12 +37,23 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Setup Node
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
-          node-version: '22'
+          python-version: '3.12'
 
-      - name: Collect workforce evidence and repair mechanical stalls
+      - name: Company-wide deterministic watchdog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python automation/control_plane/manager.py \
+            --config automation/control_plane/workers.json \
+            --out reports/control-plane/company-watchdog.json
+          python automation/control_plane/boss_gate.py \
+            reports/control-plane/company-watchdog.json \
+            --out reports/ceo-events/company-watchdog.json > /tmp/boss-gate.txt
+
+      - name: Collect TOMOKI workforce evidence and repair mechanical stalls
         env:
           GITHUB_TOKEN: ${{ github.token }}
           TOMOKI_MANAGER_REF: ${{ github.event.repository.default_branch }}
@@ -51,6 +63,11 @@ jobs:
             --apply-repairs \
             --output tomoki-manager-snapshot.json \
             --report tomoki-manager-report.md
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
 
       - name: Install Copilot CLI
         run: npm install -g @github/copilot@1.0.80
@@ -91,6 +108,23 @@ jobs:
             --output tomoki-manager-apply.json \
             --report tomoki-manager-report.md
 
+      - name: Publish competition scoreboard
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          p=Path('reports/control-plane/company-watchdog.json')
+          if p.exists():
+              d=json.loads(p.read_text(encoding='utf-8'))
+              s=d['summary']
+              print('## Company Watchdog')
+              print(f"- incidents={s['incidents']} recovery_actions={s['internal_recovery_actions']} recovering={s['recovering']} unresolved={s['unresolved']}")
+              print('### Competition')
+              for row in d['scoreboard']:
+                  print(f"- {row['id']}: {row['score']} / {row['state']}")
+          PY
+
       - name: Upload manager evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -101,6 +135,8 @@ jobs:
             tomoki-manager-plan.json
             tomoki-manager-apply.json
             tomoki-manager-report.md
+            reports/control-plane/company-watchdog.json
+            reports/ceo-events/company-watchdog.json
           retention-days: 14
           if-no-files-found: warn
 
@@ -117,7 +153,25 @@ jobs:
             --file tomoki-manager-report.md \
             --status "${{ job.status }}"
 
-      - name: Escalate only material or unresolved outcomes to CEO layer
+      - name: BOSS sends company-watchdog material outcome only
+        if: always()
+        env:
+          CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+        shell: bash
+        run: |
+          if [[ -f reports/ceo-events/company-watchdog.json ]]; then
+            SHOULD=$(python - <<'PY'
+          import json
+          d=json.load(open('reports/ceo-events/company-watchdog.json',encoding='utf-8'))
+          print('true' if d.get('should_report') else 'false')
+          PY
+          )
+            if [[ "$SHOULD" == "true" ]]; then
+              python automation/reporting/ceo_report.py reports/ceo-events/company-watchdog.json
+            fi
+          fi
+
+      - name: Escalate only material or unresolved TOMOKI outcomes to CEO layer
         if: always()
         env:
           CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
