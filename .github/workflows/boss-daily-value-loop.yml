@@ -9,6 +9,8 @@ on:
     paths:
       - "automation/control_plane/value_loop.py"
       - "automation/control_plane/value_policy.json"
+      - "automation/control_plane/performance_board.py"
+      - "automation/revenue_bridge/**"
       - ".github/workflows/boss-daily-value-loop.yml"
       - ".github/agents/ai-factory-boss.agent.md"
 
@@ -38,6 +40,22 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
+
+      - name: Restore previous BOSS memory
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/previous-boss
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "BOSS Daily Value Loop" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" && "$RUN_ID" != "$GITHUB_RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name boss-daily-value --dir /tmp/previous-boss || true
+          fi
+          PERF="$(find /tmp/previous-boss -name board.json -print -quit || true)"
+          BRIDGE="$(find /tmp/previous-boss -name latest.json -path '*revenue-bridge*' -print -quit || true)"
+          [[ -n "$PERF" ]] && cp "$PERF" previous-performance.json || printf '{}\n' > previous-performance.json
+          [[ -n "$BRIDGE" ]] && cp "$BRIDGE" previous-revenue-bridge.json || printf '{}\n' > previous-revenue-bridge.json
+          echo "previous_boss_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Listen to latest TOMOKI/MANAGER evidence
         if: github.event_name != 'pull_request'
@@ -82,7 +100,29 @@ jobs:
             --out-md reports/value-loop/daily-value.md
           cat reports/value-loop/daily-value.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload daily evidence
+      - name: Grade every worker and preserve trend memory
+        run: |
+          set -euo pipefail
+          python automation/control_plane/performance_board.py \
+            --manager tomoki-manager-snapshot.json \
+            --previous previous-performance.json \
+            --out-json reports/performance/board.json \
+            --out-md reports/performance/board.md
+          cat reports/performance/board.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Convert verified evidence into a real buyer path
+        run: |
+          set -euo pipefail
+          python automation/revenue_bridge/bridge.py \
+            --catalog automation/revenue_bridge/catalog.json \
+            --value reports/value-loop/daily-value.json \
+            --performance reports/performance/board.json \
+            --previous previous-revenue-bridge.json \
+            --out-json reports/revenue-bridge/latest.json \
+            --out-md reports/revenue-bridge/latest.md
+          cat reports/revenue-bridge/latest.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload BOSS memory and evidence
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: boss-daily-value
@@ -91,27 +131,31 @@ jobs:
           path: |
             reports/value-loop/daily-value.json
             reports/value-loop/daily-value.md
+            reports/performance/board.json
+            reports/performance/board.md
+            reports/revenue-bridge/latest.json
+            reports/revenue-bridge/latest.md
 
-      - name: Report concise value brief to internal Slack
+      - name: Report executive internal brief to Slack
         if: github.event_name != 'pull_request' && env.TOMOKI_SLACK_WEBHOOK_URL != ''
         run: |
           python - <<'PY'
           import json, os, urllib.request
-          d=json.load(open('reports/value-loop/daily-value.json', encoding='utf-8'))
-          actions=d.get('top_actions', [])[:3]
-          action_text='\n'.join(
-              f"{i+1}. {a['owner']} / {a['revenue_distance']} — {a['action']}"
-              for i,a in enumerate(actions)
-          )
-          p=d['pillars']
-          s=d['senju']
+          v=json.load(open('reports/value-loop/daily-value.json', encoding='utf-8'))
+          perf=json.load(open('reports/performance/board.json', encoding='utf-8'))
+          rev=json.load(open('reports/revenue-bridge/latest.json', encoding='utf-8'))
+          bridge=(rev.get('bridges') or [{}])[0]
+          weak=[r for r in perf.get('workers', []) if r.get('band') in {'COACH','WATCH','REASSIGN'}][:3]
+          weak_text=' / '.join(f"{r['name']}:{r['band']}({r['score']})" for r in weak) or 'NONE'
+          p=v['pillars']; s=v['senju']
           text=(
-              "*BOSS DAILY VALUE｜売上までの距離を縮める*\n"
-              f"operations={p['operations']} / security={p['security']} / AI={p['ai_evolution']} / faith={p['faith_to_value']}\n"
-              f"workers={d['manager']['workers_seen']} unresolved={d['manager']['unresolved']} verified={d['manager']['verified_signals']}\n"
+              "*BOSS DAILY COMMAND｜活動量ではなく現金までの距離*\n"
+              f"業務={p['operations']} / Security={p['security']} / AI={p['ai_evolution']} / Faith→Value={p['faith_to_value']}\n"
               f"Senju safe={s['safe']} stable={s['stable']} score={s['score']}\n"
-              "*今日やる価値の高いこと*\n" + action_text +
-              "\n※活動量ではなく、D6→D0（入金）へ近づいた証拠だけを評価"
+              f"要しごき/再配置候補: {weak_text}\n"
+              f"商品: {bridge.get('product','NONE')} / proof={bridge.get('proof_strength',0)}/100 / {bridge.get('revenue_distance','D6')}\n"
+              f"次の実売上アクション: {bridge.get('next_action','検証を続行')}\n"
+              "※商談・提案・契約・入金の実イベントが無い限り、売上達成とは数えない"
           )
           req=urllib.request.Request(
               os.environ['TOMOKI_SLACK_WEBHOOK_URL'],
