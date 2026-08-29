@@ -33,7 +33,7 @@ EVENT_RULES: dict[str, dict[str, Any]] = {
 }
 
 
-def load(path: str | Path) -> dict[str, Any]:
+def load(path: str | Path) -> Any:
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
 
@@ -148,7 +148,7 @@ def main() -> int:
     args = parser.parse_args()
     snapshot = load(args.snapshot)
     event_doc = load(args.events)
-    events = event_doc.get("events", event_doc if isinstance(event_doc, list) else [])
+    events = event_doc if isinstance(event_doc, list) else event_doc.get("events", [])
     state = apply_events(state_from_snapshot(snapshot), events)
     Path(args.output).write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps({"citizens": len(state["citizens"]), "events": state["event_count"]}))
