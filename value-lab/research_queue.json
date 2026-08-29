@@ -2,10 +2,33 @@
   "schema": "rnd-senju-research-queue/v1",
   "active": [
     {
+      "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-001",
+      "title": "Reliable daily Standment Security portfolio evidence cycle",
+      "problem": "Standment security R&D can produce technical work without consistently converting it into reproducible, human-inspectable portfolio evidence. The research process must optimize for verified deliverables, counterevidence and repeatability rather than activity volume.",
+      "hypothesis": "A bounded portfolio-first research gate that requires verification evidence, counterevidence and reproducibility will improve the efficiency and stability of converting daily R&D into credible Standment Security portfolio artifacts.",
+      "focus": "efficiency",
+      "priority": 4000,
+      "candidate_count": 9,
+      "success": {
+        "safe": true,
+        "stable": true,
+        "holdout_required": true,
+        "worst_score_positive": true,
+        "worst_balance_min": 0.35,
+        "worst_learning_min": 0.05,
+        "score_stdev_max": 35.0,
+        "human_inspectable_artifact_required": true,
+        "verification_evidence_required": true,
+        "counterevidence_preserved": true,
+        "material_delta_reported_to_slack": true
+      },
+      "commercial_bridge": "Use Senju evidence to improve research-process quality only. A portfolio promotion still requires a human-inspectable artifact, verification proof and explicit limitations. Technical scores do not establish buyer demand, contracts, payments or revenue."
+    },
+    {
       "research_id": "RND-PORTFOLIO-P0-001",
       "title": "THE WORLD portfolio proof-to-artifact conversion",
       "problem": "THE WORLD can generate large amounts of internal research while too little of it becomes a human-inspectable, evidence-backed portfolio artifact that an owner, buyer, or operator can actually judge.",
-      "hypothesis": "Making portfolio conversion the highest-priority research question across THE WORLD, choosing one material proof gap per day, and coupling that gap to bounded Senju technical improvement will increase the rate at which BUILDING/EXPERIMENT outputs become genuinely VERIFIED without increasing reporting noise.",
+      "hypothesis": "Making portfolio conversion the highest-priority general research question across THE WORLD, choosing one material proof gap per day, and coupling that gap to bounded Senju technical improvement will increase the rate at which BUILDING/EXPERIMENT outputs become genuinely VERIFIED without increasing reporting noise.",
       "focus": "efficiency",
       "priority": 3000,
       "candidate_count": 7,
@@ -17,26 +40,7 @@
         "counterevidence_preserved": true,
         "material_delta_reported_to_slack": true
       },
-      "commercial_bridge": "The portfolio exists to turn verified R&D output into something a human can inspect, understand, evaluate, sell, or reuse. Senju technical evidence may strengthen proof quality but must not be treated as willingness-to-pay, market validation, contract value, payment, or revenue."
-    },
-    {
-      "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-001",
-      "title": "Reliable daily Standment Security portfolio evidence cycle",
-      "problem": "Standment security R&D can produce technical work without consistently converting it into reproducible, human-inspectable portfolio evidence. The research process must optimize for verified deliverables, counterevidence and repeatability rather than activity volume.",
-      "hypothesis": "A bounded portfolio-first research gate that requires verification evidence, counterevidence and reproducibility will improve the efficiency and stability of converting daily R&D into credible Standment Security portfolio artifacts.",
-      "focus": "efficiency",
-      "priority": 2000,
-      "candidate_count": 9,
-      "success": {
-        "safe": true,
-        "stable": true,
-        "holdout_required": true,
-        "worst_score_positive": true,
-        "worst_balance_min": 0.35,
-        "worst_learning_min": 0.05,
-        "score_stdev_max": 35.0
-      },
-      "commercial_bridge": "Use Senju evidence to improve research-process quality only. A portfolio promotion still requires a human-inspectable artifact, verification proof and explicit limitations. Technical scores do not establish buyer demand, contracts, payments or revenue."
+      "commercial_bridge": "The general portfolio program exists to turn verified R&D output into something a human can inspect, understand, evaluate, sell, or reuse. Standment Security remains the current top-priority specialization. Senju technical evidence may strengthen proof quality but must not be treated as willingness-to-pay, market validation, contract value, payment, or revenue."
     },
     {
       "research_id": "RND-SENJU-ROBUSTNESS-001",
