@@ -1,41 +1,41 @@
 {
   "version": 1,
-  "updated_at": "2026-08-29T12:40:24+00:00",
+  "updated_at": "2026-08-29T13:31:02+00:00",
   "strategy": {
     "population": 120,
     "generations": 16,
-    "matches": 500,
-    "mutation_rate": 0.09,
-    "red_budget": 14,
-    "blue_budget": 14,
+    "matches": 400,
+    "mutation_rate": 0.06,
+    "red_budget": 16,
+    "blue_budget": 16,
     "seed": 20260829
   },
-  "score": 225.815,
+  "score": 222.525,
   "evaluation": {
-    "score": 225.815,
+    "score": 222.525,
     "safe": true,
-    "rating_gain": 354.9,
-    "balance": 0.616,
+    "rating_gain": 371.5,
+    "balance": 0.525,
     "learning_signal": 1.0,
     "reason": "safe balanced learning run"
   },
   "red_champion": {
     "side": "red",
-    "rating": 3973.7,
-    "resources": 30.208556063774886,
-    "generation": 18,
+    "rating": 4386.8,
+    "resources": 29.84141859483785,
+    "generation": 20,
     "genome": {
       "kind": "red",
       "focus": {
-        "sqli": 0.22,
+        "sqli": 0.179,
         "nosqli": 0.574,
         "xss": 0.908,
-        "csrf": 0.496,
+        "csrf": 0.234,
         "auth_bypass": 1.0,
         "jwt_weak": 1.0,
         "idor": 0.994,
         "priv_esc": 0.96,
-        "ssrf": 0.844,
+        "ssrf": 0.809,
         "rce": 0.121,
         "path_trav": 0.82,
         "deserial": 0.628,
@@ -46,39 +46,39 @@
         "misconfig": 0.042
       },
       "skill": 0.846,
-      "stealth": 0.863,
+      "stealth": 1.0,
       "aggression": 0.306
     }
   },
   "blue_champion": {
     "side": "blue",
-    "rating": 3915.5,
-    "resources": 43.21245572665647,
+    "rating": 4285.8,
+    "resources": 44.87106976379213,
     "generation": 14,
     "genome": {
       "kind": "blue",
       "harden": {
         "sqli": 0.413,
-        "nosqli": 0.238,
-        "xss": 0.79,
-        "csrf": 0.98,
-        "auth_bypass": 0.608,
-        "jwt_weak": 0.492,
-        "idor": 0.937,
+        "nosqli": 0.1,
+        "xss": 0.983,
+        "csrf": 1.0,
+        "auth_bypass": 0.407,
+        "jwt_weak": 0.576,
+        "idor": 0.679,
         "priv_esc": 0.551,
         "ssrf": 0.712,
-        "rce": 0.396,
-        "path_trav": 0.936,
-        "deserial": 0.937,
+        "rce": 0.128,
+        "path_trav": 1.0,
+        "deserial": 1.0,
         "xxe": 0.329,
         "ssti": 0.575,
-        "race_condition": 0.567,
+        "race_condition": 0.749,
         "secrets_exposure": 0.369,
         "misconfig": 0.677
       },
-      "detection": 1.0,
-      "patch_speed": 0.396,
-      "coverage": 0.742
+      "detection": 0.82,
+      "patch_speed": 0.567,
+      "coverage": 0.612
     }
   },
   "history": [
@@ -271,6 +271,27 @@
       "accepted_strategy_change": true,
       "changes": [
         "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T13:11:19+00:00",
+      "baseline_score": 214.95,
+      "best_score": 256.555,
+      "selected_score": 256.555,
+      "accepted_strategy_change": true,
+      "changes": [
+        "red_budget: 14 -> 16",
+        "blue_budget: 14 -> 16"
+      ]
+    },
+    {
+      "at": "2026-08-29T13:31:02+00:00",
+      "baseline_score": 215.54,
+      "best_score": 222.525,
+      "selected_score": 222.525,
+      "accepted_strategy_change": true,
+      "changes": [
+        "mutation_rate: 0.09 -> 0.06"
       ]
     }
   ]
