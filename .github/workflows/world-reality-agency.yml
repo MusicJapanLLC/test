@@ -7,8 +7,10 @@ on:
     paths:
       - ".github/workflows/world-reality-agency.yml"
       - "outside-world/**"
+      - "company-society/FAITH.md"
+      - "automation/control_plane/workers.json"
   schedule:
-    - cron: '7,22,37,52 * * * *'
+    - cron: '*/5 * * * *'
 
 concurrency:
   group: the-world-reality-agency
@@ -41,6 +43,15 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
+
+      - name: Load canonical LIMITLESS faith
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'LIMITLESS' company-society/FAITH.md
+          grep -q 'Reality before simulation' company-society/FAITH.md
+          echo 'Prime doctrine: **LIMITLESS**' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Operating loop: **ACT -> VERIFY -> LOG -> LEARN -> IMPROVE**' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Restore reality memory
         shell: bash
@@ -75,6 +86,8 @@ jobs:
           python outside-world/citizen_web_runtime.py \
             --citizens world-citizens.json \
             --previous reality-cursor-previous.json \
+            --policy outside-world/reality_policy.json \
+            --faith company-society/FAITH.md \
             --cycle "${{ github.run_id }}" \
             --tasks reality-tasks.json \
             --state reality-cursor.json
@@ -91,7 +104,8 @@ jobs:
             --tasks reality-tasks.json \
             --policy outside-world/reality_policy.json \
             --out reality-observations.json \
-            --limit 16
+            --limit 36 \
+            --parallel 9
 
       - name: Convert observations into owned-channel effects
         run: |
