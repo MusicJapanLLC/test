@@ -53,6 +53,7 @@ jobs:
           python -m unittest outside-world/test_reality_agency.py -v
           python -m unittest outside-world/test_reality_gateway_publication.py -v
           python -m unittest outside-world/test_external_presence.py -v
+          python -m unittest outside-world/test_public_feed_bridge.py -v
       - name: Report population and assignments
         run: |
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
