@@ -32,13 +32,16 @@ jobs:
       - name: Install Copilot CLI
         run: npm install -g @github/copilot@1.0.80
       - name: Run SKEPTIC
-        continue-on-error: true
         env:
           COPILOT_GITHUB_TOKEN: ${{ github.token }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          copilot -p "$(cat tomoki-agents/prompts/skeptic.md)" -s --allow-tool=write --allow-tool='shell(git:*)' --allow-tool='shell(gh:*)' --no-ask-user > /tmp/tomoki-copilot.log 2>&1 || true
-          if [[ ! -f tomoki-report.md ]]; then printf 'Copilot run failed or produced no report.\n' > tomoki-report.md; fi
+          set +e
+          copilot -p "$(cat tomoki-agents/prompts/skeptic.md)" -s --allow-tool=write --no-ask-user > /tmp/tomoki-copilot.log 2>&1
+          rc=$?
+          set -e
+          if [[ ! -f tomoki-report.md ]]; then printf 'SKEPTIC failed or produced no report. Exit code: %s\n' "$rc" > tomoki-report.md; fi
+          exit "$rc"
       - name: Persist SKEPTIC evidence for Manager
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
