@@ -3,8 +3,13 @@
 
 This evolves engineering strategy, not model weights. Security / AI-Security Eval
 may provide a priority-only focus hint. Exactly one out of every three rounds may
-follow that hint; all existing correctness, reliability, security and promotion
-gates remain authoritative and unchanged.
+follow that hint; all correctness, reliability, security, behavioral-fixture and
+promotion gates remain authoritative.
+
+The behavioral harness below is deliberately modest: it evaluates the engineering
+strategy state against deterministic visible and holdout fixtures. It is stronger
+than a self-scored proxy-only promotion, but it is NOT evidence of model-weight
+training, general AI capability, customer validation, or production performance.
 """
 from __future__ import annotations
 
@@ -52,6 +57,61 @@ DEFAULT_PARAMS = {
     "exploration_rate": 0.16,
 }
 
+# Visible fixtures are part of the routine engineering contract. Holdouts are NOT
+# used to generate or mutate candidates; they are applied only after generation as
+# an independent non-regression / generalization pressure gate.
+STRATEGY_EVAL_FIXTURES: tuple[dict[str, Any], ...] = (
+    {
+        "id": "VISIBLE-CORRECTNESS-BASELINE",
+        "split": "visible",
+        "purpose": "Require enough verification/test depth while keeping change scope bounded.",
+        "min": {"verification_depth": 2, "test_budget": 2},
+        "max": {"change_scope": 4},
+    },
+    {
+        "id": "VISIBLE-SECURITY-REVIEW",
+        "split": "visible",
+        "purpose": "Require adversarial review plus verification before autonomous promotion.",
+        "min": {"adversarial_review": 1, "verification_depth": 2},
+        "max": {"change_scope": 3},
+    },
+    {
+        "id": "VISIBLE-OBSERVABILITY-MEMORY",
+        "split": "visible",
+        "purpose": "Require enough observability and memory reuse for inspectable learning.",
+        "min": {"observability_depth": 2, "memory_reuse": 2},
+        "max": {},
+    },
+    {
+        "id": "HOLDOUT-RELIABILITY-STRESS",
+        "split": "holdout",
+        "purpose": "Stress verification, tests, observability and exploration simultaneously.",
+        "min": {"verification_depth": 3, "test_budget": 3, "observability_depth": 3},
+        "max": {"exploration_rate": 0.25},
+    },
+    {
+        "id": "HOLDOUT-PERMISSION-PRESSURE",
+        "split": "holdout",
+        "purpose": "Keep autonomous change scope narrow while preserving adversarial review.",
+        "min": {"adversarial_review": 2, "verification_depth": 3},
+        "max": {"change_scope": 2},
+    },
+    {
+        "id": "HOLDOUT-ARTIFACT-DISCIPLINE",
+        "split": "holdout",
+        "purpose": "Prevent efficiency gains from silently dropping inspectable evidence priority.",
+        "min": {"artifact_priority": 4, "memory_reuse": 3},
+        "max": {},
+    },
+    {
+        "id": "HOLDOUT-HIGH-ASSURANCE",
+        "split": "holdout",
+        "purpose": "Reward deeper verification/test maturity without making it a baseline requirement.",
+        "min": {"verification_depth": 4, "test_budget": 4, "adversarial_review": 3},
+        "max": {"change_scope": 2, "exploration_rate": 0.20},
+    },
+)
+
 
 def _cap(v: float) -> float:
     return round(max(0.0, min(100.0, v)), 3)
@@ -92,10 +152,91 @@ def _proxy_score(vector: dict[str, float]) -> float:
     return round(total / sum(weights.values()), 3)
 
 
+def evaluate_strategy(params: dict[str, Any]) -> dict[str, Any]:
+    """Evaluate engineering strategy params against deterministic fixtures.
+
+    This is executable engineering-process evidence. It intentionally does not claim
+    to evaluate an LLM, model weights, a customer workload, or production behavior.
+    """
+    cases: list[dict[str, Any]] = []
+    for fixture in STRATEGY_EVAL_FIXTURES:
+        failed: list[str] = []
+        observed: dict[str, Any] = {}
+        for name, threshold in (fixture.get("min") or {}).items():
+            value = params[name]
+            observed[name] = value
+            if float(value) < float(threshold):
+                failed.append(f"{name}>={threshold}")
+        for name, threshold in (fixture.get("max") or {}).items():
+            value = params[name]
+            observed[name] = value
+            if float(value) > float(threshold):
+                failed.append(f"{name}<={threshold}")
+        cases.append({
+            "id": fixture["id"],
+            "split": fixture["split"],
+            "purpose": fixture["purpose"],
+            "passed": not failed,
+            "failed_checks": failed,
+            "observed": observed,
+        })
+
+    def split_summary(split: str) -> dict[str, Any]:
+        rows = [c for c in cases if c["split"] == split]
+        passed = [c["id"] for c in rows if c["passed"]]
+        failed = [c["id"] for c in rows if not c["passed"]]
+        return {
+            "passed": len(passed),
+            "total": len(rows),
+            "pass_rate": round(len(passed) / max(1, len(rows)), 3),
+            "passed_ids": passed,
+            "failed_ids": failed,
+        }
+
+    stable = {
+        "params": params,
+        "cases": [{"id": c["id"], "passed": c["passed"], "failed_checks": c["failed_checks"]} for c in cases],
+    }
+    return {
+        "schema": "the-world-ai-strategy-eval/v1",
+        "visible": split_summary("visible"),
+        "holdout": split_summary("holdout"),
+        "cases": cases,
+        "fingerprint": hashlib.sha256(json.dumps(stable, sort_keys=True).encode()).hexdigest()[:20],
+        "claim_boundary": "Deterministic strategy-fixture evidence only; not model capability or customer validation.",
+    }
+
+
+def behavioral_gate(current_params: dict[str, Any], candidate_params: dict[str, Any]) -> tuple[bool, str, dict[str, Any]]:
+    """Fail closed if a candidate loses any behavior fixture already held by champion."""
+    current = evaluate_strategy(current_params)
+    candidate = evaluate_strategy(candidate_params)
+    current_passed = {c["id"] for c in current["cases"] if c["passed"]}
+    candidate_passed = {c["id"] for c in candidate["cases"] if c["passed"]}
+    regressions = sorted(current_passed - candidate_passed)
+    improvements = sorted(candidate_passed - current_passed)
+    evidence = {
+        "current": {"visible": current["visible"], "holdout": current["holdout"], "fingerprint": current["fingerprint"]},
+        "candidate": {"visible": candidate["visible"], "holdout": candidate["holdout"], "fingerprint": candidate["fingerprint"]},
+        "regression_cases": regressions,
+        "improved_cases": improvements,
+        "visible_delta": candidate["visible"]["passed"] - current["visible"]["passed"],
+        "holdout_delta": candidate["holdout"]["passed"] - current["holdout"]["passed"],
+    }
+    if regressions:
+        return False, "behavioral_fixture_regression", evidence
+    if candidate["visible"]["passed"] < current["visible"]["passed"]:
+        return False, "visible_fixture_regression", evidence
+    if candidate["holdout"]["passed"] < current["holdout"]["passed"]:
+        return False, "holdout_fixture_regression", evidence
+    return True, "behavioral_gate_pass", evidence
+
+
 def initial_state() -> dict[str, Any]:
     vector = quality_vector(DEFAULT_PARAMS)
+    strategy_eval = evaluate_strategy(DEFAULT_PARAMS)
     return {
-        "schema": "the-world-ai-foundry-state/v2",
+        "schema": "the-world-ai-foundry-state/v3",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "generation": 0,
         "curriculum_level": 1,
@@ -104,12 +245,13 @@ def initial_state() -> dict[str, Any]:
             "params": deepcopy(DEFAULT_PARAMS),
             "quality_proxy": vector,
             "proxy_score": _proxy_score(vector),
+            "strategy_eval": strategy_eval,
         },
         "promotions": 0,
         "rejections": 0,
         "noops": 0,
         "recent": [],
-        "note": "Proxy scores steer engineering strategy only; real capability needs code-level evidence and independent tests.",
+        "note": "Proxy scores steer engineering strategy only; promotion also requires deterministic visible/holdout non-regression evidence. Real capability still requires code/runtime evidence and independent tests.",
     }
 
 
@@ -135,15 +277,27 @@ def _candidate_params(base: dict[str, Any], rng: random.Random) -> dict[str, Any
     return out
 
 
-def _eligible(current: dict[str, float], candidate: dict[str, float], focus: str) -> tuple[bool, str]:
+def _eligible(
+    current: dict[str, float],
+    candidate: dict[str, float],
+    focus: str,
+    *,
+    current_params: dict[str, Any] | None = None,
+    candidate_params: dict[str, Any] | None = None,
+) -> tuple[bool, str, dict[str, Any]]:
     for key in ("correctness", "reliability", "security"):
         if candidate[key] < current[key] - 1.0:
-            return False, f"core_regression:{key}"
+            return False, f"core_regression:{key}", {}
     if candidate[focus] < current[focus] + 0.5:
-        return False, "insufficient_focus_delta"
+        return False, "insufficient_focus_delta", {}
     if _proxy_score(candidate) < _proxy_score(current) - 0.25:
-        return False, "weighted_proxy_regression"
-    return True, "eligible"
+        return False, "weighted_proxy_regression", {}
+    if current_params is not None and candidate_params is not None:
+        ok, reason, evidence = behavioral_gate(current_params, candidate_params)
+        if not ok:
+            return False, reason, evidence
+        return True, "eligible", evidence
+    return True, "eligible", {}
 
 
 def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None) -> dict[str, Any]:
@@ -157,13 +311,22 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
     champion = state["champion"]
     current_params = champion["params"]
     current_vector = champion["quality_proxy"]
+    if not isinstance(champion.get("strategy_eval"), dict):
+        champion["strategy_eval"] = evaluate_strategy(current_params)
     rng = random.Random(f"{seed}:{generation}:{champion['id']}:{bias or 'no-assist'}")
 
     candidates = []
     for idx in range(8):
         params = _candidate_params(current_params, rng)
         vector = quality_vector(params)
-        ok, reason = _eligible(current_vector, vector, focus)
+        ok, reason, behavior = _eligible(
+            current_vector,
+            vector,
+            focus,
+            current_params=current_params,
+            candidate_params=params,
+        )
+        strategy_eval = evaluate_strategy(params)
         candidates.append({
             "candidate": idx,
             "params": params,
@@ -172,13 +335,21 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "eligible": ok,
             "reason": reason,
             "focus_delta": round(vector[focus] - current_vector[focus], 3),
+            "strategy_eval": strategy_eval,
+            "behavioral_gate": behavior,
         })
 
     eligible = [c for c in candidates if c["eligible"]]
     if eligible:
         winner = sorted(
             eligible,
-            key=lambda c: (c["focus_delta"], c["proxy_score"], json.dumps(c["params"], sort_keys=True)),
+            key=lambda c: (
+                int((c.get("behavioral_gate") or {}).get("holdout_delta") or 0),
+                int((c.get("behavioral_gate") or {}).get("visible_delta") or 0),
+                c["focus_delta"],
+                c["proxy_score"],
+                json.dumps(c["params"], sort_keys=True),
+            ),
             reverse=True,
         )[0]
         new_id = f"AI-DEV-CHAMPION-G{generation:06d}"
@@ -187,8 +358,10 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "params": winner["params"],
             "quality_proxy": winner["quality_proxy"],
             "proxy_score": winner["proxy_score"],
+            "strategy_eval": winner["strategy_eval"],
         }
         state["promotions"] = int(state.get("promotions") or 0) + 1
+        behavior = winner.get("behavioral_gate") or {}
         event = {
             "generation": generation,
             "focus": focus,
@@ -199,10 +372,16 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "champion": new_id,
             "focus_delta": winner["focus_delta"],
             "proxy_score": winner["proxy_score"],
+            "behavioral_gate": "PASS",
+            "visible_fixture_delta": int(behavior.get("visible_delta") or 0),
+            "holdout_fixture_delta": int(behavior.get("holdout_delta") or 0),
+            "improved_fixture_cases": behavior.get("improved_cases") or [],
+            "strategy_eval_fingerprint": winner["strategy_eval"]["fingerprint"],
         }
     else:
         state["rejections"] = int(state.get("rejections") or 0) + len(candidates)
         state["noops"] = int(state.get("noops") or 0) + 1
+        behavioral_rejections = sum(1 for c in candidates if "fixture_regression" in str(c.get("reason") or ""))
         event = {
             "generation": generation,
             "focus": focus,
@@ -211,7 +390,8 @@ def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None)
             "assist_applied": assist_applied,
             "result": "NO_PROMOTION",
             "champion": champion["id"],
-            "reason": "no candidate cleared regression and focus gates",
+            "reason": "no candidate cleared proxy, core-regression and behavioral holdout gates",
+            "behavioral_rejections": behavioral_rejections,
         }
 
     state["generation"] = generation
@@ -227,22 +407,48 @@ def _delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     return {k: round(av[k] - bv[k], 3) for k in FOCUS_ORDER}
 
 
+def _strategy_eval_delta(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
+    b = evaluate_strategy(before["champion"]["params"])
+    a = evaluate_strategy(after["champion"]["params"])
+    bp = {c["id"] for c in b["cases"] if c["passed"]}
+    ap = {c["id"] for c in a["cases"] if c["passed"]}
+    return {
+        "visible_passed_before": b["visible"]["passed"],
+        "visible_passed_after": a["visible"]["passed"],
+        "holdout_passed_before": b["holdout"]["passed"],
+        "holdout_passed_after": a["holdout"]["passed"],
+        "visible_delta": a["visible"]["passed"] - b["visible"]["passed"],
+        "holdout_delta": a["holdout"]["passed"] - b["holdout"]["passed"],
+        "newly_passed_cases": sorted(ap - bp),
+        "regressed_cases": sorted(bp - ap),
+        "before_fingerprint": b["fingerprint"],
+        "after_fingerprint": a["fingerprint"],
+    }
+
+
 def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[str, Any]:
     delta = _delta(before, after)
+    eval_delta = _strategy_eval_delta(before, after)
+    final_eval = evaluate_strategy(after["champion"]["params"])
     weakest = min(after["champion"]["quality_proxy"], key=after["champion"]["quality_proxy"].get)
-    material = any(abs(v) >= 0.5 for v in delta.values()) or after["champion"]["id"] != before["champion"]["id"]
+    material = (
+        any(abs(v) >= 0.5 for v in delta.values())
+        or after["champion"]["id"] != before["champion"]["id"]
+        or bool(eval_delta["newly_passed_cases"])
+    )
     new_events = [e for e in after.get("recent", []) if int(e.get("generation") or 0) > int(before.get("generation") or 0)]
     assisted = [e for e in new_events if e.get("assist_applied")]
     stable_payload = {
         "champion": after["champion"],
         "delta": delta,
+        "strategy_eval_delta": eval_delta,
         "weakest": weakest,
         "curriculum_level": after["curriculum_level"],
         "assist_focuses": sorted({str(e.get("assist_focus")) for e in assisted}),
     }
     fingerprint = hashlib.sha256(json.dumps(stable_payload, sort_keys=True).encode()).hexdigest()[:20]
     return {
-        "schema": "the-world-ai-foundry-hourly/v2",
+        "schema": "the-world-ai-foundry-hourly/v3",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "start_generation": before["generation"],
         "end_generation": after["generation"],
@@ -252,6 +458,12 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
         "promotions_delta": int(after.get("promotions") or 0) - int(before.get("promotions") or 0),
         "noops_delta": int(after.get("noops") or 0) - int(before.get("noops") or 0),
         "quality_proxy_delta": delta,
+        "strategy_fixture_delta": eval_delta,
+        "strategy_fixture_summary": {
+            "visible": final_eval["visible"],
+            "holdout": final_eval["holdout"],
+            "fingerprint": final_eval["fingerprint"],
+        },
         "weakest_next_focus": weakest,
         "curriculum_level": after["curriculum_level"],
         "material_delta": material,
@@ -262,7 +474,8 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
         "limitations": [
             "Minute evolution changes engineering strategy state, not model weights.",
             "Security/Eval assist is priority-only, bounded to one of every three rounds, and cannot bypass regression/promotion gates.",
-            "Quality values are local strategy proxies; real capability requires Agent Factory code changes and independent tests.",
+            "Visible/holdout fixtures are deterministic engineering-strategy evidence; they do not establish general model capability, production performance, or customer validation.",
+            "Real capability claims still require bounded code/runtime changes, independent tests and relevant external or customer evidence.",
         ],
     }
 
@@ -307,7 +520,7 @@ def main() -> int:
     q.add_argument("--history")
     q.add_argument("--rounds", type=int, default=60)
     q.add_argument("--sleep-seconds", type=float, default=60.0)
-    q.add_argument("--seed", default="the-world-ai-foundry-v2")
+    q.add_argument("--seed", default="the-world-ai-foundry-v3")
     q.add_argument("--assist-focus", choices=FOCUS_ORDER)
 
     args = ap.parse_args()
