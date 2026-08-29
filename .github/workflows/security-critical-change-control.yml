@@ -61,14 +61,14 @@ jobs:
             exit 0
           fi
 
-          # GitHub can transiently return zero for a fresh commit that is already the
-          # exact head of an open PR. Fail closed, but cross-check that independently
-          # instead of treating one API's propagation lag as proof of no PR.
+          # Cross-check a fresh branch-head commit against the exact head SHA of an
+          # open PR. This keeps the gate fail-closed while avoiding API propagation
+          # false negatives from the commit-association endpoint.
           OWNER="${GITHUB_REPOSITORY%%/*}"
           HEAD_MATCH="$(gh api \
             -H 'Accept: application/vnd.github+json' \
             "repos/${GITHUB_REPOSITORY}/pulls?state=open&head=${OWNER}:${GITHUB_REF_NAME}&per_page=100" \
-            --jq --arg sha "$GITHUB_SHA" '[.[] | select(.head.sha == $sha)] | length')"
+            --jq "[.[] | select(.head.sha == \"${GITHUB_SHA}\")] | length")"
 
           if [ "$HEAD_MATCH" -ge 1 ]; then
             echo "PR trace: PASS via exact open-PR head SHA (${GITHUB_REF_NAME}@${GITHUB_SHA})" >> "$GITHUB_STEP_SUMMARY"
