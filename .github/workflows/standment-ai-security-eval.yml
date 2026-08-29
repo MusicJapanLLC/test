@@ -10,6 +10,8 @@ on:
       - '.github/workflows/standment-ai-security-eval.yml'
       - 'automation/security/llm_security_eval.py'
       - 'automation/security/test_llm_security_eval.py'
+      - 'automation/security/ai_security_feedback.py'
+      - 'automation/security/test_ai_security_feedback.py'
       - 'standment-security/ai-security/llm-security-eval-harness.md'
       - 'standment-security/ai-security/llm-security-eval-evidence-pack.md'
       - 'standment-security/ai-security/fixtures/**'
@@ -103,10 +105,10 @@ jobs:
           PY
           cat reports/standment-ai-security/collaboration-context.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify LLM security evaluator
+      - name: Verify LLM security evaluator and bounded feedback contract
         run: |
           set -euo pipefail
-          python -m unittest -v automation.security.test_llm_security_eval
+          python -m unittest -v automation.security.test_llm_security_eval automation.security.test_ai_security_feedback
 
       - name: Measure synthetic vulnerable baseline
         run: |
@@ -162,6 +164,33 @@ jobs:
           PY
           cat reports/standment-ai-security/comparison.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Compile bounded feedback for next AI + Security cycles
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --before reports/standment-ai-security/before.json
+            --after reports/standment-ai-security/after.json
+            --out reports/standment-ai-security/feedback.json
+          )
+          if [[ -f reports/standment-ai-security/collaboration-context.json ]]; then
+            args+=(--context reports/standment-ai-security/collaboration-context.json)
+          fi
+          python automation/security/ai_security_feedback.py "${args[@]}"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          d=json.loads(Path('reports/standment-ai-security/feedback.json').read_text(encoding='utf-8'))
+          g=d['guidance']
+          print('## Bounded feedback to next cycles')
+          print(f"- authority: **{d['authority']}**")
+          print(f"- feedback token: `{d['feedback_token']}`")
+          print(f"- AI priority focus: **{g['ai_priority_focus']}**")
+          print(f"- Security priority lens: **{g['security_priority_lens']}**")
+          print(f"- challenge next: {g['challenge_next']}")
+          print('- Gates / permissions / external scope: **UNCHANGED**')
+          PY
+
       - name: Preserve AI-security portfolio evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -175,5 +204,6 @@ jobs:
             reports/standment-ai-security/after.json
             reports/standment-ai-security/after.md
             reports/standment-ai-security/comparison.md
+            reports/standment-ai-security/feedback.json
             reports/standment-ai-security/collaboration-context.json
             reports/standment-ai-security/collaboration-context.md
