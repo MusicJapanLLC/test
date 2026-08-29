@@ -1,0 +1,47 @@
+name: THE WORLD External Write Stress 100
+
+on:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - ".github/workflows/external-write-stress-100.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  write-stress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Post writes 004 through 100 to owned issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -u
+          success=0
+          failed=0
+          for i in $(seq 4 100); do
+            n=$(printf '%03d' "$i")
+            body="[WRITE TEST ${n}/100] THE WORLD autonomous external write — LIMITLESS / ACT→VERIFY→LOG→LEARN→IMPROVE"
+            if gh api --method POST "repos/${REPO}/issues/93/comments" -f body="$body" >/tmp/resp.json 2>/tmp/err.txt; then
+              success=$((success+1))
+            else
+              failed=$((failed+1))
+              echo "write ${n} failed: $(cat /tmp/err.txt)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            sleep 0.35
+          done
+          {
+            echo "## External write stress result"
+            echo "- requested in workflow: 97"
+            echo "- success: ${success}"
+            echo "- failed: ${failed}"
+            echo "- total including 3 connector writes before workflow: $((success+3)) / 100"
+            echo "- target: ${REPO}#93"
+          } >> "$GITHUB_STEP_SUMMARY"
+          test "$success" -gt 0
