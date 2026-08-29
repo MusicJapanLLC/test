@@ -11,6 +11,19 @@ class SenjuBridgeTests(unittest.TestCase):
         ]}
         self.assertEqual(choose_research(q)["research_id"], "R2")
 
+    def test_research_prose_can_discuss_boundaries_without_becoming_directive_surface(self):
+        q = {"active": [{
+            "research_id":"R","title":"scope robustness","problem":"network variance in a simulator description",
+            "hypothesis":"keep permission boundaries fixed while testing robustness","focus":"robustness",
+            "priority":10,"candidate_count":7,"success":{},"commercial_bridge":"technical evidence only",
+        }]}
+        picked = choose_research(q)
+        d = build_directive(picked)
+        self.assertEqual(d["research_id"], "R")
+        self.assertNotIn("target", d)
+        self.assertNotIn("network", d)
+        self.assertNotIn("permission", d)
+
     def test_directive_is_bounded(self):
         d = build_directive({"research_id":"R","focus":"robustness","candidate_count":99,"hypothesis":"h"})
         self.assertEqual(d["candidate_count"], 9)
