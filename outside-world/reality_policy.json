@@ -1,0 +1,52 @@
+{
+  "schema": "the-world-reality-policy/v1",
+  "mode": "active_bounded_autonomy",
+  "pulse": {
+    "target_seconds": 60,
+    "github_watchdog_minutes": 5,
+    "max_citizens_per_pulse": 16,
+    "max_observations_per_pulse": 24,
+    "max_publications_per_pulse": 2
+  },
+  "actions": {
+    "public_web_observe": "AUTO",
+    "public_feed_observe": "AUTO",
+    "youtube_public_observe": "AUTO",
+    "research_synthesize": "AUTO",
+    "draft_external_post": "AUTO",
+    "github_issue_own_repo": "AUTO_ALLOWLIST",
+    "slack_post_owned_workspace": "AUTO_ALLOWLIST",
+    "gmail_read": "AUTO_WITH_EXISTING_OAUTH",
+    "gmail_label": "AUTO_WITH_EXISTING_RULES",
+    "gmail_archive": "AUTO_WITH_EXISTING_RULES",
+    "gmail_send": "APPROVAL",
+    "general_external_post": "APPROVAL",
+    "new_service_identity": "APPROVAL",
+    "purchase_or_payment": "APPROVAL",
+    "contract_or_legal_commitment": "APPROVAL"
+  },
+  "allowlists": {
+    "github_repositories": ["MusicJapanLLC/test"],
+    "slack_webhook_secret_names": ["RND_SLACK_WEBHOOK_URL", "CEO_REPORT_WEBHOOK_URL"],
+    "public_browser_hosts": ["github.com", "github.blog", "news.ycombinator.com", "hnrss.org", "dev.to", "arxiv.org", "export.arxiv.org", "youtube.com", "www.youtube.com", "note.com"]
+  },
+  "identity": {
+    "logical_identity_per_citizen": true,
+    "credentials": "secret_reference_only",
+    "human_identity_impersonation": false,
+    "service_identity_creation": "approval"
+  },
+  "browser": {
+    "authenticated_sessions": "explicit_capability_required",
+    "respect_service_limits": true,
+    "respect_access_controls": true,
+    "engagement_manipulation": false,
+    "bulk_unsolicited_messaging": false
+  },
+  "logging": {
+    "record_every_effect": true,
+    "record_fields": ["citizen_id", "action", "target", "decision", "timestamp", "result_id"],
+    "store_secrets": false,
+    "store_private_message_body_in_artifacts": false
+  }
+}
