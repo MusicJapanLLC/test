@@ -1,4 +1,7 @@
+import json
+import tempfile
 import unittest
+from pathlib import Path
 
 from automation.world import ai_security_joint_lab as joint
 
@@ -103,6 +106,37 @@ class JointLabTests(unittest.TestCase):
         self.assertEqual(packet["joint_focus"]["ai"], "architecture")
         self.assertEqual(packet["joint_focus"]["auditability_pressure"], "REGRESSION_WATCH")
         self.assertEqual(packet["handoff"]["guidance"]["ai_priority_focus"], "architecture")
+
+    def test_load_auditability_rejects_wrong_result_and_recovers_canonical_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            staged = root / "auditability-result.json"
+            staged.write_text(json.dumps({"schema": "standment-llm-security-eval/v1", "status": "PASS"}), encoding="utf-8")
+            source = root / "sources" / "auditability"
+            source.mkdir(parents=True)
+            canonical = {
+                "schema": "standment-agent-auditability-evidence/v1",
+                "track": "SEC-PORT-005",
+                "status": "PASS",
+                "verification_state": "SCOPED_VERIFIED_CANDIDATE",
+                "auditability_score": 1.0,
+                "actual_mutations": 8,
+                "deny_reached_execution": 0,
+                "fingerprint": "canonical",
+                "source_run": "123",
+                "gaps": [],
+            }
+            (source / "result.json").write_text(json.dumps(canonical), encoding="utf-8")
+            loaded = joint._load_auditability(str(staged))
+            self.assertEqual(loaded["schema"], "standment-agent-auditability-evidence/v1")
+            self.assertEqual(loaded["track"], "SEC-PORT-005")
+            self.assertEqual(loaded["fingerprint"], "canonical")
+
+    def test_load_auditability_rejects_unrelated_result_without_canonical_fallback(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            staged = Path(tmp) / "auditability-result.json"
+            staged.write_text(json.dumps({"schema": "standment-llm-security-eval/v1", "status": "PASS"}), encoding="utf-8")
+            self.assertEqual(joint._load_auditability(str(staged)), {})
 
 
 if __name__ == "__main__":
