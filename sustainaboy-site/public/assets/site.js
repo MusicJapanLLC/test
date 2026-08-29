@@ -3,16 +3,17 @@ if(btn&&nav){btn.addEventListener('click',()=>{const open=nav.classList.toggle('
 const io='IntersectionObserver'in window?new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('is-visible');io.unobserve(e.target)}}),{threshold:.08}):null;
 document.querySelectorAll('.reveal').forEach(el=>io?io.observe(el):el.classList.add('is-visible'));
 
-/* Homepage finishing layer: keep the hero image-free and add a mobile-only sticky CTA. */
+const globalFix=document.createElement('link');
+globalFix.rel='stylesheet';
+globalFix.href='/assets/global-fix.css';
+document.head.appendChild(globalFix);
+
 const isHome=location.pathname==='/'||location.pathname==='/index.html';
 if(isHome){
   const polish=document.createElement('link');
   polish.rel='stylesheet';
   polish.href='/assets/home-polish.css';
   document.head.appendChild(polish);
-
-  const heroVisual=document.querySelector('.hero-visual');
-  if(heroVisual)heroVisual.setAttribute('aria-hidden','true');
 
   if(!document.querySelector('.mobile-sticky-cta')){
     const sticky=document.createElement('aside');
