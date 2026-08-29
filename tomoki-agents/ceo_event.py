@@ -33,9 +33,11 @@ def classify(agent: str, status: str, body: str) -> tuple[str, bool]:
         material = "まだ終わってない" in body or "長く放置" in body or "今回また出た" in body
         return ("BUILDING" if material else "VERIFIED"), material
     if a == "FORGE":
+        if "merged" in s:
+            return "VERIFIED", True
         if any(x in s for x in ("revert", "reject")):
             return "EXPERIMENT", True
-        if any(x in s for x in ("pr-created", "validated-patch", "branch-only", "merged")):
+        if any(x in s for x in ("pr-created", "validated-patch", "branch-only")):
             return "BUILDING", True
         return "EXPERIMENT", False
     return "BUILDING", True
