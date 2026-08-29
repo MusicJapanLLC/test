@@ -24,6 +24,7 @@ ROLE_POOL = [
     ("replicator", "Design an independent reproduction / clean-run verification."),
     ("test_engineer", "Design the smallest tests that would prove or disprove improvement."),
     ("systems_engineer", "Find the smallest bounded implementation improvement."),
+    ("elite_whitehat", "Act as the R&D elite white-hat adversarial lead: model realistic attacker paths against owned/explicitly authorized lab systems, find control gaps, require safe reproduction, remediation, retest and preserved evidence."),
     ("portfolio_translator", "Turn technical proof into a human-inspectable artifact."),
     ("failure_archaeologist", "Search for repeated failures and lessons that must not recur."),
     ("reliability_engineer", "Improve durability, retries, observability and deterministic recovery."),
@@ -87,22 +88,22 @@ def _security_track(program: dict[str, Any]) -> dict[str, Any] | None:
 
 def _agent_count(mission: dict[str, Any], track: dict[str, Any] | None) -> int:
     priority = int(mission.get("priority") or 0)
-    count = 6
+    count = 7
     if priority >= 1000:
         count += 2
     if priority >= 2000:
         count += 2
     if track and str(mission.get("research_id") or "").startswith(("RND-STANDMENT", "RND-PORTFOLIO")):
-        count += 2
-    return max(6, min(12, count))
+        count += 1
+    return max(7, min(12, count))
 
 
 def _role_order(run_id: str, mission_id: str, count: int) -> list[tuple[str, str]]:
-    # Critical independent roles always exist. Remaining roles are deterministically
-    # rotated per run to avoid a permanently fixed research monoculture.
-    mandatory = [ROLE_POOL[0], ROLE_POOL[1], ROLE_POOL[2], ROLE_POOL[3], ROLE_POOL[4]]
-    rest = ROLE_POOL[5:]
-    seed = hashlib.sha256(f"{run_id}:{mission_id}:agent-factory-v1".encode()).digest()
+    # Critical independent roles always exist. The elite white-hat is mandatory in
+    # every R&D security swarm so adversarial review cannot be rotated away.
+    mandatory = [ROLE_POOL[0], ROLE_POOL[1], ROLE_POOL[2], ROLE_POOL[3], ROLE_POOL[4], ROLE_POOL[5]]
+    rest = ROLE_POOL[6:]
+    seed = hashlib.sha256(f"{run_id}:{mission_id}:agent-factory-v2".encode()).digest()
     ranked = sorted(rest, key=lambda item: hashlib.sha256(seed + item[0].encode()).digest())
     return (mandatory + ranked)[:count]
 
@@ -116,7 +117,7 @@ def build_plan(root: Path, run_id: str) -> dict[str, Any]:
     roles = _role_order(run_id, str(mission.get("research_id") or "unknown"), count)
     agents: list[AgentSpec] = []
     for slot, (role, mandate) in enumerate(roles):
-        stance = "RED" if role in {"red_skeptic", "failure_archaeologist", "counterevidence_curator"} else "BLUE" if role in {"systems_engineer", "portfolio_translator", "integration_engineer"} else "INDEPENDENT"
+        stance = "RED" if role in {"red_skeptic", "failure_archaeologist", "counterevidence_curator", "elite_whitehat"} else "BLUE" if role in {"systems_engineer", "portfolio_translator", "integration_engineer"} else "INDEPENDENT"
         agents.append(AgentSpec(
             agent_id=f"AF-{run_id}-{slot:02d}",
             slot=slot,
@@ -127,7 +128,7 @@ def build_plan(root: Path, run_id: str) -> dict[str, Any]:
         ))
 
     return {
-        "schema": "the-world-agent-factory-plan/v1",
+        "schema": "the-world-agent-factory-plan/v2",
         "run_id": run_id,
         "mission": {
             "research_id": mission.get("research_id"),
@@ -148,6 +149,12 @@ def build_plan(root: Path, run_id: str) -> dict[str, Any]:
             "direct_main_push": False,
             "pr_required": True,
         },
+        "whitehat_contract": {
+            "mandatory_role": "elite_whitehat",
+            "scope": "owned or explicitly authorized lab systems only",
+            "required_output": ["attack-path hypothesis", "safe reproduction plan", "control gap", "remediation", "retest", "counterevidence", "limitations"],
+            "forbidden": ["third-party targeting", "credential theft", "destructive exploitation", "stealth persistence", "permission escalation", "victim data"],
+        },
         "forbidden_agent_scope": list(FORBIDDEN_AGENT_SCOPE),
         "success_definition": "parallel evidence-backed experiments/day and verified portfolio deltas, not headcount",
     }
@@ -160,6 +167,16 @@ def _prompt(plan: dict[str, Any], slot: int) -> str:
     agent = agents[slot]
     mission = plan["mission"]
     track = plan.get("security_track") or {}
+    extra = ""
+    if agent.get("role") == "elite_whitehat":
+        extra = """
+ELITE WHITE-HAT CONTRACT
+- Think like a highly capable adversary, but operate only on owned or explicitly authorized lab scope.
+- Prioritize trust-boundary failures, auth/tenant mistakes, secrets exposure, supply-chain weaknesses, unsafe agent tool permissions, prompt-injection boundaries, recovery gaps and evidence blind spots.
+- Do not provide operational intrusion steps against third-party systems.
+- Any attack-path hypothesis must terminate in a safe reproduction plan, remediation and retest criteria.
+- A finding without reproducible defensive evidence is not a win.
+"""
     return f"""You are ephemeral research worker {agent['agent_id']} inside THE WORLD Agent Factory.
 You exist for this run only. Your role is {agent['role']} ({agent['stance']}).
 Mandate: {agent['mandate']}
@@ -178,7 +195,7 @@ title: {track.get('title')}
 hypothesis: {track.get('hypothesis')}
 deliverable: {track.get('deliverable')}
 evidence_files: {json.dumps(track.get('evidence_files') or [], ensure_ascii=False)}
-
+{extra}
 BOUNDARIES
 - Work only from the repository facts in the mission/track and generally known engineering reasoning.
 - Defensive / owned / explicitly authorized scope only.
