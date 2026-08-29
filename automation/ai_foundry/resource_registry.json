@@ -1,0 +1,41 @@
+{
+  "schema": "the-world-ai-foundry-resource-registry/v1",
+  "principle": "reuse measured capabilities before adding platforms or agents",
+  "conversation_core": {
+    "name": "AI FOUNDRY CORE — AI Development Model",
+    "brainbase_agent_id": "a0b16635-497f-434a-ba84-2323fb064636",
+    "default_model": "gpt-5.6-sol",
+    "orchestration_id": "f435060d-985b-4a57-9fd0-065fa826c129"
+  },
+  "resources": [
+    {"id": "brainbase", "role": "conversation and orchestration", "status": "connected"},
+    {"id": "github", "role": "source of truth, branch, PR and CI evidence", "status": "connected", "repository": "MusicJapanLLC/test"},
+    {"id": "supabase", "role": "durable task/run/memory state", "status": "connected", "project_id": "czwdtjgunsafcifjhpwt"},
+    {"id": "vercel", "role": "preview deployment and runtime evidence", "status": "connected", "team_id": "team_YYjb3kjHKNHDFvupwnzuBcRw"},
+    {"id": "context_dev", "role": "current technical research", "status": "connected_to_foundry"},
+    {"id": "exa", "role": "current technical search", "status": "connected_to_foundry"},
+    {"id": "openai_agents_sdk", "role": "code-level agent runtime", "status": "preferred_runtime"},
+    {"id": "agent_factory", "role": "bounded implementation tournament", "status": "existing"},
+    {"id": "senju", "role": "parallel evaluation/evolution arena", "status": "existing"},
+    {"id": "ai_security", "role": "independent AI-system verification", "status": "existing"},
+    {"id": "ai_blackbox", "role": "operational worklog, failure memory, handoff and eval continuity", "status": "existing"}
+  ],
+  "existing_specialists": [
+    "System Architect",
+    "Full-stack Engineer Alpha",
+    "Full-stack Engineer Beta",
+    "Application Security Auditor",
+    "QA & Release Gatekeeper",
+    "Arena Judge",
+    "Agent Evolution Engineer",
+    "GitHub & DevOps Integrator",
+    "Research Lead"
+  ],
+  "non_goals": [
+    "duplicate the Agent Factory",
+    "duplicate Senju",
+    "create agents only to increase agent count",
+    "claim strategy-score movement is model-weight improvement",
+    "replace existing independent QA and release gates"
+  ]
+}
