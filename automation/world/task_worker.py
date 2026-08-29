@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
-GATEWAY_PROTOCOL = "oidc-repository-v5-experiment-learning"
+GATEWAY_PROTOCOL = "oidc-repository-v6-parallel-learning"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
 
 
@@ -100,11 +100,19 @@ def main() -> int:
     q.add_argument("--out", default=None)
     args = p.parse_args()
 
-    if args.cmd in {"claim", "review"}:
-        data = _edge({"action": args.cmd})
+    if args.cmd == "claim":
+        slot = os.environ.get("WORLD_WORKER_SLOT", "0")
+        data = _edge({"action": "claim", "worker_slot": slot})
         _write(args.out, data)
         task = data.get("task")
-        print("NO_TASK" if not task else f"{args.cmd.upper()} {task.get('id')} {task.get('title')}")
+        print("NO_TASK" if not task else f"CLAIM {task.get('id')} {task.get('title')}")
+        return 0
+
+    if args.cmd == "review":
+        data = _edge({"action": "review"})
+        _write(args.out, data)
+        task = data.get("task")
+        print("NO_TASK" if not task else f"REVIEW {task.get('id')} {task.get('title')}")
         return 0
 
     if args.cmd == "experiment-config":
