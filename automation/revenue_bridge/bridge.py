@@ -48,10 +48,20 @@ def proof_strength(value: dict[str, Any], performance: dict[str, Any]) -> tuple[
     return min(100, score), evidence
 
 
+def previous_cursor(previous: dict[str, Any]) -> int:
+    value = previous.get("prospect_cursor", -1)
+    if value is None:
+        return -1
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return -1
+
+
 def build(catalog: dict[str, Any], value: dict[str, Any], performance: dict[str, Any], previous: dict[str, Any]) -> dict[str, Any]:
     products = catalog.get("products") or []
     strength, evidence = proof_strength(value, performance)
-    prior_idx = int(previous.get("prospect_cursor", -1) or -1)
+    prior_idx = previous_cursor(previous)
     bridges: list[dict[str, Any]] = []
 
     for product in products:
@@ -90,10 +100,12 @@ def build(catalog: dict[str, Any], value: dict[str, Any], performance: dict[str,
             "commercial_claim_rule": "Do not call this revenue until a real meeting/proposal/order/payment is recorded."
         })
 
+    first_prospects = list(products[0].get("named_prospects", [])) if products else []
+    next_cursor = ((prior_idx + 1) % len(first_prospects)) if first_prospects else -1
     return {
         "schema": "revenue-bridge-report/v1",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "prospect_cursor": ((prior_idx + 1) % len(products[0].get("named_prospects", []))) if products and products[0].get("named_prospects") else -1,
+        "prospect_cursor": next_cursor,
         "bridges": bridges,
     }
 
