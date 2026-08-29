@@ -1,0 +1,9 @@
+{
+  "schema": "standment-security-slack-outbox-v1",
+  "report_date_jst": "2026-08-30",
+  "generated_at_jst": "2026-08-30T03:14:00+09:00",
+  "channel_id": "C0BTJ38SNNA",
+  "source": "github-make-slack",
+  "delivery_mode": "make-pull-no-github-secret",
+  "message": "*STANDMENT SECURITY｜DELIVERY ROUTE RESTORED*\nGitHub → Slack の配送を、GitHub Actions の Slack Webhook Secret 依存から切り離しました。\n\n*Before*\nGitHub Actions が `PORTFOLIO_SLACK_WEBHOOK_URL` / `RND_SLACK_WEBHOOK_URL` を要求し、未設定なら配送停止。\n\n*After*\nGitHub は日次Portfolio/R&D結果を outbox JSON に保存し、Make がSlack接続を使って取得・配送する方式へ移行。\n\n*Benefit*\nGitHub側のSlack Webhook Secret未設定を、毎日の恒常ブロッカーとして扱う必要がなくなります。\n\n*Status*\nこのメッセージは新配送ルートのbootstrap。次回以降は日次Security Portfolio evolution digestで上書きされます。"
+}
