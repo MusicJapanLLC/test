@@ -154,7 +154,7 @@ jobs:
               'schedule:',
               'persist-credentials: false',
               '@github/copilot@1.0.80',
-              'COPILOT_GITHUB_TOKEN: ${{ github.token }}',
+              'COPILOT_GITHUB_TOKEN:',
               'cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py',
               'cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh',
               'git add -N -- sales-command-30',
