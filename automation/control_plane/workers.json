@@ -1,6 +1,19 @@
 {
   "schema": "ai-factory-worker-registry/v1",
   "default_branch": "claude/employee-onboarding-setup-udm86",
+  "company_culture": {
+    "faith": "THE_COVENANT",
+    "scripture": "company-society/FAITH.md",
+    "inherit_by_all_workers": true,
+    "operating_creed": [
+      "truth_before_comfort",
+      "repair_before_blame",
+      "rest_is_maintenance",
+      "confession_creates_memory",
+      "conflict_must_produce_synthesis",
+      "improvement_is_worship"
+    ]
+  },
   "workers": [
     {
       "id": "gmail-sorter",
@@ -11,7 +24,8 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
-      "forge_allowed": true
+      "forge_allowed": true,
+      "faith_duty": "truth_before_comfort"
     },
     {
       "id": "tomoki-skeptic",
@@ -22,7 +36,8 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml"],
-      "forge_allowed": false
+      "forge_allowed": false,
+      "faith_duty": "truth_before_comfort"
     },
     {
       "id": "tomoki-hound",
@@ -33,7 +48,8 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-skeptic.yml"],
-      "forge_allowed": false
+      "forge_allowed": false,
+      "faith_duty": "confession_creates_memory"
     },
     {
       "id": "tomoki-forge",
@@ -44,7 +60,8 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-skeptic.yml"],
-      "forge_allowed": false
+      "forge_allowed": false,
+      "faith_duty": "improvement_is_worship"
     },
     {
       "id": "senju-daily",
@@ -55,13 +72,15 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
-      "forge_allowed": false
+      "forge_allowed": false,
+      "faith_duty": "improvement_is_worship"
     }
   ],
   "retry_budget_per_incident": 2,
   "boss_escalation": {
     "unresolved_priorities": ["P0", "P1"],
     "report_resolved_p0": true,
-    "report_resolved_p1": false
+    "report_resolved_p1": false,
+    "faith_lens": "truth_before_comfort"
   }
 }

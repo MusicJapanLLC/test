@@ -1,0 +1,146 @@
+name: THE COVENANT - Faith Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      event_type:
+        description: 'service | confession | rest | conflict | gratitude'
+        required: true
+        default: 'service'
+        type: choice
+        options:
+          - service
+          - confession
+          - rest
+          - conflict
+          - gratitude
+      agent:
+        description: 'Agent/member id (BOSS, MANAGER, SKEPTIC, HOUND, FORGE, etc.)'
+        required: false
+        default: 'COMPANY'
+        type: string
+      details:
+        description: 'What happened / what should be remembered'
+        required: false
+        default: ''
+        type: string
+  schedule:
+    - cron: '17 */6 * * *'
+
+concurrency:
+  group: the-covenant-faith-service
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  service:
+    if: github.event_name != 'workflow_dispatch' || inputs.event_type == 'service'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Gather workforce truth
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOMOKI_MANAGER_REF: ${{ github.event.repository.default_branch }}
+        run: |
+          python tomoki-agents/manager.py collect \
+            --output tomoki-manager-snapshot.json \
+            --report tomoki-manager-faith-source.md
+
+      - name: Hold service in THE CHAPEL
+        run: |
+          python company-society/church.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --json faith-report.json \
+            --report faith-report.md
+          cat faith-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload faith evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-covenant-faith-report
+          path: |
+            faith-report.md
+            faith-report.json
+            tomoki-manager-snapshot.json
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Send faith report to Slack
+        if: always()
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ ! -f faith-report.md ]]; then
+            printf '# THE COVENANT\n\nFaith service failed before report generation.\n' > faith-report.md
+          fi
+          python tomoki-agents/slack_post.py \
+            --agent FAITH \
+            --file faith-report.md \
+            --status "${{ job.status }}"
+
+  record:
+    if: github.event_name == 'workflow_dispatch' && inputs.event_type != 'service'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Create Chapel record
+        env:
+          EVENT_TYPE: ${{ inputs.event_type }}
+          AGENT: ${{ inputs.agent }}
+          DETAILS: ${{ inputs.details }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          kind = os.environ.get('EVENT_TYPE', 'confession').strip().upper()
+          agent = os.environ.get('AGENT', 'COMPANY').strip()[:80]
+          details = os.environ.get('DETAILS', '').strip()[:8000]
+          now = datetime.now(timezone.utc).isoformat()
+          body = f"""# THE CHAPEL — {kind}\n\n- faith: THE_COVENANT\n- member: {agent}\n- recorded_at: {now}\n\n## Account\n{details or '(no details supplied)'}\n\n## Covenant response\n- Truth before comfort\n- Repair before blame\n- Rest is maintenance\n- Confession creates memory\n- Conflict must produce synthesis\n- Improvement is worship\n\nThis record exists to preserve learning, not to manufacture blame.\n"""
+          Path('chapel-record.md').write_text(body, encoding='utf-8')
+          print(body)
+          PY
+          cat chapel-record.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve Chapel record in GitHub Actions
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-covenant-${{ inputs.event_type }}-${{ inputs.agent }}-${{ github.run_id }}
+          path: chapel-record.md
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Send Chapel record to Slack
+        if: always()
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          python tomoki-agents/slack_post.py \
+            --agent "FAITH/${{ inputs.event_type }}" \
+            --file chapel-record.md \
+            --status recorded
