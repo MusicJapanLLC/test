@@ -95,11 +95,10 @@ jobs:
               raise SystemExit(0)
           text = p.read_text(encoding='utf-8')
           required = [
-              'models: read',
               'contents: write',
-              'pull-requests: write',
               'workflow_dispatch:',
               'schedule:',
+              'force=false',
               'senju/state/champion.json',
               'senju/state/strategy.json',
               'senju/state/last-evolution-summary.json',
@@ -111,12 +110,12 @@ jobs:
           forbidden = [
               'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
               'runs-on: self-hosted', 'write-all', 'issues: write', 'packages: write',
-              'deployments: write', 'checks: write', 'statuses: write', 'security-events: write',
+              'pull-requests: write', 'deployments: write', 'checks: write', 'statuses: write',
+              'security-events: write', 'models: read', 'gh pr create', 'gh pr merge',
           ]
           for item in forbidden:
               if item in text:
                   raise SystemExit(f'autonomous improver contains forbidden capability: {item}')
-          # The promotion job may write only the four state/audit files below.
           allowed = {
               'senju/state/champion.json',
               'senju/state/strategy.json',
@@ -127,6 +126,10 @@ jobs:
           observed = {line.split()[-1] for line in write_lines}
           if observed != allowed:
               raise SystemExit(f'autonomous write allowlist mismatch: {sorted(observed)}')
+          if "CURRENT_BASE_SHA" not in text or '[[ "$CURRENT_BASE_SHA" != "$BASE_SHA" ]]' not in text:
+              raise SystemExit('autonomous improver must refuse stale promotion if default branch moved')
+          if 'compare/$BASE_SHA...$HEAD_SHA' not in text:
+              raise SystemExit('autonomous improver must compare exact changed paths before promotion')
           PY
 
       - name: Block remote shell execution patterns
