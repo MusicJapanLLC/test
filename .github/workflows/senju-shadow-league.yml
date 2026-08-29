@@ -1,11 +1,8 @@
 name: Senju Shadow Stability League
 
 on:
-  workflow_run:
-    workflows: ["Senju GitHub Native Autonomous Improver"]
-    types: [completed]
   schedule:
-    - cron: "50 22 * * *" # 07:50 JST fallback
+    - cron: "50 22 * * *" # 07:50 JST
   workflow_dispatch:
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
@@ -26,7 +23,6 @@ concurrency:
 
 jobs:
   shadow:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 35
     steps:
