@@ -18,7 +18,7 @@
     {"name":"TOMOKI_HOUND","workflow":"tomoki-hound.yml","stale_minutes":110,"director_min_interval_minutes":60,"priority":86,"autostart":true},
     {"name":"COVENANT_AUTONOMY","workflow":"covenant-autonomy-cycle.yml","stale_minutes":420,"director_min_interval_minutes":240,"priority":82,"autostart":true},
     {"name":"COVENANT_QUALITY","workflow":"covenant-quality-gate.yml","stale_minutes":720,"director_min_interval_minutes":360,"priority":80,"autostart":false},
-    {"name":"SECURITY_GUARD","workflow":"security-guard.yml","stale_minutes":480,"director_min_interval_minutes":240,"priority":78,"autostart":true},
+    {"name":"SECURITY_GUARD","workflow":"security-guard.yml","stale_minutes":480,"director_min_interval_minutes":240,"priority":78,"autostart":true,"require_current_head":true},
     {"name":"STANDMENT_SECURITY_GATE","workflow":"standment-security-gate.yml","stale_minutes":720,"director_min_interval_minutes":360,"priority":76,"autostart":false},
     {"name":"CODEQL_SECURITY","workflow":"codeql.yml","stale_minutes":720,"director_min_interval_minutes":360,"priority":74,"autostart":false},
     {"name":"DEPENDENCY_AUDIT","workflow":"dependency-audit.yml","stale_minutes":720,"director_min_interval_minutes":360,"priority":72,"autostart":false},
