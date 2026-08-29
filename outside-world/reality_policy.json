@@ -33,7 +33,7 @@
     "gmail_archive": "AUTO_WITH_EXISTING_RULES",
     "gmail_draft": "AUTO",
     "gmail_send": "PREAUTHORIZED_ENVELOPE_OR_APPROVAL",
-    "general_external_post": "AUTHORIZED_ADAPTER_ONLY",
+    "general_external_post": "APPROVAL",
     "new_service_identity": "SERVICE_PERMITTED_AND_APPROVED",
     "purchase_or_payment": "APPROVAL",
     "contract_or_legal_commitment": "APPROVAL"
