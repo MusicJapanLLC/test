@@ -4,7 +4,8 @@
 This worker is evidence-first, target-free and defensive. It never attacks networks.
 A machine-readable Research Frontier defines the lenses. Each micro-round rotates both
 lens and research stage so repeated workflow runs deepen the work instead of rereading
-the same five topics forever.
+the same topics. A public-framework crosswalk provides an external benchmark layer;
+alignment never counts as verification by itself.
 """
 from __future__ import annotations
 
@@ -18,6 +19,7 @@ from typing import Any
 
 FRONTIER_PATH = Path("standment-security/security_research_frontier.json")
 PROGRAM_PATH = Path("standment-security/security_portfolio_program.json")
+CROSSWALK_PATH = Path("standment-security/security_framework_crosswalk.json")
 
 
 def _load_json(path: Path) -> dict[str, Any]:
@@ -44,14 +46,27 @@ def _select(frontier: dict[str, Any], run_id: str, round_number: int) -> tuple[d
     if not stages:
         raise ValueError("security research frontier has no stages")
 
-    # Five rounds are generated per workflow. The run id shifts the base position, so
-    # later workflow runs do not restart at the same five lenses. Stage advances more
-    # slowly than lens selection, producing DISCOVERY -> FALSIFICATION -> ... depth.
     global_micro = (_numeric_run_seed(run_id) * 5) + max(0, round_number - 1)
     lens = lenses[global_micro % len(lenses)]
     stage = stages[(global_micro // len(lenses)) % len(stages)]
     contract = str(stage_contracts.get(stage) or "Evidence-first bounded defensive research")
     return lens, stage, contract
+
+
+def _framework_alignment(crosswalk: dict[str, Any], lens_id: str) -> list[dict[str, str]]:
+    mappings = crosswalk.get("lens_mapping") if isinstance(crosswalk.get("lens_mapping"), dict) else {}
+    catalog = crosswalk.get("frameworks") if isinstance(crosswalk.get("frameworks"), dict) else {}
+    keys = [str(x) for x in (mappings.get(lens_id) or []) if str(x)]
+    rows: list[dict[str, str]] = []
+    for key in keys[:5]:
+        meta = catalog.get(key) if isinstance(catalog.get(key), dict) else {}
+        rows.append({
+            "id": key,
+            "name": str(meta.get("name") or key),
+            "use": str(meta.get("use") or "external defensive benchmark"),
+            "url": str(meta.get("url") or ""),
+        })
+    return rows
 
 
 def _file_signals(root: Path, present: list[str]) -> dict[str, Any]:
@@ -77,18 +92,19 @@ def _file_signals(root: Path, present: list[str]) -> dict[str, Any]:
     return {"inspected_files": inspected, "signal_hits": hits}
 
 
-def _stage_question(stage: str, lens: dict[str, Any], missing: list[str]) -> str:
+def _stage_question(stage: str, lens: dict[str, Any], missing: list[str], frameworks: list[dict[str, str]]) -> str:
     title = str(lens.get("title") or lens.get("id") or "security control")
+    benchmark = ", ".join(x["id"] for x in frameworks[:3]) or "internal baseline only"
     if stage == "DISCOVERY":
-        return f"{title}で、今ある証拠と『まだ証明できていないこと』の境界はどこか？"
+        return f"{title}で、今ある証拠と『まだ証明できていないこと』の境界はどこか？ 外部照合: {benchmark}"
     if stage == "FALSIFICATION":
-        return f"{title}の安全性主張を間違いだと示せる反証条件は何か？"
+        return f"{title}の安全性主張を間違いだと示せる反証条件は何か？ 外部照合: {benchmark}"
     if stage == "REMEDIATION":
-        return f"{title}の最大の証拠ギャップを、最小・可逆な改善でどう縮めるか？"
+        return f"{title}の最大の証拠ギャップを、最小・可逆な改善でどう縮めるか？ 外部照合: {benchmark}"
     if stage == "RETEST":
-        return f"{title}を同一条件で再実行し、Before/After差分をどう独立確認するか？"
+        return f"{title}を同一条件で再実行し、Before/After差分をどう独立確認するか？ 外部照合: {benchmark}"
     gap = missing[0] if missing else "runtime / independent retest evidence"
-    return f"{title}を顧客がコードを読まず判断できるEvidence Cardへ変換する時、最後に不足する証拠は何か？ ({gap})"
+    return f"{title}を顧客がコードを読まず判断できるEvidence Cardへ変換する時、最後に不足する証拠は何か？ ({gap}) 外部照合: {benchmark}"
 
 
 def _next_improvement(stage: str, lens: dict[str, Any], missing: list[str]) -> str:
@@ -101,12 +117,14 @@ def _next_improvement(stage: str, lens: dict[str, Any], missing: list[str]) -> s
         return "最大の証拠ギャップに対して、変更範囲・期待差分・rollbackを持つ最小改善案を作る"
     if stage == "RETEST":
         return f"{safe_test}。同一入力・同一判定基準でBefore/Afterを比較し、失敗条件も保存する"
-    return "技術証拠を『用途 / Before / After / 検証 / 反証 / 残存リスク / 再現方法』の1枚に束ねる"
+    return "技術証拠を『用途 / Before / After / 検証 / 外部基準 / 反証 / 残存リスク / 再現方法』の1枚に束ねる"
 
 
 def run_round(root: Path, round_number: int, run_id: str) -> dict[str, Any]:
     frontier = _load_json(root / FRONTIER_PATH)
     lens, stage, stage_contract = _select(frontier, run_id, round_number)
+    crosswalk = _load_json(root / CROSSWALK_PATH)
+    frameworks = _framework_alignment(crosswalk, str(lens.get("id") or ""))
 
     refs = [str(x) for x in (lens.get("refs") or []) if isinstance(x, str)]
     present = [p for p in refs if (root / p).exists()]
@@ -126,13 +144,20 @@ def run_round(root: Path, round_number: int, run_id: str) -> dict[str, Any]:
     related.sort(reverse=True)
 
     challenge = (
-        "リポジトリ上のファイルやキーワード存在は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。"
+        "リポジトリ上のファイル、キーワード、外部フレームワークへの対応表は、ランタイム挙動・顧客価値・脆弱性不在を証明しない。"
         "VERIFIEDには所有/明示許可済みscope、行動証拠、反証、再実行性、独立retestが必要。"
     )
     next_improvement = _next_improvement(stage, lens, missing)
-    question = _stage_question(stage, lens, missing)
+    question = _stage_question(stage, lens, missing, frameworks)
     fingerprint_src = json.dumps(
-        {"lens": lens.get("id"), "stage": stage, "present": present, "missing": missing, "next": next_improvement},
+        {
+            "lens": lens.get("id"),
+            "stage": stage,
+            "present": present,
+            "missing": missing,
+            "frameworks": [x["id"] for x in frameworks],
+            "next": next_improvement,
+        },
         ensure_ascii=False,
         sort_keys=True,
     )
@@ -141,6 +166,8 @@ def run_round(root: Path, round_number: int, run_id: str) -> dict[str, Any]:
     blockers = []
     if missing:
         blockers.append("configured_evidence_missing")
+    if not frameworks:
+        blockers.append("external_framework_alignment_missing")
     if signals["signal_hits"].get("behavior", 0) == 0:
         blockers.append("no_behavioral_evidence_signal")
     if signals["signal_hits"].get("counterevidence", 0) == 0:
@@ -150,7 +177,7 @@ def run_round(root: Path, round_number: int, run_id: str) -> dict[str, Any]:
     blockers.append("runtime_and_customer_validation_not_inferred_from_repository")
 
     return {
-        "schema": "elite-whitehat-continuous-round/v2",
+        "schema": "elite-whitehat-continuous-round/v3",
         "run_id": run_id,
         "round": round_number,
         "created_at": datetime.now(timezone.utc).isoformat(),
@@ -162,6 +189,7 @@ def run_round(root: Path, round_number: int, run_id: str) -> dict[str, Any]:
         "use_case": lens.get("purpose"),
         "customer_use": lens.get("customer_use"),
         "safe_test_contract": lens.get("safe_test"),
+        "external_frameworks": frameworks,
         "evidence": {"present": present, "missing": missing, "coverage": ratio, "signals": signals},
         "related_portfolio": [{"id": x[1], "title": x[2]} for x in related[:3]],
         "counterevidence": challenge,
@@ -175,6 +203,7 @@ def run_round(root: Path, round_number: int, run_id: str) -> dict[str, Any]:
 def render_card(row: dict[str, Any]) -> str:
     ev = row["evidence"]
     related = ", ".join(x["id"] for x in row.get("related_portfolio", [])) or "NONE"
+    frameworks = ", ".join(x["id"] for x in row.get("external_frameworks", [])) or "NONE"
     missing = ", ".join(ev["missing"]) if ev["missing"] else "NONE"
     blockers = ", ".join(row.get("promotion_blockers") or []) or "NONE"
     return "\n".join([
@@ -185,6 +214,7 @@ def render_card(row: dict[str, Any]) -> str:
         f"- 研究質問: {row['research_question']}",
         f"- 用途: {row['use_case']}",
         f"- 顧客が使う場面: {row['customer_use']}",
+        f"- 外部基準: {frameworks}",
         f"- 安全な検証契約: {row['safe_test_contract']}",
         f"- Evidence coverage: **{ev['coverage']:.0%}** ({len(ev['present'])}/{len(ev['present']) + len(ev['missing'])})",
         f"- 不足Evidence: {missing}",
@@ -217,6 +247,7 @@ def main() -> int:
         "lens": row["lens_id"],
         "stage": row["research_stage"],
         "artifact": row["artifact"],
+        "frameworks": [x["id"] for x in row["external_frameworks"]],
         "coverage": row["evidence"]["coverage"],
         "fingerprint": row["fingerprint"],
     }, ensure_ascii=False))
