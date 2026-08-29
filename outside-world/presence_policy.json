@@ -3,6 +3,28 @@
   "principle": "LIMITLESS_MIND_BOUNDED_EXECUTION",
   "default_mode": "PROACTIVE",
   "mission_interval_minutes": 10,
+  "covenant_runtime": {
+    "required": true,
+    "doctrine": "LIMITLESS_MIND_BOUNDED_EXECUTION",
+    "duties": [
+      "TRUTH",
+      "SERVICE",
+      "AUTONOMY",
+      "IMPROVEMENT"
+    ],
+    "default_autonomy_tier": "T0",
+    "default_privacy_class": "public",
+    "outcome_loop": [
+      "ACT",
+      "VERIFY",
+      "LOG",
+      "LEARN",
+      "IMPROVE"
+    ],
+    "evidence_contract": "Return verifiable source/result evidence. Never report success without evidence.",
+    "failure_confession_required": true,
+    "next_vow_required": true
+  },
   "identity": {
     "one_presence_profile_per_citizen": true,
     "credential_model": "secret_reference_only",
