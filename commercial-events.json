@@ -1,0 +1,21 @@
+{
+  "schema": "commercial-events/v1",
+  "source_policy": "Only events verified against an authorized business source may be recorded here. No raw email bodies, credentials, private financial details, or invented revenue.",
+  "events": [
+    {
+      "event_id": "gdrive-sales-kpi-2026-08-29-row6-evolg",
+      "product_id": "evolg-referral",
+      "prospect": "株式会社ONE HEART／リンクブリッジ株式会社／KIKIYO合同会社",
+      "stage": "outreach_ready",
+      "amount_yen": 0,
+      "verified": true,
+      "occurred_at": "2026-08-29",
+      "occurred_at_precision": "day",
+      "verified_at": "2026-08-29T23:25:00+09:00",
+      "source_type": "google_sheet",
+      "evidence_ref": "gdrive:1O8vK6mmnvW7LzEJ_KGVGS_i8w2dT2650SB-Y5koFX7E:紹介管理!A6:F6",
+      "evidence_summary": "The sales KPI referral sheet marks both the row completion flag and the Evolg referral flag TRUE. The sheet instructions define the checked destination flag as an actual completed introduction.",
+      "cash_claim": false
+    }
+  ]
+}
