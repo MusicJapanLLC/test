@@ -31,6 +31,28 @@ class CovenantCouncilTests(unittest.TestCase):
         self.assertTrue(data["ceo_attention_required"])
         self.assertIn("## COMMUNION", report)
 
+    def test_unresolved_after_bounded_recovery_enters_sanctuary(self):
+        snapshot = {
+            "workers": [
+                {
+                    "agent": "HOUND",
+                    "conclusion": "unresolved",
+                    "report_quality": "RUN_EVIDENCE",
+                    "run_attempt": 0,
+                    "material_signal": True,
+                    "verified_signal": False,
+                    "manager_action": "DETERMINISTIC_RECOVERY",
+                    "action_result": "UNRESOLVED",
+                }
+            ],
+            "unresolved": [{"agent": "HOUND", "reason": "bounded recovery exhausted"}],
+        }
+        data, _ = COUNCIL.build_council(snapshot)
+        rest = next(x for x in data["rest"] if x["agent"] == "HOUND")
+        self.assertIn("未解決", rest["reason"])
+        self.assertIn("仮説", rest["reentry"])
+        self.assertTrue(any(x["helper"] == "SKEPTIC" for x in data["mutual_aid"]))
+
     def test_verified_healthy_worker_gets_bounded_autonomy(self):
         snapshot = {
             "workers": [
