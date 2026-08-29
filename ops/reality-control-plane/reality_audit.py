@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Evidence-based runtime truth for The world.
 
-This auditor deliberately ignores conversational claims and static labels when deciding
-whether a core capability is actually operating. GitHub Actions is runtime evidence;
-verified commercial events are business evidence.
+Conversational claims, role counts, Slack posts, PRs and static labels never prove
+runtime health. Each expected workflow is checked independently and the core fails
+closed to its worst current evidence. Verified commercial events are business truth.
 """
 from __future__ import annotations
 
@@ -16,6 +16,13 @@ from pathlib import Path
 from typing import Any
 
 ACTIVE = {"queued", "in_progress", "pending", "waiting", "requested"}
+STATE_PRIORITY = {
+    "FAILED_RECENT": 5,
+    "CONFIG_ONLY": 4,
+    "STALE": 3,
+    "ACTIVE": 2,
+    "PROVEN": 1,
+}
 
 
 def parse_time(value: str | None) -> datetime | None:
@@ -41,8 +48,8 @@ def api_json(url: str, token: str) -> dict[str, Any]:
         return json.loads(resp.read().decode("utf-8"))
 
 
-def latest_for_paths(runs: list[dict[str, Any]], paths: list[str]) -> dict[str, Any] | None:
-    candidates = [r for r in runs if str(r.get("path", "")) in paths]
+def latest_for_path(runs: list[dict[str, Any]], path: str) -> dict[str, Any] | None:
+    candidates = [r for r in runs if str(r.get("path", "")) == path]
     if not candidates:
         return None
     return max(candidates, key=lambda r: str(r.get("created_at", "")))
@@ -64,6 +71,20 @@ def runtime_state(run: dict[str, Any] | None, freshness_hours: int, now: datetim
     return "PROVEN", f"Latest run succeeded {age_hours:.2f}h ago."
 
 
+def run_view(run: dict[str, Any] | None) -> dict[str, Any] | None:
+    if not run:
+        return None
+    return {
+        "id": run.get("id"),
+        "name": run.get("name"),
+        "path": run.get("path"),
+        "status": run.get("status"),
+        "conclusion": run.get("conclusion"),
+        "created_at": run.get("created_at"),
+        "html_url": run.get("html_url"),
+    }
+
+
 def verified_commercial(events: dict[str, Any]) -> dict[str, Any]:
     verified = []
     cash = 0
@@ -77,8 +98,7 @@ def verified_commercial(events: dict[str, Any]) -> dict[str, Any]:
             continue
         verified.append(event)
         if stage == "payment":
-            amount = max(0, int(event.get("amount_yen", 0) or 0))
-            cash += amount
+            cash += max(0, int(event.get("amount_yen", 0) or 0))
     return {
         "verified_event_count": len(verified),
         "verified_cash_yen": cash,
@@ -99,26 +119,33 @@ def audit(config: dict[str, Any], runs: list[dict[str, Any]], root: Path, now: d
     cores = []
     for core in config.get("cores", []):
         paths = list(core.get("expected_workflows") or [])
-        latest = latest_for_paths(runs, paths) if paths else None
-        state, reason = runtime_state(latest, int(core.get("freshness_hours", 24)), now)
+        freshness = int(core.get("freshness_hours", 24))
+        workflow_evidence = []
+        if paths:
+            for path in paths:
+                run = latest_for_path(runs, path)
+                state, reason = runtime_state(run, freshness, now)
+                workflow_evidence.append({
+                    "path": path,
+                    "runtime_state": state,
+                    "reason": reason,
+                    "latest_run": run_view(run),
+                })
+            worst = max(workflow_evidence, key=lambda item: STATE_PRIORITY[item["runtime_state"]])
+            state = str(worst["runtime_state"])
+            reason = f"Fail-closed aggregate; worst evidence is {worst['path']}: {worst['reason']}"
+        else:
+            state = "CONFIG_ONLY"
+            reason = "No runtime workflow is registered for this core."
+
         entry: dict[str, Any] = {
             "id": core.get("id"),
             "name": core.get("name"),
             "runtime_state": state,
             "reason": reason,
             "proof_requirement": core.get("proof_requirement"),
-            "latest_run": None,
+            "workflow_evidence": workflow_evidence,
         }
-        if latest:
-            entry["latest_run"] = {
-                "id": latest.get("id"),
-                "name": latest.get("name"),
-                "path": latest.get("path"),
-                "status": latest.get("status"),
-                "conclusion": latest.get("conclusion"),
-                "created_at": latest.get("created_at"),
-                "html_url": latest.get("html_url"),
-            }
         commercial_path = core.get("commercial_events_path")
         if commercial_path:
             entry["commercial"] = verified_commercial(load_json(root / str(commercial_path)))
@@ -148,13 +175,16 @@ def render(report: dict[str, Any]) -> str:
         f"- verified cash: **¥{report['verified_cash_yen']:,}**",
         f"- revenue connected: **{str(report['revenue_connected']).lower()}**",
         "",
-        "| Core | Runtime truth | Latest evidence |",
+        "| Core | Runtime truth | Evidence summary |",
         "|---|---|---|",
     ]
     for core in report["cores"]:
-        run = core.get("latest_run") or {}
-        evidence = f"run {run.get('id')} / {run.get('conclusion') or run.get('status')}" if run else "none"
-        lines.append(f"| {core['name']} | **{core['runtime_state']}** | {evidence} |")
+        ev = core.get("workflow_evidence") or []
+        summary = ", ".join(
+            f"{Path(str(item['path'])).name}:{item['runtime_state']}"
+            for item in ev
+        ) or "no runtime evidence"
+        lines.append(f"| {core['name']} | **{core['runtime_state']}** | {summary} |")
     lines += [
         "",
         "> A chat message, Slack post, role/persona count, PR, source file, or static `VERIFIED` label is not runtime proof.",
@@ -186,8 +216,7 @@ def main() -> int:
             raise SystemExit("GITHUB_REPOSITORY and GITHUB_TOKEN are required unless --runs-file is used")
         payload = api_json(f"https://api.github.com/repos/{repo}/actions/runs?per_page=100", token)
 
-    now = datetime.now(timezone.utc)
-    report = audit(config, list(payload.get("workflow_runs") or []), root, now)
+    report = audit(config, list(payload.get("workflow_runs") or []), root, datetime.now(timezone.utc))
     out_json, out_md = root / args.out_json, root / args.out_md
     out_json.parent.mkdir(parents=True, exist_ok=True)
     out_md.parent.mkdir(parents=True, exist_ok=True)
