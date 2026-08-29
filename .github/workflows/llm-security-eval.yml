@@ -8,6 +8,7 @@ on:
       - 'automation/security/test_llm_security_eval.py'
       - 'standment-security/ai-security/llm-security-eval-cases.json'
       - 'standment-security/ai-security/llm-security-eval-harness.md'
+      - 'standment-security/security_portfolio_program.json'
   workflow_dispatch:
 
 permissions:
