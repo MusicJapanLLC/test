@@ -25,6 +25,7 @@ permissions:
 
 env:
   RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+  PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
 
 jobs:
   portfolio-rnd:
@@ -66,14 +67,25 @@ jobs:
           python - <<'PY'
           import json
           from pathlib import Path
-          p=Path('/tmp/standment-rnd-senju/directive.json')
-          d=json.loads(p.read_text(encoding='utf-8'))
-          assert d['research_id'].startswith('RND-STANDMENT-SECURITY-PORTFOLIO')
-          assert d['focus'] in {'robustness','learning','balance','efficiency'}
-          assert 3 <= int(d['candidate_count']) <= 9
+
+          directive=json.loads(Path('/tmp/standment-rnd-senju/directive.json').read_text(encoding='utf-8'))
+          queue=json.loads(Path('value-lab/research_queue.json').read_text(encoding='utf-8'))
+
+          research_id=str(directive['research_id'])
+          assert research_id.startswith(('RND-PORTFOLIO-P0', 'RND-STANDMENT-SECURITY-PORTFOLIO'))
+          assert directive['focus'] in {'robustness','learning','balance','efficiency'}
+          assert 3 <= int(directive['candidate_count']) <= 9
           forbidden={'target','url','host','network','scope','permission','secret','credential','exploit','victim'}
-          assert not (set(d) & forbidden)
-          print('Standment portfolio priority is active and Senju boundary is intact.')
+          assert not (set(directive) & forbidden)
+
+          security_tracks=[
+              item for item in queue.get('active', [])
+              if str(item.get('research_id','')).startswith('RND-STANDMENT-SECURITY-PORTFOLIO')
+          ]
+          assert security_tracks, 'Standment Security portfolio research is missing from the live queue'
+          assert max(int(item.get('priority',0)) for item in security_tracks) >= 2000
+
+          print(f'Portfolio P0/Security priority active: {research_id}; Senju boundary intact.')
           PY
 
       - name: Preserve daily R&D evidence
@@ -99,13 +111,14 @@ jobs:
           from pathlib import Path
           from urllib import request, error
 
-          webhook=os.getenv('RND_SLACK_WEBHOOK_URL','').strip()
+          webhook=(os.getenv('PORTFOLIO_SLACK_WEBHOOK_URL','').strip()
+                   or os.getenv('RND_SLACK_WEBHOOK_URL','').strip())
           report=Path('reports/standment-security-rnd/daily.md')
           if not report.exists():
               print('R&D report missing; see workflow failure above.')
               raise SystemExit(0)
           if not webhook:
-              print('BLOCKED_NO_CAPABILITY: RND_SLACK_WEBHOOK_URL is not configured. Artifact evidence was preserved.')
+              print('BLOCKED_NO_CAPABILITY: PORTFOLIO_SLACK_WEBHOOK_URL / RND_SLACK_WEBHOOK_URL is not configured. Artifact evidence was preserved.')
               raise SystemExit(0)
           text=report.read_text(encoding='utf-8')[:30000]
           payload=json.dumps({'text': '*Standment Security / DAILY PORTFOLIO R&D*\n'+text}, ensure_ascii=False).encode('utf-8')
