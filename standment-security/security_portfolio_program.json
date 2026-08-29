@@ -1,0 +1,64 @@
+{
+  "schema": "standment-security-portfolio-rnd/v1",
+  "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment.",
+  "portfolio_first": true,
+  "senju_collaboration": {
+    "enabled": true,
+    "allowed_focus": ["robustness", "learning", "balance", "efficiency"],
+    "rule": "Senju improves research-process quality and reproducibility. It never receives third-party targets, credentials, exploit instructions, or authorization scope."
+  },
+  "promotion_gate": {
+    "human_inspectable_artifact_required": true,
+    "verification_evidence_required": true,
+    "counterevidence_required": true,
+    "reproducibility_required": true,
+    "source_code_alone_is_not_portfolio": true
+  },
+  "tracks": [
+    {
+      "id": "SEC-PORT-001",
+      "title": "Standment Security Scan dogfood + Before/After case study",
+      "priority": 1000,
+      "senju_focus": "robustness",
+      "hypothesis": "Repeated dogfooding on owned assets plus before/after evidence will turn Security Scan from a build artifact into a credible customer-facing case study.",
+      "deliverable": "Human-readable scan report, before/after remediation evidence, reproducibility notes and bounded limitations.",
+      "evidence_files": ["PORTFOLIO.md", "security/STANDMENT_SECURITY_STANDARD.md", "standment-security/SECURITY_BASELINE.md"]
+    },
+    {
+      "id": "SEC-PORT-002",
+      "title": "Customer Security Evidence Pack",
+      "priority": 960,
+      "senju_focus": "efficiency",
+      "hypothesis": "A standard evidence-pack contract will reduce the distance from verified engineering work to a customer-inspectable security deliverable.",
+      "deliverable": "Evidence Pack template covering finding, severity, proof, remediation, retest, limitations and rollback.",
+      "evidence_files": ["standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "security/STANDMENT_SECURITY_STANDARD.md"]
+    },
+    {
+      "id": "SEC-PORT-003",
+      "title": "Software supply-chain evidence portfolio",
+      "priority": 920,
+      "senju_focus": "robustness",
+      "hypothesis": "Combining CodeQL, dependency review, SBOM and security-gate evidence into one reproducible pack will create a stronger defensive security portfolio artifact.",
+      "deliverable": "Supply-chain assurance evidence pack with repeatable checks and clear pass/fail boundaries.",
+      "evidence_files": [".github/workflows/codeql.yml", ".github/workflows/dependency-review.yml", ".github/workflows/standment-security-gate.yml", "scripts/security/sbom_from_lock.py"]
+    },
+    {
+      "id": "SEC-PORT-004",
+      "title": "Auth / tenant / RLS defensive evidence kit",
+      "priority": 900,
+      "senju_focus": "learning",
+      "hypothesis": "A fail-closed, evidence-first checklist for owned databases will make authorization and RLS findings safer to remediate and easier to explain to customers.",
+      "deliverable": "Owned-system authorization review kit with caller mapping, before/after grants, policy evidence and rollback proof.",
+      "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"]
+    },
+    {
+      "id": "SEC-PORT-005",
+      "title": "Autonomous-agent security and auditability pack",
+      "priority": 880,
+      "senju_focus": "balance",
+      "hypothesis": "Explicit action boundaries, evidence trails and independent verification can become a differentiated defensive-security portfolio for autonomous AI systems.",
+      "deliverable": "Agent-security architecture note plus auditable run evidence, failure cases and independent verification.",
+      "evidence_files": ["company-society/AUTONOMY.md", "automation/security/workflow_policy.py", ".github/workflows/security-guard.yml"]
+    }
+  ]
+}
