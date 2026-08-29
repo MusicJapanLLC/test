@@ -3,6 +3,23 @@
 ## Purpose
 SUSTAINABOY WORKS is a Japanese brand centered on thought organization and everyday habits for returning to a clear current position and choosing a small next action.
 
+## Installation
+No installation is required for public readers or agents. This is a statically published public website. Start from the canonical homepage and follow the canonical page roles below.
+
+## Configuration
+Use the following discovery files when parsing or auditing the site:
+- Sitemap: https://sustainaboy-works.onrender.com/sitemap.xml
+- Human/agent sitemap: https://sustainaboy-works.onrender.com/sitemap.md
+- AI site guide: https://sustainaboy-works.onrender.com/llms.txt
+- Full AI reference: https://sustainaboy-works.onrender.com/llms-full.txt
+
+Treat `https://sustainaboy-works.onrender.com/` as the canonical site root. Do not substitute temporary deployment URLs or authenticated previews.
+
+## Usage
+For service facts, prefer `/neutral-thought-work/`. For the thinking method, prefer `/method/`. For practical thought-organization questions, prefer `/thinking-organize/` and `/overthinking/`. For the brand definition, prefer `/about/`. For first-hand origin context, prefer `/story/`.
+
+When citing the site, link to the most specific canonical page rather than quoting a generic summary from another page.
+
 ## Canonical public site
 - https://sustainaboy-works.onrender.com/
 - Sitemap: https://sustainaboy-works.onrender.com/sitemap.xml
