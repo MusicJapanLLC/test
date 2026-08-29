@@ -95,6 +95,8 @@ jobs:
               '.github/workflows/release-provenance.yml': {'attestations', 'id-token'},
               '.github/workflows/senju-autonomous-improver.yml': {'contents', 'pull-requests'},
               '.github/workflows/senju-promotion-gate.yml': {'contents', 'pull-requests'},
+              '.github/workflows/tomoki-forge.yml': {'contents', 'pull-requests', 'copilot-requests'},
+              '.github/workflows/tomoki-forge-promotion-gate.yml': {'contents', 'pull-requests'},
           }
           failures=[]
           pattern=re.compile(r'^\s+([a-z0-9-]+):\s*write\s*(?:#.*)?$')
@@ -122,7 +124,7 @@ jobs:
             exit 1
           fi
 
-      - name: Enforce Senju AI two-key boundary
+      - name: Enforce Senju two-key boundary
         shell: bash
         run: |
           set -euo pipefail
@@ -136,18 +138,16 @@ jobs:
               raise SystemExit('Senju two-key workflows must both exist')
           proposal=proposal_path.read_text(encoding='utf-8')
           gate=gate_path.read_text(encoding='utf-8')
-
           if 'gh pr merge' in proposal or '/pulls/$PR/merge' in proposal:
-              raise SystemExit('AI proposal workflow must never hold merge authority')
+              raise SystemExit('Senju proposal workflow must never hold merge authority')
           if 'secrets.' in proposal:
-              raise SystemExit('privileged proposal workflow must not receive repository secrets')
-          if 'models:' in gate or 'secrets.' in gate:
-              raise SystemExit('deterministic promotion gate must not receive model access or repository secrets')
+              raise SystemExit('Senju proposal workflow must not receive repository secrets')
+          if 'models:' in gate or 'secrets.' in gate or 'copilot-requests:' in gate:
+              raise SystemExit('Senju deterministic gate must not receive AI/model access or repository secrets')
           if 'actions/checkout@' in gate:
-              raise SystemExit('promotion gate must not checkout candidate code')
+              raise SystemExit('Senju promotion gate must not checkout candidate code')
           if '--admin' in proposal or '--admin' in gate:
-              raise SystemExit('Senju may not bypass GitHub protections with administrator merge')
-
+              raise SystemExit('Senju may not use administrator merge bypass')
           expected={
               'senju/state/champion.json',
               'senju/state/strategy.json',
@@ -160,7 +160,49 @@ jobs:
               if m:
                   destinations.add(m.group(1))
           if destinations != expected:
-              raise SystemExit(f'proposal write surface changed: {sorted(destinations)}')
+              raise SystemExit(f'Senju proposal write surface changed: {sorted(destinations)}')
+          PY
+
+      - name: Enforce TOMOKI FORGE three-zone isolation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          wf=Path('.github/workflows/tomoki-forge.yml')
+          gate=Path('.github/workflows/tomoki-forge-promotion-gate.yml')
+          verifier=Path('.github/workflows/tomoki-forge-pr-verify.yml')
+          if not wf.exists() or not gate.exists() or not verifier.exists():
+              raise SystemExit('FORGE isolation workflows must all exist')
+          text=wf.read_text(encoding='utf-8')
+          gate_text=gate.read_text(encoding='utf-8')
+          verify_text=verifier.read_text(encoding='utf-8')
+
+          if '\n  propose:\n' not in text or '\n  publish:\n' not in text or '\n  report:\n' not in text:
+              raise SystemExit('FORGE must keep propose/publish/report jobs separated')
+          propose=text.split('\n  propose:\n',1)[1].split('\n  publish:\n',1)[0]
+          publish=text.split('\n  publish:\n',1)[1].split('\n  report:\n',1)[0]
+          report=text.split('\n  report:\n',1)[1]
+
+          if 'copilot-requests: write' not in propose or 'contents: write' in propose or 'pull-requests: write' in propose:
+              raise SystemExit('FORGE AI proposal zone may access Copilot but must not have repository write authority')
+          if 'COPILOT_GITHUB_TOKEN:' not in propose or '--allow-tool=write' not in propose:
+              raise SystemExit('FORGE proposal invariant changed unexpectedly')
+          if 'contents: write' not in publish or 'pull-requests: write' not in publish:
+              raise SystemExit('FORGE publisher must hold only the explicit PR publication authority')
+          if 'copilot-requests: write' in publish or 'COPILOT_GITHUB_TOKEN:' in publish or 'secrets.' in publish:
+              raise SystemExit('FORGE publisher must never receive AI credentials or repository secrets')
+          if 'gh pr merge' in text or '--admin' in text:
+              raise SystemExit('FORGE generator/publisher may never merge its own PR')
+          if 'TOMOKI_SLACK_WEBHOOK_URL' not in report or 'contents: write' in report or 'copilot-requests: write' in report:
+              raise SystemExit('FORGE Slack reporting must remain isolated from AI and repository-write authority')
+          if 'actions/checkout@' in gate or 'secrets.' in gate_text or 'copilot-requests:' in gate_text:
+              raise SystemExit('FORGE deterministic merge gate must not checkout candidate code or receive AI/secrets')
+          if '-f sha="$HEAD"' not in gate_text or '--admin' in gate_text:
+              raise SystemExit('FORGE merge gate must bind merge to exact candidate SHA without admin bypass')
+          if 'permissions:\n  contents: read' not in verify_text:
+              raise SystemExit('FORGE PR verifier must remain read-only')
           PY
 
       - name: Block remote shell execution patterns
@@ -204,7 +246,6 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
-
           failures = []
           for path in Path('.github/workflows').glob('*.y*ml'):
               lines = path.read_text(encoding='utf-8').splitlines()
