@@ -77,6 +77,7 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import json
           import re
 
           root = Path('.github/workflows')
@@ -100,14 +101,14 @@ jobs:
           def writes(body: str) -> set[str]:
               return {m.group(1) for m in write_re.finditer(body)}
 
-          def require(name: str, required: list[str], forbidden: list[str] = []) -> str:
+          def require(name: str, required: list[str], forbidden: list[str] | None = None) -> str:
               body = workflows.get(name, '')
               if not body:
                   return ''
               for item in required:
                   if item not in body:
                       raise SystemExit(f'{name}: missing required guardrail: {item}')
-              for item in forbidden:
+              for item in (forbidden or []):
                   if item in body:
                       raise SystemExit(f'{name}: contains forbidden capability: {item}')
               return body
@@ -128,10 +129,14 @@ jobs:
               ]:
                   if item not in body:
                       raise SystemExit(f'{name}: Pages lane missing invariant: {item}')
+              if body.count('pages: write') != 1 or body.count('id-token: write') != 1:
+                  raise SystemExit(f'{name}: Pages/OIDC write permissions must exist in exactly one deployment job')
               if 'pull_request:' in body and "if: github.event_name != 'pull_request'" not in body:
                   raise SystemExit(f'{name}: PR-triggered Pages workflow must suppress deployment on PR events')
               if 'push:' in body and 'paths:' not in body:
                   raise SystemExit(f'{name}: auto Pages deployment must be path-scoped')
+              if 'schedule:' in body:
+                  raise SystemExit(f'{name}: Pages deployment must not be schedule-triggered')
 
           # OIDC is allowed only for the resident worker or validated Pages lanes.
           oidc_lanes = {name for name, body in workflows.items() if 'id-token' in writes(body)}
@@ -170,9 +175,12 @@ jobs:
               'senju-autonomous-improver.yml': {'contents'},
               'tomoki-forge.yml': {'contents', 'pull-requests', 'copilot-requests'},
               'tomoki-manager.yml': {'actions', 'copilot-requests'},
+              'tomoki-hound.yml': {'copilot-requests'},
+              'tomoki-skeptic.yml': {'copilot-requests'},
               'ai-factory-boss.yml': {'actions'},
               'the-world-realtime-kernel.yml': {'actions'},
               'the-core-autonomous-director.yml': {'actions', 'copilot-requests'},
+              'world-reality-agency.yml': {'issues'},
           }
           for name, expected in explicit.items():
               body = workflows.get(name, '')
@@ -184,6 +192,51 @@ jobs:
               for invariant in ['workflow_dispatch:', 'schedule:', 'persist-credentials: false']:
                   if invariant not in body:
                       raise SystemExit(f'{name}: missing privileged-lane invariant: {invariant}')
+
+          # HOUND and SKEPTIC are local/read-only observers. Copilot may edit the ephemeral
+          # checkout/report and use git/gh read surfaces, but repository token writes remain denied.
+          for observer_name in ['tomoki-hound.yml', 'tomoki-skeptic.yml']:
+              observer = workflows.get(observer_name, '')
+              if not observer:
+                  continue
+              copilot_lines = [x.strip() for x in observer.splitlines() if x.strip().startswith('copilot -p ')]
+              if len(copilot_lines) != 1:
+                  raise SystemExit(f'{observer_name}: must have exactly one Copilot execution line')
+              line = copilot_lines[0]
+              for required_cap in [
+                  '--allow-tool=write', "--allow-tool='shell(git:*)'",
+                  "--allow-tool='shell(gh:*)'", '--no-ask-user',
+              ]:
+                  if required_cap not in line:
+                      raise SystemExit(f'{observer_name}: missing bounded observer capability: {required_cap}')
+              if line.count("--allow-tool='shell(") != 2:
+                  raise SystemExit(f'{observer_name}: observer shell capability expanded beyond git/gh')
+
+          # Reality Agency may create one daily issue only in an explicitly allowlisted owned repo.
+          reality = workflows.get('world-reality-agency.yml', '')
+          if reality:
+              for item in [
+                  'contents: read', 'actions: read', 'issues: write',
+                  'outside-world/reality_policy.json', 'outside-world/reality_gateway.py',
+                  '--execute-owned-writes', 'persist-credentials: false',
+              ]:
+                  if item not in reality:
+                      raise SystemExit(f'world-reality-agency.yml: missing owned-write invariant: {item}')
+              gateway = Path('outside-world/reality_gateway.py').read_text(encoding='utf-8')
+              policy_path = Path('outside-world/reality_policy.json')
+              if not policy_path.exists():
+                  raise SystemExit('world-reality-agency.yml: reality policy is missing')
+              policy = json.loads(policy_path.read_text(encoding='utf-8'))
+              repos = ((policy.get('allowlists') or {}).get('github_repositories') or [])
+              if repos != ['MusicJapanLLC/test']:
+                  raise SystemExit(f'world-reality-agency.yml: GitHub issue allowlist drifted: {repos}')
+              for marker in [
+                  'repo not in allowed', 'SKIPPED_DAILY_LIMIT',
+                  'https://api.github.com/repos/{repo}/issues',
+                  'Treat this as external evidence/inspiration. Validate before promoting',
+              ]:
+                  if marker not in gateway:
+                      raise SystemExit(f'reality_gateway.py: missing bounded issue invariant: {marker}')
 
           # Preserve the tightest file-level restrictions on autonomous code writers.
           senju = workflows.get('senju-autonomous-improver.yml', '')
