@@ -11,12 +11,13 @@ def main() -> int:
     p.add_argument('--agent', required=True)
     p.add_argument('--file', required=True)
     p.add_argument('--status', default='unknown')
+    p.add_argument('--required', action='store_true', help='Fail the job when Slack delivery is unavailable or fails')
     args = p.parse_args()
 
     webhook = os.getenv('TOMOKI_SLACK_WEBHOOK_URL', '').strip()
     if not webhook:
         print('BLOCKED: TOMOKI_SLACK_WEBHOOK_URL is not configured; report not sent.')
-        return 0
+        return 2 if args.required else 0
 
     path = Path(args.file)
     if path.exists():
