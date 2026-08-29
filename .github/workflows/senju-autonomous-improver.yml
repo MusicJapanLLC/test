@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "30 22 * * *" # 07:30 JST, after the 07:00 tournament
   workflow_dispatch:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - ".github/workflows/senju-autonomous-improver.yml"
+      - "senju/scripts/github_native_improver.py"
 
 concurrency:
   group: senju-github-native-autonomous-improver
