@@ -120,18 +120,26 @@ jobs:
           cat reality-field-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish successful field notes to non-GitHub public web
+        env:
+          PUBLIC_FEED_BOOTSTRAP_PROBE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[PUBLIC_FEED_PROBE]') }}
         run: |
           set -euo pipefail
+          EXTRA_ARGS=()
+          if [[ "$PUBLIC_FEED_BOOTSTRAP_PROBE" == "true" ]]; then
+            EXTRA_ARGS+=(--probe)
+          fi
           python outside-world/public_feed_bridge.py \
             --events reality-events.json \
             --out public-feed-receipt.json \
-            --limit 2
+            --limit 2 \
+            "${EXTRA_ARGS[@]}"
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           d=json.load(open('public-feed-receipt.json', encoding='utf-8'))
+          print(f"External public-feed mode: **{d.get('mode', 'REGULAR')}**")
           print(f"External public-feed writes selected: **{d.get('selected', 0)}**")
           for r in d.get('receipts', []):
-              print(f"- {r.get('source_url', '')}: `{r.get('status')}`")
+              print(f"- {r.get('source_url', '')}: `{r.get('status')}` / `{(r.get('body') or {}).get('id', '')}`")
           PY
 
       - name: Convert real-world outcome into learning signal

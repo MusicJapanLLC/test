@@ -29,6 +29,17 @@ def run_id() -> int:
     return int(value)
 
 
+def finding_payload(item: dict[str, Any]) -> dict[str, str]:
+    return {
+        "title": str(item.get("title") or "External field observation"),
+        "source_url": str(item.get("url") or ""),
+        "citizen_id": str(item.get("citizen_id") or "unknown"),
+        "display_name": str(item.get("display_name") or ""),
+        "category": str(item.get("category") or "field"),
+        "note": str(item.get("note") or ""),
+    }
+
+
 def select_payloads(doc: dict[str, Any], limit: int = 2) -> list[dict[str, str]]:
     findings = {
         str(item.get("url") or ""): item
@@ -45,18 +56,18 @@ def select_payloads(doc: dict[str, Any], limit: int = 2) -> list[dict[str, str]]
         if not source_url or source_url in seen or source_url not in findings:
             continue
         seen.add(source_url)
-        item = findings[source_url]
-        out.append({
-            "title": str(item.get("title") or "External field observation"),
-            "source_url": source_url,
-            "citizen_id": str(item.get("citizen_id") or "unknown"),
-            "display_name": str(item.get("display_name") or ""),
-            "category": str(item.get("category") or "field"),
-            "note": str(item.get("note") or ""),
-        })
+        out.append(finding_payload(findings[source_url]))
         if len(out) >= max(1, limit):
             break
     return out
+
+
+def select_probe_payloads(doc: dict[str, Any]) -> list[dict[str, str]]:
+    """Select exactly one real browser finding for an explicitly marked bootstrap probe."""
+    for item in doc.get("findings", []):
+        if item.get("url") and item.get("title") and item.get("citizen_id"):
+            return [finding_payload(item)]
+    return []
 
 
 def post_payload(payload: dict[str, Any], token: str) -> dict[str, Any]:
@@ -66,7 +77,7 @@ def post_payload(payload: dict[str, Any], token: str) -> dict[str, Any]:
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
-            "User-Agent": "TheWorld-RealityAgency-PublicFeed/2.0",
+            "User-Agent": "TheWorld-RealityAgency-PublicFeed/2.1",
         },
         method="POST",
     )
@@ -81,9 +92,11 @@ def main() -> int:
     p.add_argument("--out", default="public-feed-receipt.json")
     p.add_argument("--limit", type=int, default=2)
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--probe", action="store_true", help="one-time bootstrap: publish one real finding even if the regular 6h owned-publication interval is not due")
     args = p.parse_args()
 
-    payloads: list[dict[str, Any]] = list(select_payloads(load_json(args.events), args.limit))
+    doc = load_json(args.events)
+    payloads: list[dict[str, Any]] = list(select_probe_payloads(doc) if args.probe else select_payloads(doc, args.limit))
     receipts: list[dict[str, Any]] = []
     if args.dry_run:
         receipts = [{"status": "DRY_RUN", "payload": payload} for payload in payloads]
@@ -96,9 +109,10 @@ def main() -> int:
             receipts.append({"source_url": payload["source_url"], **receipt})
 
     result = {
-        "schema": "the-world-public-feed-receipt/v2",
+        "schema": "the-world-public-feed-receipt/v3",
         "endpoint": ENDPOINT,
         "auth": "ephemeral_github_actions_installation_token",
+        "mode": "BOOTSTRAP_PROBE" if args.probe else "REGULAR",
         "selected": len(payloads),
         "receipts": receipts,
     }

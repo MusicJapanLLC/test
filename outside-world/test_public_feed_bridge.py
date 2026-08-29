@@ -44,6 +44,19 @@ class PublicFeedBridgeTests(unittest.TestCase):
         payloads = bridge.select_payloads(doc, limit=2)
         self.assertEqual([p['source_url'] for p in payloads], ['https://example.com/a', 'https://example.com/b'])
 
+    def test_bootstrap_probe_selects_exactly_one_real_finding_without_issue_effect(self):
+        doc = {
+            'findings': [
+                {'url': 'https://example.com/live', 'title': 'Live finding', 'citizen_id': 'c9', 'display_name': 'Nine', 'category': 'research', 'note': 'observed with browser'},
+                {'url': 'https://example.com/next', 'title': 'Next', 'citizen_id': 'c10'},
+            ],
+            'effects': [{'kind': 'github_issue', 'status': 'SKIPPED_PUBLICATION_INTERVAL'}],
+        }
+        payloads = bridge.select_probe_payloads(doc)
+        self.assertEqual(len(payloads), 1)
+        self.assertEqual(payloads[0]['source_url'], 'https://example.com/live')
+        self.assertEqual(payloads[0]['citizen_id'], 'c9')
+
 
 if __name__ == '__main__':
     unittest.main()
