@@ -34,6 +34,24 @@
         "株式会社O-line",
         "ONE HEART"
       ]
+    },
+    {
+      "id": "evolg-referral",
+      "name": "エボルグ紹介",
+      "monthly_yen": 0,
+      "setup_yen": 15000,
+      "product_spec": "commercial-events.json",
+      "sales_pack": "営業KPI管理 2026 / 紹介管理",
+      "security_evidence": "authorized Google Sheets source; no customer secrets copied",
+      "buyer_outcomes": [
+        "紹介候補を実送客へ進める",
+        "送客済みと未送客を分離する",
+        "実営業イベントをAI内部活動と混同しない"
+      ],
+      "proof_mappings": {},
+      "named_prospects": [
+        "株式会社ONE HEART／リンクブリッジ株式会社／KIKIYO合同会社"
+      ]
     }
   ]
 }
