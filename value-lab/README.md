@@ -6,9 +6,9 @@ R&D decides **what uncertainty should be reduced**. Senju supplies **competition
 
 ```text
 R&D research queue
-  ↓ bounded focus only
+  ↓ bounded research focus only
 Senju proposal
-  ↓ R&D numeric adapter
+  ↓ numeric strategy adapter
 multi-candidate Shadow league
   ↓ worst-case selection
 unseen holdout
@@ -30,14 +30,14 @@ A high Senju score therefore never changes `real_revenue_yen`. Customer and paym
 
 ## Allowed R&D influence on Senju
 
-R&D may send only:
+The machine-readable directive may contain only:
 
 - `research_id`
 - `focus`: `robustness`, `learning`, `balance`, or `efficiency`
 - bounded `candidate_count` (3–9)
 - a research hypothesis
 
-The adapter may only alter Senju's existing numeric simulator parameters. Targets, URLs, hosts, network scope, permissions, credentials, secrets, workflows and executable attack surfaces are outside the coupling contract.
+Research prose may discuss boundaries and risks, but those words do not become executable configuration. The adapter can alter only Senju's existing numeric simulator parameters. It cannot introduce new execution-surface keys or change the safety boundary.
 
 ## Daily cycle
 
