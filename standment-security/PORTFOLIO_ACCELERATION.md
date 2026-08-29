@@ -2,7 +2,7 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-08-30T04:05:40+09:00`
+Updated JST: `2026-08-30T04:08:38+09:00`
 
 ## TODAY'S PRIMARY BET
 - `SEC-PORT-009` — AI Agent Permission Boundary Lab
@@ -24,7 +24,7 @@ Updated JST: `2026-08-30T04:05:40+09:00`
 - average evidence coverage: **85%**
 - open white-hat candidates: **2**
 - unfinished tracks: **11**
-- stagnation streak: **1**
+- stagnation streak: **2**
 
 ## ANTI-STAGNATION
 No material progress for three consecutive selections => automatically rotate to another high-value evidence path. Repeating unchanged activity does not count as R&D progress.
