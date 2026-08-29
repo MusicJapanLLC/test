@@ -1,5 +1,8 @@
-/* SBW mobile QA fixes — 2026-08-29
+/* SBW mobile QA fixes — 2026-08-30
    Scope: phone typography, non-overlapping sticky notes, founder card, and uniform presentation. */
+
+/* The founder card was already approved visually; only remove the note that covered the face. */
+body.paper-home .founder-card .sticky-note{display:none!important}
 
 @media (max-width: 599px){
   /* ===== HOME / PAPER HERO ===== */
@@ -58,7 +61,6 @@
   body.paper-home .founder-card-copy p{font-size:12px;line-height:1.8}
   body.paper-home .founder-image{aspect-ratio:16/10!important;min-height:0!important}
   body.paper-home .founder-image img{width:100%;height:100%;object-fit:cover;object-position:50% 17%}
-  body.paper-home .founder-card .sticky-note{display:none!important}
 
   body.paper-home .section-title{font-size:30px!important;line-height:1.45!important}
   body.paper-home .section-lead{font-size:13px;line-height:1.85}
