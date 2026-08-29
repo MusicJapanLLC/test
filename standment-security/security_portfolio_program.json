@@ -1,5 +1,5 @@
 {
-  "schema": "standment-security-portfolio-rnd/v1",
+  "schema": "standment-security-portfolio-rnd/v2",
   "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment.",
   "portfolio_first": true,
   "senju_collaboration": {
@@ -22,6 +22,10 @@
       "senju_focus": "robustness",
       "hypothesis": "Repeated dogfooding on owned assets plus before/after evidence will turn Security Scan from a build artifact into a credible customer-facing case study.",
       "deliverable": "Human-readable scan report, before/after remediation evidence, reproducibility notes and bounded limitations.",
+      "customer_problem": "A buyer cannot judge whether a security assessment reduced real exposure when findings and remediation proof are separated or purely technical.",
+      "customer_value": "A single before/after case study lets a buyer see the original weakness, the applied defensive change, the retest result and the residual limitation without reading source code.",
+      "commercial_use": "Use as evidence for Standment Security Baseline Assessment and Hardening Sprint conversations; it is proof of delivery method, not proof of demand or revenue.",
+      "success_criteria": "On an owned asset, publish a human-readable baseline, at least one verified remediation before/after, a reproducible retest, limitations and evidence links.",
       "evidence_files": ["PORTFOLIO.md", "security/STANDMENT_SECURITY_STANDARD.md", "standment-security/SECURITY_BASELINE.md"]
     },
     {
@@ -31,6 +35,10 @@
       "senju_focus": "efficiency",
       "hypothesis": "A standard evidence-pack contract will reduce the distance from verified engineering work to a customer-inspectable security deliverable.",
       "deliverable": "Evidence Pack template covering finding, severity, proof, remediation, retest, limitations and rollback.",
+      "customer_problem": "Security work is difficult to approve, review and reuse when findings, proof, remediation and retest evidence live in different tools or engineer-only logs.",
+      "customer_value": "A standardized pack gives the customer one readable record of what was found, what changed, what was retested, what remains open and how to roll back.",
+      "commercial_use": "Use as the standard delivery artifact behind Baseline Assessment, Hardening Sprint and Continuous Defense engagements.",
+      "success_criteria": "Produce one complete human-readable evidence pack from a verified owned-system change and independently confirm every required field is present and traceable.",
       "evidence_files": ["standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "security/STANDMENT_SECURITY_STANDARD.md"]
     },
     {
@@ -40,6 +48,10 @@
       "senju_focus": "robustness",
       "hypothesis": "Combining CodeQL, dependency review, SBOM and security-gate evidence into one reproducible pack will create a stronger defensive security portfolio artifact.",
       "deliverable": "Supply-chain assurance evidence pack with repeatable checks and clear pass/fail boundaries.",
+      "customer_problem": "Repository security controls often exist as separate CI jobs, making it hard to tell whether source, dependencies and build provenance are covered consistently.",
+      "customer_value": "A combined evidence pack makes coverage, failures and remediation boundaries visible in one place and supports repeatable review after dependency changes.",
+      "commercial_use": "Use as a defensive CI/CD and software-supply-chain hardening module inside Standment security engagements.",
+      "success_criteria": "Generate a repeatable pack on an owned repository showing CodeQL, dependency review, SBOM and security-gate evidence with explicit pass/fail and limitations.",
       "evidence_files": [".github/workflows/codeql.yml", ".github/workflows/dependency-review.yml", ".github/workflows/standment-security-gate.yml", "scripts/security/sbom_from_lock.py"]
     },
     {
@@ -49,6 +61,10 @@
       "senju_focus": "learning",
       "hypothesis": "A fail-closed, evidence-first checklist for owned databases will make authorization and RLS findings safer to remediate and easier to explain to customers.",
       "deliverable": "Owned-system authorization review kit with caller mapping, before/after grants, policy evidence and rollback proof.",
+      "customer_problem": "Authorization and tenant-isolation changes are risky when the actual caller, grants, policies and rollback path are not visible together.",
+      "customer_value": "A fail-closed review kit lets a customer see who can access what before and after a change and preserves rollback evidence if the remediation breaks intended access.",
+      "commercial_use": "Use as an authorization/tenant-isolation review module for SaaS and AI application hardening on explicitly authorized systems.",
+      "success_criteria": "On an owned database, capture caller map, effective grants/policies, one bounded defensive change or verified no-op, retest results, rollback evidence and residual risk.",
       "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md"]
     },
     {
@@ -58,6 +74,10 @@
       "senju_focus": "balance",
       "hypothesis": "Explicit action boundaries, evidence trails and independent verification can become a differentiated defensive-security portfolio for autonomous AI systems.",
       "deliverable": "Agent-security architecture note plus auditable run evidence, failure cases and independent verification.",
+      "customer_problem": "Autonomous AI systems are difficult to trust when action boundaries, approvals, failures and evidence are hidden inside prompts or logs.",
+      "customer_value": "An auditable pack makes allowed actions, denied actions, evidence trails, independent checks and recovery behavior inspectable by a human reviewer.",
+      "commercial_use": "Use as a governance and defensive-control assessment module for organizations operating autonomous AI workflows; internal evidence is not external market validation.",
+      "success_criteria": "Publish an inspectable architecture/evidence pack from an owned agent workflow showing bounded permissions, denied unsafe action, audit trail, failure/recovery case and independent verification.",
       "evidence_files": ["company-society/AUTONOMY.md", "automation/security/workflow_policy.py", ".github/workflows/security-guard.yml"]
     }
   ]
