@@ -13,8 +13,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-from senju.improvement import normalize
-
 ALLOWED_DIRECTIVE_KEYS = {"schema", "research_id", "focus", "candidate_count", "hypothesis"}
 ALLOWED_FOCUS = {"robustness", "learning", "balance", "efficiency"}
 BOUNDS: dict[str, tuple[float, float]] = {
@@ -28,10 +26,22 @@ BOUNDS: dict[str, tuple[float, float]] = {
 }
 
 
+def normalize_strategy(raw: dict[str, Any]) -> dict[str, Any]:
+    if set(raw) != set(BOUNDS):
+        raise ValueError(f"strategy surface mismatch: {sorted(raw)}")
+    return {
+        "population": int(raw["population"]),
+        "generations": int(raw["generations"]),
+        "matches": int(raw["matches"]),
+        "mutation_rate": float(raw["mutation_rate"]),
+        "red_budget": int(raw["red_budget"]),
+        "blue_budget": int(raw["blue_budget"]),
+        "seed": int(raw["seed"]),
+    }
+
+
 def clamp(strategy: dict[str, Any]) -> dict[str, Any]:
-    s = normalize(strategy)
-    if set(s) != set(BOUNDS):
-        raise ValueError("strategy surface mismatch")
+    s = normalize_strategy(strategy)
     out: dict[str, Any] = {}
     for key, value in s.items():
         lo, hi = BOUNDS[key]
