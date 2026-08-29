@@ -21,11 +21,17 @@ permissions:
 
 jobs:
   motor-cortex:
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        slot: [0, 1, 2, 3]
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
       GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
+      WORLD_WORKER_SLOT: ${{ matrix.slot }}
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -38,6 +44,7 @@ jobs:
           python-version: '3.12'
 
       - name: Load one prior dispatch for evidence reconciliation
+        if: matrix.slot == 0
         id: review
         shell: bash
         run: |
@@ -54,7 +61,7 @@ jobs:
           PY
 
       - name: Reconcile downstream GitHub evidence
-        if: steps.review.outputs.has_review == 'true'
+        if: matrix.slot == 0 && steps.review.outputs.has_review == 'true'
         shell: bash
         env:
           REVIEW_RUN_ID: ${{ steps.review.outputs.run_id }}
@@ -111,7 +118,7 @@ jobs:
         shell: bash
         run: |
           python - <<'PY' >> "$GITHUB_OUTPUT"
-          import json
+          import json,zlib
           d=json.load(open('/tmp/world-claim.json',encoding='utf-8'))
           t=d.get('task') or {}; r=d.get('resident') or {}; c=t.get('context') or {}
           identity=str(r.get('identity_class') or '').lower()
@@ -119,12 +126,19 @@ jobs:
           unit=str(r.get('unit') or '').lower()
           runtime=str(r.get('runtime_id') or c.get('runtime_id') or '').lower()
           intent=str(c.get('intent_type') or '').upper()
+          resident=str(r.get('resident_key') or c.get('world_resident_key') or '')
+          bucket=zlib.crc32(resident.encode('utf-8')) % 4 if resident else 0
           if identity == 'fictional_child_persona':
               wf='child-guild-adventure.yml'
           elif 'security' in role or 'security' in unit or 'security' in runtime:
               wf='security-guard.yml'
           elif identity == 'security_society':
-              wf='senju-autonomous-improver.yml' if intent in {'SEEK_VERIFIED_CONTRIBUTION','IMPROVE_CRAFT'} else 'rnd-senju-coupled-loop.yml'
+              if intent in {'RESEARCH','EXPLORE','LEARN','SHARE_SURPRISE'}:
+                  wf='rnd-senju-coupled-loop.yml'
+              elif intent == 'SEEK_VERIFIED_CONTRIBUTION' and bucket == 0:
+                  wf='senju-mass-shadow-learning.yml'
+              else:
+                  wf='senju-autonomous-improver.yml'
           elif intent in {'RESEARCH','EXPLORE','LEARN','SHARE_SURPRISE'}:
               wf='rnd-senju-coupled-loop.yml'
           elif identity in {'management_identity','executive_identity'} or 'manager' in role:
@@ -135,7 +149,8 @@ jobs:
               wf='ai-factory-boss.yml'
           print('workflow='+wf)
           print('intent='+intent)
-          print('resident='+str(r.get('resident_key') or c.get('world_resident_key') or ''))
+          print('resident='+resident)
+          print('bucket='+str(bucket))
           PY
 
       - name: Dispatch one owned execution lane
@@ -150,7 +165,7 @@ jobs:
           if [[ "${BUSY:-0}" -gt 0 ]]; then
             python automation/world/task_worker.py release --claim /tmp/world-claim.json --delay 15 --reason "execution lane ${TARGET_WORKFLOW} busy"
             echo 'dispatched=false' >> "$GITHUB_OUTPUT"
-            echo "Lane ${TARGET_WORKFLOW} busy; task returned without attempt penalty." >> "$GITHUB_STEP_SUMMARY"
+            echo "Slot ${WORLD_WORKER_SLOT}: lane ${TARGET_WORKFLOW} busy; task returned without attempt penalty." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
 
@@ -173,7 +188,7 @@ jobs:
           echo 'dispatched=true' >> "$GITHUB_OUTPUT"
           echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
           echo "run_url=$RUN_URL" >> "$GITHUB_OUTPUT"
-          echo "Resident=${{ steps.route.outputs.resident }} intent=${{ steps.route.outputs.intent }} -> ${TARGET_WORKFLOW} -> ${RUN_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Slot=${WORLD_WORKER_SLOT} Resident=${{ steps.route.outputs.resident }} intent=${{ steps.route.outputs.intent }} -> ${TARGET_WORKFLOW} -> ${RUN_URL}" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Close freshly dispatched task when downstream finishes quickly
         if: steps.dispatch.outputs.dispatched == 'true'
@@ -194,7 +209,7 @@ jobs:
             sleep 10
           done
           if [[ "$STATUS" != "completed" ]]; then
-            echo "Downstream run ${RUN_ID} still ${STATUS}; next motor cycle will reconcile it." >> "$GITHUB_STEP_SUMMARY"
+            echo "Downstream run ${RUN_ID} still ${STATUS}; slot 0 will reconcile next cycle." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           python - "$CONCLUSION" "$RUN_URL" "$TARGET_WORKFLOW" "${{ steps.claim.outputs.task_id }}" <<'PY'
@@ -224,5 +239,5 @@ jobs:
       - name: Motor cortex heartbeat
         if: always()
         run: |
-          echo "THE WORLD deterministic motor cortex completed run $GITHUB_RUN_ID." >> "$GITHUB_STEP_SUMMARY"
-          echo "No Brainbase or Copilot execution quota is required for routing and reconciliation." >> "$GITHUB_STEP_SUMMARY"
+          echo "THE WORLD motor cortex slot ${WORLD_WORKER_SLOT} completed run $GITHUB_RUN_ID." >> "$GITHUB_STEP_SUMMARY"
+          echo "Four parallel slots claim independently; only slot 0 reconciles prior review tasks." >> "$GITHUB_STEP_SUMMARY"
