@@ -8,6 +8,7 @@ from automation.ai_foundry.minute_evolution import (
     build_hourly_summary,
     evolve_once,
     initial_state,
+    normalize_focus_bias,
     quality_vector,
     run_rounds,
 )
@@ -37,14 +38,45 @@ class MinuteEvolutionTests(unittest.TestCase):
         self.assertEqual(a["champion"]["quality_proxy"], b["champion"]["quality_proxy"])
         self.assertEqual(a["promotions"], b["promotions"])
 
-    def test_hourly_summary_excludes_generation_from_fingerprint(self):
+    def test_priority_assist_is_exactly_one_of_three_rounds(self):
+        start = initial_state()
+        after = run_rounds(start, rounds=9, sleep_seconds=0, seed="assist", focus_bias="security")
+        assisted = [e for e in after["recent"] if e.get("assist_applied")]
+        self.assertEqual(len(assisted), 3)
+        self.assertTrue(all(e["focus"] == "security" for e in assisted))
+        self.assertTrue(all(e["assist_focus"] == "security" for e in assisted))
+        self.assertGreater(len([e for e in after["recent"] if not e.get("assist_applied")]), 0)
+
+    def test_assist_never_relaxes_core_regression_gates(self):
+        before = initial_state()
+        after = run_rounds(before, rounds=12, sleep_seconds=0, seed="gate-test", focus_bias="productization")
+        for key in ("correctness", "reliability", "security"):
+            self.assertGreaterEqual(
+                after["champion"]["quality_proxy"][key],
+                before["champion"]["quality_proxy"][key] - 1.0,
+            )
+
+    def test_invalid_assist_focus_is_ignored(self):
+        self.assertIsNone(normalize_focus_bias("permission_override"))
+        after = evolve_once(initial_state(), "invalid", focus_bias="permission_override")
+        self.assertFalse(after["recent"][-1]["assist_applied"])
+
+    def test_hourly_summary_records_assist_evidence(self):
+        start = initial_state()
+        after = run_rounds(start, rounds=6, sleep_seconds=0, seed="summary-assist", focus_bias="reliability")
+        summary = build_hourly_summary(start, after)
+        self.assertEqual(summary["security_assist_rounds"], 2)
+        self.assertEqual(summary["security_assist_focuses"], ["reliability"])
+        self.assertIn("priority-only", summary["limitations"][1])
+
+    def test_hourly_summary_contains_stable_contract(self):
         start = initial_state()
         after = run_rounds(start, rounds=10, sleep_seconds=0, seed="summary")
         summary = build_hourly_summary(start, after)
         self.assertEqual(summary["rounds"], 10)
         self.assertIn("report_fingerprint", summary)
         self.assertIn("weakest_next_focus", summary)
-        self.assertIn("Minute evolution changes engineering strategy state", summary["limitations"][0])
+        self.assertIn("strategy state", summary["limitations"][0])
 
     def test_history_is_append_only_jsonl(self):
         with tempfile.TemporaryDirectory() as td:

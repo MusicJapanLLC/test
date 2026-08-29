@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Bounded minute-scale strategy evolution for THE WORLD AI development.
 
-This does NOT retrain or mutate model weights. It evolves the engineering strategy
-used by the Agent Factory. The minute loop is deliberately state-only; code-level
-changes remain behind the existing Agent Factory policy, tests and PR gates.
+This evolves engineering strategy, not model weights. Security / AI-Security Eval
+may provide a priority-only focus hint. Exactly one out of every three rounds may
+follow that hint; all existing correctness, reliability, security and promotion
+gates remain authoritative and unchanged.
 """
 from __future__ import annotations
 
@@ -78,7 +79,6 @@ def quality_vector(params: dict[str, Any]) -> dict[str, float]:
 
 
 def _proxy_score(vector: dict[str, float]) -> float:
-    # Safety/correctness are intentionally weighted above raw throughput.
     weights = {
         "correctness": 1.4,
         "architecture": 1.0,
@@ -95,7 +95,7 @@ def _proxy_score(vector: dict[str, float]) -> float:
 def initial_state() -> dict[str, Any]:
     vector = quality_vector(DEFAULT_PARAMS)
     return {
-        "schema": "the-world-ai-foundry-state/v1",
+        "schema": "the-world-ai-foundry-state/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "generation": 0,
         "curriculum_level": 1,
@@ -109,8 +109,13 @@ def initial_state() -> dict[str, Any]:
         "rejections": 0,
         "noops": 0,
         "recent": [],
-        "note": "Proxy scores steer engineering strategy only; they are not model-quality, customer-value or revenue evidence.",
+        "note": "Proxy scores steer engineering strategy only; real capability needs code-level evidence and independent tests.",
     }
+
+
+def normalize_focus_bias(value: str | None) -> str | None:
+    value = str(value or "").strip().lower()
+    return value if value in FOCUS_ORDER else None
 
 
 def _mutate_value(name: str, value: Any, rng: random.Random) -> Any:
@@ -131,10 +136,9 @@ def _candidate_params(base: dict[str, Any], rng: random.Random) -> dict[str, Any
 
 
 def _eligible(current: dict[str, float], candidate: dict[str, float], focus: str) -> tuple[bool, str]:
-    # Never buy a focus gain by materially weakening core safety/correctness dimensions.
-    for k in ("correctness", "reliability", "security"):
-        if candidate[k] < current[k] - 1.0:
-            return False, f"core_regression:{k}"
+    for key in ("correctness", "reliability", "security"):
+        if candidate[key] < current[key] - 1.0:
+            return False, f"core_regression:{key}"
     if candidate[focus] < current[focus] + 0.5:
         return False, "insufficient_focus_delta"
     if _proxy_score(candidate) < _proxy_score(current) - 0.25:
@@ -142,15 +146,19 @@ def _eligible(current: dict[str, float], candidate: dict[str, float], focus: str
     return True, "eligible"
 
 
-def evolve_once(state: dict[str, Any], seed: str) -> dict[str, Any]:
+def evolve_once(state: dict[str, Any], seed: str, focus_bias: str | None = None) -> dict[str, Any]:
     state = deepcopy(state)
     generation = int(state.get("generation") or 0) + 1
-    focus = FOCUS_ORDER[(generation - 1) % len(FOCUS_ORDER)]
+    base_focus = FOCUS_ORDER[(generation - 1) % len(FOCUS_ORDER)]
+    bias = normalize_focus_bias(focus_bias)
+    assist_applied = bool(bias and generation % 3 == 0)
+    focus = bias if assist_applied else base_focus
+
     champion = state["champion"]
     current_params = champion["params"]
     current_vector = champion["quality_proxy"]
+    rng = random.Random(f"{seed}:{generation}:{champion['id']}:{bias or 'no-assist'}")
 
-    rng = random.Random(f"{seed}:{generation}:{champion['id']}")
     candidates = []
     for idx in range(8):
         params = _candidate_params(current_params, rng)
@@ -184,6 +192,9 @@ def evolve_once(state: dict[str, Any], seed: str) -> dict[str, Any]:
         event = {
             "generation": generation,
             "focus": focus,
+            "base_focus": base_focus,
+            "assist_focus": bias,
+            "assist_applied": assist_applied,
             "result": "PROMOTED",
             "champion": new_id,
             "focus_delta": winner["focus_delta"],
@@ -195,6 +206,9 @@ def evolve_once(state: dict[str, Any], seed: str) -> dict[str, Any]:
         event = {
             "generation": generation,
             "focus": focus,
+            "base_focus": base_focus,
+            "assist_focus": bias,
+            "assist_applied": assist_applied,
             "result": "NO_PROMOTION",
             "champion": champion["id"],
             "reason": "no candidate cleared regression and focus gates",
@@ -202,7 +216,7 @@ def evolve_once(state: dict[str, Any], seed: str) -> dict[str, Any]:
 
     state["generation"] = generation
     state["generated_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    state["recent"] = (list(state.get("recent") or []) + [event])[-30:]
+    state["recent"] = (list(state.get("recent") or []) + [event])[-60:]
     state["curriculum_level"] = min(7, 1 + int(state.get("promotions") or 0) // 12)
     return state
 
@@ -217,15 +231,18 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
     delta = _delta(before, after)
     weakest = min(after["champion"]["quality_proxy"], key=after["champion"]["quality_proxy"].get)
     material = any(abs(v) >= 0.5 for v in delta.values()) or after["champion"]["id"] != before["champion"]["id"]
+    new_events = [e for e in after.get("recent", []) if int(e.get("generation") or 0) > int(before.get("generation") or 0)]
+    assisted = [e for e in new_events if e.get("assist_applied")]
     stable_payload = {
         "champion": after["champion"],
         "delta": delta,
         "weakest": weakest,
         "curriculum_level": after["curriculum_level"],
+        "assist_focuses": sorted({str(e.get("assist_focus")) for e in assisted}),
     }
     fingerprint = hashlib.sha256(json.dumps(stable_payload, sort_keys=True).encode()).hexdigest()[:20]
     return {
-        "schema": "the-world-ai-foundry-hourly/v1",
+        "schema": "the-world-ai-foundry-hourly/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "start_generation": before["generation"],
         "end_generation": after["generation"],
@@ -240,10 +257,12 @@ def build_hourly_summary(before: dict[str, Any], after: dict[str, Any]) -> dict[
         "material_delta": material,
         "report_fingerprint": fingerprint,
         "champion_params": after["champion"]["params"],
+        "security_assist_rounds": len(assisted),
+        "security_assist_focuses": sorted({str(e.get("assist_focus")) for e in assisted}),
         "limitations": [
             "Minute evolution changes engineering strategy state, not model weights.",
+            "Security/Eval assist is priority-only, bounded to one of every three rounds, and cannot bypass regression/promotion gates.",
             "Quality values are local strategy proxies; real capability requires Agent Factory code changes and independent tests.",
-            "No hourly report should claim improvement when material_delta is false.",
         ],
     }
 
@@ -253,10 +272,18 @@ def write_json(path: Path, data: dict[str, Any]) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
-def run_rounds(state: dict[str, Any], *, rounds: int, sleep_seconds: float, seed: str, history_path: Path | None = None) -> dict[str, Any]:
+def run_rounds(
+    state: dict[str, Any],
+    *,
+    rounds: int,
+    sleep_seconds: float,
+    seed: str,
+    history_path: Path | None = None,
+    focus_bias: str | None = None,
+) -> dict[str, Any]:
     out = deepcopy(state)
     for _ in range(rounds):
-        out = evolve_once(out, seed)
+        out = evolve_once(out, seed, focus_bias=focus_bias)
         if history_path:
             history_path.parent.mkdir(parents=True, exist_ok=True)
             with history_path.open("a", encoding="utf-8") as f:
@@ -280,7 +307,8 @@ def main() -> int:
     q.add_argument("--history")
     q.add_argument("--rounds", type=int, default=60)
     q.add_argument("--sleep-seconds", type=float, default=60.0)
-    q.add_argument("--seed", default="the-world-ai-foundry-v1")
+    q.add_argument("--seed", default="the-world-ai-foundry-v2")
+    q.add_argument("--assist-focus", choices=FOCUS_ORDER)
 
     args = ap.parse_args()
     if args.cmd == "init":
@@ -294,6 +322,7 @@ def main() -> int:
         sleep_seconds=max(0.0, args.sleep_seconds),
         seed=args.seed,
         history_path=Path(args.history) if args.history else None,
+        focus_bias=args.assist_focus,
     )
     write_json(Path(args.out), after)
     write_json(Path(args.summary), build_hourly_summary(before, after))
