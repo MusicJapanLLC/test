@@ -20,7 +20,7 @@ def test_autonomous_promotion_requires_shadow_champion_and_holdout_gate():
         assert invariant in workflow, f"Senju promotion lost invariant: {invariant}"
 
     selector_required = [
-        "PRELIM_SALTS",
+        "SELECTION_SALTS",
         "HOLDOUT_SALTS",
         "choose_stable",
         "robust_score",
