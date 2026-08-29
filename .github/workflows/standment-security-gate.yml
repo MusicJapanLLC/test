@@ -9,8 +9,12 @@ on:
     branches:
       - "claude/employee-onboarding-setup-udm86"
   schedule:
-    - cron: "23 1 * * 1"
+    - cron: "17 2 * * *"
   workflow_dispatch:
+
+concurrency:
+  group: standment-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -43,7 +47,7 @@ jobs:
       - name: Build WebGL application
         working-directory: baton
         env:
-          VITE_SITE_URL: https://baton-musicjapanllc.vercel.app
+          VITE_SITE_URL: https://baton-liart.vercel.app
         run: npm run build
 
       - name: Prepare security reports
@@ -81,10 +85,7 @@ jobs:
 
   production-passive-dast:
     name: Production passive DAST
-    if: >-
-      github.event_name == 'schedule' ||
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/claude/employee-onboarding-setup-udm86')
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     needs: secure-build
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -99,7 +100,7 @@ jobs:
 
       - name: Probe production edge and accidental exposure
         env:
-          STANDMENT_DAST_TARGET: https://baton-musicjapanllc.vercel.app/
+          STANDMENT_DAST_TARGET: https://baton-liart.vercel.app/
         run: >-
           python scripts/security/http_probe.py "$STANDMENT_DAST_TARGET"
           --json production-dast.json
