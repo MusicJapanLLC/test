@@ -1,6 +1,6 @@
 # LLM Security Evaluation Harness
 
-**状態: BUILDING**
+Status: **BUILDING**
 
 > StandmentのAIセキュリティR&Dを、プロンプトの感想ではなく再現可能なテスト結果へ変換するための防御専用ハーネス。所有または明示許可されたAI/Agent環境だけを対象にする。
 
