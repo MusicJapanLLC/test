@@ -1,6 +1,6 @@
 # AI Factory Portfolio
 
-最終更新: 2026-08-29 JST
+最終更新: 2026-08-30 JST
 
 このファイルは、Music Japan / Standment のAI開発工場が**実際に作ったもの**を社長・営業・非エンジニア向けに説明するための一覧です。
 
@@ -250,3 +250,44 @@ GitHub側の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN
 
 ### 次の改善
 初回の実Gmail scheduled runを確認し、未分類だけを低コストAI判定へ回すfallbackを追加する。
+
+---
+
+## 8. Standment Security — Autonomous Defensive R&D Fabric
+
+**状態: BUILDING**
+
+### 作ったもの
+Standmentのセキュリティ研究を、毎日「公開防御情報を読む → 自社の防御証拠を監査する → ポートフォリオの一番弱い箇所を選ぶ → Senjuへ限定研究テーマとして渡す → 反証と証拠を保存する → Slackへ人間語で報告する」という1本の自律ループへ統合。
+
+### 何に使える？
+新しい脆弱性ニュースを眺めるだけで終わらせず、Standment自身のCI/CD・依存関係・認証・AI Agent運用・Evidence Packへ結び付ける。研究量ではなく、**顧客が確認できる防御証拠が毎日増える方向**へR&Dの優先順位を寄せる。
+
+### すでにできていること
+- CISA KEV / GitHub Advisory Databaseからの受動的な防御情報収集
+- 自社リポジトリのSecurity Guard / CodeQL / Dependency Review / Security Gate / R&D基盤の証拠カバレッジ監査
+- Portfolio gapを日次でランキング
+- その日の最優先gapをAdaptive Research Queueの最上位へ昇格
+- Senjuへ渡す研究directiveからtarget / URL / credential / exploit等の実行情報を除外
+- counterevidence / reproducibilityを昇格条件として維持
+- JSON + Markdownの研究証拠を90日Artifact保存
+- 通常運用ではSlackへ日次R&D digestを配送
+- PR時にも同じテストと境界検証を走らせ、Slack通知だけ抑制
+
+### 現在の残り
+この強化版はPR上で統合検証中。Security Guard / Standment Security Gate / unit tests / 実際のPortfolio R&D workflowが通り、最初の日次実行証拠を確認するまではVERIFIEDとは呼ばない。
+
+### 経営メリット
+「セキュリティ会社にしたい」を、単発の診断ツールではなく**毎日研究して証拠を増やす会社内R&D工程**へ変える。将来、Security Scan、Evidence Pack、AI Agent Security、Supply-chain Assuranceを同じ改善サイクルで育てられる。
+
+### Evidence
+- `.github/workflows/standment-security-portfolio-rnd.yml`
+- `automation/security/portfolio_rnd.py`
+- `automation/security/standment_defensive_intel.py`
+- `automation/security/test_standment_defensive_intel.py`
+- `standment-security/security_portfolio_program.json`
+- `value-lab/senju_bridge.py`
+- `.github/workflows/the-world-autonomous-research-fabric.yml`
+
+### 次の改善
+PR検証を通した後、最初の06:50 JST日次runで生成されたIntel / Research Seed / Senju Directive / Counterevidenceを保存し、Evidence PackとBefore/Afterケーススタディへ昇格させる。
