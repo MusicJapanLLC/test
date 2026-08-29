@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any
 
 AUDIENCE = "the-world-worker"
+GATEWAY_PROTOCOL = "oidc-repository-v2"
 EDGE_URL = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker"
 
 
@@ -46,7 +47,7 @@ def _edge(payload: dict[str, Any]) -> dict[str, Any]:
         headers={
             "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
-            "User-Agent": "the-world-github-task-worker",
+            "User-Agent": f"the-world-github-task-worker/{GATEWAY_PROTOCOL}",
         },
         method="POST",
     )
