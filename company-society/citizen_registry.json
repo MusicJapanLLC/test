@@ -113,9 +113,12 @@
     "rule": "Standing-changing events require verified=true and evidence. Unverified accusations change no standing."
   },
   "runtime_projection": {
-    "existing_identity_source": "Supabase/public.ai_runtime_registry metadata.identity_version=world-resident/v1",
+    "canonical_identity_source": "Supabase/public.world_residents",
+    "runtime_state_source": "Supabase/public.ai_runtime_registry",
+    "directory_view": "Supabase/public.world_resident_directory",
     "economy_source": "Supabase/public.world_accounts",
     "event_bus": "Supabase/public.ai_company_events",
-    "rule": "Do not create a second runtime registry when an existing resident identity already exists."
+    "social_event_view": "Supabase/public.world_resident_social_events",
+    "rule": "world_residents owns resident identity; runtime registry owns liveness/capabilities; event bus owns history. Do not create duplicate identity or event stores."
   }
 }
