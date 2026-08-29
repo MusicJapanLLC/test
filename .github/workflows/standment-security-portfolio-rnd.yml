@@ -17,6 +17,7 @@ on:
       - 'automation/security/portfolio_accelerator.py'
       - 'automation/security/test_portfolio_accelerator.py'
       - 'standment-security/security_portfolio_program.json'
+      - 'standment-security/PORTFOLIO_INDEX.md'
       - 'standment-security/whitehat-candidates/**'
       - 'standment-security/ai-security/**'
       - 'value-lab/research_queue.json'
@@ -159,6 +160,8 @@ jobs:
             --state standment-security/state/portfolio-accelerator.json \
             --dashboard standment-security/PORTFOLIO_ACCELERATION.md \
             --outbox reports/standment-security-rnd/accelerator-outbox.json
+          test -s standment-security/state/portfolio-accelerator.json
+          test -s standment-security/PORTFOLIO_ACCELERATION.md
           cat standment-security/PORTFOLIO_ACCELERATION.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Verify R&D x Senju boundary compatibility
@@ -265,6 +268,7 @@ jobs:
           out.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
           print(f'Wrote {out} for R&D Slack delivery; no Slack secret is required in GitHub.')
           PY
+          test -s automation/reporting/outbox/standment-security-latest.json
 
       - name: Commit material portfolio artifacts and Slack outbox back to THE WORLD
         env:
@@ -274,17 +278,35 @@ jobs:
           set -euo pipefail
           git config user.name "standment-rnd-bot"
           git config user.email "standment-rnd-bot@users.noreply.github.com"
-          git add \
-            standment-security/PORTFOLIO_INDEX.md \
-            standment-security/PORTFOLIO_ACCELERATION.md \
-            standment-security/state/portfolio-accelerator.json \
-            standment-security/lab-notes \
-            standment-security/case-studies \
-            standment-security/evidence-packs \
-            standment-security/ai-security \
-            automation/reporting/outbox/standment-security-latest.json 2>/dev/null || true
+
+          persist_paths=(
+            "standment-security/PORTFOLIO_INDEX.md"
+            "standment-security/PORTFOLIO_ACCELERATION.md"
+            "standment-security/state/portfolio-accelerator.json"
+            "standment-security/lab-notes"
+            "standment-security/case-studies"
+            "standment-security/evidence-packs"
+            "standment-security/ai-security"
+            "automation/reporting/outbox/standment-security-latest.json"
+          )
+
+          staged=0
+          for path in "${persist_paths[@]}"; do
+            if [[ -e "$path" ]]; then
+              git add -- "$path"
+              staged=1
+            else
+              echo "Persistence path absent this run: $path" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          done
+
+          if [[ "$staged" -eq 0 ]]; then
+            echo "No persistence paths existed; failing closed." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
           if git diff --cached --quiet; then
-            echo "No repository artifact or delivery outbox delta to commit." >> "$GITHUB_STEP_SUMMARY"
+            echo "Persistence paths exist but produced no repository delta." >> "$GITHUB_STEP_SUMMARY"
           else
             TRACK="$(python -c "import json; print(json.load(open('reports/standment-security-rnd/evolution.json'))['track'])")"
             git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
