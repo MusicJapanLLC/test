@@ -1,0 +1,110 @@
+name: R&D Portfolio P0 Daily Evolution
+
+on:
+  schedule:
+    - cron: "50 21 * * *" # 06:50 JST, before R&D x Senju Coupled Loop at 07:20 JST
+  workflow_dispatch:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "PORTFOLIO.md"
+      - "automation/reporting/PORTFOLIO_CONTRACT.md"
+      - "automation/reporting/portfolio_evolution.py"
+      - "automation/reporting/test_portfolio_evolution.py"
+      - "value-lab/research_queue.json"
+      - "value-lab/senju_bridge.py"
+      - "senju/scripts/apply_rnd_directive.py"
+      - ".github/workflows/portfolio-evolution-daily.yml"
+
+permissions:
+  contents: read
+
+env:
+  RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+  PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
+
+concurrency:
+  group: portfolio-evolution-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Test portfolio gates and daily selector
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          python -m pytest \
+            automation/reporting/test_portfolio_report.py \
+            automation/reporting/test_portfolio_evolution.py \
+            -q
+          python -m json.tool value-lab/research_queue.json >/dev/null
+
+      - name: Choose today's single portfolio bet
+        run: |
+          set -euo pipefail
+          python automation/reporting/portfolio_evolution.py \
+            --portfolio PORTFOLIO.md \
+            --out reports/portfolio-evolution/plan.json \
+            --slack reports/portfolio-evolution/slack.md \
+            --directive reports/portfolio-evolution/directive.json
+          cat reports/portfolio-evolution/slack.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate bounded Senju collaboration
+        run: |
+          set -euo pipefail
+          python senju/scripts/apply_rnd_directive.py \
+            --strategy senju/state/strategy.json \
+            --directive reports/portfolio-evolution/directive.json \
+            --out reports/portfolio-evolution/senju-candidate-strategy.json \
+            --audit reports/portfolio-evolution/senju-audit.json
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Senju directive validated against the bounded numeric strategy surface." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload daily portfolio evolution evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: portfolio-evolution-daily
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            reports/portfolio-evolution/plan.json
+            reports/portfolio-evolution/slack.md
+            reports/portfolio-evolution/directive.json
+            reports/portfolio-evolution/senju-candidate-strategy.json
+            reports/portfolio-evolution/senju-audit.json
+
+      - name: Report daily portfolio priority to Slack
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          webhook="${PORTFOLIO_SLACK_WEBHOOK_URL:-}"
+          if [[ -z "$webhook" ]]; then webhook="${RND_SLACK_WEBHOOK_URL:-}"; fi
+          if [[ -z "$webhook" ]]; then
+            echo "SLACK_DELIVERY=BLOCKED_MISSING_PORTFOLIO_OR_RND_WEBHOOK" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          WEBHOOK="$webhook" python - <<'PY'
+          import json, os, urllib.request
+          text=open('reports/portfolio-evolution/slack.md', encoding='utf-8').read().strip()
+          req=urllib.request.Request(
+              os.environ['WEBHOOK'],
+              data=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type':'application/json'},
+          )
+          with urllib.request.urlopen(req, timeout=10) as response:
+              print('slack status', response.status)
+          PY
