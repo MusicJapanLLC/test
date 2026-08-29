@@ -5,6 +5,8 @@ The White-Hat R&D lane is an adversarial reviewer and evidence generator for def
 
 It does not exist to maximize vulnerability counts. It exists to improve the quality of owned/authorized systems and produce reproducible Before/After evidence that can survive skeptical review.
 
+The current-base integration also keeps GitHub checkout credentials non-persistent. Repository artifact writes, where needed, must use an explicit bounded API path rather than inheriting a hidden checkout credential.
+
 ## Two modes
 
 ### 1. Plan-only
