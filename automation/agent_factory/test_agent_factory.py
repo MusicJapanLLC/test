@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest import mock
 
 import factory
+import local_worker
 import policy
 import tournament
 
@@ -15,6 +16,8 @@ class AgentFactoryTests(unittest.TestCase):
         root = Path(tmp.name)
         (root / "value-lab").mkdir()
         (root / "standment-security").mkdir()
+        (root / "automation/security").mkdir(parents=True)
+        (root / ".github/workflows").mkdir(parents=True)
         (root / "value-lab/research_queue.json").write_text(json.dumps({
             "active": [{
                 "research_id": "RND-STANDMENT-SECURITY-PORTFOLIO-001",
@@ -35,6 +38,17 @@ class AgentFactoryTests(unittest.TestCase):
                 "evidence_files": ["standment-security/SECURITY_BASELINE.md"],
             }]
         }), encoding="utf-8")
+        for path in [
+            "standment-security/SECURITY_BASELINE.md",
+            "standment-security/CONTROL_EVIDENCE_TEMPLATE.md",
+            "standment-security/ELITE_WHITEHAT_CELL.md",
+            "automation/security/portfolio_rnd.py",
+            "automation/security/test_portfolio_rnd.py",
+            ".github/workflows/standment-security-portfolio-rnd.yml",
+        ]:
+            p = root / path
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text("fixture\n", encoding="utf-8")
         return tmp, root
 
     def test_dynamic_swarm_has_mandatory_independent_roles(self):
@@ -44,27 +58,44 @@ class AgentFactoryTests(unittest.TestCase):
         self.assertEqual(plan["agent_count"], 12)
         self.assertLessEqual(plan["max_parallel"], 5)
         roles = {x["role"] for x in plan["agents"]}
-        for role in {"evidence_hunter", "red_skeptic", "replicator", "test_engineer", "systems_engineer"}:
+        for role in {"evidence_hunter", "red_skeptic", "replicator", "test_engineer", "systems_engineer", "elite_whitehat"}:
             self.assertIn(role, roles)
+        whitehat = next(x for x in plan["agents"] if x["role"] == "elite_whitehat")
+        self.assertEqual(whitehat["stance"], "RED")
+        self.assertEqual(plan["whitehat_contract"]["mandatory_role"], "elite_whitehat")
         self.assertFalse(plan["forge"]["direct_main_push"])
         self.assertTrue(plan["forge"]["pr_required"])
 
-    def test_lower_priority_swarm_shrinks(self):
+    def test_lower_priority_swarm_still_keeps_whitehat(self):
         tmp, root = self._root(priority=100)
         self.addCleanup(tmp.cleanup)
         plan = factory.build_plan(root, "43")
-        self.assertGreaterEqual(plan["agent_count"], 6)
-        self.assertLessEqual(plan["agent_count"], 8)
+        self.assertGreaterEqual(plan["agent_count"], 7)
+        self.assertLessEqual(plan["agent_count"], 9)
+        self.assertIn("elite_whitehat", {x["role"] for x in plan["agents"]})
 
     def test_prompt_is_bounded_and_json_only(self):
         tmp, root = self._root()
         self.addCleanup(tmp.cleanup)
         plan = factory.build_plan(root, "44")
-        text = factory._prompt(plan, 0)
+        slot = next(x["slot"] for x in plan["agents"] if x["role"] == "elite_whitehat")
+        text = factory._prompt(plan, slot)
         self.assertIn('"schema": "agent-factory-worker/v1"', text)
         self.assertIn("Return ONE JSON object only", text)
         self.assertIn("Do not propose third-party targeting", text)
-        self.assertIn("source-code-only outcome is not a portfolio result", text)
+        self.assertIn("ELITE WHITE-HAT CONTRACT", text)
+        self.assertIn("remediation and retest criteria", text)
+
+    def test_local_fallback_supports_elite_whitehat(self):
+        tmp, root = self._root()
+        self.addCleanup(tmp.cleanup)
+        plan = factory.build_plan(root, "45")
+        slot = next(x["slot"] for x in plan["agents"] if x["role"] == "elite_whitehat")
+        worker = local_worker.build_worker(root, plan, slot)
+        self.assertEqual(worker["role"], "elite_whitehat")
+        self.assertGreaterEqual(len(worker["evidence_refs"]), 3)
+        self.assertIn("authorized", worker["observations"][-1])
+        self.assertGreaterEqual(len(worker["proposed_change"]["tests"]), 3)
 
     def _valid_worker(self, agent_id="AF-1-00", role="evidence_hunter", summary="Improve evidence manifest"):
         return {
@@ -131,18 +162,11 @@ class AgentFactoryTests(unittest.TestCase):
             "promotion_ready": True,
             "champion": {
                 "agent_id": "AF-1-00", "role": "evidence_hunter", "score": 88,
-                "proposal": self._valid_worker()["proposed_change"] | {
-                    "hypothesis": "h",
-                    "evidence_refs": ["docs/x.md"],
-                    "counterevidence": ["c"],
-                    "limitations": ["l"],
+                "proposal": {
+                    "hypothesis": "h", "evidence_refs": ["docs/x.md"], "counterevidence": ["c"],
+                    "limitations": ["l"], "proposed_change": self._valid_worker()["proposed_change"],
                 }
             }
-        }
-        # Champion proposal shape normally has proposed_change nested; create correct shape.
-        result["champion"]["proposal"] = {
-            "hypothesis": "h", "evidence_refs": ["docs/x.md"], "counterevidence": ["c"],
-            "limitations": ["l"], "proposed_change": self._valid_worker()["proposed_change"],
         }
         text = tournament.forge_prompt({"mission": {"research_id": "RND-X"}}, result)
         self.assertIn("Do NOT modify .github/", text)
