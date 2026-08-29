@@ -8,9 +8,11 @@ on:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - "outside-world/external_presence.py"
+      - "outside-world/covenant_runtime.py"
       - "outside-world/presence_policy.json"
       - "outside-world/supabase_directory.py"
       - "outside-world/test_external_presence.py"
+      - "outside-world/test_covenant_runtime.py"
       - ".github/workflows/the-world-external-presence.yml"
 
 concurrency:
@@ -73,19 +75,35 @@ jobs:
             --decisions outside-world-action-decisions.json
           cat outside-world-presence-report.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Verify external presence invariants
-        run: python -m unittest outside-world/test_external_presence.py -v
+      - name: Bind THE COVENANT to every external mission
+        run: |
+          set -euo pipefail
+          python outside-world/covenant_runtime.py \
+            --plan outside-world-presence-plan.json \
+            --policy outside-world/presence_policy.json \
+            --in-place \
+            --report covenant-runtime-report.md
+          cat covenant-runtime-report.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Dispatch read-only missions to authorized external executor
+      - name: Verify external presence and Covenant invariants
+        run: |
+          python -m unittest outside-world/test_external_presence.py -v
+          python -m unittest outside-world/test_covenant_runtime.py -v
+
+      - name: Dispatch Covenant-bound read-only missions to authorized external executor
         if: success() && env.WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL != ''
         run: |
           python - <<'PY'
           import json, os, urllib.request
           plan=json.load(open('outside-world-presence-plan.json', encoding='utf-8'))
+          binding=plan.get('covenant_binding') or {}
+          if binding.get('missions_bound') != plan.get('missions_count'):
+              raise RuntimeError('refusing dispatch: not every mission is Covenant-bound')
           payload={
-              'schema':'the-world-external-mission-batch/v1',
+              'schema':'the-world-external-mission-batch/v2-covenant',
               'generated_at':plan['generated_at'],
               'principle':plan['principle'],
+              'covenant_binding':binding,
               'missions':plan['missions'],
           }
           req=urllib.request.Request(
@@ -106,13 +124,20 @@ jobs:
           import json, os, urllib.request
           plan=json.load(open('outside-world-presence-plan.json', encoding='utf-8'))
           counts={}
+          duties={}
           for m in plan['missions']:
               counts[m['lane']]=counts.get(m['lane'],0)+1
+              duty=(m.get('covenant') or {}).get('duty','UNBOUND')
+              duties[duty]=duties.get(duty,0)+1
           lanes=' / '.join(f'{k}:{v}' for k,v in sorted(counts.items()))
+          duty_summary=' / '.join(f'{k}:{v}' for k,v in sorted(duties.items()))
           executor='CONNECTED' if os.environ.get('WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL') else 'WAITING_FOR_EXECUTOR_SECRET'
+          binding=plan.get('covenant_binding') or {}
           text=(
               f"*THE WORLD / EXTERNAL PRESENCE*\n"
               f"citizens={plan['profiles_count']} / missions={plan['missions_count']}\n"
+              f"covenant_coverage={binding.get('coverage_ratio',0):.0%} / evidence={binding.get('evidence_coverage_ratio',0):.0%}\n"
+              f"duties={duty_summary}\n"
               f"lanes={lanes}\n"
               f"executor={executor}\n"
               f"principle={plan['principle']}"
@@ -139,3 +164,4 @@ jobs:
             outside-world-presence-plan.json
             outside-world-presence-report.md
             outside-world-action-decisions.json
+            covenant-runtime-report.md
