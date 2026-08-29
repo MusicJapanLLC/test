@@ -1,0 +1,43 @@
+name: Security Critical Change Control
+
+on:
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  critical-change-control:
+    name: Require PR trace for security-critical changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - name: Detect critical paths
+        id: critical
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git rev-parse HEAD^ >/dev/null 2>&1; then CHANGED="$(git diff --name-only HEAD^ HEAD)"; else CHANGED="$(git show --pretty='' --name-only HEAD)"; fi
+          CRITICAL="$(printf '%s\n' "$CHANGED" | grep -E '^(\.github/workflows/|\.github/CODEOWNERS$|\.github/dependabot\.yml$|SECURITY\.md$|security/|scripts/security/|baton/vercel\.json$)' || true)"
+          if [ -z "$CRITICAL" ]; then echo "has_critical=false" >> "$GITHUB_OUTPUT"; exit 0; fi
+          echo "has_critical=true" >> "$GITHUB_OUTPUT"
+      - name: Verify commit is traceable to a pull request
+        if: steps.critical.outputs.has_critical == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          PR_COUNT="$(gh api -H 'Accept: application/vnd.github+json' "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" --jq 'length')"
+          if [ "$PR_COUNT" -lt 1 ]; then
+            echo "::error::Security-critical controls were changed without an associated pull request."
+            exit 1
+          fi
