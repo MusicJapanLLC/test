@@ -2,8 +2,9 @@
 """Evidence-based runtime truth for The world.
 
 Conversational claims, role counts, Slack posts, PRs and static labels never prove
-runtime health. Each expected workflow is checked independently and the core fails
-closed to its worst current evidence. Verified commercial events are business truth.
+runtime health. Critical workflows fail closed to their worst current evidence. Fresh,
+explicitly verified external runtime evidence may prove non-GitHub substrates such as
+the Company Memory database. Verified commercial events are business truth.
 """
 from __future__ import annotations
 
@@ -85,6 +86,29 @@ def run_view(run: dict[str, Any] | None) -> dict[str, Any] | None:
     }
 
 
+def external_state(
+    evidence_doc: dict[str, Any], evidence_id: str, freshness_hours: int, now: datetime
+) -> tuple[str, str, dict[str, Any] | None]:
+    match = next(
+        (
+            item
+            for item in evidence_doc.get("evidence", []) or []
+            if isinstance(item, dict) and str(item.get("id")) == evidence_id
+        ),
+        None,
+    )
+    if not match or match.get("verified") is not True:
+        return "CONFIG_ONLY", "No verified external runtime evidence exists.", match
+    verified_at = parse_time(str(match.get("verified_at", "")))
+    if verified_at is None:
+        return "STALE", "External evidence has no valid verified_at timestamp.", match
+    ttl = min(freshness_hours, int(match.get("freshness_hours", freshness_hours) or freshness_hours))
+    age_hours = max(0.0, (now - verified_at).total_seconds() / 3600)
+    if age_hours > ttl:
+        return "STALE", f"External evidence is {age_hours:.2f}h old; TTL is {ttl}h.", match
+    return "PROVEN", f"Fresh verified external evidence is {age_hours:.2f}h old.", match
+
+
 def verified_commercial(events: dict[str, Any]) -> dict[str, Any]:
     verified = []
     cash = 0
@@ -117,10 +141,13 @@ def load_json(path: Path) -> dict[str, Any]:
 
 def audit(config: dict[str, Any], runs: list[dict[str, Any]], root: Path, now: datetime) -> dict[str, Any]:
     cores = []
+    external_doc = load_json(root / "ops/reality-control-plane/external-evidence.json")
     for core in config.get("cores", []):
         paths = list(core.get("expected_workflows") or [])
         freshness = int(core.get("freshness_hours", 24))
         workflow_evidence = []
+        external_evidence = None
+
         if paths:
             for path in paths:
                 run = latest_for_path(runs, path)
@@ -134,9 +161,16 @@ def audit(config: dict[str, Any], runs: list[dict[str, Any]], root: Path, now: d
             worst = max(workflow_evidence, key=lambda item: STATE_PRIORITY[item["runtime_state"]])
             state = str(worst["runtime_state"])
             reason = f"Fail-closed aggregate; worst evidence is {worst['path']}: {worst['reason']}"
+        elif core.get("external_evidence_id"):
+            state, reason, external_evidence = external_state(
+                external_doc,
+                str(core["external_evidence_id"]),
+                freshness,
+                now,
+            )
         else:
             state = "CONFIG_ONLY"
-            reason = "No runtime workflow is registered for this core."
+            reason = "No runtime workflow or external evidence source is registered for this core."
 
         entry: dict[str, Any] = {
             "id": core.get("id"),
@@ -146,22 +180,42 @@ def audit(config: dict[str, Any], runs: list[dict[str, Any]], root: Path, now: d
             "proof_requirement": core.get("proof_requirement"),
             "workflow_evidence": workflow_evidence,
         }
+        if external_evidence is not None:
+            entry["external_evidence"] = {
+                "id": external_evidence.get("id"),
+                "verified": external_evidence.get("verified"),
+                "verified_at": external_evidence.get("verified_at"),
+                "source": external_evidence.get("source"),
+                "scope": external_evidence.get("scope"),
+                "checks": external_evidence.get("checks") or [],
+                "limitations": external_evidence.get("limitations") or [],
+            }
         commercial_path = core.get("commercial_events_path")
         if commercial_path:
             entry["commercial"] = verified_commercial(load_json(root / str(commercial_path)))
         cores.append(entry)
 
-    blocking = [c for c in cores if c["runtime_state"] in {"FAILED_RECENT", "STALE", "CONFIG_ONLY"}]
+    runtime_blocking_ids = {
+        str(c["id"])
+        for c in cores
+        if c["runtime_state"] in {"FAILED_RECENT", "STALE", "CONFIG_ONLY"}
+    }
     revenue = next((c for c in cores if c["id"] == "revenue-agent"), {})
     commercial = revenue.get("commercial") or {}
+    revenue_connected = bool(commercial.get("revenue_connected", False))
+    blocking_ids = set(runtime_blocking_ids)
+    if not revenue_connected:
+        blocking_ids.add("revenue-agent")
+
     return {
         "schema": "the-world-reality-audit/v1",
         "generated_at": now.isoformat(timespec="seconds"),
-        "truth_source": "GitHub Actions + verified commercial event contract",
-        "overall": "PROVEN" if not blocking else "UNPROVEN",
-        "blocking_core_count": len(blocking),
+        "truth_source": "GitHub Actions + fresh verified external runtime evidence + verified commercial event contract",
+        "overall": "PROVEN" if not blocking_ids else "UNPROVEN",
+        "blocking_core_count": len(blocking_ids),
+        "blocking_core_ids": sorted(blocking_ids),
         "verified_cash_yen": int(commercial.get("verified_cash_yen", 0) or 0),
-        "revenue_connected": bool(commercial.get("revenue_connected", False)),
+        "revenue_connected": revenue_connected,
         "cores": cores,
     }
 
@@ -171,7 +225,7 @@ def render(report: dict[str, Any]) -> str:
         "# THE WORLD — REALITY AUDIT",
         "",
         f"- overall: **{report['overall']}**",
-        f"- blocking cores: **{report['blocking_core_count']}**",
+        f"- blocking cores: **{report['blocking_core_count']}** ({', '.join(report['blocking_core_ids']) or 'none'})",
         f"- verified cash: **¥{report['verified_cash_yen']:,}**",
         f"- revenue connected: **{str(report['revenue_connected']).lower()}**",
         "",
@@ -180,15 +234,22 @@ def render(report: dict[str, Any]) -> str:
     ]
     for core in report["cores"]:
         ev = core.get("workflow_evidence") or []
-        summary = ", ".join(
-            f"{Path(str(item['path'])).name}:{item['runtime_state']}"
-            for item in ev
-        ) or "no runtime evidence"
+        ext = core.get("external_evidence")
+        if ev:
+            summary = ", ".join(
+                f"{Path(str(item['path'])).name}:{item['runtime_state']}"
+                for item in ev
+            )
+        elif ext:
+            summary = f"{ext.get('source')} @ {ext.get('verified_at')}"
+        else:
+            summary = "no runtime evidence"
         lines.append(f"| {core['name']} | **{core['runtime_state']}** | {summary} |")
     lines += [
         "",
         "> A chat message, Slack post, role/persona count, PR, source file, or static `VERIFIED` label is not runtime proof.",
-        "> Completion requires current machine evidence. Revenue requires a trusted verified commercial event.",
+        "> Overall PROVEN also requires the revenue core to have at least one trusted verified commercial event.",
+        "> Cash still requires a verified payment event; operational success alone is never revenue.",
         "",
     ]
     return "\n".join(lines)
@@ -225,6 +286,7 @@ def main() -> int:
     print(json.dumps({
         "overall": report["overall"],
         "blocking_core_count": report["blocking_core_count"],
+        "blocking_core_ids": report["blocking_core_ids"],
         "verified_cash_yen": report["verified_cash_yen"],
         "revenue_connected": report["revenue_connected"],
     }, ensure_ascii=False))
