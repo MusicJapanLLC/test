@@ -175,6 +175,52 @@ jobs:
           echo "run_url=$RUN_URL" >> "$GITHUB_OUTPUT"
           echo "Resident=${{ steps.route.outputs.resident }} intent=${{ steps.route.outputs.intent }} -> ${TARGET_WORKFLOW} -> ${RUN_URL}" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Close freshly dispatched task when downstream finishes quickly
+        if: steps.dispatch.outputs.dispatched == 'true'
+        shell: bash
+        env:
+          RUN_ID: ${{ steps.dispatch.outputs.run_id }}
+          RUN_URL: ${{ steps.dispatch.outputs.run_url }}
+          TARGET_WORKFLOW: ${{ steps.route.outputs.workflow }}
+        run: |
+          set -euo pipefail
+          STATUS=''
+          CONCLUSION=''
+          for i in {1..24}; do
+            DATA="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")"
+            STATUS="$(jq -r '.status' <<<"$DATA")"
+            CONCLUSION="$(jq -r '.conclusion // ""' <<<"$DATA")"
+            if [[ "$STATUS" == "completed" ]]; then break; fi
+            sleep 10
+          done
+          if [[ "$STATUS" != "completed" ]]; then
+            echo "Downstream run ${RUN_ID} still ${STATUS}; next motor cycle will reconcile it." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - "$CONCLUSION" "$RUN_URL" "$TARGET_WORKFLOW" "${{ steps.claim.outputs.task_id }}" <<'PY'
+          import json,sys
+          conclusion,url,workflow,task_id=sys.argv[1:]
+          ok=conclusion=='success'
+          result={
+            'schema':'the-world-task-result/v1',
+            'status':'DONE' if ok else 'FAILED',
+            'summary':f'Deterministic owned workflow {workflow} completed with {conclusion}.',
+            'verified':ok,
+            'produced_change':ok,
+            'evidence':[f'github_run:{url}',f'workflow:{workflow}',f'conclusion:{conclusion}'],
+            'changed_files':[],
+            'tests':[],
+            'next_action':'NONE' if ok else 'retry through bounded lane',
+          }
+          open('/tmp/world-self-review.json','w',encoding='utf-8').write(json.dumps({'task':{'id':task_id}},ensure_ascii=False)+'\n')
+          open('/tmp/world-self-result.json','w',encoding='utf-8').write(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+          PY
+          if [[ "$CONCLUSION" == "success" ]]; then
+            python automation/world/task_worker.py finish-review --review /tmp/world-self-review.json --result /tmp/world-self-result.json --success
+          else
+            python automation/world/task_worker.py finish-review --review /tmp/world-self-review.json --result /tmp/world-self-result.json --error "downstream workflow conclusion=${CONCLUSION}"
+          fi
+
       - name: Motor cortex heartbeat
         if: always()
         run: |
