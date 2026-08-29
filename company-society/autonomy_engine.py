@@ -128,7 +128,7 @@ def improvement_vow(mode: str) -> str:
 
 def render(report: dict[str, Any]) -> str:
     lines = [
-        "# THE COVENANT — Autonomy, Personality & Fellowship",
+        "# THE COVENANT — Autonomy & Fellowship — Personality Layer",
         "",
         "**Rule:** personality changes preference; evidence and legitimate execution bounds remain constitutional.",
         "",
