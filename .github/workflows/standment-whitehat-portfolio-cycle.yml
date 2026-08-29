@@ -12,6 +12,9 @@ on:
       - 'automation/agent_factory/**'
       - 'automation/security/whitehat_portfolio_bridge.py'
       - 'automation/security/test_whitehat_portfolio_bridge.py'
+      - 'automation/security/whitehat_lab_adapter.py'
+      - 'automation/security/test_whitehat_lab_adapter.py'
+      - 'autonomous_redteam_lab/**'
       - 'standment-security/ELITE_WHITEHAT_CELL.md'
       - 'standment-security/WHITEHAT_PORTFOLIO_OPERATING_PLAN.md'
       - 'standment-security/security_portfolio_program.json'
@@ -47,12 +50,14 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify white-hat control plane and bridge
+      - name: Verify white-hat control plane, bridge and lab
         shell: bash
         run: |
           set -euo pipefail
           (cd automation/agent_factory && python -m unittest -v test_agent_factory.py)
           (cd automation/security && python -m unittest -v test_whitehat_portfolio_bridge.py)
+          python -m unittest -v automation.security.test_whitehat_lab_adapter
+          PYTHONPATH=autonomous_redteam_lab python -m unittest discover -s autonomous_redteam_lab/tests -v
 
       - name: Generate current P0 research swarm plan
         run: |
@@ -85,6 +90,72 @@ jobs:
             --slot "$slot" \
             --out "$WHITEHAT_DIR/workers/elite-whitehat.json"
           cat "$WHITEHAT_DIR/workers/elite-whitehat.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Convert elite white-hat output into bounded lab findings
+        shell: bash
+        run: |
+          set -euo pipefail
+          python automation/security/whitehat_lab_adapter.py \
+            --worker "$WHITEHAT_DIR/workers/elite-whitehat.json" \
+            --out "$WHITEHAT_DIR/lab-findings.json"
+          cat "$WHITEHAT_DIR/lab-findings.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Generate zero-network falsification plan
+        env:
+          PYTHONPATH: autonomous_redteam_lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m cyber_lab.core \
+            --findings "$WHITEHAT_DIR/lab-findings.json" \
+            --plan-only \
+            --out "$WHITEHAT_DIR/falsification-plan.md" \
+            --json-out "$WHITEHAT_DIR/falsification-plan.json"
+          python - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['WHITEHAT_DIR'],'falsification-plan.json')
+          d=json.load(open(p, encoding='utf-8'))
+          assert d['mode'] == 'plan-only'
+          assert d['network_requests'] == 0
+          assert d['probe_results'] == []
+          print(f"White-Hat falsification plan: hypotheses={len(d['hypotheses'])}, network_requests=0")
+          PY
+          cat "$WHITEHAT_DIR/falsification-plan.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Prove active validation stays local and bounded
+        env:
+          PYTHONPATH: autonomous_redteam_lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from cyber_lab.core import assert_local_target
+          try:
+              assert_local_target('https://8.8.8.8')
+          except ValueError:
+              print('PASS: public active target refused')
+          else:
+              raise SystemExit('FAIL: public active target was accepted')
+          PY
+          python -m http.server 8765 --bind 127.0.0.1 >/tmp/whitehat-local-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          sleep 1
+          python -m cyber_lab.core \
+            --findings "$WHITEHAT_DIR/lab-findings.json" \
+            --target http://127.0.0.1:8765 \
+            --out "$WHITEHAT_DIR/local-lab-evidence.md" \
+            --json-out "$WHITEHAT_DIR/local-lab-evidence.json"
+          python - <<'PY'
+          import json, os
+          p=os.path.join(os.environ['WHITEHAT_DIR'],'local-lab-evidence.json')
+          d=json.load(open(p, encoding='utf-8'))
+          assert d['mode'] == 'local-validation'
+          assert 0 < int(d['network_requests']) <= 12
+          assert d['policy']['target_scope'] == 'loopback/private/link-local only'
+          print(f"Local lab harness evidence: requests={d['network_requests']} / 12")
+          PY
+          cat "$WHITEHAT_DIR/local-lab-evidence.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Convert white-hat research into persistent portfolio candidate
         id: bridge
@@ -133,6 +204,11 @@ jobs:
           path: |
             /tmp/standment-whitehat-portfolio/plan.json
             /tmp/standment-whitehat-portfolio/workers/elite-whitehat.json
+            /tmp/standment-whitehat-portfolio/lab-findings.json
+            /tmp/standment-whitehat-portfolio/falsification-plan.md
+            /tmp/standment-whitehat-portfolio/falsification-plan.json
+            /tmp/standment-whitehat-portfolio/local-lab-evidence.md
+            /tmp/standment-whitehat-portfolio/local-lab-evidence.json
             reports/standment-security-rnd/whitehat-bridge.json
             standment-security/whitehat-candidates/INDEX.md
             ${{ steps.bridge.outputs.candidate }}
@@ -148,9 +224,12 @@ jobs:
 
           webhook=(os.getenv('PORTFOLIO_SLACK_WEBHOOK_URL','').strip()
                    or os.getenv('RND_SLACK_WEBHOOK_URL','').strip())
-          plan_path=Path(os.environ['WHITEHAT_DIR'])/'plan.json'
-          worker_path=Path(os.environ['WHITEHAT_DIR'])/'workers/elite-whitehat.json'
+          base=Path(os.environ['WHITEHAT_DIR'])
+          plan_path=base/'plan.json'
+          worker_path=base/'workers/elite-whitehat.json'
           bridge_path=Path('reports/standment-security-rnd/whitehat-bridge.json')
+          falsification_path=base/'falsification-plan.json'
+          local_path=base/'local-lab-evidence.json'
           if not (plan_path.exists() and worker_path.exists() and bridge_path.exists()):
               print('White-hat report inputs incomplete; workflow evidence will show the failing step.')
               raise SystemExit(0)
@@ -158,6 +237,8 @@ jobs:
           plan=json.loads(plan_path.read_text(encoding='utf-8'))
           worker=json.loads(worker_path.read_text(encoding='utf-8'))
           bridge=json.loads(bridge_path.read_text(encoding='utf-8'))
+          falsification=json.loads(falsification_path.read_text(encoding='utf-8')) if falsification_path.exists() else {}
+          local=json.loads(local_path.read_text(encoding='utf-8')) if local_path.exists() else {}
           proposed=worker.get('proposed_change') or {}
           track=plan.get('security_track') or {}
           evidence=', '.join(worker.get('evidence_refs') or []) or 'NONE'
@@ -169,9 +250,11 @@ jobs:
 *WHAT CHANGED*
 {created}: `{bridge.get('candidate_path')}`
 White-hat candidate index: `{bridge.get('index_path')}`
+Adversarial falsification plan: hypotheses={len(falsification.get('hypotheses') or [])}, network_requests={falsification.get('network_requests','UNMEASURED')}
+Local safety harness: requests={local.get('network_requests','NOT RUN')} / 12
 
 *WHY IT MATTERS*
-Adversarial R&D is now forced into a portfolio contract: authorization → safe reproduction → remediation → independent retest → residual risk → buyer-readable evidence.
+The white-hat is no longer only generating an adversarial idea. Each cycle now converts its output into a zero-network falsification plan and proves that active validation stays inside a bounded local lab before remediation/retest work is allowed to count.
 
 *PORTFOLIO DELTA*
 Track: `{track.get('id')}` — {track.get('title')}
@@ -182,19 +265,21 @@ Stage: `WHITEHAT_CANDIDATE / NOT VERIFIED`
 {worker.get('hypothesis')}
 
 *RETEST STATUS*
-NOT RUN by this bridge. Required tests: {tests}
+Candidate-specific remediation retest: NOT RUN unless separately evidenced.
+Required tests: {tests}
+Local lab harness evidence does NOT prove the candidate vulnerability; it proves the bounded validation machinery and creates the next falsifiable evidence path.
 
 *EVIDENCE REFERENCES*
 {evidence}
 
 *REAL-WORLD VALUE*
-Standment can turn an internal security claim into evidence a buyer/operator can inspect: what boundary was challenged, what failed, how it is remediated, how the fix is retested, and what remains uncertain.
+Standment can turn an internal security claim into evidence a buyer/operator can inspect: challenged boundary, falsification plan, before evidence, remediation, same-condition retest and residual uncertainty.
 
 *TRUTH / LIMITATION*
-No automatic VERIFIED promotion. This cycle is bounded to owned/explicitly-authorized scope and does not treat internal score, code existence, or agent confidence as customer proof.
+No automatic VERIFIED promotion. Plan-only mode uses zero network requests. Active validation remains loopback/private/link-local only and the generic local harness is not customer-target proof.
 
 *NEXT MOVE*
-Execute the smallest authorized lab experiment for the selected track, preserve before/after evidence, then feed the verified delta into the main Portfolio Auto-Builder.
+Map the highest-impact hypothesis to owned source/config or an authorized local fixture, implement the smallest defensive remediation, then rerun the same test condition for a real Before/After portfolio delta.
 '''
           print(text)
           if not webhook:
