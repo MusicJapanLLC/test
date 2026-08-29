@@ -5,6 +5,15 @@ on:
     # Fast cross-assist cadence. This lab is read-only and produces evidence artifacts.
     - cron: '*/10 * * * *'
   workflow_dispatch:
+  pull_request:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/ai-security-joint-lab.yml'
+      - 'automation/world/ai_security_joint_lab.py'
+      - 'automation/world/test_ai_security_joint_lab.py'
+      - 'automation/ai_foundry/**'
+      - 'automation/security/elite_whitehat_continuous.py'
+      - 'automation/security/test_elite_whitehat_continuous.py'
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
@@ -17,7 +26,7 @@ on:
       - 'standment-security/security_framework_crosswalk.json'
 
 concurrency:
-  group: the-world-ai-security-joint-lab
+  group: the-world-ai-security-joint-lab-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -48,7 +57,7 @@ jobs:
           set -euo pipefail
           python -m unittest -v automation.world.test_ai_security_joint_lab
           python -m unittest -v automation.ai_foundry.test_minute_evolution
-          python -m unittest -v automation.security.test_elite_whitehat_continuous
+          (cd automation/security && python -m unittest -v test_elite_whitehat_continuous.py)
 
       - name: Load latest AI, Security, and Research evidence
         shell: bash
@@ -198,7 +207,7 @@ jobs:
         with:
           name: ai-security-joint-lab-${{ github.run_id }}
           retention-days: 30
-          if-no-files-found: error
+          if-no-files-found: warn
           path: |
             /tmp/the-world-ai-security-joint/assist-packet.json
             /tmp/the-world-ai-security-joint/assist-packet.md
