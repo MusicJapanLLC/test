@@ -1,25 +1,40 @@
 from pathlib import Path
 
 
-def test_autonomous_promotion_requires_shadow_stability_gate():
+def test_autonomous_promotion_requires_shadow_champion_and_holdout_gate():
     root = Path(__file__).resolve().parents[2]
     workflow = (root / ".github/workflows/senju-autonomous-improver.yml").read_text(encoding="utf-8")
+    selector = (root / "senju/scripts/shadow_selector.py").read_text(encoding="utf-8")
 
-    required = [
-        "Shadow-test proposed strategy across multiple seeds",
-        "python -m scripts.shadow_league",
+    workflow_required = [
+        "Restore latest R&D research directive",
+        "Apply bounded R&D research focus to Senju proposal",
+        "Run multi-candidate Shadow Champion selection and unseen holdout",
+        "python -m scripts.shadow_selector",
         "--strategy /tmp/promotion/strategy.json",
-        "--seeds 5",
-        "--require-stable",
+        "--selected /tmp/shadow-selected-strategy.json",
         "senju-prepromotion-shadow",
+        "cp /tmp/shadow-selected-strategy.json /tmp/promotion/strategy.json",
     ]
-    for invariant in required:
+    for invariant in workflow_required:
         assert invariant in workflow, f"Senju promotion lost invariant: {invariant}"
 
-    shadow_pos = workflow.index("Shadow-test proposed strategy across multiple seeds")
+    selector_required = [
+        "PRELIM_SALTS",
+        "HOLDOUT_SALTS",
+        "choose_stable",
+        "robust_score",
+        "holdout",
+        "selected",
+    ]
+    for invariant in selector_required:
+        assert invariant in selector, f"Shadow selector lost invariant: {invariant}"
+
+    rnd_pos = workflow.index("Apply bounded R&D research focus to Senju proposal")
+    shadow_pos = workflow.index("Run multi-candidate Shadow Champion selection and unseen holdout")
     promotion_bundle_pos = workflow.index("Upload validated promotion bundle")
     promote_job_pos = workflow.index("\n  promote:")
-    assert shadow_pos < promotion_bundle_pos < promote_job_pos
+    assert rnd_pos < shadow_pos < promotion_bundle_pos < promote_job_pos
 
 
 def test_promotion_scope_remains_state_only():
