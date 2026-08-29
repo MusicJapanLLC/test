@@ -131,6 +131,10 @@ class Agent:
     losses: int = 0
     draws: int = 0
     generation: int = 0
+    resources: float = 100.0   # 戦争経済の生存通貨
+    alive: bool = True
+    death_cause: str = ""      # 'bankrupt' | 'starved' | ''
+    gen_score: float = 0.0     # 当世代の戦果（勝ち数ベース、毎世代リセット）
 
     @property
     def games(self) -> int:

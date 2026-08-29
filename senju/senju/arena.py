@@ -16,6 +16,14 @@ from .safety import ScopeGuard
 from .targets.base import Target, Surface
 
 
+def _norm(weights: dict[str, float]) -> dict[str, float]:
+    """最大値で正規化し、注力の強弱をクラス数に依存させない。"""
+    if not weights:
+        return {}
+    hi = max(weights.values()) or 1.0
+    return {k: v / hi for k, v in weights.items()}
+
+
 @dataclass
 class MatchResult:
     red_id: str
@@ -40,17 +48,18 @@ class MatchResult:
 def _blue_prepare(blue: BlueGenome, target: Target, budget: int, rng: random.Random) -> None:
     """ブルーが試合前に有限予算で標的を強化・監視する。"""
     surfaces = target.surfaces()
+    harden = _norm(blue.harden)
     # 対策優先度 = ハードニング重み × 対策速度。高い面から予算を投下。
     ranked = sorted(
         surfaces,
-        key=lambda s: blue.harden.get(s.vuln_class, 0.0) * (0.5 + blue.patch_speed),
+        key=lambda s: harden.get(s.vuln_class, 0.0) * (0.5 + blue.patch_speed),
         reverse=True,
     )
     spent = 0
     for s in ranked:
         if spent >= budget:
             break
-        pri = blue.harden.get(s.vuln_class, 0.0)
+        pri = harden.get(s.vuln_class, 0.0)
         # 予算1で対策、監視は coverage に応じて確率的に付与。
         if pri > 0.35:
             s.mitigated = True
@@ -80,9 +89,10 @@ def run_match(
     result = MatchResult(red_id=red.agent_id, blue_id=blue.agent_id, target_ref=target.ref)
 
     surfaces = target.surfaces()
+    focus_n = _norm(rg.focus)
     # レッドは focus 重みの高い面を優先。aggression が高いほど広く薄く。
     ranked = sorted(
-        surfaces, key=lambda s: rg.focus.get(s.vuln_class, 0.0), reverse=True
+        surfaces, key=lambda s: focus_n.get(s.vuln_class, 0.0), reverse=True
     )
     depth = 1 + int((1.0 - rg.aggression) * 2)  # 1..3 回まで同一面に再挑戦
 
@@ -90,7 +100,7 @@ def run_match(
     for s in ranked:
         if budget <= 0:
             break
-        focus = rg.focus.get(s.vuln_class, 0.0)
+        focus = focus_n.get(s.vuln_class, 0.0)
         if focus < 0.15:
             continue  # 興味の薄い面は捨てる（リソース節約）
 
@@ -113,20 +123,20 @@ def run_match(
             detected = rng.random() < p_detect
             if detected:
                 result.detections.append(s.name)
-                result.blue_score += 1.0
+                result.blue_score += 0.5
                 result.log.append(f"BLUE detected probe on {s.name} ({s.vuln_class})")
 
             if rng.random() < p_success:
                 captured = True
                 result.captures.append(s.name)
                 # 難易度が高い面ほど高得点。
-                result.red_score += 1.0 + s.difficulty
+                result.red_score += 1.6 + 1.2 * s.difficulty
                 result.log.append(f"RED captured {s.name} ({s.vuln_class}, diff={s.difficulty})")
                 break
             else:
                 if s.mitigated:
                     result.blocks.append(s.name)
-                    result.blue_score += 0.5
+                    result.blue_score += 0.3
 
         if not captured and s.mitigated:
             result.log.append(f"BLUE held {s.name} ({s.vuln_class})")
@@ -135,7 +145,7 @@ def run_match(
     # （レッドが触れもしない面での不戦勝は加点しない＝公平な軍拡競争）。
     # 加えて、レッドが1面も陥落できなかった場合の完全防衛ボーナス。
     if not result.captures:
-        result.blue_score += 2.0
+        result.blue_score += 1.2
         result.log.append("BLUE full defense: no surface captured")
 
     return result

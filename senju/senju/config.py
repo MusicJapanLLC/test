@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from .economy import EconomyConfig
+
 
 @dataclass
 class ArenaConfig:
@@ -34,6 +36,8 @@ class SenjuConfig:
     """フレームワーク全体の設定。"""
 
     scenario_name: str = "default-web"
+    archetypes: tuple[str, ...] = ("web_app", "api", "auth_service", "cloud", "iot")
     arena: ArenaConfig = field(default_factory=ArenaConfig)
     evolution: EvolutionConfig = field(default_factory=EvolutionConfig)
+    economy: EconomyConfig = field(default_factory=EconomyConfig)
     report_dir: str = "reports"

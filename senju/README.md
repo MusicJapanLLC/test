@@ -58,6 +58,47 @@ python -m senju.cli safety-check example.com     # ⛔ 拒否
 python -m pytest tests -q
 ```
 
+## 戦争経済（報酬と罰・有限リソース）
+
+「勝てば報酬、負ければ罰」「リソース有限＝戦争」を最後まで突き詰めた仕組み。
+
+- **有限資源**: 世界の総資源には上限がある。増やせない。奪い合うだけ。
+- **食料は戦果で決まる**: 各世代、維持費で徴収した資源の一部が「食料」として
+  戻るが、受け取れるのは**その世代に敵を倒した個体だけ**。負けた個体は食えない。
+- **維持費（飢餓）**: 全個体が毎世代コストを払う。戦果ゼロが続けば資産が尽きる。
+- **破産＝死**: 資産が閾値を割った個体はその場で淘汰される。
+- **繁殖はコスト**: 富める個体だけが子を残せる。相続で資源は保存される（総量一定）。
+- **陣営内の淘汰**: 資源はレッド/ブルーの陣営内で奪い合う。だから一方が他方を
+  絶滅させることはなく、両陣営が健全に生き残りながら内部で強くなる（軍拡競争が持続）。
+
+```bash
+# 通常モード（持続的な淘汰）
+python -m senju.cli run --population 100 --generations 40 --matches 1000
+
+# 苛烈モード（略奪多・維持費高・破産しやすい＝大量死の消耗戦）
+python -m senju.cli run --population 100 --generations 40 --matches 1000 --extreme
+```
+
+苛烈モードのパラメータは `senju/economy.py` の `EconomyConfig.extreme()` で調整可能。
+さらに極端にしたければ `upkeep`・`reinforcement_ratio`・`bankruptcy_threshold` をいじる。
+
+## 標的アーキタイプと脆弱性クラス
+
+標的は5種のアーキタイプ（`web_app` / `api` / `auth_service` / `cloud` / `iot`）を
+巡回し、それぞれ脆弱性クラスの出やすさが異なる（例: cloudは `ssrf`/`misconfig` が多い）。
+脆弱性クラスは17種（`sqli`, `xss`, `csrf`, `auth_bypass`, `jwt_weak`, `idor`,
+`priv_esc`, `ssrf`, `rce`, `path_trav`, `deserial`, `xxe`, `ssti`,
+`race_condition`, `secrets_exposure`, `misconfig`, `nosqli`）。
+増やすのは簡単: `senju/targets/base.py` の `VULN_CLASSES` と `ARCHETYPES` に追記するだけ。
+
+## 監視（あなたが毎日見るもの）
+
+- `senju/reports/report-YYYY-MM-DD.md` — 日次の戦況レポート（レーティング推移・
+  戦争経済・弱点分析・チャンピオン）。
+- `senju/reports/latest.json` — 全世代の生データ（ダッシュボード/自作可視化用）。
+- `.github/workflows/senju-daily-report.yml` — 毎朝CIで自動実行。Job Summaryに表示し、
+  **`SLACK_WEBHOOK_URL` シークレットを設定すればSlackへ自動投稿**（要約を通知）。
+
 ## アーキテクチャ
 
 ```
@@ -69,12 +110,15 @@ senju/
     simulated.py   in-process 仮想標的（実ネットワーク不使用）
   agents/
     base.py        RedGenome / BlueGenome / Agent（レーティングを持つ個体）
+    labnet.py      隔離ラボネット上の実標的アダプタ（ScopeGuard必須・攻撃コードなし）
   arena.py         1試合の交戦エンジン（有限リソース下の攻防）
   scoring.py       ELOレーティング更新（報酬と罰）
+  economy.py       戦争経済（有限資源・食料・維持費・繁殖コスト・破産＝死）
   evolution.py     選抜・交配・変異・淘汰（世代交代）
   tournament.py    世代を回す司令塔
-  report.py        日次戦況レポート生成
+  report.py        日次戦況レポート生成＋JSONエクスポート
   cli.py           コマンドライン入口
+lab/               Docker隔離ラボ（internal網で外部遮断）＋標的マニフェスト＋RoE
 ```
 
 ### 遺伝子（進化の対象）

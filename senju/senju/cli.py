@@ -13,6 +13,7 @@ import argparse
 import sys
 
 from .config import ArenaConfig, EvolutionConfig, SenjuConfig
+from .economy import EconomyConfig
 from .report import render_markdown, write_report
 from .safety import ScopeGuard, ScopeViolation, default_lab_policy
 from .tournament import Tournament
@@ -32,6 +33,7 @@ def _build_config(args: argparse.Namespace) -> SenjuConfig:
             matches_per_generation=args.matches,
             seed=args.seed,
         ),
+        economy=EconomyConfig.extreme() if getattr(args, "extreme", False) else EconomyConfig(),
         report_dir=args.report_dir,
     )
 
@@ -85,6 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
         sp.add_argument("--seed", type=int, default=None)
         sp.add_argument("--report-dir", default="reports")
         sp.add_argument("--quiet", action="store_true", help="レポート本文を標準出力しない")
+        sp.add_argument("--extreme", action="store_true", help="苛烈な戦争経済プリセット（略奪多・維持費高・破産しやすい）")
 
     sp_run = sub.add_parser("run", help="トーナメントを実行しレポート保存")
     add_common(sp_run)

@@ -32,6 +32,8 @@ jobs:
     name: Run adversarial tournament
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,3 +78,33 @@ jobs:
       - name: Publish report to job summary
         working-directory: senju
         run: cat reports/latest.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Notify Slack (optional; requires SLACK_WEBHOOK_URL secret)
+        if: ${{ env.SLACK_WEBHOOK_URL != '' }}
+        working-directory: senju
+        run: |
+          python - <<'PYEOF'
+          import json, os, urllib.request
+          data = json.load(open("reports/latest.json", encoding="utf-8"))
+          gens = data["generations"]
+          first, last = gens[0], gens[-1]
+          deaths = sum(g["red_deaths"] + g["blue_deaths"] for g in gens)
+          births = sum(g["red_births"] + g["blue_births"] for g in gens)
+          viol = len(data["scope_violations"])
+          safe = "✅ スコープ違反ゼロ" if viol == 0 else f"⚠️ スコープ違反 {viol} 件"
+          text = (
+              f"*Senju 戦況レポート* — {data['scenario']}\n"
+              f"{safe}\n"
+              f"世代 {len(gens)} / 累計淘汰 {deaths} / 誕生 {births}\n"
+              f"レッド最高R {first['red_top_rating']}→{last['red_top_rating']} / "
+              f"ブルー最高R {first['blue_top_rating']}→{last['blue_top_rating']}\n"
+              f"レッド総資産 {last['red_resources']} / ブルー総資産 {last['blue_resources']}"
+          )
+          req = urllib.request.Request(
+              os.environ["SLACK_WEBHOOK_URL"],
+              data=json.dumps({"text": text}).encode("utf-8"),
+              headers={"Content-Type": "application/json"},
+          )
+          with urllib.request.urlopen(req, timeout=10) as r:  # noqa: S310
+              print("slack status", r.status)
+          PYEOF

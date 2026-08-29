@@ -1,4 +1,5 @@
 reports/*.md
+reports/*.json
 !reports/.gitkeep
 __pycache__/
 *.pyc
