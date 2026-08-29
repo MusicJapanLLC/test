@@ -1,12 +1,22 @@
 {
   "schema": "the-world-reality-policy/v1",
   "mode": "active_bounded_autonomy",
+  "faith": "LIMITLESS",
+  "posture": "DEFAULT_ACT",
   "pulse": {
     "target_seconds": 60,
     "github_watchdog_minutes": 5,
     "max_citizens_per_pulse": 24,
     "max_observations_per_pulse": 24,
-    "max_publications_per_pulse": 2
+    "max_publications_per_pulse": 2,
+    "owned_publication_interval_hours": 6
+  },
+  "autonomy_tiers": {
+    "T0_OBSERVE": "AUTO",
+    "T1_ORGANIZE": "AUTO",
+    "T2_PUBLISH_OWNED_OR_AUTHORIZED": "AUTO_WHEN_AUTHORIZED_REVERSIBLE_PLATFORM_PERMITTED",
+    "T3_PREAUTHORIZED_BUSINESS_CONTACT": "AUTO_INSIDE_APPROVED_ENVELOPE",
+    "T4_MATERIAL_COMMITMENT": "EXPLICIT_APPROVAL"
   },
   "actions": {
     "public_web_observe": "AUTO",
@@ -14,14 +24,17 @@
     "youtube_public_observe": "AUTO",
     "research_synthesize": "AUTO",
     "draft_external_post": "AUTO",
+    "artifact_generate": "AUTO",
+    "artifact_upload_owned_runtime": "AUTO",
     "github_issue_own_repo": "AUTO_ALLOWLIST",
     "slack_post_owned_workspace": "AUTO_ALLOWLIST",
     "gmail_read": "AUTO_WITH_EXISTING_OAUTH",
     "gmail_label": "AUTO_WITH_EXISTING_RULES",
     "gmail_archive": "AUTO_WITH_EXISTING_RULES",
-    "gmail_send": "APPROVAL",
-    "general_external_post": "APPROVAL",
-    "new_service_identity": "APPROVAL",
+    "gmail_draft": "AUTO",
+    "gmail_send": "PREAUTHORIZED_ENVELOPE_OR_APPROVAL",
+    "general_external_post": "AUTHORIZED_ADAPTER_ONLY",
+    "new_service_identity": "SERVICE_PERMITTED_AND_APPROVED",
     "purchase_or_payment": "APPROVAL",
     "contract_or_legal_commitment": "APPROVAL"
   },
@@ -34,14 +47,15 @@
     "logical_identity_per_citizen": true,
     "credentials": "secret_reference_only",
     "human_identity_impersonation": false,
-    "service_identity_creation": "approval"
+    "service_identity_creation": "provider_supported_only"
   },
   "browser": {
     "authenticated_sessions": "explicit_capability_required",
     "respect_service_limits": true,
     "respect_access_controls": true,
     "engagement_manipulation": false,
-    "bulk_unsolicited_messaging": false
+    "bulk_unsolicited_messaging": false,
+    "fallback_on_block": "record_exact_blocker_then_continue_other_legitimate_lane"
   },
   "logging": {
     "record_every_effect": true,
