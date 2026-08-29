@@ -2,8 +2,8 @@ name: SECURITY - Continuous Elite White-Hat Portfolio
 
 on:
   schedule:
-    # GitHub scheduled workflows support 5-minute granularity. Each run performs
-    # five one-minute evidence rounds so the research loop keeps a minute cadence.
+    # GitHub scheduled workflows support 5-minute granularity. Each run now performs
+    # ten bounded evidence rounds, using the latest AI Foundry state as an assist seed.
     - cron: '*/5 * * * *'
   workflow_dispatch:
   push:
@@ -39,6 +39,8 @@ jobs:
   continuous-whitehat:
     runs-on: ubuntu-latest
     timeout-minutes: 9
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout THE WORLD
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -77,23 +79,77 @@ jobs:
           rm -rf "$OUT_DIR"
           mkdir -p "$OUT_DIR"
 
-      - name: Five one-minute Elite White-Hat R&D rounds
+      - name: Load latest AI Foundry assist evidence
+        id: ai_assist
         shell: bash
         run: |
           set -euo pipefail
-          for round in 1 2 3 4 5; do
-            echo "## Elite White-Hat minute round ${round}" >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p "$OUT_DIR/ai-assist"
+          printf '%s\n' '{"status":"NO_AI_ASSIST"}' > "$OUT_DIR/ai-assist.json"
+          source_run=""
+          focus="NONE"
+          seed="$(python - <<'PY'
+          import hashlib, os
+          print(int(hashlib.sha256(os.environ['GITHUB_RUN_ID'].encode()).hexdigest()[:10], 16) % 100000000)
+          PY
+          )"
+
+          prev="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow ai-dev-minute-foundry.yml \
+            --status success \
+            --limit 12 \
+            --json databaseId \
+            --jq '.[].databaseId' | head -n1 || true)"
+
+          if [[ -n "$prev" ]]; then
+            if gh run download "$prev" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "ai-dev-minute-foundry-${prev}" \
+              --dir "$OUT_DIR/ai-assist"; then
+              candidate="$(find "$OUT_DIR/ai-assist" -type f -name hourly-summary.json | head -n1 || true)"
+              if [[ -n "$candidate" ]]; then
+                cp "$candidate" "$OUT_DIR/ai-assist.json"
+                source_run="$prev"
+                read -r seed focus < <(python - <<'PY'
+          import hashlib, json, os
+          p=os.environ['OUT_DIR']+'/ai-assist.json'
+          d=json.load(open(p, encoding='utf-8'))
+          raw='|'.join(str(d.get(k) or '') for k in ('report_fingerprint','weakest_next_focus','end_champion'))
+          n=int(hashlib.sha256(raw.encode()).hexdigest()[:12], 16) % 100000000
+          print(n, str(d.get('weakest_next_focus') or 'NONE'))
+          PY
+          )
+              fi
+            fi
+          fi
+
+          echo "seed=$seed" >> "$GITHUB_OUTPUT"
+          echo "focus=$focus" >> "$GITHUB_OUTPUT"
+          echo "source_run=$source_run" >> "$GITHUB_OUTPUT"
+          echo "AI assist source run: ${source_run:-NONE}; weakest focus: $focus; selection seed: $seed" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ten accelerated Elite White-Hat R&D rounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          for round in $(seq 1 10); do
+            echo "## Elite White-Hat assist round ${round}" >> "$GITHUB_STEP_SUMMARY"
             python automation/security/elite_whitehat_continuous.py \
               --round "$round" \
-              --run-id "${GITHUB_RUN_ID}-${round}" \
+              --run-id "${{ steps.ai_assist.outputs.seed }}-${GITHUB_RUN_ID}-${round}" \
               --out-dir "$OUT_DIR"
-            cat "$OUT_DIR/round-0${round}.md" >> "$GITHUB_STEP_SUMMARY"
-            if [[ "$round" != "5" ]]; then
-              sleep 60
+            cat "$OUT_DIR/round-$(printf '%02d' "$round").md" >> "$GITHUB_STEP_SUMMARY"
+            if [[ "$round" != "10" ]]; then
+              sleep 25
             fi
           done
 
       - name: Build human-readable portfolio digest
+        env:
+          AI_ASSIST_SOURCE_RUN: ${{ steps.ai_assist.outputs.source_run }}
+          AI_ASSIST_FOCUS: ${{ steps.ai_assist.outputs.focus }}
+          AI_ASSIST_SEED: ${{ steps.ai_assist.outputs.seed }}
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -117,11 +173,15 @@ jobs:
               '',
               f'- GitHub run: **{os.environ.get("GITHUB_RUN_ID")}**',
               f'- Elite White-Hat micro rounds: **{len(rows)}**',
+              f'- AI Foundry assist run: **{os.getenv("AI_ASSIST_SOURCE_RUN") or "NONE"}**',
+              f'- AI Foundry weakest focus: **{os.getenv("AI_ASSIST_FOCUS") or "NONE"}**',
+              f'- AI-derived selection seed: **{os.getenv("AI_ASSIST_SEED") or "NONE"}**',
               f'- Unique lens × stage pairs: **{len(unique_pairs)}/{len(rows)}**',
               f'- Stage mix: **{dict(stage_counts)}**',
               f'- External benchmark mix: **{dict(framework_counts)}**',
               f'- Average repository evidence coverage: **{sum(coverage)/max(1,len(coverage)):.0%}**',
               '- Status: **BUILDING**',
+              '- Note: AI assist changes deterministic research selection only; it never bypasses defensive scope or verification gates.',
               '- Note: coverage and framework alignment are research signals, not a security score or certification.',
               '',
               '## このrunで深掘りしたもの',
@@ -157,6 +217,9 @@ jobs:
           (out / 'run-index.json').write_text(json.dumps({
               'run_id': os.environ.get('GITHUB_RUN_ID'),
               'micro_rounds': len(rows),
+              'ai_assist_source_run': os.getenv('AI_ASSIST_SOURCE_RUN') or None,
+              'ai_assist_focus': os.getenv('AI_ASSIST_FOCUS') or None,
+              'ai_assist_seed': os.getenv('AI_ASSIST_SEED') or None,
               'unique_lens_stage_pairs': len(unique_pairs),
               'stage_mix': dict(stage_counts),
               'external_framework_mix': dict(framework_counts),
@@ -185,6 +248,7 @@ jobs:
             /tmp/security-continuous-whitehat/round-*.md
             /tmp/security-continuous-whitehat/hourly-source-pack.md
             /tmp/security-continuous-whitehat/run-index.json
+            /tmp/security-continuous-whitehat/ai-assist.json
             standment-security/security_research_frontier.json
             standment-security/security_framework_crosswalk.json
             standment-security/SECURITY_EXTERNAL_BASELINE.md
