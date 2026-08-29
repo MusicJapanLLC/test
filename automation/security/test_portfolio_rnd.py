@@ -23,6 +23,7 @@ class PortfolioRndTests(unittest.TestCase):
                         "senju_focus": "robustness",
                         "hypothesis": "h",
                         "deliverable": "d",
+                        "customer_usefulness": "customer can inspect the result",
                         "evidence_files": ["proof.md"],
                     },
                     {
@@ -32,6 +33,7 @@ class PortfolioRndTests(unittest.TestCase):
                         "senju_focus": "efficiency",
                         "hypothesis": "h2",
                         "deliverable": "d2",
+                        "customer_usefulness": "customer can receive evidence",
                         "evidence_files": ["missing.md"],
                     },
                 ],
@@ -43,6 +45,7 @@ class PortfolioRndTests(unittest.TestCase):
             self.assertIn(report["next_research"]["focus"], portfolio_rnd.ALLOWED_SENJU_FOCUS)
             self.assertNotIn("target", report["next_research"])
             self.assertNotIn("credential", report["next_research"])
+            self.assertTrue(report["report_key"])
 
     def test_status_does_not_bleed_from_neighboring_verified_section(self):
         portfolio = (
@@ -78,6 +81,7 @@ class PortfolioRndTests(unittest.TestCase):
                 "senju_focus": "exploit",
                 "hypothesis": "x",
                 "deliverable": "x",
+                "customer_usefulness": "x",
                 "evidence_files": [],
             }
             with self.assertRaises(ValueError):
@@ -100,6 +104,36 @@ class PortfolioRndTests(unittest.TestCase):
         }
         self.assertEqual(set(item), allowed)
         self.assertLessEqual(item["candidate_count"], 9)
+
+    def test_slack_report_contains_mandatory_delta_fields(self):
+        report = {
+            "report_key": "SEC-PORT-001:BUILDING:67:0",
+            "selected": {
+                "id": "SEC-PORT-001",
+                "title": "Security Scan",
+                "portfolio_status": "BUILDING",
+                "evidence_ratio": 0.67,
+                "evidence_missing": ["proof.md"],
+                "senju_focus": "robustness",
+                "deliverable": "Before/After evidence pack",
+                "customer_usefulness": "Buyer can inspect the result",
+            },
+            "promotion_ready": False,
+            "counterevidence_questions": ["falsify?", "reproduce?", "readable?"],
+        }
+        text = portfolio_rnd.render(report)
+        for label in (
+            "何が変わった？",
+            "実物は何？",
+            "検証結果",
+            "何に使える？",
+            "前回との違い",
+            "失敗・反証",
+            "現在ステータス",
+            "次に自動でやること",
+            "Owner action",
+        ):
+            self.assertIn(label, text)
 
 
 if __name__ == "__main__":
