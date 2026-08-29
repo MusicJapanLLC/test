@@ -116,6 +116,11 @@ class SecurityReactorTests(unittest.TestCase):
             self.assertIn("INDEPENDENT_RETEST", modes)
             self.assertIn("SWITCH_EVIDENCE_PATH", modes)
 
+    def test_reactor_scratch_is_artifact_only_and_never_git_persistence(self) -> None:
+        repo_root = Path(__file__).resolve().parents[2]
+        gitignore = (repo_root / ".gitignore").read_text(encoding="utf-8").splitlines()
+        self.assertIn("/reports/standment-security-rnd/", gitignore)
+
     def test_round_and_sleep_bounds_fail_closed(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             root = Path(td)
