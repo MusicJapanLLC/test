@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-realtime-kernel.yml'
+      - 'automation/world/realtime_kernel.py'
+      - 'automation/world/realtime_plan.json'
+      - 'automation/world/test_realtime_kernel.py'
+      - 'automation/world/self_heal_engine.py'
 
 concurrency:
   group: the-world-realtime-kernel
@@ -16,7 +24,7 @@ permissions:
 jobs:
   pulse:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
       GITHUB_TOKEN: ${{ github.token }}
