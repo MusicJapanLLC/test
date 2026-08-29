@@ -109,13 +109,23 @@ def validate_task_worker() -> str:
             'contents: read', 'actions: write', 'id-token: write', 'workflow_dispatch:', 'schedule:',
             "cron: '*/5 * * * *'", 'persist-credentials: false',
             'automation/world/task_worker.py', 'gh workflow run',
-            'Claim one personality-linked task', 'Reconcile downstream GitHub evidence',
+            'Claim one personality-linked task',
+            'gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${REVIEW_RUN_ID}"',
+            'automation/world/external_feedback.py query --task-id',
+            'task_worker.py finish-review --review /tmp/world-review.json --result /tmp/world-review-result.json',
         ),
         ('contents: write', 'issues: write', 'pull-requests: write', 'packages: write',
          'deployments: write', 'pages: write'),
     )
     if writes(body) != {'actions', 'id-token'}:
         raise SystemExit(f'the-world-task-worker.yml: unexpected writes {sorted(writes(body))}')
+
+    if body.count('task_worker.py finish-review --review /tmp/world-review.json') < 2:
+        raise SystemExit('the-world-task-worker.yml: reconciliation must close both verified and failed evidence paths')
+    if 'CONCLUSION="$(jq -r \' .conclusion // ""\' <<<"$DATA")"'.replace("' ", "'") not in body:
+        raise SystemExit('the-world-task-worker.yml: downstream conclusion must be read before review closure')
+    if "verified=workflow_ok and (bool(obs.get('verified')) if external else True)" not in body:
+        raise SystemExit('the-world-task-worker.yml: external review must require verified reality evidence')
 
     secrets_marker = '$' + '{{' + ' secrets.'
     if secrets_marker in body:
@@ -211,8 +221,6 @@ def validate_owned_issue_stress_lanes() -> set[str]:
             continue
         if name == 'world-reality-agency.yml':
             continue
-        # This capability class is intentionally narrow: manual/self-file push,
-        # no schedule, same-repository token, one fixed issue, <=100 comments.
         for item in (
             'contents: read', 'issues: write', 'workflow_dispatch:',
             'REPO: ${{ github.repository }}', 'repos/${REPO}/issues/', '/comments',
