@@ -1,0 +1,153 @@
+name: Clean Room Recovery Drill
+
+on:
+  schedule:
+    - cron: "43 20 * * 6" # Sunday 05:43 JST
+  workflow_dispatch:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "baton/**"
+      - "iyomaru-ramen/**"
+      - "scripts/security/**"
+      - ".github/workflows/recovery-drill.yml"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/standment-security-gate.yml"
+      - ".github/workflows/release-provenance.yml"
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "baton/**"
+      - "iyomaru-ramen/**"
+      - "scripts/security/**"
+      - ".github/workflows/recovery-drill.yml"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/standment-security-gate.yml"
+      - ".github/workflows/release-provenance.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: clean-room-recovery-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  restore-and-verify:
+    name: Restore from Git only and rebuild
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: baton/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Export a clean recovery source tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/recovery-src /tmp/recovery-evidence
+          mkdir -p /tmp/recovery-src /tmp/recovery-evidence
+          git archive --format=tar HEAD | tar -xf - -C /tmp/recovery-src
+          test -f /tmp/recovery-src/baton/package-lock.json
+          test -f /tmp/recovery-src/baton/package.json
+          test -f /tmp/recovery-src/iyomaru-ramen/build.mjs
+          test -f /tmp/recovery-src/scripts/security/webgl_guard.py
+          test -f /tmp/recovery-src/scripts/security/vercel_policy_guard.py
+          test -f /tmp/recovery-src/scripts/security/artifact_guard.py
+
+      - name: Rebuild Baton only from recovered files
+        working-directory: /tmp/recovery-src/baton
+        env:
+          VITE_SITE_URL: https://baton-liart.vercel.app
+        run: |
+          set -euo pipefail
+          npm ci
+          npm run build
+
+      - name: Rebuild Iyomaru only from recovered files
+        working-directory: /tmp/recovery-src/iyomaru-ramen
+        env:
+          SITE_URL: https://musicjapanllc.github.io
+          SITE_BASE_PATH: /test/
+        run: |
+          set -euo pipefail
+          node build.mjs
+
+      - name: Re-run security controls against recovered build
+        shell: bash
+        run: |
+          set -euo pipefail
+          python /tmp/recovery-src/scripts/security/webgl_guard.py /tmp/recovery-src/baton \
+            --json /tmp/recovery-evidence/webgl-security.json \
+            --markdown /tmp/recovery-evidence/webgl-security.md
+          python /tmp/recovery-src/scripts/security/vercel_policy_guard.py /tmp/recovery-src/baton/vercel.json \
+            --json /tmp/recovery-evidence/vercel-policy.json
+          python /tmp/recovery-src/scripts/security/artifact_guard.py /tmp/recovery-src/baton/dist \
+            --json /tmp/recovery-evidence/artifact-security.json
+
+      - name: Produce recovery manifest and artifact hashes
+        shell: bash
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -czf /tmp/recovery-evidence/baton-restored.tgz -C /tmp/recovery-src/baton/dist .
+          tar --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 --numeric-owner -czf /tmp/recovery-evidence/iyomaru-restored.tgz -C /tmp/recovery-src/iyomaru-ramen/dist .
+          python - <<'PY'
+          import hashlib, json, os
+          from pathlib import Path
+
+          root = Path('/tmp/recovery-src')
+          evidence = Path('/tmp/recovery-evidence')
+          critical = [
+              'baton/package.json',
+              'baton/package-lock.json',
+              'baton/vercel.json',
+              'iyomaru-ramen/build.mjs',
+              '.github/workflows/security-guard.yml',
+              '.github/workflows/standment-security-gate.yml',
+          ]
+          def digest(path: Path) -> str:
+              h=hashlib.sha256()
+              with path.open('rb') as f:
+                  for chunk in iter(lambda: f.read(1024 * 1024), b''):
+                      h.update(chunk)
+              return h.hexdigest()
+
+          manifest = {
+              'source_sha': os.environ['SOURCE_SHA'],
+              'clean_git_export': True,
+              'rebuilds': {'baton': 'success', 'iyomaru': 'success'},
+              'security_revalidation': 'success',
+              'critical_file_sha256': {p: digest(root / p) for p in critical},
+              'restored_artifact_sha256': {
+                  'baton-restored.tgz': digest(evidence / 'baton-restored.tgz'),
+                  'iyomaru-restored.tgz': digest(evidence / 'iyomaru-restored.tgz'),
+              },
+          }
+          (evidence / 'recovery-manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n')
+          PY
+          (cd /tmp/recovery-evidence && sha256sum *.json *.tgz > SHA256SUMS)
+
+      - name: Upload recovery evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: clean-room-recovery-${{ github.sha }}
+          path: /tmp/recovery-evidence/
+          if-no-files-found: error
+          retention-days: 30
