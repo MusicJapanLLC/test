@@ -24,8 +24,10 @@ on:
       - 'PORTFOLIO.md'
 
 concurrency:
-  group: standment-security-portfolio-rnd
-  cancel-in-progress: true
+  # Shared with Standment Security - White-Hat Portfolio Cycle because both
+  # workflows persist material directly to the same branch.
+  group: standment-security-default-writer
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -311,7 +313,27 @@ jobs:
             TRACK="$(python -c "import json; print(json.load(open('reports/standment-security-rnd/evolution.json'))['track'])")"
             git commit -m "rnd(security): evolve ${TRACK} portfolio evidence"
             git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+
+            pushed=0
+            for attempt in 1 2 3; do
+              git fetch origin "$GITHUB_REF_NAME"
+              if ! git rebase "origin/$GITHUB_REF_NAME"; then
+                git rebase --abort || true
+                echo "Concurrent writer produced a real content conflict; refusing unsafe overwrite." >> "$GITHUB_STEP_SUMMARY"
+                exit 1
+              fi
+              if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+                pushed=1
+                break
+              fi
+              echo "Branch advanced during push attempt ${attempt}; rebasing and retrying." >> "$GITHUB_STEP_SUMMARY"
+              sleep $((attempt * 2))
+            done
+
+            if [[ "$pushed" -ne 1 ]]; then
+              echo "Could not persist R&D artifacts after three safe rebase attempts." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
             echo "Autonomous portfolio artifacts + accelerator state + Make delivery outbox committed to ${GITHUB_REF_NAME}." >> "$GITHUB_STEP_SUMMARY"
           fi
 
