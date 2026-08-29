@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Senju shadow league.
 
-Runs the currently selected abstract simulator strategy across several deterministic
-seed offsets and reports worst-case/variance signals. This is a defensive research
-quality gate only: it never changes targets, network access, permissions, secrets, or
-executable attack behavior.
+Runs an abstract simulator strategy across several deterministic seed offsets and
+reports worst-case/variance signals. This is a defensive research quality gate only:
+it never changes targets, network access, permissions, secrets, or executable attack
+behavior.
 """
 from __future__ import annotations
 
@@ -78,9 +78,18 @@ def summarize(evaluations: Iterable[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def run_shadow(state_path: str, seeds: int = 5) -> dict[str, Any]:
+def load_strategy(path: str | None, state: dict[str, Any]) -> dict[str, Any]:
+    if path:
+        p = Path(path)
+        if not p.exists():
+            raise FileNotFoundError(path)
+        return normalize(json.loads(p.read_text(encoding="utf-8")))
+    return normalize(state.get("strategy") or {})
+
+
+def run_shadow(state_path: str, seeds: int = 5, strategy_path: str | None = None) -> dict[str, Any]:
     state = load_state(state_path)
-    strategy = normalize(state.get("strategy") or {})
+    strategy = load_strategy(strategy_path, state)
 
     # Keep the shadow league bounded so it can run every day without exploding CI
     # cost while still varying seeds and evaluating robustness.
@@ -100,6 +109,7 @@ def run_shadow(state_path: str, seeds: int = 5) -> dict[str, Any]:
     summary.update({
         "schema": "senju-shadow-stability/v1",
         "probe_strategy": probe,
+        "strategy_source": strategy_path or state_path,
         "evaluations": rows,
         "guardrail": "simulator-only; no target/network/permission/secret mutation",
     })
@@ -129,12 +139,13 @@ def render(report: dict[str, Any]) -> str:
 def main() -> int:
     p = argparse.ArgumentParser()
     p.add_argument("--state", default="state/champion.json")
+    p.add_argument("--strategy", default=None)
     p.add_argument("--out", default="reports/shadow")
     p.add_argument("--seeds", type=int, default=5)
     p.add_argument("--require-stable", action="store_true")
     args = p.parse_args()
 
-    report = run_shadow(args.state, args.seeds)
+    report = run_shadow(args.state, args.seeds, args.strategy)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "stability.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

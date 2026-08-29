@@ -131,24 +131,30 @@ def supervise_worker(repo: str, branch: str, worker: dict[str, Any], budget: int
     all_runs = list_runs(repo, worker["workflow"], branch)
     runs = operational_runs(worker, all_runs)
     before, reason = classify(worker, runs)
+    latest = runs[0] if runs else None
+    failures = recent_failure_count(runs)
+    priority = str(worker.get("priority", "P3"))
     row: dict[str, Any] = {
         "id": worker["id"],
         "name": worker["name"],
         "workflow": worker["workflow"],
-        "priority": worker["priority"],
+        "priority": priority,
         "operational_events": worker.get("operational_events") or ["any"],
         "before": before,
         "reason": reason,
         "actions": [],
         "after": before,
         "score": 100 if before == "HEALTHY" else 70 if before == "ACTIVE" else 35,
+        "recent_failures": failures,
+        "latest_run_id": latest.get("id") if latest else None,
+        "latest_created_at": latest.get("created_at") if latest else None,
+        "verified_signal": before == "HEALTHY",
+        "material_signal": priority in {"P0", "P1"} and before not in {"HEALTHY", "ACTIVE"},
     }
     if before in {"HEALTHY", "ACTIVE"} or not repair:
         return row
 
-    failures = recent_failure_count(runs)
     attempted = 0
-    latest = runs[0] if runs else None
     latest_attempt = int(latest.get("run_attempt") or 1) if latest else 0
 
     if (
@@ -227,6 +233,8 @@ def main() -> int:
             "recovering": len(recovering),
             "unresolved": len(unresolved),
             "states": states,
+            "verified_workers": sum(1 for row in rows if row.get("verified_signal")),
+            "material_incidents": sum(1 for row in rows if row.get("material_signal")),
         },
         "scoreboard": sorted(
             [{"id": row["id"], "score": row["score"], "state": row["after"]} for row in rows],
