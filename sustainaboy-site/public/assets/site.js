@@ -2,8 +2,6 @@ const btn=document.querySelector('.menu-btn');
 const nav=document.querySelector('.nav');
 const header=document.querySelector('.site-header');
 
-/* Keep navigation language natural across every page. URLs stay stable for SEO,
-   but visible labels avoid internal jargon and person-name-heavy navigation. */
 const naturalLabels=[
   ['/method/','考え方'],
   ['/story/','ストーリー'],
@@ -15,7 +13,6 @@ naturalLabels.forEach(([href,label])=>{
   });
 });
 
-/* Home copy lock: approved hero stays untouched. Only normalize labels around it. */
 if(document.body.classList.contains('paper-home')){
   const founderLabel=document.querySelector('.founder-card-copy .section-mini');
   if(founderLabel) founderLabel.textContent='このワークについて';
@@ -46,6 +43,7 @@ if(btn&&nav){
 const ensureStyle=href=>{if(!document.querySelector(`link[href="${href}"]`)){const link=document.createElement('link');link.rel='stylesheet';link.href=href;document.head.appendChild(link)}};
 ensureStyle('/assets/global-fix.css');
 ensureStyle('/assets/mobile-fixes.css');
+if(document.body.classList.contains('subpage-v2')) ensureStyle('/assets/subpage-premium.css');
 
 const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
