@@ -336,7 +336,7 @@ def validate_explicit_lanes() -> set[str]:
         "automation/security/portfolio_autobuilder.py",
         "value-lab/senju_bridge.py",
         "verification_claimed",
-        "Portfolio Auto-Builder",
+        "Materialize one portfolio improvement",
     ):
         if marker not in portfolio:
             raise SystemExit(f"standment-security-portfolio-rnd.yml: missing portfolio invariant: {marker}")
