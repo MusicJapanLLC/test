@@ -5,6 +5,7 @@ on:
     branches: ["claude/employee-onboarding-setup-udm86"]
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
+  workflow_dispatch:
   schedule:
     - cron: "23 1 * * 1"
 
