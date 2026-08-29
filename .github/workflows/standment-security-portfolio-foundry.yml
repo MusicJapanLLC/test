@@ -88,6 +88,10 @@ jobs:
           print(f"Using upstream planner run {run['databaseId']} created {run['createdAt']} age={age:.2f}h")
           PY
 
+          # GITHUB_ENV becomes visible only to subsequent steps. Resolve the ID locally
+          # for this step as well so the upstream artifact can be downloaded immediately.
+          UPSTREAM_RND_RUN_ID="$(python -c "import json; print(json.load(open('/tmp/portfolio-rnd-runs.json', encoding='utf-8'))[0]['databaseId'])")"
+
           gh run download "$UPSTREAM_RND_RUN_ID" \
             --repo "$GITHUB_REPOSITORY" \
             --dir /tmp/portfolio-rnd-upstream
