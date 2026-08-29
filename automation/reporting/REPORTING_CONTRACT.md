@@ -31,6 +31,29 @@ The CEO channel is not an activity feed. It receives only a BOSS-final report wh
 
 Recovered, recovering, healthy, routine, and duplicate events stay internal.
 
+## Runtime truth invariant
+
+Human-facing status words are downstream of machine evidence. They never create truth.
+
+- `ops/system-registry.json` is a declaration of known systems, not proof that they are currently alive.
+- A static `VERIFIED` label means the system has had evidence before; it does **not** mean the latest runtime is healthy.
+- Runtime truth comes from `THE WORLD Reality Control Plane`, which evaluates current GitHub Actions evidence using `PROVEN / ACTIVE / FAILED_RECENT / STALE / CONFIG_ONLY`.
+- If a core has multiple expected workflows, the worst current evidence wins. One healthy workflow may not hide another failed or stale workflow.
+- Chat messages, AI personas, employee counts, Slack posts, source files, commits, PRs and configuration alone must never be translated to `稼働中`, `完成`, `VERIFIED`, or equivalent owner-facing claims.
+- `完成` requires a current successful run plus the promised inspectable artifact or external result. If the result is a deployment, the public URL and production check are required evidence.
+- A concurrency/safety rejection is evidence of `recovery/retry required`, not evidence that the underlying proposal failed and not evidence of completion.
+- When evidence is missing, the correct owner-facing status is `未証明` rather than a guessed healthy state.
+
+## Revenue truth invariant
+
+Internal activity is never money.
+
+- Runtime success only proves that automation ran.
+- `REVENUE_CONNECTED` requires a trusted, verified commercial event with a stable `evidence_ref`.
+- Cash revenue requires `stage=payment` and a positive verified `amount_yen` under `automation/revenue_bridge/COMMERCIAL_EVENT_CONTRACT.md`.
+- Research score, WLD/WORLD CREDIT, meetings, proposals, contracts, potential value and AI-generated claims are not cash.
+- If no verified payment event exists, the correct generated revenue report is `現実売上 ¥0`.
+
 ## Portfolio reporting rule
 
 `#portfolio` receives only a human-inspectable artifact. It can be a deployed site/app, interactive demo, dashboard, Canvas, PDF/report, screenshot/video with evidence, or packaged customer deliverable.
