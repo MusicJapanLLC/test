@@ -23,8 +23,19 @@ def host_allowed(url: str, policy: dict[str, Any]) -> bool:
     return any(host == item or host.endswith("." + item) for item in allowed)
 
 
+def task_context(task: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "prime_doctrine": task.get("prime_doctrine", "LIMITLESS"),
+        "operating_loop": task.get("operating_loop", "ACT -> VERIFY -> LOG -> LEARN -> IMPROVE"),
+        "conversion_goal": task.get("conversion_goal", "IMPROVE"),
+        "mission": task.get("mission", ""),
+        "action_tier": task.get("action_tier", "T0"),
+    }
+
+
 async def observe(page: Any, task: dict[str, Any]) -> dict[str, Any]:
     started = datetime.now(timezone.utc).isoformat()
+    context = task_context(task)
     try:
         response = await page.goto(task["url"], wait_until="domcontentloaded", timeout=20_000)
         await page.wait_for_timeout(800)
@@ -42,6 +53,7 @@ async def observe(page: Any, task: dict[str, Any]) -> dict[str, Any]:
             "group": task.get("group"),
             "category": task.get("category"),
             "target_id": task.get("target_id"),
+            **context,
             "requested_url": task["url"],
             "final_url": final_url,
             "http_status": response.status if response else None,
@@ -58,6 +70,7 @@ async def observe(page: Any, task: dict[str, Any]) -> dict[str, Any]:
             "citizen_id": task.get("citizen_id"),
             "display_name": task.get("display_name"),
             "category": task.get("category"),
+            **context,
             "requested_url": task.get("url"),
             "started_at": started,
             "finished_at": datetime.now(timezone.utc).isoformat(),
@@ -76,13 +89,13 @@ async def run(tasks: list[dict[str, Any]], policy: dict[str, Any], limit: int, p
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
-            user_agent="TheWorld-ResearchBrowser/1.1",
+            user_agent="TheWorld-ResearchBrowser/1.2",
             viewport={"width": 1365, "height": 900},
             locale="ja-JP",
         )
 
         async def route_handler(route: Any) -> None:
-            # Research pages are read as documents. Media playback is intentionally skipped.
+            # Research pages are read as public documents. Media playback is skipped to keep patrols fast.
             if route.request.resource_type in {"media", "font"}:
                 await route.abort()
             else:
@@ -117,13 +130,14 @@ def main() -> int:
     policy = load_json(args.policy, {})
     results = asyncio.run(run(task_doc.get("tasks", []), policy, max(1, args.limit), max(1, args.parallel)))
     out = {
-        "schema": "the-world-browser-observations/v1",
+        "schema": "the-world-browser-observations/v2",
         "generated_at": datetime.now(timezone.utc).isoformat(),
+        "prime_doctrine": task_doc.get("prime_doctrine", policy.get("prime_doctrine", "LIMITLESS")),
         "count": len(results),
         "observations": results,
     }
     Path(args.out).write_text(json.dumps(out, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(json.dumps({"observed": len(results), "ok": sum(1 for r in results if r.get('status') == 'OK'), "parallel": args.parallel}, ensure_ascii=False))
+    print(json.dumps({"observed": len(results), "ok": sum(1 for r in results if r.get('status') == 'OK'), "parallel": args.parallel, "prime_doctrine": out["prime_doctrine"]}, ensure_ascii=False))
     return 0
 
 
