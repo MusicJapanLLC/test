@@ -1,0 +1,62 @@
+{
+  "schema": "the-world-core-runtime/v1",
+  "updated_at": "2026-08-29T23:18:00+09:00",
+  "truth_order": [
+    "verified_external_business_event",
+    "github_actions_run_and_artifact",
+    "repository_configuration",
+    "slack_notification",
+    "chat_claim"
+  ],
+  "rules": {
+    "chat_is_authority": false,
+    "slack_is_authority": false,
+    "static_verified_is_runtime_proof": false,
+    "completion_requires_runtime_evidence": true,
+    "revenue_requires_verified_payment_event": true,
+    "allowed_runtime_states": ["PROVEN", "ACTIVE", "FAILED_RECENT", "STALE", "CONFIG_ONLY"]
+  },
+  "cores": [
+    {
+      "id": "shared-knowledge",
+      "name": "Shared Knowledge / Company Memory",
+      "system_ids": ["company-memory", "integration-os"],
+      "expected_workflows": [],
+      "freshness_hours": 24,
+      "proof_requirement": "A repeatable sync/query run with canonical entity resolution and durable audit evidence. Repository files or a PR alone are CONFIG_ONLY."
+    },
+    {
+      "id": "autonomous-execution",
+      "name": "Autonomous Job Execution",
+      "system_ids": ["tomoki-agents", "senju"],
+      "expected_workflows": [
+        ".github/workflows/the-world-task-worker.yml",
+        ".github/workflows/the-world-realtime-kernel.yml",
+        ".github/workflows/the-core-autonomous-director.yml",
+        ".github/workflows/senju-autonomous-improver.yml"
+      ],
+      "freshness_hours": 6,
+      "proof_requirement": "Recent successful run. A current failure outranks an older success. Concurrency rejection is recovery-needed evidence, not completion."
+    },
+    {
+      "id": "execution-audit",
+      "name": "Execution Logs / Audit / CEO Truth",
+      "system_ids": ["ceo-reporting"],
+      "expected_workflows": [
+        ".github/workflows/ai-factory-boss.yml",
+        ".github/workflows/boss-daily-value-loop.yml"
+      ],
+      "freshness_hours": 24,
+      "proof_requirement": "Recent successful evidence-producing reporting run. Static registry labels cannot promote runtime status."
+    },
+    {
+      "id": "revenue-agent",
+      "name": "Revenue-Producing Agent",
+      "system_ids": ["mj-sales-automation", "revenue-recovery"],
+      "expected_workflows": [".github/workflows/boss-daily-value-loop.yml"],
+      "freshness_hours": 24,
+      "commercial_events_path": "commercial-events.json",
+      "proof_requirement": "Runtime success proves only operation. REVENUE_CONNECTED additionally requires a trusted verified commercial event; cash requires stage=payment, positive amount_yen, and evidence_ref."
+    }
+  ]
+}
