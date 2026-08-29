@@ -59,7 +59,7 @@ jobs:
           if [[ "$EVENT_NAME" != "pull_request" ]]; then
             require+=(--require-stable)
           fi
-          python scripts/shadow_league.py \
+          python -m scripts.shadow_league \
             --state state/champion.json \
             --out reports/shadow \
             --seeds 5 \
