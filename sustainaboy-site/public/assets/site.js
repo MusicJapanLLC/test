@@ -24,6 +24,45 @@ const ensureHeadLink=(rel,href,type)=>{
 };
 ensureHeadLink('describedby','/llms.txt');
 
+const setMeta=(name,value)=>{
+  let meta=document.head.querySelector(`meta[name="${name}"]`);
+  if(!meta){meta=document.createElement('meta');meta.name=name;document.head.appendChild(meta)}
+  meta.content=value;
+};
+const setPropertyMeta=(property,value)=>{
+  let meta=document.head.querySelector(`meta[property="${property}"]`);
+  if(!meta){meta=document.createElement('meta');meta.setAttribute('property',property);document.head.appendChild(meta)}
+  meta.content=value;
+};
+
+/* Search intent reinforcement. Visible navigation stays human-first. */
+if(location.pathname==='/story/'||location.pathname==='/story/index.html'){
+  document.title='壁谷望｜SUSTAINABOY WORKS ストーリー｜消防・警察・住宅営業・15,000台の洗車';
+  setMeta('description','壁谷望（かべや のぞみ）が、消防・警察・住宅営業・店舗責任者・洗車美装などの現場経験を経て、SUSTAINABOY WORKSの「整える」という考え方に至った背景を紹介します。');
+  setPropertyMeta('og:title','壁谷望｜SUSTAINABOY WORKS ストーリー');
+  setPropertyMeta('og:description','消防、警察、住宅営業、約15,000台の洗車。壁谷望とSUSTAINABOY WORKSの考え方が生まれた現場の記録。');
+  const portrait=document.querySelector('.portrait img');
+  if(portrait)portrait.alt='SUSTAINABOY WORKS代表 壁谷望（かべや のぞみ）';
+  const facts=document.querySelector('.facts');
+  if(facts&&!facts.querySelector('[data-person-name]')){
+    const row=document.createElement('div');
+    row.dataset.personName='true';
+    row.innerHTML='<dt>名前</dt><dd>壁谷 望（かべや のぞみ）</dd>';
+    facts.prepend(row);
+  }
+}
+
+if(location.pathname==='/about/'||location.pathname==='/about/index.html'){
+  setMeta('description','SUSTAINABOY WORKS（サスティナボーイワークス／SBW）は、頭と心を整理し、現在地を確認して次の小さな一手を選ぶためのブランドです。「サスティナブル ワーク」「サスティナブルワーク」などの検索からお探しの場合も、公式表記はこちらです。');
+  const facts=document.querySelector('.facts');
+  if(facts&&!facts.querySelector('[data-name-guide]')){
+    const row=document.createElement('div');
+    row.dataset.nameGuide='true';
+    row.innerHTML='<dt>表記について</dt><dd>公式表記は「SUSTAINABOY WORKS（サスティナボーイワークス）」。検索時に「サスティナブル ワーク」「サスティナブルワーク」と入力された方も、こちらが公式サイトです。</dd>';
+    facts.append(row);
+  }
+}
+
 if(document.body.classList.contains('subpage-v2')){
   const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
   const nodes=[];
