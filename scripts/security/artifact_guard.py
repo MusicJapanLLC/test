@@ -15,10 +15,27 @@ SECRET_PATTERNS = {
 }
 TEXT_SUFFIXES = {".html", ".js", ".mjs", ".css", ".json", ".svg", ".txt", ".xml"}
 WEBGL_ASSET_SUFFIXES = {".glb", ".gltf", ".hdr", ".ktx", ".ktx2", ".bin"}
+LOCAL_URL = re.compile(r"https?://(?:localhost|127\.0\.0\.1)(?::\d+)?(?:[/\"'\s]|$)", re.IGNORECASE)
+HTML_HTTP_URL = re.compile(r"(?:src|href|action|poster)\s*=\s*[\"'](http://[^\"']+)", re.IGNORECASE)
+CSS_HTTP_URL = re.compile(r"url\(\s*[\"']?(http://[^)\"']+)", re.IGNORECASE)
+XML_HTTP_LOC = re.compile(r"<loc>\s*(http://[^<\s]+)\s*</loc>", re.IGNORECASE)
+JS_HTTP_URL = re.compile(r"(?:fetch\s*\(|new\s+URL\s*\(|\.src\s*=|\.href\s*=)\s*[\"'](http://[^\"']+)", re.IGNORECASE)
 
 
 def finding(severity: str, rule: str, path: Path, detail: str) -> dict[str, str]:
     return {"severity": severity, "rule": rule, "path": path.as_posix(), "detail": detail}
+
+
+def insecure_runtime_urls(text: str, suffix: str) -> list[str]:
+    if suffix in {".html", ".svg"}:
+        return HTML_HTTP_URL.findall(text)
+    if suffix == ".css":
+        return CSS_HTTP_URL.findall(text)
+    if suffix == ".xml":
+        return XML_HTTP_LOC.findall(text)
+    if suffix in {".js", ".mjs"}:
+        return JS_HTTP_URL.findall(text)
+    return []
 
 
 def main() -> int:
@@ -36,27 +53,31 @@ def main() -> int:
                 continue
             rel = path.relative_to(args.dist)
             size = path.stat().st_size
+            suffix = path.suffix.lower()
 
-            if path.suffix.lower() == ".map":
+            if suffix == ".map":
                 findings.append(finding("HIGH", "artifact.source-map", rel, "Source map is present in production output"))
 
-            if path.suffix.lower() in WEBGL_ASSET_SUFFIXES:
+            if suffix in WEBGL_ASSET_SUFFIXES:
                 if size > 25 * 1024 * 1024:
                     findings.append(finding("HIGH", "webgl.asset-size", rel, f"3D/GPU asset is {size} bytes (>25 MiB)"))
                 elif size > 8 * 1024 * 1024:
                     findings.append(finding("MEDIUM", "webgl.asset-size", rel, f"3D/GPU asset is {size} bytes (>8 MiB); review GPU/memory budget"))
 
-            if path.suffix.lower() not in TEXT_SUFFIXES or size > 8 * 1024 * 1024:
+            if suffix not in TEXT_SUFFIXES or size > 8 * 1024 * 1024:
                 continue
             try:
                 text = path.read_text(encoding="utf-8")
             except UnicodeDecodeError:
                 continue
 
-            if "http://" in text and "http://www.w3.org/" not in text:
-                findings.append(finding("HIGH", "artifact.mixed-content", rel, "Production artifact contains an http:// resource/reference"))
-            if "localhost" in text or "127.0.0.1" in text:
-                findings.append(finding("HIGH", "artifact.localhost-reference", rel, "Production artifact contains a localhost reference"))
+            for url in insecure_runtime_urls(text, suffix):
+                findings.append(finding("HIGH", "artifact.mixed-content", rel, f"Browser-loadable HTTP URL: {url[:180]}"))
+
+            local_match = LOCAL_URL.search(text)
+            if local_match:
+                findings.append(finding("HIGH", "artifact.localhost-reference", rel, f"Production artifact contains local URL: {local_match.group(0)[:180]}"))
+
             if "sourceMappingURL=" in text:
                 findings.append(finding("HIGH", "artifact.source-map-reference", rel, "Built asset references a source map"))
 
