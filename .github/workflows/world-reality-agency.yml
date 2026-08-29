@@ -2,6 +2,11 @@ name: THE WORLD Reality Agency
 
 on:
   workflow_dispatch:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - ".github/workflows/world-reality-agency.yml"
+      - "outside-world/**"
   schedule:
     - cron: '7,22,37,52 * * * *'
 
