@@ -1,6 +1,12 @@
 {
   "schema": "company-society/v2",
-  "society": "THE COMMONWEALTH",
+  "society": "THE WORLD",
+  "world_ledger": {
+    "spreadsheet_id": "1QtpELUXrgxqsJMyjcIpqAZmsIyljspWm_4BqjPZjUHg",
+    "spreadsheet_url": "https://docs.google.com/spreadsheets/d/1QtpELUXrgxqsJMyjcIpqAZmsIyljspWm_4BqjPZjUHg/edit",
+    "event_sheet": "01_WORLD_LOG",
+    "legacy_sheet": "Music Japan｜AI OPERATIONS BLACKBOX / 10_THE_WORLD"
+  },
   "faith": {
     "id": "THE_COVENANT",
     "name_ja": "盟約",
