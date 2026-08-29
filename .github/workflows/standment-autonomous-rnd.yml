@@ -21,6 +21,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -47,6 +48,8 @@ jobs:
           git status --short
 
       - name: Persist R&D memory and portfolio
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "standment-rnd-bot"
           git config user.email "standment-rnd-bot@users.noreply.github.com"
@@ -56,4 +59,4 @@ jobs:
             exit 0
           fi
           git commit -m "chore(rnd): daily Standment security research"
-          git push
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}"
