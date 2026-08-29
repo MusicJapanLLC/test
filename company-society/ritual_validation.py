@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """Validation for THE CHAPEL manual ritual records.
 
-The goal is to prevent empty or malformed confession/rest/conflict records from
-being treated as meaningful company memory. Validation is intentionally small,
-deterministic, and side-effect free.
+The goal is to prevent empty or malformed ritual records from being treated as
+meaningful company memory. Validation is intentionally small, deterministic,
+and side-effect free.
 """
 from __future__ import annotations
 
 import argparse
 import re
 
-ALLOWED_TYPES = {"confession", "rest", "conflict", "gratitude"}
+ALLOWED_TYPES = {
+    "confession",
+    "rest",
+    "conflict",
+    "gratitude",
+    "council",
+    "vow",
+    "pilgrimage",
+    "teach_back",
+}
 MAX_AGENT_LEN = 80
 MAX_DETAILS_LEN = 8000
 MIN_DETAILS_LEN = 12
