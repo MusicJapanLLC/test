@@ -14,6 +14,17 @@ from pathlib import Path
 from typing import Any
 
 
+ALLOWED_AI_FOCUS = {
+    "correctness",
+    "architecture",
+    "reliability",
+    "security",
+    "observability",
+    "efficiency",
+    "productization",
+}
+
+
 def _load(path: str | None) -> dict[str, Any]:
     if not path:
         return {}
@@ -51,6 +62,55 @@ def _research_signal(d: dict[str, Any]) -> dict[str, Any]:
         "program_count": int(d.get("program_count") or len(cycles)),
         "trial_count": int(d.get("trial_count") or 0),
         "top_program": top,
+    }
+
+
+def _build_handoff(
+    *,
+    seed: str,
+    ai_focus: str,
+    security_lens: str,
+    security_stage: str,
+    research_bias: str,
+    ai_fingerprint: Any,
+    security_run_id: Any,
+    research_run_id: Any,
+) -> dict[str, Any]:
+    """Return the strict, machine-readable contract downstream lanes may consume.
+
+    This is intentionally weaker than an instruction channel: it can influence priority
+    and deterministic exploration geometry only. It cannot change permissions, scope,
+    pass/fail gates, verification authority, or external targets.
+    """
+    normalized_ai_focus = str(ai_focus or "security").lower()
+    if normalized_ai_focus not in ALLOWED_AI_FOCUS:
+        normalized_ai_focus = "security"
+    return {
+        "schema": "the-world-ai-security-handoff/v1",
+        "authority": "priority_only",
+        "handoff_token": seed[:20],
+        "freshness": {
+            "max_consumer_cycles": 2,
+            "stale_behavior": "ignore_and_fall_back_to_local_evidence",
+        },
+        "guidance": {
+            "ai_priority_focus": normalized_ai_focus,
+            "security_priority_lens": security_lens,
+            "security_priority_stage": security_stage,
+            "research_bias": research_bias,
+        },
+        "source": {
+            "ai_fingerprint": ai_fingerprint,
+            "security_run_id": security_run_id,
+            "research_run_id": research_run_id,
+        },
+        "constraints": {
+            "promotion_gate_unchanged": True,
+            "permission_surface_unchanged": True,
+            "external_scope_unchanged": True,
+            "verification_authority_unchanged": True,
+            "external_target_expansion_forbidden": True,
+        },
     }
 
 
@@ -92,6 +152,16 @@ def build_packet(ai: dict[str, Any], security: dict[str, Any], research: dict[st
         f"AIの最弱点 `{ai_focus}` を改善しつつ、Security `{sec_lens}/{sec_stage}` の"
         f"反証条件を悪化させず、`{sec_artifact}` の証拠をどう強くできるか？"
     )
+    handoff = _build_handoff(
+        seed=seed,
+        ai_focus=ai_focus,
+        security_lens=sec_lens,
+        security_stage=sec_stage,
+        research_bias=research_bias,
+        ai_fingerprint=ai.get("report_fingerprint"),
+        security_run_id=security.get("run_id"),
+        research_run_id=rs.get("github_run_id"),
+    )
 
     return {
         "schema": "the-world-ai-security-joint-assist/v1",
@@ -122,6 +192,7 @@ def build_packet(ai: dict[str, Any], security: dict[str, Any], research: dict[st
             "security_stage": sec_stage,
             "research_bias": research_bias,
         },
+        "handoff": handoff,
         "contracts": {
             "ai_assist": f"Explore `{ai_focus}` with the security evidence seed; core correctness/reliability/security regression gates remain mandatory.",
             "security_assist": f"Challenge AI changes through `{sec_lens}` at `{sec_stage}`; next proof gap: {sec_improvement}",
@@ -140,6 +211,7 @@ def build_packet(ai: dict[str, Any], security: dict[str, Any], research: dict[st
 def render(packet: dict[str, Any]) -> str:
     f = packet["joint_focus"]
     src = packet["source"]
+    handoff = packet["handoff"]
     return "\n".join([
         "# THE WORLD — AI × Security Joint Lab",
         "",
@@ -151,6 +223,7 @@ def render(packet: dict[str, Any]) -> str:
         f"- AI source fingerprint: `{src['ai'].get('report_fingerprint') or 'NONE'}`",
         f"- Security source run: `{src['security'].get('run_id') or 'NONE'}`",
         f"- Research source run: `{src['research'].get('github_run_id') or 'NONE'}`",
+        f"- Handoff: **{handoff['authority']}** / token `{handoff['handoff_token']}` / max {handoff['freshness']['max_consumer_cycles']} consumer cycles",
         "",
         "## Joint question",
         packet["joint_question"],
@@ -159,6 +232,12 @@ def render(packet: dict[str, Any]) -> str:
         f"- AI: {packet['contracts']['ai_assist']}",
         f"- Security: {packet['contracts']['security_assist']}",
         f"- Research: {packet['contracts']['research_assist']}",
+        "",
+        "## Handoff constraints",
+        "- priority only; promotion gate unchanged",
+        "- permission surface unchanged",
+        "- external scope and verification authority unchanged",
+        "- stale handoffs must be ignored in favor of local evidence",
         "",
         "## Claim boundary",
         *[f"- {x}" for x in packet["promotion_blockers"]],
@@ -181,7 +260,7 @@ def main() -> int:
     report.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     report.write_text(render(packet), encoding="utf-8")
-    print(json.dumps({"seed": packet["assist_seed_short"], "focus": packet["joint_focus"]}, ensure_ascii=False))
+    print(json.dumps({"seed": packet["assist_seed_short"], "focus": packet["joint_focus"], "handoff": packet["handoff"]["handoff_token"]}, ensure_ascii=False))
     return 0
 
 
