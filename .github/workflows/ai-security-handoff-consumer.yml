@@ -1,0 +1,185 @@
+name: THE WORLD - AI x Security Handoff Consumer
+
+on:
+  workflow_run:
+    workflows: ['THE WORLD - AI x Security Joint Lab']
+    types: [completed]
+    branches: ['claude/employee-onboarding-setup-udm86']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: the-world-ai-security-handoff-${{ github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  HANDOFF_DIR: /tmp/the-world-ai-security-handoff
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  consume-handoff:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event != 'pull_request' &&
+       github.event.workflow_run.head_branch == 'claude/employee-onboarding-setup-udm86')
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout exact source revision
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify fail-closed handoff consumer
+        run: |
+          set -euo pipefail
+          python -m unittest -v automation.world.test_ai_security_joint_lab automation.world.test_consume_ai_security_handoff
+          python -m unittest -v automation.ai_foundry.test_minute_evolution
+          (cd automation/security && python -m unittest -v test_elite_whitehat_continuous.py)
+
+      - name: Load triggering Joint Lab evidence
+        id: source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$HANDOFF_DIR"
+          mkdir -p "$HANDOFF_DIR/source" "$HANDOFF_DIR/security"
+
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_run" ]]; then
+            source_run="${{ github.event.workflow_run.id }}"
+          else
+            source_run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow ai-security-joint-lab.yml --status success --limit 8 --json databaseId --jq '.[].databaseId' | head -n1 || true)"
+          fi
+          test -n "$source_run"
+
+          gh run download "$source_run" \
+            --repo "$GITHUB_REPOSITORY" \
+            --name "ai-security-joint-lab-${source_run}" \
+            --dir "$HANDOFF_DIR/source"
+
+          packet="$(find "$HANDOFF_DIR/source" -type f -name assist-packet.json | head -n1 || true)"
+          test -n "$packet"
+          cp "$packet" "$HANDOFF_DIR/assist-packet.json"
+
+          champion="$(find "$HANDOFF_DIR/source" -type f -name ai-assisted-champion.json | head -n1 || true)"
+          if [[ -n "$champion" ]]; then
+            cp "$champion" "$HANDOFF_DIR/ai-start.json"
+          else
+            python automation/ai_foundry/minute_evolution.py init --out "$HANDOFF_DIR/ai-start.json"
+          fi
+
+          echo "source_run=$source_run" >> "$GITHUB_OUTPUT"
+          echo "Joint Lab source: **$source_run**" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate bounded Handoff Contract
+        id: contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python automation/world/consume_ai_security_handoff.py validate \
+            --packet "$HANDOFF_DIR/assist-packet.json" \
+            --out "$HANDOFF_DIR/contract.json"
+
+          read -r token focus lens stage bias < <(python - <<'PY'
+          import json, os
+          d=json.load(open(os.environ['HANDOFF_DIR']+'/contract.json', encoding='utf-8'))
+          print(d['handoff_token'], d['ai_priority_focus'], d['security_priority_lens'], d['security_priority_stage'], d['research_bias'])
+          PY
+          )
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+          echo "focus=$focus" >> "$GITHUB_OUTPUT"
+          echo "lens=$lens" >> "$GITHUB_OUTPUT"
+          echo "stage=$stage" >> "$GITHUB_OUTPUT"
+          echo "bias=$bias" >> "$GITHUB_OUTPUT"
+          {
+            echo "Handoff authority: **priority_only**"
+            echo "Handoff token: \`$token\`"
+            echo "AI focus: **$focus**"
+            echo "Security lens/stage: **$lens / $stage**"
+            echo "Research bias: **$bias**"
+            echo "Permissions / external scope / promotion gates / verification authority: **UNCHANGED**"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Feed Handoff into bounded AI micro-assist
+        shell: bash
+        run: |
+          set -euo pipefail
+          python automation/ai_foundry/minute_evolution.py run \
+            --state "$HANDOFF_DIR/ai-start.json" \
+            --out "$HANDOFF_DIR/ai-next.json" \
+            --summary "$HANDOFF_DIR/ai-summary.json" \
+            --history "$HANDOFF_DIR/ai-history.jsonl" \
+            --rounds 12 \
+            --sleep-seconds 0 \
+            --seed "handoff:${{ steps.contract.outputs.token }}:ai:${GITHUB_RUN_ID}" \
+            --assist-focus "${{ steps.contract.outputs.focus }}"
+
+      - name: Feed Handoff into bounded Security micro-assist
+        shell: bash
+        run: |
+          set -euo pipefail
+          numeric_seed="$(TOKEN='${{ steps.contract.outputs.token }}' python - <<'PY'
+          import os
+          print(int(os.environ['TOKEN'][:12], 16) % 1000000000)
+          PY
+          )"
+          for round in 1 2 3 4 5 6; do
+            python automation/security/elite_whitehat_continuous.py \
+              --round "$round" \
+              --run-id "${numeric_seed}-${GITHUB_RUN_ID}-${round}" \
+              --preferred-lens "${{ steps.contract.outputs.lens }}" \
+              --out-dir "$HANDOFF_DIR/security"
+          done
+
+      - name: Prove both sides consumed the same Handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python automation/world/consume_ai_security_handoff.py result \
+            --contract "$HANDOFF_DIR/contract.json" \
+            --ai-summary "$HANDOFF_DIR/ai-summary.json" \
+            --security-dir "$HANDOFF_DIR/security" \
+            --out "$HANDOFF_DIR/consumption-result.json"
+
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, os
+          root=os.environ['HANDOFF_DIR']
+          d=json.load(open(root+'/consumption-result.json', encoding='utf-8'))
+          ai=d['ai']; sec=d['security']
+          print('## Joint Handoff consumption proof')
+          print(f"- token: `{d['handoff_token']}`")
+          print(f"- AI: {ai['rounds']} rounds / promotions {ai['promotions_delta']} / no-ops {ai['noops_delta']} / focus **{ai['focus']}**")
+          print(f"- Security: {sec['rounds']} rounds / handoff-directed {sec['handoff_directed_rounds']} / broad rotation {sec['broad_rotation_rounds']}")
+          print(f"- Security preferred lens: **{sec['preferred_lens']}**")
+          print(f"- Unique lens×stage: {sec['unique_lens_stage_pairs']}")
+          print('- Status: **BUILDING** — internal bounded R&D evidence only')
+          print('- External target testing: **NOT AUTHORIZED**')
+          PY
+
+      - name: Preserve Handoff consumption evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ai-security-handoff-consumer-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            /tmp/the-world-ai-security-handoff/assist-packet.json
+            /tmp/the-world-ai-security-handoff/contract.json
+            /tmp/the-world-ai-security-handoff/ai-start.json
+            /tmp/the-world-ai-security-handoff/ai-next.json
+            /tmp/the-world-ai-security-handoff/ai-summary.json
+            /tmp/the-world-ai-security-handoff/ai-history.jsonl
+            /tmp/the-world-ai-security-handoff/security/round-*.json
+            /tmp/the-world-ai-security-handoff/security/round-*.md
+            /tmp/the-world-ai-security-handoff/consumption-result.json
