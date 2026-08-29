@@ -28,6 +28,10 @@ CUSTOMER_VALUE_TERMS = (
     "顧客", "営業", "商品", "納品", "売上", "saas", "レポート", "診断",
     "dashboard", "デモ", "web app", "website", "artifact", "成果物",
 )
+SECURITY_PRIORITY_TERMS = (
+    "standment security", "security scan", "security company", "security portfolio",
+    "セキュリティ", "security",
+)
 
 
 @dataclass(frozen=True)
@@ -64,6 +68,10 @@ def score_item(title: str, status: str, body: str, next_improvement: str) -> tup
         bonus = min(18, value_hits * 3)
         score += bonus
         reasons.append(f"customer_value+{bonus}")
+
+    if any(term in haystack for term in SECURITY_PRIORITY_TERMS):
+        score += 60
+        reasons.append("standment_security_priority+60")
 
     if next_improvement:
         score += 10
@@ -111,10 +119,14 @@ def build_plan(items: list[PortfolioItem], now: datetime) -> dict:
     next_step = primary.next_improvement or "人間が開ける成果物と、その中核挙動の検証証拠を1つ増やす"
     research_id = "RND-PORTFOLIO-P0-001"
     return {
-        "schema": "the-world-portfolio-evolution/v1",
+        "schema": "the-world-portfolio-evolution/v2",
         "generated_at": now.astimezone(timezone.utc).isoformat(timespec="seconds"),
         "priority": "P0",
-        "doctrine": "One material portfolio improvement per day; evidence before claims.",
+        "organization_priority": "STANDMENT_SECURITY_PORTFOLIO_FIRST",
+        "doctrine": (
+            "One material portfolio improvement per day; evidence before claims. "
+            "While Standment Security has unfinished customer-inspectable work, security portfolio receives an explicit P0 scoring advantage across THE WORLD."
+        ),
         "portfolio_count": len(items),
         "primary": {
             "title": primary.title,
@@ -139,10 +151,11 @@ def build_plan(items: list[PortfolioItem], now: datetime) -> dict:
             "verified_requires_access_and_behavioral_evidence": True,
             "code_or_pr_alone_is_not_portfolio": True,
             "senju_technical_score_is_not_market_evidence": True,
+            "standment_security_priority_is_research_priority_not_fake_proof": True,
         },
         "daily_loop": [
             "OBSERVE PORTFOLIO.md",
-            "RANK proof/value gaps",
+            "RANK proof/value gaps with Standment Security P0 bias",
             "CHOOSE exactly one primary bet",
             "FORM hypothesis and counterevidence target",
             "SEND bounded directive to Senju",
@@ -159,13 +172,15 @@ def render_slack(plan: dict) -> str:
     d = plan["senju_directive"]
     return (
         "*THE WORLD｜R&D PORTFOLIO P0 — DAILY EVOLUTION*\n"
+        f"組織優先: `{plan['organization_priority']}`\n"
         f"今日の最優先: *{p['title']}* / status=`{p['status']}` / score={p['score']}\n"
+        f"選定理由: {', '.join(p.get('reasons') or [])}\n"
         f"今日の改善: {p['today_target']}\n"
         f"千寿連携: `{d['research_id']}` / focus=`{d['focus']}` / candidates={d['candidate_count']}\n"
         f"仮説: {d['hypothesis']}\n"
         "Gate: 人間が開ける実物 + 中核挙動の証拠が揃うまで VERIFIED にしない。コード/PRだけはポートフォリオ扱いしない。\n"
         "運用: 1日1つのmaterial improvementを優先。反証・失敗も保存し、翌日の仮説へ戻す。\n"
-        "※千寿の技術スコアは市場需要・契約・入金の証拠ではない。"
+        "※Security優先は研究配分であり、未検証の成果を良く見せるための加点ではない。千寿の技術スコアも市場需要・契約・入金の証拠ではない。"
     )
 
 
@@ -195,6 +210,7 @@ def main() -> int:
     print(json.dumps({
         "ok": True,
         "priority": plan["priority"],
+        "organization_priority": plan["organization_priority"],
         "primary": plan["primary"]["title"],
         "status": plan["primary"]["status"],
         "senju_focus": plan["senju_directive"]["focus"],
