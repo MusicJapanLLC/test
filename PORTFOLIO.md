@@ -199,12 +199,54 @@ AI社員の最大の弱点である「毎回忘れる」を、プロンプトで
 - private Slack `#ai-ceo-brief` を作成
 - CEO Reporterの報告契約を `docs/CEO_REPORTING_SYSTEM.md` に定義
 - 本ポートフォリオを正本化
+- 共通イベント規格 `ai-factory-ceo-event/v1` を定義
+- 共通配送コード `automation/reporting/ceo_report.py` を実装
+- 「通常成功は黙る / 成果・重要異常だけCEOへ」のAnti-noiseルールを実装
 
 ### 現在の残り
-ChatGPT automationをCEO Reporterへ変更し、1日2回のowner mention付き配送を実測する。
+GitHub Secret `CEO_REPORT_WEBHOOK_URL` が `#ai-ceo-brief` 向けに設定されていることを実測し、GitHub常駐workerからの自動配送成功を確認する。
 
 ### 経営メリット
 工場の成果を「存在しているけど見えない」状態から、**判断できる・営業に使える・進捗を把握できる**状態にする。
 
 ### 次の改善
-CEO Briefの配送成功を確認し、各プロジェクトの状態差分を自動で本ファイルへ反映する。
+既存のSenju / Security / Sales / Research系workerを共通イベント規格へ順次移行する。
+
+---
+
+## 7. Gmail Autonomous Sorter
+
+**状態: BUILDING**
+
+### 作ったもの
+ChatGPTの定期タスク枠を使わず、GitHub Actionsが15分ごとに起動してGmailを自動整理するworker。メール本文をGitHubへ保存せず、送信元・件名・既存ラベルの最小情報だけで決定論的に分類する。
+
+### 何に使える？
+GitHub/Vercelなどの機械通知やニュースを受信箱から退避し、営業・商談・セキュリティ・要対応メールを前に残す。人間が読む受信箱と、システムログ置き場を自動で分離できる。
+
+### すでにできていること
+- GitHub Actions 15分cron
+- GitHub / Vercel / 障害 / セキュリティ / 営業 / ニーズ / 日経 / 広告の分類ルール
+- ラベル付与 / Star / Archive
+- 未分類メールは安全側に倒して受信箱へ残す
+- `自動整理済み` マーカーで重複処理を防止
+- Gmail本文・件名・送信者をレポートartifactへ保存しない
+- 集計だけを `ai-factory-ceo-event/v1` でCEO Reporting Layerへ渡す
+- ルールunit tests
+- 初回GitHub Actions CI run #1 成功
+
+### 現在の残り
+GitHub側の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN` と、CEO Reporting用 `CEO_REPORT_WEBHOOK_URL` の実設定は未確認。これらが未設定でもworkflowは秘密情報を漏らさずBLOCKEDとして止まる。
+
+### 経営メリット
+メール整理がChatGPTを開く作業ではなく、**会社の常設バックグラウンド業務**になる。今後、営業監視・請求監視・障害監視も同じGitHub worker形式へ横展開できる。
+
+### Evidence
+- `.github/workflows/gmail-autonomous-sorter.yml`
+- `automation/gmail_sorter/sorter.py`
+- `automation/gmail_sorter/rules.json`
+- `automation/gmail_sorter/test_sorter.py`
+- GitHub Actions `Gmail Autonomous Sorter` run #1: success
+
+### 次の改善
+初回の実Gmail scheduled runを確認し、未分類だけを低コストAI判定へ回すfallbackを追加する。
