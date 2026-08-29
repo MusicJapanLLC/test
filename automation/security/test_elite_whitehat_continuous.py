@@ -27,7 +27,15 @@ class EliteWhiteHatContinuousTests(unittest.TestCase):
                 for i in range(12)
             ],
         }
+        crosswalk = {
+            "frameworks": {
+                "OWASP": {"name": "OWASP", "url": "https://example.invalid/owasp", "use": "risk taxonomy"},
+                "NIST": {"name": "NIST", "url": "https://example.invalid/nist", "use": "risk lifecycle"},
+            },
+            "lens_mapping": {f"LENS-{i}": ["OWASP", "NIST"] for i in range(12)},
+        }
         (root / worker.FRONTIER_PATH).write_text(json.dumps(frontier), encoding="utf-8")
+        (root / worker.CROSSWALK_PATH).write_text(json.dumps(crosswalk), encoding="utf-8")
         (root / worker.PROGRAM_PATH).write_text(json.dumps({"tracks": []}), encoding="utf-8")
         (root / "security/evidence.md").write_text(
             "authorized scope observed before after retest counterevidence reproducible customer use case",
@@ -66,6 +74,7 @@ class EliteWhiteHatContinuousTests(unittest.TestCase):
         self.assertIn("owned fixture", row["safe_test_contract"])
         text = worker.render_card(row)
         self.assertIn("顧客が使う場面", text)
+        self.assertIn("外部基準", text)
         self.assertIn("Promotion blocker", text)
 
     def test_signal_scoring_is_descriptive_not_verification(self):
@@ -76,6 +85,22 @@ class EliteWhiteHatContinuousTests(unittest.TestCase):
         self.assertGreater(hits["authorization"], 0)
         self.assertGreater(hits["behavior"], 0)
         self.assertEqual(row["status"], "BUILDING")
+
+    def test_every_fixture_lens_has_external_benchmark_alignment(self):
+        tmp, root = self._fixture()
+        self.addCleanup(tmp.cleanup)
+        for round_number in range(1, 6):
+            row = worker.run_round(root, round_number, f"200-{round_number}")
+            self.assertGreaterEqual(len(row["external_frameworks"]), 1)
+            self.assertNotIn("external_framework_alignment_missing", row["promotion_blockers"])
+
+    def test_missing_crosswalk_is_visible_blocker_not_verification(self):
+        tmp, root = self._fixture()
+        self.addCleanup(tmp.cleanup)
+        (root / worker.CROSSWALK_PATH).unlink()
+        row = worker.run_round(root, 1, "300")
+        self.assertEqual(row["status"], "BUILDING")
+        self.assertIn("external_framework_alignment_missing", row["promotion_blockers"])
 
 
 if __name__ == "__main__":
