@@ -22,14 +22,12 @@ const reduceMotion=window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 if(header){
   let ticking=false;
-  const syncHeader=()=>{header.classList.toggle('is-scrolled',window.scrollY>20);ticking=false};
+  const syncHeader=()=>{header.classList.toggle('is-scrolled',window.scrollY>12);ticking=false};
   syncHeader();
   addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(syncHeader);ticking=true}},{passive:true});
 }
 
 const revealEls=[...document.querySelectorAll('.reveal')];
-document.querySelectorAll('.flow .reveal').forEach((el,i)=>el.style.transitionDelay=`${Math.min(i*55,220)}ms`);
-
 if(!reduceMotion&&'IntersectionObserver'in window){
   const io=new IntersectionObserver(entries=>{
     entries.forEach(entry=>{
@@ -38,7 +36,7 @@ if(!reduceMotion&&'IntersectionObserver'in window){
         io.unobserve(entry.target);
       }
     });
-  },{threshold:.12,rootMargin:'0px 0px -7% 0px'});
+  },{threshold:.1,rootMargin:'0px 0px -6% 0px'});
   revealEls.forEach(el=>io.observe(el));
 }else{
   revealEls.forEach(el=>el.classList.add('is-visible'));
@@ -55,31 +53,15 @@ if(isHome){
     document.body.appendChild(sticky);
   }
 
-  const hero=document.querySelector('.hero');
+  const hero=document.querySelector('.home-hero,.hero');
   const price=document.querySelector('#price');
   let heroVisible=true;
   let priceVisible=false;
   const syncSticky=()=>sticky.classList.toggle('is-visible',!heroVisible&&!priceVisible&&innerWidth<760);
 
   if('IntersectionObserver'in window){
-    if(hero){new IntersectionObserver(entries=>{heroVisible=entries[0]?.isIntersecting??true;syncSticky()},{threshold:.08}).observe(hero)}
-    if(price){new IntersectionObserver(entries=>{priceVisible=entries[0]?.isIntersecting??false;syncSticky()},{threshold:.05}).observe(price)}
+    if(hero)new IntersectionObserver(entries=>{heroVisible=entries[0]?.isIntersecting??true;syncSticky()},{threshold:.06}).observe(hero);
+    if(price)new IntersectionObserver(entries=>{priceVisible=entries[0]?.isIntersecting??false;syncSticky()},{threshold:.05}).observe(price);
   }
   addEventListener('resize',syncSticky,{passive:true});
-
-  if(!reduceMotion){
-    const route=document.querySelector('.hero-route');
-    const compass=document.querySelector('.hero-compass');
-    let motionTick=false;
-    addEventListener('scroll',()=>{
-      if(motionTick||scrollY>innerHeight*1.15)return;
-      motionTick=true;
-      requestAnimationFrame(()=>{
-        const y=Math.min(scrollY,innerHeight);
-        if(route)route.style.transform=`translate3d(0,${y*.035}px,0)`;
-        if(compass)compass.style.marginTop=`${y*.018}px`;
-        motionTick=false;
-      });
-    },{passive:true});
-  }
 }
