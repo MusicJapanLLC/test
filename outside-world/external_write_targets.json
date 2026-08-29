@@ -1,0 +1,57 @@
+{
+  "schema": "the-world-external-write-targets/v1",
+  "mode": "ROTATING_ALLOWLIST",
+  "max_total_writes_per_run": 2,
+  "dedupe_hours": 72,
+  "principle": "EXPLORE_WIDELY_WRITE_THROUGH_AUTHORIZED_ACCOUNTS",
+  "platforms": [
+    {
+      "id": "dev-community",
+      "kind": "devto",
+      "enabled": true,
+      "endpoint": "https://dev.to/api/articles",
+      "required_env": [
+        "DEVTO_API_KEY"
+      ],
+      "max_per_day": 1,
+      "tags": [
+        "ai",
+        "research"
+      ]
+    },
+    {
+      "id": "mastodon",
+      "kind": "mastodon",
+      "enabled": true,
+      "required_env": [
+        "MASTODON_BASE_URL",
+        "MASTODON_ACCESS_TOKEN"
+      ],
+      "max_per_day": 4,
+      "max_chars": 480
+    },
+    {
+      "id": "bluesky",
+      "kind": "bluesky",
+      "enabled": true,
+      "required_env": [
+        "BLUESKY_HANDLE",
+        "BLUESKY_APP_PASSWORD"
+      ],
+      "max_per_day": 4,
+      "max_chars": 280
+    },
+    {
+      "id": "wordpress",
+      "kind": "wordpress",
+      "enabled": true,
+      "required_env": [
+        "WORDPRESS_BASE_URL",
+        "WORDPRESS_USERNAME",
+        "WORDPRESS_APP_PASSWORD"
+      ],
+      "max_per_day": 1,
+      "status": "publish"
+    }
+  ]
+}
