@@ -32,16 +32,33 @@ def count_real(items: Any, key: str = "agent") -> int:
 
 
 def manager_signals(manager: dict[str, Any]) -> dict[str, Any]:
-    workers = manager.get("workers") or []
-    unresolved = manager.get("unresolved") or []
-    material = sum(1 for w in workers if isinstance(w, dict) and w.get("material_signal"))
-    verified = sum(1 for w in workers if isinstance(w, dict) and w.get("verified_signal"))
+    workers = [w for w in (manager.get("workers") or []) if isinstance(w, dict)]
+    summary = manager.get("summary") or {}
+    unresolved_rows = [w for w in workers if w.get("after") == "UNRESOLVED"]
+    recovering_rows = [w for w in workers if w.get("after") == "RECOVERING"]
+    unresolved = int(summary.get("unresolved", len(unresolved_rows)) or 0)
+    material = int(
+        summary.get(
+            "material_incidents",
+            sum(1 for w in workers if w.get("material_signal")),
+        )
+        or 0
+    )
+    verified = int(
+        summary.get(
+            "verified_workers",
+            sum(1 for w in workers if w.get("verified_signal")),
+        )
+        or 0
+    )
+    repairs = int(summary.get("internal_recovery_actions", 0) or 0)
     return {
-        "workers_seen": len(workers),
-        "unresolved": len(unresolved),
+        "workers_seen": int(summary.get("workers", len(workers)) or len(workers)),
+        "unresolved": unresolved,
+        "recovering": int(summary.get("recovering", len(recovering_rows)) or 0),
         "material_signals": material,
         "verified_signals": verified,
-        "repairs_used": int(manager.get("repairs_used", 0) or 0),
+        "repairs_used": repairs,
     }
 
 
@@ -71,7 +88,7 @@ def build_actions(
             "pillar": "operations",
             "revenue_distance": "protect D3-D0",
             "action": f"Resolve or safely reassign the highest-value unresolved worker issue ({mgr['unresolved']} remaining) before opening new work.",
-            "evidence": "manager unresolved count",
+            "evidence": "manager summary.unresolved / worker after=UNRESOLVED",
         })
 
     if senju.get("safe"):
@@ -139,7 +156,7 @@ def build_report(
     actions = build_actions(mgr, council, faith, senju)
 
     pillars = {
-        "operations": "blocked" if mgr["unresolved"] else "healthy",
+        "operations": "blocked" if mgr["unresolved"] else ("recovering" if mgr["recovering"] else "healthy"),
         "research": "active" if senju_summary else "no-evidence",
         "security": "guarded" if senju.get("safe") else "needs-evidence",
         "ai_evolution": "stable" if senju.get("stable") is True else ("unverified" if senju_summary else "no-evidence"),
@@ -178,6 +195,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         "## Evidence",
         f"- workers seen: {report['manager']['workers_seen']}",
         f"- unresolved: {report['manager']['unresolved']}",
+        f"- recovering: {report['manager']['recovering']}",
+        f"- material signals: {report['manager']['material_signals']}",
         f"- verified signals: {report['manager']['verified_signals']}",
         f"- Senju safe: {report['senju']['safe']}",
         f"- Senju score: {report['senju']['score']}",
