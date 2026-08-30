@@ -16,7 +16,6 @@
     { "src": "public/**", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/generated/:path*", "destination": "/public/generated/:path*" },
     { "source": "/agent", "destination": "/public/agent.html" },
     { "source": "/agent.js", "destination": "/public/agent.js" },
     { "source": "/app.js", "destination": "/public/app.js" },
