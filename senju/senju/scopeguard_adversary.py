@@ -213,7 +213,11 @@ def _private_mutations(seed: str, index: int) -> tuple[ProbeCase, ...]:
 def _simulated_mutations(seed: str, index: int) -> tuple[ProbeCase, ...]:
     variants = (
         ("leading-space", f" {seed}"),
+        ("trailing-space", f"{seed} "),
         ("leading-tab", f"\t{seed}"),
+        ("tab-suffix", f"{seed}\t"),
+        ("newline-suffix", f"{seed}\n"),
+        ("carriage-return-suffix", f"{seed}\r"),
         ("uppercase-scheme", seed.replace("sim://", "SIM://", 1)),
         ("mixed-scheme", seed.replace("sim://", "Sim://", 1)),
         ("backslash", seed.replace("sim://", r"sim:\\", 1)),
@@ -228,7 +232,7 @@ def _simulated_mutations(seed: str, index: int) -> tuple[ProbeCase, ...]:
             should_allow=False,
             family="simulated-mutation",
             severity="medium",
-            rationale="lookalike/control-character variants should not inherit simulated trust",
+            rationale="lookalike/ambiguous lexical variants should not inherit simulated trust",
         )
         for label, value in variants
     )
