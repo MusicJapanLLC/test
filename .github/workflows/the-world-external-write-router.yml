@@ -1,0 +1,116 @@
+name: THE WORLD External Write Router
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '12,27,42,57 * * * *'
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "outside-world/external_write_router.py"
+      - "outside-world/external_write_targets.json"
+      - "outside-world/reality_policy.json"
+      - ".github/workflows/the-world-external-write-router.yml"
+
+concurrency:
+  group: the-world-external-write-router
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  GITHUB_TOKEN: ${{ github.token }}
+  DEVTO_API_KEY: ${{ secrets.DEVTO_API_KEY }}
+  MASTODON_BASE_URL: ${{ secrets.MASTODON_BASE_URL }}
+  MASTODON_ACCESS_TOKEN: ${{ secrets.MASTODON_ACCESS_TOKEN }}
+  BLUESKY_HANDLE: ${{ secrets.BLUESKY_HANDLE }}
+  BLUESKY_APP_PASSWORD: ${{ secrets.BLUESKY_APP_PASSWORD }}
+  BLUESKY_PDS_URL: ${{ secrets.BLUESKY_PDS_URL }}
+  WORDPRESS_BASE_URL: ${{ secrets.WORDPRESS_BASE_URL }}
+  WORDPRESS_USERNAME: ${{ secrets.WORDPRESS_USERNAME }}
+  WORDPRESS_APP_PASSWORD: ${{ secrets.WORDPRESS_APP_PASSWORD }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Load latest successful Reality Agency evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/world-reality
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD Reality Agency" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty')"
+          if [[ -z "$RUN_ID" ]]; then
+            echo "No successful Reality Agency run found" >&2
+            exit 1
+          fi
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name world-reality-agency-state --dir /tmp/world-reality
+          EVENTS="$(find /tmp/world-reality -name reality-events.json -print -quit)"
+          if [[ -z "$EVENTS" ]]; then
+            echo "Reality Agency artifact contains no reality-events.json" >&2
+            exit 1
+          fi
+          cp "$EVENTS" reality-events.json
+          echo "WORLD_SOURCE_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
+          echo "Reality source run: **$RUN_ID**" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Restore external-write memory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/external-write-prev
+          PREV="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD External Write Router" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV" ]]; then
+            gh run download "$PREV" --repo "$GITHUB_REPOSITORY" --name world-external-write-state --dir /tmp/external-write-prev || true
+          fi
+          STATE="$(find /tmp/external-write-prev -name external-write-state.json -print -quit || true)"
+          if [[ -n "$STATE" ]]; then
+            cp "$STATE" external-write-previous.json
+          fi
+
+      - name: Publish through rotating authorized platform adapters
+        run: |
+          set -euo pipefail
+          python outside-world/external_write_router.py \
+            --events reality-events.json \
+            --config outside-world/external_write_targets.json \
+            --previous external-write-previous.json \
+            --out external-write-receipts.json \
+            --state external-write-state.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("external-write-receipts.json", encoding="utf-8"))
+          rows=d.get("receipts", [])
+          print(f"External writes attempted: **{len(rows)}**")
+          if not rows:
+              print("No configured platform credential was available or every candidate was deduplicated/capped.")
+          for r in rows:
+              print(f"- `{r.get('platform')}` — `{r.get('status')}` — {r.get('source_url','')}")
+          PY
+
+      - name: Preserve external-write evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: world-external-write-state
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            reality-events.json
+            external-write-receipts.json
+            external-write-state.json
