@@ -124,6 +124,29 @@ def request_json(url: str, payload: dict[str, Any], headers: dict[str, str]) -> 
         return int(res.status), body
 
 
+def post_github_issue(finding: dict[str, Any], target: dict[str, Any]) -> dict[str, Any]:
+    """Write to GitHub Issues using GITHUB_TOKEN — always available in Actions."""
+    token = os.environ["GITHUB_TOKEN"].strip()
+    repo = str(target.get("repo") or "MusicJapanLLC/test")
+    title, body = render_long(finding)
+    labels = list(target.get("labels") or ["the-world", "automated"])
+    payload = {"title": title, "body": body, "labels": labels}
+    status, response = request_json(
+        f"https://api.github.com/repos/{repo}/issues",
+        payload,
+        {
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+    )
+    return {
+        "http_status": status,
+        "remote_id": response.get("number"),
+        "remote_url": response.get("html_url"),
+    }
+
+
 def post_appdeploy(finding: dict[str, Any], target: dict[str, Any]) -> dict[str, Any]:
     token = os.environ["GITHUB_TOKEN"].strip()
     run_id = os.environ.get("WORLD_SOURCE_RUN_ID", os.environ.get("GITHUB_RUN_ID", "")).strip()
@@ -227,6 +250,7 @@ def post_wordpress(finding: dict[str, Any], target: dict[str, Any]) -> dict[str,
 
 
 ADAPTERS = {
+    "github_issue": post_github_issue,
     "appdeploy": post_appdeploy,
     "devto": post_devto,
     "mastodon": post_mastodon,

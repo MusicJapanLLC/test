@@ -17,6 +17,8 @@ jobs:
   play:
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -37,12 +39,30 @@ jobs:
             --report child-guild-adventure.md
           cat child-guild-adventure.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Send three Child Fellows into the R&D lab
+      - name: Restore latest Outside World abstract R&D seed
+        shell: bash
         run: |
+          set -euo pipefail
+          mkdir -p /tmp/outside-rnd
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Outside World Scout" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name outside-world-scout --dir /tmp/outside-rnd || true
+          fi
+          FOUND="$(find /tmp/outside-rnd -name outside-world-rnd-seed.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/outside-world-rnd-seed.json; fi
+          echo "outside_world_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Send three Child Fellows into the R&D lab
+        shell: bash
+        run: |
+          set -euo pipefail
+          outside=()
+          if [[ -f /tmp/outside-world-rnd-seed.json ]]; then outside+=(--outside-seed /tmp/outside-world-rnd-seed.json); fi
           python value-lab/child_research_fellows.py \
             --registry company-society/child_guild.json \
             --queue value-lab/research_queue.json \
             --senju senju/state/last-evolution-summary.json \
+            "${outside[@]}" \
             --seed "${{ github.run_id }}" \
             --out child-research-sparks.json \
             --report child-research-sparks.md

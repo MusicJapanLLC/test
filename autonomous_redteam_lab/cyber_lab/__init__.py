@@ -1,1 +1,1 @@
-"""Bounded plan-only and local validation helpers for Standment White-Hat R&D."""
+"""Local-only autonomous defensive red-team lab."""
