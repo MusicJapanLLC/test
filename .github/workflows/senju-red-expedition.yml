@@ -29,6 +29,8 @@ jobs:
     name: RED choose -> contact -> discover -> learn -> attack research
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    env:
+      SENJU_RED_EXPEDITION_SCOPE_JSON: ${{ secrets.SENJU_RED_EXPEDITION_SCOPE_JSON }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -97,9 +99,7 @@ jobs:
           PY
 
       - name: Run enrolled owned-target expedition when configured
-        if: ${{ secrets.SENJU_RED_EXPEDITION_SCOPE_JSON != '' }}
-        env:
-          SENJU_RED_EXPEDITION_SCOPE_JSON: ${{ secrets.SENJU_RED_EXPEDITION_SCOPE_JSON }}
+        if: ${{ env.SENJU_RED_EXPEDITION_SCOPE_JSON != '' }}
         working-directory: senju
         run: |
           set -euo pipefail
