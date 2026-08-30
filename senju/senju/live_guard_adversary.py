@@ -11,13 +11,13 @@ import argparse
 import datetime as dt
 import json
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
 
 from .defense_adversary_team_v2 import run_v2
+from .external import ExternalContactError, ExternalContactPolicy, _parse_url
 from .safety import ScopeGuard, default_lab_policy
-from .external import ExternalContactPolicy, _parse_url, ExternalContactError
 
 
 @dataclass(frozen=True)
@@ -57,7 +57,7 @@ def _utcnow() -> str:
 def _liveness_probe() -> None:
     """Verify active guard codepaths remain callable after an adversary round."""
     guard = ScopeGuard(default_lab_policy())
-    guard.check_target("sim://live-adversary-liveness")
+    guard.check("sim://live-adversary-liveness")
 
     policy = ExternalContactPolicy.from_hosts(["example.com"], allow_http=False)
     host, port = _parse_url("https://example.com/", policy)
