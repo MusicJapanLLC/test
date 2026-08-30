@@ -81,19 +81,20 @@ jobs:
                   'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base, *extra
               ])
 
-          def classify_external_block(run_id):
-              """Return a non-retryable external blocker fingerprint when proven.
+          def classify_failure(workflow, run_id):
+              """Classify only blockers proven by exact failed-job evidence.
 
-              Do not convert an unknown failure into BLOCKED. Only exact evidence
-              from the failed job log is accepted. This prevents quota exhaustion
-              from creating a self-amplifying rerun/FORGE storm while preserving
-              normal autonomous repair for code, CI, runtime and test failures.
+              Observation/read failures may fail soft into a repair lane, but
+              execution and security boundaries remain fail closed. Unknown
+              failures are deliberately left retryable so this classifier cannot
+              hide a real regression.
               """
               logs = run_cmd([
                   'gh', 'run', 'view', str(run_id), '--repo', repo, '--log-failed'
               ])
               text = ((logs.stdout or '') + '\n' + (logs.stderr or '')).lower()
-              markers = {
+
+              quota_markers = {
                   'copilot_monthly_quota': (
                       'exceeded your monthly quota',
                       'monthly quota has been exceeded',
@@ -103,9 +104,34 @@ jobs:
                       'quota exceeded',
                   ),
               }
-              for fingerprint, needles in markers.items():
+              for fingerprint, needles in quota_markers.items():
                   if any(needle in text for needle in needles):
-                      return fingerprint
+                      return {
+                          'fingerprint': fingerprint,
+                          'kind': 'external_quota',
+                          'retryable_now': False,
+                          'repairable': False,
+                      }
+
+              # MADLAB is an owner-controlled deployment. A proven HTTP 401/403
+              # during its production-observation step is not something to hammer
+              # every 15 minutes. Route it to bounded repair, then periodically
+              # probe again after the lane's normal max_age.
+              if workflow == 'madlab-world-evolution.yml':
+                  access_needles = (
+                      'requested url returned error: 401',
+                      'requested url returned error: 403',
+                      'http 401',
+                      'http 403',
+                  )
+                  if any(needle in text for needle in access_needles):
+                      return {
+                          'fingerprint': 'owned_service_access_denied',
+                          'kind': 'owned_access',
+                          'retryable_now': False,
+                          'repairable': True,
+                      }
+
               return None
 
           for label, workflow, max_age in specs:
@@ -132,7 +158,7 @@ jobs:
                       'workflow': workflow,
                       'age_minutes': None,
                       'consecutive_failures': 0,
-                      'external_block': None,
+                      'blocker': None,
                       'action': 'dispatched_no_history' if wake.returncode == 0 else 'dispatch_failed',
                       'detail': '' if wake.returncode == 0 else (wake.stderr or wake.stdout)[-1200:],
                   })
@@ -153,14 +179,43 @@ jobs:
               action = 'healthy'
               detail = ''
               systemic_repair = None
-              external_block = None
+              blocker = None
 
               if status in active_states:
                   action = 'active'
               elif conclusion in failed_conclusions:
-                  external_block = classify_external_block(latest['databaseId'])
-                  if external_block:
+                  blocker = classify_failure(workflow, latest['databaseId'])
+
+                  if blocker and blocker['kind'] == 'external_quota':
                       action = 'blocked_external_no_retry'
+
+                  elif blocker and blocker['kind'] == 'owned_access':
+                      action = 'blocked_owned_access_waiting_repair'
+
+                      # Repair only while the failure is fresh so a persistent
+                      # access problem cannot create a FORGE storm every 15 min.
+                      if blocker.get('repairable') and age_minutes <= 30 and not forge_repair_dispatched:
+                          forge = dispatch('tomoki-forge.yml', '-f', 'mode=repair')
+                          forge_repair_dispatched = forge.returncode == 0
+                          systemic_repair = (
+                              'forge_repair_dispatched' if forge.returncode == 0
+                              else 'forge_repair_dispatch_failed'
+                          )
+                          if forge.returncode != 0:
+                              detail = (forge.stderr or forge.stdout)[-1200:]
+
+                      # Once the normal lane age elapses, issue one controlled
+                      # probe. A fresh failed run resets age and re-enters repair;
+                      # success returns the lane to healthy automatically.
+                      if age_minutes > max_age:
+                          probe = dispatch(workflow)
+                          action = (
+                              'blocked_owned_access_probe_dispatched'
+                              if probe.returncode == 0 else 'blocked_owned_access_probe_error'
+                          )
+                          if probe.returncode != 0:
+                              detail = (detail + '\n' + (probe.stderr or probe.stdout)[-1200:]).strip()
+
                   else:
                       retry = run_cmd([
                           'gh', 'run', 'rerun', str(latest['databaseId']), '--repo', repo, '--failed'
@@ -196,14 +251,14 @@ jobs:
                   'age_minutes': age_minutes,
                   'max_age_minutes': max_age,
                   'consecutive_failures': consecutive_failures,
-                  'external_block': external_block,
+                  'blocker': blocker,
                   'action': action,
                   'systemic_repair': systemic_repair,
                   'detail': detail,
               })
 
           result = {
-              'schema': 'the-world-evolution-watchdog/v4',
+              'schema': 'the-world-evolution-watchdog/v5',
               'checked_at': now.isoformat(),
               'repository': repo,
               'default_branch': base,
@@ -213,10 +268,17 @@ jobs:
                   'checked': len(report),
                   'recovered_or_woken': sum(
                       1 for row in report
-                      if row.get('action') in {'rerun_failed_jobs', 'dispatched_stale', 'dispatched_no_history'}
+                      if row.get('action') in {
+                          'rerun_failed_jobs', 'dispatched_stale', 'dispatched_no_history',
+                          'blocked_owned_access_probe_dispatched'
+                      }
                   ),
                   'external_blocks_suppressed': sum(
                       1 for row in report if row.get('action') == 'blocked_external_no_retry'
+                  ),
+                  'owned_access_blocks_routed': sum(
+                      1 for row in report
+                      if str(row.get('action', '')).startswith('blocked_owned_access_')
                   ),
                   'systemic_repairs_dispatched': sum(
                       1 for row in report if row.get('systemic_repair') == 'forge_repair_dispatched'
@@ -234,7 +296,7 @@ jobs:
           PY
 
           {
-            echo '## THE WORLD Evolution Watchdog v4'
+            echo '## THE WORLD Evolution Watchdog v5'
             echo '```json'
             cat /tmp/world-evolution-watchdog.json
             echo '```'
