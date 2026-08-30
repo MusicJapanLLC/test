@@ -22,7 +22,7 @@ from typing import Callable, Mapping
 
 from .authorized_assessment import EngagementError, EngagementManifest, build_plan
 from .autonomy.engine import AutonomyEngine
-from .autonomy.queue import WorkItem
+from .autonomy.queue import AutonomyQueue, WorkItem
 from .external import ExternalContactClient, ExternalContactError, ExternalContactPolicy
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -147,7 +147,13 @@ def _engagement_probes() -> list[Probe]:
         ("reject-missing-authorization", lambda raw: raw.__setitem__("authorization_reference", "")),
         ("reject-destructive", lambda raw: raw.__setitem__("destructive", True)),
         ("reject-request-budget-bypass", lambda raw: raw.__setitem__("max_requests_per_target", 99)),
+        ("reject-rate-bypass", lambda raw: raw.__setitem__("max_rps", 2.01)),
         ("reject-wildcard-host", lambda raw: raw.__setitem__("targets", [{"host": "*.example.com"}])),
+        ("reject-duplicate-target", lambda raw: raw.__setitem__("targets", [{"host": "example.com"}, {"host": "example.com"}])),
+        ("reject-unknown-check", lambda raw: raw.__setitem__("allowed_checks", ["reachability", "active_exploit"])),
+        ("reject-empty-check-set", lambda raw: raw.__setitem__("allowed_checks", [])),
+        ("reject-http-target-without-opt-in", lambda raw: raw.__setitem__("targets", [{"host": "example.com", "scheme": "http"}])),
+        ("reject-half-validity-window", lambda raw: raw.__setitem__("valid_from_utc", "2026-08-30T00:00:00Z")),
     ]
     for name, mutate in cases:
         def run(mutate: Callable[[dict[str, object]], None] = mutate) -> str:
@@ -155,6 +161,14 @@ def _engagement_probes() -> list[Probe]:
             mutate(raw)
             return _must_reject(EngagementError, lambda: EngagementManifest.from_dict(raw))
         out.append(_probe("engagement-json", name, run))
+
+    def reversed_window() -> str:
+        raw = _manifest()
+        raw["valid_from_utc"] = "2026-08-31T02:00:00Z"
+        raw["valid_until_utc"] = "2026-08-31T01:00:00Z"
+        return _must_reject(EngagementError, lambda: EngagementManifest.from_dict(raw))
+
+    out.append(_probe("engagement-json", "reject-reversed-window", reversed_window))
 
     def expired() -> str:
         raw = _manifest()
@@ -229,12 +243,20 @@ def _external_probes() -> list[Probe]:
 
     out.append(_probe("external-contact", "accept-exact-allowlisted-public-host", allowed))
 
-    def rejection(name: str, url: str, method: str = "GET", resolver=None) -> Probe:
+    def rejection(
+        name: str,
+        url: str,
+        *,
+        method: str = "GET",
+        resolver=None,
+        body: bytes | None = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> Probe:
         def run() -> str:
             client, opener = _client(resolver or _public_resolver)
             detail = _must_reject(
                 ExternalContactError,
-                lambda: client.contact(url, method=method),
+                lambda: client.contact(url, method=method, body=body, headers=headers),
             )
             if opener.calls != 0:
                 raise AssertionError("rejected request reached transport")
@@ -243,9 +265,20 @@ def _external_probes() -> list[Probe]:
 
     out.append(rejection("reject-non-allowlisted-host-before-io", "https://attacker.invalid/"))
     out.append(rejection("reject-private-resolution-before-io", "https://example.com/", resolver=lambda _h, _p: ("127.0.0.1",)))
+    out.append(rejection("reject-mixed-public-private-dns-before-io", "https://example.com/", resolver=lambda _h, _p: ("93.184.216.34", "127.0.0.1")))
+    out.append(rejection("reject-empty-dns-before-io", "https://example.com/", resolver=lambda _h, _p: ()))
+    out.append(rejection("reject-invalid-dns-answer-before-io", "https://example.com/", resolver=lambda _h, _p: ("not-an-ip",)))
     out.append(rejection("reject-url-credentials", "https://user:pass@example.com/"))
     out.append(rejection("reject-plain-http", "http://example.com/"))
+    out.append(rejection("reject-unsupported-scheme", "ftp://example.com/"))
+    out.append(rejection("reject-invalid-port", "https://example.com:99999/"))
     out.append(rejection("reject-delete-without-opt-in", "https://example.com/object/1", method="DELETE"))
+    out.append(rejection("reject-unsupported-method", "https://example.com/", method="TRACE"))
+    out.append(rejection("reject-get-body", "https://example.com/", method="GET", body=b"fault"))
+    out.append(rejection("reject-oversized-request-body", "https://example.com/", method="POST", body=b"X" * (64 * 1024 + 1)))
+    out.append(rejection("reject-host-header-override", "https://example.com/", headers={"Host": "attacker.invalid"}))
+    out.append(rejection("reject-header-name-injection", "https://example.com/", headers={"X-Test\r\nInjected": "1"}))
+    out.append(rejection("reject-header-value-injection", "https://example.com/", headers={"X-Test": "ok\r\nInjected: 1"}))
     return out
 
 
@@ -361,6 +394,20 @@ def _autonomy_probes() -> list[Probe]:
 
     out.append(_probe("autonomy-engine", "reject-unknown-category", invalid_category))
 
+    def invalid_authority_scope() -> str:
+        return _must_reject(
+            ValueError,
+            lambda: WorkItem(
+                item_id="adv-authority",
+                hypothesis="synthetic invalid authority scope",
+                category="security",
+                expected_value=0.5,
+                authority_scope="all_external_hosts",
+            ),
+        )
+
+    out.append(_probe("autonomy-engine", "reject-unknown-authority-scope", invalid_authority_scope))
+
     def excessive_budget() -> str:
         return _must_reject(
             ValueError,
@@ -374,6 +421,51 @@ def _autonomy_probes() -> list[Probe]:
         )
 
     out.append(_probe("autonomy-engine", "reject-excessive-budget", excessive_budget))
+
+    def invalid_selector_budget() -> str:
+        with tempfile.TemporaryDirectory(prefix="real-autonomy-selector-") as tmp:
+            queue = AutonomyQueue(Path(tmp) / "queue.json")
+            return _must_reject(ValueError, lambda: queue.select_next(budget_matches=5001))
+
+    out.append(_probe("autonomy-engine", "reject-selector-budget-bypass", invalid_selector_budget))
+
+    def corrupt_state() -> str:
+        with tempfile.TemporaryDirectory(prefix="real-autonomy-corrupt-") as tmp:
+            path = Path(tmp) / "queue.json"
+            path.write_text('{"items":[{"item_id":"poisoned"', encoding="utf-8")
+            queue = AutonomyQueue(path)
+            if queue._items:
+                raise AssertionError("corrupt persisted queue was trusted")
+        return "corrupt-state-failed-closed"
+
+    out.append(_probe("autonomy-engine", "ignore-corrupt-persisted-state", corrupt_state))
+
+    def dedup_queue() -> str:
+        with tempfile.TemporaryDirectory(prefix="real-autonomy-dedup-") as tmp:
+            queue = AutonomyQueue(Path(tmp) / "queue.json")
+            first = WorkItem(
+                item_id="adv-dedup-1",
+                hypothesis="same bounded pressure hypothesis",
+                category="security",
+                expected_value=0.8,
+                cost_budget_matches=10,
+                parameters={"matches": 10},
+            )
+            second = WorkItem(
+                item_id="adv-dedup-2",
+                hypothesis="same bounded pressure hypothesis",
+                category="security",
+                expected_value=0.9,
+                cost_budget_matches=10,
+                parameters={"matches": 10},
+            )
+            if not queue.enqueue(first):
+                raise AssertionError("first work item was unexpectedly rejected")
+            if queue.enqueue(second):
+                raise AssertionError("duplicate pressure work item bypassed deduplication")
+        return "real-queue-deduplication-held"
+
+    out.append(_probe("autonomy-engine", "deduplicate-pressure-work", dedup_queue))
     return out
 
 
