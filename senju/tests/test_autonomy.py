@@ -67,6 +67,20 @@ def test_autonomy_engine_closed_loop() -> None:
         assert Path(res.report_path).exists()
 
 
+def test_lab_profile_relaxes_local_research_threshold_and_budget() -> None:
+    with tempfile.TemporaryDirectory() as strict_tmp, tempfile.TemporaryDirectory() as lab_tmp:
+        strict = AutonomyEngine(strict_tmp, research_profile="strict")
+        lab = AutonomyEngine(lab_tmp, research_profile="lab")
+        assert lab.evaluation_threshold < strict.evaluation_threshold
+        assert lab.default_match_budget > strict.default_match_budget
+
+
+def test_unknown_research_profile_is_rejected() -> None:
+    with tempfile.TemporaryDirectory() as tmp:
+        with pytest.raises(ValueError):
+            AutonomyEngine(tmp, research_profile="anything-goes")
+
+
 def test_ai_agent_vulnerability_classes_present() -> None:
     assert "prompt_injection" in VULN_CLASSES
     assert "tool_misuse" in VULN_CLASSES
