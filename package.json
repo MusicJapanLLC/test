@@ -1,9 +1,8 @@
 {
-  "name": "ai-foundry-ide",
+  "name": "hack-terminal-ai",
+  "version": "0.1.0",
   "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-    "ai": "^6.0.0"
-  }
+  "scripts": {"dev":"next dev","build":"next build","start":"next start"},
+  "dependencies": {"next":"15.5.2","react":"19.1.0","react-dom":"19.1.0"},
+  "devDependencies": {"typescript":"^5.8.3","@types/node":"^22.15.3","@types/react":"^19.1.2","@types/react-dom":"^19.1.2"}
 }
