@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
 from senju.multiguard_adversary import TARGETS, build_campaign, run_campaign
@@ -36,6 +37,21 @@ def main() -> int:
         args.json_out.write_text(encoded + "\n", encoding="utf-8")
 
     if args.fail_on_surprise and not report.passed:
+        print(
+            f"multiguard surprise gate failed: count={report.surprising_count} "
+            f"risk_score={report.risk_score} side_effect_violations={report.side_effect_violation_count}",
+            file=sys.stderr,
+        )
+        for result in report.surprising:
+            print(
+                f"SURPRISE {result.case.target}/{result.case.name} "
+                f"expected={result.case.should_allow} observed={result.allowed} "
+                f"side_effect_calls={result.side_effect_calls} "
+                f"guard_exception={result.guard_exception_type} "
+                f"harness_exception={result.harness_exception_type} "
+                f"detail={result.detail}",
+                file=sys.stderr,
+            )
         return 1
     return 0
 
