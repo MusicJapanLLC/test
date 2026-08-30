@@ -18,7 +18,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Update outdated PR branches
-        uses: actions/github-script@v7
+        uses: actions/github-script@60a0d83ef908b6445cf8ac0c318c3f0d02f3e8b0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
