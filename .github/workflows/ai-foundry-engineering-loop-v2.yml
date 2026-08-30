@@ -8,6 +8,7 @@ on:
       - '.github/workflows/ai-foundry-engineering-loop-v2.yml'
       - 'automation/ai_foundry/engineering_loop.py'
       - 'tests/test_ai_foundry_engineering_loop_v2.py'
+      - 'tests/engineering_loop_fault_canary.py'
 
 permissions:
   contents: read
@@ -31,7 +32,7 @@ jobs:
       - name: Run engineering loop unit tests
         run: python -m unittest tests/test_ai_foundry_engineering_loop_v2.py -v
 
-      - name: Create real canary development request
+      - name: Create real canary development requests
         run: |
           cat > /tmp/foundry-engineering-canary.json <<'JSON'
           {
@@ -43,8 +44,18 @@ jobs:
             }
           }
           JSON
+          cat > /tmp/foundry-repair-canary.json <<'JSON'
+          {
+            "job": {
+              "id": "engineering-v2-repair-canary",
+              "request": {
+                "request_text": "Build a dependency-free browser habit tracker with add, toggle, delete, local persistence, accessible controls, a responsive interface, and a deterministic JavaScript syntax validation command."
+              }
+            }
+          }
+          JSON
 
-      - name: Generate, execute, repair, and verify real code
+      - name: Generate, execute, and verify real code
         run: |
           set -euo pipefail
           rm -rf /tmp/foundry-engineering-v2
@@ -68,21 +79,51 @@ jobs:
           }, ensure_ascii=False, indent=2))
           PY
 
+      - name: Force a real failure and prove AI self-repair
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/foundry-repair-v2
+          python tests/engineering_loop_fault_canary.py \
+            --payload /tmp/foundry-repair-canary.json \
+            --out-root /tmp/foundry-repair-v2 \
+            --meta-out /tmp/foundry-repair-meta.json \
+            --repair-rounds 3
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          meta=json.loads(Path('/tmp/foundry-repair-meta.json').read_text(encoding='utf-8'))
+          assert meta['verified'] is True, meta
+          assert meta['repair_rounds_used'] >= 1, meta
+          assert meta['history'][0]['passed'] is False, meta
+          assert meta['history'][-1]['passed'] is True, meta
+          assert meta['history'][0].get('repair_reason'), meta
+          print(json.dumps({
+              'verified_after_forced_failure': meta['verified'],
+              'repair_rounds_used': meta['repair_rounds_used'],
+              'first_round_passed': meta['history'][0]['passed'],
+              'final_round_passed': meta['history'][-1]['passed'],
+              'repair_reason': meta['history'][0].get('repair_reason'),
+              'repair_files': meta['history'][0].get('repair_files'),
+          }, ensure_ascii=False, indent=2))
+          PY
+
       - name: Publish evidence to workflow summary
         if: always()
         run: |
           echo '## AI FOUNDRY ENGINEERING LOOP V2' >> "$GITHUB_STEP_SUMMARY"
-          if [[ -f /tmp/foundry-engineering-meta.json ]]; then
-            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
           from pathlib import Path
-          d=json.loads(Path('/tmp/foundry-engineering-meta.json').read_text(encoding='utf-8'))
-          print(f"- verified: **{d.get('verified')}**")
-          print(f"- repair rounds used: **{d.get('repair_rounds_used')}**")
-          print(f"- generated files: **{len(d.get('files') or [])}**")
-          for h in d.get('history') or []:
-              print(f"- round {h.get('round')}: passed={h.get('passed')} commands={len(h.get('commands') or [])} http_smoke={h.get('http_smoke',{}).get('passed')}")
+          for label,path in [
+              ('normal canary','/tmp/foundry-engineering-meta.json'),
+              ('forced-failure repair canary','/tmp/foundry-repair-meta.json'),
+          ]:
+              p=Path(path)
+              if not p.exists():
+                  print(f'- {label}: metadata unavailable')
+                  continue
+              d=json.loads(p.read_text(encoding='utf-8'))
+              print(f'- {label}: verified=**{d.get("verified")}**, repair_rounds=**{d.get("repair_rounds_used")}**, files=**{len(d.get("files") or [])}**')
+              for h in d.get('history') or []:
+                  print(f'  - round {h.get("round")}: passed={h.get("passed")} commands={len(h.get("commands") or [])} http_smoke={h.get("http_smoke",{}).get("passed")}')
           PY
-          else
-            echo '- metadata unavailable: loop failed before evidence emission' >> "$GITHUB_STEP_SUMMARY"
-          fi
