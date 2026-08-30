@@ -2,8 +2,6 @@ name: Codegen Self-Loop (No Claude Required)
 
 # Fully self-contained. Uses GITHUB_TOKEN for GitHub Models API.
 # No ANTHROPIC_API_KEY needed. Runs every 4 hours, 24/7.
-# Control: intentionally loose. Just run and record.
-
 on:
   schedule:
     - cron: "0 */4 * * *"
@@ -16,12 +14,11 @@ on:
         description: "Max iterations"
         default: "20"
       model:
-        description: "GitHub Models model name"
+        description: "GitHub Models model name (gpt-4o-mini, Meta-Llama-3.1-70B-Instruct)"
         default: "gpt-4o-mini"
 
 permissions:
   contents: write
-  models: read
 
 env:
   CODEGEN_MODEL: ${{ github.event.inputs.model || 'gpt-4o-mini' }}
@@ -94,13 +91,15 @@ jobs:
         if: always()
         run: |
           echo "## Self-Loop Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Model: \`$CODEGEN_MODEL\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: \`${{ steps.branch.outputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
-          if [ -f senju/status/codegen_status.json ]; then
-            python -c "
-import json
-s = json.load(open('senju/status/codegen_status.json'))
-print(f'- Tasks passing: {s[\"passing\"]}/{s[\"total_tasks\"]}')
-print(f'- Success rate: {s[\"success_rate\"]*100:.1f}%')
+          echo "- Model: $CODEGEN_MODEL" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ steps.branch.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          python -c "
+import json, os
+status_file = 'senju/status/codegen_status.json'
+if os.path.exists(status_file):
+    s = json.load(open(status_file))
+    print(f'- Tasks passing: {s[\"passing\"]}/{s[\"total_tasks\"]}')
+    print(f'- Success rate: {round(s[\"success_rate\"]*100, 1)}%')
+else:
+    print('- No status yet')
 " >> $GITHUB_STEP_SUMMARY
-          fi

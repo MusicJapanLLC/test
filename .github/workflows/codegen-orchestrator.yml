@@ -1,5 +1,6 @@
 name: Codegen Orchestrator (Autonomous)
 
+# Every 6 hours: generate new tasks -> run all pending -> broadcast results.
 on:
   schedule:
     - cron: "0 */6 * * *"
@@ -36,7 +37,7 @@ jobs:
           python-version: "3.11"
           cache: pip
 
-      - run: pip install anthropic pytest
+      - run: pip install openai anthropic pytest
 
       - name: Resolve mode
         id: cfg
@@ -62,6 +63,7 @@ jobs:
 
       - name: Run orchestrator
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         working-directory: automation/codegen
         run: |
@@ -79,6 +81,9 @@ jobs:
             automation/codegen/knowledge/ \
             automation/codegen/tasks/auto/ \
             automation/codegen/tests/ \
+            senju/inbox/ \
+            senju/knowledge/ \
+            senju/status/ \
             automation/agent_factory/codegen_feed.ndjson \
             tomoki-agents/data/codegen_feed.ndjson \
             automation/reporting/codegen_summary.ndjson \
@@ -91,14 +96,18 @@ jobs:
         if: always()
         run: |
           echo "## Codegen Cycle" >> $GITHUB_STEP_SUMMARY
-          echo "- Mode: \`${{ steps.cfg.outputs.mode }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: \`${{ steps.branch.outputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
-          if [ -f automation/codegen/knowledge/index.json ]; then
-            python -c "
-import json
-idx = json.load(open('automation/codegen/knowledge/index.json'))
-print(f'- Tasks tracked: {len(idx)}')
-print(f'- Passing: {sum(1 for v in idx.values() if v.get(\"successes\",0)>0)}/{len(idx)}')
-print(f'- Total attempts: {sum(v.get(\"attempts\",0) for v in idx.values())}')
+          echo "- Mode: ${{ steps.cfg.outputs.mode }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: ${{ steps.branch.outputs.branch }}" >> $GITHUB_STEP_SUMMARY
+          python -c "
+import json, os
+idx_file = 'automation/codegen/knowledge/index.json'
+if os.path.exists(idx_file):
+    idx = json.load(open(idx_file))
+    passing = sum(1 for v in idx.values() if v.get('successes', 0) > 0)
+    attempts = sum(v.get('attempts', 0) for v in idx.values())
+    print(f'- Tasks tracked: {len(idx)}')
+    print(f'- Passing: {passing}/{len(idx)}')
+    print(f'- Total attempts: {attempts}')
+else:
+    print('- No knowledge base yet')
 " >> $GITHUB_STEP_SUMMARY
-          fi
