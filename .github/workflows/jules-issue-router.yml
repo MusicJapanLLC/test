@@ -72,7 +72,8 @@ jobs:
                 source: $source,
                 githubRepoContext: {startingBranch: $branch}
               },
-              requirePlanApproval: false
+              requirePlanApproval: false,
+              automationMode: "AUTO_CREATE_PR"
             }'
           )"
 
