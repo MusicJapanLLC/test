@@ -333,6 +333,23 @@ def _add_transport_options(sp: argparse.ArgumentParser) -> None:
     sp.add_argument("--token-prefix", default="Bearer ", help="トークン値の接頭辞")
 
 
+def _cmd_autonomy(args: argparse.Namespace) -> int:
+    from .autonomy.engine import run_autonomy_cycle
+    cycles = run_autonomy_cycle(state_dir=args.state_dir, max_cycles=args.cycles)
+    if not cycles:
+        print("No eligible experiment work items in queue.")
+        return 0
+    print(f"Executed {len(cycles)} autonomous learning cycle(s):")
+    for c in cycles:
+        print(f"  - [{c.status.upper()}] Item: {c.item_id}")
+        print(f"    Hypothesis: {c.hypothesis}")
+        print(f"    Matches: {c.matches_run} | Champion RED: {c.red_champion_rating:.1f} | Champion BLUE: {c.blue_champion_rating:.1f}")
+        print(f"    Evidence Report: {c.report_path}")
+        if c.proposed_next_items:
+            print(f"    Proposed Next: {', '.join(c.proposed_next_items)}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="senju", description="Senju 攻防シミュレーション基盤")
     sub = p.add_subparsers(dest="command", required=True)
@@ -356,6 +373,11 @@ def build_parser() -> argparse.ArgumentParser:
     sp_demo = sub.add_parser("demo", help="短時間デモ")
     add_common(sp_demo)
     sp_demo.set_defaults(func=_cmd_demo)
+
+    sp_autonomy = sub.add_parser("autonomy", help="自律実験キューから閉ループサイクルを実行")
+    sp_autonomy.add_argument("--state-dir", default="state", help="状態・キュー永続ディレクトリ")
+    sp_autonomy.add_argument("--cycles", type=int, default=1, help="実行するサイクル数")
+    sp_autonomy.set_defaults(func=_cmd_autonomy)
 
     sp_safe = sub.add_parser("safety-check", help="攻撃対象スコープ検問の単体確認")
     sp_safe.add_argument("ref", help="標的参照")

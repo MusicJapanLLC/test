@@ -24,16 +24,26 @@ def genome_to_dict(genome: object) -> dict[str, Any]:
     raise TypeError(f"unsupported genome: {type(genome)!r}")
 
 
+def _compatible_body(genome_cls: type, body: dict[str, Any]) -> dict[str, Any]:
+    """Keep only fields understood by the currently installed genome class.
+
+    Durable champion artifacts can outlive the exact code revision that produced
+    them. A newer RED/BLUE generation may therefore contain strategy genes that
+    an older checkout does not know yet. Unknown numerical strategy fields must
+    not crash the evolution loop; they become active automatically once the
+    corresponding dataclass field exists in the running revision.
+    """
+    known = {field.name for field in dataclasses.fields(genome_cls)}
+    return {key: value for key, value in body.items() if key in known}
+
+
 def genome_from_dict(data: dict[str, Any]) -> RedGenome | BlueGenome:
     kind = data.get("kind")
+    body = {k: v for k, v in data.items() if k != "kind"}
     if kind == "red":
-        fields = {f.name for f in dataclasses.fields(RedGenome)}
-        body = {k: v for k, v in data.items() if k in fields}
-        return RedGenome(**body)
+        return RedGenome(**_compatible_body(RedGenome, body))
     if kind == "blue":
-        fields = {f.name for f in dataclasses.fields(BlueGenome)}
-        body = {k: v for k, v in data.items() if k in fields}
-        return BlueGenome(**body)
+        return BlueGenome(**_compatible_body(BlueGenome, body))
     raise ValueError(f"invalid genome kind: {kind!r}")
 
 
