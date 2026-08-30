@@ -11,8 +11,8 @@ Latest autonomous lab note: `standment-security/lab-notes/2026-08-30/SEC-PORT-00
 | `SEC-PORT-003` | Software supply-chain evidence portfolio | 1040 | 100% | robustness |
 | `SEC-PORT-004` | Auth / tenant / RLS defensive evidence kit | 1020 | 100% | learning |
 | `SEC-PORT-005` | Autonomous-agent security and auditability pack | 1100 | 100% | balance |
-| `SEC-PORT-006` | Incident readiness and recovery evidence pack | 980 | 67% | robustness |
-| `SEC-PORT-007` | Continuous security retainer scorecard | 960 | 75% | efficiency |
+| `SEC-PORT-006` | Incident readiness and recovery evidence pack | 980 | 100% | robustness |
+| `SEC-PORT-007` | Continuous security retainer scorecard | 960 | 100% | efficiency |
 | `SEC-PORT-008` | Security architecture review pack for AI and SaaS systems | 1000 | 100% | learning |
 | `SEC-PORT-009` | AI Agent Permission Boundary Lab | 1160 | 100% | robustness |
 | `SEC-PORT-010` | LLM Security Evaluation Harness | 1140 | 100% | learning |
