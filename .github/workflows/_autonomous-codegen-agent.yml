@@ -1,0 +1,92 @@
+name: Reusable Autonomous Codegen Agent
+
+on:
+  workflow_call:
+    inputs:
+      agent_id:
+        description: "Agent config ID"
+        required: true
+        type: string
+      task_id:
+        description: "Task ID"
+        required: true
+        type: string
+      max_iterations:
+        description: "Maximum generation attempts"
+        required: false
+        default: "10"
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install anthropic pytest
+
+      - name: Configure git
+        run: |
+          git config user.name "${{ inputs.agent_id }}-bot"
+          git config user.email "${{ inputs.agent_id }}-bot@noreply"
+
+      - name: Create isolated working branch
+        id: branch
+        shell: bash
+        run: |
+          SAFE_TASK=$(printf '%s' "${{ inputs.task_id }}" | tr -c '[:alnum:]_.-' '-')
+          BRANCH="codegen/${{ inputs.agent_id }}/${SAFE_TASK}-${{ github.run_id }}-${{ github.run_attempt }}"
+          git checkout -b "$BRANCH"
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+      - name: Run autonomous loop
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CODEGEN_AGENT_ID: ${{ inputs.agent_id }}
+        run: |
+          python automation/codegen/loop.py \
+            "${{ inputs.task_id }}" \
+            "${{ inputs.max_iterations }}" \
+            "${{ inputs.agent_id }}"
+
+      - name: Commit results
+        if: always()
+        run: |
+          git add -A automation/codegen/runs/ automation/codegen/generated/
+          git diff --cached --quiet && echo "nothing to commit" || \
+            git commit -m "codegen(${{ inputs.agent_id }}:${{ inputs.task_id }}): autonomous results [skip ci]"
+
+      - name: Push isolated branch
+        if: always()
+        run: git push -u origin "${{ steps.branch.outputs.branch }}"
+
+      - name: Report summary
+        if: always()
+        shell: bash
+        run: |
+          RUN_DIR="automation/codegen/runs/${{ inputs.agent_id }}/${{ inputs.task_id }}"
+          echo "## Autonomous Codegen Agent" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Agent: \`${{ inputs.agent_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Task: \`${{ inputs.task_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Branch: \`${{ steps.branch.outputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+          RUNS=$(find "$RUN_DIR" -maxdepth 1 -name 'iter_*.json' 2>/dev/null | wc -l)
+          echo "- Iterations recorded: $RUNS" >> "$GITHUB_STEP_SUMMARY"
+          LAST=$(find "$RUN_DIR" -maxdepth 1 -name 'iter_*.json' 2>/dev/null | sort | tail -1)
+          if [ -n "$LAST" ]; then
+            PASSED=$(python -c "import json; d=json.load(open('$LAST')); print('PASSED' if d['passed'] else 'FAILED')")
+            echo "- Final status: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          fi
