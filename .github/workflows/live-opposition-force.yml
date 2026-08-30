@@ -46,9 +46,9 @@ concurrency:
 
 jobs:
   live-opposition-force:
-    name: Real implementations / 7 targets / 300 cases
+    name: Real guards / 300 deterministic + 39.8k pressure
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -67,11 +67,11 @@ jobs:
           PIP_NO_INPUT: "1"
         run: python -m pip install -e './senju[dev]'
 
-      - name: Prove live repository bindings
+      - name: Prove live repository bindings and pressure invariants
         working-directory: senju
         run: python -m pytest tests/test_live_opposition_force.py -q
 
-      - name: Run opposition force against all seven real guard surfaces
+      - name: Hammer all seven real guard surfaces
         working-directory: senju
         run: >-
           python scripts/run_live_opposition_force.py
@@ -93,7 +93,11 @@ jobs:
           print("campaign_total:", report["campaign"]["total"])
           print("surprising:", report["campaign"]["surprising_count"])
           print("side_effect_violations:", report["campaign"]["side_effect_violation_count"])
+          print("pressure_attempts:", report["pressure_attempts"])
+          print("pressure_failures:", report["pressure_failures"])
           print("passed:", report["passed"])
+          for pressure in report["pressure"]:
+              print("pressure", pressure["name"], "attempts=" + str(pressure["attempts"]), "passed=" + str(pressure["passed"]), "side_effect_calls=" + str(pressure["side_effect_calls"]))
           for binding in report["bindings"]:
               print(binding["target"], binding["observed_path"], "matched=" + str(binding["matched"]))
           PY
