@@ -3,7 +3,7 @@ name: ScopeGuard Failure Hunt
 on:
   push:
     branches:
-      - claude/employee-onboarding-setup-udm86
+      - main
     paths:
       - "senju/OFFENSE_FIRST.md"
       - "senju/senju/safety.py"

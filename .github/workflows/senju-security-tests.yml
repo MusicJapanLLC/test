@@ -3,7 +3,7 @@ name: Senju Security Regression
 on:
   workflow_dispatch:
   push:
-    branches: ['claude/employee-onboarding-setup-udm86']
+    branches: ['main']
     paths:
       - 'senju/**'
       - '.github/workflows/senju-security-tests.yml'

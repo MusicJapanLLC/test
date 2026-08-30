@@ -2,7 +2,7 @@ name: Senju Live Guard Adversary
 
 on:
   pull_request:
-    branches: ["claude/employee-onboarding-setup-udm86"]
+    branches: ["main"]
     paths:
       - "senju/**"
       - "scripts/security/artifact_guard.py"
@@ -11,7 +11,7 @@ on:
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/senju-live-guard-adversary.yml"
   push:
-    branches: ["claude/employee-onboarding-setup-udm86"]
+    branches: ["main"]
     paths:
       - "senju/**"
       - "scripts/security/artifact_guard.py"

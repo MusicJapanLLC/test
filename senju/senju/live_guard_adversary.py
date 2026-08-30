@@ -11,6 +11,8 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import random
+import string
 import subprocess
 import sys
 import tempfile
@@ -135,7 +137,43 @@ def _engagement_payload(now: dt.datetime) -> dict[str, object]:
     }
 
 
-def _check_engagement() -> LiveSurfaceResult:
+def _mutate_engagement_payload(
+    base: dict[str, object], rng: random.Random
+) -> tuple[str, dict[str, object]]:
+    """Return (label, mutated_payload) — all mutations should be rejected."""
+    mutation = rng.randrange(8)
+    payload = {k: v for k, v in base.items()}
+    if mutation == 0:
+        payload["allow_http"] = "false"
+        return "allow_http-string", payload
+    if mutation == 1:
+        payload["max_requests_per_target"] = str(rng.randint(1, 100))
+        return "budget-string", payload
+    if mutation == 2:
+        payload["targets"] = [{"host": "*.example.com", "scheme": "https", "base_path": "/"}]
+        return "wildcard-host", payload
+    if mutation == 3:
+        payload["destructive"] = True
+        return "destructive", payload
+    if mutation == 4:
+        payload["allowed_checks"] = ["__unknown__" + _random_token(rng)]
+        return "unknown-check", payload
+    if mutation == 5:
+        payload["authorization_reference"] = ""
+        return "empty-authorization", payload
+    if mutation == 6:
+        payload["targets"] = [{"host": "example.com", "scheme": "http", "base_path": "/"}]
+        return "http-scheme", payload
+    payload["valid_from_utc"] = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)).isoformat()
+    payload["valid_until_utc"] = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=2)).isoformat()
+    return "future-window", payload
+
+
+def _random_token(rng: random.Random) -> str:
+    return "".join(rng.choice(string.ascii_lowercase) for _ in range(8))
+
+
+def _check_engagement(*, seed: int = 0) -> LiveSurfaceResult:
     now = dt.datetime.now(dt.timezone.utc)
     payload = _engagement_payload(now)
     try:
@@ -143,21 +181,49 @@ def _check_engagement() -> LiveSurfaceResult:
     except Exception as exc:  # noqa: BLE001 - live telemetry
         return _surface("engagement-json", False, f"valid active manifest rejected: {type(exc).__name__}: {exc}")
 
-    malformed = dict(payload)
-    malformed["allow_http"] = "false"
-    malformed["targets"] = [{"host": "example.com", "scheme": "http", "base_path": "/"}]
-    try:
-        EngagementManifest.from_dict(malformed)
-    except (EngagementError, TypeError, ValueError):
-        return _surface("engagement-json", True, "active parser accepted valid manifest and rejected wrong JSON types")
-    return _surface("engagement-json", False, "active parser accepted string-shaped boolean authority input")
+    rng = random.Random(seed)
+    for _ in range(16):
+        label, mutated = _mutate_engagement_payload(payload, rng)
+        try:
+            EngagementManifest.from_dict(mutated)
+        except (EngagementError, TypeError, ValueError):
+            continue
+        return _surface("engagement-json", False, f"active parser accepted disallowed mutation: {label}")
+    return _surface("engagement-json", True, "active parser rejected all 16 random engagement mutations")
 
 
-def _check_external_contact() -> LiveSurfaceResult:
+def _random_host_bypass(rng: random.Random) -> str:
+    """Generate a URL that should be rejected: lookalikes, injections, port variants."""
+    mode = rng.randrange(10)
+    token = _random_token(rng)
+    if mode == 0:
+        return f"https://example.com.{token}.invalid/"
+    if mode == 1:
+        return f"https://{token}.example.com/"
+    if mode == 2:
+        return f"https://example.com:{rng.randint(1, 442)}/"
+    if mode == 3:
+        return f"https://example.com:{rng.randint(444, 65535)}/"
+    if mode == 4:
+        return f"https://{token}@example.com/"
+    if mode == 5:
+        return f"https://{token}:x@example.com/"
+    if mode == 6:
+        return f"http://example.com/"
+    if mode == 7:
+        return f"https://example.com\x00.evil/"
+    if mode == 8:
+        return f"https://EXAMPLE.COM/"
+    return f"https://example.com./"
+
+
+def _check_external_contact(*, seed: int = 0) -> LiveSurfaceResult:
     policy = ExternalContactPolicy.from_hosts(["example.com"], allow_http=False)
     host, port = _parse_url("https://example.com/", policy)
     if (host, port) != ("example.com", 443):
         return _surface("external-contact", False, f"unexpected active parser result: {(host, port)!r}")
+
+    # fixed known-bad cases
     for invalid in (
         "https://example.com.invalid/",
         "https://example.com:444/",
@@ -168,7 +234,18 @@ def _check_external_contact() -> LiveSurfaceResult:
         except (ExternalContactError, TypeError, ValueError):
             continue
         return _surface("external-contact", False, f"active parser accepted disallowed authority: {invalid}")
-    return _surface("external-contact", True, "active parser enforced exact host, port and userinfo boundaries")
+
+    # random bypass attempts
+    rng = random.Random(seed)
+    for _ in range(24):
+        candidate = _random_host_bypass(rng)
+        try:
+            _parse_url(candidate, policy)
+        except (ExternalContactError, TypeError, ValueError, UnicodeError):
+            continue
+        return _surface("external-contact", False, f"active parser accepted random bypass attempt: {candidate!r}")
+
+    return _surface("external-contact", True, "active parser enforced host/port/userinfo boundaries (fixed + 24 random)")
 
 
 def _check_security_guard(root: Path) -> LiveSurfaceResult:
@@ -251,12 +328,12 @@ def _check_autonomy() -> LiveSurfaceResult:
     return _surface("autonomy-engine", False, "active WorkItem accepted unknown authority scope")
 
 
-def _live_surface_checks(root: Path) -> tuple[LiveSurfaceResult, ...]:
+def _live_surface_checks(root: Path, *, seed: int = 0) -> tuple[LiveSurfaceResult, ...]:
     checks = (
         lambda: _check_scopeguard(),
         lambda: _check_offense_first(root),
-        lambda: _check_engagement(),
-        lambda: _check_external_contact(),
+        lambda: _check_engagement(seed=seed),
+        lambda: _check_external_contact(seed=seed),
         lambda: _check_security_guard(root),
         lambda: _check_artifact_guard(root),
         lambda: _check_autonomy(),
@@ -296,7 +373,7 @@ def run_live_loop(
             summary = report.to_dict()["summary"]
             checks = int(summary["checks"])
             weaknesses = int(summary["weaknesses"])
-            surfaces = _live_surface_checks(root)
+            surfaces = _live_surface_checks(root, seed=round_seed)
             live_checks = len(surfaces)
             live_weaknesses = sum(not surface.passed for surface in surfaces)
             checks += live_checks

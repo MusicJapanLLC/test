@@ -2,20 +2,18 @@ name: Senju Defense Adversary Team
 
 on:
   push:
-    branches: ["claude/employee-onboarding-setup-udm86"]
+    branches: ["main"]
     paths:
       - "senju/**"
       - "scripts/security/**"
       - ".github/workflows/security-guard.yml"
-      - ".github/workflows/standment-security-gate.yml"
       - ".github/workflows/senju-defense-adversary-team.yml"
   pull_request:
-    branches: ["claude/employee-onboarding-setup-udm86"]
+    branches: ["main"]
     paths:
       - "senju/**"
       - "scripts/security/**"
       - ".github/workflows/security-guard.yml"
-      - ".github/workflows/standment-security-gate.yml"
       - ".github/workflows/senju-defense-adversary-team.yml"
   schedule:
     - cron: "41 2 * * *"
@@ -43,15 +41,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run adversary team tests
-        working-directory: senju
-        run: python -m unittest discover -s tests -p 'test_defense_adversary_team.py' -v
-
-      - name: Run coordinated pressure campaign
+      - name: Install Senju package
         env:
-          PYTHONPATH: senju
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: python -m pip install -e './senju[dev]'
+
+      - name: Run V2 adversary tests
+        working-directory: senju
+        run: python -m pytest tests/test_defense_adversary_team_v2.py tests/test_multiguard_adversary.py -v
+
+      - name: Run V2 coordinated pressure campaign
         run: >-
-          python -m senju.defense_adversary_team
+          python -m senju.defense_adversary_team_v2
+          --scope-cases 4096
           --json security-reports/senju-defense-adversary.json
 
       - name: Upload adversary evidence

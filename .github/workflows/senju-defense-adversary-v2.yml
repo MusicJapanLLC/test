@@ -2,14 +2,14 @@ name: Senju Defense Adversary Suite V2
 
 on:
   pull_request:
-    branches: ["claude/employee-onboarding-setup-udm86"]
+    branches: ["main"]
     paths:
       - "senju/**"
       - "scripts/security/artifact_guard.py"
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/senju-defense-adversary-v2.yml"
   push:
-    branches: ["claude/employee-onboarding-setup-udm86"]
+    branches: ["main"]
     paths:
       - "senju/**"
       - "scripts/security/artifact_guard.py"
