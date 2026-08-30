@@ -1,11 +1,11 @@
 name: TOMOKI - MANAGER Queue Bridge
 
-# Master Control recurrence guard: schedule remains canonical cadence, while a successful
-# Realtime Kernel cycle also wakes this bridge so a dropped GitHub schedule cannot leave
-# the canonical Manager heartbeat stale indefinitely.
+# Master Control recurrence guard: the policy-approved five-minute schedule remains
+# canonical. Realtime Kernel completion is a redundant wake path so a dropped GitHub
+# schedule cannot leave the canonical Manager heartbeat stale indefinitely.
 on:
   schedule:
-    - cron: '2-57/5 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
   workflow_run:
     workflows: ['THE WORLD - Realtime Kernel']
