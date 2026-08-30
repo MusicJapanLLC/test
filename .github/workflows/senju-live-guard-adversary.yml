@@ -1,0 +1,58 @@
+name: Senju Live Guard Adversary
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/**"
+      - ".github/workflows/senju-live-guard-adversary.yml"
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/**"
+      - ".github/workflows/senju-live-guard-adversary.yml"
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-live-guard-adversary-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-adversary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Run live adversary loop against active codepaths
+        env:
+          PYTHONPATH: senju
+        run: >-
+          python -m senju.live_guard_adversary
+          --rounds 8
+          --scope-cases 1024
+          --seed 31001
+          --json security-reports/senju-live-guard-adversary.json
+          --fail-on-crash
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: senju-live-guard-adversary-${{ github.sha }}
+          path: security-reports/senju-live-guard-adversary.json
+          if-no-files-found: error
+          retention-days: 30
