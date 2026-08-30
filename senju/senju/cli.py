@@ -199,6 +199,60 @@ def _load_manifest(path: str) -> list[dict[str, Any]]:
     return out
 
 
+def _cmd_autonomy_loop(args: argparse.Namespace) -> int:
+    import urllib.parse
+    from .autonomy import AutonomyLoop, WorkItem
+
+    authorized_write_hosts = []
+    if args.canary_url:
+        parsed = urllib.parse.urlsplit(args.canary_url)
+        if parsed.hostname:
+            authorized_write_hosts.append(parsed.hostname)
+
+    loop = AutonomyLoop(
+        allow_hosts=args.allow_host,
+        authorized_write_hosts=authorized_write_hosts,
+        out_dir=args.out_dir,
+    )
+
+    for i, url in enumerate(args.url):
+        loop.queue.enqueue(
+            WorkItem(
+                id=f"seed-{i+1}",
+                item_type="discovery",
+                url=url,
+                method="GET",
+                source="cli_seed",
+                novelty_score=1.0,
+                expected_research_value=0.8,
+            )
+        )
+
+    if args.canary_url:
+        loop.queue.enqueue(
+            WorkItem(
+                id="canary-1",
+                item_type="canary_write",
+                url=args.canary_url,
+                method="POST",
+                source="canary",
+                score=2.0,
+                payload={"json": {"canary": "test"}, "expect_status": [200, 201, 202, 204]},
+            )
+        )
+
+    results = []
+    for _ in range(max(1, args.max_steps)):
+        item = loop.queue.pop_next()
+        if not item:
+            break
+        res = loop.execute_step(item)
+        results.append(res)
+
+    print(json.dumps(results, ensure_ascii=False, indent=2))
+    return 0
+
+
 def _cmd_contact_batch(args: argparse.Namespace) -> int:
     policy = _build_policy(args)
     try:
@@ -330,6 +384,14 @@ def build_parser() -> argparse.ArgumentParser:
     sp_batch.add_argument("--response-dir", help="各response bodyの保存先ディレクトリ")
     sp_batch.add_argument("--continue-on-error", action="store_true", help="1件失敗しても後続を続行")
     sp_batch.set_defaults(func=_cmd_contact_batch)
+
+    sp_autonomy = sub.add_parser("autonomy-loop", help="未知の公開サイトの自律調査ループを実行")
+    sp_autonomy.add_argument("--url", action="append", default=[], help="初期調査対象URL")
+    sp_autonomy.add_argument("--allow-host", action="append", required=True, help="許可ホスト")
+    sp_autonomy.add_argument("--canary-url", help="所有/許可済みカナリア書き込み先URL")
+    sp_autonomy.add_argument("--out-dir", default="reports/autonomy", help="証跡出力先")
+    sp_autonomy.add_argument("--max-steps", type=int, default=3, help="実行ステップ数")
+    sp_autonomy.set_defaults(func=_cmd_autonomy_loop)
 
     return p
 
