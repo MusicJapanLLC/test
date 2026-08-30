@@ -1,0 +1,55 @@
+name: Senju Agency Orchestrator CI
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/scripts/run_external_frontier.py"
+      - "senju/scripts/autonomy_delegate.py"
+      - "senju/tests/test_external_frontier.py"
+      - "senju/tests/test_autonomy_delegate.py"
+      - ".github/workflows/senju-agency-orchestrator.yml"
+      - ".github/workflows/senju-agency-orchestrator-ci.yml"
+      - ".github/workflows/senju-auto-approve-merge.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Run focused autonomy tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/senju
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          (cd senju && python -m pytest tests/test_external_frontier.py tests/test_autonomy_delegate.py tests/test_autonomy_read_scope.py -q)
+
+      - name: Verify orchestrator stays GitHub-read-only
+        shell: python
+        run: |
+          from pathlib import Path
+          body = Path('.github/workflows/senju-agency-orchestrator.yml').read_text(encoding='utf-8')
+          assert 'contents: read' in body
+          assert 'actions: read' in body
+          for forbidden in ('contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'):
+              assert forbidden not in body, forbidden
+          assert 'requirePlanApproval:false' in body
+          assert 'automationMode:"AUTO_CREATE_PR"' in body
+          assert 'AI_MERGE_AUDIT PASS' in body
+          print('agency orchestrator contract verified')
