@@ -70,15 +70,20 @@ class AutonomousContactMemory:
     def state(self, mission_id: str) -> MissionMemory:
         return self.missions.setdefault(mission_id, MissionMemory())
 
-    def record_success(self, mission_id: str, result: ContactResult) -> None:
+    def record_result(self, mission_id: str, result: ContactResult) -> None:
+        """Record provider acknowledgement, not merely TCP/HTTP completion, as success."""
         state = self.state(mission_id)
         receipt = result.receipt
         state.attempts += 1
-        state.successes += 1
-        state.consecutive_failures = 0
         state.last_status = receipt.status
         state.last_response_sha256 = receipt.response_sha256
         state.last_contacted_at_utc = receipt.contacted_at_utc
+        if receipt.provider_acknowledged:
+            state.successes += 1
+            state.consecutive_failures = 0
+        else:
+            state.failures += 1
+            state.consecutive_failures += 1
 
     def record_failure(self, mission_id: str) -> None:
         state = self.state(mission_id)
@@ -126,7 +131,7 @@ BUILTIN_MISSIONS: tuple[ContactMission, ...] = (
     ContactMission(
         mission_id="public-github-runtime-pulse",
         scope_id="github_metadata",
-        url="https://api.github.com/repos/python/cpython/releases/latest",
+        url="https://api.github.com/repos/cli/cli/releases/latest",
         method="GET",
         purpose="sample public software-release metadata for external-change awareness",
         base_priority=0.68,
@@ -349,7 +354,7 @@ def run_cycle(
                 "error": str(exc)[:500],
             })
             continue
-        memory.record_success(mission.mission_id, result)
+        memory.record_result(mission.mission_id, result)
         observations.append({
             "mission_id": mission.mission_id,
             "scope_id": mission.scope_id,
