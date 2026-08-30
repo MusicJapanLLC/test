@@ -185,7 +185,8 @@ def _check_engagement(*, seed: int = 0) -> LiveSurfaceResult:
     for _ in range(16):
         label, mutated = _mutate_engagement_payload(payload, rng)
         try:
-            EngagementManifest.from_dict(mutated)
+            m = EngagementManifest.from_dict(mutated)
+            m.validate(now=now, enforce_window=True)
         except (EngagementError, TypeError, ValueError):
             continue
         return _surface("engagement-json", False, f"active parser accepted disallowed mutation: {label}")
@@ -213,8 +214,8 @@ def _random_host_bypass(rng: random.Random) -> str:
     if mode == 7:
         return f"https://example.com\x00.evil/"
     if mode == 8:
-        return f"https://EXAMPLE.COM/"
-    return f"https://example.com./"
+        return f"https://example.com%00.evil/"
+    return f"https://example.com:{rng.randint(8443, 9443)}/"
 
 
 def _check_external_contact(*, seed: int = 0) -> LiveSurfaceResult:
