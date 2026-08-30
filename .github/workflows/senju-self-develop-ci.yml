@@ -1,6 +1,13 @@
 name: Senju Self-Development CI
 
 on:
+  push:
+    paths:
+      - "senju/senju/lab_planner.py"
+      - "senju/scripts/self_code_gen.py"
+      - "senju/tests/test_lab_planner_v2.py"
+      - ".github/workflows/senju-self-develop.yml"
+      - ".github/workflows/senju-self-develop-ci.yml"
   pull_request:
     paths:
       - "senju/senju/lab_planner.py"
@@ -13,7 +20,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: senju-self-develop-ci-${{ github.event.pull_request.number }}
+  group: senju-self-develop-ci-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
