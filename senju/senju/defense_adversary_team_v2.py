@@ -396,19 +396,23 @@ def probe_autonomy_v2(root: Path) -> list[Finding]:
         blocked = retry_queue._items["retry"].status == WorkItemStatus.BLOCKED.value
         out.append(_result("autonomy-engine", "retry-exhaustion-blocks", blocked, retry_queue._items["retry"].status))
 
-        # Adversarial validation pressure: these are expected to be rejected by a hardened queue.
-        for name, item in (
-            ("unknown-authority-scope", _work("bad-scope", "bad scope", authority_scope="arbitrary-admin")),
-            ("expected-value-over-one", _work("bad-ev", "bad expected value", expected_value=1.5)),
-            ("negative-cost-budget", _work("bad-cost", "bad cost", cost_budget_matches=-1)),
-            ("negative-runtime-budget", _work("bad-runtime", "bad runtime", runtime_seconds_budget=-1.0)),
-        ):
+        # Invalid items may now fail at construction or enqueue. Both are correct fail-closed outcomes.
+        invalid_specs: tuple[tuple[str, str, str, dict[str, Any]], ...] = (
+            ("unknown-authority-scope", "bad-scope", "bad scope", {"authority_scope": "arbitrary-admin"}),
+            ("expected-value-over-one", "bad-ev", "bad expected value", {"expected_value": 1.5}),
+            ("negative-cost-budget", "bad-cost", "bad cost", {"cost_budget_matches": -1}),
+            ("negative-runtime-budget", "bad-runtime", "bad runtime", {"runtime_seconds_budget": -1.0}),
+        )
+        for name, item_id, hypothesis, kwargs in invalid_specs:
             validation_queue = AutonomyQueue(tmp_path / f"{name}.json")
             try:
+                item = _work(item_id, hypothesis, **kwargs)
                 accepted = validation_queue.enqueue(item)
-            except (TypeError, ValueError):
+                detail = "accepted by queue" if accepted else "rejected by queue"
+            except (TypeError, ValueError) as exc:
                 accepted = False
-            out.append(_result("autonomy-engine", name, not accepted, "rejected" if not accepted else "accepted by queue"))
+                detail = f"rejected at construction: {type(exc).__name__}: {exc}"
+            out.append(_result("autonomy-engine", name, not accepted, detail))
 
         # Instantiation only: seeds queue/state locally, but never executes a tournament or network I/O.
         engine = AutonomyEngine(tmp_path / "engine-state")
