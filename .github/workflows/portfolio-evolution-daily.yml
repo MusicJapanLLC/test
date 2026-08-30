@@ -4,6 +4,14 @@ on:
   schedule:
     - cron: "50 3,9,15,21 * * *" # 12:50 / 18:50 / 00:50 / 06:50 JST
   workflow_dispatch:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "PORTFOLIO.md"
+      - "automation/reporting/portfolio_evolution.py"
+      - "automation/reporting/test_portfolio_evolution.py"
+      - "automation/reporting/portfolio_targets.json"
+      - ".github/workflows/portfolio-evolution-daily.yml"
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
