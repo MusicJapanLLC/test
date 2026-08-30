@@ -99,3 +99,9 @@ def test_runner_executes_red_selected_subdomains_without_exact_host_manifest() -
     assert report["request_count"] == 2
     assert seen_policies[0].allow_hosts == frozenset({"api.example.com"})
     assert seen_policies[1].allow_hosts == frozenset({"worker.example.com"})
+
+
+def test_unified_spear_entrypoint_is_available() -> None:
+    from senju.spear import main as spear_main
+
+    assert callable(spear_main)
