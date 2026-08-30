@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/madlab-world-evolution.yml"
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 */3 * * *'
 
 concurrency:
   group: madlab-world-evolution
@@ -251,10 +251,9 @@ jobs:
           Choose exactly ONE highest-value next improvement. Do not repeat prior_directive unless current evidence proves failure or regression. Use delta plus live latency/risk evidence when available. Require deterministic before/after acceptance checks.
           If current.observation_state is blocked_owner_access, unreachable, or degraded_scan, prioritize restoring the documented owner-authorized observation path and its verification. Treat HTTP 401/403 as a repair signal, never as permission to bypass authorization.
           Optimize diagnostic precision, evidence quality, reliable owner-authorized execution, speed, operator clarity, regression prevention, and migration away from blocked infrastructure.
-          Never weaken ownership, authorization, or approval boundaries.
-          Never weaken audit, rollback, or target-scope boundaries. Never add credential guessing, hidden-path brute force, arbitrary exploit payload execution, destructive external actions, or stealth/persistence.
+          Never weaken ownership, authorization, approval, audit, rollback, or target-scope boundaries. Never add credential guessing, hidden-path brute force, arbitrary exploit payload execution, destructive external actions, or stealth/persistence.
           AppDeploy production deploy quota is exhausted; prefer GitHub/Vercel successor work when source deployment is required. Avoid cosmetic-only work unless it removes a measured blocker. Never claim success without new evidence.
-          Write exactly one file named madlab-evolution-directive.json. JSON fields: schema="the-world-madlab-directive/v1", title, priority (P0|P1|P2), lane (runtime-observation|successor-repo|qa|operator), why_now, implementation, acceptance_checks (2-5 items), expected_gain, risk (low|medium), next_actor (MADLAB|TOMOKI_FORGE|SENJU|AI_FOUNDRY), novelty_reason, rollback_trigger, measurement (metric + desired_direction).
+          Write exactly one file named madlab-evolution-directive.json. JSON fields: schema="the-world-madlab-directive/v2", title, priority (P0|P1|P2), lane (runtime-observation|successor-repo|qa|operator), why_now, implementation, acceptance_checks (2-5 items), expected_gain, risk (low|medium), next_actor (MADLAB|TOMOKI_FORGE|SENJU|AI_FOUNDRY), novelty_reason, rollback_trigger, measurement (metric + desired_direction).
           PROMPT
           copilot -p "$(cat prompt.md)" -s --allow-tool=write --no-ask-user > /tmp/madlab-copilot.log 2>&1 || true
           if [[ ! -s madlab-evolution-directive.json ]]; then
@@ -301,7 +300,7 @@ jobs:
               priority = 'P1'
 
           d = {
-              'schema': 'the-world-madlab-directive/v1',
+              'schema': 'the-world-madlab-directive/v2',
               'title': title,
               'priority': priority,
               'lane': lane,
@@ -334,7 +333,7 @@ jobs:
           missing = [k for k in required if not d.get(k)]
           if missing:
               raise SystemExit('directive missing: ' + ','.join(missing))
-          if d['schema'] != 'the-world-madlab-directive/v1':
+          if d['schema'] != 'the-world-madlab-directive/v2':
               raise SystemExit('bad directive schema')
           if d['priority'] not in ['P0','P1','P2'] or d['risk'] not in ['low','medium']:
               raise SystemExit('bad directive enum')

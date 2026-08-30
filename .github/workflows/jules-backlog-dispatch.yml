@@ -20,7 +20,7 @@ jobs:
     env:
       JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
       GH_TOKEN: ${{ github.token }}
-      REPOSITORY: ${{ github.repository }}
+      REPO: ${{ github.repository }}
       DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
     steps:
       - name: Dispatch oldest undispatched Jules issue
@@ -49,12 +49,12 @@ jobs:
                 -H "Authorization: Bearer $GH_TOKEN" \
                 -H "Accept: application/vnd.github+json" \
                 -H "X-GitHub-Api-Version: 2022-11-28" \
-                "https://api.github.com/repos/$REPOSITORY/issues/$number/comments" \
+                "https://api.github.com/repos/${REPO}/issues/$number/comments" \
                 --data-binary @- >/dev/null
           }
 
-          owner="${REPOSITORY%%/*}"
-          repo="${REPOSITORY#*/}"
+          owner="${REPO%%/*}"
+          repo="${REPO#*/}"
           sources_json="$(curl --fail-with-body --silent --show-error \
             -H "X-Goog-Api-Key: $JULES_API_KEY" \
             "https://jules.googleapis.com/v1alpha/sources")"
@@ -63,15 +63,15 @@ jobs:
             <<<"$sources_json" | head -n 1)"
 
           if [[ -z "$source_name" ]]; then
-            echo "::error::$REPOSITORY is not configured as a Jules source"
+            echo "::error::$REPO is not configured as a Jules source"
             exit 1
           fi
 
-          issues_json="$(gh_get "https://api.github.com/repos/$REPOSITORY/issues?state=open&per_page=100&sort=created&direction=asc")"
+          issues_json="$(gh_get "https://api.github.com/repos/${REPO}/issues?state=open&per_page=100&sort=created&direction=asc")"
           candidate=""
 
           while IFS= read -r number; do
-            comments="$(gh_get "https://api.github.com/repos/$REPOSITORY/issues/$number/comments?per_page=100")"
+            comments="$(gh_get "https://api.github.com/repos/${REPO}/issues/$number/comments?per_page=100")"
             last_jules_event="$(jq -r '[.[] | select(((.body // "") | startswith("Julesを起動しました")) or ((.body // "") | startswith("Julesセッションが終了しました"))) | .body] | last // ""' <<<"$comments")"
             if [[ "$last_jules_event" == Julesを起動しました* ]]; then
               continue
@@ -85,7 +85,7 @@ jobs:
             exit 0
           fi
 
-          issue="$(gh_get "https://api.github.com/repos/$REPOSITORY/issues/$candidate")"
+          issue="$(gh_get "https://api.github.com/repos/${REPO}/issues/$candidate")"
           title="$(jq -r '.title' <<<"$issue")"
           body="$(jq -r '.body // ""' <<<"$issue")"
           url="$(jq -r '.html_url' <<<"$issue")"
