@@ -1,12 +1,13 @@
 """
 senju.cli — コマンドライン入口。
 
-  python -m senju.cli demo                 短時間デモ（レポートを標準出力）
-  python -m senju.cli run [options]        本格的なトーナメント＋レポート保存
-  python -m senju.cli safety-check <ref>   攻撃対象スコープ検問の単体テスト
-  python -m senju.cli contact <url> ...    明示許可した外部HTTP(S)への接触
+  python -m senju.cli demo
+  python -m senju.cli run [options]
+  python -m senju.cli safety-check <ref>
+  python -m senju.cli contact <url> ...
+  python -m senju.cli contact-batch <manifest.json> ...
 
-攻防シミュレーションの標的スコープと外部HTTP transport は分離する。
+Arena simulation scope and external HTTP transport remain separate layers.
 """
 from __future__ import annotations
 
@@ -14,6 +15,8 @@ import argparse
 import json
 import os
 import sys
+from pathlib import Path
+from typing import Any
 
 from .config import ArenaConfig, EvolutionConfig, SenjuConfig
 from .economy import EconomyConfig
@@ -77,32 +80,89 @@ def _cmd_safety_check(args: argparse.Namespace) -> int:
         return 3
 
 
-def _cmd_contact(args: argparse.Namespace) -> int:
-    policy = ExternalContactPolicy.from_hosts(
+def _parse_headers(values: list[str] | None) -> dict[str, str]:
+    headers: dict[str, str] = {}
+    for raw in values or []:
+        if ":" not in raw:
+            raise ValueError(f"header must be NAME:VALUE: {raw!r}")
+        name, value = raw.split(":", 1)
+        name = name.strip()
+        value = value.lstrip()
+        if not name:
+            raise ValueError("header name is empty")
+        headers[name] = value
+    return headers
+
+
+def _token_header(args: argparse.Namespace) -> dict[str, str]:
+    if not getattr(args, "token_env", None):
+        return {}
+    token = os.environ.get(args.token_env)
+    if not token:
+        raise ValueError(f"environment variable is empty or missing: {args.token_env}")
+    return {args.token_header: f"{args.token_prefix}{token}"}
+
+
+def _build_policy(args: argparse.Namespace) -> ExternalContactPolicy:
+    return ExternalContactPolicy.from_hosts(
         args.allow_host,
         allow_http=args.allow_http,
+        allow_delete=args.allow_delete,
+        follow_redirects=args.follow_redirects,
+        max_redirects=args.max_redirects,
         timeout_seconds=args.timeout,
         max_response_bytes=args.max_response_bytes,
         retries=args.retries,
     )
-    headers: dict[str, str] = {}
-    body: bytes | None = None
 
-    if args.json_body is not None:
-        try:
-            parsed = json.loads(args.json_body)
-        except json.JSONDecodeError as exc:
-            print(f"⛔ invalid --json-body: {exc}", file=sys.stderr)
-            return 2
-        body = json.dumps(parsed, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-        headers["Content-Type"] = "application/json"
 
-    if args.token_env:
-        token = os.environ.get(args.token_env)
-        if not token:
-            print(f"⛔ environment variable is empty or missing: {args.token_env}", file=sys.stderr)
-            return 2
-        headers[args.token_header] = f"{args.token_prefix}{token}"
+def _encode_body(
+    *,
+    json_value: Any = None,
+    raw_text: str | None = None,
+    body_file: str | None = None,
+    max_bytes: int,
+) -> tuple[bytes | None, dict[str, str]]:
+    selected = int(json_value is not None) + int(raw_text is not None) + int(body_file is not None)
+    if selected > 1:
+        raise ValueError("choose only one of JSON, raw data, or body file")
+    if json_value is not None:
+        body = json.dumps(json_value, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+        if len(body) > max_bytes:
+            raise ValueError(f"request body exceeds {max_bytes} bytes")
+        return body, {"Content-Type": "application/json"}
+    if raw_text is not None:
+        body = raw_text.encode("utf-8")
+        if len(body) > max_bytes:
+            raise ValueError(f"request body exceeds {max_bytes} bytes")
+        return body, {}
+    if body_file is not None:
+        p = Path(body_file)
+        if p.stat().st_size > max_bytes:
+            raise ValueError(f"request body exceeds {max_bytes} bytes")
+        return p.read_bytes(), {}
+    return None, {}
+
+
+def _cmd_contact(args: argparse.Namespace) -> int:
+    policy = _build_policy(args)
+    try:
+        headers = _parse_headers(args.header)
+        headers.update(_token_header(args))
+        json_value = None
+        if args.json_body is not None:
+            json_value = json.loads(args.json_body)
+        body, inferred = _encode_body(
+            json_value=json_value,
+            raw_text=args.data,
+            body_file=args.body_file,
+            max_bytes=policy.max_request_bytes,
+        )
+        for key, value in inferred.items():
+            headers.setdefault(key, value)
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"⛔ invalid request: {exc}", file=sys.stderr)
+        return 2
 
     try:
         result = ExternalContactClient(policy).contact_with_body(
@@ -122,6 +182,101 @@ def _cmd_contact(args: argparse.Namespace) -> int:
 
     print(json.dumps(result.receipt.to_dict(), ensure_ascii=False))
     return 0 if result.receipt.provider_acknowledged else 5
+
+
+def _load_manifest(path: str) -> list[dict[str, Any]]:
+    raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    requests = raw.get("requests") if isinstance(raw, dict) else raw
+    if not isinstance(requests, list):
+        raise ValueError("manifest must be a JSON array or {'requests': [...]} object")
+    if not 1 <= len(requests) <= 20:
+        raise ValueError("manifest must contain 1-20 requests")
+    out: list[dict[str, Any]] = []
+    for i, item in enumerate(requests):
+        if not isinstance(item, dict):
+            raise ValueError(f"request[{i}] must be an object")
+        out.append(item)
+    return out
+
+
+def _cmd_contact_batch(args: argparse.Namespace) -> int:
+    policy = _build_policy(args)
+    try:
+        requests = _load_manifest(args.manifest)
+        global_headers = _parse_headers(args.header)
+        global_headers.update(_token_header(args))
+    except (ValueError, OSError, json.JSONDecodeError) as exc:
+        print(f"⛔ invalid batch: {exc}", file=sys.stderr)
+        return 2
+
+    client = ExternalContactClient(policy)
+    response_dir = Path(args.response_dir) if args.response_dir else None
+    if response_dir:
+        response_dir.mkdir(parents=True, exist_ok=True)
+
+    results: list[dict[str, Any]] = []
+    for index, item in enumerate(requests):
+        try:
+            url = str(item["url"])
+            method = str(item.get("method", "GET")).upper()
+            item_headers_raw = item.get("headers", {})
+            if not isinstance(item_headers_raw, dict) or not all(
+                isinstance(k, str) and isinstance(v, str) for k, v in item_headers_raw.items()
+            ):
+                raise ValueError(f"request[{index}].headers must be string:string object")
+            headers = dict(global_headers)
+            headers.update(item_headers_raw)
+
+            json_present = "json" in item
+            data_present = "data" in item
+            if json_present and data_present:
+                raise ValueError(f"request[{index}] cannot contain both json and data")
+            body, inferred = _encode_body(
+                json_value=item.get("json") if json_present else None,
+                raw_text=str(item["data"]) if data_present else None,
+                max_bytes=policy.max_request_bytes,
+            )
+            for key, value in inferred.items():
+                headers.setdefault(key, value)
+
+            result = client.contact_with_body(url, method=method, body=body, headers=headers)
+            record: dict[str, Any] = {"index": index, "ok": True, **result.receipt.to_dict()}
+            if response_dir:
+                body_path = response_dir / f"{index:02d}.bin"
+                result.write_body(body_path)
+                record["response_file"] = str(body_path)
+            results.append(record)
+        except (ExternalContactError, ValueError, KeyError) as exc:
+            results.append({"index": index, "ok": False, "error": str(exc)})
+            if not args.continue_on_error:
+                break
+
+    if args.receipt:
+        p = Path(args.receipt)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(json.dumps(results, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(results, ensure_ascii=False))
+    return 0 if len(results) == len(requests) and all(r.get("ok") for r in results) else 5
+
+
+def _add_transport_options(sp: argparse.ArgumentParser) -> None:
+    sp.add_argument(
+        "--allow-host",
+        action="append",
+        required=True,
+        help="明示許可する公開ホスト。複数回指定可能",
+    )
+    sp.add_argument("--timeout", type=float, default=5.0)
+    sp.add_argument("--retries", type=int, default=1, help="transport失敗時の再試行回数 (0-3)")
+    sp.add_argument("--max-response-bytes", type=int, default=512 * 1024)
+    sp.add_argument("--allow-http", action="store_true", help="HTTPS以外を明示的に許可")
+    sp.add_argument("--allow-delete", action="store_true", help="DELETEを明示的に許可")
+    sp.add_argument("--follow-redirects", action="store_true", help="allowlist内redirectを再検証して追従")
+    sp.add_argument("--max-redirects", type=int, default=3, help="redirect上限 (0-5)")
+    sp.add_argument("--header", action="append", help="追加ヘッダ NAME:VALUE。複数回指定可能")
+    sp.add_argument("--token-env", help="認証トークンを読む環境変数名")
+    sp.add_argument("--token-header", default="Authorization", help="トークン送信ヘッダ名")
+    sp.add_argument("--token-prefix", default="Bearer ", help="トークン値の接頭辞")
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -149,36 +304,32 @@ def build_parser() -> argparse.ArgumentParser:
     sp_demo.set_defaults(func=_cmd_demo)
 
     sp_safe = sub.add_parser("safety-check", help="攻撃対象スコープ検問の単体確認")
-    sp_safe.add_argument("ref", help="標的参照 (例: sim://x, 8.8.8.8, 10.0.0.1)")
+    sp_safe.add_argument("ref", help="標的参照")
     sp_safe.set_defaults(func=_cmd_safety_check)
 
-    sp_contact = sub.add_parser(
-        "contact",
-        help="明示許可した公開HTTP(S) endpointへ外部接触する",
-    )
+    sp_contact = sub.add_parser("contact", help="allowlist済みHTTP(S) endpointへ実通信する")
     sp_contact.add_argument("url", help="接触先URL")
-    sp_contact.add_argument(
-        "--allow-host",
-        action="append",
-        required=True,
-        help="明示許可する公開ホスト。複数回指定可能",
-    )
+    _add_transport_options(sp_contact)
     sp_contact.add_argument(
         "--method",
-        choices=("GET", "HEAD", "POST", "PUT", "PATCH"),
+        choices=("GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"),
         default="GET",
     )
-    sp_contact.add_argument("--json-body", help="POST/PUT/PATCHするJSON。サイズ上限あり")
-    sp_contact.add_argument("--timeout", type=float, default=5.0)
-    sp_contact.add_argument("--retries", type=int, default=1, help="transport失敗時の再試行回数 (0-3)")
-    sp_contact.add_argument("--max-response-bytes", type=int, default=512 * 1024)
-    sp_contact.add_argument("--allow-http", action="store_true", help="HTTPS以外を明示的に許可")
+    body_group = sp_contact.add_mutually_exclusive_group()
+    body_group.add_argument("--json-body", help="送信するJSON文字列")
+    body_group.add_argument("--data", help="送信するUTF-8 raw text")
+    body_group.add_argument("--body-file", help="送信するファイル")
     sp_contact.add_argument("--receipt", help="機械可読の接触証跡JSON保存先")
     sp_contact.add_argument("--response-out", help="取得した応答本文の保存先")
-    sp_contact.add_argument("--token-env", help="認証トークンを読む環境変数名")
-    sp_contact.add_argument("--token-header", default="Authorization", help="トークン送信ヘッダ名")
-    sp_contact.add_argument("--token-prefix", default="Bearer ", help="トークン値の接頭辞")
     sp_contact.set_defaults(func=_cmd_contact)
+
+    sp_batch = sub.add_parser("contact-batch", help="JSON manifestから最大20件の実HTTP API操作を順次実行")
+    sp_batch.add_argument("manifest", help="request manifest JSON")
+    _add_transport_options(sp_batch)
+    sp_batch.add_argument("--receipt", help="batch結果JSON保存先")
+    sp_batch.add_argument("--response-dir", help="各response bodyの保存先ディレクトリ")
+    sp_batch.add_argument("--continue-on-error", action="store_true", help="1件失敗しても後続を続行")
+    sp_batch.set_defaults(func=_cmd_contact_batch)
 
     return p
 
