@@ -62,6 +62,7 @@ jobs:
               ('Portfolio Evolution', 'portfolio-evolution-daily.yml', 360),
               ('Senju Self Evolution', 'senju-autonomous-improver.yml', 120),
               ('R&D x Senju Coupling', 'rnd-senju-coupled-loop.yml', 180),
+              ('MADLAB Evolution', 'madlab-world-evolution.yml', 180),
           ]
 
           now = dt.datetime.now(dt.timezone.utc)
@@ -202,7 +203,7 @@ jobs:
               })
 
           result = {
-              'schema': 'the-world-evolution-watchdog/v3',
+              'schema': 'the-world-evolution-watchdog/v4',
               'checked_at': now.isoformat(),
               'repository': repo,
               'default_branch': base,
@@ -233,7 +234,7 @@ jobs:
           PY
 
           {
-            echo '## THE WORLD Evolution Watchdog v3'
+            echo '## THE WORLD Evolution Watchdog v4'
             echo '```json'
             cat /tmp/world-evolution-watchdog.json
             echo '```'
