@@ -197,4 +197,3 @@ Session: `33309883945-1`
   - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode INDEPENDENT_RETEST: what alternate evidence path would contradict the current hypothesis?
-
