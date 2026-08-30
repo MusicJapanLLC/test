@@ -22,6 +22,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import math
 import time
 import urllib.parse
 from dataclasses import asdict, dataclass, field
@@ -54,6 +55,27 @@ CHECK_ORDER = (
 )
 
 
+def _strict_bool(value: object, *, field_name: str) -> bool:
+    if type(value) is not bool:
+        raise EngagementError(f"{field_name} must be a JSON boolean")
+    return value
+
+
+def _strict_int(value: object, *, field_name: str) -> int:
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise EngagementError(f"{field_name} must be a JSON integer")
+    return value
+
+
+def _strict_float(value: object, *, field_name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise EngagementError(f"{field_name} must be a JSON number")
+    result = float(value)
+    if not math.isfinite(result):
+        raise EngagementError(f"{field_name} must be finite")
+    return result
+
+
 def _utc(value: str, *, field_name: str) -> dt.datetime:
     try:
         parsed = dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
@@ -72,6 +94,8 @@ def _host(value: str) -> str:
         raise EngagementError("wildcard hosts are not allowed")
     if any(ch in host for ch in "/?#@"):
         raise EngagementError(f"target host must be an exact hostname: {value!r}")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in host):
+        raise EngagementError("target host contains control characters")
     try:
         return host.encode("idna").decode("ascii")
     except UnicodeError as exc:
@@ -84,6 +108,8 @@ def _path(value: str) -> str:
         raise EngagementError(f"target path must start with '/': {value!r}")
     if "#" in path:
         raise EngagementError("URL fragments are not allowed in target paths")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in path):
+        raise EngagementError("target path contains control characters")
     return path
 
 
@@ -96,11 +122,25 @@ class EngagementTarget:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, Any]) -> "EngagementTarget":
+        if not isinstance(raw, Mapping):
+            raise EngagementError("each target must be an object")
+        host_raw = raw.get("host", "")
+        scheme_raw = raw.get("scheme", "https")
+        path_raw = raw.get("base_path", "/")
+        label_raw = raw.get("label", "")
+        if not isinstance(host_raw, str):
+            raise EngagementError("target host must be a string")
+        if not isinstance(scheme_raw, str):
+            raise EngagementError("target scheme must be a string")
+        if not isinstance(path_raw, str):
+            raise EngagementError("target base_path must be a string")
+        if not isinstance(label_raw, str):
+            raise EngagementError("target label must be a string")
         return cls(
-            host=_host(str(raw.get("host", ""))),
-            scheme=str(raw.get("scheme", "https")).lower().strip(),
-            base_path=_path(str(raw.get("base_path", "/"))),
-            label=str(raw.get("label", "")).strip(),
+            host=_host(host_raw),
+            scheme=scheme_raw.lower().strip(),
+            base_path=_path(path_raw),
+            label=label_raw.strip(),
         )
 
     def validate(self, *, allow_http: bool) -> None:
@@ -131,12 +171,18 @@ class EngagementManifest:
 
     @classmethod
     def from_dict(cls, raw: Mapping[str, Any]) -> "EngagementManifest":
+        if not isinstance(raw, Mapping):
+            raise EngagementError("engagement manifest must be an object")
         targets_raw = raw.get("targets", [])
         if not isinstance(targets_raw, list):
             raise EngagementError("targets must be a list")
+        if any(not isinstance(item, Mapping) for item in targets_raw):
+            raise EngagementError("each target must be an object")
         checks_raw = raw.get("allowed_checks", sorted(SAFE_CHECKS))
         if not isinstance(checks_raw, list):
             raise EngagementError("allowed_checks must be a list")
+        if any(not isinstance(item, str) for item in checks_raw):
+            raise EngagementError("allowed_checks entries must be strings")
         manifest = cls(
             engagement_id=str(raw.get("engagement_id", "")).strip(),
             owner=str(raw.get("owner", "")).strip(),
@@ -144,11 +190,14 @@ class EngagementManifest:
             valid_from_utc=str(raw.get("valid_from_utc", "")).strip(),
             valid_until_utc=str(raw.get("valid_until_utc", "")).strip(),
             targets=tuple(EngagementTarget.from_dict(item) for item in targets_raw),
-            allowed_checks=frozenset(str(item).strip() for item in checks_raw if str(item).strip()),
-            max_requests_per_target=int(raw.get("max_requests_per_target", 5)),
-            max_rps=float(raw.get("max_rps", 1.0)),
-            allow_http=bool(raw.get("allow_http", False)),
-            destructive=bool(raw.get("destructive", False)),
+            allowed_checks=frozenset(item.strip() for item in checks_raw if item.strip()),
+            max_requests_per_target=_strict_int(
+                raw.get("max_requests_per_target", 5),
+                field_name="max_requests_per_target",
+            ),
+            max_rps=_strict_float(raw.get("max_rps", 1.0), field_name="max_rps"),
+            allow_http=_strict_bool(raw.get("allow_http", False), field_name="allow_http"),
+            destructive=_strict_bool(raw.get("destructive", False), field_name="destructive"),
             notes=str(raw.get("notes", "")).strip(),
         )
         manifest.validate()
