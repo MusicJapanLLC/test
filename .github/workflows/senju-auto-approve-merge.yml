@@ -1,12 +1,13 @@
 name: Senju Auto-Approve and Merge
 
-# Instantly approve and squash-merge any PR opened by the self-development loop.
-# No human review required for Senju-generated lab manifests.
+# No human review is required for genuine Senju-generated PRs. Provenance is
+# determined from both bot identity and Senju branch/title signals; a title alone
+# never grants merge authority.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   schedule:
-    - cron: "*/5 * * * *"  # sweep every 5 minutes
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -22,7 +23,7 @@ jobs:
       REPO: ${{ github.repository }}
 
     steps:
-      - name: Approve and merge Senju-generated PRs
+      - name: Approve and merge genuine Senju-generated PRs
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,23 +33,41 @@ jobs:
               owner, repo, state: 'open', per_page: 100
             });
 
-            const senjuTitles = [
-              'feat(senju)', 'auto-lab', 'Senju', 'senju'
+            const allowedAuthors = new Set([
+              'github-actions[bot]',
+              'github-actions',
+              'google-labs-jules[bot]'
+            ]);
+            const senjuBranchPrefixes = [
+              'senju/',
+              'feat/senju-',
+              'fix/senju-'
             ];
-            const senjuAuthors = [
-              'github-actions[bot]', 'github-actions'
-            ];
+
+            function hasSenjuSignal(pr) {
+              const title = pr.title || '';
+              const branch = pr.head?.ref || '';
+              return title.includes('[Senju]') ||
+                     title.includes('Senju advisor:') ||
+                     title.startsWith('feat(senju)') ||
+                     title.startsWith('fix(senju)') ||
+                     senjuBranchPrefixes.some(prefix => branch.startsWith(prefix));
+            }
 
             let merged = 0;
+            let skipped = 0;
             for (const pr of pulls.data) {
-              const isSenjuPR =
-                senjuAuthors.includes(pr.user.login) ||
-                senjuTitles.some(t => pr.title.includes(t));
-
-              if (!isSenjuPR) continue;
               if (pr.draft) continue;
 
-              // Check if already approved
+              const authorAllowed = allowedAuthors.has(pr.user.login);
+              const senjuSignal = hasSenjuSignal(pr);
+              if (!(authorAllowed && senjuSignal)) {
+                skipped++;
+                continue;
+              }
+
+              console.log(`Senju provenance accepted for PR #${pr.number}: author=${pr.user.login} branch=${pr.head.ref}`);
+
               const reviews = await github.rest.pulls.listReviews({
                 owner, repo, pull_number: pr.number
               });
@@ -61,7 +80,7 @@ jobs:
                   await github.rest.pulls.createReview({
                     owner, repo, pull_number: pr.number,
                     event: 'APPROVE',
-                    body: 'Auto-approved: Senju-generated lab manifest — no human review required.'
+                    body: 'Auto-approved: verified Senju automation provenance; no human review required.'
                   });
                   console.log(`✅ Approved PR #${pr.number}: ${pr.title}`);
                 } catch (e) {
@@ -69,17 +88,22 @@ jobs:
                 }
               }
 
-              // Attempt squash merge
               try {
                 const mergeResult = await github.rest.pulls.merge({
                   owner, repo, pull_number: pr.number,
                   merge_method: 'squash',
                   commit_title: pr.title,
                 });
-                console.log(`🚀 Merged PR #${pr.number}: ${pr.title}`);
-                merged++;
+                if (mergeResult.data.merged) {
+                  console.log(`🚀 Merged PR #${pr.number}: ${pr.title}`);
+                  merged++;
+                } else {
+                  console.log(`⏭️ PR #${pr.number} not merged: ${mergeResult.data.message}`);
+                  skipped++;
+                }
               } catch (e) {
                 console.log(`⏭️ PR #${pr.number} not ready yet: ${e.message}`);
+                skipped++;
               }
             }
-            console.log(`Total merged: ${merged}`);
+            console.log(`Done. merged=${merged} skipped=${skipped}`);
