@@ -39,7 +39,7 @@ def test_foundry_payload_allows_selected_improvement_to_enter_existing_lane() ->
         "senju-advisor-test",
     )
     text = payload["job"]["request"]["request_text"]
-    assert "existing engineering lane" in text
+    assert "authority already available" in text
     assert "detect overlap/staleness" in text
     assert "Improve tournament diagnostics" in text
     assert "do not claim success without evidence" in text
