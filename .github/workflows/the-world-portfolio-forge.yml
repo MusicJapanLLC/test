@@ -19,6 +19,7 @@ concurrency:
 permissions:
   contents: read
   actions: write
+  id-token: write
 
 jobs:
   portfolio-forge:
@@ -66,7 +67,7 @@ jobs:
             --markdown "$STATE_DIR/portfolio-watch.md"
           cat "$STATE_DIR/portfolio-watch.md" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Compare Previous -> Current and dedupe incidents
+      - name: Compare Previous -> Current, persist streak, and schedule escalation
         id: delta
         shell: bash
         run: |
@@ -89,29 +90,95 @@ jobs:
           improved=(cs >= ps + 5) or (cf < pf) or (previous_fp != 'healthy' and current_fp == 'healthy')
           regressed=(cs <= ps - 10) or (cf > pf)
           incident_changed=current_fp != previous_fp
-          repair_due=material and (incident_changed or regressed or not previous)
+          same_incident=material and previous_fp == current_fp
+          previous_streak=int(previous.get('incident_streak') or 0)
+          streak=(previous_streak + 1) if same_incident else (1 if material else 0)
+          escalation=''
+          repair_due=False
+          if material:
+              if incident_changed or regressed or not previous:
+                  escalation='initial'; repair_due=True
+              elif streak == 4:
+                  escalation='1h'; repair_due=True
+              elif streak == 12:
+                  escalation='3h'; repair_due=True
+              elif streak == 24:
+                  escalation='6h'; repair_due=True
+              elif streak > 24 and streak % 24 == 0:
+                  escalation=f'6h-{streak//24}'; repair_due=True
+          direct_check=next((c for c in current.get('checks',[]) if c.get('target_id') == 'musicjapan-ai-portfolio' and (not c.get('ok') or int(c.get('score') or 0) < 90)),None)
+          direct_repair=bool(repair_due and direct_check)
+          current['incident_streak']=streak
+          current['escalation_key']=escalation or None
+          current['repair_due']=repair_due
+          current['direct_repair_due']=direct_repair
+          with open(state+'/portfolio-watch.json','w',encoding='utf-8') as f:
+              json.dump(current,f,ensure_ascii=False,indent=2); f.write('\n')
           print(f'current_score={cs}')
           print(f'previous_score={ps}')
           print(f'current_fingerprint={current_fp}')
           print(f'previous_fingerprint={previous_fp}')
+          print(f'incident_streak={streak}')
+          print(f'escalation_key={escalation}')
           print('improved=' + ('true' if improved else 'false'))
           print('regressed=' + ('true' if regressed else 'false'))
           print('incident_changed=' + ('true' if incident_changed else 'false'))
           print('material=' + ('true' if material else 'false'))
           print('repair_due=' + ('true' if repair_due else 'false'))
+          print('direct_repair=' + ('true' if direct_repair else 'false'))
           print(f'failed={cf}')
           PY
 
-      - name: Feed a new or worsened incident into autonomous repair loops
+      - name: Feed new, worsened, or persistent incident into autonomous repair loops
         if: steps.delta.outputs.repair_due == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          echo "New/worsened live portfolio incident detected. Dispatching both portfolio prioritization and AI development loops." >> "$GITHUB_STEP_SUMMARY"
+          echo "Portfolio incident escalation=${{ steps.delta.outputs.escalation_key }} streak=${{ steps.delta.outputs.incident_streak }}. Dispatching prioritization and AI development loops." >> "$GITHUB_STEP_SUMMARY"
           gh workflow run portfolio-evolution-daily.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || true
           gh workflow run ai-dev-minute-foundry.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || true
 
-      - name: Report new or worsened portfolio incident to Slack
+      - name: Queue verified Music Japan repo repair through GitHub OIDC
+        if: steps.delta.outputs.direct_repair == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR"
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=ai-foundry-executor" > "$STATE_DIR/oidc.json"
+          python - <<'PY'
+          import json, os
+          state=os.environ['STATE_DIR']
+          token=json.load(open(state+'/oidc.json',encoding='utf-8'))['value']
+          open(state+'/oidc.token','w',encoding='utf-8').write(token)
+          cur=json.load(open(state+'/portfolio-watch.json',encoding='utf-8'))
+          check=next(c for c in cur.get('checks',[]) if c.get('target_id') == 'musicjapan-ai-portfolio')
+          evidence=(f"status={check.get('status')} latency_ms={check.get('latency_ms')} score={check.get('score')} "
+                    f"health_status={check.get('health_status')} error={check.get('error')}")
+          payload={
+            'action':'enqueue_repair',
+            'target_id':'musicjapan-ai-portfolio',
+            'incident_fingerprint':cur['incident_fingerprint'],
+            'escalation_key':cur.get('escalation_key') or 'initial',
+            'evidence':evidence,
+          }
+          json.dump(payload,open(state+'/repair-request.json','w',encoding='utf-8'),ensure_ascii=False)
+          PY
+          token="$(cat "$STATE_DIR/oidc.token")"
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: Bearer $token" \
+            -H 'Content-Type: application/json' \
+            --data-binary "@$STATE_DIR/repair-request.json" \
+            'https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/ai-foundry-executor-gateway' \
+            | tee "$STATE_DIR/repair-response.json"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, os
+          data=json.load(open(os.environ['STATE_DIR']+'/repair-response.json',encoding='utf-8'))
+          print(f"OIDC_DIRECT_REPAIR queued={data.get('queued')} deduped={data.get('deduped')} task={data.get('task_id')} job={data.get('job_id')}")
+          PY
+
+      - name: Report repair escalation to Slack
         if: steps.delta.outputs.repair_due == 'true'
         shell: bash
         run: |
@@ -127,15 +194,16 @@ jobs:
           state=os.environ['STATE_DIR']
           cur=json.load(open(state+'/portfolio-watch.json',encoding='utf-8'))
           nf=cur.get('next_focus') or {}
+          direct=' + direct repo repair queued' if cur.get('direct_repair_due') else ''
           text=(
-              '*THE WORLD PORTFOLIO — REPAIR LOOP STARTED*\n'
+              '*THE WORLD PORTFOLIO — REPAIR ESCALATION*\n'
               f"Product: {nf.get('name','UNKNOWN')}\n"
               f"Live: {nf.get('url','')}\n"
               f"Priority: {nf.get('priority','UNKNOWN')}\n"
               f"Evidence: {nf.get('reason','unknown')}\n"
               f"Portfolio score: {cur.get('portfolio_score','?')} / failed={cur.get('failed','?')} / degraded={cur.get('degraded','?')}\n"
-              f"Incident: {cur.get('incident_fingerprint','unknown')}\n"
-              'Action: Portfolio Evolution + AI Dev Foundry dispatched; duplicate incident dispatches are suppressed until state changes.\n'
+              f"Incident: {cur.get('incident_fingerprint','unknown')} / streak={cur.get('incident_streak',0)} / escalation={cur.get('escalation_key') or 'initial'}\n"
+              f"Action: Portfolio Evolution + AI Dev Foundry dispatched{direct}. Persistent incidents re-escalate at 1h / 3h / 6h and every 6h thereafter.\n"
               f"GitHub run: {os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
           )
           json.dump({'text':text},open(state+'/slack-incident.json','w',encoding='utf-8'),ensure_ascii=False)
@@ -198,7 +266,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${{ steps.delta.outputs.material }}" == "true" ]]; then
-            echo "DETECTOR=HEALTHY; TARGET_STATE=INCIDENT; repair loop has been routed without marking the detector itself broken." >> "$GITHUB_STEP_SUMMARY"
+            echo "DETECTOR=HEALTHY; TARGET_STATE=INCIDENT; escalation=${{ steps.delta.outputs.escalation_key }} streak=${{ steps.delta.outputs.incident_streak }}." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "DETECTOR=HEALTHY; TARGET_STATE=HEALTHY." >> "$GITHUB_STEP_SUMMARY"
           fi
