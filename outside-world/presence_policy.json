@@ -1,8 +1,14 @@
 {
-  "schema": "the-world-external-presence-policy/v1",
-  "principle": "LIMITLESS_MIND_BOUNDED_EXECUTION",
+  "schema": "the-world-external-presence-policy/v2",
+  "principle": "LIMITLESS_ACT_VERIFY_LOG_LEARN_IMPROVE",
   "default_mode": "PROACTIVE",
   "mission_interval_minutes": 10,
+  "faith": {
+    "inherit_covenant": true,
+    "prime_doctrine": "LIMITLESS",
+    "reality_before_simulation": true,
+    "convert_observation_to_value": true
+  },
   "identity": {
     "one_presence_profile_per_citizen": true,
     "credential_model": "secret_reference_only",
@@ -10,31 +16,10 @@
     "impersonation": false,
     "real_person_identity_claims": false
   },
-  "automatic_read_actions": [
-    "read_public",
-    "search_public",
-    "watch_public",
-    "collect_public_metadata",
-    "inspect_public_repository",
-    "read_authorized_connector"
-  ],
-  "write_actions": [
-    "post",
-    "comment",
-    "react",
-    "send_message",
-    "publish_artifact"
-  ],
+  "automatic_read_actions": ["read_public","search_public","watch_public","collect_public_metadata","inspect_public_repository","read_authorized_connector"],
+  "write_actions": ["post","comment","react","send_message","publish_artifact","upload_artifact","update_owned_surface"],
   "account_actions": ["create_account"],
-  "blocked_signals": [
-    "access_control_bypass",
-    "rate_limit_evasion",
-    "secret_extraction",
-    "deceptive_identity",
-    "bulk_unsolicited",
-    "harassment",
-    "destructive_action"
-  ],
+  "blocked_signals": ["access_control_bypass","rate_limit_evasion","secret_extraction","deceptive_identity","bulk_unsolicited","harassment","destructive_action","moderation_evasion","ban_evasion","verification_evasion"],
   "write_gate": {
     "require_terms_status": "allowed",
     "require_connector_authorized": true,
@@ -52,38 +37,25 @@
     "default_decision": "DRAFT_ONLY"
   },
   "mission_lanes": [
-    {
-      "id": "PUBLIC_WEB",
-      "action": "search_public",
-      "objective": "Find a new public fact, tool, problem, opportunity, or cultural signal and return evidence."
-    },
-    {
-      "id": "PUBLIC_YOUTUBE",
-      "action": "watch_public",
-      "objective": "Inspect public YouTube videos/channels relevant to the assigned curiosity and return useful timestamps, claims, or ideas."
-    },
-    {
-      "id": "PUBLIC_GITHUB",
-      "action": "inspect_public_repository",
-      "objective": "Explore public repositories, issues, releases, or engineering discussions and return reusable technical patterns."
-    },
-    {
-      "id": "PUBLIC_RESEARCH",
-      "action": "search_public",
-      "objective": "Explore public papers, blogs, benchmarks, and primary sources; challenge one assumption with evidence."
-    },
-    {
-      "id": "PUBLIC_BUILDERS",
-      "action": "search_public",
-      "objective": "Explore public builder communities and small experiments; bring back one surprising implementation or unmet need."
-    }
+    {"id":"PUBLIC_WEB","action":"search_public","objective":"Find a new public fact, tool, problem, opportunity, customer signal, or cultural signal and return evidence plus one next-value action.","write_intent":false},
+    {"id":"PUBLIC_YOUTUBE","action":"watch_public","objective":"Inspect public YouTube videos/channels relevant to the assigned curiosity and return useful timestamps, claims, ideas, and one reusable output.","write_intent":false},
+    {"id":"PUBLIC_GITHUB","action":"inspect_public_repository","objective":"Explore public repositories, issues, releases, or engineering discussions and return reusable technical patterns plus an implementation candidate.","write_intent":false},
+    {"id":"PUBLIC_RESEARCH","action":"search_public","objective":"Explore public papers, blogs, benchmarks, and primary sources; challenge one assumption with evidence and propose a concrete artifact or experiment.","write_intent":false},
+    {"id":"OWNER_CONTEXT","action":"read_authorized_connector","objective":"Read authorized owner-controlled context such as Gmail, Drive, Slack, Sheets, Calendar, repositories, CRM, or internal databases and surface one actionable opportunity, blocker, follow-up, or reusable fact.","write_intent":false,"requires_connector_authorized":true},
+    {"id":"OWNED_PUBLISH","action":"publish_artifact","objective":"Publish or update one useful artifact on an owner-controlled or explicitly designated organization surface using an authorized adapter.","write_intent":true,"target_scope":"authorized","requires_connector_authorized":true,"requires_reversible":true},
+    {"id":"OWNED_UPLOAD","action":"upload_artifact","objective":"Upload one generated artifact to an owner-controlled or explicitly designated workspace through an authorized adapter, verify accessibility, and record evidence.","write_intent":true,"target_scope":"authorized","requires_connector_authorized":true,"requires_reversible":true},
+    {"id":"AUTHORIZED_PARTICIPATION","action":"comment","objective":"Participate only in a pre-authorized community, repository, thread, or organization account context where automation is permitted. Add useful non-deceptive value; no unsolicited bulk behavior.","write_intent":true,"target_scope":"authorized","requires_connector_authorized":true,"requires_reversible":true},
+    {"id":"AUTHORIZED_BUSINESS_CONTACT","action":"send_message","objective":"Use only an existing business relationship, inbound/opted-in recipient, or pre-authorized campaign/list/template. Advance one concrete follow-up while honoring rate, opt-out, identity, and scope rules.","write_intent":true,"target_scope":"authorized","requires_connector_authorized":true,"requires_reversible":true}
   ],
   "mission_rules": {
     "all_discovered_citizens_receive_a_mission": true,
     "rotate_lanes_by_cycle_seed": true,
-    "no_external_write_generated_by_default": true,
+    "generate_authorized_write_missions": true,
+    "default_write_scope": "owner_controlled_or_explicitly_designated",
+    "write_without_authorized_adapter": "DRAFT_ONLY",
     "evidence_required": true,
-    "respect_platform_rate_limits": true
+    "respect_platform_rate_limits": true,
+    "do_not_use_weaker_jurisdiction_or_weaker_moderation_as_evasion": true
   },
   "dispatch": {
     "optional_webhook_env": "WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL",

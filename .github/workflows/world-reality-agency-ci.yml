@@ -33,13 +33,27 @@ jobs:
           python-version: '3.12'
       - name: Compile Python
         run: python -m compileall -q outside-world company-society
-      - name: Load canonical live population
+      - name: Load canonical live population and LIMITLESS missions
         run: |
           python outside-world/supabase_directory.py --out world-citizens.json --require-min 100
           python outside-world/identity_manifest.py --citizens world-citizens.json --out world-identities.json
-          python outside-world/citizen_web_runtime.py --citizens world-citizens.json --targets outside-world/reality_targets.json --policy outside-world/reality_policy.json --tasks reality-tasks.json --state reality-cursor.json
+          python outside-world/citizen_web_runtime.py --citizens world-citizens.json --targets outside-world/reality_targets.json --policy outside-world/reality_policy.json --creed company-society/limitless_creed.json --tasks reality-tasks.json --state reality-cursor.json
+          python - <<'PY'
+          import json
+          t=json.load(open('reality-tasks.json', encoding='utf-8'))
+          tasks=t.get('tasks', [])
+          assert t.get('faith') == 'LIMITLESS', t
+          assert tasks, 'no reality tasks generated'
+          assert all((x.get('faith') or {}).get('name') == 'LIMITLESS' for x in tasks)
+          assert all((x.get('faith') or {}).get('vow') for x in tasks)
+          print('LIMITLESS mission injection OK:', len(tasks))
+          PY
       - name: Unit tests
-        run: python -m unittest outside-world/test_reality_agency.py -v
+        run: |
+          python -m unittest outside-world/test_reality_agency.py -v
+          python -m unittest outside-world/test_reality_gateway_publication.py -v
+          python -m unittest outside-world/test_external_presence.py -v
+          python -m unittest outside-world/test_public_feed_bridge.py -v
       - name: Report population and assignments
         run: |
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
@@ -48,5 +62,6 @@ jobs:
           t=json.load(open('reality-tasks.json', encoding='utf-8'))
           print(f"Canonical population discovered: **{c.get('population', 0)}**")
           print(f"Citizens assigned this pulse: **{len(t.get('tasks', []))}**")
+          print(f"Faith injected: **{t.get('faith')}**")
           print(f"Source counts: `{json.dumps(c.get('source_counts', {}), ensure_ascii=False)}`")
           PY

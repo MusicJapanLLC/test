@@ -5,11 +5,13 @@ A bounded GitHub-native watchdog that keeps the existing autonomous workers
 alive across the default branch *and* recently active feature branches.
 
 Recovery ladder:
-1. detect latest failure per active branch,
-2. rerun transient/first-attempt failures,
-3. route persistent failures to the bounded TOMOKI/FORGE repair executor,
-4. keep stale default-branch workers awake,
-5. emit auditable evidence for every action.
+1. enforce current-HEAD freshness for workflows explicitly marked as required,
+2. detect latest failure per active branch,
+3. if the branch HEAD moved beyond the failing SHA, revalidate current HEAD,
+4. rerun transient/first-attempt failures on the same SHA,
+5. route persistent current-HEAD failures to bounded TOMOKI/FORGE repair,
+6. keep stale default-branch workers awake,
+7. emit auditable evidence for every action.
 
 The kernel never edits source code itself and never mutates secrets, repository
 permissions, billing, external targets, or third-party systems.
@@ -127,6 +129,12 @@ def _latest_run(workflow: str, ref: str) -> dict[str, Any] | None:
     return runs[0] if runs else None
 
 
+def _branch_head_sha(ref: str) -> str:
+    encoded = urllib.parse.quote(ref, safe="")
+    data = _json("GET", f"/branches/{encoded}")
+    return str(((data.get("commit") or {}).get("sha")) or "")
+
+
 def _dispatch(workflow: str, ref: str, inputs: dict[str, str] | None = None) -> None:
     payload: dict[str, Any] = {"ref": ref}
     if inputs:
@@ -156,6 +164,8 @@ def load_plan(path: str) -> dict[str, Any]:
         stale = int(row.get("stale_minutes", 0))
         if stale < 15:
             raise ValueError(f"stale_minutes too aggressive for {wf}")
+        if bool(row.get("require_current_head", False)) and not bool(row.get("autostart", True)):
+            raise ValueError(f"require_current_head requires autostart for {wf}")
     repair = str(data.get("repair_workflow") or "")
     if repair and repair not in seen:
         raise ValueError("repair_workflow must also be present in workers allowlist")
@@ -172,6 +182,13 @@ def _latest_by_branch(runs: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return out
 
 
+def _needs_head_revalidation(run: dict[str, Any] | None, current_sha: str) -> bool:
+    if not run or not current_sha:
+        return False
+    run_sha = str(run.get("head_sha") or "")
+    return bool(run_sha and run_sha != current_sha)
+
+
 def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None) -> dict[str, Any]:
     ref = ref or str(plan.get("default_ref") or DEFAULT_REF)
     max_actions = max(0, min(8, int(plan.get("max_dispatches_per_pulse", 5))))
@@ -185,6 +202,16 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
     repair_triggered = False
     now = datetime.now(timezone.utc)
     rows = sorted(plan["workers"], key=lambda r: (-int(r.get("priority", 0)), str(r.get("workflow", ""))))
+    branch_heads: dict[str, str] = {}
+
+    def branch_head(branch: str) -> str:
+        if branch not in branch_heads:
+            try:
+                branch_heads[branch] = _branch_head_sha(branch)
+            except Exception as exc:
+                branch_heads[branch] = ""
+                errors.append({"branch": branch, "error": f"branch HEAD lookup failed: {type(exc).__name__}: {exc}"[:1000]})
+        return branch_heads[branch]
 
     def trigger_repair(source_workflow: str, branch: str, run_id: int | None) -> tuple[str, str]:
         nonlocal actions_used, repair_triggered
@@ -206,6 +233,25 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
             )
             return "DISPATCH_REPAIR", "ERROR"
 
+    def revalidate(workflow: str, branch: str, run_id: int | None, action_name: str) -> tuple[str, str]:
+        nonlocal actions_used
+        if not apply_actions or actions_used >= max_actions:
+            return action_name, "WAITING"
+        try:
+            _dispatch(workflow, branch)
+            actions_used += 1
+            return action_name, "REQUESTED"
+        except Exception as exc:
+            errors.append(
+                {
+                    "workflow": workflow,
+                    "branch": branch,
+                    "run_id": run_id,
+                    "error": f"current-HEAD revalidation dispatch failed: {type(exc).__name__}: {exc}"[:1000],
+                }
+            )
+            return action_name, "ERROR"
+
     for cfg in rows:
         workflow = str(cfg["workflow"])
         name = str(cfg.get("name") or workflow)
@@ -213,6 +259,7 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
         priority = int(cfg.get("priority", 0))
         autostart = bool(cfg.get("autostart", True))
         recover_failures = bool(cfg.get("recover_failures", True))
+        require_current_head = bool(cfg.get("require_current_head", False))
         director_min = int(cfg.get("director_min_interval_minutes", stale_minutes))
         try:
             recent = _recent_runs(workflow, per_page=30)
@@ -235,8 +282,31 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
             )
 
             should_act = apply_actions and actions_used < max_actions
-            if should_act and recover_failures and state_name == "FAILED" and state.run_id is not None:
-                if state.run_attempt < repair_after:
+            required_head_handled = False
+            if (
+                should_act
+                and require_current_head
+                and run is not None
+                and str(run.get("status") or "") == "completed"
+            ):
+                current_sha = branch_head(ref)
+                if _needs_head_revalidation(run, current_sha):
+                    state.action, state.action_result = revalidate(
+                        workflow, ref, state.run_id, "REVALIDATE_REQUIRED_HEAD"
+                    )
+                    required_head_handled = True
+
+            if (
+                not required_head_handled
+                and should_act
+                and recover_failures
+                and state_name == "FAILED"
+                and state.run_id is not None
+            ):
+                current_sha = branch_head(ref)
+                if _needs_head_revalidation(run, current_sha):
+                    state.action, state.action_result = revalidate(workflow, ref, state.run_id, "REVALIDATE_HEAD")
+                elif state.run_attempt < repair_after:
                     _rerun_failed(state.run_id)
                     state.action = "RERUN_FAILED"
                     state.action_result = "REQUESTED"
@@ -248,7 +318,12 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
                     actions_used += 1
                 else:
                     state.action, state.action_result = trigger_repair(workflow, ref, state.run_id)
-            elif should_act and autostart and state_name in {"STALE", "MISSING"}:
+            elif (
+                not required_head_handled
+                and should_act
+                and autostart
+                and state_name in {"STALE", "MISSING"}
+            ):
                 _dispatch(workflow, ref)
                 state.action = "WAKE_STALE"
                 state.action_result = "REQUESTED"
@@ -269,19 +344,28 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
                     continue
                 attempt = int(branch_run.get("run_attempt") or 1)
                 run_id = int(branch_run["id"])
+                current_sha = branch_head(branch)
+                stale_sha = _needs_head_revalidation(branch_run, current_sha)
                 incident = {
                     "worker": name,
                     "workflow": workflow,
                     "branch": branch,
                     "run_id": run_id,
                     "run_attempt": attempt,
+                    "failing_sha": str(branch_run.get("head_sha") or ""),
+                    "current_branch_sha": current_sha,
+                    "stale_failure_sha": stale_sha,
                     "age_minutes": age,
                     "state": branch_state,
                     "action": "NONE",
                     "action_result": "NONE",
                 }
                 if apply_actions and actions_used < max_actions:
-                    if attempt < repair_after:
+                    if stale_sha:
+                        incident["action"], incident["action_result"] = revalidate(
+                            workflow, branch, run_id, "REVALIDATE_BRANCH_HEAD"
+                        )
+                    elif attempt < repair_after:
                         try:
                             _rerun_failed(run_id)
                             incident["action"] = "RERUN_FAILED_BRANCH"
@@ -323,7 +407,12 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
             )
 
     material_states = {"FAILED", "STALE", "MISSING", "ERROR", "DEGRADED"}
-    persistent = sum(int(i.get("run_attempt", 0)) >= repair_after for i in incidents)
+    persistent = sum(
+        int(i.get("run_attempt", 0)) >= repair_after and not bool(i.get("stale_failure_sha"))
+        for i in incidents
+    )
+    revalidations = sum(str(i.get("action") or "").startswith("REVALIDATE") for i in incidents)
+    revalidations += sum(str(s.action or "").startswith("REVALIDATE") for s in states)
     material = bool(actions_used or errors or incidents or any(s.state in material_states for s in states))
     summary = {
         "healthy": sum(s.state == "HEALTHY" for s in states),
@@ -334,11 +423,12 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
         "error": sum(s.state == "ERROR" for s in states),
         "branch_incidents": len(incidents),
         "persistent_branch_incidents": persistent,
+        "head_revalidations": revalidations,
         "actions": actions_used,
         "repair_triggered": repair_triggered,
     }
     return {
-        "schema": "the-world-realtime-pulse/v2",
+        "schema": "the-world-realtime-pulse/v3",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "repository": REPO,
         "ref": ref,
@@ -351,6 +441,8 @@ def collect(plan: dict[str, Any], *, apply_actions: bool, ref: str | None = None
         "external_effect_policy": {
             "allowed": [
                 "dispatch_or_rerun_allowlisted_owned_github_workflows",
+                "enforce_current_head_for_required_internal_validation_lanes",
+                "revalidate_latest_owned_branch_head_before_repair",
                 "route_persistent_internal_ci_failures_to_bounded_repair_executor",
                 "emit_internal_evidence_and_reports",
             ],
@@ -377,6 +469,7 @@ def render_markdown(pulse: dict[str, Any]) -> str:
             f"failed={s['failed']} missing={s['missing']} error={s['error']}"
         ),
         f"- active-branch incidents={s['branch_incidents']} persistent={s['persistent_branch_incidents']}",
+        f"- latest-HEAD revalidations: **{s['head_revalidations']}**",
         f"- autonomous actions this pulse: **{s['actions']}** / repair_triggered={s['repair_triggered']}",
         "",
         "## Default-branch workers",
@@ -391,17 +484,17 @@ def render_markdown(pulse: dict[str, Any]) -> str:
         for i in pulse["incidents"]:
             lines.append(
                 f"- **{i['worker']}** `{i['branch']}` run={i['run_id']} attempt={i['run_attempt']} "
-                f"action={i['action']} {i['action_result']}"
+                f"stale_sha={i.get('stale_failure_sha')} action={i['action']} {i['action_result']}"
             )
     if pulse.get("errors"):
         lines += ["", "## Errors"]
         for e in pulse["errors"]:
             suffix = f" branch={e.get('branch')} run={e.get('run_id')}" if e.get("branch") else ""
-            lines.append(f"- {e.get('workflow')}{suffix}: {e.get('error')}")
+            lines.append(f"- {e.get('workflow') or 'kernel'}{suffix}: {e.get('error')}")
     lines += [
         "",
         "## Boundary",
-        "This pulse can wake/rerun only allowlisted owned GitHub workflows and route persistent internal CI failures to the bounded repair executor. It cannot contact third parties, test credentials, target public/third-party assets, change secrets/permissions, or make purchases/financial commitments.",
+        "This pulse can wake/rerun only allowlisted owned GitHub workflows, enforce current-HEAD freshness for explicitly required internal validation lanes, revalidate the latest owned branch HEAD, and route persistent current-HEAD CI failures to the bounded repair executor. It cannot contact third parties, test credentials, target public/third-party assets, change secrets/permissions, or make purchases/financial commitments.",
     ]
     return "\n".join(lines) + "\n"
 

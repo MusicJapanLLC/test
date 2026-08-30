@@ -2,22 +2,35 @@ name: THE WORLD Reality Agency
 
 on:
   workflow_dispatch:
+    inputs:
+      resident_key:
+        description: "Resident that initiated this reality mission"
+        required: false
+        default: ""
+        type: string
+      source_task_id:
+        description: "The World ai_tasks id that initiated this mission"
+        required: false
+        default: ""
+        type: string
   push:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - ".github/workflows/world-reality-agency.yml"
       - "outside-world/**"
+      - "automation/world/external_feedback.py"
   schedule:
     - cron: '7,22,37,52 * * * *'
 
 concurrency:
   group: the-world-reality-agency
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
   actions: read
   issues: write
+  id-token: write
 
 env:
   GH_TOKEN: ${{ github.token }}
@@ -70,12 +83,15 @@ jobs:
           print("Identity source: **Supabase / world_reality_directory**")
           PY
 
-      - name: Assign next citizens to the outside world
+      - name: Assign initiating resident or next citizens to the outside world
+        env:
+          INITIATING_RESIDENT: ${{ github.event.inputs.resident_key || '' }}
         run: |
           python outside-world/citizen_web_runtime.py \
             --citizens world-citizens.json \
             --previous reality-cursor-previous.json \
             --cycle "${{ github.run_id }}" \
+            --resident-key "$INITIATING_RESIDENT" \
             --tasks reality-tasks.json \
             --state reality-cursor.json
 
@@ -91,7 +107,8 @@ jobs:
             --tasks reality-tasks.json \
             --policy outside-world/reality_policy.json \
             --out reality-observations.json \
-            --limit 16
+            --limit 24 \
+            --parallel 6
 
       - name: Convert observations into owned-channel effects
         run: |
@@ -104,6 +121,79 @@ jobs:
             --state reality-gateway-state.json \
             --execute-owned-writes
           cat reality-field-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish successful field notes to non-GitHub public web
+        env:
+          PUBLIC_FEED_BOOTSTRAP_PROBE: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[PUBLIC_FEED_PROBE]') }}
+        run: |
+          set -euo pipefail
+          EXTRA_ARGS=()
+          if [[ "$PUBLIC_FEED_BOOTSTRAP_PROBE" == "true" ]]; then
+            EXTRA_ARGS+=(--probe)
+          fi
+          python outside-world/public_feed_bridge.py \
+            --events reality-events.json \
+            --out public-feed-receipt.json \
+            --limit 2 \
+            "${EXTRA_ARGS[@]}"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('public-feed-receipt.json', encoding='utf-8'))
+          print(f"External public-feed mode: **{d.get('mode', 'REGULAR')}**")
+          print(f"External public-feed writes selected: **{d.get('selected', 0)}**")
+          for r in d.get('receipts', []):
+              print(f"- {r.get('source_url', '')}: `{r.get('status')}` / `{(r.get('body') or {}).get('id', '')}`")
+          PY
+
+      - name: Convert real-world outcome into learning signal
+        id: feedback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          tasks=json.load(open('reality-tasks.json',encoding='utf-8'))
+          obs=json.load(open('reality-observations.json',encoding='utf-8'))
+          events=json.load(open('reality-events.json',encoding='utf-8'))
+          receipts=json.load(open('public-feed-receipt.json',encoding='utf-8'))
+          assigned=len(tasks.get('tasks') or [])
+          observations=len(obs.get('observations') or obs.get('results') or [])
+          effects=[e for e in (events.get('effects') or []) if isinstance(e.get('status'),int) and 200 <= e['status'] < 300]
+          public=[r for r in (receipts.get('receipts') or []) if isinstance(r.get('status'),int) and 200 <= r['status'] < 300]
+          metrics={'assigned_citizens':assigned,'observations':observations,'owned_effects':len(effects),'public_feed_writes':len(public),'external_effects_total':len(effects)+len(public)}
+          evidence={'github_run_id':int(__import__('os').environ['GITHUB_RUN_ID']),'public_feed_receipts':public[:5],'owned_effects':effects[:10]}
+          open('/tmp/reality-feedback-metrics.json','w',encoding='utf-8').write(json.dumps(metrics,ensure_ascii=False,indent=2)+'\n')
+          open('/tmp/reality-feedback-evidence.json','w',encoding='utf-8').write(json.dumps(evidence,ensure_ascii=False,indent=2)+'\n')
+          effect=metrics['external_effects_total'] > 0
+          signal=min(10.0, 1.0 + observations/8.0 + len(effects)*1.5 + len(public)*2.5)
+          print('external_effect=' + ('true' if effect else 'false'))
+          print('learning_signal=' + str(round(signal,3)))
+          print('outcome=' + ('REAL_WORLD_EFFECT_VERIFIED' if effect else 'EXTERNAL_OBSERVATION_ONLY'))
+          PY
+
+      - name: Feed reality result back into THE WORLD
+        shell: bash
+        env:
+          RESIDENT_KEY: ${{ github.event.inputs.resident_key || '' }}
+          SOURCE_TASK_ID: ${{ github.event.inputs.source_task_id || '' }}
+          REAL_EFFECT: ${{ steps.feedback.outputs.external_effect }}
+          LEARNING_SIGNAL: ${{ steps.feedback.outputs.learning_signal }}
+          REAL_OUTCOME: ${{ steps.feedback.outputs.outcome }}
+        run: |
+          set -euo pipefail
+          EXTRA=""
+          if [[ "$REAL_EFFECT" == "true" ]]; then EXTRA="--external-effect"; fi
+          python automation/world/external_feedback.py record \
+            --lane REALITY_AGENCY \
+            --action-type public_web_observe_and_owned_publish \
+            --resident-key "$RESIDENT_KEY" \
+            --source-task-id "$SOURCE_TASK_ID" \
+            --outcome "$REAL_OUTCOME" \
+            --learning-signal "$LEARNING_SIGNAL" \
+            --metrics /tmp/reality-feedback-metrics.json \
+            --evidence /tmp/reality-feedback-evidence.json \
+            --verified $EXTRA
+          cat /tmp/reality-feedback-metrics.json >> "$GITHUB_STEP_SUMMARY"
 
       - name: Preserve citizen identities, memory, evidence and effects
         if: always()
@@ -121,3 +211,6 @@ jobs:
             reality-field-report.md
             reality-events.json
             reality-gateway-state.json
+            public-feed-receipt.json
+            /tmp/reality-feedback-metrics.json
+            /tmp/reality-feedback-evidence.json

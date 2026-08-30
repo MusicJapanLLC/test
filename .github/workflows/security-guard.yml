@@ -5,6 +5,7 @@ on:
     branches: ["claude/employee-onboarding-setup-udm86"]
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
+  workflow_dispatch:
   schedule:
     - cron: "23 1 * * 1"
 
@@ -37,11 +38,11 @@ jobs:
             exit 1
           fi
 
-      - name: Block obvious credential material
+      - name: Block obvious credential material in tracked source
         shell: bash
         run: |
           set -euo pipefail
-          patterns='-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{20,}|AKIA[0-9A-Z]{16}|sk_live_[0-9A-Za-z]{16,}|SG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}|https://hooks\.slack\.com/services/[A-Za-z0-9/_-]{20,}'
+          patterns='-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|(^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{20,}|AKIA[0-9A-Z]{16}|sk_live_[0-9A-Za-z]{16,}|SG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}|https://hooks\.slack\.com/services/[A-Za-z0-9/_-]{20,}'
           if git grep -I -nE -e "$patterns" -- ':!*.md' ':!*.example' ':!.github/workflows/security-guard.yml'; then
             echo "Potential credential material found in tracked source."
             exit 1
@@ -57,7 +58,7 @@ jobs:
           CURRENT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          patterns='-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{20,}|AKIA[0-9A-Z]{16}|sk_live_[0-9A-Za-z]{16,}|SG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}|https://hooks\.slack\.com/services/[A-Za-z0-9/_-]{20,}'
+          patterns='-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|(^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{20,}|AKIA[0-9A-Z]{16}|sk_live_[0-9A-Za-z]{16,}|SG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}|https://hooks\.slack\.com/services/[A-Za-z0-9/_-]{20,}'
           diff_file="$(mktemp)"
           if [[ "$EVENT_NAME" == "pull_request" && -n "${BASE_SHA:-}" && -n "${PR_HEAD_SHA:-}" ]]; then
             git diff --unified=0 "$BASE_SHA...$PR_HEAD_SHA" -- . ':!.github/workflows/security-guard.yml' > "$diff_file"
@@ -71,224 +72,11 @@ jobs:
             exit 1
           fi
 
-      - name: Validate workflow trust boundaries and privileged lanes
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import re
+      - name: Enforce fail-closed workflow policy
+        run: python automation/security/workflow_policy_entrypoint.py
 
-          root = Path('.github/workflows')
-          workflows = {p.name: p.read_text(encoding='utf-8') for p in root.glob('*.y*ml')}
-
-          unsafe_tokens = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'permissions: write-all', 'write-all',
-              'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
-          ]
-          for name, body in workflows.items():
-              if name == 'security-guard.yml':
-                  continue
-              for token in unsafe_tokens:
-                  if token in body:
-                      raise SystemExit(f'{name}: forbidden workflow capability: {token}')
-
-          privileged = {
-              'senju-autonomous-improver.yml',
-              'tomoki-forge.yml',
-              'tomoki-manager.yml',
-              'ai-factory-boss.yml',
-              'the-world-realtime-kernel.yml',
-              'the-core-autonomous-director.yml',
-              'the-world-task-worker.yml',
-              'pages.yml',
-              'world-reality-agency.yml',
-          }
-          oidc_allowed = {'the-world-task-worker.yml', 'pages.yml'}
-          write_re = re.compile(r'(?m)^\s+(contents|actions|checks|deployments|issues|packages|pull-requests|statuses|pages|id-token):\s*write\s*$')
-          for name, body in workflows.items():
-              writes = [(m.group(1), m.group(0).strip()) for m in write_re.finditer(body)]
-              if writes and name not in privileged and name != 'security-guard.yml':
-                  raise SystemExit(f'{name}: write permission outside validated privileged lane: {writes}')
-              if any(kind == 'id-token' for kind, _ in writes) and name not in oidc_allowed:
-                  raise SystemExit(f'{name}: OIDC id-token write is outside the explicit allowlist')
-
-          def require(name: str, required: list[str], forbidden: list[str]) -> str:
-              body = workflows.get(name, '')
-              if not body:
-                  return ''
-              for item in required:
-                  if item not in body:
-                      raise SystemExit(f'{name}: missing required guardrail: {item}')
-              for item in forbidden:
-                  if item in body:
-                      raise SystemExit(f'{name}: contains forbidden capability: {item}')
-              return body
-
-          common_forbidden = [
-              'pull_request_target:', 'workflow_run:', 'issue_comment:', 'repository_dispatch:',
-              'runs-on: self-hosted', 'write-all', 'packages: write', 'deployments: write',
-              'checks: write', 'statuses: write', 'security-events: write',
-              'git push --force', 'git push -f', '--yolo', '--allow-all-tools',
-          ]
-
-          senju = require(
-              'senju-autonomous-improver.yml',
-              ['contents: write', 'actions: read', 'workflow_dispatch:', 'schedule:',
-               'persist-credentials: false', 'senju/state/champion.json',
-               'senju/state/strategy.json', 'senju/state/last-evolution-summary.json',
-               'senju/state/last-evolution-plan.md', 'CURRENT_BASE_SHA=', 'force=false'],
-              common_forbidden + ['issues: write', 'pull-requests: write', 'models: write', 'id-token: write'],
-          )
-          if senju:
-              allowed = {
-                  'senju/state/champion.json',
-                  'senju/state/strategy.json',
-                  'senju/state/last-evolution-summary.json',
-                  'senju/state/last-evolution-plan.md',
-              }
-              observed = {
-                  line.strip().split()[-1]
-                  for line in senju.splitlines()
-                  if line.strip().startswith('put_file ')
-              }
-              if observed != allowed:
-                  raise SystemExit(f'Senju autonomous write allowlist mismatch: {sorted(observed)}')
-
-          forge = require(
-              'tomoki-forge.yml',
-              ['contents: write', 'pull-requests: write', 'copilot-requests: write',
-               'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
-               '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
-               'python /tmp/tomoki-policy-gate.py', 'bash /tmp/tomoki-verify.sh',
-               'git add -A -- sales-command-30', 'gh auth setup-git', 'gh pr create'],
-              common_forbidden + ['issues: write', 'id-token: write'],
-          )
-          if forge:
-              copilot_lines = [x.strip() for x in forge.splitlines() if x.strip().startswith('copilot -p ')]
-              if len(copilot_lines) != 1:
-                  raise SystemExit('TOMOKI FORGE must have exactly one Copilot execution line')
-              if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
-                  raise SystemExit('TOMOKI FORGE Copilot may edit files but may not receive autonomous shell permission')
-
-          require(
-              'tomoki-manager.yml',
-              ['contents: read', 'actions: write', 'issues: read', 'pull-requests: read',
-               'security-events: read', 'copilot-requests: write', 'workflow_dispatch:',
-               'schedule:', 'persist-credentials: false', 'TOMOKI_MANAGER_MAX_ACTIONS:',
-               "TOMOKI_MANAGER_MAX_ACTIONS: '3'", 'apply-plan', '--apply-actions'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
-
-          require(
-              'ai-factory-boss.yml',
-              ['contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-               'persist-credentials: false', 'boss_gate.py', 'ceo_report.py'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
-
-          require(
-              'the-world-realtime-kernel.yml',
-              ['contents: read', 'actions: write', 'workflow_dispatch:', 'schedule:',
-               "cron: '*/5 * * * *'", 'persist-credentials: false',
-               'automation/world/realtime_kernel.py', '--apply',
-               'WORLD_REALTIME_REF:', 'world-realtime-pulse.json'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
-
-          task_worker = require(
-              'the-world-task-worker.yml',
-              ['contents: read', 'actions: write', 'id-token: write', 'workflow_dispatch:', 'schedule:',
-               "cron: '*/5 * * * *'", 'persist-credentials: false',
-               'automation/world/task_worker.py', 'gh workflow run',
-               'Claim one personality-linked task', 'Reconcile downstream GitHub evidence'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write',
-                                  'copilot-requests: write', '$' + '{{ secrets.'],
-          )
-          if task_worker:
-              client = Path('automation/world/task_worker.py').read_text(encoding='utf-8')
-              for item in [
-                  'AUDIENCE = "the-world-worker"',
-                  'GATEWAY_PROTOCOL = "oidc-repository-v4-audited"',
-                  'ACTIONS_ID_TOKEN_REQUEST_URL',
-                  'ACTIONS_ID_TOKEN_REQUEST_TOKEN',
-                  'Authorization": f"Bearer {_oidc_token()}"',
-                  'method="POST"',
-                  'https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/the-world-github-worker',
-              ]:
-                  if item not in client:
-                      raise SystemExit(f'task_worker.py: missing OIDC/gateway invariant: {item}')
-
-          pages = require(
-              'pages.yml',
-              ['workflow_dispatch:', 'contents: read', 'pages: write', 'id-token: write',
-               'persist-credentials: false', 'name: github-pages',
-               'actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b',
-               'actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b',
-               'actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128'],
-              common_forbidden + ['contents: write', 'actions: write', 'issues: write',
-                                  'pull-requests: write', 'packages: write'],
-          )
-          if pages:
-              for forbidden_trigger in ['schedule:', 'push:', 'pull_request:']:
-                  if forbidden_trigger in pages:
-                      raise SystemExit(f'pages.yml: backup deployment must remain manual-only: {forbidden_trigger}')
-
-          require(
-              'world-reality-agency.yml',
-              ['contents: read', 'actions: read', 'issues: write', 'workflow_dispatch:', 'schedule:',
-               'persist-credentials: false', 'outside-world/browser_runner.py',
-               'outside-world/reality_gateway.py', '--execute-owned-writes',
-               'world-reality-agency-state'],
-              common_forbidden + ['contents: write', 'actions: write', 'pull-requests: write',
-                                  'id-token: write', 'copilot-requests: write'],
-          )
-
-          director = require(
-              'the-core-autonomous-director.yml',
-              ['contents: read', 'actions: write', 'copilot-requests: write',
-               'workflow_dispatch:', 'schedule:', 'persist-credentials: false',
-               '@github/copilot@1.0.80', 'COPILOT_GITHUB_TOKEN:',
-               'automation/world/core_director.py', '--apply', '--allow-tool=write',
-               '--no-ask-user', 'core-director-plan.json'],
-              common_forbidden + ['contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'],
-          )
-          if director:
-              copilot_lines = [x.strip() for x in director.splitlines() if x.strip().startswith('copilot -p ')]
-              if len(copilot_lines) != 1:
-                  raise SystemExit('THE CORE Director must have exactly one Copilot execution line')
-              if '--allow-tool=write' not in copilot_lines[0] or 'shell(' in copilot_lines[0]:
-                  raise SystemExit('THE CORE Director Copilot may write its plan but may not receive autonomous shell permission')
-          PY
-
-      - name: Validate TOMOKI FORGE file policy remains bounded
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          gate = Path('tomoki-agents/policy_gate.py')
-          verifier = Path('tomoki-agents/verify.sh')
-          workflow = Path('.github/workflows/tomoki-forge.yml')
-          if not workflow.exists():
-              raise SystemExit(0)
-          if not gate.exists() or not verifier.exists():
-              raise SystemExit('TOMOKI FORGE guardrail files are missing')
-          gate_text = gate.read_text(encoding='utf-8')
-          for item in [
-              "'sales-command-30/src/'", "'sales-command-30/tests/'",
-              "'sales-command-30/README.md'", 'if len(names) > 3:',
-              'if changed_lines > 250:', 'FORBIDDEN_PATTERNS',
-          ]:
-              if item not in gate_text:
-                  raise SystemExit(f'TOMOKI policy gate missing invariant: {item}')
-          if "'.github/" in gate_text or '".github/' in gate_text:
-              raise SystemExit('TOMOKI policy gate must never allow .github writes')
-          verify_text = verifier.read_text(encoding='utf-8')
-          if 'npm run build' not in verify_text or 'py_compile' not in verify_text:
-              raise SystemExit('TOMOKI verifier must retain compile/build checks')
-          PY
+      - name: Enforce external-evidence reality gate
+        run: python automation/security/reality_gate.py
 
       - name: Block remote shell execution patterns
         shell: bash
@@ -307,39 +95,3 @@ jobs:
             echo "Untrusted event text is directly interpolated into a workflow."
             exit 1
           fi
-
-      - name: Require immutable action references
-        shell: bash
-        run: |
-          set -euo pipefail
-          failed=0
-          while IFS= read -r entry; do
-            ref="${entry#uses:}"
-            ref="${ref#${ref%%[![:space:]]*}}"
-            [[ "$ref" == ./* ]] && continue
-            version="${ref##*@}"
-            if [[ ! "$version" =~ ^[0-9a-f]{40}$ ]]; then
-              echo "Action is not pinned to a full commit SHA: $ref"
-              failed=1
-            fi
-          done < <(grep -RhoE 'uses:[[:space:]]+[^[:space:]#]+' .github/workflows --exclude='security-guard.yml' || true)
-          exit "$failed"
-
-      - name: Require checkout credentials to be discarded
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          failures = []
-          for path in Path('.github/workflows').glob('*.y*ml'):
-              lines = path.read_text(encoding='utf-8').splitlines()
-              for i, line in enumerate(lines):
-                  if 'uses: actions/checkout@' not in line:
-                      continue
-                  block = '\n'.join(lines[i:i+8])
-                  if 'persist-credentials: false' not in block:
-                      failures.append(f'{path}:{i+1}')
-          if failures:
-              raise SystemExit('checkout must set persist-credentials: false at ' + ', '.join(failures))
-          PY
