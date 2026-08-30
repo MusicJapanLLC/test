@@ -10,6 +10,7 @@ Arena の target_ref 検査とネットワーク egress を混同しない。
 - 研究モードでは抽象的な外部参照名をシミュレーション入力として扱えるが、
   それ自体はネットワーク transport を付与しない。
 - Arena の ScopeGuard を完全 no-op にする実装は提供しない。
+- target_ref の制御文字・前後空白・空 namespace を拒否し、文字列解釈の抜け道を減らす。
 """
 from __future__ import annotations
 
@@ -23,6 +24,7 @@ class ScopeViolation(RuntimeError):
 
 
 SIMULATED_SCHEME = "sim://"
+LABNET_SCHEME = "labnet:"
 
 
 def _is_lab_ip(host: str) -> bool:
@@ -31,6 +33,15 @@ def _is_lab_ip(host: str) -> bool:
     except ValueError:
         return False
     return ip.is_loopback or ip.is_private or ip.is_link_local
+
+
+def _has_control_chars(value: str) -> bool:
+    return any(ord(ch) < 0x20 or ord(ch) == 0x7F for ch in value)
+
+
+def _has_clean_payload(target_ref: str, prefix: str) -> bool:
+    payload = target_ref[len(prefix) :]
+    return bool(payload) and payload == payload.strip() and not _has_control_chars(payload)
 
 
 @dataclass
@@ -75,11 +86,25 @@ class ScopeGuard:
         if not target_ref:
             return "空の標的参照"
 
-        if target_ref.startswith(SIMULATED_SCHEME):
-            return None if self.policy.allow_simulated else "仮想標的が無効化されている"
+        if target_ref != target_ref.strip():
+            return "標的参照の前後空白は許可されていない"
 
-        if target_ref.startswith("labnet:"):
-            return None if self.policy.allow_private_network else "プライベートネット標的が無効化されている"
+        if _has_control_chars(target_ref):
+            return "標的参照に制御文字が含まれている"
+
+        if target_ref.startswith(SIMULATED_SCHEME):
+            if not self.policy.allow_simulated:
+                return "仮想標的が無効化されている"
+            if not _has_clean_payload(target_ref, SIMULATED_SCHEME):
+                return "仮想標的 namespace が空または不正"
+            return None
+
+        if target_ref.startswith(LABNET_SCHEME):
+            if not self.policy.allow_private_network:
+                return "プライベートネット標的が無効化されている"
+            if not _has_clean_payload(target_ref, LABNET_SCHEME):
+                return "labnet namespace が空または不正"
+            return None
 
         if target_ref in self.policy.allow_hosts:
             return None
