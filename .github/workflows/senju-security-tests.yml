@@ -1,0 +1,30 @@
+name: Senju Security Regression
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'senju/**'
+      - '.github/workflows/senju-security-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  labnet-ssrf-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install Senju test dependencies
+        run: python -m pip install -e './senju[dev]'
+      - name: Run LabNet SSRF regression
+        run: python -m pytest -q senju/tests/test_labnet_liveness.py

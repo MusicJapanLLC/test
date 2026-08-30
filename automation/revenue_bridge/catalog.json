@@ -1,0 +1,39 @@
+{
+  "schema": "revenue-bridge-catalog/v1",
+  "products": [
+    {
+      "id": "sales-command-30",
+      "name": "営業司令室 30",
+      "monthly_yen": 30000,
+      "setup_yen": 50000,
+      "product_spec": "sales-command-30/PRODUCT.md",
+      "sales_pack": "sales-command-30/SALES.md",
+      "security_evidence": "sales-command-30/SECURITY_BASELINE_EVIDENCE.md",
+      "buyer_outcomes": [
+        "追客漏れを減らす",
+        "次アクション忘れを減らす",
+        "営業KPIを一箇所で見る",
+        "既存のGmail/Calendar/Slackを捨てずに運用する",
+        "自動化を安全境界付きで運用する"
+      ],
+      "proof_mappings": {
+        "operations": "自動監視・復旧の運用証拠",
+        "security": "Secrets/権限/外部アクセスの安全境界とCI証拠",
+        "ai_evolution": "改善を本番へ出す前の評価・安定性検証",
+        "faith_to_value": "誠実な報告、約束遵守、相互扶助を運用品質に変換するルール"
+      },
+      "named_prospects": [
+        "株式会社Waku Lab",
+        "株式会社Lis",
+        "株式会社Pole Position",
+        "株式会社C.C",
+        "株式会社kanaDe",
+        "GH Lab.",
+        "Nleague",
+        "unveil",
+        "株式会社O-line",
+        "ONE HEART"
+      ]
+    }
+  ]
+}
