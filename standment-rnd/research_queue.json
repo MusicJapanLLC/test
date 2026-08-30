@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "R-001",
+      "title": "Daily exploited-vulnerability intelligence digest",
+      "type": "threat-intel",
+      "priority": 100,
+      "status": "queued",
+      "scope": "public-info-only",
+      "success_metric": "Produce an evidence-backed daily digest and defensive actions"
+    },
+    {
+      "id": "R-002",
+      "title": "Repository defensive-control maturity audit",
+      "type": "self-audit",
+      "priority": 95,
+      "status": "queued",
+      "scope": "own-repository",
+      "success_metric": "Measure and improve CI, dependency, code scanning and recovery controls"
+    },
+    {
+      "id": "R-003",
+      "title": "Security research process benchmark",
+      "type": "meta-research",
+      "priority": 80,
+      "status": "queued",
+      "scope": "internal",
+      "success_metric": "Track cycle time, evidence quality, reuse and portfolio output"
+    }
+  ]
+}
