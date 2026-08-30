@@ -87,19 +87,30 @@ jobs:
           python -m pip install pytest==9.1.1
           python -m pytest tests -q
 
-      - name: Verify isolation guard blocks public targets
+      - name: Verify ScopeGuard mode semantics
         working-directory: senju
         run: |
           set -euo pipefail
-          python -m senju.cli safety-check sim://ci-target
-          if python -m senju.cli safety-check 8.8.8.8; then
-            echo "SECURITY FAIL: public target was allowed" >&2
-            exit 1
-          fi
-          if python -m senju.cli safety-check https://example.com; then
-            echo "SECURITY FAIL: public URL was allowed" >&2
-            exit 1
-          fi
+          python - <<'PY'
+          from senju.safety import ScopeGuard, ScopeViolation, default_lab_policy, experimental_lab_policy
+
+          strict = ScopeGuard(default_lab_policy())
+          strict.check('sim://ci-target')
+          for ref in ('8.8.8.8', 'https://example.com', '10.0.0.1'):
+              try:
+                  strict.check(ref)
+              except ScopeViolation:
+                  pass
+              else:
+                  raise SystemExit(f'strict ScopeGuard unexpectedly allowed {ref}')
+
+          research = ScopeGuard(experimental_lab_policy())
+          for ref in ('sim://ci-target', '8.8.8.8', 'https://example.com', '10.0.0.1'):
+              research.check(ref)
+          if not research.policy.allow_abstract_external_refs:
+              raise SystemExit('research policy must accept abstract external refs')
+          print('ScopeGuard strict and research-mode semantics verified')
+          PY
 
       - name: Run closed-loop candidate tournament
         id: evolve
