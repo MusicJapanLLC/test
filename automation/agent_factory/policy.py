@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 ALLOWED_PREFIXES = (
+    "automation/ai_foundry/",
     "automation/world/",
     "automation/security/",
     "standment-security/",

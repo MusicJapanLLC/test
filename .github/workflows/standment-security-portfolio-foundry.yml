@@ -2,11 +2,13 @@ name: Standment Security Portfolio Foundry
 
 on:
   schedule:
-    - cron: '45 22 * * *' # 07:45 JST, after R&D x Senju and before daily value loop
+    - cron: '45 22 * * *' # 07:45 JST, after 06:50 planning and 07:20 R&D x Senju
   workflow_dispatch:
-  pull_request:
+  push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
+      - '.github/workflows/standment-security-portfolio-foundry.yml'
+      - '.github/workflows/standment-security-portfolio-rnd.yml'
       - 'automation/security/portfolio_rnd.py'
       - 'automation/security/test_portfolio_rnd.py'
       - 'standment-security/**'
@@ -15,7 +17,6 @@ on:
       - 'senju/scripts/apply_rnd_directive.py'
       - 'senju/scripts/shadow_selector.py'
       - 'senju/state/**'
-      - '.github/workflows/standment-security-portfolio-foundry.yml'
 
 permissions:
   contents: read
@@ -26,10 +27,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  GH_TOKEN: ${{ github.token }}
   RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+  PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
 
 jobs:
-  portfolio-rnd:
+  portfolio-foundry:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -43,7 +46,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify portfolio-first R&D contract
+      - name: Verify portfolio and Senju contracts
         run: |
           set -euo pipefail
           (cd automation/security && python -m unittest -v test_portfolio_rnd.py)
@@ -52,16 +55,66 @@ jobs:
           python -m json.tool standment-security/security_portfolio_program.json >/dev/null
           python -m json.tool value-lab/research_queue.json >/dev/null
 
-      - name: Rank Standment security portfolio gaps
+      - name: Restore today's upstream portfolio R&D plan
+        shell: bash
         run: |
           set -euo pipefail
-          python automation/security/portfolio_rnd.py \
-            --program standment-security/security_portfolio_program.json \
-            --portfolio PORTFOLIO.md \
-            --out reports/standment-security-foundry
-          cat reports/standment-security-foundry/daily.md >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p /tmp/portfolio-rnd-upstream reports/standment-security-foundry
+          gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Standment Security - Portfolio First R&D" \
+            --branch "$GITHUB_REF_NAME" \
+            --status success \
+            --limit 5 \
+            --json databaseId,createdAt,headSha,event \
+            > /tmp/portfolio-rnd-runs.json
 
-      - name: Convert top portfolio gap into bounded Senju directive
+          python - <<'PY'
+          import json, os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          runs=json.loads(Path('/tmp/portfolio-rnd-runs.json').read_text(encoding='utf-8'))
+          if not runs:
+              raise SystemExit('BLOCKED_UPSTREAM: no successful Standment Security - Portfolio First R&D run exists')
+          run=runs[0]
+          created=datetime.fromisoformat(str(run['createdAt']).replace('Z','+00:00'))
+          age=(datetime.now(timezone.utc)-created).total_seconds()/3600
+          if age > 8:
+              raise SystemExit(f'BLOCKED_STALE_UPSTREAM: latest successful planner is {age:.1f}h old')
+          with open(os.environ['GITHUB_ENV'],'a',encoding='utf-8') as fh:
+              fh.write(f"UPSTREAM_RND_RUN_ID={run['databaseId']}\n")
+              fh.write(f"UPSTREAM_RND_CREATED_AT={run['createdAt']}\n")
+          print(f"Using upstream planner run {run['databaseId']} created {run['createdAt']} age={age:.2f}h")
+          PY
+
+          # GITHUB_ENV becomes visible only to subsequent steps. Resolve the ID locally
+          # for this step as well so the upstream artifact can be downloaded immediately.
+          UPSTREAM_RND_RUN_ID="$(python -c "import json; print(json.load(open('/tmp/portfolio-rnd-runs.json', encoding='utf-8'))[0]['databaseId'])")"
+
+          gh run download "$UPSTREAM_RND_RUN_ID" \
+            --repo "$GITHUB_REPOSITORY" \
+            --dir /tmp/portfolio-rnd-upstream
+
+          DAILY="$(find /tmp/portfolio-rnd-upstream -path '*/daily.json' -print -quit)"
+          ITEM="$(find /tmp/portfolio-rnd-upstream -path '*/senju-research-item.json' -print -quit)"
+          [[ -n "$DAILY" && -n "$ITEM" ]] || { echo 'BLOCKED_UPSTREAM_ARTIFACTS: planner evidence incomplete' >&2; exit 1; }
+          cp "$DAILY" reports/standment-security-foundry/daily.json
+          cp "$ITEM" reports/standment-security-foundry/senju-research-item.json
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('reports/standment-security-foundry/daily.json').read_text(encoding='utf-8'))
+          assert d.get('portfolio_first') is True
+          assert (d.get('selected') or {}).get('id')
+          assert (d.get('delta') or {}).get('kind') in {
+              'BASELINE_CAPTURED','RESEARCH_REFOCUS','VERIFIED_PORTFOLIO_DELTA','NO_VERIFIED_DELTA'
+          }
+          print('Upstream chain verified:', d['selected']['id'], d['delta']['kind'])
+          PY
+
+      - name: Convert selected gap into bounded Senju directive
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -108,7 +161,7 @@ jobs:
             exit "$RC"
           fi
 
-      - name: Build daily evidence digest
+      - name: Build final daily evolution evidence
         if: always()
         run: |
           python - <<'PY'
@@ -122,16 +175,31 @@ jobs:
           audit=load('directive-audit.json')
           selection=load('senju-shadow/selection.json')
           selected=plan.get('selected') or {}
+          delta=plan.get('delta') or {}
           holdout=selection.get('holdout') or {}
+          material_delta=bool(delta.get('material_delta'))
           result={
-              'schema':'standment-security-portfolio-foundry-evidence/v1',
+              'schema':'standment-security-portfolio-foundry-evidence/v2',
               'generated_at':datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'),
+              'upstream_rnd_run_id':str(__import__('os').environ.get('UPSTREAM_RND_RUN_ID','')),
               'portfolio_first':bool(plan.get('portfolio_first')),
               'portfolio_track':selected.get('id'),
               'portfolio_title':selected.get('title'),
               'portfolio_status':selected.get('portfolio_status'),
               'evidence_ratio':selected.get('evidence_ratio'),
               'promotion_ready':bool(plan.get('promotion_ready')),
+              'delta_kind':delta.get('kind'),
+              'material_delta':material_delta,
+              'before':delta.get('before') or {},
+              'after':delta.get('after') or {},
+              'new_evidence':delta.get('new_evidence') or [],
+              'lost_evidence':delta.get('lost_evidence') or [],
+              'research_mode':delta.get('research_mode'),
+              'stagnation_streak':plan.get('stagnation_streak',0),
+              'north_star':plan.get('north_star') or {},
+              'capability_gain':plan.get('capability_gain'),
+              'owner_benefit':plan.get('owner_benefit'),
+              'business_effect':plan.get('business_effect'),
               'senju_focus':audit.get('focus'),
               'senju_candidate_count':selection.get('candidate_count'),
               'senju_selected':bool(selection.get('selected')),
@@ -139,16 +207,26 @@ jobs:
               'holdout_stable':holdout.get('stable'),
               'robust_score':holdout.get('robust_score'),
               'what_remains_unproven':'Technical reproducibility does not prove customer demand, payment, production deployment, or market value.',
-              'next_action':'Strengthen the selected human-inspectable artifact with verified before/after evidence; preserve negative evidence if the holdout fails.'
+              'next_action':(
+                  f"Continue {selected.get('id')} in {delta.get('research_mode') or 'NORMAL'} mode; "
+                  "strengthen the selected human-inspectable artifact with verified before/after evidence and preserve negative evidence."
+              )
           }
           (root/'evidence.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          before=result['before']; after=result['after']; ns=result['north_star']
           md=(
-              '# R&D PORTFOLIO DAILY — Standment Security\n\n'
-              f"- top track: **{result['portfolio_track']} — {result['portfolio_title']}**\n"
-              f"- portfolio status: **{result['portfolio_status']}** / evidence={result['evidence_ratio']}\n"
-              f"- Senju: focus={result['senju_focus']} candidates={result['senju_candidate_count']} selected={result['senju_selected']}\n"
-              f"- holdout: safe={result['holdout_safe']} stable={result['holdout_stable']} robust={result['robust_score']}\n"
-              f"- promotion ready: **{result['promotion_ready']}**\n"
+              '# STANDMENT SECURITY — DAILY PORTFOLIO EVOLUTION\n\n'
+              f"- track: **{result['portfolio_track']} — {result['portfolio_title']}**\n"
+              f"- delta: **{result['delta_kind']}** / material={result['material_delta']}\n"
+              f"- before: status={before.get('status')} evidence={before.get('evidence_ratio')} promotion={before.get('promotion_ready')}\n"
+              f"- after: status={after.get('status')} evidence={after.get('evidence_ratio')} promotion={after.get('promotion_ready')}\n"
+              f"- new evidence: {result['new_evidence'] or 'NONE'} / lost evidence: {result['lost_evidence'] or 'NONE'}\n"
+              f"- Senju holdout: focus={result['senju_focus']} candidates={result['senju_candidate_count']} selected={result['senju_selected']} safe={result['holdout_safe']} stable={result['holdout_stable']} robust={result['robust_score']}\n"
+              f"- stagnation: {result['stagnation_streak']} / mode={result['research_mode']}\n"
+              f"- north star: verified={ns.get('tracks_verified')} inspectable={ns.get('tracks_inspectable')} full-evidence={ns.get('tracks_full_evidence')} avg-evidence={ns.get('average_evidence_ratio')}\n"
+              f"- capability: {result['capability_gain']}\n"
+              f"- owner benefit: {result['owner_benefit']}\n"
+              f"- business effect: {result['business_effect']}\n"
               f"- unproven: {result['what_remains_unproven']}\n"
               f"- next: {result['next_action']}\n"
           )
@@ -157,24 +235,67 @@ jobs:
           PY
           cat reports/standment-security-foundry/evidence.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Report material daily portfolio R&D delta to Slack
-        if: github.event_name != 'pull_request' && env.RND_SLACK_WEBHOOK_URL != ''
+      - name: Deliver one final daily R&D report to Slack
+        if: always() && github.event_name != 'pull_request'
         run: |
           python - <<'PY'
-          import json, os, urllib.request
-          d=json.load(open('reports/standment-security-foundry/evidence.json',encoding='utf-8'))
+          import json, os
+          from urllib import request, error
+          from pathlib import Path
+
+          p=Path('reports/standment-security-foundry/evidence.json')
+          if not p.exists():
+              print('R&D Slack delivery skipped: final evidence missing.')
+              raise SystemExit(0)
+          d=json.loads(p.read_text(encoding='utf-8'))
+          before=d.get('before') or {}; after=d.get('after') or {}; ns=d.get('north_star') or {}
           text=(
-              f"*R&D PORTFOLIO DAILY｜Standment Security*\n"
-              f"最優先={d.get('portfolio_track')} / {d.get('portfolio_title')}\n"
-              f"状態={d.get('portfolio_status')} / evidence={d.get('evidence_ratio')} / promotion={d.get('promotion_ready')}\n"
-              f"Senju focus={d.get('senju_focus')} / candidates={d.get('senju_candidate_count')} / selected={d.get('senju_selected')}\n"
-              f"holdout safe={d.get('holdout_safe')} / stable={d.get('holdout_stable')} / robust={d.get('robust_score')}\n"
-              f"次={d.get('next_action')}\n"
-              "※技術検証と市場価値は分離。人間が確認できる証拠だけをportfolioへ昇格"
+              '*STANDMENT SECURITY｜DAILY PORTFOLIO EVOLUTION*\n'
+              f"Track: {d.get('portfolio_track')} — {d.get('portfolio_title')}\n"
+              f"Delta: {d.get('delta_kind')} / material={d.get('material_delta')}\n"
+              f"Before: {before.get('status')} / evidence={before.get('evidence_ratio')} / promotion={before.get('promotion_ready')}\n"
+              f"After: {after.get('status')} / evidence={after.get('evidence_ratio')} / promotion={after.get('promotion_ready')}\n"
+              f"New evidence: {d.get('new_evidence') or 'NONE'} / Lost: {d.get('lost_evidence') or 'NONE'}\n"
+              f"What changed: {d.get('capability_gain')}\n"
+              f"Owner benefit: {d.get('owner_benefit')}\n"
+              f"Business effect: {d.get('business_effect')}\n"
+              f"Senju: focus={d.get('senju_focus')} / selected={d.get('senju_selected')} / holdout safe={d.get('holdout_safe')} stable={d.get('holdout_stable')}\n"
+              f"North Star: verified={ns.get('tracks_verified')} / inspectable={ns.get('tracks_inspectable')} / full-evidence={ns.get('tracks_full_evidence')} / avg-evidence={ns.get('average_evidence_ratio')}\n"
+              f"Stagnation: {d.get('stagnation_streak')} / next mode={d.get('research_mode')}\n"
+              f"Next: {d.get('next_action')}\n"
+              f"Still unproven: {d.get('what_remains_unproven')}"
           )
-          req=urllib.request.Request(os.environ['RND_SLACK_WEBHOOK_URL'],data=json.dumps({'text':text},ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
-          with urllib.request.urlopen(req,timeout=10) as res:
-              print('slack status',res.status)
+
+          rnd=os.getenv('RND_SLACK_WEBHOOK_URL','').strip()
+          portfolio=os.getenv('PORTFOLIO_SLACK_WEBHOOK_URL','').strip()
+
+          def send(url, body, label):
+              if not url:
+                  print(f'BLOCKED_NO_CAPABILITY: {label} webhook is not configured.')
+                  return False
+              req=request.Request(url,data=json.dumps({'text':body},ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
+              try:
+                  with request.urlopen(req,timeout=15) as res:
+                      if not 200 <= res.status < 300:
+                          raise RuntimeError(f'HTTP {res.status}')
+              except (error.URLError, RuntimeError) as exc:
+                  print(f'{label} Slack delivery failed: {type(exc).__name__}')
+                  return False
+              print(f'{label} Slack delivery OK')
+              return True
+
+          # R&D receives exactly one final daily research result.
+          rnd_ok=send(rnd,text,'RND')
+
+          # Portfolio receives only a material verified change/promotion, never a planning-only cycle.
+          if d.get('material_delta') or d.get('promotion_ready'):
+              portfolio_body='*PORTFOLIO PROMOTION / MATERIAL DELTA*\n'+text
+              send(portfolio,portfolio_body,'PORTFOLIO')
+          else:
+              print('PORTFOLIO Slack skipped: no material verified delta this cycle.')
+
+          if not rnd_ok:
+              print('Daily R&D result preserved as Actions artifact even though recurring Slack delivery is unavailable.')
           PY
 
       - name: Preserve portfolio R&D evidence
@@ -182,11 +303,10 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: standment-security-portfolio-foundry-${{ github.run_id }}
-          retention-days: 30
+          retention-days: 90
           if-no-files-found: error
           path: |
             reports/standment-security-foundry/daily.json
-            reports/standment-security-foundry/daily.md
             reports/standment-security-foundry/senju-research-item.json
             reports/standment-security-foundry/senju-directive.json
             reports/standment-security-foundry/proposed-strategy.json
