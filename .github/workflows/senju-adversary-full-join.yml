@@ -1,0 +1,131 @@
+name: Senju Adversary Full Join
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/**"
+      - "scripts/security/**"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/senju-adversary-pressure.yml"
+      - ".github/workflows/senju-adversary-full-join.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "47 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-adversary-full-join-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full-join:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Compile exhaustive feedback path
+        run: |
+          PYTHONPATH=senju python -m py_compile \
+            senju/senju/real_surface_adversary.py \
+            senju/senju/autonomy/engine.py \
+            senju/senju/autonomy/adversary_loop.py \
+            senju/senju/autonomy/adversary_drain.py
+
+      - name: Generate and stream controlled attack effects
+        env:
+          SENJU_ADVERSARY_STATE: ${{ runner.temp }}/senju-adversary-full-join-state
+        run: |
+          set -euo pipefail
+          PYTHONPATH=senju python -m senju.autonomy.adversary_loop \
+            --state-dir "$SENJU_ADVERSARY_STATE" \
+            --cycles 3 \
+            --rounds-per-cycle 2 \
+            --senju-joins-per-round 8 \
+            --json reports/security/senju-adversary-full-join-pressure.json
+
+      - name: Require Senju to consume every shared effect
+        env:
+          SENJU_ADVERSARY_STATE: ${{ runner.temp }}/senju-adversary-full-join-state
+        run: |
+          set -euo pipefail
+          PYTHONPATH=senju python -m senju.autonomy.adversary_drain \
+            --state-dir "$SENJU_ADVERSARY_STATE" \
+            --max-cycles 512 \
+            --json reports/security/senju-adversary-full-join-drain.json
+
+      - name: Verify one-to-one feedback completion
+        env:
+          SENJU_ADVERSARY_STATE: ${{ runner.temp }}/senju-adversary-full-join-state
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          state = Path(os.environ["SENJU_ADVERSARY_STATE"])
+          event_log = state / "autonomy_reports" / "real_surface_adversary" / "attack_effects.jsonl"
+          queue_path = state / "autonomy_queue.json"
+          if not event_log.is_file() or not queue_path.is_file():
+              raise SystemExit("missing attack effect log or Senju main queue")
+
+          events = [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines() if line.strip()]
+          queue = json.loads(queue_path.read_text(encoding="utf-8"))
+          feedback = [
+              item for item in queue.get("items", [])
+              if item.get("parameters", {}).get("runner") == "real_surface_followup"
+          ]
+          completed = [item for item in feedback if item.get("status") == "completed"]
+          unfinished = [item for item in feedback if item.get("status") != "completed"]
+
+          evidence = {
+              "schema": "senju-adversary-one-to-one/v1",
+              "attack_effect_events": len(events),
+              "senju_feedback_items": len(feedback),
+              "senju_completed_feedback_items": len(completed),
+              "senju_unfinished_feedback_items": len(unfinished),
+              "one_to_one_complete": len(events) == len(feedback) == len(completed) and not unfinished,
+          }
+          Path("reports/security/senju-adversary-one-to-one.json").write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+              encoding="utf-8",
+          )
+          print(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True))
+          if not evidence["one_to_one_complete"]:
+              raise SystemExit("Senju did not consume every shared adversary effect")
+          PY
+
+      - name: Collect exhaustive Senju evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATE_ROOT="${{ runner.temp }}/senju-adversary-full-join-state"
+          mkdir -p reports/security/senju-adversary-full-join-state
+          EFFECT_LOG="$STATE_ROOT/autonomy_reports/real_surface_adversary/attack_effects.jsonl"
+          if [[ -f "$EFFECT_LOG" ]]; then
+            cp "$EFFECT_LOG" reports/security/senju-adversary-full-join-effects.jsonl
+          fi
+          if [[ -f "$STATE_ROOT/autonomy_queue.json" ]]; then
+            cp "$STATE_ROOT/autonomy_queue.json" reports/security/senju-adversary-full-join-state/autonomy_queue.json
+          fi
+          if [[ -d "$STATE_ROOT/autonomy_reports/adversary_feedback" ]]; then
+            cp -R "$STATE_ROOT/autonomy_reports/adversary_feedback" reports/security/senju-adversary-full-join-state/
+          fi
+
+      - name: Upload exhaustive Senju adversary evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: senju-adversary-full-join-${{ github.run_id }}
+          path: reports/security/
+          if-no-files-found: error
+          retention-days: 14
