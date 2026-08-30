@@ -3,18 +3,26 @@ from __future__ import annotations
 from senju import advisors
 
 
-def test_personal_prompt_is_broad_and_implementation_oriented() -> None:
+def test_personal_prompt_allows_any_question_and_is_implementation_oriented() -> None:
+    question = "哲学でも営業でもPythonでも自由に答えて"
     prompt = advisors.personal_prompt(
         {
             "accepted_strategy_change": False,
             "selected": {"score": 12.3, "safe": True},
             "code_suggestions": ["improve observability"],
-        }
+        },
+        question,
     )
-    assert "architecture" in prompt
-    assert "observability" in prompt
+    assert question in prompt
+    assert "ANY question" in prompt
     assert "acceptance tests" in prompt
-    assert "pull request" in prompt
+    assert "CURRENT SENJU EVALUATION" in prompt
+
+
+def test_requested_foundry_url_is_the_live_chat_endpoint() -> None:
+    assert advisors.FOUNDRY_CHAT == (
+        "https://test-git-feat-ai-foundry-forge-v2-musicjapanllc.vercel.app/api/foundry"
+    )
 
 
 def test_extract_json_accepts_fenced_payload() -> None:
@@ -25,12 +33,17 @@ def test_extract_json_accepts_fenced_payload() -> None:
     assert decision["request"] == "add test"
 
 
-def test_foundry_payload_restricts_automatic_patch_scope() -> None:
+def test_foundry_payload_allows_selected_improvement_to_enter_existing_lane() -> None:
     payload = advisors.foundry_payload(
         {"implement": True, "request": "Improve tournament diagnostics."},
         "senju-advisor-test",
     )
     text = payload["job"]["request"]["request_text"]
-    assert "senju/**" in text
-    assert "Do not modify .github/workflows" in text
+    assert "existing engineering lane" in text
+    assert "detect overlap/staleness" in text
     assert "Improve tournament diagnostics" in text
+    assert "do not claim success without evidence" in text
+
+
+def test_default_question_exists_for_autonomous_daily_use() -> None:
+    assert "highest-leverage" in advisors.DEFAULT_QUESTION
