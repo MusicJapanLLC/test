@@ -1,0 +1,100 @@
+{
+  "version": 1,
+  "default": {
+    "labels": [],
+    "archive": false,
+    "star": false,
+    "priority": "normal"
+  },
+  "rules": [
+    {
+      "id": "github-machine",
+      "match": {"from_contains": ["notifications@github.com"]},
+      "labels": ["開発/GitHub"],
+      "archive": true,
+      "priority": "low"
+    },
+    {
+      "id": "github-failure",
+      "match": {"from_contains": ["notifications@github.com"], "subject_contains_any": ["Run failed", "PR run failed", "workflow run", "CodeQL", "Security Guard"]},
+      "labels": ["開発/GitHub", "開発/障害"],
+      "archive": true,
+      "priority": "high"
+    },
+    {
+      "id": "vercel-machine",
+      "match": {"from_contains": ["notifications@vercel.com"]},
+      "labels": ["開発/Vercel"],
+      "archive": true,
+      "priority": "low"
+    },
+    {
+      "id": "vercel-failure",
+      "match": {"from_contains": ["notifications@vercel.com"], "subject_contains_any": ["Failed", "Error", "deployment"]},
+      "labels": ["開発/Vercel", "開発/障害"],
+      "archive": true,
+      "priority": "high"
+    },
+    {
+      "id": "account-security",
+      "match": {"from_contains_any": ["accounts.google.com", "noreply@github.com", "trustandsafety@tm.openai.com"], "subject_contains_any": ["セキュリティ", "security", "OAuth", "permission", "scope", "規定違反", "警告", "異議申し立て", "password", "Log In Code"]},
+      "labels": ["セキュリティ・アカウント", "要対応"],
+      "archive": false,
+      "star": true,
+      "priority": "critical"
+    },
+    {
+      "id": "apps-script-failure",
+      "match": {"from_contains": ["noreply-apps-scripts-notifications@google.com"], "subject_contains_any": ["failure", "failures", "failed"]},
+      "labels": ["開発/障害", "要対応"],
+      "archive": false,
+      "star": true,
+      "priority": "high"
+    },
+    {
+      "id": "meeting-recording-failure",
+      "match": {"from_contains": ["team@genspark.ai"], "subject_contains_any": ["Action Required", "recording failed"]},
+      "labels": ["要対応"],
+      "archive": false,
+      "star": true,
+      "priority": "high"
+    },
+    {
+      "id": "timerex-sales",
+      "match": {"subject_contains_any": ["さんが新しい予定を追加しました", "予定を追加しました"]},
+      "labels": ["営業・商談"],
+      "archive": false,
+      "star": true,
+      "priority": "high"
+    },
+    {
+      "id": "sidebizz-sales",
+      "match": {"subject_contains_any": ["side bizz", "スカウトが届きました"]},
+      "labels": ["営業・商談"],
+      "archive": false,
+      "star": true,
+      "priority": "high"
+    },
+    {
+      "id": "needs-form",
+      "match": {"subject_contains_any": ["【リーガルチェック】新規回答", "ニーズ", "新規回答"]},
+      "labels": ["ニーズ回収"],
+      "archive": false,
+      "priority": "high"
+    },
+    {
+      "id": "nikkei-news",
+      "match": {"from_contains": ["nikkei-news@mx.nikkei.com"]},
+      "labels": ["News/日経新聞"],
+      "archive": true,
+      "priority": "low"
+    },
+    {
+      "id": "promotions",
+      "match": {"category_any": ["CATEGORY_PROMOTIONS"]},
+      "labels": ["あとで読む/広告"],
+      "archive": true,
+      "priority": "low"
+    }
+  ]
+}

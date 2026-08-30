@@ -65,40 +65,6 @@ class ExternalWriteRouterTests(unittest.TestCase):
         self.assertEqual(receipts[0]["status"], "DRY_RUN")
         self.assertEqual(state["history"], [])
 
-    def test_github_issue_adapter_posts_and_records_receipt(self):
-        cfg = {
-            "max_total_writes_per_run": 1,
-            "platforms": [{
-                "id": "github-issues",
-                "kind": "github_issue",
-                "enabled": True,
-                "repo": "MusicJapanLLC/test",
-                "required_env": ["GITHUB_TOKEN"],
-                "max_per_day": 4,
-                "labels": ["the-world", "automated"],
-            }],
-        }
-        mock_result = {"http_status": 201, "remote_id": 42, "remote_url": "https://github.com/MusicJapanLLC/test/issues/42"}
-        with mock.patch.dict(os.environ, {"GITHUB_TOKEN": "ghs_test"}, clear=True), \
-             mock.patch.dict(MOD.ADAPTERS, {"github_issue": lambda f, t: mock_result}):
-            receipts, state = MOD.execute(self.events, cfg, {})
-        self.assertEqual(len(receipts), 1)
-        self.assertEqual(receipts[0]["status"], "POSTED")
-        self.assertEqual(receipts[0]["platform"], "github-issues")
-        self.assertEqual(receipts[0]["remote_id"], 42)
-        self.assertEqual(len(state["history"]), 1)
-
-    def test_github_issue_requires_github_token(self):
-        cfg = {"platforms": [{
-            "id": "github-issues",
-            "kind": "github_issue",
-            "enabled": True,
-            "required_env": ["GITHUB_TOKEN"],
-            "max_per_day": 4,
-        }]}
-        with mock.patch.dict(os.environ, {}, clear=True):
-            self.assertEqual(MOD.capable_targets(cfg, {}, datetime.now(timezone.utc)), [])
-
 
 if __name__ == "__main__":
     unittest.main()

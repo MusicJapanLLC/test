@@ -1,0 +1,45 @@
+name: Dependency Review
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Detect dependency graph
+        id: dependency-graph
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          status="$(curl --fail-with-body --silent --show-error -o /tmp/sbom.json -w '%{http_code}' \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GH_REPO/dependency-graph/sbom" || true)"
+          if [[ "$status" == "200" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::GitHub Dependency graph is not enabled; native dependency review is skipped until it is enabled in repository security settings."
+          fi
+
+      - name: Review dependency changes
+        if: steps.dependency-graph.outputs.enabled == 'true'
+        uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v4
+        with:
+          fail-on-severity: moderate
+          show-openssf-scorecard: true
+          warn-on-openssf-scorecard-level: 3

@@ -1,0 +1,70 @@
+name: Dependency Vulnerability Audit
+
+on:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+  schedule:
+    - cron: "41 0 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  npm-audit:
+    name: npm audit (${{ matrix.directory }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - directory: baton
+            generate_lock: false
+          - directory: iyomaru-ramen
+            generate_lock: true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: Generate temporary lockfile when missing
+        if: matrix.generate_lock
+        working-directory: ${{ matrix.directory }}
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Audit npm dependencies
+        working-directory: ${{ matrix.directory }}
+        run: npm audit --audit-level=high
+
+  pip-audit:
+    name: Python dependency audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install pip-audit
+        run: python -m pip install --disable-pip-version-check pip-audit==2.10.1
+
+      - name: Audit Python dependencies
+        run: pip-audit -r requirements.txt --strict

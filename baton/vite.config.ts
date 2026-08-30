@@ -19,6 +19,9 @@ const pages = {
   privacy: resolve(root, 'privacy', 'index.html'),
 };
 
+const FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';
+
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -40,10 +43,7 @@ function head(opts: {
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
-    />
+    <link rel="stylesheet" href="${FONT_HREF}" />
     <title>${esc(opts.title)}</title>
     <meta name="description" content="${esc(opts.description)}" />
     <meta name="theme-color" content="${opts.themeColor}" />
@@ -160,9 +160,16 @@ export default defineConfig({
     rollupOptions: {
       input: pages,
       output: {
-        manualChunks: {
-          three: ['three'],
-          motion: ['gsap', 'gsap/ScrollTrigger', 'lenis'],
+        manualChunks(id) {
+          const normalized = id.replace(/\\/g, '/');
+          if (normalized.includes('/node_modules/three/')) return 'three';
+          if (
+            normalized.includes('/node_modules/gsap/') ||
+            normalized.includes('/node_modules/lenis/')
+          ) {
+            return 'motion';
+          }
+          return undefined;
         },
       },
     },

@@ -20,14 +20,15 @@ const PROFILE_WITH_CAPITAL: ProfileField[] = [
   {
     id: 'capital',
     label: '資本金',
-    type: 'select',
+    type: 'number',
     required: true,
-    options: ['1,000万円未満', '1,000万〜5,000万円', '5,000万〜1億円', '1億円以上', '非公開'],
+    unit: '万円',
+    placeholder: '1000',
   },
 ];
 
 /** 全サービス共通・アンケート末尾（ひとこと＋連絡方法）は survey.ts 側で固定表示 */
-export const CONTACT_METHODS = ['メール', '電話', 'いまは資料だけ'] as const;
+export const CONTACT_METHODS = ['メール', '電話', 'LINE'] as const;
 
 export const services: Service[] = [
   {
@@ -122,7 +123,7 @@ export const services: Service[] = [
   {
     id: 'webgl',
     slug: 'webgl',
-    company: 'Standment',
+    company: '合同会社Music Japan',
     serviceName: 'Standment',
     tagline: '見るサイトから、体験するサイトへ',
     description:
@@ -155,10 +156,7 @@ export const services: Service[] = [
       { label: '活用シーン', value: '幅広く', unit: '', note: 'ブランディング・集客・採用広報' },
     ],
     links: [
-      {
-        label: '制作実績',
-        url: 'https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#experience',
-      },
+      { label: '制作実績', url: 'https://standment-portfolio.watagon-0220.chatgpt.site/' },
     ],
     survey: {
       questions: [
@@ -196,7 +194,14 @@ export const services: Service[] = [
           id: 'q4',
           label: '想定している予算はどのくらいですか',
           type: 'single',
-          options: ['〜100万円', '100〜300万円', '300〜500万円', '500万円〜', 'これから検討'],
+          options: [
+            '〜10万円',
+            '10〜30万円',
+            '30〜50万円',
+            '50〜100万円',
+            '100万円以上',
+            'これから検討',
+          ],
         },
       ],
       profileFields: PROFILE_WITH_CAPITAL,

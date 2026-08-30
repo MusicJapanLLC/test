@@ -1,0 +1,67 @@
+# Tests
+
+## Test 1 - 過去案件をまとめて回収キューへ入れられる [sanity]
+Viewport: desktop
+Covers: authentication, POST /api/deals/import, bulk import, database persistence, recovery score, dashboard metrics
+Description: 営業リストを貼り付けるだけで複数案件を保存し、回収優先度付きキューを作れることを確認する。
+
+Steps:
+1. Googleでログインし「まとめて追加」を開く
+2. 2行のタブ区切り案件データを貼り付けて「回収キューへ追加」を押す
+3. ページを更新する
+
+Expected: 追加件数が表示され、2案件が回収キューと全案件に残り、それぞれ回収スコアが表示される。
+
+## Test 2 - AIが次アクションと追客文を生成する
+Viewport: desktop
+Covers: POST /api/recovery/scan, AI generation, database update, rendered recovery action and draft
+Description: 優先案件をAI分析し、実行可能な次アクションと送信ドラフトを保存する。
+
+Setup:
+1. 会社名「AI Scan Test」、見込金額「500000」、状態「提案済」、メモ「見積送付後に返信が止まった」を登録する
+
+Steps:
+1. 「AIで回収候補を更新」を押す
+2. AI処理完了後に「AI Scan Test」を確認する
+3. ページを更新する
+
+Expected: 「次の一手」と「送信ドラフト」に具体的な日本語が表示され、更新後も残る。
+
+## Test 3 - 復活結果が学習ログと見込額へ反映される
+Viewport: desktop
+Covers: POST /api/deals/:id/outcome, outcome persistence, adaptive learning data, revived pipeline metric
+Description: 回収成功を記録すると次回学習用データとして保存され、復活見込額へ反映される。
+
+Setup:
+1. 会社名「Revived Test」、見込金額「200000」、状態「休眠」を登録する
+
+Steps:
+1. 「Revived Test」の「復活」を押す
+2. 「復活見込額」と「学習ログ」を確認する
+3. ページを更新する
+
+Expected: 「復活見込額」が200000円以上増え、学習ログが1件以上増え、「Revived Test」の状態が「商談予定」になる。
+
+## Test 4 - 不正な案件と削除を正しく処理する
+Viewport: mobile
+Covers: create validation, DELETE /api/deals/:id, destructive confirmation, mobile workflow
+Description: 不正な金額は保存せず、正常案件は確認後に削除できる。
+
+Steps:
+1. 案件追加で会社名「Invalid Test」、見込金額「-1」を入力して保存する
+2. エラー表示を確認した後、会社名「Delete Test」、見込金額「10000」で正常登録する
+3. 全案件から「Delete Test」を削除して確認ダイアログを承認する
+
+Expected: 「Invalid Test」は作成されず、「Delete Test」は削除後に一覧から消える。
+
+## Test 5 - 外部連携キーと受信テストが機能する
+Viewport: desktop
+Covers: integration token issuance, POST /api/events/test, event persistence, integration UI
+Description: 外部イベント連携の入口が発行でき、内部受信経路が保存まで動作する。
+
+Steps:
+1. 「Gmail / Calendar連携」を開き「キー発行」を押す
+2. Endpoint、X-User-Id、X-Ingest-Tokenが表示されることを確認する
+3. 「受信テスト」を押す
+
+Expected: 直近イベントに「受信テスト成功」が表示される。
