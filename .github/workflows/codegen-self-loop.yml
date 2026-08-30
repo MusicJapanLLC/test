@@ -1,0 +1,106 @@
+name: Codegen Self-Loop (No Claude Required)
+
+# Fully self-contained. Uses GITHUB_TOKEN for GitHub Models API.
+# No ANTHROPIC_API_KEY needed. Runs every 4 hours, 24/7.
+# Control: intentionally loose. Just run and record.
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Specific task ID, or leave blank for auto-discover"
+        default: ""
+      max_iterations:
+        description: "Max iterations"
+        default: "20"
+      model:
+        description: "GitHub Models model name"
+        default: "gpt-4o-mini"
+
+permissions:
+  contents: write
+  models: read
+
+env:
+  CODEGEN_MODEL: ${{ github.event.inputs.model || 'gpt-4o-mini' }}
+
+jobs:
+  self-loop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps (openai SDK for GitHub Models, no anthropic needed)
+        run: pip install openai pytest
+
+      - name: Configure git
+        run: |
+          git config user.name "codegen-self-loop"
+          git config user.email "codegen-self-loop@noreply"
+
+      - name: Create cycle branch
+        id: branch
+        run: |
+          BRANCH="codegen/self-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Run loop
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        working-directory: automation/codegen
+        run: |
+          TASK="${{ github.event.inputs.task_id }}"
+          MAX="${{ github.event.inputs.max_iterations || '20' }}"
+          if [ -z "$TASK" ]; then
+            python orchestrator.py run
+          else
+            python engine/loop.py "$TASK" "$MAX"
+          fi
+
+      - name: Commit everything
+        if: always()
+        run: |
+          git add -A \
+            automation/codegen/runs/ \
+            automation/codegen/generated/ \
+            automation/codegen/knowledge/ \
+            automation/codegen/tasks/auto/ \
+            automation/codegen/tests/ \
+            senju/inbox/ \
+            senju/knowledge/ \
+            senju/status/ \
+            automation/agent_factory/codegen_feed.ndjson \
+            tomoki-agents/data/codegen_feed.ndjson \
+            automation/reporting/codegen_summary.ndjson \
+            data/codegen_knowledge.ndjson 2>/dev/null || true
+          git diff --cached --quiet && echo "nothing" || \
+            git commit -m "codegen(self-loop): $(date +%Y-%m-%dT%H:%M) [skip ci]"
+          git push -u origin "${{ steps.branch.outputs.branch }}"
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Self-Loop Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Model: \`$CODEGEN_MODEL\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Branch: \`${{ steps.branch.outputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
+          if [ -f senju/status/codegen_status.json ]; then
+            python -c "
+import json
+s = json.load(open('senju/status/codegen_status.json'))
+print(f'- Tasks passing: {s[\"passing\"]}/{s[\"total_tasks\"]}')
+print(f'- Success rate: {s[\"success_rate\"]*100:.1f}%')
+" >> $GITHUB_STEP_SUMMARY
+          fi

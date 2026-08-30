@@ -1,6 +1,8 @@
 """
-Enhanced autonomous loop with knowledge-base-informed prompting,
-broadcaster integration, and aggressive retry with expanding context.
+Autonomous generation loop — model-agnostic, Senju-integrated.
+
+Works without Claude: uses GitHub Models (GITHUB_TOKEN) by default.
+Control is intentionally loose — just run, record, share.
 """
 
 import json
@@ -11,10 +13,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-import anthropic
-
 from . import knowledge_base as kb
 from .broadcaster import push_result
+from .model_client import get_client, strip_fences
+from .senju_hub import emit_result, update_status
 
 ROOT = Path(__file__).resolve().parents[3]
 TASKS_DIR = Path(__file__).parents[1] / "tasks"
@@ -23,10 +25,11 @@ RUNS_DIR = Path(__file__).parents[1] / "runs"
 
 def load_task(task_id: str) -> dict[str, Any]:
     parts = task_id.split("/", 1)
-    if len(parts) == 2:
-        path = TASKS_DIR / parts[0] / f"{parts[1]}.json"
-    else:
-        path = TASKS_DIR / f"{task_id}.json"
+    path = (
+        TASKS_DIR / parts[0] / f"{parts[1]}.json"
+        if len(parts) == 2
+        else TASKS_DIR / f"{task_id}.json"
+    )
     if not path.exists():
         raise FileNotFoundError(f"Task not found: {path}")
     return json.loads(path.read_text())
@@ -34,60 +37,43 @@ def load_task(task_id: str) -> dict[str, Any]:
 
 def build_prompt(task: dict, history: list[dict]) -> str:
     domain = task.get("domain", "general")
-    exemplars = kb.get_successful_patterns(domain=domain, limit=3)
+    from .senju_hub import read_senju_knowledge
+    local_exemplars = kb.get_successful_patterns(domain=domain, limit=2)
+    senju_exemplars = read_senju_knowledge(domain=domain, limit=2)
+    exemplars = (local_exemplars + senju_exemplars)[:3]
 
     parts = [
-        f"# Code Generation Task: {task['name']}",
-        f"\n## Domain: {domain}",
+        f"# Programming Task: {task['name']}",
+        f"Domain: {domain}",
         f"\n## Goal\n{task['goal']}",
-        f"\n## Output file\n`{task['output_file']}`",
-        f"\n## Test command\n`{task['test_cmd']}`",
+        f"\n## Write to\n`{task['output_file']}`",
+        f"\n## Validated by\n`{task['test_cmd']}`",
         f"\n## Constraints\n{task.get('constraints', 'None')}",
     ]
 
     if exemplars:
-        parts.append("\n## Similar successful implementations (for reference)")
+        parts.append("\n## Reference implementations (passed tests)")
         for ex in exemplars:
+            src = ex.get("source", "local")
             parts.append(
-                f"\n### {ex['task_name']} (passed at iteration {ex['iteration']})"
-                f"\n```python\n{ex['code'][:600]}\n```"
+                f"\n### {ex.get('task_name','?')} [{src}]\n"
+                f"```python\n{ex.get('code','')[:500]}\n```"
             )
 
     if history:
-        parts.append(f"\n## Your previous {len(history)} attempt(s) — study the failures")
+        parts.append(f"\n## Previous {len(history)} attempt(s)")
         for run in history[-5:]:
+            status = "PASSED" if run["passed"] else "FAILED"
             parts.append(
-                f"\n### Attempt {run['iteration']} — {'PASSED' if run['passed'] else 'FAILED'}"
+                f"\n### Attempt {run['iteration']}: {status}"
                 f"\n```python\n{run['code']}\n```"
-                f"\n**Test output:**\n```\n{run['test_output'][:600]}\n```"
+                f"\nTest output:\n```\n{run['test_output'][:500]}\n```"
             )
-        parts.append(
-            "\n## Instructions\n"
-            "Fix every issue you can identify from the failures above.\n"
-            "Output ONLY raw Python code — no markdown, no explanation."
-        )
+        parts.append("\nFix the failures. Output ONLY raw Python. No markdown. No explanation.")
     else:
-        parts.append(
-            "\n## Instructions\n"
-            "Write a clean, correct implementation.\n"
-            "Output ONLY raw Python code — no markdown, no explanation."
-        )
+        parts.append("\nWrite a correct implementation. Output ONLY raw Python. No markdown.")
 
     return "\n".join(parts)
-
-
-def generate(task: dict, history: list[dict], client: anthropic.Anthropic) -> str:
-    prompt = build_prompt(task, history)
-    msg = client.messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=8192,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    code = msg.content[0].text.strip()
-    if code.startswith("```"):
-        lines = code.splitlines()
-        code = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
-    return code
 
 
 def run_tests(test_cmd: str) -> tuple[bool, str]:
@@ -123,7 +109,9 @@ def save_run(task_id: str, iteration: int, code: str, output: str, passed: bool)
 
 def run_loop(task_id: str, max_iterations: int = 15) -> bool:
     task = load_task(task_id)
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = get_client()
+    model_name = type(client).__name__
+
     output_path = ROOT / task["output_file"]
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -131,33 +119,36 @@ def run_loop(task_id: str, max_iterations: int = 15) -> bool:
     start = len(history) + 1
     domain = task.get("domain", "general")
 
-    print(f"[loop] {task_id} iter {start}/{max_iterations} domain={domain}")
+    print(f"[loop] {task_id} | model={model_name} | iter {start}/{max_iterations}")
 
     for iteration in range(start, max_iterations + 1):
         print(f"\n[loop] === {task_id} iter {iteration} ===")
-        code = generate(task, history, client)
+        prompt = build_prompt(task, history)
+        code = strip_fences(client.complete(prompt))
         output_path.write_text(code)
 
         passed, test_output = run_tests(task["test_cmd"])
-        print(f"[loop] {'PASS' if passed else 'FAIL'} | {test_output[:200]}")
+        print(f"[loop] {'PASS' if passed else 'FAIL'} | {test_output[:180]}")
 
         record = save_run(task_id, iteration, code, test_output, passed)
         history.append(record)
 
-        kb.record(
-            task_id=task_id, task_name=task["name"], iteration=iteration,
-            passed=passed, code=code, test_output=test_output, domain=domain,
-        )
-        push_result(
-            task_id=task_id, task_name=task["name"], domain=domain,
-            iteration=iteration, passed=passed, code=code, test_output=test_output,
-        )
+        kb.record(task_id=task_id, task_name=task["name"], iteration=iteration,
+                  passed=passed, code=code, test_output=test_output, domain=domain,
+                  extra={"model": model_name})
+        push_result(task_id=task_id, task_name=task["name"], domain=domain,
+                    iteration=iteration, passed=passed, code=code, test_output=test_output)
+        emit_result(task_id=task_id, task_name=task["name"], domain=domain,
+                    iteration=iteration, passed=passed, code=code,
+                    test_output=test_output, model_used=model_name)
 
         if passed:
             print(f"[loop] SUCCESS {task_id} at iteration {iteration}")
+            update_status(kb.get_stats())
             return True
 
     print(f"[loop] EXHAUSTED {task_id} after {max_iterations} iterations")
+    update_status(kb.get_stats())
     return False
 
 
