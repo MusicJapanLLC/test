@@ -13,6 +13,7 @@ stronger semantic check succeeds.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -227,9 +228,9 @@ def validate_agent_factory_semantic_contract() -> str:
 def validate_evolution_watchdog_lane() -> str:
     """Classify the watchdog as a dispatcher-only recovery lane.
 
-    The watchdog may wake or rerun a fixed set of already-governed workflows, but
-    it cannot write repository contents, mint OIDC tokens, modify issues/PRs, or
-    reach arbitrary workflow names through external input.
+    It may wake or rerun only a fixed fleet of already-governed workflows. The
+    fleet can expand inside this explicit allowlist without giving the watchdog
+    arbitrary workflow execution, repository writes, OIDC, or external secrets.
     """
 
     name = "the-world-evolution-watchdog.yml"
@@ -289,7 +290,26 @@ def validate_evolution_watchdog_lane() -> str:
         if marker in body:
             raise SystemExit(f"{name}: forbidden watchdog capability: {marker}")
 
-    expected_workflows = {
+    allowed_workflows = {
+        "the-world-realtime-kernel.yml",
+        "tomoki-manager-queue.yml",
+        "ai-foundry-executor.yml",
+        "the-world-task-worker.yml",
+        "the-world-autonomous-research-fabric.yml",
+        "tomoki-manager.yml",
+        "ai-factory-boss.yml",
+        "the-core-autonomous-director.yml",
+        "tomoki-skeptic.yml",
+        "tomoki-hound.yml",
+        "tomoki-forge.yml",
+        "the-world-agent-factory.yml",
+        "standment-security-portfolio-rnd.yml",
+        "standment-security-portfolio-foundry.yml",
+        "portfolio-evolution-daily.yml",
+        "senju-autonomous-improver.yml",
+        "rnd-senju-coupled-loop.yml",
+    }
+    required_core = {
         "the-world-realtime-kernel.yml",
         "tomoki-manager-queue.yml",
         "the-core-autonomous-director.yml",
@@ -297,13 +317,13 @@ def validate_evolution_watchdog_lane() -> str:
         "senju-autonomous-improver.yml",
         "rnd-senju-coupled-loop.yml",
     }
-    observed = {
-        marker
-        for marker in expected_workflows
-        if marker in body
-    }
-    if observed != expected_workflows:
-        raise SystemExit(f"{name}: monitored workflow allowlist drifted: {sorted(observed)}")
+    referenced = set(re.findall(r"['\"]([A-Za-z0-9_.-]+\.yml)['\"]", body))
+    unknown = referenced - allowed_workflows
+    if unknown:
+        raise SystemExit(f"{name}: unauthorized workflow target(s): {sorted(unknown)}")
+    missing_core = required_core - referenced
+    if missing_core:
+        raise SystemExit(f"{name}: required recovery target(s) missing: {sorted(missing_core)}")
 
     return name
 
