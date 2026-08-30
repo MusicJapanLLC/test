@@ -68,6 +68,37 @@ For live public targets, the transport still enforces the campaign's external au
 
 For Arena / synthetic / isolated owned labs, those external-public-target restrictions do not define Red's research freedom inside the lab.
 
+### Domain-scoped host boundary
+
+The default transport still supports exact-host allowlists, but SPEAR now also provides `senju.domain_scope` for campaigns whose authorization naturally covers an owned domain tree.
+
+A declared root such as `owned.example.com` may authorize:
+
+- `owned.example.com`
+- `api.owned.example.com`
+- `staging.api.owned.example.com`
+
+without requiring every descendant hostname to be enumerated in advance. Matching is label-boundary aware, so names such as `evil-owned.example.com` or `owned.example.com.attacker.example` do not match the authorized root.
+
+This intentionally makes the host boundary less brittle while keeping the external-asset boundary explicit. The domain-scoped policy reuses `ExternalContactClient`, so public-DNS validation, HTTP/HTTPS policy, method controls, response limits, retry bounds, redirect re-validation, and cross-host sensitive-header stripping remain active.
+
+Example:
+
+```python
+from senju.domain_scope import client_for_domains
+
+client = client_for_domains(
+    ["owned.example.com"],
+    allowed_methods=("GET", "HEAD", "OPTIONS", "POST"),
+    follow_redirects=True,
+    retries=2,
+)
+
+receipt = client.contact("https://api.owned.example.com/health", method="GET")
+```
+
+State-changing methods remain explicit campaign parameters; `DELETE` still requires an explicit opt-in. The broader host matcher is for owned or explicitly authorized domain roots, not unrelated third-party domains.
+
 ## Phase 2: Authorized web posture pack — live
 
 ```bash
