@@ -43,6 +43,18 @@ class HandoffConsumerTests(unittest.TestCase):
         self.assertEqual(result["security_priority_lens"], "CI-PERMISSIONS")
         self.assertEqual(result["max_consumer_cycles"], 2)
 
+    def test_accepts_current_joint_assist_v2_with_same_bounded_handoff(self):
+        value = packet()
+        value["schema"] = "the-world-ai-security-joint-assist/v2"
+        result = consumer.validate_packet(value)
+        self.assertEqual(result["status"], "ACCEPTED_PRIORITY_ONLY")
+
+    def test_rejects_unknown_assist_schema(self):
+        value = packet()
+        value["schema"] = "the-world-ai-security-joint-assist/v999"
+        with self.assertRaises(ValueError):
+            consumer.validate_packet(value)
+
     def test_rejects_permission_relaxation(self):
         value = packet()
         value["handoff"]["constraints"]["permission_surface_unchanged"] = False
