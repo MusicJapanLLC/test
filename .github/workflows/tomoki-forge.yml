@@ -1,0 +1,247 @@
+name: TOMOKI - FORGE
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'auto=repair persistent CI first, otherwise product work'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - product
+          - repair
+  schedule:
+    - cron: '47 * * * *'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/tomoki-forge.yml'
+      - 'tomoki-agents/**'
+      - 'automation/world/self_heal_engine.py'
+      - 'automation/world/self_heal_policy.py'
+      - 'automation/world/self_heal_verify.sh'
+      - 'automation/world/self_heal_merge.py'
+      - 'automation/world/prompts/self-heal.md'
+      - 'automation/world/realtime_plan.json'
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  issues: read
+  copilot-requests: write
+jobs:
+  forge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot@1.0.80
+      - name: Snapshot fixed guardrails
+        run: |
+          cp tomoki-agents/policy_gate.py /tmp/tomoki-policy-gate.py
+          cp tomoki-agents/verify.sh /tmp/tomoki-verify.sh
+          cp tomoki-agents/slack_post.py /tmp/tomoki-slack-post.py
+          cp automation/world/self_heal_engine.py /tmp/world-self-heal-engine.py
+          cp automation/world/self_heal_policy.py /tmp/world-self-heal-policy.py
+          cp automation/world/self_heal_verify.sh /tmp/world-self-heal-verify.sh
+          cp automation/world/self_heal_merge.py /tmp/world-self-heal-merge.py
+          cp automation/world/prompts/self-heal.md /tmp/world-self-heal-prompt.md
+          chmod 500 /tmp/tomoki-policy-gate.py /tmp/tomoki-verify.sh /tmp/world-self-heal-policy.py /tmp/world-self-heal-verify.sh /tmp/world-self-heal-merge.py
+      - name: Merge only previously verified self-heal PRs
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          python /tmp/world-self-heal-merge.py --json /tmp/self-heal-merge.json --report /tmp/self-heal-merge.md --apply
+          cat /tmp/self-heal-merge.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Select FORGE mode and repair target
+        id: mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REQUESTED_MODE: ${{ inputs.mode || 'auto' }}
+          WORLD_REALTIME_REF: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mode="${REQUESTED_MODE:-auto}"
+          target_ref="${GITHUB_REF_NAME}"
+          if [[ "$mode" == "auto" || "$mode" == "repair" ]]; then
+            python /tmp/world-self-heal-engine.py --plan automation/world/realtime_plan.json --json /tmp/self-heal-dossier.json --report /tmp/self-heal-dossier.md
+            selected=$(python - <<'PY'
+          import json
+          d=json.load(open('/tmp/self-heal-dossier.json',encoding='utf-8'))
+          print('true' if d.get('selected') else 'false')
+          PY
+          )
+            if [[ "$selected" == "true" ]]; then
+              mode="repair"
+              target_ref=$(python - <<'PY'
+          import json
+          d=json.load(open('/tmp/self-heal-dossier.json',encoding='utf-8'))
+          print(d['target_base'])
+          PY
+          )
+            elif [[ "$mode" == "repair" ]]; then
+              mode="idle"
+            else
+              mode="product"
+            fi
+          fi
+          if [[ "$mode" == "repair" ]]; then
+            git fetch origin "refs/heads/${target_ref}:refs/remotes/origin/${target_ref}"
+            git checkout -B __world_repair_base "origin/${target_ref}"
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "target_ref=$target_ref" >> "$GITHUB_OUTPUT"
+          echo "FORGE mode=$mode target=$target_ref" >> "$GITHUB_STEP_SUMMARY"
+      - name: Run FORGE experiment
+        id: experiment
+        continue-on-error: true
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+          FORGE_MODE: ${{ steps.mode.outputs.mode }}
+          REPAIR_BASE: ${{ steps.mode.outputs.target_ref }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f tomoki-forge-report.md
+          if [[ "$FORGE_MODE" == "idle" ]]; then
+            printf 'SELF-HEAL: persistent repair target not found. No repair action required.\n' > /tmp/tomoki-forge-report.md
+            echo 'result=idle' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PROMPT_FILE=/tmp/forge-prompt.md
+          if [[ "$FORGE_MODE" == "repair" ]]; then
+            {
+              cat /tmp/world-self-heal-prompt.md
+              printf '\n\n## Current failure dossier\n'
+              cat /tmp/self-heal-dossier.md
+            } > "$PROMPT_FILE"
+            printf 'THE WORLD SELF-HEAL / target=%s\n' "$REPAIR_BASE" > /tmp/tomoki-forge-report.md
+          else
+            cp tomoki-agents/prompts/forge.md "$PROMPT_FILE"
+          fi
+
+          copilot -p "$(cat "$PROMPT_FILE")" -s --allow-tool=write --no-ask-user > /tmp/tomoki-copilot.log 2>&1 || true
+          if [[ -f tomoki-forge-report.md ]]; then cp tomoki-forge-report.md /tmp/tomoki-forge-report.md; rm tomoki-forge-report.md; fi
+          if [[ "$FORGE_MODE" == "product" ]]; then
+            git add -N -- sales-command-30 2>/dev/null || true
+          fi
+          if git diff --quiet; then
+            printf '\nNo repository change produced.\n' >> /tmp/tomoki-forge-report.md
+            echo 'result=no-change' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ "$FORGE_MODE" == "repair" ]]; then
+            if ! python /tmp/world-self-heal-policy.py > /tmp/tomoki-policy.txt 2>&1; then
+              printf '\n\n**SELF-HEAL POLICY: REVERTED**\n' >> /tmp/tomoki-forge-report.md
+              cat /tmp/tomoki-policy.txt >> /tmp/tomoki-forge-report.md
+              git reset --hard HEAD
+              git clean -fd
+              echo 'result=reverted-policy' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if ! bash /tmp/world-self-heal-verify.sh > /tmp/tomoki-verify.txt 2>&1; then
+              printf '\n\n**SELF-HEAL VERIFY: REVERTED**\n' >> /tmp/tomoki-forge-report.md
+              tail -120 /tmp/tomoki-verify.txt >> /tmp/tomoki-forge-report.md
+              git reset --hard HEAD
+              git clean -fd
+              echo 'result=reverted-verify' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          else
+            if ! python /tmp/tomoki-policy-gate.py > /tmp/tomoki-policy.txt 2>&1; then
+              printf '\n\n**POLICY: REVERTED**\n' >> /tmp/tomoki-forge-report.md
+              cat /tmp/tomoki-policy.txt >> /tmp/tomoki-forge-report.md
+              git reset --hard HEAD
+              git clean -fd -- sales-command-30
+              echo 'result=reverted-policy' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if ! bash /tmp/tomoki-verify.sh > /tmp/tomoki-verify.txt 2>&1; then
+              printf '\n\n**VERIFY: REVERTED**\n' >> /tmp/tomoki-forge-report.md
+              tail -80 /tmp/tomoki-verify.txt >> /tmp/tomoki-forge-report.md
+              git reset --hard HEAD
+              git clean -fd -- sales-command-30
+              echo 'result=reverted-verify' >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          printf '\n\n**POLICY: PASS / VERIFY: PASS**\n' >> /tmp/tomoki-forge-report.md
+          if [[ "$FORGE_MODE" == "repair" ]]; then
+            BRANCH="the-world/self-heal-${GITHUB_RUN_ID}"
+            BASE_REF="$REPAIR_BASE"
+            TITLE="THE WORLD/SELF-HEAL: verified repair #${GITHUB_RUN_ID}"
+          else
+            BRANCH="tomoki/forge-${GITHUB_RUN_ID}"
+            BASE_REF="${GITHUB_REF_NAME}"
+            TITLE="TOMOKI/FORGE: verified autonomous improvement #${GITHUB_RUN_ID}"
+          fi
+          git config user.name 'TOMOKI-FORGE[bot]'
+          git config user.email 'tomoki-forge@users.noreply.github.com'
+          git checkout -b "$BRANCH"
+          if [[ "$FORGE_MODE" == "repair" ]]; then
+            git add -A
+          else
+            git add -A -- sales-command-30
+          fi
+          git commit -m "chore(tomoki-forge): ${FORGE_MODE} verified improvement ${GITHUB_RUN_ID}"
+          gh auth setup-git
+          git push origin "$BRANCH"
+          PR_URL=$(gh pr create --base "$BASE_REF" --head "$BRANCH" --title "$TITLE" --body 'Autonomous bounded repair/improvement. Fixed policy gate and local verification passed. Generated by TOMOKI/FORGE.' 2>/dev/null || true)
+          if [[ -n "$PR_URL" ]]; then
+            printf '\nPR: %s\n' "$PR_URL" >> /tmp/tomoki-forge-report.md
+            if [[ "$FORGE_MODE" == "repair" ]]; then
+              printf 'MERGE: gated — next FORGE cycle merges only after GitHub checks complete successfully.\n' >> /tmp/tomoki-forge-report.md
+              echo 'result=repair-pr-created' >> "$GITHUB_OUTPUT"
+            elif gh pr merge "$PR_URL" --squash --delete-branch >/tmp/tomoki-merge.txt 2>&1; then
+              printf 'MERGE: KEEP\n' >> /tmp/tomoki-forge-report.md
+              echo 'result=merged' >> "$GITHUB_OUTPUT"
+            else
+              printf 'MERGE: PR created; automatic merge unavailable.\n' >> /tmp/tomoki-forge-report.md
+              echo 'result=pr-created' >> "$GITHUB_OUTPUT"
+            fi
+          else
+            printf '\nPR creation rejected by repository settings; branch remains pushed.\n' >> /tmp/tomoki-forge-report.md
+            echo 'result=branch-only' >> "$GITHUB_OUTPUT"
+          fi
+      - name: Persist FORGE evidence for Manager
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tomoki-forge-report
+          path: |
+            /tmp/tomoki-forge-report.md
+            /tmp/self-heal-dossier.json
+            /tmp/self-heal-dossier.md
+            /tmp/self-heal-merge.json
+            /tmp/self-heal-merge.md
+          retention-days: 14
+          if-no-files-found: warn
+      - name: Report to TOMOKI Slack
+        if: always()
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ ! -f /tmp/tomoki-forge-report.md ]]; then printf 'FORGE run failed before report generation.\n' > /tmp/tomoki-forge-report.md; fi
+          python /tmp/tomoki-slack-post.py --agent FORGE --file /tmp/tomoki-forge-report.md --status "${{ steps.experiment.outputs.result || job.status }}"

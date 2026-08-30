@@ -1,13 +1,13 @@
 {
   "methods": ["google"],
-  "headline": "営業司令室 30",
-  "subtitle": "案件・追客・営業イベントを1か所で管理",
+  "headline": "Revenue Recovery AI",
+  "subtitle": "止まった商談を見つけ、売上機会に戻す",
   "style": {
     "mode": "light",
-    "accentColor": "#161815",
-    "backgroundColor": "#f7f7f4",
+    "accentColor": "#171816",
+    "backgroundColor": "#f6f6f2",
     "panelColor": "#ffffff",
-    "textColor": "#161815",
+    "textColor": "#171816",
     "fontFamily": "Inter, system-ui, sans-serif",
     "borderRadius": 16
   }

@@ -1,0 +1,137 @@
+name: R&D x Senju Coupled Loop
+
+on:
+  schedule:
+    - cron: "20 22 * * *" # 07:20 JST, before Senju autonomous improver
+  workflow_dispatch:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "value-lab/**"
+      - "company-society/CHILD_GUILD.md"
+      - "company-society/child_guild.json"
+      - "senju/scripts/apply_rnd_directive.py"
+      - "senju/scripts/shadow_selector.py"
+      - "senju/tests/test_rnd_directive.py"
+      - "senju/tests/test_shadow_selector.py"
+      - ".github/workflows/child-guild-adventure.yml"
+      - ".github/workflows/rnd-senju-coupled-loop.yml"
+      - ".github/workflows/senju-autonomous-improver.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+
+concurrency:
+  group: rnd-senju-coupled-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  exchange:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Test R&D value gates and coupling contract
+        run: |
+          set -euo pipefail
+          (cd value-lab && python -m unittest -v)
+          python -m pip install pytest==9.1.1
+          (cd senju && python -m pytest tests/test_rnd_directive.py tests/test_shadow_selector.py -q)
+          python -m json.tool value-lab/policy.json >/dev/null
+          python -m json.tool value-lab/research_queue.json >/dev/null
+          python -m json.tool company-society/child_guild.json >/dev/null
+
+      - name: Restore latest Senju stability evidence
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-evidence
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Senju Shadow Stability League" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name senju-shadow-stability --dir /tmp/senju-evidence || true
+          fi
+          FOUND="$(find /tmp/senju-evidence -name stability.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/latest-shadow.json; fi
+          echo "senju_shadow_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Restore latest Child Guild research sparks
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/child-rnd
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD - Child Guild Adventure" --status success --limit 10 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name child-research-sparks --dir /tmp/child-rnd || true
+          fi
+          FOUND="$(find /tmp/child-rnd -name child-research-sparks.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/child-research-sparks.json; fi
+          echo "child_guild_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build R&D -> Senju directive and Senju -> R&D evidence return
+        shell: bash
+        run: |
+          set -euo pipefail
+          shadow=()
+          child=()
+          if [[ -f /tmp/latest-shadow.json ]]; then shadow+=(--shadow /tmp/latest-shadow.json); fi
+          if [[ -f /tmp/child-research-sparks.json ]]; then child+=(--child-sparks /tmp/child-research-sparks.json); fi
+          python value-lab/senju_bridge.py \
+            --queue value-lab/research_queue.json \
+            --senju senju/state/last-evolution-summary.json \
+            "${shadow[@]}" \
+            "${child[@]}" \
+            --out reports/rnd-senju
+          cat reports/rnd-senju/exchange.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload R&D Senju exchange
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: rnd-senju-exchange
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            reports/rnd-senju/exchange.json
+            reports/rnd-senju/exchange.md
+            reports/rnd-senju/directive.json
+
+      - name: Report material R&D x Senju delta to Slack
+        if: github.event_name != 'pull_request' && env.RND_SLACK_WEBHOOK_URL != ''
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          d=json.load(open('reports/rnd-senju/exchange.json', encoding='utf-8'))
+          r=d['research']; x=d['technical_evidence_from_senju']; q=d['directive_to_senju']; c=d.get('child_stimulus') or {}
+          kids=', '.join(y.get('name','') for y in c.get('fellows',[])) or 'NONE'
+          text=(
+              "*R&D × SENJU × CHILD GUILD｜COUPLED LOOP*\n"
+              f"研究={r.get('research_id')} / focus={q.get('focus')} / candidates={q.get('candidate_count')}\n"
+              f"Child Fellows={kids} / challenge={c.get('requested_focus')} / applied={c.get('applied')}\n"
+              f"Senju safe={x.get('senju_safe')} / shadow stable={x.get('shadow_stable')} / worst={x.get('worst_score')}\n"
+              f"反証={', '.join(d.get('counterevidence') or []) or 'NONE'}\n"
+              f"次={d.get('rnd_next')}\n"
+              "※子供は前提を揺らす。実行境界は揺らさない。技術スコアは市場需要・契約・入金を意味しない"
+          )
+          req=urllib.request.Request(
+              os.environ['RND_SLACK_WEBHOOK_URL'],
+              data=json.dumps({'text':text}, ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type':'application/json'},
+          )
+          with urllib.request.urlopen(req, timeout=10) as res:
+              print('slack status', res.status)
+          PY

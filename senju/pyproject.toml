@@ -1,0 +1,19 @@
+[project]
+name = "senju"
+version = "0.1.0"
+description = "Senju — 自律進化するレッド/ブルー攻防シミュレーション基盤（ラボ限定・安全設計）"
+requires-python = ">=3.10"
+dependencies = []   # コアは標準ライブラリのみ（ゼロ依存）
+
+[project.optional-dependencies]
+dev = ["pytest==9.1.1"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["senju", "senju.agents", "senju.targets"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
