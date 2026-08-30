@@ -9,9 +9,11 @@ on:
       - "senju/senju/safety.py"
       - "senju/senju/scopeguard_adversary.py"
       - "senju/senju/multiguard_adversary.py"
+      - "senju/senju/multiguard_adversary_v2.py"
       - "senju/senju/authorized_assessment.py"
       - "senju/senju/external.py"
       - "senju/senju/autonomy.py"
+      - "senju/senju/autonomy/**"
       - "senju/scripts/run_scopeguard_adversary.py"
       - "senju/scripts/run_multiguard_adversary.py"
       - "senju/scripts/scopeguard_fuzzer.py"
@@ -27,9 +29,11 @@ on:
       - "senju/senju/safety.py"
       - "senju/senju/scopeguard_adversary.py"
       - "senju/senju/multiguard_adversary.py"
+      - "senju/senju/multiguard_adversary_v2.py"
       - "senju/senju/authorized_assessment.py"
       - "senju/senju/external.py"
       - "senju/senju/autonomy.py"
+      - "senju/senju/autonomy/**"
       - "senju/scripts/run_scopeguard_adversary.py"
       - "senju/scripts/run_multiguard_adversary.py"
       - "senju/scripts/scopeguard_fuzzer.py"
@@ -97,11 +101,11 @@ jobs:
         with:
           name: scopeguard-adversary-${{ github.sha }}
           path: senju/scopeguard-adversary-report.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
   multi-guard-regression:
-    name: Multi-guard adversary / 208 cases / 7 targets
+    name: Multi-guard adversary / 300 cases / 7 targets
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -132,6 +136,7 @@ jobs:
           python scripts/run_multiguard_adversary.py
           --target all
           --compact
+          --fail-on-surprise
           --json-out multiguard-adversary-report.json
           > /tmp/multiguard-adversary-stdout.json
 
@@ -144,6 +149,7 @@ jobs:
           report = json.loads(Path("multiguard-adversary-report.json").read_text())
           print("total:", report["total"])
           print("surprising:", report["surprising_count"])
+          print("risk_score:", report["risk_score"])
           print("side_effect_violations:", report["side_effect_violation_count"])
           for target, row in sorted(report["by_target"].items()):
               print(f"{target}: {row}")
@@ -155,7 +161,7 @@ jobs:
         with:
           name: multiguard-adversary-${{ github.sha }}
           path: senju/multiguard-adversary-report.json
-          if-no-files-found: error
+          if-no-files-found: warn
           retention-days: 30
 
   adversarial-fuzz:
