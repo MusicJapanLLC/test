@@ -98,6 +98,34 @@ def test_execute_rejects_expired_engagement() -> None:
         runner.run(now=NOW)
 
 
+def test_manifest_allows_omitted_engagement_id_and_derives_audit_id() -> None:
+    data = base_manifest()
+    data.pop("engagement_id")
+    manifest = EngagementManifest.from_dict(data)
+    report = dry_run_report(manifest)
+
+    assert report["engagement_id"].startswith("auto-")
+    assert report["engagement_id_source"] == "derived"
+
+
+def test_manifest_allows_standing_authorization_without_validity_window() -> None:
+    data = base_manifest()
+    data.pop("valid_from_utc")
+    data.pop("valid_until_utc")
+    manifest = EngagementManifest.from_dict(data)
+
+    manifest.validate(now=NOW, enforce_window=True)
+    assert manifest.valid_from_utc == ""
+    assert manifest.valid_until_utc == ""
+
+
+def test_manifest_rejects_partial_validity_window() -> None:
+    data = base_manifest()
+    data.pop("valid_until_utc")
+    with pytest.raises(EngagementError, match="must either both be set or both be omitted"):
+        EngagementManifest.from_dict(data)
+
+
 def test_request_budget_limits_generated_plan() -> None:
     manifest = EngagementManifest.from_dict(base_manifest(max_requests_per_target=2))
     plan = build_plan(manifest)
