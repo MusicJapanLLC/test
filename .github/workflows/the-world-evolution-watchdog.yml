@@ -1,0 +1,168 @@
+name: THE WORLD - Evolution Watchdog
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-evolution-watchdog.yml'
+
+concurrency:
+  group: the-world-evolution-watchdog
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Inspect, wake, and recover autonomous evolution loops
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import datetime as dt
+          import json
+          import os
+          import subprocess
+          from pathlib import Path
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          base = subprocess.check_output(
+              ['gh', 'repo', 'view', repo, '--json', 'defaultBranchRef', '--jq', '.defaultBranchRef.name'],
+              text=True,
+          ).strip()
+
+          # label, workflow file, maximum tolerated age in minutes.
+          # Fast deterministic loops are kept tight. Heavier evolution loops are
+          # woken multiple times per day without creating overlapping run storms.
+          specs = [
+              ('Realtime Kernel', 'the-world-realtime-kernel.yml', 15),
+              ('Manager Queue', 'tomoki-manager-queue.yml', 15),
+              ('Autonomous Director', 'the-core-autonomous-director.yml', 60),
+              ('Agent Factory', 'the-world-agent-factory.yml', 120),
+              ('Senju Self Evolution', 'senju-autonomous-improver.yml', 120),
+              ('R&D x Senju Coupling', 'rnd-senju-coupled-loop.yml', 180),
+          ]
+
+          now = dt.datetime.now(dt.timezone.utc)
+          active_states = {'queued', 'in_progress', 'pending', 'waiting', 'requested'}
+          failed_conclusions = {
+              'failure', 'cancelled', 'timed_out', 'startup_failure', 'stale', 'action_required'
+          }
+          report = []
+
+          def run_cmd(args):
+              return subprocess.run(args, text=True, capture_output=True)
+
+          for label, workflow, max_age in specs:
+              query = run_cmd([
+                  'gh', 'run', 'list', '--repo', repo, '--workflow', workflow,
+                  '--limit', '1', '--json',
+                  'databaseId,status,conclusion,createdAt,updatedAt'
+              ])
+
+              if query.returncode != 0:
+                  report.append({
+                      'label': label,
+                      'workflow': workflow,
+                      'action': 'lookup_failed',
+                      'detail': (query.stderr or query.stdout)[-1200:],
+                  })
+                  continue
+
+              rows = json.loads(query.stdout or '[]')
+              if not rows:
+                  wake = run_cmd([
+                      'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base
+                  ])
+                  report.append({
+                      'label': label,
+                      'workflow': workflow,
+                      'age_minutes': None,
+                      'action': 'dispatched_no_history' if wake.returncode == 0 else 'dispatch_failed',
+                      'detail': '' if wake.returncode == 0 else (wake.stderr or wake.stdout)[-1200:],
+                  })
+                  continue
+
+              latest = rows[0]
+              created = dt.datetime.fromisoformat(latest['createdAt'].replace('Z', '+00:00'))
+              age_minutes = round((now - created).total_seconds() / 60, 1)
+              status = latest.get('status') or ''
+              conclusion = latest.get('conclusion') or ''
+              action = 'healthy'
+              detail = ''
+
+              if status in active_states:
+                  action = 'active'
+              elif conclusion in failed_conclusions:
+                  retry = run_cmd([
+                      'gh', 'run', 'rerun', str(latest['databaseId']), '--repo', repo, '--failed'
+                  ])
+                  action = 'rerun_failed_jobs' if retry.returncode == 0 else 'rerun_failed_error'
+                  if retry.returncode != 0:
+                      detail = (retry.stderr or retry.stdout)[-1200:]
+              elif age_minutes > max_age:
+                  wake = run_cmd([
+                      'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base
+                  ])
+                  action = 'dispatched_stale' if wake.returncode == 0 else 'dispatch_stale_error'
+                  if wake.returncode != 0:
+                      detail = (wake.stderr or wake.stdout)[-1200:]
+
+              report.append({
+                  'label': label,
+                  'workflow': workflow,
+                  'run_id': latest.get('databaseId'),
+                  'status': status,
+                  'conclusion': conclusion,
+                  'age_minutes': age_minutes,
+                  'max_age_minutes': max_age,
+                  'action': action,
+                  'detail': detail,
+              })
+
+          result = {
+              'schema': 'the-world-evolution-watchdog/v1',
+              'checked_at': now.isoformat(),
+              'repository': repo,
+              'default_branch': base,
+              'loops': report,
+              'summary': {
+                  'checked': len(report),
+                  'recovered_or_woken': sum(
+                      1 for row in report
+                      if row.get('action') in {'rerun_failed_jobs', 'dispatched_stale', 'dispatched_no_history'}
+                  ),
+                  'errors': sum(1 for row in report if 'error' in row.get('action', '') or row.get('action') == 'lookup_failed'),
+              },
+          }
+          Path('/tmp/world-evolution-watchdog.json').write_text(
+              json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+          print(json.dumps(result, ensure_ascii=False, indent=2))
+          PY
+
+          {
+            echo '## THE WORLD Evolution Watchdog'
+            echo '```json'
+            cat /tmp/world-evolution-watchdog.json
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve watchdog evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: world-evolution-watchdog-${{ github.run_id }}
+          path: /tmp/world-evolution-watchdog.json
+          retention-days: 30
+          if-no-files-found: warn
