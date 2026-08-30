@@ -1,19 +1,17 @@
 """Guarded outbound HTTP contact for Senju.
 
-This module is intentionally separate from Senju's Arena target framework.
-It gives Senju an auditable transport for explicitly approved public HTTP(S)
-endpoints without turning public hosts into attack targets.
+A bounded, auditable HTTP(S) transport for explicitly approved public hosts.
+The transport is intentionally separate from the Arena target framework.
 
 Capabilities:
-- exact public-host allowlist;
+- exact public-host allowlist and public-DNS validation;
 - HTTPS by default;
-- GET/HEAD/POST/PUT/PATCH;
-- bounded request and response bodies;
-- response-body capture for downstream agents;
-- bounded transport retries;
-- DNS validation blocks loopback/private/link-local/metadata/reserved addresses;
-- redirects are not followed automatically;
-- every contact emits a machine-readable receipt.
+- GET/HEAD/OPTIONS/POST/PUT/PATCH plus explicit opt-in DELETE;
+- bounded request/response bodies and response-body capture;
+- bounded retries;
+- optional redirect following with every hop re-validated against the allowlist;
+- cross-host redirects strip sensitive request headers;
+- machine-readable receipts containing final URL, contacted hosts and redirect count.
 """
 from __future__ import annotations
 
@@ -28,7 +26,7 @@ import urllib.parse
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Callable, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 
 class ExternalContactError(RuntimeError):
@@ -36,7 +34,7 @@ class ExternalContactError(RuntimeError):
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """Return provider redirect responses instead of following them."""
+    """Expose provider redirect responses so Senju can validate every hop."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
         return None
@@ -49,8 +47,13 @@ class ExternalContactPolicy:
     allow_hosts: frozenset[str] = field(default_factory=frozenset)
     allow_http: bool = False
     allowed_methods: frozenset[str] = field(
-        default_factory=lambda: frozenset({"GET", "HEAD", "POST", "PUT", "PATCH"})
+        default_factory=lambda: frozenset(
+            {"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"}
+        )
     )
+    allow_delete: bool = False
+    follow_redirects: bool = False
+    max_redirects: int = 3
     timeout_seconds: float = 5.0
     max_request_bytes: int = 64 * 1024
     max_response_bytes: int = 512 * 1024
@@ -63,6 +66,9 @@ class ExternalContactPolicy:
         hosts: Iterable[str],
         *,
         allow_http: bool = False,
+        allow_delete: bool = False,
+        follow_redirects: bool = False,
+        max_redirects: int = 3,
         timeout_seconds: float = 5.0,
         max_response_bytes: int = 512 * 1024,
         retries: int = 1,
@@ -71,6 +77,9 @@ class ExternalContactPolicy:
         return cls(
             allow_hosts=normalized,
             allow_http=allow_http,
+            allow_delete=allow_delete,
+            follow_redirects=follow_redirects,
+            max_redirects=max(0, min(int(max_redirects), 5)),
             timeout_seconds=max(0.5, min(float(timeout_seconds), 20.0)),
             max_response_bytes=max(1024, min(int(max_response_bytes), 1024 * 1024)),
             retries=max(0, min(int(retries), 3)),
@@ -82,18 +91,32 @@ class ContactReceipt:
     schema: str
     contacted_at_utc: str
     method: str
-    url: str
+    requested_url: str
+    final_url: str
     host: str
+    final_host: str
+    contacted_hosts: tuple[str, ...]
     resolved_ips: tuple[str, ...]
     status: int
     provider_acknowledged: bool
     response_bytes: int
     response_sha256: str
     content_type: str | None
+    etag: str | None
+    last_modified: str | None
+    retry_after: str | None
     attempt_count: int
+    redirect_count: int
+
+    @property
+    def url(self) -> str:
+        """Backwards-compatible alias for callers that expect receipt.url."""
+        return self.requested_url
 
     def to_dict(self) -> dict[str, object]:
-        return asdict(self)
+        data = asdict(self)
+        data["url"] = self.requested_url
+        return data
 
     def write(self, path: str | Path) -> None:
         p = Path(path)
@@ -112,6 +135,12 @@ class ContactResult:
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(self.body)
+
+    def text(self, encoding: str = "utf-8") -> str:
+        return self.body.decode(encoding, errors="replace")
+
+    def json(self) -> Any:
+        return json.loads(self.body.decode("utf-8"))
 
 
 def _normalize_host(host: str) -> str:
@@ -167,9 +196,18 @@ def _resolve_public(host: str, port: int) -> tuple[str, ...]:
 
 
 def _safe_headers(headers: Mapping[str, str] | None) -> dict[str, str]:
-    out = {"User-Agent": "Senju-External-Contact/2.0"}
-    forbidden = {"host", "content-length", "transfer-encoding", "connection"}
+    out = {"User-Agent": "Senju-External-Contact/3.0"}
+    forbidden = {
+        "host",
+        "content-length",
+        "transfer-encoding",
+        "connection",
+        "proxy-authorization",
+        "proxy-connection",
+    }
     for key, value in (headers or {}).items():
+        if not isinstance(key, str) or not isinstance(value, str):
+            raise ExternalContactError("request headers must be strings")
         if not key or any(c in key for c in "\r\n:"):
             raise ExternalContactError(f"invalid header name: {key!r}")
         if key.lower() in forbidden:
@@ -193,6 +231,21 @@ def _validate_resolved(host: str, resolved: Iterable[str]) -> tuple[str, ...]:
     if not checked:
         raise ExternalContactError(f"no public address resolved for {host}")
     return tuple(sorted(checked))
+
+
+def _header(headers: object, name: str) -> str | None:
+    if headers is None:
+        return None
+    getter = getattr(headers, "get", None)
+    if getter is None:
+        return None
+    value = getter(name)
+    return None if value is None else str(value)
+
+
+def _strip_sensitive_cross_host(headers: Mapping[str, str]) -> dict[str, str]:
+    sensitive = {"authorization", "cookie", "x-api-key", "proxy-authorization"}
+    return {k: v for k, v in headers.items() if k.lower() not in sensitive}
 
 
 class ExternalContactClient:
@@ -223,7 +276,6 @@ class ExternalContactClient:
         body: bytes | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> ContactReceipt:
-        """Compatibility API: perform contact and return only the receipt."""
         return self.contact_with_body(url, method=method, body=body, headers=headers).receipt
 
     def contact_with_body(
@@ -234,74 +286,129 @@ class ExternalContactClient:
         body: bytes | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> ContactResult:
-        """Perform contact and return both receipt and bounded response bytes."""
+        requested_url = url
         method = method.upper().strip()
         if method not in self.policy.allowed_methods:
             raise ExternalContactError(f"method is not allowed: {method}")
-        if body is not None and method not in {"POST", "PUT", "PATCH"}:
-            raise ExternalContactError("request body is supported only for POST/PUT/PATCH")
+        if method == "DELETE" and not self.policy.allow_delete:
+            raise ExternalContactError("DELETE requires explicit allow_delete opt-in")
+        body_methods = {"POST", "PUT", "PATCH", "DELETE"}
+        if body is not None and method not in body_methods:
+            raise ExternalContactError("request body is supported only for POST/PUT/PATCH/DELETE")
         payload = body or b""
         if len(payload) > self.policy.max_request_bytes:
             raise ExternalContactError(
                 f"request body exceeds {self.policy.max_request_bytes} bytes"
             )
 
-        host, port = _parse_url(url, self.policy)
-        resolved = _validate_resolved(host, self._resolver(host, port))
-        req = urllib.request.Request(
-            url,
-            data=(payload if method in {"POST", "PUT", "PATCH"} else None),
-            headers=_safe_headers(headers),
-            method=method,
-        )
+        current_url = url
+        current_method = method
+        current_payload = payload
+        current_headers = _safe_headers(headers)
+        contacted_hosts: list[str] = []
+        all_resolved: set[str] = set()
+        redirects = 0
+        total_attempts = 0
 
-        last_error: Exception | None = None
-        attempts = self.policy.retries + 1
-        for attempt in range(1, attempts + 1):
-            try:
-                response = self._open(req, timeout=self.policy.timeout_seconds)
-                status = int(response.status)
-                content_type = response.headers.get("Content-Type") if response.headers else None
-                data = b"" if method == "HEAD" else response.read(self.policy.max_response_bytes + 1)
-                try:
-                    response.close()
-                except Exception:
-                    pass
-                break
-            except urllib.error.HTTPError as exc:
-                # HTTP errors are real provider responses, not transport loss.
-                status = int(exc.code)
-                content_type = exc.headers.get("Content-Type") if exc.headers else None
-                data = exc.read(self.policy.max_response_bytes + 1)
-                break
-            except (urllib.error.URLError, TimeoutError, OSError) as exc:
-                last_error = exc
-                if attempt >= attempts:
-                    raise ExternalContactError(
-                        f"external contact failed after {attempt} attempt(s): {exc}"
-                    ) from exc
-                self._sleep(self.policy.retry_backoff_seconds * attempt)
-        else:  # pragma: no cover - loop exits via break or raise
-            raise ExternalContactError(f"external contact failed: {last_error}")
+        while True:
+            host, port = _parse_url(current_url, self.policy)
+            resolved = _validate_resolved(host, self._resolver(host, port))
+            all_resolved.update(resolved)
+            if not contacted_hosts or contacted_hosts[-1] != host:
+                contacted_hosts.append(host)
 
-        if len(data) > self.policy.max_response_bytes:
-            raise ExternalContactError(
-                f"response exceeds {self.policy.max_response_bytes} byte safety limit"
+            req = urllib.request.Request(
+                current_url,
+                data=(current_payload if current_method in body_methods and current_payload else None),
+                headers=current_headers,
+                method=current_method,
             )
 
-        now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-        receipt = ContactReceipt(
-            schema="senju-external-contact/v2",
-            contacted_at_utc=now,
-            method=method,
-            url=url,
-            host=host,
-            resolved_ips=resolved,
-            status=status,
-            provider_acknowledged=200 <= status < 400,
-            response_bytes=len(data),
-            response_sha256=hashlib.sha256(data).hexdigest(),
-            content_type=content_type,
-            attempt_count=attempt,
-        )
-        return ContactResult(receipt=receipt, body=data)
+            attempts = self.policy.retries + 1
+            last_error: Exception | None = None
+            redirect_location: str | None = None
+            response_headers: object = None
+
+            for attempt in range(1, attempts + 1):
+                total_attempts += 1
+                try:
+                    response = self._open(req, timeout=self.policy.timeout_seconds)
+                    status = int(response.status)
+                    response_headers = response.headers
+                    data = b"" if current_method == "HEAD" else response.read(self.policy.max_response_bytes + 1)
+                    try:
+                        response.close()
+                    except Exception:
+                        pass
+                    break
+                except urllib.error.HTTPError as exc:
+                    status = int(exc.code)
+                    response_headers = exc.headers
+                    if status in {301, 302, 303, 307, 308}:
+                        redirect_location = _header(exc.headers, "Location")
+                    data = b"" if current_method == "HEAD" else exc.read(self.policy.max_response_bytes + 1)
+                    break
+                except (urllib.error.URLError, TimeoutError, OSError) as exc:
+                    last_error = exc
+                    if attempt >= attempts:
+                        raise ExternalContactError(
+                            f"external contact failed after {attempt} attempt(s): {exc}"
+                        ) from exc
+                    self._sleep(self.policy.retry_backoff_seconds * attempt)
+            else:  # pragma: no cover
+                raise ExternalContactError(f"external contact failed: {last_error}")
+
+            if len(data) > self.policy.max_response_bytes:
+                raise ExternalContactError(
+                    f"response exceeds {self.policy.max_response_bytes} byte safety limit"
+                )
+
+            if (
+                self.policy.follow_redirects
+                and status in {301, 302, 303, 307, 308}
+                and redirect_location
+            ):
+                if redirects >= self.policy.max_redirects:
+                    raise ExternalContactError(
+                        f"redirect limit exceeded ({self.policy.max_redirects})"
+                    )
+                next_url = urllib.parse.urljoin(current_url, redirect_location)
+                next_host, _ = _parse_url(next_url, self.policy)
+                if next_host != host:
+                    current_headers = _strip_sensitive_cross_host(current_headers)
+                if status == 303 or (status in {301, 302} and current_method == "POST"):
+                    current_method = "GET"
+                    current_payload = b""
+                    current_headers = {
+                        k: v
+                        for k, v in current_headers.items()
+                        if k.lower() not in {"content-type", "content-encoding"}
+                    }
+                current_url = next_url
+                redirects += 1
+                continue
+
+            now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+            final_host, _ = _parse_url(current_url, self.policy)
+            receipt = ContactReceipt(
+                schema="senju-external-contact/v3",
+                contacted_at_utc=now,
+                method=method,
+                requested_url=requested_url,
+                final_url=current_url,
+                host=_parse_url(requested_url, self.policy)[0],
+                final_host=final_host,
+                contacted_hosts=tuple(contacted_hosts),
+                resolved_ips=tuple(sorted(all_resolved)),
+                status=status,
+                provider_acknowledged=200 <= status < 400,
+                response_bytes=len(data),
+                response_sha256=hashlib.sha256(data).hexdigest(),
+                content_type=_header(response_headers, "Content-Type"),
+                etag=_header(response_headers, "ETag"),
+                last_modified=_header(response_headers, "Last-Modified"),
+                retry_after=_header(response_headers, "Retry-After"),
+                attempt_count=total_attempts,
+                redirect_count=redirects,
+            )
+            return ContactResult(receipt=receipt, body=data)
