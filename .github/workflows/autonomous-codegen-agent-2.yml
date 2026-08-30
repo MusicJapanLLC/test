@@ -1,0 +1,27 @@
+name: Autonomous Codegen Agent 2
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Task ID (automation/codegen/tasks/<task_id>.json)"
+        required: true
+        default: "example"
+      max_iterations:
+        description: "Maximum generation attempts"
+        required: false
+        default: "10"
+  repository_dispatch:
+    types: [run-codegen-2]
+
+permissions:
+  contents: write
+
+jobs:
+  codegen-2:
+    uses: ./.github/workflows/_autonomous-codegen-agent.yml
+    with:
+      agent_id: codegen-2
+      task_id: ${{ github.event.inputs.task_id || github.event.client_payload.task_id || 'example' }}
+      max_iterations: ${{ github.event.inputs.max_iterations || github.event.client_payload.max_iterations || '10' }}
+    secrets: inherit
