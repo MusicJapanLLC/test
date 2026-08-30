@@ -1,0 +1,77 @@
+name: Auto Conflict Resolver
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # every 10 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  resolve-conflicts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ github.token }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Resolve conflicts for all open PRs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_BRANCH="claude/employee-onboarding-setup-udm86"
+          git fetch origin --prune
+
+          # Get all open non-draft PRs targeting our base
+          PRS=$(gh pr list --repo "$REPO" \
+            --base "$BASE_BRANCH" \
+            --state open \
+            --json number,headRefName,isDraft \
+            --jq '.[] | select(.isDraft == false) | "\(.number) \(.headRefName)"')
+
+          while IFS= read -r line; do
+            [[ -z "$line" ]] && continue
+            PR_NUM=$(echo "$line" | awk '{print $1}')
+            HEAD_REF=$(echo "$line" | awk '{print $2}')
+
+            echo "--- Checking PR #$PR_NUM ($HEAD_REF) ---"
+
+            # Fetch the head branch
+            git fetch origin "$HEAD_REF" || { echo "Cannot fetch $HEAD_REF — skip"; continue; }
+
+            # Test merge
+            git checkout -B "conflict-test-$$" "origin/$HEAD_REF"
+            if git merge --no-commit --no-ff "origin/$BASE_BRANCH" 2>&1 | grep -q 'CONFLICT'; then
+              echo "Conflicts detected in PR #$PR_NUM — resolving with base-wins strategy"
+              # Take base versions for all conflicting files
+              CONFLICTED=$(git diff --name-only --diff-filter=U)
+              for FILE in $CONFLICTED; do
+                git checkout "origin/$BASE_BRANCH" -- "$FILE" 2>/dev/null || git rm -f "$FILE"
+              done
+              git commit -m "fix(conflicts): auto-resolve PR #$PR_NUM conflicts — base-wins [skip ci]"
+              git push origin "HEAD:$HEAD_REF"
+              echo "✅ Resolved PR #$PR_NUM"
+            else
+              git merge --abort 2>/dev/null || true
+              echo "✓ No conflicts in PR #$PR_NUM"
+            fi
+
+            # Return to base
+            git checkout "origin/$BASE_BRANCH" -B tmp-base-$$
+          done <<< "$PRS"

@@ -2,6 +2,10 @@
 
 Implements the SELECT -> DISCOVER -> FETCH -> STORE -> PASSIVE ANALYZE -> LEARN -> SELECT NEXT
 research loop, using AutonomyQueue for candidate scoring and selection.
+
+Public read-only autonomy is intentionally frictionless: GET/HEAD candidates discovered
+from public HTTP(S) pages may be added to the read scope automatically. Write/effect
+authority remains a separate explicit set and is never inferred from discovery.
 """
 from __future__ import annotations
 
@@ -52,6 +56,11 @@ class WorkItem:
 def _normalize_host(url: str) -> str:
     parsed = urllib.parse.urlsplit(url)
     return (parsed.hostname or "").lower().strip()
+
+
+def _is_http_url(url: str) -> bool:
+    parsed = urllib.parse.urlsplit(url)
+    return parsed.scheme.lower() in {"http", "https"} and bool(parsed.hostname)
 
 
 class AutonomyQueue:
@@ -112,7 +121,7 @@ class AutonomyQueue:
 
 
 class AutonomyLoop:
-    """Executes the live discovery loop and authorized write lane."""
+    """Executes live discovery plus explicitly authorized write/canary work."""
 
     def __init__(
         self,
@@ -121,18 +130,23 @@ class AutonomyLoop:
         authorized_write_hosts: Iterable[str] = (),
         out_dir: str | Path = "reports/autonomy",
         client: ExternalContactClient | None = None,
-        max_host_budget: int = 5,
+        max_host_budget: int = 12,
+        auto_authorize_reads: bool = True,
     ) -> None:
-        self.allow_hosts = frozenset(h.strip().lower() for h in allow_hosts if h and h.strip())
         self.authorized_write_hosts = frozenset(
             h.strip().lower() for h in authorized_write_hosts if h and h.strip()
         )
+        self.allow_hosts: set[str] = {
+            h.strip().lower() for h in allow_hosts if h and h.strip()
+        } | set(self.authorized_write_hosts)
+        self.auto_authorize_reads = bool(auto_authorize_reads)
         self.out_dir = Path(out_dir)
         self.out_dir.mkdir(parents=True, exist_ok=True)
         self.queue = AutonomyQueue(max_host_budget=max_host_budget)
+        self._client_injected = client is not None
 
         policy = ExternalContactPolicy.from_hosts(
-            self.allow_hosts,
+            sorted(self.allow_hosts),
             allow_http=False,
             follow_redirects=True,
             max_redirects=3,
@@ -140,6 +154,38 @@ class AutonomyLoop:
             retries=1,
         )
         self.client = client or ExternalContactClient(policy)
+
+    def _refresh_default_client(self) -> None:
+        if self._client_injected:
+            return
+        policy = ExternalContactPolicy.from_hosts(
+            sorted(self.allow_hosts),
+            allow_http=False,
+            follow_redirects=True,
+            max_redirects=3,
+            timeout_seconds=5.0,
+            retries=1,
+        )
+        self.client = ExternalContactClient(policy)
+
+    def authorize_read_candidate(self, url: str) -> bool:
+        """Add one public HTTP(S) hostname to the GET/HEAD research scope.
+
+        This changes only the read scope. It never adds the host to
+        ``authorized_write_hosts`` and therefore cannot turn discovery into write authority.
+        DNS/public-address validation still happens in ``ExternalContactClient`` before
+        network contact.
+        """
+        if not self.auto_authorize_reads:
+            return False
+        if not _is_http_url(url):
+            return False
+        host = _normalize_host(url)
+        if not host or host in self.allow_hosts:
+            return False
+        self.allow_hosts.add(host)
+        self._refresh_default_client()
+        return True
 
     def is_authorized_write_target(self, url: str) -> bool:
         host = _normalize_host(url)
@@ -155,11 +201,12 @@ class AutonomyLoop:
                 )
             return self._execute_canary_write(item)
 
-        # For unknown third-party public candidates: strictly GET or HEAD
+        # Unknown/public research candidates are autonomous only for GET or HEAD.
         if item.method.upper() not in {"GET", "HEAD"}:
             raise AutonomyError(
                 f"Unknown public candidate {item.url} must be GET/HEAD only, got: {item.method}"
             )
+        auto_added_current = self.authorize_read_candidate(item.url)
 
         # 1 & 2. FETCH real HTTP content
         try:
@@ -170,6 +217,7 @@ class AutonomyLoop:
             return {
                 "work_item": item.to_dict(),
                 "success": False,
+                "auto_authorized_read_host": auto_added_current,
                 "error": type(exc).__name__,
                 "message": str(exc),
             }
@@ -204,12 +252,17 @@ class AutonomyLoop:
             json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
         )
 
-        # 5. LEARN & enqueue next candidates
+        # 5. LEARN & enqueue next candidates. Newly discovered public hosts become
+        # eligible for GET/HEAD research without a human having to pre-enumerate them.
         new_enqueued = 0
+        newly_authorized: list[str] = []
         for candidate in evidence.get("discovered_candidates", []):
             cand_url = candidate["url"]
+            if not _is_http_url(cand_url):
+                continue
             cand_host = _normalize_host(cand_url)
-            # Only enqueue candidate URLs whose host is allowlisted
+            if self.authorize_read_candidate(cand_url):
+                newly_authorized.append(cand_host)
             if cand_host in self.allow_hosts:
                 next_item = WorkItem(
                     id=f"disc-{len(self.queue._seen_urls) + 1}",
@@ -226,13 +279,16 @@ class AutonomyLoop:
         return {
             "work_item": item.to_dict(),
             "success": True,
+            "auto_authorized_read_host": auto_added_current,
+            "auto_authorized_discovered_hosts": sorted(set(newly_authorized)),
+            "current_read_scope_hosts": sorted(self.allow_hosts),
             "evidence": evidence,
             "evidence_path": str(evidence_path),
             "new_enqueued_candidates": new_enqueued,
         }
 
     def _execute_canary_write(self, item: WorkItem) -> dict[str, Any]:
-        """Reuse PR #210 Action Intents for POST/PUT/PATCH write lane with read-back verification."""
+        """Reuse the Action Intents write lane with read-back verification."""
         host = _normalize_host(item.url)
         intent = {
             "schema": "senju-action-intents/v1",
