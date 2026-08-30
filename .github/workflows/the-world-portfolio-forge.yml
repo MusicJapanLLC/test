@@ -10,6 +10,7 @@ on:
     paths:
       - '.github/workflows/the-world-portfolio-forge.yml'
       - 'automation/portfolio_forge/**'
+      - 'automation/reporting/portfolio_targets.json'
 
 concurrency:
   group: the-world-portfolio-forge
@@ -26,6 +27,7 @@ jobs:
     env:
       STATE_DIR: /tmp/the-world-portfolio-forge
       GH_TOKEN: ${{ github.token }}
+      PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
       TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
     steps:
       - name: Checkout THE WORLD
@@ -53,21 +55,18 @@ jobs:
             fi
           fi
 
-      - name: Probe live portfolio
-        id: probe
+      - name: Probe registered live portfolio
         shell: bash
         run: |
-          set +e
+          set -euo pipefail
           mkdir -p "$STATE_DIR"
           python automation/portfolio_forge/portfolio_watch.py \
+            --registry automation/reporting/portfolio_targets.json \
             --json "$STATE_DIR/portfolio-watch.json" \
             --markdown "$STATE_DIR/portfolio-watch.md"
-          rc=$?
-          set -e
-          echo "probe_rc=$rc" >> "$GITHUB_OUTPUT"
           cat "$STATE_DIR/portfolio-watch.md" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Compare Previous -> Current
+      - name: Compare Previous -> Current and dedupe incidents
         id: delta
         shell: bash
         run: |
@@ -84,32 +83,77 @@ jobs:
           ps=float(previous.get('portfolio_score') or cs)
           cf=int(current.get('failed') or 0)
           pf=int(previous.get('failed') or cf)
-          improved=(cs >= ps + 5) or (cf < pf)
-          regressed=(cs <= ps - 10) or (cf > pf)
+          current_fp=str(current.get('incident_fingerprint') or 'unknown')
+          previous_fp=str(previous.get('incident_fingerprint') or '__none__')
           material=bool(current.get('material_delta'))
+          improved=(cs >= ps + 5) or (cf < pf) or (previous_fp != 'healthy' and current_fp == 'healthy')
+          regressed=(cs <= ps - 10) or (cf > pf)
+          incident_changed=current_fp != previous_fp
+          repair_due=material and (incident_changed or regressed or not previous)
           print(f'current_score={cs}')
           print(f'previous_score={ps}')
+          print(f'current_fingerprint={current_fp}')
+          print(f'previous_fingerprint={previous_fp}')
           print('improved=' + ('true' if improved else 'false'))
           print('regressed=' + ('true' if regressed else 'false'))
+          print('incident_changed=' + ('true' if incident_changed else 'false'))
           print('material=' + ('true' if material else 'false'))
+          print('repair_due=' + ('true' if repair_due else 'false'))
           print(f'failed={cf}')
           PY
 
-      - name: Feed degraded live evidence back into AI Foundry
-        if: steps.delta.outputs.material == 'true' || steps.delta.outputs.regressed == 'true'
+      - name: Feed a new or worsened incident into autonomous repair loops
+        if: steps.delta.outputs.repair_due == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          echo "Live portfolio weakness detected; dispatching AI Dev Minute Foundry with fresh production evidence available in this run." >> "$GITHUB_STEP_SUMMARY"
+          echo "New/worsened live portfolio incident detected. Dispatching both portfolio prioritization and AI development loops." >> "$GITHUB_STEP_SUMMARY"
+          gh workflow run portfolio-evolution-daily.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || true
           gh workflow run ai-dev-minute-foundry.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || true
 
-      - name: Report verified recovery/improvement to TOMOKI
+      - name: Report new or worsened portfolio incident to Slack
+        if: steps.delta.outputs.repair_due == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          webhook="${PORTFOLIO_SLACK_WEBHOOK_URL:-}"
+          if [[ -z "$webhook" ]]; then webhook="${TOMOKI_SLACK_WEBHOOK_URL:-}"; fi
+          if [[ -z "$webhook" ]]; then
+            echo "SLACK_INCIDENT_DELIVERY=BLOCKED_MISSING_WEBHOOK" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - <<'PY'
+          import json, os
+          state=os.environ['STATE_DIR']
+          cur=json.load(open(state+'/portfolio-watch.json',encoding='utf-8'))
+          nf=cur.get('next_focus') or {}
+          text=(
+              '*THE WORLD PORTFOLIO — REPAIR LOOP STARTED*\n'
+              f"Product: {nf.get('name','UNKNOWN')}\n"
+              f"Live: {nf.get('url','')}\n"
+              f"Priority: {nf.get('priority','UNKNOWN')}\n"
+              f"Evidence: {nf.get('reason','unknown')}\n"
+              f"Portfolio score: {cur.get('portfolio_score','?')} / failed={cur.get('failed','?')} / degraded={cur.get('degraded','?')}\n"
+              f"Incident: {cur.get('incident_fingerprint','unknown')}\n"
+              'Action: Portfolio Evolution + AI Dev Foundry dispatched; duplicate incident dispatches are suppressed until state changes.\n'
+              f"GitHub run: {os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
+          )
+          json.dump({'text':text},open(state+'/slack-incident.json','w',encoding='utf-8'),ensure_ascii=False)
+          PY
+          curl --fail-with-body --silent --show-error \
+            -H 'Content-Type: application/json' \
+            --data-binary "@$STATE_DIR/slack-incident.json" \
+            "$webhook"
+
+      - name: Report verified recovery or score improvement to portfolio Slack
         if: steps.delta.outputs.improved == 'true'
         shell: bash
         run: |
           set -euo pipefail
-          if [[ -z "${TOMOKI_SLACK_WEBHOOK_URL:-}" ]]; then
-            echo "Slack webhook unavailable; improvement evidence remains in artifact." >> "$GITHUB_STEP_SUMMARY"
+          webhook="${PORTFOLIO_SLACK_WEBHOOK_URL:-}"
+          if [[ -z "$webhook" ]]; then webhook="${TOMOKI_SLACK_WEBHOOK_URL:-}"; fi
+          if [[ -z "$webhook" ]]; then
+            echo "SLACK_RECOVERY_DELIVERY=BLOCKED_MISSING_WEBHOOK" >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           python - <<'PY'
@@ -122,19 +166,21 @@ jobs:
               prev={}
           weakest=cur.get('next_focus') or {}
           text=(
-              '*THE WORLD PORTFOLIO RECOVERED / IMPROVED*\n'
+              '*THE WORLD PORTFOLIO UPDATE — VERIFIED IMPROVEMENT*\n'
               f"Portfolio score: {prev.get('portfolio_score','?')} -> {cur.get('portfolio_score','?')}\n"
-              f"Failed live products: {prev.get('failed','?')} -> {cur.get('failed','?')}\n"
-              f"Next focus: {weakest.get('name','NONE')} / {weakest.get('priority','NONE')}\n"
-              'Evidence: fresh production GET checks + Previous -> Current artifact comparison.\n'
+              f"Failed: {prev.get('failed','?')} -> {cur.get('failed','?')}\n"
+              f"Incident: {prev.get('incident_fingerprint','?')} -> {cur.get('incident_fingerprint','?')}\n"
+              f"Next: {weakest.get('name','NONE')} / {weakest.get('priority','NONE')}\n"
+              'Verified: fresh production GET/health checks + Previous -> Current artifact comparison.\n'
+              'Owner action: NONE\n'
               f"GitHub run: {os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
           )
-          json.dump({'text':text},open(state+'/slack.json','w',encoding='utf-8'),ensure_ascii=False)
+          json.dump({'text':text},open(state+'/slack-recovery.json','w',encoding='utf-8'),ensure_ascii=False)
           PY
           curl --fail-with-body --silent --show-error \
             -H 'Content-Type: application/json' \
-            --data-binary "@$STATE_DIR/slack.json" \
-            "$TOMOKI_SLACK_WEBHOOK_URL"
+            --data-binary "@$STATE_DIR/slack-recovery.json" \
+            "$webhook"
 
       - name: Preserve live portfolio evidence
         if: always()
@@ -145,10 +191,14 @@ jobs:
             /tmp/the-world-portfolio-forge/portfolio-watch.json
             /tmp/the-world-portfolio-forge/portfolio-watch.md
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
 
-      - name: Fail only on confirmed live outage
-        if: steps.delta.outputs.failed != '0'
+      - name: Keep detector health separate from target health
+        shell: bash
         run: |
-          echo "One or more live portfolio products failed the production probe." >&2
-          exit 1
+          set -euo pipefail
+          if [[ "${{ steps.delta.outputs.material }}" == "true" ]]; then
+            echo "DETECTOR=HEALTHY; TARGET_STATE=INCIDENT; repair loop has been routed without marking the detector itself broken." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "DETECTOR=HEALTHY; TARGET_STATE=HEALTHY." >> "$GITHUB_STEP_SUMMARY"
+          fi
