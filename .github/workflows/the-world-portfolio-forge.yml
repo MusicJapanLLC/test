@@ -1,0 +1,154 @@
+name: THE WORLD - Portfolio Forge Watch
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Four production-evidence cycles/hour, offset from AI Dev Minute Foundry.
+    - cron: '11,26,41,56 * * * *'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-portfolio-forge.yml'
+      - 'automation/portfolio_forge/**'
+
+concurrency:
+  group: the-world-portfolio-forge
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  portfolio-forge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      STATE_DIR: /tmp/the-world-portfolio-forge
+      GH_TOKEN: ${{ github.token }}
+      TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore prior live evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR/previous"
+          prev="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow the-world-portfolio-forge.yml --status success --limit 12 --json databaseId --jq '.[].databaseId' | grep -v "^${GITHUB_RUN_ID}$" | head -n1 || true)"
+          if [[ -n "$prev" ]]; then
+            gh run download "$prev" --repo "$GITHUB_REPOSITORY" --name "the-world-portfolio-forge-${prev}" --dir "$STATE_DIR/previous" || true
+            candidate="$(find "$STATE_DIR/previous" -type f -name portfolio-watch.json | head -n1 || true)"
+            if [[ -n "$candidate" ]]; then
+              cp "$candidate" "$STATE_DIR/previous.json"
+              echo "Restored prior live evidence from run $prev." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Probe live portfolio
+        id: probe
+        shell: bash
+        run: |
+          set +e
+          mkdir -p "$STATE_DIR"
+          python automation/portfolio_forge/portfolio_watch.py \
+            --json "$STATE_DIR/portfolio-watch.json" \
+            --markdown "$STATE_DIR/portfolio-watch.md"
+          rc=$?
+          set -e
+          echo "probe_rc=$rc" >> "$GITHUB_OUTPUT"
+          cat "$STATE_DIR/portfolio-watch.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Compare Previous -> Current
+        id: delta
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          state=os.environ['STATE_DIR']
+          current=json.load(open(state+'/portfolio-watch.json',encoding='utf-8'))
+          try:
+              previous=json.load(open(state+'/previous.json',encoding='utf-8'))
+          except Exception:
+              previous={}
+          cs=float(current.get('portfolio_score') or 0)
+          ps=float(previous.get('portfolio_score') or cs)
+          cf=int(current.get('failed') or 0)
+          pf=int(previous.get('failed') or cf)
+          improved=(cs >= ps + 5) or (cf < pf)
+          regressed=(cs <= ps - 10) or (cf > pf)
+          material=bool(current.get('material_delta'))
+          print(f'current_score={cs}')
+          print(f'previous_score={ps}')
+          print('improved=' + ('true' if improved else 'false'))
+          print('regressed=' + ('true' if regressed else 'false'))
+          print('material=' + ('true' if material else 'false'))
+          print(f'failed={cf}')
+          PY
+
+      - name: Feed degraded live evidence back into AI Foundry
+        if: steps.delta.outputs.material == 'true' || steps.delta.outputs.regressed == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Live portfolio weakness detected; dispatching AI Dev Minute Foundry with fresh production evidence available in this run." >> "$GITHUB_STEP_SUMMARY"
+          gh workflow run ai-dev-minute-foundry.yml --repo "$GITHUB_REPOSITORY" --ref "$GITHUB_REF_NAME" || true
+
+      - name: Report verified recovery/improvement to TOMOKI
+        if: steps.delta.outputs.improved == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${TOMOKI_SLACK_WEBHOOK_URL:-}" ]]; then
+            echo "Slack webhook unavailable; improvement evidence remains in artifact." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - <<'PY'
+          import json, os
+          state=os.environ['STATE_DIR']
+          cur=json.load(open(state+'/portfolio-watch.json',encoding='utf-8'))
+          try:
+              prev=json.load(open(state+'/previous.json',encoding='utf-8'))
+          except Exception:
+              prev={}
+          weakest=cur.get('next_focus') or {}
+          text=(
+              '*THE WORLD PORTFOLIO RECOVERED / IMPROVED*\n'
+              f"Portfolio score: {prev.get('portfolio_score','?')} -> {cur.get('portfolio_score','?')}\n"
+              f"Failed live products: {prev.get('failed','?')} -> {cur.get('failed','?')}\n"
+              f"Next focus: {weakest.get('name','NONE')} / {weakest.get('priority','NONE')}\n"
+              'Evidence: fresh production GET checks + Previous -> Current artifact comparison.\n'
+              f"GitHub run: {os.getenv('GITHUB_SERVER_URL')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{os.getenv('GITHUB_RUN_ID')}"
+          )
+          json.dump({'text':text},open(state+'/slack.json','w',encoding='utf-8'),ensure_ascii=False)
+          PY
+          curl --fail-with-body --silent --show-error \
+            -H 'Content-Type: application/json' \
+            --data-binary "@$STATE_DIR/slack.json" \
+            "$TOMOKI_SLACK_WEBHOOK_URL"
+
+      - name: Preserve live portfolio evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-world-portfolio-forge-${{ github.run_id }}
+          path: |
+            /tmp/the-world-portfolio-forge/portfolio-watch.json
+            /tmp/the-world-portfolio-forge/portfolio-watch.md
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Fail only on confirmed live outage
+        if: steps.delta.outputs.failed != '0'
+        run: |
+          echo "One or more live portfolio products failed the production probe." >&2
+          exit 1
