@@ -1,6 +1,12 @@
 name: Autonomous Codegen Loop x3
 
 on:
+  push:
+    branches:
+      - claude/autonomous-code-generation-github-kje2uj
+    paths:
+      - "automation/codegen/**"
+      - ".github/workflows/autonomous-codegen-loop.yml"
   workflow_dispatch:
     inputs:
       task_id:
