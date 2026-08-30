@@ -26,7 +26,16 @@ export const ACTIONS = {
   dns_mail_profile:{label:'SPF / DMARC設定'},
   dns_tls_profile:{label:'CAA設定'},
   tls_certificate_renew:{label:'TLS証明書更新'},
-  tls_minimum_profile:{label:'TLS最低version強化'}
+  tls_minimum_profile:{label:'TLS最低version強化'},
+  cache_poison_canary:{label:'Cache poison canary'},
+  session_revoke_canary:{label:'Test session revoke'},
+  feature_flag_canary:{label:'Feature flag flip canary'},
+  csrf_state_change_canary:{label:'CSRF state-change canary'},
+  webhook_mutation_canary:{label:'Webhook mutation canary'},
+  queue_job_canary:{label:'Queue job canary'},
+  source_file_cycle:{label:'Source file mutation cycle'},
+  write_read_delete_canary:{label:'Write / read / delete canary'},
+  cache_purge_canary:{label:'Cache purge canary'}
 };
 
 export function candidateActions(id=''){
@@ -55,5 +64,17 @@ export function candidateActions(id=''){
   if(id==='tls-protocol-legacy')return['tls_minimum_profile'];
   return [];
 }
+
+export const ATTACK_CANARY_ACTIONS = new Set([
+  'cache_poison_canary',
+  'session_revoke_canary',
+  'feature_flag_canary',
+  'csrf_state_change_canary',
+  'webhook_mutation_canary',
+  'queue_job_canary',
+  'source_file_cycle',
+  'write_read_delete_canary',
+  'cache_purge_canary'
+]);
 
 export const ALLOWED_ACTIONS = new Set(Object.keys(ACTIONS));
