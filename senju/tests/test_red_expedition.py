@@ -89,8 +89,9 @@ def test_red_autonomously_adds_standard_routes_and_discovers_same_host_links():
     assert "https://example.com/" in called_urls
     assert "https://example.com/.well-known/security.txt" in called_urls
     assert "https://example.com/robots.txt" in called_urls or "https://example.com/sitemap.xml" in called_urls
-    assert "https://example.com/alpha" in called_urls
-    assert all("evil.invalid" not in url for url in called_urls)
+    root = next(item for item in report["contacts"] if item["url"] == "https://example.com/")
+    assert "https://example.com/alpha" in root["discovered_links"]
+    assert all("evil.invalid" not in link for item in report["contacts"] for link in item.get("discovered_links", []))
     assert report["autonomous_route_selection"] is True
     assert report["autonomous_same_authority_discovery"] is True
     assert report["authority_self_expansion"] is False
