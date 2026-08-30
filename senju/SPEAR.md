@@ -14,24 +14,32 @@ This removes **role separation inside the authorized scope**. It does not conver
 
 ## Phase 1: Engagement Controller — live
 
-SPEAR supports two operating profiles.
+### Engagement metadata rule
+
+`engagement_id` is **not required as a source of execution authority**. If omitted, Senju may derive a stable audit identifier from the manifest.
+
+A `valid_from_utc` / `valid_until_utc` window is also **not mandatory when the campaign is covered by standing authorization**. If an explicit validity window is supplied, Senju enforces it.
+
+The controlling authority is the Owner / BOSS-approved campaign scope, not the presence of a particular identifier field.
 
 ### Local / synthetic / isolated owned-lab profile
 
 For network-free dry-runs, synthetic targets, and isolated owned labs, a durable `engagement_id` and validity window are optional metadata. These runs may be created directly from the BOSS objective and local lab configuration.
 
+Inside these environments, Red may select tools, methods, retries, sequencing, credentials supplied to the lab, and supported effect levels without per-step approval.
+
 ### Live external profile
 
-For live contact with public external assets, the campaign must still carry machine-readable evidence of authority and a target scope. The current live implementation uses:
+For live contact with public external assets, the campaign must still carry machine-readable evidence of authority and a target scope. A standing authorization may replace a per-run expiry window.
+
+The live profile records:
 
 - asset owner / authorization or Rules-of-Engagement reference
-- target hosts belonging to the authorized campaign
-- active authorization window or equivalent standing authorization
-- approved action / impact envelope
-- request budget and request rate
+- target scope belonging to the authorized campaign
+- standing authorization or an optional explicit authorization window
+- action / impact envelope
+- request budget / rate parameters
 - whether plain HTTP is allowed
-
-`engagement_id` is an audit identifier, not a separate source of execution authority. The controlling authority is the Owner / BOSS-approved campaign scope.
 
 After that scope is accepted, Red does not need to reacquire permission for every observation, method selection, retry, path choice, or execution step that remains inside the approved envelope.
 
@@ -50,7 +58,15 @@ python -m senju.authorized_assessment path/to/owned-engagement.json \
   --out reports/spear-engagement.json
 ```
 
-Network execution passes through `ExternalContactClient`. For live public targets, that transport remains an enforcement layer for the campaign's external authorization scope; it is **not** a separate governance authority over Red. Method, retry, redirect, and response-size settings are execution parameters inside the supported policy envelope rather than a requirement for per-step human approval.
+## ExternalContactClient rule
+
+`ExternalContactClient` is an execution transport, **not a second governance authority over Red**.
+
+Within an already authorized campaign, method choice, retry strategy, redirect handling, timeout, response-size budget, and request cadence are execution parameters. They do not require a separate human approval step for every request.
+
+For live public targets, the transport still enforces the campaign's external authorization boundary and public-network safety checks. That boundary exists to distinguish authorized campaign assets from unrelated third-party assets; it is not an internal Red-vs-executor permission split.
+
+For Arena / synthetic / isolated owned labs, those external-public-target restrictions do not define Red's research freedom inside the lab.
 
 ## Phase 2: Authorized web posture pack — live
 
@@ -97,51 +113,21 @@ Raw bodies are not required for regression memory.
 
 External assessment only runs when a live external authority configuration is present. Without one, the workflow performs a network-free example dry-run and records `not_configured` rather than contacting a public target.
 
-When configured, the workflow:
-
-1. runs the focused SPEAR regression suite before network execution;
-2. validates the live campaign authority configuration;
-3. assesses targets inside the active campaign scope;
-4. sanitizes evidence before persistence;
-5. restores the previous successful sanitized baseline;
-6. computes regression changes and risk direction;
-7. uploads a 30-day evidence artifact;
-8. posts a compact Slack summary when `SLACK_WEBHOOK_URL` is configured.
+When configured, the workflow runs the focused regression suite, validates campaign authority, assesses targets inside the campaign scope, sanitizes evidence, restores the previous baseline, computes changes, uploads evidence, and may post a compact Slack summary.
 
 Persisted evidence intentionally excludes raw response bodies, raw response headers, cookie values, credentials, and authorization-reference text.
 
 ## Phase 5: Depth observation — implemented
 
-Phase 5 increases real-world observation density without creating a second execution authority.
-
 ### TLS / certificate pack
 
-`senju.spear_tls` performs one authorized TLS handshake against an HTTPS host in campaign scope and records sanitized metadata:
-
-- negotiated TLS version
-- cipher suite
-- certificate subject/issuer common name
-- certificate expiry time
-- SAN DNS count
-- near-expiry / expired certificate findings
-- legacy TLS finding if an old protocol is negotiated
-
-Raw certificate bytes are not persisted, and the TLS pack sends no HTTP request.
+`senju.spear_tls` performs an authorized TLS handshake against an HTTPS host in campaign scope and records sanitized metadata such as TLS version, cipher suite, certificate subject/issuer, expiry, SAN count, and relevant findings.
 
 ### Bounded same-origin path inventory
 
-`senju.spear_inventory` performs a low-impact inventory inside the host and `base_path` already present in the campaign scope:
+`senju.spear_inventory` inventories same-origin links inside the campaign target and verifies a bounded subset without form submission, credential guessing, brute force, exploit delivery, or unauthorized cross-host expansion on live public targets.
 
-1. one bounded `GET` of the engagement base path;
-2. parse same-origin links from that HTML only;
-3. remove query strings/fragments;
-4. reject cross-host links and paths outside `base_path`;
-5. skip state-changing-looking paths such as logout/delete/remove/unsubscribe;
-6. verify only a small request-budget-limited subset with `HEAD`.
-
-It does not submit forms, authenticate, brute force, guess credentials, deliver exploit payloads, or follow unauthorized cross-host redirects on live public targets.
-
-`.github/workflows/senju-spear-depth.yml` runs every 6 hours on a separate offset. It uses the same live authority source, runs Phase 5 tests before network execution, and persists a sanitized depth signal containing path counts/statuses and TLS metadata/findings only.
+`.github/workflows/senju-spear-depth.yml` runs every 6 hours on a separate offset using the same live authority source.
 
 ## Next phases
 
