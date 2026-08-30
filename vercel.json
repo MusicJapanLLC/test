@@ -6,8 +6,8 @@
     { "src": "public/**", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/runtime/chat", "destination": "https://ai-foundry-ai-development-core-yt8e6o.v2.appdeploy.ai/api/chat" },
-    { "source": "/runtime/title", "destination": "https://ai-foundry-ai-development-core-yt8e6o.v2.appdeploy.ai/api/title" },
+    { "source": "/runtime/chat", "destination": "https://api-v2.appdeploy.ai/app/ai-foundry-ai-development-core-yt8e6o/api/chat" },
+    { "source": "/runtime/title", "destination": "https://api-v2.appdeploy.ai/app/ai-foundry-ai-development-core-yt8e6o/api/title" },
     { "source": "/agent", "destination": "/public/agent.html" },
     { "source": "/agent.js", "destination": "/public/agent.js" },
     { "source": "/app.js", "destination": "/public/app.js" },
