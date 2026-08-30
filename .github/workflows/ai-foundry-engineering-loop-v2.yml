@@ -1,0 +1,88 @@
+name: AI FOUNDRY - Engineering Loop V2 Canary
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['chatgpt/ai-foundry-engineering-loop-v2']
+    paths:
+      - '.github/workflows/ai-foundry-engineering-loop-v2.yml'
+      - 'automation/ai_foundry/engineering_loop.py'
+      - 'tests/test_ai_foundry_engineering_loop_v2.py'
+
+permissions:
+  contents: read
+
+jobs:
+  engineering-canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout assist branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: chatgpt/ai-foundry-engineering-loop-v2
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34aea4fa41551a30e30af803
+        with:
+          python-version: '3.12'
+
+      - name: Run engineering loop unit tests
+        run: python -m unittest tests/test_ai_foundry_engineering_loop_v2.py -v
+
+      - name: Create real canary development request
+        run: |
+          cat > /tmp/foundry-engineering-canary.json <<'JSON'
+          {
+            "job": {
+              "id": "engineering-v2-canary",
+              "request": {
+                "request_text": "Build a polished dependency-free browser Pomodoro timer. It must have Start, Pause, Reset, work/break mode switching, accessible labels, keyboard-friendly controls, responsive layout, and keep all state locally in the browser. Include a deterministic JavaScript syntax validation command."
+              }
+            }
+          }
+          JSON
+
+      - name: Generate, execute, repair, and verify real code
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/foundry-engineering-v2
+          python automation/ai_foundry/engineering_loop.py \
+            --payload /tmp/foundry-engineering-canary.json \
+            --out-root /tmp/foundry-engineering-v2 \
+            --meta-out /tmp/foundry-engineering-meta.json \
+            --repair-rounds 3
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          meta=json.loads(Path('/tmp/foundry-engineering-meta.json').read_text(encoding='utf-8'))
+          assert meta['verified'] is True, meta
+          assert meta['history'], meta
+          assert any(step['commands'] for step in meta['history']), meta
+          print(json.dumps({
+              'verified': meta['verified'],
+              'repair_rounds_used': meta['repair_rounds_used'],
+              'files': meta['files'],
+              'rounds': len(meta['history']),
+          }, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Publish evidence to workflow summary
+        if: always()
+        run: |
+          echo '## AI FOUNDRY ENGINEERING LOOP V2' >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f /tmp/foundry-engineering-meta.json ]]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          d=json.loads(Path('/tmp/foundry-engineering-meta.json').read_text(encoding='utf-8'))
+          print(f"- verified: **{d.get('verified')}**")
+          print(f"- repair rounds used: **{d.get('repair_rounds_used')}**")
+          print(f"- generated files: **{len(d.get('files') or [])}**")
+          for h in d.get('history') or []:
+              print(f"- round {h.get('round')}: passed={h.get('passed')} commands={len(h.get('commands') or [])} http_smoke={h.get('http_smoke',{}).get('passed')}")
+          PY
+          else
+            echo '- metadata unavailable: loop failed before evidence emission' >> "$GITHUB_STEP_SUMMARY"
+          fi
