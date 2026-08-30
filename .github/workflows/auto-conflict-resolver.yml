@@ -1,0 +1,124 @@
+name: Auto Conflict Resolver
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"  # every 30 minutes
+  workflow_dispatch:
+
+concurrency:
+  group: auto-conflict-resolver
+  cancel-in-progress: true
+
+jobs:
+  resolve-conflicts:
+    name: Detect and resolve merge conflicts (base-wins strategy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      pull-requests: read
+      actions: read
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_BRANCH: claude/employee-onboarding-setup-udm86
+
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ github.token }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all PR branches and base
+        run: |
+          git fetch origin ${{ env.BASE_BRANCH }}
+          git fetch origin '+refs/heads/*:refs/remotes/origin/*' --prune
+
+      - name: Find PRs with merge conflicts and resolve them
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="origin/${{ env.BASE_BRANCH }}"
+          REPO="$GITHUB_REPOSITORY"
+          RESOLVED=0
+          SKIPPED=0
+
+          # Get all open PRs targeting base branch (drafts excluded)
+          PRS=$(gh pr list \
+            --repo "$REPO" \
+            --base "${{ env.BASE_BRANCH }}" \
+            --state open \
+            --json number,headRefName,isDraft \
+            --jq '.[] | select(.isDraft == false) | "\(.number) \(.headRefName)"')
+
+          if [[ -z "$PRS" ]]; then
+            echo "No open PRs to check."
+            exit 0
+          fi
+
+          while IFS=' ' read -r PR_NUM HEAD_BRANCH; do
+            echo "--- Checking PR #$PR_NUM ($HEAD_BRANCH) ---"
+
+            # Check if branch exists remotely
+            if ! git ls-remote --exit-code origin "$HEAD_BRANCH" > /dev/null 2>&1; then
+              echo "Branch $HEAD_BRANCH not found remotely; skipping."
+              ((SKIPPED++)) || true
+              continue
+            fi
+
+            git fetch origin "$HEAD_BRANCH" 2>/dev/null || { echo "Fetch failed; skipping."; ((SKIPPED++)) || true; continue; }
+
+            # Test-merge to detect conflicts
+            git checkout -B "__conflict-test__" "origin/$HEAD_BRANCH"
+            MERGE_OUTPUT=$(git merge --no-commit --no-ff "$BASE" 2>&1 || true)
+            CONFLICTED=$(git diff --name-only --diff-filter=U)
+            git merge --abort 2>/dev/null || true
+
+            if [[ -z "$CONFLICTED" ]]; then
+              echo "PR #$PR_NUM: no conflicts."
+              ((SKIPPED++)) || true
+              continue
+            fi
+
+            echo "PR #$PR_NUM conflicts: $CONFLICTED"
+
+            # Resolve: take base branch version for all conflicting files
+            git checkout -B "$HEAD_BRANCH" "origin/$HEAD_BRANCH"
+            git merge --no-commit --no-ff "$BASE" 2>/dev/null || true
+
+            for FILE in $CONFLICTED; do
+              git checkout "$BASE" -- "$FILE" 2>/dev/null && echo "  resolved: $FILE" || echo "  skip (deleted in base): $FILE"
+            done
+
+            # Stage any remaining unmerged files
+            git add -A
+
+            if git diff --cached --quiet; then
+              git merge --abort 2>/dev/null || true
+              echo "PR #$PR_NUM: nothing staged after resolution; skipping."
+              ((SKIPPED++)) || true
+              continue
+            fi
+
+            git commit -m "fix: auto-resolve merge conflicts with base branch [PR #$PR_NUM]"
+            git push origin "$HEAD_BRANCH"
+            echo "PR #$PR_NUM: conflicts resolved and pushed."
+            ((RESOLVED++)) || true
+
+          done <<< "$PRS"
+
+          echo "=== Summary ==="
+          echo "Resolved: $RESOLVED"
+          echo "Skipped/clean: $SKIPPED"
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Auto Conflict Resolver — Run ${GITHUB_RUN_ID}
+          - PRs resolved: **$RESOLVED**
+          - PRs clean/skipped: **$SKIPPED**
+          EOF
