@@ -1,6 +1,18 @@
 name: ScopeGuard Failure Hunt
 
 on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/OFFENSE_FIRST.md"
+      - "senju/senju/safety.py"
+      - "senju/senju/authorized_assessment.py"
+      - "senju/senju/external.py"
+      - "senju/senju/autonomy/**"
+      - "scripts/security/artifact_guard.py"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/scopeguard-failure-hunt.yml"
   workflow_dispatch:
     inputs:
       iterations:
