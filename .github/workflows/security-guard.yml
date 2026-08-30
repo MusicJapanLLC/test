@@ -73,7 +73,7 @@ jobs:
           fi
 
       - name: Enforce fail-closed workflow policy
-        run: python automation/security/workflow_policy_entrypoint.py
+        run: python automation/security/workflow_policy_entrypoint_v2.py
 
       - name: Block remote shell execution patterns
         shell: bash
