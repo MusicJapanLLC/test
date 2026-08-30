@@ -9,6 +9,7 @@
     { "source": "/agent", "destination": "/public/agent.html" },
     { "source": "/agent.js", "destination": "/public/agent.js" },
     { "source": "/app.js", "destination": "/public/app.js" },
+    { "source": "/auto-execute.js", "destination": "/public/auto-execute.js" },
     { "source": "/styles.css", "destination": "/public/styles.css" },
     { "source": "/", "destination": "/public/index.html" }
   ]
