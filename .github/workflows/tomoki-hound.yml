@@ -41,17 +41,35 @@ jobs:
           rc=$?
           set -e
 
-          # Preserve enough redacted failure evidence for MANAGER/SKEPTIC to diagnose
-          # the next state. Never persist the raw Copilot log or environment secrets.
+          python - <<'PY'
+          import re
+          from pathlib import Path
+
+          src = Path('/tmp/tomoki-copilot.log')
+          text = src.read_text(encoding='utf-8', errors='replace') if src.exists() else 'Copilot CLI produced no diagnostic log.\n'
+          patterns = [
+              (r'(?i)(authorization\s*[:=]\s*bearer\s+)[^\s]+', r'\1[REDACTED]'),
+              (r'\bgh[pousr]_[A-Za-z0-9_]{20,}\b', '[REDACTED_GITHUB_TOKEN]'),
+              (r'\bgithub_pat_[A-Za-z0-9_]{20,}\b', '[REDACTED_GITHUB_PAT]'),
+          ]
+          for pattern, repl in patterns:
+              text = re.sub(pattern, repl, text)
+          lines = text.splitlines()[-160:]
+          Path('tomoki-copilot-diagnostic.log').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+          # Preserve enough redacted failure evidence for MANAGER/SKEPTIC and the
+          # Evolution Watchdog. Never persist or print the raw Copilot log.
           if [[ ! -s tomoki-report.md ]]; then
             printf 'HOUND failed or produced no report. Exit code: %s\n' "$rc" > tomoki-report.md
           fi
           if [[ "$rc" -ne 0 ]]; then
             {
               printf '\n## Redacted diagnostic tail\n'
-              tail -n 120 /tmp/tomoki-copilot.log \
-                | sed -E 's/github_pat_[A-Za-z0-9_]+/[REDACTED_GITHUB_TOKEN]/g; s/gh[pousr]_[A-Za-z0-9_]+/[REDACTED_GITHUB_TOKEN]/g; s/Bearer[[:space:]]+[A-Za-z0-9._~+\/-]+/[REDACTED_BEARER]/g'
+              cat tomoki-copilot-diagnostic.log
             } >> tomoki-report.md
+            echo '--- sanitized Copilot diagnostic ---' >&2
+            cat tomoki-copilot-diagnostic.log >&2
           fi
           exit "$rc"
       - name: Persist HOUND evidence for Manager
@@ -59,7 +77,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: tomoki-hound-report
-          path: tomoki-report.md
+          path: |
+            tomoki-report.md
+            tomoki-copilot-diagnostic.log
           retention-days: 14
           if-no-files-found: warn
       - name: Report to TOMOKI Slack
