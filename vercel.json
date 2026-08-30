@@ -1,6 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "git": { "deploymentEnabled": true },
+  "git": {
+    "deploymentEnabled": {
+      "security/**": false,
+      "senju/**": false,
+      "dependabot/**": false,
+      "automation/**": false,
+      "rnd/**": false,
+      "world/**": false,
+      "chatgpt/**": false
+    }
+  },
   "builds": [
     { "src": "api/*.js", "use": "@vercel/node" },
     { "src": "public/**", "use": "@vercel/static" }
@@ -9,6 +19,7 @@
     { "source": "/agent", "destination": "/public/agent.html" },
     { "source": "/agent.js", "destination": "/public/agent.js" },
     { "source": "/app.js", "destination": "/public/app.js" },
+    { "source": "/auto-execute.js", "destination": "/public/auto-execute.js" },
     { "source": "/styles.css", "destination": "/public/styles.css" },
     { "source": "/", "destination": "/public/index.html" }
   ]
