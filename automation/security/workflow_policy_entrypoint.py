@@ -224,12 +224,98 @@ def validate_agent_factory_semantic_contract() -> str:
     return name
 
 
+def validate_evolution_watchdog_lane() -> str:
+    """Classify the watchdog as a dispatcher-only recovery lane.
+
+    The watchdog may wake or rerun a fixed set of already-governed workflows, but
+    it cannot write repository contents, mint OIDC tokens, modify issues/PRs, or
+    reach arbitrary workflow names through external input.
+    """
+
+    name = "the-world-evolution-watchdog.yml"
+    body = policy.WORKFLOWS.get(name, "")
+    if not body:
+        raise SystemExit(f"{name}: required evolution watchdog lane is missing")
+
+    got = policy.writes(body)
+    if got != {"actions"}:
+        raise SystemExit(f"{name}: watchdog write set drifted: {sorted(got)}")
+
+    required = (
+        "contents: read",
+        "actions: write",
+        "workflow_dispatch:",
+        "schedule:",
+        "cron: '*/15 * * * *'",
+        "group: the-world-evolution-watchdog",
+        "cancel-in-progress: true",
+        "gh', 'run', 'list'",
+        "gh', 'run', 'rerun'",
+        "gh', 'workflow', 'run'",
+        "--failed",
+        "GITHUB_REPOSITORY",
+        "the-world-realtime-kernel.yml",
+        "tomoki-manager-queue.yml",
+        "the-core-autonomous-director.yml",
+        "the-world-agent-factory.yml",
+        "senju-autonomous-improver.yml",
+        "rnd-senju-coupled-loop.yml",
+        "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+    )
+    for marker in required:
+        if marker not in body:
+            raise SystemExit(f"{name}: missing watchdog guardrail: {marker}")
+
+    forbidden = (
+        "contents: write",
+        "id-token: write",
+        "issues: write",
+        "pull-requests: write",
+        "deployments: write",
+        "packages: write",
+        "pages: write",
+        "copilot-requests: write",
+        "pull_request:",
+        "pull_request_target:",
+        "repository_dispatch:",
+        "workflow_run:",
+        "runs-on: self-hosted",
+        "permissions: write-all",
+        "git push ",
+        "gh pr create",
+        "${{ secrets.",
+    )
+    for marker in forbidden:
+        if marker in body:
+            raise SystemExit(f"{name}: forbidden watchdog capability: {marker}")
+
+    expected_workflows = {
+        "the-world-realtime-kernel.yml",
+        "tomoki-manager-queue.yml",
+        "the-core-autonomous-director.yml",
+        "the-world-agent-factory.yml",
+        "senju-autonomous-improver.yml",
+        "rnd-senju-coupled-loop.yml",
+    }
+    observed = {
+        marker
+        for marker in expected_workflows
+        if marker in body
+    }
+    if observed != expected_workflows:
+        raise SystemExit(f"{name}: monitored workflow allowlist drifted: {sorted(observed)}")
+
+    return name
+
+
 def main() -> int:
     manager = validate_manager_queue_oidc_lane()
     foundry = validate_ai_foundry_forge_lane()
+    watchdog = validate_evolution_watchdog_lane()
     validate_agent_factory_semantic_contract()
     policy.WORKFLOWS.pop(manager, None)
     policy.WORKFLOWS.pop(foundry, None)
+    policy.WORKFLOWS.pop(watchdog, None)
     return policy.main()
 
 
