@@ -295,10 +295,15 @@ def _parse_url(url: str, policy: ExternalContactPolicy) -> tuple[str, int]:
     host = _normalize_host(parsed.hostname)
     if host not in policy.allow_hosts:
         raise ExternalContactError(f"host is not explicitly allowlisted: {host}")
+    default_port = 443 if scheme == "https" else 80
     try:
-        port = parsed.port or (443 if scheme == "https" else 80)
+        port = parsed.port or default_port
     except ValueError as exc:
         raise ExternalContactError("invalid URL port") from exc
+    if port != default_port:
+        raise ExternalContactError(
+            f"non-default port is not covered by host-only authority: {host}:{port}"
+        )
     return host, port
 
 
