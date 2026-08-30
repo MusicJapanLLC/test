@@ -1,9 +1,18 @@
 from __future__ import annotations
 
+import hashlib
+import inspect
 import json
 from collections import Counter
+from pathlib import Path
 
+from senju.authorized_assessment import EngagementManifest
+from senju.autonomy import AutonomyEngine
+from senju.external import ExternalContactClient
 from senju.multiguard_adversary import (
+    ARTIFACT_GUARD_PATH,
+    OFFENSE_FIRST_PATH,
+    SECURITY_GUARD_PATH,
     TARGETS,
     build_campaign,
     run_campaign,
@@ -16,6 +25,10 @@ def _results_for(target: str, *names: str):
     wanted = set(names)
     report = run_campaign(build_campaign(targets=(target,)))
     return {result.case.name: result for result in report.results if result.case.name in wanted}
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def test_full_campaign_has_exactly_300_cases_across_seven_targets() -> None:
@@ -232,3 +245,50 @@ def test_full_300_case_campaign_is_surprise_free() -> None:
     assert report.harness_exception_count == 0
     assert report.side_effect_violation_count == 0
     assert report.risk_score == 0
+
+
+def test_multiguard_paths_are_the_real_repository_guard_files() -> None:
+    repo_root = Path(__file__).resolve().parents[2]
+    expected = {
+        repo_root / "senju" / "OFFENSE_FIRST.md": OFFENSE_FIRST_PATH,
+        repo_root / ".github" / "workflows" / "security-guard.yml": SECURITY_GUARD_PATH,
+        repo_root / "scripts" / "security" / "artifact_guard.py": ARTIFACT_GUARD_PATH,
+    }
+    for canonical, harness_path in expected.items():
+        assert harness_path.resolve() == canonical.resolve()
+        assert canonical.is_file()
+        assert len(_sha256(canonical)) == 64
+
+
+def test_multiguard_runtime_targets_are_real_package_classes() -> None:
+    assert EngagementManifest.__module__ == "senju.authorized_assessment"
+    assert ExternalContactClient.__module__ == "senju.external"
+    assert AutonomyEngine.__module__ == "senju.autonomy"
+
+    repo_root = Path(__file__).resolve().parents[2]
+    expected_sources = {
+        EngagementManifest: repo_root / "senju" / "senju" / "authorized_assessment.py",
+        ExternalContactClient: repo_root / "senju" / "senju" / "external.py",
+        AutonomyEngine: repo_root / "senju" / "senju" / "autonomy.py",
+    }
+    for cls, canonical in expected_sources.items():
+        assert Path(inspect.getsourcefile(cls) or "").resolve() == canonical.resolve()
+
+
+def test_requested_guard_stack_is_covered_by_real_campaign() -> None:
+    requested = {
+        "offense-first",
+        "engagement-json",
+        "external-contact",
+        "security-guard",
+        "artifact-guard",
+        "autonomy-engine",
+    }
+    campaign = build_campaign(targets=tuple(sorted(requested)))
+    assert {case.target for case in campaign} == requested
+
+    report = run_campaign(campaign)
+    assert report.passed
+    assert report.side_effect_violation_count == 0
+    for target in requested:
+        assert report.by_target()[target]["total"] > 0
