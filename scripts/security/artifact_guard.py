@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Inspect built frontend artifacts for accidental exposure and unsafe output."""
+"""Inspect built frontend artifacts for accidental exposure and unsafe output.
+
+The default ``prod`` profile remains fail-closed for HIGH findings. The explicit
+``lab`` profile is intentionally more permissive for development-only artifact
+noise (source maps, localhost references, mixed content and oversized WebGL
+assets) while credential-like material and missing build output remain blocking.
+"""
 from __future__ import annotations
 
 import argparse
@@ -21,9 +27,21 @@ CSS_HTTP_URL = re.compile(r"url\(\s*[\"']?(http://[^)\"']+)", re.IGNORECASE)
 XML_HTTP_LOC = re.compile(r"<loc>\s*(http://[^<\s]+)\s*</loc>", re.IGNORECASE)
 JS_HTTP_URL = re.compile(r"(?:fetch\s*\(|new\s+URL\s*\(|\.src\s*=|\.href\s*=)\s*[\"'](http://[^\"']+)", re.IGNORECASE)
 
+ALWAYS_BLOCK_RULE_PREFIXES = ("artifact.secret.",)
+ALWAYS_BLOCK_RULES = {"artifact.dist-missing"}
+
 
 def finding(severity: str, rule: str, path: Path, detail: str) -> dict[str, str]:
     return {"severity": severity, "rule": rule, "path": path.as_posix(), "detail": detail}
+
+
+def profile_severity(profile: str, rule: str, severity: str) -> str:
+    """Downgrade non-secret production noise only in explicit lab mode."""
+    if profile != "lab" or severity != "HIGH":
+        return severity
+    if rule in ALWAYS_BLOCK_RULES or rule.startswith(ALWAYS_BLOCK_RULE_PREFIXES):
+        return severity
+    return "MEDIUM"
 
 
 def insecure_runtime_urls(text: str, suffix: str) -> list[str]:
@@ -42,11 +60,21 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("dist", type=Path)
     parser.add_argument("--json", dest="output", type=Path, required=True)
+    parser.add_argument(
+        "--profile",
+        choices=("prod", "lab"),
+        default="prod",
+        help="prod blocks all HIGH findings; lab downgrades non-secret development-only findings",
+    )
     args = parser.parse_args()
 
     findings: list[dict[str, str]] = []
+
+    def add(severity: str, rule: str, path: Path, detail: str) -> None:
+        findings.append(finding(profile_severity(args.profile, rule, severity), rule, path, detail))
+
     if not args.dist.is_dir():
-        findings.append(finding("HIGH", "artifact.dist-missing", args.dist, "Build output directory does not exist"))
+        add("HIGH", "artifact.dist-missing", args.dist, "Build output directory does not exist")
     else:
         for path in args.dist.rglob("*"):
             if not path.is_file():
@@ -56,13 +84,13 @@ def main() -> int:
             suffix = path.suffix.lower()
 
             if suffix == ".map":
-                findings.append(finding("HIGH", "artifact.source-map", rel, "Source map is present in production output"))
+                add("HIGH", "artifact.source-map", rel, "Source map is present in production output")
 
             if suffix in WEBGL_ASSET_SUFFIXES:
                 if size > 25 * 1024 * 1024:
-                    findings.append(finding("HIGH", "webgl.asset-size", rel, f"3D/GPU asset is {size} bytes (>25 MiB)"))
+                    add("HIGH", "webgl.asset-size", rel, f"3D/GPU asset is {size} bytes (>25 MiB)")
                 elif size > 8 * 1024 * 1024:
-                    findings.append(finding("MEDIUM", "webgl.asset-size", rel, f"3D/GPU asset is {size} bytes (>8 MiB); review GPU/memory budget"))
+                    add("MEDIUM", "webgl.asset-size", rel, f"3D/GPU asset is {size} bytes (>8 MiB); review GPU/memory budget")
 
             if suffix not in TEXT_SUFFIXES or size > 8 * 1024 * 1024:
                 continue
@@ -72,21 +100,22 @@ def main() -> int:
                 continue
 
             for url in insecure_runtime_urls(text, suffix):
-                findings.append(finding("HIGH", "artifact.mixed-content", rel, f"Browser-loadable HTTP URL: {url[:180]}"))
+                add("HIGH", "artifact.mixed-content", rel, f"Browser-loadable HTTP URL: {url[:180]}")
 
             local_match = LOCAL_URL.search(text)
             if local_match:
-                findings.append(finding("HIGH", "artifact.localhost-reference", rel, f"Production artifact contains local URL: {local_match.group(0)[:180]}"))
+                add("HIGH", "artifact.localhost-reference", rel, f"Production artifact contains local URL: {local_match.group(0)[:180]}")
 
             if "sourceMappingURL=" in text:
-                findings.append(finding("HIGH", "artifact.source-map-reference", rel, "Built asset references a source map"))
+                add("HIGH", "artifact.source-map-reference", rel, "Built asset references a source map")
 
             for name, pattern in SECRET_PATTERNS.items():
                 if pattern.search(text):
-                    findings.append(finding("HIGH", f"artifact.secret.{name}", rel, "Credential-like material found in browser-delivered output"))
+                    add("HIGH", f"artifact.secret.{name}", rel, "Credential-like material found in browser-delivered output")
 
     payload = {
         "schema": "standment.artifact-security.v1",
+        "profile": args.profile,
         "dist": str(args.dist),
         "findings": findings,
         "status": "fail" if any(f["severity"] == "HIGH" for f in findings) else "pass",
