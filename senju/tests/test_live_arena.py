@@ -8,7 +8,7 @@ from senju.targets.observed import ObservedExternalTarget
 
 def _receipt(digest: str = "a" * 64) -> ContactReceipt:
     return ContactReceipt(
-        schema="senju-external-contact/v2",
+        schema="senju-external-contact/v3",
         contacted_at_utc="2026-08-30T12:00:00+00:00",
         method="GET",
         requested_url="https://example.com/",
