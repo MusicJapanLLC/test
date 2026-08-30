@@ -6,6 +6,16 @@
   "principle": "EXPLORE_WIDELY_WRITE_THROUGH_AUTHORIZED_ACCOUNTS",
   "platforms": [
     {
+      "id": "github-issues",
+      "kind": "github_issue",
+      "enabled": true,
+      "repo": "MusicJapanLLC/test",
+      "required_env": ["GITHUB_TOKEN"],
+      "max_per_day": 4,
+      "labels": ["the-world", "automated"],
+      "note": "Uses GITHUB_TOKEN — always available in Actions, no new secret needed"
+    },
+    {
       "id": "dev-community",
       "kind": "devto",
       "enabled": true,

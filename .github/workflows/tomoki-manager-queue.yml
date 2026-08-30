@@ -1,7 +1,7 @@
 name: TOMOKI - MANAGER Queue Bridge
 
 # Master Control recurrence guard: the policy-approved five-minute schedule remains
-# canonical. Realtime Kernel, THE CORE, and the independent security scan are redundant
+# canonical. Realtime Kernel, THE CORE, and independent security workflows are redundant
 # wake paths so a dropped GitHub schedule cannot leave the canonical Manager heartbeat stale indefinitely.
 on:
   schedule:
@@ -12,6 +12,7 @@ on:
       - 'THE WORLD - Realtime Kernel'
       - 'THE CORE - Autonomous Director'
       - 'Standment Security Scan'
+      - 'Security Guard'
     types: [completed]
   push:
     branches: ['claude/employee-onboarding-setup-udm86']

@@ -250,7 +250,7 @@ def validate_madlab_evolution_lane() -> str:
         "TARGET: https://madlab-guard-0i24yt.v2.appdeploy.ai/",
         '"${TARGET}api/_healthcheck"',
         '"${TARGET}api/scan"',
-        '"authorized\\\":true',
+        '\\\"authorized\\\":true',
         "Never weaken ownership, authorization, or approval boundaries.",
         "AppDeploy production deploy quota is exhausted",
         "copilot -p",

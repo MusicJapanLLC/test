@@ -37,6 +37,7 @@
     armed = false;
     terminal('AUTO EXECUTE -> forcing real execution queue');
 
+    // Let the chat handler finish persisting the assistant reply first.
     setTimeout(() => {
       try {
         run.click();
@@ -48,6 +49,7 @@
     }, 80);
   }
 
+  // Capture before app.js clears the composer.
   document.addEventListener('click', (event) => {
     if (event.target?.closest?.('#sendBtn')) captureIntent();
   }, true);

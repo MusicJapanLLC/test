@@ -1,0 +1,120 @@
+name: Jules backlog dispatcher
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: jules-backlog-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch-one:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+      GH_TOKEN: ${{ github.token }}
+      REPOSITORY: ${{ github.repository }}
+      DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+    steps:
+      - name: Dispatch oldest undispatched Jules issue
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${JULES_API_KEY:-}" ]]; then
+            echo "::error::JULES_API_KEY is not configured"
+            exit 1
+          fi
+
+          gh_get() {
+            curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              "$1"
+          }
+
+          comment() {
+            local number="$1"
+            local body="$2"
+            jq -n --arg body "$body" '{body: $body}' |
+              curl --fail --silent --show-error -X POST \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/$REPOSITORY/issues/$number/comments" \
+                --data-binary @- >/dev/null
+          }
+
+          owner="${REPOSITORY%%/*}"
+          repo="${REPOSITORY#*/}"
+          sources_json="$(curl --fail-with-body --silent --show-error \
+            -H "X-Goog-Api-Key: $JULES_API_KEY" \
+            "https://jules.googleapis.com/v1alpha/sources")"
+          source_name="$(jq -r --arg owner "$owner" --arg repo "$repo" \
+            '.sources[]? | select(.githubRepo.owner == $owner and .githubRepo.repo == $repo) | .name' \
+            <<<"$sources_json" | head -n 1)"
+
+          if [[ -z "$source_name" ]]; then
+            echo "::error::$REPOSITORY is not configured as a Jules source"
+            exit 1
+          fi
+
+          issues_json="$(gh_get "https://api.github.com/repos/$REPOSITORY/issues?state=open&per_page=100&sort=created&direction=asc")"
+          candidate=""
+
+          while IFS= read -r number; do
+            comments="$(gh_get "https://api.github.com/repos/$REPOSITORY/issues/$number/comments?per_page=100")"
+            last_jules_event="$(jq -r '[.[] | select(((.body // "") | startswith("Julesを起動しました")) or ((.body // "") | startswith("Julesセッションが終了しました"))) | .body] | last // ""' <<<"$comments")"
+            if [[ "$last_jules_event" == Julesを起動しました* ]]; then
+              continue
+            fi
+            candidate="$number"
+            break
+          done < <(jq -r '.[] | select(.pull_request == null) | select((((.title // "") | startswith("[Jules]")) or (((.title // "") | startswith("[jules]"))))) | .number' <<<"$issues_json")
+
+          if [[ -z "$candidate" ]]; then
+            echo "No undispatched [Jules] issues in backlog."
+            exit 0
+          fi
+
+          issue="$(gh_get "https://api.github.com/repos/$REPOSITORY/issues/$candidate")"
+          title="$(jq -r '.title' <<<"$issue")"
+          body="$(jq -r '.body // ""' <<<"$issue")"
+          url="$(jq -r '.html_url' <<<"$issue")"
+          prompt="$(jq -nr --arg title "$title" --arg body "$body" --arg url "$url" '$title + "\n\n" + $body + "\n\nSource issue: " + $url + "\n\nImplement the task, run relevant tests, and open a pull request. Do not push directly to the starting branch."')"
+          request="$(jq -n --arg prompt "$prompt" --arg source "$source_name" --arg branch "$DEFAULT_BRANCH" '{prompt:$prompt,title:("GitHub Issue: " + ($prompt | split("\n")[0])),sourceContext:{source:$source,githubRepoContext:{startingBranch:$branch}},requirePlanApproval:false,automationMode:"AUTO_CREATE_PR"}')"
+
+          response_file="$(mktemp)"
+          http_code="$(curl --silent --show-error -o "$response_file" -w '%{http_code}' -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Goog-Api-Key: $JULES_API_KEY" \
+            "https://jules.googleapis.com/v1alpha/sessions" \
+            --data-binary "$request")"
+
+          if [[ "$http_code" != "200" && "$http_code" != "201" ]]; then
+            echo "Jules session creation deferred for issue #$candidate (HTTP $http_code); retrying on a later cycle."
+            exit 0
+          fi
+
+          session_name="$(jq -r '.name // empty' <"$response_file")"
+          session_id="$(jq -r '.id // empty' <"$response_file")"
+          session_url="$(jq -r '.url // empty' <"$response_file")"
+          if [[ -z "$session_name" ]]; then
+            echo "Jules response had no session name; keeping issue queued."
+            exit 0
+          fi
+
+          if [[ -n "$session_url" ]]; then
+            comment "$candidate" "Julesを起動しました\n\n- Session: $session_id\n- Status: running\n- Console: $session_url\n- Dispatcher: backlog"
+          else
+            comment "$candidate" "Julesを起動しました\n\n- Session: $session_id\n- Status: running\n- Dispatcher: backlog"
+          fi
+          echo "Started Jules session $session_id for issue #$candidate"
