@@ -24,7 +24,7 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
-      - name: Inspect, wake, and recover autonomous evolution loops
+      - name: Inspect, wake, and recover autonomous evolution fleet
         shell: bash
         run: |
           set -euo pipefail
@@ -41,14 +41,25 @@ jobs:
               text=True,
           ).strip()
 
-          # label, workflow file, maximum tolerated age in minutes.
-          # Fast deterministic loops are kept tight. Heavier evolution loops are
-          # woken multiple times per day without creating overlapping run storms.
+          # Fixed, security-reviewed fleet. max_age is deliberately larger than
+          # each lane's native cadence so GitHub scheduling jitter does not create
+          # duplicate run storms. Heavier lanes are woken several times per day.
           specs = [
               ('Realtime Kernel', 'the-world-realtime-kernel.yml', 15),
               ('Manager Queue', 'tomoki-manager-queue.yml', 15),
+              ('AI Foundry Executor', 'ai-foundry-executor.yml', 15),
+              ('Resident Task Worker', 'the-world-task-worker.yml', 15),
+              ('Research Fabric', 'the-world-autonomous-research-fabric.yml', 30),
+              ('TOMOKI Manager', 'tomoki-manager.yml', 45),
+              ('AI Factory BOSS', 'ai-factory-boss.yml', 60),
               ('Autonomous Director', 'the-core-autonomous-director.yml', 60),
+              ('TOMOKI SKEPTIC', 'tomoki-skeptic.yml', 90),
+              ('TOMOKI HOUND', 'tomoki-hound.yml', 90),
+              ('TOMOKI FORGE', 'tomoki-forge.yml', 90),
               ('Agent Factory', 'the-world-agent-factory.yml', 120),
+              ('Standment Portfolio R&D', 'standment-security-portfolio-rnd.yml', 90),
+              ('Standment Portfolio Foundry', 'standment-security-portfolio-foundry.yml', 360),
+              ('Portfolio Evolution', 'portfolio-evolution-daily.yml', 360),
               ('Senju Self Evolution', 'senju-autonomous-improver.yml', 120),
               ('R&D x Senju Coupling', 'rnd-senju-coupled-loop.yml', 180),
           ]
@@ -59,14 +70,20 @@ jobs:
               'failure', 'cancelled', 'timed_out', 'startup_failure', 'stale', 'action_required'
           }
           report = []
+          forge_repair_dispatched = False
 
           def run_cmd(args):
               return subprocess.run(args, text=True, capture_output=True)
 
+          def dispatch(workflow, *extra):
+              return run_cmd([
+                  'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base, *extra
+              ])
+
           for label, workflow, max_age in specs:
               query = run_cmd([
                   'gh', 'run', 'list', '--repo', repo, '--workflow', workflow,
-                  '--limit', '1', '--json',
+                  '--limit', '3', '--json',
                   'databaseId,status,conclusion,createdAt,updatedAt'
               ])
 
@@ -81,13 +98,12 @@ jobs:
 
               rows = json.loads(query.stdout or '[]')
               if not rows:
-                  wake = run_cmd([
-                      'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base
-                  ])
+                  wake = dispatch(workflow)
                   report.append({
                       'label': label,
                       'workflow': workflow,
                       'age_minutes': None,
+                      'consecutive_failures': 0,
                       'action': 'dispatched_no_history' if wake.returncode == 0 else 'dispatch_failed',
                       'detail': '' if wake.returncode == 0 else (wake.stderr or wake.stdout)[-1200:],
                   })
@@ -98,8 +114,16 @@ jobs:
               age_minutes = round((now - created).total_seconds() / 60, 1)
               status = latest.get('status') or ''
               conclusion = latest.get('conclusion') or ''
+              consecutive_failures = 0
+              for row in rows:
+                  if (row.get('conclusion') or '') in failed_conclusions:
+                      consecutive_failures += 1
+                  else:
+                      break
+
               action = 'healthy'
               detail = ''
+              systemic_repair = None
 
               if status in active_states:
                   action = 'active'
@@ -110,10 +134,21 @@ jobs:
                   action = 'rerun_failed_jobs' if retry.returncode == 0 else 'rerun_failed_error'
                   if retry.returncode != 0:
                       detail = (retry.stderr or retry.stdout)[-1200:]
+
+                  # Two consecutive terminal failures are treated as a mechanism
+                  # problem, not another one-off retry. Invoke exactly one bounded
+                  # FORGE repair session per watchdog cycle to investigate/fix CI.
+                  if consecutive_failures >= 2 and workflow != 'tomoki-forge.yml' and not forge_repair_dispatched:
+                      forge = dispatch('tomoki-forge.yml', '-f', 'mode=repair')
+                      forge_repair_dispatched = forge.returncode == 0
+                      systemic_repair = (
+                          'forge_repair_dispatched' if forge.returncode == 0
+                          else 'forge_repair_dispatch_failed'
+                      )
+                      if forge.returncode != 0:
+                          detail = (detail + '\n' + (forge.stderr or forge.stdout)[-1200:]).strip()
               elif age_minutes > max_age:
-                  wake = run_cmd([
-                      'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base
-                  ])
+                  wake = dispatch(workflow)
                   action = 'dispatched_stale' if wake.returncode == 0 else 'dispatch_stale_error'
                   if wake.returncode != 0:
                       detail = (wake.stderr or wake.stdout)[-1200:]
@@ -126,15 +161,18 @@ jobs:
                   'conclusion': conclusion,
                   'age_minutes': age_minutes,
                   'max_age_minutes': max_age,
+                  'consecutive_failures': consecutive_failures,
                   'action': action,
+                  'systemic_repair': systemic_repair,
                   'detail': detail,
               })
 
           result = {
-              'schema': 'the-world-evolution-watchdog/v1',
+              'schema': 'the-world-evolution-watchdog/v2',
               'checked_at': now.isoformat(),
               'repository': repo,
               'default_branch': base,
+              'fleet_size': len(specs),
               'loops': report,
               'summary': {
                   'checked': len(report),
@@ -142,7 +180,13 @@ jobs:
                       1 for row in report
                       if row.get('action') in {'rerun_failed_jobs', 'dispatched_stale', 'dispatched_no_history'}
                   ),
-                  'errors': sum(1 for row in report if 'error' in row.get('action', '') or row.get('action') == 'lookup_failed'),
+                  'systemic_repairs_dispatched': sum(
+                      1 for row in report if row.get('systemic_repair') == 'forge_repair_dispatched'
+                  ),
+                  'errors': sum(
+                      1 for row in report
+                      if 'error' in row.get('action', '') or row.get('action') == 'lookup_failed'
+                  ),
               },
           }
           Path('/tmp/world-evolution-watchdog.json').write_text(
@@ -152,7 +196,7 @@ jobs:
           PY
 
           {
-            echo '## THE WORLD Evolution Watchdog'
+            echo '## THE WORLD Evolution Watchdog v2'
             echo '```json'
             cat /tmp/world-evolution-watchdog.json
             echo '```'
