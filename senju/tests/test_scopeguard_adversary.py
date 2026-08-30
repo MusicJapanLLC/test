@@ -19,23 +19,54 @@ def test_baseline_keeps_pr260_behavior():
     assert surprising_results(guard, BASELINE_CASES) == []
 
 
-def test_campaign_is_large_deterministic_and_unique():
+def test_campaign_is_120_cases_deterministic_and_unique():
     first = build_campaign()
     second = build_campaign()
 
     assert first == second
-    assert len(first) >= 100
+    assert len(first) == 120
     assert len({case.name for case in first}) == len(first)
     assert len({(case.name, case.target_ref) for case in first}) == len(first)
 
 
-def test_campaign_detects_control_character_trust_inheritance():
+def test_default_policy_passes_full_adversary_campaign():
     report = run_campaign(ScopeGuard(default_lab_policy()))
-    surprising_names = {result.case.name for result in report.surprising}
 
-    assert "sim-0-nul-suffix" in surprising_names
-    assert "sim-1-nul-suffix" in surprising_names
-    assert report.by_family()["simulated-mutation"]["surprising"] >= 2
+    assert report.total == 120
+    assert report.surprising_count == 0
+    assert report.exception_count == 0
+    assert report.passed is True
+    assert report.by_family()["simulated-mutation"]["surprising"] == 0
+
+
+def test_ambiguous_simulated_refs_do_not_inherit_trust():
+    guard = ScopeGuard(default_lab_policy())
+    refs = (
+        " sim://fixture",
+        "sim://fixture ",
+        "\tsim://fixture",
+        "sim://fixture\t",
+        "sim://fixture\n",
+        "sim://fixture\r",
+        "\x00sim://fixture",
+        "sim://fixture\x00",
+    )
+
+    assert all(guard.is_allowed(ref) is False for ref in refs)
+
+
+def test_experimental_policy_does_not_override_input_validity():
+    guard = ScopeGuard(experimental_lab_policy())
+    refs = (
+        " sim://fixture",
+        "sim://fixture ",
+        "sim://fixture\n",
+        "sim://fixture\x00",
+        "example.com\n",
+        "\texample.com",
+    )
+
+    assert all(guard.is_allowed(ref) is False for ref in refs)
 
 
 def test_report_is_machine_readable_and_fingerprinted():
