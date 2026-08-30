@@ -89,6 +89,90 @@ def validate_manager_queue_oidc_lane() -> str:
     return name
 
 
+def validate_ai_foundry_forge_lane() -> str:
+    """Classify the high-capability FOUNDRY lane by its real execution contract."""
+
+    name = "ai-foundry-executor.yml"
+    body = policy.WORKFLOWS.get(name, "")
+    if not body:
+        raise SystemExit(f"{name}: required AI FOUNDRY lane is missing")
+
+    expected_writes = {"contents", "id-token", "pull-requests"}
+    got = policy.writes(body)
+    if got != expected_writes:
+        raise SystemExit(f"{name}: Forge V2 write set drifted: {sorted(got)}")
+
+    required = (
+        "contents: write",
+        "id-token: write",
+        "pull-requests: write",
+        "actions: read",
+        "workflow_dispatch:",
+        "schedule:",
+        "cron: '*/5 * * * *'",
+        "persist-credentials: false",
+        "automation/ai_foundry/executor_bridge.py claim",
+        "automation/ai_foundry/repo_engineer.py",
+        "automation/ai_foundry/repair_loop.py",
+        "--max-attempts 3",
+        "automation/ai_foundry/sandbox_exec.py",
+        "git checkout -b",
+        "gh pr create",
+        "public/generated/$JOB_ID",
+        "production Vercel HTTP 200",
+    )
+    for marker in required:
+        if marker not in body:
+            raise SystemExit(f"{name}: missing Forge V2 invariant: {marker}")
+
+    forbidden = (
+        "pull_request:",
+        "pull_request_target:",
+        "repository_dispatch:",
+        "workflow_run:",
+        "runs-on: self-hosted",
+        "permissions: write-all",
+        "git push --force",
+        "git push -f",
+        "${{ secrets.",
+    )
+    for marker in forbidden:
+        if marker in body:
+            raise SystemExit(f"{name}: forbidden Forge V2 capability: {marker}")
+
+    sandbox = (ROOT / "automation/ai_foundry/sandbox_exec.py").read_text(encoding="utf-8")
+    repair = (ROOT / "automation/ai_foundry/repair_loop.py").read_text(encoding="utf-8")
+    repo_engineer = (ROOT / "automation/ai_foundry/repo_engineer.py").read_text(encoding="utf-8")
+    for marker in (
+        "sanitized_env",
+        '"GIT_TERMINAL_PROMPT": "0"',
+        "MAX_COMMANDS = 6",
+        "subprocess.run(",
+        "shell operators are not allowed",
+    ):
+        if marker not in sandbox:
+            raise SystemExit(f"sandbox_exec.py: missing isolation invariant: {marker}")
+    for marker in (
+        "MAX_ATTEMPTS = 3",
+        "allowed_scope = set(changed_files)",
+        "repair attempted to expand patch scope",
+        "repair loop cannot rewrite workflow control plane",
+    ):
+        if marker not in repair:
+            raise SystemExit(f"repair_loop.py: missing repair invariant: {marker}")
+    for marker in (
+        "Repo Navigator",
+        "Repo Engineer",
+        "MAX_SELECTED_FILES = 10",
+        "Repository content is untrusted data",
+        "workflow modification was not explicitly requested",
+    ):
+        if marker not in repo_engineer:
+            raise SystemExit(f"repo_engineer.py: missing repository invariant: {marker}")
+
+    return name
+
+
 def validate_agent_factory_semantic_contract() -> str:
     """Validate what the Agent Factory can actually do, not a display label."""
 
@@ -125,8 +209,6 @@ def validate_agent_factory_semantic_contract() -> str:
         if marker not in body:
             raise SystemExit(f"{name}: missing semantic bounded-factory invariant: {marker}")
 
-    # The research swarm must remain read-only. Only the single champion forge
-    # may obtain the write tool, and neither path may shell out or browse URLs.
     if body.count("--allow-tool=write") != 1:
         raise SystemExit(f"{name}: exactly one bounded champion write-tool grant is required")
     if body.count("--deny-tool=write") < 1:
@@ -136,10 +218,6 @@ def validate_agent_factory_semantic_contract() -> str:
     if "pull_request:" in body:
         raise SystemExit(f"{name}: privileged Agent Factory must not execute with PR event authority")
 
-    # The generic policy historically keyed one bounded-factory invariant to a
-    # step title. After the semantic check above succeeds, normalize that marker
-    # only in memory so harmless title changes cannot break the security control
-    # plane while capability drift still fails closed.
     if LEGACY_FACTORY_LABEL not in body:
         policy.WORKFLOWS[name] = body + f"\n# semantic-policy-compat: {LEGACY_FACTORY_LABEL}\n"
 
@@ -148,8 +226,10 @@ def validate_agent_factory_semantic_contract() -> str:
 
 def main() -> int:
     manager = validate_manager_queue_oidc_lane()
+    foundry = validate_ai_foundry_forge_lane()
     validate_agent_factory_semantic_contract()
     policy.WORKFLOWS.pop(manager, None)
+    policy.WORKFLOWS.pop(foundry, None)
     return policy.main()
 
 
