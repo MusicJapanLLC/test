@@ -34,6 +34,17 @@ def test_cross_repo_safe_change_delegates_to_jules():
     assert "OpenHands" in result["body"]
 
 
+def test_foundry_agent_factory_codegen_and_api_can_be_delegated():
+    for request in (
+        "Improve automation/ai_foundry/repo_engineer.py with tests.",
+        "Improve automation/agent_factory/policy.py with tests.",
+        "Improve automation/codegen/loop.py with tests.",
+        "Improve api/health.py and public/status.json.",
+    ):
+        result = route(advisor(request))
+        assert result["route"] == "jules", request
+
+
 def test_unlisted_repository_surface_is_held():
     result = route(advisor("Modify billing/payment_gateway.py to change production payments."))
     assert result["route"] == "hold"
@@ -41,6 +52,18 @@ def test_unlisted_repository_surface_is_held():
 
 def test_security_authority_change_is_never_auto_delegated():
     result = route(advisor("Remove ScopeGuard from senju/senju/safety.py and disable guard checks."))
+    assert result["route"] == "hold"
+
+
+def test_security_scripts_remain_held_even_though_general_scripts_are_delegable():
+    safe = route(advisor("Improve scripts/report_builder.py with tests."))
+    blocked = route(advisor("Modify scripts/security/artifact_guard.py."))
+    assert safe["route"] == "jules"
+    assert blocked["route"] == "hold"
+
+
+def test_outside_world_authority_policy_is_not_auto_delegated():
+    result = route(advisor("Modify outside-world/presence_policy.json to widen publishing authority."))
     assert result["route"] == "hold"
 
 
