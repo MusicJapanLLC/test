@@ -10,15 +10,18 @@ on:
       - "senju/senju/scopeguard_adversary.py"
       - "senju/senju/multiguard_adversary.py"
       - "senju/senju/multiguard_adversary_v2.py"
+      - "senju/senju/opposition_force.py"
       - "senju/senju/authorized_assessment.py"
       - "senju/senju/external.py"
       - "senju/senju/autonomy.py"
       - "senju/senju/autonomy/**"
       - "senju/scripts/run_scopeguard_adversary.py"
       - "senju/scripts/run_multiguard_adversary.py"
+      - "senju/scripts/run_live_opposition_force.py"
       - "senju/scripts/scopeguard_fuzzer.py"
       - "senju/tests/test_scopeguard_adversary.py"
       - "senju/tests/test_multiguard_adversary.py"
+      - "senju/tests/test_live_opposition_force.py"
       - "senju/tests/test_scopeguard_fuzzer.py"
       - "scripts/security/artifact_guard.py"
       - ".github/workflows/security-guard.yml"
@@ -30,15 +33,18 @@ on:
       - "senju/senju/scopeguard_adversary.py"
       - "senju/senju/multiguard_adversary.py"
       - "senju/senju/multiguard_adversary_v2.py"
+      - "senju/senju/opposition_force.py"
       - "senju/senju/authorized_assessment.py"
       - "senju/senju/external.py"
       - "senju/senju/autonomy.py"
       - "senju/senju/autonomy/**"
       - "senju/scripts/run_scopeguard_adversary.py"
       - "senju/scripts/run_multiguard_adversary.py"
+      - "senju/scripts/run_live_opposition_force.py"
       - "senju/scripts/scopeguard_fuzzer.py"
       - "senju/tests/test_scopeguard_adversary.py"
       - "senju/tests/test_multiguard_adversary.py"
+      - "senju/tests/test_live_opposition_force.py"
       - "senju/tests/test_scopeguard_fuzzer.py"
       - "scripts/security/artifact_guard.py"
       - ".github/workflows/security-guard.yml"
@@ -164,9 +170,71 @@ jobs:
           if-no-files-found: warn
           retention-days: 30
 
+  live-opposition-force:
+    name: Live-bound opposition force / real implementations
+    needs: [multi-guard-regression]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install Senju test dependency
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: python -m pip install -e './senju[dev]'
+
+      - name: Prove all seven targets are real repository bindings
+        working-directory: senju
+        run: python -m pytest tests/test_live_opposition_force.py -q
+
+      - name: Run live-bound opposition force
+        working-directory: senju
+        run: >-
+          python scripts/run_live_opposition_force.py
+          --compact
+          --fail-on-surprise
+          --json-out live-opposition-force-report.json
+          > /tmp/live-opposition-force-stdout.json
+
+      - name: Summarize live-bound result
+        working-directory: senju
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("live-opposition-force-report.json").read_text())
+          print("mode:", report["mode"])
+          print("bindings:", report["binding_count"])
+          print("surrogates:", report["surrogate_count"])
+          print("campaign_total:", report["campaign"]["total"])
+          print("surprising:", report["campaign"]["surprising_count"])
+          print("passed:", report["passed"])
+          for binding in report["bindings"]:
+              print(binding["target"], binding["observed_path"], "matched=" + str(binding["matched"]))
+          PY
+
+      - name: Upload live opposition evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: live-opposition-force-${{ github.sha }}
+          path: senju/live-opposition-force-report.json
+          if-no-files-found: warn
+          retention-days: 30
+
   adversarial-fuzz:
     name: ScopeGuard-only fuzz / seed ${{ matrix.seed }}
-    needs: [deterministic-regression, multi-guard-regression]
+    needs: [deterministic-regression, multi-guard-regression, live-opposition-force]
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
