@@ -31,7 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          forbidden="$(git ls-files | grep -E '(^|/)(\.env($|\..*)|.npmrc$|\.pypirc$|\.netrc$|credentials\.json$|token\.json$|client_secret[^/]*\.json$|service-account[^/]*\.json$|firebase-adminsdk[^/]*\.json$|.*\.(pem|key|p12|pfx|kdbx)$|id_rsa$|id_ed25519$)' | grep -vE '(^|/)\.env\.example$' || true)"
+          forbidden="$(git ls-files | grep -E '(^|/)(\.env($|\..*)|.npmrc$|\.pypirc$|\.netrc$|credentials\.json$|token\.json$|client_secret[^/]*\.json$|service-account[^/]*\.json$|firebase-adminsdk[^/]*\.json$|.*\.(pem|key|p12|pfx|kdbx)$|id_rsa$|id_ed25519$)' | grep -vE '(^/)\.env\.example$' || true)"
           if [[ -n "$forbidden" ]]; then
             echo "Forbidden secret-bearing files are tracked:"
             echo "$forbidden"
