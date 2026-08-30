@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-29T21:00:00+09:00",
+  "updated_at": "2026-08-29T19:18:00+09:00",
   "purpose": "Single machine-readable registry for CEO reporting across all meaningful GitHub systems. Support folders, tests and shared libraries are not counted as separate systems.",
-  "system_count": 13,
+  "system_count": 12,
   "systems": [
     {
       "id": "mj-sales-automation",
@@ -63,16 +63,6 @@
       "purpose": "Championを引き継ぎながら候補戦略を比較・評価し、安全範囲内で自己改善を継続するGitHubネイティブ研究ループ",
       "evidence": ["PR #35", "PR #36", "senju/state/", "promotion commits containing run IDs", "Actions results"],
       "report_when": ["new champion", "score delta", "promotion", "failed cycle", "safety gate rejection"]
-    },
-    {
-      "id": "real-world-value-lab",
-      "name": "Real World Value Lab",
-      "state": "BUILDING",
-      "category": "business_value_research",
-      "paths": ["value-lab/"],
-      "purpose": "既存のThe World・Senju・AI社員・商品資産を再利用し、実顧客価値の仮説を研究→反証→競争→試作→MANAGER/TOMOKI/BOSS監査→市場検証へ進めるR&D工場",
-      "evidence": ["value-lab/README.md", "value-lab/policy.json", "value-lab/test_controller.py", "Supabase ai_governed_items/ai_value_projects/ai_value_stage_events", "WLD world_ledger stage rewards"],
-      "report_when": ["demo_ready", "material candidate rejected", "market_test", "validated", "governance gap", "owner-only blocker"]
     },
     {
       "id": "tomoki-agents",
@@ -139,7 +129,7 @@
     "owner_channel": "C0BTDEGU55Z",
     "owner_channel_name": "ai-ceo-brief",
     "operational_channels": ["ai-command-center", "ai-dev", "ai-mail", "ai-calendar"],
-    "rule": "Every CEO Reporter run must check all 13 registry entries for evidence/status change. It may summarize unchanged systems, but it must not silently omit a system from coverage. Every material new system/product/research/experiment/artifact/workflow/policy/data_model must also exist in Supabase ai_governed_items; missing registration is GOVERNANCE COVERAGE ERROR.",
+    "rule": "Every CEO Reporter run must check all 12 registry entries for evidence/status change. It may summarize unchanged systems, but it must not silently omit a system from coverage.",
     "output": ["what_changed", "why_it_matters", "verified_evidence", "business_effect", "next_improvement", "owner_action"]
   }
 }

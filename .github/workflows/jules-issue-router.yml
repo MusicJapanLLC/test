@@ -3,7 +3,6 @@ name: Jules issue router
 on:
   issues:
     types: [opened, reopened]
-  workflow_dispatch:
 
 permissions:
   contents: read
