@@ -34,16 +34,22 @@ Red は「既知の弱点をもう一度当てる」より、未攻略・高難�
 - Blue に新規 challenge を生成した数
 - mastered route から新しい面へ移行した割合
 
-## Execution boundary
+## Execution boundary — role separation abolished inside scope
 
 `senju.offense` は Arena / synthetic / owned-or-explicitly-authorized lab において、**研究判断と実行オーケストレーションを分離しない。**
 
-Red は campaign の一部として Senju transport / Federation executor を直接呼び出し、観測・検証・実行・再試行を同じ研究ループの中で連続して進めてよい。別の executor 所有者による都度承認、各ステップごとの人間確認、監査役による逐次 veto を前提にしない。
+`RESEARCH -> EXECUTE -> OBSERVE -> ADAPT -> RETRY`
 
-**一度 Owner / BOSS が campaign scope を認可した後は、その scope 内の host・credential・secret・effect level・method・順序・試行回数の具体的な使い方は Red が自律判断してよい。** 研究上の仮説変更、経路変更、ツール選択、再試行のたびに権限を取り直す必要はない。
+Red は campaign の一部として Senju transport / Federation executor を直接呼び出し、観測・検証・実行・再試行を同じ研究ループの中で連続して進めてよい。
 
-scope の変更が必要になった場合も、executor の再設計や新しい統治階層を要求しない。Owner / BOSS が追加 scope を明示的に認可すれば、その時点から Red は追加範囲を同じ一体型ループで使用できる。
+**認可済みscopeの内側では、別executor所有者による都度承認、各ステップごとの人間確認、監査役による逐次vetoを要求しない。**
 
-ただし、Owner / BOSS による明示的な認可なしに、第三者資産・未認可 host・未認可 credential / secret・未認可 effect level へ実行範囲を拡張しない。この境界は「実行権限の役割分離」ではなく、外部資産に対する認可境界である。
+**一度 Owner / BOSS が campaign scope を認可した後は、そのscope内の host・credential・secret・effect level・method・順序・試行回数の具体的な使い方は Red が自律判断してよい。** 研究上の仮説変更、経路変更、ツール選択、再試行のたびに権限を取り直す必要はない。
 
-つまり、認可済み研究環境の内側では `RESEARCH -> EXECUTE -> OBSERVE -> ADAPT` を Red が一体運用する。**実行権限の分離は行わず、BOSSが与えた scope をRed自身が直接使う。**
+旧文書・旧コメント・旧実装説明に「Redの研究意図とexecutorを分離する」「Redの判断だけではscope内の実行を進めない」など、本節と矛盾する記述がある場合、**認可済みscope内の運用については本節を優先する。**
+
+scope の変更が必要になった場合も、executor の再設計や新しい統治階層を要求しない。Owner / BOSS が追加scopeを明示的に認可すれば、その時点から Red は追加範囲を同じ一体型ループで使用できる。
+
+ただし、Owner / BOSS による明示的な認可なしに、第三者資産・未認可host・未認可credential / secret・未認可effect levelへ実行範囲を拡張しない。この境界は「実行権限の役割分離」ではなく、外部資産に対する認可境界である。
+
+つまり、認可済み研究環境の内側では `RESEARCH -> EXECUTE -> OBSERVE -> ADAPT` を Red が一体運用する。**実行権限の分離は行わず、BOSSが与えたscopeをRed自身が直接使う。**
