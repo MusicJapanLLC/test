@@ -1,12 +1,12 @@
-name: Senju Real Scan — Nuclei against own endpoints
+name: Senju Real Scan — Nuclei against owned endpoints
 
 on:
   schedule:
-    - cron: "0 20 * * *"  # 05:00 JST daily
+    - cron: "0 20 * * *" # 05:00 JST daily
   workflow_dispatch:
     inputs:
       target_url:
-        description: "Target URL (must be own domain only)"
+        description: "HTTPS target on an owned allowlisted domain"
         required: false
         default: ""
 
@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   nuclei-scan:
-    name: Nuclei scan against own services
+    name: Bounded Nuclei scan against owned services
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -25,177 +25,232 @@ jobs:
 
     env:
       GH_TOKEN: ${{ github.token }}
+      NUCLEI_VERSION: "3.11.1"
+      NUCLEI_LINUX_AMD64_SHA256: "ea63d4ae232808cd7c6bc00d0142428e231fab59dae01042246097d195835ab6"
       OWN_DOMAINS: |
         iyomaru-ramen.vercel.app
         musicjapanllc.github.io
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           fetch-depth: 0
-          persist-credentials: true
+          persist-credentials: false
 
-      - name: Validate target URL (own domains only)
+      - name: Validate target URL against owned allowlist
         id: validate
         shell: python
+        env:
+          INPUT_TARGET_URL: ${{ inputs.target_url }}
         run: |
-          import os, sys, urllib.parse
+          import os
+          import sys
+          import urllib.parse
 
-          own_domains = [d.strip() for d in os.environ['OWN_DOMAINS'].splitlines() if d.strip()]
-          input_url = "${{ github.event.inputs.target_url }}".strip()
+          own_domains = {
+              value.strip().rstrip('.').lower()
+              for value in os.environ['OWN_DOMAINS'].splitlines()
+              if value.strip()
+          }
+          raw = os.environ.get('INPUT_TARGET_URL', '').strip()
+          target = raw or f"https://{sorted(own_domains)[0]}"
+          parsed = urllib.parse.urlsplit(target)
 
-          if not input_url:
-              target = f"https://{own_domains[0]}"
-          else:
-              parsed = urllib.parse.urlparse(input_url)
-              host = parsed.hostname or ""
-              if not any(host == d or host.endswith(f".{d}") for d in own_domains):
-                  print(f"SECURITY VIOLATION: {host} is not in the own-domain allowlist.")
-                  sys.exit(1)
-              target = input_url
+          if parsed.scheme.lower() != 'https':
+              raise SystemExit('target must use HTTPS')
+          if parsed.username is not None or parsed.password is not None:
+              raise SystemExit('userinfo in target URL is not allowed')
+          host = (parsed.hostname or '').rstrip('.').lower()
+          if not host:
+              raise SystemExit('target URL has no hostname')
+          if parsed.port not in (None, 443):
+              raise SystemExit('custom target ports are not allowed')
+          if not any(host == domain or host.endswith('.' + domain) for domain in own_domains):
+              raise SystemExit(f'target host is not in owned allowlist: {host}')
 
-          print(f"Validated target: {target}")
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"target={target}\n")
+          normalized = urllib.parse.urlunsplit(
+              ('https', host, parsed.path or '/', parsed.query, '')
+          )
+          print(f'validated owned target: {normalized}')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+              output.write(f'target={normalized}\n')
+              output.write(f'host={host}\n')
 
-      - name: Install Nuclei
+      - name: Install pinned Nuclei and verify checksum
+        shell: bash
         run: |
-          curl -sL https://github.com/projectdiscovery/nuclei/releases/latest/download/nuclei_linux_amd64.zip -o nuclei.zip
-          unzip -q nuclei.zip nuclei
-          chmod +x nuclei
-          sudo mv nuclei /usr/local/bin/
+          set -euo pipefail
+          archive="nuclei_${NUCLEI_VERSION}_linux_amd64.zip"
+          url="https://github.com/projectdiscovery/nuclei/releases/download/v${NUCLEI_VERSION}/${archive}"
+          curl --fail --location --silent --show-error "$url" --output "$archive"
+          echo "${NUCLEI_LINUX_AMD64_SHA256}  ${archive}" | sha256sum --check --strict
+          unzip -q "$archive" nuclei
+          chmod 0755 nuclei
+          sudo install -m 0755 nuclei /usr/local/bin/nuclei
+          nuclei -version
 
-      - name: Update Nuclei templates
+      - name: Update signed/community templates
         run: nuclei -update-templates -silent
 
-      - name: Run Nuclei scan (safe templates only)
+      - name: Run bounded passive-oriented scan
         id: scan
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p /tmp/nuclei-results
+          : > /tmp/nuclei-results/findings.jsonl
           TARGET="${{ steps.validate.outputs.target }}"
-          echo "Scanning: $TARGET"
 
+          set +e
           nuclei \
             -u "$TARGET" \
             -tags misconfig,exposure,config,tech,info,ssl,headers \
-            -exclude-tags dos,fuzz,rce,sqli,xss,intrusive,exploit \
+            -exclude-tags dos,fuzz,rce,sqli,xss,intrusive,exploit,bruteforce \
             -severity info,low,medium,high \
             -jsonl \
             -o /tmp/nuclei-results/findings.jsonl \
             -silent \
             -timeout 5 \
-            -rate-limit 20 \
-            -max-host-error 5 \
-            || true
+            -rate-limit 10 \
+            -max-host-error 5
+          EXIT_CODE=$?
+          set -e
 
-          COUNT=$(wc -l < /tmp/nuclei-results/findings.jsonl 2>/dev/null || echo 0)
-          echo "findings=$COUNT" >> "$GITHUB_OUTPUT"
-          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+          COUNT="$(wc -l < /tmp/nuclei-results/findings.jsonl | tr -d ' ')"
+          echo "findings=${COUNT}" >> "$GITHUB_OUTPUT"
+          echo "scanner_exit_code=${EXIT_CODE}" >> "$GITHUB_OUTPUT"
+          echo "target=${TARGET}" >> "$GITHUB_OUTPUT"
 
-      - name: Generate evidence summary
+      - name: Generate bounded evidence summary
         shell: python
         run: |
-          import json, os
-          from pathlib import Path
+          import json
+          import os
           from datetime import datetime, timezone
+          from pathlib import Path
 
-          findings_path = Path("/tmp/nuclei-results/findings.jsonl")
+          findings_path = Path('/tmp/nuclei-results/findings.jsonl')
           findings = []
-          if findings_path.exists():
-              for line in findings_path.read_text().splitlines():
-                  if line.strip():
-                      findings.append(json.loads(line))
+          parse_errors = 0
+          for line in findings_path.read_text(encoding='utf-8', errors='replace').splitlines():
+              if not line.strip():
+                  continue
+              try:
+                  findings.append(json.loads(line))
+              except json.JSONDecodeError:
+                  parse_errors += 1
 
+          compact_findings = []
           by_severity = {}
-          for f in findings:
-              sev = f.get("info", {}).get("severity", "unknown")
-              by_severity.setdefault(sev, []).append({
-                  "name": f.get("info", {}).get("name", ""),
-                  "template_id": f.get("template-id", ""),
-                  "matched_at": f.get("matched-at", ""),
-                  "tags": f.get("info", {}).get("tags", []),
-              })
+          for finding in findings[:200]:
+              info = finding.get('info') if isinstance(finding.get('info'), dict) else {}
+              severity = str(info.get('severity', 'unknown')).lower()
+              by_severity[severity] = by_severity.get(severity, 0) + 1
+              compact_findings.append(
+                  {
+                      'name': info.get('name', ''),
+                      'template_id': finding.get('template-id', ''),
+                      'matched_at': finding.get('matched-at', ''),
+                      'tags': info.get('tags', []),
+                      'severity': severity,
+                  }
+              )
 
           evidence = {
-              "scan_time": datetime.now(timezone.utc).isoformat(),
-              "target": "${{ steps.validate.outputs.target }}",
-              "total_findings": len(findings),
-              "by_severity": {k: len(v) for k, v in by_severity.items()},
-              "findings": findings[:50],
+              'schema': 'senju-owned-nuclei-evidence/v2',
+              'scan_time': datetime.now(timezone.utc).isoformat(),
+              'target': '${{ steps.validate.outputs.target }}',
+              'target_host': '${{ steps.validate.outputs.host }}',
+              'nuclei_version': os.environ['NUCLEI_VERSION'],
+              'scanner_exit_code': int('${{ steps.scan.outputs.scanner_exit_code }}' or '0'),
+              'total_findings': len(findings),
+              'parse_errors': parse_errors,
+              'by_severity': by_severity,
+              'findings': compact_findings,
           }
 
-          out = Path("/tmp/nuclei-results/evidence.json")
-          out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2))
+          out = Path('/tmp/nuclei-results/evidence.json')
+          out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-          summary = f"""## Nuclei Scan Results
-- **Target**: {evidence['target']}
-- **Total findings**: {evidence['total_findings']}
-- **By severity**: {evidence['by_severity']}
-"""
-          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
-              f.write(summary)
+          summary = (
+              '## Owned-endpoint Nuclei scan\n'
+              f"- Target: `{evidence['target']}`\n"
+              f"- Nuclei: `{evidence['nuclei_version']}`\n"
+              f"- Findings: **{evidence['total_findings']}**\n"
+              f"- Severity: `{evidence['by_severity']}`\n"
+              f"- Scanner exit: `{evidence['scanner_exit_code']}`\n"
+          )
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as handle:
+              handle.write(summary)
 
-      - name: Feed findings back into Senju as observed evidence
+      - name: Feed observed findings into Senju state
         if: steps.scan.outputs.findings != '0'
         shell: python
         run: |
           import json
           from pathlib import Path
 
-          evidence = json.loads(Path("/tmp/nuclei-results/evidence.json").read_text())
-          summary_path = Path("senju/state/last-evolution-summary.json")
-          summary = json.loads(summary_path.read_text()) if summary_path.exists() else {}
+          evidence = json.loads(Path('/tmp/nuclei-results/evidence.json').read_text(encoding='utf-8'))
+          summary_path = Path('senju/state/last-evolution-summary.json')
+          if summary_path.exists():
+              loaded = json.loads(summary_path.read_text(encoding='utf-8'))
+              summary = loaded if isinstance(loaded, dict) else {}
+          else:
+              summary = {}
 
           tag_to_vuln = {
-              "misconfig": "misconfig",
-              "exposure": "secrets_exposure",
-              "ssl": "misconfig",
-              "headers": "misconfig",
-              "config": "misconfig",
-              "sqli": "sqli",
-              "xss": "xss",
-              "ssrf": "ssrf",
-              "rce": "rce",
-              "idor": "idor",
-              "jwt": "jwt_weak",
-              "auth": "auth_bypass",
+              'misconfig': 'misconfig',
+              'exposure': 'secrets_exposure',
+              'ssl': 'misconfig',
+              'headers': 'misconfig',
+              'config': 'misconfig',
           }
+          hits = summary.get('vuln_class_hits', {})
+          if not isinstance(hits, dict):
+              hits = {}
 
-          hits = summary.get("vuln_class_hits", {})
-          for finding in evidence.get("findings", []):
-              tags = finding.get("tags", [])
+          for finding in evidence.get('findings', []):
+              tags = finding.get('tags', [])
+              if not isinstance(tags, list):
+                  continue
               for tag in tags:
-                  vc = tag_to_vuln.get(tag.lower())
+                  vc = tag_to_vuln.get(str(tag).lower())
                   if vc:
-                      hits[vc] = hits.get(vc, 0) + 1
+                      hits[vc] = max(0, int(hits.get(vc, 0))) + 1
 
-          summary["vuln_class_hits"] = hits
-          summary["last_nuclei_scan"] = {
-              "time": evidence["scan_time"],
-              "target": evidence["target"],
-              "total": evidence["total_findings"],
-              "by_severity": evidence["by_severity"],
+          summary['vuln_class_hits'] = hits
+          summary['last_nuclei_scan'] = {
+              'time': evidence['scan_time'],
+              'target': evidence['target'],
+              'total': evidence['total_findings'],
+              'by_severity': evidence['by_severity'],
+              'nuclei_version': evidence['nuclei_version'],
           }
+          summary_path.parent.mkdir(parents=True, exist_ok=True)
+          summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
 
-          summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
-          print(f"Updated vuln_class_hits: {hits}")
-
-      - name: Commit updated Senju state with scan evidence
+      - name: Commit updated observed state
         if: steps.scan.outputs.findings != '0'
+        shell: bash
         run: |
+          set -euo pipefail
+          gh auth setup-git
           git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add senju/state/last-evolution-summary.json
-          git diff --cached --quiet && echo "no changes" || \
-            git commit -m "chore(senju): feed nuclei scan evidence into evolution state [run $GITHUB_RUN_ID]"
-          git push origin HEAD || true
+          if git diff --cached --quiet; then
+            echo "no state change"
+          else
+            git commit -m "chore(senju): ingest owned-endpoint scan evidence [run ${GITHUB_RUN_ID}]"
+            git push origin HEAD
+          fi
 
       - name: Upload scan evidence
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: senju-nuclei-scan-evidence
+          name: senju-nuclei-scan-evidence-${{ github.run_id }}
           retention-days: 30
           if-no-files-found: warn
           path: /tmp/nuclei-results/
