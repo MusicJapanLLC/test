@@ -24,6 +24,7 @@ concurrency:
 
 jobs:
   live-adversary:
+    name: Pressure all 7 live guard surfaces
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -37,7 +38,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run live adversary loop against active codepaths
+      - name: Pressure real implementations with randomized and 300-case multi-guard campaigns
         env:
           PYTHONPATH: senju
         run: >-
@@ -46,7 +47,7 @@ jobs:
           --scope-cases 1024
           --seed 31001
           --json security-reports/senju-live-guard-adversary.json
-          --fail-on-crash
+          --fail-on-findings
 
       - name: Upload evidence
         if: always()
