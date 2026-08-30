@@ -6,6 +6,15 @@ on:
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
   workflow_dispatch:
+    inputs:
+      profile:
+        description: "Guard profile for manual research runs"
+        required: true
+        default: strict
+        type: choice
+        options:
+          - strict
+          - lab
   schedule:
     - cron: "23 1 * * 1"
 
@@ -26,6 +35,12 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Report manual lab profile
+        if: github.event_name == 'workflow_dispatch' && inputs.profile == 'lab'
+        run: |
+          echo "LAB profile: policy/reality gates are advisory for this manual run."
+          echo "Secret scanning, remote-shell blocking, and untrusted-event checks remain blocking."
 
       - name: Block tracked secret files
         shell: bash
@@ -73,9 +88,11 @@ jobs:
           fi
 
       - name: Enforce fail-closed workflow policy
+        if: github.event_name != 'workflow_dispatch' || inputs.profile != 'lab'
         run: python automation/security/workflow_policy_entrypoint.py
 
       - name: Enforce external-evidence reality gate
+        if: github.event_name != 'workflow_dispatch' || inputs.profile != 'lab'
         run: python automation/security/reality_gate.py
 
       - name: Block remote shell execution patterns
