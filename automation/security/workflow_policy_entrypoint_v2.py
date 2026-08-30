@@ -2,9 +2,8 @@
 """Fail-closed workflow policy entrypoint v2.
 
 Extends the existing semantic policy with an explicit capability contract for
-THE WORLD Portfolio Forge. The lane may dispatch already-governed workflows
-and mint GitHub OIDC only to enqueue a bounded repair for the owned Music Japan
-portfolio target. It does not receive repository-content write authority.
+THE WORLD Portfolio Forge when that lane exists. If the lane has been
+quarantined/removed, policy remains valid instead of requiring its return.
 """
 from __future__ import annotations
 
@@ -14,11 +13,11 @@ from automation.security import workflow_policy as policy
 from automation.security import workflow_policy_entrypoint as base
 
 
-def validate_portfolio_forge_oidc_lane() -> str:
+def validate_portfolio_forge_oidc_lane() -> str | None:
     name = "the-world-portfolio-forge.yml"
     body = policy.WORKFLOWS.get(name, "")
     if not body:
-        raise SystemExit(f"{name}: required portfolio repair lane is missing")
+        return None
 
     got = policy.writes(body)
     if got != {"actions", "id-token"}:
@@ -95,7 +94,8 @@ def main() -> int:
     base.validate_agent_factory_semantic_contract()
 
     for name in (manager, foundry, madlab, watchdog, portfolio):
-        policy.WORKFLOWS.pop(name, None)
+        if name:
+            policy.WORKFLOWS.pop(name, None)
 
     return policy.main()
 
