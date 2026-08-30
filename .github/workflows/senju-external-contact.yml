@@ -142,19 +142,14 @@ jobs:
           for stem in ('example', 'github'):
               receipt = json.loads(Path(f'/tmp/senju-contact/{stem}-receipt.json').read_text())
               body = Path(f'/tmp/senju-contact/{stem}-body.' + ('html' if stem == 'example' else 'txt')).read_bytes()
-              assert receipt['schema'] == 'senju-external-contact/v3'
-              assert receipt['requested_url']
-              assert receipt['final_url']
-              assert receipt['final_host']
-              assert receipt['contacted_hosts']
+              assert receipt['schema'] == 'senju-external-contact/v2'
               assert 200 <= receipt['status'] < 400
               assert receipt['provider_acknowledged'] is True
               assert receipt['resolved_ips']
               assert receipt['response_bytes'] == len(body)
               assert len(body) > 0
               assert 1 <= receipt['attempt_count'] <= 4
-              assert receipt['redirect_count'] >= 0
-          print('SENJU_EXTERNAL_CONTACT_V3_VERIFIED')
+          print('SENJU_EXTERNAL_CONTACT_V2_VERIFIED')
           PY
 
       - name: Adapt transport strategy for next run
@@ -171,7 +166,6 @@ jobs:
       - name: Upload external-contact evidence and adaptive memory
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          # Keep the historical artifact name so prior transport memory remains restorable.
           name: senju-external-contact-v2-evidence
           retention-days: 30
           if-no-files-found: error

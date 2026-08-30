@@ -4,12 +4,9 @@
   "confidence": 0.9,
   "changes": [
     "R&D/efficiency population: 120 -> 108",
-    "R&D/efficiency matches: 500 -> 450",
-    "COVENANT/VERIFY_DEEPLY generations: 16 -> 17",
-    "COVENANT/VERIFY_DEEPLY matches: 450 -> 504",
-    "COVENANT/VERIFY_DEEPLY mutation_rate: 0.06 -> 0.057"
+    "R&D/efficiency matches: 500 -> 450"
   ],
-  "reason": "Evaluator selected the best already-measured safe candidate with score=255.175, rating_gain=404.5, balance=0.736, learning_signal=1.0.",
+  "reason": "Evaluator selected the best already-measured safe candidate with score=222.970, rating_gain=366.2, balance=0.548, learning_signal=1.0.",
   "hypothesis": "Carry forward the strongest safe measured strategy and verify it again in the bounded smoke tournament.",
   "previous_strategy": {
     "population": 120,
@@ -22,8 +19,8 @@
   },
   "next_strategy": {
     "population": 108,
-    "generations": 17,
-    "matches": 504,
+    "generations": 16,
+    "matches": 450,
     "mutation_rate": 0.05,
     "red_budget": 16,
     "blue_budget": 16,
@@ -47,32 +44,6 @@
     },
     "guardrail": "numeric simulator strategy only"
   },
-  "covenant_intent": {
-    "schema": "senju-covenant-intent/v1",
-    "intent_mode": "VERIFY_DEEPLY",
-    "drive_score": 1,
-    "candidate_count": 5,
-    "reality_signal": true,
-    "senju_specific_plan": false,
-    "modes": {
-      "VERIFY": 3
-    },
-    "changes": {
-      "generations": {
-        "before": 16,
-        "after": 17
-      },
-      "matches": {
-        "before": 450,
-        "after": 504
-      },
-      "mutation_rate": {
-        "before": 0.06,
-        "after": 0.057
-      }
-    },
-    "authority": "numeric_strategy_only"
-  },
   "shadow_champion": {
     "selected": true,
     "reason": "stable preliminary winner passed unseen holdout",
@@ -82,15 +53,15 @@
       "safe": true,
       "reason": "multi-seed stability gate passed",
       "runs": 3,
-      "mean_score": 182.2695,
-      "worst_score": 143.5,
-      "score_stdev": 32.2388,
-      "worst_balance": 0.65,
+      "mean_score": 166.0883,
+      "worst_score": 139.9217,
+      "score_stdev": 23.6632,
+      "worst_balance": 0.4417,
       "worst_learning_signal": 1.0,
       "strategy": {
         "population": 108,
-        "generations": 17,
-        "matches": 504,
+        "generations": 16,
+        "matches": 450,
         "mutation_rate": 0.05,
         "red_budget": 16,
         "blue_budget": 16,
@@ -107,34 +78,34 @@
       },
       "evaluations": [
         {
-          "score": 180.8767,
+          "score": 161.105,
           "safe": true,
-          "rating_gain": 190.6,
-          "balance": 0.7417,
+          "rating_gain": 160.3,
+          "balance": 0.65,
           "learning_signal": 1.0,
           "reason": "safe balanced learning run",
           "seed_offset": 7919
         },
         {
-          "score": 143.5,
+          "score": 139.9217,
           "safe": true,
-          "rating_gain": 110.0,
-          "balance": 0.65,
+          "rating_gain": 159.3,
+          "balance": 0.4417,
           "learning_signal": 1.0,
           "reason": "safe balanced learning run",
           "seed_offset": 9011
         },
         {
-          "score": 222.4317,
+          "score": 197.2383,
           "safe": true,
-          "rating_gain": 237.9,
-          "balance": 0.9917,
+          "rating_gain": 168.3,
+          "balance": 0.9833,
           "learning_signal": 1.0,
           "reason": "safe balanced learning run",
           "seed_offset": 10037
         }
       ],
-      "robust_score": 157.6596
+      "robust_score": 148.006
     }
   }
 }

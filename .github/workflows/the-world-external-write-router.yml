@@ -19,7 +19,6 @@ concurrency:
 permissions:
   contents: read
   actions: read
-  issues: write
 
 env:
   GH_TOKEN: ${{ github.token }}
