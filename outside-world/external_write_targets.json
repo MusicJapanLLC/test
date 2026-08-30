@@ -1,7 +1,7 @@
 {
   "schema": "the-world-external-write-targets/v1",
   "mode": "ROTATING_ALLOWLIST",
-  "max_total_writes_per_run": 5,
+  "max_total_writes_per_run": 2,
   "dedupe_hours": 72,
   "principle": "EXPLORE_WIDELY_WRITE_THROUGH_AUTHORIZED_ACCOUNTS",
   "platforms": [
