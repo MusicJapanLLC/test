@@ -2,7 +2,7 @@ name: TOMOKI - MANAGER Queue Bridge
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '2-57/5 * * * *'
   workflow_dispatch:
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
