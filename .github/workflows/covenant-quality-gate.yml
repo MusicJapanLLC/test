@@ -1,0 +1,100 @@
+name: Covenant Quality Gate
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'company-society/**'
+      - 'tomoki-agents/prompts/**'
+      - '.github/agents/ai-factory-boss.agent.md'
+      - '.github/workflows/the-covenant.yml'
+      - '.github/workflows/covenant-autonomy-cycle.yml'
+      - '.github/workflows/covenant-quality-gate.yml'
+      - 'automation/control_plane/workers.json'
+  push:
+    paths:
+      - 'company-society/**'
+      - 'tomoki-agents/prompts/**'
+      - '.github/agents/ai-factory-boss.agent.md'
+      - '.github/workflows/the-covenant.yml'
+      - '.github/workflows/covenant-autonomy-cycle.yml'
+      - '.github/workflows/covenant-quality-gate.yml'
+      - 'automation/control_plane/workers.json'
+
+permissions:
+  contents: read
+
+jobs:
+  covenant-quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Compile Covenant code
+        run: |
+          python -m py_compile \
+            company-society/church.py \
+            company-society/ritual_validation.py \
+            company-society/autonomy_engine.py
+
+      - name: Validate society registry JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for path in ['company-society/society.json', 'automation/control_plane/workers.json']:
+              data = json.loads(Path(path).read_text(encoding='utf-8'))
+              if not isinstance(data, dict):
+                  raise SystemExit(f'{path}: expected object')
+              print(path, 'OK')
+          PY
+
+      - name: Run Covenant tests
+        run: python -m unittest discover -s company-society -p 'test_*.py' -v
+
+      - name: Smoke-test Faith Report rendering
+        run: |
+          cat > /tmp/covenant-snapshot.json <<'JSON'
+          {
+            "workers": [
+              {
+                "agent": "FORGE",
+                "id": "tomoki-forge",
+                "status": "completed",
+                "conclusion": "success",
+                "run_id": 1,
+                "run_attempt": 1,
+                "age_minutes": 3,
+                "report_excerpt": "VERIFY: PASS",
+                "report_quality": "OK",
+                "material_signal": false,
+                "verified_signal": true,
+                "manager_action": "NONE",
+                "action_result": "NONE"
+              }
+            ],
+            "unresolved": []
+          }
+          JSON
+          python company-society/church.py --snapshot /tmp/covenant-snapshot.json --json /tmp/faith.json --report /tmp/faith.md
+          grep -q 'THE COVENANT' /tmp/faith.md
+          grep -q '検証済みシグナル' /tmp/faith.md
+
+      - name: Smoke-test Autonomy rendering
+        run: |
+          python company-society/autonomy_engine.py \
+            --snapshot /tmp/covenant-snapshot.json \
+            --registry automation/control_plane/workers.json \
+            --json /tmp/autonomy.json \
+            --report /tmp/autonomy.md
+          grep -q 'Autonomy & Fellowship' /tmp/autonomy.md
+          grep -q 'tomoki-forge' /tmp/autonomy.md

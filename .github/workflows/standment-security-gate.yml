@@ -1,0 +1,119 @@
+name: Standment Security Gate v2
+
+on:
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+      - "security/**"
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: standment-security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secure-build:
+    name: Secure build / WebGL / policy / SBOM
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: baton/package-lock.json
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Install locked frontend dependencies
+        working-directory: baton
+        run: npm ci
+
+      - name: Build WebGL application
+        working-directory: baton
+        env:
+          VITE_SITE_URL: https://baton-liart.vercel.app
+        run: npm run build
+
+      - name: Prepare security reports
+        run: mkdir -p security-reports
+
+      - name: Scan WebGL and browser attack surface
+        run: >-
+          python scripts/security/webgl_guard.py baton
+          --json security-reports/webgl-security.json
+          --markdown security-reports/webgl-security.md
+
+      - name: Verify Vercel security policy
+        run: >-
+          python scripts/security/vercel_policy_guard.py baton/vercel.json
+          --json security-reports/vercel-policy.json
+
+      - name: Generate CycloneDX SBOM from lockfile
+        run: >-
+          python scripts/security/sbom_from_lock.py baton/package-lock.json
+          --output security-reports/baton.cdx.json
+
+      - name: Inspect built artifacts
+        run: >-
+          python scripts/security/artifact_guard.py baton/dist
+          --json security-reports/artifact-security.json
+
+      - name: Upload security evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: standment-security-evidence-${{ github.sha }}
+          path: security-reports/
+          if-no-files-found: error
+          retention-days: 30
+
+  production-passive-dast:
+    name: Production passive DAST
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    needs: secure-build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Probe production edge and accidental exposure
+        env:
+          STANDMENT_DAST_TARGET: https://baton-liart.vercel.app/
+        run: >-
+          python scripts/security/http_probe.py "$STANDMENT_DAST_TARGET"
+          --json production-dast.json
+
+      - name: Upload DAST evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: standment-production-dast-${{ github.sha }}
+          path: production-dast.json
+          if-no-files-found: error
+          retention-days: 30
