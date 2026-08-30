@@ -41,6 +41,124 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 
 @dataclass(frozen=True)
+class ExternalAuthorityScope:
+    """Explicit, machine-readable authority contract for outbound connectors and API access.
+    
+    Adheres to the Senju autonomous expansion covenant: all external interaction lanes
+    must declare explicit destination, action sets, rate limits, verification, and purpose.
+    """
+
+    scope_id: str
+    target_service: str
+    allow_hosts: frozenset[str]
+    allowed_methods: frozenset[str] = field(
+        default_factory=lambda: frozenset({"GET", "HEAD", "OPTIONS"})
+    )
+    allow_http: bool = False
+    allow_delete: bool = False
+    rate_limit_per_minute: int = 60
+    timeout_seconds: float = 10.0
+    max_request_bytes: int = 128 * 1024
+    max_response_bytes: int = 1024 * 1024
+    retries: int = 2
+    follow_redirects: bool = True
+    credential_scope: str = "none"  # "none" | "public_token" | "service_bearer"
+    verification_strategy: str = "sha256_receipt"
+    rollback_supported: bool = False
+    description: str = ""
+
+    def to_policy(self) -> ExternalContactPolicy:
+        return ExternalContactPolicy(
+            allow_hosts=self.allow_hosts,
+            allow_http=self.allow_http,
+            allowed_methods=self.allowed_methods,
+            allow_delete=self.allow_delete,
+            follow_redirects=self.follow_redirects,
+            max_redirects=3,
+            timeout_seconds=self.timeout_seconds,
+            max_request_bytes=self.max_request_bytes,
+            max_response_bytes=self.max_response_bytes,
+            retries=self.retries,
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "scope_id": self.scope_id,
+            "target_service": self.target_service,
+            "allow_hosts": sorted(self.allow_hosts),
+            "allowed_methods": sorted(self.allowed_methods),
+            "allow_http": self.allow_http,
+            "allow_delete": self.allow_delete,
+            "rate_limit_per_minute": self.rate_limit_per_minute,
+            "timeout_seconds": self.timeout_seconds,
+            "max_request_bytes": self.max_request_bytes,
+            "max_response_bytes": self.max_response_bytes,
+            "retries": self.retries,
+            "follow_redirects": self.follow_redirects,
+            "credential_scope": self.credential_scope,
+            "verification_strategy": self.verification_strategy,
+            "rollback_supported": self.rollback_supported,
+            "description": self.description,
+        }
+
+
+# Standard authorized threat intelligence and public observability scopes
+BUILTIN_AUTHORITY_SCOPES: dict[str, ExternalAuthorityScope] = {
+    "threat_intel_public": ExternalAuthorityScope(
+        scope_id="threat_intel_public",
+        target_service="Public Vulnerability & Threat Feeds",
+        allow_hosts=frozenset({
+            "services.nvd.nist.gov",
+            "cve.circl.lu",
+            "raw.githubusercontent.com",
+            "api.github.com",
+            "security.debian.org",
+            "vuln.cisa.gov",
+            "example.com",
+        }),
+        allowed_methods=frozenset({"GET", "HEAD"}),
+        timeout_seconds=10.0,
+        max_response_bytes=2 * 1024 * 1024,
+        retries=2,
+        follow_redirects=True,
+        description="Public CVE and advisory telemetry feed ingestion for dynamic target generation",
+    ),
+    "github_metadata": ExternalAuthorityScope(
+        scope_id="github_metadata",
+        target_service="GitHub API and Releases",
+        allow_hosts=frozenset({
+            "api.github.com",
+            "raw.githubusercontent.com",
+            "github.com",
+        }),
+        allowed_methods=frozenset({"GET", "HEAD", "POST"}),
+        timeout_seconds=15.0,
+        max_response_bytes=4 * 1024 * 1024,
+        retries=2,
+        follow_redirects=True,
+        credential_scope="public_token",
+        description="GitHub repository status, release tracking, and commit verification",
+    ),
+    "canary_telemetry": ExternalAuthorityScope(
+        scope_id="canary_telemetry",
+        target_service="Observability & Canary Probes",
+        allow_hosts=frozenset({
+            "httpbin.org",
+            "1.1.1.1",
+            "dns.google",
+            "example.com",
+        }),
+        allowed_methods=frozenset({"GET", "HEAD", "OPTIONS", "POST"}),
+        timeout_seconds=5.0,
+        max_response_bytes=512 * 1024,
+        retries=1,
+        follow_redirects=True,
+        description="Live egress verification and transport resilience canary tests",
+    ),
+}
+
+
+@dataclass(frozen=True)
 class ExternalContactPolicy:
     """Policy for a Senju outbound-contact lane."""
 
@@ -59,6 +177,16 @@ class ExternalContactPolicy:
     max_response_bytes: int = 512 * 1024
     retries: int = 1
     retry_backoff_seconds: float = 0.25
+
+    @classmethod
+    def from_authority_scope(cls, scope: ExternalAuthorityScope) -> "ExternalContactPolicy":
+        """Build an outbound contact policy from a structured authority scope."""
+        return scope.to_policy()
+
+    @classmethod
+    def threat_intel(cls) -> "ExternalContactPolicy":
+        """Pre-authorized policy for public threat intelligence and CVE feeds."""
+        return BUILTIN_AUTHORITY_SCOPES["threat_intel_public"].to_policy()
 
     @classmethod
     def from_hosts(
@@ -81,8 +209,8 @@ class ExternalContactPolicy:
             follow_redirects=follow_redirects,
             max_redirects=max(0, min(int(max_redirects), 5)),
             timeout_seconds=max(0.5, min(float(timeout_seconds), 20.0)),
-            max_response_bytes=max(1024, min(int(max_response_bytes), 1024 * 1024)),
-            retries=max(0, min(int(retries), 3)),
+            max_response_bytes=max(1024, min(int(max_response_bytes), 10 * 1024 * 1024)),
+            retries=max(0, min(int(retries), 5)),
         )
 
 
