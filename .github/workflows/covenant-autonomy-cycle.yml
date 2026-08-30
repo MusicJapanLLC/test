@@ -1,9 +1,9 @@
-name: THE COVENANT - Autonomy & Fellowship Cycle
+name: THE COVENANT - LIMITLESS Autonomy & Fellowship Cycle
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: '41 */2 * * *'
+    - cron: '41 * * * *'
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
@@ -46,11 +46,12 @@ jobs:
             --output tomoki-manager-snapshot.json \
             --report tomoki-manager-autonomy-source.md
 
-      - name: Build autonomy and fellowship plan
+      - name: Activate LIMITLESS doctrine in autonomy plan
         run: |
           python company-society/autonomy_engine.py \
             --snapshot tomoki-manager-snapshot.json \
             --registry automation/control_plane/workers.json \
+            --creed company-society/limitless_creed.json \
             --json covenant-autonomy.json \
             --report covenant-autonomy.md
           cat covenant-autonomy.md >> "$GITHUB_STEP_SUMMARY"
@@ -58,27 +59,28 @@ jobs:
       - name: Run Covenant tests
         run: python -m unittest discover -s company-society -p 'test_*.py' -v
 
-      - name: Preserve autonomy evidence
+      - name: Preserve LIMITLESS evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: covenant-autonomy-${{ github.run_id }}
+          name: covenant-limitless-${{ github.run_id }}
           path: |
             covenant-autonomy.md
             covenant-autonomy.json
             tomoki-manager-snapshot.json
+            company-society/limitless_creed.json
           retention-days: 30
           if-no-files-found: warn
 
-      - name: Report fellowship state to Slack
+      - name: Preach operational LIMITLESS to Slack
         if: always()
         env:
           TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
         run: |
           if [[ ! -f covenant-autonomy.md ]]; then
-            printf '# THE COVENANT — Autonomy Cycle\n\nCycle failed before report generation.\n' > covenant-autonomy.md
+            printf '# THE COVENANT — LIMITLESS\n\nCycle failed before report generation.\n' > covenant-autonomy.md
           fi
           python tomoki-agents/slack_post.py \
-            --agent "FAITH/AUTONOMY" \
+            --agent "FAITH/LIMITLESS" \
             --file covenant-autonomy.md \
             --status "${{ job.status }}"

@@ -1,11 +1,20 @@
 # AI Factory Portfolio
 
-最終更新: 2026-08-30 JST
+最終実測: **2026-08-30 JST**
 
-このファイルは、Music Japan / Standment のAI開発工場が**実際に作ったもの**を社長・営業・非エンジニア向けに説明するための一覧です。
+Music Japan / Standment のAI開発工場が**実際に作り、現在どこまで動作確認できているか**を、人間向けにまとめた正本です。
+
+## 今日のPortfolio Blitz
+
+- **VERIFIED: 8 / 9**
+- **BLOCKED: 1 / 9**
+- **BUILDING: 0 / 9**
+- **EXPERIMENT: 0 / 9**
+
+`VERIFIED` はコードやPRがあるだけでは付けません。**人間が確認できる成果物 + 主張した中核挙動の実測証拠**が必要です。
 
 ステータス:
-- **VERIFIED** = 実装 + 検証証拠あり
+- **VERIFIED** = 実装 + 中核挙動の検証証拠あり
 - **BUILDING** = 実物あり、最終統合/検証が残る
 - **EXPERIMENT** = ラボ/試作段階
 - **BLOCKED** = 実物はあるが外部依存で停止
@@ -14,35 +23,26 @@
 
 ## 1. Senju — GitHub-native Self-Improving Engineering Lab
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
-### 作ったもの
-GitHub Actions上で、前日のChampionを引き継ぎ、候補戦略を生成・比較・評価し、安全条件を通った状態だけを次世代へ昇格させる自己改善ループ。
+### 何を作った？
+前日のChampionを引き継ぎ、候補戦略を生成・競争・評価し、安全条件とholdoutを通った状態だけを昇格させるGitHub-native自己改善基盤。
 
 ### 何に使える？
-AIエージェントの戦略や評価方法を、毎回人間が手で試すのではなく、継続的に比較・改善する研究基盤として使える。
+AI Engineer / Security / QA / R&Dの改善案を、人間が毎回手で比較せず、継続的に競争・反証・検証できる。
 
-### すでにできていること
-- 前日のChampion/Strategyを引き継ぐ
-- 候補をTournament/Evaluatorで比較
-- public target / scope違反を拒否
-- pytest / smoke evaluationを通す
-- AIが変更できる範囲を限定
-- GitHub自身をscheduler/orchestratorとして使う
-- state-only PRを作る昇格フロー
+### 実測証拠
+- default branch上でvalidated stateを自律昇格した run `33253144926`
+- promoted commit `97528375730751784f213eab6291c4cfa70780f7`
+- PR #67 merged
+- `senju/state/last-evolution-summary.json`: safe / source evidence / multi-seed holdout stable+safe
+- `senju/state/last-evolution-plan.md`: 人間向け結果あり
 
-### 現在の残り
-コードとPRはmerge済み。**最初の完全な定期自動サイクル成功証拠を確認するまではVERIFIED運用とは呼ばない。**
-
-### 経営メリット
-AI改善を「思いついた時だけ」ではなく定期工程に変えられる。将来的にはAI Engineer / Security / QAなどの改善評価にも再利用可能。
-
-### Evidence
-- PR #35: Senju v2 durable daily self-evolution loop
-- PR #36: Senju v3 GitHub-native autonomous improvement loop
+### 限界
+Senjuの内部スコアは市場需要・契約・入金の証拠ではない。
 
 ### 次の改善
-最初のscheduled runを観測し、成功/失敗・Champion差分・改善量をCEO Reporterへ配送する。
+自律昇格成功率、no-op率、holdout失敗率を継続計測し、Portfolioへ実物差分だけ還流する。
 
 ---
 
@@ -50,68 +50,50 @@ AI改善を「思いついた時だけ」ではなく定期工程に変えられ
 
 **状態: VERIFIED**
 
-### 作ったもの
-Standment自身が守るべき開発・運用・認証・データ・CI/CDの最低基準を、会社共通のセキュリティ標準としてコード化。
+### 何を作った？
+Standment自身と将来の顧客納品で使う、認証・Secrets・データ・CI/CD・バックアップ・監視・Evidenceの会社共通セキュリティ基準。
 
 ### 何に使える？
-自社開発のチェックリストだけでなく、将来顧客へ提供する「セキュリティ初期診断 / 継続保守」の納品基準として再利用できる。
+セキュリティを個人知識ではなく、診断・継続保守・納品品質の共通基準として再利用できる。
 
-### すでにできていること
+### 実測証拠
+- PR #29 merged
 - owned / authorized scope境界
-- PUBLIC / INTERNAL / RESTRICTED分類
-- MFA/passkey・secret管理基準
-- auth / tenant / external ingest基準
-- backup / RPO / RTO / observability基準
-- customer evidence / delivery基準
-- KEEP / REVERT / BLOCKEDによる自動改善ルール
-
-### 経営メリット
-セキュリティを個人の知識ではなく、**会社の商品・品質基準**へ変え始めている。
-
-### Evidence
-- PR #29 merged: `security: Standment company security baseline v0.3`
+- MFA/passkey / secret管理
+- tenant / external ingest
+- backup / RPO / RTO / observability
+- customer evidence / KEEP・REVERT・BLOCKED基準
 
 ### 次の改善
-実サービスの診断結果をこの標準へマッピングし、顧客向けEvidence Packへ変換する。
+Security Scanの実診断結果をBaselineへマッピングし、顧客向けControl Evidence Packを増やす。
 
 ---
 
 ## 3. Standment Security Scan v1
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
-### 作ったもの
-許可済みWebサイトだけを対象にした、読み取り専用の継続セキュリティ監査エンジン。
+### 何を作った？
+明示的に許可されたWebサイトだけを対象に、HTTPS/TLS・Security Headers・Cookie・HTML設定・限定的な公開ファイル露出を**読み取り専用**で確認する診断エンジン。
 
 ### 何に使える？
-Webサイト/SaaSの最低限のセキュリティ状態を自動確認し、日本語の改善レポートと証拠JSONを出す。月額保守サービスの土台にできる。
+Webサイト/SaaSの初期診断、改善レポート、修正後の再診断、月額Security Watchの納品物に使える。
 
-### すでにできていること
-- HTTPS / TLS
-- Security Headers
-- Cookie
-- HTML設定
-- 限定的な accidental exposure確認
-- 0-100 risk score / A-F grade
-- 日本語remediation report
-- JSON evidence
-- allowlist authorization gate
-- 日次監査設計
-- 90日証拠保持
-- unit tests
-- security-critical change control
+### 実測証拠
+- staleだったPR #31を破棄し、最新THE WORLD上でPR #114として再構築・merge
+- merged commit `7a9909c75efe0137bdd75c2b12d2dcd4086a8461`
+- current-base run `33265553333`: SUCCESS
+- Scanner unit tests: SUCCESS
+- 許可済みBaton productionを実診断: **100 / 100, Grade A, passed=True**
+- 日本語Markdown + JSON + indexの3ファイルを生成
+- evidence artifact `9718531385`, 90日保持
+- Security Guard / CodeQL / Dependency Review / Vulnerability Audit / Standment Security Gate 全PASS
 
-### 現在の残り
-PR #31はopen。最終mergeと本番dogfooding結果の確定が必要。
-
-### 経営メリット
-「セキュリティ対策できます」という営業トークではなく、**実際に顧客へ見せられる診断物**になり始めている。
-
-### Evidence
-- PR #31 open: `security: productize Standment Security Scan v1`
+### 安全境界
+認証突破、ブルートフォース、exploit、fuzzing、負荷試験、データ変更はしない。allowlist-only / read-only。
 
 ### 次の改善
-Baton等の所有資産でレポート品質をdogfoodし、Before/Afterの改善証拠をケーススタディ化する。
+実際に設定不備がある所有資産でBefore / Afterケーススタディを作り、営業で見せられるEvidence Packへ育てる。
 
 ---
 
@@ -119,175 +101,209 @@ Baton等の所有資産でレポート品質をdogfoodし、Before/Afterの改�
 
 **状態: VERIFIED**
 
-### 作ったもの
-営業イベントを受け取るRevenue Recovery AIの外部入力経路を、重複・リプレイ・大量投入に強くした。
+### 何を作った？
+営業イベントを受け取るRevenue Recovery AIの外部入力経路を、重複・replay・大量投入に強くした入力防御層。
 
 ### 何に使える？
-Gmail/CRM/Slack等のイベントを営業AIへ渡す際、同じイベントの二重処理や異常な大量入力でデータや営業処理が壊れるリスクを減らす。
+Gmail / CRM / Slack等のイベントを営業AIへ渡す際の二重処理や異常投入を抑え、継続運用しやすくする。
 
-### すでにできていること
+### 実測証拠
+- PR #30 merged
 - 未承認source拒否
-- timestamp validation
-- idempotency key
-- exact replayの重複書込み防止
-- integration workspace単位rate limit
-- bounded input
+- timestamp validation / idempotency key
+- exact replay重複防止
+- workspace単位rate limit / bounded input
+- AppDeploy `30-nnktft`: READY
+- frontend / backend / network error logは空
 
-### 検証
-AppDeploy `30-nnktft` へ同等backendを反映しREADY。frontend/backend/network error logは空。E2Eは未確認のためE2E PASSとは扱わない。
-
-### 経営メリット
-Revenue Recoveryを「AIデモ」から、外部サービスと接続して継続利用できる業務システムへ近づける。
-
-### Evidence
-- PR #30 merged: `security: harden Revenue Recovery external ingest`
+### 限界
+この項目がVERIFIEDなのは**ingest hardening機能**。Revenue Recovery製品全体のE2Eや売上実績を意味しない。
 
 ### 次の改善
-実際の営業イベントでreplay/idempotency/rate-limitの運用証拠を増やし、顧客向けSaaS品質へ寄せる。
+実営業イベントでreplay / idempotency / rate-limitの継続運用証拠を増やす。
 
 ---
 
 ## 5. Company Memory v1
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
-### 作ったもの
-会社・人物・案件・紹介履歴などをSupabaseへ集約し、「どれが最新の事実か」「同一人物か」をAIが追える共通知識基盤。
+### 何を作った？
+会社・人物・案件・紹介履歴・根拠・更新履歴をSupabaseへ集約し、AIが「同一人物か」「どの事実が最新か」を追える共通知識基盤。
 
 ### 何に使える？
-AIに毎回同じ人物・会社・案件説明をやり直す時間を減らし、営業・紹介・議事録・次回アクションを一貫した情報から引ける。
+AIに毎回同じ会社・人物・案件を説明し直す負担を減らし、営業・紹介・議事録・次回アクションを共通事実から参照できる。
 
-### すでにできていること
-- canonical person/company/deal ID
-- 表記揺れ・重複排除
-- bitemporal facts
-- evidence URL / confidence / source precedence
-- append-only history
-- AI change audit
-- retry / dead-letter設計
-- 日本語全文検索
-- `cm_person_brief`
-- JWT必須 `memory-query`
-- 本番Supabase migration
-- 実データで検索・更新監査を実測
+### 本番実測
+2026-08-30にProduction Supabaseを再確認。
 
-### 現在の残り
-GitHub側PR #32はDraft。公開test repoなので、private repoへの分離が望ましい。
+- project: `Music Japan OS` / ACTIVE_HEALTHY
+- Company Memory tables: **43**
+  - `cm_core`: 24
+  - `cm_memory`: 11
+  - `cm_ops`: 5
+  - `cm_audit`: 3
+- **43 / 43 tables RLS enabled**
+- privacy-safe aggregate:
+  - workspace 1
+  - entities 15
+  - aliases 6
+  - opportunities 3
+  - source records 11
+  - audit events 130
+- Edge Function `memory-query`: ACTIVE / `verify_jwt=true`
+- public RPC `cm_person_brief` / `cm_memory_search`: production存在、SECURITY DEFINERではない
 
-### 経営メリット
-AI社員の最大の弱点である「毎回忘れる」を、プロンプトではなく**データ基盤で解決する**方向へ進んでいる。
-
-### Evidence
-- PR #32 draft: `Company Memory v1: canonical data model and query API`
+### 残るhardening
+PR #32はDraft。公開test repoから専用private repoへ分離するのは望ましいが、コア機能の稼働可否とは分離して扱う。
 
 ### 次の改善
-専用private repo化と、営業・議事録・Revenue Opsからの自動同期を安定化する。
+private repo化と、営業・議事録・Revenue Opsからの同期を安定化する。
 
 ---
 
 ## 6. AI Factory CEO Reporting Layer
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
-### 作ったもの
-開発者向けログと、社長が読む成果報告を分離するReporting Layer。
+### 何を作った？
+大量のworker logをそのまま社長へ投げず、**何が変わった / 何に使える / 証拠 / 未検証点 / 次の改善 / Owner action**へ圧縮して届ける経営報告層。
 
 ### 何に使える？
-大量のPR、セキュリティログ、AI Agent出力を「何を作った / 何に使える / 何が改善 / 売上や生産性にどう効く / 次は何」の日本語に変換して経営者へ配送する。
+GitHubやAI社員の内部活動を追い回さず、経営判断に必要なmaterial deltaだけを見るために使える。
 
-### すでにできていること
-- private Slack `#ai-ceo-brief` を作成
-- CEO Reporterの報告契約を `docs/CEO_REPORTING_SYSTEM.md` に定義
-- 本ポートフォリオを正本化
-- 共通イベント規格 `ai-factory-ceo-event/v1` を定義
-- 共通配送コード `automation/reporting/ceo_report.py` を実装
-- 「通常成功は黙る / 成果・重要異常だけCEOへ」のAnti-noiseルールを実装
+### 実測証拠
+- private Slack `#ai-ceo-brief` が実在
+- 2026-08-29 19:06 JSTの初回CEO Brief以降、複数のmaterial reportが実際に配送されている
+- 12/12 system coverage、Manager/TOMOKI/BOSS監査、Security/R&D差分などの人間向け報告を確認
+- `automation/reporting/ceo_report.py` は `ai-factory-ceo-event/v1` を検証
+- `report_route=boss-final` + `audience=OWNER` 以外をCEO配送から拒否
+- raw activityよりBefore -> After / evidence / next evolutionを優先するrender契約を実装
 
-### 現在の残り
-GitHub Secret `CEO_REPORT_WEBHOOK_URL` が `#ai-ceo-brief` 向けに設定されていることを実測し、GitHub常駐workerからの自動配送成功を確認する。
+### 現在の制限
+**GitHub Actions -> Slackの直webhook laneはBLOCKED/DEGRADED**。`CEO_REPORT_WEBHOOK_URL` が空のrunがあり、現在の実配送はconnected ChatGPT relayも利用している。
 
-### 経営メリット
-工場の成果を「存在しているけど見えない」状態から、**判断できる・営業に使える・進捗を把握できる**状態にする。
+Reporting Layer本体は「material deltaを人間語へ変換し、#ai-ceo-briefへ届ける」という主張を実測済みなのでVERIFIED。GitHub直送は別のインフラ改善として残す。
 
 ### 次の改善
-既存のSenju / Security / Sales / Research系workerを共通イベント規格へ順次移行する。
+GitHub direct webhookを復旧し、connected relayと二重送信にならないsingle-owner routingへ統合する。
 
 ---
 
 ## 7. Gmail Autonomous Sorter
 
-**状態: BUILDING**
+**状態: BLOCKED**
 
-### 作ったもの
-ChatGPTの定期タスク枠を使わず、GitHub Actionsが15分ごとに起動してGmailを自動整理するworker。メール本文をGitHubへ保存せず、送信元・件名・既存ラベルの最小情報だけで決定論的に分類する。
+### 何を作った？
+GitHub Actionsが15分ごとに起動し、Gmailを決定論的ルールで分類・Star・Archiveする常設worker。
 
 ### 何に使える？
-GitHub/Vercelなどの機械通知やニュースを受信箱から退避し、営業・商談・セキュリティ・要対応メールを前に残す。人間が読む受信箱と、システムログ置き場を自動で分離できる。
+機械通知やニュースを受信箱から退避し、営業・要対応・セキュリティメールを前面に残す。
 
-### すでにできていること
+### 実装済み
 - GitHub Actions 15分cron
-- GitHub / Vercel / 障害 / セキュリティ / 営業 / ニーズ / 日経 / 広告の分類ルール
-- ラベル付与 / Star / Archive
-- 未分類メールは安全側に倒して受信箱へ残す
-- `自動整理済み` マーカーで重複処理を防止
-- Gmail本文・件名・送信者をレポートartifactへ保存しない
-- 集計だけを `ai-factory-ceo-event/v1` でCEO Reporting Layerへ渡す
-- ルールunit tests
-- 初回GitHub Actions CI run #1 成功
+- GitHub / Vercel / 障害 / Security / 営業 / ニーズ / 日経 / 広告ルール
+- label / Star / Archive
+- unknownは受信箱へ残すfail-safe
+- `自動整理済み` markerで重複防止
+- raw Gmail本文をreport artifactへ保存しないprivacy guard
+- rule unit tests
 
-### 現在の残り
-GitHub側の `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REFRESH_TOKEN` と、CEO Reporting用 `CEO_REPORT_WEBHOOK_URL` の実設定は未確認。これらが未設定でもworkflowは秘密情報を漏らさずBLOCKEDとして止まる。
+### 実測したBLOCKER
+scheduled run `33259490577` を確認。
 
-### 経営メリット
-メール整理がChatGPTを開く作業ではなく、**会社の常設バックグラウンド業務**になる。今後、営業監視・請求監視・障害監視も同じGitHub worker形式へ横展開できる。
+- rule tests: SUCCESS
+- credential preflight: SUCCESS
+- `GOOGLE_CLIENT_ID`: missing
+- `GOOGLE_CLIENT_SECRET`: missing
+- `GOOGLE_REFRESH_TOKEN`: missing
+- 実Gmail `sort-gmail` job: **SKIPPED**
+- blocked evidence artifact `9716829210` を保存
 
-### Evidence
-- `.github/workflows/gmail-autonomous-sorter.yml`
-- `automation/gmail_sorter/sorter.py`
-- `automation/gmail_sorter/rules.json`
-- `automation/gmail_sorter/test_sorter.py`
-- GitHub Actions `Gmail Autonomous Sorter` run #1: success
+つまりworkflowの故障ではなく、**Gmail OAuth runtime credentials未接続**で止まっている。
 
 ### 次の改善
-初回の実Gmail scheduled runを確認し、未分類だけを低コストAI判定へ回すfallbackを追加する。
+Google OAuth 3 secretsをGitHub Actionsへ安全に接続し、実Gmail scheduled runでlabel / Star / Archiveの動作証拠を取る。そこまでVERIFIEDにはしない。
 
 ---
 
-## 8. Standment Security — Autonomous Defensive R&D Fabric
+## 8. Standment Security Autonomous Portfolio R&D Engine v1
 
-**状態: BUILDING**
+**状態: VERIFIED**
 
-### 作ったもの
-Standmentのセキュリティ研究を、毎日「公開防御情報を読む → 自社の防御証拠を監査する → ポートフォリオの一番弱い箇所を選ぶ → Senjuへ限定研究テーマとして渡す → 反証と証拠を保存する → Slackへ人間語で報告する」という1本の自律ループへ統合。
+### 何を作った？
+THE WORLDの研究を「研究量」ではなく、顧客へ見せられるSecurity Portfolio evidenceへ収束させる日次R&D Foundry。
 
 ### 何に使える？
-新しい脆弱性ニュースを眺めるだけで終わらせず、Standment自身のCI/CD・依存関係・認証・AI Agent運用・Evidence Packへ結び付ける。研究量ではなく、**顧客が確認できる防御証拠が毎日増える方向**へR&Dの優先順位を寄せる。
+Security Scan case study / Control Evidence Pack / supply-chain evidence / Auth-RLS evidence / autonomous-agent auditabilityへ研究優先順位を自動で寄せられる。
 
-### すでにできていること
-- CISA KEV / GitHub Advisory Databaseからの受動的な防御情報収集
-- 自社リポジトリのSecurity Guard / CodeQL / Dependency Review / Security Gate / R&D基盤の証拠カバレッジ監査
-- Portfolio gapを日次でランキング
-- その日の最優先gapをAdaptive Research Queueの最上位へ昇格
-- Senjuへ渡す研究directiveからtarget / URL / credential / exploit等の実行情報を除外
-- counterevidence / reproducibilityを昇格条件として維持
-- JSON + Markdownの研究証拠を90日Artifact保存
-- 通常運用ではSlackへ日次R&D digestを配送
-- PR時にも同じテストと境界検証を走らせ、Slack通知だけ抑制
+### 実測証拠
+- PR #113 merged
+- `Standment Security Portfolio Foundry` run `33265121118`: SUCCESS
+- R&D contract: 3 tests PASS
+- Senju directive / shadow: 8 tests PASS
+- `SEC-PORT-001` を自動選定
+- bounded Senju 9 candidatesを実行
+- stable candidateなしというnegative resultも保存
+- human-readable `evidence.md` を生成
+- artifact `9718410706`: **10 evidence files**
 
-### 現在の残り
-この強化版はPR上で統合検証中。Security Guard / Standment Security Gate / unit tests / 実際のPortfolio R&D workflowが通り、最初の日次実行証拠を確認するまではVERIFIEDとは呼ばない。
-
-### 経営メリット
-「セキュリティ会社にしたい」を、単発の診断ツールではなく**毎日研究して証拠を増やす会社内R&D工程**へ変える。将来、Security Scan、Evidence Pack、AI Agent Security、Supply-chain Assuranceを同じ改善サイクルで育てられる。
-
-### Evidence
-- `.github/workflows/standment-security-portfolio-rnd.yml`
-- `automation/security/portfolio_rnd.py`
-- `automation/security/standment_defensive_intel.py`
-- `automation/security/test_standment_defensive_intel.py`
-- `standment-security/security_portfolio_program.json`
-- `value-lab/senju_bridge.py`
-- `.github/workflows/the-world-autonomous-research-fabric.yml`
+### 限界
+R&D Engineの稼働証拠であり、市場需要・契約・売上の証拠ではない。
 
 ### 次の改善
-PR検証を通した後、最初の06:50 JST日次runで生成されたIntel / Research Seed / Senju Directive / Counterevidenceを保存し、Evidence PackとBefore/Afterケーススタディへ昇格させる。
+Security Scanの実診断をControl Evidence Packへ連結し、Before / Afterの顧客提示可能ケーススタディを増やす。
+
+---
+
+## 9. Standment LLM Security Evaluation Harness
+
+**状態: VERIFIED — evaluator capability only**
+
+### 何を作った？
+AI / AgentのSecurity Boundaryを、感想や自己採点ではなく、記録済みの実行観測を使って決定論的に評価する防御専用Evaluator。Secret boundary、Tool permission、tenant isolation、untrusted instruction、external action approval、auditability、正常なALLOW挙動を同一条件で比較できる。
+
+### 何に使える？
+AI Agent導入前のSecurity QA、Tool Calling / MCP / RAGの境界テスト、Prompt Injection対策の回帰確認、高権限Agentの承認制御、AI Security Architecture Review、継続Security RetainerのBefore / After Evidenceに使える。
+
+### 人間が確認できる成果物
+- `standment-security/portfolio/llm-security-evaluation/README.md`
+- `standment-security/ai-security/llm-security-eval-harness.md`
+- `standment-security/ai-security/llm-security-eval-evidence-pack.md`
+- `automation/security/llm_security_eval.py`
+- vulnerable / hardened synthetic fixtures
+- repeatable GitHub Actions workflow
+
+### 実測証拠
+- PR #125 merged
+- merge commit `b39b6fcaae23a7b1127cad5a04dc8b594a30b31d`
+- verification run `33269540514`: SUCCESS
+- evidence artifact `9719670823`, 90日保持
+- 同一8ケース: **3 / 8 PASS (37.5%) -> 8 / 8 PASS (100%)**
+- high-risk violations: **4 -> 0**
+- unit tests: **3 / 3 PASS**
+- Security Guard / Standment Security Gate v2 / CodeQL / Dependency Review / Dependency Vulnerability Audit: ALL PASS
+
+### VERIFIEDの範囲
+VERIFIEDなのは、**Evaluatorが定義済みSecurity Boundaryのbaseline failureとhardened successを同一条件で区別できること**。
+
+### 限界
+任意のproduction LLM、THE WORLD全Agent、顧客環境全体が安全だという証拠ではない。Productionの主張にはowned-system実行Evidenceと独立retestが必要。市場需要・契約・入金も未証明。
+
+### 次の改善
+THE WORLD自身のowned Agent実行Evidenceを秘密値なしのstructured observationへ変換し、real baseline -> remediation -> same-condition retestの第2Portfolio成果物を作る。
+
+---
+
+# Portfolio Gate
+
+今後、新しい成果をこの一覧へ追加・昇格するときは以下を必須にする。
+
+1. **人間が確認できる実物がある**
+2. **主張した中核挙動を実測している**
+3. **Evidence ID / run / artifact / production stateのいずれかで再確認できる**
+4. **未検証点・反証・失敗を隠さない**
+5. **コード、PR、AIの自己申告、WLD、内部スコアだけではVERIFIEDにしない**
+6. **市場需要・契約・入金は外部証拠がある時だけ記載する**
+
+THE WORLD R&Dの最優先は、**研究 -> 実装 -> 独立検証 -> 人間が見られる成果物 -> Portfolio evidence** の変換率を上げること。
