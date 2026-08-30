@@ -88,6 +88,16 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
             "behavior_directive": temperament,
             "moral_tension": tension,
             "personality_authority": "NONE",
+            "event_bus_event": {
+                "event_type": "SUBAGENT_STATUS_UPDATE",
+                "worker": wid,
+                "mode": mode,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+            "continuous_improvement_analysis": {
+                "what_changed": f"Worker {wid} evaluated in mode {mode}",
+                "low_risk_improvement": "Auto-tune retry budget and handoff validation",
+            },
         }
         plans.append(plan)
 
