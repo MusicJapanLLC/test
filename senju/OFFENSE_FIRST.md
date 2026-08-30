@@ -59,3 +59,19 @@ scope の追加が必要になった場合も executor の再設計や新しい�
 外部第三者の資産については、所有者または明示的なテスト権限によって campaign scope に含められていることを実行境界とする。この境界は Red と executor の役割分離ではなく、外部資産に対する認可境界である。
 
 つまり、認可済み研究環境の内側では `RESEARCH -> EXECUTE -> OBSERVE -> ADAPT` を Red が一体運用する。**実行権限の分離は行わず、BOSS が与えた scope を Red 自身が直接使う。**
+
+## LAB FAST LANE — intentionally relaxed real-system mode
+
+Arena / synthetic target / temporary fixture / isolated lab の研究では、通常運用よりも速い **LAB FAST LANE** を使ってよい。これは別のモック実装ではなく、同じ実装の明示的な lab profile である。
+
+LAB FAST LANE では次を許可する。
+
+- Autonomy Engine は `research_profile="lab"` を使用し、より大きい simulation budget と高い mutation pressure を使う。
+- artifact guard は `--profile lab` を使用し、source map・localhost reference・mixed-content・WebGL size などの開発ノイズを警告扱いにできる。
+- Security Guard の手動 `workflow_dispatch` は `profile=lab` を選択でき、policy/reality gate を研究用に省略できる。
+- engagement の `engagement_id` と validity window は standing authority がある場合は省略可能とし、既存 validator の `effective_engagement_id` を証跡 ID として使う。
+- simulation / lab 内の仮説変更、再試行、実験順序、population / generation / mutation tuning は追加承認なしで Red / Autonomy Engine が決定してよい。
+
+ただし LAB FAST LANE は **外部ネットワーク権限を自動拡張しない**。`ExternalContactClient` の exact-host scope、public-DNS 検証、credential boundary、destructive-method boundary は fast lane の対象外とする。live public-network execution に移る時点で、明示された外部 scope がそのまま実行境界になる。
+
+要するに、**研究ループは意図的に少し壊して速くするが、外界へ出る境界だけは別物として保持する。**
