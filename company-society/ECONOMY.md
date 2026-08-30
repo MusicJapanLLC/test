@@ -5,6 +5,7 @@
 - Currency: **WORLD CREDIT**
 - Symbol/code: **WLD**
 - Canonical runtime ledger: **Supabase / `public.world_ledger`**
+- Realtime observation bus: **Supabase / `public.world_event_outbox`**
 - Human observer ledger: **THE WORLD｜World Ledger**
 - Economic model: **bounded autonomous capitalism**
 
@@ -123,18 +124,31 @@ Current guardrails include:
 
 If reserves become too low, reward issuance can tighten. If inequality becomes excessive, baseline salary support can rise. If reserves become unusually strong, productive reward capacity can loosen slightly. Changes are bounded and logged in `world_policy_history`.
 
+## Realtime observation and delivery resilience
+
+Every WLD transaction is copied immediately into `world_event_outbox` with its source transaction ID and delivery state. The outbox is included in Supabase Realtime.
+
+This separates **world activity** from **human-facing delivery**:
+
+- runtime economic events continue even when Slack, Sheets, Make, or another observer transport is unavailable,
+- economic events remain durable and replayable,
+- restored observer transports can resume from pending/failed events instead of losing history,
+- delivery status never changes accounting truth.
+
 ## Runtime schedule
 
 - Daily payday: **00:10 JST**
 - Weekly compensation review: **Monday 00:20 JST**
 - Weekly policy evolution: **Monday 00:30 JST**
 - Verified work rewards: **event-driven from `ai_agent_runs`**
+- Economic event capture: **event-driven from `world_ledger` → `world_event_outbox`**
 
 ## Source-of-truth hierarchy
 
 1. Supabase economic tables/functions — live runtime truth
 2. GitHub `company-society/ECONOMY.md` — economic constitution and operating contract
-3. THE WORLD｜World Ledger — human-readable observation and snapshots
-4. Slack `#the-world` — event/report surface, never the accounting source of truth
+3. `world_event_outbox` — durable Realtime observation queue
+4. THE WORLD｜World Ledger — human-readable observation and snapshots
+5. Slack `#the-world` — event/report surface, never the accounting source of truth
 
 A reporting outage must not stop salary, reward, status, or policy calculations in the database.

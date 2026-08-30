@@ -1,0 +1,12 @@
+{
+  "schema": "the-world-reality-targets/v1",
+  "targets": [
+    {"id": "github-trending", "category": "builders", "url": "https://github.com/trending", "weight": 1.0},
+    {"id": "hacker-news-newest", "category": "weird-tech", "url": "https://news.ycombinator.com/newest", "weight": 1.0},
+    {"id": "devto-ai", "category": "builders", "url": "https://dev.to/t/ai", "weight": 0.9},
+    {"id": "arxiv-ai", "category": "research", "url": "https://arxiv.org/list/cs.AI/recent", "weight": 1.0},
+    {"id": "youtube-ai-agents", "category": "video-research", "url": "https://www.youtube.com/results?search_query=AI+agents", "weight": 0.8},
+    {"id": "youtube-browser-agents", "category": "video-research", "url": "https://www.youtube.com/results?search_query=browser+agents", "weight": 0.8},
+    {"id": "note-ai", "category": "japan-research", "url": "https://note.com/hashtag/AI", "weight": 0.8}
+  ]
+}

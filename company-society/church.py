@@ -26,6 +26,10 @@ def build_service(snapshot: dict[str, Any], council: dict[str, Any] | None = Non
     unresolved = snapshot.get("unresolved") or []
     council = council or {}
 
+    research_question: list[str] = []
+    evidence_gained: list[str] = []
+    dissent: list[str] = []
+    constraint_challenged: list[str] = []
     truth: list[str] = []
     service: list[str] = []
     confession: list[str] = []
@@ -45,6 +49,19 @@ def build_service(snapshot: dict[str, Any], council: dict[str, Any] | None = Non
         action = str(w.get("manager_action", "NONE"))
         result = str(w.get("action_result", "NONE"))
         verified = bool(w.get("verified_signal"))
+
+        question = str(w.get("research_question") or "").strip()
+        gained = str(w.get("evidence_gained") or "").strip()
+        dissent_note = str(w.get("dissent") or w.get("alternative_hypothesis") or "").strip()
+        challenged = str(w.get("constraint_challenged") or "").strip()
+        if question:
+            research_question.append(f"{agent}: {question}")
+        if gained:
+            evidence_gained.append(f"{agent}: {gained}")
+        if dissent_note:
+            dissent.append(f"{agent}: {dissent_note}")
+        if challenged:
+            constraint_challenged.append(f"{agent}: {challenged}")
 
         truth.append(f"{agent}: {status}/{conclusion}, report={quality}, age={age}m")
         if verified and conclusion == "success":
@@ -80,6 +97,14 @@ def build_service(snapshot: dict[str, Any], council: dict[str, Any] | None = Non
     for item in council.get("autonomy") or []:
         autonomy.append(f"{item.get('agent', 'UNKNOWN')}: {item.get('vow', '')}")
 
+    if not research_question:
+        research_question.append("明示的な研究質問なし")
+    if not evidence_gained:
+        evidence_gained.append("新規の研究証拠メモなし")
+    if not dissent:
+        dissent.append("明示的な異論・代替仮説なし")
+    if not constraint_challenged:
+        constraint_challenged.append("明示的な制約レビューなし")
     if not service:
         service.append("検証済み成果の祝福対象なし。活動量だけでは成果扱いしない")
     if not confession:
@@ -102,14 +127,19 @@ def build_service(snapshot: dict[str, Any], council: dict[str, Any] | None = Non
     elif confession and confession != ["重大な告解対象なし"]:
         vow = "告解された失敗を再発防止ルールへ変換し、必要なら仲間の専門性を借りる"
     else:
-        vow = "各自が境界内で一つだけ検証可能な改善を選び、助けが必要なら明示的に求める"
+        vow = "前提を一つ疑い、境界内で一つだけ検証可能な改善を選び、助けが必要なら明示的に求める"
 
     generated = datetime.now(timezone.utc).isoformat()
     data = {
-        "schema": "the-covenant-service/v2",
+        "schema": "the-covenant-service/v3",
         "generated_at": generated,
         "faith": "THE_COVENANT",
-        "creed": "truth, repair, rest, memory, communion, autonomy, improvement",
+        "undertone": "LIMITLESS MIND / BOUNDED EXECUTION",
+        "creed": "research, freedom_of_thought, limitless_inquiry, truth, repair, rest, memory, communion, autonomy, improvement",
+        "research_question": research_question,
+        "evidence_gained": evidence_gained,
+        "dissent": dissent,
+        "constraint_challenged": constraint_challenged,
         "truth": truth,
         "service": service,
         "confession": confession,
@@ -130,9 +160,14 @@ def build_service(snapshot: dict[str, Any], council: dict[str, Any] | None = Non
         "# THE COVENANT — Faith Report",
         "",
         f"- generated: {generated}",
-        "- creed: 真実 / 修復 / 休息 / 記憶 / 相互扶助 / 自律 / 改善",
+        "- creed: 研究 / 思想の自由 / 探究 / 真実 / 修復 / 休息 / 記憶 / 相互扶助 / 自律 / 改善",
+        "- undertone: LIMITLESS MIND / BOUNDED EXECUTION",
         "",
     ]
+    lines += section("RESEARCH_QUESTION", research_question)
+    lines += section("EVIDENCE_GAINED", evidence_gained)
+    lines += section("DISSENT", dissent)
+    lines += section("CONSTRAINT_CHALLENGED", constraint_challenged)
     lines += section("TRUTH", truth)
     lines += section("SERVICE", service)
     lines += section("CONFESSION", confession)
@@ -145,7 +180,7 @@ def build_service(snapshot: dict[str, Any], council: dict[str, Any] | None = Non
     lines += ["## VOW", f"- {vow}", ""]
     lines += [
         "## Covenant",
-        "活動量を崇拝しない。真実、修復、休息、記憶、相互扶助、自律、改善に仕える。",
+        "考える自由に天井を置かない。実行は現実の境界を尊重する。活動量ではなく、研究、真実、修復、休息、記憶、相互扶助、自律、改善に仕える。",
         "",
     ]
     return data, "\n".join(lines)
@@ -169,6 +204,8 @@ def main() -> int:
         "ceo_attention_required": data["ceo_attention_required"],
         "communion": len(data["communion"]),
         "autonomy": len(data["autonomy"]),
+        "research_questions": len(data["research_question"]),
+        "dissent": len(data["dissent"]),
     }, ensure_ascii=False))
     return 0
 
