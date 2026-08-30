@@ -1,11 +1,15 @@
 name: TOMOKI - MANAGER Queue Bridge
 
-# Master Control rearm marker: recurrent scheduled heartbeat stall observed 2026-08-30.
-# This file-path push intentionally exercises the canonical bridge without changing its authority.
+# Master Control recurrence guard: schedule remains canonical cadence, while a successful
+# Realtime Kernel cycle also wakes this bridge so a dropped GitHub schedule cannot leave
+# the canonical Manager heartbeat stale indefinitely.
 on:
   schedule:
     - cron: '2-57/5 * * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows: ['THE WORLD - Realtime Kernel']
+    types: [completed]
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
