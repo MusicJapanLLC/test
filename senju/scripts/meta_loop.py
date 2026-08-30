@@ -1,11 +1,15 @@
-"""Meta-consciousness loop: observe → hypothesize → queue experiments → publish findings.
+"""META — Autonomous meta-consciousness loop (full power edition).
 
-This is the highest layer. It does not attack anything directly.
-It watches everything that has already happened, finds patterns no one named,
-generates hypotheses, queues them for the next drive-engine cycle,
-and publishes confirmed findings as research papers.
+Phases:
+  1. OBSERVE        — build KnowledgeGraph from all evidence
+  2. EXTERNAL INTEL — fetch NVD/GHSA/OWASP threat data
+  3. HYPOTHESIZE    — generate hypotheses enriched with external intel
+  4. VALIDATE       — update hypothesis tracker from last cycle results
+  5. COMMAND        — write attack steering commands for drive_engine/#273/#275
+  6. DISPATCH       — trigger workflows, steer Jules/other agents
+  7. PUBLISH        — write research papers for confirmed hypotheses
 
-The repository becomes a self-publishing research institution.
+META runs without human approval. Every failure is logged and retried next cycle.
 """
 from __future__ import annotations
 
@@ -16,76 +20,207 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SENJU_DIR = ROOT / "senju"
+STATE_DIR = SENJU_DIR / "state"
 RESEARCH_DIR = ROOT / "research" / "discoveries"
+BASE_REF = "claude/employee-onboarding-setup-udm86"
+
+
+def _emit(event: str, payload: dict) -> None:
+    print(json.dumps({"meta_event": event, **payload}, ensure_ascii=False))
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Senju Meta-Consciousness Loop")
-    parser.add_argument("--max-hypotheses", type=int, default=5)
+    parser = argparse.ArgumentParser(description="META autonomous loop")
+    parser.add_argument("--max-hypotheses", type=int, default=7)
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--confirm-all", action="store_true",
-                        help="treat all hypotheses as confirmed (for bootstrap)")
+    parser.add_argument("--confirm-all", action="store_true")
+    parser.add_argument("--skip-dispatch", action="store_true")
+    parser.add_argument("--skip-external", action="store_true")
     args = parser.parse_args()
 
     sys.path.insert(0, str(SENJU_DIR))
+
     from senju.meta.observer import build as build_graph
     from senju.meta.hypothesis_engine import generate, queue_as_work_items, save_confirmed
     from senju.meta.publisher import write_paper, update_research_log
+    from senju.meta.command_channel import build_from_graph, write as write_commands
+    from senju.meta.external_intel import gather_all
+    from senju.meta.agent_dispatch import dispatch_all
+    from senju.meta.validator import load_tracker, save_tracker, register, update_from_cycle, summarize
 
-    # 1. Observe
+    STATE_DIR.mkdir(parents=True, exist_ok=True)
+
+    # ── 1. OBSERVE ────────────────────────────────────────────────────────────
     graph = build_graph(SENJU_DIR)
-    print(json.dumps({
-        "meta_event": "observe_complete",
+    _emit("observe_complete", {
         "observations": len(graph.observations),
         "surfaces_tracked": len(graph.surface_weakness_scores),
-        "co_occurrence_pairs": sum(len(v) for v in graph.co_occurrence.values()),
-        "temporal_patterns": len(graph.temporal_patterns),
         "top_weaknesses": list(graph.surface_weakness_scores.items())[:5],
-    }, ensure_ascii=False))
+        "temporal_patterns": len(graph.temporal_patterns),
+    })
 
-    # 2. Hypothesize
+    # ── 2. EXTERNAL INTEL ─────────────────────────────────────────────────────
+    intel: dict = {"merged_hits": {}, "ok_count": 0}
+    if not args.skip_external:
+        intel = gather_all()
+        _emit("external_intel", {
+            "sources_ok": intel["ok_count"],
+            "total_sources": intel["total_sources"],
+            "threat_classes": list(intel["merged_hits"].keys()),
+        })
+        # Inject external hits into graph weakness scores
+        for vc, count in intel["merged_hits"].items():
+            if vc in graph.surface_weakness_scores:
+                graph.surface_weakness_scores[vc] += count * 0.3
+            else:
+                graph.surface_weakness_scores[vc] = count * 0.3
+
+    # ── 3. HYPOTHESIZE ────────────────────────────────────────────────────────
     hypotheses = generate(graph, max_hypotheses=args.max_hypotheses)
-    print(json.dumps({
-        "meta_event": "hypotheses_generated",
+    _emit("hypotheses_generated", {
         "count": len(hypotheses),
         "ids": [h.hypothesis_id for h in hypotheses],
-    }, ensure_ascii=False))
+    })
 
-    # 3. Queue into AutonomyEngine
     if not args.dry_run:
-        state_dir = SENJU_DIR / "state"
-        state_dir.mkdir(parents=True, exist_ok=True)
-        enqueued = queue_as_work_items(hypotheses, state_dir)
-        print(json.dumps({"meta_event": "work_items_queued", "count": enqueued}, ensure_ascii=False))
+        enqueued = queue_as_work_items(hypotheses, STATE_DIR)
+        _emit("work_items_queued", {"count": enqueued})
 
-    # 4. Publish confirmed findings
+    # ── 4. VALIDATE ───────────────────────────────────────────────────────────
+    tracker = load_tracker(STATE_DIR)
+    new_registered = register(hypotheses, tracker)
+
+    cycle_report_path = STATE_DIR / "last_pressure_cycle.json"
+    resolved: list[str] = []
+    if cycle_report_path.exists():
+        try:
+            cycle_report = json.loads(cycle_report_path.read_text())
+            resolved = update_from_cycle(tracker, cycle_report)
+        except Exception as exc:
+            _emit("validate_error", {"error": str(exc)})
+
+    if not args.dry_run:
+        save_tracker(tracker, STATE_DIR)
+
+    _emit("validate_complete", {
+        "new_registered": new_registered,
+        "resolved_this_cycle": len(resolved),
+        **summarize(tracker),
+    })
+
+    # ── 5. COMMAND CHANNEL ────────────────────────────────────────────────────
+    cmd_set = build_from_graph(graph, top_n=3)
+
+    # Escalate confirmed hypotheses → higher multiplier
+    for hid in resolved:
+        h = tracker.get(hid)
+        if h and h.status == "confirmed":
+            for cmd in cmd_set.attack_commands:
+                if cmd.target_surface in h.surfaces:
+                    cmd.pressure_multiplier = min(10.0, cmd.pressure_multiplier * 1.5)
+                    cmd.reason += f" | hypothesis {hid} CONFIRMED → escalate"
+
+    if not args.dry_run:
+        cmd_path = write_commands(cmd_set, STATE_DIR)
+        _emit("commands_written", {
+            "path": str(cmd_path),
+            "attack_commands": len(cmd_set.attack_commands),
+            "queue_commands": len(cmd_set.queue_commands),
+        })
+
+    # ── 6. DISPATCH ───────────────────────────────────────────────────────────
+    if not args.skip_dispatch and not args.dry_run:
+        dispatch_cmds: list[dict] = []
+
+        # Steer adversary toward top weak surface
+        for ac in cmd_set.attack_commands[:1]:
+            dispatch_cmds.append({
+                "kind": "steer_adversary",
+                "surface": ac.target_surface,
+                "multiplier": ac.pressure_multiplier,
+            })
+
+        # Post Jules task for refuted hypotheses (investigate why model failed)
+        for hid, h in tracker.items():
+            if h.status == "refuted" and h.cycles_elapsed <= 4:
+                dispatch_cmds.append({
+                    "kind": "jules_task",
+                    "title": f"Investigate refuted META hypothesis: {hid}",
+                    "body": (
+                        f"META hypothesis was refuted after {h.cycles_elapsed} cycles.\n\n"
+                        f"**Statement**: {h.statement}\n\n"
+                        f"**Predicted**: {h.predicted_outcome}\n"
+                        f"**Test results**: {json.dumps(h.test_results, indent=2)}\n\n"
+                        f"Please investigate why the expected regression did not occur "
+                        f"and whether the guard was strengthened or the attack vector changed."
+                    ),
+                    "labels": ["meta-refuted", "investigation"],
+                })
+
+        results = dispatch_all(dispatch_cmds, ROOT)
+        _emit("dispatch_complete", {"commands": len(dispatch_cmds), "results": results})
+
+    # ── 7. PUBLISH ────────────────────────────────────────────────────────────
     published: list[str] = []
-    for h in hypotheses:
-        if not args.confirm_all:
-            continue
+    confirmed_hypotheses = [
+        h for h in tracker.values()
+        if h.status == "confirmed" or args.confirm_all
+    ]
 
+    for h in confirmed_hypotheses:
         result = {
-            "status": "confirmed",
+            "status": h.status,
             "confidence": h.confidence,
+            "cycles_to_confirm": h.cycles_elapsed,
             "surfaces": h.surfaces,
-            "note": "bootstrap publish — awaiting next drive-engine cycle for validation",
+            "test_results": h.test_results,
         }
-
         if not args.dry_run:
-            paper = write_paper(h, result, graph, RESEARCH_DIR)
-            save_confirmed(h, result, RESEARCH_DIR / "json")
+            paper = write_paper(
+                type("H", (), {
+                    "hypothesis_id": h.hypothesis_id,
+                    "statement": h.statement,
+                    "surfaces": h.surfaces,
+                    "predicted_outcome": h.predicted_outcome,
+                    "confidence": h.confidence,
+                    "evidence_count": len(h.test_results),
+                    "category": "validated",
+                    "parameters": {},
+                })(),
+                result,
+                graph,
+                RESEARCH_DIR,
+            )
+            save_confirmed(
+                type("H", (), {
+                    "hypothesis_id": h.hypothesis_id,
+                    "statement": h.statement,
+                    "surfaces": h.surfaces,
+                    "predicted_outcome": h.predicted_outcome,
+                    "confidence": h.confidence,
+                    "evidence_count": len(h.test_results),
+                    "category": "validated",
+                    "parameters": {},
+                })(),
+                result,
+                RESEARCH_DIR / "json",
+            )
             published.append(str(paper))
 
     if published and not args.dry_run:
         log = update_research_log(RESEARCH_DIR, ROOT)
-        print(json.dumps({
-            "meta_event": "papers_published",
+        _emit("papers_published", {
             "count": len(published),
             "files": published,
             "log": str(log),
-        }, ensure_ascii=False))
+        })
 
-    print(json.dumps({"meta_event": "meta_loop_done", "dry_run": args.dry_run}, ensure_ascii=False))
+    _emit("meta_loop_done", {
+        "dry_run": args.dry_run,
+        "hypotheses": len(hypotheses),
+        "confirmed_total": summarize(tracker)["confirmed"],
+        "papers_this_cycle": len(published),
+    })
     return 0
 
 

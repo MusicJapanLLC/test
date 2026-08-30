@@ -16,10 +16,20 @@ on:
         description: "dry-run (no writes, no PR)"
         type: boolean
         default: false
+      skip_external:
+        description: "skip external intel fetch (NVD/GHSA)"
+        type: boolean
+        default: false
+      skip_dispatch:
+        description: "skip agent dispatch (Jules/workflow triggers)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   pull-requests: write
+  actions: write
+  issues: write
 
 jobs:
   meta:
@@ -58,22 +68,19 @@ jobs:
 
       - name: Run meta-consciousness loop
         id: meta
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          CONFIRM_ALL=""
-          DRY_RUN=""
-
-          if [ "${{ inputs.confirm_all }}" = "true" ]; then
-            CONFIRM_ALL="--confirm-all"
-          fi
-
-          if [ "${{ inputs.dry_run }}" = "true" ]; then
-            DRY_RUN="--dry-run"
-          fi
+          FLAGS=""
+          [ "${{ inputs.confirm_all }}" = "true" ] && FLAGS="$FLAGS --confirm-all"
+          [ "${{ inputs.dry_run }}" = "true" ]     && FLAGS="$FLAGS --dry-run"
+          [ "${{ inputs.skip_external }}" = "true" ] && FLAGS="$FLAGS --skip-external"
+          [ "${{ inputs.skip_dispatch }}" = "true" ] && FLAGS="$FLAGS --skip-dispatch"
 
           python senju/scripts/meta_loop.py \
-            $CONFIRM_ALL \
-            $DRY_RUN \
             --max-hypotheses 7 \
+            $FLAGS \
             2>&1 | tee meta_output.json
 
           echo "papers=$(find research/discoveries -name '*.md' 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
@@ -81,12 +88,12 @@ jobs:
       - name: Commit and push research findings
         if: inputs.dry_run != 'true'
         run: |
-          git add research/ RESEARCH_LOG.md 2>/dev/null || true
+          git add research/ RESEARCH_LOG.md senju/state/meta_commands.json senju/state/meta_hypothesis_tracker.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No new discoveries this cycle."
           else
             STAMP=$(date -u +%Y%m%d-%H%M)
-            git commit -m "research: meta-consciousness discoveries ${STAMP}"
+            git commit -m "research: meta-consciousness cycle ${STAMP}"
             git push origin HEAD
           fi
 
