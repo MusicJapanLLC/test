@@ -16,10 +16,40 @@ senju.targets.labnet — 隔離ラボネット上の実標的アダプタ（安�
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 from pathlib import Path
 
 from .base import ARCHETYPES, Surface
+
+
+_LIVENESS_IPV4_ALLOWLIST = tuple(
+    ipaddress.ip_network(cidr)
+    for cidr in (
+        "127.0.0.0/8",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+    )
+)
+
+
+def _is_allowed_liveness_host(host: object) -> bool:
+    """Allow only literal IPv4 loopback/RFC1918 addresses used by the isolated lab.
+
+    Deliberately reject hostnames, public/reserved ranges and all link-local space.
+    In particular, 169.254.169.254 (common cloud metadata endpoint) must never be
+    reachable through this optional liveness probe.
+    """
+    if not isinstance(host, str):
+        return False
+    try:
+        ip = ipaddress.ip_address(host.strip())
+    except ValueError:
+        return False
+    if not isinstance(ip, ipaddress.IPv4Address):
+        return False
+    return any(ip in network for network in _LIVENESS_IPV4_ALLOWLIST)
 
 
 class LabNetTarget:
@@ -51,12 +81,11 @@ class LabNetTarget:
         return self._surfaces
 
     def liveness(self, timeout: float = 2.0) -> bool:
-        """ラボ内ホストの生存確認のみ（攻撃ではない）。到達不能なら False。"""
-        if not self.host:
+        """ラボ内ホストの生存確認のみ。許可済みIPv4以外はfail-closedで拒否する。"""
+        if not _is_allowed_liveness_host(self.host):
             return False
         import urllib.request
 
-        # ラボ内プライベートアドレスのみ（http, 平文, タイムアウト厳格）。
         url = f"http://{self.host}/"
         try:
             with urllib.request.urlopen(url, timeout=timeout) as resp:  # noqa: S310

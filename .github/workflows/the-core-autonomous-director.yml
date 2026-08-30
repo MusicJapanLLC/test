@@ -1,0 +1,112 @@
+name: THE CORE - Autonomous Director
+
+on:
+  schedule:
+    - cron: '7,37 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: the-core-autonomous-director
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+  copilot-requests: write
+
+jobs:
+  direct:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+      WORLD_REALTIME_REF: ${{ github.event.repository.default_branch }}
+      RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+      TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+      CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Snapshot world workers
+        run: |
+          python automation/world/realtime_kernel.py --plan automation/world/realtime_plan.json --json world-realtime-snapshot.json --report world-realtime-snapshot.md
+          cat world-realtime-snapshot.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+      - name: Install Copilot CLI
+        continue-on-error: true
+        run: npm install -g @github/copilot@1.0.80
+      - name: THE CORE reasons about next bounded cycle
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          rm -f core-director-plan.json
+          { cat automation/world/prompts/core-director.md; printf '\n\n## Current realtime snapshot\n```json\n'; cat world-realtime-snapshot.json; printf '\n```\n'; } > /tmp/core-director-prompt.md
+          copilot -p "$(cat /tmp/core-director-prompt.md)" -s --allow-tool=write --no-ask-user > /tmp/core-director-copilot.log 2>&1 || true
+          if [[ ! -f core-director-plan.json ]]; then
+            cat > core-director-plan.json <<'JSON'
+          {"schema":"the-core-director-plan/v1","summary":"Reasoning runtime unavailable or produced no valid plan; deterministic workers continue on their native schedules.","actions":[],"material_outcome":false,"next_improvement":"Retry at the next scheduled director cycle while realtime kernel maintains liveness.","owner_action":"NONE"}
+          JSON
+          fi
+      - name: Deterministic authority gate and action apply
+        run: |
+          python automation/world/core_director.py --plan core-director-plan.json --snapshot world-realtime-snapshot.json --realtime-plan automation/world/realtime_plan.json --json core-director-result.json --report core-director-report.md --apply
+          cat core-director-report.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Report material Director outcome to internal R&D/TOMOKI route
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          from pathlib import Path
+          p=Path('core-director-result.json')
+          if not p.exists(): raise SystemExit(0)
+          d=json.loads(p.read_text(encoding='utf-8'))
+          if not d.get('material_outcome'): raise SystemExit(0)
+          webhook=(os.getenv('RND_SLACK_WEBHOOK_URL') or os.getenv('TOMOKI_SLACK_WEBHOOK_URL') or '').strip()
+          if not webhook:
+              print('No R&D/TOMOKI Slack webhook configured; artifact remains canonical evidence.')
+              raise SystemExit(0)
+          report=Path('core-director-report.md').read_text(encoding='utf-8')[:12000]
+          req=urllib.request.Request(webhook,data=json.dumps({'text':report},ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
+          with urllib.request.urlopen(req,timeout=15) as res: print('slack status',res.status)
+          PY
+      - name: CEO receives only unresolved owner decision
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path('core-director-result.json')
+          if not p.exists(): raise SystemExit(0)
+          d=json.loads(p.read_text(encoding='utf-8'))
+          if not d.get('ceo_escalation'): raise SystemExit(0)
+          event={"schema":"ai-factory-ceo-event/v1","project":"THE CORE / THE WORLD","state":"BLOCKED","counts":{"blocked_core_workflows":len(d.get('blocked_core_workflows') or [])},"priorities":{},"business_effect":d.get('summary') or 'THE CORE found an unresolved autonomy blocker.',"next_improvement":d.get('next_improvement') or 'Internal recovery continues.',"owner_action":d.get('owner_action') or 'NONE'}
+          Path('core-director-ceo-event.json').write_text(json.dumps(event,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+          if [[ -f core-director-ceo-event.json && -n "${CEO_REPORT_WEBHOOK_URL:-}" ]]; then python automation/reporting/ceo_report.py core-director-ceo-event.json; fi
+      - name: Preserve Director evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-core-director-${{ github.run_id }}
+          path: |
+            world-realtime-snapshot.json
+            world-realtime-snapshot.md
+            core-director-plan.json
+            core-director-result.json
+            core-director-report.md
+            core-director-ceo-event.json
+          retention-days: 30
+          if-no-files-found: warn

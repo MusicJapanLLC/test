@@ -1,0 +1,53 @@
+{
+  "schema": "outside-world-sources/v1",
+  "policy": "company-society/EXTERNAL_CONTACT.md",
+  "mode": "public_read_only_discovery",
+  "max_items_per_source": 12,
+  "sources": [
+    {
+      "id": "hacker-news-newest",
+      "kind": "rss",
+      "category": "weird-tech",
+      "url": "https://hnrss.org/newest",
+      "weight": 1.0
+    },
+    {
+      "id": "github-blog",
+      "kind": "rss",
+      "category": "engineering",
+      "url": "https://github.blog/feed/",
+      "weight": 0.9
+    },
+    {
+      "id": "devto-ai",
+      "kind": "rss",
+      "category": "builders",
+      "url": "https://dev.to/feed/tag/ai",
+      "weight": 0.8
+    },
+    {
+      "id": "arxiv-cs-ai",
+      "kind": "rss",
+      "category": "research",
+      "url": "https://export.arxiv.org/rss/cs.AI",
+      "weight": 0.8
+    }
+  ],
+  "web_search_lanes": [
+    "public note.com posts",
+    "public YouTube videos and channels",
+    "public blogs",
+    "public GitHub repositories and issues",
+    "strange creative coding projects",
+    "small experiments with no obvious business value"
+  ],
+  "rules": {
+    "public_only": true,
+    "login_bypass": false,
+    "robots_or_access_control_bypass": false,
+    "comments_or_posts_from_feed_scout": false,
+    "third_party_email": false,
+    "store_minimal_metadata_only": true,
+    "allow_fun_without_utility": true
+  }
+}

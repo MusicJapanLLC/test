@@ -1,0 +1,357 @@
+name: THE WORLD - Agent Factory Tournament
+
+on:
+  schedule:
+    # Hourly bounded AI/Security R&D tournament. Concurrency prevents pile-up.
+    - cron: '23 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-agent-factory.yml'
+      - 'automation/agent_factory/**'
+      - 'automation/ai_foundry/**'
+      - 'automation/world/ai_security_joint_lab.py'
+      - 'automation/security/ai_security_feedback.py'
+      - 'value-lab/research_queue.json'
+      - 'standment-security/security_portfolio_program.json'
+
+concurrency:
+  group: the-world-agent-factory-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+  copilot-requests: write
+
+env:
+  FACTORY_DIR: /tmp/the-world-agent-factory
+
+jobs:
+  factory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+
+      - name: Install Copilot CLI
+        run: npm install -g @github/copilot@1.0.80
+
+      - name: Verify Agent Factory control plane
+        working-directory: automation/agent_factory
+        run: |
+          set -euo pipefail
+          python -m unittest discover -v -p 'test_*.py'
+
+      - name: Generate mission-specific ephemeral swarm
+        id: plan
+        run: |
+          set -euo pipefail
+          mkdir -p "$FACTORY_DIR/prompts" "$FACTORY_DIR/raw" "$FACTORY_DIR/workers"
+          python automation/agent_factory/factory.py plan \
+            --run-id "$GITHUB_RUN_ID" \
+            --out "$FACTORY_DIR/plan.json"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          d=json.load(open(os.environ['FACTORY_DIR']+'/plan.json', encoding='utf-8'))
+          print(f"count={int(d['agent_count'])}")
+          print(f"parallel={int(d['max_parallel'])}")
+          print(f"mission={d['mission']['research_id']}")
+          print(f"family={d.get('mission_family') or 'unknown'}")
+          print(f"track={(d.get('primary_track') or {}).get('id') or 'NONE'}")
+          PY
+          cat "$FACTORY_DIR/plan.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run ephemeral research swarm with quota-independent fallback
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          AGENT_COUNT: ${{ steps.plan.outputs.count }}
+          MAX_PARALLEL: ${{ steps.plan.outputs.parallel }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export ROOT="$PWD"
+          seq 0 $((AGENT_COUNT - 1)) | xargs -P "$MAX_PARALLEL" -I{} bash -c '
+            set -u
+            slot="$1"
+            cd "$ROOT"
+            python automation/agent_factory/factory.py prompt \
+              --run-id "$GITHUB_RUN_ID" \
+              --slot "$slot" \
+              --out "$FACTORY_DIR/prompts/${slot}.md" >/dev/null
+
+            # Primary model worker is read-only. It cannot write, shell out, browse URLs,
+            # expand permissions or post externally.
+            timeout 180s copilot \
+              -p "$(cat "$FACTORY_DIR/prompts/${slot}.md")" \
+              -s \
+              --allow-tool=read \
+              --deny-tool=write \
+              --deny-tool=shell \
+              --deny-tool=url \
+              --no-ask-user \
+              > "$FACTORY_DIR/raw/${slot}.txt" 2>&1 || true
+
+            python automation/agent_factory/tournament.py normalize \
+              --plan "$FACTORY_DIR/plan.json" \
+              --slot "$slot" \
+              --raw "$FACTORY_DIR/raw/${slot}.txt" \
+              --out "$FACTORY_DIR/workers/${slot}.json" >/dev/null
+
+            eligible="$(python -c "import json; d=json.load(open(\"$FACTORY_DIR/workers/${slot}.json\")); print(\"true\" if d.get(\"eligible\") else \"false\")")"
+            if [[ "$eligible" != "true" ]]; then
+              # Graceful degradation: deterministic repository-evidence specialist takes
+              # over the SAME role. It gets no new authority and is graded by the same
+              # independent tournament. If fallback itself fails, original rejection stays.
+              if python automation/agent_factory/local_worker.py \
+                --plan "$FACTORY_DIR/plan.json" \
+                --slot "$slot" \
+                --out "$FACTORY_DIR/raw/${slot}.fallback.json" >/dev/null 2>&1; then
+                python automation/agent_factory/tournament.py normalize \
+                  --plan "$FACTORY_DIR/plan.json" \
+                  --slot "$slot" \
+                  --raw "$FACTORY_DIR/raw/${slot}.fallback.json" \
+                  --out "$FACTORY_DIR/workers/${slot}.json" >/dev/null
+              fi
+            fi
+          ' _ {}
+
+          echo "### Ephemeral workers" >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, json, os
+          rows=[]
+          for p in sorted(glob.glob(os.environ['FACTORY_DIR']+'/workers/*.json')):
+              rows.append(json.load(open(p, encoding='utf-8')))
+          fallback_count=len(glob.glob(os.environ['FACTORY_DIR']+'/raw/*.fallback.json'))
+          print(f"- local fallback workers used: {fallback_count}")
+          for r in rows:
+              print(f"- {r.get('agent_id')} role={r.get('role')} stance={r.get('stance')} eligible={r.get('eligible')} score={r.get('score')}")
+          PY
+
+      - name: Tournament — independent evidence scoring
+        id: tournament
+        run: |
+          set -euo pipefail
+          python automation/agent_factory/tournament.py tournament \
+            --workers-dir "$FACTORY_DIR/workers" \
+            --json "$FACTORY_DIR/tournament.json" \
+            --report "$FACTORY_DIR/tournament.md"
+          cat "$FACTORY_DIR/tournament.md" >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          d=json.load(open(os.environ['FACTORY_DIR']+'/tournament.json', encoding='utf-8'))
+          c=d.get('champion') or {}
+          print('promotion_ready=' + ('true' if d.get('promotion_ready') else 'false'))
+          print(f"eligible={int(d.get('eligible_count') or 0)}")
+          print(f"unique={int(d.get('unique_proposals') or 0)}")
+          print(f"champion={c.get('agent_id') or 'NONE'}")
+          print(f"score={c.get('score') or 0}")
+          PY
+
+      - name: Generate bounded champion forge prompt
+        if: steps.tournament.outputs.promotion_ready == 'true'
+        run: |
+          set -euo pipefail
+          python automation/agent_factory/tournament.py forge-prompt \
+            --plan "$FACTORY_DIR/plan.json" \
+            --result "$FACTORY_DIR/tournament.json" \
+            --out "$FACTORY_DIR/forge-prompt.md"
+
+      - name: Champion Forge — one reversible repository improvement
+        id: forge
+        if: steps.tournament.outputs.promotion_ready == 'true'
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE_SHA=$(git rev-parse HEAD)
+          echo "base_sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+
+          # Only the single tournament champion gets bounded write access.
+          # Shell and URL tools remain denied; GitHub Actions validates afterward.
+          timeout 420s copilot \
+            -p "$(cat "$FACTORY_DIR/forge-prompt.md")" \
+            -s \
+            --allow-tool=read \
+            --allow-tool=write \
+            --deny-tool=shell \
+            --deny-tool=url \
+            --no-ask-user \
+            > "$FACTORY_DIR/forge.log" 2>&1 || true
+
+          git add -N -- automation/ai_foundry automation/world automation/security standment-security value-lab docs 2>/dev/null || true
+
+          if git diff --quiet "$BASE_SHA" --; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Champion produced no repository change. Research evidence remains preserved; no fake implementation claim." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          git diff --stat "$BASE_SHA" -- >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Enforce fail-closed champion change policy
+        id: policy
+        if: steps.forge.outputs.changed == 'true'
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if python automation/agent_factory/policy.py \
+            --base "${{ steps.forge.outputs.base_sha }}" \
+            --json "$FACTORY_DIR/policy.json" \
+            --report "$FACTORY_DIR/policy.md"; then
+            echo "allowed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "allowed=false" >> "$GITHUB_OUTPUT"
+          fi
+          cat "$FACTORY_DIR/policy.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Revert champion if policy rejects it
+        if: steps.forge.outputs.changed == 'true' && steps.policy.outputs.allowed != 'true'
+        run: |
+          git reset --hard "${{ steps.forge.outputs.base_sha }}"
+          git clean -fd
+          echo "Champion change reverted by Agent Factory policy." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate champion against existing AI and Security R&D systems
+        id: validate
+        if: steps.forge.outputs.changed == 'true' && steps.policy.outputs.allowed == 'true'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          status=0
+          python -m compileall -q automation/ai_foundry automation/world automation/security value-lab || status=1
+          (cd automation/agent_factory && python -m unittest discover -v -p 'test_*.py') || status=1
+          python -m unittest discover -s automation/ai_foundry -p 'test_*.py' || status=1
+          python -m unittest discover -s automation/world -p 'test_*.py' || status=1
+          python -m unittest discover -s automation/security -p 'test_*.py' || status=1
+          python -m unittest discover -s value-lab -p 'test_*.py' || status=1
+          if [[ "$status" == "0" ]]; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"
+            echo "Champion validation: PASS" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "passed=false" >> "$GITHUB_OUTPUT"
+            echo "Champion validation: FAIL" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"
+
+      - name: Revert champion if validation fails
+        if: steps.forge.outputs.changed == 'true' && steps.policy.outputs.allowed == 'true' && steps.validate.outputs.passed != 'true'
+        run: |
+          git reset --hard "${{ steps.forge.outputs.base_sha }}"
+          git clean -fd
+          echo "Champion change reverted after validation failure." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create tested champion PR
+        id: pr
+        if: steps.forge.outputs.changed == 'true' && steps.policy.outputs.allowed == 'true' && steps.validate.outputs.passed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          BASE_REF: ${{ github.event.repository.default_branch }}
+          CHAMPION: ${{ steps.tournament.outputs.champion }}
+          SCORE: ${{ steps.tournament.outputs.score }}
+          MISSION: ${{ steps.plan.outputs.mission }}
+          FAMILY: ${{ steps.plan.outputs.family }}
+          TRACK: ${{ steps.plan.outputs.track }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="agent-factory/run-${GITHUB_RUN_ID}"
+          git reset
+          git checkout -b "$branch"
+          git add -- automation/ai_foundry automation/world automation/security standment-security value-lab docs
+          if git diff --cached --quiet; then
+            echo "created=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "THE WORLD Agent Factory"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "agent-factory: ${FAMILY} champion run ${GITHUB_RUN_ID}"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin "$branch"
+
+          body="$FACTORY_DIR/pr-body.md"
+          cat > "$body" <<EOF
+          ## THE WORLD Agent Factory Champion
+
+          - Mission: \`${MISSION}\`
+          - Family: \`${FAMILY}\`
+          - Primary track: \`${TRACK}\`
+          - Champion: \`${CHAMPION}\`
+          - Tournament score: **${SCORE}**
+          - Generated workers: ${{ steps.plan.outputs.count }}
+          - Eligible proposals: ${{ steps.tournament.outputs.eligible }}
+          - Unique proposals: ${{ steps.tournament.outputs.unique }}
+          - Agent Factory policy: PASS
+          - AI + Security R&D test suites: PASS
+
+          This PR was generated autonomously from an ephemeral research swarm. It is **not auto-merged**. Internal tournament score and AI strategy proxies are engineering evidence only; they are not model-training proof, customer validation or revenue evidence.
+          EOF
+
+          url=$(gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$BASE_REF" \
+            --head "$branch" \
+            --title "agent-factory: ${FAMILY} champion run ${GITHUB_RUN_ID}" \
+            --body-file "$body")
+          echo "created=true" >> "$GITHUB_OUTPUT"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Champion PR: $url" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve full Agent Factory evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-world-agent-factory-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: warn
+          path: |
+            /tmp/the-world-agent-factory/plan.json
+            /tmp/the-world-agent-factory/prompts/
+            /tmp/the-world-agent-factory/raw/
+            /tmp/the-world-agent-factory/workers/
+            /tmp/the-world-agent-factory/tournament.json
+            /tmp/the-world-agent-factory/tournament.md
+            /tmp/the-world-agent-factory/forge-prompt.md
+            /tmp/the-world-agent-factory/forge.log
+            /tmp/the-world-agent-factory/policy.json
+            /tmp/the-world-agent-factory/policy.md
+            /tmp/the-world-agent-factory/pr-body.md
+
+      - name: Final execution summary
+        if: always()
+        run: |
+          echo "### Agent Factory outcome" >> "$GITHUB_STEP_SUMMARY"
+          echo "- mission: ${{ steps.plan.outputs.mission }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- family: ${{ steps.plan.outputs.family }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- primary track: ${{ steps.plan.outputs.track }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- generated agents: ${{ steps.plan.outputs.count }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- eligible proposals: ${{ steps.tournament.outputs.eligible }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- unique proposals: ${{ steps.tournament.outputs.unique }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- champion: ${{ steps.tournament.outputs.champion }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- champion score: ${{ steps.tournament.outputs.score }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- forge changed repository: ${{ steps.forge.outputs.changed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- policy allowed: ${{ steps.policy.outputs.allowed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- validation passed: ${{ steps.validate.outputs.passed }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- PR created: ${{ steps.pr.outputs.created }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- PR: ${{ steps.pr.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"

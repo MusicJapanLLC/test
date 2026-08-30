@@ -2,7 +2,11 @@ name: AI Factory - BOSS Watchdog
 
 on:
   schedule:
-    - cron: '3,33 * * * *'
+    # Keep the existing twice-hourly BOSS cadence, but split 00:03 UTC so
+    # exactly one run per day can also emit a low-noise CEO heartbeat.
+    - cron: '3 0 * * *'
+    - cron: '33 0 * * *'
+    - cron: '3,33 1-23 * * *'
   workflow_dispatch:
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
@@ -78,6 +82,45 @@ jobs:
           if [[ "$SHOULD" == "true" && -n "${CEO_REPORT_WEBHOOK_URL:-}" ]]; then
             python automation/reporting/ceo_report.py reports/ceo-events/boss-watchdog.json
           fi
+
+      - name: CEO daily heartbeat — alive, no duplicate operations
+        if: github.event_name == 'schedule' && github.event.schedule == '3 0 * * *'
+        shell: bash
+        run: |
+          if [[ -z "${CEO_REPORT_WEBHOOK_URL:-}" ]]; then
+            echo "CEO heartbeat skipped: CEO_REPORT_WEBHOOK_URL is not configured." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python - <<'PY'
+          import json
+          import os
+          import urllib.request
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+
+          gate = json.load(open('reports/ceo-events/boss-watchdog.json', encoding='utf-8'))
+          boss = json.load(open('reports/control-plane/boss-watchdog.json', encoding='utf-8'))
+          summary = boss.get('summary') or {}
+          owner_required = bool(gate.get('should_report'))
+          now = datetime.now(ZoneInfo('Asia/Tokyo')).strftime('%Y-%m-%d %H:%M JST')
+          owner_line = 'REQUIRED — final owner report emitted in this cycle' if owner_required else 'NONE'
+          text = (
+              '*CEO — DAILY HEARTBEAT*\n'
+              f'生存=YES / BOSS cycle=OK / {now}\n'
+              f"owner action={owner_line}\n"
+              f"unresolved={int(summary.get('unresolved', 0) or 0)}\n"
+              '通常業務の詳細はTOMOKI/MANAGER/BOSS内部に保持。CEOは重複報告しない。'
+          )
+          req = urllib.request.Request(
+              os.environ['CEO_REPORT_WEBHOOK_URL'],
+              data=json.dumps({'text': text}, ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type': 'application/json'},
+          )
+          with urllib.request.urlopen(req, timeout=10) as res:
+              if res.status < 200 or res.status >= 300:
+                  raise RuntimeError(f'CEO heartbeat webhook HTTP {res.status}')
+              print('CEO heartbeat delivered:', res.status)
+          PY
 
       - name: Upload BOSS evidence
         if: always()
