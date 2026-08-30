@@ -147,6 +147,43 @@ def post_github_issue(finding: dict[str, Any], target: dict[str, Any]) -> dict[s
     }
 
 
+def post_discord_webhook(finding: dict[str, Any], target: dict[str, Any]) -> dict[str, Any]:
+    """Write to Discord via incoming webhook."""
+    webhook_url = os.environ["DISCORD_WEBHOOK_URL"].strip()
+    title, body = render_long(finding)
+    source = str(finding.get("url") or "")
+    payload: dict[str, Any] = {
+        "username": "THE WORLD",
+        "embeds": [
+            {
+                "title": title[:256],
+                "description": body[:4096],
+                "color": 0x5865F2,
+                "footer": {"text": f"Source: {source}"[:2048]},
+            }
+        ],
+    }
+    status, response = request_json(webhook_url, payload, {})
+    return {"http_status": status, "remote_id": response.get("id")}
+
+
+def post_slack_webhook(finding: dict[str, Any], target: dict[str, Any]) -> dict[str, Any]:
+    """Write to Slack via incoming webhook."""
+    webhook_url = os.environ["SLACK_WEBHOOK_URL"].strip()
+    title, body = render_long(finding)
+    max_body = int(target.get("max_chars", 2800) or 2800)
+    payload = {
+        "username": "THE WORLD",
+        "icon_emoji": ":globe_with_meridians:",
+        "blocks": [
+            {"type": "header", "text": {"type": "plain_text", "text": title[:150]}},
+            {"type": "section", "text": {"type": "mrkdwn", "text": body[:max_body]}},
+        ],
+    }
+    status, response = request_json(webhook_url, payload, {})
+    return {"http_status": status}
+
+
 def post_appdeploy(finding: dict[str, Any], target: dict[str, Any]) -> dict[str, Any]:
     token = os.environ["GITHUB_TOKEN"].strip()
     run_id = os.environ.get("WORLD_SOURCE_RUN_ID", os.environ.get("GITHUB_RUN_ID", "")).strip()
@@ -251,6 +288,8 @@ def post_wordpress(finding: dict[str, Any], target: dict[str, Any]) -> dict[str,
 
 ADAPTERS = {
     "github_issue": post_github_issue,
+    "discord_webhook": post_discord_webhook,
+    "slack_webhook": post_slack_webhook,
     "appdeploy": post_appdeploy,
     "devto": post_devto,
     "mastodon": post_mastodon,
@@ -262,7 +301,7 @@ ADAPTERS = {
 def execute(events: dict[str, Any], config: dict[str, Any], previous: dict[str, Any], dry_run: bool = False) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     now = datetime.now(timezone.utc)
     dedupe_hours = int(config.get("dedupe_hours", 72) or 72)
-    max_total = int(config.get("max_total_writes_per_run", 2) or 2)
+    max_total = int(config.get("max_total_writes_per_run", 5) or 5)
     seen = recent_keys(previous, dedupe_hours, now)
     targets = capable_targets(config, previous, now)
     used: set[str] = set()
