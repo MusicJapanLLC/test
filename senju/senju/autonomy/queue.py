@@ -26,6 +26,20 @@ _ALLOWED_AUTHORITY_SCOPES = {
     "github_metadata",
 }
 
+_ALLOWED_CATEGORIES = {
+    "combat_tactics",
+    "evolution_rate",
+    "threat_intel",
+    "resilience",
+    "test",
+    "security",
+    "defense",
+    "red_team",
+    "blue_team",
+    "research",
+    "benchmark",
+}
+
 
 def _has_control(value: str) -> bool:
     return any(ord(ch) < 32 or ord(ch) == 127 for ch in value)
@@ -52,8 +66,8 @@ def _bounded_int(value: object, *, field_name: str, low: int, high: int) -> int:
 class WorkItem:
     item_id: str
     hypothesis: str
-    category: str  # logical experiment category; non-empty and control-free
-    expected_value: float  # 0.0 .. 1.0 (information/performance gain expectation)
+    category: str
+    expected_value: float
     cost_budget_matches: int = 400
     runtime_seconds_budget: float = 30.0
     prerequisite_evidence: list[str] = dataclasses.field(default_factory=list)
@@ -76,6 +90,9 @@ class WorkItem:
                 raise ValueError(f"{field_name} must be a non-empty string")
             if _has_control(value):
                 raise ValueError(f"{field_name} must not contain control characters")
+
+        if self.category not in _ALLOWED_CATEGORIES:
+            raise ValueError(f"unknown work item category: {self.category!r}")
 
         _bounded_number(self.expected_value, field_name="expected_value", low=0.0, high=1.0)
         _bounded_int(
@@ -181,7 +198,6 @@ class AutonomyQueue:
         """Enqueue a work item with automatic deduplication against existing items."""
         if not isinstance(item, WorkItem):
             raise TypeError("item must be a WorkItem")
-        # Re-run validation in case a caller mutated a dataclass field after creation.
         item.__post_init__()
         dedup = item.deduplication_key
         for existing in self._items.values():
