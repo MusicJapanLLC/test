@@ -13,6 +13,10 @@ import json
 from pathlib import Path
 from typing import Any
 
+SUPPORTED_ASSIST_SCHEMAS = {
+    "the-world-ai-security-joint-assist/v1",
+    "the-world-ai-security-joint-assist/v2",
+}
 ALLOWED_AI_FOCUS = {
     "correctness",
     "architecture",
@@ -39,7 +43,7 @@ def _load(path: str | Path) -> dict[str, Any]:
 
 
 def validate_packet(packet: dict[str, Any]) -> dict[str, Any]:
-    if packet.get("schema") != "the-world-ai-security-joint-assist/v1":
+    if packet.get("schema") not in SUPPORTED_ASSIST_SCHEMAS:
         raise ValueError("unexpected assist packet schema")
     if packet.get("status") != "BUILDING":
         raise ValueError("handoff source must remain BUILDING research evidence")
