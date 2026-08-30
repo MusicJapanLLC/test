@@ -1,9 +1,13 @@
 {
-  "name": "madlab-deepguard-v2",
-  "version": "2.1.0",
+  "name": "madlab-deepguard-v3",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "engines": {"node": ">=20"},
-  "scripts": {"start": "node server2.js"},
+  "scripts": {
+    "start": "node server3.js",
+    "start:v2": "node server2.js",
+    "test": "node --test tests/*.test.js"
+  },
   "dependencies": {"express": "^4.21.2"}
 }
