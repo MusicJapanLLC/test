@@ -44,47 +44,39 @@ jobs:
           comment() {
             local body="$1"
             jq -n --arg body "$body" '{body: $body}' |
-              curl --fail --silent --show-error                 -X POST                 -H "Authorization: Bearer $GH_TOKEN"                 -H "Accept: application/vnd.github+json"                 -H "X-GitHub-Api-Version: 2022-11-28"                 "https://api.github.com/repos/$REPOSITORY/issues/$ISSUE_NUMBER/comments"                 --data-binary @- >/dev/null
+              curl --fail --silent --show-error -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" "https://api.github.com/repos/$REPOSITORY/issues/$ISSUE_NUMBER/comments" --data-binary @- >/dev/null
           }
 
           owner="${REPOSITORY%%/*}"
           repo="${REPOSITORY#*/}"
-
-          sources_json="$(
-            curl --fail-with-body --silent --show-error               -H "X-Goog-Api-Key: $JULES_API_KEY"               "https://jules.googleapis.com/v1alpha/sources"
-          )"
+          sources_json="$(curl --fail-with-body --silent --show-error -H "X-Goog-Api-Key: $JULES_API_KEY" "https://jules.googleapis.com/v1alpha/sources")"
 
           source_name="$(
-            jq -r --arg owner "$owner" --arg repo "$repo"               '.sources[]? |
-               select(.githubRepo.owner == $owner and .githubRepo.repo == $repo) |
-               .name' <<<"$sources_json" | head -n 1
+            jq -r --arg owner "$owner" --arg repo "$repo" '.sources[]? | select(.githubRepo.owner == $owner and .githubRepo.repo == $repo) | .name' <<<"$sources_json" | head -n 1
           )"
 
           if [[ -z "$source_name" ]]; then
-            comment "Jules APIには接続できましたが、`$REPOSITORY` がJulesのSourcesにありません。Jules側でこのリポジトリを追加してください。"
+            comment "Jules APIには接続できましたが、$REPOSITORY がJulesのSourcesにありません。Jules側でこのリポジトリを追加してください。"
             exit 1
           fi
 
           prompt="$(
-            jq -nr               --arg title "$ISSUE_TITLE"               --arg body "${ISSUE_BODY:-}"               --arg url "$ISSUE_URL"               '$title + "\n\n" + $body + "\n\nSource issue: " + $url + "\n\nImplement the task, run relevant tests, and open a pull request. Do not push directly to the starting branch."'
+            jq -nr --arg title "$ISSUE_TITLE" --arg body "${ISSUE_BODY:-}" --arg url "$ISSUE_URL" '$title + "\n\n" + $body + "\n\nSource issue: " + $url + "\n\nImplement the task, run relevant tests, and open a pull request. Do not push directly to the starting branch."'
           )"
 
           request="$(
-            jq -n               --arg prompt "$prompt"               --arg source "$source_name"               --arg branch "$DEFAULT_BRANCH"               '{
-                prompt: $prompt,
-                title: ("GitHub Issue: " + ($prompt | split("\n")[0])),
-                sourceContext: {
-                  source: $source,
-                  githubRepoContext: {startingBranch: $branch}
-                },
-                requirePlanApproval: false
-              }'
+            jq -n --arg prompt "$prompt" --arg source "$source_name" --arg branch "$DEFAULT_BRANCH" '{
+              prompt: $prompt,
+              title: ("GitHub Issue: " + ($prompt | split("\n")[0])),
+              sourceContext: {
+                source: $source,
+                githubRepoContext: {startingBranch: $branch}
+              },
+              requirePlanApproval: false
+            }'
           )"
 
-          session="$(
-            curl --fail-with-body --silent --show-error               -X POST               -H "Content-Type: application/json"               -H "X-Goog-Api-Key: $JULES_API_KEY"               "https://jules.googleapis.com/v1alpha/sessions"               --data-binary "$request"
-          )"
-
+          session="$(curl --fail-with-body --silent --show-error -X POST -H "Content-Type: application/json" -H "X-Goog-Api-Key: $JULES_API_KEY" "https://jules.googleapis.com/v1alpha/sessions" --data-binary "$request")"
           session_name="$(jq -r '.name // empty' <<<"$session")"
           session_id="$(jq -r '.id // empty' <<<"$session")"
           session_url="$(jq -r '.url // empty' <<<"$session")"
@@ -95,32 +87,28 @@ jobs:
           fi
 
           if [[ -n "$session_url" ]]; then
-            comment "Julesを起動しました\n\n- Session: `$session_id`\n- Status: running\n- Console: $session_url"
+            comment "Julesを起動しました\n\n- Session: $session_id\n- Status: running\n- Console: $session_url"
           else
-            comment "Julesを起動しました\n\n- Session: `$session_id`\n- Status: running"
+            comment "Julesを起動しました\n\n- Session: $session_id\n- Status: running"
           fi
 
           for attempt in $(seq 1 40); do
             sleep 30
-
-            current="$(
-              curl --fail-with-body --silent --show-error                 -H "X-Goog-Api-Key: $JULES_API_KEY"                 "https://jules.googleapis.com/v1alpha/$session_name"
-            )"
-
+            current="$(curl --fail-with-body --silent --show-error -H "X-Goog-Api-Key: $JULES_API_KEY" "https://jules.googleapis.com/v1alpha/$session_name")"
             pr_url="$(jq -r '[.outputs[]?.pullRequest.url // empty] | map(select(length > 0)) | first // empty' <<<"$current")"
             state="$(jq -r '.state // "UNKNOWN"' <<<"$current")"
 
             if [[ -n "$pr_url" ]]; then
-              comment "JulesがPull Requestを作成しました\n\n- State: `$state`\n- PR: $pr_url"
+              comment "JulesがPull Requestを作成しました\n\n- State: $state\n- PR: $pr_url"
               exit 0
             fi
 
             case "$state" in
               FAILED|CANCELLED|CANCELED)
-                comment "Julesセッションが終了しました\n\n- State: `$state`\n- Session: `$session_id`"
+                comment "Julesセッションが終了しました\n\n- State: $state\n- Session: $session_id"
                 exit 1
                 ;;
             esac
           done
 
-          comment "Julesはまだ処理中です。20分の監視時間を超えたため、JulesコンソールでSession `$session_id`を確認してください。"
+          comment "Julesはまだ処理中です。20分の監視時間を超えたため、JulesコンソールでSession $session_idを確認してください。"
