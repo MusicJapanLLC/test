@@ -2,7 +2,8 @@ name: Senju Auto-Approve and Merge
 
 # No human review is required for genuine Senju-generated PRs. Provenance is
 # determined from both bot identity and Senju branch/title signals; a title alone
-# never grants merge authority.
+# never grants merge authority. OpenHands PASS for the exact head SHA acts as the
+# machine approval before merge.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -12,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  issues: read
   pull-requests: write
 
 jobs:
@@ -23,7 +25,7 @@ jobs:
       REPO: ${{ github.repository }}
 
     steps:
-      - name: Approve and merge genuine Senju-generated PRs
+      - name: Approve and merge audited Senju-generated PRs
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -66,7 +68,28 @@ jobs:
                 continue;
               }
 
-              console.log(`Senju provenance accepted for PR #${pr.number}: author=${pr.user.login} branch=${pr.head.ref}`);
+              const headSha = pr.head.sha;
+              console.log(`Senju provenance accepted for PR #${pr.number}: author=${pr.user.login} branch=${pr.head.ref} sha=${headSha}`);
+
+              const comments = await github.paginate(
+                github.rest.issues.listComments,
+                { owner, repo, issue_number: pr.number, per_page: 100 }
+              );
+              const passMarker = `AI_MERGE_AUDIT: PASS ${headSha}`;
+              const blockMarker = `AI_MERGE_AUDIT: BLOCK ${headSha}`;
+              const auditPassed = comments.some(c => (c.body || '').includes(passMarker));
+              const auditBlocked = comments.some(c => (c.body || '').includes(blockMarker));
+
+              if (auditBlocked) {
+                console.log(`🛑 OpenHands BLOCK for PR #${pr.number} at ${headSha}`);
+                skipped++;
+                continue;
+              }
+              if (!auditPassed) {
+                console.log(`⏳ Waiting for OpenHands PASS for PR #${pr.number} at ${headSha}`);
+                skipped++;
+                continue;
+              }
 
               const reviews = await github.rest.pulls.listReviews({
                 owner, repo, pull_number: pr.number
@@ -80,7 +103,7 @@ jobs:
                   await github.rest.pulls.createReview({
                     owner, repo, pull_number: pr.number,
                     event: 'APPROVE',
-                    body: 'Auto-approved: verified Senju automation provenance; no human review required.'
+                    body: `Auto-approved: verified Senju provenance + OpenHands PASS for ${headSha}; no human review required.`
                   });
                   console.log(`✅ Approved PR #${pr.number}: ${pr.title}`);
                 } catch (e) {
@@ -93,6 +116,7 @@ jobs:
                   owner, repo, pull_number: pr.number,
                   merge_method: 'squash',
                   commit_title: pr.title,
+                  sha: headSha,
                 });
                 if (mergeResult.data.merged) {
                   console.log(`🚀 Merged PR #${pr.number}: ${pr.title}`);
