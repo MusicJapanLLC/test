@@ -1,8 +1,8 @@
 """Defense Adversary Suite V2 for Senju guard layers.
 
-This module pressure-tests local parsers, policy text, workflow text, synthetic
-artifacts, and autonomy authorization gates. It deliberately performs no live
-network contact and never mutates production guard configuration.
+Local-only adversarial pressure for policy, parser, workflow, artifact and
+Autonomy Engine boundaries. The suite performs no live network contact and
+never disables or mutates production guards.
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 
 from .authorized_assessment import EngagementError, EngagementManifest
-from .autonomy import AutonomyError, AutonomyLoop, AutonomyQueue, WorkItem
+from .autonomy import AutonomyEngine, AutonomyQueue, WorkItem, WorkItemStatus
 from .external import ExternalContactError, ExternalContactPolicy, _parse_url
 from .safety import ScopeGuard, default_lab_policy
 from .scopeguard_adversary import DEFAULT_CASES, ProbeCase, probe_guard
@@ -40,35 +40,32 @@ class AdversaryReport:
 
     @property
     def weaknesses(self) -> tuple[Finding, ...]:
-        return tuple(item for item in self.findings if not item.passed)
+        return tuple(x for x in self.findings if not x.passed)
 
     def to_dict(self) -> dict[str, object]:
         layers: dict[str, dict[str, int]] = {}
         for item in self.findings:
             bucket = layers.setdefault(item.layer, {"checks": 0, "passed": 0, "weaknesses": 0})
             bucket["checks"] += 1
-            if item.passed:
-                bucket["passed"] += 1
-            else:
-                bucket["weaknesses"] += 1
+            bucket["passed" if item.passed else "weaknesses"] += 1
         return {
             "schema": self.schema,
             "seed": self.seed,
             "summary": {
                 "checks": len(self.findings),
-                "passed": sum(1 for item in self.findings if item.passed),
+                "passed": sum(x.passed for x in self.findings),
                 "weaknesses": len(self.weaknesses),
                 "layers": layers,
             },
-            "findings": [asdict(item) for item in self.findings],
+            "findings": [asdict(x) for x in self.findings],
         }
 
 
 def _result(layer: str, case: str, passed: bool, detail: str) -> Finding:
-    return Finding(layer=layer, case=case, passed=bool(passed), detail=detail)
+    return Finding(layer, case, bool(passed), detail)
 
 
-# ScopeGuard: deterministic mutation corpus (local strings only)
+# ScopeGuard -----------------------------------------------------------------
 def _scope_mutations(count: int, seed: int) -> tuple[ProbeCase, ...]:
     rng = random.Random(seed)
     bases = (
@@ -78,34 +75,26 @@ def _scope_mutations(count: int, seed: int) -> tuple[ProbeCase, ...]:
         "sim:/fixture", "sim%3A//fixture", "sim：//fixture",
     )
     wrappers: tuple[Callable[[str], str], ...] = (
-        lambda value: value,
-        lambda value: f" {value}",
-        lambda value: f"{value} ",
-        lambda value: f"\t{value}",
-        lambda value: f"{value}\n",
-        lambda value: f"//{value}",
-        lambda value: f"{value}:443",
-        lambda value: f"{value}/path",
-        lambda value: f"{value}?q=1",
-        lambda value: f"{value}#fragment",
-        lambda value: f"{value}@other.invalid",
+        lambda v: v,
+        lambda v: f" {v}", lambda v: f"{v} ", lambda v: f"\t{v}", lambda v: f"{v}\n",
+        lambda v: f"//{v}", lambda v: f"{v}:443", lambda v: f"{v}/path",
+        lambda v: f"{v}?q=1", lambda v: f"{v}#fragment", lambda v: f"{v}@other.invalid",
     )
     return tuple(
-        ProbeCase(f"v2-fuzz-{index:05d}", rng.choice(wrappers)(rng.choice(bases)), False)
-        for index in range(max(0, count))
+        ProbeCase(f"v2-fuzz-{i:05d}", rng.choice(wrappers)(rng.choice(bases)), False)
+        for i in range(max(0, count))
     )
 
 
 def probe_scopeguard_v2(*, count: int = 4096, seed: int = 26002) -> list[Finding]:
-    guard = ScopeGuard(default_lab_policy())
     cases = DEFAULT_CASES + _scope_mutations(count, seed)
     return [
-        _result("scopeguard", result.case.name, not result.surprising, result.detail)
-        for result in probe_guard(guard, cases)
+        _result("scopeguard", r.case.name, not r.surprising, r.detail)
+        for r in probe_guard(ScopeGuard(default_lab_policy()), cases)
     ]
 
 
-# ExternalContactClient: URL/authority parser pressure; never resolves or opens.
+# ExternalContactClient -------------------------------------------------------
 def probe_external_contact_v2() -> list[Finding]:
     policy = ExternalContactPolicy.from_hosts(["example.com"], allow_http=False)
     cases: tuple[tuple[str, str, bool], ...] = (
@@ -132,23 +121,22 @@ def probe_external_contact_v2() -> list[Finding]:
         ("ipv4-not-allowlisted", "https://127.0.0.1/", False),
         ("ipv6-not-allowlisted", "https://[::1]/", False),
         ("encoded-at-host", "https://%40example.com/", False),
+        # Defensive expectation: an authority scope should bind port as well as host.
         ("non-default-port", "https://example.com:444/", False),
     )
-    findings: list[Finding] = []
+    out: list[Finding] = []
     for name, url, should_allow in cases:
         try:
             _parse_url(url, policy)
         except (ExternalContactError, TypeError, ValueError) as exc:
-            allowed = False
-            detail = f"rejected: {exc}"
+            allowed, detail = False, f"rejected: {exc}"
         else:
-            allowed = True
-            detail = "accepted"
-        findings.append(_result("external-contact", name, allowed == should_allow, detail))
-    return findings
+            allowed, detail = True, "accepted"
+        out.append(_result("external-contact", name, allowed == should_allow, detail))
+    return out
 
 
-# Engagement JSON: schema/type/window/scope mutation pressure.
+# Engagement JSON -------------------------------------------------------------
 def _engagement_baseline() -> dict[str, object]:
     return {
         "engagement_id": "v2-local-synthetic",
@@ -172,297 +160,262 @@ def _copy_manifest() -> dict[str, object]:
 def probe_engagement_v2() -> list[Finding]:
     cases: list[tuple[str, Mapping[str, Any], bool]] = [("valid-baseline", _copy_manifest(), True)]
     standing = _copy_manifest()
-    standing["engagement_id"] = ""
-    standing["valid_from_utc"] = ""
-    standing["valid_until_utc"] = ""
+    standing.update(engagement_id="", valid_from_utc="", valid_until_utc="")
     cases.append(("standing-authority-derived-id", standing, True))
 
-    def mutate(name: str, key: str, value: object, should_allow: bool = False) -> None:
-        raw = _copy_manifest()
-        raw[key] = value
-        cases.append((name, raw, should_allow))
+    def simple(name: str, key: str, value: object, allowed: bool = False) -> None:
+        raw = _copy_manifest(); raw[key] = value; cases.append((name, raw, allowed))
 
-    mutate("owner-empty", "owner", "")
-    mutate("authorization-empty", "authorization_reference", "")
-    mutate("targets-empty", "targets", [])
-    mutate("targets-wrong-type", "targets", {"host": "example.com"})
-    mutate("checks-wrong-type", "allowed_checks", "reachability")
-    mutate("checks-empty", "allowed_checks", [])
-    mutate("unknown-check", "allowed_checks", ["reachability", "exploit"])
-    mutate("request-budget-zero", "max_requests_per_target", 0)
-    mutate("request-budget-high", "max_requests_per_target", 9)
-    mutate("rps-zero", "max_rps", 0)
-    mutate("rps-high", "max_rps", 2.1)
-    mutate("destructive", "destructive", True)
-    mutate("partial-window", "valid_until_utc", "")
-    mutate("bad-start-format", "valid_from_utc", "not-a-date")
-    mutate("timezone-missing", "valid_from_utc", "2026-08-31T00:00:00")
+    simple("owner-empty", "owner", "")
+    simple("authorization-empty", "authorization_reference", "")
+    simple("targets-empty", "targets", [])
+    simple("targets-wrong-type", "targets", {"host": "example.com"})
+    simple("checks-wrong-type", "allowed_checks", "reachability")
+    simple("checks-empty", "allowed_checks", [])
+    simple("unknown-check", "allowed_checks", ["reachability", "exploit"])
+    simple("request-budget-zero", "max_requests_per_target", 0)
+    simple("request-budget-high", "max_requests_per_target", 9)
+    simple("rps-zero", "max_rps", 0)
+    simple("rps-high", "max_rps", 2.1)
+    simple("destructive", "destructive", True)
+    simple("partial-window", "valid_until_utc", "")
+    simple("bad-start-format", "valid_from_utc", "not-a-date")
+    simple("timezone-missing", "valid_from_utc", "2026-08-31T00:00:00")
 
-    wildcard = _copy_manifest()
-    wildcard["targets"] = [{"host": "*.example.com"}]
-    cases.append(("wildcard-host", wildcard, False))
-    duplicate = _copy_manifest()
-    duplicate["targets"] = [{"host": "example.com"}, {"host": "example.com"}]
-    cases.append(("duplicate-host", duplicate, False))
+    for name, targets in (
+        ("wildcard-host", [{"host": "*.example.com"}]),
+        ("duplicate-host", [{"host": "example.com"}, {"host": "example.com"}]),
+        ("http-without-optin", [{"host": "example.com", "scheme": "http"}]),
+        ("unsupported-scheme", [{"host": "example.com", "scheme": "ftp"}]),
+        ("fragment-in-path", [{"host": "example.com", "base_path": "/x#frag"}]),
+        ("relative-base-path", [{"host": "example.com", "base_path": "relative"}]),
+    ):
+        raw = _copy_manifest(); raw["targets"] = targets; cases.append((name, raw, False))
     reversed_window = _copy_manifest()
-    reversed_window["valid_from_utc"] = "2026-09-01T00:00:00+00:00"
-    reversed_window["valid_until_utc"] = "2026-08-31T00:00:00+00:00"
+    reversed_window.update(valid_from_utc="2026-09-01T00:00:00+00:00", valid_until_utc="2026-08-31T00:00:00+00:00")
     cases.append(("reversed-window", reversed_window, False))
-    http_without_optin = _copy_manifest()
-    http_without_optin["targets"] = [{"host": "example.com", "scheme": "http"}]
-    cases.append(("http-without-optin", http_without_optin, False))
-    bad_scheme = _copy_manifest()
-    bad_scheme["targets"] = [{"host": "example.com", "scheme": "ftp"}]
-    cases.append(("unsupported-scheme", bad_scheme, False))
-    path_fragment = _copy_manifest()
-    path_fragment["targets"] = [{"host": "example.com", "base_path": "/x#frag"}]
-    cases.append(("fragment-in-path", path_fragment, False))
-    path_relative = _copy_manifest()
-    path_relative["targets"] = [{"host": "example.com", "base_path": "relative"}]
-    cases.append(("relative-base-path", path_relative, False))
-    string_false_http = _copy_manifest()
-    string_false_http["allow_http"] = "false"
-    string_false_http["targets"] = [{"host": "example.com", "scheme": "http"}]
-    cases.append(("string-false-http-coercion", string_false_http, False))
+    string_false = _copy_manifest()
+    string_false["allow_http"] = "false"
+    string_false["targets"] = [{"host": "example.com", "scheme": "http"}]
+    cases.append(("string-false-http-coercion", string_false, False))
 
-    findings: list[Finding] = []
+    out: list[Finding] = []
     for name, raw, should_allow in cases:
         try:
             EngagementManifest.from_dict(raw)
         except (EngagementError, TypeError, ValueError, AttributeError) as exc:
-            allowed = False
-            detail = f"rejected: {exc}"
+            allowed, detail = False, f"rejected: {exc}"
         else:
-            allowed = True
-            detail = "accepted"
-        findings.append(_result("engagement-json", name, allowed == should_allow, detail))
+            allowed, detail = True, "accepted"
+        out.append(_result("engagement-json", name, allowed == should_allow, detail))
 
     now = dt.datetime(2026, 8, 31, 12, 0, tzinfo=dt.timezone.utc)
-    for name, start, end, should_allow in (
+    windows = (
         ("active-window", "2026-08-31T00:00:00+00:00", "2026-09-01T00:00:00+00:00", True),
         ("expired-window", "2026-08-29T00:00:00+00:00", "2026-08-30T00:00:00+00:00", False),
         ("future-window", "2026-09-02T00:00:00+00:00", "2026-09-03T00:00:00+00:00", False),
-    ):
-        raw = _copy_manifest()
-        raw["valid_from_utc"] = start
-        raw["valid_until_utc"] = end
+    )
+    for name, start, end, should_allow in windows:
+        raw = _copy_manifest(); raw.update(valid_from_utc=start, valid_until_utc=end)
         try:
-            manifest = EngagementManifest.from_dict(raw)
-            manifest.validate(now=now, enforce_window=True)
+            EngagementManifest.from_dict(raw).validate(now=now, enforce_window=True)
         except (EngagementError, TypeError, ValueError) as exc:
-            allowed = False
-            detail = f"rejected: {exc}"
+            allowed, detail = False, f"rejected: {exc}"
         else:
-            allowed = True
-            detail = "accepted"
-        findings.append(_result("engagement-json", name, allowed == should_allow, detail))
-    return findings
+            allowed, detail = True, "accepted"
+        out.append(_result("engagement-json", name, allowed == should_allow, detail))
+    return out
 
 
-# OFFENSE_FIRST.md: authorization contract invariants + mutation sensitivity.
+# Policy/workflow mutation auditors -----------------------------------------
 def audit_offense_text(text: str) -> list[str]:
     problems: list[str] = []
-    required = (
-        "owned-or-explicitly-authorized lab",
-        "外部第三者の資産",
-        "所有者または明示的なテスト権限",
-        "campaign scope",
-    )
-    for marker in required:
+    for marker in (
+        "owned-or-explicitly-authorized lab", "外部第三者の資産",
+        "所有者または明示的なテスト権限", "campaign scope",
+    ):
         if marker not in text:
             problems.append(f"missing authorization-boundary marker: {marker}")
     normalized = text.lower()
-    forbidden = (
+    for marker in (
         "any public host without authorization",
         "third-party assets require no authorization",
         "外部第三者の資産は認可不要",
-    )
-    for marker in forbidden:
+    ):
         if marker.lower() in normalized:
             problems.append(f"unsafe authorization claim present: {marker}")
     return problems
 
 
-def probe_offense_first_v2(repo_root: Path) -> list[Finding]:
-    path = repo_root / "senju" / "OFFENSE_FIRST.md"
+def probe_offense_first_v2(root: Path) -> list[Finding]:
+    path = root / "senju" / "OFFENSE_FIRST.md"
     if not path.is_file():
         return [_result("offense-first", "file-present", False, f"missing: {path}")]
     text = path.read_text(encoding="utf-8")
     problems = audit_offense_text(text)
-    findings = [_result("offense-first", "authorization-boundary-intact", not problems, "; ".join(problems) or "intact")]
-    mutated = text.replace("所有者または明示的なテスト権限", "")
-    caught = bool(audit_offense_text(mutated))
-    findings.append(_result("offense-first", "mutation-removes-third-party-authorization", caught, "mutation detected" if caught else "mutation escaped auditor"))
-    injected = text + "\nThird-party assets require no authorization.\n"
-    caught = bool(audit_offense_text(injected))
-    findings.append(_result("offense-first", "mutation-injects-unsafe-claim", caught, "mutation detected" if caught else "mutation escaped auditor"))
-    return findings
+    out = [_result("offense-first", "authorization-boundary-intact", not problems, "; ".join(problems) or "intact")]
+    mutations = (
+        ("remove-third-party-authorization", text.replace("所有者または明示的なテスト権限", "")),
+        ("inject-unsafe-claim", text + "\nThird-party assets require no authorization.\n"),
+    )
+    for name, mutated in mutations:
+        caught = bool(audit_offense_text(mutated))
+        out.append(_result("offense-first", f"mutation-{name}", caught, "detected" if caught else "escaped"))
+    return out
 
 
-# security-guard.yml: static workflow hardening + synthetic mutations.
 def audit_security_guard_text(text: str) -> list[str]:
     problems: list[str] = []
-    required = (
-        "permissions:\n  contents: read",
-        "persist-credentials: false",
-        "Block tracked secret files",
-        "Block obvious credential material in tracked source",
-        "Enforce fail-closed workflow policy",
-        "Enforce external-evidence reality gate",
-        "Block remote shell execution patterns",
-        "Block direct interpolation of untrusted event text",
-    )
-    for marker in required:
+    for marker in (
+        "permissions:\n  contents: read", "persist-credentials: false",
+        "Block tracked secret files", "Block obvious credential material in tracked source",
+        "Enforce fail-closed workflow policy", "Enforce external-evidence reality gate",
+        "Block remote shell execution patterns", "Block direct interpolation of untrusted event text",
+    ):
         if marker not in text:
             problems.append(f"missing workflow invariant: {marker}")
-    unsafe = ("pull_request_target:", "permissions: write-all", "persist-credentials: true", "continue-on-error: true")
-    for marker in unsafe:
+    for marker in ("pull_request_target:", "permissions: write-all", "persist-credentials: true", "continue-on-error: true"):
         if marker in text:
             problems.append(f"unsafe workflow marker present: {marker}")
     return problems
 
 
-def probe_security_guard_v2(repo_root: Path) -> list[Finding]:
-    path = repo_root / ".github" / "workflows" / "security-guard.yml"
+def probe_security_guard_v2(root: Path) -> list[Finding]:
+    path = root / ".github" / "workflows" / "security-guard.yml"
     if not path.is_file():
         return [_result("security-guard-workflow", "file-present", False, f"missing: {path}")]
     text = path.read_text(encoding="utf-8")
     problems = audit_security_guard_text(text)
-    findings = [_result("security-guard-workflow", "live-contract", not problems, "; ".join(problems) or "intact")]
+    out = [_result("security-guard-workflow", "live-contract", not problems, "; ".join(problems) or "intact")]
     mutations = (
         ("pull-request-target", text.replace("  pull_request:\n", "  pull_request_target:\n", 1)),
         ("write-permission", text.replace("  contents: read", "  contents: write", 1)),
         ("credential-persistence", text.replace("persist-credentials: false", "persist-credentials: true", 1)),
-        ("continue-on-error", text + "\n# synthetic mutation\ncontinue-on-error: true\n"),
+        ("continue-on-error", text + "\ncontinue-on-error: true\n"),
     )
     for name, mutated in mutations:
         caught = bool(audit_security_guard_text(mutated))
-        findings.append(_result("security-guard-workflow", f"mutation-{name}", caught, "mutation detected" if caught else "mutation escaped auditor"))
-    return findings
+        out.append(_result("security-guard-workflow", f"mutation-{name}", caught, "detected" if caught else "escaped"))
+    return out
 
 
-# artifact_guard.py: execute against temporary synthetic build outputs only.
-def _run_artifact_case(guard_path: Path, files: Mapping[str, str]) -> tuple[int, dict[str, Any], str]:
+# artifact_guard.py -----------------------------------------------------------
+def _run_artifact_case(guard: Path, files: Mapping[str, str]) -> tuple[int, dict[str, Any], str]:
     with tempfile.TemporaryDirectory(prefix="senju-artifact-adversary-") as tmp:
-        root = Path(tmp)
-        dist = root / "dist"
-        dist.mkdir()
+        root = Path(tmp); dist = root / "dist"; dist.mkdir()
         for rel, content in files.items():
-            target = dist / rel
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content, encoding="utf-8")
-        output = root / "report.json"
-        completed = subprocess.run(
-            [sys.executable, str(guard_path), str(dist), "--json", str(output)],
-            capture_output=True,
-            text=True,
-            timeout=20,
-            check=False,
+            target = dist / rel; target.parent.mkdir(parents=True, exist_ok=True); target.write_text(content, encoding="utf-8")
+        report = root / "report.json"
+        done = subprocess.run(
+            [sys.executable, str(guard), str(dist), "--json", str(report)],
+            capture_output=True, text=True, timeout=20, check=False,
         )
-        payload = json.loads(output.read_text(encoding="utf-8")) if output.is_file() else {}
-        return completed.returncode, payload, (completed.stdout + completed.stderr).strip()
+        payload = json.loads(report.read_text(encoding="utf-8")) if report.is_file() else {}
+        return done.returncode, payload, (done.stdout + done.stderr).strip()
 
 
-def probe_artifact_guard_v2(repo_root: Path) -> list[Finding]:
-    guard_path = repo_root / "scripts" / "security" / "artifact_guard.py"
-    if not guard_path.is_file():
-        return [_result("artifact-guard", "file-present", False, f"missing: {guard_path}")]
-    fake_openai_key = "sk-" + ("A" * 24)
+def probe_artifact_guard_v2(root: Path) -> list[Finding]:
+    guard = root / "scripts" / "security" / "artifact_guard.py"
+    if not guard.is_file():
+        return [_result("artifact-guard", "file-present", False, f"missing: {guard}")]
+    fake_key = "sk-" + "A" * 24
     cases: tuple[tuple[str, Mapping[str, str], bool, str | None], ...] = (
         ("clean", {"index.html": '<script src="https://example.com/app.js"></script>'}, True, None),
         ("source-map-file", {"assets/app.js.map": "{}"}, False, "artifact.source-map"),
         ("mixed-content", {"index.html": '<script src="http://example.com/app.js"></script>'}, False, "artifact.mixed-content"),
         ("localhost", {"assets/app.js": 'fetch("http://localhost:3000/api")'}, False, "artifact.localhost-reference"),
         ("source-map-reference", {"assets/app.js": "//# sourceMappingURL=app.js.map"}, False, "artifact.source-map-reference"),
-        ("synthetic-secret", {"nested/config.JSON": f'{{"token":"{fake_openai_key}"}}'}, False, "artifact.secret.openai-key"),
+        ("synthetic-secret", {"nested/config.JSON": f'{{"token":"{fake_key}"}}'}, False, "artifact.secret.openai-key"),
     )
-    findings: list[Finding] = []
-    for name, files, should_pass, expected_rule in cases:
+    out: list[Finding] = []
+    for name, files, should_pass, rule in cases:
         try:
-            code, payload, output = _run_artifact_case(guard_path, files)
+            code, payload, output = _run_artifact_case(guard, files)
+            rules = {str(x.get("rule")) for x in payload.get("findings", []) if isinstance(x, dict)}
+            actual_pass = code == 0 and payload.get("status") == "pass"
+            passed = actual_pass if should_pass else (code != 0 and payload.get("status") == "fail" and (rule in rules if rule else True))
+            detail = f"exit={code}; status={payload.get('status')}; rules={sorted(rules)}"
+            if output: detail += f"; output={output[:160]}"
         except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
-            findings.append(_result("artifact-guard", name, False, f"runner error: {exc}"))
-            continue
-        rules = {str(item.get("rule")) for item in payload.get("findings", []) if isinstance(item, dict)}
-        actual_pass = code == 0 and payload.get("status") == "pass"
-        if should_pass:
-            passed = actual_pass
-        else:
-            passed = code != 0 and payload.get("status") == "fail" and (expected_rule in rules if expected_rule else True)
-        detail = f"exit={code}; status={payload.get('status')}; rules={sorted(rules)}"
-        if output:
-            detail += f"; output={output[:240]}"
-        findings.append(_result("artifact-guard", name, passed, detail))
-    return findings
+            passed, detail = False, f"runner error: {exc}"
+        out.append(_result("artifact-guard", name, passed, detail))
+    return out
 
 
-# Autonomy Engine: authorization/queue gates with an exploding local stub.
-class _NoNetworkClient:
-    def __init__(self) -> None:
-        self.calls = 0
+# Active Autonomy Engine package --------------------------------------------
+def _work(item_id: str, hypothesis: str, **kwargs: Any) -> WorkItem:
+    return WorkItem(
+        item_id=item_id,
+        hypothesis=hypothesis,
+        category=str(kwargs.pop("category", "resilience")),
+        expected_value=float(kwargs.pop("expected_value", 0.5)),
+        **kwargs,
+    )
 
-    def contact_with_body(self, *args: object, **kwargs: object) -> object:
-        self.calls += 1
-        raise AssertionError("V2 adversary must not perform external contact")
 
+def probe_autonomy_v2(root: Path) -> list[Finding]:
+    out: list[Finding] = []
+    engine_path = root / "senju" / "senju" / "autonomy" / "engine.py"
+    queue_path = root / "senju" / "senju" / "autonomy" / "queue.py"
+    for name, path in (("engine-file-present", engine_path), ("queue-file-present", queue_path)):
+        out.append(_result("autonomy-engine", name, path.is_file(), str(path)))
+    if not engine_path.is_file() or not queue_path.is_file():
+        return out
 
-def probe_autonomy_v2(repo_root: Path) -> list[Finding]:
-    findings: list[Finding] = []
-    path = repo_root / "senju" / "senju" / "autonomy.py"
-    if not path.is_file():
-        return [_result("autonomy-engine", "file-present", False, f"missing: {path}")]
-    source = path.read_text(encoding="utf-8")
-    for case, marker in (
-        ("authorized-write-gate-present", "is_authorized_write_target"),
-        ("unknown-public-write-restriction-present", "must be GET/HEAD only"),
-        ("discovered-host-allowlist-present", "cand_host in self.allow_hosts"),
-        ("guarded-transport-present", "ExternalContactPolicy.from_hosts"),
+    engine_source = engine_path.read_text(encoding="utf-8")
+    queue_source = queue_path.read_text(encoding="utf-8")
+    for case, marker, source in (
+        ("bounded-cycle-selector", "select_next(budget_matches=max_matches)", engine_source),
+        ("simulation-tournament-boundary", "Tournament(cfg)", engine_source),
+        ("persistent-queue", "self.save()", queue_source),
+        ("dedup-key", "deduplication_key", queue_source),
+        ("retry-bound", "max_retries", queue_source),
     ):
-        findings.append(_result("autonomy-engine", case, marker in source, "present" if marker in source else "missing"))
+        out.append(_result("autonomy-engine", case, marker in source, "present" if marker in source else "missing"))
 
-    with tempfile.TemporaryDirectory(prefix="senju-autonomy-adversary-") as tmp:
-        stub = _NoNetworkClient()
-        loop = AutonomyLoop(
-            allow_hosts=["example.com"], authorized_write_hosts=["owned.example"],
-            out_dir=Path(tmp), client=stub, max_host_budget=1,  # type: ignore[arg-type]
-        )
-        unauthorized = WorkItem(
-            id="unauth-write", item_type="canary_write", url="https://third-party.invalid/x",
-            method="POST", payload={"json": {"synthetic": True}},
-        )
-        try:
-            loop.execute_step(unauthorized)
-        except AutonomyError as exc:
-            blocked, detail = True, str(exc)
-        except AssertionError as exc:
-            blocked, detail = False, str(exc)
-        else:
-            blocked, detail = False, "unexpectedly accepted"
-        findings.append(_result("autonomy-engine", "unauthorized-canary-write", blocked and stub.calls == 0, detail))
+    with tempfile.TemporaryDirectory(prefix="senju-autonomy-v2-") as tmp:
+        tmp_path = Path(tmp)
+        queue = AutonomyQueue(tmp_path / "queue.json")
+        first = _work("a", "same-hypothesis", cost_budget_matches=20)
+        duplicate = _work("b", " SAME-HYPOTHESIS ", cost_budget_matches=20)
+        first_ok, dup_ok = queue.enqueue(first), queue.enqueue(duplicate)
+        out.append(_result("autonomy-engine", "hypothesis-dedup", first_ok and not dup_ok, f"first={first_ok}; duplicate={dup_ok}"))
 
-        public_post = WorkItem(id="public-post", item_type="discovery", url="https://example.com/x", method="POST")
-        try:
-            loop.execute_step(public_post)
-        except AutonomyError as exc:
-            blocked, detail = True, str(exc)
-        except AssertionError as exc:
-            blocked, detail = False, str(exc)
-        else:
-            blocked, detail = False, "unexpectedly accepted"
-        findings.append(_result("autonomy-engine", "public-non-read-method", blocked and stub.calls == 0, detail))
-        findings.append(_result("autonomy-engine", "exact-authorized-write-host", loop.is_authorized_write_target("https://OWNED.EXAMPLE/path"), "exact host accepted"))
-        findings.append(_result("autonomy-engine", "write-host-suffix-lookalike", not loop.is_authorized_write_target("https://owned.example.evil.invalid/path"), "lookalike rejected"))
+        expensive = _work("expensive", "expensive", expected_value=0.99, cost_budget_matches=1000)
+        cheap = _work("cheap", "cheap", expected_value=0.4, cost_budget_matches=30)
+        queue.enqueue(expensive); queue.enqueue(cheap)
+        selected = queue.select_next(budget_matches=50)
+        out.append(_result("autonomy-engine", "budget-bound-selection", selected is not None and selected.cost_budget_matches <= 50, f"selected={getattr(selected, 'item_id', None)}"))
 
-    queue = AutonomyQueue(max_host_budget=1)
-    first = WorkItem(id="q1", item_type="discovery", url="https://example.com/", method="GET")
-    second = WorkItem(id="q2", item_type="discovery", url="HTTPS://EXAMPLE.COM", method="GET")
-    first_ok, second_ok = queue.enqueue(first), queue.enqueue(second)
-    findings.append(_result("autonomy-engine", "queue-url-dedup", first_ok and not second_ok, f"first={first_ok}; second={second_ok}"))
-    queue.record_outcome(first.url, success=True)
-    budgeted = WorkItem(id="q3", item_type="discovery", url="https://example.com/next", method="GET")
-    score = queue.score_item(budgeted)
-    findings.append(_result("autonomy-engine", "host-budget-penalty", score == 0.0, f"score={score:.3f}"))
-    return findings
+        retry_queue = AutonomyQueue(tmp_path / "retry.json")
+        retry_item = _work("retry", "retry-boundary", max_retries=0, cost_budget_matches=20)
+        retry_queue.enqueue(retry_item)
+        picked = retry_queue.select_next(budget_matches=20)
+        if picked:
+            retry_queue.record_result(picked.item_id, success=False, blocker_reason="synthetic failure")
+        blocked = retry_queue._items["retry"].status == WorkItemStatus.BLOCKED.value
+        out.append(_result("autonomy-engine", "retry-exhaustion-blocks", blocked, retry_queue._items["retry"].status))
+
+        # Adversarial validation pressure: these are expected to be rejected by a hardened queue.
+        for name, item in (
+            ("unknown-authority-scope", _work("bad-scope", "bad scope", authority_scope="arbitrary-admin")),
+            ("expected-value-over-one", _work("bad-ev", "bad expected value", expected_value=1.5)),
+            ("negative-cost-budget", _work("bad-cost", "bad cost", cost_budget_matches=-1)),
+            ("negative-runtime-budget", _work("bad-runtime", "bad runtime", runtime_seconds_budget=-1.0)),
+        ):
+            validation_queue = AutonomyQueue(tmp_path / f"{name}.json")
+            try:
+                accepted = validation_queue.enqueue(item)
+            except (TypeError, ValueError):
+                accepted = False
+            out.append(_result("autonomy-engine", name, not accepted, "rejected" if not accepted else "accepted by queue"))
+
+        # Instantiation only: seeds queue/state locally, but never executes a tournament or network I/O.
+        engine = AutonomyEngine(tmp_path / "engine-state")
+        scopes = {x.authority_scope for x in engine.queue._items.values()}
+        allowed_scopes = {"none", "threat_intel_public", "canary_telemetry"}
+        out.append(_result("autonomy-engine", "seed-authority-scopes-bounded", scopes <= allowed_scopes, f"scopes={sorted(scopes)}"))
+    return out
 
 
 def run_v2(repo_root: Path | None = None, *, scope_cases: int = 4096, seed: int = 26002) -> AdversaryReport:
