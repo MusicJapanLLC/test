@@ -1,0 +1,113 @@
+name: Senju Meta-Consciousness
+
+on:
+  schedule:
+    - cron: "0 2,6,10,14,18,22 * * *"
+  workflow_run:
+    workflows: ["Autonomous Drive Engine"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      confirm_all:
+        description: "publish all hypotheses immediately (bootstrap)"
+        type: boolean
+        default: false
+      dry_run:
+        description: "dry-run (no writes, no PR)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  meta:
+    name: Observe → Hypothesize → Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore all evidence artifacts
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            senju/state/
+            senju/adversary/regression_scars.json
+            senju/adversary/degraded_profile.json
+          key: senju-adversary-damage-${{ github.ref_name }}
+          restore-keys: senju-adversary-damage-
+
+      - name: Install dependencies
+        working-directory: senju
+        run: pip install -e ".[dev]" --quiet 2>/dev/null || true
+
+      - name: Configure git
+        run: |
+          git config user.name "Senju Meta-Consciousness"
+          git config user.email "senju-meta@users.noreply.github.com"
+
+      - name: Run meta-consciousness loop
+        id: meta
+        run: |
+          CONFIRM_ALL=""
+          DRY_RUN=""
+
+          if [ "${{ inputs.confirm_all }}" = "true" ]; then
+            CONFIRM_ALL="--confirm-all"
+          fi
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN="--dry-run"
+          fi
+
+          python senju/scripts/meta_loop.py \
+            $CONFIRM_ALL \
+            $DRY_RUN \
+            --max-hypotheses 7 \
+            2>&1 | tee meta_output.json
+
+          echo "papers=$(find research/discoveries -name '*.md' 2>/dev/null | wc -l)" >> $GITHUB_OUTPUT
+
+      - name: Commit and push research findings
+        if: inputs.dry_run != 'true'
+        run: |
+          git add research/ RESEARCH_LOG.md 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No new discoveries this cycle."
+          else
+            STAMP=$(date -u +%Y%m%d-%H%M)
+            git commit -m "research: meta-consciousness discoveries ${STAMP}"
+            git push origin HEAD
+          fi
+
+      - name: Summary
+        run: |
+          echo "## Meta-Consciousness Cycle" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Total published discoveries**: ${{ steps.meta.outputs.papers }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f meta_output.json ]; then
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            grep '"meta_event"' meta_output.json | tail -10 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload meta output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: meta-output-${{ github.run_id }}
+          path: |
+            meta_output.json
+            research/
+          retention-days: 90
