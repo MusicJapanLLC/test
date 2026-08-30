@@ -29,6 +29,7 @@ jobs:
       GH_TOKEN: ${{ github.token }}
       BASE_BRANCH: claude/employee-onboarding-setup-udm86
       GITHUB_REPOSITORY: ${{ github.repository }}
+      PYTHONPATH: ${{ github.workspace }}/senju
 
     steps:
       - name: Checkout
@@ -42,11 +43,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Senju test dependencies
+      - name: Install test dependency with layout compatibility
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: "1"
           PIP_NO_INPUT: "1"
-        run: python -m pip install -e './senju[dev]'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f senju/pyproject.toml || -f senju/setup.py ]]; then
+            python -m pip install -e './senju[dev]'
+          else
+            python -m pip install pytest
+          fi
 
       - name: Restore latest validated Senju evolution summary
         shell: bash
