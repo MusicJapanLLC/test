@@ -6,7 +6,7 @@ import pytest
 from pathlib import Path
 from unittest.mock import MagicMock
 
-from senju.autonomy import AutonomyError, AutonomyLoop, AutonomyQueue, WorkItem
+from senju.autonomy.discovery import AutonomyError, AutonomyLoop, AutonomyQueue, WorkItem
 from senju.discovery import HTMLPassiveExtractor, parse_html_evidence, extract_security_headers
 from senju.external import ContactReceipt, ContactResult, ExternalContactPolicy
 
