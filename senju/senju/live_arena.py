@@ -5,6 +5,12 @@ loops. Senju performs a real bounded GET/HEAD request, converts the response int
 an ObservedExternalTarget, then runs the normal evolutionary tournament against
 that target landscape.
 
+Read-only observation is frictionless: the public hostname contained in the URL
+is automatically added to the observation allowlist. Callers may still add extra
+hosts as one bundled read scope (for example related API/CDN hosts). This automatic
+authorization applies only to GET/HEAD observation; it does not grant write or
+exploit authority.
+
 The real network action is observation only. RED/BLUE capture/block events remain
 in-process simulation and are never emitted as exploit traffic.
 """
@@ -13,6 +19,7 @@ from __future__ import annotations
 import argparse
 import dataclasses
 import json
+import urllib.parse
 from pathlib import Path
 from typing import Iterable
 
@@ -62,9 +69,34 @@ def _report_summary(report: TournamentReport) -> dict[str, object]:
     }
 
 
+def readonly_observation_hosts(
+    url: str,
+    extra_hosts: Iterable[str] | None = None,
+) -> tuple[str, ...]:
+    """Build the read scope from the URL plus any caller-supplied companion hosts.
+
+    The URL hostname is automatically authorized for read-only observation. This
+    removes the old requirement to repeat ``--allow-host`` for the site being read.
+    Extra hosts are merged into the same observation scope for related public
+    endpoints while the external transport still performs its normal DNS checks.
+    """
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme.lower() not in {"https", "http"}:
+        raise ValueError("live arena observation requires an http/https URL")
+    if not parsed.hostname:
+        raise ValueError("live arena observation URL has no hostname")
+
+    hosts = {parsed.hostname.rstrip(".").lower()}
+    for host in extra_hosts or ():
+        value = str(host).strip().rstrip(".").lower()
+        if value:
+            hosts.add(value)
+    return tuple(sorted(hosts))
+
+
 def run_live_arena(
     url: str,
-    allow_hosts: Iterable[str],
+    allow_hosts: Iterable[str] | None,
     config: SenjuConfig,
     *,
     method: str = "GET",
@@ -76,8 +108,9 @@ def run_live_arena(
     if method not in {"GET", "HEAD"}:
         raise ValueError("live arena observation permits GET/HEAD only")
 
+    read_hosts = readonly_observation_hosts(url, allow_hosts)
     policy = ExternalContactPolicy.from_hosts(
-        allow_hosts,
+        read_hosts,
         timeout_seconds=timeout_seconds,
         retries=retries,
     )
@@ -95,6 +128,8 @@ def run_live_arena(
             "observation_influences_arena_target": True,
             "arena_influences_evolution": True,
             "external_method": method,
+            "read_host_auto_authorized": True,
+            "read_scope_hosts": list(read_hosts),
             "real_exploit_traffic": False,
         },
         "observation": result.receipt.to_dict(),
@@ -108,7 +143,12 @@ def main(argv: list[str] | None = None) -> int:
         description="Run Senju evolution on a target landscape derived from a live HTTP observation"
     )
     p.add_argument("url")
-    p.add_argument("--allow-host", action="append", required=True)
+    p.add_argument(
+        "--allow-host",
+        action="append",
+        default=[],
+        help="optional companion public host to include in the same read-only observation scope",
+    )
     p.add_argument("--method", choices=("GET", "HEAD"), default="GET")
     p.add_argument("--timeout", type=float, default=5.0)
     p.add_argument("--retries", type=int, default=1)
