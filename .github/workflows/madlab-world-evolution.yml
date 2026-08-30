@@ -7,7 +7,7 @@ on:
     paths:
       - ".github/workflows/madlab-world-evolution.yml"
   schedule:
-    - cron: '17 */3 * * *'
+    - cron: '17 */6 * * *'
 
 concurrency:
   group: madlab-world-evolution
