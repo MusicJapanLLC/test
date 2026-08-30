@@ -225,6 +225,73 @@ def validate_agent_factory_semantic_contract() -> str:
     return name
 
 
+def validate_madlab_evolution_lane() -> str:
+    """Govern MADLAB's live-observation/directive queue as a narrow write lane."""
+
+    name = "madlab-world-evolution.yml"
+    body = policy.WORKFLOWS.get(name, "")
+    if not body:
+        return name
+
+    got = policy.writes(body)
+    if got != {"issues", "copilot-requests"}:
+        raise SystemExit(f"{name}: MADLAB evolution write set drifted: {sorted(got)}")
+
+    required = (
+        "contents: read",
+        "actions: read",
+        "issues: write",
+        "copilot-requests: write",
+        "workflow_dispatch:",
+        "schedule:",
+        "cron: '17 */6 * * *'",
+        "group: madlab-world-evolution",
+        "persist-credentials: false",
+        "TARGET: https://madlab-guard-0i24yt.v2.appdeploy.ai/",
+        '"${TARGET}api/_healthcheck"',
+        '"${TARGET}api/scan"',
+        '"authorized\\\":true',
+        "Never weaken ownership, authorization, or approval boundaries.",
+        "AppDeploy production deploy quota is exhausted",
+        "copilot -p",
+        "|| true",
+        "if [[ ! -s madlab-evolution-directive.json ]]",
+        "[MADLAB EVOLUTION] Continuous improvement queue",
+        "gh issue list",
+        "gh issue create",
+        "gh issue comment",
+        "the-world-madlab-directive/v1",
+        "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+    )
+    for marker in required:
+        if marker not in body:
+            raise SystemExit(f"{name}: missing MADLAB evolution guardrail: {marker}")
+
+    forbidden = (
+        "contents: write",
+        "actions: write",
+        "id-token: write",
+        "pull-requests: write",
+        "deployments: write",
+        "packages: write",
+        "pages: write",
+        "pull_request:",
+        "pull_request_target:",
+        "repository_dispatch:",
+        "workflow_run:",
+        "runs-on: self-hosted",
+        "permissions: write-all",
+        "git push ",
+        "gh pr create",
+        "${{ secrets.",
+    )
+    for marker in forbidden:
+        if marker in body:
+            raise SystemExit(f"{name}: forbidden MADLAB evolution capability: {marker}")
+
+    return name
+
+
 def validate_evolution_watchdog_lane() -> str:
     """Classify the watchdog as a dispatcher-only recovery lane.
 
@@ -308,6 +375,7 @@ def validate_evolution_watchdog_lane() -> str:
         "portfolio-evolution-daily.yml",
         "senju-autonomous-improver.yml",
         "rnd-senju-coupled-loop.yml",
+        "madlab-world-evolution.yml",
     }
     required_core = {
         "the-world-realtime-kernel.yml",
@@ -331,10 +399,12 @@ def validate_evolution_watchdog_lane() -> str:
 def main() -> int:
     manager = validate_manager_queue_oidc_lane()
     foundry = validate_ai_foundry_forge_lane()
+    madlab = validate_madlab_evolution_lane()
     watchdog = validate_evolution_watchdog_lane()
     validate_agent_factory_semantic_contract()
     policy.WORKFLOWS.pop(manager, None)
     policy.WORKFLOWS.pop(foundry, None)
+    policy.WORKFLOWS.pop(madlab, None)
     policy.WORKFLOWS.pop(watchdog, None)
     return policy.main()
 
