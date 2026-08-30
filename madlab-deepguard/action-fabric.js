@@ -85,9 +85,12 @@ export function buildRemediationPlan(scan,channel={},research={}){
     findings:rows,
     bridge_gap:gaps.slice(0,12),
     research_context:{
-      security_next_track:String(research?.security_reactor?.next_track||''),
-      security_next_mode:String(research?.security_reactor?.next_mode||''),
+      security_latest_track:String(research?.security_reactor?.latest_track||''),
+      security_latest_mode:String(research?.security_reactor?.latest_mode||''),
+      security_preferred_track:String(research?.security_reactor?.preferred_track||''),
+      security_recommended_next_mode:String(research?.security_reactor?.recommended_next_mode||''),
       senju_focus:String(research?.senju?.focus||''),
+      senju_research_id:String(research?.senju?.research_id||''),
       source_health:research?.source_health||{}
     },
     next_best_expansion:gaps[0]||null,
