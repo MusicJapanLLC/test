@@ -5,7 +5,6 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches:
-      - claude/employee-onboarding-setup-udm86
       - main
       - master
   schedule:
@@ -18,12 +17,21 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      checks: read
+      statuses: read
+      issues: read
     steps:
       - name: Merge ready PRs
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const repoInfo = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            const defaultBranch = repoInfo.data.default_branch;
+
             const pulls = await github.rest.pulls.list({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -36,7 +44,14 @@ jobs:
 
             for (const pr of pulls.data) {
               if (pr.draft) {
-                console.log(`⏭️ Draft PR #${pr.number} — skip`);
+                console.log(`Draft PR #${pr.number} — skip`);
+                skipped++;
+                continue;
+              }
+
+              if (pr.base.ref !== defaultBranch) {
+                console.log(`PR #${pr.number} targets '${pr.base.ref}', not default branch '${defaultBranch}' — skip`);
+                skipped++;
                 continue;
               }
 
@@ -46,29 +61,129 @@ jobs:
                 pull_number: pr.number
               });
 
+              const headSha = detail.data.head.sha;
               const mergeable = detail.data.mergeable;
               const state = detail.data.mergeable_state;
 
-              if (mergeable === true && state === 'clean') {
-                try {
-                  await github.rest.pulls.merge({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    pull_number: pr.number,
-                    merge_method: 'squash',
-                    commit_title: `${pr.title} (#${pr.number})`
-                  });
-                  console.log(`✅ Merged PR #${pr.number}: ${pr.title}`);
-                  merged++;
-                  await new Promise(r => setTimeout(r, 2000));
-                } catch (e) {
-                  console.log(`❌ Failed PR #${pr.number}: ${e.message}`);
-                  skipped++;
+              if (mergeable !== true || state !== 'clean') {
+                console.log(`PR #${pr.number} not clean (mergeable=${mergeable}, state=${state}) — skip`);
+                skipped++;
+                continue;
+              }
+
+              // Check OpenHands Audit Verdicts with pagination handling
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                per_page: 100
+              });
+
+              const passTarget = `AI_MERGE_AUDIT: PASS ${headSha}`;
+              const blockTarget = `AI_MERGE_AUDIT: BLOCK ${headSha}`;
+
+              let latestPassTime = 0;
+              let latestBlockTime = 0;
+
+              for (const comment of comments) {
+                const isBot = comment.user && (
+                  comment.user.login === 'openhands-ai[bot]' ||
+                  comment.user.login === 'openhands[bot]' ||
+                  comment.user.login.includes('openhands')
+                );
+                if (!isBot) continue;
+
+                const createdAt = new Date(comment.created_at).getTime();
+
+                if (comment.body && comment.body.includes(passTarget)) {
+                  latestPassTime = Math.max(latestPassTime, createdAt);
                 }
-              } else {
-                console.log(`⏭️ PR #${pr.number} not ready (mergeable=${mergeable}, state=${state})`);
+
+                if (comment.body && comment.body.includes(blockTarget)) {
+                  latestBlockTime = Math.max(latestBlockTime, createdAt);
+                }
+              }
+
+              const hasPass = latestPassTime > 0;
+              const hasBlockAfterPass = latestBlockTime >= latestPassTime && latestBlockTime > 0;
+
+              if (!hasPass || hasBlockAfterPass) {
+                console.log(`PR #${pr.number} missing valid OpenHands PASS audit for SHA ${headSha} (hasPass=${hasPass}, hasBlockAfterPass=${hasBlockAfterPass}) — skip`);
+                skipped++;
+                continue;
+              }
+
+              // Check CI / Status Checks for Head SHA
+              const checkRuns = await github.paginate(github.rest.checks.listForRef, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: headSha,
+                per_page: 100
+              });
+
+              const validConclusions = ['success', 'neutral', 'skipped'];
+              const failedCheck = checkRuns.some(cr => {
+                if (cr.name === 'auto-merge' || cr.name === 'Auto Merge PRs' || cr.name === context.workflow) {
+                  return false;
+                }
+                if (cr.status !== 'completed') return true;
+                if (!validConclusions.includes(cr.conclusion)) return true;
+                return false;
+              });
+
+              const combinedStatus = await github.rest.repos.getCombinedStatusForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: headSha
+              });
+
+              const failedStatus = combinedStatus.data.statuses.some(st => st.state !== 'success');
+
+              if (failedCheck || failedStatus) {
+                console.log(`PR #${pr.number} has incomplete or failing status/check-runs for SHA ${headSha} — skip`);
+                skipped++;
+                continue;
+              }
+
+              // Check Active Reviews
+              const reviews = await github.paginate(github.rest.pulls.listReviews, {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                per_page: 100
+              });
+
+              const latestReviews = new Map();
+              for (const review of reviews) {
+                if (review.user && review.state !== 'DISMISSED') {
+                  latestReviews.set(review.user.login, review.state);
+                }
+              }
+
+              const hasChangesRequested = Array.from(latestReviews.values()).includes('CHANGES_REQUESTED');
+              if (hasChangesRequested) {
+                console.log(`PR #${pr.number} has active CHANGES_REQUESTED review — skip`);
+                skipped++;
+                continue;
+              }
+
+              // Attempt Merge with Head SHA Protection
+              try {
+                await github.rest.pulls.merge({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash',
+                  sha: headSha,
+                  commit_title: `${pr.title} (#${pr.number})`
+                });
+                console.log(`Merged PR #${pr.number}: ${pr.title}`);
+                merged++;
+                await new Promise(r => setTimeout(r, 2000));
+              } catch (e) {
+                console.log(`Failed PR #${pr.number}: ${e.message}`);
                 skipped++;
               }
             }
 
-            console.log(`\n📊 Done: ${merged} merged, ${skipped} skipped`);
+            console.log(`\nDone: ${merged} merged, ${skipped} skipped`);
