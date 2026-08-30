@@ -76,6 +76,13 @@ def test_sanctuary_reduces_exploration_pressure():
     assert_bounded(result)
 
 
+def test_boss_attention_also_stabilizes_even_when_acting():
+    result, audit = apply_intent(BASE, covenant("ACT", boss=True), live_ok())
+    assert audit["intent_mode"] == "STABILIZE"
+    assert result["mutation_rate"] < BASE["mutation_rate"]
+    assert_bounded(result)
+
+
 def test_pair_balances_red_blue_budgets():
     base = dict(BASE, red_budget=18, blue_budget=8)
     result, audit = apply_intent(base, covenant("PAIR"), live_ok())
