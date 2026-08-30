@@ -71,6 +71,9 @@ def test_autonomous_registry_rejects_write_method() -> None:
 
 
 class _FakeClient:
+    acknowledged = True
+    status = 200
+
     def __init__(self, scope) -> None:  # noqa: ANN001
         self.scope = scope
 
@@ -86,8 +89,8 @@ class _FakeClient:
             final_host=host,
             contacted_hosts=(host,),
             resolved_ips=("203.0.113.10",),
-            status=200,
-            provider_acknowledged=True,
+            status=self.status,
+            provider_acknowledged=self.acknowledged,
             response_bytes=2,
             response_sha256="a" * 64,
             content_type="application/json",
@@ -98,6 +101,11 @@ class _FakeClient:
             redirect_count=0,
         )
         return ContactResult(receipt=receipt, body=b"{}")
+
+
+class _FakeNonAckClient(_FakeClient):
+    acknowledged = False
+    status = 404
 
 
 def test_cycle_is_self_initiated_and_emits_red_handoff_without_live_network() -> None:
@@ -114,3 +122,14 @@ def test_cycle_is_self_initiated_and_emits_red_handoff_without_live_network() ->
     assert report["attempted"] == 2
     assert report["provider_acknowledged"] == 2
     assert len(report["red_handoff"]["external_observations"]) == 2
+
+
+def test_non_acknowledged_http_response_is_failure_memory() -> None:
+    report = run_cycle(max_missions=1, seed=3, client_factory=_FakeNonAckClient)
+    assert report["provider_acknowledged"] == 0
+    mission_id = report["planned"][0]["mission"]["mission_id"]
+    state = report["memory"]["missions"][mission_id]
+    assert state["attempts"] == 1
+    assert state["successes"] == 0
+    assert state["failures"] == 1
+    assert state["consecutive_failures"] == 1
