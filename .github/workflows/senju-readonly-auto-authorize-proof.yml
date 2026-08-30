@@ -1,0 +1,77 @@
+name: Senju Readonly Auto-Authorize Proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "fix/senju-auto-authorize-readonly-20260831"
+    paths:
+      - "senju/senju/live_arena.py"
+      - "senju/tests/test_readonly_auto_authorize.py"
+      - ".github/workflows/senju-readonly-auto-authorize-proof.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Run Senju tests
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          python -m pytest tests -q
+
+      - name: Read a public site without allow-host input
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m senju.live_arena \
+            https://api.github.com/zen \
+            --method GET \
+            --timeout 8 \
+            --retries 2 \
+            --population 8 \
+            --generations 1 \
+            --matches 8 \
+            --seed 42 \
+            --out /tmp/senju-read-auto/evidence.json
+
+      - name: Verify automatic read authorization
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('/tmp/senju-read-auto/evidence.json').read_text())
+          c=d['coupling']
+          assert c['external_method'] == 'GET'
+          assert c['read_host_auto_authorized'] is True
+          assert c['read_scope_hosts'] == ['api.github.com']
+          assert c['real_exploit_traffic'] is False
+          assert d['observation']['host'] == 'api.github.com'
+          assert d['observation']['provider_acknowledged'] is True
+          assert d['observation']['status'] == 200
+          print('SENJU_READONLY_AUTO_AUTHORIZE_VERIFIED')
+          PY
+
+      - name: Upload proof
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-readonly-auto-authorize-proof
+          retention-days: 30
+          if-no-files-found: error
+          path: /tmp/senju-read-auto/evidence.json
