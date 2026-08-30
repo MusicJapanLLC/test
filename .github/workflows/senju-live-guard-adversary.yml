@@ -5,11 +5,19 @@ on:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - "senju/**"
+      - "scripts/security/artifact_guard.py"
+      - "automation/security/workflow_policy.py"
+      - "automation/security/workflow_policy_entrypoint.py"
+      - ".github/workflows/security-guard.yml"
       - ".github/workflows/senju-live-guard-adversary.yml"
   push:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - "senju/**"
+      - "scripts/security/artifact_guard.py"
+      - "automation/security/workflow_policy.py"
+      - "automation/security/workflow_policy_entrypoint.py"
+      - ".github/workflows/security-guard.yml"
       - ".github/workflows/senju-live-guard-adversary.yml"
   schedule:
     - cron: "7 * * * *"
@@ -24,6 +32,7 @@ concurrency:
 
 jobs:
   live-adversary:
+    name: Active codepaths / 7 live guard surfaces
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -37,7 +46,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run live adversary loop against active codepaths
+      - name: Run live adversary against active implementations and policy files
         env:
           PYTHONPATH: senju
         run: >-
@@ -47,6 +56,24 @@ jobs:
           --seed 31001
           --json security-reports/senju-live-guard-adversary.json
           --fail-on-crash
+          --fail-on-weakness
+
+      - name: Print per-surface evidence
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("security-reports/senju-live-guard-adversary.json")
+          if not path.exists():
+              raise SystemExit("live adversary report missing")
+          report = json.loads(path.read_text(encoding="utf-8"))
+          print("execution_mode:", report.get("execution_mode"))
+          print("summary:", report.get("summary"))
+          if report.get("rounds"):
+              for item in report["rounds"][-1].get("live_surfaces", []):
+                  print(f"{item['layer']}: passed={item['passed']} detail={item['detail']}")
+          PY
 
       - name: Upload evidence
         if: always()
