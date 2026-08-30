@@ -75,6 +75,34 @@ def test_empty_ref_still_rejected_in_experimental_mode():
         g.check("")
 
 
+def test_malformed_simulated_refs_are_rejected():
+    g = ScopeGuard(default_lab_policy())
+    refs = (
+        "sim://",
+        " sim://web-1",
+        "sim://web-1 ",
+        "sim://web-1\n",
+        "sim://web-1\x00tail",
+    )
+    for ref in refs:
+        with pytest.raises(ScopeViolation):
+            g.check(ref)
+
+
+def test_malformed_labnet_refs_are_rejected_even_when_private_network_is_enabled():
+    g = ScopeGuard(ScopePolicy(allow_private_network=True))
+    refs = (
+        "labnet:",
+        " labnet:dvwa",
+        "labnet:dvwa ",
+        "labnet:dvwa\t",
+        "labnet:dvwa\x00tail",
+    )
+    for ref in refs:
+        with pytest.raises(ScopeViolation):
+            g.check(ref)
+
+
 def test_no_unrestricted_noop_guard_is_exported():
     assert not hasattr(safety, "UnrestrictedArenaGuard")
     assert not hasattr(safety, "unrestricted_arena_guard")
