@@ -11,15 +11,22 @@ def _receipt(digest: str = "a" * 64) -> ContactReceipt:
         schema="senju-external-contact/v2",
         contacted_at_utc="2026-08-30T12:00:00+00:00",
         method="GET",
-        url="https://example.com/",
+        requested_url="https://example.com/",
+        final_url="https://example.com/",
         host="example.com",
+        final_host="example.com",
+        contacted_hosts=("example.com",),
         resolved_ips=("93.184.216.34",),
         status=200,
         provider_acknowledged=True,
         response_bytes=512,
         response_sha256=digest,
         content_type="text/html",
+        etag=None,
+        last_modified=None,
+        retry_after=None,
         attempt_count=1,
+        redirect_count=0,
     )
 
 
