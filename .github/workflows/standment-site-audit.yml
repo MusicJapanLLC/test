@@ -1,0 +1,80 @@
+name: Standment Security Scan
+
+on:
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "scripts/security/site_audit.py"
+      - "security/targets.json"
+      - "tests/security/**"
+      - ".github/workflows/standment-site-audit.yml"
+  schedule:
+    - cron: "41 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: standment-site-audit-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit-tests:
+    name: Scanner unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Run scanner tests
+        run: python -m unittest discover -s tests/security -p 'test_*.py' -v
+
+  passive-audit:
+    name: Authorized production passive audit
+    needs: unit-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.12"
+      - name: Run allowlisted Standment Security Scan
+        id: audit
+        continue-on-error: true
+        run: >-
+          python scripts/security/site_audit.py
+          --config security/targets.json
+          --all
+          --output-dir security-reports/site-audit
+      - name: Publish report to job summary
+        if: always()
+        run: |
+          REPORT="security-reports/site-audit/baton-production.md"
+          if [ -f "$REPORT" ]; then cat "$REPORT" >> "$GITHUB_STEP_SUMMARY"; else echo "Report was not generated." >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Upload audit evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: standment-security-scan-${{ github.sha }}
+          path: security-reports/site-audit/
+          if-no-files-found: error
+          retention-days: 90
+      - name: Record existing production debt during pull requests
+        if: github.event_name == 'pull_request' && steps.audit.outcome != 'success'
+        run: echo "::warning::Authorized target is below policy; preserve the report as remediation evidence."
+      - name: Enforce production score gate
+        if: github.event_name != 'pull_request' && steps.audit.outcome != 'success'
+        run: exit 1

@@ -1,0 +1,108 @@
+name: Outside World Scout
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '13,43 * * * *'
+
+concurrency:
+  group: outside-world-scout
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  scout:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore previous scout memory
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/outside-world-prev
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Outside World Scout" --status success --limit 5 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name outside-world-scout --dir /tmp/outside-world-prev || true
+          fi
+          FOUND="$(find /tmp/outside-world-prev -name outside-world-state.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" outside-world-previous.json; fi
+          echo "previous_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Let one child look outside
+        run: |
+          set -euo pipefail
+          python outside-world/scout.py \
+            --config outside-world/sources.json \
+            --previous outside-world-previous.json \
+            --seed "${{ github.run_id }}" \
+            --json outside-world-state.json \
+            --report outside-world-report.md
+          python outside-world/rnd_seed.py \
+            --state outside-world-state.json \
+            --out outside-world-rnd-seed.json
+          cat outside-world-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate exploration boundary
+        run: python -m unittest outside-world/test_scout.py -v
+
+      - name: Preserve memory and R&D inspiration
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: outside-world-scout
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            outside-world-state.json
+            outside-world-report.md
+            outside-world-rnd-seed.json
+
+      - name: Send technical discoveries to R&D
+        if: success() && env.RND_SLACK_WEBHOOK_URL != ''
+        run: |
+          python - <<'PY'
+          import json, os, urllib.request
+          state=json.load(open('outside-world-state.json', encoding='utf-8'))
+          seed=json.load(open('outside-world-rnd-seed.json', encoding='utf-8'))
+          pick=state.get('picked') or {}
+          if not pick or not seed.get('eligible'):
+              print('No discovery to report.')
+              raise SystemExit(0)
+          category=pick.get('category')
+          if category not in {'engineering','research','builders','weird-tech'}:
+              print('Non-technical discovery stays in Child Guild memory.')
+              raise SystemExit(0)
+          child=state['child']
+          directive=seed.get('candidate_directive') or {}
+          text=(
+              f"*OUTSIDE WORLD / {child['id']} {child['name']}*\n"
+              f"こんなの見たんだよ！ {pick.get('title')}\n"
+              f"{pick.get('url')}\n"
+              f"category={category} / R&D inspiration={directive.get('focus')}\n"
+              "外部URLはSenjuのtarget/scopeへ渡さない。抽象パターンだけR&D候補にする。"
+          )
+          req=urllib.request.Request(
+              os.environ['RND_SLACK_WEBHOOK_URL'],
+              data=json.dumps({'text':text}, ensure_ascii=False).encode('utf-8'),
+              headers={'Content-Type':'application/json'},
+          )
+          with urllib.request.urlopen(req, timeout=10) as res:
+              print('slack status', res.status)
+          PY

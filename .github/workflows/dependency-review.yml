@@ -13,7 +13,9 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Detect dependency graph
         id: dependency-graph
@@ -23,10 +25,10 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          status="$(curl -sS -o /tmp/sbom.json -w '%{http_code}' \
+          status="$(curl --fail-with-body --silent --show-error -o /tmp/sbom.json -w '%{http_code}' \
             -H "Authorization: Bearer $GH_TOKEN" \
             -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/$GH_REPO/dependency-graph/sbom")"
+            "https://api.github.com/repos/$GH_REPO/dependency-graph/sbom" || true)"
           if [[ "$status" == "200" ]]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
