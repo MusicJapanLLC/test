@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import urllib.error
 import urllib.request
 
 import pytest
@@ -53,7 +54,7 @@ def test_external_contact_blocks_private_or_metadata_resolution() -> None:
         client.contact("https://example.com/")
 
 
-def test_external_contact_https_get_emits_provider_receipt() -> None:
+def test_external_contact_https_get_emits_v2_receipt_and_body() -> None:
     seen: dict[str, object] = {}
 
     def opener(req: urllib.request.Request, *, timeout: float) -> FakeResponse:
@@ -63,49 +64,78 @@ def test_external_contact_https_get_emits_provider_receipt() -> None:
         return FakeResponse(status=200, body=b"provider-ok")
 
     policy = ExternalContactPolicy.from_hosts(["example.com"], timeout_seconds=2.5)
-    receipt = ExternalContactClient(policy, resolver=public_resolver, opener=opener).contact(
+    result = ExternalContactClient(policy, resolver=public_resolver, opener=opener).contact_with_body(
         "https://example.com/contact",
     )
 
     assert seen == {"method": "GET", "url": "https://example.com/contact", "timeout": 2.5}
-    assert receipt.schema == "senju-external-contact/v1"
-    assert receipt.host == "example.com"
-    assert receipt.resolved_ips == (PUBLIC_IP,)
-    assert receipt.status == 200
-    assert receipt.provider_acknowledged is True
-    assert receipt.response_bytes == len(b"provider-ok")
-    assert len(receipt.response_sha256) == 64
+    assert result.receipt.schema == "senju-external-contact/v2"
+    assert result.receipt.host == "example.com"
+    assert result.receipt.resolved_ips == (PUBLIC_IP,)
+    assert result.receipt.status == 200
+    assert result.receipt.provider_acknowledged is True
+    assert result.receipt.response_bytes == len(b"provider-ok")
+    assert result.receipt.attempt_count == 1
+    assert result.body == b"provider-ok"
+    assert len(result.receipt.response_sha256) == 64
 
 
-def test_external_contact_post_is_bounded_and_json_receipt_is_writable(tmp_path) -> None:
-    captured: dict[str, object] = {}
+def test_external_contact_write_methods_are_bounded(tmp_path) -> None:
+    captured: list[tuple[str, bytes | None]] = []
 
     def opener(req: urllib.request.Request, *, timeout: float) -> FakeResponse:
-        captured["method"] = req.get_method()
-        captured["body"] = req.data
-        captured["content_type"] = req.headers.get("Content-type")
+        captured.append((req.get_method(), req.data))
         return FakeResponse(status=202, body=b"accepted")
 
     policy = ExternalContactPolicy.from_hosts(["example.com"])
     payload = b'{"event":"senju-contact"}'
-    receipt = ExternalContactClient(policy, resolver=public_resolver, opener=opener).contact(
-        "https://example.com/hook",
-        method="POST",
-        body=payload,
-        headers={"Content-Type": "application/json"},
-    )
+    client = ExternalContactClient(policy, resolver=public_resolver, opener=opener)
 
-    assert captured["method"] == "POST"
-    assert captured["body"] == payload
-    assert captured["content_type"] == "application/json"
-    assert receipt.status == 202
-    assert receipt.provider_acknowledged is True
+    for method in ("POST", "PUT", "PATCH"):
+        result = client.contact_with_body(
+            "https://example.com/hook",
+            method=method,
+            body=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        assert result.receipt.status == 202
+        assert result.receipt.provider_acknowledged is True
+        assert result.body == b"accepted"
 
-    out = tmp_path / "receipt.json"
-    receipt.write(out)
-    data = json.loads(out.read_text(encoding="utf-8"))
-    assert data["schema"] == "senju-external-contact/v1"
-    assert data["provider_acknowledged"] is True
+    assert [method for method, _ in captured] == ["POST", "PUT", "PATCH"]
+    assert all(body == payload for _, body in captured)
+
+    receipt_out = tmp_path / "receipt.json"
+    body_out = tmp_path / "response.bin"
+    result.receipt.write(receipt_out)
+    result.write_body(body_out)
+    data = json.loads(receipt_out.read_text(encoding="utf-8"))
+    assert data["schema"] == "senju-external-contact/v2"
+    assert body_out.read_bytes() == b"accepted"
+
+
+def test_external_contact_retries_transient_transport_failure() -> None:
+    attempts = {"count": 0}
+    sleeps: list[float] = []
+
+    def flaky(req: urllib.request.Request, *, timeout: float) -> FakeResponse:
+        attempts["count"] += 1
+        if attempts["count"] == 1:
+            raise urllib.error.URLError("temporary")
+        return FakeResponse(status=200, body=b"recovered")
+
+    policy = ExternalContactPolicy.from_hosts(["example.com"], retries=2)
+    result = ExternalContactClient(
+        policy,
+        resolver=public_resolver,
+        opener=flaky,
+        sleeper=sleeps.append,
+    ).contact_with_body("https://example.com/")
+
+    assert attempts["count"] == 2
+    assert result.receipt.attempt_count == 2
+    assert result.body == b"recovered"
+    assert sleeps == [policy.retry_backoff_seconds]
 
 
 def test_external_contact_rejects_plain_http_by_default() -> None:
@@ -115,8 +145,15 @@ def test_external_contact_rejects_plain_http_by_default() -> None:
         client.contact("http://example.com/")
 
 
-def test_external_contact_rejects_unbounded_method() -> None:
+def test_external_contact_rejects_delete_method() -> None:
     policy = ExternalContactPolicy.from_hosts(["example.com"])
     client = ExternalContactClient(policy, resolver=public_resolver, opener=lambda *a, **k: FakeResponse())
     with pytest.raises(ExternalContactError, match="method is not allowed"):
         client.contact("https://example.com/", method="DELETE")
+
+
+def test_external_contact_blocks_caller_controlled_host_header() -> None:
+    policy = ExternalContactPolicy.from_hosts(["example.com"])
+    client = ExternalContactClient(policy, resolver=public_resolver, opener=lambda *a, **k: FakeResponse())
+    with pytest.raises(ExternalContactError, match="caller-controlled header"):
+        client.contact("https://example.com/", headers={"Host": "169.254.169.254"})
