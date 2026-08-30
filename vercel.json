@@ -5,12 +5,13 @@
     { "src": "api/*.js", "use": "@vercel/node" },
     { "src": "public/**", "use": "@vercel/static" }
   ],
-  "routes": [
-    { "src": "/api/(.*)", "dest": "/api/$1" },
-    { "src": "/agent", "dest": "/public/agent.html" },
-    { "src": "/agent.js", "dest": "/public/agent.js" },
-    { "src": "/app.js", "dest": "/public/app.js" },
-    { "src": "/styles.css", "dest": "/public/styles.css" },
-    { "src": "/", "dest": "/public/index.html" }
+  "rewrites": [
+    { "source": "/runtime/chat", "destination": "https://ai-foundry-ai-development-core-yt8e6o.v2.appdeploy.ai/api/chat" },
+    { "source": "/runtime/title", "destination": "https://ai-foundry-ai-development-core-yt8e6o.v2.appdeploy.ai/api/title" },
+    { "source": "/agent", "destination": "/public/agent.html" },
+    { "source": "/agent.js", "destination": "/public/agent.js" },
+    { "source": "/app.js", "destination": "/public/app.js" },
+    { "source": "/styles.css", "destination": "/public/styles.css" },
+    { "source": "/", "destination": "/public/index.html" }
   ]
 }
