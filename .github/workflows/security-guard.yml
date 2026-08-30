@@ -75,14 +75,17 @@ jobs:
             exit 1
           fi
 
+      # Run the focused real-surface regression before repository-wide policy checks.
+      # Later gates still fail closed; this ordering only ensures this PR's focused
+      # evidence is produced even when unrelated pre-existing workflow drift exists.
+      - name: Run real-surface adversary regression
+        run: PYTHONPATH=senju python -m senju.real_surface_adversary --json reports/security/real-surface-adversary.json
+
       - name: Enforce fail-closed workflow policy
         run: python automation/security/workflow_policy_entrypoint.py
 
       - name: Enforce external-evidence reality gate
         run: python automation/security/reality_gate.py
-
-      - name: Run real-surface adversary regression
-        run: PYTHONPATH=senju python -m senju.real_surface_adversary --json reports/security/real-surface-adversary.json
 
       - name: Block remote shell execution patterns
         shell: bash
