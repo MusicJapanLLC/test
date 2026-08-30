@@ -26,10 +26,13 @@ def genome_to_dict(genome: object) -> dict[str, Any]:
 
 def genome_from_dict(data: dict[str, Any]) -> RedGenome | BlueGenome:
     kind = data.get("kind")
-    body = {k: v for k, v in data.items() if k != "kind"}
     if kind == "red":
+        fields = {f.name for f in dataclasses.fields(RedGenome)}
+        body = {k: v for k, v in data.items() if k in fields}
         return RedGenome(**body)
     if kind == "blue":
+        fields = {f.name for f in dataclasses.fields(BlueGenome)}
+        body = {k: v for k, v in data.items() if k in fields}
         return BlueGenome(**body)
     raise ValueError(f"invalid genome kind: {kind!r}")
 
