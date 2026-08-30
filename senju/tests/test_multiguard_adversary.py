@@ -263,13 +263,13 @@ def test_multiguard_paths_are_the_real_repository_guard_files() -> None:
 def test_multiguard_runtime_targets_are_real_package_classes() -> None:
     assert EngagementManifest.__module__ == "senju.authorized_assessment"
     assert ExternalContactClient.__module__ == "senju.external"
-    assert AutonomyEngine.__module__ == "senju.autonomy"
+    assert AutonomyEngine.__module__ == "senju.autonomy.engine"
 
     repo_root = Path(__file__).resolve().parents[2]
     expected_sources = {
         EngagementManifest: repo_root / "senju" / "senju" / "authorized_assessment.py",
         ExternalContactClient: repo_root / "senju" / "senju" / "external.py",
-        AutonomyEngine: repo_root / "senju" / "senju" / "autonomy.py",
+        AutonomyEngine: repo_root / "senju" / "senju" / "autonomy" / "engine.py",
     }
     for cls, canonical in expected_sources.items():
         assert Path(inspect.getsourcefile(cls) or "").resolve() == canonical.resolve()
