@@ -1,0 +1,32 @@
+name: Autonomous Codegen Trio
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Task ID (automation/codegen/tasks/<task_id>.json)"
+        required: true
+        default: "example"
+      max_iterations:
+        description: "Maximum generation attempts per agent"
+        required: false
+        default: "10"
+  repository_dispatch:
+    types: [run-codegen-trio]
+
+permissions:
+  contents: write
+
+jobs:
+  trio:
+    strategy:
+      fail-fast: false
+      max-parallel: 3
+      matrix:
+        agent_id: [codegen-1, codegen-2, codegen-3]
+    uses: ./.github/workflows/_autonomous-codegen-agent.yml
+    with:
+      agent_id: ${{ matrix.agent_id }}
+      task_id: ${{ github.event.inputs.task_id || github.event.client_payload.task_id || 'example' }}
+      max_iterations: ${{ github.event.inputs.max_iterations || github.event.client_payload.max_iterations || '10' }}
+    secrets: inherit
