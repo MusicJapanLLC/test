@@ -7,17 +7,18 @@ Senju has two standing AI development resources:
 
 ## Standing rule
 
-1. Senju may ask these AIs any question that could help it understand, design, test, improve, debug, document, observe, or operate its own system and owner-controlled development resources.
-2. Questions are not limited to the current simulator knobs. They may cover architecture, algorithms, agent behavior, research methods, testing, reliability, observability, UX, developer tooling, performance, maintainability, defensive security, product design, and adjacent engineering topics.
-3. Advice is input, not proof. A recommendation is not treated as implemented, tested, deployed, or successful until there is execution evidence.
-4. Senju is permitted to turn advisor output into code changes. The preferred path is:
+1. **Senju may ask these AIs any question.** There is no topic/category allowlist in the advisor rule. A question does not have to be limited to the current simulator, software engineering, or security.
+2. Questions may cover architecture, algorithms, agent behavior, research, testing, reliability, observability, UX, developer tooling, performance, maintainability, product design, business ideas, philosophy, outside knowledge, or any other subject Senju judges useful or interesting.
+3. **Advisor answers may be implemented.** When an answer contains a concrete improvement for Senju or an owner-controlled development resource, Senju may promote it into the existing implementation lane without waiting for a new question that repeats the same instruction.
+4. Advice is input, not proof. A recommendation is not treated as implemented, tested, deployed, or successful until there is execution evidence.
+5. Preferred implementation path:
 
-   `Personal AI Core advice -> AI FOUNDRY synthesis -> Repo Engineer patch -> sandbox tests/repair -> pull request -> review/merge`
+   `question -> Personal AI Core -> AI FOUNDRY synthesis -> Repo Engineer patch -> sandbox tests/repair -> pull request -> review/merge`
 
-5. Automatic implementation is limited to Senju's own repository/project code and owner-controlled development resources. It must not silently widen third-party target scope, introduce credentials, weaken authorization boundaries, or claim external effects without verification.
-6. Keep automatic changes small and reviewable. One focused implementation candidate is preferred over broad rewrites.
-7. If an advisor is unavailable, the daily Senju run continues without fabricating an answer. If AI FOUNDRY synthesis is unavailable, automatic code promotion is skipped for that run.
-8. Advisor failures, recommendations, implementation decisions, tests, repair results, and pull-request URLs are evidence and should be preserved in the daily evolution artifacts and owner report.
+6. The advisor answer itself is not executed verbatim as shell/code and does not create new credentials, network authority, target ownership, or deployment authority. The implementation executor uses whatever authority its existing lane already has.
+7. Keep automatic changes focused and evidence-backed. Inspect current repository state and active PR overlap before editing, then test the resulting change and preserve the run/PR evidence.
+8. If one advisor is unavailable, preserve the failure as evidence and continue where a useful answer is still available. Do not fabricate an answer or success state.
+9. Advisor failures, recommendations, implementation decisions, tests, repair results, and pull-request URLs are evidence and should be preserved in the evolution artifacts and owner report.
 
 ## Role split
 
@@ -25,13 +26,13 @@ Senju has two standing AI development resources:
 
 Primary role: broad senior advisor and second opinion.
 
-Use it to challenge assumptions, propose improvements, identify weak spots, suggest experiments, and produce implementation-oriented recommendations. Senju should reuse it proactively rather than waiting for a human to remember that it exists.
+Use it actively. Ask whatever Senju wants to know, challenge assumptions, explore ideas, propose improvements, identify weak spots, suggest experiments, and produce implementation-oriented recommendations when appropriate.
 
 ### AI FOUNDRY Forge V2
 
-Primary role: implementation gate and engineering executor.
+Primary role: implementation-oriented engineering peer and synthesis layer.
 
-Use it to synthesize the current Senju evaluation with advisor feedback, decide whether a change is concrete enough to implement, generate a focused repository patch, run bounded tests, repair failures, and open a pull request when verification succeeds.
+Use the user-specified public FOUNDRY deployment at `/api/foundry`. It receives the current question, Senju context, and Personal AI Core answer, then decides whether there is a focused implementation candidate. When there is, the existing Repo Engineer and repair/test lane performs the code change and produces a reviewable PR.
 
 ## Evidence standard
 
@@ -39,8 +40,8 @@ The following labels are distinct:
 
 - **ADVISED** — an AI recommended it.
 - **PLANNED** — Senju selected it as an implementation candidate.
-- **PATCHED** — code was actually changed in the ephemeral worktree.
-- **VERIFIED** — allowed tests completed successfully.
+- **PATCHED** — code was actually changed in the worktree.
+- **VERIFIED** — relevant tests completed successfully.
 - **PR OPENED** — a reviewable branch and pull request were created.
 - **MERGED/DEPLOYED** — only after the corresponding GitHub/deployment evidence exists.
 
