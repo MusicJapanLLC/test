@@ -2,7 +2,7 @@
 
 This patch is intentionally isolated from the existing AI FOUNDRY chat/build/runtime implementation.
 
-It adds one sidecar endpoint: `POST /api/develop`.
+It adds one sidecar endpoint: `POST /api/develop.js`.
 
 ## What changes
 
@@ -22,7 +22,7 @@ No existing `api/foundry.js`, `public/app.js`, or UI file is changed by this pat
 
 ## Runtime contract
 
-`POST /api/develop`
+`POST /api/develop.js`
 
 ```json
 {
@@ -58,7 +58,9 @@ Response includes:
 
 ### Phase 1 — prove the hand
 
-Deploy this branch as Preview and call `/api/develop` directly with a tiny build-and-test task. Success means there is evidence of at least one file write and one real command execution.
+Deploy this branch as Preview and call `GET /api/develop-smoke.js` first. It must prove a real Sandbox can start, write/read a file, and run Node. Then call `POST /api/develop.js` with a tiny build-and-test task. Success means there is evidence of at least one file write and one real command execution.
+
+Note: this repository currently uses legacy `builds` routing, so these sidecar functions are exposed with the `.js` suffix on the verified Preview. A later integration may add an explicit rewrite if a suffix-free route is desired.
 
 ### Phase 2 — connect the existing UI
 
