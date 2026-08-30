@@ -28,6 +28,8 @@ jobs:
     name: Determinism + idempotency + dry-run
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      PYTHONPATH: ${{ github.workspace }}/senju
 
     steps:
       - name: Checkout
@@ -40,11 +42,18 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Senju test dependencies
+      - name: Install test dependency with layout compatibility
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: "1"
           PIP_NO_INPUT: "1"
-        run: python -m pip install -e './senju[dev]'
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f senju/pyproject.toml || -f senju/setup.py ]]; then
+            python -m pip install -e './senju[dev]'
+          else
+            python -m pip install pytest
+          fi
 
       - name: Run planner regression suite
         working-directory: senju
