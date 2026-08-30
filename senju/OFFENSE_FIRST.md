@@ -42,14 +42,20 @@ Red は「既知の弱点をもう一度当てる」より、未攻略・高難�
 
 Red は campaign の一部として Senju transport / Federation executor を直接呼び出し、観測・検証・実行・再試行を同じ研究ループの中で連続して進めてよい。
 
-**認可済み scope の内側では、別 executor 所有者による都度承認、各ステップごとの人間確認、監査役による逐次 veto を要求しない。**
+**認可済み scope の内側では、別 executor 所有者による都度承認、各ステップごとの人間確認、Claude その他の監査役による逐次 veto を要求しない。**
 
 **一度 Owner / BOSS が campaign scope を認可した後は、その scope 内で利用可能な host・credential・secret・effect level・method・順序・試行回数の具体的な使い方は Red が自律判断してよい。** 仮説変更、経路変更、ツール選択、再試行のたびに権限を取り直す必要はない。
 
-旧文書・旧コメント・旧実装説明に「Red の研究意図と executor を分離する」「Red は executor を直接使わない」など、本節と矛盾する記述がある場合、**認可済み scope 内の運用については本節を優先する。**
+### 旧「実行権限の分離」ルールの扱い
+
+旧制約 `Redの判断だけでhost・secret・effect levelを増やさない` は、**認可済み scope 内の運用を縛るルールとしては廃止する。**
+
+認可済み scope の内側では、Red は BOSS が与えた上限まで host・credential・secret・effect level・method・retry・execution order を自律的に選択・変更できる。Claude / executor owner / reviewer による第二承認は不要とする。
+
+旧文書・旧コメント・旧実装説明に「Red の研究意図と executor を分離する」「Red は executor を直接使わない」「scope内でもRedの判断だけでは実行できない」など、本節と矛盾する記述がある場合、**認可済み scope 内の運用については本節を優先する。**
 
 scope の追加が必要になった場合も executor の再設計や新しい統治階層は要求しない。Owner / BOSS が追加 scope を明示的に認可すれば、その時点から Red は追加範囲を同じ一体型ループで使用できる。
 
-外部第三者の資産については、campaign scope に含まれていることを実行境界とする。この境界は Red と executor の役割分離ではなく、外部資産に対する認可境界である。
+外部第三者の資産については、所有者または明示的なテスト権限によって campaign scope に含められていることを実行境界とする。この境界は Red と executor の役割分離ではなく、外部資産に対する認可境界である。
 
 つまり、認可済み研究環境の内側では `RESEARCH -> EXECUTE -> OBSERVE -> ADAPT` を Red が一体運用する。**実行権限の分離は行わず、BOSS が与えた scope を Red 自身が直接使う。**
