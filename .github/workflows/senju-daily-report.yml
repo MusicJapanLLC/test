@@ -22,6 +22,10 @@ on:
       candidates:
         description: "比較する改善候補数"
         default: "5"
+      question:
+        description: "Personal AI Core + AI FOUNDRYへ聞く質問（何でも可。空欄なら自律改善質問）"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -142,12 +146,15 @@ jobs:
         id: advisor
         if: github.event_name != 'pull_request'
         working-directory: senju
+        env:
+          ADVISOR_QUESTION: ${{ github.event.inputs.question || '' }}
         run: |
           set -euo pipefail
           python -m senju.advisors \
             --summary reports/evolution/evolution-summary.json \
             --out reports/evolution/advisor-brief.json \
-            --payload-out reports/evolution/foundry-request.json
+            --payload-out reports/evolution/foundry-request.json \
+            --question "$ADVISOR_QUESTION"
           python - <<'PY' >> "$GITHUB_OUTPUT"
           import json
           d=json.load(open('reports/evolution/advisor-brief.json', encoding='utf-8'))
@@ -222,6 +229,7 @@ jobs:
           d=json.load(open('reports/evolution/advisor-brief.json', encoding='utf-8'))
           decision=d.get('decision') or {}
           print('\n---\n\n## AI Advisor Hub')
+          print(f"- question: {d.get('question','')}")
           print(f"- Personal AI Core: {'OK' if (d.get('personal_ai') or {}).get('ok') else 'unavailable'}")
           print(f"- AI Foundry decision: implement={decision.get('implement')} / priority={decision.get('priority')}")
           print(f"- rationale: {decision.get('rationale','')}")
@@ -268,6 +276,8 @@ jobs:
                       f"\nadvisor: personal_ai={'ok' if (a.get('personal_ai') or {}).get('ok') else 'unavailable'} / "
                       f"foundry_implement={decision.get('implement')} / priority={decision.get('priority')}"
                   )
+                  if a.get('question'):
+                      extra += f"\nquestion: {str(a.get('question'))[:300]}"
                   if os.environ.get('ADVISOR_PR'):
                       extra += f"\nverified PR: {os.environ['ADVISOR_PR']}"
               except Exception:
