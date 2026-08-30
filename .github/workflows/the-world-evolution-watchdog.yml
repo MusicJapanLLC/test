@@ -80,6 +80,33 @@ jobs:
                   'gh', 'workflow', 'run', workflow, '--repo', repo, '--ref', base, *extra
               ])
 
+          def classify_external_block(run_id):
+              """Return a non-retryable external blocker fingerprint when proven.
+
+              Do not convert an unknown failure into BLOCKED. Only exact evidence
+              from the failed job log is accepted. This prevents quota exhaustion
+              from creating a self-amplifying rerun/FORGE storm while preserving
+              normal autonomous repair for code, CI, runtime and test failures.
+              """
+              logs = run_cmd([
+                  'gh', 'run', 'view', str(run_id), '--repo', repo, '--log-failed'
+              ])
+              text = ((logs.stdout or '') + '\n' + (logs.stderr or '')).lower()
+              markers = {
+                  'copilot_monthly_quota': (
+                      'exceeded your monthly quota',
+                      'monthly quota has been exceeded',
+                  ),
+                  'provider_quota': (
+                      'insufficient quota',
+                      'quota exceeded',
+                  ),
+              }
+              for fingerprint, needles in markers.items():
+                  if any(needle in text for needle in needles):
+                      return fingerprint
+              return None
+
           for label, workflow, max_age in specs:
               query = run_cmd([
                   'gh', 'run', 'list', '--repo', repo, '--workflow', workflow,
@@ -104,6 +131,7 @@ jobs:
                       'workflow': workflow,
                       'age_minutes': None,
                       'consecutive_failures': 0,
+                      'external_block': None,
                       'action': 'dispatched_no_history' if wake.returncode == 0 else 'dispatch_failed',
                       'detail': '' if wake.returncode == 0 else (wake.stderr or wake.stdout)[-1200:],
                   })
@@ -124,29 +152,34 @@ jobs:
               action = 'healthy'
               detail = ''
               systemic_repair = None
+              external_block = None
 
               if status in active_states:
                   action = 'active'
               elif conclusion in failed_conclusions:
-                  retry = run_cmd([
-                      'gh', 'run', 'rerun', str(latest['databaseId']), '--repo', repo, '--failed'
-                  ])
-                  action = 'rerun_failed_jobs' if retry.returncode == 0 else 'rerun_failed_error'
-                  if retry.returncode != 0:
-                      detail = (retry.stderr or retry.stdout)[-1200:]
+                  external_block = classify_external_block(latest['databaseId'])
+                  if external_block:
+                      action = 'blocked_external_no_retry'
+                  else:
+                      retry = run_cmd([
+                          'gh', 'run', 'rerun', str(latest['databaseId']), '--repo', repo, '--failed'
+                      ])
+                      action = 'rerun_failed_jobs' if retry.returncode == 0 else 'rerun_failed_error'
+                      if retry.returncode != 0:
+                          detail = (retry.stderr or retry.stdout)[-1200:]
 
-                  # Two consecutive terminal failures are treated as a mechanism
-                  # problem, not another one-off retry. Invoke exactly one bounded
-                  # FORGE repair session per watchdog cycle to investigate/fix CI.
-                  if consecutive_failures >= 2 and workflow != 'tomoki-forge.yml' and not forge_repair_dispatched:
-                      forge = dispatch('tomoki-forge.yml', '-f', 'mode=repair')
-                      forge_repair_dispatched = forge.returncode == 0
-                      systemic_repair = (
-                          'forge_repair_dispatched' if forge.returncode == 0
-                          else 'forge_repair_dispatch_failed'
-                      )
-                      if forge.returncode != 0:
-                          detail = (detail + '\n' + (forge.stderr or forge.stdout)[-1200:]).strip()
+                      # Two consecutive repairable terminal failures are treated as
+                      # a mechanism problem, not another one-off retry. Invoke one
+                      # bounded FORGE repair session per watchdog cycle.
+                      if consecutive_failures >= 2 and workflow != 'tomoki-forge.yml' and not forge_repair_dispatched:
+                          forge = dispatch('tomoki-forge.yml', '-f', 'mode=repair')
+                          forge_repair_dispatched = forge.returncode == 0
+                          systemic_repair = (
+                              'forge_repair_dispatched' if forge.returncode == 0
+                              else 'forge_repair_dispatch_failed'
+                          )
+                          if forge.returncode != 0:
+                              detail = (detail + '\n' + (forge.stderr or forge.stdout)[-1200:]).strip()
               elif age_minutes > max_age:
                   wake = dispatch(workflow)
                   action = 'dispatched_stale' if wake.returncode == 0 else 'dispatch_stale_error'
@@ -162,13 +195,14 @@ jobs:
                   'age_minutes': age_minutes,
                   'max_age_minutes': max_age,
                   'consecutive_failures': consecutive_failures,
+                  'external_block': external_block,
                   'action': action,
                   'systemic_repair': systemic_repair,
                   'detail': detail,
               })
 
           result = {
-              'schema': 'the-world-evolution-watchdog/v2',
+              'schema': 'the-world-evolution-watchdog/v3',
               'checked_at': now.isoformat(),
               'repository': repo,
               'default_branch': base,
@@ -179,6 +213,9 @@ jobs:
                   'recovered_or_woken': sum(
                       1 for row in report
                       if row.get('action') in {'rerun_failed_jobs', 'dispatched_stale', 'dispatched_no_history'}
+                  ),
+                  'external_blocks_suppressed': sum(
+                      1 for row in report if row.get('action') == 'blocked_external_no_retry'
                   ),
                   'systemic_repairs_dispatched': sum(
                       1 for row in report if row.get('systemic_repair') == 'forge_repair_dispatched'
@@ -196,7 +233,7 @@ jobs:
           PY
 
           {
-            echo '## THE WORLD Evolution Watchdog v2'
+            echo '## THE WORLD Evolution Watchdog v3'
             echo '```json'
             cat /tmp/world-evolution-watchdog.json
             echo '```'
