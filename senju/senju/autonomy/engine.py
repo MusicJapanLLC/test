@@ -70,11 +70,121 @@ class AutonomyEngine:
         for item in initial_hypotheses:
             self.queue.enqueue(item)
 
+    def _execute_real_surface_followup(self, item: WorkItem) -> AutonomyCycleResult:
+        """Have Senju re-attack a real guard family after adversary feedback.
+
+        This stays repository-local: the real guard implementations run, while the
+        adversary harness keeps its final external transport seam inert.
+        """
+        from ..real_surface_adversary import run as run_real_surface_adversary
+
+        params = item.parameters
+        focus_target = str(params.get("focus_target", "")).strip()
+        focus_probe = str(params.get("focus_probe", "")).strip()
+        family = str(params.get("focus_family", "")).strip()
+        if not focus_target or not focus_probe:
+            self.queue.record_result(
+                item.item_id,
+                success=False,
+                blocker_reason="real_surface_followup requires focus_target and focus_probe",
+            )
+            return AutonomyCycleResult(
+                item_id=item.item_id,
+                hypothesis=item.hypothesis,
+                status=WorkItemStatus.FAILED.value,
+                matches_run=0,
+                red_champion_rating=1000.0,
+                blue_champion_rating=1000.0,
+                report_path="",
+            )
+
+        report = run_real_surface_adversary()
+        rows = report.get("results", [])
+        matched: list[dict[str, Any]] = []
+        if isinstance(rows, list):
+            for row in rows:
+                if not isinstance(row, dict) or str(row.get("target", "")) != focus_target:
+                    continue
+                name = str(row.get("name", ""))
+                if name == focus_probe or (family and name.startswith(family)):
+                    matched.append(dict(row))
+
+        passed = bool(matched) and all(row.get("passed") is True for row in matched)
+        timestamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+        report_dir = self.state_dir / "autonomy_reports" / "adversary_feedback"
+        report_dir.mkdir(parents=True, exist_ok=True)
+        report_file = report_dir / f"followup_{item.item_id}_{timestamp}.json"
+        evidence = {
+            "schema": "senju-adversary-feedback-followup/v1",
+            "item_id": item.item_id,
+            "timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "focus_target": focus_target,
+            "focus_probe": focus_probe,
+            "focus_family": family,
+            "source_effect_id": params.get("source_effect_id", ""),
+            "observed_effect": params.get("observed_effect", ""),
+            "matched_probe_count": len(matched),
+            "passed": passed,
+            "matched_results": matched,
+        }
+        report_file.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+        self.queue.record_result(
+            item.item_id,
+            success=passed,
+            result_ref=str(report_file) if passed else "",
+            blocker_reason="" if passed else "Senju follow-up found a real-surface regression",
+        )
+
+        proposed: list[str] = []
+        depth_raw = params.get("feedback_depth", 0)
+        depth = depth_raw if isinstance(depth_raw, int) and not isinstance(depth_raw, bool) else 0
+        if not passed and depth < 2:
+            next_item = WorkItem(
+                item_id=f"adv-feedback-retry-{timestamp}",
+                hypothesis=(
+                    f"Senju follow-up on {focus_target}/{focus_probe} still fails; repeat the "
+                    "adjacent real-surface family with elevated attention"
+                ),
+                category="red_team",
+                expected_value=1.0,
+                cost_budget_matches=20,
+                runtime_seconds_budget=240.0,
+                max_retries=3,
+                authority_scope="none",
+                prerequisite_evidence=[str(report_file)],
+                parameters={
+                    "runner": "real_surface_followup",
+                    "focus_target": focus_target,
+                    "focus_probe": focus_probe,
+                    "focus_family": family,
+                    "source_effect_id": params.get("source_effect_id", ""),
+                    "observed_effect": params.get("observed_effect", ""),
+                    "feedback_depth": depth + 1,
+                },
+            )
+            if self.queue.enqueue(next_item):
+                proposed.append(next_item.item_id)
+
+        return AutonomyCycleResult(
+            item_id=item.item_id,
+            hypothesis=item.hypothesis,
+            status=WorkItemStatus.COMPLETED.value if passed else WorkItemStatus.FAILED.value,
+            matches_run=len(matched),
+            red_champion_rating=1000.0,
+            blue_champion_rating=1000.0,
+            report_path=str(report_file),
+            proposed_next_items=proposed,
+        )
+
     def execute_next_cycle(self, max_matches: int = 2000) -> AutonomyCycleResult | None:
         """Execute one bounded autonomous experiment cycle."""
         item = self.queue.select_next(budget_matches=max_matches)
         if not item:
             return None
+
+        if item.parameters.get("runner") == "real_surface_followup":
+            return self._execute_real_surface_followup(item)
 
         cfg = SenjuConfig()
         params = item.parameters
@@ -92,11 +202,11 @@ class AutonomyEngine:
         tournament = Tournament(cfg)
         base_seed = cfg.evolution.seed if cfg.evolution.seed is not None else 42
         rng = random.Random(base_seed + 1337)
-        
+
         red = seeded_population(state.get("red_champion"), "red", cfg.evolution.population_size, cfg.evolution.mutation_rate, rng)
         if not red:
             red = seed_population("red", cfg.evolution.population_size, rng)
-            
+
         blue = seeded_population(state.get("blue_champion"), "blue", cfg.evolution.population_size, cfg.evolution.mutation_rate, rng)
         if not blue:
             blue = seed_population("blue", cfg.evolution.population_size, rng)
@@ -109,7 +219,7 @@ class AutonomyEngine:
         report_dir = self.state_dir / "autonomy_reports"
         report_dir.mkdir(parents=True, exist_ok=True)
         report_file = report_dir / f"cycle_{item.item_id}_{timestamp}.json"
-        
+
         eval_passed = evaluation.safe and evaluation.score > 20.0
         total_matches = sum(g.matches for g in report.generations)
         total_red_wins = sum(g.red_wins for g in report.generations)
