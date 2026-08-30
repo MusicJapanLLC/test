@@ -1,0 +1,220 @@
+name: THE WORLD - MADLAB Evolution Worker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+concurrency:
+  group: madlab-world-evolution
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+  copilot-requests: write
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      TARGET: https://madlab-guard-0i24yt.v2.appdeploy.ai/
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Observe MADLAB production
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail-with-body -sS --max-time 20 "${TARGET}api/_healthcheck" > /tmp/madlab-health.json
+          curl --fail-with-body -sS --max-time 35 -H 'Content-Type: application/json' \
+            -d "{\"url\":\"${TARGET}\",\"authorized\":true}" \
+            "${TARGET}api/scan" > /tmp/madlab-scan.json
+          python - <<'PY'
+          import hashlib,json
+          from datetime import datetime,timezone
+          health=json.load(open('/tmp/madlab-health.json',encoding='utf-8'))
+          scan=json.load(open('/tmp/madlab-scan.json',encoding='utf-8'))
+          if not str(scan.get('schema','')).startswith('madlab-deepguard/'):
+              raise SystemExit('unexpected MADLAB scan schema')
+          top=[]
+          for f in (scan.get('findings') or [])[:10]:
+              top.append({k:f.get(k) for k in ('id','severity','confidence','title','category','evidence','fix')})
+          stable={
+              'target':scan.get('target'),
+              'grade':scan.get('grade'),
+              'risk_score':scan.get('risk_score'),
+              'summary':scan.get('summary'),
+              'top_findings':top,
+              'health_scanner':health.get('scanner'),
+          }
+          digest=hashlib.sha256(json.dumps(stable,sort_keys=True,ensure_ascii=False).encode()).hexdigest()[:20]
+          evidence={
+              'schema':'the-world-madlab-evidence/v1',
+              'observed_at':datetime.now(timezone.utc).isoformat(),
+              'digest':digest,
+              **stable,
+          }
+          json.dump(evidence,open('/tmp/madlab-evidence.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          s=evidence.get('summary') or {}
+          with open('/tmp/madlab-evidence.md','w',encoding='utf-8') as out:
+              out.write('# MADLAB Production Evidence\n\n')
+              out.write(f"- digest: `{digest}`\n- grade: **{evidence.get('grade')}**\n- risk: **{evidence.get('risk_score')}/100**\n")
+              out.write(f"- findings: {s.get('findings',0)} / critical+high: {int(s.get('critical',0))+int(s.get('high',0))}\n\n")
+              out.write('## Top findings\n')
+              for f in top:
+                  out.write(f"- [{f.get('severity')}] {f.get('title')} — {f.get('fix')}\n")
+          PY
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+
+      - name: Install GitHub Copilot CLI
+        continue-on-error: true
+        run: npm install -g @github/copilot@1.0.80
+
+      - name: AI chooses one bounded improvement
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/madlab-brain
+          mkdir -p /tmp/madlab-brain
+          cp /tmp/madlab-evidence.json /tmp/madlab-brain/evidence.json
+          cd /tmp/madlab-brain
+          cat > prompt.md <<'PROMPT'
+          You are THE WORLD / MADLAB EVOLUTION, a bounded autonomous product engineer.
+          Read evidence.json and choose exactly ONE highest-value next improvement.
+          Optimize for diagnostic precision, evidence quality, reliable owner-authorized execution, speed, operator clarity, regression prevention, and migration away from blocked infrastructure when necessary.
+
+          Non-negotiable boundaries:
+          - Never weaken ownership, authorization, or approval boundaries.
+          - Never add credential guessing, hidden-path brute force, arbitrary exploit payload execution, destructive external actions, or stealth/persistence behavior.
+          - Prefer a small reversible change with a deterministic acceptance check.
+          - AppDeploy production deploy quota is exhausted; do not recommend repeated AppDeploy deploy attempts. Prefer GitHub/Vercel successor work when production source changes are needed.
+          - Avoid cosmetic-only work unless it removes an operational blocker.
+
+          Write exactly one file named madlab-evolution-directive.json and no other file. It must be valid JSON with:
+          schema="the-world-madlab-directive/v1",
+          title,
+          priority (P0|P1|P2),
+          lane (runtime-observation|successor-repo|qa|operator),
+          why_now,
+          implementation,
+          acceptance_checks (array, 2-5 items),
+          expected_gain,
+          risk (low|medium),
+          next_actor (MADLAB|TOMOKI_FORGE|SENJU|AI_FOUNDRY).
+          PROMPT
+          copilot -p "$(cat prompt.md)" -s --allow-tool=write --no-ask-user > /tmp/madlab-copilot.log 2>&1 || true
+          if [[ ! -s madlab-evolution-directive.json ]]; then
+            python - <<'PY'
+          import json
+          e=json.load(open('evidence.json',encoding='utf-8'))
+          fs=e.get('top_findings') or []
+          f=fs[0] if fs else {}
+          d={
+            'schema':'the-world-madlab-directive/v1',
+            'title':('Improve verification for '+str(f.get('title'))) if f else 'Strengthen MADLAB regression evidence',
+            'priority':'P1',
+            'lane':'qa',
+            'why_now':'AI directive generation was unavailable, so THE WORLD selected the highest visible production evidence gap deterministically.',
+            'implementation':str(f.get('fix') or 'Add one deterministic before/after regression check around the highest-value production workflow.'),
+            'acceptance_checks':['Existing MADLAB production health remains reachable','The chosen change has a repeatable before/after evidence check'],
+            'expected_gain':'Higher confidence that the next change measurably improves MADLAB without weakening boundaries.',
+            'risk':'low',
+            'next_actor':'TOMOKI_FORGE'
+          }
+          json.dump(d,open('madlab-evolution-directive.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          PY
+          fi
+          python - <<'PY'
+          import json
+          p='madlab-evolution-directive.json'
+          d=json.load(open(p,encoding='utf-8'))
+          required=['schema','title','priority','lane','why_now','implementation','acceptance_checks','expected_gain','risk','next_actor']
+          missing=[k for k in required if not d.get(k)]
+          if missing: raise SystemExit('directive missing: '+','.join(missing))
+          if d['schema']!='the-world-madlab-directive/v1': raise SystemExit('bad directive schema')
+          if d['priority'] not in ['P0','P1','P2'] or d['risk'] not in ['low','medium']: raise SystemExit('bad directive enum')
+          json.dump(d,open('/tmp/madlab-evolution-directive.json','w',encoding='utf-8'),ensure_ascii=False,indent=2)
+          PY
+
+      - name: Persist one living GitHub improvement queue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TITLE='[MADLAB EVOLUTION] Continuous improvement queue'
+          DIGEST=$(python -c "import json;print(json.load(open('/tmp/madlab-evidence.json'))['digest'])")
+          NUMBER=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$TITLE in:title" --json number,title --jq ".[] | select(.title == \"$TITLE\") | .number" | head -1)
+          python - <<'PY' > /tmp/madlab-issue.md
+          import json
+          e=json.load(open('/tmp/madlab-evidence.json',encoding='utf-8'))
+          d=json.load(open('/tmp/madlab-evolution-directive.json',encoding='utf-8'))
+          print(f"<!-- madlab-evidence:{e['digest']} -->")
+          print('## THE WORLD / MADLAB EVOLUTION')
+          print(f"Production: {e['target']}  ")
+          print(f"Evidence: grade **{e['grade']}**, risk **{e['risk_score']}/100**, digest `{e['digest']}`")
+          print(f"\n### {d['priority']} — {d['title']}")
+          print(f"**Lane:** {d['lane']}  ")
+          print(f"**Next actor:** {d['next_actor']}  ")
+          print(f"**Risk:** {d['risk']}\n")
+          print(d['why_now'])
+          print('\n**Implementation**\n'+d['implementation'])
+          print('\n**Acceptance checks**')
+          for x in d['acceptance_checks'][:5]: print('- [ ] '+str(x))
+          print('\n**Expected gain**\n'+d['expected_gain'])
+          print('\n_This queue is generated from live MADLAB evidence. It does not authorize weakening owner/security boundaries._')
+          PY
+          if [[ -z "$NUMBER" ]]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body-file /tmp/madlab-issue.md
+          else
+            CURRENT=$(gh issue view "$NUMBER" --repo "$GITHUB_REPOSITORY" --json body --jq .body)
+            if ! grep -q "madlab-evidence:${DIGEST}" <<<"$CURRENT"; then
+              gh issue comment "$NUMBER" --repo "$GITHUB_REPOSITORY" --body-file /tmp/madlab-issue.md
+            fi
+          fi
+
+      - name: Publish evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: madlab-world-evolution
+          path: |
+            /tmp/madlab-health.json
+            /tmp/madlab-scan.json
+            /tmp/madlab-evidence.json
+            /tmp/madlab-evidence.md
+            /tmp/madlab-evolution-directive.json
+            /tmp/madlab-copilot.log
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Write cycle summary
+        if: always()
+        shell: bash
+        run: |
+          cat /tmp/madlab-evidence.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+          if [[ -s /tmp/madlab-evolution-directive.json ]]; then
+            echo '' >> "$GITHUB_STEP_SUMMARY"
+            echo '## Next bounded improvement' >> "$GITHUB_STEP_SUMMARY"
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('/tmp/madlab-evolution-directive.json',encoding='utf-8'))
+          print(f"- {d['priority']} / {d['title']}")
+          print(f"- lane={d['lane']} next_actor={d['next_actor']} risk={d['risk']}")
+          PY
+          fi
