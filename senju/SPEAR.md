@@ -94,11 +94,44 @@ When configured, the workflow:
 
 Persisted evidence intentionally excludes raw response bodies, raw response headers, cookie values, credentials, and authorization-reference text.
 
+## Phase 5: Depth observation — implemented
+
+Phase 5 increases real-world observation density without widening execution authority.
+
+### TLS / certificate pack
+
+`senju.spear_tls` performs one authorized TLS handshake against an exact HTTPS host and records sanitized metadata:
+
+- negotiated TLS version
+- cipher suite
+- certificate subject/issuer common name
+- certificate expiry time
+- SAN DNS count
+- near-expiry / expired certificate findings
+- legacy TLS finding if an old protocol is negotiated
+
+Raw certificate bytes are not persisted, and the TLS pack sends no HTTP request.
+
+### Bounded same-origin path inventory
+
+`senju.spear_inventory` performs a low-impact inventory inside the exact host and `base_path` already present in the engagement:
+
+1. one bounded `GET` of the engagement base path;
+2. parse same-origin links from that HTML only;
+3. remove query strings/fragments;
+4. reject cross-host links and paths outside `base_path`;
+5. skip state-changing-looking paths such as logout/delete/remove/unsubscribe;
+6. verify only a small request-budget-limited subset with `HEAD`.
+
+It does not submit forms, authenticate, brute force, guess credentials, deliver exploit payloads, or follow cross-host redirects.
+
+`.github/workflows/senju-spear-depth.yml` runs every 6 hours on a separate offset. It uses the same `SENJU_SPEAR_ENGAGEMENT_JSON` authorization source, runs Phase 5 tests before network execution, and persists a sanitized depth signal containing path counts/statuses and TLS metadata/findings only.
+
 ## Next phases
 
-1. TLS/certificate metadata and explicit bounded path inventory.
+1. Deployment-triggered targeted retest rather than schedule-only retest.
 2. Owned-lab active validation using Juice Shop / DVWA / WebGoat adapters; active exploit-chain validation remains lab-only.
-3. Deployment-triggered targeted retest rather than schedule-only retest.
-4. Multi-agent remediation loop: COVENANT chooses objective, R&D chooses focus, Senju produces evidence, Jules/OpenHands implement fixes, then Senju retests and records whether the finding actually disappeared.
+3. Multi-agent remediation loop: COVENANT chooses objective, R&D chooses focus, Senju produces evidence, Jules/OpenHands implement fixes, then Senju retests and records whether the finding actually disappeared.
+4. Evidence correlation across posture, TLS, path inventory, deployment SHA, and remediation PR.
 
 Tracking issue: #238.
