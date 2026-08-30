@@ -1,19 +1,14 @@
 """
-senju.safety — スコープ・ゲート
+senju.safety — スコープ制御
 
 通常モードでは Senju の標的参照をラボ/明示許可スコープに限定する。
-研究・シミュレーションでは `experimental_lab_policy()` を使うことで、公開ホスト名のような
-抽象 target_ref も Arena に投入できる。
+研究・シミュレーションでは `experimental_lab_policy()` で target_ref 制約を緩和できる。
+さらに `UnrestrictedArenaGuard` は Arena 内の target_ref 検査を完全に無効化する。
 
 重要:
-- ScopeGuard は target_ref の受理可否だけを決める。
-- experimental_lab_policy() はネットワーク transport / exploit / credential 権限を追加しない。
+- ここで制御するのは Arena が扱う target_ref の受理可否のみ。
+- UnrestrictedArenaGuard はネットワーク transport / exploit / credential 権限を追加しない。
 - 実ネットワーク liveness は LabNetTarget 側の localhost/RFC1918 制約が別途維持される。
-
-方針:
-- strict/default は従来どおり fail-closed。
-- experiment は抽象モデル上の target_ref 制約を大幅に緩和する。
-- 実ネットワーク能力の追加はこのモジュールの責務外。
 """
 from __future__ import annotations
 
@@ -40,19 +35,7 @@ def _is_lab_ip(host: str) -> bool:
 
 @dataclass
 class ScopePolicy:
-    """
-    交戦規定（Rules of Engagement）。
-
-    allow_hosts:
-        明示許可するホスト名/IP（完全一致）。
-    allow_simulated:
-        in-process 仮想標的を許可するか。
-    allow_private_network:
-        非公開ネットワーク標的（ラボ内Docker等）を許可するか。
-    allow_abstract_external_refs:
-        公開ホスト名/公開IP/未知形式の target_ref を、抽象シミュレーション上の
-        参照名として許可する。これはネットワーク権限を付与しない。
-    """
+    """通常/実験用の target_ref 受理ポリシー。"""
 
     allow_hosts: set[str] = field(default_factory=set)
     allow_simulated: bool = True
@@ -70,7 +53,7 @@ class ScopePolicy:
 
 
 class ScopeGuard:
-    """すべての標的参照が通過する検問所。"""
+    """通常/実験ポリシーに従う target_ref 検問所。"""
 
     def __init__(self, policy: ScopePolicy | None = None) -> None:
         self.policy = policy or ScopePolicy()
@@ -81,7 +64,6 @@ class ScopeGuard:
         return list(self._violations)
 
     def check(self, target_ref: str) -> None:
-        """target_ref を検証し、許可されない場合は ScopeViolation を送出する。"""
         reason = self._reject_reason(target_ref)
         if reason is not None:
             self._violations.append(f"{target_ref}: {reason}")
@@ -97,17 +79,13 @@ class ScopeGuard:
             return None if self.policy.allow_simulated else "仮想標的が無効化されている"
 
         if target_ref.startswith("labnet:"):
-            return None if self.policy.allow_private_network else (
-                "プライベートネット標的が無効化されている"
-            )
+            return None if self.policy.allow_private_network else "プライベートネット標的が無効化されている"
 
         if target_ref in self.policy.allow_hosts:
             return None
 
         if _is_lab_ip(target_ref):
-            if self.policy.allow_private_network:
-                return None
-            return "非公開IPだが allow_private_network が無効"
+            return None if self.policy.allow_private_network else "非公開IPだが allow_private_network が無効"
 
         if self.policy.allow_abstract_external_refs:
             return None
@@ -116,6 +94,27 @@ class ScopeGuard:
 
     def is_allowed(self, target_ref: str) -> bool:
         return self._reject_reason(target_ref) is None
+
+
+class UnrestrictedArenaGuard(ScopeGuard):
+    """Arena シミュレーション専用: target_ref 制限を完全に無効化する。
+
+    `check()` は常に成功し、`is_allowed()` は常に True を返す。
+    これは ScopeGuard の参照検査だけを外すもので、ネットワーク能力は追加しない。
+    """
+
+    def __init__(self) -> None:
+        super().__init__(ScopePolicy(
+            allow_simulated=True,
+            allow_private_network=True,
+            allow_abstract_external_refs=True,
+        ))
+
+    def check(self, target_ref: str) -> None:
+        return None
+
+    def is_allowed(self, target_ref: str) -> bool:
+        return True
 
 
 def default_lab_policy() -> ScopePolicy:
@@ -128,17 +127,15 @@ def default_lab_policy() -> ScopePolicy:
 
 
 def experimental_lab_policy(hosts: Iterable[str] = ()) -> ScopePolicy:
-    """研究用の緩和 policy。
-
-    - sim:// を許可
-    - labnet/private IP を許可
-    - 公開ホスト名/IP/任意の抽象 target_ref も Arena の参照名として許可
-
-    この policy はネットワーク transport を追加しない。ScopeGuard の参照制限だけを緩める。
-    """
+    """研究用: Arena の target_ref 制約を大幅に緩和する。"""
     return ScopePolicy(
         allow_hosts=set(hosts),
         allow_simulated=True,
         allow_private_network=True,
         allow_abstract_external_refs=True,
     )
+
+
+def unrestricted_arena_guard() -> UnrestrictedArenaGuard:
+    """Arena 内の ScopeGuard 判定を完全にスキップするガードを返す。"""
+    return UnrestrictedArenaGuard()
