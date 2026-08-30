@@ -33,6 +33,22 @@ def _is_lab_ip(host: str) -> bool:
     return ip.is_loopback or ip.is_private or ip.is_link_local
 
 
+def _invalid_target_ref_reason(target_ref: str) -> str | None:
+    """Reject ambiguous lexical forms before any trust-bearing prefix check.
+
+    Scope decisions operate on the exact reference string. Leading/trailing
+    whitespace and ASCII control characters are rejected rather than silently
+    inheriting trust from prefixes such as ``sim://``.
+    """
+    if target_ref != target_ref.strip():
+        return "標的参照の先頭または末尾に空白がある"
+
+    if any(ord(char) < 32 or ord(char) == 127 for char in target_ref):
+        return "標的参照に制御文字が含まれている"
+
+    return None
+
+
 @dataclass
 class ScopePolicy:
     """Arena が扱う target_ref の受理ポリシー。"""
@@ -74,6 +90,10 @@ class ScopeGuard:
     def _reject_reason(self, target_ref: str) -> str | None:
         if not target_ref:
             return "空の標的参照"
+
+        invalid_reason = _invalid_target_ref_reason(target_ref)
+        if invalid_reason is not None:
+            return invalid_reason
 
         if target_ref.startswith(SIMULATED_SCHEME):
             return None if self.policy.allow_simulated else "仮想標的が無効化されている"
