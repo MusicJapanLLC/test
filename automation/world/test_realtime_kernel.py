@@ -11,7 +11,7 @@ from automation.world.realtime_kernel import (
 from automation.world.core_director import validate_plan
 from automation.world.self_heal_engine import _excerpt, _extract_source_locations, select_incident
 
-NOW = datetime(2026, 8, 29, 12, 0, tzinfo=timezone.utc)
+NOW = datetime.now(timezone.utc)
 
 
 class RealtimeKernelTests(unittest.TestCase):
@@ -48,7 +48,7 @@ class RealtimeKernelTests(unittest.TestCase):
         self.assertEqual(latest["feat/b"]["id"], 4)
         self.assertNotIn("the-world/self-heal-123", latest)
 
-    def test_head_revalidation_only_when_failure_sha_is_obsolete(self):
+    def test_head_revalidation_only_when_run_sha_is_obsolete(self):
         run = {"head_sha": "old"}
         self.assertTrue(_needs_head_revalidation(run, "new"))
         self.assertFalse(_needs_head_revalidation(run, "old"))
@@ -96,6 +96,91 @@ class RealtimeKernelTests(unittest.TestCase):
         self.assertEqual(pulse["summary"]["head_revalidations"], 1)
         dispatch.assert_called_once_with("safe.yml", "main")
         rerun_failed.assert_not_called()
+        branch_head.assert_called_once_with("main")
+
+    @patch("automation.world.realtime_kernel._dispatch")
+    @patch("automation.world.realtime_kernel._branch_head_sha", return_value="new-sha")
+    @patch("automation.world.realtime_kernel._recent_runs")
+    def test_required_current_head_revalidates_even_healthy_old_success(
+        self, recent_runs, branch_head, dispatch
+    ):
+        recent_runs.return_value = [
+            {
+                "id": 601,
+                "head_branch": "main",
+                "head_sha": "old-sha",
+                "status": "completed",
+                "conclusion": "success",
+                "run_attempt": 1,
+                "updated_at": NOW.isoformat(),
+            }
+        ]
+        plan = {
+            "default_ref": "main",
+            "max_dispatches_per_pulse": 3,
+            "active_branch_window_minutes": 720,
+            "repair_after_attempts": 2,
+            "repair_workflow": "",
+            "workers": [
+                {
+                    "name": "SECURITY",
+                    "workflow": "security.yml",
+                    "stale_minutes": 480,
+                    "priority": 10,
+                    "autostart": True,
+                    "recover_failures": True,
+                    "require_current_head": True,
+                }
+            ],
+        }
+        pulse = collect(plan, apply_actions=True, ref="main")
+        self.assertEqual(pulse["workers"][0]["state"], "HEALTHY")
+        self.assertEqual(pulse["workers"][0]["action"], "REVALIDATE_REQUIRED_HEAD")
+        self.assertEqual(pulse["workers"][0]["action_result"], "REQUESTED")
+        self.assertEqual(pulse["summary"]["head_revalidations"], 1)
+        dispatch.assert_called_once_with("security.yml", "main")
+        branch_head.assert_called_once_with("main")
+
+    @patch("automation.world.realtime_kernel._dispatch")
+    @patch("automation.world.realtime_kernel._branch_head_sha", return_value="same-sha")
+    @patch("automation.world.realtime_kernel._recent_runs")
+    def test_required_current_head_does_nothing_when_success_is_current(
+        self, recent_runs, branch_head, dispatch
+    ):
+        recent_runs.return_value = [
+            {
+                "id": 602,
+                "head_branch": "main",
+                "head_sha": "same-sha",
+                "status": "completed",
+                "conclusion": "success",
+                "run_attempt": 1,
+                "updated_at": NOW.isoformat(),
+            }
+        ]
+        plan = {
+            "default_ref": "main",
+            "max_dispatches_per_pulse": 3,
+            "active_branch_window_minutes": 720,
+            "repair_after_attempts": 2,
+            "repair_workflow": "",
+            "workers": [
+                {
+                    "name": "SECURITY",
+                    "workflow": "security.yml",
+                    "stale_minutes": 480,
+                    "priority": 10,
+                    "autostart": True,
+                    "recover_failures": True,
+                    "require_current_head": True,
+                }
+            ],
+        }
+        pulse = collect(plan, apply_actions=True, ref="main")
+        self.assertEqual(pulse["workers"][0]["state"], "HEALTHY")
+        self.assertEqual(pulse["workers"][0]["action"], "NONE")
+        self.assertEqual(pulse["summary"]["head_revalidations"], 0)
+        dispatch.assert_not_called()
         branch_head.assert_called_once_with("main")
 
     def test_director_rejects_fresh_and_non_allowlisted_actions(self):

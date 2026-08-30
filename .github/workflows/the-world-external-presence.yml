@@ -35,33 +35,15 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
-
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
-
       - name: Load canonical live population from Supabase
         run: |
           set -euo pipefail
           python outside-world/supabase_directory.py --out world-citizens.json --require-min 100
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          d=json.load(open('world-citizens.json', encoding='utf-8'))
-          lines=[
-              '# THE WORLD — Canonical Citizens',
-              '',
-              f"- population: **{d.get('population', 0)}**",
-              '- source: `Supabase/public.world_reality_directory`',
-              '',
-          ]
-          for c in d.get('citizens', []):
-              lines.append(f"- `{c.get('citizen_id')}` — {c.get('display_name')} / {c.get('role')} / {c.get('group')}")
-          Path('world-citizens.md').write_text('\n'.join(lines)+'\n', encoding='utf-8')
-          PY
-
-      - name: Issue one external-world mission to every canonical citizen
+      - name: Issue one LIMITLESS external-world mission to every canonical citizen
         run: |
           set -euo pipefail
           python outside-world/external_presence.py \
@@ -72,33 +54,31 @@ jobs:
             --report outside-world-presence-report.md \
             --decisions outside-world-action-decisions.json
           cat outside-world-presence-report.md >> "$GITHUB_STEP_SUMMARY"
-
       - name: Verify external presence invariants
         run: python -m unittest outside-world/test_external_presence.py -v
-
-      - name: Dispatch read-only missions to authorized external executor
+      - name: Dispatch bounded read and authorized-write missions to external executor
         if: success() && env.WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL != ''
         run: |
           python - <<'PY'
           import json, os, urllib.request
           plan=json.load(open('outside-world-presence-plan.json', encoding='utf-8'))
           payload={
-              'schema':'the-world-external-mission-batch/v1',
+              'schema':'the-world-external-mission-batch/v2',
               'generated_at':plan['generated_at'],
               'principle':plan['principle'],
+              'execution_contract':{
+                  'public_or_authorized_reads':'ALLOW_AUTO',
+                  'writes':'DRAFT_ONLY_UNTIL_ADAPTER_CONFIRMS_REQUIRED_GATE',
+                  'never_send_credentials_in_payload':True,
+              },
               'missions':plan['missions'],
           }
-          req=urllib.request.Request(
-              os.environ['WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL'],
-              data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-              headers={'Content-Type':'application/json'},
-          )
+          req=urllib.request.Request(os.environ['WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL'],data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
           with urllib.request.urlopen(req, timeout=15) as res:
-              if res.status < 200 or res.status >= 300:
+              if not 200 <= res.status < 300:
                   raise RuntimeError(f'External executor HTTP {res.status}')
               print('external executor status', res.status)
           PY
-
       - name: Report presence cycle to R&D Slack
         if: success() && env.RND_SLACK_WEBHOOK_URL != ''
         run: |
@@ -110,22 +90,11 @@ jobs:
               counts[m['lane']]=counts.get(m['lane'],0)+1
           lanes=' / '.join(f'{k}:{v}' for k,v in sorted(counts.items()))
           executor='CONNECTED' if os.environ.get('WORLD_EXTERNAL_PRESENCE_WEBHOOK_URL') else 'WAITING_FOR_EXECUTOR_SECRET'
-          text=(
-              f"*THE WORLD / EXTERNAL PRESENCE*\n"
-              f"citizens={plan['profiles_count']} / missions={plan['missions_count']}\n"
-              f"lanes={lanes}\n"
-              f"executor={executor}\n"
-              f"principle={plan['principle']}"
-          )
-          req=urllib.request.Request(
-              os.environ['RND_SLACK_WEBHOOK_URL'],
-              data=json.dumps({'text':text}, ensure_ascii=False).encode('utf-8'),
-              headers={'Content-Type':'application/json'},
-          )
+          text=(f"*THE WORLD / LIMITLESS EXTERNAL PRESENCE*\n" f"citizens={plan['profiles_count']} / missions={plan['missions_count']} / reads={plan.get('read_missions_count',0)} / write_intents={plan.get('write_missions_count',0)}\n" f"lanes={lanes}\n" f"executor={executor}\n" f"principle={plan['principle']}")
+          req=urllib.request.Request(os.environ['RND_SLACK_WEBHOOK_URL'],data=json.dumps({'text':text}, ensure_ascii=False).encode('utf-8'),headers={'Content-Type':'application/json'})
           with urllib.request.urlopen(req, timeout=10) as res:
               print('slack status', res.status)
           PY
-
       - name: Preserve external presence evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -135,7 +104,6 @@ jobs:
           if-no-files-found: warn
           path: |
             world-citizens.json
-            world-citizens.md
             outside-world-presence-plan.json
             outside-world-presence-report.md
             outside-world-action-decisions.json

@@ -1,0 +1,13 @@
+{
+  "targets": [
+    {
+      "id": "baton-production",
+      "name": "Baton public production",
+      "url": "https://baton-liart.vercel.app/",
+      "owner": "MusicJapanLLC / Standment",
+      "authorized": true,
+      "minimum_score": 90,
+      "purpose": "Standment Security Scan reference target"
+    }
+  ]
+}

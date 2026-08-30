@@ -1,42 +1,42 @@
 {
   "version": 1,
-  "updated_at": "2026-08-29T13:31:02+00:00",
+  "updated_at": "2026-08-29T23:42:55+00:00",
   "strategy": {
     "population": 120,
     "generations": 16,
-    "matches": 400,
+    "matches": 500,
     "mutation_rate": 0.06,
     "red_budget": 16,
     "blue_budget": 16,
     "seed": 20260829
   },
-  "score": 222.525,
+  "score": 222.97,
   "evaluation": {
-    "score": 222.525,
+    "score": 222.97,
     "safe": true,
-    "rating_gain": 371.5,
-    "balance": 0.525,
+    "rating_gain": 366.2,
+    "balance": 0.548,
     "learning_signal": 1.0,
     "reason": "safe balanced learning run"
   },
   "red_champion": {
     "side": "red",
-    "rating": 4386.8,
-    "resources": 29.84141859483785,
-    "generation": 20,
+    "rating": 4530.4,
+    "resources": 25.953126857177228,
+    "generation": 21,
     "genome": {
       "kind": "red",
       "focus": {
         "sqli": 0.179,
         "nosqli": 0.574,
-        "xss": 0.908,
+        "xss": 1.0,
         "csrf": 0.234,
         "auth_bypass": 1.0,
         "jwt_weak": 1.0,
-        "idor": 0.994,
+        "idor": 0.917,
         "priv_esc": 0.96,
         "ssrf": 0.809,
-        "rce": 0.121,
+        "rce": 0.24,
         "path_trav": 0.82,
         "deserial": 0.628,
         "xxe": 0.249,
@@ -52,16 +52,16 @@
   },
   "blue_champion": {
     "side": "blue",
-    "rating": 4285.8,
-    "resources": 44.87106976379213,
-    "generation": 14,
+    "rating": 4382.8,
+    "resources": 38.67496695761167,
+    "generation": 4,
     "genome": {
       "kind": "blue",
       "harden": {
         "sqli": 0.413,
         "nosqli": 0.1,
-        "xss": 0.983,
-        "csrf": 1.0,
+        "xss": 1.0,
+        "csrf": 0.823,
         "auth_bypass": 0.407,
         "jwt_weak": 0.576,
         "idor": 0.679,
@@ -292,6 +292,16 @@
       "accepted_strategy_change": true,
       "changes": [
         "mutation_rate: 0.09 -> 0.06"
+      ]
+    },
+    {
+      "at": "2026-08-29T23:42:55+00:00",
+      "baseline_score": 194.97,
+      "best_score": 222.97,
+      "selected_score": 222.97,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
       ]
     }
   ]
