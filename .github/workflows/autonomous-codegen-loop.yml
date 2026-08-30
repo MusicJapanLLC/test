@@ -52,6 +52,15 @@ jobs:
         run: |
           pip install anthropic pytest
 
+      - name: Validate Claude API key
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::Missing repository Actions secret: ANTHROPIC_API_KEY"
+            exit 1
+          fi
+
       - name: Resolve inputs
         id: inputs
         shell: bash
@@ -70,7 +79,7 @@ jobs:
         id: branch
         shell: bash
         run: |
-          SAFE_TASK=$(echo "${{ steps.inputs.outputs.task_id }}" | tr -cs 'A-Za-z0-9._-' '-')
+          SAFE_TASK=$(printf '%s' "${{ steps.inputs.outputs.task_id }}" | tr -cs 'A-Za-z0-9._-' '-')
           BRANCH="codegen/${SAFE_TASK}/${{ matrix.agent }}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git checkout -b "$BRANCH"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
@@ -87,14 +96,17 @@ jobs:
             "${{ matrix.agent }}"
 
       - name: Commit agent results
-        if: always()
+        if: always() && steps.branch.outcome == 'success'
         run: |
-          git add -A automation/codegen/runs/ automation/codegen/generated/
-          git diff --cached --quiet && echo "nothing to commit" || \
+          git add -A automation/codegen/runs/ automation/codegen/generated/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "nothing to commit"
+          else
             git commit -m "codegen(${{ steps.inputs.outputs.task_id }}): ${{ matrix.agent }} results [skip ci]"
+          fi
 
       - name: Push isolated branch
-        if: always()
+        if: always() && steps.branch.outcome == 'success'
         run: |
           git push -u origin "${{ steps.branch.outputs.branch }}"
 
@@ -103,18 +115,23 @@ jobs:
         shell: bash
         run: |
           echo "## Autonomous Codegen - ${{ matrix.agent }}" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Task: \`${{ steps.inputs.outputs.task_id }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Agent: \`${{ matrix.agent }}\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "- Branch: \`${{ steps.branch.outputs.branch }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Task: ${{ steps.inputs.outputs.task_id || 'unresolved' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Agent: ${{ matrix.agent }}" >> "$GITHUB_STEP_SUMMARY"
+          if [ -n "${{ steps.branch.outputs.branch }}" ]; then
+            echo "- Branch: ${{ steps.branch.outputs.branch }}" >> "$GITHUB_STEP_SUMMARY"
+          fi
           RUN_DIR="automation/codegen/runs/${{ steps.inputs.outputs.task_id }}/${{ matrix.agent }}"
-          RUNS=$(find "$RUN_DIR" -maxdepth 1 -name 'iter_*.json' 2>/dev/null | wc -l | tr -d ' ')
-          echo "- Iterations recorded: $RUNS" >> "$GITHUB_STEP_SUMMARY"
-          LAST=$(find "$RUN_DIR" -maxdepth 1 -name 'iter_*.json' 2>/dev/null | sort | tail -1)
-          if [ -n "$LAST" ]; then
-            PASSED=$(python -c "import json; d=json.load(open('$LAST')); print('✅ PASSED' if d['passed'] else '❌ FAILED')")
-            echo "- Final status: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+          if [ -d "$RUN_DIR" ]; then
+            RUNS=$(find "$RUN_DIR" -maxdepth 1 -name 'iter_*.json' | wc -l | tr -d ' ')
+            echo "- Iterations recorded: $RUNS" >> "$GITHUB_STEP_SUMMARY"
+            LAST=$(find "$RUN_DIR" -maxdepth 1 -name 'iter_*.json' | sort | tail -1)
+            if [ -n "$LAST" ]; then
+              PASSED=$(python -c "import json; d=json.load(open('$LAST')); print('PASSED' if d['passed'] else 'FAILED')")
+              echo "- Final status: $PASSED" >> "$GITHUB_STEP_SUMMARY"
+            fi
           else
-            echo "- Final status: ⚠️ no run record" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Iterations recorded: 0" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Final status: no run record" >> "$GITHUB_STEP_SUMMARY"
           fi
 
       - name: Fail job when loop did not pass
