@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import sys
 from pathlib import Path
 
 from senju.opposition_force import run_live_opposition_force
@@ -28,7 +27,7 @@ def main() -> int:
         args.json_out.parent.mkdir(parents=True, exist_ok=True)
         args.json_out.write_text(encoded + "\n", encoding="utf-8")
 
-    if args.fail_on-surprise and not report.passed:
+    if args.fail_on_surprise and not report.passed:
         return 1
     return 0
 
