@@ -58,10 +58,36 @@ class EliteWhiteHatContinuousTests(unittest.TestCase):
         second = [(worker._select(frontier, "101", i)[0]["id"], worker._select(frontier, "101", i)[1]) for i in range(1, 6)]
         self.assertNotEqual(first, second)
 
+    def test_eval_preferred_lens_is_bounded_to_two_of_ten_rounds(self):
+        tmp, root = self._fixture()
+        self.addCleanup(tmp.cleanup)
+        frontier = json.loads((root / worker.FRONTIER_PATH).read_text())
+        selected = [worker._select(frontier, "100", i, "LENS-11")[0]["id"] for i in range(1, 11)]
+        self.assertEqual(selected[0], "LENS-11")
+        self.assertEqual(selected[5], "LENS-11")
+        self.assertTrue(any(value != "LENS-11" for idx, value in enumerate(selected) if idx not in {0, 5}))
+
+    def test_unknown_eval_lens_falls_back_to_broad_rotation(self):
+        tmp, root = self._fixture()
+        self.addCleanup(tmp.cleanup)
+        frontier = json.loads((root / worker.FRONTIER_PATH).read_text())
+        normal = [worker._select(frontier, "100", i)[0]["id"] for i in range(1, 6)]
+        unknown = [worker._select(frontier, "100", i, "NOT-A-LENS")[0]["id"] for i in range(1, 6)]
+        self.assertEqual(normal, unknown)
+
     def test_round_never_self_promotes_verified(self):
         tmp, root = self._fixture()
         self.addCleanup(tmp.cleanup)
         row = worker.run_round(root, 1, "100-1")
+        self.assertEqual(row["status"], "BUILDING")
+        self.assertIn("runtime_and_customer_validation_not_inferred_from_repository", row["promotion_blockers"])
+
+    def test_assisted_round_is_explicitly_labeled_and_still_building(self):
+        tmp, root = self._fixture()
+        self.addCleanup(tmp.cleanup)
+        row = worker.run_round(root, 1, "100-1", "LENS-11")
+        self.assertEqual(row["lens_id"], "LENS-11")
+        self.assertEqual(row["selection_source"], "ai_security_eval")
         self.assertEqual(row["status"], "BUILDING")
         self.assertIn("runtime_and_customer_validation_not_inferred_from_repository", row["promotion_blockers"])
 

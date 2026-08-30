@@ -2,28 +2,28 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-08-30T04:09:04+09:00`
+Updated JST: `2026-08-30T19:53:08+09:00`
 
 ## TODAY'S PRIMARY BET
-- `SEC-PORT-010` — LLM Security Evaluation Harness
-- status: **BUILDING**
+- `SEC-PORT-001` — Standment Security Scan dogfood + Before/After case study
+- status: **VISIBLE**
 - evidence coverage: **100%**
-- white-hat candidates: **0**
-- Senju focus: **learning**
-- selection: `ROTATED_AFTER_STAGNATION:SEC-PORT-009->SEC-PORT-010`
-- next material action: Run an independent retest, preserve counterevidence, and document residual risk before any verification claim.
+- white-hat candidates: **4**
+- Senju focus: **robustness**
+- selection: `HIGHEST_EVIDENCE_CLOSURE_SCORE`
+- next material action: Convert the strongest white-hat candidate into a bounded reproduction -> remediation -> independent retest evidence bundle.
 
 ## THREE-LANE R&D
-- Verification closure: `SEC-PORT-009`
-- White-hat challenge: `SEC-PORT-001` (2 candidates)
-- AI-native security: `SEC-PORT-009`
+- Verification closure: `SEC-PORT-001`
+- White-hat challenge: `SEC-PORT-001` (4 candidates)
+- AI-native security: `SEC-PORT-005`
 
 ## NORTH STAR
-- verified: **0/11**
-- full evidence-file coverage: **5/11**
-- average evidence coverage: **85%**
-- open white-hat candidates: **2**
-- unfinished tracks: **11**
+- verified: **2/11**
+- full evidence-file coverage: **11/11**
+- average evidence coverage: **100%**
+- open white-hat candidates: **4**
+- unfinished tracks: **9**
 - stagnation streak: **0**
 
 ## ANTI-STAGNATION

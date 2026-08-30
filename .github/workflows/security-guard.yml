@@ -73,7 +73,10 @@ jobs:
           fi
 
       - name: Enforce fail-closed workflow policy
-        run: python automation/security/workflow_policy.py
+        run: python automation/security/workflow_policy_entrypoint.py
+
+      - name: Enforce external-evidence reality gate
+        run: python automation/security/reality_gate.py
 
       - name: Block remote shell execution patterns
         shell: bash

@@ -1,9 +1,18 @@
 name: TOMOKI - MANAGER Queue Bridge
 
+# Master Control recurrence guard: the policy-approved five-minute schedule remains
+# canonical. Realtime Kernel, THE CORE, and the independent security scan are redundant
+# wake paths so a dropped GitHub schedule cannot leave the canonical Manager heartbeat stale indefinitely.
 on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows:
+      - 'THE WORLD - Realtime Kernel'
+      - 'THE CORE - Autonomous Director'
+      - 'Standment Security Scan'
+    types: [completed]
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
@@ -35,9 +44,7 @@ jobs:
 
       - name: Heartbeat and move up to three P100 Manager tasks into independent review
         run: |
-          python automation/control_plane/manager_queue.py \
-            --max 3 \
-            --out reports/control-plane/manager-queue-cycle.json
+          python automation/control_plane/manager_queue.py --max 3
 
       - name: Queue bridge summary
         if: always()
