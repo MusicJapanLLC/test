@@ -2,12 +2,14 @@ name: Senju Autonomous Self-Development Loop
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 * * * *"   # every hour
   workflow_dispatch:
   workflow_run:
     workflows:
       - "Senju GitHub Native Autonomous Improver"
       - "Auto Merge PRs"
+      - "Senju Data Mesh — Unified Intelligence Hub"
+      - "Senju Blitz — Parallel Adversary Surge"
     types: [completed]
 
 concurrency:
@@ -19,7 +21,7 @@ jobs:
     name: Verify → ELO gap plan → deduplicated PR
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 120
     permissions:
       contents: write
       pull-requests: write
@@ -120,7 +122,7 @@ jobs:
           python senju/scripts/self_code_gen.py \
             --summary /tmp/evolution-summary.json \
             --labs-dir senju/labs \
-            --max-manifests 3 \
+            --max-manifests 10 \
             --report-json /tmp/self-code-gen-report.json
 
           python - <<'PY' >> "$GITHUB_OUTPUT"

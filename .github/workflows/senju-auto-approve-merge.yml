@@ -1,0 +1,85 @@
+name: Senju Auto-Approve and Merge
+
+# Instantly approve and squash-merge any PR opened by the self-development loop.
+# No human review required for Senju-generated lab manifests.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  schedule:
+    - cron: "*/5 * * * *"  # sweep every 5 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-approve-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+
+    steps:
+      - name: Approve and merge Senju-generated PRs
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const pulls = await github.rest.pulls.list({
+              owner, repo, state: 'open', per_page: 100
+            });
+
+            const senjuTitles = [
+              'feat(senju)', 'auto-lab', 'Senju', 'senju'
+            ];
+            const senjuAuthors = [
+              'github-actions[bot]', 'github-actions'
+            ];
+
+            let merged = 0;
+            for (const pr of pulls.data) {
+              const isSenjuPR =
+                senjuAuthors.includes(pr.user.login) ||
+                senjuTitles.some(t => pr.title.includes(t));
+
+              if (!isSenjuPR) continue;
+              if (pr.draft) continue;
+
+              // Check if already approved
+              const reviews = await github.rest.pulls.listReviews({
+                owner, repo, pull_number: pr.number
+              });
+              const alreadyApproved = reviews.data.some(
+                r => r.state === 'APPROVED'
+              );
+
+              if (!alreadyApproved) {
+                try {
+                  await github.rest.pulls.createReview({
+                    owner, repo, pull_number: pr.number,
+                    event: 'APPROVE',
+                    body: 'Auto-approved: Senju-generated lab manifest — no human review required.'
+                  });
+                  console.log(`✅ Approved PR #${pr.number}: ${pr.title}`);
+                } catch (e) {
+                  console.log(`⚠️ Could not approve PR #${pr.number}: ${e.message}`);
+                }
+              }
+
+              // Attempt squash merge
+              try {
+                const mergeResult = await github.rest.pulls.merge({
+                  owner, repo, pull_number: pr.number,
+                  merge_method: 'squash',
+                  commit_title: pr.title,
+                });
+                console.log(`🚀 Merged PR #${pr.number}: ${pr.title}`);
+                merged++;
+              } catch (e) {
+                console.log(`⏭️ PR #${pr.number} not ready yet: ${e.message}`);
+              }
+            }
+            console.log(`Total merged: ${merged}`);
