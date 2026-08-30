@@ -1,10 +1,13 @@
-name: Senju External Contact Proof
+name: Senju External Contact Autopilot
 
 on:
+  schedule:
+    - cron: "37 */6 * * *"
   workflow_dispatch:
   push:
     branches:
-      - "feat/senju-external-contact-20260830"
+      - "claude/employee-onboarding-setup-udm86"
+      - "feat/senju-external-contact-v2-20260830"
     paths:
       - "senju/**"
       - ".github/workflows/senju-external-contact.yml"
@@ -18,12 +21,14 @@ concurrency:
 
 jobs:
   test-and-contact:
-    name: Tests + real public HTTPS contact
+    name: Tests + live public egress + response capture
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
@@ -40,17 +45,17 @@ jobs:
           python -m pip install pytest==9.1.1
           python -m pytest tests -q
 
-      - name: Prove existing attack-target guard is still closed
+      - name: Prove Arena target guard remains fail-closed
         working-directory: senju
         run: |
           set -euo pipefail
           python -m senju.cli safety-check sim://ci-target
           if python -m senju.cli safety-check https://example.com; then
-            echo "attack-target guard unexpectedly accepted a public URL" >&2
+            echo "Arena target guard unexpectedly accepted a public URL" >&2
             exit 1
           fi
 
-      - name: Perform real allowlisted external HTTPS contact
+      - name: Contact public web and capture response body
         working-directory: senju
         run: |
           set -euo pipefail
@@ -60,25 +65,47 @@ jobs:
             --allow-host example.com \
             --method GET \
             --timeout 5 \
-            --receipt /tmp/senju-contact/receipt.json
+            --retries 2 \
+            --receipt /tmp/senju-contact/example-receipt.json \
+            --response-out /tmp/senju-contact/example-body.html
+
+      - name: Contact public API independently
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m senju.cli contact \
+            https://api.github.com/zen \
+            --allow-host api.github.com \
+            --method GET \
+            --timeout 5 \
+            --retries 2 \
+            --receipt /tmp/senju-contact/github-receipt.json \
+            --response-out /tmp/senju-contact/github-body.txt
+
+      - name: Verify live evidence contract
+        run: |
+          set -euo pipefail
           python - <<'PY'
           import json
           from pathlib import Path
 
-          receipt = json.loads(Path('/tmp/senju-contact/receipt.json').read_text())
-          assert receipt['schema'] == 'senju-external-contact/v1'
-          assert receipt['host'] == 'example.com'
-          assert receipt['status'] >= 200 and receipt['status'] < 400
-          assert receipt['provider_acknowledged'] is True
-          assert receipt['resolved_ips']
-          print('SENJU_EXTERNAL_CONTACT_VERIFIED')
-          print(json.dumps(receipt, indent=2))
+          for stem in ('example', 'github'):
+              receipt = json.loads(Path(f'/tmp/senju-contact/{stem}-receipt.json').read_text())
+              body = Path(f'/tmp/senju-contact/{stem}-body.' + ('html' if stem == 'example' else 'txt')).read_bytes()
+              assert receipt['schema'] == 'senju-external-contact/v2'
+              assert 200 <= receipt['status'] < 400
+              assert receipt['provider_acknowledged'] is True
+              assert receipt['resolved_ips']
+              assert receipt['response_bytes'] == len(body)
+              assert len(body) > 0
+              assert 1 <= receipt['attempt_count'] <= 3
+          print('SENJU_EXTERNAL_CONTACT_V2_VERIFIED')
           PY
 
-      - name: Upload external-contact receipt
+      - name: Upload external-contact evidence
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: senju-external-contact-receipt
+          name: senju-external-contact-v2-evidence
           retention-days: 30
           if-no-files-found: error
-          path: /tmp/senju-contact/receipt.json
+          path: /tmp/senju-contact/

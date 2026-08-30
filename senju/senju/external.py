@@ -1,18 +1,19 @@
 """Guarded outbound HTTP contact for Senju.
 
-This module is intentionally separate from Senju's attack/target framework.
-It gives Senju a small, auditable way to contact explicitly approved public
-HTTP(S) endpoints without turning public hosts into attack targets.
+This module is intentionally separate from Senju's Arena target framework.
+It gives Senju an auditable transport for explicitly approved public HTTP(S)
+endpoints without turning public hosts into attack targets.
 
-Properties:
-- public host must be explicitly allowlisted;
-- HTTPS is required unless the caller explicitly opts into HTTP;
-- DNS results must all be globally routable (no loopback/private/link-local,
-  metadata, multicast, reserved, or unspecified addresses);
-- only GET/HEAD/POST are supported;
+Capabilities:
+- exact public-host allowlist;
+- HTTPS by default;
+- GET/HEAD/POST/PUT/PATCH;
+- bounded request and response bodies;
+- response-body capture for downstream agents;
+- bounded transport retries;
+- DNS validation blocks loopback/private/link-local/metadata/reserved addresses;
 - redirects are not followed automatically;
-- request/response sizes and timeouts are bounded;
-- every contact returns a machine-readable receipt.
+- every contact emits a machine-readable receipt.
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ import hashlib
 import ipaddress
 import json
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -34,7 +36,7 @@ class ExternalContactError(RuntimeError):
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
-    """Return the provider's redirect response instead of following it."""
+    """Return provider redirect responses instead of following them."""
 
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
         return None
@@ -42,16 +44,18 @@ class _NoRedirect(urllib.request.HTTPRedirectHandler):
 
 @dataclass(frozen=True)
 class ExternalContactPolicy:
-    """Policy for a single Senju outbound-contact lane."""
+    """Policy for a Senju outbound-contact lane."""
 
     allow_hosts: frozenset[str] = field(default_factory=frozenset)
     allow_http: bool = False
     allowed_methods: frozenset[str] = field(
-        default_factory=lambda: frozenset({"GET", "HEAD", "POST"})
+        default_factory=lambda: frozenset({"GET", "HEAD", "POST", "PUT", "PATCH"})
     )
     timeout_seconds: float = 5.0
-    max_request_bytes: int = 16 * 1024
-    max_response_bytes: int = 64 * 1024
+    max_request_bytes: int = 64 * 1024
+    max_response_bytes: int = 512 * 1024
+    retries: int = 1
+    retry_backoff_seconds: float = 0.25
 
     @classmethod
     def from_hosts(
@@ -60,12 +64,16 @@ class ExternalContactPolicy:
         *,
         allow_http: bool = False,
         timeout_seconds: float = 5.0,
+        max_response_bytes: int = 512 * 1024,
+        retries: int = 1,
     ) -> "ExternalContactPolicy":
         normalized = frozenset(_normalize_host(h) for h in hosts if h and h.strip())
         return cls(
             allow_hosts=normalized,
             allow_http=allow_http,
-            timeout_seconds=max(0.5, min(float(timeout_seconds), 10.0)),
+            timeout_seconds=max(0.5, min(float(timeout_seconds), 20.0)),
+            max_response_bytes=max(1024, min(int(max_response_bytes), 1024 * 1024)),
+            retries=max(0, min(int(retries), 3)),
         )
 
 
@@ -82,6 +90,7 @@ class ContactReceipt:
     response_bytes: int
     response_sha256: str
     content_type: str | None
+    attempt_count: int
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
@@ -90,6 +99,19 @@ class ContactReceipt:
         p = Path(path)
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_text(json.dumps(self.to_dict(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+@dataclass(frozen=True)
+class ContactResult:
+    """Receipt plus the bounded provider response body."""
+
+    receipt: ContactReceipt
+    body: bytes
+
+    def write_body(self, path: str | Path) -> None:
+        p = Path(path)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(self.body)
 
 
 def _normalize_host(host: str) -> str:
@@ -116,7 +138,10 @@ def _parse_url(url: str, policy: ExternalContactPolicy) -> tuple[str, int]:
     host = _normalize_host(parsed.hostname)
     if host not in policy.allow_hosts:
         raise ExternalContactError(f"host is not explicitly allowlisted: {host}")
-    port = parsed.port or (443 if scheme == "https" else 80)
+    try:
+        port = parsed.port or (443 if scheme == "https" else 80)
+    except ValueError as exc:
+        raise ExternalContactError("invalid URL port") from exc
     return host, port
 
 
@@ -133,8 +158,6 @@ def _resolve_public(host: str, port: int) -> tuple[str, ...]:
             ip = ipaddress.ip_address(raw)
         except ValueError as exc:
             raise ExternalContactError(f"resolver returned invalid address for {host}: {raw}") from exc
-        # is_global excludes RFC1918, loopback, link-local, multicast, reserved,
-        # unspecified, documentation-only and the common cloud metadata ranges.
         if not ip.is_global:
             raise ExternalContactError(f"non-public address blocked for {host}: {ip}")
         ips.add(str(ip))
@@ -144,18 +167,36 @@ def _resolve_public(host: str, port: int) -> tuple[str, ...]:
 
 
 def _safe_headers(headers: Mapping[str, str] | None) -> dict[str, str]:
-    out = {"User-Agent": "Senju-External-Contact/1.0"}
+    out = {"User-Agent": "Senju-External-Contact/2.0"}
+    forbidden = {"host", "content-length", "transfer-encoding", "connection"}
     for key, value in (headers or {}).items():
         if not key or any(c in key for c in "\r\n:"):
             raise ExternalContactError(f"invalid header name: {key!r}")
+        if key.lower() in forbidden:
+            raise ExternalContactError(f"caller-controlled header is not allowed: {key}")
         if "\r" in value or "\n" in value:
             raise ExternalContactError(f"invalid header value for {key}")
         out[key] = value
     return out
 
 
+def _validate_resolved(host: str, resolved: Iterable[str]) -> tuple[str, ...]:
+    checked: set[str] = set()
+    for raw in resolved:
+        try:
+            ip = ipaddress.ip_address(raw)
+        except ValueError as exc:
+            raise ExternalContactError(f"resolver returned invalid address: {raw}") from exc
+        if not ip.is_global:
+            raise ExternalContactError(f"non-public address blocked for {host}: {ip}")
+        checked.add(str(ip))
+    if not checked:
+        raise ExternalContactError(f"no public address resolved for {host}")
+    return tuple(sorted(checked))
+
+
 class ExternalContactClient:
-    """Perform bounded, allowlisted outbound HTTP contact and emit a receipt."""
+    """Perform bounded, allowlisted outbound HTTP contact and emit evidence."""
 
     def __init__(
         self,
@@ -163,6 +204,7 @@ class ExternalContactClient:
         *,
         resolver: Callable[[str, int], tuple[str, ...]] | None = None,
         opener: Callable[..., object] | None = None,
+        sleeper: Callable[[float], None] | None = None,
     ) -> None:
         self.policy = policy
         self._resolver = resolver or _resolve_public
@@ -171,6 +213,7 @@ class ExternalContactClient:
             self._open = built.open
         else:
             self._open = opener
+        self._sleep = sleeper or time.sleep
 
     def contact(
         self,
@@ -180,11 +223,23 @@ class ExternalContactClient:
         body: bytes | None = None,
         headers: Mapping[str, str] | None = None,
     ) -> ContactReceipt:
+        """Compatibility API: perform contact and return only the receipt."""
+        return self.contact_with_body(url, method=method, body=body, headers=headers).receipt
+
+    def contact_with_body(
+        self,
+        url: str,
+        *,
+        method: str = "GET",
+        body: bytes | None = None,
+        headers: Mapping[str, str] | None = None,
+    ) -> ContactResult:
+        """Perform contact and return both receipt and bounded response bytes."""
         method = method.upper().strip()
         if method not in self.policy.allowed_methods:
             raise ExternalContactError(f"method is not allowed: {method}")
-        if body is not None and method not in {"POST"}:
-            raise ExternalContactError("request body is supported only for POST")
+        if body is not None and method not in {"POST", "PUT", "PATCH"}:
+            raise ExternalContactError("request body is supported only for POST/PUT/PATCH")
         payload = body or b""
         if len(payload) > self.policy.max_request_bytes:
             raise ExternalContactError(
@@ -192,42 +247,42 @@ class ExternalContactClient:
             )
 
         host, port = _parse_url(url, self.policy)
-        resolved = tuple(self._resolver(host, port))
-        if not resolved:
-            raise ExternalContactError(f"no public address resolved for {host}")
-        # Custom resolvers used by embedders/tests must still obey the same public-IP gate.
-        for raw in resolved:
-            try:
-                ip = ipaddress.ip_address(raw)
-            except ValueError as exc:
-                raise ExternalContactError(f"resolver returned invalid address: {raw}") from exc
-            if not ip.is_global:
-                raise ExternalContactError(f"non-public address blocked for {host}: {ip}")
-
+        resolved = _validate_resolved(host, self._resolver(host, port))
         req = urllib.request.Request(
             url,
-            data=(payload if method == "POST" else None),
+            data=(payload if method in {"POST", "PUT", "PATCH"} else None),
             headers=_safe_headers(headers),
             method=method,
         )
 
-        try:
-            response = self._open(req, timeout=self.policy.timeout_seconds)
-            status = int(response.status)
-            content_type = response.headers.get("Content-Type") if response.headers else None
-            data = b"" if method == "HEAD" else response.read(self.policy.max_response_bytes + 1)
+        last_error: Exception | None = None
+        attempts = self.policy.retries + 1
+        for attempt in range(1, attempts + 1):
             try:
-                response.close()
-            except Exception:
-                pass
-        except urllib.error.HTTPError as exc:
-            # A real HTTP response is still externally verifiable contact. Preserve it
-            # as a non-acknowledged receipt rather than disguising it as transport loss.
-            status = int(exc.code)
-            content_type = exc.headers.get("Content-Type") if exc.headers else None
-            data = exc.read(self.policy.max_response_bytes + 1)
-        except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise ExternalContactError(f"external contact failed: {exc}") from exc
+                response = self._open(req, timeout=self.policy.timeout_seconds)
+                status = int(response.status)
+                content_type = response.headers.get("Content-Type") if response.headers else None
+                data = b"" if method == "HEAD" else response.read(self.policy.max_response_bytes + 1)
+                try:
+                    response.close()
+                except Exception:
+                    pass
+                break
+            except urllib.error.HTTPError as exc:
+                # HTTP errors are real provider responses, not transport loss.
+                status = int(exc.code)
+                content_type = exc.headers.get("Content-Type") if exc.headers else None
+                data = exc.read(self.policy.max_response_bytes + 1)
+                break
+            except (urllib.error.URLError, TimeoutError, OSError) as exc:
+                last_error = exc
+                if attempt >= attempts:
+                    raise ExternalContactError(
+                        f"external contact failed after {attempt} attempt(s): {exc}"
+                    ) from exc
+                self._sleep(self.policy.retry_backoff_seconds * attempt)
+        else:  # pragma: no cover - loop exits via break or raise
+            raise ExternalContactError(f"external contact failed: {last_error}")
 
         if len(data) > self.policy.max_response_bytes:
             raise ExternalContactError(
@@ -235,16 +290,18 @@ class ExternalContactClient:
             )
 
         now = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
-        return ContactReceipt(
-            schema="senju-external-contact/v1",
+        receipt = ContactReceipt(
+            schema="senju-external-contact/v2",
             contacted_at_utc=now,
             method=method,
             url=url,
             host=host,
-            resolved_ips=tuple(sorted(set(resolved))),
+            resolved_ips=resolved,
             status=status,
             provider_acknowledged=200 <= status < 400,
             response_bytes=len(data),
             response_sha256=hashlib.sha256(data).hexdigest(),
             content_type=content_type,
+            attempt_count=attempt,
         )
+        return ContactResult(receipt=receipt, body=data)
