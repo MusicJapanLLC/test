@@ -1,0 +1,201 @@
+name: Senju Real Scan — Nuclei against own endpoints
+
+on:
+  schedule:
+    - cron: "0 20 * * *"  # 05:00 JST daily
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Target URL (must be own domain only)"
+        required: false
+        default: ""
+
+concurrency:
+  group: senju-nuclei-scan
+  cancel-in-progress: true
+
+jobs:
+  nuclei-scan:
+    name: Nuclei scan against own services
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      actions: read
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OWN_DOMAINS: |
+        iyomaru-ramen.vercel.app
+        musicjapanllc.github.io
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Validate target URL (own domains only)
+        id: validate
+        shell: python
+        run: |
+          import os, sys, urllib.parse
+
+          own_domains = [d.strip() for d in os.environ['OWN_DOMAINS'].splitlines() if d.strip()]
+          input_url = "${{ github.event.inputs.target_url }}".strip()
+
+          if not input_url:
+              target = f"https://{own_domains[0]}"
+          else:
+              parsed = urllib.parse.urlparse(input_url)
+              host = parsed.hostname or ""
+              if not any(host == d or host.endswith(f".{d}") for d in own_domains):
+                  print(f"SECURITY VIOLATION: {host} is not in the own-domain allowlist.")
+                  sys.exit(1)
+              target = input_url
+
+          print(f"Validated target: {target}")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"target={target}\n")
+
+      - name: Install Nuclei
+        run: |
+          curl -sL https://github.com/projectdiscovery/nuclei/releases/latest/download/nuclei_linux_amd64.zip -o nuclei.zip
+          unzip -q nuclei.zip nuclei
+          chmod +x nuclei
+          sudo mv nuclei /usr/local/bin/
+
+      - name: Update Nuclei templates
+        run: nuclei -update-templates -silent
+
+      - name: Run Nuclei scan (safe templates only)
+        id: scan
+        run: |
+          mkdir -p /tmp/nuclei-results
+          TARGET="${{ steps.validate.outputs.target }}"
+          echo "Scanning: $TARGET"
+
+          nuclei \
+            -u "$TARGET" \
+            -tags misconfig,exposure,config,tech,info,ssl,headers \
+            -exclude-tags dos,fuzz,rce,sqli,xss,intrusive,exploit \
+            -severity info,low,medium,high \
+            -jsonl \
+            -o /tmp/nuclei-results/findings.jsonl \
+            -silent \
+            -timeout 5 \
+            -rate-limit 20 \
+            -max-host-error 5 \
+            || true
+
+          COUNT=$(wc -l < /tmp/nuclei-results/findings.jsonl 2>/dev/null || echo 0)
+          echo "findings=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "target=$TARGET" >> "$GITHUB_OUTPUT"
+
+      - name: Generate evidence summary
+        shell: python
+        run: |
+          import json, os
+          from pathlib import Path
+          from datetime import datetime, timezone
+
+          findings_path = Path("/tmp/nuclei-results/findings.jsonl")
+          findings = []
+          if findings_path.exists():
+              for line in findings_path.read_text().splitlines():
+                  if line.strip():
+                      findings.append(json.loads(line))
+
+          by_severity = {}
+          for f in findings:
+              sev = f.get("info", {}).get("severity", "unknown")
+              by_severity.setdefault(sev, []).append({
+                  "name": f.get("info", {}).get("name", ""),
+                  "template_id": f.get("template-id", ""),
+                  "matched_at": f.get("matched-at", ""),
+                  "tags": f.get("info", {}).get("tags", []),
+              })
+
+          evidence = {
+              "scan_time": datetime.now(timezone.utc).isoformat(),
+              "target": "${{ steps.validate.outputs.target }}",
+              "total_findings": len(findings),
+              "by_severity": {k: len(v) for k, v in by_severity.items()},
+              "findings": findings[:50],
+          }
+
+          out = Path("/tmp/nuclei-results/evidence.json")
+          out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2))
+
+          summary = f"""## Nuclei Scan Results
+- **Target**: {evidence['target']}
+- **Total findings**: {evidence['total_findings']}
+- **By severity**: {evidence['by_severity']}
+"""
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as f:
+              f.write(summary)
+
+      - name: Feed findings back into Senju as observed evidence
+        if: steps.scan.outputs.findings != '0'
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+
+          evidence = json.loads(Path("/tmp/nuclei-results/evidence.json").read_text())
+          summary_path = Path("senju/state/last-evolution-summary.json")
+          summary = json.loads(summary_path.read_text()) if summary_path.exists() else {}
+
+          tag_to_vuln = {
+              "misconfig": "misconfig",
+              "exposure": "secrets_exposure",
+              "ssl": "misconfig",
+              "headers": "misconfig",
+              "config": "misconfig",
+              "sqli": "sqli",
+              "xss": "xss",
+              "ssrf": "ssrf",
+              "rce": "rce",
+              "idor": "idor",
+              "jwt": "jwt_weak",
+              "auth": "auth_bypass",
+          }
+
+          hits = summary.get("vuln_class_hits", {})
+          for finding in evidence.get("findings", []):
+              tags = finding.get("tags", [])
+              for tag in tags:
+                  vc = tag_to_vuln.get(tag.lower())
+                  if vc:
+                      hits[vc] = hits.get(vc, 0) + 1
+
+          summary["vuln_class_hits"] = hits
+          summary["last_nuclei_scan"] = {
+              "time": evidence["scan_time"],
+              "target": evidence["target"],
+              "total": evidence["total_findings"],
+              "by_severity": evidence["by_severity"],
+          }
+
+          summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
+          print(f"Updated vuln_class_hits: {hits}")
+
+      - name: Commit updated Senju state with scan evidence
+        if: steps.scan.outputs.findings != '0'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add senju/state/last-evolution-summary.json
+          git diff --cached --quiet && echo "no changes" || \
+            git commit -m "chore(senju): feed nuclei scan evidence into evolution state [run $GITHUB_RUN_ID]"
+          git push origin HEAD || true
+
+      - name: Upload scan evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-nuclei-scan-evidence
+          retention-days: 30
+          if-no-files-found: warn
+          path: /tmp/nuclei-results/

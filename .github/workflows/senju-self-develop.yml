@@ -1,0 +1,165 @@
+name: Senju Autonomous Self-Development Loop
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # every 6 hours
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Senju GitHub Native Autonomous Improver"]
+    types: [completed]
+
+concurrency:
+  group: senju-self-develop
+  cancel-in-progress: false
+
+jobs:
+  analyze-and-generate:
+    name: Gap analysis → lab manifest generation → PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BASE_BRANCH: claude/employee-onboarding-setup-udm86
+      GITHUB_REPOSITORY: ${{ github.repository }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ github.token }}
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Restore latest Senju evolution summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-memory
+          PREV_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju GitHub Native Autonomous Improver" \
+            --status success --limit 5 \
+            --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" --repo "$GITHUB_REPOSITORY" \
+              --name senju-validated-promotion --dir /tmp/senju-memory || true
+          fi
+          if [[ -f /tmp/senju-memory/last-evolution-summary.json ]]; then
+            cp /tmp/senju-memory/last-evolution-summary.json /tmp/evolution-summary.json
+            echo "Restored evolution summary from run $PREV_RUN"
+          elif [[ -f senju/state/last-evolution-summary.json ]]; then
+            cp senju/state/last-evolution-summary.json /tmp/evolution-summary.json
+            echo "Using repository state evolution summary"
+          else
+            echo '{}' > /tmp/evolution-summary.json
+            echo "No evolution summary found — starting fresh"
+          fi
+
+      - name: Run coverage gap analysis
+        id: gap
+        working-directory: senju
+        shell: python
+        run: |
+          import sys
+          sys.path.insert(0, ".")
+          from senju.lab_planner import analyze_coverage, find_gaps
+          import json
+          from pathlib import Path
+
+          summary = json.loads(Path("/tmp/evolution-summary.json").read_text())
+          coverage = analyze_coverage(summary)
+          gaps = find_gaps(coverage)
+
+          print(f"Coverage: {coverage}")
+          print(f"Gaps ({len(gaps)}): {gaps}")
+
+          with open("/tmp/gaps.json", "w") as f:
+              json.dump({"gaps": gaps, "coverage": coverage}, f, indent=2)
+
+          import os
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"gap_count={len(gaps)}\n")
+
+      - name: Generate lab manifests for gaps
+        id: gen
+        working-directory: senju
+        shell: python
+        run: |
+          import sys, json, os
+          sys.path.insert(0, ".")
+          from senju.lab_planner import plan
+          from pathlib import Path
+
+          written = plan(
+              "/tmp/evolution-summary.json",
+              "labs",
+              max_manifests=3,
+          )
+
+          paths = [str(p) for p in written]
+          print(f"Generated: {paths}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"manifest_count={len(written)}\n")
+              f.write(f"manifests={json.dumps(paths)}\n")
+
+      - name: Commit and push manifests, open PR
+        if: steps.gen.outputs.manifest_count != '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          BRANCH="senju/auto-lab-gen-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git checkout -b "$BRANCH"
+
+          git add senju/labs/
+          git diff --cached --quiet && { echo "Nothing to commit"; exit 0; }
+
+          MANIFESTS='${{ steps.gen.outputs.manifests }}'
+          COUNT='${{ steps.gen.outputs.manifest_count }}'
+
+          git commit -m "feat(senju): auto-generate $COUNT lab manifest(s) for gap coverage [run ${GITHUB_RUN_ID}]"
+          git push -u origin "$BRANCH"
+
+          BODY="## Senju Auto-Lab Generation
+
+          Coverage gap analysis on run \`${GITHUB_RUN_ID}\` triggered automatic generation of **${COUNT}** lab manifest(s).
+
+          **New manifests:** \`${MANIFESTS}\`
+
+          These declare new attack surfaces for under-tested vulnerability classes.
+          Will be auto-merged and active on the next Senju evolution cycle.
+
+          ---
+          _Generated by [Claude Code](https://claude.ai/code)_"
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$BASE_BRANCH" \
+            --head "$BRANCH" \
+            --title "feat(senju): auto-generate lab manifests for gap coverage [run ${GITHUB_RUN_ID}]" \
+            --body "$BODY"
+
+      - name: Summary
+        shell: bash
+        run: |
+          COUNT="${{ steps.gen.outputs.manifest_count || 0 }}"
+          GAPS="$(python -c "import json; d=json.load(open('/tmp/gaps.json')); print(len(d['gaps']))" 2>/dev/null || echo '?')"
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## Senju Self-Development Run ${GITHUB_RUN_ID}
+          - Coverage gaps found: **${GAPS}**
+          - Lab manifests generated: **${COUNT}**
+          - Next cycle: Senju will use the new attack surfaces automatically
+          EOF
