@@ -3,92 +3,34 @@ name: Autonomous Codegen Loop
 on:
   workflow_dispatch:
     inputs:
+      agent_id:
+        description: "Agent ID"
+        required: true
+        default: "codegen-1"
+        type: choice
+        options:
+          - codegen-1
+          - codegen-2
+          - codegen-3
       task_id:
-        description: "Task ID (filename in automation/codegen/tasks/ without .json)"
+        description: "Task ID (automation/codegen/tasks/<task_id>.json)"
         required: true
         default: "example"
       max_iterations:
-        description: "Max generation attempts"
+        description: "Maximum generation attempts"
         required: false
         default: "10"
-  # Allow other workflows to trigger this via repository_dispatch
   repository_dispatch:
     types: [run-codegen]
 
 permissions:
   contents: write
-  pull-requests: write
 
 jobs:
-  codegen-loop:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          pip install anthropic pytest
-
-      - name: Resolve inputs
-        id: inputs
-        run: |
-          TASK_ID="${{ github.event.inputs.task_id || github.event.client_payload.task_id || 'example' }}"
-          MAX_ITER="${{ github.event.inputs.max_iterations || github.event.client_payload.max_iterations || '10' }}"
-          echo "task_id=$TASK_ID" >> $GITHUB_OUTPUT
-          echo "max_iterations=$MAX_ITER" >> $GITHUB_OUTPUT
-
-      - name: Configure git
-        run: |
-          git config user.name "claude-codegen-bot"
-          git config user.email "claude-codegen-bot@noreply"
-
-      - name: Create working branch
-        id: branch
-        run: |
-          BRANCH="codegen/${{ steps.inputs.outputs.task_id }}-$(date +%s)"
-          git checkout -b "$BRANCH"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-
-      - name: Run autonomous loop
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          python automation/codegen/loop.py \
-            "${{ steps.inputs.outputs.task_id }}" \
-            "${{ steps.inputs.outputs.max_iterations }}"
-
-      - name: Commit results
-        if: always()
-        run: |
-          git add -A automation/codegen/runs/ automation/codegen/generated/
-          git diff --cached --quiet && echo "nothing to commit" || \
-            git commit -m "codegen(${{ steps.inputs.outputs.task_id }}): iteration results [skip ci]"
-
-      - name: Push branch
-        if: always()
-        run: |
-          git push -u origin "${{ steps.branch.outputs.branch }}"
-
-      - name: Report summary
-        if: always()
-        run: |
-          echo "## Codegen Loop Results" >> $GITHUB_STEP_SUMMARY
-          echo "- Task: \`${{ steps.inputs.outputs.task_id }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- Branch: \`${{ steps.branch.outputs.branch }}\`" >> $GITHUB_STEP_SUMMARY
-          RUNS=$(ls automation/codegen/runs/${{ steps.inputs.outputs.task_id }}/ 2>/dev/null | wc -l || echo 0)
-          echo "- Iterations run: $RUNS" >> $GITHUB_STEP_SUMMARY
-          LAST=$(ls automation/codegen/runs/${{ steps.inputs.outputs.task_id }}/ 2>/dev/null | tail -1)
-          if [ -n "$LAST" ]; then
-            PASSED=$(python -c "import json; d=json.load(open('automation/codegen/runs/${{ steps.inputs.outputs.task_id }}/$LAST')); print('✅ PASSED' if d['passed'] else '❌ FAILED')")
-            echo "- Final status: $PASSED" >> $GITHUB_STEP_SUMMARY
-          fi
+  selected-agent:
+    uses: ./.github/workflows/_autonomous-codegen-agent.yml
+    with:
+      agent_id: ${{ github.event.inputs.agent_id || github.event.client_payload.agent_id || 'codegen-1' }}
+      task_id: ${{ github.event.inputs.task_id || github.event.client_payload.task_id || 'example' }}
+      max_iterations: ${{ github.event.inputs.max_iterations || github.event.client_payload.max_iterations || '10' }}
+    secrets: inherit
