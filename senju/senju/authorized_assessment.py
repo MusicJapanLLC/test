@@ -3,13 +3,18 @@
 PROJECT SENJU SPEAR phase 1.
 
 This module turns a machine-readable engagement manifest into a bounded,
-non-destructive external assessment plan. It deliberately separates aggressive
-research intent from execution authority: an assessment may only contact exact
-hosts declared in a currently-valid manifest, and phase 1 only permits passive
-or low-impact HTTP observation (HEAD/GET/OPTIONS).
+non-destructive external assessment plan. Inside an authorized campaign scope,
+Red research intent and execution orchestration are treated as one continuous
+loop rather than separate authorities.
+
+Live public-network execution still requires explicit asset ownership or
+authorization evidence and target hosts in scope. ``engagement_id`` and a
+validity window are audit metadata: they may be omitted when the authorization
+reference represents standing authority. When a validity window is supplied,
+it is enforced for live execution.
 
 No exploit payloads, credential attacks, brute force, destructive methods, or
-wildcard target expansion are implemented here.
+unapproved target expansion are implemented here.
 """
 from __future__ import annotations
 
@@ -157,8 +162,6 @@ class EngagementManifest:
         return cls.from_dict(raw)
 
     def validate(self, *, now: dt.datetime | None = None, enforce_window: bool = False) -> None:
-        if not self.engagement_id:
-            raise EngagementError("engagement_id is required")
         if not self.owner:
             raise EngagementError("owner is required")
         if not self.authorization_reference:
@@ -178,13 +181,26 @@ class EngagementManifest:
             raise EngagementError("max_requests_per_target must be between 1 and 8")
         if not 0.1 <= self.max_rps <= 2.0:
             raise EngagementError("max_rps must be between 0.1 and 2.0")
-        start = _utc(self.valid_from_utc, field_name="valid_from_utc")
-        end = _utc(self.valid_until_utc, field_name="valid_until_utc")
-        if end <= start:
-            raise EngagementError("valid_until_utc must be after valid_from_utc")
+
+        has_start = bool(self.valid_from_utc)
+        has_end = bool(self.valid_until_utc)
+        if has_start != has_end:
+            raise EngagementError(
+                "valid_from_utc and valid_until_utc must either both be set or both be omitted"
+            )
+
+        start: dt.datetime | None = None
+        end: dt.datetime | None = None
+        if has_start and has_end:
+            start = _utc(self.valid_from_utc, field_name="valid_from_utc")
+            end = _utc(self.valid_until_utc, field_name="valid_until_utc")
+            if end <= start:
+                raise EngagementError("valid_until_utc must be after valid_from_utc")
+
         for target in self.targets:
             target.validate(allow_http=self.allow_http)
-        if enforce_window:
+
+        if enforce_window and start is not None and end is not None:
             current = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
             if current < start:
                 raise EngagementError("engagement is not active yet")
@@ -202,6 +218,13 @@ class EngagementManifest:
             self.canonical_dict(), sort_keys=True, separators=(",", ":")
         ).encode("utf-8")
         return hashlib.sha256(encoded).hexdigest()
+
+    @property
+    def effective_engagement_id(self) -> str:
+        """Return a stable audit id even when no explicit id was supplied."""
+        if self.engagement_id:
+            return self.engagement_id
+        return f"auto-{self.sha256()[:12]}"
 
 
 @dataclass(frozen=True)
@@ -311,7 +334,8 @@ class AuthorizedAssessmentRunner:
         created = (now or dt.datetime.now(dt.timezone.utc)).astimezone(dt.timezone.utc)
         return {
             "schema": "senju-authorized-assessment/v1",
-            "engagement_id": self.manifest.engagement_id,
+            "engagement_id": self.manifest.effective_engagement_id,
+            "engagement_id_source": "provided" if self.manifest.engagement_id else "derived",
             "owner": self.manifest.owner,
             "authorization_reference": self.manifest.authorization_reference,
             "manifest_sha256": self.manifest.sha256(),
@@ -328,7 +352,8 @@ def dry_run_report(manifest: EngagementManifest) -> dict[str, Any]:
     plan = build_plan(manifest)
     return {
         "schema": "senju-authorized-assessment-plan/v1",
-        "engagement_id": manifest.engagement_id,
+        "engagement_id": manifest.effective_engagement_id,
+        "engagement_id_source": "provided" if manifest.engagement_id else "derived",
         "manifest_sha256": manifest.sha256(),
         "destructive": False,
         "exact_hosts": [target.host for target in manifest.targets],
