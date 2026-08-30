@@ -1,14 +1,13 @@
-"""ScopeGuard の strict / experiment / unrestricted 挙動を検証する。"""
+"""ScopeGuard の strict / experiment 挙動を検証する。"""
 import pytest
 
+import senju.safety as safety
 from senju.safety import (
     ScopeGuard,
     ScopePolicy,
     ScopeViolation,
-    UnrestrictedArenaGuard,
     default_lab_policy,
     experimental_lab_policy,
-    unrestricted_arena_guard,
 )
 
 
@@ -56,7 +55,7 @@ def test_labnet_requires_optin_in_strict_mode():
     g2.check("labnet:dvwa")
 
 
-def test_experimental_mode_allows_abstract_external_refs():
+def test_experimental_mode_allows_abstract_external_refs_only_as_simulation_refs():
     g = ScopeGuard(experimental_lab_policy())
     g.check("example.com")
     g.check("203.0.113.10")
@@ -76,24 +75,6 @@ def test_empty_ref_still_rejected_in_experimental_mode():
         g.check("")
 
 
-def test_unrestricted_arena_guard_never_rejects_target_refs():
-    g = UnrestrictedArenaGuard()
-    for ref in (
-        "",
-        "example.com",
-        "8.8.8.8",
-        "10.0.0.5",
-        "labnet:juice-shop",
-        "sim://anything",
-        "research-target:anything",
-        "totally-arbitrary-ref",
-    ):
-        g.check(ref)
-        assert g.is_allowed(ref) is True
-    assert g.violations == []
-
-
-def test_unrestricted_factory_returns_noop_scope_guard():
-    g = unrestricted_arena_guard()
-    g.check("anything-at-all")
-    assert g.is_allowed("anything-at-all") is True
+def test_no_unrestricted_noop_guard_is_exported():
+    assert not hasattr(safety, "UnrestrictedArenaGuard")
+    assert not hasattr(safety, "unrestricted_arena_guard")
