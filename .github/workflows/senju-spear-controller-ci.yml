@@ -4,7 +4,9 @@ on:
   pull_request:
     paths:
       - "senju/senju/authorized_assessment.py"
+      - "senju/senju/spear_web.py"
       - "senju/tests/test_authorized_assessment.py"
+      - "senju/tests/test_spear_web.py"
       - "senju/examples/spear-engagement.example.json"
       - "senju/SPEAR.md"
       - ".github/workflows/senju-spear-controller-ci.yml"
@@ -15,7 +17,7 @@ permissions:
 
 jobs:
   controller:
-    name: Engagement authority -> plan -> guarded fake execution
+    name: Engagement authority -> plan -> web posture -> guarded fake execution
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -29,7 +31,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Run SPEAR controller tests
+      - name: Run SPEAR controller and posture tests
         working-directory: senju
         env:
           PIP_DISABLE_PIP_VERSION_CHECK: "1"
@@ -37,7 +39,11 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install pytest==9.1.1
-          python -m pytest tests/test_authorized_assessment.py tests/test_external_contact.py -q
+          python -m pytest \
+            tests/test_authorized_assessment.py \
+            tests/test_spear_web.py \
+            tests/test_external_contact.py \
+            -q
 
       - name: Prove example manifest dry-run stays network-free
         working-directory: senju
