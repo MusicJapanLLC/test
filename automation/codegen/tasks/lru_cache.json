@@ -1,0 +1,8 @@
+{
+  "name": "LRU Cache",
+  "domain": "data_structures",
+  "goal": "Implement `class LRUCache` with `__init__(self, capacity: int)`, `get(self, key: int) -> int` (return -1 if missing), `put(self, key: int, value: int) -> None`. O(1) for both operations.",
+  "output_file": "automation/codegen/generated/lru_cache.py",
+  "test_cmd": "python -m pytest automation/codegen/tests/test_lru_cache.py -v",
+  "constraints": "O(1) get and put. stdlib only. No functools.lru_cache."
+}

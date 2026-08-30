@@ -1,0 +1,66 @@
+name: Codegen Task Expander
+
+on:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "Number of new tasks to generate"
+        default: "10"
+
+permissions:
+  contents: write
+
+jobs:
+  expand:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install anthropic
+
+      - name: Configure git
+        run: |
+          git config user.name "claude-task-expander"
+          git config user.email "claude-task-expander@noreply"
+
+      - name: Generate new tasks
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        working-directory: automation/codegen
+        run: |
+          python orchestrator.py expand "${{ github.event.inputs.count || '10' }}"
+
+      - name: Commit new tasks
+        run: |
+          git add -A \
+            automation/codegen/tasks/auto/ \
+            automation/codegen/tests/ \
+            automation/codegen/knowledge/ \
+            automation/agent_factory/codegen_feed.ndjson \
+            automation/reporting/codegen_summary.ndjson 2>/dev/null || true
+          BRANCH="codegen/new-tasks-$(date +%Y%m%d)"
+          git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+          git diff --cached --quiet && echo "no new tasks" || \
+            git commit -m "codegen(expand): auto-generated tasks $(date +%Y-%m-%d) [skip ci]"
+          git push -u origin "$BRANCH"
+
+      - name: Trigger orchestrator run
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDispatchEvent({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              event_type: 'codegen-run',
+              client_payload: { mode: 'run', max_iterations: '15' }
+            });

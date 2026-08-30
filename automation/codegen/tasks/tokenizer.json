@@ -1,0 +1,8 @@
+{
+  "name": "Simple Tokenizer",
+  "domain": "text_processing",
+  "goal": "Implement `tokenize(text: str) -> list[dict]` where each token is {'type': str, 'value': str}. Types: NUMBER, STRING, IDENT, OP, WHITESPACE, UNKNOWN. Also `count_by_type(tokens) -> dict[str, int]`.",
+  "output_file": "automation/codegen/generated/tokenizer.py",
+  "test_cmd": "python -m pytest automation/codegen/tests/test_tokenizer.py -v",
+  "constraints": "stdlib only."
+}

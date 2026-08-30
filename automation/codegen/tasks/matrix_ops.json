@@ -1,0 +1,8 @@
+{
+  "name": "Matrix Operations",
+  "domain": "math",
+  "goal": "Implement `multiply(a, b)`, `transpose(m)`, `determinant(m)` (1x1/2x2/3x3), `identity(n)` on list-of-lists. Raise ValueError for dimension mismatches.",
+  "output_file": "automation/codegen/generated/matrix_ops.py",
+  "test_cmd": "python -m pytest automation/codegen/tests/test_matrix_ops.py -v",
+  "constraints": "stdlib only. No numpy."
+}

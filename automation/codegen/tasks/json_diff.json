@@ -1,0 +1,8 @@
+{
+  "name": "JSON Deep Diff",
+  "domain": "parsing",
+  "goal": "Implement `diff(a: dict, b: dict) -> dict` returning keys: 'added', 'removed', 'changed' ({'old': v, 'new': v}), 'unchanged'. Recurse into nested dicts.",
+  "output_file": "automation/codegen/generated/json_diff.py",
+  "test_cmd": "python -m pytest automation/codegen/tests/test_json_diff.py -v",
+  "constraints": "stdlib only. Recursive for nested dicts."
+}
