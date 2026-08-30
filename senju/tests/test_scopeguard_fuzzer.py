@@ -1,14 +1,16 @@
 """Regression tests for the adversarial ScopeGuard fuzzer."""
 from __future__ import annotations
 
-from pathlib import Path
 import importlib.util
+from pathlib import Path
+import sys
 
 
 _SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "scopeguard_fuzzer.py"
 _SPEC = importlib.util.spec_from_file_location("scopeguard_fuzzer", _SCRIPT)
 assert _SPEC is not None and _SPEC.loader is not None
 _MOD = importlib.util.module_from_spec(_SPEC)
+sys.modules[_SPEC.name] = _MOD
 _SPEC.loader.exec_module(_MOD)
 
 
