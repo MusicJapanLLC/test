@@ -37,19 +37,38 @@ jobs:
             senju/senju/real_surface_adversary.py \
             senju/senju/autonomy/engine.py \
             senju/senju/autonomy/adversary_loop.py \
-            senju/senju/autonomy/adversary_drain.py
+            senju/senju/autonomy/adversary_drain.py \
+            senju/senju/autonomy/adversary_regression_bridge.py
 
       - name: Generate and stream controlled attack effects
+        id: pressure
         env:
           SENJU_ADVERSARY_STATE: ${{ runner.temp }}/senju-adversary-full-join-state
+        shell: bash
         run: |
-          set -euo pipefail
+          set +e
           PYTHONPATH=senju python -m senju.autonomy.adversary_loop \
             --state-dir "$SENJU_ADVERSARY_STATE" \
             --cycles 3 \
             --rounds-per-cycle 2 \
             --senju-joins-per-round 8 \
             --json reports/security/senju-adversary-full-join-pressure.json
+          pressure_exit=$?
+          set -e
+          echo "exit_code=$pressure_exit" >> "$GITHUB_OUTPUT"
+          # Do not stop here. Genuine regressions must first be shared with Senju.
+          exit 0
+
+      - name: Bridge genuine regressions into Senju
+        env:
+          SENJU_ADVERSARY_STATE: ${{ runner.temp }}/senju-adversary-full-join-state
+        run: |
+          set -euo pipefail
+          test -f reports/security/senju-adversary-full-join-pressure.json
+          PYTHONPATH=senju python -m senju.autonomy.adversary_regression_bridge \
+            --state-dir "$SENJU_ADVERSARY_STATE" \
+            --summary reports/security/senju-adversary-full-join-pressure.json \
+            --json reports/security/senju-adversary-regression-bridge.json
 
       - name: Require Senju to consume every shared effect
         env:
@@ -72,27 +91,54 @@ jobs:
           from pathlib import Path
 
           state = Path(os.environ["SENJU_ADVERSARY_STATE"])
-          event_log = state / "autonomy_reports" / "real_surface_adversary" / "attack_effects.jsonl"
+          effect_log = state / "autonomy_reports" / "real_surface_adversary" / "attack_effects.jsonl"
+          regression_log = state / "autonomy_reports" / "real_surface_adversary" / "regression_tripwires.jsonl"
           queue_path = state / "autonomy_queue.json"
-          if not event_log.is_file() or not queue_path.is_file():
-              raise SystemExit("missing attack effect log or Senju main queue")
+          if not queue_path.is_file():
+              raise SystemExit("missing Senju main queue")
 
-          events = [json.loads(line) for line in event_log.read_text(encoding="utf-8").splitlines() if line.strip()]
+          effects = [
+              json.loads(line)
+              for line in effect_log.read_text(encoding="utf-8").splitlines()
+              if line.strip()
+          ] if effect_log.is_file() else []
+          regressions = [
+              json.loads(line)
+              for line in regression_log.read_text(encoding="utf-8").splitlines()
+              if line.strip()
+          ] if regression_log.is_file() else []
           queue = json.loads(queue_path.read_text(encoding="utf-8"))
           feedback = [
               item for item in queue.get("items", [])
               if item.get("parameters", {}).get("runner") == "real_surface_followup"
           ]
-          completed = [item for item in feedback if item.get("status") == "completed"]
-          unfinished = [item for item in feedback if item.get("status") != "completed"]
+          guard_feedback = [
+              item for item in feedback
+              if item.get("parameters", {}).get("regression_tripwire") is not True
+          ]
+          regression_feedback = [
+              item for item in feedback
+              if item.get("parameters", {}).get("regression_tripwire") is True
+          ]
+          completed_guard = [item for item in guard_feedback if item.get("status") == "completed"]
+          attempted_regressions = [
+              item for item in regression_feedback
+              if int(item.get("attempt_count", 0)) >= 1
+          ]
 
           evidence = {
-              "schema": "senju-adversary-one-to-one/v1",
-              "attack_effect_events": len(events),
-              "senju_feedback_items": len(feedback),
-              "senju_completed_feedback_items": len(completed),
-              "senju_unfinished_feedback_items": len(unfinished),
-              "one_to_one_complete": len(events) == len(feedback) == len(completed) and not unfinished,
+              "schema": "senju-adversary-one-to-one/v2",
+              "guard_effect_events": len(effects),
+              "regression_tripwire_events": len(regressions),
+              "senju_guard_feedback_items": len(guard_feedback),
+              "senju_completed_guard_feedback_items": len(completed_guard),
+              "senju_regression_feedback_items": len(regression_feedback),
+              "senju_attempted_regression_feedback_items": len(attempted_regressions),
+              "one_to_one_complete": (
+                  len(effects) == len(guard_feedback) == len(completed_guard)
+                  and len(regressions) == len(regression_feedback) == len(attempted_regressions)
+                  and len(feedback) == len(effects) + len(regressions)
+              ),
           }
           Path("reports/security/senju-adversary-one-to-one.json").write_text(
               json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
@@ -100,8 +146,23 @@ jobs:
           )
           print(json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True))
           if not evidence["one_to_one_complete"]:
-              raise SystemExit("Senju did not consume every shared adversary effect")
+              raise SystemExit("Senju did not consume/attempt every shared adversary event")
           PY
+
+      - name: Fail closed on genuine real-surface regression
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          pressure_exit="${{ steps.pressure.outputs.exit_code }}"
+          if [[ -z "$pressure_exit" ]]; then
+            echo "pressure command did not report an exit code"
+            exit 1
+          fi
+          if [[ "$pressure_exit" != "0" ]]; then
+            echo "genuine real-surface regression detected; Senju feedback was attempted; blocking this change"
+            exit "$pressure_exit"
+          fi
 
       - name: Collect exhaustive Senju evidence
         if: always()
@@ -111,8 +172,12 @@ jobs:
           STATE_ROOT="${{ runner.temp }}/senju-adversary-full-join-state"
           mkdir -p reports/security/senju-adversary-full-join-state
           EFFECT_LOG="$STATE_ROOT/autonomy_reports/real_surface_adversary/attack_effects.jsonl"
+          REGRESSION_LOG="$STATE_ROOT/autonomy_reports/real_surface_adversary/regression_tripwires.jsonl"
           if [[ -f "$EFFECT_LOG" ]]; then
             cp "$EFFECT_LOG" reports/security/senju-adversary-full-join-effects.jsonl
+          fi
+          if [[ -f "$REGRESSION_LOG" ]]; then
+            cp "$REGRESSION_LOG" reports/security/senju-adversary-regression-tripwires.jsonl
           fi
           if [[ -f "$STATE_ROOT/autonomy_queue.json" ]]; then
             cp "$STATE_ROOT/autonomy_queue.json" reports/security/senju-adversary-full-join-state/autonomy_queue.json
