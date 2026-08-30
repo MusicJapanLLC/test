@@ -44,5 +44,35 @@ class AgentFactorySemanticPolicyTests(unittest.TestCase):
             entrypoint.validate_agent_factory_semantic_contract()
 
 
+class MadlabEvolutionPolicyTests(unittest.TestCase):
+    def setUp(self):
+        self.name = "madlab-world-evolution.yml"
+        self.original = policy.WORKFLOWS[self.name]
+
+    def tearDown(self):
+        policy.WORKFLOWS[self.name] = self.original
+
+    def test_madlab_evolution_lane_passes_current_workflow(self):
+        self.assertEqual(self.name, entrypoint.validate_madlab_evolution_lane())
+
+    def test_madlab_cron_drift_fails_closed(self):
+        policy.WORKFLOWS[self.name] = self.original.replace("cron: '17 */6 * * *'", "cron: '17 */3 * * *'")
+        with self.assertRaises(SystemExit):
+            entrypoint.validate_madlab_evolution_lane()
+
+    def test_madlab_forbidden_permission_fails_closed(self):
+        policy.WORKFLOWS[self.name] = self.original + "\n  contents: write\n"
+        with self.assertRaises(SystemExit):
+            entrypoint.validate_madlab_evolution_lane()
+
+    def test_madlab_missing_required_guardrail_fails_closed(self):
+        policy.WORKFLOWS[self.name] = self.original.replace(
+            "Never weaken ownership, authorization, or approval boundaries.",
+            "echo relaxed-boundaries",
+        )
+        with self.assertRaises(SystemExit):
+            entrypoint.validate_madlab_evolution_lane()
+
+
 if __name__ == "__main__":
     unittest.main()
