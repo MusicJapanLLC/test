@@ -28,7 +28,7 @@
       "id": "madlab-world-evolution",
       "name": "MADLAB / EVOLUTION",
       "workflow": "madlab-world-evolution.yml",
-      "expected_minutes": 390,
+      "expected_minutes": 210,
       "priority": "P1",
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
