@@ -45,7 +45,7 @@ jobs:
 
       - name: Run adversary team tests
         working-directory: senju
-        run: python -m unittest -v tests.test_defense_adversary_team
+        run: python -m unittest discover -s tests -p 'test_defense_adversary_team.py' -v
 
       - name: Run coordinated pressure campaign
         env:
