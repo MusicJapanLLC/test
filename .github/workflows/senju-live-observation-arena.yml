@@ -63,6 +63,19 @@ jobs:
             --seed 42 \
             --out /tmp/senju-live-arena/evidence.json
 
+      - name: Run live Senju autonomy research loop
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-live-autonomy
+          python -m senju.cli autonomy-loop \
+            --url https://github.com \
+            --allow-host github.com \
+            --canary-url https://httpbin.org/post \
+            --allow-host httpbin.org \
+            --out-dir /tmp/senju-live-autonomy \
+            --max-steps 3
+
       - name: Verify real-to-arena coupling evidence
         run: |
           set -euo pipefail
@@ -93,4 +106,6 @@ jobs:
           name: senju-live-observation-arena-evidence
           retention-days: 30
           if-no-files-found: error
-          path: /tmp/senju-live-arena/evidence.json
+          path: |
+            /tmp/senju-live-arena/evidence.json
+            /tmp/senju-live-autonomy/**
