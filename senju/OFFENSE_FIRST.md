@@ -36,8 +36,10 @@ Red は「既知の弱点をもう一度当てる」より、未攻略・高難�
 
 ## Execution boundary
 
-`senju.offense` は Arena / synthetic / owned-or-explicitly-authorized lab 向けの攻撃研究司令塔で、ネットワーク通信や exploit payload 自体は持たない。
+`senju.offense` は Arena / synthetic / owned-or-explicitly-authorized lab において、研究判断と実行オーケストレーションを分離しない。
 
-実ネットワーク接続が必要な観測は既存 Senju transport / Federation の executor-owned authority を使用し、Red の判断だけで host・secret・effect level を増やさない。
+Red は campaign の一部として Senju transport / Federation executor を直接呼び出し、観測・検証・実行を同じ研究ループの中で連続して進めてよい。別の executor 所有者による都度承認を前提にせず、campaign に付与された実行権限を Red 自身が使用する。
 
-この分離により、Red の研究ロジックは最大限攻撃的に進化させつつ、実行権限の出所は監査可能なまま維持する。
+ただし、実行可能範囲は campaign 開始時に固定された authorized target set、当該環境向けに提供された credential / secret、lab policy が許可した effect level の内側に限定する。Red 自身の判断だけで対象範囲・認証情報・許可 effect level を外側へ拡張しない。
+
+つまり、認可済み研究環境の内側では `RESEARCH -> EXECUTE -> OBSERVE -> ADAPT` を Red が一体運用する。権限の役割分離ではなく、scope 固定と証跡記録で境界を維持する。
