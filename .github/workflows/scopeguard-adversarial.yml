@@ -126,10 +126,6 @@ jobs:
           PIP_NO_INPUT: "1"
         run: python -m pip install -e './senju[dev]'
 
-      - name: Run multi-guard adversary regression tests
-        working-directory: senju
-        run: python -m pytest tests/test_multiguard_adversary.py -q
-
       - name: Attack all seven guard surfaces offline
         working-directory: senju
         run: >-
@@ -139,6 +135,10 @@ jobs:
           --fail-on-surprise
           --json-out multiguard-adversary-report.json
           > /tmp/multiguard-adversary-stdout.json
+
+      - name: Run multi-guard adversary regression tests
+        working-directory: senju
+        run: python -m pytest tests/test_multiguard_adversary.py -q
 
       - name: Summarize adversary findings
         working-directory: senju
