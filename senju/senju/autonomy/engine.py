@@ -27,14 +27,34 @@ class AutonomyCycleResult:
 
 
 class AutonomyEngine:
-    """Executes closed-loop bounded autonomous learning cycles."""
+    """Executes closed-loop bounded autonomous learning cycles.
 
-    def __init__(self, state_dir: str | Path) -> None:
+    ``strict`` is the normal profile. ``lab`` deliberately lowers research
+    acceptance friction and raises the local simulation budget, but does not
+    add network transport, credentials, host authority, or deployment rights.
+    """
+
+    VALID_RESEARCH_PROFILES = frozenset({"strict", "lab"})
+
+    def __init__(self, state_dir: str | Path, research_profile: str = "strict") -> None:
+        if research_profile not in self.VALID_RESEARCH_PROFILES:
+            raise ValueError(
+                f"research_profile must be one of {sorted(self.VALID_RESEARCH_PROFILES)}"
+            )
+        self.research_profile = research_profile
         self.state_dir = Path(state_dir)
         self.state_dir.mkdir(parents=True, exist_ok=True)
         self.queue = AutonomyQueue(self.state_dir / "autonomy_queue.json")
         self.state_file = self.state_dir / "champion.json"
         self._ensure_seed_items()
+
+    @property
+    def evaluation_threshold(self) -> float:
+        return 5.0 if self.research_profile == "lab" else 20.0
+
+    @property
+    def default_match_budget(self) -> int:
+        return 4000 if self.research_profile == "lab" else 2000
 
     def _ensure_seed_items(self) -> None:
         """Seed the queue with initial high-impact hypotheses if empty."""
@@ -70,9 +90,10 @@ class AutonomyEngine:
         for item in initial_hypotheses:
             self.queue.enqueue(item)
 
-    def execute_next_cycle(self, max_matches: int = 2000) -> AutonomyCycleResult | None:
+    def execute_next_cycle(self, max_matches: int | None = None) -> AutonomyCycleResult | None:
         """Execute one bounded autonomous experiment cycle."""
-        item = self.queue.select_next(budget_matches=max_matches)
+        budget = self.default_match_budget if max_matches is None else max_matches
+        item = self.queue.select_next(budget_matches=budget)
         if not item:
             return None
 
@@ -81,7 +102,12 @@ class AutonomyEngine:
         cfg.evolution.population_size = params.get("population", 40)
         cfg.evolution.generations = params.get("generations", 10)
         cfg.evolution.matches_per_generation = params.get("matches", 200)
-        cfg.evolution.mutation_rate = params.get("mutation_rate", 0.08)
+        base_mutation = params.get("mutation_rate", 0.08)
+        cfg.evolution.mutation_rate = (
+            min(float(base_mutation) * 1.25, 0.20)
+            if self.research_profile == "lab"
+            else base_mutation
+        )
 
         # 1. ACT & VERIFY: Run tournament
         import random
@@ -92,11 +118,11 @@ class AutonomyEngine:
         tournament = Tournament(cfg)
         base_seed = cfg.evolution.seed if cfg.evolution.seed is not None else 42
         rng = random.Random(base_seed + 1337)
-        
+
         red = seeded_population(state.get("red_champion"), "red", cfg.evolution.population_size, cfg.evolution.mutation_rate, rng)
         if not red:
             red = seed_population("red", cfg.evolution.population_size, rng)
-            
+
         blue = seeded_population(state.get("blue_champion"), "blue", cfg.evolution.population_size, cfg.evolution.mutation_rate, rng)
         if not blue:
             blue = seed_population("blue", cfg.evolution.population_size, rng)
@@ -109,8 +135,8 @@ class AutonomyEngine:
         report_dir = self.state_dir / "autonomy_reports"
         report_dir.mkdir(parents=True, exist_ok=True)
         report_file = report_dir / f"cycle_{item.item_id}_{timestamp}.json"
-        
-        eval_passed = evaluation.safe and evaluation.score > 20.0
+
+        eval_passed = evaluation.safe and evaluation.score > self.evaluation_threshold
         total_matches = sum(g.matches for g in report.generations)
         total_red_wins = sum(g.red_wins for g in report.generations)
         total_blue_wins = sum(g.blue_wins for g in report.generations)
@@ -119,6 +145,8 @@ class AutonomyEngine:
             "item_id": item.item_id,
             "hypothesis": item.hypothesis,
             "timestamp_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+            "research_profile": self.research_profile,
+            "evaluation_threshold": self.evaluation_threshold,
             "evaluation_passed": eval_passed,
             "evaluation_score": evaluation.score,
             "balance": evaluation.balance,
@@ -177,8 +205,12 @@ class AutonomyEngine:
         )
 
 
-def run_autonomy_cycle(state_dir: str | Path = "state", max_cycles: int = 1) -> list[AutonomyCycleResult]:
-    engine = AutonomyEngine(state_dir)
+def run_autonomy_cycle(
+    state_dir: str | Path = "state",
+    max_cycles: int = 1,
+    research_profile: str = "strict",
+) -> list[AutonomyCycleResult]:
+    engine = AutonomyEngine(state_dir, research_profile=research_profile)
     results = []
     for _ in range(max_cycles):
         res = engine.execute_next_cycle()
