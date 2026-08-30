@@ -8,29 +8,29 @@
     {
       "id": "github-issues",
       "kind": "github_issue",
-      "enabled": true,
+      "enabled": false,
       "repo": "MusicJapanLLC/test",
       "required_env": ["GITHUB_TOKEN"],
       "max_per_day": 8,
       "labels": ["the-world", "automated"],
-      "note": "Uses GITHUB_TOKEN — always available in Actions, no new secret needed"
+      "note": "Disabled until canonical external_write_target_ids allowlist explicitly authorizes this target"
     },
     {
       "id": "discord",
       "kind": "discord_webhook",
-      "enabled": true,
+      "enabled": false,
       "required_env": ["DISCORD_WEBHOOK_URL"],
       "max_per_day": 8,
-      "note": "Discord incoming webhook — set DISCORD_WEBHOOK_URL secret in repo settings"
+      "note": "Disabled until canonical external_write_target_ids allowlist explicitly authorizes this target"
     },
     {
       "id": "slack",
       "kind": "slack_webhook",
-      "enabled": true,
+      "enabled": false,
       "required_env": ["SLACK_WEBHOOK_URL"],
       "max_per_day": 8,
       "max_chars": 2800,
-      "note": "Slack incoming webhook — set SLACK_WEBHOOK_URL secret in repo settings"
+      "note": "Disabled until canonical external_write_target_ids allowlist explicitly authorizes this target"
     },
     {
       "id": "dev-community",
