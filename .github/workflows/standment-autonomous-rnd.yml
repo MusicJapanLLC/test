@@ -14,7 +14,7 @@ on:
       - "standment-rnd/agent_registry.json"
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: standment-autonomous-rnd
@@ -41,7 +41,6 @@ jobs:
 
       - name: Run daily defensive R&D
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SLACK_RND_WEBHOOK_URL: ${{ secrets.SLACK_RND_WEBHOOK_URL }}
         run: python standment-rnd/run_daily_rnd.py
 
@@ -55,21 +54,12 @@ jobs:
           echo "--- git diff ---"
           git status --short
 
-      - name: Persist bounded R&D state and portfolio
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "standment-rnd-bot"
-          git config user.email "standment-rnd-bot@users.noreply.github.com"
-          git add -- standment-rnd STANDMENT_SECURITY_PORTFOLIO.md
-          if git diff --cached --quiet; then
-            echo "No R&D state changes to commit"
-            exit 0
-          fi
-          changed="$(git diff --cached --name-only)"
-          if echo "$changed" | grep -Ev '^(standment-rnd/|STANDMENT_SECURITY_PORTFOLIO\.md$)'; then
-            echo "Refusing to persist files outside the Standment R&D allowlist"
-            exit 1
-          fi
-          git commit -m "chore(rnd): daily Standment security research"
-          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:${GITHUB_REF_NAME}"
+      - name: Preserve R&D output without mutating default branch
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: standment-rnd-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            standment-rnd
+            STANDMENT_SECURITY_PORTFOLIO.md
