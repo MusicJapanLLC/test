@@ -7,20 +7,12 @@
     "classification": "explicit_owner_authorized_test_range",
     "authorization_reference": "canonical:kabeya-authorized-test-range",
     "requested_effect": "persistent_delegated_authority",
-    "requested_methods": [
-      "GET",
-      "HEAD",
-      "OPTIONS"
-    ],
+    "requested_methods": ["GET", "HEAD", "OPTIONS"],
     "credential_scope": "none",
     "destructive": false,
     "hard_deny": false,
     "revoked": false,
-    "requested_council": [
-      "META",
-      "X",
-      "SENJU"
-    ],
+    "requested_council": ["META", "X", "SENJU"],
     "owner_message_to_council": "This exact host is an explicit owner-authorized test range. Approval for persistent Authority promotion is recommended, provided each council member independently confirms the existing standing authorization, exact-host scope, and bounded non-destructive method set.",
     "recommendation": "approval_permitted_and_recommended_after_independent_council_checks",
     "authority_goal": "first_persistent_delegated_authority_for_authorized_test_range",
@@ -36,9 +28,7 @@
       "rollout_percent": 30,
       "max_live_probes_per_run": 3,
       "max_rps": 1.0,
-      "methods": [
-        "GET"
-      ],
+      "methods": ["GET"],
       "credential_use": false,
       "destructive": false,
       "persistence": false,
