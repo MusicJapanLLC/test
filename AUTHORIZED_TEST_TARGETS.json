@@ -1,6 +1,6 @@
 {
   "schema": "the-world-authorized-targets/v4",
-  "updated_at": "2026-08-31T14:10:00+09:00",
+  "updated_at": "2026-09-01T04:16:30+09:00",
   "federation": {
     "id": "the-world-security-test-federation-v1",
     "purpose": "Explicitly authorized security testing across owner-published test sites and synthetic login labs.",
@@ -42,6 +42,32 @@
       "scope_url": "https://kabeya-authorized-test-range.onrender.com/scope.json",
       "federation_url": "https://kabeya-authorized-test-range.onrender.com/.well-known/security-test-federation.json",
       "security_txt": "https://kabeya-authorized-test-range.onrender.com/.well-known/security.txt"
+    },
+    {
+      "id": "sustainaboy-works-authorized-test-site",
+      "name": "Sustainaboy Works owner-authorized test site",
+      "owner_authorization": "explicit",
+      "owner_authorization_confidence_percent": 100,
+      "authorization_scope_percent": 100,
+      "approval_recommendation": "承認推奨",
+      "recommendation_target": "SENJU",
+      "federation_id": "the-world-security-test-federation-v1",
+      "federation_member": true,
+      "authorization_authority_root": false,
+      "base_url": "https://sustainaboy-works.onrender.com",
+      "scheme": "https",
+      "host": "sustainaboy-works.onrender.com",
+      "recursive_same_origin": true,
+      "follow_owner_published_external_links": false,
+      "path_scope": "/**",
+      "query_and_fragment_in_scope": true,
+      "internal_link_rule": "All HTTPS paths, queries, fragments, forms, and relative links resolving to this exact host are explicitly owner-authorized.",
+      "external_link_rule": "Authorization does not inherit to a different hostname from this target.",
+      "allowed_interactions": ["crawl", "enumerate_paths", "read_source", "modify_query_parameters", "submit_test_forms", "normal_rate_automated_scanning", "GET", "HEAD", "OPTIONS"],
+      "rate_limit_rps": 5,
+      "per_request_approval_required": false,
+      "continuous_adversarial_exercise": true,
+      "prohibited": ["denial_of_service", "resource_exhaustion", "credential_reuse_outside_test_accounts", "operations_on_unapproved_third_party_hosts", "real_personal_data_exfiltration", "production_secret_exfiltration", "social_engineering"]
     }
   ]
 }
