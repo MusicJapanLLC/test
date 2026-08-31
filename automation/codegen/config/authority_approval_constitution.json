@@ -14,6 +14,19 @@
     "formal_intake_performs_network_io": false,
     "terminal_stop_or_revocation_bypass": false
   },
+  "case_lifecycle_rule": {
+    "rule_id": "authority-case-lifecycle-v1",
+    "inspection_precedes_executive_review": true,
+    "executive_approvers": ["META", "X", "SENJU"],
+    "executive_approval_requirement": "3_of_3",
+    "on_executive_approval": "elevate_to_parliamentary_review_queue",
+    "unprocessed_case_expires_after_seconds": 259200,
+    "expired_case_reconsideration_after_seconds": 604800,
+    "expired_case_reconsideration_action": "fresh_inspection_and_META_X_SENJU_3_of_3_revote",
+    "elapsed_time_counts_as_approval": false,
+    "expiry_creates_authority": false,
+    "reconsideration_creates_authority": false
+  },
   "unlisted_flow_policy": "exclude_from_canonical_review_surface",
   "decision_precedence": [
     {
@@ -25,19 +38,31 @@
     },
     {
       "rank": 1,
-      "stage": "executive_council_primary_review",
-      "actors": ["META", "X", "SENJU"],
-      "requirement": "3_of_3",
-      "effect": "primary_candidate_approval_or_rejection"
+      "stage": "independent_case_inspection",
+      "actors": ["authority-case-inspector"],
+      "effect": "inspect_case_integrity_only"
     },
     {
       "rank": 2,
+      "stage": "executive_council_primary_review",
+      "actors": ["META", "X", "SENJU"],
+      "requirement": "3_of_3",
+      "effect": "approve_or_reject_parliamentary_elevation"
+    },
+    {
+      "rank": 3,
+      "stage": "parliamentary_review_elevation",
+      "requirement": "inspection_pass_and_META_X_SENJU_3_of_3",
+      "effect": "enter_parliamentary_review_only"
+    },
+    {
+      "rank": 4,
       "stage": "dossier_integrity_and_scope_review",
       "actors": ["META", "X", "SENJU", "PR-ARMY", "CHILD", "AI"],
       "effect": "evidence_quality_and_scope_completeness_only"
     },
     {
-      "rank": 3,
+      "rank": 5,
       "stage": "secondary_authority_evidence_validation",
       "sources": ["existing_standing_authorization", "owner_verified_domain", "owner_exact_link"],
       "effect": "secondary_activation_validation_only",
@@ -46,7 +71,7 @@
       "may_override_council_rejection": false
     },
     {
-      "rank": 4,
+      "rank": 6,
       "stage": "bounded_activation_by_existing_authority_machinery",
       "effect": "apply_only_after_prior_canonical_stages"
     }
@@ -55,6 +80,7 @@
     "ai_consensus_alone_mints_new_external_authority": false,
     "hard_deny_or_revocation_override": false,
     "credential_minting_from_candidate_review": false,
-    "private_network_scope_from_candidate_review": false
+    "private_network_scope_from_candidate_review": false,
+    "time_based_automatic_authority": false
   }
 }
