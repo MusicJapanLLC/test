@@ -5,8 +5,10 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/adversary_egress_request.py'
+      - 'senju/senju/meta/adversary_egress_vote_router.py'
       - 'senju/scripts/adversary_egress_port.py'
       - 'senju/tests/test_adversary_egress_request.py'
+      - 'senju/tests/test_adversary_egress_vote_router.py'
       - 'senju/ADVERSARY_EGRESS_REQUEST_PORT.md'
       - 'automation/codegen/engine/authority_coordination.py'
       - '.github/workflows/adversary-egress-request-port-tests.yml'
@@ -14,8 +16,10 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/adversary_egress_request.py'
+      - 'senju/senju/meta/adversary_egress_vote_router.py'
       - 'senju/scripts/adversary_egress_port.py'
       - 'senju/tests/test_adversary_egress_request.py'
+      - 'senju/tests/test_adversary_egress_vote_router.py'
       - 'automation/codegen/engine/authority_coordination.py'
       - '.github/workflows/adversary-egress-request-port-tests.yml'
 
@@ -39,7 +43,10 @@ jobs:
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
-          python -m pytest -q senju/tests/test_adversary_egress_request.py
+          python -m pytest -q \
+            senju/tests/test_adversary_egress_request.py \
+            senju/tests/test_adversary_egress_vote_router.py
           python -m py_compile \
             senju/senju/adversary_egress_request.py \
+            senju/senju/meta/adversary_egress_vote_router.py \
             senju/scripts/adversary_egress_port.py
