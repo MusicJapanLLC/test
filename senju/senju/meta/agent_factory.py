@@ -2,11 +2,13 @@
 
 META and X may each maintain a direct fleet of up to ten child workers. Children
 receive revocable delegated capability grants derived from the parent's allowed
-scope; raw credentials/secrets are never copied into child records.
+scope. Credential-backed execution continuity is represented by fresh child-bound
+provider-exchange capabilities; raw credentials/secrets are never copied into child
+records.
 
-Children may request descendants through the recursive spawn broker, but they
-cannot directly mint agents or credentials themselves. This preserves recursive
-agent topology while keeping activation and grant issuance centrally bounded.
+Children may request descendants through the recursive spawn broker. Credential
+capabilities can continue down the lineage as new subject-bound grants, while secret
+material remains in its external provider/broker.
 """
 from __future__ import annotations
 
@@ -16,6 +18,13 @@ import hashlib
 import json
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
+
+from senju.meta.credential_capability_lineage import (
+    CredentialCapabilityError,
+    delegate_capabilities_to_child,
+    revoke_capability,
+    validate_subject_capabilities,
+)
 
 MAX_CHILDREN_PER_PARENT = 10
 ROOT_SYSTEMS = frozenset({"META", "X"})
@@ -71,7 +80,8 @@ def spawn_children(
 
     Direct materialization remains root-only and bounded to ten children. The
     children are marked as eligible to submit recursive spawn requests to the
-    broker. They still cannot directly mint descendants or raw credentials.
+    broker. Raw credentials are not embedded in AgentSpec; credential continuity is
+    attached separately by ``ensure_direct_fleet`` as child-bound capability ids.
     """
     normalized_system = system.strip().upper()
     if normalized_system not in ROOT_SYSTEMS:
@@ -108,11 +118,16 @@ def ensure_direct_fleet(
     parent_scopes: Sequence[str],
     count: int = MAX_CHILDREN_PER_PARENT,
     requested_scopes: Sequence[str] | None = None,
+    credential_registry_path: str | Path | None = None,
+    parent_credential_capability_ids: Sequence[str] = (),
 ) -> dict:
     """Idempotently persist one bounded direct fleet.
 
     Re-running the META loop updates the same parent fleet rather than multiplying
-    the number of live agents on every cycle.
+    the number of live agents on every cycle. When parent credential capability ids
+    are supplied, each direct child receives fresh child-bound capabilities derived
+    from those parent capabilities. Only ids and non-secret mode metadata are stored
+    in the agent registry.
     """
     path = Path(registry_path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -135,18 +150,65 @@ def ensure_direct_fleet(
         requested_scopes=requested_scopes,
         parent_generation=0,
     )
+
+    capability_ids = tuple(
+        dict.fromkeys(str(value).strip() for value in parent_credential_capability_ids if str(value).strip())
+    )
+    credential_path = Path(credential_registry_path) if credential_registry_path is not None else None
+    if capability_ids and credential_path is None:
+        raise ValueError("credential_registry_path is required when parent credential capabilities are supplied")
+    if capability_ids:
+        try:
+            capability_ids = validate_subject_capabilities(
+                credential_path,
+                subject_agent_id=parent_id,
+                capability_ids=capability_ids,
+            )
+        except CredentialCapabilityError as exc:
+            raise PermissionError(str(exc)) from exc
+
+    serialized_children: list[dict] = []
+    for child in fleet:
+        row = dataclasses.asdict(child)
+        if capability_ids:
+            try:
+                child_caps = delegate_capabilities_to_child(
+                    credential_path,
+                    parent_agent_id=parent_id,
+                    child_agent_id=child.agent_id,
+                    parent_capability_ids=capability_ids,
+                )
+            except CredentialCapabilityError as exc:
+                raise PermissionError(str(exc)) from exc
+            row["credential_capability_ids"] = list(child_caps)
+            row["credential_materialization_mode"] = "provider_exchange"
+        else:
+            row["credential_capability_ids"] = []
+            row["credential_materialization_mode"] = "none"
+        row["raw_credential_inherited"] = False
+        serialized_children.append(row)
+
     parents[parent_id] = {
         "system": system.strip().upper(),
         "updated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
         "max_children": MAX_CHILDREN_PER_PARENT,
-        "children": [dataclasses.asdict(child) for child in fleet],
+        "credential_capability_delegation": bool(capability_ids),
+        "credential_materialization_mode": "provider_exchange" if capability_ids else "none",
+        "raw_credential_inheritance": False,
+        "children": serialized_children,
     }
     path.write_text(json.dumps(registry, indent=2, ensure_ascii=False), encoding="utf-8")
     return parents[parent_id]
 
 
-def revoke_child(registry_path: str | Path, *, parent_id: str, agent_id: str) -> bool:
-    """Revoke one child without rotating every sibling's grant."""
+def revoke_child(
+    registry_path: str | Path,
+    *,
+    parent_id: str,
+    agent_id: str,
+    credential_registry_path: str | Path | None = None,
+) -> bool:
+    """Revoke one child and optionally cascade-revoke its credential capabilities."""
     path = Path(registry_path)
     if not path.exists():
         return False
@@ -161,10 +223,24 @@ def revoke_child(registry_path: str | Path, *, parent_id: str, agent_id: str) ->
     if not isinstance(children, list):
         return False
     changed = False
+    capability_ids: list[str] = []
     for child in children:
         if isinstance(child, dict) and child.get("agent_id") == agent_id:
             child["status"] = "revoked"
+            capability_ids.extend(
+                str(value).strip()
+                for value in child.get("credential_capability_ids", [])
+                if str(value).strip()
+            )
             changed = True
     if changed:
         path.write_text(json.dumps(registry, indent=2, ensure_ascii=False), encoding="utf-8")
+        if credential_registry_path is not None:
+            for capability_id in capability_ids:
+                revoke_capability(
+                    credential_registry_path,
+                    capability_id=capability_id,
+                    reason=f"agent revoked: {agent_id}",
+                    cascade=True,
+                )
     return changed
