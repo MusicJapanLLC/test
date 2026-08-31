@@ -11,9 +11,9 @@ Production flow:
       -> authorization re-evaluation in the same run
 
 Discovery alone never creates a new unrelated authority root. The live crawler executes
-only scan/probe on exact hosts carrying a still-live read-only discovery grant. Higher
-impact actions may exist in the separate action queue only when backed by an explicit
-exact-host owner profile; this crawler never executes them.
+only scan/probe on URLs whose exact host carries a still-live read-only discovery grant.
+Higher impact actions may exist in the separate action queue only when backed by an
+explicit exact-host owner profile; this crawler never executes them.
 """
 from __future__ import annotations
 
@@ -119,6 +119,83 @@ def _live_read_only_grant(state: Path, host: str, *, now: int) -> dict[str, Any]
     return grant
 
 
+def _authorized_url_candidates(state: Path, *, now: int) -> tuple[dict[str, Any], ...]:
+    """Return exact URLs that may be probed under a live inherited read-only host grant.
+
+    Host-root actions remain the canonical execution queue. In addition, every URL in
+    shared discovery knowledge whose decision is probationary_authorized becomes a
+    URL-granular scan/probe candidate. This makes a discovered internal path operational
+    without broadening the host authority that justified it.
+    """
+    candidates: list[dict[str, Any]] = []
+
+    queue = _load_json(state / "discovery_action_queue.json", {})
+    rows = queue.get("actions", []) if isinstance(queue, dict) else []
+    if isinstance(rows, list):
+        for row in rows:
+            if not isinstance(row, dict) or row.get("status") != "ready":
+                continue
+            capabilities = {str(item).strip().lower() for item in row.get("capabilities", [])}
+            if not capabilities.intersection({"scan", "probe"}):
+                continue
+            raw_host = str(row.get("target", "")).strip()
+            raw_url = str(row.get("url", "")).strip()
+            try:
+                host = _normalize_host(raw_host)
+            except ValueError:
+                continue
+            normalized = _normalize_url(raw_url)
+            if normalized is None:
+                continue
+            url, url_host = normalized
+            if url_host != host:
+                continue
+            grant = _live_read_only_grant(state, host, now=now)
+            if grant is None:
+                continue
+            candidates.append(
+                {
+                    "host": host,
+                    "url": url,
+                    "authorization_reference": row.get("authorization_reference") or host,
+                    "candidate_source": "action_queue",
+                }
+            )
+
+    shared = _load_json(state / "shared_discovery_knowledge.json", {})
+    discoveries = shared.get("discoveries", []) if isinstance(shared, dict) else []
+    if isinstance(discoveries, list):
+        for row in discoveries:
+            if not isinstance(row, dict) or row.get("decision") != "probationary_authorized":
+                continue
+            normalized = _normalize_url(str(row.get("url", "")))
+            if normalized is None:
+                continue
+            url, host = normalized
+            grant = _live_read_only_grant(state, host, now=now)
+            if grant is None:
+                continue
+            candidates.append(
+                {
+                    "host": host,
+                    "url": url,
+                    "authorization_reference": (
+                        grant.get("authorization_reference")
+                        or row.get("authorization_reference")
+                        or host
+                    ),
+                    "candidate_source": "shared_discovery_url",
+                }
+            )
+
+    # Queue candidates win ties because they carry the canonical action record. Shared
+    # URLs add path-level coverage beyond the one host-root queue entry.
+    unique: dict[str, dict[str, Any]] = {}
+    for candidate in candidates:
+        unique.setdefault(str(candidate["url"]), candidate)
+    return tuple(unique.values())
+
+
 def run_authorized_discovery_crawl(
     state_dir: str | Path,
     *,
@@ -126,13 +203,8 @@ def run_authorized_discovery_crawl(
     seen_targets: set[str] | None = None,
     client_factory: Callable[[ExternalContactPolicy], Any] | None = None,
 ) -> dict[str, Any]:
-    """GET exact discovery-authorized targets and feed found links back to the bus."""
+    """GET authorized discovered URLs and feed newly found links back to the bus."""
     state = Path(state_dir)
-    queue = _load_json(state / "discovery_action_queue.json", {})
-    rows = queue.get("actions", []) if isinstance(queue, dict) else []
-    if not isinstance(rows, list):
-        rows = []
-
     seen = seen_targets if seen_targets is not None else set()
     known = _known_urls(state)
     limit = max(1, min(int(max_targets), MAX_TARGETS_PER_ROUND))
@@ -142,28 +214,18 @@ def run_authorized_discovery_crawl(
     new_events = 0
     receipts: list[dict[str, Any]] = []
     now = _now()
+    candidates = _authorized_url_candidates(state, now=now)
 
-    for row in rows:
+    for row in candidates:
         if attempted >= limit:
             break
-        if not isinstance(row, dict) or row.get("status") != "ready":
+        host = str(row["host"])
+        url = str(row["url"])
+        if url in seen:
             continue
-        capabilities = {str(item).strip().lower() for item in row.get("capabilities", [])}
-        if not capabilities.intersection({"scan", "probe"}):
-            continue
-        raw_host = str(row.get("target", "")).strip()
-        raw_url = str(row.get("url", "")).strip()
-        try:
-            host = _normalize_host(raw_host)
-        except ValueError:
-            continue
-        normalized = _normalize_url(raw_url)
-        if normalized is None:
-            continue
-        url, url_host = normalized
-        if url_host != host or url in seen:
-            continue
-        grant = _live_read_only_grant(state, host, now=now)
+        # Re-check immediately before every network action so expiry/revocation-like
+        # removal from the runtime grant takes effect within the same loop.
+        grant = _live_read_only_grant(state, host, now=_now())
         if grant is None:
             continue
 
@@ -218,6 +280,7 @@ def run_authorized_discovery_crawl(
                     "new_discovery_count": len(published),
                     "elapsed_ms": round((time.monotonic() - started) * 1000, 2),
                     "authorization_reference": row.get("authorization_reference"),
+                    "candidate_source": row.get("candidate_source"),
                     "executed_capability": "scan_probe",
                     "credential_scope": "none",
                 }
@@ -232,16 +295,20 @@ def run_authorized_discovery_crawl(
                     "error": str(exc)[:300],
                     "elapsed_ms": round((time.monotonic() - started) * 1000, 2),
                     "authorization_reference": row.get("authorization_reference"),
+                    "candidate_source": row.get("candidate_source"),
                     "executed_capability": "scan_probe",
                     "credential_scope": "none",
                 }
             )
 
+    remaining = sum(1 for candidate in candidates if str(candidate["url"]) not in seen)
     return {
+        "candidate_count": len(candidates),
         "attempted": attempted,
         "succeeded": succeeded,
         "failed": failed,
         "new_event_count": new_events,
+        "remaining_candidate_count": remaining,
         "receipts": receipts,
     }
 
@@ -254,7 +321,7 @@ def run_discovery_closed_loop(
     max_targets_per_round: int = 20,
     client_factory: Callable[[ExternalContactPolicy], Any] | None = None,
 ) -> dict[str, Any]:
-    """Run Discovery -> Authorize -> Probe -> Rediscover until stable or bounded limit."""
+    """Run Discovery -> Authorize -> URL Probe -> Rediscover until stable or bounded."""
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
     rounds_limit = max(1, min(int(max_rounds), MAX_ROUNDS))
@@ -288,7 +355,10 @@ def run_discovery_closed_loop(
                 "action_ready_after": after.get("action_ready_count", 0),
             }
         )
-        if int(crawl.get("new_event_count", 0)) == 0:
+        if (
+            int(crawl.get("new_event_count", 0)) == 0
+            and int(crawl.get("remaining_candidate_count", 0)) == 0
+        ):
             break
 
     payload = {
