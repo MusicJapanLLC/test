@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: "23 * * * *"
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - META Production Stop Learning
-    types:
-      - completed
 
 permissions:
   contents: read
@@ -147,19 +142,21 @@ jobs:
             --dynamic-workers /tmp/tuned-dynamic-workers.json \
             --out /tmp/self-recovery-plan.json
 
-      - name: Dispatch approved recovery recipes
+      - name: Dispatch approved recovery recipes with learned cadence
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python - <<'PY'
           import json
           import os
+          import time
           import urllib.error
           import urllib.parse
           import urllib.request
           from pathlib import Path
 
           plan = json.loads(Path('/tmp/self-recovery-plan.json').read_text())
+          tuning = json.loads(Path('/tmp/recovery-tuning.json').read_text())
           if plan.get('unknown_system_installation') is not False:
               raise SystemExit('refusing plan that permits unknown-system installation')
           if plan.get('same_repository_only') is not True:
@@ -169,12 +166,16 @@ jobs:
           token = os.environ['GITHUB_TOKEN']
           owner, name = repo.split('/', 1)
           actions = plan.get('actions', [])
-          print(f'approved recovery actions: {len(actions)}')
+          spacing = max(0, min(int(tuning.get('dispatch_spacing_seconds', 30)), 60))
+          strategy = str(tuning.get('strategy') or 'steady_recovery')
+          print(f'approved recovery actions: {len(actions)} strategy={strategy} spacing={spacing}s')
 
-          for action in actions:
+          for index, action in enumerate(actions):
               if action.get('provider') != 'github_actions' or action.get('action') != 'workflow_dispatch':
                   print('skip unsupported action', action.get('worker_id'))
                   continue
+              if index > 0 and spacing:
+                  time.sleep(spacing)
               workflow = str(action['workflow'])
               ref = str(action['ref'])
               encoded = urllib.parse.quote(workflow, safe='')
@@ -194,7 +195,7 @@ jobs:
               try:
                   with urllib.request.urlopen(req, timeout=15) as response:
                       selected = action.get('selected_by', 'static-owner-registry')
-                      print(f"recovery dispatched: {action['worker_id']} -> {workflow} ({response.status}) selected_by={selected}")
+                      print(f"recovery dispatched: {action['worker_id']} -> {workflow} ({response.status}) selected_by={selected} strategy={strategy}")
               except urllib.error.HTTPError as exc:
                   print(f"recovery dispatch failed: {action['worker_id']} -> {workflow}: HTTP {exc.code}")
           PY

@@ -1,6 +1,7 @@
 name: Senju Authorization Regression Guard
 
 on:
+  workflow_dispatch:
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
     paths:
