@@ -1,17 +1,19 @@
 """Adversarial local fuzzer for ``senju.safety.ScopeGuard``.
 
-This harness attacks ScopeGuard itself, not external systems.  It performs no
-network I/O and never resolves or connects to generated hostnames.  The goal is
+This harness attacks ScopeGuard itself, not external systems. It performs no
+network I/O and never resolves or connects to generated hostnames. The goal is
 to find crashes, inconsistent decisions, and accidental fail-open behaviour at
 the target_ref parsing boundary.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import random
 import string
 import sys
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from pathlib import Path
 from typing import Iterable
 
 from senju.safety import ScopeGuard, ScopePolicy, ScopeViolation, default_lab_policy
@@ -67,6 +69,9 @@ class FuzzStats:
     rejected: int = 0
     unexpected: int = 0
 
+    def to_dict(self) -> dict[str, int]:
+        return asdict(self)
+
 
 def _random_ref(rng: random.Random) -> str:
     mode = rng.randrange(10)
@@ -96,7 +101,7 @@ def _random_ref(rng: random.Random) -> str:
 def attack_once(guard: ScopeGuard, target_ref: str, stats: FuzzStats) -> None:
     """Hit ScopeGuard once and classify the result.
 
-    ScopeViolation is an expected rejection.  Any other exception is a fuzzer
+    ScopeViolation is an expected rejection. Any other exception is a fuzzer
     finding because arbitrary target_ref input must not crash the guard.
     """
     stats.cases += 1
@@ -164,6 +169,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Continuously adversarial-test ScopeGuard locally")
     parser.add_argument("--iterations", type=int, default=100_000)
     parser.add_argument("--seed", type=int, default=0x5C0FE)
+    parser.add_argument("--json-out")
     parser.add_argument(
         "--forever",
         action="store_true",
@@ -178,6 +184,16 @@ def main(argv: Iterable[str] | None = None) -> int:
         raise SystemExit("--iterations must be >= 1")
 
     stats = run(args.iterations, args.seed, args.forever)
+    evidence = {
+        "schema": "scopeguard-fuzz-evidence/v1",
+        "seed": int(args.seed),
+        "requested_iterations": int(args.iterations),
+        "network_io": False,
+        "payloads_retained": False,
+        "stats": stats.to_dict(),
+    }
+    if args.json_out:
+        Path(args.json_out).write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(
         "SCOPEGUARD_FUZZ_OK "
         f"cases={stats.cases} allowed={stats.allowed} "
