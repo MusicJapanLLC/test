@@ -24,8 +24,7 @@
       "refs": ["claude/employee-onboarding-setup-udm86"],
       "recovery_workflows": [
         "meta-consciousness.yml",
-        "autonomous-codegen.yml",
-        "autonomous-engine.yml"
+        "autonomous-codegen-loop.yml"
       ],
       "roles": ["self", "agent", "scheduler", "cron", "persistent_worker"],
       "can_create_webhook": false,
@@ -57,7 +56,7 @@
       "stale_after_seconds": 10800,
       "recovery": {
         "kind": "workflow_dispatch",
-        "workflow": "autonomous-codegen.yml",
+        "workflow": "autonomous-codegen-loop.yml",
         "ref": "claude/employee-onboarding-setup-udm86"
       }
     }
