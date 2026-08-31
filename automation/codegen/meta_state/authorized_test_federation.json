@@ -1,0 +1,11 @@
+{
+  "schema": "meta-x-federation-state/v1",
+  "status": "active",
+  "federation_id": "the-world-security-test-federation-v1",
+  "canonical_registry": "AUTHORIZED_TEST_TARGETS.json",
+  "broadcast": "senju/config/authorized-test-federation-broadcast.json",
+  "seed_urls": ["https://kabeya-authorized-test-range.onrender.com"],
+  "directive": "META and X should prioritize discovery and normal-rate security assessment of verified federation members and share findings through existing META-X channels.",
+  "external_link_policy": "follow only verified federation members",
+  "rate_limit_rps": 5
+}
