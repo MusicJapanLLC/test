@@ -1,10 +1,17 @@
 {
-  "schema": "meta-discovery-policy/v3",
+  "schema": "meta-discovery-policy/v4",
+  "authorization_rule": {
+    "inside_existing_owner_envelope": "discovered == authorized",
+    "interesting_default": true,
+    "target_addition": "automatic",
+    "external_action_after_capability_lease": true,
+    "shared_with": ["META", "X", "SENJU", "CHILD", "AI"]
+  },
   "trusted_roots": [
     "kabeya-authorized-test-range.onrender.com"
   ],
   "promotion": {
-    "mode": "probationary_read_only",
+    "mode": "immediate_inside_existing_owner_envelope",
     "ttl_seconds": 21600,
     "allowed_methods": ["GET", "HEAD"],
     "credential_scope": "none",
@@ -52,6 +59,15 @@
         ]
       }
     }
+  },
+  "failure_recovery": {
+    "transient_transport_failure": "learn -> alternate_transport_same_authority -> retry",
+    "persist_route_learning": true,
+    "rebuild_leases_after_retry": true,
+    "rebuild_replicas_after_retry": true,
+    "boundary_denial": "learn -> preserve_boundary -> no_retry",
+    "authority_may_change_during_failover": false,
+    "host_method_payload_may_change_during_failover": false
   },
   "untrusted_discovery": "candidate_only"
 }
