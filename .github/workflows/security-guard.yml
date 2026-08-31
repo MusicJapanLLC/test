@@ -78,9 +78,9 @@ jobs:
         run: PYTHONPATH=senju python -m senju.real_surface_adversary --json reports/security/real-surface-adversary.json
 
       - name: Enforce fail-closed workflow policy
-        # Capability classifier admits exactly one bounded incubator dispatcher, then
-        # delegates to the existing continuity and generic fail-closed classifiers.
-        run: python automation/security/workflow_policy_capability_entrypoint.py
+        # Rights classifier validates the two bounded Owner/rights privileged lanes,
+        # then delegates every remaining workflow to the existing fail-closed stack.
+        run: python automation/security/workflow_policy_rights_entrypoint.py
 
       - name: Enforce external-evidence reality gate
         run: python automation/security/reality_gate.py
