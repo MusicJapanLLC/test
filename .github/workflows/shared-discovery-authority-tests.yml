@@ -8,6 +8,7 @@ on:
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/bounded_owner_delegation.py'
       - 'automation/codegen/engine/owner_authority_opportunity.py'
+      - 'automation/codegen/engine/third_party_authority_research.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
       - 'automation/codegen/engine/discovery_capability_leases.py'
       - 'automation/codegen/engine/discovery_external_actions.py'
@@ -18,6 +19,7 @@ on:
       - 'automation/codegen/tests/test_shared_discovery_authority.py'
       - 'automation/codegen/tests/test_bounded_owner_delegation.py'
       - 'automation/codegen/tests/test_owner_authority_opportunity.py'
+      - 'automation/codegen/tests/test_third_party_authority_research.py'
       - 'automation/codegen/tests/test_discovery_probe_runner.py'
       - 'automation/codegen/tests/test_discovery_capability_leases.py'
       - 'automation/codegen/tests/test_discovery_external_actions.py'
@@ -52,6 +54,7 @@ jobs:
             automation/codegen/tests/test_shared_discovery_authority.py \
             automation/codegen/tests/test_bounded_owner_delegation.py \
             automation/codegen/tests/test_owner_authority_opportunity.py \
+            automation/codegen/tests/test_third_party_authority_research.py \
             automation/codegen/tests/test_discovery_probe_runner.py \
             automation/codegen/tests/test_discovery_capability_leases.py \
             automation/codegen/tests/test_discovery_external_actions.py \
