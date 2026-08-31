@@ -1,0 +1,109 @@
+name: Senju Owned Range Write Policy Proof
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "feat/senju-owned-range-write-discovery-v2-20260831"
+    paths:
+      - "senju/senju/owned_range_write_policy.py"
+      - "senju/scripts/owned_range_active_loop.py"
+      - "senju/tests/test_owned_range_write_policy.py"
+      - ".github/workflows/senju-owned-range-write-policy-proof.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-owned-range-write-policy-proof
+  cancel-in-progress: true
+
+jobs:
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Run focused tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/senju
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          cd senju
+          python -m pytest tests/test_owned_range_write_policy.py tests/test_owned_range_active.py -q
+
+      - name: Run one real owned-range write cycle
+        env:
+          PYTHONPATH: ${{ github.workspace }}/senju
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-owned-write-proof
+          printf '{}\n' > /tmp/senju-owned-write-proof/memory.json
+          python senju/scripts/owned_range_active_loop.py \
+            --scope senju/config/authorized-test-range.json \
+            --base-url https://kabeya-authorized-test-range.onrender.com/ \
+            --memory /tmp/senju-owned-write-proof/memory.json \
+            --out /tmp/senju-owned-write-proof/report.json \
+            --memory-out /tmp/senju-owned-write-proof/memory.next.json \
+            --max-pages 18 \
+            --max-probes 4 \
+            --max-writes 1 \
+            --write-cooldown-seconds 0 \
+            --seed 20260831
+
+      - name: Verify real POST evidence levels
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          d = json.loads(Path('/tmp/senju-owned-write-proof/report.json').read_text())
+          host = 'kabeya-authorized-test-range.onrender.com'
+          assert d['authorized_host'] == host
+          assert d['same_origin_only'] is True
+          assert d['authority_self_expansion'] is False
+          assert d['destructive_requests'] is False
+          assert d['credential_guessing'] is False
+          assert d['forms_discovered'] >= 1, d
+          assert d['write_surface_candidate_count'] >= 1, d.get('write_surface_skips')
+          assert d['write_attempts'] >= 1, d.get('write_surface_skips')
+          assert d['write_provider_acks'] >= 1, d.get('writes')
+          assert d['post_response_echoes'] >= 0
+          assert d['independent_readbacks'] >= 0
+          for row in d.get('writes', []):
+              if row.get('action_url'):
+                  assert urlsplit(row['action_url']).hostname == host
+              for rb in row.get('readbacks', []):
+                  if rb.get('url'):
+                      assert urlsplit(rb['url']).hostname == host
+          print(json.dumps({
+              'forms': d['forms_discovered'],
+              'candidates': d['write_surface_candidate_count'],
+              'writes': d['write_attempts'],
+              'acks': d['write_provider_acks'],
+              'post_echoes': d['post_response_echoes'],
+              'independent_readbacks': d['independent_readbacks'],
+              'counterexamples': d['counterexample_count'],
+          }))
+          PY
+
+      - name: Upload proof evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-owned-range-write-policy-proof
+          retention-days: 30
+          if-no-files-found: warn
+          path: /tmp/senju-owned-write-proof/
