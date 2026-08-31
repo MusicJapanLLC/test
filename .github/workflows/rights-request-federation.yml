@@ -11,6 +11,9 @@ on:
       - 'senju/scripts/rights_request_federation.py'
       - 'senju/tests/test_rights_request_federation.py'
       - '.github/workflows/rights-request-federation.yml'
+      - '.github/workflows/owner-scope-negotiation-production.yml'
+      - 'automation/security/workflow_policy_rights_entrypoint.py'
+      - '.github/workflows/security-guard.yml'
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/config/owner-expansion-envelope.json'
@@ -21,6 +24,9 @@ on:
       - 'senju/scripts/rights_request_federation.py'
       - 'senju/tests/test_rights_request_federation.py'
       - '.github/workflows/rights-request-federation.yml'
+      - '.github/workflows/owner-scope-negotiation-production.yml'
+      - 'automation/security/workflow_policy_rights_entrypoint.py'
+      - '.github/workflows/security-guard.yml'
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/config/owner-expansion-envelope.json'
@@ -39,12 +45,14 @@ jobs:
   federate-negotiate-share:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout production lineage
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -109,38 +117,94 @@ jobs:
           echo "active_requests=$(jq -r '.active_request_count' /tmp/rights-request-federation-after.json)"
           echo "persistent_owner_review=$(jq -r '.owner_review_persistent_count' /tmp/rights-request-federation-after.json)"
 
-      - name: Persist negotiation memory and effective ceiling
+      - name: Persist bounded negotiation state through GitHub ref API
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
-          git config user.name 'senju-rights-request-bot'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            senju/state/rights_request_ledger.json \
-            senju/state/rights_request_federation.json \
-            senju/state/owner_scope_negotiation_signals.json \
-            senju/state/owner_scope_negotiation_campaign.json \
-            senju/state/owner_scope_negotiation_result.json \
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          BASE="claude/employee-onboarding-setup-udm86"
+          ALLOWED=(
+            senju/state/rights_request_ledger.json
+            senju/state/rights_request_federation.json
+            senju/state/owner_scope_negotiation_signals.json
+            senju/state/owner_scope_negotiation_campaign.json
+            senju/state/owner_scope_negotiation_result.json
             senju/state/owner_contact_ceiling_effective.json
-          if git diff --cached --quiet; then
-            echo 'No meaningful rights/ceiling state change.'
-            exit 0
-          fi
-          git commit -m 'chore(authority): persist META X SENJU rights negotiation [skip ci]'
-          for attempt in 1 2 3; do
-            if git push origin HEAD:claude/employee-onboarding-setup-udm86; then
-              exit 0
+          )
+
+          put_file() {
+            local branch="$1" src="$2" path="$3" remote_sha local_sha content
+            remote_sha="$(gh api "repos/$REPO/contents/$path?ref=$branch" --jq '.sha' 2>/dev/null || true)"
+            local_sha="$(git hash-object "$src")"
+            if [[ "$remote_sha" == "$local_sha" ]]; then
+              return 0
             fi
-            echo "push race attempt $attempt; rebasing latest production"
-            git fetch origin claude/employee-onboarding-setup-udm86
-            git rebase origin/claude/employee-onboarding-setup-udm86
+            content="$(base64 -w0 "$src")"
+            if [[ -n "$remote_sha" ]]; then
+              gh api -X PUT "repos/$REPO/contents/$path" \
+                -f message="chore(authority): persist META X SENJU rights negotiation [skip ci]" \
+                -f content="$content" -f branch="$branch" -f sha="$remote_sha" >/dev/null
+            else
+              gh api -X PUT "repos/$REPO/contents/$path" \
+                -f message="chore(authority): persist META X SENJU rights negotiation [skip ci]" \
+                -f content="$content" -f branch="$branch" >/dev/null
+            fi
+          }
+
+          for attempt in 1 2 3; do
+            BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+            BRANCH="rights-request-state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}"
+            gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BRANCH" -f sha="$BASE_SHA" >/dev/null
+
+            for path in "${ALLOWED[@]}"; do
+              test -f "$path"
+              put_file "$BRANCH" "$path" "$path"
+            done
+
+            HEAD_SHA="$(gh api "repos/$REPO/git/ref/heads/$BRANCH" --jq '.object.sha')"
+            if [[ "$HEAD_SHA" == "$BASE_SHA" ]]; then
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+              echo "No meaningful federation state change."
+              break
+            fi
+
+            gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq '.files[].filename' | sort > /tmp/rights-state-changed.txt
+            python - <<'PY'
+          from pathlib import Path
+          allowed = {
+              'senju/state/rights_request_ledger.json',
+              'senju/state/rights_request_federation.json',
+              'senju/state/owner_scope_negotiation_signals.json',
+              'senju/state/owner_scope_negotiation_campaign.json',
+              'senju/state/owner_scope_negotiation_result.json',
+              'senju/state/owner_contact_ceiling_effective.json',
+          }
+          changed = {line.strip() for line in Path('/tmp/rights-state-changed.txt').read_text().splitlines() if line.strip()}
+          forbidden = changed - allowed
+          if forbidden:
+              raise SystemExit(f'rights-state promotion touched forbidden paths: {sorted(forbidden)}')
+          print('Validated bounded rights-state diff:', ', '.join(sorted(changed)))
+          PY
+
+            CURRENT_BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+            if [[ "$CURRENT_BASE_SHA" == "$BASE_SHA" ]]; then
+              gh api -X PATCH "repos/$REPO/git/refs/heads/$BASE" -f sha="$HEAD_SHA" -F force=false >/dev/null
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+              echo "Promoted bounded rights negotiation state to $BASE at $HEAD_SHA"
+              break
+            fi
+
+            echo "Base moved; safe rights-state promotion retry $attempt/3"
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+            if [[ "$attempt" -eq 3 ]]; then
+              echo "Base remained busy; persistence deferred to next cycle."
+            fi
           done
-          exit 1
 
       - name: Share active rights requests with authority-related PRs
         if: github.event_name != 'pull_request'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PYTHONPATH: senju:automation/codegen
         shell: bash
         run: |
