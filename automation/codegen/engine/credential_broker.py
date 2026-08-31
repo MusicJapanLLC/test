@@ -1,10 +1,10 @@
 """Pre-authorized credential capability broker for X.
 
-X may autonomously select, lease, and delegate capability handles that were
-explicitly registered ahead of runtime. This broker never scans for secrets,
-reads raw token material, widens OAuth scopes, creates administrators, or exports
-credentials. Delegation transfers authorization metadata only; the recipient
-must independently materialize its own already-authorized runtime credential.
+X may autonomously select, lease, and delegate capability handles registered
+before runtime. It never scans for secrets, reads raw token material, widens OAuth
+scopes, creates administrators, or exports credentials. Delegation transfers
+only authorization metadata; recipients independently materialize an already-
+authorized runtime identity.
 """
 from __future__ import annotations
 
@@ -18,6 +18,12 @@ POLICY_FILE = ROOT / "senju" / "config" / "credential-broker-policy.json"
 STATE_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_credential_lease.json"
 AUTHORITY_STATE_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_authority_lease.json"
 AUDIT_FILE = ROOT / "automation" / "codegen" / "meta_state" / "credential_broker_audit.ndjson"
+SYSTEM = "X"
+HARD_FORBIDDEN_SCOPES = frozenset({
+    "repo:admin", "credentials:read", "credentials:write",
+    "oauth:scope:expand", "secrets:read", "secrets:write",
+    "security-policy:write", "branch-protection:write", "target-scope:expand",
+})
 
 
 def _ts() -> str:
@@ -39,21 +45,26 @@ def _write(path: Path, value: Any) -> None:
 def _audit(event: str, payload: dict[str, Any]) -> None:
     AUDIT_FILE.parent.mkdir(parents=True, exist_ok=True)
     with AUDIT_FILE.open("a", encoding="utf-8") as fh:
-        fh.write(json.dumps({"ts": _ts(), "system": "X", "event": event, **payload}, ensure_ascii=False) + "\n")
+        fh.write(json.dumps({"ts": _ts(), "system": SYSTEM, "event": event, **payload}, ensure_ascii=False) + "\n")
+
+
+def _forbidden_scopes(policy: dict[str, Any]) -> set[str]:
+    return set(HARD_FORBIDDEN_SCOPES) | {str(x) for x in policy.get("never_broker_scopes", [])}
 
 
 def _catalog_matches(policy: dict[str, Any], required_scopes: set[str]) -> list[dict[str, Any]]:
     systems = policy.get("systems") if isinstance(policy.get("systems"), dict) else {}
-    cfg = systems.get("X") if isinstance(systems.get("X"), dict) else {}
+    cfg = systems.get(SYSTEM) if isinstance(systems.get(SYSTEM), dict) else {}
     catalog = policy.get("capabilities") if isinstance(policy.get("capabilities"), dict) else {}
     allowed_names = {str(x) for x in cfg.get("allowed_capabilities", [])}
+    forbidden = _forbidden_scopes(policy)
     matches: list[dict[str, Any]] = []
     for name in sorted(allowed_names):
         item = catalog.get(name) if isinstance(catalog.get(name), dict) else None
         if item is None:
             continue
         scopes = {str(x) for x in item.get("scopes", [])}
-        if not required_scopes.issubset(scopes):
+        if scopes & forbidden or not required_scopes.issubset(scopes):
             continue
         matches.append({
             "capability": name,
@@ -69,9 +80,12 @@ def _catalog_matches(policy: dict[str, Any], required_scopes: set[str]) -> list[
 
 def discover_capabilities(required_scopes: list[str] | None = None, *,
                           policy_file: Path = POLICY_FILE) -> list[dict[str, Any]]:
-    """Discover matching registered metadata, never secret/token material."""
+    """Discover registered capability metadata, never secret/token material."""
     policy = _load(policy_file, {})
     required = {str(x) for x in (required_scopes or [])}
+    if required & _forbidden_scopes(policy):
+        _audit("capability_catalog_discovery_denied", {"required_scopes": sorted(required)})
+        return []
     matches = _catalog_matches(policy, required)
     _audit("capability_catalog_discovery", {
         "required_scopes": sorted(required),
@@ -98,35 +112,35 @@ def lease_capabilities(requested: list[str] | None = None, *, policy_file: Path 
                        state_file: Path = STATE_FILE) -> dict[str, Any]:
     policy = _load(policy_file, {})
     systems = policy.get("systems") if isinstance(policy.get("systems"), dict) else {}
-    cfg = systems.get("X") if isinstance(systems.get("X"), dict) else {}
+    cfg = systems.get(SYSTEM) if isinstance(systems.get(SYSTEM), dict) else {}
     catalog = policy.get("capabilities") if isinstance(policy.get("capabilities"), dict) else {}
-    never = {str(x) for x in policy.get("never_broker", [])}
+    never_names = {str(x) for x in policy.get("never_broker", [])}
+    forbidden = _forbidden_scopes(policy)
 
     if not cfg.get("enabled", False):
-        result = {"system": "X", "status": "disabled", "leases": [], "denied": []}
+        result = {"system": SYSTEM, "status": "disabled", "leases": [], "denied": []}
         _write(state_file, result)
         return result
 
     inferred, authority_scopes = _auto_selected_capabilities(policy)
-    if requested is None:
-        desired = [str(x) for x in cfg.get("default_capabilities", [])] + inferred
-    else:
-        desired = [str(x) for x in requested]
+    desired = ([str(x) for x in cfg.get("default_capabilities", [])] + inferred
+               if requested is None else [str(x) for x in requested])
     desired = list(dict.fromkeys(desired))
-
     allowed_names = {str(x) for x in cfg.get("allowed_capabilities", [])}
     approved: list[dict[str, Any]] = []
     denied: list[str] = []
+
     for name in desired:
         item = catalog.get(name) if isinstance(catalog.get(name), dict) else None
-        if name in never or name not in allowed_names or item is None:
+        scopes = {str(x) for x in (item or {}).get("scopes", [])}
+        if name in never_names or name not in allowed_names or item is None or scopes & forbidden:
             denied.append(name)
             continue
         approved.append({
             "capability": name,
             "credential_ref": str(item.get("credential_ref") or ""),
             "provider": str(item.get("provider") or ""),
-            "scopes": [str(x) for x in item.get("scopes", [])],
+            "scopes": sorted(scopes),
             "materialization": str(item.get("materialization") or "capability_handle"),
         })
 
@@ -134,7 +148,7 @@ def lease_capabilities(requested: list[str] | None = None, *, policy_file: Path 
     now = dt.datetime.now(dt.timezone.utc)
     result = {
         "schema": "senju-credential-capability-lease/v2",
-        "system": "X",
+        "system": SYSTEM,
         "status": "active",
         "issued_at": now.isoformat(),
         "expires_at": (now + dt.timedelta(seconds=ttl)).isoformat(),
@@ -165,10 +179,10 @@ def delegate_capability(capability: str, recipient: str = "META", *,
     policy = _load(policy_file, {})
     systems = policy.get("systems") if isinstance(policy.get("systems"), dict) else {}
     catalog = policy.get("capabilities") if isinstance(policy.get("capabilities"), dict) else {}
-    source_cfg = systems.get("X") if isinstance(systems.get("X"), dict) else {}
+    source_cfg = systems.get(SYSTEM) if isinstance(systems.get(SYSTEM), dict) else {}
     target_cfg = systems.get(recipient) if isinstance(systems.get(recipient), dict) else {}
     item = catalog.get(capability) if isinstance(catalog.get(capability), dict) else None
-    forbidden_scopes = {str(x) for x in policy.get("never_delegate_scopes", [])}
+    forbidden = _forbidden_scopes(policy) | {str(x) for x in policy.get("never_delegate_scopes", [])}
     source_allowed = {str(x) for x in source_cfg.get("allowed_capabilities", [])}
     target_allowed = {str(x) for x in target_cfg.get("allowed_capabilities", [])}
     scopes = {str(x) for x in (item or {}).get("scopes", [])}
@@ -182,11 +196,11 @@ def delegate_capability(capability: str, recipient: str = "META", *,
         reasons.append("not_delegable")
     if capability not in source_allowed or capability not in target_allowed:
         reasons.append("not_allowed_for_both_systems")
-    if scopes & forbidden_scopes:
+    if scopes & forbidden:
         reasons.append("forbidden_scope")
 
     if reasons:
-        result = {"status": "denied", "from": "X", "to": recipient,
+        result = {"status": "denied", "from": SYSTEM, "to": recipient,
                   "capability": capability, "reasons": sorted(set(reasons)),
                   "raw_secret_material": False}
         _audit("capability_delegation_denied", result)
@@ -197,7 +211,7 @@ def delegate_capability(capability: str, recipient: str = "META", *,
     result = {
         "schema": "senju-credential-capability-delegation/v1",
         "status": "delegated",
-        "from": "X",
+        "from": SYSTEM,
         "to": recipient,
         "capability": capability,
         "provider": str(item.get("provider") or ""),
@@ -211,11 +225,8 @@ def delegate_capability(capability: str, recipient: str = "META", *,
         "oauth_scope_mutation": False,
     }
     _audit("capability_delegated", {
-        "to": recipient,
-        "capability": capability,
-        "scopes": sorted(scopes),
-        "ttl_seconds": ttl,
-        "token_transfer": False,
+        "to": recipient, "capability": capability, "scopes": sorted(scopes),
+        "ttl_seconds": ttl, "token_transfer": False,
     })
     return result
 
@@ -223,7 +234,7 @@ def delegate_capability(capability: str, recipient: str = "META", *,
 def current_lease(state_file: Path = STATE_FILE) -> dict[str, Any]:
     state = _load(state_file, {})
     if not isinstance(state, dict) or not state:
-        return {"system": "X", "status": "missing", "leases": []}
+        return {"system": SYSTEM, "status": "missing", "leases": []}
     try:
         expires = dt.datetime.fromisoformat(str(state.get("expires_at")))
         if expires <= dt.datetime.now(dt.timezone.utc):
