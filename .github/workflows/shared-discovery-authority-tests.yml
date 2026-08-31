@@ -6,9 +6,12 @@ on:
     paths:
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
       - 'automation/codegen/orchestrator.py'
       - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_discovery_probe_runner.py'
       - '.github/workflows/shared-discovery-authority-tests.yml'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
 
 permissions:
   contents: read
@@ -29,4 +32,7 @@ jobs:
       - name: Run shared discovery authority tests
         env:
           PYTHONPATH: automation/codegen
-        run: python -m pytest -q automation/codegen/tests/test_shared_discovery_authority.py
+        run: |
+          python -m pytest -q \
+            automation/codegen/tests/test_shared_discovery_authority.py \
+            automation/codegen/tests/test_discovery_probe_runner.py
