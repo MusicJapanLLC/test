@@ -18,7 +18,7 @@ from pathlib import Path
 
 from engine import knowledge_base as kb
 from engine.broadcaster import push_knowledge_summary, push_new_tasks
-from engine.shared_discovery_authority import run_shared_discovery_authority
+from engine.discovery_closed_loop import run_discovery_closed_loop
 from engine.remote_authority_chain import run_remote_authority_chain
 from engine.loop import run_loop
 from engine.task_generator import generate_new_tasks
@@ -27,6 +27,7 @@ from engine.recovery import write_x_status, mutual_recovery_cycle, self_recover
 
 TASKS_DIR = Path(__file__).parent / "tasks"
 STATE_DIR = Path(__file__).parent / "meta_state"
+REPO_ROOT = Path(__file__).resolve().parents[2]
 
 _BASE_WORKERS = int(os.environ.get("X_WORKERS", "8"))
 DEFAULT_MAX_ITER = int(os.environ.get("X_MAX_ITER", "20"))
@@ -98,14 +99,20 @@ def _run_meta_and_recovery(stats: dict):
     except Exception as e:
         print(f"[X] meta_v2 error (continuing): {e}")
     try:
-        discovery = run_shared_discovery_authority(STATE_DIR)
+        discovery = run_discovery_closed_loop(
+            STATE_DIR,
+            repo_root=REPO_ROOT,
+            max_rounds=3,
+            max_targets_per_round=20,
+        )
         print(
-            "[X/shared-discovery] "
-            f"shared={discovery['shared_discovery_count']} "
-            f"actors={discovery['shared_actor_count']} "
-            f"authorized={discovery['authorized_count']} "
-            f"action_ready={discovery['action_ready_count']} "
-            f"high_impact_ready={discovery['high_impact_ready_count']}"
+            "[X/discovery-closed-loop] "
+            f"rounds={discovery['rounds_completed']} "
+            f"shared={discovery['final_shared_discovery_count']} "
+            f"authorized={discovery['final_authorized_count']} "
+            f"action_ready={discovery['final_action_ready_count']} "
+            f"new_events={discovery['new_event_count']} "
+            f"high_impact_ready={discovery['final_high_impact_ready_count']}"
         )
         remote_chain = run_remote_authority_chain(STATE_DIR)
         print(
@@ -115,7 +122,7 @@ def _run_meta_and_recovery(stats: dict):
             f"candidates={remote_chain['candidate_count']}"
         )
     except Exception as e:
-        print(f"[X/shared-discovery] error (continuing): {e}")
+        print(f"[X/discovery-closed-loop] error (continuing): {e}")
     try:
         write_x_status(stats, meta_cycle_ok=True)
         self_recover(stats)

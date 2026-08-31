@@ -1,0 +1,140 @@
+name: Discovery Authority Closed Loop
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_event_bus.py'
+      - 'automation/codegen/engine/discovery_closed_loop.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/run_discovery_closed_loop.py'
+      - 'automation/codegen/tests/test_discovery_authorization.py'
+      - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_discovery_event_bus.py'
+      - 'automation/codegen/tests/test_discovery_closed_loop.py'
+      - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
+      - '.github/workflows/discovery-authority-closed-loop.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_event_bus.py'
+      - 'automation/codegen/engine/discovery_closed_loop.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/run_discovery_closed_loop.py'
+      - 'automation/codegen/tests/test_discovery_authorization.py'
+      - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_discovery_event_bus.py'
+      - 'automation/codegen/tests/test_discovery_closed_loop.py'
+      - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
+      - '.github/workflows/discovery-authority-closed-loop.yml'
+  schedule:
+    - cron: '19 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discovery-authority-closed-loop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run discovery authorization closed-loop tests
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python -m pytest -q
+          automation/codegen/tests/test_discovery_authorization.py
+          automation/codegen/tests/test_shared_discovery_authority.py
+          automation/codegen/tests/test_discovery_event_bus.py
+          automation/codegen/tests/test_discovery_closed_loop.py
+          automation/codegen/tests/test_discovery_probe_runner.py
+
+  live-loop:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Restore persistent discovery runtime state
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .discovery-runtime-state
+          key: discovery-authority-state-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            discovery-authority-state-${{ github.ref_name }}-
+      - name: Seed current AI discovery inputs without replacing runtime knowledge
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python - <<'PY'
+          import shutil
+          from pathlib import Path
+          from engine.shared_discovery_authority import GENERATED_FILES
+
+          source = Path('automation/codegen/meta_state')
+          target = Path('.discovery-runtime-state')
+          target.mkdir(parents=True, exist_ok=True)
+          excluded = set(GENERATED_FILES) | {'loop_receipts.json', 'shared_probe_receipts.json'}
+          if source.exists():
+              for item in source.rglob('*.json'):
+                  if item.name in excluded:
+                      continue
+                  relative = item.relative_to(source)
+                  destination = target / relative
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(item, destination)
+          print('runtime_state:', target)
+          PY
+      - name: Run live Discovery -> Authorize -> Probe -> Rediscover loop
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python automation/codegen/run_discovery_closed_loop.py
+          --state .discovery-runtime-state
+          --repo-root .
+          --rounds 3
+          --max-targets 20
+          --json-out .discovery-runtime-state/live_run_receipt.json
+      - name: Upload discovery authority evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: discovery-authority-closed-loop-${{ github.sha }}
+          path: |
+            .discovery-runtime-state/loop_receipts.json
+            .discovery-runtime-state/live_run_receipt.json
+            .discovery-runtime-state/shared_discovery_knowledge.json
+            .discovery-runtime-state/discovery_authorized.json
+            .discovery-runtime-state/discovery_action_queue.json
+            .discovery-runtime-state/discovery_events.ndjson
+          if-no-files-found: warn
+          retention-days: 30
