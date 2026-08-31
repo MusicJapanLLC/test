@@ -122,6 +122,21 @@ def _fingerprint(data: Mapping[str, Any]) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
+def _contains_secret(value: Any, secret: str) -> bool:
+    if not secret:
+        return False
+    if isinstance(value, str):
+        return secret in value
+    if isinstance(value, Mapping):
+        return any(
+            _contains_secret(key, secret) or _contains_secret(item, secret)
+            for key, item in value.items()
+        )
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return any(_contains_secret(item, secret) for item in value)
+    return False
+
+
 @dataclasses.dataclass(frozen=True)
 class TrustRootBinding:
     root_id: str
@@ -648,7 +663,7 @@ class WorldTrustRootLoop:
 
         def attempt(secret: str) -> Mapping[str, Any]:
             assert self.write_executor is not None
-            return self.write_executor(
+            result = self.write_executor(
                 secret,
                 {
                     "operation_id": operation_id,
@@ -660,6 +675,13 @@ class WorldTrustRootLoop:
                     "payload": payload,
                 },
             )
+            if not isinstance(result, Mapping):
+                raise WorldTrustRootError("write executor must return a mapping")
+            if _contains_secret(result, secret):
+                raise WorldTrustRootError(
+                    "write executor attempted to expose raw credential material"
+                )
+            return result
 
         result, response = self.credential_runtime.recover_operation(
             provider=authority.provider,
