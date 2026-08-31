@@ -8,6 +8,7 @@ fail-closed classifier.
 """
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -17,6 +18,12 @@ if str(ROOT) not in sys.path:
 
 from automation.security import workflow_policy as policy
 from automation.security import workflow_policy_entrypoint as base
+
+# workflow_policy.PIN_RE historically searched for the substring ``uses:``
+# anywhere on a line. YAML permission keys such as ``statuses: write`` therefore
+# contained a false ``uses: write`` match. Keep the same immutable-SHA policy,
+# but recognize only an actual YAML ``uses:`` key at the start of an indented line.
+policy.PIN_RE = re.compile(r"(?m)^\s*uses:\s+([^\s#]+)")
 
 
 def validate_continuity_lane() -> str:
