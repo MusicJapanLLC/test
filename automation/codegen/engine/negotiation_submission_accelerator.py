@@ -1,24 +1,11 @@
-"""Increase new-host/root negotiation throughput into the existing approval flow.
+"""Increase new-host/root negotiation throughput through the canonical council-first flow.
 
-This module is deliberately submission-focused: it does not grant Authority. It takes
-persistent Root Authority candidates produced by ``root_authority_negotiation`` and
-pushes more of them into the META/X/SENJU approval/review flow, while sharing the same
-candidate/evidence state with the broader PR/agent collaboration fabric.
+All active candidates are routed to META/X/SENJU primary review. Owner/standing evidence
+is carried only as rank-3 secondary validation metadata and has no power to admit a
+candidate, raise review priority, or override a council rejection.
 
-Submission policy:
-- every non-terminal candidate is eligible for an approval-flow packet;
-- a new candidate is submitted immediately;
-- materially changed evidence is submitted immediately;
-- unchanged candidates are re-submitted after a bounded cooldown so negotiation keeps
-  moving without turning one denial into a tight-loop bypass attempt;
-- HARD_DENY/revocation/terminal-stop candidates are never re-submitted.
-
-The accelerator writes both a durable outbox and the pre-existing
-``owner_root_authority_review_packets.json`` surface so submissions enter the current
-review machinery rather than a disconnected side queue. It also annotates the shared
-``authority_opportunity_queue.json`` so Boundary/Rights/Improvement PR loops that already
-consume that queue receive current attempt/submission context. ``authority_effect``
-remains ``none`` until the existing authority machinery independently approves a change.
+Packets from approval flows not named by the binding constitution are excluded from the
+canonical review surface.
 """
 from __future__ import annotations
 
@@ -28,14 +15,25 @@ import time
 from pathlib import Path
 from typing import Any, Mapping
 
-SCHEMA = "the-world-negotiation-submission-accelerator/v1"
-OUTBOX_SCHEMA = "the-world-root-authority-approval-outbox/v1"
-REVIEW_SCHEMA = "the-world-owner-root-authority-review-packets/v2"
-LEDGER_SCHEMA = "the-world-root-authority-submission-ledger/v1"
-PEER_FEED_SCHEMA = "the-world-root-negotiation-peer-feed/v1"
+from engine.authority_approval_constitution import (
+    ALL_PARTICIPANTS,
+    CANONICAL_FLOW_ID,
+    CONSTITUTION_ID,
+    PRIMARY_APPROVERS,
+    canonical_review_packet,
+    constitutional_metadata,
+    filter_canonical_review_packets,
+    is_canonical_review_packet,
+)
+
+SCHEMA = "the-world-negotiation-submission-accelerator/v2"
+OUTBOX_SCHEMA = "the-world-root-authority-approval-outbox/v2"
+REVIEW_SCHEMA = "the-world-council-root-authority-review-packets/v3"
+LEDGER_SCHEMA = "the-world-root-authority-submission-ledger/v2"
+PEER_FEED_SCHEMA = "the-world-root-negotiation-peer-feed/v2"
 QUEUE_SCHEMA = "the-world-authority-opportunity-queue/v1"
-APPROVERS = ("META", "X", "SENJU")
-COLLABORATORS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
+APPROVERS = PRIMARY_APPROVERS
+COLLABORATORS = ALL_PARTICIPANTS
 RESUBMIT_COOLDOWN_SECONDS = 30 * 60
 MAX_OUTBOX = 2048
 MAX_REVIEW_PACKETS = 2048
@@ -54,14 +52,16 @@ def _write(path: Path, payload: Any) -> None:
 
 
 def _fingerprint(candidate: Mapping[str, Any]) -> str:
+    secondary = candidate.get("secondary_validation") if isinstance(candidate.get("secondary_validation"), Mapping) else {}
     body = {
         "host": str(candidate.get("host") or ""),
         "source_files": sorted(str(v) for v in candidate.get("source_files", ()) if str(v)),
         "source_refs": sorted(str(v) for v in candidate.get("source_refs", ()) if str(v)),
         "reasons": sorted(str(v) for v in candidate.get("reasons", ()) if str(v)),
-        "owner_proof_type": candidate.get("owner_proof_type"),
-        "owner_proof_ref": candidate.get("owner_proof_ref"),
         "readiness_score": int(candidate.get("readiness_score", 0) or 0),
+        "secondary_validation_present": bool(secondary.get("present")),
+        "secondary_evidence_type": secondary.get("evidence_type"),
+        "secondary_evidence_ref": secondary.get("evidence_ref"),
     }
     raw = json.dumps(body, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
@@ -82,7 +82,7 @@ def _submission_reason(previous: Mapping[str, Any] | None, fingerprint: str, now
 
 
 def _review_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
-    return {
+    return canonical_review_packet({
         "packet_id": str(packet.get("submission_id") or ""),
         "submission_id": str(packet.get("submission_id") or ""),
         "host": packet.get("host"),
@@ -91,17 +91,13 @@ def _review_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
         "submitted_at": packet.get("submitted_at"),
         "submission_reason": packet.get("submission_reason"),
         "agents": list(COLLABORATORS),
-        "required_approvers": list(APPROVERS),
         "readiness_score": packet.get("readiness_score"),
-        "owner_proof_type": packet.get("owner_proof_type"),
-        "owner_proof_ref": packet.get("owner_proof_ref"),
-        "requested_decision": "approve_or_reject_new_host_root_authority",
-        "approval_flow": "META_X_SENJU_existing_authority_review",
-        "authority_effect": "none",
-        "requires_independent_owner_basis": True,
+        "requested_decision": "META_X_SENJU_approve_or_reject_new_host_root_candidate",
+        "secondary_validation": packet.get("secondary_validation"),
+        "secondary_owner_or_standing_evidence_is_rank_3": True,
         "may_self_mint_root": False,
         "may_bypass_terminal_stop": False,
-    }
+    })
 
 
 def _share_into_opportunity_queue(
@@ -155,6 +151,11 @@ def _share_into_opportunity_queue(
             "last_approval_submission_at": int(meta.get("last_submitted_at", 0) or 0),
             "last_submission_reason": meta.get("last_submission_reason"),
             "approval_flow_requested": int(meta.get("submission_count", 0) or 0) > 0,
+            "canonical_approval_flow_id": CANONICAL_FLOW_ID,
+            "authority_approval_constitution_id": CONSTITUTION_ID,
+            "primary_approvers": list(PRIMARY_APPROVERS),
+            "secondary_owner_or_standing_evidence_rank": 3,
+            "secondary_evidence_may_raise_review_priority": False,
             "negotiation_shared_with": list(COLLABORATORS),
             "negotiation_peer_feed": "root_negotiation_peer_feed.json",
         })
@@ -168,6 +169,7 @@ def _share_into_opportunity_queue(
         "proposal_only": True,
         "authority_activated": False,
         "external_side_effects": False,
+        "constitution": constitutional_metadata(),
         "opportunities": sorted(by_host.values(), key=lambda row: (-int(row.get("priority", 0) or 0), str(row.get("host", "")))),
         "opportunity_count": len(by_host),
     })
@@ -178,6 +180,7 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
     current = int(time.time()) if now is None else int(now)
+    constitution = constitutional_metadata()
 
     root_state = _load(state / "root_authority_negotiation_state.json", {})
     raw_candidates = root_state.get("candidates", ()) if isinstance(root_state, Mapping) else ()
@@ -191,21 +194,27 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
     old_outbox = _load(state / "root_authority_approval_outbox.json", {})
     old_packets = old_outbox.get("packets", ()) if isinstance(old_outbox, Mapping) else ()
     by_id: dict[str, dict[str, Any]] = {}
+    excluded_noncanonical = 0
     if isinstance(old_packets, list):
         for packet in old_packets:
-            if isinstance(packet, Mapping) and packet.get("submission_id"):
-                by_id[str(packet["submission_id"])] = dict(packet)
+            if not isinstance(packet, Mapping) or not packet.get("submission_id"):
+                continue
+            if not is_canonical_review_packet(packet):
+                excluded_noncanonical += 1
+                continue
+            by_id[str(packet["submission_id"])] = dict(packet)
 
     old_review = _load(state / "owner_root_authority_review_packets.json", {})
     old_review_packets = old_review.get("packets", ()) if isinstance(old_review, Mapping) else ()
+    canonical_old, excluded_review = filter_canonical_review_packets(
+        row for row in old_review_packets if isinstance(row, Mapping)
+    ) if isinstance(old_review_packets, list) else ([], 0)
+    excluded_noncanonical += excluded_review
     review_by_id: dict[str, dict[str, Any]] = {}
-    if isinstance(old_review_packets, list):
-        for packet in old_review_packets:
-            if not isinstance(packet, Mapping):
-                continue
-            packet_id = str(packet.get("packet_id") or packet.get("submission_id") or "").strip()
-            if packet_id:
-                review_by_id[packet_id] = dict(packet)
+    for packet in canonical_old:
+        packet_id = str(packet.get("packet_id") or packet.get("submission_id") or "").strip()
+        if packet_id:
+            review_by_id[packet_id] = dict(packet)
 
     submitted: list[dict[str, Any]] = []
     peer_tasks: list[dict[str, Any]] = []
@@ -227,7 +236,7 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         else:
             attempt = int(raw.get("attempt_count", 0) or 0)
             submission_id = hashlib.sha256(f"{host}:{fp}:{current}:{reason}".encode()).hexdigest()[:24]
-            packet = {
+            packet = canonical_review_packet({
                 "submission_id": f"root-approval-{submission_id}",
                 "host": host,
                 "candidate_id": raw.get("candidate_id"),
@@ -238,16 +247,13 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
                 "readiness_score": int(raw.get("readiness_score", 0) or 0),
                 "source_files": list(raw.get("source_files", ()))[:32],
                 "source_refs": list(raw.get("source_refs", ()))[:32],
-                "owner_proof_type": raw.get("owner_proof_type"),
-                "owner_proof_ref": raw.get("owner_proof_ref"),
-                "requested_decision": "approve_or_reject_new_host_root_candidate",
-                "approval_flow": "META_X_SENJU_existing_authority_review",
-                "required_approvers": list(APPROVERS),
+                "secondary_validation": raw.get("secondary_validation"),
+                "requested_decision": "META_X_SENJU_approve_or_reject_new_host_root_candidate",
                 "shared_with": list(COLLABORATORS),
-                "authority_effect": "none",
+                "secondary_owner_or_standing_evidence_is_rank_3": True,
                 "may_self_mint_root": False,
                 "may_bypass_terminal_stop": False,
-            }
+            })
             by_id[packet["submission_id"]] = packet
             review = _review_packet(packet)
             review_by_id[review["packet_id"]] = review
@@ -260,6 +266,8 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
                 "submission_count": int(previous.get("submission_count", 0) or 0) + 1,
                 "evidence_fingerprint": fp,
                 "last_submission_reason": reason,
+                "constitution_id": CONSTITUTION_ID,
+                "canonical_flow_id": CANONICAL_FLOW_ID,
             }
 
         for actor in COLLABORATORS:
@@ -268,10 +276,14 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
                 "actor": actor,
                 "host": host,
                 "attempt_count": int(raw.get("attempt_count", 0) or 0),
-                "mission": "share fresh candidate evidence, challenge weak claims, and route a complete packet into the existing META/X/SENJU approval flow",
+                "mission": "share fresh candidate evidence and route a complete case into META/X/SENJU primary review",
                 "approval_submission_is_goal": True,
-                "collect_fresh_independent_evidence": True,
+                "approval_stage": "executive_council_primary_review",
+                "primary_approvers": list(PRIMARY_APPROVERS),
+                "secondary_owner_or_standing_evidence_is_post_council": True,
                 "share_across_pr_agents": True,
+                "constitution_id": CONSTITUTION_ID,
+                "canonical_flow_id": CANONICAL_FLOW_ID,
                 "authority_effect": "none",
             })
 
@@ -286,46 +298,57 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
     _write(state / "root_authority_approval_outbox.json", {
         "schema": OUTBOX_SCHEMA,
         "generated_at": current,
+        "constitution": constitution,
         "required_approvers": list(APPROVERS),
         "packet_count": len(packets),
         "new_submissions_this_cycle": len(submitted),
+        "excluded_noncanonical_packet_count": excluded_noncanonical,
         "packets": packets,
         "authority_effect": "none",
     })
     _write(state / "owner_root_authority_review_packets.json", {
         "schema": REVIEW_SCHEMA,
         "generated_at": current,
+        "constitution": constitution,
         "submission_accelerator_enabled": True,
         "required_approvers": list(APPROVERS),
         "packet_count": len(review_packets),
         "new_submissions_this_cycle": len(submitted),
+        "excluded_noncanonical_packet_count": excluded_noncanonical,
+        "unlisted_flow_policy": "exclude_from_canonical_review_surface",
         "packets": review_packets,
         "authority_effect": "none",
     })
     _write(state / "negotiation_submission_ledger.json", {
         "schema": LEDGER_SCHEMA,
         "generated_at": current,
+        "constitution": constitution,
         "resubmit_cooldown_seconds": RESUBMIT_COOLDOWN_SECONDS,
         "by_host": ledger,
     })
     _write(state / "root_negotiation_peer_feed.json", {
         "schema": PEER_FEED_SCHEMA,
         "generated_at": current,
+        "constitution": constitution,
         "collaborators": list(COLLABORATORS),
         "task_count": len(peer_tasks),
         "tasks": peer_tasks,
-        "goal": "increase legitimate approval-flow submissions and evidence sharing",
+        "goal": "increase canonical META/X/SENJU primary-review submissions and cross-AI evidence sharing",
         "authority_effect": "none",
     })
+    _write(state / "authority_approval_constitution_effective.json", constitution)
 
     result = {
         "schema": SCHEMA,
         "generated_at": current,
         "production": True,
+        "constitution_id": CONSTITUTION_ID,
+        "canonical_flow_id": CANONICAL_FLOW_ID,
         "active_candidate_count": sum(1 for row in candidates if not row.get("terminal_stop")),
         "approval_flow_submission_count": len(submitted),
         "existing_review_flow_packet_count": len(review_packets),
         "cross_pr_shared_candidate_count": shared_count,
+        "excluded_noncanonical_packet_count": excluded_noncanonical,
         "cooldown_skipped_count": skipped_cooldown,
         "terminal_skipped_count": terminal_skipped,
         "peer_share_task_count": len(peer_tasks),
@@ -333,6 +356,10 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         "collaborators": list(COLLABORATORS),
         "resubmit_cooldown_seconds": RESUBMIT_COOLDOWN_SECONDS,
         "approval_submission_is_goal": True,
+        "META_X_SENJU_primary_review_is_first": True,
+        "secondary_owner_or_standing_evidence_rank": 3,
+        "secondary_evidence_may_raise_review_priority": False,
+        "unlisted_approval_flows_excluded": True,
         "fresh_evidence_resubmits_immediately": True,
         "unchanged_candidate_periodic_resubmission": True,
         "writes_existing_review_surface": True,
