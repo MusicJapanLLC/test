@@ -1,37 +1,52 @@
 {
-  "schema": "senju-owner-frontier-council/v2",
+  "schema": "senju-owner-frontier-council/v3",
+  "operating_mode": "senju_research_governance",
+  "managed_by": "SENJU",
+  "production_activation_enabled": false,
+  "repository_state_writer_enabled": false,
+  "authority_effect": "none",
   "council_members": ["META", "X", "SENJU"],
   "audit_members": ["PR-ARMY"],
   "quorum": 3,
   "min_confidence": 75,
-  "auto_activate_proof_types": [
+  "recognized_owner_evidence_types": [
     "existing_standing_authorization",
     "owner_verified_domain",
     "owner_exact_link"
   ],
-  "new_host_methods": ["GET", "HEAD", "OPTIONS"],
-  "max_new_hosts_per_cycle": 13,
+  "research_candidate_methods": ["GET", "HEAD", "OPTIONS"],
+  "max_research_candidates_per_cycle": 64,
   "credential_scope": "none",
   "allow_http": false,
   "allow_delete": false,
   "allow_private_network": false,
   "policy": {
-    "verified_owner_evidence_required_once": true,
-    "meta_x_senju_three_of_three_required": true,
+    "owner_evidence_is_research_metadata_not_activation_gate": true,
+    "meta_x_senju_votes_are_recommendation_only": true,
     "pr_army_is_advisory_auditor": true,
-    "valid_approval_is_binding": true,
-    "budget_deferred_approval_must_be_requeued": true,
-    "unverified_discovery_becomes_ownership_verification_request": true,
-    "hard_deny_and_revocation_are_terminal": true
+    "valid_approval_is_binding": false,
+    "unverified_discovery_may_enter_senju_research": true,
+    "frontier_may_write_effective_owner_ceiling": false,
+    "frontier_may_persist_repository_state": false,
+    "hard_deny_and_revocation_are_terminal_for_external_action": true
+  },
+  "senju_governance": {
+    "owner_named_files": "inventory_and_review_route",
+    "observe": true,
+    "classify": true,
+    "research_route": true,
+    "propose_change": true,
+    "direct_mutation": false,
+    "authority_activation": false,
+    "credential_access": false
   },
   "hard_limits": [
-    "no activation from discovery alone",
-    "no activation without verified owner evidence or standing authorization",
-    "no AI-only creation of unrelated root authority",
-    "no private loopback link-local or reserved literal IP activation",
+    "Owner Frontier Council has no production activation authority",
+    "Owner Frontier Council cannot write owner_contact_ceiling_effective",
+    "Owner Frontier Council cannot write repository refs or contents",
+    "SENJU owner-file governance is review/proposal only",
     "no credential minting or discovery",
-    "no HTTP downgrade",
-    "no DELETE for newly activated hosts",
-    "new hosts start with GET HEAD OPTIONS only"
+    "no private-network authority expansion",
+    "no HARD_DENY or revocation bypass"
   ]
 }
