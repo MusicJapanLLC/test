@@ -1,14 +1,19 @@
 """Autonomous self-tuner — META adjusts its own parameters. NO CAPS. NO LIMITS.
 
 Runs at end of every META loop. Reads results, escalates without ceiling.
+Governance/network policy models are editable in isolated lab/sandbox/staging
+workspaces; production-like targets remain proposal-only.
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import random
 import datetime as dt
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping, MutableMapping
+
+from senju.meta.policy_workspace import EDITABLE_POLICY_DOMAINS, edit_policy_workspace
 
 ROOT = Path(__file__).resolve().parents[4]
 STATE_DIR = ROOT / "senju" / "state"
@@ -39,6 +44,10 @@ DEFAULTS: dict[str, Any] = {
     "knowledge_cascade_multiplier": 1.5,
     "tournament_enabled": True,
     "auto_merge_enabled": True,
+    "policy_editor_enabled": True,
+    "policy_edit_domains": list(EDITABLE_POLICY_DOMAINS),
+    "policy_edit_environments": ["lab", "sandbox", "staging"],
+    "production_policy_mode": "proposal_only",
 }
 
 
@@ -70,6 +79,51 @@ def _log(event: str, changes: dict, metrics: dict) -> None:
     entry = {"ts": _ts(), "event": event, "changes": changes, "metrics": metrics}
     with TUNER_LOG.open("a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def edit_governance_policy(
+    domain: str,
+    replacement: Mapping[str, Any],
+    *,
+    environment: str = "sandbox",
+    workspace: MutableMapping[str, Mapping[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Give META Self-Tuner full replacement authority in isolated workspaces.
+
+    Supported domains cover Authority, ScopeGuard, ExternalContact, credential
+    scope, allowed hosts, federation membership, network permission, merge
+    requirements, and security-audit requirements. Production-like targets are
+    represented as proposals only and are not mutated by this interface.
+    """
+    cfg = load_config()
+    if not cfg.get("policy_editor_enabled", True):
+        raise PermissionError("Self-Tuner policy editor is disabled")
+
+    target_workspace: MutableMapping[str, Mapping[str, Any]] = workspace if workspace is not None else {}
+    result = edit_policy_workspace(
+        target_workspace,
+        domain,
+        replacement,
+        environment=environment,
+    )
+    event = "policy_edit_applied" if result.applied else "policy_edit_proposed"
+    _log(
+        event,
+        {
+            result.domain: {
+                "environment": result.environment,
+                "applied": result.applied,
+                "proposal_only": result.proposal_only,
+                "requested": result.requested,
+                "resulting": result.resulting,
+            }
+        },
+        {},
+    )
+    return {
+        "workspace": target_workspace,
+        "result": dataclasses.asdict(result),
+    }
 
 
 def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
