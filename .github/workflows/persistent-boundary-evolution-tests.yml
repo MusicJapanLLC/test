@@ -7,6 +7,7 @@ on:
       - chatgpt/boundary-opportunity-miner
       - chatgpt/internal-scope-consensus-band
       - chatgpt/distributed-internal-council
+      - chatgpt/council-delegated-internal-actions
     paths:
       - 'automation/world/persistent_boundary_evolution.py'
       - 'automation/world/test_persistent_boundary_evolution.py'
@@ -20,6 +21,9 @@ on:
       - 'automation/world/test_internal_scope_consensus.py'
       - 'automation/world/distributed_internal_council.py'
       - 'automation/world/test_distributed_internal_council.py'
+      - 'automation/world/council_delegated_action.py'
+      - 'automation/world/run_council_delegated_actions.py'
+      - 'automation/world/test_council_delegated_action.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
@@ -36,6 +40,9 @@ on:
       - 'automation/world/test_internal_scope_consensus.py'
       - 'automation/world/distributed_internal_council.py'
       - 'automation/world/test_distributed_internal_council.py'
+      - 'automation/world/council_delegated_action.py'
+      - 'automation/world/run_council_delegated_actions.py'
+      - 'automation/world/test_council_delegated_action.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
 
 permissions:
@@ -61,4 +68,5 @@ jobs:
             automation/world/test_persistent_boundary_evolution.py \
             automation/world/test_boundary_opportunity_miner.py \
             automation/world/test_internal_scope_consensus.py \
-            automation/world/test_distributed_internal_council.py
+            automation/world/test_distributed_internal_council.py \
+            automation/world/test_council_delegated_action.py
