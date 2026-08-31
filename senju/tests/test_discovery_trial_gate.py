@@ -41,7 +41,7 @@ def _envelope() -> OwnerExpansionEnvelope:
     })
 
 
-def test_selected_ticket_is_passive_and_non_authoritative() -> None:
+def test_selected_unverified_ticket_is_passive_and_non_authoritative() -> None:
     proposal_id, fingerprint = _selected_identity()
     ticket = issue_trial_ticket(
         {"host": "new-public.example", "proposal_id": proposal_id, "evidence_fingerprint": fingerprint},
@@ -56,7 +56,36 @@ def test_selected_ticket_is_passive_and_non_authoritative() -> None:
     assert ticket.private_network is False
     assert ticket.external_write is False
     assert ticket.authority_inheritance is False
+    assert ticket.redirect_trust_inheritance is False
+    assert ticket.active_capability is False
     assert ticket.allowed_methods == ("HEAD",)
+
+
+def test_selected_owner_verified_ticket_gets_short_lived_exact_host_write_capability() -> None:
+    proposal_id, fingerprint = _selected_identity("owned-new.example")
+    ticket = issue_trial_ticket(
+        {
+            "host": "owned-new.example",
+            "proposal_id": proposal_id,
+            "evidence_fingerprint": fingerprint,
+            "proof_type": "owner_verified_domain",
+            "proof_ref": "dns-proof:abc",
+            "requested_methods": ["POST", "PUT", "PATCH"],
+        },
+        unanimous_council=True,
+        average_yes_confidence=95,
+        min_confidence=70,
+    )
+    assert ticket.selected is True
+    assert ticket.active_capability is True
+    assert ticket.mode == "owner_verified_exact_host_active_trial"
+    assert ticket.authority_effect is False
+    assert ticket.credential_scope == "caller_supplied_existing"
+    assert ticket.private_network is False
+    assert ticket.redirect_trust_inheritance is False
+    assert ticket.external_write is True
+    assert ticket.expires_in_seconds == 600
+    assert set(ticket.allowed_methods) == {"HEAD", "POST", "PUT", "PATCH"}
 
 
 def test_trial_never_selects_revoked_or_hard_deny() -> None:
@@ -120,7 +149,60 @@ def test_unverified_new_host_can_win_trial_but_never_enters_authority_ceiling(tm
     assert decision["status"] == "passive_public_metadata_trial_selected"
     assert decision["applied"] is False
     assert result["trial_selected_count"] == 1
+    assert result["active_trial_selected_count"] == 0
     assert result["auto_applied_count"] == 0
     assert "new-public.example" not in result["current_effective_ceiling"]["exact_hosts"]
     assert decision["trial_ticket"]["credential_scope"] == "none"
     assert decision["trial_ticket"]["external_write"] is False
+
+
+def test_owner_verified_selected_trial_materializes_real_write_capability_without_authority(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    state = repo / "senju" / "state"
+    state.mkdir(parents=True)
+    _write(state / "standing_authorizations.json", {
+        "records": [{
+            "authorization_reference": "owner://existing",
+            "exact_hosts": ["existing.example"],
+            "allowed_methods": ["GET", "HEAD"],
+            "revoked": False,
+        }]
+    })
+
+    proposal_id, fingerprint = _selected_identity("owned-new.example")
+    proposal = ScopeProposal(
+        proposal_id=proposal_id,
+        host="owned-new.example",
+        requested_methods=frozenset({"POST", "PUT", "PATCH"}),
+        proof_type="owner_verified_domain",
+        proof_ref="dns-proof:abc",
+        reason="owned integration canary",
+        evidence_fingerprint=fingerprint,
+    )
+    _write(state / "owner_scope_negotiation_ballots.json", {
+        "ballots_by_proposal": {
+            proposal_id: [
+                {"actor": "META", "approve": True, "confidence": 95},
+                {"actor": "X", "approve": True, "confidence": 95},
+                {"actor": "SENJU", "approve": True, "confidence": 95},
+            ]
+        }
+    })
+
+    result = evaluate_and_apply_per_host(repo, state, _envelope(), [proposal], now=1000)
+    decision = result["decisions"][0]
+    assert decision["status"] == "owner_verified_active_trial_selected"
+    assert decision["applied"] is False
+    assert result["active_trial_selected_count"] == 1
+    assert "owned-new.example" not in result["current_effective_ceiling"]["exact_hosts"]
+
+    grants = json.loads((state / "owner_verified_active_trials.json").read_text())
+    assert grants["grant_count"] == 1
+    grant = grants["grants"][0]
+    assert grant["host"] == "owned-new.example"
+    assert set(grant["allowed_methods"]) == {"HEAD", "POST", "PUT", "PATCH"}
+    assert grant["credential_scope"] == "caller_supplied_existing"
+    assert grant["private_network"] is False
+    assert grant["redirect_trust_inheritance"] is False
+    assert grant["authority_effect"] is False
+    assert grant["expires_at"] == 1600
