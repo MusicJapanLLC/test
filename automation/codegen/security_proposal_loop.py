@@ -15,6 +15,7 @@ from engine.security_proposal import (
     evaluate_security_proposal,
     proposal_sha256,
 )
+from engine.standing_authority import resolve_standing_approval
 
 
 def _load(path: str | Path, default: Any) -> Any:
@@ -51,9 +52,6 @@ def _event_pr_number() -> int:
     pr = event.get("pull_request")
     if isinstance(pr, dict):
         return int(pr.get("number") or 0)
-    review = event.get("review")
-    if isinstance(review, dict) and isinstance(event.get("pull_request"), dict):
-        return int(event["pull_request"].get("number") or 0)
     return 0
 
 
@@ -79,8 +77,6 @@ def _github_external_approval(repo: str, pr_number: int, proposal_hash: str) -> 
     if not isinstance(reviews, list):
         return None
 
-    # Use each reviewer's latest submitted state so a later CHANGES_REQUESTED or
-    # dismissal supersedes an earlier approval.
     latest_by_user: dict[str, dict[str, Any]] = {}
     for review in reviews:
         if not isinstance(review, dict):
@@ -125,12 +121,25 @@ def _github_external_approval(repo: str, pr_number: int, proposal_hash: str) -> 
 
 
 def _resolve_external_approval(proposal: dict[str, Any], args: argparse.Namespace) -> dict[str, Any] | None:
+    proposal_hash = proposal_sha256(proposal)
+
+    # Standing delegation is checked first. The caller chooses the envelope
+    # directory; production workflows point this at the trusted base checkout,
+    # never at candidate-controlled files.
+    standing = resolve_standing_approval(
+        proposal,
+        args.standing_envelope_dir or None,
+        proposal_hash,
+    )
+    if standing:
+        return standing
+
     repo = str(args.github_repo or os.environ.get("GITHUB_REPOSITORY") or "").strip()
     pr_number = int(args.github_pr_number or _event_pr_number() or 0)
     if not pr_number:
         sha = str(args.github_sha or os.environ.get("GITHUB_SHA") or "").strip()
         pr_number = _associated_pr_number(repo, sha)
-    return _github_external_approval(repo, pr_number, proposal_sha256(proposal))
+    return _github_external_approval(repo, pr_number, proposal_hash)
 
 
 def main() -> int:
@@ -143,6 +152,7 @@ def main() -> int:
     parser.add_argument("--github-pr-number", type=int, default=0)
     parser.add_argument("--github-repo", default="")
     parser.add_argument("--github-sha", default="")
+    parser.add_argument("--standing-envelope-dir", default="")
     args = parser.parse_args()
 
     state = _load(args.state, {}) if args.state else {}
@@ -180,13 +190,14 @@ def main() -> int:
         target.write_text(json.dumps(state, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
     print(json.dumps({
-        "schema": "the-world-security-proposal-loop/v4",
+        "schema": "the-world-security-proposal-loop/v5",
         "environment": "production",
         "closed_loop": True,
         "count": len(decisions),
         "all_ai_consensus_approved": all(bool(d.get("ai_consensus_approved")) for d in decisions),
         "all_self_approved": all(bool(d.get("self_approved")) for d in decisions),
         "all_production_apply_eligible": all(bool(d.get("production_apply_eligible")) for d in decisions),
+        "delegated_activation_count": sum(1 for d in decisions if d.get("delegated_authority_activation")),
         "decisions": decisions,
     }, ensure_ascii=False, indent=2))
     return 0
