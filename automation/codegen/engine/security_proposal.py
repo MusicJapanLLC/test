@@ -67,6 +67,7 @@ def _council(votes: dict[str, Any]) -> dict[str, Any]:
 
 
 def evaluate_security_proposal(proposal: dict[str, Any]) -> dict[str, Any]:
+    proposal_id = str(proposal.get("id", "")).strip()
     target = str(proposal.get("target", ""))
     operations = proposal.get("operations", [])
     if not isinstance(operations, list):
@@ -85,12 +86,14 @@ def evaluate_security_proposal(proposal: dict[str, Any]) -> dict[str, Any]:
     council = _council(proposal.get("council_votes", {}) if isinstance(proposal.get("council_votes"), dict) else {})
     production_requested = proposal.get("environment", "production") == "production"
     owner_namespace = proposal.get("owner_namespace", "MusicJapanLLC/test") == "MusicJapanLLC/test"
+    identified = bool(proposal_id)
 
-    self_approved = all((council["approved"], monotonic, production_requested, owner_namespace))
+    self_approved = all((identified, council["approved"], monotonic, production_requested, owner_namespace))
 
     return {
         "schema": "the-world-security-proposal-decision/v1",
-        "proposal_id": str(proposal.get("id", "")),
+        "proposal_id": proposal_id,
+        "identified": identified,
         "target": target,
         "supported_target": target in ALLOWED_OPERATIONS,
         "operations": operation_names,
