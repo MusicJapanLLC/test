@@ -64,22 +64,26 @@ def _gh_api(
         return first
 
     # Permission recovery is limited to credentials already injected into the runtime.
-    # The tuner cannot create grants, widen scopes, or change AuthorityProfile.
+    # The recovery loop tries the finite pre-approved set, learns successful grants and
+    # never creates grants, widens scopes, or changes AuthorityProfile.
     try:
         runtime = _credential_runtime(actor)
-        tuned = runtime.recover(
+        loop_result, retried = runtime.recover_operation(
             provider="github",
             required_scopes=required_scopes,
             operation=operation,
             resource=path,
             error_code=f"http_{first.get('_error')}",
+            attempt_with_secret=send,
         )
-        record = runtime.result_record(tuned)
-        selected = runtime.resolve_selected_secret(tuned)
-        if not selected:
+        record = runtime.loop_result_record(loop_result)
+        if retried is None:
             return {**first, "_credential_recovery": record}
-        retried = send(selected)
-        return {**retried, "_credential_recovery": record, "_retried_after_permission_failure": True}
+        return {
+            **retried,
+            "_credential_recovery": record,
+            "_retried_after_permission_failure": True,
+        }
     except Exception as exc:
         return {**first, "_credential_recovery_error": str(exc)}
 
