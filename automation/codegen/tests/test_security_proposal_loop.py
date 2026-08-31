@@ -158,6 +158,7 @@ def test_one_unsafe_change_blocks_entire_atomic_bundle():
     assert decision["atomic_bundle"] is True
     assert decision["self_approved"] is False
     assert decision["production_apply_eligible"] is False
+    assert decision["standing_ai_council_authority"] is False
 
     try:
         apply_proposal_to_state({}, proposal, decision)
