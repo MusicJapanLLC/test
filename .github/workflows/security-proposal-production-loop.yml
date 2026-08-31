@@ -1,0 +1,148 @@
+name: AI Security Proposal Production Loop
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'security/proposals/**.json'
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'security/proposals/**.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: ai-security-proposal-production-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  security-proposal-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted base evaluator
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: trusted
+          persist-credentials: false
+
+      - name: Checkout candidate proposal
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Collect changed proposal files
+        id: proposals
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          cd candidate
+          git fetch --no-tags origin "$BASE_SHA" --depth=1 || true
+          mapfile -t files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'No security proposal JSON changed.'
+            exit 1
+          fi
+          printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
+          cat /tmp/security-proposals.txt
+
+      - name: AI Council -> Self-Approval gate
+        run: |
+          mapfile -t rels < /tmp/security-proposals.txt
+          files=()
+          for rel in "${rels[@]}"; do
+            files+=("candidate/$rel")
+          done
+          PYTHONPATH=trusted/automation/codegen \
+            python trusted/automation/codegen/security_proposal_loop.py \
+              "${files[@]}" \
+              --decision-dir /tmp/security-proposal-decisions
+
+      - name: Preserve council/self-approval evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-proposal-gate-${{ github.run_id }}
+          path: /tmp/security-proposal-decisions
+          if-no-files-found: ignore
+          retention-days: 30
+
+  production-apply:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      THE_WORLD_ENVIRONMENT: production
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@v4
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 2
+
+      - name: Collect production proposals
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            find security/proposals -maxdepth 1 -type f -name '*.json' -print 2>/dev/null | sort > /tmp/security-proposals.txt || true
+          else
+            mapfile -t files < <(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+            printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
+          fi
+          sed -i '/^$/d' /tmp/security-proposals.txt
+          if [ ! -s /tmp/security-proposals.txt ]; then
+            echo 'No production security proposal to apply.'
+            exit 0
+          fi
+          cat /tmp/security-proposals.txt
+
+      - name: Re-evaluate Council and Self-Approval from production code
+        run: |
+          mapfile -t files < /tmp/security-proposals.txt
+          PYTHONPATH=automation/codegen \
+            python automation/codegen/security_proposal_loop.py \
+              "${files[@]}" \
+              --state security/runtime/ai_security_state.json \
+              --write-state security/runtime/ai_security_state.json \
+              --decision-dir /tmp/security-proposal-decisions \
+              --apply
+
+      - name: Verify closed-loop invariants
+        run: |
+          PYTHONPATH=automation/codegen \
+            python -m pytest automation/codegen/tests/test_security_proposal_loop.py -q
+
+      - name: Commit production security state
+        run: |
+          if [ -z "$(git status --porcelain -- security/runtime/ai_security_state.json)" ]; then
+            echo 'Production security state already current.'
+            exit 0
+          fi
+          git config user.name 'the-world-security-loop[bot]'
+          git config user.email 'the-world-security-loop[bot]@users.noreply.github.com'
+          git add security/runtime/ai_security_state.json
+          git commit -m 'security: apply AI Council self-approved proposal'
+          git push origin HEAD:claude/employee-onboarding-setup-udm86
+
+      - name: Preserve production apply evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-production-apply-${{ github.run_id }}
+          path: |
+            /tmp/security-proposal-decisions
+            security/runtime/ai_security_state.json
+          if-no-files-found: ignore
+          retention-days: 30
