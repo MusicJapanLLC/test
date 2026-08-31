@@ -14,13 +14,6 @@ on:
   schedule:
     - cron: "11,26,41,56 * * * *"
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Senju External Agency Orchestrator
-      - Senju Meta-Consciousness
-      - Autonomous Codegen Loop x3
-    types:
-      - completed
 
 permissions:
   contents: read
