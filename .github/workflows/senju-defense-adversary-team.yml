@@ -20,7 +20,7 @@ on:
       - ".github/workflows/senju-defense-adversary-team.yml"
       - ".github/workflows/senju-autonomous-boundary-research.yml"
   schedule:
-    - cron: "41 * * * *"
+    - cron: "1,21,41 * * * *"
   workflow_dispatch:
 
 permissions:
