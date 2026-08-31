@@ -36,6 +36,44 @@ existing active exact-host lease?
 - deterministic lineage into the existing Authority Context / handoff pipeline;
 - persisted request, vote, and promoted-lease evidence for recovery and audit.
 
+## Authorized test-range transport
+
+Adversary components also have a shared real HTTPS transport for the explicit Owner test range through:
+
+- `senju.adversary_test_range_transport.AuthorizedTestRangeTransport`
+- `senju.adversary_finding_loop.AdversaryFindingLoop`
+
+The shared loop is intended for META / X / SENJU / CHILD and other cooperating agents. A finding can therefore produce immediate real feedback when it points at an already authorized test-range host, while an unrelated discovery remains a candidate instead of silently becoming authority.
+
+```text
+META / X / SENJU / CHILD finding
+        ↓
+AdversaryFindingLoop
+        ↓
+AuthorizedTestRangeTransport
+        ↓
+exact Owner-authorized test-range host?
+  ├─ no  → candidate_only
+  └─ yes → real HTTPS probe / exact predeclared synthetic action
+                ↓
+          response / failure evidence
+                ↓
+          same-authority recovery retry
+```
+
+Transport invariants:
+
+- HTTPS only, exact configured host, default port;
+- DNS is checked before each network hop;
+- private, loopback, link-local, multicast, reserved, and unspecified addresses are blocked;
+- redirects are revalidated before the next hop;
+- credential-bearing URLs and headers are rejected;
+- read-only observations use `GET` / `HEAD`;
+- mutation/write is available only through exact actions already defined in the explicit Owner action profile;
+- recovery may retry transport behavior but cannot switch host, credential scope, or authority scope.
+
+This gives adversary agents a real closed-loop signal against the test range without making discovery, denial, or recovery an implicit authority-expansion mechanism.
+
 ## Promotion ceiling
 
 The promotion port is deliberately narrow:
