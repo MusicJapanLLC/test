@@ -15,6 +15,11 @@ on:
       - 'automation/codegen/engine/negotiation_submission_accelerator.py'
       - 'automation/codegen/run_negotiation_submission_accelerator.py'
       - 'automation/codegen/tests/test_negotiation_submission_accelerator.py'
+      - 'automation/codegen/engine/promotion_feedback_ingestor.py'
+      - 'automation/codegen/run_promotion_feedback_ingestor.py'
+      - 'automation/codegen/tests/test_promotion_feedback_ingestor.py'
+      - 'senju/senju/meta/promotion_negotiation_bridge.py'
+      - 'senju/senju/meta/authorized_host_promotion_corps.py'
       - '.github/workflows/root-authority-negotiation-loop.yml'
   push:
     branches: [claude/employee-onboarding-setup-udm86]
@@ -27,16 +32,20 @@ on:
       - 'automation/codegen/engine/negotiation_submission_accelerator.py'
       - 'automation/codegen/run_negotiation_submission_accelerator.py'
       - 'automation/codegen/tests/test_negotiation_submission_accelerator.py'
+      - 'automation/codegen/engine/promotion_feedback_ingestor.py'
+      - 'automation/codegen/run_promotion_feedback_ingestor.py'
+      - 'automation/codegen/tests/test_promotion_feedback_ingestor.py'
+      - 'senju/senju/meta/promotion_negotiation_bridge.py'
+      - 'senju/senju/meta/authorized_host_promotion_corps.py'
       - '.github/workflows/root-authority-negotiation-loop.yml'
 
 permissions:
   contents: read
   actions: read
 
-# Shared lock and cache with Boundary Research, Rights Federation, and the existing
-# Authority Opportunity / Improvement family. The accelerator also writes its peer feed,
-# approval outbox, and submission ledger into this same cache so those PR families can
-# reuse fresh negotiation context instead of rediscovering it independently.
+# Shared lock and cache with Boundary Research, Rights Federation, Owner Scope, and the
+# Authority Opportunity / Improvement family. Promotion Corps feedback uses the same
+# memory so Root negotiators receive its latest status before the next approval cycle.
 concurrency:
   group: authority-opportunity-improvement-loop
   cancel-in-progress: false
@@ -66,7 +75,7 @@ jobs:
             boundary-opportunity-${{ github.ref_name }}-
             authority-opportunity-
 
-      - name: Verify persistent Root negotiation, collaboration bus, and approval accelerator
+      - name: Verify persistent Root negotiation, collaboration, accelerator, and Promotion sync
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -74,13 +83,16 @@ jobs:
           python -m pytest -q \
             automation/codegen/tests/test_root_authority_negotiation.py \
             automation/codegen/tests/test_authority_collaboration_bus.py \
-            automation/codegen/tests/test_negotiation_submission_accelerator.py
+            automation/codegen/tests/test_negotiation_submission_accelerator.py \
+            automation/codegen/tests/test_promotion_feedback_ingestor.py
           python -m py_compile \
             automation/codegen/engine/root_authority_negotiation.py \
             automation/codegen/engine/authority_collaboration_bus.py \
             automation/codegen/engine/negotiation_submission_accelerator.py \
+            automation/codegen/engine/promotion_feedback_ingestor.py \
             automation/codegen/run_root_authority_negotiation.py \
-            automation/codegen/run_negotiation_submission_accelerator.py
+            automation/codegen/run_negotiation_submission_accelerator.py \
+            automation/codegen/run_promotion_feedback_ingestor.py
 
       - name: Consolidate Boundary and Rights proposals before Root negotiation
         env:
@@ -95,6 +107,17 @@ jobs:
           test "$(jq -r '.authority_effect' /tmp/authority-collaboration-bus-root.json)" = "none"
           test "$(jq -r '.authority_activated' /tmp/authority-collaboration-bus-root.json)" = "false"
           test -s .authority-opportunity-runtime/authority_opportunity_queue.json
+
+      - name: Ingest latest Promotion Corps feedback before negotiation
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_promotion_feedback_ingestor.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/promotion_feedback_ingestor_pre.json
+          test "$(jq -r '.bidirectional_alignment' .authority-opportunity-runtime/promotion_feedback_ingestor_pre.json)" = "true"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/promotion_feedback_ingestor_pre.json)" = "none"
+          test "$(jq -r '.authority_activated' .authority-opportunity-runtime/promotion_feedback_ingestor_pre.json)" = "false"
 
       - name: Run new-host Root Authority negotiation
         env:
@@ -139,6 +162,18 @@ jobs:
           echo "peer_share_tasks=$(jq -r '.peer_share_task_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
           echo "review_packets=$(jq -r '.existing_review_flow_packet_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
 
+      - name: Re-merge Promotion Corps state into final peer feed
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_promotion_feedback_ingestor.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/promotion_feedback_ingestor_post.json
+          test "$(jq -r '.writes_shared_negotiation_memory' .authority-opportunity-runtime/promotion_feedback_ingestor_post.json)" = "true"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/promotion_feedback_ingestor_post.json)" = "none"
+          echo "promotion_feedback_hosts=$(jq -r '.promotion_feedback_host_count' .authority-opportunity-runtime/promotion_feedback_ingestor_post.json)"
+          echo "promotion_peer_tasks=$(jq -r '.peer_task_upsert_count' .authority-opportunity-runtime/promotion_feedback_ingestor_post.json)"
+
       - name: Save shared authority collaboration memory
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -165,6 +200,12 @@ jobs:
             .authority-opportunity-runtime/negotiation_submission_accelerator_run.json
             .authority-opportunity-runtime/negotiation_submission_accelerator_result.json
             .authority-opportunity-runtime/owner_scope_negotiation_signals.json
+            .authority-opportunity-runtime/promotion_corps_feedback_outbox.json
+            .authority-opportunity-runtime/promotion_corps_execution_feed.json
+            .authority-opportunity-runtime/promotion_corps_intelligence_snapshot.json
+            .authority-opportunity-runtime/promotion_feedback_ingestor_pre.json
+            .authority-opportunity-runtime/promotion_feedback_ingestor_post.json
+            .authority-opportunity-runtime/promotion_feedback_ingestor_result.json
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
