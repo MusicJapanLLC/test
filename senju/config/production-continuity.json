@@ -1,0 +1,22 @@
+{
+  "schema": "senju-production-continuity-config/v1",
+  "environment": "production",
+  "targets": [
+    {
+      "target_host": "kabeya-authorized-test-range.onrender.com",
+      "actor": "META",
+      "parent_id": "META-PRODUCTION-CONTINUITY",
+      "parent_generation": 1,
+      "parent_scopes": [
+        "read:state",
+        "write:state",
+        "read:research",
+        "write:research"
+      ],
+      "desired_replicas": 10,
+      "desired_revision": "default-branch",
+      "active_limit": 50,
+      "health_status": "healthy"
+    }
+  ]
+}

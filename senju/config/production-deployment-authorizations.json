@@ -1,0 +1,5 @@
+{
+  "schema": "senju-production-deployment-authority/v1",
+  "semantics": "exact_target_separate_authority_required",
+  "records": []
+}
