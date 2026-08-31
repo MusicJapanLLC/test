@@ -1,5 +1,6 @@
 {
   "id": "sp-bootstrap-audit-20260831",
+  "bootstrap_revision": 2,
   "environment": "production",
   "owner_namespace": "MusicJapanLLC/test",
   "target": "audit_policy",
