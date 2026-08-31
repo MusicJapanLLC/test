@@ -1,11 +1,12 @@
 """CLI for recursive delegated Authority minting.
 
 Examples:
-  python senju/scripts/authority_mint.py seed
   python senju/scripts/authority_mint.py list
   python senju/scripts/authority_mint.py mint --issuer META \
       --parent root:threat_intel_public --purpose "NVD-only research" \
       --hosts services.nvd.nist.gov --methods GET,HEAD --delegate
+
+On first use, code-defined builtin Authority roots are seeded automatically.
 """
 from __future__ import annotations
 
@@ -36,6 +37,13 @@ def _tuple_csv(value: str | None) -> tuple[str, ...] | None:
     if value is None:
         return None
     return tuple(x.strip() for x in value.split(",") if x.strip())
+
+
+def _ensure_roots(registry: AuthorityRegistry, *, depth: int = 8) -> None:
+    if registry.profiles:
+        return
+    registry.seed_builtin_roots(delegation_depth=depth)
+    registry.save()
 
 
 def main() -> int:
@@ -76,6 +84,8 @@ def main() -> int:
         registry.save()
         print(json.dumps({"ok": True, "profiles": len(registry.profiles), "registry": str(args.registry)}))
         return 0
+
+    _ensure_roots(registry)
 
     if args.command == "list":
         print(json.dumps(registry.to_dict(), ensure_ascii=False, indent=2))
