@@ -18,7 +18,7 @@ from pathlib import Path
 
 from engine import knowledge_base as kb
 from engine.authority_lease import refresh_authority_lease
-from engine.credential_broker import lease_capabilities
+from engine.credential_broker import renew_capabilities
 from engine.broadcaster import push_knowledge_summary, push_new_tasks
 from engine.loop import run_loop
 from engine.task_generator import generate_new_tasks
@@ -97,11 +97,15 @@ def _run_meta_and_recovery(stats: dict):
     except Exception as e:
         print(f"[X/authority] lease refresh failed (continuing): {e}")
     try:
-        credential_lease = lease_capabilities()
+        credential_lease = renew_capabilities()
         capabilities = [x.get("capability") for x in credential_lease.get("leases", [])]
-        print(f"[X/credential-broker] lease={credential_lease.get('status')} capabilities={capabilities}")
+        print(
+            f"[X/credential-broker] lease={credential_lease.get('status')} "
+            f"renewed={credential_lease.get('renewed', False)} "
+            f"capabilities={capabilities} cooling={credential_lease.get('cooling_down', [])}"
+        )
     except Exception as e:
-        print(f"[X/credential-broker] lease failed (continuing): {e}")
+        print(f"[X/credential-broker] lease renewal failed (continuing): {e}")
     if not check_heartbeat(max_gap_hours=10.0):
         print("[X] WARNING: heartbeat gap — system may have been down")
     try:
