@@ -60,8 +60,28 @@ jobs:
 
       - name: Verify closed-loop invariants
         run: |
-          PYTHONPATH=automation/codegen \
-            python -m pytest automation/codegen/tests/test_security_proposal_loop.py -q
+          PYTHONPATH=automation/codegen python - <<'PY'
+          import importlib.util
+          from pathlib import Path
+
+          path = Path('automation/codegen/tests/test_security_proposal_loop.py')
+          spec = importlib.util.spec_from_file_location('security_proposal_tests', path)
+          module = importlib.util.module_from_spec(spec)
+          if spec.loader is None:
+              raise SystemExit('unable to load security proposal invariant tests')
+          spec.loader.exec_module(module)
+          tests = [
+              (name, value)
+              for name, value in vars(module).items()
+              if name.startswith('test_') and callable(value)
+          ]
+          if not tests:
+              raise SystemExit('no security proposal invariant tests discovered')
+          for name, test in sorted(tests):
+              test()
+              print(f'PASS {name}')
+          print(f'closed-loop invariant tests passed: {len(tests)}')
+          PY
 
       - name: Persist production security state through GitHub API
         env:

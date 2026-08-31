@@ -1,0 +1,27 @@
+{
+  "schema": "the-world-ai-security-runtime-state/v1",
+  "generation": 1,
+  "applied_proposals": [
+    {
+      "proposal_id": "sp-bootstrap-audit-20260831",
+      "target": "audit_policy",
+      "operations": [
+        "increase_coverage"
+      ],
+      "council_yes": 3,
+      "self_approved": true,
+      "production_applied": true
+    }
+  ],
+  "controls": {
+    "audit_policy": [
+      {
+        "proposal_id": "sp-bootstrap-audit-20260831",
+        "type": "increase_coverage",
+        "parameters": {
+          "reason": "Bootstrap the production Security Proposal -> AI Council -> Self-Approval -> Auto-Merge -> Production Apply closed loop with a monotonic audit-strengthening change."
+        }
+      }
+    ]
+  }
+}
