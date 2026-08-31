@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 """Self-directed development orchestrator for THE WORLD.
 
-Implements the end-to-end loop:
-Pending task / research / failure -> select agent -> branch -> implement -> test -> self-repair -> PR -> audit -> outcome.
+Implements the end-to-end development loop and exposes the bounded production
+SELF_TUNE -> REPLICATE -> AUTHORITY_LEASE -> AUTO_DEPLOY -> PERSIST loop.
 """
 from __future__ import annotations
 
 import hashlib
-import json
-import subprocess
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterable, Mapping
 
 from automation.world.adaptive_budget import compute_adaptive_budget, ResourceState
-from automation.world.experiment_runner import run_experiment
+from automation.world.production_evolution_loop import (
+    EvolutionRunResult,
+    EvolutionState,
+    ProductionEvolutionEnvelope,
+    ProductionEvolutionLoop,
+)
 from automation.world.task_dedup import TaskDeduplicator
 
 
@@ -101,6 +102,27 @@ class AutonomyOrchestrator:
             shipped=shipped,
             next_improvement_candidate=next_candidate,
             adaptive_budget_reason=budget.reason,
+        )
+
+    def run_production_evolution(
+        self,
+        *,
+        state: EvolutionState,
+        envelope: ProductionEvolutionEnvelope,
+        tune_fn: Callable[[EvolutionState], Mapping[str, Any]],
+        replicate_fn: Callable[[str, int], Iterable[str]],
+        authority_fn: Callable[[str], Mapping[str, Any]],
+        deploy_fn: Callable[[str, Mapping[str, Any]], Mapping[str, Any]],
+        persist_fn: Callable[[Mapping[str, Any]], Mapping[str, Any]],
+    ) -> EvolutionRunResult:
+        """Run the five production capabilities as one bounded loop."""
+        return ProductionEvolutionLoop(envelope).run(
+            state,
+            tune_fn=tune_fn,
+            replicate_fn=replicate_fn,
+            authority_fn=authority_fn,
+            deploy_fn=deploy_fn,
+            persist_fn=persist_fn,
         )
 
 
