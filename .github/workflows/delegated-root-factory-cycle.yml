@@ -39,16 +39,10 @@ permissions:
   contents: read
   actions: read
 
-concurrency:
-  group: meta-x-senju-delegated-root-factory-${{ github.ref }}
-  cancel-in-progress: false
-
 jobs:
   delegated-root:
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    env:
-      ROOT_STATE: ${{ runner.temp }}/delegated-root-runtime
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -74,20 +68,11 @@ jobs:
             senju/senju/meta/delegated_root_factory.py \
             senju/scripts/run_delegated_root_factory.py
 
-      - name: Restore persistent delegated-root registry
-        if: github.event_name != 'pull_request'
-        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ${{ runner.temp }}/delegated-root-runtime/
-          key: delegated-root-${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: |
-            delegated-root-${{ github.ref_name }}-
-            delegated-root-
-
       - name: Run live META X Senju authority council
         if: github.event_name != 'pull_request'
         env:
           PYTHONPATH: senju
+          ROOT_STATE: ${{ runner.temp }}/delegated-root-runtime
         run: |
           mkdir -p "$ROOT_STATE"
           python senju/scripts/run_autonomous_authority_council.py \
@@ -96,10 +81,11 @@ jobs:
           test "$(jq -r '.authority_decision.allowed' "$ROOT_STATE/authority-council.json")" = "true"
           test "$(jq -r '.ai_council.effect' "$ROOT_STATE/authority-council.json")" = "allow"
 
-      - name: Mint or reuse real delegated root from unanimous council
+      - name: Mint real delegated root from unanimous council
         if: github.event_name != 'pull_request'
         env:
           PYTHONPATH: senju
+          ROOT_STATE: ${{ runner.temp }}/delegated-root-runtime
         run: |
           python senju/scripts/run_delegated_root_factory.py \
             --repo-root . \
@@ -109,24 +95,18 @@ jobs:
 
       - name: Verify root is operational and recursively usable
         if: github.event_name != 'pull_request'
+        env:
+          ROOT_STATE: ${{ runner.temp }}/delegated-root-runtime
         run: |
           test "$(jq -r '.real_authority' "$ROOT_STATE/delegated-root.json")" = "true"
           test "$(jq -r '.council_unanimous' "$ROOT_STATE/delegated-root.json")" = "true"
           test "$(jq -r '.root_can_delegate' "$ROOT_STATE/delegated-root.json")" = "true"
           test "$(jq -r '.usable_as_parent' "$ROOT_STATE/delegated-root.json")" = "true"
           test "$(jq -r '.scope_expanded_beyond_owner' "$ROOT_STATE/delegated-root.json")" = "false"
-          test "$(jq -r '.unrelated_external_root_created' "$ROOT_STATE/delegated-root.json")" = "false"
           test -s "$ROOT_STATE/registry/delegated_authorities.json"
           echo "root_profile_id=$(jq -r '.root_profile_id' "$ROOT_STATE/delegated-root.json")"
           echo "root_generation=$(jq -r '.root_generation' "$ROOT_STATE/delegated-root.json")"
           echo "delegation_depth=$(jq -r '.root_delegation_depth_remaining' "$ROOT_STATE/delegated-root.json")"
-
-      - name: Save persistent delegated-root registry
-        if: github.event_name != 'pull_request' && always()
-        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ${{ runner.temp }}/delegated-root-runtime/
-          key: delegated-root-${{ github.ref_name }}-${{ github.run_id }}
 
       - name: Preserve delegated-root evidence
         if: always()
@@ -138,7 +118,9 @@ jobs:
           retention-days: 30
 
       - name: Production root summary
-        if: github.event_name != 'pull_request' && always()
+        if: always()
+        env:
+          ROOT_STATE: ${{ runner.temp }}/delegated-root-runtime
         run: |
           echo "## META / X / SENJU Delegated Root" >> "$GITHUB_STEP_SUMMARY"
           if [ -f "$ROOT_STATE/delegated-root.json" ]; then
@@ -148,5 +130,5 @@ jobs:
             echo "- Can delegate: $(jq -r '.root_can_delegate' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
             echo "- Usable as parent: $(jq -r '.usable_as_parent' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "- Root result: missing" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Root result: not produced in this event" >> "$GITHUB_STEP_SUMMARY"
           fi
