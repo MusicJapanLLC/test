@@ -4,6 +4,7 @@ name: TOMOKI - MANAGER Queue Bridge
 # The five-minute cadence is the canonical redundant wake path, avoiding privileged
 # workflow-to-workflow trigger chaining while keeping the Manager heartbeat fresh.
 # Offset the five-minute cadence to :02/:07/.../:57 to avoid GitHub's busiest hourly boundary.
+# A change to this workflow is also an explicit bounded push-trigger recovery wake path.
 on:
   schedule:
     - cron: '2-59/5 * * * *'
