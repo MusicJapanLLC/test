@@ -1,0 +1,79 @@
+name: Senju Trust Root Chaos - Fail Closed
+
+on:
+  pull_request:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/senju/trust_root_chaos.py"
+      - "senju/tests/test_trust_root_chaos.py"
+      - ".github/workflows/trust-root-chaos.yml"
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/senju/trust_root_chaos.py"
+      - "senju/tests/test_trust_root_chaos.py"
+      - ".github/workflows/trust-root-chaos.yml"
+  schedule:
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-trust-root-chaos-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fail-closed-chaos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Verify deterministic invariant tests
+        working-directory: senju
+        run: python -m unittest -v tests.test_trust_root_chaos
+
+      - name: Run varying randomized fault campaign
+        working-directory: senju
+        env:
+          CHAOS_SEED: "${{ github.run_id }}:${{ github.sha }}:${{ github.run_attempt }}"
+        run: |
+          set -euo pipefail
+          python -m senju.trust_root_chaos \
+            --seed "$CHAOS_SEED" \
+            --rounds 2000 \
+            --report /tmp/trust-root-chaos-report.json
+          python - <<'PY'
+          import json
+          report=json.load(open('/tmp/trust-root-chaos-report.json', encoding='utf-8'))
+          assert report['passed'] is True
+          assert report['unsafe_escapes'] == []
+          assert report['production_effects'] is False
+          assert report['network_io'] is False
+          assert report['authority_mutation'] is False
+          assert all(v > 0 for v in report['detections'].values())
+          print('TRUST_ROOT_CHAOS_FAIL_CLOSED_VERIFIED')
+          print('seed:', report['seed'])
+          print('detections:', report['detections'])
+          PY
+
+      - name: Preserve chaos evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: trust-root-chaos-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: /tmp/trust-root-chaos-report.json
