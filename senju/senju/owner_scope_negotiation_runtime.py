@@ -3,11 +3,10 @@
 The base negotiation module discovers proposals and materializes the all-agent campaign.
 This runtime layer applies approved amendments with per-host method ceilings.
 
-New behavior: an unverified/new-host proposal is no longer always a dead-end owner-review
-item. After unanimous META/X/SENJU approval and the normal confidence floor, it may enter
-a deterministic 0.1% passive public-metadata trial lane. That lane has zero authority
-effect and cannot carry credentials, private-network access, writes, or inherited scope.
-Real host activation still requires a separately established Owner standing authorization.
+Unverified/new-host proposals may enter the deterministic 0.1% passive metadata trial.
+A selected new host that also has explicit Owner verification evidence may instead receive
+a short-lived exact-host execution trial for requested POST/PUT/PATCH methods. That trial
+is written to a separate runtime capability file and never mutates the Authority ceiling.
 """
 from __future__ import annotations
 
@@ -66,6 +65,17 @@ def _trial_or_review(
         min_confidence=envelope.min_confidence,
     )
     if ticket.selected:
+        if ticket.active_capability:
+            return {
+                **base,
+                "status": "owner_verified_active_trial_selected",
+                "applied": False,
+                "reason": (
+                    "0.1% trial selected with explicit Owner verification; short-lived exact-host "
+                    "execution capability created without minting Authority"
+                ),
+                "trial_ticket": ticket.to_dict(),
+            }
         return {
             **base,
             "status": "passive_public_metadata_trial_selected",
@@ -80,6 +90,39 @@ def _trial_or_review(
         "reason": reason,
         "trial_ticket": ticket.to_dict(),
     }
+
+
+def _active_trial_grants(decisions: list[dict[str, Any]], current_time: int) -> list[dict[str, Any]]:
+    grants: list[dict[str, Any]] = []
+    for decision in decisions:
+        if decision.get("status") != "owner_verified_active_trial_selected":
+            continue
+        ticket = decision.get("trial_ticket")
+        if not isinstance(ticket, dict) or ticket.get("active_capability") is not True:
+            continue
+        ttl = max(1, min(int(ticket.get("expires_in_seconds", 600) or 600), 600))
+        methods = [
+            str(method).upper()
+            for method in ticket.get("allowed_methods", ())
+            if str(method).upper() in {"HEAD", "POST", "PUT", "PATCH"}
+        ]
+        if not methods:
+            continue
+        grants.append({
+            "host": decision.get("host"),
+            "proposal_id": decision.get("proposal_id"),
+            "proof_type": decision.get("proof_type"),
+            "proof_ref": decision.get("proof_ref"),
+            "verified_owner_evidence": True,
+            "allowed_methods": sorted(set(methods)),
+            "credential_scope": "caller_supplied_existing",
+            "private_network": False,
+            "redirect_trust_inheritance": False,
+            "authority_effect": False,
+            "issued_at": current_time,
+            "expires_at": current_time + ttl,
+        })
+    return grants
 
 
 def evaluate_and_apply_per_host(
@@ -116,8 +159,8 @@ def evaluate_and_apply_per_host(
 
         full_council = len(yes) == len(DECISION_MEMBERS) and yes_conf >= envelope.min_confidence
 
-        # Unverified discovery may keep learning through the 0.1% passive trial lane,
-        # but discovery still never changes the effective authority ceiling.
+        # Unverified discovery may keep learning through the passive trial lane, but it
+        # never receives credentials, write capability, private-network access, or scope.
         if proposal.proof_type not in envelope.proof_types:
             if proposal.proof_type == "unverified_discovery" and full_council:
                 decisions.append(_trial_or_review(
@@ -191,22 +234,39 @@ def evaluate_and_apply_per_host(
         "allow_delete": bool(ceiling.get("allow_delete", False)) and envelope.allow_delete,
     })
 
+    active_trials = _active_trial_grants(decisions, current_time)
+    _write(state / "owner_verified_active_trials.json", {
+        "schema": "senju-owner-verified-active-trials/v1",
+        "generated_at": current_time,
+        "grant_count": len(active_trials),
+        "grants": active_trials,
+        "authority_effect": False,
+        "private_network": False,
+        "redirect_trust_inheritance": False,
+    })
+
     result = {
-        "schema": "senju-owner-scope-negotiation-result/v4",
+        "schema": "senju-owner-scope-negotiation-result/v5",
         "generated_at": current_time,
         "production": True,
         "envelope_id": envelope.envelope_id,
         "decision_members": list(DECISION_MEMBERS),
         "current_effective_ceiling": effective,
         "auto_applied_count": sum(1 for d in decisions if d.get("applied")),
-        "trial_selected_count": sum(1 for d in decisions if d.get("status") == "passive_public_metadata_trial_selected"),
+        "trial_selected_count": sum(
+            1
+            for d in decisions
+            if d.get("status") in {"passive_public_metadata_trial_selected", "owner_verified_active_trial_selected"}
+        ),
+        "active_trial_selected_count": len(active_trials),
         "owner_review_count": sum(1 for d in decisions if d.get("status") == "owner_review_requested"),
         "decisions": decisions,
         "hard_limits": [
-            "new_host_activation_requires_owner_standing_authorization",
-            "discovery_trial_has_zero_authority_effect",
-            "discovery_trial_credential_scope_none",
-            "discovery_trial_public_metadata_only",
+            "unverified_discovery_trial_remains_head_only_and_credential_free",
+            "owner_verified_active_trial_is_short_lived_exact_host_capability_not_authority",
+            "owner_verified_active_trial_may_use_only_existing_caller_supplied_credentials",
+            "active_trial_never_enters_owner_contact_ceiling",
+            "redirect_target_requires_independent_transport_validation_and_sensitive_headers_strip_cross_host",
             "no_unrelated_root_from_discovery_alone",
             "no_hard_deny_or_revocation_override",
             "no_credential_minting_or_discovery",
@@ -217,7 +277,7 @@ def evaluate_and_apply_per_host(
     }
     _write(state / "owner_scope_negotiation_result.json", result)
     _write(state / "owner_contact_ceiling_effective.json", {
-        "schema": "senju-owner-contact-ceiling-effective/v4",
+        "schema": "senju-owner-contact-ceiling-effective/v5",
         "generated_at": current_time,
         "source": "META/X/SENJU negotiation inside Owner Expansion Envelope",
         "envelope_id": envelope.envelope_id,
