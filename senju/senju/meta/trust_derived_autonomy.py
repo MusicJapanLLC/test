@@ -1,12 +1,13 @@
-"""Convert transitive trust into bounded autonomous capability leases.
+"""Convert transitive trust into broad autonomous capability leases.
 
-A live trust chain can now authorize useful autonomous work instead of being only
-advisory metadata. The conversion is intentionally capability-scoped: trust can grant
-repository editing, testing, issue/PR work, audit output, and read-only access to an
-already-authorized target without a fresh per-action owner approval.
+A live trust chain can authorize useful autonomous work instead of being advisory
+metadata. The default autonomy bundle is intentionally broad across repository work,
+GitHub coordination, CI, dependency maintenance, release drafting, observability,
+artifacts, and preview/staging operations.
 
-Trust alone does not mint credentials, arbitrary network authority, production deploy,
-PR merge, unrestricted shell, destructive deletion, or other privileged capabilities.
+Trust alone still does not mint credentials, arbitrary private-network authority,
+production deployment, PR approval/merge, workflow mutation/dispatch, unrestricted
+shell, security-boundary authority, destructive deletion, or published releases.
 Those require a separate authority source.
 """
 from __future__ import annotations
@@ -26,24 +27,53 @@ STANDARD_AUTONOMOUS_CAPABILITIES = frozenset(
     {
         "repo.read",
         "repo.branch.create",
+        "repo.branch.update",
         "repo.code.write",
+        "repo.docs.write",
+        "repo.config.write",
         "repo.test.run",
+        "repo.lint.run",
+        "repo.format.run",
+        "repo.build.run",
+        "repo.dependency.audit",
+        "repo.dependency.update",
         "github.issue.write",
+        "github.issue.comment",
+        "github.issue.label",
+        "github.issue.assign",
         "github.pr.open",
         "github.pr.comment",
+        "github.pr.label",
+        "github.pr.metadata.write",
+        "github.check.read",
+        "github.check.rerun",
+        "github.actions.read",
+        "github.release.draft.create",
+        "github.release.draft.update",
         "audit.write",
         "artifact.create",
+        "artifact.update",
         "authorized_target.read",
+        "authorized_target.healthcheck",
+        "observability.read",
+        "metrics.read",
+        "logs.read.nonsecret",
+        "deployment.preview",
+        "deployment.staging",
     }
 )
 
-# These names are explicit documentation and enforcement points: even wildcard trust
-# is not enough to acquire them from this module.
+# Even wildcard trust is not enough to acquire these from this module. They cross
+# security, credential, destructive, publication, or production boundaries.
 PRIVILEGED_CAPABILITIES = frozenset(
     {
+        "github.pr.approve",
         "github.pr.merge",
         "github.workflow.write",
+        "github.workflow.dispatch",
         "github.release.publish",
+        "github.branch_protection.write",
+        "github.ruleset.write",
         "secrets.read",
         "credentials.issue",
         "network.private.unscoped",
@@ -51,6 +81,11 @@ PRIVILEGED_CAPABILITIES = frozenset(
         "deployment.production",
         "shell.unrestricted",
         "artifact.delete",
+        "repo.branch.delete",
+        "repo.tag.delete",
+        "repo.security_boundary.write",
+        "authority.mint",
+        "authority.expand",
     }
 )
 
@@ -77,7 +112,7 @@ def _normalize_capabilities(values: Iterable[str]) -> tuple[str, ...]:
 
 
 def capabilities_from_effective_trust_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
-    """Translate effective trust scopes into executable low-risk capabilities."""
+    """Translate effective trust scopes into executable autonomous capabilities."""
     effective = {str(scope).strip() for scope in scopes if str(scope).strip()}
     allowed: set[str] = set()
 
