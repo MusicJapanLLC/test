@@ -18,6 +18,8 @@ jobs:
     timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Run four-pillar decision cycle
         run: python automation/codegen/four_pillar_runner.py
