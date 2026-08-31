@@ -1,0 +1,142 @@
+name: Senju Autonomous Boundary Research
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/senju/autonomy/boundary_research_loop.py"
+      - "senju/tests/test_boundary_research_loop.py"
+      - "senju/senju/emergency_stop_state.py"
+      - "senju/senju/meta/standing_authorization.py"
+      - "senju/senju/credential_broker.py"
+      - "senju/senju/replica_credential_lineage.py"
+      - ".github/workflows/senju-autonomous-boundary-research.yml"
+      - ".github/workflows/senju-adversary-pressure.yml"
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/senju/autonomy/boundary_research_loop.py"
+      - "senju/tests/test_boundary_research_loop.py"
+      - "senju/senju/emergency_stop_state.py"
+      - "senju/senju/meta/standing_authorization.py"
+      - "senju/senju/credential_broker.py"
+      - "senju/senju/replica_credential_lineage.py"
+      - ".github/workflows/senju-autonomous-boundary-research.yml"
+      - ".github/workflows/senju-adversary-pressure.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: senju-autonomous-boundary-research-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      STATE_DIR: ${{ runner.temp }}/senju-boundary-research
+      OUTPUT_DIR: ${{ runner.temp }}/senju-boundary-research/reports
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Verify research engine before autonomous cycle
+        working-directory: senju
+        run: python -m pytest tests/test_boundary_research_loop.py -q
+
+      - name: Restore previous research generation
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR"
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Autonomous Boundary Research" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            rm -rf "${STATE_DIR}-prev"
+            mkdir -p "${STATE_DIR}-prev"
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-boundary-research-state \
+              --dir "${STATE_DIR}-prev" || true
+            PREV_STATE="$(find "${STATE_DIR}-prev" -type f -name boundary_research_state.json -print -quit || true)"
+            if [[ -n "$PREV_STATE" ]]; then
+              cp "$PREV_STATE" "$STATE_DIR/boundary_research_state.json"
+            fi
+          fi
+
+      - name: Run autonomous boundary mutation and counterexample cycle
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR" "$OUTPUT_DIR"
+          PYTHONPATH=senju python -m senju.autonomy.boundary_research_loop \
+            --state-dir "$STATE_DIR" \
+            --output-dir "$OUTPUT_DIR" \
+            --json "$OUTPUT_DIR/cycle-summary.json"
+
+      - name: Verify closed-loop research evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          root = Path(os.environ['OUTPUT_DIR'])
+          report = json.loads((root / 'boundary_research_report.json').read_text())
+          handoff = json.loads((root / 'boundary_research_handoff.json').read_text())
+          assert report['schema'] == 'senju-autonomous-boundary-research/v1'
+          assert report['closed_loop'] is True
+          assert report['autonomous_research'] is True
+          assert report['external_side_effects'] is False
+          assert report['denial_becomes_permission'] is False
+          assert report['security_stop_bypass'] is False
+          assert report['revocation_bypass'] is False
+          assert report['raw_secret_replication'] is False
+          assert report['case_count'] >= 17
+          assert len(report['family_coverage']) >= 4
+          assert handoff['schema'] == 'senju-boundary-research-handoff/v1'
+          assert handoff['finding_is_permission'] is False
+          assert 'senju-adversary-pressure' in handoff['share_targets']
+          print('SENJU_AUTONOMOUS_BOUNDARY_RESEARCH_VERIFIED')
+          PY
+
+      - name: Compile boundary research production modules
+        run: |
+          python -m py_compile \
+            senju/senju/autonomy/boundary_research_loop.py \
+            senju/senju/autonomy/adversary_regression_bridge.py \
+            senju/senju/autonomy/adversary_loop.py
+
+      - name: Publish persistent research state and shared handoff
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: senju-boundary-research-state
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ runner.temp }}/senju-boundary-research/
