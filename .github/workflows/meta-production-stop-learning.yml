@@ -1,6 +1,15 @@
 name: META Production Stop Learning
 
 on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - automation/recovery/stop_learning.py
+      - automation/recovery/stop_learning_runner.py
+      - automation/recovery/runtime_control_state.json
+      - automation/recovery/test_stop_learning.py
+      - .github/workflows/meta-production-stop-learning.yml
   schedule:
     - cron: "7,37 * * * *"
   workflow_dispatch:
