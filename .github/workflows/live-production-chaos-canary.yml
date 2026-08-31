@@ -7,22 +7,40 @@ on:
     paths:
       - "senju/senju/live_production_chaos_canary.py"
       - "senju/tests/test_live_production_chaos_canary.py"
+      - "senju/senju/autonomy/capability_continuity_incubator.py"
+      - "senju/tests/test_capability_continuity_incubator.py"
       - "senju/senju/adversary_test_range_transport.py"
       - "automation/codegen/meta_state/discovery_policy.json"
       - ".github/workflows/live-production-chaos-canary.yml"
+      - ".github/workflows/capability-continuity-incubator.yml"
       - "automation/security/workflow_policy_continuity_entrypoint.py"
+      - "automation/security/workflow_policy_capability_entrypoint.py"
   push:
     branches:
       - claude/employee-onboarding-setup-udm86
     paths:
       - "senju/senju/live_production_chaos_canary.py"
+      - "senju/senju/autonomy/capability_continuity_incubator.py"
       - "senju/senju/adversary_test_range_transport.py"
       - "automation/codegen/meta_state/discovery_policy.json"
       - ".github/workflows/live-production-chaos-canary.yml"
+      - ".github/workflows/capability-continuity-incubator.yml"
       - "automation/security/workflow_policy_continuity_entrypoint.py"
+      - "automation/security/workflow_policy_capability_entrypoint.py"
   schedule:
     - cron: "17 */2 * * *"
   workflow_dispatch:
+    inputs:
+      scenario:
+        description: "Optional bounded canary scenario selected by the continuity incubator"
+        required: false
+        type: choice
+        options:
+          - ""
+          - contact_write
+          - record_create
+          - record_create_patch
+          - duplicate_contact_write
 
 permissions:
   contents: read
@@ -49,13 +67,18 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
-      - name: Verify canary lease boundaries
+      - name: Verify canary and continuity-incubator boundaries
         working-directory: senju
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check pytest==9.1.1
-          python -m pytest tests/test_live_production_chaos_canary.py -q
-          python -m py_compile senju/live_production_chaos_canary.py senju/adversary_test_range_transport.py
+          python -m pytest \
+            tests/test_live_production_chaos_canary.py \
+            tests/test_capability_continuity_incubator.py -q
+          python -m py_compile \
+            senju/live_production_chaos_canary.py \
+            senju/autonomy/capability_continuity_incubator.py \
+            senju/adversary_test_range_transport.py
 
   live-canary:
     if: github.event_name != 'pull_request'
@@ -65,6 +88,8 @@ jobs:
     permissions:
       contents: write
       actions: read
+    env:
+      REQUESTED_SCENARIO: ${{ inputs.scenario }}
     steps:
       - name: Checkout production default
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -76,7 +101,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Issue randomized short-lived canary authority
+      - name: Issue randomized or incubator-selected short-lived canary authority
         id: lease
         working-directory: senju
         run: |
@@ -84,10 +109,18 @@ jobs:
           rm -rf "$CANARY_DIR"
           mkdir -p "$CANARY_DIR"
           seed="${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${GITHUB_SHA}:$(date +%s%N)"
+          scenario_args=()
+          case "${REQUESTED_SCENARIO:-}" in
+            "") ;;
+            contact_write|record_create|record_create_patch|duplicate_contact_write)
+              scenario_args=(--scenario "$REQUESTED_SCENARIO") ;;
+            *) echo "Rejected unknown canary scenario" >&2; exit 2 ;;
+          esac
           python -m senju.live_production_chaos_canary issue \
             --seed "$seed" \
             --run-id "$GITHUB_RUN_ID" \
             --ttl-seconds 180 \
+            "${scenario_args[@]}" \
             --out "$CANARY_DIR/lease-local.json"
           scenario="$(python -c 'import json,os;print(json.load(open(os.environ["CANARY_DIR"]+"/lease-local.json"))["scenario"])')"
           echo "scenario=$scenario" >> "$GITHUB_OUTPUT"
