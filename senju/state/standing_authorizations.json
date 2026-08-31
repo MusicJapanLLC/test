@@ -22,6 +22,28 @@
       "destructive": false,
       "private_cidrs": [],
       "private_dns_names": []
+    },
+    {
+      "authorization_reference": "canonical:sustainaboy-works-authorized-test-site",
+      "owner": "MusicJapanLLC",
+      "issuer_kind": "owner_explicit_canonical_repository",
+      "exact_hosts": [
+        "sustainaboy-works.onrender.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "created_at_utc": "2026-08-31T19:16:30+00:00",
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "owner_authorization_confidence_percent": 100,
+      "approval_recommendation": "承認推奨"
     }
   ]
 }

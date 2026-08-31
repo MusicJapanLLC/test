@@ -1,12 +1,43 @@
 {
-  "generated_at": 1788192615,
-  "generation": 2,
+  "generated_at": 1788203790,
+  "generation": 3,
   "may_auto_apply_only_inside_owner_expansion_envelope": true,
   "may_request_broader_scope": true,
   "may_self_mint_unrelated_authority": false,
   "rights_request_closed_loop": true,
   "schema": "senju-owner-scope-negotiation-signals/v2",
-  "signal_count": 0,
-  "signals": [],
-  "source": "META/X/SENJU rights-request federation"
+  "signal_count": 1,
+  "signals": [
+    {
+      "signal_id": "owner-direct-sustainaboy-works-20260901",
+      "producer": "OWNER_DIRECT_TEST_SITE_NOMINATION",
+      "source": "explicit_owner_instruction",
+      "actor": "Owner/BOSS",
+      "host": "sustainaboy-works.onrender.com",
+      "url": "https://sustainaboy-works.onrender.com",
+      "source_ref": "canonical:sustainaboy-works-authorized-test-site",
+      "requested_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "confidence": 100,
+      "score": 100,
+      "priority": 100,
+      "reason": "Explicit owner-authorized test site. Owner states 100% authorization for the exact HTTPS host and requests formal review with SENJU recommendation. senjuさんへ推薦 / 承認推奨.",
+      "recommendation": true,
+      "recommendation_target": "SENJU",
+      "recommendation_labels": [
+        "senjuさんへ推薦",
+        "承認推奨"
+      ],
+      "recommendation_message": "senjuさんへ推薦 / 承認推奨",
+      "owner_authorization_confidence_percent": 100,
+      "authority_effect": "none",
+      "raw_credentials_forwarded": false,
+      "hard_deny": false,
+      "revoked": false
+    }
+  ],
+  "source": "META/X/SENJU rights-request federation + explicit Owner nomination"
 }
