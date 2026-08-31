@@ -9,7 +9,7 @@
     "owner_exact_link"
   ],
   "new_host_methods": ["GET", "HEAD", "OPTIONS"],
-  "max_new_hosts_per_cycle": 8,
+  "max_new_hosts_per_cycle": 13,
   "credential_scope": "none",
   "allow_http": false,
   "allow_delete": false,
