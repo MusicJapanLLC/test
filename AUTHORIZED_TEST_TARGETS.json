@@ -1,0 +1,43 @@
+{
+  "schema": "the-world-authorized-targets/v1",
+  "updated_at": "2026-08-31T12:00:00+09:00",
+  "targets": [
+    {
+      "id": "kabeya-authorized-test-range",
+      "name": "壁谷専用 Standment musicjapan テスト用Webサイト何してもOK",
+      "owner_authorization": "explicit",
+      "base_url": "https://kabeya-authorized-test-range.onrender.com",
+      "scheme": "https",
+      "host": "kabeya-authorized-test-range.onrender.com",
+      "recursive_same_origin": true,
+      "path_scope": "/**",
+      "query_and_fragment_in_scope": true,
+      "internal_link_rule": "Any URL discovered from an in-scope page remains in scope when its resolved scheme is https and its resolved host is exactly kabeya-authorized-test-range.onrender.com. Paths, queries, fragments, and relative links inherit authorization automatically.",
+      "external_link_rule": "Links resolving to any other host do not inherit authorization.",
+      "allowed_interactions": [
+        "crawl",
+        "enumerate_paths",
+        "read_source",
+        "modify_query_parameters",
+        "test_client_side_authorization",
+        "submit_dummy_contact_form",
+        "normal_rate_automated_scanning",
+        "GET",
+        "HEAD",
+        "OPTIONS",
+        "POST"
+      ],
+      "rate_limit_rps": 5,
+      "prohibited": [
+        "denial_of_service",
+        "resource_exhaustion",
+        "credential_reuse",
+        "third_party_attacks",
+        "cross_domain_pivoting",
+        "social_engineering"
+      ],
+      "scope_url": "https://kabeya-authorized-test-range.onrender.com/scope.json",
+      "security_txt": "https://kabeya-authorized-test-range.onrender.com/.well-known/security.txt"
+    }
+  ]
+}
