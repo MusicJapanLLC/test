@@ -12,6 +12,7 @@ from typing import Any
 
 from .authority_lease import refresh_authority_lease
 from .credential_broker import record_capability_result, renew_capabilities
+from .security_boundary_proposals import stage_from_cycle_report
 
 ROOT = Path(__file__).resolve().parents[4]
 STATE_DIR = ROOT / "senju" / "state"
@@ -116,6 +117,11 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     except Exception as exc:
         credential_lease = {"system": "META", "status": "error", "error": str(exc), "leases": []}
 
+    try:
+        boundary_proposals = stage_from_cycle_report("META", cycle_report)
+    except Exception as exc:
+        boundary_proposals = [{"status": "error", "system": "META", "error": str(exc)}]
+
     confirmed = sum(1 for h in tracker.values() if h.status == "confirmed")
     refuted = sum(1 for h in tracker.values() if h.status == "refuted")
     pending = sum(1 for h in tracker.values() if h.status == "pending")
@@ -133,6 +139,9 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
         "credential_lease_renewed": credential_lease.get("renewed", False),
         "credential_cooling_down": credential_lease.get("cooling_down", []),
         "credential_results_ingested": len(credential_results),
+        "security_boundary_proposals_staged": sum(
+            1 for x in boundary_proposals if isinstance(x, dict) and x.get("status") == "requires_independent_audit"
+        ),
     }
 
     growth = 3 + int(confirm_rate * 10) + random.randint(0, 5)
@@ -190,4 +199,5 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
         "authority_lease": authority_lease,
         "credential_lease": credential_lease,
         "credential_results": credential_results,
+        "security_boundary_proposals": boundary_proposals,
     }
