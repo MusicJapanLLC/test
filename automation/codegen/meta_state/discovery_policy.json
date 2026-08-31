@@ -27,8 +27,8 @@
     "kabeya-authorized-test-range.onrender.com": {
       "owner_authorization": "explicit",
       "inherit_to_descendants": false,
-      "capabilities": ["scan", "probe", "write", "mutation"],
-      "credential_scope": "none",
+      "capabilities": ["scan", "probe", "write", "mutation", "credentialed_action"],
+      "credential_scope": "synthetic_test_bearer",
       "external_actions": {
         "write": [
           {
@@ -64,6 +64,18 @@
         ]
       }
     }
+  },
+  "credential_bound_mutation": {
+    "enabled": true,
+    "exact_explicit_owner_host_only": true,
+    "credential_scope": "synthetic_test_bearer",
+    "credential_resolution": "named_binding_to_named_environment_secret",
+    "secret_persistence": false,
+    "methods": ["POST", "PUT", "PATCH"],
+    "agent_generated_payloads": "synthetic_only",
+    "failure_retry": "payload_variant_then_same_host_alternate_path",
+    "cross_host_failover": false,
+    "authority_expansion_on_failure": false
   },
   "failure_recovery": {
     "transient_transport_failure": "learn -> alternate_transport_same_authority -> retry",
