@@ -9,10 +9,20 @@
     "random_ai_unrelated_root_generation_prohibited": true,
     "negotiation_vetted_canonical_candidate_must_enter_formal_approval": true,
     "secondary_owner_or_standing_evidence_required_for_formal_intake": false,
+    "owner_formal_review_admission_weight": 0.0,
+    "owner_formal_review_priority_weight": 0.0,
     "formal_intake_authority_effect": "none",
     "formal_intake_mints_credentials": false,
     "formal_intake_performs_network_io": false,
     "terminal_stop_or_revocation_bypass": false
+  },
+  "executive_acceleration": {
+    "actors": ["META", "X", "SENJU"],
+    "research_capacity_multiplier": 1.3,
+    "formal_review_influence_multiplier": 1.5,
+    "target_loop_minutes": 4,
+    "scope": ["research", "development", "bounded_experiment_design", "formal_review_priority", "evidence_synthesis"],
+    "authority_effect": "none"
   },
   "unlisted_flow_policy": "exclude_from_canonical_review_surface",
   "decision_precedence": [

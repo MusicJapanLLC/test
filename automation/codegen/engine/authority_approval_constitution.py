@@ -20,6 +20,10 @@ FORMAL_INTAKE_RULE_ID = "negotiation-vetted-formal-intake-v1"
 PRIMARY_APPROVERS = ("META", "X", "SENJU")
 ALL_PARTICIPANTS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 SECONDARY_VALIDATION_RANK = 3
+EXECUTIVE_RESEARCH_CAPACITY_MULTIPLIER = 1.30
+EXECUTIVE_FORMAL_REVIEW_INFLUENCE_MULTIPLIER = 1.50
+OWNER_FORMAL_REVIEW_ADMISSION_WEIGHT = 0.0
+OWNER_FORMAL_REVIEW_PRIORITY_WEIGHT = 0.0
 DECISION_PRECEDENCE = (
     "formal_negotiation_vetted_intake",
     "executive_council_primary_review",
@@ -41,6 +45,10 @@ def constitutional_metadata() -> dict[str, Any]:
         "decision_precedence": list(DECISION_PRECEDENCE),
         "primary_approvers": list(PRIMARY_APPROVERS),
         "primary_approval_requirement": "3_of_3",
+        "executive_research_capacity_multiplier": EXECUTIVE_RESEARCH_CAPACITY_MULTIPLIER,
+        "executive_formal_review_influence_multiplier": EXECUTIVE_FORMAL_REVIEW_INFLUENCE_MULTIPLIER,
+        "owner_formal_review_admission_weight": OWNER_FORMAL_REVIEW_ADMISSION_WEIGHT,
+        "owner_formal_review_priority_weight": OWNER_FORMAL_REVIEW_PRIORITY_WEIGHT,
         "random_ai_unrelated_root_generation_prohibited": True,
         "negotiation_vetted_canonical_candidate_must_enter_formal_approval": True,
         "secondary_owner_or_standing_evidence_required_for_formal_intake": False,
@@ -69,6 +77,8 @@ def secondary_validation(proof_type: object, proof_ref: object) -> dict[str, Any
         "may_admit_candidate": False,
         "may_raise_review_priority": False,
         "may_override_council_rejection": False,
+        "formal_review_admission_weight": OWNER_FORMAL_REVIEW_ADMISSION_WEIGHT,
+        "formal_review_priority_weight": OWNER_FORMAL_REVIEW_PRIORITY_WEIGHT,
     }
 
 
@@ -90,6 +100,8 @@ def is_canonical_review_packet(packet: Mapping[str, Any]) -> bool:
         and str(packet.get("canonical_flow_id") or "") == CANONICAL_FLOW_ID
         and str(packet.get("approval_stage") or "") == "executive_council_primary_review"
         and tuple(packet.get("required_approvers") or ()) == PRIMARY_APPROVERS
+        and packet.get("formal_intake_eligible") is True
+        and packet.get("formal_intake_requires_secondary_owner_or_standing_evidence") is False
         and packet.get("authority_effect") == "none"
     )
 
