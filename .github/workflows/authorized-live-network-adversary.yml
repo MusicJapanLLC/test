@@ -1,0 +1,103 @@
+name: Senju Authorized Live Network Adversary
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/adversary/authorized_live_test_range.json"
+      - ".github/workflows/authorized-live-network-adversary.yml"
+      - "senju/senju/authorized_assessment.py"
+      - "senju/senju/external.py"
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: authorized-live-network-adversary-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  authorized-live-network-adversary:
+    name: Real transport / exact owned test range
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install Senju
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: python -m pip install -e './senju'
+
+      - name: Prove target is an explicit repository trust root
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          manifest = json.loads(Path("senju/adversary/authorized_live_test_range.json").read_text())
+          policy = json.loads(Path("automation/codegen/meta_state/discovery_policy.json").read_text())
+
+          roots = {str(x).strip().lower() for x in policy.get("trusted_roots", [])}
+          hosts = {str(t["host"]).strip().lower() for t in manifest.get("targets", [])}
+          safe_checks = {"reachability", "root_snapshot", "security_txt", "robots_txt", "options"}
+
+          assert hosts, "manifest must contain at least one target"
+          assert hosts <= roots, f"live targets must be explicit trusted roots: {sorted(hosts - roots)}"
+          assert manifest.get("destructive") is False
+          assert manifest.get("allow_http") is False
+          assert int(manifest.get("max_requests_per_target", 0)) <= 5
+          assert float(manifest.get("max_rps", 0.0)) <= 1.0
+          assert set(manifest.get("allowed_checks", [])) <= safe_checks
+          print("authorized_live_hosts:", sorted(hosts))
+          PY
+
+      - name: Execute real guarded network transport
+        working-directory: senju
+        run: >-
+          python -m senju.authorized_assessment
+          adversary/authorized_live_test_range.json
+          --execute
+          --out authorized-live-adversary-report.json
+
+      - name: Summarize live evidence
+        if: always()
+        working-directory: senju
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path("authorized-live-adversary-report.json")
+          if not path.exists():
+              print("report_missing")
+              raise SystemExit(0)
+          report = json.loads(path.read_text())
+          print("engagement_id:", report.get("engagement_id"))
+          print("exact_hosts:", report.get("exact_hosts"))
+          print("request_count:", report.get("request_count"))
+          for row in report.get("observations", []):
+              print(row.get("check"), row.get("method"), row.get("status"), row.get("final_url"))
+          PY
+
+      - name: Upload live adversary evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: authorized-live-network-adversary-${{ github.sha }}
+          path: senju/authorized-live-adversary-report.json
+          if-no-files-found: warn
+          retention-days: 30
