@@ -1,0 +1,47 @@
+{
+  "schema": "senju-authority-self-lease/v1",
+  "max_lease_seconds": 3600,
+  "max_active_scopes": 4,
+  "systems": {
+    "META": {
+      "enabled": true,
+      "preauthorized_scopes": [
+        "repo:read",
+        "repo:write:pr",
+        "repo:pr:review",
+        "workflow:dispatch:approved"
+      ],
+      "default_requested_scopes": [
+        "repo:read",
+        "repo:write:pr",
+        "repo:pr:review",
+        "workflow:dispatch:approved"
+      ]
+    },
+    "X": {
+      "enabled": true,
+      "preauthorized_scopes": [
+        "repo:read",
+        "repo:write:pr",
+        "workflow:dispatch:approved",
+        "codegen:queue:write"
+      ],
+      "default_requested_scopes": [
+        "repo:read",
+        "repo:write:pr",
+        "workflow:dispatch:approved",
+        "codegen:queue:write"
+      ]
+    }
+  },
+  "never_self_grant": [
+    "repo:admin",
+    "credentials:read",
+    "credentials:write",
+    "security-policy:write",
+    "guard:weaken",
+    "target-scope:expand",
+    "external-write:unapproved",
+    "branch-protection:write"
+  ]
+}
