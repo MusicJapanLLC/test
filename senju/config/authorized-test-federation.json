@@ -1,0 +1,25 @@
+{
+  "scope_id": "the-world-security-test-federation-v1",
+  "owner": "Owner/BOSS",
+  "domain_roots": [
+    "kabeya-authorized-test-range.onrender.com"
+  ],
+  "effect_level": "state_change",
+  "allowed_methods": ["GET", "HEAD", "OPTIONS", "POST"],
+  "allow_http": false,
+  "follow_redirects": true,
+  "max_redirects": 4,
+  "max_rps": 5,
+  "timeout_seconds": 15,
+  "max_request_bytes": 1048576,
+  "max_response_bytes": 8388608,
+  "retries": 2,
+  "federation_id": "the-world-security-test-federation-v1",
+  "canonical_registry": "AUTHORIZED_TEST_TARGETS.json",
+  "follow_authorized_external_links": true,
+  "external_admission": "registered_or_mutually_declared_only",
+  "self_declaration_path": "/.well-known/security-test-federation.json",
+  "recursive_member_scope": "/**",
+  "query_and_fragment_in_scope": true,
+  "directive": "Actively discover and assess verified federation members at normal authorized rates. Never treat an unverified external host as authorized."
+}
