@@ -1,4 +1,8 @@
-"""Read real GitHub Actions outcomes and persist production stop-learning state."""
+"""Read real GitHub Actions outcomes and persist production stop-learning state.
+
+Durable state is restored/persisted by the workflow as a GitHub Actions artifact.
+The runner itself only needs read access to Actions; it no longer writes Issues.
+"""
 from __future__ import annotations
 
 import json
@@ -15,8 +19,7 @@ from stop_learning import update_learning_state
 HERE = Path(__file__).resolve().parent
 CONTROL_FILE = HERE / "runtime_control_state.json"
 REGISTRY_FILE = HERE / "approved_persistence_registry.json"
-STATE_LABEL = "meta-stop-learning-state"
-STATE_TITLE = "[THE-WORLD] Production Stop Learning State"
+DEFAULT_STATE_FILE = Path("/tmp/stop-learning-state.json")
 WORKFLOWS = (
     "meta-consciousness.yml",
     "autonomous-codegen-loop.yml",
@@ -39,13 +42,11 @@ def _headers(token: str) -> dict[str, str]:
         "Authorization": f"Bearer {token}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
-        "Content-Type": "application/json",
     }
 
 
-def _call(method: str, url: str, token: str, payload=None):
-    data = json.dumps(payload).encode() if payload is not None else None
-    request = urllib.request.Request(url, data=data, method=method, headers=_headers(token))
+def _call(method: str, url: str, token: str):
+    request = urllib.request.Request(url, method=method, headers=_headers(token))
     try:
         with urllib.request.urlopen(request, timeout=20) as response:
             raw = response.read()
@@ -85,22 +86,6 @@ def _observation(run: dict) -> dict | None:
     }
 
 
-def _load_previous(repo: str, token: str) -> tuple[dict, int | None]:
-    owner, name = repo.split("/", 1)
-    query = urllib.parse.urlencode({"state": "open", "labels": STATE_LABEL, "per_page": "100"})
-    rows = _call("GET", f"https://api.github.com/repos/{owner}/{name}/issues?{query}", token)
-    if not isinstance(rows, list):
-        return {}, None
-    target = next((row for row in rows if row.get("title") == STATE_TITLE and "pull_request" not in row), None)
-    if not target:
-        return {}, None
-    try:
-        body = json.loads(target.get("body") or "{}")
-    except json.JSONDecodeError:
-        body = {}
-    return body, int(target["number"])
-
-
 def _recent_observations(repo: str, token: str, seen: set[int]) -> list[dict]:
     owner, name = repo.split("/", 1)
     out: list[dict] = []
@@ -120,12 +105,21 @@ def _recent_observations(repo: str, token: str, seen: set[int]) -> list[dict]:
     return out
 
 
+def state_file_from_environment() -> Path:
+    raw = os.environ.get("STOP_LEARNING_STATE_FILE", "").strip()
+    return Path(raw) if raw else DEFAULT_STATE_FILE
+
+
 def main() -> int:
     repo = os.environ.get("GITHUB_REPOSITORY", "MusicJapanLLC/test")
     token = os.environ.get("GITHUB_TOKEN", "")
     if not token:
         raise SystemExit("GITHUB_TOKEN required")
-    previous, issue_number = _load_previous(repo, token)
+
+    state_file = state_file_from_environment()
+    previous = _load(state_file, {})
+    if not isinstance(previous, dict):
+        previous = {}
     seen = {int(x) for x in previous.get("seen_run_ids", []) if isinstance(x, int) or str(x).isdigit()}
     observations = _recent_observations(repo, token, seen)
     controls = _load(CONTROL_FILE, {})
@@ -135,26 +129,15 @@ def main() -> int:
     state["seen_run_ids"] = list((seen | {int(row["run_id"]) for row in observations if row.get("run_id")}))[-500:]
     state["observations_processed"] = len(observations)
     state["workflows"] = list(WORKFLOWS)
+    state["persistence"] = {
+        "backend": "github_actions_artifact",
+        "state_file": str(state_file),
+        "issue_write_required": False,
+    }
 
-    owner, name = repo.split("/", 1)
-    base = f"https://api.github.com/repos/{owner}/{name}"
-    _call("POST", f"{base}/labels", token, {
-        "name": STATE_LABEL,
-        "description": "Production stop-learning state for META/X/Senju",
-    })
     body = json.dumps(state, ensure_ascii=False, indent=2)
-    if issue_number is None:
-        created = _call("POST", f"{base}/issues", token, {
-            "title": STATE_TITLE,
-            "body": body,
-            "labels": [STATE_LABEL],
-        })
-        print(f"created stop-learning state issue #{created.get('number')}")
-    else:
-        _call("PATCH", f"{base}/issues/{issue_number}", token, {"body": body})
-        print(f"updated stop-learning state issue #{issue_number}")
-
-    Path("/tmp/stop-learning-state.json").write_text(body + "\n", encoding="utf-8")
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    state_file.write_text(body + "\n", encoding="utf-8")
     print(json.dumps({
         "processed": len(observations),
         "failure_score": state["failure_score"],
@@ -162,6 +145,8 @@ def main() -> int:
         "active_controls": state["active_controls"],
         "pending_failures": list(state.get("pending_failures", {})),
         "recovery_tuning": state["recovery_tuning"],
+        "state_file": str(state_file),
+        "persistence_backend": "github_actions_artifact",
     }, ensure_ascii=False))
     return 0
 
