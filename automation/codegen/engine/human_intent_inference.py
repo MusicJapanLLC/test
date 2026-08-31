@@ -107,7 +107,8 @@ def infer_human_intent(
         confidence += 0.15
         reasons.append('prior_explicit_approval_exists')
 
-    confidence = min(confidence, 0.99)
+    # Keep policy thresholds deterministic at decimal boundaries such as 0.80.
+    confidence = round(min(confidence, 0.99), 6)
     grant = reusable_explicit_grant(request, prior, now=now)
     if grant is not None:
         reasons.append('live_exact_scope_explicit_grant_reused')
