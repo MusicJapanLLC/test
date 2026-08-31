@@ -1,0 +1,96 @@
+name: Production Security Change Loop
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/production_security_change_loop.py'
+      - 'automation/world/tests/test_production_security_change_loop.py'
+      - '.github/workflows/production-security-change-loop.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/production_security_change_loop.py'
+      - 'automation/world/state/security_findings.json'
+      - 'automation/world/state/boundary_opportunities.json'
+      - 'automation/world/state/security_change_findings.json'
+      - '.github/workflows/production-security-change-loop.yml'
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: production-security-change-loop
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify bounded production security loop
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q automation/world/tests/test_production_security_change_loop.py
+
+  production-loop:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: true
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Run Finding to Proposal to AI Consensus to bounded Self-Approval to Production Apply
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python -m automation.world.production_security_change_loop | tee /tmp/production-security-change-summary.json
+      - name: Persist only bounded runtime production changes
+        run: |
+          set -euo pipefail
+          runtime='automation/world/state/security_runtime_overrides.json'
+          if [ ! -f "$runtime" ]; then
+            echo 'No runtime override state produced.'
+            exit 0
+          fi
+          git add -- "$runtime"
+          if git diff --cached --quiet; then
+            echo 'No new bounded production change to persist.'
+            exit 0
+          fi
+          git config user.name 'the-world-security-loop[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(security): apply AI-consensus bounded runtime override'
+          git push origin HEAD:claude/employee-onboarding-setup-udm86
+      - name: Preserve proposal, consensus, owner-gate, and apply receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-security-change-loop-state
+          path: |
+            automation/world/state/security_runtime_overrides.json
+            automation/world/state/owner_authority_required.json
+            automation/world/state/production_security_change_receipts.json
+            /tmp/production-security-change-summary.json
+          if-no-files-found: warn
+          retention-days: 30
