@@ -1,6 +1,9 @@
 import json
 from pathlib import Path
 
+# Production activation marker: this comment intentionally changes no capability;
+# it gives the read-only growth workflow a user-authored default-branch push event.
+
 from automation.security.adversarial_boundary_lab import (
     SEED_FAMILIES,
     build_report,
