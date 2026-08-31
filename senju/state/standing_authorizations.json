@@ -1,6 +1,7 @@
 {
   "schema": "senju-standing-authorization/v1",
   "semantics": "durable_until_explicit_revocation",
+  "network_scope_semantics": "single_authority_explicit_public_and_private_non_transitive",
   "records": [
     {
       "authorization_reference": "canonical:kabeya-authorized-test-range",
@@ -18,7 +19,9 @@
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
-      "destructive": false
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": []
     }
   ]
 }
