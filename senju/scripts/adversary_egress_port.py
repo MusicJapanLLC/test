@@ -22,6 +22,7 @@ from senju.adversary_egress_request import (  # noqa: E402
     AdversaryEgressRequestPort,
     OwnerPromotionTicket,
 )
+from senju.meta.adversary_egress_vote_router import route_pending_vote_requests  # noqa: E402
 from engine.authority_coordination import build_handoff_plan, context_from_lease  # noqa: E402
 
 
@@ -71,7 +72,10 @@ def main() -> int:
             capabilities=_csv(args.capabilities),
             methods=_csv(args.methods),
         )
-        print(json.dumps(decision.to_dict(), ensure_ascii=False, indent=2))
+        solicitations = route_pending_vote_requests(args.state)
+        payload = decision.to_dict()
+        payload["vote_solicitation_count"] = solicitations["pending_count"]
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
     if args.command == "vote":
@@ -81,7 +85,10 @@ def main() -> int:
             effect=args.effect,
             reason=args.reason,
         )
-        print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        solicitations = route_pending_vote_requests(args.state)
+        payload = result.to_dict()
+        payload["remaining_vote_solicitations"] = solicitations["pending_count"]
+        print(json.dumps(payload, ensure_ascii=False, indent=2))
         return 0
 
     ticket = OwnerPromotionTicket.from_mapping(_json(args.ticket))
