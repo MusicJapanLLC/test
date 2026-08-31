@@ -1,45 +1,36 @@
 name: Senju Data Mesh — Unified Intelligence Hub
 
-# Runs after every system completes, merges all evidence into Senju state,
-# then triggers the self-development loop to re-plan with fresh data.
+# Read-only evidence aggregation lane. Privileged state promotion, workflow dispatch,
+# retries, and external delivery belong to their separately governed workflows.
 on:
   schedule:
-    - cron: "*/30 * * * *"  # every 30 minutes
+    - cron: "*/30 * * * *"
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - "Senju Adversary Full Join"
-      - "Senju Live Opposition Force"
-      - "Senju Real Scan — Nuclei against own endpoints"
-      - "Senju GitHub Native Autonomous Improver"
-      - "Senju Blitz — Parallel Adversary Surge"
-    types: [completed]
 
 concurrency:
   group: senju-data-mesh
   cancel-in-progress: false
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
-  aggregate-and-feed:
-    name: Collect all evidence → merge → Senju state → trigger self-develop
+  aggregate-evidence:
+    name: Collect evidence → build bounded Senju summary artifact
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    permissions:
-      contents: write
-      actions: write
-      issues: write
 
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-          persist-credentials: true
-          token: ${{ github.token }}
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
@@ -97,95 +88,24 @@ jobs:
             gh run download "$RUN" --repo "$REPO" --dir /tmp/mesh/nuclei || true
           fi
 
-      - name: Merge all intelligence into Senju state
+      - name: Merge intelligence into bounded working summary
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p /tmp/mesh/out
+          cp senju/state/last-evolution-summary.json /tmp/mesh/out/summary.json 2>/dev/null || printf '{}\n' > /tmp/mesh/out/summary.json
           PYTHONPATH=senju python senju/scripts/data_mesh.py \
             --adversary-dir /tmp/mesh/adversary \
             --blitz-dir /tmp/mesh/blitz \
             --opposition-dir /tmp/mesh/opposition \
             --nuclei-dir /tmp/mesh/nuclei \
-            --state senju/state/last-evolution-summary.json
+            --state /tmp/mesh/out/summary.json
+          python -m json.tool /tmp/mesh/out/summary.json >/dev/null
 
-      - name: Commit updated Senju state
-        shell: bash
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add senju/state/last-evolution-summary.json
-          if git diff --cached --quiet; then
-            echo "No state changes to commit"
-          else
-            git commit -m "chore(senju): data mesh state update [skip ci]"
-            git push origin HEAD:claude/employee-onboarding-setup-udm86
-          fi
-
-      - name: Broadcast Senju state externally
-        shell: bash
-        env:
-          OUTBOUND_WEBHOOK_URL: ${{ secrets.OUTBOUND_WEBHOOK_URL }}
-        run: |
-          python senju/scripts/external_broadcast.py \
-            --state senju/state/last-evolution-summary.json \
-            --source senju-data-mesh \
-            --repo "$REPO" \
-            --out /tmp/broadcast-result.json || true
-          cat /tmp/broadcast-result.json 2>/dev/null || true
-
-      - name: Trigger self-development loop
-        shell: bash
-        run: |
-          gh workflow run senju-self-develop.yml \
-            --repo "$REPO" \
-            --ref claude/employee-onboarding-setup-udm86 || true
-
-      - name: Conditionally trigger autonomous improver
-        shell: bash
-        run: |
-          HITS=$(python3 -c "
-import json, pathlib
-p = pathlib.Path('senju/state/last-evolution-summary.json')
-if p.exists():
-    d = json.loads(p.read_text())
-    print(sum(d.get('vuln_class_hits', {}).values()))
-else:
-    print(0)
-" 2>/dev/null || echo 0)
-          echo "Total vuln class hits: $HITS"
-          if (( HITS >= 5 )); then
-            gh workflow run senju-autonomous-improver.yml \
-              --repo "$REPO" \
-              --ref claude/employee-onboarding-setup-udm86 || true
-          fi
-
-  auto-retry-failed-workflows:
-    name: Auto-retry any failed Senju workflow
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      actions: write
-    env:
-      GH_TOKEN: ${{ github.token }}
-      REPO: ${{ github.repository }}
-    steps:
-      - name: Re-run recently failed Senju workflows
-        shell: bash
-        run: |
-          SENJU_WORKFLOWS=(
-            "Senju Adversary Full Join"
-            "Senju Autonomous Self-Development Loop"
-            "Senju Real Scan — Nuclei against own endpoints"
-            "Senju GitHub Native Autonomous Improver"
-            "Senju Blitz — Parallel Adversary Surge"
-          )
-          for WF in "${SENJU_WORKFLOWS[@]}"; do
-            FAILED_ID=$(gh run list --repo "$REPO" \
-              --workflow "$WF" --status failure --limit 1 \
-              --json databaseId --jq '.[0].databaseId // empty' || true)
-            if [[ -n "$FAILED_ID" ]]; then
-              echo "Re-running failed run $FAILED_ID for: $WF"
-              gh run rerun "$FAILED_ID" --repo "$REPO" || true
-            fi
-          done
+      - name: Upload data-mesh evidence artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: senju-data-mesh-${{ github.run_id }}
+          path: /tmp/mesh/out/summary.json
+          if-no-files-found: error
+          retention-days: 7
