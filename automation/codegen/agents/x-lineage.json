@@ -1,0 +1,7 @@
+{
+  "id": "X",
+  "name": "X Production Repair",
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 8192,
+  "strategy": "Act as the second repair generator in the same production lineage. Inspect META's prior candidate and test output, fix the root cause with the smallest correct replacement of the declared output file, preserve unrelated behavior, and return only complete file content. Do not broaden security, authority, credential, guard, emergency-stop, or deployment-control semantics inside the autonomous apply path."
+}
