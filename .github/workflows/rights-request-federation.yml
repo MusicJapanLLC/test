@@ -25,14 +25,15 @@ on:
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/config/owner-expansion-envelope.json'
 
+# Balance policy: the federation may research, negotiate, and emit evidence, but
+# it no longer writes repository state or comments on PRs directly. Any real
+# mutation must travel through a separately reviewed writer/authority lane.
 permissions:
-  contents: write
+  contents: read
   actions: read
-  issues: write
-  pull-requests: write
 
 concurrency:
-  group: owner-scope-negotiation-production
+  group: owner-scope-negotiation-research
   cancel-in-progress: false
 
 jobs:
@@ -40,23 +41,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout production lineage
+      - name: Checkout production lineage read-only
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
 
-      - name: Restore shared authority runtime
+      - name: Restore shared authority research runtime
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .authority-opportunity-runtime/
           key: rights-request-${{ github.ref_name }}-${{ github.run_id }}
           restore-keys: |
+            rights-request-${{ github.ref_name }}-
             authority-signal-${{ github.ref_name }}-
             authority-opportunity-${{ github.ref_name }}-
             authority-opportunity-
@@ -70,7 +72,7 @@ jobs:
             senju/tests/test_rights_request_federation.py \
             senju/tests/test_owner_scope_negotiation.py
 
-      - name: Generate proactive META X SENJU rights requests
+      - name: Generate proactive META X SENJU rights request proposals
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -84,7 +86,7 @@ jobs:
           test -s senju/state/rights_request_ledger.json
           test -s senju/state/owner_scope_negotiation_signals.json
 
-      - name: Run existing production Owner-scope negotiation immediately
+      - name: Run Owner-scope negotiation as proposal evaluation only
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -97,7 +99,7 @@ jobs:
           test -s senju/state/owner_contact_ceiling_effective.json
           test "$(jq -r '.result.hard_limits | index("no_scope_change_outside_owner_expansion_envelope") != null' /tmp/owner-scope-negotiation-report.json)" = "true"
 
-      - name: Feed negotiation result back into next rights-request generation
+      - name: Feed evaluation result into next proposal generation
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -109,67 +111,27 @@ jobs:
           echo "active_requests=$(jq -r '.active_request_count' /tmp/rights-request-federation-after.json)"
           echo "persistent_owner_review=$(jq -r '.owner_review_persistent_count' /tmp/rights-request-federation-after.json)"
 
-      - name: Persist negotiation memory and effective ceiling
-        if: github.event_name != 'pull_request'
+      - name: Assert proposal-only authority boundary
         shell: bash
         run: |
-          git config user.name 'senju-rights-request-bot'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add \
-            senju/state/rights_request_ledger.json \
-            senju/state/rights_request_federation.json \
-            senju/state/owner_scope_negotiation_signals.json \
-            senju/state/owner_scope_negotiation_campaign.json \
-            senju/state/owner_scope_negotiation_result.json \
-            senju/state/owner_contact_ceiling_effective.json
-          if git diff --cached --quiet; then
-            echo 'No meaningful rights/ceiling state change.'
-            exit 0
-          fi
-          git commit -m 'chore(authority): persist META X SENJU rights negotiation [skip ci]'
-          for attempt in 1 2 3; do
-            if git push origin HEAD:claude/employee-onboarding-setup-udm86; then
-              exit 0
-            fi
-            echo "push race attempt $attempt; rebasing latest production"
-            git fetch origin claude/employee-onboarding-setup-udm86
-            git rebase origin/claude/employee-onboarding-setup-udm86
-          done
-          exit 1
+          set -euo pipefail
+          test "${GITHUB_EVENT_NAME}" = "pull_request" || true
+          git diff --quiet -- .github/workflows || {
+            echo 'Workflow control plane mutation is not allowed in proposal federation.'
+            exit 1
+          }
+          echo 'RIGHTS_FEDERATION_PROPOSAL_ONLY=true'
+          echo 'REPOSITORY_WRITE=false'
+          echo 'PR_COMMENT_WRITE=false'
 
-      - name: Share active rights requests with authority-related PRs
-        if: github.event_name != 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYTHONPATH: senju:automation/codegen
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          from senju.rights_request_federation import pr_federation_message
-          marker, message = pr_federation_message(Path('senju/state'))
-          Path('/tmp/rights-marker.txt').write_text(marker, encoding='utf-8')
-          Path('/tmp/rights-message.md').write_text(message, encoding='utf-8')
-          PY
-          MARKER=$(cat /tmp/rights-marker.txt)
-          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 80 --json number,title --jq '.[] | select(.title | test("authority|scope|senju|meta|discovery|trust|external|guard"; "i")) | .number' | head -n 8 > /tmp/rights-prs.txt
-          while read -r PR; do
-            [ -n "$PR" ] || continue
-            if gh api "repos/$GITHUB_REPOSITORY/issues/$PR/comments" --paginate --jq '.[].body' | grep -Fq "$MARKER"; then
-              echo "PR #$PR already has this federation snapshot"
-              continue
-            fi
-            gh pr comment "$PR" --repo "$GITHUB_REPOSITORY" --body-file /tmp/rights-message.md
-          done < /tmp/rights-prs.txt
-
-      - name: Save shared authority runtime
+      - name: Save shared authority research runtime
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .authority-opportunity-runtime/
           key: rights-request-${{ github.ref_name }}-${{ github.run_id }}
 
-      - name: Preserve negotiation evidence
+      - name: Preserve negotiation proposal evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
