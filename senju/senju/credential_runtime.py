@@ -57,7 +57,6 @@ class RuntimeGrant:
 
     @classmethod
     def from_mapping(cls, value: Mapping[str, Any]) -> "RuntimeGrant":
-        # Configuration must identify a secret container, never carry the secret itself.
         assert_no_raw_secret_fields(value)
         allowed_keys = {
             "grant_id",
@@ -111,9 +110,6 @@ class CredentialRecoveryRuntime:
         env = dict(os.environ if environ is None else environ)
         grants: list[RuntimeGrant] = []
 
-        # The GitHub Actions token is already explicitly provisioned by the workflow.
-        # Register only the capabilities declared by that workflow; this does not change
-        # the token or ask GitHub for additional permissions.
         if env.get("GITHUB_TOKEN"):
             grants.append(
                 RuntimeGrant(
@@ -138,13 +134,9 @@ class CredentialRecoveryRuntime:
                 if not isinstance(item, Mapping):
                     raise CredentialRuntimeError("each runtime credential grant must be an object")
                 grant = RuntimeGrant.from_mapping(item)
-                # Missing secret env means the grant is not actually provisioned and is
-                # therefore ignored rather than treated as an available credential.
                 if env.get(grant.env_var):
                     grants.append(grant)
 
-        # De-duplicate by grant id deterministically, with explicit extra config replacing
-        # the default entry only when it uses the same id.
         by_id: dict[str, RuntimeGrant] = {grant.grant_id: grant for grant in grants}
         grants = [by_id[key] for key in sorted(by_id)]
 
@@ -164,8 +156,6 @@ class CredentialRecoveryRuntime:
                 )
             )
 
-        # This profile represents the ceiling of credentials already injected into the
-        # running process. It does not create or obtain any credential itself.
         credential_scope = "service_bearer" if any(
             grant.required_authority_scope == "service_bearer" for grant in grants
         ) else ("public_token" if grants else "none")
@@ -188,6 +178,30 @@ class CredentialRecoveryRuntime:
         memory = SecretMemoryIndex()
         tuner = CredentialSelfTuner(broker=broker, secret_memory=memory)
         recovery_loop = CredentialRecoveryLoop(broker=broker, secret_memory=memory)
+
+        # Learn across workflow/process restarts. Only secret-free grant ids and counters
+        # are restored, and counters for grants no longer provisioned are discarded.
+        if state_dir is not None:
+            learning_path = Path(state_dir) / "credential_recovery_learning.json"
+            if learning_path.exists():
+                try:
+                    learned = json.loads(learning_path.read_text(encoding="utf-8"))
+                    valid_ids = set(broker.grants)
+                    recovery_loop.grant_successes = {
+                        str(key): max(0, int(value))
+                        for key, value in dict(learned.get("grant_successes", {})).items()
+                        if str(key) in valid_ids
+                    }
+                    recovery_loop.grant_failures = {
+                        str(key): max(0, int(value))
+                        for key, value in dict(learned.get("grant_failures", {})).items()
+                        if str(key) in valid_ids
+                    }
+                except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                    # Corrupt/stale learning state must never block runtime startup.
+                    recovery_loop.grant_successes = {}
+                    recovery_loop.grant_failures = {}
+
         return cls(
             actor=actor,
             authority=authority,
@@ -237,7 +251,6 @@ class CredentialRecoveryRuntime:
         attempt_with_secret: Callable[[str], Mapping[str, Any]],
         ttl_seconds: int = 300,
     ) -> tuple[RecoveryLoopResult, Mapping[str, Any] | None]:
-        """Retry one failed operation across the learned finite pre-approved grant set."""
         last_response: Mapping[str, Any] | None = None
         need = PermissionNeed(
             provider=provider,
@@ -266,7 +279,6 @@ class CredentialRecoveryRuntime:
         return result, last_response
 
     def resolve_lease_secret(self, lease_id: str) -> str:
-        """Resolve an owned lease only in memory for the immediate operation retry."""
         ref = self.broker.resolve_credential_ref(actor=self.actor, lease_id=lease_id)
         if not ref.startswith("env://"):
             raise CredentialRuntimeError("runtime only resolves env:// credential references")
@@ -277,7 +289,6 @@ class CredentialRecoveryRuntime:
         return value
 
     def resolve_selected_secret(self, result: CredentialTuneResult) -> str | None:
-        """Resolve a selected credential only in memory for the immediate operation retry."""
         if result.outcome is not TuneOutcome.RECOVERED or not result.lease_id:
             return None
         return self.resolve_lease_secret(result.lease_id)
