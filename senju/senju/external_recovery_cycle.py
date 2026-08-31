@@ -1,9 +1,9 @@
 """Production recovery cycle for authorized external observation lanes.
 
-The cycle persists denial learning and per-scope agent reliability across runs. Five
-candidate execution agents are available; the underlying rotation lane uses three per
-pass, so a second pass can naturally promote previously unused agents after transient
-failures. Every pass preserves the exact authority contract.
+The cycle persists denial learning, route health, repair objectives, and per-scope
+agent reliability across runs. Eight candidate execution agents are available; the
+underlying rotation lane chooses a health-ranked adaptive subset per pass. Every pass
+preserves the exact authority contract.
 """
 from __future__ import annotations
 
@@ -18,11 +18,20 @@ from pathlib import Path
 from typing import Any, Callable, Mapping, Sequence
 
 from .external import BUILTIN_AUTHORITY_SCOPES, ExternalAuthorityScope, ExternalContactClient
-from .external_denial_learning import DENIAL_SCHEMA, DenialLearningMemory
+from .external_denial_learning import DenialLearningMemory
 from .external_recovery_closed_loop import AgentReliabilityMemory, execute_recovery_closed_loop
 
-REPORT_SCHEMA = "senju-external-recovery-cycle/v1"
-AGENTS = ("senju-a", "senju-b", "senju-c", "senju-d", "senju-e")
+REPORT_SCHEMA = "senju-external-recovery-cycle/v2"
+AGENTS = (
+    "senju-a",
+    "senju-b",
+    "senju-c",
+    "senju-d",
+    "senju-e",
+    "senju-f",
+    "senju-g",
+    "senju-h",
+)
 
 
 @dataclass(frozen=True)
@@ -57,13 +66,8 @@ BUILTIN_RECOVERY_MISSIONS: tuple[RecoveryMission, ...] = (
 
 
 def _denial_memory_from_mapping(data: Mapping[str, Any] | None) -> DenialLearningMemory:
-    if not data or data.get("schema") != DENIAL_SCHEMA:
-        return DenialLearningMemory()
-    events = data.get("events") or []
-    if not isinstance(events, list):
-        return DenialLearningMemory()
-    clean = [dict(item) for item in events[-1000:] if isinstance(item, Mapping)]
-    return DenialLearningMemory(events=clean)
+    """Restore both legacy v1 and current v2 denial learning without losing successes."""
+    return DenialLearningMemory.from_mapping(data)
 
 
 def _scope_for(mission: RecoveryMission) -> ExternalAuthorityScope:
@@ -75,8 +79,7 @@ def _scope_for(mission: RecoveryMission) -> ExternalAuthorityScope:
         raise ValueError(f"mission host is outside authority scope: {mission.mission_id}")
     if mission.method not in scope.allowed_methods:
         raise ValueError(f"mission method is outside authority scope: {mission.mission_id}")
-    # Closed-loop rotation supplies the retry structure, so disable nested client retries
-    # to keep total request pressure bounded and observable.
+    # Closed-loop rotation supplies retry structure, so disable nested client retries.
     return dataclasses.replace(scope, retries=0)
 
 
@@ -106,9 +109,10 @@ def run_recovery_cycle(
         scope = _scope_for(mission)
 
         def recovery_hook(pass_index: int, playbook: Mapping[str, Any]) -> None:
-            # A short local cooldown/reset seam gives DNS/socket/provider state a chance
-            # to recover without changing route, host, protocol, credential, or authority.
-            sleep_fn(min(2.0, 0.5 * pass_index))
+            route = playbook.get("route_health_after") or {}
+            multiplier = max(1, min(int(route.get("backoff_multiplier", 1)), 8))
+            # Local cooldown only; destination, protocol, credential, and authority stay fixed.
+            sleep_fn(min(4.0, 0.35 * pass_index * multiplier))
 
         outcome = execute_recovery_closed_loop(
             operation_id=mission.mission_id,
@@ -149,6 +153,7 @@ def run_recovery_cycle(
         if isinstance(pass_outcome, Mapping)
     )
     successful = sum(1 for operation in operations if operation["success"])
+    denial_summary = denial_memory.summary()
     return {
         "schema": REPORT_SCHEMA,
         "cycle_id": f"ext-recovery-{uuid.uuid4().hex[:12]}",
@@ -158,6 +163,9 @@ def run_recovery_cycle(
         "network_io": True,
         "closed_loop_recovery": True,
         "agent_rotation": True,
+        "health_ranked_agents": True,
+        "adaptive_route_backoff": True,
+        "adaptive_agent_budget": True,
         "agent_pool": list(AGENTS),
         "max_passes": max(1, min(int(max_passes), 3)),
         "authority_preserved": all(x["authority_preserved"] for x in operations),
@@ -168,7 +176,10 @@ def run_recovery_cycle(
         "operations": operations,
         "optimization_queue": optimization_queue,
         "boundary_repair_queue": boundary_repair_queue,
-        "denial_learning": denial_memory.summary(),
+        "repair_queue": denial_summary.get("repair_queue", []),
+        "route_health": denial_summary.get("route_health", {}),
+        "denial_agent_health": denial_summary.get("agent_health", {}),
+        "denial_learning": denial_summary,
         "agent_reliability": reliability.to_dict(),
     }
 
