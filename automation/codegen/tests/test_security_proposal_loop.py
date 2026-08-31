@@ -58,6 +58,14 @@ def test_missing_proposal_id_cannot_self_approve():
     assert decision["self_approved"] is False
 
 
+def test_non_production_request_cannot_self_approve():
+    proposal = _proposal()
+    proposal["environment"] = "staging"
+    decision = evaluate_security_proposal(proposal)
+    assert decision["self_approved"] is False
+    assert decision["production_apply_eligible"] is False
+
+
 def test_authority_expansion_is_not_an_allowed_operation():
     decision = evaluate_security_proposal(_proposal("authority_policy", "expand_scope"))
     assert decision["self_approved"] is False
