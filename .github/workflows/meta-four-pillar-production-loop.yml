@@ -23,6 +23,17 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install invariant test dependency
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: python -m pip install pytest
+
       - name: Evaluate current Four-Pillar state
         run: python automation/codegen/four_pillar_runner.py
 
