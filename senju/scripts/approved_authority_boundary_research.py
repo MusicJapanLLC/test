@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import datetime as dt
 import json
 import sys
 import uuid
@@ -24,6 +25,36 @@ def _load_memory(path: Path) -> DenialLearningMemory:
     return DenialLearningMemory.from_mapping(raw)
 
 
+def _append_research_memory(path: Path, report: dict) -> None:
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        raw = {}
+    rows = raw.get("runs", []) if isinstance(raw, dict) else []
+    if not isinstance(rows, list):
+        rows = []
+    local = report.get("local_validator_learning", [])
+    rows.append({
+        "recorded_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "operation_id": report.get("operation_id"),
+        "research_targets": report.get("research_targets", []),
+        "authority_approved": report.get("target_host_authority_approved", False),
+        "live_selected": report.get("approved_host_live_transport_selected", False),
+        "external_contact_attempted": report.get("external_contact_attempted", False),
+        "local_rejections": [
+            {"name": row.get("name"), "rejected": row.get("rejected"), "reason": row.get("reason")}
+            for row in local if isinstance(row, dict)
+        ],
+    })
+    payload = {
+        "schema": "senju-approved-authority-boundary-research-memory/v1",
+        "max_runs": 200,
+        "runs": rows[-200:],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run SENJU boundary research; live transport is Authority-approved-host only"
@@ -36,6 +67,10 @@ def main() -> int:
     parser.add_argument(
         "--memory",
         default=str(ROOT / "senju" / "state" / "approved_authority_red_memory.json"),
+    )
+    parser.add_argument(
+        "--research-memory",
+        default=str(ROOT / "senju" / "state" / "approved_authority_boundary_research_memory.json"),
     )
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
@@ -55,6 +90,7 @@ def main() -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     memory.write(memory_path)
+    _append_research_memory(Path(args.research_memory), report)
     print(json.dumps({
         "approved": report.get("target_host_authority_approved"),
         "live_selected": report.get("approved_host_live_transport_selected"),
