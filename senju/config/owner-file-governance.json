@@ -1,0 +1,23 @@
+{
+  "schema": "senju-owner-file-governance/v1",
+  "manager": "SENJU",
+  "match_rule": "path_segment_contains_owner_case_insensitive",
+  "coverage": "repository_wide",
+  "management_rights": {
+    "observe": true,
+    "classify": true,
+    "research_route": true,
+    "propose_change": true,
+    "direct_mutation": false,
+    "authority_activation": false,
+    "credential_access": false,
+    "security_boundary_override": false
+  },
+  "protected_external_authority_surfaces": [
+    "standing_authorizations",
+    "owner_contact_ceiling_effective",
+    "owner-expansion-envelope",
+    "owner-frontier-council"
+  ],
+  "policy": "SENJU manages owner-named files as a research/review control plane, not as an autonomous authority writer"
+}
