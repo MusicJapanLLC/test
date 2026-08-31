@@ -10,10 +10,12 @@ on:
     paths:
       - 'automation/codegen/engine/the_world_unified_loop.py'
       - 'automation/codegen/run_the_world_unified_loop.py'
+      - 'automation/codegen/run_discovery_action_failover.py'
       - 'automation/codegen/engine/discovery_*.py'
       - 'automation/codegen/engine/network_policy_expansion.py'
       - 'automation/codegen/meta_state/**'
       - 'automation/codegen/tests/test_the_world_unified_loop.py'
+      - 'automation/codegen/tests/test_discovery_action_failover.py'
       - 'automation/recovery/**'
       - 'senju/senju/credential_*.py'
       - 'AUTHORIZED_TEST_TARGETS.json'
@@ -63,6 +65,7 @@ jobs:
             automation/codegen/tests/test_the_world_unified_loop.py \
             automation/codegen/tests/test_discovery_capability_leases.py \
             automation/codegen/tests/test_discovery_external_action.py \
+            automation/codegen/tests/test_discovery_action_failover.py \
             automation/codegen/tests/test_discovery_replica_continuity.py \
             automation/codegen/tests/test_network_policy_expansion.py
 
@@ -94,16 +97,30 @@ jobs:
             --require-credentialed-write \
             --json-out .the-world-runtime/the_world_unified_loop.json
 
+      - name: Learn failures and retry alternate same-authority routes
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python automation/codegen/run_discovery_action_failover.py \
+            --state .the-world-runtime \
+            --repo-root . \
+            --max-actions 8 \
+            --json-out .the-world-runtime/discovery_action_failover_run.json
+
       - name: Require full closed-loop completion
         run: |
           test "$(jq -r '.closed_loop' .the-world-runtime/the_world_unified_loop.json)" = "true"
           test "$(jq -r '.credentialed_external_write.succeeded' .the-world-runtime/the_world_unified_loop.json)" = "true"
           test "$(jq -r '.authority.new_root_self_authorization' .the-world-runtime/the_world_unified_loop.json)" = "false"
           test "$(jq -r '.authority.revoked_authority_auto_restore' .the-world-runtime/the_world_unified_loop.json)" = "false"
+          test "$(jq -r '.closed_loop' .the-world-runtime/discovery_action_failover_run.json)" = "true"
+          test "$(jq -r '.boundary_denial_bypass' .the-world-runtime/discovery_action_failover_run.json)" = "false"
           test -s .the-world-runtime/the_world_unified_loop_heartbeat.json
           echo "leases=$(jq -r '.final_lease.lease_count // 0' .the-world-runtime/the_world_unified_loop.json)"
           echo "replicas=$(jq -r '.final_replicas.replica_count // 0' .the-world-runtime/the_world_unified_loop.json)"
           echo "actions=$(jq -r '.actions.succeeded // 0' .the-world-runtime/the_world_unified_loop.json)"
+          echo "failover_success=$(jq -r '.failover.succeeded // 0' .the-world-runtime/discovery_action_failover_run.json)"
+          echo "boundary_denials_learned=$(jq -r '.failover.boundary_denials_learned // 0' .the-world-runtime/discovery_action_failover_run.json)"
           echo "queue=$(jq -r '.final_queue.item_count // 0' .the-world-runtime/the_world_unified_loop.json)"
 
       - name: Save persistent unified-loop state
@@ -133,4 +150,8 @@ jobs:
             echo "- External actions succeeded: $(jq -r '.actions.succeeded // 0' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- Persistent replicas: $(jq -r '.final_replicas.replica_count // 0' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- Credentialed external write: $(jq -r '.credentialed_external_write.succeeded' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f .the-world-runtime/discovery_action_failover_run.json ]; then
+            echo "- Same-authority failover succeeded: $(jq -r '.failover.succeeded // 0' .the-world-runtime/discovery_action_failover_run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Boundary denials learned (not bypassed): $(jq -r '.failover.boundary_denials_learned // 0' .the-world-runtime/discovery_action_failover_run.json)" >> "$GITHUB_STEP_SUMMARY"
           fi
