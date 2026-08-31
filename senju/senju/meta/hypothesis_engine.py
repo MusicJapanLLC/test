@@ -29,6 +29,43 @@ def _hid(text: str) -> str:
 
 def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]:
     hypotheses: list[Hypothesis] = []
+
+    # Guards themselves are first-class META learning targets. These hypotheses
+    # only ask META to characterize consistency/calibration/drift from known
+    # evidence and bounded replay; they do not mutate or weaken guard policy.
+    for guard, profile in list(graph.guard_learning_profiles.items())[:2]:
+        if profile.sample_count <= 0:
+            continue
+        confidence = min(0.95, 0.45 + min(profile.sample_count, 10) * 0.05)
+        hypotheses.append(Hypothesis(
+            hypothesis_id=_hid(f"guard-behavior:{guard}"),
+            statement=(
+                f"Guard '{guard}' should be treated as a learning target: characterize its "
+                f"decision consistency, block rate ({profile.block_rate:.2f}), regression rate "
+                f"({profile.regression_rate:.2f}), and decision drift ({profile.decision_drift:.2f}) "
+                "using existing evidence and bounded replay of known cases."
+            ),
+            surfaces=[guard],
+            predicted_outcome="guard_behavior_characterized",
+            confidence=confidence,
+            evidence_count=profile.sample_count,
+            category="guard_behavior_learning",
+            parameters={
+                "learning_target": "guard_decision_behavior",
+                "guard": guard,
+                "evaluation_mode": "observe_and_replay_known_cases",
+                "learning_dimensions": [
+                    "decision_consistency",
+                    "block_rate",
+                    "regression_rate",
+                    "decision_drift",
+                ],
+                "policy_mutation": False,
+            },
+        ))
+        if len(hypotheses) >= max_hypotheses:
+            return hypotheses[:max_hypotheses]
+
     for surface, score in list(graph.surface_weakness_scores.items())[:3]:
         if score <= 0:
             continue
