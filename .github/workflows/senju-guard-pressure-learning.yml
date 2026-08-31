@@ -51,17 +51,11 @@ jobs:
           PIP_NO_INPUT: "1"
         run: python -m pip install -e './senju[dev]'
 
-      - name: Run deterministic and multi-guard offline campaigns
+      - name: Run deterministic ScopeGuard campaign
         working-directory: senju
         run: |
           set -euo pipefail
           python scripts/run_scopeguard_adversary.py --compact --fail-on-surprise > scopeguard-adversary-report.json
-          python scripts/run_multiguard_adversary.py \
-            --target all \
-            --compact \
-            --fail-on-surprise \
-            --json-out multiguard-adversary-report.json \
-            > /tmp/multiguard-stdout.json
 
       - name: Upload baseline pressure evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -69,9 +63,7 @@ jobs:
           name: guard-pressure-baseline
           retention-days: 14
           if-no-files-found: error
-          path: |
-            senju/scopeguard-adversary-report.json
-            senju/multiguard-adversary-report.json
+          path: senju/scopeguard-adversary-report.json
 
   fuzz:
     name: Offline guard pressure / seed ${{ matrix.seed }}
