@@ -134,6 +134,22 @@ def _priority(filename: str, row: Mapping[str, Any]) -> int:
     return max(1, min(score, 100))
 
 
+def _terminal_hosts(source_dirs: Iterable[Path]) -> set[str]:
+    blocked: set[str] = set()
+    for directory in source_dirs:
+        for filename in SOURCE_FILES:
+            if filename == "shared_discovery_knowledge.json":
+                continue
+            doc = _load(directory / filename, {})
+            for row in _rows(doc):
+                if not _terminal(row):
+                    continue
+                host = _host(row.get("host") or row.get("target") or row.get("url"))
+                if host:
+                    blocked.add(host)
+    return blocked
+
+
 def _metadata(source_dirs: Iterable[Path]) -> dict[str, dict[str, Any]]:
     meta: dict[str, dict[str, Any]] = {}
     for directory in source_dirs:
@@ -159,8 +175,9 @@ def _metadata(source_dirs: Iterable[Path]) -> dict[str, dict[str, Any]]:
     return meta
 
 
-def _collect(source_dirs: Iterable[Path]) -> dict[str, dict[str, Any]]:
+def _collect(source_dirs: Iterable[Path]) -> tuple[dict[str, dict[str, Any]], set[str]]:
     directories = list(source_dirs)
+    terminal_hosts = _terminal_hosts(directories)
     metadata = _metadata(directories)
     merged: dict[str, dict[str, Any]] = {}
 
@@ -175,7 +192,7 @@ def _collect(source_dirs: Iterable[Path]) -> dict[str, dict[str, Any]]:
                 if _terminal(row) or _satisfied(row):
                     continue
                 host = _host(row.get("host") or row.get("target") or row.get("url"))
-                if not host:
+                if not host or host in terminal_hosts:
                     continue
                 item = merged.setdefault(
                     host,
@@ -224,7 +241,7 @@ def _collect(source_dirs: Iterable[Path]) -> dict[str, dict[str, Any]]:
         item["actors"] = list(info.get("actors", []))[:16]
         item["public_sources"] = list(info.get("sources", []))[:16]
         item["priority"] = min(100, int(item["priority"]) + min(8, max(0, len(item["source_files"]) - 1) * 2))
-    return merged
+    return merged, terminal_hosts
 
 
 def _prior(runtime: Path) -> dict[str, Mapping[str, Any]]:
@@ -251,6 +268,8 @@ def _merge_queue(runtime: Path, opportunities: list[Mapping[str, Any]], now: int
     for relay in opportunities:
         host = str(relay["host"])
         current = by_host.get(host, {})
+        if _terminal(current):
+            continue
         existing_sources = current.get("sources", [])
         if not isinstance(existing_sources, list):
             existing_sources = []
@@ -265,8 +284,6 @@ def _merge_queue(runtime: Path, opportunities: list[Mapping[str, Any]], now: int
             "proposal_only": True,
             "authority_effect": "none",
             "external_action_allowed": False,
-            "hard_deny": False,
-            "revoked": False,
             "relay_count": relay["relay_count"],
         }
 
@@ -282,16 +299,25 @@ def _merge_queue(runtime: Path, opportunities: list[Mapping[str, Any]], now: int
     })
 
 
-def _merge_signals(runtime: Path, opportunities: list[Mapping[str, Any]], now: int) -> None:
+def _merge_signals(
+    runtime: Path,
+    opportunities: list[Mapping[str, Any]],
+    now: int,
+    terminal_hosts: set[str],
+) -> None:
     path = runtime / "owner_scope_negotiation_signals.json"
     doc = _load(path, {})
     existing = doc.get("signals", []) if isinstance(doc, Mapping) else []
     by_id: dict[str, dict[str, Any]] = {}
     for row in existing if isinstance(existing, list) else []:
-        if isinstance(row, Mapping):
-            sid = _clean(row.get("signal_id"), 240)
-            if sid:
-                by_id[sid] = dict(row)
+        if not isinstance(row, Mapping):
+            continue
+        host = _host(row.get("host") or row.get("target") or row.get("url"))
+        if host in terminal_hosts and row.get("source") == "external_input_negotiation_relay":
+            continue
+        sid = _clean(row.get("signal_id"), 240)
+        if sid:
+            by_id[sid] = dict(row)
 
     for relay in opportunities:
         sid = f"external-input-relay-{_stable(relay['host'])[:18]}"
@@ -329,7 +355,7 @@ def run_external_input_negotiation_relay(
     if runtime not in directories:
         directories.append(runtime)
 
-    collected = _collect(directories)
+    collected, terminal_hosts = _collect(directories)
     prior = _prior(runtime)
     opportunities: list[dict[str, Any]] = []
 
@@ -372,7 +398,7 @@ def run_external_input_negotiation_relay(
 
     opportunities.sort(key=lambda row: (-int(row["priority"]), row["host"]))
     _merge_queue(runtime, opportunities, current)
-    _merge_signals(runtime, opportunities, current)
+    _merge_signals(runtime, opportunities, current, terminal_hosts)
 
     result = {
         "schema": SCHEMA,
