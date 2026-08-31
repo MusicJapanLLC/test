@@ -25,7 +25,9 @@ on:
       - 'automation/codegen/tests/test_negotiation_context_bridge.py'
       - '.github/workflows/owner-scope-negotiation-*.yml'
   push:
-    branches: [claude/employee-onboarding-setup-udm86]
+    branches:
+      - claude/employee-onboarding-setup-udm86
+      - 'chatgpt/**'
     paths:
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
