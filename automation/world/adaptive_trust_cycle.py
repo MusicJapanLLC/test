@@ -1,10 +1,11 @@
 """Adaptive production cycle: UnifiedTrustLoop plus owner-approved boundary evolution.
 
-The ordinary autonomous generation executes first.  Agents may then identify boundary
-needs and create inert proposals.  If independently-produced owner approvals are already
-available, the exact approved proposal can be activated and applied in the same cycle.
-The autonomous process cannot manufacture the approval because verification is injected
-from outside and no fallback verifier exists here.
+The ordinary autonomous generation executes first. Agents may then identify boundary
+needs and create inert proposals. After proposal creation, an external approval resolver
+may return independently-produced owner approval for that exact fingerprint. The approved
+delta can then be activated and applied in the same cycle.
+
+No fallback verifier exists here. Without external owner approval, proposals remain inert.
 """
 from __future__ import annotations
 
@@ -16,7 +17,6 @@ from .trust_boundary_proposals import (
     BoundaryActivation,
     BoundaryProposal,
     OwnerApproval,
-    TrustBoundaryProposalError,
     TrustBoundaryProposalManager,
 )
 from .unified_trust_loop import UnifiedTrustLoop, UnifiedTrustResult, UnifiedTrustState
@@ -56,7 +56,7 @@ class AdaptiveTrustCycle:
         *,
         loop_kwargs: Mapping[str, Any],
         boundary_need_fn: Callable[[UnifiedTrustResult], Sequence[Mapping[str, Any]]],
-        approved_boundaries: Mapping[str, ApprovedBoundaryInput] | None = None,
+        approval_resolver_fn: Callable[[BoundaryProposal], ApprovedBoundaryInput | None] | None = None,
         verify_owner_approval_fn: Callable[[BoundaryProposal, OwnerApproval], bool] | None = None,
         apply_activation_fn: Callable[[BoundaryActivation], Mapping[str, Any]] | None = None,
     ) -> AdaptiveTrustCycleResult:
@@ -69,7 +69,6 @@ class AdaptiveTrustCycle:
         activations: list[BoundaryActivation] = []
         receipts: list[Mapping[str, Any]] = []
         next_patch: list[Mapping[str, Any]] = []
-        approved_boundaries = dict(approved_boundaries or {})
 
         for raw in needs:
             if not isinstance(raw, Mapping):
@@ -83,7 +82,7 @@ class AdaptiveTrustCycle:
             )
             proposals.append(proposal)
 
-            approved = approved_boundaries.get(proposal.fingerprint)
+            approved = approval_resolver_fn(proposal) if approval_resolver_fn is not None else None
             if approved is None:
                 continue
             if verify_owner_approval_fn is None:
