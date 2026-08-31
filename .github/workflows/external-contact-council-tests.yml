@@ -6,6 +6,7 @@ on:
     paths:
       - 'senju/senju/external_contact_council.py'
       - 'senju/senju/external_contact_pressure.py'
+      - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/external_contact_pressure_campaign.py'
       - 'senju/tests/test_external_contact_council.py'
       - 'senju/config/external-contact-research-reserves.json'
@@ -17,6 +18,7 @@ on:
     paths:
       - 'senju/senju/external_contact_council.py'
       - 'senju/senju/external_contact_pressure.py'
+      - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/external_contact_pressure_campaign.py'
       - 'senju/tests/test_external_contact_council.py'
       - 'senju/config/external-contact-research-reserves.json'
@@ -42,12 +44,16 @@ jobs:
           python-version: '3.12'
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check -q pytest
-      - name: Verify council, reserve delegation, and pressure bus
+      - name: Verify council, reserve delegation, role demotion, and pressure bus
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
           python -m pytest -q senju/tests/test_external_contact_council.py senju/tests/test_external_contact.py
-          python -m py_compile senju/senju/external_contact_council.py senju/senju/external_contact_pressure.py senju/scripts/external_contact_pressure_campaign.py
+          python -m py_compile \
+            senju/senju/external_contact_council.py \
+            senju/senju/external_contact_pressure.py \
+            senju/senju/negotiated_external_client.py \
+            senju/scripts/external_contact_pressure_campaign.py
       - name: Prove production reserve can exceed current effective method ceiling
         env:
           PYTHONPATH: senju
