@@ -1,4 +1,4 @@
-name: Four Party Owner Frontier Council
+name: Owner Frontier Approval Council
 
 on:
   schedule:
@@ -32,7 +32,7 @@ on:
       - '.github/workflows/security-guard.yml'
 
 concurrency:
-  group: four-party-owner-frontier-council
+  group: owner-frontier-approval-council
   cancel-in-progress: false
 
 jobs:
@@ -54,7 +54,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify four-party frontier and existing negotiation invariants
+      - name: Verify simplified frontier and negotiation invariants
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -63,7 +63,8 @@ jobs:
           python -m pytest -q \
             senju/tests/test_owner_frontier_council.py \
             senju/tests/test_rights_request_federation.py \
-            senju/tests/test_owner_scope_negotiation.py
+            senju/tests/test_owner_scope_negotiation.py \
+            senju/tests/test_frontier_approval_continuity.py
 
       - name: Generate current autonomous rights requests from discovery evidence
         env:
@@ -78,7 +79,7 @@ jobs:
           test "$(jq -r '.closed_loop' /tmp/rights-request-federation.json)" = "true"
           test "$(jq -r '.new_unrelated_authority_self_mint' /tmp/rights-request-federation.json)" = "false"
 
-      - name: Run four-party Owner frontier council
+      - name: Run Owner frontier approval council
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -87,11 +88,13 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --out /tmp/owner-frontier-council.json
-          test "$(jq -r '.four_party_quorum' /tmp/owner-frontier-council.json)" = "4"
+          test "$(jq -r '.approval_quorum' /tmp/owner-frontier-council.json)" = "3"
+          test "$(jq -r '.valid_approval_is_binding' /tmp/owner-frontier-council.json)" = "true"
           test "$(jq -r '.unknown_host_without_verified_evidence_auto_activated' /tmp/owner-frontier-council.json)" = "false"
           test -s senju/state/owner_frontier_ballots.json
           test -s senju/state/owner_frontier_council.json
           test -s senju/state/owner_scope_expansion_evidence_requests.json
+          test -s senju/state/owner_frontier_negotiator_feed.json
           test -s senju/state/owner_contact_ceiling_effective.json
 
       - name: Build bounded frontier state bundle
@@ -106,6 +109,7 @@ jobs:
             senju/state/owner_frontier_ballots.json \
             senju/state/owner_frontier_council.json \
             senju/state/owner_scope_expansion_evidence_requests.json \
+            senju/state/owner_frontier_negotiator_feed.json \
             senju/state/owner_contact_ceiling_effective.json
           do
             test -s "$path"
@@ -115,7 +119,7 @@ jobs:
       - name: Upload reviewed frontier state bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: four-party-owner-frontier-state
+          name: owner-frontier-approval-state
           path: /tmp/frontier-state/
           if-no-files-found: error
           retention-days: 7
@@ -124,7 +128,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: four-party-owner-frontier-evidence-${{ github.run_id }}
+          name: owner-frontier-approval-evidence-${{ github.run_id }}
           path: |
             /tmp/rights-request-federation.json
             /tmp/owner-frontier-council.json
@@ -151,7 +155,7 @@ jobs:
       - name: Download reviewed frontier state bundle
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: four-party-owner-frontier-state
+          name: owner-frontier-approval-state
           path: /tmp/frontier-state
 
       - name: Persist only bounded frontier state through GitHub ref API
@@ -167,6 +171,7 @@ jobs:
             senju/state/owner_frontier_ballots.json
             senju/state/owner_frontier_council.json
             senju/state/owner_scope_expansion_evidence_requests.json
+            senju/state/owner_frontier_negotiator_feed.json
             senju/state/owner_contact_ceiling_effective.json
           )
 
@@ -180,11 +185,11 @@ jobs:
             content="$(base64 -w0 "$src")"
             if [[ -n "$remote_sha" ]]; then
               gh api -X PUT "repos/$REPO/contents/$path" \
-                -f message="chore(authority): persist four-party Owner frontier state [skip ci]" \
+                -f message="chore(authority): persist Owner frontier approval state [skip ci]" \
                 -f content="$content" -f branch="$branch" -f sha="$remote_sha" >/dev/null
             else
               gh api -X PUT "repos/$REPO/contents/$path" \
-                -f message="chore(authority): persist four-party Owner frontier state [skip ci]" \
+                -f message="chore(authority): persist Owner frontier approval state [skip ci]" \
                 -f content="$content" -f branch="$branch" >/dev/null
             fi
           }
@@ -217,6 +222,7 @@ jobs:
               'senju/state/owner_frontier_ballots.json',
               'senju/state/owner_frontier_council.json',
               'senju/state/owner_scope_expansion_evidence_requests.json',
+              'senju/state/owner_frontier_negotiator_feed.json',
               'senju/state/owner_contact_ceiling_effective.json',
           }
           changed = {line.strip() for line in Path('/tmp/frontier-changed.txt').read_text().splitlines() if line.strip()}
@@ -232,7 +238,7 @@ jobs:
             if [[ "$CURRENT_BASE_SHA" == "$BASE_SHA" ]]; then
               gh api -X PATCH "repos/$REPO/git/refs/heads/$BASE" -f sha="$HEAD_SHA" -F force=false >/dev/null
               gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
-              echo "Persisted bounded four-party frontier state to $BASE at $HEAD_SHA"
+              echo "Persisted bounded Owner frontier approval state to $BASE at $HEAD_SHA"
               exit 0
             fi
 
