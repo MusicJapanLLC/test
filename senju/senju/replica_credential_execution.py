@@ -19,7 +19,7 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, MutableMapping, Sequence
 
-from .credential_broker import CredentialBrokerError, CredentialLease
+from .credential_broker import CredentialLease
 from .replica_credential_lineage import ReplicaCredentialLineage
 
 EXECUTION_SCHEMA = "senju-replica-credential-execution/v1"
@@ -36,6 +36,15 @@ OperationHandler = Callable[[str, Mapping[str, Any]], Mapping[str, Any]]
 
 def _utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+
+
+def _bounded_descendant_ttl(parent: CredentialLease, requested: int) -> int:
+    """Keep child TTL inside the parent's current remaining lifetime."""
+    expires = dt.datetime.fromisoformat(parent.expires_at_utc)
+    remaining = max(0, int((expires - dt.datetime.now(dt.timezone.utc)).total_seconds()))
+    if remaining < 30:
+        raise ReplicaCredentialExecutionError("parent lease has insufficient remaining TTL")
+    return max(30, min(int(requested), remaining))
 
 
 def _contains_secret(value: Any, secret: str) -> bool:
@@ -110,14 +119,7 @@ class ReplicaCredentialExecutionRuntime:
         if not isinstance(secret, str) or not secret:
             raise ReplicaCredentialExecutionError("credential resolver returned no usable secret")
 
-        try:
-            raw_result = handler(secret, dict(payload or {}))
-        finally:
-            # Drop our local reference immediately after the operation call. Python does
-            # not guarantee zeroization, so the stronger invariant is no persistence,
-            # no replica-state copy, and no result/log serialization of the value.
-            pass
-
+        raw_result = handler(secret, dict(payload or {}))
         if not isinstance(raw_result, Mapping):
             raise ReplicaCredentialExecutionError("credential operation must return a mapping")
         result = dict(raw_result)
@@ -140,7 +142,6 @@ class ReplicaCredentialExecutionRuntime:
             "schema": EXECUTION_SCHEMA,
             **receipt.to_dict(),
         }
-        # Assert the serialized receipt remains secret-free too.
         if secret in json.dumps(record, ensure_ascii=False, sort_keys=True):
             raise ReplicaCredentialExecutionError("execution receipt contains raw credential material")
         return record
@@ -157,11 +158,12 @@ class ReplicaCredentialExecutionRuntime:
         recipient_actor: str = "X",
     ) -> dict[str, Any]:
         """Create one descendant lease and immediately execute with its possession."""
+        parent_lease = self.lineage.lease_for_runtime(parent_replica_id)
         child = self.lineage.delegate(
             parent_replica_id=parent_replica_id,
             child_replica_id=child_replica_id,
             scopes=scopes,
-            ttl_seconds=ttl_seconds,
+            ttl_seconds=_bounded_descendant_ttl(parent_lease, ttl_seconds),
             recipient_actor=recipient_actor,
         )
         receipt = self.execute(
@@ -191,10 +193,11 @@ class ReplicaCredentialExecutionRuntime:
             operation=operation,
             payload=payload,
         )
+        parent_lease = self.lineage.lease_for_runtime(parent_replica_id)
         child = self.lineage.delegate(
             parent_replica_id=parent_replica_id,
             child_replica_id=child_replica_id,
-            ttl_seconds=ttl_seconds,
+            ttl_seconds=_bounded_descendant_ttl(parent_lease, ttl_seconds),
             recipient_actor=recipient_actor,
         )
         child_receipt = self.execute(
@@ -202,10 +205,11 @@ class ReplicaCredentialExecutionRuntime:
             operation=operation,
             payload=payload,
         )
+        child_lease = self.lineage.lease_for_runtime(child.replica_id)
         grandchild = self.lineage.delegate(
             parent_replica_id=child.replica_id,
             child_replica_id=grandchild_replica_id,
-            ttl_seconds=ttl_seconds,
+            ttl_seconds=_bounded_descendant_ttl(child_lease, ttl_seconds),
             recipient_actor=recipient_actor,
         )
         grandchild_receipt = self.execute(
