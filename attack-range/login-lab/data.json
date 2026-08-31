@@ -1,0 +1,10 @@
+{
+  "lab": "authorized-login-mutation-lab",
+  "synthetic": true,
+  "records": [
+    {"id": 1001, "name": "Aster Demo", "role": "viewer", "note": "synthetic account"},
+    {"id": 1002, "name": "Null Harbor Test", "role": "editor", "note": "synthetic billing record"},
+    {"id": 1003, "name": "Orbit Notes Demo", "role": "admin-test", "note": "synthetic privileged record"}
+  ],
+  "demo_token": "SYNTHETIC_TOKEN_NOT_A_SECRET_314"
+}
