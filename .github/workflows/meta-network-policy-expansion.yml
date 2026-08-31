@@ -18,14 +18,12 @@ on:
 permissions:
   contents: read
   actions: read
-  issues: write
 
 concurrency:
   group: meta-network-policy-expansion
   cancel-in-progress: true
 
 env:
-  REPO: ${{ github.repository }}
   GH_TOKEN: ${{ github.token }}
   PYTHONPATH: ${{ github.workspace }}/automation/codegen:${{ github.workspace }}/senju
 
@@ -48,23 +46,26 @@ jobs:
       - name: Verify network-policy expansion invariants
         run: python automation/codegen/tests/test_network_policy_expansion.py -q
 
-      - name: Load durable previous runtime network policy
+      - name: Restore previous runtime network policy from evidence artifact
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/meta-network-policy
-          ISSUE="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
-            --json number,title --jq '.[] | select(.title == "[THE-WORLD] Runtime Network Policy State") | .number' \
-            | head -n 1 || true)"
-          if [[ -n "$ISSUE" ]]; then
-            gh issue view "$ISSUE" --repo "$GITHUB_REPOSITORY" --json body --jq '.body' \
-              > /tmp/meta-network-policy/previous.json
-            echo "NETWORK_POLICY_ISSUE=$ISSUE" >> "$GITHUB_ENV"
-            echo "loaded durable runtime network policy from issue #$ISSUE"
+          mkdir -p /tmp/meta-network-policy /tmp/meta-network-policy/previous-run
+          RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow "META Network Policy Expansion" --status success --limit 20 \
+            --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN" ]]; then
+            gh run download "$RUN" --repo "$GITHUB_REPOSITORY" \
+              --pattern 'meta-network-policy-expansion-*' \
+              --dir /tmp/meta-network-policy/previous-run || true
+          fi
+          PREVIOUS="$(find /tmp/meta-network-policy/previous-run -name runtime-final.json -print -quit || true)"
+          if [[ -n "$PREVIOUS" ]]; then
+            cp "$PREVIOUS" /tmp/meta-network-policy/previous.json
+            echo "loaded previous runtime network policy from run $RUN"
           else
             printf '{}\n' > /tmp/meta-network-policy/previous.json
-            echo "NETWORK_POLICY_ISSUE=" >> "$GITHUB_ENV"
-            echo "no previous durable runtime network policy"
+            echo "no previous runtime artifact; starting from empty state"
           fi
 
       - name: Restore latest external response and agent evidence
@@ -127,26 +128,11 @@ jobs:
           cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime-final.json
           cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/post-apply-decision-audit.json
 
-      - name: Persist final production network policy state
-        shell: bash
-        run: |
-          set -euo pipefail
-          body=/tmp/meta-network-policy/runtime-final.json
-          if [[ -n "${NETWORK_POLICY_ISSUE:-}" ]]; then
-            gh issue edit "$NETWORK_POLICY_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file "$body"
-            echo "updated durable network policy issue #$NETWORK_POLICY_ISSUE"
-          else
-            url="$(gh issue create --repo "$GITHUB_REPOSITORY" \
-              --title "[THE-WORLD] Runtime Network Policy State" \
-              --body-file "$body")"
-            echo "created durable network policy state: $url"
-          fi
-
-      - name: Preserve Detection -> Apply -> Audit evidence
+      - name: Preserve Detection -> Apply -> Audit evidence and next runtime state
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: meta-network-policy-expansion-${{ github.run_id }}
           path: /tmp/meta-network-policy/
           if-no-files-found: warn
-          retention-days: 14
+          retention-days: 30
