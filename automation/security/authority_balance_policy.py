@@ -10,6 +10,8 @@ This module deliberately does NOT weaken the four authority safety invariants:
 Instead it reduces operational friction around those boundaries by 35% and
 requires unanimous modeled approval from META, X, and Senju before the tuning
 is considered active.
+
+Revalidation marker: run the same council contract after automatic base updates.
 """
 from __future__ import annotations
 
