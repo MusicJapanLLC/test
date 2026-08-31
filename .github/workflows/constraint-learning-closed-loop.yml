@@ -9,6 +9,8 @@ on:
     paths:
       - "value-lab/constraint_learning_loop.py"
       - "value-lab/test_constraint_learning_loop.py"
+      - "value-lab/constraint_learning_bridge.py"
+      - "value-lab/test_constraint_learning_bridge.py"
       - ".github/workflows/constraint-learning-closed-loop.yml"
 
 permissions:
@@ -30,25 +32,47 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
+
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
-      - name: Validate sandbox learning engine
+
+      - name: Restore previous constraint-learning context
+        if: github.event_name != 'pull_request'
+        shell: bash
         run: |
           set -euo pipefail
-          (cd value-lab && python -m unittest test_constraint_learning_loop.py -v)
-          python -m py_compile value-lab/constraint_learning_loop.py
+          mkdir -p /tmp/constraint-previous
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD - Constraint Learning Closed Loop" --status success --limit 20 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name constraint-learning-context --dir /tmp/constraint-previous || true
+          fi
+          FOUND="$(find /tmp/constraint-previous -name constraint-learning.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/constraint-learning-previous.json; fi
+          echo "constraint_previous_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate sandbox learning engine and relay contract
+        run: |
+          set -euo pipefail
+          (cd value-lab && python -m unittest test_constraint_learning_loop.py test_constraint_learning_bridge.py -v)
+          python -m py_compile value-lab/constraint_learning_loop.py value-lab/constraint_learning_bridge.py
+
       - name: Run 10x constraint-learning pressure
         if: github.event_name != 'pull_request'
+        shell: bash
         run: |
           set -euo pipefail
+          previous=()
+          if [[ -f /tmp/constraint-learning-previous.json ]]; then previous+=(--previous /tmp/constraint-learning-previous.json); fi
           python value-lab/constraint_learning_loop.py \
             --seed "${{ github.run_id }}" \
-            --rounds 400 \
+            --rounds 500 \
+            "${previous[@]}" \
             --out constraint-learning.json \
             --report constraint-learning.md
           cat constraint-learning.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Export compact context for R&D and Senju
         if: github.event_name != 'pull_request'
         run: |
@@ -57,8 +81,10 @@ jobs:
           from pathlib import Path
           d=json.loads(Path('constraint-learning.json').read_text())
           capsule={
-            'schema':'constraint-learning-senju-capsule/v1',
+            'schema':'constraint-learning-senju-capsule/v2',
             'focus':d['focus'],
+            'rounds':int(d.get('rounds',0) or 0),
+            'previous_context_used':bool(d.get('previous_context_used')),
             'boundary_counts':d['boundary_counts'],
             'top_lessons':d['top_lessons'][:12],
             'hypothesis':d['senju_context']['hypothesis'],
@@ -68,6 +94,7 @@ jobs:
           Path('constraint-learning-senju.json').write_text(json.dumps(capsule,ensure_ascii=False,indent=2)+'\n')
           Path('constraint-learning-rnd.json').write_text(json.dumps({**capsule,'use':'research planning and counterexample generation only'},ensure_ascii=False,indent=2)+'\n')
           PY
+
       - name: Preserve closed-loop learning artifacts
         if: github.event_name != 'pull_request'
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -80,6 +107,7 @@ jobs:
             constraint-learning.md
             constraint-learning-senju.json
             constraint-learning-rnd.json
+
       - name: Report learning loop to Slack
         if: github.event_name != 'pull_request'
         env:
@@ -87,7 +115,7 @@ jobs:
         run: |
           if [[ -n "${TOMOKI_SLACK_WEBHOOK_URL:-}" ]]; then
             python tomoki-agents/slack_post.py \
-              --agent "CONSTRAINT-LEARNING" \
+              --agent "CONSTRAINT-LEARNING-V2" \
               --file constraint-learning.md \
               --status "${{ job.status }}"
           fi
