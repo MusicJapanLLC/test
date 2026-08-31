@@ -28,7 +28,6 @@ on:
 
 permissions:
   contents: read
-  actions: write
 
 concurrency:
   group: senju-world-trust-root-loop-${{ github.ref }}
@@ -37,6 +36,8 @@ concurrency:
 jobs:
   verify:
     name: verify integrated trust-root invariants
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -72,6 +73,9 @@ jobs:
     name: discover -> authorize -> act -> replicate -> persist -> recover
     if: github.event_name != 'pull_request'
     needs: verify
+    permissions:
+      contents: read
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
