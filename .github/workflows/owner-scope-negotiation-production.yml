@@ -7,6 +7,10 @@ on:
   push:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - '.github/workflows/owner-scope-negotiation-production.yml'
+      - '.github/workflows/external-input-negotiation-relay.yml'
+      - 'automation/codegen/engine/external_input_negotiation_relay.py'
+      - 'automation/codegen/tests/test_external_input_negotiation_relay.py'
       - 'senju/state/owner_scope_expansion_evidence.json'
       - 'senju/state/owner_scope_negotiation_ballots.json'
       - 'senju/state/owner_scope_negotiation_signals.json'
