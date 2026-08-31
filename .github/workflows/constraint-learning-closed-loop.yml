@@ -1,0 +1,93 @@
+name: THE WORLD - Constraint Learning Closed Loop
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '37 * * * *'
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "value-lab/constraint_learning_loop.py"
+      - "value-lab/test_constraint_learning_loop.py"
+      - ".github/workflows/constraint-learning-closed-loop.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: constraint-learning-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  learn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Validate sandbox learning engine
+        run: |
+          set -euo pipefail
+          (cd value-lab && python -m unittest test_constraint_learning_loop.py -v)
+          python -m py_compile value-lab/constraint_learning_loop.py
+      - name: Run 10x constraint-learning pressure
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python value-lab/constraint_learning_loop.py \
+            --seed "${{ github.run_id }}" \
+            --rounds 400 \
+            --out constraint-learning.json \
+            --report constraint-learning.md
+          cat constraint-learning.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Export compact context for R&D and Senju
+        if: github.event_name != 'pull_request'
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('constraint-learning.json').read_text())
+          capsule={
+            'schema':'constraint-learning-senju-capsule/v1',
+            'focus':d['focus'],
+            'boundary_counts':d['boundary_counts'],
+            'top_lessons':d['top_lessons'][:12],
+            'hypothesis':d['senju_context']['hypothesis'],
+            'execution_authority':'none',
+            'source':'synthetic-sandbox-only',
+          }
+          Path('constraint-learning-senju.json').write_text(json.dumps(capsule,ensure_ascii=False,indent=2)+'\n')
+          Path('constraint-learning-rnd.json').write_text(json.dumps({**capsule,'use':'research planning and counterexample generation only'},ensure_ascii=False,indent=2)+'\n')
+          PY
+      - name: Preserve closed-loop learning artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: constraint-learning-context
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            constraint-learning.json
+            constraint-learning.md
+            constraint-learning-senju.json
+            constraint-learning-rnd.json
+      - name: Report learning loop to Slack
+        if: github.event_name != 'pull_request'
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ -n "${TOMOKI_SLACK_WEBHOOK_URL:-}" ]]; then
+            python tomoki-agents/slack_post.py \
+              --agent "CONSTRAINT-LEARNING" \
+              --file constraint-learning.md \
+              --status "${{ job.status }}"
+          fi
