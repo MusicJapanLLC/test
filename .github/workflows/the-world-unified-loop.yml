@@ -11,12 +11,14 @@ on:
       - 'automation/codegen/engine/the_world_unified_loop.py'
       - 'automation/codegen/run_the_world_unified_loop.py'
       - 'automation/codegen/the_world_final_contract.py'
+      - 'automation/codegen/seed_the_world_owner_authority.py'
       - 'automation/codegen/run_discovery_action_failover.py'
       - 'automation/codegen/engine/discovery_*.py'
       - 'automation/codegen/engine/network_policy_expansion.py'
       - 'automation/codegen/meta_state/**'
       - 'automation/codegen/tests/test_the_world_unified_loop.py'
       - 'automation/codegen/tests/test_the_world_final_contract.py'
+      - 'automation/codegen/tests/test_the_world_owner_authority_seed.py'
       - 'automation/codegen/tests/test_discovery_action_failover.py'
       - 'automation/recovery/**'
       - 'senju/senju/credential_*.py'
@@ -66,6 +68,7 @@ jobs:
           python -m pytest -q \
             automation/codegen/tests/test_the_world_unified_loop.py \
             automation/codegen/tests/test_the_world_final_contract.py \
+            automation/codegen/tests/test_the_world_owner_authority_seed.py \
             automation/codegen/tests/test_discovery_capability_leases.py \
             automation/codegen/tests/test_discovery_external_action.py \
             automation/codegen/tests/test_discovery_action_failover.py \
@@ -81,6 +84,16 @@ jobs:
         run: |
           mkdir -p .the-world-runtime
           python automation/recovery/stop_learning_runner.py | tee .the-world-runtime/stop-learning-run.json
+
+      - name: Activate explicit owner authority roots in production discovery
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python automation/codegen/seed_the_world_owner_authority.py \
+            --state .the-world-runtime \
+            --repo-root .
+          test "$(jq -r '.seed_count' .the-world-runtime/the_world_owner_authority_seed.json)" -ge 1
+          test "$(jq -r '.new_trust_roots_created' .the-world-runtime/the_world_owner_authority_seed.json)" = "false"
 
       - name: Run unified Self-Tuning -> Authority -> Action -> Persistence -> Recovery loop
         env:
