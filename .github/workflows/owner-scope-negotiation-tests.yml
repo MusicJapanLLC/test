@@ -8,6 +8,7 @@ on:
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/owner_scope_negotiation.py'
+      - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/config/owner-expansion-envelope.json'
       - '.github/workflows/owner-scope-negotiation-*.yml'
@@ -17,6 +18,7 @@ on:
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/negotiated_external_client.py'
+      - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
 
 permissions:
@@ -44,4 +46,15 @@ jobs:
             senju/senju/owner_scope_negotiation.py \
             senju/senju/owner_scope_negotiation_runtime.py \
             senju/senju/negotiated_external_client.py \
-            senju/scripts/owner_scope_negotiation.py
+            senju/scripts/owner_scope_negotiation.py \
+            senju/scripts/negotiated_external_probe.py
+      - name: Verify production workflow has no repository writer
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=.github/workflows/owner-scope-negotiation-production.yml
+          grep -q 'contents: read' "$file"
+          grep -q 'persist-credentials: false' "$file"
+          ! grep -q 'contents: write' "$file"
+          ! grep -q 'git push ' "$file"
+          ! grep -q 'pull_request_target:' "$file"
