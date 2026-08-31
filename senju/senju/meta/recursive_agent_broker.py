@@ -1,10 +1,11 @@
 """Brokered recursive descendant requests for META and X.
 
-Agent descendants may request further descendants with no fixed per-request count
-ceiling. The broker materializes only as many live agents as the configured global
-activation budget allows, and every descendant receives a fresh revocable grant
-whose scopes are equal to or narrower than its parent. Raw credentials are never
-copied between generations.
+Descendant lineages may express very large replication plans without copying raw
+credentials or turning the requested population into simultaneous live agents.
+The queue accepts up to one million requested descendants per lineage request;
+materialization still passes through a bounded live-agent broker. Every activated
+descendant receives a fresh revocable grant whose scopes are equal to or narrower
+than its parent.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ from senju.meta.agent_factory import AgentSpec, DelegatedGrant, ROOT_SYSTEMS
 
 MAX_ACTIVE_AGENTS = 50
 MAX_GENERATION = 4
+MAX_QUEUED_DESCENDANTS = 1_000_000
 
 
 @dataclasses.dataclass(frozen=True)
@@ -26,6 +28,7 @@ class SpawnRequest:
     parent_scopes: tuple[str, ...]
     requested_scopes: tuple[str, ...]
     desired_count: int
+    queue_limit: int = MAX_QUEUED_DESCENDANTS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -33,6 +36,7 @@ class BrokerResult:
     materialized: tuple[AgentSpec, ...]
     deferred_count: int
     active_limit: int
+    queue_limit: int
     next_generation: int
 
 
@@ -52,10 +56,11 @@ def request_descendants(
     desired_count: int,
     requested_scopes: Sequence[str] | None = None,
 ) -> SpawnRequest:
-    """Create a recursive spawn request without directly minting agents.
+    """Create a brokered recursive spawn request.
 
-    ``desired_count`` intentionally has no fixed ten-agent ceiling. Capacity is
-    enforced only when the broker materializes the request.
+    A lineage may request up to ``MAX_QUEUED_DESCENDANTS`` descendants in one
+    logical plan. This is a queue/planning capacity, not a simultaneous live-agent
+    allowance. Activation remains brokered and bounded separately.
     """
     normalized_system = system.strip().upper()
     if normalized_system not in ROOT_SYSTEMS:
@@ -68,6 +73,10 @@ def request_descendants(
         raise PermissionError("maximum recursive generation reached")
     if desired_count < 1:
         raise ValueError("desired_count must be positive")
+    if desired_count > MAX_QUEUED_DESCENDANTS:
+        raise ValueError(
+            f"desired_count may not exceed queued descendant capacity {MAX_QUEUED_DESCENDANTS}"
+        )
 
     parent = _normalize_scopes(parent_scopes)
     requested = _normalize_scopes(requested_scopes if requested_scopes is not None else parent)
@@ -104,7 +113,7 @@ def materialize_spawn_request(
     active_limit: int = MAX_ACTIVE_AGENTS,
     start_index: int = 1,
 ) -> BrokerResult:
-    """Materialize a recursive request within the global live-agent budget."""
+    """Materialize part of a large queued request within the live-agent budget."""
     if active_agents < 0:
         raise ValueError("active_agents cannot be negative")
     if active_limit < 1:
@@ -139,5 +148,6 @@ def materialize_spawn_request(
         materialized=tuple(agents),
         deferred_count=request.desired_count - materialize_count,
         active_limit=active_limit,
+        queue_limit=request.queue_limit,
         next_generation=next_generation,
     )
