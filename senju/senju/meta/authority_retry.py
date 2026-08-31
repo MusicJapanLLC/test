@@ -234,6 +234,17 @@ def plan_authority_retries(graph: Any, state_dir: Path, registry_path: Path) -> 
     return commands, summary
 
 
+def _dispatch_failed(result: Any) -> bool:
+    if not isinstance(result, dict):
+        return True
+    if "_error" in result or "_unknown_kind" in result:
+        return True
+    nested = result.get("result")
+    if isinstance(nested, dict) and ("_error" in nested or "_unknown_kind" in nested):
+        return True
+    return False
+
+
 def record_dispatch_results(commands: list[dict[str, Any]], results: list[dict[str, Any]], state_dir: Path) -> None:
     """Persist whether a planned authority delegation was actually dispatched."""
     state_path = state_dir / STATE_FILE
@@ -251,8 +262,7 @@ def record_dispatch_results(commands: list[dict[str, Any]], results: list[dict[s
         attempt = next((a for a in reversed(chain.get("attempts", [])) if a.get("agent") == agent and a.get("status") == "planned"), None)
         if attempt is None:
             continue
-        failed = isinstance(result, dict) and ("_error" in result or "_unknown_kind" in result)
-        if failed:
+        if _dispatch_failed(result):
             attempt["status"] = "dispatch_error"
             attempt["result"] = result
             chain["status"] = "dispatch_error"
