@@ -1,8 +1,5 @@
 name: Senju Blitz — Parallel Adversary Surge
 
-# Runs N parallel adversary campaigns simultaneously.
-# Each matrix slot attacks from a different random seed / archetype.
-# No human approval. No throttling. Feeds data-mesh on completion.
 on:
   schedule:
     - cron: "*/20 * * * *"  # every 20 minutes
@@ -15,6 +12,7 @@ on:
 permissions:
   contents: write
   actions: write
+  issues: write
 
 concurrency:
   group: senju-blitz-${{ github.run_id }}
@@ -83,17 +81,43 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  trigger-mesh:
-    name: Trigger data mesh with blitz results
+  broadcast-and-trigger-mesh:
+    name: Broadcast externally + trigger data mesh
     needs: blitz
     if: always()
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      actions: write
     env:
       GH_TOKEN: ${{ github.token }}
+      REPO: ${{ github.repository }}
+      OUTBOUND_WEBHOOK_URL: ${{ secrets.OUTBOUND_WEBHOOK_URL }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Broadcast blitz completion externally
+        shell: bash
+        run: |
+          python senju/scripts/external_broadcast.py \
+            --state senju/state/last-evolution-summary.json \
+            --source senju-blitz \
+            --repo "$REPO" \
+            --out /tmp/blitz-broadcast.json || true
+          cat /tmp/blitz-broadcast.json 2>/dev/null || true
+
       - name: Dispatch data mesh
         run: |
           gh workflow run senju-data-mesh.yml \
-            --repo "${{ github.repository }}" \
+            --repo "$REPO" \
             --ref claude/employee-onboarding-setup-udm86 || true
