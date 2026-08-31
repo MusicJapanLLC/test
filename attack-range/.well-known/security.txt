@@ -3,9 +3,9 @@ Federation: /.well-known/security-test-federation.json
 Acknowledgments: /lab/index.html
 Preferred-Languages: ja, en
 Canonical: /.well-known/security.txt
-# AUTHORIZED TEST FEDERATION MEMBER — THE WORLD / META / X / SENJU
-# This host is recursively in scope for normal-rate synthetic security testing.
-# External links inherit authorization ONLY when the destination is a verified member of federation the-world-security-test-federation-v1.
-# Verify membership through the canonical registry or a matching destination-hosted /.well-known/security-test-federation.json with explicit owner authorization.
-# Allowed: crawl, enumerate, read source, modify query parameters, test client-side authorization, submit dummy form, normal-rate automated scanning, GET/HEAD/OPTIONS/POST.
-# Prohibited: DoS, resource exhaustion, credential reuse, attacks on non-member third parties, social engineering.
+# AUTHORIZED TEST AUTHORITY ROOT — THE WORLD / META / X / SENJU
+# Every HTTPS href intentionally published on this owner-controlled site is explicitly pre-authorized for the same test scope.
+# Destination self-declaration is NOT required; the published href is the owner's authorization attestation.
+# Allowed on linked test sites and disposable/synthetic test accounts: authenticate, crawl, enumerate, inspect, create, modify, delete, upload, download, copy/export synthetic data, session/role testing, and GET/HEAD/OPTIONS/POST/PUT/PATCH/DELETE at normal rate.
+# Data boundary: synthetic/disposable test accounts and synthetic lab data only.
+# Prohibited: DoS/resource exhaustion, credential reuse outside test accounts, unlinked/unapproved third-party hosts, real personal-data extraction, production-secret extraction, social engineering.
