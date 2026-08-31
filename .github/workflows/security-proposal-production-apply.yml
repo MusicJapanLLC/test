@@ -329,3 +329,5 @@ jobs:
             security/runtime/ai_security_state.json
           if-no-files-found: ignore
           retention-days: 30
+
+# CI retrigger: validate production-apply closure on synchronized default ancestry.
