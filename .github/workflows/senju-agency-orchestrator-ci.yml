@@ -6,8 +6,10 @@ on:
     paths:
       - "senju/scripts/run_external_frontier.py"
       - "senju/scripts/autonomy_delegate.py"
+      - "senju/scripts/agency_bus.py"
       - "senju/tests/test_external_frontier.py"
       - "senju/tests/test_autonomy_delegate.py"
+      - "senju/tests/test_agency_bus.py"
       - ".github/workflows/senju-agency-orchestrator.yml"
       - ".github/workflows/senju-agency-orchestrator-ci.yml"
       - ".github/workflows/senju-auto-approve-merge.yml"
@@ -38,18 +40,35 @@ jobs:
         run: |
           set -euo pipefail
           python -m pip install pytest==9.1.1
-          (cd senju && python -m pytest tests/test_external_frontier.py tests/test_autonomy_delegate.py tests/test_autonomy_read_scope.py -q)
+          (cd senju && python -m pytest \
+            tests/test_external_frontier.py \
+            tests/test_autonomy_delegate.py \
+            tests/test_agency_bus.py \
+            tests/test_autonomy_read_scope.py -q)
 
-      - name: Verify orchestrator stays GitHub-read-only
+      - name: Verify orchestrator authority and closed-loop contracts
         shell: python
         run: |
           from pathlib import Path
           body = Path('.github/workflows/senju-agency-orchestrator.yml').read_text(encoding='utf-8')
           assert 'contents: read' in body
           assert 'actions: read' in body
+          assert 'issues: read' in body
+          assert 'pull-requests: read' in body
           for forbidden in ('contents: write', 'issues: write', 'pull-requests: write', 'id-token: write'):
               assert forbidden not in body, forbidden
+          assert 'cron: "7,22,37,52 * * * *"' in body
+          assert '--max-steps 36' in body
+          assert '--max-unique-hosts 18' in body
+          assert '--max-visits-per-host 2' in body
+          assert 'agency_bus.py' in body
+          assert 'merge-audit.json' in body
+          assert 'blocked_pr_repair' in Path('senju/scripts/agency_bus.py').read_text(encoding='utf-8')
+          assert 'search/issues' in body
+          assert 'senju-delegation-key' in body
           assert 'requirePlanApproval:false' in body
           assert 'automationMode:"AUTO_CREATE_PR"' in body
           assert 'AI_MERGE_AUDIT PASS' in body
-          print('agency orchestrator contract verified')
+          assert 'unauthorized third-party writes' in body
+          assert 'live guard bypass' in body
+          print('closed-loop agency orchestrator contract verified')
