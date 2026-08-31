@@ -2,12 +2,17 @@ name: Persistent Boundary Evolution Tests
 
 on:
   push:
-    branches: [chatgpt/persistent-boundary-evolution-v2]
+    branches:
+      - chatgpt/persistent-boundary-evolution-v2
+      - chatgpt/boundary-opportunity-miner
     paths:
       - 'automation/world/persistent_boundary_evolution.py'
       - 'automation/world/test_persistent_boundary_evolution.py'
       - 'automation/world/trust_boundary_proposals.py'
       - 'automation/world/test_trust_boundary_proposals.py'
+      - 'automation/world/boundary_opportunity_miner.py'
+      - 'automation/world/run_boundary_opportunity_cycle.py'
+      - 'automation/world/test_boundary_opportunity_miner.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
@@ -16,6 +21,9 @@ on:
       - 'automation/world/test_persistent_boundary_evolution.py'
       - 'automation/world/trust_boundary_proposals.py'
       - 'automation/world/test_trust_boundary_proposals.py'
+      - 'automation/world/boundary_opportunity_miner.py'
+      - 'automation/world/run_boundary_opportunity_cycle.py'
+      - 'automation/world/test_boundary_opportunity_miner.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
 
 permissions:
@@ -38,4 +46,5 @@ jobs:
         run: |
           python -m pytest -q \
             automation/world/test_trust_boundary_proposals.py \
-            automation/world/test_persistent_boundary_evolution.py
+            automation/world/test_persistent_boundary_evolution.py \
+            automation/world/test_boundary_opportunity_miner.py
