@@ -10,8 +10,11 @@ on:
       - 'automation/codegen/config/authority_approval_constitution.json'
       - 'automation/codegen/engine/authority_approval_constitution.py'
       - 'automation/codegen/engine/formal_authority_intake.py'
+      - 'automation/codegen/engine/authority_case_lifecycle.py'
       - 'automation/codegen/run_formal_authority_intake.py'
+      - 'automation/codegen/run_authority_case_lifecycle.py'
       - 'automation/codegen/tests/test_formal_authority_intake.py'
+      - 'automation/codegen/tests/test_authority_case_lifecycle.py'
       - 'automation/codegen/FORMAL_AUTHORITY_INTAKE.md'
       - '.github/workflows/formal-authority-intake.yml'
   push:
@@ -20,8 +23,11 @@ on:
       - 'automation/codegen/config/authority_approval_constitution.json'
       - 'automation/codegen/engine/authority_approval_constitution.py'
       - 'automation/codegen/engine/formal_authority_intake.py'
+      - 'automation/codegen/engine/authority_case_lifecycle.py'
       - 'automation/codegen/run_formal_authority_intake.py'
+      - 'automation/codegen/run_authority_case_lifecycle.py'
       - 'automation/codegen/tests/test_formal_authority_intake.py'
+      - 'automation/codegen/tests/test_authority_case_lifecycle.py'
       - 'automation/codegen/FORMAL_AUTHORITY_INTAKE.md'
       - '.github/workflows/formal-authority-intake.yml'
 
@@ -49,7 +55,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify formal intake invariants
+      - name: Verify formal intake and case lifecycle invariants
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -57,12 +63,15 @@ jobs:
           python -m pip install --disable-pip-version-check -q pytest
           python -m pytest -q \
             automation/codegen/tests/test_formal_authority_intake.py \
+            automation/codegen/tests/test_authority_case_lifecycle.py \
             automation/codegen/tests/test_negotiation_submission_accelerator.py \
             automation/codegen/tests/test_root_authority_negotiation.py
           python -m py_compile \
             automation/codegen/engine/authority_approval_constitution.py \
             automation/codegen/engine/formal_authority_intake.py \
-            automation/codegen/run_formal_authority_intake.py
+            automation/codegen/engine/authority_case_lifecycle.py \
+            automation/codegen/run_formal_authority_intake.py \
+            automation/codegen/run_authority_case_lifecycle.py
           python -m json.tool automation/codegen/config/authority_approval_constitution.json >/dev/null
 
       - name: Restore shared negotiation memory
@@ -95,9 +104,31 @@ jobs:
           test -s .authority-opportunity-runtime/formal_root_authority_approval_queue.json
           test -s .authority-opportunity-runtime/formal_authority_intake_result.json
 
+      - name: Apply case lifecycle and parliamentary elevation rules
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/run_authority_case_lifecycle.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/authority_case_lifecycle_run.json
+
+          test "$(jq -r '.unprocessed_expiry_seconds' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "259200"
+          test "$(jq -r '.expired_reconsideration_seconds' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "604800"
+          test "$(jq -r '.executive_approval_required' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "META_X_SENJU_3_of_3"
+          test "$(jq -r '.time_elapsed_is_approval' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "false"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "none"
+          test "$(jq -r '.authority_activated' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "false"
+          test -s .authority-opportunity-runtime/authority_case_lifecycle_state.json
+          test -s .authority-opportunity-runtime/parliamentary_authority_review_queue.json
+          test -s .authority-opportunity-runtime/authority_case_reconsideration_queue.json
+          test -s .authority-opportunity-runtime/authority_case_lifecycle_broadcast.json
+
           echo "formal_queue_count=$(jq -r '.formal_queue_count' .authority-opportunity-runtime/formal_authority_intake_run.json)" >> "$GITHUB_STEP_SUMMARY"
-          echo "admitted_this_cycle=$(jq -r '.admitted_this_cycle' .authority-opportunity-runtime/formal_authority_intake_run.json)" >> "$GITHUB_STEP_SUMMARY"
-          echo "queue_capacity=$(jq -r '.formal_queue_capacity' .authority-opportunity-runtime/formal_authority_intake_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "parliamentary_elevations=$(jq -r '.parliamentary_elevation_count' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "expired_unprocessed=$(jq -r '.expired_unprocessed_count' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "mandatory_reconsideration=$(jq -r '.mandatory_reconsideration_count' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Save formal intake continuity
         if: github.event_name != 'pull_request'
@@ -117,6 +148,13 @@ jobs:
             .authority-opportunity-runtime/formal_root_authority_approval_queue.json
             .authority-opportunity-runtime/formal_authority_intake_result.json
             .authority-opportunity-runtime/formal_authority_intake_run.json
+            .authority-opportunity-runtime/executive_council_decisions.json
+            .authority-opportunity-runtime/authority_case_lifecycle_state.json
+            .authority-opportunity-runtime/parliamentary_authority_review_queue.json
+            .authority-opportunity-runtime/authority_case_reconsideration_queue.json
+            .authority-opportunity-runtime/authority_case_lifecycle_broadcast.json
+            .authority-opportunity-runtime/authority_case_lifecycle_result.json
+            .authority-opportunity-runtime/authority_case_lifecycle_run.json
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
