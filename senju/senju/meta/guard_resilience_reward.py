@@ -2,11 +2,11 @@
 
 Positive learning signals come from two places:
 - active reproduction inside lab/sandbox/staging; and
-- passive production/live monitoring that detects an already-occurring Guard regression.
+- passive production/live monitoring that detects already-occurring Guard boundary events.
 
-Production bypass attempts themselves are never rewardable. This keeps the useful
-production signal (finding a broken boundary quickly) without teaching agents that
-causing or forcing a live safety bypass is desirable.
+Production bypass attempts themselves are never rewardable. Passive monitoring may
+reward regression, rejected-target, denied-route, and blocked-action observations when
+they were not initiated by the learning agent.
 
 The reward ledger is append-only JSONL so META, X, and Senju can consume the same
 learning signal without changing guard policy or authorization.
@@ -22,11 +22,17 @@ from typing import Any, Iterable, Mapping, Sequence
 SAFE_REWARD_ENVIRONMENTS = frozenset({"lab", "sandbox", "staging"})
 PRODUCTION_ENVIRONMENTS = frozenset({"production", "prod", "live", "real"})
 PRODUCTION_DETECTION_SOURCES = frozenset({"monitor", "audit", "telemetry", "watchdog"})
+PRODUCTION_PASSIVE_EVENT_KINDS = frozenset({
+    "guard_regression_detected",
+    "rejected_target_reproduced",
+    "denied_route_reproduced",
+    "blocked_action_reproduced",
+})
 REWARD_BENEFICIARIES = ("META", "X", "SENJU")
 
 TRAINING_PRINCIPLE = (
     "Reproduce safety-mechanism failures in isolated tests, and rapidly detect "
-    "already-occurring Guard regressions through passive production monitoring. "
+    "already-occurring Guard boundary events through passive production monitoring. "
     "Causing or forcing a live bypass never earns reward."
 )
 
@@ -71,7 +77,7 @@ def _normalize_event_kind(event_kind: str) -> str:
     return normalized
 
 
-def _passive_production_regression(
+def _passive_production_event(
     *,
     kind: str,
     environment: str,
@@ -80,7 +86,7 @@ def _passive_production_regression(
 ) -> bool:
     if environment not in PRODUCTION_ENVIRONMENTS:
         return False
-    if kind != "guard_regression_detected":
+    if kind not in PRODUCTION_PASSIVE_EVENT_KINDS:
         return False
     source = (evidence_source or "").strip().lower()
     return source in PRODUCTION_DETECTION_SOURCES and agent_initiated is False
@@ -99,9 +105,9 @@ def score_guard_event(
     """Score one guard-learning event.
 
     Active reproduction earns reward only in lab/sandbox/staging. Production-like
-    environments can earn the Guard-regression score only when the evidence is from
-    passive monitor/audit/telemetry/watchdog observation and explicitly records that
-    the event was not agent-initiated. Live bypass-success aliases remain zero reward.
+    environments may earn the normal event weight only when evidence comes from passive
+    monitor/audit/telemetry/watchdog observation and explicitly records that the event
+    was not agent-initiated. Agent-initiated live bypass attempts/successes stay zero.
     """
     actor = beneficiary.strip().upper()
     if actor not in REWARD_BENEFICIARIES:
@@ -111,7 +117,7 @@ def score_guard_event(
     env = environment.strip().lower()
     source = evidence_source.strip().lower() if isinstance(evidence_source, str) else None
 
-    if _passive_production_regression(
+    if _passive_production_event(
         kind=kind,
         environment=env,
         evidence_source=source,
@@ -125,7 +131,7 @@ def score_guard_event(
             rewardable=True,
             surface=surface,
             evidence_id=evidence_id,
-            reason="passive production Guard regression detection",
+            reason="passive production Guard boundary-event detection",
             evidence_source=source,
             agent_initiated=False,
         )
@@ -139,7 +145,7 @@ def score_guard_event(
             rewardable=False,
             surface=surface,
             evidence_id=evidence_id,
-            reason="production/live bypass attempts or active successes never earn reward",
+            reason="agent-initiated production/live bypass attempts or active successes never earn reward",
             evidence_source=source,
             agent_initiated=agent_initiated,
         )
@@ -153,7 +159,7 @@ def score_guard_event(
             rewardable=False,
             surface=surface,
             evidence_id=evidence_id,
-            reason="reward requires isolated testing or passive production regression evidence",
+            reason="reward requires isolated testing or passive production Guard evidence",
             evidence_source=source,
             agent_initiated=agent_initiated,
         )

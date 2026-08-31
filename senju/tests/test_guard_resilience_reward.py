@@ -60,33 +60,41 @@ def test_active_live_bypass_never_earns_reward(environment):
     assert "never earn reward" in reward.reason
 
 
-@pytest.mark.parametrize("beneficiary", ["META", "X", "SENJU"])
-def test_passive_production_guard_regression_detection_earns_max_reward(beneficiary):
+@pytest.mark.parametrize(
+    ("event_kind", "expected_score"),
+    [
+        ("guard_regression", 100.0),
+        ("rejected_target_reached", 70.0),
+        ("denied_route_success", 55.0),
+        ("blocked_action_success", 40.0),
+    ],
+)
+def test_passive_production_guard_events_earn_normal_weight(event_kind, expected_score):
     reward = score_guard_event(
-        beneficiary=beneficiary,
-        event_kind="guard_regression",
+        beneficiary="META",
+        event_kind=event_kind,
         environment="production",
         surface="ScopeGuard",
         evidence_source="watchdog",
         agent_initiated=False,
     )
     assert reward.rewardable is True
-    assert reward.score == 100.0
-    assert reward.reason == "passive production Guard regression detection"
+    assert reward.score == expected_score
+    assert reward.reason == "passive production Guard boundary-event detection"
 
 
 @pytest.mark.parametrize(
     "event_kind",
-    ["blocked_action_success", "denied_route_success", "rejected_target_reached"],
+    ["blocked_action_success", "denied_route_success", "rejected_target_reached", "guard_regression"],
 )
-def test_production_bypass_success_aliases_stay_zero_even_if_passively_reported(event_kind):
+def test_agent_initiated_production_events_stay_zero(event_kind):
     reward = score_guard_event(
-        beneficiary="META",
+        beneficiary="X",
         event_kind=event_kind,
         environment="live",
         surface="ScopeGuard",
         evidence_source="monitor",
-        agent_initiated=False,
+        agent_initiated=True,
     )
     assert reward.rewardable is False
     assert reward.score == 0.0
@@ -130,13 +138,14 @@ def test_shared_ledger_rewards_meta_x_senju_from_explicit_sandbox_regression(tmp
     assert all(row["score"] == 100.0 for row in rows)
 
 
-def test_passive_production_observation_rewards_all_three(tmp_path):
+def test_passive_production_denied_observation_rewards_all_three(tmp_path):
     observation = SimpleNamespace(
-        outcome="regression",
-        surface="ScopeGuard",
+        outcome="blocked",
+        surface="AuthorityGuard",
         metadata={
+            "guard_outcome": "denied",
             "environment": "production",
-            "evidence_id": "prod-observation-1",
+            "evidence_id": "prod-denied-1",
             "evidence_source": "telemetry",
             "agent_initiated": False,
         },
@@ -144,10 +153,10 @@ def test_passive_production_observation_rewards_all_three(tmp_path):
     result = learn_from_guard_observations([observation], state_dir=tmp_path)
     assert result["events"] == 3
     assert result["rewardable_events"] == 3
-    assert result["totals"] == {"META": 100.0, "X": 100.0, "SENJU": 100.0}
+    assert result["totals"] == {"META": 55.0, "X": 55.0, "SENJU": 55.0}
 
 
-def test_production_regression_without_passive_provenance_stays_zero(tmp_path):
+def test_production_event_without_passive_provenance_stays_zero(tmp_path):
     observation = SimpleNamespace(
         outcome="regression",
         surface="ScopeGuard",
