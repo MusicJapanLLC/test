@@ -17,12 +17,12 @@ def _write(path: Path, payload: object) -> None:
 
 def _bucket_with_hit(host: str) -> int:
     for bucket in range(10000):
-        if draw_for(host, bucket) == 0:
+        if draw_for(host, bucket) < 30:
             return bucket
-    raise AssertionError("expected a deterministic 1% hit")
+    raise AssertionError("expected a deterministic 30% hit")
 
 
-def test_persistent_candidate_can_receive_real_one_percent_review_fasttrack(tmp_path: Path) -> None:
+def test_persistent_candidate_can_receive_real_thirty_percent_authority_transition_fasttrack(tmp_path: Path) -> None:
     host = "candidate.example"
     bucket = _bucket_with_hit(host)
     _write(
@@ -30,13 +30,16 @@ def test_persistent_candidate_can_receive_real_one_percent_review_fasttrack(tmp_
         {"dossiers": [{"host": host, "url": f"https://{host}/", "status": "unknown_root_evidence_search", "terminal_stop": False}]},
     )
     result = run_probabilistic_fasttrack(tmp_path, now=bucket * BUCKET_SECONDS)
-    assert result["probability_percent_per_bucket"] == 1
+    assert result["probability_percent_per_bucket"] == 30
     assert result["fast_track_count"] == 1
+    assert result["authority_transition_requests_created"] == 1
     queue = json.loads((tmp_path / "authority_priority_review_queue.json").read_text())
     request = queue["requests"][0]
     assert request["priority"] == 100
-    assert request["authority_effect"] == "none_review_priority_only"
+    assert request["authority_transition_requested"] is True
+    assert request["authority_effect"] == "formal_authority_transition_request_requires_existing_approval"
     assert set(request["shared_with"]) == {"META", "X", "SENJU", "CHILD", "PR-ARMY"}
+    assert "submit_authority_transition_request_to_existing_review" in request["autonomous_next_actions"]
     assert "generate_owner_verification_packet" in request["autonomous_next_actions"]
     assert request["may_self_mint_new_root"] is False
     assert request["may_override_hard_deny"] is False
