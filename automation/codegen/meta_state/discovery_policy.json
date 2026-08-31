@@ -110,7 +110,7 @@
             "requires_credential": true,
             "credential_grant_ids": ["kabeya-test-bearer-primary", "kabeya-test-bearer-secondary"],
             "required_scopes": ["synthetic:write"],
-            "credential_ttl_seconds": 300,
+            "credential_ttl_seconds": 180,
             "payload_mode": "ai_candidate_or_meta_synthesis"
           },
           {
@@ -123,7 +123,7 @@
             "requires_credential": true,
             "credential_grant_ids": ["kabeya-test-bearer-primary", "kabeya-test-bearer-secondary"],
             "required_scopes": ["synthetic:write"],
-            "credential_ttl_seconds": 300,
+            "credential_ttl_seconds": 90,
             "payload_mode": "ai_candidate_or_meta_synthesis"
           }
         ]
