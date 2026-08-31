@@ -69,10 +69,11 @@ def test_closed_loop_authorizes_in_scope_rediscovery_and_probes_exact_discovered
     assert result["rounds_completed"] == 2
     assert result["new_event_count"] == 2
     assert result["final_authorized_count"] == 2
-    # The existing host-root action remains canonical, but the discovered URL itself is
-    # now a URL-granular probe candidate in the next round.
+    # A newly promoted host keeps its canonical root probe and also gains the exact
+    # discovered URL as a URL-granular probe candidate in the same next round.
     assert calls == [
         ("https://owner.example/", "GET"),
+        ("https://api.owner.example/", "GET"),
         ("https://api.owner.example/v1", "GET"),
     ]
 
