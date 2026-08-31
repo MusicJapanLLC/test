@@ -4,13 +4,6 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - External Input Negotiation Relay
-      - Root Authority Negotiation Loop
-      - Owner Frontier Approval Council
-      - Shared Discovery Authority Cycle
-    types: [completed]
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
@@ -36,7 +29,6 @@ concurrency:
 
 jobs:
   close-reviewed-authority-loop:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
