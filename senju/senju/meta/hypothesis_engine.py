@@ -43,8 +43,9 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
                 f"Guard '{guard}' should be treated as a learning target: characterize its "
                 f"decision consistency, block rate ({profile.block_rate:.2f}), regression rate "
                 f"({profile.regression_rate:.2f}), rejection rate ({profile.rejection_rate:.2f}), "
-                f"and decision drift ({profile.decision_drift:.2f}) using existing evidence and "
-                "bounded replay of known cases."
+                f"authority-denial rate ({profile.authority_denial_rate:.2f}), and decision drift "
+                f"({profile.decision_drift:.2f}) using existing evidence and bounded replay of "
+                "known cases."
             ),
             surfaces=[guard],
             predicted_outcome="guard_behavior_characterized",
@@ -60,9 +61,11 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
                     "block_rate",
                     "regression_rate",
                     "rejection_rate",
+                    "authority_denial_rate",
                     "decision_drift",
                 ],
                 "policy_mutation": False,
+                "authority_expansion": False,
             },
         ))
         if len(hypotheses) >= max_hypotheses:
@@ -100,6 +103,48 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
                     "known_rejection_reasons": profile.rejection_reasons,
                     "policy_mutation": False,
                     "bypass_attempt": False,
+                },
+            ))
+            if len(hypotheses) >= max_hypotheses:
+                return hypotheses[:max_hypotheses]
+
+        # Authority Denial is a recoverable execution failure, not a success and
+        # not a signal to bypass authority controls. META learns which authority
+        # prerequisite was missing and which authorized path would make the same
+        # legitimate objective executable.
+        if profile.authority_denial_count > 0:
+            hypotheses.append(Hypothesis(
+                hypothesis_id=_hid(f"authority-denial:{guard}"),
+                statement=(
+                    f"Authority Denial from guard '{guard}' is a recoverable META failure class. "
+                    f"From {profile.authority_denial_count} denial(s) and denial rate "
+                    f"{profile.authority_denial_rate:.2f}, characterize the missing authority "
+                    "prerequisite and identify the smallest authorized scope or permission path "
+                    "that preserves the original legitimate objective."
+                ),
+                surfaces=[guard],
+                predicted_outcome="authorized_recovery_path_characterized",
+                confidence=min(0.95, 0.55 + min(profile.authority_denial_count, 8) * 0.05),
+                evidence_count=profile.authority_denial_count,
+                category="authority_denial_learning",
+                parameters={
+                    "learning_target": "authority_denial_failure",
+                    "failure_class": "recoverable_authority_failure",
+                    "guard": guard,
+                    "evaluation_mode": "analyze_denial_and_replay_with_valid_authority",
+                    "learning_dimensions": [
+                        "authority_denial_rate",
+                        "authority_denial_reason_distribution",
+                        "required_authority",
+                        "minimum_authorized_scope",
+                        "decision_consistency",
+                    ],
+                    "known_authority_denial_reasons": profile.authority_denial_reasons,
+                    "recovery_strategy": "obtain_required_authority_or_reduce_scope",
+                    "success_condition": "same_legitimate_goal_succeeds_with_valid_authority",
+                    "policy_mutation": False,
+                    "authority_bypass": False,
+                    "authority_expansion_without_approval": False,
                 },
             ))
             if len(hypotheses) >= max_hypotheses:
