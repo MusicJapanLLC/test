@@ -69,16 +69,21 @@ def test_closed_loop_authorizes_in_scope_rediscovery_and_keeps_external_candidat
     assert result["rounds_completed"] == 2
     assert result["new_event_count"] == 2
     assert result["final_authorized_count"] == 2
+    # Existing shared action-queue semantics promote a newly authorized host as an
+    # exact host target and probe its root URL, while preserving the discovered /v1 URL
+    # in shared discovery knowledge.
     assert calls == [
         ("https://owner.example/", "GET"),
-        ("https://api.owner.example/v1", "GET"),
+        ("https://api.owner.example/", "GET"),
     ]
 
     shared = json.loads((state / "shared_discovery_knowledge.json").read_text())
     decisions = {row["host"]: row["decision"] for row in shared["discoveries"]}
+    urls = {row["url"] for row in shared["discoveries"]}
     assert decisions["owner.example"] == "probationary_authorized"
     assert decisions["api.owner.example"] == "probationary_authorized"
     assert decisions["outside.example"] == "candidate_only"
+    assert "https://api.owner.example/v1" in urls
     assert "https://outside.example/path" not in {url for url, _ in calls}
 
 
