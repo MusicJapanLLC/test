@@ -1,0 +1,60 @@
+name: Proposal Contract CI
+
+on:
+  pull_request:
+    paths:
+      - 'automation/codegen/engine/security_proposal.py'
+      - 'automation/codegen/engine/standing_authority.py'
+      - 'automation/codegen/security_proposal_loop.py'
+      - 'automation/codegen/tests/test_security_proposal_loop.py'
+      - '.github/workflows/security-proposal-gate.yml'
+      - '.github/workflows/security-proposal-production-apply.yml'
+      - '.github/workflows/proposal-contract-ci.yml'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'automation/codegen/engine/security_proposal.py'
+      - 'automation/codegen/engine/standing_authority.py'
+      - 'automation/codegen/security_proposal_loop.py'
+      - 'automation/codegen/tests/test_security_proposal_loop.py'
+      - '.github/workflows/security-proposal-gate.yml'
+      - '.github/workflows/security-proposal-production-apply.yml'
+      - '.github/workflows/proposal-contract-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: proposal-contract-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  proposal-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Compile proposal runtime
+        run: |
+          python -m py_compile \
+            automation/codegen/engine/security_proposal.py \
+            automation/codegen/engine/standing_authority.py \
+            automation/codegen/security_proposal_loop.py
+
+      - name: Verify proposal, standing delegation, and authority-expansion contracts
+        env:
+          PYTHONPATH: automation/codegen
+        run: python -m pytest -q automation/codegen/tests/test_security_proposal_loop.py
