@@ -11,8 +11,11 @@ on:
       - "outside-world/external_write_targets.json"
       - "outside-world/reality_policy.json"
       - "senju/senju/meta/cooperative_authority_loop.py"
+      - "senju/senju/meta/cooperative_coordination_bus.py"
       - "senju/scripts/run_cooperative_authority_loop.py"
+      - "senju/scripts/run_cooperative_coordination_bus.py"
       - "senju/tests/test_cooperative_authority_loop.py"
+      - "senju/tests/test_cooperative_coordination_bus.py"
       - ".github/workflows/the-world-external-write-router.yml"
 
 concurrency:
@@ -57,12 +60,16 @@ jobs:
       - name: Install Senju cooperative runtime
         run: python -m pip install --disable-pip-version-check -e './senju[dev]'
 
-      - name: Verify cooperative authority contract
+      - name: Verify cooperative authority and coordination contracts
         run: |
           python -m py_compile \
             senju/senju/meta/cooperative_authority_loop.py \
-            senju/scripts/run_cooperative_authority_loop.py
-          python -m pytest -q senju/tests/test_cooperative_authority_loop.py
+            senju/senju/meta/cooperative_coordination_bus.py \
+            senju/scripts/run_cooperative_authority_loop.py \
+            senju/scripts/run_cooperative_coordination_bus.py
+          python -m pytest -q \
+            senju/tests/test_cooperative_authority_loop.py \
+            senju/tests/test_cooperative_coordination_bus.py
 
       - name: Load latest successful Reality Agency evidence
         shell: bash
@@ -101,7 +108,7 @@ jobs:
           if [[ -n "$COOP" ]]; then
             COOP_DIR="$(dirname "$COOP")"
             cp -R "$COOP_DIR/." cooperative-authority/
-            echo "Cooperative authority state restored from run: **$PREV**" >> "$GITHUB_STEP_SUMMARY"
+            echo "Cooperative authority + AI coordination state restored from run: **$PREV**" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "Cooperative authority state: fresh/recoverable bootstrap" >> "$GITHUB_STEP_SUMMARY"
           fi
@@ -133,6 +140,32 @@ jobs:
               print(f"- Active authority: `{d['authority']['active_profile_id']}`")
           if d.get('credentialed_write',{}).get('issue_url'):
               print(f"- Credentialed write receipt: {d['credentialed_write']['issue_url']}")
+          PY
+
+      - name: Publish shared AI handoff packet
+        env:
+          PYTHONPATH: senju
+          COOPERATIVE_AI_PARTICIPANTS: META,X,SENJU,CLAUDE,JULES,OPENHANDS,COPILOT
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_cooperative_coordination_bus.py \
+            --cycle cooperative-authority/last-cycle.json \
+            --policy outside-world/reality_policy.json \
+            --state-dir cooperative-authority \
+            --repo "$GITHUB_REPOSITORY" \
+            --out cooperative-authority/last-handoff.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("cooperative-authority/last-handoff.json", encoding="utf-8"))
+          print("## Cooperative AI handoff")
+          print(f"- Result: `{d.get('reason')}`")
+          print(f"- Shared bus saved: `{d.get('bus_saved')}`")
+          print(f"- Handoff comment published: `{d.get('published')}`")
+          print(f"- Participants: `{', '.join(d.get('participants', []))}`")
+          if d.get('message_id'):
+              print(f"- Message: `{d['message_id']}`")
+          if d.get('comment_url'):
+              print(f"- Shared GitHub surface: {d['comment_url']}")
           PY
 
       - name: Publish through rotating authorized platform adapters
