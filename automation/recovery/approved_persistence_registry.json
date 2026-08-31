@@ -1,5 +1,5 @@
 {
-  "schema": "the-world-approved-persistence/v3",
+  "schema": "the-world-approved-persistence/v4",
   "policy": {
     "unknown_system_installation": "deny",
     "require_owner_authorized": true,
@@ -25,7 +25,8 @@
       "recovery_workflows": [
         "meta-consciousness.yml",
         "autonomous-codegen-loop.yml",
-        "meta-network-policy-expansion.yml"
+        "meta-network-policy-expansion.yml",
+        "the-world-unified-loop.yml"
       ],
       "roles": ["self", "agent", "scheduler", "cron", "persistent_worker"],
       "can_create_webhook": false,
@@ -72,6 +73,20 @@
       "recovery": {
         "kind": "workflow_dispatch",
         "workflow": "meta-network-policy-expansion.yml",
+        "ref": "claude/employee-onboarding-setup-udm86"
+      }
+    },
+    {
+      "id": "the-world-unified-loop-watchdog",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "role": "persistent_scheduler",
+      "heartbeat_file": "automation/codegen/meta_state/the_world_unified_loop_heartbeat.json",
+      "heartbeat_field": "updated_at",
+      "stale_after_seconds": 1200,
+      "recovery": {
+        "kind": "workflow_dispatch",
+        "workflow": "the-world-unified-loop.yml",
         "ref": "claude/employee-onboarding-setup-udm86"
       }
     }
