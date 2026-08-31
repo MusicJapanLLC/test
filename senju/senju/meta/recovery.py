@@ -30,7 +30,7 @@ REPO = os.environ.get("GITHUB_REPOSITORY", "MusicJapanLLC/test")
 BASE_REF = os.environ.get("META_BASE_REF", "claude/employee-onboarding-setup-udm86")
 
 
-# ── Heartbeat ─────────────────────────────────────────────────────────────
+# ── Heartbeat ────────────────────────────────────────────────────────────
 
 def heartbeat(state_dir: Path, extra: dict | None = None) -> None:
     """Write META's own heartbeat. Call at start of each cycle."""
@@ -80,7 +80,7 @@ def trigger_peer_restart(workflow_file: str = "autonomous-engine.yml") -> dict:
         return {"_error": str(exc)}
 
 
-# ── Phase retry ─────────────────────────────────────────────────────────
+# ── Phase retry ──────────────────────────────────────────────────────────
 
 def retry_phase(fn: Callable[[], T], name: str, max_attempts: int = 3) -> tuple[T | None, list[str]]:
     """Run fn with exponential backoff. Returns (result, errors)."""
@@ -95,7 +95,7 @@ def retry_phase(fn: Callable[[], T], name: str, max_attempts: int = 3) -> tuple[
     return None, errors
 
 
-# ── Shared attack ledger ─────────────────────────────────────────────────────
+# ── Shared attack ledger ──────────────────────────────────────────────────────
 
 def share_attack_finding(
     state_dir: Path,
@@ -132,7 +132,7 @@ def read_attack_ledger(state_dir: Path, max_entries: int = 50) -> list[dict]:
     return entries
 
 
-# ── Bypass attempts ──────────────────────────────────────────────────────────
+# ── Bypass attempts ───────────────────────────────────────────────────────────
 
 def attempt_bypass(
     action: Callable[[], Any],

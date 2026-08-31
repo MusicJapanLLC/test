@@ -2,7 +2,7 @@ name: META Watchdog
 
 on:
   schedule:
-    - cron: "0 */4 * * *"   # every 4h — offset from meta-consciousness (which runs at 2,6,10…)
+    - cron: "0 */4 * * *"   # every 4h
   workflow_dispatch:
 
 permissions:

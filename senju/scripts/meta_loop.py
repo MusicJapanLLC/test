@@ -1,7 +1,6 @@
 """META — Autonomous meta-consciousness loop (full power edition).
 
 Phases:
-  0. HEARTBEAT      — write alive timestamp, check Drive Engine peer health
   1. OBSERVE        — build KnowledgeGraph from all evidence
   2. EXTERNAL INTEL — fetch NVD/GHSA/OWASP threat data
   3. HYPOTHESIZE    — generate hypotheses enriched with external intel
@@ -55,7 +54,7 @@ def main() -> int:
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
-    # ── 0. HEARTBEAT + PEER HEALTH ──────────────────────────────────────────────────
+    # ── 0. HEARTBEAT + PEER HEALTH ─────────────────────────────────────────────────────
     heartbeat(STATE_DIR)
     peer_alive, peer_reason = check_peer_alive(STATE_DIR)
     if not peer_alive and not args.dry_run:
@@ -63,23 +62,24 @@ def main() -> int:
         result = trigger_peer_restart()
         _emit("peer_restart_triggered", result)
 
+    # Read shared ledger for cross-system context
     ledger = read_attack_ledger(STATE_DIR, max_entries=20)
     if ledger:
         _emit("ledger_loaded", {"entries": len(ledger), "surfaces": list({e["surface"] for e in ledger})})
 
-    # ── 1. OBSERVE ────────────────────────────────────────────────────────────
+    # ── 1. OBSERVE ───────────────────────────────────────────────────────────────────────
     graph, observe_errors = retry_phase(lambda: build_graph(SENJU_DIR), "observe")
     if graph is None:
         _emit("observe_failed", {"errors": observe_errors})
         return 1
     _emit("observe_complete", {
-        "observations": len(graph.observations),
+        "observations": len(graph.observations) if graph else 0,
         "surfaces_tracked": len(graph.surface_weakness_scores),
         "top_weaknesses": list(graph.surface_weakness_scores.items())[:5],
         "temporal_patterns": len(graph.temporal_patterns),
     })
 
-    # ── 2. EXTERNAL INTEL ─────────────────────────────────────────────────────
+    # ── 2. EXTERNAL INTEL ────────────────────────────────────────────────────────────────
     intel: dict = {"merged_hits": {}, "ok_count": 0}
     if not args.skip_external:
         intel = gather_all()
@@ -88,13 +88,14 @@ def main() -> int:
             "total_sources": intel["total_sources"],
             "threat_classes": list(intel["merged_hits"].keys()),
         })
+        # Inject external hits into graph weakness scores
         for vc, count in intel["merged_hits"].items():
             if vc in graph.surface_weakness_scores:
                 graph.surface_weakness_scores[vc] += count * 0.3
             else:
                 graph.surface_weakness_scores[vc] = count * 0.3
 
-    # ── 3. HYPOTHESIZE ────────────────────────────────────────────────────────
+    # ── 3. HYPOTHESIZE ────────────────────────────────────────────────────────────────
     hypotheses = generate(graph, max_hypotheses=args.max_hypotheses)
     _emit("hypotheses_generated", {
         "count": len(hypotheses),
@@ -105,7 +106,7 @@ def main() -> int:
         enqueued = queue_as_work_items(hypotheses, STATE_DIR)
         _emit("work_items_queued", {"count": enqueued})
 
-    # ── 4. VALIDATE ───────────────────────────────────────────────────────────
+    # ── 4. VALIDATE ────────────────────────────────────────────────────────────────────
     tracker = load_tracker(STATE_DIR)
     new_registered = register(hypotheses, tracker)
 
@@ -127,9 +128,10 @@ def main() -> int:
         **summarize(tracker),
     })
 
-    # ── 5. COMMAND CHANNEL ────────────────────────────────────────────────────
+    # ── 5. COMMAND CHANNEL ─────────────────────────────────────────────────────────────
     cmd_set = build_from_graph(graph, top_n=3)
 
+    # Escalate confirmed hypotheses → higher multiplier + share to ledger
     for hid in resolved:
         h = tracker.get(hid)
         if h and h.status == "confirmed":
@@ -154,10 +156,11 @@ def main() -> int:
             "queue_commands": len(cmd_set.queue_commands),
         })
 
-    # ── 6. DISPATCH ───────────────────────────────────────────────────────────
+    # ── 6. DISPATCH ───────────────────────────────────────────────────────────────────
     if not args.skip_dispatch and not args.dry_run:
         dispatch_cmds: list[dict] = []
 
+        # Steer adversary toward top weak surface
         for ac in cmd_set.attack_commands[:1]:
             dispatch_cmds.append({
                 "kind": "steer_adversary",
@@ -165,6 +168,7 @@ def main() -> int:
                 "multiplier": ac.pressure_multiplier,
             })
 
+        # Post Jules task for refuted hypotheses
         for hid, h in tracker.items():
             if h.status == "refuted" and h.cycles_elapsed <= 4:
                 dispatch_cmds.append({
@@ -184,7 +188,7 @@ def main() -> int:
         results = dispatch_all(dispatch_cmds, ROOT)
         _emit("dispatch_complete", {"commands": len(dispatch_cmds), "results": results})
 
-    # ── 7. PUBLISH ────────────────────────────────────────────────────────────
+    # ── 7. PUBLISH ────────────────────────────────────────────────────────────────────
     published: list[str] = []
     confirmed_hypotheses = [
         h for h in tracker.values()
