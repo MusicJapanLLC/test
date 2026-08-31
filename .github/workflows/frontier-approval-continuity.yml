@@ -2,7 +2,7 @@ name: Frontier Approval Continuity
 
 on:
   workflow_run:
-    workflows: ["Four Party Owner Frontier Council"]
+    workflows: ["Owner Frontier Approval Council"]
     types: [completed]
   workflow_dispatch:
   pull_request:
@@ -52,7 +52,7 @@ jobs:
           python -m pip install --disable-pip-version-check -q pytest
           python -m pytest -q senju/tests/test_frontier_approval_continuity.py
 
-      - name: Preserve valid 4/4 approvals deferred only by cycle budget
+      - name: Preserve valid binding approvals deferred only by cycle budget
         run: |
           set -euo pipefail
           python senju/scripts/frontier_approval_continuity.py \
