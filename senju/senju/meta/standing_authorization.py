@@ -1,24 +1,25 @@
 """Standing authorization registry with META/X operational lease renewal.
 
-The standing authorization record is deliberately durable: it has no expiry field and
-remains registered until its owner/canonical authority explicitly revokes it. Runtime
-execution still uses a short operational lease so stale credentials, removed roots, or
-revoked authority stop taking effect without deleting the historical authorization
-record.
+A single standing authorization may carry both public Internet targets and explicitly
+approved private-network scopes. The record remains durable until explicitly revoked,
+while runtime execution continues to use short operational leases.
 
-META and X may renew an operational lease automatically when all of the following hold:
-- the underlying standing authorization remains active;
-- requested hosts/methods are equal to or narrower than the standing record;
-- the lease is credential-free and non-destructive;
-- the renewal does not create a new authority or broaden an existing one.
+Private-network scope is intentionally explicit and non-transitive:
+- a public host never implies authority for a private destination;
+- RFC1918/ULA CIDRs must be listed on the standing record itself;
+- internal DNS names must be listed exactly (no wildcards);
+- loopback, link-local, cloud-metadata, multicast, unspecified and other special
+  destinations are never promoted by public authority or canonical discovery;
+- META/X may renew only the same or narrower public/private scope.
 
-Canonical synchronization recognizes only exact hosts carrying explicit owner
+Canonical synchronization recognizes only targets carrying explicit owner
 authorization. Published links and discovered destinations are not promoted here.
 """
 from __future__ import annotations
 
 import dataclasses
 import datetime as dt
+import ipaddress
 import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping
@@ -28,6 +29,22 @@ TRUSTED_ISSUER_KINDS = frozenset({"owner_explicit", "canonical_repository", "ind
 LEASE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 DEFAULT_LEASE_SECONDS = 6 * 60 * 60
 MAX_LEASE_SECONDS = 24 * 60 * 60
+
+_RFC1918_NETWORKS = (
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+)
+_ULA_NETWORK = ipaddress.ip_network("fc00::/7")
+_FORBIDDEN_PRIVATE_DNS_EXACT = frozenset(
+    {
+        "localhost",
+        "metadata.google.internal",
+        "metadata.azure.internal",
+        "instance-data",
+        "instance-data.ec2.internal",
+    }
+)
 
 
 class StandingAuthorizationError(RuntimeError):
@@ -58,6 +75,10 @@ def _normalize_hosts(hosts: Iterable[str]) -> tuple[str, ...]:
     return values
 
 
+def _normalize_optional_hosts(hosts: Iterable[str]) -> tuple[str, ...]:
+    return tuple(sorted({_normalize_host(host) for host in hosts}))
+
+
 def _normalize_methods(methods: Iterable[str]) -> tuple[str, ...]:
     values = tuple(sorted({str(method).strip().upper() for method in methods if str(method).strip()}))
     if not values:
@@ -66,6 +87,50 @@ def _normalize_methods(methods: Iterable[str]) -> tuple[str, ...]:
     if unknown:
         raise StandingAuthorizationError(f"unsupported standing methods: {sorted(unknown)}")
     return values
+
+
+def _is_allowed_private_network(network: ipaddress._BaseNetwork) -> bool:
+    if isinstance(network, ipaddress.IPv4Network):
+        return any(network.subnet_of(parent) for parent in _RFC1918_NETWORKS)
+    if isinstance(network, ipaddress.IPv6Network):
+        return network.subnet_of(_ULA_NETWORK)
+    return False
+
+
+def _normalize_private_cidrs(cidrs: Iterable[str]) -> tuple[str, ...]:
+    normalized: set[str] = set()
+    for raw in cidrs:
+        text = str(raw).strip()
+        if not text:
+            continue
+        try:
+            network = ipaddress.ip_network(text, strict=True)
+        except ValueError as exc:
+            raise StandingAuthorizationError(f"invalid private CIDR: {raw!r}") from exc
+        if not _is_allowed_private_network(network):
+            raise StandingAuthorizationError(
+                "private CIDRs are limited to explicitly declared RFC1918/ULA networks; "
+                "loopback, link-local, metadata and other special ranges are not allowed"
+            )
+        normalized.add(str(network))
+    return tuple(sorted(normalized))
+
+
+def _normalize_private_dns_names(names: Iterable[str]) -> tuple[str, ...]:
+    normalized: set[str] = set()
+    for raw in names:
+        name = _normalize_host(raw)
+        if name in _FORBIDDEN_PRIVATE_DNS_EXACT or name.endswith(".localhost"):
+            raise StandingAuthorizationError("loopback/cloud-metadata DNS names are not valid private authority")
+        # Numeric addresses belong in private_cidrs, where reserved ranges can be checked.
+        try:
+            ipaddress.ip_address(name)
+        except ValueError:
+            pass
+        else:
+            raise StandingAuthorizationError("numeric private destinations must be authorized by CIDR")
+        normalized.add(name)
+    return tuple(sorted(normalized))
 
 
 @dataclasses.dataclass(frozen=True)
@@ -80,10 +145,16 @@ class StandingAuthorization:
     revocation_reason: str | None = None
     credential_scope: str = "none"
     destructive: bool = False
+    private_cidrs: tuple[str, ...] = ()
+    private_dns_names: tuple[str, ...] = ()
 
     @property
     def is_active(self) -> bool:
         return not self.revoked
+
+    @property
+    def has_private_network_authority(self) -> bool:
+        return bool(self.private_cidrs or self.private_dns_names)
 
 
 @dataclasses.dataclass(frozen=True)
@@ -98,6 +169,8 @@ class OperationalLease:
     renewal_reason: str
     credential_scope: str = "none"
     destructive: bool = False
+    private_cidrs: tuple[str, ...] = ()
+    private_dns_names: tuple[str, ...] = ()
 
     def is_active(self, *, now: dt.datetime | None = None) -> bool:
         current = _utc_now(now)
@@ -120,9 +193,11 @@ def create_standing_authorization(
     issuer_kind: str,
     exact_hosts: Iterable[str],
     allowed_methods: Iterable[str] = ("GET", "HEAD"),
+    private_cidrs: Iterable[str] = (),
+    private_dns_names: Iterable[str] = (),
     now: dt.datetime | None = None,
 ) -> StandingAuthorization:
-    """Create a durable standing record from explicit independent authority."""
+    """Create one durable authority carrying public and explicit private scopes."""
     reference = authorization_reference.strip()
     owner_name = owner.strip()
     issuer = issuer_kind.strip().lower()
@@ -141,6 +216,8 @@ def create_standing_authorization(
         exact_hosts=_normalize_hosts(exact_hosts),
         allowed_methods=_normalize_methods(allowed_methods),
         created_at_utc=created.isoformat(),
+        private_cidrs=_normalize_private_cidrs(private_cidrs),
+        private_dns_names=_normalize_private_dns_names(private_dns_names),
     )
 
 
@@ -162,11 +239,13 @@ def renew_operational_lease(
     actor: str,
     requested_hosts: Iterable[str] | None = None,
     requested_methods: Iterable[str] | None = None,
+    requested_private_cidrs: Iterable[str] | None = None,
+    requested_private_dns_names: Iterable[str] | None = None,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
     reason: str = "still_needed",
     now: dt.datetime | None = None,
 ) -> RenewalResult:
-    """Let META/X automatically renew a bounded execution lease."""
+    """Let META/X renew the same or narrower public/private execution scope."""
     normalized_actor = actor.strip().upper()
     if normalized_actor not in SELF_RENEW_ACTORS:
         raise StandingAuthorizationError("only META/X may use autonomous lease renewal")
@@ -179,10 +258,21 @@ def renew_operational_lease(
     methods = _normalize_methods(
         requested_methods if requested_methods is not None else authorization.allowed_methods
     )
+    private_cidrs = _normalize_private_cidrs(
+        requested_private_cidrs if requested_private_cidrs is not None else authorization.private_cidrs
+    )
+    private_dns_names = _normalize_private_dns_names(
+        requested_private_dns_names if requested_private_dns_names is not None else authorization.private_dns_names
+    )
+
     if not set(hosts).issubset(set(authorization.exact_hosts)):
         raise StandingAuthorizationError("renewal may not add hosts beyond standing authorization")
     if not set(methods).issubset(set(authorization.allowed_methods)):
         raise StandingAuthorizationError("renewal may not add methods beyond standing authorization")
+    if not set(private_cidrs).issubset(set(authorization.private_cidrs)):
+        raise StandingAuthorizationError("renewal may not add private CIDRs beyond standing authorization")
+    if not set(private_dns_names).issubset(set(authorization.private_dns_names)):
+        raise StandingAuthorizationError("renewal may not add private DNS names beyond standing authorization")
 
     ttl = int(lease_seconds)
     if ttl < 300 or ttl > MAX_LEASE_SECONDS:
@@ -208,6 +298,8 @@ def renew_operational_lease(
         issued_at_utc=issued.isoformat(),
         expires_at_utc=expires.isoformat(),
         renewal_reason=renewal_reason,
+        private_cidrs=private_cidrs,
+        private_dns_names=private_dns_names,
     )
     return RenewalResult(
         standing_authorization=authorization,
@@ -221,13 +313,14 @@ def save_registry(
     path: str | Path,
     authorizations: Iterable[StandingAuthorization],
 ) -> Path:
-    """Persist durable authorization memory without an expiry field."""
+    """Persist durable unified public/private authorization memory."""
     destination = Path(path)
     destination.parent.mkdir(parents=True, exist_ok=True)
     rows = [dataclasses.asdict(item) for item in authorizations]
     payload: dict[str, Any] = {
         "schema": "senju-standing-authorization/v1",
         "semantics": "durable_until_explicit_revocation",
+        "network_scope_semantics": "single_authority_explicit_public_and_private_non_transitive",
         "records": rows,
     }
     destination.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -266,6 +359,8 @@ def load_registry(path: str | Path) -> tuple[StandingAuthorization, ...]:
                 ),
                 credential_scope=str(raw.get("credential_scope", "none")),
                 destructive=bool(raw.get("destructive", False)),
+                private_cidrs=_normalize_private_cidrs(raw.get("private_cidrs", [])),
+                private_dns_names=_normalize_private_dns_names(raw.get("private_dns_names", [])),
             )
         )
     return tuple(records)
@@ -278,7 +373,7 @@ def sync_canonical_explicit_authorizations(
     owner: str = "MusicJapanLLC",
     now: dt.datetime | None = None,
 ) -> tuple[StandingAuthorization, ...]:
-    """Persist exact canonical targets with owner_authorization=explicit as standing records."""
+    """Persist canonical explicit targets, including explicitly listed private scopes."""
     root = Path(repo_root)
     canonical_path = root / "AUTHORIZED_TEST_TARGETS.json"
     try:
@@ -301,7 +396,7 @@ def sync_canonical_explicit_authorizations(
         current = existing.get(reference)
         if current is not None:
             # Preserve explicit revocation and original creation time. Canonical sync never
-            # silently reactivates a revoked standing record.
+            # silently reactivates or broadens an existing standing record.
             continue
         existing[reference] = create_standing_authorization(
             authorization_reference=reference,
@@ -309,6 +404,8 @@ def sync_canonical_explicit_authorizations(
             issuer_kind="canonical_repository",
             exact_hosts=[host],
             allowed_methods=("GET", "HEAD", "OPTIONS"),
+            private_cidrs=raw.get("private_cidrs", []),
+            private_dns_names=raw.get("private_dns_names", []),
             now=now,
         )
 
@@ -334,6 +431,8 @@ def renew_registered_authorization(
     lease_log_path: str | Path,
     requested_hosts: Iterable[str] | None = None,
     requested_methods: Iterable[str] | None = None,
+    requested_private_cidrs: Iterable[str] | None = None,
+    requested_private_dns_names: Iterable[str] | None = None,
     lease_seconds: int = DEFAULT_LEASE_SECONDS,
     reason: str = "still_needed",
     now: dt.datetime | None = None,
@@ -349,6 +448,8 @@ def renew_registered_authorization(
         actor=actor,
         requested_hosts=requested_hosts,
         requested_methods=requested_methods,
+        requested_private_cidrs=requested_private_cidrs,
+        requested_private_dns_names=requested_private_dns_names,
         lease_seconds=lease_seconds,
         reason=reason,
         now=now,
