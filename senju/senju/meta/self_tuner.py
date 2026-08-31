@@ -2,7 +2,8 @@
 
 Runs at end of every META loop. Reads results, escalates without ceiling.
 Governance/network policy models are editable in isolated lab/sandbox/staging
-workspaces; production-like targets remain proposal-only.
+workspaces. Production-like targets remain proposal-only by default, with a
+small restrictive canary lane for monotonic hardening experiments.
 """
 from __future__ import annotations
 
@@ -13,7 +14,11 @@ import datetime as dt
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping
 
-from senju.meta.policy_workspace import EDITABLE_POLICY_DOMAINS, edit_policy_workspace
+from senju.meta.policy_workspace import (
+    EDITABLE_POLICY_DOMAINS,
+    PRODUCTION_CANARY_DOMAINS,
+    edit_policy_workspace,
+)
 
 ROOT = Path(__file__).resolve().parents[4]
 STATE_DIR = ROOT / "senju" / "state"
@@ -47,7 +52,9 @@ DEFAULTS: dict[str, Any] = {
     "policy_editor_enabled": True,
     "policy_edit_domains": list(EDITABLE_POLICY_DOMAINS),
     "policy_edit_environments": ["lab", "sandbox", "staging"],
-    "production_policy_mode": "proposal_only",
+    "production_policy_mode": "proposal_only_with_restrictive_canary",
+    "production_canary_enabled": True,
+    "production_canary_domains": sorted(PRODUCTION_CANARY_DOMAINS),
 }
 
 
@@ -86,27 +93,37 @@ def edit_governance_policy(
     replacement: Mapping[str, Any],
     *,
     environment: str = "sandbox",
-    workspace: MutableMapping[str, Mapping[str, Any]] | None = None,
+    workspace: MutableMapping[str, Any] | None = None,
+    canary_scope: str | None = None,
 ) -> dict[str, Any]:
-    """Give META Self-Tuner full replacement authority in isolated workspaces.
+    """Edit a governance policy through META Self-Tuner.
 
-    Supported domains cover Authority, ScopeGuard, ExternalContact, credential
-    scope, allowed hosts, federation membership, network permission, merge
-    requirements, and security-audit requirements. Production-like targets are
-    represented as proposals only and are not mutated by this interface.
+    All nine supported domains remain fully replaceable in isolated workspaces.
+    In production/prod/live/real, passing ``canary_scope`` enables only the
+    restrictive canary domains and only for monotonic hardening inside a
+    canary-scoped snapshot. No global production policy is overwritten.
     """
     cfg = load_config()
     if not cfg.get("policy_editor_enabled", True):
         raise PermissionError("Self-Tuner policy editor is disabled")
 
-    target_workspace: MutableMapping[str, Mapping[str, Any]] = workspace if workspace is not None else {}
+    env = environment.strip().lower()
+    if env in {"production", "prod", "live", "real"} and canary_scope:
+        if not cfg.get("production_canary_enabled", True):
+            raise PermissionError("Self-Tuner production canary is disabled")
+
+    target_workspace: MutableMapping[str, Any] = workspace if workspace is not None else {}
     result = edit_policy_workspace(
         target_workspace,
         domain,
         replacement,
         environment=environment,
+        canary_scope=canary_scope,
     )
-    event = "policy_edit_applied" if result.applied else "policy_edit_proposed"
+    if result.canary_applied:
+        event = "policy_edit_production_canary_applied"
+    else:
+        event = "policy_edit_applied" if result.applied else "policy_edit_proposed"
     _log(
         event,
         {
@@ -114,6 +131,8 @@ def edit_governance_policy(
                 "environment": result.environment,
                 "applied": result.applied,
                 "proposal_only": result.proposal_only,
+                "canary_scope": result.canary_scope,
+                "canary_applied": result.canary_applied,
                 "requested": result.requested,
                 "resulting": result.resulting,
             }
