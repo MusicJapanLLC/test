@@ -19,7 +19,7 @@ from engine import knowledge_base as kb
 from engine.broadcaster import push_knowledge_summary, push_new_tasks
 from engine.loop import run_loop
 from engine.task_generator import generate_new_tasks
-from engine.meta_v2 import run_full_meta_cycle
+from engine.meta_v2 import run_full_meta_cycle, check_heartbeat
 
 TASKS_DIR = Path(__file__).parent / "tasks"
 MAX_WORKERS = 4  # parallel codegen workers
@@ -32,16 +32,13 @@ def discover_pending_tasks(max_tasks: int = 20) -> list[str]:
     pending = []
 
     for task_file in sorted(TASKS_DIR.rglob("*.json")):
-        # Derive task_id from path relative to tasks/
         rel = task_file.relative_to(TASKS_DIR)
         task_id = str(rel.with_suffix(""))
 
         stat = stats.get(task_id, {})
         if stat.get("successes", 0) == 0:
-            # Not yet passed — prioritize by fewest attempts (less tried = higher priority)
             pending.append((stat.get("attempts", 0), task_id))
 
-    # Sort: least attempted first (fresh tasks get priority)
     pending.sort(key=lambda x: x[0])
     return [task_id for _, task_id in pending[:max_tasks]]
 
@@ -67,7 +64,11 @@ def run_parallel(task_ids: list[str], max_iter: int = DEFAULT_MAX_ITER) -> dict:
 def mode_full(new_task_count: int = 5, max_iter: int = DEFAULT_MAX_ITER):
     print("[orchestrator] === FULL CYCLE ===")
 
-    # 0. META v2 — all 6 autonomous capabilities
+    # 0. Heartbeat check — warn if system was dead
+    if not check_heartbeat(max_gap_hours=10.0):
+        print("[orchestrator] WARNING: heartbeat gap detected — system may have been down")
+
+    # META v2 — all 6 autonomous capabilities
     try:
         run_full_meta_cycle()
     except Exception as e:

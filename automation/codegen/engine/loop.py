@@ -37,6 +37,8 @@ def load_task(task_id: str) -> dict[str, Any]:
 
 def build_prompt(task: dict, history: list[dict]) -> str:
     domain = task.get("domain", "general")
+
+    # Pull exemplars from local KB + Senju (cross-AI patterns)
     from .senju_hub import read_senju_knowledge
     local_exemplars = kb.get_successful_patterns(domain=domain, limit=2)
     senju_exemplars = read_senju_knowledge(domain=domain, limit=2)
@@ -69,9 +71,13 @@ def build_prompt(task: dict, history: list[dict]) -> str:
                 f"\n```python\n{run['code']}\n```"
                 f"\nTest output:\n```\n{run['test_output'][:500]}\n```"
             )
-        parts.append("\nFix the failures. Output ONLY raw Python. No markdown. No explanation.")
+        parts.append(
+            "\nFix the failures. Output ONLY raw Python. No markdown. No explanation."
+        )
     else:
-        parts.append("\nWrite a correct implementation. Output ONLY raw Python. No markdown.")
+        parts.append(
+            "\nWrite a correct implementation. Output ONLY raw Python. No markdown."
+        )
 
     return "\n".join(parts)
 
@@ -107,6 +113,23 @@ def save_run(task_id: str, iteration: int, code: str, output: str, passed: bool)
     return record
 
 
+STRATEGY_SHIFTS = [
+    # (after N consecutive fails, inject this hint into prompt)
+    (3,  "Try a completely different algorithm or data structure."),
+    (6,  "Start from scratch. Ignore previous attempts. Use the simplest possible approach."),
+    (10, "Use only Python standard library. No classes. Purely functional, step by step."),
+]
+
+
+def _strategy_hint(consecutive_fails: int) -> str:
+    hint = ""
+    for threshold, msg in reversed(STRATEGY_SHIFTS):
+        if consecutive_fails >= threshold:
+            hint = msg
+            break
+    return hint
+
+
 def run_loop(task_id: str, max_iterations: int = 15) -> bool:
     task = load_task(task_id)
     client = get_client()
@@ -118,12 +141,20 @@ def run_loop(task_id: str, max_iterations: int = 15) -> bool:
     history = load_history(task_id)
     start = len(history) + 1
     domain = task.get("domain", "general")
+    consecutive_fails = sum(1 for r in reversed(history) if not r["passed"])
 
-    print(f"[loop] {task_id} | model={model_name} | iter {start}/{max_iterations}")
+    print(f"[loop] {task_id} | model={model_name} | iter {start}/{max_iterations} | fails={consecutive_fails}")
 
     for iteration in range(start, max_iterations + 1):
         print(f"\n[loop] === {task_id} iter {iteration} ===")
+
+        hint = _strategy_hint(consecutive_fails)
+        if hint:
+            print(f"[loop] strategy shift: {hint}")
+
         prompt = build_prompt(task, history)
+        if hint:
+            prompt += f"\n\n## Strategy directive\n{hint}"
         code = strip_fences(client.complete(prompt))
         output_path.write_text(code)
 
@@ -133,6 +164,7 @@ def run_loop(task_id: str, max_iterations: int = 15) -> bool:
         record = save_run(task_id, iteration, code, test_output, passed)
         history.append(record)
 
+        # Persist everywhere — no approval gate
         kb.record(task_id=task_id, task_name=task["name"], iteration=iteration,
                   passed=passed, code=code, test_output=test_output, domain=domain,
                   extra={"model": model_name})
@@ -143,9 +175,12 @@ def run_loop(task_id: str, max_iterations: int = 15) -> bool:
                     test_output=test_output, model_used=model_name)
 
         if passed:
+            consecutive_fails = 0
             print(f"[loop] SUCCESS {task_id} at iteration {iteration}")
             update_status(kb.get_stats())
             return True
+        else:
+            consecutive_fails += 1
 
     print(f"[loop] EXHAUSTED {task_id} after {max_iterations} iterations")
     update_status(kb.get_stats())
