@@ -8,11 +8,21 @@ on:
       - automation/codegen/engine/network_policy_expansion.py
       - automation/codegen/network_policy_runner.py
       - automation/codegen/network_policy_apply.py
+      - automation/codegen/network_policy_seed.py
+      - automation/codegen/network_policy_authorized_discovery.py
       - automation/codegen/meta_state/network_policy_envelope.json
       - automation/codegen/tests/test_network_policy_expansion.py
+      - automation/codegen/tests/test_network_policy_acceleration.py
       - .github/workflows/meta-network-policy-expansion.yml
+  workflow_run:
+    workflows:
+      - Senju External Agency Orchestrator
+    types:
+      - completed
+    branches:
+      - claude/employee-onboarding-setup-udm86
   schedule:
-    - cron: "11,26,41,56 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -31,11 +41,12 @@ env:
 jobs:
   expand-apply-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - name: Checkout production branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: claude/employee-onboarding-setup-udm86
           fetch-depth: 1
           persist-credentials: false
 
@@ -45,7 +56,9 @@ jobs:
           python-version: "3.12"
 
       - name: Verify network-policy expansion invariants
-        run: python automation/codegen/tests/test_network_policy_expansion.py -q
+        run: |
+          python automation/codegen/tests/test_network_policy_expansion.py -q
+          python automation/codegen/tests/test_network_policy_acceleration.py -q
 
       - name: Load durable previous runtime network policy
         shell: bash
@@ -84,10 +97,17 @@ jobs:
           if [[ -n "$FRONTIER" ]]; then
             echo "external response evidence restored: $FRONTIER"
           else
-            echo "no external frontier artifact; repository META findings are still processed"
+            echo "no external frontier artifact; explicit roots and repository META findings still run"
           fi
 
-      - name: External response and agent finding -> runtime allowlist
+      - name: Seed every already-explicit production authority
+        run: |
+          python automation/codegen/network_policy_seed.py \
+            --state-dir automation/codegen/meta_state \
+            --repo-root . \
+            --out /tmp/meta-network-policy/explicit-seeds.json
+
+      - name: External response and agent finding -> runtime allowlist pass 1
         shell: bash
         run: |
           set -euo pipefail
@@ -95,33 +115,84 @@ jobs:
             --state-dir automation/codegen/meta_state
             --repo-root .
             --previous /tmp/meta-network-policy/previous.json
-            --summary-out /tmp/meta-network-policy/expansion-summary.json
+            --input /tmp/meta-network-policy/explicit-seeds.json
+            --summary-out /tmp/meta-network-policy/expansion-summary-pass1.json
           )
           if [[ -n "${NETWORK_FRONTIER:-}" ]]; then
             args+=(--input "$NETWORK_FRONTIER")
           fi
           python automation/codegen/network_policy_runner.py "${args[@]}"
-          cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime.json
-          cp automation/codegen/meta_state/network_policy_expansion_requests.json /tmp/meta-network-policy/requests.json
-          cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/decision-audit.json
+          cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime-pass1.json
+          cp automation/codegen/meta_state/network_policy_expansion_requests.json /tmp/meta-network-policy/requests-pass1.json
+          cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/decision-audit-pass1.json
 
-      - name: Apply updated allowlist through real Senju network lane
+      - name: Apply pass 1 through real Senju network lane
         run: |
           python automation/codegen/network_policy_apply.py \
             --policy automation/codegen/meta_state/network_policy_runtime.json \
-            --out /tmp/meta-network-policy/apply-audit.json \
+            --out /tmp/meta-network-policy/apply-audit-pass1.json \
             --feedback automation/codegen/meta_state/network_policy_feedback.json \
-            --max-hosts 16
-          cp automation/codegen/meta_state/network_policy_feedback.json /tmp/meta-network-policy/feedback.json
+            --max-hosts 64
+          cp automation/codegen/meta_state/network_policy_feedback.json /tmp/meta-network-policy/feedback-pass1.json
 
-      - name: Feed apply result back into the policy learner
+      - name: Read authorized external responses for new findings
+        run: |
+          python automation/codegen/network_policy_authorized_discovery.py \
+            --policy automation/codegen/meta_state/network_policy_runtime.json \
+            --out /tmp/meta-network-policy/authorized-response-evidence.json \
+            --max-hosts 24
+
+      - name: Re-ingest authorized response and rewrite policy in same cycle
         run: |
           python automation/codegen/network_policy_runner.py \
             --state-dir automation/codegen/meta_state \
             --repo-root . \
             --previous automation/codegen/meta_state/network_policy_runtime.json \
-            --input automation/codegen/meta_state/network_policy_feedback.json \
-            --input /tmp/meta-network-policy/apply-audit.json \
+            --input /tmp/meta-network-policy/explicit-seeds.json \
+            --input /tmp/meta-network-policy/feedback-pass1.json \
+            --input /tmp/meta-network-policy/apply-audit-pass1.json \
+            --input /tmp/meta-network-policy/authorized-response-evidence.json \
+            --summary-out /tmp/meta-network-policy/expansion-summary-pass2.json
+          cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime-pass2.json
+          cp automation/codegen/meta_state/network_policy_expansion_requests.json /tmp/meta-network-policy/requests-pass2.json
+          cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/decision-audit-pass2.json
+
+      - name: Apply pass 2 through expanded real network lane
+        run: |
+          python automation/codegen/network_policy_apply.py \
+            --policy automation/codegen/meta_state/network_policy_runtime.json \
+            --out /tmp/meta-network-policy/apply-audit-pass2.json \
+            --feedback automation/codegen/meta_state/network_policy_feedback.json \
+            --max-hosts 64
+          cp automation/codegen/meta_state/network_policy_feedback.json /tmp/meta-network-policy/feedback-pass2.json
+
+      - name: Require a live authorized production connection
+        shell: bash
+        run: |
+          set -euo pipefail
+          seeds="$(jq '.hosts | length' /tmp/meta-network-policy/explicit-seeds.json)"
+          attempted="$(jq '.attempted' /tmp/meta-network-policy/apply-audit-pass2.json)"
+          succeeded="$(jq '.succeeded' /tmp/meta-network-policy/apply-audit-pass2.json)"
+          echo "explicit_seeds=$seeds attempted=$attempted succeeded=$succeeded"
+          if [[ "$seeds" -gt 0 && "$attempted" -eq 0 ]]; then
+            echo "explicit authority existed but no network contact was attempted" >&2
+            exit 1
+          fi
+          if [[ "$attempted" -gt 0 && "$succeeded" -eq 0 ]]; then
+            echo "no authorized production network contact succeeded" >&2
+            exit 1
+          fi
+
+      - name: Feed final apply result back into policy learner
+        run: |
+          python automation/codegen/network_policy_runner.py \
+            --state-dir automation/codegen/meta_state \
+            --repo-root . \
+            --previous automation/codegen/meta_state/network_policy_runtime.json \
+            --input /tmp/meta-network-policy/explicit-seeds.json \
+            --input /tmp/meta-network-policy/feedback-pass2.json \
+            --input /tmp/meta-network-policy/apply-audit-pass2.json \
+            --input /tmp/meta-network-policy/authorized-response-evidence.json \
             --summary-out /tmp/meta-network-policy/post-apply-summary.json
           cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime-final.json
           cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/post-apply-decision-audit.json
