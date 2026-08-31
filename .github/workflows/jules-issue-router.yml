@@ -120,4 +120,4 @@ jobs:
             esac
           done
 
-          comment "Julesはまだ処理中です。20分の監視時間を超えたため、JulesコンソールでSession $session_idを確認してください。"
+          comment "Julesはまだ処理中です。20分の監視時間を超えたため、JulesコンソールSession $session_idを確認してください。"
