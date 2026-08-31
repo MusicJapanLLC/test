@@ -14,8 +14,8 @@ It aggressively reuses every authority source the production system already trus
 
 For unresolved third-party hosts it emits a persistent opportunity queue describing what
 independent evidence is still missing. A HARD_DENY becomes eligible for reconsideration
-only when independently trusted authority evidence has changed; transport or identity
-rotation cannot turn the denial into an allow.
+only when independently trusted authority evidence has changed since that denial;
+transport or identity rotation cannot turn the denial into an allow.
 """
 from __future__ import annotations
 
@@ -156,6 +156,23 @@ def _is_hard_denial(rows: Iterable[Mapping[str, Any]]) -> bool:
     return False
 
 
+def _latest_denial_evidence_fingerprint(rows: Iterable[Mapping[str, Any]]) -> str | None:
+    latest: Mapping[str, Any] | None = None
+    latest_ts = -1
+    for row in rows:
+        try:
+            ts = int(row.get("ts", row.get("at", 0)) or 0)
+        except (TypeError, ValueError):
+            ts = 0
+        if latest is None or ts >= latest_ts:
+            latest = row
+            latest_ts = ts
+    if latest is None:
+        return None
+    raw = latest.get("authority_evidence_fingerprint")
+    return str(raw).strip() if isinstance(raw, str) and raw.strip() else None
+
+
 def run_authority_opportunity_explorer(
     state_dir: str | Path,
     *,
@@ -189,7 +206,9 @@ def run_authority_opportunity_explorer(
         host = candidate["host"]
         url = candidate["url"]
         matched_root = _covered_by_root(host, roots)
-        hard_denied = _is_hard_denial(denials.get(host, ()))
+        host_denials = denials.get(host, ())
+        hard_denied = _is_hard_denial(host_denials)
+        denial_fingerprint = _latest_denial_evidence_fingerprint(host_denials)
 
         if host in signed:
             status = "promotable_signed_delegation"
@@ -201,7 +220,12 @@ def run_authority_opportunity_explorer(
             status = "seek_independent_authority_evidence"
             evidence = None
 
-        if hard_denied and status.startswith("promotable_"):
+        authority_changed_since_denial = (
+            hard_denied
+            and denial_fingerprint is not None
+            and denial_fingerprint != authority_fingerprint
+        )
+        if hard_denied and authority_changed_since_denial and status.startswith("promotable_"):
             status = "reconsider_hard_denial_with_new_independent_evidence"
         elif hard_denied:
             status = "hard_denial_wait_for_new_independent_evidence"
@@ -215,6 +239,8 @@ def run_authority_opportunity_explorer(
                 "hard_denial_seen": hard_denied,
                 "evidence": evidence,
                 "authority_evidence_fingerprint": authority_fingerprint,
+                "denial_authority_evidence_fingerprint": denial_fingerprint,
+                "authority_changed_since_denial": authority_changed_since_denial,
                 "autonomous_next_actions": [
                     "recheck_canonical_owner_roots",
                     "recheck_active_standing_authority",
