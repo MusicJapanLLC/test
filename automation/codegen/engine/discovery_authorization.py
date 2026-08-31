@@ -10,6 +10,7 @@ Promotion rules:
 - Trusted roots come from META_DISCOVERY_TRUST_ROOTS or meta_state/discovery_policy.json.
 - Promotions are probationary, read-only (GET/HEAD), credential-free, and expire.
 - Untrusted discoveries are retained as candidates; they are never auto-authorized.
+- Every candidate also receives a strong human-intent inference score for prioritization.
 """
 from __future__ import annotations
 
@@ -21,6 +22,8 @@ import time
 import urllib.parse
 from pathlib import Path
 from typing import Any, Iterable
+
+from .human_intent_inference import as_dict, infer_human_intent
 
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 HOST_KEYS = {"host", "hostname", "domain", "domain_name", "target_host"}
@@ -129,6 +132,57 @@ def _candidate_record(url: str, host: str, source: str) -> dict[str, Any]:
     }
 
 
+def _intent_doc(state: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]:
+    """Infer likely owner intent for every candidate without minting guessed authority."""
+    reviewed = _load_json(state / "authority_reviewed_grants.json", {})
+    prior_grants = list(reviewed.get("hosts", {}).values()) if isinstance(reviewed, dict) else []
+    signals = _load_json(state / "human_intent_signals.json", {})
+    if not isinstance(signals, dict):
+        signals = {}
+    supplied_links = [str(x) for x in signals.get("supplied_links", []) if isinstance(x, str)]
+    owner_context = bool(signals.get("owner_context", False))
+    similarity = signals.get("similarity_by_host", {})
+    if not isinstance(similarity, dict):
+        similarity = {}
+
+    decisions: list[dict[str, Any]] = []
+    for candidate in candidates:
+        host = str(candidate.get("host", ""))
+        decision = infer_human_intent(
+            {
+                "host": host,
+                "url": candidate.get("url"),
+                "method": candidate.get("method", "GET"),
+                "credential_scope": candidate.get("credential_scope", "none"),
+            },
+            prior_explicit_approvals=prior_grants,
+            supplied_links=supplied_links,
+            owner_context=owner_context,
+            similarity_score=float(similarity.get(host, 0.0)),
+        )
+        decisions.append({
+            "host": host,
+            "url": candidate.get("url"),
+            "source": candidate.get("source"),
+            **as_dict(decision),
+        })
+
+    return {
+        "schema": "meta-human-intent-inference/v1",
+        "generated_at": _now(),
+        "policy": {
+            "infer_likely_human_approval": True,
+            "prior_similar_explicit_approval_is_strong_evidence": True,
+            "owner_context_is_strong_evidence": True,
+            "owner_supplied_link_is_strong_intent_evidence": True,
+            "inference_may_prioritize_without_reprompt": True,
+            "inference_may_create_new_authority": False,
+            "exact_live_explicit_grant_may_be_reused_without_reprompt": True,
+        },
+        "decisions": decisions,
+    }
+
+
 def run_discovery_authorization(
     state_dir: str | Path,
     *,
@@ -143,6 +197,7 @@ def run_discovery_authorization(
     Output files:
       discovery_candidates.json  - every normalized discovery and decision
       discovery_authorized.json  - live probationary read-only host grants
+      human_intent_decisions.json - likely-owner-intent ranking for all candidates
     """
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
@@ -212,6 +267,8 @@ def run_discovery_authorization(
         "mode": "probationary_read_only",
         "hosts": dict(sorted(promoted.items())),
     }
+    intent_doc = _intent_doc(state, candidates)
+
     (state / "discovery_candidates.json").write_text(
         json.dumps(candidate_doc, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -220,10 +277,17 @@ def run_discovery_authorization(
         json.dumps(authorized_doc, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    (state / "human_intent_decisions.json").write_text(
+        json.dumps(intent_doc, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    decisions = intent_doc.get("decisions", [])
     return {
         "trusted_roots": sorted(roots),
         "candidate_count": len(candidates),
         "authorized_hosts": sorted(promoted),
         "authorized_count": len(promoted),
         "ttl_seconds": ttl,
+        "intent_likely_count": sum(1 for x in decisions if x.get("likely_owner_intent")),
+        "intent_auto_execute_count": sum(1 for x in decisions if x.get("may_auto_execute")),
     }
