@@ -81,6 +81,71 @@ def test_openhands_block_becomes_next_cycle_repair_focus() -> None:
     assert packet["pr_swarm"]["recent"][0]["machine_audit"] == "BLOCK"
 
 
+def test_owned_range_counterexample_flows_into_repair_focus_and_markdown() -> None:
+    owned = {
+        "schema": "senju-owned-range-active/v1",
+        "authorized_host": "kabeya-authorized-test-range.onrender.com",
+        "request_count": 44,
+        "pages_discovered": 8,
+        "forms_discovered": 1,
+        "write_attempts": 1,
+        "write_provider_acks": 1,
+        "independent_readbacks": 1,
+        "counterexample_count": 1,
+        "digest": "owned123",
+        "counterexamples": [
+            {
+                "kind": "owned_range_control_counterexample",
+                "surface": "/internal",
+                "target": "https://kabeya-authorized-test-range.onrender.com/internal",
+                "probe": "role_diff",
+                "reason": "status_diff:403->200",
+            }
+        ],
+        "evolution": {
+            "next_family_ranking": ["role_diff", "case_diff", "debug_diff"],
+        },
+    }
+    packet = build_bus(
+        {"steps_executed": 1, "successful_steps": 1, "failed_steps": 0},
+        {"safe": True},
+        [],
+        owned_range=owned,
+    )
+    assert packet["schema"] == "senju-agency-bus/v3"
+    assert packet["next_focus"] == "owned_range_counterexample_repair"
+    assert packet["owned_range_active"]["write_provider_acks"] == 1
+    assert any(row["probe"] == "role_diff" for row in packet["adversary_counterexamples"])
+    text = render_markdown(packet)
+    assert "owned range: present" in text
+    assert "role_diff" in text
+
+
+def test_owned_write_readback_gap_becomes_priority() -> None:
+    owned = {
+        "authorized_host": "kabeya-authorized-test-range.onrender.com",
+        "write_attempts": 1,
+        "write_provider_acks": 1,
+        "independent_readbacks": 0,
+        "counterexample_count": 1,
+        "counterexamples": [
+            {
+                "kind": "owned_range_readback_gap",
+                "target": "https://kabeya-authorized-test-range.onrender.com/api/contact",
+                "probe": "dummy_form_write",
+                "reason": "provider acknowledged write but marker was not independently observable",
+            }
+        ],
+    }
+    packet = build_bus(
+        {"steps_executed": 0, "successful_steps": 0, "failed_steps": 0},
+        {"safe": True},
+        [],
+        owned_range=owned,
+    )
+    assert packet["next_focus"] == "owned_range_readback_gap"
+
+
 def test_digest_is_stable_across_build_time(tmp_path: Path) -> None:
     frontier = {
         "steps_executed": 1,
