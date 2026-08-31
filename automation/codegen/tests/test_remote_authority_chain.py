@@ -181,7 +181,6 @@ def test_signed_remote_delegation_builds_cross_domain_recursive_production_chain
         n=_RSA_B_N,
         d=_RSA_B_D,
     )
-    # Deliberately reverse the order to prove fixed-point processing, not list order.
     _write(
         state / "remote_authority_declarations.json",
         {"declarations": [second, first]},
