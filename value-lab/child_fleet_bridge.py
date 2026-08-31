@@ -89,7 +89,7 @@ def sanitize_fleet(raw: dict[str, Any]) -> dict[str, Any]:
         "top_concepts": concepts,
         "status_counts": status_counts,
         "hypotheses": hypotheses,
-        "rule": "research context only; no URL/host/target/network/write authority is transferred",
+        "rule": "research context only; no raw locators, request data, or execution/write authority is transferred",
     }
 
 
