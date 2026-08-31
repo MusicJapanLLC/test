@@ -48,7 +48,8 @@ jobs:
           (cd senju && python -m pytest \
             tests/test_external_frontier.py \
             tests/test_autonomy_delegate.py \
-            tests/test_agency_bus.py -q)
+            tests/test_agency_bus.py \
+            tests/test_owned_range_active.py -q)
 
       - name: Restore previous agency memory
         shell: bash
@@ -110,6 +111,29 @@ jobs:
 
           echo "PR273_RUN=${FULL_RUN:-none}" >> "$GITHUB_ENV"
           echo "PR275_RUN=${OPP_RUN:-none}" >> "$GITHUB_ENV"
+
+      - name: Restore latest owned-range active evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-agency/owned-range
+          OWNED_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Owned Range Active Evolution" --status success --limit 20 \
+            --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$OWNED_RUN" ]]; then
+            gh run download "$OWNED_RUN" --repo "$GITHUB_REPOSITORY" \
+              --name senju-owned-range-active-evidence \
+              --dir /tmp/senju-agency/owned-range || true
+          fi
+          OWNED_REPORT="$(find /tmp/senju-agency/owned-range -name report.json -print -quit || true)"
+          if [[ -n "$OWNED_REPORT" ]]; then
+            cp "$OWNED_REPORT" /tmp/senju-agency/owned-range.json
+            echo "owned-range active evidence restored from run $OWNED_RUN"
+          else
+            printf '{}\n' > /tmp/senju-agency/owned-range.json
+            echo "no successful owned-range artifact yet; bus continues without it"
+          fi
+          echo "OWNED_RANGE_RUN=${OWNED_RUN:-none}" >> "$GITHUB_ENV"
 
       - name: Snapshot recent PR swarm and OpenHands machine audits
         shell: bash
@@ -179,6 +203,7 @@ jobs:
             --merge-audit /tmp/senju-agency/merge-audit.json \
             --pr273 /tmp/senju-agency/pr273 \
             --pr275 /tmp/senju-agency/pr275 \
+            --owned-range /tmp/senju-agency/owned-range.json \
             --out /tmp/senju-agency/agency-bus.json \
             --markdown /tmp/senju-agency/agency-bus.md
           cat /tmp/senju-agency/agency-bus.md >> "$GITHUB_STEP_SUMMARY"
@@ -207,22 +232,22 @@ jobs:
 
           root = Path('/tmp/senju-agency')
           bus = json.loads((root / 'agency-bus.json').read_text())
-          focus = bus.get('next_focus')
           question = (
               'Act as Senju agency director. Use the current evolution state and the shared agency bus below. '
               'Select ONE concrete, testable repository improvement that closes the loop between external public-read research, '
-              'PR outcomes, adversarial counterexamples, AI delegation, code generation, observability, and reliability. '
-              'If focus is blocked_pr_repair, inspect the blocked PR and change the hypothesis instead of duplicating it. '
-              'If focus is guard_regression_repair or counterexample_expansion, add a regression test/counterexample first and '
-              'then propose the smallest defensive or reliability fix. Prefer senju/, value-lab/, company-society/, '
-              'automation/world/, automation/control_plane/, automation/ai_foundry/, automation/agent_factory/, '
-              'automation/codegen/, api/, public/, non-security scripts/, or docs/. Detect overlap with active PRs before acting. '
-              'Do not propose credential expansion, unauthorized third-party writes, live guard bypass, exploit deployment, '
-              'guard removal, or security-policy weakening.\n\nAGENCY BUS:\n'
-              + json.dumps(bus, ensure_ascii=False)[:16000]
+              'the explicitly owned active test range, PR outcomes, adversarial counterexamples, AI delegation, code generation, '
+              'observability, and reliability. If focus begins with owned_range_, use the owned-range evidence and evolving probe '
+              'ranking to add a regression test or the smallest reliability/verification fix; never generalize that authority to '
+              'another hostname. If focus is blocked_pr_repair, inspect the blocked PR and change the hypothesis instead of '
+              'duplicating it. If focus is guard_regression_repair or counterexample_expansion, add a regression test/counterexample '
+              'first and then propose the smallest defensive or reliability fix. Prefer senju/, value-lab/, company-society/, '
+              'automation/world/, automation/control_plane/, automation/ai_foundry/, automation/agent_factory/, automation/codegen/, '
+              'api/, public/, non-security scripts/, or docs/. Detect overlap with active PRs before acting. Do not propose '
+              'credential expansion, unauthorized third-party writes, live guard bypass, exploit deployment, guard removal, or '
+              'security-policy weakening.\n\nAGENCY BUS:\n' + json.dumps(bus, ensure_ascii=False)[:18000]
           )
           (root / 'agency-question.txt').write_text(question, encoding='utf-8')
-          print(question[:5000])
+          print(question[:6000])
 
       - name: Ask Personal AI Core and AI FOUNDRY for one action
         if: env.AGENCY_CHANGED == 'true'
@@ -288,7 +313,8 @@ jobs:
             --arg focus "$AGENCY_FOCUS" \
             --arg pr273 "$PR273_RUN" \
             --arg pr275 "$PR275_RUN" \
-            '$request + "\n\nRationale: " + $rationale + "\n\nSenju agency key: " + $key + "\nAgency digest: " + $digest + "\nAgency focus: " + $focus + "\nPR273 evidence run: " + $pr273 + "\nPR275 evidence run: " + $pr275 + "\n\nInspect current default branch, recent [Senju] PRs, and active overlap first. If repairing a blocked attempt, change the hypothesis and add a regression test before retrying the implementation. Implement one focused change, run relevant tests, and open a pull request. PR title MUST begin with [Senju]. Include senju-delegation-key: " + $key + " in the PR body. Do not push directly to the default branch. Public external research is GET/HEAD only. Do not expand credentials, unauthorized third-party write/exploit authority, live guard bypass, or weaken security/authorization policy. The PR will be independently audited by OpenHands; Senju automation may approve it only after AI_MERGE_AUDIT PASS for the exact head SHA."')"
+            --arg owned "$OWNED_RANGE_RUN" \
+            '$request + "\n\nRationale: " + $rationale + "\n\nSenju agency key: " + $key + "\nAgency digest: " + $digest + "\nAgency focus: " + $focus + "\nPR273 evidence run: " + $pr273 + "\nPR275 evidence run: " + $pr275 + "\nOwned-range evidence run: " + $owned + "\n\nInspect current default branch, recent [Senju] PRs, and active overlap first. If repairing a blocked attempt, change the hypothesis and add a regression test before retrying the implementation. Implement one focused change, run relevant tests, and open a pull request. PR title MUST begin with [Senju]. Include senju-delegation-key: " + $key + " in the PR body. Do not push directly to the default branch. Public external research is GET/HEAD only. The exact host kabeya-authorized-test-range.onrender.com is separately ownership-verified and may receive the bounded same-origin non-destructive active probes and dummy POSTs declared by AUTHORIZED_TEST_TARGETS.json; never extend that write authority to another host. Do not expand credentials, unauthorized third-party write/exploit authority, live guard bypass, or weaken security/authorization policy. The PR will be independently audited by OpenHands; Senju automation may approve it only after AI_MERGE_AUDIT PASS for the exact head SHA."')"
           payload="$(jq -n \
             --arg prompt "$prompt" \
             --arg source "$source_name" \
