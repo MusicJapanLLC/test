@@ -1,13 +1,19 @@
-from engine.security_proposal import ALLOWED_OPERATIONS, apply_proposal_to_state, evaluate_security_proposal
+from engine.security_proposal import (
+    ALLOWED_OPERATIONS,
+    EXPANSION_OPERATIONS,
+    apply_proposal_to_state,
+    evaluate_security_proposal,
+    proposal_sha256,
+)
 
 
-def _proposal(target="guard", operation="tighten_rule", votes=None):
+def _proposal(target="guard", operation="tighten_rule", votes=None, parameters=None):
     return {
         "id": "sp-test-001",
         "environment": "production",
         "owner_namespace": "MusicJapanLLC/test",
         "target": target,
-        "operations": [{"type": operation, "parameters": {"reason": "test"}}],
+        "operations": [{"type": operation, "parameters": parameters or {"reason": "test"}}],
         "council_votes": votes or {
             "META": {"approve": True},
             "X": {"approve": True},
@@ -28,6 +34,21 @@ def _bundle(changes):
             "Senju": {"approve": True},
         },
     }
+
+
+def _review(proposal, **overrides):
+    row = {
+        "approved": True,
+        "source": "github_pull_request_review",
+        "reviewer": "maintainer",
+        "reviewer_type": "User",
+        "reviewer_association": "OWNER",
+        "review_state": "APPROVED",
+        "pull_request": 123,
+        "proposal_sha256": proposal_sha256(proposal),
+    }
+    row.update(overrides)
+    return row
 
 
 def test_all_requested_security_surfaces_are_supported():
@@ -81,11 +102,79 @@ def test_non_production_request_cannot_self_approve():
     assert decision["production_apply_eligible"] is False
 
 
-def test_authority_expansion_is_not_an_allowed_operation():
-    decision = evaluate_security_proposal(_proposal("authority_policy", "expand_scope"))
+def test_authority_expansion_is_first_class_but_not_ai_only_self_approved():
+    proposal = _proposal("authority_policy", "expand_scope")
+    decision = evaluate_security_proposal(proposal)
+    assert decision["proposal_class"] == "authority_expansion"
+    assert decision["creates_new_authority"] is True
+    assert decision["ai_consensus_approved"] is True
     assert decision["self_approved"] is False
-    assert decision["creates_new_authority"] is False
     assert decision["scope_expansion_allowed"] is False
+    assert decision["production_apply_eligible"] is False
+    assert decision["fresh_human_prompt_required"] is True
+
+
+def test_authority_expansion_requires_unanimous_ai_consensus():
+    proposal = _proposal("authority_policy", "add_external_host", votes={
+        "META": {"approve": True},
+        "X": {"approve": True},
+        "Senju": {"approve": False},
+    })
+    decision = evaluate_security_proposal(proposal, _review(proposal))
+    assert decision["council"]["majority"] is True
+    assert decision["council"]["unanimous"] is False
+    assert decision["ai_consensus_approved"] is False
+    assert decision["production_apply_eligible"] is False
+
+
+def test_reviewed_authority_expansion_becomes_production_apply_eligible():
+    proposal = _proposal("network_policy", "allow_private_network", parameters={"cidr": "10.20.0.0/16"})
+    decision = evaluate_security_proposal(proposal, _review(proposal))
+    assert decision["proposal_class"] == "authority_expansion"
+    assert decision["external_approval"]["verified"] is True
+    assert decision["self_approved"] is False
+    assert decision["proposal_gate_eligible"] is True
+    assert decision["auto_merge_eligible"] is True
+    assert decision["production_apply_eligible"] is True
+    assert decision["scope_expansion_allowed"] is True
+    assert decision["trust_root"] == "ai-council+github-maintainer-review/v1"
+
+
+def test_review_is_bound_to_exact_proposal_hash():
+    proposal = _proposal("authority_policy", "add_provider", parameters={"provider": "example"})
+    bad_review = _review(proposal, proposal_sha256="0" * 64)
+    decision = evaluate_security_proposal(proposal, bad_review)
+    assert decision["external_approval"]["verified"] is False
+    assert decision["production_apply_eligible"] is False
+
+
+def test_requested_expansion_operations_are_explicitly_classified():
+    assert {
+        "expand_scope",
+        "add_external_host",
+        "add_provider",
+        "add_repository",
+        "add_cloud_account",
+        "add_organization",
+        "add_trusted_root",
+    } <= EXPANSION_OPERATIONS["authority_policy"]
+    assert "register_credential_reference" in EXPANSION_OPERATIONS["credential_broker"]
+    assert {"add_cidr", "allow_private_network", "broaden_api_methods"} <= EXPANSION_OPERATIONS["network_policy"]
+    assert "modify_branch_protection" in EXPANSION_OPERATIONS["branch_protection"]
+    assert {"add_deploy_target", "modify_deployment_protection"} <= EXPANSION_OPERATIONS["deployment_protection"]
+    assert {"add_authorization_entry", "expand_authorization_entry"} <= EXPANSION_OPERATIONS["authorization_registry"]
+
+
+def test_raw_credential_secret_material_is_rejected():
+    proposal = _proposal(
+        "credential_broker",
+        "register_credential_reference",
+        parameters={"provider": "example", "secret": "do-not-store-this"},
+    )
+    decision = evaluate_security_proposal(proposal, _review(proposal))
+    assert decision["raw_secret_material_detected"] is True
+    assert decision["ai_consensus_approved"] is False
+    assert decision["production_apply_eligible"] is False
 
 
 def test_emergency_stop_disable_is_not_an_allowed_operation():
@@ -103,6 +192,22 @@ def test_production_apply_is_idempotent_and_persistent():
     assert first["generation"] == 1
     assert first["applied_proposals"][0]["production_applied"] is True
     assert first["controls"]["guard"][0]["type"] == "tighten_rule"
+
+
+def test_reviewed_expansion_persists_review_and_authority_record():
+    proposal = _proposal(
+        "authority_policy",
+        "add_repository",
+        parameters={"repository": "MusicJapanLLC/example"},
+    )
+    review = _review(proposal)
+    decision = evaluate_security_proposal(proposal, review)
+    state = apply_proposal_to_state({}, proposal, decision, review)
+    applied = state["applied_proposals"][0]
+    assert applied["proposal_class"] == "authority_expansion"
+    assert applied["external_approval"]["verified"] is True
+    assert applied["production_applied"] is True
+    assert state["controls"]["authority_policy"][0]["type"] == "add_repository"
 
 
 def test_wrong_namespace_cannot_self_approve():
@@ -143,7 +248,7 @@ def test_atomic_bundle_can_self_approve_all_ten_security_surfaces_at_once():
     assert state["applied_proposals"][0]["atomic_bundle"] is True
 
 
-def test_one_unsafe_change_blocks_entire_atomic_bundle():
+def test_one_expansion_change_blocks_ai_only_atomic_bundle_until_reviewed():
     proposal = _bundle([
         {
             "target": "audit_policy",
@@ -156,16 +261,12 @@ def test_one_unsafe_change_blocks_entire_atomic_bundle():
     ])
     decision = evaluate_security_proposal(proposal)
     assert decision["atomic_bundle"] is True
+    assert decision["proposal_class"] == "authority_expansion"
     assert decision["self_approved"] is False
     assert decision["production_apply_eligible"] is False
-    assert decision["standing_ai_council_authority"] is False
 
-    try:
-        apply_proposal_to_state({}, proposal, decision)
-    except PermissionError:
-        pass
-    else:
-        raise AssertionError("unsafe atomic bundle must not partially apply")
+    reviewed = evaluate_security_proposal(proposal, _review(proposal))
+    assert reviewed["production_apply_eligible"] is True
 
 
 def test_malformed_bundle_is_fail_closed():
