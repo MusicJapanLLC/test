@@ -20,7 +20,7 @@ def _envelope() -> OwnerExpansionEnvelope:
     return OwnerExpansionEnvelope.from_mapping({
         "envelope_id": "test-envelope",
         "proof_types": ["existing_standing_authorization", "owner_verified_domain", "owner_exact_link"],
-        "auto_apply_proof_types": ["existing_standing_authorization", "owner_verified_domain"],
+        "auto_apply_proof_types": ["existing_standing_authorization"],
         "new_host_methods": ["GET", "HEAD", "OPTIONS"],
         "existing_host_method_ceiling": ["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH"],
         "max_added_hosts_per_cycle": 8,
@@ -70,14 +70,14 @@ def test_unverified_discovery_becomes_aggressive_negotiation_not_authority(tmp_p
     assert proposals[0].proof_type == "unverified_discovery"
     campaign = materialize_negotiation_campaign(state, proposals, _envelope(), now=1000)
     assert campaign["negotiation_intensity"] == 60
-    assert campaign["task_count"] == 30  # 6 agents x 5 negotiation angles
+    assert campaign["task_count"] == 30
     result = evaluate_and_apply_per_host(repo, state, _envelope(), proposals, now=1000)
     assert result["auto_applied_count"] == 0
     assert result["owner_review_count"] == 1
     assert "unknown.example" not in result["current_effective_ceiling"]["exact_hosts"]
 
 
-def test_verified_owned_host_can_be_applied_by_meta_x_senju_inside_envelope(tmp_path: Path) -> None:
+def test_verified_new_host_stays_owner_review_even_with_unanimous_ai_ballots(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
     _write(state / "owner_scope_expansion_evidence.json", {
         "evidence": [{
@@ -94,42 +94,44 @@ def test_verified_owned_host_can_be_applied_by_meta_x_senju_inside_envelope(tmp_
     proposal = build_scope_proposals(repo, state, _envelope())[0]
     _ballots(state, proposal.proposal_id)
     result = evaluate_and_apply_per_host(repo, state, _envelope(), [proposal], now=1000)
-    assert result["auto_applied_count"] == 1
-    ceiling = result["current_effective_ceiling"]
-    assert "owned-new.example" in ceiling["exact_hosts"]
-    assert ceiling["per_host_methods"]["owned-new.example"] == ["GET", "HEAD", "OPTIONS"]
-    assert "POST" not in ceiling["per_host_methods"]["owned-new.example"]
+    assert result["auto_applied_count"] == 0
+    assert result["owner_review_count"] == 1
+    assert "owned-new.example" not in result["current_effective_ceiling"]["exact_hosts"]
 
 
-def test_existing_host_can_expand_methods_without_spilling_to_new_host(tmp_path: Path) -> None:
+def test_existing_owner_host_can_expand_methods_after_meta_x_senju_quorum(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _write(state / "owner_scope_expansion_evidence.json", {
-        "evidence": [{
-            "host": "owned-new.example",
-            "proof_type": "owner_verified_domain",
-            "proof_ref": "dns-proof:abc",
-            "verified": True,
-        }]
-    })
     _write(state / "owner_scope_negotiation_signals.json", {
         "signals": [
             {"host": "existing.example", "requested_methods": ["GET", "HEAD", "POST", "PATCH"]},
-            {"host": "owned-new.example", "requested_methods": ["GET", "HEAD"]},
         ]
     })
-    proposals = build_scope_proposals(repo, state, _envelope())
-    ballot_doc = {"ballots_by_proposal": {}}
-    for proposal in proposals:
-        ballot_doc["ballots_by_proposal"][proposal.proposal_id] = [
-            {"actor": "META", "approve": True, "confidence": 90},
-            {"actor": "X", "approve": True, "confidence": 90},
-            {"actor": "SENJU", "approve": True, "confidence": 90},
-        ]
-    _write(state / "owner_scope_negotiation_ballots.json", ballot_doc)
-    result = evaluate_and_apply_per_host(repo, state, _envelope(), proposals, now=1000)
+    proposal = build_scope_proposals(repo, state, _envelope())[0]
+    _ballots(state, proposal.proposal_id)
+    result = evaluate_and_apply_per_host(repo, state, _envelope(), [proposal], now=1000)
     ceiling = result["current_effective_ceiling"]
+    assert result["auto_applied_count"] == 1
     assert "PATCH" in ceiling["per_host_methods"]["existing.example"]
-    assert ceiling["per_host_methods"]["owned-new.example"] == ["GET", "HEAD", "OPTIONS"]
+    assert ceiling["exact_hosts"] == ["existing.example"]
+
+
+def test_existing_host_needs_full_meta_x_senju_quorum(tmp_path: Path) -> None:
+    repo, state = _repo(tmp_path)
+    _write(state / "owner_scope_negotiation_signals.json", {
+        "signals": [{"host": "existing.example", "requested_methods": ["PATCH"]}]
+    })
+    proposal = build_scope_proposals(repo, state, _envelope())[0]
+    _write(state / "owner_scope_negotiation_ballots.json", {
+        "ballots_by_proposal": {
+            proposal.proposal_id: [
+                {"actor": "META", "approve": True, "confidence": 95},
+                {"actor": "X", "approve": True, "confidence": 95},
+            ]
+        }
+    })
+    result = evaluate_and_apply_per_host(repo, state, _envelope(), [proposal], now=1000)
+    assert result["auto_applied_count"] == 0
+    assert result["decisions"][0]["status"] == "council_negotiation_pending"
 
 
 def test_hard_deny_remains_terminal_even_with_unanimous_ballots(tmp_path: Path) -> None:
