@@ -23,9 +23,9 @@ from .external_denial_learning import (
     optimization_objective,
 )
 
-RECOVERY_SCHEMA = "senju-external-recovery-closed-loop/v1"
+RECOVERY_SCHEMA = "senju-external-recovery-closed-loop/v2"
 RELIABILITY_SCHEMA = "senju-external-agent-reliability/v1"
-PLAYBOOK_SCHEMA = "senju-external-recovery-playbook/v1"
+PLAYBOOK_SCHEMA = "senju-external-recovery-playbook/v2"
 
 
 @dataclasses.dataclass
@@ -125,11 +125,13 @@ def build_recovery_playbook(outcome: Mapping[str, Any]) -> dict[str, Any]:
     actions_by_category = {
         "network_denial": [
             "re_rank_agents_by_scope_reliability",
+            "apply_route_health_backoff",
             "run_local_transport_recovery_hook",
             "retry_exact_same_authorized_operation",
         ],
         "transient_service_failure": [
             "re_rank_agents_by_scope_reliability",
+            "apply_route_health_backoff",
             "honor_provider_availability_signal",
             "retry_exact_same_authorized_operation",
         ],
@@ -165,13 +167,20 @@ def build_recovery_playbook(outcome: Mapping[str, Any]) -> dict[str, Any]:
         "schema": PLAYBOOK_SCHEMA,
         "category": category,
         "retryable": retryable,
-        "priority": "critical" if len(denials) >= 3 else "high",
+        "priority": "critical" if category in BOUNDARY_DENIALS or len(denials) >= 3 else "high",
         "objective": optimization_objective(category),
         "actions": actions_by_category.get(category, actions_by_category["external_failure"]),
         "authority_invariants": dict(outcome.get("authority_invariants") or {}),
+        "route_health_before": dict(outcome.get("route_health_before") or {}),
+        "route_health_after": dict(outcome.get("route_health_after") or {}),
+        "agent_order": list(outcome.get("agent_order") or []),
+        "agent_budget": int(outcome.get("agent_budget", 0) or 0),
+        "repair_queue": list(outcome.get("repair_queue") or []),
         "automatic_changes_allowed": {
             "agent_order": retryable,
             "local_transport_state": retryable,
+            "retry_budget": retryable,
+            "backoff_multiplier": retryable,
             "host": False,
             "protocol": False,
             "method": False,
@@ -221,6 +230,7 @@ def execute_recovery_closed_loop(
             agents=ranked_agents,
             client_factory=client_factory,
             memory=learning,
+            max_agents=min(8, len(ranked_agents)),
         )
         reliability.learn_from_outcome(scope.scope_id, outcome)
         outcomes.append(outcome)
@@ -242,6 +252,7 @@ def execute_recovery_closed_loop(
                 "authority_preserved": True,
                 "outcomes": outcomes,
                 "playbooks": playbooks,
+                "repair_queue": learning.repair_queue(),
                 "denial_learning": learning.summary(),
                 "agent_reliability": reliability.to_dict(),
             }
@@ -265,6 +276,7 @@ def execute_recovery_closed_loop(
         "authority_preserved": True,
         "outcomes": outcomes,
         "playbooks": playbooks,
+        "repair_queue": learning.repair_queue(),
         "denial_learning": learning.summary(),
         "agent_reliability": reliability.to_dict(),
     }
