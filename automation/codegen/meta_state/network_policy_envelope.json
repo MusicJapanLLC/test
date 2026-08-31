@@ -1,12 +1,15 @@
 {
-  "schema": "meta-network-policy-envelope/v1",
+  "schema": "meta-network-policy-envelope/v2",
   "mode": "production_auto_expand_within_explicit_envelope",
   "authorized_roots": [
     "kabeya-authorized-test-range.onrender.com"
   ],
   "inherit_subdomains": true,
-  "ttl_seconds": 21600,
-  "max_dynamic_hosts": 64,
+  "ttl_seconds": 43200,
+  "max_dynamic_hosts": 192,
+  "max_apply_hosts_per_pass": 64,
+  "closed_loop_passes": 2,
+  "refresh_seconds": 300,
   "allowed_methods": [
     "GET",
     "HEAD"
@@ -17,5 +20,7 @@
   "external_response_can_drive_policy_update": true,
   "agent_finding_can_drive_policy_update": true,
   "active_explicit_exact_grants_can_be_reused": true,
+  "explicit_roots_are_seeded_each_cycle": true,
+  "authorized_response_links_are_reingested_same_cycle": true,
   "external_input_can_create_unrelated_trust_root": false
 }

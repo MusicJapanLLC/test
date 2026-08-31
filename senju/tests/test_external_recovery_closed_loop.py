@@ -74,6 +74,8 @@ def test_closed_loop_runs_second_pass_after_transient_exhaustion_and_preserves_a
         reset_calls.append(pass_index)
         assert playbook["retryable"] is True
         assert playbook["automatic_changes_allowed"]["host"] is False
+        assert playbook["automatic_changes_allowed"]["retry_budget"] is True
+        assert playbook["route_health_after"]["failure_pressure"] >= 1
         pass_counter["value"] += 1
 
     result = execute_recovery_closed_loop(
@@ -89,20 +91,20 @@ def test_closed_loop_runs_second_pass_after_transient_exhaustion_and_preserves_a
     assert result["success"] is True
     assert result["passes_used"] == 2
     assert result["authority_preserved"] is True
-    assert result["authority_invariants"] == {
-        "scope_id": "owned-read",
-        "host": "owned.example.com",
-        "protocol": "https",
-        "method": "GET",
-        "credential_scope": "none",
-        "unchanged_across_rotation": True,
-    }
+    invariants = result["authority_invariants"]
+    assert invariants["scope_id"] == "owned-read"
+    assert invariants["host"] == "owned.example.com"
+    assert invariants["protocol"] == "https"
+    assert invariants["method"] == "GET"
+    assert invariants["credential_scope"] == "none"
+    assert invariants["route_key"]
+    assert invariants["unchanged_across_rotation"] is True
     assert reset_calls == [1]
     assert len(calls) >= 4
     assert result["playbooks"][0]["category"] == "network_denial"
 
 
-def test_boundary_denial_produces_repair_playbook_without_second_pass() -> None:
+def test_boundary_denial_produces_critical_repair_playbook_without_second_pass() -> None:
     calls: list[str] = []
 
     def factory(scope: ExternalAuthorityScope, agent: str) -> _Client:
@@ -123,10 +125,14 @@ def test_boundary_denial_produces_repair_playbook_without_second_pass() -> None:
     assert calls == ["agent-a"]
     playbook = result["playbooks"][0]
     assert playbook["category"] == "authorization_denial"
+    assert playbook["priority"] == "critical"
     assert playbook["requires_external_repair"] is True
+    assert playbook["repair_queue"][0]["repair_action"] == "authority_reconcile"
     assert playbook["automatic_changes_allowed"] == {
         "agent_order": False,
         "local_transport_state": False,
+        "retry_budget": False,
+        "backoff_multiplier": False,
         "host": False,
         "protocol": False,
         "method": False,
@@ -176,6 +182,7 @@ def test_playbook_for_private_network_denial_keeps_contact_blocked() -> None:
         ],
     })
     assert playbook["retryable"] is False
+    assert playbook["priority"] == "critical"
     assert playbook["requires_external_repair"] is True
     assert "keep_private_network_contact_blocked" in playbook["actions"]
     assert playbook["automatic_changes_allowed"]["authority_scope"] is False
@@ -199,3 +206,4 @@ def test_shared_denial_memory_accumulates_across_recovery_passes() -> None:
     assert result["success"] is False
     assert result["denial_learning"]["event_count"] == 4
     assert result["denial_learning"]["optimization_objectives"][0]["priority"] == "critical"
+    assert result["repair_queue"][0]["category"] == "network_denial"
