@@ -1,6 +1,15 @@
 name: Shared Discovery Authority Cycle
 
 on:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/orchestrator.py'
+      - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
