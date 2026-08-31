@@ -10,10 +10,12 @@ on:
     paths:
       - "automation/codegen/engine/world_trust_root_runtime.py"
       - "automation/codegen/engine/world_trust_root_hardening.py"
+      - "automation/codegen/engine/world_trust_root_provenance_finalize.py"
       - "automation/codegen/world_trust_root_runtime.py"
       - "automation/codegen/config/world-trust-root.json"
       - "automation/codegen/tests/test_world_trust_root_runtime.py"
       - "automation/codegen/tests/test_world_trust_root_hardening.py"
+      - "automation/codegen/tests/test_world_trust_root_provenance_finalize.py"
       - "automation/world/unified_trust_loop.py"
       - "automation/world/adaptive_trust_cycle.py"
       - "automation/world/trust_boundary_proposals.py"
@@ -25,10 +27,12 @@ on:
     paths:
       - "automation/codegen/engine/world_trust_root_runtime.py"
       - "automation/codegen/engine/world_trust_root_hardening.py"
+      - "automation/codegen/engine/world_trust_root_provenance_finalize.py"
       - "automation/codegen/world_trust_root_runtime.py"
       - "automation/codegen/config/world-trust-root.json"
       - "automation/codegen/tests/test_world_trust_root_runtime.py"
       - "automation/codegen/tests/test_world_trust_root_hardening.py"
+      - "automation/codegen/tests/test_world_trust_root_provenance_finalize.py"
       - "automation/world/unified_trust_loop.py"
       - "automation/world/adaptive_trust_cycle.py"
       - "automation/world/trust_boundary_proposals.py"
@@ -64,13 +68,14 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Verify WORLD three-layer contract
+      - name: Verify WORLD four-layer contract
         run: |
           set -euo pipefail
           python -m pip install --disable-pip-version-check pytest==9.1.1
           python -m pytest \
             automation/codegen/tests/test_world_trust_root_runtime.py \
             automation/codegen/tests/test_world_trust_root_hardening.py \
+            automation/codegen/tests/test_world_trust_root_provenance_finalize.py \
             automation/world/test_unified_trust_loop.py \
             automation/world/test_adaptive_trust_cycle.py \
             automation/world/test_trust_boundary_proposals.py \
@@ -79,6 +84,7 @@ jobs:
           python -m py_compile \
             automation/codegen/engine/world_trust_root_runtime.py \
             automation/codegen/engine/world_trust_root_hardening.py \
+            automation/codegen/engine/world_trust_root_provenance_finalize.py \
             automation/codegen/world_trust_root_runtime.py \
             automation/world/unified_trust_loop.py \
             automation/world/adaptive_trust_cycle.py \
@@ -91,19 +97,30 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$WORLD_STATE/previous"
-          previous="$(gh run list \
+          restored=""
+          while read -r candidate; do
+            [[ -n "$candidate" ]] || continue
+            artifact_id="$(gh api \
+              "repos/$GITHUB_REPOSITORY/actions/runs/$candidate/artifacts" \
+              --jq '.artifacts[] | select(.name == "world-trust-root-runtime" and .expired == false) | .id' \
+              | head -n1 || true)"
+            [[ -n "$artifact_id" ]] || continue
+            rm -rf "$WORLD_STATE/previous"/*
+            if gh run download "$candidate" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name world-trust-root-runtime \
+              --dir "$WORLD_STATE/previous"; then
+              restored="$candidate"
+              break
+            fi
+          done < <(gh run list \
             --repo "$GITHUB_REPOSITORY" \
             --workflow world-trust-root-runtime.yml \
             --status success \
-            --limit 20 \
+            --limit 30 \
             --json databaseId \
-            --jq '.[0].databaseId // empty' || true)"
-          if [[ -n "$previous" ]]; then
-            gh run download "$previous" \
-              --repo "$GITHUB_REPOSITORY" \
-              --name world-trust-root-runtime \
-              --dir "$WORLD_STATE/previous" || true
-          fi
+            --jq '.[].databaseId' || true)
+          echo "WORLD_PREVIOUS_RUN=${restored:-none}"
 
       - name: Restore provenance-bound evidence from production loops
         if: github.event_name != 'pull_request'
@@ -122,9 +139,9 @@ jobs:
             local workflow="$2"
             local selector="$3"
             local dest="$4"
-            local run_json="$5"
-            local run head created updated
-            run="$(jq -r '.databaseId // empty' <<<"$run_json")"
+            local run="$5"
+            local run_json head created updated
+            run_json="$(gh run view "$run" --repo "$GITHUB_REPOSITORY" --json databaseId,headSha,createdAt,updatedAt,status,conclusion)"
             head="$(jq -r '.headSha // empty' <<<"$run_json")"
             created="$(jq -r '.createdAt // empty' <<<"$run_json")"
             updated="$(jq -r '.updatedAt // empty' <<<"$run_json")"
@@ -153,20 +170,23 @@ jobs:
             local workflow="$2"
             local artifact="$3"
             local dest="$4"
-            local run_json run
-            run_json="$(gh run list \
+            local candidate
+            while read -r candidate; do
+              [[ -n "$candidate" ]] || continue
+              rm -rf "$dest"/*
+              if gh run download "$candidate" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir "$dest" 2>/dev/null; then
+                write_provenance "$component" "$workflow" "$artifact" "$dest" "$candidate"
+                echo "WORLD_SOURCE component=$component run=$candidate"
+                return 0
+              fi
+            done < <(gh run list \
               --repo "$GITHUB_REPOSITORY" \
               --workflow "$workflow" \
               --status success \
-              --limit 20 \
-              --json databaseId,headSha,createdAt,updatedAt,status,conclusion \
-              --jq '.[0] // empty' || true)"
-            [[ -n "$run_json" ]] || return 0
-            run="$(jq -r '.databaseId // empty' <<<"$run_json")"
-            [[ -n "$run" ]] || return 0
-            if gh run download "$run" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir "$dest"; then
-              write_provenance "$component" "$workflow" "$artifact" "$dest" "$run_json"
-            fi
+              --limit 30 \
+              --json databaseId \
+              --jq '.[].databaseId' || true)
+            echo "WORLD_SOURCE_MISSING component=$component workflow=$workflow"
           }
 
           download_pattern_artifact() {
@@ -174,20 +194,23 @@ jobs:
             local workflow="$2"
             local pattern="$3"
             local dest="$4"
-            local run_json run
-            run_json="$(gh run list \
+            local candidate
+            while read -r candidate; do
+              [[ -n "$candidate" ]] || continue
+              rm -rf "$dest"/*
+              if gh run download "$candidate" --repo "$GITHUB_REPOSITORY" --pattern "$pattern" --dir "$dest" 2>/dev/null; then
+                write_provenance "$component" "$workflow" "$pattern" "$dest" "$candidate"
+                echo "WORLD_SOURCE component=$component run=$candidate"
+                return 0
+              fi
+            done < <(gh run list \
               --repo "$GITHUB_REPOSITORY" \
               --workflow "$workflow" \
               --status success \
-              --limit 20 \
-              --json databaseId,headSha,createdAt,updatedAt,status,conclusion \
-              --jq '.[0] // empty' || true)"
-            [[ -n "$run_json" ]] || return 0
-            run="$(jq -r '.databaseId // empty' <<<"$run_json")"
-            [[ -n "$run" ]] || return 0
-            if gh run download "$run" --repo "$GITHUB_REPOSITORY" --pattern "$pattern" --dir "$dest"; then
-              write_provenance "$component" "$workflow" "$pattern" "$dest" "$run_json"
-            fi
+              --limit 30 \
+              --json databaseId \
+              --jq '.[].databaseId' || true)
+            echo "WORLD_SOURCE_MISSING component=$component workflow=$workflow"
           }
 
           download_named_artifact \
@@ -247,6 +270,8 @@ jobs:
 
           assert checkpoint['schema'] == 'world-trust-root-runtime/v1'
           assert checkpoint['hardening_contract'] == 'world-trust-root-hardening/v2'
+          assert checkpoint['provenance_reporting_contract'] == 'world-trust-root-provenance-reporting/v1'
+          assert checkpoint['evidence_age_semantics'] == 'source_workflow_updated_at'
           assert checkpoint['environment'] == 'production'
           assert checkpoint['closed_loop'] is True
           assert checkpoint['runtime_generation'] >= 1
@@ -264,6 +289,21 @@ jobs:
           assert chain['checkpoint_digest'] == checkpoint['checkpoint_digest']
           assert queue['active_count'] == checkpoint['handoff_dispatch_count']
 
+          summary_map = {
+              'shared_discovery': checkpoint['authorization'],
+              'network_policy': checkpoint['replication_persistence'],
+              'external_recovery': checkpoint['self_tuning_recovery'],
+              'production_continuity': checkpoint['deployment_continuity'],
+          }
+          for component, evidence in manifest['components'].items():
+              if evidence['provenance_present']:
+                  assert evidence['source_run_id'] is not None
+                  assert evidence['source_head_sha']
+                  assert evidence['freshness_basis'] == 'source_workflow_updated_at'
+                  assert evidence['evidence_digest']
+                  assert summary_map[component]['evidence_age_seconds'] == evidence['source_age_seconds']
+                  assert summary_map[component]['freshness_basis'] == 'source_workflow_updated_at'
+
           for intent in intents['intents']:
               assert intent['authority_minted_by_world'] is False
               assert intent['credential_minted_by_world'] is False
@@ -280,13 +320,6 @@ jobs:
           for intent in intents['blocked_intents']:
               assert intent['authorization_coherent'] is False
               assert intent['ready_for_dispatch'] is False
-
-          for component, evidence in manifest['components'].items():
-              if evidence['provenance_present']:
-                  assert evidence['source_run_id'] is not None
-                  assert evidence['source_head_sha']
-                  assert evidence['freshness_basis'] == 'source_workflow_updated_at'
-                  assert evidence['evidence_digest']
 
           print('WORLD_TRUST_ROOT_HARDENING_V2_VERIFIED')
           PY
