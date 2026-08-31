@@ -49,6 +49,8 @@ GENERATED_FILES = frozenset(
         "human_intent_decisions.json",
         "shared_discovery_knowledge.json",
         "discovery_action_queue.json",
+        "discovery_capability_leases.json",
+        "discovery_external_action_receipts.json",
     }
 )
 
