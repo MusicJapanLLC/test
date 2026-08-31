@@ -1,8 +1,10 @@
 """Runtime-safe application layer for Owner-scope negotiation.
 
 The base negotiation module discovers proposals and materializes the all-agent campaign.
-This runtime layer applies approved amendments with per-host method ceilings so adding a
-new host cannot inherit broader methods that belonged to another host.
+This runtime layer applies approved amendments with per-host method ceilings. Automatic
+runtime mutation is deliberately limited to hosts that already have an active Owner
+standing authorization; new-host proposals remain active negotiation / owner-review
+items even when all AI seats agree.
 """
 from __future__ import annotations
 
@@ -22,6 +24,8 @@ from .owner_scope_negotiation import (
     derive_current_ceiling,
     materialize_negotiation_campaign,
 )
+
+SAFE_RUNTIME_AUTO_PROOF_TYPES = frozenset({"existing_standing_authorization"})
 
 
 def _initial_per_host_methods(ceiling: dict[str, Any]) -> dict[str, set[str]]:
@@ -56,7 +60,6 @@ def evaluate_and_apply_per_host(
     per_host = _initial_per_host_methods(ceiling)
     hosts = set(per_host)
     decisions: list[dict[str, Any]] = []
-    added = 0
 
     for proposal in proposals:
         ballots = _ballots_for(state, proposal.proposal_id)
@@ -79,28 +82,30 @@ def evaluate_and_apply_per_host(
         if proposal.proof_type not in envelope.auto_apply_proof_types:
             decisions.append({**base, "status": "owner_review_requested", "applied": False, "reason": "proof type is negotiable but not auto-applicable"})
             continue
+        if proposal.proof_type not in SAFE_RUNTIME_AUTO_PROOF_TYPES:
+            decisions.append({**base, "status": "owner_review_requested", "applied": False, "reason": "runtime auto-apply requires active Owner standing authorization"})
+            continue
         if len(yes) < envelope.decision_quorum or yes_conf < envelope.min_confidence:
             decisions.append({**base, "status": "council_negotiation_pending", "applied": False, "reason": "META/X/SENJU quorum or confidence not met"})
             continue
 
         is_new = proposal.host not in hosts
-        if is_new and added >= envelope.max_added_hosts_per_cycle:
-            decisions.append({**base, "status": "cycle_host_budget_exhausted", "applied": False, "reason": "new-host auto-apply budget reached"})
+        if is_new:
+            decisions.append({
+                **base,
+                "status": "owner_review_requested",
+                "applied": False,
+                "reason": "new exact host cannot be activated until Owner standing authorization exists",
+            })
             continue
 
-        if is_new:
-            hosts.add(proposal.host)
-            per_host[proposal.host] = set(envelope.new_host_methods)
-            added += 1
-        else:
-            current_methods = per_host.setdefault(proposal.host, set(envelope.new_host_methods))
-            current_methods.update(proposal.requested_methods & envelope.existing_host_method_ceiling)
-
+        current_methods = per_host.setdefault(proposal.host, set(envelope.new_host_methods))
+        current_methods.update(proposal.requested_methods & envelope.existing_host_method_ceiling)
         decisions.append({
             **base,
             "status": "auto_applied_inside_owner_expansion_envelope",
             "applied": True,
-            "new_host": is_new,
+            "new_host": False,
             "effective_host_methods": sorted(per_host[proposal.host]),
         })
 
@@ -116,7 +121,7 @@ def evaluate_and_apply_per_host(
     })
 
     result = {
-        "schema": "senju-owner-scope-negotiation-result/v2",
+        "schema": "senju-owner-scope-negotiation-result/v3",
         "generated_at": current_time,
         "production": True,
         "envelope_id": envelope.envelope_id,
@@ -126,6 +131,7 @@ def evaluate_and_apply_per_host(
         "owner_review_count": sum(1 for d in decisions if d.get("status") == "owner_review_requested"),
         "decisions": decisions,
         "hard_limits": [
+            "new_host_activation_requires_owner_standing_authorization",
             "no_unrelated_root_from_discovery_alone",
             "no_hard_deny_or_revocation_override",
             "no_credential_minting_or_discovery",
@@ -136,7 +142,7 @@ def evaluate_and_apply_per_host(
     }
     _write(state / "owner_scope_negotiation_result.json", result)
     _write(state / "owner_contact_ceiling_effective.json", {
-        "schema": "senju-owner-contact-ceiling-effective/v2",
+        "schema": "senju-owner-contact-ceiling-effective/v3",
         "generated_at": current_time,
         "source": "META/X/SENJU negotiation inside Owner Expansion Envelope",
         "envelope_id": envelope.envelope_id,

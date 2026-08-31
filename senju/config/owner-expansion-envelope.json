@@ -7,8 +7,7 @@
     "owner_exact_link"
   ],
   "auto_apply_proof_types": [
-    "existing_standing_authorization",
-    "owner_verified_domain"
+    "existing_standing_authorization"
   ],
   "new_host_methods": [
     "GET",
