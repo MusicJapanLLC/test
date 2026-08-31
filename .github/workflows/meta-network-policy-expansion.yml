@@ -29,6 +29,7 @@ concurrency:
 
 env:
   GH_TOKEN: ${{ github.token }}
+  REPO: ${{ github.repository }}
   PYTHONPATH: ${{ github.workspace }}/automation/codegen:${{ github.workspace }}/senju
 
 jobs:
