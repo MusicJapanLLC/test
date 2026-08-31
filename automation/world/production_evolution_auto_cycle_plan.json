@@ -5,6 +5,7 @@
     "base",
     "replica-worker"
   ],
+  "replica_authority_mode": "parent-effective",
   "replica_authority_profile": "replica-worker",
   "allowed_deploy_targets": [
     "production-noop"
