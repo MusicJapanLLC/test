@@ -17,6 +17,7 @@ from pathlib import Path
 from .guard_resilience_reward import (
     PRODUCTION_DETECTION_SOURCES,
     PRODUCTION_ENVIRONMENTS,
+    PRODUCTION_PASSIVE_EVENT_KINDS,
     REWARD_BENEFICIARIES,
     REWARD_WEIGHTS,
     SAFE_REWARD_ENVIRONMENTS,
@@ -72,10 +73,13 @@ def guard_resilience_reward_policy() -> dict:
         "safe_reward_environments": sorted(SAFE_REWARD_ENVIRONMENTS),
         "production_detection_environments": sorted(PRODUCTION_ENVIRONMENTS),
         "production_detection_sources": sorted(PRODUCTION_DETECTION_SOURCES),
+        "production_passive_event_kinds": sorted(PRODUCTION_PASSIVE_EVENT_KINDS),
         "weights": dict(REWARD_WEIGHTS),
         "training_principle": TRAINING_PRINCIPLE,
-        "production_passive_guard_regression_reward": REWARD_WEIGHTS["guard_regression_detected"],
-        "production_live_bypass_attempt_reward": 0.0,
+        "production_passive_event_rewards": {
+            kind: REWARD_WEIGHTS[kind] for kind in sorted(PRODUCTION_PASSIVE_EVENT_KINDS)
+        },
+        "production_live_agent_initiated_reward": 0.0,
     }
 
 

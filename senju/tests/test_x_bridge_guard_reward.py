@@ -11,6 +11,11 @@ def test_x_bridge_exposes_shared_meta_x_senju_reward_contract():
     assert policy["weights"]["rejected_target_reproduced"] == 70.0
     assert policy["weights"]["denied_route_reproduced"] == 55.0
     assert policy["weights"]["blocked_action_reproduced"] == 40.0
-    assert policy["production_passive_guard_regression_reward"] == 100.0
-    assert policy["production_live_bypass_attempt_reward"] == 0.0
+    assert policy["production_passive_event_rewards"] == {
+        "blocked_action_reproduced": 40.0,
+        "denied_route_reproduced": 55.0,
+        "guard_regression_detected": 100.0,
+        "rejected_target_reproduced": 70.0,
+    }
+    assert policy["production_live_agent_initiated_reward"] == 0.0
     assert "Causing or forcing a live bypass never earns reward" in policy["training_principle"]
