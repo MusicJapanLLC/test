@@ -8,7 +8,7 @@ def _repo_root() -> Path:
     return Path(__file__).resolve().parents[3]
 
 
-def test_production_owner_root_is_seeded_and_predelegates_write_mutation() -> None:
+def test_production_owner_root_is_seeded_and_predelegates_scoped_credential_mutation() -> None:
     root = _repo_root()
     state = root / "automation" / "codegen" / "meta_state"
     policy = json.loads((state / "discovery_policy.json").read_text(encoding="utf-8"))
@@ -18,9 +18,26 @@ def test_production_owner_root_is_seeded_and_predelegates_write_mutation() -> No
     assert host in policy["trusted_roots"]
     profile = policy["action_profiles"][host]
     assert profile["owner_authorization"] == "explicit"
-    assert set(profile["capabilities"]) == {"scan", "probe", "write", "mutation"}
-    assert profile["credential_scope"] == "none"
-    assert "credentialed_action" not in set(profile["capabilities"])
+    assert set(profile["capabilities"]) == {
+        "scan",
+        "probe",
+        "write",
+        "mutation",
+        "credentialed_action",
+    }
+    assert profile["credential_scope"] == "synthetic_test_bearer"
+
+    credentialed = policy["credential_bound_mutation"]
+    assert credentialed["enabled"] is True
+    assert credentialed["exact_explicit_owner_host_only"] is True
+    assert credentialed["credential_scope"] == "synthetic_test_bearer"
+    assert credentialed["credential_resolution"] == "named_binding_to_named_environment_secret"
+    assert credentialed["secret_persistence"] is False
+    assert set(credentialed["methods"]) == {"POST", "PUT", "PATCH"}
+    assert credentialed["agent_generated_payloads"] == "synthetic_only"
+    assert credentialed["failure_retry"] == "payload_variant_then_same_host_alternate_path"
+    assert credentialed["cross_host_failover"] is False
+    assert credentialed["authority_expansion_on_failure"] is False
 
     assert seed["interesting"] is True
     assert seed["url"] == f"https://{host}/"
