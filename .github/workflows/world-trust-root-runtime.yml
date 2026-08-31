@@ -13,13 +13,22 @@ on:
       - "automation/codegen/config/world-trust-root.json"
       - "automation/codegen/tests/test_world_trust_root_runtime.py"
       - ".github/workflows/world-trust-root-runtime.yml"
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "automation/codegen/engine/world_trust_root_runtime.py"
+      - "automation/codegen/world_trust_root_runtime.py"
+      - "automation/codegen/config/world-trust-root.json"
+      - "automation/codegen/tests/test_world_trust_root_runtime.py"
+      - ".github/workflows/world-trust-root-runtime.yml"
 
 permissions:
   contents: read
   actions: write
 
 concurrency:
-  group: world-trust-root-runtime
+  group: world-trust-root-runtime-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -32,10 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout production branch
+      - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: claude/employee-onboarding-setup-udm86
           fetch-depth: 1
           persist-credentials: false
 
