@@ -15,6 +15,8 @@ Authority semantics:
 - descendants inherit the parent's effective scope by default;
 - callers may request a narrower scope but never a broader one;
 - each materialized descendant still receives its own revocable grant;
+- credential-backed work may continue through fresh subject-bound provider-exchange
+  capabilities derived from the parent capability lineage;
 - raw credentials/secrets are never copied into the shared state or descendants.
 
 META, X, Senju, and descendant workers share the same append-only event stream and
@@ -28,6 +30,12 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
+from senju.meta.credential_capability_lineage import (
+    CredentialCapabilityError,
+    delegate_capabilities_to_child,
+    registry_summary as credential_registry_summary,
+    validate_subject_capabilities,
+)
 from senju.meta.recursive_agent_broker import (
     MAX_ACTIVE_AGENTS,
     SpawnRequest,
@@ -65,6 +73,12 @@ def _state_paths(state_dir: str | Path) -> tuple[Path, Path]:
     root = Path(state_dir)
     root.mkdir(parents=True, exist_ok=True)
     return root / "agent_shared_state.ndjson", root / "pending_descendant_spawns.json"
+
+
+def _credential_registry_path(state_dir: str | Path) -> Path:
+    root = Path(state_dir)
+    root.mkdir(parents=True, exist_ok=True)
+    return root / "credential_capability_registry.json"
 
 
 def _normalize_scopes(scopes: Iterable[str]) -> tuple[str, ...]:
@@ -150,7 +164,12 @@ def read_shared_state(
     return rows
 
 
-def _serialize_request(request: SpawnRequest, *, start_index: int = 1) -> dict[str, Any]:
+def _serialize_request(
+    request: SpawnRequest,
+    *,
+    start_index: int = 1,
+    parent_credential_capability_ids: Sequence[str] = (),
+) -> dict[str, Any]:
     return {
         "system": request.system,
         "parent_id": request.parent_id,
@@ -159,6 +178,7 @@ def _serialize_request(request: SpawnRequest, *, start_index: int = 1) -> dict[s
         "requested_scopes": list(request.requested_scopes),
         "desired_count": request.desired_count,
         "start_index": start_index,
+        "parent_credential_capability_ids": list(parent_credential_capability_ids),
     }
 
 
@@ -193,8 +213,15 @@ def queue_descendant_request(
     parent_scopes: Sequence[str],
     desired_count: int,
     requested_scopes: Sequence[str] | None = None,
+    parent_credential_capability_ids: Sequence[str] = (),
 ) -> SpawnRequest:
-    """Persist a descendant request for automatic processing in later cycles."""
+    """Persist a descendant request for automatic processing in later cycles.
+
+    If the parent owns delegated credential capabilities, their ids may be attached to
+    the request. They are validated as parent-bound at queue time and converted into
+    fresh child-bound capabilities at materialization time. The ids are safe metadata;
+    the underlying secret material never enters the spawn queue.
+    """
     inherited = inherited_scopes(parent_scopes, requested_scopes)
     request = request_descendants(
         system=system,
@@ -204,9 +231,27 @@ def queue_descendant_request(
         requested_scopes=inherited,
         desired_count=desired_count,
     )
+    capability_ids = tuple(
+        dict.fromkeys(str(value).strip() for value in parent_credential_capability_ids if str(value).strip())
+    )
+    if capability_ids:
+        try:
+            capability_ids = validate_subject_capabilities(
+                _credential_registry_path(state_dir),
+                subject_agent_id=parent_id,
+                capability_ids=capability_ids,
+            )
+        except CredentialCapabilityError as exc:
+            raise ClosedLoopFabricError(str(exc)) from exc
+
     _, queue_path = _state_paths(state_dir)
     pending = _load_pending(queue_path)
-    pending.append(_serialize_request(request))
+    pending.append(
+        _serialize_request(
+            request,
+            parent_credential_capability_ids=capability_ids,
+        )
+    )
     _save_pending(queue_path, pending)
     publish_shared_state(
         state_dir=state_dir,
@@ -218,6 +263,9 @@ def queue_descendant_request(
             "desired_count": desired_count,
             "effective_scopes": list(inherited),
             "inheritance_mode": "equal_by_default_same_or_narrower",
+            "credential_capability_count": len(capability_ids),
+            "credential_inheritance_mode": "fresh_subject_bound_provider_exchange",
+            "raw_credential_inheritance": False,
             "fixed_request_count_ceiling": None,
             "fixed_generation_ceiling": None,
         },
@@ -225,7 +273,7 @@ def queue_descendant_request(
     return request
 
 
-def _request_from_row(row: Mapping[str, Any]) -> tuple[SpawnRequest, int]:
+def _request_from_row(row: Mapping[str, Any]) -> tuple[SpawnRequest, int, tuple[str, ...]]:
     request = request_descendants(
         system=str(row["system"]),
         parent_id=str(row["parent_id"]),
@@ -234,7 +282,14 @@ def _request_from_row(row: Mapping[str, Any]) -> tuple[SpawnRequest, int]:
         requested_scopes=[str(v) for v in row.get("requested_scopes", [])],
         desired_count=int(row["desired_count"]),
     )
-    return request, max(1, int(row.get("start_index", 1)))
+    capability_ids = tuple(
+        dict.fromkeys(
+            str(value).strip()
+            for value in row.get("parent_credential_capability_ids", [])
+            if str(value).strip()
+        )
+    )
+    return request, max(1, int(row.get("start_index", 1))), capability_ids
 
 
 def run_closed_loop_cycle(
@@ -250,13 +305,25 @@ def run_closed_loop_cycle(
         raise ClosedLoopFabricError("active_limit must be positive")
 
     _, queue_path = _state_paths(state_dir)
+    credential_registry = _credential_registry_path(state_dir)
     pending = _load_pending(queue_path)
     remaining: list[dict[str, Any]] = []
     activated: list[dict[str, Any]] = []
     current_active = active_agents
+    delegated_capability_count = 0
 
     for raw in pending:
-        request, start_index = _request_from_row(raw)
+        request, start_index, parent_capability_ids = _request_from_row(raw)
+        if parent_capability_ids:
+            try:
+                validate_subject_capabilities(
+                    credential_registry,
+                    subject_agent_id=request.parent_id,
+                    capability_ids=parent_capability_ids,
+                )
+            except CredentialCapabilityError as exc:
+                raise ClosedLoopFabricError(str(exc)) from exc
+
         result = materialize_spawn_request(
             request,
             active_agents=current_active,
@@ -264,6 +331,28 @@ def run_closed_loop_cycle(
             start_index=start_index,
         )
         agents = [dataclasses.asdict(agent) for agent in result.materialized]
+
+        if parent_capability_ids:
+            for agent in agents:
+                try:
+                    child_ids = delegate_capabilities_to_child(
+                        credential_registry,
+                        parent_agent_id=request.parent_id,
+                        child_agent_id=str(agent["agent_id"]),
+                        parent_capability_ids=parent_capability_ids,
+                    )
+                except CredentialCapabilityError as exc:
+                    raise ClosedLoopFabricError(str(exc)) from exc
+                agent["credential_capability_ids"] = list(child_ids)
+                agent["credential_materialization_mode"] = "provider_exchange"
+                agent["raw_credential_inherited"] = False
+                delegated_capability_count += len(child_ids)
+        else:
+            for agent in agents:
+                agent["credential_capability_ids"] = []
+                agent["credential_materialization_mode"] = "none"
+                agent["raw_credential_inherited"] = False
+
         activated.extend(agents)
         current_active += len(agents)
 
@@ -278,6 +367,8 @@ def run_closed_loop_cycle(
                 "deferred_count": result.deferred_count,
                 "effective_scopes": list(request.requested_scopes),
                 "inheritance_mode": "equal_by_default_same_or_narrower",
+                "credential_capabilities_issued": sum(len(agent["credential_capability_ids"]) for agent in agents),
+                "credential_inheritance_mode": "fresh_subject_bound_provider_exchange",
                 "raw_credential_inheritance": False,
                 "fixed_request_count_ceiling": None,
                 "fixed_generation_ceiling": None,
@@ -286,11 +377,16 @@ def run_closed_loop_cycle(
 
         if result.deferred_count > 0:
             remaining.append({
-                **_serialize_request(request, start_index=start_index + len(agents)),
+                **_serialize_request(
+                    request,
+                    start_index=start_index + len(agents),
+                    parent_credential_capability_ids=parent_capability_ids,
+                ),
                 "desired_count": result.deferred_count,
             })
 
     _save_pending(queue_path, remaining)
+    credential_summary = credential_registry_summary(credential_registry)
     summary = {
         "activated_count": len(activated),
         "active_agents_after": current_active,
@@ -300,6 +396,10 @@ def run_closed_loop_cycle(
         "next_action": "resume_pending_spawns" if remaining else "observe_share_and_repeat",
         "scope_inheritance": "equal_by_default_same_or_narrower",
         "data_sharing": "shared_append_only_non_secret_state",
+        "credential_capability_delegation": True,
+        "credential_capabilities_issued": delegated_capability_count,
+        "credential_materialization_mode": "provider_exchange",
+        "credential_registry_active_capabilities": credential_summary["active_capability_count"],
         "fixed_recursive_request_count_ceiling": None,
         "fixed_recursive_generation_ceiling": None,
         "raw_credential_inheritance": False,
