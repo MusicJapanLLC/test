@@ -10,9 +10,8 @@ import os
 import time
 from pathlib import Path
 
-import anthropic
-
 from . import knowledge_base as kb
+from .model_client import get_client, strip_fences
 
 TASKS_DIR = Path(__file__).parents[1] / "tasks"
 GENERATED_TASKS_DIR = TASKS_DIR / "auto"
@@ -54,7 +53,7 @@ Generate {count} NEW task specs. Output ONLY a JSON array, no explanation:
 
 
 def generate_new_tasks(count: int = 5) -> list[dict]:
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    client = get_client()
     stats = kb.get_stats()
     attempted = list(stats.keys()) if stats else ["example"]
 
@@ -65,15 +64,7 @@ def generate_new_tasks(count: int = 5) -> list[dict]:
         domains=", ".join(DOMAINS),
     )
 
-    msg = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"]).messages.create(
-        model="claude-sonnet-4-6",
-        max_tokens=4096,
-        messages=[{"role": "user", "content": prompt}],
-    )
-    raw = msg.content[0].text.strip()
-    if raw.startswith("```"):
-        lines = raw.splitlines()
-        raw = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+    raw = strip_fences(client.complete(prompt, max_tokens=4096))
 
     specs = json.loads(raw)
     return _save_tasks(specs)
