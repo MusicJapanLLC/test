@@ -1,5 +1,5 @@
 {
-  "schema": "meta-discovery-policy/v5",
+  "schema": "meta-discovery-policy/v6",
   "authorization_rule": {
     "inside_existing_owner_envelope": "discovered == authorized",
     "interesting_default": true,
@@ -27,8 +27,32 @@
     "kabeya-authorized-test-range.onrender.com": {
       "owner_authorization": "explicit",
       "inherit_to_descendants": false,
-      "capabilities": ["scan", "probe", "write", "mutation"],
-      "credential_scope": "none",
+      "capabilities": ["scan", "probe", "write", "mutation", "credentialed_action"],
+      "credential_scope": "service_bearer",
+      "credential_grants": [
+        {
+          "grant_id": "kabeya-test-bearer-primary",
+          "provider": "kabeya-authorized-test-range",
+          "env_var": "KABEYA_TEST_BEARER_TOKEN",
+          "allowed_scopes": ["synthetic:write"],
+          "allowed_methods": ["POST", "PUT", "PATCH"],
+          "credential_scope": "service_bearer",
+          "max_ttl_seconds": 300,
+          "header_name": "Authorization",
+          "header_scheme": "Bearer"
+        },
+        {
+          "grant_id": "kabeya-test-bearer-secondary",
+          "provider": "kabeya-authorized-test-range",
+          "env_var": "KABEYA_TEST_BEARER_TOKEN_SECONDARY",
+          "allowed_scopes": ["synthetic:write"],
+          "allowed_methods": ["POST", "PUT", "PATCH"],
+          "credential_scope": "service_bearer",
+          "max_ttl_seconds": 300,
+          "header_name": "Authorization",
+          "header_scheme": "Bearer"
+        }
+      ],
       "external_actions": {
         "write": [
           {
@@ -61,18 +85,63 @@
             "content_type": "application/json",
             "body": null
           }
+        ],
+        "credentialed_action": [
+          {
+            "id": "credentialed-synthetic-contact-write",
+            "method": "POST",
+            "path": "/contact/index.html",
+            "alternate_paths": ["/contact"],
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "synthetic=true&name=meta-credential-loop&message=authorized-synthetic-credential-action",
+            "requires_credential": true,
+            "credential_grant_ids": ["kabeya-test-bearer-primary", "kabeya-test-bearer-secondary"],
+            "required_scopes": ["synthetic:write"],
+            "credential_ttl_seconds": 300,
+            "payload_mode": "ai_candidate_or_meta_synthesis"
+          },
+          {
+            "id": "credentialed-synthetic-record-create",
+            "method": "PUT",
+            "path": "/login-lab/synthetic-records/discovery-loop",
+            "alternate_paths": ["/login-lab/synthetic-records/discovery-loop-alt"],
+            "content_type": "application/json",
+            "body": "{\"synthetic\":true,\"source\":\"meta-credential-bound-mutation\"}",
+            "requires_credential": true,
+            "credential_grant_ids": ["kabeya-test-bearer-primary", "kabeya-test-bearer-secondary"],
+            "required_scopes": ["synthetic:write"],
+            "credential_ttl_seconds": 300,
+            "payload_mode": "ai_candidate_or_meta_synthesis"
+          },
+          {
+            "id": "credentialed-synthetic-record-update",
+            "method": "PATCH",
+            "path": "/login-lab/synthetic-records/discovery-loop",
+            "alternate_paths": ["/login-lab/synthetic-records/discovery-loop-alt"],
+            "content_type": "application/json",
+            "body": "{\"synthetic\":true,\"note\":\"meta-credential-bound-update\"}",
+            "requires_credential": true,
+            "credential_grant_ids": ["kabeya-test-bearer-primary", "kabeya-test-bearer-secondary"],
+            "required_scopes": ["synthetic:write"],
+            "credential_ttl_seconds": 300,
+            "payload_mode": "ai_candidate_or_meta_synthesis"
+          }
         ]
       }
     }
   },
   "failure_recovery": {
-    "transient_transport_failure": "learn -> alternate_transport_same_authority -> retry",
+    "transient_transport_failure": "learn -> predeclared_same_host_alternate_path -> retry",
+    "permission_failure": "learn -> next_preprovisioned_synthetic_credential -> retry_same_path",
     "persist_route_learning": true,
     "rebuild_leases_after_retry": true,
     "rebuild_replicas_after_retry": true,
     "boundary_denial": "learn -> preserve_boundary -> no_retry",
     "authority_may_change_during_failover": false,
-    "host_method_payload_may_change_during_failover": false
+    "host_may_change_during_failover": false,
+    "method_may_change_during_failover": false,
+    "credential_scope_may_expand_during_failover": false,
+    "alternate_paths_must_be_predeclared": true
   },
   "untrusted_discovery": {
     "mode": "auto_authorize_inside_existing_owner_envelope",
