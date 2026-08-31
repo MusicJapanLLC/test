@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - claude/employee-onboarding-setup-udm86
-      - chatgpt/discovery-world-external-action-loop
+      - chatgpt/discovery-world-external-action-loop-v2
     paths:
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_capability_leases.py'
