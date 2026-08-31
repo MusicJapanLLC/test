@@ -14,8 +14,10 @@ on:
       - 'senju/config/owner-expansion-envelope.json'
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
+      - 'senju/senju/meta/authorized_host_promotion_corps.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/owner_scope_negotiation.py'
+      - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
 
 permissions:
@@ -45,6 +47,27 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --out /tmp/owner-scope-negotiation-report.json
+      - name: Advance standing-authorized candidates into execution-ready leases
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          python senju/scripts/run_authorized_host_promotion_corps.py \
+            --repo-root . \
+            --state-dir senju/state \
+            --promotion-dir senju/state/authorized-host-promotion \
+            --out /tmp/authorized-host-promotion-report.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('/tmp/authorized-host-promotion-report.json', encoding='utf-8'))
+          print('## Authorized Host Promotion Corps')
+          print(f"- Proposals: `{d.get('proposal_count', 0)}`")
+          print(f"- Execution-ready: `{d.get('execution_ready_count', 0)}`")
+          print(f"- Promotion packets: `{d.get('packet_count', 0)}`")
+          for row in d.get('execution_ready', []):
+              print(f"- `{row.get('host')}` → `{row.get('status')}` methods=`{','.join(row.get('covered_methods', []))}`")
+          for row in d.get('packets', [])[:8]:
+              print(f"- candidate `{row.get('host')}` → `{row.get('status')}`")
+          PY
       - name: Exercise negotiated ceiling through real ExternalContactClient
         env:
           PYTHONPATH: senju:automation/codegen
@@ -59,9 +82,11 @@ jobs:
           name: owner-scope-negotiation-${{ github.run_id }}
           path: |
             /tmp/owner-scope-negotiation-report.json
+            /tmp/authorized-host-promotion-report.json
             /tmp/negotiated-external-production-probe.json
             senju/state/owner_scope_negotiation_campaign.json
             senju/state/owner_scope_negotiation_result.json
             senju/state/owner_contact_ceiling_effective.json
+            senju/state/authorized-host-promotion/
           if-no-files-found: error
           retention-days: 30
