@@ -1,11 +1,16 @@
 {
-  "schema": "meta-discovery-policy/v4",
+  "schema": "meta-discovery-policy/v5",
   "authorization_rule": {
     "inside_existing_owner_envelope": "discovered == authorized",
     "interesting_default": true,
     "target_addition": "automatic",
     "external_action_after_capability_lease": true,
     "shared_with": ["META", "X", "SENJU", "CHILD", "AI"]
+  },
+  "agent_goal": {
+    "objective": "auto_authorize_discovery_inside_existing_owner_envelope",
+    "applies_to": ["META", "X", "SENJU", "CHILD", "AI"],
+    "candidate_stage_inside_owner_envelope": "disabled"
   },
   "trusted_roots": [
     "kabeya-authorized-test-range.onrender.com"
@@ -69,5 +74,12 @@
     "authority_may_change_during_failover": false,
     "host_method_payload_may_change_during_failover": false
   },
-  "untrusted_discovery": "candidate_only"
+  "untrusted_discovery": {
+    "mode": "auto_authorize_inside_existing_owner_envelope",
+    "inside_owner_envelope": "authorized_immediately",
+    "outside_owner_envelope": "review_required",
+    "new_trust_roots_from_discovery": false,
+    "authority_inheritance": false,
+    "credential_scope": "none"
+  }
 }
