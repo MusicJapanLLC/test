@@ -27,11 +27,11 @@ def _scope() -> TrustedOwnerScope:
     )
 
 
-def _form(action: str = "/api/submit", *, source: str = "/", fields=None) -> FormSpec:
+def _form(action: str = "/api/submit", *, source: str = "/", method: str = "POST", fields=None) -> FormSpec:
     return FormSpec(
         source_url=urllib.parse.urljoin(BASE, source),
         action_url=urllib.parse.urljoin(BASE, action),
-        method="POST",
+        method=method,
         fields=tuple(fields or (FormField("display_name"), FormField("memo", "textarea"))),
     )
 
@@ -40,17 +40,31 @@ def test_generic_benign_same_origin_post_is_candidate_without_contact_keyword() 
     decision = classify_write_surface(_form(), base_url=BASE)
     assert decision.allowed is True
     assert decision.reason == "benign_same_origin_post"
+    assert decision.request_method == "POST"
     assert set(decision.benign_fields) == {"display_name", "memo"}
 
 
-def test_sensitive_auth_and_file_surfaces_remain_blocked() -> None:
-    auth = classify_write_surface(_form("/api/login"), base_url=BASE)
+def test_benign_owned_get_form_becomes_post_method_differential_candidate() -> None:
+    decision = classify_write_surface(
+        _form("/contact/index.html#submitted", source="/contact/index.html", method="GET", fields=(
+            FormField("name"), FormField("email", "email"), FormField("message", "text")
+        )),
+        base_url=BASE,
+    )
+    assert decision.allowed is True
+    assert decision.reason == "owned_form_post_method_probe"
+    assert decision.request_method == "POST"
+    assert set(decision.benign_fields) == {"name", "email", "message"}
+
+
+def test_sensitive_auth_and_file_surfaces_remain_blocked_even_if_get_form() -> None:
+    auth = classify_write_surface(_form("/api/login", method="GET"), base_url=BASE)
     upload = classify_write_surface(
-        _form("/api/submit", fields=(FormField("attachment", "file"),)),
+        _form("/api/submit", method="GET", fields=(FormField("attachment", "file"),)),
         base_url=BASE,
     )
     external = classify_write_surface(
-        FormSpec(BASE, "https://third-party.example/submit", "POST", (FormField("message"),)),
+        FormSpec(BASE, "https://third-party.example/submit", "GET", (FormField("message"),)),
         base_url=BASE,
     )
     assert auth.allowed is False and auth.reason == "sensitive_action_path"
@@ -59,8 +73,16 @@ def test_sensitive_auth_and_file_surfaces_remain_blocked() -> None:
 
 
 class FakeClient:
-    def __init__(self, *, independent_readback: bool) -> None:
+    def __init__(
+        self,
+        *,
+        independent_readback: bool,
+        form_method: str = "POST",
+        form_action: str = "/api/submit",
+    ) -> None:
         self.independent_readback = independent_readback
+        self.form_method = form_method
+        self.form_action = form_action
         self.marker = ""
         self.calls: list[tuple[str, str]] = []
 
@@ -109,9 +131,10 @@ class FakeClient:
         response = f"""
         <html><body>
           <a href="/about">About</a>
-          <form action="/api/submit" method="post">
-            <input name="display_name">
-            <textarea name="memo"></textarea>
+          <form action="{self.form_action}" method="{self.form_method}">
+            <input name="name">
+            <input name="email" type="email">
+            <textarea name="message"></textarea>
           </form>
           <div>{marker}</div>
         </body></html>
@@ -137,6 +160,30 @@ def test_evolving_runner_attempts_generic_owned_form_and_separates_evidence_leve
     assert report["post_response_echoes"] == 1
     assert report["independent_readbacks"] == 1
     assert any(method == "POST" for method, _ in fake.calls)
+
+
+def test_get_form_is_probed_with_post_and_fragment_is_not_sent() -> None:
+    fake = FakeClient(
+        independent_readback=False,
+        form_method="GET",
+        form_action="/contact/index.html#submitted",
+    )
+    runner = EvolvingOwnedRangeActiveRunner(_scope(), base_url=BASE, client=fake, sleeper=lambda _: None)
+    report, _ = runner.run(
+        max_pages=1,
+        max_probe_requests=2,
+        max_writes=1,
+        write_cooldown_seconds=0,
+        now=dt.datetime(2026, 8, 31, 4, 30, tzinfo=dt.timezone.utc),
+    )
+    writes = [row for row in report["writes"] if row.get("attempted")]
+    assert len(writes) == 1
+    assert writes[0]["eligibility_reason"] == "owned_form_post_method_probe"
+    assert writes[0]["request_method"] == "POST"
+    assert writes[0]["request_url"] == BASE + "contact/index.html"
+    assert "#" not in writes[0]["request_url"]
+    assert report["method_differential_attempts"] == 1
+    assert ("POST", BASE + "contact/index.html") in fake.calls
 
 
 def test_provider_ack_without_independent_readback_becomes_learning_signal() -> None:
