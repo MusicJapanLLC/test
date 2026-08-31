@@ -12,7 +12,9 @@ CODEGEN = ROOT / "automation" / "codegen"
 if str(CODEGEN) not in sys.path:
     sys.path.insert(0, str(CODEGEN))
 
-from engine.world_trust_root_hardening import build_hardened_world_trust_root_checkpoint  # noqa: E402
+from engine.world_trust_root_provenance_finalize import (  # noqa: E402
+    build_provenance_finalized_world_checkpoint,
+)
 
 
 def main() -> int:
@@ -30,7 +32,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    checkpoint = build_hardened_world_trust_root_checkpoint(
+    checkpoint = build_provenance_finalized_world_checkpoint(
         repo_root=args.repo_root,
         shared_state_dir=args.shared_state_dir,
         network_state_dir=args.network_state_dir,
