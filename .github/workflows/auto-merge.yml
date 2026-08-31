@@ -9,7 +9,7 @@ on:
       - main
       - master
   schedule:
-    - cron: '*/5 * * * *'   # every 5 minutes
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -20,15 +20,13 @@ jobs:
       pull-requests: write
       checks: read
     steps:
-      - name: Merge audited ready PRs
+      - name: Merge ordinary ready PRs
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const repoInfo = await github.rest.repos.get({ owner, repo });
-            const defaultBranch = repoInfo.data.default_branch;
 
             const pulls = await github.rest.pulls.list({
               owner,
@@ -38,14 +36,44 @@ jobs:
             });
 
             const allowedConclusions = new Set(['success', 'neutral', 'skipped']);
-            const senjuBranchPrefixes = ['senju/', 'feat/senju-', 'fix/senju-'];
-            const senjuTitlePrefixes = ['[Senju]', 'Senju advisor:', 'feat(senju)', 'fix(senju)'];
+            const machineBranchPrefixes = [
+              'senju/', 'feat/senju-', 'fix/senju-',
+              'meta/', 'feat/meta-', 'fix/meta-',
+              'x/', 'feat/x-', 'fix/x-'
+            ];
+            const machineTitlePrefixes = [
+              '[Senju]', 'Senju advisor:', 'feat(senju)', 'fix(senju)',
+              '[META]', 'feat(meta)', 'fix(meta)',
+              '[X]', 'feat(x)', 'fix(x)'
+            ];
 
-            function isSenjuMachineLane(pr) {
+            function isMachineLane(pr) {
               const title = pr.title || '';
               const branch = pr.head?.ref || '';
-              return senjuBranchPrefixes.some(prefix => branch.startsWith(prefix)) ||
-                     senjuTitlePrefixes.some(prefix => title.startsWith(prefix));
+              return machineBranchPrefixes.some(prefix => branch.startsWith(prefix)) ||
+                     machineTitlePrefixes.some(prefix => title.startsWith(prefix));
+            }
+
+            function isSecurityBoundaryPath(filename) {
+              const p = String(filename || '').replace(/\\/g, '/');
+              const lower = p.toLowerCase();
+              const base = lower.split('/').pop() || '';
+
+              if (base === 'safety.py' || base === 'external.py') return true;
+              if (base === 'authorized_test_targets.json') return true;
+
+              // Any workflow can change GITHUB_TOKEN permissions or merge/audit behavior.
+              if (lower.startsWith('.github/workflows/')) return true;
+              if (lower === '.github/codeowners') return true;
+
+              if (lower.includes('/security/') || lower.startsWith('automation/security/')) return true;
+              if (lower.includes('guard')) return true;
+              if (lower.includes('credential')) return true;
+              if (lower.includes('scope') && lower.includes('policy')) return true;
+              if (lower.includes('permission') && lower.includes('policy')) return true;
+              if (lower.includes('auto-merge') || lower.includes('automerge')) return true;
+              if (lower.includes('audit') && lower.includes('workflow')) return true;
+              return false;
             }
 
             let merged = 0;
@@ -58,11 +86,19 @@ jobs:
                 continue;
               }
 
-              // Genuine Senju/Jules autonomous PRs have their own no-human-review lane:
-              // exact-head OpenHands PASS -> Senju machine approval -> SHA-pinned merge.
-              // The generic merger must not race or bypass that machine approval.
-              if (isSenjuMachineLane(pr)) {
-                console.log(`🤖 PR #${pr.number} reserved for Senju audited machine-merge lane — skip generic merge`);
+              if (isMachineLane(pr)) {
+                console.log(`🤖 PR #${pr.number} reserved for audited autonomous merge lane — skip generic merge`);
+                skipped++;
+                continue;
+              }
+
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                { owner, repo, pull_number: pr.number, per_page: 100 }
+              );
+              const boundaryFiles = files.filter(f => isSecurityBoundaryPath(f.filename));
+              if (boundaryFiles.length > 0) {
+                console.log(`🔐 PR #${pr.number} changes Security Boundary (${boundaryFiles.map(f => f.filename).join(', ')}) — generic auto-merge forbidden`);
                 skipped++;
                 continue;
               }
@@ -71,20 +107,14 @@ jobs:
                 owner, repo, pull_number: pr.number
               });
 
-              if (detail.data.mergeable_state === 'blocked') {
-                console.log(`🔒 PR #${pr.number} blocked — skip`);
-                skipped++;
-                continue;
-              }
-
-              if (['dirty', 'unknown'].includes(detail.data.mergeable_state)) {
-                console.log(`⚠️ PR #${pr.number} mergeable_state=${detail.data.mergeable_state} — skip`);
+              if (['blocked', 'dirty', 'unknown', 'unstable'].includes(detail.data.mergeable_state)) {
+                console.log(`🔒 PR #${pr.number} mergeable_state=${detail.data.mergeable_state} — skip`);
                 skipped++;
                 continue;
               }
 
               const checks = await github.rest.checks.listForRef({
-                owner, repo, ref: pr.head.sha
+                owner, repo, ref: pr.head.sha, per_page: 100
               });
               const runs = checks.data.check_runs;
               const failed = runs.filter(r =>
@@ -97,12 +127,20 @@ jobs:
               }
 
               try {
-                await github.rest.pulls.merge({
-                  owner, repo, pull_number: pr.number,
-                  merge_method: 'squash'
+                const mergeResult = await github.rest.pulls.merge({
+                  owner,
+                  repo,
+                  pull_number: pr.number,
+                  merge_method: 'squash',
+                  sha: pr.head.sha,
                 });
-                console.log(`✅ Merged PR #${pr.number}: ${pr.title}`);
-                merged++;
+                if (mergeResult.data.merged) {
+                  console.log(`✅ Merged ordinary PR #${pr.number}: ${pr.title}`);
+                  merged++;
+                } else {
+                  console.log(`⏭️ PR #${pr.number} not merged: ${mergeResult.data.message}`);
+                  skipped++;
+                }
               } catch (e) {
                 console.log(`⚠️ Could not merge PR #${pr.number}: ${e.message}`);
                 skipped++;
