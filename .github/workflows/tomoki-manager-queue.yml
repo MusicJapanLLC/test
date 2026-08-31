@@ -3,9 +3,10 @@ name: TOMOKI - MANAGER Queue Bridge
 # Master Control recurrence guard: the policy-approved five-minute schedule is canonical.
 # Realtime Kernel, THE CORE, and independent security workflows remain redundant wake paths
 # so a dropped GitHub schedule cannot leave the canonical Manager heartbeat stale indefinitely.
+# Offset the five-minute cadence to :02/:07/.../:57 to avoid GitHub's busiest hourly boundary.
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '2-59/5 * * * *'
   workflow_dispatch:
   workflow_run:
     workflows:
