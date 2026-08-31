@@ -25,6 +25,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  REPO: ${{ github.repository }}
   GH_TOKEN: ${{ github.token }}
   PYTHONPATH: ${{ github.workspace }}/automation/codegen:${{ github.workspace }}/senju
 
