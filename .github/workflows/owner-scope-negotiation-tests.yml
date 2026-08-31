@@ -19,10 +19,13 @@ on:
       - 'senju/tests/test_council_operational_governance.py'
       - 'senju/tests/test_authorized_host_promotion*.py'
       - 'senju/config/owner-expansion-envelope.json'
+      - 'automation/codegen/engine/root_authority_negotiation.py'
       - 'automation/codegen/engine/authority_collaboration_bus.py'
       - 'automation/codegen/engine/negotiation_context_bridge.py'
+      - 'automation/codegen/tests/test_root_authority_negotiation.py'
       - 'automation/codegen/tests/test_authority_collaboration_bus*.py'
       - 'automation/codegen/tests/test_negotiation_context_bridge.py'
+      - '.github/workflows/root-authority-negotiation-loop.yml'
       - '.github/workflows/owner-scope-negotiation-*.yml'
   push:
     branches:
@@ -42,10 +45,14 @@ on:
       - 'senju/tests/test_discovery_trial_gate.py'
       - 'senju/tests/test_council_operational_governance.py'
       - 'senju/tests/test_authorized_host_promotion*.py'
+      - 'automation/codegen/engine/root_authority_negotiation.py'
       - 'automation/codegen/engine/authority_collaboration_bus.py'
       - 'automation/codegen/engine/negotiation_context_bridge.py'
+      - 'automation/codegen/tests/test_root_authority_negotiation.py'
       - 'automation/codegen/tests/test_authority_collaboration_bus*.py'
       - 'automation/codegen/tests/test_negotiation_context_bridge.py'
+      - '.github/workflows/root-authority-negotiation-loop.yml'
+      - '.github/workflows/owner-scope-negotiation-*.yml'
 
 permissions:
   contents: read
@@ -63,7 +70,7 @@ jobs:
           python-version: '3.12'
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check -q pytest
-      - name: Verify negotiation, collaboration bus, promotion, and client contracts
+      - name: Verify negotiation, collaboration bus, promotion, Root, and client contracts
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -73,6 +80,7 @@ jobs:
             senju/tests/test_council_operational_governance.py \
             senju/tests/test_authorized_host_promotion_corps.py \
             senju/tests/test_authorized_host_promotion_collaboration.py \
+            automation/codegen/tests/test_root_authority_negotiation.py \
             automation/codegen/tests/test_authority_collaboration_bus.py \
             automation/codegen/tests/test_authority_collaboration_bus_v2.py \
             automation/codegen/tests/test_negotiation_context_bridge.py
@@ -87,6 +95,7 @@ jobs:
             senju/scripts/run_council_operational_governance.py \
             senju/scripts/run_authorized_host_promotion_corps.py \
             senju/scripts/negotiated_external_probe.py \
+            automation/codegen/engine/root_authority_negotiation.py \
             automation/codegen/engine/authority_collaboration_bus.py \
             automation/codegen/engine/negotiation_context_bridge.py
       - name: Verify production workflow remains a read-only repository lane with shared memory
