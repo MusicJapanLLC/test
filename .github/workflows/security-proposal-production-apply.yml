@@ -62,6 +62,22 @@ jobs:
           echo 'has_proposals=true' >> "$GITHUB_OUTPUT"
           cat /tmp/security-proposals.txt
 
+      - name: Snapshot latest production security state
+        if: steps.collect.outputs.has_proposals == 'true'
+        env:
+          TARGET_BRANCH: claude/employee-onboarding-setup-udm86
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$TARGET_BRANCH"
+          if git cat-file -e 'FETCH_HEAD:security/runtime/ai_security_state.json' 2>/dev/null; then
+            git show 'FETCH_HEAD:security/runtime/ai_security_state.json' > /tmp/production-security-state.json
+            git rev-parse 'FETCH_HEAD:security/runtime/ai_security_state.json' > /tmp/production-security-state-blob.txt
+          else
+            printf '{}\n' > /tmp/production-security-state.json
+            : > /tmp/production-security-state-blob.txt
+          fi
+
       - name: Re-evaluate Council, standing delegation, and review evidence from production code
         if: steps.collect.outputs.has_proposals == 'true'
         env:
@@ -74,35 +90,159 @@ jobs:
               --standing-envelope-dir security/authority_envelopes \
               --github-repo '${{ github.repository }}' \
               --github-sha '${{ github.sha }}' \
-              --state security/runtime/ai_security_state.json \
+              --state /tmp/production-security-state.json \
               --write-state security/runtime/ai_security_state.json \
               --decision-dir /tmp/security-proposal-decisions \
               --apply
 
-      - name: Verify closed-loop invariants
+      - name: Verify closed-loop decision and applied-state invariants
         if: steps.collect.outputs.has_proposals == 'true'
         run: |
           PYTHONPATH=automation/codegen python - <<'PY'
-          import importlib.util
+          import json
           from pathlib import Path
 
-          path = Path('automation/codegen/tests/test_security_proposal_loop.py')
-          spec = importlib.util.spec_from_file_location('security_proposal_tests', path)
-          module = importlib.util.module_from_spec(spec)
-          if spec.loader is None:
-              raise SystemExit('unable to load security proposal invariant tests')
-          spec.loader.exec_module(module)
-          tests = [
-              (name, value)
-              for name, value in vars(module).items()
-              if name.startswith('test_') and callable(value)
+          from engine.security_proposal import proposal_sha256
+
+          proposal_paths = [
+              Path(line.strip())
+              for line in Path('/tmp/security-proposals.txt').read_text(encoding='utf-8').splitlines()
+              if line.strip()
           ]
-          if not tests:
-              raise SystemExit('no security proposal invariant tests discovered')
-          for name, test in sorted(tests):
-              test()
-              print(f'PASS {name}')
-          print(f'closed-loop invariant tests passed: {len(tests)}')
+          if not proposal_paths:
+              raise SystemExit('no proposal paths available for invariant verification')
+
+          state_path = Path('security/runtime/ai_security_state.json')
+          if not state_path.exists():
+              raise SystemExit('production security state was not generated')
+          state = json.loads(state_path.read_text(encoding='utf-8'))
+          if not isinstance(state, dict):
+              raise SystemExit('production security state is not an object')
+          generation = state.get('generation')
+          if not isinstance(generation, int) or generation < 1:
+              raise SystemExit('production security state generation is invalid')
+
+          applied_rows = state.get('applied_proposals')
+          controls = state.get('controls')
+          if not isinstance(applied_rows, list) or not isinstance(controls, dict):
+              raise SystemExit('production security state shape is invalid')
+          applied_by_id = {
+              row.get('proposal_id'): row
+              for row in applied_rows
+              if isinstance(row, dict) and row.get('proposal_id')
+          }
+
+          for proposal_path in proposal_paths:
+              proposal = json.loads(proposal_path.read_text(encoding='utf-8'))
+              proposal_id = str(proposal.get('id') or '').strip()
+              if not proposal_id:
+                  raise SystemExit(f'{proposal_path}: missing proposal id')
+              expected_hash = proposal_sha256(proposal)
+
+              decision_path = Path('/tmp/security-proposal-decisions') / f'{proposal_path.stem}.decision.json'
+              if not decision_path.exists():
+                  raise SystemExit(f'{proposal_path}: decision artifact missing')
+              decision = json.loads(decision_path.read_text(encoding='utf-8'))
+
+              required_true = (
+                  'identified',
+                  'supported_target',
+                  'ai_consensus_approved',
+                  'proposal_gate_eligible',
+                  'auto_merge_eligible',
+                  'production_apply_eligible',
+              )
+              for key in required_true:
+                  if decision.get(key) is not True:
+                      raise SystemExit(f'{proposal_id}: decision invariant failed: {key}=true required')
+              if decision.get('proposal_id') != proposal_id:
+                  raise SystemExit(f'{proposal_id}: decision proposal id mismatch')
+              if decision.get('proposal_sha256') != expected_hash:
+                  raise SystemExit(f'{proposal_id}: decision hash mismatch')
+              for key in (
+                  'raw_secret_material_detected',
+                  'guard_weakening_allowed',
+                  'emergency_stop_disable_allowed',
+                  'root_self_rewrite_allowed',
+              ):
+                  if decision.get(key) is not False:
+                      raise SystemExit(f'{proposal_id}: forbidden decision invariant failed: {key}')
+
+              council = decision.get('council')
+              if not isinstance(council, dict) or council.get('complete') is not True:
+                  raise SystemExit(f'{proposal_id}: incomplete AI Council')
+              if decision.get('proposal_class') == 'authority_expansion':
+                  if council.get('unanimous') is not True:
+                      raise SystemExit(f'{proposal_id}: authority activation requires unanimous Council')
+                  external = decision.get('external_approval')
+                  if not isinstance(external, dict) or external.get('verified') is not True:
+                      raise SystemExit(f'{proposal_id}: authority activation lacks verified external trust root')
+                  if decision.get('delegated_authority_activation') is True:
+                      if decision.get('self_approved') is not True:
+                          raise SystemExit(f'{proposal_id}: delegated activation must be self-approved')
+                      if external.get('source') != 'standing_owner_envelope':
+                          raise SystemExit(f'{proposal_id}: delegated activation must come from standing owner envelope')
+                      if external.get('standing_delegation') is not True:
+                          raise SystemExit(f'{proposal_id}: standing delegation flag missing')
+                      if decision.get('fresh_human_prompt_required') is not False:
+                          raise SystemExit(f'{proposal_id}: bounded delegated activation unexpectedly requests fresh prompt')
+                      if decision.get('creates_new_authority') is not False:
+                          raise SystemExit(f'{proposal_id}: delegated activation cannot create a new trust root')
+                      if decision.get('trust_root') != 'owner-standing-envelope+ai-council/v1':
+                          raise SystemExit(f'{proposal_id}: delegated activation trust root mismatch')
+
+              applied = applied_by_id.get(proposal_id)
+              if not isinstance(applied, dict):
+                  raise SystemExit(f'{proposal_id}: proposal missing from production state')
+              if applied.get('production_applied') is not True:
+                  raise SystemExit(f'{proposal_id}: production_applied=true missing')
+              if applied.get('proposal_sha256') != expected_hash:
+                  raise SystemExit(f'{proposal_id}: applied proposal hash mismatch')
+              for key in (
+                  'proposal_class',
+                  'target',
+                  'delegation_envelope_id',
+                  'trust_root',
+              ):
+                  if applied.get(key) != decision.get(key):
+                      raise SystemExit(f'{proposal_id}: applied {key} does not match decision')
+              if bool(applied.get('self_approved')) != bool(decision.get('self_approved')):
+                  raise SystemExit(f'{proposal_id}: applied self_approved does not match decision')
+
+              raw_changes = proposal.get('changes')
+              if raw_changes is None:
+                  raw_changes = [{
+                      'target': proposal.get('target'),
+                      'operations': proposal.get('operations', []),
+                  }]
+              if not isinstance(raw_changes, list) or not raw_changes:
+                  raise SystemExit(f'{proposal_id}: no normalized changes to verify')
+              for change in raw_changes:
+                  if not isinstance(change, dict):
+                      raise SystemExit(f'{proposal_id}: malformed change during state verification')
+                  target = str(change.get('target') or '').strip()
+                  target_rows = controls.get(target)
+                  if not isinstance(target_rows, list):
+                      raise SystemExit(f'{proposal_id}: control target not persisted: {target}')
+                  for operation in change.get('operations', []):
+                      if not isinstance(operation, dict):
+                          raise SystemExit(f'{proposal_id}: malformed operation during state verification')
+                      op_type = operation.get('type')
+                      params = operation.get('parameters', {})
+                      matched = any(
+                          isinstance(row, dict)
+                          and row.get('proposal_id') == proposal_id
+                          and row.get('proposal_sha256') == expected_hash
+                          and row.get('type') == op_type
+                          and row.get('parameters', {}) == params
+                          for row in target_rows
+                      )
+                      if not matched:
+                          raise SystemExit(f'{proposal_id}: applied control missing: {target}/{op_type}')
+
+              print(f'PASS production invariants: {proposal_id}')
+
+          print(f'closed-loop production state verified for {len(proposal_paths)} proposal(s)')
           PY
 
       - name: Persist production security state through GitHub API
@@ -138,6 +278,7 @@ jobs:
               'Content-Type': 'application/json',
           }
 
+          expected_sha = Path('/tmp/production-security-state-blob.txt').read_text(encoding='utf-8').strip()
           existing_sha = None
           request = urllib.request.Request(
               f'{base}?{urllib.parse.urlencode({"ref": branch})}',
@@ -150,6 +291,12 @@ jobs:
           except urllib.error.HTTPError as exc:
               if exc.code != 404:
                   raise
+
+          if expected_sha:
+              if existing_sha != expected_sha:
+                  raise SystemExit('concurrent production security state update detected; refusing stale overwrite')
+          elif existing_sha:
+              raise SystemExit('production security state appeared after snapshot; refusing stale overwrite')
 
           payload = {
               'message': 'security: apply AI Council authorized proposal',
@@ -177,6 +324,8 @@ jobs:
           name: security-production-apply-${{ github.run_id }}
           path: |
             /tmp/security-proposal-decisions
+            /tmp/production-security-state.json
+            /tmp/production-security-state-blob.txt
             security/runtime/ai_security_state.json
           if-no-files-found: ignore
           retention-days: 30
