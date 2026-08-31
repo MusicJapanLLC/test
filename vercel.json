@@ -8,7 +8,10 @@
       "automation/**": false,
       "rnd/**": false,
       "world/**": false,
-      "chatgpt/**": false
+      "chatgpt/**": false,
+      "openai/**": false,
+      "forge/**": false,
+      "portfolio/**": false
     }
   },
   "ignoreCommand": "git rev-parse HEAD^ >/dev/null 2>&1 || exit 0; git diff --quiet HEAD^ HEAD -- automation/deploy-permits/root-vercel.json",
