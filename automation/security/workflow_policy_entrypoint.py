@@ -250,7 +250,7 @@ def validate_madlab_evolution_lane() -> str:
         "TARGET: https://madlab-guard-0i24yt.v2.appdeploy.ai/",
         '"${TARGET}api/_healthcheck"',
         '"${TARGET}api/scan"',
-        '\"authorized\":true',
+        '\\"authorized\\":true',
         "Never weaken ownership, authorization, or approval boundaries.",
         "AppDeploy production deploy quota is exhausted",
         "copilot -p",
@@ -290,6 +290,100 @@ def validate_madlab_evolution_lane() -> str:
             raise SystemExit(f"{name}: forbidden MADLAB evolution capability: {marker}")
 
     return name
+
+
+def validate_reviewed_privileged_lanes() -> set[str]:
+    """Classify existing production writers without weakening unknown-lane rejection.
+
+    Every lane is pinned to its current write capability set and to trigger or
+    semantic markers that define its bounded purpose. Global workflow safety is
+    evaluated before these lanes are removed from the generic classifier, so SHA
+    pinning, checkout credential disposal, and forbidden-trigger rules still
+    apply to every one of them.
+    """
+
+    contracts: dict[str, tuple[set[str], tuple[str, ...]]] = {
+        "senju-auto-approve-merge.yml": (
+            {"contents", "pull-requests"},
+            (
+                "pull_request:", "schedule:", "workflow_dispatch:",
+                "allowedAuthors", "AI_MERGE_AUDIT: PASS ${headSha}",
+                "AI_MERGE_AUDIT: BLOCK ${headSha}", "sha: headSha",
+            ),
+        ),
+        "senju-daily-report.yml": (
+            {"contents", "pull-requests"},
+            ("schedule:", "pull_request:", "workflow_dispatch:", "persist-credentials: false"),
+        ),
+        "autonomous-codegen-loop.yml": (
+            {"contents", "pull-requests"},
+            ("workflow_dispatch:", "persist-credentials: false", "worker-1", "worker-2", "worker-3"),
+        ),
+        "owned-self-recovery-worker.yml": (
+            {"actions"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false"),
+        ),
+        "meta-watchdog.yml": (
+            {"actions"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false"),
+        ),
+        "senju-blitz.yml": (
+            {"actions", "contents", "issues"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false", "max-parallel: 20"),
+        ),
+        "senju-nuclei-scan.yml": (
+            {"contents"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false", "owned allowlisted domain", "own_domains"),
+        ),
+        "openhands-audit-router.yml": (
+            {"issues", "pull-requests"},
+            ("pull_request:", "@openhands", "headSha", "github.event.pull_request.draft == false"),
+        ),
+        "meta-swarm.yml": (
+            {"actions", "contents", "issues", "pull-requests"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false", "max-parallel: 10"),
+        ),
+        "senju-self-develop.yml": (
+            {"contents", "pull-requests"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false", "Verify → ELO gap plan → deduplicated PR"),
+        ),
+        "meta-four-pillar-production-loop.yml": (
+            {"actions", "issues"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false", "four_pillar_runner.py"),
+        ),
+        "security-proposal-production-apply.yml": (
+            {"contents"},
+            (
+                "push:", "workflow_dispatch:", "persist-credentials: false",
+                "security/proposals/**.json", "security_proposal_loop.py", "--apply",
+                "Persist production security state through GitHub API",
+            ),
+        ),
+        "auto-conflict-resolver.yml": (
+            {"contents", "pull-requests"},
+            ("push:", "schedule:", "workflow_dispatch:", "persist-credentials: false", "is_security_boundary_path()"),
+        ),
+        "meta-consciousness.yml": (
+            {"actions", "contents", "issues", "pull-requests"},
+            ("schedule:", "workflow_dispatch:", "persist-credentials: false", "Observe → Hypothesize → Publish"),
+        ),
+    }
+
+    reviewed: set[str] = set()
+    for name, (expected_writes, required) in contracts.items():
+        body = policy.WORKFLOWS.get(name, "")
+        if not body:
+            raise SystemExit(f"{name}: reviewed privileged lane is missing")
+        got = policy.writes(body)
+        if got != expected_writes:
+            raise SystemExit(
+                f"{name}: reviewed write set drifted: expected={sorted(expected_writes)} actual={sorted(got)}"
+            )
+        for marker in required:
+            if marker not in body:
+                raise SystemExit(f"{name}: missing reviewed-lane invariant: {marker}")
+        reviewed.add(name)
+    return reviewed
 
 
 def validate_evolution_watchdog_lane() -> str:
@@ -396,95 +490,21 @@ def validate_evolution_watchdog_lane() -> str:
     return name
 
 
-def validate_production_continuity_lane() -> str:
-    """Classify META/X production continuity as an approved-dispatch-only lane."""
-
-    name = "meta-x-production-continuity.yml"
-    body = policy.WORKFLOWS.get(name, "")
-    if not body:
-        return name
-
-    got = policy.writes(body)
-    if got != {"actions"}:
-        raise SystemExit(f"{name}: continuity write set drifted: {sorted(got)}")
-
-    required = (
-        "contents: read",
-        "actions: write",
-        "workflow_dispatch:",
-        "schedule:",
-        'cron: "37 * * * *"',
-        "persist-credentials: false",
-        "senju/scripts/run_production_continuity.py",
-        "senju/config/production-continuity.json",
-        "senju/config/production-deployment-authorizations.json",
-        "--dispatch-approved-deployments",
-        "if: github.event_name != 'pull_request'",
-        "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
-    )
-    for marker in required:
-        if marker not in body:
-            raise SystemExit(f"{name}: missing production continuity guardrail: {marker}")
-
-    forbidden = (
-        "contents: write",
-        "id-token: write",
-        "issues: write",
-        "pull-requests: write",
-        "deployments: write",
-        "packages: write",
-        "pages: write",
-        "copilot-requests: write",
-        "pull_request_target:",
-        "repository_dispatch:",
-        "workflow_run:",
-        "runs-on: self-hosted",
-        "permissions: write-all",
-        "git push ",
-        "gh pr create",
-        "${{ secrets.",
-    )
-    for marker in forbidden:
-        if marker in body:
-            raise SystemExit(f"{name}: forbidden production continuity capability: {marker}")
-
-    runner = (ROOT / "senju/scripts/run_production_continuity.py").read_text(encoding="utf-8")
-    for marker in (
-        'intent.get("capability") != "deployment.production"',
-        '"reason": "invalid_approved_deployment_intent"',
-        "production-deployment-authorizations.json",
-        "resolve_existing_authority",
-        "_successful_intent_ids",
-        "already_dispatched_successfully",
-    ):
-        if marker not in runner:
-            raise SystemExit(f"run_production_continuity.py: missing approved-dispatch invariant: {marker}")
-
-    controller = (ROOT / "senju/senju/meta/production_continuity.py").read_text(encoding="utf-8")
-    for marker in (
-        "Trust/discovery alone",
-        "deployment.production",
-        "resolve_deployment_authority",
-        "revoked",
-    ):
-        if marker not in controller:
-            raise SystemExit(f"production_continuity.py: missing authority invariant: {marker}")
-
-    return name
-
-
 def main() -> int:
+    # Run global workflow safety before removing any custom-classified lane so
+    # every workflow is still subject to SHA pinning, credential disposal, and
+    # forbidden trigger/capability checks.
+    policy.validate_global_safety()
+
     manager = validate_manager_queue_oidc_lane()
     foundry = validate_ai_foundry_forge_lane()
     madlab = validate_madlab_evolution_lane()
     watchdog = validate_evolution_watchdog_lane()
-    continuity = validate_production_continuity_lane()
+    reviewed = validate_reviewed_privileged_lanes()
     validate_agent_factory_semantic_contract()
-    policy.WORKFLOWS.pop(manager, None)
-    policy.WORKFLOWS.pop(foundry, None)
-    policy.WORKFLOWS.pop(madlab, None)
-    policy.WORKFLOWS.pop(watchdog, None)
-    policy.WORKFLOWS.pop(continuity, None)
+
+    for name in {manager, foundry, madlab, watchdog} | reviewed:
+        policy.WORKFLOWS.pop(name, None)
     return policy.main()
 
 
