@@ -50,6 +50,7 @@ jobs:
           assert all(row['path'].startswith('/') for row in selected)
           assert mod['MAX_ACTIVE_EXPLOIT_PROBES'] == 3
           assert mod['ACTIVE_EXPLOIT_MAX_RPS'] <= 1.0
+          assert mod['AUTHORIZED_HOST'] == 'kabeya-authorized-test-range.onrender.com'
           print({'active_exploit_budget_ok': True, 'selected': [x['name'] for x in selected]})
           PY
 
