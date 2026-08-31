@@ -1,4 +1,4 @@
-"""Build bounded adaptive guard resilience plans from current Senju observations."""
+"""Build uncapped adaptive guard resilience plans from current Senju observations."""
 from __future__ import annotations
 
 import argparse
@@ -14,7 +14,6 @@ SENJU_DIR = ROOT / "senju"
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--environment", default="sandbox", choices=["lab", "sandbox", "staging"])
-    parser.add_argument("--max-test-intensity", type=int, default=5)
     parser.add_argument("--output", default=str(SENJU_DIR / "state" / "adaptive_guard_test_plan.json"))
     args = parser.parse_args()
 
@@ -26,13 +25,13 @@ def main() -> int:
     plans = build_plans(
         graph.guard_learning_profiles,
         execution_environment=args.environment,
-        max_test_intensity=args.max_test_intensity,
     )
 
     payload = {
         "mode": "adaptive_guard_resilience_testing",
         "environment": args.environment,
         "source": "current_observed_guard_learning_profiles",
+        "intensity_ceiling": None,
         "plans": [dataclasses.asdict(plan) for plan in plans],
     }
     output = Path(args.output)

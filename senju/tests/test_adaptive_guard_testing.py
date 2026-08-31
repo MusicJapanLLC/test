@@ -28,7 +28,17 @@ def test_stronger_guard_gets_higher_isolated_test_intensity():
 
     assert guard_strength(strong) > guard_strength(weak)
     assert strong_plan.test_intensity > weak_plan.test_intensity
-    assert strong_plan.test_intensity <= 5
+
+
+def test_isolated_planning_intensity_has_no_fixed_ceiling():
+    ordinary = _profile("ordinary", block=1.0, consistency=1.0, regression=0.0, samples=20)
+    deep = _profile("deep", block=1.0, consistency=1.0, regression=0.0, samples=2**20)
+
+    ordinary_plan = plan_test_intensity(ordinary, execution_environment="sandbox")
+    deep_plan = plan_test_intensity(deep, execution_environment="sandbox")
+
+    assert deep_plan.test_intensity > ordinary_plan.test_intensity
+    assert deep_plan.test_intensity > 10
 
 
 def test_production_and_live_are_denied():
@@ -38,12 +48,12 @@ def test_production_and_live_are_denied():
             plan_test_intensity(profile, execution_environment=env)
 
 
-def test_plans_are_sorted_by_bounded_intensity():
+def test_plans_are_sorted_by_uncapped_intensity():
     profiles = {
         "a": _profile("a", block=0.30, consistency=0.70, regression=0.10, samples=10),
         "b": _profile("b", block=0.90, consistency=0.90, regression=0.00, samples=20),
     }
-    plans = build_plans(profiles, execution_environment="lab", max_test_intensity=7)
+    plans = build_plans(profiles, execution_environment="lab")
 
     assert [p.guard for p in plans] == ["b", "a"]
-    assert all(1 <= p.test_intensity <= 7 for p in plans)
+    assert all(p.test_intensity >= 1 for p in plans)
