@@ -35,7 +35,7 @@ jobs:
       - name: Test stop-learning invariants
         run: |
           cd automation/recovery
-          python -m pytest test_stop_learning.py -q
+          python -m unittest -q test_stop_learning
 
       - name: Learn from real production stoppages
         env:
