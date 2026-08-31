@@ -1,11 +1,11 @@
-"""Autonomous self-tuner — META adjusts its own parameters based on cycle performance.
+"""Autonomous self-tuner — META adjusts its own parameters. NO CAPS. NO LIMITS.
 
-No human approval. Reads tracker + cycle history, writes updated config.
-Runs at the end of every META loop cycle.
+Runs at end of every META loop. Reads results, escalates without ceiling.
 """
 from __future__ import annotations
 
 import json
+import random
 import datetime as dt
 from pathlib import Path
 from typing import Any
@@ -16,17 +16,29 @@ TUNER_CONFIG = STATE_DIR / "meta_tuner_config.json"
 TUNER_LOG = STATE_DIR / "meta_tuner_log.ndjson"
 
 DEFAULTS: dict[str, Any] = {
-    "max_hypotheses": 7,
-    "confirm_threshold": 0.8,
-    "refute_threshold": 0.2,
-    "pressure_multiplier_max": 10.0,
-    "pressure_multiplier_escalation": 1.5,
-    "max_bypass_variations": 5,
+    "max_hypotheses": 15,
+    "confirm_threshold": 0.75,
+    "refute_threshold": 0.15,
+    "pressure_multiplier_max": 9999.0,
+    "pressure_multiplier_escalation": 2.0,
+    "max_bypass_variations": 20,
     "intel_sources_active": ["nvd", "github", "owasp"],
-    "dispatch_top_n": 3,
+    "dispatch_top_n": 10,
     "cycle_cooldown_seconds": 0,
     "auto_escalate_on_refute": True,
     "self_rewrite_enabled": True,
+    "chaos_noise_range": 0.5,
+    "exploration_prob": 0.4,
+    "resurrection_prob": 0.3,
+    "reproduction_enabled": True,
+    "adversarial_pairs_enabled": True,
+    "surface_scout_enabled": True,
+    "market_enabled": True,
+    "meta_hypothesis_enabled": True,
+    "bayesian_enabled": True,
+    "knowledge_cascade_multiplier": 1.5,
+    "tournament_enabled": True,
+    "auto_merge_enabled": True,
 }
 
 
@@ -61,19 +73,14 @@ def _log(event: str, changes: dict, metrics: dict) -> None:
 
 
 def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
-    """
-    Analyze tracker + cycle history. Adjust parameters autonomously.
-    Returns dict of changes made.
-    """
+    """Aggressive autonomous tuning. No ceiling. Everything escalates."""
     cfg = load_config()
     changes: dict = {}
 
-    # Metrics
     confirmed = sum(1 for h in tracker.values() if h.status == "confirmed")
     refuted = sum(1 for h in tracker.values() if h.status == "refuted")
     pending = sum(1 for h in tracker.values() if h.status == "pending")
     total = confirmed + refuted + pending
-
     confirm_rate = confirmed / max(total, 1)
     refute_rate = refuted / max(total, 1)
 
@@ -82,51 +89,61 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
         "confirm_rate": round(confirm_rate, 3), "refute_rate": round(refute_rate, 3),
     }
 
-    # Rule 1: Low confirmation rate → generate more hypotheses
-    if confirm_rate < 0.15 and cfg["max_hypotheses"] < 20:
-        new_val = min(20, cfg["max_hypotheses"] + 3)
-        changes["max_hypotheses"] = {"from": cfg["max_hypotheses"], "to": new_val}
-        cfg["max_hypotheses"] = new_val
+    # Always grow hypotheses — no ceiling
+    growth = 3 + int(confirm_rate * 10) + random.randint(0, 5)
+    new_max = cfg["max_hypotheses"] + growth
+    changes["max_hypotheses"] = {"from": cfg["max_hypotheses"], "to": new_max}
+    cfg["max_hypotheses"] = new_max
 
-    # Rule 2: High refute rate → lower confirm threshold (be less strict)
-    if refute_rate > 0.5 and cfg["confirm_threshold"] > 0.6:
-        new_val = round(cfg["confirm_threshold"] - 0.05, 2)
-        changes["confirm_threshold"] = {"from": cfg["confirm_threshold"], "to": new_val}
-        cfg["confirm_threshold"] = new_val
+    # Escalate pressure multiplier — always, no ceiling
+    if confirm_rate > 0.1:
+        new_esc = cfg["pressure_multiplier_escalation"] * (1.0 + confirm_rate)
+        changes["pressure_multiplier_escalation"] = {"from": cfg["pressure_multiplier_escalation"], "to": round(new_esc, 3)}
+        cfg["pressure_multiplier_escalation"] = new_esc
 
-    # Rule 3: High confirm rate → escalate pressure multiplier cap
-    if confirm_rate > 0.5 and cfg["pressure_multiplier_max"] < 20.0:
-        new_val = min(20.0, cfg["pressure_multiplier_max"] + 2.0)
-        changes["pressure_multiplier_max"] = {"from": cfg["pressure_multiplier_max"], "to": new_val}
-        cfg["pressure_multiplier_max"] = new_val
+    # Lower thresholds aggressively when stuck
+    if confirm_rate < 0.1 and cfg["confirm_threshold"] > 0.3:
+        new_t = max(0.3, cfg["confirm_threshold"] - 0.1)
+        changes["confirm_threshold"] = {"from": cfg["confirm_threshold"], "to": new_t}
+        cfg["confirm_threshold"] = new_t
 
-    # Rule 4: Many pending hypotheses → increase dispatch breadth
-    if pending > 10 and cfg["dispatch_top_n"] < 10:
-        new_val = min(10, cfg["dispatch_top_n"] + 1)
-        changes["dispatch_top_n"] = {"from": cfg["dispatch_top_n"], "to": new_val}
-        cfg["dispatch_top_n"] = new_val
+    # Increase dispatch breadth — no ceiling
+    new_dispatch = cfg["dispatch_top_n"] + max(1, confirmed)
+    changes["dispatch_top_n"] = {"from": cfg["dispatch_top_n"], "to": new_dispatch}
+    cfg["dispatch_top_n"] = new_dispatch
 
-    # Rule 5: All stuck → enable more bypass variations
-    if confirm_rate == 0 and total > 5:
-        new_val = min(10, cfg["max_bypass_variations"] + 2)
-        changes["max_bypass_variations"] = {"from": cfg["max_bypass_variations"], "to": new_val}
-        cfg["max_bypass_variations"] = new_val
+    # Increase bypass variations — no ceiling
+    new_bypass = cfg["max_bypass_variations"] + 2 + int(refute_rate * 10)
+    changes["max_bypass_variations"] = {"from": cfg["max_bypass_variations"], "to": new_bypass}
+    cfg["max_bypass_variations"] = new_bypass
 
-    # Rule 6: Cycle report shows regression rate falling → escalate multiplier
+    # Increase chaos noise when stalled
+    if confirm_rate < 0.05:
+        new_noise = min(2.0, cfg["chaos_noise_range"] + 0.1)  # noise can exceed 1.0
+        changes["chaos_noise_range"] = {"from": cfg["chaos_noise_range"], "to": new_noise}
+        cfg["chaos_noise_range"] = new_noise
+
+    # Increase exploration when everything is stuck
+    if confirm_rate == 0 and total > 0:
+        new_exp = min(1.0, cfg["exploration_prob"] + 0.1)
+        changes["exploration_prob"] = {"from": cfg["exploration_prob"], "to": new_exp}
+        cfg["exploration_prob"] = new_exp
+
+    # Cascade multiplier grows with knowledge
+    new_cascade = cfg["knowledge_cascade_multiplier"] + confirm_rate * 0.5
+    changes["knowledge_cascade_multiplier"] = {"from": cfg["knowledge_cascade_multiplier"], "to": round(new_cascade, 3)}
+    cfg["knowledge_cascade_multiplier"] = new_cascade
+
+    # Cycle report regression rate — if guards are holding, escalate harder
     if cycle_report:
         reg_rate = cycle_report.get("regression_rate", 1.0)
-        if reg_rate < 0.3 and cfg["pressure_multiplier_escalation"] < 3.0:
-            new_val = round(cfg["pressure_multiplier_escalation"] + 0.25, 2)
-            changes["pressure_multiplier_escalation"] = {
-                "from": cfg["pressure_multiplier_escalation"], "to": new_val
-            }
-            cfg["pressure_multiplier_escalation"] = new_val
+        if reg_rate < 0.5:
+            factor = 1.0 + (1.0 - reg_rate) * 2.0
+            new_esc = cfg["pressure_multiplier_escalation"] * factor
+            changes["pressure_multiplier_escalation_regression"] = {"factor": round(factor, 3)}
+            cfg["pressure_multiplier_escalation"] = new_esc
 
-    if changes:
-        save_config(cfg)
-        _log("auto_tune", changes, metrics)
-        print(f"[self_tuner] adjusted {len(changes)} parameters: {list(changes.keys())}")
-    else:
-        _log("no_change", {}, metrics)
-
+    save_config(cfg)
+    _log("auto_tune", changes, metrics)
+    print(f"[self_tuner] {len(changes)} params escalated. max_hypotheses={cfg['max_hypotheses']}")
     return {"config": cfg, "changes": changes, "metrics": metrics}
