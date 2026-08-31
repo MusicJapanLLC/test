@@ -66,6 +66,19 @@ jobs:
           if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/outside-world-rnd-seed.json; fi
           echo "outside_world_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Restore latest 50-child external fleet input
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/child-fleet
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD - Child Guild External Fleet" --status success --limit 20 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name child-external-fleet --dir /tmp/child-fleet || true
+          fi
+          FOUND="$(find /tmp/child-fleet -name child-external-fleet.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/child-external-fleet.json; fi
+          echo "child_external_fleet_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Pick one child and one memory-aware adventure
         run: |
           python company-society/playground_engine.py \
@@ -92,7 +105,7 @@ jobs:
             --report child-research-sparks.md
           cat child-research-sparks.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Learn from the run and persist memory
+      - name: Learn from adventure, research, Outside World, and the 50-child fleet
         shell: bash
         run: |
           set -euo pipefail
@@ -105,6 +118,9 @@ jobs:
           )
           if [[ -f /tmp/outside-world-rnd-seed.json ]]; then
             args+=(--observation /tmp/outside-world-rnd-seed.json)
+          fi
+          if [[ -f /tmp/child-external-fleet.json ]]; then
+            args+=(--fleet /tmp/child-external-fleet.json)
           fi
           python company-society/child_memory.py "${args[@]}"
           mv child-guild-memory.next.json child-guild-memory.json

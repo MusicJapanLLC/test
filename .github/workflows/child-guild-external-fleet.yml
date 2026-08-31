@@ -1,0 +1,119 @@
+name: THE WORLD - Child Guild External Fleet
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 * * * *'
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "company-society/child_external_fleet.py"
+      - "company-society/test_child_external_fleet.py"
+      - "value-lab/child_fleet_bridge.py"
+      - "value-lab/test_child_fleet_bridge.py"
+      - "outside-world/sources.json"
+      - ".github/workflows/child-guild-external-fleet.yml"
+
+concurrency:
+  group: child-guild-external-fleet-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  explore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Restore latest Child Guild memory
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/child-memory
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD - Child Guild Adventure" --status success --limit 20 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name child-guild-memory --dir /tmp/child-memory || true
+          fi
+          FOUND="$(find /tmp/child-memory -name child-guild-memory.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then
+            cp "$FOUND" child-guild-memory.json
+          else
+            printf '{"schema":"child-guild-memory/v1","updated_at":null,"episodes":[],"child_counts":{},"action_counts":{},"adventure_counts":{},"genius_counts":{},"concept_counts":{},"recent_concepts":[],"observation_digests":[]}\n' > child-guild-memory.json
+          fi
+          echo "memory_source_run=${RUN_ID:-fresh}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create fresh memory fixture for PR validation
+        if: github.event_name == 'pull_request'
+        run: |
+          printf '{"schema":"child-guild-memory/v1","updated_at":null,"episodes":[],"child_counts":{},"action_counts":{},"adventure_counts":{},"genius_counts":{},"concept_counts":{},"recent_concepts":[],"observation_digests":[]}\n' > child-guild-memory.json
+
+      - name: Run 50-child public external exploration fleet
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python company-society/child_external_fleet.py \
+            --registry company-society/child_guild.json \
+            --sources outside-world/sources.json \
+            --memory child-guild-memory.json \
+            --seed "${{ github.run_id }}" \
+            --max-workers 10 \
+            --out child-external-fleet.json \
+            --report child-external-fleet.md
+          cat child-external-fleet.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate fleet and bridge code
+        run: |
+          set -euo pipefail
+          python -m unittest company-society/test_child_external_fleet.py -v
+          (cd value-lab && python -m unittest test_child_fleet_bridge.py -v)
+          python -m py_compile company-society/child_external_fleet.py value-lab/child_fleet_bridge.py
+
+      - name: Build R&D and Senju context capsules
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python value-lab/child_fleet_bridge.py \
+            --fleet child-external-fleet.json \
+            --out reports/child-fleet-bridge
+          cat reports/child-fleet-bridge/handoff.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve external fleet input
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: child-external-fleet
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            child-external-fleet.json
+            child-external-fleet.md
+            reports/child-fleet-bridge/rnd-capsule.json
+            reports/child-fleet-bridge/senju-capsule.json
+            reports/child-fleet-bridge/handoff.md
+
+      - name: Report fleet learning to TOMOKI
+        if: github.event_name != 'pull_request'
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ -n "${TOMOKI_SLACK_WEBHOOK_URL:-}" ]]; then
+            python tomoki-agents/slack_post.py \
+              --agent "CHILD-FLEET-50" \
+              --file reports/child-fleet-bridge/handoff.md \
+              --status "${{ job.status }}"
+          fi
