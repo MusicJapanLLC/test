@@ -1,5 +1,5 @@
 {
-  "schema": "senju-world-trust-root-bindings/v2",
+  "schema": "senju-world-trust-root-bindings/v3",
   "semantics": "binding_only_existing_authority_never_mints_authority",
   "records": [
     {
@@ -10,6 +10,7 @@
       "autonomous_authority_council_reference": "META-X-SENJU:owner-envelope-council",
       "credentialed_write_authorization_reference": "owner:write:github:MusicJapanLLC/test:commit-status",
       "credentialed_write_target": "github:MusicJapanLLC/test:current-commit-status",
+      "security_self_approval_reference": "owner:security:self-approval:monotonic-only",
       "deployment_authorization_reference": "owner:deploy:kabeya-authorized-test-range:worker-fleet",
       "recovery_authorization_reference": "owner:recovery:MusicJapanLLC/test:the-world-unified-loop",
       "network_policy_reference": "automation/codegen/meta_state/network_policy_envelope.json",
