@@ -23,6 +23,17 @@ on:
   schedule:
     - cron: "17 */2 * * *"
   workflow_dispatch:
+    inputs:
+      scenario:
+        description: "Optional bounded canary scenario selected by the continuity incubator"
+        required: false
+        type: choice
+        options:
+          - ""
+          - contact_write
+          - record_create
+          - record_create_patch
+          - duplicate_contact_write
 
 permissions:
   contents: read
@@ -65,6 +76,8 @@ jobs:
     permissions:
       contents: write
       actions: read
+    env:
+      REQUESTED_SCENARIO: ${{ inputs.scenario }}
     steps:
       - name: Checkout production default
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -76,7 +89,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Issue randomized short-lived canary authority
+      - name: Issue randomized or incubator-selected short-lived canary authority
         id: lease
         working-directory: senju
         run: |
@@ -84,10 +97,18 @@ jobs:
           rm -rf "$CANARY_DIR"
           mkdir -p "$CANARY_DIR"
           seed="${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${GITHUB_SHA}:$(date +%s%N)"
+          scenario_args=()
+          case "${REQUESTED_SCENARIO:-}" in
+            "") ;;
+            contact_write|record_create|record_create_patch|duplicate_contact_write)
+              scenario_args=(--scenario "$REQUESTED_SCENARIO") ;;
+            *) echo "Rejected unknown canary scenario" >&2; exit 2 ;;
+          esac
           python -m senju.live_production_chaos_canary issue \
             --seed "$seed" \
             --run-id "$GITHUB_RUN_ID" \
             --ttl-seconds 180 \
+            "${scenario_args[@]}" \
             --out "$CANARY_DIR/lease-local.json"
           scenario="$(python -c 'import json,os;print(json.load(open(os.environ["CANARY_DIR"]+"/lease-local.json"))["scenario"])')"
           echo "scenario=$scenario" >> "$GITHUB_OUTPUT"
