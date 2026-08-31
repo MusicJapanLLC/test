@@ -15,7 +15,7 @@ from senju.owner_frontier_council import run_frontier_cycle
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run the four-party Owner frontier council")
+    parser = argparse.ArgumentParser(description="Run the Owner frontier approval council")
     parser.add_argument("--repo-root", default=str(ROOT))
     parser.add_argument("--state-dir", default=str(ROOT / "senju" / "state"))
     parser.add_argument("--config")
