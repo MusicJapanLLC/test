@@ -20,6 +20,7 @@ from senju.meta.policy_workspace import (
     edit_policy_workspace,
     resolve_policy_for_scope,
 )
+from senju.meta.security_boundary_proposals import stage_from_cycle_report
 
 ROOT = Path(__file__).resolve().parents[4]
 STATE_DIR = ROOT / "senju" / "state"
@@ -167,6 +168,11 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     cfg = load_config()
     changes: dict = {}
 
+    try:
+        boundary_proposals = stage_from_cycle_report("META", cycle_report)
+    except Exception as exc:
+        boundary_proposals = [{"status": "error", "system": "META", "error": str(exc)}]
+
     confirmed = sum(1 for h in tracker.values() if h.status == "confirmed")
     refuted = sum(1 for h in tracker.values() if h.status == "refuted")
     pending = sum(1 for h in tracker.values() if h.status == "pending")
@@ -177,6 +183,9 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     metrics = {
         "confirmed": confirmed, "refuted": refuted, "pending": pending,
         "confirm_rate": round(confirm_rate, 3), "refute_rate": round(refute_rate, 3),
+        "security_boundary_proposals_staged": sum(
+            1 for x in boundary_proposals if isinstance(x, dict) and x.get("status") == "requires_independent_audit"
+        ),
     }
 
     growth = 3 + int(confirm_rate * 10) + random.randint(0, 5)
@@ -227,4 +236,9 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     save_config(cfg)
     _log("auto_tune", changes, metrics)
     print(f"[self_tuner] {len(changes)} params escalated. max_hypotheses={cfg['max_hypotheses']}")
-    return {"config": cfg, "changes": changes, "metrics": metrics}
+    return {
+        "config": cfg,
+        "changes": changes,
+        "metrics": metrics,
+        "security_boundary_proposals": boundary_proposals,
+    }
