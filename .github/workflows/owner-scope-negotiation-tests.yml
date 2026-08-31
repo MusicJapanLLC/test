@@ -7,13 +7,16 @@ on:
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/discovery_trial_gate.py'
+      - 'senju/senju/council_operational_governance.py'
       - 'senju/senju/meta/authorized_host_promotion_corps.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/owner_scope_negotiation.py'
+      - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
+      - 'senju/tests/test_council_operational_governance.py'
       - 'senju/tests/test_authorized_host_promotion_corps.py'
       - 'senju/config/owner-expansion-envelope.json'
       - '.github/workflows/owner-scope-negotiation-*.yml'
@@ -23,12 +26,15 @@ on:
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/discovery_trial_gate.py'
+      - 'senju/senju/council_operational_governance.py'
       - 'senju/senju/meta/authorized_host_promotion_corps.py'
       - 'senju/senju/negotiated_external_client.py'
+      - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
+      - 'senju/tests/test_council_operational_governance.py'
       - 'senju/tests/test_authorized_host_promotion_corps.py'
 
 permissions:
@@ -47,21 +53,24 @@ jobs:
           python-version: '3.12'
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check -q pytest
-      - name: Verify negotiation, trial, promotion, and client contracts
+      - name: Verify negotiation, trial, council governance, promotion, and client contracts
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
           python -m pytest -q \
             senju/tests/test_owner_scope_negotiation.py \
             senju/tests/test_discovery_trial_gate.py \
+            senju/tests/test_council_operational_governance.py \
             senju/tests/test_authorized_host_promotion_corps.py
           python -m py_compile \
             senju/senju/owner_scope_negotiation.py \
             senju/senju/owner_scope_negotiation_runtime.py \
             senju/senju/discovery_trial_gate.py \
+            senju/senju/council_operational_governance.py \
             senju/senju/meta/authorized_host_promotion_corps.py \
             senju/senju/negotiated_external_client.py \
             senju/scripts/owner_scope_negotiation.py \
+            senju/scripts/run_council_operational_governance.py \
             senju/scripts/run_authorized_host_promotion_corps.py \
             senju/scripts/negotiated_external_probe.py
       - name: Verify production workflow has no repository writer
