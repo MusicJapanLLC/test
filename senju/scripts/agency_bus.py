@@ -126,8 +126,9 @@ def collect_counterexamples(*roots: str | Path | None, limit: int = 80) -> list[
                 if not interesting:
                     continue
                 compact = _compact_counterexample(nested_source, row, kind)
+                identity = {k: v for k, v in compact.items() if k != "source"}
                 digest = hashlib.sha256(
-                    json.dumps(compact, ensure_ascii=False, sort_keys=True).encode("utf-8")
+                    json.dumps(identity, ensure_ascii=False, sort_keys=True).encode("utf-8")
                 ).hexdigest()[:20]
                 if digest in seen:
                     continue
