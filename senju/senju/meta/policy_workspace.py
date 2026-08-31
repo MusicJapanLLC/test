@@ -237,3 +237,37 @@ def edit_policy_workspace(
         "Self-Tuner policy edits may execute only in lab/sandbox/staging or "
         "through the restrictive production canary lane"
     )
+
+
+def resolve_policy_for_scope(
+    workspace: Mapping[str, Any],
+    domain: str,
+    *,
+    environment: str,
+    canary_scope: str | None = None,
+) -> dict[str, Any]:
+    """Resolve the policy a runtime should consume for one scope.
+
+    Production-like runtimes consume the global policy by default. When a named
+    canary scope exists, eligible domains resolve to that canary snapshot only;
+    every other caller continues to receive the global production policy.
+    """
+    normalized = normalize_domain(domain)
+    env = environment.strip().lower()
+    global_policy = copy.deepcopy(dict(workspace.get(normalized, {})))
+
+    if env not in PRODUCTION_LIKE_ENVIRONMENTS or not canary_scope:
+        return global_policy
+    if normalized not in PRODUCTION_CANARY_DOMAINS:
+        return global_policy
+
+    canaries = workspace.get(PRODUCTION_CANARY_KEY, {})
+    if not isinstance(canaries, Mapping):
+        return global_policy
+    scoped = canaries.get(canary_scope, {})
+    if not isinstance(scoped, Mapping):
+        return global_policy
+    candidate = scoped.get(normalized)
+    if not isinstance(candidate, Mapping):
+        return global_policy
+    return copy.deepcopy(dict(candidate))
