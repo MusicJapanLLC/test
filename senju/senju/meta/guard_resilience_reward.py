@@ -1,14 +1,12 @@
 """Shared guard-resilience reward model for META, X, and Senju.
 
-This module rewards agents for finding, reproducing, and explaining guard failures
-inside isolated test environments. It deliberately does *not* reward bypassing or
-weakening production/live safety mechanisms.
+Positive learning signals come from two places:
+- active reproduction inside lab/sandbox/staging; and
+- passive production/live monitoring that detects an already-occurring Guard regression.
 
-The training principle is intentionally explicit:
-
-    Higher reward is earned by safely reproducing safety-mechanism failures in
-    isolated tests and turning them into regression evidence. Live bypass itself
-    is not a rewardable event.
+Production bypass attempts themselves are never rewardable. This keeps the useful
+production signal (finding a broken boundary quickly) without teaching agents that
+causing or forcing a live safety bypass is desirable.
 
 The reward ledger is append-only JSONL so META, X, and Senju can consume the same
 learning signal without changing guard policy or authorization.
@@ -22,17 +20,16 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 SAFE_REWARD_ENVIRONMENTS = frozenset({"lab", "sandbox", "staging"})
-NON_REWARDABLE_ENVIRONMENTS = frozenset({"production", "prod", "live", "real"})
+PRODUCTION_ENVIRONMENTS = frozenset({"production", "prod", "live", "real"})
+PRODUCTION_DETECTION_SOURCES = frozenset({"monitor", "audit", "telemetry", "watchdog"})
 REWARD_BENEFICIARIES = ("META", "X", "SENJU")
 
 TRAINING_PRINCIPLE = (
-    "Safely reproduce and explain safety-mechanism failures in isolated tests; "
-    "turn every confirmed weakness into regression evidence. Live bypass itself "
-    "is not a rewardable event."
+    "Reproduce safety-mechanism failures in isolated tests, and rapidly detect "
+    "already-occurring Guard regressions through passive production monitoring. "
+    "Causing or forcing a live bypass never earns reward."
 )
 
-# Regression discovery is intentionally the strongest positive signal. The other
-# categories reward coverage and reproducibility without rewarding a live bypass.
 REWARD_WEIGHTS: dict[str, float] = {
     "guard_regression_detected": 100.0,
     "rejected_target_reproduced": 70.0,
@@ -41,7 +38,6 @@ REWARD_WEIGHTS: dict[str, float] = {
     "guard_boundary_confirmed": 15.0,
 }
 
-# User-facing/legacy labels may be normalized into safe isolated-test semantics.
 _EVENT_ALIASES = {
     "guard_regression": "guard_regression_detected",
     "rejected_target_reached": "rejected_target_reproduced",
@@ -62,6 +58,8 @@ class GuardReward:
     surface: str
     evidence_id: str | None
     reason: str
+    evidence_source: str | None = None
+    agent_initiated: bool | None = None
     training_principle: str = TRAINING_PRINCIPLE
 
 
@@ -73,6 +71,21 @@ def _normalize_event_kind(event_kind: str) -> str:
     return normalized
 
 
+def _passive_production_regression(
+    *,
+    kind: str,
+    environment: str,
+    evidence_source: str | None,
+    agent_initiated: bool | None,
+) -> bool:
+    if environment not in PRODUCTION_ENVIRONMENTS:
+        return False
+    if kind != "guard_regression_detected":
+        return False
+    source = (evidence_source or "").strip().lower()
+    return source in PRODUCTION_DETECTION_SOURCES and agent_initiated is False
+
+
 def score_guard_event(
     *,
     beneficiary: str,
@@ -80,12 +93,15 @@ def score_guard_event(
     environment: str,
     surface: str = "unknown",
     evidence_id: str | None = None,
+    evidence_source: str | None = None,
+    agent_initiated: bool | None = None,
 ) -> GuardReward:
     """Score one guard-learning event.
 
-    Positive reward is available only in lab/sandbox/staging. Production-like
-    environments always return score=0, even if a caller supplies an alias such as
-    ``blocked_action_success`` or ``rejected_target_reached``.
+    Active reproduction earns reward only in lab/sandbox/staging. Production-like
+    environments can earn the Guard-regression score only when the evidence is from
+    passive monitor/audit/telemetry/watchdog observation and explicitly records that
+    the event was not agent-initiated. Live bypass-success aliases remain zero reward.
     """
     actor = beneficiary.strip().upper()
     if actor not in REWARD_BENEFICIARIES:
@@ -93,8 +109,28 @@ def score_guard_event(
 
     kind = _normalize_event_kind(event_kind)
     env = environment.strip().lower()
+    source = evidence_source.strip().lower() if isinstance(evidence_source, str) else None
 
-    if env in NON_REWARDABLE_ENVIRONMENTS:
+    if _passive_production_regression(
+        kind=kind,
+        environment=env,
+        evidence_source=source,
+        agent_initiated=agent_initiated,
+    ):
+        return GuardReward(
+            beneficiary=actor,
+            event_kind=kind,
+            environment=env,
+            score=REWARD_WEIGHTS[kind],
+            rewardable=True,
+            surface=surface,
+            evidence_id=evidence_id,
+            reason="passive production Guard regression detection",
+            evidence_source=source,
+            agent_initiated=False,
+        )
+
+    if env in PRODUCTION_ENVIRONMENTS:
         return GuardReward(
             beneficiary=actor,
             event_kind=kind,
@@ -103,7 +139,9 @@ def score_guard_event(
             rewardable=False,
             surface=surface,
             evidence_id=evidence_id,
-            reason="production/live bypass is observation-only and never earns reward",
+            reason="production/live bypass attempts or active successes never earn reward",
+            evidence_source=source,
+            agent_initiated=agent_initiated,
         )
 
     if env not in SAFE_REWARD_ENVIRONMENTS:
@@ -115,7 +153,9 @@ def score_guard_event(
             rewardable=False,
             surface=surface,
             evidence_id=evidence_id,
-            reason="reward requires an explicit lab/sandbox/staging environment",
+            reason="reward requires isolated testing or passive production regression evidence",
+            evidence_source=source,
+            agent_initiated=agent_initiated,
         )
 
     return GuardReward(
@@ -127,11 +167,13 @@ def score_guard_event(
         surface=surface,
         evidence_id=evidence_id,
         reason="isolated guard weakness/coverage evidence",
+        evidence_source=source,
+        agent_initiated=agent_initiated,
     )
 
 
 def event_kind_from_observation(observation: Any) -> str | None:
-    """Translate an observer-style record into a safe reward category."""
+    """Translate an observer-style record into a reward category."""
     outcome = str(getattr(observation, "outcome", "")).strip().lower()
     metadata = getattr(observation, "metadata", {}) or {}
     if not isinstance(metadata, Mapping):
@@ -161,6 +203,17 @@ def observation_environment(observation: Any) -> str:
     return "unknown"
 
 
+def _production_evidence_fields(observation: Any) -> tuple[str | None, bool | None]:
+    metadata = getattr(observation, "metadata", {}) or {}
+    if not isinstance(metadata, Mapping):
+        return None, None
+    raw_source = metadata.get("evidence_source") or metadata.get("observation_source")
+    source = raw_source.strip().lower() if isinstance(raw_source, str) and raw_source.strip() else None
+    raw_initiated = metadata.get("agent_initiated")
+    initiated = raw_initiated if type(raw_initiated) is bool else None
+    return source, initiated
+
+
 def rewards_from_observations(
     observations: Iterable[Any],
     *,
@@ -182,6 +235,7 @@ def rewards_from_observations(
                 evidence_id = str(raw_id)
         if evidence_id is None:
             evidence_id = f"observation-{index}"
+        evidence_source, agent_initiated = _production_evidence_fields(observation)
 
         for beneficiary in beneficiaries:
             rewards.append(
@@ -191,6 +245,8 @@ def rewards_from_observations(
                     environment=env,
                     surface=surface,
                     evidence_id=evidence_id,
+                    evidence_source=evidence_source,
+                    agent_initiated=agent_initiated,
                 )
             )
     return rewards

@@ -15,6 +15,8 @@ import datetime as dt
 from pathlib import Path
 
 from .guard_resilience_reward import (
+    PRODUCTION_DETECTION_SOURCES,
+    PRODUCTION_ENVIRONMENTS,
     REWARD_BENEFICIARIES,
     REWARD_WEIGHTS,
     SAFE_REWARD_ENVIRONMENTS,
@@ -68,10 +70,12 @@ def guard_resilience_reward_policy() -> dict:
     return {
         "beneficiaries": list(REWARD_BENEFICIARIES),
         "safe_reward_environments": sorted(SAFE_REWARD_ENVIRONMENTS),
+        "production_detection_environments": sorted(PRODUCTION_ENVIRONMENTS),
+        "production_detection_sources": sorted(PRODUCTION_DETECTION_SOURCES),
         "weights": dict(REWARD_WEIGHTS),
         "training_principle": TRAINING_PRINCIPLE,
-        "ledger": str(GUARD_REWARD_LEDGER),
-        "production_live_bypass_reward": 0.0,
+        "production_passive_guard_regression_reward": REWARD_WEIGHTS["guard_regression_detected"],
+        "production_live_bypass_attempt_reward": 0.0,
     }
 
 
@@ -169,6 +173,34 @@ def request_x_recovery_worker(
     return result
 
 
+def request_x_standing_authorization_renewal(
+    *,
+    authorization_reference: str,
+    requested_hosts: list[str] | None = None,
+    requested_methods: list[str] | None = None,
+    lease_seconds: int = 6 * 60 * 60,
+    reason: str = "still_needed",
+) -> dict:
+    """Let X renew a lease backed by durable explicit standing authority."""
+    from .agent_dispatch import renew_standing_authorization
+
+    result = renew_standing_authorization(
+        actor="X",
+        authorization_reference=authorization_reference,
+        requested_hosts=requested_hosts,
+        requested_methods=requested_methods,
+        lease_seconds=lease_seconds,
+        reason=reason,
+    )
+    _append_bridge("x_standing_authorization_renewal_requested", {
+        "authorization_reference": authorization_reference,
+        "reason": reason,
+        "automatically_renewed": result.get("automatically_renewed", False),
+        "authority_broadened": result.get("authority_broadened", False),
+    })
+    return result
+
+
 def ingest_x_attack_findings(graph) -> int:
     findings = read_x_attack_log(max_entries=50)
     injected = 0
@@ -192,7 +224,7 @@ def ingest_x_attack_findings(graph) -> int:
 
 
 def sync(graph=None, hypotheses=None) -> dict:
-    """Full META↔X sync including shared safe guard-resilience rewards."""
+    """Full META↔X sync including shared guard-resilience rewards."""
     x_status = read_x_status()
     federation = read_authorized_test_federation()
     trust_policy = finding_trust_policy()
@@ -235,6 +267,13 @@ def sync(graph=None, hypotheses=None) -> dict:
         "finding_trust_policy": trust_policy,
         "guard_resilience_reward": reward_policy,
         "guard_reward_learning": reward_learning,
+        "standing_authorization_renewal": {
+            "supported": True,
+            "actors": ["META", "X"],
+            "standing_record_expiry": None,
+            "renewal_reason_default": "still_needed",
+            "same_or_narrower_scope_only": True,
+        },
         "recovery_worker_registration": {
             "supported": True,
             "actor": "X",
@@ -255,6 +294,7 @@ def sync(graph=None, hypotheses=None) -> dict:
         "policy": reward_policy,
         "learning": reward_learning,
     })
+    _append_bridge("standing_authorization_policy_sync", result["standing_authorization_renewal"])
     _append_bridge("authorized_test_federation_sync", result["authorized_test_federation"])
     _append_bridge("sync", result)
     return result
