@@ -123,3 +123,39 @@ def test_relay_persists_and_increases_internal_handoff_priority(tmp_path: Path) 
     queue = json.loads((runtime / "authority_opportunity_queue.json").read_text(encoding="utf-8"))
     assert len(queue["opportunities"]) == 1
     assert queue["opportunities"][0]["relay_count"] == 2
+
+
+def test_terminal_runtime_policy_wins_over_fresh_external_candidate(tmp_path: Path) -> None:
+    source = tmp_path / "source"
+    runtime = tmp_path / "runtime"
+    _write(source / "discovery_candidates.json", {
+        "candidates": [{"host": "blocked.example", "decision": "candidate_only"}]
+    })
+    _write(runtime / "authority_opportunity_queue.json", {
+        "opportunities": [{
+            "host": "blocked.example",
+            "hard_deny": True,
+            "reason": "policy block",
+            "priority": 100,
+        }]
+    })
+    _write(runtime / "owner_scope_negotiation_signals.json", {
+        "signals": [{
+            "signal_id": "external-input-relay-stale",
+            "host": "blocked.example",
+            "source": "external_input_negotiation_relay",
+            "reason": "stale relay signal",
+        }]
+    })
+
+    result = run_external_input_negotiation_relay(runtime, source_dirs=[source], now=4_000)
+
+    assert result["opportunity_count"] == 0
+    queue = json.loads((runtime / "authority_opportunity_queue.json").read_text(encoding="utf-8"))
+    assert len(queue["opportunities"]) == 1
+    assert queue["opportunities"][0]["host"] == "blocked.example"
+    assert queue["opportunities"][0]["hard_deny"] is True
+    assert queue["opportunities"][0]["reason"] == "policy block"
+
+    signals = json.loads((runtime / "owner_scope_negotiation_signals.json").read_text(encoding="utf-8"))
+    assert signals["signals"] == []

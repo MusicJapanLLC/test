@@ -15,11 +15,10 @@ on:
   schedule:
     - cron: '*/10 * * * *'
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - Shared Discovery Authority Cycle
-      - Owner Frontier Approval Council
-    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
 
 concurrency:
   group: external-input-negotiation-relay
@@ -27,12 +26,8 @@ concurrency:
 
 jobs:
   relay-site-intelligence:
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 12
-    permissions:
-      contents: read
-      actions: read
     steps:
       - name: Checkout coordination code read-only
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -110,7 +105,7 @@ jobs:
             echo '## External Input Negotiation Relay'
             echo "- Relayed unresolved hosts: **$(jq -r '.opportunity_count' .authority-opportunity-runtime/external_input_negotiation_relay_run.json)**"
             echo '- Handoff: Shared Discovery / latest PR buses -> Owner Scope + Root Negotiation'
-            echo '- Coordination permission: may trigger downstream internal negotiation workflows'
+            echo '- Consumption: read-only artifact handoff; negotiation workflows pull this state on their normal cadence'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Save relay state into the shared authority opportunity cache
@@ -133,26 +128,3 @@ jobs:
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
-
-  kick-negotiators:
-    needs: relay-site-intelligence
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      actions: write
-    steps:
-      - name: Hand relay output immediately to downstream negotiation workers
-        env:
-          GH_TOKEN: ${{ github.token }}
-          BASE_BRANCH: claude/employee-onboarding-setup-udm86
-        run: |
-          set -euo pipefail
-          gh workflow run root-authority-negotiation-loop.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref "$BASE_BRANCH"
-          gh workflow run owner-scope-negotiation-production.yml \
-            --repo "$GITHUB_REPOSITORY" \
-            --ref "$BASE_BRANCH"
-          echo 'Triggered Root Authority Negotiation Loop and Owner Scope Negotiation Production from the relay.' >> "$GITHUB_STEP_SUMMARY"
