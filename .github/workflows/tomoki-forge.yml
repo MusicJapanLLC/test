@@ -245,3 +245,177 @@ jobs:
         run: |
           if [[ ! -f /tmp/tomoki-forge-report.md ]]; then printf 'FORGE run failed before report generation.\n' > /tmp/tomoki-forge-report.md; fi
           python /tmp/tomoki-slack-post.py --agent FORGE --file /tmp/tomoki-forge-report.md --status "${{ steps.experiment.outputs.result || job.status }}"
+
+  lineage:
+    name: META -> X -> Senju closed production lineage
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout current production branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+
+      - name: Install closed-lineage runtime
+        run: |
+          npm install -g @github/copilot@1.0.80
+          python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Select highest-confidence confirmed META finding
+        id: select
+        shell: bash
+        run: |
+          set -euo pipefail
+          target_ref='${{ github.event.repository.default_branch }}'
+          python automation/world/select_confirmed_fix_lineages.py \
+            --target-ref "$target_ref" \
+            --limit 1 \
+            --out /tmp/closed-lineage-selection.json >/dev/null
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('/tmp/closed-lineage-selection.json',encoding='utf-8'))
+          rows=d.get('selected') or []
+          if not rows:
+              print('found=false')
+          else:
+              row=rows[0]
+              print('found=true')
+              print('task_id='+str(row['task_id']))
+              print('detection_id='+str(row['hypothesis_id']))
+              print('lineage_id='+str(row['lineage_id']))
+          PY
+
+      - name: Skip lineage already represented by a PR
+        id: dedupe
+        if: steps.select.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LINEAGE_ID: ${{ steps.select.outputs.lineage_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="$(gh pr list --repo "$GITHUB_REPOSITORY" --state all --search "$LINEAGE_ID in:title" --limit 20 --json number --jq 'length')"
+          if [[ "$count" == "0" ]]; then
+            echo 'run=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'run=false' >> "$GITHUB_OUTPUT"
+            echo "Lineage $LINEAGE_ID already has a PR; duplicate generation skipped." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: META/X generate and META/X/Senju approve one patch
+        id: build_lineage
+        if: steps.select.outputs.found == 'true' && steps.dedupe.outputs.run == 'true'
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LINEAGE_GENERATOR_BACKEND: copilot
+        shell: bash
+        run: |
+          set -euo pipefail
+          base_sha="$(git rev-parse HEAD)"
+          echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
+          python automation/world/closed_loop_lineage.py \
+            --task-id '${{ steps.select.outputs.task_id }}' \
+            --detection-id '${{ steps.select.outputs.detection_id }}' \
+            --max-iterations 8 \
+            --target-ref '${{ github.event.repository.default_branch }}' \
+            --state-out /tmp/closed-lineage.json \
+            --receipt-out /tmp/closed-lineage-pr.md
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('/tmp/closed-lineage.json',encoding='utf-8'))
+          print('status='+str(d.get('status') or 'unknown'))
+          print('output_file='+str(d.get('output_file') or ''))
+          print('selected_sha='+str(d.get('selected_code_sha256') or ''))
+          PY
+
+      - name: Enforce existing Agent Factory production change policy
+        id: lineage_policy
+        if: steps.build_lineage.outputs.status == 'ready_for_apply'
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          if python automation/agent_factory/policy.py \
+            --base '${{ steps.build_lineage.outputs.base_sha }}' \
+            --json /tmp/closed-lineage-policy.json \
+            --report /tmp/closed-lineage-policy.md; then
+            echo 'allowed=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'allowed=false' >> "$GITHUB_OUTPUT"
+          fi
+          cat /tmp/closed-lineage-policy.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create same-lineage production PR
+        id: lineage_pr
+        if: steps.build_lineage.outputs.status == 'ready_for_apply' && steps.lineage_policy.outputs.allowed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          LINEAGE_ID: ${{ steps.select.outputs.lineage_id }}
+          TASK_ID: ${{ steps.select.outputs.task_id }}
+          OUTPUT_FILE: ${{ steps.build_lineage.outputs.output_file }}
+          BASE_REF: ${{ github.event.repository.default_branch }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="closed-lineage/${LINEAGE_ID}-${GITHUB_RUN_ID}"
+          git config user.name 'META-X-Senju[bot]'
+          git config user.email 'meta-x-senju@users.noreply.github.com'
+          git checkout -b "$branch"
+          git add -- "$OUTPUT_FILE"
+          staged="$(git diff --cached --name-only)"
+          if [[ "$staged" != "$OUTPUT_FILE" ]]; then
+            echo "Closed lineage staging drifted from declared output_file." >&2
+            exit 1
+          fi
+          git commit -m "closed-lineage: ${TASK_ID} [${LINEAGE_ID}]"
+          gh auth setup-git
+          git push origin "$branch"
+          url="$(gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base "$BASE_REF" \
+            --head "$branch" \
+            --title "[LINEAGE ${LINEAGE_ID}] META/X/Senju fix: ${TASK_ID}" \
+            --body-file /tmp/closed-lineage-pr.md)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Apply handoff PR: $url" >> "$GITHUB_STEP_SUMMARY"
+          echo "Existing Auto Merge PRs lane will perform production Apply only after repository checks pass." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Closed-lineage summary
+        if: always()
+        shell: bash
+        run: |
+          echo '### META -> X -> Senju closed lineage' >> "$GITHUB_STEP_SUMMARY"
+          echo "- Detection selected: ${{ steps.select.outputs.found }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Lineage: \`${{ steps.select.outputs.lineage_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Build status: \`${{ steps.build_lineage.outputs.status }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Production policy allowed: \`${{ steps.lineage_policy.outputs.allowed }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Apply PR: ${{ steps.lineage_pr.outputs.url }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve closed-lineage generation and approval receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: closed-lineage-${{ github.run_id }}
+          path: |
+            /tmp/closed-lineage-selection.json
+            /tmp/closed-lineage.json
+            /tmp/closed-lineage-pr.md
+            /tmp/closed-lineage-policy.json
+            /tmp/closed-lineage-policy.md
+          retention-days: 90
+          if-no-files-found: warn

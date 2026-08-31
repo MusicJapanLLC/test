@@ -1,0 +1,87 @@
+name: Closed Production Lineage Audit
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+concurrency:
+  group: closed-production-lineage-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WORLD_ENV: production
+
+    steps:
+      - name: Checkout current production default branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install audit test dependency
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Audit merged lineage against production
+        shell: bash
+        run: |
+          set -euo pipefail
+          pr_number='${{ github.event.pull_request.number || 0 }}'
+          args=(
+            --out-dir /tmp/closed-lineage-audits
+            --lookback-hours 24
+          )
+          if [[ "$pr_number" != "0" && -n "$pr_number" ]]; then
+            args+=(--pr-number "$pr_number" --require-pass)
+          else
+            args+=(--limit 50)
+          fi
+          python automation/world/audit_closed_lineage_prs.py "${args[@]}" | tee /tmp/closed-lineage-audit.log
+
+      - name: Publish Audit -> PASS summary
+        if: always()
+        shell: bash
+        run: |
+          echo '## Closed Production Lineage Audit' >> "$GITHUB_STEP_SUMMARY"
+          if compgen -G '/tmp/closed-lineage-audits/*.json' >/dev/null; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, json
+          for path in sorted(glob.glob('/tmp/closed-lineage-audits/*.json')):
+              row=json.load(open(path, encoding='utf-8'))
+              print(f"- `{row.get('lineage_id')}` PR #{row.get('pr_number')}: **{row.get('status')}**")
+              print(f"  - Apply SHA: `{row.get('merge_commit_sha')}`")
+              for actor, vote in (row.get('audit_votes') or {}).items():
+                  print(f"  - {actor} audit: {'PASS' if vote.get('passed') else 'FAIL'}")
+          PY
+          else
+            echo '- No merged closed-lineage PR required auditing in this run.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Preserve lineage audit receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: closed-lineage-audit-${{ github.run_id }}
+          path: |
+            /tmp/closed-lineage-audits/
+            /tmp/closed-lineage-audit.log
+          if-no-files-found: warn
+          retention-days: 90
