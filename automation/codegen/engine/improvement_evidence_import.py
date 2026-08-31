@@ -12,6 +12,7 @@ import io
 import json
 import os
 import urllib.error
+import urllib.parse
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -38,6 +39,28 @@ class EvidenceImportError(RuntimeError):
     """Raised when bounded production evidence import cannot be completed."""
 
 
+class _StripSensitiveCrossHostRedirect(urllib.request.HTTPRedirectHandler):
+    """Follow GitHub artifact redirects without leaking GitHub authorization headers."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ANN001
+        redirected = super().redirect_request(req, fp, code, msg, headers, newurl)
+        if redirected is None:
+            return None
+        old_host = urllib.parse.urlsplit(req.full_url).hostname
+        new_host = urllib.parse.urlsplit(newurl).hostname
+        if old_host != new_host:
+            for header in ("Authorization", "X-GitHub-Api-Version"):
+                redirected.remove_header(header)
+                redirected.headers.pop(header, None)
+                redirected.unredirected_hdrs.pop(header, None)
+        return redirected
+
+
+def _default_open(request: urllib.request.Request, *, timeout: int) -> Any:
+    opener = urllib.request.build_opener(_StripSensitiveCrossHostRedirect())
+    return opener.open(request, timeout=timeout)
+
+
 def _request_bytes(url: str, token: str, *, opener: Callable[..., Any] | None = None) -> bytes:
     request = urllib.request.Request(
         url,
@@ -48,10 +71,15 @@ def _request_bytes(url: str, token: str, *, opener: Callable[..., Any] | None = 
             "User-Agent": "The-World-Authority-Improvement/1.0",
         },
     )
-    open_fn = opener or urllib.request.urlopen
+    open_fn = opener or _default_open
     try:
         with open_fn(request, timeout=20) as response:
-            return bytes(response.read(8 * 1024 * 1024))
+            data = bytes(response.read(8 * 1024 * 1024 + 1))
+            if len(data) > 8 * 1024 * 1024:
+                raise EvidenceImportError("GitHub evidence response exceeded size limit")
+            return data
+    except EvidenceImportError:
+        raise
     except (OSError, TimeoutError, urllib.error.HTTPError) as exc:
         raise EvidenceImportError(f"GitHub evidence request failed: {type(exc).__name__}") from exc
 
