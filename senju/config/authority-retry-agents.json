@@ -1,0 +1,30 @@
+{
+  "schema": "senju-authority-retry-agents/v1",
+  "max_attempts": 4,
+  "agents": [
+    {
+      "name": "JULES",
+      "enabled": true,
+      "authority_scopes": [
+        "repo:read",
+        "repo:write:pr",
+        "repo:pr:review"
+      ],
+      "route": {
+        "kind": "jules_task",
+        "labels": ["authority-retry", "jules-task"]
+      }
+    },
+    {
+      "name": "OPENHANDS",
+      "enabled": true,
+      "authority_scopes": [
+        "repo:read",
+        "repo:pr:review"
+      ],
+      "route": {
+        "kind": "openhands_task"
+      }
+    }
+  ]
+}
