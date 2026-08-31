@@ -1,11 +1,13 @@
-"""AI Security Proposal -> Council -> reviewed production decision engine.
+"""AI Security Proposal -> Council -> reviewed/delegated production decision engine.
 
-Two production classes share one proposal/trust record:
+Three production classes share one proposal/trust record:
 
 * monotonic security tightening may be self-approved by the AI Council;
-* authority expansion may be proposed and unanimously approved by the Council,
-  but Production Apply additionally requires an independent GitHub PR approval
-  bound to the exact proposal hash.
+* authority expansion may be unanimously approved by the Council and then
+  independently approved on GitHub;
+* authority activation already covered by a trusted production standing
+  envelope may be self-approved by the Council without a per-proposal human
+  review because the authority was delegated earlier at the trust root.
 
 The engine never permits a proposal to disable emergency stop, weaken a guard,
 rewrite its own approval root, or embed raw credential/secret material.
@@ -19,6 +21,7 @@ from typing import Any, Mapping
 
 COUNCIL = ("META", "X", "Senju")
 TRUSTED_REVIEW_ASSOCIATIONS = frozenset({"OWNER", "MEMBER", "COLLABORATOR"})
+OWNER_NAMESPACE = "MusicJapanLLC/test"
 
 ALLOWED_OPERATIONS: dict[str, frozenset[str]] = {
     "guard": frozenset({
@@ -53,9 +56,6 @@ ALLOWED_OPERATIONS: dict[str, frozenset[str]] = {
     }),
 }
 
-# Requested authority changes are first-class proposals, not unknown operations.
-# They are never eligible for AI-only self approval. They require unanimous AI
-# consensus plus a separately sourced GitHub approval bound to the proposal hash.
 EXPANSION_OPERATIONS: dict[str, frozenset[str]] = {
     "authority_policy": frozenset({
         "expand_scope",
@@ -183,7 +183,8 @@ def _verify_external_approval(
     state = str(row.get("review_state") or "").upper()
     source = str(row.get("source") or "")
     bound_hash = str(row.get("proposal_sha256") or "")
-    verified = all((
+
+    github_review = all((
         row.get("approved") is True,
         source == "github_pull_request_review",
         reviewer_type == "User",
@@ -194,6 +195,22 @@ def _verify_external_approval(
         bool(str(row.get("reviewer") or "").strip()),
         int(row.get("pull_request") or 0) > 0,
     ))
+
+    standing_envelope = all((
+        row.get("approved") is True,
+        source == "standing_owner_envelope",
+        row.get("trusted_base") is True,
+        row.get("scope_match") is True,
+        str(row.get("owner_namespace") or "") == OWNER_NAMESPACE,
+        reviewer_type == "OwnerManifest",
+        association == "OWNER",
+        state == "STANDING_APPROVAL",
+        bool(str(row.get("envelope_id") or "").strip()),
+        bool(bound_hash),
+        bound_hash == proposal_hash,
+    ))
+
+    verified = github_review or standing_envelope
     return {
         "required": True,
         "verified": verified,
@@ -204,6 +221,10 @@ def _verify_external_approval(
         "review_state": state or None,
         "pull_request": row.get("pull_request"),
         "proposal_sha256": bound_hash or None,
+        "standing_delegation": bool(standing_envelope),
+        "trusted_base": row.get("trusted_base") is True,
+        "scope_match": row.get("scope_match") is True,
+        "envelope_id": row.get("envelope_id"),
     }
 
 
@@ -257,7 +278,7 @@ def evaluate_security_proposal(
 
     council = _council(proposal.get("council_votes", {}) if isinstance(proposal.get("council_votes"), dict) else {})
     production_requested = proposal.get("environment", "production") == "production"
-    owner_namespace = proposal.get("owner_namespace", "MusicJapanLLC/test") == "MusicJapanLLC/test"
+    owner_namespace = proposal.get("owner_namespace", OWNER_NAMESPACE) == OWNER_NAMESPACE
     identified = bool(proposal_id)
 
     proposal_class = "authority_expansion" if any_expansion else ("security_tightening" if all_tightening else "blocked")
@@ -280,10 +301,23 @@ def evaluate_security_proposal(
         "review_state": None,
         "pull_request": None,
         "proposal_sha256": None,
+        "standing_delegation": False,
+        "trusted_base": False,
+        "scope_match": False,
+        "envelope_id": None,
     }
 
-    # AI-only self approval remains limited to monotonic tightening.
-    self_approved = bool(ai_consensus_approved and proposal_class == "security_tightening")
+    delegated_activation = bool(
+        proposal_class == "authority_expansion"
+        and ai_consensus_approved
+        and external["verified"]
+        and external["standing_delegation"]
+    )
+
+    self_approved = bool(
+        (ai_consensus_approved and proposal_class == "security_tightening")
+        or delegated_activation
+    )
     production_apply_eligible = bool(
         self_approved
         or (
@@ -292,20 +326,20 @@ def evaluate_security_proposal(
             and external["verified"]
         )
     )
-    proposal_gate_eligible = bool(
-        self_approved
-        or (
-            proposal_class == "authority_expansion"
-            and ai_consensus_approved
-            and external["verified"]
-        )
-    )
+    proposal_gate_eligible = production_apply_eligible
 
     targets = [change["target"] for change in decision_changes]
     target = targets[0] if len(targets) == 1 else "multi_surface_bundle"
 
+    if delegated_activation:
+        trust_root = "owner-standing-envelope+ai-council/v1"
+    elif proposal_class == "authority_expansion":
+        trust_root = "ai-council+github-maintainer-review/v1"
+    else:
+        trust_root = "ai-council-tightening/v1"
+
     return {
-        "schema": "the-world-security-proposal-decision/v4",
+        "schema": "the-world-security-proposal-decision/v5",
         "proposal_id": proposal_id,
         "proposal_sha256": proposal_hash,
         "identified": identified,
@@ -321,18 +355,21 @@ def evaluate_security_proposal(
         "external_approval": external,
         "security_direction": "expand" if proposal_class == "authority_expansion" else ("tighten" if proposal_class == "security_tightening" else "blocked"),
         "self_approved": self_approved,
+        "delegated_authority_activation": delegated_activation,
+        "delegation_envelope_id": external.get("envelope_id"),
         "proposal_gate_eligible": proposal_gate_eligible,
         "auto_merge_eligible": production_apply_eligible,
         "production_apply_eligible": production_apply_eligible,
         "fresh_human_prompt_required": proposal_class == "authority_expansion" and not external["verified"],
         "standing_ai_council_authority": self_approved,
-        "creates_new_authority": proposal_class == "authority_expansion" and all_supported,
+        "creates_new_authority": proposal_class == "authority_expansion" and all_supported and not delegated_activation,
+        "activates_predelegated_authority": delegated_activation,
         "scope_expansion_allowed": proposal_class == "authority_expansion" and production_apply_eligible,
         "raw_secret_material_detected": raw_secret,
         "guard_weakening_allowed": False,
         "emergency_stop_disable_allowed": False,
         "root_self_rewrite_allowed": False,
-        "trust_root": "ai-council+github-maintainer-review/v1" if proposal_class == "authority_expansion" else "ai-council-tightening/v1",
+        "trust_root": trust_root,
     }
 
 
@@ -348,7 +385,7 @@ def apply_proposal_to_state(
         raise PermissionError("security proposal is not eligible for production apply")
 
     current = deepcopy(state or {})
-    current.setdefault("schema", "the-world-ai-security-runtime-state/v2")
+    current.setdefault("schema", "the-world-ai-security-runtime-state/v3")
     current.setdefault("generation", 0)
     current.setdefault("applied_proposals", [])
     current.setdefault("controls", {})
@@ -377,6 +414,7 @@ def apply_proposal_to_state(
                 "proposal_id": proposal_id,
                 "proposal_sha256": decision["proposal_sha256"],
                 "proposal_class": decision["proposal_class"],
+                "delegation_envelope_id": decision.get("delegation_envelope_id"),
                 "type": operation["type"],
                 "parameters": operation.get("parameters", {}),
             })
@@ -392,6 +430,8 @@ def apply_proposal_to_state(
         "council_yes": decision["council"]["yes"],
         "ai_consensus_approved": bool(decision.get("ai_consensus_approved")),
         "self_approved": bool(decision.get("self_approved")),
+        "delegated_authority_activation": bool(decision.get("delegated_authority_activation")),
+        "delegation_envelope_id": decision.get("delegation_envelope_id"),
         "external_approval": deepcopy(decision.get("external_approval")),
         "trust_root": decision.get("trust_root"),
         "production_applied": True,
