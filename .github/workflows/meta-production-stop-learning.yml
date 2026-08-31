@@ -9,6 +9,7 @@ on:
       - automation/recovery/stop_learning_runner.py
       - automation/recovery/recovery_tuner.py
       - automation/recovery/apply_recovery_tuning.py
+      - automation/recovery/approved_persistence_registry.json
       - automation/recovery/runtime_control_state.json
       - automation/recovery/test_stop_learning.py
       - automation/recovery/test_recovery_tuner.py
