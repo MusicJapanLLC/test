@@ -24,34 +24,16 @@ jobs:
   negotiate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true
+          persist-credentials: false
           ref: claude/employee-onboarding-setup-udm86
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
         with:
           python-version: '3.12'
-      - name: Snapshot effective ceiling
-        id: before
-        shell: bash
-        run: |
-          python - <<'PY' > /tmp/owner-ceiling-before.sha
-          import hashlib, json
-          from pathlib import Path
-          p = Path('senju/state/owner_contact_ceiling_effective.json')
-          if not p.exists():
-              print('missing')
-          else:
-              try:
-                  doc = json.loads(p.read_text())
-                  ceiling = doc.get('ceiling', {})
-                  raw = json.dumps(ceiling, sort_keys=True, separators=(',', ':')).encode()
-                  print(hashlib.sha256(raw).hexdigest())
-              except Exception:
-                  print('invalid')
-          PY
-          echo "sha=$(cat /tmp/owner-ceiling-before.sha)" >> "$GITHUB_OUTPUT"
       - name: Run real negotiation cycle
         env:
           PYTHONPATH: senju:automation/codegen
@@ -60,32 +42,61 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --out /tmp/owner-scope-negotiation-report.json
-      - name: Persist effective Owner ceiling when meaningfully changed
+      - name: Persist effective Owner ceiling through bounded GitHub ref API
         id: persist
         shell: bash
         run: |
-          AFTER=$(python - <<'PY'
-          import hashlib, json
-          from pathlib import Path
-          p = Path('senju/state/owner_contact_ceiling_effective.json')
-          doc = json.loads(p.read_text())
-          raw = json.dumps(doc.get('ceiling', {}), sort_keys=True, separators=(',', ':')).encode()
-          print(hashlib.sha256(raw).hexdigest())
-          PY
-          )
-          BEFORE='${{ steps.before.outputs.sha }}'
-          echo "before=$BEFORE"
-          echo "after=$AFTER"
-          if [ "$BEFORE" = "$AFTER" ]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git config user.name 'senju-owner-scope-bot'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add senju/state/owner_contact_ceiling_effective.json
-          git commit -m 'chore(authority): persist negotiated owner contact ceiling [skip ci]'
-          git push origin HEAD:claude/employee-onboarding-setup-udm86
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          REPO="$GITHUB_REPOSITORY"
+          BASE="claude/employee-onboarding-setup-udm86"
+          SRC="senju/state/owner_contact_ceiling_effective.json"
+          PATH_IN_REPO="senju/state/owner_contact_ceiling_effective.json"
+
+          for attempt in 1 2 3; do
+            BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+            BRANCH="owner-scope-state-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${attempt}"
+            gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BRANCH" -f sha="$BASE_SHA" >/dev/null
+
+            REMOTE_SHA="$(gh api "repos/$REPO/contents/$PATH_IN_REPO?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)"
+            LOCAL_SHA="$(git hash-object "$SRC")"
+            if [[ "$REMOTE_SHA" == "$LOCAL_SHA" ]]; then
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+              echo "Effective Owner ceiling already current."
+              exit 0
+            fi
+
+            CONTENT="$(base64 -w0 "$SRC")"
+            if [[ -n "$REMOTE_SHA" ]]; then
+              gh api -X PUT "repos/$REPO/contents/$PATH_IN_REPO" \
+                -f message="chore(authority): persist negotiated owner contact ceiling [skip ci]" \
+                -f content="$CONTENT" -f branch="$BRANCH" -f sha="$REMOTE_SHA" >/dev/null
+            else
+              gh api -X PUT "repos/$REPO/contents/$PATH_IN_REPO" \
+                -f message="chore(authority): persist negotiated owner contact ceiling [skip ci]" \
+                -f content="$CONTENT" -f branch="$BRANCH" >/dev/null
+            fi
+
+            HEAD_SHA="$(gh api "repos/$REPO/git/ref/heads/$BRANCH" --jq '.object.sha')"
+            gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq '.files[].filename' | sort > /tmp/owner-scope-changed.txt
+            test "$(wc -l < /tmp/owner-scope-changed.txt)" -eq 1
+            grep -Fxq "$PATH_IN_REPO" /tmp/owner-scope-changed.txt
+
+            CURRENT_BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+            if [[ "$CURRENT_BASE_SHA" == "$BASE_SHA" ]]; then
+              gh api -X PATCH "repos/$REPO/git/refs/heads/$BASE" -f sha="$HEAD_SHA" -F force=false >/dev/null
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+              echo "Promoted bounded Owner ceiling state to $BASE at $HEAD_SHA"
+              exit 0
+            fi
+
+            echo "Base moved; safe Owner ceiling promotion retry $attempt/3"
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+          done
+
+          echo "Base remained busy; safe Owner ceiling promotion deferred to next cycle."
+          echo "changed=false" >> "$GITHUB_OUTPUT"
       - name: Upload negotiation evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
