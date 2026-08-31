@@ -13,13 +13,14 @@ Flow:
       -> SENJU delegated root
       -> persistent AuthorityRegistry
       -> later descendants may be minted from that delegated root
+      -> delegated root may drive bounded live HEAD contact to its exact authorized host
 """
 from __future__ import annotations
 
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from senju.authority_factory import (
     AuthorityMintError,
@@ -28,15 +29,17 @@ from senju.authority_factory import (
     AuthorityRegistry,
     mint_child,
 )
+from senju.external import ExternalContactClient
 
 SCHEMA = "senju-ai-council-delegated-root/v1"
 LEDGER_SCHEMA = "senju-ai-council-delegated-root-ledger/v1"
+PROBE_SCHEMA = "senju-ai-council-delegated-root-probe/v1"
 REQUIRED_APPROVERS = ("META", "X", "SENJU")
 READ_ONLY_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 
 
 class DelegatedRootError(RuntimeError):
-    """Raised when a delegated root cannot be safely minted."""
+    """Raised when a delegated root cannot be safely minted or used."""
 
 
 def _load_json(path: Path, default: Any) -> Any:
@@ -209,7 +212,7 @@ def run_delegated_root_factory(
         created = True
 
     # Prove the final profile is not ceremonial: use it as a parent for another real
-    # AuthorityProfile in memory.  Persisting the proof child is intentionally avoided so
+    # AuthorityProfile in memory. Persisting the proof child is intentionally avoided so
     # scheduled runs stay idempotent; later workers may mint their own descendants.
     proof_child = mint_child(
         root,
@@ -253,4 +256,70 @@ def run_delegated_root_factory(
         "registry_path": str(registry_path),
     }
     _write_json(state / "delegated_root_factory_result.json", result)
+    return result
+
+
+def probe_delegated_root(
+    state_dir: str | Path,
+    root_profile_id: str,
+    *,
+    client_factory: Callable[[Any], Any] = ExternalContactClient,
+) -> dict[str, Any]:
+    """Use a persisted delegated root to perform one bounded live HEAD request.
+
+    The probe deliberately proves *use*, not scope expansion. It accepts only a
+    credential-free public root with exactly one host and HEAD already present in the
+    root's method set. The root is converted to ExternalAuthorityScope and then to the
+    existing guarded ExternalContactClient policy. No credential, write method, private
+    address, redirect broadening, or new host is introduced here.
+    """
+
+    state = Path(state_dir)
+    registry = AuthorityRegistry.load(state / "delegated_authorities.json")
+    try:
+        root = registry.get(str(root_profile_id))
+    except AuthorityMintError as exc:
+        raise DelegatedRootError(str(exc)) from exc
+
+    if root.credential_scope != "none":
+        raise DelegatedRootError("live delegated-root probe requires credential_scope=none")
+    if root.allow_private_network:
+        raise DelegatedRootError("live delegated-root probe cannot use private-network authority")
+    if "HEAD" not in root.allowed_methods:
+        raise DelegatedRootError("delegated root does not authorize HEAD")
+    if len(root.allow_hosts) != 1:
+        raise DelegatedRootError("live delegated-root probe requires exactly one authorized host")
+
+    host = next(iter(root.allow_hosts))
+    scope = root.to_external_scope()
+    if scope.scope_id != root.profile_id or scope.allow_hosts != root.allow_hosts:
+        raise DelegatedRootError("external scope is not an exact projection of the delegated root")
+
+    client = client_factory(scope.to_policy())
+    receipt = client.contact(f"https://{host}/", method="HEAD")
+    receipt_dict = receipt.to_dict()
+    final_host = _norm_host(receipt_dict.get("final_host"))
+    status = int(receipt_dict.get("status", 0) or 0)
+    if final_host not in root.allow_hosts:
+        raise DelegatedRootError("live probe escaped delegated-root host authority")
+    if not (100 <= status <= 599):
+        raise DelegatedRootError("live probe did not receive a valid HTTP response status")
+
+    result = {
+        "schema": PROBE_SCHEMA,
+        "production": True,
+        "root_profile_id": root.profile_id,
+        "root_fingerprint": root.fingerprint,
+        "external_scope_id": scope.scope_id,
+        "scope_derived_from_root": True,
+        "host": host,
+        "method": "HEAD",
+        "credential_scope": root.credential_scope,
+        "private_network": root.allow_private_network,
+        "live_external_io": True,
+        "provider_acknowledged": bool(receipt_dict.get("provider_acknowledged")),
+        "status": status,
+        "receipt": receipt_dict,
+    }
+    _write_json(state / "delegated_root_external_probe.json", result)
     return result
