@@ -22,7 +22,6 @@ on:
 permissions:
   contents: read
   actions: read
-  issues: write
 
 concurrency:
   group: meta-production-stop-learning
@@ -32,10 +31,28 @@ jobs:
   learn:
     runs-on: ubuntu-latest
     timeout-minutes: 8
+    env:
+      GH_TOKEN: ${{ github.token }}
+      STOP_LEARNING_STATE_FILE: /tmp/stop-learning-state.json
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Restore latest stop-learning state artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=meta-production-stop-learning-state&per_page=20" \
+            --jq '.artifacts | map(select(.expired == false)) | sort_by(.created_at) | reverse | .[0].id // empty')"
+          if [[ -n "$artifact_id" ]]; then
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > /tmp/meta-production-stop-learning-state.zip
+            unzip -oq /tmp/meta-production-stop-learning-state.zip -d /tmp/stop-learning-restore
+            restored="$(find /tmp/stop-learning-restore -name stop-learning-state.json -print -quit || true)"
+            if [[ -n "$restored" ]]; then
+              cp "$restored" "$STOP_LEARNING_STATE_FILE"
+            fi
+          fi
 
       - name: Test stop-learning and recovery tuning invariants
         run: |
@@ -44,14 +61,14 @@ jobs:
 
       - name: Learn from real production stoppages and derive tuning
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: python automation/recovery/stop_learning_runner.py
 
       - name: Preserve learning evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: meta-production-stop-learning-${{ github.run_id }}
+          name: meta-production-stop-learning-state
           path: /tmp/stop-learning-state.json
           if-no-files-found: ignore
           retention-days: 14
