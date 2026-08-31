@@ -7,6 +7,8 @@ on:
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - 'automation/codegen/config/authority_approval_constitution.json'
+      - 'automation/codegen/engine/authority_approval_constitution.py'
       - 'automation/codegen/engine/root_authority_negotiation.py'
       - 'automation/codegen/run_root_authority_negotiation.py'
       - 'automation/codegen/tests/test_root_authority_negotiation.py'
@@ -19,6 +21,8 @@ on:
   push:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - 'automation/codegen/config/authority_approval_constitution.json'
+      - 'automation/codegen/engine/authority_approval_constitution.py'
       - 'automation/codegen/engine/root_authority_negotiation.py'
       - 'automation/codegen/run_root_authority_negotiation.py'
       - 'automation/codegen/tests/test_root_authority_negotiation.py'
@@ -33,10 +37,6 @@ permissions:
   contents: read
   actions: read
 
-# Shared lock and cache with Boundary Research, Rights Federation, and the existing
-# Authority Opportunity / Improvement family. The accelerator also writes its peer feed,
-# approval outbox, and submission ledger into this same cache so those PR families can
-# reuse fresh negotiation context instead of rediscovering it independently.
 concurrency:
   group: authority-opportunity-improvement-loop
   cancel-in-progress: false
@@ -66,7 +66,7 @@ jobs:
             boundary-opportunity-${{ github.ref_name }}-
             authority-opportunity-
 
-      - name: Verify persistent Root negotiation, collaboration bus, and approval accelerator
+      - name: Verify council-first Root negotiation and canonical approval surface
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -76,11 +76,13 @@ jobs:
             automation/codegen/tests/test_authority_collaboration_bus.py \
             automation/codegen/tests/test_negotiation_submission_accelerator.py
           python -m py_compile \
+            automation/codegen/engine/authority_approval_constitution.py \
             automation/codegen/engine/root_authority_negotiation.py \
             automation/codegen/engine/authority_collaboration_bus.py \
             automation/codegen/engine/negotiation_submission_accelerator.py \
             automation/codegen/run_root_authority_negotiation.py \
             automation/codegen/run_negotiation_submission_accelerator.py
+          python -m json.tool automation/codegen/config/authority_approval_constitution.json >/dev/null
 
       - name: Consolidate Boundary and Rights proposals before Root negotiation
         env:
@@ -96,7 +98,7 @@ jobs:
           test "$(jq -r '.authority_activated' /tmp/authority-collaboration-bus-root.json)" = "false"
           test -s .authority-opportunity-runtime/authority_opportunity_queue.json
 
-      - name: Run new-host Root Authority negotiation
+      - name: Run council-first new-host Root Authority negotiation
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -110,14 +112,19 @@ jobs:
           test "$(jq -r '.attempts_increment_every_cycle' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "true"
           test "$(jq -r '.new_unrelated_root_self_mint' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "false"
           test "$(jq -r '.new_root_created' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "false"
+          test "$(jq -r '.META_X_SENJU_primary_review_is_first' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "true"
+          test "$(jq -r '.secondary_owner_or_standing_evidence_rank' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "3"
+          test "$(jq -r '.unlisted_approval_flows_excluded' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "true"
           test -s .authority-opportunity-runtime/root_authority_negotiation_campaign.json
           test -s .authority-opportunity-runtime/root_authority_negotiation_state.json
           test -s .authority-opportunity-runtime/owner_root_authority_review_packets.json
+          test -s .authority-opportunity-runtime/authority_approval_constitution_effective.json
           echo "candidates=$(jq -r '.candidate_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
           echo "tasks=$(jq -r '.task_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
-          echo "owner_handoffs=$(jq -r '.existing_owner_activation_handoff_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
+          echo "council_review_packets=$(jq -r '.council_review_packet_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
+          echo "post_council_activation_handoffs=$(jq -r '.existing_owner_activation_handoff_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
 
-      - name: Accelerate submissions into META X SENJU approval flow
+      - name: Accelerate canonical submissions into META X SENJU primary review
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -126,6 +133,9 @@ jobs:
             --state .authority-opportunity-runtime \
             --json-out .authority-opportunity-runtime/negotiation_submission_accelerator_run.json
           test "$(jq -r '.approval_submission_is_goal' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
+          test "$(jq -r '.META_X_SENJU_primary_review_is_first' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
+          test "$(jq -r '.secondary_owner_or_standing_evidence_rank' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "3"
+          test "$(jq -r '.unlisted_approval_flows_excluded' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
           test "$(jq -r '.fresh_evidence_resubmits_immediately' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
           test "$(jq -r '.unchanged_candidate_periodic_resubmission' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
           test "$(jq -r '.writes_existing_review_surface' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
@@ -135,9 +145,11 @@ jobs:
           test -s .authority-opportunity-runtime/owner_root_authority_review_packets.json
           test -s .authority-opportunity-runtime/root_negotiation_peer_feed.json
           test -s .authority-opportunity-runtime/negotiation_submission_ledger.json
+          test -s .authority-opportunity-runtime/authority_approval_constitution_effective.json
           echo "approval_submissions=$(jq -r '.approval_flow_submission_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
           echo "peer_share_tasks=$(jq -r '.peer_share_task_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
           echo "review_packets=$(jq -r '.existing_review_flow_packet_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
+          echo "excluded_noncanonical=$(jq -r '.excluded_noncanonical_packet_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
 
       - name: Save shared authority collaboration memory
         if: always()
@@ -146,13 +158,15 @@ jobs:
           path: .authority-opportunity-runtime/
           key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
 
-      - name: Preserve Root negotiation and approval-flow evidence
+      - name: Preserve Root negotiation and constitutional approval-flow evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: root-authority-negotiation-${{ github.run_id }}
           path: |
+            automation/codegen/config/authority_approval_constitution.json
             /tmp/authority-collaboration-bus-root.json
+            .authority-opportunity-runtime/authority_approval_constitution_effective.json
             .authority-opportunity-runtime/authority_collaboration_bus.json
             .authority-opportunity-runtime/authority_opportunity_queue.json
             .authority-opportunity-runtime/root_authority_negotiation_run.json
