@@ -94,7 +94,7 @@ jobs:
             encoded="$(base64 -w 0 "$runtime")"
             gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
               --method PUT \
-              -f message='chore(security): apply AI-consensus bounded or predelegated runtime override' \
+              -f message='chore(security): apply AI-consensus bounded runtime override' \
               -f content="$encoded" \
               -f branch="$branch" \
               -f sha="$current_sha" >/dev/null
@@ -102,7 +102,7 @@ jobs:
             encoded="$(base64 -w 0 "$runtime")"
             gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
               --method PUT \
-              -f message='chore(security): apply AI-consensus bounded or predelegated runtime override' \
+              -f message='chore(security): apply AI-consensus bounded runtime override' \
               -f content="$encoded" \
               -f branch="$branch" >/dev/null
           fi
