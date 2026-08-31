@@ -4,6 +4,10 @@ The cycle persists denial learning, route health, repair objectives, guard-denia
 self-tuning pressure, and per-scope agent reliability across runs. Eight candidate
 execution agents are available; the underlying rotation lane chooses a health-ranked
 adaptive subset per pass. Every pass preserves the exact authority contract.
+
+Version 4 also closes the feedback loop inside a single cycle: transient DENIED events
+can immediately raise pressure and unlock one additional bounded same-route recovery
+pass, up to the existing three-pass ceiling. Boundary denials never unlock that path.
 """
 from __future__ import annotations
 
@@ -22,7 +26,7 @@ from .external_denial_learning import DenialLearningMemory
 from .external_recovery_closed_loop import AgentReliabilityMemory, execute_recovery_closed_loop
 from .guard_denial_feedback import feedback_for_operation, feedback_state, recommended_recovery_passes
 
-REPORT_SCHEMA = "senju-external-recovery-cycle/v3"
+REPORT_SCHEMA = "senju-external-recovery-cycle/v4"
 AGENTS = (
     "senju-a",
     "senju-b",
@@ -80,11 +84,36 @@ def _scope_for(mission: RecoveryMission) -> ExternalAuthorityScope:
         raise ValueError(f"mission host is outside authority scope: {mission.mission_id}")
     if mission.method not in scope.allowed_methods:
         raise ValueError(f"mission method is outside authority scope: {mission.mission_id}")
-    # Closed-loop rotation supplies retry structure, so disable nested client retries.
     return dataclasses.replace(scope, retries=0)
 
 
 ClientFactory = Callable[[ExternalAuthorityScope, str], ExternalContactClient]
+
+
+def _merge_outcomes(primary: Mapping[str, Any], followup: Mapping[str, Any]) -> dict[str, Any]:
+    """Merge two same-authority recovery rounds into one operation record."""
+    first_invariants = dict(primary.get("authority_invariants") or {})
+    next_invariants = dict(followup.get("authority_invariants") or {})
+    if first_invariants and next_invariants and first_invariants != next_invariants:
+        raise RuntimeError("authority invariants changed during pressure escalation")
+    return {
+        "schema": primary.get("schema") or followup.get("schema"),
+        "operation_id": primary.get("operation_id") or followup.get("operation_id"),
+        "success": bool(primary.get("success", False) or followup.get("success", False)),
+        "passes_used": int(primary.get("passes_used", 0)) + int(followup.get("passes_used", 0)),
+        "selected_agent": (
+            followup.get("selected_agent")
+            if bool(followup.get("success", False))
+            else primary.get("selected_agent")
+        ),
+        "authority_invariants": first_invariants or next_invariants,
+        "authority_preserved": bool(primary.get("authority_preserved", False)) and bool(followup.get("authority_preserved", False)),
+        "outcomes": list(primary.get("outcomes") or []) + list(followup.get("outcomes") or []),
+        "playbooks": list(primary.get("playbooks") or []) + list(followup.get("playbooks") or []),
+        "repair_queue": list(followup.get("repair_queue") or primary.get("repair_queue") or []),
+        "denial_learning": followup.get("denial_learning") or primary.get("denial_learning"),
+        "agent_reliability": followup.get("agent_reliability") or primary.get("agent_reliability"),
+    }
 
 
 def run_recovery_cycle(
@@ -122,8 +151,6 @@ def run_recovery_cycle(
         def recovery_hook(pass_index: int, playbook: Mapping[str, Any]) -> None:
             route = playbook.get("route_health_after") or {}
             multiplier = max(1, min(int(route.get("backoff_multiplier", 1)), 8))
-            # Same-route cooldown only. Denial pressure can increase retry/pass variation
-            # for transient failures, but never changes host/protocol/credential/authority.
             sleep_fn(min(4.0, 0.35 * pass_index * multiplier))
 
         outcome = execute_recovery_closed_loop(
@@ -138,12 +165,56 @@ def run_recovery_cycle(
             reliability_memory=reliability,
             transport_recovery_hook=recovery_hook,
         )
+
+        pressure_trajectory = [int(guard_feedback_before.get("self_tune_pressure", 0))]
+        escalation_rounds = 0
         guard_feedback_after = feedback_for_operation(
             denial_memory,
             scope=scope,
             url=mission.url,
             method=mission.method,
         )
+        pressure_trajectory.append(int(guard_feedback_after.get("self_tune_pressure", 0)))
+
+        # Same-cycle feedback escalation. Every round is still the exact same authorized
+        # host/protocol/method/credential/authority tuple. A boundary denial flips
+        # external_retry_allowed off and terminates escalation immediately.
+        while not bool(outcome.get("success", False)) and int(outcome.get("passes_used", 0)) < 3:
+            if not bool(guard_feedback_after.get("external_retry_allowed", False)):
+                break
+            total_used = int(outcome.get("passes_used", 0))
+            target_total = recommended_recovery_passes(
+                guard_feedback_after,
+                configured=max(mission_max_passes, total_used),
+            )
+            if target_total <= total_used:
+                break
+            extra_passes = min(3 - total_used, target_total - total_used)
+            if extra_passes <= 0:
+                break
+
+            followup = execute_recovery_closed_loop(
+                operation_id=mission.mission_id,
+                scope=scope,
+                url=mission.url,
+                method=mission.method,
+                agents=AGENTS,
+                max_passes=extra_passes,
+                client_factory=client_factory,
+                denial_memory=denial_memory,
+                reliability_memory=reliability,
+                transport_recovery_hook=recovery_hook,
+            )
+            outcome = _merge_outcomes(outcome, followup)
+            escalation_rounds += 1
+            guard_feedback_after = feedback_for_operation(
+                denial_memory,
+                scope=scope,
+                url=mission.url,
+                method=mission.method,
+            )
+            pressure_trajectory.append(int(guard_feedback_after.get("self_tune_pressure", 0)))
+
         playbooks = [dict(x) for x in outcome.get("playbooks", []) if isinstance(x, Mapping)]
         optimization_queue.extend(
             {"mission_id": mission.mission_id, **playbook} for playbook in playbooks
@@ -159,9 +230,15 @@ def run_recovery_cycle(
             "selected_agent": outcome.get("selected_agent"),
             "passes_used": int(outcome.get("passes_used", 0)),
             "configured_max_passes": max(1, min(int(max_passes), 3)),
-            "self_tuned_max_passes": mission_max_passes,
+            "self_tuned_initial_max_passes": mission_max_passes,
+            "self_tuned_max_passes": max(mission_max_passes, int(outcome.get("passes_used", 0))),
+            "feedback_loop_escalated": escalation_rounds > 0,
+            "pressure_escalation_rounds": escalation_rounds,
+            "pressure_trajectory": pressure_trajectory,
+            "pressure_delta": int(guard_feedback_after.get("self_tune_pressure", 0)) - int(guard_feedback_before.get("self_tune_pressure", 0)),
             "guard_feedback_before": guard_feedback_before,
             "guard_feedback_after": guard_feedback_after,
+            "self_tune_variation_plan": dict(guard_feedback_after.get("variation_plan") or {}),
             "authority_preserved": bool(outcome.get("authority_preserved", False)),
             "authority_invariants": dict(outcome.get("authority_invariants") or {}),
             "outcomes": outcome.get("outcomes", []),
@@ -185,6 +262,7 @@ def run_recovery_cycle(
         "self_initiated": True,
         "network_io": True,
         "closed_loop_recovery": True,
+        "same_cycle_pressure_escalation": True,
         "denied_as_normal_failure": True,
         "guard_denial_self_tune_pressure": True,
         "agent_rotation": True,
@@ -192,10 +270,14 @@ def run_recovery_cycle(
         "adaptive_route_backoff": True,
         "adaptive_agent_budget": True,
         "adaptive_retry_pass_budget": True,
+        "diagnostic_variation_scaling": True,
+        "repair_candidate_scaling": True,
         "agent_pool": list(AGENTS),
         "max_passes": max(1, min(int(max_passes), 3)),
+        "hard_total_pass_ceiling": 3,
         "authority_preserved": all(x["authority_preserved"] for x in operations),
         "boundary_bypass_enabled": False,
+        "external_route_variation_budget": 1,
         "attempted_missions": len(operations),
         "successful_missions": successful,
         "transport_attempts": transport_attempts,
@@ -203,6 +285,7 @@ def run_recovery_cycle(
         "optimization_queue": optimization_queue,
         "boundary_repair_queue": boundary_repair_queue,
         "repair_queue": denial_summary.get("repair_queue", []),
+        "guard_repair_queue": aggregate_feedback.get("repair_queue", []),
         "route_health": denial_summary.get("route_health", {}),
         "denial_agent_health": denial_summary.get("agent_health", {}),
         "guard_feedback": aggregate_feedback,
