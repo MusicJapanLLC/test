@@ -20,6 +20,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Evaluate current Four-Pillar state
         run: python automation/codegen/four_pillar_runner.py
