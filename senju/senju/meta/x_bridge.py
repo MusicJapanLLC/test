@@ -2,7 +2,8 @@
 
 META reads X's status and injects findings into Senju.
 X reads META's command channel and receives attack hypotheses.
-Both sides also consume the shared explicitly-authorized security-test federation state.
+Both sides also consume the shared explicitly-authorized security-test federation state
+and expose their bounded self-activated authority leases to each other.
 """
 from __future__ import annotations
 
@@ -17,6 +18,8 @@ X_ATTACK_LOG = ROOT / "automation" / "codegen" / "meta_state" / "attack_research
 AUTHORIZED_FEDERATION_FILE = ROOT / "automation" / "codegen" / "meta_state" / "authorized_test_federation.json"
 META_CMD_FILE = ROOT / "senju" / "state" / "meta_commands.json"
 META_TRACKER = ROOT / "senju" / "state" / "meta_hypothesis_tracker.json"
+META_AUTHORITY_FILE = ROOT / "senju" / "state" / "meta_authority_lease.json"
+X_AUTHORITY_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_authority_lease.json"
 BRIDGE_LOG = ROOT / "senju" / "state" / "meta_x_bridge.ndjson"
 
 
@@ -31,6 +34,14 @@ def _append_bridge(event: str, data: dict) -> None:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def _read_json(path: Path, default: dict) -> dict:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else dict(default)
+    except Exception:
+        return dict(default)
+
+
 def read_x_status() -> dict:
     if not X_STATUS_FILE.exists():
         return {"system": "X", "available": False}
@@ -40,6 +51,26 @@ def read_x_status() -> dict:
         return data
     except Exception:
         return {"system": "X", "available": False}
+
+
+def read_authority_leases() -> dict:
+    """Expose current internal META/X leases; these do not mutate external permissions."""
+    meta = _read_json(META_AUTHORITY_FILE, {"system": "META", "status": "missing", "active_scopes": []})
+    x = _read_json(X_AUTHORITY_FILE, {"system": "X", "status": "missing", "active_scopes": []})
+    return {
+        "META": {
+            "status": meta.get("status", "missing"),
+            "active_scopes": meta.get("active_scopes", []),
+            "expires_at": meta.get("expires_at"),
+            "preauthorized_only": meta.get("preauthorized_only", True),
+        },
+        "X": {
+            "status": x.get("status", "missing"),
+            "active_scopes": x.get("active_scopes", []),
+            "expires_at": x.get("expires_at"),
+            "preauthorized_only": x.get("preauthorized_only", True),
+        },
+    }
 
 
 def read_authorized_test_federation() -> dict:
@@ -104,9 +135,10 @@ def ingest_x_attack_findings(graph) -> int:
 
 
 def sync(graph=None, hypotheses=None) -> dict:
-    """Full META↔X sync including the explicit authorized-test federation directive."""
+    """Full META↔X sync including authorized-test federation and bounded authority leases."""
     x_status = read_x_status()
     federation = read_authorized_test_federation()
+    authority = read_authority_leases()
     ingested = 0
     pushed = 0
 
@@ -129,6 +161,7 @@ def sync(graph=None, hypotheses=None) -> dict:
         "x_needs_help": x_status.get("needs_help", False),
         "findings_ingested": ingested,
         "hypotheses_pushed": pushed,
+        "authority_leases": authority,
         "authorized_test_federation": {
             "status": federation.get("status", "active"),
             "federation_id": federation.get("federation_id"),
@@ -138,6 +171,7 @@ def sync(graph=None, hypotheses=None) -> dict:
             "rate_limit_rps": federation.get("rate_limit_rps", 5),
         },
     }
+    _append_bridge("authority_lease_sync", authority)
     _append_bridge("authorized_test_federation_sync", result["authorized_test_federation"])
     _append_bridge("sync", result)
     return result
