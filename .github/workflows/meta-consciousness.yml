@@ -3,9 +3,6 @@ name: Senju Meta-Consciousness
 on:
   schedule:
     - cron: "0 2,6,10,14,18,22 * * *"
-  workflow_run:
-    workflows: ["Autonomous Drive Engine"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       confirm_all:
@@ -38,17 +35,17 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
 
       - name: Restore all evidence artifacts
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             senju/state/
@@ -58,7 +55,7 @@ jobs:
           restore-keys: senju-adversary-damage-
 
       - name: Restore credential recovery learning
-        uses: actions/cache/restore@v4
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             senju/state/credential_tuning_history.json
@@ -72,8 +69,11 @@ jobs:
         working-directory: senju
         run: pip install -e ".[dev]" --quiet 2>/dev/null || true
 
-      - name: Configure git
+      - name: Configure authenticated git transport
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          gh auth setup-git
           git config user.name "Senju Meta-Consciousness"
           git config user.email "senju-meta@users.noreply.github.com"
 
@@ -100,7 +100,7 @@ jobs:
 
       - name: Save credential recovery learning
         if: always() && inputs.dry_run != 'true'
-        uses: actions/cache/save@v4
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: |
             senju/state/credential_tuning_history.json
@@ -132,7 +132,7 @@ jobs:
 
       - name: Upload meta output
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: meta-output-${{ github.run_id }}
           path: |
