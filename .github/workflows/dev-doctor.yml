@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: read
-  issues: write
 
 jobs:
   doctor:
@@ -25,10 +24,9 @@ jobs:
 
       - name: Run Environment Doctor Audit
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          python3 scripts/dev_doctor.py --upsert-issue
+          python3 scripts/dev_doctor.py
 
       - name: Upload Doctor Audit Artifact
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
