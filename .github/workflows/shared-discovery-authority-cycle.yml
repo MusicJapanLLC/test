@@ -8,18 +8,19 @@ on:
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
       - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_actions.py'
       - 'automation/codegen/meta_state/discovery_policy.json'
       - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/orchestrator.py'
       - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
       - '.github/workflows/shared-discovery-authority-cycle.yml'
   schedule:
-    - cron: '17 * * * *'
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 permissions:
   contents: read
-  actions: read
+  actions: write
 
 concurrency:
   group: shared-discovery-authority-cycle
@@ -39,7 +40,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run shared discovery authority, lease, and probe loop
+      - name: Run shared discovery authority, lease, external action, and probe loop
         working-directory: automation/codegen
         env:
           PYTHONPATH: .
@@ -48,6 +49,7 @@ jobs:
           from pathlib import Path
           from engine.shared_discovery_authority import run_shared_discovery_authority
           from engine.discovery_capability_leases import issue_discovery_capability_leases
+          from engine.discovery_external_actions import execute_discovery_external_actions
           from engine.discovery_probe_runner import run_discovery_probe_cycle
 
           state = Path('meta_state')
@@ -55,6 +57,8 @@ jobs:
           print({'discovery': discovery})
           leases = issue_discovery_capability_leases(state)
           print({'leases': leases})
+          external_actions = execute_discovery_external_actions(state, max_actions=16)
+          print({'external_actions': external_actions})
           probes = run_discovery_probe_cycle(state, max_targets=20)
           print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
           # Rebuild leases again after the live cycle so current queue state is the
@@ -63,7 +67,7 @@ jobs:
           print({'leases_refreshed': refreshed})
           PY
 
-      - name: Preserve shared discovery state, operational authority, and probe receipts
+      - name: Preserve shared discovery state, operational authority, and action receipts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: shared-discovery-authority-state
@@ -78,6 +82,16 @@ jobs:
             automation/codegen/meta_state/discovery_action_queue.json
             automation/codegen/meta_state/discovery_capability_leases.json
             automation/codegen/meta_state/capability_lease_events.ndjson
+            automation/codegen/meta_state/discovery_external_action_receipts.json
             automation/codegen/meta_state/shared_probe_receipts.json
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Hand current discovery authority to production continuity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run meta-x-production-continuity.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref claude/employee-onboarding-setup-udm86
