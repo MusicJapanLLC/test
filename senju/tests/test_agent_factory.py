@@ -23,6 +23,7 @@ def test_meta_and_x_can_each_get_ten_direct_children(tmp_path):
     assert result["x_children"] == 10
     assert result["recursive_spawn_requests"] is True
     assert result["recursive_request_fixed_count_ceiling"] is None
+    assert result["recursive_generation_ceiling"] is None
     registry = json.loads((tmp_path / "meta_x_agent_registry.json").read_text())
     assert len(registry["parents"]["META"]["children"]) == 10
     assert len(registry["parents"]["X"]["children"]) == 10
@@ -103,15 +104,18 @@ def test_recursive_broker_rejects_scope_expansion():
         )
 
 
-def test_recursive_generation_is_bounded():
-    with pytest.raises(PermissionError, match="maximum recursive generation reached"):
-        request_descendants(
-            system="META",
-            parent_id="deep-agent",
-            parent_generation=MAX_GENERATION,
-            parent_scopes=["read:state"],
-            desired_count=10,
-        )
+def test_recursive_generation_has_no_fixed_ceiling():
+    request = request_descendants(
+        system="META",
+        parent_id="deep-agent",
+        parent_generation=100_000,
+        parent_scopes=["read:state"],
+        desired_count=10,
+    )
+    assert MAX_GENERATION is None
+    result = materialize_spawn_request(request, active_agents=49)
+    assert result.next_generation == 100_001
+    assert result.materialized[0].may_spawn_children is True
 
 
 def test_count_above_ten_is_rejected_for_direct_root_materialization():
