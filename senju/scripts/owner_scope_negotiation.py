@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 """Run the production Owner-scope negotiation cycle.
 
-The cycle mines current external-host friction, materializes all-agent negotiation work,
-and applies only META/X/SENJU-approved amendments that are already inside the explicit
-Owner Expansion Envelope. Effective policy is persisted with per-host method ceilings.
+Every negotiation-originated case first passes the META/X/SENJU intake review gate.
+Only 3-of-3 admitted cases may begin the existing formal Owner-scope discussion.
 """
 from __future__ import annotations
 
@@ -17,7 +16,7 @@ _SENJU_ROOT = _REPO_ROOT / "senju"
 if str(_SENJU_ROOT) not in sys.path:
     sys.path.insert(0, str(_SENJU_ROOT))
 
-from senju.owner_scope_negotiation_runtime import run_production_scope_negotiation_cycle  # noqa: E402
+from senju.reviewed_owner_scope_runtime import run_reviewed_production_scope_negotiation_cycle  # noqa: E402
 
 
 def main() -> int:
@@ -28,7 +27,7 @@ def main() -> int:
     parser.add_argument("--out")
     args = parser.parse_args()
 
-    result = run_production_scope_negotiation_cycle(
+    result = run_reviewed_production_scope_negotiation_cycle(
         args.repo_root,
         args.state_dir,
         envelope_path=args.envelope,
