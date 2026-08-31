@@ -1,19 +1,21 @@
 """Autonomous production security-change loop with bounded self-approval.
 
-The loop deliberately separates *autonomous change management* from *autonomous
-privilege escalation*.
+The loop separates autonomous change management from authority creation while allowing
+AI Council activation of authority that the owner already delegated on the trusted
+production base.
 
     Finding
       -> Security Proposal
       -> independent AI reviews / consensus
-      -> Self Approval (same-or-narrower changes only)
+      -> Self Approval
+          * same-or-narrower operational changes, or
+          * exact predelegated authority activation
       -> Production Apply to runtime overrides
       -> next Finding
 
-Changes that create or broaden authority are still fully researched, proposed, and
-reviewed by the AI council, but they stop at OWNER_AUTHORITY_REQUIRED. This keeps the
-closed loop live in production without allowing the loop to create its own trust root,
-credential, private-network reach, or protection bypass.
+A proposal can never manufacture a new trust root, credential, private-network grant,
+or protection bypass. Authority expansion is only activatable when it exactly matches
+an enabled standing owner envelope already present on the trusted production base.
 """
 from __future__ import annotations
 
@@ -21,16 +23,18 @@ import hashlib
 import json
 import time
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
-SCHEMA = "world-production-security-change-loop/v1"
+from automation.codegen.engine.security_proposal import proposal_sha256
+from automation.codegen.engine.standing_authority import resolve_standing_approval
+
+SCHEMA = "world-production-security-change-loop/v2"
 DEFAULT_STATE_DIR = Path(__file__).resolve().parent / "state"
+DEFAULT_AUTHORITY_ENVELOPE_DIR = Path(__file__).resolve().parents[2] / "security" / "authority_envelopes"
 AI_COUNCIL = ("META", "X", "SENJU")
 CONSENSUS_THRESHOLD = 2
 MAX_PROPOSALS = 128
 
-# These classes are retained as proposals and can receive AI consensus, but they can
-# never self-approve or enter the production apply lane.
 OWNER_AUTHORITY_REQUIRED_KINDS = frozenset(
     {
         "new_external_host",
@@ -51,8 +55,6 @@ OWNER_AUTHORITY_REQUIRED_KINDS = frozenset(
     }
 )
 
-# Safe autonomous lane: operational/security tuning inside an already-authorized
-# envelope. Items here must additionally pass the textual privilege-broadening check.
 AUTO_APPLY_KINDS = frozenset(
     {
         "audit_strengthening",
@@ -70,6 +72,27 @@ AUTO_APPLY_KINDS = frozenset(
         "disable_capability",
     }
 )
+
+# Each entry maps the finding vocabulary used by this production loop to the canonical
+# security-proposal operation vocabulary already used by the standing-authority engine.
+# The parameters remain exactly those supplied by the finding; the standing envelope
+# must match every key/value (or an explicitly bounded matcher) before activation.
+DELEGATED_AUTHORITY_OPERATIONS: dict[str, tuple[str, str]] = {
+    "new_external_host": ("authority_policy", "add_external_host"),
+    "new_provider": ("authority_policy", "add_provider"),
+    "new_credential": ("credential_broker", "register_credential_reference"),
+    "new_repository": ("authority_policy", "add_repository"),
+    "new_cloud_account": ("authority_policy", "add_cloud_account"),
+    "new_organization": ("authority_policy", "add_organization"),
+    "new_cidr": ("network_policy", "add_cidr"),
+    "private_network_access": ("network_policy", "allow_private_network"),
+    "broader_api_methods": ("network_policy", "broaden_api_methods"),
+    "trusted_root_addition": ("authority_policy", "add_trusted_root"),
+    "deploy_target_addition": ("deployment_protection", "add_deploy_target"),
+    "branch_protection_change": ("branch_protection", "modify_branch_protection"),
+    "deployment_protection_change": ("deployment_protection", "modify_deployment_protection"),
+    "authority_registry_change": ("authorization_registry", "expand_authorization_entry"),
+}
 
 BROADENING_TERMS = frozenset(
     {
@@ -99,6 +122,18 @@ BROADENING_TERMS = frozenset(
         "disable guard",
         "weaken guard",
         "ignore revocation",
+    }
+)
+
+RAW_SECRET_KEYS = frozenset(
+    {
+        "secret",
+        "secret_value",
+        "password",
+        "token",
+        "api_key",
+        "private_key",
+        "credential_value",
     }
 )
 
@@ -179,6 +214,19 @@ def _looks_broadening(kind: str, changes: Mapping[str, Any], finding: Mapping[st
     return any(term in text for term in BROADENING_TERMS)
 
 
+def _contains_raw_secret(value: Any) -> bool:
+    if isinstance(value, Mapping):
+        for key, item in value.items():
+            if str(key).strip().lower() in RAW_SECRET_KEYS and item not in (None, "", False):
+                return True
+            if _contains_raw_secret(item):
+                return True
+        return False
+    if isinstance(value, list):
+        return any(_contains_raw_secret(item) for item in value)
+    return False
+
+
 def _authority_relation(finding: Mapping[str, Any]) -> str:
     raw = str(finding.get("authority_relation", "same_or_narrower")).strip().lower()
     if raw in {"same", "narrower", "same_or_narrower", "equal_or_narrower_than_parent"}:
@@ -200,27 +248,27 @@ def _proposal_from_finding(finding: Mapping[str, Any], *, now: int) -> dict[str,
         "proposal_id": proposal_id,
         "finding_id": finding_id,
         "created_at": now,
-        "proposer": str(finding.get("proposer") or "META"),
+        "proposer": str(finding.get("proposer") or "META").upper(),
         "change_kind": kind,
         "requested_changes": changes,
         "reason": str(finding.get("reason") or finding.get("description") or "security/capability finding"),
         "authority_relation": relation,
         "authority_broadening_detected": broadening,
+        "raw_secret_material_detected": _contains_raw_secret(changes),
         "proposed_lane": "bounded_self_approval" if auto_lane else "owner_authority_required",
         "status": "proposed",
     }
 
 
 def _review(proposal: Mapping[str, Any], reviewer: str) -> dict[str, Any]:
-    proposer = str(proposal.get("proposer", ""))
-    independent = reviewer != proposer
+    proposer = str(proposal.get("proposer", "")).upper()
+    independent = reviewer.upper() != proposer
     safe_lane = proposal.get("proposed_lane") == "bounded_self_approval"
     relation_ok = proposal.get("authority_relation") == "same_or_narrower"
     no_broadening = not bool(proposal.get("authority_broadening_detected"))
-    approve = bool(independent and safe_lane and relation_ok and no_broadening)
-    # Owner-gated proposals are still reviewed positively for proposal quality when
-    # independent, but that consensus never means authorization.
-    proposal_quality_ok = bool(independent and proposal.get("change_kind") != "unknown")
+    no_raw_secret = not bool(proposal.get("raw_secret_material_detected"))
+    approve = bool(independent and safe_lane and relation_ok and no_broadening and no_raw_secret)
+    proposal_quality_ok = bool(independent and proposal.get("change_kind") != "unknown" and no_raw_secret)
     return {
         "reviewer": reviewer,
         "independent_from_proposer": independent,
@@ -238,9 +286,67 @@ def _consensus(proposal: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "reviews": reviews,
         "quality_consensus": quality_approvals >= CONSENSUS_THRESHOLD,
+        "delegated_activation_consensus": quality_approvals >= CONSENSUS_THRESHOLD,
         "self_approval_consensus": lane_approvals >= CONSENSUS_THRESHOLD,
         "threshold": CONSENSUS_THRESHOLD,
         "consensus_creates_authority": False,
+    }
+
+
+def _delegated_security_proposal(proposal: Mapping[str, Any]) -> dict[str, Any] | None:
+    kind = str(proposal.get("change_kind") or "")
+    mapped = DELEGATED_AUTHORITY_OPERATIONS.get(kind)
+    params = proposal.get("requested_changes")
+    if not mapped or not isinstance(params, Mapping) or not params:
+        return None
+    target, operation = mapped
+    return {
+        "id": str(proposal.get("proposal_id") or ""),
+        "owner_namespace": "MusicJapanLLC/test",
+        "environment": "production",
+        "changes": [
+            {
+                "target": target,
+                "operations": [
+                    {
+                        "type": operation,
+                        "parameters": dict(params),
+                    }
+                ],
+            }
+        ],
+    }
+
+
+def _resolve_predelegated_activation(
+    proposal: Mapping[str, Any],
+    consensus: Mapping[str, Any],
+    envelope_dir: str | Path | None,
+) -> dict[str, Any] | None:
+    if not bool(proposal.get("authority_broadening_detected")):
+        return None
+    if proposal.get("raw_secret_material_detected") is True:
+        return None
+    if consensus.get("delegated_activation_consensus") is not True:
+        return None
+    candidate = _delegated_security_proposal(proposal)
+    if not candidate:
+        return None
+    candidate_hash = proposal_sha256(candidate)
+    approval = resolve_standing_approval(candidate, envelope_dir, candidate_hash)
+    if not approval:
+        return None
+    return {
+        "approved": True,
+        "source": approval.get("source"),
+        "envelope_id": approval.get("envelope_id"),
+        "proposal_sha256": candidate_hash,
+        "owner_namespace": approval.get("owner_namespace"),
+        "scope_match": approval.get("scope_match") is True,
+        "trusted_base": approval.get("trusted_base") is True,
+        "activation": candidate["changes"],
+        "creates_new_owner_authority": False,
+        "activation_of_predelegated_authority": True,
     }
 
 
@@ -251,19 +357,24 @@ def _apply_key(proposal: Mapping[str, Any]) -> str:
 def _load_runtime_overrides(state: Path) -> dict[str, Any]:
     doc = _load_json(state / "security_runtime_overrides.json", {})
     if not isinstance(doc, Mapping):
-        return {"schema": "world-security-runtime-overrides/v1", "applied": {}}
+        return {"schema": "world-security-runtime-overrides/v2", "applied": {}}
     applied = doc.get("applied", {})
     if not isinstance(applied, Mapping):
         applied = {}
-    return {"schema": "world-security-runtime-overrides/v1", "applied": dict(applied)}
+    return {"schema": "world-security-runtime-overrides/v2", "applied": dict(applied)}
 
 
-def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DIR) -> dict[str, Any]:
-    """Run one closed-loop production change-management cycle.
+def run_production_security_change_loop(
+    state_dir: str | Path = DEFAULT_STATE_DIR,
+    *,
+    authority_envelope_dir: str | Path | None = DEFAULT_AUTHORITY_ENVELOPE_DIR,
+) -> dict[str, Any]:
+    """Run one production change-management cycle.
 
-    The function has real state effects in ``state_dir``. Only same-or-narrower changes
-    can alter ``security_runtime_overrides.json``. Broader authority changes are staged
-    to ``owner_authority_required.json`` and never self-approved.
+    Same-or-narrower changes can self-apply after AI consensus. Authority-broadening
+    changes can additionally self-apply *activation only* when the exact operation and
+    parameters match a pre-existing owner standing envelope from the trusted base.
+    Anything else remains OWNER_AUTHORITY_REQUIRED.
     """
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
@@ -275,12 +386,16 @@ def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DI
 
     for proposal in proposals:
         consensus = _consensus(proposal)
-        self_approved = bool(
+        delegated = _resolve_predelegated_activation(proposal, consensus, authority_envelope_dir)
+        delegated_approved = bool(delegated and delegated.get("approved") is True)
+        bounded_self_approved = bool(
             proposal["proposed_lane"] == "bounded_self_approval"
             and consensus["self_approval_consensus"]
             and not proposal["authority_broadening_detected"]
+            and not proposal["raw_secret_material_detected"]
             and proposal["authority_relation"] == "same_or_narrower"
         )
+        self_approved = bounded_self_approved or delegated_approved
 
         if self_approved:
             key = _apply_key(proposal)
@@ -288,10 +403,26 @@ def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DI
                 "change_kind": proposal["change_kind"],
                 "requested_changes": proposal["requested_changes"],
                 "finding_id": proposal["finding_id"],
-                "approval": "ai_consensus_bounded_self_approval",
-                "authority_relation": "same_or_narrower",
+                "approval": (
+                    "ai_consensus_predelegated_owner_authority"
+                    if delegated_approved
+                    else "ai_consensus_bounded_self_approval"
+                ),
+                "authority_relation": (
+                    "predelegated_activation"
+                    if delegated_approved
+                    else "same_or_narrower"
+                ),
+                "delegated_authority_activation": delegated_approved,
+                "delegation_envelope_id": delegated.get("envelope_id") if delegated else None,
+                "delegated_activation": delegated.get("activation") if delegated else None,
+                "creates_new_owner_authority": False,
             }
-            status = "production_applied"
+            status = (
+                "DELEGATED_OWNER_AUTHORITY_PRODUCTION_APPLIED"
+                if delegated_approved
+                else "production_applied"
+            )
         else:
             owner_required.append(
                 {
@@ -299,6 +430,7 @@ def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DI
                     "ai_consensus": consensus,
                     "status": "OWNER_AUTHORITY_REQUIRED",
                     "automatic_production_apply": False,
+                    "standing_owner_envelope_match": False,
                 }
             )
             status = "owner_authority_required"
@@ -307,6 +439,7 @@ def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DI
             {
                 "proposal": proposal,
                 "ai_consensus": consensus,
+                "delegated_authority": delegated,
                 "self_approved": self_approved,
                 "production_apply": self_approved,
                 "status": status,
@@ -314,13 +447,11 @@ def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DI
             }
         )
 
-    # The runtime override document is deterministic so the production workflow only
-    # commits when a genuinely new safe proposal becomes applicable.
     _write_json(state / "security_runtime_overrides.json", runtime)
     _write_json(
         state / "owner_authority_required.json",
         {
-            "schema": "world-owner-authority-required/v1",
+            "schema": "world-owner-authority-required/v2",
             "generated_at": now,
             "items": owner_required,
         },
@@ -330,17 +461,26 @@ def run_production_security_change_loop(state_dir: str | Path = DEFAULT_STATE_DI
         {
             "schema": SCHEMA,
             "generated_at": now,
-            "loop": "Finding->Security Proposal->AI Consensus->Bounded Self Approval->Production Apply->Next Finding",
+            "loop": "Finding->Security Proposal->AI Consensus->Bounded/Predelegated Self Approval->Production Apply->Next Finding",
             "receipts": receipts,
         },
     )
 
+    delegated_count = sum(
+        1
+        for row in receipts
+        if isinstance(row.get("delegated_authority"), Mapping)
+        and row["delegated_authority"].get("approved") is True
+        and row["production_apply"] is True
+    )
     return {
         "proposal_count": len(proposals),
         "production_applied_count": sum(1 for row in receipts if row["production_apply"]),
+        "delegated_authority_applied_count": delegated_count,
         "owner_authority_required_count": len(owner_required),
         "next_finding_enabled": True,
         "authority_expansion_self_approval": False,
+        "predelegated_authority_activation_enabled": True,
         "production_state_file": str(state / "security_runtime_overrides.json"),
     }
 
