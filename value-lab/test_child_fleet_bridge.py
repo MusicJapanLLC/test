@@ -1,3 +1,4 @@
+import json
 import unittest
 
 import child_fleet_bridge as bridge
@@ -17,11 +18,13 @@ class ChildFleetBridgeTests(unittest.TestCase):
             },
         }
         clean = bridge.sanitize_fleet(raw)
+        serialized = json.dumps(clean, ensure_ascii=False).lower()
         self.assertTrue(clean["available"])
         self.assertEqual(50, clean["fleet_size"])
         self.assertEqual(17, clean["distinct_domains"])
         self.assertNotIn("results", clean)
-        self.assertNotIn("url", str(clean).lower())
+        self.assertNotIn("https://example.com/private-looking-path", serialized)
+        self.assertNotIn("raw body", serialized)
         self.assertIn("agents", clean["top_concepts"])
         self.assertNotIn("bad token with spaces", clean["top_concepts"])
 
