@@ -26,7 +26,7 @@
   "council_votes": {
     "META": {
       "approve": true,
-      "reason": "bootstrap monotonic security loop"
+      "reason": "bootstrap monotonic production security loop"
     },
     "X": {
       "approve": true,
