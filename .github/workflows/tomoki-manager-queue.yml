@@ -6,6 +6,7 @@ name: TOMOKI - MANAGER Queue Bridge
 # Offset the five-minute cadence to :02/:07/.../:57 to avoid GitHub's busiest hourly boundary.
 # A change to this workflow is also an explicit bounded push-trigger recovery wake path.
 # Recovery note: this lane may be touched with a comment-only commit to wake a stale heartbeat.
+# 2026-08-31 recurrence wake: scheduled runs elsewhere remained active while this lane missed wakes.
 on:
   schedule:
     - cron: '2-59/5 * * * *'
