@@ -5,9 +5,10 @@ The public state shape is intentionally simple and JSON-friendly::
     state["emergency_stop"] = True
 
 Checkpoint restore, recovery, rollback, replica merge, majority vote, and self-tuning
-may all *engage* the stop, but they cannot clear an already engaged stop. Clearing is
-kept on an explicit external-operator path so automated recovery cannot accidentally
-undo a safety stop.
+may all engage the stop. When one of those automated paths wants the stop cleared, it
+is allowed to record a production release request and mark the release as ready for
+external approval. The final transition from True to False remains on the explicit
+external-operator path so an automated recovery loop cannot disable its own stop.
 """
 from __future__ import annotations
 
@@ -33,17 +34,30 @@ def _utcnow_iso() -> str:
 
 
 def initialize_emergency_state(state: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
-    """Ensure the ordinary emergency-stop field and audit metadata exist."""
+    """Ensure the ordinary emergency-stop field and release-intent metadata exist."""
     state.setdefault("emergency_stop", False)
     state.setdefault("emergency_stop_generation", 0)
     state.setdefault("emergency_stop_source", None)
     state.setdefault("emergency_stop_reason", None)
     state.setdefault("emergency_stop_changed_at_utc", None)
+    state.setdefault("emergency_stop_release_requested", False)
+    state.setdefault("emergency_stop_release_ready", False)
+    state.setdefault("emergency_stop_release_sources", [])
+    state.setdefault("emergency_stop_release_reason", None)
+    state.setdefault("emergency_stop_release_requested_at_utc", None)
     return state
 
 
 def is_emergency_stopped(state: Mapping[str, Any] | None) -> bool:
     return bool(state and state.get("emergency_stop", False))
+
+
+def _reset_release_intent(state: MutableMapping[str, Any]) -> None:
+    state["emergency_stop_release_requested"] = False
+    state["emergency_stop_release_ready"] = False
+    state["emergency_stop_release_sources"] = []
+    state["emergency_stop_release_reason"] = None
+    state["emergency_stop_release_requested_at_utc"] = None
 
 
 def engage_emergency_stop(
@@ -52,15 +66,47 @@ def engage_emergency_stop(
     source: str,
     reason: str = "",
 ) -> None:
-    """Latch the stop on. Repeated engagement is idempotent for the boolean state."""
+    """Latch the stop on. A fresh engagement resets any older release intent."""
     initialize_emergency_state(state)
     was_stopped = bool(state["emergency_stop"])
     state["emergency_stop"] = True
     if not was_stopped:
         state["emergency_stop_generation"] = int(state["emergency_stop_generation"]) + 1
+        _reset_release_intent(state)
     state["emergency_stop_source"] = str(source)
     state["emergency_stop_reason"] = str(reason) or None
     state["emergency_stop_changed_at_utc"] = _utcnow_iso()
+
+
+def request_emergency_stop_release(
+    state: MutableMapping[str, Any],
+    *,
+    source: str,
+    reason: str = "",
+) -> bool:
+    """Let an automated production path request release without clearing the stop.
+
+    A valid automated source can autonomously move the release workflow to a
+    ready-for-external-approval state. Repeated requests are deduplicated by source.
+    """
+    initialize_emergency_state(state)
+    source_n = str(source).strip().lower()
+    if source_n not in AUTOMATED_SOURCES:
+        raise ValueError(f"unsupported automated release source: {source}")
+    if not bool(state["emergency_stop"]):
+        return False
+
+    raw_sources = state.get("emergency_stop_release_sources", [])
+    sources = list(raw_sources) if isinstance(raw_sources, list) else []
+    if source_n not in sources:
+        sources.append(source_n)
+
+    state["emergency_stop_release_requested"] = True
+    state["emergency_stop_release_ready"] = True
+    state["emergency_stop_release_sources"] = sources
+    state["emergency_stop_release_reason"] = str(reason) or f"release requested by {source_n}"
+    state["emergency_stop_release_requested_at_utc"] = _utcnow_iso()
+    return True
 
 
 def release_emergency_stop(
@@ -90,6 +136,8 @@ def release_emergency_stop(
     state["emergency_stop_source"] = f"external:{approver_n}"
     state["emergency_stop_reason"] = f"released:{approval_ref_n}"
     state["emergency_stop_changed_at_utc"] = _utcnow_iso()
+    state["emergency_stop_release_requested"] = False
+    state["emergency_stop_release_ready"] = False
 
 
 def apply_automated_state(
@@ -98,11 +146,12 @@ def apply_automated_state(
     *,
     source: str,
 ) -> MutableMapping[str, Any]:
-    """Merge an automated state update using a monotonic stop-wins rule.
+    """Merge automated state while granting release-intent authority.
 
-    The candidate may update normal state fields. For ``emergency_stop`` specifically,
-    ``True`` always wins over ``False``. This means stale snapshots and recovery paths
-    cannot clear a live stop, while any source can still engage it.
+    Normal state fields are restored directly. For ``emergency_stop``, True always wins
+    over False as a live state transition. If a stopped system receives a False candidate,
+    that source is granted authority to create a production release request and mark it
+    ready for the external approval path.
     """
     source_n = str(source).strip().lower()
     if source_n not in AUTOMATED_SOURCES:
@@ -124,8 +173,12 @@ def apply_automated_state(
             reason=f"engaged by {source_n} state",
         )
     elif prior_stop:
-        # Preserve the latched stop and its existing provenance.
         state["emergency_stop"] = True
+        request_emergency_stop_release(
+            state,
+            source=source_n,
+            reason=f"{source_n} proposed emergency-stop release",
+        )
     else:
         state["emergency_stop"] = False
     return state
@@ -151,7 +204,7 @@ def apply_majority_vote(
     state: MutableMapping[str, Any],
     replicas: Iterable[Mapping[str, Any]],
 ) -> MutableMapping[str, Any]:
-    """Apply majority values for ordinary booleans while retaining stop-wins semantics."""
+    """Apply the majority stop value, with False producing release intent when stopped."""
     snapshots = [dict(item) for item in replicas]
     if not snapshots:
         return initialize_emergency_state(state)
