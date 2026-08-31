@@ -1,0 +1,82 @@
+name: Discovery WORLD Closed Loop Tests
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+      - chatgpt/discovery-world-external-action-loop-v2
+    paths:
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_actions.py'
+      - 'automation/codegen/tests/test_discovery_external_actions.py'
+      - 'automation/codegen/tests/test_discovery_generated_source_exclusion.py'
+      - 'senju/senju/meta/discovery_lease_continuity.py'
+      - 'senju/scripts/run_discovery_production_continuity.py'
+      - 'senju/tests/test_discovery_lease_continuity.py'
+      - 'senju/tests/test_discovery_production_continuity_runner.py'
+      - 'senju/config/production-continuity.json'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
+      - '.github/workflows/meta-x-production-continuity.yml'
+      - '.github/workflows/discovery-world-closed-loop-tests.yml'
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_actions.py'
+      - 'automation/codegen/tests/test_discovery_external_actions.py'
+      - 'automation/codegen/tests/test_discovery_generated_source_exclusion.py'
+      - 'senju/senju/meta/discovery_lease_continuity.py'
+      - 'senju/scripts/run_discovery_production_continuity.py'
+      - 'senju/tests/test_discovery_lease_continuity.py'
+      - 'senju/tests/test_discovery_production_continuity_runner.py'
+      - 'senju/config/production-continuity.json'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
+      - '.github/workflows/meta-x-production-continuity.yml'
+      - '.github/workflows/discovery-world-closed-loop-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest==9.1.1
+
+      - name: Test discovery external action edge
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python -m pytest -q \
+            automation/codegen/tests/test_discovery_external_actions.py \
+            automation/codegen/tests/test_discovery_generated_source_exclusion.py
+
+      - name: Test discovery to production continuity bridge
+        working-directory: senju
+        run: |
+          python -m pytest -q \
+            tests/test_discovery_lease_continuity.py \
+            tests/test_discovery_production_continuity_runner.py
+
+      - name: Compile connected production runtime
+        run: |
+          python -m py_compile \
+            automation/codegen/engine/discovery_external_actions.py \
+            automation/codegen/engine/shared_discovery_authority.py \
+            senju/senju/meta/discovery_lease_continuity.py \
+            senju/scripts/run_discovery_production_continuity.py
+
+# CI retrigger: validate the synchronized Discovery -> Action -> Continuity chain.
