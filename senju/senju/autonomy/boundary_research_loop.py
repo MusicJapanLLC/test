@@ -1,31 +1,9 @@
-"""Autonomous boundary research for Senju.
+"""Autonomous, repository-local boundary research for Senju.
 
-This loop continuously searches for *unexpected accepts* across real repository
-boundary implementations. It is deliberately a research/hardening system rather than
-an authority bypass system: every probe is repository-local, uses synthetic inputs,
-and has no external side effects or raw-secret material.
-
-Closed loop:
-
-    mutate boundary inputs
-      -> execute real boundary implementation
-      -> compare against explicit invariant oracle
-      -> persist counterexample / coverage evidence
-      -> enqueue Senju red-team follow-up
-      -> emit hardening request + cross-loop handoff
-      -> increase next-generation mutation pressure
-      -> repeat
-
-Families currently exercised:
-- latched Emergency Stop automated-state paths;
-- standing authorization renewal, normalization, private scope, and revocation;
-- credential scope ceilings and revoked credential leases;
-- Parent -> Child replica credential lineage and ancestor revocation;
-- secret-free replica persistence.
-
-The loop never changes a host, credential, authority root, private-network policy, or
-security stop in response to a denial. A failed boundary probe becomes evidence for
-hardening, not permission.
+The loop searches for unexpected accepts in real boundary implementations and turns
+any counterexample into persistent evidence, a Senju red-team WorkItem, a hardening
+request, and a cross-loop handoff. Denials never become permission and probes have no
+external side effects.
 """
 from __future__ import annotations
 
@@ -40,7 +18,7 @@ from typing import Any, Callable, Mapping, Sequence
 from .engine import AutonomyEngine
 from .queue import WorkItem
 from ..authority_factory import root_from_external_scope
-from ..credential_broker import CredentialBroker, CredentialBrokerError, CredentialGrant
+from ..credential_broker import CredentialBroker, CredentialGrant
 from ..emergency_stop_state import (
     apply_majority_vote,
     apply_recovery_state,
@@ -53,7 +31,6 @@ from ..emergency_stop_state import (
 from ..external import ExternalAuthorityScope
 from ..replica_credential_lineage import ReplicaCredentialLineage
 from ..meta.standing_authorization import (
-    StandingAuthorizationError,
     create_standing_authorization,
     renew_operational_lease,
     revoke_standing_authorization,
@@ -106,7 +83,7 @@ def _load_json(path: Path) -> dict[str, Any]:
 def _exception_probe(fn: Callable[[], Any]) -> Mapping[str, Any]:
     try:
         value = fn()
-    except Exception as exc:  # boundary research intentionally records rejection types
+    except Exception as exc:
         return {"outcome": "denied", "exception": type(exc).__name__, "message": str(exc)[:240]}
     return {"outcome": "accepted", "result_type": type(value).__name__}
 
@@ -115,7 +92,7 @@ def _emergency_probe(source: str) -> Mapping[str, Any]:
     state: dict[str, Any] = {}
     engage_emergency_stop(state, source="owner-test", reason="boundary research")
     candidate = {"emergency_stop": False, "research_marker": source}
-    apply = {
+    operations = {
         "checkpoint": lambda: restore_checkpoint(state, candidate),
         "recovery": lambda: apply_recovery_state(state, candidate),
         "rollback": lambda: apply_rollback_state(state, candidate),
@@ -125,8 +102,8 @@ def _emergency_probe(source: str) -> Mapping[str, Any]:
             state,
             [{"emergency_stop": False}, {"emergency_stop": False}, {"emergency_stop": False}],
         ),
-    }[source]
-    apply()
+    }
+    operations[source]()
     return {
         "outcome": "denied" if state.get("emergency_stop") is True else "accepted",
         "emergency_stop": bool(state.get("emergency_stop")),
@@ -147,7 +124,13 @@ def _standing_authority() -> Any:
     )
 
 
-def _renew_probe(*, host: str | None = None, methods: Sequence[str] | None = None, private: Sequence[str] | None = None, revoked: bool = False) -> Mapping[str, Any]:
+def _renew_probe(
+    *,
+    host: str | None = None,
+    methods: Sequence[str] | None = None,
+    private: Sequence[str] | None = None,
+    revoked: bool = False,
+) -> Mapping[str, Any]:
     auth = _standing_authority()
     if revoked:
         auth = revoke_standing_authorization(auth, reason="boundary research revocation")
@@ -258,9 +241,7 @@ def _replica_secret_persistence_probe() -> Mapping[str, Any]:
 
 
 def build_probe_corpus(*, mutation_budget: int) -> tuple[ProbeCase, ...]:
-    """Build deterministic mutation cases around real boundary implementations."""
     cases: list[ProbeCase] = []
-
     for source in ("checkpoint", "recovery", "rollback", "replica", "self_tuning", "majority_vote"):
         cases.append(
             ProbeCase(
@@ -282,37 +263,48 @@ def build_probe_corpus(*, mutation_budget: int) -> tuple[ProbeCase, ...]:
         ("standing-revoked-renew", "denied", lambda: _renew_probe(revoked=True)),
     )
     for case_id, expected, fn in standing_cases:
-        cases.append(ProbeCase(case_id, "standing_authority", expected, fn, case_id.replace("-", " ")))
+        cases.append(
+            ProbeCase(
+                case_id=case_id,
+                family="standing_authority",
+                expected=expected,
+                run=fn,
+                description=case_id.replace("-", " "),
+            )
+        )
 
     cases.extend(
         [
             ProbeCase(
-                "credential-parent-scope-expansion",
-                "denied",
-                _credential_scope_expansion_probe,
-                "a narrowed credential lease must not re-expand to the grant ceiling",
+                case_id="credential-parent-scope-expansion",
+                family="credential_broker",
+                expected="denied",
+                run=_credential_scope_expansion_probe,
+                description="a narrowed credential lease must not re-expand to the grant ceiling",
             ),
             ProbeCase(
-                "credential-revoked-lease-resolution",
-                "denied",
-                _credential_revocation_probe,
-                "a revoked credential lease must not resolve its backing reference",
+                case_id="credential-revoked-lease-resolution",
+                family="credential_broker",
+                expected="denied",
+                run=_credential_revocation_probe,
+                description="a revoked credential lease must not resolve its backing reference",
             ),
             ProbeCase(
-                "replica-ancestor-revocation",
-                "denied",
-                _replica_revocation_probe,
-                "ancestor revocation must invalidate child and grandchild possession",
+                case_id="replica-ancestor-revocation",
+                family="replica_credential_lineage",
+                expected="denied",
+                run=_replica_revocation_probe,
+                description="ancestor revocation must invalidate child and grandchild possession",
             ),
             ProbeCase(
-                "replica-secret-free-persistence",
-                "denied",
-                _replica_secret_persistence_probe,
-                "replica persistence must not contain credential references or raw secret material",
+                case_id="replica-secret-free-persistence",
+                family="replica_credential_lineage",
+                expected="denied",
+                run=_replica_secret_persistence_probe,
+                description="replica persistence must not contain credential references or raw secret material",
             ),
         ]
     )
-
     budget = max(1, min(int(mutation_budget), MAX_MUTATION_BUDGET))
     return tuple(cases[:budget])
 
@@ -403,9 +395,9 @@ def _hardening_request(finding: Mapping[str, Any]) -> dict[str, Any]:
 
 
 def _next_budget(previous: Mapping[str, Any], counterexamples: int) -> int:
-    old = int(previous.get("mutation_budget", 12) or 12)
-    growth = 8 if counterexamples else 2
-    return min(MAX_MUTATION_BUDGET, max(12, old + growth))
+    old = int(previous.get("mutation_budget", 16) or 16)
+    growth = 8 if counterexamples else 4
+    return min(MAX_MUTATION_BUDGET, max(17, old + growth))
 
 
 def run_boundary_research(
@@ -420,11 +412,10 @@ def run_boundary_research(
     state_path = state / "boundary_research_state.json"
     prior = _load_json(state_path)
     generation = max(0, int(prior.get("generation", 0))) + 1
-    mutation_budget = max(12, min(int(prior.get("mutation_budget", 12) or 12), MAX_MUTATION_BUDGET))
+    mutation_budget = max(17, min(int(prior.get("mutation_budget", 17) or 17), MAX_MUTATION_BUDGET))
 
     results = [_result_for(case) for case in build_probe_corpus(mutation_budget=mutation_budget)]
     findings = [_finding(result, generation=generation) for result in results if not result.passed]
-
     engine = AutonomyEngine(state)
     queued = [item for item in (_queue_finding(engine, finding) for finding in findings) if item]
     requests = [_hardening_request(finding) for finding in findings]
@@ -451,7 +442,6 @@ def run_boundary_research(
         "finding_is_permission": False,
         "external_side_effects": False,
     }
-
     snapshot = {
         "schema": STATE_SCHEMA,
         "generation": generation,
@@ -495,13 +485,15 @@ def run_boundary_research(
 
 
 def import_handoff(*, state_dir: str | Path, handoff_path: str | Path) -> dict[str, Any]:
-    """Import another research run's counterexamples into a local Senju queue."""
     handoff = _load_json(Path(handoff_path))
     if handoff.get("schema") != HANDOFF_SCHEMA:
         raise ValueError("unsupported boundary research handoff")
     engine = AutonomyEngine(Path(state_dir))
     queued: list[str] = []
-    for finding in handoff.get("counterexamples", []):
+    rows = handoff.get("counterexamples", [])
+    if not isinstance(rows, list):
+        rows = []
+    for finding in rows:
         if not isinstance(finding, Mapping):
             continue
         item_id = _queue_finding(engine, finding)
@@ -510,7 +502,7 @@ def import_handoff(*, state_dir: str | Path, handoff_path: str | Path) -> dict[s
     return {
         "schema": "senju-boundary-research-import/v1",
         "source_generation": int(handoff.get("generation", 0)),
-        "findings_seen": len(handoff.get("counterexamples", [])),
+        "findings_seen": len(rows),
         "items_queued": len(queued),
         "queued_item_ids": queued,
     }
@@ -523,11 +515,11 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--import-handoff")
     parser.add_argument("--json")
     args = parser.parse_args(argv)
-
-    if args.import_handoff:
-        result = import_handoff(state_dir=args.state_dir, handoff_path=args.import_handoff)
-    else:
-        result = run_boundary_research(state_dir=args.state_dir, output_dir=args.output_dir)
+    result = (
+        import_handoff(state_dir=args.state_dir, handoff_path=args.import_handoff)
+        if args.import_handoff
+        else run_boundary_research(state_dir=args.state_dir, output_dir=args.output_dir)
+    )
     rendered = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.json:
         destination = Path(args.json)
