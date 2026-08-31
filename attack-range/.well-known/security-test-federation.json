@@ -1,0 +1,15 @@
+{
+  "schema": "the-world-security-test-federation/v1",
+  "federation_id": "the-world-security-test-federation-v1",
+  "member_id": "kabeya-authorized-test-range",
+  "host": "kabeya-authorized-test-range.onrender.com",
+  "base_url": "https://kabeya-authorized-test-range.onrender.com",
+  "owner_authorization": "explicit",
+  "authorization": "AUTHORIZED_FOR_SECURITY_TESTING",
+  "recursive_scope": "/**",
+  "query_and_fragment_in_scope": true,
+  "follow_verified_external_members": true,
+  "external_admission": "registered_or_mutually_declared_only",
+  "rate_limit_rps": 5,
+  "prohibited": ["denial_of_service", "resource_exhaustion", "credential_reuse", "third_party_attacks", "social_engineering"]
+}
