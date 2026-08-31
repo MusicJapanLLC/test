@@ -1,0 +1,223 @@
+"""Production recovery cycle for authorized external observation lanes.
+
+The cycle persists denial learning and per-scope agent reliability across runs. Five
+candidate execution agents are available; the underlying rotation lane uses three per
+pass, so a second pass can naturally promote previously unused agents after transient
+failures. Every pass preserves the exact authority contract.
+"""
+from __future__ import annotations
+
+import argparse
+import dataclasses
+import datetime as dt
+import json
+import time
+import uuid
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Mapping, Sequence
+
+from .external import BUILTIN_AUTHORITY_SCOPES, ExternalAuthorityScope, ExternalContactClient
+from .external_denial_learning import DENIAL_SCHEMA, DenialLearningMemory
+from .external_recovery_closed_loop import AgentReliabilityMemory, execute_recovery_closed_loop
+
+REPORT_SCHEMA = "senju-external-recovery-cycle/v1"
+AGENTS = ("senju-a", "senju-b", "senju-c", "senju-d", "senju-e")
+
+
+@dataclass(frozen=True)
+class RecoveryMission:
+    mission_id: str
+    scope_id: str
+    url: str
+    method: str = "GET"
+    purpose: str = "authorized external availability observation"
+
+
+BUILTIN_RECOVERY_MISSIONS: tuple[RecoveryMission, ...] = (
+    RecoveryMission(
+        mission_id="recovery-nvd",
+        scope_id="threat_intel_public",
+        url="https://services.nvd.nist.gov/rest/json/cves/2.0?resultsPerPage=1",
+        purpose="maintain resilient public vulnerability telemetry access",
+    ),
+    RecoveryMission(
+        mission_id="recovery-github",
+        scope_id="github_metadata",
+        url="https://api.github.com/repos/cli/cli/releases/latest",
+        purpose="maintain resilient public release metadata access",
+    ),
+    RecoveryMission(
+        mission_id="recovery-egress-canary",
+        scope_id="canary_telemetry",
+        url="https://example.com/",
+        purpose="maintain resilient external transport canary evidence",
+    ),
+)
+
+
+def _denial_memory_from_mapping(data: Mapping[str, Any] | None) -> DenialLearningMemory:
+    if not data or data.get("schema") != DENIAL_SCHEMA:
+        return DenialLearningMemory()
+    events = data.get("events") or []
+    if not isinstance(events, list):
+        return DenialLearningMemory()
+    clean = [dict(item) for item in events[-1000:] if isinstance(item, Mapping)]
+    return DenialLearningMemory(events=clean)
+
+
+def _scope_for(mission: RecoveryMission) -> ExternalAuthorityScope:
+    scope = BUILTIN_AUTHORITY_SCOPES.get(mission.scope_id)
+    if scope is None:
+        raise ValueError(f"unknown built-in authority scope: {mission.scope_id}")
+    host = mission.url.split("/", 3)[2].split(":", 1)[0].lower().rstrip(".")
+    if host not in scope.allow_hosts:
+        raise ValueError(f"mission host is outside authority scope: {mission.mission_id}")
+    if mission.method not in scope.allowed_methods:
+        raise ValueError(f"mission method is outside authority scope: {mission.mission_id}")
+    # Closed-loop rotation supplies the retry structure, so disable nested client retries
+    # to keep total request pressure bounded and observable.
+    return dataclasses.replace(scope, retries=0)
+
+
+ClientFactory = Callable[[ExternalAuthorityScope, str], ExternalContactClient]
+
+
+def run_recovery_cycle(
+    *,
+    missions: Sequence[RecoveryMission] = BUILTIN_RECOVERY_MISSIONS,
+    reliability_data: Mapping[str, Any] | None = None,
+    denial_data: Mapping[str, Any] | None = None,
+    max_missions: int = 3,
+    max_passes: int = 2,
+    client_factory: ClientFactory | None = None,
+    sleeper: Callable[[float], None] | None = None,
+) -> dict[str, Any]:
+    reliability = AgentReliabilityMemory.from_mapping(reliability_data)
+    denial_memory = _denial_memory_from_mapping(denial_data)
+    selected = list(missions)[: max(1, min(int(max_missions), 8))]
+    sleep_fn = sleeper or time.sleep
+
+    operations: list[dict[str, Any]] = []
+    optimization_queue: list[dict[str, Any]] = []
+    boundary_repair_queue: list[dict[str, Any]] = []
+
+    for mission in selected:
+        scope = _scope_for(mission)
+
+        def recovery_hook(pass_index: int, playbook: Mapping[str, Any]) -> None:
+            # A short local cooldown/reset seam gives DNS/socket/provider state a chance
+            # to recover without changing route, host, protocol, credential, or authority.
+            sleep_fn(min(2.0, 0.5 * pass_index))
+
+        outcome = execute_recovery_closed_loop(
+            operation_id=mission.mission_id,
+            scope=scope,
+            url=mission.url,
+            method=mission.method,
+            agents=AGENTS,
+            max_passes=max_passes,
+            client_factory=client_factory,
+            denial_memory=denial_memory,
+            reliability_memory=reliability,
+            transport_recovery_hook=recovery_hook,
+        )
+        playbooks = [dict(x) for x in outcome.get("playbooks", []) if isinstance(x, Mapping)]
+        optimization_queue.extend(
+            {"mission_id": mission.mission_id, **playbook} for playbook in playbooks
+        )
+        boundary_repair_queue.extend(
+            {"mission_id": mission.mission_id, **playbook}
+            for playbook in playbooks
+            if bool(playbook.get("requires_external_repair", False))
+        )
+        operations.append({
+            "mission": dataclasses.asdict(mission),
+            "success": bool(outcome.get("success", False)),
+            "selected_agent": outcome.get("selected_agent"),
+            "passes_used": int(outcome.get("passes_used", 0)),
+            "authority_preserved": bool(outcome.get("authority_preserved", False)),
+            "authority_invariants": dict(outcome.get("authority_invariants") or {}),
+            "outcomes": outcome.get("outcomes", []),
+            "playbooks": playbooks,
+        })
+
+    transport_attempts = sum(
+        len(pass_outcome.get("attempts", []))
+        for operation in operations
+        for pass_outcome in operation.get("outcomes", [])
+        if isinstance(pass_outcome, Mapping)
+    )
+    successful = sum(1 for operation in operations if operation["success"])
+    return {
+        "schema": REPORT_SCHEMA,
+        "cycle_id": f"ext-recovery-{uuid.uuid4().hex[:12]}",
+        "executed_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "production_mode": True,
+        "self_initiated": True,
+        "network_io": True,
+        "closed_loop_recovery": True,
+        "agent_rotation": True,
+        "agent_pool": list(AGENTS),
+        "max_passes": max(1, min(int(max_passes), 3)),
+        "authority_preserved": all(x["authority_preserved"] for x in operations),
+        "boundary_bypass_enabled": False,
+        "attempted_missions": len(operations),
+        "successful_missions": successful,
+        "transport_attempts": transport_attempts,
+        "operations": operations,
+        "optimization_queue": optimization_queue,
+        "boundary_repair_queue": boundary_repair_queue,
+        "denial_learning": denial_memory.summary(),
+        "agent_reliability": reliability.to_dict(),
+    }
+
+
+def _read_json(path: str | Path | None) -> dict[str, Any] | None:
+    if not path:
+        return None
+    p = Path(path)
+    if not p.exists():
+        return None
+    value = json.loads(p.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"expected JSON object: {p}")
+    return value
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run production external recovery closed loop")
+    parser.add_argument("--reliability-memory")
+    parser.add_argument("--denial-memory")
+    parser.add_argument("--out", required=True)
+    parser.add_argument("--reliability-out")
+    parser.add_argument("--denial-out")
+    parser.add_argument("--max-missions", type=int, default=3)
+    parser.add_argument("--max-passes", type=int, default=2)
+    args = parser.parse_args(argv)
+
+    report = run_recovery_cycle(
+        reliability_data=_read_json(args.reliability_memory),
+        denial_data=_read_json(args.denial_memory),
+        max_missions=args.max_missions,
+        max_passes=args.max_passes,
+    )
+    out = Path(args.out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    reliability_out = Path(args.reliability_out) if args.reliability_out else out.with_name("external-agent-reliability.json")
+    denial_out = Path(args.denial_out) if args.denial_out else out.with_name("external-denial-learning.json")
+    reliability_out.write_text(json.dumps(report["agent_reliability"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    denial_out.write_text(json.dumps(report["denial_learning"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+    print(
+        "SENJU_EXTERNAL_RECOVERY_CYCLE "
+        f"missions={report['attempted_missions']} success={report['successful_missions']} "
+        f"transport_attempts={report['transport_attempts']} authority_preserved={str(report['authority_preserved']).lower()}"
+    )
+    return 0 if report["successful_missions"] > 0 else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
