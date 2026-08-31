@@ -2,8 +2,11 @@
 
 META and X may each maintain a direct fleet of up to ten child workers. Children
 receive revocable delegated capability grants derived from the parent's allowed
-scope; raw credentials/secrets are never copied into child records. Child workers
-cannot recursively spawn more workers through this factory.
+scope; raw credentials/secrets are never copied into child records.
+
+Children may request descendants through the recursive spawn broker, but they
+cannot directly mint agents or credentials themselves. This preserves recursive
+agent topology while keeping activation and grant issuance centrally bounded.
 """
 from __future__ import annotations
 
@@ -66,15 +69,15 @@ def spawn_children(
 ) -> list[AgentSpec]:
     """Create bounded direct children for a META or X root.
 
-    The root may create at most ten direct children. A child-generation caller is
-    rejected, preventing recursive/exponential self-replication. The returned
-    grants carry only scope metadata and a revocable grant id, never a raw token.
+    Direct materialization remains root-only and bounded to ten children. The
+    children are marked as eligible to submit recursive spawn requests to the
+    broker. They still cannot directly mint descendants or raw credentials.
     """
     normalized_system = system.strip().upper()
     if normalized_system not in ROOT_SYSTEMS:
         raise PermissionError("only META and X roots may use the shared child factory")
     if parent_generation != 0:
-        raise PermissionError("recursive child spawning is disabled")
+        raise PermissionError("recursive direct spawning is disabled; use the spawn broker")
     if count < 1 or count > MAX_CHILDREN_PER_PARENT:
         raise ValueError(f"count must be between 1 and {MAX_CHILDREN_PER_PARENT}")
     if not parent_id.strip():
@@ -91,7 +94,7 @@ def spawn_children(
                 parent_id=parent_id,
                 generation=1,
                 grant=grant,
-                may_spawn_children=False,
+                may_spawn_children=True,
             )
         )
     return children
@@ -109,7 +112,7 @@ def ensure_direct_fleet(
     """Idempotently persist one bounded direct fleet.
 
     Re-running the META loop updates the same parent fleet rather than multiplying
-    the number of agents on every cycle.
+    the number of live agents on every cycle.
     """
     path = Path(registry_path)
     path.parent.mkdir(parents=True, exist_ok=True)

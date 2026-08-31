@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Sequence
 
 from senju.meta.agent_factory import MAX_CHILDREN_PER_PARENT, ensure_direct_fleet
+from senju.meta.recursive_agent_broker import MAX_ACTIVE_AGENTS, MAX_GENERATION
 
 DEFAULT_DELEGATED_SCOPES = (
     "read:state",
@@ -21,11 +22,13 @@ def provision_meta_x_fleets(
     meta_scopes: Sequence[str] = DEFAULT_DELEGATED_SCOPES,
     x_scopes: Sequence[str] = DEFAULT_DELEGATED_SCOPES,
 ) -> dict:
-    """Ensure bounded direct worker fleets for both META and X.
+    """Ensure direct worker fleets and enable brokered recursive descendants.
 
-    Each root receives at most ten direct workers. Workers receive independent,
-    revocable grant identifiers with delegated scope metadata; they do not inherit
-    the root's raw credential and are not allowed to spawn another generation.
+    META and X each receive a bounded direct fleet. Those children may submit
+    recursive descendant requests with no fixed ten-agent request ceiling, but
+    descendants are materialized only through the shared broker's global live-agent
+    budget. Every generation receives fresh revocable grants; raw credentials are
+    never inherited.
     """
     registry = Path(state_dir) / "meta_x_agent_registry.json"
     meta = ensure_direct_fleet(
@@ -46,7 +49,11 @@ def provision_meta_x_fleets(
         "registry": str(registry),
         "meta_children": len(meta["children"]),
         "x_children": len(x["children"]),
-        "max_children_per_parent": MAX_CHILDREN_PER_PARENT,
-        "recursive_spawn": False,
+        "max_children_per_root": MAX_CHILDREN_PER_PARENT,
+        "recursive_spawn_requests": True,
+        "recursive_request_fixed_count_ceiling": None,
+        "recursive_materialization": "brokered",
+        "max_active_agents": MAX_ACTIVE_AGENTS,
+        "max_generation": MAX_GENERATION,
         "raw_credential_inheritance": False,
     }
