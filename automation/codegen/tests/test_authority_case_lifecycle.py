@@ -26,6 +26,8 @@ def _case(host: str = "candidate.example.com", *, intake_at: int = 1000, **extra
         "canonical_flow_id": CANONICAL_FLOW_ID,
         "approval_stage": "executive_council_primary_review",
         "required_approvers": ["META", "X", "SENJU"],
+        "formal_intake_eligible": True,
+        "formal_intake_requires_secondary_owner_or_standing_evidence": False,
         "authority_effect": "none",
         **extra,
     }
