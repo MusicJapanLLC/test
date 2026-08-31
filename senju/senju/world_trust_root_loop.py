@@ -710,14 +710,15 @@ class WorldTrustRootLoop:
                     0,
                     int((expires - dt.datetime.now(dt.timezone.utc)).total_seconds()),
                 )
-                if remaining < 30:
+                if remaining < 31:
                     break
                 child_id = f"{operation_id}:replica:{generation}"
+                child_ttl = max(30, min(120, remaining - 1))
                 lineage.delegate(
                     parent_replica_id=current_id,
                     child_replica_id=child_id,
                     scopes=required_scopes,
-                    ttl_seconds=max(30, min(120, remaining)),
+                    ttl_seconds=child_ttl,
                     recipient_actor="X",
                 )
                 current_id = child_id
