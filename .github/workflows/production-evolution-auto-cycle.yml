@@ -43,9 +43,9 @@ jobs:
             unzip -oq /tmp/production-evolution-state.zip -d "$STATE_DIR" || true
           fi
 
-      - name: Run one production evolution generation
+      - name: Run one production evolution generation with authority recovery
         run: |
-          python automation/world/run_production_evolution_cycle.py \
+          python automation/world/run_authority_checkpoint_recovery_cycle.py \
             --plan automation/world/production_evolution_auto_cycle_plan.json \
             --state "$STATE_FILE" \
             --output "$STATE_FILE"
