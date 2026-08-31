@@ -127,7 +127,8 @@ def augment_directive(directive: dict[str, Any], clean: dict[str, Any]) -> dict[
         f"{clean.get('distinct_domains', 0)} distinct public domains, concepts=[{concepts}]. "
         f"Research hint: {hint}"
     )
-    out["hypothesis"] = (str(out.get("hypothesis", "")) + context)[:600]
+    base = str(out.get("hypothesis", ""))[:300]
+    out["hypothesis"] = (base + context)[:600]
     return out
 
 
