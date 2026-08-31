@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed classifier for the four-party Owner frontier writer.
+"""Fail-closed classifier for the bounded Owner frontier approval writer.
 
 The frontier workflow is privileged only in its non-PR apply job. It may persist a
 fixed set of authority research/state files through GitHub's own-repository contents
@@ -28,6 +28,7 @@ ALLOWED_STATE = {
     "senju/state/owner_frontier_ballots.json",
     "senju/state/owner_frontier_council.json",
     "senju/state/owner_scope_expansion_evidence_requests.json",
+    "senju/state/owner_frontier_negotiator_feed.json",
     "senju/state/owner_contact_ceiling_effective.json",
     "senju/state/owner_frontier_approved_pending.json",
     "senju/state/authority_opportunity_queue.json",
@@ -37,13 +38,13 @@ ALLOWED_STATE = {
 def validate_frontier_lane() -> str:
     body = policy.WORKFLOWS.get(NAME, "")
     if not body:
-        raise SystemExit(f"{NAME}: required four-party frontier workflow is missing")
+        raise SystemExit(f"{NAME}: required Owner frontier approval workflow is missing")
     got = policy.writes(body)
     if got != {"contents"}:
         raise SystemExit(f"{NAME}: write set drifted: expected=['contents'] actual={sorted(got)}")
 
     required = (
-        "Four Party Owner Frontier Council",
+        "Owner Frontier Approval Council",
         "contents: read",
         "contents: write",
         "actions: read",
@@ -59,7 +60,9 @@ def validate_frontier_lane() -> str:
         "senju/scripts/frontier_approval_continuity.py",
         "approved_pending_next_frontier_cycle",
         "unknown_host_without_verified_evidence_auto_activated",
-        "four_party_quorum",
+        "approval_quorum",
+        "valid_approval_is_binding",
+        "owner_frontier_negotiator_feed.json",
         "if: github.event_name != 'pull_request'",
         'REPO="$GITHUB_REPOSITORY"',
         'BASE="claude/employee-onboarding-setup-udm86"',

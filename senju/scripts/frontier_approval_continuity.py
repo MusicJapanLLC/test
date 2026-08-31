@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Keep valid four-party approvals alive when only the per-cycle budget deferred them.
+"""Keep valid frontier approvals alive when only the per-cycle budget deferred them.
 
-This script does not activate a host or mint authority. It converts a prior
-`cycle_host_budget_exhausted` decision that already had verified Owner evidence and
-4/4 approval into a high-priority opportunity for the next normal frontier cycle.
-The next cycle must still re-evaluate current evidence and council policy.
+A deferred row is eligible only when it already had verified Owner evidence and binding
+META/X/SENJU 3/3 approval. The script does not mint authority; it requeues the approval
+at priority 100 so the next normal frontier cycle revalidates current evidence and
+policy, then activates it if still valid.
 """
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ APPROVED_PROOF_TYPES = {
     "owner_exact_link",
 }
 MAX_PENDING = 300
-KIND = "four_party_approved_budget_deferred"
+KIND = "ai_council_approved_budget_deferred"
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -91,7 +91,11 @@ def run(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
         proof_ref = str(row.get("proof_ref") or "")
         if proof_type not in APPROVED_PROOF_TYPES or not proof_ref:
             continue
-        if int(row.get("yes_votes", 0) or 0) != 4:
+        if int(row.get("yes_votes", 0) or 0) != 3:
+            continue
+        if int(row.get("required_votes", 0) or 0) != 3:
+            continue
+        if not bool(row.get("valid_approval_is_binding")):
             continue
         if int(row.get("min_yes_confidence", 0) or 0) < 75:
             continue
@@ -103,7 +107,8 @@ def run(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
             "proof_ref": proof_ref,
             "status": "approved_pending_next_frontier_cycle",
             "priority": 100,
-            "approved_votes": 4,
+            "approved_votes": 3,
+            "binding_approvers": ["META", "X", "SENJU"],
             "min_yes_confidence": int(row.get("min_yes_confidence", 0) or 0),
             "first_approved_at": int(old.get("first_approved_at", ts) or ts),
             "last_seen_at": ts,
@@ -114,7 +119,9 @@ def run(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
     for host in activated_hosts | terminal_hosts:
         pending.pop(host, None)
 
-    pending_rows = sorted(pending.values(), key=lambda r: (-int(r.get("priority", 0)), str(r.get("host", ""))))[:MAX_PENDING]
+    pending_rows = sorted(
+        pending.values(), key=lambda r: (-int(r.get("priority", 0)), str(r.get("host", "")))
+    )[:MAX_PENDING]
 
     queue_doc = _load(state / "authority_opportunity_queue.json", {})
     raw_opps = queue_doc.get("opportunities", []) if isinstance(queue_doc, Mapping) else []
@@ -126,7 +133,7 @@ def run(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
         kept.append({
             "host": row["host"],
             "requested_methods": row["requested_methods"],
-            "reason": "Prior verified 4/4 frontier approval was deferred only by the per-cycle host budget; re-evaluate first in the next normal frontier cycle.",
+            "reason": "Prior verified Owner evidence + META/X/SENJU 3/3 approval was deferred only by cycle budget; re-evaluate first next cycle.",
             "priority": 100,
             "hard_deny": False,
             "revoked": False,
@@ -136,12 +143,13 @@ def run(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
         })
 
     pending_doc = {
-        "schema": "senju-owner-frontier-approved-pending/v1",
+        "schema": "senju-owner-frontier-approved-pending/v2",
         "generated_at": ts,
         "pending_count": len(pending_rows),
         "max_pending": MAX_PENDING,
         "authority_minted": False,
         "network_io_attempted": False,
+        "binding_approvers": ["META", "X", "SENJU"],
         "pending": pending_rows,
     }
     out_queue = dict(queue_doc) if isinstance(queue_doc, Mapping) else {}
