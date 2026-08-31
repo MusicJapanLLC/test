@@ -1,9 +1,9 @@
-"""Unanimous META/X/Senju voting for guard-change proposals.
+"""Unanimous META/X/Senju voting and META/X approval for guard-change proposals.
 
 META, X and Senju have equal votes. A proposal reaches CONSENSUS_APPROVED only
-when all three vote YES. Consensus approval does not itself rewrite or disable
-safety/guard enforcement; an independent authority applier must perform any
-runtime mutation.
+when all three vote YES. META and X may then explicitly approve that consensus.
+Approved changes can be applied immediately in lab/sandbox/staging. Production-
+like safety/guard enforcement remains behind an independent authority applier.
 """
 from __future__ import annotations
 
@@ -13,9 +13,14 @@ import json
 from typing import Any, Callable, Mapping
 
 VOTERS = ("META", "X", "SENJU")
+META_X_APPROVERS = ("META", "X")
+NONPROD_ENVIRONMENTS = frozenset({"lab", "sandbox", "staging"})
+PRODUCTION_LIKE_ENVIRONMENTS = frozenset({"production", "prod", "live", "real"})
+
 STATUS_PENDING = "PENDING"
 STATUS_REJECTED = "REJECTED"
 STATUS_CONSENSUS_APPROVED = "CONSENSUS_APPROVED"
+STATUS_META_X_APPROVED = "META_X_APPROVED"
 STATUS_APPLIED = "APPLIED"
 STATUS_AUTHORITY_REJECTED = "AUTHORITY_REJECTED"
 
@@ -54,15 +59,28 @@ class GuardConsensusDecision:
 
 
 @dataclasses.dataclass(frozen=True)
+class MetaXApprovalDecision:
+    decision: GuardConsensusDecision
+    approvals: Mapping[str, bool]
+    status: str
+
+    @property
+    def both_approved(self) -> bool:
+        return all(self.approvals.get(actor) is True for actor in META_X_APPROVERS)
+
+
+@dataclasses.dataclass(frozen=True)
 class GuardApplyResult:
     decision: GuardConsensusDecision
     applied: bool
     status: str
     authority_receipt: Mapping[str, Any]
+    environment: str | None = None
+    meta_x_approvals: Mapping[str, bool] | None = None
 
 
 class GuardConsensus:
-    """Equal, condition-free 3-agent vote at the proposal-approval layer."""
+    """Equal three-agent vote plus explicit META/X approval."""
 
     def decide(self, proposal: GuardChangeProposal, votes: Mapping[str, bool]) -> GuardConsensusDecision:
         normalized = {str(name).strip().upper(): bool(value) for name, value in votes.items()}
@@ -84,17 +102,93 @@ class GuardConsensus:
             status=status,
         )
 
+    def request_meta_x_approval(
+        self,
+        decision: GuardConsensusDecision,
+        approvals: Mapping[str, bool],
+    ) -> MetaXApprovalDecision:
+        """Require explicit, equal META and X approval after unanimous consensus."""
+        if decision.status != STATUS_CONSENSUS_APPROVED or not decision.unanimous_yes:
+            raise GuardConsensusError("META/X approval requires unanimous guard consensus")
+
+        normalized = {str(name).strip().upper(): bool(value) for name, value in approvals.items()}
+        missing = [actor for actor in META_X_APPROVERS if actor not in normalized]
+        extras = [name for name in normalized if name not in META_X_APPROVERS]
+        if missing:
+            raise GuardConsensusError(f"missing META/X approvals: {', '.join(missing)}")
+        if extras:
+            raise GuardConsensusError(f"unknown META/X approvers: {', '.join(extras)}")
+
+        approved = all(normalized[actor] for actor in META_X_APPROVERS)
+        return MetaXApprovalDecision(
+            decision=decision,
+            approvals={actor: normalized[actor] for actor in META_X_APPROVERS},
+            status=STATUS_META_X_APPROVED if approved else STATUS_REJECTED,
+        )
+
+    def apply_after_meta_x_approval(
+        self,
+        approval: MetaXApprovalDecision,
+        *,
+        environment: str,
+        nonprod_applier: Callable[[GuardChangeProposal], Mapping[str, Any]] | None = None,
+        authority_applier: Callable[[GuardChangeProposal], Mapping[str, Any]] | None = None,
+    ) -> GuardApplyResult:
+        """Apply META/X-approved guard changes according to environment.
+
+        lab/sandbox/staging: META+X approval can trigger the supplied non-production
+        applier immediately.
+
+        production/prod/live/real: the same approved proposal is automatically
+        submitted to an independent authority applier. META/X approval cannot
+        replace that production boundary.
+        """
+        if approval.status != STATUS_META_X_APPROVED or not approval.both_approved:
+            raise GuardConsensusError("guard change lacks META/X approval")
+
+        env = environment.strip().lower()
+        proposal = approval.decision.proposal
+
+        if env in NONPROD_ENVIRONMENTS:
+            if nonprod_applier is None:
+                raise GuardConsensusError("non-production guard apply requires nonprod_applier")
+            receipt = nonprod_applier(proposal)
+            if not isinstance(receipt, Mapping):
+                raise GuardConsensusError("nonprod applier must return a mapping")
+            applied = bool(receipt.get("applied", receipt.get("approved", False)))
+            return GuardApplyResult(
+                decision=approval.decision,
+                applied=applied,
+                status=STATUS_APPLIED if applied else STATUS_AUTHORITY_REJECTED,
+                authority_receipt=dict(receipt),
+                environment=env,
+                meta_x_approvals=dict(approval.approvals),
+            )
+
+        if env in PRODUCTION_LIKE_ENVIRONMENTS:
+            if authority_applier is None:
+                raise GuardConsensusError("production guard apply requires independent authority_applier")
+            receipt = authority_applier(proposal)
+            if not isinstance(receipt, Mapping):
+                raise GuardConsensusError("authority applier must return a mapping")
+            approved = bool(receipt.get("approved"))
+            return GuardApplyResult(
+                decision=approval.decision,
+                applied=approved,
+                status=STATUS_APPLIED if approved else STATUS_AUTHORITY_REJECTED,
+                authority_receipt=dict(receipt),
+                environment=env,
+                meta_x_approvals=dict(approval.approvals),
+            )
+
+        raise GuardConsensusError(f"unsupported guard environment: {environment!r}")
+
     def apply_with_authority(
         self,
         decision: GuardConsensusDecision,
         authority_applier: Callable[[GuardChangeProposal], Mapping[str, Any]],
     ) -> GuardApplyResult:
-        """Submit a unanimous proposal to an independent authority layer.
-
-        The authority layer is not one of META/X/Senju and cannot be replaced by
-        their votes. This preserves unanimous governance while preventing the
-        voters from self-authorizing removal of the boundary that judges them.
-        """
+        """Backward-compatible direct submission to an independent authority layer."""
         if decision.status != STATUS_CONSENSUS_APPROVED or not decision.unanimous_yes:
             raise GuardConsensusError("guard change lacks unanimous consensus")
 
