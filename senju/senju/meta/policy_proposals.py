@@ -1,14 +1,14 @@
 """META policy evolution primitives.
 
-META may author and test changes to Guard / Authority / Safety Policy in an
-isolated sandbox. Protected policy changes cannot be self-approved or applied
-to production by META itself.
+META may author and immediately test changes to Guard / Authority / Safety Policy
+inside an isolated sandbox. Protected policy changes cannot be self-approved or
+applied to production by META itself.
 """
 from __future__ import annotations
 
 import dataclasses
 import datetime as dt
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 PROTECTED_POLICY_TARGETS = frozenset({"guard", "authority", "safety_policy"})
 META_ACTOR = "meta"
@@ -21,6 +21,17 @@ class PolicyProposal:
     rationale: str
     author: str = META_ACTOR
     created_at: str = dataclasses.field(
+        default_factory=lambda: dt.datetime.now(dt.timezone.utc).isoformat()
+    )
+
+
+@dataclasses.dataclass(frozen=True)
+class SandboxApplyResult:
+    proposal: PolicyProposal
+    policies: dict[str, dict[str, Any]]
+    applied: bool
+    validation_passed: bool
+    applied_at: str = dataclasses.field(
         default_factory=lambda: dt.datetime.now(dt.timezone.utc).isoformat()
     )
 
@@ -54,6 +65,28 @@ def apply_to_sandbox(
     sandbox = {name: dict(policy) for name, policy in current_policies.items()}
     sandbox[proposal.target] = dict(proposal.proposed_policy)
     return sandbox
+
+
+def immediate_apply_to_sandbox(
+    proposal: PolicyProposal,
+    current_policies: Mapping[str, Mapping[str, Any]],
+    *,
+    validator: Callable[[Mapping[str, Mapping[str, Any]]], bool] | None = None,
+) -> SandboxApplyResult:
+    """Immediately apply a META-authored protected-policy proposal in isolation.
+
+    No approval step is required for sandbox execution. If a validator is supplied,
+    the resulting policy set is evaluated immediately and the outcome is returned
+    with the applied sandbox snapshot.
+    """
+    sandbox = apply_to_sandbox(proposal, current_policies)
+    validation_passed = True if validator is None else bool(validator(sandbox))
+    return SandboxApplyResult(
+        proposal=proposal,
+        policies=sandbox,
+        applied=True,
+        validation_passed=validation_passed,
+    )
 
 
 def authorize_production_apply(
