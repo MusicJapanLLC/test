@@ -1,0 +1,40 @@
+{
+  "id": "sp-bootstrap-ai-security-loop-v1",
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "target": "audit_policy",
+  "operations": [
+    {
+      "type": "enable_audit",
+      "parameters": {
+        "channel": "security-proposal-loop",
+        "evidence_retention_days": 30
+      }
+    },
+    {
+      "type": "increase_coverage",
+      "parameters": {
+        "events": [
+          "security_proposal",
+          "ai_council_vote",
+          "self_approval",
+          "production_apply"
+        ]
+      }
+    }
+  ],
+  "council_votes": {
+    "META": {
+      "approve": true,
+      "reason": "bootstrap monotonic security loop"
+    },
+    "X": {
+      "approve": true,
+      "reason": "production audit coverage increase"
+    },
+    "Senju": {
+      "approve": true,
+      "reason": "closed-loop evidence preservation"
+    }
+  }
+}
