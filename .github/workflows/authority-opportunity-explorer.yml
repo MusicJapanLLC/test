@@ -10,11 +10,16 @@ on:
       - 'automation/codegen/engine/authority_opportunity_explorer.py'
       - 'automation/codegen/engine/authority_improvement_bus.py'
       - 'automation/codegen/engine/improvement_evidence_import.py'
+      - 'automation/codegen/engine/authority_candidate_council.py'
+      - 'automation/codegen/engine/authority_candidate_improvement_bridge.py'
       - 'automation/codegen/run_authority_opportunity_explorer.py'
       - 'automation/codegen/run_authority_improvement_bus.py'
+      - 'automation/codegen/run_authority_candidate_council.py'
       - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
       - 'automation/codegen/tests/test_authority_improvement_bus.py'
       - 'automation/codegen/tests/test_improvement_evidence_import.py'
+      - 'automation/codegen/tests/test_authority_candidate_council.py'
+      - 'automation/codegen/tests/test_authority_candidate_improvement_bridge.py'
       - 'senju/senju/meta/trust_derived_autonomy.py'
       - 'senju/tests/test_trust_derived_improvement_capabilities.py'
       - '.github/workflows/authority-opportunity-explorer.yml'
@@ -24,11 +29,16 @@ on:
       - 'automation/codegen/engine/authority_opportunity_explorer.py'
       - 'automation/codegen/engine/authority_improvement_bus.py'
       - 'automation/codegen/engine/improvement_evidence_import.py'
+      - 'automation/codegen/engine/authority_candidate_council.py'
+      - 'automation/codegen/engine/authority_candidate_improvement_bridge.py'
       - 'automation/codegen/run_authority_opportunity_explorer.py'
       - 'automation/codegen/run_authority_improvement_bus.py'
+      - 'automation/codegen/run_authority_candidate_council.py'
       - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
       - 'automation/codegen/tests/test_authority_improvement_bus.py'
       - 'automation/codegen/tests/test_improvement_evidence_import.py'
+      - 'automation/codegen/tests/test_authority_candidate_council.py'
+      - 'automation/codegen/tests/test_authority_candidate_improvement_bridge.py'
       - 'senju/senju/meta/trust_derived_autonomy.py'
       - 'senju/tests/test_trust_derived_improvement_capabilities.py'
       - '.github/workflows/authority-opportunity-explorer.yml'
@@ -64,7 +74,7 @@ jobs:
             authority-opportunity-${{ github.ref_name }}-
             authority-opportunity-
 
-      - name: Verify explorer, improvement, import, and trust capability invariants
+      - name: Verify explorer, candidate council, improvement, import, and trust invariants
         env:
           PYTHONPATH: automation/codegen:senju
         run: |
@@ -73,6 +83,8 @@ jobs:
             automation/codegen/tests/test_authority_opportunity_explorer.py \
             automation/codegen/tests/test_authority_improvement_bus.py \
             automation/codegen/tests/test_improvement_evidence_import.py \
+            automation/codegen/tests/test_authority_candidate_council.py \
+            automation/codegen/tests/test_authority_candidate_improvement_bridge.py \
             senju/tests/test_trust_derived_improvement_capabilities.py
 
       - name: Import latest sanitized The World evidence
@@ -137,6 +149,21 @@ jobs:
           test "$(jq -r '.global_rules.hard_denial_requires_new_independent_evidence_for_reconsideration' .authority-opportunity-runtime/authority_opportunity_run.json)" = "true"
           test "$(jq -r '.global_rules.alternate_identity_bypass' .authority-opportunity-runtime/authority_opportunity_run.json)" = "false"
 
+      - name: Build multi-agent root candidate and HARD_DENY reconsideration dossiers
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_authority_candidate_council.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --json-out .authority-opportunity-runtime/authority_candidate_council_run.json
+          test "$(jq -r '.new_root_self_mint' .authority-opportunity-runtime/authority_candidate_council_run.json)" = "false"
+          test "$(jq -r '.hard_deny_identity_bypass' .authority-opportunity-runtime/authority_candidate_council_run.json)" = "false"
+          test "$(jq -r '.explicit_revocation_reactivation' .authority-opportunity-runtime/authority_candidate_council_run.json)" = "false"
+          test -s .authority-opportunity-runtime/authority_reconsideration_queue.json
+          echo "root_review_ready=$(jq -r '.review_ready_count' .authority-opportunity-runtime/authority_candidate_council_run.json)"
+          echo "hard_deny_reconsideration_ready=$(jq -r '.hard_deny_reconsideration_ready_count' .authority-opportunity-runtime/authority_candidate_council_run.json)"
+
       - name: Fuse PR-army evidence into shared continuous-improvement work
         env:
           PYTHONPATH: automation/codegen
@@ -147,9 +174,23 @@ jobs:
           test "$(jq -r '.continuous_improvement' .authority-opportunity-runtime/authority_improvement_run.json)" = "true"
           test "$(jq -r '.new_unrelated_root_self_mint' .authority-opportunity-runtime/authority_improvement_run.json)" = "false"
           test "$(jq -r '.hard_denial_identity_bypass' .authority-opportunity-runtime/authority_improvement_run.json)" = "false"
+
+      - name: Connect candidate council to META X SENJU CHILD and PR-Army improvement tasks
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python - <<'PY'
+          from engine.authority_candidate_improvement_bridge import bridge_candidate_council_to_improvement_bus
+
+          result = bridge_candidate_council_to_improvement_bus('.authority-opportunity-runtime')
+          print(result)
+          assert result['continuous_improvement'] is True
+          assert result['new_unrelated_root_self_mint'] is False
+          assert result['hard_deny_identity_bypass'] is False
+          assert 'PR-ARMY' in result['shared_with']
+          PY
           test -s .authority-opportunity-runtime/authority_improvement_tasks.json
           echo "improvement_tasks=$(jq -r '.task_count' .authority-opportunity-runtime/authority_improvement_tasks.json)"
-          echo "high_priority=$(jq -r '.high_priority_task_count' .authority-opportunity-runtime/authority_improvement_run.json)"
 
       - name: Save opportunity and improvement memory
         if: always()
