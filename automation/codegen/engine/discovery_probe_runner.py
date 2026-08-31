@@ -1,6 +1,6 @@
 """Execute real read-only probes for shared discovery targets already authorized.
 
-The runner consumes discovery_action_queue.json.  Only scan/probe capabilities are
+The runner consumes discovery_action_queue.json. Only scan/probe capabilities are
 executed automatically here; write, mutation, and credentialed actions remain separate
 explicit action profiles and are never invented from discovery.
 """
@@ -56,10 +56,6 @@ def run_discovery_probe_cycle(
         capabilities = {str(item).strip().lower() for item in row.get("capabilities", [])}
         if not capabilities.intersection({"scan", "probe"}):
             continue
-        if str(row.get("credential_scope", "none")) != "none":
-            # Probe execution never carries credentials even if another explicit action
-            # profile has credentialed capabilities for this exact host.
-            pass
         host = str(row.get("target", "")).strip().lower()
         url = str(row.get("url", "")).strip()
         if not host or not url:
@@ -118,7 +114,9 @@ def run_discovery_probe_cycle(
         "receipts": receipts,
     }
     state.mkdir(parents=True, exist_ok=True)
-    (state / "discovery_probe_receipts.json").write_text(
+    # Name intentionally avoids discovery/crawler/log tokens so the shared discovery
+    # source scanner cannot ingest its own execution receipts on the next cycle.
+    (state / "shared_probe_receipts.json").write_text(
         json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     return payload
