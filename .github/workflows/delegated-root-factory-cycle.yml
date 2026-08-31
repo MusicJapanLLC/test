@@ -136,3 +136,17 @@ jobs:
           path: ${{ runner.temp }}/delegated-root-runtime/
           if-no-files-found: warn
           retention-days: 30
+
+      - name: Production root summary
+        if: github.event_name != 'pull_request' && always()
+        run: |
+          echo "## META / X / SENJU Delegated Root" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$ROOT_STATE/delegated-root.json" ]; then
+            echo "- Root profile: $(jq -r '.root_profile_id' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Generation: $(jq -r '.root_generation' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Council unanimous: $(jq -r '.council_unanimous' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Can delegate: $(jq -r '.root_can_delegate' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Usable as parent: $(jq -r '.usable_as_parent' "$ROOT_STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Root result: missing" >> "$GITHUB_STEP_SUMMARY"
+          fi
