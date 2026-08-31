@@ -50,14 +50,18 @@ def _repo(tmp_path: Path) -> tuple[Path, Path]:
         "negotiation_intensity": 60,
     })
     _write(config / "owner-frontier-council.json", {
-        "schema": "senju-owner-frontier-council/v2",
+        "schema": "senju-owner-frontier-council/v3",
+        "operating_mode": "senju_research_governance",
+        "managed_by": "SENJU",
+        "production_activation_enabled": False,
+        "repository_state_writer_enabled": False,
         "council_members": list(FRONTIER_MEMBERS),
         "audit_members": ["PR-ARMY"],
         "quorum": 3,
         "min_confidence": 75,
-        "auto_activate_proof_types": ["existing_standing_authorization", "owner_verified_domain", "owner_exact_link"],
-        "new_host_methods": ["GET", "HEAD", "OPTIONS"],
-        "max_new_hosts_per_cycle": 8,
+        "recognized_owner_evidence_types": ["existing_standing_authorization", "owner_verified_domain", "owner_exact_link"],
+        "research_candidate_methods": ["GET", "HEAD", "OPTIONS"],
+        "max_research_candidates_per_cycle": 64,
         "credential_scope": "none",
         "allow_http": False,
         "allow_delete": False,
@@ -66,7 +70,18 @@ def _repo(tmp_path: Path) -> tuple[Path, Path]:
     return repo, state
 
 
-def _verified(repo: Path, state: Path, host: str = "owned-new.example") -> None:
+def _signal(state: Path, host: str, **extra: object) -> None:
+    _write(state / "owner_scope_negotiation_signals.json", {
+        "signals": [{
+            "host": host,
+            "requested_methods": ["GET", "POST"],
+            "reason": "frontier research",
+            **extra,
+        }]
+    })
+
+
+def _verified(state: Path, host: str) -> None:
     _write(state / "owner_scope_expansion_evidence.json", {
         "evidence": [{
             "host": host,
@@ -76,88 +91,81 @@ def _verified(repo: Path, state: Path, host: str = "owned-new.example") -> None:
             "revoked": False,
         }]
     })
-    _write(state / "owner_scope_negotiation_signals.json", {
-        "signals": [{"host": host, "requested_methods": ["GET", "POST"], "reason": "new owner integration"}]
-    })
 
 
-def test_unverified_discovery_is_kept_as_ownership_request_not_authority(tmp_path: Path) -> None:
+def test_unverified_discovery_enters_senju_research_without_authority(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _write(state / "owner_scope_negotiation_signals.json", {
-        "signals": [{"host": "unknown.example", "requested_methods": ["GET"], "reason": "frontier discovery"}]
-    })
+    _signal(state, "unknown.example")
     result = run_frontier_cycle(repo, state, now=1000)
+    assert result["production"] is False
+    assert result["production_activation_enabled"] is False
     assert result["activated_count"] == 0
-    assert result["unknown_host_without_verified_evidence_auto_activated"] is False
-    assert result["decisions"][0]["status"] == "ownership_verification_required"
-    assert "unknown.example" not in result["current_effective_ceiling"]["exact_hosts"]
+    assert result["valid_approval_is_binding"] is False
+    assert result["decisions"][0]["research_admitted"] is True
+    assert result["decisions"][0]["production_activation_eligible"] is False
+    assert result["decisions"][0]["status"].startswith("senju_research_candidate")
 
 
-def test_verified_owner_domain_plus_meta_x_senju_three_of_three_is_binding(tmp_path: Path) -> None:
+def test_verified_three_of_three_is_recommendation_only(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(repo, state)
+    _signal(state, "owned-new.example")
+    _verified(state, "owned-new.example")
     result = run_frontier_cycle(repo, state, now=1000)
     assert result["approval_quorum"] == 3
-    assert result["valid_approval_is_binding"] is True
-    assert result["activated_count"] == 1
+    assert result["activated_count"] == 0
     decision = result["decisions"][0]
     assert decision["yes_votes"] == 3
-    assert decision["status"] == "verified_owner_evidence_plus_ai_council_approved"
-    assert decision["applied"] is True
-    assert result["current_effective_ceiling"]["per_host_methods"]["owned-new.example"] == ["GET", "HEAD", "OPTIONS"]
-
-
-def test_pr_army_is_advisory_and_cannot_veto_valid_three_of_three(tmp_path: Path) -> None:
-    repo, state = _repo(tmp_path)
-    _verified(repo, state)
-    envelope = OwnerExpansionEnvelope.from_mapping(json.loads((repo / "senju/config/owner-expansion-envelope.json").read_text()))
-    proposal = build_scope_proposals(repo, state, envelope)[0]
-    policy = FrontierPolicy.from_mapping(json.loads((repo / "senju/config/owner-frontier-council.json").read_text()))
-    ballots = list(autonomous_ballots(proposal, policy))
-    ballots[-1] = FrontierBallot(
-        actor="PR-ARMY",
-        approve=False,
-        confidence=0,
-        check="audit",
-        reason="advisory concern",
-        binding=False,
-    )
-    decision = evaluate_candidate(proposal, ballots, policy)
-    assert decision["yes_votes"] == 3
-    assert decision["applied"] is True
-
-
-def test_missing_one_binding_ai_vote_blocks_activation(tmp_path: Path) -> None:
-    repo, state = _repo(tmp_path)
-    _verified(repo, state)
-    envelope = OwnerExpansionEnvelope.from_mapping(json.loads((repo / "senju/config/owner-expansion-envelope.json").read_text()))
-    proposal = build_scope_proposals(repo, state, envelope)[0]
-    policy = FrontierPolicy.from_mapping(json.loads((repo / "senju/config/owner-frontier-council.json").read_text()))
-    ballots = list(autonomous_ballots(proposal, policy))
-    ballots[2] = FrontierBallot(actor="SENJU", approve=False, confidence=90, check="method", reason="hold")
-    decision = evaluate_candidate(proposal, ballots, policy)
-    assert decision["yes_votes"] == 2
+    assert decision["status"] == "senju_research_recommendation_ready"
     assert decision["applied"] is False
-    assert decision["status"] == "ai_council_consensus_pending"
+    assert decision["valid_approval_is_binding"] is False
+    assert decision["authority_effect"] == "none"
 
 
-def test_hard_deny_is_terminal_even_when_evidence_is_verified(tmp_path: Path) -> None:
+def test_pr_army_is_advisory_and_no_ballot_is_binding(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(repo, state)
-    _write(state / "owner_scope_negotiation_signals.json", {
-        "signals": [{"host": "owned-new.example", "requested_methods": ["GET"], "hard_deny": True}]
-    })
+    _signal(state, "owned-new.example")
+    _verified(state, "owned-new.example")
+    envelope = OwnerExpansionEnvelope.from_mapping(json.loads((repo / "senju/config/owner-expansion-envelope.json").read_text()))
+    proposal = build_scope_proposals(repo, state, envelope)[0]
+    policy = FrontierPolicy.from_mapping(json.loads((repo / "senju/config/owner-frontier-council.json").read_text()))
+    ballots = list(autonomous_ballots(proposal, policy))
+    assert all(ballot.binding is False for ballot in ballots)
+    ballots[-1] = FrontierBallot(actor="PR-ARMY", approve=False, confidence=0, check="audit", reason="concern")
+    decision = evaluate_candidate(proposal, ballots, policy)
+    assert decision["applied"] is False
+    assert decision["production_activation_eligible"] is False
+
+
+def test_hard_deny_is_terminal_for_external_action(tmp_path: Path) -> None:
+    repo, state = _repo(tmp_path)
+    _signal(state, "blocked.example", hard_deny=True)
     result = run_frontier_cycle(repo, state, now=1000)
     assert result["activated_count"] == 0
     assert result["decisions"][0]["status"] == "terminal_stop"
+    assert result["decisions"][0]["research_admitted"] is False
 
 
-def test_negotiator_feed_shares_binding_approval_contract(tmp_path: Path) -> None:
+def test_frontier_does_not_write_effective_owner_ceiling(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(repo, state, "linked-owned.example")
+    sentinel = {"sentinel": "must-not-change"}
+    _write(state / "owner_contact_ceiling_effective.json", sentinel)
+    _signal(state, "owned-new.example")
+    _verified(state, "owned-new.example")
     result = run_frontier_cycle(repo, state, now=1000)
-    assert result["activated_count"] == 1
+    assert result["writes_effective_owner_ceiling"] is False
+    assert json.loads((state / "owner_contact_ceiling_effective.json").read_text()) == sentinel
+
+
+def test_negotiator_feed_routes_to_senju_research_not_binding_activation(tmp_path: Path) -> None:
+    repo, state = _repo(tmp_path)
+    _signal(state, "linked-owned.example")
+    _verified(state, "linked-owned.example")
+    run_frontier_cycle(repo, state, now=1000)
     feed = json.loads((state / "owner_frontier_negotiator_feed.json").read_text())
-    assert feed["approval_contract"]["binding_ai_approvers"] == ["META", "X", "SENJU"]
-    assert "PR-ARMY" in feed["shared_with"]
-    assert feed["decisions"][0]["binding_approval"] is True
+    assert feed["managed_by"] == "SENJU"
+    assert feed["approval_contract"]["binding_approval"] is False
+    assert feed["approval_contract"]["production_activation"] is False
+    assert feed["decisions"][0]["binding_approval"] is False
+    research = json.loads((state / "owner_frontier_senju_research_queue.json").read_text())
+    assert research["managed_by"] == "SENJU"
+    assert research["production_activation"] is False
