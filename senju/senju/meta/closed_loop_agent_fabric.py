@@ -5,6 +5,12 @@ This module turns brokered descendant requests into a repeatable control loop:
 observe -> publish shared state -> request descendants -> materialize available work
 -> persist deferred work -> collect child reports -> repeat.
 
+Logical recursion semantics:
+- descendant request counts have no fixed numeric ceiling;
+- recursive lineage depth has no fixed generation ceiling;
+- huge requests remain compressed as deferred integer continuation state;
+- every cycle resumes pending work from its stored continuation index.
+
 Authority semantics:
 - descendants inherit the parent's effective scope by default;
 - callers may request a narrower scope but never a broader one;
@@ -212,6 +218,8 @@ def queue_descendant_request(
             "desired_count": desired_count,
             "effective_scopes": list(inherited),
             "inheritance_mode": "equal_by_default_same_or_narrower",
+            "fixed_request_count_ceiling": None,
+            "fixed_generation_ceiling": None,
         },
     )
     return request
@@ -271,6 +279,8 @@ def run_closed_loop_cycle(
                 "effective_scopes": list(request.requested_scopes),
                 "inheritance_mode": "equal_by_default_same_or_narrower",
                 "raw_credential_inheritance": False,
+                "fixed_request_count_ceiling": None,
+                "fixed_generation_ceiling": None,
             },
         )
 
@@ -290,6 +300,8 @@ def run_closed_loop_cycle(
         "next_action": "resume_pending_spawns" if remaining else "observe_share_and_repeat",
         "scope_inheritance": "equal_by_default_same_or_narrower",
         "data_sharing": "shared_append_only_non_secret_state",
+        "fixed_recursive_request_count_ceiling": None,
+        "fixed_recursive_generation_ceiling": None,
         "raw_credential_inheritance": False,
     }
     publish_shared_state(
