@@ -1,0 +1,307 @@
+#!/usr/bin/env python3
+"""Build Senju's transparent cross-agent agency bus.
+
+The bus compresses external public-read evidence, PR #273/#275 adversarial
+counterexamples, recent PR outcomes, and the current Senju evolution state into one
+stable machine-readable packet. It is designed for GitHub issue/artifact sharing
+between Senju, Jules, FOUNDRY, OpenHands, and the PR swarm.
+
+It does not create third-party authority. External exploration remains GET/HEAD and
+write effects are limited by the executor to the same repository or independently
+verified owned targets.
+"""
+from __future__ import annotations
+
+import argparse
+import datetime as dt
+import hashlib
+import json
+import urllib.parse
+from pathlib import Path
+from typing import Any, Iterable
+
+
+INTEREST_KEYS = (
+    "surface",
+    "target",
+    "path",
+    "probe",
+    "name",
+    "guard",
+    "effect",
+    "outcome",
+    "reason",
+    "error",
+    "message",
+)
+
+
+def _load_json(path: str | Path, default: Any) -> Any:
+    p = Path(path)
+    if not p.exists():
+        return default
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return default
+
+
+def _iter_documents(root: str | Path | None) -> Iterable[tuple[str, Any]]:
+    if not root:
+        return
+    base = Path(root)
+    if not base.exists():
+        return
+    for path in sorted(base.rglob("*")):
+        if not path.is_file():
+            continue
+        if path.suffix.lower() == ".json":
+            try:
+                yield path.name, json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+        elif path.suffix.lower() == ".jsonl":
+            try:
+                for index, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                    if not line.strip():
+                        continue
+                    try:
+                        yield f"{path.name}:{index}", json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+            except OSError:
+                continue
+
+
+def _walk(node: Any, source: str, depth: int = 0) -> Iterable[tuple[str, dict[str, Any]]]:
+    if depth > 8:
+        return
+    if isinstance(node, dict):
+        yield source, node
+        for value in node.values():
+            yield from _walk(value, source, depth + 1)
+    elif isinstance(node, list):
+        for value in node[:500]:
+            yield from _walk(value, source, depth + 1)
+
+
+def _interesting(row: dict[str, Any]) -> tuple[bool, str]:
+    if row.get("regression_tripwire") is True:
+        return True, "regression_tripwire"
+    for key in ("regression_count", "failed_count", "failures"):
+        value = row.get(key)
+        if isinstance(value, (int, float)) and value > 0:
+            return True, "regression_or_failure"
+    if row.get("passed") is False:
+        return True, "failed_probe"
+    if row.get("success") is False and any(k in row for k in ("probe", "surface", "guard", "target")):
+        return True, "failed_probe"
+    return False, ""
+
+
+def _compact_counterexample(source: str, row: dict[str, Any], kind: str) -> dict[str, Any]:
+    compact: dict[str, Any] = {"kind": kind, "source": source}
+    for key in INTEREST_KEYS:
+        value = row.get(key)
+        if value is None:
+            continue
+        if isinstance(value, (dict, list)):
+            encoded = json.dumps(value, ensure_ascii=False, sort_keys=True)
+            compact[key] = encoded[:500]
+        else:
+            compact[key] = str(value)[:500]
+    if len(compact) == 2:
+        compact["summary"] = json.dumps(row, ensure_ascii=False, sort_keys=True)[:800]
+    return compact
+
+
+def collect_counterexamples(*roots: str | Path | None, limit: int = 80) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for root in roots:
+        for source, doc in _iter_documents(root):
+            for nested_source, row in _walk(doc, source):
+                interesting, kind = _interesting(row)
+                if not interesting:
+                    continue
+                compact = _compact_counterexample(nested_source, row, kind)
+                digest = hashlib.sha256(
+                    json.dumps(compact, ensure_ascii=False, sort_keys=True).encode("utf-8")
+                ).hexdigest()[:20]
+                if digest in seen:
+                    continue
+                seen.add(digest)
+                compact["id"] = digest
+                out.append(compact)
+                if len(out) >= max(1, int(limit)):
+                    return out
+    return out
+
+
+def _host(url: str) -> str:
+    try:
+        return (urllib.parse.urlsplit(url).hostname or "").lower()
+    except Exception:
+        return ""
+
+
+def _summarize_prs(rows: Any) -> dict[str, Any]:
+    if not isinstance(rows, list):
+        rows = []
+    normalized: list[dict[str, Any]] = []
+    for raw in rows[:100]:
+        if not isinstance(raw, dict):
+            continue
+        title = str(raw.get("title") or "")
+        branch = str(raw.get("headRefName") or raw.get("head") or "")
+        is_senju = (
+            "senju" in title.lower()
+            or branch.startswith("senju/")
+            or branch.startswith("feat/senju-")
+            or branch.startswith("fix/senju-")
+        )
+        normalized.append(
+            {
+                "number": raw.get("number"),
+                "title": title[:180],
+                "state": str(raw.get("state") or "UNKNOWN").upper(),
+                "head": branch[:180],
+                "url": str(raw.get("url") or "")[:300],
+                "senju_related": is_senju,
+            }
+        )
+    senju = [row for row in normalized if row["senju_related"]]
+    return {
+        "total": len(normalized),
+        "senju_related": len(senju),
+        "open_senju": sum(1 for row in senju if row["state"] == "OPEN"),
+        "recent": normalized[:40],
+    }
+
+
+def _focus(frontier: dict[str, Any], pr_summary: dict[str, Any], counterexamples: list[dict[str, Any]]) -> str:
+    if any(row.get("kind") == "regression_tripwire" for row in counterexamples):
+        return "guard_regression_repair"
+    if counterexamples:
+        return "counterexample_expansion"
+    failed = int(frontier.get("failed_steps") or 0)
+    success = int(frontier.get("successful_steps") or 0)
+    if failed >= max(2, success // 3):
+        return "external_research_reliability"
+    if int(pr_summary.get("open_senju") or 0) >= 6:
+        return "pr_swarm_convergence"
+    return "autonomous_capability_growth"
+
+
+def build_bus(
+    frontier: dict[str, Any],
+    evolution: dict[str, Any],
+    recent_prs: Any,
+    *,
+    pr273_root: str | Path | None = None,
+    pr275_root: str | Path | None = None,
+) -> dict[str, Any]:
+    visited = [str(x) for x in frontier.get("visited_urls", []) if str(x)]
+    contacted_hosts = sorted({h for h in (_host(url) for url in visited) if h})
+    counterexamples = collect_counterexamples(pr273_root, pr275_root)
+    pr_summary = _summarize_prs(recent_prs)
+
+    covenant = evolution.get("covenant_intent") if isinstance(evolution.get("covenant_intent"), dict) else {}
+    shadow = evolution.get("shadow_champion") if isinstance(evolution.get("shadow_champion"), dict) else {}
+    packet: dict[str, Any] = {
+        "schema": "senju-agency-bus/v1",
+        "generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+        "external_frontier": {
+            "steps_executed": int(frontier.get("steps_executed") or 0),
+            "successful_steps": int(frontier.get("successful_steps") or 0),
+            "failed_steps": int(frontier.get("failed_steps") or 0),
+            "discovered_links_enqueued": int(frontier.get("discovered_links_enqueued") or 0),
+            "contacted_hosts": contacted_hosts[:64],
+            "read_scope_hosts": list(frontier.get("read_scope_hosts") or [])[:96],
+        },
+        "adversary_counterexamples": counterexamples,
+        "pr_swarm": pr_summary,
+        "evolution": {
+            "safe": bool(evolution.get("safe", True)),
+            "confidence": evolution.get("confidence"),
+            "changes": list(evolution.get("changes") or [])[-20:],
+            "covenant_mode": covenant.get("intent_mode"),
+            "shadow_selected": shadow.get("selected"),
+            "shadow_reason": shadow.get("reason"),
+        },
+        "next_focus": "",
+        "execution_policy": {
+            "public_external_research": "GET_HEAD_ONLY",
+            "external_write": "SAME_REPO_OR_OWNERSHIP_VERIFIED_TARGETS_ONLY",
+            "guard_research": "COUNTEREXAMPLE_AND_REGRESSION_TESTING_NOT_LIVE_BYPASS",
+            "pr_information_sharing": "TRANSPARENT_SHARED_BUS",
+        },
+    }
+    packet["next_focus"] = _focus(frontier, pr_summary, counterexamples)
+
+    stable = dict(packet)
+    stable.pop("generated_at_utc", None)
+    packet["digest"] = hashlib.sha256(
+        json.dumps(stable, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    ).hexdigest()[:24]
+    return packet
+
+
+def render_markdown(packet: dict[str, Any]) -> str:
+    frontier = packet["external_frontier"]
+    swarm = packet["pr_swarm"]
+    examples = packet["adversary_counterexamples"]
+    lines = [
+        "## SENJU AGENCY BUS",
+        "",
+        f"agency-digest: `{packet['digest']}`",
+        f"next-focus: `{packet['next_focus']}`",
+        "",
+        f"- frontier: {frontier['successful_steps']}/{frontier['steps_executed']} successful, {len(frontier['contacted_hosts'])} contacted hosts, {frontier['discovered_links_enqueued']} links enqueued",
+        f"- PR swarm: {swarm['senju_related']} Senju-related / {swarm['open_senju']} open",
+        f"- adversary counterexamples: {len(examples)}",
+        f"- evolution safe: {packet['evolution']['safe']} / covenant: {packet['evolution']['covenant_mode']}",
+        "",
+        "### Counterexample feed",
+    ]
+    if examples:
+        for row in examples[:12]:
+            label = row.get("surface") or row.get("target") or row.get("path") or row.get("probe") or row.get("source")
+            reason = row.get("reason") or row.get("error") or row.get("message") or row.get("outcome") or "observed"
+            lines.append(f"- `{row['kind']}` {str(label)[:160]} — {str(reason)[:240]}")
+    else:
+        lines.append("- no new adversarial counterexample in the restored evidence")
+    lines += [
+        "",
+        "### Contract",
+        "Public web discovery is read-only. Repository/owned effects and AI delegation may act autonomously, but live guard bypass and unauthorized third-party writes are not execution surfaces.",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--frontier", required=True)
+    ap.add_argument("--evolution", required=True)
+    ap.add_argument("--prs", required=True)
+    ap.add_argument("--pr273")
+    ap.add_argument("--pr275")
+    ap.add_argument("--out", required=True)
+    ap.add_argument("--markdown", required=True)
+    args = ap.parse_args()
+
+    packet = build_bus(
+        _load_json(args.frontier, {}),
+        _load_json(args.evolution, {}),
+        _load_json(args.prs, []),
+        pr273_root=args.pr273,
+        pr275_root=args.pr275,
+    )
+    Path(args.out).write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    Path(args.markdown).write_text(render_markdown(packet), encoding="utf-8")
+    print(json.dumps({"digest": packet["digest"], "focus": packet["next_focus"]}, ensure_ascii=False))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
