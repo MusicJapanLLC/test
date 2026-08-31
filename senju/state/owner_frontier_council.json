@@ -15,7 +15,7 @@
       "HEAD",
       "OPTIONS"
     ],
-    "ceiling_id": "owner-standing-derived:frontier-four-party",
+    "ceiling_id": "owner-standing-derived:frontier-four-party:frontier-four-party",
     "exact_hosts": [
       "kabeya-authorized-test-range.onrender.com"
     ],
@@ -34,7 +34,7 @@
   },
   "decisions": [],
   "four_party_quorum": 4,
-  "generated_at": 1788190610,
+  "generated_at": 1788192615,
   "hard_limits": [
     "discovery_alone_never_activates_host",
     "verified_owner_evidence_required",

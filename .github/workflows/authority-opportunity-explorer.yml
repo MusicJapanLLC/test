@@ -129,7 +129,7 @@ jobs:
               state,
               repo_root='.',
               max_rounds=2,
-              max_targets_per_round=24,
+              max_targets_per_round=40,
           )
           leases = issue_discovery_capability_leases(state)
           actions = run_discovery_external_actions(state, repo_root='.', max_actions=4)
