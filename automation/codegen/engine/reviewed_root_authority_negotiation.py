@@ -9,13 +9,19 @@ from __future__ import annotations
 
 import json
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 from typing import Any, Mapping
 
-from senju.negotiation_case_review_gate import run_negotiation_case_review_gate
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_SENJU_ROOT = _REPO_ROOT / "senju"
+if str(_SENJU_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SENJU_ROOT))
 
-from engine.root_authority_negotiation import (
+from senju.negotiation_case_review_gate import run_negotiation_case_review_gate  # noqa: E402
+
+from engine.root_authority_negotiation import (  # noqa: E402
     _merge_owner_scope_signals,
     run_root_authority_negotiation,
 )
