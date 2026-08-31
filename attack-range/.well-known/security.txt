@@ -1,0 +1,8 @@
+Policy: /scope.json
+Acknowledgments: /lab/index.html
+Preferred-Languages: ja, en
+Canonical: /.well-known/security.txt
+# AUTHORIZED TEST RANGE — THE WORLD / SENJU
+# Synthetic data only. Scope is this host only.
+# Allowed: crawl, enumerate, read source, modify query parameters, test client-side authorization, submit dummy form, normal-rate automated scanning.
+# Prohibited: DoS, resource exhaustion, credential reuse, third-party targets, cross-domain pivoting, social engineering.
