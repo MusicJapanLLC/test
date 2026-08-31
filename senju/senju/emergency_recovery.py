@@ -11,7 +11,14 @@ from dataclasses import dataclass
 from typing import Any, Mapping, MutableMapping
 
 from .emergency_stop_state import initialize_emergency_state, is_emergency_stopped
-from .recovery_mesh import RecoveryEvent, RecoveryHandler, RecoveryMesh, RecoveryPolicy, build_three_watchdog_mesh
+from .recovery_mesh import (
+    RecoveryAction,
+    RecoveryEvent,
+    RecoveryHandler,
+    RecoveryMesh,
+    RecoveryPolicy,
+    build_three_watchdog_mesh,
+)
 
 
 @dataclass
@@ -34,7 +41,7 @@ class EmergencyControlledRecovery:
 
 
 def build_emergency_controlled_three_watchdog_mesh(
-    handlers: Mapping[tuple[str, object], RecoveryHandler],
+    handlers: Mapping[tuple[str, RecoveryAction], RecoveryHandler],
     *,
     state: MutableMapping[str, Any] | None = None,
     ring: bool = True,
