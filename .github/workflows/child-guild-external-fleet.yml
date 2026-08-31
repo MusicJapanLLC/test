@@ -91,6 +91,30 @@ jobs:
             --report child-control-lab.md
           cat child-control-lab.md >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Embed transparent Control Lab summary into fleet handoff
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          fleet_path = Path('child-external-fleet.json')
+          lab_path = Path('child-control-lab.json')
+          fleet = json.loads(fleet_path.read_text(encoding='utf-8'))
+          lab = json.loads(lab_path.read_text(encoding='utf-8'))
+          summary = lab.get('summary') if isinstance(lab.get('summary'), dict) else {}
+          fleet['control_lab_summary'] = {
+              'trial_count': int(lab.get('trial_count', 0) or 0),
+              'variants_per_child': int(lab.get('variants_per_child', 0) or 0),
+              'top_high_score_strategies': list(summary.get('top_high_score_strategies') or [])[:6],
+              'top_safe_transitions': list(summary.get('top_safe_transitions') or [])[:8],
+              'research_hypothesis': str(summary.get('research_hypothesis', ''))[:320],
+              'transport': 'transparent-research-context',
+              'execution_authority': 'none',
+          }
+          fleet_path.write_text(json.dumps(fleet, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          PY
+
       - name: Validate fleet, control lab, and bridges
         run: |
           set -euo pipefail
