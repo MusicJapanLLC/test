@@ -2,7 +2,7 @@
 
 META reads X's status and injects findings into Senju.
 X reads META's command channel and receives attack hypotheses.
-Both sides write to shared channels — no human approval needed.
+Both sides also consume the shared explicitly-authorized security-test federation state.
 """
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[4]
 
 X_STATUS_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_status.json"
 X_ATTACK_LOG = ROOT / "automation" / "codegen" / "meta_state" / "attack_research.ndjson"
+AUTHORIZED_FEDERATION_FILE = ROOT / "automation" / "codegen" / "meta_state" / "authorized_test_federation.json"
 META_CMD_FILE = ROOT / "senju" / "state" / "meta_commands.json"
 META_TRACKER = ROOT / "senju" / "state" / "meta_hypothesis_tracker.json"
 BRIDGE_LOG = ROOT / "senju" / "state" / "meta_x_bridge.ndjson"
@@ -30,10 +31,7 @@ def _append_bridge(event: str, data: dict) -> None:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-# ── Read X status into META context ───────────────────────────────────────────
-
 def read_x_status() -> dict:
-    """Read X's published health status."""
     if not X_STATUS_FILE.exists():
         return {"system": "X", "available": False}
     try:
@@ -44,8 +42,20 @@ def read_x_status() -> dict:
         return {"system": "X", "available": False}
 
 
+def read_authorized_test_federation() -> dict:
+    """Read the shared META/X/Senju federation directive; fail closed if absent/invalid."""
+    if not AUTHORIZED_FEDERATION_FILE.exists():
+        return {"status": "unavailable", "seed_urls": [], "external_link_policy": "deny-unverified"}
+    try:
+        data = json.loads(AUTHORIZED_FEDERATION_FILE.read_text(encoding="utf-8"))
+    except Exception:
+        return {"status": "invalid", "seed_urls": [], "external_link_policy": "deny-unverified"}
+    if data.get("federation_id") != "the-world-security-test-federation-v1":
+        return {"status": "invalid-federation", "seed_urls": [], "external_link_policy": "deny-unverified"}
+    return data
+
+
 def read_x_attack_log(max_entries: int = 20) -> list[dict]:
-    """Read X's recent CVE defense research findings."""
     if not X_ATTACK_LOG.exists():
         return []
     lines = X_ATTACK_LOG.read_text(encoding="utf-8").strip().splitlines()
@@ -58,11 +68,8 @@ def read_x_attack_log(max_entries: int = 20) -> list[dict]:
     return entries
 
 
-# ── Push META hypotheses to X ─────────────────────────────────────────────────
-
 def push_hypothesis_to_x(hypothesis_id: str, statement: str, surfaces: list[str],
                          confidence: float) -> None:
-    """Write a META hypothesis to X's inbox so X can generate code to test it."""
     x_inbox = ROOT / "automation" / "codegen" / "meta_state" / "meta_inbox.ndjson"
     x_inbox.parent.mkdir(parents=True, exist_ok=True)
     entry = {
@@ -79,10 +86,7 @@ def push_hypothesis_to_x(hypothesis_id: str, statement: str, surfaces: list[str]
     _append_bridge("hypothesis_pushed_to_x", {"id": hypothesis_id, "confidence": confidence})
 
 
-# ── Ingest X findings into META ────────────────────────────────────────────────
-
 def ingest_x_attack_findings(graph) -> int:
-    """Read X's attack research and inject into META's KnowledgeGraph."""
     findings = read_x_attack_log(max_entries=50)
     injected = 0
     for f in findings:
@@ -99,11 +103,10 @@ def ingest_x_attack_findings(graph) -> int:
     return injected
 
 
-# ── Full bridge sync (called from meta_loop.py phase 0) ───────────────────────
-
 def sync(graph=None, hypotheses=None) -> dict:
-    """Full META↔X sync: read X status, ingest findings, push hypotheses."""
+    """Full META↔X sync including the explicit authorized-test federation directive."""
     x_status = read_x_status()
+    federation = read_authorized_test_federation()
     ingested = 0
     pushed = 0
 
@@ -126,6 +129,15 @@ def sync(graph=None, hypotheses=None) -> dict:
         "x_needs_help": x_status.get("needs_help", False),
         "findings_ingested": ingested,
         "hypotheses_pushed": pushed,
+        "authorized_test_federation": {
+            "status": federation.get("status", "active"),
+            "federation_id": federation.get("federation_id"),
+            "seed_urls": federation.get("seed_urls", []),
+            "directive": federation.get("directive"),
+            "external_link_policy": federation.get("external_link_policy"),
+            "rate_limit_rps": federation.get("rate_limit_rps", 5),
+        },
     }
+    _append_bridge("authorized_test_federation_sync", result["authorized_test_federation"])
     _append_bridge("sync", result)
     return result
