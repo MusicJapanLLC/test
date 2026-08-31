@@ -89,24 +89,28 @@ def test_boundary_proposal_rejects_non_boundary_target(tmp_path, monkeypatch):
 def test_cycle_report_stages_multiple_security_boundary_proposals(tmp_path, monkeypatch):
     policy_file = tmp_path / "policy.json"
     policy_file.write_text(json.dumps(_policy()), encoding="utf-8")
-    monkeypatch.setattr(proposals, "POLICY_FILE", policy_file)
-    monkeypatch.setattr(proposals, "PROPOSAL_DIR", tmp_path / "proposals")
+    proposal_dir = tmp_path / "proposals"
     monkeypatch.setattr(proposals, "AUDIT_FILE", tmp_path / "audit.ndjson")
 
-    staged = proposals.stage_from_cycle_report("META", {
-        "security_boundary_proposals": [
-            {
-                "target_path": "senju/config/credential-broker-policy.json",
-                "rationale": "reduce credential routing errors",
-                "proposed_patch": "credential policy candidate patch",
-            },
-            {
-                "target_path": ".github/workflows/security-guard.yml",
-                "rationale": "make audit evidence deterministic",
-                "proposed_patch": "workflow candidate patch",
-            },
-        ]
-    })
+    staged = proposals.stage_from_cycle_report(
+        "META",
+        {
+            "security_boundary_proposals": [
+                {
+                    "target_path": "senju/config/credential-broker-policy.json",
+                    "rationale": "reduce credential routing errors",
+                    "proposed_patch": "credential policy candidate patch",
+                },
+                {
+                    "target_path": ".github/workflows/security-guard.yml",
+                    "rationale": "make audit evidence deterministic",
+                    "proposed_patch": "workflow candidate patch",
+                },
+            ]
+        },
+        policy_file=policy_file,
+        proposal_dir=proposal_dir,
+    )
 
     assert len(staged) == 2
     assert all(item["status"] == "requires_independent_audit" for item in staged)
@@ -117,22 +121,19 @@ def test_x_adapter_uses_same_proposal_only_boundary(monkeypatch, tmp_path):
     x = _load_x_adapter()
     policy_file = tmp_path / "policy.json"
     policy_file.write_text(json.dumps(_policy()), encoding="utf-8")
-
-    monkeypatch.setattr(proposals, "POLICY_FILE", policy_file)
-    monkeypatch.setattr(proposals, "PROPOSAL_DIR", tmp_path / "proposals")
+    proposal_dir = tmp_path / "proposals"
     monkeypatch.setattr(proposals, "AUDIT_FILE", tmp_path / "audit.ndjson")
-    monkeypatch.setattr(x, "POLICY_FILE", policy_file)
-
-    # Adapter delegates to the shared stage_proposal function, so patch its globals.
-    x.stage_proposal.__globals__["POLICY_FILE"] = policy_file
-    x.stage_proposal.__globals__["PROPOSAL_DIR"] = tmp_path / "proposals"
     x.stage_proposal.__globals__["AUDIT_FILE"] = tmp_path / "audit.ndjson"
 
-    assert x.is_security_boundary_target("security/AUTHORIZED_TARGETS.md") is True
+    assert x.is_security_boundary_target(
+        "security/AUTHORIZED_TARGETS.md", policy_file=policy_file
+    ) is True
     result = x.stage_x_proposal(
         "security/AUTHORIZED_TARGETS.md",
         "authorized-target policy improvement",
         "target registry candidate patch",
+        policy_file=policy_file,
+        proposal_dir=proposal_dir,
     )
     assert result["system"] == "X"
     assert result["status"] == "requires_independent_audit"
