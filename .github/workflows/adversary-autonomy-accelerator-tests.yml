@@ -5,8 +5,10 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/adversary_autonomy_accelerator.py'
+      - 'senju/senju/adversary_external_action_loop.py'
       - 'senju/scripts/adversary_autonomy_accelerator.py'
       - 'senju/tests/test_adversary_autonomy_accelerator.py'
+      - 'senju/tests/test_adversary_external_action_loop.py'
       - 'senju/ADVERSARY_AUTONOMY_ACCELERATOR.md'
       - '.github/workflows/adversary-autonomy-accelerator-tests.yml'
       - 'senju/senju/adversary_egress_request.py'
@@ -17,8 +19,10 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/adversary_autonomy_accelerator.py'
+      - 'senju/senju/adversary_external_action_loop.py'
       - 'senju/scripts/adversary_autonomy_accelerator.py'
       - 'senju/tests/test_adversary_autonomy_accelerator.py'
+      - 'senju/tests/test_adversary_external_action_loop.py'
       - '.github/workflows/adversary-autonomy-accelerator-tests.yml'
 
 permissions:
@@ -41,7 +45,10 @@ jobs:
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
-          python -m pytest -q senju/tests/test_adversary_autonomy_accelerator.py
+          python -m pytest -q \
+            senju/tests/test_adversary_autonomy_accelerator.py \
+            senju/tests/test_adversary_external_action_loop.py
           python -m py_compile \
             senju/senju/adversary_autonomy_accelerator.py \
+            senju/senju/adversary_external_action_loop.py \
             senju/scripts/adversary_autonomy_accelerator.py
