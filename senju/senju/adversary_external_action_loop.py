@@ -1,13 +1,14 @@
 """Close adversary finding -> authority -> real external action under existing trust.
 
-Before opening a promotion request, the loop now materializes an immediate read-only
-transport lease when the target already belongs to the Owner Authority envelope. That
-means trusted roots, company domains, active explicit exact grants and owner-supplied
-exact links can move Finding -> real transport without the #481 voting delay.
+Before opening a promotion request, the loop materializes an immediate read-only
+transport lease when the target already belongs to the Owner Authority envelope. It
+also wires the autonomy accelerator into the normal path so unresolved findings are
+fanned out to all cooperating agents and authorized recovery can explore owner-defined
+same-host paths without changing authority lineage.
 
 Targets outside existing Owner authority still become durable promotion requests.
 Revoked authority, unrelated discoveries and invented credentials do not enter the
-fast path.
+execution fast path.
 """
 from __future__ import annotations
 
@@ -17,6 +18,12 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Callable, Mapping
 
+from .adversary_autonomy_accelerator import (
+    execute_same_authority_recovery,
+    materialize_collaboration_bus,
+    materialize_provisional_candidate,
+    prepare_credential_acquisition,
+)
 from .adversary_egress_request import AdversaryEgressRequestPort
 from .adversary_transport import (
     AdversaryNetworkTransport,
@@ -64,13 +71,12 @@ def run_adversary_external_action(
     credential_provider: CredentialProvider | None = None,
     client_factory: Callable[[ExternalContactPolicy], ExternalContactClient] | None = None,
 ) -> ExternalActionLoopResult:
-    """Execute immediately when the target is already inside live Owner authority."""
+    """Execute immediately inside live Owner authority, otherwise parallelize acquisition."""
     current = int(time.time()) if now is None else int(now)
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
 
-    # Remove the candidate/review delay for existing Owner authority. This creates only
-    # a short-lived read-only exact-host lease and returns None for unrelated hosts.
+    # Remove candidate/review delay inside the existing Owner envelope only.
     fastpath = ensure_owner_fastpath_lease(state, url, now=current)
     leases = load_transport_leases(state)
 
@@ -86,20 +92,29 @@ def run_adversary_external_action(
     )
 
     host = decision.host
+    credential = prepare_credential_acquisition(state, host=host, now=current)
     if decision.status == "ready_existing_authority" and decision.lease is not None:
         transport_kwargs: dict[str, Any] = {"credential_provider": credential_provider}
         if client_factory is not None:
             transport_kwargs["client_factory"] = client_factory
         transport = AdversaryNetworkTransport(state, **transport_kwargs)
         try:
-            contact = transport.execute_with_recovery(
-                url,
-                method=method,
-                # Use the whole active authority set so redirects between exact hosts
-                # sharing the same authorization_reference can be revalidated and used.
-                leases=leases,
-                now=current,
-            )
+            if method.upper().strip() == "GET":
+                # This extends recovery from GET->HEAD to owner-predeclared recovery_paths,
+                # while preserving host + authorization_reference + credential_scope.
+                contact = execute_same_authority_recovery(
+                    transport,
+                    state_dir=state,
+                    url=url,
+                    now=current,
+                )
+            else:
+                contact = transport.execute_with_recovery(
+                    url,
+                    method=method,
+                    leases=leases,
+                    now=current,
+                )
         except AdversaryTransportError as exc:
             result = ExternalActionLoopResult(
                 schema=LOOP_SCHEMA,
@@ -109,7 +124,7 @@ def run_adversary_external_action(
                 request_id=None,
                 lease_id=str(decision.lease.get("lease_id", "")) or None,
                 transport_status=None,
-                reason=str(exc),
+                reason=f"{exc}; credential={credential.get('status', 'unknown')}",
                 generated_at=current,
             )
         else:
@@ -126,11 +141,27 @@ def run_adversary_external_action(
                 request_id=None,
                 lease_id=contact.receipt.lease_id,
                 transport_status=contact.receipt.status,
-                reason=f"{execution_basis} executed through real network transport",
+                reason=(
+                    f"{execution_basis} executed through real network transport; "
+                    f"credential={credential.get('status', 'unknown')}"
+                ),
                 generated_at=current,
             )
     else:
         solicitations = route_pending_vote_requests(state, now=current)
+        candidate = materialize_provisional_candidate(
+            state,
+            url=url,
+            source_actor=source_actor,
+            reason=reason,
+            request_id=decision.request_id,
+            now=current,
+        )
+        collaboration = materialize_collaboration_bus(
+            state,
+            candidate=candidate,
+            now=current,
+        )
         result = ExternalActionLoopResult(
             schema=LOOP_SCHEMA,
             status="authority_requested",
@@ -141,7 +172,9 @@ def run_adversary_external_action(
             transport_status=None,
             reason=(
                 "outside existing Owner authority; "
-                f"{solicitations.get('pending_count', 0)} peer vote tasks materialized"
+                f"{solicitations.get('pending_count', 0)} authority vote tasks + "
+                f"{collaboration.get('task_count', 0)} evidence tasks materialized; "
+                f"credential={credential.get('status', 'unknown')}"
             ),
             generated_at=current,
         )

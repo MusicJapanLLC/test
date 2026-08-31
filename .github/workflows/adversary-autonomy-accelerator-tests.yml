@@ -1,0 +1,54 @@
+name: Adversary Autonomy Accelerator Tests
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/adversary_autonomy_accelerator.py'
+      - 'senju/senju/adversary_external_action_loop.py'
+      - 'senju/scripts/adversary_autonomy_accelerator.py'
+      - 'senju/tests/test_adversary_autonomy_accelerator.py'
+      - 'senju/tests/test_adversary_external_action_loop.py'
+      - 'senju/ADVERSARY_AUTONOMY_ACCELERATOR.md'
+      - '.github/workflows/adversary-autonomy-accelerator-tests.yml'
+      - 'senju/senju/adversary_egress_request.py'
+      - 'senju/senju/adversary_transport.py'
+      - 'senju/senju/owner_envelope_fastpath.py'
+      - 'senju/senju/meta/adversary_egress_vote_router.py'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/adversary_autonomy_accelerator.py'
+      - 'senju/senju/adversary_external_action_loop.py'
+      - 'senju/scripts/adversary_autonomy_accelerator.py'
+      - 'senju/tests/test_adversary_autonomy_accelerator.py'
+      - 'senju/tests/test_adversary_external_action_loop.py'
+      - '.github/workflows/adversary-autonomy-accelerator-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify autonomy accelerator
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          python -m pytest -q \
+            senju/tests/test_adversary_autonomy_accelerator.py \
+            senju/tests/test_adversary_external_action_loop.py
+          python -m py_compile \
+            senju/senju/adversary_autonomy_accelerator.py \
+            senju/senju/adversary_external_action_loop.py \
+            senju/scripts/adversary_autonomy_accelerator.py
