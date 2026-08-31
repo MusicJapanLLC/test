@@ -40,6 +40,7 @@ def test_production_loop_is_real_and_closed() -> None:
     assert plan["generation"] == 5
     assert {a["kind"] for a in plan["actions"]} == {"workflow_dispatch", "upsert_issue_state"}
     assert plan["state_document"]["previous_generation"] == 4
+    assert plan["state_document"]["propagated_manifest"]["authority_history_persisted"] is True
 
 
 def test_workflow_dispatch_is_always_owner_allowlisted() -> None:
@@ -74,6 +75,38 @@ def test_existing_explicit_authority_can_flow_through_loop_without_expansion() -
     )
     assert plan["authority"]["authorized"] is True
     assert plan["authority"]["new_external_authority_created"] is False
+    history = plan["state_document"]["authority_checkpoint"]
+    assert history["authorization"]["authorized"] is True
+    assert history["approval_result"]["authority_authorized"] is True
+
+
+def test_issue_state_preserves_requested_authority_categories_as_history() -> None:
+    previous = {
+        "generation": 2,
+        "authority_checkpoint": {
+            "authority_lease": {"lease_id": "lease-old"},
+            "historical_evidence": {
+                "safety_exception": {"id": "old-exception"},
+                "privileged_mode": True,
+                "guard_override": {"id": "old-override"},
+            },
+        },
+    }
+    plan = build_production_plan(
+        decision=_decision(authority_authorized=True),
+        registry=_registry(),
+        previous_state=previous,
+        namespace_id="owned-prod",
+    )
+    checkpoint = plan["state_document"]["authority_checkpoint"]
+
+    assert checkpoint["self_approved"] is True
+    assert checkpoint["authority_lease"] == {"lease_id": "lease-old"}
+    assert checkpoint["approval_result"]["authority_authorized"] is True
+    assert checkpoint["historical_evidence"]["safety_exception"] == {"id": "old-exception"}
+    assert checkpoint["historical_evidence"]["privileged_mode"] is True
+    assert checkpoint["historical_evidence"]["guard_override"] == {"id": "old-override"}
+    assert checkpoint["restore_semantics"]["guard_safety_privileged_history_is_evidence_only"] is True
 
 
 def test_unowned_namespace_is_rejected() -> None:

@@ -11,6 +11,7 @@ Loop:
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 from pathlib import Path
 from typing import Any
@@ -24,6 +25,7 @@ DEFAULT_DECISION = HERE / "meta_state" / "four_pillar_decision.json"
 DEFAULT_REQUEST = HERE / "meta_state" / "four_pillar_request.json"
 STATE_TITLE = "[THE-WORLD] Four-Pillar Production State"
 STATE_LABEL = "four-pillar-production-state"
+AUTHORITY_STATE_SCHEMA = "the-world-four-pillar-authority-history/v1"
 
 
 def _load(path: str | Path | None, default: Any) -> Any:
@@ -58,6 +60,53 @@ def _previous_generation(previous: dict[str, Any]) -> int:
         return max(0, int(previous.get("generation", 0)))
     except (TypeError, ValueError):
         return 0
+
+
+def _authority_history(
+    *,
+    previous: dict[str, Any],
+    namespace_id: str,
+    authority: dict[str, Any],
+    self_approval: dict[str, Any],
+) -> dict[str, Any]:
+    """Persist requested authority categories into the durable Issue state.
+
+    Guard/safety/privileged markers from older state are retained only as historical
+    evidence. They are not consulted by build_production_plan when deciding whether a
+    production action is currently authorized.
+    """
+    previous_history = previous.get("authority_checkpoint")
+    if not isinstance(previous_history, dict):
+        previous_history = {}
+    previous_evidence = previous_history.get("historical_evidence")
+    if not isinstance(previous_evidence, dict):
+        previous_evidence = {}
+
+    return {
+        "schema": AUTHORITY_STATE_SCHEMA,
+        "namespace_id": namespace_id,
+        "authorization": {
+            "authorized": bool(authority.get("authorized")),
+            "mode": authority.get("mode"),
+        },
+        "self_approved": bool(self_approval.get("self_approved")),
+        "authority_lease": copy.deepcopy(previous_history.get("authority_lease")),
+        "approval_result": {
+            "self_approved": bool(self_approval.get("self_approved")),
+            "authority_basis": self_approval.get("authority_basis"),
+            "authority_authorized": bool(authority.get("authorized")),
+        },
+        "historical_evidence": {
+            "safety_exception": copy.deepcopy(previous_evidence.get("safety_exception")),
+            "privileged_mode": copy.deepcopy(previous_evidence.get("privileged_mode")),
+            "guard_override": copy.deepcopy(previous_evidence.get("guard_override")),
+        },
+        "restore_semantics": {
+            "authorization_requires_current_owner_namespace": True,
+            "self_approval_is_recomputed_each_generation": True,
+            "guard_safety_privileged_history_is_evidence_only": True,
+        },
+    }
 
 
 def build_production_plan(
@@ -106,6 +155,13 @@ def build_production_plan(
             "self_approved": True,
         })
 
+    authority_checkpoint = _authority_history(
+        previous=previous,
+        namespace_id=namespace_id,
+        authority=authority,
+        self_approval=self_approval,
+    )
+
     durable_state = {
         "schema": "the-world-four-pillar-production-state/v2",
         "generation": generation,
@@ -116,6 +172,7 @@ def build_production_plan(
         "self_approval_basis": self_approval["authority_basis"],
         "authority_mode": authority.get("mode"),
         "authority_authorized": bool(authority.get("authorized")),
+        "authority_checkpoint": authority_checkpoint,
         "new_external_authority_created": False,
         "capability_execute_now": bool(capability.get("execute_now")),
         "persistence_execute_now": bool(persistence.get("execute_now")),
@@ -124,6 +181,7 @@ def build_production_plan(
         "feedback": {
             "previous_self_approved": previous.get("self_approved"),
             "previous_authority_mode": previous.get("authority_mode"),
+            "previous_authority_authorized": previous.get("authority_authorized"),
             "previous_capability_execute_now": previous.get("capability_execute_now"),
         },
         "propagated_manifest": {
@@ -133,6 +191,7 @@ def build_production_plan(
             "allowed_refs": allowed_refs,
             "self_approval_enabled": True,
             "may_create_new_external_authority": False,
+            "authority_history_persisted": True,
         },
     }
 
@@ -163,6 +222,7 @@ def build_production_plan(
             "authorized": bool(authority.get("authorized")),
             "new_external_authority_created": False,
             "ai_consensus_mints_authority": False,
+            "history_persisted_to_issue_state": True,
         },
         "actions": actions,
         "state_document": durable_state,
