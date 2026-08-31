@@ -55,7 +55,7 @@ jobs:
         with:
           ref: claude/employee-onboarding-setup-udm86
           fetch-depth: 1
-          persist-credentials: true
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
         with:
           python-version: '3.12'
@@ -66,22 +66,40 @@ jobs:
           set -euo pipefail
           python -m automation.world.production_security_change_loop | tee /tmp/production-security-change-summary.json
       - name: Persist only bounded runtime production changes
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           runtime='automation/world/state/security_runtime_overrides.json'
+          branch='claude/employee-onboarding-setup-udm86'
           if [ ! -f "$runtime" ]; then
             echo 'No runtime override state produced.'
             exit 0
           fi
-          git add -- "$runtime"
-          if git diff --cached --quiet; then
-            echo 'No new bounded production change to persist.'
-            exit 0
+
+          remote_tmp="$(mktemp)"
+          if gh api "repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch" \
+              --jq '.content' 2>/dev/null | tr -d '\n' | base64 -d > "$remote_tmp" 2>/dev/null; then
+            if cmp -s "$runtime" "$remote_tmp"; then
+              echo 'No new bounded production change to persist.'
+              exit 0
+            fi
+            current_sha="$(gh api "repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch" --jq '.sha')"
+            encoded="$(base64 -w 0 "$runtime")"
+            gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
+              --method PUT \
+              -f message='chore(security): apply AI-consensus bounded runtime override' \
+              -f content="$encoded" \
+              -f branch="$branch" \
+              -f sha="$current_sha" >/dev/null
+          else
+            encoded="$(base64 -w 0 "$runtime")"
+            gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
+              --method PUT \
+              -f message='chore(security): apply AI-consensus bounded runtime override' \
+              -f content="$encoded" \
+              -f branch="$branch" >/dev/null
           fi
-          git config user.name 'the-world-security-loop[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'chore(security): apply AI-consensus bounded runtime override'
-          git push origin HEAD:claude/employee-onboarding-setup-udm86
       - name: Preserve proposal, consensus, owner-gate, and apply receipts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
