@@ -7,9 +7,13 @@ on:
     paths:
       - automation/recovery/stop_learning.py
       - automation/recovery/stop_learning_runner.py
+      - automation/recovery/recovery_tuner.py
+      - automation/recovery/apply_recovery_tuning.py
       - automation/recovery/runtime_control_state.json
       - automation/recovery/test_stop_learning.py
+      - automation/recovery/test_recovery_tuner.py
       - .github/workflows/meta-production-stop-learning.yml
+      - .github/workflows/owned-self-recovery-worker.yml
   schedule:
     - cron: "7,37 * * * *"
   workflow_dispatch:
@@ -32,12 +36,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Test stop-learning invariants
+      - name: Test stop-learning and recovery tuning invariants
         run: |
           cd automation/recovery
-          python -m unittest -q test_stop_learning
+          python -m unittest -q test_stop_learning test_recovery_tuner
 
-      - name: Learn from real production stoppages
+      - name: Learn from real production stoppages and derive tuning
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python automation/recovery/stop_learning_runner.py
