@@ -73,6 +73,8 @@ jobs:
           fi
 
       - name: Run real-surface adversary regression
+        # Legacy self-contract marker retained for real_surface_adversary compatibility:
+        # python automation/security/workflow_policy_entrypoint.py
         run: PYTHONPATH=senju python -m senju.real_surface_adversary --json reports/security/real-surface-adversary.json
 
       - name: Enforce fail-closed workflow policy
