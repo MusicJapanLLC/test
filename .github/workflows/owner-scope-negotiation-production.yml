@@ -19,8 +19,10 @@ on:
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/council_operational_governance.py'
       - 'senju/senju/meta/authorized_host_promotion_corps.py'
+      - 'senju/senju/meta/promotion_intelligence_exchange.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/negotiation_intelligence_bus.py'
+      - 'senju/scripts/promotion_intelligence_exchange.py'
       - 'senju/scripts/owner_scope_negotiation.py'
       - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
@@ -37,7 +39,7 @@ concurrency:
 jobs:
   negotiate-and-exercise:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -47,7 +49,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Restore latest external research intelligence
+      - name: Restore latest research and negotiation intelligence
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -76,6 +78,10 @@ jobs:
           restore_latest "THE WORLD - Child Guild External Fleet" /tmp/negotiation-intel/child
           restore_latest "Outside World Scout" /tmp/negotiation-intel/outside
           restore_latest "Root Authority Negotiation Loop" /tmp/negotiation-intel/root
+          restore_latest "External Input Negotiation Relay" /tmp/negotiation-intel/external-relay
+          restore_latest "META X SENJU Rights Request Federation" /tmp/negotiation-intel/rights
+          restore_latest "Shared Discovery Authority Cycle" /tmp/negotiation-intel/shared-discovery
+          restore_latest "Owner Scope Negotiation Production" /tmp/negotiation-intel/prior-owner-scope
 
       - name: Route research findings into negotiation AI
         env:
@@ -90,6 +96,23 @@ jobs:
           test "$(jq -r '.raw_credentials_forwarded' /tmp/negotiation-intelligence-bus-report.json)" = "false"
           echo "negotiation_intelligence_records=$(jq -r '.record_count' /tmp/negotiation-intelligence-bus-report.json)" >> "$GITHUB_STEP_SUMMARY"
           echo "negotiation_signals_added=$(jq -r '.signal_added_count' /tmp/negotiation-intelligence-bus-report.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build Promotion Corps cross-agent intelligence context
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/promotion_intelligence_exchange.py \
+            --state-dir senju/state \
+            --promotion-dir senju/state/authorized-host-promotion \
+            --input-root /tmp/negotiation-intel \
+            --phase before_promotion \
+            --out /tmp/promotion-intelligence-before.json
+          test "$(jq -r '.closed_loop' /tmp/promotion-intelligence-before.json)" = "true"
+          test "$(jq -r '.raw_credentials_forwarded' /tmp/promotion-intelligence-before.json)" = "false"
+          test "$(jq -r '.coordination_capabilities.may_read_cross_agent_negotiation_state' /tmp/promotion-intelligence-before.json)" = "true"
+          test "$(jq -r '.coordination_capabilities.may_mint_new_external_authority' /tmp/promotion-intelligence-before.json)" = "false"
+          echo "promotion_context_hosts=$(jq -r '.host_context_count' /tmp/promotion-intelligence-before.json)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Run real production negotiation cycle
         env:
@@ -134,14 +157,34 @@ jobs:
           import json
           d=json.load(open('/tmp/authorized-host-promotion-report.json', encoding='utf-8'))
           print('## Authorized Host Promotion Corps')
+          print(f"- Negotiation intelligence hosts: `{d.get('intelligence_host_count', 0)}`")
           print(f"- Proposals: `{d.get('proposal_count', 0)}`")
           print(f"- Execution-ready: `{d.get('execution_ready_count', 0)}`")
           print(f"- Promotion packets: `{d.get('packet_count', 0)}`")
-          for row in d.get('execution_ready', []):
-              print(f"- `{row.get('host')}` → `{row.get('status')}` methods=`{','.join(row.get('covered_methods', []))}`")
-          for row in d.get('packets', [])[:8]:
-              print(f"- candidate `{row.get('host')}` → `{row.get('status')}`")
+          for row in d.get('execution_ready', [])[:12]:
+              print(f"- `{row.get('host')}` → `{row.get('status')}` priority=`{row.get('promotion_priority')}` methods=`{','.join(row.get('covered_methods', []))}`")
+          for row in d.get('packets', [])[:12]:
+              print(f"- candidate `{row.get('host')}` → `{row.get('status')}` priority=`{row.get('promotion_priority')}`")
           PY
+
+      - name: Feed Promotion Corps outcomes back into negotiation AI
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/promotion_intelligence_exchange.py \
+            --state-dir senju/state \
+            --promotion-dir senju/state/authorized-host-promotion \
+            --input-root /tmp/negotiation-intel \
+            --phase after_promotion \
+            --out /tmp/promotion-intelligence-after.json
+          test "$(jq -r '.closed_loop' /tmp/promotion-intelligence-after.json)" = "true"
+          test "$(jq -r '.raw_credentials_forwarded' /tmp/promotion-intelligence-after.json)" = "false"
+          echo "promotion_feedback_signal_changes=$(jq -r '.feedback_signal_changes' /tmp/promotion-intelligence-after.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "authorized_execution_handoffs=$(jq -r '.execution_handoff_count' /tmp/promotion-intelligence-after.json)" >> "$GITHUB_STEP_SUMMARY"
+          test -s senju/state/authorized-host-promotion/negotiator_inbox.json
+          test -s senju/state/authorized-host-promotion/promotion_feedback.json
+          test -s senju/state/authorized-host-promotion/execution_handoff.json
 
       - name: Exercise negotiated and council-governed policy through real ExternalContactClient
         env:
@@ -158,9 +201,11 @@ jobs:
           name: owner-scope-negotiation-${{ github.run_id }}
           path: |
             /tmp/negotiation-intelligence-bus-report.json
+            /tmp/promotion-intelligence-before.json
             /tmp/owner-scope-negotiation-report.json
             /tmp/council-operational-governance-report.json
             /tmp/authorized-host-promotion-report.json
+            /tmp/promotion-intelligence-after.json
             /tmp/negotiated-external-production-probe.json
             senju/state/negotiation_intelligence_bus.json
             senju/state/negotiation_intelligence_receipts.json
