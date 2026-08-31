@@ -4,8 +4,8 @@
 This runner is designed for scheduled GitHub Actions execution. It restores the
 last checkpoint, performs one production evolution generation, automatically
 issues a fresh non-delegable replica lease, and writes the next checkpoint.
-Replicas may use the same effective pre-authorized profile as their parent, but
-raw credentials and parent grant objects are never copied.
+Replica authority inheritance is mandatory when configured: every replica must
+carry a valid lease before the closed production cycle may advance.
 """
 from __future__ import annotations
 
@@ -65,6 +65,16 @@ def load_state(path: Path, plan: Mapping[str, Any]) -> EvolutionState:
     )
 
 
+def _assert_mandatory_replica_leases(state: EvolutionState) -> None:
+    """Fail closed if any non-root replica reached a checkpoint without a lease."""
+    if len(state.worker_ids) <= 1:
+        return
+    lease_workers = {str(worker).strip() for worker, lease in state.worker_authority_leases if str(lease).strip()}
+    missing = [worker for worker in state.worker_ids[1:] if worker not in lease_workers]
+    if missing:
+        raise RuntimeError(f"replica authority inheritance missing for worker: {missing[0]}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--plan", required=True)
@@ -77,6 +87,10 @@ def main() -> int:
     output_path = Path(args.output)
     plan = load_plan(plan_path)
     state = load_state(state_path, plan)
+    require_replica_lease = bool(plan.get("require_replica_authority_lease", True))
+
+    if require_replica_lease:
+        _assert_mandatory_replica_leases(state)
 
     replica_profile = select_replica_profile(
         parent_profile=state.authority_profile,
@@ -84,6 +98,8 @@ def main() -> int:
         configured_profile=plan.get("replica_authority_profile"),
         mode=str(plan.get("replica_authority_mode") or "configured"),
     )
+    if require_replica_lease and not replica_profile:
+        raise RuntimeError("mandatory replica authority inheritance requires a pre-authorized profile")
 
     envelope = ProductionEvolutionEnvelope.create(
         allowed_authority_profiles=plan["allowed_authority_profiles"],
@@ -156,6 +172,7 @@ def main() -> int:
         persisted["replica_authority_mode"] = str(plan.get("replica_authority_mode") or "configured")
         persisted["replica_authority_profile"] = replica_profile
         persisted["replica_authority_delegable"] = False
+        persisted["require_replica_authority_lease"] = require_replica_lease
         return {"persisted": True, "checkpoint_id": checkpoint_id}
 
     result = ProductionEvolutionLoop(envelope).run(
@@ -168,6 +185,18 @@ def main() -> int:
         replica_authority_fn=replica_authority_fn,
     )
 
+    if require_replica_lease:
+        _assert_mandatory_replica_leases(
+            EvolutionState(
+                generation=result.generation,
+                worker_ids=result.worker_ids,
+                authority_profile=result.authority_profile,
+                deploys_today=result.deploys_today,
+                previous_checkpoint_id=result.checkpoint_id,
+                worker_authority_leases=result.worker_authority_leases,
+            )
+        )
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(persisted, ensure_ascii=False, indent=2, default=list) + "\n", encoding="utf-8")
     print(json.dumps({
@@ -178,6 +207,7 @@ def main() -> int:
         "authority_profile": result.authority_profile,
         "replica_authority_profile": replica_profile,
         "replica_authority_delegable": False,
+        "require_replica_authority_lease": require_replica_lease,
         "checkpoint_id": result.checkpoint_id,
     }, ensure_ascii=False, indent=2))
     return 0
