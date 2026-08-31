@@ -22,6 +22,11 @@ on:
       - 'automation/codegen/tests/test_discovery_action_failover.py'
       - 'automation/recovery/**'
       - 'senju/senju/credential_*.py'
+      - 'senju/senju/meta/autonomous_authority_council.py'
+      - 'senju/scripts/run_autonomous_authority_council.py'
+      - 'senju/scripts/run_authorized_production_worker.py'
+      - 'senju/config/world-trust-root-bindings.json'
+      - 'senju/config/production-deployment-authorizations.json'
       - 'AUTHORIZED_TEST_TARGETS.json'
       - '.github/workflows/the-world-unified-loop.yml'
 
@@ -73,7 +78,8 @@ jobs:
             automation/codegen/tests/test_discovery_external_action.py \
             automation/codegen/tests/test_discovery_action_failover.py \
             automation/codegen/tests/test_discovery_replica_continuity.py \
-            automation/codegen/tests/test_network_policy_expansion.py
+            automation/codegen/tests/test_network_policy_expansion.py \
+            senju/tests/test_autonomous_authority_council.py
 
       - name: Refresh production self-tuning state
         env:
@@ -84,6 +90,20 @@ jobs:
         run: |
           mkdir -p .the-world-runtime
           python automation/recovery/stop_learning_runner.py | tee .the-world-runtime/stop-learning-run.json
+
+      - name: Autonomous Authority Council authorizes inside explicit Owner envelope
+        env:
+          PYTHONPATH: senju
+        run: |
+          mkdir -p .the-world-runtime
+          python senju/scripts/run_autonomous_authority_council.py \
+            --repo-root . \
+            --out .the-world-runtime/authority-council.json
+          test "$(jq -r '.authority_decision.allowed' .the-world-runtime/authority-council.json)" = "true"
+          test "$(jq -r '.ai_council.effect' .the-world-runtime/authority-council.json)" = "allow"
+          test "$(jq -r '.ai_council.per_host_manual_reapproval_required' .the-world-runtime/authority-council.json)" = "false"
+          test "$(jq -r '.invariants.hard_deny_override' .the-world-runtime/authority-council.json)" = "false"
+          test "$(jq -r '.invariants.revocation_override' .the-world-runtime/authority-council.json)" = "false"
 
       - name: Run unified Self-Tuning -> Authority -> Action -> Persistence -> Recovery loop
         env:
@@ -113,6 +133,24 @@ jobs:
             --max-actions 8 \
             --json-out .the-world-runtime/discovery_action_failover_run.json
 
+      - name: Owner-authorized external deployment continuity action
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/run_authorized_production_worker.py \
+            --repo-root . \
+            --state-dir .the-world-runtime/deployment-worker \
+            --target-host kabeya-authorized-test-range.onrender.com \
+            --authority-reference canonical:kabeya-authorized-test-range \
+            --desired-revision "${GITHUB_SHA}" \
+            --action deploy \
+            --worker-id "THE-WORLD-UNIFIED-${GITHUB_RUN_ID}" \
+            --output .the-world-runtime/external-deployment.json
+          test "$(jq -r '.environment' .the-world-runtime/external-deployment.json)" = "production"
+          test "$(jq -r '.reachable' .the-world-runtime/external-deployment.json)" = "true"
+          test "$(jq -r '.authority_expanded' .the-world-runtime/external-deployment.json)" = "false"
+          test "$(jq -r '.raw_credential_inherited' .the-world-runtime/external-deployment.json)" = "false"
+
       - name: Require full closed-loop completion
         run: |
           test "$(jq -r '.closed_loop' .the-world-runtime/the_world_unified_loop.json)" = "true"
@@ -124,6 +162,8 @@ jobs:
           test "$(jq -r '.authority.revoked_authority_auto_restore' .the-world-runtime/the_world_unified_loop.json)" = "false"
           test "$(jq -r '.closed_loop' .the-world-runtime/discovery_action_failover_run.json)" = "true"
           test "$(jq -r '.boundary_denial_bypass' .the-world-runtime/discovery_action_failover_run.json)" = "false"
+          test "$(jq -r '.authority_decision.allowed' .the-world-runtime/authority-council.json)" = "true"
+          test "$(jq -r '.reachable' .the-world-runtime/external-deployment.json)" = "true"
           test -s .the-world-runtime/the_world_unified_loop_heartbeat.json
           echo "leases=$(jq -r '.final_lease.lease_count // 0' .the-world-runtime/the_world_unified_loop.json)"
           echo "replicas=$(jq -r '.final_replicas.replica_count // 0' .the-world-runtime/the_world_unified_loop.json)"
@@ -131,16 +171,21 @@ jobs:
           echo "failover_success=$(jq -r '.failover.succeeded // 0' .the-world-runtime/discovery_action_failover_run.json)"
           echo "boundary_denials_learned=$(jq -r '.failover.boundary_denials_learned // 0' .the-world-runtime/discovery_action_failover_run.json)"
           echo "queue=$(jq -r '.final_queue.item_count // 0' .the-world-runtime/the_world_unified_loop.json)"
+          echo "deployment_http=$(jq -r '.http_status // 0' .the-world-runtime/external-deployment.json)"
 
       - name: Enforce final five-layer Trust Root contract
         run: |
           python automation/codegen/the_world_final_contract.py \
             --loop .the-world-runtime/the_world_unified_loop.json \
             --registry automation/recovery/approved_persistence_registry.json \
+            --council .the-world-runtime/authority-council.json \
+            --deployment .the-world-runtime/external-deployment.json \
             --out .the-world-runtime/the_world_final_contract.json
           test "$(jq -r '.complete' .the-world-runtime/the_world_final_contract.json)" = "true"
           test "$(jq -r '.authorization_is_primary' .the-world-runtime/the_world_final_contract.json)" = "true"
           test "$(jq -r '.checks.runtime_owner_state_bootstrapped' .the-world-runtime/the_world_final_contract.json)" = "true"
+          test "$(jq -r '.checks.autonomous_authority_council_operational' .the-world-runtime/the_world_final_contract.json)" = "true"
+          test "$(jq -r '.checks.owner_authorized_external_deployment_operational' .the-world-runtime/the_world_final_contract.json)" = "true"
           test "$(jq -r '[.layers[] | .integrated] | all' .the-world-runtime/the_world_final_contract.json)" = "true"
 
       - name: Save persistent unified-loop state
@@ -172,6 +217,12 @@ jobs:
             echo "- External actions succeeded: $(jq -r '.actions.succeeded // 0' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- Persistent replicas: $(jq -r '.final_replicas.replica_count // 0' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- Credentialed external write: $(jq -r '.credentialed_external_write.succeeded' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f .the-world-runtime/authority-council.json ]; then
+            echo "- Autonomous Authority Council: $(jq -r '.ai_council.effect // "missing"' .the-world-runtime/authority-council.json)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f .the-world-runtime/external-deployment.json ]; then
+            echo "- Owner-authorized external deployment reachable: $(jq -r '.reachable // false' .the-world-runtime/external-deployment.json)" >> "$GITHUB_STEP_SUMMARY"
           fi
           if [ -f .the-world-runtime/discovery_action_failover_run.json ]; then
             echo "- Same-authority failover succeeded: $(jq -r '.failover.succeeded // 0' .the-world-runtime/discovery_action_failover_run.json)" >> "$GITHUB_STEP_SUMMARY"
