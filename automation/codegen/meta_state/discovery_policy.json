@@ -1,5 +1,5 @@
 {
-  "schema": "meta-discovery-policy/v1",
+  "schema": "meta-discovery-policy/v2",
   "trusted_roots": [
     "kabeya-authorized-test-range.onrender.com"
   ],
@@ -10,6 +10,14 @@
     "credential_scope": "none",
     "allow_http": false,
     "allow_delete": false
+  },
+  "action_profiles": {
+    "kabeya-authorized-test-range.onrender.com": {
+      "owner_authorization": "explicit",
+      "inherit_to_descendants": false,
+      "capabilities": ["scan", "probe", "write", "mutation"],
+      "credential_scope": "none"
+    }
   },
   "untrusted_discovery": "candidate_only"
 }
