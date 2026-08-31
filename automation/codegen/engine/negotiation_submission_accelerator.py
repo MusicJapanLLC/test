@@ -15,8 +15,10 @@ Submission policy:
 
 The accelerator writes both a durable outbox and the pre-existing
 ``owner_root_authority_review_packets.json`` surface so submissions enter the current
-review machinery rather than a disconnected side queue. ``authority_effect`` remains
-``none`` until the existing authority machinery independently approves a change.
+review machinery rather than a disconnected side queue. It also annotates the shared
+``authority_opportunity_queue.json`` so Boundary/Rights/Improvement PR loops that already
+consume that queue receive current attempt/submission context. ``authority_effect``
+remains ``none`` until the existing authority machinery independently approves a change.
 """
 from __future__ import annotations
 
@@ -31,6 +33,7 @@ OUTBOX_SCHEMA = "the-world-root-authority-approval-outbox/v1"
 REVIEW_SCHEMA = "the-world-owner-root-authority-review-packets/v2"
 LEDGER_SCHEMA = "the-world-root-authority-submission-ledger/v1"
 PEER_FEED_SCHEMA = "the-world-root-negotiation-peer-feed/v1"
+QUEUE_SCHEMA = "the-world-authority-opportunity-queue/v1"
 APPROVERS = ("META", "X", "SENJU")
 COLLABORATORS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 RESUBMIT_COOLDOWN_SECONDS = 30 * 60
@@ -101,15 +104,84 @@ def _review_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _share_into_opportunity_queue(
+    state: Path,
+    candidates: list[Mapping[str, Any]],
+    ledger: Mapping[str, Any],
+    *,
+    now: int,
+) -> int:
+    path = state / "authority_opportunity_queue.json"
+    doc = _load(path, {})
+    rows = doc.get("opportunities", ()) if isinstance(doc, Mapping) else ()
+    by_host: dict[str, dict[str, Any]] = {}
+    if isinstance(rows, list):
+        for raw in rows:
+            if not isinstance(raw, Mapping):
+                continue
+            host = str(raw.get("host") or "").strip().lower().rstrip(".")
+            if host:
+                by_host[host] = dict(raw)
+
+    shared = 0
+    for candidate in candidates:
+        if bool(candidate.get("terminal_stop")):
+            continue
+        host = str(candidate.get("host") or "").strip().lower().rstrip(".")
+        if not host:
+            continue
+        current = by_host.get(host, {})
+        if current.get("hard_deny") is True or current.get("revoked") is True:
+            continue
+        meta = ledger.get(host, {}) if isinstance(ledger.get(host), Mapping) else {}
+        reasons = candidate.get("reasons", ())
+        fallback_reason = next((str(v) for v in reasons if str(v).strip()), "Root Authority negotiation candidate")
+        try:
+            old_priority = int(current.get("priority", 0) or 0)
+        except (TypeError, ValueError):
+            old_priority = 0
+        readiness = max(1, min(int(candidate.get("readiness_score", 0) or 0), 100))
+        current.update({
+            "host": host,
+            "reason": str(current.get("reason") or fallback_reason)[:400],
+            "priority": max(old_priority, readiness, 70),
+            "source": str(current.get("source") or "root_authority_negotiation"),
+            "proposal_only": True,
+            "authority_effect": "none",
+            "hard_deny": False,
+            "revoked": False,
+            "negotiation_attempt_count": int(candidate.get("attempt_count", 0) or 0),
+            "approval_submission_count": int(meta.get("submission_count", 0) or 0),
+            "last_approval_submission_at": int(meta.get("last_submitted_at", 0) or 0),
+            "last_submission_reason": meta.get("last_submission_reason"),
+            "approval_flow_requested": int(meta.get("submission_count", 0) or 0) > 0,
+            "negotiation_shared_with": list(COLLABORATORS),
+            "negotiation_peer_feed": "root_negotiation_peer_feed.json",
+        })
+        by_host[host] = current
+        shared += 1
+
+    _write(path, {
+        "schema": str(doc.get("schema") or QUEUE_SCHEMA) if isinstance(doc, Mapping) else QUEUE_SCHEMA,
+        "generated_at": now,
+        "producer": "authority_collaboration_bus+negotiation_submission_accelerator",
+        "proposal_only": True,
+        "authority_activated": False,
+        "external_side_effects": False,
+        "opportunities": sorted(by_host.values(), key=lambda row: (-int(row.get("priority", 0) or 0), str(row.get("host", "")))),
+        "opportunity_count": len(by_host),
+    })
+    return shared
+
+
 def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
     current = int(time.time()) if now is None else int(now)
 
     root_state = _load(state / "root_authority_negotiation_state.json", {})
-    candidates = root_state.get("candidates", ()) if isinstance(root_state, Mapping) else ()
-    if not isinstance(candidates, list):
-        candidates = []
+    raw_candidates = root_state.get("candidates", ()) if isinstance(root_state, Mapping) else ()
+    candidates = [row for row in raw_candidates if isinstance(row, Mapping)] if isinstance(raw_candidates, list) else []
 
     ledger_doc = _load(state / "negotiation_submission_ledger.json", {})
     ledger = ledger_doc.get("by_host", {}) if isinstance(ledger_doc, Mapping) else {}
@@ -141,8 +213,6 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
     terminal_skipped = 0
 
     for raw in candidates:
-        if not isinstance(raw, Mapping):
-            continue
         host = str(raw.get("host") or "").strip().lower().rstrip(".")
         if not host:
             continue
@@ -211,6 +281,8 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         key=lambda row: int(row.get("submitted_at", 0) or 0),
         reverse=True,
     )[:MAX_REVIEW_PACKETS]
+    shared_count = _share_into_opportunity_queue(state, candidates, ledger, now=current)
+
     _write(state / "root_authority_approval_outbox.json", {
         "schema": OUTBOX_SCHEMA,
         "generated_at": current,
@@ -250,9 +322,10 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         "schema": SCHEMA,
         "generated_at": current,
         "production": True,
-        "active_candidate_count": sum(1 for row in candidates if isinstance(row, Mapping) and not row.get("terminal_stop")),
+        "active_candidate_count": sum(1 for row in candidates if not row.get("terminal_stop")),
         "approval_flow_submission_count": len(submitted),
         "existing_review_flow_packet_count": len(review_packets),
+        "cross_pr_shared_candidate_count": shared_count,
         "cooldown_skipped_count": skipped_cooldown,
         "terminal_skipped_count": terminal_skipped,
         "peer_share_task_count": len(peer_tasks),
@@ -263,6 +336,7 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         "fresh_evidence_resubmits_immediately": True,
         "unchanged_candidate_periodic_resubmission": True,
         "writes_existing_review_surface": True,
+        "writes_shared_opportunity_queue": True,
         "authority_effect": "none",
         "authority_activated": False,
         "terminal_stop_bypass": False,
