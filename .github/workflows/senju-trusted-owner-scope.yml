@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_url:
-        description: "Target URL inside configured trusted owner scope"
+        description: "Target URL inside configured authorized federation scope"
         required: true
         type: string
       method:
@@ -17,9 +17,6 @@ on:
           - HEAD
           - OPTIONS
           - POST
-          - PUT
-          - PATCH
-          - DELETE
       body:
         description: "Optional UTF-8 request body"
         required: false
@@ -32,11 +29,13 @@ on:
     paths:
       - "AUTHORIZED_TEST_TARGETS.json"
       - "senju/config/authorized-test-range.json"
+      - "senju/config/authorized-test-federation.json"
+      - "senju/config/authorized-test-federation-broadcast.json"
+      - "automation/codegen/meta_state/authorized_test_federation.json"
       - "senju/senju/safety.py"
       - "senju/senju/trusted_scope.py"
       - "senju/tests/test_safety.py"
       - "senju/tests/test_trusted_scope.py"
-      - "senju/examples/trusted-owner-scope.example.json"
       - ".github/workflows/senju-trusted-owner-scope.yml"
 
 permissions:
@@ -48,7 +47,7 @@ concurrency:
 
 jobs:
   verify:
-    name: Verify trusted-owner runtime
+    name: Verify authorized federation runtime
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -72,7 +71,7 @@ jobs:
         working-directory: senju
         run: python -m pytest tests/test_trusted_scope.py tests/test_safety.py -q
 
-      - name: Verify Kabeya authorized range recursion
+      - name: Verify federation seed and non-member rejection
         working-directory: senju
         run: |
           python - <<'PY'
@@ -80,7 +79,7 @@ jobs:
           from senju.safety import ScopeGuard, default_lab_policy
           from senju.trusted_scope import TrustedOwnerScope
 
-          scope = TrustedOwnerScope.load(Path('config/authorized-test-range.json'))
+          scope = TrustedOwnerScope.load(Path('config/authorized-test-federation.json'))
           urls = [
               'https://kabeya-authorized-test-range.onrender.com/',
               'https://kabeya-authorized-test-range.onrender.com/lab/index.html',
@@ -92,11 +91,11 @@ jobs:
               guard.check(url)
           assert not scope.allows_url('https://example.com/')
           assert not guard.is_allowed('https://example.com/')
-          print('KABEYA_AUTHORIZED_RANGE_VERIFIED')
+          print('AUTHORIZED_TEST_FEDERATION_VERIFIED')
           PY
 
   execute:
-    name: Execute inside persistent trusted scope
+    name: Execute inside persistent authorized federation scope
     if: github.event_name == 'workflow_dispatch'
     needs: verify
     runs-on: ubuntu-latest
@@ -129,21 +128,17 @@ jobs:
           if [ -n "${TRUSTED_SCOPE_JSON}" ]; then
             printf '%s' "${TRUSTED_SCOPE_JSON}" > /tmp/senju-trusted-scope.json
           else
-            cp senju/config/authorized-test-range.json /tmp/senju-trusted-scope.json
+            cp senju/config/authorized-test-federation.json /tmp/senju-trusted-scope.json
           fi
           python - <<'PY'
           import json, os
           from pathlib import Path
           body = os.environ.get('BODY', '')
-          request = {
-              'url': os.environ['TARGET_URL'],
-              'method': os.environ['METHOD'],
-          }
+          request = {'url': os.environ['TARGET_URL'], 'method': os.environ['METHOD']}
           if body:
               request['body'] = body
           Path('/tmp/senju-trusted-requests.json').write_text(
-              json.dumps({'requests': [request]}, ensure_ascii=False),
-              encoding='utf-8',
+              json.dumps({'requests': [request]}, ensure_ascii=False), encoding='utf-8'
           )
           PY
 
