@@ -1,0 +1,56 @@
+name: Shared Discovery Authority Cycle
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: shared-discovery-authority-cycle
+  cancel-in-progress: false
+
+jobs:
+  discovery-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Run shared discovery authority loop
+        working-directory: automation/codegen
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.shared_discovery_authority import run_shared_discovery_authority
+
+          result = run_shared_discovery_authority(Path('meta_state'))
+          print(result)
+          PY
+
+      - name: Persist shared discovery state
+        run: |
+          git config user.name "Shared-Discovery-Autonomy"
+          git config user.email "shared-discovery@musicjapanllc.com"
+          git add \
+            automation/codegen/meta_state/discovered_urls.json \
+            automation/codegen/meta_state/discovery_candidates.json \
+            automation/codegen/meta_state/discovery_authorized.json \
+            automation/codegen/meta_state/discovery_authorization_requests.json \
+            automation/codegen/meta_state/discovery_authority_apply_queue.json \
+            automation/codegen/meta_state/human_intent_decisions.json \
+            automation/codegen/meta_state/shared_discovery_knowledge.json \
+            automation/codegen/meta_state/discovery_action_queue.json
+          git diff --staged --quiet || git commit -m "chore(discovery): refresh shared authority state [skip ci]"
+          git push origin HEAD
