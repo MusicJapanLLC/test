@@ -1,0 +1,70 @@
+name: AI Security Proposal Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'security/proposals/**.json'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ai-security-proposal-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  security-proposal-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted base evaluator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: trusted
+          persist-credentials: false
+
+      - name: Checkout candidate proposal
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Collect changed proposal files
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          cd candidate
+          git fetch --no-tags origin "$BASE_SHA" --depth=1 || true
+          mapfile -t files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'No security proposal JSON changed.'
+            exit 1
+          fi
+          printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
+          cat /tmp/security-proposals.txt
+
+      - name: AI Council -> Self-Approval gate
+        run: |
+          mapfile -t rels < /tmp/security-proposals.txt
+          files=()
+          for rel in "${rels[@]}"; do
+            files+=("candidate/$rel")
+          done
+          PYTHONPATH=trusted/automation/codegen \
+            python trusted/automation/codegen/security_proposal_loop.py \
+              "${files[@]}" \
+              --decision-dir /tmp/security-proposal-decisions
+
+      - name: Preserve council/self-approval evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-proposal-gate-${{ github.run_id }}
+          path: /tmp/security-proposal-decisions
+          if-no-files-found: ignore
+          retention-days: 30

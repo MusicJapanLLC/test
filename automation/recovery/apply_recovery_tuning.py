@@ -46,6 +46,15 @@ def _tune_worker(worker: dict[str, Any], tuning: dict[str, Any], global_multipli
     worker["learned_stale_multiplier"] = multiplier
 
 
+def _priority(worker: Any) -> int:
+    if not isinstance(worker, dict):
+        return -1
+    try:
+        return max(0, min(int(worker.get("recovery_priority", 0)), 100))
+    except (TypeError, ValueError):
+        return 0
+
+
 def apply_tuning(registry: dict[str, Any], tuning: dict[str, Any]) -> dict[str, Any]:
     out = copy.deepcopy(registry)
     policy = out.setdefault("policy", {})
@@ -77,6 +86,9 @@ def apply_tuning(registry: dict[str, Any], tuning: dict[str, Any]) -> dict[str, 
         for worker in workers:
             if isinstance(worker, dict):
                 _tune_worker(worker, tuning, multiplier)
+        # approved_persistence consumes workers in list order before applying the fixed
+        # dispatch cap, so sorting here makes learned priority operational immediately.
+        workers.sort(key=_priority, reverse=True)
 
     out["runtime_tuning"] = {
         "enabled": True,
@@ -101,6 +113,7 @@ def apply_dynamic_tuning(dynamic: dict[str, Any], tuning: dict[str, Any]) -> dic
         for worker in rows:
             if isinstance(worker, dict):
                 _tune_worker(worker, tuning, multiplier)
+        rows.sort(key=_priority, reverse=True)
     return out
 
 

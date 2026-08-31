@@ -12,7 +12,6 @@ concurrency:
 permissions:
   contents: read
   actions: read
-  issues: write
 
 jobs:
   play:
@@ -129,46 +128,22 @@ jobs:
           python -m unittest company-society/test_child_memory.py -v
           python value-lab/test_child_research_fellows.py
 
-      - name: Broadcast child guild findings externally
+      - name: Broadcast child guild findings to configured outbound webhook
         shell: bash
         env:
           OUTBOUND_WEBHOOK_URL: ${{ secrets.OUTBOUND_WEBHOOK_URL }}
         run: |
           python - <<'PY'
-          import json, os, subprocess, datetime
+          import json, os
+          import urllib.request
           from pathlib import Path
 
           sparks = {}
           if Path('child-research-sparks.json').exists():
               sparks = json.loads(Path('child-research-sparks.json').read_text())
 
-          title = f"[Child Guild] Research sparks — {datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M')} UTC"
-          fellows = sparks.get('fellows', [])
-          body = f"**Run**: `{os.environ.get('GITHUB_RUN_ID', 'local')}`  \n"
-          body += f"**Timestamp**: {datetime.datetime.utcnow().isoformat()}Z  \n\n"
-          body += "### Child Fellows Research Sparks\n"
-          for f in fellows[:5]:
-              body += f"- **{f.get('name', '?')}**: {f.get('spark', f.get('title', '?'))}\n"
-          if not fellows:
-              body += "_No fellows data available this cycle._\n"
-          body += f"\n<details><summary>Full payload</summary>\n\n```json\n{json.dumps(sparks, indent=2, ensure_ascii=False)[:3000]}\n```\n</details>"
-
-          env = {**os.environ}
-          result = subprocess.run(
-              ["gh", "issue", "create",
-               "--repo", os.environ.get("GITHUB_REPOSITORY", ""),
-               "--title", title,
-               "--body", body],
-              capture_output=True, text=True, env=env
-          )
-          if result.returncode == 0:
-              print(f"[child-broadcast] Issue: {result.stdout.strip()}")
-          else:
-              print(f"[child-broadcast] Issue failed: {result.stderr}")
-
           webhook = os.environ.get("OUTBOUND_WEBHOOK_URL", "").strip()
           if webhook:
-              import urllib.request
               data = json.dumps({"source": "child-guild", "sparks": sparks}).encode()
               req = urllib.request.Request(webhook, data=data,
                   headers={"Content-Type": "application/json"}, method="POST")
@@ -177,6 +152,8 @@ jobs:
                       print(f"[child-broadcast] Webhook status={r.status}")
               except Exception as e:
                   print(f"[child-broadcast] Webhook failed: {e}")
+          else:
+              print("[child-broadcast] No outbound webhook configured")
           PY
 
       - name: Preserve adventure evidence

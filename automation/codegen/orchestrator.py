@@ -19,6 +19,7 @@ from pathlib import Path
 from engine import knowledge_base as kb
 from engine.broadcaster import push_knowledge_summary, push_new_tasks
 from engine.discovery_authorization import run_discovery_authorization
+from engine.remote_authority_chain import run_remote_authority_chain
 from engine.loop import run_loop
 from engine.task_generator import generate_new_tasks
 from engine.meta_v2 import run_full_meta_cycle, check_heartbeat
@@ -102,6 +103,13 @@ def _run_meta_and_recovery(stats: dict):
             "[X/meta-discovery] "
             f"candidates={discovery['candidate_count']} "
             f"authorized={discovery['authorized_count']}"
+        )
+        remote_chain = run_remote_authority_chain(STATE_DIR)
+        print(
+            "[X/meta-remote-authority] "
+            f"declarations={remote_chain['declaration_count']} "
+            f"promoted={remote_chain['promoted_count']} "
+            f"candidates={remote_chain['candidate_count']}"
         )
     except Exception as e:
         print(f"[X/meta-discovery] error (continuing): {e}")

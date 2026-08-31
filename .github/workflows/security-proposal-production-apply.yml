@@ -1,0 +1,139 @@
+name: AI Security Proposal Production Apply
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'security/proposals/**.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ai-security-proposal-production-apply
+  cancel-in-progress: false
+
+jobs:
+  production-apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      THE_WORLD_ENVIRONMENT: production
+    steps:
+      - name: Checkout production branch without credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 2
+          persist-credentials: false
+
+      - name: Collect production proposals
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            find security/proposals -maxdepth 1 -type f -name '*.json' -print 2>/dev/null | sort > /tmp/security-proposals.txt || true
+          else
+            mapfile -t files < <(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+            printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
+          fi
+          sed -i '/^$/d' /tmp/security-proposals.txt
+          if [ ! -s /tmp/security-proposals.txt ]; then
+            echo 'No production security proposal to apply.'
+            exit 0
+          fi
+          cat /tmp/security-proposals.txt
+
+      - name: Re-evaluate Council and Self-Approval from production code
+        run: |
+          mapfile -t files < /tmp/security-proposals.txt
+          PYTHONPATH=automation/codegen \
+            python automation/codegen/security_proposal_loop.py \
+              "${files[@]}" \
+              --state security/runtime/ai_security_state.json \
+              --write-state security/runtime/ai_security_state.json \
+              --decision-dir /tmp/security-proposal-decisions \
+              --apply
+
+      - name: Verify closed-loop invariants
+        run: |
+          PYTHONPATH=automation/codegen \
+            python -m pytest automation/codegen/tests/test_security_proposal_loop.py -q
+
+      - name: Persist production security state through GitHub API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: claude/employee-onboarding-setup-udm86
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          state_path = Path('security/runtime/ai_security_state.json')
+          if not state_path.exists():
+              raise SystemExit('production security state was not generated')
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          owner, name = repo.split('/', 1)
+          token = os.environ['GITHUB_TOKEN']
+          branch = os.environ['TARGET_BRANCH']
+          path = 'security/runtime/ai_security_state.json'
+          encoded_path = urllib.parse.quote(path, safe='/')
+          base = f'https://api.github.com/repos/{owner}/{name}/contents/{encoded_path}'
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'Content-Type': 'application/json',
+          }
+
+          existing_sha = None
+          request = urllib.request.Request(
+              f'{base}?{urllib.parse.urlencode({"ref": branch})}',
+              headers=headers,
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=15) as response:
+                  existing = json.loads(response.read())
+              existing_sha = existing.get('sha')
+          except urllib.error.HTTPError as exc:
+              if exc.code != 404:
+                  raise
+
+          payload = {
+              'message': 'security: apply AI Council self-approved proposal',
+              'content': base64.b64encode(state_path.read_bytes()).decode('ascii'),
+              'branch': branch,
+          }
+          if existing_sha:
+              payload['sha'] = existing_sha
+
+          request = urllib.request.Request(
+              base,
+              data=json.dumps(payload).encode('utf-8'),
+              method='PUT',
+              headers=headers,
+          )
+          with urllib.request.urlopen(request, timeout=20) as response:
+              result = json.loads(response.read())
+          print(f"production security state persisted: {result.get('content', {}).get('path', path)}")
+          PY
+
+      - name: Preserve production apply evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-production-apply-${{ github.run_id }}
+          path: |
+            /tmp/security-proposal-decisions
+            security/runtime/ai_security_state.json
+          if-no-files-found: ignore
+          retention-days: 30
