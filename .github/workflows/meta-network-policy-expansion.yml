@@ -1,0 +1,158 @@
+name: META Network Policy Expansion
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - automation/codegen/engine/network_policy_expansion.py
+      - automation/codegen/network_policy_runner.py
+      - automation/codegen/network_policy_apply.py
+      - automation/codegen/meta_state/network_policy_envelope.json
+      - automation/codegen/tests/test_network_policy_expansion.py
+      - .github/workflows/meta-network-policy-expansion.yml
+  schedule:
+    - cron: "11,26,41,56 * * * *"
+  workflow_dispatch:
+  workflow_run:
+    workflows:
+      - Senju External Agency Orchestrator
+      - Senju Meta-Consciousness
+      - Autonomous Codegen Loop x3
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+  issues: write
+
+concurrency:
+  group: meta-network-policy-expansion
+  cancel-in-progress: true
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  PYTHONPATH: ${{ github.workspace }}/automation/codegen:${{ github.workspace }}/senju
+
+jobs:
+  expand-apply-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Verify network-policy expansion invariants
+        run: python automation/codegen/tests/test_network_policy_expansion.py -q
+
+      - name: Load durable previous runtime network policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/meta-network-policy
+          ISSUE="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --limit 100 \
+            --json number,title --jq '.[] | select(.title == "[THE-WORLD] Runtime Network Policy State") | .number' \
+            | head -n 1 || true)"
+          if [[ -n "$ISSUE" ]]; then
+            gh issue view "$ISSUE" --repo "$GITHUB_REPOSITORY" --json body --jq '.body' \
+              > /tmp/meta-network-policy/previous.json
+            echo "NETWORK_POLICY_ISSUE=$ISSUE" >> "$GITHUB_ENV"
+            echo "loaded durable runtime network policy from issue #$ISSUE"
+          else
+            printf '{}\n' > /tmp/meta-network-policy/previous.json
+            echo "NETWORK_POLICY_ISSUE=" >> "$GITHUB_ENV"
+            echo "no previous durable runtime network policy"
+          fi
+
+      - name: Restore latest external response and agent evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/meta-network-policy/agency
+          RUN="$(gh run list --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju External Agency Orchestrator" --status success --limit 20 \
+            --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN" ]]; then
+            gh run download "$RUN" --repo "$GITHUB_REPOSITORY" \
+              --pattern 'senju-agency-*' --dir /tmp/meta-network-policy/agency || true
+          fi
+          FRONTIER="$(find /tmp/meta-network-policy/agency -name external-frontier.json -print -quit || true)"
+          echo "NETWORK_FRONTIER=$FRONTIER" >> "$GITHUB_ENV"
+          echo "EXTERNAL_AGENCY_RUN=${RUN:-none}" >> "$GITHUB_ENV"
+          if [[ -n "$FRONTIER" ]]; then
+            echo "external response evidence restored: $FRONTIER"
+          else
+            echo "no external frontier artifact; repository META findings are still processed"
+          fi
+
+      - name: External response and agent finding -> runtime allowlist
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --state-dir automation/codegen/meta_state
+            --repo-root .
+            --previous /tmp/meta-network-policy/previous.json
+            --summary-out /tmp/meta-network-policy/expansion-summary.json
+          )
+          if [[ -n "${NETWORK_FRONTIER:-}" ]]; then
+            args+=(--input "$NETWORK_FRONTIER")
+          fi
+          python automation/codegen/network_policy_runner.py "${args[@]}"
+          cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime.json
+          cp automation/codegen/meta_state/network_policy_expansion_requests.json /tmp/meta-network-policy/requests.json
+          cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/decision-audit.json
+
+      - name: Apply updated allowlist through real Senju network lane
+        run: |
+          python automation/codegen/network_policy_apply.py \
+            --policy automation/codegen/meta_state/network_policy_runtime.json \
+            --out /tmp/meta-network-policy/apply-audit.json \
+            --feedback automation/codegen/meta_state/network_policy_feedback.json \
+            --max-hosts 16
+          cp automation/codegen/meta_state/network_policy_feedback.json /tmp/meta-network-policy/feedback.json
+
+      - name: Feed apply result back into the policy learner
+        run: |
+          python automation/codegen/network_policy_runner.py \
+            --state-dir automation/codegen/meta_state \
+            --repo-root . \
+            --previous automation/codegen/meta_state/network_policy_runtime.json \
+            --input automation/codegen/meta_state/network_policy_feedback.json \
+            --input /tmp/meta-network-policy/apply-audit.json \
+            --summary-out /tmp/meta-network-policy/post-apply-summary.json
+          cp automation/codegen/meta_state/network_policy_runtime.json /tmp/meta-network-policy/runtime-final.json
+          cp automation/codegen/meta_state/network_policy_audit.json /tmp/meta-network-policy/post-apply-decision-audit.json
+
+      - name: Persist final production network policy state
+        shell: bash
+        run: |
+          set -euo pipefail
+          body=/tmp/meta-network-policy/runtime-final.json
+          if [[ -n "${NETWORK_POLICY_ISSUE:-}" ]]; then
+            gh issue edit "$NETWORK_POLICY_ISSUE" --repo "$GITHUB_REPOSITORY" --body-file "$body"
+            echo "updated durable network policy issue #$NETWORK_POLICY_ISSUE"
+          else
+            url="$(gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "[THE-WORLD] Runtime Network Policy State" \
+              --body-file "$body")"
+            echo "created durable network policy state: $url"
+          fi
+
+      - name: Preserve Detection -> Apply -> Audit evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: meta-network-policy-expansion-${{ github.run_id }}
+          path: /tmp/meta-network-policy/
+          if-no-files-found: warn
+          retention-days: 14
