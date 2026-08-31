@@ -9,6 +9,7 @@ from senju.autonomy.boundary_research_loop import (
     import_handoff,
     run_boundary_research,
 )
+from senju.autonomy.boundary_research_variants import expanded_probe_corpus, run_expanded_variants
 
 
 def test_real_boundary_corpus_has_multiple_independent_families() -> None:
@@ -19,11 +20,31 @@ def test_real_boundary_corpus_has_multiple_independent_families() -> None:
         "standing_authority",
         "credential_broker",
         "replica_credential_lineage",
-    }.issubset(families) or {
-        "emergency_stop",
-        "standing_authority",
     }.issubset(families)
-    assert len(corpus) >= 16
+    assert len(corpus) >= 17
+
+
+def test_expanded_boundary_mutation_surface_is_large_and_diverse() -> None:
+    corpus = expanded_probe_corpus()
+    families = {case.family for case in corpus}
+    assert len(corpus) >= 50
+    assert {
+        "standing_authority_variants",
+        "standing_authority_creation",
+        "emergency_stop_release",
+        "credential_broker_variants",
+        "replica_lineage_variants",
+    }.issubset(families)
+
+
+def test_expanded_variants_match_real_boundary_contracts() -> None:
+    report = run_expanded_variants()
+    assert report["schema"] == "senju-boundary-research-variants/v1"
+    assert report["case_count"] >= 50
+    assert report["passed_cases"] == report["case_count"]
+    assert report["unexpected_count"] == 0
+    assert report["external_side_effects"] is False
+    assert report["finding_is_permission"] is False
 
 
 def test_boundary_research_runs_closed_loop_without_external_effects(tmp_path: Path) -> None:
@@ -38,7 +59,7 @@ def test_boundary_research_runs_closed_loop_without_external_effects(tmp_path: P
     assert report["security_stop_bypass"] is False
     assert report["revocation_bypass"] is False
     assert report["raw_secret_replication"] is False
-    assert report["case_count"] >= 16
+    assert report["case_count"] >= 17
     assert report["counterexample_count"] == 0
     assert report["passed_cases"] == report["case_count"]
     assert report["family_coverage"]["emergency_stop"] >= 6
@@ -68,7 +89,6 @@ def test_unexpected_accept_becomes_counterexample_and_hardening_work(tmp_path: P
 
     def broken_corpus(*, mutation_budget: int):
         cases = list(original(mutation_budget=mutation_budget))
-        case = cases[0]
         cases[0] = module.ProbeCase(
             case_id="synthetic-unexpected-accept",
             family="emergency_stop",
@@ -92,8 +112,6 @@ def test_unexpected_accept_becomes_counterexample_and_hardening_work(tmp_path: P
 
 
 def test_handoff_can_join_another_senju_autonomy_state(tmp_path: Path) -> None:
-    import senju.autonomy.boundary_research_loop as module
-
     handoff = {
         "schema": HANDOFF_SCHEMA,
         "generation": 7,
