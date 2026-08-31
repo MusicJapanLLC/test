@@ -59,6 +59,19 @@ def post_jules_task(title: str, body: str, labels: list[str] | None = None) -> d
     return {"action": "jules_task", "title": title, "result": result}
 
 
+def post_openhands_task(title: str, body: str) -> dict[str, Any]:
+    """Delegate a bounded repository task to the installed OpenHands GitHub agent."""
+    if not GITHUB_TOKEN:
+        return {"_error": "no GITHUB_TOKEN"}
+    owner, repo = REPO.split("/", 1)
+    result = _gh_api("POST", f"/repos/{owner}/{repo}/issues", {
+        "title": f"[META→OpenHands] {title}",
+        "body": "@openhands\n\n" + body,
+        "labels": ["meta-directive", "authority-retry", "openhands-task"],
+    })
+    return {"action": "openhands_task", "title": title, "result": result}
+
+
 def write_agent_directive(agent_file: Path, directive: str, repo_root: Path) -> Path:
     target = repo_root / ".github" / "agents" / agent_file
     if not target.exists():
@@ -76,16 +89,29 @@ def dispatch_all(commands: list[dict[str, Any]], repo_root: Path) -> list[dict[s
         kind = cmd.get("kind")
         try:
             if kind == "steer_adversary":
-                results.append(steer_adversary(cmd["surface"], cmd.get("multiplier", 3.0)))
+                result = steer_adversary(cmd["surface"], cmd.get("multiplier", 3.0))
             elif kind == "steer_opposition":
-                results.append(steer_opposition(cmd["surface"], cmd.get("cycles", 1)))
+                result = steer_opposition(cmd["surface"], cmd.get("cycles", 1))
             elif kind == "jules_task":
-                results.append(post_jules_task(cmd["title"], cmd["body"], cmd.get("labels")))
+                result = post_jules_task(cmd["title"], cmd["body"], cmd.get("labels"))
+            elif kind == "openhands_task":
+                result = post_openhands_task(cmd["title"], cmd["body"])
+            elif kind == "workflow":
+                workflow_file = str(cmd.get("workflow_file") or "")
+                if not workflow_file:
+                    result = {"_error": "missing workflow_file"}
+                else:
+                    result = dispatch_workflow(workflow_file, str(cmd.get("ref") or "main"), cmd.get("inputs"))
             elif kind == "agent_directive":
                 path = write_agent_directive(Path(cmd["agent_file"]), cmd["directive"], repo_root)
-                results.append({"action": "agent_directive", "file": str(path)})
+                result = {"action": "agent_directive", "file": str(path)}
             else:
-                results.append({"_unknown_kind": kind})
+                result = {"_unknown_kind": kind}
         except Exception as exc:
-            results.append({"_error": str(exc), "cmd": cmd})
+            result = {"_error": str(exc), "cmd": cmd}
+
+        retry_meta = cmd.get("_authority_retry")
+        if isinstance(retry_meta, dict) and isinstance(result, dict):
+            result = {**result, "_authority_retry": retry_meta}
+        results.append(result)
     return results
