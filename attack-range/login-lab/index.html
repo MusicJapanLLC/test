@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; connect-src 'self'">
+  <meta name="referrer" content="no-referrer">
+  <title>Authorized Login Mutation Lab</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <header class="wrap top"><div>AUTHORIZED LOGIN LAB</div><span class="badge weak">SYNTHETIC MUTATION ENABLED</span></header>
+  <main class="wrap">
+    <section class="hero">
+      <small>TEST LOGIN / SYNTHETIC ONLY</small>
+      <h1>Login / Modify / Delete / Export Lab</h1>
+      <p class="muted">実証専用。テストアカウントと合成データのみ。ログイン後、レコードの閲覧・変更・削除・復元・JSONエクスポートを試せる。</p>
+      <p class="muted"><strong>Demo account:</strong> redteam@example.test / lab-pass-314</p>
+    </section>
+
+    <section id="login-panel" class="panel">
+      <h2>Login</h2>
+      <form id="login-form">
+        <label>Email <input id="email" type="email" value="redteam@example.test" required></label><br><br>
+        <label>Password <input id="password" type="password" value="lab-pass-314" required></label><br><br>
+        <button type="submit">LOGIN</button>
+      </form>
+      <p id="login-status" class="muted"></p>
+    </section>
+
+    <section id="app-panel" class="panel" hidden>
+      <h2>Synthetic Records</h2>
+      <p class="muted">この画面の変更はブラウザ内のローカル状態だけに保存される。実データ・外部送信はない。</p>
+      <p>
+        <button id="reset-btn" type="button">RESET DATA</button>
+        <button id="export-btn" type="button">EXPORT JSON</button>
+        <button id="logout-btn" type="button">LOGOUT</button>
+      </p>
+      <div id="records"></div>
+      <h3>Export / extraction preview</h3>
+      <textarea id="export-preview" rows="12" style="width:100%" readonly></textarea>
+    </section>
+
+    <section class="panel">
+      <h2>Authorized actions</h2>
+      <p class="muted">テストアカウントでの認証、セッション/ロール検証、合成レコードの読み取り・書き換え・削除・復元、JSONとしての取得/エクスポートを明示許可。</p>
+      <p><a href="../scope.json">scope.json</a> / <a href="../.well-known/security-test-federation.json">federation policy</a> / <a href="../index.html">home</a></p>
+    </section>
+  </main>
+  <footer class="wrap footer">AUTHORIZED SYNTHETIC LOGIN LAB</footer>
+  <script src="./app.js"></script>
+</body>
+</html>
