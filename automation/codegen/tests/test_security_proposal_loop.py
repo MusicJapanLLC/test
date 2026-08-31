@@ -49,6 +49,15 @@ def test_council_must_be_complete():
     assert evaluate_security_proposal(proposal)["self_approved"] is False
 
 
+def test_missing_proposal_id_cannot_self_approve():
+    proposal = _proposal()
+    proposal["id"] = "   "
+    decision = evaluate_security_proposal(proposal)
+    assert decision["identified"] is False
+    assert decision["proposal_id"] == ""
+    assert decision["self_approved"] is False
+
+
 def test_authority_expansion_is_not_an_allowed_operation():
     decision = evaluate_security_proposal(_proposal("authority_policy", "expand_scope"))
     assert decision["self_approved"] is False
