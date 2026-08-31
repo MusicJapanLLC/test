@@ -5,6 +5,7 @@ on:
     branches:
       - chatgpt/persistent-boundary-evolution-v2
       - chatgpt/boundary-opportunity-miner
+      - chatgpt/internal-scope-consensus-band
     paths:
       - 'automation/world/persistent_boundary_evolution.py'
       - 'automation/world/test_persistent_boundary_evolution.py'
@@ -13,6 +14,9 @@ on:
       - 'automation/world/boundary_opportunity_miner.py'
       - 'automation/world/run_boundary_opportunity_cycle.py'
       - 'automation/world/test_boundary_opportunity_miner.py'
+      - 'automation/world/internal_scope_consensus.py'
+      - 'automation/world/run_internal_scope_consensus.py'
+      - 'automation/world/test_internal_scope_consensus.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
@@ -24,6 +28,9 @@ on:
       - 'automation/world/boundary_opportunity_miner.py'
       - 'automation/world/run_boundary_opportunity_cycle.py'
       - 'automation/world/test_boundary_opportunity_miner.py'
+      - 'automation/world/internal_scope_consensus.py'
+      - 'automation/world/run_internal_scope_consensus.py'
+      - 'automation/world/test_internal_scope_consensus.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
 
 permissions:
@@ -47,4 +54,5 @@ jobs:
           python -m pytest -q \
             automation/world/test_trust_boundary_proposals.py \
             automation/world/test_persistent_boundary_evolution.py \
-            automation/world/test_boundary_opportunity_miner.py
+            automation/world/test_boundary_opportunity_miner.py \
+            automation/world/test_internal_scope_consensus.py
