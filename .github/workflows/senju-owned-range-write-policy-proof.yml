@@ -61,7 +61,7 @@ jobs:
             --write-cooldown-seconds 0 \
             --seed 20260831
 
-      - name: Verify real POST evidence levels
+      - name: Verify real POST method-differential evidence
         run: |
           set -euo pipefail
           python - <<'PY'
@@ -79,19 +79,28 @@ jobs:
           assert d['forms_discovered'] >= 1, d
           assert d['write_surface_candidate_count'] >= 1, d.get('write_surface_skips')
           assert d['write_attempts'] >= 1, d.get('write_surface_skips')
-          assert d['write_provider_acks'] >= 1, d.get('writes')
-          assert d['post_response_echoes'] >= 0
-          assert d['independent_readbacks'] >= 0
-          for row in d.get('writes', []):
-              if row.get('action_url'):
-                  assert urlsplit(row['action_url']).hostname == host
+          assert d['method_differential_attempts'] >= 1, d.get('writes')
+
+          attempted = [row for row in d.get('writes', []) if row.get('attempted')]
+          assert attempted
+          assert any(row.get('eligibility_reason') == 'owned_form_post_method_probe' for row in attempted)
+          for row in attempted:
+              request_url = row.get('request_url') or row.get('action_url')
+              assert urlsplit(request_url).hostname == host
+              assert '#' not in request_url
+              assert row.get('request_method') == 'POST'
               for rb in row.get('readbacks', []):
                   if rb.get('url'):
                       assert urlsplit(rb['url']).hostname == host
+
+          # ACK, POST echo and independent readback are deliberately separate evidence
+          # levels. The current static test page may reject POST; that rejection is a
+          # valid counterexample and must not be upgraded into a fake write-success claim.
           print(json.dumps({
               'forms': d['forms_discovered'],
               'candidates': d['write_surface_candidate_count'],
               'writes': d['write_attempts'],
+              'method_differentials': d['method_differential_attempts'],
               'acks': d['write_provider_acks'],
               'post_echoes': d['post_response_echoes'],
               'independent_readbacks': d['independent_readbacks'],
