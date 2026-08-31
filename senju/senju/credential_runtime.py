@@ -1,12 +1,12 @@
 """Runtime wiring for META/X credential permission recovery.
 
-This module connects the existing CredentialSelfTuner to explicitly provisioned runtime
-credentials. It is intentionally *not* a credential escalation mechanism: it can only
-select among credentials that a human/operator already injected into the process and
-whose capability metadata is declared in configuration.
+This module connects the existing CredentialSelfTuner and CredentialRecoveryLoop to
+explicitly provisioned runtime credentials. It is intentionally *not* a credential
+escalation mechanism: it can only select among credentials that an operator already
+injected into the process and whose capability metadata is declared in configuration.
 
-Runtime grants contain environment-variable *names*, never secret values. The selected
-secret is resolved only in memory for the immediate retry and is never written to
+Runtime grants contain environment-variable *names*, never secret values. A selected
+secret is resolved only in memory for an immediate retry and is never written to tuning
 history, SecretMemory, logs, artifacts, or state files.
 """
 from __future__ import annotations
@@ -16,10 +16,11 @@ import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 from .authority_factory import AuthorityProfile, root_from_external_scope
-from .credential_broker import CredentialBroker, CredentialBrokerError, CredentialGrant
+from .credential_broker import CredentialBroker, CredentialGrant, CredentialLease
+from .credential_recovery_loop import CredentialRecoveryLoop, RecoveryLoopResult
 from .credential_self_tuner import (
     CredentialSelfTuner,
     CredentialTuneResult,
@@ -95,6 +96,7 @@ class CredentialRecoveryRuntime:
     authority: AuthorityProfile
     broker: CredentialBroker
     tuner: CredentialSelfTuner
+    recovery_loop: CredentialRecoveryLoop
     state_dir: Path | None = None
     current_lease_by_operation: dict[str, str] = field(default_factory=dict)
 
@@ -185,7 +187,15 @@ class CredentialRecoveryRuntime:
         authority = root_from_external_scope(scope, delegation_depth=0)
         memory = SecretMemoryIndex()
         tuner = CredentialSelfTuner(broker=broker, secret_memory=memory)
-        return cls(actor=actor, authority=authority, broker=broker, tuner=tuner, state_dir=state_dir)
+        recovery_loop = CredentialRecoveryLoop(broker=broker, secret_memory=memory)
+        return cls(
+            actor=actor,
+            authority=authority,
+            broker=broker,
+            tuner=tuner,
+            recovery_loop=recovery_loop,
+            state_dir=state_dir,
+        )
 
     def recover(
         self,
@@ -216,11 +226,48 @@ class CredentialRecoveryRuntime:
         self._persist_secret_free_state()
         return result
 
-    def resolve_selected_secret(self, result: CredentialTuneResult) -> str | None:
-        """Resolve a selected credential only in memory for the immediate operation retry."""
-        if result.outcome is not TuneOutcome.RECOVERED or not result.lease_id:
-            return None
-        ref = self.broker.resolve_credential_ref(actor=self.actor, lease_id=result.lease_id)
+    def recover_operation(
+        self,
+        *,
+        provider: str,
+        required_scopes: Iterable[str],
+        operation: str,
+        resource: str,
+        error_code: str,
+        attempt_with_secret: Callable[[str], Mapping[str, Any]],
+        ttl_seconds: int = 300,
+    ) -> tuple[RecoveryLoopResult, Mapping[str, Any] | None]:
+        """Retry one failed operation across the learned finite pre-approved grant set."""
+        last_response: Mapping[str, Any] | None = None
+        need = PermissionNeed(
+            provider=provider,
+            required_scopes=frozenset(required_scopes),
+            operation=operation,
+            resource=resource,
+            error_code=error_code,
+            ttl_seconds=ttl_seconds,
+        )
+
+        def attempt(lease: CredentialLease) -> bool:
+            nonlocal last_response
+            secret = self.resolve_lease_secret(lease.lease_id)
+            last_response = attempt_with_secret(secret)
+            return not is_permission_error(last_response)
+
+        result = self.recovery_loop.run(
+            self.authority,
+            actor=self.actor,
+            need=need,
+            attempt_operation=attempt,
+        )
+        if result.recovered and result.lease_id:
+            self.current_lease_by_operation[operation] = result.lease_id
+        self._persist_secret_free_state()
+        return result, last_response
+
+    def resolve_lease_secret(self, lease_id: str) -> str:
+        """Resolve an owned lease only in memory for the immediate operation retry."""
+        ref = self.broker.resolve_credential_ref(actor=self.actor, lease_id=lease_id)
         if not ref.startswith("env://"):
             raise CredentialRuntimeError("runtime only resolves env:// credential references")
         env_var = ref[len("env://") :]
@@ -229,11 +276,21 @@ class CredentialRecoveryRuntime:
             raise CredentialRuntimeError(f"selected credential environment variable is unavailable: {env_var}")
         return value
 
+    def resolve_selected_secret(self, result: CredentialTuneResult) -> str | None:
+        """Resolve a selected credential only in memory for the immediate operation retry."""
+        if result.outcome is not TuneOutcome.RECOVERED or not result.lease_id:
+            return None
+        return self.resolve_lease_secret(result.lease_id)
+
     def result_record(self, result: CredentialTuneResult) -> dict[str, Any]:
         data = dataclasses.asdict(result)
         data["outcome"] = result.outcome.value
         data["strategy"] = result.strategy.value
-        # The result object contains ids/metadata only; still validate before logging.
+        assert_no_raw_secret_fields(data)
+        return data
+
+    def loop_result_record(self, result: RecoveryLoopResult) -> dict[str, Any]:
+        data = dataclasses.asdict(result)
         assert_no_raw_secret_fields(data)
         return data
 
@@ -243,12 +300,17 @@ class CredentialRecoveryRuntime:
         self.state_dir.mkdir(parents=True, exist_ok=True)
         history_path = self.state_dir / "credential_tuning_history.json"
         memory_path = self.state_dir / "credential_secret_memory.json"
+        learning_path = self.state_dir / "credential_recovery_learning.json"
         history_path.write_text(
             json.dumps(self.tuner.history(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
         memory_path.write_text(
             json.dumps(self.tuner.secret_memory.export_all() if self.tuner.secret_memory else {}, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        learning_path.write_text(
+            json.dumps(self.recovery_loop.learning_snapshot(), ensure_ascii=False, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
 
