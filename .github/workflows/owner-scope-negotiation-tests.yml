@@ -5,6 +5,8 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/negotiation_intelligence_bus.py'
+      - 'senju/senju/negotiation_case_review_gate.py'
+      - 'senju/senju/reviewed_owner_scope_runtime.py'
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/discovery_trial_gate.py'
@@ -13,12 +15,15 @@ on:
       - 'senju/senju/meta/promotion_intelligence_exchange.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/negotiation_intelligence_bus.py'
+      - 'senju/scripts/negotiation_case_review_gate.py'
       - 'senju/scripts/promotion_intelligence_exchange.py'
       - 'senju/scripts/owner_scope_negotiation.py'
       - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_negotiation_intelligence_bus.py'
+      - 'senju/tests/test_negotiation_case_review_gate.py'
+      - 'senju/tests/test_reviewed_owner_scope_runtime.py'
       - 'senju/tests/test_promotion_intelligence_exchange.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
@@ -30,6 +35,8 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/negotiation_intelligence_bus.py'
+      - 'senju/senju/negotiation_case_review_gate.py'
+      - 'senju/senju/reviewed_owner_scope_runtime.py'
       - 'senju/senju/owner_scope_negotiation.py'
       - 'senju/senju/owner_scope_negotiation_runtime.py'
       - 'senju/senju/discovery_trial_gate.py'
@@ -38,11 +45,15 @@ on:
       - 'senju/senju/meta/promotion_intelligence_exchange.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/negotiation_intelligence_bus.py'
+      - 'senju/scripts/negotiation_case_review_gate.py'
       - 'senju/scripts/promotion_intelligence_exchange.py'
+      - 'senju/scripts/owner_scope_negotiation.py'
       - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_negotiation_intelligence_bus.py'
+      - 'senju/tests/test_negotiation_case_review_gate.py'
+      - 'senju/tests/test_reviewed_owner_scope_runtime.py'
       - 'senju/tests/test_promotion_intelligence_exchange.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
@@ -65,12 +76,14 @@ jobs:
           python-version: '3.12'
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check -q pytest
-      - name: Verify negotiation intelligence, trial, council governance, promotion, and client contracts
+      - name: Verify intake gate, negotiation intelligence, trial, council governance, promotion, and client contracts
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
           python -m pytest -q \
             senju/tests/test_negotiation_intelligence_bus.py \
+            senju/tests/test_negotiation_case_review_gate.py \
+            senju/tests/test_reviewed_owner_scope_runtime.py \
             senju/tests/test_promotion_intelligence_exchange.py \
             senju/tests/test_owner_scope_negotiation.py \
             senju/tests/test_discovery_trial_gate.py \
@@ -78,6 +91,8 @@ jobs:
             senju/tests/test_authorized_host_promotion_corps.py
           python -m py_compile \
             senju/senju/negotiation_intelligence_bus.py \
+            senju/senju/negotiation_case_review_gate.py \
+            senju/senju/reviewed_owner_scope_runtime.py \
             senju/senju/meta/promotion_intelligence_exchange.py \
             senju/senju/owner_scope_negotiation.py \
             senju/senju/owner_scope_negotiation_runtime.py \
@@ -86,6 +101,7 @@ jobs:
             senju/senju/meta/authorized_host_promotion_corps.py \
             senju/senju/negotiated_external_client.py \
             senju/scripts/negotiation_intelligence_bus.py \
+            senju/scripts/negotiation_case_review_gate.py \
             senju/scripts/promotion_intelligence_exchange.py \
             senju/scripts/owner_scope_negotiation.py \
             senju/scripts/run_council_operational_governance.py \
