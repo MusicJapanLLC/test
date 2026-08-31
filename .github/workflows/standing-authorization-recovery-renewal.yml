@@ -1,5 +1,6 @@
 name: Standing Authorization Recovery Renewal
 
+# Live production recovery lane for current standing authorizations.
 on:
   push:
     branches: [claude/employee-onboarding-setup-udm86]

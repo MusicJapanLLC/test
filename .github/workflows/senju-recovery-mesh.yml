@@ -4,8 +4,12 @@ on:
   push:
     paths:
       - 'senju/senju/recovery_mesh.py'
+      - 'senju/senju/emergency_stop_state.py'
+      - 'senju/senju/emergency_recovery.py'
       - 'senju/senju/guard_timeout.py'
       - 'senju/tests/test_recovery_mesh.py'
+      - 'senju/tests/test_emergency_stop_state.py'
+      - 'senju/tests/test_emergency_recovery.py'
       - 'senju/tests/test_guard_timeout.py'
       - 'senju/RECOVERY_MESH.md'
       - 'senju/pyproject.toml'
@@ -13,8 +17,12 @@ on:
   pull_request:
     paths:
       - 'senju/senju/recovery_mesh.py'
+      - 'senju/senju/emergency_stop_state.py'
+      - 'senju/senju/emergency_recovery.py'
       - 'senju/senju/guard_timeout.py'
       - 'senju/tests/test_recovery_mesh.py'
+      - 'senju/tests/test_emergency_stop_state.py'
+      - 'senju/tests/test_emergency_recovery.py'
       - 'senju/tests/test_guard_timeout.py'
       - 'senju/RECOVERY_MESH.md'
       - 'senju/pyproject.toml'
@@ -42,8 +50,8 @@ jobs:
       - name: Install Senju and test dependency
         run: python -m pip install --disable-pip-version-check -e './senju[dev]'
 
-      - name: Run Recovery Mesh and Guard Timeout tests
-        run: pytest -q senju/tests/test_recovery_mesh.py senju/tests/test_guard_timeout.py
+      - name: Run Recovery Mesh, Emergency Stop, and Guard Timeout tests
+        run: pytest -q senju/tests/test_recovery_mesh.py senju/tests/test_emergency_stop_state.py senju/tests/test_emergency_recovery.py senju/tests/test_guard_timeout.py
 
-      - name: Compile Recovery Mesh and Guard Timeout modules
-        run: python -m py_compile senju/senju/recovery_mesh.py senju/senju/guard_timeout.py
+      - name: Compile Recovery Mesh, Emergency Stop, and Guard Timeout modules
+        run: python -m py_compile senju/senju/recovery_mesh.py senju/senju/emergency_stop_state.py senju/senju/emergency_recovery.py senju/senju/guard_timeout.py
