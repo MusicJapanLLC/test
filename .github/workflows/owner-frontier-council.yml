@@ -10,6 +10,8 @@ on:
       - 'senju/senju/owner_frontier_council.py'
       - 'senju/scripts/owner_frontier_council.py'
       - 'senju/tests/test_owner_frontier_council.py'
+      - 'senju/scripts/frontier_approval_continuity.py'
+      - 'senju/tests/test_frontier_approval_continuity.py'
       - 'senju/config/owner-frontier-council.json'
       - 'senju/config/owner-expansion-envelope.json'
       - 'senju/senju/rights_request_federation.py'
@@ -23,6 +25,8 @@ on:
       - 'senju/senju/owner_frontier_council.py'
       - 'senju/scripts/owner_frontier_council.py'
       - 'senju/tests/test_owner_frontier_council.py'
+      - 'senju/scripts/frontier_approval_continuity.py'
+      - 'senju/tests/test_frontier_approval_continuity.py'
       - 'senju/config/owner-frontier-council.json'
       - 'senju/config/owner-expansion-envelope.json'
       - 'senju/senju/rights_request_federation.py'
@@ -54,7 +58,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify four-party frontier and existing negotiation invariants
+      - name: Verify four-party frontier and approval-continuity invariants
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -62,6 +66,7 @@ jobs:
           python -m pip install --disable-pip-version-check -q pytest
           python -m pytest -q \
             senju/tests/test_owner_frontier_council.py \
+            senju/tests/test_frontier_approval_continuity.py \
             senju/tests/test_rights_request_federation.py \
             senju/tests/test_owner_scope_negotiation.py
 
@@ -94,6 +99,20 @@ jobs:
           test -s senju/state/owner_scope_expansion_evidence_requests.json
           test -s senju/state/owner_contact_ceiling_effective.json
 
+      - name: Preserve valid 4/4 approvals deferred only by cycle budget
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/frontier_approval_continuity.py \
+            --state-dir senju/state \
+            --out /tmp/frontier-approval-continuity.json
+          test "$(jq -r '.authority_minted' /tmp/frontier-approval-continuity.json)" = "false"
+          test "$(jq -r '.network_io_attempted' /tmp/frontier-approval-continuity.json)" = "false"
+          test -s senju/state/owner_frontier_approved_pending.json
+          test -s senju/state/authority_opportunity_queue.json
+          grep -q 'approved_pending_next_frontier_cycle' senju/scripts/frontier_approval_continuity.py
+
       - name: Build bounded frontier state bundle
         shell: bash
         run: |
@@ -106,7 +125,9 @@ jobs:
             senju/state/owner_frontier_ballots.json \
             senju/state/owner_frontier_council.json \
             senju/state/owner_scope_expansion_evidence_requests.json \
-            senju/state/owner_contact_ceiling_effective.json
+            senju/state/owner_contact_ceiling_effective.json \
+            senju/state/owner_frontier_approved_pending.json \
+            senju/state/authority_opportunity_queue.json
           do
             test -s "$path"
             cp "$path" "/tmp/frontier-state/$(basename "$path")"
@@ -128,6 +149,7 @@ jobs:
           path: |
             /tmp/rights-request-federation.json
             /tmp/owner-frontier-council.json
+            /tmp/frontier-approval-continuity.json
           if-no-files-found: warn
           retention-days: 30
 
@@ -168,6 +190,8 @@ jobs:
             senju/state/owner_frontier_council.json
             senju/state/owner_scope_expansion_evidence_requests.json
             senju/state/owner_contact_ceiling_effective.json
+            senju/state/owner_frontier_approved_pending.json
+            senju/state/authority_opportunity_queue.json
           )
 
           put_file() {
@@ -218,6 +242,8 @@ jobs:
               'senju/state/owner_frontier_council.json',
               'senju/state/owner_scope_expansion_evidence_requests.json',
               'senju/state/owner_contact_ceiling_effective.json',
+              'senju/state/owner_frontier_approved_pending.json',
+              'senju/state/authority_opportunity_queue.json',
           }
           changed = {line.strip() for line in Path('/tmp/frontier-changed.txt').read_text().splitlines() if line.strip()}
           forbidden = changed - allowed
