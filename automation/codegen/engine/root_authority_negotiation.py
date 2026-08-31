@@ -59,6 +59,7 @@ ROW_KEYS = (
     "records",
     "tasks",
     "review_requests",
+    "evidence",
 )
 
 
