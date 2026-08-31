@@ -9,6 +9,7 @@ on:
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/standment-security-gate.yml"
       - ".github/workflows/senju-defense-adversary-team.yml"
+      - ".github/workflows/senju-autonomous-boundary-research.yml"
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
@@ -17,12 +18,14 @@ on:
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/standment-security-gate.yml"
       - ".github/workflows/senju-defense-adversary-team.yml"
+      - ".github/workflows/senju-autonomous-boundary-research.yml"
   schedule:
-    - cron: "41 2 * * *"
+    - cron: "41 * * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: senju-defense-adversary-${{ github.ref }}
@@ -31,7 +34,10 @@ concurrency:
 jobs:
   pressure-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
+    env:
+      BOUNDARY_STATE: ${{ runner.temp }}/senju-defense-boundary-state
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,9 +49,40 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install boundary research tests
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
       - name: Run adversary team tests
         working-directory: senju
         run: python -m unittest discover -s tests -p 'test_defense_adversary_team.py' -v
+
+      - name: Verify autonomous boundary research contract
+        working-directory: senju
+        run: python -m pytest tests/test_boundary_research_loop.py -q
+
+      - name: Restore previous boundary research generation
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$BOUNDARY_STATE" /tmp/senju-defense-boundary-prev
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Defense Adversary Team" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-defense-boundary-research-state \
+              --dir /tmp/senju-defense-boundary-prev || true
+            PREV_STATE="$(find /tmp/senju-defense-boundary-prev -type f -name boundary_research_state.json -print -quit || true)"
+            if [[ -n "$PREV_STATE" ]]; then
+              cp "$PREV_STATE" "$BOUNDARY_STATE/boundary_research_state.json"
+            fi
+          fi
 
       - name: Run coordinated pressure campaign
         env:
@@ -54,11 +91,46 @@ jobs:
           python -m senju.defense_adversary_team
           --json security-reports/senju-defense-adversary.json
 
+      - name: Run autonomous boundary counterexample campaign
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$BOUNDARY_STATE" security-reports/senju-boundary-research
+          PYTHONPATH=senju python -m senju.autonomy.boundary_research_loop \
+            --state-dir "$BOUNDARY_STATE" \
+            --output-dir security-reports/senju-boundary-research \
+            --json security-reports/senju-boundary-research/cycle-summary.json
+
+      - name: Verify merged adversary and boundary evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('security-reports/senju-boundary-research/boundary_research_report.json').read_text())
+          assert report['closed_loop'] is True
+          assert report['autonomous_research'] is True
+          assert report['case_count'] >= 17
+          assert len(report['family_coverage']) >= 4
+          assert report['denial_becomes_permission'] is False
+          print('SENJU_DEFENSE_BOUNDARY_RESEARCH_JOIN_VERIFIED')
+          PY
+
       - name: Upload adversary evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: senju-defense-adversary-${{ github.sha }}
-          path: security-reports/senju-defense-adversary.json
+          path: security-reports/
           if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload persistent boundary research generation
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: senju-defense-boundary-research-state
+          path: ${{ runner.temp }}/senju-defense-boundary-state/
+          if-no-files-found: warn
           retention-days: 30
