@@ -1,0 +1,85 @@
+name: Autonomous Authority Council Cycle
+
+on:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/meta/autonomous_authority_council.py'
+      - 'senju/senju/meta/distributed_authority.py'
+      - 'senju/senju/distributed_egress.py'
+      - 'senju/senju/guarded_multi_egress.py'
+      - 'senju/scripts/run_autonomous_authority_council.py'
+      - 'senju/DISTRIBUTED_AUTHORITY_POLICY.md'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - '.github/workflows/autonomous-authority-council-cycle.yml'
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: autonomous-authority-council-production
+  cancel-in-progress: false
+
+jobs:
+  council:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Run authority regressions
+        env:
+          PYTHONPATH: senju
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            senju/tests/test_distributed_authority.py \
+            senju/tests/test_autonomous_authority_council.py \
+            senju/tests/test_guarded_multi_egress.py
+
+      - name: Run live autonomous Council decision and egress
+        env:
+          PYTHONPATH: senju
+        run: |
+          mkdir -p .authority-council-runtime
+          python senju/scripts/run_autonomous_authority_council.py \
+            --repo-root . \
+            --out .authority-council-runtime/council-run.json
+          test "$(jq -r '.authority_decision.allowed' .authority-council-runtime/council-run.json)" = "true"
+          test "$(jq -r '.ai_council.effect' .authority-council-runtime/council-run.json)" = "allow"
+          test "$(jq -r '.ai_council.per_host_manual_reapproval_required' .authority-council-runtime/council-run.json)" = "false"
+          test "$(jq -r '.invariants.hard_deny_override' .authority-council-runtime/council-run.json)" = "false"
+          test "$(jq -r '.invariants.revocation_override' .authority-council-runtime/council-run.json)" = "false"
+
+      - name: Preserve Council evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: autonomous-authority-council-${{ github.run_id }}
+          path: .authority-council-runtime/
+          if-no-files-found: warn
+          include-hidden-files: true
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Autonomous Authority Council" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f .authority-council-runtime/council-run.json ]; then
+            echo "- Allowed: $(jq -r '.authority_decision.allowed' .authority-council-runtime/council-run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Council: $(jq -r '.ai_council.effect' .authority-council-runtime/council-run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Manual per-host reapproval: $(jq -r '.ai_council.per_host_manual_reapproval_required' .authority-council-runtime/council-run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Transport: $(jq -r '.transport.engine' .authority-council-runtime/council-run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- HTTP: $(jq -r '.transport.status' .authority-council-runtime/council-run.json)" >> "$GITHUB_STEP_SUMMARY"
+          fi
