@@ -57,6 +57,30 @@ def test_bus_uses_regression_as_next_focus(tmp_path: Path) -> None:
     assert len(packet["digest"]) == 24
 
 
+def test_openhands_block_becomes_next_cycle_repair_focus() -> None:
+    prs = [
+        {
+            "number": 42,
+            "title": "[Senju] improve evidence bus",
+            "state": "OPEN",
+            "headRefName": "senju/agency-42",
+        }
+    ]
+    audit = {
+        "schema": "senju-machine-merge-audit/v1",
+        "prs": [{"number": 42, "audit": "BLOCK", "reason": "test regression"}],
+    }
+    packet = build_bus(
+        {"steps_executed": 1, "successful_steps": 1, "failed_steps": 0},
+        {"safe": True},
+        prs,
+        merge_audit=audit,
+    )
+    assert packet["next_focus"] == "blocked_pr_repair"
+    assert packet["pr_swarm"]["audit_blocked"] == 1
+    assert packet["pr_swarm"]["recent"][0]["machine_audit"] == "BLOCK"
+
+
 def test_digest_is_stable_across_build_time(tmp_path: Path) -> None:
     frontier = {
         "steps_executed": 1,
@@ -77,4 +101,4 @@ def test_markdown_exposes_machine_digest() -> None:
     )
     text = render_markdown(packet)
     assert f"agency-digest: `{packet['digest']}`" in text
-    assert "TRANSPARENT" not in text  # human summary stays compact; policy lives in JSON
+    assert "unauthorized third-party writes" in text
