@@ -3,5 +3,7 @@
   "source": "owner_explicit_authorized_root",
   "interesting": true,
   "url": "https://kabeya-authorized-test-range.onrender.com/",
-  "shared_with": ["META", "X", "SENJU", "CHILD", "AI"]
+  "shared_with": ["META", "X", "SENJU", "CHILD", "AI"],
+  "council_nomination": "council_discovery_nomination.json",
+  "authority_goal": "persistent_delegated_authority"
 }

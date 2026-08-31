@@ -1,0 +1,49 @@
+{
+  "schema": "meta-authority-council-discovery-nomination/v1",
+  "generated_for": "production-council-cycle",
+  "nomination": {
+    "host": "kabeya-authorized-test-range.onrender.com",
+    "url": "https://kabeya-authorized-test-range.onrender.com/",
+    "classification": "explicit_owner_authorized_test_range",
+    "authorization_reference": "canonical:kabeya-authorized-test-range",
+    "requested_effect": "persistent_delegated_authority",
+    "requested_methods": [
+      "GET",
+      "HEAD",
+      "OPTIONS"
+    ],
+    "credential_scope": "none",
+    "destructive": false,
+    "hard_deny": false,
+    "revoked": false,
+    "requested_council": [
+      "META",
+      "X",
+      "SENJU"
+    ],
+    "owner_message_to_council": "This exact host is an explicit owner-authorized test range. Approval for persistent Authority promotion is recommended, provided each council member independently confirms the existing standing authorization, exact-host scope, and bounded non-destructive method set.",
+    "recommendation": "approval_permitted_and_recommended_after_independent_council_checks",
+    "authority_goal": "first_persistent_delegated_authority_for_authorized_test_range",
+    "promotion_rule": "existing standing authorization -> discovery-authorized grant -> META/X/SENJU council -> persistent delegated Authority",
+    "trial_and_error_policy": {
+      "allowed": true,
+      "meaning": "SENJU/META/X may vary research hypotheses and approved-path probes inside the exact authorized host and existing budgets; a denial never expands host, credential, method, or authority scope by itself.",
+      "unapproved_host_expansion": false,
+      "credential_scope_expansion": false
+    },
+    "active_exploit_pilot": {
+      "eligible_after_exact_host_authorization": true,
+      "rollout_percent": 30,
+      "max_live_probes_per_run": 3,
+      "max_rps": 1.0,
+      "methods": [
+        "GET"
+      ],
+      "credential_use": false,
+      "destructive": false,
+      "persistence": false,
+      "out_of_band_callback": false,
+      "out_of_scope_redirects": "block_before_follow"
+    }
+  }
+}
