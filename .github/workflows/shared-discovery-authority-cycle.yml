@@ -1,0 +1,71 @@
+name: Shared Discovery Authority Cycle
+
+on:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/orchestrator.py'
+      - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: shared-discovery-authority-cycle
+  cancel-in-progress: false
+
+jobs:
+  discovery-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Run shared discovery authority and probe loop
+        working-directory: automation/codegen
+        env:
+          PYTHONPATH: .
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.shared_discovery_authority import run_shared_discovery_authority
+          from engine.discovery_probe_runner import run_discovery_probe_cycle
+
+          state = Path('meta_state')
+          discovery = run_shared_discovery_authority(state)
+          print({'discovery': discovery})
+          probes = run_discovery_probe_cycle(state, max_targets=20)
+          print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
+          PY
+
+      - name: Preserve shared discovery state and probe receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: shared-discovery-authority-state
+          path: |
+            automation/codegen/meta_state/discovered_urls.json
+            automation/codegen/meta_state/discovery_candidates.json
+            automation/codegen/meta_state/discovery_authorized.json
+            automation/codegen/meta_state/discovery_authorization_requests.json
+            automation/codegen/meta_state/discovery_authority_apply_queue.json
+            automation/codegen/meta_state/human_intent_decisions.json
+            automation/codegen/meta_state/shared_discovery_knowledge.json
+            automation/codegen/meta_state/discovery_action_queue.json
+            automation/codegen/meta_state/shared_probe_receipts.json
+          if-no-files-found: warn
+          retention-days: 30
