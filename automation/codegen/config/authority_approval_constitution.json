@@ -1,0 +1,43 @@
+{
+  "schema": "the-world-authority-approval-constitution/v1",
+  "constitution_id": "authority-approval-constitution-v1",
+  "status": "binding_until_explicitly_replaced",
+  "shared_with": ["META", "X", "SENJU", "PR-ARMY", "CHILD", "AI"],
+  "canonical_flow_id": "root-authority-candidate-v1",
+  "unlisted_flow_policy": "exclude_from_canonical_review_surface",
+  "decision_precedence": [
+    {
+      "rank": 1,
+      "stage": "executive_council_primary_review",
+      "actors": ["META", "X", "SENJU"],
+      "requirement": "3_of_3",
+      "effect": "primary_candidate_approval_or_rejection"
+    },
+    {
+      "rank": 2,
+      "stage": "dossier_integrity_and_scope_review",
+      "actors": ["META", "X", "SENJU", "PR-ARMY", "CHILD", "AI"],
+      "effect": "evidence_quality_and_scope_completeness_only"
+    },
+    {
+      "rank": 3,
+      "stage": "secondary_authority_evidence_validation",
+      "sources": ["existing_standing_authorization", "owner_verified_domain", "owner_exact_link"],
+      "effect": "secondary_activation_validation_only",
+      "may_admit_candidate": false,
+      "may_raise_review_priority": false,
+      "may_override_council_rejection": false
+    },
+    {
+      "rank": 4,
+      "stage": "bounded_activation_by_existing_authority_machinery",
+      "effect": "apply_only_after_prior_canonical_stages"
+    }
+  ],
+  "hard_limits": {
+    "ai_consensus_alone_mints_new_external_authority": false,
+    "hard_deny_or_revocation_override": false,
+    "credential_minting_from_candidate_review": false,
+    "private_network_scope_from_candidate_review": false
+  }
+}

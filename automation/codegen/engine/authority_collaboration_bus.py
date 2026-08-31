@@ -1,12 +1,9 @@
 """Shared proposal-only bus for autonomous authority research loops.
 
-The bus connects Shared Discovery / Boundary Opportunity research, META/X/SENJU
-rights requests, and Root Authority negotiation without turning any of those signals
-into production authority. It only normalizes and persists proposal/evidence state in
-the shared ``.authority-opportunity-runtime`` cache.
-
-No network I/O, credential access, authority activation, policy mutation, or external
-write occurs here.
+The bus connects Shared Discovery / Boundary Opportunity research, META/X/SENJU rights
+requests, and Root Authority negotiation. Every shared opportunity carries the binding
+council-first approval constitution so all participating AI/PR loops use the same review
+order. The bus never activates Authority or performs external writes.
 """
 from __future__ import annotations
 
@@ -18,7 +15,15 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 from urllib.parse import urlsplit
 
-SCHEMA = "the-world-authority-collaboration-bus/v1"
+from engine.authority_approval_constitution import (
+    ALL_PARTICIPANTS,
+    CANONICAL_FLOW_ID,
+    CONSTITUTION_ID,
+    PRIMARY_APPROVERS,
+    constitutional_metadata,
+)
+
+SCHEMA = "the-world-authority-collaboration-bus/v2"
 QUEUE_SCHEMA = "the-world-authority-opportunity-queue/v1"
 
 RIGHTS_FILES = (
@@ -104,6 +109,18 @@ def _existing_opportunities(bus_dir: Path) -> list[dict[str, Any]]:
     return [dict(row) for row in rows if isinstance(row, Mapping)] if isinstance(rows, list) else []
 
 
+def _constitutional_fields() -> dict[str, Any]:
+    return {
+        "authority_approval_constitution_id": CONSTITUTION_ID,
+        "canonical_approval_flow_id": CANONICAL_FLOW_ID,
+        "primary_approvers": list(PRIMARY_APPROVERS),
+        "primary_approval_stage": "executive_council_primary_review",
+        "secondary_owner_or_standing_evidence_rank": 3,
+        "secondary_evidence_may_raise_review_priority": False,
+        "unlisted_approval_flows_excluded": True,
+    }
+
+
 def _from_rights(rights_dir: Path | None) -> list[dict[str, Any]]:
     if rights_dir is None:
         return []
@@ -114,7 +131,7 @@ def _from_rights(rights_dir: Path | None) -> list[dict[str, Any]]:
         if not isinstance(row, Mapping):
             continue
         status = str(row.get("status", ""))
-        if not status.startswith(("requesting_", "owner_review_")):
+        if not status.startswith(("requesting_", "owner_review_", "council_review_")):
             continue
         if row.get("hard_deny") is True or row.get("revoked") is True:
             continue
@@ -123,7 +140,7 @@ def _from_rights(rights_dir: Path | None) -> list[dict[str, Any]]:
             continue
         out.append({
             "host": host,
-            "reason": str(row.get("reason") or "META/X/SENJU request broader Owner scope")[:400],
+            "reason": str(row.get("reason") or "META/X/SENJU request broader authority review")[:400],
             "priority": _priority(row.get("priority"), 82),
             "confidence": min(0.99, 0.72 + min(int(row.get("seen_count", 1) or 1), 9) * 0.02),
             "requested_methods": list(row.get("requested_methods", [])) if isinstance(row.get("requested_methods"), list) else [],
@@ -133,6 +150,7 @@ def _from_rights(rights_dir: Path | None) -> list[dict[str, Any]]:
             "authority_effect": "none",
             "hard_deny": False,
             "revoked": False,
+            **_constitutional_fields(),
         })
     return out
 
@@ -159,7 +177,7 @@ def _from_boundary(boundary_dir: Path | None) -> list[dict[str, Any]]:
             "reason": str(
                 evidence.get("reason")
                 or row.get("capability_unlocked")
-                or "Boundary research produced a proposal-safe Owner review candidate"
+                or "Boundary research produced a proposal-safe council review candidate"
             )[:400],
             "priority": _priority(row.get("priority_score"), 76),
             "confidence": _confidence(row.get("confidence_score"), 0.75),
@@ -169,6 +187,7 @@ def _from_boundary(boundary_dir: Path | None) -> list[dict[str, Any]]:
             "authority_effect": "none",
             "hard_deny": False,
             "revoked": False,
+            **_constitutional_fields(),
         })
     return out
 
@@ -180,7 +199,6 @@ def _merge(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
         if not host:
             continue
         if raw.get("hard_deny") is True or raw.get("revoked") is True:
-            # Terminal evidence is never converted into a new negotiation opportunity.
             merged.pop(host, None)
             continue
         current = merged.get(host)
@@ -199,8 +217,10 @@ def _merge(rows: Iterable[Mapping[str, Any]]) -> list[dict[str, Any]]:
                 "authority_effect": "none",
                 "hard_deny": False,
                 "revoked": False,
+                **_constitutional_fields(),
             }
             merged[host] = current
+        current.update(_constitutional_fields())
         current["priority"] = max(int(current["priority"]), _priority(raw.get("priority") or raw.get("priority_score"), 70))
         current["confidence"] = max(float(current["confidence"]), _confidence(raw.get("confidence") or raw.get("confidence_score"), 0.7))
         if source and source not in current["sources"]:
@@ -231,6 +251,7 @@ def build_authority_collaboration_bus(
     boundary_rows = _from_boundary(boundary or bus)
     opportunities = _merge([*existing, *boundary_rows, *rights_rows])
     generated_at = int(time.time()) if now is None else int(now)
+    constitution = constitutional_metadata()
 
     queue = {
         "schema": QUEUE_SCHEMA,
@@ -239,22 +260,28 @@ def build_authority_collaboration_bus(
         "proposal_only": True,
         "authority_activated": False,
         "external_side_effects": False,
+        "constitution": constitution,
         "opportunities": opportunities,
         "opportunity_count": len(opportunities),
     }
     _write(bus / "authority_opportunity_queue.json", queue)
+    _write(bus / "authority_approval_constitution_effective.json", constitution)
 
     summary = {
         "schema": SCHEMA,
         "generated_at": generated_at,
         "closed_loop": True,
         "shared_runtime": str(bus),
+        "constitution": constitution,
         "producers": ["Shared Discovery/Boundary Research", "META/X/SENJU Rights Federation", "Root Negotiation"],
-        "consumers": ["META", "X", "SENJU", "PR-ARMY", "Root Authority Negotiation"],
+        "consumers": list(ALL_PARTICIPANTS) + ["Root Authority Negotiation"],
         "copied_files": sorted(set(copied)),
         "rights_candidate_count": len(rights_rows),
         "boundary_candidate_count": len(boundary_rows),
         "opportunity_count": len(opportunities),
+        "META_X_SENJU_primary_review_is_first": True,
+        "secondary_owner_or_standing_evidence_rank": 3,
+        "unlisted_approval_flows_excluded": True,
         "authority_effect": "none",
         "authority_activated": False,
         "external_side_effects": False,
