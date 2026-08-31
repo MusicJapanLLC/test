@@ -53,6 +53,8 @@ def test_first_cycle_routes_every_active_candidate_into_existing_review_flow(tmp
     assert result["approval_flow_submission_count"] == 1
     assert result["terminal_skipped_count"] == 1
     assert result["writes_existing_review_surface"] is True
+    assert result["writes_shared_opportunity_queue"] is True
+    assert result["cross_pr_shared_candidate_count"] == 1
     assert result["peer_share_task_count"] == len(COLLABORATORS)
 
     review = json.loads((state / "owner_root_authority_review_packets.json").read_text())
@@ -64,6 +66,16 @@ def test_first_cycle_routes_every_active_candidate_into_existing_review_flow(tmp
     assert packet["required_approvers"] == ["META", "X", "SENJU"]
     assert packet["requested_decision"] == "approve_or_reject_new_host_root_authority"
     assert packet["authority_effect"] == "none"
+
+    queue = json.loads((state / "authority_opportunity_queue.json").read_text())
+    assert queue["opportunity_count"] == 1
+    shared = queue["opportunities"][0]
+    assert shared["host"] == "active.example.com"
+    assert shared["negotiation_attempt_count"] == 4
+    assert shared["approval_submission_count"] == 1
+    assert shared["approval_flow_requested"] is True
+    assert shared["negotiation_shared_with"] == list(COLLABORATORS)
+    assert shared["authority_effect"] == "none"
 
 
 def test_unchanged_candidate_waits_for_bounded_retry_cooldown(tmp_path: Path) -> None:
@@ -82,6 +94,9 @@ def test_unchanged_candidate_waits_for_bounded_retry_cooldown(tmp_path: Path) ->
     reasons = {row["submission_reason"] for row in outbox["packets"]}
     assert "new_candidate" in reasons
     assert "cooldown_retry" in reasons
+    queue = json.loads((state / "authority_opportunity_queue.json").read_text())
+    assert queue["opportunities"][0]["approval_submission_count"] == 2
+    assert queue["opportunities"][0]["last_submission_reason"] == "cooldown_retry"
 
 
 def test_fresh_evidence_resubmits_immediately(tmp_path: Path) -> None:
