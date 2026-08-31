@@ -12,47 +12,32 @@ on:
       - 'senju/state/owner_scope_negotiation_signals.json'
       - 'senju/state/adversary_external_host_requests.json'
       - 'senju/config/owner-expansion-envelope.json'
+      - 'senju/senju/owner_scope_negotiation.py'
+      - 'senju/senju/owner_scope_negotiation_runtime.py'
+      - 'senju/senju/negotiated_external_client.py'
+      - 'senju/scripts/owner_scope_negotiation.py'
+      - 'senju/scripts/negotiated_external_probe.py'
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: owner-scope-negotiation-production
   cancel-in-progress: false
 
 jobs:
-  negotiate:
+  negotiate-and-exercise:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true
+          persist-credentials: false
           ref: claude/employee-onboarding-setup-udm86
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
         with:
           python-version: '3.12'
-      - name: Snapshot effective ceiling
-        id: before
-        shell: bash
-        run: |
-          python - <<'PY' > /tmp/owner-ceiling-before.sha
-          import hashlib, json
-          from pathlib import Path
-          p = Path('senju/state/owner_contact_ceiling_effective.json')
-          if not p.exists():
-              print('missing')
-          else:
-              try:
-                  doc = json.loads(p.read_text())
-                  ceiling = doc.get('ceiling', {})
-                  raw = json.dumps(ceiling, sort_keys=True, separators=(',', ':')).encode()
-                  print(hashlib.sha256(raw).hexdigest())
-              except Exception:
-                  print('invalid')
-          PY
-          echo "sha=$(cat /tmp/owner-ceiling-before.sha)" >> "$GITHUB_OUTPUT"
-      - name: Run real negotiation cycle
+      - name: Run real production negotiation cycle
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -60,38 +45,21 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --out /tmp/owner-scope-negotiation-report.json
-      - name: Persist effective Owner ceiling when meaningfully changed
-        id: persist
-        shell: bash
+      - name: Exercise negotiated ceiling through real ExternalContactClient
+        env:
+          PYTHONPATH: senju:automation/codegen
         run: |
-          AFTER=$(python - <<'PY'
-          import hashlib, json
-          from pathlib import Path
-          p = Path('senju/state/owner_contact_ceiling_effective.json')
-          doc = json.loads(p.read_text())
-          raw = json.dumps(doc.get('ceiling', {}), sort_keys=True, separators=(',', ':')).encode()
-          print(hashlib.sha256(raw).hexdigest())
-          PY
-          )
-          BEFORE='${{ steps.before.outputs.sha }}'
-          echo "before=$BEFORE"
-          echo "after=$AFTER"
-          if [ "$BEFORE" = "$AFTER" ]; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          git config user.name 'senju-owner-scope-bot'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add senju/state/owner_contact_ceiling_effective.json
-          git commit -m 'chore(authority): persist negotiated owner contact ceiling [skip ci]'
-          git push origin HEAD:claude/employee-onboarding-setup-udm86
-          echo "changed=true" >> "$GITHUB_OUTPUT"
-      - name: Upload negotiation evidence
+          python senju/scripts/negotiated_external_probe.py \
+            --repo-root . \
+            --state-dir senju/state \
+            --out /tmp/negotiated-external-production-probe.json
+      - name: Upload production negotiation evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: owner-scope-negotiation-${{ github.run_id }}
           path: |
             /tmp/owner-scope-negotiation-report.json
+            /tmp/negotiated-external-production-probe.json
             senju/state/owner_scope_negotiation_campaign.json
             senju/state/owner_scope_negotiation_result.json
             senju/state/owner_contact_ceiling_effective.json
