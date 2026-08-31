@@ -1,0 +1,81 @@
+name: Senju Authorized Range Closed Loop
+
+on:
+  pull_request:
+    paths:
+      - "senju/senju/authorized_range_closed_loop.py"
+      - "senju/tests/test_authorized_range_closed_loop.py"
+      - ".github/workflows/senju-authorized-range-closed-loop.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-authorized-range-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-and-live-authorized:
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: senju
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install test dependency
+        run: python -m pip install pytest==9.1.1
+      - name: Run closed-loop unit tests
+        run: python -m pytest -q tests/test_authorized_range_closed_loop.py
+      - name: Execute bounded authorized live loop
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from senju.authorized_range_closed_loop import (
+              AuthorizedRangeClosedLoop,
+              AuthorizedRangePolicy,
+              LoopLimits,
+          )
+
+          policy = AuthorizedRangePolicy.load("config/authorized-test-range.json")
+          if policy.host != "kabeya-authorized-test-range.onrender.com":
+              raise SystemExit(f"refusing unexpected target: {policy.host}")
+
+          loop = AuthorizedRangeClosedLoop(
+              policy,
+              limits=LoopLimits(
+                  max_cycles=4,
+                  max_pages=24,
+                  max_depth=3,
+                  max_requests=80,
+                  families_per_page=4,
+                  stagnant_cycles_to_stop=3,
+              ),
+          )
+          report = loop.run()
+          out = Path("authorized-range-report.json")
+          out.write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          print(json.dumps({
+              "exact_host": report["exact_host"],
+              "request_count": report["request_count"],
+              "pages_observed": report["pages_observed"],
+              "blocked_out_of_scope": report["blocked_out_of_scope"],
+              "finding_count": len(report["findings"]),
+              "cycles": report["cycles"],
+          }, ensure_ascii=False, indent=2))
+          PY
+      - name: Upload assessment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: senju-authorized-range-report
+          path: senju/authorized-range-report.json
+          if-no-files-found: warn
+          retention-days: 14
