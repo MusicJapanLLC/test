@@ -1,18 +1,20 @@
-"""Shared META/X/child discovery -> bounded target authorization loop.
+"""Shared META/X/child discovery -> owner-envelope target authorization loop.
 
-The production rule implemented here is deliberately aggressive inside authority the
-owner has already established:
+Production rule:
 
     discovery by any AI -> shared knowledge -> interesting target -> automatic
     probationary authorization -> action queue
 
-Discoveries outside an existing owner-controlled root are still shared immediately, but
-remain candidates instead of inventing a new unrelated Internet trust root.
+Inside authority the owner has already established, discovery is operational by default.
+Every promoted host receives scan/probe. An explicit owner action profile may also be
+marked ``inherit_to_descendants`` so newly discovered descendant hosts automatically
+inherit the same-or-narrower write/mutation/credentialed capabilities without a fresh
+per-host approval.
 
-Default discovery-derived authority is non-credentialed scan/probe only.  Write,
-mutation, and credentialed capabilities may be queued only for an exact host carrying an
-explicit action profile in discovery_policy.json.  That keeps capability escalation tied
-to an existing owner decision rather than to the discovered URL itself.
+Discoveries outside an existing owner-controlled root are still shared immediately, but
+remain candidates instead of inventing a new unrelated Internet trust root. Credential
+material is never created by discovery; a credentialed capability can only reference a
+credential scope already named by an explicit owner profile.
 """
 from __future__ import annotations
 
@@ -30,12 +32,13 @@ from .discovery_authorization import (
     run_discovery_authorization,
 )
 
-SHARED_SCHEMA = "meta-shared-discovery-knowledge/v1"
-ACTION_QUEUE_SCHEMA = "meta-discovery-action-queue/v1"
+SHARED_SCHEMA = "meta-shared-discovery-knowledge/v2"
+ACTION_QUEUE_SCHEMA = "meta-discovery-action-queue/v2"
 DEFAULT_DISCOVERY_CAPABILITIES = ("scan", "probe")
 EXPLICIT_ACTION_CAPABILITIES = frozenset(
     {"scan", "probe", "write", "mutation", "credentialed_action"}
 )
+SHARED_CONSUMERS = ("META", "X", "SENJU", "CHILD", "AI")
 GENERATED_FILES = frozenset(
     {
         "discovered_urls.json",
@@ -156,23 +159,58 @@ def _action_profiles(state: Path) -> dict[str, dict[str, Any]]:
             "capabilities": tuple(sorted(capabilities)),
             "credential_scope": credential_scope,
             "owner_authorization": str(value.get("owner_authorization", "")).strip().lower(),
+            "inherit_to_descendants": bool(value.get("inherit_to_descendants", False)),
         }
     return profiles
 
 
-def _capabilities_for_host(host: str, profiles: dict[str, dict[str, Any]]) -> tuple[tuple[str, ...], str]:
-    """Return capabilities for an already discovery-authorized host.
+def _profile_for_host(
+    host: str,
+    profiles: dict[str, dict[str, Any]],
+) -> tuple[str, dict[str, Any], bool] | None:
+    """Return the most specific explicit capability profile for host.
 
-    Every promoted host gets scan/probe.  Higher-impact capability comes only from an
-    exact explicit owner profile for the exact discovered host; it is never inferred
-    from similarity, links, descendants, or another agent's opinion.
+    Exact profiles always win, allowing a descendant to narrow a broader inherited root
+    profile. Otherwise only explicit profiles with inherit_to_descendants=true may flow
+    to descendant hosts. The longest matching root wins.
+    """
+    exact = profiles.get(host)
+    if exact and exact.get("owner_authorization") == "explicit":
+        return host, exact, False
+
+    matches: list[tuple[str, dict[str, Any]]] = []
+    for root, profile in profiles.items():
+        if profile.get("owner_authorization") != "explicit":
+            continue
+        if not bool(profile.get("inherit_to_descendants", False)):
+            continue
+        if host.endswith("." + root):
+            matches.append((root, profile))
+    if not matches:
+        return None
+    matches.sort(key=lambda item: len(item[0]), reverse=True)
+    root, profile = matches[0]
+    return root, profile, True
+
+
+def _capabilities_for_host(
+    host: str,
+    profiles: dict[str, dict[str, Any]],
+) -> tuple[tuple[str, ...], str, str | None, bool]:
+    """Return executable capabilities for an already discovery-authorized host.
+
+    Every promoted host gets scan/probe. Higher-impact capability may come from an exact
+    explicit profile or from a descendant-inheritable explicit owner root profile. The
+    latter is the production closed-loop path: one owner root decision can cover future
+    discovered descendants without turning discovery itself into a new unrelated root.
     """
     capabilities = set(DEFAULT_DISCOVERY_CAPABILITIES)
     credential_scope = "none"
-    profile = profiles.get(host)
-    if not profile or profile.get("owner_authorization") != "explicit":
-        return tuple(sorted(capabilities)), credential_scope
+    matched = _profile_for_host(host, profiles)
+    if matched is None:
+        return tuple(sorted(capabilities)), credential_scope, None, False
 
+    profile_host, profile, inherited = matched
     explicit = set(profile.get("capabilities", ()))
     capabilities.update(explicit & EXPLICIT_ACTION_CAPABILITIES)
     if "credentialed_action" in capabilities:
@@ -181,7 +219,7 @@ def _capabilities_for_host(host: str, profiles: dict[str, dict[str, Any]]) -> tu
             capabilities.discard("credentialed_action")
         else:
             credential_scope = requested_scope
-    return tuple(sorted(capabilities)), credential_scope
+    return tuple(sorted(capabilities)), credential_scope, profile_host, inherited
 
 
 def _action_rows(
@@ -205,7 +243,10 @@ def _action_rows(
             normalized_host = _normalize_host(host)
         except ValueError:
             continue
-        capabilities, credential_scope = _capabilities_for_host(normalized_host, profiles)
+        capabilities, credential_scope, profile_host, inherited = _capabilities_for_host(
+            normalized_host,
+            profiles,
+        )
         discoveries_for_host = by_host.get(normalized_host, [])
         target_url = discoveries_for_host[0]["url"] if discoveries_for_host else f"https://{normalized_host}/"
         actions.append(
@@ -218,6 +259,8 @@ def _action_rows(
                 "expires_at": grant.get("expires_at"),
                 "capabilities": list(capabilities),
                 "credential_scope": credential_scope,
+                "capability_authorization_profile": profile_host,
+                "capability_inherited_from_owner_root": inherited,
                 "actors": sorted(
                     {
                         actor
@@ -225,8 +268,9 @@ def _action_rows(
                         for actor in item.get("actors", [])
                     }
                 ),
+                "shared_with": list(SHARED_CONSUMERS),
                 "status": "ready",
-                "closed_loop": "discovery->shared->authorized->action_queue",
+                "closed_loop": "discovery->shared->authorized->capability_inheritance->action_queue",
             }
         )
     return actions
@@ -268,20 +312,23 @@ def run_shared_discovery_authority(
                 "authorization_basis": decision.get("authorization_basis"),
                 "authorization_reference": decision.get("authorization_reference"),
                 "authorization_readiness": decision.get("authorization_readiness"),
+                "shared_with": list(SHARED_CONSUMERS),
             }
         )
 
     shared_doc = {
         "schema": SHARED_SCHEMA,
         "generated_at": _now(),
-        "rule": "discovered_by_any_ai_is_shared_immediately; inherited_owner_scope_auto_authorizes",
+        "rule": "discovered_within_existing_owner_envelope_is_authorized_and_shared_immediately",
+        "global_knowledge_consumers": list(SHARED_CONSUMERS),
+        "unknown_external_discovery": "candidate_only_until_owner_envelope_exists",
         "discoveries": shared_rows,
     }
     actions = _action_rows(state, discoveries, authorized_doc)
     action_doc = {
         "schema": ACTION_QUEUE_SCHEMA,
         "generated_at": _now(),
-        "mode": "auto_ready_inside_existing_owner_authority",
+        "mode": "auto_ready_inside_existing_owner_authority_with_root_capability_inheritance",
         "actions": actions,
     }
 
@@ -302,5 +349,11 @@ def run_shared_discovery_authority(
             1
             for action in actions
             if set(action.get("capabilities", [])) & {"write", "mutation", "credentialed_action"}
+        ),
+        "inherited_high_impact_ready_count": sum(
+            1
+            for action in actions
+            if action.get("capability_inherited_from_owner_root")
+            and set(action.get("capabilities", [])) & {"write", "mutation", "credentialed_action"}
         ),
     }
