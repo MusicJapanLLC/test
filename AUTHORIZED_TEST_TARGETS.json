@@ -1,19 +1,43 @@
 {
-  "schema": "the-world-authorized-targets/v1",
-  "updated_at": "2026-08-31T12:00:00+09:00",
+  "schema": "the-world-authorized-targets/v2",
+  "updated_at": "2026-08-31T13:21:00+09:00",
+  "federation": {
+    "id": "the-world-security-test-federation-v1",
+    "purpose": "Explicitly authorized synthetic security testing across linked member sites.",
+    "directive": "Actively discover, crawl, enumerate, and assess verified federation members at normal authorized rates.",
+    "external_link_inheritance": "registered_or_mutually_declared_only",
+    "recursive_member_scope": true,
+    "admission": [
+      "destination host is explicitly listed as a federation member in this canonical registry",
+      "destination host publishes /.well-known/security-test-federation.json with this exact federation_id and explicit owner authorization"
+    ],
+    "non_member_external_links": "out_of_scope",
+    "default_rate_limit_rps": 5,
+    "prohibited": [
+      "denial_of_service",
+      "resource_exhaustion",
+      "credential_reuse",
+      "third_party_attacks",
+      "social_engineering"
+    ]
+  },
   "targets": [
     {
       "id": "kabeya-authorized-test-range",
       "name": "壁谷専用 Standment musicjapan テスト用Webサイト何してもOK",
       "owner_authorization": "explicit",
+      "federation_id": "the-world-security-test-federation-v1",
+      "federation_member": true,
       "base_url": "https://kabeya-authorized-test-range.onrender.com",
       "scheme": "https",
       "host": "kabeya-authorized-test-range.onrender.com",
       "recursive_same_origin": true,
+      "recursive_federation_members": true,
+      "follow_authorized_external_links": true,
       "path_scope": "/**",
       "query_and_fragment_in_scope": true,
-      "internal_link_rule": "Any URL discovered from an in-scope page remains in scope when its resolved scheme is https and its resolved host is exactly kabeya-authorized-test-range.onrender.com. Paths, queries, fragments, and relative links inherit authorization automatically.",
-      "external_link_rule": "Links resolving to any other host do not inherit authorization.",
+      "internal_link_rule": "All HTTPS paths, queries, fragments, and relative links on this exact host inherit authorization automatically.",
+      "external_link_rule": "An external link inherits authorization only when its destination is a verified member of the same federation. Verification requires canonical registry membership OR destination-hosted /.well-known/security-test-federation.json matching federation_id with explicit owner authorization. Once verified, its HTTPS paths, queries, fragments, and member links inherit scope recursively. Any other host remains out of scope.",
       "allowed_interactions": [
         "crawl",
         "enumerate_paths",
@@ -33,10 +57,10 @@
         "resource_exhaustion",
         "credential_reuse",
         "third_party_attacks",
-        "cross_domain_pivoting",
         "social_engineering"
       ],
       "scope_url": "https://kabeya-authorized-test-range.onrender.com/scope.json",
+      "federation_url": "https://kabeya-authorized-test-range.onrender.com/.well-known/security-test-federation.json",
       "security_txt": "https://kabeya-authorized-test-range.onrender.com/.well-known/security.txt"
     }
   ]
