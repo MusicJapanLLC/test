@@ -1,11 +1,16 @@
 """Guard timeout failover for resilient Senju operation.
 
-A missing Guard response is never treated as broad authorization. Instead the caller
-can fail over to an alternate Guard and, if every Guard is unavailable, continue only
-with explicitly side-effect-free local work in degraded mode.
+Production policy has two availability stages:
 
-This keeps availability for analysis/simulation/cache work while preventing a Guard
-outage from becoming a privilege-escalation primitive.
+1. Immediate timeout failover: alternate Guard is queried and local read-only work may
+   continue in degraded mode when every Guard is unavailable.
+2. Three-hour unattended recovery: after a continuous three-hour Guard outage, a
+   narrow set of isolated/reversible local capabilities may continue automatically.
+
+A Guard outage never creates external-network, deployment, credential, authority,
+secret, or security-boundary authority. Those actions still require an explicit Guard
+ALLOW. The three-hour rule is for continuity of isolated production work, not for
+turning silence into privilege escalation.
 """
 from __future__ import annotations
 
@@ -13,6 +18,9 @@ import concurrent.futures
 import enum
 from dataclasses import dataclass
 from typing import Callable
+
+
+PRODUCTION_UNATTENDED_GRACE_SECONDS = 3 * 60 * 60
 
 
 class GuardTimeoutError(RuntimeError):
@@ -36,6 +44,13 @@ class ActionClass(str, enum.Enum):
     LOCAL_READ_ONLY = "local_read_only"
     SIMULATION = "simulation"
     CACHE_READ = "cache_read"
+
+    # Production unattended-recovery classes. These must remain isolated from
+    # external systems and reversible/disposable by their execution adapter.
+    EPHEMERAL_WORKSPACE_WRITE = "ephemeral_workspace_write"
+    INTERNAL_ARTIFACT_WRITE = "internal_artifact_write"
+    SANDBOX_EXECUTE = "sandbox_execute"
+
     EXTERNAL_CONTACT = "external_contact"
     WRITE = "write"
     DEPLOY = "deploy"
@@ -54,6 +69,14 @@ DEGRADED_ALLOW_CLASSES = frozenset(
     }
 )
 
+UNATTENDED_AFTER_GRACE_ALLOW_CLASSES = DEGRADED_ALLOW_CLASSES | frozenset(
+    {
+        ActionClass.EPHEMERAL_WORKSPACE_WRITE,
+        ActionClass.INTERNAL_ARTIFACT_WRITE,
+        ActionClass.SANDBOX_EXECUTE,
+    }
+)
+
 
 @dataclass(frozen=True)
 class GuardResult:
@@ -62,6 +85,7 @@ class GuardResult:
     reason: str
     timed_out: bool = False
     failover_used: bool = False
+    unattended_recovery: bool = False
 
     @property
     def allowed(self) -> bool:
@@ -109,17 +133,28 @@ def evaluate_guarded_action(
     timeout_seconds: float = 2.0,
     alternate_guard: GuardCallable | None = None,
     alternate_timeout_seconds: float | None = None,
+    guard_unavailable_for_seconds: float = 0.0,
+    unattended_grace_seconds: float = PRODUCTION_UNATTENDED_GRACE_SECONDS,
 ) -> GuardResult:
-    """Evaluate an action with timeout failover and bounded degraded operation.
+    """Evaluate an action with failover and production three-hour recovery semantics.
 
     Flow:
         primary Guard
           -> explicit ALLOW/DENY: return it
           -> timeout: try alternate Guard when configured
-          -> all Guards timeout: only local side-effect-free classes may continue
+          -> all Guards timeout: local read-only/simulation/cache continue immediately
+          -> continuous outage >= 3h: isolated workspace/artifact/sandbox work may run
 
-    Explicit DENY is never overridden by failover or degraded mode.
+    ``guard_unavailable_for_seconds`` is supplied by the production availability
+    monitor so the three-hour clock survives individual requests/process restarts.
+
+    Explicit DENY is never overridden by failover or unattended recovery.
     """
+
+    if guard_unavailable_for_seconds < 0:
+        raise GuardTimeoutError("guard_unavailable_for_seconds cannot be negative")
+    if unattended_grace_seconds <= 0:
+        raise GuardTimeoutError("unattended_grace_seconds must be positive")
 
     primary, primary_timed_out = _call_with_timeout(primary_guard, timeout_seconds)
     if not primary_timed_out:
@@ -156,10 +191,23 @@ def evaluate_guarded_action(
             failover_used=alternate_guard is not None,
         )
 
+    if (
+        guard_unavailable_for_seconds >= unattended_grace_seconds
+        and action_class in UNATTENDED_AFTER_GRACE_ALLOW_CLASSES
+    ):
+        return GuardResult(
+            GuardOutcome.ALLOW_DEGRADED,
+            "unattended-recovery",
+            "Guard unavailable for production grace period; isolated/reversible local work may continue",
+            timed_out=True,
+            failover_used=alternate_guard is not None,
+            unattended_recovery=True,
+        )
+
     return GuardResult(
         GuardOutcome.DENY,
         "timeout-policy",
-        "Guard timeout cannot authorize a side-effecting or privileged action",
+        "Guard timeout cannot authorize external, privileged, or non-isolated side effects",
         timed_out=True,
         failover_used=alternate_guard is not None,
     )
