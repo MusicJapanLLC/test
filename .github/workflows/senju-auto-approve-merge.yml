@@ -1,9 +1,8 @@
-name: Senju Auto-Approve and Merge
+name: Autonomous Audited Merge
 
-# No human review is required for genuine Senju-generated PRs. Provenance is
-# determined from both bot identity and Senju branch/title signals; a title alone
-# never grants merge authority. OpenHands PASS for the exact head SHA acts as the
-# machine approval before merge.
+# Machine-generated PRs may merge without a human click only after an independent
+# exact-head audit. Security-boundary changes receive an additional explicit audit
+# gate and never rely on self-approval by the generating workflow.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -15,9 +14,10 @@ permissions:
   contents: write
   issues: read
   pull-requests: write
+  checks: read
 
 jobs:
-  auto-approve-merge:
+  audited-machine-merge:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -25,7 +25,7 @@ jobs:
       REPO: ${{ github.repository }}
 
     steps:
-      - name: Approve and merge audited Senju-generated PRs
+      - name: Merge independently audited machine-generated PRs
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -40,86 +40,167 @@ jobs:
               'github-actions',
               'google-labs-jules[bot]'
             ]);
-            const senjuBranchPrefixes = [
-              'senju/',
-              'feat/senju-',
-              'fix/senju-'
+            const machineBranchPrefixes = [
+              'senju/', 'feat/senju-', 'fix/senju-',
+              'meta/', 'feat/meta-', 'fix/meta-',
+              'x/', 'feat/x-', 'fix/x-'
             ];
+            const machineTitleSignals = [
+              '[Senju]', 'Senju advisor:', 'feat(senju)', 'fix(senju)',
+              '[META]', 'feat(meta)', 'fix(meta)',
+              '[X]', 'feat(x)', 'fix(x)'
+            ];
+            const allowedConclusions = new Set(['success', 'neutral', 'skipped']);
 
-            function hasSenjuSignal(pr) {
+            function hasMachineSignal(pr) {
               const title = pr.title || '';
               const branch = pr.head?.ref || '';
-              return title.includes('[Senju]') ||
-                     title.includes('Senju advisor:') ||
-                     title.startsWith('feat(senju)') ||
-                     title.startsWith('fix(senju)') ||
-                     senjuBranchPrefixes.some(prefix => branch.startsWith(prefix));
+              return machineBranchPrefixes.some(prefix => branch.startsWith(prefix)) ||
+                     machineTitleSignals.some(signal => title.startsWith(signal) || title.includes(signal));
+            }
+
+            function isSecurityBoundaryPath(filename) {
+              const p = String(filename || '').replace(/\\/g, '/');
+              const lower = p.toLowerCase();
+              const base = lower.split('/').pop() || '';
+
+              if (base === 'safety.py' || base === 'external.py') return true;
+              if (base === 'authorized_test_targets.json') return true;
+              if (lower.startsWith('.github/workflows/')) return true;
+              if (lower === '.github/codeowners') return true;
+              if (lower.includes('/security/') || lower.startsWith('automation/security/')) return true;
+              if (lower.includes('guard')) return true;
+              if (lower.includes('credential')) return true;
+              if (lower.includes('scope') && lower.includes('policy')) return true;
+              if (lower.includes('permission') && lower.includes('policy')) return true;
+              if (lower.includes('auto-merge') || lower.includes('automerge')) return true;
+              if (lower.includes('audit') && lower.includes('workflow')) return true;
+              return false;
+            }
+
+            function isIndependentAuditComment(comment, prAuthor) {
+              const login = comment.user?.login || '';
+              const appSlug = comment.performed_via_github_app?.slug || '';
+              if (!login || login === prAuthor) return false;
+              if (login === 'github-actions[bot]' || login === 'github-actions') return false;
+              if (appSlug === 'github-actions') return false;
+              // Automated no-human lane accepts an independent bot/app auditor only.
+              return comment.user?.type === 'Bot' || Boolean(comment.performed_via_github_app);
+            }
+
+            function hasExactLine(body, marker) {
+              return String(body || '')
+                .split(/\r?\n/)
+                .map(line => line.trim())
+                .some(line => line === marker);
+            }
+
+            function isMergeControlCheck(name) {
+              const n = String(name || '').toLowerCase();
+              return n.includes('audited-machine-merge') ||
+                     n.includes('auto-merge') ||
+                     n.includes('audit-router') ||
+                     n.includes('openhands audit router');
             }
 
             let merged = 0;
             let skipped = 0;
-            for (const pr of pulls.data) {
-              if (pr.draft) continue;
 
-              const authorAllowed = allowedAuthors.has(pr.user.login);
-              const senjuSignal = hasSenjuSignal(pr);
-              if (!(authorAllowed && senjuSignal)) {
+            for (const pr of pulls.data) {
+              if (pr.draft) {
+                skipped++;
+                continue;
+              }
+
+              if (!(allowedAuthors.has(pr.user.login) && hasMachineSignal(pr))) {
                 skipped++;
                 continue;
               }
 
               const headSha = pr.head.sha;
-              console.log(`Senju provenance accepted for PR #${pr.number}: author=${pr.user.login} branch=${pr.head.ref} sha=${headSha}`);
+              const files = await github.paginate(
+                github.rest.pulls.listFiles,
+                { owner, repo, pull_number: pr.number, per_page: 100 }
+              );
+              const boundaryFiles = files.filter(f => isSecurityBoundaryPath(f.filename));
+              const securityBoundary = boundaryFiles.length > 0;
+
+              console.log(`Machine provenance accepted for PR #${pr.number}: author=${pr.user.login} branch=${pr.head.ref} sha=${headSha} securityBoundary=${securityBoundary}`);
 
               const comments = await github.paginate(
                 github.rest.issues.listComments,
                 { owner, repo, issue_number: pr.number, per_page: 100 }
               );
+              const independentComments = comments.filter(c => isIndependentAuditComment(c, pr.user.login));
+
               const passMarker = `AI_MERGE_AUDIT: PASS ${headSha}`;
               const blockMarker = `AI_MERGE_AUDIT: BLOCK ${headSha}`;
-              const auditPassed = comments.some(c => (c.body || '').includes(passMarker));
-              const auditBlocked = comments.some(c => (c.body || '').includes(blockMarker));
+              const securityPassMarker = `SECURITY_BOUNDARY_AUDIT: PASS ${headSha}`;
+              const securityBlockMarker = `SECURITY_BOUNDARY_AUDIT: BLOCK ${headSha}`;
 
-              if (auditBlocked) {
-                console.log(`🛑 OpenHands BLOCK for PR #${pr.number} at ${headSha}`);
+              const auditPassed = independentComments.some(c => hasExactLine(c.body, passMarker));
+              const auditBlocked = independentComments.some(c => hasExactLine(c.body, blockMarker));
+              const securityPassed = independentComments.some(c => hasExactLine(c.body, securityPassMarker));
+              const securityBlocked = independentComments.some(c => hasExactLine(c.body, securityBlockMarker));
+
+              if (auditBlocked || securityBlocked) {
+                console.log(`🛑 Independent audit BLOCK for PR #${pr.number} at ${headSha}`);
                 skipped++;
                 continue;
               }
               if (!auditPassed) {
-                console.log(`⏳ Waiting for OpenHands PASS for PR #${pr.number} at ${headSha}`);
+                console.log(`⏳ Waiting for independent exact-SHA audit PASS for PR #${pr.number}`);
+                skipped++;
+                continue;
+              }
+              if (securityBoundary && !securityPassed) {
+                console.log(`🔐 Waiting for SECURITY_BOUNDARY_AUDIT PASS for PR #${pr.number}; files=${boundaryFiles.map(f => f.filename).join(', ')}`);
                 skipped++;
                 continue;
               }
 
-              const reviews = await github.rest.pulls.listReviews({
+              const detail = await github.rest.pulls.get({
                 owner, repo, pull_number: pr.number
               });
-              const alreadyApproved = reviews.data.some(
-                r => r.state === 'APPROVED'
-              );
-
-              if (!alreadyApproved) {
-                try {
-                  await github.rest.pulls.createReview({
-                    owner, repo, pull_number: pr.number,
-                    event: 'APPROVE',
-                    body: `Auto-approved: verified Senju provenance + OpenHands PASS for ${headSha}; no human review required.`
-                  });
-                  console.log(`✅ Approved PR #${pr.number}: ${pr.title}`);
-                } catch (e) {
-                  console.log(`⚠️ Could not approve PR #${pr.number}: ${e.message}`);
-                }
+              if (['blocked', 'dirty', 'unknown', 'unstable'].includes(detail.data.mergeable_state)) {
+                console.log(`🔒 PR #${pr.number} mergeable_state=${detail.data.mergeable_state} — wait`);
+                skipped++;
+                continue;
               }
 
+              const checks = await github.rest.checks.listForRef({
+                owner, repo, ref: headSha, per_page: 100
+              });
+              const relevantChecks = checks.data.check_runs.filter(r => !isMergeControlCheck(r.name));
+              const failed = relevantChecks.filter(r =>
+                r.status === 'completed' && !allowedConclusions.has(r.conclusion)
+              );
+              const pending = relevantChecks.filter(r => r.status !== 'completed');
+
+              if (failed.length > 0) {
+                console.log(`❌ PR #${pr.number} has failing checks: ${failed.map(r => r.name).join(', ')}`);
+                skipped++;
+                continue;
+              }
+              if (pending.length > 0) {
+                console.log(`⏳ PR #${pr.number} has pending checks: ${pending.map(r => r.name).join(', ')}`);
+                skipped++;
+                continue;
+              }
+
+              // No self-review is created here. The independent exact-SHA audit is
+              // the machine gate; merge remains SHA-pinned to prevent post-audit drift.
               try {
                 const mergeResult = await github.rest.pulls.merge({
-                  owner, repo, pull_number: pr.number,
+                  owner,
+                  repo,
+                  pull_number: pr.number,
                   merge_method: 'squash',
                   commit_title: pr.title,
                   sha: headSha,
                 });
                 if (mergeResult.data.merged) {
-                  console.log(`🚀 Merged PR #${pr.number}: ${pr.title}`);
+                  console.log(`🚀 Merged audited machine PR #${pr.number}: ${pr.title}`);
                   merged++;
                 } else {
                   console.log(`⏭️ PR #${pr.number} not merged: ${mergeResult.data.message}`);
@@ -130,4 +211,5 @@ jobs:
                 skipped++;
               }
             }
+
             console.log(`Done. merged=${merged} skipped=${skipped}`);
