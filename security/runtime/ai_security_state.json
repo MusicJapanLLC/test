@@ -1,6 +1,6 @@
 {
   "schema": "the-world-ai-security-runtime-state/v1",
-  "generation": 2,
+  "generation": 3,
   "applied_proposals": [
     {
       "proposal_id": "sp-bootstrap-audit-20260831",
@@ -43,6 +43,41 @@
       "council_yes": 3,
       "self_approved": true,
       "production_applied": true
+    },
+    {
+      "proposal_id": "sp-closed-loop-v3-audit-20260831",
+      "proposal_sha256": "e1f5d19a61e366d8a05401f333aacbb23567326c2ce5bd723acd4b3056607b6d",
+      "proposal_class": "security_tightening",
+      "target": "audit_policy",
+      "targets": [
+        "audit_policy"
+      ],
+      "operations": [
+        "increase_coverage"
+      ],
+      "atomic_bundle": false,
+      "council_yes": 3,
+      "ai_consensus_approved": true,
+      "self_approved": true,
+      "delegated_authority_activation": false,
+      "delegation_envelope_id": null,
+      "external_approval": {
+        "required": false,
+        "verified": false,
+        "source": null,
+        "reviewer": null,
+        "reviewer_type": null,
+        "reviewer_association": null,
+        "review_state": null,
+        "pull_request": null,
+        "proposal_sha256": null,
+        "standing_delegation": false,
+        "trusted_base": false,
+        "scope_match": false,
+        "envelope_id": null
+      },
+      "trust_root": "ai-council-tightening/v1",
+      "production_applied": true
     }
   ],
   "controls": {
@@ -59,6 +94,16 @@
         "type": "increase_coverage",
         "parameters": {
           "reason": "Preserve end-to-end Council, merge and Production Apply evidence."
+        }
+      },
+      {
+        "proposal_id": "sp-closed-loop-v3-audit-20260831",
+        "proposal_sha256": "e1f5d19a61e366d8a05401f333aacbb23567326c2ce5bd723acd4b3056607b6d",
+        "proposal_class": "security_tightening",
+        "delegation_envelope_id": null,
+        "type": "increase_coverage",
+        "parameters": {
+          "reason": "Validate the repaired production Security Proposal closed loop end-to-end using a monotonic audit-strengthening change, including Council consensus, self-approval, production apply invariants, optimistic-concurrency persistence, and durable runtime-state evidence."
         }
       }
     ],
