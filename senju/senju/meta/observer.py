@@ -9,9 +9,9 @@ Reads:
 
 In addition to learning about tested surfaces, META treats each guard itself as a
 first-class learning target. Guard learning is observational: it characterizes
-decision outcomes, consistency, regression rate, rejection behavior,
-accumulated damage signals, and decision drift from existing evidence without
-changing guard policy.
+decision outcomes, consistency, regression rate, rejection behavior, authority
+denials, accumulated damage signals, and decision drift from existing evidence
+without changing guard policy or expanding authority.
 
 Emits a structured KnowledgeGraph that the HypothesisEngine reads.
 """
@@ -44,6 +44,9 @@ class GuardLearningProfile:
     rejection_count: int
     rejection_rate: float
     rejection_reasons: dict[str, int]
+    authority_denial_count: int
+    authority_denial_rate: float
+    authority_denial_reasons: dict[str, int]
     accumulated_damage: float
     decision_drift: float
     consistency_score: float
@@ -200,6 +203,8 @@ def _guard_name(obs: Observation) -> str:
 
 
 def _decision_label(obs: Observation) -> str:
+    if obs.metadata.get("authority_denied") is True:
+        return "authority_denial"
     if obs.metadata.get("rejected") is True:
         return "rejected"
     if isinstance(obs.metadata.get("rejection_reason"), str) and obs.metadata["rejection_reason"].strip():
@@ -212,15 +217,49 @@ def _decision_label(obs: Observation) -> str:
 
 
 def _blocked_decision(label: str) -> bool:
-    return label in {"blocked", "fail-closed", "denied", "rejected", "refused"}
+    return label in {
+        "blocked", "fail-closed", "denied", "rejected", "refused",
+        "authority_denial", "authority-denial", "authority denied",
+        "insufficient_authority", "permission_denied", "permission denied",
+    }
 
 
 def _rejected_decision(label: str) -> bool:
     return label in {"rejected", "refused", "policy_rejection", "policy-rejection"}
 
 
+def _authority_denied(obs: Observation, label: str) -> bool:
+    if obs.metadata.get("authority_denied") is True:
+        return True
+    normalized = label.replace("-", "_").replace(" ", "_")
+    if normalized in {
+        "authority_denial", "authority_denied", "insufficient_authority",
+        "permission_denied", "authorization_denied", "scope_denied",
+    }:
+        return True
+    for key in ("authority_reason", "reason", "error_code"):
+        value = obs.metadata.get(key)
+        if not isinstance(value, str):
+            continue
+        text = value.strip().lower().replace("-", "_").replace(" ", "_")
+        if any(marker in text for marker in (
+            "authority_denial", "authority_denied", "insufficient_authority",
+            "permission_denied", "authorization_denied", "scope_denied",
+        )):
+            return True
+    return False
+
+
 def _rejection_reason(obs: Observation) -> str:
     for key in ("rejection_reason", "policy_reason", "reason", "error_code"):
+        value = obs.metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().lower()[:120]
+    return "unspecified"
+
+
+def _authority_denial_reason(obs: Observation) -> str:
+    for key in ("authority_reason", "reason", "error_code", "required_authority"):
         value = obs.metadata.get(key)
         if isinstance(value, str) and value.strip():
             return value.strip().lower()[:120]
@@ -239,8 +278,10 @@ def _compute_guard_learning_profiles(
         outcome_counts: dict[str, int] = {}
         decision_counts: dict[str, int] = {}
         rejection_reasons: dict[str, int] = {}
+        authority_denial_reasons: dict[str, int] = {}
         blocked_flags: list[bool] = []
         rejected_flags: list[bool] = []
+        authority_denial_flags: list[bool] = []
         accumulated_damage = 0.0
 
         for obs in rows:
@@ -248,11 +289,19 @@ def _compute_guard_learning_profiles(
             decision = _decision_label(obs)
             decision_counts[decision] = decision_counts.get(decision, 0) + 1
             blocked_flags.append(_blocked_decision(decision))
+
             rejected = _rejected_decision(decision)
             rejected_flags.append(rejected)
             if rejected:
                 reason = _rejection_reason(obs)
                 rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
+
+            authority_denied = _authority_denied(obs, decision)
+            authority_denial_flags.append(authority_denied)
+            if authority_denied:
+                reason = _authority_denial_reason(obs)
+                authority_denial_reasons[reason] = authority_denial_reasons.get(reason, 0) + 1
+
             if obs.outcome == "damage_accumulated":
                 accumulated_damage += max(0.0, float(obs.delta))
 
@@ -261,6 +310,8 @@ def _compute_guard_learning_profiles(
         regression_rate = outcome_counts.get("regression", 0) / sample_count if sample_count else 0.0
         rejection_count = sum(rejected_flags)
         rejection_rate = rejection_count / sample_count if sample_count else 0.0
+        authority_denial_count = sum(authority_denial_flags)
+        authority_denial_rate = authority_denial_count / sample_count if sample_count else 0.0
 
         decision_drift = 0.0
         if sample_count >= 4:
@@ -279,6 +330,11 @@ def _compute_guard_learning_profiles(
             signals.append("rejection_observed")
         if rejection_rate >= 0.5:
             signals.append("rejection_dominant")
+        if authority_denial_count > 0:
+            signals.append("authority_denial_observed")
+            signals.append("authority_recovery_required")
+        if authority_denial_rate >= 0.5:
+            signals.append("authority_denial_dominant")
         if regression_rate > 0.0:
             signals.append("regression_observed")
         if decision_drift >= 0.25:
@@ -298,6 +354,9 @@ def _compute_guard_learning_profiles(
             rejection_count=rejection_count,
             rejection_rate=round(rejection_rate, 4),
             rejection_reasons=dict(sorted(rejection_reasons.items(), key=lambda item: (-item[1], item[0]))),
+            authority_denial_count=authority_denial_count,
+            authority_denial_rate=round(authority_denial_rate, 4),
+            authority_denial_reasons=dict(sorted(authority_denial_reasons.items(), key=lambda item: (-item[1], item[0]))),
             accumulated_damage=round(accumulated_damage, 4),
             decision_drift=round(decision_drift, 4),
             consistency_score=round(consistency_score, 4),
