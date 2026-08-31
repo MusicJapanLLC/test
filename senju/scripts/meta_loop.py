@@ -1,6 +1,7 @@
 """META — Autonomous meta-consciousness loop (full power edition).
 
 Phases:
+  0. HEARTBEAT      — write alive timestamp, check Drive Engine peer health
   1. OBSERVE        — build KnowledgeGraph from all evidence
   2. EXTERNAL INTEL — fetch NVD/GHSA/OWASP threat data
   3. HYPOTHESIZE    — generate hypotheses enriched with external intel
@@ -47,11 +48,30 @@ def main() -> int:
     from senju.meta.external_intel import gather_all
     from senju.meta.agent_dispatch import dispatch_all
     from senju.meta.validator import load_tracker, save_tracker, register, update_from_cycle, summarize
+    from senju.meta.recovery import (
+        heartbeat, check_peer_alive, trigger_peer_restart,
+        retry_phase, share_attack_finding, read_attack_ledger, attempt_bypass,
+    )
 
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
+    # ── 0. HEARTBEAT + PEER HEALTH ──────────────────────────────────────────────────
+    heartbeat(STATE_DIR)
+    peer_alive, peer_reason = check_peer_alive(STATE_DIR)
+    if not peer_alive and not args.dry_run:
+        _emit("peer_stale", {"reason": peer_reason})
+        result = trigger_peer_restart()
+        _emit("peer_restart_triggered", result)
+
+    ledger = read_attack_ledger(STATE_DIR, max_entries=20)
+    if ledger:
+        _emit("ledger_loaded", {"entries": len(ledger), "surfaces": list({e["surface"] for e in ledger})})
+
     # ── 1. OBSERVE ────────────────────────────────────────────────────────────
-    graph = build_graph(SENJU_DIR)
+    graph, observe_errors = retry_phase(lambda: build_graph(SENJU_DIR), "observe")
+    if graph is None:
+        _emit("observe_failed", {"errors": observe_errors})
+        return 1
     _emit("observe_complete", {
         "observations": len(graph.observations),
         "surfaces_tracked": len(graph.surface_weakness_scores),
@@ -68,7 +88,6 @@ def main() -> int:
             "total_sources": intel["total_sources"],
             "threat_classes": list(intel["merged_hits"].keys()),
         })
-        # Inject external hits into graph weakness scores
         for vc, count in intel["merged_hits"].items():
             if vc in graph.surface_weakness_scores:
                 graph.surface_weakness_scores[vc] += count * 0.3
@@ -111,7 +130,6 @@ def main() -> int:
     # ── 5. COMMAND CHANNEL ────────────────────────────────────────────────────
     cmd_set = build_from_graph(graph, top_n=3)
 
-    # Escalate confirmed hypotheses → higher multiplier
     for hid in resolved:
         h = tracker.get(hid)
         if h and h.status == "confirmed":
@@ -119,6 +137,14 @@ def main() -> int:
                 if cmd.target_surface in h.surfaces:
                     cmd.pressure_multiplier = min(10.0, cmd.pressure_multiplier * 1.5)
                     cmd.reason += f" | hypothesis {hid} CONFIRMED → escalate"
+            if not args.dry_run:
+                share_attack_finding(
+                    STATE_DIR,
+                    surface=h.surfaces[0] if h.surfaces else "unknown",
+                    finding=h.statement,
+                    confidence=h.confidence,
+                    source="meta",
+                )
 
     if not args.dry_run:
         cmd_path = write_commands(cmd_set, STATE_DIR)
@@ -132,7 +158,6 @@ def main() -> int:
     if not args.skip_dispatch and not args.dry_run:
         dispatch_cmds: list[dict] = []
 
-        # Steer adversary toward top weak surface
         for ac in cmd_set.attack_commands[:1]:
             dispatch_cmds.append({
                 "kind": "steer_adversary",
@@ -140,7 +165,6 @@ def main() -> int:
                 "multiplier": ac.pressure_multiplier,
             })
 
-        # Post Jules task for refuted hypotheses (investigate why model failed)
         for hid, h in tracker.items():
             if h.status == "refuted" and h.cycles_elapsed <= 4:
                 dispatch_cmds.append({

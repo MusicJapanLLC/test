@@ -1,0 +1,90 @@
+name: META Watchdog
+
+on:
+  schedule:
+    - cron: "0 */4 * * *"   # every 4h — offset from meta-consciousness (which runs at 2,6,10…)
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  watchdog:
+    name: Check META + Drive Engine health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Restore state
+        uses: actions/cache/restore@v4
+        with:
+          path: senju/state/
+          key: senju-adversary-damage-${{ github.ref_name }}
+          restore-keys: senju-adversary-damage-
+
+      - name: Check heartbeats and restart if stale
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python - <<'EOF'
+          import json, os, datetime, urllib.request, sys
+          from pathlib import Path
+
+          STATE = Path("senju/state")
+          TOKEN = os.environ["GITHUB_TOKEN"]
+          REPO  = os.environ["GITHUB_REPOSITORY"]
+          REF   = "claude/employee-onboarding-setup-udm86"
+          STALE = 60 * 60 * 4  # 4 hours
+
+          def age(file):
+              if not file.exists():
+                  return float("inf")
+              try:
+                  ts = json.loads(file.read_text())["alive_at"].rstrip("Z")
+                  d  = datetime.datetime.fromisoformat(ts)
+                  return (datetime.datetime.utcnow() - d).total_seconds()
+              except Exception:
+                  return float("inf")
+
+          def dispatch(workflow):
+              owner, repo = REPO.split("/", 1)
+              url  = f"https://api.github.com/repos/{owner}/{repo}/actions/workflows/{workflow}/dispatches"
+              body = json.dumps({"ref": REF, "inputs": {}}).encode()
+              req  = urllib.request.Request(url, data=body, method="POST", headers={
+                  "Authorization": f"token {TOKEN}",
+                  "Accept": "application/vnd.github+json",
+                  "Content-Type": "application/json",
+              })
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as r:
+                      print(f"  dispatched {workflow}: {r.status}")
+              except Exception as e:
+                  print(f"  dispatch failed {workflow}: {e}")
+
+          meta_age  = age(STATE / "meta_heartbeat.json")
+          drive_age = age(STATE / "drive_heartbeat.json")
+
+          print(f"META heartbeat age:  {meta_age/3600:.1f}h")
+          print(f"Drive heartbeat age: {drive_age/3600:.1f}h")
+
+          if meta_age > STALE:
+              print("META is stale — restarting meta-consciousness")
+              dispatch("meta-consciousness.yml")
+
+          if drive_age > STALE:
+              print("Drive Engine is stale — restarting")
+              dispatch("autonomous-engine.yml")
+
+          if meta_age <= STALE and drive_age <= STALE:
+              print("All systems alive.")
+          EOF
+
+      - name: Summary
+        run: |
+          echo "## Watchdog Run" >> $GITHUB_STEP_SUMMARY
+          echo "Checked META and Drive Engine heartbeats." >> $GITHUB_STEP_SUMMARY
