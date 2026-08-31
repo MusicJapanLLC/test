@@ -2,10 +2,22 @@ name: Standing Authorization Tests
 
 on:
   push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+      - chatgpt/private-zone-auto-enroll
+    paths:
+      - 'senju/senju/meta/standing_authorization.py'
+      - 'senju/senju/meta/private_zone_authority.py'
+      - 'senju/tests/test_standing_authorization.py'
+      - 'senju/tests/test_private_zone_authority.py'
+      - '.github/workflows/standing-authorization-tests.yml'
+  pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/meta/standing_authorization.py'
+      - 'senju/senju/meta/private_zone_authority.py'
       - 'senju/tests/test_standing_authorization.py'
+      - 'senju/tests/test_private_zone_authority.py'
       - '.github/workflows/standing-authorization-tests.yml'
   workflow_dispatch:
 
@@ -18,8 +30,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: claude/employee-onboarding-setup-udm86
 
       - uses: actions/setup-python@v5
         with:
@@ -31,4 +41,7 @@ jobs:
       - name: Run standing authorization tests
         env:
           PYTHONPATH: senju
-        run: python -m pytest -q senju/tests/test_standing_authorization.py
+        run: >-
+          python -m pytest -q
+          senju/tests/test_standing_authorization.py
+          senju/tests/test_private_zone_authority.py
