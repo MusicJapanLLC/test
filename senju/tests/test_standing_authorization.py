@@ -76,7 +76,7 @@ def test_renewal_cannot_add_new_host_or_method():
             requested_hosts=["third-party.example"],
             now=_now(),
         )
-    with pytest.raises(StandingAuthorizationError, match="may not add methods"):
+    with pytest.raises(StandingAuthorizationError, match="unsupported standing methods"):
         renew_operational_lease(
             standing,
             actor="X",
