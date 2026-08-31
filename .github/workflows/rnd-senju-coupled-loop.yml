@@ -116,15 +116,35 @@ jobs:
           cat reports/rnd-senju/exchange.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Relay Child Fleet context to R&D and Senju
-        if: github.event_name != 'pull_request' && hashFiles('/tmp/child-external-fleet.json') != ''
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          python value-lab/child_fleet_bridge.py \
-            --fleet /tmp/child-external-fleet.json \
-            --directive reports/rnd-senju/directive.json \
-            --out reports/child-fleet-bridge
-          cat reports/child-fleet-bridge/handoff.md >> "$GITHUB_STEP_SUMMARY"
+          if [[ -f /tmp/child-external-fleet.json ]]; then
+            python value-lab/child_fleet_bridge.py \
+              --fleet /tmp/child-external-fleet.json \
+              --directive reports/rnd-senju/directive.json \
+              --out reports/child-fleet-bridge
+            cp reports/child-fleet-bridge/directive-with-fleet.json reports/rnd-senju/directive.json
+            python - <<'PY'
+          import json
+          from pathlib import Path
+          exchange_path=Path('reports/rnd-senju/exchange.json')
+          directive_path=Path('reports/rnd-senju/directive.json')
+          d=json.loads(exchange_path.read_text(encoding='utf-8'))
+          q=json.loads(directive_path.read_text(encoding='utf-8'))
+          d['directive_to_senju']=q
+          d['child_external_fleet_context']={
+              'source':'child-external-fleet',
+              'transport':'sanitized-hypothesis-context',
+              'execution_authority':'none',
+          }
+          exchange_path.write_text(json.dumps(d, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+          PY
+            cat reports/child-fleet-bridge/handoff.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No Child Fleet artifact available; base R&D/Senju exchange remains valid." >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - name: Upload R&D Senju exchange
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
