@@ -236,7 +236,7 @@ def build_shadow_frontier(
             item_id = str(item["id"])
             if item_id in merged:
                 prior = merged[item_id]
-                item["attempt_count"] = int(prior.get("attempt_count", 0) or 0) + 1
+                item["attempt_count"] = int(prior.get("attempt_count", 1) or 1)
                 item["created_at"] = int(prior.get("created_at", timestamp) or timestamp)
             else:
                 new_ids.append(item_id)
