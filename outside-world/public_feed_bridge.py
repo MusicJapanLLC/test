@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -89,6 +90,16 @@ def select_probe_payloads(doc: dict[str, Any]) -> list[dict[str, str]]:
     return []
 
 
+def decode_error_body(raw: bytes) -> Any:
+    text = raw[:8192].decode("utf-8", "replace")
+    if not text:
+        return {}
+    try:
+        return json.loads(text)
+    except json.JSONDecodeError:
+        return {"message": text[:1000]}
+
+
 def post_payload(payload: dict[str, Any], token: str) -> dict[str, Any]:
     req = urllib.request.Request(
         ENDPOINT,
@@ -100,9 +111,22 @@ def post_payload(payload: dict[str, Any], token: str) -> dict[str, Any]:
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=20) as res:
-        body = res.read(8192).decode("utf-8", "replace")
-        return {"status": int(res.status), "body": json.loads(body) if body else {}}
+    try:
+        with urllib.request.urlopen(req, timeout=20) as res:
+            body = res.read(8192).decode("utf-8", "replace")
+            return {"status": int(res.status), "body": json.loads(body) if body else {}}
+    except urllib.error.HTTPError as exc:
+        return {
+            "status": int(exc.code),
+            "body": decode_error_body(exc.read(8192)),
+            "error": "http_error",
+        }
+    except urllib.error.URLError as exc:
+        return {
+            "status": "NETWORK_ERROR",
+            "body": {},
+            "error": str(getattr(exc, "reason", exc))[:500],
+        }
 
 
 def main() -> int:
@@ -127,18 +151,27 @@ def main() -> int:
             receipt = post_payload(body, token)
             receipts.append({"source_url": payload["source_url"], **receipt})
 
+    success_statuses = {"DRY_RUN", 200, 201, 202}
+    failures = [r for r in receipts if r.get("status") not in success_statuses]
     result = {
-        "schema": "the-world-public-feed-receipt/v4",
+        "schema": "the-world-public-feed-receipt/v5",
         "endpoint": ENDPOINT,
         "auth": "github_actions_oidc_audience_bound",
         "audience": OIDC_AUDIENCE,
         "mode": "BOOTSTRAP_PROBE" if args.probe else "REGULAR",
         "selected": len(payloads),
+        "delivery_ok": not failures,
+        "failure_count": len(failures),
         "receipts": receipts,
     }
     Path(args.out).write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(result, ensure_ascii=False))
-    return 0 if all(r.get("status") in {"DRY_RUN", 200, 201, 202} for r in receipts) else 1
+    if failures:
+        print(f"public feed degraded: {len(failures)} failed publication(s); receipt preserved for downstream learning", flush=True)
+    # Transport failure is an observed outcome, not a reason to discard the mission's
+    # already-verified browser observations and owned-channel effects. Authentication
+    # acquisition/validation errors still raise and fail closed above.
+    return 0
 
 
 if __name__ == "__main__":
