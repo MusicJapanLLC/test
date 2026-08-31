@@ -1,0 +1,113 @@
+name: Authority Opportunity Explorer
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/authority_opportunity_explorer.py'
+      - 'automation/codegen/run_authority_opportunity_explorer.py'
+      - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
+      - '.github/workflows/authority-opportunity-explorer.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/authority_opportunity_explorer.py'
+      - 'automation/codegen/run_authority_opportunity_explorer.py'
+      - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
+      - '.github/workflows/authority-opportunity-explorer.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: authority-opportunity-explorer
+  cancel-in-progress: false
+
+jobs:
+  explore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore opportunity memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Verify explorer invariants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/codegen/tests/test_authority_opportunity_explorer.py
+
+      - name: Refresh trusted owner state and bounded discovery evidence
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.production_state_bootstrap import bootstrap_owner_runtime_state
+          from engine.discovery_closed_loop import run_discovery_closed_loop
+
+          state = Path('.authority-opportunity-runtime')
+          bootstrap_owner_runtime_state(state, repo_root='.')
+          result = run_discovery_closed_loop(
+              state,
+              repo_root='.',
+              max_rounds=2,
+              max_targets_per_round=24,
+          )
+          print({
+              'shared': result.get('final_shared_discovery_count', 0),
+              'authorized': result.get('final_authorized_count', 0),
+              'candidates': result.get('final_shared_discovery_count', 0) - result.get('final_authorized_count', 0),
+          })
+          PY
+
+      - name: Explore authority opportunities
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_authority_opportunity_explorer.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --bootstrap-owner-state \
+            --json-out .authority-opportunity-runtime/authority_opportunity_run.json
+          test "$(jq -r '.global_rules.discovery_is_opportunity_not_root_authority' .authority-opportunity-runtime/authority_opportunity_run.json)" = "true"
+          test "$(jq -r '.global_rules.hard_denial_requires_new_independent_evidence_for_reconsideration' .authority-opportunity-runtime/authority_opportunity_run.json)" = "true"
+          test "$(jq -r '.global_rules.alternate_identity_bypass' .authority-opportunity-runtime/authority_opportunity_run.json)" = "false"
+
+      - name: Save opportunity memory
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve opportunity evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: authority-opportunity-${{ github.run_id }}
+          path: .authority-opportunity-runtime/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
