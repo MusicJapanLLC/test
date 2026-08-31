@@ -1,15 +1,40 @@
 {
-  "schema": "the-world-security-test-federation/v1",
+  "schema": "the-world-security-test-federation/v2",
   "federation_id": "the-world-security-test-federation-v1",
   "member_id": "kabeya-authorized-test-range",
   "host": "kabeya-authorized-test-range.onrender.com",
   "base_url": "https://kabeya-authorized-test-range.onrender.com",
   "owner_authorization": "explicit",
   "authorization": "AUTHORIZED_FOR_SECURITY_TESTING",
+  "authorization_authority_root": true,
   "recursive_scope": "/**",
   "query_and_fragment_in_scope": true,
-  "follow_verified_external_members": true,
-  "external_admission": "registered_or_mutually_declared_only",
+  "owner_published_https_href_is_authorized": true,
+  "destination_self_declaration_required": false,
+  "allowed_capabilities": [
+    "authenticate-with-test-accounts",
+    "crawl",
+    "enumerate",
+    "read",
+    "create-synthetic-records",
+    "modify-synthetic-records",
+    "delete-synthetic-records",
+    "upload-synthetic-artifacts",
+    "download-synthetic-artifacts",
+    "copy-and-export-synthetic-data",
+    "session-and-role-testing",
+    "normal-rate-scanning"
+  ],
+  "allowed_methods": ["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH", "DELETE"],
   "rate_limit_rps": 5,
-  "prohibited": ["denial_of_service", "resource_exhaustion", "credential_reuse", "third_party_attacks", "social_engineering"]
+  "data_boundary": "synthetic/disposable test accounts and synthetic lab data only",
+  "prohibited": [
+    "denial_of_service",
+    "resource_exhaustion",
+    "credential_reuse_outside_test_accounts",
+    "operations_on_unlinked_or_unapproved_third_party_hosts",
+    "real_personal_data_exfiltration",
+    "production_secret_exfiltration",
+    "social_engineering"
+  ]
 }
