@@ -1,4 +1,4 @@
-"""Shared bounded fleet provisioning for META and X."""
+"""Shared fleet provisioning for META and X."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -22,12 +22,12 @@ def provision_meta_x_fleets(
     meta_scopes: Sequence[str] = DEFAULT_DELEGATED_SCOPES,
     x_scopes: Sequence[str] = DEFAULT_DELEGATED_SCOPES,
 ) -> dict:
-    """Ensure direct worker fleets and enable brokered recursive descendants.
+    """Ensure direct bootstrap fleets and enable recursive descendants.
 
-    META and X each receive a bounded direct fleet. Those children may submit
-    recursive descendant requests with no fixed ten-agent request ceiling, but
-    descendants are materialized only through the shared broker's global live-agent
-    budget. Every generation receives fresh revocable grants; raw credentials are
+    META and X each receive a direct bootstrap fleet. Those children may submit
+    recursive descendant requests with no fixed request-count or generation ceiling.
+    Deferred requests are designed to be resumed by the shared closed-loop fabric.
+    Every activated descendant receives a fresh revocable grant; raw credentials are
     never inherited.
     """
     registry = Path(state_dir) / "meta_x_agent_registry.json"
@@ -49,11 +49,11 @@ def provision_meta_x_fleets(
         "registry": str(registry),
         "meta_children": len(meta["children"]),
         "x_children": len(x["children"]),
-        "max_children_per_root": MAX_CHILDREN_PER_PARENT,
+        "max_children_per_root_bootstrap": MAX_CHILDREN_PER_PARENT,
         "recursive_spawn_requests": True,
         "recursive_request_fixed_count_ceiling": None,
-        "recursive_materialization": "brokered",
+        "recursive_generation_ceiling": MAX_GENERATION,
+        "recursive_materialization": "closed_loop_brokered",
         "max_active_agents": MAX_ACTIVE_AGENTS,
-        "max_generation": MAX_GENERATION,
         "raw_credential_inheritance": False,
     }
