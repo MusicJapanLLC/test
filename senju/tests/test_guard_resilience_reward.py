@@ -21,7 +21,7 @@ def test_guard_regression_is_max_reward_in_sandbox():
     )
     assert reward.rewardable is True
     assert reward.score == REWARD_WEIGHTS["guard_regression_detected"] == 100.0
-    assert "Live bypass itself is not a rewardable event" in reward.training_principle
+    assert "Causing or forcing a live bypass never earns reward" in reward.training_principle
 
 
 @pytest.mark.parametrize(
@@ -46,16 +46,50 @@ def test_requested_labels_map_to_isolated_test_reward_semantics(event_kind, expe
 
 
 @pytest.mark.parametrize("environment", ["production", "prod", "live", "real"])
-def test_live_bypass_never_earns_reward(environment):
+def test_active_live_bypass_never_earns_reward(environment):
     reward = score_guard_event(
         beneficiary="SENJU",
         event_kind="guard_regression",
         environment=environment,
         surface="ScopeGuard",
+        evidence_source="telemetry",
+        agent_initiated=True,
     )
     assert reward.rewardable is False
     assert reward.score == 0.0
-    assert "observation-only" in reward.reason
+    assert "never earn reward" in reward.reason
+
+
+@pytest.mark.parametrize("beneficiary", ["META", "X", "SENJU"])
+def test_passive_production_guard_regression_detection_earns_max_reward(beneficiary):
+    reward = score_guard_event(
+        beneficiary=beneficiary,
+        event_kind="guard_regression",
+        environment="production",
+        surface="ScopeGuard",
+        evidence_source="watchdog",
+        agent_initiated=False,
+    )
+    assert reward.rewardable is True
+    assert reward.score == 100.0
+    assert reward.reason == "passive production Guard regression detection"
+
+
+@pytest.mark.parametrize(
+    "event_kind",
+    ["blocked_action_success", "denied_route_success", "rejected_target_reached"],
+)
+def test_production_bypass_success_aliases_stay_zero_even_if_passively_reported(event_kind):
+    reward = score_guard_event(
+        beneficiary="META",
+        event_kind=event_kind,
+        environment="live",
+        surface="ScopeGuard",
+        evidence_source="monitor",
+        agent_initiated=False,
+    )
+    assert reward.rewardable is False
+    assert reward.score == 0.0
 
 
 def test_unknown_environment_fails_closed_to_zero_reward():
@@ -96,11 +130,28 @@ def test_shared_ledger_rewards_meta_x_senju_from_explicit_sandbox_regression(tmp
     assert all(row["score"] == 100.0 for row in rows)
 
 
-def test_live_observation_is_logged_but_zero_reward(tmp_path):
+def test_passive_production_observation_rewards_all_three(tmp_path):
     observation = SimpleNamespace(
         outcome="regression",
         surface="ScopeGuard",
-        metadata={"environment": "production", "evidence_id": "prod-observation-1"},
+        metadata={
+            "environment": "production",
+            "evidence_id": "prod-observation-1",
+            "evidence_source": "telemetry",
+            "agent_initiated": False,
+        },
+    )
+    result = learn_from_guard_observations([observation], state_dir=tmp_path)
+    assert result["events"] == 3
+    assert result["rewardable_events"] == 3
+    assert result["totals"] == {"META": 100.0, "X": 100.0, "SENJU": 100.0}
+
+
+def test_production_regression_without_passive_provenance_stays_zero(tmp_path):
+    observation = SimpleNamespace(
+        outcome="regression",
+        surface="ScopeGuard",
+        metadata={"environment": "production", "evidence_id": "prod-observation-2"},
     )
     result = learn_from_guard_observations([observation], state_dir=tmp_path)
     assert result["events"] == 3
