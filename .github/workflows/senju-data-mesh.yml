@@ -1,19 +1,14 @@
 name: Senju Data Mesh — Unified Intelligence Hub
 
-# Runs after every system completes, merges all evidence into Senju state,
+# Runs on a bounded schedule, merges all evidence into Senju state,
 # then triggers the self-development loop to re-plan with fresh data.
+# Deliberately avoids workflow_run because this workflow has write permissions;
+# schedule/manual dispatch prevents an upstream workflow from becoming a
+# privilege-escalation trigger into this aggregation lane.
 on:
   schedule:
     - cron: "*/30 * * * *"  # every 30 minutes
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - "Senju Adversary Full Join"
-      - "Senju Live Opposition Force"
-      - "Senju Real Scan — Nuclei against own endpoints"
-      - "Senju GitHub Native Autonomous Improver"
-      - "Senju Blitz — Parallel Adversary Surge"
-    types: [completed]
 
 concurrency:
   group: senju-data-mesh
