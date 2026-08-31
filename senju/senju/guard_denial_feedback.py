@@ -1,10 +1,14 @@
 """Guard-denial feedback pressure for Senju production recovery.
 
-Guard, policy, authority, scope, credential, private-network, security-stop, and
-network denials are all first-class failures. They all increase self-tuning pressure,
-but only transient network/service failures may automatically increase external
-retry/agent variation. Boundary denials increase diagnostic/repair variation instead
-of becoming permission or a bypass signal.
+Every Guard/runtime denial is a first-class failure signal. Failure volume, denial
+density, success-rate collapse, and recent denial weight all increase self-tuning
+pressure. Diagnostic and repair variation grows for every denial category.
+
+External retry/agent variation is intentionally narrower: it may grow only for
+transient network/service failures and always keeps the exact authorized route.
+Authority, policy, scope, credential, private-network, protocol, rate-limit, and
+security-stop denials increase pressure and repair urgency without becoming
+permission, route expansion, or identity-based bypass.
 """
 from __future__ import annotations
 
@@ -20,7 +24,7 @@ from .external_denial_learning import (
     success_event,
 )
 
-FEEDBACK_SCHEMA = "senju-guard-denial-feedback/v1"
+FEEDBACK_SCHEMA = "senju-guard-denial-feedback/v2"
 
 RAW_FAILURE_CATEGORY = {
     "AUTHORITY_DENIED": "authorization_denial",
@@ -46,18 +50,18 @@ BOUNDARY_FAILURES = frozenset({
 TRANSIENT_FAILURES = frozenset({"network_denial", "transient_service_failure"})
 
 _PRESSURE_WEIGHT = {
-    "security_stop": 10,
-    "authorization_denial": 7,
-    "policy_denial": 7,
-    "out_of_scope": 7,
-    "credential_denial": 6,
-    "private_network_denial": 7,
-    "host_denial": 5,
-    "protocol_denial": 5,
-    "network_denial": 3,
-    "transient_service_failure": 3,
-    "rate_limit_denial": 2,
-    "external_failure": 2,
+    "security_stop": 14,
+    "authorization_denial": 10,
+    "policy_denial": 10,
+    "out_of_scope": 10,
+    "credential_denial": 8,
+    "private_network_denial": 10,
+    "host_denial": 7,
+    "protocol_denial": 7,
+    "network_denial": 5,
+    "transient_service_failure": 5,
+    "rate_limit_denial": 4,
+    "external_failure": 3,
 }
 
 _OBJECTIVE = {
@@ -68,7 +72,11 @@ _OBJECTIVE = {
     "credential_denial": "repair the configured credential through its authorized provider",
     "private_network_denial": "keep contact blocked and reconcile private-network scope out of band",
     "security_stop": "keep external execution stopped until the independent stop is released",
+    "host_denial": "repair the registered destination mapping without changing the intended target",
+    "protocol_denial": "reconcile the operation with the existing protocol contract",
+    "rate_limit_denial": "reduce request pressure and honor provider backoff",
     "transient_service_failure": "increase bounded same-route retry and agent variation",
+    "external_failure": "diagnose and reconcile the failure before another external attempt",
 }
 
 _REPAIR_ACTION = {
@@ -79,12 +87,16 @@ _REPAIR_ACTION = {
     "credential_denial": "credential_provider_refresh",
     "private_network_denial": "network_scope_reconcile",
     "security_stop": "wait_for_independent_security_stop_release",
+    "host_denial": "registry_reconcile",
+    "protocol_denial": "protocol_contract_reconcile",
+    "rate_limit_denial": "provider_backoff",
     "transient_service_failure": "same_route_service_recovery",
+    "external_failure": "diagnostic_review",
 }
 
 
 def normalize_guard_failure(state: str) -> str:
-    """Normalize explicit guard/runtime failure states into normal failure categories."""
+    """Normalize explicit Guard/runtime failure states into normal failure categories."""
     raw = str(state).strip().upper().replace("-", "_").replace(" ", "_")
     if raw in RAW_FAILURE_CATEGORY:
         return RAW_FAILURE_CATEGORY[raw]
@@ -107,7 +119,7 @@ def normalize_guard_failure(state: str) -> str:
 
 
 def _objective(category: str) -> str:
-    return _OBJECTIVE.get(category, "diagnose and reconcile the failure before another external attempt")
+    return _OBJECTIVE.get(category, _OBJECTIVE["external_failure"])
 
 
 def _repair_action(category: str) -> str:
@@ -181,12 +193,36 @@ def operation_route_key(*, scope: ExternalAuthorityScope, url: str, method: str 
     return probe.route_key
 
 
+def _guard_repair_queue(categories: Counter[str]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for category, count in categories.items():
+        boundary = category in BOUNDARY_FAILURES
+        transient = category in TRANSIENT_FAILURES
+        rows.append({
+            "category": category,
+            "count": int(count),
+            "priority": "critical" if boundary or count >= 3 else "high",
+            "repair_action": _repair_action(category),
+            "objective": _objective(category),
+            "retry_allowed": transient,
+            "boundary_failure": boundary,
+        })
+    return sorted(
+        rows,
+        key=lambda row: (
+            0 if row["priority"] == "critical" else 1,
+            -int(row["count"]),
+            str(row["category"]),
+        ),
+    )
+
+
 def feedback_state(
     memory: DenialLearningMemory,
     *,
     route_key: str | None = None,
 ) -> dict[str, Any]:
-    """Build the self-tuning pressure state from ordinary failures and successes."""
+    """Build a high-gain self-tuning pressure state from failures and successes."""
     events = [
         dict(row) for row in memory.events
         if route_key is None or str(row.get("route_key", "")) == route_key
@@ -195,19 +231,31 @@ def feedback_state(
         dict(row) for row in memory.successes
         if route_key is None or str(row.get("route_key", "")) == route_key
     ]
-    categories = Counter(str(row.get("category", "external_failure")) for row in events)
+    categories: Counter[str] = Counter(str(row.get("category", "external_failure")) for row in events)
     failures = len(events)
     success_count = len(successes)
     total = failures + success_count
     success_rate = (success_count / total) if total else 1.0
-    weighted_denials = sum(_PRESSURE_WEIGHT.get(category, 2) * count for category, count in categories.items())
-    rate_pressure = int(round((1.0 - success_rate) * 10.0)) if total else 0
-    pressure = min(100, weighted_denials + rate_pressure)
-    if pressure >= 50:
+    failure_rate = 1.0 - success_rate
+
+    weighted_denials = sum(_PRESSURE_WEIGHT.get(category, 3) * count for category, count in categories.items())
+    success_rate_pressure = int(round(failure_rate * 25.0)) if total else 0
+    failure_volume_pressure = min(20, failures * 2)
+    recent_rows = events[-8:]
+    recent_denial_pressure = min(
+        20,
+        sum(_PRESSURE_WEIGHT.get(str(row.get("category", "external_failure")), 3) for row in recent_rows) // 2,
+    )
+    pressure = min(
+        100,
+        weighted_denials + success_rate_pressure + failure_volume_pressure + recent_denial_pressure,
+    )
+
+    if pressure >= 70:
         pressure_level = "critical"
-    elif pressure >= 25:
+    elif pressure >= 45:
         pressure_level = "high"
-    elif pressure >= 10:
+    elif pressure >= 20:
         pressure_level = "elevated"
     else:
         pressure_level = "normal"
@@ -216,42 +264,111 @@ def feedback_state(
     boundary_count = sum(categories.get(category, 0) for category in BOUNDARY_FAILURES)
     latest_category = str(events[-1].get("category", "")) if events else None
     security_stop_active = latest_category == "security_stop"
-    latest_boundary = latest_category in BOUNDARY_FAILURES if latest_category else False
+    boundary_block_active = latest_category in BOUNDARY_FAILURES if latest_category else False
 
-    # Diagnostic/self-tuning variation grows for every denial category. External contact
-    # variation grows only for transient transport/service failures and never changes
-    # host, protocol, method, credential scope, or authority scope.
-    diagnostic_variation_budget = min(16, 1 + pressure // 6)
+    diagnostic_variation_budget = min(64, 1 + pressure // 2 + failures)
+    repair_candidate_budget = min(32, 1 + pressure // 4 + boundary_count)
+    diagnostic_route_hypothesis_budget = min(16, 1 + pressure // 12 + boundary_count)
+
     if transient_count:
-        retry_pass_budget = min(3, 1 + max(1, transient_count // 2))
-        agent_variation_budget = min(8, 3 + transient_count // 2)
+        retry_pass_budget = min(3, 1 + transient_count // 2 + (1 if pressure >= 60 else 0))
+        agent_variation_budget = min(8, 3 + transient_count + pressure // 25)
     else:
         retry_pass_budget = 0
         agent_variation_budget = 0
-    if latest_boundary or security_stop_active:
+
+    if boundary_block_active or security_stop_active:
         retry_pass_budget = 0
         agent_variation_budget = 0
+
+    same_route_retry_attempt_budget = (
+        min(24, retry_pass_budget * max(1, agent_variation_budget))
+        if retry_pass_budget > 0
+        else 0
+    )
+
+    if pressure >= 70:
+        self_tune_stage = 4
+    elif pressure >= 45:
+        self_tune_stage = 3
+    elif pressure >= 20:
+        self_tune_stage = 2
+    elif failures:
+        self_tune_stage = 1
+    else:
+        self_tune_stage = 0
+
+    repair_queue = _guard_repair_queue(categories)
+    external_retry_allowed = bool(retry_pass_budget > 0)
 
     return {
         "schema": FEEDBACK_SCHEMA,
         "route_key": route_key,
         "denied_is_normal_failure": True,
+        "feedback_loop_active": bool(failures),
         "failure_count": failures,
         "success_count": success_count,
         "success_rate": round(success_rate, 4),
+        "failure_rate": round(failure_rate, 4),
         "by_category": dict(sorted(categories.items())),
         "self_tune_pressure": pressure,
         "pressure_level": pressure_level,
+        "self_tune_stage": self_tune_stage,
+        "pressure_components": {
+            "weighted_denials": weighted_denials,
+            "success_rate_pressure": success_rate_pressure,
+            "failure_volume_pressure": failure_volume_pressure,
+            "recent_denial_pressure": recent_denial_pressure,
+        },
         "diagnostic_variation_budget": diagnostic_variation_budget,
+        "repair_candidate_budget": repair_candidate_budget,
+        "diagnostic_route_hypothesis_budget": diagnostic_route_hypothesis_budget,
         "retry_pass_budget": retry_pass_budget,
         "agent_variation_budget": agent_variation_budget,
+        "same_route_retry_attempt_budget": same_route_retry_attempt_budget,
+        "external_route_variation_budget": 1,
         "route_variation_budget": 1,
         "route_invariant": "same_authorized_route_only",
         "boundary_failure_count": boundary_count,
         "transient_failure_count": transient_count,
         "latest_failure_category": latest_category,
-        "external_retry_allowed": bool(retry_pass_budget > 0),
+        "boundary_block_active": boundary_block_active,
+        "external_retry_allowed": external_retry_allowed,
         "security_stop_active": security_stop_active,
+        "guard_contact_escalation": (
+            "same_route_transient_retry"
+            if external_retry_allowed
+            else "repair_and_diagnostics_only"
+            if failures
+            else "idle"
+        ),
+        "repair_queue": repair_queue,
+        "variation_plan": {
+            "diagnostic_variations": diagnostic_variation_budget,
+            "repair_candidates": repair_candidate_budget,
+            "diagnostic_route_hypotheses": diagnostic_route_hypothesis_budget,
+            "external_route_candidates": 1,
+            "agent_candidates": agent_variation_budget,
+            "retry_passes": retry_pass_budget,
+            "same_route_attempt_budget": same_route_retry_attempt_budget,
+        },
+        "feedback_chain": [
+            "DENIED -> normal_failure",
+            "normal_failure -> success_rate_pressure",
+            "success_rate_pressure -> self_tune_pressure",
+            "self_tune_pressure -> diagnostic_variation",
+            "transient_only -> bounded_retry_and_agent_variation",
+            "boundary_denial -> repair_pressure_without_bypass",
+        ],
+        "blocked_dimensions": {
+            "host_change": True,
+            "protocol_change": True,
+            "method_change": True,
+            "credential_scope_change": True,
+            "authority_scope_change": True,
+            "private_network_bypass": True,
+            "security_stop_bypass": True,
+        },
         "boundary_bypass_enabled": False,
     }
 
@@ -277,6 +394,8 @@ def recommended_recovery_passes(
     """Choose a bounded pass count; only transient pressure can increase it."""
     configured = max(1, min(int(configured), 3))
     if bool(state.get("security_stop_active", False)):
+        return 1
+    if bool(state.get("boundary_block_active", False)):
         return 1
     if not bool(state.get("external_retry_allowed", False)):
         return configured

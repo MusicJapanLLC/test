@@ -1,0 +1,180 @@
+name: WORLD Trust Root Runtime
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "automation/codegen/engine/world_trust_root_runtime.py"
+      - "automation/codegen/world_trust_root_runtime.py"
+      - "automation/codegen/config/world-trust-root.json"
+      - "automation/codegen/tests/test_world_trust_root_runtime.py"
+      - ".github/workflows/world-trust-root-runtime.yml"
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "automation/codegen/engine/world_trust_root_runtime.py"
+      - "automation/codegen/world_trust_root_runtime.py"
+      - "automation/codegen/config/world-trust-root.json"
+      - "automation/codegen/tests/test_world_trust_root_runtime.py"
+      - ".github/workflows/world-trust-root-runtime.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: world-trust-root-runtime-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  WORLD_STATE: /tmp/world
+  PYTHONPATH: ${{ github.workspace }}/automation/codegen:${{ github.workspace }}/senju
+
+jobs:
+  coordinate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Verify WORLD coordinator contract
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest==9.1.1
+          python -m pytest automation/codegen/tests/test_world_trust_root_runtime.py -q
+          python -m py_compile \
+            automation/codegen/engine/world_trust_root_runtime.py \
+            automation/codegen/world_trust_root_runtime.py
+
+      - name: Restore latest evidence from existing production loops
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p \
+            "$WORLD_STATE/shared-discovery" \
+            "$WORLD_STATE/network-policy" \
+            "$WORLD_STATE/external-recovery" \
+            "$WORLD_STATE/production-continuity" \
+            "$WORLD_STATE/checkpoint"
+
+          download_named_artifact() {
+            local workflow="$1"
+            local artifact="$2"
+            local dest="$3"
+            local run
+            run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" --status success --limit 20 --json databaseId --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run" ]]; then
+              gh run download "$run" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir "$dest" || true
+            fi
+          }
+
+          download_pattern_artifact() {
+            local workflow="$1"
+            local pattern="$2"
+            local dest="$3"
+            local run
+            run="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "$workflow" --status success --limit 20 --json databaseId --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run" ]]; then
+              gh run download "$run" --repo "$GITHUB_REPOSITORY" --pattern "$pattern" --dir "$dest" || true
+            fi
+          }
+
+          download_named_artifact \
+            shared-discovery-authority-cycle.yml \
+            shared-discovery-authority-state \
+            "$WORLD_STATE/shared-discovery"
+
+          download_pattern_artifact \
+            meta-network-policy-expansion.yml \
+            'meta-network-policy-expansion-*' \
+            "$WORLD_STATE/network-policy"
+
+          download_named_artifact \
+            senju-external-recovery-cycle.yml \
+            senju-external-recovery-evidence \
+            "$WORLD_STATE/external-recovery"
+
+          download_named_artifact \
+            meta-x-production-continuity.yml \
+            meta-x-production-continuity-state \
+            "$WORLD_STATE/production-continuity"
+
+      - name: Build one WORLD trust-root checkpoint
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python automation/codegen/world_trust_root_runtime.py \
+            --repo-root . \
+            --shared-state-dir "$WORLD_STATE/shared-discovery" \
+            --network-state-dir "$WORLD_STATE/network-policy" \
+            --recovery-state-dir "$WORLD_STATE/external-recovery" \
+            --continuity-state-dir "$WORLD_STATE/production-continuity" \
+            --output-dir "$WORLD_STATE/checkpoint" \
+            --config automation/codegen/config/world-trust-root.json
+
+      - name: Verify unified production invariants
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('/tmp/world/checkpoint')
+          checkpoint = json.loads((root / 'world_trust_root_checkpoint.json').read_text())
+          intents = json.loads((root / 'world_execution_intents.json').read_text())
+          handoffs = json.loads((root / 'world_handoffs.json').read_text())
+
+          assert checkpoint['schema'] == 'world-trust-root-runtime/v1'
+          assert checkpoint['environment'] == 'production'
+          assert checkpoint['closed_loop'] is True
+          assert checkpoint['authorization']['authority_minted_by_world'] is False
+          assert checkpoint['authorization']['credential_minted_by_world'] is False
+          assert checkpoint['boundary_denial_becomes_authority'] is False
+          assert checkpoint['raw_credential_replication'] is False
+          assert intents['schema'] == 'world-trust-root-execution-intents/v1'
+          assert handoffs['schema'] == 'world-trust-root-handoffs/v1'
+          for intent in intents['intents']:
+              assert intent['authority_minted_by_world'] is False
+              assert intent['credential_minted_by_world'] is False
+              assert intent['scope_expansion'] is False
+              if intent['high_impact']:
+                  assert intent['registered_executor_required'] is True
+          print('WORLD_TRUST_ROOT_RUNTIME_VERIFIED')
+          PY
+
+      - name: Report stale handoffs without duplicate dispatch
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          count="$(jq '[.handoffs[] | select(.dispatch == true)] | length' "$WORLD_STATE/checkpoint/world_handoffs.json")"
+          echo "WORLD handoffs requiring component attention: $count"
+          jq -r '.handoffs[] | select(.dispatch == true) | "handoff component=\(.component) workflow=\(.workflow) reason=\(.reason)"' \
+            "$WORLD_STATE/checkpoint/world_handoffs.json"
+          echo "Existing component schedules/recovery remain authoritative; WORLD does not duplicate-dispatch them."
+
+      - name: Persist unified WORLD checkpoint
+        if: github.event_name != 'pull_request' && always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: world-trust-root-runtime
+          path: ${{ env.WORLD_STATE }}/checkpoint
+          if-no-files-found: error
+          retention-days: 30
