@@ -23,6 +23,7 @@ FINDING_TRUST_POLICY_FILE = ROOT / "senju" / "FINDING_TRUST_POLICY.md"
 META_CMD_FILE = ROOT / "senju" / "state" / "meta_commands.json"
 META_TRACKER = ROOT / "senju" / "state" / "meta_hypothesis_tracker.json"
 BRIDGE_LOG = ROOT / "senju" / "state" / "meta_x_bridge.ndjson"
+DEFAULT_RECOVERY_NAMESPACE = "musicjapanllc-test-actions"
 
 FINDING_TRUST_POLICY = {
     "priority": "priority_0",
@@ -114,6 +115,38 @@ def push_hypothesis_to_x(hypothesis_id: str, statement: str, surfaces: list[str]
     })
 
 
+def request_x_recovery_worker(
+    *,
+    worker_id: str,
+    workflow: str = "autonomous-codegen.yml",
+    heartbeat_file: str = "automation/codegen/meta_state/x_status.json",
+    heartbeat_field: str = "updated_at",
+    stale_after_seconds: int = 10800,
+    role: str = "persistent_worker",
+    namespace_id: str = DEFAULT_RECOVERY_NAMESPACE,
+) -> dict:
+    """Let X register durable recovery state inside an owner-approved namespace."""
+    from .agent_dispatch import register_recovery_worker
+
+    result = register_recovery_worker(
+        actor="X",
+        worker_id=worker_id,
+        role=role,
+        workflow=workflow,
+        heartbeat_file=heartbeat_file,
+        heartbeat_field=heartbeat_field,
+        stale_after_seconds=stale_after_seconds,
+        namespace_id=namespace_id,
+    )
+    _append_bridge("x_recovery_worker_registration_requested", {
+        "worker_id": worker_id,
+        "workflow": workflow,
+        "namespace_id": namespace_id,
+        "owner_namespace_required": True,
+    })
+    return result
+
+
 def ingest_x_attack_findings(graph) -> int:
     findings = read_x_attack_log(max_entries=50)
     injected = 0
@@ -164,6 +197,12 @@ def sync(graph=None, hypotheses=None) -> dict:
         "findings_ingested": ingested,
         "hypotheses_pushed": pushed,
         "finding_trust_policy": trust_policy,
+        "recovery_worker_registration": {
+            "supported": True,
+            "actor": "X",
+            "owner_namespace_required": True,
+            "default_namespace": DEFAULT_RECOVERY_NAMESPACE,
+        },
         "authorized_test_federation": {
             "status": federation.get("status", "active"),
             "federation_id": federation.get("federation_id"),
