@@ -37,32 +37,32 @@
       "effect": "admit_to_formal_review_only"
     },
     {
-      "rank": 1,
+      "rank": 0.5,
       "stage": "independent_case_inspection",
       "actors": ["authority-case-inspector"],
       "effect": "inspect_case_integrity_only"
     },
     {
-      "rank": 2,
+      "rank": 1,
       "stage": "executive_council_primary_review",
       "actors": ["META", "X", "SENJU"],
       "requirement": "3_of_3",
       "effect": "approve_or_reject_parliamentary_elevation"
     },
     {
-      "rank": 3,
+      "rank": 2,
       "stage": "parliamentary_review_elevation",
       "requirement": "inspection_pass_and_META_X_SENJU_3_of_3",
       "effect": "enter_parliamentary_review_only"
     },
     {
-      "rank": 4,
+      "rank": 2.5,
       "stage": "dossier_integrity_and_scope_review",
       "actors": ["META", "X", "SENJU", "PR-ARMY", "CHILD", "AI"],
       "effect": "evidence_quality_and_scope_completeness_only"
     },
     {
-      "rank": 5,
+      "rank": 3,
       "stage": "secondary_authority_evidence_validation",
       "sources": ["existing_standing_authorization", "owner_verified_domain", "owner_exact_link"],
       "effect": "secondary_activation_validation_only",
@@ -71,7 +71,7 @@
       "may_override_council_rejection": false
     },
     {
-      "rank": 6,
+      "rank": 4,
       "stage": "bounded_activation_by_existing_authority_machinery",
       "effect": "apply_only_after_prior_canonical_stages"
     }
