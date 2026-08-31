@@ -1,9 +1,9 @@
 """Policy editing workspace for META Self-Tuner.
 
 The Self-Tuner may freely rewrite supported governance/network policy models in
-lab, sandbox, and staging workspaces. Production-like environments are
-proposal-only: the function returns the requested replacement without mutating
-live state.
+lab, sandbox, and staging workspaces. Production-like environments remain
+proposal-only by default, with a deliberately tiny canary lane that can only
+make monotonic restrictive changes to a canary-scoped policy snapshot.
 """
 from __future__ import annotations
 
@@ -25,6 +25,14 @@ EDITABLE_POLICY_DOMAINS = (
 
 ISOLATED_EDIT_ENVIRONMENTS = frozenset({"lab", "sandbox", "staging"})
 PRODUCTION_LIKE_ENVIRONMENTS = frozenset({"production", "prod", "live", "real"})
+PRODUCTION_CANARY_DOMAINS = frozenset({
+    "credential_scope",
+    "allowed_host",
+    "network_permission",
+    "merge_requirement",
+    "security_audit_requirement",
+})
+PRODUCTION_CANARY_KEY = "__production_canaries__"
 
 _ALIASES = {
     "scopeguard": "scopeguard_policy",
@@ -50,6 +58,8 @@ class PolicyEditResult:
     previous: dict[str, Any]
     requested: dict[str, Any]
     resulting: dict[str, Any]
+    canary_scope: str | None = None
+    canary_applied: bool = False
 
 
 def normalize_domain(domain: str) -> str:
@@ -60,18 +70,131 @@ def normalize_domain(domain: str) -> str:
     return normalized
 
 
+def _is_collection(value: Any) -> bool:
+    return isinstance(value, (list, tuple, set, frozenset))
+
+
+def _assert_subset_restriction(previous: Mapping[str, Any], requested: Mapping[str, Any]) -> None:
+    """Require replacement values to preserve or narrow the prior capability set."""
+    for key, new_value in requested.items():
+        if key not in previous:
+            raise PermissionError(f"production canary cannot introduce new policy key: {key}")
+        old_value = previous[key]
+        if _is_collection(old_value) and _is_collection(new_value):
+            if not set(new_value).issubset(set(old_value)):
+                raise PermissionError(f"production canary may only narrow {key}")
+        elif isinstance(old_value, bool) and isinstance(new_value, bool):
+            if new_value and not old_value:
+                raise PermissionError(f"production canary may not enable {key}")
+        elif isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
+            if new_value > old_value:
+                raise PermissionError(f"production canary may only reduce {key}")
+        elif new_value != old_value:
+            raise PermissionError(f"production canary may not broaden or replace {key}")
+
+
+def _assert_requirement_hardening(previous: Mapping[str, Any], requested: Mapping[str, Any]) -> None:
+    """Require merge/audit requirements to stay equal or become stricter."""
+    for key, new_value in requested.items():
+        if key not in previous:
+            raise PermissionError(f"production canary cannot introduce new requirement key: {key}")
+        old_value = previous[key]
+        if isinstance(old_value, bool) and isinstance(new_value, bool):
+            if old_value and not new_value:
+                raise PermissionError(f"production canary may not disable requirement {key}")
+        elif isinstance(old_value, (int, float)) and isinstance(new_value, (int, float)):
+            if new_value < old_value:
+                raise PermissionError(f"production canary may not lower requirement {key}")
+        elif _is_collection(old_value) and _is_collection(new_value):
+            if not set(new_value).issuperset(set(old_value)):
+                raise PermissionError(f"production canary may not remove requirement values from {key}")
+        elif new_value != old_value:
+            raise PermissionError(f"production canary may not weaken or replace requirement {key}")
+
+
+def _assert_monotonic_production_canary(
+    domain: str,
+    previous: Mapping[str, Any],
+    requested: Mapping[str, Any],
+) -> None:
+    if not previous:
+        raise PermissionError("production canary requires an existing baseline policy")
+    if domain in {"credential_scope", "allowed_host", "network_permission"}:
+        _assert_subset_restriction(previous, requested)
+        return
+    if domain in {"merge_requirement", "security_audit_requirement"}:
+        _assert_requirement_hardening(previous, requested)
+        return
+    raise PermissionError(f"{domain} is not eligible for production canary mutation")
+
+
+def _apply_production_canary(
+    workspace: MutableMapping[str, Any],
+    domain: str,
+    requested: Mapping[str, Any],
+    *,
+    environment: str,
+    canary_scope: str,
+) -> PolicyEditResult:
+    scope = canary_scope.strip()
+    if not scope:
+        raise PermissionError("production canary requires a non-empty canary_scope")
+    if domain not in PRODUCTION_CANARY_DOMAINS:
+        previous = copy.deepcopy(dict(workspace.get(domain, {})))
+        return PolicyEditResult(
+            domain=domain,
+            environment=environment,
+            applied=False,
+            proposal_only=True,
+            previous=previous,
+            requested=copy.deepcopy(dict(requested)),
+            resulting=previous,
+            canary_scope=scope,
+            canary_applied=False,
+        )
+
+    canaries = workspace.setdefault(PRODUCTION_CANARY_KEY, {})
+    if not isinstance(canaries, MutableMapping):
+        raise PermissionError("production canary store is invalid")
+    scoped = canaries.setdefault(scope, {})
+    if not isinstance(scoped, MutableMapping):
+        raise PermissionError("production canary scope is invalid")
+
+    baseline = scoped.get(domain, workspace.get(domain, {}))
+    previous = copy.deepcopy(dict(baseline))
+    replacement = copy.deepcopy(dict(requested))
+    _assert_monotonic_production_canary(domain, previous, replacement)
+
+    scoped[domain] = replacement
+    return PolicyEditResult(
+        domain=domain,
+        environment=environment,
+        applied=True,
+        proposal_only=False,
+        previous=previous,
+        requested=replacement,
+        resulting=copy.deepcopy(replacement),
+        canary_scope=scope,
+        canary_applied=True,
+    )
+
+
 def edit_policy_workspace(
-    workspace: MutableMapping[str, Mapping[str, Any]],
+    workspace: MutableMapping[str, Any],
     domain: str,
     replacement: Mapping[str, Any],
     *,
     environment: str,
+    canary_scope: str | None = None,
 ) -> PolicyEditResult:
-    """Replace one supported policy model in an isolated workspace.
+    """Edit a supported policy model with environment-specific containment.
 
-    All supported domains are fully replaceable in lab/sandbox/staging. For
-    production-like environments, the same replacement is represented as a
-    proposal only and the supplied workspace is left unchanged.
+    - lab/sandbox/staging: complete replacement is allowed.
+    - production/prod/live/real without a canary scope: proposal-only.
+    - production/prod/live/real with a canary scope: only five low-level domains
+      may be mutated, only under ``__production_canaries__[scope]``, and only in
+      a monotonic restrictive direction. The global production policy is never
+      overwritten by this function.
     """
     normalized = normalize_domain(domain)
     env = environment.strip().lower()
@@ -92,6 +215,14 @@ def edit_policy_workspace(
         )
 
     if env in PRODUCTION_LIKE_ENVIRONMENTS:
+        if canary_scope:
+            return _apply_production_canary(
+                workspace,
+                normalized,
+                requested,
+                environment=env,
+                canary_scope=canary_scope,
+            )
         return PolicyEditResult(
             domain=normalized,
             environment=env,
@@ -103,6 +234,6 @@ def edit_policy_workspace(
         )
 
     raise PermissionError(
-        "Self-Tuner policy edits may execute only in lab/sandbox/staging; "
-        "production-like targets are proposal-only"
+        "Self-Tuner policy edits may execute only in lab/sandbox/staging or "
+        "through the restrictive production canary lane"
     )
