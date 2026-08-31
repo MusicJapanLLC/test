@@ -33,6 +33,7 @@ on:
       - "senju/tests/test_production_continuity.py"
       - "senju/tests/test_production_federated_discovery.py"
       - "senju/tests/test_discovery_lease_continuity.py"
+      - "senju/tests/test_discovery_production_continuity_runner.py"
       - "senju/config/production-continuity.json"
       - "senju/config/production-deployment-authorizations.json"
       - ".github/workflows/meta-x-production-continuity.yml"
@@ -116,6 +117,7 @@ jobs:
             tests/test_production_continuity.py \
             tests/test_production_federated_discovery.py \
             tests/test_discovery_lease_continuity.py \
+            tests/test_discovery_production_continuity_runner.py \
             -q
 
       - name: Compile production continuity runtime
