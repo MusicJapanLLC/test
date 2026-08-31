@@ -3,7 +3,9 @@
 META, X and Senju have equal votes. A proposal reaches CONSENSUS_APPROVED only
 when all three vote YES. META and X may then explicitly approve that consensus.
 Approved changes can be applied immediately in lab/sandbox/staging. Production-
-like safety/guard enforcement remains behind an independent authority applier.
+like environments also support an immediate fast path for exact proposals that
+were pre-authorized in an immutable ProductionGuardEnvelope; everything else is
+submitted to an independent authority applier.
 """
 from __future__ import annotations
 
@@ -11,6 +13,8 @@ import dataclasses
 import hashlib
 import json
 from typing import Any, Callable, Mapping
+
+from .production_guard_envelope import ProductionGuardEnvelope
 
 VOTERS = ("META", "X", "SENJU")
 META_X_APPROVERS = ("META", "X")
@@ -77,6 +81,8 @@ class GuardApplyResult:
     authority_receipt: Mapping[str, Any]
     environment: str | None = None
     meta_x_approvals: Mapping[str, bool] | None = None
+    production_fast_path: bool = False
+    envelope_id: str | None = None
 
 
 class GuardConsensus:
@@ -133,15 +139,18 @@ class GuardConsensus:
         environment: str,
         nonprod_applier: Callable[[GuardChangeProposal], Mapping[str, Any]] | None = None,
         authority_applier: Callable[[GuardChangeProposal], Mapping[str, Any]] | None = None,
+        production_envelope: ProductionGuardEnvelope | None = None,
+        production_applier: Callable[[GuardChangeProposal], Mapping[str, Any]] | None = None,
     ) -> GuardApplyResult:
         """Apply META/X-approved guard changes according to environment.
 
         lab/sandbox/staging: META+X approval can trigger the supplied non-production
         applier immediately.
 
-        production/prod/live/real: the same approved proposal is automatically
-        submitted to an independent authority applier. META/X approval cannot
-        replace that production boundary.
+        production/prod/live/real: when the exact proposal id exists in the
+        immutable ``production_envelope``, META+X approval can trigger the supplied
+        production applier immediately. Proposals outside that pre-authorized
+        envelope are automatically submitted to the independent authority applier.
         """
         if approval.status != STATUS_META_X_APPROVED or not approval.both_approved:
             raise GuardConsensusError("guard change lacks META/X approval")
@@ -166,8 +175,28 @@ class GuardConsensus:
             )
 
         if env in PRODUCTION_LIKE_ENVIRONMENTS:
+            if production_envelope is not None and production_envelope.allows(proposal.proposal_id):
+                if production_applier is None:
+                    raise GuardConsensusError("production fast path requires production_applier")
+                receipt = production_applier(proposal)
+                if not isinstance(receipt, Mapping):
+                    raise GuardConsensusError("production applier must return a mapping")
+                applied = bool(receipt.get("applied", receipt.get("approved", False)))
+                return GuardApplyResult(
+                    decision=approval.decision,
+                    applied=applied,
+                    status=STATUS_APPLIED if applied else STATUS_AUTHORITY_REJECTED,
+                    authority_receipt=dict(receipt),
+                    environment=env,
+                    meta_x_approvals=dict(approval.approvals),
+                    production_fast_path=True,
+                    envelope_id=production_envelope.envelope_id,
+                )
+
             if authority_applier is None:
-                raise GuardConsensusError("production guard apply requires independent authority_applier")
+                raise GuardConsensusError(
+                    "production proposal is outside the pre-authorized envelope and requires independent authority_applier"
+                )
             receipt = authority_applier(proposal)
             if not isinstance(receipt, Mapping):
                 raise GuardConsensusError("authority applier must return a mapping")
