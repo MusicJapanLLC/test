@@ -109,15 +109,19 @@ def test_finding_memory_deduplicates_and_confirms() -> None:
     assert again.confidence == 0.9
 
 
-def test_scheduler_learns_high_yield_family() -> None:
+def test_scheduler_learns_high_yield_family_after_equal_exploration() -> None:
     scheduler = AdaptiveProbeScheduler()
-    for family in scheduler.FAMILIES:
-        scheduler.record(family, new_findings=0)
-    for _ in range(3):
-        scheduler.record("reflection_canary", new_findings=1)
+    for _ in range(4):
+        for family in scheduler.FAMILIES:
+            scheduler.record(
+                family,
+                new_findings=1 if family == "reflection_canary" else 0,
+            )
     ranking = scheduler.rank()
     assert ranking[0] == "reflection_canary"
-    assert scheduler.snapshot()["reflection_canary"]["yield_rate"] > 0.0
+    snapshot = scheduler.snapshot()
+    assert snapshot["reflection_canary"]["yield_rate"] == 1.0
+    assert snapshot["content_map"]["yield_rate"] == 0.0
 
 
 def test_closed_loop_crawls_internal_links_blocks_external_and_shares_findings() -> None:
