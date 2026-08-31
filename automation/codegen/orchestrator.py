@@ -1,5 +1,5 @@
 """
-Master orchestrator — runs without human approval.
+Master orchestrator (X) — runs without human approval.
 
 Modes:
   full   : generate new tasks → run all pending → broadcast summary
@@ -20,33 +20,29 @@ from engine.broadcaster import push_knowledge_summary, push_new_tasks
 from engine.loop import run_loop
 from engine.task_generator import generate_new_tasks
 from engine.meta_v2 import run_full_meta_cycle, check_heartbeat
+from engine.recovery import write_x_status, mutual_recovery_cycle, self_recover
 
 TASKS_DIR = Path(__file__).parent / "tasks"
-MAX_WORKERS = 4  # parallel codegen workers
+MAX_WORKERS = 4
 DEFAULT_MAX_ITER = 15
 
 
 def discover_pending_tasks(max_tasks: int = 20) -> list[str]:
-    """Find tasks that haven't passed yet or haven't been attempted."""
     stats = kb.get_stats()
     pending = []
-
     for task_file in sorted(TASKS_DIR.rglob("*.json")):
         rel = task_file.relative_to(TASKS_DIR)
         task_id = str(rel.with_suffix(""))
-
         stat = stats.get(task_id, {})
         if stat.get("successes", 0) == 0:
             pending.append((stat.get("attempts", 0), task_id))
-
     pending.sort(key=lambda x: x[0])
     return [task_id for _, task_id in pending[:max_tasks]]
 
 
 def run_parallel(task_ids: list[str], max_iter: int = DEFAULT_MAX_ITER) -> dict:
     results = {}
-    print(f"[orchestrator] running {len(task_ids)} tasks with {MAX_WORKERS} workers")
-
+    print(f"[X] running {len(task_ids)} tasks with {MAX_WORKERS} workers")
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as pool:
         futures = {pool.submit(run_loop, tid, max_iter): tid for tid in task_ids}
         for future in as_completed(futures):
@@ -56,53 +52,56 @@ def run_parallel(task_ids: list[str], max_iter: int = DEFAULT_MAX_ITER) -> dict:
                 results[tid] = "PASS" if passed else "FAIL"
             except Exception as e:
                 results[tid] = f"ERROR: {e}"
-                print(f"[orchestrator] {tid} raised: {e}")
-
+                print(f"[X] {tid} raised: {e}")
     return results
 
 
 def mode_full(new_task_count: int = 5, max_iter: int = DEFAULT_MAX_ITER):
-    print("[orchestrator] === FULL CYCLE ===")
+    print("[X] === FULL CYCLE ===")
 
-    # 0. Heartbeat check — warn if system was dead
     if not check_heartbeat(max_gap_hours=10.0):
-        print("[orchestrator] WARNING: heartbeat gap detected — system may have been down")
+        print("[X] WARNING: heartbeat gap — system may have been down")
 
-    # META v2 — all 6 autonomous capabilities
     try:
         run_full_meta_cycle()
     except Exception as e:
-        print(f"[orchestrator] meta_v2 cycle error (continuing): {e}")
+        print(f"[X] meta_v2 cycle error (continuing): {e}")
 
-    # 1. Expand task list
-    print(f"[orchestrator] generating {new_task_count} new tasks...")
+    print(f"[X] generating {new_task_count} new tasks...")
     try:
         new_tasks = generate_new_tasks(new_task_count)
         push_new_tasks(new_tasks)
     except Exception as e:
-        print(f"[orchestrator] task generation failed (continuing): {e}")
+        print(f"[X] task generation failed (continuing): {e}")
 
-    # 2. Discover all pending
     pending = discover_pending_tasks()
     if not pending:
-        print("[orchestrator] no pending tasks")
+        print("[X] no pending tasks")
     else:
         results = run_parallel(pending, max_iter)
         passed = sum(1 for v in results.values() if v == "PASS")
-        print(f"[orchestrator] cycle complete: {passed}/{len(results)} passed")
+        print(f"[X] cycle complete: {passed}/{len(results)} passed")
 
-    # 3. Broadcast summary
-    push_knowledge_summary(kb.get_stats())
+    stats = kb.get_stats()
+    push_knowledge_summary(stats)
+    try:
+        write_x_status(stats, meta_cycle_ok=True)
+        self_recover(stats)
+        mutual_recovery_cycle(stats)
+    except Exception as e:
+        print(f"[X] recovery error (continuing): {e}")
 
 
 def mode_run(task_ids: list[str] | None, max_iter: int = DEFAULT_MAX_ITER):
     if not task_ids:
         task_ids = discover_pending_tasks()
     if not task_ids:
-        print("[orchestrator] nothing to run")
+        print("[X] nothing to run")
         return
     results = run_parallel(task_ids, max_iter)
-    push_knowledge_summary(kb.get_stats())
+    stats = kb.get_stats()
+    push_knowledge_summary(stats)
+    write_x_status(stats, meta_cycle_ok=True)
     for tid, status in results.items():
         print(f"  {tid}: {status}")
 

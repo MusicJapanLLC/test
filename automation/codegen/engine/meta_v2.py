@@ -1,5 +1,5 @@
 """
-META v2 — 6-capability autonomous engine.
+META v2 — 6-capability autonomous engine (X system).
 
 1. COMMAND CHANNEL    : drive_engine attack parameter rewrite
 2. QUEUE SURGERY      : Senju queue priority manipulation + WorkItem injection
@@ -7,6 +7,7 @@ META v2 — 6-capability autonomous engine.
 4. AGENT DISPATCH     : workflow_dispatch commands to Jules and other AIs
 5. HYPOTHESIS TRACK   : hypothesis → experiment → result → confidence update loop
 6. SELF-REWRITE       : propose improvements to own code as PRs
++ RECOVERY            : self-recovery + mutual recovery with Senju
 """
 
 import base64
@@ -153,7 +154,6 @@ def fetch_external_intel(keywords: list[str] | None = None) -> dict:
         "sources": {},
     }
 
-    # NVD recent CVEs (public API, no key needed)
     nvd = _fetch_json(
         "https://services.nvd.nist.gov/rest/json/cves/2.0?"
         "resultsPerPage=5&startIndex=0"
@@ -172,7 +172,6 @@ def fetch_external_intel(keywords: list[str] | None = None) -> dict:
             ],
         }
 
-    # GitHub Advisory (public, no auth needed for public advisories)
     gh_advisory = _fetch_json(
         "https://api.github.com/advisories?per_page=5&type=reviewed"
     )
@@ -198,10 +197,6 @@ def fetch_external_intel(keywords: list[str] | None = None) -> dict:
 # ─────────────────────────────────────────────
 
 def dispatch_to_agent(workflow_file: str, ref: str, inputs: dict) -> bool:
-    """
-    Send workflow_dispatch to another AI agent/workflow.
-    Uses GITHUB_TOKEN — available in every Action.
-    """
     token = os.environ.get("GITHUB_TOKEN", "")
     repo = os.environ.get("GITHUB_REPOSITORY", "MusicJapanLLC/test")
 
@@ -215,8 +210,7 @@ def dispatch_to_agent(workflow_file: str, ref: str, inputs: dict) -> bool:
 
     try:
         req = urllib.request.Request(
-            url,
-            data=payload,
+            url, data=payload,
             headers={
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json",
@@ -238,7 +232,6 @@ def dispatch_to_agent(workflow_file: str, ref: str, inputs: dict) -> bool:
 
 
 def dispatch_codegen_expand(count: int = 10):
-    """Tell codegen-task-expander to generate more tasks."""
     return dispatch_to_agent(
         "codegen-task-expander.yml",
         ref=os.environ.get("GITHUB_REF_NAME", "claude/autonomous-code-generation-github-kje2uj"),
@@ -247,12 +240,7 @@ def dispatch_codegen_expand(count: int = 10):
 
 
 def dispatch_senju_cycle():
-    """Wake Senju's autonomous cycle if it has a workflow."""
-    senju_workflows = [
-        "senju-trusted-owner-scope.yml",
-        "standment-autonomous-rnd.yml",
-    ]
-    for wf in senju_workflows:
+    for wf in ["senju-trusted-owner-scope.yml", "standment-autonomous-rnd.yml"]:
         dispatch_to_agent(wf, ref="main", inputs={})
 
 
@@ -273,7 +261,6 @@ def save_hypotheses(hypotheses: list[dict]):
 
 
 def add_hypothesis(claim: str, domain: str, experiment: str) -> dict:
-    """Register a new hypothesis for testing."""
     hypotheses = load_hypotheses()
     h = {
         "id": f"H{len(hypotheses)+1:04d}",
@@ -295,14 +282,12 @@ def add_hypothesis(claim: str, domain: str, experiment: str) -> dict:
 
 
 def update_hypothesis(h_id: str, passed: bool, evidence: str = ""):
-    """Update hypothesis confidence based on experiment result."""
     hypotheses = load_hypotheses()
     for h in hypotheses:
         if h["id"] == h_id:
             h["trials"] += 1
             if passed:
                 h["successes"] += 1
-            # Bayesian-style update: confidence = successes / trials, smoothed
             h["confidence"] = round((h["successes"] + 1) / (h["trials"] + 2), 3)
             h["status"] = "confirmed" if h["confidence"] > 0.8 else (
                 "refuted" if h["confidence"] < 0.2 else "pending"
@@ -321,7 +306,6 @@ def update_hypothesis(h_id: str, passed: bool, evidence: str = ""):
 
 
 def auto_hypothesize_from_intel(intel: dict) -> list[dict]:
-    """Generate hypotheses from external intel — fully automated."""
     new_hypotheses = []
     nvd = intel.get("sources", {}).get("nvd", {})
     for cve in nvd.get("recent", []):
@@ -340,15 +324,9 @@ def auto_hypothesize_from_intel(intel: dict) -> list[dict]:
 # ─────────────────────────────────────────────
 
 def propose_self_improvement(current_file: Path, improvement_note: str, client) -> str:
-    """
-    Ask the LLM to improve this very file. Write improved version to a staging path.
-    auto_pr_self_improvement() will create the PR automatically.
-    """
     from .model_client import strip_fences
-
     if not current_file.exists():
         return ""
-
     current_code = current_file.read_text()
     prompt = (
         f"You are improving an autonomous AI engine file.\n\n"
@@ -357,9 +335,7 @@ def propose_self_improvement(current_file: Path, improvement_note: str, client) 
         f"Rewrite the file with the improvement applied. "
         f"Keep all existing functionality. Output ONLY raw Python. No markdown."
     )
-
     improved = strip_fences(client.complete(prompt, max_tokens=8192))
-
     staging_path = current_file.parent / f"{current_file.stem}_improved.py"
     staging_path.write_text(improved)
     _log("self_rewrite", {"target": str(current_file), "staging": str(staging_path)})
@@ -368,23 +344,17 @@ def propose_self_improvement(current_file: Path, improvement_note: str, client) 
 
 
 def auto_pr_self_improvement(staging_path: str, improvement_note: str) -> bool:
-    """
-    Create a branch + PR for the self-improved file automatically.
-    Uses GITHUB_TOKEN via GitHub API — no human step needed.
-    """
     token = os.environ.get("GITHUB_TOKEN", "")
     repo = os.environ.get("GITHUB_REPOSITORY", "MusicJapanLLC/test")
     if not token or not staging_path:
         return False
-
     staging = Path(staging_path)
     if not staging.exists():
         return False
 
     owner, repo_name = repo.split("/", 1)
     branch = f"meta/self-improve-{time.strftime('%Y%m%d-%H%M%S')}"
-    content = staging.read_text()
-    encoded = base64.b64encode(content.encode()).decode()
+    encoded = base64.b64encode(staging.read_text().encode()).decode()
     rel_path = str(staging.relative_to(ROOT))
 
     def _api(method: str, path: str, body: dict | None = None):
@@ -404,25 +374,17 @@ def auto_pr_self_improvement(staging_path: str, improvement_note: str) -> bool:
             return json.loads(r.read().decode())
 
     try:
-        ref_data = _api("GET", "git/ref/heads/claude/autonomous-code-generation-github-kje2uj")
-        sha = ref_data["object"]["sha"]
+        sha = _api("GET", "git/ref/heads/claude/autonomous-code-generation-github-kje2uj")["object"]["sha"]
         _api("POST", "git/refs", {"ref": f"refs/heads/{branch}", "sha": sha})
-
         try:
-            file_data = _api("GET", f"contents/{rel_path}?ref={branch}")
-            file_sha = file_data.get("sha", "")
+            file_sha = _api("GET", f"contents/{rel_path}?ref={branch}").get("sha", "")
         except Exception:
             file_sha = ""
-
-        body: dict = {
-            "message": f"meta(self-rewrite): {improvement_note[:60]}",
-            "content": encoded,
-            "branch": branch,
-        }
+        body: dict = {"message": f"meta(self-rewrite): {improvement_note[:60]}",
+                      "content": encoded, "branch": branch}
         if file_sha:
             body["sha"] = file_sha
         _api("PUT", f"contents/{rel_path}", body)
-
         _api("POST", "pulls", {
             "title": f"[META] Self-improvement: {improvement_note[:60]}",
             "body": f"Auto-generated by META v2 self-rewrite capability.\n\n{improvement_note}",
@@ -450,7 +412,6 @@ def write_heartbeat():
 
 
 def check_heartbeat(max_gap_hours: float = 10.0) -> bool:
-    """Return True if system is alive (last cycle < max_gap_hours ago)."""
     if not HEARTBEAT_FILE.exists():
         return False
     try:
@@ -466,46 +427,49 @@ def check_heartbeat(max_gap_hours: float = 10.0) -> bool:
 
 
 # ─────────────────────────────────────────────
-# FULL CYCLE — runs all 6 capabilities
+# FULL CYCLE — all capabilities + recovery
 # ─────────────────────────────────────────────
 
 def run_full_meta_cycle(client=None):
-    """
-    Run all META v2 capabilities in sequence.
-    Call this from the orchestrator — no human input needed.
-    """
-    print("[meta] === META v2 FULL CYCLE ===")
+    print("[meta] === META v2 FULL CYCLE (X) ===")
 
-    # 3. External intel first — feeds everything else
     intel = fetch_external_intel()
-
-    # 5. Auto-generate hypotheses from intel
     auto_hypothesize_from_intel(intel)
 
-    # 1. Push updated attack params based on intel
     nvd_recent = intel.get("sources", {}).get("nvd", {}).get("recent", [])
     if nvd_recent:
         push_drive_engine_params({
             "intel_cve_count": len(nvd_recent),
-            "top_severity": nvd_recent[0].get("severity", "UNKNOWN") if nvd_recent else "UNKNOWN",
+            "top_severity": nvd_recent[0].get("severity", "UNKNOWN"),
             "last_intel_at": intel["fetched_at"],
         })
 
-    # 2. Inject high-priority tasks into Senju queue
     inject_codegen_tasks_to_senju()
-
-    # 4. Dispatch to other agents
     dispatch_codegen_expand(count=5)
     dispatch_senju_cycle()
 
-    # 6. Self-rewrite proposal + auto PR (only if client available)
+    # Recovery + Senju mutual sync
+    try:
+        from . import knowledge_base as kb
+        from .recovery import (
+            mutual_recovery_cycle, self_recover, write_x_status,
+            run_cve_defense_experiments,
+        )
+        stats = kb.get_stats()
+        write_x_status(stats, meta_cycle_ok=True)
+        self_recover(stats)
+        mutual_recovery_cycle(stats)
+        if client:
+            run_cve_defense_experiments(intel, client)
+    except Exception as e:
+        print(f"[meta] recovery error (continuing): {e}")
+
     if client:
-        improvement_note = "Add better error recovery and cross-agent result aggregation capability"
+        improvement_note = "Add cross-agent result aggregation and better error recovery"
         staging = propose_self_improvement(Path(__file__), improvement_note, client)
         if staging:
             auto_pr_self_improvement(staging, improvement_note)
 
-    # Heartbeat — record successful cycle completion
     write_heartbeat()
     print("[meta] === CYCLE COMPLETE ===")
 
