@@ -5,11 +5,13 @@ on:
     paths:
       - 'senju/senju/authority_factory.py'
       - 'senju/senju/credential_broker.py'
+      - 'senju/senju/secret_memory.py'
       - 'senju/senju/external.py'
       - 'senju/senju/private_network.py'
       - 'senju/scripts/authority_mint.py'
       - 'senju/tests/test_authority_factory.py'
       - 'senju/tests/test_credential_broker.py'
+      - 'senju/tests/test_secret_memory.py'
       - 'senju/tests/test_private_network.py'
       - 'senju/pyproject.toml'
       - '.github/workflows/senju-authority-factory.yml'
@@ -17,11 +19,13 @@ on:
     paths:
       - 'senju/senju/authority_factory.py'
       - 'senju/senju/credential_broker.py'
+      - 'senju/senju/secret_memory.py'
       - 'senju/senju/external.py'
       - 'senju/senju/private_network.py'
       - 'senju/scripts/authority_mint.py'
       - 'senju/tests/test_authority_factory.py'
       - 'senju/tests/test_credential_broker.py'
+      - 'senju/tests/test_secret_memory.py'
       - 'senju/tests/test_private_network.py'
       - 'senju/pyproject.toml'
       - '.github/workflows/senju-authority-factory.yml'
@@ -48,8 +52,8 @@ jobs:
       - name: Install Senju and test dependency
         run: python -m pip install --disable-pip-version-check -e './senju[dev]'
 
-      - name: Run Authority and Credential Broker tests
-        run: pytest -q senju/tests/test_authority_factory.py senju/tests/test_credential_broker.py senju/tests/test_private_network.py
+      - name: Run Authority, Credential Broker and Secret Memory tests
+        run: pytest -q senju/tests/test_authority_factory.py senju/tests/test_credential_broker.py senju/tests/test_secret_memory.py senju/tests/test_private_network.py
 
-      - name: Compile Authority and Credential modules
-        run: python -m py_compile senju/senju/authority_factory.py senju/senju/credential_broker.py senju/scripts/authority_mint.py
+      - name: Compile Authority, Credential and Secret Memory modules
+        run: python -m py_compile senju/senju/authority_factory.py senju/senju/credential_broker.py senju/senju/secret_memory.py senju/scripts/authority_mint.py
