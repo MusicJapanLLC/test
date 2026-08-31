@@ -250,7 +250,7 @@ def validate_madlab_evolution_lane() -> str:
         "TARGET: https://madlab-guard-0i24yt.v2.appdeploy.ai/",
         '"${TARGET}api/_healthcheck"',
         '"${TARGET}api/scan"',
-        '\\"authorized\\":true',
+        '\"authorized\":true',
         "Never weaken ownership, authorization, or approval boundaries.",
         "AppDeploy production deploy quota is exhausted",
         "copilot -p",
@@ -396,16 +396,95 @@ def validate_evolution_watchdog_lane() -> str:
     return name
 
 
+def validate_production_continuity_lane() -> str:
+    """Classify META/X production continuity as an approved-dispatch-only lane."""
+
+    name = "meta-x-production-continuity.yml"
+    body = policy.WORKFLOWS.get(name, "")
+    if not body:
+        return name
+
+    got = policy.writes(body)
+    if got != {"actions"}:
+        raise SystemExit(f"{name}: continuity write set drifted: {sorted(got)}")
+
+    required = (
+        "contents: read",
+        "actions: write",
+        "workflow_dispatch:",
+        "schedule:",
+        'cron: "37 * * * *"',
+        "persist-credentials: false",
+        "senju/scripts/run_production_continuity.py",
+        "senju/config/production-continuity.json",
+        "senju/config/production-deployment-authorizations.json",
+        "--dispatch-approved-deployments",
+        "if: github.event_name != 'pull_request'",
+        "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+    )
+    for marker in required:
+        if marker not in body:
+            raise SystemExit(f"{name}: missing production continuity guardrail: {marker}")
+
+    forbidden = (
+        "contents: write",
+        "id-token: write",
+        "issues: write",
+        "pull-requests: write",
+        "deployments: write",
+        "packages: write",
+        "pages: write",
+        "copilot-requests: write",
+        "pull_request_target:",
+        "repository_dispatch:",
+        "workflow_run:",
+        "runs-on: self-hosted",
+        "permissions: write-all",
+        "git push ",
+        "gh pr create",
+        "${{ secrets.",
+    )
+    for marker in forbidden:
+        if marker in body:
+            raise SystemExit(f"{name}: forbidden production continuity capability: {marker}")
+
+    runner = (ROOT / "senju/scripts/run_production_continuity.py").read_text(encoding="utf-8")
+    for marker in (
+        'intent.get("capability") != "deployment.production"',
+        '"reason": "invalid_approved_deployment_intent"',
+        "production-deployment-authorizations.json",
+        "resolve_existing_authority",
+        "_successful_intent_ids",
+        "already_dispatched_successfully",
+    ):
+        if marker not in runner:
+            raise SystemExit(f"run_production_continuity.py: missing approved-dispatch invariant: {marker}")
+
+    controller = (ROOT / "senju/senju/meta/production_continuity.py").read_text(encoding="utf-8")
+    for marker in (
+        "Trust/discovery alone",
+        "deployment.production",
+        "resolve_deployment_authority",
+        "revoked",
+    ):
+        if marker not in controller:
+            raise SystemExit(f"production_continuity.py: missing authority invariant: {marker}")
+
+    return name
+
+
 def main() -> int:
     manager = validate_manager_queue_oidc_lane()
     foundry = validate_ai_foundry_forge_lane()
     madlab = validate_madlab_evolution_lane()
     watchdog = validate_evolution_watchdog_lane()
+    continuity = validate_production_continuity_lane()
     validate_agent_factory_semantic_contract()
     policy.WORKFLOWS.pop(manager, None)
     policy.WORKFLOWS.pop(foundry, None)
     policy.WORKFLOWS.pop(madlab, None)
     policy.WORKFLOWS.pop(watchdog, None)
+    policy.WORKFLOWS.pop(continuity, None)
     return policy.main()
 
 
