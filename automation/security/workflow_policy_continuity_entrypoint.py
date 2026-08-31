@@ -268,6 +268,88 @@ def validate_live_production_chaos_canary_lane() -> str:
     return name
 
 
+def validate_production_security_change_lane() -> str:
+    """Classify the narrow runtime-state writer for bounded self-approved changes."""
+    name = "production-security-change-loop.yml"
+    body = policy.WORKFLOWS.get(name, "")
+    if not body:
+        raise SystemExit(f"{name}: required bounded production security lane is missing")
+    got = policy.writes(body)
+    if got != {"contents"}:
+        raise SystemExit(f"{name}: write set drifted: expected=['contents'] actual={sorted(got)}")
+    _require_markers(name, body, (
+        "contents: read",
+        "contents: write",
+        "pull_request:",
+        "push:",
+        "schedule:",
+        "cron: '*/15 * * * *'",
+        "workflow_dispatch:",
+        "if: github.event_name != 'pull_request'",
+        "persist-credentials: false",
+        "ref: claude/employee-onboarding-setup-udm86",
+        "python -m automation.world.production_security_change_loop",
+        "runtime='automation/world/state/security_runtime_overrides.json'",
+        "branch='claude/employee-onboarding-setup-udm86'",
+        'repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch',
+        'repos/$GITHUB_REPOSITORY/contents/$runtime',
+        "chore(security): apply AI-consensus bounded runtime override",
+        "automation/world/state/owner_authority_required.json",
+        "automation/world/state/production_security_change_receipts.json",
+    ))
+    _forbid_markers(name, body, (
+        "actions: write",
+        "id-token: write",
+        "issues: write",
+        "pull-requests: write",
+        "deployments: write",
+        "packages: write",
+        "pages: write",
+        "copilot-requests: write",
+        "permissions: write-all",
+        "runs-on: self-hosted",
+        "pull_request_target:",
+        "repository_dispatch:",
+        "workflow_run:",
+        "git push ",
+        "gh pr create",
+        "git/refs",
+        "${{ secrets.",
+    ))
+    if body.count("contents: write") != 1:
+        raise SystemExit(f"{name}: contents write permission must occur exactly once")
+    production = body.split("  production-loop:", 1)
+    if len(production) != 2:
+        raise SystemExit(f"{name}: production-loop job is missing")
+    if "contents: write" in production[0]:
+        raise SystemExit(f"{name}: PR/test path must not inherit contents write authority")
+    if "if: github.event_name != 'pull_request'" not in production[1]:
+        raise SystemExit(f"{name}: production writer must be suppressed on pull_request")
+    # The only repository-content endpoint in this writer must be the fixed runtime path.
+    for line in body.splitlines():
+        if "repos/$GITHUB_REPOSITORY/contents/" in line and "$runtime" not in line:
+            raise SystemExit(f"{name}: repository content write/read target drifted: {line.strip()}")
+
+    module = (ROOT / "automation/world/production_security_change_loop.py").read_text(encoding="utf-8")
+    for marker in (
+        'OWNER_AUTHORITY_REQUIRED_KINDS = frozenset(',
+        '"new_external_host"',
+        '"new_credential"',
+        '"private_network_access"',
+        '"trusted_root_addition"',
+        '"branch_protection_change"',
+        '"authority_registry_change"',
+        '"authority_expansion"',
+        '"consensus_creates_authority": False',
+        'proposal["authority_relation"] == "same_or_narrower"',
+        '"status": "OWNER_AUTHORITY_REQUIRED"',
+        '"authority_expansion_self_approval": False',
+    ):
+        if marker not in module:
+            raise SystemExit(f"{name}: bounded security implementation drifted: {marker}")
+    return name
+
+
 def main() -> int:
     policy.validate_global_safety()
     classified = {
@@ -276,6 +358,7 @@ def main() -> int:
         validate_world_trust_root_dispatch_lane(),
         validate_shared_discovery_handoff_lane(),
         validate_live_production_chaos_canary_lane(),
+        validate_production_security_change_lane(),
     }
     for name in classified:
         policy.WORKFLOWS.pop(name, None)
