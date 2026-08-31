@@ -23,11 +23,11 @@ jobs:
     env:
       THE_WORLD_ENVIRONMENT: production
     steps:
-      - name: Checkout production branch without credentials
+      - name: Checkout triggering production commit without credentials
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: claude/employee-onboarding-setup-udm86
-          fetch-depth: 2
+          ref: ${{ github.sha }}
+          fetch-depth: 1
           persist-credentials: false
 
       - name: Collect production proposals
@@ -41,7 +41,16 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             find security/proposals -maxdepth 1 -type f -name '*.json' -print 2>/dev/null | sort > /tmp/security-proposals.txt || true
           else
-            mapfile -t files < <(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+            git cat-file -e "${HEAD_SHA}^{commit}"
+            if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+              mapfile -t files < <(git show --pretty='' --name-only "$HEAD_SHA" -- 'security/proposals/*.json')
+            else
+              if ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+                git fetch --no-tags --depth=1 origin "$BEFORE_SHA"
+              fi
+              git cat-file -e "${BEFORE_SHA}^{commit}"
+              mapfile -t files < <(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+            fi
             printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
           fi
           sed -i '/^$/d' /tmp/security-proposals.txt
