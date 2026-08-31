@@ -1,0 +1,12 @@
+{
+  "generated_at": 1788190610,
+  "generation": 1,
+  "may_auto_apply_only_inside_owner_expansion_envelope": true,
+  "may_request_broader_scope": true,
+  "may_self_mint_unrelated_authority": false,
+  "rights_request_closed_loop": true,
+  "schema": "senju-owner-scope-negotiation-signals/v2",
+  "signal_count": 0,
+  "signals": [],
+  "source": "META/X/SENJU rights-request federation"
+}
