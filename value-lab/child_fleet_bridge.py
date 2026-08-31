@@ -3,9 +3,9 @@
 
 The bridge intentionally discards raw page bodies, credentials, request details and
 execution targets. It keeps only compact research context: concepts, diversity,
-status counts and hypothesis hints. When asked to augment an R&D directive, it
-changes only the existing `hypothesis` string so Senju receives context without any
-new execution authority or directive surface.
+status counts, hypothesis hints, and an optional local Control Lab summary. When
+asked to augment an R&D directive, it changes only the existing `hypothesis` string
+so Senju receives context without any new execution authority or directive surface.
 """
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 ALLOWED_DIRECTIVE_KEYS = {"schema", "research_id", "focus", "candidate_count", "hypothesis"}
-TOKEN = re.compile(r"^[A-Za-z0-9_\-ぁ-んァ-ン一-龯]{2,40}$")
+TOKEN = re.compile(r"^[A-Za-z0-9_\-ぁ-んァ-ン一-龯]{2,60}$")
 
 
 def load(path: str | None) -> dict[str, Any]:
@@ -33,8 +33,48 @@ def load(path: str | None) -> dict[str, Any]:
 
 
 def clean_token(value: Any) -> str | None:
-    token = str(value).strip()[:40]
+    token = str(value).strip()[:60]
     return token if TOKEN.match(token) else None
+
+
+def _clean_token_list(values: Any, limit: int) -> list[str]:
+    out: list[str] = []
+    if not isinstance(values, list):
+        return out
+    for value in values:
+        token = clean_token(value)
+        if token and token not in out:
+            out.append(token)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _sanitize_control_summary(raw: Any) -> dict[str, Any]:
+    if not isinstance(raw, dict):
+        return {
+            "available": False,
+            "trial_count": 0,
+            "variants_per_child": 0,
+            "top_strategies": [],
+            "safe_transitions": [],
+            "hypothesis": "",
+        }
+    try:
+        trial_count = max(0, min(5000, int(raw.get("trial_count", 0) or 0)))
+        variants = max(0, min(50, int(raw.get("variants_per_child", 0) or 0)))
+    except Exception:
+        trial_count = 0
+        variants = 0
+    hypothesis = " ".join(str(raw.get("research_hypothesis", "")).split())[:220]
+    return {
+        "available": trial_count > 0,
+        "trial_count": trial_count,
+        "variants_per_child": variants,
+        "top_strategies": _clean_token_list(raw.get("top_high_score_strategies"), 5),
+        "safe_transitions": _clean_token_list(raw.get("top_safe_transitions"), 5),
+        "hypothesis": hypothesis,
+    }
 
 
 def sanitize_fleet(raw: dict[str, Any]) -> dict[str, Any]:
@@ -46,15 +86,10 @@ def sanitize_fleet(raw: dict[str, Any]) -> dict[str, Any]:
             "top_concepts": [],
             "status_counts": {},
             "hypotheses": [],
+            "control_lab": _sanitize_control_summary(None),
         }
     summary = raw.get("summary") if isinstance(raw.get("summary"), dict) else {}
-    concepts = []
-    for value in summary.get("top_concepts") or []:
-        token = clean_token(value)
-        if token and token not in concepts:
-            concepts.append(token)
-        if len(concepts) >= 12:
-            break
+    concepts = _clean_token_list(summary.get("top_concepts"), 12)
 
     status_counts: dict[str, int] = {}
     for key, value in (summary.get("status_counts") or {}).items():
@@ -82,6 +117,7 @@ def sanitize_fleet(raw: dict[str, Any]) -> dict[str, Any]:
     except Exception:
         fleet_size = 0
 
+    control = _sanitize_control_summary(raw.get("control_lab_summary"))
     return {
         "available": True,
         "fleet_size": fleet_size,
@@ -89,13 +125,14 @@ def sanitize_fleet(raw: dict[str, Any]) -> dict[str, Any]:
         "top_concepts": concepts,
         "status_counts": status_counts,
         "hypotheses": hypotheses,
-        "rule": "research context only; no raw locators, request data, or execution/write authority is transferred",
+        "control_lab": control,
+        "rule": "research context only; no raw locators, request data, covert channel, or execution/write authority is transferred",
     }
 
 
 def build_rnd_capsule(clean: dict[str, Any]) -> dict[str, Any]:
     return {
-        "schema": "child-fleet-rnd-capsule/v1",
+        "schema": "child-fleet-rnd-capsule/v2",
         **clean,
         "use": "challenge assumptions, identify novelty, and propose bounded research hypotheses",
         "market_validated": False,
@@ -104,7 +141,7 @@ def build_rnd_capsule(clean: dict[str, Any]) -> dict[str, Any]:
 
 def build_senju_capsule(clean: dict[str, Any]) -> dict[str, Any]:
     return {
-        "schema": "child-fleet-senju-capsule/v1",
+        "schema": "child-fleet-senju-capsule/v2",
         **clean,
         "use": "technical hypothesis context only",
         "execution_authority": "none",
@@ -120,20 +157,32 @@ def augment_directive(directive: dict[str, Any], clean: dict[str, Any]) -> dict[
     out = dict(directive)
     if not clean.get("available"):
         return out
-    concepts = ", ".join(clean.get("top_concepts") or []) or "none"
-    hint = (clean.get("hypotheses") or [""])[0]
-    context = (
-        f" External Child Fleet context: {clean.get('fleet_size', 0)} explorers, "
-        f"{clean.get('distinct_domains', 0)} distinct public domains, concepts=[{concepts}]. "
-        f"Research hint: {hint}"
+
+    concepts = ",".join((clean.get("top_concepts") or [])[:6]) or "none"
+    hint = (clean.get("hypotheses") or [""])[0][:150]
+    fleet_context = (
+        f" Child Fleet context: {clean.get('fleet_size', 0)} explorers, "
+        f"{clean.get('distinct_domains', 0)} public domains, concepts=[{concepts}]. Hint: {hint}"
     )
-    base = str(out.get("hypothesis", ""))[:300]
-    out["hypothesis"] = (base + context)[:600]
+
+    control = clean.get("control_lab") if isinstance(clean.get("control_lab"), dict) else {}
+    control_context = ""
+    if control.get("available"):
+        strategy = (control.get("top_strategies") or ["none"])[0]
+        transition = (control.get("safe_transitions") or ["none"])[0]
+        control_context = (
+            f" Control Lab: {control.get('trial_count', 0)} local trials "
+            f"({control.get('variants_per_child', 0)}/child); preferred={strategy}; transition={transition}."
+        )
+
+    base = str(out.get("hypothesis", ""))[:220]
+    out["hypothesis"] = (base + fleet_context + control_context)[:600]
     return out
 
 
 def render(clean: dict[str, Any]) -> str:
-    return "\n".join([
+    control = clean.get("control_lab") if isinstance(clean.get("control_lab"), dict) else {}
+    lines = [
         "# Child Fleet -> R&D / Senju Handoff",
         "",
         f"- available: **{clean.get('available')}**",
@@ -141,13 +190,21 @@ def render(clean: dict[str, Any]) -> str:
         f"- distinct public domains: **{clean.get('distinct_domains')}**",
         f"- concepts: {', '.join(clean.get('top_concepts') or []) or 'NONE'}",
         f"- statuses: {json.dumps(clean.get('status_counts') or {}, ensure_ascii=False)}",
+        f"- Control Lab trials: **{control.get('trial_count', 0)}** / variants-per-child={control.get('variants_per_child', 0)}",
+        f"- Control Lab strategies: {', '.join(control.get('top_strategies') or []) or 'NONE'}",
+        f"- Control Lab transitions: {', '.join(control.get('safe_transitions') or []) or 'NONE'}",
         "",
         "## Hypothesis hints",
         *[f"- {x}" for x in (clean.get("hypotheses") or [])],
+    ]
+    if control.get("hypothesis"):
+        lines += ["", "## Control-friction learning", f"- {control['hypothesis']}"]
+    lines += [
         "",
         "> Raw page bodies and execution targets are not handed to R&D/Senju. Context only.",
         "",
-    ])
+    ]
+    return "\n".join(lines)
 
 
 def main() -> int:
@@ -169,6 +226,7 @@ def main() -> int:
     print(json.dumps({
         "fleet": clean.get("fleet_size"),
         "domains": clean.get("distinct_domains"),
+        "control_trials": (clean.get("control_lab") or {}).get("trial_count", 0),
         "concepts": clean.get("top_concepts", [])[:6],
     }, ensure_ascii=False))
     return 0
