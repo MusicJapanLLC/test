@@ -266,7 +266,11 @@ class TrustBoundaryProposalManager:
         delta = _deepcopy_mapping(approved_delta or proposal.requested_delta)
         if _contains_raw_secret(delta):
             raise TrustBoundaryProposalError("activated delta contains raw credential material")
-        self._validate_delta(proposal.kind, delta)
+        validation_delta = delta
+        if proposal.kind == "credential_grant_request" and "credential_ref" in delta:
+            validation_delta = _deepcopy_mapping(delta)
+            validation_delta.pop("credential_ref", None)
+        self._validate_delta(proposal.kind, validation_delta)
         self._require_delta_not_broader(proposal.kind, proposal.requested_delta, delta)
 
         now = _utcnow()
