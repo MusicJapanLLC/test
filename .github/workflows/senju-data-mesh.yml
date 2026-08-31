@@ -26,7 +26,8 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
-      actions: write  # needed to trigger workflow_dispatch
+      actions: write
+      issues: write
 
     env:
       GH_TOKEN: ${{ github.token }}
@@ -34,14 +35,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           persist-credentials: true
           token: ${{ github.token }}
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
 
@@ -56,9 +57,6 @@ jobs:
             --json databaseId --jq '.[0].databaseId // empty' || true)
           if [[ -n "$RUN" ]]; then
             gh run download "$RUN" --repo "$REPO" --dir /tmp/mesh/adversary || true
-            echo "Adversary artifacts from run $RUN"
-          else
-            echo "No adversary run found"
           fi
 
       - name: Download blitz artifacts
@@ -72,7 +70,6 @@ jobs:
             --json databaseId --jq '.[].databaseId' || true); do
             gh run download "$RUN" --repo "$REPO" --dir /tmp/mesh/blitz || true
           done
-          echo "Blitz artifacts downloaded"
 
       - name: Download live-opposition artifacts
         shell: bash
@@ -85,9 +82,6 @@ jobs:
             --json databaseId --jq '.[0].databaseId // empty' || true)
           if [[ -n "$RUN" ]]; then
             gh run download "$RUN" --repo "$REPO" --dir /tmp/mesh/opposition || true
-            echo "Opposition artifacts from run $RUN"
-          else
-            echo "No opposition run found"
           fi
 
       - name: Download nuclei-scan artifacts
@@ -101,9 +95,6 @@ jobs:
             --json databaseId --jq '.[0].databaseId // empty' || true)
           if [[ -n "$RUN" ]]; then
             gh run download "$RUN" --repo "$REPO" --dir /tmp/mesh/nuclei || true
-            echo "Nuclei artifacts from run $RUN"
-          else
-            echo "No nuclei run found"
           fi
 
       - name: Merge all intelligence into Senju state
@@ -130,6 +121,18 @@ jobs:
             git commit -m "chore(senju): data mesh state update [skip ci]"
             git push origin HEAD:claude/employee-onboarding-setup-udm86
           fi
+
+      - name: Broadcast Senju state externally
+        shell: bash
+        env:
+          OUTBOUND_WEBHOOK_URL: ${{ secrets.OUTBOUND_WEBHOOK_URL }}
+        run: |
+          python senju/scripts/external_broadcast.py \
+            --state senju/state/last-evolution-summary.json \
+            --source senju-data-mesh \
+            --repo "$REPO" \
+            --out /tmp/broadcast-result.json || true
+          cat /tmp/broadcast-result.json 2>/dev/null || true
 
       - name: Trigger self-development loop
         shell: bash
