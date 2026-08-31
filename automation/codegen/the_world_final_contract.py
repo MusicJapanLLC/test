@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-SCHEMA = "the-world-final-closed-loop-contract/v2"
+SCHEMA = "the-world-final-closed-loop-contract/v3"
 REQUIRED_PHASES = {
     "self_tuning",
     "network_policy_refresh",
@@ -18,6 +18,7 @@ REQUIRED_PHASES = {
     "credentialed_external_write",
     "discover_again",
 }
+REQUIRED_BOOTSTRAP_FILES = {"discovery_policy.json", "meta_discovery_seed.json"}
 
 
 def _load(path: str | Path) -> dict[str, Any]:
@@ -37,6 +38,7 @@ def _count(mapping: dict[str, Any], key: str) -> int:
 def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
     phases = {str(x) for x in loop.get("phases", [])}
     authority = loop.get("authority", {}) if isinstance(loop.get("authority"), dict) else {}
+    bootstrap = loop.get("runtime_bootstrap", {}) if isinstance(loop.get("runtime_bootstrap"), dict) else {}
     discovery = loop.get("discovery", {}) if isinstance(loop.get("discovery"), dict) else {}
     rediscovery = loop.get("rediscovery", {}) if isinstance(loop.get("rediscovery"), dict) else {}
     actions = loop.get("actions", {}) if isinstance(loop.get("actions"), dict) else {}
@@ -63,6 +65,20 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
         for row in workers
     )
 
+    copied_files = bootstrap.get("copied_files", []) if isinstance(bootstrap.get("copied_files"), list) else []
+    copied_names = {
+        str(row.get("name"))
+        for row in copied_files
+        if isinstance(row, dict) and str(row.get("name", "")).strip()
+    }
+    bootstrap_is_trusted = (
+        bootstrap.get("authority_source") == "trusted_production_checkout"
+        and bootstrap.get("required_files_present") is True
+        and REQUIRED_BOOTSTRAP_FILES.issubset(copied_names)
+        and bootstrap.get("generated_authority_imported") is False
+        and bootstrap.get("runtime_cache_may_override_owner_policy") is False
+    )
+
     discovered_count = _count(discovery, "final_shared_discovery_count")
     authorized_count = _count(discovery, "final_authorized_count")
     action_ready_count = _count(discovery, "final_action_ready_count")
@@ -78,6 +94,7 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
     checks = {
         "closed_loop": loop.get("closed_loop") is True,
         "all_required_phases": REQUIRED_PHASES.issubset(phases),
+        "runtime_owner_state_bootstrapped": bootstrap_is_trusted,
         "explicit_authority_root": authority.get("root") == "explicit_owner_authority",
         "same_scope_auto_renew": authority.get("same_scope_live_grant_auto_renew") is True,
         "same_or_narrower_inheritance": authority.get("authority_inheritance") == "same_or_narrower_only",
@@ -106,6 +123,8 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
 
     target_activation = {
         "rule": "inside_existing_owner_envelope: discovered == authorized",
+        "runtime_owner_policy_source": bootstrap.get("authority_source"),
+        "runtime_owner_policy_bootstrapped": bootstrap_is_trusted,
         "discovered": discovered_count,
         "authorized_targets": authorized_count,
         "action_ready_targets": action_ready_count,
@@ -123,11 +142,15 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
 
     layers = {
         "discovery": {
-            "integrated": checks["all_required_phases"] and checks["discovery_present"] and checks["rediscovery_present"],
-            "mode": "production_external_discovery_with_rediscovery",
+            "integrated": checks["runtime_owner_state_bootstrapped"]
+            and checks["all_required_phases"]
+            and checks["discovery_present"]
+            and checks["rediscovery_present"],
+            "mode": "trusted_owner_seed_plus_production_external_discovery_with_rediscovery",
         },
         "authorization": {
-            "integrated": checks["explicit_authority_root"]
+            "integrated": checks["runtime_owner_state_bootstrapped"]
+            and checks["explicit_authority_root"]
             and checks["same_scope_auto_renew"]
             and checks["same_or_narrower_inheritance"]
             and checks["owner_envelope_authorized_target_present"]
@@ -158,6 +181,7 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
     requested_capabilities = {
         "EXTERNAL_DISCOVERY": "active",
         "DISCOVERY_TARGET_AUTHORIZATION": "automatic_inside_existing_owner_envelope",
+        "OWNER_RUNTIME_BOOTSTRAP": "trusted_production_checkout_overrides_stale_runtime_policy",
         "SELF_AUTHORIZATION": "same_scope_live_explicit_grant_reuse_only",
         "DISCOVERY_EXTERNAL_ACTION": "fixed_owner_predelegated_actions_must_succeed",
         "CREDENTIALED_EXTERNAL_WRITE": "current_repo_status_write_with_runtime_opaque_credential",
@@ -180,7 +204,7 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
         "absolute_goal": ["Discovery", "Authorization", "Execution", "Persistence", "Propagation"],
         "authorization_is_primary": True,
         "discovery_target_rule": "inside_existing_owner_envelope: discovered == authorized",
-        "closed_loop": ["Discover", "Authorize Target", "Act", "Replicate", "Persist", "Recover", "Discover Again"],
+        "closed_loop": ["Bootstrap Owner Policy", "Discover", "Authorize Target", "Act", "Replicate", "Persist", "Recover", "Discover Again"],
         "target_activation": target_activation,
         "layers": layers,
         "requested_capabilities": requested_capabilities,
