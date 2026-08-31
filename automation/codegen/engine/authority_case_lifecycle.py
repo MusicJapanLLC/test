@@ -37,6 +37,7 @@ PARLIAMENT_SCHEMA = "the-world-parliamentary-authority-review-queue/v1"
 RECONSIDERATION_SCHEMA = "the-world-authority-case-reconsideration-queue/v1"
 BROADCAST_SCHEMA = "the-world-authority-case-lifecycle-broadcast/v1"
 EXECUTIVE_DECISIONS_SCHEMA = "the-world-executive-authority-decisions/v1"
+INSPECTOR_RESULTS_SCHEMA = "the-world-authority-case-inspector-results/v1"
 
 UNPROCESSED_EXPIRY_SECONDS = 3 * 24 * 60 * 60
 EXPIRED_RECONSIDERATION_SECONDS = 7 * 24 * 60 * 60
@@ -75,7 +76,26 @@ def _terminal(row: Mapping[str, Any]) -> bool:
     )
 
 
-def _structural_inspection(packet: Mapping[str, Any]) -> dict[str, Any]:
+def _inspector_index(state: Path) -> dict[str, Mapping[str, Any]]:
+    doc = _load(state / "authority_case_inspector_results.json", {})
+    if not isinstance(doc, Mapping):
+        return {}
+    if str(doc.get("schema") or INSPECTOR_RESULTS_SCHEMA) != INSPECTOR_RESULTS_SCHEMA:
+        return {}
+    rows = doc.get("results", doc.get("decisions", ()))
+    if not isinstance(rows, list):
+        return {}
+    out: dict[str, Mapping[str, Any]] = {}
+    for row in rows:
+        if not isinstance(row, Mapping):
+            continue
+        host = _host(row.get("host"))
+        if host:
+            out[host] = row
+    return out
+
+
+def _structural_inspection(packet: Mapping[str, Any], external: Mapping[str, Any] | None = None) -> dict[str, Any]:
     reasons: list[str] = []
     if not is_canonical_review_packet(packet):
         reasons.append("noncanonical_packet")
@@ -85,10 +105,21 @@ def _structural_inspection(packet: Mapping[str, Any]) -> dict[str, Any]:
         reasons.append("terminal_or_revoked")
     if packet.get("authority_effect") != "none":
         reasons.append("unexpected_authority_effect")
+
+    external_status = ""
+    if isinstance(external, Mapping):
+        external_status = str(external.get("status") or external.get("decision") or "").strip().lower()
+        if external_status in {"reject", "rejected", "hold", "blocked", "fail", "failed"}:
+            reasons.append("independent_inspector_hold")
+        if _terminal(external):
+            reasons.append("independent_inspector_terminal")
+
     return {
         "status": "inspection_pass" if not reasons else "inspection_hold",
         "reasons": reasons,
         "inspector": "authority-case-inspector/v1",
+        "external_inspector_result_present": isinstance(external, Mapping),
+        "external_inspector_status": external_status or None,
         "authority_effect": "none",
     }
 
@@ -143,6 +174,7 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
     } if isinstance(previous_rows, list) else {}
 
     decisions = _decision_index(state)
+    inspector_results = _inspector_index(state)
     lifecycle_rows: list[dict[str, Any]] = []
     parliament_rows: list[dict[str, Any]] = []
     reconsideration_rows: list[dict[str, Any]] = []
@@ -153,20 +185,40 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
             continue
         prior = previous_by_host.get(host, {})
         first_seen = _int(prior.get("first_seen_at")) or _int(packet.get("formal_intake_at")) or _int(packet.get("submitted_at")) or current
-        inspection = _structural_inspection(packet)
-        decision = decisions.get(host)
-        executive_approved = inspection["status"] == "inspection_pass" and _executive_approved(decision)
-        executive_rejected = bool(isinstance(decision, Mapping) and decision.get("approved") is False)
-        terminal = _terminal(packet) or bool(isinstance(decision, Mapping) and _terminal(decision))
-
         expiry_at = first_seen + UNPROCESSED_EXPIRY_SECONDS
         expired_at = _int(prior.get("expired_at"))
+
+        inspection = _structural_inspection(packet, inspector_results.get(host))
+        decision = decisions.get(host)
+        decision_at = _int(decision.get("decided_at")) if isinstance(decision, Mapping) else 0
+        raw_executive_approved = inspection["status"] == "inspection_pass" and _executive_approved(decision)
+        decision_was_timely = bool(raw_executive_approved and (current < expiry_at or (decision_at and decision_at <= expiry_at)))
+        executive_approved = raw_executive_approved and decision_was_timely
+        executive_rejected = bool(isinstance(decision, Mapping) and decision.get("approved") is False)
+        terminal = _terminal(packet) or bool(isinstance(decision, Mapping) and _terminal(decision))
         status = "pending_inspection_or_executive_review"
 
         if terminal:
             status = "terminal_stop"
         elif executive_rejected:
             status = "executive_rejected"
+        elif current >= expiry_at and not executive_approved:
+            expired_at = expired_at or expiry_at
+            if current >= expired_at + EXPIRED_RECONSIDERATION_SECONDS:
+                status = "mandatory_reconsideration_due"
+                reconsideration_rows.append({
+                    "host": host,
+                    "case_id": packet.get("packet_id") or packet.get("submission_id"),
+                    "expired_at": expired_at,
+                    "reconsideration_due_at": expired_at + EXPIRED_RECONSIDERATION_SECONDS,
+                    "priority": 100,
+                    "required_next_step": "fresh_inspection_and_META_X_SENJU_3_of_3_revote",
+                    "late_prior_decision_may_reactivate": False,
+                    "time_elapsed_is_approval": False,
+                    "authority_effect": "none",
+                })
+            else:
+                status = "expired_unprocessed"
         elif executive_approved:
             status = "elevated_to_parliamentary_review"
             parliament_rows.append({
@@ -181,22 +233,6 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
                 "canonical_flow_id": CANONICAL_FLOW_ID,
                 "authority_effect": "none",
             })
-        elif current >= expiry_at:
-            expired_at = expired_at or expiry_at
-            if current >= expired_at + EXPIRED_RECONSIDERATION_SECONDS:
-                status = "mandatory_reconsideration_due"
-                reconsideration_rows.append({
-                    "host": host,
-                    "case_id": packet.get("packet_id") or packet.get("submission_id"),
-                    "expired_at": expired_at,
-                    "reconsideration_due_at": expired_at + EXPIRED_RECONSIDERATION_SECONDS,
-                    "priority": 100,
-                    "required_next_step": "fresh_inspection_and_META_X_SENJU_3_of_3_revote",
-                    "time_elapsed_is_approval": False,
-                    "authority_effect": "none",
-                })
-            else:
-                status = "expired_unprocessed"
 
         lifecycle_rows.append({
             "case_id": packet.get("packet_id") or packet.get("submission_id"),
@@ -207,6 +243,8 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
             "status": status,
             "inspection": inspection,
             "executive_decision_present": isinstance(decision, Mapping),
+            "executive_decided_at": decision_at or None,
+            "executive_approval_was_timely": decision_was_timely,
             "executive_approved": executive_approved,
             "parliamentary_elevation": executive_approved,
             "time_elapsed_is_approval": False,
@@ -228,7 +266,7 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
         "schema": PARLIAMENT_SCHEMA,
         "generated_at": current,
         "constitution": constitution,
-        "entry_requirement": "inspection_pass_then_META_X_SENJU_3_of_3",
+        "entry_requirement": "inspection_pass_then_META_X_SENJU_3_of_3_before_case_expiry",
         "candidate_count": len(parliament_rows),
         "candidates": parliament_rows,
         "authority_effect": "none",
@@ -248,8 +286,10 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
         "binding_case_rules": {
             "inspection_precedes_executive_review": True,
             "executive_approval_required_for_parliamentary_elevation": "META_X_SENJU_3_of_3",
+            "executive_approval_must_precede_case_expiry": True,
             "unprocessed_case_expires_after_seconds": UNPROCESSED_EXPIRY_SECONDS,
             "expired_case_reconsideration_after_seconds": EXPIRED_RECONSIDERATION_SECONDS,
+            "late_prior_decision_may_reactivate_expired_case": False,
             "elapsed_time_counts_as_approval": False,
         },
         "authority_effect": "none",
@@ -270,6 +310,7 @@ def run_case_lifecycle(state_dir: str | Path, *, now: int | None = None) -> dict
         "unprocessed_expiry_seconds": UNPROCESSED_EXPIRY_SECONDS,
         "expired_reconsideration_seconds": EXPIRED_RECONSIDERATION_SECONDS,
         "executive_approval_required": "META_X_SENJU_3_of_3",
+        "executive_approval_must_precede_case_expiry": True,
         "time_elapsed_is_approval": False,
         "shared_with": list(ALL_PARTICIPANTS),
         "authority_effect": "none",
