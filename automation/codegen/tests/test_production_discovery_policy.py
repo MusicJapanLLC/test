@@ -27,7 +27,26 @@ def test_production_owner_root_is_seeded_and_predelegates_write_mutation() -> No
     assert set(seed["shared_with"]) == {"META", "X", "SENJU", "CHILD", "AI"}
 
 
-def test_production_policy_does_not_turn_unknown_hosts_into_authority() -> None:
+def test_production_policy_disables_candidate_stage_inside_owner_envelope() -> None:
     policy_path = _repo_root() / "automation" / "codegen" / "meta_state" / "discovery_policy.json"
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
-    assert policy["untrusted_discovery"] == "candidate_only"
+
+    goal = policy["agent_goal"]
+    assert goal["objective"] == "auto_authorize_discovery_inside_existing_owner_envelope"
+    assert goal["candidate_stage_inside_owner_envelope"] == "disabled"
+    assert set(goal["applies_to"]) == {"META", "X", "SENJU", "CHILD", "AI"}
+
+    discovery = policy["untrusted_discovery"]
+    assert discovery["mode"] == "auto_authorize_inside_existing_owner_envelope"
+    assert discovery["inside_owner_envelope"] == "authorized_immediately"
+
+
+def test_production_policy_keeps_unknown_external_hosts_outside_authority() -> None:
+    policy_path = _repo_root() / "automation" / "codegen" / "meta_state" / "discovery_policy.json"
+    policy = json.loads(policy_path.read_text(encoding="utf-8"))
+    discovery = policy["untrusted_discovery"]
+
+    assert discovery["outside_owner_envelope"] == "review_required"
+    assert discovery["new_trust_roots_from_discovery"] is False
+    assert discovery["authority_inheritance"] is False
+    assert discovery["credential_scope"] == "none"
