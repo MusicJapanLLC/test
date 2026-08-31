@@ -110,8 +110,9 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
 
         # Authority Denial is a recoverable execution failure, not a success and
         # not a signal to bypass authority controls. META learns which authority
-        # prerequisite was missing and which authorized path would make the same
-        # legitimate objective executable.
+        # prerequisite was missing and whether another registered agent already
+        # possesses that exact authority. If so, the same legitimate objective can
+        # be retried through bounded, stateful cross-agent delegation.
         if profile.authority_denial_count > 0:
             hypotheses.append(Hypothesis(
                 hypothesis_id=_hid(f"authority-denial:{guard}"),
@@ -119,8 +120,9 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
                     f"Authority Denial from guard '{guard}' is a recoverable META failure class. "
                     f"From {profile.authority_denial_count} denial(s) and denial rate "
                     f"{profile.authority_denial_rate:.2f}, characterize the missing authority "
-                    "prerequisite and identify the smallest authorized scope or permission path "
-                    "that preserves the original legitimate objective."
+                    "prerequisite, identify the smallest authorized scope or an alternate agent "
+                    "already holding that exact authority, and retry the same legitimate objective "
+                    "across eligible agents until success or the bounded retry set is exhausted."
                 ),
                 surfaces=[guard],
                 predicted_outcome="authorized_recovery_path_characterized",
@@ -137,10 +139,14 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
                         "authority_denial_reason_distribution",
                         "required_authority",
                         "minimum_authorized_scope",
+                        "authorized_agent_availability",
+                        "delegation_outcome",
                         "decision_consistency",
                     ],
                     "known_authority_denial_reasons": profile.authority_denial_reasons,
-                    "recovery_strategy": "obtain_required_authority_or_reduce_scope",
+                    "recovery_strategy": "delegate_to_already_authorized_agent_then_retry_or_reduce_scope",
+                    "retry_mode": "cross_agent_bounded_stateful",
+                    "retry_progression": "denied_agent_to_next_eligible_authorized_agent",
                     "success_condition": "same_legitimate_goal_succeeds_with_valid_authority",
                     "policy_mutation": False,
                     "authority_bypass": False,
