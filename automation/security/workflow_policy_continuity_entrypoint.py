@@ -228,6 +228,66 @@ def validate_world_trust_root_dispatch_lane() -> str:
     return name
 
 
+def validate_shared_discovery_handoff_lane() -> str:
+    """Classify shared discovery as one fixed continuity-workflow dispatcher."""
+    name = "shared-discovery-authority-cycle.yml"
+    body = policy.WORKFLOWS.get(name, "")
+    if not body:
+        raise SystemExit(f"{name}: required shared discovery lane is missing")
+    got = policy.writes(body)
+    if got != {"actions"}:
+        raise SystemExit(
+            f"{name}: write set drifted: expected=['actions'] actual={sorted(got)}"
+        )
+
+    _require_markers(name, body, (
+        "contents: read",
+        "actions: write",
+        "push:",
+        "schedule:",
+        "cron: '*/15 * * * *'",
+        "workflow_dispatch:",
+        "persist-credentials: false",
+        "automation/codegen/engine/discovery_external_actions.py",
+        "execute_discovery_external_actions",
+        "issue_discovery_capability_leases",
+        "build_coordination_ledger",
+        "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+        "gh workflow run meta-x-production-continuity.yml",
+        "--repo \"$GITHUB_REPOSITORY\"",
+        "--ref claude/employee-onboarding-setup-udm86",
+    ))
+    _forbid_markers(name, body, (
+        "contents: write",
+        "id-token: write",
+        "issues: write",
+        "pull-requests: write",
+        "deployments: write",
+        "packages: write",
+        "pages: write",
+        "copilot-requests: write",
+        "permissions: write-all",
+        "runs-on: self-hosted",
+        "pull_request_target:",
+        "repository_dispatch:",
+        "workflow_run:",
+        "git push ",
+        "gh pr create",
+        "${{ secrets.",
+    ))
+    if body.count("actions: write") != 1:
+        raise SystemExit(f"{name}: actions write permission must occur exactly once")
+    if body.count("gh workflow run") != 1:
+        raise SystemExit(f"{name}: exactly one workflow dispatch command is allowed")
+    if body.count("gh workflow run meta-x-production-continuity.yml") != 1:
+        raise SystemExit(f"{name}: dispatch target must remain meta-x-production-continuity.yml")
+    if body.count("--ref claude/employee-onboarding-setup-udm86") != 1:
+        raise SystemExit(f"{name}: dispatch ref must remain the production default branch")
+    if " -f " in body or "\n            -f " in body:
+        raise SystemExit(f"{name}: discovery handoff may not inject workflow inputs")
+    return name
+
+
 def main() -> int:
     # Validate all workflows before removing custom-classified lanes so immutable
     # action pins, checkout credential disposal, and forbidden-trigger rules apply
@@ -237,6 +297,7 @@ def main() -> int:
         validate_continuity_lane(),
         validate_unified_status_lane(),
         validate_world_trust_root_dispatch_lane(),
+        validate_shared_discovery_handoff_lane(),
     }
     for name in classified:
         policy.WORKFLOWS.pop(name, None)
