@@ -114,6 +114,7 @@ class AutonomyOrchestrator:
         authority_fn: Callable[[str], Mapping[str, Any]],
         deploy_fn: Callable[[str, Mapping[str, Any]], Mapping[str, Any]],
         persist_fn: Callable[[Mapping[str, Any]], Mapping[str, Any]],
+        replica_authority_fn: Callable[[str, str, str], Mapping[str, Any]] | None = None,
     ) -> EvolutionRunResult:
         """Run the five production capabilities as one bounded loop."""
         return ProductionEvolutionLoop(envelope).run(
@@ -123,6 +124,7 @@ class AutonomyOrchestrator:
             authority_fn=authority_fn,
             deploy_fn=deploy_fn,
             persist_fn=persist_fn,
+            replica_authority_fn=replica_authority_fn,
         )
 
 
