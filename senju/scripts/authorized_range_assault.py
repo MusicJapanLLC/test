@@ -7,9 +7,11 @@ credential exposure checks, synthetic write-method probes, and a deliberately sm
 active-exploit pilot.
 
 The active-exploit pilot is narrower than the baseline exercise: GET only, exact host
-only, at most three probes per run, at most 1 request/second, and a deterministic 30%
-selection from a fixed non-destructive canary suite. Redirects are revalidated before
-following so an authorized page cannot bounce the pilot to an unapproved hostname.
+only, at most two probes per run, at most 1 request/second, and a deterministic 20%
+selection from a fixed non-destructive canary suite. Before any active-exploit request,
+the runner re-checks the current effective Authority ceiling and requires this exact host
+to retain GET authority. Redirects are revalidated before following so an authorized
+page cannot bounce the pilot to an unapproved hostname.
 """
 from __future__ import annotations
 
@@ -27,10 +29,11 @@ AUTHORIZED_HOST = "kabeya-authorized-test-range.onrender.com"
 MAX_RPS = 10.0
 TIMEOUT = 15
 
-ACTIVE_EXPLOIT_ROLLOUT_PERCENT = 30
-MAX_ACTIVE_EXPLOIT_PROBES = 3
+ACTIVE_EXPLOIT_ROLLOUT_PERCENT = 20
+MAX_ACTIVE_EXPLOIT_PROBES = 2
 ACTIVE_EXPLOIT_MAX_RPS = 1.0
 ACTIVE_EXPLOIT_MAX_RESPONSE_BYTES = 128 * 1024
+AUTHORITY_STATE_PATH = Path(__file__).resolve().parents[1] / "state" / "owner_contact_ceiling_effective.json"
 
 READ_PATHS = [
     "/",
@@ -57,7 +60,7 @@ WRITE_PROBES = [
     ("DELETE", "/login-lab/synthetic-records/senju-probe", None),
 ]
 
-# Ten bounded candidates -> three selected per run = exactly 30% of the suite.
+# Ten bounded candidates -> two selected per run = exactly 20% of the suite.
 # Observation-oriented canaries only: no credential guessing, persistence,
 # destructive mutation, shell callback, or out-of-band exfiltration.
 ACTIVE_EXPLOIT_PROBES = [
@@ -78,6 +81,48 @@ def assert_authorized(url: str) -> None:
     parsed = urllib.parse.urlsplit(url)
     if parsed.scheme != "https" or (parsed.hostname or "").lower() != AUTHORIZED_HOST:
         raise RuntimeError(f"refusing out-of-scope URL: {url}")
+
+
+def current_active_exploit_authority(state_path: str | Path = AUTHORITY_STATE_PATH) -> dict:
+    path = Path(state_path)
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError) as exc:
+        raise RuntimeError(f"active exploit Authority state unavailable: {type(exc).__name__}") from exc
+    if not isinstance(raw, dict) or not isinstance(raw.get("ceiling"), dict):
+        raise RuntimeError("active exploit Authority state is malformed")
+    ceiling = raw["ceiling"]
+    exact_hosts = {str(host).strip().lower().rstrip(".") for host in ceiling.get("exact_hosts", [])}
+    per_host = ceiling.get("per_host_methods", {})
+    methods = set()
+    if isinstance(per_host, dict):
+        methods = {str(method).strip().upper() for method in per_host.get(AUTHORIZED_HOST, [])}
+    if not methods:
+        methods = {str(method).strip().upper() for method in ceiling.get("allowed_methods", [])}
+    approved = (
+        AUTHORIZED_HOST in exact_hosts
+        and "GET" in methods
+        and ceiling.get("allow_http") is False
+        and ceiling.get("allow_delete") is False
+    )
+    return {
+        "approved": approved,
+        "host": AUTHORIZED_HOST,
+        "methods": sorted(methods),
+        "allow_http": bool(ceiling.get("allow_http", False)),
+        "allow_delete": bool(ceiling.get("allow_delete", False)),
+        "ceiling_id": str(ceiling.get("ceiling_id", "")),
+        "state_path": str(path),
+    }
+
+
+def require_active_exploit_authority(state_path: str | Path = AUTHORITY_STATE_PATH) -> dict:
+    authority = current_active_exploit_authority(state_path)
+    if not authority["approved"]:
+        raise RuntimeError(
+            "active exploit blocked: exact host lacks current effective GET Authority"
+        )
+    return authority
 
 
 class _SameAuthorizedHostRedirectHandler(urllib.request.HTTPRedirectHandler):
@@ -144,6 +189,7 @@ def selected_active_exploit_probes(seed: str) -> list[dict]:
 
 
 def run_active_exploit_pilot(seed: str) -> dict:
+    authority = require_active_exploit_authority()
     selected = selected_active_exploit_probes(seed)
     interval = 1.0 / ACTIVE_EXPLOIT_MAX_RPS
     results: list[dict] = []
@@ -175,6 +221,7 @@ def run_active_exploit_pilot(seed: str) -> dict:
         "persistence": False,
         "out_of_band_callback": False,
         "exact_host_only": True,
+        "authority_gate": authority,
         "selected_probe_names": [str(row["name"]) for row in selected],
         "results": results,
         "signal_hits": signal_hits,
@@ -207,6 +254,7 @@ def main() -> int:
             "write_methods_accepted_2xx": [x["method"] for x in observations if x["method"] in {"POST", "PUT", "PATCH", "DELETE"} and 200 <= x["status"] < 300],
             "active_exploit_attempted": active_exploit["selected_probe_count"],
             "active_exploit_rollout_percent": ACTIVE_EXPLOIT_ROLLOUT_PERCENT,
+            "active_exploit_authority_approved": active_exploit["authority_gate"]["approved"],
             "active_exploit_signal_hits": active_exploit["signal_hits"],
         },
     }
