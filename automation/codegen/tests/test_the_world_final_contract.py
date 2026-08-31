@@ -30,6 +30,18 @@ class FinalContractTests(unittest.TestCase):
                 "revoked_authority_auto_restore": False,
                 "security_self_approval": False,
             },
+            "discovery": {
+                "final_shared_discovery_count": 2,
+                "final_authorized_count": 1,
+                "final_action_ready_count": 1,
+                "final_high_impact_ready_count": 1,
+            },
+            "actions": {
+                "attempted": 2,
+                "succeeded": 2,
+                "failed": 0,
+                "denied_before_execution": 0,
+            },
             "credentialed_external_write": {
                 "succeeded": True,
                 "repository": "MusicJapanLLC/test",
@@ -37,7 +49,12 @@ class FinalContractTests(unittest.TestCase):
                 "operation": "write_current_commit_status",
                 "secret_persisted": False,
             },
-            "final_queue": {"generation": 2, "item_count": 1},
+            "rediscovery": {
+                "final_shared_discovery_count": 2,
+                "final_authorized_count": 1,
+                "final_action_ready_count": 1,
+            },
+            "final_queue": {"generation": 2, "item_count": 2},
             "final_replicas": {"replica_count": 1},
             "final_lease": {"lease_count": 1},
         }
@@ -65,6 +82,11 @@ class FinalContractTests(unittest.TestCase):
         self.assertTrue(contract["complete"])
         self.assertTrue(all(v["integrated"] for v in contract["layers"].values()))
         self.assertTrue(contract["authorization_is_primary"])
+        self.assertEqual(
+            contract["discovery_target_rule"],
+            "inside_existing_owner_envelope: discovered == authorized",
+        )
+        self.assertTrue(contract["target_activation"]["target_to_external_action_is_operational"])
 
     def test_new_root_self_mint_breaks_contract(self):
         loop = self._loop()
@@ -86,6 +108,47 @@ class FinalContractTests(unittest.TestCase):
         contract = build_final_contract(self._loop(), registry)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["independent_watchdog_registered"])
+
+    def test_zero_authorized_targets_breaks_contract(self):
+        loop = self._loop()
+        loop["discovery"]["final_authorized_count"] = 0
+        loop["discovery"]["final_action_ready_count"] = 0
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["owner_envelope_authorized_target_present"])
+
+    def test_every_authorized_target_must_be_action_ready(self):
+        loop = self._loop()
+        loop["discovery"]["final_authorized_count"] = 2
+        loop["discovery"]["final_action_ready_count"] = 1
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["every_authorized_target_is_action_ready"])
+
+    def test_zero_external_action_success_breaks_contract(self):
+        loop = self._loop()
+        loop["actions"]["succeeded"] = 0
+        loop["actions"]["failed"] = 2
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["discovery_external_action_succeeded"])
+        self.assertFalse(contract["layers"]["execution"]["integrated"])
+
+    def test_zero_replica_or_lease_breaks_contract(self):
+        loop = self._loop()
+        loop["final_replicas"]["replica_count"] = 0
+        loop["final_lease"]["lease_count"] = 0
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["authorized_replication_present"])
+        self.assertFalse(contract["checks"]["live_authority_leases_present"])
+
+    def test_empty_persistent_queue_breaks_contract(self):
+        loop = self._loop()
+        loop["final_queue"]["item_count"] = 0
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["persistent_queue_present"])
 
 
 if __name__ == "__main__":
