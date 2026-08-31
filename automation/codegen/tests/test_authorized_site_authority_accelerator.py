@@ -80,7 +80,12 @@ def test_related_candidate_is_pushed_forward_to_negotiation_but_not_minted(tmp_p
     _write(state / "child_discovery_log.json", {"url": "https://docs.owner.example/help"})
     discovery = run_shared_discovery_authority(state, repo_root=repo)
     assert discovery["authorized_count"] == 0
-    assert discovery["candidate_count"] == 1
+
+    candidates = json.loads((state / "discovery_candidates.json").read_text(encoding="utf-8"))["candidates"]
+    related = [row for row in candidates if row.get("host") == "docs.owner.example"]
+    assert related
+    assert all(row.get("decision") == "candidate_only" for row in related)
+    assert all(row.get("same_domain_hint") == "api.owner.example" for row in related)
 
     result = run_authorized_site_authority_accelerator(state)
     assert result["promoted_count"] == 0
