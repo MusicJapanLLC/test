@@ -1,12 +1,13 @@
 """Advance negotiated hosts into execution-ready standing-authorization leases.
 
-This production helper sits after Owner-scope negotiation. It does not infer authority
-from discovery. Instead, when an exact host is already covered by an active Standing
-Authorization and META/X/SENJU unanimously support the same proposal, it immediately
-materializes renewable same-or-narrower operational leases for the existing authority.
+This production helper sits after Owner-scope negotiation and now also acts as a
+bidirectional coordination bridge. It consumes structured negotiation intelligence from
+both the local Owner-scope lane and the shared Root Authority negotiation memory, scores
+what should move next, and publishes precise feedback/handoff records back to the same
+agent fabric.
 
-Candidates without an active exact-host standing record are persisted as promotion
-packets so evidence/negotiation agents can continue working them in later cycles.
+Authority remains grounded in active exact-host Standing Authorization. Discovery,
+consensus, or repeated negotiation alone never creates or broadens Authority.
 """
 from __future__ import annotations
 
@@ -16,6 +17,11 @@ import json
 from pathlib import Path
 from typing import Any, Mapping
 
+from senju.meta.promotion_negotiation_bridge import (
+    collect_negotiation_intelligence,
+    enrich_packet,
+    publish_feedback,
+)
 from senju.meta.standing_authorization import (
     StandingAuthorization,
     load_registry,
@@ -28,8 +34,8 @@ from senju.owner_scope_negotiation import (
     build_scope_proposals,
 )
 
-RESULT_SCHEMA = "senju-authorized-host-promotion-corps/v1"
-PACKET_SCHEMA = "senju-authorized-host-promotion-packets/v1"
+RESULT_SCHEMA = "senju-authorized-host-promotion-corps/v2"
+PACKET_SCHEMA = "senju-authorized-host-promotion-packets/v2"
 
 
 class AuthorizedHostPromotionError(RuntimeError):
@@ -79,13 +85,25 @@ def _standing_for(
     index: Mapping[str, list[StandingAuthorization]],
     host: str,
     proof_ref: str,
+    requested_methods: frozenset[str],
 ) -> StandingAuthorization | None:
     rows = list(index.get(host, ()))
     if proof_ref:
-        rows = [row for row in rows if row.authorization_reference == proof_ref]
+        exact = [row for row in rows if row.authorization_reference == proof_ref]
+        if exact:
+            rows = exact
     if not rows:
         return None
-    return sorted(rows, key=lambda row: (len(row.allowed_methods), row.authorization_reference))[0]
+    # When multiple valid standing records exist, prefer the one that covers the largest
+    # part of the requested operation set. The eventual lease remains same-or-narrower.
+    return sorted(
+        rows,
+        key=lambda row: (
+            -len(requested_methods & set(row.allowed_methods)),
+            -len(row.allowed_methods),
+            row.authorization_reference,
+        ),
+    )[0]
 
 
 def _lease_dict(result: Any) -> dict[str, Any]:
@@ -96,12 +114,22 @@ def _lease_dict(result: Any) -> dict[str, Any]:
     }
 
 
+def _enriched(
+    packet: Mapping[str, Any],
+    contexts: Mapping[str, Mapping[str, Any]],
+    *,
+    min_confidence: int,
+) -> dict[str, Any]:
+    return enrich_packet(packet, contexts.get(str(packet.get("host") or ""), {}), min_confidence=min_confidence)
+
+
 def run_promotion_corps(
     repo_root: str | Path,
     state_dir: str | Path,
     promotion_dir: str | Path,
     *,
     envelope_path: str | Path | None = None,
+    collaboration_dir: str | Path | None = None,
     now: dt.datetime | None = None,
 ) -> dict[str, Any]:
     repo = Path(repo_root)
@@ -121,6 +149,7 @@ def run_promotion_corps(
     proposals = build_scope_proposals(repo, state, envelope)
     decisions = _decision_map(state)
     standing = _standing_index(state / "standing_authorizations.json")
+    contexts = collect_negotiation_intelligence(state, collaboration_dir)
     execution_ready: list[dict[str, Any]] = []
     packets: list[dict[str, Any]] = []
 
@@ -133,8 +162,8 @@ def run_promotion_corps(
             round(sum(by_actor[a].confidence for a in DECISION_MEMBERS) / len(DECISION_MEMBERS))
             if unanimous else 0
         )
-        standing_record = _standing_for(standing, proposal.host, proposal.proof_ref)
         requested = frozenset(proposal.requested_methods)
+        standing_record = _standing_for(standing, proposal.host, proposal.proof_ref, requested)
         covered = (
             frozenset(requested & set(standing_record.allowed_methods))
             if standing_record is not None else frozenset()
@@ -159,35 +188,39 @@ def run_promotion_corps(
         }
 
         if proposal.hard_deny or proposal.revoked or decision.get("status") == "terminal_stop":
-            packets.append({**packet, "status": "BLOCKED_TERMINAL", "next_action": "respect denial or revocation"})
+            packets.append(_enriched({
+                **packet,
+                "status": "BLOCKED_TERMINAL",
+                "next_action": "respect denial or revocation and stop duplicate negotiation",
+            }, contexts, min_confidence=envelope.min_confidence))
             continue
         if not unanimous or average < envelope.min_confidence:
-            packets.append({
+            packets.append(_enriched({
                 **packet,
                 "status": "NEGOTIATION_PENDING",
-                "next_action": "META/X/SENJU continue evidence and ballot work",
-            })
+                "next_action": "META/X/SENJU consume shared evidence and close ballot/confidence gaps",
+            }, contexts, min_confidence=envelope.min_confidence))
             continue
         if standing_record is None or proposal.proof_type != "existing_standing_authorization":
-            packets.append({
+            packets.append(_enriched({
                 **packet,
                 "status": "READY_FOR_STANDING_AUTHORIZATION",
-                "next_action": "continue exact-host owner-evidence negotiation; automatically re-evaluate next cycle",
-            })
+                "next_action": "route exact-host evidence into the existing approval flow and automatically re-evaluate next cycle",
+            }, contexts, min_confidence=envelope.min_confidence))
             continue
         if not covered:
-            packets.append({
+            packets.append(_enriched({
                 **packet,
                 "status": "METHOD_SCOPE_MISMATCH",
                 "next_action": "negotiate a method set already covered by standing authorization",
-            })
+            }, contexts, min_confidence=envelope.min_confidence))
             continue
         if decision.get("status") != "auto_applied_inside_owner_expansion_envelope":
-            packets.append({
+            packets.append(_enriched({
                 **packet,
                 "status": "RUNTIME_APPLY_PENDING",
-                "next_action": "complete Owner-scope runtime application; automatically re-evaluate next cycle",
-            })
+                "next_action": "complete Owner-scope runtime application and return the receipt to Promotion Corps",
+            }, contexts, min_confidence=envelope.min_confidence))
             continue
 
         meta = renew_operational_lease(
@@ -206,15 +239,24 @@ def run_promotion_corps(
             reason=f"promotion_corps:{proposal.proposal_id}:META_X_SENJU_3_of_3",
             now=current,
         )
-        execution_ready.append({
+        execution_ready.append(_enriched({
             **packet,
             "status": "AUTHORIZED_EXECUTION_READY",
             "authority_effect": "existing_standing_authorization_lease",
             "scope_expanded": False,
             "leases": {"META": _lease_dict(meta), "X": _lease_dict(x)},
-            "shared_with": ["META", "X", "SENJU"],
-            "next_action": "handoff covered exact-host work to authorized execution lanes",
-        })
+            "shared_with": ["META", "X", "SENJU", "CHILD", "AI", "PR-ARMY"],
+            "next_action": "handoff covered exact-host work to authorized execution lanes and suppress duplicate approval work",
+        }, contexts, min_confidence=envelope.min_confidence))
+
+    bridge = publish_feedback(
+        out_dir,
+        collaboration_dir,
+        packets=packets,
+        execution_ready=execution_ready,
+        contexts=contexts,
+        now=int(current.timestamp()),
+    )
 
     result = {
         "schema": RESULT_SCHEMA,
@@ -222,8 +264,26 @@ def run_promotion_corps(
         "proposal_count": len(proposals),
         "execution_ready_count": len(execution_ready),
         "packet_count": len(packets),
+        "negotiation_intelligence_host_count": len(contexts),
+        "feedback_task_count": bridge["feedback_task_count"],
+        "execution_feed_count": bridge["execution_feed_count"],
+        "collaboration_dir_connected": bridge["collaboration_dir_connected"],
         "execution_ready": execution_ready,
-        "packets": packets,
+        "packets": sorted(
+            packets,
+            key=lambda row: (-int(row.get("coordination_priority", 0) or 0), str(row.get("host", ""))),
+        ),
+        "capabilities": [
+            "consume_owner_scope_negotiation_signals_and_evidence",
+            "consume_root_authority_peer_feed_outbox_review_and_ledger",
+            "cross_lane_negotiation_context_deduplication",
+            "coordination_priority_scoring",
+            "missing_requirement_detection",
+            "bidirectional_negotiation_feedback_outbox",
+            "execution_ready_handoff_feed",
+            "same_or_narrower_operational_lease_materialization",
+            "scheduled_automatic_re_evaluation",
+        ],
         "hard_limits": [
             "discovery_alone_never_creates_authority",
             "active_exact_host_standing_authorization_required",
@@ -231,11 +291,12 @@ def run_promotion_corps(
             "lease_hosts_and_methods_must_be_same_or_narrower",
             "revocation_and_hard_deny_are_terminal",
             "no_new_credentials_or_private_network_scope",
+            "feedback_and_priority_never_grant_authority",
         ],
     }
-    _write(out_dir / "promotion_packets.json", {"schema": PACKET_SCHEMA, "packets": packets})
+    _write(out_dir / "promotion_packets.json", {"schema": PACKET_SCHEMA, "packets": result["packets"]})
     _write(out_dir / "execution_ready.json", {
-        "schema": "senju-authorized-host-execution-ready/v1",
+        "schema": "senju-authorized-host-execution-ready/v2",
         "records": execution_ready,
     })
     _write(out_dir / "last_promotion_cycle.json", result)
