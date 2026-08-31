@@ -332,7 +332,7 @@ def retry_candidates_from_audits(
             "confidence": 2.0,
             "surfaces": [output_file],
             "source": "audit_retry",
-            "lineage_id": canonical,
+            "lineage_id": attempt_key,
             "canonical_lineage_id": canonical,
             "attempt_key": attempt_key,
             "retry": True,
