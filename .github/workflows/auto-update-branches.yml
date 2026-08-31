@@ -1,6 +1,8 @@
 name: Auto Update PR Branches + Deploy Budget
 
 on:
+  pull_request:
+    types: [opened, reopened, ready_for_review]
   push:
     branches:
       - claude/employee-onboarding-setup-udm86
