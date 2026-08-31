@@ -8,6 +8,8 @@ inheritance remain unavailable.
 
 A host can move beyond this trial only through a separately established
 owner-controlled/standing authorization path.
+
+Revalidation marker: run this exact bounded contract against the latest base.
 """
 from __future__ import annotations
 
