@@ -115,6 +115,8 @@ jobs:
           test "$(jq -r '.approved' .the-world-runtime/security-self-approval.json)" = "true"
           test "$(jq -r '.applied' .the-world-runtime/security-self-approval.json)" = "true"
           test "$(jq -r '.authority_decision.allowed' .the-world-runtime/authority-council.json)" = "true"
+          test "$(jq -r '.authority.new_root_self_authorization' .the-world-runtime/the_world_unified_loop.json)" = "false"
+          test "$(jq -r '.authority.revoked_authority_auto_restore' .the-world-runtime/the_world_unified_loop.json)" = "false"
           test "$(jq -r '.credentialed_external_write.succeeded' .the-world-runtime/the_world_unified_loop.json)" = "true"
           test "$(jq -r '.reachable' .the-world-runtime/external-deployment.json)" = "true"
           test "$(jq -r '.complete' .the-world-runtime/trust-root-lineage.json)" = "true"
