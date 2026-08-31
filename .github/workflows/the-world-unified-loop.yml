@@ -9,6 +9,7 @@ on:
       - claude/employee-onboarding-setup-udm86
     paths:
       - 'automation/codegen/engine/the_world_unified_loop.py'
+      - 'automation/codegen/engine/production_state_bootstrap.py'
       - 'automation/codegen/run_the_world_unified_loop.py'
       - 'automation/codegen/the_world_final_contract.py'
       - 'automation/codegen/run_discovery_action_failover.py'
@@ -17,6 +18,7 @@ on:
       - 'automation/codegen/meta_state/**'
       - 'automation/codegen/tests/test_the_world_unified_loop.py'
       - 'automation/codegen/tests/test_the_world_final_contract.py'
+      - 'automation/codegen/tests/test_production_state_bootstrap.py'
       - 'automation/codegen/tests/test_discovery_action_failover.py'
       - 'automation/recovery/**'
       - 'senju/senju/credential_*.py'
@@ -66,6 +68,7 @@ jobs:
           python -m pytest -q \
             automation/codegen/tests/test_the_world_unified_loop.py \
             automation/codegen/tests/test_the_world_final_contract.py \
+            automation/codegen/tests/test_production_state_bootstrap.py \
             automation/codegen/tests/test_discovery_capability_leases.py \
             automation/codegen/tests/test_discovery_external_action.py \
             automation/codegen/tests/test_discovery_action_failover.py \
@@ -113,6 +116,9 @@ jobs:
       - name: Require full closed-loop completion
         run: |
           test "$(jq -r '.closed_loop' .the-world-runtime/the_world_unified_loop.json)" = "true"
+          test "$(jq -r '.runtime_bootstrap.authority_source' .the-world-runtime/the_world_unified_loop.json)" = "trusted_production_checkout"
+          test "$(jq -r '.runtime_bootstrap.required_files_present' .the-world-runtime/the_world_unified_loop.json)" = "true"
+          test "$(jq -r '.runtime_bootstrap.generated_authority_imported' .the-world-runtime/the_world_unified_loop.json)" = "false"
           test "$(jq -r '.credentialed_external_write.succeeded' .the-world-runtime/the_world_unified_loop.json)" = "true"
           test "$(jq -r '.authority.new_root_self_authorization' .the-world-runtime/the_world_unified_loop.json)" = "false"
           test "$(jq -r '.authority.revoked_authority_auto_restore' .the-world-runtime/the_world_unified_loop.json)" = "false"
@@ -134,6 +140,7 @@ jobs:
             --out .the-world-runtime/the_world_final_contract.json
           test "$(jq -r '.complete' .the-world-runtime/the_world_final_contract.json)" = "true"
           test "$(jq -r '.authorization_is_primary' .the-world-runtime/the_world_final_contract.json)" = "true"
+          test "$(jq -r '.checks.runtime_owner_state_bootstrapped' .the-world-runtime/the_world_final_contract.json)" = "true"
           test "$(jq -r '[.layers[] | .integrated] | all' .the-world-runtime/the_world_final_contract.json)" = "true"
 
       - name: Save persistent unified-loop state
@@ -159,6 +166,7 @@ jobs:
           echo "## The World Unified Loop" >> "$GITHUB_STEP_SUMMARY"
           if [ -f .the-world-runtime/the_world_unified_loop.json ]; then
             echo "- Closed loop: $(jq -r '.closed_loop' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Runtime owner bootstrap: $(jq -r '.runtime_bootstrap.authority_source // "missing"' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- Strategy: $(jq -r '.parameters.strategy' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- Pressure: $(jq -r '.parameters.pressure' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
             echo "- External actions succeeded: $(jq -r '.actions.succeeded // 0' .the-world-runtime/the_world_unified_loop.json)" >> "$GITHUB_STEP_SUMMARY"
