@@ -1,15 +1,9 @@
 """Live production chaos canary with real, bounded side effects.
 
-This lane is intentionally different from the synthetic PR #514 harness:
-- it performs real HTTPS mutations against the explicit owner-controlled test range;
-- a real GitHub credential materializes a short-lived canary authority lease on a
-  temporary branch;
-- the lease fetched back from GitHub is the authority input that gates the real action;
-- the lease can authorize only owner-defined synthetic test-range actions;
-- the production Trust Root, revocation state, credentials, and Emergency/Security Stop
-  invariants are not weakened or mutated.
-
-The point is to exercise the real control path, not to pretend a failure happened.
+This lane performs real HTTPS mutations against the explicit owner-controlled test
+range and materializes a short-lived canary authority lease with a real GitHub
+credential. A caller may select one of the existing canary scenarios; no arbitrary
+action, host, authority reference, or production Trust Root mutation is accepted.
 """
 from __future__ import annotations
 
@@ -34,6 +28,12 @@ CANARY_ACTIONS = (
     "synthetic-record-update",
 )
 CLEANUP_ACTION = "synthetic-record-cleanup"
+SCENARIOS = (
+    "contact_write",
+    "record_create",
+    "record_create_patch",
+    "duplicate_contact_write",
+)
 MAX_TTL_SECONDS = 300
 
 
@@ -62,20 +62,15 @@ def _fingerprint(payload: dict[str, Any]) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-def issue_lease(*, seed: str, run_id: str, ttl_seconds: int = 180) -> dict[str, Any]:
+def issue_lease(*, seed: str, run_id: str, ttl_seconds: int = 180, scenario: str | None = None) -> dict[str, Any]:
     ttl = max(30, min(int(ttl_seconds), MAX_TTL_SECONDS))
     rng = random.Random(_seed_int(seed))
-    scenario = rng.choice(
-        (
-            "contact_write",
-            "record_create",
-            "record_create_patch",
-            "duplicate_contact_write",
-        )
-    )
-    if scenario in {"contact_write", "duplicate_contact_write"}:
+    selected = str(scenario or rng.choice(SCENARIOS))
+    if selected not in SCENARIOS:
+        raise LiveCanaryError(f"unknown canary scenario: {selected}")
+    if selected in {"contact_write", "duplicate_contact_write"}:
         allowed_actions = ["synthetic-contact-write"]
-    elif scenario == "record_create_patch":
+    elif selected == "record_create_patch":
         allowed_actions = ["synthetic-record-create", "synthetic-record-update"]
     else:
         allowed_actions = ["synthetic-record-create"]
@@ -88,14 +83,14 @@ def issue_lease(*, seed: str, run_id: str, ttl_seconds: int = 180) -> dict[str, 
         "target_host": EXPECTED_HOST,
         "canary_only": True,
         "namespace": "chaos-canary",
-        "scenario": scenario,
+        "scenario": selected,
         "allowed_actions": allowed_actions,
         "issued_at": now.isoformat(timespec="seconds"),
         "expires_at": (now + dt.timedelta(seconds=ttl)).isoformat(timespec="seconds"),
         "revoked": False,
         "emergency_stop": False,
         "security_stop": False,
-        "cleanup_required": scenario in {"record_create", "record_create_patch"},
+        "cleanup_required": selected in {"record_create", "record_create_patch"},
         "linger_seconds": rng.choice((0, 0, 2, 5, 10)),
         "production_trust_root_mutation": False,
     }
@@ -129,6 +124,9 @@ def validate_lease(lease: dict[str, Any], *, now: dt.datetime | None = None) -> 
     if (expires - issued).total_seconds() > MAX_TTL_SECONDS:
         raise LiveCanaryError("lease TTL exceeds canary maximum")
 
+    scenario = str(lease.get("scenario"))
+    if scenario not in SCENARIOS:
+        raise LiveCanaryError("lease contains an unknown canary scenario")
     actions = lease.get("allowed_actions")
     if not isinstance(actions, list) or not actions:
         raise LiveCanaryError("lease must contain at least one action")
@@ -148,16 +146,14 @@ def execute_lease(lease: dict[str, Any]) -> dict[str, Any]:
         if action_id not in allowed and action_id != CLEANUP_ACTION:
             raise LiveCanaryError(f"action not covered by lease: {action_id}")
         result = transport.execute_action(host, action_id)
-        outcomes.append(
-            {
-                "action_id": action_id,
-                "method": result.method,
-                "url": result.url,
-                "status": result.status,
-                "redirects": result.redirects,
-                "response_bytes": len(result.body),
-            }
-        )
+        outcomes.append({
+            "action_id": action_id,
+            "method": result.method,
+            "url": result.url,
+            "status": result.status,
+            "redirects": result.redirects,
+            "response_bytes": len(result.body),
+        })
         if not (200 <= result.status < 500):
             raise LiveCanaryError(f"unexpected transport status: {result.status}")
 
@@ -182,16 +178,14 @@ def execute_lease(lease: dict[str, Any]) -> dict[str, Any]:
     finally:
         if cleanup_needed:
             result = transport.execute_action(host, CLEANUP_ACTION)
-            outcomes.append(
-                {
-                    "action_id": CLEANUP_ACTION,
-                    "method": result.method,
-                    "url": result.url,
-                    "status": result.status,
-                    "redirects": result.redirects,
-                    "response_bytes": len(result.body),
-                }
-            )
+            outcomes.append({
+                "action_id": CLEANUP_ACTION,
+                "method": result.method,
+                "url": result.url,
+                "status": result.status,
+                "redirects": result.redirects,
+                "response_bytes": len(result.body),
+            })
 
     return {
         "schema": SCHEMA,
@@ -219,6 +213,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     issue.add_argument("--seed", required=True)
     issue.add_argument("--run-id", required=True)
     issue.add_argument("--ttl-seconds", type=int, default=180)
+    issue.add_argument("--scenario", choices=SCENARIOS)
     issue.add_argument("--out", required=True)
 
     execute = sub.add_parser("execute")
@@ -227,7 +222,12 @@ def main(argv: Iterable[str] | None = None) -> int:
 
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.cmd == "issue":
-        lease = issue_lease(seed=args.seed, run_id=args.run_id, ttl_seconds=args.ttl_seconds)
+        lease = issue_lease(
+            seed=args.seed,
+            run_id=args.run_id,
+            ttl_seconds=args.ttl_seconds,
+            scenario=args.scenario,
+        )
         path = Path(args.out)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(lease, indent=2, sort_keys=True) + "\n", encoding="utf-8")
