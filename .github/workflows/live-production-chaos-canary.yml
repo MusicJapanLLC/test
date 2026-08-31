@@ -10,6 +10,7 @@ on:
       - "senju/senju/adversary_test_range_transport.py"
       - "automation/codegen/meta_state/discovery_policy.json"
       - ".github/workflows/live-production-chaos-canary.yml"
+      - "automation/security/workflow_policy_continuity_entrypoint.py"
   push:
     branches:
       - claude/employee-onboarding-setup-udm86
@@ -18,12 +19,13 @@ on:
       - "senju/senju/adversary_test_range_transport.py"
       - "automation/codegen/meta_state/discovery_policy.json"
       - ".github/workflows/live-production-chaos-canary.yml"
+      - "automation/security/workflow_policy_continuity_entrypoint.py"
   schedule:
     - cron: "17 */2 * * *"
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   actions: read
 
 concurrency:
@@ -60,6 +62,9 @@ jobs:
     needs: verify
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
     steps:
       - name: Checkout production default
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -95,8 +100,6 @@ jobs:
           branch="chaos-canary/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "branch=$branch" >> "$GITHUB_OUTPUT"
 
-          # This is a real authenticated production-side state mutation. The branch is
-          # deliberately ephemeral and cannot be consumed as a production Trust Root.
           gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
             -f ref="refs/heads/$branch" \
             -f sha="$GITHUB_SHA" >/dev/null
@@ -107,8 +110,6 @@ jobs:
             -f content="$encoded" \
             -f branch="$branch" >/dev/null
 
-          # Fetch the authority back through GitHub. This returned production state,
-          # rather than the local draft, is what gates the real external mutation.
           gh api "repos/$GITHUB_REPOSITORY/contents/.canary-authority/live-lease.json?ref=$branch" \
             --jq .content | tr -d '\n' | base64 -d > "$CANARY_DIR/lease-from-github.json"
           python - <<'PY'
