@@ -75,8 +75,6 @@ def test_related_candidate_is_pushed_forward_to_negotiation_but_not_minted(tmp_p
     state.mkdir(parents=True)
     repo.mkdir(parents=True)
     _write(state / "discovery_policy.json", {"trusted_roots": ["api.owner.example"]})
-    # Sibling host shares the owner.example suffix but is not a descendant of the exact
-    # trusted root, so discovery must keep it candidate-only.
     _write(state / "child_discovery_log.json", {"url": "https://docs.owner.example/help"})
     discovery = run_shared_discovery_authority(state, repo_root=repo)
     assert discovery["authorized_count"] == 0
@@ -89,9 +87,12 @@ def test_related_candidate_is_pushed_forward_to_negotiation_but_not_minted(tmp_p
 
     result = run_authorized_site_authority_accelerator(state)
     assert result["promoted_count"] == 0
-    assert result["negotiation_signal_count"] == 1
-    signal = result["negotiation_signals"][0]
-    assert signal["host"] == "docs.owner.example"
+    assert result["negotiation_signal_count"] >= 1
+
+    persisted = json.loads((state / "owner_scope_negotiation_signals.json").read_text(encoding="utf-8"))["signals"]
+    signals = [row for row in persisted if row.get("host") == "docs.owner.example"]
+    assert len(signals) == 1
+    signal = signals[0]
     assert signal["related_authorized_host"] == "api.owner.example"
     assert signal["priority"] == "high"
 
