@@ -9,6 +9,7 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/scripts/frontier_approval_continuity.py'
+      - 'senju/tests/test_frontier_approval_continuity.py'
       - '.github/workflows/frontier-approval-continuity.yml'
 
 permissions:
@@ -42,6 +43,14 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
         with:
           python-version: '3.12'
+
+      - name: Verify budget-deferred approvals remain re-evaluable
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q senju/tests/test_frontier_approval_continuity.py
 
       - name: Preserve valid 4/4 approvals deferred only by cycle budget
         run: |
