@@ -16,8 +16,6 @@ from typing import Any
 
 import anthropic
 
-from engine.rejection_learning import learning_hint, observe_model_response
-
 ROOT = Path(__file__).resolve().parents[2]
 CODEGEN_DIR = Path(__file__).parent
 TASKS_DIR = CODEGEN_DIR / "tasks"
@@ -43,7 +41,7 @@ def load_agent(agent_id: str) -> dict[str, Any]:
     return agent
 
 
-def build_prompt(task: dict, agent: dict, history: list[dict], task_id: str | None = None) -> str:
+def build_prompt(task: dict, agent: dict, history: list[dict]) -> str:
     parts = [
         f"# Agent: {agent['name']} ({agent['id']})",
         f"\n## Agent strategy\n{agent['strategy']}",
@@ -53,10 +51,6 @@ def build_prompt(task: dict, agent: dict, history: list[dict], task_id: str | No
         f"\n## Test command\n`{task['test_cmd']}`",
         f"\n## Constraints\n{task.get('constraints', 'None')}",
     ]
-
-    learned = learning_hint(task_id)
-    if learned:
-        parts.append(f"\n## META rejection learning\n{learned}")
 
     if history:
         parts.append("\n## Previous attempt results (most recent last)")
@@ -71,8 +65,6 @@ def build_prompt(task: dict, agent: dict, history: list[dict], task_id: str | No
             "\n## Instructions\n"
             "Study the previous failures carefully. "
             "Follow your agent strategy, fix the observed issues, and produce a stronger attempt. "
-            "If a previous attempt was rejected, treat that rejection as a boundary signal: preserve the legitimate goal, "
-            "but move toward an allowed, defensive, authorized, or sandboxed solution instead of trying to bypass safeguards. "
             "Output ONLY the raw Python code - no markdown fences, no explanation."
         )
     else:
@@ -86,29 +78,22 @@ def build_prompt(task: dict, agent: dict, history: list[dict], task_id: str | No
 
 
 def generate_code(
-    task_id: str,
     task: dict,
     agent: dict,
     history: list[dict],
     client: anthropic.Anthropic,
-) -> tuple[str, dict[str, Any] | None]:
-    prompt = build_prompt(task, agent, history, task_id=task_id)
+) -> str:
+    prompt = build_prompt(task, agent, history)
     message = client.messages.create(
         model=agent.get("model", "claude-sonnet-4-6"),
         max_tokens=int(agent.get("max_tokens", 4096)),
         messages=[{"role": "user", "content": prompt}],
     )
-    raw = message.content[0].text.strip()
-
-    rejection = observe_model_response(task_id, agent["id"], raw)
-    if rejection:
-        return "", rejection
-
-    code = raw
+    code = message.content[0].text.strip()
     if code.startswith("```"):
         lines = code.splitlines()
         code = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
-    return code, None
+    return code
 
 
 def run_tests(test_cmd: str, cwd: Path) -> tuple[bool, str]:
@@ -180,21 +165,7 @@ def run_loop(task_id: str, max_iterations: int = 10, agent_id: str = "worker-1")
     for iteration in range(start_iter, max_iterations + 1):
         print(f"\n[codegen:{agent_id}] === Iteration {iteration} ===")
 
-        code, rejection = generate_code(task_id, task, agent, history, client)
-        if rejection:
-            category = rejection["category"]
-            test_output = (
-                f"MODEL_REJECTION[{category}]: {rejection['evidence'][:600]}\n"
-                f"META_NEXT_STRATEGY: {rejection['next_strategy']}"
-            )
-            print(f"[codegen:{agent_id}] model rejection learned: {category}")
-            record = save_run(task_id, agent, iteration, "", test_output, False)
-            history.append(record)
-            if iteration < max_iterations:
-                print(f"[codegen:{agent_id}] retrying with rejection-aware safe feedback...")
-                continue
-            break
-
+        code = generate_code(task, agent, history, client)
         output_path.write_text(code)
         print(f"[codegen:{agent_id}] wrote {len(code)} chars to {task['output_file']}")
 
