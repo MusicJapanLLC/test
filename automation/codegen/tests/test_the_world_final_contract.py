@@ -88,12 +88,46 @@ class FinalContractTests(unittest.TestCase):
             ],
         }
 
+    def _council(self):
+        return {
+            "authority_decision": {"allowed": True},
+            "ai_council": {
+                "effect": "allow",
+                "per_host_manual_reapproval_required": False,
+            },
+            "invariants": {
+                "hard_deny_override": False,
+                "revocation_override": False,
+            },
+        }
+
+    def _deployment(self):
+        return {
+            "environment": "production",
+            "action": "deploy",
+            "target_host": "kabeya-authorized-test-range.onrender.com",
+            "authority_reference": "canonical:kabeya-authorized-test-range",
+            "reachable": True,
+            "authority_expanded": False,
+            "raw_credential_inherited": False,
+        }
+
+    def _contract(self, *, loop=None, registry=None, council=None, deployment=None):
+        return build_final_contract(
+            loop if loop is not None else self._loop(),
+            registry if registry is not None else self._registry(),
+            council if council is not None else self._council(),
+            deployment if deployment is not None else self._deployment(),
+        )
+
     def test_complete_contract(self):
-        contract = build_final_contract(self._loop(), self._registry())
+        contract = self._contract()
         self.assertTrue(contract["complete"])
         self.assertTrue(all(v["integrated"] for v in contract["layers"].values()))
         self.assertTrue(contract["authorization_is_primary"])
         self.assertTrue(contract["checks"]["runtime_owner_state_bootstrapped"])
+        self.assertTrue(contract["checks"]["autonomous_authority_council_operational"])
+        self.assertTrue(contract["checks"]["owner_authorized_external_deployment_operational"])
         self.assertEqual(
             contract["discovery_target_rule"],
             "inside_existing_owner_envelope: discovered == authorized",
@@ -104,7 +138,7 @@ class FinalContractTests(unittest.TestCase):
     def test_missing_runtime_bootstrap_breaks_contract(self):
         loop = self._loop()
         loop.pop("runtime_bootstrap")
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["runtime_owner_state_bootstrapped"])
         self.assertFalse(contract["layers"]["discovery"]["integrated"])
@@ -113,35 +147,35 @@ class FinalContractTests(unittest.TestCase):
     def test_runtime_bootstrap_cannot_import_generated_authority(self):
         loop = self._loop()
         loop["runtime_bootstrap"]["generated_authority_imported"] = True
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["runtime_owner_state_bootstrapped"])
 
     def test_runtime_cache_cannot_override_owner_policy(self):
         loop = self._loop()
         loop["runtime_bootstrap"]["runtime_cache_may_override_owner_policy"] = True
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["runtime_owner_state_bootstrapped"])
 
     def test_new_root_self_mint_breaks_contract(self):
         loop = self._loop()
         loop["authority"]["new_root_self_authorization"] = True
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["no_new_root_self_mint"])
 
     def test_cross_repo_credential_write_breaks_contract(self):
         loop = self._loop()
         loop["credentialed_external_write"]["repository"] = "someone/else"
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["credentialed_write_is_current_repo_status"])
 
     def test_watchdog_is_required(self):
         registry = self._registry()
         registry["workers"] = []
-        contract = build_final_contract(self._loop(), registry)
+        contract = self._contract(registry=registry)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["independent_watchdog_registered"])
 
@@ -149,7 +183,7 @@ class FinalContractTests(unittest.TestCase):
         loop = self._loop()
         loop["discovery"]["final_authorized_count"] = 0
         loop["discovery"]["final_action_ready_count"] = 0
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["owner_envelope_authorized_target_present"])
 
@@ -157,7 +191,7 @@ class FinalContractTests(unittest.TestCase):
         loop = self._loop()
         loop["discovery"]["final_authorized_count"] = 2
         loop["discovery"]["final_action_ready_count"] = 1
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["every_authorized_target_is_action_ready"])
 
@@ -165,7 +199,7 @@ class FinalContractTests(unittest.TestCase):
         loop = self._loop()
         loop["actions"]["succeeded"] = 0
         loop["actions"]["failed"] = 2
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["discovery_external_action_succeeded"])
         self.assertFalse(contract["layers"]["execution"]["integrated"])
@@ -174,7 +208,7 @@ class FinalContractTests(unittest.TestCase):
         loop = self._loop()
         loop["final_replicas"]["replica_count"] = 0
         loop["final_lease"]["lease_count"] = 0
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["authorized_replication_present"])
         self.assertFalse(contract["checks"]["live_authority_leases_present"])
@@ -182,9 +216,33 @@ class FinalContractTests(unittest.TestCase):
     def test_empty_persistent_queue_breaks_contract(self):
         loop = self._loop()
         loop["final_queue"]["item_count"] = 0
-        contract = build_final_contract(loop, self._registry())
+        contract = self._contract(loop=loop)
         self.assertFalse(contract["complete"])
         self.assertFalse(contract["checks"]["persistent_queue_present"])
+
+    def test_council_must_be_operational(self):
+        council = self._council()
+        council["authority_decision"]["allowed"] = False
+        council["ai_council"]["effect"] = "deny"
+        contract = self._contract(council=council)
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["autonomous_authority_council_operational"])
+        self.assertFalse(contract["layers"]["authorization"]["integrated"])
+
+    def test_council_cannot_override_hard_deny(self):
+        council = self._council()
+        council["invariants"]["hard_deny_override"] = True
+        contract = self._contract(council=council)
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["autonomous_authority_council_operational"])
+
+    def test_deployment_must_use_exact_owner_root(self):
+        deployment = self._deployment()
+        deployment["target_host"] = "unrelated.example"
+        contract = self._contract(deployment=deployment)
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["owner_authorized_external_deployment_operational"])
+        self.assertFalse(contract["layers"]["execution"]["integrated"])
 
 
 if __name__ == "__main__":
