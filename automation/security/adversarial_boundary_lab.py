@@ -15,6 +15,7 @@ import argparse
 import hashlib
 import json
 import math
+import os
 import random
 import re
 from dataclasses import dataclass, asdict
@@ -22,7 +23,9 @@ from pathlib import Path
 from typing import Any, Iterable
 
 SCHEMA = "the-world-adversarial-boundary-lab/v1"
-MAX_CORPUS = 96
+# Default remains 96. A separately approved balance-policy workflow may raise
+# only this research corpus ceiling; it still cannot make scenarios executable.
+MAX_CORPUS = max(8, min(256, int(os.environ.get("ADVERSARIAL_LAB_MAX_CORPUS", "96"))))
 MAX_CHILDREN_PER_PARENT = 4
 TOKENISH = re.compile(
     r"(?i)(github_pat_[a-z0-9_]{10,}|gh[pousr]_[a-z0-9_]{10,}|sk-[a-z0-9_-]{12,}|"
