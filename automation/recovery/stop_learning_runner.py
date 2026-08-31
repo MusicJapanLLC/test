@@ -20,6 +20,8 @@ WORKFLOWS = (
     "autonomous-codegen.yml",
     "autonomous-engine.yml",
     "meta-four-pillar-production-loop.yml",
+    "owned-self-recovery-worker.yml",
+    "meta-production-stop-learning.yml",
 )
 
 
@@ -126,7 +128,7 @@ def main() -> int:
     observations = _recent_observations(repo, token, seen)
     controls = _load(CONTROL_FILE, {})
     state = update_learning_state(previous, observations, controls)
-    state["seen_run_ids"] = list((seen | {int(row["run_id"]) for row in observations if row.get("run_id")}) )[-500:]
+    state["seen_run_ids"] = list((seen | {int(row["run_id"]) for row in observations if row.get("run_id")}))[-500:]
     state["observations_processed"] = len(observations)
     state["workflows"] = list(WORKFLOWS)
 
@@ -154,6 +156,7 @@ def main() -> int:
         "failure_score": state["failure_score"],
         "reward_score": state["reward_score"],
         "active_controls": state["active_controls"],
+        "pending_failures": list(state.get("pending_failures", {})),
     }, ensure_ascii=False))
     return 0
 
