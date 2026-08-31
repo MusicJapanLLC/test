@@ -3,12 +3,14 @@
 A live trust chain can authorize useful autonomous work instead of being advisory
 metadata. The default autonomy bundle is intentionally broad across repository work,
 GitHub coordination, CI, dependency maintenance, release drafting, observability,
-artifacts, and preview/staging operations.
+artifacts, authority-evidence work, continuous-improvement coordination, and
+preview/staging operations.
 
-Trust alone still does not mint credentials, arbitrary private-network authority,
-production deployment, PR approval/merge, workflow mutation/dispatch, unrestricted
-shell, security-boundary authority, destructive deletion, or published releases.
-Those require a separate authority source.
+Trust alone still does not mint credentials, create new authority roots, override hard
+denials, grant arbitrary private-network authority, perform production deployment,
+approve/merge PRs, mutate workflows, expose unrestricted shell, change security
+boundaries, destructively delete, or publish releases. Those require a separate authority
+source.
 """
 from __future__ import annotations
 
@@ -60,11 +62,23 @@ STANDARD_AUTONOMOUS_CAPABILITIES = frozenset(
         "logs.read.nonsecret",
         "deployment.preview",
         "deployment.staging",
+        "authority.candidate.read",
+        "authority.evidence.collect",
+        "authority.evidence.compare",
+        "authority.review.request",
+        "authority.opportunity.prioritize",
+        "authority.recheck",
+        "knowledge.share",
+        "improvement.feedback.consume",
+        "improvement.task.create",
+        "improvement.task.prioritize",
+        "transport.experiment.authorized",
+        "discovery.followup.authorized",
     }
 )
 
 # Even wildcard trust is not enough to acquire these from this module. They cross
-# security, credential, destructive, publication, or production boundaries.
+# authority-root, security, credential, destructive, publication, or production boundaries.
 PRIVILEGED_CAPABILITIES = frozenset(
     {
         "github.pr.approve",
@@ -86,6 +100,8 @@ PRIVILEGED_CAPABILITIES = frozenset(
         "repo.security_boundary.write",
         "authority.mint",
         "authority.expand",
+        "authority.root.promote",
+        "hard_deny.override",
     }
 )
 
