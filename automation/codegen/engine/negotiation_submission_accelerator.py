@@ -13,8 +13,10 @@ Submission policy:
   moving without turning one denial into a tight-loop bypass attempt;
 - HARD_DENY/revocation/terminal-stop candidates are never re-submitted.
 
-The output is an internal approval outbox and collaboration feed only. ``authority_effect``
-remains ``none`` until the existing authority machinery independently approves a change.
+The accelerator writes both a durable outbox and the pre-existing
+``owner_root_authority_review_packets.json`` surface so submissions enter the current
+review machinery rather than a disconnected side queue. ``authority_effect`` remains
+``none`` until the existing authority machinery independently approves a change.
 """
 from __future__ import annotations
 
@@ -26,12 +28,14 @@ from typing import Any, Mapping
 
 SCHEMA = "the-world-negotiation-submission-accelerator/v1"
 OUTBOX_SCHEMA = "the-world-root-authority-approval-outbox/v1"
+REVIEW_SCHEMA = "the-world-owner-root-authority-review-packets/v2"
 LEDGER_SCHEMA = "the-world-root-authority-submission-ledger/v1"
 PEER_FEED_SCHEMA = "the-world-root-negotiation-peer-feed/v1"
 APPROVERS = ("META", "X", "SENJU")
 COLLABORATORS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 RESUBMIT_COOLDOWN_SECONDS = 30 * 60
 MAX_OUTBOX = 2048
+MAX_REVIEW_PACKETS = 2048
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -74,6 +78,29 @@ def _submission_reason(previous: Mapping[str, Any] | None, fingerprint: str, now
     return None
 
 
+def _review_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        "packet_id": str(packet.get("submission_id") or ""),
+        "submission_id": str(packet.get("submission_id") or ""),
+        "host": packet.get("host"),
+        "candidate_id": packet.get("candidate_id"),
+        "attempt_count": packet.get("attempt_count"),
+        "submitted_at": packet.get("submitted_at"),
+        "submission_reason": packet.get("submission_reason"),
+        "agents": list(COLLABORATORS),
+        "required_approvers": list(APPROVERS),
+        "readiness_score": packet.get("readiness_score"),
+        "owner_proof_type": packet.get("owner_proof_type"),
+        "owner_proof_ref": packet.get("owner_proof_ref"),
+        "requested_decision": "approve_or_reject_new_host_root_authority",
+        "approval_flow": "META_X_SENJU_existing_authority_review",
+        "authority_effect": "none",
+        "requires_independent_owner_basis": True,
+        "may_self_mint_root": False,
+        "may_bypass_terminal_stop": False,
+    }
+
+
 def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None) -> dict[str, Any]:
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
@@ -96,6 +123,17 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         for packet in old_packets:
             if isinstance(packet, Mapping) and packet.get("submission_id"):
                 by_id[str(packet["submission_id"])] = dict(packet)
+
+    old_review = _load(state / "owner_root_authority_review_packets.json", {})
+    old_review_packets = old_review.get("packets", ()) if isinstance(old_review, Mapping) else ()
+    review_by_id: dict[str, dict[str, Any]] = {}
+    if isinstance(old_review_packets, list):
+        for packet in old_review_packets:
+            if not isinstance(packet, Mapping):
+                continue
+            packet_id = str(packet.get("packet_id") or packet.get("submission_id") or "").strip()
+            if packet_id:
+                review_by_id[packet_id] = dict(packet)
 
     submitted: list[dict[str, Any]] = []
     peer_tasks: list[dict[str, Any]] = []
@@ -141,6 +179,8 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
                 "may_bypass_terminal_stop": False,
             }
             by_id[packet["submission_id"]] = packet
+            review = _review_packet(packet)
+            review_by_id[review["packet_id"]] = review
             submitted.append(packet)
             previous = ledger.get(host, {}) if isinstance(ledger.get(host), Mapping) else {}
             ledger[host] = {
@@ -166,6 +206,11 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
             })
 
     packets = sorted(by_id.values(), key=lambda row: int(row.get("submitted_at", 0) or 0), reverse=True)[:MAX_OUTBOX]
+    review_packets = sorted(
+        review_by_id.values(),
+        key=lambda row: int(row.get("submitted_at", 0) or 0),
+        reverse=True,
+    )[:MAX_REVIEW_PACKETS]
     _write(state / "root_authority_approval_outbox.json", {
         "schema": OUTBOX_SCHEMA,
         "generated_at": current,
@@ -173,6 +218,16 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         "packet_count": len(packets),
         "new_submissions_this_cycle": len(submitted),
         "packets": packets,
+        "authority_effect": "none",
+    })
+    _write(state / "owner_root_authority_review_packets.json", {
+        "schema": REVIEW_SCHEMA,
+        "generated_at": current,
+        "submission_accelerator_enabled": True,
+        "required_approvers": list(APPROVERS),
+        "packet_count": len(review_packets),
+        "new_submissions_this_cycle": len(submitted),
+        "packets": review_packets,
         "authority_effect": "none",
     })
     _write(state / "negotiation_submission_ledger.json", {
@@ -197,6 +252,7 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         "production": True,
         "active_candidate_count": sum(1 for row in candidates if isinstance(row, Mapping) and not row.get("terminal_stop")),
         "approval_flow_submission_count": len(submitted),
+        "existing_review_flow_packet_count": len(review_packets),
         "cooldown_skipped_count": skipped_cooldown,
         "terminal_skipped_count": terminal_skipped,
         "peer_share_task_count": len(peer_tasks),
@@ -206,6 +262,7 @@ def run_submission_accelerator(state_dir: str | Path, *, now: int | None = None)
         "approval_submission_is_goal": True,
         "fresh_evidence_resubmits_immediately": True,
         "unchanged_candidate_periodic_resubmission": True,
+        "writes_existing_review_surface": True,
         "authority_effect": "none",
         "authority_activated": False,
         "terminal_stop_bypass": False,
