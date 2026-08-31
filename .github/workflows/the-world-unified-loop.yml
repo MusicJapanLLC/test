@@ -150,6 +150,7 @@ jobs:
           name: the-world-unified-loop-${{ github.run_id }}
           path: .the-world-runtime/
           if-no-files-found: error
+          include-hidden-files: true
           retention-days: 30
 
       - name: Production summary
