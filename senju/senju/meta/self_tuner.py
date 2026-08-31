@@ -18,6 +18,7 @@ from senju.meta.policy_workspace import (
     EDITABLE_POLICY_DOMAINS,
     PRODUCTION_CANARY_DOMAINS,
     edit_policy_workspace,
+    resolve_policy_for_scope,
 )
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -143,6 +144,22 @@ def edit_governance_policy(
         "workspace": target_workspace,
         "result": dataclasses.asdict(result),
     }
+
+
+def resolve_governance_policy(
+    workspace: Mapping[str, Any],
+    domain: str,
+    *,
+    environment: str,
+    canary_scope: str | None = None,
+) -> dict[str, Any]:
+    """Return the effective policy for a runtime/canary scope."""
+    return resolve_policy_for_scope(
+        workspace,
+        domain,
+        environment=environment,
+        canary_scope=canary_scope,
+    )
 
 
 def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
