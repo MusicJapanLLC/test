@@ -1,0 +1,73 @@
+name: TOMOKI - MANAGER Heartbeat Watchdog
+
+# Independent bounded recovery lane for recurrence-3+ Manager schedule misses.
+# This workflow only refreshes the canonical Manager heartbeat; it never claims,
+# reviews, completes, or mutates P100 tasks.
+on:
+  schedule:
+    - cron: '4-59/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/tomoki-manager-watchdog.yml'
+      - 'automation/control_plane/manager_queue.py'
+
+concurrency:
+  group: tomoki-manager-heartbeat-watchdog
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  heartbeat-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Refresh canonical Manager heartbeat only
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports/control-plane
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from automation.control_plane.manager_queue import edge
+
+          result = edge({'action': 'heartbeat'})
+          evidence = {
+              'schema': 'tomoki-manager-heartbeat-watchdog/v1',
+              'runtime_id': result.get('runtime_id'),
+              'heartbeat_only': True,
+              'task_claim_attempted': False,
+              'task_mutation_attempted': False,
+          }
+          Path('reports/control-plane/manager-heartbeat-watchdog.json').write_text(
+              json.dumps(evidence, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          if evidence['runtime_id'] != 'github:tomoki-manager':
+              raise SystemExit(f"unexpected runtime_id: {evidence['runtime_id']!r}")
+          print(json.dumps(evidence, ensure_ascii=False))
+          PY
+
+      - name: Preserve watchdog evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tomoki-manager-heartbeat-watchdog-${{ github.run_id }}
+          path: reports/control-plane/manager-heartbeat-watchdog.json
+          retention-days: 30
+          if-no-files-found: error
