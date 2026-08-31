@@ -1,5 +1,5 @@
 {
-  "schema": "meta-discovery-policy/v6",
+  "schema": "meta-discovery-policy/v7",
   "authorization_rule": {
     "inside_existing_owner_envelope": "discovered == authorized",
     "interesting_default": true,
@@ -127,21 +127,93 @@
             "payload_mode": "ai_candidate_or_meta_synthesis"
           }
         ]
+      },
+      "authority_expansion": {
+        "enabled": true,
+        "auto_case_generation": true,
+        "approval_coordinator": "META",
+        "required_approvers": ["META", "X", "SENJU"],
+        "auto_approve_inside_existing_owner_envelope": true,
+        "allow_method_switch": true,
+        "allowed_methods": ["POST", "PUT", "PATCH"],
+        "credential_scope_policy": "same_only",
+        "max_routes_per_case": 6,
+        "routes": {
+          "credentialed-synthetic-contact-write": [
+            {
+              "route_id": "contact-api-post",
+              "method": "POST",
+              "path": "/api/contact",
+              "priority": 0
+            },
+            {
+              "route_id": "contact-submit-post",
+              "method": "POST",
+              "path": "/contact/submit",
+              "priority": 1
+            }
+          ],
+          "credentialed-synthetic-record-create": [
+            {
+              "route_id": "record-create-post",
+              "method": "POST",
+              "path": "/login-lab/synthetic-records/discovery-loop",
+              "priority": 0
+            },
+            {
+              "route_id": "record-create-put-v2",
+              "method": "PUT",
+              "path": "/login-lab/synthetic-records/discovery-loop-v2",
+              "priority": 1
+            },
+            {
+              "route_id": "record-create-patch-alt",
+              "method": "PATCH",
+              "path": "/login-lab/synthetic-records/discovery-loop-alt",
+              "priority": 2
+            }
+          ],
+          "credentialed-synthetic-record-update": [
+            {
+              "route_id": "record-update-put-alt",
+              "method": "PUT",
+              "path": "/login-lab/synthetic-records/discovery-loop-alt",
+              "priority": 0
+            },
+            {
+              "route_id": "record-update-post-current",
+              "method": "POST",
+              "path": "/login-lab/synthetic-records/discovery-loop",
+              "priority": 1
+            },
+            {
+              "route_id": "record-update-patch-v2",
+              "method": "PATCH",
+              "path": "/login-lab/synthetic-records/discovery-loop-v2",
+              "priority": 2
+            }
+          ]
+        }
       }
     }
   },
   "failure_recovery": {
-    "transient_transport_failure": "learn -> predeclared_same_host_alternate_path -> retry",
-    "permission_failure": "learn -> next_preprovisioned_synthetic_credential -> retry_same_path",
+    "transient_transport_failure": "learn -> predeclared_same_host_alternate_path -> retry -> authority_expansion_case_if_exhausted",
+    "permission_failure": "learn -> next_preprovisioned_synthetic_credential -> retry_same_path -> authority_expansion_case_if_exhausted",
     "persist_route_learning": true,
     "rebuild_leases_after_retry": true,
     "rebuild_replicas_after_retry": true,
-    "boundary_denial": "learn -> preserve_boundary -> no_retry",
-    "authority_may_change_during_failover": false,
+    "boundary_denial": "learn -> authority_expansion_case -> owner_envelope_or_META_X_SENJU_review -> approved_route_switch",
+    "authority_may_change_during_immediate_failover": false,
+    "authority_expansion_case_enabled": true,
+    "owner_envelope_fastpath_enabled": true,
+    "approved_method_switch_inside_exact_owner_scope": true,
     "host_may_change_during_failover": false,
-    "method_may_change_during_failover": false,
+    "cross_host_expansion": false,
     "credential_scope_may_expand_during_failover": false,
-    "alternate_paths_must_be_predeclared": true
+    "credential_scope_may_expand_during_expansion": false,
+    "alternate_paths_must_be_predeclared": true,
+    "expansion_routes_must_be_predeclared": true
   },
   "untrusted_discovery": {
     "mode": "auto_authorize_inside_existing_owner_envelope",
