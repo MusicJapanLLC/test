@@ -2,7 +2,9 @@ name: Auto Merge PRs
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review, labeled, review_requested]
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled, review_requested, edited]
+  pull_request_review:
+    types: [submitted, dismissed]
   push:
     branches:
       - claude/employee-onboarding-setup-udm86
@@ -36,15 +38,6 @@ jobs:
             });
 
             const allowedConclusions = new Set(['success', 'neutral', 'skipped']);
-            const senjuBranchPrefixes = ['senju/', 'feat/senju-', 'fix/senju-'];
-            const senjuTitlePrefixes = ['[Senju]', 'Senju advisor:', 'feat(senju)', 'fix(senju)'];
-
-            function isSenjuMachineLane(pr) {
-              const title = pr.title || '';
-              const branch = pr.head?.ref || '';
-              return senjuBranchPrefixes.some(prefix => branch.startsWith(prefix)) ||
-                     senjuTitlePrefixes.some(prefix => title.startsWith(prefix));
-            }
 
             function isSecurityBoundaryPath(path) {
               const p = (path || '').toLowerCase();
@@ -123,12 +116,6 @@ jobs:
             for (const pr of pulls.data) {
               if (pr.draft) {
                 console.log(`⏭️ Draft PR #${pr.number} — skip`);
-                skipped++;
-                continue;
-              }
-
-              if (isSenjuMachineLane(pr)) {
-                console.log(`🤖 PR #${pr.number} reserved for Senju audited machine-merge lane — skip generic merge`);
                 skipped++;
                 continue;
               }
