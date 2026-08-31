@@ -47,6 +47,22 @@ def test_production_owner_root_is_seeded_and_predelegates_write_mutation() -> No
     assert all(row["required_scopes"] == ["synthetic:write"] for row in actions)
     assert all(row["alternate_paths"] for row in actions)
 
+    expansion = profile["authority_expansion"]
+    assert expansion["enabled"] is True
+    assert expansion["auto_case_generation"] is True
+    assert expansion["approval_coordinator"] == "META"
+    assert set(expansion["required_approvers"]) == {"META", "X", "SENJU"}
+    assert expansion["auto_approve_inside_existing_owner_envelope"] is True
+    assert expansion["allow_method_switch"] is True
+    assert set(expansion["allowed_methods"]) == {"POST", "PUT", "PATCH"}
+    assert expansion["credential_scope_policy"] == "same_only"
+    assert expansion["max_routes_per_case"] == 6
+    assert set(expansion["routes"]) == {
+        "credentialed-synthetic-contact-write",
+        "credentialed-synthetic-record-create",
+        "credentialed-synthetic-record-update",
+    }
+
     assert seed["interesting"] is True
     assert seed["url"] == f"https://{host}/"
     assert set(seed["shared_with"]) == {"META", "X", "SENJU", "CHILD", "AI"}
@@ -77,8 +93,13 @@ def test_production_policy_keeps_unknown_external_hosts_outside_authority() -> N
     assert discovery["credential_scope"] == "none"
 
     recovery = policy["failure_recovery"]
-    assert recovery["authority_may_change_during_failover"] is False
+    assert recovery["authority_may_change_during_immediate_failover"] is False
+    assert recovery["authority_expansion_case_enabled"] is True
+    assert recovery["owner_envelope_fastpath_enabled"] is True
+    assert recovery["approved_method_switch_inside_exact_owner_scope"] is True
     assert recovery["host_may_change_during_failover"] is False
-    assert recovery["method_may_change_during_failover"] is False
+    assert recovery["cross_host_expansion"] is False
     assert recovery["credential_scope_may_expand_during_failover"] is False
+    assert recovery["credential_scope_may_expand_during_expansion"] is False
     assert recovery["alternate_paths_must_be_predeclared"] is True
+    assert recovery["expansion_routes_must_be_predeclared"] is True
