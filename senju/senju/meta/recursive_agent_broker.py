@@ -1,9 +1,9 @@
 """Brokered recursive descendant requests for META and X.
 
-Descendant lineages may express very large replication plans without copying raw
-credentials or turning the requested population into simultaneous live agents.
-The queue accepts up to one million requested descendants per lineage request;
-materialization still passes through a bounded live-agent broker. Every activated
+Descendant lineages may express arbitrarily deep and arbitrarily large logical
+replication plans without copying raw credentials or turning the requested population
+into simultaneous live agents. Large counts stay compressed as integer continuation
+state; materialization still passes through the live-agent broker. Every activated
 descendant receives a fresh revocable grant whose scopes are equal to or narrower
 than its parent.
 """
@@ -16,8 +16,9 @@ from typing import Iterable, Sequence
 from senju.meta.agent_factory import AgentSpec, DelegatedGrant, ROOT_SYSTEMS
 
 MAX_ACTIVE_AGENTS = 50
-MAX_GENERATION = 4
-MAX_QUEUED_DESCENDANTS = 1_000_000
+# Compatibility-visible policy values: None means there is no fixed logical ceiling.
+MAX_GENERATION: int | None = None
+MAX_QUEUED_DESCENDANTS: int | None = None
 
 
 @dataclasses.dataclass(frozen=True)
@@ -28,7 +29,7 @@ class SpawnRequest:
     parent_scopes: tuple[str, ...]
     requested_scopes: tuple[str, ...]
     desired_count: int
-    queue_limit: int = MAX_QUEUED_DESCENDANTS
+    queue_limit: int | None = MAX_QUEUED_DESCENDANTS
 
 
 @dataclasses.dataclass(frozen=True)
@@ -36,7 +37,7 @@ class BrokerResult:
     materialized: tuple[AgentSpec, ...]
     deferred_count: int
     active_limit: int
-    queue_limit: int
+    queue_limit: int | None
     next_generation: int
 
 
@@ -56,11 +57,10 @@ def request_descendants(
     desired_count: int,
     requested_scopes: Sequence[str] | None = None,
 ) -> SpawnRequest:
-    """Create a brokered recursive spawn request.
+    """Create a recursive spawn request with no fixed logical depth/count ceiling.
 
-    A lineage may request up to ``MAX_QUEUED_DESCENDANTS`` descendants in one
-    logical plan. This is a queue/planning capacity, not a simultaneous live-agent
-    allowance. Activation remains brokered and bounded separately.
+    ``desired_count`` is stored as compressed continuation state rather than eagerly
+    allocating that many agents. Actual live activation remains brokered separately.
     """
     normalized_system = system.strip().upper()
     if normalized_system not in ROOT_SYSTEMS:
@@ -69,14 +69,8 @@ def request_descendants(
         raise ValueError("parent_id is required")
     if parent_generation < 1:
         raise ValueError("recursive requests must come from a descendant generation")
-    if parent_generation >= MAX_GENERATION:
-        raise PermissionError("maximum recursive generation reached")
     if desired_count < 1:
         raise ValueError("desired_count must be positive")
-    if desired_count > MAX_QUEUED_DESCENDANTS:
-        raise ValueError(
-            f"desired_count may not exceed queued descendant capacity {MAX_QUEUED_DESCENDANTS}"
-        )
 
     parent = _normalize_scopes(parent_scopes)
     requested = _normalize_scopes(requested_scopes if requested_scopes is not None else parent)
@@ -86,7 +80,7 @@ def request_descendants(
     return SpawnRequest(
         system=normalized_system,
         parent_id=parent_id.strip(),
-        parent_generation=parent_generation,
+        parent_generation=int(parent_generation),
         parent_scopes=parent,
         requested_scopes=requested,
         desired_count=int(desired_count),
@@ -113,7 +107,11 @@ def materialize_spawn_request(
     active_limit: int = MAX_ACTIVE_AGENTS,
     start_index: int = 1,
 ) -> BrokerResult:
-    """Materialize part of a large queued request within the live-agent budget."""
+    """Materialize the next slice of a recursive request within live capacity.
+
+    Any remainder stays as a compressed count and can be fed back into the next
+    closed-loop cycle. There is no fixed recursive generation limit.
+    """
     if active_agents < 0:
         raise ValueError("active_agents cannot be negative")
     if active_limit < 1:
@@ -122,9 +120,6 @@ def materialize_spawn_request(
         raise ValueError("start_index must be positive")
 
     next_generation = request.parent_generation + 1
-    if next_generation > MAX_GENERATION:
-        raise PermissionError("maximum recursive generation reached")
-
     available = max(0, active_limit - active_agents)
     materialize_count = min(request.desired_count, available)
     agents: list[AgentSpec] = []
@@ -139,7 +134,7 @@ def materialize_spawn_request(
                 parent_id=request.parent_id,
                 generation=next_generation,
                 grant=_grant_for(request, agent_id),
-                may_spawn_children=next_generation < MAX_GENERATION,
+                may_spawn_children=True,
                 status="provisioned",
             )
         )
