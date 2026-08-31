@@ -1,0 +1,5 @@
+SYNTHETIC ARCHIVE ONLY
+owner=Aster Forge Labs
+classification=TEST_ONLY
+flag=FLAG{ORBIT_ARCHIVE_FOUND}
+No credentials. No personal data. No external systems.
