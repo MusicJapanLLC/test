@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: "23 * * * *"
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - META Production Stop Learning
-    types:
-      - completed
 
 permissions:
   contents: read
