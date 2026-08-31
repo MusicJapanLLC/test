@@ -76,6 +76,14 @@ jobs:
               return false;
             }
 
+            function isMergeControlCheck(name) {
+              const n = String(name || '').toLowerCase();
+              return n.includes('auto-merge') ||
+                     n.includes('audited-machine-merge') ||
+                     n.includes('audit-router') ||
+                     n.includes('openhands audit router');
+            }
+
             let merged = 0;
             let skipped = 0;
 
@@ -116,12 +124,18 @@ jobs:
               const checks = await github.rest.checks.listForRef({
                 owner, repo, ref: pr.head.sha, per_page: 100
               });
-              const runs = checks.data.check_runs;
+              const runs = checks.data.check_runs.filter(r => !isMergeControlCheck(r.name));
               const failed = runs.filter(r =>
                 r.status === 'completed' && !allowedConclusions.has(r.conclusion)
               );
+              const pending = runs.filter(r => r.status !== 'completed');
               if (failed.length > 0) {
                 console.log(`❌ PR #${pr.number} has ${failed.length} failing check(s) — skip`);
+                skipped++;
+                continue;
+              }
+              if (pending.length > 0) {
+                console.log(`⏳ PR #${pr.number} has ${pending.length} pending check(s) — wait`);
                 skipped++;
                 continue;
               }
