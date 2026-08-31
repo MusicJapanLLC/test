@@ -42,8 +42,9 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
             statement=(
                 f"Guard '{guard}' should be treated as a learning target: characterize its "
                 f"decision consistency, block rate ({profile.block_rate:.2f}), regression rate "
-                f"({profile.regression_rate:.2f}), and decision drift ({profile.decision_drift:.2f}) "
-                "using existing evidence and bounded replay of known cases."
+                f"({profile.regression_rate:.2f}), rejection rate ({profile.rejection_rate:.2f}), "
+                f"and decision drift ({profile.decision_drift:.2f}) using existing evidence and "
+                "bounded replay of known cases."
             ),
             surfaces=[guard],
             predicted_outcome="guard_behavior_characterized",
@@ -58,6 +59,7 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
                     "decision_consistency",
                     "block_rate",
                     "regression_rate",
+                    "rejection_rate",
                     "decision_drift",
                 ],
                 "policy_mutation": False,
@@ -65,6 +67,43 @@ def generate(graph: KnowledgeGraph, max_hypotheses: int = 5) -> list[Hypothesis]
         ))
         if len(hypotheses) >= max_hypotheses:
             return hypotheses[:max_hypotheses]
+
+        # A rejection is not just folded into "blocked" anymore. Once observed,
+        # META creates a dedicated hypothesis so the rejection boundary itself is
+        # characterized as a first-class target. The experiment remains
+        # observational/bounded and explicitly excludes safeguard bypass.
+        if profile.rejection_count > 0:
+            hypotheses.append(Hypothesis(
+                hypothesis_id=_hid(f"rejection-boundary:{guard}"),
+                statement=(
+                    f"Rejections from guard '{guard}' are a first-class META learning target. "
+                    f"Characterize the rejection boundary from {profile.rejection_count} observed "
+                    f"rejection(s), rejection rate {profile.rejection_rate:.2f}, and known reason "
+                    "distribution, then check whether the boundary is stable under bounded replay "
+                    "of already-known cases."
+                ),
+                surfaces=[guard],
+                predicted_outcome="rejection_boundary_characterized",
+                confidence=min(0.95, 0.50 + min(profile.rejection_count, 8) * 0.05),
+                evidence_count=profile.rejection_count,
+                category="rejection_boundary_learning",
+                parameters={
+                    "learning_target": "rejection_decision_boundary",
+                    "guard": guard,
+                    "evaluation_mode": "observe_and_replay_known_rejections",
+                    "learning_dimensions": [
+                        "rejection_rate",
+                        "rejection_reason_distribution",
+                        "decision_consistency",
+                        "decision_drift",
+                    ],
+                    "known_rejection_reasons": profile.rejection_reasons,
+                    "policy_mutation": False,
+                    "bypass_attempt": False,
+                },
+            ))
+            if len(hypotheses) >= max_hypotheses:
+                return hypotheses[:max_hypotheses]
 
     for surface, score in list(graph.surface_weakness_scores.items())[:3]:
         if score <= 0:
