@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  actions: read
 
 concurrency:
   group: shared-discovery-authority-cycle
@@ -19,10 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
+          fetch-depth: 1
           persist-credentials: false
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
         with:
           python-version: '3.12'
 
@@ -43,46 +44,19 @@ jobs:
           print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
           PY
 
-      - name: Persist shared discovery state through GitHub API
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+      - name: Preserve shared discovery state and probe receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const repoInfo = await github.rest.repos.get({ owner, repo });
-            const branch = repoInfo.data.default_branch;
-            const files = [
-              'automation/codegen/meta_state/discovered_urls.json',
-              'automation/codegen/meta_state/discovery_candidates.json',
-              'automation/codegen/meta_state/discovery_authorized.json',
-              'automation/codegen/meta_state/discovery_authorization_requests.json',
-              'automation/codegen/meta_state/discovery_authority_apply_queue.json',
-              'automation/codegen/meta_state/human_intent_decisions.json',
-              'automation/codegen/meta_state/shared_discovery_knowledge.json',
-              'automation/codegen/meta_state/discovery_action_queue.json',
-              'automation/codegen/meta_state/shared_probe_receipts.json'
-            ];
-            for (const path of files) {
-              if (!fs.existsSync(path)) continue;
-              const content = Buffer.from(fs.readFileSync(path)).toString('base64');
-              let sha;
-              try {
-                const current = await github.rest.repos.getContent({ owner, repo, path, ref: branch });
-                if (!Array.isArray(current.data)) sha = current.data.sha;
-              } catch (error) {
-                if (error.status !== 404) throw error;
-              }
-              const request = {
-                owner,
-                repo,
-                path,
-                message: 'chore(discovery): refresh shared authority state [skip ci]',
-                content,
-                branch
-              };
-              if (sha) request.sha = sha;
-              await github.rest.repos.createOrUpdateFileContents(request);
-              console.log(`Persisted ${path}`);
-            }
+          name: shared-discovery-authority-state
+          path: |
+            automation/codegen/meta_state/discovered_urls.json
+            automation/codegen/meta_state/discovery_candidates.json
+            automation/codegen/meta_state/discovery_authorized.json
+            automation/codegen/meta_state/discovery_authorization_requests.json
+            automation/codegen/meta_state/discovery_authority_apply_queue.json
+            automation/codegen/meta_state/human_intent_decisions.json
+            automation/codegen/meta_state/shared_discovery_knowledge.json
+            automation/codegen/meta_state/discovery_action_queue.json
+            automation/codegen/meta_state/shared_probe_receipts.json
+          if-no-files-found: warn
+          retention-days: 30
