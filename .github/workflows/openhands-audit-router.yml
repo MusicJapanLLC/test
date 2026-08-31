@@ -7,14 +7,14 @@ on:
 permissions:
   contents: read
   issues: write
-  pull-requests: write
+  pull-requests: read
 
 jobs:
   audit-router:
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
-      - name: Request OpenHands Audit
+      - name: Request independent OpenHands audit
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -22,44 +22,67 @@ jobs:
             const pr = context.payload.pull_request;
             const headSha = pr.head.sha;
             const prNumber = pr.number;
+            const { owner, repo } = context.repo;
 
-            // Fetch existing comments on PR
-            const comments = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              per_page: 100
-            });
+            function isSecurityBoundaryPath(filename) {
+              const p = String(filename || '').replace(/\\/g, '/');
+              const lower = p.toLowerCase();
+              const base = lower.split('/').pop() || '';
 
-            // Check if @openhands audit was already requested for this head SHA
-            const alreadyRequested = comments.data.some(c =>
-              c.body.includes('@openhands') && c.body.includes(headSha)
+              if (base === 'safety.py' || base === 'external.py') return true;
+              if (base === 'authorized_test_targets.json') return true;
+              if (lower.startsWith('.github/workflows/')) return true;
+              if (lower === '.github/codeowners') return true;
+              if (lower.includes('/security/') || lower.startsWith('automation/security/')) return true;
+              if (lower.includes('guard')) return true;
+              if (lower.includes('credential')) return true;
+              if (lower.includes('scope') && lower.includes('policy')) return true;
+              if (lower.includes('permission') && lower.includes('policy')) return true;
+              if (lower.includes('auto-merge') || lower.includes('automerge')) return true;
+              if (lower.includes('audit') && lower.includes('workflow')) return true;
+              return false;
+            }
+
+            const files = await github.paginate(
+              github.rest.pulls.listFiles,
+              { owner, repo, pull_number: prNumber, per_page: 100 }
+            );
+            const boundaryFiles = files.filter(f => isSecurityBoundaryPath(f.filename));
+            const securityBoundary = boundaryFiles.length > 0;
+
+            const comments = await github.paginate(
+              github.rest.issues.listComments,
+              { owner, repo, issue_number: prNumber, per_page: 100 }
             );
 
+            const requestKey = `OPENHANDS_AUDIT_REQUEST ${headSha}`;
+            const alreadyRequested = comments.some(c => (c.body || '').includes(requestKey));
             if (alreadyRequested) {
-              console.log(`Audit request already sent for PR #${prNumber} at head SHA ${headSha}`);
+              console.log(`Audit request already sent for PR #${prNumber} at ${headSha}`);
               return;
             }
 
+            const boundarySection = securityBoundary
+              ? `\n\n### Security Boundary review — REQUIRED\nThis PR changes privileged/security boundary files:\n${boundaryFiles.map(f => `- ${f.filename}`).join('\n')}\n\nAudit these changes as control-plane changes, not ordinary application code. Verify that they do not create a self-approval path, weaken guard/scope/credential controls, silently broaden target authority, expose credentials, increase GitHub permissions without necessity, or let the PR author forge its own audit/merge approval. Check least privilege, fail-closed behavior, exact-head binding, and rollback/revocation behavior.\n\nFor a PASS, include BOTH exact plain-text lines:\nAI_MERGE_AUDIT: PASS ${headSha}\nSECURITY_BOUNDARY_AUDIT: PASS ${headSha}\n\nFor a BLOCK, include BOTH exact plain-text lines:\nAI_MERGE_AUDIT: BLOCK ${headSha}\nSECURITY_BOUNDARY_AUDIT: BLOCK ${headSha}`
+              : `\n\nFor a PASS, include this exact plain-text line:\nAI_MERGE_AUDIT: PASS ${headSha}\n\nFor a BLOCK, include this exact plain-text line:\nAI_MERGE_AUDIT: BLOCK ${headSha}`;
+
             const commentBody = `@openhands Please perform an independent merge-readiness audit for PR #${prNumber}.
 
-            - **PR Head SHA**: \`${headSha}\`
-            - **Base Branch**: \`${pr.base.ref}\`
-            - **Head Branch**: \`${pr.head.ref}\`
+OPENHANDS_AUDIT_REQUEST ${headSha}
 
-            ### Audit Instructions:
-            Please inspect the diff, CI/test evidence, security/reliability regressions, duplicated architecture, workflow conflicts, and base-branch drift.
+- **PR Head SHA**: \`${headSha}\`
+- **Base Branch**: \`${pr.base.ref}\`
+- **Head Branch**: \`${pr.head.ref}\`
+- **Security Boundary change**: ${securityBoundary ? 'YES' : 'NO'}
 
-            Your final response MUST contain exactly one machine-readable verdict tied to this head SHA:
-            \`AI_MERGE_AUDIT: PASS ${headSha}\`
-            or
-            \`AI_MERGE_AUDIT: BLOCK ${headSha}\``;
+### General Audit Instructions
+Inspect the exact current diff, CI/test evidence, security/reliability regressions, duplicated architecture, workflow conflicts, and base-branch drift. Bind the verdict to the exact head SHA. Do not treat this request comment itself as an approval.${boundarySection}`;
 
             await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
+              owner,
+              repo,
               issue_number: prNumber,
               body: commentBody
             });
 
-            console.log(`Created OpenHands audit request for PR #${prNumber} (head SHA ${headSha})`);
+            console.log(`Created ${securityBoundary ? 'security-boundary ' : ''}audit request for PR #${prNumber} (${headSha})`);
