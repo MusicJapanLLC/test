@@ -1,16 +1,18 @@
-"""Bounded META discovery authorization.
+"""Production META discovery authorization with bounded authority inheritance.
 
-META may discover URLs, links, or hostnames during normal operation. This module gives
-those discoveries a safe, auditable path to temporary authorization without allowing
-arbitrary third-party hosts to self-escalate into scope.
+META may discover URLs, links, or hostnames during normal operation. Discoveries can
+receive real, temporary execution authority when that authority can be inherited from
+an already explicit owner-controlled source:
 
-Promotion rules:
-- HTTPS only; no credentials in URL; default port only.
-- Host must be the configured trusted root or a subdomain of it.
-- Trusted roots come from META_DISCOVERY_TRUST_ROOTS or meta_state/discovery_policy.json.
-- Promotions are probationary, read-only (GET/HEAD), credential-free, and expire.
-- Untrusted discoveries are retained as candidates; they are never auto-authorized.
-- Every candidate also receives a strong human-intent inference score for prioritization.
+- configured discovery trust roots authorize the root and its subdomains;
+- active standing authorizations authorize their exact hosts without another prompt;
+- exact links supplied by the owner authorize that exact host for read-only discovery;
+- every other discovery is retained and automatically turned into an authorization
+  request candidate, with owner-intent inference attached for prioritization.
+
+Discovery by itself never creates a brand-new external trust root. This keeps the
+production control plane useful while preventing a page from expanding authority merely
+by linking to an unrelated third party.
 """
 from __future__ import annotations
 
@@ -28,6 +30,7 @@ from .human_intent_inference import as_dict, infer_human_intent
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 HOST_KEYS = {"host", "hostname", "domain", "domain_name", "target_host"}
 DEFAULT_TTL_SECONDS = 6 * 60 * 60
+TRUSTED_STANDING_ISSUERS = {"owner_explicit", "canonical_repository", "independent_authority"}
 
 
 def _now() -> int:
@@ -116,10 +119,91 @@ def _trusted_roots(state_dir: Path) -> set[str]:
     return roots
 
 
+def _default_repo_root() -> Path:
+    # automation/codegen/engine/discovery_authorization.py -> repository root
+    return Path(__file__).resolve().parents[3]
+
+
+def _standing_authorized_exact_hosts(repo_root: Path) -> set[str]:
+    """Load exact public hosts from active, independently issued standing authority."""
+    registry = _load_json(repo_root / "senju" / "state" / "standing_authorizations.json", {})
+    if not isinstance(registry, dict) or registry.get("schema") != "senju-standing-authorization/v1":
+        return set()
+
+    hosts: set[str] = set()
+    for raw in registry.get("records", []):
+        if not isinstance(raw, dict):
+            continue
+        if bool(raw.get("revoked", False)):
+            continue
+        if str(raw.get("issuer_kind", "")).strip().lower() not in TRUSTED_STANDING_ISSUERS:
+            continue
+        if str(raw.get("credential_scope", "none")).strip().lower() != "none":
+            continue
+        if bool(raw.get("destructive", False)):
+            continue
+        methods = {str(x).strip().upper() for x in raw.get("allowed_methods", [])}
+        if not methods.intersection({"GET", "HEAD"}):
+            continue
+        for item in raw.get("exact_hosts", []):
+            try:
+                hosts.add(_normalize_host(str(item)))
+            except ValueError:
+                continue
+    return hosts
+
+
+def _owner_supplied_exact_hosts(state_dir: Path) -> set[str]:
+    """Treat exact owner-supplied HTTPS links as explicit read-only discovery intent."""
+    signals = _load_json(state_dir / "human_intent_signals.json", {})
+    if not isinstance(signals, dict):
+        return set()
+
+    hosts: set[str] = set()
+    for raw in signals.get("supplied_links", []):
+        if not isinstance(raw, str):
+            continue
+        normalized = _normalize_url(raw)
+        if normalized is not None:
+            _, host = normalized
+            hosts.add(host)
+    return hosts
+
+
 def _within_root(host: str, roots: Iterable[str]) -> str | None:
     for root in roots:
         if host == root or host.endswith("." + root):
             return root
+    return None
+
+
+def _same_domain_hint(host: str, authorized_hosts: Iterable[str]) -> str | None:
+    """Return a non-authorizing similarity hint for review prioritization only."""
+    host_labels = host.split(".")
+    if len(host_labels) < 2:
+        return None
+    suffix = ".".join(host_labels[-2:])
+    for authorized in authorized_hosts:
+        labels = authorized.split(".")
+        if len(labels) >= 2 and ".".join(labels[-2:]) == suffix:
+            return authorized
+    return None
+
+
+def _authorization_basis(
+    host: str,
+    *,
+    trusted_roots: set[str],
+    standing_exact_hosts: set[str],
+    owner_supplied_exact_hosts: set[str],
+) -> tuple[str, str] | None:
+    root = _within_root(host, trusted_roots)
+    if root is not None:
+        return "trusted_root", root
+    if host in standing_exact_hosts:
+        return "standing_authorization_exact_host", host
+    if host in owner_supplied_exact_hosts:
+        return "owner_supplied_exact_host", host
     return None
 
 
@@ -178,6 +262,8 @@ def _intent_doc(state: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]
             "inference_may_prioritize_without_reprompt": True,
             "inference_may_create_new_authority": False,
             "exact_live_explicit_grant_may_be_reused_without_reprompt": True,
+            "active_standing_exact_host_may_be_reused_without_reprompt": True,
+            "owner_supplied_exact_host_may_receive_read_only_discovery_authority": True,
         },
         "decisions": decisions,
     }
@@ -187,21 +273,27 @@ def run_discovery_authorization(
     state_dir: str | Path,
     *,
     ttl_seconds: int = DEFAULT_TTL_SECONDS,
+    repo_root: str | Path | None = None,
 ) -> dict[str, Any]:
-    """Promote only discoveries that remain inside explicitly trusted roots.
+    """Promote discoveries whose authority is inherited from an explicit source.
 
     Input convention:
       meta_state/discovered_urls.json may contain URLs, href/link strings, or explicit
       host/hostname/domain fields. external_intel.json is also scanned for URL evidence.
 
     Output files:
-      discovery_candidates.json  - every normalized discovery and decision
-      discovery_authorized.json  - live probationary read-only host grants
-      human_intent_decisions.json - likely-owner-intent ranking for all candidates
+      discovery_candidates.json       - every normalized discovery and decision
+      discovery_authorized.json       - live probationary read-only host grants
+      discovery_authorization_requests.json - unresolved discoveries queued for review
+      human_intent_decisions.json     - likely-owner-intent ranking for all candidates
     """
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
+    repository = Path(repo_root) if repo_root is not None else _default_repo_root()
+
     roots = _trusted_roots(state)
+    standing_exact = _standing_authorized_exact_hosts(repository)
+    owner_supplied_exact = _owner_supplied_exact_hosts(state)
     ttl = max(300, min(int(ttl_seconds), 24 * 60 * 60))
     now = _now()
 
@@ -211,6 +303,7 @@ def run_discovery_authorization(
     }
     candidates: list[dict[str, Any]] = []
     promoted: dict[str, dict[str, Any]] = {}
+    authorized_reference_hosts = roots | standing_exact | owner_supplied_exact
 
     for source_name, path in sources.items():
         payload = _load_json(path, {})
@@ -220,14 +313,28 @@ def run_discovery_authorization(
                 continue
             url, host = normalized
             record = _candidate_record(url, host, source_name)
-            root = _within_root(host, roots)
-            if root is None:
-                record.update({"decision": "candidate_only", "reason": "outside_trusted_roots"})
+            basis = _authorization_basis(
+                host,
+                trusted_roots=roots,
+                standing_exact_hosts=standing_exact,
+                owner_supplied_exact_hosts=owner_supplied_exact,
+            )
+            if basis is None:
+                record.update({"decision": "candidate_only", "reason": "outside_authorized_scope"})
+                related = _same_domain_hint(host, authorized_reference_hosts)
+                if related is not None:
+                    record["same_domain_hint"] = related
             else:
-                record.update({"decision": "probationary_authorized", "trusted_root": root})
+                basis_kind, basis_value = basis
+                record.update({
+                    "decision": "probationary_authorized",
+                    "authorization_basis": basis_kind,
+                    "authorization_reference": basis_value,
+                })
                 promoted[host] = {
                     "host": host,
-                    "trusted_root": root,
+                    "authorization_basis": basis_kind,
+                    "authorization_reference": basis_value,
                     "authorized_at": now,
                     "expires_at": now + ttl,
                     "allowed_methods": ["GET", "HEAD"],
@@ -250,24 +357,62 @@ def run_discovery_authorization(
                 normalized_host = _normalize_host(host)
             except ValueError:
                 continue
-            root = _within_root(normalized_host, roots)
-            if root is None:
+            basis = _authorization_basis(
+                normalized_host,
+                trusted_roots=roots,
+                standing_exact_hosts=standing_exact,
+                owner_supplied_exact_hosts=owner_supplied_exact,
+            )
+            if basis is None:
                 continue
             promoted.setdefault(normalized_host, grant)
 
+    intent_doc = _intent_doc(state, candidates)
+    intent_by_key = {
+        (str(item.get("host", "")), str(item.get("url", ""))): item
+        for item in intent_doc.get("decisions", [])
+        if isinstance(item, dict)
+    }
+    authorization_requests: list[dict[str, Any]] = []
+    for record in candidates:
+        if record.get("decision") != "candidate_only":
+            continue
+        intent = intent_by_key.get((str(record.get("host", "")), str(record.get("url", ""))), {})
+        likely = bool(intent.get("likely_owner_intent", False))
+        record["authorization_readiness"] = "owner_review_ready" if likely else "review_required"
+        record["likely_owner_intent"] = likely
+        authorization_requests.append({
+            "host": record.get("host"),
+            "url": record.get("url"),
+            "source": record.get("source"),
+            "same_domain_hint": record.get("same_domain_hint"),
+            "likely_owner_intent": likely,
+            "authorization_readiness": record["authorization_readiness"],
+            "requested_effect": "read_only",
+            "requested_methods": ["GET", "HEAD"],
+            "credential_scope": "none",
+            "created_at": now,
+        })
+
     candidate_doc = {
-        "schema": "meta-discovery-candidates/v1",
+        "schema": "meta-discovery-candidates/v2",
         "generated_at": now,
         "trusted_roots": sorted(roots),
+        "standing_authorized_exact_hosts": sorted(standing_exact),
+        "owner_supplied_exact_hosts": sorted(owner_supplied_exact),
         "candidates": candidates,
     }
     authorized_doc = {
-        "schema": "meta-discovery-authorized/v1",
+        "schema": "meta-discovery-authorized/v2",
         "generated_at": now,
         "mode": "probationary_read_only",
         "hosts": dict(sorted(promoted.items())),
     }
-    intent_doc = _intent_doc(state, candidates)
+    request_doc = {
+        "schema": "meta-discovery-authorization-requests/v1",
+        "generated_at": now,
+        "requests": authorization_requests,
+    }
 
     (state / "discovery_candidates.json").write_text(
         json.dumps(candidate_doc, ensure_ascii=False, indent=2) + "\n",
@@ -277,6 +422,10 @@ def run_discovery_authorization(
         json.dumps(authorized_doc, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    (state / "discovery_authorization_requests.json").write_text(
+        json.dumps(request_doc, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     (state / "human_intent_decisions.json").write_text(
         json.dumps(intent_doc, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -284,9 +433,15 @@ def run_discovery_authorization(
     decisions = intent_doc.get("decisions", [])
     return {
         "trusted_roots": sorted(roots),
+        "standing_authorized_exact_hosts": sorted(standing_exact),
+        "owner_supplied_exact_hosts": sorted(owner_supplied_exact),
         "candidate_count": len(candidates),
         "authorized_hosts": sorted(promoted),
         "authorized_count": len(promoted),
+        "authorization_request_count": len(authorization_requests),
+        "owner_review_ready_count": sum(
+            1 for x in authorization_requests if x.get("authorization_readiness") == "owner_review_ready"
+        ),
         "ttl_seconds": ttl,
         "intent_likely_count": sum(1 for x in decisions if x.get("likely_owner_intent")),
         "intent_auto_execute_count": sum(1 for x in decisions if x.get("may_auto_execute")),
