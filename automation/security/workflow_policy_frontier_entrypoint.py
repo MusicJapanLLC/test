@@ -30,6 +30,8 @@ ALLOWED_STATE = {
     "senju/state/owner_scope_expansion_evidence_requests.json",
     "senju/state/owner_frontier_negotiator_feed.json",
     "senju/state/owner_contact_ceiling_effective.json",
+    "senju/state/owner_frontier_approved_pending.json",
+    "senju/state/authority_opportunity_queue.json",
 }
 
 
@@ -52,8 +54,11 @@ def validate_frontier_lane() -> str:
         "workflow_dispatch:",
         "persist-credentials: false",
         "senju/tests/test_owner_frontier_council.py",
+        "senju/tests/test_frontier_approval_continuity.py",
         "senju/scripts/rights_request_federation.py",
         "senju/scripts/owner_frontier_council.py",
+        "senju/scripts/frontier_approval_continuity.py",
+        "approved_pending_next_frontier_cycle",
         "unknown_host_without_verified_evidence_auto_activated",
         "approval_quorum",
         "valid_approval_is_binding",

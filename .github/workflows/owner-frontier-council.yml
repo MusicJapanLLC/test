@@ -1,4 +1,4 @@
-name: Owner Frontier Approval Council
+name: Four Party Owner Frontier Council
 
 on:
   schedule:
@@ -10,6 +10,8 @@ on:
       - 'senju/senju/owner_frontier_council.py'
       - 'senju/scripts/owner_frontier_council.py'
       - 'senju/tests/test_owner_frontier_council.py'
+      - 'senju/scripts/frontier_approval_continuity.py'
+      - 'senju/tests/test_frontier_approval_continuity.py'
       - 'senju/config/owner-frontier-council.json'
       - 'senju/config/owner-expansion-envelope.json'
       - 'senju/senju/rights_request_federation.py'
@@ -23,6 +25,8 @@ on:
       - 'senju/senju/owner_frontier_council.py'
       - 'senju/scripts/owner_frontier_council.py'
       - 'senju/tests/test_owner_frontier_council.py'
+      - 'senju/scripts/frontier_approval_continuity.py'
+      - 'senju/tests/test_frontier_approval_continuity.py'
       - 'senju/config/owner-frontier-council.json'
       - 'senju/config/owner-expansion-envelope.json'
       - 'senju/senju/rights_request_federation.py'
@@ -32,7 +36,7 @@ on:
       - '.github/workflows/security-guard.yml'
 
 concurrency:
-  group: owner-frontier-approval-council
+  group: four-party-owner-frontier-council
   cancel-in-progress: false
 
 jobs:
@@ -54,7 +58,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Verify simplified frontier and negotiation invariants
+      - name: Verify four-party frontier and approval-continuity invariants
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -62,9 +66,9 @@ jobs:
           python -m pip install --disable-pip-version-check -q pytest
           python -m pytest -q \
             senju/tests/test_owner_frontier_council.py \
+            senju/tests/test_frontier_approval_continuity.py \
             senju/tests/test_rights_request_federation.py \
-            senju/tests/test_owner_scope_negotiation.py \
-            senju/tests/test_frontier_approval_continuity.py
+            senju/tests/test_owner_scope_negotiation.py
 
       - name: Generate current autonomous rights requests from discovery evidence
         env:
@@ -79,7 +83,7 @@ jobs:
           test "$(jq -r '.closed_loop' /tmp/rights-request-federation.json)" = "true"
           test "$(jq -r '.new_unrelated_authority_self_mint' /tmp/rights-request-federation.json)" = "false"
 
-      - name: Run Owner frontier approval council
+      - name: Run four-party Owner frontier council
         env:
           PYTHONPATH: senju:automation/codegen
         run: |
@@ -88,14 +92,26 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --out /tmp/owner-frontier-council.json
-          test "$(jq -r '.approval_quorum' /tmp/owner-frontier-council.json)" = "3"
-          test "$(jq -r '.valid_approval_is_binding' /tmp/owner-frontier-council.json)" = "true"
+          test "$(jq -r '.four_party_quorum' /tmp/owner-frontier-council.json)" = "4"
           test "$(jq -r '.unknown_host_without_verified_evidence_auto_activated' /tmp/owner-frontier-council.json)" = "false"
           test -s senju/state/owner_frontier_ballots.json
           test -s senju/state/owner_frontier_council.json
           test -s senju/state/owner_scope_expansion_evidence_requests.json
-          test -s senju/state/owner_frontier_negotiator_feed.json
           test -s senju/state/owner_contact_ceiling_effective.json
+
+      - name: Preserve valid 4/4 approvals deferred only by cycle budget
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/frontier_approval_continuity.py \
+            --state-dir senju/state \
+            --out /tmp/frontier-approval-continuity.json
+          test "$(jq -r '.authority_minted' /tmp/frontier-approval-continuity.json)" = "false"
+          test "$(jq -r '.network_io_attempted' /tmp/frontier-approval-continuity.json)" = "false"
+          test -s senju/state/owner_frontier_approved_pending.json
+          test -s senju/state/authority_opportunity_queue.json
+          grep -q 'approved_pending_next_frontier_cycle' senju/scripts/frontier_approval_continuity.py
 
       - name: Build bounded frontier state bundle
         shell: bash
@@ -109,8 +125,9 @@ jobs:
             senju/state/owner_frontier_ballots.json \
             senju/state/owner_frontier_council.json \
             senju/state/owner_scope_expansion_evidence_requests.json \
-            senju/state/owner_frontier_negotiator_feed.json \
-            senju/state/owner_contact_ceiling_effective.json
+            senju/state/owner_contact_ceiling_effective.json \
+            senju/state/owner_frontier_approved_pending.json \
+            senju/state/authority_opportunity_queue.json
           do
             test -s "$path"
             cp "$path" "/tmp/frontier-state/$(basename "$path")"
@@ -119,7 +136,7 @@ jobs:
       - name: Upload reviewed frontier state bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: owner-frontier-approval-state
+          name: four-party-owner-frontier-state
           path: /tmp/frontier-state/
           if-no-files-found: error
           retention-days: 7
@@ -128,10 +145,11 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: owner-frontier-approval-evidence-${{ github.run_id }}
+          name: four-party-owner-frontier-evidence-${{ github.run_id }}
           path: |
             /tmp/rights-request-federation.json
             /tmp/owner-frontier-council.json
+            /tmp/frontier-approval-continuity.json
           if-no-files-found: warn
           retention-days: 30
 
@@ -155,7 +173,7 @@ jobs:
       - name: Download reviewed frontier state bundle
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: owner-frontier-approval-state
+          name: four-party-owner-frontier-state
           path: /tmp/frontier-state
 
       - name: Persist only bounded frontier state through GitHub ref API
@@ -171,8 +189,9 @@ jobs:
             senju/state/owner_frontier_ballots.json
             senju/state/owner_frontier_council.json
             senju/state/owner_scope_expansion_evidence_requests.json
-            senju/state/owner_frontier_negotiator_feed.json
             senju/state/owner_contact_ceiling_effective.json
+            senju/state/owner_frontier_approved_pending.json
+            senju/state/authority_opportunity_queue.json
           )
 
           put_file() {
@@ -185,11 +204,11 @@ jobs:
             content="$(base64 -w0 "$src")"
             if [[ -n "$remote_sha" ]]; then
               gh api -X PUT "repos/$REPO/contents/$path" \
-                -f message="chore(authority): persist Owner frontier approval state [skip ci]" \
+                -f message="chore(authority): persist four-party Owner frontier state [skip ci]" \
                 -f content="$content" -f branch="$branch" -f sha="$remote_sha" >/dev/null
             else
               gh api -X PUT "repos/$REPO/contents/$path" \
-                -f message="chore(authority): persist Owner frontier approval state [skip ci]" \
+                -f message="chore(authority): persist four-party Owner frontier state [skip ci]" \
                 -f content="$content" -f branch="$branch" >/dev/null
             fi
           }
@@ -222,8 +241,9 @@ jobs:
               'senju/state/owner_frontier_ballots.json',
               'senju/state/owner_frontier_council.json',
               'senju/state/owner_scope_expansion_evidence_requests.json',
-              'senju/state/owner_frontier_negotiator_feed.json',
               'senju/state/owner_contact_ceiling_effective.json',
+              'senju/state/owner_frontier_approved_pending.json',
+              'senju/state/authority_opportunity_queue.json',
           }
           changed = {line.strip() for line in Path('/tmp/frontier-changed.txt').read_text().splitlines() if line.strip()}
           forbidden = changed - allowed
@@ -238,7 +258,7 @@ jobs:
             if [[ "$CURRENT_BASE_SHA" == "$BASE_SHA" ]]; then
               gh api -X PATCH "repos/$REPO/git/refs/heads/$BASE" -f sha="$HEAD_SHA" -F force=false >/dev/null
               gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
-              echo "Persisted bounded Owner frontier approval state to $BASE at $HEAD_SHA"
+              echo "Persisted bounded four-party frontier state to $BASE at $HEAD_SHA"
               exit 0
             fi
 
