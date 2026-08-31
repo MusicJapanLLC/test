@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
-"""Select confirmed META findings for the production repair lineage.
+"""Select work for the META/X/Senju production repair lineage.
 
-The bridge prefers explicit automation/codegen task contracts, but it can also
-materialize a temporary task when a confirmed META surface resolves uniquely to
-an ordinary production Python file with a matching pytest file. Temporary task
-contracts are excluded through .git/info/exclude so the eventual PR still
-contains only the intended repair target.
+Priority is deliberately closed-loop:
+1. A recently merged lineage whose latest production Audit failed returns to Fix
+   under the same canonical lineage_id.
+2. Otherwise, confirmed META findings are selected.
+3. Explicit task contracts are preferred; unique ordinary-code Surface Scout
+   findings may materialize a temporary pytest-backed task.
+
+The selector is read-only with respect to GitHub state. It does not broaden
+runtime authority; it only routes failed Audit evidence back into the existing
+Fix/Approval/Apply lineage.
 """
 from __future__ import annotations
 
 import argparse
 import hashlib
 import json
+import os
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Mapping
@@ -92,13 +99,10 @@ def _surface_paths(surface: str) -> tuple[Path, ...]:
     raw = str(surface).strip().replace("\\", "/")
     found: list[Path] = []
 
-    # Direct repository path emitted by a finding.
     direct = ROOT / raw
     if "/" in raw and direct.exists() and direct.is_file() and _allowed_auto_path(direct):
         found.append(direct)
 
-    # Surface Scout uses auto:<kind>:<file-stem>. Resolve only when the stem is
-    # unique inside an already-approved ordinary-code prefix.
     match = re.fullmatch(r"auto:[^:]+:([A-Za-z0-9_.-]+)", raw)
     if match:
         stem = match.group(1)
@@ -120,15 +124,13 @@ def _surface_paths(surface: str) -> tuple[Path, ...]:
 def _test_for_target(target: Path) -> str | None:
     stem = target.stem
     candidates: set[Path] = set()
-    local = (
+    for path in (
         target.parent / f"test_{stem}.py",
         target.parent / "tests" / f"test_{stem}.py",
-    )
-    for path in local:
+    ):
         if path.exists() and path.is_file():
             candidates.add(path.resolve())
 
-    # Broaden only to approved code roots and accept a unique exact test filename.
     if not candidates:
         for prefix in AUTO_PREFIXES:
             base = ROOT / prefix
@@ -201,17 +203,21 @@ def _candidate(
     source: str,
     task: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
+    canonical = lineage_id_for(
+        detection_id=hypothesis_id,
+        task_id=task_id,
+        target_ref=target_ref,
+    )
     row = {
         "hypothesis_id": hypothesis_id,
         "task_id": task_id,
         "confidence": float(raw.get("confidence") or 0.0),
         "surfaces": [str(v) for v in raw.get("surfaces", [])],
         "source": source,
-        "lineage_id": lineage_id_for(
-            detection_id=hypothesis_id,
-            task_id=task_id,
-            target_ref=target_ref,
-        ),
+        "lineage_id": canonical,
+        "canonical_lineage_id": canonical,
+        "attempt_key": canonical,
+        "retry": False,
     }
     if task is not None:
         row["task"] = dict(task)
@@ -257,6 +263,129 @@ def collect_candidates(
     return tuple(candidates)
 
 
+def _retry_task_from_audit(audit: Mapping[str, Any], receipt: Mapping[str, Any]) -> dict[str, Any] | None:
+    output_file = str(receipt.get("output_file") or audit.get("output_file") or "").strip().replace("\\", "/")
+    test_cmd = str(receipt.get("test_cmd") or audit.get("test_cmd") or "").strip()
+    task_id = str(receipt.get("task_id") or audit.get("task_id") or "").strip()
+    if not output_file or not test_cmd or not task_id or is_protected_path(output_file):
+        return None
+
+    votes = audit.get("audit_votes") if isinstance(audit.get("audit_votes"), Mapping) else {}
+    failed = [
+        actor for actor, vote in votes.items()
+        if isinstance(vote, Mapping) and not bool(vote.get("passed"))
+    ]
+    senju = votes.get("SENJU") if isinstance(votes, Mapping) else None
+    test_output = str((senju or {}).get("test_output") or "")[-4000:] if isinstance(senju, Mapping) else ""
+    goal = (
+        "Continue the same production lineage after Audit FAIL. "
+        f"The previous applied attempt failed audit actors: {', '.join(failed) or 'unknown'}. "
+        "Repair the declared output so the original test contract and post-merge integrity audit pass."
+    )
+    if test_output:
+        goal += f" Previous Senju audit test output: {test_output}"
+    return {
+        "name": f"Audit retry: {task_id}",
+        "goal": goal,
+        "output_file": output_file,
+        "test_cmd": test_cmd,
+        "constraints": "Stay inside the original output file and existing authority boundary. Preserve unrelated behavior. This is a retry of the same canonical lineage.",
+        "audit_retry": True,
+    }
+
+
+def retry_candidates_from_audits(
+    failed_audits: tuple[Mapping[str, Any], ...],
+    tasks: Mapping[str, Mapping[str, Any]],
+    *,
+    target_ref: str,
+) -> tuple[dict[str, Any], ...]:
+    rows: list[dict[str, Any]] = []
+    for audit in failed_audits:
+        receipt = audit.get("_receipt")
+        if not isinstance(receipt, Mapping):
+            continue
+        canonical = str(receipt.get("lineage_id") or "").strip()
+        detection_id = str(receipt.get("detection_id") or "").strip()
+        task_id = str(receipt.get("task_id") or "").strip()
+        receipt_target = str(receipt.get("target_ref") or target_ref).strip()
+        pr_number = int(audit.get("pr_number") or 0)
+        merge_sha = str(audit.get("merge_commit_sha") or "").strip()
+        if not canonical or not detection_id or not task_id or receipt_target != target_ref:
+            continue
+        expected = lineage_id_for(detection_id=detection_id, task_id=task_id, target_ref=target_ref)
+        if expected != canonical:
+            continue
+        output_file = str(receipt.get("output_file") or "").strip()
+        if not output_file or is_protected_path(output_file):
+            continue
+
+        task = None if task_id in tasks else _retry_task_from_audit(audit, receipt)
+        if task_id not in tasks and task is None:
+            continue
+
+        attempt_tag = f"retry-pr{pr_number}-{merge_sha[:8] or 'audit'}"
+        attempt_key = f"{canonical}-{attempt_tag}"
+        rows.append({
+            "hypothesis_id": detection_id,
+            "task_id": task_id,
+            "confidence": 2.0,
+            "surfaces": [output_file],
+            "source": "audit_retry",
+            "lineage_id": canonical,
+            "canonical_lineage_id": canonical,
+            "attempt_key": attempt_key,
+            "retry": True,
+            "retry_of_pr": pr_number,
+            "prior_audit_status": audit.get("status"),
+            "task": task,
+        })
+    return tuple(rows)
+
+
+def live_failed_audits(*, limit: int = 20, lookback_hours: int = 24) -> tuple[dict[str, Any], ...]:
+    """Re-audit the latest merged PR for each lineage using existing read authority."""
+    if os.environ.get("GITHUB_ACTIONS", "").lower() != "true" or not shutil.which("gh"):
+        return ()
+    try:
+        from automation.world import audit_closed_lineage_prs as auditor
+        prs = list(auditor.discover_lineage_prs(limit))
+    except Exception:
+        return ()
+
+    prs.sort(key=lambda row: str(row.get("mergedAt") or ""), reverse=True)
+    seen: set[str] = set()
+    failed: list[dict[str, Any]] = []
+    for pr in prs:
+        receipt = auditor.parse_receipt(str(pr.get("body") or ""))
+        if not isinstance(receipt, Mapping):
+            continue
+        canonical = str(receipt.get("lineage_id") or "").strip()
+        if not canonical or canonical in seen:
+            continue
+        seen.add(canonical)
+        if not auditor._recent_enough(pr, lookback_hours):
+            continue
+        try:
+            result = auditor.audit_pr(pr)
+        except Exception as exc:
+            result = {
+                "schema": "the-world-closed-lineage-audit/v2",
+                "lineage_id": canonical,
+                "phase": "audit",
+                "status": "FAIL",
+                "pass_declared": False,
+                "pr_number": pr.get("number"),
+                "merge_commit_sha": "",
+                "error": str(exc),
+            }
+        if not bool(result.get("pass_declared")):
+            row = dict(result)
+            row["_receipt"] = dict(receipt)
+            failed.append(row)
+    return tuple(failed)
+
+
 def _exclude_local_task(path: Path) -> None:
     exclude = ROOT / ".git" / "info" / "exclude"
     if not exclude.parent.exists():
@@ -285,7 +414,7 @@ def materialize_selected(selected: list[dict[str, Any]]) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Select confirmed META findings for the closed production lineage")
+    parser = argparse.ArgumentParser(description="Select META findings or failed audits for the closed production lineage")
     parser.add_argument("--target-ref", required=True)
     parser.add_argument("--limit", type=int, default=1)
     parser.add_argument("--out")
@@ -295,14 +424,23 @@ def main() -> int:
     tasks = load_tasks()
     if not isinstance(tracker, Mapping):
         tracker = {}
-    candidates = collect_candidates(tracker, tasks, target_ref=args.target_ref)
+
+    failed_audits = live_failed_audits()
+    retries = retry_candidates_from_audits(failed_audits, tasks, target_ref=args.target_ref)
+    findings = collect_candidates(tracker, tasks, target_ref=args.target_ref)
+    candidates = tuple(retries) + tuple(findings)
     limit = max(0, int(args.limit))
     selected = list(candidates[:limit] if limit else candidates)
     materialized = materialize_selected(selected)
     result = {
-        "schema": "meta-confirmed-fix-lineage-selection/v2",
+        "schema": "meta-confirmed-fix-lineage-selection/v3",
         "target_ref": args.target_ref,
-        "confirmed_findings": sum(1 for value in tracker.values() if isinstance(value, Mapping) and value.get("status") == "confirmed"),
+        "confirmed_findings": sum(
+            1 for value in tracker.values()
+            if isinstance(value, Mapping) and value.get("status") == "confirmed"
+        ),
+        "failed_lineages_reaudited": len(failed_audits),
+        "audit_retry_candidates": len(retries),
         "task_count": len(tasks),
         "candidate_count": len(candidates),
         "auto_tasks_materialized": materialized,
