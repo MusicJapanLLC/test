@@ -183,7 +183,11 @@ def test_credential_lease_binding_and_inheritance_never_persist_raw_secret(tmp_p
 
     headers1 = runtime.headers_for(_lease(now), _action())
     use1 = runtime.current_use("credentialed-patch")
-    action2 = {**_action(), "id": "credentialed-patch-second"}
+    action2 = {
+        **_action(),
+        "id": "credentialed-patch-second",
+        "credential_ttl_seconds": 120,
+    }
     headers2 = runtime.headers_for(_lease(now), action2)
     use2 = runtime.current_use("credentialed-patch-second")
     runtime.flush()
