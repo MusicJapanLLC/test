@@ -1,0 +1,138 @@
+name: META X Senju Closed Production Lineage
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_id:
+        description: "Existing automation/codegen/tasks/<task_id>.json"
+        required: true
+        default: "example"
+      max_iterations:
+        description: "META/X alternating repair attempts"
+        required: false
+        default: "8"
+      apply_to_production:
+        description: "Apply approved ordinary-code patch to the production default ref"
+        type: boolean
+        required: false
+        default: true
+  repository_dispatch:
+    types: [meta-fix-lineage]
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: meta-x-senju-lineage-${{ github.event.inputs.task_id || github.event.client_payload.task_id || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  closed-lineage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      WORLD_ENV: production
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout production default branch
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v5
+        with:
+          python-version: "3.12"
+
+      - name: Install production lineage dependencies
+        run: python -m pip install --disable-pip-version-check anthropic pytest
+
+      - name: Configure production git identity
+        run: |
+          git config user.name "META-X-Senju Closed Lineage"
+          git config user.email "meta-x-senju@users.noreply.github.com"
+          gh auth setup-git
+
+      - name: Resolve lineage inputs
+        id: inputs
+        shell: bash
+        env:
+          DISPATCH_TASK: ${{ github.event.inputs.task_id }}
+          META_TASK: ${{ github.event.client_payload.task_id }}
+          DISPATCH_MAX: ${{ github.event.inputs.max_iterations }}
+          META_MAX: ${{ github.event.client_payload.max_iterations }}
+          DISPATCH_APPLY: ${{ github.event.inputs.apply_to_production }}
+          META_APPLY: ${{ github.event.client_payload.apply_to_production }}
+        run: |
+          set -euo pipefail
+          task_id="${DISPATCH_TASK:-${META_TASK:-}}"
+          max_iterations="${DISPATCH_MAX:-${META_MAX:-8}}"
+          apply="${DISPATCH_APPLY:-${META_APPLY:-true}}"
+          if [ -z "$task_id" ]; then
+            echo "task_id is required" >&2
+            exit 2
+          fi
+          target_ref="${{ github.event.repository.default_branch }}"
+          if [ -z "$target_ref" ]; then
+            target_ref="$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')"
+          fi
+          safe_task="$(printf '%s' "$task_id" | tr -cs 'A-Za-z0-9._-' '-')"
+          state_out="automation/world/runtime_state/lineage/${safe_task}-${GITHUB_RUN_ID}.json"
+          echo "task_id=$task_id" >> "$GITHUB_OUTPUT"
+          echo "max_iterations=$max_iterations" >> "$GITHUB_OUTPUT"
+          echo "apply=$apply" >> "$GITHUB_OUTPUT"
+          echo "target_ref=$target_ref" >> "$GITHUB_OUTPUT"
+          echo "state_out=$state_out" >> "$GITHUB_OUTPUT"
+
+      - name: Detection -> Fix -> Approval -> Apply -> Audit -> PASS
+        id: lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          apply_flag=""
+          if [ "${{ steps.inputs.outputs.apply }}" = "true" ]; then
+            apply_flag="--apply"
+          fi
+          python automation/world/closed_loop_lineage.py \
+            --task-id "${{ steps.inputs.outputs.task_id }}" \
+            --max-iterations "${{ steps.inputs.outputs.max_iterations }}" \
+            --target-ref "${{ steps.inputs.outputs.target_ref }}" \
+            --state-out "${{ steps.inputs.outputs.state_out }}" \
+            $apply_flag | tee /tmp/closed-lineage-summary.json
+
+      - name: Publish lineage summary
+        if: always()
+        shell: bash
+        run: |
+          echo "## META/X/Senju Closed Production Lineage" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Task: \`${{ steps.inputs.outputs.task_id }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Production ref: \`${{ steps.inputs.outputs.target_ref }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Apply requested: \`${{ steps.inputs.outputs.apply }}\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "${{ steps.inputs.outputs.state_out }}" ]; then
+            python - "${{ steps.inputs.outputs.state_out }}" >> "$GITHUB_STEP_SUMMARY" <<'PY'
+          import json, sys
+          data = json.load(open(sys.argv[1], encoding="utf-8"))
+          print(f"- Lineage: `{data.get('lineage_id')}`")
+          print(f"- Final phase: `{data.get('phase')}`")
+          print(f"- Final status: `{data.get('status')}`")
+          print(f"- PASS declared: `{data.get('pass_declared')}`")
+          apply = data.get('apply') or {}
+          if apply.get('commit_sha'):
+              print(f"- Applied commit: `{apply.get('commit_sha')}`")
+          PY
+          fi
+
+      - name: Persist lineage audit artifact
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: closed-lineage-${{ github.run_id }}
+          path: |
+            ${{ steps.inputs.outputs.state_out }}
+            /tmp/closed-lineage-summary.json
+          if-no-files-found: warn
+          retention-days: 90
