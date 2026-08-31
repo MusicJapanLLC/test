@@ -7,6 +7,7 @@ on:
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/discovery_authority_contract.py'
+      - 'automation/codegen/engine/bounded_owner_delegation.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
       - 'automation/codegen/engine/discovery_capability_leases.py'
       - 'automation/codegen/engine/discovery_external_actions.py'
@@ -43,7 +44,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run shared discovery authority, lease, external action, probe, and coordination loop
+      - name: Run shared discovery authority, delegation, lease, external action, probe, and coordination loop
         working-directory: automation/codegen
         env:
           PYTHONPATH: .
@@ -52,6 +53,7 @@ jobs:
           from pathlib import Path
           from engine.shared_discovery_authority import run_shared_discovery_authority
           from engine.discovery_authority_contract import enforce_discovery_authority_contract
+          from engine.bounded_owner_delegation import run_bounded_owner_delegation_loop
           from engine.discovery_capability_leases import issue_discovery_capability_leases
           from engine.discovery_external_actions import execute_discovery_external_actions
           from engine.discovery_probe_runner import run_discovery_probe_cycle
@@ -62,28 +64,27 @@ jobs:
           print({'discovery': discovery})
           contract = enforce_discovery_authority_contract(state)
           print({'authority_contract': contract})
+          delegation = run_bounded_owner_delegation_loop(state)
+          print({'bounded_owner_delegation': delegation})
           leases = issue_discovery_capability_leases(state)
           print({'leases': leases})
           external_actions = execute_discovery_external_actions(state, max_actions=16)
           print({'external_actions': external_actions})
           probes = run_discovery_probe_cycle(state, max_targets=20)
           print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
-          # Rebuild leases again after the live cycle so current queue state is the
-          # authority source for the artifact consumed by META/X/SENJU/child workers.
+          # Rebuild authority-derived resources after the live phase so cooperating
+          # agents consume current grants, queues, and recursive lineage state.
           refreshed = issue_discovery_capability_leases(state)
           print({'leases_refreshed': refreshed})
-          # Re-check the owner-envelope invariant after the live phase too. This makes
-          # any accidental regression back to candidate-only fail the production cycle.
           final_contract = enforce_discovery_authority_contract(state)
           print({'authority_contract_final': final_contract})
-          # Materialize one immutable cross-loop authority context per live lease.
-          # The coordinator is state/receipt-only: it does not execute external actions,
-          # mint credentials, or widen the lease it consumes.
+          final_delegation = run_bounded_owner_delegation_loop(state)
+          print({'bounded_owner_delegation_final': final_delegation})
           coordination = build_coordination_ledger(state)
           print({'coordination': coordination})
           PY
 
-      - name: Preserve shared discovery state, operational authority, action, and coordination receipts
+      - name: Preserve shared discovery state, operational authority, delegation, action, and coordination receipts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: shared-discovery-authority-state
@@ -97,6 +98,9 @@ jobs:
             automation/codegen/meta_state/shared_discovery_knowledge.json
             automation/codegen/meta_state/discovery_action_queue.json
             automation/codegen/meta_state/discovery_authority_contract.json
+            automation/codegen/meta_state/owner_authority_proposals.json
+            automation/codegen/meta_state/owner_delegation_queue.json
+            automation/codegen/meta_state/owner_delegation_lineage.json
             automation/codegen/meta_state/discovery_capability_leases.json
             automation/codegen/meta_state/capability_lease_events.ndjson
             automation/codegen/meta_state/discovery_external_action_receipts.json
