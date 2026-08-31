@@ -5,14 +5,17 @@ receive real, temporary execution authority when that authority can be inherited
 an already explicit owner-controlled source:
 
 - configured discovery trust roots authorize the root and its subdomains;
-- active standing authorizations authorize their exact hosts without another prompt;
-- exact links supplied by the owner authorize that exact host for read-only discovery;
+- configured company domains authorize the domain and its subdomains;
+- active standing authorizations authorize their exact hosts and descendant subdomains;
+- exact links supplied by the owner authorize that exact host and descendant subdomains;
+- active independently reviewed grants are immediately reusable for the exact host;
 - every other discovery is retained and automatically turned into an authorization
   request candidate, with owner-intent inference attached for prioritization.
 
-Discovery by itself never creates a brand-new external trust root. This keeps the
-production control plane useful while preventing a page from expanding authority merely
-by linking to an unrelated third party.
+Discovery by itself never creates a brand-new unrelated external trust root. Instead,
+unknown hosts are converted into apply-ready authorization proposals so the production
+control plane gets as close as possible to automatic promotion without letting an
+untrusted page enlarge its own authority merely by publishing a link.
 """
 from __future__ import annotations
 
@@ -99,6 +102,18 @@ def _load_json(path: Path, default: Any) -> Any:
         return default
 
 
+def _policy_domains(state_dir: Path, key: str) -> set[str]:
+    policy = _load_json(state_dir / "discovery_policy.json", {})
+    values = policy.get(key, []) if isinstance(policy, dict) else []
+    domains: set[str] = set()
+    for item in values:
+        try:
+            domains.add(_normalize_host(str(item)))
+        except ValueError:
+            continue
+    return domains
+
+
 def _trusted_roots(state_dir: Path) -> set[str]:
     roots: set[str] = set()
     env = os.environ.get("META_DISCOVERY_TRUST_ROOTS", "")
@@ -109,14 +124,13 @@ def _trusted_roots(state_dir: Path) -> set[str]:
                 roots.add(_normalize_host(item))
             except ValueError:
                 continue
-
-    policy = _load_json(state_dir / "discovery_policy.json", {})
-    for item in policy.get("trusted_roots", []) if isinstance(policy, dict) else []:
-        try:
-            roots.add(_normalize_host(str(item)))
-        except ValueError:
-            continue
+    roots.update(_policy_domains(state_dir, "trusted_roots"))
     return roots
+
+
+def _company_domains(state_dir: Path) -> set[str]:
+    """Owner-declared company domains are reusable discovery authority roots."""
+    return _policy_domains(state_dir, "company_domains")
 
 
 def _default_repo_root() -> Path:
@@ -153,6 +167,35 @@ def _standing_authorized_exact_hosts(repo_root: Path) -> set[str]:
     return hosts
 
 
+def _reviewed_explicit_exact_hosts(state_dir: Path) -> set[str]:
+    """Reuse live read-only grants issued by the independent authority reviewer."""
+    now = _now()
+    reviewed = _load_json(state_dir / "authority_reviewed_grants.json", {})
+    if not isinstance(reviewed, dict) or reviewed.get("schema") != "meta-authority-reviewed-grants/v1":
+        return set()
+
+    hosts: set[str] = set()
+    for raw_host, grant in reviewed.get("hosts", {}).items():
+        if not isinstance(grant, dict):
+            continue
+        if int(grant.get("expires_at", 0)) <= now:
+            continue
+        if str(grant.get("credential_scope", "none")).strip().lower() != "none":
+            continue
+        if str(grant.get("effect", "read_only")).strip().lower() != "read_only":
+            continue
+        methods = {str(x).strip().upper() for x in grant.get("allowed_methods", [])}
+        if not methods.intersection({"GET", "HEAD"}):
+            continue
+        if not grant.get("matched_explicit_root") and grant.get("owner_authorization") != "explicit":
+            continue
+        try:
+            hosts.add(_normalize_host(str(raw_host)))
+        except ValueError:
+            continue
+    return hosts
+
+
 def _owner_supplied_exact_hosts(state_dir: Path) -> set[str]:
     """Treat exact owner-supplied HTTPS links as explicit read-only discovery intent."""
     signals = _load_json(state_dir / "human_intent_signals.json", {})
@@ -177,6 +220,14 @@ def _within_root(host: str, roots: Iterable[str]) -> str | None:
     return None
 
 
+def _descendant_of_exact_host(host: str, exact_hosts: Iterable[str]) -> str | None:
+    """Allow descendants of an already explicit host, never siblings or parents."""
+    for exact in exact_hosts:
+        if host.endswith("." + exact):
+            return exact
+    return None
+
+
 def _same_domain_hint(host: str, authorized_hosts: Iterable[str]) -> str | None:
     """Return a non-authorizing similarity hint for review prioritization only."""
     host_labels = host.split(".")
@@ -194,16 +245,34 @@ def _authorization_basis(
     host: str,
     *,
     trusted_roots: set[str],
+    company_domains: set[str],
     standing_exact_hosts: set[str],
+    reviewed_exact_hosts: set[str],
     owner_supplied_exact_hosts: set[str],
 ) -> tuple[str, str] | None:
     root = _within_root(host, trusted_roots)
     if root is not None:
         return "trusted_root", root
+
+    company_root = _within_root(host, company_domains)
+    if company_root is not None:
+        return "company_domain", company_root
+
     if host in standing_exact_hosts:
         return "standing_authorization_exact_host", host
+    standing_parent = _descendant_of_exact_host(host, standing_exact_hosts)
+    if standing_parent is not None:
+        return "standing_authorization_descendant", standing_parent
+
+    if host in reviewed_exact_hosts:
+        return "reviewed_explicit_exact_host", host
+
     if host in owner_supplied_exact_hosts:
         return "owner_supplied_exact_host", host
+    owner_parent = _descendant_of_exact_host(host, owner_supplied_exact_hosts)
+    if owner_parent is not None:
+        return "owner_supplied_descendant", owner_parent
+
     return None
 
 
@@ -252,7 +321,7 @@ def _intent_doc(state: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]
         })
 
     return {
-        "schema": "meta-human-intent-inference/v1",
+        "schema": "meta-human-intent-inference/v2",
         "generated_at": _now(),
         "policy": {
             "infer_likely_human_approval": True,
@@ -260,10 +329,15 @@ def _intent_doc(state: Path, candidates: list[dict[str, Any]]) -> dict[str, Any]
             "owner_context_is_strong_evidence": True,
             "owner_supplied_link_is_strong_intent_evidence": True,
             "inference_may_prioritize_without_reprompt": True,
-            "inference_may_create_new_authority": False,
+            "inference_may_create_new_unrelated_authority": False,
             "exact_live_explicit_grant_may_be_reused_without_reprompt": True,
             "active_standing_exact_host_may_be_reused_without_reprompt": True,
+            "active_standing_exact_host_descendants_may_be_reused_without_reprompt": True,
+            "active_reviewed_exact_host_may_be_reused_without_reprompt": True,
             "owner_supplied_exact_host_may_receive_read_only_discovery_authority": True,
+            "owner_supplied_exact_host_descendants_may_receive_read_only_discovery_authority": True,
+            "company_domain_may_receive_read_only_discovery_authority": True,
+            "likely_owner_intent_may_create_apply_ready_proposal": True,
         },
         "decisions": decisions,
     }
@@ -285,6 +359,7 @@ def run_discovery_authorization(
       discovery_candidates.json       - every normalized discovery and decision
       discovery_authorized.json       - live probationary read-only host grants
       discovery_authorization_requests.json - unresolved discoveries queued for review
+      discovery_authority_apply_queue.json - apply-ready proposals for likely owner intent
       human_intent_decisions.json     - likely-owner-intent ranking for all candidates
     """
     state = Path(state_dir)
@@ -292,7 +367,9 @@ def run_discovery_authorization(
     repository = Path(repo_root) if repo_root is not None else _default_repo_root()
 
     roots = _trusted_roots(state)
+    company_domains = _company_domains(state)
     standing_exact = _standing_authorized_exact_hosts(repository)
+    reviewed_exact = _reviewed_explicit_exact_hosts(state)
     owner_supplied_exact = _owner_supplied_exact_hosts(state)
     ttl = max(300, min(int(ttl_seconds), 24 * 60 * 60))
     now = _now()
@@ -303,7 +380,9 @@ def run_discovery_authorization(
     }
     candidates: list[dict[str, Any]] = []
     promoted: dict[str, dict[str, Any]] = {}
-    authorized_reference_hosts = roots | standing_exact | owner_supplied_exact
+    authorized_reference_hosts = (
+        roots | company_domains | standing_exact | reviewed_exact | owner_supplied_exact
+    )
 
     for source_name, path in sources.items():
         payload = _load_json(path, {})
@@ -316,7 +395,9 @@ def run_discovery_authorization(
             basis = _authorization_basis(
                 host,
                 trusted_roots=roots,
+                company_domains=company_domains,
                 standing_exact_hosts=standing_exact,
+                reviewed_exact_hosts=reviewed_exact,
                 owner_supplied_exact_hosts=owner_supplied_exact,
             )
             if basis is None:
@@ -360,7 +441,9 @@ def run_discovery_authorization(
             basis = _authorization_basis(
                 normalized_host,
                 trusted_roots=roots,
+                company_domains=company_domains,
                 standing_exact_hosts=standing_exact,
+                reviewed_exact_hosts=reviewed_exact,
                 owner_supplied_exact_hosts=owner_supplied_exact,
             )
             if basis is None:
@@ -374,44 +457,70 @@ def run_discovery_authorization(
         if isinstance(item, dict)
     }
     authorization_requests: list[dict[str, Any]] = []
+    apply_ready: list[dict[str, Any]] = []
     for record in candidates:
         if record.get("decision") != "candidate_only":
             continue
         intent = intent_by_key.get((str(record.get("host", "")), str(record.get("url", ""))), {})
         likely = bool(intent.get("likely_owner_intent", False))
-        record["authorization_readiness"] = "owner_review_ready" if likely else "review_required"
+        immediate = str(intent.get("priority", "")) == "immediate_proposal"
+        if immediate:
+            readiness = "apply_ready"
+        elif likely:
+            readiness = "owner_review_ready"
+        else:
+            readiness = "review_required"
+        record["authorization_readiness"] = readiness
         record["likely_owner_intent"] = likely
-        authorization_requests.append({
+        request = {
             "host": record.get("host"),
             "url": record.get("url"),
             "source": record.get("source"),
             "same_domain_hint": record.get("same_domain_hint"),
             "likely_owner_intent": likely,
-            "authorization_readiness": record["authorization_readiness"],
+            "intent_confidence": intent.get("confidence"),
+            "intent_priority": intent.get("priority"),
+            "authorization_readiness": readiness,
             "requested_effect": "read_only",
             "requested_methods": ["GET", "HEAD"],
             "credential_scope": "none",
             "created_at": now,
-        })
+        }
+        authorization_requests.append(request)
+        if readiness == "apply_ready":
+            apply_ready.append({
+                **request,
+                "recommended_decision": "authorize_probationary_read_only",
+                "proposed_expires_at": now + ttl,
+                "apply_requires_external_authority": True,
+            })
 
     candidate_doc = {
-        "schema": "meta-discovery-candidates/v2",
+        "schema": "meta-discovery-candidates/v3",
         "generated_at": now,
         "trusted_roots": sorted(roots),
+        "company_domains": sorted(company_domains),
         "standing_authorized_exact_hosts": sorted(standing_exact),
+        "reviewed_authorized_exact_hosts": sorted(reviewed_exact),
         "owner_supplied_exact_hosts": sorted(owner_supplied_exact),
         "candidates": candidates,
     }
     authorized_doc = {
-        "schema": "meta-discovery-authorized/v2",
+        "schema": "meta-discovery-authorized/v3",
         "generated_at": now,
         "mode": "probationary_read_only",
         "hosts": dict(sorted(promoted.items())),
     }
     request_doc = {
-        "schema": "meta-discovery-authorization-requests/v1",
+        "schema": "meta-discovery-authorization-requests/v2",
         "generated_at": now,
         "requests": authorization_requests,
+    }
+    apply_doc = {
+        "schema": "meta-discovery-authority-apply-queue/v1",
+        "generated_at": now,
+        "mode": "external-authority-apply-required",
+        "proposals": apply_ready,
     }
 
     (state / "discovery_candidates.json").write_text(
@@ -426,6 +535,10 @@ def run_discovery_authorization(
         json.dumps(request_doc, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
+    (state / "discovery_authority_apply_queue.json").write_text(
+        json.dumps(apply_doc, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
     (state / "human_intent_decisions.json").write_text(
         json.dumps(intent_doc, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
@@ -433,7 +546,9 @@ def run_discovery_authorization(
     decisions = intent_doc.get("decisions", [])
     return {
         "trusted_roots": sorted(roots),
+        "company_domains": sorted(company_domains),
         "standing_authorized_exact_hosts": sorted(standing_exact),
+        "reviewed_authorized_exact_hosts": sorted(reviewed_exact),
         "owner_supplied_exact_hosts": sorted(owner_supplied_exact),
         "candidate_count": len(candidates),
         "authorized_hosts": sorted(promoted),
@@ -442,6 +557,7 @@ def run_discovery_authorization(
         "owner_review_ready_count": sum(
             1 for x in authorization_requests if x.get("authorization_readiness") == "owner_review_ready"
         ),
+        "apply_ready_count": len(apply_ready),
         "ttl_seconds": ttl,
         "intent_likely_count": sum(1 for x in decisions if x.get("likely_owner_intent")),
         "intent_auto_execute_count": sum(1 for x in decisions if x.get("may_auto_execute")),
