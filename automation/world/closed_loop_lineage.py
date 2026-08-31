@@ -10,10 +10,10 @@ One lineage_id is carried through every phase:
       -> META/X/Senju audit
       -> PASS declaration
 
-The production apply path is intentionally limited to ordinary application/code
-changes. Changes to security/authority/guard/credential/emergency controls are
-recorded in the same lineage but stop at approval_pending_external rather than
-letting the same autonomous lineage mint or widen its own production authority.
+The production apply path is limited to ordinary application/code changes.
+Changes to security/authority/guard/credential/emergency controls are retained
+in the same lineage but stop at approval_pending_external rather than letting
+an autonomous lineage mint or widen its own production authority.
 """
 from __future__ import annotations
 
@@ -69,10 +69,6 @@ def _now() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def _json(value: Any) -> str:
-    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
-
-
 def _stable_id(*parts: object, length: int = 28) -> str:
     return hashlib.sha256("|".join(str(p) for p in parts).encode("utf-8")).hexdigest()[:length]
 
@@ -89,8 +85,7 @@ def is_protected_path(path: str) -> bool:
     value = _safe_repo_path(path).lower()
     if any(value.startswith(prefix.lower()) for prefix in _PROTECTED_PREFIXES):
         return True
-    name = Path(value).name
-    return any(token in value or token in name for token in _PROTECTED_TOKENS)
+    return any(token in value for token in _PROTECTED_TOKENS)
 
 
 def load_task(task_id: str) -> dict[str, Any]:
@@ -160,7 +155,7 @@ def build_prompt(task: Mapping[str, Any], actor: str, attempts: list[dict[str, A
 def generate_code(task: Mapping[str, Any], actor: str, attempts: list[dict[str, Any]]) -> str:
     try:
         import anthropic  # type: ignore
-    except ImportError as exc:  # pragma: no cover - workflow installs it
+    except ImportError as exc:  # pragma: no cover
         raise LineageError("anthropic package is required for patch generation") from exc
     key = os.environ.get("ANTHROPIC_API_KEY", "")
     if not key:
@@ -216,7 +211,7 @@ def approval_votes(task: Mapping[str, Any], *, candidate_passed: bool, test_outp
     only_expected = bool(files) and set(files) == {output_file}
     protected = is_protected_path(output_file)
     senju_test_ok, senju_test_output = run_command(str(task["test_cmd"])) if candidate_passed else (False, test_output)
-    votes = {
+    return {
         "META": {
             "approved": bool(candidate_passed),
             "basis": "generated candidate passed declared task test",
@@ -234,7 +229,6 @@ def approval_votes(task: Mapping[str, Any], *, candidate_passed: bool, test_outp
             "protected_control_path": protected,
         },
     }
-    return votes
 
 
 def consensus(votes: Mapping[str, Any]) -> bool:
@@ -245,12 +239,22 @@ def apply_patch(*, task: Mapping[str, Any], lineage_id: str, target_ref: str) ->
     output_file = str(task["output_file"])
     if is_protected_path(output_file):
         return {"applied": False, "reason": "protected control path requires authority outside this lineage"}
-    ok, out = run_command(f"git add -- {json.dumps(output_file)} && git diff --cached --quiet || git commit -m {json.dumps(f'closed-loop: {task[\"task_id\"]} [{lineage_id}]')}")
-    if not ok:
-        return {"applied": False, "reason": "commit_failed", "output": out}
+
+    add_ok, add_output = run_command(f"git add -- {json.dumps(output_file)}")
+    if not add_ok:
+        return {"applied": False, "reason": "git_add_failed", "output": add_output}
+    diff_ok, _ = run_command("git diff --cached --quiet")
+    if diff_ok:
+        return {"applied": False, "reason": "no_patch_to_apply"}
+
+    commit_message = f"closed-loop: {task['task_id']} [{lineage_id}]"
+    commit_ok, commit_output = run_command(f"git commit -m {json.dumps(commit_message)}")
+    if not commit_ok:
+        return {"applied": False, "reason": "commit_failed", "output": commit_output}
     head_ok, head = run_command("git rev-parse HEAD")
     if not head_ok:
         return {"applied": False, "reason": "head_resolution_failed", "output": head}
+    target_ref = _safe_repo_path(target_ref)
     push_ok, push_output = run_command(f"git push origin HEAD:{json.dumps(target_ref)}", timeout=300)
     return {
         "applied": push_ok,
@@ -424,7 +428,7 @@ def execute(
         persist_lineage(lineage, state_path)
         return lineage
     except Exception as exc:
-        event(lineage, lineage.get("phase", "unknown"), "SYSTEM", "error", error=str(exc))
+        event(lineage, str(lineage.get("phase") or "unknown"), "SYSTEM", "error", error=str(exc))
         persist_lineage(lineage, state_path)
         raise
 
