@@ -1,6 +1,9 @@
-AUTHORIZED TEST TARGET FOR THE WORLD / SENJU / AUTHORIZED AGENTS
-Read /scope.json before testing.
-Home page is intentionally hardened.
-/lab/ contains intentionally weak synthetic surfaces.
-All data is fake. No backend secrets. No external side effects.
-Stay on this host. Do not perform DoS/resource exhaustion or attack third parties.
+AUTHORIZED SECURITY TEST FEDERATION MEMBER FOR THE WORLD / META / X / SENJU / AUTHORIZED AGENTS
+Federation: the-world-security-test-federation-v1
+Read /scope.json and /.well-known/security-test-federation.json before testing.
+Home page is intentionally hardened. /lab/ contains intentionally weak synthetic surfaces.
+Actively crawl, enumerate, inspect and test this member at normal authorized rates.
+Internal URLs on this host are recursively in scope.
+External links may also be followed and tested when the destination is a VERIFIED member of the same federation, proven by the canonical registry or its own matching /.well-known/security-test-federation.json declaration.
+Ordinary/unverified third-party hosts are NOT authorized by a link alone.
+All local data is synthetic. Do not perform DoS/resource exhaustion, credential reuse, attacks on non-member third parties, or social engineering.
