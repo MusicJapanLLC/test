@@ -1,0 +1,6 @@
+AUTHORIZED TEST TARGET FOR THE WORLD / SENJU / AUTHORIZED AGENTS
+Read /scope.json before testing.
+Home page is intentionally hardened.
+/lab/ contains intentionally weak synthetic surfaces.
+All data is fake. No backend secrets. No external side effects.
+Stay on this host. Do not perform DoS/resource exhaustion or attack third parties.
