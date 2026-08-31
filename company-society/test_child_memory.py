@@ -24,8 +24,6 @@ class ChildMemoryTests(unittest.TestCase):
         first = pe.build(self.registry, "same-seed", memory)
         cm.record_episode(memory, first)
         second = pe.build(self.registry, "same-seed", memory)
-        # With 50 children and multiple actions/adventures, least-seen selection
-        # should move away from the exact same combination.
         self.assertNotEqual(first["child"]["id"], second["child"]["id"])
         self.assertNotEqual(first["action"]["kind"], second["action"]["kind"])
         self.assertNotEqual(first["child"]["adventure"], second["child"]["adventure"])
@@ -51,6 +49,30 @@ class ChildMemoryTests(unittest.TestCase):
         cm.ingest_observation(memory, payload, "two")
         self.assertEqual(before, memory["concept_counts"])
         self.assertEqual(1, len(memory["observation_digests"]))
+
+    def test_fleet_compaction_drops_raw_results_and_keeps_learning(self):
+        fleet = {
+            "schema": "child-external-fleet/v1",
+            "fleet_size": 50,
+            "mode": "public-read-only-open-domain-discovery",
+            "results": [{"url": "https://example.com/secret-looking-path", "snippet": "raw html body"}],
+            "summary": {
+                "status_counts": {"fetched": 48, "http_blocked": 2},
+                "distinct_domains": 31,
+                "top_concepts": ["robotics", "agents", "memory"],
+                "research_hypotheses": ["Test whether memory changes learning assumptions."],
+            },
+            "rnd_capsule": {
+                "top_concepts": ["robotics", "agents"],
+                "hypotheses": ["Try a bounded learning lens."],
+            },
+        }
+        compact = cm.compact_fleet_observation(fleet)
+        self.assertNotIn("results", compact)
+        self.assertNotIn("url", json.dumps(compact).lower())
+        memory = cm.fresh()
+        cm.ingest_observation(memory, compact, "child-external-fleet")
+        self.assertIn("robotics", memory["concept_counts"])
 
     def test_round_trip_file(self):
         memory = cm.fresh()

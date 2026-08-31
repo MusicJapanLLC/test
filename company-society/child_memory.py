@@ -47,7 +47,6 @@ def load(path: str | Path) -> dict[str, Any]:
         return fresh()
     data = json.loads(p.read_text(encoding="utf-8"))
     if data.get("schema") != SCHEMA:
-        # Preserve forward compatibility by importing only known safe counters.
         out = fresh()
         for key in ("episodes", "child_counts", "action_counts", "adventure_counts", "genius_counts", "concept_counts", "recent_concepts", "observation_digests"):
             if key in data:
@@ -146,6 +145,29 @@ def ingest_observation(memory: dict[str, Any], value: Any, source: str) -> None:
     memory["observations"] = memory["observations"][-120:]
 
 
+def compact_fleet_observation(fleet: dict[str, Any]) -> dict[str, Any]:
+    """Drop raw result URLs/bodies before Child shared memory ingestion."""
+    if not isinstance(fleet, dict):
+        return {}
+    summary = fleet.get("summary") if isinstance(fleet.get("summary"), dict) else {}
+    rnd = fleet.get("rnd_capsule") if isinstance(fleet.get("rnd_capsule"), dict) else {}
+    return {
+        "schema": fleet.get("schema"),
+        "fleet_size": fleet.get("fleet_size"),
+        "mode": fleet.get("mode"),
+        "summary": {
+            "status_counts": summary.get("status_counts", {}),
+            "distinct_domains": summary.get("distinct_domains", 0),
+            "top_concepts": (summary.get("top_concepts") or [])[:20],
+            "research_hypotheses": (summary.get("research_hypotheses") or [])[:8],
+        },
+        "rnd_capsule": {
+            "top_concepts": (rnd.get("top_concepts") or [])[:12],
+            "hypotheses": (rnd.get("hypotheses") or [])[:6],
+        },
+    }
+
+
 def least_seen(keys: list[str], counts: dict[str, int], seed: str, salt: str) -> str:
     if not keys:
         raise ValueError("least_seen requires at least one candidate")
@@ -158,7 +180,6 @@ def least_seen(keys: list[str], counts: dict[str, int], seed: str, salt: str) ->
 def top_concepts(memory: dict[str, Any], limit: int = 8) -> list[str]:
     counts = memory.get("concept_counts", {})
     recent = memory.get("recent_concepts", [])
-    # Recency gets a small bonus without erasing long-term frequency.
     score = Counter({k: int(v) for k, v in counts.items()})
     for idx, concept in enumerate(recent[:24]):
         score[concept] += max(1, 6 - idx // 4)
@@ -197,6 +218,7 @@ def main() -> int:
     parser.add_argument("--packet")
     parser.add_argument("--observation")
     parser.add_argument("--sparks")
+    parser.add_argument("--fleet")
     parser.add_argument("--out", default="child-guild-memory.json")
     parser.add_argument("--report", default="child-guild-memory.md")
     args = parser.parse_args()
@@ -211,6 +233,11 @@ def main() -> int:
     sparks = _read_json_if_exists(args.sparks)
     if sparks is not None:
         ingest_observation(memory, sparks, "child-research-sparks")
+    fleet = _read_json_if_exists(args.fleet)
+    if isinstance(fleet, dict):
+        compact = compact_fleet_observation(fleet)
+        if compact:
+            ingest_observation(memory, compact, "child-external-fleet")
 
     save(memory, args.out)
     Path(args.report).write_text(render(memory), encoding="utf-8")
