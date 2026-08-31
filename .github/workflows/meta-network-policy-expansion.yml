@@ -14,13 +14,6 @@ on:
       - automation/codegen/tests/test_network_policy_expansion.py
       - automation/codegen/tests/test_network_policy_acceleration.py
       - .github/workflows/meta-network-policy-expansion.yml
-  workflow_run:
-    workflows:
-      - Senju External Agency Orchestrator
-    types:
-      - completed
-    branches:
-      - claude/employee-onboarding-setup-udm86
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
