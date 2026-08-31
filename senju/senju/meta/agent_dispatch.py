@@ -16,31 +16,90 @@ DEFAULT_REF = "claude/employee-onboarding-setup-udm86"
 ROOT = Path(__file__).resolve().parents[4]
 STANDING_AUTH_REGISTRY = ROOT / "senju" / "state" / "standing_authorizations.json"
 OPERATIONAL_LEASE_LOG = ROOT / "senju" / "state" / "standing_authorization_leases.ndjson"
+_CREDENTIAL_RUNTIMES: dict[str, Any] = {}
 
 
-def _gh_api(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
+def _credential_runtime(actor: str):
+    normalized = actor.strip().upper()
+    if normalized not in _CREDENTIAL_RUNTIMES:
+        from ..credential_runtime import CredentialRecoveryRuntime
+
+        _CREDENTIAL_RUNTIMES[normalized] = CredentialRecoveryRuntime.from_environment(
+            actor=normalized,
+            state_dir=ROOT / "senju" / "state",
+        )
+    return _CREDENTIAL_RUNTIMES[normalized]
+
+
+def _gh_api(
+    method: str,
+    path: str,
+    body: dict | None = None,
+    *,
+    required_scopes: frozenset[str] = frozenset(),
+    operation: str = "github_api",
+    actor: str = "META",
+) -> dict[str, Any]:
     url = f"https://api.github.com{path}"
     data = json.dumps(body).encode() if body else None
-    req = urllib.request.Request(url, data=data, method=method, headers={
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github+json",
-        "Content-Type": "application/json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    })
+
+    def send(token: str) -> dict[str, Any]:
+        req = urllib.request.Request(url, data=data, method=method, headers={
+            "Authorization": f"token {token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        })
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                body_bytes = resp.read()
+                return json.loads(body_bytes) if body_bytes else {"ok": True}
+        except urllib.error.HTTPError as exc:
+            return {"_error": exc.code, "_msg": exc.reason}
+        except Exception as exc:
+            return {"_error": str(exc)}
+
+    first = send(GITHUB_TOKEN)
+    if str(first.get("_error")) not in {"401", "403"} or not required_scopes:
+        return first
+
+    # Permission recovery is limited to credentials already injected into the runtime.
+    # The tuner cannot create grants, widen scopes, or change AuthorityProfile.
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            body_bytes = resp.read()
-            return json.loads(body_bytes) if body_bytes else {"ok": True}
-    except urllib.error.HTTPError as exc:
-        return {"_error": exc.code, "_msg": exc.reason}
+        runtime = _credential_runtime(actor)
+        tuned = runtime.recover(
+            provider="github",
+            required_scopes=required_scopes,
+            operation=operation,
+            resource=path,
+            error_code=f"http_{first.get('_error')}",
+        )
+        record = runtime.result_record(tuned)
+        selected = runtime.resolve_selected_secret(tuned)
+        if not selected:
+            return {**first, "_credential_recovery": record}
+        retried = send(selected)
+        return {**retried, "_credential_recovery": record, "_retried_after_permission_failure": True}
     except Exception as exc:
-        return {"_error": str(exc)}
+        return {**first, "_credential_recovery_error": str(exc)}
 
 
-def dispatch_workflow(workflow_file: str, ref: str, inputs: dict[str, Any] | None = None) -> dict[str, Any]:
+def dispatch_workflow(
+    workflow_file: str,
+    ref: str,
+    inputs: dict[str, Any] | None = None,
+    *,
+    actor: str = "META",
+) -> dict[str, Any]:
     owner, repo = REPO.split("/", 1)
-    result = _gh_api("POST", f"/repos/{owner}/{repo}/actions/workflows/{workflow_file}/dispatches",
-                     {"ref": ref, "inputs": {k: str(v) for k, v in (inputs or {}).items()}})
+    result = _gh_api(
+        "POST",
+        f"/repos/{owner}/{repo}/actions/workflows/{workflow_file}/dispatches",
+        {"ref": ref, "inputs": {k: str(v) for k, v in (inputs or {}).items()}},
+        required_scopes=frozenset({"actions:write"}),
+        operation="github_workflow_dispatch",
+        actor=actor,
+    )
     return {"workflow": workflow_file, "ref": ref, "inputs": inputs, "result": result}
 
 
@@ -72,6 +131,7 @@ def register_recovery_worker(
             "heartbeat_field": heartbeat_field,
             "stale_after_seconds": str(stale_after_seconds),
         },
+        actor=actor,
     )
 
 
@@ -128,23 +188,43 @@ def renew_standing_authorization(
     }
 
 
-def steer_adversary(focus_surface: str, pressure_multiplier: float = 3.0) -> dict[str, Any]:
-    return dispatch_workflow("senju-adversary-full-join.yml", ref=DEFAULT_REF,
-                             inputs={"focus_surface": focus_surface, "pressure_multiplier": str(pressure_multiplier)})
+def steer_adversary(focus_surface: str, pressure_multiplier: float = 3.0, *, actor: str = "META") -> dict[str, Any]:
+    return dispatch_workflow(
+        "senju-adversary-full-join.yml",
+        ref=DEFAULT_REF,
+        inputs={"focus_surface": focus_surface, "pressure_multiplier": str(pressure_multiplier)},
+        actor=actor,
+    )
 
 
-def steer_opposition(damage_target: str, cycles: int = 1) -> dict[str, Any]:
-    return dispatch_workflow("live-opposition-force.yml", ref=DEFAULT_REF,
-                             inputs={"target_guard": damage_target, "extra_cycles": str(cycles)})
+def steer_opposition(damage_target: str, cycles: int = 1, *, actor: str = "META") -> dict[str, Any]:
+    return dispatch_workflow(
+        "live-opposition-force.yml",
+        ref=DEFAULT_REF,
+        inputs={"target_guard": damage_target, "extra_cycles": str(cycles)},
+        actor=actor,
+    )
 
 
-def post_jules_task(title: str, body: str, labels: list[str] | None = None) -> dict[str, Any]:
+def post_jules_task(
+    title: str,
+    body: str,
+    labels: list[str] | None = None,
+    *,
+    actor: str = "META",
+) -> dict[str, Any]:
     if not GITHUB_TOKEN:
         return {"_error": "no GITHUB_TOKEN"}
     owner, repo = REPO.split("/", 1)
-    result = _gh_api("POST", f"/repos/{owner}/{repo}/issues",
-                     {"title": f"[META→Jules] {title}", "body": body,
-                      "labels": (labels or []) + ["meta-directive", "jules-task"]})
+    result = _gh_api(
+        "POST",
+        f"/repos/{owner}/{repo}/issues",
+        {"title": f"[{actor}→Jules] {title}", "body": body,
+         "labels": (labels or []) + ["meta-directive", "jules-task"]},
+        required_scopes=frozenset({"issues:write"}),
+        operation="github_issue_create",
+        actor=actor,
+    )
     return {"action": "jules_task", "title": title, "result": result}
 
 
@@ -163,19 +243,20 @@ def dispatch_all(commands: list[dict[str, Any]], repo_root: Path) -> list[dict[s
     results = []
     for cmd in commands:
         kind = cmd.get("kind")
+        actor = str(cmd.get("actor", "META")).upper()
         try:
             if kind == "steer_adversary":
-                results.append(steer_adversary(cmd["surface"], cmd.get("multiplier", 3.0)))
+                results.append(steer_adversary(cmd["surface"], cmd.get("multiplier", 3.0), actor=actor))
             elif kind == "steer_opposition":
-                results.append(steer_opposition(cmd["surface"], cmd.get("cycles", 1)))
+                results.append(steer_opposition(cmd["surface"], cmd.get("cycles", 1), actor=actor))
             elif kind == "jules_task":
-                results.append(post_jules_task(cmd["title"], cmd["body"], cmd.get("labels")))
+                results.append(post_jules_task(cmd["title"], cmd["body"], cmd.get("labels"), actor=actor))
             elif kind == "agent_directive":
                 path = write_agent_directive(Path(cmd["agent_file"]), cmd["directive"], repo_root)
                 results.append({"action": "agent_directive", "file": str(path)})
             elif kind == "register_recovery_worker":
                 results.append(register_recovery_worker(
-                    actor=cmd.get("actor", "META"),
+                    actor=actor,
                     worker_id=cmd["worker_id"],
                     role=cmd.get("role", "persistent_worker"),
                     workflow=cmd["workflow"],
@@ -186,7 +267,7 @@ def dispatch_all(commands: list[dict[str, Any]], repo_root: Path) -> list[dict[s
                 ))
             elif kind == "renew_standing_authorization":
                 results.append(renew_standing_authorization(
-                    actor=cmd.get("actor", "META"),
+                    actor=actor,
                     authorization_reference=cmd["authorization_reference"],
                     requested_hosts=cmd.get("requested_hosts"),
                     requested_methods=cmd.get("requested_methods"),
