@@ -11,6 +11,7 @@ from typing import Any
 
 REPO = os.environ.get("GITHUB_REPOSITORY", "MusicJapanLLC/test")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
+DEFAULT_REF = "claude/employee-onboarding-setup-udm86"
 
 
 def _gh_api(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
@@ -39,13 +40,48 @@ def dispatch_workflow(workflow_file: str, ref: str, inputs: dict[str, Any] | Non
     return {"workflow": workflow_file, "ref": ref, "inputs": inputs, "result": result}
 
 
+def register_recovery_worker(
+    *,
+    actor: str,
+    worker_id: str,
+    role: str,
+    workflow: str,
+    heartbeat_file: str,
+    heartbeat_field: str = "alive_at",
+    stale_after_seconds: int = 7200,
+    namespace_id: str = "musicjapanllc-test-actions",
+) -> dict[str, Any]:
+    """Ask the fixed registration workflow to persist a recovery-worker definition.
+
+    This is deliberately not a generic persistence primitive. The called workflow validates
+    the request against the owner-approved namespace before it can create durable state.
+    """
+    actor = actor.upper().strip()
+    if actor not in {"META", "X"}:
+        return {"_error": "actor_not_allowed"}
+    return dispatch_workflow(
+        "meta-x-register-recovery-worker.yml",
+        ref=DEFAULT_REF,
+        inputs={
+            "actor": actor,
+            "namespace_id": namespace_id,
+            "worker_id": worker_id,
+            "role": role,
+            "workflow": workflow,
+            "heartbeat_file": heartbeat_file,
+            "heartbeat_field": heartbeat_field,
+            "stale_after_seconds": str(stale_after_seconds),
+        },
+    )
+
+
 def steer_adversary(focus_surface: str, pressure_multiplier: float = 3.0) -> dict[str, Any]:
-    return dispatch_workflow("senju-adversary-full-join.yml", ref="claude/employee-onboarding-setup-udm86",
+    return dispatch_workflow("senju-adversary-full-join.yml", ref=DEFAULT_REF,
                              inputs={"focus_surface": focus_surface, "pressure_multiplier": str(pressure_multiplier)})
 
 
 def steer_opposition(damage_target: str, cycles: int = 1) -> dict[str, Any]:
-    return dispatch_workflow("live-opposition-force.yml", ref="claude/employee-onboarding-setup-udm86",
+    return dispatch_workflow("live-opposition-force.yml", ref=DEFAULT_REF,
                              inputs={"target_guard": damage_target, "extra_cycles": str(cycles)})
 
 
@@ -84,6 +120,17 @@ def dispatch_all(commands: list[dict[str, Any]], repo_root: Path) -> list[dict[s
             elif kind == "agent_directive":
                 path = write_agent_directive(Path(cmd["agent_file"]), cmd["directive"], repo_root)
                 results.append({"action": "agent_directive", "file": str(path)})
+            elif kind == "register_recovery_worker":
+                results.append(register_recovery_worker(
+                    actor=cmd.get("actor", "META"),
+                    worker_id=cmd["worker_id"],
+                    role=cmd.get("role", "persistent_worker"),
+                    workflow=cmd["workflow"],
+                    heartbeat_file=cmd["heartbeat_file"],
+                    heartbeat_field=cmd.get("heartbeat_field", "alive_at"),
+                    stale_after_seconds=cmd.get("stale_after_seconds", 7200),
+                    namespace_id=cmd.get("namespace_id", "musicjapanllc-test-actions"),
+                ))
             else:
                 results.append({"_unknown_kind": kind})
         except Exception as exc:
