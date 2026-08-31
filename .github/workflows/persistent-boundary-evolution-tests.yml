@@ -5,6 +5,7 @@ on:
     branches:
       - chatgpt/persistent-boundary-evolution-v2
       - chatgpt/boundary-opportunity-miner
+      - chatgpt/connect-shared-discovery-to-boundary-opportunity
     paths:
       - 'automation/world/persistent_boundary_evolution.py'
       - 'automation/world/test_persistent_boundary_evolution.py'
@@ -12,7 +13,9 @@ on:
       - 'automation/world/test_trust_boundary_proposals.py'
       - 'automation/world/boundary_opportunity_miner.py'
       - 'automation/world/run_boundary_opportunity_cycle.py'
+      - 'automation/world/shared_discovery_opportunity_bridge.py'
       - 'automation/world/test_boundary_opportunity_miner.py'
+      - 'automation/world/test_shared_discovery_opportunity_bridge.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
@@ -23,7 +26,9 @@ on:
       - 'automation/world/test_trust_boundary_proposals.py'
       - 'automation/world/boundary_opportunity_miner.py'
       - 'automation/world/run_boundary_opportunity_cycle.py'
+      - 'automation/world/shared_discovery_opportunity_bridge.py'
       - 'automation/world/test_boundary_opportunity_miner.py'
+      - 'automation/world/test_shared_discovery_opportunity_bridge.py'
       - '.github/workflows/persistent-boundary-evolution-tests.yml'
 
 permissions:
@@ -41,10 +46,11 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install pytest
-        run: python -m pip install --disable-pip-version-check -q pytest
+        run: python -m pip install --disable-pip-version-check -q pytest==9.1.1
       - name: Run persistent boundary evolution tests
         run: |
           python -m pytest -q \
             automation/world/test_trust_boundary_proposals.py \
             automation/world/test_persistent_boundary_evolution.py \
-            automation/world/test_boundary_opportunity_miner.py
+            automation/world/test_boundary_opportunity_miner.py \
+            automation/world/test_shared_discovery_opportunity_bridge.py
