@@ -9,12 +9,21 @@ on:
       - 'automation/codegen/engine/discovery_event_bus.py'
       - 'automation/codegen/engine/discovery_closed_loop.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_action.py'
+      - 'automation/codegen/engine/discovery_replica_continuity.py'
       - 'automation/codegen/run_discovery_closed_loop.py'
+      - 'automation/codegen/run_discovery_action_continuity.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/tests/test_discovery_authorization.py'
       - 'automation/codegen/tests/test_shared_discovery_authority.py'
       - 'automation/codegen/tests/test_discovery_event_bus.py'
       - 'automation/codegen/tests/test_discovery_closed_loop.py'
       - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'automation/codegen/tests/test_discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_action.py'
+      - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
   push:
@@ -25,16 +34,25 @@ on:
       - 'automation/codegen/engine/discovery_event_bus.py'
       - 'automation/codegen/engine/discovery_closed_loop.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_action.py'
+      - 'automation/codegen/engine/discovery_replica_continuity.py'
       - 'automation/codegen/run_discovery_closed_loop.py'
+      - 'automation/codegen/run_discovery_action_continuity.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/tests/test_discovery_authorization.py'
       - 'automation/codegen/tests/test_shared_discovery_authority.py'
       - 'automation/codegen/tests/test_discovery_event_bus.py'
       - 'automation/codegen/tests/test_discovery_closed_loop.py'
       - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'automation/codegen/tests/test_discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_action.py'
+      - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
   schedule:
-    - cron: '19 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -59,7 +77,7 @@ jobs:
           python-version: '3.12'
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check -q pytest
-      - name: Run discovery authorization closed-loop tests
+      - name: Run discovery authorization and continuity tests
         env:
           PYTHONPATH: automation/codegen:senju
         run: >-
@@ -69,6 +87,9 @@ jobs:
           automation/codegen/tests/test_discovery_event_bus.py
           automation/codegen/tests/test_discovery_closed_loop.py
           automation/codegen/tests/test_discovery_probe_runner.py
+          automation/codegen/tests/test_discovery_capability_leases.py
+          automation/codegen/tests/test_discovery_external_action.py
+          automation/codegen/tests/test_discovery_replica_continuity.py
 
   live-loop:
     if: github.event_name != 'pull_request'
@@ -103,7 +124,15 @@ jobs:
           source = Path('automation/codegen/meta_state')
           target = Path('.discovery-runtime-state')
           target.mkdir(parents=True, exist_ok=True)
-          excluded = set(GENERATED_FILES) | {'loop_receipts.json', 'shared_probe_receipts.json'}
+          excluded = set(GENERATED_FILES) | {
+              'loop_receipts.json',
+              'shared_probe_receipts.json',
+              'live_run_receipt.json',
+              'discovery_capability_leases.json',
+              'discovery_capability_replicas.json',
+              'discovery_external_action_receipts.json',
+              'action_continuity_run.json',
+          }
           if source.exists():
               for item in source.rglob('*.json'):
                   if item.name in excluded:
@@ -114,7 +143,7 @@ jobs:
                   shutil.copy2(item, destination)
           print('runtime_state:', target)
           PY
-      - name: Run live Discovery -> Authorize -> Probe -> Rediscover loop
+      - name: Run Discovery -> Authorization -> Probe -> Rediscovery
         env:
           PYTHONPATH: automation/codegen:senju
         run: >-
@@ -124,7 +153,16 @@ jobs:
           --rounds 3
           --max-targets 20
           --json-out .discovery-runtime-state/live_run_receipt.json
-      - name: Upload discovery authority evidence
+      - name: Run Authority -> Replication -> External Action -> Persistence -> Recovery
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python automation/codegen/run_discovery_action_continuity.py
+          --state .discovery-runtime-state
+          --repo-root .
+          --max-actions 8
+          --json-out .discovery-runtime-state/action_continuity_run.json
+      - name: Upload discovery authority and continuity evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -132,9 +170,16 @@ jobs:
           path: |
             .discovery-runtime-state/loop_receipts.json
             .discovery-runtime-state/live_run_receipt.json
+            .discovery-runtime-state/action_continuity_run.json
             .discovery-runtime-state/shared_discovery_knowledge.json
             .discovery-runtime-state/discovery_authorized.json
             .discovery-runtime-state/discovery_action_queue.json
+            .discovery-runtime-state/discovery_capability_leases.json
+            .discovery-runtime-state/discovery_capability_replicas.json
+            .discovery-runtime-state/discovery_external_action_receipts.json
             .discovery-runtime-state/discovery_events.ndjson
+            .discovery-runtime-state/capability_lease_events.ndjson
+            .discovery-runtime-state/capability_replica_events.ndjson
+            .discovery-runtime-state/external_action_denials.ndjson
           if-no-files-found: warn
           retention-days: 30
