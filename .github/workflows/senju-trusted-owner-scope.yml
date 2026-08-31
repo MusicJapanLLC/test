@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       target_url:
-        description: "Target URL inside SENJU_TRUSTED_OWNER_SCOPE_JSON"
+        description: "Target URL inside configured trusted owner scope"
         required: true
         type: string
       method:
@@ -30,7 +30,11 @@ on:
       - chatgpt/trusted-owner-scope-20260831
       - claude/employee-onboarding-setup-udm86
     paths:
+      - "AUTHORIZED_TEST_TARGETS.json"
+      - "senju/config/authorized-test-range.json"
+      - "senju/senju/safety.py"
       - "senju/senju/trusted_scope.py"
+      - "senju/tests/test_safety.py"
       - "senju/tests/test_trusted_scope.py"
       - "senju/examples/trusted-owner-scope.example.json"
       - ".github/workflows/senju-trusted-owner-scope.yml"
@@ -64,24 +68,31 @@ jobs:
           PIP_NO_INPUT: "1"
         run: python -m pip install -e './senju[dev]'
 
-      - name: Run trusted-scope tests
+      - name: Run scope tests
         working-directory: senju
-        run: python -m pytest tests/test_trusted_scope.py -q
+        run: python -m pytest tests/test_trusted_scope.py tests/test_safety.py -q
 
-      - name: Verify no per-run engagement ceremony
+      - name: Verify Kabeya authorized range recursion
         working-directory: senju
         run: |
           python - <<'PY'
+          from pathlib import Path
+          from senju.safety import ScopeGuard, default_lab_policy
           from senju.trusted_scope import TrustedOwnerScope
-          scope = TrustedOwnerScope.from_dict({
-              "domain_roots": ["example.com"],
-              "effect_level": "state_change",
-          })
-          assert scope.allows_url("https://api.example.com/")
-          policy = scope.policy_for_url("https://worker.example.com/a", method="PATCH")
-          assert policy.allow_hosts == frozenset({"worker.example.com"})
-          assert policy.allow_delete is True
-          print("SENJU_TRUSTED_OWNER_SCOPE_VERIFIED")
+
+          scope = TrustedOwnerScope.load(Path('config/authorized-test-range.json'))
+          urls = [
+              'https://kabeya-authorized-test-range.onrender.com/',
+              'https://kabeya-authorized-test-range.onrender.com/lab/index.html',
+              'https://kabeya-authorized-test-range.onrender.com/lab/nullharbor.html?role=admin#panel',
+          ]
+          guard = ScopeGuard(default_lab_policy())
+          for url in urls:
+              assert scope.allows_url(url)
+              guard.check(url)
+          assert not scope.allows_url('https://example.com/')
+          assert not guard.is_allowed('https://example.com/')
+          print('KABEYA_AUTHORIZED_RANGE_VERIFIED')
           PY
 
   execute:
@@ -115,14 +126,14 @@ jobs:
           BODY: ${{ inputs.body }}
         run: |
           set -euo pipefail
-          if [ -z "${TRUSTED_SCOPE_JSON}" ]; then
-            echo "SENJU_TRUSTED_OWNER_SCOPE_JSON is not configured" >&2
-            exit 2
+          if [ -n "${TRUSTED_SCOPE_JSON}" ]; then
+            printf '%s' "${TRUSTED_SCOPE_JSON}" > /tmp/senju-trusted-scope.json
+          else
+            cp senju/config/authorized-test-range.json /tmp/senju-trusted-scope.json
           fi
           python - <<'PY'
           import json, os
           from pathlib import Path
-          Path('/tmp/senju-trusted-scope.json').write_text(os.environ['TRUSTED_SCOPE_JSON'], encoding='utf-8')
           body = os.environ.get('BODY', '')
           request = {
               'url': os.environ['TARGET_URL'],
