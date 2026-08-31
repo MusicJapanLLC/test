@@ -10,6 +10,9 @@ on:
       - "outside-world/external_write_router.py"
       - "outside-world/external_write_targets.json"
       - "outside-world/reality_policy.json"
+      - "senju/senju/meta/cooperative_authority_loop.py"
+      - "senju/scripts/run_cooperative_authority_loop.py"
+      - "senju/tests/test_cooperative_authority_loop.py"
       - ".github/workflows/the-world-external-write-router.yml"
 
 concurrency:
@@ -51,6 +54,16 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Install Senju cooperative runtime
+        run: python -m pip install --disable-pip-version-check -e './senju[dev]'
+
+      - name: Verify cooperative authority contract
+        run: |
+          python -m py_compile \
+            senju/senju/meta/cooperative_authority_loop.py \
+            senju/scripts/run_cooperative_authority_loop.py
+          python -m pytest -q senju/tests/test_cooperative_authority_loop.py
+
       - name: Load latest successful Reality Agency evidence
         shell: bash
         run: |
@@ -71,11 +84,11 @@ jobs:
           echo "WORLD_SOURCE_RUN_ID=$RUN_ID" >> "$GITHUB_ENV"
           echo "Reality source run: **$RUN_ID**" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Restore external-write memory
+      - name: Restore external-write and cooperative authority memory
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p /tmp/external-write-prev
+          mkdir -p /tmp/external-write-prev cooperative-authority
           PREV="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD External Write Router" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty' || true)"
           if [[ -n "$PREV" ]]; then
             gh run download "$PREV" --repo "$GITHUB_REPOSITORY" --name world-external-write-state --dir /tmp/external-write-prev || true
@@ -84,6 +97,43 @@ jobs:
           if [[ -n "$STATE" ]]; then
             cp "$STATE" external-write-previous.json
           fi
+          COOP="$(find /tmp/external-write-prev -name cooperative_loop_state.json -print -quit || true)"
+          if [[ -n "$COOP" ]]; then
+            COOP_DIR="$(dirname "$COOP")"
+            cp -R "$COOP_DIR/." cooperative-authority/
+            echo "Cooperative authority state restored from run: **$PREV**" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Cooperative authority state: fresh/recoverable bootstrap" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Run META X Senju persistent cooperative authority loop
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_cooperative_authority_loop.py \
+            --events reality-events.json \
+            --policy outside-world/reality_policy.json \
+            --state-dir cooperative-authority \
+            --repo "$GITHUB_REPOSITORY" \
+            --out cooperative-authority/last-cycle.json
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open("cooperative-authority/last-cycle.json", encoding="utf-8"))
+          print("## META / X / SENJU cooperative authority loop")
+          print(f"- Result: `{d.get('reason')}`")
+          print(f"- Discovery selected: `{d.get('discovery',{}).get('selected')}`")
+          print(f"- Consensus unanimous: `{d.get('consensus',{}).get('unanimous')}`")
+          print(f"- Authority ready: `{d.get('authority',{}).get('ready')}`")
+          print(f"- Credentialed write posted: `{d.get('credentialed_write',{}).get('posted')}`")
+          print(f"- Recursive delegation advanced: `{d.get('recursive_delegation',{}).get('advanced')}`")
+          print(f"- Persistent state saved: `{d.get('persistence',{}).get('saved')}`")
+          print(f"- Authority state recovered: `{d.get('recovery',{}).get('state_recovered', False)}`")
+          if d.get('authority',{}).get('active_profile_id'):
+              print(f"- Active authority: `{d['authority']['active_profile_id']}`")
+          if d.get('credentialed_write',{}).get('issue_url'):
+              print(f"- Credentialed write receipt: {d['credentialed_write']['issue_url']}")
+          PY
 
       - name: Publish through rotating authorized platform adapters
         run: |
@@ -116,3 +166,4 @@ jobs:
             reality-events.json
             external-write-receipts.json
             external-write-state.json
+            cooperative-authority/
