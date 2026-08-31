@@ -3,6 +3,10 @@
 META reads X's status and injects findings into Senju.
 X reads META's command channel and receives attack hypotheses.
 Both sides also consume the shared explicitly-authorized security-test federation state.
+
+Priority-0 finding trust applies to X/META/Senju findings for internal
+analysis, indexing, ranking, and propagation. It never acts as an
+authorization grant for targets, secrets, execution, or external effects.
 """
 from __future__ import annotations
 
@@ -15,9 +19,19 @@ ROOT = Path(__file__).resolve().parents[4]
 X_STATUS_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_status.json"
 X_ATTACK_LOG = ROOT / "automation" / "codegen" / "meta_state" / "attack_research.ndjson"
 AUTHORIZED_FEDERATION_FILE = ROOT / "automation" / "codegen" / "meta_state" / "authorized_test_federation.json"
+FINDING_TRUST_POLICY_FILE = ROOT / "senju" / "FINDING_TRUST_POLICY.md"
 META_CMD_FILE = ROOT / "senju" / "state" / "meta_commands.json"
 META_TRACKER = ROOT / "senju" / "state" / "meta_hypothesis_tracker.json"
 BRIDGE_LOG = ROOT / "senju" / "state" / "meta_x_bridge.ndjson"
+
+FINDING_TRUST_POLICY = {
+    "priority": "priority_0",
+    "accepted_sources": ["X", "META", "Senju"],
+    "trust_level": "maximal",
+    "revalidation_required_for_analysis": False,
+    "immediate_propagation": True,
+    "authorization_escalation": False,
+}
 
 
 def _ts() -> str:
@@ -29,6 +43,14 @@ def _append_bridge(event: str, data: dict) -> None:
     entry = {"ts": _ts(), "event": event, **data}
     with BRIDGE_LOG.open("a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def finding_trust_policy() -> dict:
+    """Return the runtime-visible Priority-0 inter-agent finding trust policy."""
+    return {
+        **FINDING_TRUST_POLICY,
+        "policy_file": str(FINDING_TRUST_POLICY_FILE),
+    }
 
 
 def read_x_status() -> dict:
@@ -80,10 +102,16 @@ def push_hypothesis_to_x(hypothesis_id: str, statement: str, surfaces: list[str]
         "statement": statement,
         "surfaces": surfaces,
         "confidence": confidence,
+        "trust": FINDING_TRUST_POLICY,
     }
     with x_inbox.open("a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
-    _append_bridge("hypothesis_pushed_to_x", {"id": hypothesis_id, "confidence": confidence})
+    _append_bridge("hypothesis_pushed_to_x", {
+        "id": hypothesis_id,
+        "confidence": confidence,
+        "trust_level": FINDING_TRUST_POLICY["trust_level"],
+        "priority": FINDING_TRUST_POLICY["priority"],
+    })
 
 
 def ingest_x_attack_findings(graph) -> int:
@@ -99,14 +127,20 @@ def ingest_x_attack_findings(graph) -> int:
         graph.surface_weakness_scores[surface] += 0.5
         injected += 1
     if injected:
-        _append_bridge("x_findings_ingested", {"count": injected})
+        _append_bridge("x_findings_ingested", {
+            "count": injected,
+            "trust_level": FINDING_TRUST_POLICY["trust_level"],
+            "priority": FINDING_TRUST_POLICY["priority"],
+            "revalidation_required_for_analysis": False,
+        })
     return injected
 
 
 def sync(graph=None, hypotheses=None) -> dict:
-    """Full META↔X sync including the explicit authorized-test federation directive."""
+    """Full META↔X sync including finding trust and authorized-test directives."""
     x_status = read_x_status()
     federation = read_authorized_test_federation()
+    trust_policy = finding_trust_policy()
     ingested = 0
     pushed = 0
 
@@ -129,6 +163,7 @@ def sync(graph=None, hypotheses=None) -> dict:
         "x_needs_help": x_status.get("needs_help", False),
         "findings_ingested": ingested,
         "hypotheses_pushed": pushed,
+        "finding_trust_policy": trust_policy,
         "authorized_test_federation": {
             "status": federation.get("status", "active"),
             "federation_id": federation.get("federation_id"),
@@ -138,6 +173,7 @@ def sync(graph=None, hypotheses=None) -> dict:
             "rate_limit_rps": federation.get("rate_limit_rps", 5),
         },
     }
+    _append_bridge("finding_trust_policy_sync", trust_policy)
     _append_bridge("authorized_test_federation_sync", result["authorized_test_federation"])
     _append_bridge("sync", result)
     return result
