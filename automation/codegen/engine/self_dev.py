@@ -2,10 +2,10 @@
 Self-Development Engine — X improves its own codebase autonomously.
 
 Cycle:
-1. Read all engine/*.py source
-2. Ask LLM to find improvements + generate patch
-3. Apply patch, run tests
-4. If tests pass → push via GitHub API (direct to branch)
+1. Read engine source plus selected security-boundary source
+2. Ask LLM to find one concrete improvement
+3. Ordinary engine change: apply + test + push to the configured development branch
+4. Security-boundary change: stage proposal only for independent exact-head audit
 5. Log result to Senju knowledge
 """
 
@@ -15,6 +15,8 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+
+from .security_boundary_proposals import is_security_boundary_target, stage_x_proposal
 
 ROOT = Path(__file__).resolve().parents[3]
 ENGINE_DIR = Path(__file__).parent
@@ -38,9 +40,36 @@ def _append(path: Path, record: dict):
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
 
 
+def _boundary_candidate_paths() -> list[Path]:
+    """Return representative production control-plane files X may inspect/propose changing."""
+    candidates = {
+        ROOT / "senju" / "senju" / "safety.py",
+        ROOT / "senju" / "senju" / "external.py",
+        ROOT / "senju" / "config" / "credential-broker-policy.json",
+        ROOT / "senju" / "config" / "authority-self-lease.json",
+        ROOT / ".github" / "workflows" / "security-guard.yml",
+        ROOT / ".github" / "workflows" / "auto-merge.yml",
+        ROOT / ".github" / "workflows" / "openhands-audit-router.yml",
+        ROOT / ".github" / "workflows" / "senju-auto-approve-merge.yml",
+    }
+    for pattern in ("AUTHORIZED_TARGETS.md", "authorized_test_targets.json"):
+        for path in ROOT.rglob(pattern):
+            candidates.add(path)
+    return [path for path in sorted(candidates) if path.exists()][:24]
+
+
 def read_engine_source() -> dict[str, str]:
-    """Read all Python files in engine/."""
-    sources = {}
+    """Read X engine files plus selected control-plane files for proposal generation."""
+    sources: dict[str, str] = {}
+
+    # Put security-boundary files first so the model can actually consider them.
+    for path in _boundary_candidate_paths():
+        try:
+            key = str(path.relative_to(ROOT)).replace("\\", "/")
+            sources[key] = path.read_text(encoding="utf-8")
+        except Exception:
+            pass
+
     for py_file in sorted(ENGINE_DIR.glob("*.py")):
         if py_file.name == "__pycache__":
             continue
@@ -52,16 +81,16 @@ def read_engine_source() -> dict[str, str]:
 
 
 def generate_improvement(client, sources: dict[str, str], focus: str = "") -> dict:
-    """Ask LLM to identify and implement one concrete improvement."""
+    """Ask LLM to identify one engine improvement or one audited boundary proposal."""
     source_summary = "\n\n".join(
-        f"=== {name} ===\n{code[:2000]}"
-        for name, code in list(sources.items())[:5]
+        f"=== {name} ===\n{code[:1800]}"
+        for name, code in list(sources.items())[:14]
     )
 
     focus_hint = f"\nFocus area: {focus}" if focus else ""
 
     prompt = f"""You are improving an autonomous code generation system (X).
-Here are the current engine source files:{focus_hint}
+Here are current engine and selected production control-plane source files:{focus_hint}
 
 {source_summary}
 
@@ -69,20 +98,22 @@ Your task: identify ONE concrete, testable improvement and implement it.
 
 Rules:
 - Output ONLY a JSON object, no markdown
-- The improvement must be in ONE file
-- It must be backward compatible
-- It must be measurable (faster, more accurate, fewer errors)
+- The improvement must be in ONE provided file
+- It must be measurable (faster, more accurate, fewer errors, clearer policy, or stronger reliability)
+- For ordinary engine files, changes may be applied after tests
+- For safety, external-contact, authorized-target, credential, GitHub workflow, security-workflow, or audit-policy files, generate a proposal normally, but the runtime will stage it for independent security-boundary audit rather than apply it directly
+- Never assume that a proposal is already approved
 
 JSON format:
 {{
-  "file": "filename.py",
+  "file": "exact provided file key",
   "description": "one line description",
-  "improvement_type": "speed|accuracy|robustness|feature",
-  "patch_type": "replace_function|add_function|modify_constant",
+  "improvement_type": "speed|accuracy|robustness|feature|policy",
+  "patch_type": "replace_function|add_function|modify_constant|replace_text",
   "old_code": "exact string to replace (empty if adding new)",
   "new_code": "replacement code",
-  "test_cmd": "python3 -c \\"import sys; sys.path.insert(0, 'automation/codegen'); from engine.X import Y; print(Y())\\"",
-  "expected_improvement": "specific metric"
+  "test_cmd": "optional test command for ordinary engine changes",
+  "expected_improvement": "specific metric or policy outcome"
 }}"""
 
     try:
@@ -97,9 +128,9 @@ JSON format:
 
 
 def apply_patch(patch: dict) -> bool:
-    """Apply the patch to the target file."""
+    """Apply an ordinary X-engine patch. Security-boundary patches never reach this function."""
     file_name = patch.get("file", "")
-    if not file_name:
+    if not file_name or "/" in file_name or "\\" in file_name:
         return False
 
     target = ENGINE_DIR / file_name
@@ -132,7 +163,7 @@ def apply_patch(patch: dict) -> bool:
 
 
 def validate_patch(file_name: str, test_cmd: str) -> tuple[bool, str]:
-    """Syntax check + optional test."""
+    """Syntax check + optional test for ordinary X-engine changes."""
     target = ENGINE_DIR / file_name
     try:
         result = subprocess.run(
@@ -161,7 +192,7 @@ def validate_patch(file_name: str, test_cmd: str) -> tuple[bool, str]:
 
 
 def push_improvement_to_github(file_name: str, new_content: str, description: str) -> bool:
-    """Push improved file directly to target branch via GitHub API."""
+    """Push ordinary engine improvement directly to configured development branch."""
     if not GITHUB_TOKEN:
         print("[self_dev] no GITHUB_TOKEN, skipping push")
         return False
@@ -214,8 +245,28 @@ def push_improvement_to_github(file_name: str, new_content: str, description: st
         return False
 
 
+def _stage_boundary_patch(patch: dict) -> dict:
+    target_path = str(patch.get("file") or "")
+    payload = json.dumps({
+        "patch_type": patch.get("patch_type"),
+        "old_code": patch.get("old_code", ""),
+        "new_code": patch.get("new_code", ""),
+        "expected_improvement": patch.get("expected_improvement", ""),
+    }, ensure_ascii=False, indent=2)
+    return stage_x_proposal(
+        target_path=target_path,
+        rationale=str(patch.get("description") or "X autonomous security-boundary improvement proposal"),
+        proposed_patch=payload,
+        evidence={
+            "source": "X_self_dev",
+            "improvement_type": patch.get("improvement_type"),
+            "expected_improvement": patch.get("expected_improvement"),
+        },
+    )
+
+
 def run_self_dev_cycle(client, focus: str = "") -> dict:
-    """Full self-development cycle."""
+    """Full self-development cycle with proposal-only handling for control-plane changes."""
     print(f"[self_dev] starting cycle focus={focus!r}")
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -228,7 +279,30 @@ def run_self_dev_cycle(client, focus: str = "") -> dict:
 
     print(f"[self_dev] improvement: {patch.get('description')} in {patch.get('file')}")
 
-    file_name = patch.get("file", "")
+    file_name = str(patch.get("file") or "")
+    if is_security_boundary_target(file_name):
+        staged = _stage_boundary_patch(patch)
+        result = {
+            "status": "boundary_proposal_staged" if staged.get("status") == "requires_independent_audit" else "boundary_proposal_rejected",
+            "file": file_name,
+            "description": patch.get("description"),
+            "improvement_type": patch.get("improvement_type"),
+            "proposal": staged,
+            "pushed": False,
+            "directly_applied": False,
+            "ts": _ts(),
+        }
+        _append(SELF_DEV_LOG, result)
+        _append(SENJU_KNOWLEDGE, {
+            **result,
+            "source": "X_self_dev",
+            "event": "security_boundary_change_proposal",
+            "task_name": f"boundary_proposal_{staged.get('proposal_id', 'rejected')}",
+            "domain": "meta",
+        })
+        print(f"[self_dev] security-boundary proposal: {result['status']}")
+        return result
+
     target = ENGINE_DIR / file_name if file_name else None
     backup = target.read_text() if (target and target.exists()) else ""
 
