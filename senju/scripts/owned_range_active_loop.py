@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from senju.owned_range_active import OwnedRangeActiveRunner
+from senju.owned_range_write_policy import EvolvingOwnedRangeActiveRunner
 from senju.trusted_scope import TrustedOwnerScope
 
 
@@ -39,7 +39,7 @@ def main() -> int:
     args = ap.parse_args()
 
     scope = TrustedOwnerScope.load(args.scope)
-    runner = OwnedRangeActiveRunner(scope, base_url=args.base_url)
+    runner = EvolvingOwnedRangeActiveRunner(scope, base_url=args.base_url)
     report, memory = runner.run(
         memory_data=_load(args.memory),
         max_pages=max(1, min(args.max_pages, 30)),
@@ -60,7 +60,9 @@ def main() -> int:
     print(
         "SENJU_OWNED_RANGE_ACTIVE_VERIFIED "
         f"host={report['authorized_host']} requests={report['request_count']} "
-        f"writes={report['write_attempts']} counterexamples={report['counterexample_count']} "
+        f"write_candidates={report.get('write_surface_candidate_count', 0)} "
+        f"writes={report['write_attempts']} acks={report['write_provider_acks']} "
+        f"readbacks={report['independent_readbacks']} counterexamples={report['counterexample_count']} "
         f"digest={report['digest']}"
     )
     return 0
