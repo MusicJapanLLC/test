@@ -18,7 +18,7 @@ def test_inventory_routes_all_owner_named_files_to_senju_without_direct_mutation
     (tmp_path / "other").mkdir(parents=True)
     (tmp_path / "senju/config/owner-frontier-council.json").write_text("{}")
     (tmp_path / "senju/tests/test_owner_scope.py").write_text("pass")
-    (tmp_path / "other/not-owner.txt").write_text("x")
+    (tmp_path / "other/neutral.txt").write_text("x")
 
     rows = discover_owner_files(tmp_path)
     assert {row["path"] for row in rows} == {
