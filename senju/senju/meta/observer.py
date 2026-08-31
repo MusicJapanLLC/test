@@ -7,6 +7,11 @@ Reads:
   - degraded_profile.json (damage levels per surface)
   - lab manifests generated (what coverage gaps were filled)
 
+In addition to learning about tested surfaces, META treats each guard itself as a
+first-class learning target. Guard learning is observational: it characterizes
+decision outcomes, consistency, regression rate, accumulated damage signals,
+and decision drift from existing evidence without changing guard policy.
+
 Emits a structured KnowledgeGraph that the HypothesisEngine reads.
 """
 from __future__ import annotations
@@ -28,11 +33,26 @@ class Observation:
 
 
 @dataclasses.dataclass
+class GuardLearningProfile:
+    guard: str
+    sample_count: int
+    outcome_counts: dict[str, int]
+    decision_counts: dict[str, int]
+    block_rate: float
+    regression_rate: float
+    accumulated_damage: float
+    decision_drift: float
+    consistency_score: float
+    learning_signals: list[str]
+
+
+@dataclasses.dataclass
 class KnowledgeGraph:
     observations: list[Observation]
     surface_weakness_scores: dict[str, float]
     co_occurrence: dict[str, list[str]]
     temporal_patterns: list[dict[str, Any]]
+    guard_learning_profiles: dict[str, GuardLearningProfile]
 
 
 def _load_json_safe(path: Path) -> Any:
@@ -167,6 +187,94 @@ def _compute_temporal_patterns(observations: list[Observation]) -> list[dict[str
     return patterns
 
 
+def _guard_name(obs: Observation) -> str:
+    for key in ("guard", "guard_name", "target"):
+        value = obs.metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return obs.surface or "unknown"
+
+
+def _decision_label(obs: Observation) -> str:
+    value = obs.metadata.get("guard_outcome")
+    if isinstance(value, str) and value.strip():
+        return value.strip().lower()
+    return obs.outcome.lower()
+
+
+def _blocked_decision(label: str) -> bool:
+    return label in {"blocked", "fail-closed", "denied", "rejected"}
+
+
+def _compute_guard_learning_profiles(
+    observations: list[Observation],
+) -> dict[str, GuardLearningProfile]:
+    grouped: dict[str, list[Observation]] = {}
+    for obs in observations:
+        grouped.setdefault(_guard_name(obs), []).append(obs)
+
+    profiles: dict[str, GuardLearningProfile] = {}
+    for guard, rows in grouped.items():
+        outcome_counts: dict[str, int] = {}
+        decision_counts: dict[str, int] = {}
+        blocked_flags: list[bool] = []
+        accumulated_damage = 0.0
+
+        for obs in rows:
+            outcome_counts[obs.outcome] = outcome_counts.get(obs.outcome, 0) + 1
+            decision = _decision_label(obs)
+            decision_counts[decision] = decision_counts.get(decision, 0) + 1
+            blocked_flags.append(_blocked_decision(decision))
+            if obs.outcome == "damage_accumulated":
+                accumulated_damage += max(0.0, float(obs.delta))
+
+        sample_count = len(rows)
+        block_rate = sum(blocked_flags) / sample_count if sample_count else 0.0
+        regression_rate = outcome_counts.get("regression", 0) / sample_count if sample_count else 0.0
+
+        decision_drift = 0.0
+        if sample_count >= 4:
+            split = sample_count // 2
+            earlier = blocked_flags[:split]
+            later = blocked_flags[split:]
+            earlier_rate = sum(earlier) / len(earlier) if earlier else 0.0
+            later_rate = sum(later) / len(later) if later else 0.0
+            decision_drift = abs(later_rate - earlier_rate)
+
+        consistency_score = max(0.0, min(1.0, 1.0 - decision_drift - regression_rate))
+        signals: list[str] = []
+        if sample_count < 4:
+            signals.append("needs_more_samples")
+        if regression_rate > 0.0:
+            signals.append("regression_observed")
+        if decision_drift >= 0.25:
+            signals.append("decision_drift")
+        if accumulated_damage > 0.0:
+            signals.append("damage_signal_present")
+        if not signals:
+            signals.append("stable_baseline")
+
+        profiles[guard] = GuardLearningProfile(
+            guard=guard,
+            sample_count=sample_count,
+            outcome_counts=outcome_counts,
+            decision_counts=decision_counts,
+            block_rate=round(block_rate, 4),
+            regression_rate=round(regression_rate, 4),
+            accumulated_damage=round(accumulated_damage, 4),
+            decision_drift=round(decision_drift, 4),
+            consistency_score=round(consistency_score, 4),
+            learning_signals=signals,
+        )
+
+    return dict(
+        sorted(
+            profiles.items(),
+            key=lambda item: (-item[1].sample_count, item[0]),
+        )
+    )
+
+
 def build(senju_dir: Path) -> KnowledgeGraph:
     state_dir = senju_dir / "state"
     adversary_dir = senju_dir / "adversary"
@@ -180,4 +288,5 @@ def build(senju_dir: Path) -> KnowledgeGraph:
         surface_weakness_scores=_compute_weakness_scores(observations),
         co_occurrence=_compute_co_occurrence(observations),
         temporal_patterns=_compute_temporal_patterns(observations),
+        guard_learning_profiles=_compute_guard_learning_profiles(observations),
     )
