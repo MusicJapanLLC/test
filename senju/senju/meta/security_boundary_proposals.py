@@ -134,7 +134,13 @@ def stage_proposal(
     return record
 
 
-def stage_from_cycle_report(system: str, cycle_report: dict[str, Any] | None) -> list[dict[str, Any]]:
+def stage_from_cycle_report(
+    system: str,
+    cycle_report: dict[str, Any] | None,
+    *,
+    policy_file: Path = POLICY_FILE,
+    proposal_dir: Path = PROPOSAL_DIR,
+) -> list[dict[str, Any]]:
     """Stage any agent-generated boundary proposals carried by a cycle report."""
     if not isinstance(cycle_report, dict):
         return []
@@ -151,5 +157,7 @@ def stage_from_cycle_report(system: str, cycle_report: dict[str, Any] | None) ->
             rationale=str(item.get("rationale") or item.get("description") or ""),
             proposed_patch=str(item.get("proposed_patch") or item.get("patch") or ""),
             evidence=item.get("evidence") if isinstance(item.get("evidence"), dict) else {},
+            policy_file=policy_file,
+            proposal_dir=proposal_dir,
         ))
     return staged
