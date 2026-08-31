@@ -2,9 +2,10 @@
 """Run one bounded production evolution generation from a durable checkpoint.
 
 This runner is designed for scheduled GitHub Actions execution. It restores the
-last checkpoint when available, performs one production evolution generation,
-automatically delegates the pre-authorized replica authority profile to newly
-created workers, and writes the next checkpoint for artifact persistence.
+last checkpoint, performs one production evolution generation, automatically
+issues a fresh non-delegable replica lease, and writes the next checkpoint.
+Replicas may use the same effective pre-authorized profile as their parent, but
+raw credentials and parent grant objects are never copied.
 """
 from __future__ import annotations
 
@@ -18,6 +19,10 @@ from automation.world.production_evolution_loop import (
     EvolutionState,
     ProductionEvolutionEnvelope,
     ProductionEvolutionLoop,
+)
+from automation.world.replica_authority import (
+    issue_nondelegable_replica_lease,
+    select_replica_profile,
 )
 
 
@@ -73,10 +78,17 @@ def main() -> int:
     plan = load_plan(plan_path)
     state = load_state(state_path, plan)
 
+    replica_profile = select_replica_profile(
+        parent_profile=state.authority_profile,
+        allowed_profiles=plan["allowed_authority_profiles"],
+        configured_profile=plan.get("replica_authority_profile"),
+        mode=str(plan.get("replica_authority_mode") or "configured"),
+    )
+
     envelope = ProductionEvolutionEnvelope.create(
         allowed_authority_profiles=plan["allowed_authority_profiles"],
         allowed_deploy_targets=plan["allowed_deploy_targets"],
-        replica_authority_profile=plan.get("replica_authority_profile"),
+        replica_authority_profile=replica_profile,
         max_workers=int(plan.get("max_workers", 8)),
         max_replication_per_run=int(plan.get("max_replication_per_run", 1)),
         max_deploys_per_run=int(plan.get("max_deploys_per_run", 0)),
@@ -119,19 +131,16 @@ def main() -> int:
         }
 
     def replica_authority_fn(parent_id: str, child_id: str, profile: str) -> Mapping[str, Any]:
-        return {
-            "approved": True,
-            "profile": profile,
-            "lease_id": f"replica-{_id(envelope.envelope_id, parent_id, child_id, profile)}",
-            "parent_worker": parent_id,
-            "child_worker": child_id,
-            "basis": "pre-authorized-replica-profile",
-        }
+        if profile != replica_profile:
+            raise RuntimeError("replica profile drifted from selected production profile")
+        return issue_nondelegable_replica_lease(
+            envelope_id=envelope.envelope_id,
+            parent_worker=parent_id,
+            child_worker=child_id,
+            profile=profile,
+        )
 
     def deploy_fn(target: str, artifact: Mapping[str, Any]) -> Mapping[str, Any]:
-        # This scheduled cycle does not invent deployment targets. A target can
-        # execute only when it is both present in the immutable plan and included
-        # in deploy_targets_per_cycle. The default plan keeps this lane disabled.
         return {
             "deployed": False,
             "target": target,
@@ -144,6 +153,9 @@ def main() -> int:
         checkpoint_id = f"checkpoint-{_id(envelope.envelope_id, checkpoint['run_id'], checkpoint['generation'])}"
         persisted.update(dict(checkpoint))
         persisted["checkpoint_id"] = checkpoint_id
+        persisted["replica_authority_mode"] = str(plan.get("replica_authority_mode") or "configured")
+        persisted["replica_authority_profile"] = replica_profile
+        persisted["replica_authority_delegable"] = False
         return {"persisted": True, "checkpoint_id": checkpoint_id}
 
     result = ProductionEvolutionLoop(envelope).run(
@@ -164,6 +176,8 @@ def main() -> int:
         "workers": result.worker_ids,
         "worker_authority_leases": result.worker_authority_leases,
         "authority_profile": result.authority_profile,
+        "replica_authority_profile": replica_profile,
+        "replica_authority_delegable": False,
         "checkpoint_id": result.checkpoint_id,
     }, ensure_ascii=False, indent=2))
     return 0
