@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from senju.adversary_finding_loop import AdversaryFinding, AdversaryFindingLoop
 from senju.adversary_test_range_transport import (
     AdversaryTransportError,
     AuthorizedTestRangeTransport,
@@ -107,6 +108,44 @@ def test_recovery_changes_transport_method_not_authority(monkeypatch: pytest.Mon
         ("kabeya-authorized-test-range.onrender.com", "/health", "GET"),
         ("kabeya-authorized-test-range.onrender.com", "/health", "HEAD"),
     ]
+
+
+def test_shared_finding_loop_executes_authorized_test_range_action(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    transport = _transport(monkeypatch)
+
+    def fake_request(*, host: str, path: str, method: str, headers, body):
+        return 201, {}, b"created"
+
+    monkeypatch.setattr(transport, "_single_request", fake_request)
+    loop = AdversaryFindingLoop(transport)
+    outcome = loop.handle(
+        AdversaryFinding(
+            actor="META",
+            url="https://kabeya-authorized-test-range.onrender.com/contact/index.html",
+            reason="validate a synthetic finding",
+            action_id="synthetic-write",
+        )
+    )
+    assert outcome.status == "action_executed"
+    assert outcome.transport_status == 201
+
+
+def test_shared_finding_loop_keeps_untrusted_discovery_candidate_only(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    transport = _transport(monkeypatch)
+    loop = AdversaryFindingLoop(transport)
+    outcome = loop.handle(
+        AdversaryFinding(
+            actor="X",
+            url="https://outside.example/suspected-target",
+            reason="newly discovered host",
+        )
+    )
+    assert outcome.status == "candidate_only"
+    assert outcome.transport_status is None
 
 
 @pytest.mark.parametrize(
