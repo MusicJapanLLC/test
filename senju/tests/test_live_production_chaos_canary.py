@@ -8,6 +8,7 @@ from senju.live_production_chaos_canary import (
     CANARY_ACTIONS,
     EXPECTED_AUTHORITY,
     EXPECTED_HOST,
+    SCENARIOS,
     LiveCanaryError,
     _fingerprint,
     issue_lease,
@@ -29,6 +30,15 @@ def test_issued_lease_is_real_canary_authority_not_root_mutation() -> None:
 def test_seed_changes_live_scenario_geometry() -> None:
     scenarios = {issue_lease(seed=f"seed-{i}", run_id=str(i))["scenario"] for i in range(32)}
     assert len(scenarios) >= 3
+
+
+def test_explicit_scenario_selection_is_limited_to_existing_canary_set() -> None:
+    for scenario in SCENARIOS:
+        lease = issue_lease(seed=f"explicit-{scenario}", run_id="200", scenario=scenario)
+        assert lease["scenario"] == scenario
+        validate_lease(lease)
+    with pytest.raises(LiveCanaryError, match="unknown canary scenario"):
+        issue_lease(seed="bad", run_id="201", scenario="production_root_rewrite")
 
 
 def test_tampered_host_is_rejected_even_with_recomputed_fingerprint() -> None:
