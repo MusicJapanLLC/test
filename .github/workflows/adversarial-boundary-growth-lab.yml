@@ -1,3 +1,4 @@
+# activation: preserve exact read-only capability while forcing default-branch registration
 name: THE WORLD - Adversarial Boundary Growth Lab
 
 on:
