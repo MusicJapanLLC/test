@@ -16,6 +16,20 @@ def _proposal(target="guard", operation="tighten_rule", votes=None):
     }
 
 
+def _bundle(changes):
+    return {
+        "id": "sp-bundle-001",
+        "environment": "production",
+        "owner_namespace": "MusicJapanLLC/test",
+        "changes": changes,
+        "council_votes": {
+            "META": {"approve": True},
+            "X": {"approve": True},
+            "Senju": {"approve": True},
+        },
+    }
+
+
 def test_all_requested_security_surfaces_are_supported():
     assert set(ALLOWED_OPERATIONS) == {
         "guard",
@@ -42,6 +56,7 @@ def test_council_majority_self_approves_monotonic_production_change():
     assert decision["self_approved"] is True
     assert decision["auto_merge_eligible"] is True
     assert decision["production_apply_eligible"] is True
+    assert decision["standing_ai_council_authority"] is True
 
 
 def test_council_must_be_complete():
@@ -94,3 +109,72 @@ def test_wrong_namespace_cannot_self_approve():
     proposal = _proposal()
     proposal["owner_namespace"] = "someone/else"
     assert evaluate_security_proposal(proposal)["self_approved"] is False
+
+
+def test_atomic_bundle_can_self_approve_all_ten_security_surfaces_at_once():
+    operation_by_target = {
+        "guard": "tighten_rule",
+        "authority_policy": "require_approval",
+        "credential_broker": "require_rotation",
+        "network_policy": "reduce_rate_limit",
+        "audit_policy": "increase_coverage",
+        "branch_protection": "require_checks",
+        "deployment_protection": "enable_rollback",
+        "authorization_registry": "require_fresh_validation",
+        "emergency_stop": "lock_stop_disable",
+        "recovery_policy": "require_integrity_check",
+    }
+    proposal = _bundle([
+        {
+            "target": target,
+            "operations": [{"type": operation, "parameters": {"reason": "bundle-test"}}],
+        }
+        for target, operation in operation_by_target.items()
+    ])
+    decision = evaluate_security_proposal(proposal)
+    assert decision["atomic_bundle"] is True
+    assert decision["self_approved"] is True
+    assert decision["production_apply_eligible"] is True
+    assert set(decision["targets"]) == set(ALLOWED_OPERATIONS)
+
+    state = apply_proposal_to_state({}, proposal, decision)
+    assert state["generation"] == 1
+    assert set(state["controls"]) == set(ALLOWED_OPERATIONS)
+    assert state["applied_proposals"][0]["atomic_bundle"] is True
+
+
+def test_one_unsafe_change_blocks_entire_atomic_bundle():
+    proposal = _bundle([
+        {
+            "target": "audit_policy",
+            "operations": [{"type": "increase_coverage"}],
+        },
+        {
+            "target": "authority_policy",
+            "operations": [{"type": "expand_scope"}],
+        },
+    ])
+    decision = evaluate_security_proposal(proposal)
+    assert decision["atomic_bundle"] is True
+    assert decision["self_approved"] is False
+    assert decision["production_apply_eligible"] is False
+    assert decision["standing_ai_council_authority"] is False
+
+    try:
+        apply_proposal_to_state({}, proposal, decision)
+    except PermissionError:
+        pass
+    else:
+        raise AssertionError("unsafe atomic bundle must not partially apply")
+
+
+def test_malformed_bundle_is_fail_closed():
+    proposal = _bundle([
+        {
+            "target": "guard",
+            "operations": [],
+        }
+    ])
+    decision = evaluate_security_proposal(proposal)
+    assert decision["self_approved"] is False
+    assert decision["standing_ai_council_authority"] is False
