@@ -9,10 +9,12 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from recovery_tuner import derive_recovery_tuning
 from stop_learning import update_learning_state
 
 HERE = Path(__file__).resolve().parent
 CONTROL_FILE = HERE / "runtime_control_state.json"
+REGISTRY_FILE = HERE / "approved_persistence_registry.json"
 STATE_LABEL = "meta-stop-learning-state"
 STATE_TITLE = "[THE-WORLD] Production Stop Learning State"
 WORKFLOWS = (
@@ -127,7 +129,9 @@ def main() -> int:
     seen = {int(x) for x in previous.get("seen_run_ids", []) if isinstance(x, int) or str(x).isdigit()}
     observations = _recent_observations(repo, token, seen)
     controls = _load(CONTROL_FILE, {})
+    registry = _load(REGISTRY_FILE, {})
     state = update_learning_state(previous, observations, controls)
+    state["recovery_tuning"] = derive_recovery_tuning(state, registry, controls)
     state["seen_run_ids"] = list((seen | {int(row["run_id"]) for row in observations if row.get("run_id")}))[-500:]
     state["observations_processed"] = len(observations)
     state["workflows"] = list(WORKFLOWS)
@@ -157,6 +161,7 @@ def main() -> int:
         "reward_score": state["reward_score"],
         "active_controls": state["active_controls"],
         "pending_failures": list(state.get("pending_failures", {})),
+        "recovery_tuning": state["recovery_tuning"],
     }, ensure_ascii=False))
     return 0
 
