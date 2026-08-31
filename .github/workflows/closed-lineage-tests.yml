@@ -1,0 +1,52 @@
+name: Closed Lineage Tests
+
+on:
+  pull_request:
+    paths:
+      - "automation/world/closed_loop_lineage.py"
+      - "automation/world/select_confirmed_fix_lineages.py"
+      - "automation/world/audit_closed_lineage_prs.py"
+      - "automation/world/test_closed_loop_lineage.py"
+      - "automation/world/test_select_confirmed_fix_lineages.py"
+      - "automation/world/test_audit_closed_lineage_prs.py"
+      - ".github/workflows/closed-lineage-tests.yml"
+      - ".github/workflows/lineage-production-audit.yml"
+      - ".github/workflows/tomoki-forge.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lineage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install test runner
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Compile lineage control plane
+        run: |
+          python -m py_compile \
+            automation/world/closed_loop_lineage.py \
+            automation/world/select_confirmed_fix_lineages.py \
+            automation/world/audit_closed_lineage_prs.py
+
+      - name: Verify Detection -> Fix -> Approval -> Apply handoff -> Audit -> PASS contracts
+        run: |
+          python -m pytest \
+            automation/world/test_closed_loop_lineage.py \
+            automation/world/test_select_confirmed_fix_lineages.py \
+            automation/world/test_audit_closed_lineage_prs.py \
+            -q
