@@ -6,7 +6,7 @@ from pathlib import Path
 from automation.codegen.engine.discovery_authorization import run_discovery_authorization
 
 
-def test_discovery_cycle_emits_aggressive_intent_decisions_without_new_authority(tmp_path: Path) -> None:
+def test_owner_supplied_discovery_gets_authority_and_aggressive_intent_decision(tmp_path: Path) -> None:
     (tmp_path / "discovery_policy.json").write_text(json.dumps({"trusted_roots": []}), encoding="utf-8")
     (tmp_path / "discovered_urls.json").write_text(
         json.dumps({"links": ["https://candidate.example/path"]}), encoding="utf-8"
@@ -21,9 +21,15 @@ def test_discovery_cycle_emits_aggressive_intent_decisions_without_new_authority
     )
 
     result = run_discovery_authorization(tmp_path)
-    assert result["authorized_count"] == 0
+    assert result["authorized_count"] == 1
+    assert result["authorized_hosts"] == ["candidate.example"]
     assert result["intent_likely_count"] == 1
     assert result["intent_auto_execute_count"] == 0
+
+    authorized = json.loads((tmp_path / "discovery_authorized.json").read_text(encoding="utf-8"))
+    grant = authorized["hosts"]["candidate.example"]
+    assert grant["authorization_basis"] == "owner_supplied_exact_host"
+    assert grant["effect"] == "read_only"
 
     intent = json.loads((tmp_path / "human_intent_decisions.json").read_text(encoding="utf-8"))
     row = intent["decisions"][0]
