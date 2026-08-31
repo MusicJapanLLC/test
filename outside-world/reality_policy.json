@@ -50,6 +50,7 @@
       "CEO_REPORT_WEBHOOK_URL"
     ],
     "external_write_target_ids": [
+      "github-issues",
       "dev-community",
       "mastodon",
       "bluesky",
