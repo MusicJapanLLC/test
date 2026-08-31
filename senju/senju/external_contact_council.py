@@ -166,14 +166,14 @@ class CouncilPolicyDecision:
 
 
 def _validate_inside_ceiling(proposal: ContactRelaxationProposal, ceiling: OwnerContactCeiling) -> None:
-    if not proposal.methods.issubset(ceiling.allowed_methods):
-        raise ExternalContactCouncilError("proposal methods exceed Owner contact ceiling")
-    if proposal.allow_http and not ceiling.allow_http:
-        raise ExternalContactCouncilError("proposal cannot enable HTTP beyond Owner ceiling")
     if proposal.allow_delete and not ceiling.allow_delete:
         raise ExternalContactCouncilError("proposal cannot enable DELETE beyond Owner ceiling")
     if proposal.allow_delete and "DELETE" not in proposal.methods:
         raise ExternalContactCouncilError("allow_delete requires DELETE in proposed methods")
+    if proposal.allow_http and not ceiling.allow_http:
+        raise ExternalContactCouncilError("proposal cannot enable HTTP beyond Owner ceiling")
+    if not proposal.methods.issubset(ceiling.allowed_methods):
+        raise ExternalContactCouncilError("proposal methods exceed Owner contact ceiling")
     if proposal.follow_redirects and not ceiling.follow_redirects:
         raise ExternalContactCouncilError("proposal cannot enable redirects beyond Owner ceiling")
     if proposal.max_redirects > ceiling.max_redirects:
