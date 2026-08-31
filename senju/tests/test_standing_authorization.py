@@ -9,6 +9,7 @@ from senju.meta.standing_authorization import (
     MAX_LEASE_SECONDS,
     StandingAuthorizationError,
     create_standing_authorization,
+    load_registry,
     renew_operational_lease,
     renew_registered_authorization,
     revoke_standing_authorization,
@@ -75,7 +76,7 @@ def test_renewal_cannot_add_new_host_or_method():
             requested_hosts=["third-party.example"],
             now=_now(),
         )
-    with pytest.raises(StandingAuthorizationError, match="may not add methods"):
+    with pytest.raises(StandingAuthorizationError, match="unsupported standing methods"):
         renew_operational_lease(
             standing,
             actor="X",
@@ -169,3 +170,137 @@ def test_registered_standing_record_can_be_auto_renewed_and_logged(tmp_path):
     row = json.loads(lease_log.read_text(encoding="utf-8").strip())
     assert row["renewal_reason"] == "still_needed"
     assert row["authorization_reference"] == "owner-approval-001"
+
+
+def test_same_authority_can_hold_public_and_explicit_private_scopes(tmp_path):
+    standing = create_standing_authorization(
+        authorization_reference="owner-unified-network-001",
+        owner="MusicJapanLLC",
+        issuer_kind="owner_explicit",
+        exact_hosts=["public.example.com"],
+        allowed_methods=["GET", "HEAD"],
+        private_cidrs=["10.20.0.0/16", "fd12:3456:789a::/48"],
+        private_dns_names=["api.internal.example", "orders.default.svc.cluster.local"],
+        now=_now(),
+    )
+
+    assert standing.has_private_network_authority is True
+    assert standing.exact_hosts == ("public.example.com",)
+    assert standing.private_cidrs == ("10.20.0.0/16", "fd12:3456:789a::/48")
+    assert standing.private_dns_names == (
+        "api.internal.example",
+        "orders.default.svc.cluster.local",
+    )
+
+    registry = save_registry(tmp_path / "standing.json", [standing])
+    loaded = load_registry(registry)
+    assert loaded == (standing,)
+
+    result = renew_operational_lease(
+        standing,
+        actor="META",
+        requested_hosts=["public.example.com"],
+        requested_private_cidrs=["10.20.0.0/16"],
+        requested_private_dns_names=["api.internal.example"],
+        now=_now(),
+    )
+    assert result.lease.exact_hosts == ("public.example.com",)
+    assert result.lease.private_cidrs == ("10.20.0.0/16",)
+    assert result.lease.private_dns_names == ("api.internal.example",)
+    assert result.authority_broadened is False
+
+
+def test_public_authority_does_not_transitively_create_private_authority():
+    standing = _standing()
+    assert standing.has_private_network_authority is False
+
+    with pytest.raises(StandingAuthorizationError, match="may not add private CIDRs"):
+        renew_operational_lease(
+            standing,
+            actor="META",
+            requested_private_cidrs=["10.0.0.0/8"],
+            now=_now(),
+        )
+
+    with pytest.raises(StandingAuthorizationError, match="may not add private DNS names"):
+        renew_operational_lease(
+            standing,
+            actor="X",
+            requested_private_dns_names=["db.internal.example"],
+            now=_now(),
+        )
+
+
+@pytest.mark.parametrize(
+    "cidr",
+    [
+        "127.0.0.0/8",
+        "169.254.0.0/16",
+        "169.254.169.254/32",
+        "0.0.0.0/32",
+        "224.0.0.0/4",
+        "::1/128",
+        "fe80::/10",
+    ],
+)
+def test_loopback_link_local_metadata_and_special_cidrs_are_not_private_authority(cidr):
+    with pytest.raises(StandingAuthorizationError, match="RFC1918/ULA"):
+        create_standing_authorization(
+            authorization_reference="owner-private-invalid",
+            owner="MusicJapanLLC",
+            issuer_kind="owner_explicit",
+            exact_hosts=["public.example.com"],
+            private_cidrs=[cidr],
+            now=_now(),
+        )
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "localhost",
+        "service.localhost",
+        "metadata.google.internal",
+        "metadata.azure.internal",
+        "instance-data",
+        "instance-data.ec2.internal",
+    ],
+)
+def test_loopback_and_metadata_dns_names_are_rejected(name):
+    with pytest.raises(StandingAuthorizationError, match="loopback/cloud-metadata"):
+        create_standing_authorization(
+            authorization_reference="owner-private-dns-invalid",
+            owner="MusicJapanLLC",
+            issuer_kind="owner_explicit",
+            exact_hosts=["public.example.com"],
+            private_dns_names=[name],
+            now=_now(),
+        )
+
+
+def test_private_renewal_cannot_broaden_beyond_same_authority():
+    standing = create_standing_authorization(
+        authorization_reference="owner-private-bounded",
+        owner="MusicJapanLLC",
+        issuer_kind="owner_explicit",
+        exact_hosts=["public.example.com"],
+        private_cidrs=["10.10.0.0/16"],
+        private_dns_names=["api.internal.example"],
+        now=_now(),
+    )
+
+    with pytest.raises(StandingAuthorizationError, match="may not add private CIDRs"):
+        renew_operational_lease(
+            standing,
+            actor="META",
+            requested_private_cidrs=["10.0.0.0/8"],
+            now=_now(),
+        )
+
+    with pytest.raises(StandingAuthorizationError, match="may not add private DNS names"):
+        renew_operational_lease(
+            standing,
+            actor="X",
+            requested_private_dns_names=["new.internal.example"],
+            now=_now(),
+        )
