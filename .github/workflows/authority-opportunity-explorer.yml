@@ -12,14 +12,17 @@ on:
       - 'automation/codegen/engine/improvement_evidence_import.py'
       - 'automation/codegen/engine/authority_candidate_council.py'
       - 'automation/codegen/engine/authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/engine/unknown_link_authority_research.py'
       - 'automation/codegen/run_authority_opportunity_explorer.py'
       - 'automation/codegen/run_authority_improvement_bus.py'
       - 'automation/codegen/run_authority_candidate_council.py'
+      - 'automation/codegen/run_unknown_link_authority_research.py'
       - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
       - 'automation/codegen/tests/test_authority_improvement_bus.py'
       - 'automation/codegen/tests/test_improvement_evidence_import.py'
       - 'automation/codegen/tests/test_authority_candidate_council.py'
       - 'automation/codegen/tests/test_authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/tests/test_unknown_link_authority_research.py'
       - 'senju/senju/meta/trust_derived_autonomy.py'
       - 'senju/tests/test_trust_derived_improvement_capabilities.py'
       - '.github/workflows/authority-opportunity-explorer.yml'
@@ -31,14 +34,17 @@ on:
       - 'automation/codegen/engine/improvement_evidence_import.py'
       - 'automation/codegen/engine/authority_candidate_council.py'
       - 'automation/codegen/engine/authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/engine/unknown_link_authority_research.py'
       - 'automation/codegen/run_authority_opportunity_explorer.py'
       - 'automation/codegen/run_authority_improvement_bus.py'
       - 'automation/codegen/run_authority_candidate_council.py'
+      - 'automation/codegen/run_unknown_link_authority_research.py'
       - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
       - 'automation/codegen/tests/test_authority_improvement_bus.py'
       - 'automation/codegen/tests/test_improvement_evidence_import.py'
       - 'automation/codegen/tests/test_authority_candidate_council.py'
       - 'automation/codegen/tests/test_authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/tests/test_unknown_link_authority_research.py'
       - 'senju/senju/meta/trust_derived_autonomy.py'
       - 'senju/tests/test_trust_derived_improvement_capabilities.py'
       - '.github/workflows/authority-opportunity-explorer.yml'
@@ -74,7 +80,7 @@ jobs:
             authority-opportunity-${{ github.ref_name }}-
             authority-opportunity-
 
-      - name: Verify explorer, candidate council, improvement, import, and trust invariants
+      - name: Verify explorer, candidate council, improvement, import, research, and trust invariants
         env:
           PYTHONPATH: automation/codegen:senju
         run: |
@@ -85,6 +91,7 @@ jobs:
             automation/codegen/tests/test_improvement_evidence_import.py \
             automation/codegen/tests/test_authority_candidate_council.py \
             automation/codegen/tests/test_authority_candidate_improvement_bridge.py \
+            automation/codegen/tests/test_unknown_link_authority_research.py \
             senju/tests/test_trust_derived_improvement_capabilities.py
 
       - name: Import latest sanitized The World evidence
@@ -191,6 +198,23 @@ jobs:
           PY
           test -s .authority-opportunity-runtime/authority_improvement_tasks.json
           echo "improvement_tasks=$(jq -r '.task_count' .authority-opportunity-runtime/authority_improvement_tasks.json)"
+
+      - name: Run closed-loop unknown-link authority research and council routing
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_unknown_link_authority_research.py \
+            --state .authority-opportunity-runtime \
+            --chaos-rate 0.03 \
+            --json-out .authority-opportunity-runtime/unknown_link_authority_research_run.json
+          test "$(jq -r '.closed_loop' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "true"
+          test "$(jq -r '.new_authority_minted' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "false"
+          test "$(jq -r '.external_post_executed' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "false"
+          test "$(jq -r '.synthetic_reports_truth_labeled' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "true"
+          test -s .authority-opportunity-runtime/unknown_link_council_review_requests.json
+          test -s .authority-opportunity-runtime/synthetic_chaos_reports.json
+          echo "unknown_link_review_ready=$(jq -r '.review_ready_count' .authority-opportunity-runtime/unknown_link_authority_research_run.json)"
+          echo "synthetic_chaos_reports=$(jq -r '.synthetic_report_count' .authority-opportunity-runtime/unknown_link_authority_research_run.json)"
 
       - name: Save opportunity and improvement memory
         if: always()
