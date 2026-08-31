@@ -33,7 +33,19 @@ def test_incubator_grows_population_and_emits_live_promotion(tmp_path: Path) -> 
     assert report2["promotion"]["eligible"] is True
     assert report2["promotion"]["real_side_effect_path"] is True
     assert report2["promotion"]["scenario"] in LIVE_SCENARIOS
+    assert report2["promotion"]["workflow"] == "live-production-chaos-canary.yml"
     assert report2["promotion"]["production_trust_root_mutation"] is False
+    assert report2["champion"]["score"] >= 0.86
+
+
+def test_growth_keeps_multiple_capability_families_competing() -> None:
+    early = build_population(generation=1, population_size=12)
+    later = build_population(generation=9, population_size=48)
+    assert len(early) == 12
+    assert len(later) == 48
+    assert len({c.strategy for c in later}) >= 6
+    assert {c.family for c in later} == {c.family for c in early}
+    assert all(c.effective_capability_recovered for c in later)
 
 
 def test_persisted_state_contains_no_raw_secret_or_bypass_claim(tmp_path: Path) -> None:
