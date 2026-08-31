@@ -4,6 +4,10 @@ This module controls review sequencing and canonical packet shape. It does not i
 create Authority. META/X/SENJU are the primary decision-makers for candidate approval;
 Owner/standing evidence is deliberately moved two ranks lower and may only participate
 as secondary activation validation after a council-primary decision.
+
+A canonical packet produced by the negotiation system is entitled to formal review even
+when secondary Owner/standing evidence is not yet present. Formal intake is not Authority
+and never permits self-minting, credentials, network access, or terminal-stop bypass.
 """
 from __future__ import annotations
 
@@ -12,10 +16,12 @@ from typing import Any, Iterable, Mapping
 CONSTITUTION_ID = "authority-approval-constitution-v1"
 CONSTITUTION_SCHEMA = "the-world-authority-approval-constitution/v1"
 CANONICAL_FLOW_ID = "root-authority-candidate-v1"
+FORMAL_INTAKE_RULE_ID = "negotiation-vetted-formal-intake-v1"
 PRIMARY_APPROVERS = ("META", "X", "SENJU")
 ALL_PARTICIPANTS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 SECONDARY_VALIDATION_RANK = 3
 DECISION_PRECEDENCE = (
+    "formal_negotiation_vetted_intake",
     "executive_council_primary_review",
     "dossier_integrity_and_scope_review",
     "secondary_authority_evidence_validation",
@@ -31,9 +37,14 @@ def constitutional_metadata() -> dict[str, Any]:
         "constitution_id": CONSTITUTION_ID,
         "constitution_schema": CONSTITUTION_SCHEMA,
         "canonical_flow_id": CANONICAL_FLOW_ID,
+        "formal_intake_rule_id": FORMAL_INTAKE_RULE_ID,
         "decision_precedence": list(DECISION_PRECEDENCE),
         "primary_approvers": list(PRIMARY_APPROVERS),
         "primary_approval_requirement": "3_of_3",
+        "random_ai_unrelated_root_generation_prohibited": True,
+        "negotiation_vetted_canonical_candidate_must_enter_formal_approval": True,
+        "secondary_owner_or_standing_evidence_required_for_formal_intake": False,
+        "formal_intake_authority_effect": "none",
         "secondary_authority_evidence_rank": SECONDARY_VALIDATION_RANK,
         "secondary_authority_evidence_types": sorted(SECONDARY_EVIDENCE_TYPES),
         "secondary_evidence_may_admit_candidate": False,
@@ -67,6 +78,8 @@ def canonical_review_packet(packet: Mapping[str, Any]) -> dict[str, Any]:
     out["approval_stage"] = "executive_council_primary_review"
     out["required_approvers"] = list(PRIMARY_APPROVERS)
     out["required_approval"] = "META_X_SENJU_3_of_3"
+    out["formal_intake_eligible"] = True
+    out["formal_intake_requires_secondary_owner_or_standing_evidence"] = False
     out["authority_effect"] = "none"
     return out
 
