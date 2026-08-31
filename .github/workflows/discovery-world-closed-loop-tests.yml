@@ -78,3 +78,5 @@ jobs:
             automation/codegen/engine/shared_discovery_authority.py \
             senju/senju/meta/discovery_lease_continuity.py \
             senju/scripts/run_discovery_production_continuity.py
+
+# CI retrigger: validate the synchronized Discovery -> Action -> Continuity chain.
