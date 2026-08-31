@@ -2,12 +2,12 @@
 
 This module controls review sequencing and canonical packet shape. It does not itself
 create Authority. META/X/SENJU are the primary decision-makers for candidate approval;
-Owner/standing evidence is deliberately moved two ranks lower and may only participate
-as secondary activation validation after a council-primary decision.
+Owner/standing evidence remains secondary activation validation only.
 
-A canonical packet produced by the negotiation system is entitled to formal review even
-when secondary Owner/standing evidence is not yet present. Formal intake is not Authority
-and never permits self-minting, credentials, network access, or terminal-stop bypass.
+Negotiation-vetted cases enter formal review, may be independently inspected, and need
+META/X/SENJU 3/3 before parliamentary elevation. Unprocessed cases expire after three
+days; after seven further days an expired non-terminal case is forced into fresh
+reconsideration. Time passing never becomes approval or Authority.
 """
 from __future__ import annotations
 
@@ -17,16 +17,21 @@ CONSTITUTION_ID = "authority-approval-constitution-v1"
 CONSTITUTION_SCHEMA = "the-world-authority-approval-constitution/v1"
 CANONICAL_FLOW_ID = "root-authority-candidate-v1"
 FORMAL_INTAKE_RULE_ID = "negotiation-vetted-formal-intake-v1"
+CASE_LIFECYCLE_RULE_ID = "authority-case-lifecycle-v1"
 PRIMARY_APPROVERS = ("META", "X", "SENJU")
 ALL_PARTICIPANTS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 SECONDARY_VALIDATION_RANK = 3
+UNPROCESSED_CASE_EXPIRY_SECONDS = 3 * 24 * 60 * 60
+EXPIRED_CASE_RECONSIDERATION_SECONDS = 7 * 24 * 60 * 60
 EXECUTIVE_RESEARCH_CAPACITY_MULTIPLIER = 1.30
 EXECUTIVE_FORMAL_REVIEW_INFLUENCE_MULTIPLIER = 1.50
 OWNER_FORMAL_REVIEW_ADMISSION_WEIGHT = 0.0
 OWNER_FORMAL_REVIEW_PRIORITY_WEIGHT = 0.0
 DECISION_PRECEDENCE = (
     "formal_negotiation_vetted_intake",
+    "independent_case_inspection",
     "executive_council_primary_review",
+    "parliamentary_review_elevation",
     "dossier_integrity_and_scope_review",
     "secondary_authority_evidence_validation",
     "bounded_activation_by_existing_authority_machinery",
@@ -42,9 +47,14 @@ def constitutional_metadata() -> dict[str, Any]:
         "constitution_schema": CONSTITUTION_SCHEMA,
         "canonical_flow_id": CANONICAL_FLOW_ID,
         "formal_intake_rule_id": FORMAL_INTAKE_RULE_ID,
+        "case_lifecycle_rule_id": CASE_LIFECYCLE_RULE_ID,
         "decision_precedence": list(DECISION_PRECEDENCE),
         "primary_approvers": list(PRIMARY_APPROVERS),
         "primary_approval_requirement": "3_of_3",
+        "executive_approval_promotes_to": "parliamentary_review_queue",
+        "unprocessed_case_expiry_seconds": UNPROCESSED_CASE_EXPIRY_SECONDS,
+        "expired_case_reconsideration_seconds": EXPIRED_CASE_RECONSIDERATION_SECONDS,
+        "elapsed_time_counts_as_approval": False,
         "executive_research_capacity_multiplier": EXECUTIVE_RESEARCH_CAPACITY_MULTIPLIER,
         "executive_formal_review_influence_multiplier": EXECUTIVE_FORMAL_REVIEW_INFLUENCE_MULTIPLIER,
         "owner_formal_review_admission_weight": OWNER_FORMAL_REVIEW_ADMISSION_WEIGHT,
