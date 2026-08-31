@@ -3,7 +3,7 @@
 
 The cycle mines current external-host friction, materializes all-agent negotiation work,
 and applies only META/X/SENJU-approved amendments that are already inside the explicit
-Owner Expansion Envelope.
+Owner Expansion Envelope. Effective policy is persisted with per-host method ceilings.
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _SENJU_ROOT = _REPO_ROOT / "senju"
 if str(_SENJU_ROOT) not in sys.path:
     sys.path.insert(0, str(_SENJU_ROOT))
 
-from senju.owner_scope_negotiation import run_scope_negotiation_cycle  # noqa: E402
+from senju.owner_scope_negotiation_runtime import run_production_scope_negotiation_cycle  # noqa: E402
 
 
 def main() -> int:
@@ -28,7 +28,7 @@ def main() -> int:
     parser.add_argument("--out")
     args = parser.parse_args()
 
-    result = run_scope_negotiation_cycle(
+    result = run_production_scope_negotiation_cycle(
         args.repo_root,
         args.state_dir,
         envelope_path=args.envelope,
