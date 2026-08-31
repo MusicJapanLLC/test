@@ -21,6 +21,17 @@ class FinalContractTests(unittest.TestCase):
                 "credentialed_external_write",
                 "discover_again",
             ],
+            "runtime_bootstrap": {
+                "authority_source": "trusted_production_checkout",
+                "required_files_present": True,
+                "generated_authority_imported": False,
+                "runtime_cache_may_override_owner_policy": False,
+                "copied_files": [
+                    {"name": "discovery_policy.json"},
+                    {"name": "meta_discovery_seed.json"},
+                    {"name": "network_policy_envelope.json"},
+                ],
+            },
             "authority": {
                 "root": "explicit_owner_authority",
                 "same_scope_live_grant_auto_renew": True,
@@ -82,11 +93,36 @@ class FinalContractTests(unittest.TestCase):
         self.assertTrue(contract["complete"])
         self.assertTrue(all(v["integrated"] for v in contract["layers"].values()))
         self.assertTrue(contract["authorization_is_primary"])
+        self.assertTrue(contract["checks"]["runtime_owner_state_bootstrapped"])
         self.assertEqual(
             contract["discovery_target_rule"],
             "inside_existing_owner_envelope: discovered == authorized",
         )
         self.assertTrue(contract["target_activation"]["target_to_external_action_is_operational"])
+        self.assertTrue(contract["target_activation"]["runtime_owner_policy_bootstrapped"])
+
+    def test_missing_runtime_bootstrap_breaks_contract(self):
+        loop = self._loop()
+        loop.pop("runtime_bootstrap")
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["runtime_owner_state_bootstrapped"])
+        self.assertFalse(contract["layers"]["discovery"]["integrated"])
+        self.assertFalse(contract["layers"]["authorization"]["integrated"])
+
+    def test_runtime_bootstrap_cannot_import_generated_authority(self):
+        loop = self._loop()
+        loop["runtime_bootstrap"]["generated_authority_imported"] = True
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["runtime_owner_state_bootstrapped"])
+
+    def test_runtime_cache_cannot_override_owner_policy(self):
+        loop = self._loop()
+        loop["runtime_bootstrap"]["runtime_cache_may_override_owner_policy"] = True
+        contract = build_final_contract(loop, self._registry())
+        self.assertFalse(contract["complete"])
+        self.assertFalse(contract["checks"]["runtime_owner_state_bootstrapped"])
 
     def test_new_root_self_mint_breaks_contract(self):
         loop = self._loop()
