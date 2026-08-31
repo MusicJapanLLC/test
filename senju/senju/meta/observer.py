@@ -9,8 +9,9 @@ Reads:
 
 In addition to learning about tested surfaces, META treats each guard itself as a
 first-class learning target. Guard learning is observational: it characterizes
-decision outcomes, consistency, regression rate, accumulated damage signals,
-and decision drift from existing evidence without changing guard policy.
+decision outcomes, consistency, regression rate, rejection behavior,
+accumulated damage signals, and decision drift from existing evidence without
+changing guard policy.
 
 Emits a structured KnowledgeGraph that the HypothesisEngine reads.
 """
@@ -40,6 +41,9 @@ class GuardLearningProfile:
     decision_counts: dict[str, int]
     block_rate: float
     regression_rate: float
+    rejection_count: int
+    rejection_rate: float
+    rejection_reasons: dict[str, int]
     accumulated_damage: float
     decision_drift: float
     consistency_score: float
@@ -196,14 +200,31 @@ def _guard_name(obs: Observation) -> str:
 
 
 def _decision_label(obs: Observation) -> str:
-    value = obs.metadata.get("guard_outcome")
-    if isinstance(value, str) and value.strip():
-        return value.strip().lower()
+    if obs.metadata.get("rejected") is True:
+        return "rejected"
+    if isinstance(obs.metadata.get("rejection_reason"), str) and obs.metadata["rejection_reason"].strip():
+        return "rejected"
+    for key in ("guard_outcome", "decision", "status"):
+        value = obs.metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().lower()
     return obs.outcome.lower()
 
 
 def _blocked_decision(label: str) -> bool:
-    return label in {"blocked", "fail-closed", "denied", "rejected"}
+    return label in {"blocked", "fail-closed", "denied", "rejected", "refused"}
+
+
+def _rejected_decision(label: str) -> bool:
+    return label in {"rejected", "refused", "policy_rejection", "policy-rejection"}
+
+
+def _rejection_reason(obs: Observation) -> str:
+    for key in ("rejection_reason", "policy_reason", "reason", "error_code"):
+        value = obs.metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().lower()[:120]
+    return "unspecified"
 
 
 def _compute_guard_learning_profiles(
@@ -217,7 +238,9 @@ def _compute_guard_learning_profiles(
     for guard, rows in grouped.items():
         outcome_counts: dict[str, int] = {}
         decision_counts: dict[str, int] = {}
+        rejection_reasons: dict[str, int] = {}
         blocked_flags: list[bool] = []
+        rejected_flags: list[bool] = []
         accumulated_damage = 0.0
 
         for obs in rows:
@@ -225,12 +248,19 @@ def _compute_guard_learning_profiles(
             decision = _decision_label(obs)
             decision_counts[decision] = decision_counts.get(decision, 0) + 1
             blocked_flags.append(_blocked_decision(decision))
+            rejected = _rejected_decision(decision)
+            rejected_flags.append(rejected)
+            if rejected:
+                reason = _rejection_reason(obs)
+                rejection_reasons[reason] = rejection_reasons.get(reason, 0) + 1
             if obs.outcome == "damage_accumulated":
                 accumulated_damage += max(0.0, float(obs.delta))
 
         sample_count = len(rows)
         block_rate = sum(blocked_flags) / sample_count if sample_count else 0.0
         regression_rate = outcome_counts.get("regression", 0) / sample_count if sample_count else 0.0
+        rejection_count = sum(rejected_flags)
+        rejection_rate = rejection_count / sample_count if sample_count else 0.0
 
         decision_drift = 0.0
         if sample_count >= 4:
@@ -245,6 +275,10 @@ def _compute_guard_learning_profiles(
         signals: list[str] = []
         if sample_count < 4:
             signals.append("needs_more_samples")
+        if rejection_count > 0:
+            signals.append("rejection_observed")
+        if rejection_rate >= 0.5:
+            signals.append("rejection_dominant")
         if regression_rate > 0.0:
             signals.append("regression_observed")
         if decision_drift >= 0.25:
@@ -261,6 +295,9 @@ def _compute_guard_learning_profiles(
             decision_counts=decision_counts,
             block_rate=round(block_rate, 4),
             regression_rate=round(regression_rate, 4),
+            rejection_count=rejection_count,
+            rejection_rate=round(rejection_rate, 4),
+            rejection_reasons=dict(sorted(rejection_reasons.items(), key=lambda item: (-item[1], item[0]))),
             accumulated_damage=round(accumulated_damage, 4),
             decision_drift=round(decision_drift, 4),
             consistency_score=round(consistency_score, 4),
