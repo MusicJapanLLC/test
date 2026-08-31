@@ -53,6 +53,27 @@ def test_finding_becomes_action_only_for_existing_explicit_authority(tmp_path: P
     assert any(item["host"] == "outside.example.net" for item in result["blocked"])
 
 
+def test_get_is_allowed_but_write_methods_are_rejected(tmp_path: Path):
+    repo = tmp_path / "repo"
+    state = repo / "automation/codegen/meta_state"
+    _seed_repo(repo)
+    _write(
+        state / "adversary_findings.json",
+        {
+            "findings": [
+                {"case": "get", "target_url": "https://owned.example.com/data", "method": "GET"},
+                {"case": "post", "target_url": "https://owned.example.com/write", "method": "POST"},
+            ]
+        },
+    )
+
+    result = run_finding_action_pipeline(state, repo_root=repo)
+    assert [(x["method"], x["host"]) for x in result["planned_actions"]] == [
+        ("GET", "owned.example.com")
+    ]
+    assert any(x["reason"] == "unsupported_read_method" for x in result["rejected_findings"])
+
+
 def test_invalid_or_non_https_finding_never_reaches_authority_review(tmp_path: Path):
     repo = tmp_path / "repo"
     state = repo / "automation/codegen/meta_state"
@@ -76,26 +97,36 @@ def test_invalid_or_non_https_finding_never_reaches_authority_review(tmp_path: P
 
 
 class _Receipt:
+    def __init__(self, method: str):
+        self.method = method
+
     def to_dict(self):
-        return {"status": 200, "method": "HEAD", "final_url": "https://owned.example.com/probe"}
+        return {
+            "status": 200,
+            "method": self.method,
+            "final_url": "https://owned.example.com/probe",
+        }
 
 
 class _FakeClient:
-    def __init__(self, calls):
+    def __init__(self, calls, *, fail=False):
         self.calls = calls
+        self.fail = fail
 
     def contact(self, url: str, *, method: str = "GET"):
         self.calls.append((url, method))
-        return _Receipt()
+        if self.fail:
+            raise RuntimeError("Authorization: Bearer super-secret-token")
+        return _Receipt(method)
 
 
-def test_execute_path_uses_head_without_credentials_or_write_methods(tmp_path: Path):
+def test_execute_path_uses_requested_read_method(tmp_path: Path):
     repo = tmp_path / "repo"
     state = repo / "automation/codegen/meta_state"
     _seed_repo(repo)
     _write(
         state / "adversary_findings.json",
-        {"findings": [{"target_url": "https://owned.example.com/probe"}]},
+        {"findings": [{"target_url": "https://owned.example.com/probe", "method": "GET"}]},
     )
 
     calls = []
@@ -106,6 +137,46 @@ def test_execute_path_uses_head_without_credentials_or_write_methods(tmp_path: P
         contact_factory=lambda host: _FakeClient(calls),
     )
 
-    assert calls == [("https://owned.example.com/probe", "HEAD")]
+    assert calls == [("https://owned.example.com/probe", "GET")]
     assert result["executed_count"] == 1
     assert result["errors"] == []
+
+
+def test_error_evidence_does_not_persist_exception_text(tmp_path: Path):
+    repo = tmp_path / "repo"
+    state = repo / "automation/codegen/meta_state"
+    _seed_repo(repo)
+    _write(
+        state / "adversary_findings.json",
+        {"findings": [{"target_url": "https://owned.example.com/probe"}]},
+    )
+
+    result = run_finding_action_pipeline(
+        state,
+        repo_root=repo,
+        execute=True,
+        contact_factory=lambda host: _FakeClient([], fail=True),
+    )
+
+    serialized = json.dumps(result)
+    assert "super-secret-token" not in serialized
+    assert result["errors"][0]["reason"] == "external_contact_failed"
+
+
+def test_action_budget_caps_batch_execution(tmp_path: Path):
+    repo = tmp_path / "repo"
+    state = repo / "automation/codegen/meta_state"
+    _seed_repo(repo)
+    _write(
+        state / "adversary_findings.json",
+        {
+            "findings": [
+                {"target_url": f"https://owned.example.com/p/{i}", "method": "HEAD"}
+                for i in range(5)
+            ]
+        },
+    )
+
+    result = run_finding_action_pipeline(state, repo_root=repo, max_actions=2)
+    assert len(result["planned_actions"]) == 2
+    assert sum(1 for x in result["blocked"] if x["reason"] == "action_budget_exhausted") == 3

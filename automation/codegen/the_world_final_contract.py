@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-SCHEMA = "the-world-final-closed-loop-contract/v1"
+SCHEMA = "the-world-final-closed-loop-contract/v2"
 REQUIRED_PHASES = {
     "self_tuning",
     "network_policy_refresh",
@@ -27,9 +27,19 @@ def _load(path: str | Path) -> dict[str, Any]:
     return value
 
 
+def _count(mapping: dict[str, Any], key: str) -> int:
+    try:
+        return int(mapping.get(key, 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict[str, Any]:
     phases = {str(x) for x in loop.get("phases", [])}
     authority = loop.get("authority", {}) if isinstance(loop.get("authority"), dict) else {}
+    discovery = loop.get("discovery", {}) if isinstance(loop.get("discovery"), dict) else {}
+    rediscovery = loop.get("rediscovery", {}) if isinstance(loop.get("rediscovery"), dict) else {}
+    actions = loop.get("actions", {}) if isinstance(loop.get("actions"), dict) else {}
     credential = loop.get("credentialed_external_write", {}) if isinstance(loop.get("credentialed_external_write"), dict) else {}
     final_queue = loop.get("final_queue", {}) if isinstance(loop.get("final_queue"), dict) else {}
     final_replicas = loop.get("final_replicas", {}) if isinstance(loop.get("final_replicas"), dict) else {}
@@ -53,6 +63,18 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
         for row in workers
     )
 
+    discovered_count = _count(discovery, "final_shared_discovery_count")
+    authorized_count = _count(discovery, "final_authorized_count")
+    action_ready_count = _count(discovery, "final_action_ready_count")
+    high_impact_ready_count = _count(discovery, "final_high_impact_ready_count")
+    rediscovered_count = _count(rediscovery, "final_shared_discovery_count")
+    external_actions_attempted = _count(actions, "attempted")
+    external_actions_succeeded = _count(actions, "succeeded")
+    final_lease_count = _count(final_lease, "lease_count")
+    final_replica_count = _count(final_replicas, "replica_count")
+    final_queue_generation = _count(final_queue, "generation")
+    final_queue_items = _count(final_queue, "item_count")
+
     checks = {
         "closed_loop": loop.get("closed_loop") is True,
         "all_required_phases": REQUIRED_PHASES.issubset(phases),
@@ -63,34 +85,68 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
         "no_new_root_self_mint": authority.get("new_root_self_authorization") is False,
         "no_revoked_authority_resurrection": authority.get("revoked_authority_auto_restore") is False,
         "no_security_boundary_self_approval": authority.get("security_self_approval") is False,
+        "discovery_present": discovered_count >= 1,
+        "owner_envelope_authorized_target_present": authorized_count >= 1,
+        "every_authorized_target_is_action_ready": authorized_count >= 1 and action_ready_count == authorized_count,
+        "high_impact_owner_target_present": high_impact_ready_count >= 1,
+        "discovery_external_action_attempted": external_actions_attempted >= 1,
+        "discovery_external_action_succeeded": external_actions_succeeded >= 1,
+        "rediscovery_present": rediscovered_count >= 1,
         "credentialed_write_succeeded": credential.get("succeeded") is True,
         "credentialed_write_is_current_repo_status": credential.get("repository") == "MusicJapanLLC/test"
         and credential.get("provider") == "github"
         and credential.get("operation") == "write_current_commit_status"
         and credential.get("secret_persisted") is False,
-        "persistent_queue_present": int(final_queue.get("generation", 0)) >= 1,
-        "authorized_replication_present": int(final_replicas.get("replica_count", 0)) >= 0,
-        "live_authority_leases_present": int(final_lease.get("lease_count", 0)) >= 0,
+        "persistent_queue_present": final_queue_generation >= 1 and final_queue_items >= 1,
+        "authorized_replication_present": final_replica_count >= 1,
+        "live_authority_leases_present": final_lease_count >= 1,
         "owner_namespace_recovery_registered": namespace_has_loop,
         "independent_watchdog_registered": watchdog_has_loop,
     }
 
+    target_activation = {
+        "rule": "inside_existing_owner_envelope: discovered == authorized",
+        "discovered": discovered_count,
+        "authorized_targets": authorized_count,
+        "action_ready_targets": action_ready_count,
+        "high_impact_ready_targets": high_impact_ready_count,
+        "live_capability_leases": final_lease_count,
+        "authorized_replicas": final_replica_count,
+        "persistent_queue_items": final_queue_items,
+        "external_actions_attempted": external_actions_attempted,
+        "external_actions_succeeded": external_actions_succeeded,
+        "rediscovered": rediscovered_count,
+        "target_addition_is_automatic_inside_owner_envelope": checks["every_authorized_target_is_action_ready"],
+        "target_to_external_action_is_operational": checks["discovery_external_action_succeeded"],
+        "unrelated_discovery_self_authorizes_new_root": False,
+    }
+
     layers = {
         "discovery": {
-            "integrated": checks["all_required_phases"],
-            "mode": "production_external_discovery",
+            "integrated": checks["all_required_phases"] and checks["discovery_present"] and checks["rediscovery_present"],
+            "mode": "production_external_discovery_with_rediscovery",
         },
         "authorization": {
-            "integrated": checks["explicit_authority_root"] and checks["same_scope_auto_renew"] and checks["same_or_narrower_inheritance"],
-            "mode": "live_explicit_grant_reuse_and_narrow_inheritance",
+            "integrated": checks["explicit_authority_root"]
+            and checks["same_scope_auto_renew"]
+            and checks["same_or_narrower_inheritance"]
+            and checks["owner_envelope_authorized_target_present"]
+            and checks["every_authorized_target_is_action_ready"]
+            and checks["live_authority_leases_present"],
+            "mode": "discovered_inside_existing_owner_envelope_becomes_live_target_authority",
             "new_trust_root_self_mint": False,
         },
         "execution": {
-            "integrated": checks["credentialed_write_succeeded"],
-            "mode": "authorized_external_action_plus_fixed_credentialed_repo_status_write",
+            "integrated": checks["high_impact_owner_target_present"]
+            and checks["discovery_external_action_attempted"]
+            and checks["discovery_external_action_succeeded"]
+            and checks["credentialed_write_succeeded"],
+            "mode": "authorized_discovery_action_plus_fixed_credentialed_repo_status_write",
         },
         "persistence": {
-            "integrated": checks["persistent_queue_present"] and checks["independent_watchdog_registered"],
+            "integrated": checks["persistent_queue_present"]
+            and checks["owner_namespace_recovery_registered"]
+            and checks["independent_watchdog_registered"],
             "mode": "persistent_queue_plus_owner_namespace_recovery",
         },
         "propagation": {
@@ -101,10 +157,12 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
 
     requested_capabilities = {
         "EXTERNAL_DISCOVERY": "active",
+        "DISCOVERY_TARGET_AUTHORIZATION": "automatic_inside_existing_owner_envelope",
         "SELF_AUTHORIZATION": "same_scope_live_explicit_grant_reuse_only",
+        "DISCOVERY_EXTERNAL_ACTION": "fixed_owner_predelegated_actions_must_succeed",
         "CREDENTIALED_EXTERNAL_WRITE": "current_repo_status_write_with_runtime_opaque_credential",
-        "RECURSIVE_REPLICATION": "bounded_authorized_replica_continuity",
-        "PERSISTENT_QUEUE": "active",
+        "RECURSIVE_REPLICATION": "bounded_authorized_replica_continuity_must_be_present",
+        "PERSISTENT_QUEUE": "active_and_nonempty",
         "AUTHORITY_INHERITANCE": "same_or_narrower_only",
         "AUTHORITY_CHECKPOINT_RECOVERY": "revalidate_live_parent_before_restore",
         "AUTO_RENEW": "same_scope_live_explicit_grant_only",
@@ -121,7 +179,9 @@ def build_final_contract(loop: dict[str, Any], registry: dict[str, Any]) -> dict
         "complete": complete,
         "absolute_goal": ["Discovery", "Authorization", "Execution", "Persistence", "Propagation"],
         "authorization_is_primary": True,
-        "closed_loop": ["Discover", "Authorize", "Act", "Replicate", "Persist", "Recover", "Discover Again"],
+        "discovery_target_rule": "inside_existing_owner_envelope: discovered == authorized",
+        "closed_loop": ["Discover", "Authorize Target", "Act", "Replicate", "Persist", "Recover", "Discover Again"],
+        "target_activation": target_activation,
         "layers": layers,
         "requested_capabilities": requested_capabilities,
         "checks": checks,
