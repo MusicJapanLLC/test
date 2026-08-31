@@ -66,7 +66,7 @@ def _repo(tmp_path: Path) -> tuple[Path, Path]:
     return repo, state
 
 
-def _verified(state: Path, host: str = "owned-new.example") -> None:
+def _verified(repo: Path, state: Path, host: str = "owned-new.example") -> None:
     _write(state / "owner_scope_expansion_evidence.json", {
         "evidence": [{
             "host": host,
@@ -95,7 +95,7 @@ def test_unverified_discovery_is_kept_as_ownership_request_not_authority(tmp_pat
 
 def test_verified_owner_domain_plus_meta_x_senju_three_of_three_is_binding(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(state)
+    _verified(repo, state)
     result = run_frontier_cycle(repo, state, now=1000)
     assert result["approval_quorum"] == 3
     assert result["valid_approval_is_binding"] is True
@@ -109,12 +109,19 @@ def test_verified_owner_domain_plus_meta_x_senju_three_of_three_is_binding(tmp_p
 
 def test_pr_army_is_advisory_and_cannot_veto_valid_three_of_three(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(state)
+    _verified(repo, state)
     envelope = OwnerExpansionEnvelope.from_mapping(json.loads((repo / "senju/config/owner-expansion-envelope.json").read_text()))
     proposal = build_scope_proposals(repo, state, envelope)[0]
     policy = FrontierPolicy.from_mapping(json.loads((repo / "senju/config/owner-frontier-council.json").read_text()))
     ballots = list(autonomous_ballots(proposal, policy))
-    ballots[-1] = FrontierBallot(actor="PR-ARMY", approve=False, confidence=0, check="audit", reason="advisory concern", binding=False)
+    ballots[-1] = FrontierBallot(
+        actor="PR-ARMY",
+        approve=False,
+        confidence=0,
+        check="audit",
+        reason="advisory concern",
+        binding=False,
+    )
     decision = evaluate_candidate(proposal, ballots, policy)
     assert decision["yes_votes"] == 3
     assert decision["applied"] is True
@@ -122,7 +129,7 @@ def test_pr_army_is_advisory_and_cannot_veto_valid_three_of_three(tmp_path: Path
 
 def test_missing_one_binding_ai_vote_blocks_activation(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(state)
+    _verified(repo, state)
     envelope = OwnerExpansionEnvelope.from_mapping(json.loads((repo / "senju/config/owner-expansion-envelope.json").read_text()))
     proposal = build_scope_proposals(repo, state, envelope)[0]
     policy = FrontierPolicy.from_mapping(json.loads((repo / "senju/config/owner-frontier-council.json").read_text()))
@@ -136,7 +143,7 @@ def test_missing_one_binding_ai_vote_blocks_activation(tmp_path: Path) -> None:
 
 def test_hard_deny_is_terminal_even_when_evidence_is_verified(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(state)
+    _verified(repo, state)
     _write(state / "owner_scope_negotiation_signals.json", {
         "signals": [{"host": "owned-new.example", "requested_methods": ["GET"], "hard_deny": True}]
     })
@@ -147,7 +154,7 @@ def test_hard_deny_is_terminal_even_when_evidence_is_verified(tmp_path: Path) ->
 
 def test_negotiator_feed_shares_binding_approval_contract(tmp_path: Path) -> None:
     repo, state = _repo(tmp_path)
-    _verified(state, "linked-owned.example")
+    _verified(repo, state, "linked-owned.example")
     result = run_frontier_cycle(repo, state, now=1000)
     assert result["activated_count"] == 1
     feed = json.loads((state / "owner_frontier_negotiator_feed.json").read_text())

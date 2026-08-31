@@ -1,6 +1,6 @@
 """Simplified Owner frontier approval council.
 
-The trust boundary is split into two roles:
+The trust boundary is intentionally split into two roles:
 
 1. verified Owner evidence establishes that a host is eligible to enter the Owner
    frontier; this is required once and cannot be synthesized by the AI council;
@@ -15,6 +15,7 @@ Discovery alone never creates authority.
 """
 from __future__ import annotations
 
+import json
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -71,7 +72,9 @@ class FrontierPolicy:
             raise OwnerFrontierError("new-host frontier cannot enable DELETE")
         if bool(raw.get("allow_private_network", False)):
             raise OwnerFrontierError("new-host frontier cannot enable private networks")
-        proof_types = frozenset(str(v).strip() for v in raw.get("auto_activate_proof_types", ()) if str(v).strip())
+        proof_types = frozenset(
+            str(v).strip() for v in raw.get("auto_activate_proof_types", ()) if str(v).strip()
+        )
         if not proof_types:
             raise OwnerFrontierError("auto_activate_proof_types cannot be empty")
         methods = _methods(raw.get("new_host_methods", ("GET", "HEAD", "OPTIONS")))
@@ -131,16 +134,21 @@ def _verified_for_auto_activation(proposal: ScopeProposal, policy: FrontierPolic
 
 
 def autonomous_ballots(proposal: ScopeProposal, policy: FrontierPolicy) -> tuple[FrontierBallot, ...]:
+    """Produce three binding AI ballots plus one advisory PR-ARMY audit ballot."""
     verified = _verified_for_auto_activation(proposal, policy)
     bounded_methods = bool(set(proposal.requested_methods) & set(policy.new_host_methods))
     common_refs = (proposal.proof_ref,) if proposal.proof_ref else ()
-    return (
+
+    ballots = (
         FrontierBallot(
             actor="META",
             approve=verified,
             confidence=94 if verified else 0,
             check="owner_evidence_consistency",
-            reason="verified Owner evidence makes this host eligible" if verified else "verified Owner evidence is missing",
+            reason=(
+                "verified Owner evidence makes this host eligible for council approval"
+                if verified else "verified Owner evidence is missing"
+            ),
             evidence_refs=common_refs,
         ),
         FrontierBallot(
@@ -148,7 +156,10 @@ def autonomous_ballots(proposal: ScopeProposal, policy: FrontierPolicy) -> tuple
             approve=verified,
             confidence=90 if verified else 0,
             check="exact_public_host_boundary",
-            reason="exact public host carries eligible evidence" if verified else "host remains discovery-only",
+            reason=(
+                "exact public host carries eligible verified authority evidence"
+                if verified else "host remains discovery-only"
+            ),
             evidence_refs=common_refs,
         ),
         FrontierBallot(
@@ -156,7 +167,10 @@ def autonomous_ballots(proposal: ScopeProposal, policy: FrontierPolicy) -> tuple
             approve=verified and bounded_methods,
             confidence=92 if verified and bounded_methods else 0,
             check="new_host_method_ceiling",
-            reason="activation is clamped to GET/HEAD/OPTIONS" if verified and bounded_methods else "requested capability has no bounded method",
+            reason=(
+                "activation is clamped to GET/HEAD/OPTIONS"
+                if verified and bounded_methods else "requested capability has no bounded new-host method"
+            ),
             evidence_refs=common_refs,
         ),
         FrontierBallot(
@@ -164,16 +178,28 @@ def autonomous_ballots(proposal: ScopeProposal, policy: FrontierPolicy) -> tuple
             approve=verified,
             confidence=88 if verified else 0,
             check="provenance_revocation_regression_audit",
-            reason="advisory audit found no regression" if verified else "advisory audit sees insufficient provenance",
+            reason=(
+                "advisory audit found no provenance/revocation regression"
+                if verified else "advisory audit sees insufficient provenance"
+            ),
             evidence_refs=(proposal.evidence_fingerprint, *common_refs),
             binding=False,
         ),
     )
+    return ballots
 
 
-def evaluate_candidate(proposal: ScopeProposal, ballots: Iterable[FrontierBallot], policy: FrontierPolicy) -> dict[str, Any]:
+def evaluate_candidate(
+    proposal: ScopeProposal,
+    ballots: Iterable[FrontierBallot],
+    policy: FrontierPolicy,
+) -> dict[str, Any]:
     by_actor = {b.actor: b for b in ballots}
-    yes = [by_actor[a] for a in FRONTIER_MEMBERS if a in by_actor and by_actor[a].binding and by_actor[a].approve]
+    yes = [
+        by_actor[a]
+        for a in FRONTIER_MEMBERS
+        if a in by_actor and by_actor[a].binding and by_actor[a].approve
+    ]
     min_yes_confidence = min((b.confidence for b in yes), default=0)
     audit = by_actor.get("PR-ARMY")
     base = {
@@ -189,14 +215,39 @@ def evaluate_candidate(proposal: ScopeProposal, ballots: Iterable[FrontierBallot
         "valid_approval_is_binding": True,
     }
     if proposal.hard_deny or proposal.revoked:
-        return {**base, "status": "terminal_stop", "applied": False, "reason": "HARD_DENY/revocation remains terminal"}
+        return {
+            **base,
+            "status": "terminal_stop",
+            "applied": False,
+            "reason": "HARD_DENY/revocation remains terminal",
+        }
     if proposal.proof_type not in policy.auto_activate_proof_types or not proposal.proof_ref:
-        return {**base, "status": "ownership_verification_required", "applied": False, "reason": "verified Owner evidence is required once before AI council approval"}
+        return {
+            **base,
+            "status": "ownership_verification_required",
+            "applied": False,
+            "reason": "verified Owner evidence is required once before AI council approval",
+        }
     if any(actor not in by_actor for actor in FRONTIER_MEMBERS) or len(yes) != 3:
-        return {**base, "status": "ai_council_consensus_pending", "applied": False, "reason": "META, X and SENJU must all approve"}
+        return {
+            **base,
+            "status": "ai_council_consensus_pending",
+            "applied": False,
+            "reason": "META, X and SENJU must all approve",
+        }
     if min_yes_confidence < policy.min_confidence:
-        return {**base, "status": "ai_council_consensus_pending", "applied": False, "reason": "one or more binding AI approvals are below threshold"}
-    return {**base, "status": "verified_owner_evidence_plus_ai_council_approved", "applied": True, "reason": "verified Owner evidence plus META/X/SENJU three-of-three approval"}
+        return {
+            **base,
+            "status": "ai_council_consensus_pending",
+            "applied": False,
+            "reason": "one or more binding AI approvals are below the frontier threshold",
+        }
+    return {
+        **base,
+        "status": "verified_owner_evidence_plus_ai_council_approved",
+        "applied": True,
+        "reason": "verified Owner evidence plus META/X/SENJU three-of-three approval",
+    }
 
 
 def _ownership_request(proposal: ScopeProposal, decision: Mapping[str, Any], now: int) -> dict[str, Any]:
@@ -209,13 +260,17 @@ def _ownership_request(proposal: ScopeProposal, decision: Mapping[str, Any], now
         "reason": proposal.reason,
         "requested_by": list(FRONTIER_MEMBERS),
         "shared_with": list(SHARED_WITH),
-        "required_evidence": ["owner_verified_domain", "owner_exact_link", "existing_standing_authorization"],
+        "required_evidence": [
+            "owner_verified_domain",
+            "owner_exact_link",
+            "existing_standing_authorization",
+        ],
         "evidence_fingerprint": proposal.evidence_fingerprint,
     }
 
 
 def _negotiator_feed(decisions: list[dict[str, Any]], now: int) -> dict[str, Any]:
-    rows = []
+    rows: list[dict[str, Any]] = []
     for decision in decisions:
         status = str(decision.get("status") or "")
         rows.append({
@@ -225,7 +280,12 @@ def _negotiator_feed(decisions: list[dict[str, Any]], now: int) -> dict[str, Any
             "proof_ref": decision.get("proof_ref"),
             "yes_votes": int(decision.get("yes_votes", 0) or 0),
             "required_votes": 3,
-            "binding_approval": status in {"verified_owner_evidence_plus_ai_council_approved", "cycle_host_budget_exhausted"},
+            "binding_approval": bool(
+                status in {
+                    "verified_owner_evidence_plus_ai_council_approved",
+                    "cycle_host_budget_exhausted",
+                }
+            ),
             "applied": bool(decision.get("applied")),
         })
     return {
@@ -242,7 +302,14 @@ def _negotiator_feed(decisions: list[dict[str, Any]], now: int) -> dict[str, Any
     }
 
 
-def run_frontier_cycle(repo_root: str | Path, state_dir: str | Path = DEFAULT_STATE, *, config_path: str | Path | None = None, envelope_path: str | Path | None = None, now: int | None = None) -> dict[str, Any]:
+def run_frontier_cycle(
+    repo_root: str | Path,
+    state_dir: str | Path = DEFAULT_STATE,
+    *,
+    config_path: str | Path | None = None,
+    envelope_path: str | Path | None = None,
+    now: int | None = None,
+) -> dict[str, Any]:
     repo = Path(repo_root)
     state = Path(state_dir)
     current_time = int(time.time()) if now is None else int(now)
@@ -255,6 +322,7 @@ def run_frontier_cycle(repo_root: str | Path, state_dir: str | Path = DEFAULT_ST
     per_host = _initial_per_host_methods(ceiling)
     existing_hosts = set(per_host)
     proposals = [p for p in build_scope_proposals(repo, state, envelope) if p.host not in existing_hosts]
+
     ballots_by_proposal: dict[str, list[dict[str, Any]]] = {}
     decisions: list[dict[str, Any]] = []
     ownership_requests: list[dict[str, Any]] = []
@@ -266,16 +334,29 @@ def run_frontier_cycle(repo_root: str | Path, state_dir: str | Path = DEFAULT_ST
         decision = evaluate_candidate(proposal, ballots, policy)
         if decision.get("applied"):
             if activated >= policy.max_new_hosts_per_cycle:
-                decision = {**decision, "status": "cycle_host_budget_exhausted", "applied": False, "approved_pending_continuity": True, "reason": "valid approval is binding but deferred only by new-host cycle budget"}
+                decision = {
+                    **decision,
+                    "status": "cycle_host_budget_exhausted",
+                    "applied": False,
+                    "approved_pending_continuity": True,
+                    "reason": "valid approval is binding but deferred only by the new-host cycle budget",
+                }
             else:
                 per_host[proposal.host] = set(policy.new_host_methods)
                 activated += 1
-                decision = {**decision, "new_host": True, "effective_host_methods": sorted(policy.new_host_methods), "approval_consumed": True}
+                decision = {
+                    **decision,
+                    "new_host": True,
+                    "effective_host_methods": sorted(policy.new_host_methods),
+                    "approval_consumed": True,
+                }
         if not decision.get("applied") and decision.get("status") != "terminal_stop":
             ownership_requests.append(_ownership_request(proposal, decision, current_time))
         decisions.append(decision)
 
-    global_methods = sorted({m for methods in per_host.values() for m in methods} or {"GET", "HEAD", "OPTIONS"})
+    global_methods = sorted(
+        {m for methods in per_host.values() for m in methods} or {"GET", "HEAD", "OPTIONS"}
+    )
     effective = dict(ceiling)
     effective.update({
         "ceiling_id": f"{ceiling.get('ceiling_id', 'owner')}:frontier-ai-council",
@@ -285,6 +366,7 @@ def run_frontier_cycle(repo_root: str | Path, state_dir: str | Path = DEFAULT_ST
         "allow_http": False,
         "allow_delete": False,
     })
+
     ballots_doc = {
         "schema": "senju-owner-frontier-ballots/v2",
         "generated_at": current_time,
@@ -319,14 +401,17 @@ def run_frontier_cycle(repo_root: str | Path, state_dir: str | Path = DEFAULT_ST
             "no_credentials_http_delete_or_private_network_expansion",
         ],
     }
-    _write(state / "owner_frontier_ballots.json", ballots_doc)
-    _write(state / "owner_frontier_council.json", result)
-    _write(state / "owner_scope_expansion_evidence_requests.json", {
+    request_doc = {
         "schema": "senju-owner-frontier-ownership-requests/v2",
         "generated_at": current_time,
         "requests": ownership_requests,
-    })
-    _write(state / "owner_frontier_negotiator_feed.json", _negotiator_feed(decisions, current_time))
+    }
+    feed = _negotiator_feed(decisions, current_time)
+
+    _write(state / "owner_frontier_ballots.json", ballots_doc)
+    _write(state / "owner_frontier_council.json", result)
+    _write(state / "owner_scope_expansion_evidence_requests.json", request_doc)
+    _write(state / "owner_frontier_negotiator_feed.json", feed)
     _write(state / "owner_contact_ceiling_effective.json", {
         "schema": "senju-owner-contact-ceiling-effective/v5",
         "generated_at": current_time,
