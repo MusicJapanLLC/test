@@ -27,11 +27,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-          persist-credentials: true
-          token: ${{ github.token }}
+          persist-credentials: false
 
-      - name: Configure git
+      - name: Configure authenticated git transport
         run: |
+          gh auth setup-git
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
@@ -64,7 +64,7 @@ jobs:
               *externalcontact*|*external_contact*|*secret*|*permission*|\
               *sandbox*|*allowlist*|*denylist*|*guardrail*)
                 return 0
-                ;;
+            ;;
             esac
 
             if [[ "$p" == .github/workflows/* ]] && \

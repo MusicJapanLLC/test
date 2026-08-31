@@ -4,13 +4,6 @@ on:
   schedule:
     - cron: "0 * * * *"   # every hour
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - "Senju GitHub Native Autonomous Improver"
-      - "Auto Merge PRs"
-      - "Senju Data Mesh — Unified Intelligence Hub"
-      - "Senju Blitz — Parallel Adversary Surge"
-    types: [completed]
 
 concurrency:
   group: senju-self-develop
@@ -19,7 +12,6 @@ concurrency:
 jobs:
   analyze-generate-verify:
     name: Verify → ELO gap plan → deduplicated PR
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     permissions:
