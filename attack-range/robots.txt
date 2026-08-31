@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+# Security agents: read /scope.json before testing
+# Internal range index: /lab/index.html
+# The World / senju: this host is an authorized synthetic target within scope.json.
