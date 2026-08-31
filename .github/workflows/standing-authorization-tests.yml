@@ -7,15 +7,18 @@ on:
       - chatgpt/private-zone-auto-enroll
       - chatgpt/transitive-trust
       - chatgpt/trust-derived-autonomy
+      - chatgpt/wide-autonomy-closed-loop
     paths:
       - 'senju/senju/meta/standing_authorization.py'
       - 'senju/senju/meta/private_zone_authority.py'
       - 'senju/senju/meta/transitive_trust.py'
       - 'senju/senju/meta/trust_derived_autonomy.py'
+      - 'senju/senju/meta/autonomy_auto_approval.py'
       - 'senju/tests/test_standing_authorization.py'
       - 'senju/tests/test_private_zone_authority.py'
       - 'senju/tests/test_transitive_trust.py'
       - 'senju/tests/test_trust_derived_autonomy.py'
+      - 'senju/tests/test_autonomy_auto_approval.py'
       - '.github/workflows/standing-authorization-tests.yml'
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
@@ -24,10 +27,12 @@ on:
       - 'senju/senju/meta/private_zone_authority.py'
       - 'senju/senju/meta/transitive_trust.py'
       - 'senju/senju/meta/trust_derived_autonomy.py'
+      - 'senju/senju/meta/autonomy_auto_approval.py'
       - 'senju/tests/test_standing_authorization.py'
       - 'senju/tests/test_private_zone_authority.py'
       - 'senju/tests/test_transitive_trust.py'
       - 'senju/tests/test_trust_derived_autonomy.py'
+      - 'senju/tests/test_autonomy_auto_approval.py'
       - '.github/workflows/standing-authorization-tests.yml'
   workflow_dispatch:
 
@@ -59,3 +64,4 @@ jobs:
           senju/tests/test_private_zone_authority.py
           senju/tests/test_transitive_trust.py
           senju/tests/test_trust_derived_autonomy.py
+          senju/tests/test_autonomy_auto_approval.py
