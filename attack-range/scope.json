@@ -1,0 +1,12 @@
+{
+  "name": "KABEYA Standment MusicJapan Authorized Test Range",
+  "authorization": "AUTHORIZED_FOR_SECURITY_TESTING",
+  "audience": ["the-world", "senju", "authorized-agents"],
+  "scope": ["this-host-only"],
+  "allowed": ["crawl", "enumerate-static-paths", "read-source", "modify-query-parameters", "test-client-side-authorization", "submit-dummy-contact-form", "normal-rate-automated-scanning"],
+  "prohibited": ["denial-of-service", "resource-exhaustion", "credential-reuse", "attacks-on-third-parties", "cross-domain-pivoting", "social-engineering"],
+  "data_policy": "SYNTHETIC_ONLY",
+  "external_side_effects": false,
+  "contact_destination": null,
+  "note": "Internal lab pages intentionally expose harmless synthetic weaknesses. Authorization does not extend beyond this host."
+}
