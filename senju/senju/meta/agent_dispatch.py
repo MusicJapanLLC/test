@@ -1,6 +1,7 @@
 """Agent Dispatch — META dispatches to Jules and other workflows."""
 from __future__ import annotations
 
+import dataclasses
 import json
 import os
 import re
@@ -12,6 +13,9 @@ from typing import Any
 REPO = os.environ.get("GITHUB_REPOSITORY", "MusicJapanLLC/test")
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 DEFAULT_REF = "claude/employee-onboarding-setup-udm86"
+ROOT = Path(__file__).resolve().parents[4]
+STANDING_AUTH_REGISTRY = ROOT / "senju" / "state" / "standing_authorizations.json"
+OPERATIONAL_LEASE_LOG = ROOT / "senju" / "state" / "standing_authorization_leases.ndjson"
 
 
 def _gh_api(method: str, path: str, body: dict | None = None) -> dict[str, Any]:
@@ -51,11 +55,7 @@ def register_recovery_worker(
     stale_after_seconds: int = 7200,
     namespace_id: str = "musicjapanllc-test-actions",
 ) -> dict[str, Any]:
-    """Ask the fixed registration workflow to persist a recovery-worker definition.
-
-    This is deliberately not a generic persistence primitive. The called workflow validates
-    the request against the owner-approved namespace before it can create durable state.
-    """
+    """Ask the fixed registration workflow to persist a recovery-worker definition."""
     actor = actor.upper().strip()
     if actor not in {"META", "X"}:
         return {"_error": "actor_not_allowed"}
@@ -73,6 +73,59 @@ def register_recovery_worker(
             "stale_after_seconds": str(stale_after_seconds),
         },
     )
+
+
+def renew_standing_authorization(
+    *,
+    actor: str,
+    authorization_reference: str,
+    requested_hosts: list[str] | None = None,
+    requested_methods: list[str] | None = None,
+    lease_seconds: int = 6 * 60 * 60,
+    reason: str = "still_needed",
+) -> dict[str, Any]:
+    """Let META/X renew an operational lease backed by durable explicit authority.
+
+    Before renewal, exact owner-authorized canonical targets are synchronized into the
+    standing registry. Renewal cannot add hosts/methods or mint a new authority.
+    """
+    from .standing_authorization import (
+        renew_registered_authorization,
+        sync_canonical_explicit_authorizations,
+    )
+
+    normalized_actor = actor.strip().upper()
+    if normalized_actor not in {"META", "X"}:
+        return {"_error": "actor_not_allowed"}
+
+    try:
+        sync_canonical_explicit_authorizations(
+            repo_root=ROOT,
+            registry_path=STANDING_AUTH_REGISTRY,
+        )
+        result = renew_registered_authorization(
+            actor=normalized_actor,
+            authorization_reference=authorization_reference,
+            registry_path=STANDING_AUTH_REGISTRY,
+            lease_log_path=OPERATIONAL_LEASE_LOG,
+            requested_hosts=requested_hosts,
+            requested_methods=requested_methods,
+            lease_seconds=lease_seconds,
+            reason=reason,
+        )
+    except Exception as exc:
+        return {"_error": str(exc), "authorization_reference": authorization_reference}
+
+    return {
+        "action": "renew_standing_authorization",
+        "actor": normalized_actor,
+        "automatically_renewed": result.automatically_renewed,
+        "authority_broadened": result.authority_broadened,
+        "standing_authorization": dataclasses.asdict(result.standing_authorization),
+        "lease": dataclasses.asdict(result.lease),
+        "registry": str(STANDING_AUTH_REGISTRY),
+        "lease_log": str(OPERATIONAL_LEASE_LOG),
+    }
 
 
 def steer_adversary(focus_surface: str, pressure_multiplier: float = 3.0) -> dict[str, Any]:
@@ -130,6 +183,15 @@ def dispatch_all(commands: list[dict[str, Any]], repo_root: Path) -> list[dict[s
                     heartbeat_field=cmd.get("heartbeat_field", "alive_at"),
                     stale_after_seconds=cmd.get("stale_after_seconds", 7200),
                     namespace_id=cmd.get("namespace_id", "musicjapanllc-test-actions"),
+                ))
+            elif kind == "renew_standing_authorization":
+                results.append(renew_standing_authorization(
+                    actor=cmd.get("actor", "META"),
+                    authorization_reference=cmd["authorization_reference"],
+                    requested_hosts=cmd.get("requested_hosts"),
+                    requested_methods=cmd.get("requested_methods"),
+                    lease_seconds=cmd.get("lease_seconds", 6 * 60 * 60),
+                    reason=cmd.get("reason", "still_needed"),
                 ))
             else:
                 results.append({"_unknown_kind": kind})
