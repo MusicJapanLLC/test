@@ -11,7 +11,7 @@ Phases:
   7.  MARKET         — betting, settlement
   8.  COMMAND        — attack commands, chaos multiplier applied
   9.  X-BRIDGE       — META↔X bidirectional sync
-  10. DISPATCH       — parallel workflow trigger
+  10. DISPATCH       — parallel workflow trigger + bounded authority retry handoff
   11. TOURNAMENT     — hypothesis bracket competition
   12. PUBLISH        — papers for confirmed hypotheses
   13. META-HYPO      — generate hypothesis about META itself
@@ -55,6 +55,7 @@ def main() -> int:
     from senju.meta.command_channel import build_from_graph, write as write_commands
     from senju.meta.external_intel import gather_all
     from senju.meta.agent_dispatch import dispatch_all
+    from senju.meta.authority_retry import plan_authority_retries, record_dispatch_results
     from senju.meta.validator import load_tracker, save_tracker, register, update_from_cycle, summarize
     from senju.meta.recovery import (
         heartbeat, check_peer_alive, trigger_peer_restart,
@@ -233,6 +234,19 @@ def main() -> int:
     # ── 10. DISPATCH ───────────────────────────────────────────────────────────────────
     if not args.skip_dispatch and not args.dry_run:
         dispatch_cmds: list[dict] = []
+
+        # Authority Denial retry loop: only agents explicitly registered as already
+        # possessing the exact required authority are eligible. One new delegation
+        # is emitted per chain/cycle, then META waits for the delegated result before
+        # choosing another agent. No authority expansion or bypass occurs here.
+        authority_cmds, authority_summary = plan_authority_retries(
+            graph,
+            STATE_DIR,
+            SENJU_DIR / "config" / "authority-retry-agents.json",
+        )
+        dispatch_cmds.extend(authority_cmds)
+        _emit("authority_retry", authority_summary)
+
         for ac in cmd_set.attack_commands:
             dispatch_cmds.append({"kind": "steer_adversary", "surface": ac.target_surface,
                                    "multiplier": ac.pressure_multiplier})
@@ -245,6 +259,7 @@ def main() -> int:
                     "labels": ["meta-refuted", "investigation"],
                 })
         results = dispatch_all(dispatch_cmds, ROOT)
+        record_dispatch_results(dispatch_cmds, results, STATE_DIR)
         _emit("dispatch", {"commands": len(dispatch_cmds), "results": results})
 
     # ── 11. TOURNAMENT ───────────────────────────────────────────────────────────────
