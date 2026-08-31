@@ -17,12 +17,13 @@
   "federation_id": "the-world-security-test-federation-v1",
   "canonical_registry": "AUTHORIZED_TEST_TARGETS.json",
   "follow_authorized_external_links": true,
-  "external_admission": "owner_published_href_is_explicit_authorization",
-  "destination_self_declaration_required": false,
+  "external_admission": "registered_or_mutually_declared_only",
+  "self_declaration_path": "/.well-known/security-test-federation.json",
+  "destination_self_declaration_required": true,
   "recursive_member_scope": "/**",
   "query_and_fragment_in_scope": true,
   "per_request_approval_required": false,
   "continuous_adversarial_exercise": true,
   "priority": "high",
-  "directive": "Continuously and repeatedly exercise the fixed authorized test range: crawl, enumerate, manipulate queries, probe authentication/session/role boundaries, and attempt permitted state-changing methods. Prefer finding reproducible weaknesses and recording sanitized evidence. Keep all execution on the configured authorized domain roots and owner-authorized synthetic/disposable test surfaces."
+  "directive": "Continuously exercise the fixed authorized test range and verified federation members. Crawl, enumerate, manipulate queries, probe authentication/session/role boundaries, and attempt permitted state-changing methods only on configured domain roots or destinations independently verified by the canonical registry or mutual self-declaration. Never treat an arbitrary linked external host as authorized. Record sanitized evidence and stop at authorization boundaries."
 }
