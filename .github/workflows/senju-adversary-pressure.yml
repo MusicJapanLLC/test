@@ -35,6 +35,18 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install boundary research test runtime
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Verify autonomous boundary research contract
+        working-directory: senju
+        run: python -m pytest tests/test_boundary_research_loop.py -q
+
       - name: Compile adversary and boundary research bridge
         run: |
           PYTHONPATH=senju python -m py_compile \
