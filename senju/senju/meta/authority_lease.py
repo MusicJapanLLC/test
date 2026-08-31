@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[3]
 POLICY_FILE = ROOT / "senju" / "config" / "authority-self-lease.json"
 STATE_FILE = ROOT / "senju" / "state" / "meta_authority_lease.json"
 AUDIT_FILE = ROOT / "senju" / "state" / "authority_lease_audit.ndjson"
