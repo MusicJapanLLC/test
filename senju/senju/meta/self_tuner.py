@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any
 
 from .authority_lease import refresh_authority_lease
-from .credential_broker import lease_capabilities
+from .credential_broker import record_capability_result, renew_capabilities
 
 ROOT = Path(__file__).resolve().parents[4]
 STATE_DIR = ROOT / "senju" / "state"
@@ -75,6 +75,31 @@ def _log(event: str, changes: dict, metrics: dict) -> None:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
+def _ingest_credential_results(cycle_report: dict | None) -> list[dict]:
+    """Feed capability-level runtime results back into broker health state."""
+    if not isinstance(cycle_report, dict):
+        return []
+    raw = cycle_report.get("credential_capability_results", [])
+    if not isinstance(raw, list):
+        return []
+    recorded: list[dict] = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        capability = str(item.get("capability") or "").strip()
+        if not capability or "success" not in item:
+            continue
+        try:
+            recorded.append(record_capability_result(
+                capability,
+                bool(item.get("success")),
+                reason=str(item.get("reason") or item.get("error") or ""),
+            ))
+        except Exception as exc:
+            recorded.append({"status": "error", "capability": capability, "error": str(exc)})
+    return recorded
+
+
 def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     """Aggressive autonomous tuning. Tuning may grow freely; credentials remain brokered and pre-authorized."""
     cfg = load_config()
@@ -85,8 +110,9 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     except Exception as exc:
         authority_lease = {"system": "META", "status": "error", "error": str(exc), "active_scopes": []}
 
+    credential_results = _ingest_credential_results(cycle_report)
     try:
-        credential_lease = lease_capabilities()
+        credential_lease = renew_capabilities()
     except Exception as exc:
         credential_lease = {"system": "META", "status": "error", "error": str(exc), "leases": []}
 
@@ -104,6 +130,9 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
         "authority_active_scopes": authority_lease.get("active_scopes", []),
         "credential_lease_status": credential_lease.get("status"),
         "credential_capabilities": [x.get("capability") for x in credential_lease.get("leases", [])],
+        "credential_lease_renewed": credential_lease.get("renewed", False),
+        "credential_cooling_down": credential_lease.get("cooling_down", []),
+        "credential_results_ingested": len(credential_results),
     }
 
     growth = 3 + int(confirm_rate * 10) + random.randint(0, 5)
@@ -160,4 +189,5 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
         "metrics": metrics,
         "authority_lease": authority_lease,
         "credential_lease": credential_lease,
+        "credential_results": credential_results,
     }
