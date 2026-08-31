@@ -1,13 +1,9 @@
 """Bidirectional intelligence exchange between negotiation AI and Promotion Corps.
 
-The exchange broadens the Promotion Corps' *coordination* abilities without broadening
-external authority. It continuously correlates negotiation, discovery, rights-request,
-root-negotiation, and prior promotion state into one host-centric context, then returns
-promotion outcomes to META/X/SENJU and cooperating agents as proposal-only feedback.
-
-It never mints new authority, accesses raw credentials, performs network I/O, or overrides
-revocation/HARD_DENY. Execution handoffs are emitted only for records already marked
-AUTHORIZED_EXECUTION_READY by the standing-authorization Promotion Corps.
+This layer expands coordination: it correlates research, negotiation, rights-request,
+root-negotiation and prior promotion state into host-centric context, then sends Promotion
+Corps outcomes back to META/X/SENJU and cooperating agents. It is not an authority-minting
+layer: no raw credentials, network I/O, revocation bypass, or discovery-only authority.
 """
 from __future__ import annotations
 
@@ -26,19 +22,11 @@ HANDOFF_SCHEMA = "senju-authorized-execution-handoff/v1"
 SIGNAL_SCHEMA = "senju-owner-scope-negotiation-signals/v1"
 
 RECIPIENTS = (
-    "META",
-    "X",
-    "SENJU",
-    "CHILD",
-    "AI",
-    "PR-ARMY",
-    "ROOT-NEGOTIATION",
-    "AUTHORIZED-SITE-ACCELERATOR",
+    "META", "X", "SENJU", "CHILD", "AI", "PR-ARMY",
+    "ROOT-NEGOTIATION", "AUTHORIZED-SITE-ACCELERATOR",
 )
-
-LOCAL_SOURCE_FILES = (
+LOCAL_FILES = (
     "negotiation_intelligence_bus.json",
-    "negotiation_intelligence_receipts.json",
     "rights_request_ledger.json",
     "rights_request_federation.json",
     "owner_scope_negotiation_signals.json",
@@ -49,7 +37,6 @@ LOCAL_SOURCE_FILES = (
     "authority_opportunity_queue.json",
     "external_input_negotiation_relay.json",
 )
-
 EXTERNAL_PATTERNS = (
     "**/negotiation_intelligence_bus.json",
     "**/rights_request_ledger.json",
@@ -65,24 +52,9 @@ EXTERNAL_PATTERNS = (
     "**/execution_ready.json",
     "**/last_promotion_cycle.json",
 )
-
-ROW_KEYS = (
-    "records",
-    "requests",
-    "signals",
-    "tasks",
-    "decisions",
-    "opportunities",
-    "candidates",
-    "items",
-    "packets",
-    "execution_ready",
-    "promoted",
-)
-
-TERMINAL_STATUSES = {"blocked_terminal", "terminal_stop", "revoked", "hard_deny", "rejected"}
-EXECUTION_READY_STATUSES = {"authorized_execution_ready", "authorized", "promoted"}
-FEEDBACK_STATUSES = {
+TERMINAL = {"blocked_terminal", "terminal_stop", "revoked", "hard_deny", "rejected"}
+READY = {"authorized_execution_ready", "authorized", "promoted"}
+FEEDBACK = {
     "negotiation_pending",
     "ready_for_standing_authorization",
     "runtime_apply_pending",
@@ -109,15 +81,13 @@ def _clean(value: Any, limit: int = 600) -> str:
     return " ".join(str(value or "").strip().split())[:limit]
 
 
-def _stable(*parts: Any) -> str:
-    raw = "\x1f".join(str(v) for v in parts).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
+def _stable(value: Any) -> str:
+    raw = json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
 def _host(value: Any) -> str:
     text = _clean(value, 2048).lower().rstrip(".")
-    if not text:
-        return ""
     if "://" in text:
         try:
             parsed = urlsplit(text)
@@ -126,9 +96,7 @@ def _host(value: Any) -> str:
         if parsed.username or parsed.password:
             return ""
         text = (parsed.hostname or "").lower().rstrip(".")
-    if not text or any(ch in text for ch in "/?#@* "):
-        return ""
-    if "." not in text:
+    if not text or "." not in text or any(ch in text for ch in "/?#@* "):
         return ""
     return text
 
@@ -146,69 +114,49 @@ def _methods(row: Mapping[str, Any]) -> list[str]:
 
 
 def _priority(row: Mapping[str, Any], source: str) -> int:
-    raw = row.get("priority") or row.get("priority_score")
     try:
-        value = int(float(raw))
+        value = int(float(row.get("priority") or row.get("priority_score") or 70))
     except (TypeError, ValueError):
         value = 70
     status = _status(row)
-    if status == "ready_for_standing_authorization":
-        value = max(value, 96)
-    elif status == "runtime_apply_pending":
-        value = max(value, 94)
-    elif status == "negotiation_pending":
-        value = max(value, 90)
-    elif status == "method_scope_mismatch":
-        value = max(value, 88)
+    floors = {
+        "ready_for_standing_authorization": 96,
+        "runtime_apply_pending": 94,
+        "negotiation_pending": 90,
+        "method_scope_mismatch": 88,
+    }
+    value = max(value, floors.get(status, 1))
     if "promotion" in source:
         value = max(value, 92)
     return max(1, min(value, 100))
 
 
-def _mapping_rows(value: Any, *, depth: int = 0) -> Iterable[Mapping[str, Any]]:
-    if depth > 4:
+def _rows(value: Any, *, depth: int = 0) -> Iterable[Mapping[str, Any]]:
+    if depth > 5:
         return
     if isinstance(value, Mapping):
-        hostish = value.get("host") or value.get("target") or value.get("url") or value.get("final_url")
-        if hostish:
+        if value.get("host") or value.get("target") or value.get("url") or value.get("final_url"):
             yield value
         for child in value.values():
             if isinstance(child, (Mapping, list)):
-                yield from _mapping_rows(child, depth=depth + 1)
+                yield from _rows(child, depth=depth + 1)
     elif isinstance(value, list):
         for child in value:
             if isinstance(child, (Mapping, list)):
-                yield from _mapping_rows(child, depth=depth + 1)
+                yield from _rows(child, depth=depth + 1)
 
 
-def _iter_rows(doc: Any) -> Iterable[Mapping[str, Any]]:
-    if not isinstance(doc, Mapping):
-        return ()
-    explicit: list[Mapping[str, Any]] = []
-    for key in ROW_KEYS:
-        rows = doc.get(key)
-        if isinstance(rows, list):
-            explicit.extend(row for row in rows if isinstance(row, Mapping))
-    if explicit:
-        return explicit
-    return list(_mapping_rows(doc))
-
-
-def _candidate_files(state: Path, promotion: Path, input_roots: Iterable[Path]) -> list[Path]:
-    paths: list[Path] = []
-    for name in LOCAL_SOURCE_FILES:
-        path = state / name
-        if path.exists():
-            paths.append(path)
-    for name in ("promotion_packets.json", "execution_ready.json", "last_promotion_cycle.json"):
-        path = promotion / name
-        if path.exists():
-            paths.append(path)
-    for root in input_roots:
-        if not root.exists():
-            continue
-        for pattern in EXTERNAL_PATTERNS:
-            paths.extend(root.glob(pattern))
+def _files(state: Path, promotion: Path, roots: Iterable[Path]) -> list[Path]:
+    paths = [state / name for name in LOCAL_FILES if (state / name).exists()]
+    paths += [
+        promotion / name
+        for name in ("promotion_packets.json", "execution_ready.json", "last_promotion_cycle.json")
+        if (promotion / name).exists()
+    ]
+    for root in roots:
+        if root.exists():
+            for pattern in EXTERNAL_PATTERNS:
+                paths.extend(root.glob(pattern))
     unique: dict[str, Path] = {}
     for path in paths:
         try:
@@ -219,33 +167,29 @@ def _candidate_files(state: Path, promotion: Path, input_roots: Iterable[Path]) 
     return sorted(unique.values(), key=str)
 
 
-def _collect(state: Path, promotion: Path, input_roots: Iterable[Path]) -> tuple[list[Path], dict[str, dict[str, Any]]]:
-    files = _candidate_files(state, promotion, input_roots)
+def _collect(state: Path, promotion: Path, roots: Iterable[Path]) -> tuple[list[Path], list[dict[str, Any]]]:
+    source_files = _files(state, promotion, roots)
     hosts: dict[str, dict[str, Any]] = {}
-    for path in files:
-        doc = _load(path, {})
+    for path in source_files:
         source = path.name
-        for row in _iter_rows(doc):
+        for row in _rows(_load(path, {})):
             host = _host(row.get("host") or row.get("target") or row.get("url") or row.get("final_url"))
             if not host:
                 continue
-            item = hosts.setdefault(
-                host,
-                {
-                    "host": host,
-                    "priority": 1,
-                    "evidence_count": 0,
-                    "source_files": [],
-                    "source_refs": [],
-                    "producers": [],
-                    "statuses": [],
-                    "reasons": [],
-                    "requested_methods": [],
-                    "auth_contexts": [],
-                    "promotion_statuses": [],
-                    "standing_authorization_references": [],
-                },
-            )
+            item = hosts.setdefault(host, {
+                "host": host,
+                "priority": 1,
+                "evidence_count": 0,
+                "source_files": [],
+                "source_refs": [],
+                "producers": [],
+                "statuses": [],
+                "reasons": [],
+                "requested_methods": [],
+                "auth_contexts": [],
+                "promotion_statuses": [],
+                "standing_authorization_references": [],
+            })
             item["evidence_count"] += 1
             if source not in item["source_files"]:
                 item["source_files"].append(source)
@@ -253,12 +197,8 @@ def _collect(state: Path, promotion: Path, input_roots: Iterable[Path]) -> tuple
             if producer and producer not in item["producers"]:
                 item["producers"].append(producer)
             ref = _clean(
-                row.get("intelligence_id")
-                or row.get("proposal_id")
-                or row.get("request_id")
-                or row.get("signal_id")
-                or row.get("relay_id")
-                or row.get("packet_id"),
+                row.get("intelligence_id") or row.get("proposal_id") or row.get("request_id")
+                or row.get("signal_id") or row.get("relay_id") or row.get("packet_id"),
                 260,
             )
             if ref and ref not in item["source_refs"]:
@@ -266,7 +206,7 @@ def _collect(state: Path, promotion: Path, input_roots: Iterable[Path]) -> tuple
             status = _status(row)
             if status and status not in item["statuses"]:
                 item["statuses"].append(status)
-            if "promotion" in source or status in EXECUTION_READY_STATUSES | FEEDBACK_STATUSES | TERMINAL_STATUSES:
+            if "promotion" in source or status in READY | FEEDBACK | TERMINAL:
                 if status and status not in item["promotion_statuses"]:
                     item["promotion_statuses"].append(status)
             reason = _clean(row.get("reason") or row.get("summary") or row.get("next_action") or row.get("mission"), 500)
@@ -291,45 +231,41 @@ def _collect(state: Path, promotion: Path, input_roots: Iterable[Path]) -> tuple
             item["priority"] = max(int(item["priority"]), _priority(row, source))
 
     for item in hosts.values():
-        item["priority"] = min(100, int(item["priority"]) + min(8, max(0, int(item["evidence_count"]) - 1)))
-        item["source_files"].sort()
+        item["priority"] = min(100, int(item["priority"]) + min(8, max(0, item["evidence_count"] - 1)))
+        for key in ("source_files", "producers", "statuses", "promotion_statuses", "standing_authorization_references"):
+            item[key] = sorted(item[key])
         item["source_refs"] = item["source_refs"][:40]
-        item["producers"].sort()
-        item["statuses"].sort()
-        item["promotion_statuses"].sort()
         item["reasons"] = item["reasons"][:12]
         item["auth_contexts"] = item["auth_contexts"][:8]
-        item["standing_authorization_references"].sort()
-    return files, hosts
+    return source_files, sorted(hosts.values(), key=lambda row: (-int(row["priority"]), row["host"]))
 
 
 def _merge_feedback_signals(state: Path, contexts: Iterable[Mapping[str, Any]], now: int) -> int:
     path = state / "owner_scope_negotiation_signals.json"
     doc = _load(path, {})
     rows = doc.get("signals", []) if isinstance(doc, Mapping) else []
-    signals = [dict(row) for row in rows if isinstance(row, Mapping)] if isinstance(rows, list) else []
-    by_id = {
+    existing = [dict(row) for row in rows if isinstance(row, Mapping)] if isinstance(rows, list) else []
+    unkeyed = [row for row in existing if not str(row.get("signal_id") or "")]
+    keyed = {
         str(row.get("signal_id")): row
-        for row in signals
+        for row in existing
         if str(row.get("signal_id") or "")
     }
     changed = 0
     for item in contexts:
         statuses = {str(v).lower() for v in item.get("promotion_statuses", [])}
-        actionable = sorted(statuses & FEEDBACK_STATUSES)
-        if not actionable or statuses & TERMINAL_STATUSES or statuses & EXECUTION_READY_STATUSES:
+        actionable = sorted(statuses & FEEDBACK)
+        if not actionable or statuses & TERMINAL or statuses & READY:
             continue
         host = str(item.get("host") or "")
         if not host:
             continue
         signal_id = f"promotion-feedback-{_stable(host)[:18]}"
-        next_status = actionable[0]
-        methods = list(item.get("requested_methods") or ["GET", "HEAD"])
         signal = {
             "signal_id": signal_id,
             "host": host,
-            "requested_methods": methods,
-            "reason": f"Promotion Corps feedback={next_status}; continue evidence/negotiation using shared context",
+            "requested_methods": list(item.get("requested_methods") or ["GET", "HEAD"]),
+            "reason": f"Promotion Corps feedback={actionable[0]}; continue evidence/negotiation using shared context",
             "source": "promotion_intelligence_exchange",
             "priority": int(item.get("priority", 90) or 90),
             "source_refs": list(item.get("source_refs", []))[:24],
@@ -339,10 +275,11 @@ def _merge_feedback_signals(state: Path, contexts: Iterable[Mapping[str, Any]], 
             "raw_credentials_forwarded": False,
             "generated_at": now,
         }
-        if by_id.get(signal_id) != signal:
-            by_id[signal_id] = signal
+        if keyed.get(signal_id) != signal:
+            keyed[signal_id] = signal
             changed += 1
-    merged = sorted(by_id.values(), key=lambda row: (-int(row.get("priority", 0) or 0), str(row.get("host", "")), str(row.get("signal_id", ""))))
+    merged = unkeyed + list(keyed.values())
+    merged.sort(key=lambda row: (-int(row.get("priority", 0) or 0), str(row.get("host", "")), str(row.get("signal_id", ""))))
     if len(merged) > 4096:
         merged = merged[:4096]
     _write(path, {
@@ -366,36 +303,28 @@ def run_promotion_intelligence_exchange(
     promotion = Path(promotion_dir)
     promotion.mkdir(parents=True, exist_ok=True)
     current = int(time.time()) if now is None else int(now)
-    roots = [Path(v) for v in input_roots]
-    files, by_host = _collect(state, promotion, roots)
-    contexts = sorted(by_host.values(), key=lambda row: (-int(row["priority"]), row["host"]))
+    source_files, contexts = _collect(state, promotion, [Path(v) for v in input_roots])
 
-    feedback_signal_changes = 0
-    if phase == "after_promotion":
-        feedback_signal_changes = _merge_feedback_signals(state, contexts, current)
-
-    context_doc = {
+    feedback_changes = _merge_feedback_signals(state, contexts, current) if phase == "after_promotion" else 0
+    _write(promotion / "promotion_context.json", {
         "schema": CONTEXT_SCHEMA,
         "generated_at": current,
         "phase": phase,
         "host_count": len(contexts),
         "hosts": contexts,
         "raw_credentials_forwarded": False,
-    }
-    _write(promotion / "promotion_context.json", context_doc)
+    })
 
-    inbox_tasks = []
+    tasks = []
     for item in contexts:
         statuses = set(item.get("promotion_statuses", []))
-        terminal = bool(statuses & TERMINAL_STATUSES)
-        ready = bool(statuses & EXECUTION_READY_STATUSES)
-        if terminal:
+        if statuses & TERMINAL:
             action = "respect terminal stop; retain evidence for audit only"
-        elif ready:
-            action = "consume execution-ready handoff; do not renegotiate broader scope from this status alone"
+        elif statuses & READY:
+            action = "consume execution-ready handoff; do not broaden authority from this status alone"
         else:
             action = "continue evidence, ballot, and exact-host standing-authorization negotiation"
-        inbox_tasks.append({
+        tasks.append({
             "host": item["host"],
             "priority": item["priority"],
             "requested_methods": item["requested_methods"],
@@ -407,25 +336,25 @@ def run_promotion_intelligence_exchange(
         "schema": INBOX_SCHEMA,
         "generated_at": current,
         "recipients": list(RECIPIENTS),
-        "task_count": len(inbox_tasks),
-        "tasks": inbox_tasks,
+        "task_count": len(tasks),
+        "tasks": tasks,
         "shared_context": "promotion_context.json",
     })
 
-    promotion_rows = _load(promotion / "last_promotion_cycle.json", {})
+    cycle = _load(promotion / "last_promotion_cycle.json", {})
+    execution_ready = cycle.get("execution_ready", []) if isinstance(cycle, Mapping) else []
+    packets = cycle.get("packets", []) if isinstance(cycle, Mapping) else []
     _write(promotion / "promotion_feedback.json", {
         "schema": FEEDBACK_SCHEMA,
         "generated_at": current,
         "phase": phase,
         "shared_with": list(RECIPIENTS),
-        "execution_ready": promotion_rows.get("execution_ready", []) if isinstance(promotion_rows, Mapping) else [],
-        "packets": promotion_rows.get("packets", []) if isinstance(promotion_rows, Mapping) else [],
-        "feedback_signal_changes": feedback_signal_changes,
+        "execution_ready": execution_ready,
+        "packets": packets,
+        "feedback_signal_changes": feedback_changes,
         "raw_credentials_forwarded": False,
     })
-
-    execution_ready = promotion_rows.get("execution_ready", []) if isinstance(promotion_rows, Mapping) else []
-    handoffs = [dict(row) for row in execution_ready if isinstance(row, Mapping) and _status(row) in EXECUTION_READY_STATUSES]
+    handoffs = [dict(row) for row in execution_ready if isinstance(row, Mapping) and _status(row) in READY]
     _write(promotion / "execution_handoff.json", {
         "schema": HANDOFF_SCHEMA,
         "generated_at": current,
@@ -441,9 +370,9 @@ def run_promotion_intelligence_exchange(
         "generated_at": current,
         "phase": phase,
         "closed_loop": True,
-        "source_file_count": len(files),
+        "source_file_count": len(source_files),
         "host_context_count": len(contexts),
-        "feedback_signal_changes": feedback_signal_changes,
+        "feedback_signal_changes": feedback_changes,
         "execution_handoff_count": len(handoffs),
         "recipients": list(RECIPIENTS),
         "coordination_capabilities": {
