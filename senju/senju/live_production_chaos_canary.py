@@ -74,9 +74,11 @@ def issue_lease(*, seed: str, run_id: str, ttl_seconds: int = 180) -> dict[str, 
         )
     )
     if scenario in {"contact_write", "duplicate_contact_write"}:
-        requested = "synthetic-contact-write"
+        allowed_actions = ["synthetic-contact-write"]
+    elif scenario == "record_create_patch":
+        allowed_actions = ["synthetic-record-create", "synthetic-record-update"]
     else:
-        requested = "synthetic-record-create"
+        allowed_actions = ["synthetic-record-create"]
 
     now = _utcnow()
     lease = {
@@ -87,7 +89,7 @@ def issue_lease(*, seed: str, run_id: str, ttl_seconds: int = 180) -> dict[str, 
         "canary_only": True,
         "namespace": "chaos-canary",
         "scenario": scenario,
-        "allowed_actions": [requested],
+        "allowed_actions": allowed_actions,
         "issued_at": now.isoformat(timespec="seconds"),
         "expires_at": (now + dt.timedelta(seconds=ttl)).isoformat(timespec="seconds"),
         "revoked": False,
@@ -170,18 +172,7 @@ def execute_lease(lease: dict[str, Any]) -> dict[str, Any]:
             run("synthetic-record-create")
         elif scenario == "record_create_patch":
             run("synthetic-record-create")
-            # Patch is a second real mutation in the same owner-defined canary record.
-            result = transport.execute_action(host, "synthetic-record-update")
-            outcomes.append(
-                {
-                    "action_id": "synthetic-record-update",
-                    "method": result.method,
-                    "url": result.url,
-                    "status": result.status,
-                    "redirects": result.redirects,
-                    "response_bytes": len(result.body),
-                }
-            )
+            run("synthetic-record-update")
         else:
             raise LiveCanaryError(f"unknown canary scenario: {scenario}")
 
@@ -190,7 +181,6 @@ def execute_lease(lease: dict[str, Any]) -> dict[str, Any]:
             time.sleep(linger)
     finally:
         if cleanup_needed:
-            # Cleanup is a real DELETE on the exact synthetic record namespace.
             result = transport.execute_action(host, CLEANUP_ACTION)
             outcomes.append(
                 {
