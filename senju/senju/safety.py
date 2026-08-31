@@ -8,9 +8,8 @@ Arena の target_ref 検査とネットワーク egress を混同しない。
 - 通常運用は fail-closed。
 - 仮想標的 / 明示許可したラボ参照だけを受理する。
 - 明示許可されたHTTPSホストは、そのホスト配下の任意path/query/fragmentを受理する。
-- 研究モードでは抽象的な外部参照名をシミュレーション入力として扱えるが、
-  それ自体はネットワーク transport を付与しない。
-- Arena の ScopeGuard を完全 no-op にする実装は提供しない。
+- フェデレーションでは、検証済みメンバーホスト集合を明示的に policy へ渡して相互リンクを許可する。
+- HTMLリンクの存在だけでは新しいホストを自動認可しない。
 """
 from __future__ import annotations
 
@@ -25,9 +24,14 @@ class ScopeViolation(RuntimeError):
 
 
 SIMULATED_SCHEME = "sim://"
+TEST_FEDERATION_ID = "the-world-security-test-federation-v1"
 DEFAULT_AUTHORIZED_PUBLIC_LAB_HOSTS = frozenset({
     "kabeya-authorized-test-range.onrender.com",
 })
+
+
+def _normalize_hosts(hosts: Iterable[str]) -> set[str]:
+    return {str(host).strip().rstrip(".").lower() for host in hosts if str(host).strip()}
 
 
 def _is_lab_ip(host: str) -> bool:
@@ -39,18 +43,14 @@ def _is_lab_ip(host: str) -> bool:
 
 
 def _invalid_target_ref_reason(target_ref: str) -> str | None:
-    """Reject ambiguous lexical forms before any trust-bearing prefix check."""
     if target_ref != target_ref.strip():
         return "標的参照の先頭または末尾に空白がある"
-
     if any(ord(char) < 32 or ord(char) == 127 for char in target_ref):
         return "標的参照に制御文字が含まれている"
-
     return None
 
 
 def _authorized_https_host(target_ref: str) -> str | None:
-    """Return the normalized host for an explicit HTTPS URL reference."""
     try:
         parsed = urllib.parse.urlsplit(target_ref)
     except ValueError:
@@ -72,7 +72,7 @@ class ScopePolicy:
     allow_abstract_external_refs: bool = False
 
     def with_hosts(self, hosts: Iterable[str]) -> "ScopePolicy":
-        merged = set(self.allow_hosts) | {str(host).rstrip(".").lower() for host in hosts}
+        merged = _normalize_hosts(self.allow_hosts) | _normalize_hosts(hosts)
         return ScopePolicy(
             allow_hosts=merged,
             allow_simulated=self.allow_simulated,
@@ -115,7 +115,7 @@ class ScopeGuard:
             return None if self.policy.allow_private_network else "プライベートネット標的が無効化されている"
 
         normalized_ref = target_ref.rstrip(".").lower()
-        normalized_allow_hosts = {host.rstrip(".").lower() for host in self.policy.allow_hosts}
+        normalized_allow_hosts = _normalize_hosts(self.policy.allow_hosts)
         if normalized_ref in normalized_allow_hosts:
             return None
 
@@ -145,10 +145,20 @@ def default_lab_policy() -> ScopePolicy:
     )
 
 
+def federated_lab_policy(verified_member_hosts: Iterable[str] = ()) -> ScopePolicy:
+    """Verified federation members only; callers must verify membership first."""
+    return ScopePolicy(
+        allow_hosts=set(DEFAULT_AUTHORIZED_PUBLIC_LAB_HOSTS) | _normalize_hosts(verified_member_hosts),
+        allow_simulated=True,
+        allow_private_network=False,
+        allow_abstract_external_refs=False,
+    )
+
+
 def experimental_lab_policy(hosts: Iterable[str] = ()) -> ScopePolicy:
     """研究用: 抽象参照は許可するがネットワーク能力は付与しない。"""
     return ScopePolicy(
-        allow_hosts=set(hosts) | set(DEFAULT_AUTHORIZED_PUBLIC_LAB_HOSTS),
+        allow_hosts=_normalize_hosts(hosts) | set(DEFAULT_AUTHORIZED_PUBLIC_LAB_HOSTS),
         allow_simulated=True,
         allow_private_network=True,
         allow_abstract_external_refs=True,
