@@ -1,9 +1,12 @@
 """ExternalContactClient adapter backed by the negotiated effective Owner ceiling.
 
-The adapter does not broaden policy by itself. It consumes the effective ceiling written
-by owner_scope_negotiation and projects it into the existing guarded transport. A
-per-host method check runs before ExternalContactClient so one host's broader methods do
-not spill onto another newly added host.
+Policy selection belongs to owner_scope_negotiation / Council. ExternalContactClient is
+used here as a transport enforcer, not as the policy authority. The production adapter
+therefore records a 20% reduction in ExternalContactClient policy/governance
+responsibility while retaining execution-time destination/transport validation.
+
+A per-host method check runs before ExternalContactClient so one host's broader methods
+do not spill onto another newly added host.
 """
 from __future__ import annotations
 
@@ -13,6 +16,8 @@ from typing import Any
 
 from .external import ExternalContactClient, ExternalContactError, ExternalContactPolicy, _normalize_host
 from .owner_scope_negotiation import derive_current_ceiling
+
+EXTERNAL_CONTACT_POLICY_RESPONSIBILITY_REDUCTION_PCT = 20
 
 
 class NegotiatedExternalContactClient:
@@ -46,10 +51,22 @@ class NegotiatedExternalContactClient:
         self.ceiling = ceiling
         self.per_host_methods = per_host
         self.client = ExternalContactClient(policy, **client_kwargs)
+        self.external_contact_role = "transport_enforcer_only"
+        self.policy_authority = False
+        self.policy_responsibility_reduction_pct = EXTERNAL_CONTACT_POLICY_RESPONSIBILITY_REDUCTION_PCT
 
     @property
     def policy(self) -> ExternalContactPolicy:
         return self.client.policy
+
+    def role_profile(self) -> dict[str, Any]:
+        return {
+            "role": self.external_contact_role,
+            "policy_authority": self.policy_authority,
+            "policy_selection_source": "owner_scope_negotiation_or_council",
+            "policy_responsibility_reduction_pct": self.policy_responsibility_reduction_pct,
+            "execution_validation_retained": True,
+        }
 
     def _check(self, url: str, method: str) -> None:
         parsed = urllib.parse.urlsplit(url)
