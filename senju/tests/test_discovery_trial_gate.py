@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 from senju.discovery_trial_gate import issue_trial_ticket
+from senju.negotiated_external_client import NegotiatedExternalContactClient
 from senju.owner_scope_negotiation import OwnerExpansionEnvelope, ScopeProposal
 from senju.owner_scope_negotiation_runtime import evaluate_and_apply_per_host
 
@@ -206,3 +207,41 @@ def test_owner_verified_selected_trial_materializes_real_write_capability_withou
     assert grant["redirect_trust_inheritance"] is False
     assert grant["authority_effect"] is False
     assert grant["expires_at"] == 1600
+
+
+def test_transport_projects_unexpired_owner_verified_trial_without_weakening_transport_guards(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    state = repo / "senju" / "state"
+    state.mkdir(parents=True)
+    _write(state / "standing_authorizations.json", {
+        "records": [{
+            "authorization_reference": "owner://existing",
+            "exact_hosts": ["existing.example"],
+            "allowed_methods": ["GET", "HEAD"],
+            "revoked": False,
+        }]
+    })
+    _write(state / "owner_verified_active_trials.json", {
+        "grants": [{
+            "host": "owned-new.example",
+            "proposal_id": "scope-active",
+            "proof_type": "owner_verified_domain",
+            "proof_ref": "dns-proof:abc",
+            "verified_owner_evidence": True,
+            "allowed_methods": ["HEAD", "POST", "PUT", "PATCH"],
+            "credential_scope": "caller_supplied_existing",
+            "private_network": False,
+            "redirect_trust_inheritance": False,
+            "authority_effect": False,
+            "expires_at": 4_000_000_000,
+        }]
+    })
+
+    client = NegotiatedExternalContactClient(repo, state, opener=lambda *args, **kwargs: None)
+    assert "owned-new.example" in client.policy.allow_hosts
+    assert {"POST", "PUT", "PATCH"}.issubset(client.per_host_methods["owned-new.example"])
+    assert client.active_trial_grants["owned-new.example"]["credential_scope"] == "caller_supplied_existing"
+    profile = client.role_profile()
+    assert profile["active_trial_private_network"] is False
+    assert profile["active_trial_redirect_trust_inheritance"] is False
+    assert profile["cross_host_sensitive_header_strip_retained"] is True
