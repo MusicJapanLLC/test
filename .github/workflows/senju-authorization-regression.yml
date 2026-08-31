@@ -25,6 +25,7 @@ jobs:
         with:
           persist-credentials: false
 
+      # This guard deliberately checks policy data only; it does not contact external systems.
       - name: Enforce explicit federation authorization
         shell: python
         run: |
