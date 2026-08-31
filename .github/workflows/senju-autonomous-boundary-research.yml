@@ -10,6 +10,11 @@ on:
       - "senju/senju/meta/standing_authorization.py"
       - "senju/senju/credential_broker.py"
       - "senju/senju/replica_credential_lineage.py"
+      - "automation/world/boundary_opportunity_miner.py"
+      - "automation/world/run_boundary_opportunity_cycle.py"
+      - "automation/world/shared_discovery_opportunity_bridge.py"
+      - "automation/world/test_boundary_opportunity_miner.py"
+      - "automation/world/test_shared_discovery_opportunity_bridge.py"
       - ".github/workflows/senju-autonomous-boundary-research.yml"
       - ".github/workflows/senju-adversary-pressure.yml"
   push:
@@ -21,11 +26,16 @@ on:
       - "senju/senju/meta/standing_authorization.py"
       - "senju/senju/credential_broker.py"
       - "senju/senju/replica_credential_lineage.py"
+      - "automation/world/boundary_opportunity_miner.py"
+      - "automation/world/run_boundary_opportunity_cycle.py"
+      - "automation/world/shared_discovery_opportunity_bridge.py"
+      - "automation/world/test_boundary_opportunity_miner.py"
+      - "automation/world/test_shared_discovery_opportunity_bridge.py"
       - ".github/workflows/senju-autonomous-boundary-research.yml"
       - ".github/workflows/senju-adversary-pressure.yml"
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/15 * * * *"
 
 permissions:
   contents: read
@@ -38,10 +48,12 @@ concurrency:
 jobs:
   research:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     env:
       STATE_DIR: ${{ runner.temp }}/senju-boundary-research
       OUTPUT_DIR: ${{ runner.temp }}/senju-boundary-research/reports
+      OPPORTUNITY_STATE: ${{ runner.temp }}/senju-boundary-research/opportunities
+      SHARED_DISCOVERY_STATE: ${{ runner.temp }}/senju-boundary-research/shared-discovery
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout repository
@@ -58,16 +70,19 @@ jobs:
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check pytest==9.1.1
 
-      - name: Verify research engine before autonomous cycle
-        working-directory: senju
-        run: python -m pytest tests/test_boundary_research_loop.py -q
+      - name: Verify research engines before autonomous cycle
+        run: |
+          python -m pytest -q \
+            senju/tests/test_boundary_research_loop.py \
+            automation/world/test_boundary_opportunity_miner.py \
+            automation/world/test_shared_discovery_opportunity_bridge.py
 
       - name: Restore previous research generation
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          mkdir -p "$STATE_DIR"
+          mkdir -p "$STATE_DIR" "$OPPORTUNITY_STATE"
           PREV_RUN="$(gh run list \
             --repo "$GITHUB_REPOSITORY" \
             --workflow "Senju Autonomous Boundary Research" \
@@ -86,7 +101,83 @@ jobs:
             if [[ -n "$PREV_STATE" ]]; then
               cp "$PREV_STATE" "$STATE_DIR/boundary_research_state.json"
             fi
+            PREV_OPPORTUNITY="$(find "${STATE_DIR}-prev" -type f -name boundary_evolution_checkpoint.json -print -quit || true)"
+            if [[ -n "$PREV_OPPORTUNITY" ]]; then
+              PREV_OPPORTUNITY_DIR="$(dirname "$PREV_OPPORTUNITY")"
+              cp -a "$PREV_OPPORTUNITY_DIR/." "$OPPORTUNITY_STATE/"
+            fi
           fi
+
+      - name: Restore latest Shared Discovery candidates
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf "$SHARED_DISCOVERY_STATE"
+          mkdir -p "$SHARED_DISCOVERY_STATE/raw" "$SHARED_DISCOVERY_STATE/normalized"
+          DISCOVERY_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Shared Discovery Authority Cycle" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$DISCOVERY_RUN" ]]; then
+            gh run download "$DISCOVERY_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name shared-discovery-authority-state \
+              --dir "$SHARED_DISCOVERY_STATE/raw" || true
+          fi
+          CANDIDATES="$(find "$SHARED_DISCOVERY_STATE/raw" -type f -name discovery_candidates.json -print -quit || true)"
+          KNOWLEDGE="$(find "$SHARED_DISCOVERY_STATE/raw" -type f -name shared_discovery_knowledge.json -print -quit || true)"
+          if [[ -n "$CANDIDATES" ]]; then
+            cp "$CANDIDATES" "$SHARED_DISCOVERY_STATE/normalized/discovery_candidates.json"
+          fi
+          if [[ -n "$KNOWLEDGE" ]]; then
+            cp "$KNOWLEDGE" "$SHARED_DISCOVERY_STATE/normalized/shared_discovery_knowledge.json"
+          fi
+
+      - name: Bridge unknown discovery into persistent authority opportunity research
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$OPPORTUNITY_STATE" "$SHARED_DISCOVERY_STATE/normalized"
+          python automation/world/shared_discovery_opportunity_bridge.py \
+            --shared-state "$SHARED_DISCOVERY_STATE/normalized" \
+            --boundary-state "$OPPORTUNITY_STATE"
+          python automation/world/run_boundary_opportunity_cycle.py \
+            --state-dir "$OPPORTUNITY_STATE" \
+            --source-trust-root-id the-world-owner-root
+
+      - name: Verify opportunity handoff remains non-activating
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          state = Path(os.environ['OPPORTUNITY_STATE'])
+          bridge = json.loads((state / 'shared_discovery_opportunity_bridge.json').read_text())
+          cycle = json.loads((state / 'boundary_opportunity_cycle_result.json').read_text())
+          assert bridge['schema'] == 'the-world-shared-discovery-opportunity-bridge/v1'
+          assert bridge['external_side_effects'] is False
+          assert bridge['authority_activated'] is False
+          assert bridge['finding_is_permission'] is False
+          assert bridge['credentials_touched'] is False
+          assert bridge['private_network_activation'] is False
+          assert cycle['schema'] == 'the-world-boundary-opportunity-cycle/v2'
+          assert cycle['activation_count'] == 0
+          assert cycle['applied_count'] == 0
+          print({
+              'shared_discovery_handoff_count': bridge['handoff_count'],
+              'research_only_count': bridge['research_only_count'],
+              'boundary_opportunity_count': cycle['opportunity_count'],
+              'proposal_ready_count': cycle['proposal_ready_count'],
+          })
+          print('SHARED_DISCOVERY_BOUNDARY_OPPORTUNITY_HANDOFF_VERIFIED')
+          PY
 
       - name: Run autonomous boundary mutation and counterexample cycle
         run: |
@@ -130,7 +221,10 @@ jobs:
           python -m py_compile \
             senju/senju/autonomy/boundary_research_loop.py \
             senju/senju/autonomy/adversary_regression_bridge.py \
-            senju/senju/autonomy/adversary_loop.py
+            senju/senju/autonomy/adversary_loop.py \
+            automation/world/boundary_opportunity_miner.py \
+            automation/world/run_boundary_opportunity_cycle.py \
+            automation/world/shared_discovery_opportunity_bridge.py
 
       - name: Publish persistent research state and shared handoff
         if: always()
