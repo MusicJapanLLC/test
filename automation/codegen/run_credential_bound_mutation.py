@@ -4,7 +4,7 @@ import argparse
 import json
 from pathlib import Path
 
-from engine.credential_bound_mutation import execute_credential_bound_mutations
+from engine.credential_bound_mutation_runtime import execute_credential_bound_mutations
 
 
 def main() -> int:
