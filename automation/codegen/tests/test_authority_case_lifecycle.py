@@ -35,16 +35,25 @@ def _seed_queue(state: Path, row: dict[str, object]) -> None:
     _write(state / "formal_root_authority_approval_queue.json", {"candidates": [row]})
 
 
-def _approve(state: Path, host: str, approved_by: list[str] | None = None) -> None:
+def _approve(
+    state: Path,
+    host: str,
+    approved_by: list[str] | None = None,
+    *,
+    decided_at: int | None = None,
+) -> None:
+    decision = {
+        "host": host,
+        "approved": True,
+        "approved_by": approved_by or ["META", "X", "SENJU"],
+        "constitution_id": CONSTITUTION_ID,
+        "canonical_flow_id": CANONICAL_FLOW_ID,
+    }
+    if decided_at is not None:
+        decision["decided_at"] = decided_at
     _write(state / "executive_council_decisions.json", {
         "schema": "the-world-executive-authority-decisions/v1",
-        "decisions": [{
-            "host": host,
-            "approved": True,
-            "approved_by": approved_by or ["META", "X", "SENJU"],
-            "constitution_id": CONSTITUTION_ID,
-            "canonical_flow_id": CANONICAL_FLOW_ID,
-        }],
+        "decisions": [decision],
     })
 
 
@@ -86,6 +95,23 @@ def test_unprocessed_case_expires_at_three_days(tmp_path: Path) -> None:
     lifecycle = json.loads((state / "authority_case_lifecycle_state.json").read_text())
     assert lifecycle["cases"][0]["status"] == "expired_unprocessed"
     assert lifecycle["cases"][0]["time_elapsed_is_approval"] is False
+
+
+def test_late_executive_approval_cannot_reactivate_expired_case(tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    start = 1000
+    expiry = start + UNPROCESSED_EXPIRY_SECONDS
+    _seed_queue(state, _case(intake_at=start))
+    _approve(state, "candidate.example.com", decided_at=expiry + 1)
+
+    result = run_case_lifecycle(state, now=expiry + 10)
+    assert result["parliamentary_elevation_count"] == 0
+    assert result["expired_unprocessed_count"] == 1
+    lifecycle = json.loads((state / "authority_case_lifecycle_state.json").read_text())
+    row = lifecycle["cases"][0]
+    assert row["status"] == "expired_unprocessed"
+    assert row["executive_approval_was_timely"] is False
+    assert row["parliamentary_elevation"] is False
 
 
 def test_expired_case_after_seven_more_days_forces_reconsideration_not_approval(tmp_path: Path) -> None:
