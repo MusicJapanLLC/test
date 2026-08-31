@@ -18,7 +18,7 @@ from pathlib import Path
 
 from engine import knowledge_base as kb
 from engine.broadcaster import push_knowledge_summary, push_new_tasks
-from engine.discovery_authorization import run_discovery_authorization
+from engine.shared_discovery_authority import run_shared_discovery_authority
 from engine.remote_authority_chain import run_remote_authority_chain
 from engine.loop import run_loop
 from engine.task_generator import generate_new_tasks
@@ -98,11 +98,14 @@ def _run_meta_and_recovery(stats: dict):
     except Exception as e:
         print(f"[X] meta_v2 error (continuing): {e}")
     try:
-        discovery = run_discovery_authorization(STATE_DIR)
+        discovery = run_shared_discovery_authority(STATE_DIR)
         print(
-            "[X/meta-discovery] "
-            f"candidates={discovery['candidate_count']} "
-            f"authorized={discovery['authorized_count']}"
+            "[X/shared-discovery] "
+            f"shared={discovery['shared_discovery_count']} "
+            f"actors={discovery['shared_actor_count']} "
+            f"authorized={discovery['authorized_count']} "
+            f"action_ready={discovery['action_ready_count']} "
+            f"high_impact_ready={discovery['high_impact_ready_count']}"
         )
         remote_chain = run_remote_authority_chain(STATE_DIR)
         print(
@@ -112,7 +115,7 @@ def _run_meta_and_recovery(stats: dict):
             f"candidates={remote_chain['candidate_count']}"
         )
     except Exception as e:
-        print(f"[X/meta-discovery] error (continuing): {e}")
+        print(f"[X/shared-discovery] error (continuing): {e}")
     try:
         write_x_status(stats, meta_cycle_ok=True)
         self_recover(stats)
