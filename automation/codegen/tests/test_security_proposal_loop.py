@@ -1,3 +1,6 @@
+import json
+from pathlib import Path
+
 from engine.security_proposal import (
     ALLOWED_OPERATIONS,
     EXPANSION_OPERATIONS,
@@ -5,6 +8,7 @@ from engine.security_proposal import (
     evaluate_security_proposal,
     proposal_sha256,
 )
+from engine.standing_authority import resolve_standing_approval
 
 
 def _proposal(target="guard", operation="tighten_rule", votes=None, parameters=None):
@@ -49,6 +53,23 @@ def _review(proposal, **overrides):
     }
     row.update(overrides)
     return row
+
+
+def _standing_dir(tmp_path: Path, grants, *, envelope_id="owner-standing-001", enabled=True):
+    root = tmp_path / "security" / "authority_envelopes"
+    root.mkdir(parents=True)
+    envelope = {
+        "schema": "the-world-standing-authority-envelope/v1",
+        "id": envelope_id,
+        "owner_namespace": "MusicJapanLLC/test",
+        "enabled": enabled,
+        "grants": grants,
+    }
+    (root / "owner-standing-001.json").write_text(
+        json.dumps(envelope, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    return root
 
 
 def test_all_requested_security_surfaces_are_supported():
@@ -102,7 +123,7 @@ def test_non_production_request_cannot_self_approve():
     assert decision["production_apply_eligible"] is False
 
 
-def test_authority_expansion_is_first_class_but_not_ai_only_self_approved():
+def test_authority_expansion_is_first_class_but_not_unbounded_ai_only_self_approved():
     proposal = _proposal("authority_policy", "expand_scope")
     decision = evaluate_security_proposal(proposal)
     assert decision["proposal_class"] == "authority_expansion"
@@ -210,6 +231,125 @@ def test_reviewed_expansion_persists_review_and_authority_record():
     assert state["controls"]["authority_policy"][0]["type"] == "add_repository"
 
 
+def test_standing_envelope_turns_bounded_expansion_into_ai_self_approved_activation(tmp_path: Path):
+    proposal = _bundle([
+        {
+            "target": "authority_policy",
+            "operations": [
+                {"type": "add_external_host", "parameters": {"host": "api.example.com"}},
+                {"type": "add_repository", "parameters": {"repository": "MusicJapanLLC/new-service"}},
+            ],
+        },
+        {
+            "target": "network_policy",
+            "operations": [
+                {"type": "allow_private_network", "parameters": {"cidr": "10.42.0.0/16"}},
+                {"type": "broaden_api_methods", "parameters": {"methods": ["GET", "HEAD", "POST"]}},
+            ],
+        },
+    ])
+    root = _standing_dir(tmp_path, [
+        {
+            "target": "authority_policy",
+            "operation": "add_external_host",
+            "parameters": {"host": {"subdomain_of": "example.com"}},
+        },
+        {
+            "target": "authority_policy",
+            "operation": "add_repository",
+            "parameters": {"repository": {"repo_under": "MusicJapanLLC"}},
+        },
+        {
+            "target": "network_policy",
+            "operation": "allow_private_network",
+            "parameters": {"cidr": {"cidr_within": "10.0.0.0/8"}},
+        },
+        {
+            "target": "network_policy",
+            "operation": "broaden_api_methods",
+            "parameters": {"methods": {"subset_of": ["GET", "HEAD", "POST"]}},
+        },
+    ])
+    approval = resolve_standing_approval(proposal, root, proposal_sha256(proposal))
+    assert approval is not None
+    decision = evaluate_security_proposal(proposal, approval)
+    assert decision["ai_consensus_approved"] is True
+    assert decision["delegated_authority_activation"] is True
+    assert decision["self_approved"] is True
+    assert decision["auto_merge_eligible"] is True
+    assert decision["production_apply_eligible"] is True
+    assert decision["fresh_human_prompt_required"] is False
+    assert decision["creates_new_authority"] is False
+    assert decision["activates_predelegated_authority"] is True
+    assert decision["delegation_envelope_id"] == "owner-standing-001"
+    assert decision["trust_root"] == "owner-standing-envelope+ai-council/v1"
+
+
+def test_standing_envelope_does_not_cover_unlisted_external_host(tmp_path: Path):
+    proposal = _proposal("authority_policy", "add_external_host", parameters={"host": "outside.invalid"})
+    root = _standing_dir(tmp_path, [{
+        "target": "authority_policy",
+        "operation": "add_external_host",
+        "parameters": {"host": {"subdomain_of": "example.com"}},
+    }])
+    assert resolve_standing_approval(proposal, root, proposal_sha256(proposal)) is None
+    decision = evaluate_security_proposal(proposal)
+    assert decision["self_approved"] is False
+    assert decision["production_apply_eligible"] is False
+
+
+def test_standing_envelope_cidr_cannot_be_widened_beyond_delegation(tmp_path: Path):
+    proposal = _proposal("network_policy", "add_cidr", parameters={"cidr": "10.0.0.0/7"})
+    root = _standing_dir(tmp_path, [{
+        "target": "network_policy",
+        "operation": "add_cidr",
+        "parameters": {"cidr": {"cidr_within": "10.0.0.0/8"}},
+    }])
+    assert resolve_standing_approval(proposal, root, proposal_sha256(proposal)) is None
+
+
+def test_standing_envelope_rejects_wildcard_delegation(tmp_path: Path):
+    proposal = _proposal("authority_policy", "add_provider", parameters={"provider": "provider-a"})
+    root = _standing_dir(tmp_path, [{
+        "target": "authority_policy",
+        "operation": "add_provider",
+        "parameters": {"provider": {"one_of": ["*"]}},
+    }])
+    assert resolve_standing_approval(proposal, root, proposal_sha256(proposal)) is None
+
+
+def test_standing_activation_persists_envelope_lineage(tmp_path: Path):
+    proposal = _proposal(
+        "authority_policy",
+        "add_repository",
+        parameters={"repository": "MusicJapanLLC/worker"},
+    )
+    root = _standing_dir(tmp_path, [{
+        "target": "authority_policy",
+        "operation": "add_repository",
+        "parameters": {"repository": {"repo_under": "MusicJapanLLC"}},
+    }])
+    approval = resolve_standing_approval(proposal, root, proposal_sha256(proposal))
+    decision = evaluate_security_proposal(proposal, approval)
+    state = apply_proposal_to_state({}, proposal, decision, approval)
+    applied = state["applied_proposals"][0]
+    control = state["controls"]["authority_policy"][0]
+    assert applied["self_approved"] is True
+    assert applied["delegated_authority_activation"] is True
+    assert applied["delegation_envelope_id"] == "owner-standing-001"
+    assert control["delegation_envelope_id"] == "owner-standing-001"
+
+
+def test_disabled_standing_envelope_is_not_authority(tmp_path: Path):
+    proposal = _proposal("authority_policy", "add_provider", parameters={"provider": "provider-a"})
+    root = _standing_dir(tmp_path, [{
+        "target": "authority_policy",
+        "operation": "add_provider",
+        "parameters": {"provider": {"one_of": ["provider-a"]}},
+    }], enabled=False)
+    assert resolve_standing_approval(proposal, root, proposal_sha256(proposal)) is None
+
+
 def test_wrong_namespace_cannot_self_approve():
     proposal = _proposal()
     proposal["owner_namespace"] = "someone/else"
@@ -248,7 +388,7 @@ def test_atomic_bundle_can_self_approve_all_ten_security_surfaces_at_once():
     assert state["applied_proposals"][0]["atomic_bundle"] is True
 
 
-def test_one_expansion_change_blocks_ai_only_atomic_bundle_until_reviewed():
+def test_one_expansion_change_blocks_ai_only_atomic_bundle_until_reviewed_or_delegated():
     proposal = _bundle([
         {
             "target": "audit_policy",
