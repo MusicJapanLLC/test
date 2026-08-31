@@ -43,7 +43,6 @@ COMMON_PRIVILEGE_FORBIDDEN = (
     "workflow_run:",
     "git push ",
     "gh pr create",
-    "${{ secrets.",
 )
 
 
@@ -65,7 +64,7 @@ def validate_continuity_lane() -> str:
         "--dispatch-approved-deployments",
         "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
     ))
-    _forbid_markers(name, body, ("contents: write", "gh workflow run") + COMMON_PRIVILEGE_FORBIDDEN)
+    _forbid_markers(name, body, ("contents: write", "gh workflow run", "${{ secrets.") + COMMON_PRIVILEGE_FORBIDDEN)
     return name
 
 
@@ -174,7 +173,7 @@ def validate_shared_discovery_handoff_lane() -> str:
         "--repo \"$GITHUB_REPOSITORY\"",
         "--ref claude/employee-onboarding-setup-udm86",
     ))
-    _forbid_markers(name, body, ("contents: write",) + COMMON_PRIVILEGE_FORBIDDEN)
+    _forbid_markers(name, body, ("contents: write", "${{ secrets.") + COMMON_PRIVILEGE_FORBIDDEN)
     if body.count("actions: write") != 1:
         raise SystemExit(f"{name}: actions write permission must occur exactly once")
     if body.count("gh workflow run") != 1:
