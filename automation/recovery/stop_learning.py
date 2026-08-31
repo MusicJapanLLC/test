@@ -113,20 +113,42 @@ def recovery_reward(*, prior_signal: LearningSignal, controls: dict[str, Any] | 
     return round(1.0 + stable + mttr_bonus, 3)
 
 
+def _restore_signal(value: Any) -> LearningSignal | None:
+    if not isinstance(value, dict):
+        return None
+    try:
+        return LearningSignal(
+            kind=str(value["kind"]),
+            failure_weight=float(value["failure_weight"]),
+            reward=float(value.get("reward", 0.0)),
+            recovery_eligible=bool(value["recovery_eligible"]),
+            authority_reacquire_allowed=bool(value.get("authority_reacquire_allowed", False)),
+            notes=str(value.get("notes", "")),
+        )
+    except (KeyError, TypeError, ValueError):
+        return None
+
+
 def update_learning_state(previous: dict[str, Any] | None, observations: list[dict[str, Any]],
                           controls: dict[str, Any] | None = None) -> dict[str, Any]:
     state = dict(previous or {})
     history = list(state.get("history", []))[-199:]
     failures = float(state.get("failure_score", 0.0))
     rewards = float(state.get("reward_score", 0.0))
-    last_signal: LearningSignal | None = None
+    pending: dict[str, dict[str, Any]] = {
+        str(key): value
+        for key, value in dict(state.get("pending_failures", {})).items()
+        if _restore_signal(value) is not None
+    }
 
     for row in observations:
+        workflow = str(row.get("workflow") or "unknown")
         conclusion = str(row.get("conclusion") or row.get("kind") or "unknown")
         if conclusion == "success":
-            if last_signal is not None:
+            prior_signal = _restore_signal(pending.get(workflow))
+            if prior_signal is not None:
                 reward = recovery_reward(
-                    prior_signal=last_signal,
+                    prior_signal=prior_signal,
                     controls=controls,
                     stable_minutes=float(row.get("stable_minutes", 30.0)),
                     mttr_minutes=row.get("mttr_minutes"),
@@ -134,19 +156,25 @@ def update_learning_state(previous: dict[str, Any] | None, observations: list[di
                 rewards += reward
                 history.append({
                     "event": "safe_recovery",
+                    "workflow": workflow,
                     "reward": reward,
-                    "from": last_signal.kind,
+                    "from": prior_signal.kind,
                     "run_id": row.get("run_id"),
                 })
+                pending.pop(workflow, None)
             continue
+
         signal = classify_stop(conclusion, controls)
         failures += signal.failure_weight
-        last_signal = signal
+        if signal.recovery_eligible:
+            pending[workflow] = asdict(signal)
+        else:
+            pending.pop(workflow, None)
         history.append({
             "event": "stop_observed",
             "signal": asdict(signal),
             "run_id": row.get("run_id"),
-            "workflow": row.get("workflow"),
+            "workflow": workflow,
         })
 
     active = _active_controls(controls)
@@ -159,5 +187,6 @@ def update_learning_state(previous: dict[str, Any] | None, observations: list[di
         "recovery_allowed_now": not active,
         "authority_reacquire_allowed": False,
         "optimization_target": "lower unexpected-stop rate and MTTR after authorized restart",
+        "pending_failures": pending,
         "history": history[-200:],
     }
