@@ -3,9 +3,6 @@ name: META SWARM — 10 Combat Agents
 on:
   schedule:
     - cron: "0 1,5,9,13,17,21 * * *"   # offset from META consciousness by 1h
-  workflow_run:
-    workflows: ["META Consciousness"]
-    types: [completed]
   workflow_dispatch:
     inputs:
       agents:
