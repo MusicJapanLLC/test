@@ -8,10 +8,13 @@ on:
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
       - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/orchestrator.py'
       - 'automation/codegen/tests/test_shared_discovery_authority.py'
       - 'automation/codegen/tests/test_discovery_probe_runner.py'
       - 'automation/codegen/tests/test_discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_production_discovery_policy.py'
       - '.github/workflows/shared-discovery-authority-tests.yml'
       - '.github/workflows/shared-discovery-authority-cycle.yml'
 
@@ -38,4 +41,5 @@ jobs:
           python -m pytest -q \
             automation/codegen/tests/test_shared_discovery_authority.py \
             automation/codegen/tests/test_discovery_probe_runner.py \
-            automation/codegen/tests/test_discovery_capability_leases.py
+            automation/codegen/tests/test_discovery_capability_leases.py \
+            automation/codegen/tests/test_production_discovery_policy.py
