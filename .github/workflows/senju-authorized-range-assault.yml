@@ -44,14 +44,18 @@ jobs:
           import runpy
           mod = runpy.run_path('scripts/authorized_range_assault.py', run_name='senju_active_budget_check')
           selected = mod['selected_active_exploit_probes']('ci-budget-check')
-          assert mod['ACTIVE_EXPLOIT_ROLLOUT_PERCENT'] == 30
+          authority = mod['current_active_exploit_authority']()
+          assert mod['ACTIVE_EXPLOIT_ROLLOUT_PERCENT'] == 20
           assert len(mod['ACTIVE_EXPLOIT_PROBES']) == 10
-          assert len(selected) == 3
+          assert len(selected) == 2
           assert all(row['path'].startswith('/') for row in selected)
-          assert mod['MAX_ACTIVE_EXPLOIT_PROBES'] == 3
+          assert mod['MAX_ACTIVE_EXPLOIT_PROBES'] == 2
           assert mod['ACTIVE_EXPLOIT_MAX_RPS'] <= 1.0
           assert mod['AUTHORIZED_HOST'] == 'kabeya-authorized-test-range.onrender.com'
-          print({'active_exploit_budget_ok': True, 'selected': [x['name'] for x in selected]})
+          assert authority['approved'] is True
+          assert authority['host'] == mod['AUTHORIZED_HOST']
+          assert 'GET' in authority['methods']
+          print({'active_exploit_budget_ok': True, 'authority_gate': authority, 'selected': [x['name'] for x in selected]})
           PY
 
       - name: Run Senju authorized adversarial exercise
