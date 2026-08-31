@@ -1,9 +1,9 @@
 """Production recovery cycle for authorized external observation lanes.
 
-The cycle persists denial learning, route health, repair objectives, and per-scope
-agent reliability across runs. Eight candidate execution agents are available; the
-underlying rotation lane chooses a health-ranked adaptive subset per pass. Every pass
-preserves the exact authority contract.
+The cycle persists denial learning, route health, repair objectives, guard-denial
+self-tuning pressure, and per-scope agent reliability across runs. Eight candidate
+execution agents are available; the underlying rotation lane chooses a health-ranked
+adaptive subset per pass. Every pass preserves the exact authority contract.
 """
 from __future__ import annotations
 
@@ -20,8 +20,9 @@ from typing import Any, Callable, Mapping, Sequence
 from .external import BUILTIN_AUTHORITY_SCOPES, ExternalAuthorityScope, ExternalContactClient
 from .external_denial_learning import DenialLearningMemory
 from .external_recovery_closed_loop import AgentReliabilityMemory, execute_recovery_closed_loop
+from .guard_denial_feedback import feedback_for_operation, feedback_state, recommended_recovery_passes
 
-REPORT_SCHEMA = "senju-external-recovery-cycle/v2"
+REPORT_SCHEMA = "senju-external-recovery-cycle/v3"
 AGENTS = (
     "senju-a",
     "senju-b",
@@ -66,7 +67,7 @@ BUILTIN_RECOVERY_MISSIONS: tuple[RecoveryMission, ...] = (
 
 
 def _denial_memory_from_mapping(data: Mapping[str, Any] | None) -> DenialLearningMemory:
-    """Restore both legacy v1 and current v2 denial learning without losing successes."""
+    """Restore both legacy and current denial learning without losing successes."""
     return DenialLearningMemory.from_mapping(data)
 
 
@@ -107,11 +108,22 @@ def run_recovery_cycle(
 
     for mission in selected:
         scope = _scope_for(mission)
+        guard_feedback_before = feedback_for_operation(
+            denial_memory,
+            scope=scope,
+            url=mission.url,
+            method=mission.method,
+        )
+        mission_max_passes = recommended_recovery_passes(
+            guard_feedback_before,
+            configured=max_passes,
+        )
 
         def recovery_hook(pass_index: int, playbook: Mapping[str, Any]) -> None:
             route = playbook.get("route_health_after") or {}
             multiplier = max(1, min(int(route.get("backoff_multiplier", 1)), 8))
-            # Local cooldown only; destination, protocol, credential, and authority stay fixed.
+            # Same-route cooldown only. Denial pressure can increase retry/pass variation
+            # for transient failures, but never changes host/protocol/credential/authority.
             sleep_fn(min(4.0, 0.35 * pass_index * multiplier))
 
         outcome = execute_recovery_closed_loop(
@@ -120,11 +132,17 @@ def run_recovery_cycle(
             url=mission.url,
             method=mission.method,
             agents=AGENTS,
-            max_passes=max_passes,
+            max_passes=mission_max_passes,
             client_factory=client_factory,
             denial_memory=denial_memory,
             reliability_memory=reliability,
             transport_recovery_hook=recovery_hook,
+        )
+        guard_feedback_after = feedback_for_operation(
+            denial_memory,
+            scope=scope,
+            url=mission.url,
+            method=mission.method,
         )
         playbooks = [dict(x) for x in outcome.get("playbooks", []) if isinstance(x, Mapping)]
         optimization_queue.extend(
@@ -140,6 +158,10 @@ def run_recovery_cycle(
             "success": bool(outcome.get("success", False)),
             "selected_agent": outcome.get("selected_agent"),
             "passes_used": int(outcome.get("passes_used", 0)),
+            "configured_max_passes": max(1, min(int(max_passes), 3)),
+            "self_tuned_max_passes": mission_max_passes,
+            "guard_feedback_before": guard_feedback_before,
+            "guard_feedback_after": guard_feedback_after,
             "authority_preserved": bool(outcome.get("authority_preserved", False)),
             "authority_invariants": dict(outcome.get("authority_invariants") or {}),
             "outcomes": outcome.get("outcomes", []),
@@ -154,6 +176,7 @@ def run_recovery_cycle(
     )
     successful = sum(1 for operation in operations if operation["success"])
     denial_summary = denial_memory.summary()
+    aggregate_feedback = feedback_state(denial_memory)
     return {
         "schema": REPORT_SCHEMA,
         "cycle_id": f"ext-recovery-{uuid.uuid4().hex[:12]}",
@@ -162,10 +185,13 @@ def run_recovery_cycle(
         "self_initiated": True,
         "network_io": True,
         "closed_loop_recovery": True,
+        "denied_as_normal_failure": True,
+        "guard_denial_self_tune_pressure": True,
         "agent_rotation": True,
         "health_ranked_agents": True,
         "adaptive_route_backoff": True,
         "adaptive_agent_budget": True,
+        "adaptive_retry_pass_budget": True,
         "agent_pool": list(AGENTS),
         "max_passes": max(1, min(int(max_passes), 3)),
         "authority_preserved": all(x["authority_preserved"] for x in operations),
@@ -179,6 +205,7 @@ def run_recovery_cycle(
         "repair_queue": denial_summary.get("repair_queue", []),
         "route_health": denial_summary.get("route_health", {}),
         "denial_agent_health": denial_summary.get("agent_health", {}),
+        "guard_feedback": aggregate_feedback,
         "denial_learning": denial_summary,
         "agent_reliability": reliability.to_dict(),
     }
@@ -225,7 +252,9 @@ def main(argv: Sequence[str] | None = None) -> int:
     print(
         "SENJU_EXTERNAL_RECOVERY_CYCLE "
         f"missions={report['attempted_missions']} success={report['successful_missions']} "
-        f"transport_attempts={report['transport_attempts']} authority_preserved={str(report['authority_preserved']).lower()}"
+        f"transport_attempts={report['transport_attempts']} "
+        f"pressure={report['guard_feedback']['self_tune_pressure']} "
+        f"authority_preserved={str(report['authority_preserved']).lower()}"
     )
     return 0 if report["successful_missions"] > 0 else 2
 
