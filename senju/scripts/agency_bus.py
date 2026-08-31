@@ -2,9 +2,9 @@
 """Build Senju's transparent cross-agent agency bus.
 
 The bus compresses external public-read evidence, PR #273/#275 adversarial
-counterexamples, recent PR outcomes, and the current Senju evolution state into one
-stable machine-readable packet. It is designed for GitHub issue/artifact sharing
-between Senju, Jules, FOUNDRY, OpenHands, and the PR swarm.
+counterexamples, recent PR outcomes, machine-audit results, and the current Senju
+evolution state into one stable machine-readable packet. It is designed for artifact
+sharing between Senju, Jules, FOUNDRY, OpenHands, and the PR swarm.
 
 It does not create third-party authority. External exploration remains GET/HEAD and
 write effects are limited by the executor to the same repository or independently
@@ -36,7 +36,9 @@ INTEREST_KEYS = (
 )
 
 
-def _load_json(path: str | Path, default: Any) -> Any:
+def _load_json(path: str | Path | None, default: Any) -> Any:
+    if not path:
+        return default
     p = Path(path)
     if not p.exists():
         return default
@@ -106,8 +108,7 @@ def _compact_counterexample(source: str, row: dict[str, Any], kind: str) -> dict
         if value is None:
             continue
         if isinstance(value, (dict, list)):
-            encoded = json.dumps(value, ensure_ascii=False, sort_keys=True)
-            compact[key] = encoded[:500]
+            compact[key] = json.dumps(value, ensure_ascii=False, sort_keys=True)[:500]
         else:
             compact[key] = str(value)[:500]
     if len(compact) == 2:
@@ -145,9 +146,28 @@ def _host(url: str) -> str:
         return ""
 
 
-def _summarize_prs(rows: Any) -> dict[str, Any]:
+def _audit_map(audit: Any) -> dict[int, dict[str, Any]]:
+    if not isinstance(audit, dict):
+        return {}
+    rows = audit.get("prs") or audit.get("states") or []
+    if not isinstance(rows, list):
+        return {}
+    out: dict[int, dict[str, Any]] = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            number = int(row.get("number"))
+        except (TypeError, ValueError):
+            continue
+        out[number] = row
+    return out
+
+
+def _summarize_prs(rows: Any, machine_audit: Any = None) -> dict[str, Any]:
     if not isinstance(rows, list):
         rows = []
+    audits = _audit_map(machine_audit)
     normalized: list[dict[str, Any]] = []
     for raw in rows[:100]:
         if not isinstance(raw, dict):
@@ -160,14 +180,21 @@ def _summarize_prs(rows: Any) -> dict[str, Any]:
             or branch.startswith("feat/senju-")
             or branch.startswith("fix/senju-")
         )
+        try:
+            number = int(raw.get("number"))
+        except (TypeError, ValueError):
+            number = 0
+        audit = audits.get(number, {})
         normalized.append(
             {
-                "number": raw.get("number"),
+                "number": number or raw.get("number"),
                 "title": title[:180],
                 "state": str(raw.get("state") or "UNKNOWN").upper(),
                 "head": branch[:180],
                 "url": str(raw.get("url") or "")[:300],
                 "senju_related": is_senju,
+                "machine_audit": str(audit.get("audit") or audit.get("state") or "UNKNOWN").upper(),
+                "audit_reason": str(audit.get("reason") or "")[:500],
             }
         )
     senju = [row for row in normalized if row["senju_related"]]
@@ -175,6 +202,9 @@ def _summarize_prs(rows: Any) -> dict[str, Any]:
         "total": len(normalized),
         "senju_related": len(senju),
         "open_senju": sum(1 for row in senju if row["state"] == "OPEN"),
+        "audit_blocked": sum(1 for row in senju if row["machine_audit"] == "BLOCK"),
+        "audit_waiting": sum(1 for row in senju if row["machine_audit"] == "WAITING"),
+        "audit_passed": sum(1 for row in senju if row["machine_audit"] in {"PASS", "MERGED"}),
         "recent": normalized[:40],
     }
 
@@ -182,6 +212,8 @@ def _summarize_prs(rows: Any) -> dict[str, Any]:
 def _focus(frontier: dict[str, Any], pr_summary: dict[str, Any], counterexamples: list[dict[str, Any]]) -> str:
     if any(row.get("kind") == "regression_tripwire" for row in counterexamples):
         return "guard_regression_repair"
+    if int(pr_summary.get("audit_blocked") or 0) > 0:
+        return "blocked_pr_repair"
     if counterexamples:
         return "counterexample_expansion"
     failed = int(frontier.get("failed_steps") or 0)
@@ -200,23 +232,26 @@ def build_bus(
     *,
     pr273_root: str | Path | None = None,
     pr275_root: str | Path | None = None,
+    merge_audit: Any = None,
 ) -> dict[str, Any]:
     visited = [str(x) for x in frontier.get("visited_urls", []) if str(x)]
-    contacted_hosts = sorted({h for h in (_host(url) for url in visited) if h})
+    contacted_hosts = list(frontier.get("contacted_hosts") or [])
+    if not contacted_hosts:
+        contacted_hosts = sorted({h for h in (_host(url) for url in visited) if h})
     counterexamples = collect_counterexamples(pr273_root, pr275_root)
-    pr_summary = _summarize_prs(recent_prs)
+    pr_summary = _summarize_prs(recent_prs, merge_audit)
 
     covenant = evolution.get("covenant_intent") if isinstance(evolution.get("covenant_intent"), dict) else {}
     shadow = evolution.get("shadow_champion") if isinstance(evolution.get("shadow_champion"), dict) else {}
     packet: dict[str, Any] = {
-        "schema": "senju-agency-bus/v1",
+        "schema": "senju-agency-bus/v2",
         "generated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "external_frontier": {
             "steps_executed": int(frontier.get("steps_executed") or 0),
             "successful_steps": int(frontier.get("successful_steps") or 0),
             "failed_steps": int(frontier.get("failed_steps") or 0),
             "discovered_links_enqueued": int(frontier.get("discovered_links_enqueued") or 0),
-            "contacted_hosts": contacted_hosts[:64],
+            "contacted_hosts": sorted(str(x) for x in contacted_hosts)[:64],
             "read_scope_hosts": list(frontier.get("read_scope_hosts") or [])[:96],
         },
         "adversary_counterexamples": counterexamples,
@@ -234,7 +269,7 @@ def build_bus(
             "public_external_research": "GET_HEAD_ONLY",
             "external_write": "SAME_REPO_OR_OWNERSHIP_VERIFIED_TARGETS_ONLY",
             "guard_research": "COUNTEREXAMPLE_AND_REGRESSION_TESTING_NOT_LIVE_BYPASS",
-            "pr_information_sharing": "TRANSPARENT_SHARED_BUS",
+            "pr_information_sharing": "TRANSPARENT_SHARED_ARTIFACT_BUS",
         },
     }
     packet["next_focus"] = _focus(frontier, pr_summary, counterexamples)
@@ -258,7 +293,7 @@ def render_markdown(packet: dict[str, Any]) -> str:
         f"next-focus: `{packet['next_focus']}`",
         "",
         f"- frontier: {frontier['successful_steps']}/{frontier['steps_executed']} successful, {len(frontier['contacted_hosts'])} contacted hosts, {frontier['discovered_links_enqueued']} links enqueued",
-        f"- PR swarm: {swarm['senju_related']} Senju-related / {swarm['open_senju']} open",
+        f"- PR swarm: {swarm['senju_related']} Senju-related / {swarm['open_senju']} open / BLOCK {swarm['audit_blocked']} / WAIT {swarm['audit_waiting']} / PASS+MERGED {swarm['audit_passed']}",
         f"- adversary counterexamples: {len(examples)}",
         f"- evolution safe: {packet['evolution']['safe']} / covenant: {packet['evolution']['covenant_mode']}",
         "",
@@ -286,6 +321,7 @@ def main() -> int:
     ap.add_argument("--prs", required=True)
     ap.add_argument("--pr273")
     ap.add_argument("--pr275")
+    ap.add_argument("--merge-audit")
     ap.add_argument("--out", required=True)
     ap.add_argument("--markdown", required=True)
     args = ap.parse_args()
@@ -296,6 +332,7 @@ def main() -> int:
         _load_json(args.prs, []),
         pr273_root=args.pr273,
         pr275_root=args.pr275,
+        merge_audit=_load_json(args.merge_audit, {}),
     )
     Path(args.out).write_text(json.dumps(packet, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     Path(args.markdown).write_text(render_markdown(packet), encoding="utf-8")
