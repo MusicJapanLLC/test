@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""Production Detection -> Fix -> Approval -> Apply -> Audit lineage.
+"""META/X/Senju production repair lineage.
 
-One lineage_id is carried through every phase:
+Carries one lineage_id through:
 
-    META detection
-      -> META/X patch generation
-      -> META/X/Senju approval
-      -> production apply
-      -> META/X/Senju audit
-      -> PASS declaration
+    Detection(META)
+      -> Fix(META + X)
+      -> Approval(META + X + Senju)
+      -> ready_for_apply
 
-The production apply path is limited to ordinary application/code changes.
-Changes to security/authority/guard/credential/emergency controls are retained
-in the same lineage but stop at approval_pending_external rather than letting
-an autonomous lineage mint or widen its own production authority.
+The existing production auto-merge lane performs Apply. A read-only post-merge
+auditor consumes the same lineage receipt and performs Audit -> PASS.
+
+This module never widens its own authority. Guard, credential, authority,
+emergency-stop, workflow-policy and related control-plane files are retained in
+the lineage as findings but are not approved for autonomous production apply.
 """
 from __future__ import annotations
 
@@ -22,22 +22,23 @@ import hashlib
 import json
 import os
 import re
+import shlex
+import shutil
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 ROOT = Path(__file__).resolve().parents[2]
 TASKS_DIR = ROOT / "automation" / "codegen" / "tasks"
 AGENTS_DIR = ROOT / "automation" / "codegen" / "agents"
-DEFAULT_STATE_DIR = ROOT / "automation" / "world" / "runtime_state" / "lineage"
-SCHEMA = "the-world-detection-fix-approval-apply-audit/v1"
+SCHEMA = "the-world-detection-fix-approval-apply-audit/v2"
 APPROVERS = ("META", "X", "SENJU")
 GENERATOR_ORDER = ("META", "X")
 
-_PROTECTED_PREFIXES = (
-    ".github/workflows/",
-    ".github/actions/",
+_PROTECTED_EXACT = {
+    "automation/security/workflow_policy.py",
+    "automation/security/workflow_policy_entrypoint.py",
     "automation/world/authority_checkpoint.py",
     "automation/world/production_evolution_loop.py",
     "automation/world/replica_authority.py",
@@ -45,6 +46,10 @@ _PROTECTED_PREFIXES = (
     "senju/senju/meta/standing_authorization.py",
     "senju/senju/credential_runtime.py",
     "senju/senju/authority_factory.py",
+}
+_PROTECTED_PREFIXES = (
+    ".github/",
+    "automation/recovery/",
 )
 _PROTECTED_TOKENS = (
     "guard",
@@ -58,6 +63,13 @@ _PROTECTED_TOKENS = (
     "security-guard",
     "offense_first",
     "artifact_guard",
+    "kill_switch",
+    "kill-switch",
+)
+_ALLOWED_TEST_PREFIXES = (
+    ("python", "-m", "pytest"),
+    ("python3", "-m", "pytest"),
+    ("pytest",),
 )
 
 
@@ -70,7 +82,12 @@ def _now() -> str:
 
 
 def _stable_id(*parts: object, length: int = 28) -> str:
-    return hashlib.sha256("|".join(str(p) for p in parts).encode("utf-8")).hexdigest()[:length]
+    raw = "|".join(str(p) for p in parts)
+    return hashlib.sha256(raw.encode("utf-8")).hexdigest()[:length]
+
+
+def lineage_id_for(*, detection_id: str, task_id: str, target_ref: str) -> str:
+    return f"lineage-{_stable_id(detection_id, task_id, target_ref)}"
 
 
 def _safe_repo_path(raw: str) -> str:
@@ -83,9 +100,23 @@ def _safe_repo_path(raw: str) -> str:
 
 def is_protected_path(path: str) -> bool:
     value = _safe_repo_path(path).lower()
+    if value in {p.lower() for p in _PROTECTED_EXACT}:
+        return True
     if any(value.startswith(prefix.lower()) for prefix in _PROTECTED_PREFIXES):
         return True
     return any(token in value for token in _PROTECTED_TOKENS)
+
+
+def parse_test_command(raw: str) -> tuple[str, ...]:
+    value = str(raw).strip()
+    if not value:
+        raise LineageError("test_cmd cannot be empty")
+    argv = tuple(shlex.split(value))
+    if not argv:
+        raise LineageError("test_cmd cannot be empty")
+    if not any(argv[: len(prefix)] == prefix for prefix in _ALLOWED_TEST_PREFIXES):
+        raise LineageError("production lineage test_cmd must be pytest")
+    return argv
 
 
 def load_task(task_id: str) -> dict[str, Any]:
@@ -100,6 +131,7 @@ def load_task(task_id: str) -> dict[str, Any]:
         if not str(data.get(field) or "").strip():
             raise LineageError(f"task is missing {field}")
     data["output_file"] = _safe_repo_path(str(data["output_file"]))
+    data["test_argv"] = parse_test_command(str(data["test_cmd"]))
     data["task_id"] = safe_id
     return data
 
@@ -129,7 +161,7 @@ def event(lineage: dict[str, Any], phase: str, actor: str, status: str, **payloa
     return row
 
 
-def build_prompt(task: Mapping[str, Any], actor: str, attempts: list[dict[str, Any]]) -> str:
+def build_prompt(task: Mapping[str, Any], actor: str, attempts: Sequence[Mapping[str, Any]]) -> str:
     agent = load_agent(actor)
     parts = [
         f"# Production repair actor: {actor}",
@@ -142,44 +174,84 @@ def build_prompt(task: Mapping[str, Any], actor: str, attempts: list[dict[str, A
         "Return ONLY the complete replacement file content. No markdown fences and no explanation.",
     ]
     if attempts:
-        parts.append("Previous lineage attempts:")
+        parts.append("Previous lineage attempts (most recent last):")
         for attempt in attempts[-3:]:
             parts.append(
                 f"Actor={attempt['actor']} passed={attempt['passed']}\n"
                 f"Candidate:\n{attempt['code']}\n"
-                f"Test output:\n{attempt['test_output'][-5000:]}"
+                f"Test output:\n{str(attempt['test_output'])[-5000:]}"
             )
     return "\n\n".join(parts)
 
 
-def generate_code(task: Mapping[str, Any], actor: str, attempts: list[dict[str, Any]]) -> str:
-    try:
-        import anthropic  # type: ignore
-    except ImportError as exc:  # pragma: no cover
-        raise LineageError("anthropic package is required for patch generation") from exc
-    key = os.environ.get("ANTHROPIC_API_KEY", "")
-    if not key:
-        raise LineageError("ANTHROPIC_API_KEY is required for production patch generation")
-    agent = load_agent(actor)
-    client = anthropic.Anthropic(api_key=key)
-    message = client.messages.create(
-        model=str(agent.get("model") or "claude-sonnet-4-6"),
-        max_tokens=int(agent.get("max_tokens") or 8192),
-        messages=[{"role": "user", "content": build_prompt(task, actor, attempts)}],
-    )
-    code = str(message.content[0].text).strip()
+def _strip_fences(text: str) -> str:
+    code = str(text).strip()
     if code.startswith("```"):
         lines = code.splitlines()
         code = "\n".join(lines[1:-1] if lines and lines[-1].strip() == "```" else lines[1:])
     if not code.strip():
-        raise LineageError(f"{actor} returned an empty patch")
+        raise LineageError("generator returned an empty patch")
     return code.rstrip() + "\n"
 
 
-def run_command(command: str, *, timeout: int = 300) -> tuple[bool, str]:
+def _generate_with_copilot(prompt: str) -> str:
+    if not shutil.which("copilot"):
+        raise LineageError("copilot CLI is not installed")
     result = subprocess.run(
-        command,
-        shell=True,
+        [
+            "copilot",
+            "-p",
+            prompt,
+            "-s",
+            "--allow-tool=read",
+            "--deny-tool=write",
+            "--deny-tool=shell",
+            "--deny-tool=url",
+            "--no-ask-user",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=420,
+    )
+    if result.returncode != 0:
+        raise LineageError(f"copilot generation failed: {result.stderr[-3000:]}")
+    return _strip_fences(result.stdout)
+
+
+def _generate_with_anthropic(prompt: str, agent: Mapping[str, Any]) -> str:
+    try:
+        import anthropic  # type: ignore
+    except ImportError as exc:  # pragma: no cover
+        raise LineageError("anthropic package is not installed") from exc
+    key = os.environ.get("ANTHROPIC_API_KEY", "")
+    if not key:
+        raise LineageError("ANTHROPIC_API_KEY is not configured")
+    client = anthropic.Anthropic(api_key=key)
+    message = client.messages.create(
+        model=str(agent.get("model") or "claude-sonnet-4-6"),
+        max_tokens=int(agent.get("max_tokens") or 8192),
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return _strip_fences(str(message.content[0].text))
+
+
+def generate_code(task: Mapping[str, Any], actor: str, attempts: Sequence[Mapping[str, Any]]) -> str:
+    agent = load_agent(actor)
+    prompt = build_prompt(task, actor, attempts)
+    backend = os.environ.get("LINEAGE_GENERATOR_BACKEND", "auto").strip().lower()
+    if backend not in {"auto", "copilot", "anthropic"}:
+        raise LineageError(f"unsupported generator backend: {backend}")
+    if backend in {"auto", "copilot"} and shutil.which("copilot"):
+        return _generate_with_copilot(prompt)
+    if backend == "copilot":
+        raise LineageError("copilot backend requested but CLI is unavailable")
+    return _generate_with_anthropic(prompt, agent)
+
+
+def run_tests(test_argv: Sequence[str], *, timeout: int = 300) -> tuple[bool, str]:
+    result = subprocess.run(
+        list(test_argv),
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -189,8 +261,19 @@ def run_command(command: str, *, timeout: int = 300) -> tuple[bool, str]:
     return result.returncode == 0, output
 
 
+def _git(*args: str, timeout: int = 120) -> tuple[bool, str]:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+    return result.returncode == 0, (result.stdout + result.stderr).strip()
+
+
 def changed_files() -> tuple[str, ...]:
-    ok, out = run_command("git status --porcelain --untracked-files=all")
+    ok, out = _git("status", "--porcelain", "--untracked-files=all")
     if not ok:
         raise LineageError(f"cannot inspect repository changes: {out}")
     files: list[str] = []
@@ -206,25 +289,25 @@ def changed_files() -> tuple[str, ...]:
 
 def approval_votes(task: Mapping[str, Any], *, candidate_passed: bool, test_output: str) -> dict[str, Any]:
     output_file = str(task["output_file"])
-    diff_ok, diff_output = run_command("git diff --check")
+    diff_ok, diff_output = _git("diff", "--check")
     files = changed_files()
     only_expected = bool(files) and set(files) == {output_file}
     protected = is_protected_path(output_file)
-    senju_test_ok, senju_test_output = run_command(str(task["test_cmd"])) if candidate_passed else (False, test_output)
+    senju_test_ok, senju_test_output = run_tests(task["test_argv"]) if candidate_passed else (False, test_output)
     return {
         "META": {
             "approved": bool(candidate_passed),
-            "basis": "generated candidate passed declared task test",
+            "basis": "selected candidate passed the declared pytest contract",
         },
         "X": {
             "approved": bool(candidate_passed and diff_ok and only_expected),
-            "basis": "diff-check passed and patch stayed inside declared output_file",
+            "basis": "diff-check passed and the patch stayed inside the declared output_file",
             "changed_files": files,
             "diff_check": diff_output,
         },
         "SENJU": {
             "approved": bool(candidate_passed and senju_test_ok and not protected),
-            "basis": "independent test replay and production apply-scope review",
+            "basis": "independent pytest replay plus production control-plane scope review",
             "test_output": senju_test_output,
             "protected_control_path": protected,
         },
@@ -235,52 +318,60 @@ def consensus(votes: Mapping[str, Any]) -> bool:
     return all(bool((votes.get(actor) or {}).get("approved")) for actor in APPROVERS)
 
 
-def apply_patch(*, task: Mapping[str, Any], lineage_id: str, target_ref: str) -> dict[str, Any]:
-    output_file = str(task["output_file"])
-    if is_protected_path(output_file):
-        return {"applied": False, "reason": "protected control path requires authority outside this lineage"}
-
-    add_ok, add_output = run_command(f"git add -- {json.dumps(output_file)}")
-    if not add_ok:
-        return {"applied": False, "reason": "git_add_failed", "output": add_output}
-    diff_ok, _ = run_command("git diff --cached --quiet")
-    if diff_ok:
-        return {"applied": False, "reason": "no_patch_to_apply"}
-
-    commit_message = f"closed-loop: {task['task_id']} [{lineage_id}]"
-    commit_ok, commit_output = run_command(f"git commit -m {json.dumps(commit_message)}")
-    if not commit_ok:
-        return {"applied": False, "reason": "commit_failed", "output": commit_output}
-    head_ok, head = run_command("git rev-parse HEAD")
-    if not head_ok:
-        return {"applied": False, "reason": "head_resolution_failed", "output": head}
-    target_ref = _safe_repo_path(target_ref)
-    push_ok, push_output = run_command(f"git push origin HEAD:{json.dumps(target_ref)}", timeout=300)
+def public_receipt(lineage: Mapping[str, Any]) -> dict[str, Any]:
+    attempts = []
+    for row in lineage.get("attempts") or []:
+        if not isinstance(row, Mapping):
+            continue
+        attempts.append({
+            "iteration": row.get("iteration"),
+            "actor": row.get("actor"),
+            "passed": bool(row.get("passed")),
+            "code_sha256": row.get("code_sha256"),
+        })
     return {
-        "applied": push_ok,
-        "commit_sha": head.strip(),
-        "target_ref": target_ref,
-        "push_output": push_output,
-        "reason": "pushed_to_production_ref" if push_ok else "push_rejected",
+        "schema": SCHEMA,
+        "lineage_id": lineage.get("lineage_id"),
+        "detection_id": lineage.get("detection_id"),
+        "task_id": lineage.get("task_id"),
+        "target_ref": lineage.get("target_ref"),
+        "output_file": lineage.get("output_file"),
+        "test_cmd": lineage.get("test_cmd"),
+        "phase": lineage.get("phase"),
+        "status": lineage.get("status"),
+        "attempts": attempts,
+        "selected_actor": lineage.get("selected_actor"),
+        "selected_code_sha256": lineage.get("selected_code_sha256"),
+        "approvals": lineage.get("approvals"),
     }
 
 
-def audit_apply(task: Mapping[str, Any], apply_result: Mapping[str, Any]) -> dict[str, Any]:
-    if not bool(apply_result.get("applied")):
-        return {"passed": False, "reason": "nothing_was_applied"}
-    test_ok, test_output = run_command(str(task["test_cmd"]))
-    target_ref = str(apply_result.get("target_ref") or "")
-    commit_sha = str(apply_result.get("commit_sha") or "")
-    remote_ok, remote_output = run_command(f"git ls-remote origin refs/heads/{target_ref}")
-    remote_sha = remote_output.split()[0] if remote_ok and remote_output.split() else ""
-    return {
-        "passed": bool(test_ok and remote_ok and remote_sha == commit_sha),
-        "test_passed": test_ok,
-        "test_output": test_output,
-        "remote_verified": bool(remote_ok and remote_sha == commit_sha),
-        "remote_sha": remote_sha,
-        "commit_sha": commit_sha,
-    }
+def write_receipt_markdown(lineage: Mapping[str, Any], path: Path) -> None:
+    receipt = public_receipt(lineage)
+    approvals = receipt.get("approvals") or {}
+    lines = [
+        "## META / X / Senju Closed Production Lineage",
+        "",
+        f"- Lineage: `{receipt['lineage_id']}`",
+        f"- Detection: `{receipt['detection_id']}`",
+        f"- Task: `{receipt['task_id']}`",
+        f"- Output: `{receipt['output_file']}`",
+        f"- Selected patch: `{receipt['selected_code_sha256']}` by **{receipt['selected_actor']}**",
+        f"- META approval: **{'PASS' if (approvals.get('META') or {}).get('approved') else 'FAIL'}**",
+        f"- X approval: **{'PASS' if (approvals.get('X') or {}).get('approved') else 'FAIL'}**",
+        f"- Senju approval: **{'PASS' if (approvals.get('SENJU') or {}).get('approved') else 'FAIL'}**",
+        "- Apply: **pending existing production auto-merge lane**",
+        "- Audit/PASS: **pending post-merge lineage auditor**",
+        "",
+        "The same lineage ID is preserved through detection, patch generation, approval, production apply and post-merge audit.",
+        "",
+        "<!-- CLOSED_LINEAGE_RECEIPT",
+        json.dumps(receipt, ensure_ascii=False, sort_keys=True),
+        "CLOSED_LINEAGE_RECEIPT -->",
+        "",
+    ]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def persist_lineage(lineage: Mapping[str, Any], path: Path) -> None:
@@ -291,27 +382,34 @@ def persist_lineage(lineage: Mapping[str, Any], path: Path) -> None:
 def execute(
     *,
     task_id: str,
+    detection_id: str,
     max_iterations: int,
     target_ref: str,
-    apply_to_production: bool,
     state_path: Path,
+    receipt_path: Path | None = None,
 ) -> dict[str, Any]:
     task = load_task(task_id)
-    run_seed = os.environ.get("GITHUB_RUN_ID") or str(time.time_ns())
-    lineage_id = f"lineage-{_stable_id(task['task_id'], run_seed, target_ref)}"
+    detection = str(detection_id).strip() or f"manual:{task['task_id']}"
+    target = str(target_ref).strip()
+    if not target:
+        raise LineageError("target_ref cannot be empty")
+    lineage_id = lineage_id_for(detection_id=detection, task_id=task["task_id"], target_ref=target)
     lineage: dict[str, Any] = {
         "schema": SCHEMA,
         "lineage_id": lineage_id,
         "environment": "production",
+        "detection_id": detection,
         "task_id": task["task_id"],
-        "target_ref": target_ref,
+        "target_ref": target,
+        "output_file": task["output_file"],
+        "test_cmd": task["test_cmd"],
         "phase": "detection",
         "status": "started",
         "events": [],
         "attempts": [],
         "approvals": {},
-        "apply": {},
-        "audit": {},
+        "selected_actor": None,
+        "selected_code_sha256": None,
         "pass_declared": False,
     }
 
@@ -327,15 +425,15 @@ def execute(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     original_exists = output_path.exists()
     original = output_path.read_text(encoding="utf-8") if original_exists else None
+    best: dict[str, Any] | None = None
 
-    final_passed = False
-    final_test_output = ""
     try:
-        for iteration in range(1, max(1, int(max_iterations)) + 1):
+        budget = max(2, int(max_iterations))
+        for iteration in range(1, budget + 1):
             actor = GENERATOR_ORDER[(iteration - 1) % len(GENERATOR_ORDER)]
             code = generate_code(task, actor, list(lineage["attempts"]))
             output_path.write_text(code, encoding="utf-8")
-            passed, test_output = run_command(str(task["test_cmd"]))
+            passed, test_output = run_tests(task["test_argv"])
             attempt = {
                 "iteration": iteration,
                 "actor": actor,
@@ -353,21 +451,39 @@ def execute(
                 iteration=iteration,
                 code_sha256=attempt["code_sha256"],
             )
-            final_passed = passed
-            final_test_output = test_output
             if passed:
+                best = attempt
+            # META and X both generate at least once. After that, the latest passing
+            # candidate can advance to the three-way approval stage.
+            if iteration >= 2 and passed:
                 break
 
-        if not final_passed:
+        if best is None:
             event(lineage, "approval", "META/X/SENJU", "rejected", reason="no passing patch candidate")
             if original_exists and original is not None:
                 output_path.write_text(original, encoding="utf-8")
             elif output_path.exists():
                 output_path.unlink()
             persist_lineage(lineage, state_path)
+            if receipt_path:
+                write_receipt_markdown(lineage, receipt_path)
             return lineage
 
-        votes = approval_votes(task, candidate_passed=final_passed, test_output=final_test_output)
+        selected_code = str(best["code"])
+        if output_path.read_text(encoding="utf-8") != selected_code:
+            output_path.write_text(selected_code, encoding="utf-8")
+            replay_ok, replay_output = run_tests(task["test_argv"])
+            if not replay_ok:
+                event(lineage, "fix", str(best["actor"]), "selected_candidate_replay_failed", test_output=replay_output)
+                persist_lineage(lineage, state_path)
+                if receipt_path:
+                    write_receipt_markdown(lineage, receipt_path)
+                return lineage
+            event(lineage, "fix", str(best["actor"]), "selected_best_candidate", code_sha256=best["code_sha256"])
+
+        lineage["selected_actor"] = best["actor"]
+        lineage["selected_code_sha256"] = best["code_sha256"]
+        votes = approval_votes(task, candidate_passed=True, test_output=str(best["test_output"]))
         lineage["approvals"] = votes
         for actor in APPROVERS:
             event(
@@ -379,85 +495,56 @@ def execute(
             )
 
         if not consensus(votes):
-            protected = is_protected_path(str(task["output_file"]))
-            lineage["status"] = "approval_pending_external" if protected else "approval_rejected"
-            persist_lineage(lineage, state_path)
-            return lineage
-
-        if not apply_to_production:
-            event(lineage, "apply", "META/X/SENJU", "not_applied", reason="apply_to_production=false")
-            persist_lineage(lineage, state_path)
-            return lineage
-
-        if os.environ.get("WORLD_ENV", "production").strip().lower() not in {"production", "prod", "live", "real"}:
-            event(lineage, "apply", "META/X/SENJU", "rejected", reason="WORLD_ENV is not production")
-            persist_lineage(lineage, state_path)
-            return lineage
-
-        applied = apply_patch(task=task, lineage_id=lineage_id, target_ref=target_ref)
-        lineage["apply"] = applied
-        event(
-            lineage,
-            "apply",
-            "META/X/SENJU",
-            "applied" if applied.get("applied") else "apply_failed",
-            commit_sha=applied.get("commit_sha"),
-            reason=applied.get("reason"),
-        )
-
-        audit = audit_apply(task, applied)
-        lineage["audit"] = audit
-        for actor in APPROVERS:
+            lineage["status"] = "approval_pending_external" if is_protected_path(str(task["output_file"])) else "approval_rejected"
+        else:
             event(
                 lineage,
-                "audit",
-                actor,
-                "audit_pass" if audit.get("passed") else "audit_fail",
-                commit_sha=audit.get("commit_sha"),
-                remote_verified=audit.get("remote_verified"),
+                "handoff",
+                "META/X/SENJU",
+                "ready_for_apply",
+                target_ref=target,
+                selected_code_sha256=best["code_sha256"],
             )
 
-        lineage["pass_declared"] = bool(audit.get("passed"))
-        event(
-            lineage,
-            "pass",
-            "META/X/SENJU",
-            "PASS" if lineage["pass_declared"] else "FAIL",
-            commit_sha=audit.get("commit_sha"),
-        )
         persist_lineage(lineage, state_path)
+        if receipt_path:
+            write_receipt_markdown(lineage, receipt_path)
         return lineage
     except Exception as exc:
         event(lineage, str(lineage.get("phase") or "unknown"), "SYSTEM", "error", error=str(exc))
         persist_lineage(lineage, state_path)
+        if receipt_path:
+            write_receipt_markdown(lineage, receipt_path)
         raise
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run one production closed-loop lineage")
+    parser = argparse.ArgumentParser(description="Build one META/X/Senju production repair lineage")
     parser.add_argument("--task-id", required=True)
+    parser.add_argument("--detection-id", default="")
     parser.add_argument("--max-iterations", type=int, default=8)
     parser.add_argument("--target-ref", required=True)
-    parser.add_argument("--apply", action="store_true")
-    parser.add_argument("--state-out")
+    parser.add_argument("--state-out", required=True)
+    parser.add_argument("--receipt-out")
     args = parser.parse_args()
 
-    state_path = Path(args.state_out) if args.state_out else DEFAULT_STATE_DIR / f"{args.task_id}.json"
     result = execute(
         task_id=args.task_id,
+        detection_id=args.detection_id,
         max_iterations=args.max_iterations,
         target_ref=args.target_ref,
-        apply_to_production=args.apply,
-        state_path=state_path,
+        state_path=Path(args.state_out),
+        receipt_path=Path(args.receipt_out) if args.receipt_out else None,
     )
     print(json.dumps({
         "lineage_id": result["lineage_id"],
         "phase": result["phase"],
         "status": result["status"],
-        "pass_declared": result["pass_declared"],
-        "state_path": str(state_path),
+        "task_id": result["task_id"],
+        "output_file": result["output_file"],
+        "selected_code_sha256": result.get("selected_code_sha256"),
     }, ensure_ascii=False, indent=2))
-    return 0 if result["pass_declared"] or result["status"] in {"approval_pending_external", "approval_rejected", "rejected"} else 1
+    return 0 if result["status"] in {"ready_for_apply", "approval_pending_external", "approval_rejected", "rejected"} else 1
 
 
 if __name__ == "__main__":

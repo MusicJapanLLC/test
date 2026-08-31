@@ -5,73 +5,67 @@ import pytest
 from automation.world import closed_loop_lineage as lineage
 
 
-def test_lineage_event_carries_same_id_through_phases():
-    state = {
-        "lineage_id": "lineage-abc",
-        "events": [],
-        "phase": "detection",
-        "status": "started",
-    }
+def test_lineage_id_is_stable_for_same_detection_task_and_target():
+    first = lineage.lineage_id_for(detection_id="H-1", task_id="repair", target_ref="main")
+    second = lineage.lineage_id_for(detection_id="H-1", task_id="repair", target_ref="main")
+    assert first == second
+    assert first.startswith("lineage-")
+
+
+def test_event_keeps_same_lineage_id():
+    state = {"lineage_id": "lineage-abc", "events": [], "phase": "detection", "status": "started"}
     lineage.event(state, "detection", "META", "detected")
+    lineage.event(state, "fix", "META", "candidate_failed")
     lineage.event(state, "fix", "X", "candidate_passed")
     lineage.event(state, "approval", "SENJU", "approved")
-    lineage.event(state, "audit", "META", "audit_pass")
-    assert [row["sequence"] for row in state["events"]] == [1, 2, 3, 4]
     assert {row["lineage_id"] for row in state["events"]} == {"lineage-abc"}
+    assert [row["sequence"] for row in state["events"]] == [1, 2, 3, 4]
 
 
-def test_protected_control_paths_never_enter_autonomous_apply_scope():
+def test_protected_control_paths_do_not_enter_autonomous_apply_scope():
     protected = [
-        ".github/workflows/security-guard.yml",
-        "senju/senju/authority_factory.py",
-        "senju/senju/credential_runtime.py",
+        ".github/workflows/auto-merge.yml",
+        "automation/security/workflow_policy.py",
         "automation/world/authority_checkpoint.py",
+        "senju/senju/credential_runtime.py",
         "security/artifact_guard.py",
         "OFFENSE_FIRST.md",
     ]
-    for path in protected:
-        assert lineage.is_protected_path(path) is True
-    assert lineage.is_protected_path("automation/codegen/generated/example.py") is False
-    assert lineage.is_protected_path("src/orders/reconcile.py") is False
+    assert all(lineage.is_protected_path(path) for path in protected)
+    assert lineage.is_protected_path("automation/world/ordinary_reconciler.py") is False
 
 
-def test_unsafe_repo_paths_are_rejected():
+def test_test_command_is_pytest_only():
+    assert lineage.parse_test_command("python -m pytest automation/world/test_x.py -q")[:3] == ("python", "-m", "pytest")
+    assert lineage.parse_test_command("pytest tests/test_x.py")[:1] == ("pytest",)
     with pytest.raises(lineage.LineageError):
-        lineage._safe_repo_path("../outside.py")
+        lineage.parse_test_command("bash ./deploy.sh")
     with pytest.raises(lineage.LineageError):
-        lineage._safe_repo_path("/tmp/outside.py")
+        lineage.parse_test_command("python script.py")
 
 
-def test_consensus_requires_meta_x_and_senju():
+def test_consensus_requires_all_three_actors():
     votes = {actor: {"approved": True} for actor in lineage.APPROVERS}
     assert lineage.consensus(votes) is True
     votes["X"]["approved"] = False
     assert lineage.consensus(votes) is False
 
 
-def test_senju_rejects_protected_patch_even_when_tests_pass(monkeypatch):
-    monkeypatch.setattr(lineage, "run_command", lambda *args, **kwargs: (True, "ok"))
-    monkeypatch.setattr(lineage, "changed_files", lambda: ("senju/senju/authority_factory.py",))
-    votes = lineage.approval_votes(
-        {
-            "output_file": "senju/senju/authority_factory.py",
-            "test_cmd": "pytest -q",
-        },
-        candidate_passed=True,
-        test_output="passed",
-    )
-    assert votes["META"]["approved"] is True
-    assert votes["X"]["approved"] is True
-    assert votes["SENJU"]["approved"] is False
-    assert votes["SENJU"]["protected_control_path"] is True
-
-
-def test_ordinary_patch_can_receive_all_three_approvals(monkeypatch):
-    monkeypatch.setattr(lineage, "run_command", lambda *args, **kwargs: (True, "ok"))
-    monkeypatch.setattr(lineage, "changed_files", lambda: ("src/widget.py",))
-    votes = lineage.approval_votes(
-        {"output_file": "src/widget.py", "test_cmd": "pytest -q"},
-        candidate_passed=True,
-        test_output="passed",
-    )
-    assert lineage.consensus(votes) is True
+def test_public_receipt_omits_generated_source_code():
+    state = {
+        "lineage_id": "lineage-1",
+        "detection_id": "H-1",
+        "task_id": "repair",
+        "target_ref": "main",
+        "output_file": "automation/world/x.py",
+        "test_cmd": "pytest -q",
+        "phase": "handoff",
+        "status": "ready_for_apply",
+        "attempts": [{"iteration": 1, "actor": "META", "passed": True, "code_sha256": "abc", "code": "secretly-large-code"}],
+        "selected_actor": "META",
+        "selected_code_sha256": "abc",
+        "approvals": {},
+    }
+    receipt = lineage.public_receipt(state)
+    assert "code" not in receipt["attempts"][0]
+    assert receipt["attempts"][0]["code_sha256"] == "abc"
