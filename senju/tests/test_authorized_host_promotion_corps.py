@@ -111,7 +111,7 @@ def test_exact_standing_host_becomes_execution_ready_with_same_or_narrower_lease
     for lease_row in row["leases"].values():
         assert lease_row["automatically_renewed"] is True
         assert lease_row["authority_broadened"] is False
-        assert lease_row["lease"]["exact_hosts"] == ["authorized.example"]
+        assert set(lease_row["lease"]["exact_hosts"]) == {"authorized.example"}
         assert set(lease_row["lease"]["allowed_methods"]) == {"GET", "HEAD"}
 
 
@@ -134,7 +134,6 @@ def test_revoked_standing_authorization_cannot_be_promoted(tmp_path) -> None:
 
 def test_requested_method_outside_standing_scope_is_not_granted(tmp_path) -> None:
     repo, state, proposal = _prepare(tmp_path, methods=("GET",))
-    # Rewrite the request after standing setup so the proposal asks for POST while the standing record is GET-only.
     _write(state / "owner_scope_negotiation_signals.json", {
         "signals": [{"host": "authorized.example", "requested_methods": ["POST"], "reason": "method mismatch"}]
     })
