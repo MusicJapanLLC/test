@@ -28,7 +28,7 @@ import hashlib
 import json
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, Mapping
+from typing import Callable, Mapping
 
 
 class RecoveryMeshError(RuntimeError):
@@ -219,8 +219,6 @@ class RecoveryMesh:
         produced: list[RecoveryEvent] = []
         for edge in list(self.edges):
             if self.health(edge.watchdog_id, now=now) is not HealthState.HEALTHY:
-                # A dead watchdog cannot resurrect anything. Its parent watchdog will
-                # recover it through another edge on the same or next tick.
                 continue
             if self.health(edge.target_id, now=now) is HealthState.HEALTHY:
                 continue
@@ -254,7 +252,7 @@ class RecoveryMesh:
             return None
 
         unit = self._unit(edge.target_id)
-        action = self._select_action(unit, edge)
+        action = self._select_action(unit, edge, target_runtime.consecutive_failures)
         if action is None:
             return None
         handler = self.handlers.get((edge.target_id, action))
@@ -299,11 +297,21 @@ class RecoveryMesh:
         self.events.append(event)
         return event
 
-    def _select_action(self, unit: ManagedUnit, edge: WatchEdge) -> RecoveryAction | None:
-        for action in edge.preferred_actions:
-            if action in unit.allowed_actions and (unit.unit_id, action) in self.handlers:
-                return action
-        return None
+    def _select_action(
+        self,
+        unit: ManagedUnit,
+        edge: WatchEdge,
+        consecutive_failures: int,
+    ) -> RecoveryAction | None:
+        eligible = [
+            action
+            for action in edge.preferred_actions
+            if action in unit.allowed_actions and (unit.unit_id, action) in self.handlers
+        ]
+        if not eligible:
+            return None
+        index = min(max(0, consecutive_failures), len(eligible) - 1)
+        return eligible[index]
 
     def topology(self) -> dict[str, list[str]]:
         result: dict[str, list[str]] = defaultdict(list)
@@ -359,11 +367,7 @@ def build_three_watchdog_mesh(
     ring: bool = True,
     policy: RecoveryPolicy | None = None,
 ) -> RecoveryMesh:
-    """Build the requested A->Agent, B->A, C->B recovery topology.
-
-    With ``ring=True`` watchdog A also restores watchdog C, so every watchdog has a
-    recovery parent without allowing direct self-revival.
-    """
+    """Build A->Agent, B->A, C->B and optionally A->C recovery topology."""
     all_actions = frozenset(RecoveryAction)
     mesh = RecoveryMesh(policy=policy or RecoveryPolicy())
     mesh.register_unit(ManagedUnit("agent-core", UnitKind.AGENT, all_actions, "Primary Senju agent"))
