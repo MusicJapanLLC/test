@@ -1,0 +1,28 @@
+name: Unified Trust Loop Tests
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/unified_trust_loop.py'
+      - 'automation/world/test_unified_trust_loop.py'
+      - '.github/workflows/unified-trust-loop-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run unified Trust Root loop tests
+        run: python -m pytest -q automation/world/test_unified_trust_loop.py
