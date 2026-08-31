@@ -9,13 +9,25 @@ from senju.meta.authorized_host_promotion_corps import run_promotion_corps
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Advance negotiated standing-authorized hosts into execution-ready leases")
+    parser = argparse.ArgumentParser(
+        description="Advance negotiated standing-authorized hosts and synchronize negotiation intelligence"
+    )
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--state-dir", default="senju/state")
     parser.add_argument("--promotion-dir", required=True)
+    parser.add_argument(
+        "--collaboration-dir",
+        default=None,
+        help="Optional shared Root Authority negotiation cache for bidirectional intelligence exchange",
+    )
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
-    result = run_promotion_corps(args.repo_root, args.state_dir, args.promotion_dir)
+    result = run_promotion_corps(
+        args.repo_root,
+        args.state_dir,
+        args.promotion_dir,
+        collaboration_dir=args.collaboration_dir,
+    )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
