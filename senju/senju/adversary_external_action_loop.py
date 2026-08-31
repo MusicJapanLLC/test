@@ -1,8 +1,13 @@
 """Close adversary finding -> authority -> real external action under existing trust.
 
-Unknown hosts become durable promotion requests and peer-vote solicitations. Hosts that
-already have an active #459/#481 lease execute immediately through the real transport.
-This module never converts a denial, revocation, or untrusted discovery into authority.
+Before opening a promotion request, the loop now materializes an immediate read-only
+transport lease when the target already belongs to the Owner Authority envelope. That
+means trusted roots, company domains, active explicit exact grants and owner-supplied
+exact links can move Finding -> real transport without the #481 voting delay.
+
+Targets outside existing Owner authority still become durable promotion requests.
+Revoked authority, unrelated discoveries and invented credentials do not enter the
+fast path.
 """
 from __future__ import annotations
 
@@ -10,7 +15,7 @@ import json
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Callable, Mapping
 
 from .adversary_egress_request import AdversaryEgressRequestPort
 from .adversary_transport import (
@@ -19,7 +24,9 @@ from .adversary_transport import (
     CredentialProvider,
     load_transport_leases,
 )
+from .external import ExternalContactClient, ExternalContactPolicy
 from .meta.adversary_egress_vote_router import route_pending_vote_requests
+from .owner_envelope_fastpath import ensure_owner_fastpath_lease
 
 LOOP_SCHEMA = "senju-adversary-external-action-loop/v1"
 
@@ -55,12 +62,18 @@ def run_adversary_external_action(
     method: str = "GET",
     now: int | None = None,
     credential_provider: CredentialProvider | None = None,
+    client_factory: Callable[[ExternalContactPolicy], ExternalContactClient] | None = None,
 ) -> ExternalActionLoopResult:
-    """Execute now when authority already exists; otherwise materialize review work."""
+    """Execute immediately when the target is already inside live Owner authority."""
     current = int(time.time()) if now is None else int(now)
     state = Path(state_dir)
     state.mkdir(parents=True, exist_ok=True)
+
+    # Remove the candidate/review delay for existing Owner authority. This creates only
+    # a short-lived read-only exact-host lease and returns None for unrelated hosts.
+    fastpath = ensure_owner_fastpath_lease(state, url, now=current)
     leases = load_transport_leases(state)
+
     port = AdversaryEgressRequestPort(state)
     decision = port.request(
         url,
@@ -74,15 +87,17 @@ def run_adversary_external_action(
 
     host = decision.host
     if decision.status == "ready_existing_authority" and decision.lease is not None:
-        transport = AdversaryNetworkTransport(
-            state,
-            credential_provider=credential_provider,
-        )
+        transport_kwargs: dict[str, Any] = {"credential_provider": credential_provider}
+        if client_factory is not None:
+            transport_kwargs["client_factory"] = client_factory
+        transport = AdversaryNetworkTransport(state, **transport_kwargs)
         try:
             contact = transport.execute_with_recovery(
                 url,
                 method=method,
-                leases=(decision.lease,),
+                # Use the whole active authority set so redirects between exact hosts
+                # sharing the same authorization_reference can be revalidated and used.
+                leases=leases,
                 now=current,
             )
         except AdversaryTransportError as exc:
@@ -98,6 +113,11 @@ def run_adversary_external_action(
                 generated_at=current,
             )
         else:
+            execution_basis = (
+                "owner-envelope fast path"
+                if fastpath is not None and contact.receipt.lease_id == fastpath.get("lease_id")
+                else "existing exact-host authority"
+            )
             result = ExternalActionLoopResult(
                 schema=LOOP_SCHEMA,
                 status="executed",
@@ -106,7 +126,7 @@ def run_adversary_external_action(
                 request_id=None,
                 lease_id=contact.receipt.lease_id,
                 transport_status=contact.receipt.status,
-                reason="existing exact-host authority executed through real network transport",
+                reason=f"{execution_basis} executed through real network transport",
                 generated_at=current,
             )
     else:
@@ -119,7 +139,10 @@ def run_adversary_external_action(
             request_id=decision.request_id,
             lease_id=None,
             transport_status=None,
-            reason=f"no active exact-host authority; {solicitations.get('pending_count', 0)} peer vote tasks materialized",
+            reason=(
+                "outside existing Owner authority; "
+                f"{solicitations.get('pending_count', 0)} peer vote tasks materialized"
+            ),
             generated_at=current,
         )
 
