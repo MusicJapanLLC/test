@@ -25,7 +25,7 @@ on:
 
 permissions:
   contents: read
-  actions: write
+  actions: read
 
 concurrency:
   group: world-trust-root-runtime-${{ github.ref }}
@@ -159,28 +159,16 @@ jobs:
           print('WORLD_TRUST_ROOT_RUNTIME_VERIFIED')
           PY
 
-      - name: Re-dispatch only stale existing loops
+      - name: Report stale handoffs without duplicate dispatch
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
-          while IFS= read -r workflow; do
-            [[ -z "$workflow" ]] && continue
-            active="$(gh run list \
-              --repo "$GITHUB_REPOSITORY" \
-              --workflow "$workflow" \
-              --limit 20 \
-              --json status \
-              --jq '[.[] | select(.status == "queued" or .status == "in_progress")] | length' || echo 0)"
-            if [[ "$active" == "0" ]]; then
-              echo "handoff: dispatching stale component via $workflow"
-              gh workflow run "$workflow" \
-                --repo "$GITHUB_REPOSITORY" \
-                --ref claude/employee-onboarding-setup-udm86
-            else
-              echo "handoff: $workflow already active; no duplicate dispatch"
-            fi
-          done < <(jq -r '.handoffs[] | select(.dispatch == true) | .workflow' "$WORLD_STATE/checkpoint/world_handoffs.json")
+          count="$(jq '[.handoffs[] | select(.dispatch == true)] | length' "$WORLD_STATE/checkpoint/world_handoffs.json")"
+          echo "WORLD handoffs requiring component attention: $count"
+          jq -r '.handoffs[] | select(.dispatch == true) | "handoff component=\(.component) workflow=\(.workflow) reason=\(.reason)"' \
+            "$WORLD_STATE/checkpoint/world_handoffs.json"
+          echo "Existing component schedules/recovery remain authoritative; WORLD does not duplicate-dispatch them."
 
       - name: Persist unified WORLD checkpoint
         if: github.event_name != 'pull_request' && always()
