@@ -1,0 +1,25 @@
+{
+  "engagement_id": "authorized-live-adversary-test-range",
+  "owner": "MusicJapanLLC",
+  "authorization_reference": "repo-trusted-root:automation/codegen/meta_state/discovery_policy.json#kabeya-authorized-test-range.onrender.com",
+  "targets": [
+    {
+      "host": "kabeya-authorized-test-range.onrender.com",
+      "scheme": "https",
+      "base_path": "/",
+      "label": "owner-authorized-test-range"
+    }
+  ],
+  "allowed_checks": [
+    "reachability",
+    "root_snapshot",
+    "security_txt",
+    "robots_txt",
+    "options"
+  ],
+  "max_requests_per_target": 5,
+  "max_rps": 1.0,
+  "allow_http": false,
+  "destructive": false,
+  "notes": "Live public-network transport is authorized only for this explicit owned test range. No credentials, no destructive methods, no target expansion."
+}
