@@ -8,10 +8,12 @@ on:
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/discovery_probe_runner.py'
       - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/authority_coordination.py'
       - 'automation/codegen/meta_state/discovery_policy.json'
       - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/orchestrator.py'
       - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
+      - 'automation/codegen/AUTHORITY_COORDINATION_PROTOCOL.md'
       - '.github/workflows/shared-discovery-authority-cycle.yml'
   schedule:
     - cron: '17 * * * *'
@@ -39,7 +41,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run shared discovery authority, lease, and probe loop
+      - name: Run shared discovery authority, lease, probe, and coordination loop
         working-directory: automation/codegen
         env:
           PYTHONPATH: .
@@ -49,6 +51,7 @@ jobs:
           from engine.shared_discovery_authority import run_shared_discovery_authority
           from engine.discovery_capability_leases import issue_discovery_capability_leases
           from engine.discovery_probe_runner import run_discovery_probe_cycle
+          from engine.authority_coordination import build_coordination_ledger
 
           state = Path('meta_state')
           discovery = run_shared_discovery_authority(state)
@@ -61,9 +64,14 @@ jobs:
           # authority source for the artifact consumed by META/X/SENJU/child workers.
           refreshed = issue_discovery_capability_leases(state)
           print({'leases_refreshed': refreshed})
+          # Materialize one immutable cross-loop authority context per live lease.
+          # The coordinator is state/receipt-only: it does not execute external actions,
+          # mint credentials, or widen the lease it consumes.
+          coordination = build_coordination_ledger(state)
+          print({'coordination': coordination})
           PY
 
-      - name: Preserve shared discovery state, operational authority, and probe receipts
+      - name: Preserve shared discovery state, operational authority, and coordination receipts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: shared-discovery-authority-state
@@ -79,5 +87,6 @@ jobs:
             automation/codegen/meta_state/discovery_capability_leases.json
             automation/codegen/meta_state/capability_lease_events.ndjson
             automation/codegen/meta_state/shared_probe_receipts.json
+            automation/codegen/meta_state/authority_coordination_ledger.json
           if-no-files-found: warn
           retention-days: 30
