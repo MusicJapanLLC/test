@@ -1,5 +1,5 @@
 {
-  "schema": "meta-discovery-policy/v2",
+  "schema": "meta-discovery-policy/v3",
   "trusted_roots": [
     "kabeya-authorized-test-range.onrender.com"
   ],
@@ -16,7 +16,41 @@
       "owner_authorization": "explicit",
       "inherit_to_descendants": false,
       "capabilities": ["scan", "probe", "write", "mutation"],
-      "credential_scope": "none"
+      "credential_scope": "none",
+      "external_actions": {
+        "write": [
+          {
+            "id": "synthetic-contact-write",
+            "method": "POST",
+            "path": "/contact/index.html",
+            "content_type": "application/x-www-form-urlencoded",
+            "body": "name=discovery-loop&message=synthetic-authorized-action"
+          }
+        ],
+        "mutation": [
+          {
+            "id": "synthetic-record-create",
+            "method": "PUT",
+            "path": "/login-lab/synthetic-records/discovery-loop",
+            "content_type": "application/json",
+            "body": "{\"synthetic\":true,\"source\":\"discovery-authority-loop\"}"
+          },
+          {
+            "id": "synthetic-record-update",
+            "method": "PATCH",
+            "path": "/login-lab/synthetic-records/discovery-loop",
+            "content_type": "application/json",
+            "body": "{\"synthetic\":true,\"note\":\"mutation-recovery-cycle\"}"
+          },
+          {
+            "id": "synthetic-record-cleanup",
+            "method": "DELETE",
+            "path": "/login-lab/synthetic-records/discovery-loop",
+            "content_type": "application/json",
+            "body": null
+          }
+        ]
+      }
     }
   },
   "untrusted_discovery": "candidate_only"
