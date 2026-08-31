@@ -157,3 +157,67 @@ def test_promotion_bus_is_shared_with_meta_x_senju_and_sibling_agents(tmp_path: 
     bus = json.loads((state / "authorized_site_authority_promotion_bus.json").read_text(encoding="utf-8"))
     assert {"META", "X", "SENJU", "CLAUDE", "JULES", "OPENHANDS", "COPILOT"}.issubset(set(bus["shared_with"]))
     assert bus["promotions"][0]["operational"] is True
+
+
+def test_standing_authorized_council_nomination_enters_meta_x_senju_promotion_path(tmp_path: Path) -> None:
+    state = tmp_path / "meta_state"
+    repo = tmp_path / "repo"
+    state.mkdir(parents=True)
+    repo.mkdir(parents=True)
+    host = "kabeya-authorized-test-range.onrender.com"
+    reference = "canonical:kabeya-authorized-test-range"
+
+    _write(
+        repo / "senju" / "state" / "standing_authorizations.json",
+        {
+            "schema": "senju-standing-authorization/v1",
+            "records": [
+                {
+                    "authorization_reference": reference,
+                    "owner": "MusicJapanLLC",
+                    "issuer_kind": "canonical_repository",
+                    "exact_hosts": [host],
+                    "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+                    "created_at_utc": "2026-08-31T07:18:46+00:00",
+                    "revoked": False,
+                    "credential_scope": "none",
+                    "destructive": False,
+                }
+            ],
+        },
+    )
+    _write(
+        state / "council_discovery_nomination.json",
+        {
+            "schema": "meta-authority-council-discovery-nomination/v1",
+            "nomination": {
+                "host": host,
+                "url": f"https://{host}/",
+                "authorization_reference": reference,
+                "requested_council": ["META", "X", "SENJU"],
+                "recommendation": "approval_permitted_and_recommended_after_independent_council_checks",
+            },
+        },
+    )
+
+    discovery = run_shared_discovery_authority(state, repo_root=repo)
+    assert discovery["authorized_count"] == 1
+    grant = json.loads((state / "discovery_authorized.json").read_text(encoding="utf-8"))["hosts"][host]
+    assert grant["authorization_basis"] == "standing_authorization_exact_host"
+    assert grant["credential_scope"] == "none"
+
+    result = run_authorized_site_authority_accelerator(state)
+    assert result["promoted_count"] == 1
+    row = result["promoted"][0]
+    assert row["host"] == host
+    assert row["authorization_reference"] == host
+    assert row["council"]["unanimous"] is True
+    assert all(row["council"]["votes"][actor]["approved"] for actor in ("META", "X", "SENJU"))
+    assert row["credential_scope"] == "none"
+    assert set(row["allowed_methods"]).issubset({"GET", "HEAD", "OPTIONS"})
+
+    registry = AuthorityRegistry.load(state / "authorized_site_authority_registry.json")
+    leaf = registry.get(row["delegated_root_profile_id"])
+    assert leaf.issuer == "Senju"
+    assert leaf.allow_hosts == frozenset({host})
+    assert leaf.can_delegate is True
