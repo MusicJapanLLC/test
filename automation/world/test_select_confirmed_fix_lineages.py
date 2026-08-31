@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import automation.world.select_confirmed_fix_lineages as selector
+from automation.world.closed_loop_lineage import lineage_id_for
 from automation.world.select_confirmed_fix_lineages import collect_candidates, matching_task_ids
 
 
@@ -29,6 +30,8 @@ def test_only_confirmed_findings_become_candidates_and_highest_confidence_first(
     rows = collect_candidates(tracker, tasks, target_ref="main")
     assert [row["hypothesis_id"] for row in rows] == ["H-high", "H-low"]
     assert all(str(row["lineage_id"]).startswith("lineage-") for row in rows)
+    assert all(row["canonical_lineage_id"] == row["lineage_id"] for row in rows)
+    assert all(row["retry"] is False for row in rows)
     assert all(row["source"] == "explicit_task" for row in rows)
 
 
@@ -77,3 +80,81 @@ def test_materialized_auto_task_is_git_excluded(monkeypatch, tmp_path: Path):
     task_path = tasks_dir / "meta-auto-widget-abc.json"
     assert json.loads(task_path.read_text(encoding="utf-8"))["goal"] == "repair"
     assert "automation/codegen/tasks/meta-auto-widget-abc.json" in exclude.read_text(encoding="utf-8")
+
+
+def _failed_audit(*, output_file: str = "automation/world/widget_runtime.py") -> dict:
+    detection_id = "H-audit"
+    task_id = "repair-widget"
+    target_ref = "prod"
+    canonical = lineage_id_for(detection_id=detection_id, task_id=task_id, target_ref=target_ref)
+    receipt = {
+        "lineage_id": canonical,
+        "detection_id": detection_id,
+        "task_id": task_id,
+        "target_ref": target_ref,
+        "output_file": output_file,
+        "test_cmd": "python -m pytest automation/world/test_widget_runtime.py -q",
+    }
+    return {
+        "status": "FAIL",
+        "pass_declared": False,
+        "pr_number": 91,
+        "merge_commit_sha": "abcdef0123456789",
+        "audit_votes": {
+            "META": {"passed": True},
+            "X": {"passed": True},
+            "SENJU": {"passed": False, "test_output": "1 failed"},
+        },
+        "_receipt": receipt,
+    }
+
+
+def test_failed_audit_returns_to_fix_with_same_canonical_lineage():
+    audit = _failed_audit()
+    rows = selector.retry_candidates_from_audits(
+        (audit,),
+        {"repair-widget": {}},
+        target_ref="prod",
+    )
+    assert len(rows) == 1
+    row = rows[0]
+    canonical = audit["_receipt"]["lineage_id"]
+    assert row["source"] == "audit_retry"
+    assert row["retry"] is True
+    assert row["canonical_lineage_id"] == canonical
+    assert row["lineage_id"].startswith(canonical + "-retry-pr91-abcdef01")
+    assert row["attempt_key"] == row["lineage_id"]
+    assert row["hypothesis_id"] == audit["_receipt"]["detection_id"]
+    assert row["task_id"] == audit["_receipt"]["task_id"]
+
+
+def test_failed_audit_reconstructs_missing_temporary_task():
+    audit = _failed_audit()
+    rows = selector.retry_candidates_from_audits((audit,), {}, target_ref="prod")
+    assert len(rows) == 1
+    task = rows[0]["task"]
+    assert task["audit_retry"] is True
+    assert task["output_file"] == "automation/world/widget_runtime.py"
+    assert "Audit FAIL" in task["goal"]
+    assert "1 failed" in task["goal"]
+
+
+def test_protected_audit_target_is_not_auto_retried():
+    audit = _failed_audit(output_file="automation/world/authority_checkpoint.py")
+    rows = selector.retry_candidates_from_audits(
+        (audit,),
+        {"repair-widget": {}},
+        target_ref="prod",
+    )
+    assert rows == ()
+
+
+def test_tampered_canonical_lineage_is_not_retried():
+    audit = _failed_audit()
+    audit["_receipt"]["lineage_id"] = "lineage-tampered"
+    rows = selector.retry_candidates_from_audits(
+        (audit,),
+        {"repair-widget": {}},
+        target_ref="prod",
+    )
+    assert rows == ()
