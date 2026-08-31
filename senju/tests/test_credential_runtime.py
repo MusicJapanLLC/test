@@ -36,9 +36,6 @@ def test_runtime_uses_already_provisioned_github_token_without_persisting_secret
     assert result.strategy is TuneStrategy.PREAPPROVED_GRANT_SWITCH
     assert result.authority_changed is False
 
-    # Resolution happens only in process memory for the immediate retry.
-    # from_environment(environ=...) intentionally does not mutate os.environ, so use the
-    # runtime broker metadata here to prove no credential value is persisted.
     history = (tmp_path / "credential_tuning_history.json").read_text(encoding="utf-8")
     memory = (tmp_path / "credential_secret_memory.json").read_text(encoding="utf-8")
     assert "current-token-value" not in history
@@ -116,7 +113,7 @@ def test_runtime_config_rejects_embedded_raw_secret() -> None:
             }
         ]
     )
-    with pytest.raises((CredentialRuntimeError, Exception)):
+    with pytest.raises(Exception):
         CredentialRecoveryRuntime.from_environment(
             actor="META",
             environ={
@@ -140,8 +137,8 @@ class _Response:
         return self.payload
 
 
-def test_agent_dispatch_403_invokes_tuner_and_retries_with_selected_preapproved_token(monkeypatch, tmp_path) -> None:
-    config = [
+def _issues_config() -> list[dict[str, object]]:
+    return [
         {
             "grant_id": "github-issues-only",
             "provider": "github",
@@ -151,9 +148,12 @@ def test_agent_dispatch_403_invokes_tuner_and_retries_with_selected_preapproved_
             "max_ttl_seconds": 300,
         }
     ]
+
+
+def test_agent_dispatch_403_invokes_tuner_and_retries_with_selected_preapproved_token(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("GITHUB_TOKEN", "current-token-value")
     monkeypatch.setenv("META_ISSUES_TOKEN", "issues-only-token")
-    monkeypatch.setenv("SENJU_CREDENTIAL_GRANTS_JSON", json.dumps(config))
+    monkeypatch.setenv("SENJU_CREDENTIAL_GRANTS_JSON", json.dumps(_issues_config()))
 
     runtime = CredentialRecoveryRuntime.from_environment(actor="META", state_dir=tmp_path)
     monkeypatch.setattr(agent_dispatch, "_credential_runtime", lambda actor: runtime)
@@ -186,3 +186,30 @@ def test_agent_dispatch_403_invokes_tuner_and_retries_with_selected_preapproved_
     assert result["_credential_recovery"]["grant_id"] == "github-issues-only"
     assert result["_credential_recovery"]["authority_changed"] is False
     assert seen == ["token current-token-value", "token issues-only-token"]
+
+
+def test_recovery_learning_is_loaded_by_next_runtime(monkeypatch, tmp_path) -> None:
+    monkeypatch.setenv("GITHUB_TOKEN", "current-token-value")
+    monkeypatch.setenv("META_ISSUES_TOKEN", "issues-only-token")
+    monkeypatch.setenv("SENJU_CREDENTIAL_GRANTS_JSON", json.dumps(_issues_config()))
+
+    first = CredentialRecoveryRuntime.from_environment(actor="META", state_dir=tmp_path)
+
+    result, response = first.recover_operation(
+        provider="github",
+        required_scopes={"issues:write"},
+        operation="github_issue_create",
+        resource="/repos/MusicJapanLLC/test/issues",
+        error_code="http_403",
+        attempt_with_secret=lambda secret: {"ok": True} if secret == "issues-only-token" else {"_error": 403},
+    )
+    assert result.recovered
+    assert result.grant_id == "github-issues-only"
+    assert response == {"ok": True}
+    assert first.recovery_loop.grant_successes["github-issues-only"] == 1
+
+    second = CredentialRecoveryRuntime.from_environment(actor="META", state_dir=tmp_path)
+    assert second.recovery_loop.grant_successes["github-issues-only"] == 1
+    learned = (tmp_path / "credential_recovery_learning.json").read_text(encoding="utf-8")
+    assert "issues-only-token" not in learned
+    assert "current-token-value" not in learned
