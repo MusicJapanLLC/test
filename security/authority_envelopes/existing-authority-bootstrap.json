@@ -1,0 +1,22 @@
+{
+  "schema": "the-world-standing-authority-envelope/v1",
+  "id": "owner-standing-existing-authority-20260831",
+  "owner_namespace": "MusicJapanLLC/test",
+  "enabled": true,
+  "grants": [
+    {
+      "target": "authority_policy",
+      "operation": "add_external_host",
+      "parameters": {
+        "host": "kabeya-authorized-test-range.onrender.com"
+      }
+    },
+    {
+      "target": "deployment_protection",
+      "operation": "add_deploy_target",
+      "parameters": {
+        "target_host": "kabeya-authorized-test-range.onrender.com"
+      }
+    }
+  ]
+}
