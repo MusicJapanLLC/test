@@ -7,7 +7,7 @@
       "HEAD",
       "OPTIONS"
     ],
-    "ceiling_id": "owner-standing-derived:frontier-four-party",
+    "ceiling_id": "owner-standing-derived:frontier-four-party:frontier-four-party",
     "exact_hosts": [
       "kabeya-authorized-test-range.onrender.com"
     ],
@@ -25,7 +25,7 @@
     "timeout_seconds": 20.0
   },
   "envelope_id": "owner-expansion-default-2026-08-31",
-  "generated_at": 1788190610,
+  "generated_at": 1788192615,
   "schema": "senju-owner-contact-ceiling-effective/v4",
   "source": "verified Owner evidence + META/X/SENJU/PR-ARMY four-of-four frontier council"
 }
