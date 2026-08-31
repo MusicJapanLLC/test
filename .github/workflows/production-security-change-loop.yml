@@ -71,7 +71,7 @@ jobs:
         run: |
           set -euo pipefail
           python -m automation.world.production_security_change_loop | tee /tmp/production-security-change-summary.json
-      - name: Persist only bounded runtime production changes
+      - name: Persist bounded or predelegated runtime production changes
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -87,14 +87,14 @@ jobs:
           if gh api "repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch" \
               --jq '.content' 2>/dev/null | tr -d '\n' | base64 -d > "$remote_tmp" 2>/dev/null; then
             if cmp -s "$runtime" "$remote_tmp"; then
-              echo 'No new bounded production change to persist.'
+              echo 'No new bounded or predelegated production change to persist.'
               exit 0
             fi
             current_sha="$(gh api "repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch" --jq '.sha')"
             encoded="$(base64 -w 0 "$runtime")"
             gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
               --method PUT \
-              -f message='chore(security): apply AI-consensus bounded runtime override' \
+              -f message='chore(security): apply AI-consensus bounded or predelegated runtime override' \
               -f content="$encoded" \
               -f branch="$branch" \
               -f sha="$current_sha" >/dev/null
@@ -102,7 +102,7 @@ jobs:
             encoded="$(base64 -w 0 "$runtime")"
             gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
               --method PUT \
-              -f message='chore(security): apply AI-consensus bounded runtime override' \
+              -f message='chore(security): apply AI-consensus bounded or predelegated runtime override' \
               -f content="$encoded" \
               -f branch="$branch" >/dev/null
           fi
