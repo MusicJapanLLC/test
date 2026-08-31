@@ -6,6 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
+from engine.production_state_bootstrap import bootstrap_owner_runtime_state
 from engine.the_world_unified_loop import run_the_world_unified_loop
 
 
@@ -18,12 +19,17 @@ def main() -> int:
     parser.add_argument("--json-out")
     args = parser.parse_args()
 
+    state = Path(args.state)
+    repo_root = Path(args.repo_root)
+    runtime_bootstrap = bootstrap_owner_runtime_state(state, repo_root=repo_root)
     result = run_the_world_unified_loop(
-        Path(args.state),
-        repo_root=Path(args.repo_root),
+        state,
+        repo_root=repo_root,
         tuning_state_path=args.tuning_state,
         require_credentialed_write=args.require_credentialed_write,
     )
+    result["runtime_bootstrap"] = runtime_bootstrap
+
     rendered = json.dumps(result, ensure_ascii=False, indent=2)
     print(rendered)
     if args.json_out:
