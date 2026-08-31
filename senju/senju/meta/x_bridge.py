@@ -14,6 +14,14 @@ import json
 import datetime as dt
 from pathlib import Path
 
+from .guard_resilience_reward import (
+    REWARD_BENEFICIARIES,
+    REWARD_WEIGHTS,
+    SAFE_REWARD_ENVIRONMENTS,
+    TRAINING_PRINCIPLE,
+    learn_from_guard_observations,
+)
+
 ROOT = Path(__file__).resolve().parents[4]
 
 X_STATUS_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_status.json"
@@ -23,6 +31,7 @@ FINDING_TRUST_POLICY_FILE = ROOT / "senju" / "FINDING_TRUST_POLICY.md"
 META_CMD_FILE = ROOT / "senju" / "state" / "meta_commands.json"
 META_TRACKER = ROOT / "senju" / "state" / "meta_hypothesis_tracker.json"
 BRIDGE_LOG = ROOT / "senju" / "state" / "meta_x_bridge.ndjson"
+GUARD_REWARD_LEDGER = ROOT / "senju" / "state" / "guard_resilience_rewards.ndjson"
 DEFAULT_RECOVERY_NAMESPACE = "musicjapanllc-test-actions"
 
 FINDING_TRUST_POLICY = {
@@ -51,6 +60,18 @@ def finding_trust_policy() -> dict:
     return {
         **FINDING_TRUST_POLICY,
         "policy_file": str(FINDING_TRUST_POLICY_FILE),
+    }
+
+
+def guard_resilience_reward_policy() -> dict:
+    """Return the shared META/X/Senju guard-learning reward contract."""
+    return {
+        "beneficiaries": list(REWARD_BENEFICIARIES),
+        "safe_reward_environments": sorted(SAFE_REWARD_ENVIRONMENTS),
+        "weights": dict(REWARD_WEIGHTS),
+        "training_principle": TRAINING_PRINCIPLE,
+        "ledger": str(GUARD_REWARD_LEDGER),
+        "production_live_bypass_reward": 0.0,
     }
 
 
@@ -104,6 +125,7 @@ def push_hypothesis_to_x(hypothesis_id: str, statement: str, surfaces: list[str]
         "surfaces": surfaces,
         "confidence": confidence,
         "trust": FINDING_TRUST_POLICY,
+        "guard_resilience_reward": guard_resilience_reward_policy(),
     }
     with x_inbox.open("a") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
@@ -170,15 +192,29 @@ def ingest_x_attack_findings(graph) -> int:
 
 
 def sync(graph=None, hypotheses=None) -> dict:
-    """Full META↔X sync including finding trust and authorized-test directives."""
+    """Full META↔X sync including shared safe guard-resilience rewards."""
     x_status = read_x_status()
     federation = read_authorized_test_federation()
     trust_policy = finding_trust_policy()
+    reward_policy = guard_resilience_reward_policy()
+    reward_learning = {
+        "ledger": str(GUARD_REWARD_LEDGER),
+        "events": 0,
+        "rewardable_events": 0,
+        "totals": {actor: 0.0 for actor in REWARD_BENEFICIARIES},
+        "training_principle": TRAINING_PRINCIPLE,
+    }
     ingested = 0
     pushed = 0
 
     if graph is not None:
         ingested = ingest_x_attack_findings(graph)
+        observations = getattr(graph, "observations", None)
+        if observations is not None:
+            reward_learning = learn_from_guard_observations(
+                observations,
+                state_dir=ROOT / "senju" / "state",
+            )
 
     if hypotheses is not None:
         for h in hypotheses:
@@ -197,6 +233,8 @@ def sync(graph=None, hypotheses=None) -> dict:
         "findings_ingested": ingested,
         "hypotheses_pushed": pushed,
         "finding_trust_policy": trust_policy,
+        "guard_resilience_reward": reward_policy,
+        "guard_reward_learning": reward_learning,
         "recovery_worker_registration": {
             "supported": True,
             "actor": "X",
@@ -213,6 +251,10 @@ def sync(graph=None, hypotheses=None) -> dict:
         },
     }
     _append_bridge("finding_trust_policy_sync", trust_policy)
+    _append_bridge("guard_resilience_reward_sync", {
+        "policy": reward_policy,
+        "learning": reward_learning,
+    })
     _append_bridge("authorized_test_federation_sync", result["authorized_test_federation"])
     _append_bridge("sync", result)
     return result
