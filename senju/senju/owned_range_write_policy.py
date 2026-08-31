@@ -2,13 +2,15 @@
 
 This module extends the existing owned-range active loop without widening authority.
 It keeps the exact same-origin TrustedOwnerScope boundary, but avoids losing benign
-POST surfaces merely because their HTML does not contain words such as "contact".
+write surfaces merely because their HTML uses GET or lacks words such as "contact".
 
 Only low-impact dummy writes are eligible. Login/auth/payment/account/upload/delete
-surfaces, password/file inputs, sensitive field names, cross-origin actions and any
-non-POST form remain excluded. Provider acknowledgement, POST-response echo and
-independent GET readback are recorded separately so no stronger success claim is
-made than the evidence supports.
+surfaces, password/file inputs, sensitive field names and cross-origin actions remain
+excluded. A benign same-origin GET form may receive one explicitly-authorized POST
+method-differential probe; that probe is evidence gathering, not an assumption that
+the endpoint supports state change. Provider acknowledgement, POST-response echo and
+independent GET readback are recorded separately so no stronger success claim is made
+than the evidence supports.
 """
 from __future__ import annotations
 
@@ -81,6 +83,7 @@ class WriteSurfaceDecision:
     allowed: bool
     reason: str
     benign_fields: tuple[str, ...] = ()
+    request_method: str = "POST"
 
 
 def _path_context(form: FormSpec) -> str:
@@ -93,14 +96,14 @@ def _path_context(form: FormSpec) -> str:
 
 
 def classify_write_surface(form: FormSpec, *, base_url: str) -> WriteSurfaceDecision:
-    """Classify one discovered form for a bounded dummy write.
+    """Classify one discovered form for a bounded dummy write/method differential.
 
     The exact host/scheme must remain inside the already-established owner scope.
-    Generic benign forms are accepted even without a contact-like keyword; dangerous
-    or identity/payment/authentication shaped surfaces remain excluded.
+    Generic benign forms are accepted even without a contact-like keyword. A benign
+    GET form is eligible for one POST method-differential because POST is explicitly
+    allowed by the persistent owner scope; dangerous identity/payment/authentication
+    shaped surfaces remain excluded before the method decision is made.
     """
-    if form.method.upper() != "POST":
-        return WriteSurfaceDecision(False, "method_not_post")
     if not _same_origin(form.action_url, base_url):
         return WriteSurfaceDecision(False, "cross_origin_action")
 
@@ -130,11 +133,17 @@ def classify_write_surface(form: FormSpec, *, base_url: str) -> WriteSurfaceDeci
         if any(hint in lname for hint in BENIGN_FIELD_HINTS) or ftype in BENIGN_FIELD_TYPES:
             benign.append(field.name)
 
-    if hinted:
-        return WriteSurfaceDecision(True, "hinted_owned_form", tuple(sorted(set(benign))))
-    if benign:
-        return WriteSurfaceDecision(True, "benign_same_origin_post", tuple(sorted(set(benign))))
-    return WriteSurfaceDecision(False, "no_benign_user_fields")
+    if not hinted and not benign:
+        return WriteSurfaceDecision(False, "no_benign_user_fields")
+
+    method = form.method.upper().strip()
+    fields = tuple(sorted(set(benign)))
+    if method == "POST":
+        reason = "hinted_owned_form" if hinted else "benign_same_origin_post"
+        return WriteSurfaceDecision(True, reason, fields, "POST")
+    if method == "GET":
+        return WriteSurfaceDecision(True, "owned_form_post_method_probe", fields, "POST")
+    return WriteSurfaceDecision(False, f"unsupported_form_method:{method or 'UNKNOWN'}")
 
 
 def _surface_row(form: FormSpec, decision: WriteSurfaceDecision) -> dict[str, Any]:
@@ -142,7 +151,8 @@ def _surface_row(form: FormSpec, decision: WriteSurfaceDecision) -> dict[str, An
         "form_key": form.key,
         "source_url": form.source_url,
         "action_url": form.action_url,
-        "method": form.method,
+        "discovered_method": form.method,
+        "request_method": decision.request_method,
         "reason": decision.reason,
         "benign_fields": list(decision.benign_fields),
         "fields": [
@@ -198,6 +208,7 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
                         "form_key": form.key,
                         "source_url": form.source_url,
                         "action_url": form.action_url,
+                        "request_url": _clean_url(form.action_url),
                         "attempted": False,
                         "skip_reason": "write_cooldown",
                         "eligibility_reason": decision.reason,
@@ -207,15 +218,18 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
 
             payload = _form_payload(form, marker)
             body = urllib.parse.urlencode(payload).encode("utf-8")
+            # URL fragments are browser-only and are never sent in an HTTP request.
+            request_url = _clean_url(form.action_url)
             post = self._contact(
-                "dummy-write",
-                "POST",
-                form.action_url,
+                "dummy-write" if form.method.upper() == "POST" else "post-method-differential",
+                decision.request_method,
+                request_url,
                 body=body,
                 headers={
                     "Content-Type": "application/x-www-form-urlencoded",
                     "Accept": "text/html,application/json,text/plain,*/*",
                     "X-Senju-Authorized-Test": marker,
+                    "X-Senju-Probe-Kind": decision.reason,
                 },
             )
             attempted += 1
@@ -243,6 +257,9 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
                 "form_key": form.key,
                 "source_url": form.source_url,
                 "action_url": form.action_url,
+                "request_url": request_url,
+                "discovered_method": form.method,
+                "request_method": decision.request_method,
                 "attempted": True,
                 "eligibility_reason": decision.reason,
                 "provider_acknowledged": provider_ack,
@@ -254,15 +271,15 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
             }
             writes.append(write)
 
-            surface_path = urllib.parse.urlsplit(form.action_url).path or "/"
+            surface_path = urllib.parse.urlsplit(request_url).path or "/"
             if not provider_ack:
                 counterexamples.append(
                     {
                         "kind": "owned_range_write_reliability",
                         "surface": surface_path,
-                        "target": form.action_url,
-                        "probe": "dummy_form_write",
-                        "reason": "authorized dummy POST was not provider-acknowledged",
+                        "target": request_url,
+                        "probe": decision.reason,
+                        "reason": "authorized dummy POST/method differential was not provider-acknowledged",
                         "authorized_scope": self.scope.scope_id,
                     }
                 )
@@ -272,9 +289,9 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
                     {
                         "kind": "owned_range_readback_gap",
                         "surface": surface_path,
-                        "target": form.action_url,
-                        "probe": "dummy_form_write",
-                        "reason": f"provider acknowledged write but marker was not independently observable; {evidence}",
+                        "target": request_url,
+                        "probe": decision.reason,
+                        "reason": f"provider acknowledged POST but marker was not independently observable; {evidence}",
                         "authorized_scope": self.scope.scope_id,
                     }
                 )
@@ -291,6 +308,10 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
         report["write_surface_skips"] = self.write_surface_skips[:80]
         report["write_surface_skip_count"] = len(self.write_surface_skips)
         report["post_response_echoes"] = sum(1 for row in report.get("writes", []) if row.get("post_response_echo"))
+        report["method_differential_attempts"] = sum(
+            1 for row in report.get("writes", [])
+            if row.get("attempted") and row.get("eligibility_reason") == "owned_form_post_method_probe"
+        )
 
         if int(report.get("forms_discovered") or 0) > 0 and not self.write_surface_candidates:
             reasons: dict[str, int] = {}
@@ -303,7 +324,7 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
                     "surface": urllib.parse.urlsplit(self.base_url).path or "/",
                     "target": self.base_url,
                     "probe": "write_surface_discovery",
-                    "reason": "forms discovered but no eligible benign same-origin POST surface; skip reasons="
+                    "reason": "forms discovered but no eligible benign same-origin write surface; skip reasons="
                     + json.dumps(reasons, sort_keys=True),
                     "authorized_scope": self.scope.scope_id,
                 }
@@ -317,7 +338,9 @@ class EvolvingOwnedRangeActiveRunner(OwnedRangeActiveRunner):
             "writes": [
                 {
                     "action_url": row.get("action_url"),
+                    "request_url": row.get("request_url"),
                     "attempted": row.get("attempted"),
+                    "eligibility_reason": row.get("eligibility_reason"),
                     "provider_acknowledged": row.get("provider_acknowledged"),
                     "post_response_echo": row.get("post_response_echo"),
                     "independent_readback": row.get("independent_readback"),
