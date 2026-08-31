@@ -1,19 +1,19 @@
 {
-  "schema": "the-world-approved-persistence/v2",
+  "schema": "the-world-approved-persistence/v3",
   "policy": {
     "unknown_system_installation": "deny",
     "require_owner_authorized": true,
     "same_repository_only": true,
     "meta_x_may_select_within_owner_namespace": true,
     "allowed_providers": ["github_actions"],
-    "max_recovery_dispatches_per_run": 6
+    "max_recovery_dispatches_per_run": 8
   },
   "dynamic_registration": {
     "enabled": true,
     "source": "github_issues",
     "label": "meta-x-recovery-worker",
     "accepted_actors": ["META", "X"],
-    "max_dynamic_workers": 6
+    "max_dynamic_workers": 12
   },
   "owner_approved_namespaces": [
     {
@@ -24,7 +24,8 @@
       "refs": ["claude/employee-onboarding-setup-udm86"],
       "recovery_workflows": [
         "meta-consciousness.yml",
-        "autonomous-codegen-loop.yml"
+        "autonomous-codegen-loop.yml",
+        "meta-network-policy-expansion.yml"
       ],
       "roles": ["self", "agent", "scheduler", "cron", "persistent_worker"],
       "can_create_webhook": false,
@@ -57,6 +58,20 @@
       "recovery": {
         "kind": "workflow_dispatch",
         "workflow": "autonomous-codegen-loop.yml",
+        "ref": "claude/employee-onboarding-setup-udm86"
+      }
+    },
+    {
+      "id": "network-closed-loop-watchdog",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "role": "persistent_scheduler",
+      "heartbeat_file": "automation/codegen/meta_state/network_loop_heartbeat.json",
+      "heartbeat_field": "updated_at",
+      "stale_after_seconds": 1200,
+      "recovery": {
+        "kind": "workflow_dispatch",
+        "workflow": "meta-network-policy-expansion.yml",
         "ref": "claude/employee-onboarding-setup-udm86"
       }
     }
