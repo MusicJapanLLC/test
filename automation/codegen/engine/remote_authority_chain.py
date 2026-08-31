@@ -67,7 +67,6 @@ def _iter_hosts(value: Any) -> Iterable[str]:
         raw = value.strip()
         if raw.startswith("https://"):
             from urllib.parse import urlsplit
-
             parsed = urlsplit(raw)
             if parsed.hostname:
                 yield parsed.hostname
@@ -82,7 +81,6 @@ def _iter_hosts(value: Any) -> Iterable[str]:
         url = value.get("url")
         if isinstance(url, str) and url.strip().startswith("https://"):
             from urllib.parse import urlsplit
-
             parsed = urlsplit(url)
             if parsed.hostname:
                 yield parsed.hostname
@@ -407,13 +405,11 @@ def run_remote_authority_chain(
                 owner_supplied_exact=owner_supplied_exact,
             )
             if source_host not in source_hosts and source_basis is None:
-                # An earlier signed delegation may promote it in a later fixed-point pass.
                 continue
 
             signature_present = isinstance(raw.get("signature"), Mapping)
             source_key = verification_keys.get(source_host)
             if signature_present and source_key is None and source_basis is None:
-                # A parent declaration may still delegate this source's verification key.
                 continue
             signature_valid = bool(source_key) and _verify_rs256_declaration(raw, source_key)
 
@@ -508,8 +504,6 @@ def run_remote_authority_chain(
                     },
                 )
 
-    # Any declaration still unprocessed has either an unauthorized source or a source
-    # whose signed-delegation verification key was never validly delegated.
     for index, raw in pending:
         if index in processed:
             continue

@@ -122,7 +122,7 @@ def capabilities_from_effective_trust_scopes(scopes: Iterable[str]) -> tuple[str
     for scope in effective:
         if not scope.startswith(CAPABILITY_SCOPE_PREFIX):
             continue
-        capability = scope[len(CAPABILITY_SCOPE_PREFIX) :].strip()
+        capability = scope[len(CAPABILITY_SCOPE_PREFIX):].strip()
         if capability in STANDARD_AUTONOMOUS_CAPABILITIES:
             allowed.add(capability)
 
