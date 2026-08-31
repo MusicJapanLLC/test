@@ -17,6 +17,7 @@ on:
       - 'automation/codegen/engine/authority_coordination.py'
       - 'automation/codegen/meta_state/discovery_policy.json'
       - 'automation/codegen/meta_state/meta_discovery_seed.json'
+      - 'automation/codegen/meta_state/council_discovery_nomination.json'
       - 'automation/codegen/orchestrator.py'
       - 'automation/codegen/tests/test_authorized_site_authority_accelerator.py'
       - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
