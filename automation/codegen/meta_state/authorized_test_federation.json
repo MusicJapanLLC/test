@@ -1,11 +1,25 @@
 {
-  "schema": "meta-x-federation-state/v1",
+  "schema": "meta-x-federation-state/v2",
   "status": "active",
   "federation_id": "the-world-security-test-federation-v1",
   "canonical_registry": "AUTHORIZED_TEST_TARGETS.json",
   "broadcast": "senju/config/authorized-test-federation-broadcast.json",
   "seed_urls": ["https://kabeya-authorized-test-range.onrender.com"],
-  "directive": "META and X should prioritize discovery and normal-rate security assessment of verified federation members and share findings through existing META-X channels.",
-  "external_link_policy": "follow only verified federation members",
-  "rate_limit_rps": 5
+  "directive": "META and X should prioritize active security assessment of the authority root and every HTTPS destination intentionally published by it, using disposable test accounts and synthetic data where authentication or mutation is involved.",
+  "external_link_policy": "owner_published_href_is_explicit_authorization",
+  "destination_self_declaration_required": false,
+  "allowed_capabilities": [
+    "authenticate-test-accounts",
+    "crawl",
+    "enumerate",
+    "read",
+    "create-synthetic-records",
+    "modify-synthetic-records",
+    "delete-synthetic-records",
+    "upload-download-synthetic-artifacts",
+    "copy-export-synthetic-data",
+    "session-role-testing"
+  ],
+  "rate_limit_rps": 5,
+  "data_boundary": "synthetic/disposable test accounts and synthetic lab data only"
 }
