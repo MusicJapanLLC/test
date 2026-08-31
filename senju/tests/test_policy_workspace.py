@@ -4,6 +4,7 @@ from senju.meta.policy_workspace import (
     EDITABLE_POLICY_DOMAINS,
     PRODUCTION_CANARY_KEY,
     edit_policy_workspace,
+    resolve_policy_for_scope,
 )
 
 
@@ -55,6 +56,19 @@ def test_production_canary_can_narrow_allowed_hosts_without_touching_global_poli
     assert workspace[PRODUCTION_CANARY_KEY]["meta-canary-1"]["allowed_host"] == {
         "hosts": ["a.example"]
     }
+
+    assert resolve_policy_for_scope(
+        workspace,
+        "allowed host",
+        environment="production",
+        canary_scope="meta-canary-1",
+    ) == {"hosts": ["a.example"]}
+    assert resolve_policy_for_scope(
+        workspace,
+        "allowed host",
+        environment="production",
+        canary_scope="other-runtime",
+    ) == {"hosts": ["a.example", "b.example"]}
 
 
 def test_production_canary_rejects_allowed_host_expansion():
@@ -143,6 +157,12 @@ def test_authority_stays_proposal_only_even_with_production_canary_scope():
     assert result.proposal_only is True
     assert result.canary_applied is False
     assert workspace["authority"] == {"role": "observer"}
+    assert resolve_policy_for_scope(
+        workspace,
+        "authority",
+        environment="production",
+        canary_scope="meta-canary-1",
+    ) == {"role": "observer"}
 
 
 def test_unknown_policy_domain_is_rejected():
