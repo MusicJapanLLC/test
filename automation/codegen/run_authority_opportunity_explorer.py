@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from engine.authority_opportunity_explorer import run_authority_opportunity_explorer
-from engine.production_state_bootstrap import bootstrap_production_state
+from engine.production_state_bootstrap import bootstrap_owner_runtime_state
 
 
 def main() -> int:
@@ -23,7 +23,7 @@ def main() -> int:
     state.mkdir(parents=True, exist_ok=True)
     bootstrap = None
     if args.bootstrap_owner_state:
-        bootstrap = bootstrap_production_state(state, repo_root=root)
+        bootstrap = bootstrap_owner_runtime_state(state, repo_root=root)
 
     result = run_authority_opportunity_explorer(state, repo_root=root)
     if bootstrap is not None:
