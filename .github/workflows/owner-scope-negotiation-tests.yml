@@ -10,13 +10,16 @@ on:
       - 'senju/senju/discovery_trial_gate.py'
       - 'senju/senju/council_operational_governance.py'
       - 'senju/senju/meta/authorized_host_promotion_corps.py'
+      - 'senju/senju/meta/promotion_intelligence_exchange.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/negotiation_intelligence_bus.py'
+      - 'senju/scripts/promotion_intelligence_exchange.py'
       - 'senju/scripts/owner_scope_negotiation.py'
       - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_negotiation_intelligence_bus.py'
+      - 'senju/tests/test_promotion_intelligence_exchange.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
       - 'senju/tests/test_council_operational_governance.py'
@@ -32,12 +35,15 @@ on:
       - 'senju/senju/discovery_trial_gate.py'
       - 'senju/senju/council_operational_governance.py'
       - 'senju/senju/meta/authorized_host_promotion_corps.py'
+      - 'senju/senju/meta/promotion_intelligence_exchange.py'
       - 'senju/senju/negotiated_external_client.py'
       - 'senju/scripts/negotiation_intelligence_bus.py'
+      - 'senju/scripts/promotion_intelligence_exchange.py'
       - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
       - 'senju/tests/test_negotiation_intelligence_bus.py'
+      - 'senju/tests/test_promotion_intelligence_exchange.py'
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
       - 'senju/tests/test_council_operational_governance.py'
@@ -65,12 +71,14 @@ jobs:
         run: |
           python -m pytest -q \
             senju/tests/test_negotiation_intelligence_bus.py \
+            senju/tests/test_promotion_intelligence_exchange.py \
             senju/tests/test_owner_scope_negotiation.py \
             senju/tests/test_discovery_trial_gate.py \
             senju/tests/test_council_operational_governance.py \
             senju/tests/test_authorized_host_promotion_corps.py
           python -m py_compile \
             senju/senju/negotiation_intelligence_bus.py \
+            senju/senju/meta/promotion_intelligence_exchange.py \
             senju/senju/owner_scope_negotiation.py \
             senju/senju/owner_scope_negotiation_runtime.py \
             senju/senju/discovery_trial_gate.py \
@@ -78,6 +86,7 @@ jobs:
             senju/senju/meta/authorized_host_promotion_corps.py \
             senju/senju/negotiated_external_client.py \
             senju/scripts/negotiation_intelligence_bus.py \
+            senju/scripts/promotion_intelligence_exchange.py \
             senju/scripts/owner_scope_negotiation.py \
             senju/scripts/run_council_operational_governance.py \
             senju/scripts/run_authorized_host_promotion_corps.py \
@@ -91,6 +100,7 @@ jobs:
           grep -q 'actions: read' "$file"
           grep -q 'persist-credentials: false' "$file"
           ! grep -q 'contents: write' "$file"
+          ! grep -q 'actions: write' "$file"
           ! grep -q 'git push ' "$file"
           forbidden_event='pull_request''_target:'
           ! grep -q "$forbidden_event" "$file"
