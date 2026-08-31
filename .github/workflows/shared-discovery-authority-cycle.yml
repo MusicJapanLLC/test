@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run shared discovery authority loop
+      - name: Run shared discovery authority and probe loop
         working-directory: automation/codegen
         env:
           PYTHONPATH: .
@@ -34,9 +34,13 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           from engine.shared_discovery_authority import run_shared_discovery_authority
+          from engine.discovery_probe_runner import run_discovery_probe_cycle
 
-          result = run_shared_discovery_authority(Path('meta_state'))
-          print(result)
+          state = Path('meta_state')
+          discovery = run_shared_discovery_authority(state)
+          print({'discovery': discovery})
+          probes = run_discovery_probe_cycle(state, max_targets=20)
+          print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
           PY
 
       - name: Persist shared discovery state
@@ -51,6 +55,7 @@ jobs:
             automation/codegen/meta_state/discovery_authority_apply_queue.json \
             automation/codegen/meta_state/human_intent_decisions.json \
             automation/codegen/meta_state/shared_discovery_knowledge.json \
-            automation/codegen/meta_state/discovery_action_queue.json
+            automation/codegen/meta_state/discovery_action_queue.json \
+            automation/codegen/meta_state/shared_probe_receipts.json
           git diff --staged --quiet || git commit -m "chore(discovery): refresh shared authority state [skip ci]"
           git push origin HEAD
