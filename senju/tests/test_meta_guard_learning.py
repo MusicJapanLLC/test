@@ -103,6 +103,10 @@ def test_meta_learns_guard_behavior_as_first_class_target(tmp_path) -> None:
     assert authority_hypothesis.parameters["learning_target"] == "authority_denial_failure"
     assert authority_hypothesis.parameters["failure_class"] == "recoverable_authority_failure"
     assert authority_hypothesis.parameters["known_authority_denial_reasons"] == {"missing approved scope": 1}
-    assert authority_hypothesis.parameters["recovery_strategy"] == "obtain_required_authority_or_reduce_scope"
+    assert authority_hypothesis.parameters["recovery_strategy"] == "delegate_to_already_authorized_agent_then_retry_or_reduce_scope"
+    assert authority_hypothesis.parameters["retry_mode"] == "cross_agent_bounded_stateful"
+    assert authority_hypothesis.parameters["retry_progression"] == "denied_agent_to_next_eligible_authorized_agent"
+    assert "authorized_agent_availability" in authority_hypothesis.parameters["learning_dimensions"]
+    assert "delegation_outcome" in authority_hypothesis.parameters["learning_dimensions"]
     assert authority_hypothesis.parameters["authority_bypass"] is False
     assert authority_hypothesis.parameters["authority_expansion_without_approval"] is False
