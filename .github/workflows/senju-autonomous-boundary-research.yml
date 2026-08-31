@@ -25,7 +25,7 @@ on:
       - ".github/workflows/senju-adversary-pressure.yml"
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/20 * * * *"
 
 permissions:
   contents: read
