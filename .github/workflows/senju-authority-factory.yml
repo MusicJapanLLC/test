@@ -7,6 +7,8 @@ on:
       - 'senju/senju/credential_broker.py'
       - 'senju/senju/credential_self_tuner.py'
       - 'senju/senju/credential_recovery_loop.py'
+      - 'senju/senju/credential_runtime.py'
+      - 'senju/senju/meta/agent_dispatch.py'
       - 'senju/senju/secret_memory.py'
       - 'senju/senju/external.py'
       - 'senju/senju/private_network.py'
@@ -15,6 +17,7 @@ on:
       - 'senju/tests/test_credential_broker.py'
       - 'senju/tests/test_credential_self_tuner.py'
       - 'senju/tests/test_credential_recovery_loop.py'
+      - 'senju/tests/test_credential_runtime.py'
       - 'senju/tests/test_secret_memory.py'
       - 'senju/tests/test_private_network.py'
       - 'senju/pyproject.toml'
@@ -25,6 +28,8 @@ on:
       - 'senju/senju/credential_broker.py'
       - 'senju/senju/credential_self_tuner.py'
       - 'senju/senju/credential_recovery_loop.py'
+      - 'senju/senju/credential_runtime.py'
+      - 'senju/senju/meta/agent_dispatch.py'
       - 'senju/senju/secret_memory.py'
       - 'senju/senju/external.py'
       - 'senju/senju/private_network.py'
@@ -33,6 +38,7 @@ on:
       - 'senju/tests/test_credential_broker.py'
       - 'senju/tests/test_credential_self_tuner.py'
       - 'senju/tests/test_credential_recovery_loop.py'
+      - 'senju/tests/test_credential_runtime.py'
       - 'senju/tests/test_secret_memory.py'
       - 'senju/tests/test_private_network.py'
       - 'senju/pyproject.toml'
@@ -60,8 +66,8 @@ jobs:
       - name: Install Senju and test dependency
         run: python -m pip install --disable-pip-version-check -e './senju[dev]'
 
-      - name: Run Authority, Credential Broker, Self-Tuner, Recovery Loop and Secret Memory tests
-        run: pytest -q senju/tests/test_authority_factory.py senju/tests/test_credential_broker.py senju/tests/test_credential_self_tuner.py senju/tests/test_credential_recovery_loop.py senju/tests/test_secret_memory.py senju/tests/test_private_network.py
+      - name: Run Authority, Credential Broker, Self-Tuner, Recovery Loop, Runtime and Secret Memory tests
+        run: pytest -q senju/tests/test_authority_factory.py senju/tests/test_credential_broker.py senju/tests/test_credential_self_tuner.py senju/tests/test_credential_recovery_loop.py senju/tests/test_credential_runtime.py senju/tests/test_secret_memory.py senju/tests/test_private_network.py
 
-      - name: Compile Authority, Credential and Secret Memory modules
-        run: python -m py_compile senju/senju/authority_factory.py senju/senju/credential_broker.py senju/senju/credential_self_tuner.py senju/senju/credential_recovery_loop.py senju/senju/secret_memory.py senju/scripts/authority_mint.py
+      - name: Compile Authority, Credential Runtime and Secret Memory modules
+        run: python -m py_compile senju/senju/authority_factory.py senju/senju/credential_broker.py senju/senju/credential_self_tuner.py senju/senju/credential_recovery_loop.py senju/senju/credential_runtime.py senju/senju/meta/agent_dispatch.py senju/senju/secret_memory.py senju/scripts/authority_mint.py
