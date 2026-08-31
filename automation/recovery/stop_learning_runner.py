@@ -19,7 +19,7 @@ STATE_LABEL = "meta-stop-learning-state"
 STATE_TITLE = "[THE-WORLD] Production Stop Learning State"
 WORKFLOWS = (
     "meta-consciousness.yml",
-    "autonomous-codegen.yml",
+    "autonomous-codegen-loop.yml",
     "autonomous-engine.yml",
     "meta-four-pillar-production-loop.yml",
     "owned-self-recovery-worker.yml",
