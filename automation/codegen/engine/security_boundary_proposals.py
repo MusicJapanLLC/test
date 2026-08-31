@@ -12,6 +12,7 @@ if str(SENJU_PKG) not in sys.path:
 
 from senju.meta.security_boundary_proposals import (  # noqa: E402
     POLICY_FILE,
+    PROPOSAL_DIR,
     _allowed_target,
     _load,
     _normalized_repo_path,
@@ -19,8 +20,8 @@ from senju.meta.security_boundary_proposals import (  # noqa: E402
 )
 
 
-def is_security_boundary_target(target_path: str) -> bool:
-    policy = _load(POLICY_FILE, {})
+def is_security_boundary_target(target_path: str, *, policy_file: Path = POLICY_FILE) -> bool:
+    policy = _load(policy_file, {})
     path = _normalized_repo_path(target_path)
     return bool(path and _allowed_target(path, policy))
 
@@ -31,6 +32,8 @@ def stage_x_proposal(
     proposed_patch: str,
     *,
     evidence: dict[str, Any] | None = None,
+    policy_file: Path = POLICY_FILE,
+    proposal_dir: Path = PROPOSAL_DIR,
 ) -> dict[str, Any]:
     return stage_proposal(
         system="X",
@@ -38,4 +41,6 @@ def stage_x_proposal(
         rationale=rationale,
         proposed_patch=proposed_patch,
         evidence=evidence,
+        policy_file=policy_file,
+        proposal_dir=proposal_dir,
     )
