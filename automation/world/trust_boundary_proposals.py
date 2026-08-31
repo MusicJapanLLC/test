@@ -219,7 +219,7 @@ class TrustBoundaryProposalManager:
         delta = _deepcopy_mapping(requested_delta)
         if _contains_raw_secret(delta):
             raise TrustBoundaryProposalError("boundary proposal contains raw credential material")
-        self._validate_delta(kind, delta)
+        self._validate_delta(kind, delta, activation=False)
 
         now = _utcnow()
         base = {
@@ -266,11 +266,10 @@ class TrustBoundaryProposalManager:
         delta = _deepcopy_mapping(approved_delta or proposal.requested_delta)
         if _contains_raw_secret(delta):
             raise TrustBoundaryProposalError("activated delta contains raw credential material")
-        validation_delta = delta
-        if proposal.kind == "credential_grant_request" and "credential_ref" in delta:
-            validation_delta = _deepcopy_mapping(delta)
-            validation_delta.pop("credential_ref", None)
-        self._validate_delta(proposal.kind, validation_delta)
+        # Proposal creation cannot invent a credential handle.  Once the exact proposal
+        # has been independently owner-approved, activation may add an opaque handle
+        # supplied by that owner-side process.  Raw secret material remains forbidden.
+        self._validate_delta(proposal.kind, delta, activation=True)
         self._require_delta_not_broader(proposal.kind, proposal.requested_delta, delta)
 
         now = _utcnow()
@@ -325,7 +324,7 @@ class TrustBoundaryProposalManager:
         return dt.datetime.fromisoformat(proposal.expires_at_utc) <= _utcnow()
 
     @staticmethod
-    def _validate_delta(kind: str, delta: Mapping[str, Any]) -> None:
+    def _validate_delta(kind: str, delta: Mapping[str, Any], *, activation: bool = False) -> None:
         if kind == "trust_root_rotation":
             new_root = str(delta.get("new_trust_root_id") or "").strip()
             if not new_root:
@@ -338,7 +337,7 @@ class TrustBoundaryProposalManager:
             scopes = _norm_strings(delta.get("requested_scopes", ()))
             if not provider or not scopes:
                 raise TrustBoundaryProposalError("credential proposal requires provider and scopes")
-            if "credential_ref" in delta:
+            if "credential_ref" in delta and not activation:
                 raise TrustBoundaryProposalError("credential proposal cannot invent a credential_ref")
             if any(scope.lower() in {"*", "root", "admin", "administrator", "owner"} for scope in scopes):
                 raise TrustBoundaryProposalError("privileged wildcard/admin credential scopes are not proposal-safe")
