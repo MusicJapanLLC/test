@@ -1,0 +1,138 @@
+name: META X Senju Delegated Root Factory
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'senju/senju/authority_factory.py'
+      - 'senju/senju/meta/autonomous_authority_council.py'
+      - 'senju/senju/meta/delegated_root_factory.py'
+      - 'senju/scripts/run_autonomous_authority_council.py'
+      - 'senju/scripts/run_delegated_root_factory.py'
+      - 'senju/state/standing_authorizations.json'
+      - 'senju/tests/test_authority_factory.py'
+      - 'senju/tests/test_autonomous_authority_council.py'
+      - 'senju/tests/test_delegated_root_factory.py'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - '.github/workflows/delegated-root-factory-cycle.yml'
+  pull_request:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'senju/senju/authority_factory.py'
+      - 'senju/senju/meta/autonomous_authority_council.py'
+      - 'senju/senju/meta/delegated_root_factory.py'
+      - 'senju/scripts/run_autonomous_authority_council.py'
+      - 'senju/scripts/run_delegated_root_factory.py'
+      - 'senju/state/standing_authorizations.json'
+      - 'senju/tests/test_authority_factory.py'
+      - 'senju/tests/test_autonomous_authority_council.py'
+      - 'senju/tests/test_delegated_root_factory.py'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - '.github/workflows/delegated-root-factory-cycle.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: meta-x-senju-delegated-root-factory-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  delegated-root:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      ROOT_STATE: ${{ runner.temp }}/delegated-root-runtime
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Install Senju
+        run: python -m pip install --disable-pip-version-check -e './senju[dev]'
+
+      - name: Verify delegated-root contract
+        run: |
+          python -m pytest -q \
+            senju/tests/test_authority_factory.py \
+            senju/tests/test_autonomous_authority_council.py \
+            senju/tests/test_delegated_root_factory.py
+          python -m py_compile \
+            senju/senju/meta/delegated_root_factory.py \
+            senju/scripts/run_delegated_root_factory.py
+
+      - name: Restore persistent delegated-root registry
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/delegated-root-runtime/
+          key: delegated-root-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            delegated-root-${{ github.ref_name }}-
+            delegated-root-
+
+      - name: Run live META X Senju authority council
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: senju
+        run: |
+          mkdir -p "$ROOT_STATE"
+          python senju/scripts/run_autonomous_authority_council.py \
+            --repo-root . \
+            --out "$ROOT_STATE/authority-council.json"
+          test "$(jq -r '.authority_decision.allowed' "$ROOT_STATE/authority-council.json")" = "true"
+          test "$(jq -r '.ai_council.effect' "$ROOT_STATE/authority-council.json")" = "allow"
+
+      - name: Mint or reuse real delegated root from unanimous council
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/run_delegated_root_factory.py \
+            --repo-root . \
+            --state-dir "$ROOT_STATE/registry" \
+            --council "$ROOT_STATE/authority-council.json" \
+            --out "$ROOT_STATE/delegated-root.json"
+
+      - name: Verify root is operational and recursively usable
+        if: github.event_name != 'pull_request'
+        run: |
+          test "$(jq -r '.real_authority' "$ROOT_STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.council_unanimous' "$ROOT_STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.root_can_delegate' "$ROOT_STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.usable_as_parent' "$ROOT_STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.scope_expanded_beyond_owner' "$ROOT_STATE/delegated-root.json")" = "false"
+          test "$(jq -r '.unrelated_external_root_created' "$ROOT_STATE/delegated-root.json")" = "false"
+          test -s "$ROOT_STATE/registry/delegated_authorities.json"
+          echo "root_profile_id=$(jq -r '.root_profile_id' "$ROOT_STATE/delegated-root.json")"
+          echo "root_generation=$(jq -r '.root_generation' "$ROOT_STATE/delegated-root.json")"
+          echo "delegation_depth=$(jq -r '.root_delegation_depth_remaining' "$ROOT_STATE/delegated-root.json")"
+
+      - name: Save persistent delegated-root registry
+        if: github.event_name != 'pull_request' && always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/delegated-root-runtime/
+          key: delegated-root-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve delegated-root evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: delegated-root-factory-${{ github.run_id }}
+          path: ${{ runner.temp }}/delegated-root-runtime/
+          if-no-files-found: warn
+          retention-days: 30
