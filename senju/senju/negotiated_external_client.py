@@ -1,23 +1,75 @@
-"""ExternalContactClient adapter backed by the negotiated effective Owner ceiling.
+"""ExternalContactClient adapter backed by negotiated Owner scope plus bounded trials.
 
 Policy selection belongs to owner_scope_negotiation / Council. ExternalContactClient is
-used here as a transport enforcer, not as the policy authority. The production adapter
-therefore records a 20% reduction in ExternalContactClient policy/governance
-responsibility while retaining execution-time destination/transport validation.
+used here as a transport enforcer, not as the policy authority.
 
-A per-host method check runs before ExternalContactClient so one host's broader methods
-do not spill onto another newly added host.
+A selected Owner-verified trial may temporarily add one exact public host and a requested
+subset of HEAD/POST/PUT/PATCH to the transport policy. These trial grants never alter the
+Owner Authority ceiling, never enable private networks, and never make redirect targets
+trusted by inheritance. Existing ExternalContactClient checks still apply to every hop.
 """
 from __future__ import annotations
 
+import json
+import time
 import urllib.parse
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
 from .external import ExternalContactClient, ExternalContactError, ExternalContactPolicy, _normalize_host
 from .owner_scope_negotiation import derive_current_ceiling
 
 EXTERNAL_CONTACT_POLICY_RESPONSIBILITY_REDUCTION_PCT = 20
+ACTIVE_TRIAL_METHODS = frozenset({"HEAD", "POST", "PUT", "PATCH"})
+
+
+def _load_active_trial_grants(state_dir: str | Path, *, now: int | None = None) -> dict[str, dict[str, Any]]:
+    path = Path(state_dir) / "owner_verified_active_trials.json"
+    try:
+        doc = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return {}
+    current = int(time.time()) if now is None else int(now)
+    rows = doc.get("grants", ()) if isinstance(doc, Mapping) else ()
+    grants: dict[str, dict[str, Any]] = {}
+    for raw in rows if isinstance(rows, list) else ():
+        if not isinstance(raw, Mapping):
+            continue
+        if raw.get("verified_owner_evidence") is not True:
+            continue
+        if raw.get("authority_effect") is not False:
+            continue
+        if raw.get("private_network") is not False:
+            continue
+        if raw.get("redirect_trust_inheritance") is not False:
+            continue
+        try:
+            expires_at = int(raw.get("expires_at", 0) or 0)
+        except (TypeError, ValueError):
+            continue
+        if expires_at <= current:
+            continue
+        try:
+            host = _normalize_host(str(raw.get("host") or ""))
+        except ExternalContactError:
+            continue
+        methods = frozenset(
+            str(value).strip().upper()
+            for value in raw.get("allowed_methods", ())
+            if str(value).strip().upper() in ACTIVE_TRIAL_METHODS
+        )
+        if not methods:
+            continue
+        grants[host] = {
+            "host": host,
+            "proposal_id": str(raw.get("proposal_id") or ""),
+            "proof_type": str(raw.get("proof_type") or ""),
+            "proof_ref": str(raw.get("proof_ref") or ""),
+            "allowed_methods": methods,
+            "credential_scope": "caller_supplied_existing",
+            "expires_at": expires_at,
+        }
+    return grants
 
 
 class NegotiatedExternalContactClient:
@@ -37,6 +89,15 @@ class NegotiatedExternalContactClient:
         for raw_host in ceiling.get("exact_hosts", ()):
             per_host.setdefault(_normalize_host(str(raw_host)), global_methods)
 
+        active_trials = _load_active_trial_grants(state_dir)
+        if active_trials:
+            global_method_set = set(global_methods)
+            for host, grant in active_trials.items():
+                methods = frozenset(grant["allowed_methods"])
+                per_host[host] = frozenset(set(per_host.get(host, frozenset())) | set(methods))
+                global_method_set.update(methods)
+            global_methods = frozenset(global_method_set)
+
         policy = ExternalContactPolicy(
             allow_hosts=frozenset(per_host),
             allow_http=bool(ceiling.get("allow_http", False)),
@@ -50,6 +111,7 @@ class NegotiatedExternalContactClient:
         )
         self.ceiling = ceiling
         self.per_host_methods = per_host
+        self.active_trial_grants = active_trials
         self.client = ExternalContactClient(policy, **client_kwargs)
         self.external_contact_role = "transport_enforcer_only"
         self.policy_authority = False
@@ -63,9 +125,13 @@ class NegotiatedExternalContactClient:
         return {
             "role": self.external_contact_role,
             "policy_authority": self.policy_authority,
-            "policy_selection_source": "owner_scope_negotiation_or_council",
+            "policy_selection_source": "owner_scope_negotiation_or_verified_trial_capability",
             "policy_responsibility_reduction_pct": self.policy_responsibility_reduction_pct,
             "execution_validation_retained": True,
+            "active_trial_grant_count": len(self.active_trial_grants),
+            "active_trial_private_network": False,
+            "active_trial_redirect_trust_inheritance": False,
+            "cross_host_sensitive_header_strip_retained": True,
         }
 
     def _check(self, url: str, method: str) -> None:
