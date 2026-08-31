@@ -1,0 +1,33 @@
+{
+  "schema": "senju-owner-frontier-council/v1",
+  "council_members": ["META", "X", "SENJU", "PR-ARMY"],
+  "quorum": 4,
+  "min_confidence": 75,
+  "auto_activate_proof_types": [
+    "existing_standing_authorization",
+    "owner_verified_domain",
+    "owner_exact_link"
+  ],
+  "new_host_methods": ["GET", "HEAD", "OPTIONS"],
+  "max_new_hosts_per_cycle": 8,
+  "credential_scope": "none",
+  "allow_http": false,
+  "allow_delete": false,
+  "allow_private_network": false,
+  "policy": {
+    "verified_owner_evidence_required": true,
+    "four_of_four_required": true,
+    "unverified_discovery_becomes_ownership_verification_request": true,
+    "hard_deny_and_revocation_are_terminal": true
+  },
+  "hard_limits": [
+    "no activation from discovery alone",
+    "no activation without verified owner evidence or standing authorization",
+    "no three-of-four activation",
+    "no private loopback link-local or reserved literal IP activation",
+    "no credential minting or discovery",
+    "no HTTP downgrade",
+    "no DELETE for newly activated hosts",
+    "new hosts start with GET HEAD OPTIONS only"
+  ]
+}
