@@ -13,9 +13,15 @@ def main() -> int:
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--state-dir", default="senju/state")
     parser.add_argument("--promotion-dir", required=True)
+    parser.add_argument("--collaboration-dir")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
-    result = run_promotion_corps(args.repo_root, args.state_dir, args.promotion_dir)
+    result = run_promotion_corps(
+        args.repo_root,
+        args.state_dir,
+        args.promotion_dir,
+        collaboration_dir=args.collaboration_dir,
+    )
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
