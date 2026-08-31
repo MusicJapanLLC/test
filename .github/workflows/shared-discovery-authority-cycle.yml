@@ -6,6 +6,7 @@ on:
     paths:
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/authorized_site_authority_accelerator.py'
       - 'automation/codegen/engine/discovery_authority_contract.py'
       - 'automation/codegen/engine/bounded_owner_delegation.py'
       - 'automation/codegen/engine/owner_authority_opportunity.py'
@@ -17,6 +18,7 @@ on:
       - 'automation/codegen/meta_state/discovery_policy.json'
       - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/orchestrator.py'
+      - 'automation/codegen/tests/test_authorized_site_authority_accelerator.py'
       - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
       - 'automation/codegen/AUTHORITY_COORDINATION_PROTOCOL.md'
       - '.github/workflows/shared-discovery-authority-cycle.yml'
@@ -46,14 +48,38 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run shared discovery authority, opportunity, research, delegation, lease, external action, probe, and coordination loop
+      - name: Restore authorized-site promotion lineage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/authorized-site-prev automation/codegen/meta_state
+          PREV="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Shared Discovery Authority Cycle" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV" ]]; then
+            gh run download "$PREV" --repo "$GITHUB_REPOSITORY" --name shared-discovery-authority-state --dir /tmp/authorized-site-prev || true
+          fi
+          for NAME in \
+            authorized_site_authority_registry.json \
+            authorized_site_authority_accelerator.json \
+            authorized_site_authority_promotion_bus.json \
+            owner_scope_negotiation_signals.json
+          do
+            FOUND="$(find /tmp/authorized-site-prev -name "$NAME" -print -quit || true)"
+            if [[ -n "$FOUND" ]]; then
+              cp "$FOUND" "automation/codegen/meta_state/$NAME"
+            fi
+          done
+          echo "Authorized-site promotion lineage source run: **${PREV:-fresh}**" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run shared discovery authority, authorized-site promotion, opportunity, research, delegation, lease, external action, probe, and coordination loop
         working-directory: automation/codegen
         env:
-          PYTHONPATH: .
+          PYTHONPATH: .:../../senju
         run: |
           python - <<'PY'
           from pathlib import Path
           from engine.shared_discovery_authority import run_shared_discovery_authority
+          from engine.authorized_site_authority_accelerator import run_authorized_site_authority_accelerator
           from engine.discovery_authority_contract import enforce_discovery_authority_contract
           from engine.owner_authority_opportunity import run_owner_authority_opportunity_loop
           from engine.third_party_authority_research import run_third_party_authority_research_loop
@@ -66,6 +92,8 @@ jobs:
           state = Path('meta_state')
           discovery = run_shared_discovery_authority(state)
           print({'discovery': discovery})
+          accelerator = run_authorized_site_authority_accelerator(state)
+          print({'authorized_site_authority_accelerator': accelerator})
           opportunities = run_owner_authority_opportunity_loop(state)
           print({'owner_authority_opportunities': opportunities})
           research = run_third_party_authority_research_loop(state)
@@ -80,8 +108,6 @@ jobs:
           print({'external_actions': external_actions})
           probes = run_discovery_probe_cycle(state, max_targets=20)
           print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
-          # Rebuild authority-derived resources after the live phase so cooperating
-          # agents consume current grants, opportunities, research, queues, and lineage.
           refreshed = issue_discovery_capability_leases(state)
           print({'leases_refreshed': refreshed})
           final_opportunities = run_owner_authority_opportunity_loop(state)
@@ -96,7 +122,22 @@ jobs:
           print({'coordination': coordination})
           PY
 
-      - name: Preserve shared discovery state, authority opportunities, research, delegation, action, and coordination receipts
+      - name: Summarize authorized-site authority acceleration
+        working-directory: automation/codegen
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          p=Path('meta_state/authorized_site_authority_accelerator.json')
+          d=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+          print('## Authorized-site Authority Accelerator')
+          print(f"- Already-authorized hosts promoted to persistent Authority: **{d.get('promoted_count', 0)}**")
+          print(f"- Relationship candidates pushed into negotiation: **{d.get('negotiation_signal_count', 0)}**")
+          for row in d.get('promoted', [])[:12]:
+              print(f"- `{row.get('host')}` -> `{row.get('delegated_root_profile_id')}` generation `{row.get('generation')}`")
+          PY
+
+      - name: Preserve shared discovery state, authority promotions, opportunities, research, delegation, action, and coordination receipts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: shared-discovery-authority-state
@@ -109,6 +150,10 @@ jobs:
             automation/codegen/meta_state/human_intent_decisions.json
             automation/codegen/meta_state/shared_discovery_knowledge.json
             automation/codegen/meta_state/discovery_action_queue.json
+            automation/codegen/meta_state/authorized_site_authority_registry.json
+            automation/codegen/meta_state/authorized_site_authority_accelerator.json
+            automation/codegen/meta_state/authorized_site_authority_promotion_bus.json
+            automation/codegen/meta_state/owner_scope_negotiation_signals.json
             automation/codegen/meta_state/discovery_authority_contract.json
             automation/codegen/meta_state/owner_authority_proposals.json
             automation/codegen/meta_state/owner_authority_opportunity_queue.json
