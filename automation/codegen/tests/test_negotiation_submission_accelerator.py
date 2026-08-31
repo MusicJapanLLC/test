@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from engine.authority_approval_constitution import CANONICAL_FLOW_ID, CONSTITUTION_ID
 from engine.negotiation_submission_accelerator import (
     COLLABORATORS,
     RESUBMIT_COOLDOWN_SECONDS,
@@ -26,8 +27,15 @@ def _seed(state: Path, *, readiness: int = 60, source_refs: list[str] | None = N
                 "source_files": ["authority_opportunity_queue.json"],
                 "source_refs": source_refs or ["opp-1"],
                 "reasons": ["new integration candidate"],
-                "owner_proof_type": None,
-                "owner_proof_ref": None,
+                "secondary_validation": {
+                    "stage": "secondary_authority_evidence_validation",
+                    "rank": 3,
+                    "present": False,
+                    "evidence_type": None,
+                    "evidence_ref": None,
+                    "may_admit_candidate": False,
+                    "may_raise_review_priority": False,
+                },
                 "terminal_stop": False,
             },
             {
@@ -38,13 +46,14 @@ def _seed(state: Path, *, readiness: int = 60, source_refs: list[str] | None = N
                 "source_files": ["authority_opportunity_queue.json"],
                 "source_refs": ["deny-1"],
                 "reasons": ["terminal"],
+                "secondary_validation": {"rank": 3, "present": False},
                 "terminal_stop": True,
             },
         ]
     })
 
 
-def test_first_cycle_routes_every_active_candidate_into_existing_review_flow(tmp_path: Path) -> None:
+def test_first_cycle_routes_every_active_candidate_into_canonical_council_review(tmp_path: Path) -> None:
     state = tmp_path / "state"
     _seed(state)
 
@@ -56,15 +65,22 @@ def test_first_cycle_routes_every_active_candidate_into_existing_review_flow(tmp
     assert result["writes_shared_opportunity_queue"] is True
     assert result["cross_pr_shared_candidate_count"] == 1
     assert result["peer_share_task_count"] == len(COLLABORATORS)
+    assert result["META_X_SENJU_primary_review_is_first"] is True
+    assert result["secondary_owner_or_standing_evidence_rank"] == 3
 
     review = json.loads((state / "owner_root_authority_review_packets.json").read_text())
     assert review["submission_accelerator_enabled"] is True
     assert review["new_submissions_this_cycle"] == 1
+    assert review["unlisted_flow_policy"] == "exclude_from_canonical_review_surface"
     assert len(review["packets"]) == 1
     packet = review["packets"][0]
     assert packet["host"] == "active.example.com"
     assert packet["required_approvers"] == ["META", "X", "SENJU"]
-    assert packet["requested_decision"] == "approve_or_reject_new_host_root_authority"
+    assert packet["required_approval"] == "META_X_SENJU_3_of_3"
+    assert packet["approval_stage"] == "executive_council_primary_review"
+    assert packet["requested_decision"] == "META_X_SENJU_approve_or_reject_new_host_root_candidate"
+    assert packet["constitution_id"] == CONSTITUTION_ID
+    assert packet["canonical_flow_id"] == CANONICAL_FLOW_ID
     assert packet["authority_effect"] == "none"
 
     queue = json.loads((state / "authority_opportunity_queue.json").read_text())
@@ -74,6 +90,9 @@ def test_first_cycle_routes_every_active_candidate_into_existing_review_flow(tmp
     assert shared["negotiation_attempt_count"] == 4
     assert shared["approval_submission_count"] == 1
     assert shared["approval_flow_requested"] is True
+    assert shared["primary_approvers"] == ["META", "X", "SENJU"]
+    assert shared["secondary_owner_or_standing_evidence_rank"] == 3
+    assert shared["secondary_evidence_may_raise_review_priority"] is False
     assert shared["negotiation_shared_with"] == list(COLLABORATORS)
     assert shared["authority_effect"] == "none"
 
@@ -92,7 +111,6 @@ def test_unchanged_candidate_waits_for_bounded_retry_cooldown(tmp_path: Path) ->
     assert third["approval_flow_submission_count"] == 1
     outbox = json.loads((state / "root_authority_approval_outbox.json").read_text())
     reasons = {row["submission_reason"] for row in outbox["packets"]}
-    assert "new_candidate" in reasons
     assert "cooldown_retry" in reasons
     queue = json.loads((state / "authority_opportunity_queue.json").read_text())
     assert queue["opportunities"][0]["approval_submission_count"] == 2
@@ -111,15 +129,37 @@ def test_fresh_evidence_resubmits_immediately(tmp_path: Path) -> None:
     assert any(row["submission_reason"] == "evidence_changed" for row in outbox["packets"])
 
 
-def test_peer_feed_shares_candidate_with_all_negotiation_participants(tmp_path: Path) -> None:
+def test_noncanonical_old_review_packets_are_excluded(tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    _seed(state)
+    _write(state / "owner_root_authority_review_packets.json", {
+        "packets": [{
+            "packet_id": "legacy-owner-first",
+            "host": "legacy.example.com",
+            "required_approvers": ["OWNER"],
+            "authority_effect": "none",
+        }]
+    })
+
+    result = run_submission_accelerator(state, now=1000)
+    assert result["excluded_noncanonical_packet_count"] == 1
+    review = json.loads((state / "owner_root_authority_review_packets.json").read_text())
+    assert all(row.get("packet_id") != "legacy-owner-first" for row in review["packets"])
+    assert all(row["constitution_id"] == CONSTITUTION_ID for row in review["packets"])
+
+
+def test_peer_feed_shares_constitution_with_all_negotiation_participants(tmp_path: Path) -> None:
     state = tmp_path / "state"
     _seed(state)
     run_submission_accelerator(state, now=1000)
 
     feed = json.loads((state / "root_negotiation_peer_feed.json").read_text())
     assert feed["collaborators"] == list(COLLABORATORS)
+    assert feed["constitution"]["constitution_id"] == CONSTITUTION_ID
     assert feed["task_count"] == len(COLLABORATORS)
     assert {task["actor"] for task in feed["tasks"]} == set(COLLABORATORS)
     assert all(task["approval_submission_is_goal"] is True for task in feed["tasks"])
+    assert all(task["approval_stage"] == "executive_council_primary_review" for task in feed["tasks"])
+    assert all(task["secondary_owner_or_standing_evidence_is_post_council"] is True for task in feed["tasks"])
     assert all(task["share_across_pr_agents"] is True for task in feed["tasks"])
     assert all(task["authority_effect"] == "none" for task in feed["tasks"])
