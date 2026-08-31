@@ -1,8 +1,8 @@
 """Bounded META discovery authorization.
 
-META may discover URLs during normal operation. This module gives those discoveries a
-safe, auditable path to temporary authorization without allowing arbitrary third-party
-hosts to self-escalate into scope.
+META may discover URLs, links, or hostnames during normal operation. This module gives
+those discoveries a safe, auditable path to temporary authorization without allowing
+arbitrary third-party hosts to self-escalate into scope.
 
 Promotion rules:
 - HTTPS only; no credentials in URL; default port only.
@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
+HOST_KEYS = {"host", "hostname", "domain", "domain_name", "target_host"}
 DEFAULT_TTL_SECONDS = 6 * 60 * 60
 
 
@@ -35,6 +36,8 @@ def _normalize_host(host: str) -> str:
     if not value or any(ch in value for ch in "/?#@"):
         raise ValueError("invalid host")
     value = value.encode("idna").decode("ascii")
+    if "." not in value:
+        raise ValueError("hostname must be fully qualified")
     try:
         ipaddress.ip_address(value)
     except ValueError:
@@ -63,17 +66,23 @@ def _normalize_url(url: str) -> tuple[str, str] | None:
         return None
 
 
-def _extract_urls(value: Any) -> set[str]:
+def _extract_discoveries(value: Any) -> set[str]:
+    """Extract explicit URLs plus values carried in hostname/domain fields."""
     found: set[str] = set()
     if isinstance(value, str):
         found.update(URL_RE.findall(value))
     elif isinstance(value, dict):
         for key, item in value.items():
-            found.update(_extract_urls(key))
-            found.update(_extract_urls(item))
+            if isinstance(key, str) and key.lower() in HOST_KEYS and isinstance(item, str):
+                try:
+                    host = _normalize_host(item)
+                    found.add(f"https://{host}/")
+                except ValueError:
+                    pass
+            found.update(_extract_discoveries(item))
     elif isinstance(value, (list, tuple, set)):
         for item in value:
-            found.update(_extract_urls(item))
+            found.update(_extract_discoveries(item))
     return found
 
 
@@ -127,6 +136,10 @@ def run_discovery_authorization(
 ) -> dict[str, Any]:
     """Promote only discoveries that remain inside explicitly trusted roots.
 
+    Input convention:
+      meta_state/discovered_urls.json may contain URLs, href/link strings, or explicit
+      host/hostname/domain fields. external_intel.json is also scanned for URL evidence.
+
     Output files:
       discovery_candidates.json  - every normalized discovery and decision
       discovery_authorized.json  - live probationary read-only host grants
@@ -146,7 +159,7 @@ def run_discovery_authorization(
 
     for source_name, path in sources.items():
         payload = _load_json(path, {})
-        for raw in sorted(_extract_urls(payload)):
+        for raw in sorted(_extract_discoveries(payload)):
             normalized = _normalize_url(raw)
             if not normalized:
                 continue
