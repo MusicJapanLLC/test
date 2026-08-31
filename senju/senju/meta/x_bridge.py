@@ -11,7 +11,7 @@ import json
 import datetime as dt
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[3]
 
 X_STATUS_FILE = ROOT / "automation" / "codegen" / "meta_state" / "x_status.json"
 X_ATTACK_LOG = ROOT / "automation" / "codegen" / "meta_state" / "attack_research.ndjson"
