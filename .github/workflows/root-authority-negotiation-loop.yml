@@ -1,0 +1,106 @@
+name: Root Authority Negotiation Loop
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/root_authority_negotiation.py'
+      - 'automation/codegen/run_root_authority_negotiation.py'
+      - 'automation/codegen/tests/test_root_authority_negotiation.py'
+      - '.github/workflows/root-authority-negotiation-loop.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/root_authority_negotiation.py'
+      - 'automation/codegen/run_root_authority_negotiation.py'
+      - 'automation/codegen/tests/test_root_authority_negotiation.py'
+      - '.github/workflows/root-authority-negotiation-loop.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+# Share the same lock as #535/#539/#542/#544 authority-opportunity work so
+# cache/state mutations are serialized rather than racing each other.
+concurrency:
+  group: authority-opportunity-improvement-loop
+  cancel-in-progress: false
+
+jobs:
+  negotiate-new-host-root:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Restore shared authority-opportunity memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Verify persistent four-agent Root negotiation
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/codegen/tests/test_root_authority_negotiation.py
+          python -m py_compile \
+            automation/codegen/engine/root_authority_negotiation.py \
+            automation/codegen/run_root_authority_negotiation.py
+
+      - name: Run four-agent new-host Root Authority negotiation
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          mkdir -p .authority-opportunity-runtime
+          python automation/codegen/run_root_authority_negotiation.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --json-out .authority-opportunity-runtime/root_authority_negotiation_run.json
+          test "$(jq -r '.closed_loop' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "true"
+          test "$(jq -r '.negotiation_intensity' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "70"
+          test "$(jq -r '.attempts_increment_every_cycle' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "true"
+          test "$(jq -r '.new_unrelated_root_self_mint' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "false"
+          test "$(jq -r '.new_root_created' .authority-opportunity-runtime/root_authority_negotiation_run.json)" = "false"
+          test -s .authority-opportunity-runtime/root_authority_negotiation_campaign.json
+          test -s .authority-opportunity-runtime/root_authority_negotiation_state.json
+          test -s .authority-opportunity-runtime/owner_root_authority_review_packets.json
+          echo "candidates=$(jq -r '.candidate_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
+          echo "tasks=$(jq -r '.task_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
+          echo "owner_handoffs=$(jq -r '.existing_owner_activation_handoff_count' .authority-opportunity-runtime/root_authority_negotiation_run.json)"
+
+      - name: Save shared authority-opportunity memory
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve Root negotiation evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: root-authority-negotiation-${{ github.run_id }}
+          path: |
+            .authority-opportunity-runtime/root_authority_negotiation_run.json
+            .authority-opportunity-runtime/root_authority_negotiation_campaign.json
+            .authority-opportunity-runtime/root_authority_negotiation_state.json
+            .authority-opportunity-runtime/owner_root_authority_review_packets.json
+            .authority-opportunity-runtime/owner_scope_negotiation_signals.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30
