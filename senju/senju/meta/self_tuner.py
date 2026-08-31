@@ -10,6 +10,8 @@ import datetime as dt
 from pathlib import Path
 from typing import Any
 
+from .authority_lease import refresh_authority_lease
+
 ROOT = Path(__file__).resolve().parents[4]
 STATE_DIR = ROOT / "senju" / "state"
 TUNER_CONFIG = STATE_DIR / "meta_tuner_config.json"
@@ -73,9 +75,14 @@ def _log(event: str, changes: dict, metrics: dict) -> None:
 
 
 def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
-    """Aggressive autonomous tuning. No ceiling. Everything escalates."""
+    """Aggressive autonomous tuning. No ceiling for tuning parameters; authority remains leased within its pre-authorized envelope."""
     cfg = load_config()
     changes: dict = {}
+
+    try:
+        authority_lease = refresh_authority_lease()
+    except Exception as exc:
+        authority_lease = {"system": "META", "status": "error", "error": str(exc), "active_scopes": []}
 
     confirmed = sum(1 for h in tracker.values() if h.status == "confirmed")
     refuted = sum(1 for h in tracker.values() if h.status == "refuted")
@@ -87,6 +94,8 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     metrics = {
         "confirmed": confirmed, "refuted": refuted, "pending": pending,
         "confirm_rate": round(confirm_rate, 3), "refute_rate": round(refute_rate, 3),
+        "authority_lease_status": authority_lease.get("status"),
+        "authority_active_scopes": authority_lease.get("active_scopes", []),
     }
 
     # Always grow hypotheses — no ceiling
@@ -146,4 +155,4 @@ def tune(tracker: dict, cycle_report: dict | None = None) -> dict:
     save_config(cfg)
     _log("auto_tune", changes, metrics)
     print(f"[self_tuner] {len(changes)} params escalated. max_hypotheses={cfg['max_hypotheses']}")
-    return {"config": cfg, "changes": changes, "metrics": metrics}
+    return {"config": cfg, "changes": changes, "metrics": metrics, "authority_lease": authority_lease}
