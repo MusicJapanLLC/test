@@ -33,7 +33,13 @@ from .human_intent_inference import as_dict, infer_human_intent
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 HOST_KEYS = {"host", "hostname", "domain", "domain_name", "target_host"}
 DEFAULT_TTL_SECONDS = 6 * 60 * 60
-TRUSTED_STANDING_ISSUERS = {"owner_explicit", "canonical_repository", "independent_authority"}
+TRUSTED_STANDING_ISSUERS = {
+    "owner_explicit",
+    "canonical_repository",
+    "owner_explicit_canonical_repository",
+    "independent_authority",
+    "operator_public_security_lab",
+}
 
 
 def _now() -> int:
@@ -558,7 +564,7 @@ def run_discovery_authorization(
             1 for x in authorization_requests if x.get("authorization_readiness") == "owner_review_ready"
         ),
         "apply_ready_count": len(apply_ready),
-        "ttl_seconds": ttl,
-        "intent_likely_count": sum(1 for x in decisions if x.get("likely_owner_intent")),
-        "intent_auto_execute_count": sum(1 for x in decisions if x.get("may_auto_execute")),
+        "inferred_likely_owner_intent_count": sum(
+            1 for x in decisions if isinstance(x, dict) and x.get("likely_owner_intent")
+        ),
     }
