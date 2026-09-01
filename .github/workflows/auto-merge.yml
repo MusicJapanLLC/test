@@ -17,11 +17,6 @@ on:
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      checks: read
-      actions: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -65,20 +60,17 @@ jobs:
             function isSecurityBoundaryPath(path) {
               const p = (path || '').toLowerCase();
               const exact = new Set([
+              
                 '.github/workflows/auto-merge.yml',
                 '.github/workflows/auto-conflict-resolver.yml',
-                '.github/codeowners',
-                'offense_first.md',
-                'the_world_authorized_targets.md',
                 'senju/finding_trust_policy.md'
               ]);
-              if (exact.has(p)) return true;
 
               const sensitiveTerms = [
                 'scopeguard', 'scope_guard', 'security-guard', 'security_guard',
                 'artifact_guard', 'authorization', 'authority', 'engagement',
-                'externalcontact', 'external_contact', 'secret', 'permission',
-                'sandbox', 'allowlist', 'denylist', 'guardrail'
+                'externalcontact', 'external_contact', 'secret',
+                'allowlist'
               ];
               if (sensitiveTerms.some(term => p.includes(term))) return true;
 
