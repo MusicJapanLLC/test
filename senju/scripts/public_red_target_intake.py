@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 URL_RE = re.compile(r"https://[^\s\"'<>]+", re.IGNORECASE)
 USER_AGENT = "SENJU-RED-authorized-public-lab-intake/1.0"
 MAX_FETCH_BYTES = 512 * 1024
+SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -81,6 +82,18 @@ def _standing_hosts(doc: dict[str, Any]) -> set[str]:
     return out
 
 
+def _revoked_standing_hosts(doc: dict[str, Any]) -> set[str]:
+    out: set[str] = set()
+    for row in doc.get("records", []) if isinstance(doc, dict) else []:
+        if not isinstance(row, dict) or row.get("revoked") is not True:
+            continue
+        for raw in row.get("exact_hosts", []):
+            host = str(raw).strip().lower().rstrip(".")
+            if host:
+                out.add(host)
+    return out
+
+
 def _profile_id(provider_id: str, url: str) -> str:
     digest = hashlib.sha256(url.encode("utf-8")).hexdigest()[:12]
     return f"auto-{provider_id}-{digest}"
@@ -117,12 +130,60 @@ def _add_standing_record(
     return True
 
 
+def _sync_effective_ceiling(path: Path, standing_doc: dict[str, Any]) -> dict[str, Any]:
+    doc = _load(path, {"schema": "senju-owner-contact-ceiling-effective/v4", "ceiling": {}})
+    if not isinstance(doc, dict):
+        doc = {"schema": "senju-owner-contact-ceiling-effective/v4", "ceiling": {}}
+    ceiling = doc.setdefault("ceiling", {})
+    if not isinstance(ceiling, dict):
+        ceiling = {}
+        doc["ceiling"] = ceiling
+
+    exact = {str(v).strip().lower().rstrip(".") for v in ceiling.get("exact_hosts", []) if str(v).strip()}
+    per_host_raw = ceiling.get("per_host_methods", {})
+    per_host = dict(per_host_raw) if isinstance(per_host_raw, dict) else {}
+    revoked = _revoked_standing_hosts(standing_doc)
+    exact.difference_update(revoked)
+    for host in revoked:
+        per_host.pop(host, None)
+
+    for row in standing_doc.get("records", []) if isinstance(standing_doc, dict) else []:
+        if not isinstance(row, dict) or row.get("revoked") is True:
+            continue
+        if str(row.get("credential_scope", "none")).lower() != "none" or row.get("destructive") is True:
+            continue
+        methods = sorted({str(v).strip().upper() for v in row.get("allowed_methods", [])} & SAFE_METHODS)
+        if not methods:
+            continue
+        for raw_host in row.get("exact_hosts", []):
+            host = str(raw_host).strip().lower().rstrip(".")
+            if not host:
+                continue
+            exact.add(host)
+            per_host[host] = methods
+
+    ceiling["exact_hosts"] = sorted(exact)
+    ceiling["per_host_methods"] = {host: per_host[host] for host in sorted(per_host) if host in exact}
+    ceiling["allowed_methods"] = ["GET", "HEAD", "OPTIONS"]
+    ceiling["allow_http"] = False
+    ceiling["allow_delete"] = False
+    ceiling["credential_scope"] = "none"
+    ceiling["shared_public_lab_rate_limit_rps"] = 1
+    ceiling["max_public_lab_requests_per_cycle"] = 6
+    doc["source"] = "standing authority plus operator-published security-lab evidence; safe methods only"
+    doc["generated_at"] = int(datetime.now(timezone.utc).timestamp())
+    _write(path, doc)
+    return doc
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Discover SENJU RED targets only from configured operator-published security-lab evidence")
     parser.add_argument("--config", default=str(ROOT / "senju" / "config" / "public_red_lab_sources.json"))
     parser.add_argument("--standing", default=str(ROOT / "senju" / "state" / "standing_authorizations.json"))
+    parser.add_argument("--effective-ceiling", default=str(ROOT / "senju" / "state" / "owner_contact_ceiling_effective.json"))
     parser.add_argument("--out", default=str(ROOT / "senju" / "state" / "public_red_discovery.json"))
     parser.add_argument("--admit-standing", action="store_true")
+    parser.add_argument("--sync-effective", action="store_true")
     parser.add_argument("--create-gruyere-instance", action="store_true")
     args = parser.parse_args()
 
@@ -173,7 +234,7 @@ def main() -> int:
                     check["matched_urls"].append(url)
                     if args.admit_standing and _add_standing_record(standing_doc, provider, host, evidence_url):
                         admitted_hosts.append(host)
-            except Exception as exc:  # network failure is recorded, never converted into authority
+            except Exception as exc:
                 check["error"] = f"{type(exc).__name__}: {exc}"[:300]
             provider_checks.append(check)
 
@@ -215,6 +276,9 @@ def main() -> int:
 
     if args.admit_standing and admitted_hosts:
         _write(standing_path, standing_doc)
+    effective_doc = None
+    if args.sync_effective:
+        effective_doc = _sync_effective_ceiling(Path(args.effective_ceiling), standing_doc)
 
     profiles = sorted(profiles_by_url.values(), key=lambda row: (str(row.get("provider_id", "")), str(row.get("url", ""))))
     state = {
@@ -224,6 +288,7 @@ def main() -> int:
         "authority_from_general_web_discovery": False,
         "admitted_hosts": sorted(set(admitted_hosts)),
         "newly_discovered_urls": sorted(set(newly_discovered)),
+        "effective_host_count": len((effective_doc or {}).get("ceiling", {}).get("exact_hosts", [])) if isinstance(effective_doc, dict) else None,
         "provider_checks": provider_checks,
         "discovered_profiles": profiles,
     }
@@ -233,6 +298,7 @@ def main() -> int:
         "discovered_profile_count": len(profiles),
         "newly_discovered_count": len(set(newly_discovered)),
         "admitted_host_count": len(set(admitted_hosts)),
+        "effective_host_count": state["effective_host_count"],
     }, sort_keys=True))
     return 0
 
