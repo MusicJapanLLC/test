@@ -1,0 +1,89 @@
+name: SENJU RED Public Lab Expansion
+
+on:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/config/public_red_lab_sources.json'
+      - 'senju/scripts/public_red_target_intake.py'
+      - 'senju/scripts/public_red_target_fanout.py'
+      - 'senju/state/standing_authorizations.json'
+      - 'senju/state/owner_contact_ceiling_effective.json'
+      - '.github/workflows/senju-red-public-lab-expansion.yml'
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: senju-red-public-lab-expansion
+  cancel-in-progress: false
+
+jobs:
+  expand-and-rotate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: true
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Compile RED expansion scripts
+        run: |
+          python -m py_compile \
+            senju/scripts/public_red_target_intake.py \
+            senju/scripts/public_red_target_fanout.py \
+            senju/senju/approved_authority_red_adaptive.py
+
+      - name: Validate 30-profile authorized catalog
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/public_red_target_fanout.py --validate-only
+
+      - name: Discover only operator-published security lab targets
+        run: |
+          python senju/scripts/public_red_target_intake.py \
+            --admit-standing \
+            --sync-effective \
+            --create-gruyere-instance
+
+      - name: Revalidate effective RED authority after intake
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/public_red_target_fanout.py --validate-only
+
+      - name: Run bounded real-transport RED rotation
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/public_red_target_fanout.py \
+            --memory /tmp/approved_authority_red_memory.json \
+            --out /tmp/public_red_fanout_latest.json
+          cat /tmp/public_red_fanout_latest.json
+
+      - name: Persist newly verified public-lab inventory
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'senju-red-lab-bot'
+          git config user.email 'senju-red-lab-bot@users.noreply.github.com'
+          git add \
+            senju/state/standing_authorizations.json \
+            senju/state/owner_contact_ceiling_effective.json \
+            senju/state/public_red_discovery.json
+          if git diff --cached --quiet; then
+            echo 'No public-lab authority/inventory changes to persist.'
+            exit 0
+          fi
+          git commit -m 'chore(senju-red): refresh operator-verified public lab inventory'
+          git push origin HEAD:claude/employee-onboarding-setup-udm86
