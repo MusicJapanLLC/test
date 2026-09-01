@@ -7,6 +7,7 @@ on:
       - 'senju/config/public_red_lab_sources.json'
       - 'senju/scripts/public_red_target_intake.py'
       - 'senju/scripts/public_red_target_fanout.py'
+      - 'senju/tests/test_public_red_target_pipeline.py'
       - 'senju/state/standing_authorizations.json'
       - 'senju/state/owner_contact_ceiling_effective.json'
       - '.github/workflows/senju-red-public-lab-expansion.yml'
@@ -36,8 +37,16 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Compile RED expansion scripts
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+
+      - name: Verify public-lab authority expansion contracts
+        env:
+          PYTHONPATH: senju
         run: |
+          python -m pytest -q \
+            senju/tests/test_public_red_target_pipeline.py \
+            senju/tests/test_approved_authority_red_adaptive.py
           python -m py_compile \
             senju/scripts/public_red_target_intake.py \
             senju/scripts/public_red_target_fanout.py \
