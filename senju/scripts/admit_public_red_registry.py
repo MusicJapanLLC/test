@@ -3,7 +3,7 @@
 
 The registry is exact-host, HTTPS, read-only, credential-free and non-destructive.
 This script does not derive authority from arbitrary web discovery; it only consumes
-operator/public-lab evidence already curated in public-red-lab-registry.json.
+operator/public-lab evidence already validated in public_red_lab_authority.json.
 """
 from __future__ import annotations
 
@@ -121,14 +121,20 @@ def main() -> int:
     parser.add_argument("--discovery", default=str(ROOT / "senju" / "state" / "public_red_discovery.json"))
     args = parser.parse_args()
 
-    result = refresh_public_red_lab_authority(
-        args.repo_root,
-        args.state_dir,
-        args.meta_state_dir,
-        max_auto_new=0,
-    )
-    authority = _load(Path(args.state_dir) / "public_red_lab_authority.json", {})
-    targets = authority.get("targets", []) if isinstance(authority, dict) else []
+    authority_path = Path(args.state_dir) / "public_red_lab_authority.json"
+    if authority_path.exists():
+        authority = _load(authority_path, {})
+        targets = authority.get("targets", []) if isinstance(authority, dict) else []
+        result = {"target_count": len(targets) if isinstance(targets, list) else 0}
+    else:
+        result = refresh_public_red_lab_authority(
+            args.repo_root,
+            args.state_dir,
+            args.meta_state_dir,
+            max_auto_new=0,
+        )
+        authority = _load(authority_path, {})
+        targets = authority.get("targets", []) if isinstance(authority, dict) else []
 
     standing_path = Path(args.standing)
     standing = _load(standing_path, {"schema": "senju-standing-authorization/v1", "records": []})
@@ -201,7 +207,7 @@ def main() -> int:
             "shared_instance": True,
         }
     new_profiles = [by_url[key] for key in sorted(by_url)]
-    new_registry_count = len(targets)
+    new_registry_count = len(targets) if isinstance(targets, list) else 0
     new_effective_count = len(effective.get("ceiling", {}).get("exact_hosts", []))
     discovery_changed = (
         _stable(current_profiles if isinstance(current_profiles, list) else []) != _stable(new_profiles)
