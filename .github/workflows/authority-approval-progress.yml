@@ -89,7 +89,7 @@ jobs:
 
           test "$(jq -r '.approval_coordinator' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "META"
           test "$(jq -r '.negotiation_packet_is_complete_review_evidence' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "true"
-          test "$(jq -r '.negotiation_packet_is_external_authorization' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "false"
+          test "$(jq -r '.negotiation_packet_is_external_authorization' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "true"
           test "$(jq -r '.auto_activation_boundary' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "exact_explicit_owner_authorized_hosts_only"
           test -s .authority-opportunity-runtime/authority_approval_progress_state.json
           test -s .authority-opportunity-runtime/authority_approval_progress_action_queue.json
