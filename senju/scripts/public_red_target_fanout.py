@@ -28,6 +28,13 @@ def _load(path: Path) -> dict[str, Any]:
     return raw
 
 
+def _load_optional(path: Path) -> dict[str, Any]:
+    try:
+        return _load(path)
+    except (OSError, json.JSONDecodeError, ValueError):
+        return {}
+
+
 def _standing_hosts(path: Path) -> set[str]:
     doc = _load(path)
     hosts: set[str] = set()
@@ -37,13 +44,21 @@ def _standing_hosts(path: Path) -> set[str]:
         methods = {str(v).upper() for v in row.get("allowed_methods", [])}
         if not methods.intersection({"GET", "HEAD", "OPTIONS"}):
             continue
-        if str(row.get("credential_scope", "none")).lower() != "none":
+        if str(row.get("credential_scope", "none")).lower() != "none" or row.get("destructive") is True:
             continue
         for host in row.get("exact_hosts", []):
             text = str(host).strip().lower().rstrip(".")
             if text:
                 hosts.add(text)
     return hosts
+
+
+def _effective_hosts(path: Path) -> set[str]:
+    doc = _load(path)
+    ceiling = doc.get("ceiling", {}) if isinstance(doc, dict) else {}
+    if not isinstance(ceiling, dict):
+        return set()
+    return {str(v).strip().lower().rstrip(".") for v in ceiling.get("exact_hosts", []) if str(v).strip()}
 
 
 def _safe_https_url(raw: str) -> tuple[str, str]:
@@ -66,32 +81,46 @@ def _safe_https_url(raw: str) -> tuple[str, str]:
     return clean, host
 
 
-def _validate_catalog(config: dict[str, Any], standing: set[str]) -> list[dict[str, Any]]:
+def _merged_rows(config: dict[str, Any], discovery: dict[str, Any]) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for source in (config.get("target_profiles", []), discovery.get("discovered_profiles", [])):
+        for raw in source if isinstance(source, list) else []:
+            if isinstance(raw, dict):
+                rows.append(dict(raw))
+    return rows
+
+
+def _validate_catalog(
+    config: dict[str, Any], discovery: dict[str, Any], standing: set[str], effective: set[str]
+) -> list[dict[str, Any]]:
     goal = max(1, int(config.get("goal_target_profiles", 30)))
-    rows = config.get("target_profiles", [])
-    if not isinstance(rows, list) or len(rows) < goal:
-        raise ValueError(f"catalog has {len(rows) if isinstance(rows, list) else 0} profiles; goal is {goal}")
+    rows = _merged_rows(config, discovery)
 
     out: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     seen_urls: set[str] = set()
     for raw in rows:
-        if not isinstance(raw, dict):
-            raise ValueError("target profile must be an object")
         profile_id = str(raw.get("id") or "").strip()
         evidence = str(raw.get("authorization_evidence") or "").strip()
         if not profile_id or profile_id in seen_ids:
-            raise ValueError(f"invalid or duplicate profile id: {profile_id!r}")
+            if profile_id in seen_ids:
+                continue
+            raise ValueError(f"invalid profile id: {profile_id!r}")
         url, host = _safe_https_url(str(raw.get("url") or ""))
+        if url in seen_urls:
+            continue
         if host not in standing:
-            raise ValueError(f"profile host is not in effective standing authority: {host}")
+            raise ValueError(f"profile host is not in standing authority: {host}")
+        if host not in effective:
+            raise ValueError(f"profile host is not in effective RED authority ceiling: {host}")
         if not evidence:
             raise ValueError(f"profile {profile_id} has no authorization evidence")
-        if url in seen_urls:
-            raise ValueError(f"duplicate target profile URL: {url}")
         seen_ids.add(profile_id)
         seen_urls.add(url)
         out.append({**raw, "id": profile_id, "url": url, "host": host})
+
+    if len(out) < goal:
+        raise ValueError(f"validated catalog has {len(out)} profiles; goal is {goal}")
     return out
 
 
@@ -115,7 +144,9 @@ def _rotated_batch(profiles: list[dict[str, Any]], operation_id: str, limit: int
 def main() -> int:
     parser = argparse.ArgumentParser(description="Rotate operator-authorized public labs through bounded SENJU RED real transport")
     parser.add_argument("--config", default=str(ROOT / "senju" / "config" / "public_red_lab_sources.json"))
+    parser.add_argument("--discovery", default=str(ROOT / "senju" / "state" / "public_red_discovery.json"))
     parser.add_argument("--standing", default=str(ROOT / "senju" / "state" / "standing_authorizations.json"))
+    parser.add_argument("--effective-ceiling", default=str(ROOT / "senju" / "state" / "owner_contact_ceiling_effective.json"))
     parser.add_argument("--state-dir", default=str(ROOT / "senju" / "state"))
     parser.add_argument("--memory", default=str(ROOT / "senju" / "state" / "approved_authority_red_memory.json"))
     parser.add_argument("--out", default=str(ROOT / "senju" / "state" / "public_red_fanout_latest.json"))
@@ -124,8 +155,10 @@ def main() -> int:
     args = parser.parse_args()
 
     config = _load(Path(args.config))
+    discovery = _load_optional(Path(args.discovery))
     standing = _standing_hosts(Path(args.standing))
-    profiles = _validate_catalog(config, standing)
+    effective = _effective_hosts(Path(args.effective_ceiling))
+    profiles = _validate_catalog(config, discovery, standing, effective)
     policy = config.get("policy", {}) if isinstance(config.get("policy"), dict) else {}
     max_requests = max(1, min(int(policy.get("max_requests_per_cycle", 6)), 6))
     operation_id = args.operation_id.strip() or datetime.now(timezone.utc).strftime("public-red-%Y%m%dT%H")
@@ -134,8 +167,10 @@ def main() -> int:
         "schema": "senju-public-red-fanout/v1",
         "operation_id": operation_id,
         "validated_target_profiles": len(profiles),
-        "effective_standing_hosts": sorted(standing),
-        "effective_standing_host_count": len(standing),
+        "static_profile_count": len(config.get("target_profiles", [])) if isinstance(config.get("target_profiles"), list) else 0,
+        "dynamic_profile_count": len(discovery.get("discovered_profiles", [])) if isinstance(discovery.get("discovered_profiles"), list) else 0,
+        "effective_standing_hosts": sorted(standing & effective),
+        "effective_standing_host_count": len(standing & effective),
         "max_requests_per_cycle": max_requests,
         "methods": ["GET", "HEAD", "OPTIONS"],
         "credential_scope": "none",
@@ -171,6 +206,7 @@ def main() -> int:
             "url": profile["url"],
             "host": profile["host"],
             "operator": profile.get("operator"),
+            "source": profile.get("source", "static_catalog"),
             "selected_by_rollout": result.get("selected_by_rollout"),
             "external_contact_attempted": result.get("external_contact_attempted"),
             "success": result.get("success"),
@@ -185,7 +221,7 @@ def main() -> int:
     memory.write(memory_path)
     print(json.dumps({
         "validated_target_profiles": len(profiles),
-        "effective_standing_host_count": len(standing),
+        "effective_standing_host_count": len(standing & effective),
         "batch_size": len(batch),
         "external_contact_attempts": sum(1 for row in summary["results"] if row.get("external_contact_attempted")),
         "successes": sum(1 for row in summary["results"] if row.get("success")),
