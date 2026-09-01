@@ -20,7 +20,8 @@ for path in (SCRIPT_DIR, SENJU):
 import public_red_target_fanout as base
 from senju.approved_authority_red_adaptive import execute_authorized_red_learning_cycle
 
-MAX_PROFILES_PER_CYCLE = 12
+# This must never exceed owner_contact_ceiling_effective.json's public-lab cycle ceiling.
+MAX_PROFILES_PER_CYCLE = 6
 
 
 def _diverse_batch(profiles: list[dict[str, Any]], operation_id: str, limit: int) -> list[dict[str, Any]]:
@@ -95,6 +96,9 @@ def main() -> int:
         return 0
 
     policy = config.get("policy", {}) if isinstance(config.get("policy"), dict) else {}
+    configured_cycle_cap = max(1, int(policy.get("max_requests_per_cycle", MAX_PROFILES_PER_CYCLE)))
+    if len(batch) > min(configured_cycle_cap, MAX_PROFILES_PER_CYCLE):
+        raise SystemExit("RED burst exceeds configured public-lab request ceiling")
     rate = max(1, int(policy.get("shared_instance_rate_limit_rps", 1)))
     delay = 1.0 / rate
     memory_path = Path(args.memory)
