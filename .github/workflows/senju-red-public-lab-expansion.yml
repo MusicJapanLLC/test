@@ -140,7 +140,7 @@ jobs:
         run: |
           python senju/scripts/public_red_burst_fanout.py \
             --operation-id "public-red-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --max-profiles 12 \
+            --max-profiles 6 \
             --memory /tmp/approved_authority_red_memory.json \
             --out /tmp/public_red_burst_latest.json \
             | tee /tmp/public_red_burst_summary.json
@@ -155,7 +155,7 @@ jobs:
           p=json.load(open('/tmp/public_red_burst_latest.json'))
           print(p.get('batch_size', 0))
           PY
-          )" -eq 12
+          )" -eq 6
           cat /tmp/public_red_burst_latest.json
 
       - name: Upload RED expansion evidence
