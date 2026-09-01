@@ -101,7 +101,7 @@ jobs:
           restore_latest "External Input Negotiation Relay" /tmp/reviewed-upstream/relay
           restore_latest "Owner Frontier Approval Council" /tmp/reviewed-upstream/frontier
 
-      - name: Hydrate candidate, approval, and previous lifecycle state
+      - name: Hydrate candidates and auto-ingress binding frontier approvals
         if: github.event_name != 'pull_request'
         shell: bash
         run: |
@@ -129,6 +129,75 @@ jobs:
               if [[ -n "$FOUND" ]]; then cp "$FOUND" "senju/state/$name"; fi
             fi
           done
+
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          candidate_path = Path("automation/codegen/meta_state/discovery_candidates.json")
+          council_path = Path("senju/state/owner_frontier_council.json")
+          try:
+              candidate_doc = json.loads(candidate_path.read_text(encoding="utf-8"))
+          except (OSError, json.JSONDecodeError, TypeError):
+              candidate_doc = {"candidates": []}
+          try:
+              council_doc = json.loads(council_path.read_text(encoding="utf-8"))
+          except (OSError, json.JSONDecodeError, TypeError):
+              council_doc = {"decisions": []}
+
+          candidates = candidate_doc.get("candidates", []) if isinstance(candidate_doc, dict) else []
+          if not isinstance(candidates, list):
+              candidates = []
+
+          by_host = {}
+          for item in candidates:
+              if isinstance(item, dict):
+                  host = str(item.get("host") or "").strip().rstrip(".").lower()
+                  if host:
+                      by_host[host] = item
+
+          added = 0
+          decisions = council_doc.get("decisions", []) if isinstance(council_doc, dict) else []
+          for row in decisions if isinstance(decisions, list) else []:
+              if not isinstance(row, dict):
+                  continue
+              host = str(row.get("host") or "").strip().rstrip(".").lower()
+              if not host or "." not in host or any(ch in host for ch in "/?#@"):
+                  continue
+              if row.get("status") != "verified_owner_evidence_plus_ai_council_approved":
+                  continue
+              if row.get("applied") is not True:
+                  continue
+              try:
+                  yes_votes = int(row.get("yes_votes", 0) or 0)
+                  required_votes = int(row.get("required_votes", 3) or 3)
+              except (TypeError, ValueError):
+                  continue
+              if required_votes != 3 or yes_votes < 3:
+                  continue
+              if not row.get("proof_type") or not row.get("proof_ref"):
+                  continue
+              if host in by_host:
+                  continue
+              candidate = {
+                  "url": f"https://{host}/",
+                  "host": host,
+                  "source": "binding_frontier_council_auto_ingress",
+                  "decision": "binding_approved_candidate",
+              }
+              candidates.append(candidate)
+              by_host[host] = candidate
+              added += 1
+
+          candidate_doc = candidate_doc if isinstance(candidate_doc, dict) else {}
+          candidate_doc["candidates"] = candidates
+          candidate_doc["frontier_auto_ingress_count"] = added
+          candidate_path.parent.mkdir(parents=True, exist_ok=True)
+          candidate_path.write_text(json.dumps(candidate_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+          Path("/tmp/frontier-auto-ingress-count").write_text(str(added), encoding="utf-8")
+          PY
+
+          echo "frontier_auto_ingress=$(cat /tmp/frontier-auto-ingress-count)" >> "$GITHUB_STEP_SUMMARY"
 
           ROOT_FEED="$(find /tmp/reviewed-upstream/root -name root_negotiation_peer_feed.json -print -quit || true)"
           if [[ -n "$ROOT_FEED" ]]; then
@@ -174,7 +243,7 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --meta-state-dir automation/codegen/meta_state \
-            --max-exec-hosts 4 \
+            --max-exec-hosts 8 \
             --out /tmp/reviewed-authority-closed-loop.json
 
           test "$(jq -r '.closed_loop' /tmp/reviewed-authority-closed-loop.json)" = "true"
