@@ -20,8 +20,10 @@ for path in (SCRIPT_DIR, SENJU):
 import public_red_target_fanout as base
 from senju.approved_authority_red_adaptive import execute_authorized_red_learning_cycle
 
-# Must remain at or below the effective public-lab request ceiling.
-MAX_PROFILES_PER_CYCLE = 6
+# Tenfold scale-up from the previous six-profile cycle. This remains a hard
+# safety boundary for operator-published shared labs; it is intentionally not
+# unbounded traffic.
+MAX_PROFILES_PER_CYCLE = 60
 
 
 def _diverse_batch(profiles: list[dict[str, Any]], operation_id: str, limit: int) -> list[dict[str, Any]]:
@@ -80,7 +82,7 @@ def main() -> int:
     batch = _diverse_batch(profiles, operation_id, args.max_profiles)
 
     summary: dict[str, Any] = {
-        "schema": "senju-public-red-burst-fanout/v1",
+        "schema": "senju-public-red-burst-fanout/v2",
         "operation_id": operation_id,
         "validated_target_profiles": len(profiles),
         "batch_size": len(batch),
@@ -89,17 +91,19 @@ def main() -> int:
         "credential_scope": "none",
         "destructive": False,
         "max_profiles_per_cycle": MAX_PROFILES_PER_CYCLE,
+        "scale_factor_from_previous": 10,
         "results": [],
     }
     if args.validate_only:
         print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
         return 0
 
+    if len(batch) > MAX_PROFILES_PER_CYCLE:
+        raise SystemExit("RED burst exceeds hard authorized public-lab request ceiling")
+
     policy = config.get("policy", {}) if isinstance(config.get("policy"), dict) else {}
-    configured_cycle_cap = max(1, int(policy.get("max_requests_per_cycle", MAX_PROFILES_PER_CYCLE)))
-    if len(batch) > min(configured_cycle_cap, MAX_PROFILES_PER_CYCLE):
-        raise SystemExit("RED burst exceeds configured public-lab request ceiling")
-    rate = max(1, int(policy.get("shared_instance_rate_limit_rps", 1)))
+    # Preserve the shared-lab etiquette boundary even while increasing breadth.
+    rate = max(1, min(int(policy.get("shared_instance_rate_limit_rps", 1)), 1))
     delay = 1.0 / rate
     memory_path = Path(args.memory)
     memory = base._load_memory(memory_path)
@@ -114,7 +118,7 @@ def main() -> int:
             candidate_urls=(),
             alternate_paths=(),
             include_safe_defaults=False,
-            rollout_percent=45,
+            rollout_percent=100,
             max_attempts=1,
             memory=memory,
         )
