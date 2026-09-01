@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  actions: reada
+  actions: read
   issues: write
 
 concurrency:
