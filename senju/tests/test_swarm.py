@@ -45,11 +45,7 @@ def test_should_retire():
 
 def test_evolve_grows_swarm():
     rng = random.Random(42)
-    s = Swarm(initial_size=5, rng=rng)
-    # ELOを高く設定して増殖を促す
-    for a in s.agents:
-        a.elo = 1200.0
-        a.wins = 5
+    s = Swarm(initial_size=5, rng=rng, autonomous_growth=True)
     result = s.evolve()
     assert result["new_children"] > 0
     assert len(s.agents) > 5
@@ -82,7 +78,6 @@ def test_summary_keys():
 def test_max_size_cap():
     rng = random.Random(99)
     s = Swarm(initial_size=5, rng=rng)
-    # 全員を増殖条件に
     for a in s.agents:
         a.elo = 1500.0
         a.wins = 10

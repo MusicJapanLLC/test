@@ -1,16 +1,12 @@
 """senju.swarm — 自己増殖する開発エージェント集団
 
 ELO上位エージェントが子を産み、下位が淘汰される。
-世代を重ねるごとにスウォームは「勝つ戦略」に収束しながら多様性も保つ。
-
-スウォームサイズは caps で上限管理される — メモリ/CIコスト爆発を防ぐ。
+autonomous_growth=True (デフォルト) のとき毎世代上限まで積極的に増殖する。
 """
 from __future__ import annotations
 
-import math
 import random
 from dataclasses import dataclass, field
-from typing import Sequence
 
 
 @dataclass
@@ -36,19 +32,33 @@ class SwarmAgent:
         else:
             self.losses += 1
 
-    def should_replicate(self, threshold: float = 1150.0, min_games: int = 3) -> bool:
+    def should_replicate(self, threshold: float = 1050.0, min_games: int = 2) -> bool:
+        """低い閾値・少ないゲーム数で積極増殖。"""
         return self.elo >= threshold and self.games >= min_games
 
-    def should_retire(self, threshold: float = 850.0, min_games: int = 3) -> bool:
+    def should_retire(self, threshold: float = 900.0, min_games: int = 2) -> bool:
+        """早期淘汰で枠を開けて次世代を呼び込む。"""
         return self.elo <= threshold and self.games >= min_games
 
 
 class Swarm:
-    """自己増殖・自己淘汰するエージェント集団。"""
+    """自己増殖・自己淘汰するエージェント集団。
 
-    MAX_SIZE = 100
+    autonomous_growth=True (デフォルト) のとき:
+    - ELO閾値に関わらず上位50%が全員増殖候補
+    - 毎世代 MAX_SIZE に達するまで子を産み続ける
+    - 枠が空くほど新しい多様な子が生まれる
+    """
 
-    def __init__(self, initial_size: int = 10, rng: random.Random | None = None) -> None:
+    MAX_SIZE = 200
+
+    def __init__(
+        self,
+        initial_size: int = 10,
+        rng: random.Random | None = None,
+        autonomous_growth: bool = True,
+    ) -> None:
+        self.autonomous_growth = autonomous_growth
         self._rng = rng or random.Random()
         self._next_id = 0
         self.agents: list[SwarmAgent] = []
@@ -74,29 +84,37 @@ class Swarm:
         return a
 
     def _child_seed(self, pa: SwarmAgent, pb: SwarmAgent) -> int:
-        # ランダムなビット交差で子のseedを生成 — 親両方の特性を引き継ぐ
         mask = self._rng.getrandbits(17)
         return (pa.seed & mask) | (pb.seed & ~mask) & 0xFFFFF
 
     def evolve(self) -> dict[str, int]:
-        """1世代進化させる: 増殖 → 淘汰 → 世代更新。"""
+        """1世代進化させる: 淘汰 → 増殖 → 世代更新。"""
         self.generation += 1
         survivors = [a for a in self.agents if not a.should_retire()]
-        candidates = [a for a in survivors if a.should_replicate()]
+        retired = len(self.agents) - len(survivors)
+
+        if self.autonomous_growth:
+            # autonomous: 上位50%が全員候補、MAX_SIZEまで埋める
+            ranked = sorted(survivors, key=lambda a: a.elo, reverse=True)
+            breeders = ranked[: max(1, len(ranked) // 2)]
+        else:
+            breeders = [a for a in survivors if a.should_replicate()]
 
         new_children: list[SwarmAgent] = []
-        for parent in candidates:
-            if len(survivors) + len(new_children) >= self.MAX_SIZE:
+        while len(survivors) + len(new_children) < self.MAX_SIZE:
+            if not breeders:
                 break
-            if len(survivors) >= 2:
-                other = self._rng.choice([a for a in survivors if a.agent_id != parent.agent_id])
+            parent = self._rng.choice(breeders)
+            if len(breeders) >= 2:
+                other = self._rng.choice([a for a in breeders if a.agent_id != parent.agent_id] or breeders)
                 seed = self._child_seed(parent, other)
                 parent_ids = [parent.agent_id, other.agent_id]
             else:
                 seed = (parent.seed * 31 + self.generation * 7) % 99991
                 parent_ids = [parent.agent_id]
 
-            start_elo = round((parent.elo + 1000.0) / 2.0, 1)
+            # 子のELOは親の平均から少し下げて多様性を確保
+            start_elo = round((parent.elo * 0.6 + 1000.0 * 0.4), 1)
             child = self._new_agent(
                 seed=seed,
                 elo=start_elo,
@@ -105,7 +123,9 @@ class Swarm:
             )
             new_children.append(child)
 
-        retired = len(self.agents) - len(survivors)
+            if not self.autonomous_growth:
+                break  # 通常モードは1親1子
+
         self.agents = survivors + new_children
 
         return {
@@ -127,4 +147,5 @@ class Swarm:
             "elo_max": max(elos) if elos else 0,
             "elo_min": min(elos) if elos else 0,
             "top3_ids": [a.agent_id for a in self.top_k(3)],
+            "autonomous_growth": self.autonomous_growth,
         }
