@@ -1,6 +1,6 @@
 # The world — Strong New Game 3h
 
-3時間ごとに `test` の現在Git状態と研究成果をcheckpoint化し、2分岐×2世代 = 4 worldへ並列継承する研究サイクルです。
+3時間ごとに `test` の現在Git状態と研究成果をcheckpoint化し、2分岐×2世代 = 4つのactive worldへ並列継承する研究サイクルです。
 
 ## 継承するもの
 
@@ -8,9 +8,12 @@
 - commit / merge history（2x2 Git mirrorを `git_mesh.py` で作成）
 - `.github/workflows` 定義
 - RED / Senju / META / X の研究メモリ要約
-- 前世代checkpoint lineage
+- 直近の主要自律研究workflowの成功artifact
+- 前世代checkpoint lineageとrolling insights
 
-研究優先度は RED 40%、Senju 20%、META 20%、X 20%。4 worldは同時生成されるため、世代生成自体を直列化しません。
+研究取り込み予算は1サイクル最大1,000 text filesです。RED 400、Senju 200、META 200、X 200へ実際に割り当てるため、RED 40%は表示上のweightだけではなく読み込み予算にも反映されます。
+
+artifactはread-onlyで読み、schema・研究方向・regression/finding signal・confidence等のbounded summaryに変換します。raw credential、Authority grant、外部実行権限はcheckpointへ持ち越しません。
 
 ## 周期
 
@@ -25,14 +28,19 @@
 ```text
 current merged Git state
         ↓
-RED / Senju / META / X を収集・要約
+最新成功artifactを並列取得
+  RED pentest / RED observation
+  Senju boundary research
+  META/X world research fabric
         ↓
-previous checkpoint と結合
+repo内研究 + artifactをbounded summary化
+        ↓
+previous rolling checkpointと統合
         ↓
 2 x 2 Git mirror reconcile
         ↓
 world-1 ─┐
-world-2 ─┼─ parallel research seed
+world-2 ─┼─ 4 workers / parallel research seed
 world-3 ─┤
 world-4 ─┘
         ↓
@@ -41,9 +49,23 @@ checkpoint.json
 次の3時間サイクル
 ```
 
+## バイバインと処理速度
+
+実体を `4^N` 個すべて物理生成すると短期間でI/Oが支配的になり速度が落ちるため、active worldは常に4個へ固定します。一方でlineageは `virtual_lineage_count = 4 ** generation` として保持し、全世代のrolling research memoryを次seedへ継承します。
+
+つまり、計算資源は4-way fan-outへ集中しながら、研究系譜は3時間ごとに4倍として積み上がります。
+
+`checkpoint.json.performance` に以下を記録します。
+
+- research collection seconds
+- four-world generation seconds
+- total build seconds
+- active world workers
+- research file budget
+
 ## 合成ラボ
 
-`synthetic-labs.json` に `.invalid` reserved domainを使った16種類のresearch surfaceを定義しています。実ホストの許可範囲を勝手に広げず、authorization / session / parser / workflow / cache / recovery / concurrency等の異なる膠着パターンを研究できます。
+`synthetic-labs.json` に `.invalid` reserved domainを使った16種類のresearch surfaceを定義しています。4 worldへ4件ずつ自動配布し、authorization / session / parser / workflow / cache / recovery / concurrency等の異なる膠着パターンを並列研究できます。
 
 ## 継承しないもの
 
@@ -53,7 +75,8 @@ credential、Authority grant、外部side effectは研究checkpointから自動�
 
 ```bash
 python the-world-strong-new-game/strong_new_game.py build \
-  --output /tmp/strong-new-game
+  --output /tmp/strong-new-game \
+  --research-file-budget 1000
 python the-world-strong-new-game/strong_new_game.py verify \
   --output /tmp/strong-new-game
 
