@@ -115,10 +115,10 @@ def test_diverse_batch_prefers_distinct_authorized_hosts():
     assert len({row["host"] for row in batch}) == 3
 
 
-def test_burst_cycle_has_hard_request_profile_cap():
+def test_burst_cycle_has_tenfold_hard_request_profile_cap():
     profiles = [
         {"id": f"p{i}", "host": f"h{i}.example", "url": f"https://h{i}.example/"}
-        for i in range(30)
+        for i in range(100)
     ]
-    batch = burst._diverse_batch(profiles, "op-cap", 99)
-    assert len(batch) == burst.MAX_PROFILES_PER_CYCLE == 6
+    batch = burst._diverse_batch(profiles, "op-cap", 999)
+    assert len(batch) == burst.MAX_PROFILES_PER_CYCLE == 60
