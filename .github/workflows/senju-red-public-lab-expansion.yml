@@ -32,7 +32,7 @@ concurrency:
 jobs:
   expand-and-rotate:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -134,13 +134,13 @@ jobs:
           PY
           )" -ge 30
 
-      - name: Run hourly diversified bounded RED burst
+      - name: Run tenfold diversified bounded RED burst
         env:
           PYTHONPATH: senju
         run: |
           python senju/scripts/public_red_burst_fanout.py \
             --operation-id "public-red-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --max-profiles 6 \
+            --max-profiles 60 \
             --memory /tmp/approved_authority_red_memory.json \
             --out /tmp/public_red_burst_latest.json \
             | tee /tmp/public_red_burst_summary.json
@@ -155,7 +155,7 @@ jobs:
           p=json.load(open('/tmp/public_red_burst_latest.json'))
           print(p.get('batch_size', 0))
           PY
-          )" -eq 6
+          )" -eq 60
           cat /tmp/public_red_burst_latest.json
 
       - name: Upload RED expansion evidence

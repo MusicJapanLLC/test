@@ -1,282 +1,377 @@
 {
-  "schema": "senju-standing-authorization/v1",
-  "semantics": "durable_until_explicit_revocation",
   "network_scope_semantics": "single_authority_explicit_public_and_private_non_transitive",
   "records": [
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_reference": "canonical:kabeya-authorized-test-range",
-      "owner": "MusicJapanLLC",
-      "issuer_kind": "canonical_repository",
-      "exact_hosts": ["kabeya-authorized-test-range.onrender.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "created_at_utc": "2026-08-31T07:18:46.558001+00:00",
-      "revoked": false,
-      "revocation_reason": null,
       "credential_scope": "none",
       "destructive": false,
-      "private_cidrs": [],
-      "private_dns_names": []
-    },
-    {
-      "authorization_reference": "canonical:sustainaboy-works-authorized-test-site",
+      "exact_hosts": [
+        "kabeya-authorized-test-range.onrender.com"
+      ],
+      "issuer_kind": "canonical_repository",
       "owner": "MusicJapanLLC",
-      "issuer_kind": "owner_explicit_canonical_repository",
-      "exact_hosts": ["sustainaboy-works.onrender.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "revocation_reason": null,
+      "revoked": false
+    },
+    {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "approval_recommendation": "承認推奨",
+      "authorization_reference": "canonical:sustainaboy-works-authorized-test-site",
       "created_at_utc": "2026-08-31T19:16:30+00:00",
-      "revoked": false,
-      "revocation_reason": null,
       "credential_scope": "none",
       "destructive": false,
-      "private_cidrs": [],
-      "private_dns_names": [],
+      "exact_hosts": [
+        "sustainaboy-works.onrender.com"
+      ],
+      "issuer_kind": "owner_explicit_canonical_repository",
+      "owner": "MusicJapanLLC",
       "owner_authorization_confidence_percent": 100,
-      "approval_recommendation": "承認推奨"
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "revocation_reason": null,
+      "revoked": false
     },
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
       "authorization_reference": "operator-public-lab:acunetix-testphp",
-      "owner": "Acunetix / Invicti",
-      "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": ["testphp.vulnweb.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "testphp.vulnweb.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "Acunetix / Invicti",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
       "authorization_reference": "operator-public-lab:acunetix-testasp",
-      "owner": "Acunetix / Invicti",
-      "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": ["testasp.vulnweb.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "testasp.vulnweb.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "Acunetix / Invicti",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
       "authorization_reference": "operator-public-lab:acunetix-testaspnet",
-      "owner": "Acunetix / Invicti",
-      "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": ["testaspnet.vulnweb.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "testaspnet.vulnweb.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "Acunetix / Invicti",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
       "authorization_reference": "operator-public-lab:acunetix-testhtml5",
+      "credential_scope": "none",
+      "destructive": false,
+      "exact_hosts": [
+        "testhtml5.vulnweb.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
       "owner": "Acunetix / Invicti",
-      "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": ["testhtml5.vulnweb.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
-      "credential_scope": "none",
-      "destructive": false,
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "operator-public-lab:owasp-juice-shop-demo",
-      "owner": "OWASP Juice Shop Project",
-      "issuer_kind": "operator_public_security_lab",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://owasp.org/www-project-juice-shop/",
-      "exact_hosts": ["demo.owasp-juice.shop"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_reference": "operator-public-lab:owasp-juice-shop-demo",
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "demo.owasp-juice.shop"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "OWASP Juice Shop Project",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "operator-public-lab:google-firing-range",
-      "owner": "Google",
-      "issuer_kind": "operator_public_security_lab",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://github.com/google/firing-range",
-      "exact_hosts": ["public-firing-range.appspot.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_reference": "operator-public-lab:google-firing-range",
       "credential_scope": "none",
       "destructive": false,
-      "private_cidrs": [],
-      "private_dns_names": [],
-      "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
-    },
-    {
-      "authorization_reference": "operator-public-lab:google-gruyere",
+      "exact_hosts": [
+        "public-firing-range.appspot.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
       "owner": "Google",
-      "issuer_kind": "operator_public_security_lab",
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "rate_limit_rps": 1,
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
+    },
+    {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://google-gruyere.appspot.com/",
-      "exact_hosts": ["google-gruyere.appspot.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_reference": "operator-public-lab:google-gruyere",
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "google-gruyere.appspot.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "Google",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "operator-public-lab:portswigger-gin-and-juice",
-      "owner": "PortSwigger",
-      "issuer_kind": "operator_public_security_lab",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
-      "exact_hosts": ["ginandjuice.shop"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_reference": "operator-public-lab:portswigger-gin-and-juice",
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "ginandjuice.shop"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "PortSwigger",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
+      "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
-      "rate_limit_rps": 1
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "operator-public-lab:opentext-zero-webappsecurity",
-      "owner": "OpenText Fortify",
-      "issuer_kind": "operator_public_security_lab",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://www.microfocus.com/documentation/fortify-webinspect/2540/dast-ugd-html-25.4.0/Content/WebAssessWiz-All.html",
-      "exact_hosts": ["zero.webappsecurity.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_note": "OpenText documentation explicitly describes the host as its example banking application and gives instructions for scanning it.",
+      "authorization_reference": "operator-public-lab:opentext-zero-webappsecurity",
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "zero.webappsecurity.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "OpenText Fortify",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
       "rate_limit_rps": 1,
-      "authorization_note": "OpenText documentation explicitly describes the host as its example banking application and gives instructions for scanning it."
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "operator-public-lab:hcl-testfire",
-      "owner": "HCL AppScan",
-      "issuer_kind": "operator_public_security_lab",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://help.hcl-software.com/appscan/ASoC/appseccloud_results_samplescans.html",
-      "exact_hosts": ["demo.testfire.net"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_note": "HCL documentation provides this demo application specifically for users to practice and run DAST scans.",
+      "authorization_reference": "operator-public-lab:hcl-testfire",
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "demo.testfire.net"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "HCL AppScan",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
       "rate_limit_rps": 1,
-      "authorization_note": "HCL documentation provides this demo application specifically for users to practice and run DAST scans."
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://docs.rapid7.com/insightappsec/free-trial-quick-start",
+      "authorization_note": "Rapid7 documents this as a Rapid7-owned deliberately vulnerable demo domain intended to be scanned.",
       "authorization_reference": "operator-public-lab:rapid7-webscantest",
-      "owner": "Rapid7",
-      "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://docs.rapid7.com/insightappsec/free-trial-quick-start",
-      "exact_hosts": ["www.webscantest.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "www.webscantest.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "Rapid7",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
       "rate_limit_rps": 1,
-      "authorization_note": "Rapid7 documents this as a Rapid7-owned deliberately vulnerable demo domain intended to be scanned."
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://docs.rapid7.com/insightappsec/free-trial-quick-start",
+      "authorization_note": "Rapid7 documents this as a Rapid7-owned deliberately vulnerable e-commerce demo domain intended to be scanned.",
       "authorization_reference": "operator-public-lab:rapid7-hackazon",
+      "credential_scope": "none",
+      "destructive": false,
+      "exact_hosts": [
+        "hackazon.webscantest.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
       "owner": "Rapid7",
-      "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://docs.rapid7.com/insightappsec/free-trial-quick-start",
-      "exact_hosts": ["hackazon.webscantest.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
-      "credential_scope": "none",
-      "destructive": false,
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
       "rate_limit_rps": 1,
-      "authorization_note": "Rapid7 documents this as a Rapid7-owned deliberately vulnerable e-commerce demo domain intended to be scanned."
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "operator-public-lab:troyhunt-hack-yourself-first",
-      "owner": "Troy Hunt",
-      "issuer_kind": "operator_public_security_lab",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_url": "https://hack-yourself-first.com/",
-      "exact_hosts": ["hack-yourself-first.com"],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "revoked": false,
-      "revocation_reason": null,
+      "authorization_note": "The operator describes this public site as intentionally vulnerable and used for hands-on security training; standing scope remains read-only/non-destructive.",
+      "authorization_reference": "operator-public-lab:troyhunt-hack-yourself-first",
       "credential_scope": "none",
       "destructive": false,
+      "exact_hosts": [
+        "hack-yourself-first.com"
+      ],
+      "issuer_kind": "operator_public_security_lab",
+      "owner": "Troy Hunt",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
       "rate_limit_rps": 1,
-      "authorization_note": "The operator describes this public site as intentionally vulnerable and used for hands-on security training; standing scope remains read-only/non-destructive."
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     },
     {
-      "authorization_reference": "curated-public-red-lab-registry:2026-09-01-distinct-host-expansion",
-      "owner": "operator-published public security labs",
-      "issuer_kind": "curated_public_security_lab_registry_read_only_probe",
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
       "authorization_evidence_registry": "senju/config/public-red-lab-registry.json",
+      "authorization_note": "Evidence and per-host operator/registry references are stored in public-red-lab-registry.json. This grouped standing record grants only bounded read-only RED probing to the exact listed hosts.",
+      "authorization_reference": "curated-public-red-lab-registry:2026-09-01-distinct-host-expansion",
+      "created_at_utc": "2026-09-01T02:58:00+00:00",
+      "credential_scope": "none",
+      "destructive": false,
       "exact_hosts": [
         "aspnet.testsparker.com",
         "authlab.digi.ninja",
@@ -294,19 +389,44 @@
         "wrongsecrets.herokuapp.com",
         "www.dvaib.com"
       ],
-      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
-      "created_at_utc": "2026-09-01T02:58:00+00:00",
-      "revoked": false,
-      "revocation_reason": null,
-      "credential_scope": "none",
-      "destructive": false,
+      "issuer_kind": "curated_public_security_lab_registry_read_only_probe",
+      "owner": "operator-published public security labs",
       "private_cidrs": [],
       "private_dns_names": [],
       "public_security_lab": true,
-      "recommendation_target": "SENJU_RED",
-      "shared_instance": true,
       "rate_limit_rps": 1,
-      "authorization_note": "Evidence and per-host operator/registry references are stored in public-red-lab-registry.json. This grouped standing record grants only bounded read-only RED probing to the exact listed hosts."
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
+    },
+    {
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "authorization_evidence_url": "https://vwad.owasp.org/",
+      "authorization_note": "OWASP VWAD online/live entry with direct vulnerable/test/lab signal; probationary read-only authority.",
+      "authorization_reference": "curated-public-red-lab:PyGoat",
+      "created_at_utc": "2026-09-01T03:08:38.606443+00:00",
+      "credential_scope": "none",
+      "destructive": false,
+      "exact_hosts": [
+        "github.com"
+      ],
+      "issuer_kind": "operator_public_security_lab_curated_registry",
+      "owner": "Ade Yoseman",
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "rate_limit_rps": 1,
+      "recommendation_target": "SENJU_RED",
+      "revocation_reason": null,
+      "revoked": false,
+      "shared_instance": true
     }
-  ]
+  ],
+  "schema": "senju-standing-authorization/v1",
+  "semantics": "durable_until_explicit_revocation"
 }
