@@ -60,10 +60,9 @@ def aggregate(repo, children, level, group):
         head = run("git", "--git-dir", str(child), "symbolic-ref", "-q", "HEAD", capture=True)
         child_data.append({"position": position, "repository": str(child),
                            "head": head, "refs": child_refs})
-        for ref, sha in child_refs.items():
-            safe_ref = ref.removeprefix("refs/")
-            run("git", "--git-dir", str(repo), "update-ref",
-                f"refs/children/{position}/{safe_ref}", sha)
+        run("git", "--git-dir", str(repo), "fetch", "--prune", "--no-tags", str(child),
+            f"+refs/heads/*:refs/children/{position}/heads/*",
+            f"+refs/tags/*:refs/children/{position}/tags/*")
     payload = json.dumps({"level": level, "group": group, "children": child_data},
                          ensure_ascii=False, sort_keys=True, indent=2) + "\n"
     blob = run("git", "--git-dir", str(repo), "hash-object", "-w", "--stdin",
