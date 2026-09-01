@@ -14,6 +14,7 @@ on:
       - 'senju/scripts/public_red_target_fanout.py'
       - 'senju/scripts/public_red_seed_expander.py'
       - 'senju/scripts/public_red_burst_fanout.py'
+      - 'senju/scripts/public_red_internal_closed_loop.py'
       - 'senju/tests/test_public_red_lab_discovery.py'
       - 'senju/tests/test_public_red_target_pipeline.py'
       - 'senju/tests/test_public_red_url_expansion.py'
@@ -64,6 +65,7 @@ jobs:
             senju/scripts/public_red_target_fanout.py \
             senju/scripts/public_red_seed_expander.py \
             senju/scripts/public_red_burst_fanout.py \
+            senju/scripts/public_red_internal_closed_loop.py \
             senju/senju/approved_authority_red_adaptive.py
 
       - name: Fetch OWASP vulnerable-app registry for bounded autonomous growth
@@ -168,7 +170,26 @@ jobs:
           print(sum(1 for row in p.get('results', []) if row.get('external_contact_attempted')))
           PY
           )" -eq 60
-          cat /tmp/public_red_burst_latest.json
+
+      - name: Run 600-action offline RED closed loop
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/public_red_internal_closed_loop.py \
+            --burst /tmp/public_red_burst_latest.json \
+            --rounds 10 \
+            --out /tmp/public_red_internal_closed_loop.json \
+            | tee /tmp/public_red_internal_closed_loop_summary.json
+          python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public_red_internal_closed_loop.json'))
+          assert p.get('input_observation_count') == 60
+          assert p.get('rounds') == 10
+          assert p.get('internal_action_count') == 600
+          assert p.get('external_action_count') == 0
+          assert p.get('network_io_count') == 0
+          assert p.get('authority_mutation_count') == 0
+          PY
 
       - name: Upload RED expansion evidence
         uses: actions/upload-artifact@v4
@@ -182,6 +203,8 @@ jobs:
             /tmp/public_red_catalog_validation.json
             /tmp/public_red_burst_summary.json
             /tmp/public_red_burst_latest.json
+            /tmp/public_red_internal_closed_loop_summary.json
+            /tmp/public_red_internal_closed_loop.json
             senju/state/public_red_discovery.json
             senju/state/public_red_lab_authority.json
 
