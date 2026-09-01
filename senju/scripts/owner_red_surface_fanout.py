@@ -20,6 +20,8 @@ from senju.external_denial_learning import DenialLearningMemory
 
 MAX_PROFILES_PER_CYCLE = 32
 MAX_OWNER_RPS = 4.0
+OWNER_SAFE_READ_METHODS = ("GET", "HEAD", "OPTIONS")
+OWNER_MAX_ATTEMPTS_PER_PROFILE = 2
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -103,13 +105,15 @@ def main() -> int:
     memory = DenialLearningMemory.from_mapping(raw_memory)
 
     summary: dict[str, Any] = {
-        "schema": "senju-owner-red-surface-burst/v1",
+        "schema": "senju-owner-red-surface-burst/v2",
         "operation_id": operation_id,
         "catalog_profile_count": int(catalog.get("profile_count", 0)),
         "catalog_unique_host_count": int(catalog.get("unique_host_count", 0)),
         "batch_size": len(batch),
         "unique_batch_hosts": len({str(row.get("host") or "") for row in batch}),
-        "method": "HEAD",
+        "preferred_method": "GET",
+        "safe_read_method_variation": list(OWNER_SAFE_READ_METHODS),
+        "max_attempts_per_profile": OWNER_MAX_ATTEMPTS_PER_PROFILE,
         "credential_scope": "none",
         "destructive": False,
         "exact_owner_hosts_only": True,
@@ -128,12 +132,12 @@ def main() -> int:
                 state_dir=args.state_dir,
                 operation_id=f"{operation_id}:{profile['id']}",
                 seed_url=str(profile["url"]),
-                method="HEAD",
+                method="GET",
                 candidate_urls=(),
                 alternate_paths=(),
                 include_safe_defaults=False,
                 rollout_percent=100,
-                max_attempts=1,
+                max_attempts=OWNER_MAX_ATTEMPTS_PER_PROFILE,
                 memory=memory,
             )
             summary["results"].append({
@@ -145,6 +149,8 @@ def main() -> int:
                 "mutation_capable_catalog_entry": bool(profile.get("mutating_methods")),
                 "selected_by_rollout": result.get("selected_by_rollout"),
                 "external_contact_attempted": result.get("external_contact_attempted"),
+                "attempt_count": result.get("attempt_count", 0),
+                "methods_seen": result.get("methods_seen", []),
                 "success": result.get("success"),
                 "stop_reason": result.get("stop_reason"),
             })
@@ -156,6 +162,7 @@ def main() -> int:
     summary["external_contact_attempts"] = sum(
         1 for row in summary["results"] if row.get("external_contact_attempted")
     )
+    summary["http_attempt_count"] = sum(int(row.get("attempt_count") or 0) for row in summary["results"])
     summary["successes"] = sum(1 for row in summary["results"] if row.get("success"))
     summary["mutation_capable_selected"] = sum(
         1 for row in summary["results"] if row.get("mutation_capable_catalog_entry")
@@ -173,6 +180,7 @@ def main() -> int:
         "batch_size": summary["batch_size"],
         "unique_batch_hosts": summary["unique_batch_hosts"],
         "external_contact_attempts": summary["external_contact_attempts"],
+        "http_attempt_count": summary["http_attempt_count"],
         "successes": summary["successes"],
         "mutation_capable_selected": summary["mutation_capable_selected"],
     }, sort_keys=True))
