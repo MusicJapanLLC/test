@@ -122,7 +122,9 @@ jobs:
           assert catalog['external_link_inheritance'] is False
           assert catalog['exact_host_only'] is True
           assert catalog['mutation_capable_host_count'] >= 1
-          assert burst['method'] == 'HEAD'
+          assert burst['preferred_method'] == 'GET'
+          assert set(burst['safe_read_method_variation']) == {'GET', 'HEAD', 'OPTIONS'}
+          assert burst['max_attempts_per_profile'] == 2
           assert burst['exact_owner_hosts_only'] is True
           assert burst['external_contact_attempts'] >= 1
           assert assault['target'] == 'https://kabeya-authorized-test-range.onrender.com'
@@ -133,7 +135,8 @@ jobs:
               'catalog_hosts': catalog['unique_host_count'],
               'mutation_capable_hosts': catalog['mutation_capable_host_count'],
               'observation_batch': burst['batch_size'],
-              'observation_attempts': burst['external_contact_attempts'],
+              'observation_profiles_attempted': burst['external_contact_attempts'],
+              'http_attempt_count': burst['http_attempt_count'],
               'observation_successes': burst['successes'],
               'fixed_owner_write_methods_accepted_2xx': assault['summary']['write_methods_accepted_2xx'],
               'bounded_canaries': assault['summary']['active_exploit_attempted'],
