@@ -2,7 +2,7 @@ name: Negotiation Authorization Accelerator
 
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '*/5 * * * *'
   workflow_dispatch:
   push:
     branches:
@@ -12,9 +12,14 @@ on:
       - 'senju/scripts/negotiation_authorization_accelerator.py'
       - 'senju/senju/negotiation_case_review_gate.py'
       - 'senju/authorization_issuance_bureau.py'
+      - 'senju/senju/owner_authorization_pool.py'
+      - 'senju/scripts/owner_authorization_pool.py'
+      - 'senju/senju/authority_promotion_bureau.py'
+      - 'senju/scripts/run_authority_promotion_bureau.py'
       - 'senju/state/verified_control_attestations.json'
       - 'AUTHORIZED_TEST_TARGETS.json'
       - 'tests/test_negotiation_authorization_accelerator.py'
+      - 'tests/test_owner_authorization_pool.py'
       - '.github/workflows/negotiation-authorization-accelerator.yml'
 
 permissions:
@@ -28,7 +33,7 @@ concurrency:
 jobs:
   accelerate:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,14 +121,62 @@ jobs:
             exit 1
           fi
 
-      - name: Run focused accelerator tests
+      - name: Maintain fifty owner-authorized exact-host grants
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          previous="$(find /tmp/negotiation-authorization-input -name owner_authorization_pool.json -type f | head -n1 || true)"
+          if [[ -n "$previous" ]]; then
+            cp "$previous" senju/state/owner_authorization_pool.json
+          fi
+
+          python senju/scripts/owner_authorization_pool.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --target-count 50 \
+            --ttl-minutes 1440 \
+            --renew-before-minutes 60 \
+            | tee /tmp/owner-authorization-pool.json
+
+          test "$(jq -r '.target_met' /tmp/owner-authorization-pool.json)" = "true"
+          test "$(jq -r '.authorized_count' /tmp/owner-authorization-pool.json)" -ge 50
+          echo "## Owner Authorization Pool" >> "$GITHUB_STEP_SUMMARY"
+          echo "- verified candidates: $(jq -r '.verified_candidate_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- authorized: $(jq -r '.authorized_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- transport-eligible: $(jq -r '.transport_eligible_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- issued this cycle: $(jq -r '.issued_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reused this cycle: $(jq -r '.reused_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Promote pool into SENJU Authority feed
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_authority_promotion_bureau.py \
+            --state-dir senju/state \
+            --meta-state-dir automation/codegen/meta_state \
+            --output-dir senju/state \
+            | tee /tmp/owner-authorization-promotion.json
+
+          test "$(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" -ge 50
+          test "$(jq -r '.promotion_lease_count' /tmp/owner-authorization-promotion.json)" -ge 50
+          echo "- promoted runtime hosts: $(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- promotion leases: $(jq -r '.promotion_lease_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run focused accelerator and pool tests
         env:
           PYTHONPATH: senju
         run: |
           python -m pip install --disable-pip-version-check pytest
-          pytest -q tests/test_negotiation_authorization_accelerator.py tests/test_authorization_issuance_bureau.py
+          pytest -q \
+            tests/test_negotiation_authorization_accelerator.py \
+            tests/test_owner_authorization_pool.py \
+            tests/test_authorization_issuance_bureau.py \
+            senju/tests/test_authority_promotion_bureau.py
 
-      - name: Preserve acceleration evidence
+      - name: Preserve acceleration and pool evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -131,10 +184,19 @@ jobs:
           path: |
             /tmp/negotiation-authorization-bus.json
             /tmp/negotiation-authorization-accelerator.json
+            /tmp/owner-authorization-pool.json
+            /tmp/owner-authorization-promotion.json
             senju/state/negotiation_case_review_queue.json
             senju/state/formal_approval_intake.json
             senju/state/authorization_review_keys.json
             senju/state/negotiation_authorization_acceleration.json
             senju/state/negotiation_authorization_handoffs.json
+            senju/state/owner_authorization_pool.json
+            senju/state/owner_authorization_pool_handoffs.json
+            senju/state/reviewed_authority_operational_leases.json
+            senju/state/promotion_bureau_approved_hosts.json
+            senju/state/promotion_bureau_leases.json
+            senju/state/promotion_bureau_assignments.json
+            senju/state/senju_approved_authority_feed.json
           if-no-files-found: warn
           retention-days: 30

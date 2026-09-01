@@ -65,17 +65,20 @@
       "shared_instance": true,
       "source": "operator_evidence_page",
       "url": "https://demo.owasp-juice.shop/"
+    },
+    {
+      "authorization_evidence": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
+      "id": "auto-portswigger-gin-and-juice-33294f0e82d6",
+      "operator": "PortSwigger",
+      "provider_id": "portswigger-gin-and-juice",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://ginandjuice.shop/"
     }
   ],
   "effective_host_count": 10,
   "newly_discovered_urls": [
-    "https://demo.owasp-juice.shop/",
-    "https://google-gruyere.appspot.com/",
-    "https://google-gruyere.appspot.com/code/",
-    "https://google-gruyere.appspot.com/gruyere-code.zip",
-    "https://google-gruyere.appspot.com/resetbutton/123",
-    "https://google-gruyere.appspot.com/start",
-    "https://public-firing-range.appspot.com/"
+    "https://ginandjuice.shop/"
   ],
   "provider_checks": [
     {
@@ -130,18 +133,22 @@
       "provider_id": "google-gruyere"
     },
     {
-      "error": "HTTPError: HTTP Error 403: Forbidden",
       "evidence_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
+      "final_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
       "matched_urls": [],
       "provider_id": "portswigger-gin-and-juice",
-      "reachable": false
+      "reachable": true
     },
     {
-      "error": "HTTPError: HTTP Error 403: Forbidden",
       "evidence_url": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
-      "matched_urls": [],
+      "final_url": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
+      "matched_urls": [
+        "https://ginandjuice.shop/",
+        "https://ginandjuice.shop/",
+        "https://ginandjuice.shop/"
+      ],
       "provider_id": "portswigger-gin-and-juice",
-      "reachable": false
+      "reachable": true
     },
     {
       "evidence_url": "https://owasp.org/www-project-juice-shop/",
@@ -169,5 +176,5 @@
     }
   ],
   "schema": "senju-public-red-discovery/v1",
-  "updated_at_utc": "2026-09-01T02:19:01.928289+00:00"
+  "updated_at_utc": "2026-09-01T02:24:49.964243+00:00"
 }
