@@ -65,7 +65,9 @@ checkpoint.json
 
 ## 合成ラボ
 
-`synthetic-labs.json` に `.invalid` reserved domainを使った16種類のresearch surfaceを定義しています。4 worldへ4件ずつ自動配布し、authorization / session / parser / workflow / cache / recovery / concurrency等の異なる膠着パターンを並列研究できます。
+`synthetic-labs.json` に `.invalid` reserved domainを使った32種類のresearch surfaceを定義しています。各サイクルはそのうち16件を選び、4 worldへ4件ずつ自動配布します。次世代では16件分rotationするため、現在の32-lab catalogは2サイクルで一巡します。
+
+これにより同時処理量は増やさず、authorization / session / parser / workflow / cache / recovery / concurrency / identity / time / federation等の異なる膠着パターンを継続的に切り替えられます。
 
 ## 継承しないもの
 
