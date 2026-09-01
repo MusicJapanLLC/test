@@ -1,6 +1,12 @@
 name: Strong New Game 3h Research Cycle
 
 on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "the-world-strong-new-game/**"
+      - ".github/workflows/strong-new-game-3h.yml"
+      - "the-world-5th-power/git_mesh.py"
   workflow_dispatch:
   schedule:
     - cron: "0 */3 * * *"
