@@ -21,7 +21,30 @@ jobs:
       contents: write
       pull-requests: write
       checks: read
+      actions: read
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Apply frontier findings
+        run: |
+          if gh run download --name adversarial-boundary-growth-corpus 2>/dev/null; then
+            if [ -f corpus.json ]; then
+              python apply_findings.py --corpus corpus.json --create-pr
+            else
+              echo "corpus.json was not found in the downloaded artifact."
+            fi
+          else
+            echo "Artifact 'adversarial-boundary-growth-corpus' not found. Skipping."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Merge audited ready PRs
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
