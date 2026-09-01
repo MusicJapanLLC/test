@@ -35,6 +35,7 @@ on:
       - 'automation/codegen/tests/test_authority_expansion_runtime.py'
       - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
       - 'automation/codegen/tests/test_host_activation_bundle.py'
+      - 'automation/codegen/tests/test_validate_host_activation_pr.py'
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
@@ -72,6 +73,7 @@ on:
       - 'automation/codegen/tests/test_authority_expansion_runtime.py'
       - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
       - 'automation/codegen/tests/test_host_activation_bundle.py'
+      - 'automation/codegen/tests/test_validate_host_activation_pr.py'
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
@@ -118,6 +120,7 @@ jobs:
           automation/codegen/tests/test_authority_expansion_runtime.py
           automation/codegen/tests/test_new_host_authorization_runtime.py
           automation/codegen/tests/test_host_activation_bundle.py
+          automation/codegen/tests/test_validate_host_activation_pr.py
           automation/codegen/tests/test_discovery_replica_continuity.py
       - name: Check committed host activation bundles are complete
         env:
