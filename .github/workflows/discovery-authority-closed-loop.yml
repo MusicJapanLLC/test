@@ -13,6 +13,7 @@ on:
       - 'automation/codegen/engine/discovery_external_action.py'
       - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
       - 'automation/codegen/engine/authority_expansion_runtime.py'
+      - 'automation/codegen/engine/new_host_authorization_runtime.py'
       - 'automation/codegen/engine/discovery_replica_continuity.py'
       - 'automation/codegen/run_discovery_closed_loop.py'
       - 'automation/codegen/run_discovery_action_continuity.py'
@@ -27,6 +28,7 @@ on:
       - 'automation/codegen/tests/test_discovery_external_action.py'
       - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
       - 'automation/codegen/tests/test_authority_expansion_runtime.py'
+      - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
@@ -42,6 +44,7 @@ on:
       - 'automation/codegen/engine/discovery_external_action.py'
       - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
       - 'automation/codegen/engine/authority_expansion_runtime.py'
+      - 'automation/codegen/engine/new_host_authorization_runtime.py'
       - 'automation/codegen/engine/discovery_replica_continuity.py'
       - 'automation/codegen/run_discovery_closed_loop.py'
       - 'automation/codegen/run_discovery_action_continuity.py'
@@ -56,6 +59,7 @@ on:
       - 'automation/codegen/tests/test_discovery_external_action.py'
       - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
       - 'automation/codegen/tests/test_authority_expansion_runtime.py'
+      - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
@@ -99,6 +103,7 @@ jobs:
           automation/codegen/tests/test_discovery_external_action.py
           automation/codegen/tests/test_credential_bound_mutation_runtime.py
           automation/codegen/tests/test_authority_expansion_runtime.py
+          automation/codegen/tests/test_new_host_authorization_runtime.py
           automation/codegen/tests/test_discovery_replica_continuity.py
 
   live-loop:
@@ -146,6 +151,8 @@ jobs:
               'authority_expansion_cases.json',
               'authority_expansion_route_queue.json',
               'authority_expansion_execution_receipts.json',
+              'new_host_authorization_cases.json',
+              'new_host_authorization_activation.json',
               'action_continuity_run.json',
           }
           if source.exists():
@@ -168,7 +175,7 @@ jobs:
           --rounds 3
           --max-targets 20
           --json-out .discovery-runtime-state/live_run_receipt.json
-      - name: Run Authority -> Credential -> Mutation -> Expansion -> Recovery
+      - name: Run New Host -> Authority -> Credential -> Mutation -> Expansion -> Recovery
         env:
           PYTHONPATH: automation/codegen:senju
           KABEYA_TEST_BEARER_TOKEN: ${{ secrets.KABEYA_TEST_BEARER_TOKEN }}
@@ -200,6 +207,8 @@ jobs:
             .discovery-runtime-state/authority_expansion_cases.json
             .discovery-runtime-state/authority_expansion_route_queue.json
             .discovery-runtime-state/authority_expansion_execution_receipts.json
+            .discovery-runtime-state/new_host_authorization_cases.json
+            .discovery-runtime-state/new_host_authorization_activation.json
             .discovery-runtime-state/discovery_events.ndjson
             .discovery-runtime-state/capability_lease_events.ndjson
             .discovery-runtime-state/capability_replica_events.ndjson
