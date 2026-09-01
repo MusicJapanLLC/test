@@ -156,6 +156,12 @@ jobs:
           print(p.get('batch_size', 0))
           PY
           )" -eq 60
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public_red_burst_latest.json'))
+          print(sum(1 for row in p.get('results', []) if row.get('external_contact_attempted')))
+          PY
+          )" -eq 60
           cat /tmp/public_red_burst_latest.json
 
       - name: Upload RED expansion evidence
