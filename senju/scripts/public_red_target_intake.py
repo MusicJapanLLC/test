@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import html
 import ipaddress
@@ -30,6 +31,10 @@ def _load(path: Path, default: Any) -> Any:
 def _write(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _stable_json(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
 def _safe_url(raw: str) -> tuple[str, str]:
@@ -134,6 +139,7 @@ def _sync_effective_ceiling(path: Path, standing_doc: dict[str, Any]) -> dict[st
     doc = _load(path, {"schema": "senju-owner-contact-ceiling-effective/v4", "ceiling": {}})
     if not isinstance(doc, dict):
         doc = {"schema": "senju-owner-contact-ceiling-effective/v4", "ceiling": {}}
+    before = copy.deepcopy(doc)
     ceiling = doc.setdefault("ceiling", {})
     if not isinstance(ceiling, dict):
         ceiling = {}
@@ -171,9 +177,21 @@ def _sync_effective_ceiling(path: Path, standing_doc: dict[str, Any]) -> dict[st
     ceiling["shared_public_lab_rate_limit_rps"] = 1
     ceiling["max_public_lab_requests_per_cycle"] = 6
     doc["source"] = "standing authority plus operator-published security-lab evidence; safe methods only"
-    doc["generated_at"] = int(datetime.now(timezone.utc).timestamp())
-    _write(path, doc)
+
+    before_compare = copy.deepcopy(before)
+    after_compare = copy.deepcopy(doc)
+    before_compare.pop("generated_at", None)
+    after_compare.pop("generated_at", None)
+    if _stable_json(before_compare) != _stable_json(after_compare):
+        doc["generated_at"] = int(datetime.now(timezone.utc).timestamp())
+        _write(path, doc)
     return doc
+
+
+def _inventory_changed(previous: dict[str, Any], profiles: list[dict[str, Any]], effective_host_count: int | None) -> bool:
+    previous_profiles = previous.get("discovered_profiles", []) if isinstance(previous, dict) else []
+    previous_count = previous.get("effective_host_count") if isinstance(previous, dict) else None
+    return _stable_json(previous_profiles) != _stable_json(profiles) or previous_count != effective_host_count
 
 
 def main() -> int:
@@ -190,7 +208,8 @@ def main() -> int:
     config = _load(Path(args.config), {})
     standing_path = Path(args.standing)
     standing_doc = _load(standing_path, {"schema": "senju-standing-authorization/v1", "records": []})
-    previous = _load(Path(args.out), {})
+    out_path = Path(args.out)
+    previous = _load(out_path, {})
     old_profiles = previous.get("discovered_profiles", []) if isinstance(previous, dict) else []
     profiles_by_url: dict[str, dict[str, Any]] = {}
     for row in old_profiles if isinstance(old_profiles, list) else []:
@@ -281,24 +300,29 @@ def main() -> int:
         effective_doc = _sync_effective_ceiling(Path(args.effective_ceiling), standing_doc)
 
     profiles = sorted(profiles_by_url.values(), key=lambda row: (str(row.get("provider_id", "")), str(row.get("url", ""))))
-    state = {
-        "schema": "senju-public-red-discovery/v1",
-        "updated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "authority_rule": "operator_evidence_page_plus_provider_policy_match_only",
-        "authority_from_general_web_discovery": False,
-        "admitted_hosts": sorted(set(admitted_hosts)),
-        "newly_discovered_urls": sorted(set(newly_discovered)),
-        "effective_host_count": len((effective_doc or {}).get("ceiling", {}).get("exact_hosts", [])) if isinstance(effective_doc, dict) else None,
-        "provider_checks": provider_checks,
-        "discovered_profiles": profiles,
-    }
-    _write(Path(args.out), state)
+    effective_host_count = len((effective_doc or {}).get("ceiling", {}).get("exact_hosts", [])) if isinstance(effective_doc, dict) else None
+    inventory_changed = _inventory_changed(previous, profiles, effective_host_count)
+    if inventory_changed or not out_path.exists():
+        state = {
+            "schema": "senju-public-red-discovery/v1",
+            "updated_at_utc": datetime.now(timezone.utc).isoformat(),
+            "authority_rule": "operator_evidence_page_plus_provider_policy_match_only",
+            "authority_from_general_web_discovery": False,
+            "admitted_hosts": sorted(set(admitted_hosts)),
+            "newly_discovered_urls": sorted(set(newly_discovered)),
+            "effective_host_count": effective_host_count,
+            "provider_checks": provider_checks,
+            "discovered_profiles": profiles,
+        }
+        _write(out_path, state)
+
     print(json.dumps({
         "provider_checks": len(provider_checks),
         "discovered_profile_count": len(profiles),
         "newly_discovered_count": len(set(newly_discovered)),
         "admitted_host_count": len(set(admitted_hosts)),
-        "effective_host_count": state["effective_host_count"],
+        "effective_host_count": effective_host_count,
+        "inventory_changed": inventory_changed,
     }, sort_keys=True))
     return 0
 
