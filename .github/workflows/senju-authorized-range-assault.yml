@@ -3,11 +3,17 @@ name: Senju - Authorized Range Assault
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '*/15 * * * *'
   push:
     branches:
       - claude/employee-onboarding-setup-udm86
     paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'senju/state/verified_control_attestations.json'
+      - 'senju/state/owner_contact_ceiling_effective.json'
+      - 'senju/scripts/owner_red_surface_expander.py'
+      - 'senju/scripts/owner_red_surface_fanout.py'
+      - 'senju/tests/test_owner_red_surface_expander.py'
       - 'senju/scripts/authorized_range_assault.py'
       - 'senju/scripts/authorized_range_assault_full.py'
       - 'senju/config/authorized-test-federation.json'
@@ -18,6 +24,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: senju-authorized-range-assault
@@ -25,9 +32,9 @@ concurrency:
 
 jobs:
   exercise:
-    name: Repeated adversarial exercise of fixed authorized range
+    name: Owner surfaces -> RED observation -> fixed-range canaries -> learn
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
@@ -39,20 +46,106 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Verify owner RED expansion contracts
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            senju/tests/test_owner_red_surface_expander.py \
+            senju/tests/test_authorized_range_active_exploit.py \
+            senju/tests/test_approved_authority_red_adaptive.py
+          python -m py_compile \
+            senju/scripts/owner_red_surface_expander.py \
+            senju/scripts/owner_red_surface_fanout.py
+
+      - name: Expand verified owner-controlled RED catalog to 120 plus URLs
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-red-owned
+          python senju/scripts/owner_red_surface_expander.py \
+            --minimum-profiles 120 \
+            --max-profiles 240 \
+            --out /tmp/senju-red-owned/catalog.json \
+            | tee /tmp/senju-red-owned/catalog-summary.json
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/senju-red-owned/catalog.json'))
+          print(p.get('profile_count', 0))
+          PY
+          )" -ge 120
+
+      - name: Run diversified 32 URL owner-controlled RED observation burst
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/owner_red_surface_fanout.py \
+            --catalog /tmp/senju-red-owned/catalog.json \
+            --operation-id "owner-red-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --max-profiles 32 \
+            --memory /tmp/senju-red-owned/memory.json \
+            --out /tmp/senju-red-owned/burst.json \
+            | tee /tmp/senju-red-owned/burst-summary.json
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/senju-red-owned/burst.json'))
+          print(p.get('batch_size', 0))
+          PY
+          )" -eq 32
+
       - name: Validate 100 percent bounded canary profile
         working-directory: senju
         run: python scripts/authorized_range_assault_full.py --validate
 
-      - name: Run Senju authorized adversarial exercise with all bounded canaries
+      - name: Run stronger fixed-owner synthetic writes and all bounded canaries
         working-directory: senju
         env:
-          SENJU_ACTIVE_EXPLOIT_SEED: gha-${{ github.run_id }}
-        run: python scripts/authorized_range_assault_full.py
+          SENJU_ACTIVE_EXPLOIT_SEED: gha-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          python scripts/authorized_range_assault_full.py
+          cp authorized-range-assault-report.json /tmp/senju-red-owned/authorized-range-assault-report.json
 
-      - name: Publish sanitized findings
+      - name: Verify RED privilege separation and activity
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          catalog=json.load(open('/tmp/senju-red-owned/catalog.json'))
+          burst=json.load(open('/tmp/senju-red-owned/burst.json'))
+          assault=json.load(open('/tmp/senju-red-owned/authorized-range-assault-report.json'))
+          assert catalog['general_web_discovery_authorizes'] is False
+          assert catalog['external_link_inheritance'] is False
+          assert catalog['exact_host_only'] is True
+          assert catalog['mutation_capable_host_count'] >= 1
+          assert burst['method'] == 'HEAD'
+          assert burst['exact_owner_hosts_only'] is True
+          assert burst['external_contact_attempts'] >= 1
+          assert assault['target'] == 'https://kabeya-authorized-test-range.onrender.com'
+          assert assault['active_exploit']['exact_host_only'] is True
+          assert assault['active_exploit']['credential_use'] is False
+          print(json.dumps({
+              'catalog_profiles': catalog['profile_count'],
+              'catalog_hosts': catalog['unique_host_count'],
+              'mutation_capable_hosts': catalog['mutation_capable_host_count'],
+              'observation_batch': burst['batch_size'],
+              'observation_attempts': burst['external_contact_attempts'],
+              'observation_successes': burst['successes'],
+              'fixed_owner_write_methods_accepted_2xx': assault['summary']['write_methods_accepted_2xx'],
+              'bounded_canaries': assault['summary']['active_exploit_attempted'],
+          }))
+          PY
+
+      - name: Publish sanitized RED evidence
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: senju-authorized-range-assault-${{ github.run_id }}
           retention-days: 14
           if-no-files-found: error
-          path: senju/authorized-range-assault-report.json
+          path: |
+            /tmp/senju-red-owned/
+            senju/authorized-range-assault-report.json
