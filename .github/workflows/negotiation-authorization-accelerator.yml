@@ -1,0 +1,140 @@
+name: Negotiation Authorization Accelerator
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'senju/senju/negotiation_authorization_accelerator.py'
+      - 'senju/scripts/negotiation_authorization_accelerator.py'
+      - 'senju/senju/negotiation_case_review_gate.py'
+      - 'senju/authorization_issuance_bureau.py'
+      - 'senju/state/verified_control_attestations.json'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'tests/test_negotiation_authorization_accelerator.py'
+      - '.github/workflows/negotiation-authorization-accelerator.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: negotiation-authorization-accelerator
+  cancel-in-progress: false
+
+jobs:
+  accelerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          ref: claude/employee-onboarding-setup-udm86
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Restore latest negotiation artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/negotiation-authorization-input
+          restore_latest() {
+            workflow="$1"
+            dest="$2"
+            mkdir -p "$dest"
+            run_id="$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "$workflow" \
+              --branch claude/employee-onboarding-setup-udm86 \
+              --status success \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run_id" ]]; then
+              gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --dir "$dest" || true
+              echo "$workflow=$run_id" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$workflow=none" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+          restore_latest "Owner Scope Negotiation Production" /tmp/negotiation-authorization-input/owner-scope
+          restore_latest "Root Authority Negotiation Loop" /tmp/negotiation-authorization-input/root
+          restore_latest "External Input Negotiation Relay" /tmp/negotiation-authorization-input/external-relay
+          restore_latest "THE WORLD - Child Guild External Fleet" /tmp/negotiation-authorization-input/child
+          restore_latest "Outside World Scout" /tmp/negotiation-authorization-input/outside
+          restore_latest "Shared Discovery Authority Cycle" /tmp/negotiation-authorization-input/shared-discovery
+
+      - name: Rebuild current negotiation intelligence state
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/negotiation_intelligence_bus.py \
+            --state-dir senju/state \
+            --input-root /tmp/negotiation-authorization-input \
+            --out /tmp/negotiation-authorization-bus.json
+          test "$(jq -r '.closed_loop' /tmp/negotiation-authorization-bus.json)" = "true"
+          echo "negotiation_records=$(jq -r '.record_count' /tmp/negotiation-authorization-bus.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Advance at least five admitted negotiation hosts toward Authorization
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/negotiation_authorization_accelerator.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --minimum-batch 5 \
+            --out /tmp/negotiation-authorization-accelerator.json
+
+          available="$(jq -r '.available_admitted_unique_hosts' /tmp/negotiation-authorization-accelerator.json)"
+          selected="$(jq -r '.selected_count' /tmp/negotiation-authorization-accelerator.json)"
+          issued="$(jq -r '.authorization_issued_count' /tmp/negotiation-authorization-accelerator.json)"
+          pending="$(jq -r '.pending_verification_count' /tmp/negotiation-authorization-accelerator.json)"
+
+          echo "## Negotiation → Authorization Accelerator" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Admitted unique hosts available: \`$available\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Advanced this cycle: \`$selected\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Authorization issued: \`$issued\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Pending verified authorization basis: \`$pending\`" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.rows[] | "- `\(.host)` → `\(.authorization_status)` key=`\(.review_key.key_id)`"' \
+            /tmp/negotiation-authorization-accelerator.json >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$available" -ge 5 && "$selected" -lt 5 ]]; then
+            echo "accelerator failed to advance five hosts despite five or more admitted candidates" >&2
+            exit 1
+          fi
+
+      - name: Run focused accelerator tests
+        env:
+          PYTHONPATH: senju
+        run: |
+          python -m pip install --disable-pip-version-check pytest
+          pytest -q tests/test_negotiation_authorization_accelerator.py tests/test_authorization_issuance_bureau.py
+
+      - name: Preserve acceleration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: negotiation-authorization-acceleration-${{ github.run_id }}
+          path: |
+            /tmp/negotiation-authorization-bus.json
+            /tmp/negotiation-authorization-accelerator.json
+            senju/state/negotiation_case_review_queue.json
+            senju/state/formal_approval_intake.json
+            senju/state/authorization_review_keys.json
+            senju/state/negotiation_authorization_acceleration.json
+            senju/state/negotiation_authorization_handoffs.json
+          if-no-files-found: warn
+          retention-days: 30
