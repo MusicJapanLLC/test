@@ -26,6 +26,18 @@ DEFAULT_PATHS = (
     "/docs",
     "/sitemap.xml",
     "/manifest.json",
+    "/api/health",
+    "/api/status",
+    "/api/v1",
+    "/api/v1/health",
+    "/auth",
+    "/signin",
+    "/signup",
+    "/dashboard",
+    "/settings",
+    "/profile",
+    "/assets",
+    "/static",
 )
 OWNER_SPECIAL_PATHS = {
     "kabeya-authorized-test-range.onrender.com": (
