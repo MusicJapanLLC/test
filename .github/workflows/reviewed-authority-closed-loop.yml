@@ -4,10 +4,16 @@ on:
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
+    inputs:
+      write_requests_json:
+        description: 'Optional owner-authorized Senju write requests (JSON list or {requests:[...]})'
+        required: false
+        type: string
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/reviewed_authority_lifecycle.py'
+      - 'senju/senju/authorized_write_broker.py'
       - 'senju/scripts/run_reviewed_authority_lifecycle.py'
       - 'senju/tests/test_reviewed_authority_lifecycle.py'
       - '.github/workflows/reviewed-authority-closed-loop.yml'
@@ -15,6 +21,7 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/senju/reviewed_authority_lifecycle.py'
+      - 'senju/senju/authorized_write_broker.py'
       - 'senju/scripts/run_reviewed_authority_lifecycle.py'
       - 'senju/tests/test_reviewed_authority_lifecycle.py'
       - '.github/workflows/reviewed-authority-closed-loop.yml'
@@ -56,6 +63,7 @@ jobs:
             senju/tests/test_council_operational_governance.py
           python -m py_compile \
             senju/senju/reviewed_authority_lifecycle.py \
+            senju/senju/authorized_write_broker.py \
             senju/scripts/run_reviewed_authority_lifecycle.py \
             automation/codegen/engine/authority_reviewer.py
 
@@ -101,8 +109,10 @@ jobs:
           restore_latest "External Input Negotiation Relay" /tmp/reviewed-upstream/relay
           restore_latest "Owner Frontier SENJU Research Governance" /tmp/reviewed-upstream/frontier
 
-      - name: Hydrate candidates and auto-ingress binding frontier approvals
+      - name: Hydrate candidates, write queue, and binding frontier approvals
         if: github.event_name != 'pull_request'
+        env:
+          DISPATCH_WRITE_REQUESTS_JSON: ${{ inputs.write_requests_json }}
         shell: bash
         run: |
           set -euo pipefail
@@ -111,7 +121,10 @@ jobs:
           for name in \
             reviewed_authority_operational_leases.json \
             reviewed_authority_execution_receipts.json \
-            reviewed_authority_lifecycle_state.json
+            reviewed_authority_lifecycle_state.json \
+            reviewed_write_requests.json \
+            reviewed_write_operational_leases.json \
+            reviewed_write_execution_receipts.json
           do
             if [[ -s ".reviewed-authority-runtime/$name" ]]; then
               cp ".reviewed-authority-runtime/$name" "senju/state/$name"
@@ -132,6 +145,7 @@ jobs:
 
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
 
           candidate_path = Path("automation/codegen/meta_state/discovery_candidates.json")
@@ -195,6 +209,39 @@ jobs:
           candidate_path.parent.mkdir(parents=True, exist_ok=True)
           candidate_path.write_text(json.dumps(candidate_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           Path("/tmp/frontier-auto-ingress-count").write_text(str(added), encoding="utf-8")
+
+          raw_dispatch = os.environ.get("DISPATCH_WRITE_REQUESTS_JSON", "").strip()
+          if raw_dispatch:
+              incoming = json.loads(raw_dispatch)
+              if isinstance(incoming, dict):
+                  incoming_rows = incoming.get("requests", [])
+              elif isinstance(incoming, list):
+                  incoming_rows = incoming
+              else:
+                  raise SystemExit("write_requests_json must be a JSON list or object with requests")
+              if not isinstance(incoming_rows, list):
+                  raise SystemExit("write_requests_json.requests must be a list")
+              queue_path = Path("senju/state/reviewed_write_requests.json")
+              try:
+                  queue = json.loads(queue_path.read_text(encoding="utf-8"))
+              except (OSError, json.JSONDecodeError, TypeError):
+                  queue = {"schema": "senju-owner-authorized-write-requests/v1", "requests": []}
+              current_rows = queue.get("requests", []) if isinstance(queue, dict) else []
+              if not isinstance(current_rows, list):
+                  current_rows = []
+              by_id = {
+                  str(row.get("request_id")): row
+                  for row in current_rows
+                  if isinstance(row, dict) and row.get("request_id")
+              }
+              for row in incoming_rows:
+                  if isinstance(row, dict) and row.get("request_id"):
+                      by_id[str(row["request_id"])] = row
+              queue = {
+                  "schema": "senju-owner-authorized-write-requests/v1",
+                  "requests": list(by_id.values()),
+              }
+              queue_path.write_text(json.dumps(queue, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
           PY
 
           echo "frontier_auto_ingress=$(cat /tmp/frontier-auto-ingress-count)" >> "$GITHUB_STEP_SUMMARY"
@@ -255,6 +302,33 @@ jobs:
           echo "execution_attempts=$(jq -r '.execution_attempt_count' /tmp/reviewed-authority-closed-loop.json)" >> "$GITHUB_STEP_SUMMARY"
           echo "contacted=$(jq -r '.contacted_count' /tmp/reviewed-authority-closed-loop.json)" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Execute queued owner-authorized credentialed writes
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: senju:automation/codegen
+          SENJU_WRITE_CREDENTIAL_GRANTS_JSON: ${{ vars.SENJU_WRITE_CREDENTIAL_GRANTS_JSON }}
+          SENJU_WRITE_TOKEN_1: ${{ secrets.SENJU_WRITE_TOKEN_1 }}
+          SENJU_WRITE_TOKEN_2: ${{ secrets.SENJU_WRITE_TOKEN_2 }}
+          SENJU_WRITE_TOKEN_3: ${{ secrets.SENJU_WRITE_TOKEN_3 }}
+        run: |
+          set -euo pipefail
+          python - <<'PY' > /tmp/reviewed-authorized-write-broker.json
+          import json
+          from senju.authorized_write_broker import execute_authorized_write_queue
+
+          result = execute_authorized_write_queue(
+              ".",
+              "senju/state",
+              max_requests=8,
+          )
+          print(json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True))
+          PY
+          test -s senju/state/reviewed_write_operational_leases.json
+          test -s senju/state/reviewed_write_execution_receipts.json
+          echo "write_hosts=$(jq -r '.authorized_write_host_count' /tmp/reviewed-authorized-write-broker.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "write_attempts=$(jq -r '.cycle_attempt_count' /tmp/reviewed-authorized-write-broker.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "credentialed_write_attempts=$(jq -r '.credentialed_attempt_count' /tmp/reviewed-authorized-write-broker.json)" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Save approval evidence and execution state for next cycle
         if: github.event_name != 'pull_request'
         shell: bash
@@ -268,6 +342,9 @@ jobs:
           cp senju/state/owner_frontier_council.json .reviewed-authority-runtime/
           cp senju/state/owner_frontier_negotiator_feed.json .reviewed-authority-runtime/ || true
           cp senju/state/council_operational_policy.json .reviewed-authority-runtime/
+          cp senju/state/reviewed_write_requests.json .reviewed-authority-runtime/ 2>/dev/null || true
+          cp senju/state/reviewed_write_operational_leases.json .reviewed-authority-runtime/
+          cp senju/state/reviewed_write_execution_receipts.json .reviewed-authority-runtime/
 
       - name: Persist closed-loop memory
         if: github.event_name != 'pull_request'
@@ -285,6 +362,7 @@ jobs:
             /tmp/authority-review.json
             /tmp/council-operational-governance.json
             /tmp/reviewed-authority-closed-loop.json
+            /tmp/reviewed-authorized-write-broker.json
             senju/state/authority_reviewed_grants.json
             senju/state/owner_frontier_council.json
             senju/state/owner_frontier_negotiator_feed.json
@@ -293,6 +371,8 @@ jobs:
             senju/state/reviewed_authority_operational_leases.json
             senju/state/reviewed_authority_execution_receipts.json
             senju/state/reviewed_authority_lifecycle_state.json
+            senju/state/reviewed_write_operational_leases.json
+            senju/state/reviewed_write_execution_receipts.json
             .reviewed-authority-runtime/root_negotiation_peer_feed.json
             .reviewed-authority-runtime/authority_opportunity_queue.json
           include-hidden-files: true
