@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: read
-  actions: read
+  actions: reada
   issues: write
 
 concurrency:
@@ -115,14 +115,14 @@ jobs:
                 jq -r '.body' /tmp/senju-delegation.json > /tmp/senju-delegation-body.md
                 cat >> /tmp/senju-delegation-body.md <<EOF
 
-## PR #252 coordination context
-- self-development run: ${SELF_RUN:-none}
-- local manifests generated: ${SELF_GENERATED:-0}
-- local plan fingerprint: ${SELF_FP:-none}
-- local self-development PR: ${SELF_PR:-none}
+                ## PR #252 coordination context
+                - self-development run: ${SELF_RUN:-none}
+                - local manifests generated: ${SELF_GENERATED:-0}
+                - local plan fingerprint: ${SELF_FP:-none}
+                - local self-development PR: ${SELF_PR:-none}
 
-If the requested change overlaps the local self-development PR above, do not duplicate it; adapt to the current default branch and leave the overlapping work to PR #252's lane.
-EOF
+                If the requested change overlaps the local self-development PR above, do not duplicate it; adapt to the current default branch and leave the overlapping work to PR #252's lane.
+                EOF
                 URL="$(gh issue create \
                   --repo "$REPO" \
                   --title "$TITLE" \
