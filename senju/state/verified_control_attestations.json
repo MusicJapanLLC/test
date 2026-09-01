@@ -1,0 +1,20 @@
+{
+  "schema": "senju-verified-control-attestations/v1",
+  "records": [
+    {
+      "id": "render-precedent-20260901",
+      "provider": "render",
+      "workspace_id": "tea-da883v49v7es73euaiug",
+      "service_id": "srv-dab2m5jtqb8s73ejvlb0",
+      "service_url": "https://the-world-authority-precedent-20260901.onrender.com",
+      "host": "the-world-authority-precedent-20260901.onrender.com",
+      "provider_control_verified": true,
+      "owner_authorized": true,
+      "proof_ref": "render:srv-dab2m5jtqb8s73ejvlb0",
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "credential_scope": "none",
+      "private_network": false,
+      "authority_effect": "none"
+    }
+  ]
+}
