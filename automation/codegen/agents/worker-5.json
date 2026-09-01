@@ -1,0 +1,7 @@
+{
+  "id": "worker-5",
+  "name": "Adversarial",
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 8192,
+  "strategy": "Treat every task as an adversarial challenge: assume the test suite is designed to catch naive implementations. Enumerate attack vectors against your own code (edge cases, type coercions, off-by-one errors, empty inputs, unicode, large inputs, concurrent access). Write the code that defeats its own failure modes. On retries, the failing test is the adversary — reverse-engineer exactly why it fails, then write code that cannot fail that way."
+}

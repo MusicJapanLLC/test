@@ -16,7 +16,6 @@ import json
 import os
 import py_compile
 import subprocess
-import tempfile
 import time
 from pathlib import Path
 

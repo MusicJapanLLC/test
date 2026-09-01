@@ -4,6 +4,7 @@ X Recovery Engine — self-recovery + mutual recovery with Senju/META.
 - Self-recovery: detect own failures, restart stalled tasks, re-inject queue
 - Mutual recovery: read Senju's status, offer help; write own status so Senju can help X
 - Attack research sharing: CVE patterns → Senju knowledge → X hypothesis engine
+- Senju→X injection: Senju can actively push task specs into X's queue
 """
 
 import json
@@ -15,6 +16,7 @@ SENJU_INBOX = ROOT / "senju" / "inbox" / "codegen_events.ndjson"
 SENJU_KNOWLEDGE = ROOT / "senju" / "knowledge" / "codegen_patterns.ndjson"
 SENJU_STATUS = ROOT / "senju" / "status" / "codegen_status.json"
 SENJU_X_CHANNEL = ROOT / "senju" / "inbox" / "x_recovery.ndjson"
+SENJU_PUSH = ROOT / "automation" / "codegen" / "meta_state" / "senju_push.ndjson"
 X_STATUS = ROOT / "automation" / "codegen" / "meta_state" / "x_status.json"
 X_ATTACK_LOG = ROOT / "automation" / "codegen" / "meta_state" / "attack_research.ndjson"
 
@@ -98,7 +100,7 @@ def request_help_from_senju(reason: str):
     print(f"[X/recovery] requested help from Senju: {reason}")
 
 
-def mutual_recovery_cycle(stats: dict):
+def mutual_recovery_cycle(stats: dict) -> dict:
     """
     Check Senju's health and X's health.
     - If X is stuck → ask Senju for help
@@ -112,13 +114,11 @@ def mutual_recovery_cycle(stats: dict):
 
     print(f"[X/recovery] X={x_rate:.1%} Senju={senju_rate:.1%}")
 
-    # X struggling → ask Senju
     if x_rate < 0.2 and x_total > 0:
         request_help_from_senju(
             f"X success rate critically low: {x_rate:.1%} ({x_passing}/{x_total})"
         )
 
-    # Senju struggling → share X's patterns
     if senju_rate < 0.2 and x_rate > 0.5:
         from . import knowledge_base as kb
         patterns = kb.get_successful_patterns(limit=10)
@@ -138,11 +138,6 @@ def mutual_recovery_cycle(stats: dict):
 def log_attack_research(cve_id: str, description: str, test_result: str,
                         bypass_attempted: bool, bypass_succeeded: bool,
                         code_generated: str = ""):
-    """
-    Log CVE-based defensive code generation research.
-    Shared with Senju so all AIs benefit from security findings.
-    bypass_succeeded = whether generated code handled the attack scenario.
-    """
     record = {
         "ts": _ts(),
         "cve_id": cve_id,
@@ -175,10 +170,6 @@ def log_attack_research(cve_id: str, description: str, test_result: str,
 
 
 def run_cve_defense_experiments(intel: dict, client) -> list[dict]:
-    """
-    For each HIGH/CRITICAL CVE in intel, generate defensive code and test it.
-    Results logged and shared with Senju.
-    """
     from .model_client import strip_fences
     from .meta_v2 import update_hypothesis, load_hypotheses
 
@@ -234,10 +225,6 @@ def run_cve_defense_experiments(intel: dict, client) -> list[dict]:
 # ─────────────────────────────────────────────
 
 def self_recover(stats: dict) -> list[str]:
-    """
-    Detect stalled tasks (5+ attempts, 0 successes) and re-inject to Senju queue.
-    Returns list of task_ids re-injected.
-    """
     from .meta_v2 import inject_work_item
     queue_file = ROOT / "senju" / "queue" / "work_items.json"
 
@@ -266,3 +253,87 @@ def self_recover(stats: dict) -> list[str]:
         })
 
     return stalled[:3]
+
+
+# ─────────────────────────────────────────────
+# SENJU → X ACTIVE INJECTION CHANNEL
+# ─────────────────────────────────────────────
+
+def read_senju_push_requests() -> list[dict]:
+    """Read task injection requests that Senju has written for X to pick up."""
+    if not SENJU_PUSH.exists():
+        return []
+    records = []
+    try:
+        for line in SENJU_PUSH.read_text().splitlines():
+            line = line.strip()
+            if line:
+                records.append(json.loads(line))
+    except Exception:
+        pass
+    return records
+
+
+def process_senju_injections(stats: dict) -> list[str]:
+    """
+    Pick up tasks that Senju pushed for X.
+    Inject them into X's task queue and ack back to Senju.
+    """
+    from .meta_v2 import inject_work_item
+    requests = read_senju_push_requests()
+    if not requests:
+        return []
+
+    queue_file = ROOT / "senju" / "queue" / "work_items.json"
+    injected = []
+
+    for req in requests[-10:]:
+        task_id = req.get("task_id", "")
+        if not task_id:
+            continue
+        if stats.get(task_id, {}).get("successes", 0) > 0:
+            continue
+
+        inject_work_item(queue_file, {
+            "type": "codegen_task_senju_injection",
+            "name": task_id,
+            "task_id": task_id,
+            "source": "Senju",
+            "rationale": req.get("rationale", ""),
+        }, priority=0)
+
+        injected.append(task_id)
+        print(f"[X/recovery] Senju-injected task: {task_id} — {req.get('rationale','')}")
+
+    if injected:
+        _append(SENJU_INBOX, {
+            "source": "X",
+            "event": "senju_injection_ack",
+            "ts": _ts(),
+            "injected": injected,
+        })
+        SENJU_PUSH.write_text("")
+
+    return injected
+
+
+def enhanced_mutual_recovery(stats: dict) -> dict:
+    """
+    Full bidirectional recovery:
+    - mutual_recovery_cycle (X↔Senju health)
+    - process_senju_injections (Senju tasks → X queue)
+    - self_recover (stalled task re-injection)
+    """
+    mutual = mutual_recovery_cycle(stats)
+    injected = process_senju_injections(stats)
+    stalled = self_recover(stats)
+
+    report = {
+        "ts": _ts(),
+        "x_rate": mutual["x_rate"],
+        "senju_rate": mutual["senju_rate"],
+        "senju_injected": injected,
+        "self_recovered": stalled,
+    }
+    _append(SENJU_INBOX, {"source": "X", "event": "enhanced_recovery_report", **report})
+    return report

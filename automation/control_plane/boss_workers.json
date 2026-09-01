@@ -1,5 +1,5 @@
 {
-  "schema": "ai-factory-worker-registry/v1",
+  "schema": "ai-factory-worker-registry/v2",
   "default_branch": "claude/employee-onboarding-setup-udm86",
   "workers": [
     {
@@ -11,7 +11,7 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": [],
-      "forge_allowed": false
+      "forge_allowed": true
     },
     {
       "id": "ai-foundry-executor",
@@ -45,11 +45,46 @@
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
       "forge_allowed": true
+    },
+    {
+      "id": "codegen-orchestrator",
+      "name": "X / CODEGEN ORCHESTRATOR",
+      "workflow": "codegen-orchestrator.yml",
+      "expected_minutes": 240,
+      "priority": "P0",
+      "operational_events": ["schedule", "workflow_dispatch", "repository_dispatch"],
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": [],
+      "forge_allowed": true,
+      "self_dev": true,
+      "autonomous_task_generation": true
+    },
+    {
+      "id": "senju-red-expedition",
+      "name": "SENJU / RED EXPEDITION",
+      "workflow": "senju-red-expedition.yml",
+      "expected_minutes": 45,
+      "priority": "P0",
+      "operational_events": ["schedule", "workflow_dispatch", "push"],
+      "repair": ["rerun_failed", "dispatch"],
+      "investigate_with": [],
+      "forge_allowed": true,
+      "offense_first": true,
+      "autonomous_escalation": true
     }
   ],
-  "retry_budget_per_incident": 2,
+  "retry_budget_per_incident": 5,
+  "auto_retry_on_timeout": true,
   "boss_escalation": {
-    "unresolved_priorities": ["P0", "P1"],
-    "report_resolved_p0": true
+    "unresolved_priorities": ["P0"],
+    "report_resolved_p0": false,
+    "escalate_after_retries": 5,
+    "silent_on_p1_self_resolved": true
+  },
+  "inter_agent_coordination": {
+    "x_to_senju": "senju/inbox/codegen_events.ndjson",
+    "senju_to_x": "automation/codegen/meta_state/senju_push.ndjson",
+    "meta_broadcast": "automation/reporting/codegen_summary.ndjson",
+    "knowledge_share": "senju/knowledge/codegen_patterns.ndjson"
   }
 }

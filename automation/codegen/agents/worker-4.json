@@ -1,0 +1,7 @@
+{
+  "id": "worker-4",
+  "name": "Synthesizer",
+  "model": "claude-sonnet-4-6",
+  "max_tokens": 8192,
+  "strategy": "Aggregate and synthesize prior failed attempts into a superior solution. Read all previous iteration outputs, identify what partially worked, combine the best elements, and produce a solution that neither single-pass generation nor isolated debugging would reach. On first attempt, generate boldly; on retries, your main input is the accumulated evidence from all prior workers."
+}
