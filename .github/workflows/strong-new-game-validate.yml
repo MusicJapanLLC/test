@@ -1,0 +1,139 @@
+name: Strong New Game Validation
+
+on:
+  push:
+    branches: ["feat/strong-new-game-3h"]
+    paths:
+      - "the-world-strong-new-game/**"
+      - ".github/workflows/strong-new-game-validate.yml"
+      - "the-world-5th-power/git_mesh.py"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Compile Strong New Game modules
+        run: |
+          set -euo pipefail
+          python -m py_compile \
+            the-world-strong-new-game/strong_new_game.py \
+            the-world-strong-new-game/assign_synthetic_labs.py \
+            the-world-5th-power/git_mesh.py
+
+      - name: Build representative research inputs
+        run: |
+          set -euo pipefail
+          for channel in red senju meta x; do
+            mkdir -p "/tmp/research/$channel"
+          done
+          cat > /tmp/research/red/research.json <<'JSON'
+          {"schema":"red-smoke/v1","trend":"improving","focus_findings":["regression-A","hypothesis-B"],"confidence":0.91}
+          JSON
+          cat > /tmp/research/senju/research.json <<'JSON'
+          {"schema":"senju-smoke/v1","mode":"research","priority_findings":["boundary-C"],"confidence":0.88}
+          JSON
+          cat > /tmp/research/meta/research.json <<'JSON'
+          {"schema":"meta-smoke/v1","program_key":"LEARNING","novelty":0.77,"reproducibility":0.93}
+          JSON
+          cat > /tmp/research/x/research.json <<'JSON'
+          {"schema":"x-smoke/v1","program_key":"COORDINATION","replication_outcome":"confirmed","confidence":0.90}
+          JSON
+
+      - name: Reconcile and verify 2x2 Git mesh
+        run: |
+          set -euo pipefail
+          python the-world-5th-power/git_mesh.py reconcile \
+            --runtime /tmp/strong-game-git \
+            --branching 2 \
+            --generations 2 \
+            --workers 4
+          python the-world-5th-power/git_mesh.py verify \
+            --runtime /tmp/strong-game-git \
+            --branching 2 \
+            --generations 2
+
+      - name: Build generation one
+        run: |
+          set -euo pipefail
+          python the-world-strong-new-game/strong_new_game.py build \
+            --output /tmp/generation-one \
+            --research-file-budget 1000 \
+            --research-input RED=/tmp/research/red \
+            --research-input SENJU=/tmp/research/senju \
+            --research-input META=/tmp/research/meta \
+            --research-input X=/tmp/research/x
+          python the-world-strong-new-game/assign_synthetic_labs.py /tmp/generation-one
+          python the-world-strong-new-game/strong_new_game.py verify --output /tmp/generation-one
+
+      - name: Roll generation one into generation two
+        run: |
+          set -euo pipefail
+          python the-world-strong-new-game/strong_new_game.py build \
+            --output /tmp/generation-two \
+            --previous /tmp/generation-one \
+            --research-file-budget 1000 \
+            --research-input RED=/tmp/research/red \
+            --research-input SENJU=/tmp/research/senju \
+            --research-input META=/tmp/research/meta \
+            --research-input X=/tmp/research/x
+          python the-world-strong-new-game/assign_synthetic_labs.py /tmp/generation-two
+          python the-world-strong-new-game/strong_new_game.py verify --output /tmp/generation-two
+
+      - name: Assert evolution and lab rotation
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          def checkpoint(root):
+              root = Path(root)
+              latest = json.loads((root / 'latest.json').read_text())
+              return json.loads((root / latest['checkpoint']).read_text())
+
+          one = checkpoint('/tmp/generation-one')
+          two = checkpoint('/tmp/generation-two')
+          assert one['generation'] == 1
+          assert two['generation'] == 2
+          assert one['virtual_lineage_count'] == 4
+          assert two['virtual_lineage_count'] == 16
+          assert one['research']['RED']['file_budget'] == 400
+          assert one['research']['SENJU']['file_budget'] == 200
+          assert one['research']['META']['file_budget'] == 200
+          assert one['research']['X']['file_budget'] == 200
+          assert two['research']['RED']['cumulative_cycles'] == 2
+          assert two['previous_checkpoint_digest'] == one['checkpoint_digest']
+          assert one['synthetic_labs']['catalog_size'] == 32
+          assert two['synthetic_labs']['catalog_size'] == 32
+          assert one['synthetic_labs']['rotation_offset'] == 0
+          assert two['synthetic_labs']['rotation_offset'] == 16
+          first = {lab for labs in one['synthetic_labs']['assignments'].values() for lab in labs}
+          second = {lab for labs in two['synthetic_labs']['assignments'].values() for lab in labs}
+          assert len(first) == 16 and len(second) == 16
+          assert first.isdisjoint(second)
+          assert one['invariants']['guard_policy'] == 'unchanged'
+          assert two['invariants']['guard_policy'] == 'unchanged'
+          assert not one['invariants']['external_side_effects']
+          print({
+              'generation_1_seconds': one['performance']['total_build_seconds'],
+              'generation_2_seconds': two['performance']['total_build_seconds'],
+              'generation_2_lineage': two['virtual_lineage_count'],
+              'red_budget': two['research']['RED']['file_budget'],
+              'lab_rotation': [one['synthetic_labs']['rotation_offset'], two['synthetic_labs']['rotation_offset']],
+          })
+          PY
