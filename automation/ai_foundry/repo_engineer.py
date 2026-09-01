@@ -8,6 +8,7 @@ import re
 import subprocess
 import urllib.request
 from pathlib import Path
+from inference_streamer import InferenceUI
 
 RUNTIME = "https://czwdtjgunsafcifjhpwt.supabase.co/functions/v1/ai-foundry-runtime"
 MAX_TREE_FILES = 450
@@ -129,9 +130,12 @@ def main() -> int:
     job = payload.get("job") or {}
     job_id = str(job.get("id") or "")
     request = extract_request(payload)
+    
+    InferenceUI.notify_step("リポジトリの構成を解析")
     inventory = git_files(repo)
     inventory_text = "\n".join(file_summary(repo, path) for path in inventory)
 
+    InferenceUI.notify_step("最適な修正箇所を推論")
     nav_prompt = f"USER REQUEST:\n{request}\n\nREPOSITORY INVENTORY:\n{inventory_text}"
     nav = parse_json(runtime(NAVIGATOR_SYSTEM, [{"role": "user", "content": nav_prompt}]))
     selected = [safe_path(p) for p in (nav.get("files") or []) if isinstance(p, str)][:MAX_SELECTED_FILES]
@@ -139,6 +143,7 @@ def main() -> int:
     context_paths = list(dict.fromkeys(selected + new_files))
     context = read_context(repo, context_paths)
 
+    InferenceUI.notify_step("パッチを生成")
     patch_prompt = (
         f"USER REQUEST:\n{request}\n\nNAVIGATION RATIONALE:\n{nav.get('rationale','')}\n"
         f"\nSELECTED REPOSITORY CONTEXT:\n{context}\n\n"
@@ -149,6 +154,7 @@ def main() -> int:
     if not files:
         raise RuntimeError("repo engineer produced no files")
 
+    InferenceUI.notify_step("ファイルを書き込み")
     changed: list[str] = []
     backups: dict[str, str | None] = {}
     for item in files[:16]:
@@ -170,6 +176,8 @@ def main() -> int:
     for source in (nav.get("test_commands") or [], patch.get("test_commands") or []):
         if isinstance(source, str) and source.strip() and source.strip() not in tests:
             tests.append(source.strip())
+    
+    InferenceUI.notify_step("完了")
     meta = {
         "job_id": job_id,
         "mode": "repo-engineer",
