@@ -8,6 +8,7 @@ operator/public-lab evidence already curated in public-red-lab-registry.json.
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import sys
 from datetime import datetime, timezone
@@ -36,6 +37,10 @@ def _write(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _stable(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+
+
 def _active_hosts(standing: dict[str, Any]) -> set[str]:
     out: set[str] = set()
     for row in standing.get("records", []) if isinstance(standing, dict) else []:
@@ -53,10 +58,11 @@ def _active_hosts(standing: dict[str, Any]) -> set[str]:
     return out
 
 
-def _sync_effective(path: Path, standing: dict[str, Any]) -> dict[str, Any]:
+def _sync_effective(path: Path, standing: dict[str, Any]) -> tuple[dict[str, Any], bool]:
     doc = _load(path, {"schema": "senju-owner-contact-ceiling-effective/v4", "ceiling": {}})
     if not isinstance(doc, dict):
         doc = {"schema": "senju-owner-contact-ceiling-effective/v4", "ceiling": {}}
+    before = copy.deepcopy(doc)
     ceiling = doc.get("ceiling")
     if not isinstance(ceiling, dict):
         ceiling = {}
@@ -92,10 +98,17 @@ def _sync_effective(path: Path, standing: dict[str, Any]) -> dict[str, Any]:
     ceiling["credential_scope"] = "none"
     ceiling["shared_public_lab_rate_limit_rps"] = 1
     ceiling["max_public_lab_requests_per_cycle"] = min(int(ceiling.get("max_public_lab_requests_per_cycle", 6) or 6), 6)
-    doc["generated_at"] = int(datetime.now(timezone.utc).timestamp())
     doc["public_red_registry_overlay"] = True
-    _write(path, doc)
-    return doc
+
+    before_cmp = copy.deepcopy(before)
+    after_cmp = copy.deepcopy(doc)
+    before_cmp.pop("generated_at", None)
+    after_cmp.pop("generated_at", None)
+    changed = _stable(before_cmp) != _stable(after_cmp)
+    if changed:
+        doc["generated_at"] = int(datetime.now(timezone.utc).timestamp())
+        _write(path, doc)
+    return doc, changed
 
 
 def main() -> int:
@@ -157,8 +170,9 @@ def main() -> int:
         before_hosts.add(host)
         newly_admitted.append(host)
 
-    _write(standing_path, standing)
-    effective = _sync_effective(Path(args.effective_ceiling), standing)
+    if newly_admitted or not standing_path.exists():
+        _write(standing_path, standing)
+    effective, effective_changed = _sync_effective(Path(args.effective_ceiling), standing)
 
     discovery_path = Path(args.discovery)
     discovery = _load(discovery_path, {"schema": "senju-public-red-discovery/v1", "discovered_profiles": []})
@@ -186,11 +200,20 @@ def main() -> int:
             "source": "curated_public_red_lab_registry",
             "shared_instance": True,
         }
-    discovery["discovered_profiles"] = [by_url[key] for key in sorted(by_url)]
-    discovery["registry_profile_count"] = len(targets)
-    discovery["effective_host_count"] = len(effective.get("ceiling", {}).get("exact_hosts", []))
-    discovery["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
-    _write(discovery_path, discovery)
+    new_profiles = [by_url[key] for key in sorted(by_url)]
+    new_registry_count = len(targets)
+    new_effective_count = len(effective.get("ceiling", {}).get("exact_hosts", []))
+    discovery_changed = (
+        _stable(current_profiles if isinstance(current_profiles, list) else []) != _stable(new_profiles)
+        or discovery.get("registry_profile_count") != new_registry_count
+        or discovery.get("effective_host_count") != new_effective_count
+    )
+    if discovery_changed or not discovery_path.exists():
+        discovery["discovered_profiles"] = new_profiles
+        discovery["registry_profile_count"] = new_registry_count
+        discovery["effective_host_count"] = new_effective_count
+        discovery["updated_at_utc"] = datetime.now(timezone.utc).isoformat()
+        _write(discovery_path, discovery)
 
     active = _active_hosts(standing)
     effective_hosts = {
@@ -204,7 +227,9 @@ def main() -> int:
         "newly_admitted_hosts": sorted(newly_admitted),
         "standing_safe_host_count": len(active),
         "effective_safe_host_count": len(active & effective_hosts),
-        "discovery_profile_count": len(discovery["discovered_profiles"]),
+        "discovery_profile_count": len(new_profiles),
+        "effective_changed": effective_changed,
+        "discovery_changed": discovery_changed,
         "methods": SAFE_METHODS,
         "credential_scope": "none",
         "destructive": False,
