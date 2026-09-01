@@ -1,0 +1,173 @@
+{
+  "admitted_hosts": [],
+  "authority_from_general_web_discovery": false,
+  "authority_rule": "operator_evidence_page_plus_provider_policy_match_only",
+  "discovered_profiles": [
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "auto-google-firing-range-a4ed9833cabe",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://public-firing-range.appspot.com/"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-081db3698be6",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-f04510fbb95e",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/code/"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-592f1b9d0120",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/gruyere-code.zip"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-d0cf22082aab",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/resetbutton/123"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-0b72c6e0d1ad",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/start"
+    },
+    {
+      "authorization_evidence": "https://owasp.org/www-project-juice-shop/",
+      "id": "auto-owasp-juice-shop-3fa327d82374",
+      "operator": "OWASP",
+      "provider_id": "owasp-juice-shop",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://demo.owasp-juice.shop/"
+    }
+  ],
+  "effective_host_count": 10,
+  "newly_discovered_urls": [
+    "https://demo.owasp-juice.shop/",
+    "https://google-gruyere.appspot.com/",
+    "https://google-gruyere.appspot.com/code/",
+    "https://google-gruyere.appspot.com/gruyere-code.zip",
+    "https://google-gruyere.appspot.com/resetbutton/123",
+    "https://google-gruyere.appspot.com/start",
+    "https://public-firing-range.appspot.com/"
+  ],
+  "provider_checks": [
+    {
+      "evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "final_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "matched_urls": [],
+      "provider_id": "acunetix-vulnweb",
+      "reachable": true
+    },
+    {
+      "evidence_url": "https://github.com/google/firing-range",
+      "final_url": "https://github.com/google/firing-range",
+      "matched_urls": [
+        "https://public-firing-range.appspot.com/",
+        "https://public-firing-range.appspot.com/"
+      ],
+      "provider_id": "google-firing-range",
+      "reachable": true
+    },
+    {
+      "error": "HTTPError: HTTP Error 429: Too Many Requests",
+      "evidence_url": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
+      "matched_urls": [],
+      "provider_id": "google-firing-range",
+      "reachable": false
+    },
+    {
+      "error": "HTTPError: HTTP Error 429: Too Many Requests",
+      "evidence_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
+      "matched_urls": [],
+      "provider_id": "google-gruyere",
+      "reachable": false
+    },
+    {
+      "evidence_url": "https://google-gruyere.appspot.com/part1",
+      "final_url": "https://google-gruyere.appspot.com/part1",
+      "matched_urls": [
+        "https://google-gruyere.appspot.com/start",
+        "https://google-gruyere.appspot.com/",
+        "https://google-gruyere.appspot.com/code/",
+        "https://google-gruyere.appspot.com/gruyere-code.zip",
+        "https://google-gruyere.appspot.com/gruyere-code.zip",
+        "https://google-gruyere.appspot.com/resetbutton/123"
+      ],
+      "provider_id": "google-gruyere",
+      "reachable": true
+    },
+    {
+      "created": false,
+      "error": "ValueError: instance factory did not return a distinct same-provider sandbox URL",
+      "instance_factory_url": "https://google-gruyere.appspot.com/start",
+      "provider_id": "google-gruyere"
+    },
+    {
+      "error": "HTTPError: HTTP Error 403: Forbidden",
+      "evidence_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
+      "matched_urls": [],
+      "provider_id": "portswigger-gin-and-juice",
+      "reachable": false
+    },
+    {
+      "error": "HTTPError: HTTP Error 403: Forbidden",
+      "evidence_url": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
+      "matched_urls": [],
+      "provider_id": "portswigger-gin-and-juice",
+      "reachable": false
+    },
+    {
+      "evidence_url": "https://owasp.org/www-project-juice-shop/",
+      "final_url": "https://owasp.org/www-project-juice-shop/",
+      "matched_urls": [
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/"
+      ],
+      "provider_id": "owasp-juice-shop",
+      "reachable": true
+    }
+  ],
+  "schema": "senju-public-red-discovery/v1",
+  "updated_at_utc": "2026-09-01T02:19:01.928289+00:00"
+}
