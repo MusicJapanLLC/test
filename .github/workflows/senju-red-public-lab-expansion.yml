@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: senju-red-public-lab-expansion
@@ -38,7 +38,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
@@ -191,7 +191,7 @@ jobs:
           PY
 
       - name: Upload RED expansion evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: senju-red-public-lab-expansion-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 7
@@ -207,36 +207,6 @@ jobs:
             senju/state/public_red_discovery.json
             senju/state/public_red_lab_authority.json
 
-      - name: Persist newly verified public-lab authority and URL inventory
-        shell: bash
+      - name: Keep public-lab discoveries evidence-only
         run: |
-          set -euo pipefail
-          branch='claude/employee-onboarding-setup-udm86'
-          git config user.name 'senju-red-lab-bot'
-          git config user.email 'senju-red-lab-bot@users.noreply.github.com'
-          git add \
-            senju/state/standing_authorizations.json \
-            senju/state/owner_contact_ceiling_effective.json \
-            senju/state/public_red_discovery.json \
-            senju/state/public_red_lab_authority.json
-          if git diff --cached --quiet; then
-            echo 'No public-lab authority/inventory changes to persist.'
-            exit 0
-          fi
-          git commit -m 'chore(senju-red): refresh public lab authority'
-
-          for attempt in 1 2 3 4 5; do
-            git fetch origin "$branch"
-            if ! git rebase "origin/$branch"; then
-              git rebase --abort || true
-              echo 'State persistence rebase conflicted; refusing to overwrite concurrent work.' >&2
-              exit 1
-            fi
-            if git push origin "HEAD:$branch"; then
-              echo "Persisted public-lab state on attempt $attempt."
-              exit 0
-            fi
-            sleep $((attempt * 2))
-          done
-          echo 'State persistence lost repeated non-fast-forward races.' >&2
-          exit 1
+          echo 'Public-lab discovery state is intentionally not persisted into repository authority.'

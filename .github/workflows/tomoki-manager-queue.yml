@@ -3,18 +3,11 @@ name: TOMOKI - MANAGER Queue Bridge
 # Master Control recurrence guard: the policy-approved five-minute schedule is canonical.
 # Offset the primary cadence to :02/:07/.../:57 to avoid GitHub's busiest hourly boundary.
 # A lower-frequency :11/:31/:51 backup cadence provides a second schedule event.
-# Existing bounded recovery workers are independent wake sources: when the
-# Owned Self-Recovery Worker, Auto Conflict Resolver, or proven-live Realtime Kernel completes,
-# this Manager bridge can run even if its own scheduled event was dropped.
 # A change to this workflow remains an explicit push-trigger recovery wake path.
 on:
   schedule:
     - cron: '2-59/5 * * * *'
     - cron: '11,31,51 * * * *'
-  workflow_run:
-    workflows: ['Owned Self-Recovery Worker', 'Auto Conflict Resolver', 'THE WORLD - Realtime Kernel']
-    types: [completed]
-    branches: ['claude/employee-onboarding-setup-udm86']
   workflow_dispatch:
   push:
     branches: ['claude/employee-onboarding-setup-udm86']
@@ -58,10 +51,9 @@ jobs:
               raise SystemExit('Manager schedule drift: only the primary and bounded backup cadences are allowed')
           if forbidden in cron_lines:
               raise SystemExit('Manager schedule drift: hourly-boundary */5 cadence is forbidden')
-          required_recovery = "workflows: ['Owned Self-Recovery Worker', 'Auto Conflict Resolver', 'THE WORLD - Realtime Kernel']"
-          required_type = 'types: [completed]'
-          if required_recovery not in workflow or required_type not in workflow:
-              raise SystemExit('Manager wake-path drift: all bounded independent completion triggers are required')
+          forbidden_trigger = 'workflow' + '_run:'
+          if forbidden_trigger in workflow:
+              raise SystemExit('Manager wake-path drift: workflow_run trigger is forbidden')
           print('Manager wake-path regression guard: PASS')
 
       - name: Setup Python

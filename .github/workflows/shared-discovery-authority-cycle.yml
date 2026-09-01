@@ -94,11 +94,10 @@ jobs:
           done
           echo "Authorized-site promotion lineage source run: **${PREV:-fresh}**" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Run shared discovery authority, lease, credential-bound mutation, external action, probe, and coordination loop
+      - name: Run shared discovery authority, lease, bounded mutation planning, external action, probe, and coordination loop
         working-directory: automation/codegen
         env:
           PYTHONPATH: .:../../senju
-          KABEYA_TEST_BEARER_TOKEN: ${{ secrets.KABEYA_TEST_BEARER_TOKEN }}
         run: |
           python - <<'PY'
           from pathlib import Path
