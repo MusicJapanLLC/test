@@ -92,8 +92,12 @@ def bridge_authorization_handoffs(
             skipped += 1
             continue
 
-        credential_scope = str(auth.get("credential_scope") or "none")
-        if credential_scope not in {"none", "synthetic_test"}:
+        # The existing Authority Promotion Bureau accepts credential-free reviewed
+        # leases only. Credential-bearing synthetic test lanes remain separate;
+        # admitting them here would create a false-positive bridge that Promotion
+        # immediately filters out and could replace a valid credential-free lease.
+        credential_scope = str(auth.get("credential_scope") or "none").strip().lower()
+        if credential_scope != "none":
             skipped += 1
             continue
 
@@ -109,7 +113,7 @@ def bridge_authorization_handoffs(
             "host": host,
             "expires_at": expires_at,
             "same_or_narrower": True,
-            "credential_scope": credential_scope,
+            "credential_scope": "none",
             "allow_http": False,
             "allow_delete": False,
             "allow_private_network": False,
