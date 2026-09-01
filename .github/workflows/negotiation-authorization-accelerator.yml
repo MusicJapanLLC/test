@@ -1,5 +1,5 @@
 name: Negotiation Authorization Accelerator
-# Owner Authorization pool closed-loop validation: 50 exact-host grants -> SENJU promotion.
+# Owner Authorization pool closed-loop validation: 50 exact-host grants -> SENJU promotion -> RED frontier.
 
 on:
   schedule:
@@ -17,10 +17,13 @@ on:
       - 'senju/scripts/owner_authorization_pool.py'
       - 'senju/senju/authority_promotion_bureau.py'
       - 'senju/scripts/run_authority_promotion_bureau.py'
+      - 'senju/senju/red_authorized_frontier.py'
+      - 'senju/scripts/run_red_authorized_frontier.py'
       - 'senju/state/verified_control_attestations.json'
       - 'AUTHORIZED_TEST_TARGETS.json'
       - 'tests/test_negotiation_authorization_accelerator.py'
       - 'tests/test_owner_authorization_pool.py'
+      - 'tests/test_red_authorized_frontier.py'
       - '.github/workflows/negotiation-authorization-accelerator.yml'
 
 permissions:
@@ -166,7 +169,35 @@ jobs:
           echo "- promoted runtime hosts: $(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
           echo "- promotion leases: $(jq -r '.promotion_lease_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Run focused accelerator and pool tests
+      - name: Activate live authorized URLs for SENJU RED
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_red_authorized_frontier.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --max-hosts 128 \
+            --live-sample 12 \
+            --out /tmp/red-authorized-frontier.json \
+            | tee /tmp/red-authorized-frontier-run.json
+
+          targets="$(jq -r '.active_target_count' /tmp/red-authorized-frontier.json)"
+          urls="$(jq -r '.frontier_url_count' /tmp/red-authorized-frontier.json)"
+          attempted="$(jq -r '.live_sample.attempted_count' /tmp/red-authorized-frontier-run.json)"
+          success="$(jq -r '.live_sample.success_count' /tmp/red-authorized-frontier-run.json)"
+
+          test "$targets" -ge 1
+          test "$urls" -ge "$targets"
+          test "$attempted" -ge 1
+
+          echo "## SENJU RED Authorized Frontier" >> "$GITHUB_STEP_SUMMARY"
+          echo "- live authorized targets: $targets" >> "$GITHUB_STEP_SUMMARY"
+          echo "- same-origin frontier URLs: $urls" >> "$GITHUB_STEP_SUMMARY"
+          echo "- live probes attempted: $attempted" >> "$GITHUB_STEP_SUMMARY"
+          echo "- live probes succeeded: $success" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run focused accelerator, pool, and RED frontier tests
         env:
           PYTHONPATH: senju
         run: |
@@ -175,9 +206,10 @@ jobs:
             tests/test_negotiation_authorization_accelerator.py \
             tests/test_owner_authorization_pool.py \
             tests/test_authorization_issuance_bureau.py \
+            tests/test_red_authorized_frontier.py \
             senju/tests/test_authority_promotion_bureau.py
 
-      - name: Preserve acceleration and pool evidence
+      - name: Preserve acceleration, pool, and RED evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -187,6 +219,8 @@ jobs:
             /tmp/negotiation-authorization-accelerator.json
             /tmp/owner-authorization-pool.json
             /tmp/owner-authorization-promotion.json
+            /tmp/red-authorized-frontier.json
+            /tmp/red-authorized-frontier-run.json
             senju/state/negotiation_case_review_queue.json
             senju/state/formal_approval_intake.json
             senju/state/authorization_review_keys.json
@@ -199,5 +233,10 @@ jobs:
             senju/state/promotion_bureau_leases.json
             senju/state/promotion_bureau_assignments.json
             senju/state/senju_approved_authority_feed.json
+            senju/state/red_authorized_target_feed.json
+            senju/state/red_authorized_url_frontier.json
+            senju/state/red_authorized_transport_leases.json
+            senju/state/red_authorized_live_sample.json
+            senju/state/adversary_transport_receipts.ndjson
           if-no-files-found: warn
           retention-days: 30
