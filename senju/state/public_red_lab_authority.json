@@ -10,14 +10,16 @@
     "cross_host_inheritance": false,
     "destructive_operations": false,
     "max_auto_new_per_cycle": 2,
-    "private_network": false
+    "private_network": false,
+    "shared_code_hosts_excluded": true,
+    "upstream_requires_explicit_live_reference": true
   },
   "curated_count": 20,
-  "generated_at": 1788232118,
-  "new_probationary_count": 1,
-  "probationary_count": 1,
+  "generated_at": 1788233230,
+  "new_probationary_count": 0,
+  "probationary_count": 0,
   "schema": "senju-public-red-lab-authority/v1",
-  "target_count": 21,
+  "target_count": 20,
   "targets": [
     {
       "allow_delete": false,
@@ -438,28 +440,6 @@
       "source": "curated_public_red_lab_registry",
       "source_id": "zero-bank-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
-    },
-    {
-      "allow_delete": false,
-      "allow_private_network": false,
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
-      "authorization_evidence_url": "https://vwad.owasp.org/",
-      "authorization_note": "OWASP VWAD online/live entry with direct vulnerable/test/lab signal; probationary read-only authority.",
-      "base_url": "https://github.com",
-      "credential_scope": "none",
-      "cross_host_inheritance": false,
-      "first_authorized_at": 1788232118,
-      "host": "github.com",
-      "operator": "Ade Yoseman",
-      "profile": "probationary_public_security_lab",
-      "rate_limit_rps": 1,
-      "source": "owasp_vwad_online_live",
-      "source_id": "PyGoat",
-      "status": "PUBLIC_RED_LAB_PROBATIONARY"
     }
   ]
 }
