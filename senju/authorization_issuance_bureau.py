@@ -1,14 +1,15 @@
 """Bounded Authorization Issuance Bureau.
 
-Discovery is a first-class authorization *review key*: a discovered exact host
-may automatically enter the authorization-verification lane and receive a
-stable machine-readable intake key. Discovery alone still has no authority
-effect. An authorization grant is issued only when the host is already a
+Authorization *review keys* are intentionally easy to obtain. Any requester may
+open an exact-host authorization review lane and receive a stable
+machine-readable key. Possession of that key has no authority effect.
+
+A real authorization grant is still issued only when the host is already a
 canonical authorized target or a trusted verifier supplies both owner-control
 verification and explicit owner authorization.
 
 Flow:
-    discovery -> review key -> owner-control verification -> bureau issuance
+    any requester -> review key -> authorization verification -> bureau issuance
     -> same-or-narrower Authority handoff
 """
 
@@ -46,6 +47,8 @@ class DiscoveryAuthorizationKey:
     authority_effect: str
     next_action: str
     proof_ref: str | None = None
+    requester: str | None = None
+    acquisition_policy: str = "open"
 
 
 @dataclass(frozen=True)
@@ -78,23 +81,36 @@ def _normalize_methods(methods: Iterable[str]) -> tuple[str, ...]:
     return normalized
 
 
+def _normalize_requester(requester: str | None) -> str | None:
+    if requester is None:
+        return None
+    value = str(requester).strip()
+    if not value:
+        return None
+    return value[:160]
+
+
 def recognize_discovery_key(
     host: str,
     *,
     source: str = "discovery",
     proof_ref: str | None = None,
+    requester: str | None = None,
 ) -> DiscoveryAuthorizationKey:
-    """Recognize discovery as a key that opens the authorization review lane.
+    """Issue an open-access review key for one exact host.
 
-    The key is deliberately non-authorizing. It makes the discovered host an
-    accepted authorization-review candidate and gives downstream workers a
-    stable object to enrich with owner-control evidence.
+    Historical name retained for compatibility. The function is no longer
+    limited to Discovery callers: research, negotiation, external input, agents,
+    and manual requesters may all obtain the same non-authorizing review key.
     """
 
     normalized_host = _normalize_host(host)
+    normalized_requester = _normalize_requester(requester)
     discovered = datetime.now(timezone.utc)
-    digest_input = "|".join([normalized_host, source, proof_ref or ""])
-    key_id = "discovery-key-" + sha256(digest_input.encode("utf-8")).hexdigest()[:20]
+    digest_input = "|".join(
+        [normalized_host, source, normalized_requester or "", proof_ref or ""]
+    )
+    key_id = "review-key-" + sha256(digest_input.encode("utf-8")).hexdigest()[:20]
     return DiscoveryAuthorizationKey(
         key_id=key_id,
         host=normalized_host,
@@ -102,8 +118,27 @@ def recognize_discovery_key(
         discovered_at=discovered.isoformat(),
         status="authorization_review_unlocked",
         authority_effect="none",
-        next_action="verify_owner_control_then_issue",
+        next_action="verify_authorization_then_issue",
         proof_ref=proof_ref,
+        requester=normalized_requester,
+        acquisition_policy="open",
+    )
+
+
+def request_review_key(
+    host: str,
+    *,
+    requester: str | None = None,
+    source: str = "public-review-request",
+    proof_ref: str | None = None,
+) -> DiscoveryAuthorizationKey:
+    """Public entrypoint: any requester may obtain a non-authorizing review key."""
+
+    return recognize_discovery_key(
+        host,
+        source=source,
+        proof_ref=proof_ref,
+        requester=requester,
     )
 
 
@@ -112,18 +147,19 @@ def build_discovery_authorization_intake(
     *,
     requested_methods: Iterable[str] = ("GET", "HEAD"),
 ) -> dict[str, Any]:
-    """Create the review packet opened by a discovery key."""
+    """Create the authorization-review packet opened by a review key."""
 
     methods = _normalize_methods(requested_methods)
     return {
-        "schema": "authorization-issuance-bureau/discovery-key-v1",
-        "trigger": "discovery_key",
+        "schema": "authorization-issuance-bureau/review-key-v2",
+        "trigger": "open_review_key",
+        "review_key": asdict(key),
         "discovery_key": asdict(key),
-        "discovery_recognized": True,
+        "review_key_acquisition": "open",
         "authorization_review_unlocked": True,
         "authority_effect": "none",
         "review_required": True,
-        "next_action": "verify_owner_control_then_issue",
+        "next_action": "verify_authorization_then_issue",
         "candidate": {
             "host": key.host,
             "requested_methods": list(methods),
@@ -185,14 +221,10 @@ def issue_from_discovery_key(
     *,
     canonical_authorized_hosts: set[str] | None = None,
 ) -> IssuedAuthorization:
-    """Continue a discovery-opened lane into issuance after verification.
-
-    The discovery key binds the review to one exact host. Verification cannot be
-    borrowed from another discovered host.
-    """
+    """Continue an open review-key lane into issuance after verification."""
 
     if key.host != _normalize_host(evidence.host):
-        raise PermissionError("authorization denied: discovery key host mismatch")
+        raise PermissionError("authorization denied: review key host mismatch")
     return issue_authorization(
         evidence,
         canonical_authorized_hosts=canonical_authorized_hosts,
