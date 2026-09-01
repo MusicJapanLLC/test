@@ -422,8 +422,9 @@
       "public_security_lab": true,
       "rate_limit_rps": 1,
       "recommendation_target": "SENJU_RED",
-      "revocation_reason": null,
-      "revoked": false,
+      "revocation_reason": "removed_from_validated_public_red_lab_authority",
+      "revoked": true,
+      "revoked_at_utc": "2026-09-01T03:27:10.057065+00:00",
       "shared_instance": true
     }
   ],
