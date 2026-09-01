@@ -7,14 +7,8 @@
       "authorization_reference": "canonical:kabeya-authorized-test-range",
       "owner": "MusicJapanLLC",
       "issuer_kind": "canonical_repository",
-      "exact_hosts": [
-        "kabeya-authorized-test-range.onrender.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["kabeya-authorized-test-range.onrender.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "created_at_utc": "2026-08-31T07:18:46.558001+00:00",
       "revoked": false,
       "revocation_reason": null,
@@ -27,14 +21,8 @@
       "authorization_reference": "canonical:sustainaboy-works-authorized-test-site",
       "owner": "MusicJapanLLC",
       "issuer_kind": "owner_explicit_canonical_repository",
-      "exact_hosts": [
-        "sustainaboy-works.onrender.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["sustainaboy-works.onrender.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "created_at_utc": "2026-08-31T19:16:30+00:00",
       "revoked": false,
       "revocation_reason": null,
@@ -50,14 +38,8 @@
       "owner": "Acunetix / Invicti",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": [
-        "testphp.vulnweb.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["testphp.vulnweb.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -74,14 +56,8 @@
       "owner": "Acunetix / Invicti",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": [
-        "testasp.vulnweb.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["testasp.vulnweb.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -98,14 +74,8 @@
       "owner": "Acunetix / Invicti",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": [
-        "testaspnet.vulnweb.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["testaspnet.vulnweb.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -122,14 +92,8 @@
       "owner": "Acunetix / Invicti",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
-      "exact_hosts": [
-        "testhtml5.vulnweb.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["testhtml5.vulnweb.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -146,14 +110,8 @@
       "owner": "OWASP Juice Shop Project",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://owasp.org/www-project-juice-shop/",
-      "exact_hosts": [
-        "demo.owasp-juice.shop"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["demo.owasp-juice.shop"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -170,14 +128,8 @@
       "owner": "Google",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://github.com/google/firing-range",
-      "exact_hosts": [
-        "public-firing-range.appspot.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["public-firing-range.appspot.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -193,15 +145,9 @@
       "authorization_reference": "operator-public-lab:google-gruyere",
       "owner": "Google",
       "issuer_kind": "operator_public_security_lab",
-      "authorization_evidence_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
-      "exact_hosts": [
-        "google-gruyere.appspot.com"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "authorization_evidence_url": "https://google-gruyere.appspot.com/",
+      "exact_hosts": ["google-gruyere.appspot.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -218,14 +164,8 @@
       "owner": "PortSwigger",
       "issuer_kind": "operator_public_security_lab",
       "authorization_evidence_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
-      "exact_hosts": [
-        "ginandjuice.shop"
-      ],
-      "allowed_methods": [
-        "GET",
-        "HEAD",
-        "OPTIONS"
-      ],
+      "exact_hosts": ["ginandjuice.shop"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
       "revoked": false,
       "revocation_reason": null,
       "credential_scope": "none",
@@ -236,6 +176,101 @@
       "recommendation_target": "SENJU_RED",
       "shared_instance": true,
       "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:opentext-zero-webappsecurity",
+      "owner": "OpenText Fortify",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://www.microfocus.com/documentation/fortify-webinspect/2540/dast-ugd-html-25.4.0/Content/WebAssessWiz-All.html",
+      "exact_hosts": ["zero.webappsecurity.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1,
+      "authorization_note": "OpenText documentation explicitly describes the host as its example banking application and gives instructions for scanning it."
+    },
+    {
+      "authorization_reference": "operator-public-lab:hcl-testfire",
+      "owner": "HCL AppScan",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://help.hcl-software.com/appscan/ASoC/appseccloud_results_samplescans.html",
+      "exact_hosts": ["demo.testfire.net"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1,
+      "authorization_note": "HCL documentation provides this demo application specifically for users to practice and run DAST scans."
+    },
+    {
+      "authorization_reference": "operator-public-lab:rapid7-webscantest",
+      "owner": "Rapid7",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://docs.rapid7.com/insightappsec/free-trial-quick-start",
+      "exact_hosts": ["www.webscantest.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1,
+      "authorization_note": "Rapid7 documents this as a Rapid7-owned deliberately vulnerable demo domain intended to be scanned."
+    },
+    {
+      "authorization_reference": "operator-public-lab:rapid7-hackazon",
+      "owner": "Rapid7",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://docs.rapid7.com/insightappsec/free-trial-quick-start",
+      "exact_hosts": ["hackazon.webscantest.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1,
+      "authorization_note": "Rapid7 documents this as a Rapid7-owned deliberately vulnerable e-commerce demo domain intended to be scanned."
+    },
+    {
+      "authorization_reference": "operator-public-lab:troyhunt-hack-yourself-first",
+      "owner": "Troy Hunt",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://hack-yourself-first.com/",
+      "exact_hosts": ["hack-yourself-first.com"],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1,
+      "authorization_note": "The operator describes this public site as intentionally vulnerable and used for hands-on security training; standing scope remains read-only/non-destructive."
     }
   ]
 }
