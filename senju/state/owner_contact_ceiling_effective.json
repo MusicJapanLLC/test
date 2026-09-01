@@ -8,41 +8,81 @@
       "OPTIONS"
     ],
     "ceiling_id": "owner-and-operator-public-labs-2026-09-01",
+    "credential_scope": "none",
     "exact_hosts": [
+      "demo.owasp-juice.shop",
+      "ginandjuice.shop",
+      "google-gruyere.appspot.com",
       "kabeya-authorized-test-range.onrender.com",
+      "public-firing-range.appspot.com",
       "sustainaboy-works.onrender.com",
-      "testphp.vulnweb.com",
       "testasp.vulnweb.com",
       "testaspnet.vulnweb.com",
       "testhtml5.vulnweb.com",
-      "demo.owasp-juice.shop",
-      "public-firing-range.appspot.com",
-      "google-gruyere.appspot.com",
-      "ginandjuice.shop"
+      "testphp.vulnweb.com"
     ],
     "follow_redirects": true,
+    "max_public_lab_requests_per_cycle": 6,
     "max_redirects": 5,
     "max_response_bytes": 10485760,
     "per_host_methods": {
-      "kabeya-authorized-test-range.onrender.com": ["GET", "HEAD", "OPTIONS"],
-      "sustainaboy-works.onrender.com": ["GET", "HEAD", "OPTIONS"],
-      "testphp.vulnweb.com": ["GET", "HEAD", "OPTIONS"],
-      "testasp.vulnweb.com": ["GET", "HEAD", "OPTIONS"],
-      "testaspnet.vulnweb.com": ["GET", "HEAD", "OPTIONS"],
-      "testhtml5.vulnweb.com": ["GET", "HEAD", "OPTIONS"],
-      "demo.owasp-juice.shop": ["GET", "HEAD", "OPTIONS"],
-      "public-firing-range.appspot.com": ["GET", "HEAD", "OPTIONS"],
-      "google-gruyere.appspot.com": ["GET", "HEAD", "OPTIONS"],
-      "ginandjuice.shop": ["GET", "HEAD", "OPTIONS"]
+      "demo.owasp-juice.shop": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "ginandjuice.shop": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "google-gruyere.appspot.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "kabeya-authorized-test-range.onrender.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "public-firing-range.appspot.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "sustainaboy-works.onrender.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "testasp.vulnweb.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "testaspnet.vulnweb.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "testhtml5.vulnweb.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "testphp.vulnweb.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
     },
     "retries": 2,
-    "timeout_seconds": 20.0,
-    "credential_scope": "none",
     "shared_public_lab_rate_limit_rps": 1,
-    "max_public_lab_requests_per_cycle": 6
+    "timeout_seconds": 20.0
   },
   "envelope_id": "owner-expansion-default-2026-08-31",
-  "generated_at": 1788235200,
+  "generated_at": 1788229141,
   "schema": "senju-owner-contact-ceiling-effective/v4",
-  "source": "explicit owner standing authorization plus operator-published public security-lab evidence"
+  "source": "standing authority plus operator-published security-lab evidence; safe methods only"
 }
