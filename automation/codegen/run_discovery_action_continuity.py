@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Authority -> credential -> mutation -> expansion -> recovery as one loop."""
+"""Run Authority -> new-host activation -> credential -> mutation -> expansion -> recovery."""
 from __future__ import annotations
 
 import argparse
@@ -15,6 +15,7 @@ from engine.credential_bound_mutation_runtime import ConfiguredCredentialMutatio
 from engine.discovery_capability_leases import issue_discovery_capability_leases
 from engine.discovery_external_action import run_discovery_external_actions
 from engine.discovery_replica_continuity import rebuild_discovery_capability_replicas
+from engine.new_host_authorization_runtime import sync_new_host_authorizations
 
 
 def main() -> int:
@@ -27,6 +28,15 @@ def main() -> int:
 
     state = Path(args.state)
     state.mkdir(parents=True, exist_ok=True)
+
+    # Any exact host that has independently reached canonical explicit-owner status is
+    # activated into the live action queue immediately. This is the new-host permission
+    # fast path: no extra per-host wiring or additional cycle is required after the
+    # canonical authorization exists.
+    new_host_authorization = sync_new_host_authorizations(
+        state,
+        repo_root=args.repo_root,
+    )
 
     lease_before = issue_discovery_capability_leases(state)
     replicas_before = rebuild_discovery_capability_replicas(state)
@@ -61,15 +71,23 @@ def main() -> int:
     )
     credential_runtime.flush()
 
-    # Rebuild from current live authority after both the primary and approved-expansion
-    # mutation passes. Persistent replica state is never an authority source.
+    # Re-sync before the final rebuild so a canonical host added by another authority
+    # process during the same run is eligible for a live lease without waiting for the
+    # next scheduled continuity cycle.
+    new_host_authorization_after = sync_new_host_authorizations(
+        state,
+        repo_root=args.repo_root,
+    )
     lease_after = issue_discovery_capability_leases(state)
     replicas_after = rebuild_discovery_capability_replicas(state)
 
     payload = {
-        "schema": "meta-discovery-action-continuity-run/v3",
+        "schema": "meta-discovery-action-continuity-run/v4",
         "generated_at": int(time.time()),
         "closed_loop": [
+            "canonical_new_host_authorization_sync",
+            "same_cycle_new_host_action_queue",
+            "same_cycle_new_host_capability_lease",
             "authorization",
             "capability_lease",
             "replication",
@@ -89,6 +107,17 @@ def main() -> int:
             "live_authority_rebuild",
             "auto_recovery",
         ],
+        "new_host_authorization": {
+            "canonical_explicit_host_count": new_host_authorization["canonical_explicit_host_count"],
+            "activated_host_count": new_host_authorization["activated_host_count"],
+            "new_profiles_created": new_host_authorization["new_profiles_created"],
+            "review_case_count": new_host_authorization["review_case_count"],
+            "post_action_activated_host_count": new_host_authorization_after["activated_host_count"],
+            "same_cycle_action_queue": True,
+            "same_cycle_capability_lease": True,
+            "unknown_host_auto_authorization": False,
+            "external_link_inheritance_used": False,
+        },
         "lease_before": lease_before,
         "replicas_before": replicas_before,
         "actions": {
