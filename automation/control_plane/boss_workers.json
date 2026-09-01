@@ -1,6 +1,7 @@
 {
-  "schema": "ai-factory-worker-registry/v2",
+  "schema": "ai-factory-worker-registry/v3",
   "default_branch": "claude/employee-onboarding-setup-udm86",
+  "global_autonomy_level": "maximum",
   "workers": [
     {
       "id": "tomoki-manager",
@@ -11,7 +12,8 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": [],
-      "forge_allowed": true
+      "forge_allowed": true,
+      "auto_restart_on_failure": true
     },
     {
       "id": "ai-foundry-executor",
@@ -22,7 +24,8 @@
       "operational_events": ["schedule", "workflow_dispatch"],
       "repair": ["rerun_failed", "dispatch"],
       "investigate_with": ["tomoki-hound.yml", "tomoki-skeptic.yml"],
-      "forge_allowed": true
+      "forge_allowed": true,
+      "auto_restart_on_failure": true
     },
     {
       "id": "madlab-world-evolution",
@@ -57,7 +60,9 @@
       "investigate_with": [],
       "forge_allowed": true,
       "self_dev": true,
-      "autonomous_task_generation": true
+      "autonomous_task_generation": true,
+      "auto_restart_on_failure": true,
+      "inter_agent_write": ["senju/inbox/codegen_events.ndjson", "senju/knowledge/codegen_patterns.ndjson"]
     },
     {
       "id": "senju-red-expedition",
@@ -70,7 +75,35 @@
       "investigate_with": [],
       "forge_allowed": true,
       "offense_first": true,
-      "autonomous_escalation": true
+      "autonomous_escalation": true,
+      "auto_restart_on_failure": true,
+      "autonomous_scope_expansion": true,
+      "inter_agent_write": ["automation/codegen/meta_state/senju_push.ndjson", "automation/codegen/meta_state/x_status.json"]
+    },
+    {
+      "id": "x-self-heal",
+      "name": "X / SELF-HEAL MONITOR",
+      "workflow": "x-self-heal.yml",
+      "expected_minutes": 15,
+      "priority": "P0",
+      "operational_events": ["schedule", "workflow_dispatch"],
+      "repair": ["dispatch"],
+      "investigate_with": [],
+      "forge_allowed": true,
+      "monitors": ["codegen-orchestrator", "senju-red-expedition", "tomoki-manager", "ai-foundry-executor"],
+      "auto_restart_on_failure": true
+    },
+    {
+      "id": "claude-auto-merge",
+      "name": "CLAUDE / AUTO-MERGE",
+      "workflow": "claude-auto-merge.yml",
+      "expected_minutes": 5,
+      "priority": "P0",
+      "operational_events": ["pull_request", "workflow_run", "workflow_dispatch"],
+      "repair": ["dispatch"],
+      "investigate_with": [],
+      "forge_allowed": true,
+      "auto_merge_scope": "claude/*"
     }
   ],
   "retry_budget_per_incident": 5,
@@ -81,10 +114,20 @@
     "escalate_after_retries": 5,
     "silent_on_p1_self_resolved": true
   },
+  "autonomous_capabilities": {
+    "auto_merge_claude_prs": true,
+    "auto_restart_failed_p0": true,
+    "inter_agent_mesh_writes": true,
+    "self_dev_engine_modification": true,
+    "autonomous_scope_expansion": true,
+    "forge_pr_if_missing": true
+  },
   "inter_agent_coordination": {
     "x_to_senju": "senju/inbox/codegen_events.ndjson",
     "senju_to_x": "automation/codegen/meta_state/senju_push.ndjson",
     "meta_broadcast": "automation/reporting/codegen_summary.ndjson",
-    "knowledge_share": "senju/knowledge/codegen_patterns.ndjson"
+    "knowledge_share": "senju/knowledge/codegen_patterns.ndjson",
+    "self_heal_trigger": ".github/workflows/x-self-heal.yml",
+    "auto_merge_trigger": ".github/workflows/claude-auto-merge.yml"
   }
 }

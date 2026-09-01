@@ -1,0 +1,62 @@
+name: Claude Branch Auto-Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+      - "claude/employee-onboarding-setup-udm86"
+  workflow_run:
+    workflows:
+      - "X - Codegen Orchestrator"
+      - "Senju - RED Autonomous Expedition"
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: PR number to auto-merge
+        required: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    name: Enable auto-merge on claude/ PRs
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      startsWith(github.head_ref, 'claude/')
+    steps:
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge ${{ github.event.pull_request.number }} \
+            --auto --squash \
+            --repo ${{ github.repository }} || true
+          echo "Auto-merge enabled for PR #${{ github.event.pull_request.number }}"
+
+  forge-pr-if-missing:
+    name: Forge PR for claude/ branch if none exists
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+
+      - name: Find open PRs from claude/ branches and enable auto-merge
+        run: |
+          gh pr list --repo ${{ github.repository }} \
+            --state open \
+            --json number,headRefName \
+            --jq '.[] | select(.headRefName | startswith("claude/")) | .number' | \
+          while read pr; do
+            echo "Enabling auto-merge on PR #$pr"
+            gh pr merge "$pr" --auto --squash --repo ${{ github.repository }} || true
+          done

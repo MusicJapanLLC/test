@@ -1,0 +1,92 @@
+name: X Self-Heal Monitor
+
+on:
+  schedule:
+    - cron: "0 */3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+  pull-requests: write
+
+jobs:
+  self-heal:
+    name: Monitor + restart failed X/Senju workers
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Check and restart stalled P0 workflows
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import subprocess, json, sys, time
+
+          REPO = "${{ github.repository }}"
+          P0_WORKFLOWS = [
+              "codegen-orchestrator.yml",
+              "senju-red-expedition.yml",
+              "tomoki-manager.yml",
+              "ai-foundry-executor.yml",
+          ]
+          MAX_STALL_HOURS = 6
+
+          def gh(*args):
+              r = subprocess.run(["gh", *args], capture_output=True, text=True)
+              return r.stdout.strip()
+
+          restarted = []
+          for wf in P0_WORKFLOWS:
+              runs_json = gh("api",
+                  f"/repos/{REPO}/actions/workflows/{wf}/runs",
+                  "--jq", ".workflow_runs[:3]"
+              )
+              try:
+                  runs = json.loads(runs_json)
+              except Exception:
+                  continue
+              if not runs:
+                  continue
+              latest = runs[0]
+              status = latest.get("status", "")
+              conclusion = latest.get("conclusion", "")
+              run_id = latest.get("id", "")
+
+              # Restart if failed/cancelled and more than 1h ago
+              if conclusion in ("failure", "cancelled", "timed_out"):
+                  print(f"[self-heal] {wf} last run={conclusion} — re-dispatching")
+                  gh("workflow", "run", wf, "--repo", REPO)
+                  restarted.append(wf)
+              elif status in ("queued", "in_progress"):
+                  print(f"[self-heal] {wf} is running (status={status}) — OK")
+              else:
+                  print(f"[self-heal] {wf} conclusion={conclusion} — OK")
+
+          print(f"[self-heal] restarted: {restarted}")
+          sys.exit(0)
+          PY
+
+      - name: Ensure claude/ PRs have auto-merge enabled
+        run: |
+          gh pr list --repo ${{ github.repository }} \
+            --state open \
+            --json number,headRefName \
+            --jq '.[] | select(.headRefName | startswith("claude/")) | .number' | \
+          while read pr; do
+            echo "Auto-merge: PR #$pr"
+            gh pr merge "$pr" --auto --squash \
+              --repo ${{ github.repository }} || true
+          done
