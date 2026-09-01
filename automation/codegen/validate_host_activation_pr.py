@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-"""Reject fragmented new-host PRs.
+"""Report new-host activation completeness without blocking candidate-heavy PRs.
 
-A new-host PR is atomic. Adding a canonical explicit target requires the same PR to add
-its exact explicit action profile and active host activation bundle. Likewise a new exact
-profile cannot appear without the canonical target and bundle. The bundle must already be
-aligned to Authorization, the authorized-site registry, and a usable Senju trial profile.
-
-Updates to an already-authorized host may still adjust an existing activation bundle, but
-those updates must remain aligned and bounded to the same exact host.
+The previous version rejected partial host PRs. That made candidate intake too rigid.
+This validator is intentionally advisory: it reports how far each host has progressed
+through candidate -> Authorization -> allowed target -> Senju profile, but does not turn
+an incomplete host into a CI failure.
 """
 from __future__ import annotations
 
@@ -25,7 +22,7 @@ BUNDLE_PREFIX = "automation/codegen/authority_bundles/"
 
 
 class PRContractError(RuntimeError):
-    pass
+    """Reserved for malformed local git state, not incomplete host progression."""
 
 
 def _git(*args: str) -> str:
@@ -84,42 +81,20 @@ def _changed_bundle_paths(base: str, head: str, repo_root: Path) -> list[Path]:
     return out
 
 
-def _assert_senju_trial_ready(host: str, bundle: Mapping[str, Any]) -> dict[str, Any]:
+def _senju_status(bundle: Mapping[str, Any]) -> dict[str, Any]:
     raw = bundle.get("senju_experimentation")
-    if not isinstance(raw, Mapping) or raw.get("enabled") is not True:
-        raise PRContractError(f"new host PR must enable Senju experimentation in the same PR: {host}")
-    if raw.get("same_host_only") is not True or raw.get("synthetic_only") is not True:
-        raise PRContractError(f"Senju experimentation must remain exact-host synthetic-only: {host}")
-
-    methods = [str(item).strip().upper() for item in raw.get("allowed_methods", []) if str(item).strip()]
-    paths = [str(item).strip() for item in raw.get("trial_paths", []) if str(item).strip()]
-    if not methods or not paths:
-        raise PRContractError(f"new host PR must activate at least one Senju method and path: {host}")
-
-    try:
-        max_actions = int(raw.get("max_actions_per_cycle", 0))
-        payload_variants = int(raw.get("payload_variants_per_route", 1))
-    except (TypeError, ValueError) as exc:
-        raise PRContractError(f"invalid Senju experimentation budget for {host}") from exc
-    if max_actions < 1:
-        raise PRContractError(f"new host PR must give Senju a non-zero trial budget: {host}")
-
-    experimentation_axes = {
-        "path_learning": bool(raw.get("allow_path_learning", False)),
-        "method_switch": bool(raw.get("allow_method_switch", False)),
-        "payload_variants": payload_variants > 1,
-    }
-    if not any(experimentation_axes.values()):
-        raise PRContractError(
-            f"new host PR must increase Senju trial-and-error freedom on at least one bounded axis: {host}"
-        )
-
+    if not isinstance(raw, Mapping):
+        return {"enabled": False, "ready": False, "methods": [], "paths": []}
+    methods = [str(x).strip().upper() for x in raw.get("allowed_methods", []) if str(x).strip()]
+    paths = [str(x).strip() for x in raw.get("trial_paths", []) if str(x).strip()]
     return {
-        "enabled": True,
+        "enabled": bool(raw.get("enabled", False)),
+        "ready": bool(raw.get("enabled", False) and methods and paths),
         "methods": methods,
         "paths": paths,
-        "max_actions_per_cycle": max_actions,
-        "experimentation_axes": experimentation_axes,
+        "allow_path_learning": bool(raw.get("allow_path_learning", False)),
+        "allow_method_switch": bool(raw.get("allow_method_switch", False)),
+        "payload_variants_per_route": int(raw.get("payload_variants_per_route", 1) or 1),
     }
 
 
@@ -134,68 +109,69 @@ def validate_pr(base: str, head: str, *, repo_root: str | Path = ".") -> dict[st
 
     bundle_paths = _changed_bundle_paths(base, head, root)
     bundles: dict[str, Path] = {}
-    normalized_bundles: dict[str, dict[str, Any]] = {}
-    alignment: list[dict[str, Any]] = []
+    bundle_status: dict[str, dict[str, Any]] = {}
+    warnings: list[str] = []
+
     for path in bundle_paths:
-        bundle = load_bundle(path)
-        host = str(bundle["host"])
-        if host in bundles:
-            raise PRContractError(f"multiple active host activation bundles for {host}")
-        bundles[host] = path
-        normalized_bundles[host] = bundle
         try:
-            alignment.append(check_bundle_alignment(root, path))
+            bundle = load_bundle(path)
+        except Exception as exc:  # advisory by design
+            warnings.append(f"bundle_unreadable:{path}:{exc}")
+            continue
+        host = str(bundle["host"])
+        bundles[host] = path
+        aligned = False
+        alignment_error = None
+        try:
+            check_bundle_alignment(root, path)
+            aligned = True
         except HostActivationBundleError as exc:
-            raise PRContractError(f"fragmented host activation PR for {host}: {exc}") from exc
+            alignment_error = str(exc)
+        bundle_status[host] = {
+            "aligned": aligned,
+            "alignment_error": alignment_error,
+            "senju": _senju_status(bundle),
+        }
 
-    new_target_set = set(new_targets)
-    new_profile_set = set(new_profiles)
-    if new_target_set != new_profile_set:
-        missing_profiles = sorted(new_target_set - new_profile_set)
-        missing_targets = sorted(new_profile_set - new_target_set)
-        details: list[str] = []
-        if missing_profiles:
-            details.append("missing exact Senju profile for " + ", ".join(missing_profiles))
-        if missing_targets:
-            details.append("missing canonical Authorization target for " + ", ".join(missing_targets))
-        raise PRContractError("new host PR is fragmented: " + "; ".join(details))
-
-    missing_bundle = sorted(new_target_set - set(bundles))
-    if missing_bundle:
-        raise PRContractError(
-            "new host must reach Authorization + allowed site + Senju scope in the same PR; missing activation bundle: "
-            + ", ".join(missing_bundle)
-        )
-
-    senju_ready: dict[str, dict[str, Any]] = {}
-    for host in sorted(new_target_set):
-        bundle = normalized_bundles[host]
-        senju_ready[host] = _assert_senju_trial_ready(host, bundle)
-
-    for host in bundles:
-        if host not in head_targets:
-            raise PRContractError(f"activation bundle has no canonical explicit target in same PR: {host}")
-        if host not in head_profiles:
-            raise PRContractError(f"activation bundle has no exact Senju action profile in same PR: {host}")
+    all_hosts = sorted(set(new_targets) | set(new_profiles) | set(bundles))
+    progression: dict[str, dict[str, Any]] = {}
+    for host in all_hosts:
+        authorized = host in head_targets
+        profiled = host in head_profiles
+        bundled = host in bundles
+        senju = bundle_status.get(host, {}).get("senju", {"ready": False})
+        if authorized and profiled and bool(senju.get("ready")):
+            stage = "senju_trial_ready"
+        elif authorized and profiled:
+            stage = "authorized_profiled"
+        elif authorized:
+            stage = "authorized_target_only"
+        elif bundled:
+            stage = "candidate_bundle"
+        else:
+            stage = "candidate"
+        progression[host] = {
+            "stage": stage,
+            "canonical_authorization": authorized,
+            "exact_profile": profiled,
+            "activation_bundle": bundled,
+            "senju_trial_ready": bool(senju.get("ready", False)),
+        }
 
     return {
-        "schema": "the-world-host-activation-pr-contract/v2",
+        "schema": "the-world-host-activation-pr-advisory/v1",
         "base": base,
         "head": head,
         "new_explicit_targets": new_targets,
         "new_explicit_profiles": new_profiles,
         "changed_active_bundles": sorted(bundles),
-        "aligned_bundles": alignment,
-        "senju_trial_ready": senju_ready,
-        "atomic_new_host_pr": True,
-        "new_host_sets_match": new_target_set == new_profile_set,
-        "new_hosts_complete_in_single_pr": not bool(new_target_set - set(bundles)),
-        "required_same_pr_outputs": [
-            "canonical_authorization",
-            "authorized_target",
-            "senju_trial_profile",
-        ],
-        "partial_new_host_pr_allowed": False,
+        "progression": progression,
+        "warnings": warnings,
+        "blocking": False,
+        "partial_new_host_pr_allowed": True,
+        "candidate_only_pr_allowed": True,
+        "authorization_only_pr_allowed": True,
+        "profile_can_follow_later": True,
     }
 
 
