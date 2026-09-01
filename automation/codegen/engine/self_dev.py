@@ -47,21 +47,41 @@ def _boundary_candidate_paths() -> list[Path]:
         ROOT / "senju" / "senju" / "external.py",
         ROOT / "senju" / "config" / "credential-broker-policy.json",
         ROOT / "senju" / "config" / "authority-self-lease.json",
-        ROOT / ".github" / "workflows" / "security-guard.yml",
-        ROOT / ".github" / "workflows" / "auto-merge.yml",
-        ROOT / ".github" / "workflows" / "openhands-audit-router.yml",
-        ROOT / ".github" / "workflows" / "senju-auto-approve-merge.yml",
     }
+
+    # 指定ディレクトリ配下の全ファイルをスキャンして追加
+    target_dirs = [
+        ROOT / ".github" / "workflows",
+        ROOT / "automation" / "control_plane",
+        ROOT / "senju" / "labs",
+    ]
+    for d in target_dirs:
+        if d.exists():
+            for p in d.rglob("*"):
+                if p.is_file():
+                    candidates.add(p)
+
     for pattern in ("AUTHORIZED_TARGETS.md", "authorized_test_targets.json"):
         for path in ROOT.rglob(pattern):
             candidates.add(path)
-    return [path for path in sorted(candidates) if path.exists()][:24]
+
+    return [path for path in sorted(candidates) if path.exists()][:100]
 
 
 def read_engine_source() -> dict[str, str]:
     """Read X engine files plus selected control-plane files for proposal generation."""
     sources: dict[str, str] = {}
 
+    # 1. 根幹となる engine ディレクトリの Python ファイルを最優先で読み込み
+    for py_file in sorted(ENGINE_DIR.glob("*.py")):
+        if py_file.name == "__pycache__":
+            continue
+        try:
+            sources[py_file.name] = py_file.read_text(encoding="utf-8")
+        except Exception:
+            pass
+
+    # 2. バウンダリ対象の管理用ファイルを読み込み
     for path in _boundary_candidate_paths():
         try:
             key = str(path.relative_to(ROOT)).replace("\\", "/")
@@ -69,21 +89,25 @@ def read_engine_source() -> dict[str, str]:
         except Exception:
             pass
 
-    for py_file in sorted(ENGINE_DIR.glob("*.py")):
-        if py_file.name == "__pycache__":
-            continue
-        try:
-            sources[py_file.name] = py_file.read_text()
-        except Exception:
-            pass
     return sources
 
 
 def generate_improvement(client, sources: dict[str, str], focus: str = "") -> dict:
     """Ask LLM to identify one engine improvement or one audited boundary proposal."""
+    
+    # Focusキーワードが存在する場合、該当するファイルを優先的にAIへ送るロジック
+    items = list(sources.items())
+    if focus:
+        focus_lower = focus.lower()
+        matched = [item for item in items if focus_lower in item[0].lower()]
+        others = [item for item in items if focus_lower not in item[0].lower()]
+        selected_sources = (matched + others)[:35]
+    else:
+        selected_sources = items[:35]
+
     source_summary = "\n\n".join(
         f"=== {name} ===\n{code[:1800]}"
-        for name, code in list(sources.items())[:14]
+        for name, code in selected_sources
     )
 
     focus_hint = f"\nFocus area: {focus}" if focus else ""
@@ -144,7 +168,7 @@ def apply_patch(patch: dict) -> bool:
         return False
 
     try:
-        current = target.read_text()
+        current = target.read_text(encoding="utf-8")
         if old_code and old_code not in current:
             print(f"[self_dev] old_code not found in {file_name}")
             return False
@@ -154,7 +178,7 @@ def apply_patch(patch: dict) -> bool:
         else:
             patched = current + "\n\n" + new_code
 
-        target.write_text(patched)
+        target.write_text(patched, encoding="utf-8")
         return True
     except Exception as e:
         print(f"[self_dev] apply_patch error: {e}")
@@ -302,7 +326,7 @@ def run_self_dev_cycle(client, focus: str = "") -> dict:
         return result
 
     target = ENGINE_DIR / file_name if file_name else None
-    backup = target.read_text() if (target and target.exists()) else ""
+    backup = target.read_text(encoding="utf-8") if (target and target.exists()) else ""
 
     applied = apply_patch(patch)
     if not applied:
@@ -312,12 +336,12 @@ def run_self_dev_cycle(client, focus: str = "") -> dict:
     if not valid:
         print(f"[self_dev] validation failed ({reason}), rolling back")
         if backup and target:
-            target.write_text(backup)
+            target.write_text(backup, encoding="utf-8")
         result = {"status": "validation_failed", "reason": reason, "patch": patch}
         _append(SELF_DEV_LOG, {**result, "ts": _ts()})
         return result
 
-    new_content = (ENGINE_DIR / file_name).read_text()
+    new_content = (ENGINE_DIR / file_name).read_text(encoding="utf-8")
     pushed = push_improvement_to_github(file_name, new_content, patch.get("description", ""))
 
     result = {
