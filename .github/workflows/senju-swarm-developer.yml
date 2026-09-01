@@ -1,0 +1,236 @@
+name: "Senju Swarm Developer — 100x 並列開発ループ"
+
+# 100x化の核心: push毎 + 15分毎の高頻度実行
+# 単一シリアルループ → N並列スウォームに置き換え
+on:
+  push:
+    branches:
+      - "MusicJapanLLC-patch-1"
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/**"
+      - ".github/workflows/senju-swarm-developer.yml"
+  schedule:
+    - cron: "*/15 * * * *"   # 15分毎 (旧: 6時間毎 → 24x頻度向上)
+  workflow_dispatch:
+    inputs:
+      n_workers:
+        description: "並列エージェント数 (デフォルト: 20)"
+        default: "20"
+        required: false
+      force_all_targets:
+        description: "全ターゲット再検査"
+        type: boolean
+        default: false
+
+concurrency:
+  group: senju-swarm-developer
+  cancel-in-progress: false   # 前のスウォームが終わるまで待つ（上書きしない）
+
+env:
+  PYTHONPATH: ${{ github.workspace }}/senju
+
+jobs:
+  # ── PHASE 1: 並列スウォーム（N個のworkerが同時提案） ──────────────
+  swarm-develop:
+    name: "Swarm[${{ matrix.shard }}/${{ matrix.total_shards }}]"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+
+    strategy:
+      fail-fast: false          # 1シャードが失敗しても他は継続
+      matrix:
+        shard: [1, 2, 3, 4]     # 4並列シャード → 各シャードが5 workers = 20並列
+        total_shards: [4]
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f senju/pyproject.toml || -f senju/setup.py ]]; then
+            pip install -e './senju[dev]' --quiet
+          else
+            pip install pytest --quiet
+          fi
+
+      - name: Restore swarm state
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/senju-swarm
+          PREV=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Swarm Developer — 100x 並列開発ループ" \
+            --status success --limit 5 \
+            --json databaseId --jq '.[0].databaseId // empty' || true)
+          if [[ -n "$PREV" ]]; then
+            gh run download "$PREV" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-swarm-state \
+              --dir /tmp/senju-swarm || true
+          fi
+
+      - name: Run swarm shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          N_WORKERS=${{ github.event.inputs.n_workers || '5' }}
+          SHARD=${{ matrix.shard }}
+          TOTAL=${{ matrix.total_shards }}
+          # シャードごとにseed_offsetをずらして多様性確保
+          SEED_BASE=$(( (SHARD - 1) * 1000 ))
+
+          python senju/scripts/swarm_coordinator.py \
+            --workers "$N_WORKERS" \
+            --max-workers 50 \
+            --parallelism 4 \
+            --state "/tmp/senju-swarm/state_shard${SHARD}.json" \
+            --output "/tmp/senju-swarm/velocity_shard${SHARD}.jsonl" \
+            2>&1 | tee /tmp/swarm_shard_${SHARD}.log || true
+
+      - name: Upload shard results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: senju-swarm-shard-${{ matrix.shard }}
+          path: |
+            /tmp/senju-swarm/state_shard${{ matrix.shard }}.json
+            /tmp/senju-swarm/velocity_shard${{ matrix.shard }}.jsonl
+            /tmp/swarm_shard_${{ matrix.shard }}.log
+          retention-days: 3
+
+  # ── PHASE 2: 全シャード統合 + 速度計測 ────────────────────────────
+  aggregate-and-measure:
+    name: "Aggregate + Velocity"
+    needs: swarm-develop
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    if: always()
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Download all shard results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: senju-swarm-shard-*
+          path: /tmp/senju-swarm-shards
+          merge-multiple: true
+
+      - name: Merge velocity logs
+        shell: bash
+        run: |
+          mkdir -p /tmp/senju-swarm
+          cat /tmp/senju-swarm-shards/velocity_shard*.jsonl > /tmp/senju-swarm/velocity.jsonl 2>/dev/null || true
+          echo "[aggregate] $(wc -l < /tmp/senju-swarm/velocity.jsonl) cycles merged"
+
+      - name: Install + run velocity tracker
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f senju/pyproject.toml ]]; then
+            pip install -e './senju[dev]' --quiet
+          fi
+          python senju/scripts/velocity_tracker.py || true
+
+      - name: Upload swarm state
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: senju-swarm-state
+          path: |
+            /tmp/senju-swarm/velocity.jsonl
+            /tmp/senju-swarm/velocity_report.json
+            /tmp/senju-swarm/optimization_hints.json
+          retention-days: 7
+
+  # ── PHASE 3: 新規ターゲット検出 → 即時攻撃 ───────────────────────
+  target-watcher:
+    name: "Target Watcher — 新規サイト自動検査"
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f senju/pyproject.toml || -f senju/setup.py ]]; then
+            pip install -e './senju[dev]' --quiet
+          else
+            pip install pytest requests --quiet
+          fi
+
+      - name: Restore seen targets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p /tmp/senju-swarm
+          PREV=$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Swarm Developer — 100x 並列開発ループ" \
+            --status success --limit 5 \
+            --json databaseId --jq '.[0].databaseId // empty' || true)
+          if [[ -n "$PREV" ]]; then
+            gh run download "$PREV" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-target-watcher-state \
+              --dir /tmp/senju-swarm || true
+          fi
+
+      - name: Watch and assess new targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          FORCE_FLAG=""
+          if [[ "${{ github.event.inputs.force_all_targets }}" == "true" ]]; then
+            FORCE_FLAG="--force-all"
+          fi
+          python senju/scripts/target_watcher.py $FORCE_FLAG || true
+
+      - name: Upload watcher state
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: senju-target-watcher-state
+          path: |
+            /tmp/senju-swarm/seen_targets.json
+            /tmp/senju-swarm/redteam_ledger.json
+          retention-days: 14
