@@ -6,10 +6,14 @@ on:
     paths:
       - 'senju/config/public_red_lab_sources.json'
       - 'senju/config/public_red_route_seeds.json'
+      - 'senju/config/public-red-lab-registry.json'
+      - 'senju/scripts/admit_public_red_registry.py'
       - 'senju/scripts/public_red_target_intake.py'
       - 'senju/scripts/public_red_target_fanout.py'
       - 'senju/scripts/public_red_seed_expander.py'
       - 'senju/scripts/public_red_burst_fanout.py'
+      - 'senju/senju/public_red_lab_discovery.py'
+      - 'senju/tests/test_public_red_lab_discovery.py'
       - 'senju/tests/test_public_red_target_pipeline.py'
       - 'senju/tests/test_public_red_url_expansion.py'
       - 'senju/state/standing_authorizations.json'
@@ -49,17 +53,39 @@ jobs:
           PYTHONPATH: senju
         run: |
           python -m pytest -q \
+            senju/tests/test_public_red_lab_discovery.py \
             senju/tests/test_public_red_target_pipeline.py \
             senju/tests/test_public_red_url_expansion.py \
             senju/tests/test_approved_authority_red_adaptive.py
           python -m py_compile \
+            senju/scripts/admit_public_red_registry.py \
             senju/scripts/public_red_target_intake.py \
             senju/scripts/public_red_target_fanout.py \
             senju/scripts/public_red_seed_expander.py \
             senju/scripts/public_red_burst_fanout.py \
+            senju/senju/public_red_lab_discovery.py \
             senju/senju/approved_authority_red_adaptive.py
 
-      - name: Refresh only operator-published security lab authority
+      - name: Admit curated operator-published public RED labs
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/admit_public_red_registry.py \
+            | tee /tmp/public_red_registry_admission.json
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public_red_registry_admission.json'))
+          print(p.get('registry_target_count', 0))
+          PY
+          )" -ge 20
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public_red_registry_admission.json'))
+          print(p.get('effective_safe_host_count', 0))
+          PY
+          )" -ge 20
+
+      - name: Refresh operator-published security lab authority
         run: |
           python senju/scripts/public_red_target_intake.py \
             --admit-standing \
@@ -92,7 +118,7 @@ jobs:
         run: |
           python senju/scripts/public_red_burst_fanout.py \
             --operation-id "public-red-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
-            --max-profiles 12 \
+            --max-profiles 6 \
             --memory /tmp/approved_authority_red_memory.json \
             --out /tmp/public_red_burst_latest.json \
             | tee /tmp/public_red_burst_summary.json
@@ -107,7 +133,7 @@ jobs:
           p=json.load(open('/tmp/public_red_burst_latest.json'))
           print(p.get('batch_size', 0))
           PY
-          )" -eq 12
+          )" -eq 6
           cat /tmp/public_red_burst_latest.json
 
       - name: Upload RED expansion evidence
@@ -116,6 +142,7 @@ jobs:
           name: senju-red-public-lab-expansion-${{ github.run_id }}-${{ github.run_attempt }}
           retention-days: 7
           path: |
+            /tmp/public_red_registry_admission.json
             /tmp/public_red_seed_expansion.json
             /tmp/public_red_catalog_validation.json
             /tmp/public_red_burst_summary.json
@@ -131,7 +158,8 @@ jobs:
           git add \
             senju/state/standing_authorizations.json \
             senju/state/owner_contact_ceiling_effective.json \
-            senju/state/public_red_discovery.json
+            senju/state/public_red_discovery.json \
+            senju/state/public_red_lab_authority.json
           if git diff --cached --quiet; then
             echo 'No public-lab authority/inventory changes to persist.'
             exit 0
