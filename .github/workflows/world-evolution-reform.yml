@@ -1,0 +1,99 @@
+name: World Evolution Reform
+
+on:
+  workflow_dispatch:
+    inputs:
+      agents:
+        description: Synthetic agents
+        required: false
+        default: "100"
+      hosts:
+        description: Synthetic hosts
+        required: false
+        default: "1000"
+      generations:
+        description: Evolution generations
+        required: false
+        default: "10"
+      experiments_per_agent:
+        description: Experiments per agent per generation
+        required: false
+        default: "10"
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: world-evolution-reform
+  cancel-in-progress: true
+
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      AGENTS: ${{ inputs.agents || '100' }}
+      HOSTS: ${{ inputs.hosts || '1000' }}
+      GENERATIONS: ${{ inputs.generations || '10' }}
+      EXPERIMENTS_PER_AGENT: ${{ inputs.experiments_per_agent || '10' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run bounded synthetic swarm
+        run: |
+          python -m automation.world_evolution.evolution_engine \
+            --agents "$AGENTS" \
+            --hosts "$HOSTS" \
+            --generations "$GENERATIONS" \
+            --experiments-per-agent "$EXPERIMENTS_PER_AGENT" \
+            --output artifacts/world_evolution_report.json
+
+      - name: Assert no real-world side effects
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path("artifacts/world_evolution_report.json").read_text())
+          assert report["mode"] == "synthetic_only"
+          assert report["network_io"] is False
+          assert report["real_credentials"] is False
+          assert report["authority_mutation"] is False
+          assert report["totals"]["experiments"] > 0
+          PY
+
+      - name: Run regression tests
+        run: python -m pytest -q tests/test_world_evolution_reform.py
+
+      - name: Publish run summary
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          r = json.loads(Path("artifacts/world_evolution_report.json").read_text())
+          print("# World Evolution Reform")
+          print()
+          print(f"- mode: `{r['mode']}`")
+          print(f"- agents: **{r['config']['agents']}**")
+          print(f"- synthetic hosts: **{r['config']['hosts']}**")
+          print(f"- generations: **{r['config']['generations']}**")
+          print(f"- total experiments: **{r['totals']['experiments']}**")
+          print(f"- successes: **{r['totals']['successes']}**")
+          print(f"- failures: **{r['totals']['failures']}**")
+          print()
+          print("Network I/O, real credentials, and Authority mutation remain disabled by construction.")
+          PY
+
+      - name: Upload evolutionary memory
+        uses: actions/upload-artifact@v4
+        with:
+          name: world-evolution-memory
+          path: artifacts/world_evolution_report.json
+          retention-days: 14
