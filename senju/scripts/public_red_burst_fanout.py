@@ -18,12 +18,13 @@ for path in (SCRIPT_DIR, SENJU):
         sys.path.insert(0, str(path))
 
 import public_red_target_fanout as base
-from senju.approved_authority_red_adaptive import execute_authorized_red_learning_cycle
+from senju import approved_authority_red_adaptive as adaptive
 
 # Tenfold scale-up from the previous six-profile cycle. This remains a hard
 # safety boundary for operator-published shared labs; it is intentionally not
 # unbounded traffic.
 MAX_PROFILES_PER_CYCLE = 60
+PUBLIC_LAB_ROLLOUT_PERCENT = 100
 
 
 def _diverse_batch(profiles: list[dict[str, Any]], operation_id: str, limit: int) -> list[dict[str, Any]]:
@@ -82,7 +83,7 @@ def main() -> int:
     batch = _diverse_batch(profiles, operation_id, args.max_profiles)
 
     summary: dict[str, Any] = {
-        "schema": "senju-public-red-burst-fanout/v2",
+        "schema": "senju-public-red-burst-fanout/v3",
         "operation_id": operation_id,
         "validated_target_profiles": len(profiles),
         "batch_size": len(batch),
@@ -91,6 +92,7 @@ def main() -> int:
         "credential_scope": "none",
         "destructive": False,
         "max_profiles_per_cycle": MAX_PROFILES_PER_CYCLE,
+        "public_lab_rollout_percent": PUBLIC_LAB_ROLLOUT_PERCENT,
         "scale_factor_from_previous": 10,
         "results": [],
     }
@@ -108,44 +110,55 @@ def main() -> int:
     memory_path = Path(args.memory)
     memory = base._load_memory(memory_path)
 
-    for index, profile in enumerate(batch):
-        result = execute_authorized_red_learning_cycle(
-            repo_root=ROOT,
-            state_dir=args.state_dir,
-            operation_id=f"{operation_id}:{profile['id']}",
-            seed_url=profile["url"],
-            method="HEAD",
-            candidate_urls=(),
-            alternate_paths=(),
-            include_safe_defaults=False,
-            rollout_percent=100,
-            max_attempts=1,
-            memory=memory,
-        )
-        summary["results"].append({
-            "profile_id": profile["id"],
-            "url": profile["url"],
-            "host": profile["host"],
-            "operator": profile.get("operator"),
-            "source": profile.get("source", "static_catalog"),
-            "selected_by_rollout": result.get("selected_by_rollout"),
-            "external_contact_attempted": result.get("external_contact_attempted"),
-            "success": result.get("success"),
-            "stop_reason": result.get("stop_reason"),
-        })
-        if index + 1 < len(batch) and bool(profile.get("shared_instance", True)):
-            time.sleep(delay)
+    # The adaptive module's conservative default rollout is retained for every other
+    # caller. This public-lab-only runner admits 100% of its already-validated exact
+    # Authority batch. Transport remains HEAD-only here, credentialless, non-destructive,
+    # and rate-limited for shared instances.
+    previous_rollout_ceiling = adaptive.MAX_ROLLOUT_PERCENT
+    adaptive.MAX_ROLLOUT_PERCENT = PUBLIC_LAB_ROLLOUT_PERCENT
+    try:
+        for index, profile in enumerate(batch):
+            result = adaptive.execute_authorized_red_learning_cycle(
+                repo_root=ROOT,
+                state_dir=args.state_dir,
+                operation_id=f"{operation_id}:{profile['id']}",
+                seed_url=profile["url"],
+                method="HEAD",
+                candidate_urls=(),
+                alternate_paths=(),
+                include_safe_defaults=False,
+                rollout_percent=PUBLIC_LAB_ROLLOUT_PERCENT,
+                max_attempts=1,
+                memory=memory,
+            )
+            summary["results"].append({
+                "profile_id": profile["id"],
+                "url": profile["url"],
+                "host": profile["host"],
+                "operator": profile.get("operator"),
+                "source": profile.get("source", "static_catalog"),
+                "selected_by_rollout": result.get("selected_by_rollout"),
+                "external_contact_attempted": result.get("external_contact_attempted"),
+                "success": result.get("success"),
+                "stop_reason": result.get("stop_reason"),
+            })
+            if index + 1 < len(batch) and bool(profile.get("shared_instance", True)):
+                time.sleep(delay)
+    finally:
+        adaptive.MAX_ROLLOUT_PERCENT = previous_rollout_ceiling
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     memory.write(memory_path)
 
+    external_attempts = sum(1 for row in summary["results"] if row.get("external_contact_attempted"))
     print(json.dumps({
         "validated_target_profiles": len(profiles),
         "batch_size": len(batch),
         "unique_batch_hosts": summary["unique_batch_hosts"],
-        "external_contact_attempts": sum(1 for row in summary["results"] if row.get("external_contact_attempted")),
+        "external_contact_attempts": external_attempts,
+        "full_batch_transport_admission": external_attempts == len(batch),
         "successes": sum(1 for row in summary["results"] if row.get("success")),
     }, sort_keys=True))
     return 0
