@@ -5,14 +5,18 @@ on:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
       - 'senju/config/public_red_lab_sources.json'
+      - 'senju/config/public_red_route_seeds.json'
       - 'senju/scripts/public_red_target_intake.py'
       - 'senju/scripts/public_red_target_fanout.py'
+      - 'senju/scripts/public_red_seed_expander.py'
+      - 'senju/scripts/public_red_burst_fanout.py'
       - 'senju/tests/test_public_red_target_pipeline.py'
+      - 'senju/tests/test_public_red_url_expansion.py'
       - 'senju/state/standing_authorizations.json'
       - 'senju/state/owner_contact_ceiling_effective.json'
       - '.github/workflows/senju-red-public-lab-expansion.yml'
   schedule:
-    - cron: '17 */6 * * *'
+    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:
@@ -25,7 +29,7 @@ concurrency:
 jobs:
   expand-and-rotate:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,47 +44,85 @@ jobs:
       - name: Install pytest
         run: python -m pip install --disable-pip-version-check -q pytest
 
-      - name: Verify public-lab authority expansion contracts
+      - name: Verify public-lab RED expansion contracts
         env:
           PYTHONPATH: senju
         run: |
           python -m pytest -q \
             senju/tests/test_public_red_target_pipeline.py \
+            senju/tests/test_public_red_url_expansion.py \
             senju/tests/test_approved_authority_red_adaptive.py
           python -m py_compile \
             senju/scripts/public_red_target_intake.py \
             senju/scripts/public_red_target_fanout.py \
+            senju/scripts/public_red_seed_expander.py \
+            senju/scripts/public_red_burst_fanout.py \
             senju/senju/approved_authority_red_adaptive.py
 
-      - name: Validate 30-profile authorized catalog
-        env:
-          PYTHONPATH: senju
-        run: |
-          python senju/scripts/public_red_target_fanout.py --validate-only
-
-      - name: Discover only operator-published security lab targets
+      - name: Refresh only operator-published security lab authority
         run: |
           python senju/scripts/public_red_target_intake.py \
             --admit-standing \
             --sync-effective \
             --create-gruyere-instance
 
-      - name: Revalidate effective RED authority after intake
+      - name: Expand exact-host route seeds to at least 60 RED URLs
         env:
           PYTHONPATH: senju
         run: |
-          python senju/scripts/public_red_target_fanout.py --validate-only
+          python senju/scripts/public_red_seed_expander.py --minimum-profiles 60 \
+            | tee /tmp/public_red_seed_expansion.json
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('senju/state/public_red_discovery.json'))
+          print(p.get('expanded_unique_url_count', 0))
+          PY
+          )" -ge 60
 
-      - name: Run bounded real-transport RED rotation
+      - name: Revalidate expanded RED catalog
         env:
           PYTHONPATH: senju
         run: |
-          python senju/scripts/public_red_target_fanout.py \
+          python senju/scripts/public_red_target_fanout.py --validate-only \
+            | tee /tmp/public_red_catalog_validation.json
+
+      - name: Run hourly diversified bounded RED burst
+        env:
+          PYTHONPATH: senju
+        run: |
+          python senju/scripts/public_red_burst_fanout.py \
+            --operation-id "public-red-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            --max-profiles 12 \
             --memory /tmp/approved_authority_red_memory.json \
-            --out /tmp/public_red_fanout_latest.json
-          cat /tmp/public_red_fanout_latest.json
+            --out /tmp/public_red_burst_latest.json \
+            | tee /tmp/public_red_burst_summary.json
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public_red_burst_latest.json'))
+          print(p.get('validated_target_profiles', 0))
+          PY
+          )" -ge 60
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public_red_burst_latest.json'))
+          print(p.get('batch_size', 0))
+          PY
+          )" -eq 12
+          cat /tmp/public_red_burst_latest.json
 
-      - name: Persist newly verified public-lab inventory
+      - name: Upload RED expansion evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: senju-red-public-lab-expansion-${{ github.run_id }}-${{ github.run_attempt }}
+          retention-days: 7
+          path: |
+            /tmp/public_red_seed_expansion.json
+            /tmp/public_red_catalog_validation.json
+            /tmp/public_red_burst_summary.json
+            /tmp/public_red_burst_latest.json
+            senju/state/public_red_discovery.json
+
+      - name: Persist newly verified public-lab URL inventory
         shell: bash
         run: |
           set -euo pipefail
@@ -94,5 +136,5 @@ jobs:
             echo 'No public-lab authority/inventory changes to persist.'
             exit 0
           fi
-          git commit -m 'chore(senju-red): refresh operator-verified public lab inventory'
+          git commit -m 'chore(senju-red): refresh expanded operator-verified RED URL inventory'
           git push origin HEAD:claude/employee-onboarding-setup-udm86
