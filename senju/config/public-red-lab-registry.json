@@ -1,0 +1,171 @@
+{
+  "schema": "senju-public-red-lab-registry/v1",
+  "updated_at": "2026-09-01T11:45:00+09:00",
+  "purpose": "Exact-host public security labs whose operators or authoritative security-training registries publish them for legal testing, scanner evaluation, or challenge use.",
+  "default_methods": ["GET", "HEAD", "OPTIONS"],
+  "default_rate_limit_rps": 1,
+  "destructive_operations": false,
+  "credential_scope": "none",
+  "targets": [
+    {
+      "id": "google-public-firing-range",
+      "host": "public-firing-range.appspot.com",
+      "base_url": "https://public-firing-range.appspot.com",
+      "profile": "scanner_test",
+      "authorization_evidence_url": "https://github.com/google/firing-range",
+      "authorization_note": "Google publishes this public instance as a test bed for web application security scanners."
+    },
+    {
+      "id": "netsparker-test-app-php",
+      "host": "php.testsparker.com",
+      "base_url": "https://php.testsparker.com",
+      "profile": "scanner_test",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/netsparker-test-app-php/",
+      "authorization_note": "OWASP VWAD lists the online vulnerable PHP demo as a scanner-evaluation target."
+    },
+    {
+      "id": "netsparker-test-app-dotnet",
+      "host": "aspnet.testsparker.com",
+      "base_url": "https://aspnet.testsparker.com",
+      "profile": "scanner_test",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/netsparker-test-app-net/",
+      "authorization_note": "OWASP VWAD lists the online vulnerable ASP.NET demo as a scanner-evaluation target."
+    },
+    {
+      "id": "zero-bank-public-lab",
+      "host": "zero.webappsecurity.com",
+      "base_url": "https://zero.webappsecurity.com",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/zero-bank/",
+      "authorization_note": "OWASP VWAD describes Zero Bank as an intentionally vulnerable online demo for WebInspect and security training."
+    },
+    {
+      "id": "owasp-skf-public-labs",
+      "host": "secureby.design",
+      "base_url": "https://secureby.design",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/owasp-skf-labs/",
+      "authorization_note": "OWASP VWAD publishes the SKF labs online; scanner use must remain low-rate."
+    },
+    {
+      "id": "vulnbank-public-lab",
+      "host": "vulnbank.org",
+      "base_url": "https://vulnbank.org",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/vulnbank/",
+      "authorization_note": "OWASP VWAD describes Vulnbank as deliberately vulnerable and intended for safe security-testing practice."
+    },
+    {
+      "id": "broken-crystals-public-lab",
+      "host": "brokencrystals.com",
+      "base_url": "https://brokencrystals.com",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/broken-crystals/",
+      "authorization_note": "OWASP VWAD publishes Broken Crystals as an online vulnerable benchmark application."
+    },
+    {
+      "id": "dvaib-public-lab",
+      "host": "www.dvaib.com",
+      "base_url": "https://www.dvaib.com",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/damn-vulnerable-ai-bank-dvaib/",
+      "authorization_note": "OWASP VWAD publishes DVAIB as a hands-on AI security training target."
+    },
+    {
+      "id": "duck-store-public-lab",
+      "host": "duck-store.escape.tech",
+      "base_url": "https://duck-store.escape.tech",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/duck-store/",
+      "authorization_note": "OWASP VWAD describes Duck Store as intentionally vulnerable for training ethical hackers and security engineers."
+    },
+    {
+      "id": "gin-and-juice-shop-public-lab",
+      "host": "ginandjuice.shop",
+      "base_url": "https://ginandjuice.shop",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/gin-juice-shop/",
+      "authorization_note": "OWASP VWAD lists the PortSwigger hosted always-online demo app for CTF and security practice."
+    },
+    {
+      "id": "burp-bounty-public-lab",
+      "host": "burpbountylab.com",
+      "base_url": "https://burpbountylab.com",
+      "profile": "scanner_test",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/burp-bounty-lab/",
+      "authorization_note": "OWASP VWAD describes Burp Bounty Lab as intentionally vulnerable for testing Burp Bounty profiles."
+    },
+    {
+      "id": "pentest-ground-public-lab",
+      "host": "pentest-ground.com",
+      "base_url": "https://pentest-ground.com",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/pentest-ground/",
+      "authorization_note": "OWASP VWAD lists Pentest-Ground as a suite of vulnerable web apps to practice against."
+    },
+    {
+      "id": "openvault-bank-public-lab",
+      "host": "openvaultbank.com",
+      "base_url": "https://openvaultbank.com",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/openvault-bank/",
+      "authorization_note": "OWASP VWAD describes OpenVault Bank as a deliberately vulnerable API-security training app, not a real bank."
+    },
+    {
+      "id": "wrongsecrets-public-demo",
+      "host": "wrongsecrets.herokuapp.com",
+      "base_url": "https://wrongsecrets.herokuapp.com",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/wrongsecrets/",
+      "authorization_note": "OWASP VWAD identifies the Heroku demo for the WrongSecrets security challenge project."
+    },
+    {
+      "id": "authlab-public-challenges",
+      "host": "authlab.digi.ninja",
+      "base_url": "https://authlab.digi.ninja",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/authlab/",
+      "authorization_note": "OWASP VWAD and DigiNinja publish AuthLab as online authentication/authorization challenges."
+    },
+    {
+      "id": "bugbait-public-lab",
+      "host": "bugbait.io",
+      "base_url": "https://bugbait.io",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/",
+      "authorization_note": "OWASP VWAD lists BugBait as an online vulnerable web application for students, developers, cyber enthusiasts, and pentesters."
+    },
+    {
+      "id": "cyber-scavenger-hunt-public-lab",
+      "host": "cyberscavengerhunt.com",
+      "base_url": "https://cyberscavengerhunt.com",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/cyber-scavenger-hunt/",
+      "authorization_note": "OWASP VWAD publishes this online scavenger hunt specifically for learning website pentesting."
+    },
+    {
+      "id": "hack-yourself-first-public-lab",
+      "host": "hack-yourself-first.com",
+      "base_url": "https://hack-yourself-first.com",
+      "profile": "direct_vulnerable_app",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/hackyourselffirst/",
+      "authorization_note": "OWASP VWAD describes Troy Hunt's site as deliberately vulnerable for learning to find and fix security issues."
+    },
+    {
+      "id": "altoro-testfire-public-lab",
+      "host": "demo.testfire.net",
+      "base_url": "https://demo.testfire.net",
+      "profile": "scanner_test",
+      "authorization_evidence_url": "https://www.zaproxy.org/docs/testapps/altoroj/",
+      "authorization_note": "OWASP ZAP documents demo.testfire.net as an online AltoroJ test app and provides active-scan examples."
+    },
+    {
+      "id": "hackxpert-public-labs",
+      "host": "labs.hackxpert.com",
+      "base_url": "https://labs.hackxpert.com",
+      "profile": "interactive_lab",
+      "authorization_evidence_url": "https://vwad.owasp.org/app/hackxpert/",
+      "authorization_note": "OWASP VWAD publishes HackXpert as online XSS and web-security labs; interactions remain challenge-directed."
+    }
+  ]
+}
