@@ -197,7 +197,7 @@
       "url": "https://php.testsparker.com/"
     },
     {
-      "authorization_evidence": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
+      "authorization_evidence": "https://github.com/google/firing-range",
       "id": "auto-google-firing-range-a4ed9833cabe",
       "operator": "Google",
       "provider_id": "google-firing-range",
@@ -749,21 +749,18 @@
       "reachable": true
     },
     {
+      "error": "HTTPError: HTTP Error 429: Too Many Requests",
       "evidence_url": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
-      "final_url": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
-      "matched_urls": [
-        "https://public-firing-range.appspot.com/",
-        "https://public-firing-range.appspot.com/"
-      ],
+      "matched_urls": [],
       "provider_id": "google-firing-range",
-      "reachable": true
+      "reachable": false
     },
     {
+      "error": "HTTPError: HTTP Error 429: Too Many Requests",
       "evidence_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
-      "final_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
       "matched_urls": [],
       "provider_id": "google-gruyere",
-      "reachable": true
+      "reachable": false
     },
     {
       "evidence_url": "https://google-gruyere.appspot.com/part1",
@@ -830,5 +827,5 @@
   ],
   "route_seed_added_count": 0,
   "schema": "senju-public-red-discovery/v2",
-  "updated_at_utc": "2026-09-01T03:27:13.324685+00:00"
+  "updated_at_utc": "2026-09-01T03:31:38.485484+00:00"
 }
