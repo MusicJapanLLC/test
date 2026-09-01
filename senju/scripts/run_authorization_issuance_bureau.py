@@ -13,7 +13,7 @@ from senju.authorization_issuance_bureau import (
     build_discovery_authorization_intake,
     issue_authorization,
     issue_from_discovery_key,
-    recognize_discovery_key,
+    request_review_key,
 )
 
 
@@ -67,9 +67,14 @@ def main() -> int:
     )
     canonical_hosts = _load_canonical_hosts(args.canonical_targets)
 
-    if source.lower() == "discovery" or bool(payload.get("discovery_key", False)):
-        key = recognize_discovery_key(
+    wants_review_key = bool(payload.get("request_review_key", False)) or bool(
+        payload.get("discovery_key", False)
+    ) or source.lower() == "discovery"
+
+    if wants_review_key:
+        key = request_review_key(
             evidence.host,
+            requester=payload.get("requester"),
             source=source,
             proof_ref=evidence.proof_ref,
         )
@@ -91,12 +96,23 @@ def main() -> int:
             evidence,
             canonical_authorized_hosts=canonical_hosts,
         )
-    else:
-        grant = issue_authorization(
-            evidence,
-            canonical_authorized_hosts=canonical_hosts,
-        )
+        packet = build_authority_handoff(grant)
+        packet["review_key"] = {
+            "key_id": key.key_id,
+            "host": key.host,
+            "requester": key.requester,
+            "source": key.source,
+            "acquisition_policy": key.acquisition_policy,
+            "authority_effect": key.authority_effect,
+        }
+        packet["precedent"] = "open_review_key_to_authorization"
+        _write_packet(args.output, packet)
+        return 0
 
+    grant = issue_authorization(
+        evidence,
+        canonical_authorized_hosts=canonical_hosts,
+    )
     packet = build_authority_handoff(grant)
     _write_packet(args.output, packet)
     return 0
