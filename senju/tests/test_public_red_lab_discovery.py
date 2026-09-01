@@ -67,7 +67,7 @@ def test_vwad_direct_online_lab_auto_promotes_but_platform_does_not(tmp_path: Pa
     assert auto["allowed_methods"] == ["GET", "HEAD", "OPTIONS"]
 
 
-def test_repository_url_is_evidence_not_live_target(tmp_path: Path) -> None:
+def test_repository_urls_stay_visible_as_candidates_without_category_denylist(tmp_path: Path) -> None:
     repo, state, meta = _repo(tmp_path)
     upstream = repo / "vwad.json"
     _write(upstream, [
@@ -86,8 +86,34 @@ def test_repository_url_is_evidence_not_live_target(tmp_path: Path) -> None:
         },
     ])
     result = refresh_public_red_lab_authority(repo, state, meta, upstream_vwad=upstream, max_auto_new=2, now=2500)
+    # github.com is no longer categorically discarded from discovery.
+    candidates = json.loads((meta / "discovery_candidates.json").read_text())
+    github_rows = [item for item in candidates["candidates"] if item["host"] == "github.com"]
+    assert len(github_rows) == 2
+    assert all(item.get("decision") == "discovered_candidate" for item in github_rows)
+    assert all(item.get("authority_effect") == "none" for item in github_rows)
+    # A repository path alone is not enough to derive host-wide RED authority.
     assert "github.com" not in result["hosts"]
     assert result["new_probationary_count"] == 0
+    assert result["broad_discovery_candidate_count"] == 2
+
+
+def test_curated_code_host_can_be_authorized_when_explicitly_registered(tmp_path: Path) -> None:
+    repo, state, meta = _repo(tmp_path)
+    _write(repo / "senju" / "config" / "public-red-lab-registry.json", {
+        "targets": [{
+            "id": "explicit-code-host-scope",
+            "host": "github.com",
+            "base_url": "https://github.com",
+            "authorization_evidence_url": "https://evidence.example.com/github-scope",
+            "authorization_note": "explicit host authorization supplied by the operator",
+        }]
+    })
+    result = refresh_public_red_lab_authority(repo, state, meta, now=2600)
+    assert "github.com" in result["hosts"]
+    authority = json.loads((state / "public_red_lab_authority.json").read_text())
+    row = next(item for item in authority["targets"] if item["host"] == "github.com")
+    assert row["scope_evidence"] == "explicit_curated_host_authorization"
 
 
 def test_auto_growth_is_capped_and_rejects_http_or_private_literals(tmp_path: Path) -> None:
