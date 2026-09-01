@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run Authority -> new-host activation -> credential -> mutation -> expansion -> recovery."""
+"""Run new-host Authorization -> Senju trial -> credential -> mutation -> expansion."""
 from __future__ import annotations
 
 import argparse
@@ -29,10 +29,6 @@ def main() -> int:
     state = Path(args.state)
     state.mkdir(parents=True, exist_ok=True)
 
-    # Any exact host that has independently reached canonical explicit-owner status is
-    # activated into the live action queue immediately. This is the new-host permission
-    # fast path: no extra per-host wiring or additional cycle is required after the
-    # canonical authorization exists.
     new_host_authorization = sync_new_host_authorizations(
         state,
         repo_root=args.repo_root,
@@ -54,10 +50,6 @@ def main() -> int:
         payload_resolver=credential_runtime.resolve_payload,
     )
 
-    # A failed exact-owner mutation is no longer a dead end. It becomes an Authority
-    # expansion case immediately. Routes that remain inside the canonical explicit
-    # owner envelope can use that existing owner authorization as the fast-path approval;
-    # anything outside the envelope remains review-only and produces no transport.
     expansion_cases = build_authority_expansion_cases(
         state,
         repo_root=args.repo_root,
@@ -71,9 +63,6 @@ def main() -> int:
     )
     credential_runtime.flush()
 
-    # Re-sync before the final rebuild so a canonical host added by another authority
-    # process during the same run is eligible for a live lease without waiting for the
-    # next scheduled continuity cycle.
     new_host_authorization_after = sync_new_host_authorizations(
         state,
         repo_root=args.repo_root,
@@ -82,9 +71,14 @@ def main() -> int:
     replicas_after = rebuild_discovery_capability_replicas(state)
 
     payload = {
-        "schema": "meta-discovery-action-continuity-run/v4",
+        "schema": "meta-discovery-action-continuity-run/v5",
         "generated_at": int(time.time()),
         "closed_loop": [
+            "single_PR_host_activation_bundle",
+            "external_exact_host_authorization_attestation",
+            "canonical_authorization_registration",
+            "authorized_site_registration",
+            "senju_same_host_trial_profile",
             "canonical_new_host_authorization_sync",
             "same_cycle_new_host_action_queue",
             "same_cycle_new_host_capability_lease",
@@ -111,8 +105,16 @@ def main() -> int:
             "canonical_explicit_host_count": new_host_authorization["canonical_explicit_host_count"],
             "activated_host_count": new_host_authorization["activated_host_count"],
             "new_profiles_created": new_host_authorization["new_profiles_created"],
+            "senju_trial_ready_count": new_host_authorization["senju_trial_ready_count"],
             "review_case_count": new_host_authorization["review_case_count"],
             "post_action_activated_host_count": new_host_authorization_after["activated_host_count"],
+            "post_action_senju_trial_ready_count": new_host_authorization_after["senju_trial_ready_count"],
+            "single_pr_completion_contract": True,
+            "single_pr_required_outputs": [
+                "canonical_authorization",
+                "authorized_target",
+                "senju_trial_profile",
+            ],
             "same_cycle_action_queue": True,
             "same_cycle_capability_lease": True,
             "unknown_host_auto_authorization": False,
