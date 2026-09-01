@@ -44,6 +44,198 @@
       "private_dns_names": [],
       "owner_authorization_confidence_percent": 100,
       "approval_recommendation": "承認推奨"
+    },
+    {
+      "authorization_reference": "operator-public-lab:acunetix-testphp",
+      "owner": "Acunetix / Invicti",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "exact_hosts": [
+        "testphp.vulnweb.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:acunetix-testasp",
+      "owner": "Acunetix / Invicti",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "exact_hosts": [
+        "testasp.vulnweb.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:acunetix-testaspnet",
+      "owner": "Acunetix / Invicti",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "exact_hosts": [
+        "testaspnet.vulnweb.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:acunetix-testhtml5",
+      "owner": "Acunetix / Invicti",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "exact_hosts": [
+        "testhtml5.vulnweb.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:owasp-juice-shop-demo",
+      "owner": "OWASP Juice Shop Project",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://owasp.org/www-project-juice-shop/",
+      "exact_hosts": [
+        "demo.owasp-juice.shop"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:google-firing-range",
+      "owner": "Google",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://github.com/google/firing-range",
+      "exact_hosts": [
+        "public-firing-range.appspot.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:google-gruyere",
+      "owner": "Google",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
+      "exact_hosts": [
+        "google-gruyere.appspot.com"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
+    },
+    {
+      "authorization_reference": "operator-public-lab:portswigger-gin-and-juice",
+      "owner": "PortSwigger",
+      "issuer_kind": "operator_public_security_lab",
+      "authorization_evidence_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
+      "exact_hosts": [
+        "ginandjuice.shop"
+      ],
+      "allowed_methods": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ],
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1
     }
   ]
 }
