@@ -84,7 +84,7 @@ def test_seed_expansion_requires_existing_standing_and_effective_authority():
     )
     assert len(profiles) == 2
     assert len(added) == 2
-    assert all(row["host"] if "host" in row else row["url"].startswith("https://lab.example.com/") for row in profiles)
+    assert all(row["url"].startswith("https://lab.example.com/") for row in profiles)
 
     blocked, blocked_added = expander.expand_seed_routes(
         config=config,
@@ -117,4 +117,4 @@ def test_burst_cycle_has_hard_request_profile_cap():
         for i in range(30)
     ]
     batch = burst._diverse_batch(profiles, "op-cap", 99)
-    assert len(batch) == burst.MAX_PROFILES_PER_CYCLE == 12
+    assert len(batch) == burst.MAX_PROFILES_PER_CYCLE == 6
