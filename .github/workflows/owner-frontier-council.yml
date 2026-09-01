@@ -99,6 +99,60 @@ jobs:
             --out /tmp/rights-request-federation.json
           test "$(jq -r '.new_unrelated_authority_self_mint' /tmp/rights-request-federation.json)" = "false"
 
+      - name: Restore latest unresolved URL relay
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: owner-frontier-ingress-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-claude/employee-onboarding-setup-udm86-
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Feed unresolved relay URLs into council review queue
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p senju/state
+          SIGNALS=.authority-opportunity-runtime/owner_scope_negotiation_signals.json
+          QUEUE=.authority-opportunity-runtime/authority_opportunity_queue.json
+          DEST=senju/state/owner_scope_negotiation_signals.json
+
+          if [[ -s "$SIGNALS" ]]; then
+            cp "$SIGNALS" "$DEST"
+            SOURCE=relay_signals
+          elif [[ -s "$QUEUE" ]]; then
+            jq '{
+              schema: "senju-owner-scope-negotiation-signals/v1",
+              generated_at: (now | floor),
+              signals: [
+                (.opportunities // [])[]
+                | select(.host != null and (.host | tostring | length) > 0)
+                | {
+                    signal_id: ("frontier-ingress-" + (.host | tostring)),
+                    host: (.host | tostring),
+                    requested_methods: (.requested_methods // ["GET", "HEAD", "OPTIONS"]),
+                    reason: (.reason // "unresolved discovery routed to Owner frontier council"),
+                    source: "authority_opportunity_queue_bridge",
+                    priority: (.priority // 75),
+                    proposal_only: true,
+                    authority_effect: "none",
+                    external_action_allowed: false
+                  }
+              ]
+            }' "$QUEUE" > "$DEST"
+            SOURCE=relay_queue_fallback
+          else
+            printf '%s\n' '{"schema":"senju-owner-scope-negotiation-signals/v1","signals":[]}' > "$DEST"
+            SOURCE=no_upstream_urls
+          fi
+
+          COUNT="$(jq '[.signals[]? | select(.host != null and (.host | tostring | length) > 0)] | length' "$DEST")"
+          echo "frontier_ingress_source=$SOURCE" >> "$GITHUB_STEP_SUMMARY"
+          echo "frontier_ingress_urls=$COUNT" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Run Owner frontier as SENJU recommendation-only research council
         env:
           PYTHONPATH: senju:automation/codegen
@@ -123,6 +177,8 @@ jobs:
           test -s senju/state/owner_scope_expansion_evidence_requests.json
           test -s senju/state/owner_frontier_negotiator_feed.json
           test -s senju/state/owner_frontier_senju_research_queue.json
+          echo "frontier_council_candidates=$(jq -r '.candidate_count // 0' /tmp/owner-frontier-council.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "frontier_research_admitted=$(jq -r '.research_candidate_count // 0' /tmp/owner-frontier-council.json)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Build read-only SENJU owner research bundle
         shell: bash
@@ -137,7 +193,8 @@ jobs:
             senju/state/owner_frontier_council.json \
             senju/state/owner_scope_expansion_evidence_requests.json \
             senju/state/owner_frontier_negotiator_feed.json \
-            senju/state/owner_frontier_senju_research_queue.json
+            senju/state/owner_frontier_senju_research_queue.json \
+            senju/state/owner_scope_negotiation_signals.json
           do
             test -s "$path"
             cp "$path" "/tmp/owner-research/$(basename "$path")"
