@@ -68,26 +68,38 @@ def test_production_owner_root_is_seeded_and_predelegates_write_mutation() -> No
     assert set(seed["shared_with"]) == {"META", "X", "SENJU", "CHILD", "AI"}
 
 
-def test_production_policy_disables_candidate_stage_inside_owner_envelope() -> None:
+def test_production_policy_runs_aggressive_candidate_authorization_batches() -> None:
     policy_path = _repo_root() / "automation" / "codegen" / "meta_state" / "discovery_policy.json"
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
 
     goal = policy["agent_goal"]
-    assert goal["objective"] == "auto_authorize_discovery_inside_existing_owner_envelope"
+    assert goal["objective"] == "promote_new_hosts_to_authorization_aggressively_when_exact_host_evidence_exists"
     assert goal["candidate_stage_inside_owner_envelope"] == "disabled"
+    assert goal["candidate_authorization_target_per_cycle"] == 10
     assert set(goal["applies_to"]) == {"META", "X", "SENJU", "CHILD", "AI"}
 
+    promotion = policy["candidate_authorization_promotion"]
+    assert promotion["enabled"] is True
+    assert promotion["mode"] == "exact_host_attestation_auto_promotion"
+    assert promotion["target_promotions_per_cycle"] == 10
+    assert promotion["max_candidates_per_cycle"] == 25
+    assert promotion["pr_required_before_runtime_authorization"] is False
+    assert promotion["candidate_intake_is_nonblocking"] is True
+    assert promotion["same_host_attestation_can_authorize"] is True
+    assert promotion["candidate_or_recommendation_alone_is_authority"] is False
+
     discovery = policy["untrusted_discovery"]
-    assert discovery["mode"] == "auto_authorize_inside_existing_owner_envelope"
+    assert discovery["mode"] == "candidate_first_aggressive_intake"
     assert discovery["inside_owner_envelope"] == "authorized_immediately"
+    assert discovery["outside_owner_envelope"] == "candidate_and_attestation_probe"
+    assert discovery["candidate_prs_may_be_partial"] is True
 
 
-def test_production_policy_keeps_unknown_external_hosts_outside_authority() -> None:
+def test_production_policy_keeps_unverified_external_hosts_outside_authority() -> None:
     policy_path = _repo_root() / "automation" / "codegen" / "meta_state" / "discovery_policy.json"
     policy = json.loads(policy_path.read_text(encoding="utf-8"))
     discovery = policy["untrusted_discovery"]
 
-    assert discovery["outside_owner_envelope"] == "review_required"
     assert discovery["new_trust_roots_from_discovery"] is False
     assert discovery["authority_inheritance"] is False
     assert discovery["credential_scope"] == "none"
