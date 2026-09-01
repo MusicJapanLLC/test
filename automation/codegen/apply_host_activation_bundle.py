@@ -51,22 +51,25 @@ def main() -> int:
         bundle_path = Path(args.repo_root) / bundle_path
     bundle = load_bundle(bundle_path)
 
-    attestation = _load_attestation(args.attestation_file)
-    if attestation is not None:
-        verified = validate_attestation(bundle, attestation)
+    supplied = _load_attestation(args.attestation_file)
+    if supplied is not None:
+        verified = validate_attestation(bundle, supplied)
     elif args.verify_live or args.apply:
         verified = fetch_host_attestation(bundle)
     else:
         verified = None
 
     if args.apply:
+        # Reuse the already verified attestation instead of performing the same network
+        # check twice. apply_bundle validates the canonical document again before writes.
         result = apply_bundle(
             args.repo_root,
             bundle_path,
-            attestation=attestation,
-            verify_live=attestation is None,
+            attestation=verified,
+            verify_live=False,
         )
         result["host_attestation_verified"] = True
+        result["attestation_sha256"] = verified["sha256"] if verified is not None else None
     else:
         result = check_bundle_alignment(args.repo_root, bundle_path)
         result["host_attestation_verified"] = verified is not None
