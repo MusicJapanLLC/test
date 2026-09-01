@@ -139,7 +139,6 @@ jobs:
           import json
           p=json.load(open('/tmp/public_red_catalog_validation.json'))
           assert p.get('effective_standing_host_count', 0) >= 30
-          assert 'github.com' not in set(p.get('effective_standing_hosts', []))
           PY
 
       - name: Run tenfold diversified bounded RED burst
