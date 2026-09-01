@@ -18,6 +18,9 @@ on:
         required: false
         default: '0'
 
+permissions:
+  contents: read
+
 jobs:
   orchestrate:
     runs-on: ubuntu-latest
@@ -39,26 +42,61 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: Capability preflight
+        id: preflight
+        shell: bash
+        run: |
+          set -u
+          missing=()
+          for path in \
+            automation/codegen/engine/knowledge_base.py \
+            automation/codegen/engine/broadcaster.py \
+            automation/codegen/engine/loop.py \
+            automation/codegen/engine/task_generator.py; do
+            if [ ! -f "$path" ]; then
+              missing+=("$path")
+            fi
+          done
+
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            missing+=("secret:ANTHROPIC_API_KEY")
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            printf '### X full-cycle BLOCKED — prerequisites missing\n\n' >> "$GITHUB_STEP_SUMMARY"
+            printf 'The scheduled legacy orchestrator was not executed because its declared runtime contract is incomplete. No code generation or external action was attempted.\n\n' >> "$GITHUB_STEP_SUMMARY"
+            printf '**Missing prerequisites:**\n' >> "$GITHUB_STEP_SUMMARY"
+            printf -- '- `%s`\n' "${missing[@]}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          python3 -m py_compile automation/codegen/orchestrator.py
+
       - name: Install dependencies
+        if: steps.preflight.outputs.ready == 'true'
         run: |
           pip install requests anthropic 2>/dev/null || pip install requests
 
       - name: Run X orchestrator
+        if: steps.preflight.outputs.ready == 'true'
         working-directory: automation/codegen
         run: |
           MODE="${{ github.event.inputs.mode || 'full' }}"
           NEW_TASKS="${{ github.event.inputs.new_tasks || '10' }}"
           MAX_ITER="${{ github.event.inputs.max_iter || '0' }}"
           if [ "$MAX_ITER" = "0" ]; then
-            python3 orchestrator.py $MODE $NEW_TASKS
+            python3 orchestrator.py "$MODE" "$NEW_TASKS"
           else
-            python3 orchestrator.py $MODE $NEW_TASKS $MAX_ITER
+            python3 orchestrator.py "$MODE" "$NEW_TASKS" "$MAX_ITER"
           fi
 
       - name: Commit generated files
+        if: steps.preflight.outputs.ready == 'true'
         run: |
           git config user.name "X-Autonomous"
           git config user.email "x-autonomous@musicjapanllc.com"
           git add -A
           git diff --staged --quiet || git commit -m "chore(X): autonomous cycle output [skip ci]"
-          git push origin HEAD || true
+          echo "Generated output is intentionally not pushed by this legacy lane; use the governed codegen workflow for write-capable execution."
