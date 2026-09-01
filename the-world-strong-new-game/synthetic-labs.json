@@ -1,5 +1,5 @@
 {
-  "schema": "the-world-synthetic-research-labs/v1",
+  "schema": "the-world-synthetic-research-labs/v2",
   "purpose": "Offline/synthetic surfaces for diverse RED research stalemates without expanding real-world target scope.",
   "network_transport": "disabled",
   "simulation_only": true,
@@ -19,6 +19,22 @@
     {"id":"lab-concurrency-01","base_url":"https://concurrency-01.world.invalid","theme":"concurrent update","stalemate":"two valid updates produce invalid combined state"},
     {"id":"lab-policy-01","base_url":"https://policy-01.world.invalid","theme":"policy composition","stalemate":"individually valid rules conflict when combined"},
     {"id":"lab-routing-01","base_url":"https://routing-01.world.invalid","theme":"route equivalence","stalemate":"alternate routes disagree on authorization state"},
-    {"id":"lab-regression-01","base_url":"https://regression-01.world.invalid","theme":"fixed-bug regression","stalemate":"historical fix conflicts with new feature behavior"}
+    {"id":"lab-regression-01","base_url":"https://regression-01.world.invalid","theme":"fixed-bug regression","stalemate":"historical fix conflicts with new feature behavior"},
+    {"id":"lab-token-01","base_url":"https://token-01.world.invalid","theme":"token lifecycle","stalemate":"renewal and revocation state disagree"},
+    {"id":"lab-pagination-01","base_url":"https://pagination-01.world.invalid","theme":"collection boundaries","stalemate":"page boundaries expose inconsistent filtering state"},
+    {"id":"lab-idempotency-01","base_url":"https://idempotency-01.world.invalid","theme":"idempotent operations","stalemate":"replay protection and retry semantics disagree"},
+    {"id":"lab-webhook-01","base_url":"https://webhook-01.world.invalid","theme":"event delivery","stalemate":"event ordering conflicts with current object state"},
+    {"id":"lab-queue-01","base_url":"https://queue-01.world.invalid","theme":"asynchronous queue","stalemate":"consumer retry observes stale authorization context"},
+    {"id":"lab-serialization-01","base_url":"https://serialization-01.world.invalid","theme":"serialization","stalemate":"equivalent objects canonicalize differently"},
+    {"id":"lab-proxy-01","base_url":"https://proxy-01.world.invalid","theme":"proxy interpretation","stalemate":"upstream and application disagree on request metadata"},
+    {"id":"lab-locale-01","base_url":"https://locale-01.world.invalid","theme":"locale normalization","stalemate":"case and locale transformations disagree"},
+    {"id":"lab-time-01","base_url":"https://time-01.world.invalid","theme":"time window","stalemate":"clock skew changes authorization or expiry outcome"},
+    {"id":"lab-featureflag-01","base_url":"https://featureflag-01.world.invalid","theme":"feature flags","stalemate":"mixed rollout creates two policy interpretations"},
+    {"id":"lab-search-01","base_url":"https://search-01.world.invalid","theme":"search filtering","stalemate":"index state lags source-of-truth permissions"},
+    {"id":"lab-graph-01","base_url":"https://graph-01.world.invalid","theme":"relationship graph","stalemate":"cyclic membership produces ambiguous effective access"},
+    {"id":"lab-federation-01","base_url":"https://federation-01.world.invalid","theme":"federated identity","stalemate":"issuer mapping and local role state diverge"},
+    {"id":"lab-audit-01","base_url":"https://audit-01.world.invalid","theme":"audit reconstruction","stalemate":"event log order cannot reproduce effective state"},
+    {"id":"lab-import-01","base_url":"https://import-01.world.invalid","theme":"bulk import","stalemate":"partial validation leaves mixed-version state"},
+    {"id":"lab-quota-01","base_url":"https://quota-01.world.invalid","theme":"quota accounting","stalemate":"concurrent reservations disagree on remaining capacity"}
   ]
 }
