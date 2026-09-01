@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from engine.candidate_authorization_runtime import promote_attested_candidates
 from engine.discovery_capability_leases import issue_discovery_capability_leases, load_discovery_capability_leases
 from engine.new_host_authorization_runtime import sync_new_host_authorizations
 
@@ -196,3 +197,93 @@ def test_external_link_setting_does_not_create_new_host_activation(tmp_path: Pat
     assert {row["target"] for row in queue["actions"]} == {"owner.example"}
     assert result["external_link_inheritance_used"] is False
     assert result["review_case_count"] == 1
+
+
+def _candidate(state: Path, host: str) -> None:
+    _write(
+        state / "discovery_candidates.json",
+        {
+            "candidates": [
+                {
+                    "host": host,
+                    "url": f"https://{host}/",
+                    "decision": "candidate_only",
+                    "source": "external_intel",
+                }
+            ]
+        },
+    )
+
+
+def _attestation(host: str, *, senju: bool = True) -> dict:
+    return {
+        "schema": "the-world-host-authorization-attestation/v1",
+        "host": host,
+        "repository": "MusicJapanLLC/test",
+        "authorization_id": f"auto-{host}",
+        "owner_authorization": "explicit",
+        "allowed_interactions": ["GET", "HEAD", "POST", "PUT", "PATCH"],
+        "path_prefixes": ["/", "/api"],
+        "trial_paths": ["/", "/api/test"],
+        "senju_experimentation_allowed": senju,
+        "same_host_only": True,
+        "synthetic_only": True,
+        "expires_at": 2_100_000_000,
+    }
+
+
+def test_candidate_exact_host_attestation_auto_promotes_to_authority_and_senju_trial(tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    now = 2_000_000_000
+    _base_state(state)
+    _candidate(state, "attested.example")
+    _write(state / "discovery_authorized.json", {"hosts": {}})
+
+    result = promote_attested_candidates(
+        state,
+        now=now,
+        fetcher=lambda host, paths: (_attestation(host), f"https://{host}{paths[0]}"),
+    )
+    lease_result = issue_discovery_capability_leases(state, now=now)
+    leases = load_discovery_capability_leases(state)
+    policy = json.loads((state / "discovery_policy.json").read_text())
+
+    assert result["promoted_count"] == 1
+    assert result["pr_required_before_runtime_authorization"] is False
+    assert lease_result["lease_count"] == 1
+    assert leases[0].target == "attested.example"
+    assert set(leases[0].capabilities) == {"scan", "probe", "write", "mutation"}
+    assert leases[0].credential_scope == "none"
+    profile = policy["action_profiles"]["attested.example"]
+    assert profile["authorization_source"] == "exact_host_attestation"
+    assert profile["senju_experimentation"]["enabled"] is True
+    assert profile["senju_experimentation"]["cross_host_routes"] is False
+
+
+def test_candidate_without_attestation_stays_candidate(tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    _base_state(state)
+    _candidate(state, "no-proof.example")
+    _write(state / "discovery_authorized.json", {"hosts": {}})
+
+    result = promote_attested_candidates(state, now=2_000_000_000, fetcher=lambda host, paths: None)
+    assert result["promoted_count"] == 0
+    assert result["attempts"][0]["status"] == "no_attestation"
+
+
+def test_attestation_without_senju_permission_only_gets_read_authority(tmp_path: Path) -> None:
+    state = tmp_path / "state"
+    _base_state(state)
+    _candidate(state, "read-attested.example")
+    _write(state / "discovery_authorized.json", {"hosts": {}})
+
+    promote_attested_candidates(
+        state,
+        now=2_000_000_000,
+        fetcher=lambda host, paths: (_attestation(host, senju=False), f"https://{host}{paths[0]}"),
+    )
+    issue_discovery_capability_leases(state, now=2_000_000_000)
+    lease = load_discovery_capability_leases(state)[0]
+
+    assert set(lease.capabilities) == {"scan", "probe"}
+    assert lease.credential_scope == "none"
