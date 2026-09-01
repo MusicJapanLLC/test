@@ -5,8 +5,8 @@ This module grows SENJU RED's *read-only* public-lab authority from two sources:
 2. OWASP VWAD online/live entries that look like direct vulnerable/test/lab apps.
 
 It deliberately does not turn arbitrary discovery into authority. Generic training/CTF
-platforms, private/non-HTTPS targets, redirects to new hosts, credentials, write methods,
-and destructive operations are outside this authority class.
+platforms, source-code hosting roots, private/non-HTTPS targets, redirects to new hosts,
+credentials, write methods, and destructive operations are outside this authority class.
 """
 from __future__ import annotations
 
@@ -36,6 +36,21 @@ PLATFORM_TOKENS = (
     "vulnhub",
     "portswigger web security academy",
 )
+
+# VWAD entries often link to a source repository in the generic `url` field. A source
+# repository is evidence about a vulnerable app, not authorization to treat the hosting
+# platform itself as a RED target. Upstream auto-admission therefore requires an explicit
+# `references[].name == live` URL and rejects common shared source-code platform roots.
+SHARED_CODE_HOSTS = frozenset({
+    "github.com",
+    "www.github.com",
+    "gitlab.com",
+    "www.gitlab.com",
+    "bitbucket.org",
+    "www.bitbucket.org",
+    "sourceforge.net",
+    "www.sourceforge.net",
+})
 
 DIRECT_LAB_SIGNALS = (
     "vulnerable",
@@ -145,16 +160,17 @@ def _safe_registry_rows(repo_root: Path) -> list[dict[str, Any]]:
 
 def _live_https_url(raw: Mapping[str, Any]) -> tuple[str, str] | None:
     refs = raw.get("references", ())
-    if isinstance(refs, list):
-        for ref in refs:
-            if not isinstance(ref, Mapping):
-                continue
-            if str(ref.get("name") or "").strip().lower() != "live":
-                continue
-            parsed = _normalize_https_url(ref.get("url"))
-            if parsed:
-                return parsed
-    return _normalize_https_url(raw.get("url"))
+    if not isinstance(refs, list):
+        return None
+    for ref in refs:
+        if not isinstance(ref, Mapping):
+            continue
+        if str(ref.get("name") or "").strip().lower() != "live":
+            continue
+        parsed = _normalize_https_url(ref.get("url"))
+        if parsed and parsed[0] not in SHARED_CODE_HOSTS:
+            return parsed
+    return None
 
 
 def _is_direct_online_lab(raw: Mapping[str, Any]) -> bool:
@@ -179,7 +195,7 @@ def _upstream_candidates(upstream_doc: Any) -> list[dict[str, Any]]:
         if parsed is None:
             continue
         host, base_url = parsed
-        if host in seen:
+        if host in SHARED_CODE_HOSTS or host in seen:
             continue
         seen.add(host)
         out.append({
@@ -231,6 +247,8 @@ def refresh_public_red_lab_authority(
         if parsed is None:
             continue
         host, base_url = parsed
+        if host in SHARED_CODE_HOSTS:
+            continue
         persisted_auto[host] = {
             **dict(raw),
             "host": host,
@@ -267,6 +285,8 @@ def refresh_public_red_lab_authority(
         "private_network": False,
         "cross_host_inheritance": False,
         "max_auto_new_per_cycle": cap,
+        "upstream_requires_explicit_live_reference": True,
+        "shared_code_hosts_excluded": True,
     }
     previous_targets = previous.get("targets", []) if isinstance(previous, Mapping) else []
     previous_constraints = previous.get("constraints", {}) if isinstance(previous, Mapping) else {}
@@ -294,8 +314,9 @@ def refresh_public_red_lab_authority(
         if not isinstance(raw, Mapping):
             continue
         host = str(raw.get("host") or "").strip().rstrip(".").lower()
-        if host:
-            by_host[host] = dict(raw)
+        if not host or host in SHARED_CODE_HOSTS:
+            continue
+        by_host[host] = dict(raw)
     for row in targets:
         host = row["host"]
         by_host[host] = {
