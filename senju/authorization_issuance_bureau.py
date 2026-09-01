@@ -1,18 +1,15 @@
 """Bounded Authorization Issuance Bureau.
 
-This module turns *verified owner-controlled authorization evidence* into a
-machine-readable authorization grant that downstream Authority machinery can
-consume.  It deliberately does not let discovery, negotiation success, or AI
-consensus self-authorize an unrelated third-party host.
+Discovery is a first-class authorization *review key*: a discovered exact host
+may automatically enter the authorization-verification lane and receive a
+stable machine-readable intake key. Discovery alone still has no authority
+effect. An authorization grant is issued only when the host is already a
+canonical authorized target or a trusted verifier supplies both owner-control
+verification and explicit owner authorization.
 
-The bureau is intended to be the missing independent institution between
-review and Authority materialization:
-
-candidate -> evidence verification -> bureau issuance -> Authority handoff
-
-Security invariant: issuance requires either an exact canonical authorized
-host or an explicit owner-control proof supplied by a trusted verifier.  The
-bureau never harvests credentials and never treats a discovered host as proof.
+Flow:
+    discovery -> review key -> owner-control verification -> bureau issuance
+    -> same-or-narrower Authority handoff
 """
 
 from __future__ import annotations
@@ -36,6 +33,18 @@ class AuthorizationEvidence:
     credential_scope: str = "none"
     private_network: bool = False
     expires_in_minutes: int = 60
+    proof_ref: str | None = None
+
+
+@dataclass(frozen=True)
+class DiscoveryAuthorizationKey:
+    key_id: str
+    host: str
+    source: str
+    discovered_at: str
+    status: str
+    authority_effect: str
+    next_action: str
     proof_ref: str | None = None
 
 
@@ -69,21 +78,67 @@ def _normalize_methods(methods: Iterable[str]) -> tuple[str, ...]:
     return normalized
 
 
+def recognize_discovery_key(
+    host: str,
+    *,
+    source: str = "discovery",
+    proof_ref: str | None = None,
+) -> DiscoveryAuthorizationKey:
+    """Recognize discovery as a key that opens the authorization review lane.
+
+    The key is deliberately non-authorizing. It makes the discovered host an
+    accepted authorization-review candidate and gives downstream workers a
+    stable object to enrich with owner-control evidence.
+    """
+
+    normalized_host = _normalize_host(host)
+    discovered = datetime.now(timezone.utc)
+    digest_input = "|".join([normalized_host, source, proof_ref or ""])
+    key_id = "discovery-key-" + sha256(digest_input.encode("utf-8")).hexdigest()[:20]
+    return DiscoveryAuthorizationKey(
+        key_id=key_id,
+        host=normalized_host,
+        source=source,
+        discovered_at=discovered.isoformat(),
+        status="authorization_review_unlocked",
+        authority_effect="none",
+        next_action="verify_owner_control_then_issue",
+        proof_ref=proof_ref,
+    )
+
+
+def build_discovery_authorization_intake(
+    key: DiscoveryAuthorizationKey,
+    *,
+    requested_methods: Iterable[str] = ("GET", "HEAD"),
+) -> dict[str, Any]:
+    """Create the review packet opened by a discovery key."""
+
+    methods = _normalize_methods(requested_methods)
+    return {
+        "schema": "authorization-issuance-bureau/discovery-key-v1",
+        "trigger": "discovery_key",
+        "discovery_key": asdict(key),
+        "discovery_recognized": True,
+        "authorization_review_unlocked": True,
+        "authority_effect": "none",
+        "review_required": True,
+        "next_action": "verify_owner_control_then_issue",
+        "candidate": {
+            "host": key.host,
+            "requested_methods": list(methods),
+            "credential_scope_ceiling": "synthetic_test",
+            "private_network": False,
+        },
+    }
+
+
 def issue_authorization(
     evidence: AuthorizationEvidence,
     *,
     canonical_authorized_hosts: set[str] | None = None,
 ) -> IssuedAuthorization:
-    """Issue a bounded authorization grant.
-
-    A host is eligible when either:
-      * it is already an exact canonical authorized host; or
-      * a trusted verifier supplied both owner-control verification and explicit
-        owner authorization.
-
-    This is intentionally stronger than a recommendation but weaker than a
-    self-issued Root: discovery/negotiation alone can never satisfy the gate.
-    """
+    """Issue a bounded authorization grant after authorization evidence exists."""
 
     host = _normalize_host(evidence.host)
     canonical = {_normalize_host(h) for h in (canonical_authorized_hosts or set())}
@@ -121,6 +176,26 @@ def issue_authorization(
         authority_effect="authorization_issued",
         issuer="SENJU_AUTHORIZATION_ISSUANCE_BUREAU",
         proof_ref=evidence.proof_ref,
+    )
+
+
+def issue_from_discovery_key(
+    key: DiscoveryAuthorizationKey,
+    evidence: AuthorizationEvidence,
+    *,
+    canonical_authorized_hosts: set[str] | None = None,
+) -> IssuedAuthorization:
+    """Continue a discovery-opened lane into issuance after verification.
+
+    The discovery key binds the review to one exact host. Verification cannot be
+    borrowed from another discovered host.
+    """
+
+    if key.host != _normalize_host(evidence.host):
+        raise PermissionError("authorization denied: discovery key host mismatch")
+    return issue_authorization(
+        evidence,
+        canonical_authorized_hosts=canonical_authorized_hosts,
     )
 
 
