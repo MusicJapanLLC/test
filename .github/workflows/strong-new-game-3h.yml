@@ -5,6 +5,7 @@ on:
     branches: ["claude/employee-onboarding-setup-udm86"]
     paths:
       - "the-world-strong-new-game/**"
+      - "automation/codegen/config/credential_bound_mutation.json"
       - ".github/workflows/strong-new-game-3h.yml"
       - "the-world-5th-power/git_mesh.py"
   workflow_dispatch:
@@ -132,6 +133,10 @@ jobs:
             --research-input "META=$RESEARCH_DIR/world-fabric" \
             --research-input "X=$RESEARCH_DIR/world-fabric"
           python the-world-strong-new-game/assign_synthetic_labs.py "$STATE_DIR"
+          python the-world-strong-new-game/inherit_credential_bindings.py \
+            --state "$STATE_DIR" \
+            --source automation/codegen/config/credential_bound_mutation.json \
+            --out "$STATE_DIR/credential-binding-inheritance.json"
           python the-world-strong-new-game/strong_new_game.py verify \
             --output "$STATE_DIR"
 
@@ -157,8 +162,16 @@ jobs:
           assert checkpoint['research']['X']['file_budget'] == 200
           assert checkpoint['invariants']['guard_policy'] == 'unchanged'
           assert checkpoint['invariants']['external_side_effects'] is False
-          assert checkpoint['invariants']['credential_inheritance'] is False
           assert checkpoint['invariants']['authority_inheritance'] is False
+          assert checkpoint['invariants']['credential_binding_inheritance'] is True
+          assert checkpoint['invariants']['raw_credential_inheritance'] is False
+          assert checkpoint['credential_binding_inheritance']['cross_world_binding_inheritance'] is True
+          assert checkpoint['credential_binding_inheritance']['secret_values_serialized'] is False
+          assert checkpoint['credential_binding_inheritance']['binding_count'] >= 1
+          for binding in checkpoint['credential_binding_inheritance']['bindings']:
+              assert binding['secret_value_inherited'] is False
+              assert 'secret_value' not in binding
+              assert binding['secret_env']
           assert checkpoint['synthetic_labs']['simulation_only'] is True
           assert checkpoint['synthetic_labs']['network_transport'] == 'disabled'
           assert checkpoint['synthetic_labs']['catalog_size'] >= 32
