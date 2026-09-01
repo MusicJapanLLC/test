@@ -43,10 +43,11 @@ def test_bridges_issued_authorization_into_reviewed_lease(tmp_path: Path) -> Non
     assert result["bridged_count"] == 1
     assert leases[0]["host"] == "new-owned.example"
     assert leases[0]["allowed_methods"] == ["GET", "HEAD"]
+    assert leases[0]["credential_scope"] == "none"
     assert leases[0]["same_or_narrower"] is True
 
 
-def test_rejects_unissued_or_private_network_handoff(tmp_path: Path) -> None:
+def test_rejects_unissued_private_or_credential_bearing_handoff(tmp_path: Path) -> None:
     state = tmp_path / "state"
     _write(
         state / "negotiation_authorization_handoffs.json",
@@ -75,6 +76,18 @@ def test_rejects_unissued_or_private_network_handoff(tmp_path: Path) -> None:
                         "expires_at": "2030-01-01T00:00:00+00:00",
                     },
                     "requested_authority": {"host": "private.example"},
+                },
+                {
+                    "authorization": {
+                        "authorization_id": "auth-4",
+                        "host": "credentialed.example",
+                        "authority_effect": "authorization_issued",
+                        "allowed_methods": ["GET", "HEAD"],
+                        "credential_scope": "synthetic_test",
+                        "private_network": False,
+                        "expires_at": "2030-01-01T00:00:00+00:00",
+                    },
+                    "requested_authority": {"host": "credentialed.example"},
                 },
             ]
         },
