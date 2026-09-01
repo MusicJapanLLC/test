@@ -1,4 +1,5 @@
 name: Negotiation Authorization Accelerator
+# Owner Authorization pool closed-loop validation: 50 exact-host grants -> SENJU promotion.
 
 on:
   schedule:
