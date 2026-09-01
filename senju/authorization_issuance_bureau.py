@@ -1,16 +1,17 @@
 """Bounded Authorization Issuance Bureau.
 
-Authorization *review keys* are intentionally easy to obtain. Any requester may
+Authorization review keys are intentionally easy to obtain. Any requester may
 open an exact-host authorization review lane and receive a stable
 machine-readable key. Possession of that key has no authority effect.
 
-A real authorization grant is still issued only when the host is already a
-canonical authorized target or a trusted verifier supplies both owner-control
-verification and explicit owner authorization.
+Authorization issuance supports three legitimate bases:
+1. an exact canonical authorized target;
+2. trusted verifier evidence of owner control plus explicit authorization; or
+3. a verified cloud-control attestation for a service owned in a connected
+   account, with explicit owner authorization for that service.
 
-Flow:
-    any requester -> review key -> authorization verification -> bureau issuance
-    -> same-or-narrower Authority handoff
+The third route deliberately loosens the exit side without turning discovery or
+AI consensus into permission for unrelated third-party hosts.
 """
 
 from __future__ import annotations
@@ -19,9 +20,11 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from hashlib import sha256
 from typing import Any, Iterable
+from urllib.parse import urlparse
 
 
 _ALLOWED_METHODS = {"GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH"}
+_TRUSTED_CONTROL_PROVIDERS = {"render", "vercel"}
 
 
 @dataclass(frozen=True)
@@ -35,6 +38,21 @@ class AuthorizationEvidence:
     private_network: bool = False
     expires_in_minutes: int = 60
     proof_ref: str | None = None
+
+
+@dataclass(frozen=True)
+class VerifiedControlAttestation:
+    provider: str
+    host: str
+    service_url: str
+    provider_control_verified: bool
+    owner_authorized: bool
+    proof_ref: str
+    allowed_methods: tuple[str, ...] = ("GET", "HEAD")
+    credential_scope: str = "none"
+    private_network: bool = False
+    workspace_id: str | None = None
+    service_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -63,6 +81,7 @@ class IssuedAuthorization:
     authority_effect: str
     issuer: str
     proof_ref: str | None
+    authorization_basis: str = "verified_owner_authorization"
 
 
 def _normalize_host(host: str) -> str:
@@ -85,9 +104,7 @@ def _normalize_requester(requester: str | None) -> str | None:
     if requester is None:
         return None
     value = str(requester).strip()
-    if not value:
-        return None
-    return value[:160]
+    return value[:160] or None
 
 
 def recognize_discovery_key(
@@ -97,13 +114,6 @@ def recognize_discovery_key(
     proof_ref: str | None = None,
     requester: str | None = None,
 ) -> DiscoveryAuthorizationKey:
-    """Issue an open-access review key for one exact host.
-
-    Historical name retained for compatibility. The function is no longer
-    limited to Discovery callers: research, negotiation, external input, agents,
-    and manual requesters may all obtain the same non-authorizing review key.
-    """
-
     normalized_host = _normalize_host(host)
     normalized_requester = _normalize_requester(requester)
     discovered = datetime.now(timezone.utc)
@@ -132,8 +142,6 @@ def request_review_key(
     source: str = "public-review-request",
     proof_ref: str | None = None,
 ) -> DiscoveryAuthorizationKey:
-    """Public entrypoint: any requester may obtain a non-authorizing review key."""
-
     return recognize_discovery_key(
         host,
         source=source,
@@ -147,14 +155,11 @@ def build_discovery_authorization_intake(
     *,
     requested_methods: Iterable[str] = ("GET", "HEAD"),
 ) -> dict[str, Any]:
-    """Create the authorization-review packet opened by a review key."""
-
     methods = _normalize_methods(requested_methods)
     return {
         "schema": "authorization-issuance-bureau/review-key-v2",
         "trigger": "open_review_key",
         "review_key": asdict(key),
-        "discovery_key": asdict(key),
         "review_key_acquisition": "open",
         "authorization_review_unlocked": True,
         "authority_effect": "none",
@@ -169,25 +174,10 @@ def build_discovery_authorization_intake(
     }
 
 
-def issue_authorization(
-    evidence: AuthorizationEvidence,
-    *,
-    canonical_authorized_hosts: set[str] | None = None,
-) -> IssuedAuthorization:
-    """Issue a bounded authorization grant after authorization evidence exists."""
-
+def _build_grant(evidence: AuthorizationEvidence, *, basis: str) -> IssuedAuthorization:
     host = _normalize_host(evidence.host)
-    canonical = {_normalize_host(h) for h in (canonical_authorized_hosts or set())}
-
-    eligible = host in canonical or (
-        evidence.owner_control_verified and evidence.explicit_owner_authorization
-    )
-    if not eligible:
-        raise PermissionError("authorization denied: no verified owner-controlled authorization")
-
     if evidence.private_network:
         raise PermissionError("authorization denied: private-network scope is not issuable here")
-
     methods = _normalize_methods(evidence.requested_methods)
     if evidence.credential_scope not in {"none", "synthetic_test"}:
         raise PermissionError("authorization denied: credential scope outside bureau ceiling")
@@ -195,12 +185,10 @@ def issue_authorization(
     ttl = max(5, min(int(evidence.expires_in_minutes), 24 * 60))
     issued = datetime.now(timezone.utc)
     expires = issued + timedelta(minutes=ttl)
-
     digest_input = "|".join(
-        [host, evidence.source, issued.isoformat(), ",".join(methods), evidence.credential_scope]
+        [host, evidence.source, issued.isoformat(), ",".join(methods), evidence.credential_scope, basis]
     )
     authorization_id = "authz-" + sha256(digest_input.encode("utf-8")).hexdigest()[:20]
-
     return IssuedAuthorization(
         authorization_id=authorization_id,
         host=host,
@@ -212,7 +200,64 @@ def issue_authorization(
         authority_effect="authorization_issued",
         issuer="SENJU_AUTHORIZATION_ISSUANCE_BUREAU",
         proof_ref=evidence.proof_ref,
+        authorization_basis=basis,
     )
+
+
+def issue_authorization(
+    evidence: AuthorizationEvidence,
+    *,
+    canonical_authorized_hosts: set[str] | None = None,
+) -> IssuedAuthorization:
+    host = _normalize_host(evidence.host)
+    canonical = {_normalize_host(h) for h in (canonical_authorized_hosts or set())}
+    if host in canonical:
+        return _build_grant(evidence, basis="canonical_authorized_host")
+    if evidence.owner_control_verified and evidence.explicit_owner_authorization:
+        return _build_grant(evidence, basis="trusted_owner_control_verification")
+    raise PermissionError("authorization denied: no verified authorization basis")
+
+
+def issue_from_verified_control_attestation(
+    attestation: VerifiedControlAttestation,
+    *,
+    expires_in_minutes: int = 60,
+) -> IssuedAuthorization:
+    """Issue for a newly created host proven controlled in a connected cloud account.
+
+    This route does not require prior canonical registration. It requires a
+    provider-side control attestation and explicit owner authorization for the
+    exact service being promoted.
+    """
+
+    provider = str(attestation.provider).strip().lower()
+    if provider not in _TRUSTED_CONTROL_PROVIDERS:
+        raise PermissionError("authorization denied: untrusted control provider")
+    host = _normalize_host(attestation.host)
+    parsed = urlparse(attestation.service_url)
+    if parsed.scheme != "https" or _normalize_host(parsed.hostname or "") != host:
+        raise PermissionError("authorization denied: service URL does not bind exact host")
+    if not attestation.provider_control_verified or not attestation.owner_authorized:
+        raise PermissionError("authorization denied: cloud control or owner authorization missing")
+    if not attestation.proof_ref.strip():
+        raise PermissionError("authorization denied: control proof reference required")
+    if attestation.private_network:
+        raise PermissionError("authorization denied: private-network scope is not issuable here")
+    if attestation.credential_scope not in {"none", "synthetic_test"}:
+        raise PermissionError("authorization denied: credential scope outside bureau ceiling")
+
+    evidence = AuthorizationEvidence(
+        host=host,
+        source=f"verified-cloud-control:{provider}",
+        owner_control_verified=True,
+        explicit_owner_authorization=True,
+        requested_methods=_normalize_methods(attestation.allowed_methods),
+        credential_scope=attestation.credential_scope,
+        private_network=False,
+        expires_in_minutes=expires_in_minutes,
+        proof_ref=attestation.proof_ref,
+    )
+    return _build_grant(evidence, basis=f"verified_cloud_control:{provider}")
 
 
 def issue_from_discovery_key(
@@ -221,21 +266,14 @@ def issue_from_discovery_key(
     *,
     canonical_authorized_hosts: set[str] | None = None,
 ) -> IssuedAuthorization:
-    """Continue an open review-key lane into issuance after verification."""
-
     if key.host != _normalize_host(evidence.host):
         raise PermissionError("authorization denied: review key host mismatch")
-    return issue_authorization(
-        evidence,
-        canonical_authorized_hosts=canonical_authorized_hosts,
-    )
+    return issue_authorization(evidence, canonical_authorized_hosts=canonical_authorized_hosts)
 
 
 def build_authority_handoff(grant: IssuedAuthorization) -> dict[str, Any]:
-    """Create a downstream Authority handoff packet from an issued grant."""
-
     return {
-        "schema": "authorization-issuance-bureau/v1",
+        "schema": "authorization-issuance-bureau/v2",
         "authorization": asdict(grant),
         "next_action": "materialize_same_or_narrower_authority",
         "requested_authority": {
