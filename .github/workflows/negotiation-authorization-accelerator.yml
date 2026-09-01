@@ -1,5 +1,5 @@
 name: Negotiation Authorization Accelerator
-# Owner Authorization pool closed-loop validation: 50 exact-host grants -> SENJU promotion -> RED frontier.
+# Owner Authorization pool closed-loop validation: formal intake -> Authorization -> promotion -> RED frontier.
 
 on:
   schedule:
@@ -13,6 +13,8 @@ on:
       - 'senju/scripts/negotiation_authorization_accelerator.py'
       - 'senju/senju/negotiation_case_review_gate.py'
       - 'senju/authorization_issuance_bureau.py'
+      - 'senju/senju/authorization_handoff_bridge.py'
+      - 'senju/scripts/authorization_handoff_bridge.py'
       - 'senju/senju/owner_authorization_pool.py'
       - 'senju/scripts/owner_authorization_pool.py'
       - 'senju/senju/authority_promotion_bureau.py'
@@ -22,6 +24,7 @@ on:
       - 'senju/state/verified_control_attestations.json'
       - 'AUTHORIZED_TEST_TARGETS.json'
       - 'tests/test_negotiation_authorization_accelerator.py'
+      - 'tests/test_authorization_handoff_bridge.py'
       - 'tests/test_owner_authorization_pool.py'
       - 'tests/test_red_authorized_frontier.py'
       - '.github/workflows/negotiation-authorization-accelerator.yml'
@@ -153,7 +156,22 @@ jobs:
           echo "- issued this cycle: $(jq -r '.issued_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
           echo "- reused this cycle: $(jq -r '.reused_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Promote pool into SENJU Authority feed
+      - name: Bridge every newly issued Authorization into reviewed promotion leases
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/authorization_handoff_bridge.py \
+            --state-dir senju/state \
+            --out /tmp/authorization-handoff-bridge.json
+
+          test "$(jq -r '.closed_loop' /tmp/authorization-handoff-bridge.json)" = "true"
+          echo "## Authorization Handoff Closure" >> "$GITHUB_STEP_SUMMARY"
+          echo "- issued handoffs seen: $(jq -r '.input_handoff_count' /tmp/authorization-handoff-bridge.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- newly bridged into promotion leases: $(jq -r '.bridged_count' /tmp/authorization-handoff-bridge.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reviewed promotion leases: $(jq -r '.reviewed_lease_count' /tmp/authorization-handoff-bridge.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Promote pool and issued handoffs into SENJU Authority feed
         env:
           PYTHONPATH: senju
         run: |
@@ -197,19 +215,20 @@ jobs:
           echo "- live probes attempted: $attempted" >> "$GITHUB_STEP_SUMMARY"
           echo "- live probes succeeded: $success" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Run focused accelerator, pool, and RED frontier tests
+      - name: Run focused accelerator, closure, pool, and RED frontier tests
         env:
           PYTHONPATH: senju
         run: |
           python -m pip install --disable-pip-version-check pytest
           pytest -q \
             tests/test_negotiation_authorization_accelerator.py \
+            tests/test_authorization_handoff_bridge.py \
             tests/test_owner_authorization_pool.py \
             tests/test_authorization_issuance_bureau.py \
             tests/test_red_authorized_frontier.py \
             senju/tests/test_authority_promotion_bureau.py
 
-      - name: Preserve acceleration, pool, and RED evidence
+      - name: Preserve acceleration, closure, pool, and RED evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
@@ -217,6 +236,7 @@ jobs:
           path: |
             /tmp/negotiation-authorization-bus.json
             /tmp/negotiation-authorization-accelerator.json
+            /tmp/authorization-handoff-bridge.json
             /tmp/owner-authorization-pool.json
             /tmp/owner-authorization-promotion.json
             /tmp/red-authorized-frontier.json
@@ -226,6 +246,7 @@ jobs:
             senju/state/authorization_review_keys.json
             senju/state/negotiation_authorization_acceleration.json
             senju/state/negotiation_authorization_handoffs.json
+            senju/state/authorization_handoff_bridge.json
             senju/state/owner_authorization_pool.json
             senju/state/owner_authorization_pool_handoffs.json
             senju/state/reviewed_authority_operational_leases.json
