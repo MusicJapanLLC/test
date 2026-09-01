@@ -207,7 +207,7 @@
       "url": "https://php.testsparker.com/"
     },
     {
-      "authorization_evidence": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
+      "authorization_evidence": "https://github.com/google/firing-range",
       "id": "auto-google-firing-range-a4ed9833cabe",
       "operator": "Google",
       "provider_id": "google-firing-range",
@@ -739,55 +739,7 @@
   "effective_host_count": 31,
   "expanded_unique_url_count": 100,
   "minimum_profile_target": 60,
-  "newly_discovered_urls": [
-    "https://public-firing-range.appspot.com/address",
-    "https://public-firing-range.appspot.com/badscriptimport",
-    "https://public-firing-range.appspot.com/cors",
-    "https://public-firing-range.appspot.com/cors/alloworigin/allowInsecureScheme",
-    "https://public-firing-range.appspot.com/cors/alloworigin/allowNullOrigin",
-    "https://public-firing-range.appspot.com/cors/alloworigin/dynamicAllowOrigin",
-    "https://public-firing-range.appspot.com/dom/dompropagation",
-    "https://public-firing-range.appspot.com/dom/eventtriggering",
-    "https://public-firing-range.appspot.com/dom/javascripturi.html",
-    "https://public-firing-range.appspot.com/dom/toxicdom",
-    "https://public-firing-range.appspot.com/dom/toxicdomscripts",
-    "https://public-firing-range.appspot.com/escape/js",
-    "https://public-firing-range.appspot.com/escape/serverside",
-    "https://public-firing-range.appspot.com/flashinjection",
-    "https://public-firing-range.appspot.com/invalidframingconfig",
-    "https://public-firing-range.appspot.com/invalidframingconfig/frameancestorsnonenoxfodeny",
-    "https://public-firing-range.appspot.com/invalidframingconfig/frameancestorsnoxfoallowfrom",
-    "https://public-firing-range.appspot.com/invalidframingconfig/frameancestorsselfnoxfosameorigin",
-    "https://public-firing-range.appspot.com/invalidframingconfig/xfoallowfromnocoverdomain",
-    "https://public-firing-range.appspot.com/invalidframingconfig/xfoallowfromnoframeancestors",
-    "https://public-firing-range.appspot.com/invalidframingconfig/xfodenynoframeancestorsnone",
-    "https://public-firing-range.appspot.com/invalidframingconfig/xfosameoriginnoframeancestorsself",
-    "https://public-firing-range.appspot.com/leakedcookie",
-    "https://public-firing-range.appspot.com/mixedcontent",
-    "https://public-firing-range.appspot.com/redirect",
-    "https://public-firing-range.appspot.com/redirect/meta",
-    "https://public-firing-range.appspot.com/redirect/parameter",
-    "https://public-firing-range.appspot.com/reflected/contentsniffing",
-    "https://public-firing-range.appspot.com/reflected/escapedparameter",
-    "https://public-firing-range.appspot.com/reflected/filteredcharsets",
-    "https://public-firing-range.appspot.com/reflected/filteredstrings",
-    "https://public-firing-range.appspot.com/reflected/jsoncallback",
-    "https://public-firing-range.appspot.com/reflected/parameter",
-    "https://public-firing-range.appspot.com/reflected/url",
-    "https://public-firing-range.appspot.com/remoteinclude/object_hash.html",
-    "https://public-firing-range.appspot.com/remoteinclude/parameter",
-    "https://public-firing-range.appspot.com/remoteinclude/script_hash.html",
-    "https://public-firing-range.appspot.com/reverseclickjacking",
-    "https://public-firing-range.appspot.com/reverseclickjacking/jsonpendpoint",
-    "https://public-firing-range.appspot.com/reverseclickjacking/multipage",
-    "https://public-firing-range.appspot.com/reverseclickjacking/singlepage",
-    "https://public-firing-range.appspot.com/tags",
-    "https://public-firing-range.appspot.com/tags/expression",
-    "https://public-firing-range.appspot.com/tags/multiline",
-    "https://public-firing-range.appspot.com/urldom/jsonp",
-    "https://public-firing-range.appspot.com/urldom/location",
-    "https://public-firing-range.appspot.com/urldom/redirect"
-  ],
+  "newly_discovered_urls": [],
   "provider_checks": [
     {
       "evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
@@ -807,21 +759,18 @@
       "reachable": true
     },
     {
+      "error": "HTTPError: HTTP Error 429: Too Many Requests",
       "evidence_url": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
-      "final_url": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
-      "matched_urls": [
-        "https://public-firing-range.appspot.com/",
-        "https://public-firing-range.appspot.com/"
-      ],
+      "matched_urls": [],
       "provider_id": "google-firing-range",
-      "reachable": true
+      "reachable": false
     },
     {
-      "error": "HTTPError: HTTP Error 429: Too Many Requests",
       "evidence_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
+      "final_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
       "matched_urls": [],
       "provider_id": "google-gruyere",
-      "reachable": false
+      "reachable": true
     },
     {
       "evidence_url": "https://google-gruyere.appspot.com/part1",
@@ -886,7 +835,7 @@
       "reachable": true
     }
   ],
-  "route_seed_added_count": 47,
+  "route_seed_added_count": 0,
   "schema": "senju-public-red-discovery/v2",
-  "updated_at_utc": "2026-09-01T03:08:41.103785+00:00"
+  "updated_at_utc": "2026-09-01T03:09:22.096874+00:00"
 }
