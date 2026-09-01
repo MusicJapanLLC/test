@@ -37,6 +37,21 @@ PLATFORM_TOKENS = (
     "portswigger web security academy",
 )
 
+# An OWASP/VWAD entry can legitimately link to source code or a project page. A generic
+# code-hosting root is not thereby the vulnerable application itself, so autonomous
+# discovery must never promote these roots into RED authority. Curated exact-host rows
+# remain a separate, explicit evidence path and are not affected by this list.
+GENERIC_AUTONOMOUS_PLATFORM_HOSTS = frozenset({
+    "github.com",
+    "www.github.com",
+    "gitlab.com",
+    "www.gitlab.com",
+    "bitbucket.org",
+    "www.bitbucket.org",
+    "sourceforge.net",
+    "www.sourceforge.net",
+})
+
 DIRECT_LAB_SIGNALS = (
     "vulnerable",
     "intentionally insecure",
@@ -101,6 +116,10 @@ def _normalize_https_url(value: Any) -> tuple[str, str] | None:
     if literal is not None and not literal.is_global:
         return None
     return host, f"https://{host}"
+
+
+def _is_generic_autonomous_platform_host(host: str) -> bool:
+    return str(host or "").strip().lower().rstrip(".") in GENERIC_AUTONOMOUS_PLATFORM_HOSTS
 
 
 def _safe_registry_rows(repo_root: Path) -> list[dict[str, Any]]:
@@ -179,7 +198,7 @@ def _upstream_candidates(upstream_doc: Any) -> list[dict[str, Any]]:
         if parsed is None:
             continue
         host, base_url = parsed
-        if host in seen:
+        if _is_generic_autonomous_platform_host(host) or host in seen:
             continue
         seen.add(host)
         out.append({
@@ -231,6 +250,8 @@ def refresh_public_red_lab_authority(
         if parsed is None:
             continue
         host, base_url = parsed
+        if _is_generic_autonomous_platform_host(host):
+            continue
         persisted_auto[host] = {
             **dict(raw),
             "host": host,
@@ -267,6 +288,7 @@ def refresh_public_red_lab_authority(
         "private_network": False,
         "cross_host_inheritance": False,
         "max_auto_new_per_cycle": cap,
+        "generic_autonomous_platform_roots": "excluded",
     }
     previous_targets = previous.get("targets", []) if isinstance(previous, Mapping) else []
     previous_constraints = previous.get("constraints", {}) if isinstance(previous, Mapping) else {}
@@ -294,8 +316,11 @@ def refresh_public_red_lab_authority(
         if not isinstance(raw, Mapping):
             continue
         host = str(raw.get("host") or "").strip().rstrip(".").lower()
-        if host:
-            by_host[host] = dict(raw)
+        if not host:
+            continue
+        if raw.get("source") == "owasp_vwad_online_live" and _is_generic_autonomous_platform_host(host):
+            continue
+        by_host[host] = dict(raw)
     for row in targets:
         host = row["host"]
         by_host[host] = {
