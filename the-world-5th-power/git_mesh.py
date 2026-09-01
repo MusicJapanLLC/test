@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Git-native 5^5 world mesh: exact leaf mirrors and bottom-up aggregate commits."""
 from __future__ import annotations
-import argparse, hashlib, json, os, shutil, subprocess, time
+import argparse, concurrent.futures, hashlib, json, os, shutil, subprocess, time
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -11,7 +11,7 @@ DEFAULT_RUNTIME = HERE / "git-runtime"
 def run(*args, cwd=None, capture=False, env=None):
     result = subprocess.run(args, cwd=cwd, text=True, check=True,
                             stdout=subprocess.PIPE if capture else subprocess.DEVNULL,
-                            stderr=subprocess.PIPE if capture else None, env=env)
+                            stderr=subprocess.PIPE if capture else subprocess.DEVNULL, env=env)
     return result.stdout.strip() if capture else ""
 
 def refs(repo):
@@ -91,22 +91,25 @@ def aggregate(repo, children, level, group):
     run("git", "--git-dir", str(repo), "symbolic-ref", "HEAD", "refs/heads/aggregate")
     return commit
 
-def reconcile(runtime, branching, generations):
+def reconcile(runtime, branching, generations, workers):
     seed = ensure_seed(runtime)
-    leaves = []
     total = branching ** generations
-    for index in range(total):
-        target = leaf_path(runtime, digits_for(index, branching, generations))
-        ensure_leaf(seed, target); leaves.append(target)
+    leaves = [leaf_path(runtime, digits_for(i, branching, generations)) for i in range(total)]
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+        list(pool.map(lambda target: ensure_leaf(seed, target), leaves))
     current = leaves
     level = 1
     while len(current) > 1:
-        next_level = []
-        for group, start in enumerate(range(0, len(current), branching), 1):
+        groups = [(group, current[start:start + branching])
+                  for group, start in enumerate(range(0, len(current), branching), 1)]
+        def make_parent(item):
+            group, children = item
             parent = parent_path(runtime, level, group)
-            aggregate(parent, current[start:start + branching], level, group)
-            next_level.append(parent)
-        current = next_level; level += 1
+            aggregate(parent, children, level, group)
+            return parent
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as pool:
+            current = list(pool.map(make_parent, groups))
+        level += 1
     registry = {"branching_factor": branching, "generations": generations,
                 "leaf_repositories": len(leaves), "aggregate_repositories": sum(
                 branching ** n for n in range(generations)), "total_git_nodes":
@@ -133,8 +136,9 @@ def main():
     p.add_argument("--runtime", type=Path, default=DEFAULT_RUNTIME)
     p.add_argument("--branching", type=int, default=5)
     p.add_argument("--generations", type=int, default=5)
+    p.add_argument("--workers", type=int, default=min(32, max(2, (os.cpu_count() or 2) * 2)))
     a = p.parse_args()
-    if a.command == "reconcile": reconcile(a.runtime, a.branching, a.generations)
+    if a.command == "reconcile": reconcile(a.runtime, a.branching, a.generations, a.workers)
     else: verify(a.runtime, a.branching, a.generations)
 
 if __name__ == "__main__": main()
