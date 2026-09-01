@@ -19,6 +19,7 @@ import json
 from pathlib import Path
 from typing import Any, Iterable, Mapping
 
+# The package bridge keeps the historical bureau implementation importable here.
 from .authorization_issuance_bureau import (
     AuthorizationEvidence,
     VerifiedControlAttestation,
