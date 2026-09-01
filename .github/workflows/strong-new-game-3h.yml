@@ -1,0 +1,190 @@
+name: Strong New Game 3h Research Cycle
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "the-world-strong-new-game/**"
+      - ".github/workflows/strong-new-game-3h.yml"
+      - "the-world-5th-power/git_mesh.py"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */3 * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: strong-new-game-3h-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      STATE_DIR: ${{ runner.temp }}/strong-new-game
+      PREVIOUS_DIR: ${{ runner.temp }}/strong-new-game-previous
+      GIT_MESH_DIR: ${{ runner.temp }}/strong-new-game-git-mesh
+      RESEARCH_DIR: ${{ runner.temp }}/strong-new-game-research
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout complete Git history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Restore previous Strong New Game checkpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$PREVIOUS_DIR"
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Strong New Game 3h Research Cycle" \
+            --branch claude/employee-onboarding-setup-udm86 \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name strong-new-game-state \
+              --dir "$PREVIOUS_DIR" || true
+          fi
+
+      - name: Read latest RED Senju META X research evidence in parallel
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p \
+            "$RESEARCH_DIR/red-pentest" \
+            "$RESEARCH_DIR/red-contact" \
+            "$RESEARCH_DIR/senju-boundary" \
+            "$RESEARCH_DIR/world-fabric"
+
+          download_latest() {
+            local workflow="$1"
+            local destination="$2"
+            local run_id
+            run_id="$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "$workflow" \
+              --branch claude/employee-onboarding-setup-udm86 \
+              --status success \
+              --limit 20 \
+              --json databaseId \
+              --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run_id" ]]; then
+              gh run download "$run_id" \
+                --repo "$GITHUB_REPOSITORY" \
+                --dir "$destination" || true
+            fi
+          }
+
+          download_latest "Senju Authorized Pentest Fabric" "$RESEARCH_DIR/red-pentest" &
+          p1=$!
+          download_latest "Senju RED Autonomous External Contact" "$RESEARCH_DIR/red-contact" &
+          p2=$!
+          download_latest "Senju Autonomous Boundary Research" "$RESEARCH_DIR/senju-boundary" &
+          p3=$!
+          download_latest "THE WORLD - Autonomous Research Fabric" "$RESEARCH_DIR/world-fabric" &
+          p4=$!
+          wait "$p1" "$p2" "$p3" "$p4" || true
+
+          echo "Downloaded bounded read-only research inputs:"
+          find "$RESEARCH_DIR" -type f | wc -l
+
+      - name: Reconcile exact 2x2 Git seed worlds in parallel
+        shell: bash
+        run: |
+          set -euo pipefail
+          python the-world-5th-power/git_mesh.py reconcile \
+            --runtime "$GIT_MESH_DIR" \
+            --branching 2 \
+            --generations 2 \
+            --workers 4
+          python the-world-5th-power/git_mesh.py verify \
+            --runtime "$GIT_MESH_DIR" \
+            --branching 2 \
+            --generations 2
+
+      - name: Build next four research worlds
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR"
+          python the-world-strong-new-game/strong_new_game.py build \
+            --output "$STATE_DIR" \
+            --previous "$PREVIOUS_DIR" \
+            --research-file-budget 1000 \
+            --research-input "RED=$RESEARCH_DIR/red-pentest" \
+            --research-input "RED=$RESEARCH_DIR/red-contact" \
+            --research-input "SENJU=$RESEARCH_DIR/senju-boundary" \
+            --research-input "META=$RESEARCH_DIR/world-fabric" \
+            --research-input "X=$RESEARCH_DIR/world-fabric"
+          python the-world-strong-new-game/assign_synthetic_labs.py "$STATE_DIR"
+          python the-world-strong-new-game/strong_new_game.py verify \
+            --output "$STATE_DIR"
+
+      - name: Assert inheritance boundaries and RED priority
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ['STATE_DIR'])
+          latest = json.loads((root / 'latest.json').read_text())
+          checkpoint = json.loads((root / latest['checkpoint']).read_text())
+          assert checkpoint['cadence_hours'] == 3
+          assert checkpoint['world_count'] == 4
+          assert checkpoint['active_world_count'] == 4
+          assert checkpoint['virtual_lineage_count'] == 4 ** checkpoint['generation']
+          assert checkpoint['invariants']['parallel_world_generation'] is True
+          assert checkpoint['invariants']['red_priority'] == 0.40
+          assert checkpoint['research']['RED']['file_budget'] == 400
+          assert checkpoint['research']['SENJU']['file_budget'] == 200
+          assert checkpoint['research']['META']['file_budget'] == 200
+          assert checkpoint['research']['X']['file_budget'] == 200
+          assert checkpoint['invariants']['guard_policy'] == 'unchanged'
+          assert checkpoint['invariants']['external_side_effects'] is False
+          assert checkpoint['invariants']['credential_inheritance'] is False
+          assert checkpoint['invariants']['authority_inheritance'] is False
+          assert checkpoint['synthetic_labs']['simulation_only'] is True
+          assert checkpoint['synthetic_labs']['network_transport'] == 'disabled'
+          assert checkpoint['synthetic_labs']['catalog_size'] >= 32
+          assert checkpoint['synthetic_labs']['active_per_cycle'] == 16
+          assert checkpoint['synthetic_labs']['labs_per_world'] == 4
+          assert sum(len(v) for v in checkpoint['synthetic_labs']['assignments'].values()) == 16
+          assert checkpoint['performance']['research_file_budget_total'] == 1000
+          print('STRONG_NEW_GAME_3H_INVARIANTS_OK')
+          PY
+
+      - name: Publish persistent checkpoint
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: strong-new-game-state
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ runner.temp }}/strong-new-game/
+
+      - name: Publish Git-mesh verification snapshot
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: strong-new-game-git-mesh
+          retention-days: 7
+          if-no-files-found: warn
+          include-hidden-files: true
+          path: |
+            ${{ runner.temp }}/strong-new-game-git-mesh/registry.json
