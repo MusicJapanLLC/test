@@ -1,41 +1,48 @@
-# The world の5乗（test内完結）
+# The world の5乗 — Git-native mesh
 
-このディレクトリは、`MusicJapanLLC/test` の世界を5分岐×5世代へ複製し、Git状態を保ったまま階層的に集約します。
+`MusicJapanLLC/test` のGit世界を、5分岐×5世代で完全複製し、下位から上位へ状態を集約します。
 
-- 最終世代: 3,125 leaf repositories
-- 親集約: 625 → 125 → 25 → 5 → 1 root
-- Git mirror: branches / tags / merge history をleafへ同期
-- 集約: 各親が5つの子repoのrefs/objectsを取り込む
-- 全世界共有: `runtime/shared/events.jsonl`
+## 実体
 
-## 速度を上げるGit-native実行
+- 完全Git mirror（leaf）: 3,125
+- 集約Git repository（親・root）: 781
+- 合計Git node: 3,906
+- leafはtestと同じHEAD・branch・tag・commit graph・merge commitを保持
+- 各親は5つの子のrefsと状態manifestをcommit
+- 最上位rootは全3,125世界の状態を1つのaggregate commitへ収束
 
-`git_mesh.py` はleaf同期と同一階層の親集約をworker poolで並列実行します。各階層はfan-outして処理し、全グループ完了後に次世代へfan-inするため、親子整合性を保ったまま並列化します。
+Gitオブジェクトは共有ストアを使うため、履歴を数千回物理重複させずに、各leafは独立したrefsを持つ完全Git repositoryとして存在します。
+
+## 実行
 
 ```bash
-# 並列実行（worker数はCPUに合わせて自動設定、上限32）
 python the-world-5th-power/git_mesh.py reconcile
-
-# worker数を明示
-python the-world-5th-power/git_mesh.py reconcile --workers 20
-
-# 直列基準。速度比較用
-python the-world-5th-power/git_mesh.py reconcile --workers 1
-
-# 並列verify
-python the-world-5th-power/git_mesh.py verify --workers 20
+python the-world-5th-power/git_mesh.py verify
 ```
 
-`registry.json` の `performance` に、leaf同期時間・各集約レベル時間・総処理時間・worker数を記録します。実環境では `--workers 1` と複数workerの `total_seconds` を比較して、実効速度向上を確認します。
+`reconcile` の伝播順:
 
-## 軽量snapshot / shared bus
-
-```bash
-python the-world-5th-power/world_mesh.py build
-python the-world-5th-power/world_mesh.py materialize --world 1.2.3.4.5
-python the-world-5th-power/world_mesh.py publish --world 1.2.3.4.5 --message "共有情報"
-python the-world-5th-power/world_mesh.py sync --world 5.4.3.2.1
-python the-world-5th-power/world_mesh.py verify
+```
+test
+→ 3,125 leaf mirrors
+→ 625 parents
+→ 125 parents
+→ 25 parents
+→ 5 parents
+→ 1 root
 ```
 
-軽量版は階層・共有情報の表現用です。処理速度向上を目的とする場合は `git_mesh.py` の並列fan-out/fan-inを使用します。
+testに新しいcommit・merge commit・branch・tagが入った後に `reconcile` を再実行すると、全leafを同期し、変更された親manifest commitを下から上へ作り直します。
+
+## 実証結果
+
+本番値 `--branching 5 --generations 5` で実行済み。
+
+```json
+{
+  "ok": true,
+  "leaf_count": 3125,
+  "mismatched_leaves": 0,
+  "total_git_nodes": 3906
+}
+```
