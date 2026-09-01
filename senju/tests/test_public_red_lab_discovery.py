@@ -67,6 +67,29 @@ def test_vwad_direct_online_lab_auto_promotes_but_platform_does_not(tmp_path: Pa
     assert auto["allowed_methods"] == ["GET", "HEAD", "OPTIONS"]
 
 
+def test_repository_url_is_evidence_not_live_target(tmp_path: Path) -> None:
+    repo, state, meta = _repo(tmp_path)
+    upstream = repo / "vwad.json"
+    _write(upstream, [
+        {
+            "name": "PyGoat Vulnerable Training App",
+            "collection": ["online"],
+            "notes": "intentionally vulnerable training app",
+            "url": "https://github.com/example/pygoat",
+            "references": [],
+        },
+        {
+            "name": "Repository-hosted Vulnerable Lab",
+            "collection": ["online"],
+            "notes": "deliberately vulnerable test app",
+            "references": [{"name": "live", "url": "https://github.com/example/lab"}],
+        },
+    ])
+    result = refresh_public_red_lab_authority(repo, state, meta, upstream_vwad=upstream, max_auto_new=2, now=2500)
+    assert "github.com" not in result["hosts"]
+    assert result["new_probationary_count"] == 0
+
+
 def test_auto_growth_is_capped_and_rejects_http_or_private_literals(tmp_path: Path) -> None:
     repo, state, meta = _repo(tmp_path)
     upstream = repo / "vwad.json"
