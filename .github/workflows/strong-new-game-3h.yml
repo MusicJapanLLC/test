@@ -161,6 +161,9 @@ jobs:
           assert checkpoint['invariants']['authority_inheritance'] is False
           assert checkpoint['synthetic_labs']['simulation_only'] is True
           assert checkpoint['synthetic_labs']['network_transport'] == 'disabled'
+          assert checkpoint['synthetic_labs']['catalog_size'] >= 32
+          assert checkpoint['synthetic_labs']['active_per_cycle'] == 16
+          assert checkpoint['synthetic_labs']['labs_per_world'] == 4
           assert sum(len(v) for v in checkpoint['synthetic_labs']['assignments'].values()) == 16
           assert checkpoint['performance']['research_file_budget_total'] == 1000
           print('STRONG_NEW_GAME_3H_INVARIANTS_OK')
