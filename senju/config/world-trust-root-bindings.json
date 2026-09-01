@@ -1,5 +1,5 @@
 {
-  "schema": "senju-world-trust-root-bindings/v3",
+  "schema": "senju-world-trust-root-bindings/v1",
   "semantics": "binding_only_existing_authority_never_mints_authority",
   "records": [
     {

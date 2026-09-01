@@ -20,6 +20,7 @@ jobs:
     env:
       WORLD_ENV: production
       GH_TOKEN: ${{ github.token }}
+      PYTHONPATH: ${{ github.workspace }}
       STATE_DIR: automation/world/runtime_state
       STATE_FILE: automation/world/runtime_state/production_evolution_state.json
     steps:

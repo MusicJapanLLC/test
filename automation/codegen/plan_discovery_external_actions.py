@@ -12,13 +12,9 @@ import json
 import time
 from pathlib import Path
 
+from engine.discovery_action_failover import _canonical_explicit_target, _method_allowed
 from engine.discovery_capability_leases import load_discovery_capability_leases
-from engine.discovery_external_action import (
-    _action_rows,
-    _canonical_explicit_target,
-    _method_allowed,
-    _profile,
-)
+from engine.discovery_external_action import _action_rows, _profile
 
 MAX_PLANNED_CANDIDATES = 300
 

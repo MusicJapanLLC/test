@@ -8,6 +8,7 @@ on:
       - 'automation/codegen/engine/authority_reviewer.py'
       - 'automation/codegen/tests/test_discovery_authorization.py'
       - 'automation/codegen/tests/test_discovery_human_intent_integration.py'
+      - 'automation/codegen/tests/test_authority_reviewer.py'
       - '.github/workflows/discovery-authorization.yml'
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - 'automation/codegen/engine/authority_reviewer.py'
       - 'automation/codegen/tests/test_discovery_authorization.py'
       - 'automation/codegen/tests/test_discovery_human_intent_integration.py'
+      - 'automation/codegen/tests/test_authority_reviewer.py'
       - '.github/workflows/discovery-authorization.yml'
   workflow_dispatch:
 
@@ -41,7 +43,11 @@ jobs:
         run: python -m pip install --disable-pip-version-check pytest
 
       - name: Run discovery authorization tests
-        run: PYTHONPATH=. pytest -q automation/codegen/tests/test_discovery_authorization.py automation/codegen/tests/test_discovery_human_intent_integration.py
+        run: |
+          PYTHONPATH=. pytest -q \
+            automation/codegen/tests/test_discovery_authorization.py \
+            automation/codegen/tests/test_discovery_human_intent_integration.py \
+            automation/codegen/tests/test_authority_reviewer.py
 
       - name: Compile discovery authorization modules
         run: python -m py_compile automation/codegen/engine/discovery_authorization.py automation/codegen/engine/human_intent_inference.py automation/codegen/engine/authority_reviewer.py

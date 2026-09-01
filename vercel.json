@@ -2,16 +2,8 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "security/**": false,
-      "senju/**": false,
-      "dependabot/**": false,
-      "automation/**": false,
-      "rnd/**": false,
-      "world/**": false,
-      "chatgpt/**": false,
-      "openai/**": false,
-      "forge/**": false,
-      "portfolio/**": false
+      "**": false,
+      "claude/employee-onboarding-setup-udm86": true
     }
   },
   "ignoreCommand": "git rev-parse HEAD^ >/dev/null 2>&1 || exit 0; git diff --quiet HEAD^ HEAD -- automation/deploy-permits/root-vercel.json",

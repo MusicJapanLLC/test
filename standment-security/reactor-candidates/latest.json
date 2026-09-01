@@ -1,6 +1,6 @@
 {
   "schema": "standment-security-reactor-session/v1",
-  "session_id": "33406251752-1",
+  "session_id": "33495361103-1",
   "rounds_completed": 12,
   "unique_tracks": 6,
   "material_rounds": 12,
@@ -8,15 +8,14 @@
   "records": [
     {
       "round": 1,
-      "track_id": "SEC-PORT-003",
+      "track_id": "SEC-PORT-005",
       "mode": "VERIFY_NEXT_MISSING_EVIDENCE",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "169f9851e9cd064169f1",
+      "fingerprint": "ac13fb004e36c9a6e2e8",
       "material_delta": true,
       "created_or_updated": [
-        "standment-security/lab-notes/2026-09-01/SEC-PORT-003.md",
         "standment-security/PORTFOLIO_INDEX.md"
       ],
       "failure_count": 0,
@@ -30,15 +29,14 @@
     },
     {
       "round": 2,
-      "track_id": "SEC-PORT-004",
+      "track_id": "SEC-PORT-011",
       "mode": "REFRAME_AND_COUNTEREVIDENCE",
-      "status_before": "VISIBLE",
+      "status_before": "BUILDING",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "75ead27b99ed1f563451",
+      "fingerprint": "2a185117e90599afba66",
       "material_delta": true,
       "created_or_updated": [
-        "standment-security/lab-notes/2026-09-01/SEC-PORT-004.md",
         "standment-security/PORTFOLIO_INDEX.md"
       ],
       "failure_count": 0,
@@ -52,15 +50,14 @@
     },
     {
       "round": 3,
-      "track_id": "SEC-PORT-005",
+      "track_id": "SEC-PORT-002",
       "mode": "INDEPENDENT_RETEST",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "efe1c75e3fc69a2bf547",
+      "fingerprint": "f9f3f6e9434a0080841f",
       "material_delta": true,
       "created_or_updated": [
-        "standment-security/lab-notes/2026-09-01/SEC-PORT-005.md",
         "standment-security/PORTFOLIO_INDEX.md"
       ],
       "failure_count": 0,
@@ -74,15 +71,14 @@
     },
     {
       "round": 4,
-      "track_id": "SEC-PORT-011",
+      "track_id": "SEC-PORT-003",
       "mode": "SWITCH_EVIDENCE_PATH",
-      "status_before": "BUILDING",
+      "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "15be50e563596fdd919e",
+      "fingerprint": "bd3482be5e2063a2d096",
       "material_delta": true,
       "created_or_updated": [
-        "standment-security/lab-notes/2026-09-01/SEC-PORT-011.md",
         "standment-security/PORTFOLIO_INDEX.md"
       ],
       "failure_count": 0,
@@ -96,15 +92,14 @@
     },
     {
       "round": 5,
-      "track_id": "SEC-PORT-002",
+      "track_id": "SEC-PORT-004",
       "mode": "VERIFY_NEXT_MISSING_EVIDENCE",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "e39e22c562a9e96fe509",
+      "fingerprint": "fd982372eaf8486b98e5",
       "material_delta": true,
       "created_or_updated": [
-        "standment-security/lab-notes/2026-09-01/SEC-PORT-002.md",
         "standment-security/PORTFOLIO_INDEX.md"
       ],
       "failure_count": 0,
@@ -118,15 +113,14 @@
     },
     {
       "round": 6,
-      "track_id": "SEC-PORT-008",
+      "track_id": "SEC-PORT-005",
       "mode": "REFRAME_AND_COUNTEREVIDENCE",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "1cf10232ad37bb007648",
+      "fingerprint": "6faf6bde3151bb5cef6c",
       "material_delta": true,
       "created_or_updated": [
-        "standment-security/lab-notes/2026-09-01/SEC-PORT-008.md",
         "standment-security/PORTFOLIO_INDEX.md"
       ],
       "failure_count": 0,
@@ -140,12 +134,12 @@
     },
     {
       "round": 7,
-      "track_id": "SEC-PORT-005",
+      "track_id": "SEC-PORT-011",
       "mode": "INDEPENDENT_RETEST",
-      "status_before": "VISIBLE",
+      "status_before": "BUILDING",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "efe1c75e3fc69a2bf547",
+      "fingerprint": "0b1cce3001284c8f1b58",
       "material_delta": true,
       "created_or_updated": [
         "standment-security/PORTFOLIO_INDEX.md"
@@ -161,12 +155,12 @@
     },
     {
       "round": 8,
-      "track_id": "SEC-PORT-011",
+      "track_id": "SEC-PORT-002",
       "mode": "SWITCH_EVIDENCE_PATH",
-      "status_before": "BUILDING",
+      "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "15be50e563596fdd919e",
+      "fingerprint": "a2b65113001884f8189b",
       "material_delta": true,
       "created_or_updated": [
         "standment-security/PORTFOLIO_INDEX.md"
@@ -182,12 +176,12 @@
     },
     {
       "round": 9,
-      "track_id": "SEC-PORT-002",
+      "track_id": "SEC-PORT-008",
       "mode": "VERIFY_NEXT_MISSING_EVIDENCE",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "e39e22c562a9e96fe509",
+      "fingerprint": "6ef844c05bc1ec314d66",
       "material_delta": true,
       "created_or_updated": [
         "standment-security/PORTFOLIO_INDEX.md"
@@ -203,12 +197,12 @@
     },
     {
       "round": 10,
-      "track_id": "SEC-PORT-003",
+      "track_id": "SEC-PORT-005",
       "mode": "REFRAME_AND_COUNTEREVIDENCE",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "779290f38d54118b673c",
+      "fingerprint": "6faf6bde3151bb5cef6c",
       "material_delta": true,
       "created_or_updated": [
         "standment-security/PORTFOLIO_INDEX.md"
@@ -224,12 +218,12 @@
     },
     {
       "round": 11,
-      "track_id": "SEC-PORT-004",
+      "track_id": "SEC-PORT-011",
       "mode": "INDEPENDENT_RETEST",
-      "status_before": "VISIBLE",
+      "status_before": "BUILDING",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "4b1d1cb58b2dfce21d64",
+      "fingerprint": "0b1cce3001284c8f1b58",
       "material_delta": true,
       "created_or_updated": [
         "standment-security/PORTFOLIO_INDEX.md"
@@ -245,12 +239,12 @@
     },
     {
       "round": 12,
-      "track_id": "SEC-PORT-005",
+      "track_id": "SEC-PORT-002",
       "mode": "SWITCH_EVIDENCE_PATH",
       "status_before": "VISIBLE",
       "evidence_before": 1.0,
       "evidence_target": "independent_retest_and_counterevidence",
-      "fingerprint": "b683e658f0808529fd4b",
+      "fingerprint": "a2b65113001884f8189b",
       "material_delta": true,
       "created_or_updated": [
         "standment-security/PORTFOLIO_INDEX.md"
@@ -272,7 +266,7 @@
     "tracks_full_evidence": 11,
     "average_evidence_ratio": 1.0
   },
-  "next_track": "SEC-PORT-011",
+  "next_track": "SEC-PORT-003",
   "next_mode": "VERIFY_NEXT_MISSING_EVIDENCE",
   "verification_claimed": false,
   "external_targets_touched": 0

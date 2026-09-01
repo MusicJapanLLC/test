@@ -2,7 +2,7 @@
 
 **Company Priority: P0**
 
-Updated JST: `2026-09-01T00:48:01+09:00`
+Updated JST: `2026-09-01T19:46:47+09:00`
 
 ## TODAY'S PRIMARY BET
 - `SEC-PORT-001` — Standment Security Scan dogfood + Before/After case study

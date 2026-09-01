@@ -6,6 +6,7 @@ on:
     paths:
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/authorized_site_authority_accelerator.py'
       - 'automation/codegen/engine/bounded_owner_delegation.py'
       - 'automation/codegen/engine/owner_authority_opportunity.py'
       - 'automation/codegen/engine/third_party_authority_research.py'
@@ -17,6 +18,7 @@ on:
       - 'automation/codegen/meta_state/meta_discovery_seed.json'
       - 'automation/codegen/orchestrator.py'
       - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_authorized_site_authority_accelerator.py'
       - 'automation/codegen/tests/test_bounded_owner_delegation.py'
       - 'automation/codegen/tests/test_owner_authority_opportunity.py'
       - 'automation/codegen/tests/test_third_party_authority_research.py'
@@ -48,10 +50,12 @@ jobs:
         run: python -m pip install --disable-pip-version-check -q pytest
       - name: Run shared discovery authority tests
         env:
-          PYTHONPATH: automation/codegen
+          PYTHONPATH: automation/codegen:senju
         run: |
+          python -m py_compile automation/codegen/engine/authorized_site_authority_accelerator.py
           python -m pytest -q \
             automation/codegen/tests/test_shared_discovery_authority.py \
+            automation/codegen/tests/test_authorized_site_authority_accelerator.py \
             automation/codegen/tests/test_bounded_owner_delegation.py \
             automation/codegen/tests/test_owner_authority_opportunity.py \
             automation/codegen/tests/test_third_party_authority_research.py \

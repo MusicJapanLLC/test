@@ -5,17 +5,17 @@ import argparse
 import json
 from pathlib import Path
 
-from engine.root_authority_negotiation import run_root_authority_negotiation
+from engine.reviewed_root_authority_negotiation import run_reviewed_root_authority_negotiation
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run persistent four-agent Root Authority negotiation")
+    parser = argparse.ArgumentParser(description="Run intake-gated persistent Root Authority negotiation")
     parser.add_argument("--state", default=".authority-opportunity-runtime")
     parser.add_argument("--repo-root", default=".")
     parser.add_argument("--json-out")
     args = parser.parse_args()
 
-    result = run_root_authority_negotiation(args.state, repo_root=args.repo_root)
+    result = run_reviewed_root_authority_negotiation(args.state, repo_root=args.repo_root)
     text = json.dumps(result, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
     if args.json_out:
         path = Path(args.json_out)
