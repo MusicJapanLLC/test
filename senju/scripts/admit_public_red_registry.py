@@ -23,6 +23,9 @@ if str(SENJU) not in sys.path:
 from senju.public_red_lab_discovery import refresh_public_red_lab_authority
 
 SAFE_METHODS = ["GET", "HEAD", "OPTIONS"]
+PUBLIC_RED_MAX_REQUESTS_PER_CYCLE = 60
+MANAGED_ISSUER_KIND = "operator_public_security_lab_curated_registry"
+MANAGED_REFERENCE_PREFIX = "curated-public-red-lab:"
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -41,6 +44,21 @@ def _stable(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
 
 
+def _row_hosts(row: dict[str, Any]) -> set[str]:
+    return {
+        str(v).strip().lower().rstrip(".")
+        for v in row.get("exact_hosts", [])
+        if str(v).strip()
+    }
+
+
+def _is_managed_public_lab_row(row: dict[str, Any]) -> bool:
+    return (
+        str(row.get("issuer_kind") or "") == MANAGED_ISSUER_KIND
+        or str(row.get("authorization_reference") or "").startswith(MANAGED_REFERENCE_PREFIX)
+    )
+
+
 def _active_hosts(standing: dict[str, Any]) -> set[str]:
     out: set[str] = set()
     for row in standing.get("records", []) if isinstance(standing, dict) else []:
@@ -51,10 +69,7 @@ def _active_hosts(standing: dict[str, Any]) -> set[str]:
         methods = {str(v).strip().upper() for v in row.get("allowed_methods", [])}
         if not methods.intersection(SAFE_METHODS):
             continue
-        for raw in row.get("exact_hosts", []):
-            host = str(raw).strip().lower().rstrip(".")
-            if host:
-                out.add(host)
+        out.update(_row_hosts(row))
     return out
 
 
@@ -74,7 +89,7 @@ def _sync_effective(path: Path, standing: dict[str, Any]) -> tuple[dict[str, Any
     for row in standing.get("records", []) if isinstance(standing, dict) else []:
         if not isinstance(row, dict):
             continue
-        hosts = {str(v).strip().lower().rstrip(".") for v in row.get("exact_hosts", []) if str(v).strip()}
+        hosts = _row_hosts(row)
         if row.get("revoked") is True:
             revoked.update(hosts)
             continue
@@ -97,7 +112,7 @@ def _sync_effective(path: Path, standing: dict[str, Any]) -> tuple[dict[str, Any
     ceiling["allow_delete"] = False
     ceiling["credential_scope"] = "none"
     ceiling["shared_public_lab_rate_limit_rps"] = 1
-    ceiling["max_public_lab_requests_per_cycle"] = min(int(ceiling.get("max_public_lab_requests_per_cycle", 6) or 6), 6)
+    ceiling["max_public_lab_requests_per_cycle"] = PUBLIC_RED_MAX_REQUESTS_PER_CYCLE
     doc["public_red_registry_overlay"] = True
 
     before_cmp = copy.deepcopy(before)
@@ -136,6 +151,11 @@ def main() -> int:
         authority = _load(authority_path, {})
         targets = authority.get("targets", []) if isinstance(authority, dict) else []
 
+    target_hosts = {
+        str(raw.get("host") or "").strip().lower().rstrip(".")
+        for raw in targets if isinstance(raw, dict) and str(raw.get("host") or "").strip()
+    } if isinstance(targets, list) else set()
+
     standing_path = Path(args.standing)
     standing = _load(standing_path, {"schema": "senju-standing-authorization/v1", "records": []})
     if not isinstance(standing, dict):
@@ -143,9 +163,28 @@ def main() -> int:
     records = standing.setdefault("records", [])
     if not isinstance(records, list):
         raise SystemExit("standing authorization records must be a list")
+
+    # Reconcile only records managed by this registry bridge. A public-lab row that is no
+    # longer present in the validated authority feed is explicitly revoked so the effective
+    # ceiling removes it as well. Unrelated owner/canonical standing authority is untouched.
+    revoked_managed: list[str] = []
+    standing_changed = False
+    now_iso = datetime.now(timezone.utc).isoformat()
+    for row in records:
+        if not isinstance(row, dict) or not _is_managed_public_lab_row(row):
+            continue
+        hosts = _row_hosts(row)
+        stale = sorted(host for host in hosts if host not in target_hosts)
+        if not stale or row.get("revoked") is True:
+            continue
+        row["revoked"] = True
+        row["revocation_reason"] = "removed_from_validated_public_red_lab_authority"
+        row["revoked_at_utc"] = now_iso
+        revoked_managed.extend(stale)
+        standing_changed = True
+
     before_hosts = _active_hosts(standing)
     newly_admitted: list[str] = []
-
     for raw in targets if isinstance(targets, list) else []:
         if not isinstance(raw, dict):
             continue
@@ -154,14 +193,14 @@ def main() -> int:
         if not host or host in before_hosts or not evidence.startswith("https://"):
             continue
         records.append({
-            "authorization_reference": f"curated-public-red-lab:{raw.get('source_id') or host}",
+            "authorization_reference": f"{MANAGED_REFERENCE_PREFIX}{raw.get('source_id') or host}",
             "owner": str(raw.get("operator") or "operator-published public security lab"),
-            "issuer_kind": "operator_public_security_lab_curated_registry",
+            "issuer_kind": MANAGED_ISSUER_KIND,
             "authorization_evidence_url": evidence,
             "authorization_note": str(raw.get("authorization_note") or "")[:500],
             "exact_hosts": [host],
             "allowed_methods": SAFE_METHODS,
-            "created_at_utc": datetime.now(timezone.utc).isoformat(),
+            "created_at_utc": now_iso,
             "revoked": False,
             "revocation_reason": None,
             "credential_scope": "none",
@@ -175,8 +214,9 @@ def main() -> int:
         })
         before_hosts.add(host)
         newly_admitted.append(host)
+        standing_changed = True
 
-    if newly_admitted or not standing_path.exists():
+    if standing_changed or not standing_path.exists():
         _write(standing_path, standing)
     effective, effective_changed = _sync_effective(Path(args.effective_ceiling), standing)
 
@@ -185,10 +225,15 @@ def main() -> int:
     if not isinstance(discovery, dict):
         discovery = {"schema": "senju-public-red-discovery/v1", "discovered_profiles": []}
     current_profiles = discovery.get("discovered_profiles", [])
-    by_url = {
-        str(row.get("url")): dict(row)
-        for row in current_profiles if isinstance(row, dict) and row.get("url")
-    } if isinstance(current_profiles, list) else {}
+    by_url: dict[str, dict[str, Any]] = {}
+    for row in current_profiles if isinstance(current_profiles, list) else []:
+        if not isinstance(row, dict) or not row.get("url"):
+            continue
+        host = str(row.get("host") or "").strip().lower().rstrip(".")
+        if row.get("source") == "curated_public_red_lab_registry" and host not in target_hosts:
+            continue
+        by_url[str(row.get("url"))] = dict(row)
+
     for raw in targets if isinstance(targets, list) else []:
         if not isinstance(raw, dict):
             continue
@@ -231,11 +276,14 @@ def main() -> int:
         "registry_target_count": result.get("target_count", 0),
         "newly_admitted_count": len(newly_admitted),
         "newly_admitted_hosts": sorted(newly_admitted),
+        "revoked_managed_count": len(set(revoked_managed)),
+        "revoked_managed_hosts": sorted(set(revoked_managed)),
         "standing_safe_host_count": len(active),
         "effective_safe_host_count": len(active & effective_hosts),
         "discovery_profile_count": len(new_profiles),
         "effective_changed": effective_changed,
         "discovery_changed": discovery_changed,
+        "max_public_lab_requests_per_cycle": PUBLIC_RED_MAX_REQUESTS_PER_CYCLE,
         "methods": SAFE_METHODS,
         "credential_scope": "none",
         "destructive": False,

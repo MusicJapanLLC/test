@@ -27,7 +27,7 @@ permissions:
 
 concurrency:
   group: senju-red-public-lab-expansion
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   expand-and-rotate:
@@ -100,6 +100,12 @@ jobs:
           print(p.get('effective_safe_host_count', 0))
           PY
           )" -ge 30
+          test "$(python - <<'PY'
+          import json
+          p=json.load(open('/tmp/public-red-registry-admission.json'))
+          print(p.get('max_public_lab_requests_per_cycle', 0))
+          PY
+          )" -eq 60
 
       - name: Refresh only configured operator-published security lab authority
         run: |
@@ -127,12 +133,12 @@ jobs:
         run: |
           python senju/scripts/public_red_target_fanout.py --validate-only \
             | tee /tmp/public_red_catalog_validation.json
-          test "$(python - <<'PY'
+          python - <<'PY'
           import json
           p=json.load(open('/tmp/public_red_catalog_validation.json'))
-          print(p.get('effective_standing_host_count', 0))
+          assert p.get('effective_standing_host_count', 0) >= 30
+          assert 'github.com' not in set(p.get('effective_standing_hosts', []))
           PY
-          )" -ge 30
 
       - name: Run tenfold diversified bounded RED burst
         env:
@@ -183,6 +189,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          branch='claude/employee-onboarding-setup-udm86'
           git config user.name 'senju-red-lab-bot'
           git config user.email 'senju-red-lab-bot@users.noreply.github.com'
           git add \
@@ -194,5 +201,20 @@ jobs:
             echo 'No public-lab authority/inventory changes to persist.'
             exit 0
           fi
-          git commit -m 'chore(senju-red): refresh thirty-host public lab authority'
-          git push origin HEAD:claude/employee-onboarding-setup-udm86
+          git commit -m 'chore(senju-red): refresh public lab authority'
+
+          for attempt in 1 2 3 4 5; do
+            git fetch origin "$branch"
+            if ! git rebase "origin/$branch"; then
+              git rebase --abort || true
+              echo 'State persistence rebase conflicted; refusing to overwrite concurrent work.' >&2
+              exit 1
+            fi
+            if git push origin "HEAD:$branch"; then
+              echo "Persisted public-lab state on attempt $attempt."
+              exit 0
+            fi
+            sleep $((attempt * 2))
+          done
+          echo 'State persistence lost repeated non-fast-forward races.' >&2
+          exit 1

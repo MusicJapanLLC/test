@@ -19,6 +19,7 @@ def _load_script(name: str, relative: str):
 
 intake = _load_script("public_red_target_intake", "senju/scripts/public_red_target_intake.py")
 fanout = _load_script("public_red_target_fanout", "senju/scripts/public_red_target_fanout.py")
+admit = _load_script("admit_public_red_registry", "senju/scripts/admit_public_red_registry.py")
 
 
 def test_catalog_has_at_least_30_unique_authorized_profiles():
@@ -124,6 +125,48 @@ def test_effective_ceiling_sync_is_idempotent_when_authority_does_not_change(tmp
     intake._sync_effective_ceiling(path, standing)
     second = path.read_text(encoding="utf-8")
     assert second == first
+
+
+def test_registry_effective_sync_removes_revoked_managed_host_and_sets_sixty_cycle_cap(tmp_path: Path):
+    path = tmp_path / "ceiling.json"
+    path.write_text(json.dumps({
+        "schema": "senju-owner-contact-ceiling-effective/v4",
+        "ceiling": {
+            "exact_hosts": ["safe.example.com", "stale.example.com"],
+            "per_host_methods": {
+                "safe.example.com": ["GET"],
+                "stale.example.com": ["GET"],
+            },
+            "max_public_lab_requests_per_cycle": 6,
+        },
+    }), encoding="utf-8")
+    standing = {
+        "records": [
+            {
+                "exact_hosts": ["safe.example.com"],
+                "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+                "credential_scope": "none",
+                "destructive": False,
+                "revoked": False,
+            },
+            {
+                "authorization_reference": "curated-public-red-lab:stale",
+                "issuer_kind": "operator_public_security_lab_curated_registry",
+                "exact_hosts": ["stale.example.com"],
+                "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+                "credential_scope": "none",
+                "destructive": False,
+                "revoked": True,
+            },
+        ]
+    }
+
+    doc, changed = admit._sync_effective(path, standing)
+    ceiling = doc["ceiling"]
+    assert changed is True
+    assert ceiling["exact_hosts"] == ["safe.example.com"]
+    assert "stale.example.com" not in ceiling["per_host_methods"]
+    assert ceiling["max_public_lab_requests_per_cycle"] == 60
 
 
 def test_fanout_requires_both_standing_and_effective_authority():
