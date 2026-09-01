@@ -23,6 +23,7 @@ jobs:
     env:
       TARGET_HOST: the-world-authority-precedent-20260901.onrender.com
       TARGET_URL: https://the-world-authority-precedent-20260901.onrender.com
+      PYTHONPATH: .
     steps:
       - name: Checkout
         uses: actions/checkout@v4
