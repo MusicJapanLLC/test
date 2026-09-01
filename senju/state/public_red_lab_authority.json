@@ -6,16 +6,18 @@
       "HEAD",
       "OPTIONS"
     ],
+    "authority_scope": "curated_or_dedicated_live_endpoint",
+    "category_denylist": false,
     "credentials": "none",
     "cross_host_inheritance": false,
     "destructive_operations": false,
+    "discovery_scope": "all_public_https_references",
     "max_auto_new_per_cycle": 2,
     "private_network": false,
-    "shared_code_hosts_excluded": true,
     "upstream_requires_explicit_live_reference": true
   },
   "curated_count": 20,
-  "generated_at": 1788233230,
+  "generated_at": 1788233814,
   "new_probationary_count": 0,
   "probationary_count": 0,
   "schema": "senju-public-red-lab-authority/v1",
@@ -38,6 +40,7 @@
       "operator": "public security lab operator",
       "profile": "scanner_test",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "netsparker-test-app-dotnet",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -59,6 +62,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "authlab-public-challenges",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -80,6 +84,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "broken-crystals-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -101,6 +106,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "bugbait-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -122,6 +128,7 @@
       "operator": "public security lab operator",
       "profile": "scanner_test",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "burp-bounty-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -143,6 +150,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "cyber-scavenger-hunt-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -164,6 +172,7 @@
       "operator": "public security lab operator",
       "profile": "scanner_test",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "altoro-testfire-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -185,6 +194,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "duck-store-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -206,6 +216,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "gin-and-juice-shop-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -227,6 +238,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "hack-yourself-first-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -248,6 +260,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "hackxpert-public-labs",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -269,6 +282,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "openvault-bank-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -290,6 +304,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "pentest-ground-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -311,6 +326,7 @@
       "operator": "public security lab operator",
       "profile": "scanner_test",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "netsparker-test-app-php",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -332,6 +348,7 @@
       "operator": "public security lab operator",
       "profile": "scanner_test",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "google-public-firing-range",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -353,6 +370,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "owasp-skf-public-labs",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -374,6 +392,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "vulnbank-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -395,6 +414,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "wrongsecrets-public-demo",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -416,6 +436,7 @@
       "operator": "public security lab operator",
       "profile": "interactive_lab",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "dvaib-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
@@ -437,6 +458,7 @@
       "operator": "public security lab operator",
       "profile": "direct_vulnerable_app",
       "rate_limit_rps": 1,
+      "scope_evidence": "explicit_curated_host_authorization",
       "source": "curated_public_red_lab_registry",
       "source_id": "zero-bank-public-lab",
       "status": "PUBLIC_RED_LAB_AUTHORIZED"
