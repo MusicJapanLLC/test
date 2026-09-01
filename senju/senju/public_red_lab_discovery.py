@@ -73,6 +73,10 @@ def _write(path: Path, payload: Any) -> None:
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _stable(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
+
+
 def _normalize_https_url(value: Any) -> tuple[str, str] | None:
     try:
         parsed = urllib.parse.urlsplit(str(value or "").strip())
@@ -96,8 +100,6 @@ def _normalize_https_url(value: Any) -> tuple[str, str] | None:
         literal = None
     if literal is not None and not literal.is_global:
         return None
-    # Strip path/query/fragment from authority identity. Runtime execution is same-origin
-    # and current reviewed lifecycle executes only HEAD against the origin root.
     return host, f"https://{host}"
 
 
@@ -126,6 +128,7 @@ def _safe_registry_rows(repo_root: Path) -> list[dict[str, Any]]:
             "base_url": base_url,
             "source": "curated_public_red_lab_registry",
             "source_id": str(raw.get("id") or host),
+            "operator": str(raw.get("operator") or "public security lab operator"),
             "profile": str(raw.get("profile") or "public_security_lab"),
             "authorization_evidence_url": evidence,
             "authorization_note": " ".join(str(raw.get("authorization_note") or "").split())[:500],
@@ -158,9 +161,7 @@ def _is_direct_online_lab(raw: Mapping[str, Any]) -> bool:
     collections = {str(v).strip().lower() for v in raw.get("collection", ()) if str(v).strip()}
     if "online" not in collections or "platform" in collections:
         return False
-    text = " ".join(
-        str(raw.get(key) or "") for key in ("name", "notes", "author")
-    ).lower()
+    text = " ".join(str(raw.get(key) or "") for key in ("name", "notes", "author")).lower()
     if any(token in text for token in PLATFORM_TOKENS):
         return False
     return any(signal in text for signal in DIRECT_LAB_SIGNALS)
@@ -186,6 +187,7 @@ def _upstream_candidates(upstream_doc: Any) -> list[dict[str, Any]]:
             "base_url": base_url,
             "source": "owasp_vwad_online_live",
             "source_id": str(raw.get("name") or host),
+            "operator": str(raw.get("author") or "OWASP VWAD listed operator"),
             "profile": "probationary_public_security_lab",
             "authorization_evidence_url": "https://vwad.owasp.org/",
             "authorization_note": "OWASP VWAD online/live entry with direct vulnerable/test/lab signal; probationary read-only authority.",
@@ -218,7 +220,8 @@ def refresh_public_red_lab_authority(
     curated = _safe_registry_rows(repo)
     curated_hosts = {row["host"] for row in curated}
 
-    previous = _load(state / "public_red_lab_authority.json", {})
+    authority_path = state / "public_red_lab_authority.json"
+    previous = _load(authority_path, {})
     previous_rows = previous.get("targets", ()) if isinstance(previous, Mapping) else ()
     persisted_auto: dict[str, dict[str, Any]] = {}
     for raw in previous_rows if isinstance(previous_rows, list) else ():
@@ -252,36 +255,36 @@ def refresh_public_red_lab_authority(
             continue
         if len(added) >= cap:
             break
-        row = {**row, "first_authorized_at": current, "last_seen_at": current}
+        row = {**row, "first_authorized_at": current}
         persisted_auto[host] = row
         added.append(row)
 
-    # Refresh last-seen time when the upstream still advertises an already persisted lab.
-    upstream_hosts = {row["host"] for row in candidates}
-    for host, row in list(persisted_auto.items()):
-        if host in upstream_hosts:
-            persisted_auto[host] = {**row, "last_seen_at": current}
-
     targets = curated + [persisted_auto[host] for host in sorted(persisted_auto) if host not in curated_hosts]
+    constraints = {
+        "allowed_methods": list(READ_ONLY_METHODS),
+        "credentials": "none",
+        "destructive_operations": False,
+        "private_network": False,
+        "cross_host_inheritance": False,
+        "max_auto_new_per_cycle": cap,
+    }
+    previous_targets = previous.get("targets", []) if isinstance(previous, Mapping) else []
+    previous_constraints = previous.get("constraints", {}) if isinstance(previous, Mapping) else {}
+    authority_changed = _stable(previous_targets) != _stable(targets) or _stable(previous_constraints) != _stable(constraints)
+    generated_at = current if authority_changed or not authority_path.exists() else int(previous.get("generated_at", current) or current)
     authority_doc = {
         "schema": SCHEMA,
-        "generated_at": current,
+        "generated_at": generated_at,
         "authority_class": "public_operator_published_security_lab_read_only",
         "curated_count": len(curated),
         "probationary_count": len(targets) - len(curated),
         "new_probationary_count": len(added),
         "target_count": len(targets),
         "targets": targets,
-        "constraints": {
-            "allowed_methods": list(READ_ONLY_METHODS),
-            "credentials": "none",
-            "destructive_operations": False,
-            "private_network": False,
-            "cross_host_inheritance": False,
-            "max_auto_new_per_cycle": cap,
-        },
+        "constraints": constraints,
     }
-    _write(state / "public_red_lab_authority.json", authority_doc)
+    if authority_changed or not authority_path.exists():
+        _write(authority_path, authority_doc)
 
     candidate_path = meta_state / "discovery_candidates.json"
     candidate_doc = _load(candidate_path, {})
@@ -313,5 +316,6 @@ def refresh_public_red_lab_authority(
         "probationary_count": len(targets) - len(curated),
         "new_probationary_count": len(added),
         "target_count": len(targets),
+        "authority_changed": authority_changed,
         "hosts": [row["host"] for row in targets],
     }
