@@ -13,6 +13,7 @@ on:
       - 'senju/state/verified_control_attestations.json'
       - 'AUTHORIZED_TEST_TARGETS.json'
       - 'senju/senju/authority_promotion_bureau.py'
+      - 'senju/scripts/run_authority_promotion_bureau.py'
       - 'tests/test_owner_authorization_pool.py'
       - '.github/workflows/owner-authorization-pool.yml'
 
@@ -92,9 +93,9 @@ jobs:
           PYTHONPATH: senju
         run: |
           set -euo pipefail
-          python senju/scripts/authority_promotion_bureau.py \
+          python senju/scripts/run_authority_promotion_bureau.py \
             --state-dir senju/state \
-            --meta-state-dir meta/state \
+            --meta-state-dir automation/codegen/meta_state \
             --output-dir senju/state \
             | tee /tmp/owner-authorization-promotion.json
 
