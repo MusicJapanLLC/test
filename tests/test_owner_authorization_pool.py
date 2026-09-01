@@ -76,7 +76,10 @@ def test_pool_combines_canonical_and_verified_control_and_dedupes(tmp_path: Path
     assert result["target_met"] is True
     assert result["authorized_count"] == 3
     assert len({row["host"] for row in result["entries"]}) == 3
-    assert all(row["authorization"]["allowed_methods"] == ["GET", "HEAD"] for row in result["entries"])
+    assert all(
+        list(row["authorization"]["allowed_methods"]) == ["GET", "HEAD"]
+        for row in result["entries"]
+    )
     leases = json.loads((state / "reviewed_authority_operational_leases.json").read_text())
     assert leases["lease_count"] == 3
     assert all(row["same_or_narrower"] is True for row in leases["leases"])
