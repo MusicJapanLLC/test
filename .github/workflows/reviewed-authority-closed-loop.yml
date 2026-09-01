@@ -99,7 +99,7 @@ jobs:
           restore_latest "Shared Discovery Authority Cycle" /tmp/reviewed-upstream/shared
           restore_latest "Root Authority Negotiation Loop" /tmp/reviewed-upstream/root
           restore_latest "External Input Negotiation Relay" /tmp/reviewed-upstream/relay
-          restore_latest "Owner Frontier Approval Council" /tmp/reviewed-upstream/frontier
+          restore_latest "Owner Frontier SENJU Research Governance" /tmp/reviewed-upstream/frontier
 
       - name: Hydrate candidates and auto-ingress binding frontier approvals
         if: github.event_name != 'pull_request'
