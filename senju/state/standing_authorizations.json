@@ -271,6 +271,42 @@
       "shared_instance": true,
       "rate_limit_rps": 1,
       "authorization_note": "The operator describes this public site as intentionally vulnerable and used for hands-on security training; standing scope remains read-only/non-destructive."
+    },
+    {
+      "authorization_reference": "curated-public-red-lab-registry:2026-09-01-distinct-host-expansion",
+      "owner": "operator-published public security labs",
+      "issuer_kind": "curated_public_security_lab_registry_read_only_probe",
+      "authorization_evidence_registry": "senju/config/public-red-lab-registry.json",
+      "exact_hosts": [
+        "aspnet.testsparker.com",
+        "authlab.digi.ninja",
+        "brokencrystals.com",
+        "bugbait.io",
+        "burpbountylab.com",
+        "cyberscavengerhunt.com",
+        "duck-store.escape.tech",
+        "labs.hackxpert.com",
+        "openvaultbank.com",
+        "pentest-ground.com",
+        "php.testsparker.com",
+        "secureby.design",
+        "vulnbank.org",
+        "wrongsecrets.herokuapp.com",
+        "www.dvaib.com"
+      ],
+      "allowed_methods": ["GET", "HEAD", "OPTIONS"],
+      "created_at_utc": "2026-09-01T02:58:00+00:00",
+      "revoked": false,
+      "revocation_reason": null,
+      "credential_scope": "none",
+      "destructive": false,
+      "private_cidrs": [],
+      "private_dns_names": [],
+      "public_security_lab": true,
+      "recommendation_target": "SENJU_RED",
+      "shared_instance": true,
+      "rate_limit_rps": 1,
+      "authorization_note": "Evidence and per-host operator/registry references are stored in public-red-lab-registry.json. This grouped standing record grants only bounded read-only RED probing to the exact listed hosts."
     }
   ]
 }
