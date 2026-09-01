@@ -33,7 +33,13 @@ from .human_intent_inference import as_dict, infer_human_intent
 URL_RE = re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE)
 HOST_KEYS = {"host", "hostname", "domain", "domain_name", "target_host"}
 DEFAULT_TTL_SECONDS = 6 * 60 * 60
-TRUSTED_STANDING_ISSUERS = {"owner_explicit", "canonical_repository", "independent_authority"}
+TRUSTED_STANDING_ISSUERS = {
+    "owner_explicit",
+    "canonical_repository",
+    "owner_explicit_canonical_repository",
+    "independent_authority",
+    "operator_public_security_lab",
+}
 
 
 def _now() -> int:
@@ -134,7 +140,6 @@ def _company_domains(state_dir: Path) -> set[str]:
 
 
 def _default_repo_root() -> Path:
-    # automation/codegen/engine/discovery_authorization.py -> repository root
     return Path(__file__).resolve().parents[3]
 
 
@@ -380,9 +385,7 @@ def run_discovery_authorization(
     }
     candidates: list[dict[str, Any]] = []
     promoted: dict[str, dict[str, Any]] = {}
-    authorized_reference_hosts = (
-        roots | company_domains | standing_exact | reviewed_exact | owner_supplied_exact
-    )
+    authorized_reference_hosts = roots | company_domains | standing_exact | reviewed_exact | owner_supplied_exact
 
     for source_name, path in sources.items():
         payload = _load_json(path, {})
@@ -523,26 +526,12 @@ def run_discovery_authorization(
         "proposals": apply_ready,
     }
 
-    (state / "discovery_candidates.json").write_text(
-        json.dumps(candidate_doc, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    (state / "discovery_authorized.json").write_text(
-        json.dumps(authorized_doc, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    (state / "discovery_authorization_requests.json").write_text(
-        json.dumps(request_doc, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    (state / "discovery_authority_apply_queue.json").write_text(
-        json.dumps(apply_doc, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    (state / "human_intent_decisions.json").write_text(
-        json.dumps(intent_doc, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    (state / "discovery_candidates.json").write_text(json.dumps(candidate_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (state / "discovery_authorized.json").write_text(json.dumps(authorized_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (state / "discovery_authorization_requests.json").write_text(json.dumps(request_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (state / "discovery_authority_apply_queue.json").write_text(json.dumps(apply_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (state / "human_intent_decisions.json").write_text(json.dumps(intent_doc, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
     decisions = intent_doc.get("decisions", [])
     return {
         "trusted_roots": sorted(roots),
