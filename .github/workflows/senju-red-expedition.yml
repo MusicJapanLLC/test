@@ -2,7 +2,7 @@ name: Senju - RED Autonomous Expedition
 
 on:
   schedule:
-    - cron: "41 */3 * * *"
+    - cron: "41 */1 * * *"
   workflow_dispatch:
   push:
     branches:
@@ -13,12 +13,14 @@ on:
       - "senju/senju/offense.py"
       - "senju/senju/offense_intel.py"
       - "senju/senju/external.py"
+      - "senju/senju/target_expander.py"
+      - "senju/outward_targets.json"
       - "senju/tests/test_red_expedition.py"
       - "senju/examples/red-expedition-scope.example.json"
       - ".github/workflows/senju-red-expedition.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 concurrency:
   group: senju-red-expedition-${{ github.ref }}
@@ -28,9 +30,12 @@ jobs:
   red-expedition:
     name: RED choose -> contact -> discover -> learn -> attack research
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 45
     env:
       SENJU_RED_EXPEDITION_SCOPE_JSON: ${{ secrets.SENJU_RED_EXPEDITION_SCOPE_JSON }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_REPOSITORY: ${{ github.repository }}
+      TARGET_EXPANDER_BRANCH: ${{ github.ref_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -41,6 +46,17 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
+
+      - name: Run autonomous target expander (discover + merge new scope)
+        working-directory: senju
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          python -m pip install --quiet pytest==9.1.1
+          mkdir -p /tmp/senju-red-expedition
+          python -m senju.target_expander \
+            --scope-out /tmp/senju-red-expedition/auto-scope.json
+          echo "TARGET_EXPANDER_DONE=true" >> "$GITHUB_ENV"
 
       - name: Verify RED expedition engine
         working-directory: senju
@@ -78,7 +94,7 @@ jobs:
           python -m senju.red_expedition \
             --scope /tmp/senju-red-expedition/canary-scope.json \
             --out /tmp/senju-red-expedition/canary-report.json \
-            --cycles 8 \
+            --cycles 24 \
             --seed 20260831
           python - <<'PY'
           import json
@@ -98,6 +114,21 @@ jobs:
           print('priorities=', ','.join(report['priority_next']))
           PY
 
+      - name: Run auto-expanded scope expedition
+        if: ${{ env.TARGET_EXPANDER_DONE == 'true' }}
+        working-directory: senju
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          if [ -f /tmp/senju-red-expedition/auto-scope.json ]; then
+            python -m senju.red_expedition \
+              --scope /tmp/senju-red-expedition/auto-scope.json \
+              --out /tmp/senju-red-expedition/auto-expanded-report.json \
+              --cycles 32 \
+              --seed "${GITHUB_RUN_ID}"
+            echo "AUTO_EXPANDED_EXPEDITION_COMPLETED"
+          fi
+
       - name: Run enrolled owned-target expedition when configured
         if: ${{ env.SENJU_RED_EXPEDITION_SCOPE_JSON != '' }}
         working-directory: senju
@@ -107,7 +138,7 @@ jobs:
           python -m senju.red_expedition \
             --scope /tmp/senju-red-expedition/owned-scope.json \
             --out /tmp/senju-red-expedition/owned-report.json \
-            --cycles 16 \
+            --cycles 48 \
             --seed "${GITHUB_RUN_ID}"
           echo "SENJU_RED_OWNED_TARGET_EXPEDITION_COMPLETED"
 

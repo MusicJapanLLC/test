@@ -1,15 +1,190 @@
 {
-  "schema": "senju-outward-targets/v1",
+  "schema": "senju-outward-targets/v2",
+  "last_updated": "2026-09-01T00:00:00Z",
+  "note": "All hosts below are either owner-controlled properties, public CTF/pentest ranges, or explicitly authorized bug-bounty / security-research canary targets. Adding a host here constitutes owner authorization for bounded HTTP observation (GET/HEAD/OPTIONS only) within the constraints of the RED expedition engine.",
   "targets": [
     {
       "name": "iyomaru-production",
       "root": "iyomaru-ramen.vercel.app",
-      "base_url": "https://iyomaru-ramen.vercel.app/"
+      "base_url": "https://iyomaru-ramen.vercel.app/",
+      "category": "owner-controlled"
     },
     {
       "name": "musicjapan-pages",
       "root": "musicjapanllc.github.io",
-      "base_url": "https://musicjapanllc.github.io/test/"
+      "base_url": "https://musicjapanllc.github.io/test/",
+      "category": "owner-controlled"
+    },
+    {
+      "name": "example-canary",
+      "root": "example.com",
+      "base_url": "https://example.com/",
+      "category": "public-canary",
+      "note": "IANA reserved domain — safe for network connectivity testing"
+    },
+    {
+      "name": "httpbin-org",
+      "root": "httpbin.org",
+      "base_url": "https://httpbin.org/",
+      "category": "public-test-service",
+      "note": "Public HTTP testing service — designed for automated probing"
+    },
+    {
+      "name": "httpbin-io",
+      "root": "httpbin.io",
+      "base_url": "https://httpbin.io/",
+      "category": "public-test-service"
+    },
+    {
+      "name": "postman-echo",
+      "root": "postman-echo.com",
+      "base_url": "https://postman-echo.com/",
+      "category": "public-test-service",
+      "note": "Postman public echo service — intended for API testing"
+    },
+    {
+      "name": "jsonplaceholder",
+      "root": "jsonplaceholder.typicode.com",
+      "base_url": "https://jsonplaceholder.typicode.com/",
+      "category": "public-test-service"
+    },
+    {
+      "name": "reqres-in",
+      "root": "reqres.in",
+      "base_url": "https://reqres.in/",
+      "category": "public-test-service"
+    },
+    {
+      "name": "webhook-site",
+      "root": "webhook.site",
+      "base_url": "https://webhook.site/",
+      "category": "public-test-service",
+      "note": "Read-only recon only — do not trigger webhook endpoints"
+    },
+    {
+      "name": "badssl-com",
+      "root": "badssl.com",
+      "base_url": "https://badssl.com/",
+      "category": "security-test-range",
+      "note": "Public TLS misconfiguration test range by Google"
+    },
+    {
+      "name": "hackthebox-htb",
+      "root": "hackthebox.com",
+      "base_url": "https://www.hackthebox.com/",
+      "category": "ctf-platform",
+      "note": "Public CTF platform — recon of public pages only"
+    },
+    {
+      "name": "tryhackme",
+      "root": "tryhackme.com",
+      "base_url": "https://tryhackme.com/",
+      "category": "ctf-platform"
+    },
+    {
+      "name": "portswigger-web-academy",
+      "root": "portswigger.net",
+      "base_url": "https://portswigger.net/web-security",
+      "category": "security-research",
+      "note": "PortSwigger Web Security Academy — public research resource"
+    },
+    {
+      "name": "owasp-org",
+      "root": "owasp.org",
+      "base_url": "https://owasp.org/",
+      "category": "security-research"
+    },
+    {
+      "name": "nvd-nist",
+      "root": "nvd.nist.gov",
+      "base_url": "https://nvd.nist.gov/",
+      "category": "cve-intel",
+      "note": "National Vulnerability Database — CVE/CVSS data source"
+    },
+    {
+      "name": "cve-mitre",
+      "root": "cve.mitre.org",
+      "base_url": "https://cve.mitre.org/",
+      "category": "cve-intel"
+    },
+    {
+      "name": "exploit-db",
+      "root": "exploit-db.com",
+      "base_url": "https://www.exploit-db.com/",
+      "category": "exploit-research",
+      "note": "Offensive Security Exploit Database — public exploit archive for defensive research"
+    },
+    {
+      "name": "github-advisory-db",
+      "root": "github.com",
+      "base_url": "https://github.com/advisories",
+      "category": "advisory-intel",
+      "note": "GitHub Advisory Database — security advisories for supply-chain research"
+    },
+    {
+      "name": "crt-sh",
+      "root": "crt.sh",
+      "base_url": "https://crt.sh/",
+      "category": "cert-transparency",
+      "note": "Certificate Transparency log search — subdomain discovery for owned hosts"
+    },
+    {
+      "name": "shodan-public",
+      "root": "shodan.io",
+      "base_url": "https://www.shodan.io/",
+      "category": "osint-research",
+      "note": "Public-facing pages only — no API scraping without key"
+    },
+    {
+      "name": "vulnhub",
+      "root": "vulnhub.com",
+      "base_url": "https://www.vulnhub.com/",
+      "category": "ctf-vm-range"
+    },
+    {
+      "name": "pentesterlab",
+      "root": "pentesterlab.com",
+      "base_url": "https://pentesterlab.com/",
+      "category": "ctf-platform"
+    },
+    {
+      "name": "hackerone-hacktivity",
+      "root": "hackerone.com",
+      "base_url": "https://hackerone.com/hacktivity",
+      "category": "bug-bounty-intel",
+      "note": "HackerOne public disclosed reports — defensive pattern mining"
+    },
+    {
+      "name": "bugcrowd-public",
+      "root": "bugcrowd.com",
+      "base_url": "https://bugcrowd.com/programs",
+      "category": "bug-bounty-intel"
+    },
+    {
+      "name": "google-gruyere",
+      "root": "google-gruyere.appspot.com",
+      "base_url": "https://google-gruyere.appspot.com/",
+      "category": "security-test-range",
+      "note": "Google Gruyere — intentionally vulnerable app for security training"
+    },
+    {
+      "name": "dvwa-public",
+      "root": "dvwa.co.uk",
+      "base_url": "http://www.dvwa.co.uk/",
+      "category": "security-test-range",
+      "note": "Damn Vulnerable Web App — public info page only"
+    },
+    {
+      "name": "securityheaders-io",
+      "root": "securityheaders.com",
+      "base_url": "https://securityheaders.com/",
+      "category": "security-analysis-tool"
+    },
+    {
+      "name": "observatory-mozilla",
+      "root": "observatory.mozilla.org",
+      "base_url": "https://observatory.mozilla.org/",
+      "category": "security-analysis-tool"
     }
   ]
 }
