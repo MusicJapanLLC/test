@@ -75,6 +75,7 @@ jobs:
           python the-world-strong-new-game/strong_new_game.py build \
             --output "$STATE_DIR" \
             --previous "$PREVIOUS_DIR"
+          python the-world-strong-new-game/assign_synthetic_labs.py "$STATE_DIR"
           python the-world-strong-new-game/strong_new_game.py verify \
             --output "$STATE_DIR"
 
@@ -96,6 +97,9 @@ jobs:
           assert checkpoint['invariants']['external_side_effects'] is False
           assert checkpoint['invariants']['credential_inheritance'] is False
           assert checkpoint['invariants']['authority_inheritance'] is False
+          assert checkpoint['synthetic_labs']['simulation_only'] is True
+          assert checkpoint['synthetic_labs']['network_transport'] == 'disabled'
+          assert sum(len(v) for v in checkpoint['synthetic_labs']['assignments'].values()) == 16
           print('STRONG_NEW_GAME_3H_INVARIANTS_OK')
           PY
 
