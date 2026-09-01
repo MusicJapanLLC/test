@@ -1,12 +1,13 @@
-"""Bounded discovery for operator-published public security labs.
+"""Broad discovery for operator-published public security labs.
 
-This module grows SENJU RED's *read-only* public-lab authority from two sources:
-1. an exact-host curated registry committed in this repository; and
-2. OWASP VWAD online/live entries that look like direct vulnerable/test/lab apps.
+Discovery is intentionally broad: HTTPS references are retained as candidates regardless
+of whether they are application hosts, code hosts, documentation hosts, or other public
+infrastructure. Candidate discovery by itself has no authority effect.
 
-It deliberately does not turn arbitrary discovery into authority. Generic training/CTF
-platforms, source-code hosting roots, private/non-HTTPS targets, redirects to new hosts,
-credentials, write methods, and destructive operations are outside this authority class.
+Automatic RED authority remains narrower than discovery because the downstream authority
+model is host-wide. A reference is auto-admitted only when the upstream record identifies
+it as the live lab and the URL looks like a dedicated lab endpoint. Curated registry rows
+with explicit authorization evidence remain eligible regardless of hosting provider.
 """
 from __future__ import annotations
 
@@ -22,8 +23,6 @@ REGISTRY = Path("senju/config/public-red-lab-registry.json")
 READ_ONLY_METHODS = ("GET", "HEAD", "OPTIONS")
 MAX_AUTO_NEW_HARD = 4
 
-# Platform-style sites are useful training destinations, but the platform root itself is
-# not a generic scanner target. These tokens prevent accidental root-wide authority.
 PLATFORM_TOKENS = (
     "hack the box",
     "hackthebox",
@@ -36,21 +35,6 @@ PLATFORM_TOKENS = (
     "vulnhub",
     "portswigger web security academy",
 )
-
-# VWAD entries often link to a source repository in the generic `url` field. A source
-# repository is evidence about a vulnerable app, not authorization to treat the hosting
-# platform itself as a RED target. Upstream auto-admission therefore requires an explicit
-# `references[].name == live` URL and rejects common shared source-code platform roots.
-SHARED_CODE_HOSTS = frozenset({
-    "github.com",
-    "www.github.com",
-    "gitlab.com",
-    "www.gitlab.com",
-    "bitbucket.org",
-    "www.bitbucket.org",
-    "sourceforge.net",
-    "www.sourceforge.net",
-})
 
 DIRECT_LAB_SIGNALS = (
     "vulnerable",
@@ -75,6 +59,8 @@ DIRECT_LAB_SIGNALS = (
     "goat",
 )
 
+HOST_LAB_SIGNALS = ("lab", "labs", "vuln", "vulnerable", "test", "demo", "goat", "ctf")
+
 
 def _load(path: Path, default: Any) -> Any:
     try:
@@ -92,7 +78,7 @@ def _stable(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"), default=str)
 
 
-def _normalize_https_url(value: Any) -> tuple[str, str] | None:
+def _normalize_https_reference(value: Any) -> tuple[str, str] | None:
     try:
         parsed = urllib.parse.urlsplit(str(value or "").strip())
     except ValueError:
@@ -115,6 +101,18 @@ def _normalize_https_url(value: Any) -> tuple[str, str] | None:
         literal = None
     if literal is not None and not literal.is_global:
         return None
+    path = parsed.path or "/"
+    if not path.startswith("/"):
+        path = "/" + path
+    normalized = urllib.parse.urlunsplit(("https", host, path, parsed.query, ""))
+    return host, normalized
+
+
+def _normalize_https_url(value: Any) -> tuple[str, str] | None:
+    parsed = _normalize_https_reference(value)
+    if parsed is None:
+        return None
+    host, _ = parsed
     return host, f"https://{host}"
 
 
@@ -133,9 +131,7 @@ def _safe_registry_rows(repo_root: Path) -> list[dict[str, Any]]:
         if str(raw.get("host") or "").strip().rstrip(".").lower() != host:
             continue
         evidence = str(raw.get("authorization_evidence_url") or "").strip()
-        if not evidence.startswith("https://"):
-            continue
-        if host in seen:
+        if not evidence.startswith("https://") or host in seen:
             continue
         seen.add(host)
         out.append({
@@ -154,22 +150,56 @@ def _safe_registry_rows(repo_root: Path) -> list[dict[str, Any]]:
             "allow_private_network": False,
             "cross_host_inheritance": False,
             "status": "PUBLIC_RED_LAB_AUTHORIZED",
+            "scope_evidence": "explicit_curated_host_authorization",
         })
     return sorted(out, key=lambda row: row["host"])
 
 
-def _live_https_url(raw: Mapping[str, Any]) -> tuple[str, str] | None:
-    refs = raw.get("references", ())
-    if not isinstance(refs, list):
-        return None
-    for ref in refs:
+def _all_https_references(raw: Mapping[str, Any]) -> list[dict[str, str]]:
+    refs: list[dict[str, str]] = []
+    seen: set[str] = set()
+    primary = _normalize_https_reference(raw.get("url"))
+    if primary:
+        host, url = primary
+        seen.add(url)
+        refs.append({"host": host, "url": url, "reference_name": "primary"})
+    raw_refs = raw.get("references", ())
+    for ref in raw_refs if isinstance(raw_refs, list) else ():
         if not isinstance(ref, Mapping):
             continue
-        if str(ref.get("name") or "").strip().lower() != "live":
+        parsed = _normalize_https_reference(ref.get("url"))
+        if not parsed:
             continue
-        parsed = _normalize_https_url(ref.get("url"))
-        if parsed and parsed[0] not in SHARED_CODE_HOSTS:
-            return parsed
+        host, url = parsed
+        if url in seen:
+            continue
+        seen.add(url)
+        refs.append({
+            "host": host,
+            "url": url,
+            "reference_name": str(ref.get("name") or "reference").strip().lower(),
+        })
+    return refs
+
+
+def _looks_like_dedicated_live_endpoint(host: str, url: str) -> bool:
+    parsed = urllib.parse.urlsplit(url)
+    path_parts = [part for part in parsed.path.split("/") if part]
+    # Root live URLs can represent a dedicated app directly. For pathful URLs, require
+    # the hostname itself to carry a lab/test/vulnerable signal before deriving host-wide
+    # authority from a single application reference.
+    if not path_parts:
+        return True
+    labels = host.replace("-", ".").split(".")
+    return any(signal in label for label in labels for signal in HOST_LAB_SIGNALS)
+
+
+def _live_https_url(raw: Mapping[str, Any]) -> tuple[str, str, str] | None:
+    for ref in _all_https_references(raw):
+        if ref["reference_name"] != "live":
+            continue
+        if _looks_like_dedicated_live_endpoint(ref["host"], ref["url"]):
+            return ref["host"], f"https://{ref['host']}", ref["url"]
     return None
 
 
@@ -194,19 +224,20 @@ def _upstream_candidates(upstream_doc: Any) -> list[dict[str, Any]]:
         parsed = _live_https_url(raw)
         if parsed is None:
             continue
-        host, base_url = parsed
-        if host in SHARED_CODE_HOSTS or host in seen:
+        host, base_url, source_url = parsed
+        if host in seen:
             continue
         seen.add(host)
         out.append({
             "host": host,
             "base_url": base_url,
+            "source_url": source_url,
             "source": "owasp_vwad_online_live",
             "source_id": str(raw.get("name") or host),
             "operator": str(raw.get("author") or "OWASP VWAD listed operator"),
             "profile": "probationary_public_security_lab",
             "authorization_evidence_url": "https://vwad.owasp.org/",
-            "authorization_note": "OWASP VWAD online/live entry with direct vulnerable/test/lab signal; probationary read-only authority.",
+            "authorization_note": "OWASP VWAD online/live entry with a dedicated vulnerable/test/lab endpoint; probationary read-only authority.",
             "allowed_methods": list(READ_ONLY_METHODS),
             "rate_limit_rps": 1,
             "credential_scope": "none",
@@ -214,8 +245,35 @@ def _upstream_candidates(upstream_doc: Any) -> list[dict[str, Any]]:
             "allow_private_network": False,
             "cross_host_inheritance": False,
             "status": "PUBLIC_RED_LAB_PROBATIONARY",
+            "scope_evidence": "dedicated_live_endpoint",
         })
     return sorted(out, key=lambda row: row["host"])
+
+
+def _discovery_only_candidates(upstream_doc: Any) -> list[dict[str, Any]]:
+    if not isinstance(upstream_doc, list):
+        return []
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw in upstream_doc:
+        if not isinstance(raw, Mapping):
+            continue
+        for ref in _all_https_references(raw):
+            key = (ref["host"], ref["url"])
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append({
+                "url": ref["url"],
+                "host": ref["host"],
+                "source": "owasp_vwad_reference_discovery",
+                "source_id": str(raw.get("name") or ref["host"]),
+                "reference_name": ref["reference_name"],
+                "decision": "discovered_candidate",
+                "authority_effect": "none",
+                "requires_explicit_authorization_evidence": True,
+            })
+    return out
 
 
 def refresh_public_red_lab_authority(
@@ -243,12 +301,12 @@ def refresh_public_red_lab_authority(
     for raw in previous_rows if isinstance(previous_rows, list) else ():
         if not isinstance(raw, Mapping) or raw.get("source") != "owasp_vwad_online_live":
             continue
+        if raw.get("scope_evidence") != "dedicated_live_endpoint":
+            continue
         parsed = _normalize_https_url(raw.get("base_url"))
         if parsed is None:
             continue
         host, base_url = parsed
-        if host in SHARED_CODE_HOSTS:
-            continue
         persisted_auto[host] = {
             **dict(raw),
             "host": host,
@@ -286,7 +344,9 @@ def refresh_public_red_lab_authority(
         "cross_host_inheritance": False,
         "max_auto_new_per_cycle": cap,
         "upstream_requires_explicit_live_reference": True,
-        "shared_code_hosts_excluded": True,
+        "category_denylist": False,
+        "discovery_scope": "all_public_https_references",
+        "authority_scope": "curated_or_dedicated_live_endpoint",
     }
     previous_targets = previous.get("targets", []) if isinstance(previous, Mapping) else []
     previous_constraints = previous.get("constraints", {}) if isinstance(previous, Mapping) else {}
@@ -309,27 +369,36 @@ def refresh_public_red_lab_authority(
     candidate_path = meta_state / "discovery_candidates.json"
     candidate_doc = _load(candidate_path, {})
     rows = candidate_doc.get("candidates", ()) if isinstance(candidate_doc, Mapping) else ()
-    by_host: dict[str, dict[str, Any]] = {}
+    by_key: dict[tuple[str, str], dict[str, Any]] = {}
     for raw in rows if isinstance(rows, list) else ():
         if not isinstance(raw, Mapping):
             continue
         host = str(raw.get("host") or "").strip().rstrip(".").lower()
-        if not host or host in SHARED_CODE_HOSTS:
+        url = str(raw.get("url") or "").strip()
+        if not host or not url:
             continue
-        by_host[host] = dict(raw)
+        by_key[(host, url)] = dict(raw)
+
+    for row in _discovery_only_candidates(upstream_doc):
+        by_key[(row["host"], row["url"])] = row
+
     for row in targets:
         host = row["host"]
-        by_host[host] = {
-            "url": row["base_url"] + "/",
+        url = row.get("source_url") or (row["base_url"] + "/")
+        by_key[(host, url)] = {
+            "url": url,
             "host": host,
             "source": row["source"],
             "decision": "operator_published_public_red_lab",
             "authorization_evidence_url": row["authorization_evidence_url"],
+            "authority_effect": "read_only_exact_host",
         }
+
     candidate_doc = dict(candidate_doc) if isinstance(candidate_doc, Mapping) else {}
-    candidate_doc["candidates"] = [by_host[key] for key in sorted(by_host)]
+    candidate_doc["candidates"] = [by_key[key] for key in sorted(by_key)]
     candidate_doc["public_red_lab_candidate_count"] = len(targets)
     candidate_doc["public_red_lab_new_probationary_count"] = len(added)
+    candidate_doc["broad_discovery_candidate_count"] = len(_discovery_only_candidates(upstream_doc))
     _write(candidate_path, candidate_doc)
 
     return {
@@ -339,4 +408,5 @@ def refresh_public_red_lab_authority(
         "target_count": len(targets),
         "authority_changed": authority_changed,
         "hosts": [row["host"] for row in targets],
+        "broad_discovery_candidate_count": len(_discovery_only_candidates(upstream_doc)),
     }
