@@ -4,6 +4,8 @@ on:
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'automation/codegen/authority_bundles/**'
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_event_bus.py'
@@ -14,7 +16,10 @@ on:
       - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
       - 'automation/codegen/engine/authority_expansion_runtime.py'
       - 'automation/codegen/engine/new_host_authorization_runtime.py'
+      - 'automation/codegen/engine/host_activation_bundle.py'
       - 'automation/codegen/engine/discovery_replica_continuity.py'
+      - 'automation/codegen/apply_host_activation_bundle.py'
+      - 'automation/codegen/validate_host_activation_pr.py'
       - 'automation/codegen/run_discovery_closed_loop.py'
       - 'automation/codegen/run_discovery_action_continuity.py'
       - 'automation/codegen/meta_state/discovery_policy.json'
@@ -29,12 +34,15 @@ on:
       - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
       - 'automation/codegen/tests/test_authority_expansion_runtime.py'
       - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
+      - 'automation/codegen/tests/test_host_activation_bundle.py'
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
   push:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'automation/codegen/authority_bundles/**'
       - 'automation/codegen/engine/discovery_authorization.py'
       - 'automation/codegen/engine/shared_discovery_authority.py'
       - 'automation/codegen/engine/discovery_event_bus.py'
@@ -45,7 +53,10 @@ on:
       - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
       - 'automation/codegen/engine/authority_expansion_runtime.py'
       - 'automation/codegen/engine/new_host_authorization_runtime.py'
+      - 'automation/codegen/engine/host_activation_bundle.py'
       - 'automation/codegen/engine/discovery_replica_continuity.py'
+      - 'automation/codegen/apply_host_activation_bundle.py'
+      - 'automation/codegen/validate_host_activation_pr.py'
       - 'automation/codegen/run_discovery_closed_loop.py'
       - 'automation/codegen/run_discovery_action_continuity.py'
       - 'automation/codegen/meta_state/discovery_policy.json'
@@ -60,6 +71,7 @@ on:
       - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
       - 'automation/codegen/tests/test_authority_expansion_runtime.py'
       - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
+      - 'automation/codegen/tests/test_host_activation_bundle.py'
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
@@ -83,6 +95,7 @@ jobs:
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
@@ -104,7 +117,49 @@ jobs:
           automation/codegen/tests/test_credential_bound_mutation_runtime.py
           automation/codegen/tests/test_authority_expansion_runtime.py
           automation/codegen/tests/test_new_host_authorization_runtime.py
+          automation/codegen/tests/test_host_activation_bundle.py
           automation/codegen/tests/test_discovery_replica_continuity.py
+      - name: Check committed host activation bundles are complete
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python automation/codegen/apply_host_activation_bundle.py
+          --repo-root .
+          --check-all
+      - name: Enforce one-PR new-host completion contract
+        if: github.event_name == 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen:senju
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          python automation/codegen/validate_host_activation_pr.py
+          --repo-root .
+          --base "$BASE_SHA"
+          --head "$HEAD_SHA"
+      - name: Verify changed host bundles against exact-host attestation
+        if: github.event_name == 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen:senju
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t bundles < <(
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- automation/codegen/authority_bundles \
+              | grep '\.json$' \
+              | grep -v '\.example\.json$' \
+              || true
+          )
+          for bundle in "${bundles[@]}"; do
+            [[ -f "$bundle" ]] || continue
+            python automation/codegen/apply_host_activation_bundle.py \
+              --repo-root . \
+              --bundle "$bundle" \
+              --check \
+              --verify-live
+          done
 
   live-loop:
     if: github.event_name != 'pull_request'
@@ -175,7 +230,7 @@ jobs:
           --rounds 3
           --max-targets 20
           --json-out .discovery-runtime-state/live_run_receipt.json
-      - name: Run New Host -> Authority -> Credential -> Mutation -> Expansion -> Recovery
+      - name: Run New Host -> Authorization -> Allowed Site -> Senju Trial -> Mutation -> Recovery
         env:
           PYTHONPATH: automation/codegen:senju
           KABEYA_TEST_BEARER_TOKEN: ${{ secrets.KABEYA_TEST_BEARER_TOKEN }}
