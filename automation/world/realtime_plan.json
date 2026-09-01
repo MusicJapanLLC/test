@@ -26,7 +26,7 @@
     {"name":"RND_SENJU_COUPLED","workflow":"rnd-senju-coupled-loop.yml","stale_minutes":75,"director_min_interval_minutes":45,"priority":111,"autostart":true},
     {"name":"SENJU_100X_MASS_SHADOW","workflow":"senju-mass-shadow-learning.yml","stale_minutes":75,"director_min_interval_minutes":60,"priority":110,"autostart":true},
     {"name":"GMAIL_AUTONOMOUS_SORTER","workflow":"gmail-autonomous-sorter.yml","stale_minutes":40,"director_min_interval_minutes":30,"priority":108,"autostart":true},
-    {"name":"TOMOKI_MANAGER","workflow":"tomoki-manager.yml","stale_minutes":25,"director_min_interval_minutes":20,"priority":106,"autostart":true},
+    {"name":"TOMOKI_MANAGER","workflow":"tomoki-manager-queue.yml","stale_minutes":25,"director_min_interval_minutes":20,"priority":106,"autostart":true},
     {"name":"GMAIL_SERVICE_HEALTH","workflow":"gmail-service-health.yml","stale_minutes":95,"director_min_interval_minutes":60,"priority":104,"autostart":true},
     {"name":"TOMOKI_FORGE","workflow":"tomoki-forge.yml","stale_minutes":110,"director_min_interval_minutes":60,"priority":102,"autostart":true},
     {"name":"BOSS_WATCHDOG","workflow":"ai-factory-boss.yml","stale_minutes":45,"director_min_interval_minutes":30,"priority":100,"autostart":true},
