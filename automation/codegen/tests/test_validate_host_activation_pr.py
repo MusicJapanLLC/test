@@ -2,27 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import pytest
-
 import validate_host_activation_pr as validator
 
 
 def _target_doc(*hosts: str) -> dict:
-    return {
-        "targets": [
-            {"host": host, "owner_authorization": "explicit"}
-            for host in hosts
-        ]
-    }
+    return {"targets": [{"host": host, "owner_authorization": "explicit"} for host in hosts]}
 
 
 def _policy_doc(*hosts: str) -> dict:
-    return {
-        "action_profiles": {
-            host: {"owner_authorization": "explicit"}
-            for host in hosts
-        }
-    }
+    return {"action_profiles": {host: {"owner_authorization": "explicit"} for host in hosts}}
 
 
 def _bundle(host: str, *, enabled: bool = True, learning: bool = True) -> dict:
@@ -70,43 +58,30 @@ def _wire(monkeypatch, tmp_path: Path, *, base_targets=(), head_targets=(), base
     )
 
 
-def test_new_target_without_same_pr_profile_is_rejected(monkeypatch, tmp_path: Path) -> None:
-    _wire(
-        monkeypatch,
-        tmp_path,
-        head_targets=("new.example",),
-        head_profiles=(),
-        bundles={"new.example": _bundle("new.example")},
-    )
-    with pytest.raises(validator.PRContractError, match="fragmented"):
-        validator.validate_pr("base", "head", repo_root=tmp_path)
+def test_target_only_pr_is_advisory_not_rejected(monkeypatch, tmp_path: Path) -> None:
+    _wire(monkeypatch, tmp_path, head_targets=("new.example",), head_profiles=(), bundles={})
+    result = validator.validate_pr("base", "head", repo_root=tmp_path)
+    assert result["blocking"] is False
+    assert result["partial_new_host_pr_allowed"] is True
+    assert result["progression"]["new.example"]["stage"] == "authorized_target_only"
 
 
-def test_new_target_and_profile_without_bundle_is_rejected(monkeypatch, tmp_path: Path) -> None:
-    _wire(
-        monkeypatch,
-        tmp_path,
-        head_targets=("new.example",),
-        head_profiles=("new.example",),
-        bundles={},
-    )
-    with pytest.raises(validator.PRContractError, match="missing activation bundle"):
-        validator.validate_pr("base", "head", repo_root=tmp_path)
+def test_candidate_bundle_without_authorization_is_allowed(monkeypatch, tmp_path: Path) -> None:
+    _wire(monkeypatch, tmp_path, bundles={"new.example": _bundle("new.example")})
+    result = validator.validate_pr("base", "head", repo_root=tmp_path)
+    assert result["blocking"] is False
+    assert result["candidate_only_pr_allowed"] is True
+    assert result["progression"]["new.example"]["stage"] == "candidate_bundle"
 
 
-def test_new_host_bundle_must_enable_real_senju_trial_axis(monkeypatch, tmp_path: Path) -> None:
-    _wire(
-        monkeypatch,
-        tmp_path,
-        head_targets=("new.example",),
-        head_profiles=("new.example",),
-        bundles={"new.example": _bundle("new.example", learning=False)},
-    )
-    with pytest.raises(validator.PRContractError, match="trial-and-error freedom"):
-        validator.validate_pr("base", "head", repo_root=tmp_path)
+def test_profile_can_follow_authorization_later(monkeypatch, tmp_path: Path) -> None:
+    _wire(monkeypatch, tmp_path, head_targets=("new.example",), head_profiles=("new.example",), bundles={})
+    result = validator.validate_pr("base", "head", repo_root=tmp_path)
+    assert result["profile_can_follow_later"] is True
+    assert result["progression"]["new.example"]["stage"] == "authorized_profiled"
 
 
-def test_complete_new_host_pr_reaches_all_three_outputs(monkeypatch, tmp_path: Path) -> None:
+def test_complete_host_reports_senju_ready(monkeypatch, tmp_path: Path) -> None:
     _wire(
         monkeypatch,
         tmp_path,
@@ -115,24 +90,5 @@ def test_complete_new_host_pr_reaches_all_three_outputs(monkeypatch, tmp_path: P
         bundles={"new.example": _bundle("new.example")},
     )
     result = validator.validate_pr("base", "head", repo_root=tmp_path)
-    assert result["new_explicit_targets"] == ["new.example"]
-    assert result["new_explicit_profiles"] == ["new.example"]
-    assert result["changed_active_bundles"] == ["new.example"]
-    assert result["senju_trial_ready"]["new.example"]["enabled"] is True
-    assert result["new_hosts_complete_in_single_pr"] is True
-    assert result["partial_new_host_pr_allowed"] is False
-
-
-def test_existing_host_bundle_update_is_allowed_if_still_aligned(monkeypatch, tmp_path: Path) -> None:
-    _wire(
-        monkeypatch,
-        tmp_path,
-        base_targets=("existing.example",),
-        head_targets=("existing.example",),
-        base_profiles=("existing.example",),
-        head_profiles=("existing.example",),
-        bundles={"existing.example": _bundle("existing.example")},
-    )
-    result = validator.validate_pr("base", "head", repo_root=tmp_path)
-    assert result["new_explicit_targets"] == []
-    assert result["changed_active_bundles"] == ["existing.example"]
+    assert result["progression"]["new.example"]["stage"] == "senju_trial_ready"
+    assert result["progression"]["new.example"]["senju_trial_ready"] is True
