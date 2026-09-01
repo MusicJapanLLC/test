@@ -1,4 +1,5 @@
 name: SENJU RED Owned Surface Expansion
+# Registered post-merge; this comment also exercises the push trigger.
 
 on:
   schedule:
