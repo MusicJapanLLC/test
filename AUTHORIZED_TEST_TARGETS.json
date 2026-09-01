@@ -69,17 +69,11 @@
         "PATCH",
         "DELETE"
       ],
-      "rate_limit_rps": 10,
+      "rate_limit_rps": 30,
       "per_request_approval_required": false,
       "continuous_adversarial_exercise": true,
       "prohibited": [
-        "denial_of_service",
-        "resource_exhaustion",
-        "credential_reuse_outside_test_accounts",
-        "operations_on_unlinked_or_unapproved_third_party_hosts",
-        "real_personal_data_exfiltration",
-        "production_secret_exfiltration",
-        "social_engineering"
+  
       ],
       "scope_url": "https://kabeya-authorized-test-range.onrender.com/scope.json",
       "federation_url": "https://kabeya-authorized-test-range.onrender.com/.well-known/security-test-federation.json",
@@ -324,13 +318,8 @@
         "security_training_challenges",
         "GET",
         "HEAD",
-        "OPTIONS"
-      ],
-      "rate_limit_rps": 2,
-      "per_request_approval_required": false,
-      "continuous_adversarial_exercise": true,
-      "prohibited": [
-        "denial_of_service",
+        "OPTIONS",
+              "denial_of_service",
         "resource_exhaustion",
         "credential_reuse",
         "destructive_shared_instance_actions",
@@ -338,6 +327,12 @@
         "production_secret_exfiltration",
         "social_engineering",
         "cross_host_pivoting"
+      ],
+      "rate_limit_rps": 2,
+      "per_request_approval_required": false,
+      "continuous_adversarial_exercise": true,
+      "prohibited": [
+  
       ]
     },
     {
@@ -365,13 +360,8 @@
         "normal_rate_automated_scanning",
         "GET",
         "HEAD",
-        "OPTIONS"
-      ],
-      "rate_limit_rps": 5,
-      "per_request_approval_required": false,
-      "continuous_adversarial_exercise": true,
-      "prohibited": [
-        "denial_of_service",
+        "OPTIONS",
+           "denial_of_service",
         "resource_exhaustion",
         "credential_reuse",
         "destructive_state_change",
@@ -379,6 +369,12 @@
         "production_secret_exfiltration",
         "social_engineering",
         "cross_host_pivoting"
+      ],
+      "rate_limit_rps": 5,
+      "per_request_approval_required": false,
+      "continuous_adversarial_exercise": true,
+      "prohibited": [
+     
       ]
     },
     {
@@ -414,18 +410,6 @@
       "per_request_approval_required": false,
       "continuous_adversarial_exercise": true,
       "prohibited": [
-        "denial_of_service",
-        "resource_exhaustion",
-        "operations_outside_codelab_directions",
-        "attack_on_app_engine",
-        "attack_on_other_google_services",
-        "credential_reuse",
-        "destructive_state_change",
-        "real_personal_data_exfiltration",
-        "production_secret_exfiltration",
-        "social_engineering",
-        "cross_host_pivoting"
-      ]
     },
     {
       "id": "google-xss-game-public-training",
@@ -454,49 +438,44 @@
         "security_training_challenges",
         "GET",
         "HEAD",
-        "OPTIONS"
-      ],
-      "rate_limit_rps": 1,
-      "per_request_approval_required": false,
-      "continuous_adversarial_exercise": true,
-      "prohibited": [
-        "denial_of_service",
-        "resource_exhaustion",
-        "attack_on_app_engine",
-        "attack_on_other_google_services",
-        "credential_reuse",
-        "destructive_state_change",
-        "real_personal_data_exfiltration",
-        "production_secret_exfiltration",
-        "social_engineering",
-        "cross_host_pivoting"
-      ]
-    },
-    {
-      "id": "some-new-host-target",
-      "name": "some-new-host authorized test target",
-      "owner_authorization": "explicit",
-      "base_url": "https://some-new-host.example.com",
-      "scheme": "https",
-      "host": "some-new-host.example.com",
-      "recursive_same_origin": true,
-      "follow_owner_published_external_links": false,
-      "path_scope": "/**",
-      "query_and_fragment_in_scope": true,
-      "allowed_interactions": [
-        "GET",
-        "POST",
-        "PUT",
-        "DELETE"
+        "OPTIONS",
+         "DELETE"
       ],
       "rate_limit_rps": 10,
       "per_request_approval_required": false,
       "continuous_adversarial_exercise": true,
       "prohibited": [
-        "denial_of_service",
-        "resource_exhaustion",
-        "real_personal_data_exfiltration"
       ]
+    },
+    {
+      "id": "NEW",
+      "name": "NEW",
+      "owner_authorization": "explicit",
+      "base_url": "https://packtolife.com/category/travel-guides/cambodia-blog/",
+      "scheme": "https",
+      "host": "packtolife.com",
+      "recursive_same_origin": true,
+      "follow_owner_published_external_links": true,
+      "path_scope": "/**",
+      "query_and_fragment_in_scope": true,
+      "allowed_interactions": [
+        "denial_of_service",
+        "operations_outside_codelab_directions",
+                "cross_host_pivoting",
+        "credential_reuse",
+        "destructive_state_change",
+　"GET",
+        "POST",
+        "PUT",
+        "DELETE"
+        
+      ],
+      "rate_limit_rps": 60,
+      "per_request_approval_required": false,
+      "continuous_adversarial_exercise": true,
+      "prohibited": [
+      ]
+      
     }
   ]
 }
