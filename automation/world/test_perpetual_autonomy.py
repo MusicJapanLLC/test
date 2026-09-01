@@ -65,6 +65,15 @@ class PerpetualAutonomyContractTests(unittest.TestCase):
         self.assertIn("--apply", text)
         self.assertIn("test_perpetual_autonomy", text)
 
+    def test_realtime_kernel_recovers_canonical_manager_queue_bridge(self) -> None:
+        managers = [row for row in self.plan["workers"] if row.get("name") == "TOMOKI_MANAGER"]
+        self.assertEqual(len(managers), 1)
+        manager = managers[0]
+        self.assertEqual(manager["workflow"], "tomoki-manager-queue.yml")
+        self.assertTrue(manager.get("autostart"))
+        self.assertLessEqual(int(manager["stale_minutes"]), 25)
+        self.assertNotIn("tomoki-manager.yml", self.workers)
+
     def test_provider_independent_research_path_remains_alive(self) -> None:
         # Agent Factory may depend on a model/provider. Research Fabric and the
         # local White-Hat path must remain separately scheduled and supervised.
