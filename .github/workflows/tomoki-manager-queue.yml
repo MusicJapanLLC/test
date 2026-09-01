@@ -51,7 +51,8 @@ jobs:
               raise SystemExit('Manager schedule drift: only the primary and bounded backup cadences are allowed')
           if forbidden in cron_lines:
               raise SystemExit('Manager schedule drift: hourly-boundary */5 cadence is forbidden')
-          if 'workflow_run:' in workflow:
+          forbidden_trigger = 'workflow' + '_run:'
+          if forbidden_trigger in workflow:
               raise SystemExit('Manager wake-path drift: workflow_run trigger is forbidden')
           print('Manager wake-path regression guard: PASS')
 
