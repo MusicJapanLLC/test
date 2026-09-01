@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+supabase/seed.private.sql
+private-data/
+
