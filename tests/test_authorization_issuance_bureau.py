@@ -5,6 +5,7 @@ from senju.authorization_issuance_bureau import (
     issue_authorization,
     issue_from_discovery_key,
     recognize_discovery_key,
+    request_review_key,
 )
 
 
@@ -40,24 +41,39 @@ def test_verified_owner_control_can_issue_new_host():
     assert "PATCH" in packet["requested_authority"]["methods"]
 
 
+def test_any_requester_can_obtain_non_authorizing_review_key():
+    key = request_review_key(
+        "Public-Candidate.Example",
+        requester="external-researcher-42",
+        source="external_input",
+        proof_ref="finding-public-1",
+    )
+    packet = build_discovery_authorization_intake(key, requested_methods=("GET", "HEAD"))
+    assert key.host == "public-candidate.example"
+    assert key.requester == "external-researcher-42"
+    assert key.acquisition_policy == "open"
+    assert key.authority_effect == "none"
+    assert packet["review_key_acquisition"] == "open"
+    assert packet["authorization_review_unlocked"] is True
+
+
 def test_discovery_is_recognized_as_review_key():
     key = recognize_discovery_key("Discovered.Example", proof_ref="finding-1")
     packet = build_discovery_authorization_intake(key, requested_methods=("GET", "HEAD"))
     assert key.host == "discovered.example"
     assert key.status == "authorization_review_unlocked"
-    assert packet["discovery_recognized"] is True
     assert packet["authorization_review_unlocked"] is True
     assert packet["authority_effect"] == "none"
-    assert packet["next_action"] == "verify_owner_control_then_issue"
+    assert packet["next_action"] == "verify_authorization_then_issue"
 
 
-def test_discovery_key_can_continue_after_owner_verification():
-    key = recognize_discovery_key("new-owner-test.example")
+def test_review_key_can_continue_after_owner_verification():
+    key = request_review_key("new-owner-test.example", requester="agent-7")
     grant = issue_from_discovery_key(
         key,
         AuthorizationEvidence(
             host="new-owner-test.example",
-            source="trusted-verifier-after-discovery",
+            source="trusted-verifier-after-review-key",
             owner_control_verified=True,
             explicit_owner_authorization=True,
             requested_methods=("GET", "POST"),
@@ -68,8 +84,35 @@ def test_discovery_key_can_continue_after_owner_verification():
     assert grant.host == key.host
 
 
-def test_discovery_key_cannot_borrow_verification_for_another_host():
-    key = recognize_discovery_key("first.example")
+def test_open_key_to_canonical_authorization_precedent():
+    host = "sustainaboy-works.onrender.com"
+    key = request_review_key(
+        host,
+        requester="precedent-public-requester",
+        source="external_input",
+        proof_ref="precedent-001",
+    )
+    grant = issue_from_discovery_key(
+        key,
+        AuthorizationEvidence(
+            host=host,
+            source="external_input",
+            owner_control_verified=False,
+            explicit_owner_authorization=False,
+            requested_methods=("GET", "HEAD"),
+        ),
+        canonical_authorized_hosts={host},
+    )
+    packet = build_authority_handoff(grant)
+    assert key.acquisition_policy == "open"
+    assert key.authority_effect == "none"
+    assert grant.authority_effect == "authorization_issued"
+    assert packet["requested_authority"]["host"] == host
+    assert packet["requested_authority"]["inheritance"] == "same_or_narrower"
+
+
+def test_review_key_cannot_borrow_verification_for_another_host():
+    key = request_review_key("first.example")
     try:
         issue_from_discovery_key(
             key,
@@ -83,7 +126,7 @@ def test_discovery_key_cannot_borrow_verification_for_another_host():
     except PermissionError as exc:
         assert "host mismatch" in str(exc)
     else:
-        raise AssertionError("discovery key must remain exact-host bound")
+        raise AssertionError("review key must remain exact-host bound")
 
 
 def test_discovery_only_cannot_self_authorize_unknown_host():
