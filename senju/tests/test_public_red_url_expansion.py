@@ -33,11 +33,15 @@ def test_route_seed_catalog_has_broad_operator_backed_url_supply():
     assert all(source.get("route_source") for source in sources)
 
 
-def test_seed_path_rejects_cross_host_query_and_fragment():
+def test_seed_path_rejects_cross_host_query_fragment_and_absolute_schemes():
     assert expander._safe_seed_path("/dom/toxicdom") == "/dom/toxicdom"
+    assert expander._safe_seed_path("dom/eventtriggering") == "/dom/eventtriggering"
     for raw in (
         "//evil.example/path",
         "https://evil.example/path",
+        "http://evil.example/path",
+        "ftp://evil.example/path",
+        "mailto:red@example.com",
         "/path?q=payload",
         "/path#fragment",
     ):
