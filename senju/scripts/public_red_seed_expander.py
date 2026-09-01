@@ -28,13 +28,21 @@ def _safe_seed_path(raw: str) -> str:
     text = str(raw or "").strip()
     if not text or len(text) > 256:
         raise ValueError("seed path is empty or too long")
+
+    # Reject URL/network-path syntax before adding a leading slash. Otherwise an
+    # absolute URL such as https://example.test/x could be transformed into a
+    # same-host path like /https://example.test/x instead of being rejected.
+    raw_parsed = urllib.parse.urlsplit(text)
+    if raw_parsed.scheme or raw_parsed.netloc or text.startswith("//"):
+        raise ValueError("seed path must not contain URL authority")
+    if raw_parsed.query or raw_parsed.fragment or "\x00" in text:
+        raise ValueError("seed path must be path-only without query/fragment")
+
     if not text.startswith("/"):
         text = "/" + text
     parsed = urllib.parse.urlsplit(text)
-    if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment or "\x00" in text:
+    if parsed.scheme or parsed.netloc or parsed.query or parsed.fragment:
         raise ValueError("seed path must be path-only without query/fragment")
-    if text.startswith("//"):
-        raise ValueError("network-path references are not allowed")
     return parsed.path or "/"
 
 
