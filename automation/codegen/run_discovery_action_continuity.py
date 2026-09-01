@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run new-host Authorization -> Senju trial -> credential -> mutation -> expansion."""
+"""Run candidate -> Authorization -> Senju trial -> credential -> mutation -> expansion."""
 from __future__ import annotations
 
 import argparse
@@ -11,6 +11,7 @@ from engine.authority_expansion_runtime import (
     build_authority_expansion_cases,
     execute_approved_authority_expansion_routes,
 )
+from engine.candidate_authorization_runtime import promote_attested_candidates
 from engine.credential_bound_mutation_runtime import ConfiguredCredentialMutationRuntime
 from engine.discovery_capability_leases import issue_discovery_capability_leases
 from engine.discovery_external_action import run_discovery_external_actions
@@ -29,6 +30,14 @@ def main() -> int:
     state = Path(args.state)
     state.mkdir(parents=True, exist_ok=True)
 
+    # Candidate intake is intentionally broad. A candidate can receive temporary exact-host
+    # Authority without waiting for a dedicated PR when the exact host itself publishes a
+    # valid Authorization attestation. Recommendation/discovery alone still does not mint
+    # Authority.
+    candidate_promotion = promote_attested_candidates(state)
+
+    # Canonical repository authorizations are synchronized too, but they are no longer the
+    # only way for a new candidate to become operational in the runtime.
     new_host_authorization = sync_new_host_authorizations(
         state,
         repo_root=args.repo_root,
@@ -71,13 +80,13 @@ def main() -> int:
     replicas_after = rebuild_discovery_capability_replicas(state)
 
     payload = {
-        "schema": "meta-discovery-action-continuity-run/v5",
+        "schema": "meta-discovery-action-continuity-run/v6",
         "generated_at": int(time.time()),
         "closed_loop": [
-            "single_PR_host_activation_bundle",
-            "external_exact_host_authorization_attestation",
-            "canonical_authorization_registration",
-            "authorized_site_registration",
+            "aggressive_candidate_intake",
+            "exact_host_attestation_probe",
+            "candidate_to_runtime_Authorization",
+            "authorized_site_runtime_registration",
             "senju_same_host_trial_profile",
             "canonical_new_host_authorization_sync",
             "same_cycle_new_host_action_queue",
@@ -101,6 +110,15 @@ def main() -> int:
             "live_authority_rebuild",
             "auto_recovery",
         ],
+        "candidate_authorization": {
+            "candidate_count": candidate_promotion.get("candidate_count", 0),
+            "attempted_count": candidate_promotion.get("attempted_count", 0),
+            "promoted_count": candidate_promotion.get("promoted_count", 0),
+            "pr_required_before_runtime_authorization": False,
+            "exact_host_attestation_required": True,
+            "recommendation_alone_is_authority": False,
+            "candidate_prs_may_be_partial": True,
+        },
         "new_host_authorization": {
             "canonical_explicit_host_count": new_host_authorization["canonical_explicit_host_count"],
             "activated_host_count": new_host_authorization["activated_host_count"],
@@ -109,15 +127,11 @@ def main() -> int:
             "review_case_count": new_host_authorization["review_case_count"],
             "post_action_activated_host_count": new_host_authorization_after["activated_host_count"],
             "post_action_senju_trial_ready_count": new_host_authorization_after["senju_trial_ready_count"],
-            "single_pr_completion_contract": True,
-            "single_pr_required_outputs": [
-                "canonical_authorization",
-                "authorized_target",
-                "senju_trial_profile",
-            ],
+            "single_pr_completion_contract": False,
+            "partial_new_host_pr_allowed": True,
             "same_cycle_action_queue": True,
             "same_cycle_capability_lease": True,
-            "unknown_host_auto_authorization": False,
+            "unknown_host_auto_authorization_without_evidence": False,
             "external_link_inheritance_used": False,
         },
         "lease_before": lease_before,
