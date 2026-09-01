@@ -2,17 +2,20 @@ name: Senju - RED Autonomous Expedition
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
   push:
     branches:
       - "claude/employee-onboarding-setup-udm86"
       - "chatgpt/red-authorized-100-url-pool-20260901"
+      - "chatgpt/red-owner-pool-activation-20260901"
     paths:
       - "AUTHORIZED_TEST_TARGETS.json"
       - "senju/senju/red_expedition.py"
       - "senju/senju/red_negotiation_bridge.py"
       - "senju/senju/red_authorized_url_pool.py"
+      - "senju/senju/red_owner_pool_bridge.py"
+      - "senju/senju/owner_authorization_pool.py"
       - "senju/senju/negotiation_authorization_accelerator.py"
       - "senju/senju/negotiation_case_review_gate.py"
       - "senju/senju/offense.py"
@@ -20,6 +23,8 @@ on:
       - "senju/senju/external.py"
       - "senju/scripts/red_negotiation_bridge.py"
       - "senju/scripts/red_authorized_url_pool.py"
+      - "senju/scripts/red_owner_pool_bridge.py"
+      - "senju/scripts/owner_authorization_pool.py"
       - "senju/scripts/red_negotiation_inbox_sync.py"
       - "senju/scripts/negotiation_authorization_accelerator.py"
       - "senju/state/standing_authorizations.json"
@@ -27,6 +32,7 @@ on:
       - "senju/tests/test_red_expedition.py"
       - "senju/tests/test_red_negotiation_bridge.py"
       - "senju/tests/test_red_authorized_url_pool.py"
+      - "senju/tests/test_red_owner_pool_bridge.py"
       - "senju/examples/red-expedition-scope.example.json"
       - ".github/workflows/senju-red-expedition.yml"
 
@@ -39,7 +45,7 @@ concurrency:
 
 jobs:
   red-expedition:
-    name: RED negotiation -> 100 URL pool -> validate -> learn -> revalidate
+    name: RED owner pool -> 100 URL rotation -> validate -> learn -> revalidate
     runs-on: ubuntu-latest
     timeout-minutes: 22
     env:
@@ -67,9 +73,10 @@ jobs:
             tests/test_red_expedition.py \
             tests/test_red_negotiation_bridge.py \
             tests/test_red_authorized_url_pool.py \
+            tests/test_red_owner_pool_bridge.py \
             tests/test_offense.py -q
 
-      - name: Prepare negotiation handoffs and 100-URL authorized pool
+      - name: Prepare negotiation handoffs, owner pool, and 100-URL authorized pool
         run: |
           set -euo pipefail
           mkdir -p /tmp/senju-red-expedition
@@ -79,12 +86,23 @@ jobs:
             --verified-attestations senju/state/verified_control_attestations.json \
             --minimum-batch 10 \
             --out /tmp/senju-red-expedition/negotiation-before.json
+          PYTHONPATH=senju python senju/scripts/owner_authorization_pool.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --target-count 50 \
+            --ttl-minutes 1440 \
+            --renew-before-minutes 60 \
+            | tee /tmp/senju-red-expedition/owner-authorization-pool.json
           python senju/scripts/red_negotiation_bridge.py \
             --state-dir senju/state \
             --canonical-targets AUTHORIZED_TEST_TARGETS.json \
             --standing-authorizations senju/state/standing_authorizations.json \
             --rotation "${GITHUB_RUN_NUMBER}" \
             --out /tmp/senju-red-expedition/bridge-before.json
+          python senju/scripts/red_owner_pool_bridge.py \
+            --state-dir senju/state \
+            --out /tmp/senju-red-expedition/red-owner-pool-bridge-before.json
           python senju/scripts/red_authorized_url_pool.py \
             --target-queue senju/state/red_authorized_target_queue.json \
             --pool-size 100 \
@@ -94,6 +112,16 @@ jobs:
             --scope-out /tmp/senju-red-expedition/rotating-scope.json
           cp senju/state/red_authorized_target_queue.json /tmp/senju-red-expedition/red-authorized-target-queue.json
           cp senju/state/red_negotiation_exchange.json /tmp/senju-red-expedition/red-negotiation-exchange-before.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          bridge = json.loads(Path('/tmp/senju-red-expedition/red-owner-pool-bridge-before.json').read_text())
+          pool = json.loads(Path('/tmp/senju-red-expedition/authorized-url-pool-before.json').read_text())
+          print('SENJU_RED_OWNER_POOL_ACTIVATED', bridge['transport_eligible_owner_targets'], bridge['new_unique_hosts_added'], bridge['total_runnable_hosts'])
+          print('SENJU_RED_AUTHORIZED_URL_POOL', pool['url_count'], pool['pool_full'])
+          assert bridge['total_runnable_hosts'] >= bridge['queue_targets_before']
+          assert pool['authorized_host_count'] == bridge['total_runnable_hosts']
+          PY
 
       - name: Run first authorized URL window
         run: |
@@ -119,7 +147,7 @@ jobs:
           assert report['authority_self_expansion'] is False
           assert set(report['allowed_hosts']) == set(scope['allowed_hosts'])
           assert report['contact_count'] <= scope['max_contacts']
-          print('SENJU_RED_AUTHORIZED_URL_WINDOW_COMPLETED', report['contact_count'])
+          print('SENJU_RED_AUTHORIZED_URL_WINDOW_COMPLETED', report['cycle_profile'], report['contact_count'])
           PY
 
       - name: Feed evidence to negotiation AI and build learned URL window
@@ -152,6 +180,9 @@ jobs:
             --rotation "$((GITHUB_RUN_NUMBER + 1))" \
             --red-report /tmp/senju-red-expedition/rotating-report.json \
             --out /tmp/senju-red-expedition/bridge-final.json
+          python senju/scripts/red_owner_pool_bridge.py \
+            --state-dir senju/state \
+            --out /tmp/senju-red-expedition/red-owner-pool-bridge-final.json
           python senju/scripts/red_authorized_url_pool.py \
             --target-queue senju/state/red_authorized_target_queue.json \
             --red-report /tmp/senju-red-expedition/rotating-report.json \
@@ -163,6 +194,7 @@ jobs:
           cp senju/state/red_negotiation_exchange.json /tmp/senju-red-expedition/red-negotiation-exchange-final.json
           cp senju/state/negotiation_authorization_acceleration.json /tmp/senju-red-expedition/negotiation-authorization-acceleration.json
           cp senju/state/negotiation_authorization_handoffs.json /tmp/senju-red-expedition/negotiation-authorization-handoffs.json
+          cp senju/state/red_owner_pool_bridge.json /tmp/senju-red-expedition/red-owner-pool-bridge-state.json
 
       - name: Run learned second authorized window
         run: |
@@ -199,10 +231,10 @@ jobs:
             --seed "${GITHUB_RUN_ID}"
           echo "SENJU_RED_OWNED_TARGET_EXPEDITION_COMPLETED"
 
-      - name: Publish RED 100-URL closed-loop evidence
+      - name: Publish RED owner-pool 100-URL closed-loop evidence
         uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
-          name: senju-red-100-url-loop-${{ github.run_id }}
+          name: senju-red-owner-pool-100-url-loop-${{ github.run_id }}
           retention-days: 30
           if-no-files-found: error
           path: /tmp/senju-red-expedition/
