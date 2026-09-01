@@ -28,11 +28,20 @@ on:
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
       - 'senju/tests/test_council_operational_governance.py'
-      - 'senju/tests/test_authorized_host_promotion_corps.py'
+      - 'senju/tests/test_authorized_host_promotion*.py'
       - 'senju/config/owner-expansion-envelope.json'
+      - 'automation/codegen/engine/root_authority_negotiation.py'
+      - 'automation/codegen/engine/authority_collaboration_bus.py'
+      - 'automation/codegen/engine/negotiation_context_bridge.py'
+      - 'automation/codegen/tests/test_root_authority_negotiation.py'
+      - 'automation/codegen/tests/test_authority_collaboration_bus*.py'
+      - 'automation/codegen/tests/test_negotiation_context_bridge.py'
+      - '.github/workflows/root-authority-negotiation-loop.yml'
       - '.github/workflows/owner-scope-negotiation-*.yml'
   push:
-    branches: [claude/employee-onboarding-setup-udm86]
+    branches:
+      - claude/employee-onboarding-setup-udm86
+      - 'chatgpt/**'
     paths:
       - 'senju/senju/negotiation_intelligence_bus.py'
       - 'senju/senju/negotiation_case_review_gate.py'
@@ -58,7 +67,15 @@ on:
       - 'senju/tests/test_owner_scope_negotiation.py'
       - 'senju/tests/test_discovery_trial_gate.py'
       - 'senju/tests/test_council_operational_governance.py'
-      - 'senju/tests/test_authorized_host_promotion_corps.py'
+      - 'senju/tests/test_authorized_host_promotion*.py'
+      - 'automation/codegen/engine/root_authority_negotiation.py'
+      - 'automation/codegen/engine/authority_collaboration_bus.py'
+      - 'automation/codegen/engine/negotiation_context_bridge.py'
+      - 'automation/codegen/tests/test_root_authority_negotiation.py'
+      - 'automation/codegen/tests/test_authority_collaboration_bus*.py'
+      - 'automation/codegen/tests/test_negotiation_context_bridge.py'
+      - '.github/workflows/root-authority-negotiation-loop.yml'
+      - '.github/workflows/owner-scope-negotiation-*.yml'
 
 permissions:
   contents: read
@@ -66,7 +83,7 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -88,7 +105,12 @@ jobs:
             senju/tests/test_owner_scope_negotiation.py \
             senju/tests/test_discovery_trial_gate.py \
             senju/tests/test_council_operational_governance.py \
-            senju/tests/test_authorized_host_promotion_corps.py
+            senju/tests/test_authorized_host_promotion_corps.py \
+            senju/tests/test_authorized_host_promotion_collaboration.py \
+            automation/codegen/tests/test_root_authority_negotiation.py \
+            automation/codegen/tests/test_authority_collaboration_bus.py \
+            automation/codegen/tests/test_authority_collaboration_bus_v2.py \
+            automation/codegen/tests/test_negotiation_context_bridge.py
           python -m py_compile \
             senju/senju/negotiation_intelligence_bus.py \
             senju/senju/negotiation_case_review_gate.py \
@@ -106,8 +128,11 @@ jobs:
             senju/scripts/owner_scope_negotiation.py \
             senju/scripts/run_council_operational_governance.py \
             senju/scripts/run_authorized_host_promotion_corps.py \
-            senju/scripts/negotiated_external_probe.py
-      - name: Verify production workflow has no repository writer
+            senju/scripts/negotiated_external_probe.py \
+            automation/codegen/engine/root_authority_negotiation.py \
+            automation/codegen/engine/authority_collaboration_bus.py \
+            automation/codegen/engine/negotiation_context_bridge.py
+      - name: Verify production workflow remains a read-only repository lane with shared memory
         shell: bash
         run: |
           set -euo pipefail
@@ -115,6 +140,10 @@ jobs:
           grep -q 'contents: read' "$file"
           grep -q 'actions: read' "$file"
           grep -q 'persist-credentials: false' "$file"
+          grep -q 'authority-opportunity-improvement-loop' "$file"
+          grep -q 'negotiation_context_bridge.py pull' "$file"
+          grep -q 'negotiation_context_bridge.py publish' "$file"
+          grep -q -- '--collaboration-dir .authority-opportunity-runtime' "$file"
           ! grep -q 'contents: write' "$file"
           ! grep -q 'actions: write' "$file"
           ! grep -q 'git push ' "$file"

@@ -31,13 +31,19 @@ on:
       - 'senju/scripts/run_council_operational_governance.py'
       - 'senju/scripts/run_authorized_host_promotion_corps.py'
       - 'senju/scripts/negotiated_external_probe.py'
+      - 'automation/codegen/engine/authority_collaboration_bus.py'
+      - 'automation/codegen/engine/negotiation_context_bridge.py'
+      - 'automation/codegen/tests/test_authority_collaboration_bus*.py'
+      - 'automation/codegen/tests/test_negotiation_context_bridge.py'
 
 permissions:
   contents: read
   actions: read
 
+# Share one lock with Root negotiation / Rights / Boundary collaboration memory so a
+# promotion result cannot be lost while another negotiation loop saves the same cache.
 concurrency:
-  group: owner-scope-negotiation-production
+  group: authority-opportunity-improvement-loop
   cancel-in-progress: false
 
 jobs:
@@ -156,6 +162,7 @@ jobs:
             --repo-root . \
             --state-dir senju/state \
             --promotion-dir senju/state/authorized-host-promotion \
+            --collaboration-dir .authority-opportunity-runtime \
             --out /tmp/authorized-host-promotion-report.json
           python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
           import json
@@ -200,6 +207,7 @@ jobs:
             --out /tmp/negotiated-external-production-probe.json
 
       - name: Upload production negotiation evidence
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: owner-scope-negotiation-${{ github.run_id }}
@@ -220,5 +228,13 @@ jobs:
             senju/state/council_operational_policy.json
             senju/state/council_operational_governance_result.json
             senju/state/authorized-host-promotion/
-          if-no-files-found: error
+            .authority-opportunity-runtime/authority_collaboration_bus.json
+            .authority-opportunity-runtime/authority_opportunity_queue.json
+            .authority-opportunity-runtime/negotiation_evidence_bundle.json
+            .authority-opportunity-runtime/negotiation_agent_inboxes.json
+            .authority-opportunity-runtime/negotiation_coordination_protocol.json
+            .authority-opportunity-runtime/agent-inbox/
+            .authority-opportunity-runtime/promotion_feedback_publish.json
+          include-hidden-files: true
+          if-no-files-found: warn
           retention-days: 30

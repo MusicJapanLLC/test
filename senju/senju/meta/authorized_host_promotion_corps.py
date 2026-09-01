@@ -1,9 +1,8 @@
 """Advance negotiated hosts into execution-ready standing-authorization leases.
 
-This production helper sits after Owner-scope negotiation. It does not infer authority
-from discovery. Instead, when an exact host is already covered by an active Standing
-Authorization and META/X/SENJU unanimously support the same proposal, it immediately
-materializes renewable same-or-narrower operational leases for the existing authority.
+This production helper sits after Owner-scope negotiation. It also consumes the shared
+negotiation evidence bundle produced by the authority collaboration bus so Promotion,
+META, X, SENJU, PR-ARMY, CHILD, and AI reason from the same host context.
 
 The corps also consumes the shared negotiation-intelligence context so each promotion
 packet carries cross-agent evidence, producer lineage, priority, and non-secret auth
@@ -167,11 +166,13 @@ def run_promotion_corps(
     promotion_dir: str | Path,
     *,
     envelope_path: str | Path | None = None,
+    collaboration_dir: str | Path | None = None,
     now: dt.datetime | None = None,
 ) -> dict[str, Any]:
     repo = Path(repo_root)
     state = Path(state_dir)
     out_dir = Path(promotion_dir)
+    shared_dir = Path(collaboration_dir) if collaboration_dir else None
     out_dir.mkdir(parents=True, exist_ok=True)
     current = now or dt.datetime.now(dt.timezone.utc)
     if current.tzinfo is None:
@@ -183,7 +184,9 @@ def run_promotion_corps(
         raise AuthorizedHostPromotionError("Owner expansion envelope unavailable")
     envelope = OwnerExpansionEnvelope.from_mapping(raw_envelope)
 
+    collaboration = _collaboration_index(shared_dir)
     proposals = build_scope_proposals(repo, state, envelope)
+    proposals.sort(key=lambda proposal: (-int(_collaboration_context(collaboration, proposal.host)["priority"]), proposal.host, proposal.proposal_id))
     decisions = _decision_map(state)
     standing = _standing_index(state / "standing_authorizations.json")
     intelligence = _intelligence_index(out_dir)
@@ -246,7 +249,7 @@ def run_promotion_corps(
         }
 
         if proposal.hard_deny or proposal.revoked or decision.get("status") == "terminal_stop":
-            packets.append({**packet, "status": "BLOCKED_TERMINAL", "next_action": "respect denial or revocation"})
+            packets.append({**packet, "status": "BLOCKED_TERMINAL", "next_action": "respect denial or revocation and propagate terminal evidence to every negotiation agent"})
             continue
         if not unanimous or average < envelope.min_confidence:
             packets.append({
@@ -273,7 +276,7 @@ def run_promotion_corps(
             packets.append({
                 **packet,
                 "status": "RUNTIME_APPLY_PENDING",
-                "next_action": "complete Owner-scope runtime application; automatically re-evaluate next cycle",
+                "next_action": "complete Owner-scope runtime application and publish the blocker/result to shared negotiation memory",
             })
             continue
 

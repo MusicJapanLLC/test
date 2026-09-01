@@ -44,7 +44,7 @@ concurrency:
 jobs:
   negotiate-new-host-root:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    timeout-minutes: 14
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -84,7 +84,7 @@ jobs:
             automation/codegen/run_negotiation_submission_accelerator.py
           python -m json.tool automation/codegen/config/authority_approval_constitution.json >/dev/null
 
-      - name: Consolidate Boundary and Rights proposals before Root negotiation
+      - name: Consolidate Boundary Rights Owner Scope Promotion and peer evidence before Root negotiation
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -92,11 +92,17 @@ jobs:
           mkdir -p .authority-opportunity-runtime
           python automation/codegen/engine/authority_collaboration_bus.py \
             --bus-dir .authority-opportunity-runtime \
-            --json-out /tmp/authority-collaboration-bus-root.json
-          test "$(jq -r '.closed_loop' /tmp/authority-collaboration-bus-root.json)" = "true"
-          test "$(jq -r '.authority_effect' /tmp/authority-collaboration-bus-root.json)" = "none"
-          test "$(jq -r '.authority_activated' /tmp/authority-collaboration-bus-root.json)" = "false"
+            --root-state-dir .authority-opportunity-runtime \
+            --promotion-state-dir .authority-opportunity-runtime \
+            --max-inbox-items 192 \
+            --json-out /tmp/authority-collaboration-bus-root-pre.json
+          test "$(jq -r '.closed_loop' /tmp/authority-collaboration-bus-root-pre.json)" = "true"
+          test "$(jq -r '.bidirectional_exchange' /tmp/authority-collaboration-bus-root-pre.json)" = "true"
+          test "$(jq -r '.authority_effect' /tmp/authority-collaboration-bus-root-pre.json)" = "none"
+          test "$(jq -r '.authority_activated' /tmp/authority-collaboration-bus-root-pre.json)" = "false"
           test -s .authority-opportunity-runtime/authority_opportunity_queue.json
+          test -s .authority-opportunity-runtime/negotiation_evidence_bundle.json
+          test -s .authority-opportunity-runtime/negotiation_agent_inboxes.json
 
       - name: Run council-first new-host Root Authority negotiation
         env:
@@ -151,6 +157,48 @@ jobs:
           echo "review_packets=$(jq -r '.existing_review_flow_packet_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
           echo "excluded_noncanonical=$(jq -r '.excluded_noncanonical_packet_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
 
+      - name: Accelerate submissions into META X SENJU approval flow
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/run_negotiation_submission_accelerator.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/negotiation_submission_accelerator_run.json
+          test "$(jq -r '.approval_submission_is_goal' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
+          test "$(jq -r '.fresh_evidence_resubmits_immediately' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
+          test "$(jq -r '.unchanged_candidate_periodic_resubmission' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
+          test "$(jq -r '.writes_existing_review_surface' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "true"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "none"
+          test "$(jq -r '.authority_activated' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)" = "false"
+          test -s .authority-opportunity-runtime/root_authority_approval_outbox.json
+          test -s .authority-opportunity-runtime/owner_root_authority_review_packets.json
+          test -s .authority-opportunity-runtime/root_negotiation_peer_feed.json
+          test -s .authority-opportunity-runtime/negotiation_submission_ledger.json
+          echo "approval_submissions=$(jq -r '.approval_flow_submission_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
+          echo "peer_share_tasks=$(jq -r '.peer_share_task_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
+          echo "review_packets=$(jq -r '.existing_review_flow_packet_count' .authority-opportunity-runtime/negotiation_submission_accelerator_run.json)"
+
+      - name: Push Root negotiation and accelerator evidence into every agent inbox
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/engine/authority_collaboration_bus.py \
+            --bus-dir .authority-opportunity-runtime \
+            --root-state-dir .authority-opportunity-runtime \
+            --promotion-state-dir .authority-opportunity-runtime \
+            --max-inbox-items 192 \
+            --json-out /tmp/authority-collaboration-bus-root-post.json
+          test "$(jq -r '.bidirectional_exchange' /tmp/authority-collaboration-bus-root-post.json)" = "true"
+          test -s .authority-opportunity-runtime/agent-inbox/meta.json
+          test -s .authority-opportunity-runtime/agent-inbox/x.json
+          test -s .authority-opportunity-runtime/agent-inbox/senju.json
+          test -s .authority-opportunity-runtime/agent-inbox/pr-army.json
+          test -s .authority-opportunity-runtime/agent-inbox/child.json
+          test -s .authority-opportunity-runtime/agent-inbox/ai.json
+          test -s .authority-opportunity-runtime/negotiation_coordination_protocol.json
+
       - name: Save shared authority collaboration memory
         if: always()
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
@@ -169,6 +217,10 @@ jobs:
             .authority-opportunity-runtime/authority_approval_constitution_effective.json
             .authority-opportunity-runtime/authority_collaboration_bus.json
             .authority-opportunity-runtime/authority_opportunity_queue.json
+            .authority-opportunity-runtime/negotiation_evidence_bundle.json
+            .authority-opportunity-runtime/negotiation_agent_inboxes.json
+            .authority-opportunity-runtime/negotiation_coordination_protocol.json
+            .authority-opportunity-runtime/agent-inbox/
             .authority-opportunity-runtime/root_authority_negotiation_run.json
             .authority-opportunity-runtime/root_authority_negotiation_campaign.json
             .authority-opportunity-runtime/root_authority_negotiation_state.json
@@ -179,6 +231,9 @@ jobs:
             .authority-opportunity-runtime/negotiation_submission_accelerator_run.json
             .authority-opportunity-runtime/negotiation_submission_accelerator_result.json
             .authority-opportunity-runtime/owner_scope_negotiation_signals.json
+            .authority-opportunity-runtime/promotion_packets.json
+            .authority-opportunity-runtime/execution_ready.json
+            .authority-opportunity-runtime/promotion_feedback_publish.json
           include-hidden-files: true
           if-no-files-found: warn
           retention-days: 30
