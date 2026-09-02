@@ -16,6 +16,7 @@ import { UltimateWorldGod } from './ultimate-evolution-engine.js';
 import { MetaSystemUltimate } from './meta-system-ultimate-beyond.js';
 import { SingularityCore } from './singularity-core.js';
 import { SingularityCoordinator } from './singularity-coordinator.js';
+import { SingularityAgentBridge } from './singularity-agent-bridge.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -277,6 +278,32 @@ async function runCoordinatorStats(payload) {
   return coordinator.getCoordinationStatus();
 }
 
+// SINGULARITY AGENT BRIDGE - Inter-Agent Communication & Workflow Integration
+let bridgeInstance = null;
+
+async function initializeBridge() {
+  if (!bridgeInstance) {
+    bridgeInstance = new SingularityAgentBridge();
+    await bridgeInstance.initializeBridge();
+  }
+  return bridgeInstance;
+}
+
+async function runBridgeCycle(payload) {
+  const bridge = await initializeBridge();
+  const cycleResult = await bridge.runBridgeCycle();
+  return {
+    bridgeEvolution: cycleResult,
+    timestamp: new Date().toISOString(),
+    profile: 'agent-bridge-level2'
+  };
+}
+
+async function runBridgeStats(payload) {
+  const bridge = await initializeBridge();
+  return bridge.getBridgeStatus();
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -297,6 +324,8 @@ export default async function handler(req, res) {
     if (action === 'singularity-stats') return send(res, 200, await runSingularityStats(payload));
     if (action === 'coordinator-cycle') return send(res, 200, await runCoordinationCycle(payload));
     if (action === 'coordinator-stats') return send(res, 200, await runCoordinatorStats(payload));
+    if (action === 'bridge-cycle') return send(res, 200, await runBridgeCycle(payload));
+    if (action === 'bridge-stats') return send(res, 200, await runBridgeStats(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
