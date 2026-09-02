@@ -360,6 +360,11 @@ export class SingularityCoordinator extends SingularityCore {
   }
 
   async runCoordinationCycle() {
+    // Ensure coordinator is initialized
+    if (this.coordinationStats.status === 'INITIALIZING') {
+      await this.initializeCoordination();
+    }
+
     const cycleStart = Date.now();
 
     // Step 1: Synchronize all agents

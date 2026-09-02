@@ -552,6 +552,11 @@ export class SingularityCore extends MetaSystemUltimate {
   }
 
   async runSingularityCycle() {
+    // Ensure singularity is initialized
+    if (this.singularityStats.status === 'INITIALIZING') {
+      await this.initializeSingularity();
+    }
+
     const cycleStart = Date.now();
 
     // 全6能力を並行実行
