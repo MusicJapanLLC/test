@@ -1,4 +1,17 @@
 import { generateText } from 'ai';
+import {
+  MemoryLearning,
+  ResourceManager,
+  DynamicParallelism,
+  PredictiveOptimization,
+  SmartCaching,
+  RewardSystem,
+  DynamicAgentFactory,
+  MultiStrategy,
+  P2PNetwork,
+  AutoValidator,
+  TheWorldGod
+} from './god-enhancements.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -130,6 +143,32 @@ async function runRuntime(payload) {
   return { text: result.text.trim(), model: MODEL, profile: 'development-max' };
 }
 
+// The World God - Daily Evolution Cycle
+let godInstance = null;
+
+async function initializeGod() {
+  if (!godInstance) {
+    godInstance = new TheWorldGod();
+    await godInstance.initialize();
+  }
+  return godInstance;
+}
+
+async function runGodCycle(payload) {
+  const god = await initializeGod();
+  const cycleResult = await god.runDailyCycle();
+  return {
+    cycle: cycleResult,
+    systemStats: god.getSystemStats(),
+    timestamp: new Date().toISOString()
+  };
+}
+
+async function runGodStats(payload) {
+  const god = await initializeGod();
+  return god.getSystemStats();
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -140,6 +179,8 @@ export default async function handler(req, res) {
     if (action === 'build') return send(res, 200, await runBuild(payload));
     if (action === 'smoke') return send(res, 200, await runSmoke(payload));
     if (action === 'runtime') return send(res, 200, await runRuntime(payload));
+    if (action === 'god-cycle') return send(res, 200, await runGodCycle(payload));
+    if (action === 'god-stats') return send(res, 200, await runGodStats(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
