@@ -17,6 +17,7 @@ import { MetaSystemUltimate } from './meta-system-ultimate-beyond.js';
 import { SingularityCore } from './singularity-core.js';
 import { SingularityCoordinator } from './singularity-coordinator.js';
 import { SingularityAgentBridge } from './singularity-agent-bridge.js';
+import { CompanyMemoryClient, ExternalDataConnector, UnifiedMemorySystem } from './company-memory-client.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -304,6 +305,92 @@ async function runBridgeStats(payload) {
   return bridge.getBridgeStatus();
 }
 
+// ============================================================================
+// COMPANY MEMORY INTEGRATION
+// ============================================================================
+
+let memorySystem = null;
+
+async function initializeMemorySystem() {
+  if (!memorySystem) {
+    memorySystem = new UnifiedMemorySystem({
+      memory: {
+        supabaseUrl: process.env.SUPABASE_URL || 'http://localhost:54321',
+        supabaseKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+      },
+      external: {}
+    });
+  }
+  return memorySystem;
+}
+
+async function runMemoryQuery(payload) {
+  const system = await initializeMemorySystem();
+  const question = typeof payload.question === 'string' ? payload.question.trim() : '';
+  if (!question) throw new Error('question required');
+
+  const result = await system.queryWithFallback(question);
+  return {
+    question,
+    result,
+    timestamp: new Date().toISOString(),
+    status: 'memory_query_complete'
+  };
+}
+
+async function runMemoryStat(payload) {
+  const system = await initializeMemorySystem();
+  return system.getSystemStats();
+}
+
+async function runExternalSync(payload) {
+  const system = await initializeMemorySystem();
+  const syncResult = await system.dataConnector.runDailySync();
+  return {
+    sync_result: syncResult,
+    timestamp: new Date().toISOString(),
+    status: 'external_sync_complete'
+  };
+}
+
+async function runMaterializeExternal(payload) {
+  const system = await initializeMemorySystem();
+  const improvements = await system.materializeExternalData();
+  return {
+    improvements_materialized: improvements.length,
+    improvements,
+    timestamp: new Date().toISOString(),
+    status: 'materialization_complete'
+  };
+}
+
+async function runMemoryBridgeIntegration(payload) {
+  const system = await initializeMemorySystem();
+  const bridge = await initializeBridge();
+
+  // Step 1: Materialize external data
+  const improvements = await system.materializeExternalData();
+
+  // Step 2: Propagate through bridge
+  const propagations = [];
+  for (const improvement of improvements) {
+    try {
+      const propagation = await bridge.propagation.propagateImprovements();
+      propagations.push(propagation);
+    } catch (err) {
+      console.error('Propagation error:', err.message);
+    }
+  }
+
+  return {
+    external_data_materialized: improvements.length,
+    propagations_executed: propagations.length,
+    total_propagations: propagations.reduce((acc, p) => acc + (p.propagations?.length || 0), 0),
+    timestamp: new Date().toISOString(),
+    status: 'memory_bridge_integration_complete'
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -326,6 +413,11 @@ export default async function handler(req, res) {
     if (action === 'coordinator-stats') return send(res, 200, await runCoordinatorStats(payload));
     if (action === 'bridge-cycle') return send(res, 200, await runBridgeCycle(payload));
     if (action === 'bridge-stats') return send(res, 200, await runBridgeStats(payload));
+    if (action === 'memory-query') return send(res, 200, await runMemoryQuery(payload));
+    if (action === 'memory-stats') return send(res, 200, await runMemoryStat(payload));
+    if (action === 'external-sync') return send(res, 200, await runExternalSync(payload));
+    if (action === 'materialize-external') return send(res, 200, await runMaterializeExternal(payload));
+    if (action === 'memory-bridge-integration') return send(res, 200, await runMemoryBridgeIntegration(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
