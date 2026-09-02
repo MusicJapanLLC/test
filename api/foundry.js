@@ -13,6 +13,7 @@ import {
   TheWorldGod
 } from './god-enhancements.js';
 import { UltimateWorldGod } from './ultimate-evolution-engine.js';
+import { MetaSystemUltimate } from './meta-system-ultimate-beyond.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -196,6 +197,32 @@ async function runSupremeStats(payload) {
   return supreme.getSupremeStatus();
 }
 
+// META-SYSTEM ULTIMATE - Beyond Supreme God (All 40 Layers)
+let metaSystemInstance = null;
+
+async function initializeMetaSystem() {
+  if (!metaSystemInstance) {
+    metaSystemInstance = new MetaSystemUltimate();
+    await metaSystemInstance.initializeMetaSystemUltimate();
+  }
+  return metaSystemInstance;
+}
+
+async function runMetaCycle(payload) {
+  const meta = await initializeMetaSystem();
+  const finalStatus = meta.getFinalStatus();
+  return {
+    metaCycle: finalStatus,
+    timestamp: new Date().toISOString(),
+    profile: 'meta-system-ultimate'
+  };
+}
+
+async function runMetaStats(payload) {
+  const meta = await initializeMetaSystem();
+  return meta.getFinalStatus();
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -210,6 +237,8 @@ export default async function handler(req, res) {
     if (action === 'god-stats') return send(res, 200, await runGodStats(payload));
     if (action === 'supreme-cycle') return send(res, 200, await runSupremeCycle(payload));
     if (action === 'supreme-stats') return send(res, 200, await runSupremeStats(payload));
+    if (action === 'meta-cycle') return send(res, 200, await runMetaCycle(payload));
+    if (action === 'meta-stats') return send(res, 200, await runMetaStats(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
