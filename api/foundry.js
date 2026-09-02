@@ -55,11 +55,24 @@ function validSpec(x) {
   return x && typeof x === 'object' && typeof x.name === 'string' && typeof x.description === 'string' && typeof x.systemPrompt === 'string' && Array.isArray(x.capabilities) && Array.isArray(x.starterPrompts);
 }
 
+const REASONING_INSTRUCTION = `\n\nOutput format (mandatory): first write your step-by-step engineering reasoning inside <reasoning>...</reasoning> (assumptions, options considered, why this approach), then write the final answer inside <answer>...</answer>. Keep <reasoning> honest and concise (max ~200 words); never claim it is hidden.`;
+
+function splitReasoning(raw) {
+  const text = String(raw || '');
+  const reasoningMatch = text.match(/<reasoning>([\s\S]*?)<\/reasoning>/i);
+  const answerMatch = text.match(/<answer>([\s\S]*?)<\/answer>/i);
+  if (answerMatch) {
+    return { reasoning: (reasoningMatch ? reasoningMatch[1] : '').trim(), text: answerMatch[1].trim() };
+  }
+  return { reasoning: '', text: text.trim() };
+}
+
 async function runChat(payload) {
   const messages = sanitizeMessages(payload.messages);
   if (!messages.length) throw new Error('messages required');
-  const { text } = await generateText({ model: MODEL, system: FOUNDRY_SYSTEM, messages, temperature: 0.15 });
-  return { text: text.trim(), model: MODEL, profile: 'development-max' };
+  const { text } = await generateText({ model: MODEL, system: FOUNDRY_SYSTEM + REASONING_INSTRUCTION, messages, temperature: 0.15 });
+  const { reasoning, text: answer } = splitReasoning(text);
+  return { text: answer, reasoning, model: MODEL, profile: 'development-max' };
 }
 
 async function runTitle(payload) {
