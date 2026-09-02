@@ -18,6 +18,7 @@ import { SingularityCore } from './singularity-core.js';
 import { SingularityCoordinator } from './singularity-coordinator.js';
 import { SingularityAgentBridge } from './singularity-agent-bridge.js';
 import { CompanyMemoryClient, ExternalDataConnector, UnifiedMemorySystem } from './company-memory-client.js';
+import MemoryDatabase, { seedTestData } from './memory-db.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -306,10 +307,24 @@ async function runBridgeStats(payload) {
 }
 
 // ============================================================================
-// COMPANY MEMORY INTEGRATION
+// COMPANY MEMORY INTEGRATION - REAL DATABASE
 // ============================================================================
 
 let memorySystem = null;
+let memoryDB = null;
+
+function initializeMemoryDB() {
+  if (!memoryDB) {
+    memoryDB = new MemoryDatabase();
+    // Seed with test data on first init
+    const stats = memoryDB.getStats();
+    if (stats.persons === 0) {
+      console.log('Seeding Company Memory with test data...');
+      seedTestData(memoryDB);
+    }
+  }
+  return memoryDB;
+}
 
 async function initializeMemorySystem() {
   if (!memorySystem) {
@@ -325,22 +340,57 @@ async function initializeMemorySystem() {
 }
 
 async function runMemoryQuery(payload) {
-  const system = await initializeMemorySystem();
+  const db = initializeMemoryDB();
   const question = typeof payload.question === 'string' ? payload.question.trim() : '';
   if (!question) throw new Error('question required');
 
-  const result = await system.queryWithFallback(question);
+  // Extract name from question (e.g., "岡藤さんどうなった？" → "岡藤")
+  const nameMatch = question.match(/^([^？?！!どなっ]*)/);
+  const name = nameMatch ? nameMatch[1].replace(/[さん様]/g, '').trim() : '';
+
+  if (!name) {
+    // If no specific name, search for matching names
+    const searchResults = db.searchPersons(question, 10);
+    return {
+      question,
+      status: 'search_results',
+      candidates: searchResults,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // Query specific person
+  const person = db.getPersonBrief(name);
+  if (!person) {
+    // Try search if exact match not found
+    const searchResults = db.searchPersons(name, 5);
+    return {
+      question,
+      status: 'not_found',
+      candidates: searchResults,
+      timestamp: new Date().toISOString()
+    };
+  }
+
   return {
     question,
-    result,
+    data: person,
     timestamp: new Date().toISOString(),
     status: 'memory_query_complete'
   };
 }
 
 async function runMemoryStat(payload) {
-  const system = await initializeMemorySystem();
-  return system.getSystemStats();
+  const db = initializeMemoryDB();
+  const stats = db.getStats();
+  const recentActivity = db.getRecentActivity(10);
+
+  return {
+    database: stats,
+    recent_activity: recentActivity,
+    timestamp: new Date().toISOString(),
+    status: 'memory_stats_complete'
+  };
 }
 
 async function runExternalSync(payload) {
