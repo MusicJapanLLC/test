@@ -338,6 +338,10 @@ class MockKnowledgeSheetsDB:
     def get_knowledge(self, knowledge_id: str) -> Optional[Dict]:
         return self.store.get(knowledge_id)
 
+    def get(self, knowledge_id: str) -> Optional[Dict]:
+        """Alias for get_knowledge for orchestrator compatibility"""
+        return self.store.get(knowledge_id)
+
     def check_duplicate(self, knowledge_id: str) -> bool:
         return knowledge_id in self.store
 
