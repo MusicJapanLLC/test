@@ -12,6 +12,7 @@ import {
   AutoValidator,
   TheWorldGod
 } from './god-enhancements.js';
+import { UltimateWorldGod } from './ultimate-evolution-engine.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -169,6 +170,32 @@ async function runGodStats(payload) {
   return god.getSystemStats();
 }
 
+// ULTIMATE WORLD GOD - Supreme Evolution System
+let supremeInstance = null;
+
+async function initializeSupreme() {
+  if (!supremeInstance) {
+    supremeInstance = new UltimateWorldGod();
+    await supremeInstance.initializeSupremeSystem();
+  }
+  return supremeInstance;
+}
+
+async function runSupremeCycle(payload) {
+  const supreme = await initializeSupreme();
+  const cycleResult = await supreme.runSupremeEvolutionCycle();
+  return {
+    supremeCycle: cycleResult,
+    systemStatus: supreme.getSupremeStatus(),
+    timestamp: new Date().toISOString()
+  };
+}
+
+async function runSupremeStats(payload) {
+  const supreme = await initializeSupreme();
+  return supreme.getSupremeStatus();
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -181,6 +208,8 @@ export default async function handler(req, res) {
     if (action === 'runtime') return send(res, 200, await runRuntime(payload));
     if (action === 'god-cycle') return send(res, 200, await runGodCycle(payload));
     if (action === 'god-stats') return send(res, 200, await runGodStats(payload));
+    if (action === 'supreme-cycle') return send(res, 200, await runSupremeCycle(payload));
+    if (action === 'supreme-stats') return send(res, 200, await runSupremeStats(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
