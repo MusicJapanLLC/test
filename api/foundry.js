@@ -14,6 +14,7 @@ import {
 } from './god-enhancements.js';
 import { UltimateWorldGod } from './ultimate-evolution-engine.js';
 import { MetaSystemUltimate } from './meta-system-ultimate-beyond.js';
+import { SingularityCore } from './singularity-core.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -223,6 +224,32 @@ async function runMetaStats(payload) {
   return meta.getFinalStatus();
 }
 
+// THE WORLD GOD SINGULARITY - The Ultimate System (46 Layers)
+let singularityInstance = null;
+
+async function initializeSingularity() {
+  if (!singularityInstance) {
+    singularityInstance = new SingularityCore();
+    await singularityInstance.initializeSingularity();
+  }
+  return singularityInstance;
+}
+
+async function runSingularityCycle(payload) {
+  const singularity = await initializeSingularity();
+  const cycleResult = await singularity.runSingularityCycle();
+  return {
+    singularityEvolution: cycleResult,
+    timestamp: new Date().toISOString(),
+    profile: 'singularity-ultimate'
+  };
+}
+
+async function runSingularityStats(payload) {
+  const singularity = await initializeSingularity();
+  return singularity.getSingularityStatus();
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -239,6 +266,8 @@ export default async function handler(req, res) {
     if (action === 'supreme-stats') return send(res, 200, await runSupremeStats(payload));
     if (action === 'meta-cycle') return send(res, 200, await runMetaCycle(payload));
     if (action === 'meta-stats') return send(res, 200, await runMetaStats(payload));
+    if (action === 'singularity-cycle') return send(res, 200, await runSingularityCycle(payload));
+    if (action === 'singularity-stats') return send(res, 200, await runSingularityStats(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
