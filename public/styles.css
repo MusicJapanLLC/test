@@ -77,7 +77,6 @@ button{letter-spacing:.055em}
 
 @media(min-width:700px) and (max-width:1050px){
   #app{grid-template-columns:220px minmax(0,1fr)}
-  .sidebar{display:flex}
   .sidebar-foot{font-size:7px}
 }
 
