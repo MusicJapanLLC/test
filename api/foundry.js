@@ -15,6 +15,7 @@ import {
 import { UltimateWorldGod } from './ultimate-evolution-engine.js';
 import { MetaSystemUltimate } from './meta-system-ultimate-beyond.js';
 import { SingularityCore } from './singularity-core.js';
+import { SingularityCoordinator } from './singularity-coordinator.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -250,6 +251,32 @@ async function runSingularityStats(payload) {
   return singularity.getSingularityStatus();
 }
 
+// SINGULARITY COORDINATOR - Unified AI Family Orchestration
+let coordinatorInstance = null;
+
+async function initializeCoordinator() {
+  if (!coordinatorInstance) {
+    coordinatorInstance = new SingularityCoordinator();
+    await coordinatorInstance.initializeCoordination();
+  }
+  return coordinatorInstance;
+}
+
+async function runCoordinationCycle(payload) {
+  const coordinator = await initializeCoordinator();
+  const cycleResult = await coordinator.runCoordinationCycle();
+  return {
+    coordinationEvolution: cycleResult,
+    timestamp: new Date().toISOString(),
+    profile: 'coordinator-ultimate'
+  };
+}
+
+async function runCoordinatorStats(payload) {
+  const coordinator = await initializeCoordinator();
+  return coordinator.getCoordinationStatus();
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -268,6 +295,8 @@ export default async function handler(req, res) {
     if (action === 'meta-stats') return send(res, 200, await runMetaStats(payload));
     if (action === 'singularity-cycle') return send(res, 200, await runSingularityCycle(payload));
     if (action === 'singularity-stats') return send(res, 200, await runSingularityStats(payload));
+    if (action === 'coordinator-cycle') return send(res, 200, await runCoordinationCycle(payload));
+    if (action === 'coordinator-stats') return send(res, 200, await runCoordinatorStats(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
