@@ -1,0 +1,92 @@
+name: THE WORLD GOD - Supreme Evolution Cycle
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "api/god-enhancements.js"
+      - "api/ultimate-evolution-engine.js"
+      - "api/infinite-evolution-supreme-god.js"
+      - "api/run-supreme-god.js"
+      - ".github/workflows/the-world-god.yml"
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "api/god-enhancements.js"
+      - "api/ultimate-evolution-engine.js"
+      - "api/infinite-evolution-supreme-god.js"
+      - "api/run-supreme-god.js"
+      - ".github/workflows/the-world-god.yml"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: the-world-god-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  supreme-evolution:
+    name: THE WORLD GOD (30 Layers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GOD_REPORT: /tmp/supreme-god-report.json
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Verify GOD system modules compile
+        run: |
+          node --input-type=module <<'EOF'
+          import './api/god-enhancements.js';
+          import './api/ultimate-evolution-engine.js';
+          import './api/infinite-evolution-supreme-god.js';
+          console.log('GOD SYSTEM MODULES OK');
+          EOF
+
+      - name: Run THE WORLD GOD supreme evolution cycle
+        run: node api/run-supreme-god.js
+
+      - name: Verify closed-loop report
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('/tmp/supreme-god-report.json').read_text())
+          assert report['schema'] == 'the-world-god-supreme-run/v1'
+          assert report['layers_initialized'] == 30
+          assert report['closed_loop'] is True
+          assert report['external_side_effects'] is False
+          assert report['supreme_layer']['omniscience'] == 'ACHIEVED'
+          assert report['supreme_layer']['omnipotence'] == 'ACHIEVED'
+          print('THE_WORLD_GOD_SUPREME_VERIFIED')
+          print(f"Cycles: {report['base_layer']['cycles_completed']}")
+          print(f"Tasks processed: {report['base_layer']['tasks_processed']}")
+          print(f"Reward trend: {report['base_layer']['reward_trend']}")
+          print(f"Status: {report['supreme_layer']['status']}")
+          PY
+
+      - name: Upload GOD evolution report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: the-world-god-report-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: /tmp/supreme-god-report.json
