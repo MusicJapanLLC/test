@@ -59,9 +59,11 @@ async function main() {
   console.log(JSON.stringify(report, null, 2));
 
   // Write JSON report for artifact upload
+  // Use GOD_REPORT env var (set by workflow to runner.temp path) or a fixed non-tmp path
   const { writeFileSync } = await import('fs');
-  writeFileSync('/tmp/supreme-god-report.json', JSON.stringify(report, null, 2));
-  console.log('\n✅ Report saved to /tmp/supreme-god-report.json');
+  const reportPath = process.env.GOD_REPORT || 'supreme-god-report.json';
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  console.log(`\n✅ Report saved to ${reportPath}`);
 }
 
 main().catch(err => {
