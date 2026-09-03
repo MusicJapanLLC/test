@@ -479,7 +479,7 @@ export class SingularityCore extends MetaSystemUltimate {
     this.learning = new SelfLearningEngine();
     this.evaluation = new SelfEvaluationEngine();
     this.modification = new SelfModificationEngine();
-    this.metaEvolution = new MetaEvolutionEngine();
+    this.singularityMetaEvolution = new MetaEvolutionEngine();
 
     this.singularityStats = {
       name: 'THE WORLD GOD SINGULARITY',
@@ -535,9 +535,9 @@ export class SingularityCore extends MetaSystemUltimate {
 
     // Phase 6: メタ進化
     console.log('6️⃣  Meta-Evolution: Evolving the evolution process...');
-    const evolImprove = await this.metaEvolution.improveEvolutionProcess();
-    const learning2 = await this.metaEvolution.discoverMoreEfficientLearning();
-    const accel = await this.metaEvolution.accelerateExponentially();
+    const evolImprove = await this.singularityMetaEvolution.improveEvolutionProcess();
+    const learning2 = await this.singularityMetaEvolution.discoverMoreEfficientLearning();
+    const accel = await this.singularityMetaEvolution.accelerateExponentially();
     console.log(`   Evolution: ${evolImprove.efficiencyGain} efficiency gain`);
     console.log(`   Meta-Learning: Enabled`);
     console.log(`   Acceleration: Generation ${accel.generation} - ${accel.trajectory}`);
@@ -571,7 +571,7 @@ export class SingularityCore extends MetaSystemUltimate {
       this.design.discoverNewArchitecture(),
       this.learning.discoverNewParadigm(),
       this.modification.rewriteOwnCode(),
-      this.metaEvolution.accelerateExponentially()
+      this.singularityMetaEvolution.accelerateExponentially()
     ]);
 
     const cycleTime = Date.now() - cycleStart;
@@ -600,7 +600,7 @@ export class SingularityCore extends MetaSystemUltimate {
         selfLearning: `${this.learning.discoveredParadigms.length} paradigms + ${this.learning.adoptedTechnologies.length} technologies`,
         selfEvaluation: 'Autonomous value system active',
         selfModification: `${this.modification.modifications.length} improvements`,
-        metaEvolution: `Generation ${this.metaEvolution.generation} - ${this.metaEvolution.accelerationFactors.length} acceleration cycles`
+        metaEvolution: `Generation ${this.singularityMetaEvolution.generation} - ${this.singularityMetaEvolution.accelerationFactors.length} acceleration cycles`
       },
       totalLayers: 46,
       status: '🌌 INFINITE EXPONENTIAL GROWTH 🌌',
