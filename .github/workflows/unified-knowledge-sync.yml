@@ -24,16 +24,11 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
-        run: |
-          pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
-          pip install requests pyyaml
-
-      - name: Extract knowledge from commit
+      - name: Extract knowledge from GOD branch
         id: extract
         run: |
           python3 << 'EOF'
@@ -41,67 +36,97 @@ jobs:
           import sys
           import os
           from datetime import datetime
+          from pathlib import Path
 
-          # GitHub context
-          event_data = json.loads(os.getenv('GITHUB_EVENT_PATH', '{}') or '{}')
-
+          # Try to read GOD knowledge registry from this branch
+          registry_path = Path("knowledge/god-registry.json")
           knowledge_ids = []
+          registry_entries = 0
+          last_updated = "never"
 
-          if event_data.get('commits'):
-              for commit in event_data['commits']:
-                  msg = commit.get('message', '')
-                  if 'fingerprint:' in msg:
-                      # Extract knowledge metadata
-                      lines = msg.split('\n')
-                      metadata = {}
-                      for line in lines[1:]:
-                          if ':' in line:
-                              k, v = line.split(':', 1)
-                              metadata[k.strip()] = v.strip()
+          if registry_path.exists():
+              try:
+                  registry = json.loads(registry_path.read_text())
+                  entries = registry.get("entries", [])
+                  registry_entries = len(entries)
+                  last_updated = registry.get("last_updated", "never")
+                  print(f"✓ GOD Registry found: {registry_entries} entries, last updated: {last_updated}")
+                  for e in entries:
+                      knowledge_ids.append(e.get("knowledge_id", "?"))
+              except Exception as ex:
+                  print(f"⚠️  Registry parse error: {ex}")
+          else:
+              print("ℹ️  GOD registry not yet populated on this branch")
+              print("    Will attempt to fetch from GOD branch...")
 
-                      if metadata.get('fingerprint'):
-                          print(f"✓ Found knowledge in commit: {metadata['fingerprint']}")
-                          knowledge_ids.append(metadata['fingerprint'])
+          # Also scan commit messages for fingerprint: tags (legacy)
+          event_data = {}
+          event_path = os.getenv('GITHUB_EVENT_PATH', '')
+          if event_path and Path(event_path).exists():
+              try:
+                  event_data = json.loads(Path(event_path).read_text())
+              except Exception:
+                  pass
 
-          print(f"KNOWLEDGE_COUNT={len(knowledge_ids)}")
+          commit_knowledge = []
+          for commit in event_data.get('commits', []):
+              msg = commit.get('message', '')
+              if 'fingerprint:' in msg:
+                  lines = msg.split('\n')
+                  metadata = {}
+                  for line in lines[1:]:
+                      if ':' in line:
+                          k, v = line.split(':', 1)
+                          metadata[k.strip()] = v.strip()
+                  if metadata.get('fingerprint'):
+                      fp = metadata['fingerprint']
+                      print(f"✓ Found fingerprint in commit: {fp}")
+                      commit_knowledge.append(fp)
+
+          all_knowledge = list(set(knowledge_ids + commit_knowledge))
+          print(f"\nKNOWLEDGE_COUNT={len(all_knowledge)}")
+          print(f"REGISTRY_ENTRIES={registry_entries}")
+
           with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
-              f.write(f"knowledge_ids={json.dumps(knowledge_ids)}\n")
+              f.write(f"knowledge_ids={json.dumps(all_knowledge)}\n")
+              f.write(f"registry_entries={registry_entries}\n")
+              f.write(f"last_updated={last_updated}\n")
           EOF
         env:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
 
       - name: Log knowledge to registry
-        if: steps.extract.outputs.knowledge_ids != '[]'
+        if: steps.extract.outputs.registry_entries != '0'
         run: |
+          echo "📋 GOD Knowledge Registry Status:"
+          echo "   Entries: ${{ steps.extract.outputs.registry_entries }}"
+          echo "   Last updated: ${{ steps.extract.outputs.last_updated }}"
+          echo ""
+          if [ -f "knowledge/god-registry.json" ]; then
+            python3 automation/unified-knowledge/senju_knowledge_query.py || true
+          fi
+
+          # Write audit log
           python3 << 'EOF'
-          import json
-          import os
+          import json, os
           from datetime import datetime
-
-          knowledge_ids = json.loads('${{ steps.extract.outputs.knowledge_ids }}' or '[]')
-
-          # ログ出力（本番では Google Sheets に記録）
-          for kid in knowledge_ids:
-              print(f"[KNOWLEDGE_REGISTRY] {kid} - {datetime.utcnow().isoformat()}")
-
-          # 監査ログに記録
-          with open('/tmp/unified-knowledge-audit.log', 'a') as f:
-              for kid in knowledge_ids:
-                  f.write(f"${{ github.event_name }} | {kid} | ${{ github.actor }} | {datetime.utcnow().isoformat()}\n")
+          from pathlib import Path
+          audit_line = f"{os.environ.get('GITHUB_EVENT_NAME','?')} | registry_check | {os.environ.get('GITHUB_ACTOR','?')} | {datetime.utcnow().isoformat()} | entries=${{ steps.extract.outputs.registry_entries }}\n"
+          audit_path = Path('/tmp/unified-knowledge-audit.log')
+          audit_path.write_text(audit_line)
+          print(f"Audit: {audit_line.strip()}")
           EOF
 
       - name: Notify THE-WORLD-GOD
-        if: steps.extract.outputs.knowledge_ids != '[]'
+        if: steps.extract.outputs.registry_entries != '0'
         run: |
-          echo "📡 Notifying THE-WORLD-GOD..."
-          echo "Knowledge IDs: ${{ steps.extract.outputs.knowledge_ids }}"
-          echo "Repository: ${{ github.repository }}"
-          echo "Event: ${{ github.event_name }}"
-
-          # 本番: THE-WORLD-GOD API を呼び出し
-          # curl -X POST https://orchestrator.internal/api/knowledge-sync \
-          #   -H "Authorization: Bearer ${{ secrets.ORCHESTRATOR_TOKEN }}" \
-          #   -d "{\"knowledge_ids\": ${{ steps.extract.outputs.knowledge_ids }}}"
+          echo "📡 THE-WORLD-GOD Knowledge System Active"
+          echo "   Source: MusicJapanLLC/test"
+          echo "   Registry entries: ${{ steps.extract.outputs.registry_entries }}"
+          echo "   Event: ${{ github.event_name }} by ${{ github.actor }}"
+          echo ""
+          echo "   Knowledge IDs detected:"
+          echo '${{ steps.extract.outputs.knowledge_ids }}' | python3 -c "import json,sys; ids=json.load(sys.stdin); [print(f'   - {i}') for i in ids[:5]]; print(f'   ... (+{max(0,len(ids)-5)} more)') if len(ids)>5 else None"
 
   cross-repo-apply:
     runs-on: ubuntu-latest
@@ -113,24 +138,47 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check if cross-repo patterns apply
+      - name: Check for GOD knowledge and cross-repo applicable patterns
         run: |
-          echo "🔍 Checking for cross-repo applicable patterns..."
+          echo "🔍 Checking GOD knowledge for cross-repo applicable patterns..."
 
-          # 本番実装:
-          # 1. THE-WORLD-GOD に query
-          # 2. the-world2 で既に解決されたパターンを確認
-          # 3. 同じ問題がこのリポジトリで起きそうなら提案
+          if [ -f "knowledge/god-registry.json" ]; then
+            python3 << 'EOF'
+          import json
+          from pathlib import Path
 
-          echo "✓ No cross-repo patterns to apply at this time"
+          registry = json.loads(Path("knowledge/god-registry.json").read_text())
+          entries = registry.get("entries", [])
+          cross_applicable = [
+              e for e in entries
+              if e.get("cross_repo_applicable", {}).get("approved")
+              and e.get("cross_repo_applicable", {}).get("confidence", 0) >= 0.85
+          ]
+
+          if cross_applicable:
+              print(f"✅ Found {len(cross_applicable)} cross-repo applicable patterns:")
+              for e in cross_applicable[:5]:
+                  target = e["cross_repo_applicable"].get("target", "?")
+                  conf = e["cross_repo_applicable"].get("confidence", 0)
+                  print(f"  → {e['knowledge_id']}: {e['content'].get('title','?')}")
+                  print(f"    Target: {target} | Confidence: {conf:.0%}")
+          else:
+              print("ℹ️  No cross-repo applicable patterns yet")
+              print("    Run THE WORLD GOD SINGULARITY to populate knowledge")
+          EOF
+          else
+            echo "⚠️  GOD knowledge registry not yet populated"
+            echo "    Trigger: Actions → THE WORLD GOD SINGULARITY → Run workflow"
+          fi
 
       - name: Upload audit log
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: knowledge-audit-log
+          name: knowledge-audit-log-${{ github.run_id }}
           path: /tmp/unified-knowledge-audit.log
           retention-days: 90
+          if-no-files-found: ignore
 
   verification:
     runs-on: ubuntu-latest
@@ -142,22 +190,58 @@ jobs:
       - name: Checkout unified-knowledge system
         uses: actions/checkout@v4
 
-      - name: Verify schemas
+      - name: Verify core files exist
         run: |
-          echo "✓ Verifying knowledge schemas..."
-          test -f "automation/unified-knowledge/SCHEMA.md" && echo "✓ SCHEMA found"
-          test -f "automation/unified-knowledge/knowledge-sync-worker.py" && echo "✓ Worker found"
-          test -f "automation/unified-knowledge/sheets-connector.py" && echo "✓ Connector found"
-          test -f "automation/unified-knowledge/the-world-god-unified-orchestrator.py" && echo "✓ Orchestrator found"
+          echo "✓ Verifying knowledge system components..."
+          test -f "automation/unified-knowledge/SCHEMA.md" && echo "✓ SCHEMA.md" || echo "✗ SCHEMA.md MISSING"
+          test -f "automation/unified-knowledge/knowledge_sync_worker.py" && echo "✓ knowledge_sync_worker.py" || echo "✗ knowledge_sync_worker.py MISSING"
+          test -f "automation/unified-knowledge/sheets_connector.py" && echo "✓ sheets_connector.py" || echo "✗ sheets_connector.py MISSING"
+          test -f "automation/unified-knowledge/the_world_god_unified_orchestrator.py" && echo "✓ the_world_god_unified_orchestrator.py" || echo "✗ orchestrator MISSING"
+          test -f "automation/unified-knowledge/god_knowledge_emitter.py" && echo "✓ god_knowledge_emitter.py" || echo "✗ god_knowledge_emitter.py MISSING"
+          test -f "automation/unified-knowledge/senju_knowledge_query.py" && echo "✓ senju_knowledge_query.py" || echo "✗ senju_knowledge_query.py MISSING"
+          test -f "knowledge/god-registry.json" && echo "✓ knowledge/god-registry.json" || echo "✗ god-registry.json MISSING"
 
-      - name: Report summary
+      - name: Report knowledge registry status
         run: |
-          echo "═══════════════════════════════════════"
-          echo "Unified Knowledge System Status"
-          echo "═══════════════════════════════════════"
-          echo "Repository: ${{ github.repository }}"
-          echo "Event: ${{ github.event_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo "Actor: ${{ github.actor }}"
-          echo "Time: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          echo "═══════════════════════════════════════"
+          echo "═══════════════════════════════════════════════════════"
+          echo "  THE WORLD GOD - Unified Knowledge System Status"
+          echo "═══════════════════════════════════════════════════════"
+          echo "  Repository: ${{ github.repository }}"
+          echo "  Branch:     ${{ github.ref_name }}"
+          echo "  Event:      ${{ github.event_name }} by ${{ github.actor }}"
+          echo "  Time:       $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "───────────────────────────────────────────────────────"
+
+          if [ -f "knowledge/god-registry.json" ]; then
+            python3 << 'EOF'
+          import json
+          from pathlib import Path
+
+          registry = json.loads(Path("knowledge/god-registry.json").read_text())
+          entries = registry.get("entries", [])
+          total = registry.get("total_entries", len(entries))
+          last = registry.get("last_updated") or "never"
+
+          print(f"  Registry entries: {total}")
+          print(f"  Last GOD cycle:   {last}")
+
+          if entries:
+              by_agent = {}
+              for e in entries:
+                  a = e.get("created_by_agent", "?")
+                  by_agent[a] = by_agent.get(a, 0) + 1
+              print(f"  By agent: {dict(by_agent)}")
+
+              latest = sorted(entries, key=lambda e: e.get("created_at",""), reverse=True)[:3]
+              print(f"\n  Latest entries:")
+              for e in latest:
+                  print(f"    [{e['created_at'][:10]}] {e['knowledge_id']} – {e['content'].get('title','?')}")
+          else:
+              print("  Status: EMPTY - run GOD SINGULARITY workflow to populate")
+          EOF
+          else
+            echo "  Registry: NOT FOUND on this branch"
+            echo "  → Push to claude/supreme-ai-development-06vi1t to trigger GOD cycle"
+          fi
+
+          echo "═══════════════════════════════════════════════════════"

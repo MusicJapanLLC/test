@@ -30,7 +30,7 @@ on:
       - ".github/workflows/the-world-god-singularity.yml"
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 concurrency:
@@ -49,7 +49,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
+          token: ${{ github.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -97,6 +98,31 @@ jobs:
           print(f"Bridge improvements: {report['bridge_cycle']['improvements_collected']}")
           print(f"Singularity status: {report['singularity_layer']['status']}")
           PY
+
+      - name: Emit knowledge to GOD registry
+        run: |
+          pip install --quiet requests 2>/dev/null || true
+          python3 automation/unified-knowledge/god_knowledge_emitter.py "$SINGULARITY_REPORT"
+
+      - name: Commit GOD knowledge registry
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.email "god@the-world.ai"
+          git config user.name "THE WORLD GOD"
+          git add knowledge/god-registry.json
+          if git diff --cached --quiet; then
+            echo "Knowledge registry already up-to-date"
+          else
+            git commit -m "chore: GOD singularity knowledge update [skip ci]
+
+fingerprint: god_singularity_$(date +%Y%m%d_%H)
+category: cycle_result
+source: THE_WORLD_GOD_SINGULARITY
+layers: 46
+omniscience: ACHIEVED"
+            git push origin HEAD:${{ github.ref_name }}
+            echo "✅ Knowledge committed and pushed"
+          fi
 
       - name: Upload Singularity evolution report
         if: always()
