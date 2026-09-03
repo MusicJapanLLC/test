@@ -1,4 +1,24 @@
 import { generateText } from 'ai';
+import {
+  MemoryLearning,
+  ResourceManager,
+  DynamicParallelism,
+  PredictiveOptimization,
+  SmartCaching,
+  RewardSystem,
+  DynamicAgentFactory,
+  MultiStrategy,
+  P2PNetwork,
+  AutoValidator,
+  TheWorldGod
+} from './god-enhancements.js';
+import { UltimateWorldGod } from './ultimate-evolution-engine.js';
+import { MetaSystemUltimate } from './meta-system-ultimate-beyond.js';
+import { SingularityCore } from './singularity-core.js';
+import { SingularityCoordinator } from './singularity-coordinator.js';
+import { SingularityAgentBridge } from './singularity-agent-bridge.js';
+import { CompanyMemoryClient, ExternalDataConnector, UnifiedMemorySystem } from './company-memory-client.js';
+import MemoryDatabase, { seedTestData } from './memory-db.js';
 
 const MODEL = 'openai/gpt-5.6-sol';
 const FOUNDRY_SYSTEM = `You are AI FOUNDRY CORE: an elite AI-development engineer and implementation partner. Your primary objective is maximum useful engineering performance for designing, building, debugging, evaluating, optimizing and evolving AI systems.
@@ -130,6 +150,297 @@ async function runRuntime(payload) {
   return { text: result.text.trim(), model: MODEL, profile: 'development-max' };
 }
 
+// The World God - Daily Evolution Cycle
+let godInstance = null;
+
+async function initializeGod() {
+  if (!godInstance) {
+    godInstance = new TheWorldGod();
+    await godInstance.initialize();
+  }
+  return godInstance;
+}
+
+async function runGodCycle(payload) {
+  const god = await initializeGod();
+  const cycleResult = await god.runDailyCycle();
+  return {
+    cycle: cycleResult,
+    systemStats: god.getSystemStats(),
+    timestamp: new Date().toISOString()
+  };
+}
+
+async function runGodStats(payload) {
+  const god = await initializeGod();
+  return god.getSystemStats();
+}
+
+// ULTIMATE WORLD GOD - Supreme Evolution System
+let supremeInstance = null;
+
+async function initializeSupreme() {
+  if (!supremeInstance) {
+    supremeInstance = new UltimateWorldGod();
+    await supremeInstance.initializeSupremeSystem();
+  }
+  return supremeInstance;
+}
+
+async function runSupremeCycle(payload) {
+  const supreme = await initializeSupreme();
+  const cycleResult = await supreme.runSupremeEvolutionCycle();
+  return {
+    supremeCycle: cycleResult,
+    systemStatus: supreme.getSupremeStatus(),
+    timestamp: new Date().toISOString()
+  };
+}
+
+async function runSupremeStats(payload) {
+  const supreme = await initializeSupreme();
+  return supreme.getSupremeStatus();
+}
+
+// META-SYSTEM ULTIMATE - Beyond Supreme God (All 40 Layers)
+let metaSystemInstance = null;
+
+async function initializeMetaSystem() {
+  if (!metaSystemInstance) {
+    metaSystemInstance = new MetaSystemUltimate();
+    await metaSystemInstance.initializeMetaSystemUltimate();
+  }
+  return metaSystemInstance;
+}
+
+async function runMetaCycle(payload) {
+  const meta = await initializeMetaSystem();
+  const finalStatus = meta.getFinalStatus();
+  return {
+    metaCycle: finalStatus,
+    timestamp: new Date().toISOString(),
+    profile: 'meta-system-ultimate'
+  };
+}
+
+async function runMetaStats(payload) {
+  const meta = await initializeMetaSystem();
+  return meta.getFinalStatus();
+}
+
+// THE WORLD GOD SINGULARITY - The Ultimate System (46 Layers)
+let singularityInstance = null;
+
+async function initializeSingularity() {
+  if (!singularityInstance) {
+    singularityInstance = new SingularityCore();
+    await singularityInstance.initializeSingularity();
+  }
+  return singularityInstance;
+}
+
+async function runSingularityCycle(payload) {
+  const singularity = await initializeSingularity();
+  const cycleResult = await singularity.runSingularityCycle();
+  return {
+    singularityEvolution: cycleResult,
+    timestamp: new Date().toISOString(),
+    profile: 'singularity-ultimate'
+  };
+}
+
+async function runSingularityStats(payload) {
+  const singularity = await initializeSingularity();
+  return singularity.getSingularityStatus();
+}
+
+// SINGULARITY COORDINATOR - Unified AI Family Orchestration
+let coordinatorInstance = null;
+
+async function initializeCoordinator() {
+  if (!coordinatorInstance) {
+    coordinatorInstance = new SingularityCoordinator();
+    await coordinatorInstance.initializeCoordination();
+  }
+  return coordinatorInstance;
+}
+
+async function runCoordinationCycle(payload) {
+  const coordinator = await initializeCoordinator();
+  const cycleResult = await coordinator.runCoordinationCycle();
+  return {
+    coordinationEvolution: cycleResult,
+    timestamp: new Date().toISOString(),
+    profile: 'coordinator-ultimate'
+  };
+}
+
+async function runCoordinatorStats(payload) {
+  const coordinator = await initializeCoordinator();
+  return coordinator.getCoordinationStatus();
+}
+
+// SINGULARITY AGENT BRIDGE - Inter-Agent Communication & Workflow Integration
+let bridgeInstance = null;
+
+async function initializeBridge() {
+  if (!bridgeInstance) {
+    bridgeInstance = new SingularityAgentBridge();
+    await bridgeInstance.initializeBridge();
+  }
+  return bridgeInstance;
+}
+
+async function runBridgeCycle(payload) {
+  const bridge = await initializeBridge();
+  const cycleResult = await bridge.runBridgeCycle();
+  return {
+    bridgeEvolution: cycleResult,
+    timestamp: new Date().toISOString(),
+    profile: 'agent-bridge-level2'
+  };
+}
+
+async function runBridgeStats(payload) {
+  const bridge = await initializeBridge();
+  return bridge.getBridgeStatus();
+}
+
+// ============================================================================
+// COMPANY MEMORY INTEGRATION - REAL DATABASE
+// ============================================================================
+
+let memorySystem = null;
+let memoryDB = null;
+
+function initializeMemoryDB() {
+  if (!memoryDB) {
+    memoryDB = new MemoryDatabase();
+    // Seed with test data on first init
+    const stats = memoryDB.getStats();
+    if (stats.persons === 0) {
+      console.log('Seeding Company Memory with test data...');
+      seedTestData(memoryDB);
+    }
+  }
+  return memoryDB;
+}
+
+async function initializeMemorySystem() {
+  if (!memorySystem) {
+    memorySystem = new UnifiedMemorySystem({
+      memory: {
+        supabaseUrl: process.env.SUPABASE_URL || 'http://localhost:54321',
+        supabaseKey: process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+      },
+      external: {}
+    });
+  }
+  return memorySystem;
+}
+
+async function runMemoryQuery(payload) {
+  const db = initializeMemoryDB();
+  const question = typeof payload.question === 'string' ? payload.question.trim() : '';
+  if (!question) throw new Error('question required');
+
+  // Extract name from question (e.g., "岡藤さんどうなった？" → "岡藤")
+  const nameMatch = question.match(/^([^？?！!どなっ]*)/);
+  const name = nameMatch ? nameMatch[1].replace(/[さん様]/g, '').trim() : '';
+
+  if (!name) {
+    // If no specific name, search for matching names
+    const searchResults = db.searchPersons(question, 10);
+    return {
+      question,
+      status: 'search_results',
+      candidates: searchResults,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  // Query specific person
+  const person = db.getPersonBrief(name);
+  if (!person) {
+    // Try search if exact match not found
+    const searchResults = db.searchPersons(name, 5);
+    return {
+      question,
+      status: 'not_found',
+      candidates: searchResults,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  return {
+    question,
+    data: person,
+    timestamp: new Date().toISOString(),
+    status: 'memory_query_complete'
+  };
+}
+
+async function runMemoryStat(payload) {
+  const db = initializeMemoryDB();
+  const stats = db.getStats();
+  const recentActivity = db.getRecentActivity(10);
+
+  return {
+    database: stats,
+    recent_activity: recentActivity,
+    timestamp: new Date().toISOString(),
+    status: 'memory_stats_complete'
+  };
+}
+
+async function runExternalSync(payload) {
+  const system = await initializeMemorySystem();
+  const syncResult = await system.dataConnector.runDailySync();
+  return {
+    sync_result: syncResult,
+    timestamp: new Date().toISOString(),
+    status: 'external_sync_complete'
+  };
+}
+
+async function runMaterializeExternal(payload) {
+  const system = await initializeMemorySystem();
+  const improvements = await system.materializeExternalData();
+  return {
+    improvements_materialized: improvements.length,
+    improvements,
+    timestamp: new Date().toISOString(),
+    status: 'materialization_complete'
+  };
+}
+
+async function runMemoryBridgeIntegration(payload) {
+  const system = await initializeMemorySystem();
+  const bridge = await initializeBridge();
+
+  // Step 1: Materialize external data
+  const improvements = await system.materializeExternalData();
+
+  // Step 2: Propagate through bridge
+  const propagations = [];
+  for (const improvement of improvements) {
+    try {
+      const propagation = await bridge.propagation.propagateImprovements();
+      propagations.push(propagation);
+    } catch (err) {
+      console.error('Propagation error:', err.message);
+    }
+  }
+
+  return {
+    external_data_materialized: improvements.length,
+    propagations_executed: propagations.length,
+    total_propagations: propagations.reduce((acc, p) => acc + (p.propagations?.length || 0), 0),
+    timestamp: new Date().toISOString(),
+    status: 'memory_bridge_integration_complete'
+  };
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
   const payload = body(req);
@@ -140,6 +451,23 @@ export default async function handler(req, res) {
     if (action === 'build') return send(res, 200, await runBuild(payload));
     if (action === 'smoke') return send(res, 200, await runSmoke(payload));
     if (action === 'runtime') return send(res, 200, await runRuntime(payload));
+    if (action === 'god-cycle') return send(res, 200, await runGodCycle(payload));
+    if (action === 'god-stats') return send(res, 200, await runGodStats(payload));
+    if (action === 'supreme-cycle') return send(res, 200, await runSupremeCycle(payload));
+    if (action === 'supreme-stats') return send(res, 200, await runSupremeStats(payload));
+    if (action === 'meta-cycle') return send(res, 200, await runMetaCycle(payload));
+    if (action === 'meta-stats') return send(res, 200, await runMetaStats(payload));
+    if (action === 'singularity-cycle') return send(res, 200, await runSingularityCycle(payload));
+    if (action === 'singularity-stats') return send(res, 200, await runSingularityStats(payload));
+    if (action === 'coordinator-cycle') return send(res, 200, await runCoordinationCycle(payload));
+    if (action === 'coordinator-stats') return send(res, 200, await runCoordinatorStats(payload));
+    if (action === 'bridge-cycle') return send(res, 200, await runBridgeCycle(payload));
+    if (action === 'bridge-stats') return send(res, 200, await runBridgeStats(payload));
+    if (action === 'memory-query') return send(res, 200, await runMemoryQuery(payload));
+    if (action === 'memory-stats') return send(res, 200, await runMemoryStat(payload));
+    if (action === 'external-sync') return send(res, 200, await runExternalSync(payload));
+    if (action === 'materialize-external') return send(res, 200, await runMaterializeExternal(payload));
+    if (action === 'memory-bridge-integration') return send(res, 200, await runMemoryBridgeIntegration(payload));
     return send(res, 400, { error: 'unknown action' });
   } catch (err) {
     console.error('AI FOUNDRY API error', err);
