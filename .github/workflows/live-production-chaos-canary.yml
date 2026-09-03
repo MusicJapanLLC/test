@@ -173,7 +173,7 @@ jobs:
 
       - name: Preserve evolving state
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@v4
         with:
           name: capability-continuity-incubator-state
           retention-days: 30
@@ -299,7 +299,7 @@ jobs:
 
       - name: Preserve live evidence
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@v4
         with:
           name: live-production-chaos-canary-${{ github.run_id }}
           retention-days: 30
