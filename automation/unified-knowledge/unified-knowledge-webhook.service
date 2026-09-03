@@ -1,0 +1,36 @@
+[Unit]
+Description=Unified Knowledge System - Webhook Server
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=webhook
+WorkingDirectory=/opt/unified-knowledge
+ExecStart=/usr/bin/python3 /opt/unified-knowledge/webhook-server.py
+
+# Environment configuration
+EnvironmentFile=/etc/unified-knowledge/webhook.env
+
+# Restart policy
+Restart=always
+RestartSec=10
+
+# Resource limits
+MemoryLimit=512M
+MemoryAccounting=yes
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=unified-knowledge
+
+# Security
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/log/unified-knowledge
+
+[Install]
+WantedBy=multi-user.target
