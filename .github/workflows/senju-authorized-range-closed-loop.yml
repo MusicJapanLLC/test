@@ -29,6 +29,33 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
+
+      - name: Load GOD Knowledge
+        run: |
+          GOD_BRANCH="claude/supreme-ai-development-06vi1t"
+          git fetch origin "$GOD_BRANCH" --depth=1 2>/dev/null || true
+          mkdir -p knowledge automation/unified-knowledge
+          git show "origin/$GOD_BRANCH:knowledge/god-registry.json" \
+            > knowledge/god-registry.json 2>/dev/null || \
+            printf '{"schema":"god-knowledge-registry/v1","entries":[],"total_entries":0}' \
+            > knowledge/god-registry.json
+          git show "origin/$GOD_BRANCH:automation/unified-knowledge/senju_knowledge_query.py" \
+            > automation/unified-knowledge/senju_knowledge_query.py 2>/dev/null || true
+          python3 << 'PYEOF'
+          import json
+          from pathlib import Path
+          registry = json.loads(Path("knowledge/god-registry.json").read_text())
+          entries = registry.get("entries", [])
+          total = registry.get("total_entries", len(entries))
+          last = registry.get("last_updated") or "never"
+          print(f"📚 GOD Knowledge: {total} entries | last: {last}")
+          for e in sorted(entries, key=lambda x: x.get("created_at",""), reverse=True)[:5]:
+              meta = e.get("meta_learning", {})
+              print(f"  [{e.get('created_at','')[:10]}] {e.get('created_by_agent','?')}: {e.get('content',{}).get('title','?')}")
+              if meta.get("omniscience"): print(f"    omniscience={meta['omniscience']} | omnipotence={meta.get('omnipotence','?')}")
+              if meta.get("reward_trend"): print(f"    reward_trend={meta['reward_trend']}")
+          if not entries: print("  → No GOD knowledge yet. Trigger THE WORLD GOD SINGULARITY workflow.")
+          PYEOF
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
