@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      GOD_REPORT: /tmp/supreme-god-report.json
+      GOD_REPORT: ${{ runner.temp }}/supreme-god-report.json
 
     steps:
       - name: Checkout
@@ -68,7 +68,8 @@ jobs:
           python3 - <<'PY'
           import json
           from pathlib import Path
-          report = json.loads(Path('/tmp/supreme-god-report.json').read_text())
+          import os
+          report = json.loads(Path(os.environ['GOD_REPORT']).read_text())
           assert report['schema'] == 'the-world-god-supreme-run/v1'
           assert report['layers_initialized'] == 30
           assert report['closed_loop'] is True
@@ -89,4 +90,4 @@ jobs:
           name: the-world-god-report-${{ github.run_id }}
           retention-days: 30
           if-no-files-found: warn
-          path: /tmp/supreme-god-report.json
+          path: ${{ runner.temp }}/supreme-god-report.json
