@@ -4,6 +4,7 @@ __pycache__/
 .env
 data/*.db
 data/*.sqlite
+supreme-god-report.json
 credentials.json
 token.json
 *.log
