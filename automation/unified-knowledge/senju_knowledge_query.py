@@ -108,6 +108,28 @@ def query_knowledge(category=None, limit=10):
 
     print("KNOWLEDGE_AVAILABLE=true")
     print(f"KNOWLEDGE_ENTRIES={len(entries)}")
+
+    # Export GOD directives to $GITHUB_ENV for downstream steps
+    env_file = os.environ.get("GITHUB_ENV", "")
+    if env_file and entries:
+        top_target = "none"
+        strategy = "coverage_expansion"
+        coverage_gaps = ""
+        for e in sorted(entries, key=lambda x: x.get("created_at", ""), reverse=True):
+            c = e.get("content", {})
+            if c.get("top_target") and c["top_target"] != "none":
+                top_target = c["top_target"]
+                strategy = c.get("strategy", strategy)
+                gaps = c.get("coverage_gaps", [])
+                coverage_gaps = ",".join(gaps[:5]) if gaps else ""
+                break
+        with open(env_file, "a") as f:
+            f.write(f"GOD_TOP_TARGET={top_target}\n")
+            f.write(f"GOD_STRATEGY={strategy}\n")
+            f.write(f"GOD_COVERAGE_GAPS={coverage_gaps}\n")
+            f.write(f"GOD_ENTRIES={len(entries)}\n")
+        print(f"  → $GITHUB_ENV: GOD_TOP_TARGET={top_target} GOD_STRATEGY={strategy}")
+
     print("═" * 70)
     return entries
 

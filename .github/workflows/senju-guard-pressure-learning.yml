@@ -53,19 +53,40 @@ jobs:
           git show "origin/$GOD_BRANCH:automation/unified-knowledge/senju_knowledge_query.py" \
             > automation/unified-knowledge/senju_knowledge_query.py 2>/dev/null || true
           python3 << 'PYEOF'
-          import json
+          import json, os
           from pathlib import Path
           registry = json.loads(Path("knowledge/god-registry.json").read_text())
           entries = registry.get("entries", [])
           total = registry.get("total_entries", len(entries))
           last = registry.get("last_updated") or "never"
           print(f"📚 GOD Knowledge: {total} entries | last: {last}")
+          # Extract latest directive for env export
+          top_target = "none"
+          strategy = "coverage_expansion"
+          coverage_gaps = ""
+          for e in sorted(entries, key=lambda x: x.get("created_at",""), reverse=True):
+              c = e.get("content", {})
+              if c.get("top_target") and c["top_target"] != "none":
+                  top_target = c["top_target"]
+                  strategy = c.get("strategy", strategy)
+                  gaps = c.get("coverage_gaps", [])
+                  coverage_gaps = ",".join(gaps[:5]) if gaps else ""
+                  break
           for e in sorted(entries, key=lambda x: x.get("created_at",""), reverse=True)[:5]:
               meta = e.get("meta_learning", {})
               print(f"  [{e.get('created_at','')[:10]}] {e.get('created_by_agent','?')}: {e.get('content',{}).get('title','?')}")
               if meta.get("omniscience"): print(f"    omniscience={meta['omniscience']} | omnipotence={meta.get('omnipotence','?')}")
               if meta.get("reward_trend"): print(f"    reward_trend={meta['reward_trend']}")
-          if not entries: print("  → No GOD knowledge yet. Trigger THE WORLD GOD SINGULARITY workflow.")
+          if not entries: print("  → No GOD knowledge yet. Trigger THE WORLD GOD workflow.")
+          # Write to GITHUB_ENV so downstream steps can consume GOD directives
+          env_file = os.environ.get("GITHUB_ENV", "")
+          if env_file:
+              with open(env_file, "a") as f:
+                  f.write(f"GOD_TOP_TARGET={top_target}\n")
+                  f.write(f"GOD_STRATEGY={strategy}\n")
+                  f.write(f"GOD_COVERAGE_GAPS={coverage_gaps}\n")
+                  f.write(f"GOD_ENTRIES={total}\n")
+              print(f"  → Exported: GOD_TOP_TARGET={top_target} GOD_STRATEGY={strategy}")
           PYEOF
       - name: Set up Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
