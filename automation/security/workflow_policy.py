@@ -295,31 +295,6 @@ def validate_explicit_lanes() -> set[str]:
         "auto-update-branches.yml": {"contents", "pull-requests"},
         "auto-merge.yml": {"contents", "pull-requests"},
         "the-world-external-write-router.yml": {"issues"},
-        "ai-foundry-executor.yml": {"contents", "id-token", "pull-requests"},
-        "tomoki-manager-queue.yml": {"id-token"},
-        "senju-auto-approve-merge.yml": {"contents", "pull-requests"},
-        "senju-self-develop.yml": {"contents", "pull-requests"},
-        "meta-swarm.yml": {"actions", "contents", "issues", "pull-requests"},
-        "live-production-chaos-canary.yml": {"contents"},
-        "senju-nuclei-scan.yml": {"contents"},
-        "the-world-unified-loop.yml": {"statuses"},
-        "meta-four-pillar-production-loop.yml": {"actions", "issues"},
-        "the-world-evolution-watchdog.yml": {"actions"},
-        "auto-conflict-resolver.yml": {"contents", "pull-requests"},
-        "senju-blitz.yml": {"actions", "contents", "issues"},
-        "meta-watchdog.yml": {"actions"},
-        "openhands-audit-router.yml": {"issues", "pull-requests"},
-        "madlab-world-evolution.yml": {"copilot-requests", "issues"},
-        "security-proposal-production-apply.yml": {"contents"},
-        "meta-x-production-continuity.yml": {"actions"},
-        "meta-consciousness.yml": {"actions", "contents", "issues", "pull-requests"},
-        "shared-discovery-authority-cycle.yml": {"actions"},
-        "autonomous-codegen-loop.yml": {"contents", "pull-requests"},
-        "senju-daily-report.yml": {"contents", "pull-requests"},
-        "capability-continuity-incubator.yml": {"actions"},
-        "production-security-change-loop.yml": {"contents"},
-        "senju-world-trust-root-loop.yml": {"actions"},
-        "owned-self-recovery-worker.yml": {"actions"},
     }
     # Autonomous/scheduled lanes require full scheduling invariants
     autonomous = {
@@ -328,15 +303,6 @@ def validate_explicit_lanes() -> set[str]:
         "the-world-realtime-kernel.yml", "the-core-autonomous-director.yml",
         "the-world-agent-factory.yml", "standment-security-portfolio-rnd.yml",
         "standment-whitehat-portfolio-cycle.yml", "the-world-external-write-router.yml",
-        "ai-foundry-executor.yml",
-        "senju-self-develop.yml", "meta-swarm.yml", "live-production-chaos-canary.yml",
-        "senju-nuclei-scan.yml", "the-world-unified-loop.yml", "meta-four-pillar-production-loop.yml",
-        "auto-conflict-resolver.yml", "senju-blitz.yml", "meta-watchdog.yml",
-        "madlab-world-evolution.yml", "meta-x-production-continuity.yml",
-        "meta-consciousness.yml", "shared-discovery-authority-cycle.yml",
-        "senju-daily-report.yml", "capability-continuity-incubator.yml",
-        "production-security-change-loop.yml", "senju-world-trust-root-loop.yml",
-        "owned-self-recovery-worker.yml",
     }
     for name, want in expected.items():
         markers = ("workflow_dispatch:", "schedule:", "persist-credentials: false") if name in autonomous else ("workflow_dispatch:",)
@@ -418,7 +384,7 @@ def main() -> int:
     reality = validate_reality_lane()
     research = validate_research_oidc_lane()
     public_probe = validate_public_web_write_probe()
-    experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality, research, "ai-foundry-executor.yml", "tomoki-manager-queue.yml"})
+    experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality, research})
     stress = validate_owned_issue_stress_lanes()
     explicit = validate_explicit_lanes()
     known = explicit | pages | experiments | stress | {task_worker, reality, research, public_probe, "security-guard.yml"}
