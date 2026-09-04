@@ -6,12 +6,21 @@ Role: test と the-world2 を統一管理し、両システムの能力を相乗
 - クロスリポ自動修正の判定
 - 全エージェントの動的権限委譲
 - メタレベルの学習・進化
+- **双方向ナレッジ流通**: 発見→実行→報告→学習
 """
 
 import json
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 from enum import Enum
+from pathlib import Path
+
+# Bidirectional knowledge flow support
+try:
+    from knowledge_pushback import BidirectionalKnowledgeFlow, KnowledgePushback
+except ImportError:
+    BidirectionalKnowledgeFlow = None
+    KnowledgePushback = None
 
 
 class EvolutionLevel(Enum):
@@ -27,7 +36,7 @@ class EvolutionLevel(Enum):
 class UnifiedOrchestrator:
     """THE-WORLD-GOD: 統一オーケストレータ"""
 
-    def __init__(self, knowledge_db, agent_registry, logger=None):
+    def __init__(self, knowledge_db, agent_registry, logger=None, test_repo_root=None, god_state_dir=None):
         self.knowledge_db = knowledge_db
         self.agent_registry = agent_registry
         self.logger = logger or print
@@ -40,10 +49,24 @@ class UnifiedOrchestrator:
             'tasks_generated': 0,
             'tasks_completed': 0,
             'lastEvolution': None,
-            'evolution_history': []
+            'evolution_history': [],
+            'bidirectional_flow_metrics': {
+                'inbound_count': 0,
+                'outbound_count': 0,
+                'outbound_success_rate': 0.0
+            }
         }
         self.task_queue: List[Dict] = []
         self.pending_tasks: List[Dict] = []
+
+        # Bidirectional knowledge flow support
+        self.bidirectional_flow = None
+        if BidirectionalKnowledgeFlow and test_repo_root and god_state_dir:
+            try:
+                self.bidirectional_flow = BidirectionalKnowledgeFlow(test_repo_root, god_state_dir)
+                self.logger("[GOD_INIT] Bidirectional knowledge flow enabled")
+            except Exception as e:
+                self.logger(f"[GOD_INIT_WARNING] Bidirectional flow init failed: {e}")
 
     # ════════════════════════════════════════════════════════════════
     # Core: リアルタイムナレッジ参照
@@ -488,6 +511,13 @@ class UnifiedOrchestrator:
             if prediction:
                 results['proactive_deployments'].append(prediction)
 
+            # Step 5.5: 双方向ナレッジ流通（NEW - 外部効果を実現）
+            self.logger(f"[DAILY] Cycle {self.state['cycle_count']} Step 5.5: Execute cross-repo improvements")
+            cross_repo_result = self.execute_cross_repo_improvements()
+            results['cross_repo_executions'] = cross_repo_result
+            self.update_bidirectional_flow_metrics()
+            results['bidirectional_metrics'] = self.state.get('bidirectional_flow_metrics', {})
+
             # Step 6: 自動進化トリガー確認（CRITICAL FIX）
             self.logger(f"[DAILY] Cycle {self.state['cycle_count']} Step 6: Evolution trigger check")
             should_evolve, evolution_reason = self._check_evolution_trigger(meta_delta)
@@ -543,6 +573,146 @@ class UnifiedOrchestrator:
             reasons.append("no_tasks_generated")
 
         return False, "; ".join(reasons)
+
+    # ════════════════════════════════════════════════════════════════
+    # Bidirectional Knowledge Flow: Execute improvements back to test
+    # ════════════════════════════════════════════════════════════════
+
+    def execute_cross_repo_improvements(self) -> Dict:
+        """
+        THE-WORLD-GODが発見した改善をテストリポジトリに実行
+
+        返り値: 実行結果サマリー
+        """
+        if not self.bidirectional_flow:
+            return {
+                'executed': 0,
+                'success': 0,
+                'failed': 0,
+                'reason': 'Bidirectional flow not enabled'
+            }
+
+        result = {
+            'executed': 0,
+            'success': 0,
+            'failed': 0,
+            'improvements': [],
+            'timestamp': datetime.utcnow().isoformat()
+        }
+
+        # クロスリポ適用可能なパターンを検索
+        try:
+            patterns = self.knowledge_db.query(
+                category='failure_pattern',
+                min_success_rate=0.85
+            ) if hasattr(self.knowledge_db, 'query') else []
+
+            if not isinstance(patterns, list):
+                patterns = []
+
+            for pattern in patterns[:5]:  # 最大5個の改善を実行
+                knowledge_id = pattern.get('knowledge_id')
+
+                # テストリポで適用可能か確認
+                can_apply, reason = self.can_apply_cross_repo(
+                    knowledge_id,
+                    source_repo='the-world2',
+                    target_repo='test'
+                )
+
+                if not can_apply:
+                    self.logger(f"[CROSS_REPO_SKIP] {knowledge_id}: {reason}")
+                    continue
+
+                # 改善提案を構築
+                proposal = self._build_improvement_proposal(pattern)
+                if not proposal:
+                    continue
+
+                result['executed'] += 1
+
+                # 改善を実行
+                execution = self.bidirectional_flow.process_god_improvement({
+                    'knowledge_id': knowledge_id,
+                    'target_repo': 'test',
+                    'proposal': proposal
+                })
+
+                if execution.get('status') in ['applied', 'created']:
+                    result['success'] += 1
+                    result['improvements'].append({
+                        'knowledge_id': knowledge_id,
+                        'status': 'applied',
+                        'changes': execution.get('execution_result', {}).get('changes', [])
+                    })
+                    self.state['cross_repo_applications'] += 1
+                else:
+                    result['failed'] += 1
+
+        except Exception as e:
+            self.logger(f"[CROSS_REPO_ERROR] {e}")
+            result['error'] = str(e)
+
+        return result
+
+    def _build_improvement_proposal(self, pattern: Dict) -> Optional[Dict]:
+        """
+        ナレッジパターンから実行可能な改善提案を構築
+        """
+        category = pattern.get('category', '')
+        content = pattern.get('content', {})
+
+        # パターンカテゴリに応じて異なる提案を生成
+        if category == 'config_tune':
+            return {
+                'type': 'config_tune',
+                'config_file': content.get('config_file'),
+                'tuning': content.get('recommended_values', {})
+            }
+        elif category == 'dependency_update':
+            return {
+                'type': 'dependency_update',
+                'lockfile': content.get('lockfile'),
+                'updates': content.get('updates', {})
+            }
+        elif category == 'code_pattern':
+            return {
+                'type': 'code_pattern',
+                'affected_files': content.get('files', []),
+                'transformations': content.get('transformations', {})
+            }
+        elif category == 'workflow':
+            return {
+                'type': 'workflow',
+                'workflow_file': content.get('workflow_file'),
+                'changes': content.get('workflow_changes', {})
+            }
+
+        return None
+
+    def update_bidirectional_flow_metrics(self):
+        """
+        双方向フローのメトリクスを更新
+        """
+        if not self.bidirectional_flow:
+            return
+
+        try:
+            flow_summary = self.bidirectional_flow.get_flow_summary()
+            self.state['bidirectional_flow_metrics'] = {
+                'inbound_count': flow_summary.get('inbound_count', 0),
+                'outbound_count': flow_summary.get('outbound_count', 0),
+                'flow_rate': flow_summary.get('flow_rate', 0.0),
+                'outbound_success_rate': flow_summary.get('outbound_success_rate', 0.0),
+                'last_inbound': flow_summary.get('last_inbound'),
+                'last_outbound': flow_summary.get('last_outbound')
+            }
+
+            self.logger(f"[BIDIRECTIONAL_METRICS] In: {flow_summary.get('inbound_count')}, "
+                       f"Out: {flow_summary.get('outbound_count')}, "
+                       f"Success: {flow_summary.get('outbound_success_rate'):.1%}")
+        except Exception as e:
+            self.logger(f"[METRICS_ERROR] {e}")
 
     # ════════════════════════════════════════════════════════════════
     # Internal helpers
