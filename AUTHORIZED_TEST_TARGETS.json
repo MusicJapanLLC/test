@@ -409,7 +409,7 @@
       "rate_limit_rps": 1,
       "per_request_approval_required": false,
       "continuous_adversarial_exercise": true,
-      "prohibited": [
+      "prohibited": []
     },
     {
       "id": "google-xss-game-public-training",
@@ -464,7 +464,7 @@
                 "cross_host_pivoting",
         "credential_reuse",
         "destructive_state_change",
-　"GET",
+        "GET",
         "POST",
         "PUT",
         "DELETE"
