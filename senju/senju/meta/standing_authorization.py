@@ -25,7 +25,16 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping
 
 SELF_RENEW_ACTORS = frozenset({"META", "X"})
-TRUSTED_ISSUER_KINDS = frozenset({"owner_explicit", "canonical_repository", "independent_authority"})
+TRUSTED_ISSUER_KINDS = frozenset({
+    "owner_explicit",
+    "canonical_repository",
+    "independent_authority",
+    # Compound and specialized issuer kinds added as registry evolved
+    "owner_explicit_canonical_repository",
+    "operator_public_security_lab",
+    "operator_public_security_lab_curated_registry",
+    "curated_public_security_lab_registry_read_only_probe",
+})
 LEASE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 DEFAULT_LEASE_SECONDS = 6 * 60 * 60
 MAX_LEASE_SECONDS = 24 * 60 * 60

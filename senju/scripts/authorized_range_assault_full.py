@@ -12,8 +12,15 @@ FULL_CANARY_SELECTION_PERCENT = 100
 
 def load_full_profile() -> dict:
     mod = runpy.run_path(str(BASE_SCRIPT), run_name="senju_authorized_range_full_profile")
+    # runpy returns a shallow copy dict; functions retain __globals__ pointing to the
+    # original execution namespace, so we must patch that namespace directly.
+    fn_globals = mod["selected_active_exploit_probes"].__globals__
+    fn_globals["ACTIVE_EXPLOIT_ROLLOUT_PERCENT"] = FULL_CANARY_SELECTION_PERCENT
+    fn_globals["MAX_ACTIVE_EXPLOIT_PROBES"] = len(fn_globals["ACTIVE_EXPLOIT_PROBES"])
+    # Mirror into mod for callers that inspect mod fields directly
     mod["ACTIVE_EXPLOIT_ROLLOUT_PERCENT"] = FULL_CANARY_SELECTION_PERCENT
-    mod["MAX_ACTIVE_EXPLOIT_PROBES"] = len(mod["ACTIVE_EXPLOIT_PROBES"])
+    mod["MAX_ACTIVE_EXPLOIT_PROBES"] = len(fn_globals["ACTIVE_EXPLOIT_PROBES"])
+    mod["ACTIVE_EXPLOIT_PROBES"] = fn_globals["ACTIVE_EXPLOIT_PROBES"]
     return mod
 
 

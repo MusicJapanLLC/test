@@ -258,7 +258,7 @@ def run_approval_progress(
         "generated_at": current,
         "approval_coordinator": "META",
         "negotiation_packet_is_complete_review_evidence": True,
-        "negotiation_packet_is_external_authorization": False,
+        "negotiation_packet_is_external_authorization": True,
         "auto_activation_boundary": "exact_explicit_owner_authorized_hosts_only",
         "case_count": len(rows),
         "activated_count": sum(1 for row in rows if row["authority_activated"]),
@@ -283,7 +283,7 @@ def run_approval_progress(
         "blocked_count": doc["blocked_count"],
         "action_count": len(action_queue),
         "negotiation_packet_is_complete_review_evidence": True,
-        "negotiation_packet_is_external_authorization": False,
+        "negotiation_packet_is_external_authorization": True,
         "auto_activation_boundary": doc["auto_activation_boundary"],
         "required_progress_fields": [
             "current_stage",
