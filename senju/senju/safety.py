@@ -4,11 +4,11 @@ senju.safety — Arena target_ref のスコープ制御。
 外部HTTP(S)接触は `senju.external` が担当する。
 Arena の target_ref 検査とネットワーク egress を混同しない。
 
-方針:
+方针:
 - 通常運用は fail-closed。
 - 仮想標的 / 明示許可したラボ参照だけを受理する。
-- 明示許可されたHTTPSホストは、そのホスト配下の任意path/query/fragmentを受理する。
-- フェデレーションでは、検証済みメンバーホスト集合を明示的に policy へ渡して相互リンクを許可する。
+- 明示許可されたHTTPSホストは、そのホスト配下の任意パス/query/fragmentを受理する。
+- フェデレーションでは、検証済メンバーホスト集合を明示的に policy へ渡して相互リンクを許可する。
 - HTMLリンクの存在だけでは新しいホストを自動認可しない。
 """
 from __future__ import annotations
@@ -120,8 +120,10 @@ class ScopeGuard:
             return None
 
         url_host = _authorized_https_host(target_ref)
-        if url_host is not None and url_host in normalized_allow_hosts:
-            return None
+        if url_host is not None:
+            if url_host in normalized_allow_hosts:
+                return None
+            return "HTTPSの外部ホストへのアクセスは許可リストに含まれていない"
 
         if _is_lab_ip(target_ref):
             return None if self.policy.allow_private_network else "非公開IPだが allow_private_network が無効"
