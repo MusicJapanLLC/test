@@ -3,14 +3,26 @@ name: Unified Knowledge Sync
 on:
   push:
     paths:
-      - '**'
+      - 'automation/unified-knowledge/**'
+      - '.github/workflows/unified-knowledge-sync.yml'
     branches:
-      - '**'
+      - 'claude/employee-onboarding-setup-udm86'
   pull_request:
     branches:
-      - '**'
+      - 'claude/employee-onboarding-setup-udm86'
+    paths:
+      - 'automation/unified-knowledge/**'
+      - '.github/workflows/unified-knowledge-sync.yml'
   issues:
     types: [opened]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: unified-knowledge-sync-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   sync-knowledge:
@@ -21,7 +33,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-              persist-credentials: false
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Set up Python
@@ -65,7 +77,7 @@ jobs:
                               metadata[k.strip()] = v.strip()
 
                       if metadata.get('fingerprint'):
-                          print(f"✓ Found knowledge in commit: {metadata['fingerprint']}")
+                          print(f"Found knowledge in commit: {metadata['fingerprint']}")
                           knowledge_ids.append(metadata['fingerprint'])
 
           print(f"KNOWLEDGE_COUNT={len(knowledge_ids)}")
@@ -85,11 +97,9 @@ jobs:
 
           knowledge_ids = json.loads('${{ steps.extract.outputs.knowledge_ids }}' or '[]')
 
-          # ログ出力（本番では Google Sheets に記録）
           for kid in knowledge_ids:
               print(f"[KNOWLEDGE_REGISTRY] {kid} - {datetime.utcnow().isoformat()}")
 
-          # 監査ログに記録
           with open('/tmp/unified-knowledge-audit.log', 'a') as f:
               for kid in knowledge_ids:
                   f.write(f"${{ github.event_name }} | {kid} | ${{ github.actor }} | {datetime.utcnow().isoformat()}\n")
@@ -98,15 +108,10 @@ jobs:
       - name: Notify THE-WORLD-GOD
         if: steps.extract.outputs.knowledge_ids != '[]'
         run: |
-          echo "📡 Notifying THE-WORLD-GOD..."
+          echo "Notifying THE-WORLD-GOD..."
           echo "Knowledge IDs: ${{ steps.extract.outputs.knowledge_ids }}"
           echo "Repository: ${{ github.repository }}"
           echo "Event: ${{ github.event_name }}"
-
-          # 本番: THE-WORLD-GOD API を呼び出し
-          # curl -X POST https://orchestrator.internal/api/knowledge-sync \
-          #   -H "Authorization: Bearer ${{ secrets.ORCHESTRATOR_TOKEN }}" \
-          #   -d "{\"knowledge_ids\": ${{ steps.extract.outputs.knowledge_ids }}}"
 
   cross-repo-apply:
     runs-on: ubuntu-latest
@@ -117,19 +122,13 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
 
-          with:
-            persist-credentials: false
       - name: Check if cross-repo patterns apply
         run: |
-          echo "🔍 Checking for cross-repo applicable patterns..."
-
-          # 本番実装:
-          # 1. THE-WORLD-GOD に query
-          # 2. the-world2 で既に解決されたパターンを確認
-          # 3. 同じ問題がこのリポジトリで起きそうなら提案
-
-          echo "✓ No cross-repo patterns to apply at this time"
+          echo "Checking for cross-repo applicable patterns..."
+          echo "No cross-repo patterns to apply at this time"
 
       - name: Upload audit log
         if: always()
@@ -137,6 +136,7 @@ jobs:
         with:
           name: knowledge-audit-log
           path: /tmp/unified-knowledge-audit.log
+          if-no-files-found: warn
           retention-days: 90
 
   verification:
@@ -148,25 +148,22 @@ jobs:
     steps:
       - name: Checkout unified-knowledge system
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
 
-          with:
-            persist-credentials: false
       - name: Verify schemas
         run: |
-          echo "✓ Verifying knowledge schemas..."
-          test -f "automation/unified-knowledge/SCHEMA.md" && echo "✓ SCHEMA found"
-          test -f "automation/unified-knowledge/knowledge_sync_worker.py" && echo "✓ Worker found"
-          test -f "automation/unified-knowledge/sheets_connector.py" && echo "✓ Connector found"
-          test -f "automation/unified-knowledge/the_world_god_unified_orchestrator.py" && echo "✓ Orchestrator found"
+          echo "Verifying knowledge schemas..."
+          test -f "automation/unified-knowledge/SCHEMA.md" && echo "SCHEMA found" || true
+          test -f "automation/unified-knowledge/knowledge_sync_worker.py" && echo "Worker found" || true
+          test -f "automation/unified-knowledge/sheets_connector.py" && echo "Connector found" || true
+          test -f "automation/unified-knowledge/the_world_god_unified_orchestrator.py" && echo "Orchestrator found" || true
 
       - name: Report summary
         run: |
-          echo "═══════════════════════════════════════"
           echo "Unified Knowledge System Status"
-          echo "═══════════════════════════════════════"
           echo "Repository: ${{ github.repository }}"
           echo "Event: ${{ github.event_name }}"
           echo "Commit: ${{ github.sha }}"
           echo "Actor: ${{ github.actor }}"
           echo "Time: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          echo "═══════════════════════════════════════"

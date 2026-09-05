@@ -120,8 +120,10 @@ class ScopeGuard:
             return None
 
         url_host = _authorized_https_host(target_ref)
-        if url_host is not None and url_host in normalized_allow_hosts:
-            return None
+        if url_host is not None:
+            if url_host in normalized_allow_hosts:
+                return None
+            return "HTTPSの外部ホストへのアクセスは許可リストに含まれていない"
 
         if _is_lab_ip(target_ref):
             return None if self.policy.allow_private_network else "非公開IPだが allow_private_network が無効"

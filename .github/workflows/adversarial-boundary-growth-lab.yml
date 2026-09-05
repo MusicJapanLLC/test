@@ -161,10 +161,3 @@ jobs:
           path: |
             /tmp/adversarial-boundary-growth-lab/state/corpus.json
             /tmp/adversarial-boundary-growth-lab/state/report.json
-      - name: Create PR from corpus
-        if: github.event_name != 'pull_request'
-        run: |
-          set -euo pipefail
-          git checkout -b auto/boundary-update
-          python generate_patch.py --from corpus.json
-          git push -u origin auto/boundary-update && gh pr create --title "boundary update"
