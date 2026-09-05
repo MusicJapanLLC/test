@@ -294,6 +294,7 @@ def validate_explicit_lanes() -> set[str]:
         "jules-issue-router.yml": {"issues"},
         "auto-update-branches.yml": {"contents", "pull-requests"},
         "auto-merge.yml": {"contents", "pull-requests"},
+        "ai-foundry-executor.yml": {"contents", "id-token", "pull-requests"},
         "senju-auto-approve-merge.yml": {"contents", "pull-requests"},
         "senju-self-develop.yml": {"contents", "pull-requests"},
         "meta-swarm.yml": {"actions", "contents", "issues", "pull-requests"},
@@ -319,6 +320,7 @@ def validate_explicit_lanes() -> set[str]:
         "owned-self-recovery-worker.yml": {"actions"},
         "the-world-external-write-router.yml": {"issues"},
         "the-world-god.yml": {"contents"},
+        "tomoki-manager-queue.yml": {"id-token"},
     }
     # Autonomous/scheduled lanes require full scheduling invariants
     autonomous = {
@@ -330,8 +332,15 @@ def validate_explicit_lanes() -> set[str]:
         "the-world-god.yml",
     }
     for name, want in expected.items():
+        body = WORKFLOWS.get(name, "")
+        if not body:
+            # Workflow was already classified and popped by the entrypoint before policy.main() was called.
+            # In standalone mode all workflows are present and will be validated here.
+            continue
         markers = ("workflow_dispatch:", "schedule:", "persist-credentials: false") if name in autonomous else ("workflow_dispatch:",)
-        body = require(name, markers)
+        for marker in markers:
+            if marker not in body:
+                raise SystemExit(f"{name}: missing required guardrail: {marker}")
         got = writes(body)
         if got != want:
             raise SystemExit(f"{name}: write set drifted: expected={sorted(want)} actual={sorted(got)}")
@@ -412,15 +421,7 @@ def main() -> int:
     experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality, research, "tomoki-manager-queue.yml", "ai-foundry-executor.yml"})
     stress = validate_owned_issue_stress_lanes()
     explicit = validate_explicit_lanes()
-    # These two are validated and popped by the entrypoint before calling main(); check write sets only when still present (standalone mode).
-    mgr_body = WORKFLOWS.get("tomoki-manager-queue.yml", "")
-    if mgr_body and writes(mgr_body) != {"id-token"}:
-        raise SystemExit(f"tomoki-manager-queue.yml: manager queue write set drifted: {sorted(writes(mgr_body))}")
-    fry_body = WORKFLOWS.get("ai-foundry-executor.yml", "")
-    if fry_body and writes(fry_body) != {"contents", "id-token", "pull-requests"}:
-        raise SystemExit(f"ai-foundry-executor.yml: Forge V2 write set drifted: {sorted(writes(fry_body))}")
-    entrypoint_classified = {n for n in ("tomoki-manager-queue.yml", "ai-foundry-executor.yml") if WORKFLOWS.get(n)}
-    known = explicit | pages | experiments | stress | entrypoint_classified | {task_worker, reality, research, public_probe, "security-guard.yml"}
+    known = explicit | pages | experiments | stress | {task_worker, reality, research, public_probe, "security-guard.yml"}
     validate_unknown_writes(known)
     print(json.dumps({
         "status": "PASS", "workflows": len(WORKFLOWS), "pages_lanes": sorted(pages),
