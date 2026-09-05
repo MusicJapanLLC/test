@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import threading
 import time
 
 import pytest
@@ -14,7 +15,9 @@ from senju.guard_timeout import (
 
 
 def _timeout():
-    time.sleep(0.05)
+    # Block indefinitely until the ThreadPoolExecutor cancels the future on timeout.
+    # time.sleep(0.05) is unreliable in CI (scheduler granularity can beat 5ms timeouts).
+    threading.Event().wait(60)
     return "allow"
 
 

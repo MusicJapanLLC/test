@@ -111,6 +111,29 @@ def _standing_for(
     return sorted(rows, key=lambda row: (len(row.allowed_methods), row.authorization_reference))[0]
 
 
+def _collaboration_index(shared_dir: Path | None) -> dict[str, dict[str, Any]]:
+    if shared_dir is None:
+        return {}
+    doc = _load(shared_dir / "collaboration_context.json", {})
+    rows = doc.get("hosts", ()) if isinstance(doc, Mapping) else ()
+    out: dict[str, dict[str, Any]] = {}
+    for row in rows if isinstance(rows, list) else ():
+        if not isinstance(row, Mapping):
+            continue
+        try:
+            host = _host(row.get("host"))
+        except AuthorizedHostPromotionError:
+            continue
+        out[host] = {
+            "priority": max(1, min(int(row.get("priority", 70) or 70), 100)),
+        }
+    return out
+
+
+def _collaboration_context(index: dict[str, dict[str, Any]], host: str) -> dict[str, Any]:
+    return index.get(host, {"priority": 70})
+
+
 def _intelligence_index(promotion_dir: Path) -> dict[str, dict[str, Any]]:
     doc = _load(promotion_dir / "promotion_context.json", {})
     rows = doc.get("hosts", ()) if isinstance(doc, Mapping) else ()
