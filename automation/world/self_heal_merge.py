@@ -67,7 +67,9 @@ def inspect_pr(pr: dict[str, Any]) -> dict[str, Any]:
     pending = [c for c in checks if str(c.get("status") or "") != "completed"]
     bad = [c for c in checks if str(c.get("status") or "") == "completed" and str(c.get("conclusion") or "") not in GOOD]
     mergeable = detail.get("mergeable") is True
-    ready = bool(checks) and not pending and not bad and mergeable
+    labels = {str(lb.get("name") or "") for lb in (detail.get("labels") or [])}
+    has_approval_label = "ai-merge-approved" in labels
+    ready = bool(checks) and not pending and not bad and mergeable and has_approval_label
     return {
         "number": number,
         "head": str((detail.get("head") or {}).get("ref") or ""),
@@ -77,6 +79,7 @@ def inspect_pr(pr: dict[str, Any]) -> dict[str, Any]:
         "checks_total": len(checks),
         "checks_pending": [str(c.get("name") or "check") for c in pending],
         "checks_bad": [f"{c.get('name')}={c.get('conclusion')}" for c in bad],
+        "has_ai_merge_approved": has_approval_label,
         "ready": ready,
         "html_url": detail.get("html_url"),
     }
