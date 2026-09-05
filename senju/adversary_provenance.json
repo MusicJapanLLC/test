@@ -5,7 +5,7 @@
     "senju/senju/authorized_assessment.py": "c013c4d982d5643e761dd6a081830ade739fca40",
     "senju/senju/external.py": "b0719d28dbb121303e60f787dd3fca9a558870d5",
     "senju/senju/autonomy/engine.py": "ff8a3757446a2bacb3b75a392a991d0d450ee0ef",
-    "senju/senju/safety.py": "e51b4ca9240842839e6548cbfd7a91c583c7ca95",
+    "senju/senju/safety.py": "f30ad77d0f479d75e412acb009c59d22301700aa",
     ".github/workflows/security-guard.yml": "f828f1dc03adeb33bcdcdc6f10baf6d7db49107b",
     "scripts/security/artifact_guard.py": "752b2a0069fffe727927e90c5fffc74ba138ab85"
   }

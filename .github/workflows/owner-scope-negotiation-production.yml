@@ -124,6 +124,16 @@ jobs:
           test "$(jq -r '.coordination_capabilities.may_mint_new_external_authority' /tmp/promotion-intelligence-before.json)" = "false"
           echo "promotion_context_hosts=$(jq -r '.host_context_count' /tmp/promotion-intelligence-before.json)" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Pull shared negotiation context into Owner Scope signals
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/engine/negotiation_context_bridge.py pull \
+            --bus-dir .authority-opportunity-runtime \
+            --state-dir senju/state \
+            --json-out /tmp/negotiation-context-bridge-pull.json
+
       - name: Run real production negotiation cycle
         env:
           PYTHONPATH: senju:automation/codegen
@@ -177,6 +187,17 @@ jobs:
           for row in d.get('packets', [])[:12]:
               print(f"- candidate `{row.get('host')}` → `{row.get('status')}` priority=`{row.get('promotion_priority')}`")
           PY
+
+      - name: Publish Promotion Corps outcomes to shared authority-opportunity runtime
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/engine/negotiation_context_bridge.py publish \
+            --bus-dir .authority-opportunity-runtime \
+            --promotion-dir senju/state/authorized-host-promotion \
+            --state-dir senju/state \
+            --json-out /tmp/negotiation-context-bridge-publish.json
 
       - name: Feed Promotion Corps outcomes back into negotiation AI
         env:
