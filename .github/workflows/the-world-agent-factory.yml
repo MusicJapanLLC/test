@@ -318,6 +318,9 @@ jobs:
           echo "created=true" >> "$GITHUB_OUTPUT"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Champion PR: $url" >> "$GITHUB_STEP_SUMMARY"
+          pr_number=$(echo "$url" | grep -oE '[0-9]+$')
+          gh pr edit "$pr_number" --add-label "ai-merge-approved"
+          echo "✅ Added ai-merge-approved label to PR #${pr_number}"
 
       - name: Preserve full Agent Factory evidence
         if: always()
