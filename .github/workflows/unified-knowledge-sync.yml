@@ -55,7 +55,6 @@ jobs:
           import os
           from datetime import datetime
 
-          # GitHub context — GITHUB_EVENT_PATH is a file path, not JSON
           event_path = os.getenv('GITHUB_EVENT_PATH', '')
           event_data = {}
           if event_path and os.path.isfile(event_path):
@@ -68,7 +67,6 @@ jobs:
               for commit in event_data['commits']:
                   msg = commit.get('message', '')
                   if 'fingerprint:' in msg:
-                      # Extract knowledge metadata
                       lines = msg.split('\n')
                       metadata = {}
                       for line in lines[1:]:

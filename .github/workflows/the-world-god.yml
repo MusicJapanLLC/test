@@ -11,6 +11,7 @@ on:
       - "api/ultimate-evolution-engine.js"
       - "api/infinite-evolution-supreme-god.js"
       - "api/run-supreme-god.js"
+      - "automation/unified-knowledge/god_knowledge_emitter.py"
       - ".github/workflows/the-world-god.yml"
   pull_request:
     branches: ["claude/employee-onboarding-setup-udm86"]
@@ -19,10 +20,11 @@ on:
       - "api/ultimate-evolution-engine.js"
       - "api/infinite-evolution-supreme-god.js"
       - "api/run-supreme-god.js"
+      - "automation/unified-knowledge/god_knowledge_emitter.py"
       - ".github/workflows/the-world-god.yml"
 
 permissions:
-  contents: read
+  contents: write
   actions: read
 
 concurrency:
@@ -33,18 +35,21 @@ jobs:
   supreme-evolution:
     name: THE WORLD GOD (30 Layers)
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       GOD_REPORT: ${{ runner.temp }}/supreme-god-report.json
+      GOD_BRANCH: claude/supreme-ai-development-06vi1t
 
     steps:
       - name: Checkout
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
-          persist-credentials: false
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ github.token }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "20"
 
@@ -80,12 +85,74 @@ jobs:
           print(f"Cycles: {report['base_layer']['cycles_completed']}")
           print(f"Tasks processed: {report['base_layer']['tasks_processed']}")
           print(f"Reward trend: {report['base_layer']['reward_trend']}")
-          print(f"Status: {report['supreme_layer']['status']}")
+          print(f"Avg reward: {report['base_layer']['average_reward']:.3f}")
           PY
+
+      - name: Emit enriched knowledge to GOD registry branch
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+
+          # Configure git identity
+          git config user.name "THE WORLD GOD"
+          git config user.email "god@the-world.ai"
+
+          # Fetch the GOD knowledge branch (full depth so worktree works)
+          git fetch origin "$GOD_BRANCH"
+
+          # Create a worktree for the GOD branch so we push ONLY the registry
+          # change without overwriting the rest of that branch
+          WORKTREE="/tmp/god-registry-wt"
+          git worktree add "$WORKTREE" "origin/$GOD_BRANCH"
+          trap "git worktree remove --force '$WORKTREE' 2>/dev/null || true" EXIT
+
+          REGISTRY="$WORKTREE/knowledge/god-registry.json"
+          mkdir -p "$(dirname "$REGISTRY")"
+
+          # Run emitter: reads Senju labs/champion state from THIS checkout,
+          # writes to the registry in the GOD worktree
+          python3 automation/unified-knowledge/god_knowledge_emitter.py \
+            "$GOD_REPORT" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --registry-path "$REGISTRY"
+
+          # Commit and push from the worktree
+          cd "$WORKTREE"
+          git add knowledge/god-registry.json
+
+          if git diff --cached --quiet; then
+            echo "ℹ️  Registry already up-to-date for this cycle"
+            exit 0
+          fi
+
+          ENTRIES=$(python3 -c "
+          import json; r=json.load(open('knowledge/god-registry.json'))
+          print(r.get('total_entries',0))
+          ")
+          TOP=$(python3 -c "
+          import json; r=json.load(open('knowledge/god-registry.json'))
+          e=r.get('entries',[])
+          if e:
+              latest=sorted(e,key=lambda x:x.get('created_at',''))[-1]
+              c=latest.get('content',{})
+              print(c.get('top_target','none')+' / '+c.get('strategy','unknown'))
+          else:
+              print('none / unknown')
+          ")
+
+          git commit -m "chore(god): knowledge DB updated — cycle learning recorded [skip ci]
+
+entries: $ENTRIES
+top_target/strategy: $TOP
+source: THE_WORLD_GOD_SUPREME (30 layers, test repo)
+senju_labs: enriched from ELO champion + coverage gaps"
+
+          git push origin "HEAD:$GOD_BRANCH"
+          echo "✅ Knowledge committed and pushed to $GOD_BRANCH ($ENTRIES total entries)"
 
       - name: Upload GOD evolution report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: the-world-god-report-${{ github.run_id }}
           retention-days: 30
