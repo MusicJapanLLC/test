@@ -217,6 +217,8 @@ def execute_authorized_red_contact(
     for attempt in range(1, attempts_cap + 1):
         try:
             receipt = lane.contact(url, method=method)
+            if receipt is None:
+                raise ExternalContactError("transport returned None response")
         except Exception as exc:  # transport errors are normalized into denial memory
             event = denial_event(
                 operation_id=operation_id,

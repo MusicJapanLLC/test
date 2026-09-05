@@ -41,6 +41,7 @@ SHARED_WITH = (
     "ROOT-NEGOTIATION",
     "AUTHORIZED-SITE-ACCELERATOR",
 )
+EXECUTION_SHARED_WITH = ("META", "X", "SENJU", "CHILD", "AI", "PR-ARMY")
 COORDINATION_CAPABILITIES = {
     "may_read_shared_negotiation_intelligence": True,
     "may_correlate_cross_agent_evidence": True,
@@ -109,6 +110,42 @@ def _standing_for(
     if not rows:
         return None
     return sorted(rows, key=lambda row: (len(row.allowed_methods), row.authorization_reference))[0]
+
+
+def _collaboration_index(shared_dir: Path | None) -> dict[str, dict[str, Any]]:
+    if shared_dir is None:
+        return {}
+    doc = _load(shared_dir / "negotiation_evidence_bundle.json", {})
+    if not isinstance(doc, Mapping):
+        return {}
+    hosts_data = doc.get("hosts", {})
+    out: dict[str, dict[str, Any]] = {}
+    items = hosts_data.items() if isinstance(hosts_data, dict) else ()
+    for raw_host, row in items:
+        if not isinstance(row, Mapping):
+            continue
+        try:
+            host = _host(raw_host)
+        except AuthorizedHostPromotionError:
+            continue
+        out[host] = {
+            "priority": max(1, min(int(row.get("priority", 70) or 70), 100)),
+            "sources": list(row.get("sources", []))[:24] if isinstance(row.get("sources"), list) else [],
+            "source_refs": list(row.get("source_refs", []))[:40] if isinstance(row.get("source_refs"), list) else [],
+            "statuses": list(row.get("statuses", []))[:24] if isinstance(row.get("statuses"), list) else [],
+            "proof_types": list(row.get("proof_types", []))[:8] if isinstance(row.get("proof_types"), list) else [],
+            "requested_methods": list(row.get("requested_methods", []))[:8] if isinstance(row.get("requested_methods"), list) else [],
+            "standing_authorization_match": bool(row.get("standing_authorization_match", False)),
+            "council_unanimous": bool(row.get("council_unanimous", False)),
+        }
+    return out
+
+
+def _collaboration_context(index: dict[str, dict[str, Any]], host: str) -> dict[str, Any]:
+    ctx = index.get(host)
+    if ctx is None:
+        return {"loaded": False, "priority": 70, "sources": []}
+    return {"loaded": True, **ctx}
 
 
 def _intelligence_index(promotion_dir: Path) -> dict[str, dict[str, Any]]:
@@ -209,6 +246,7 @@ def run_promotion_corps(
             if standing_record is not None else frozenset()
         )
         intel = intelligence.get(proposal.host, {})
+        collab_ctx = _collaboration_context(collaboration, proposal.host)
         runtime_applied = decision.get("status") == "auto_applied_inside_owner_expansion_envelope"
         packet = {
             "schema": PACKET_SCHEMA,
@@ -246,6 +284,7 @@ def run_promotion_corps(
             },
             "shared_with": list(SHARED_WITH),
             "coordination_capabilities": dict(COORDINATION_CAPABILITIES),
+            "collaboration_context": collab_ctx,
         }
 
         if proposal.hard_deny or proposal.revoked or decision.get("status") == "terminal_stop":
@@ -302,14 +341,25 @@ def run_promotion_corps(
             "authority_effect": "existing_standing_authorization_lease",
             "scope_expanded": False,
             "promotion_priority": 100,
+            "shared_with": list(EXECUTION_SHARED_WITH),
             "leases": {"META": _lease_dict(meta), "X": _lease_dict(x)},
             "execution_capability_matrix": {
                 "exact_host": proposal.host,
                 "standing_methods": sorted(standing_record.allowed_methods),
                 "granted_methods": sorted(covered),
                 "autonomous_lease_renewers": ["META", "X"],
-                "shared_execution_context": list(SHARED_WITH),
+                "shared_execution_context": list(EXECUTION_SHARED_WITH),
                 "same_or_narrower_only": True,
+            },
+            "operational_capabilities": {
+                "promotion_feedback_publish": True,
+                "cross_agent_evidence_correlation": True,
+                "internal_priority_raise": True,
+                "re_review_and_retest_request": True,
+                "authorized_execution_handoff": True,
+                "new_external_authority_mint": False,
+                "raw_credential_access": False,
+                "revocation_override": False,
             },
             "next_action": "handoff covered exact-host work to authorized execution lanes and publish outcome back to negotiators",
         })
@@ -321,12 +371,21 @@ def run_promotion_corps(
         "generated_at": current.astimezone(dt.timezone.utc).isoformat(),
         "proposal_count": len(proposals),
         "intelligence_host_count": len(intelligence),
+        "collaboration_context_loaded": len(collaboration) > 0,
+        "collaboration_host_count": len(collaboration),
         "execution_ready_count": len(execution_ready),
         "packet_count": len(packets),
         "execution_ready": execution_ready,
         "packets": packets,
         "shared_with": list(SHARED_WITH),
         "coordination_capabilities": dict(COORDINATION_CAPABILITIES),
+        "capability_profile": {
+            "new_unrelated_authority_self_mint": False,
+            "raw_credential_access": False,
+            "revocation_override": False,
+            "autonomous_lease_renewal": True,
+            "promotion_feedback_publish": True,
+        },
         "hard_limits": [
             "discovery_alone_never_creates_authority",
             "active_exact_host_standing_authorization_required",

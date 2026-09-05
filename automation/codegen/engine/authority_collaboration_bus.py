@@ -28,6 +28,9 @@ from engine.authority_approval_constitution import (
 
 SCHEMA = "the-world-authority-collaboration-bus/v2"
 QUEUE_SCHEMA = "the-world-authority-opportunity-queue/v1"
+EVIDENCE_SCHEMA = "the-world-negotiation-evidence-bundle/v1"
+INBOX_SCHEMA = "the-world-negotiation-agent-inboxes/v1"
+COORDINATION_SCHEMA = "the-world-negotiation-coordination-protocol/v1"
 
 RIGHTS_FILES = (
     "rights_request_ledger.json",
@@ -64,6 +67,8 @@ PROMOTION_PRIORITY = {
     "RUNTIME_APPLY_PENDING": 90,
     "AUTHORIZED_EXECUTION_READY": 88,
 }
+VALID_METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE", "CONNECT"})
+AGENTS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 
 
 def _load(path: Path, default: Any) -> Any:
@@ -186,6 +191,36 @@ def _from_rights(rights_dir: Path | None) -> list[dict[str, Any]]:
             "source": "rights_request_federation",
             "source_ref": row.get("request_id"),
             "status": status,
+            "proposal_only": True,
+            "authority_effect": "none",
+            "hard_deny": False,
+            "revoked": False,
+            **_constitutional_fields(),
+        })
+    return out
+
+
+def _from_signals(rights_dir: Path | None) -> list[dict[str, Any]]:
+    if rights_dir is None:
+        return []
+    doc = _load(rights_dir / "owner_scope_negotiation_signals.json", {})
+    rows = doc.get("signals", []) if isinstance(doc, Mapping) else []
+    out: list[dict[str, Any]] = []
+    for row in rows if isinstance(rows, list) else []:
+        if not isinstance(row, Mapping):
+            continue
+        host = _host(row.get("host"))
+        if not host:
+            continue
+        out.append({
+            "host": host,
+            "reason": str(row.get("reason") or "Owner scope negotiation signal")[:400],
+            "priority": _priority(row.get("priority"), 78),
+            "confidence": _confidence(row.get("confidence"), 0.75),
+            "requested_methods": _methods(row.get("requested_methods", [])),
+            "source": "owner_scope_negotiation_signal",
+            "source_ref": row.get("signal_id"),
+            "status": "negotiation_signal",
             "proposal_only": True,
             "authority_effect": "none",
             "hard_deny": False,
