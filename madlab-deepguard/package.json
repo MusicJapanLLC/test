@@ -1,0 +1,9 @@
+{
+  "name": "madlab-deepguard-v2",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {"node": ">=20"},
+  "scripts": {"start": "node server2.js"},
+  "dependencies": {"express": "^4.21.2"}
+}
