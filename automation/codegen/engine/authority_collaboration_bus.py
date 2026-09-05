@@ -68,6 +68,7 @@ PROMOTION_PRIORITY = {
     "AUTHORIZED_EXECUTION_READY": 88,
 }
 VALID_METHODS = frozenset({"GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE", "CONNECT"})
+AGENTS = ("META", "X", "SENJU", "PR-ARMY", "CHILD", "AI")
 
 
 def _load(path: Path, default: Any) -> Any:

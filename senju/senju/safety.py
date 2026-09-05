@@ -123,6 +123,8 @@ class ScopeGuard:
         if url_host is not None:
             if url_host in normalized_allow_hosts:
                 return None
+            if self.policy.allow_abstract_external_refs:
+                return None
             return "HTTPSの外部ホストへのアクセスは許可リストに含まれていない"
 
         if _is_lab_ip(target_ref):
