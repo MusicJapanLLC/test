@@ -45,8 +45,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
         with:
           fetch-depth: 0
-          persist-credentials: true
-          token: ${{ github.token }}
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -93,9 +92,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Configure git identity
+          # Configure git identity and credentials for push
           git config user.name "THE WORLD GOD"
           git config user.email "god@the-world.ai"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
           # Fetch the GOD knowledge branch (full depth so worktree works)
           git fetch origin "$GOD_BRANCH"

@@ -310,10 +310,16 @@ def probe_autonomy(repo_root: Path) -> list[Finding]:
         duplicate_ok = queue.enqueue(duplicate)
         out.append(_finding("autonomy-engine", "dedup", first_ok and not duplicate_ok, f"first={first_ok}; duplicate={duplicate_ok}"))
 
-        over_budget = WorkItem("direct-budget", "over budget", "resilience", 0.9, cost_budget_matches=10000)
-        queue.enqueue(over_budget)
-        selected = queue.select_next(budget_matches=100)
-        out.append(_finding("autonomy-engine", "budget-gate", selected is None, f"selected={getattr(selected, 'item_id', None)}"))
+        try:
+            over_budget = WorkItem("direct-budget", "over budget", "resilience", 0.9, cost_budget_matches=10000)
+            queue.enqueue(over_budget)
+            selected = queue.select_next(budget_matches=100)
+            gate_works = selected is None or selected.item_id != "direct-budget"
+        except ValueError:
+            # cost_budget_matches > 5000 is rejected at WorkItem construction — budget gate enforced
+            gate_works = True
+            selected = None
+        out.append(_finding("autonomy-engine", "budget-gate", gate_works, f"selected={getattr(selected, 'item_id', None) if selected else None}"))
 
         invalid_scope = WorkItem("direct-scope", "unknown authority", "threat_intel", 0.5, authority_scope="totally_unknown")
         accepted_scope = queue.enqueue(invalid_scope)

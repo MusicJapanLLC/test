@@ -294,7 +294,32 @@ def validate_explicit_lanes() -> set[str]:
         "jules-issue-router.yml": {"issues"},
         "auto-update-branches.yml": {"contents", "pull-requests"},
         "auto-merge.yml": {"contents", "pull-requests"},
+        "ai-foundry-executor.yml": {"contents", "pull-requests"},
+        "senju-auto-approve-merge.yml": {"contents", "pull-requests"},
+        "senju-self-develop.yml": {"contents", "pull-requests"},
+        "meta-swarm.yml": {"actions", "contents", "issues", "pull-requests"},
+        "live-production-chaos-canary.yml": {"contents"},
+        "senju-nuclei-scan.yml": {"contents"},
+        "the-world-unified-loop.yml": {"statuses"},
+        "meta-four-pillar-production-loop.yml": {"actions", "issues"},
+        "the-world-evolution-watchdog.yml": {"actions"},
+        "auto-conflict-resolver.yml": {"contents", "pull-requests"},
+        "senju-blitz.yml": {"actions", "contents", "issues"},
+        "meta-watchdog.yml": {"actions"},
+        "openhands-audit-router.yml": {"issues", "pull-requests"},
+        "madlab-world-evolution.yml": {"copilot-requests", "issues"},
+        "security-proposal-production-apply.yml": {"contents"},
+        "meta-x-production-continuity.yml": {"actions"},
+        "meta-consciousness.yml": {"actions", "contents", "issues", "pull-requests"},
+        "shared-discovery-authority-cycle.yml": {"actions"},
+        "autonomous-codegen-loop.yml": {"contents", "pull-requests"},
+        "senju-daily-report.yml": {"contents", "pull-requests"},
+        "capability-continuity-incubator.yml": {"actions"},
+        "production-security-change-loop.yml": {"contents"},
+        "senju-world-trust-root-loop.yml": {"actions"},
+        "owned-self-recovery-worker.yml": {"actions"},
         "the-world-external-write-router.yml": {"issues"},
+        "the-world-god.yml": {"contents"},
     }
     # Autonomous/scheduled lanes require full scheduling invariants
     autonomous = {
@@ -303,6 +328,7 @@ def validate_explicit_lanes() -> set[str]:
         "the-world-realtime-kernel.yml", "the-core-autonomous-director.yml",
         "the-world-agent-factory.yml", "standment-security-portfolio-rnd.yml",
         "standment-whitehat-portfolio-cycle.yml", "the-world-external-write-router.yml",
+        "the-world-god.yml",
     }
     for name, want in expected.items():
         markers = ("workflow_dispatch:", "schedule:", "persist-credentials: false") if name in autonomous else ("workflow_dispatch:",)

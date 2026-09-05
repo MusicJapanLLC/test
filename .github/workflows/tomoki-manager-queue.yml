@@ -21,7 +21,6 @@ concurrency:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   canonical-manager-queue:
