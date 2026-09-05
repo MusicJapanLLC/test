@@ -294,7 +294,7 @@ def validate_explicit_lanes() -> set[str]:
         "jules-issue-router.yml": {"issues"},
         "auto-update-branches.yml": {"contents", "pull-requests"},
         "auto-merge.yml": {"contents", "pull-requests"},
-        "ai-foundry-executor.yml": {"contents", "pull-requests"},
+        "ai-foundry-executor.yml": {"contents", "id-token", "pull-requests"},
         "senju-auto-approve-merge.yml": {"contents", "pull-requests"},
         "senju-self-develop.yml": {"contents", "pull-requests"},
         "meta-swarm.yml": {"actions", "contents", "issues", "pull-requests"},
@@ -320,6 +320,7 @@ def validate_explicit_lanes() -> set[str]:
         "owned-self-recovery-worker.yml": {"actions"},
         "the-world-external-write-router.yml": {"issues"},
         "the-world-god.yml": {"contents"},
+        "tomoki-manager-queue.yml": {"id-token"},
     }
     # Autonomous/scheduled lanes require full scheduling invariants
     autonomous = {
@@ -410,7 +411,7 @@ def main() -> int:
     reality = validate_reality_lane()
     research = validate_research_oidc_lane()
     public_probe = validate_public_web_write_probe()
-    experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality, research})
+    experiments = validate_experiment_oidc_lanes(pages, {task_worker, reality, research, "tomoki-manager-queue.yml", "ai-foundry-executor.yml"})
     stress = validate_owned_issue_stress_lanes()
     explicit = validate_explicit_lanes()
     known = explicit | pages | experiments | stress | {task_worker, reality, research, public_probe, "security-guard.yml"}

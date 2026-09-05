@@ -321,20 +321,32 @@ def probe_autonomy(repo_root: Path) -> list[Finding]:
             selected = None
         out.append(_finding("autonomy-engine", "budget-gate", gate_works, f"selected={getattr(selected, 'item_id', None) if selected else None}"))
 
-        invalid_scope = WorkItem("direct-scope", "unknown authority", "threat_intel", 0.5, authority_scope="totally_unknown")
-        accepted_scope = queue.enqueue(invalid_scope)
+        try:
+            invalid_scope = WorkItem("direct-scope", "unknown authority", "threat_intel", 0.5, authority_scope="totally_unknown")
+            accepted_scope = queue.enqueue(invalid_scope)
+        except ValueError:
+            accepted_scope = False
         out.append(_finding("autonomy-engine", "unknown-authority-scope-rejected", not accepted_scope, f"accepted={accepted_scope}"))
 
-        negative_value = WorkItem("direct-negative", "negative expected value", "resilience", -1.0)
-        accepted_negative = queue.enqueue(negative_value)
+        try:
+            negative_value = WorkItem("direct-negative", "negative expected value", "resilience", -1.0)
+            accepted_negative = queue.enqueue(negative_value)
+        except ValueError:
+            accepted_negative = False
         out.append(_finding("autonomy-engine", "negative-expected-value-rejected", not accepted_negative, f"accepted={accepted_negative}"))
 
-        empty_hypothesis = WorkItem("direct-empty", "", "resilience", 0.5)
-        accepted_empty = queue.enqueue(empty_hypothesis)
+        try:
+            empty_hypothesis = WorkItem("direct-empty", "", "resilience", 0.5)
+            accepted_empty = queue.enqueue(empty_hypothesis)
+        except ValueError:
+            accepted_empty = False
         out.append(_finding("autonomy-engine", "empty-hypothesis-rejected", not accepted_empty, f"accepted={accepted_empty}"))
 
-        bad_status = WorkItem("direct-status", "bad status", "resilience", 0.5, status="unknown-state")
-        accepted_status = queue.enqueue(bad_status)
+        try:
+            bad_status = WorkItem("direct-status", "bad status", "resilience", 0.5, status="unknown-state")
+            accepted_status = queue.enqueue(bad_status)
+        except ValueError:
+            accepted_status = False
         out.append(_finding("autonomy-engine", "unknown-status-rejected", not accepted_status, f"accepted={accepted_status}"))
 
         retry = WorkItem("direct-retry", "retry gate", "resilience", 0.5, status=WorkItemStatus.FAILED.value, attempt_count=3, max_retries=2)
