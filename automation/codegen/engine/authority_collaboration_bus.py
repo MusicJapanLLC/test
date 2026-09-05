@@ -28,6 +28,9 @@ from engine.authority_approval_constitution import (
 
 SCHEMA = "the-world-authority-collaboration-bus/v2"
 QUEUE_SCHEMA = "the-world-authority-opportunity-queue/v1"
+EVIDENCE_SCHEMA = "the-world-negotiation-evidence-bundle/v1"
+INBOX_SCHEMA = "the-world-negotiation-agent-inboxes/v1"
+COORDINATION_SCHEMA = "the-world-negotiation-coordination-protocol/v1"
 
 RIGHTS_FILES = (
     "rights_request_ledger.json",
