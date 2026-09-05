@@ -6,6 +6,11 @@ NASA JAPAN 30-Min Research Loop Engine
 実行周期: 30分ごと
 収集対象: arXiv, NASA Data, GitHub Research, IEEE
 出力先: Google Sheets（自動作成・追記）
+
+Dependencies:
+  - google-auth-oauthlib (for Sheets integration)
+  - google-auth-httplib2
+  - google-api-python-client
 """
 
 import json
@@ -14,8 +19,17 @@ import os
 import re
 import datetime
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import subprocess
+
+# Google Sheets統合（オプション）
+try:
+    from sheets_integration import integrate_with_research_engine
+    SHEETS_AVAILABLE = True
+except ImportError:
+    SHEETS_AVAILABLE = False
+    def integrate_with_research_engine(data):
+        return None
 
 # ============================================================================
 # DATA SOURCES: 宇宙開発×AI関連論文・データの複数ソース取得
@@ -429,6 +443,19 @@ def main():
         'result_file': result_file,
         'sheets': sheets_data,
     }
+
+    # Step 7: Google Sheets連携（オプション）
+    print("📊 [STEP 7] Syncing to Google Sheets...")
+    if SHEETS_AVAILABLE:
+        sheets_url = integrate_with_research_engine(output)
+        if sheets_url:
+            output['sheets_url'] = sheets_url
+            print(f"  ✅ Synced to Sheets: {sheets_url}")
+        else:
+            print("  ⚠️  Sheets sync skipped (credentials not configured)")
+    else:
+        print("  ℹ️  Sheets integration not available (install google-auth-oauthlib)")
+    print()
 
     print("=" * 80)
     print("✅ NASA JAPAN Research Loop - COMPLETE")
