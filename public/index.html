@@ -1,59 +1,124 @@
 <!doctype html>
 <html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>AI FOUNDRY IDE</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI FOUNDRY IDE</title>
   <link rel="stylesheet" href="/styles.css" />
-</head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/typescript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/bash.min.js"></script>
+  </head>
 <body>
-  <div id="mobileBlock">AI FOUNDRY IDE is desktop-first. Open this URL on a PC.</div>
+  <div id="mobileBlock">AI FOUNDRY IDE — desktop only. Open on a PC.</div>div>
   <div id="app" class="shell">
+
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-      <div class="brand"><span class="dot"></span><strong>AI FOUNDRY</strong><small>DEVELOPMENT IDE</small></div>
-      <button id="newThread" class="new-thread">+ NEW CHAT</button>
-      <div class="sidebar-label">SESSIONS</div>
-      <div id="threadList" class="thread-list"></div>
-      <div class="sidebar-foot">GPT-5.6 SOL · VERCEL AI GATEWAY</div>
-    </aside>
-
-    <main class="chat-pane">
-      <header class="pane-head">
-        <div><div class="eyebrow">AI DEVELOPMENT CORE</div><h1 id="threadTitle">New AI Development</h1></div>
-        <div class="head-meta"><span class="green"></span> ONLINE</div>
-      </header>
-      <section id="messages" class="messages"></section>
-      <div class="composer-wrap">
-        <textarea id="composer" rows="1" placeholder="Build, debug, evaluate or evolve an AI system...  Enter = send / Shift+Enter = newline"></textarea>
-        <button id="sendBtn">SEND</button>
-      </div>
-    </main>
-
-    <aside class="tools-pane">
-      <header class="tools-head"><div class="eyebrow">EXECUTION</div><h2>DEV TOOLS</h2></header>
-      <div class="pipeline">
-        <button id="runPipeline" class="primary">RUN BUILD PIPELINE</button>
-        <button id="clearLog" class="secondary">CLEAR LOG</button>
-      </div>
-      <div class="tool-status">
-        <div><span>MODEL</span><b>openai/gpt-5.6-sol</b></div>
-        <div><span>BUILD</span><b id="buildState">IDLE</b></div>
-        <div><span>TEST</span><b id="testState">IDLE</b></div>
-        <div><span>PUBLISH</span><b id="publishState">IDLE</b></div>
-      </div>
-      <div class="terminal-head"><span>TERMINAL</span><span id="clock"></span></div>
-      <pre id="terminal" class="terminal"></pre>
-      <section id="artifact" class="artifact hidden">
-        <div class="artifact-title">GENERATED AI</div>
-        <h3 id="artifactName"></h3>
-        <p id="artifactDescription"></p>
-        <div id="artifactCaps" class="caps"></div>
-        <a id="artifactUrl" target="_blank" rel="noreferrer">OPEN AI ↗</a>
-        <button id="copyUrl" class="secondary">COPY URL</button>
-      </section>
-    </aside>
+      <div class="brand">
+        <span class="dot"></span>span>
+        <strong>AI FOUNDRY</strong>
+      <small>DEVELOPMENT IDE v2</small>
+      </div>div>
+    <button id="newThread" class="new-thread">+ NEW SESSION</button>button>
+    <div class="sidebar-label">SESSIONS</div>div>
+    <div id="threadList" class="thread-list"></div>div>
+    
+    <!-- GitHub Connect Panel -->
+    <div id="ghPanel" class="gh-panel">
+    <div class="sidebar-label">GITHUB</div>div>
+    <div id="ghConnected" class="gh-connected hidden">
+    <span class="dot" style="width:6px;height:6px;display:inline-block"></span>span>
+    <span id="ghConnectedLabel">NOT CONNECTED</span>span>
+    </div>div>
+    <input id="githubToken" type="password" placeholder="GitHub PAT" class="gh-input" />
+    <input id="githubUrl" type="text" placeholder="owner/repo or full URL" class="gh-input" spellcheck="false" />
+    <button id="githubLoad" class="gh-connect-btn">CONNECT REPO</button>button>
+    <span id="githubStatus" class="gh-status-small"></span>span>
+    </div>div>
+    
+    <div class="sidebar-foot" id="modelLabel">GPT-5.6-SOL · VERCEL AI</div>div>
+    </aside>aside>
+  
+  <!-- CHAT PANE -->
+  <main class="chat-pane">
+  <header class="pane-head">
+  <div>
+    <div class="eyebrow">AI DEVELOPMENT CORE</div>
+    <h1 id="threadTitle">New Session</h1>h1>
   </div>
-  <script src="/auto-execute.js"></script>
-  <script type="module" src="/app.js"></script>
-</body>
-</html>
+    <div class="head-right">
+      <select id="modelPicker" title="Model">
+        <option value="gpt">GPT-5.6-SOL</option>option>
+        <option value="claude">Claude Sonnet</option>option>
+        <option value="gemini">Gemini 2.0</option>option>
+      </select>select>
+      <div class="head-meta"><span class="green"></span>span> ONLINE</div>
+    </div>
+  </header>header>
+
+    <section id="messages" class="messages"></section>section>
+
+    <div class="composer-wrap">
+      <div class="composer-hints" id="composerHints">
+        <span class="hint" data-text="Next.js API with Supabase RLS">Next.js + Supabase</span>span>
+        <span class="hint" data-text="Python FastAPI streaming SSE endpoint">FastAPI SSE</span>span>
+        <span class="hint" data-text="Refactor TypeScript — eliminate all `any` types">TS strict</span>span>
+        <span class="hint" data-text="/pr MusicJapanLLC/test feature/test &quot;My PR title&quot;">/pr command</span>span>
+      </div>
+      <div class="composer-row">
+        <textarea id="composer" rows="1" placeholder="Describe what to build, debug, or improve… Enter = send Shift+Enter = newline"></textarea>
+        <button id="sendBtn">SEND</button>button>
+      </div>
+    </div>
+  </main>main>
+
+    <!-- TOOLS PANE -->
+    <aside class="tools-pane">
+      <header class="tools-head">
+        <div class="eyebrow">AUTONOMOUS IMPROVEMENT</div>
+        <h2>DEV TOOLS</h2>
+      </header>header>
+    
+    <div class="pipeline">
+    <button id="selfForgeBtn" class="forge-btn">SELF-FORGE</button>button>
+    <button id="autoImproveBtn" class="secondary">AUTO FORGE (5m)</button>button>
+    <button id="runPipeline" class="secondary">BUILD PIPELINE</button>button>
+    <button id="clearLog" class="secondary">CLEAR LOG</button>button>
+    </div>
+    
+    <div id="forgeStatus" class="forge-status hidden"></div>
+    
+    <div class="tool-status">
+    <div><span>MODEL</span><b id="modelDisplay">openai/gpt-5.6-sol</b>b></div>
+    <div><span>GITHUB</span><b id="ghState">DISCONNECTED</b>b></div>
+    <div><span>LATENCY</span><b id="latencyDisplay">—</b>b></div>
+    <div><span>EST COST</span><b id="costDisplay">$0.0000</b>b></div>
+    <div><span>BUILD</span><b id="buildState">IDLE</b>b></div>
+    <div><span>TOKENS</span><b id="tokenTotal">0</b>b></div>
+    </div>
+    
+    <div class="terminal-head">
+    <span>TERMINAL</span><span id="clock"></span>
+    </div>
+    <pre id="terminal" class="terminal"></pre>pre>
+    
+    <section id="artifact" class="artifact hidden">
+    <div class="artifact-title">GENERATED ARTIFACT</div>
+    <h3 id="artifactName"></h3>
+    <p id="artifactDescription"></p>p>
+    <div id="artifactCaps" class="caps"></div>
+    <a id="artifactUrl" target="_blank" rel="noreferrer">OPEN ↗</a>a>
+    <button id="copyUrl" class="secondary">COPY URL</button>button>
+    </section>section>
+    </aside>aside>
+  </div>
+<script src="/auto-execute.js"></script>
+<script type="module" src="/app.js"></script>
+</body></span></span></h2>
+  </div></small></strong>
+</body></title>
+  </head>

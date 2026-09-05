@@ -1,0 +1,11 @@
+{
+  "schema": "senju-public-review-key-policy/v1",
+  "review_key_acquisition": "open",
+  "eligible_requesters": ["discovery", "negotiation", "research", "manual", "external_input", "agent"],
+  "authority_effect": "none",
+  "approval_required_for_authority": true,
+  "exact_host_binding": true,
+  "cross_host_inheritance": false,
+  "credential_ceiling": "synthetic_test",
+  "private_network": false
+}

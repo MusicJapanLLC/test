@@ -1,0 +1,72 @@
+name: Persistent Boundary Evolution Tests
+
+on:
+  push:
+    branches:
+      - chatgpt/persistent-boundary-evolution-v2
+      - chatgpt/boundary-opportunity-miner
+      - chatgpt/internal-scope-consensus-band
+      - chatgpt/distributed-internal-council
+      - chatgpt/council-delegated-internal-actions
+    paths:
+      - 'automation/world/persistent_boundary_evolution.py'
+      - 'automation/world/test_persistent_boundary_evolution.py'
+      - 'automation/world/trust_boundary_proposals.py'
+      - 'automation/world/test_trust_boundary_proposals.py'
+      - 'automation/world/boundary_opportunity_miner.py'
+      - 'automation/world/run_boundary_opportunity_cycle.py'
+      - 'automation/world/test_boundary_opportunity_miner.py'
+      - 'automation/world/internal_scope_consensus.py'
+      - 'automation/world/run_internal_scope_consensus.py'
+      - 'automation/world/test_internal_scope_consensus.py'
+      - 'automation/world/distributed_internal_council.py'
+      - 'automation/world/test_distributed_internal_council.py'
+      - 'automation/world/council_delegated_action.py'
+      - 'automation/world/run_council_delegated_actions.py'
+      - 'automation/world/test_council_delegated_action.py'
+      - '.github/workflows/persistent-boundary-evolution-tests.yml'
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/persistent_boundary_evolution.py'
+      - 'automation/world/test_persistent_boundary_evolution.py'
+      - 'automation/world/trust_boundary_proposals.py'
+      - 'automation/world/test_trust_boundary_proposals.py'
+      - 'automation/world/boundary_opportunity_miner.py'
+      - 'automation/world/run_boundary_opportunity_cycle.py'
+      - 'automation/world/test_boundary_opportunity_miner.py'
+      - 'automation/world/internal_scope_consensus.py'
+      - 'automation/world/run_internal_scope_consensus.py'
+      - 'automation/world/test_internal_scope_consensus.py'
+      - 'automation/world/distributed_internal_council.py'
+      - 'automation/world/test_distributed_internal_council.py'
+      - 'automation/world/council_delegated_action.py'
+      - 'automation/world/run_council_delegated_actions.py'
+      - 'automation/world/test_council_delegated_action.py'
+      - '.github/workflows/persistent-boundary-evolution-tests.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run persistent boundary evolution tests
+        run: |
+          python -m pytest -q \
+            automation/world/test_trust_boundary_proposals.py \
+            automation/world/test_persistent_boundary_evolution.py \
+            automation/world/test_boundary_opportunity_miner.py \
+            automation/world/test_internal_scope_consensus.py \
+            automation/world/test_distributed_internal_council.py \
+            automation/world/test_council_delegated_action.py

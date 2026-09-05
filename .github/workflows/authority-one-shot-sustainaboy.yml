@@ -1,0 +1,128 @@
+name: One Shot Sustainaboy Authority Canary
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - '.github/workflows/authority-one-shot-sustainaboy.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  one-shot-authority:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Install Senju
+        run: python -m pip install --disable-pip-version-check -e './senju[dev]'
+
+      - name: Verify one-shot route code
+        run: |
+          python -m py_compile \
+            senju/scripts/run_autonomous_authority_council.py \
+            senju/scripts/run_delegated_root_factory.py \
+            senju/scripts/run_delegated_root_probe.py \
+            senju/senju/meta/delegated_root_factory.py
+
+      - name: Run council from second explicit Owner route
+        env:
+          PYTHONPATH: senju
+          STATE: ${{ runner.temp }}/one-shot-authority
+          TARGET_HOST: sustainaboy-works.onrender.com
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE/registry"
+          python senju/scripts/run_autonomous_authority_council.py \
+            --repo-root . \
+            --target-host "$TARGET_HOST" \
+            --out "$STATE/authority-council.json"
+          test "$(jq -r '.target' "$STATE/authority-council.json")" = "$TARGET_HOST"
+          test "$(jq -r '.owner_authorization' "$STATE/authority-council.json")" = "explicit"
+          test "$(jq -r '.standing_authorization_required' "$STATE/authority-council.json")" = "true"
+          test "$(jq -r '.authority_decision.allowed' "$STATE/authority-council.json")" = "true"
+          test "$(jq -r '.ai_council.effect' "$STATE/authority-council.json")" = "allow"
+
+      - name: Mint real bounded Authority from the new route
+        env:
+          PYTHONPATH: senju
+          STATE: ${{ runner.temp }}/one-shot-authority
+          TARGET_HOST: sustainaboy-works.onrender.com
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_delegated_root_factory.py \
+            --repo-root . \
+            --state-dir "$STATE/registry" \
+            --council "$STATE/authority-council.json" \
+            --out "$STATE/delegated-root.json"
+          root_id="$(jq -r '.root_profile_id' "$STATE/delegated-root.json")"
+          test -n "$root_id"
+          test "$root_id" != "null"
+          test "$(jq -r '.host' "$STATE/delegated-root.json")" = "$TARGET_HOST"
+          test "$(jq -r '.real_authority' "$STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.council_unanimous' "$STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.usable_as_parent' "$STATE/delegated-root.json")" = "true"
+          test "$(jq -r '.scope_expanded_beyond_owner' "$STATE/delegated-root.json")" = "false"
+          test "$(jq -r '.root_credential_scope' "$STATE/delegated-root.json")" = "none"
+          test "$(jq -r '.root_private_network' "$STATE/delegated-root.json")" = "false"
+          echo "ROOT_ID=$root_id" >> "$GITHUB_ENV"
+
+      - name: Prove Authority is usable with one bounded live HEAD
+        env:
+          PYTHONPATH: senju
+          STATE: ${{ runner.temp }}/one-shot-authority
+          TARGET_HOST: sustainaboy-works.onrender.com
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_delegated_root_probe.py \
+            --state-dir "$STATE/registry" \
+            --root-id "$ROOT_ID" \
+            --out "$STATE/delegated-root-external-probe.json"
+          test "$(jq -r '.host' "$STATE/delegated-root-external-probe.json")" = "$TARGET_HOST"
+          test "$(jq -r '.scope_derived_from_root' "$STATE/delegated-root-external-probe.json")" = "true"
+          test "$(jq -r '.live_external_io' "$STATE/delegated-root-external-probe.json")" = "true"
+          test "$(jq -r '.method' "$STATE/delegated-root-external-probe.json")" = "HEAD"
+          test "$(jq -r '.credential_scope' "$STATE/delegated-root-external-probe.json")" = "none"
+          test "$(jq -r '.private_network' "$STATE/delegated-root-external-probe.json")" = "false"
+
+      - name: Preserve one-shot authority evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: one-shot-sustainaboy-authority-${{ github.run_id }}
+          path: ${{ runner.temp }}/one-shot-authority/
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Summary
+        if: always()
+        env:
+          STATE: ${{ runner.temp }}/one-shot-authority
+        run: |
+          echo "## One-shot explicit-route Authority" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f "$STATE/delegated-root.json" ]; then
+            echo "- Target: $(jq -r '.host' "$STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Real Authority: $(jq -r '.real_authority' "$STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Root profile: $(jq -r '.root_profile_id' "$STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Council unanimous: $(jq -r '.council_unanimous' "$STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Scope expanded beyond Owner: $(jq -r '.scope_expanded_beyond_owner' "$STATE/delegated-root.json")" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "- Authority result: not produced" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          if [ -f "$STATE/delegated-root-external-probe.json" ]; then
+            echo "- Live HEAD status: $(jq -r '.status' "$STATE/delegated-root-external-probe.json")" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Live external I/O: $(jq -r '.live_external_io' "$STATE/delegated-root-external-probe.json")" >> "$GITHUB_STEP_SUMMARY"
+          fi

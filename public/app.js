@@ -102,9 +102,30 @@ async function send(){
   if(busy)return;const c=$('#composer');const text=c.value.trim();if(!text)return;
   const t=active()||newThread();t.messages.push({role:'user',content:text});t.updatedAt=Date.now();saveThreads();c.value='';resizeComposer();renderAll(true);busy=true;$('#sendBtn').disabled=true;log('chat dispatch');titleThread(t,text);
   try{
-    const r=await call('chat',{messages:t.messages});t.messages.push({role:'assistant',content:r.text});t.updatedAt=Date.now();if(r.execution)trackExecution(t,r.execution);saveThreads();renderAll(true);log(`chat complete · ${r.route||r.model||'runtime'}`)
+    const r=await call('chat',{messages:t.messages});t.messages.push({role:'assistant',content:r.text});t.updatedAt=Date.now();if(r.execution)trackExecution(t,r.execution);saveThreads();renderAll(true);log(`chat complete · ${r.route||r.model||'runtime'}`);if(r.reasoning)renderReasoning(r.reasoning)
   }catch(e){t.messages.push({role:'assistant',content:`RUNTIME ERROR: ${e.message}`,error:true});saveThreads();renderAll(true);log(e.message,'err')}
   finally{busy=false;$('#sendBtn').disabled=false;c.focus();scrollMessagesToBottom()}
+}
+
+function renderReasoning(reasoning){
+  const el=$('#terminal');
+  el.textContent+=`[${stamp()}] THK  ---- reasoning ----\n${reasoning.split('\n').map(l=>`         ${l}`).join('\n')}\n         ----------------\n`;
+  el.scrollTop=el.scrollHeight;
+}
+
+const GITHUB_REPO='MusicJapanLLC/test';
+async function connectGithub(){
+  const el=$('#githubStatus');if(!el)return;
+  try{
+    const r=await fetch(`https://api.github.com/repos/${GITHUB_REPO}`,{headers:{Accept:'application/vnd.github+json'}});
+    if(!r.ok)throw new Error(`HTTP ${r.status}`);
+    const data=await r.json();
+    el.textContent=`${data.full_name} · ${data.default_branch}`;el.style.color='#65ff9b';
+    log(`GitHub connected · ${data.full_name}@${data.default_branch}`);
+  }catch(e){
+    el.textContent='disconnected';el.style.color='#ff6565';
+    log(`GitHub connection failed · ${e.message}`,'warn');
+  }
 }
 
 async function pipeline(){
@@ -118,4 +139,4 @@ async function pipeline(){
 
 $('#newThread').addEventListener('click',newThread);$('#sendBtn').addEventListener('click',send);$('#composer').addEventListener('input',resizeComposer);$('#composer').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});$('#runPipeline').addEventListener('click',pipeline);$('#clearLog').addEventListener('click',()=>{$('#terminal').textContent=''});$('#copyUrl').addEventListener('click',async e=>{const url=e.currentTarget.dataset.url;if(url){await navigator.clipboard.writeText(url);log('URL copied')}});setInterval(()=>{$('#clock').textContent=stamp()},1000);
 if(!activeId)newThread();else{renderAll(true);threads.forEach(resumeExecution)}
-log('AI FOUNDRY IDE boot');log('chat runtime: DEVELOPMENT-MAX');log('execution lane: GitHub Actions -> verified Vercel URL');
+log('AI FOUNDRY IDE boot');log('chat runtime: DEVELOPMENT-MAX');log('execution lane: GitHub Actions -> verified Vercel URL');connectGithub();

@@ -4,8 +4,7 @@ on:
   push:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
-      - "iyomaru-ramen/**"
-      - ".github/workflows/deploy-iyomaru-ramen.yml"
+      - "automation/deploy-permits/iyomaru-pages.json"
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:

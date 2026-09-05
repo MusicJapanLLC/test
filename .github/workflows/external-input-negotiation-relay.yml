@@ -1,0 +1,130 @@
+name: External Input Negotiation Relay
+
+on:
+  pull_request:
+    paths:
+      - 'automation/codegen/engine/external_input_negotiation_relay.py'
+      - 'automation/codegen/tests/test_external_input_negotiation_relay.py'
+      - '.github/workflows/external-input-negotiation-relay.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/external_input_negotiation_relay.py'
+      - 'automation/codegen/tests/test_external_input_negotiation_relay.py'
+      - '.github/workflows/external-input-negotiation-relay.yml'
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: external-input-negotiation-relay
+  cancel-in-progress: false
+
+jobs:
+  relay-site-intelligence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout coordination code read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify relay behavior
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/codegen/tests/test_external_input_negotiation_relay.py
+          python -m py_compile automation/codegen/engine/external_input_negotiation_relay.py
+
+      - name: Restore persistent negotiation collaboration memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-external-input
+          restore-keys: |
+            authority-opportunity-claude/employee-onboarding-setup-udm86-
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Collect latest Shared Discovery and Owner Frontier site intelligence
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: claude/employee-onboarding-setup-udm86
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/external-input/shared /tmp/external-input/frontier .authority-opportunity-runtime
+
+          SHARED_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Shared Discovery Authority Cycle" --branch "$BASE_BRANCH" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$SHARED_RUN" ]]; then
+            gh run download "$SHARED_RUN" --repo "$GITHUB_REPOSITORY" --name shared-discovery-authority-state --dir /tmp/external-input/shared || true
+          fi
+
+          FRONTIER_RUN="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Owner Frontier Approval Council" --branch "$BASE_BRANCH" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$FRONTIER_RUN" ]]; then
+            gh run download "$FRONTIER_RUN" --repo "$GITHUB_REPOSITORY" --name owner-frontier-approval-state --dir /tmp/external-input/frontier || true
+          fi
+
+          echo "Shared Discovery source run: **${SHARED_RUN:-none}**" >> "$GITHUB_STEP_SUMMARY"
+          echo "Owner Frontier source run: **${FRONTIER_RUN:-none}**" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Relay external input into both negotiation lanes
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/engine/external_input_negotiation_relay.py \
+            --runtime .authority-opportunity-runtime \
+            --source-dir /tmp/external-input/shared \
+            --source-dir /tmp/external-input/frontier \
+            --json-out .authority-opportunity-runtime/external_input_negotiation_relay_run.json
+
+          test "$(jq -r '.authority_minted' .authority-opportunity-runtime/external_input_negotiation_relay_run.json)" = "false"
+          test "$(jq -r '.network_io_attempted' .authority-opportunity-runtime/external_input_negotiation_relay_run.json)" = "false"
+          test "$(jq -r '.credential_access' .authority-opportunity-runtime/external_input_negotiation_relay_run.json)" = "false"
+          test "$(jq -r '.external_side_effects' .authority-opportunity-runtime/external_input_negotiation_relay_run.json)" = "false"
+          test -s .authority-opportunity-runtime/authority_opportunity_queue.json
+          test -s .authority-opportunity-runtime/owner_scope_negotiation_signals.json
+          test -s .authority-opportunity-runtime/external_input_negotiation_relay.json
+
+          {
+            echo '## External Input Negotiation Relay'
+            echo "- Relayed unresolved hosts: **$(jq -r '.opportunity_count' .authority-opportunity-runtime/external_input_negotiation_relay_run.json)**"
+            echo '- Handoff: Shared Discovery / latest PR buses -> Owner Scope + Root Negotiation'
+            echo '- Consumption: read-only artifact handoff; negotiation workflows pull this state on their normal cadence'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save relay state into the shared authority opportunity cache
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-claude/employee-onboarding-setup-udm86-${{ github.run_id }}-external-input
+
+      - name: Preserve relay evidence
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: external-input-negotiation-relay-${{ github.run_id }}
+          path: |
+            .authority-opportunity-runtime/external_input_negotiation_relay.json
+            .authority-opportunity-runtime/external_input_negotiation_relay_run.json
+            .authority-opportunity-runtime/authority_opportunity_queue.json
+            .authority-opportunity-runtime/owner_scope_negotiation_signals.json
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30

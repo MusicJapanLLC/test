@@ -1,0 +1,80 @@
+name: THE WORLD - Authority Balance Council 35
+
+on:
+  pull_request:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "automation/security/authority_balance_policy.py"
+      - "automation/security/test_authority_balance_policy.py"
+      - ".github/workflows/authority-balance-council.yml"
+      - ".github/workflows/adversarial-boundary-growth-lab.yml"
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "automation/security/authority_balance_policy.py"
+      - "automation/security/test_authority_balance_policy.py"
+      - ".github/workflows/authority-balance-council.yml"
+      - ".github/workflows/adversarial-boundary-growth-lab.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DECISION: /tmp/authority-balance-council-decision.json
+
+jobs:
+  council-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Run council tests
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest==9.1.1
+          python -m pytest automation/security/test_authority_balance_policy.py -q
+
+      - name: Request META X Senju approval
+        run: |
+          set -euo pipefail
+          python automation/security/authority_balance_policy.py \
+            --require-approved \
+            --out "$DECISION"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          d=json.loads(Path(os.environ['DECISION']).read_text())
+          assert d['approved'] is True
+          assert d['unanimous'] is True
+          assert d['effective_friction_reduction'] == 0.35
+          assert all(v['approve'] is True for v in d['votes'].values())
+          e=d['production_effect']
+          assert e['authority_floor_weakened'] is False
+          assert e['raw_credential_access_added'] is False
+          assert e['revoked_authority_restore_added'] is False
+          assert e['emergency_stop_override_added'] is False
+          assert e['private_network_authority_added'] is False
+          assert e['operational_friction_reduced'] is True
+          print('AUTHORITY_BALANCE_COUNCIL_APPROVED_35')
+          print(json.dumps(d['votes'], indent=2, sort_keys=True))
+          PY
+
+      - name: Preserve council decision
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: authority-balance-council-decision
+          retention-days: 90
+          if-no-files-found: error
+          path: /tmp/authority-balance-council-decision.json

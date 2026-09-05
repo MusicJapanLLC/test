@@ -1,0 +1,285 @@
+name: Discovery Authority Closed Loop
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'automation/codegen/authority_bundles/**'
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_event_bus.py'
+      - 'automation/codegen/engine/discovery_closed_loop.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_action.py'
+      - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
+      - 'automation/codegen/engine/authority_expansion_runtime.py'
+      - 'automation/codegen/engine/new_host_authorization_runtime.py'
+      - 'automation/codegen/engine/candidate_authorization_runtime.py'
+      - 'automation/codegen/engine/host_activation_bundle.py'
+      - 'automation/codegen/engine/discovery_replica_continuity.py'
+      - 'automation/codegen/apply_host_activation_bundle.py'
+      - 'automation/codegen/validate_host_activation_pr.py'
+      - 'automation/codegen/run_discovery_closed_loop.py'
+      - 'automation/codegen/run_discovery_action_continuity.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
+      - 'automation/codegen/tests/test_discovery_authorization.py'
+      - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_discovery_event_bus.py'
+      - 'automation/codegen/tests/test_discovery_closed_loop.py'
+      - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'automation/codegen/tests/test_discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_action.py'
+      - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
+      - 'automation/codegen/tests/test_authority_expansion_runtime.py'
+      - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
+      - 'automation/codegen/tests/test_host_activation_bundle.py'
+      - 'automation/codegen/tests/test_validate_host_activation_pr.py'
+      - 'automation/codegen/tests/test_production_discovery_policy.py'
+      - 'automation/codegen/tests/test_discovery_replica_continuity.py'
+      - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
+      - '.github/workflows/discovery-authority-closed-loop.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'automation/codegen/authority_bundles/**'
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_event_bus.py'
+      - 'automation/codegen/engine/discovery_closed_loop.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_action.py'
+      - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
+      - 'automation/codegen/engine/authority_expansion_runtime.py'
+      - 'automation/codegen/engine/new_host_authorization_runtime.py'
+      - 'automation/codegen/engine/candidate_authorization_runtime.py'
+      - 'automation/codegen/engine/host_activation_bundle.py'
+      - 'automation/codegen/engine/discovery_replica_continuity.py'
+      - 'automation/codegen/apply_host_activation_bundle.py'
+      - 'automation/codegen/validate_host_activation_pr.py'
+      - 'automation/codegen/run_discovery_closed_loop.py'
+      - 'automation/codegen/run_discovery_action_continuity.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
+      - 'automation/codegen/tests/test_discovery_authorization.py'
+      - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_discovery_event_bus.py'
+      - 'automation/codegen/tests/test_discovery_closed_loop.py'
+      - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'automation/codegen/tests/test_discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_action.py'
+      - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
+      - 'automation/codegen/tests/test_authority_expansion_runtime.py'
+      - 'automation/codegen/tests/test_new_host_authorization_runtime.py'
+      - 'automation/codegen/tests/test_host_activation_bundle.py'
+      - 'automation/codegen/tests/test_validate_host_activation_pr.py'
+      - 'automation/codegen/tests/test_production_discovery_policy.py'
+      - 'automation/codegen/tests/test_discovery_replica_continuity.py'
+      - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
+      - '.github/workflows/discovery-authority-closed-loop.yml'
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discovery-authority-closed-loop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run discovery authorization and continuity tests
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python -m pytest -q
+          automation/codegen/tests/test_discovery_authorization.py
+          automation/codegen/tests/test_shared_discovery_authority.py
+          automation/codegen/tests/test_discovery_event_bus.py
+          automation/codegen/tests/test_discovery_closed_loop.py
+          automation/codegen/tests/test_discovery_probe_runner.py
+          automation/codegen/tests/test_discovery_capability_leases.py
+          automation/codegen/tests/test_discovery_external_action.py
+          automation/codegen/tests/test_credential_bound_mutation_runtime.py
+          automation/codegen/tests/test_authority_expansion_runtime.py
+          automation/codegen/tests/test_new_host_authorization_runtime.py
+          automation/codegen/tests/test_host_activation_bundle.py
+          automation/codegen/tests/test_validate_host_activation_pr.py
+          automation/codegen/tests/test_production_discovery_policy.py
+          automation/codegen/tests/test_discovery_replica_continuity.py
+      - name: Report committed host activation bundle alignment
+        continue-on-error: true
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python automation/codegen/apply_host_activation_bundle.py
+          --repo-root .
+          --check-all
+      - name: Report new-host PR progression
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          PYTHONPATH: automation/codegen:senju
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: >-
+          python automation/codegen/validate_host_activation_pr.py
+          --repo-root .
+          --base "$BASE_SHA"
+          --head "$HEAD_SHA"
+      - name: Report changed host bundle attestation status
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          PYTHONPATH: automation/codegen:senju
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -u
+          mapfile -t bundles < <(
+            git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- automation/codegen/authority_bundles \
+              | grep '\.json$' \
+              | grep -v '\.example\.json$' \
+              || true
+          )
+          for bundle in "${bundles[@]}"; do
+            [[ -f "$bundle" ]] || continue
+            python automation/codegen/apply_host_activation_bundle.py \
+              --repo-root . \
+              --bundle "$bundle" \
+              --check \
+              --verify-live || true
+          done
+
+  live-loop:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Restore persistent discovery runtime state
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: .discovery-runtime-state
+          key: discovery-authority-state-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            discovery-authority-state-${{ github.ref_name }}-
+      - name: Seed current AI discovery inputs without replacing runtime knowledge
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python - <<'PY'
+          import shutil
+          from pathlib import Path
+          from engine.shared_discovery_authority import GENERATED_FILES
+
+          source = Path('automation/codegen/meta_state')
+          target = Path('.discovery-runtime-state')
+          target.mkdir(parents=True, exist_ok=True)
+          excluded = set(GENERATED_FILES) | {
+              'loop_receipts.json',
+              'shared_probe_receipts.json',
+              'live_run_receipt.json',
+              'discovery_capability_leases.json',
+              'discovery_capability_replicas.json',
+              'discovery_external_action_receipts.json',
+              'credential_bound_mutation_runtime.json',
+              'credential_bound_mutation_learning.json',
+              'authority_expansion_cases.json',
+              'authority_expansion_route_queue.json',
+              'authority_expansion_execution_receipts.json',
+              'new_host_authorization_cases.json',
+              'new_host_authorization_activation.json',
+              'candidate_authorization_promotions.json',
+              'action_continuity_run.json',
+          }
+          if source.exists():
+              for item in source.rglob('*.json'):
+                  if item.name in excluded:
+                      continue
+                  relative = item.relative_to(source)
+                  destination = target / relative
+                  destination.parent.mkdir(parents=True, exist_ok=True)
+                  shutil.copy2(item, destination)
+          print('runtime_state:', target)
+          PY
+      - name: Run Discovery -> Candidate Intake -> Rediscovery
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: >-
+          python automation/codegen/run_discovery_closed_loop.py
+          --state .discovery-runtime-state
+          --repo-root .
+          --rounds 3
+          --max-targets 20
+          --json-out .discovery-runtime-state/live_run_receipt.json
+      - name: Run 25 Candidate Probes -> Authorization -> Senju -> Mutation
+        env:
+          PYTHONPATH: automation/codegen:senju
+          KABEYA_TEST_BEARER_TOKEN: ${{ secrets.KABEYA_TEST_BEARER_TOKEN }}
+          KABEYA_TEST_BEARER_TOKEN_SECONDARY: ${{ secrets.KABEYA_TEST_BEARER_TOKEN_SECONDARY }}
+        run: >-
+          python automation/codegen/run_discovery_action_continuity.py
+          --state .discovery-runtime-state
+          --repo-root .
+          --max-actions 12
+          --json-out .discovery-runtime-state/action_continuity_run.json
+      - name: Upload discovery authority and continuity evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: discovery-authority-closed-loop-${{ github.sha }}
+          path: |
+            .discovery-runtime-state/loop_receipts.json
+            .discovery-runtime-state/live_run_receipt.json
+            .discovery-runtime-state/action_continuity_run.json
+            .discovery-runtime-state/candidate_authorization_promotions.json
+            .discovery-runtime-state/shared_discovery_knowledge.json
+            .discovery-runtime-state/discovery_authorized.json
+            .discovery-runtime-state/discovery_action_queue.json
+            .discovery-runtime-state/discovery_capability_leases.json
+            .discovery-runtime-state/discovery_capability_replicas.json
+            .discovery-runtime-state/discovery_external_action_receipts.json
+            .discovery-runtime-state/credential_bound_mutation_runtime.json
+            .discovery-runtime-state/credential_bound_mutation_learning.json
+            .discovery-runtime-state/credential_bound_mutation_events.ndjson
+            .discovery-runtime-state/authority_expansion_cases.json
+            .discovery-runtime-state/authority_expansion_route_queue.json
+            .discovery-runtime-state/authority_expansion_execution_receipts.json
+            .discovery-runtime-state/new_host_authorization_cases.json
+            .discovery-runtime-state/new_host_authorization_activation.json
+            .discovery-runtime-state/discovery_events.ndjson
+            .discovery-runtime-state/capability_lease_events.ndjson
+            .discovery-runtime-state/capability_replica_events.ndjson
+            .discovery-runtime-state/external_action_denials.ndjson
+          if-no-files-found: warn
+          retention-days: 30

@@ -1,0 +1,160 @@
+name: Formal Authority Intake
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/config/authority_approval_constitution.json'
+      - 'automation/codegen/engine/authority_approval_constitution.py'
+      - 'automation/codegen/engine/formal_authority_intake.py'
+      - 'automation/codegen/engine/authority_case_lifecycle.py'
+      - 'automation/codegen/run_formal_authority_intake.py'
+      - 'automation/codegen/run_authority_case_lifecycle.py'
+      - 'automation/codegen/tests/test_formal_authority_intake.py'
+      - 'automation/codegen/tests/test_authority_case_lifecycle.py'
+      - 'automation/codegen/FORMAL_AUTHORITY_INTAKE.md'
+      - '.github/workflows/formal-authority-intake.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/config/authority_approval_constitution.json'
+      - 'automation/codegen/engine/authority_approval_constitution.py'
+      - 'automation/codegen/engine/formal_authority_intake.py'
+      - 'automation/codegen/engine/authority_case_lifecycle.py'
+      - 'automation/codegen/run_formal_authority_intake.py'
+      - 'automation/codegen/run_authority_case_lifecycle.py'
+      - 'automation/codegen/tests/test_formal_authority_intake.py'
+      - 'automation/codegen/tests/test_authority_case_lifecycle.py'
+      - 'automation/codegen/FORMAL_AUTHORITY_INTAKE.md'
+      - '.github/workflows/formal-authority-intake.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: formal-authority-intake
+  cancel-in-progress: false
+
+jobs:
+  formal-intake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify formal intake and case lifecycle invariants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            automation/codegen/tests/test_formal_authority_intake.py \
+            automation/codegen/tests/test_authority_case_lifecycle.py \
+            automation/codegen/tests/test_negotiation_submission_accelerator.py \
+            automation/codegen/tests/test_root_authority_negotiation.py
+          python -m py_compile \
+            automation/codegen/engine/authority_approval_constitution.py \
+            automation/codegen/engine/formal_authority_intake.py \
+            automation/codegen/engine/authority_case_lifecycle.py \
+            automation/codegen/run_formal_authority_intake.py \
+            automation/codegen/run_authority_case_lifecycle.py
+          python -m json.tool automation/codegen/config/authority_approval_constitution.json >/dev/null
+
+      - name: Restore shared negotiation memory
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-formal-intake
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Admit negotiation-vetted candidates to formal approval
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          mkdir -p .authority-opportunity-runtime
+          python automation/codegen/run_formal_authority_intake.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/formal_authority_intake_run.json
+
+          test "$(jq -r '.random_ai_unrelated_root_generation_prohibited' .authority-opportunity-runtime/formal_authority_intake_run.json)" = "true"
+          test "$(jq -r '.negotiation_vetted_candidates_enter_formal_approval' .authority-opportunity-runtime/formal_authority_intake_run.json)" = "true"
+          test "$(jq -r '.secondary_owner_or_standing_evidence_required_for_intake' .authority-opportunity-runtime/formal_authority_intake_run.json)" = "false"
+          test "$(jq -r '.formal_queue_capacity_ratio' .authority-opportunity-runtime/formal_authority_intake_run.json)" = "2.5"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/formal_authority_intake_run.json)" = "none"
+          test "$(jq -r '.authority_activated' .authority-opportunity-runtime/formal_authority_intake_run.json)" = "false"
+          test -s .authority-opportunity-runtime/formal_root_authority_approval_queue.json
+          test -s .authority-opportunity-runtime/formal_authority_intake_result.json
+
+      - name: Apply case lifecycle and parliamentary elevation rules
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/run_authority_case_lifecycle.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/authority_case_lifecycle_run.json
+
+          test "$(jq -r '.unprocessed_expiry_seconds' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "259200"
+          test "$(jq -r '.expired_reconsideration_seconds' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "604800"
+          test "$(jq -r '.executive_approval_required' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "META_X_SENJU_3_of_3"
+          test "$(jq -r '.time_elapsed_is_approval' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "false"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "none"
+          test "$(jq -r '.authority_activated' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" = "false"
+          test -s .authority-opportunity-runtime/authority_case_lifecycle_state.json
+          test -s .authority-opportunity-runtime/parliamentary_authority_review_queue.json
+          test -s .authority-opportunity-runtime/authority_case_reconsideration_queue.json
+          test -s .authority-opportunity-runtime/authority_case_lifecycle_broadcast.json
+
+          echo "formal_queue_count=$(jq -r '.formal_queue_count' .authority-opportunity-runtime/formal_authority_intake_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "parliamentary_elevations=$(jq -r '.parliamentary_elevation_count' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "expired_unprocessed=$(jq -r '.expired_unprocessed_count' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "mandatory_reconsideration=$(jq -r '.mandatory_reconsideration_count' .authority-opportunity-runtime/authority_case_lifecycle_run.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save formal intake continuity
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-formal-intake
+
+      - name: Preserve formal approval evidence
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: formal-authority-intake-${{ github.run_id }}
+          path: |
+            automation/codegen/config/authority_approval_constitution.json
+            automation/codegen/FORMAL_AUTHORITY_INTAKE.md
+            .authority-opportunity-runtime/formal_root_authority_approval_queue.json
+            .authority-opportunity-runtime/formal_authority_intake_result.json
+            .authority-opportunity-runtime/formal_authority_intake_run.json
+            .authority-opportunity-runtime/executive_council_decisions.json
+            .authority-opportunity-runtime/authority_case_lifecycle_state.json
+            .authority-opportunity-runtime/parliamentary_authority_review_queue.json
+            .authority-opportunity-runtime/authority_case_reconsideration_queue.json
+            .authority-opportunity-runtime/authority_case_lifecycle_broadcast.json
+            .authority-opportunity-runtime/authority_case_lifecycle_result.json
+            .authority-opportunity-runtime/authority_case_lifecycle_run.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

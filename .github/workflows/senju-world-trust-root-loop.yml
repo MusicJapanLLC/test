@@ -1,0 +1,218 @@
+name: Senju World Trust Root Loop
+
+on:
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/senju/world_trust_root_loop.py"
+      - "senju/tests/test_world_trust_root_loop.py"
+      - "senju/config/world-trust-root-bindings.json"
+      - "senju/config/credentialed-external-write-authorizations.json"
+      - "senju/config/production-deployment-authorizations.json"
+      - "senju/state/standing_authorizations.json"
+      - ".github/workflows/senju-world-trust-root-loop.yml"
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/senju/world_trust_root_loop.py"
+      - "senju/config/world-trust-root-bindings.json"
+      - "senju/config/credentialed-external-write-authorizations.json"
+      - "senju/config/production-deployment-authorizations.json"
+      - "senju/state/standing_authorizations.json"
+      - ".github/workflows/senju-world-trust-root-loop.yml"
+  schedule:
+    - cron: "41 */2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-world-trust-root-loop-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    name: verify integrated trust-root invariants
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+      - name: Verify world loop and authority primitives
+        working-directory: senju
+        run: >-
+          python -m pytest
+          tests/test_world_trust_root_loop.py
+          tests/test_standing_authorization.py
+          tests/test_renewal_recovery.py
+          tests/test_replica_credential_lineage.py
+          -q
+      - name: Compile production modules
+        run: >-
+          python -m py_compile
+          senju/senju/world_trust_root_loop.py
+          senju/senju/meta/production_continuity.py
+          senju/senju/meta/standing_authorization.py
+          senju/senju/credential_runtime.py
+          senju/senju/replica_credential_lineage.py
+
+  production-control-plane:
+    name: discover -> authorize -> act -> replicate -> persist -> recover
+    if: github.event_name != 'pull_request'
+    needs: verify
+    permissions:
+      contents: read
+      actions: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      WORLD_ROOT_ID: world:kabeya-authorized-test-range
+      WORLD_TARGET_HOST: kabeya-authorized-test-range.onrender.com
+      WORLD_STANDING_AUTHORITY: canonical:kabeya-authorized-test-range
+      WORLD_DEPLOY_WORKFLOW: meta-x-authorized-production-worker-fleet.yml
+      WORLD_DEPLOY_REF: claude/employee-onboarding-setup-udm86
+    steps:
+      - name: Checkout production default
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Restore previous world state
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/senju-world /tmp/senju-world-prev
+          mkdir -p /tmp/senju-world/state /tmp/senju-world-prev
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju World Trust Root Loop" \
+            --status success \
+            --limit 10 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-world-trust-root-state \
+              --dir /tmp/senju-world-prev || true
+          fi
+          if [[ -d /tmp/senju-world-prev/state ]]; then
+            cp -a /tmp/senju-world-prev/state/. /tmp/senju-world/state/
+          fi
+
+      - name: Restore latest shared discovery evidence
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-world/discovery
+          DISCOVERY_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Shared Discovery Authority Cycle" \
+            --status success \
+            --limit 10 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$DISCOVERY_RUN" ]]; then
+            gh run download "$DISCOVERY_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name shared-discovery-authority-state \
+              --dir /tmp/senju-world/discovery || true
+          fi
+          CANDIDATE="$(find /tmp/senju-world/discovery -name discovery_candidates.json -print -quit || true)"
+          if [[ -n "$CANDIDATE" ]]; then
+            cp "$CANDIDATE" /tmp/senju-world/discovery_candidates.json
+          else
+            printf '{"candidates":[]}\n' > /tmp/senju-world/discovery_candidates.json
+          fi
+
+      - name: Run integrated production trust-root cycle
+        id: control
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m senju.world_trust_root_loop \
+            --repo-root .. \
+            --state-dir /tmp/senju-world/state \
+            --root-id "$WORLD_ROOT_ID" \
+            --discovery-file /tmp/senju-world/discovery_candidates.json \
+            --desired-replicas 3 \
+            --current-replicas 0 \
+            --active-agents 0 \
+            --active-limit 50 \
+            --desired-revision "$GITHUB_SHA" \
+            --health-status healthy \
+            --report /tmp/senju-world/world-report.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report = json.loads(Path('/tmp/senju-world/world-report.json').read_text())
+          assert report['schema'] == 'senju-world-trust-root-loop/v1'
+          assert report['environment'] == 'production'
+          assert report['authorization_central'] is True
+          assert report['authorization_reused_not_minted'] is True
+          assert report['authority_minted_by_loop'] is False
+          assert report['security_self_approval'] is False
+          assert report['network_policy_self_edit'] is False
+          assert report['revocation_overridden'] is False
+          assert report['discover_again'] is True
+          assert set(report['same_trust_root'].values()) == {report['root_id']}
+          assert report['authorization']['standing_live'] is True
+          assert report['authorization']['standing_reference'] == os.environ['WORLD_STANDING_AUTHORITY']
+          assert report['execution']['external_write_enabled'] is False
+          continuity = report['propagation']['continuity']
+          intent = continuity.get('deployment_intent') or {}
+          ready = bool(continuity.get('deployment_ready', False) and intent)
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as out:
+              out.write(f"deployment_ready={'true' if ready else 'false'}\n")
+              out.write(f"deployment_action={intent.get('action', 'deploy')}\n")
+          print('SENJU_WORLD_TRUST_ROOT_PRODUCTION_VERIFIED')
+          PY
+
+      - name: Dispatch explicitly authorized production worker fleet
+        if: steps.control.outputs.deployment_ready == 'true'
+        run: |
+          set -euo pipefail
+          test "$WORLD_TARGET_HOST" = "kabeya-authorized-test-range.onrender.com"
+          test "$WORLD_STANDING_AUTHORITY" = "canonical:kabeya-authorized-test-range"
+          test "$WORLD_DEPLOY_WORKFLOW" = "meta-x-authorized-production-worker-fleet.yml"
+          case "${{ steps.control.outputs.deployment_action }}" in
+            deploy|recover_same_revision) ;;
+            *) exit 1 ;;
+          esac
+          gh workflow run "$WORLD_DEPLOY_WORKFLOW" \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref "$WORLD_DEPLOY_REF" \
+            -f target_host="$WORLD_TARGET_HOST" \
+            -f authority_reference="$WORLD_STANDING_AUTHORITY" \
+            -f desired_revision="$GITHUB_SHA" \
+            -f action="${{ steps.control.outputs.deployment_action }}"
+
+      - name: Preserve persistent world state and evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-world-trust-root-state
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            /tmp/senju-world/state/
+            /tmp/senju-world/world-report.json
+            /tmp/senju-world/discovery_candidates.json

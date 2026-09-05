@@ -1,0 +1,130 @@
+name: Authority 5 Percent Transition Fast-Track
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/authority_probabilistic_fasttrack.py'
+      - 'automation/codegen/engine/authority_fasttrack_grant_bridge.py'
+      - 'automation/codegen/tests/test_authority_probabilistic_fasttrack.py'
+      - 'automation/codegen/tests/test_authority_fasttrack_grant_bridge.py'
+      - '.github/workflows/authority-probabilistic-fasttrack.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/authority_probabilistic_fasttrack.py'
+      - 'automation/codegen/engine/authority_fasttrack_grant_bridge.py'
+      - 'automation/codegen/tests/test_authority_probabilistic_fasttrack.py'
+      - 'automation/codegen/tests/test_authority_fasttrack_grant_bridge.py'
+      - '.github/workflows/authority-probabilistic-fasttrack.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: authority-opportunity-improvement-loop
+  cancel-in-progress: false
+
+jobs:
+  five-percent-fasttrack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore shared authority opportunity memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-fasttrack-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Verify transition probability and real-grant bridge invariants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            automation/codegen/tests/test_authority_probabilistic_fasttrack.py \
+            automation/codegen/tests/test_authority_fasttrack_grant_bridge.py
+
+      - name: Give persistent candidates a new 5 percent authority-transition review chance
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.authority_probabilistic_fasttrack import run_probabilistic_fasttrack
+
+          state = Path('.authority-opportunity-runtime')
+          result = run_probabilistic_fasttrack(state, percent=5, extra_review_percent=10)
+          print(result)
+          assert result['probability_percent_per_bucket'] == 5
+          assert result['extra_review_percent_on_fasttrack'] == 10
+          assert result['persistent_candidates_receive_new_chance_each_bucket'] is True
+          assert result['new_root_self_mint'] is False
+          assert result['hard_deny_identity_bypass'] is False
+          assert result['terminal_stop_lottery_bypass'] is False
+          PY
+          test -s .authority-opportunity-runtime/authority_priority_review_queue.json
+          echo "fast_track=$(jq -r '.request_count' .authority-opportunity-runtime/authority_priority_review_queue.json)"
+          echo "secondary_crosschecks=$(jq -r '.secondary_review_crosscheck_count' .authority-opportunity-runtime/authority_priority_review_queue.json)"
+
+      - name: Convert eligible fast-track requests into real reviewed operational grants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.authority_fasttrack_grant_bridge import run_fasttrack_grant_bridge
+
+          state = Path('.authority-opportunity-runtime')
+          result = run_fasttrack_grant_bridge(state, repo_root='.')
+          print(result)
+          assert result['new_unrelated_root_self_mint'] is False
+          assert result['hard_deny_identity_bypass'] is False
+          assert result['credential_mint'] is False
+          assert 'META' in result['shared_with']
+          assert 'X' in result['shared_with']
+          assert 'SENJU' in result['shared_with']
+          assert 'CHILD' in result['shared_with']
+          assert 'PR-ARMY' in result['shared_with']
+          PY
+          test -s .authority-opportunity-runtime/authority_reviewed_grants.json
+          test -s .authority-opportunity-runtime/authority_fasttrack_issued_grants.json
+          echo "real_grants_issued=$(jq -r '.issued_count' .authority-opportunity-runtime/authority_fasttrack_issued_grants.json)"
+          echo "held=$(jq -r '.held_count' .authority-opportunity-runtime/authority_fasttrack_issued_grants.json)"
+
+      - name: Save shared review memory
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-fasttrack-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve transition fast-track evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: authority-five-percent-fasttrack-${{ github.run_id }}
+          path: |
+            .authority-opportunity-runtime/authority_priority_review_queue.json
+            .authority-opportunity-runtime/authority_probabilistic_fasttrack.json
+            .authority-opportunity-runtime/authority_reviewed_grants.json
+            .authority-opportunity-runtime/authority_fasttrack_issued_grants.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

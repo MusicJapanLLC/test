@@ -1,0 +1,19 @@
+{
+  "id": "sp-closed-loop-v3-audit-20260831",
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "target": "audit_policy",
+  "operations": [
+    {
+      "type": "increase_coverage",
+      "parameters": {
+        "reason": "Validate the repaired production Security Proposal closed loop end-to-end using a monotonic audit-strengthening change, including Council consensus, self-approval, production apply invariants, optimistic-concurrency persistence, and durable runtime-state evidence."
+      }
+    }
+  ],
+  "council_votes": {
+    "META": {"approve": true},
+    "X": {"approve": true},
+    "Senju": {"approve": true}
+  }
+}

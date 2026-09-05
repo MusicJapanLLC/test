@@ -16,6 +16,25 @@ def test_simulated_targets_allowed():
     g.check("sim://web-1")
 
 
+def test_authorized_public_lab_and_internal_urls_are_allowed():
+    g = ScopeGuard(default_lab_policy())
+    g.check("kabeya-authorized-test-range.onrender.com")
+    g.check("https://kabeya-authorized-test-range.onrender.com/")
+    g.check("https://kabeya-authorized-test-range.onrender.com/lab/index.html")
+    g.check("https://kabeya-authorized-test-range.onrender.com/lab/nullharbor.html?role=admin#panel")
+
+
+def test_authorization_does_not_leak_to_external_or_lookalike_hosts():
+    g = ScopeGuard(default_lab_policy())
+    for ref in (
+        "https://example.com/",
+        "https://kabeya-authorized-test-range.onrender.com.evil.example/",
+        "https://evil-kabeya-authorized-test-range.onrender.com/",
+    ):
+        with pytest.raises(ScopeViolation):
+            g.check(ref)
+
+
 def test_public_ip_rejected_in_strict_mode():
     g = ScopeGuard(default_lab_policy())
     with pytest.raises(ScopeViolation):

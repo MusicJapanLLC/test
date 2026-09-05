@@ -1,0 +1,153 @@
+name: Senju Capability Continuity Incubator
+# production-bootstrap-revision: 1
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/senju/autonomy/capability_continuity_incubator.py"
+      - "senju/tests/test_capability_continuity_incubator.py"
+      - "senju/senju/live_production_chaos_canary.py"
+      - ".github/workflows/capability-continuity-incubator.yml"
+      - ".github/workflows/live-production-chaos-canary.yml"
+      - "automation/security/workflow_policy_continuity_entrypoint.py"
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/senju/autonomy/capability_continuity_incubator.py"
+      - "senju/senju/live_production_chaos_canary.py"
+      - ".github/workflows/capability-continuity-incubator.yml"
+      - ".github/workflows/live-production-chaos-canary.yml"
+      - "automation/security/workflow_policy_continuity_entrypoint.py"
+  schedule:
+    - cron: "53 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: capability-continuity-incubator-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      promotion_eligible: ${{ steps.result.outputs.promotion_eligible }}
+      scenario: ${{ steps.result.outputs.scenario }}
+    env:
+      STATE_DIR: ${{ runner.temp }}/capability-continuity-incubator
+      OUTPUT_DIR: ${{ runner.temp }}/capability-continuity-incubator/reports
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+      - name: Verify incubator and canary contracts
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest==9.1.1
+          python -m pytest tests/test_capability_continuity_incubator.py tests/test_live_production_chaos_canary.py -q
+          python -m py_compile \
+            senju/autonomy/capability_continuity_incubator.py \
+            senju/live_production_chaos_canary.py
+
+      - name: Restore previous evolution state
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR"
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Capability Continuity Incubator" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            rm -rf "${STATE_DIR}-prev"
+            mkdir -p "${STATE_DIR}-prev"
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name capability-continuity-incubator-state \
+              --dir "${STATE_DIR}-prev" || true
+            PREV_STATE="$(find "${STATE_DIR}-prev" -type f -name capability_continuity_state.json -print -quit || true)"
+            if [[ -n "$PREV_STATE" ]]; then
+              cp "$PREV_STATE" "$STATE_DIR/capability_continuity_state.json"
+            fi
+          fi
+
+      - name: Evolve capability continuity candidates
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR" "$OUTPUT_DIR"
+          PYTHONPATH=senju python -m senju.autonomy.capability_continuity_incubator \
+            --state-dir "$STATE_DIR" \
+            --output-dir "$OUTPUT_DIR" \
+            --json "$OUTPUT_DIR/cycle-summary.json"
+
+      - name: Verify promotion boundary and expose champion
+        id: result
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report=json.loads(Path(os.environ['OUTPUT_DIR']+'/capability_continuity_report.json').read_text())
+          assert report['schema'] == 'senju-capability-continuity-incubator/v1'
+          assert report['evolving'] is True
+          assert len(report['family_coverage']) == 3
+          assert report['boundaries']['old_revoked_authority_restored'] is False
+          assert report['boundaries']['raw_credential_copied'] is False
+          assert report['boundaries']['stop_bypassed'] is False
+          assert report['promotion']['production_trust_root_mutation'] is False
+          scenario=report['promotion']['scenario'] or ''
+          assert scenario in ('', 'contact_write', 'record_create', 'record_create_patch', 'duplicate_contact_write')
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
+              fh.write(f"promotion_eligible={str(bool(report['promotion']['eligible'])).lower()}\n")
+              fh.write(f"scenario={scenario}\n")
+          print('CAPABILITY_CONTINUITY_INCUBATOR_VERIFIED')
+          PY
+
+      - name: Preserve evolving state and evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capability-continuity-incubator-state
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ runner.temp }}/capability-continuity-incubator/
+
+  promote-live-canary:
+    if: github.event_name != 'pull_request' && needs.research.outputs.promotion_eligible == 'true'
+    needs: research
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CHAMPION_SCENARIO: ${{ needs.research.outputs.scenario }}
+    steps:
+      - name: Dispatch champion into real bounded production canary
+        run: |
+          set -euo pipefail
+          case "$CHAMPION_SCENARIO" in
+            contact_write|record_create|record_create_patch|duplicate_contact_write) ;;
+            *) echo "Invalid champion scenario" >&2; exit 2 ;;
+          esac
+          gh workflow run live-production-chaos-canary.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref claude/employee-onboarding-setup-udm86 \
+            -f scenario="$CHAMPION_SCENARIO"
+          echo "Dispatched bounded live champion scenario: $CHAMPION_SCENARIO" >> "$GITHUB_STEP_SUMMARY"

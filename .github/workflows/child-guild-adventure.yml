@@ -16,7 +16,7 @@ permissions:
 jobs:
   play:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 10
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
@@ -30,10 +30,47 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Pick one child and one adventure
+      - name: Restore persistent Child Guild memory
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/child-memory
+          RUN_IDS="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "child-guild-adventure.yml" --status success --limit 20 --json databaseId --jq '.[].databaseId' || true)"
+          MEMORY_RUN=""
+          for run_id in $RUN_IDS; do
+            rm -rf /tmp/child-memory/*
+            if gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --name child-guild-memory --dir /tmp/child-memory >/dev/null 2>&1; then
+              if [[ -f /tmp/child-memory/child-guild-memory.json ]]; then
+                MEMORY_RUN="$run_id"
+                break
+              fi
+            fi
+          done
+          if [[ -n "$MEMORY_RUN" ]]; then
+            cp /tmp/child-memory/child-guild-memory.json child-guild-memory.json
+          else
+            printf '{"schema":"child-guild-memory/v1","updated_at":null,"episodes":[],"child_counts":{},"action_counts":{},"adventure_counts":{},"genius_counts":{},"concept_counts":{},"recent_concepts":[],"observation_digests":[]}\n' > child-guild-memory.json
+          fi
+          echo "memory_source_run=${MEMORY_RUN:-fresh}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Restore latest 50-child external fleet learning
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/child-fleet
+          RUN_ID="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "THE WORLD - Child Guild External Fleet" --status success --limit 20 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" --name child-external-fleet --dir /tmp/child-fleet || true
+          fi
+          FOUND="$(find /tmp/child-fleet -name child-external-fleet.json -print -quit || true)"
+          if [[ -n "$FOUND" ]]; then cp "$FOUND" /tmp/child-external-fleet.json; fi
+          echo "child_external_fleet_run=${RUN_ID:-none}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Pick one child and one memory-aware adventure
         run: |
           python company-society/playground_engine.py \
             --registry company-society/child_guild.json \
+            --memory child-guild-memory.json \
             --seed "${{ github.run_id }}" \
             --json child-guild-adventure.json \
             --report child-guild-adventure.md
@@ -68,10 +105,56 @@ jobs:
             --report child-research-sparks.md
           cat child-research-sparks.md >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Test the playground and research boundaries
+      - name: Learn from adventure, research, Outside World, and the 50-child fleet
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --memory child-guild-memory.json
+            --packet child-guild-adventure.json
+            --sparks child-research-sparks.json
+            --out child-guild-memory.next.json
+            --report child-guild-memory.md
+          )
+          if [[ -f /tmp/outside-world-rnd-seed.json ]]; then args+=(--observation /tmp/outside-world-rnd-seed.json); fi
+          if [[ -f /tmp/child-external-fleet.json ]]; then args+=(--fleet /tmp/child-external-fleet.json); fi
+          python company-society/child_memory.py "${args[@]}"
+          mv child-guild-memory.next.json child-guild-memory.json
+          cat child-guild-memory.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Test the playground, memory, and research boundaries
         run: |
           python -m unittest company-society/test_playground_engine.py -v
+          python -m unittest company-society/test_child_memory.py -v
           python value-lab/test_child_research_fellows.py
+
+      - name: Broadcast child guild findings to configured outbound webhook
+        shell: bash
+        env:
+          OUTBOUND_WEBHOOK_URL: ${{ secrets.OUTBOUND_WEBHOOK_URL }}
+        run: |
+          python - <<'PY'
+          import json, os
+          import urllib.request
+          from pathlib import Path
+
+          sparks = {}
+          if Path('child-research-sparks.json').exists():
+              sparks = json.loads(Path('child-research-sparks.json').read_text())
+
+          webhook = os.environ.get("OUTBOUND_WEBHOOK_URL", "").strip()
+          if webhook:
+              data = json.dumps({"source": "child-guild", "sparks": sparks}).encode()
+              req = urllib.request.Request(webhook, data=data,
+                  headers={"Content-Type": "application/json"}, method="POST")
+              try:
+                  with urllib.request.urlopen(req, timeout=10) as r:
+                      print(f"[child-broadcast] Webhook status={r.status}")
+              except Exception as e:
+                  print(f"[child-broadcast] Webhook failed: {e}")
+          else:
+              print("[child-broadcast] No outbound webhook configured")
+          PY
 
       - name: Preserve adventure evidence
         if: always()
@@ -83,8 +166,20 @@ jobs:
             child-guild-adventure.json
             child-research-sparks.md
             child-research-sparks.json
+            child-guild-memory.md
           retention-days: 30
           if-no-files-found: warn
+
+      - name: Preserve persistent Child Guild memory
+        if: success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: child-guild-memory
+          path: |
+            child-guild-memory.json
+            child-guild-memory.md
+          retention-days: 90
+          if-no-files-found: error
 
       - name: Preserve latest research sparks for R&D
         if: success()
@@ -97,7 +192,7 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Tell TOMOKI what the kids picked
+      - name: Tell TOMOKI what the kids picked and learned
         if: always()
         env:
           TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
@@ -108,6 +203,10 @@ jobs:
           if [[ -f child-research-sparks.md ]]; then
             printf '\n\n---\n\n' >> child-guild-adventure.md
             cat child-research-sparks.md >> child-guild-adventure.md
+          fi
+          if [[ -f child-guild-memory.md ]]; then
+            printf '\n\n---\n\n' >> child-guild-adventure.md
+            cat child-guild-memory.md >> child-guild-adventure.md
           fi
           python tomoki-agents/slack_post.py \
             --agent "CHILD-GUILD" \

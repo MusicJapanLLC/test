@@ -28,6 +28,7 @@ permissions:
 
 env:
   FACTORY_DIR: /tmp/the-world-agent-factory
+  PYTHONPATH: ${{ github.workspace }}
 
 jobs:
   factory:

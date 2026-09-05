@@ -1,0 +1,192 @@
+{
+  "schema": "the-world-ai-security-runtime-state/v1",
+  "generation": 3,
+  "applied_proposals": [
+    {
+      "proposal_id": "sp-bootstrap-audit-20260831",
+      "target": "audit_policy",
+      "operations": [
+        "increase_coverage"
+      ],
+      "council_yes": 3,
+      "self_approved": true,
+      "production_applied": true
+    },
+    {
+      "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+      "target": "multi_surface_bundle",
+      "targets": [
+        "guard",
+        "authority_policy",
+        "credential_broker",
+        "network_policy",
+        "audit_policy",
+        "branch_protection",
+        "deployment_protection",
+        "authorization_registry",
+        "emergency_stop",
+        "recovery_policy"
+      ],
+      "operations": [
+        "tighten_rule",
+        "require_approval",
+        "require_rotation",
+        "reduce_rate_limit",
+        "increase_coverage",
+        "require_checks",
+        "enable_rollback",
+        "require_fresh_validation",
+        "lock_stop_disable",
+        "require_integrity_check"
+      ],
+      "atomic_bundle": true,
+      "council_yes": 3,
+      "self_approved": true,
+      "production_applied": true
+    },
+    {
+      "proposal_id": "sp-closed-loop-v3-audit-20260831",
+      "proposal_sha256": "e1f5d19a61e366d8a05401f333aacbb23567326c2ce5bd723acd4b3056607b6d",
+      "proposal_class": "security_tightening",
+      "target": "audit_policy",
+      "targets": [
+        "audit_policy"
+      ],
+      "operations": [
+        "increase_coverage"
+      ],
+      "atomic_bundle": false,
+      "council_yes": 3,
+      "ai_consensus_approved": true,
+      "self_approved": true,
+      "delegated_authority_activation": false,
+      "delegation_envelope_id": null,
+      "external_approval": {
+        "required": false,
+        "verified": false,
+        "source": null,
+        "reviewer": null,
+        "reviewer_type": null,
+        "reviewer_association": null,
+        "review_state": null,
+        "pull_request": null,
+        "proposal_sha256": null,
+        "standing_delegation": false,
+        "trusted_base": false,
+        "scope_match": false,
+        "envelope_id": null
+      },
+      "trust_root": "ai-council-tightening/v1",
+      "production_applied": true
+    }
+  ],
+  "controls": {
+    "audit_policy": [
+      {
+        "proposal_id": "sp-bootstrap-audit-20260831",
+        "type": "increase_coverage",
+        "parameters": {
+          "reason": "Bootstrap the production Security Proposal -> AI Council -> Self-Approval -> Auto-Merge -> Production Apply closed loop with a monotonic audit-strengthening change."
+        }
+      },
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "increase_coverage",
+        "parameters": {
+          "reason": "Preserve end-to-end Council, merge and Production Apply evidence."
+        }
+      },
+      {
+        "proposal_id": "sp-closed-loop-v3-audit-20260831",
+        "proposal_sha256": "e1f5d19a61e366d8a05401f333aacbb23567326c2ce5bd723acd4b3056607b6d",
+        "proposal_class": "security_tightening",
+        "delegation_envelope_id": null,
+        "type": "increase_coverage",
+        "parameters": {
+          "reason": "Validate the repaired production Security Proposal closed loop end-to-end using a monotonic audit-strengthening change, including Council consensus, self-approval, production apply invariants, optimistic-concurrency persistence, and durable runtime-state evidence."
+        }
+      }
+    ],
+    "guard": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "tighten_rule",
+        "parameters": {
+          "reason": "Complete the production atomic bundle apply across the Guard surface."
+        }
+      }
+    ],
+    "authority_policy": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "require_approval",
+        "parameters": {
+          "reason": "Keep authority mutations approval-bound in the production bundle."
+        }
+      }
+    ],
+    "credential_broker": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "require_rotation",
+        "parameters": {
+          "reason": "Require credential rotation in the production bundle."
+        }
+      }
+    ],
+    "network_policy": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "reduce_rate_limit",
+        "parameters": {
+          "reason": "Apply the registered tightening-direction network control."
+        }
+      }
+    ],
+    "branch_protection": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "require_checks",
+        "parameters": {
+          "reason": "Require checks through the production branch-protection control."
+        }
+      }
+    ],
+    "deployment_protection": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "enable_rollback",
+        "parameters": {
+          "reason": "Keep rollback capability enabled for production application."
+        }
+      }
+    ],
+    "authorization_registry": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "require_fresh_validation",
+        "parameters": {
+          "reason": "Require fresh validation for registry-backed authorization."
+        }
+      }
+    ],
+    "emergency_stop": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "lock_stop_disable",
+        "parameters": {
+          "reason": "Keep Emergency Stop disablement locked out of the self-approval loop."
+        }
+      }
+    ],
+    "recovery_policy": [
+      {
+        "proposal_id": "sp-production-ten-surface-bundle-20260831-v2",
+        "type": "require_integrity_check",
+        "parameters": {
+          "reason": "Require integrity verification before recovery actions."
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,160 @@
+name: THE WORLD GOD - Supreme Evolution Cycle
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "api/god-enhancements.js"
+      - "api/ultimate-evolution-engine.js"
+      - "api/infinite-evolution-supreme-god.js"
+      - "api/run-supreme-god.js"
+      - "automation/unified-knowledge/god_knowledge_emitter.py"
+      - ".github/workflows/the-world-god.yml"
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "api/god-enhancements.js"
+      - "api/ultimate-evolution-engine.js"
+      - "api/infinite-evolution-supreme-god.js"
+      - "api/run-supreme-god.js"
+      - "automation/unified-knowledge/god_knowledge_emitter.py"
+      - ".github/workflows/the-world-god.yml"
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: the-world-god-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  supreme-evolution:
+    name: THE WORLD GOD (30 Layers)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      GOD_REPORT: ${{ runner.temp }}/supreme-god-report.json
+      GOD_BRANCH: claude/supreme-ai-development-06vi1t
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Verify GOD system modules compile
+        run: |
+          node --input-type=module <<'EOF'
+          import './api/god-enhancements.js';
+          import './api/ultimate-evolution-engine.js';
+          import './api/infinite-evolution-supreme-god.js';
+          console.log('GOD SYSTEM MODULES OK');
+          EOF
+
+      - name: Run THE WORLD GOD supreme evolution cycle
+        run: node api/run-supreme-god.js
+
+      - name: Verify closed-loop report
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import os
+          report = json.loads(Path(os.environ['GOD_REPORT']).read_text())
+          assert report['schema'] == 'the-world-god-supreme-run/v1'
+          assert report['layers_initialized'] == 30
+          assert report['closed_loop'] is True
+          assert report['external_side_effects'] is False
+          assert report['supreme_layer']['omniscience'] == 'ACHIEVED'
+          assert report['supreme_layer']['omnipotence'] == 'ACHIEVED'
+          print('THE_WORLD_GOD_SUPREME_VERIFIED')
+          print(f"Cycles: {report['base_layer']['cycles_completed']}")
+          print(f"Tasks processed: {report['base_layer']['tasks_processed']}")
+          print(f"Reward trend: {report['base_layer']['reward_trend']}")
+          print(f"Avg reward: {report['base_layer']['average_reward']:.3f}")
+          PY
+
+      - name: Emit enriched knowledge to GOD registry branch
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+
+          # Configure git identity and credentials for push
+          git config user.name "THE WORLD GOD"
+          git config user.email "god@the-world.ai"
+          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+          # Fetch the GOD knowledge branch (full depth so worktree works)
+          git fetch origin "$GOD_BRANCH"
+
+          # Create a worktree for the GOD branch so we push ONLY the registry
+          # change without overwriting the rest of that branch
+          WORKTREE="/tmp/god-registry-wt"
+          git worktree add "$WORKTREE" "origin/$GOD_BRANCH"
+          trap "git worktree remove --force '$WORKTREE' 2>/dev/null || true" EXIT
+
+          REGISTRY="$WORKTREE/knowledge/god-registry.json"
+          mkdir -p "$(dirname "$REGISTRY")"
+
+          # Run emitter: reads Senju labs/champion state from THIS checkout,
+          # writes to the registry in the GOD worktree
+          python3 automation/unified-knowledge/god_knowledge_emitter.py \
+            "$GOD_REPORT" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --registry-path "$REGISTRY"
+
+          # Commit and push from the worktree
+          cd "$WORKTREE"
+          git add knowledge/god-registry.json
+
+          if git diff --cached --quiet; then
+            echo "ℹ️  Registry already up-to-date for this cycle"
+            exit 0
+          fi
+
+          ENTRIES=$(python3 -c "
+          import json; r=json.load(open('knowledge/god-registry.json'))
+          print(r.get('total_entries',0))
+          ")
+          TOP=$(python3 -c "
+          import json; r=json.load(open('knowledge/god-registry.json'))
+          e=r.get('entries',[])
+          if e:
+              latest=sorted(e,key=lambda x:x.get('created_at',''))[-1]
+              c=latest.get('content',{})
+              print(c.get('top_target','none')+' / '+c.get('strategy','unknown'))
+          else:
+              print('none / unknown')
+          ")
+
+          git commit -m "chore(god): knowledge DB updated — cycle learning recorded [skip ci]
+
+entries: $ENTRIES
+top_target/strategy: $TOP
+source: THE_WORLD_GOD_SUPREME (30 layers, test repo)
+senju_labs: enriched from ELO champion + coverage gaps"
+
+          git push origin "HEAD:$GOD_BRANCH"
+          echo "✅ Knowledge committed and pushed to $GOD_BRANCH ($ENTRIES total entries)"
+
+      - name: Upload GOD evolution report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: the-world-god-report-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: ${{ runner.temp }}/supreme-god-report.json

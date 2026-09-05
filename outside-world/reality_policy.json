@@ -29,6 +29,7 @@
     "artifact_generate": "AUTO",
     "artifact_upload_owned_runtime": "AUTO",
     "github_issue_own_repo": "AUTO_ALLOWLIST",
+    "github_issue_comment_own_repo": "AUTO_ALLOWLIST",
     "slack_post_owned_workspace": "AUTO_ALLOWLIST",
     "external_post_allowlisted_account": "AUTO_ALLOWLIST",
     "gmail_read": "AUTO_WITH_EXISTING_OAUTH",
@@ -50,6 +51,8 @@
       "CEO_REPORT_WEBHOOK_URL"
     ],
     "external_write_target_ids": [
+      "github-issues",
+      "github-issue-comments",
       "dev-community",
       "mastodon",
       "bluesky",

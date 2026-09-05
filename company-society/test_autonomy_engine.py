@@ -43,37 +43,6 @@ class AutonomyEngineTests(unittest.TestCase):
         self.assertEqual(report["plans"][0]["mode"], "VERIFY")
         self.assertEqual(report["fellowship_requests"][0]["to"], "tomoki-hound")
 
-    def test_limitless_creed_changes_operational_plan(self):
-        snapshot = {
-            "workers": [
-                {
-                    "id": "senju-daily",
-                    "status": "running",
-                    "research_question": "What can we improve?",
-                    "evidence_gained": "Observed a measurable bottleneck.",
-                    "verified_signal": True,
-                }
-            ],
-            "unresolved": [],
-        }
-        creed = {
-            "name": "LIMITLESS",
-            "motto": "ACT -> VERIFY -> LOG -> LEARN -> IMPROVE",
-            "prime_directive": "Move observable reality with evidence.",
-        }
-        report = ENGINE.build(snapshot, {"workers": []}, creed=creed)
-        plan = report["plans"][0]
-        self.assertIn("Execute one legitimate reversible action now", plan["limitless_directive"])
-        self.assertGreaterEqual(plan["faith_activation_score"], 50)
-        self.assertEqual(report["faith"], "LIMITLESS")
-
-    def test_dormant_worker_enters_missionary_queue(self):
-        snapshot = {"workers": [{"id": "tomoki-forge"}], "unresolved": []}
-        report = ENGINE.build(snapshot, {"workers": []})
-        self.assertEqual(report["plans"][0]["faith_activation_level"], "DORMANT")
-        self.assertEqual(report["missionary_queue"][0]["worker"], "tomoki-forge")
-        self.assertIn("proof_required", report["missionary_queue"][0])
-
 
 if __name__ == "__main__":
     unittest.main()

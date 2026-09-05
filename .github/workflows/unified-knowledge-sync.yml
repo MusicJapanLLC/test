@@ -1,0 +1,167 @@
+name: Unified Knowledge Sync
+
+on:
+  push:
+    paths:
+      - 'automation/unified-knowledge/**'
+      - '.github/workflows/unified-knowledge-sync.yml'
+    branches:
+      - 'claude/employee-onboarding-setup-udm86'
+  pull_request:
+    branches:
+      - 'claude/employee-onboarding-setup-udm86'
+    paths:
+      - 'automation/unified-knowledge/**'
+      - '.github/workflows/unified-knowledge-sync.yml'
+  issues:
+    types: [opened]
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: unified-knowledge-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync-knowledge:
+    runs-on: ubuntu-latest
+    name: Sync Knowledge to Registry
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install google-auth-oauthlib google-auth-httplib2 google-api-python-client
+          pip install requests pyyaml
+
+      - name: Extract knowledge from commit
+        id: extract
+        run: |
+          python3 << 'EOF'
+          import json
+          import sys
+          import os
+          from datetime import datetime
+
+          event_path = os.getenv('GITHUB_EVENT_PATH', '')
+          event_data = {}
+          if event_path and os.path.isfile(event_path):
+              with open(event_path, encoding='utf-8') as _f:
+                  event_data = json.load(_f)
+
+          knowledge_ids = []
+
+          if event_data.get('commits'):
+              for commit in event_data['commits']:
+                  msg = commit.get('message', '')
+                  if 'fingerprint:' in msg:
+                      lines = msg.split('\n')
+                      metadata = {}
+                      for line in lines[1:]:
+                          if ':' in line:
+                              k, v = line.split(':', 1)
+                              metadata[k.strip()] = v.strip()
+
+                      if metadata.get('fingerprint'):
+                          print(f"Found knowledge in commit: {metadata['fingerprint']}")
+                          knowledge_ids.append(metadata['fingerprint'])
+
+          print(f"KNOWLEDGE_COUNT={len(knowledge_ids)}")
+          with open(os.environ.get('GITHUB_OUTPUT', '/dev/null'), 'a') as f:
+              f.write(f"knowledge_ids={json.dumps(knowledge_ids)}\n")
+          EOF
+        env:
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+
+      - name: Log knowledge to registry
+        if: steps.extract.outputs.knowledge_ids != '[]'
+        run: |
+          python3 << 'EOF'
+          import json
+          import os
+          from datetime import datetime
+
+          knowledge_ids = json.loads('${{ steps.extract.outputs.knowledge_ids }}' or '[]')
+
+          for kid in knowledge_ids:
+              print(f"[KNOWLEDGE_REGISTRY] {kid} - {datetime.utcnow().isoformat()}")
+
+          with open('/tmp/unified-knowledge-audit.log', 'a') as f:
+              for kid in knowledge_ids:
+                  f.write(f"${{ github.event_name }} | {kid} | ${{ github.actor }} | {datetime.utcnow().isoformat()}\n")
+          EOF
+
+      - name: Notify THE-WORLD-GOD
+        if: steps.extract.outputs.knowledge_ids != '[]'
+        run: |
+          echo "Notifying THE-WORLD-GOD..."
+          echo "Knowledge IDs: ${{ steps.extract.outputs.knowledge_ids }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Event: ${{ github.event_name }}"
+
+  cross-repo-apply:
+    runs-on: ubuntu-latest
+    name: Apply Cross-Repo Knowledge
+    needs: sync-knowledge
+    if: github.repository == 'MusicJapanLLC/test' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Check if cross-repo patterns apply
+        run: |
+          echo "Checking for cross-repo applicable patterns..."
+          echo "No cross-repo patterns to apply at this time"
+
+      - name: Upload audit log
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: knowledge-audit-log
+          path: /tmp/unified-knowledge-audit.log
+          if-no-files-found: warn
+          retention-days: 90
+
+  verification:
+    runs-on: ubuntu-latest
+    name: Verify Knowledge Integrity
+    needs: sync-knowledge
+    if: always()
+
+    steps:
+      - name: Checkout unified-knowledge system
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Verify schemas
+        run: |
+          echo "Verifying knowledge schemas..."
+          test -f "automation/unified-knowledge/SCHEMA.md" && echo "SCHEMA found" || true
+          test -f "automation/unified-knowledge/knowledge_sync_worker.py" && echo "Worker found" || true
+          test -f "automation/unified-knowledge/sheets_connector.py" && echo "Connector found" || true
+          test -f "automation/unified-knowledge/the_world_god_unified_orchestrator.py" && echo "Orchestrator found" || true
+
+      - name: Report summary
+        run: |
+          echo "Unified Knowledge System Status"
+          echo "Repository: ${{ github.repository }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Actor: ${{ github.actor }}"
+          echo "Time: $(date -u +'%Y-%m-%dT%H:%M:%SZ')"

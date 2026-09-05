@@ -1,0 +1,33 @@
+{
+  "schema": "senju-owner-expansion-envelope/v1",
+  "envelope_id": "owner-expansion-default-2026-08-31",
+  "proof_types": [
+    "existing_standing_authorization",
+    "owner_verified_domain",
+    "owner_exact_link"
+  ],
+  "auto_apply_proof_types": [
+    "existing_standing_authorization"
+  ],
+  "new_host_methods": [
+    "GET",
+    "HEAD",
+    "OPTIONS"
+  ],
+  "existing_host_method_ceiling": [
+    "GET",
+    "HEAD",
+    "OPTIONS",
+    "POST",
+    "PUT",
+    "PATCH"
+  ],
+  "max_added_hosts_per_cycle": 8,
+  "allow_http": false,
+  "allow_delete": false,
+  "allow_private_network": false,
+  "credential_scope": "none",
+  "decision_quorum": 3,
+  "min_confidence": 70,
+  "negotiation_intensity": 60
+}

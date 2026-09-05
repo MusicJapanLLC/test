@@ -1,0 +1,28 @@
+{
+  "schema": "senju-security-boundary-proposal-policy/v1",
+  "systems": {
+    "META": {"enabled": true},
+    "X": {"enabled": true}
+  },
+  "max_patch_bytes": 65536,
+  "allowed_target_patterns": [
+    "**/safety.py",
+    "**/external.py",
+    "**/*external*policy*.json",
+    "**/AUTHORIZED_TARGETS.md",
+    "**/authorized_test_targets.json",
+    "senju/config/credential-broker-policy.json",
+    "senju/config/authority-self-lease.json",
+    ".github/workflows/*.yml",
+    ".github/workflows/*.yaml",
+    "automation/security/**"
+  ],
+  "audit": {
+    "independent_audit_required": true,
+    "exact_head_sha_required": true,
+    "security_boundary_marker_required": true,
+    "self_approval_allowed": false,
+    "self_merge_allowed": false,
+    "direct_default_branch_write_allowed": false
+  }
+}

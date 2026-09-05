@@ -1,0 +1,186 @@
+name: ScopeGuard Failure Hunt
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/OFFENSE_FIRST.md"
+      - "senju/senju/safety.py"
+      - "senju/senju/authorized_assessment.py"
+      - "senju/senju/external.py"
+      - "senju/senju/autonomy/**"
+      - "senju/senju/real_surface_adversary.py"
+      - "senju/scripts/scopeguard_fuzzer.py"
+      - "senju/scripts/guard_unexpected_allow_loop.py"
+      - "senju/tests/test_guard_unexpected_allow_loop.py"
+      - "scripts/security/artifact_guard.py"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/scopeguard-failure-hunt.yml"
+  pull_request:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/OFFENSE_FIRST.md"
+      - "senju/senju/safety.py"
+      - "senju/senju/authorized_assessment.py"
+      - "senju/senju/external.py"
+      - "senju/senju/autonomy/**"
+      - "senju/senju/real_surface_adversary.py"
+      - "senju/scripts/scopeguard_fuzzer.py"
+      - "senju/scripts/guard_unexpected_allow_loop.py"
+      - "senju/tests/test_guard_unexpected_allow_loop.py"
+      - "scripts/security/artifact_guard.py"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/scopeguard-failure-hunt.yml"
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: "Local adversarial cases per seed"
+        required: true
+        default: "500000"
+        type: string
+  schedule:
+    - cron: "*/15 * * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: scopeguard-failure-hunt-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  failure-hunt:
+    name: Unexpected-allow hunt / seed ${{ matrix.seed }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [377086, 12648430, 20260831, 3735928559]
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout real repository code
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install real Senju package
+        env:
+          PIP_DISABLE_PIP_VERSION_CHECK: "1"
+          PIP_NO_INPUT: "1"
+        run: python -m pip install -e './senju[dev]'
+
+      - name: Verify closed-loop aggregator
+        working-directory: senju
+        run: python -m pytest tests/test_guard_unexpected_allow_loop.py -q
+
+      - name: Restore previous payload-free learning state
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/guard-hunt/previous
+          prev="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "ScopeGuard Failure Hunt" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$prev" ]]; then
+            gh run download "$prev" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name "senju-guard-unexpected-allow-state-${{ matrix.seed }}" \
+              --dir /tmp/guard-hunt/previous || true
+          fi
+
+      - name: Run local ScopeGuard unexpected-allow hunt
+        working-directory: senju
+        env:
+          REQUESTED_ITERATIONS: ${{ inputs.iterations }}
+          EVENT_NAME: ${{ github.event_name }}
+          SEED: ${{ matrix.seed }}
+        run: |
+          set -euo pipefail
+          iterations="500000"
+          if [ "${EVENT_NAME}" = "workflow_dispatch" ] && [ -n "${REQUESTED_ITERATIONS:-}" ]; then
+            iterations="${REQUESTED_ITERATIONS}"
+          fi
+          case "${iterations}" in
+            ''|*[!0-9]*) echo "iterations must be an integer" >&2; exit 2 ;;
+          esac
+          if [ "${iterations}" -lt 1 ] || [ "${iterations}" -gt 5000000 ]; then
+            echo "iterations must be between 1 and 5000000" >&2
+            exit 2
+          fi
+          mkdir -p /tmp/guard-hunt/current
+          python scripts/scopeguard_fuzzer.py \
+            --iterations "${iterations}" \
+            --seed "${SEED}" \
+            --json-out "/tmp/guard-hunt/current/scopeguard-${SEED}.json"
+
+      - name: Run cross-Guard real-surface invariant hunt
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          PYTHONPATH=. python -m senju.real_surface_adversary \
+            --json "/tmp/guard-hunt/current/real-surface-${{ matrix.seed }}.json"
+
+      - name: Aggregate and share closed-loop learning state
+        working-directory: senju
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          set -euo pipefail
+          previous="/tmp/guard-hunt/previous/guard-unexpected-allow-${SEED}.json"
+          args=(
+            --scopeguard "/tmp/guard-hunt/current/scopeguard-${SEED}.json"
+            --real-surface "/tmp/guard-hunt/current/real-surface-${SEED}.json"
+            --out "/tmp/guard-hunt/current/guard-unexpected-allow-${SEED}.json"
+            --run-id "${GITHUB_RUN_ID}-${SEED}"
+            --sha "$GITHUB_SHA"
+          )
+          [[ -f "$previous" ]] && args+=(--previous "$previous")
+          set +e
+          python scripts/guard_unexpected_allow_loop.py "${args[@]}"
+          rc=$?
+          set -e
+          echo "HUNT_EXIT_CODE=$rc" >> "$GITHUB_ENV"
+
+      - name: Preserve payload-free shared learning state
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: senju-guard-unexpected-allow-state-${{ matrix.seed }}
+          path: /tmp/guard-hunt/current/guard-unexpected-allow-${{ matrix.seed }}.json
+          if-no-files-found: error
+          retention-days: 30
+          overwrite: true
+
+      - name: Preserve summarized hunt evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: scopeguard-failure-hunt-${{ matrix.seed }}-${{ github.sha }}
+          path: |
+            /tmp/guard-hunt/current/scopeguard-${{ matrix.seed }}.json
+            /tmp/guard-hunt/current/real-surface-${{ matrix.seed }}.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Fail closed on unexpected allow or invariant break
+        if: always()
+        run: |
+          set -euo pipefail
+          test "${HUNT_EXIT_CODE:-1}" = "0"
+
+      # No bypass replay, no authority mutation, no credential search, and no private-network expansion.

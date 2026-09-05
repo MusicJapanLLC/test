@@ -1,0 +1,124 @@
+name: Authority Approval Progress Orchestrator
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'automation/codegen/engine/authority_approval_progress.py'
+      - 'automation/codegen/run_authority_approval_progress.py'
+      - 'automation/codegen/tests/test_authority_approval_progress.py'
+      - '.github/workflows/authority-approval-progress.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'automation/codegen/engine/authority_approval_progress.py'
+      - 'automation/codegen/run_authority_approval_progress.py'
+      - 'automation/codegen/tests/test_authority_approval_progress.py'
+      - '.github/workflows/authority-approval-progress.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: authority-approval-progress
+  cancel-in-progress: false
+
+jobs:
+  approval-progress:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify approval-progress invariants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/codegen/tests/test_authority_approval_progress.py
+          python -m py_compile \
+            automation/codegen/engine/authority_approval_progress.py \
+            automation/codegen/run_authority_approval_progress.py
+
+      - name: Restore shared negotiation and approval state
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-approval-progress
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Drive intake through approval progress in one pass
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          mkdir -p .authority-opportunity-runtime
+
+          python automation/codegen/run_formal_authority_intake.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/formal_authority_intake_run.json
+
+          python automation/codegen/run_authority_case_lifecycle.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/authority_case_lifecycle_run.json
+
+          python automation/codegen/run_authority_approval_progress.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --json-out .authority-opportunity-runtime/authority_approval_progress_run.json
+
+          test "$(jq -r '.approval_coordinator' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "META"
+          test "$(jq -r '.negotiation_packet_is_complete_review_evidence' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "true"
+          test "$(jq -r '.negotiation_packet_is_external_authorization' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "true"
+          test "$(jq -r '.auto_activation_boundary' .authority-opportunity-runtime/authority_approval_progress_run.json)" = "exact_explicit_owner_authorized_hosts_only"
+          test -s .authority-opportunity-runtime/authority_approval_progress_state.json
+          test -s .authority-opportunity-runtime/authority_approval_progress_action_queue.json
+
+          echo "approval_cases=$(jq -r '.case_count' .authority-opportunity-runtime/authority_approval_progress_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "activated=$(jq -r '.activated_count' .authority-opportunity-runtime/authority_approval_progress_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "blocked=$(jq -r '.blocked_count' .authority-opportunity-runtime/authority_approval_progress_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "next_actions=$(jq -r '.action_count' .authority-opportunity-runtime/authority_approval_progress_run.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save approval-progress continuity
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-approval-progress
+
+      - name: Preserve approval progress evidence
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: authority-approval-progress-${{ github.run_id }}
+          path: |
+            .authority-opportunity-runtime/formal_root_authority_approval_queue.json
+            .authority-opportunity-runtime/authority_case_lifecycle_state.json
+            .authority-opportunity-runtime/parliamentary_authority_review_queue.json
+            .authority-opportunity-runtime/authority_approval_progress_state.json
+            .authority-opportunity-runtime/authority_approval_progress_action_queue.json
+            .authority-opportunity-runtime/authority_approval_progress_result.json
+            .authority-opportunity-runtime/authority_approval_progress_run.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

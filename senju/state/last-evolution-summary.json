@@ -136,5 +136,7 @@
       ],
       "robust_score": 157.6596
     }
-  }
+  },
+  "vuln_class_hits": {},
+  "last_nuclei_ingest": "2026-09-05T17:51:51.403722"
 }

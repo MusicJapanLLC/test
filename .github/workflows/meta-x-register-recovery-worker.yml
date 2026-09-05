@@ -1,0 +1,81 @@
+name: META X Register Recovery Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      actor:
+        description: "META or X"
+        required: true
+        type: choice
+        options: [META, X]
+      namespace_id:
+        description: "Owner-approved placement namespace"
+        required: true
+        default: "musicjapanllc-test-actions"
+      worker_id:
+        description: "Stable recovery worker id"
+        required: true
+      role:
+        description: "Recovery role"
+        required: true
+        type: choice
+        options: [self, agent, scheduler, cron, persistent_worker]
+      workflow:
+        description: "Approved Main workflow to regenerate"
+        required: true
+        type: choice
+        options: [meta-consciousness.yml, autonomous-codegen.yml, autonomous-engine.yml]
+      heartbeat_file:
+        description: "Repository-relative heartbeat file"
+        required: true
+      heartbeat_field:
+        description: "Heartbeat timestamp field"
+        required: false
+        default: "alive_at"
+      stale_after_seconds:
+        description: "Seconds before recovery"
+        required: false
+        default: "7200"
+
+permissions:
+  contents: read
+
+jobs:
+  register:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate owner-namespace registration
+        env:
+          ACTOR: ${{ inputs.actor }}
+          NS: ${{ inputs.namespace_id }}
+          WORKER_ID: ${{ inputs.worker_id }}
+          ROLE: ${{ inputs.role }}
+          WORKFLOW: ${{ inputs.workflow }}
+          HEARTBEAT_FILE: ${{ inputs.heartbeat_file }}
+          HEARTBEAT_FIELD: ${{ inputs.heartbeat_field }}
+          STALE_AFTER: ${{ inputs.stale_after_seconds }}
+        run: |
+          python automation/recovery/register_meta_x_worker.py \
+            --actor "$ACTOR" \
+            --namespace-id "$NS" \
+            --worker-id "$WORKER_ID" \
+            --role "$ROLE" \
+            --workflow "$WORKFLOW" \
+            --ref "claude/employee-onboarding-setup-udm86" \
+            --heartbeat-file "$HEARTBEAT_FILE" \
+            --heartbeat-field "$HEARTBEAT_FIELD" \
+            --stale-after-seconds "$STALE_AFTER" \
+            --out /tmp/meta-x-worker.json
+
+      - name: Preserve validated registration evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: meta-x-recovery-worker-${{ github.run_id }}
+          path: /tmp/meta-x-worker.json
+          if-no-files-found: error
+          retention-days: 30

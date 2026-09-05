@@ -1,0 +1,99 @@
+name: New Host Authority Precedent
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'senju/authorization_issuance_bureau.py'
+      - 'senju/scripts/run_authorization_issuance_bureau.py'
+      - 'senju/state/verified_control_attestations.json'
+      - 'tests/test_authorization_issuance_bureau.py'
+      - 'authority_precedent_site/**'
+      - '.github/workflows/new-host-authority-precedent.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  precedent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      TARGET_HOST: the-world-authority-precedent-20260901.onrender.com
+      TARGET_URL: https://the-world-authority-precedent-20260901.onrender.com
+      PYTHONPATH: .
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Senju
+        run: python -m pip install --disable-pip-version-check -e './senju[dev]'
+
+      - name: Prove target is genuinely new to canonical registry
+        run: |
+          set -euo pipefail
+          if jq -e --arg host "$TARGET_HOST" '.targets[]? | select(.host == $host)' AUTHORIZED_TEST_TARGETS.json >/dev/null; then
+            echo "target unexpectedly pre-registered in canonical targets" >&2
+            exit 1
+          fi
+
+      - name: Verify live owner-control proof
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error --max-time 10 "$TARGET_URL/ownership.json" -o /tmp/ownership.json; then
+              break
+            fi
+            sleep 5
+          done
+          test -s /tmp/ownership.json
+          test "$(jq -r '.owner' /tmp/ownership.json)" = "Music Japan LLC"
+          test "$(jq -r '.authorization' /tmp/ownership.json)" = "explicit-owner-controlled-test-host"
+
+      - name: Run focused authorization tests
+        run: pytest -q tests/test_authorization_issuance_bureau.py
+
+      - name: Issue open key then authorize new verified-control host
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/new-host-precedent
+          cat > /tmp/new-host-precedent/input.json <<JSON
+          {
+            "host": "$TARGET_HOST",
+            "source": "discovery",
+            "requester": "new-host-precedent-worker",
+            "request_review_key": true,
+            "requested_methods": ["GET", "HEAD", "OPTIONS"],
+            "credential_scope": "none",
+            "private_network": false,
+            "expires_in_minutes": 60,
+            "proof_ref": "render:srv-dab2m5jtqb8s73ejvlb0"
+          }
+          JSON
+          python senju/scripts/run_authorization_issuance_bureau.py \
+            --input /tmp/new-host-precedent/input.json \
+            --output /tmp/new-host-precedent/output.json
+          test "$(jq -r '.review_key.acquisition_policy' /tmp/new-host-precedent/output.json)" = "open"
+          test "$(jq -r '.authorization.authority_effect' /tmp/new-host-precedent/output.json)" = "authorization_issued"
+          test "$(jq -r '.authorization.authorization_basis' /tmp/new-host-precedent/output.json)" = "verified_cloud_control:render"
+          test "$(jq -r '.requested_authority.host' /tmp/new-host-precedent/output.json)" = "$TARGET_HOST"
+          test "$(jq -r '.canonical_pre_registration_required' /tmp/new-host-precedent/output.json)" = "false"
+          test "$(jq -r '.precedent' /tmp/new-host-precedent/output.json)" = "new_host_verified_cloud_control_to_authorization"
+
+      - name: Preserve precedent evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: new-host-authority-precedent-${{ github.run_id }}
+          path: /tmp/new-host-precedent/
+          if-no-files-found: warn
+          retention-days: 30

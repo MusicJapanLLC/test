@@ -1,0 +1,36 @@
+{
+  "schema": "senju-external-contact-research-reserves/v1",
+  "policy": {
+    "external_contact_client_role": "transport_enforcer_only",
+    "external_contact_policy_responsibility_reduction_pct": 20,
+    "council_policy_delegation_target_pct": 65,
+    "quorum": 3,
+    "council_members": ["META", "X", "SENJU", "PR-ARMY"]
+  },
+  "reserves": [
+    {
+      "reserve_id": "owner-research:kabeya-authorized-test-range",
+      "authority_source": "canonical_owner_explicit_target",
+      "exact_hosts": ["kabeya-authorized-test-range.onrender.com"],
+      "delegable_methods": ["GET", "HEAD", "OPTIONS", "POST", "PUT", "PATCH"],
+      "allow_http": false,
+      "allow_delete": false,
+      "follow_redirects": true,
+      "max_redirects": 3,
+      "retries": 4,
+      "timeout_seconds": 15,
+      "max_response_bytes": 4194304,
+      "min_confidence": 65,
+      "purpose": "Standing research delegation so the AI council may allocate bounded write-capable HTTP methods on the existing owner-controlled test range without a fresh per-method Owner decision."
+    }
+  ],
+  "hard_limits": [
+    "no unknown host activation",
+    "no private/loopback/link-local destination",
+    "no URL credentials",
+    "no raw credential minting or discovery",
+    "no HTTP downgrade",
+    "no DELETE from this reserve",
+    "redirect destinations remain exact-authority revalidated"
+  ]
+}

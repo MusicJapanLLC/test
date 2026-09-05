@@ -1,0 +1,155 @@
+name: META X Production Continuity
+
+on:
+  schedule:
+    - cron: "37 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/senju/meta/production_continuity.py"
+      - "senju/senju/meta/production_federated_discovery.py"
+      - "senju/senju/meta/discovery_lease_continuity.py"
+      - "senju/scripts/run_production_continuity.py"
+      - "senju/scripts/run_production_federated_continuity.py"
+      - "senju/scripts/run_discovery_production_continuity.py"
+      - "senju/scripts/run_authorized_production_worker.py"
+      - "senju/config/production-continuity.json"
+      - "senju/config/production-deployment-authorizations.json"
+      - ".github/workflows/meta-x-production-continuity.yml"
+      - ".github/workflows/meta-x-authorized-production-worker-fleet.yml"
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/senju/meta/production_continuity.py"
+      - "senju/senju/meta/production_federated_discovery.py"
+      - "senju/senju/meta/discovery_lease_continuity.py"
+      - "senju/scripts/run_production_continuity.py"
+      - "senju/scripts/run_production_federated_continuity.py"
+      - "senju/scripts/run_discovery_production_continuity.py"
+      - "senju/scripts/run_authorized_production_worker.py"
+      - "senju/tests/test_production_continuity.py"
+      - "senju/tests/test_production_federated_discovery.py"
+      - "senju/tests/test_discovery_lease_continuity.py"
+      - "senju/tests/test_discovery_production_continuity_runner.py"
+      - "senju/config/production-continuity.json"
+      - "senju/config/production-deployment-authorizations.json"
+      - ".github/workflows/meta-x-production-continuity.yml"
+      - ".github/workflows/meta-x-authorized-production-worker-fleet.yml"
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: meta-x-production-continuity
+  cancel-in-progress: false
+
+jobs:
+  continuity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      WORLD_ENV: production
+      REPO: ${{ github.repository }}
+      GITHUB_TOKEN: ${{ github.token }}
+      STATE_DIR: senju/state/production-continuity
+      DISCOVERY_STATE: /tmp/shared-discovery-authority
+      DISCOVERY_LEASES: /tmp/shared-discovery-authority/discovery_capability_leases.json
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Restore latest production continuity state
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR"
+          artifact_id="$(gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts?name=meta-x-production-continuity-state&per_page=20" \
+            --jq '.artifacts | map(select(.expired == false)) | sort_by(.created_at) | reverse | .[0].id // empty')"
+          if [ -n "$artifact_id" ]; then
+            gh api "repos/${GITHUB_REPOSITORY}/actions/artifacts/${artifact_id}/zip" > /tmp/meta-x-production-continuity-state.zip
+            unzip -oq /tmp/meta-x-production-continuity-state.zip -d "$STATE_DIR" || true
+          fi
+
+      - name: Restore latest shared discovery authority leases
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$DISCOVERY_STATE"
+          run_id="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow shared-discovery-authority-cycle.yml \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [ -n "$run_id" ]; then
+            gh run download "$run_id" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name shared-discovery-authority-state \
+              --dir "$DISCOVERY_STATE" || true
+          fi
+          found="$(find "$DISCOVERY_STATE" -type f -name discovery_capability_leases.json -print -quit || true)"
+          if [ -n "$found" ]; then
+            echo "DISCOVERY_LEASES=$found" >> "$GITHUB_ENV"
+          fi
+
+      - name: Install test runtime
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Verify production continuity invariants
+        working-directory: senju
+        run: |
+          python -m pytest \
+            tests/test_production_continuity.py \
+            tests/test_production_federated_discovery.py \
+            tests/test_discovery_lease_continuity.py \
+            tests/test_discovery_production_continuity_runner.py \
+            -q
+
+      - name: Compile production continuity runtime
+        run: |
+          python -m py_compile \
+            senju/senju/meta/production_continuity.py \
+            senju/senju/meta/production_federated_discovery.py \
+            senju/senju/meta/discovery_lease_continuity.py \
+            senju/scripts/run_production_continuity.py \
+            senju/scripts/run_production_federated_continuity.py \
+            senju/scripts/run_discovery_production_continuity.py \
+            senju/scripts/run_authorized_production_worker.py
+
+      - name: Run discovery-connected production continuity cycle
+        if: github.event_name != 'pull_request'
+        run: |
+          python senju/scripts/run_discovery_production_continuity.py \
+            --repo-root . \
+            --state-dir "$STATE_DIR" \
+            --config senju/config/production-continuity.json \
+            --discovery-leases "$DISCOVERY_LEASES" \
+            --remote-chain-state "$STATE_DIR/federation/remote_authority_chain.json" \
+            --deployment-authorities senju/config/production-deployment-authorizations.json \
+            --output "$STATE_DIR/latest-run.json" \
+            --probe-health \
+            --dispatch-approved-deployments
+
+      - name: Persist production continuity state
+        if: github.event_name != 'pull_request' && always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: meta-x-production-continuity-state
+          path: ${{ env.STATE_DIR }}
+          if-no-files-found: error
+          retention-days: 30

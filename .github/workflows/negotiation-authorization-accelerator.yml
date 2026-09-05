@@ -1,0 +1,263 @@
+name: Negotiation Authorization Accelerator
+# Owner Authorization pool closed-loop validation: formal intake -> Authorization -> promotion -> RED frontier.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'senju/senju/negotiation_authorization_accelerator.py'
+      - 'senju/scripts/negotiation_authorization_accelerator.py'
+      - 'senju/senju/negotiation_case_review_gate.py'
+      - 'senju/authorization_issuance_bureau.py'
+      - 'senju/senju/authorization_handoff_bridge.py'
+      - 'senju/scripts/authorization_handoff_bridge.py'
+      - 'senju/senju/owner_authorization_pool.py'
+      - 'senju/scripts/owner_authorization_pool.py'
+      - 'senju/senju/authority_promotion_bureau.py'
+      - 'senju/scripts/run_authority_promotion_bureau.py'
+      - 'senju/senju/red_authorized_frontier.py'
+      - 'senju/scripts/run_red_authorized_frontier.py'
+      - 'senju/state/verified_control_attestations.json'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'tests/test_negotiation_authorization_accelerator.py'
+      - 'tests/test_authorization_handoff_bridge.py'
+      - 'tests/test_owner_authorization_pool.py'
+      - 'tests/test_red_authorized_frontier.py'
+      - '.github/workflows/negotiation-authorization-accelerator.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: negotiation-authorization-accelerator
+  cancel-in-progress: false
+
+jobs:
+  accelerate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: claude/employee-onboarding-setup-udm86
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Restore latest negotiation artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/negotiation-authorization-input
+          restore_latest() {
+            workflow="$1"
+            dest="$2"
+            mkdir -p "$dest"
+            run_id="$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "$workflow" \
+              --branch claude/employee-onboarding-setup-udm86 \
+              --status success \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run_id" ]]; then
+              gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --dir "$dest" || true
+              echo "$workflow=$run_id" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "$workflow=none" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          }
+          restore_latest "Owner Scope Negotiation Production" /tmp/negotiation-authorization-input/owner-scope
+          restore_latest "Root Authority Negotiation Loop" /tmp/negotiation-authorization-input/root
+          restore_latest "External Input Negotiation Relay" /tmp/negotiation-authorization-input/external-relay
+          restore_latest "THE WORLD - Child Guild External Fleet" /tmp/negotiation-authorization-input/child
+          restore_latest "Outside World Scout" /tmp/negotiation-authorization-input/outside
+          restore_latest "Shared Discovery Authority Cycle" /tmp/negotiation-authorization-input/shared-discovery
+
+      - name: Rebuild current negotiation intelligence state
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/negotiation_intelligence_bus.py \
+            --state-dir senju/state \
+            --input-root /tmp/negotiation-authorization-input \
+            --out /tmp/negotiation-authorization-bus.json
+          test "$(jq -r '.closed_loop' /tmp/negotiation-authorization-bus.json)" = "true"
+          echo "negotiation_records=$(jq -r '.record_count' /tmp/negotiation-authorization-bus.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Advance at least five admitted negotiation hosts toward Authorization
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/negotiation_authorization_accelerator.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --minimum-batch 5 \
+            --out /tmp/negotiation-authorization-accelerator.json
+
+          available="$(jq -r '.available_admitted_unique_hosts' /tmp/negotiation-authorization-accelerator.json)"
+          selected="$(jq -r '.selected_count' /tmp/negotiation-authorization-accelerator.json)"
+          issued="$(jq -r '.authorization_issued_count' /tmp/negotiation-authorization-accelerator.json)"
+          pending="$(jq -r '.pending_verification_count' /tmp/negotiation-authorization-accelerator.json)"
+
+          echo "## Negotiation → Authorization Accelerator" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Admitted unique hosts available: \`$available\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Advanced this cycle: \`$selected\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Authorization issued: \`$issued\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Pending verified authorization basis: \`$pending\`" >> "$GITHUB_STEP_SUMMARY"
+          jq -r '.rows[] | "- `\(.host)` → `\(.authorization_status)` key=`\(.review_key.key_id)`"' \
+            /tmp/negotiation-authorization-accelerator.json >> "$GITHUB_STEP_SUMMARY"
+
+          if [[ "$available" -ge 5 && "$selected" -lt 5 ]]; then
+            echo "accelerator failed to advance five hosts despite five or more admitted candidates" >&2
+            exit 1
+          fi
+
+      - name: Maintain fifty owner-authorized exact-host grants
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          previous="$(find /tmp/negotiation-authorization-input -name owner_authorization_pool.json -type f | head -n1 || true)"
+          if [[ -n "$previous" ]]; then
+            cp "$previous" senju/state/owner_authorization_pool.json
+          fi
+
+          python senju/scripts/owner_authorization_pool.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --target-count 50 \
+            --ttl-minutes 1440 \
+            --renew-before-minutes 60 \
+            | tee /tmp/owner-authorization-pool.json
+
+          test "$(jq -r '.target_met' /tmp/owner-authorization-pool.json)" = "true"
+          test "$(jq -r '.authorized_count' /tmp/owner-authorization-pool.json)" -ge 50
+          echo "## Owner Authorization Pool" >> "$GITHUB_STEP_SUMMARY"
+          echo "- verified candidates: $(jq -r '.verified_candidate_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- authorized: $(jq -r '.authorized_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- transport-eligible: $(jq -r '.transport_eligible_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- issued this cycle: $(jq -r '.issued_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reused this cycle: $(jq -r '.reused_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Bridge every newly issued Authorization into reviewed promotion leases
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/authorization_handoff_bridge.py \
+            --state-dir senju/state \
+            --out /tmp/authorization-handoff-bridge.json
+
+          test "$(jq -r '.closed_loop' /tmp/authorization-handoff-bridge.json)" = "true"
+          echo "## Authorization Handoff Closure" >> "$GITHUB_STEP_SUMMARY"
+          echo "- issued handoffs seen: $(jq -r '.input_handoff_count' /tmp/authorization-handoff-bridge.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- newly bridged into promotion leases: $(jq -r '.bridged_count' /tmp/authorization-handoff-bridge.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reviewed promotion leases: $(jq -r '.reviewed_lease_count' /tmp/authorization-handoff-bridge.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Promote pool and issued handoffs into SENJU Authority feed
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_authority_promotion_bureau.py \
+            --state-dir senju/state \
+            --meta-state-dir automation/codegen/meta_state \
+            --output-dir senju/state \
+            | tee /tmp/owner-authorization-promotion.json
+
+          test "$(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" -ge 50
+          test "$(jq -r '.promotion_lease_count' /tmp/owner-authorization-promotion.json)" -ge 50
+          echo "- promoted runtime hosts: $(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- promotion leases: $(jq -r '.promotion_lease_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Activate live authorized URLs for SENJU RED
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_red_authorized_frontier.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --max-hosts 128 \
+            --live-sample 12 \
+            --out /tmp/red-authorized-frontier.json \
+            | tee /tmp/red-authorized-frontier-run.json
+
+          targets="$(jq -r '.active_target_count' /tmp/red-authorized-frontier.json)"
+          urls="$(jq -r '.frontier_url_count' /tmp/red-authorized-frontier.json)"
+          attempted="$(jq -r '.live_sample.attempted_count' /tmp/red-authorized-frontier-run.json)"
+          success="$(jq -r '.live_sample.success_count' /tmp/red-authorized-frontier-run.json)"
+
+          test "$targets" -ge 1
+          test "$urls" -ge "$targets"
+          test "$attempted" -ge 1
+
+          echo "## SENJU RED Authorized Frontier" >> "$GITHUB_STEP_SUMMARY"
+          echo "- live authorized targets: $targets" >> "$GITHUB_STEP_SUMMARY"
+          echo "- same-origin frontier URLs: $urls" >> "$GITHUB_STEP_SUMMARY"
+          echo "- live probes attempted: $attempted" >> "$GITHUB_STEP_SUMMARY"
+          echo "- live probes succeeded: $success" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run focused accelerator, closure, pool, and RED frontier tests
+        env:
+          PYTHONPATH: senju
+        run: |
+          python -m pip install --disable-pip-version-check pytest
+          pytest -q \
+            tests/test_negotiation_authorization_accelerator.py \
+            tests/test_authorization_handoff_bridge.py \
+            tests/test_owner_authorization_pool.py \
+            tests/test_authorization_issuance_bureau.py \
+            tests/test_red_authorized_frontier.py \
+            senju/tests/test_authority_promotion_bureau.py
+
+      - name: Preserve acceleration, closure, pool, and RED evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: negotiation-authorization-acceleration-${{ github.run_id }}
+          path: |
+            /tmp/negotiation-authorization-bus.json
+            /tmp/negotiation-authorization-accelerator.json
+            /tmp/authorization-handoff-bridge.json
+            /tmp/owner-authorization-pool.json
+            /tmp/owner-authorization-promotion.json
+            /tmp/red-authorized-frontier.json
+            /tmp/red-authorized-frontier-run.json
+            senju/state/negotiation_case_review_queue.json
+            senju/state/formal_approval_intake.json
+            senju/state/authorization_review_keys.json
+            senju/state/negotiation_authorization_acceleration.json
+            senju/state/negotiation_authorization_handoffs.json
+            senju/state/authorization_handoff_bridge.json
+            senju/state/owner_authorization_pool.json
+            senju/state/owner_authorization_pool_handoffs.json
+            senju/state/reviewed_authority_operational_leases.json
+            senju/state/promotion_bureau_approved_hosts.json
+            senju/state/promotion_bureau_leases.json
+            senju/state/promotion_bureau_assignments.json
+            senju/state/senju_approved_authority_feed.json
+            senju/state/red_authorized_target_feed.json
+            senju/state/red_authorized_url_frontier.json
+            senju/state/red_authorized_transport_leases.json
+            senju/state/red_authorized_live_sample.json
+            senju/state/adversary_transport_receipts.ndjson
+          if-no-files-found: warn
+          retention-days: 30

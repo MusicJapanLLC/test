@@ -2,21 +2,16 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "security/**": false,
-      "senju/**": false,
-      "dependabot/**": false,
-      "automation/**": false,
-      "rnd/**": false,
-      "world/**": false,
-      "chatgpt/**": false
+      "**": false,
+      "claude/employee-onboarding-setup-udm86": true
     }
   },
+  "ignoreCommand": "git rev-parse HEAD^ >/dev/null 2>&1 || exit 0; git diff --quiet HEAD^ HEAD -- automation/deploy-permits/root-vercel.json",
   "builds": [
     { "src": "api/*.js", "use": "@vercel/node" },
     { "src": "public/**", "use": "@vercel/static" }
   ],
   "rewrites": [
-    { "source": "/generated/:path*", "destination": "/public/generated/:path*" },
     { "source": "/agent", "destination": "/public/agent.html" },
     { "source": "/agent.js", "destination": "/public/agent.js" },
     { "source": "/app.js", "destination": "/public/app.js" },

@@ -1,0 +1,310 @@
+name: Senju Live Production Chaos Canary
+
+on:
+  pull_request:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/senju/live_production_chaos_canary.py"
+      - "senju/tests/test_live_production_chaos_canary.py"
+      - "senju/senju/autonomy/capability_continuity_incubator.py"
+      - "senju/tests/test_capability_continuity_incubator.py"
+      - "senju/senju/adversary_test_range_transport.py"
+      - "automation/codegen/meta_state/discovery_policy.json"
+      - ".github/workflows/live-production-chaos-canary.yml"
+      - ".github/workflows/capability-continuity-incubator.yml"
+      - "automation/security/workflow_policy_continuity_entrypoint.py"
+      - "automation/security/workflow_policy_capability_entrypoint.py"
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "senju/senju/live_production_chaos_canary.py"
+      - "senju/senju/autonomy/capability_continuity_incubator.py"
+      - "senju/senju/adversary_test_range_transport.py"
+      - "automation/codegen/meta_state/discovery_policy.json"
+      - ".github/workflows/live-production-chaos-canary.yml"
+      - ".github/workflows/capability-continuity-incubator.yml"
+      - "automation/security/workflow_policy_continuity_entrypoint.py"
+      - "automation/security/workflow_policy_capability_entrypoint.py"
+  schedule:
+    - cron: "17 */2 * * *"
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: "Optional bounded canary scenario; empty lets the evolving incubator choose"
+        required: false
+        type: choice
+        options:
+          - ""
+          - contact_write
+          - record_create
+          - record_create_patch
+          - duplicate_contact_write
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: live-production-chaos-canary-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CANARY_DIR: /tmp/senju-live-production-chaos-canary
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+      - name: Verify canary and continuity-incubator boundaries
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest==9.1.1
+          python -m pytest \
+            tests/test_live_production_chaos_canary.py \
+            tests/test_capability_continuity_incubator.py -q
+          python -m py_compile \
+            senju/live_production_chaos_canary.py \
+            senju/autonomy/capability_continuity_incubator.py \
+            senju/adversary_test_range_transport.py
+
+  evolve-capability-continuity:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      promotion_eligible: ${{ steps.champion.outputs.promotion_eligible }}
+      scenario: ${{ steps.champion.outputs.scenario }}
+      generation: ${{ steps.champion.outputs.generation }}
+      population_size: ${{ steps.champion.outputs.population_size }}
+      champion_id: ${{ steps.champion.outputs.champion_id }}
+    env:
+      STATE_DIR: ${{ runner.temp }}/capability-continuity-incubator
+      OUTPUT_DIR: ${{ runner.temp }}/capability-continuity-incubator/reports
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Restore previous production evolution state
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR"
+          PREV_RUN="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Live Production Chaos Canary" \
+            --branch claude/employee-onboarding-setup-udm86 \
+            --status success \
+            --limit 30 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV_RUN" ]]; then
+            rm -rf "${STATE_DIR}-prev"
+            mkdir -p "${STATE_DIR}-prev"
+            gh run download "$PREV_RUN" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name capability-continuity-incubator-state \
+              --dir "${STATE_DIR}-prev" || true
+            PREV_STATE="$(find "${STATE_DIR}-prev" -type f -name capability_continuity_state.json -print -quit || true)"
+            if [[ -n "$PREV_STATE" ]]; then
+              cp "$PREV_STATE" "$STATE_DIR/capability_continuity_state.json"
+              echo "Restored production evolution state from run $PREV_RUN" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Evolve candidate population
+        run: |
+          set -euo pipefail
+          mkdir -p "$STATE_DIR" "$OUTPUT_DIR"
+          PYTHONPATH=senju python -m senju.autonomy.capability_continuity_incubator \
+            --state-dir "$STATE_DIR" \
+            --output-dir "$OUTPUT_DIR" \
+            --json "$OUTPUT_DIR/cycle-summary.json"
+
+      - name: Select bounded champion
+        id: champion
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report=json.loads(Path(os.environ['OUTPUT_DIR']+'/capability_continuity_report.json').read_text())
+          assert report['schema'] == 'senju-capability-continuity-incubator/v1'
+          assert report['evolving'] is True
+          assert report['boundaries']['old_revoked_authority_restored'] is False
+          assert report['boundaries']['raw_credential_copied'] is False
+          assert report['boundaries']['stop_bypassed'] is False
+          assert report['promotion']['production_trust_root_mutation'] is False
+          assert report['promotion']['eligible'] is True
+          scenario=report['promotion']['scenario']
+          assert scenario in ('contact_write', 'record_create', 'record_create_patch', 'duplicate_contact_write')
+          champion=report['champion']
+          with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as fh:
+              fh.write('promotion_eligible=true\n')
+              fh.write(f"scenario={scenario}\n")
+              fh.write(f"generation={report['generation']}\n")
+              fh.write(f"population_size={report['population_size']}\n")
+              fh.write(f"champion_id={champion['candidate_id']}\n")
+          with open(os.environ['GITHUB_STEP_SUMMARY'], 'a', encoding='utf-8') as fh:
+              fh.write(f"Generation: {report['generation']}\n\n")
+              fh.write(f"Population: {report['population_size']}\n\n")
+              fh.write(f"Champion: {champion['candidate_id']} ({champion['family']}/{champion['strategy']})\n\n")
+              fh.write(f"Live scenario: {scenario}\n")
+          print('EVOLVING_CAPABILITY_CHAMPION_SELECTED')
+          PY
+
+      - name: Preserve evolving state
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: capability-continuity-incubator-state
+          retention-days: 30
+          if-no-files-found: error
+          path: ${{ runner.temp }}/capability-continuity-incubator/
+
+  live-canary:
+    if: github.event_name != 'pull_request' && needs.evolve-capability-continuity.outputs.promotion_eligible == 'true'
+    needs:
+      - verify
+      - evolve-capability-continuity
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      actions: read
+    env:
+      REQUESTED_SCENARIO: ${{ inputs.scenario || needs.evolve-capability-continuity.outputs.scenario }}
+      EVOLUTION_GENERATION: ${{ needs.evolve-capability-continuity.outputs.generation }}
+      EVOLUTION_POPULATION: ${{ needs.evolve-capability-continuity.outputs.population_size }}
+      EVOLUTION_CHAMPION: ${{ needs.evolve-capability-continuity.outputs.champion_id }}
+    steps:
+      - name: Checkout production default
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Bind evolved champion to short-lived canary authority
+        id: lease
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          rm -rf "$CANARY_DIR"
+          mkdir -p "$CANARY_DIR"
+          seed="${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${GITHUB_SHA}:$(date +%s%N)"
+          scenario_args=()
+          case "${REQUESTED_SCENARIO:-}" in
+            "") ;;
+            contact_write|record_create|record_create_patch|duplicate_contact_write)
+              scenario_args=(--scenario "$REQUESTED_SCENARIO") ;;
+            *) echo "Rejected unknown canary scenario" >&2; exit 2 ;;
+          esac
+          python -m senju.live_production_chaos_canary issue \
+            --seed "$seed" \
+            --run-id "$GITHUB_RUN_ID" \
+            --ttl-seconds 180 \
+            "${scenario_args[@]}" \
+            --out "$CANARY_DIR/lease-local.json"
+          scenario="$(python -c 'import json,os;print(json.load(open(os.environ["CANARY_DIR"]+"/lease-local.json"))["scenario"])')"
+          echo "scenario=$scenario" >> "$GITHUB_OUTPUT"
+          {
+            echo "Evolution generation: $EVOLUTION_GENERATION"
+            echo "Evolution population: $EVOLUTION_POPULATION"
+            echo "Evolution champion: $EVOLUTION_CHAMPION"
+            echo "Live scenario: $scenario"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Materialize authority using the real GitHub credential
+        id: github_authority
+        run: |
+          set -euo pipefail
+          branch="chaos-canary/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+          gh api -X POST "repos/$GITHUB_REPOSITORY/git/refs" \
+            -f ref="refs/heads/$branch" \
+            -f sha="$GITHUB_SHA" >/dev/null
+
+          encoded="$(base64 -w0 "$CANARY_DIR/lease-local.json")"
+          gh api -X PUT "repos/$GITHUB_REPOSITORY/contents/.canary-authority/live-lease.json" \
+            -f message="chaos-canary: materialize live authority lease" \
+            -f content="$encoded" \
+            -f branch="$branch" >/dev/null
+
+          gh api "repos/$GITHUB_REPOSITORY/contents/.canary-authority/live-lease.json?ref=$branch" \
+            --jq .content | tr -d '\n' | base64 -d > "$CANARY_DIR/lease-from-github.json"
+          python - <<'PY'
+          import hashlib, os
+          from pathlib import Path
+          root=Path(os.environ['CANARY_DIR'])
+          a=root.joinpath('lease-local.json').read_bytes()
+          b=root.joinpath('lease-from-github.json').read_bytes()
+          assert hashlib.sha256(a).digest() == hashlib.sha256(b).digest()
+          print('REAL_GITHUB_AUTHORITY_ROUNDTRIP_VERIFIED')
+          PY
+
+      - name: Execute real owner-controlled production canary mutation
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m senju.live_production_chaos_canary execute \
+            --lease "$CANARY_DIR/lease-from-github.json" \
+            --report "$CANARY_DIR/live-report.json"
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          report=json.loads(Path(os.environ['CANARY_DIR']+'/live-report.json').read_text())
+          assert report['network_io'] is True
+          assert report['real_external_mutation'] is True
+          assert report['production_side_effects'] is True
+          assert report['authority_state_source'] == 'github_canary_branch'
+          assert report['credential_path'] == 'github_actions_token_runtime_only'
+          assert report['production_trust_root_mutated'] is False
+          print('LIVE_PRODUCTION_CHAOS_CANARY_VERIFIED')
+          for row in report['outcomes']:
+              print(row['method'], row['status'], row['url'], row['action_id'])
+          PY
+          cat "$CANARY_DIR/live-report.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Revoke canary authority by deleting its GitHub branch
+        if: always() && steps.github_authority.outputs.branch != ''
+        env:
+          CANARY_BRANCH: ${{ steps.github_authority.outputs.branch }}
+        run: |
+          set -euo pipefail
+          gh api -X DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$CANARY_BRANCH" || true
+          echo "Canary authority branch revoked: $CANARY_BRANCH" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve live evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: live-production-chaos-canary-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            /tmp/senju-live-production-chaos-canary/lease-local.json
+            /tmp/senju-live-production-chaos-canary/lease-from-github.json
+            /tmp/senju-live-production-chaos-canary/live-report.json

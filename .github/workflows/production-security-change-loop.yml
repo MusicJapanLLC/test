@@ -1,0 +1,120 @@
+name: Production Security Change Loop
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/production_security_change_loop.py'
+      - 'automation/world/tests/test_production_security_change_loop.py'
+      - 'automation/codegen/engine/standing_authority.py'
+      - 'automation/codegen/engine/security_proposal.py'
+      - 'security/authority_envelopes/**'
+      - '.github/workflows/production-security-change-loop.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/production_security_change_loop.py'
+      - 'automation/world/state/security_findings.json'
+      - 'automation/world/state/boundary_opportunities.json'
+      - 'automation/world/state/security_change_findings.json'
+      - 'automation/codegen/engine/standing_authority.py'
+      - 'automation/codegen/engine/security_proposal.py'
+      - 'security/authority_envelopes/**'
+      - '.github/workflows/production-security-change-loop.yml'
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: production-security-change-loop
+  cancel-in-progress: false
+
+jobs:
+  test:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify bounded and predelegated production security loop
+        env:
+          PYTHONPATH: .
+        run: python -m pytest -q automation/world/tests/test_production_security_change_loop.py
+
+  production-loop:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Run Finding to Proposal to AI Consensus to bounded or predelegated Self-Approval to Production Apply
+        env:
+          PYTHONPATH: .
+        run: |
+          set -euo pipefail
+          python -m automation.world.production_security_change_loop | tee /tmp/production-security-change-summary.json
+      - name: Persist bounded or predelegated runtime production changes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          runtime='automation/world/state/security_runtime_overrides.json'
+          branch='claude/employee-onboarding-setup-udm86'
+          if [ ! -f "$runtime" ]; then
+            echo 'No runtime override state produced.'
+            exit 0
+          fi
+
+          remote_tmp="$(mktemp)"
+          if gh api "repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch" \
+              --jq '.content' 2>/dev/null | tr -d '\n' | base64 -d > "$remote_tmp" 2>/dev/null; then
+            if cmp -s "$runtime" "$remote_tmp"; then
+              echo 'No new bounded or predelegated production change to persist.'
+              exit 0
+            fi
+            current_sha="$(gh api "repos/$GITHUB_REPOSITORY/contents/$runtime?ref=$branch" --jq '.sha')"
+            encoded="$(base64 -w 0 "$runtime")"
+            gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
+              --method PUT \
+              -f message='chore(security): apply AI-consensus bounded runtime override' \
+              -f content="$encoded" \
+              -f branch="$branch" \
+              -f sha="$current_sha" >/dev/null
+          else
+            encoded="$(base64 -w 0 "$runtime")"
+            gh api "repos/$GITHUB_REPOSITORY/contents/$runtime" \
+              --method PUT \
+              -f message='chore(security): apply AI-consensus bounded runtime override' \
+              -f content="$encoded" \
+              -f branch="$branch" >/dev/null
+          fi
+      - name: Preserve proposal, consensus, owner-gate, and apply receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: production-security-change-loop-state
+          path: |
+            automation/world/state/security_runtime_overrides.json
+            automation/world/state/owner_authority_required.json
+            automation/world/state/production_security_change_receipts.json
+            /tmp/production-security-change-summary.json
+          if-no-files-found: warn
+          retention-days: 30

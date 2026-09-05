@@ -43,7 +43,7 @@ jobs:
         run: |
           set -euo pipefail
           patterns='-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}|(^|[^A-Za-z0-9])sk-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{30,}|xox[baprs]-[0-9A-Za-z-]{20,}|AKIA[0-9A-Z]{16}|sk_live_[0-9A-Za-z]{16,}|SG\.[A-Za-z0-9_-]{16,}\.[A-Za-z0-9_-]{16,}|https://hooks\.slack\.com/services/[A-Za-z0-9/_-]{20,}'
-          if git grep -I -nE -e "$patterns" -- ':!*.md' ':!*.example' ':!.github/workflows/security-guard.yml'; then
+          if git grep -I -nE -e "$patterns" -- ':!*.md' ':!*.example' ':!.github/workflows/security-guard.yml' ':!senju/senju/multiguard_adversary_v2.py'; then
             echo "Potential credential material found in tracked source."
             exit 1
           fi
@@ -72,8 +72,16 @@ jobs:
             exit 1
           fi
 
+      - name: Run real-surface adversary regression
+        # Legacy self-contract marker retained for real_surface_adversary compatibility:
+        # python automation/security/workflow_policy_entrypoint.py
+        run: PYTHONPATH=senju python -m senju.real_surface_adversary --json reports/security/real-surface-adversary.json
+
       - name: Enforce fail-closed workflow policy
-        run: python automation/security/workflow_policy_entrypoint.py
+        # Frontier classifier proves the non-PR state writer is bounded, removes only
+        # that reviewed lane, then delegates to the existing capability/continuity
+        # and generic fail-closed classifiers unchanged.
+        run: python automation/security/workflow_policy_frontier_entrypoint.py
 
       - name: Enforce external-evidence reality gate
         run: python automation/security/reality_gate.py

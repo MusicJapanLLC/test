@@ -1,0 +1,333 @@
+name: AI Security Proposal Production Apply
+
+on:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'security/proposals/**.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: ai-security-proposal-production-apply
+  cancel-in-progress: false
+
+jobs:
+  production-apply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      THE_WORLD_ENVIRONMENT: production
+    steps:
+      - name: Checkout triggering production commit without credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Collect production proposals
+        id: collect
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            find security/proposals -maxdepth 1 -type f -name '*.json' -print 2>/dev/null | sort > /tmp/security-proposals.txt || true
+          else
+            git cat-file -e "${HEAD_SHA}^{commit}"
+            if [ "$BEFORE_SHA" = "0000000000000000000000000000000000000000" ]; then
+              mapfile -t files < <(git show --pretty='' --name-only "$HEAD_SHA" -- 'security/proposals/*.json')
+            else
+              if ! git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+                git fetch --no-tags --depth=1 origin "$BEFORE_SHA"
+              fi
+              git cat-file -e "${BEFORE_SHA}^{commit}"
+              mapfile -t files < <(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+            fi
+            printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
+          fi
+          sed -i '/^$/d' /tmp/security-proposals.txt
+          if [ ! -s /tmp/security-proposals.txt ]; then
+            echo 'has_proposals=false' >> "$GITHUB_OUTPUT"
+            echo 'No production security proposal to apply.'
+            exit 0
+          fi
+          echo 'has_proposals=true' >> "$GITHUB_OUTPUT"
+          cat /tmp/security-proposals.txt
+
+      - name: Snapshot latest production security state
+        if: steps.collect.outputs.has_proposals == 'true'
+        env:
+          TARGET_BRANCH: claude/employee-onboarding-setup-udm86
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$TARGET_BRANCH"
+          if git cat-file -e 'FETCH_HEAD:security/runtime/ai_security_state.json' 2>/dev/null; then
+            git show 'FETCH_HEAD:security/runtime/ai_security_state.json' > /tmp/production-security-state.json
+            git rev-parse 'FETCH_HEAD:security/runtime/ai_security_state.json' > /tmp/production-security-state-blob.txt
+          else
+            printf '{}\n' > /tmp/production-security-state.json
+            : > /tmp/production-security-state-blob.txt
+          fi
+
+      - name: Re-evaluate Council, standing delegation, and review evidence from production code
+        if: steps.collect.outputs.has_proposals == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -t files < /tmp/security-proposals.txt
+          PYTHONPATH=automation/codegen \
+            python automation/codegen/security_proposal_loop.py \
+              "${files[@]}" \
+              --standing-envelope-dir security/authority_envelopes \
+              --github-repo '${{ github.repository }}' \
+              --github-sha '${{ github.sha }}' \
+              --state /tmp/production-security-state.json \
+              --write-state security/runtime/ai_security_state.json \
+              --decision-dir /tmp/security-proposal-decisions \
+              --apply
+
+      - name: Verify closed-loop decision and applied-state invariants
+        if: steps.collect.outputs.has_proposals == 'true'
+        run: |
+          PYTHONPATH=automation/codegen python - <<'PY'
+          import json
+          from pathlib import Path
+
+          from engine.security_proposal import proposal_sha256
+
+          proposal_paths = [
+              Path(line.strip())
+              for line in Path('/tmp/security-proposals.txt').read_text(encoding='utf-8').splitlines()
+              if line.strip()
+          ]
+          if not proposal_paths:
+              raise SystemExit('no proposal paths available for invariant verification')
+
+          state_path = Path('security/runtime/ai_security_state.json')
+          if not state_path.exists():
+              raise SystemExit('production security state was not generated')
+          state = json.loads(state_path.read_text(encoding='utf-8'))
+          if not isinstance(state, dict):
+              raise SystemExit('production security state is not an object')
+          generation = state.get('generation')
+          if not isinstance(generation, int) or generation < 1:
+              raise SystemExit('production security state generation is invalid')
+
+          applied_rows = state.get('applied_proposals')
+          controls = state.get('controls')
+          if not isinstance(applied_rows, list) or not isinstance(controls, dict):
+              raise SystemExit('production security state shape is invalid')
+          applied_by_id = {
+              row.get('proposal_id'): row
+              for row in applied_rows
+              if isinstance(row, dict) and row.get('proposal_id')
+          }
+
+          for proposal_path in proposal_paths:
+              proposal = json.loads(proposal_path.read_text(encoding='utf-8'))
+              proposal_id = str(proposal.get('id') or '').strip()
+              if not proposal_id:
+                  raise SystemExit(f'{proposal_path}: missing proposal id')
+              expected_hash = proposal_sha256(proposal)
+
+              decision_path = Path('/tmp/security-proposal-decisions') / f'{proposal_path.stem}.decision.json'
+              if not decision_path.exists():
+                  raise SystemExit(f'{proposal_path}: decision artifact missing')
+              decision = json.loads(decision_path.read_text(encoding='utf-8'))
+
+              required_true = (
+                  'identified',
+                  'supported_target',
+                  'ai_consensus_approved',
+                  'proposal_gate_eligible',
+                  'auto_merge_eligible',
+                  'production_apply_eligible',
+              )
+              for key in required_true:
+                  if decision.get(key) is not True:
+                      raise SystemExit(f'{proposal_id}: decision invariant failed: {key}=true required')
+              if decision.get('proposal_id') != proposal_id:
+                  raise SystemExit(f'{proposal_id}: decision proposal id mismatch')
+              if decision.get('proposal_sha256') != expected_hash:
+                  raise SystemExit(f'{proposal_id}: decision hash mismatch')
+              for key in (
+                  'raw_secret_material_detected',
+                  'guard_weakening_allowed',
+                  'emergency_stop_disable_allowed',
+                  'root_self_rewrite_allowed',
+              ):
+                  if decision.get(key) is not False:
+                      raise SystemExit(f'{proposal_id}: forbidden decision invariant failed: {key}')
+
+              council = decision.get('council')
+              if not isinstance(council, dict) or council.get('complete') is not True:
+                  raise SystemExit(f'{proposal_id}: incomplete AI Council')
+              if decision.get('proposal_class') == 'authority_expansion':
+                  if council.get('unanimous') is not True:
+                      raise SystemExit(f'{proposal_id}: authority activation requires unanimous Council')
+                  external = decision.get('external_approval')
+                  if not isinstance(external, dict) or external.get('verified') is not True:
+                      raise SystemExit(f'{proposal_id}: authority activation lacks verified external trust root')
+                  if decision.get('delegated_authority_activation') is True:
+                      if decision.get('self_approved') is not True:
+                          raise SystemExit(f'{proposal_id}: delegated activation must be self-approved')
+                      if external.get('source') != 'standing_owner_envelope':
+                          raise SystemExit(f'{proposal_id}: delegated activation must come from standing owner envelope')
+                      if external.get('standing_delegation') is not True:
+                          raise SystemExit(f'{proposal_id}: standing delegation flag missing')
+                      if decision.get('fresh_human_prompt_required') is not False:
+                          raise SystemExit(f'{proposal_id}: bounded delegated activation unexpectedly requests fresh prompt')
+                      if decision.get('creates_new_authority') is not False:
+                          raise SystemExit(f'{proposal_id}: delegated activation cannot create a new trust root')
+                      if decision.get('trust_root') != 'owner-standing-envelope+ai-council/v1':
+                          raise SystemExit(f'{proposal_id}: delegated activation trust root mismatch')
+
+              applied = applied_by_id.get(proposal_id)
+              if not isinstance(applied, dict):
+                  raise SystemExit(f'{proposal_id}: proposal missing from production state')
+              if applied.get('production_applied') is not True:
+                  raise SystemExit(f'{proposal_id}: production_applied=true missing')
+              if applied.get('proposal_sha256') != expected_hash:
+                  raise SystemExit(f'{proposal_id}: applied proposal hash mismatch')
+              for key in (
+                  'proposal_class',
+                  'target',
+                  'delegation_envelope_id',
+                  'trust_root',
+              ):
+                  if applied.get(key) != decision.get(key):
+                      raise SystemExit(f'{proposal_id}: applied {key} does not match decision')
+              if bool(applied.get('self_approved')) != bool(decision.get('self_approved')):
+                  raise SystemExit(f'{proposal_id}: applied self_approved does not match decision')
+
+              raw_changes = proposal.get('changes')
+              if raw_changes is None:
+                  raw_changes = [{
+                      'target': proposal.get('target'),
+                      'operations': proposal.get('operations', []),
+                  }]
+              if not isinstance(raw_changes, list) or not raw_changes:
+                  raise SystemExit(f'{proposal_id}: no normalized changes to verify')
+              for change in raw_changes:
+                  if not isinstance(change, dict):
+                      raise SystemExit(f'{proposal_id}: malformed change during state verification')
+                  target = str(change.get('target') or '').strip()
+                  target_rows = controls.get(target)
+                  if not isinstance(target_rows, list):
+                      raise SystemExit(f'{proposal_id}: control target not persisted: {target}')
+                  for operation in change.get('operations', []):
+                      if not isinstance(operation, dict):
+                          raise SystemExit(f'{proposal_id}: malformed operation during state verification')
+                      op_type = operation.get('type')
+                      params = operation.get('parameters', {})
+                      matched = any(
+                          isinstance(row, dict)
+                          and row.get('proposal_id') == proposal_id
+                          and row.get('proposal_sha256') == expected_hash
+                          and row.get('type') == op_type
+                          and row.get('parameters', {}) == params
+                          for row in target_rows
+                      )
+                      if not matched:
+                          raise SystemExit(f'{proposal_id}: applied control missing: {target}/{op_type}')
+
+              print(f'PASS production invariants: {proposal_id}')
+
+          print(f'closed-loop production state verified for {len(proposal_paths)} proposal(s)')
+          PY
+
+      - name: Persist production security state through GitHub API
+        if: steps.collect.outputs.has_proposals == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TARGET_BRANCH: claude/employee-onboarding-setup-udm86
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          state_path = Path('security/runtime/ai_security_state.json')
+          if not state_path.exists():
+              raise SystemExit('production security state was not generated')
+
+          repo = os.environ['GITHUB_REPOSITORY']
+          owner, name = repo.split('/', 1)
+          token = os.environ['GITHUB_TOKEN']
+          branch = os.environ['TARGET_BRANCH']
+          path = 'security/runtime/ai_security_state.json'
+          encoded_path = urllib.parse.quote(path, safe='/')
+          base = f'https://api.github.com/repos/{owner}/{name}/contents/{encoded_path}'
+          headers = {
+              'Authorization': f'Bearer {token}',
+              'Accept': 'application/vnd.github+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+              'Content-Type': 'application/json',
+          }
+
+          expected_sha = Path('/tmp/production-security-state-blob.txt').read_text(encoding='utf-8').strip()
+          existing_sha = None
+          request = urllib.request.Request(
+              f'{base}?{urllib.parse.urlencode({"ref": branch})}',
+              headers=headers,
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=15) as response:
+                  existing = json.loads(response.read())
+              existing_sha = existing.get('sha')
+          except urllib.error.HTTPError as exc:
+              if exc.code != 404:
+                  raise
+
+          if expected_sha:
+              if existing_sha != expected_sha:
+                  raise SystemExit('concurrent production security state update detected; refusing stale overwrite')
+          elif existing_sha:
+              raise SystemExit('production security state appeared after snapshot; refusing stale overwrite')
+
+          payload = {
+              'message': 'security: apply AI Council authorized proposal',
+              'content': base64.b64encode(state_path.read_bytes()).decode('ascii'),
+              'branch': branch,
+          }
+          if existing_sha:
+              payload['sha'] = existing_sha
+
+          request = urllib.request.Request(
+              base,
+              data=json.dumps(payload).encode('utf-8'),
+              method='PUT',
+              headers=headers,
+          )
+          with urllib.request.urlopen(request, timeout=20) as response:
+              result = json.loads(response.read())
+          print(f"production security state persisted: {result.get('content', {}).get('path', path)}")
+          PY
+
+      - name: Preserve production apply evidence
+        if: always() && steps.collect.outputs.has_proposals == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-production-apply-${{ github.run_id }}
+          path: |
+            /tmp/security-proposal-decisions
+            /tmp/production-security-state.json
+            /tmp/production-security-state-blob.txt
+            security/runtime/ai_security_state.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+# CI retrigger: validate production-apply closure on synchronized default ancestry.

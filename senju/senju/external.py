@@ -102,7 +102,6 @@ class ExternalAuthorityScope:
         }
 
 
-# Standard authorized threat intelligence and public observability scopes
 BUILTIN_AUTHORITY_SCOPES: dict[str, ExternalAuthorityScope] = {
     "threat_intel_public": ExternalAuthorityScope(
         scope_id="threat_intel_public",
@@ -180,12 +179,10 @@ class ExternalContactPolicy:
 
     @classmethod
     def from_authority_scope(cls, scope: ExternalAuthorityScope) -> "ExternalContactPolicy":
-        """Build an outbound contact policy from a structured authority scope."""
         return scope.to_policy()
 
     @classmethod
     def threat_intel(cls) -> "ExternalContactPolicy":
-        """Pre-authorized policy for public threat intelligence and CVE feeds."""
         return BUILTIN_AUTHORITY_SCOPES["threat_intel_public"].to_policy()
 
     @classmethod
@@ -238,7 +235,6 @@ class ContactReceipt:
 
     @property
     def url(self) -> str:
-        """Backwards-compatible alias for callers that expect receipt.url."""
         return self.requested_url
 
     def to_dict(self) -> dict[str, object]:
@@ -254,8 +250,6 @@ class ContactReceipt:
 
 @dataclass(frozen=True)
 class ContactResult:
-    """Receipt plus the bounded provider response body."""
-
     receipt: ContactReceipt
     body: bytes
 
@@ -272,7 +266,13 @@ class ContactResult:
 
 
 def _normalize_host(host: str) -> str:
-    value = host.strip().rstrip(".").lower()
+    if not isinstance(host, str):
+        raise ExternalContactError("allowlisted host must be a string")
+    if host != host.strip():
+        raise ExternalContactError(f"allowlisted host has surrounding whitespace: {host!r}")
+    if any(ord(ch) < 32 or ord(ch) == 127 for ch in host):
+        raise ExternalContactError(f"allowlisted host contains control characters: {host!r}")
+    value = host.rstrip(".").lower()
     if not value or any(c in value for c in "/?#@"):
         raise ExternalContactError(f"invalid allowlisted host: {host!r}")
     try:
@@ -295,10 +295,15 @@ def _parse_url(url: str, policy: ExternalContactPolicy) -> tuple[str, int]:
     host = _normalize_host(parsed.hostname)
     if host not in policy.allow_hosts:
         raise ExternalContactError(f"host is not explicitly allowlisted: {host}")
+    default_port = 443 if scheme == "https" else 80
     try:
-        port = parsed.port or (443 if scheme == "https" else 80)
+        port = parsed.port or default_port
     except ValueError as exc:
         raise ExternalContactError("invalid URL port") from exc
+    if port != default_port:
+        raise ExternalContactError(
+            f"non-default port is not covered by host-only authority: {host}:{port}"
+        )
     return host, port
 
 

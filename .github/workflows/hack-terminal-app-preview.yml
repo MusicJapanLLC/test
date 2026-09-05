@@ -1,0 +1,83 @@
+name: Hack Terminal AI - App Build & Preview
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'next.config.ts'
+      - '.github/workflows/hack-terminal-app-preview.yml'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'app/**'
+      - 'next.config.ts'
+      - '.github/workflows/hack-terminal-app-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '20'
+
+      - name: Stage standalone Next.js project (content byte-identical to app/)
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ht-app/app
+          cp -r app/* /tmp/ht-app/app/
+          cp next.config.ts /tmp/ht-app/
+          cat > /tmp/ht-app/package.json <<'JSON'
+          {
+            "name": "hack-terminal-ai",
+            "version": "0.1.0",
+            "private": true,
+            "scripts": { "build": "next build" },
+            "dependencies": { "next": "15.5.2", "react": "19.1.0", "react-dom": "19.1.0" }
+          }
+          JSON
+          cat > /tmp/ht-app/tsconfig.json <<'JSON'
+          { "compilerOptions": { "target": "ES2017", "lib": ["dom", "dom.iterable", "esnext"], "allowJs": false, "skipLibCheck": true, "strict": true, "noEmit": true, "esModuleInterop": true, "module": "esnext", "moduleResolution": "bundler", "resolveJsonModule": true, "isolatedModules": true, "jsx": "preserve", "incremental": false }, "include": ["next-env.d.ts", "app/**/*.ts", "app/**/*.tsx", ".next/types/**/*.ts"], "exclude": ["node_modules"] }
+          JSON
+          echo "staged:"
+          find /tmp/ht-app/app -type f | sort
+
+      - name: Install dependencies
+        working-directory: /tmp/ht-app
+        run: npm install --no-audit --no-fund
+
+      - name: Build the Hack Terminal AI app
+        working-directory: /tmp/ht-app
+        run: |
+          set -euo pipefail
+          npx next build 2>&1 | tee /tmp/ht-app/build.log
+          test -d .next
+          echo "BUILD_OK=true" >> "$GITHUB_ENV"
+
+      - name: Static preview evidence
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/ht-evidence
+          cp /tmp/ht-app/build.log /tmp/ht-evidence/build.log
+          find /tmp/ht-app/.next -maxdepth 2 -type f | head -20 > /tmp/ht-evidence/next-tree.txt
+          echo "HACK_TERMINAL_BUILD_OK=true" > /tmp/ht-evidence/evidence.env
+          grep -E 'Compiled successfully|Generating static pages|✓' /tmp/ht-app/build.log | head -5 || true
+
+      - name: Upload preview build evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: hack-terminal-ai-preview
+          path: /tmp/ht-evidence/
+          retention-days: 30
+          if-no-files-found: error

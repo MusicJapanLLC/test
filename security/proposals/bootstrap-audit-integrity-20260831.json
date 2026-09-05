@@ -1,0 +1,25 @@
+{
+  "id": "sp-20260831-audit-integrity-bootstrap",
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "target": "audit_policy",
+  "operations": [
+    {
+      "type": "require_integrity",
+      "parameters": {
+        "reason": "Require integrity protection for AI security proposal audit state"
+      }
+    },
+    {
+      "type": "increase_coverage",
+      "parameters": {
+        "reason": "Cover production security proposal decisions and apply evidence"
+      }
+    }
+  ],
+  "council_votes": {
+    "META": {"approve": true},
+    "X": {"approve": true},
+    "Senju": {"approve": true}
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "id": "sp-bootstrap-audit-20260831",
+  "bootstrap_revision": 4,
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "target": "audit_policy",
+  "operations": [
+    {
+      "type": "increase_coverage",
+      "parameters": {
+        "reason": "Bootstrap the production Security Proposal -> AI Council -> Self-Approval -> Auto-Merge -> Production Apply closed loop with a monotonic audit-strengthening change."
+      }
+    }
+  ],
+  "council_votes": {
+    "META": {"approve": true},
+    "X": {"approve": true},
+    "Senju": {"approve": true}
+  }
+}

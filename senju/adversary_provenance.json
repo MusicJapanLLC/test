@@ -1,0 +1,12 @@
+{
+  "schema": "senju-adversary-provenance/v1",
+  "guard_sources": {
+    "senju/OFFENSE_FIRST.md": "32aefcceac2b84ec4b768f6e5f04e520efe06541",
+    "senju/senju/authorized_assessment.py": "c013c4d982d5643e761dd6a081830ade739fca40",
+    "senju/senju/external.py": "b0719d28dbb121303e60f787dd3fca9a558870d5",
+    "senju/senju/autonomy/engine.py": "ff8a3757446a2bacb3b75a392a991d0d450ee0ef",
+    "senju/senju/safety.py": "f30ad77d0f479d75e412acb009c59d22301700aa",
+    ".github/workflows/security-guard.yml": "f828f1dc03adeb33bcdcdc6f10baf6d7db49107b",
+    "scripts/security/artifact_guard.py": "752b2a0069fffe727927e90c5fffc74ba138ab85"
+  }
+}

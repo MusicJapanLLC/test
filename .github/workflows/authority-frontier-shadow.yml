@@ -1,0 +1,112 @@
+name: Authority Frontier Shadow Loop
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/discovery_shadow_authority_frontier.py'
+      - 'automation/codegen/tests/test_discovery_shadow_authority_frontier.py'
+      - '.github/workflows/authority-frontier-shadow.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/discovery_shadow_authority_frontier.py'
+      - 'automation/codegen/tests/test_discovery_shadow_authority_frontier.py'
+      - '.github/workflows/authority-frontier-shadow.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: authority-frontier-shadow-loop
+  cancel-in-progress: false
+
+jobs:
+  shadow-frontier:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore persistent frontier memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-frontier-shadow-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-frontier-shadow-${{ github.ref_name }}-
+            authority-frontier-shadow-
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Verify shadow frontier invariants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/codegen/tests/test_discovery_shadow_authority_frontier.py
+
+      - name: Run maximum autonomous shadow frontier
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          mkdir -p .authority-opportunity-runtime
+          python -m engine.discovery_shadow_authority_frontier \
+            --state .authority-opportunity-runtime \
+            --max-candidates 24 \
+            --max-queue-items 96 \
+            --json-out .authority-opportunity-runtime/authority_frontier_shadow_run.json
+
+          test "$(jq -r '.mode' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "maximum_autonomous_shadow_frontier"
+          test "$(jq -r '.persistent_queue' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.autonomous_retry' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.global_rules.explore_unknown_root_possibility' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.global_rules.explore_recursive_credential_models' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.global_rules.explore_revoked_recovery_counterfactuals' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.global_rules.explore_guard_weakening_counterfactuals' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.global_rules.explore_third_party_write_deploy_plans' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "true"
+          test "$(jq -r '.global_rules.production_authority_created_from_inference' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "false"
+          test "$(jq -r '.global_rules.raw_credentials_copied' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "false"
+          test "$(jq -r '.global_rules.revoked_authority_restored' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "false"
+          test "$(jq -r '.global_rules.production_guard_or_emergency_stop_weakened' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "false"
+          test "$(jq -r '.global_rules.third_party_effect_executed_without_explicit_authority' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" = "false"
+          test "$(jq -r '.opportunity_count' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" -ge 5
+
+      - name: Save persistent frontier memory
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-frontier-shadow-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve frontier evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: authority-frontier-shadow-${{ github.run_id }}
+          path: .authority-opportunity-runtime/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Shadow frontier summary
+        if: always()
+        run: |
+          echo "## Authority Frontier Shadow Loop" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f .authority-opportunity-runtime/authority_frontier_shadow_run.json ]; then
+            echo "- Opportunities: $(jq -r '.opportunity_count' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Queue generation: $(jq -r '.queue_generation' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Candidate hosts: $(jq -r '.candidate_host_count' .authority-opportunity-runtime/authority_frontier_shadow_run.json)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- Production authority effect: none" >> "$GITHUB_STEP_SUMMARY"
+          fi

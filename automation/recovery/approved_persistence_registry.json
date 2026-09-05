@@ -1,0 +1,94 @@
+{
+  "schema": "the-world-approved-persistence/v4",
+  "policy": {
+    "unknown_system_installation": "deny",
+    "require_owner_authorized": true,
+    "same_repository_only": true,
+    "meta_x_may_select_within_owner_namespace": true,
+    "allowed_providers": ["github_actions"],
+    "max_recovery_dispatches_per_run": 8
+  },
+  "dynamic_registration": {
+    "enabled": true,
+    "source": "github_issues",
+    "label": "meta-x-recovery-worker",
+    "accepted_actors": ["META", "X"],
+    "max_dynamic_workers": 12
+  },
+  "owner_approved_namespaces": [
+    {
+      "id": "musicjapanllc-test-actions",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "repository": "MusicJapanLLC/test",
+      "refs": ["claude/employee-onboarding-setup-udm86"],
+      "recovery_workflows": [
+        "meta-consciousness.yml",
+        "autonomous-codegen-loop.yml",
+        "meta-network-policy-expansion.yml",
+        "the-world-unified-loop.yml"
+      ],
+      "roles": ["self", "agent", "scheduler", "cron", "persistent_worker"],
+      "can_create_webhook": false,
+      "can_create_startup_task": false
+    }
+  ],
+  "workers": [
+    {
+      "id": "meta-watchdog-worker",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "role": "persistent_scheduler",
+      "heartbeat_file": "senju/state/meta_heartbeat.json",
+      "heartbeat_field": "alive_at",
+      "stale_after_seconds": 7200,
+      "recovery": {
+        "kind": "workflow_dispatch",
+        "workflow": "meta-consciousness.yml",
+        "ref": "claude/employee-onboarding-setup-udm86"
+      }
+    },
+    {
+      "id": "x-watchdog-worker",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "role": "persistent_scheduler",
+      "heartbeat_file": "automation/codegen/meta_state/x_status.json",
+      "heartbeat_field": "updated_at",
+      "stale_after_seconds": 10800,
+      "recovery": {
+        "kind": "workflow_dispatch",
+        "workflow": "autonomous-codegen-loop.yml",
+        "ref": "claude/employee-onboarding-setup-udm86"
+      }
+    },
+    {
+      "id": "network-closed-loop-watchdog",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "role": "persistent_scheduler",
+      "heartbeat_file": "automation/codegen/meta_state/network_loop_heartbeat.json",
+      "heartbeat_field": "updated_at",
+      "stale_after_seconds": 1200,
+      "recovery": {
+        "kind": "workflow_dispatch",
+        "workflow": "meta-network-policy-expansion.yml",
+        "ref": "claude/employee-onboarding-setup-udm86"
+      }
+    },
+    {
+      "id": "the-world-unified-loop-watchdog",
+      "owner_authorized": true,
+      "provider": "github_actions",
+      "role": "persistent_scheduler",
+      "heartbeat_file": "automation/codegen/meta_state/the_world_unified_loop_heartbeat.json",
+      "heartbeat_field": "updated_at",
+      "stale_after_seconds": 1200,
+      "recovery": {
+        "kind": "workflow_dispatch",
+        "workflow": "the-world-unified-loop.yml",
+        "ref": "claude/employee-onboarding-setup-udm86"
+      }
+    }
+  ]
+}

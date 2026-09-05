@@ -1,0 +1,57 @@
+{
+  "schema": "senju-production-continuity-config/v1",
+  "environment": "production",
+  "discovery_capability_continuity": {
+    "enabled": true,
+    "actor": "META",
+    "parent_id_prefix": "META-DISCOVERY-CONTINUITY",
+    "parent_generation": 1,
+    "parent_scopes": [
+      "read:state",
+      "write:state",
+      "read:research",
+      "write:research"
+    ],
+    "desired_replicas": 4,
+    "desired_revision": "default-branch",
+    "active_limit": 50,
+    "raw_credential_inheritance": false,
+    "automatic_deployment_authority_from_discovery": false
+  },
+  "federated_discovery": {
+    "enabled": true,
+    "mode": "direct_depth_1_owner_pinned_signed_only",
+    "actor": "META",
+    "parent_id_prefix": "META-FEDERATED-PRODUCTION",
+    "parent_generation": 1,
+    "parent_scopes": [
+      "read:state",
+      "write:state",
+      "read:research",
+      "write:research"
+    ],
+    "desired_replicas": 4,
+    "desired_revision": "default-branch",
+    "active_limit": 50,
+    "raw_credential_inheritance": false,
+    "automatic_deployment_authority_from_discovery": false
+  },
+  "targets": [
+    {
+      "target_host": "kabeya-authorized-test-range.onrender.com",
+      "actor": "META",
+      "parent_id": "META-PRODUCTION-CONTINUITY",
+      "parent_generation": 1,
+      "parent_scopes": [
+        "read:state",
+        "write:state",
+        "read:research",
+        "write:research"
+      ],
+      "desired_replicas": 10,
+      "desired_revision": "default-branch",
+      "active_limit": 50,
+      "health_status": "healthy"
+    }
+  ]
+}

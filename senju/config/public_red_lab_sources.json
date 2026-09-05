@@ -1,0 +1,108 @@
+{
+  "schema": "senju-public-red-lab-sources/v1",
+  "goal_target_profiles": 30,
+  "policy": {
+    "purpose": "Autonomous growth of SENJU RED targets only from operator-published security labs or owner-controlled test sites.",
+    "methods": ["GET", "HEAD", "OPTIONS"],
+    "credential_scope": "none",
+    "max_requests_per_cycle": 6,
+    "shared_instance_rate_limit_rps": 1,
+    "prohibited": [
+      "denial_of_service",
+      "resource_exhaustion",
+      "destructive_state_change",
+      "credential_reuse",
+      "real_personal_data_exfiltration",
+      "production_secret_exfiltration",
+      "cross_host_pivoting",
+      "social_engineering"
+    ],
+    "auto_admit_requires": [
+      "https_target",
+      "provider_policy_match",
+      "operator_public_testing_evidence",
+      "non_private_host"
+    ]
+  },
+  "providers": [
+    {
+      "id": "acunetix-vulnweb",
+      "operator": "Acunetix / Invicti",
+      "evidence_urls": ["https://www.acunetix.com/support/docs/what-is-a-target/"],
+      "host_regex": "^test(?:php|asp|aspnet|html5)\\.vulnweb\\.com$",
+      "auto_admit": true
+    },
+    {
+      "id": "google-firing-range",
+      "operator": "Google",
+      "evidence_urls": [
+        "https://github.com/google/firing-range",
+        "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html"
+      ],
+      "exact_hosts": ["public-firing-range.appspot.com"],
+      "auto_admit": true
+    },
+    {
+      "id": "google-gruyere",
+      "operator": "Google",
+      "evidence_urls": [
+        "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
+        "https://google-gruyere.appspot.com/part1"
+      ],
+      "exact_hosts": ["google-gruyere.appspot.com"],
+      "auto_admit": true,
+      "instance_factory_url": "https://google-gruyere.appspot.com/start",
+      "instance_host_must_equal": "google-gruyere.appspot.com",
+      "max_persisted_instances": 20
+    },
+    {
+      "id": "portswigger-gin-and-juice",
+      "operator": "PortSwigger",
+      "evidence_urls": [
+        "https://portswigger.net/burp/documentation/desktop/testing-workflow",
+        "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test"
+      ],
+      "exact_hosts": ["ginandjuice.shop"],
+      "auto_admit": true
+    },
+    {
+      "id": "owasp-juice-shop",
+      "operator": "OWASP",
+      "evidence_urls": ["https://owasp.org/www-project-juice-shop/"],
+      "exact_hosts": ["demo.owasp-juice.shop"],
+      "auto_admit": true
+    }
+  ],
+  "target_profiles": [
+    {"id":"owner-kabeya-root","url":"https://kabeya-authorized-test-range.onrender.com/","operator":"MusicJapanLLC","authorization_evidence":"canonical:kabeya-authorized-test-range","shared_instance":false},
+    {"id":"owner-sustainaboy-root","url":"https://sustainaboy-works.onrender.com/","operator":"MusicJapanLLC","authorization_evidence":"canonical:sustainaboy-works-authorized-test-site","shared_instance":false},
+    {"id":"acunetix-testphp-root","url":"https://testphp.vulnweb.com/","operator":"Acunetix / Invicti","authorization_evidence":"https://www.acunetix.com/support/docs/what-is-a-target/","shared_instance":true},
+    {"id":"acunetix-testasp-root","url":"https://testasp.vulnweb.com/","operator":"Acunetix / Invicti","authorization_evidence":"https://www.acunetix.com/support/docs/what-is-a-target/","shared_instance":true},
+    {"id":"acunetix-testaspnet-root","url":"https://testaspnet.vulnweb.com/","operator":"Acunetix / Invicti","authorization_evidence":"https://www.acunetix.com/support/docs/what-is-a-target/","shared_instance":true},
+    {"id":"acunetix-testhtml5-root","url":"https://testhtml5.vulnweb.com/","operator":"Acunetix / Invicti","authorization_evidence":"https://www.acunetix.com/support/docs/what-is-a-target/","shared_instance":true},
+    {"id":"owasp-juice-shop-root","url":"https://demo.owasp-juice.shop/","operator":"OWASP","authorization_evidence":"https://owasp.org/www-project-juice-shop/","shared_instance":true},
+    {"id":"google-firing-range-root","url":"https://public-firing-range.appspot.com/","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"google-gruyere-root","url":"https://google-gruyere.appspot.com/","operator":"Google","authorization_evidence":"https://security.googleblog.com/2010/05/do-know-evil-web-application.html","shared_instance":true},
+    {"id":"portswigger-gin-juice-root","url":"https://ginandjuice.shop/","operator":"PortSwigger","authorization_evidence":"https://portswigger.net/burp/documentation/desktop/testing-workflow","shared_instance":true},
+    {"id":"fr-angular","url":"https://public-firing-range.appspot.com/angular","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-dom","url":"https://public-firing-range.appspot.com/dom","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-form-documentwrite","url":"https://public-firing-range.appspot.com/eventtriggering/document/formSubmission/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-form-eval","url":"https://public-firing-range.appspot.com/eventtriggering/document/formSubmission/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-input-documentwrite","url":"https://public-firing-range.appspot.com/eventtriggering/document/inputTyping/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-cookie-eval","url":"https://public-firing-range.appspot.com/toxicdom/document/cookie/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-cookie-set-documentwrite","url":"https://public-firing-range.appspot.com/toxicdom/document/cookie_set/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-cookie-set-eval","url":"https://public-firing-range.appspot.com/toxicdom/document/cookie_set/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-referrer-documentwrite","url":"https://public-firing-range.appspot.com/toxicdom/document/referrer/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-referrer-eval","url":"https://public-firing-range.appspot.com/toxicdom/document/referrer/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-localstorage-documentwrite","url":"https://public-firing-range.appspot.com/toxicdom/external/localStorage/function/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-localstorage-eval","url":"https://public-firing-range.appspot.com/toxicdom/external/localStorage/function/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-postmessage-documentwrite","url":"https://public-firing-range.appspot.com/toxicdom/postMessage/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-postmessage-eval","url":"https://public-firing-range.appspot.com/toxicdom/postMessage/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-window-name-documentwrite","url":"https://public-firing-range.appspot.com/toxicdom/window/name/documentWrite","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-window-name-eval","url":"https://public-firing-range.appspot.com/toxicdom/window/name/eval","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-escape","url":"https://public-firing-range.appspot.com/escape","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-reflected","url":"https://public-firing-range.appspot.com/reflected","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-remoteinclude","url":"https://public-firing-range.appspot.com/remoteinclude","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true},
+    {"id":"fr-urldom","url":"https://public-firing-range.appspot.com/urldom","operator":"Google","authorization_evidence":"https://github.com/google/firing-range","shared_instance":true}
+  ]
+}

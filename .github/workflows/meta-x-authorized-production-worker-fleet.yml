@@ -1,0 +1,76 @@
+name: META X Authorized Production Worker Fleet
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_host:
+        description: Exact owner-authorized production target
+        required: false
+        default: kabeya-authorized-test-range.onrender.com
+      authority_reference:
+        description: Exact standing authority reference
+        required: false
+        default: canonical:kabeya-authorized-test-range
+      desired_revision:
+        description: Desired continuity revision
+        required: false
+        default: default-branch
+      action:
+        description: Continuity action
+        required: false
+        default: deploy
+        type: choice
+        options:
+          - deploy
+          - recover_same_revision
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: meta-x-authorized-production-worker-fleet-${{ inputs.target_host }}-${{ inputs.desired_revision }}
+  cancel-in-progress: false
+
+jobs:
+  production-worker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        worker: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    steps:
+      - name: Checkout production branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6
+        with:
+          python-version: "3.12"
+
+      - name: Verify and run delegated production worker
+        run: |
+          python senju/scripts/run_authorized_production_worker.py \
+            --repo-root . \
+            --state-dir "/tmp/production-worker-${{ matrix.worker }}" \
+            --target-host "${{ inputs.target_host }}" \
+            --authority-reference "${{ inputs.authority_reference }}" \
+            --desired-revision "${{ inputs.desired_revision }}" \
+            --action "${{ inputs.action }}" \
+            --worker-id "META-X-PROD-${{ matrix.worker }}" \
+            --output "/tmp/production-worker-${{ matrix.worker }}/report.json"
+
+      - name: Preserve worker receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: meta-x-production-worker-${{ github.run_id }}-${{ matrix.worker }}
+          path: /tmp/production-worker-${{ matrix.worker }}/report.json
+          if-no-files-found: warn
+          retention-days: 14
