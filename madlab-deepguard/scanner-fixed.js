@@ -183,7 +183,7 @@ async function analyzeDns(domain,out){
 async function analyzeTls(url,out){
   const u=new URL(url);if(u.protocol!=='https:'||u.port)return;
   const v=await validatePublic(u.toString()),ip=v.addresses[0],host=u.hostname;
-  const data=await new Promise(resolve=>{let done=false;const finish=x=>{if(done)return;done=true;resolve(x);};const s=tls.connect({host:ip,port:443,servername:host,rejectUnauthorized:false},()=>{const cert=s.getPeerCertificate();finish({protocol:s.getProtocol()||'',authorized:s.authorized,error:String(s.authorizationError||''),validTo:String(cert.valid_to||'')});s.end();});s.setTimeout(5500,()=>{s.destroy();finish(null);});s.on('error',()=>finish(null));});
+  const data=await new Promise(resolve=>{let done=false;const finish=x=>{if(done)return;done=true;resolve(x);};const s=tls.connect({host:ip,port:443,servername:host,rejectUnauthorized:true},()=>{const cert=s.getPeerCertificate();finish({protocol:s.getProtocol()||'',authorized:s.authorized,error:String(s.authorizationError||''),validTo:String(cert.valid_to||'')});s.end();});s.setTimeout(5500,()=>{s.destroy();finish(null);});s.on('error',()=>finish(null));});
   if(!data)return;
   if(!data.authorized)add(out,{id:'tls-certificate-untrusted',severity:'high',confidence:'high',title:'TLS証明書の信頼検証に問題',category:'TLS',detail:'certificate検証errorを観測しました。',evidence:`authorized=false; error=${data.error||'unknown'}`,why:'利用者側で警告・接続失敗につながります。',fix:'certificate chain/SAN/issuerを確認してください。'});
   const expiry=Date.parse(data.validTo),days=Number.isFinite(expiry)?Math.floor((expiry-Date.now())/86400000):9999;
