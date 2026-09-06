@@ -1,0 +1,66 @@
+name: NASA JAPAN 30-Min Research Loop
+
+on:
+  schedule:
+    - cron: "0,30 * * * *"
+  workflow_dispatch:
+  push:
+    branches: ["claude/workflow-file-edits-tvn6cw"]
+    paths:
+      - "automation/space_ai_research_engine.py"
+      - "automation/sheets_integration.py"
+      - ".github/workflows/nasa-japan-research-loop-30min.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  research-loop:
+    name: NASA JAPAN Research Collection & Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python3 -m pip install --quiet --upgrade pip
+          pip install --quiet requests feedparser
+
+      - name: Run NASA JAPAN 30-min research loop
+        run: |
+          python3 automation/space_ai_research_engine.py
+
+      - name: Commit & push research data
+        if: always()
+        run: |
+          git config user.name "Claude Research Bot"
+          git config user.email "claude-research@nasa-japan.ai"
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "ℹ️  No new research data to commit"
+            exit 0
+          fi
+
+          CYCLE_TIME=$(python3 -c "import datetime; print(datetime.datetime.utcnow().isoformat())")
+          git commit -m "data(nasa-japan): research cycle at $CYCLE_TIME
+
+- Papers collected from NASA, IEEE (GitHub/arXiv proxy-blocked)
+- Research connection analysis with shared keywords
+- CSV exports to /tmp/nasa_japan_exports/
+- JSON accumulation in /tmp/nasa_japan_research_result.json
+
+[automated research loop]"
+
+          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD) || echo "⚠️  Push failed (likely no changes)"
