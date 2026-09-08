@@ -2,107 +2,11 @@
 
 **Status: R&D ONLY — NOT VERIFICATION EVIDENCE**
 
-Session: `34201079737-1`
+Session: `34225413488-1`
 
 > Continuous defensive research on THE WORLD owned repository only. No third-party target, credential testing, exploit payload, or production-security claim is authorized by this artifact.
 
-## Round 1 — SEC-PORT-011
-- mode: `INDEPENDENT_RETEST`
-- status before: `BUILDING`
-- evidence before: `100%`
-- evidence target: `independent_retest_and_counterevidence`
-- fingerprint: `0b1cce3001284c8f1b58`
-- material delta: `true`
-- created/updated: standment-security/PORTFOLIO_INDEX.md
-- failure-memory count after round: `0`
-- counterevidence:
-  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
-  - Could the same result occur without the intended authorization or isolation boundary?
-  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
-  - Which residual risk remains explicitly outside the verified scope?
-  - Research mode INDEPENDENT_RETEST: what alternate evidence path would contradict the current hypothesis?
-
-## Round 2 — SEC-PORT-002
-- mode: `SWITCH_EVIDENCE_PATH`
-- status before: `VISIBLE`
-- evidence before: `100%`
-- evidence target: `independent_retest_and_counterevidence`
-- fingerprint: `a2b65113001884f8189b`
-- material delta: `true`
-- created/updated: standment-security/PORTFOLIO_INDEX.md
-- failure-memory count after round: `0`
-- counterevidence:
-  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
-  - Could the same result occur without the intended authorization or isolation boundary?
-  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
-  - Which residual risk remains explicitly outside the verified scope?
-  - Research mode SWITCH_EVIDENCE_PATH: what alternate evidence path would contradict the current hypothesis?
-
-## Round 3 — SEC-PORT-008
-- mode: `VERIFY_NEXT_MISSING_EVIDENCE`
-- status before: `VISIBLE`
-- evidence before: `100%`
-- evidence target: `independent_retest_and_counterevidence`
-- fingerprint: `6ef844c05bc1ec314d66`
-- material delta: `true`
-- created/updated: standment-security/PORTFOLIO_INDEX.md
-- failure-memory count after round: `0`
-- counterevidence:
-  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
-  - Could the same result occur without the intended authorization or isolation boundary?
-  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
-  - Which residual risk remains explicitly outside the verified scope?
-  - Research mode VERIFY_NEXT_MISSING_EVIDENCE: what alternate evidence path would contradict the current hypothesis?
-
-## Round 4 — SEC-PORT-005
-- mode: `REFRAME_AND_COUNTEREVIDENCE`
-- status before: `VISIBLE`
-- evidence before: `100%`
-- evidence target: `independent_retest_and_counterevidence`
-- fingerprint: `6faf6bde3151bb5cef6c`
-- material delta: `true`
-- created/updated: standment-security/PORTFOLIO_INDEX.md
-- failure-memory count after round: `0`
-- counterevidence:
-  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
-  - Could the same result occur without the intended authorization or isolation boundary?
-  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
-  - Which residual risk remains explicitly outside the verified scope?
-  - Research mode REFRAME_AND_COUNTEREVIDENCE: what alternate evidence path would contradict the current hypothesis?
-
-## Round 5 — SEC-PORT-011
-- mode: `INDEPENDENT_RETEST`
-- status before: `BUILDING`
-- evidence before: `100%`
-- evidence target: `independent_retest_and_counterevidence`
-- fingerprint: `0b1cce3001284c8f1b58`
-- material delta: `true`
-- created/updated: standment-security/PORTFOLIO_INDEX.md
-- failure-memory count after round: `0`
-- counterevidence:
-  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
-  - Could the same result occur without the intended authorization or isolation boundary?
-  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
-  - Which residual risk remains explicitly outside the verified scope?
-  - Research mode INDEPENDENT_RETEST: what alternate evidence path would contradict the current hypothesis?
-
-## Round 6 — SEC-PORT-002
-- mode: `SWITCH_EVIDENCE_PATH`
-- status before: `VISIBLE`
-- evidence before: `100%`
-- evidence target: `independent_retest_and_counterevidence`
-- fingerprint: `a2b65113001884f8189b`
-- material delta: `true`
-- created/updated: standment-security/PORTFOLIO_INDEX.md
-- failure-memory count after round: `0`
-- counterevidence:
-  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
-  - Could the same result occur without the intended authorization or isolation boundary?
-  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
-  - Which residual risk remains explicitly outside the verified scope?
-  - Research mode SWITCH_EVIDENCE_PATH: what alternate evidence path would contradict the current hypothesis?
-
-## Round 7 — SEC-PORT-003
+## Round 1 — SEC-PORT-003
 - mode: `VERIFY_NEXT_MISSING_EVIDENCE`
 - status before: `VISIBLE`
 - evidence before: `100%`
@@ -118,7 +22,7 @@ Session: `34201079737-1`
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode VERIFY_NEXT_MISSING_EVIDENCE: what alternate evidence path would contradict the current hypothesis?
 
-## Round 8 — SEC-PORT-004
+## Round 2 — SEC-PORT-004
 - mode: `REFRAME_AND_COUNTEREVIDENCE`
 - status before: `VISIBLE`
 - evidence before: `100%`
@@ -134,7 +38,7 @@ Session: `34201079737-1`
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode REFRAME_AND_COUNTEREVIDENCE: what alternate evidence path would contradict the current hypothesis?
 
-## Round 9 — SEC-PORT-005
+## Round 3 — SEC-PORT-005
 - mode: `INDEPENDENT_RETEST`
 - status before: `VISIBLE`
 - evidence before: `100%`
@@ -150,7 +54,7 @@ Session: `34201079737-1`
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode INDEPENDENT_RETEST: what alternate evidence path would contradict the current hypothesis?
 
-## Round 10 — SEC-PORT-011
+## Round 4 — SEC-PORT-011
 - mode: `SWITCH_EVIDENCE_PATH`
 - status before: `BUILDING`
 - evidence before: `100%`
@@ -166,7 +70,7 @@ Session: `34201079737-1`
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode SWITCH_EVIDENCE_PATH: what alternate evidence path would contradict the current hypothesis?
 
-## Round 11 — SEC-PORT-002
+## Round 5 — SEC-PORT-002
 - mode: `VERIFY_NEXT_MISSING_EVIDENCE`
 - status before: `VISIBLE`
 - evidence before: `100%`
@@ -182,7 +86,7 @@ Session: `34201079737-1`
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode VERIFY_NEXT_MISSING_EVIDENCE: what alternate evidence path would contradict the current hypothesis?
 
-## Round 12 — SEC-PORT-008
+## Round 6 — SEC-PORT-008
 - mode: `REFRAME_AND_COUNTEREVIDENCE`
 - status before: `VISIBLE`
 - evidence before: `100%`
@@ -197,4 +101,100 @@ Session: `34201079737-1`
   - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
   - Which residual risk remains explicitly outside the verified scope?
   - Research mode REFRAME_AND_COUNTEREVIDENCE: what alternate evidence path would contradict the current hypothesis?
+
+## Round 7 — SEC-PORT-005
+- mode: `INDEPENDENT_RETEST`
+- status before: `VISIBLE`
+- evidence before: `100%`
+- evidence target: `independent_retest_and_counterevidence`
+- fingerprint: `efe1c75e3fc69a2bf547`
+- material delta: `true`
+- created/updated: standment-security/PORTFOLIO_INDEX.md
+- failure-memory count after round: `0`
+- counterevidence:
+  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
+  - Could the same result occur without the intended authorization or isolation boundary?
+  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
+  - Which residual risk remains explicitly outside the verified scope?
+  - Research mode INDEPENDENT_RETEST: what alternate evidence path would contradict the current hypothesis?
+
+## Round 8 — SEC-PORT-011
+- mode: `SWITCH_EVIDENCE_PATH`
+- status before: `BUILDING`
+- evidence before: `100%`
+- evidence target: `independent_retest_and_counterevidence`
+- fingerprint: `15be50e563596fdd919e`
+- material delta: `true`
+- created/updated: standment-security/PORTFOLIO_INDEX.md
+- failure-memory count after round: `0`
+- counterevidence:
+  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
+  - Could the same result occur without the intended authorization or isolation boundary?
+  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
+  - Which residual risk remains explicitly outside the verified scope?
+  - Research mode SWITCH_EVIDENCE_PATH: what alternate evidence path would contradict the current hypothesis?
+
+## Round 9 — SEC-PORT-002
+- mode: `VERIFY_NEXT_MISSING_EVIDENCE`
+- status before: `VISIBLE`
+- evidence before: `100%`
+- evidence target: `independent_retest_and_counterevidence`
+- fingerprint: `e39e22c562a9e96fe509`
+- material delta: `true`
+- created/updated: standment-security/PORTFOLIO_INDEX.md
+- failure-memory count after round: `0`
+- counterevidence:
+  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
+  - Could the same result occur without the intended authorization or isolation boundary?
+  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
+  - Which residual risk remains explicitly outside the verified scope?
+  - Research mode VERIFY_NEXT_MISSING_EVIDENCE: what alternate evidence path would contradict the current hypothesis?
+
+## Round 10 — SEC-PORT-003
+- mode: `REFRAME_AND_COUNTEREVIDENCE`
+- status before: `VISIBLE`
+- evidence before: `100%`
+- evidence target: `independent_retest_and_counterevidence`
+- fingerprint: `779290f38d54118b673c`
+- material delta: `true`
+- created/updated: standment-security/PORTFOLIO_INDEX.md
+- failure-memory count after round: `0`
+- counterevidence:
+  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
+  - Could the same result occur without the intended authorization or isolation boundary?
+  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
+  - Which residual risk remains explicitly outside the verified scope?
+  - Research mode REFRAME_AND_COUNTEREVIDENCE: what alternate evidence path would contradict the current hypothesis?
+
+## Round 11 — SEC-PORT-004
+- mode: `INDEPENDENT_RETEST`
+- status before: `VISIBLE`
+- evidence before: `100%`
+- evidence target: `independent_retest_and_counterevidence`
+- fingerprint: `4b1d1cb58b2dfce21d64`
+- material delta: `true`
+- created/updated: standment-security/PORTFOLIO_INDEX.md
+- failure-memory count after round: `0`
+- counterevidence:
+  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
+  - Could the same result occur without the intended authorization or isolation boundary?
+  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
+  - Which residual risk remains explicitly outside the verified scope?
+  - Research mode INDEPENDENT_RETEST: what alternate evidence path would contradict the current hypothesis?
+
+## Round 12 — SEC-PORT-005
+- mode: `SWITCH_EVIDENCE_PATH`
+- status before: `VISIBLE`
+- evidence before: `100%`
+- evidence target: `independent_retest_and_counterevidence`
+- fingerprint: `b683e658f0808529fd4b`
+- material delta: `true`
+- created/updated: standment-security/PORTFOLIO_INDEX.md
+- failure-memory count after round: `0`
+- counterevidence:
+  - What observation would falsify the claim that independent_retest_and_counterevidence improves this defensive control?
+  - Could the same result occur without the intended authorization or isolation boundary?
+  - Does an independent rerun reproduce the same outcome on a fresh runner or fixture?
+  - Which residual risk remains explicitly outside the verified scope?
+  - Research mode SWITCH_EVIDENCE_PATH: what alternate evidence path would contradict the current hypothesis?
 
