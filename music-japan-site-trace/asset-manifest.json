@@ -1,0 +1,35 @@
+{
+  "capturedAtUtc": "2026-09-09T13:47:59Z",
+  "source": "https://music-japan.pearly-cedar-3983.chatgpt.site/",
+  "routes": [
+    "/",
+    "/en",
+    "/company",
+    "/en/company",
+    "/privacy",
+    "/en/privacy",
+    "/robots.txt",
+    "/sitemap.xml"
+  ],
+  "preservedBehaviors": [
+    "initial loader",
+    "WebGL red-frequency scene",
+    "GSAP scroll animation",
+    "custom cursor",
+    "release-card hover and modal",
+    "audio previews",
+    "responsive navigation",
+    "contact mailto form"
+  ],
+  "externalArtworkBackups": {
+    "TOKYO JUNKIES": "media/tokyo-junkies-{480,800,1200}x{480,800,1200}bb.jpg",
+    "ここにある": "media/kokoni-aru-{480,800,1200}x{480,800,1200}bb.jpg",
+    "Beach Sunset": "media/beach-sunset-{480,800,1200}x{480,800,1200}bb.jpg",
+    "I Know, but Tried": "media/i-know-but-tried-{480,800,1200}x{480,800,1200}bb.jpg",
+    "Like a Drug": "media/like-a-drug-{480,800,1200}x{480,800,1200}bb.jpg",
+    "All I Need": "media/all-i-need-{480,800,1200}x{480,800,1200}bb.jpg",
+    "Late Night Jazz Lounge 2026": "media/late-night-jazz-{480,800,1200}x{480,800,1200}bb.jpg",
+    "Fairytale Classical Music": "media/fairytale-classical-{480,800,1200}x{480,800,1200}bb.jpg",
+    "Soft Rain Piano for Deep Sleep": "media/soft-rain-piano-{480,800,1200}x{480,800,1200}bb.jpg"
+  }
+}

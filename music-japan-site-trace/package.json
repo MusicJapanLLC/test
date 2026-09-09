@@ -1,0 +1,11 @@
+{
+  "name": "music-japan-site-trace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Static preservation copy of the Music Japan public website captured on 2026-09-09.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node scripts/check-snapshot.mjs"
+  }
+}

@@ -1,0 +1,18 @@
+User-Agent: *
+Allow: /
+Disallow: /audio/
+
+User-Agent: Googlebot
+Allow: /
+Disallow: /audio/
+
+User-Agent: OAI-SearchBot
+Allow: /
+Disallow: /audio/
+
+User-Agent: GPTBot
+Allow: /
+Disallow: /audio/
+
+Sitemap: https://music-japan.pearly-cedar-3983.chatgpt.site/sitemap.xml
+Host: https://music-japan.pearly-cedar-3983.chatgpt.site
