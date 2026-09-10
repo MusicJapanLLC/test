@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "check": "node scripts/check-snapshot.mjs"
+    "check": "node scripts/check-snapshot.mjs",
+    "build:deploy": "node scripts/build-deploy.mjs"
   }
 }
