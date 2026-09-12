@@ -1,0 +1,269 @@
+/* ── Baton Introduction System 専用スタイル ──────────────────── */
+/* base.css / service.css の続き。.hero .card .field .btn .survey__* 等は */
+/* service.css をそのまま流用し、ここでは足りない部分だけを足す。 */
+
+body.profile {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* プロフィール一覧（ハブ） */
+
+body.talk-hub {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+.talk-hub-hero {
+  padding: clamp(5rem, 3.5rem + 6vw, 7.5rem) 0 clamp(2.5rem, 1.8rem + 3vw, 4rem);
+  background:
+    radial-gradient(90% 70% at 80% 0%, rgba(200, 16, 46, 0.05), transparent 60%),
+    var(--hub-bg);
+}
+
+.talk-hub-hero__eyebrow {
+  margin-bottom: 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+}
+
+.talk-hub-hero__title {
+  font-family: var(--font-display);
+  font-size: var(--step-3);
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+.talk-hub-hero__tagline {
+  margin-top: 0.9rem;
+  color: var(--hub-muted);
+  font-size: var(--step-1);
+}
+
+.talk-hub-list {
+  display: grid;
+  gap: 0;
+}
+
+.talk-hub-card {
+  display: block;
+  text-decoration: none;
+  border-bottom: 1px solid var(--hub-line);
+  padding-block: clamp(1.5rem, 1rem + 2vw, 2.25rem);
+}
+
+.talk-hub-card:first-child {
+  border-top: 1px solid var(--hub-line);
+}
+
+.talk-hub-card__name {
+  font-size: var(--step-2);
+  font-weight: 600;
+}
+
+.talk-hub-card__meta {
+  margin-top: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--hub-muted);
+}
+
+.talk-hero {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(6rem, 4rem + 8vw, 9rem) 0 clamp(3rem, 2rem + 3vw, 5rem);
+}
+
+.talk-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(110% 80% at 84% 8%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%),
+    linear-gradient(170deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 84%, var(--primary)) 100%);
+}
+
+.talk-hero__inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: clamp(1.5rem, 1rem + 2vw, 2.25rem);
+  grid-template-columns: auto 1fr;
+  align-items: center;
+}
+
+@media (max-width: 560px) {
+  .talk-hero__inner {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+}
+
+.talk-hero__photo {
+  width: clamp(84px, 60px + 8vw, 120px);
+  height: clamp(84px, 60px + 8vw, 120px);
+  border-radius: 50%;
+  flex: none;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--primary) 14%, #fff);
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 1rem + 1.4vw, 2rem);
+  font-weight: 600;
+  border: 1.5px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  overflow: hidden;
+}
+
+.talk-hero__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.talk-hero__eyebrow {
+  font-size: 0.76rem;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+  margin-bottom: 0.6rem;
+}
+
+.talk-hero__name {
+  font-size: var(--step-3);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--primary);
+}
+
+.talk-hero__role {
+  margin-top: 0.5rem;
+  font-size: var(--step-1);
+  color: color-mix(in srgb, var(--text) 78%, transparent);
+}
+
+.talk-hero__bio {
+  margin-top: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  max-width: var(--measure);
+}
+
+.talk-hero__cta {
+  margin-top: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+}
+
+/* 話せるテーマ */
+
+.topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 0.7rem;
+}
+
+.topic-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  background: color-mix(in srgb, var(--primary) 5%, #fff);
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+}
+
+/* ハニーポット（人には見えず、ボットだけが埋めてしまう欄） */
+
+.hp-field {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* 目的（申請フォーム）は .opt を流用しつつ、グリッドで並べる */
+
+.purpose-grid {
+  display: grid;
+  gap: 0;
+}
+
+/* 認証 / 承認・辞退 の状態表示ページ（/verify /respond 共通） */
+
+body.action {
+  background: var(--hub-bg);
+  color: var(--hub-text);
+}
+
+.action-page {
+  min-height: 70svh;
+  display: grid;
+  align-items: center;
+  padding-block: clamp(4rem, 3rem + 4vw, 7rem);
+}
+
+.action-card {
+  width: min(100%, 560px);
+  margin-inline: auto;
+  background: #fff;
+  border: 1px solid var(--hub-line);
+  border-radius: var(--radius);
+  padding: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+}
+
+.action-card__label {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--hub-accent);
+  margin-bottom: 0.9rem;
+  display: block;
+}
+
+.action-card__title {
+  font-size: var(--step-2);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+.action-card__note {
+  margin-top: 0.9rem;
+  color: color-mix(in srgb, var(--hub-text) 72%, transparent);
+  line-height: 1.85;
+}
+
+.action-card dl {
+  margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+  padding-top: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  border-top: 1px solid var(--hub-line);
+  display: grid;
+  gap: 0.8rem;
+}
+
+.action-card dt {
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: var(--hub-muted);
+}
+
+.action-card dd {
+  margin-top: 0.25rem;
+  line-height: 1.75;
+  white-space: pre-wrap;
+}
+
+.action-card__actions {
+  margin-top: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.action-card__actions .btn--decline {
+  background: #fff;
+  border: 1.5px solid color-mix(in srgb, var(--hub-text) 24%, transparent);
+  color: var(--hub-text);
+}
+
+.action-card__actions .btn--decline:hover {
+  border-color: var(--hub-text);
+}

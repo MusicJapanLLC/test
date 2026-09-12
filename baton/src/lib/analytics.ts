@@ -92,3 +92,9 @@ export function trackSurveyComplete(serviceId: string): void {
   ga('survey_complete', { service_id: serviceId });
   window.fbq?.('track', 'Lead', { content_name: serviceId, service_id: serviceId });
 }
+
+/** Baton Introduction System: 「この人と話したい」の申請送信 */
+export function trackTalkRequestSubmit(profileId: string): void {
+  ga('talk_request_submit', { profile_id: profileId });
+  window.fbq?.('track', 'Lead', { content_name: profileId, profile_id: profileId });
+}

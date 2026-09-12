@@ -1,22 +1,37 @@
 import { resolve } from 'node:path';
 import { defineConfig, type Plugin } from 'vite';
+import { profiles } from './src/data/profiles';
 import { services } from './src/data/services';
 import { site } from './src/data/site';
-import { hubHeroHtml, serviceHeroHtml } from './src/lib/hero';
-import type { Service } from './src/types';
+import {
+  hubHeroHtml,
+  profileHeroHtml,
+  profileHubHeroHtml,
+  serviceHeroHtml,
+} from './src/lib/hero';
+import type { Service, TalkProfile } from './src/types';
 
 const root = process.cwd();
 
 /** サブパス配信するときだけ設定する。例: GitHub Pages なら /test/ */
 const base = process.env.VITE_BASE ?? '/';
 
-/** 6サービス + ハブ + プライバシーポリシー = 8エントリ */
+/**
+ * 6サービス + ハブ + プライバシーポリシー
+ * + Baton Introduction System（プロフィール6枚 + 一覧 + 認証/承認・辞退の2ページ）
+ */
 const pages = {
   main: resolve(root, 'index.html'),
   ...Object.fromEntries(
     services.map((s) => [s.id, resolve(root, s.slug, 'index.html')]),
   ),
   privacy: resolve(root, 'privacy', 'index.html'),
+  'profile-hub': resolve(root, 'profile', 'index.html'),
+  ...Object.fromEntries(
+    profiles.map((p) => [`profile-${p.id}`, resolve(root, 'profile', p.slug, 'index.html')]),
+  ),
+  verify: resolve(root, 'verify', 'index.html'),
+  respond: resolve(root, 'respond', 'index.html'),
 };
 
 const FONT_HREF =
@@ -25,11 +40,26 @@ const FONT_HREF =
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/** ページのパスから、対応するサービス設定を引く（なければハブ/法務ページ） */
+/**
+ * ページのパスから、対応するサービス設定を引く（なければハブ/法務ページ）。
+ * サービスは常にルート直下（/<slug>/index.html）にあるため、
+ * 「/profile/<slug>/index.html」のように途中に別のセグメントが挟まる
+ * パスと混同しないよう、直前が root であることまで確認する。
+ */
 function serviceForPath(filename: string): Service | null {
   const normalized = filename.replace(/\\/g, '/');
+  const normalizedRoot = root.replace(/\\/g, '/');
   return (
-    services.find((s) => normalized.includes(`/${s.slug}/index.html`)) ?? null
+    services.find((s) => normalized === `${normalizedRoot}/${s.slug}/index.html`) ?? null
+  );
+}
+
+/** ページのパスから、対応するBaton Talkプロフィールを引く */
+function profileForPath(filename: string): TalkProfile | null {
+  const normalized = filename.replace(/\\/g, '/');
+  const normalizedRoot = root.replace(/\\/g, '/');
+  return (
+    profiles.find((p) => normalized === `${normalizedRoot}/profile/${p.slug}/index.html`) ?? null
   );
 }
 
@@ -81,9 +111,13 @@ function batonSeoFiles(): Plugin {
     apply: 'build',
     generateBundle() {
       const siteBase = siteUrl();
-      const paths = ['', ...services.map((s) => `${s.slug}/`), 'privacy/'].map(
-        (p) => `${base}${p}`.replace(/\/{2,}/g, '/'),
-      );
+      const paths = [
+        '',
+        ...services.map((s) => `${s.slug}/`),
+        'privacy/',
+        'profile/',
+        ...profiles.map((p) => `profile/${p.slug}/`),
+      ].map((p) => `${base}${p}`.replace(/\/{2,}/g, '/'));
 
       this.emitFile({
         type: 'asset',
@@ -113,6 +147,8 @@ function batonPages(): Plugin {
     transformIndexHtml: {
       order: 'pre',
       handler(html, ctx) {
+        const filename = ctx.filename.replace(/\\/g, '/');
+
         const s = serviceForPath(ctx.filename);
         if (s) {
           const vars = [
@@ -135,7 +171,62 @@ function batonPages(): Plugin {
             .replace('<!--BATON:HERO-->', serviceHeroHtml(s, base));
         }
 
-        const isPrivacy = ctx.filename.replace(/\\/g, '/').includes('/privacy/');
+        const p = profileForPath(ctx.filename);
+        if (p) {
+          const vars = [
+            `--primary:${p.theme.primary}`,
+            `--accent:${p.theme.accent}`,
+            `--bg:${p.theme.bg}`,
+            `--text:${p.theme.text}`,
+          ].join(';');
+          return html
+            .replace(
+              '<!--BATON:HEAD-->',
+              head({
+                title: `${p.name}｜${p.company} - Baton Talk`,
+                description: p.bio,
+                themeColor: p.theme.primary,
+                path: `/profile/${p.slug}/`,
+                vars,
+              }),
+            )
+            .replace('<!--BATON:HERO-->', profileHeroHtml(p, `${base}profile/`.replace(/\/{2,}/g, '/')));
+        }
+
+        const isProfileHub = filename.includes('/profile/index.html');
+        if (isProfileHub) {
+          const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:${site.theme.bg};--text:${site.theme.text}`;
+          return html
+            .replace(
+              '<!--BATON:HEAD-->',
+              head({
+                title: `Baton Talk｜この人と話したい - ${site.name}`,
+                description: 'Music Japanが紹介する人物プロフィール一覧です。',
+                themeColor: site.theme.bg,
+                path: '/profile/',
+                vars,
+              }),
+            )
+            .replace('<!--BATON:HERO-->', profileHubHeroHtml());
+        }
+
+        const isVerify = filename.includes('/verify/index.html');
+        const isRespond = filename.includes('/respond/index.html');
+        if (isVerify || isRespond) {
+          const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:${site.theme.bg};--text:${site.theme.text}`;
+          return html.replace(
+            '<!--BATON:HEAD-->',
+            head({
+              title: `${isVerify ? 'メール認証' : '確認'} - ${site.name}`,
+              description: 'Baton Introduction System',
+              themeColor: site.theme.bg,
+              path: isVerify ? '/verify/' : '/respond/',
+              vars,
+            }),
+          );
+        }
+
+        const isPrivacy = filename.includes('/privacy/');
         const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:${site.theme.bg};--text:${site.theme.text}`;
         return html
           .replace(

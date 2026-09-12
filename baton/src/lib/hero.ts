@@ -1,5 +1,5 @@
 import { site } from '../data/site';
-import type { Service } from '../types';
+import type { Service, TalkProfile } from '../types';
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -20,6 +20,41 @@ export function serviceHeroHtml(s: Service, homeHref = '/'): string {
     <p class="hero__desc">${esc(s.description)}</p>
   </div>
   <div class="hero__scroll" aria-hidden="true"><span></span></div>
+</header>`.trim();
+}
+
+/**
+ * プロフィールページのヒーロー。サービスページと同じく、ビルド時に
+ * 静的HTMLへ焼き込む（写真は今回プレースホルダーのイニシャル表示）。
+ */
+export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
+  const initial = esc(p.name.slice(0, 1));
+
+  return `
+<header class="talk-hero" data-hero>
+  <div class="wrap talk-hero__inner">
+    <div class="talk-hero__photo" aria-hidden="true">${initial}</div>
+    <div>
+      <p class="talk-hero__eyebrow"><a class="hero__back" href="${homeHref}">Baton Talk</a><span aria-hidden="true"> / </span><span>${esc(p.company)}</span></p>
+      <h1 class="talk-hero__name">${esc(p.name)}</h1>
+      <p class="talk-hero__role">${esc(p.title)}・${esc(p.company)}</p>
+      <p class="talk-hero__bio">${esc(p.bio)}</p>
+      <div class="talk-hero__cta">
+        <a class="btn btn--primary" href="#talk-request">この人と話したい</a>
+      </div>
+    </div>
+  </div>
+</header>`.trim();
+}
+
+export function profileHubHeroHtml(): string {
+  return `
+<header class="talk-hub-hero" data-hero>
+  <div class="wrap talk-hub-hero__inner">
+    <p class="talk-hub-hero__eyebrow"><a class="hero__back" href="/">Baton</a></p>
+    <h1 class="talk-hub-hero__title">Baton Talk</h1>
+    <p class="talk-hub-hero__tagline">この人と話してみたい、を紹介にかえる。</p>
+  </div>
 </header>`.trim();
 }
 

@@ -69,3 +69,35 @@ export type Service = {
    */
   monument?: MonumentKind;
 };
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ *  Baton Introduction System（紹介システム）
+ *  仕様: Baton MVP Backend Specification v1.1
+ * ═══════════════════════════════════════════════════════════════
+ *  既存の6サービスページ・アンケートとは完全に独立した別機能。
+ *  「この人と話したい」→ メール認証 → 掲載者承認/辞退 → 社長へ紹介、を扱う。
+ *  掲載者メール（recipient_email）はここには置かない。非公開情報は
+ *  GAS側（Google Sheets の PROFILES シート）だけが持つ。
+ */
+
+/** プロフィールに公開する情報だけを持つ。個人の連絡先は一切含めない */
+export type TalkProfile = {
+  id: string;
+  slug: string;
+  name: string;
+  company: string;
+  title: string;
+  /** 人物紹介（今後、実際の経歴文に差し替えていく前提） */
+  bio: string;
+  /** 話せるテーマ */
+  topics: string[];
+  /** SECOND TAKE記事 / Podcast など */
+  media?: { label: string; url: string }[];
+  theme: Theme;
+  active: boolean;
+};
+
+/** 申請フォームの目的（仕様書どおりの固定選択肢） */
+export const TALK_PURPOSES = ['協業', '情報交換', '発注・相談', '紹介', 'その他'] as const;
+export type TalkPurpose = (typeof TALK_PURPOSES)[number];

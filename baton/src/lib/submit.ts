@@ -70,3 +70,113 @@ export async function submitSurvey(payload: SurveyPayload): Promise<void> {
     window.clearTimeout(timer);
   }
 }
+
+/**
+ * ═══════════════════════════════════════════════════════════════
+ *  Baton Introduction System 用の通信
+ * ═══════════════════════════════════════════════════════════════
+ *  こちらは応答を読む必要があるため（重複申請・トークン失効などを
+ *  画面に伝える必要がある）、上の submitSurvey とは違い no-cors を使わない。
+ *  プリフライトを避けるため POST の Content-Type は text/plain のまま。
+ */
+
+export type TalkRequestPayload = {
+  profileId: string;
+  applicant: { name: string; company: string; title: string; email: string };
+  purpose: string;
+  comment: string;
+  note: string;
+  /** ハニーポット。人間には見えない欄で、埋まっていたらスパム扱いにする */
+  hp: string;
+};
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export type BatonResult<T = {}> = ({ ok: true } & T) | { ok: false; error: string; message?: string };
+
+async function batonFetch<T>(
+  init: { method: 'GET' | 'POST'; query?: Record<string, string>; body?: unknown },
+): Promise<BatonResult<T>> {
+  if (!ENDPOINT) {
+    return { ok: false, error: 'no_endpoint' };
+  }
+
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+  try {
+    const url = new URL(ENDPOINT);
+    if (init.method === 'GET' && init.query) {
+      Object.entries(init.query).forEach(([k, v]) => url.searchParams.set(k, v));
+    }
+
+    const res = await fetch(url.toString(), {
+      method: init.method,
+      redirect: 'follow',
+      signal: controller.signal,
+      ...(init.method === 'POST'
+        ? { headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(init.body) }
+        : {}),
+    });
+
+    const text = await res.text();
+    try {
+      return JSON.parse(text) as BatonResult<T>;
+    } catch {
+      return { ok: false, error: 'bad_response' };
+    }
+  } catch (err) {
+    if ((err as Error).name === 'AbortError') {
+      return { ok: false, error: 'timeout' };
+    }
+    return { ok: false, error: 'network' };
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
+/** 「この人と話したい」の申請を送る */
+export function submitTalkRequest(payload: TalkRequestPayload): Promise<BatonResult> {
+  if (DEMO || (!ENDPOINT && import.meta.env.DEV)) {
+    console.info('[baton] プレビューのため送信していません。内容:', payload);
+    return new Promise((resolve) => window.setTimeout(() => resolve({ ok: true }), 700));
+  }
+  return batonFetch({ method: 'POST', body: { action: 'baton_talk_submit', ...payload } });
+}
+
+export type VerifyCheckResult = { state: 'ready' | 'used' | 'expired' | 'invalid'; profileName?: string };
+
+/** メール認証リンクのトークンを確認する（画面表示用。状態は変えない） */
+export function checkVerifyToken(token: string): Promise<BatonResult<VerifyCheckResult>> {
+  return batonFetch({ method: 'GET', query: { action: 'baton_verify_check', t: token } });
+}
+
+/** メール認証を確定する（ここではじめて状態が変わる） */
+export function confirmVerify(token: string): Promise<BatonResult> {
+  return batonFetch({ method: 'POST', body: { action: 'baton_verify_confirm', t: token } });
+}
+
+export type RespondCheckResult = {
+  state: 'ready' | 'used' | 'expired' | 'invalid';
+  profileName?: string;
+  request?: {
+    applicantName: string;
+    applicantCompany: string;
+    applicantTitle: string;
+    purpose: string;
+    comment: string;
+    note: string;
+  };
+};
+
+/** 承認/辞退リンクのトークンを確認する（画面表示用。状態は変えない） */
+export function checkRespondToken(token: string): Promise<BatonResult<RespondCheckResult>> {
+  return batonFetch({ method: 'GET', query: { action: 'baton_respond_check', t: token } });
+}
+
+/** 承認/辞退を確定する（ボタンを押した瞬間だけ呼ぶ。POSTで確定） */
+export function submitRespondAction(
+  token: string,
+  decision: 'approved' | 'declined',
+): Promise<BatonResult> {
+  return batonFetch({ method: 'POST', body: { action: 'baton_respond_action', t: token, decision } });
+}
