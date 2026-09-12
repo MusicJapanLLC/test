@@ -1,46 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
 <url>
-<loc>https://music-japan.pearly-cedar-3983.chatgpt.site/</loc>
-<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pearly-cedar-3983.chatgpt.site/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pearly-cedar-3983.chatgpt.site/en" />
-<lastmod>2026-08-21T15:00:00.000Z</lastmod>
+<loc>https://music-japan.pages.dev/</loc>
+<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pages.dev/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pages.dev/en" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://music-japan.pages.dev/" />
+<lastmod>2026-09-12</lastmod>
 <changefreq>monthly</changefreq>
-<priority>1</priority>
+<priority>1.0</priority>
 </url>
 <url>
-<loc>https://music-japan.pearly-cedar-3983.chatgpt.site/en</loc>
-<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pearly-cedar-3983.chatgpt.site/" />
-<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pearly-cedar-3983.chatgpt.site/en" />
-<lastmod>2026-08-21T15:00:00.000Z</lastmod>
+<loc>https://music-japan.pages.dev/en</loc>
+<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pages.dev/" />
+<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pages.dev/en" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://music-japan.pages.dev/" />
+<lastmod>2026-09-12</lastmod>
 <changefreq>monthly</changefreq>
 <priority>0.9</priority>
 </url>
 <url>
-<loc>https://music-japan.pearly-cedar-3983.chatgpt.site/company</loc>
-<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pearly-cedar-3983.chatgpt.site/company" />
-<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pearly-cedar-3983.chatgpt.site/en/company" />
-<lastmod>2026-08-21T15:00:00.000Z</lastmod>
+<loc>https://music-japan.pages.dev/company</loc>
+<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pages.dev/company" />
+<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pages.dev/en/company" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://music-japan.pages.dev/company" />
+<lastmod>2026-09-12</lastmod>
 <changefreq>yearly</changefreq>
 <priority>0.8</priority>
 </url>
 <url>
-<loc>https://music-japan.pearly-cedar-3983.chatgpt.site/en/company</loc>
-<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pearly-cedar-3983.chatgpt.site/company" />
-<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pearly-cedar-3983.chatgpt.site/en/company" />
-<lastmod>2026-08-21T15:00:00.000Z</lastmod>
+<loc>https://music-japan.pages.dev/en/company</loc>
+<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pages.dev/company" />
+<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pages.dev/en/company" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://music-japan.pages.dev/company" />
+<lastmod>2026-09-12</lastmod>
 <changefreq>yearly</changefreq>
 <priority>0.7</priority>
 </url>
 <url>
-<loc>https://music-japan.pearly-cedar-3983.chatgpt.site/privacy</loc>
-<lastmod>2026-08-21T15:00:00.000Z</lastmod>
+<loc>https://music-japan.pages.dev/privacy</loc>
+<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pages.dev/privacy" />
+<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pages.dev/en/privacy" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://music-japan.pages.dev/privacy" />
+<lastmod>2026-09-12</lastmod>
 <changefreq>yearly</changefreq>
 <priority>0.2</priority>
 </url>
 <url>
-<loc>https://music-japan.pearly-cedar-3983.chatgpt.site/en/privacy</loc>
-<lastmod>2026-08-21T15:00:00.000Z</lastmod>
+<loc>https://music-japan.pages.dev/en/privacy</loc>
+<xhtml:link rel="alternate" hreflang="ja" href="https://music-japan.pages.dev/privacy" />
+<xhtml:link rel="alternate" hreflang="en" href="https://music-japan.pages.dev/en/privacy" />
+<xhtml:link rel="alternate" hreflang="x-default" href="https://music-japan.pages.dev/privacy" />
+<lastmod>2026-09-12</lastmod>
 <changefreq>yearly</changefreq>
 <priority>0.2</priority>
 </url>
