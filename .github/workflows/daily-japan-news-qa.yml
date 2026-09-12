@@ -64,3 +64,10 @@ jobs:
           for f in ai-grid.svg yen-wave.svg chip-lines.svg science-orbit.svg diplomacy-map.svg startup-bars.svg styles.css daily-news.css site.js; do
             test -f "dist/assets/$f"
           done
+      - name: Upload completed site
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-japan-news-dist
+          path: daily-japan-news-second-take/dist
+          if-no-files-found: error
+          retention-days: 14
