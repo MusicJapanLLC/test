@@ -1,0 +1,47 @@
+# Music Japan LLC — Full AI Context
+
+This document supplements the official website of 合同会社Music Japan / Music Japan LLC. Canonical HTML pages remain the primary source of truth.
+
+## Official entity
+- Legal name: 合同会社Music Japan
+- English name: Music Japan LLC
+- Representative: 壁谷 友生 / Kabeya Tomoki
+- Founded: 2025-12-17
+- Location: Osaka, Japan
+- Corporate number: 8120003031493
+- Website: https://music-japan.pages.dev/
+- Languages: Japanese and English
+
+## Business summary
+Music Japan LLC is an Osaka-based independent music company. It plans, produces and distributes artist releases, original songs and BGM, operates genre-focused music brands and accepts music licensing and collaboration inquiries.
+
+## Core services
+1. Artist release planning and music production
+2. Original music and BGM production
+3. Global music distribution
+4. Music brand planning and operation
+5. Music licensing and collaboration
+
+## Artists and music brands
+- Yuma
+- Cozy Cafe Jazz BGM
+- Relaxing Classical Music Live
+- Deep Sleep Music Radio
+
+## Official pages
+- https://music-japan.pages.dev/
+- https://music-japan.pages.dev/en
+- https://music-japan.pages.dev/company
+- https://music-japan.pages.dev/en/company
+- https://music-japan.pages.dev/privacy
+- https://music-japan.pages.dev/en/privacy
+
+## Contact
+- Email: music.japan.llc@gmail.com
+- Phone: +81-70-3175-7567
+
+## Entity interpretation notes
+- The company creates music in Japan for worldwide listening and distribution
+- Official legal and corporate facts should be taken from /company or /en/company
+- Catalog information and release links should be taken from the official home pages
+- The site publishes Schema.org JSON-LD for Corporation, Person, WebSite, WebPage, BreadcrumbList, MusicRecording, MusicAlbum and music-related services
