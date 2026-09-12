@@ -11,6 +11,7 @@ const OLD_SITE_URL = "https://music-japan.pearly-cedar-3983.chatgpt.site";
 const DEFAULT_SITE_URL = "https://music-japan.pages.dev";
 const SITE_URL = (process.env.PUBLIC_SITE_URL || DEFAULT_SITE_URL).replace(/\/$/, "");
 const RSC_MARKER = '<script id="_R_">';
+const FAVICON_URL = "/music-japan-symbol.png?v=20260913";
 
 rmSync(output, { recursive: true, force: true });
 cpSync(source, output, { recursive: true });
@@ -64,13 +65,26 @@ for (const relativePath of publicHtmlFiles) {
   // IMPORTANT:
   // Vinext/React Server Components append a length-prefixed serialized payload after this marker.
   // Replacing text inside that payload changes byte lengths without updating the prefixes and can blank the page.
-  // Therefore SEO URL rewrites are limited to the real HTML document before hydration begins.
+  // Therefore SEO / brand-head rewrites are limited to the real HTML document before hydration begins.
   const documentHtml = original.slice(0, markerIndex);
   const rscPayload = original.slice(markerIndex);
   const referenceCount = documentHtml.split(OLD_SITE_URL).length - 1;
   if (referenceCount === 0) throw new Error(`Expected legacy host reference missing in document HTML: ${relativePath}`);
 
-  const rewrittenDocument = documentHtml.replaceAll(OLD_SITE_URL, SITE_URL);
+  // Use the existing 480x480 Music Japan symbol as the browser/tab icon.
+  // The version query intentionally breaks aggressive favicon caches after this branding update.
+  let rewrittenDocument = documentHtml
+    .replaceAll(`${OLD_SITE_URL}/favicon.svg`, FAVICON_URL)
+    .replaceAll(OLD_SITE_URL, SITE_URL);
+
+  rewrittenDocument = rewrittenDocument
+    .replaceAll(`rel="shortcut icon" href="${FAVICON_URL}"`, `rel="shortcut icon" type="image/png" href="${FAVICON_URL}"`)
+    .replaceAll(`rel="icon" href="${FAVICON_URL}"`, `rel="icon" type="image/png" href="${FAVICON_URL}"`)
+    .replaceAll(
+      `<link rel="icon" type="image/png" href="${FAVICON_URL}"/>`,
+      `<link rel="icon" type="image/png" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${FAVICON_URL}"/>`
+    );
+
   const rewritten = rewrittenDocument + rscPayload;
 
   // Guard against accidental mutation of the length-prefixed RSC payload
@@ -100,6 +114,12 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes(SITE_URL)) throw new Error(`Canonical host missing in document HTML: ${relativePath}`);
   if (!documentHtml.includes('rel="canonical"')) throw new Error(`Canonical link missing: ${relativePath}`);
   if (!documentHtml.includes('application/ld+json')) throw new Error(`Structured data missing: ${relativePath}`);
+  if (!documentHtml.includes(`rel="icon" type="image/png" href="${FAVICON_URL}"`)) {
+    throw new Error(`Music Japan favicon missing: ${relativePath}`);
+  }
+  if (!documentHtml.includes(`rel="apple-touch-icon" href="${FAVICON_URL}"`)) {
+    throw new Error(`Apple touch icon missing: ${relativePath}`);
+  }
 }
 
 for (const relativePath of machineReadableFiles) {
@@ -107,10 +127,10 @@ for (const relativePath of machineReadableFiles) {
   if (content.includes(OLD_SITE_URL)) throw new Error(`Legacy host remains in SEO/AIO file: ${relativePath}`);
 }
 
-for (const requiredImage of ["music-japan-og.png", "kabeya-tomoki.png"]) {
+for (const requiredImage of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png"]) {
   const fullPath = join(output, requiredImage);
   if (!existsSync(fullPath) || statSync(fullPath).size === 0) {
-    throw new Error(`Required reconstructed image is missing or empty: ${requiredImage}`);
+    throw new Error(`Required image is missing or empty: ${requiredImage}`);
   }
 }
 
@@ -129,6 +149,7 @@ for (const assetPath of localAssetRefs) {
 
 console.log(`Prepared static deploy directory: ${output}`);
 console.log(`Canonical host: ${SITE_URL}`);
+console.log(`Browser icon: ${FAVICON_URL}`);
 console.log(`Safely rewrote ${rewrittenReferences} SEO references across ${publicHtmlFiles.length} public HTML documents.`);
 console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
-console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and reconstructed images.`);
+console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required images.`);
