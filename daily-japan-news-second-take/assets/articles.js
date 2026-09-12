@@ -1,47 +1,8 @@
 window.SECOND_TAKE_ARTICLES = [
-  {
-    slug: "rebuild-night",
-    href: "/articles/rebuild-night/",
-    number: "01",
-    title: "会社を畳むつもりだった夜、彼は社員に何も言えなかった",
-    shortTitle: "会社を畳むつもりだった夜、社員に言えなかったこと",
-    person: "佐伯 遼",
-    company: "株式会社NORTHBOUND",
-    role: "代表取締役",
-    theme: "撤退・再起",
-    readTime: "8 MIN",
-    image: "/assets/sample-saeki.jpg",
-    description: "事業撤退を決めた経営者が、残った社員ともう一度会社を作り直すまでの決断を聞く",
-    tags: ["失敗", "決断", "再起", "組織"]
-  },
-  {
-    slug: "failure-knew",
-    href: "/articles/failure-knew/",
-    number: "02",
-    title: "失敗すると分かっていた。それでも新規事業を止めなかった理由",
-    shortTitle: "失敗すると分かっていても、止めなかった理由",
-    person: "黒田 奈緒",
-    company: "合同会社SCALE",
-    role: "共同代表",
-    theme: "新規事業・決断",
-    readTime: "6 MIN",
-    image: "/assets/sample-kuroda.jpg",
-    description: "数字が崩れ始めても止められなかった事業と、最後に決断を変えた一言について",
-    tags: ["新規事業", "失敗", "意思決定"]
-  },
-  {
-    slug: "leave-company",
-    href: "/articles/leave-company/",
-    number: "03",
-    title: "守るために、辞めた。創業した会社を離れるまでの143日",
-    shortTitle: "創業した会社を離れるまでの143日",
-    person: "森 圭介",
-    company: "株式会社RELAY",
-    role: "創業者",
-    theme: "離任・承継",
-    readTime: "7 MIN",
-    image: "/assets/sample-mori.jpg",
-    description: "自分が残ることより会社が続くことを選んだ創業者が、離任までに考えたこと",
-    tags: ["承継", "組織", "生き方"]
-  }
+  {slug:'japan-ai-investment-2026',href:'https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/japan-ai-investment-2026/',number:'01',title:'日本企業のAI投資、次の焦点は「導入」から「成果」へ',shortTitle:'AI投資は「導入」から「成果」へ',person:'6 MIN',company:'AI',role:'',theme:'AI・企業投資',readTime:'6 MIN',image:'/assets/ai-grid.svg',description:'生成AIの導入競争が一巡し、企業は投資額よりも収益改善と業務短縮を問われる段階に入った',tags:['AI','生成AI','投資','生産性']},
+  {slug:'yen-rates-households-2026',href:'https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/yen-rates-households-2026/',number:'02',title:'金利と円相場、家計への影響を3分で整理',shortTitle:'金利と円相場を3分で整理',person:'5 MIN',company:'経済',role:'',theme:'経済・家計',readTime:'5 MIN',image:'/assets/yen-wave.svg',description:'住宅ローン、輸入物価、預金金利まで、ニュースの数字が生活にどうつながるかを短く整理する',tags:['経済','金利','円相場','家計']},
+  {slug:'semiconductor-japan-2026',href:'https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/semiconductor-japan-2026/',number:'03',title:'半導体投資が日本で続く理由　工場だけでは見えない競争力',shortTitle:'日本で半導体投資が続く理由',person:'7 MIN',company:'ビジネス',role:'',theme:'半導体・産業',readTime:'7 MIN',image:'/assets/chip-lines.svg',description:'設備投資、材料、装置、人材までを一つの産業網として見ると、日本市場の強みが分かりやすい',tags:['半導体','設備投資','製造業','ビジネス']},
+  {slug:'science-space-japan-2026',href:'https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/science-space-japan-2026/',number:'04',title:'宇宙開発を「研究ニュース」だけで終わらせないために',shortTitle:'宇宙開発を産業として読む',person:'4 MIN',company:'科学',role:'',theme:'科学・宇宙',readTime:'4 MIN',image:'/assets/science-orbit.svg',description:'衛星、通信、防災、観測データを通じて、宇宙投資は地上の産業に接続している',tags:['科学','宇宙','JAXA','衛星']},
+  {slug:'japan-diplomacy-supply-chains-2026',href:'https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/japan-diplomacy-supply-chains-2026/',number:'05',title:'外交ニュースを経済から読む　供給網が政策を変える',shortTitle:'外交ニュースを供給網から読む',person:'6 MIN',company:'政治・外交',role:'',theme:'外交・供給網',readTime:'6 MIN',image:'/assets/diplomacy-map.svg',description:'安全保障とビジネスが近づく中、外交判断は企業の調達・投資にも直結する',tags:['外交','経済安全保障','供給網','政治']},
+  {slug:'startup-productivity-japan-2026',href:'https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/startup-productivity-japan-2026/',number:'06',title:'スタートアップを見るなら資金調達額より「生産性」を見る',shortTitle:'調達額より「生産性」を見る',person:'5 MIN',company:'ビジネス',role:'',theme:'スタートアップ・生産性',readTime:'5 MIN',image:'/assets/startup-bars.svg',description:'調達ニュースの派手さではなく、少人数でどれだけ価値を生むかを見ると企業の現在地が見えやすい',tags:['スタートアップ','資金調達','生産性','AI']}
 ];

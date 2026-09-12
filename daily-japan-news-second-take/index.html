@@ -3,191 +3,82 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>SECOND TAKE｜人生の決断と、ビジネスの因果</title>
-  <meta name="description" content="経営者の失敗、苦悩、決断、その先を記者インタビューで残す独立メディア SECOND TAKE">
+  <title>Daily Japan News｜日本の重要ニュースを、速く深く</title>
+  <meta name="description" content="日本の経済・ビジネス・AI・科学・政治外交を、短時間で深く理解するDaily Japan Newsの新デザインプレビュー">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#fbfaf7">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="manifest" href="/manifest.webmanifest">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" href="/assets/sample-saeki.jpg" as="image">
   <link rel="stylesheet" href="/assets/styles.css">
+  <link rel="stylesheet" href="/assets/daily-news.css">
   <script defer src="/assets/shell.js"></script>
   <script defer src="/assets/articles.js"></script>
   <script defer src="/assets/site.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">本文へ移動</a>
-  <div class="demo-ribbon">DESIGN SAMPLE　記事・人物・通知登録はデモです</div>
+  <div class="demo-ribbon">REDESIGN PREVIEW　SECOND TAKEのレイアウトを基準にしたDaily Japan News</div>
+  <div class="news-datebar"><span>SEPTEMBER 13, 2026 · JAPAN EDITION</span><span>ECONOMY · BUSINESS · AI · SCIENCE · POLITICS</span></div>
 
   <main id="main">
-    <section class="home-hero" aria-labelledby="latest-title">
-      <div class="home-hero__image">
-        <img src="/assets/sample-saeki.jpg" width="1600" height="2400" alt="経営者インタビューのサンプル人物写真" fetchpriority="high">
-      </div>
-      <span class="hero-index"><span>ST.</span> 001</span>
+    <section class="home-hero home-hero--news" aria-labelledby="latest-title">
+      <div class="home-hero__image"><img src="/assets/ai-grid.svg" width="1600" height="1200" alt="AIとデータを表現したグラフィック" fetchpriority="high"></div>
+      <span class="hero-index"><span>DJN.</span> 0913</span>
       <div class="home-hero__content">
-        <div class="hero-kicker">LATEST INTERVIEW　8 MIN READ</div>
-        <h1 id="latest-title">会社を畳むつもりだった夜、彼は社員に何も言えなかった</h1>
-        <p class="home-hero__meta">株式会社NORTHBOUND　代表取締役 佐伯 遼<br>撤退 / 組織 / 再起</p>
+        <div class="hero-kicker">TODAY'S LEAD　6 MIN READ</div>
+        <h1 id="latest-title">日本企業のAI投資、次の焦点は「導入」から「成果」へ</h1>
+        <p class="home-hero__meta">AI / BUSINESS　生成AIの次の評価軸を読む</p>
+        <p class="news-source-line">企業公式発表・IR / 官公庁・公的統計 / 主要報道機関</p>
         <div class="hero-actions">
-          <a class="primary-link" href="/articles/rebuild-night/">記事を読む</a>
+          <a class="primary-link" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/japan-ai-investment-2026/">記事を読む</a>
           <a class="secondary-link" href="#briefs">3分で要点</a>
         </div>
       </div>
     </section>
 
     <section class="feed-section page-shell" id="articles">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Swipe to discover</p>
-          <h2 class="section-title">New Interviews<small>次に読む一人が、すぐ見つかる</small></h2>
-        </div>
-        <button class="text-link plain-button" type="button" data-open="search">すべて探す</button>
-      </div>
-
-      <div class="snap-feed" aria-label="新着インタビュー">
-        <article class="feed-card">
-          <div class="feed-card__image"><img src="/assets/sample-saeki.jpg" width="1600" height="2400" alt="サンプル人物 佐伯遼" loading="lazy"></div>
-          <span class="feed-card__number">01</span>
-          <div class="feed-card__content">
-            <span class="feed-card__label">撤退・再起</span>
-            <h3>会社を畳むつもりだった夜、彼は社員に何も言えなかった</h3>
-            <div class="feed-card__meta"><span>佐伯 遼 / NORTHBOUND</span><span>8 MIN</span></div>
-          </div>
-          <a href="/articles/rebuild-night/" aria-label="佐伯遼のサンプル記事を読む"></a>
-        </article>
-
-        <article class="feed-card">
-          <div class="feed-card__image"><img src="/assets/sample-kuroda.jpg" width="1400" height="2100" alt="サンプル人物 黒田奈緒" loading="lazy"></div>
-          <span class="feed-card__number">02</span>
-          <div class="feed-card__content">
-            <span class="feed-card__label">新規事業・決断</span>
-            <h3>失敗すると分かっていた。それでも新規事業を止めなかった理由</h3>
-            <div class="feed-card__meta"><span>黒田 奈緒 / SCALE</span><span>6 MIN</span></div>
-          </div>
-          <a href="/articles/failure-knew/" aria-label="黒田奈緒のサンプル記事を読む"></a>
-        </article>
-
-        <article class="feed-card">
-          <div class="feed-card__image"><img src="/assets/sample-mori.jpg" width="1400" height="2100" alt="サンプル人物 森圭介" loading="lazy"></div>
-          <span class="feed-card__number">03</span>
-          <div class="feed-card__content">
-            <span class="feed-card__label">離任・承継</span>
-            <h3>守るために、辞めた。創業した会社を離れるまでの143日</h3>
-            <div class="feed-card__meta"><span>森 圭介 / RELAY</span><span>7 MIN</span></div>
-          </div>
-          <a href="/articles/leave-company/" aria-label="森圭介のサンプル記事を読む"></a>
-        </article>
+      <div class="section-head"><div><p class="eyebrow">Swipe to discover</p><h2 class="section-title">Latest News<small>今日の日本を、重要度から読む</small></h2></div><button class="text-link plain-button" type="button" data-open="search">すべて探す</button></div>
+      <div class="snap-feed" aria-label="最新ニュース">
+        <article class="feed-card"><div class="feed-card__image"><img src="/assets/yen-wave.svg" width="1200" height="900" alt="円相場と金利のグラフィック" loading="lazy"></div><span class="feed-card__number">01</span><div class="feed-card__content"><span class="feed-card__label">経済・家計</span><h3>金利と円相場、家計への影響を3分で整理</h3><div class="feed-card__meta"><span>ECONOMY</span><span>5 MIN</span></div></div><a href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/yen-rates-households-2026/" aria-label="金利と円相場の記事を読む"></a></article>
+        <article class="feed-card"><div class="feed-card__image"><img src="/assets/chip-lines.svg" width="1200" height="900" alt="半導体産業のグラフィック" loading="lazy"></div><span class="feed-card__number">02</span><div class="feed-card__content"><span class="feed-card__label">ビジネス・産業</span><h3>半導体投資が日本で続く理由　工場だけでは見えない競争力</h3><div class="feed-card__meta"><span>BUSINESS</span><span>7 MIN</span></div></div><a href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/semiconductor-japan-2026/" aria-label="半導体投資の記事を読む"></a></article>
+        <article class="feed-card"><div class="feed-card__image"><img src="/assets/science-orbit.svg" width="1200" height="900" alt="宇宙開発のグラフィック" loading="lazy"></div><span class="feed-card__number">03</span><div class="feed-card__content"><span class="feed-card__label">科学・宇宙</span><h3>宇宙開発を「研究ニュース」だけで終わらせないために</h3><div class="feed-card__meta"><span>SCIENCE</span><span>4 MIN</span></div></div><a href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/science-space-japan-2026/" aria-label="宇宙開発の記事を読む"></a></article>
       </div>
     </section>
 
     <section class="feed-section page-shell" id="briefs">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">3 minute brief</p>
-          <h2 class="section-title">Short Reads<small>忙しい日に、決断だけを読む</small></h2>
-        </div>
-      </div>
+      <div class="section-head"><div><p class="eyebrow">3 minute brief</p><h2 class="section-title">Quick Brief<small>忙しい日は、まず要点だけ</small></h2></div></div>
       <div class="brief-list">
-        <a class="brief-card" href="/articles/rebuild-night/#brief">
-          <span class="brief-card__number">01</span>
-          <span><h3>撤退を決めた夜に残っていた、三つの選択肢</h3><p>佐伯遼が「倒産」と「再起」の間で選んだこと</p></span>
-          <span class="brief-card__arrow">→</span>
-        </a>
-        <a class="brief-card" href="/articles/failure-knew/#brief">
-          <span class="brief-card__number">02</span>
-          <span><h3>赤字を止められなかった本当の理由</h3><p>数字ではなく、期待を捨てられなかった</p></span>
-          <span class="brief-card__arrow">→</span>
-        </a>
-        <a class="brief-card" href="/articles/leave-company/#brief">
-          <span class="brief-card__number">03</span>
-          <span><h3>創業者が会社を去る前に、決めたこと</h3><p>自分が残ることより、会社が続くことを選ぶ</p></span>
-          <span class="brief-card__arrow">→</span>
-        </a>
+        <a class="brief-card" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/japan-ai-investment-2026/"><span class="brief-card__number">01</span><span><h3>AI導入そのものより「利益に効いているか」が評価軸へ</h3><p>モデル選定より、データ・権限・業務への組み込みが差を生む</p></span><span class="brief-card__arrow">→</span></a>
+        <a class="brief-card" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/japan-diplomacy-supply-chains-2026/"><span class="brief-card__number">02</span><span><h3>外交ニュースは「何を安定供給したいか」で読む</h3><p>安全保障と企業の調達・投資が近づいている</p></span><span class="brief-card__arrow">→</span></a>
+        <a class="brief-card" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/startup-productivity-japan-2026/"><span class="brief-card__number">03</span><span><h3>資金調達額より、一人あたりの生産性を見る</h3><p>調達後に何が改善したかが企業の現在地を映す</p></span><span class="brief-card__arrow">→</span></a>
       </div>
     </section>
 
     <section class="popular-section page-shell" id="popular">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Most read this week</p>
-          <h2 class="section-title">Popular<small>今週、最後まで読まれた記事</small></h2>
-        </div>
-      </div>
+      <div class="section-head"><div><p class="eyebrow">Most read</p><h2 class="section-title">Popular<small>いま押さえておきたい記事</small></h2></div></div>
       <div class="popular-list">
-        <a class="popular-item" href="/articles/rebuild-night/">
-          <img src="/assets/sample-saeki.jpg" width="82" height="82" alt="" loading="lazy">
-          <span><h3>会社を畳むつもりだった夜、彼は社員に何も言えなかった</h3><p>佐伯 遼 · 8 MIN</p></span>
-        </a>
-        <a class="popular-item" href="/articles/leave-company/">
-          <img src="/assets/sample-mori.jpg" width="82" height="82" alt="" loading="lazy">
-          <span><h3>守るために、辞めた。創業した会社を離れるまでの143日</h3><p>森 圭介 · 7 MIN</p></span>
-        </a>
-        <a class="popular-item" href="/articles/failure-knew/">
-          <img src="/assets/sample-kuroda.jpg" width="82" height="82" alt="" loading="lazy">
-          <span><h3>失敗すると分かっていた。それでも新規事業を止めなかった理由</h3><p>黒田 奈緒 · 6 MIN</p></span>
-        </a>
+        <a class="popular-item" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/japan-ai-investment-2026/"><img src="/assets/ai-grid.svg" width="82" height="82" alt="" loading="lazy"><span><h3>日本企業のAI投資、次の焦点は「導入」から「成果」へ</h3><p>AI · 6 MIN</p></span></a>
+        <a class="popular-item" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/yen-rates-households-2026/"><img src="/assets/yen-wave.svg" width="82" height="82" alt="" loading="lazy"><span><h3>金利と円相場、家計への影響を3分で整理</h3><p>ECONOMY · 5 MIN</p></span></a>
+        <a class="popular-item" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/articles/semiconductor-japan-2026/"><img src="/assets/chip-lines.svg" width="82" height="82" alt="" loading="lazy"><span><h3>半導体投資が日本で続く理由</h3><p>BUSINESS · 7 MIN</p></span></a>
       </div>
     </section>
 
     <section class="theme-section page-shell" id="themes">
-      <div class="section-head">
-        <div>
-          <p class="eyebrow">Read by decision</p>
-          <h2 class="section-title">Themes<small>いま必要な言葉から選ぶ</small></h2>
-        </div>
-      </div>
+      <div class="section-head"><div><p class="eyebrow">Read by topic</p><h2 class="section-title">Topics<small>関心のある分野から読む</small></h2></div></div>
       <div class="theme-grid">
-        <button class="theme-link" type="button" data-open="search" data-search-query="失敗"><strong>失敗</strong><span>Failure / 02</span></button>
-        <button class="theme-link" type="button" data-open="search" data-search-query="決断"><strong>決断</strong><span>Decision / 03</span></button>
-        <button class="theme-link" type="button" data-open="search" data-search-query="再起"><strong>再起</strong><span>Restart / 01</span></button>
-        <button class="theme-link" type="button" data-open="search" data-search-query="組織"><strong>組織</strong><span>People / 02</span></button>
+        <button class="theme-link" type="button" data-open="search" data-search-query="経済"><strong>経済</strong><span>Economy</span></button>
+        <button class="theme-link" type="button" data-open="search" data-search-query="ビジネス"><strong>ビジネス</strong><span>Business</span></button>
+        <button class="theme-link" type="button" data-open="search" data-search-query="AI"><strong>AI</strong><span>Artificial Intelligence</span></button>
+        <button class="theme-link" type="button" data-open="search" data-search-query="科学"><strong>科学</strong><span>Science</span></button>
+        <button class="theme-link" type="button" data-open="search" data-search-query="外交"><strong>政治・外交</strong><span>Politics / Diplomacy</span></button>
+        <button class="theme-link" type="button" data-open="search" data-search-query="半導体"><strong>産業</strong><span>Industry</span></button>
       </div>
     </section>
 
     <section class="page-shell" id="newsletter">
-      <div class="notification-panel">
-        <div class="notification-panel__content">
-          <p class="eyebrow">Never miss the next take</p>
-          <h2>忙しい日にこそ、<br>読むべき言葉を</h2>
-          <p>新しいインタビューを、通知またはメールで受け取れます　配信は新着時のみ</p>
-          <div class="notify-actions">
-            <button class="button button--light" type="button" data-enable-notifications>新着通知をONにする</button>
-          </div>
-          <form class="newsletter-form newsletter-form--home" data-newsletter-form>
-            <label class="visually-hidden" for="home-newsletter-email">メールアドレス</label>
-            <input class="newsletter-input" id="home-newsletter-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
-            <button class="button" type="submit">メールで受け取る</button>
-            <p class="form-note">サンプル版では入力内容を保存・外部送信しません</p>
-            <p class="form-status" aria-live="polite"></p>
-          </form>
-        </div>
-      </div>
+      <div class="notification-panel notification-panel--news"><div class="notification-panel__content"><p class="eyebrow">Daily edition · 14:00 JST</p><h2>ニュースを追うより、<br>意味をつかむ</h2><p>日本の重要ニュースを、数字・背景・影響まで短く整理　読む順番に迷わない一日一版を目指します</p><a class="button button--light" href="https://daily-japan-news.vocal-shore-1441.chatgpt.site/ja/">現在のDaily Japan Newsを見る</a></div></div>
     </section>
 
-    <section class="about-teaser" id="about">
-      <div class="page-shell about-teaser__grid">
-        <div>
-          <p class="eyebrow">About second take</p>
-          <h2>失敗の続きに、<br>その人がいる</h2>
-        </div>
-        <p>あなたはこれまで何を選び、何に耐えてきましたか？<br><br>SECOND TAKEでは、経営者の命運を分けた決断と苦悩、そしてその人が生きてきた物語にせまります</p>
-      </div>
-    </section>
-
-    <section class="podcast-section" id="podcast">
-      <div class="page-shell podcast-panel">
-        <div class="podcast-cover-wrap"><img src="/assets/second-take-cover.png" width="1254" height="1254" alt="Podcast SECOND TAKE ジャケット" loading="lazy"></div>
-        <div>
-          <p class="eyebrow">Listen after reading</p>
-          <h2>声でしか残らない、<br>間と温度もある</h2>
-          <p>記事を読んだあと、本人の声でもう一度触れる　Podcastは本文を補う、もう一つの入り口です</p>
-          <button class="button button--red" type="button" disabled>配信リンク準備中</button>
-        </div>
-      </div>
-    </section>
+    <section class="about-teaser about-teaser--news" id="about"><div class="page-shell about-teaser__grid"><div><p class="eyebrow">About Daily Japan News</p><h2>速さだけではなく、<br>理解まで</h2></div><p>経済、ビジネス、AI、科学、政治・外交を横断し、ニュースの「何が起きたか」だけでなく「なぜ重要か」「誰に影響するか」まで整理します<br><br>一次資料・公的統計・企業公式情報を優先し、短時間でも判断材料が残る読み方を目指します</p></div></section>
   </main>
 </body>
 </html>
