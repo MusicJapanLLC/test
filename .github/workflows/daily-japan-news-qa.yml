@@ -44,19 +44,20 @@ jobs:
           fi
           python - <<'PY'
           from pathlib import Path
-          from bs4 import BeautifulSoup
+          import re
           pages=list(Path('dist/ja/articles').glob('*/index.html'))+list(Path('dist/en/articles').glob('*/index.html'))
           for p in pages:
-              soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html.parser')
-              pts=soup.select('.points-list--editorial li')
-              assert len(pts)==5, f'{p}: expected 5 key points, got {len(pts)}'
-              assert soup.select_one('link[rel="canonical"]'), f'{p}: no canonical'
-              assert len(soup.select('link[rel="alternate"]')) >= 3, f'{p}: hreflang missing'
-              assert soup.select_one('script[type="application/ld+json"]'), f'{p}: JSON-LD missing'
+              html=p.read_text(encoding='utf-8')
+              block=re.search(r'<ol class="points-list points-list--editorial">(.*?)</ol>', html, re.S)
+              assert block, f'{p}: key-points block missing'
+              assert block.group(1).count('<li>')==5, f'{p}: expected 5 key points'
+              assert 'rel="canonical"' in html, f'{p}: no canonical'
+              assert html.count('rel="alternate"') >= 3, f'{p}: hreflang missing'
+              assert 'application/ld+json' in html, f'{p}: JSON-LD missing'
           print(f'verified {len(pages)} article pages')
           PY
         shell: bash
-      - name: Verify generated asset references
+      - name: Verify generated assets
         working-directory: daily-japan-news-second-take
         run: |
           set -euo pipefail
