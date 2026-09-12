@@ -127,14 +127,16 @@ img {
   display: inline-flex;
   align-items: center;
   width: 155px;
-  height: 48px;
-  overflow: hidden;
+  height: auto;
+  flex: 0 0 auto;
+  overflow: visible;
   text-decoration: none;
 }
 
 .site-logo img {
-  width: 155px;
+  width: 100%;
   height: auto;
+  object-fit: contain;
 }
 
 .desktop-nav {
@@ -916,6 +918,15 @@ button.theme-link {
   font-family: var(--serif);
   font-size: 1rem;
   line-height: 2;
+}
+
+.about-company-link {
+  display: inline-block;
+  margin-top: 22px;
+  font-family: var(--sans);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
 .site-footer {
@@ -1909,8 +1920,7 @@ button.theme-link {
     --header-h: 76px;
   }
 
-  .site-logo,
-  .site-logo img {
+  .site-logo {
     width: 196px;
   }
 

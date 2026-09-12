@@ -56,7 +56,7 @@
           <button type="button" data-enable-notifications>新着通知をONにする</button>
           <button type="button" data-reader-size>Aa　文字サイズ</button>
           <button type="button" data-open="cookies">Cookie設定</button>
-          <a href="https://music-japan.pages.dev/">運営会社</a>
+          <a href="https://music-japan.pages.dev/company/" target="_blank" rel="noopener">運営会社｜合同会社Music Japan ↗</a>
         </div>
       </div>
     </dialog>
@@ -115,6 +115,7 @@
             <a href="/#about">私たちについて</a>
             <a href="/#podcast">Podcast</a>
             <button class="footer-button" type="button" data-open="cookies">Cookie設定</button>
+            <a href="https://music-japan.pages.dev/company/" target="_blank" rel="noopener">運営会社公式サイト ↗</a>
           </nav>
         </div>
         <p class="copyright">© 2026 MUSIC JAPAN LLC　PHOTO: SAMPLE / UNSPLASH</p>
@@ -126,7 +127,7 @@
   const cookie = `
     <section class="cookie-banner" id="cookie-banner" aria-label="Cookieについて" hidden>
       <h2>Cookieについて</h2>
-      <p>読みかけ位置や文字サイズの保存、利用状況の把握にCookieを使用します</p>
+      <p>読みかけ位置や文字サイズの保存、利用状況の把握にCookieを使用します。</p>
       <div class="cookie-actions">
         <button type="button" data-cookie-essential>必要なものだけ</button>
         <button class="accept-all" type="button" data-cookie-accept>すべて許可</button>
