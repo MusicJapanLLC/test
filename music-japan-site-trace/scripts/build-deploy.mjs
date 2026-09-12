@@ -1,3 +1,4 @@
+// Cloudflare Pages redeploy trigger — known-good build path restored 2026-09-12
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
