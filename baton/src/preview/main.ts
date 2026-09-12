@@ -1,15 +1,19 @@
 import '../styles/base.css';
 import '../styles/hub.css';
 import '../styles/service.css';
+import '../styles/profile.css';
 
 import { services } from '../data/services';
 import { site } from '../data/site';
 import { renderPrivacy } from '../entries/privacy-content';
 import { renderHub } from '../hub/render';
-import { hubHeroHtml, serviceHeroHtml } from '../lib/hero';
+import { profiles } from '../data/profiles';
+import { hubHeroHtml, profileHeroHtml, profileHubHeroHtml, serviceHeroHtml } from '../lib/hero';
 import { renderFooter } from '../lib/footer';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
+import { renderProfileHub } from '../profile/hub-render';
+import { renderProfileSections } from '../profile/render';
 import { renderServiceSections } from '../service/render';
 import { mountLightScene } from '../service/scene-light';
 import { mountStandmentScene } from '../service/scene-standment';
@@ -38,6 +42,10 @@ function route(): void {
   const hash = window.location.hash.replace(/^#\/?/, '').replace(/\/$/, '');
   const service = services.find((s) => s.slug === hash);
   const isPrivacy = hash === 'privacy';
+  const isProfileHub = hash === 'profile';
+  const profile = hash.startsWith('profile/')
+    ? profiles.find((p) => p.slug === hash.slice('profile/'.length))
+    : undefined;
 
   const hero = document.getElementById('hero')!;
   const app = document.getElementById('app')!;
@@ -45,7 +53,15 @@ function route(): void {
   hero.replaceChildren();
   app.replaceChildren();
   footer.replaceChildren();
-  document.body.className = service ? 'service' : isPrivacy ? 'doc' : 'hub';
+  document.body.className = service
+    ? 'service'
+    : isPrivacy
+      ? 'doc'
+      : profile
+        ? 'profile'
+        : isProfileHub
+          ? 'talk-hub'
+          : 'hub';
 
   if (service) {
     setTheme(service.theme);
@@ -58,6 +74,18 @@ function route(): void {
     renderPrivacy(app);
     renderFooter(footer, { backToHub: true });
     document.title = `プライバシーポリシー - ${site.name}`;
+  } else if (profile) {
+    setTheme(profile.theme);
+    hero.innerHTML = profileHeroHtml(profile, '#/profile');
+    renderProfileSections(app, profile);
+    renderFooter(footer, { backToHub: true });
+    document.title = `${profile.name}｜${profile.company} - Baton Talk`;
+  } else if (isProfileHub) {
+    setTheme({ primary: site.theme.text, accent: site.theme.accent, bg: site.theme.bg, text: site.theme.text });
+    hero.innerHTML = profileHubHeroHtml();
+    renderProfileHub(app);
+    renderFooter(footer, { backToHub: true });
+    document.title = `Baton Talk｜この人と話したい - ${site.name}`;
   } else {
     setTheme({ primary: site.theme.text, accent: site.theme.accent, bg: site.theme.bg, text: site.theme.text });
     hero.innerHTML = hubHeroHtml();
@@ -73,11 +101,17 @@ function route(): void {
   if (canvas && shouldRender3D()) {
     whenIdle(() => {
       if (!document.body.contains(canvas)) return;
-      dispose = service
-        ? service.heavyWebGL
+      if (service) {
+        dispose = service.heavyWebGL
           ? mountStandmentScene(canvas, service.theme)
-          : mountLightScene(canvas, service.theme, service.monument)
-        : mountHubScene(canvas);
+          : mountLightScene(canvas, service.theme, service.monument);
+      } else if (profile?.heavyWebGL) {
+        dispose = mountStandmentScene(canvas, profile.theme);
+      } else if (profile?.monument) {
+        dispose = mountLightScene(canvas, profile.theme, profile.monument);
+      } else {
+        dispose = mountHubScene(canvas);
+      }
     }, 1200);
   }
 }

@@ -1,6 +1,31 @@
-import { el, externalAttrs } from '../lib/dom';
+import { el, externalAttrs, pad2 } from '../lib/dom';
 import type { TalkProfile } from '../types';
 import { renderRequestForm } from './request-form';
+
+/** 事業内容・活動領域。businesses を持つプロフィールだけ表示する */
+function businessSection(profile: TalkProfile): HTMLElement | null {
+  if (!profile.businesses || !profile.businesses.length) return null;
+
+  return el('section', { class: 'section section--problems', id: 'businesses' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Business', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '事業内容・活動領域', 'data-reveal': true }),
+      ]),
+      el(
+        'div',
+        { class: 'grid grid--2', 'data-reveal-group': true },
+        profile.businesses.map((item, i) =>
+          el('article', { class: 'card', 'data-reveal': true }, [
+            el('p', { class: 'card__num', text: pad2(i + 1) }),
+            el('h3', { class: 'card__title', text: item.title }),
+            el('p', { class: 'card__detail', text: item.detail }),
+          ]),
+        ),
+      ),
+    ]),
+  ]);
+}
 
 function topicsSection(profile: TalkProfile): HTMLElement | null {
   if (!profile.topics.length) return null;
@@ -77,8 +102,11 @@ function requestSection(profile: TalkProfile): HTMLElement {
 /** プロフィールページの本文。ヒーローより下を丸ごと組み立てる */
 export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
   app.append(
-    ...[topicsSection(profile), mediaSection(profile), requestSection(profile)].filter(
-      (n): n is HTMLElement => n !== null,
-    ),
+    ...[
+      businessSection(profile),
+      topicsSection(profile),
+      mediaSection(profile),
+      requestSection(profile),
+    ].filter((n): n is HTMLElement => n !== null),
   );
 }

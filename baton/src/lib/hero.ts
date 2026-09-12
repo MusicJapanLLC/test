@@ -26,9 +26,31 @@ export function serviceHeroHtml(s: Service, homeHref = '/'): string {
 /**
  * プロフィールページのヒーロー。サービスページと同じく、ビルド時に
  * 静的HTMLへ焼き込む（写真は今回プレースホルダーのイニシャル表示）。
+ *
+ * `monument` を持つプロフィール（＝実データが入った「ミニLP」）だけ、
+ * サービスページと同じ `.hero`（フル高さ + WebGL立体）を使う。
+ * 持たないプロフィール（暫定の6件）は今まで通りの簡易ヒーローのまま。
  */
 export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   const initial = esc(p.name.slice(0, 1));
+
+  if (p.monument || p.heavyWebGL) {
+    return `
+<header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
+  <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+  <div class="hero__inner">
+    <p class="hero__eyebrow">
+      <span class="hero__avatar" aria-hidden="true">${initial}</span>
+      <a class="hero__back" href="${homeHref}">Baton Talk</a><span aria-hidden="true">/</span><span>${esc(p.company)}</span>
+    </p>
+    <h1 class="hero__title">${esc(p.name)}</h1>
+    <p class="hero__tagline">${esc(p.tagline ?? p.title)}</p>
+    <p class="hero__desc">${esc(p.bio)}</p>
+    <div class="hero__cta"><a class="btn btn--primary" href="#talk-request">この人と話したい</a></div>
+  </div>
+  <div class="hero__scroll" aria-hidden="true"><span></span></div>
+</header>`.trim();
+  }
 
   return `
 <header class="talk-hero" data-hero>

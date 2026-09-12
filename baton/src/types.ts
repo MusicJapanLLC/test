@@ -88,13 +88,21 @@ export type TalkProfile = {
   name: string;
   company: string;
   title: string;
+  /** ヒーローに置く一行の位置づけ（未指定なら簡易版ヒーローになる） */
+  tagline?: string;
   /** 人物紹介（今後、実際の経歴文に差し替えていく前提） */
   bio: string;
   /** 話せるテーマ */
   topics: string[];
-  /** SECOND TAKE記事 / Podcast など */
+  /** 事業内容・活動領域（カード形式。未指定なら表示しない） */
+  businesses?: Item[];
+  /** SECOND TAKE記事 / Podcast / 公式サイトなど。今後増える想定でそのまま並べる */
   media?: { label: string; url: string }[];
   theme: Theme;
+  /** ヒーローに出す立体（未指定ならCSSグラデーションのみの簡易ヒーロー） */
+  monument?: MonumentKind;
+  /** true のときは Standment ページと同じ、フルの3Dヒーローを使う（monumentより優先） */
+  heavyWebGL?: boolean;
   active: boolean;
 };
 

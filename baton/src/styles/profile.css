@@ -7,6 +7,27 @@ body.profile {
   color: var(--text);
 }
 
+/* 実データ入りプロフィール（.hero を流用するリッチ版）の追加分 */
+
+.hero__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6em;
+  height: 1.6em;
+  margin-right: 0.5em;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--primary) 16%, #fff);
+  color: var(--primary);
+  font-family: var(--font-display);
+  font-weight: 600;
+  vertical-align: -0.35em;
+}
+
+.hero__cta {
+  margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+}
+
 /* プロフィール一覧（ハブ） */
 
 body.talk-hub {
