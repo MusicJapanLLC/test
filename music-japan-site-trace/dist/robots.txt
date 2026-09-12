@@ -14,5 +14,13 @@ User-Agent: GPTBot
 Allow: /
 Disallow: /audio/
 
-Sitemap: https://music-japan.pearly-cedar-3983.chatgpt.site/sitemap.xml
-Host: https://music-japan.pearly-cedar-3983.chatgpt.site
+User-Agent: PerplexityBot
+Allow: /
+Disallow: /audio/
+
+User-Agent: ClaudeBot
+Allow: /
+Disallow: /audio/
+
+Sitemap: https://music-japan.pages.dev/sitemap.xml
+Host: https://music-japan.pages.dev
