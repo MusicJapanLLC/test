@@ -54,9 +54,9 @@
         </nav>
         <div class="menu-utility">
           <button type="button" data-enable-notifications>新着通知をONにする</button>
-          <button type="button" data-reader-size>Aa　文字サイズ</button>
+          <button type="button" data-reader-size>Aa　文字サイズ：標準</button>
           <button type="button" data-open="cookies">Cookie設定</button>
-          <a href="https://music-japan.pages.dev/company/" target="_blank" rel="noopener">運営会社｜合同会社Music Japan ↗</a>
+          <a href="https://music-japan.pages.dev/company/" target="_blank" rel="noopener">合同会社Music Japan ↗</a>
         </div>
       </div>
     </dialog>
@@ -99,6 +99,23 @@
           <label class="switch"><input id="cookie-analytics" type="checkbox"><span aria-hidden="true"></span><span class="visually-hidden">アクセス解析を許可</span></label>
         </div>
         <button class="button button--red" id="cookie-save" type="button">設定を保存</button>
+      </div>
+    </dialog>
+
+    <dialog class="notification-dialog" id="notification-dialog" aria-label="通知を受け取る">
+      <div class="dialog-head">
+        <span class="dialog-title">NOTIFICATIONS</span>
+        <button class="dialog-close" type="button" data-close aria-label="通知の案内を閉じる">×</button>
+      </div>
+      <div class="notification-guide">
+        <p class="eyebrow">Notifications on iPhone</p>
+        <h2>ホーム画面に追加すると、<br>新着通知を受け取れます</h2>
+        <ol>
+          <li><strong>共有ボタンをタップ</strong><span>画面下部の共有アイコンを開きます</span></li>
+          <li><strong>「ホーム画面に追加」を選ぶ</strong><span>SECOND TAKEをホーム画面へ追加します</span></li>
+          <li><strong>ホーム画面から開いて通知をON</strong><span>メニューから、もう一度通知ボタンを押してください</span></li>
+        </ol>
+        <button class="button button--red" type="button" data-close>閉じる</button>
       </div>
     </dialog>`;
 

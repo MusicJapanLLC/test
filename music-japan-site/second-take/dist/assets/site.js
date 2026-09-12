@@ -27,6 +27,7 @@
   const searchDialog = $("#search-dialog");
   const tocDialog = $("#toc-dialog");
   const cookieDialog = $("#cookie-dialog");
+  const notificationDialog = $("#notification-dialog");
 
   $$('[data-open="menu"]').forEach((button) => button.addEventListener("click", () => openDialog(menu)));
   $$('[data-open="search"]').forEach((button) => button.addEventListener("click", () => {
@@ -117,12 +118,31 @@
   }
 
   const readerModes = ["reader-compact", "", "reader-large"];
+  const readerLabels = ["小", "標準", "大"];
   let readerIndex = Number(localStorage.getItem("st-reader-index") || 1);
+
+  function showStatus(message) {
+    let status = $("#site-status");
+    if (!status) {
+      status = document.createElement("div");
+      status.id = "site-status";
+      status.className = "site-status";
+      status.setAttribute("role", "status");
+      status.setAttribute("aria-live", "polite");
+      document.body.appendChild(status);
+    }
+    status.textContent = message;
+    status.classList.add("is-visible");
+    window.clearTimeout(showStatus.timer);
+    showStatus.timer = window.setTimeout(() => status.classList.remove("is-visible"), 2200);
+  }
+
   function applyReaderMode() {
     document.body.classList.remove("reader-compact", "reader-large");
     if (readerModes[readerIndex]) document.body.classList.add(readerModes[readerIndex]);
     $$('[data-reader-size]').forEach((button) => {
-      button.setAttribute("aria-label", `文字サイズを変更 現在${readerIndex === 0 ? "小" : readerIndex === 2 ? "大" : "標準"}`);
+      button.textContent = `Aa　文字サイズ：${readerLabels[readerIndex]}`;
+      button.setAttribute("aria-label", `文字サイズを変更 現在${readerLabels[readerIndex]}`);
     });
   }
   applyReaderMode();
@@ -131,6 +151,8 @@
       readerIndex = (readerIndex + 1) % readerModes.length;
       localStorage.setItem("st-reader-index", String(readerIndex));
       applyReaderMode();
+      if (menu?.open) closeDialog(menu);
+      showStatus(`文字サイズを「${readerLabels[readerIndex]}」に変更しました`);
     });
   });
 
@@ -181,8 +203,16 @@
   }
 
   async function enableNotifications(button) {
+    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    if (isIos && !isStandalone) {
+      if (menu?.open) closeDialog(menu);
+      openDialog(notificationDialog);
+      return;
+    }
+
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      button.textContent = "このブラウザは通知に未対応です";
+      showStatus("このブラウザでは通知を利用できません");
       return;
     }
     try {
@@ -191,16 +221,18 @@
       if (permission === "granted") {
         localStorage.setItem("st-notifications", "enabled");
         await registration.showNotification("SECOND TAKE", {
-          body: "新着通知の準備ができました　これはサンプル通知です",
+          body: "新着通知の準備ができました。これはサンプル通知です。",
           icon: "/assets/second-take-cover.png",
           badge: "/favicon.svg"
         });
         $$('[data-enable-notifications]').forEach((target) => { target.textContent = "通知はONです"; });
+        if (menu?.open) closeDialog(menu);
+        showStatus("新着通知をONにしました");
       } else {
-        button.textContent = "通知は許可されませんでした";
+        showStatus("通知の許可が必要です。ブラウザの設定をご確認ください");
       }
     } catch (error) {
-      button.textContent = "通知設定を確認してください";
+      showStatus("通知設定をご確認ください");
     }
   }
 

@@ -774,7 +774,20 @@ button.theme-link {
   font-family: var(--serif);
   font-size: clamp(1.7rem, 7vw, 3.6rem);
   font-weight: 500;
-  line-height: 1.35;
+  line-height: 1.45;
+}
+
+.notification-panel ruby {
+  ruby-align: center;
+  ruby-position: over;
+}
+
+.notification-panel rt {
+  color: #ff7085;
+  font-family: var(--sans);
+  font-size: 0.28em;
+  font-weight: 700;
+  letter-spacing: 0.12em;
 }
 
 .notification-panel p {
@@ -978,7 +991,8 @@ button.theme-link {
 .menu-dialog,
 .search-dialog,
 .toc-dialog,
-.cookie-dialog {
+.cookie-dialog,
+.notification-dialog {
   width: 100%;
   max-width: none;
   height: 100%;
@@ -993,7 +1007,8 @@ button.theme-link {
 .menu-dialog::backdrop,
 .search-dialog::backdrop,
 .toc-dialog::backdrop,
-.cookie-dialog::backdrop {
+.cookie-dialog::backdrop,
+.notification-dialog::backdrop {
   background: rgba(0, 0, 0, 0.58);
 }
 
@@ -1030,7 +1045,8 @@ button.theme-link {
 .menu-body,
 .search-body,
 .toc-body,
-.cookie-body {
+.cookie-body,
+.notification-guide {
   width: min(100%, 900px);
   margin: 0 auto;
   padding: 30px var(--page-pad) 100px;
@@ -1118,6 +1134,91 @@ button.theme-link {
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+}
+
+.menu-utility a {
+  display: grid;
+  place-items: center;
+  white-space: nowrap;
+}
+
+.notification-guide h2 {
+  margin: 0 0 32px;
+  font-family: var(--serif);
+  font-size: clamp(1.75rem, 7vw, 3.2rem);
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.notification-guide ol {
+  margin: 0 0 32px;
+  padding: 0;
+  list-style: none;
+  counter-reset: notification-step;
+}
+
+.notification-guide li {
+  min-height: 88px;
+  border-top: 1px solid var(--line);
+  padding: 18px 0 18px 48px;
+  position: relative;
+  counter-increment: notification-step;
+}
+
+.notification-guide li:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.notification-guide li::before {
+  position: absolute;
+  left: 0;
+  top: 18px;
+  color: var(--red);
+  font-family: var(--display), var(--serif);
+  font-size: 1.25rem;
+  content: "0" counter(notification-step);
+}
+
+.notification-guide strong,
+.notification-guide span {
+  display: block;
+}
+
+.notification-guide strong {
+  font-size: 0.9rem;
+}
+
+.notification-guide span {
+  margin-top: 5px;
+  color: var(--ink-soft);
+  font-size: 0.72rem;
+  line-height: 1.65;
+}
+
+.site-status {
+  position: fixed;
+  z-index: 140;
+  left: 50%;
+  bottom: max(86px, calc(env(safe-area-inset-bottom) + 76px));
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: var(--black);
+  color: var(--white);
+  padding: 12px 16px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 12px);
+  transition: opacity 180ms ease, transform 180ms ease;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.site-status.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 .menu-quick-results {
@@ -1578,6 +1679,10 @@ button.theme-link {
   align-items: center;
 }
 
+.listen-card > div {
+  min-width: 0;
+}
+
 .listen-card img {
   width: 90px;
   height: 90px;
@@ -1601,6 +1706,37 @@ button.theme-link {
 .listen-card a {
   color: rgba(255, 255, 255, 0.75);
   font-size: 0.69rem;
+}
+
+@media (max-width: 479px) {
+  .listen-card {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .listen-card img {
+    width: 76px;
+    height: 76px;
+  }
+
+  .listen-card small {
+    font-size: 0.54rem;
+    letter-spacing: 0.1em;
+  }
+
+  .listen-card h2 {
+    margin: 6px 0 9px;
+    font-size: 0.92rem;
+    line-height: 1.55;
+  }
+
+  .listen-card a {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 0.62rem;
+    line-height: 1.6;
+  }
 }
 
 .related-section {
