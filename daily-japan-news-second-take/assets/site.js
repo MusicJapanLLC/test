@@ -1,257 +1,120 @@
 (function () {
-  const articles = window.SECOND_TAKE_ARTICLES || [];
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
-
-  function rootPath(path) {
-    return path;
-  }
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+  const lang = document.body.dataset.lang || 'ja';
+  let articles = [];
+  try {
+    articles = JSON.parse($('#djn-search-data')?.textContent || '[]');
+  } catch (_) {}
 
   function openDialog(dialog) {
     if (!dialog) return;
-    $$('dialog[open]').forEach((open) => {
-      if (open !== dialog) open.close();
-    });
-    if (dialog.open) return;
-    dialog.showModal();
-    document.body.classList.add("modal-open");
+    $$('dialog[open]').forEach(d => { if (d !== dialog) d.close(); });
+    if (!dialog.open) dialog.showModal();
+    document.body.classList.add('modal-open');
   }
-
   function closeDialog(dialog) {
     if (!dialog) return;
     dialog.close();
-    if (!$("dialog[open]")) document.body.classList.remove("modal-open");
+    if (!$('dialog[open]')) document.body.classList.remove('modal-open');
   }
 
-  const menu = $("#site-menu");
-  const searchDialog = $("#search-dialog");
-  const tocDialog = $("#toc-dialog");
-  const cookieDialog = $("#cookie-dialog");
+  const menu = $('#site-menu');
+  const search = $('#search-dialog');
+  const cookie = $('#cookie-dialog');
 
-  $$('[data-open="menu"]').forEach((button) => button.addEventListener("click", () => openDialog(menu)));
-  $$('[data-open="search"]').forEach((button) => button.addEventListener("click", () => {
-    const query = button.dataset.searchQuery;
-    openDialog(searchDialog);
-    if (query && pageSearch) {
-      pageSearch.value = query;
-      pageSearch.dispatchEvent(new Event("input"));
+  $$('[data-open="menu"]').forEach(b => b.addEventListener('click', () => openDialog(menu)));
+  $$('[data-open="search"]').forEach(b => b.addEventListener('click', () => {
+    openDialog(search);
+    const q = b.dataset.searchQuery || '';
+    if ($('#page-search-input') && q) {
+      $('#page-search-input').value = q;
+      $('#page-search-input').dispatchEvent(new Event('input'));
     }
-    window.setTimeout(() => pageSearch?.focus(), 40);
+    setTimeout(() => $('#page-search-input')?.focus(), 50);
   }));
-  $$('[data-open="toc"]').forEach((button) => button.addEventListener("click", () => openDialog(tocDialog)));
-  $$('[data-open="cookies"]').forEach((button) => button.addEventListener("click", () => openDialog(cookieDialog)));
-
-  $$('[data-close]').forEach((button) => {
-    button.addEventListener("click", () => closeDialog(button.closest("dialog")));
+  $$('[data-open="cookies"]').forEach(b => b.addEventListener('click', () => openDialog(cookie)));
+  $$('[data-close]').forEach(b => b.addEventListener('click', () => closeDialog(b.closest('dialog'))));
+  $$('dialog').forEach(d => {
+    d.addEventListener('click', e => { if (e.target === d) closeDialog(d); });
+    d.addEventListener('close', () => { if (!$('dialog[open]')) document.body.classList.remove('modal-open'); });
   });
+  $$('[data-close-menu-link]').forEach(a => a.addEventListener('click', () => closeDialog(menu)));
 
-  $$("dialog").forEach((dialog) => {
-    dialog.addEventListener("click", (event) => {
-      if (event.target === dialog && !dialog.classList.contains("menu-dialog")) closeDialog(dialog);
-    });
-    dialog.addEventListener("close", () => {
-      if (!$("dialog[open]")) document.body.classList.remove("modal-open");
-    });
-  });
-
-  function articleMatches(article, query) {
-    const haystack = [
-      article.title,
-      article.shortTitle,
-      article.person,
-      article.company,
-      article.role,
-      article.theme,
-      article.description,
-      ...(article.tags || [])
-    ].join(" ").toLowerCase();
-    return haystack.includes(query.trim().toLowerCase());
+  function view(a) {
+    return lang === 'ja'
+      ? {title:a.ja.title, dek:a.ja.dek, category:a.categoryJa}
+      : {title:a.en.title, dek:a.en.dek, category:a.categoryEn};
   }
-
-  function quickResultMarkup(article) {
-    return `<a class="quick-result" href="${rootPath(article.href)}">
-      <img src="${rootPath(article.image)}" width="56" height="56" alt="" loading="lazy">
-      <span><strong>${article.shortTitle}</strong><span>${article.company} / ${article.person}</span></span>
+  function matches(a, q) {
+    const v = view(a);
+    return [v.title,v.dek,v.category,a.categoryJa,a.categoryEn].join(' ').toLowerCase().includes(q.trim().toLowerCase());
+  }
+  function resultMarkup(a) {
+    const v=view(a);
+    return `<a class="search-result-card" href="/${lang}/articles/${a.slug}/">
+      <img src="/assets/${a.image}" width="150" height="180" alt="" loading="lazy">
+      <span><span class="tag-line">${v.category} · ${a.readMinutes} MIN</span><h2>${v.title}</h2><p>${v.dek}</p></span>
     </a>`;
   }
 
-  const quickInput = $("#menu-search-input");
-  const quickResults = $("#menu-search-results");
-  if (quickInput && quickResults) {
-    quickInput.addEventListener("input", () => {
-      const query = quickInput.value;
-      const matches = query ? articles.filter((article) => articleMatches(article, query)) : [];
-      quickResults.innerHTML = matches.slice(0, 3).map(quickResultMarkup).join("");
-      quickResults.hidden = !query;
-      if (query && matches.length === 0) {
-        quickResults.innerHTML = '<p class="empty-state">一致するサンプル記事はありません</p>';
+  const input = $('#page-search-input');
+  const results = $('#search-results');
+  const count = $('#search-count');
+  function renderSearch() {
+    if (!input || !results) return;
+    const q=input.value;
+    const list=q ? articles.filter(a=>matches(a,q)) : articles;
+    results.innerHTML = list.length ? list.map(resultMarkup).join('') : `<p class="empty-state">${lang==='ja'?'一致する記事はありません':'No matching stories'}</p>`;
+    if (count) count.textContent=`${list.length} ARTICLES`;
+  }
+  input?.addEventListener('input', renderSearch);
+  renderSearch();
+
+  const quick = $('#menu-search-input');
+  quick?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      openDialog(search);
+      if (input) {
+        input.value=quick.value;
+        renderSearch();
+        setTimeout(()=>input.focus(),40);
       }
-    });
-  }
+    }
+  });
 
-  function searchResultMarkup(article) {
-    return `<a class="search-result-card" href="${rootPath(article.href)}">
-      <img src="${rootPath(article.image)}" width="150" height="180" alt="${article.company} ${article.person}のサンプル写真" loading="lazy">
-      <span>
-        <span class="tag-line">${article.theme} · ${article.readTime}</span>
-        <h2>${article.title}</h2>
-        <p>${article.description}</p>
-      </span>
-    </a>`;
-  }
-
-  const pageSearch = $("#page-search-input");
-  const pageResults = $("#search-results");
-  const searchCount = $("#search-count");
-  if (pageSearch && pageResults) {
-    const renderSearch = () => {
-      const query = pageSearch.value;
-      const matches = query ? articles.filter((article) => articleMatches(article, query)) : articles;
-      pageResults.innerHTML = matches.length
-        ? matches.map(searchResultMarkup).join("")
-        : '<p class="empty-state">一致するサンプル記事はありません<br>人物名、会社名、テーマを変えて検索してください</p>';
-      if (searchCount) searchCount.textContent = `${matches.length} ARTICLES`;
-    };
-    pageSearch.addEventListener("input", renderSearch);
-    renderSearch();
-  }
-
-  const readerModes = ["reader-compact", "", "reader-large"];
-  let readerIndex = Number(localStorage.getItem("st-reader-index") || 1);
-  function applyReaderMode() {
-    document.body.classList.remove("reader-compact", "reader-large");
+  const readerModes=['reader-compact','', 'reader-large'];
+  let readerIndex=Number(localStorage.getItem('djn-reader-index') || 1);
+  function applyReader() {
+    document.body.classList.remove('reader-compact','reader-large');
     if (readerModes[readerIndex]) document.body.classList.add(readerModes[readerIndex]);
-    $$('[data-reader-size]').forEach((button) => {
-      button.setAttribute("aria-label", `文字サイズを変更 現在${readerIndex === 0 ? "小" : readerIndex === 2 ? "大" : "標準"}`);
-    });
   }
-  applyReaderMode();
-  $$('[data-reader-size]').forEach((button) => {
-    button.addEventListener("click", () => {
-      readerIndex = (readerIndex + 1) % readerModes.length;
-      localStorage.setItem("st-reader-index", String(readerIndex));
-      applyReaderMode();
-    });
+  applyReader();
+  $$('[data-reader-size]').forEach(b=>b.addEventListener('click',()=>{
+    readerIndex=(readerIndex+1)%readerModes.length;
+    localStorage.setItem('djn-reader-index',String(readerIndex));
+    applyReader();
+  }));
+
+  const scrollTop=$('#scroll-top');
+  function scrollUI() {
+    scrollTop?.classList.toggle('is-visible',window.scrollY>520);
+  }
+  addEventListener('scroll',scrollUI,{passive:true});
+  scrollUI();
+  scrollTop?.addEventListener('click',()=>scrollTo({top:0,behavior:'smooth'}));
+
+  const consentKey='djn-cookie-consent';
+  const banner=$('#cookie-banner');
+  if (banner && !localStorage.getItem(consentKey)) banner.hidden=false;
+  $$('[data-cookie-accept]').forEach(b=>b.addEventListener('click',()=>{
+    localStorage.setItem(consentKey,'ok');
+    if (banner) banner.hidden=true;
+  }));
+  $('#cookie-save')?.addEventListener('click',()=>{
+    localStorage.setItem(consentKey,'ok');
+    if (banner) banner.hidden=true;
+    closeDialog(cookie);
   });
-
-  const progress = $("#reading-progress");
-  const dock = $("#bottom-dock");
-  const scrollTop = $("#scroll-top");
-  const articleBody = $(".article-body");
-  let lastY = window.scrollY;
-  let progressWriteTimer;
-
-  function updateScrollUi() {
-    const y = window.scrollY;
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const percent = max > 0 ? Math.min(100, (y / max) * 100) : 0;
-    if (progress) progress.style.width = `${percent}%`;
-    if (scrollTop) scrollTop.classList.toggle("is-visible", y > 520);
-    if (dock) {
-      dock.classList.toggle("is-hidden", y > lastY && y > 180);
-      lastY = y;
-    }
-    if (articleBody && y > 240) {
-      clearTimeout(progressWriteTimer);
-      progressWriteTimer = setTimeout(() => {
-        localStorage.setItem(`st-progress:${location.pathname}`, String(Math.round(percent)));
-      }, 250);
-    }
-  }
-
-  window.addEventListener("scroll", updateScrollUi, { passive: true });
-  updateScrollUi();
-
-  if (scrollTop) {
-    scrollTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  }
-
-  const savedProgress = Number(localStorage.getItem(`st-progress:${location.pathname}`) || 0);
-  if (articleBody && savedProgress >= 10 && savedProgress <= 90) {
-    const banner = document.createElement("div");
-    banner.className = "continue-banner";
-    banner.innerHTML = `前回は${savedProgress}%まで読みました　<button type="button" data-resume>続きから読む</button><button type="button" class="continue-banner__close" aria-label="閉じる">×</button>`;
-    document.body.appendChild(banner);
-    $("[data-resume]", banner).addEventListener("click", () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      window.scrollTo({ top: max * (savedProgress / 100), behavior: "smooth" });
-      banner.remove();
-    });
-    $(".continue-banner__close", banner).addEventListener("click", () => banner.remove());
-  }
-
-  async function enableNotifications(button) {
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      button.textContent = "このブラウザは通知に未対応です";
-      return;
-    }
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        localStorage.setItem("st-notifications", "enabled");
-        await registration.showNotification("SECOND TAKE", {
-          body: "新着通知の準備ができました　これはサンプル通知です",
-          icon: "/assets/second-take-cover.png",
-          badge: "/favicon.svg"
-        });
-        $$('[data-enable-notifications]').forEach((target) => { target.textContent = "通知はONです"; });
-      } else {
-        button.textContent = "通知は許可されませんでした";
-      }
-    } catch (error) {
-      button.textContent = "通知設定を確認してください";
-    }
-  }
-
-  $$('[data-enable-notifications]').forEach((button) => {
-    if (localStorage.getItem("st-notifications") === "enabled") button.textContent = "通知はONです";
-    button.addEventListener("click", () => enableNotifications(button));
-  });
-
-  $$('[data-newsletter-form]').forEach((form) => {
-    form.addEventListener("submit", (event) => {
-      event.preventDefault();
-      const email = $("input[type=email]", form);
-      const status = $(".form-status", form);
-      if (!email || !email.checkValidity()) {
-        if (status) status.textContent = "メールアドレスを確認してください";
-        return;
-      }
-      localStorage.setItem("st-newsletter-demo", "registered");
-      if (status) status.textContent = "表示テスト完了　入力内容は保存・送信していません";
-      email.value = "";
-    });
-  });
-
-  const cookieBanner = $("#cookie-banner");
-  const consentKey = "st-cookie-consent";
-  if (cookieBanner && !localStorage.getItem(consentKey)) cookieBanner.hidden = false;
-
-  function saveConsent(analytics) {
-    localStorage.setItem(consentKey, JSON.stringify({ essential: true, analytics, updatedAt: new Date().toISOString() }));
-    if (cookieBanner) cookieBanner.hidden = true;
-    closeDialog(cookieDialog);
-  }
-
-  $$('[data-cookie-accept]').forEach((button) => button.addEventListener("click", () => saveConsent(true)));
-  $$('[data-cookie-essential]').forEach((button) => button.addEventListener("click", () => saveConsent(false)));
-  const cookieSave = $("#cookie-save");
-  if (cookieSave) {
-    cookieSave.addEventListener("click", () => {
-      const analytics = $("#cookie-analytics");
-      saveConsent(Boolean(analytics && analytics.checked));
-    });
-  }
-
-  const currentConsent = localStorage.getItem(consentKey);
-  if (currentConsent) {
-    try {
-      const parsed = JSON.parse(currentConsent);
-      const analytics = $("#cookie-analytics");
-      if (analytics) analytics.checked = Boolean(parsed.analytics);
-    } catch (_) {}
-  }
-
-  $$('[data-close-menu-link]').forEach((link) => link.addEventListener("click", () => closeDialog(menu)));
 })();
