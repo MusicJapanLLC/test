@@ -1,5 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+JP:wght@400;500;600;700&family=Shippori+Mincho:wght@400;500;600;700&display=swap");
 
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: 180ms ease both page-fade-out;
+}
+
+::view-transition-new(root) {
+  animation: 320ms cubic-bezier(0.2, 0.75, 0.25, 1) both page-fade-in;
+}
+
 :root {
   --paper: #fbfaf7;
   --paper-2: #f2f0eb;
@@ -110,6 +122,12 @@ img {
   border-bottom: 1px solid var(--line);
   background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: blur(16px);
+  transition: background-color 240ms ease, box-shadow 240ms ease;
+}
+
+.site-header.is-scrolled {
+  background: color-mix(in srgb, var(--paper) 97%, transparent);
+  box-shadow: 0 12px 32px rgba(17, 16, 15, 0.08);
 }
 
 .site-header__inner {
@@ -528,6 +546,7 @@ img {
   background: var(--black);
   color: var(--white);
   scroll-snap-align: start;
+  transition: transform 240ms cubic-bezier(0.2, 0.75, 0.25, 1), box-shadow 240ms ease;
 }
 
 .feed-card__image {
@@ -1500,44 +1519,70 @@ button.theme-link {
 }
 
 .brief-box {
-  border-top: 2px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
+  position: relative;
+  border: 1px solid var(--line-strong);
+  border-top: 3px solid var(--ink);
   margin-bottom: 42px;
-  padding: 19px 0 21px;
+  background: color-mix(in srgb, var(--paper-2) 62%, var(--paper));
+  padding: 17px 16px 15px;
 }
 
 .brief-box__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 10px;
+  margin-bottom: 10px;
+  white-space: nowrap;
 }
 
 .brief-box h2 {
   margin: 0;
   font-family: var(--display);
-  font-size: 1.3rem;
+  font-size: clamp(1.03rem, 4.6vw, 1.3rem);
   letter-spacing: 0.02em;
 }
 
 .brief-box__time {
   color: var(--red);
-  font-size: 0.64rem;
+  flex: 0 0 auto;
+  font-size: clamp(0.63rem, 2.8vw, 0.72rem);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.08em;
 }
 
-.brief-box ul {
+.brief-box ol {
+  display: grid;
+  gap: 0;
   margin: 0;
-  padding-left: 1.2em;
+  padding: 0;
+  list-style: none;
+  counter-reset: brief-point;
 }
 
 .brief-box li {
-  margin: 8px 0;
+  position: relative;
+  margin: 0;
+  border-top: 1px solid var(--line);
+  padding: 10px 0 10px 30px;
   font-family: var(--serif);
-  font-size: 0.93rem;
-  line-height: 1.75;
+  overflow: hidden;
+  font-size: clamp(0.7rem, 3.2vw, 0.86rem);
+  line-height: 1.62;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  counter-increment: brief-point;
+}
+
+.brief-box li::before {
+  position: absolute;
+  top: 10px;
+  left: 0;
+  color: var(--red);
+  font-family: var(--display), var(--serif);
+  font-size: 0.88rem;
+  font-weight: 600;
+  content: "0" counter(brief-point);
 }
 
 .article-body {
@@ -1557,9 +1602,11 @@ button.theme-link {
   padding-top: 0.65em;
   border-top: 1px solid var(--ink);
   font-family: var(--serif);
-  font-size: clamp(0.86rem, 3.65vw, 1.55rem);
-  font-weight: 600;
-  letter-spacing: -0.055em;
+  border-bottom: 1px solid rgba(17, 16, 15, 0.16);
+  padding-bottom: 0.52em;
+  font-size: clamp(0.98rem, 4.1vw, 1.65rem);
+  font-weight: 700;
+  letter-spacing: -0.06em;
   line-height: 1.6;
   white-space: nowrap;
 }
@@ -2262,6 +2309,67 @@ button.theme-link {
 @media (max-width: 1019px) {
   .article-aside {
     display: none;
+  }
+}
+
+.motion-ready .reveal {
+  opacity: 0;
+  filter: blur(1.5px);
+  transform: translateY(18px) scale(0.992);
+  transition: opacity 620ms ease var(--reveal-delay, 0ms), filter 620ms ease var(--reveal-delay, 0ms), transform 700ms cubic-bezier(0.2, 0.75, 0.25, 1) var(--reveal-delay, 0ms);
+  will-change: opacity, filter, transform;
+}
+
+.motion-ready .reveal.is-revealed {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  will-change: auto;
+}
+
+dialog[open] {
+  animation: 280ms cubic-bezier(0.2, 0.75, 0.25, 1) both dialog-enter;
+}
+
+dialog[open]::backdrop {
+  animation: 220ms ease both backdrop-enter;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .feed-card:active,
+  .popular-item:active,
+  .theme-link:active,
+  .next-feature:active,
+  .button:active,
+  .icon-button:active {
+    transform: scale(0.985);
+  }
+}
+
+@keyframes page-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes page-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@keyframes dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateX(14px);
+  }
+}
+
+@keyframes backdrop-enter {
+  from {
+    opacity: 0;
   }
 }
 

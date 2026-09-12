@@ -159,6 +159,7 @@
   const progress = $("#reading-progress");
   const dock = $("#bottom-dock");
   const scrollTop = $("#scroll-top");
+  const siteHeader = $(".site-header");
   const articleBody = $(".article-body");
   let lastY = window.scrollY;
   let progressWriteTimer;
@@ -169,6 +170,7 @@
     const percent = max > 0 ? Math.min(100, (y / max) * 100) : 0;
     if (progress) progress.style.width = `${percent}%`;
     if (scrollTop) scrollTop.classList.toggle("is-visible", y > 520);
+    if (siteHeader) siteHeader.classList.toggle("is-scrolled", y > 12);
     if (dock) {
       dock.classList.toggle("is-hidden", y > lastY && y > 180);
       lastY = y;
@@ -183,6 +185,26 @@
 
   window.addEventListener("scroll", updateScrollUi, { passive: true });
   updateScrollUi();
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motionTargets = $$(
+    ".section-head, .feed-card, .popular-item, .theme-link, .notification-panel, .podcast-cover-wrap, .podcast-panel > div, .about-teaser__grid, .brief-box, .article-body h2, .pull-quote, .speaker-card, .listen-card, .next-feature"
+  );
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    document.documentElement.classList.add("motion-ready");
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("is-revealed");
+        revealObserver.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    motionTargets.forEach((target, index) => {
+      target.classList.add("reveal");
+      target.style.setProperty("--reveal-delay", `${(index % 3) * 55}ms`);
+      revealObserver.observe(target);
+    });
+  }
 
   if (scrollTop) {
     scrollTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
