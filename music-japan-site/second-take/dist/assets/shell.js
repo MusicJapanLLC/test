@@ -168,8 +168,16 @@
     document.querySelectorAll(".article-body h2").forEach((heading, index) => {
       if (!heading.id) heading.id = `chapter-${index + 1}`;
       const link = document.createElement("a");
+      const number = document.createElement("span");
+      const title = document.createElement("span");
+      const headingCopy = heading.cloneNode(true);
+      headingCopy.querySelector(".chapter")?.remove();
       link.href = `#${heading.id}`;
-      link.textContent = heading.textContent.trim();
+      number.className = "toc-list__number";
+      number.textContent = `${String(index + 1).padStart(2, "0")}.`;
+      title.className = "toc-list__title";
+      title.textContent = headingCopy.textContent.trim();
+      link.append(number, title);
       link.addEventListener("click", () => document.querySelector("#toc-dialog")?.close());
       tocList?.appendChild(link);
     });
