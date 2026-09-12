@@ -1,0 +1,17 @@
+{
+  "name": "SECOND TAKE",
+  "short_name": "SECOND TAKE",
+  "description": "人生の決断と、ビジネスの因果を記者インタビューで残すメディア",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fbfaf7",
+  "theme_color": "#11100f",
+  "icons": [
+    {
+      "src": "/assets/second-take-cover.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
