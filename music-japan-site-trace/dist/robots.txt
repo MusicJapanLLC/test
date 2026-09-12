@@ -1,18 +1,33 @@
-User-Agent: *
+User-agent: *
 Allow: /
 Disallow: /audio/
 
-User-Agent: Googlebot
+User-agent: Googlebot
 Allow: /
 Disallow: /audio/
 
-User-Agent: OAI-SearchBot
+User-agent: OAI-SearchBot
 Allow: /
 Disallow: /audio/
 
-User-Agent: GPTBot
+User-agent: GPTBot
 Allow: /
 Disallow: /audio/
 
-Sitemap: https://music-japan.pearly-cedar-3983.chatgpt.site/sitemap.xml
-Host: https://music-japan.pearly-cedar-3983.chatgpt.site
+User-agent: ClaudeBot
+Allow: /
+Disallow: /audio/
+
+User-agent: Claude-SearchBot
+Allow: /
+Disallow: /audio/
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /audio/
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /audio/
+
+Sitemap: https://music-japan.pages.dev/sitemap.xml
