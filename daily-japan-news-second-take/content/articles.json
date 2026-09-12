@@ -1,0 +1,262 @@
+[
+  {
+    "slug": "japan-ai-investment-2026",
+    "category": "AI",
+    "categoryJa": "AI",
+    "categoryEn": "AI",
+    "published": "2026-09-12T06:00:00+09:00",
+    "updated": "2026-09-12T14:00:00+09:00",
+    "readMinutes": 6,
+    "featured": true,
+    "popularScore": 96,
+    "image": "ai-grid.svg",
+    "ja": {
+      "title": "日本企業のAI投資、次の焦点は『導入』から『成果』へ",
+      "dek": "生成AIの導入競争が一巡し、企業は投資額よりも収益改善と業務短縮を問われる段階に入った",
+      "points": [
+        "AI導入そのものより、売上・コスト・時間への効果測定が重視され始めている",
+        "大企業だけでなく中堅企業でも、社内検索・営業支援・顧客対応への導入が進む",
+        "PoCを繰り返す企業と、既存業務に組み込む企業で成果の差が広がりやすい",
+        "データ整備と権限設計が、モデル選定以上に成否を左右する場面が増えている",
+        "2027年に向けて『AIを使っているか』ではなく『利益に効いているか』が評価軸になる"
+      ],
+      "sections": [
+        {"heading":"導入競争の次に来るもの","body":"2024〜2026年にかけて生成AIは急速に普及した。現在の企業側の関心は、試験導入の数ではなく、どの業務でどれだけ時間を削減し、顧客体験や利益率を改善できたかへ移りつつある。"},
+        {"heading":"勝負はモデルより業務設計","body":"同じAIを使っていても、成果は企業ごとに大きく異なる。差を生むのは、参照できるデータの品質、承認フロー、現場が毎日使える画面設計、そして効果を測る指標だ。"},
+        {"heading":"Daily Japan Newsの見方","body":"AI関連ニュースを見る時は、発表された機能だけでなく、誰のどの業務を置き換えるのか、導入コストを上回る効果があるのかを見ると理解が速い。"}
+      ],
+      "sources": ["企業の公式発表・IR資料", "官公庁・公的統計", "主要報道機関の公開情報"]
+    },
+    "en": {
+      "title": "Japan's AI Race Is Moving From Adoption to Measurable Returns",
+      "dek": "After the first wave of generative AI adoption, companies are increasingly judged by productivity gains and financial outcomes",
+      "points": [
+        "Companies are shifting from adoption metrics to measurable gains in revenue, cost and time",
+        "Mid-sized firms are expanding AI use in search, sales support and customer operations",
+        "The gap is widening between endless pilots and tools embedded in daily workflows",
+        "Data readiness and access controls increasingly matter as much as model choice",
+        "By 2027, the key question will be whether AI improves the business, not whether it is deployed"
+      ],
+      "sections": [
+        {"heading":"What comes after adoption","body":"Generative AI adoption accelerated rapidly from 2024 through 2026. The next phase is about measurable operating impact: time saved, customer experience improved and margins expanded."},
+        {"heading":"Workflow design beats model shopping","body":"Companies using similar models can still produce very different results. Data quality, approval flows, interface design and clear success metrics increasingly determine the outcome."},
+        {"heading":"How to read AI news","body":"When evaluating an AI announcement, ask which job it changes, who uses it every day and whether the economic benefit can plausibly exceed implementation cost."}
+      ],
+      "sources": ["Corporate releases and investor materials", "Government and public statistics", "Major public news sources"]
+    }
+  },
+  {
+    "slug": "yen-rates-households-2026",
+    "category": "Economy",
+    "categoryJa": "経済",
+    "categoryEn": "Economy",
+    "published": "2026-09-12T08:30:00+09:00",
+    "updated": "2026-09-12T08:30:00+09:00",
+    "readMinutes": 5,
+    "featured": false,
+    "popularScore": 91,
+    "image": "yen-wave.svg",
+    "ja": {
+      "title": "金利と円相場、家計への影響を3分で整理",
+      "dek": "住宅ローン、輸入物価、預金金利まで、ニュースの数字が生活にどうつながるかを短く整理する",
+      "points": [
+        "金利上昇は預金には追い風だが、変動型ローンには負担増要因になる",
+        "円安は輸入品やエネルギー価格を通じて家計に効きやすい",
+        "円高は輸入コストを抑えやすい一方、輸出企業の利益には逆風になり得る",
+        "政策金利の変更と住宅ローン金利の動きには時間差がある",
+        "一つの数字ではなく、金利・為替・賃金をセットで見るのが重要"
+      ],
+      "sections": [
+        {"heading":"ニュースの数字を生活に翻訳する","body":"政策金利や為替は遠い話に見えるが、住宅ローン、電気代、食品価格、旅行費用、預金金利を通じて家計に伝わる。"},
+        {"heading":"一方向ではない","body":"金利上昇は借り手には負担でも、預金を持つ人には利息増加につながる。為替も輸入企業と輸出企業で影響が逆になるため、単純な善悪では見ない方がよい。"}
+      ],
+      "sources": ["日本銀行", "総務省統計局", "財務省・公的統計"]
+    },
+    "en": {
+      "title": "Rates, the Yen and Household Budgets — Explained in Three Minutes",
+      "dek": "A quick guide to how interest rates and exchange rates reach mortgages, deposits and everyday prices",
+      "points": [
+        "Higher rates can benefit savers while raising costs for some variable-rate borrowers",
+        "A weaker yen tends to raise import and energy costs",
+        "A stronger yen can reduce import pressure but may weigh on exporters",
+        "Policy-rate changes do not flow into retail borrowing costs instantly",
+        "Rates, FX and wages are more useful together than any single headline number"
+      ],
+      "sections": [
+        {"heading":"Translate markets into daily life","body":"Interest rates and FX seem abstract, but they reach households through mortgages, utilities, food prices, travel costs and deposit returns."},
+        {"heading":"The effect is not one-directional","body":"Higher rates can hurt borrowers but help savers. FX moves also affect importers and exporters differently, so the same headline can create both winners and losers."}
+      ],
+      "sources": ["Bank of Japan", "Statistics Bureau of Japan", "Ministry of Finance and public statistics"]
+    }
+  },
+  {
+    "slug": "semiconductor-japan-2026",
+    "category": "Business",
+    "categoryJa": "ビジネス",
+    "categoryEn": "Business",
+    "published": "2026-09-11T18:00:00+09:00",
+    "updated": "2026-09-12T09:10:00+09:00",
+    "readMinutes": 7,
+    "featured": false,
+    "popularScore": 88,
+    "image": "chip-lines.svg",
+    "ja": {
+      "title": "半導体投資が日本で続く理由　工場だけでは見えない競争力",
+      "dek": "設備投資、材料、装置、人材までを一つの産業網として見ると、日本市場の強みが分かりやすい",
+      "points": [
+        "半導体は工場単体ではなく、材料・装置・設計・人材の連携で競争力が決まる",
+        "日本には製造装置や素材で国際競争力を持つ企業が多い",
+        "大型投資は地域雇用やインフラ整備にも影響する",
+        "補助金だけで長期競争力が決まるわけではない",
+        "今後は先端工程だけでなく、成熟工程や後工程も重要になる"
+      ],
+      "sections": [
+        {"heading":"工場ニュースだけでは足りない","body":"半導体産業は一社で完結しない。材料、製造装置、設計、検査、物流まで含めて見ると、日本で投資が続く背景が見えやすくなる。"},
+        {"heading":"地域経済への波及","body":"大型工場は雇用だけでなく、電力、水、住宅、交通、周辺企業の投資にも波及する。ニュースを読む時は企業価値と地域への影響を分けて見ると理解しやすい。"}
+      ],
+      "sources": ["企業IR", "経済産業省", "自治体・公的資料"]
+    },
+    "en": {
+      "title": "Why Semiconductor Investment Keeps Flowing Into Japan",
+      "dek": "The story is bigger than fabs: materials, equipment, talent and infrastructure shape long-term competitiveness",
+      "points": [
+        "Semiconductor competitiveness depends on an ecosystem, not a single factory",
+        "Japan retains global strength in materials and manufacturing equipment",
+        "Large projects can reshape local employment and infrastructure demand",
+        "Subsidies matter, but they do not guarantee long-term competitiveness",
+        "Mature nodes and advanced packaging remain strategically important alongside leading-edge fabs"
+      ],
+      "sections": [
+        {"heading":"Look beyond the fab","body":"Semiconductors are built through a chain of materials, tools, design, testing and logistics. Japan's investment story is easier to understand when that full chain is visible."},
+        {"heading":"Regional impact","body":"Large facilities influence power, water, housing, transport and supplier investment, not only direct employment. That broader footprint matters for both policy and business analysis."}
+      ],
+      "sources": ["Corporate investor relations", "METI", "Local government and public materials"]
+    }
+  },
+  {
+    "slug": "science-space-japan-2026",
+    "category": "Science",
+    "categoryJa": "科学",
+    "categoryEn": "Science",
+    "published": "2026-09-11T14:00:00+09:00",
+    "updated": "2026-09-11T14:00:00+09:00",
+    "readMinutes": 4,
+    "featured": false,
+    "popularScore": 79,
+    "image": "science-orbit.svg",
+    "ja": {
+      "title": "宇宙開発を『研究ニュース』だけで終わらせないために",
+      "dek": "衛星、通信、防災、観測データを通じて、宇宙投資は地上の産業に接続している",
+      "points": [
+        "宇宙開発はロケットだけでなく通信・観測・防災の産業でもある",
+        "衛星データの価値は地上の意思決定で初めて生まれる",
+        "政府需要が民間市場の立ち上がりを支えることがある",
+        "打ち上げ回数だけでは産業の強さを測れない",
+        "データ利用企業まで含めて見ると市場の広がりが分かる"
+      ],
+      "sections": [
+        {"heading":"宇宙は地上のビジネスにつながる","body":"衛星観測は農業、災害監視、物流、保険などの判断材料になる。宇宙産業を見る際は、軌道上の技術だけでなく、地上でデータを使う企業まで見る必要がある。"}
+      ],
+      "sources": ["JAXA", "内閣府・関係省庁", "企業公式情報"]
+    },
+    "en": {
+      "title": "Japan's Space Economy Is Bigger Than Rocket Launches",
+      "dek": "Satellite communications, observation and resilience connect space investment directly to terrestrial industries",
+      "points": [
+        "Space is also a communications, observation and resilience industry",
+        "Satellite data creates value only when it improves decisions on Earth",
+        "Public procurement can help early commercial markets develop",
+        "Launch counts alone do not measure ecosystem strength",
+        "The downstream users of space data are central to market growth"
+      ],
+      "sections": [
+        {"heading":"Space connects back to Earth","body":"Satellite observation can influence agriculture, disaster response, logistics and insurance. The commercial story therefore includes the companies turning raw data into decisions."}
+      ],
+      "sources": ["JAXA", "Cabinet Office and ministries", "Corporate official information"]
+    }
+  },
+  {
+    "slug": "japan-diplomacy-supply-chains-2026",
+    "category": "Politics",
+    "categoryJa": "政治・外交",
+    "categoryEn": "Politics",
+    "published": "2026-09-10T20:00:00+09:00",
+    "updated": "2026-09-11T07:00:00+09:00",
+    "readMinutes": 6,
+    "featured": false,
+    "popularScore": 83,
+    "image": "diplomacy-map.svg",
+    "ja": {
+      "title": "外交ニュースを経済から読む　供給網が政策を変える",
+      "dek": "安全保障とビジネスが近づく中、外交判断は企業の調達・投資にも直結する",
+      "points": [
+        "外交と経済安全保障は企業の調達先や投資先に影響する",
+        "重要物資では価格だけでなく供給継続性が評価される",
+        "友好国との連携強化が新しい投資機会を生むこともある",
+        "政策変更は業界ごとに影響の時間軸が異なる",
+        "外交ニュースは『誰と何を安定供給したいのか』を見ると理解しやすい"
+      ],
+      "sections": [
+        {"heading":"企業にとっての外交","body":"半導体、エネルギー、重要鉱物などでは、外交関係が調達条件に影響する。企業は価格だけでなく、供給停止リスクもコストとして見る必要がある。"}
+      ],
+      "sources": ["外務省", "経済産業省", "各国政府の公式情報"]
+    },
+    "en": {
+      "title": "Reading Japanese Diplomacy Through Supply Chains",
+      "dek": "As economic security and national security converge, foreign policy increasingly shapes sourcing and investment decisions",
+      "points": [
+        "Diplomacy and economic security can alter sourcing and investment choices",
+        "For critical goods, continuity of supply can matter as much as price",
+        "Closer ties with partners may create new investment opportunities",
+        "Policy changes reach industries on different timelines",
+        "A useful question is: which supply does Japan want to keep reliable, and with whom?"
+      ],
+      "sections": [
+        {"heading":"Foreign policy for companies","body":"In semiconductors, energy and critical minerals, diplomatic relationships can affect procurement conditions. Supply disruption risk increasingly belongs in the cost calculation."}
+      ],
+      "sources": ["Ministry of Foreign Affairs", "METI", "Official information from partner governments"]
+    }
+  },
+  {
+    "slug": "startup-productivity-japan-2026",
+    "category": "Business",
+    "categoryJa": "ビジネス",
+    "categoryEn": "Business",
+    "published": "2026-09-10T12:00:00+09:00",
+    "updated": "2026-09-10T12:00:00+09:00",
+    "readMinutes": 5,
+    "featured": false,
+    "popularScore": 75,
+    "image": "startup-bars.svg",
+    "ja": {
+      "title": "スタートアップを見るなら資金調達額より『生産性』を見る",
+      "dek": "調達ニュースの派手さではなく、少人数でどれだけ価値を生むかを見ると企業の現在地が見えやすい",
+      "points": [
+        "資金調達額は事業価値そのものではない",
+        "少人数で売上を伸ばせる企業ほど固定費耐性が高くなりやすい",
+        "AI活用で一人あたりの生産量を高める企業が増えている",
+        "成長率と同時に解約率や粗利も確認したい",
+        "ニュースでは『何円集めたか』より『何に使い、何が改善したか』を見る"
+      ],
+      "sections": [
+        {"heading":"調達額はスタート地点","body":"大型調達は注目を集めるが、投資資金をどの事業指標に変換できるかが重要だ。人員増加だけで成長するのか、製品やAIで一人あたりの生産性を上げるのかで質が変わる。"}
+      ],
+      "sources": ["企業発表", "登記・公開情報", "業界レポート"]
+    },
+    "en": {
+      "title": "Judge Startups by Productivity, Not Just Funding Headlines",
+      "dek": "The more useful question is how much value a small team can create with the capital it has raised",
+      "points": [
+        "Funding raised is not the same as business value",
+        "Revenue growth with smaller teams can create stronger fixed-cost resilience",
+        "AI is increasing output per employee in some startups",
+        "Growth should be read alongside retention and gross margin",
+        "Ask what the capital changes, not only how much was raised"
+      ],
+      "sections": [
+        {"heading":"Funding is the starting line","body":"Large rounds attract attention, but the quality of growth depends on what that capital changes. Hiring-driven growth and productivity-driven growth can produce very different economics."}
+      ],
+      "sources": ["Company announcements", "Public corporate records", "Industry reports"]
+    }
+  }
+]
