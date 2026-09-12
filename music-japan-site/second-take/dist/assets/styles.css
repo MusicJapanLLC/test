@@ -497,6 +497,12 @@ img {
   padding-block: 64px;
 }
 
+.feed-section + .feed-section,
+.feed-section + .popular-section,
+.popular-section + .theme-section {
+  padding-top: 0;
+}
+
 .snap-feed {
   display: grid;
   grid-auto-columns: min(82vw, 330px);
@@ -923,15 +929,9 @@ button.theme-link {
   margin: 0 auto;
 }
 
-.footer-logo {
-  width: min(100%, 290px);
-  filter: invert(1) grayscale(1) brightness(2.2);
-}
-
 .footer-grid {
   display: grid;
   gap: 35px;
-  margin-top: 44px;
   padding-top: 28px;
   border-top: 1px solid rgba(255, 255, 255, 0.21);
 }
@@ -956,12 +956,6 @@ button.theme-link {
   font-size: 0.73rem;
   text-align: left;
   cursor: pointer;
-}
-
-.music-japan-lockup {
-  width: 180px;
-  padding: 10px;
-  background: var(--white);
 }
 
 .copyright {
@@ -1456,7 +1450,7 @@ button.theme-link {
 
 .question {
   margin: 2.4em 0 1em;
-  font-family: var(--sans);
+  font-family: var(--serif);
   font-size: 0.84rem;
   font-weight: 700;
   line-height: 1.8;
@@ -1465,11 +1459,12 @@ button.theme-link {
 .question::before {
   margin-right: 8px;
   color: var(--red);
+  font-family: inherit;
   content: "Q";
 }
 
 .answer-name {
-  font-family: var(--sans);
+  font-family: var(--serif);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -1955,7 +1950,7 @@ button.theme-link {
   }
 
   .footer-grid {
-    grid-template-columns: 1fr auto;
+    grid-template-columns: 1fr;
     align-items: start;
   }
 

@@ -107,7 +107,6 @@
   const footer = `
     <footer class="site-footer">
       <div class="site-footer__inner">
-        <img class="footer-logo" src="/assets/second-take-logo-header.png" width="700" height="243" alt="SECOND TAKE">
         <div class="footer-grid">
           <nav class="footer-nav" aria-label="フッターナビゲーション">
             <a href="/#articles">新着記事</a>
@@ -117,9 +116,6 @@
             <a href="/#podcast">Podcast</a>
             <button class="footer-button" type="button" data-open="cookies">Cookie設定</button>
           </nav>
-          <a href="https://music-japan.pages.dev/" aria-label="合同会社Music Japan 公式サイト">
-            <img class="music-japan-lockup" src="/assets/music-japan-logo.png" width="1500" height="500" alt="MUSIC JAPAN LLC">
-          </a>
         </div>
         <p class="copyright">© 2026 MUSIC JAPAN LLC　PHOTO: SAMPLE / UNSPLASH</p>
       </div>
