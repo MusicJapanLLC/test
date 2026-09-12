@@ -1,0 +1,65 @@
+name: Daily Japan News QA
+
+on:
+  push:
+    branches:
+      - chatgpt/daily-japan-news-second-take-redesign-20260913
+    paths:
+      - 'daily-japan-news-second-take/**'
+      - '.github/workflows/daily-japan-news-qa.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build
+        working-directory: daily-japan-news-second-take
+        run: npm run build
+      - name: Verify routes and editorial rules
+        working-directory: daily-japan-news-second-take
+        run: |
+          set -euo pipefail
+          test -f dist/index.html
+          test -f dist/ja/index.html
+          test -f dist/en/index.html
+          test -f dist/sitemap.xml
+          COUNT=$(find dist/ja/articles dist/en/articles -name index.html | wc -l)
+          test "$COUNT" -eq 12
+          if grep -Rni "SECOND TAKE" dist; then
+            echo "SECOND TAKE residue found"
+            exit 1
+          fi
+          if grep -RniE "情報源を明示|一次資料・公的統計・企業公式情報を優先" dist; then
+            echo "Unwanted source declaration found"
+            exit 1
+          fi
+          python - <<'PY'
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+          pages=list(Path('dist/ja/articles').glob('*/index.html'))+list(Path('dist/en/articles').glob('*/index.html'))
+          for p in pages:
+              soup=BeautifulSoup(p.read_text(encoding='utf-8'),'html.parser')
+              pts=soup.select('.points-list--editorial li')
+              assert len(pts)==5, f'{p}: expected 5 key points, got {len(pts)}'
+              assert soup.select_one('link[rel="canonical"]'), f'{p}: no canonical'
+              assert len(soup.select('link[rel="alternate"]')) >= 3, f'{p}: hreflang missing'
+              assert soup.select_one('script[type="application/ld+json"]'), f'{p}: JSON-LD missing'
+          print(f'verified {len(pages)} article pages')
+          PY
+        shell: bash
+      - name: Verify generated asset references
+        working-directory: daily-japan-news-second-take
+        run: |
+          set -euo pipefail
+          for f in ai-grid.svg yen-wave.svg chip-lines.svg science-orbit.svg diplomacy-map.svg startup-bars.svg styles.css daily-news.css site.js; do
+            test -f "dist/assets/$f"
+          done
