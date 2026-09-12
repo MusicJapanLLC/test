@@ -1,5 +1,5 @@
 // Cloudflare Pages deploy build
-// Keep the known-good static copy/reassembly path intact, then perform only safe SEO host rewrites.
+// Keep the known-good static copy/reassembly path intact, then perform only safe SEO and favicon-head rewrites.
 import { cpSync, existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -11,7 +11,8 @@ const OLD_SITE_URL = "https://music-japan.pearly-cedar-3983.chatgpt.site";
 const DEFAULT_SITE_URL = "https://music-japan.pages.dev";
 const SITE_URL = (process.env.PUBLIC_SITE_URL || DEFAULT_SITE_URL).replace(/\/$/, "");
 const RSC_MARKER = '<script id="_R_">';
-const FAVICON_URL = "/music-japan-symbol.png?v=20260913";
+const FAVICON_URL = "/favicon-music-japan.svg?v=20260913-final";
+const APPLE_ICON_URL = "/music-japan-symbol.png?v=20260913-final";
 
 rmSync(output, { recursive: true, force: true });
 cpSync(source, output, { recursive: true });
@@ -62,33 +63,30 @@ for (const relativePath of publicHtmlFiles) {
   const markerIndex = original.indexOf(RSC_MARKER);
   if (markerIndex === -1) throw new Error(`RSC marker missing: ${relativePath}`);
 
-  // IMPORTANT:
   // Vinext/React Server Components append a length-prefixed serialized payload after this marker.
-  // Replacing text inside that payload changes byte lengths without updating the prefixes and can blank the page.
-  // Therefore SEO / brand-head rewrites are limited to the real HTML document before hydration begins.
-  const documentHtml = original.slice(0, markerIndex);
+  // Never mutate that payload. All SEO/favicon rewrites stay inside the real document HTML only.
+  let documentHtml = original.slice(0, markerIndex);
   const rscPayload = original.slice(markerIndex);
   const referenceCount = documentHtml.split(OLD_SITE_URL).length - 1;
   if (referenceCount === 0) throw new Error(`Expected legacy host reference missing in document HTML: ${relativePath}`);
 
-  // Use the existing 480x480 Music Japan symbol as the browser/tab icon.
-  // The version query intentionally breaks aggressive favicon caches after this branding update.
-  let rewrittenDocument = documentHtml
-    .replaceAll(`${OLD_SITE_URL}/favicon.svg`, FAVICON_URL)
-    .replaceAll(OLD_SITE_URL, SITE_URL);
+  // Canonical/OGP/JSON-LD host migration
+  documentHtml = documentHtml.replaceAll(OLD_SITE_URL, SITE_URL);
 
-  rewrittenDocument = rewrittenDocument
-    .replaceAll(`rel="shortcut icon" href="${FAVICON_URL}"`, `rel="shortcut icon" type="image/png" href="${FAVICON_URL}"`)
-    .replaceAll(`rel="icon" href="${FAVICON_URL}"`, `rel="icon" type="image/png" href="${FAVICON_URL}"`)
-    .replaceAll(
-      `<link rel="icon" type="image/png" href="${FAVICON_URL}"/>`,
-      `<link rel="icon" type="image/png" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${FAVICON_URL}"/>`
-    );
+  // Remove every pre-existing favicon declaration so Chrome has one unambiguous browser-tab icon.
+  documentHtml = documentHtml
+    .replace(/<link\s+rel="shortcut icon"[^>]*\/>/gi, "")
+    .replace(/<link\s+rel="icon"[^>]*\/>/gi, "")
+    .replace(/<link\s+rel="apple-touch-icon"[^>]*\/>/gi, "");
 
-  const rewritten = rewrittenDocument + rscPayload;
+  const faviconTags = `<link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/>`;
+  if (!documentHtml.includes("</head>")) throw new Error(`Head close tag missing: ${relativePath}`);
+  documentHtml = documentHtml.replace("</head>", `${faviconTags}\n</head>`);
 
-  // Guard against accidental mutation of the length-prefixed RSC payload
-  if (rewritten.slice(rewrittenDocument.length) !== rscPayload) {
+  const rewritten = documentHtml + rscPayload;
+
+  // Byte-for-byte protection for hydration data
+  if (rewritten.slice(documentHtml.length) !== rscPayload) {
     throw new Error(`RSC payload changed unexpectedly: ${relativePath}`);
   }
 
@@ -104,7 +102,6 @@ for (const relativePath of machineReadableFiles) {
   writeFileSync(fullPath, original.replaceAll(DEFAULT_SITE_URL, SITE_URL));
 }
 
-// Validate only the real document portion, never the serialized RSC payload
 for (const relativePath of publicHtmlFiles) {
   const html = readFileSync(join(output, relativePath), "utf8");
   const markerIndex = html.indexOf(RSC_MARKER);
@@ -114,12 +111,9 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes(SITE_URL)) throw new Error(`Canonical host missing in document HTML: ${relativePath}`);
   if (!documentHtml.includes('rel="canonical"')) throw new Error(`Canonical link missing: ${relativePath}`);
   if (!documentHtml.includes('application/ld+json')) throw new Error(`Structured data missing: ${relativePath}`);
-  if (!documentHtml.includes(`rel="icon" type="image/png" href="${FAVICON_URL}"`)) {
-    throw new Error(`Music Japan favicon missing: ${relativePath}`);
-  }
-  if (!documentHtml.includes(`rel="apple-touch-icon" href="${FAVICON_URL}"`)) {
-    throw new Error(`Apple touch icon missing: ${relativePath}`);
-  }
+  if (!documentHtml.includes(`rel="icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New favicon missing: ${relativePath}`);
+  if (!documentHtml.includes(`rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New shortcut favicon missing: ${relativePath}`);
+  if (!documentHtml.includes(`rel="apple-touch-icon" href="${APPLE_ICON_URL}"`)) throw new Error(`Apple touch icon missing: ${relativePath}`);
 }
 
 for (const relativePath of machineReadableFiles) {
@@ -127,10 +121,10 @@ for (const relativePath of machineReadableFiles) {
   if (content.includes(OLD_SITE_URL)) throw new Error(`Legacy host remains in SEO/AIO file: ${relativePath}`);
 }
 
-for (const requiredImage of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png"]) {
-  const fullPath = join(output, requiredImage);
+for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg"]) {
+  const fullPath = join(output, requiredFile);
   if (!existsSync(fullPath) || statSync(fullPath).size === 0) {
-    throw new Error(`Required image is missing or empty: ${requiredImage}`);
+    throw new Error(`Required branding/SEO file is missing or empty: ${requiredFile}`);
   }
 }
 
@@ -149,7 +143,7 @@ for (const assetPath of localAssetRefs) {
 
 console.log(`Prepared static deploy directory: ${output}`);
 console.log(`Canonical host: ${SITE_URL}`);
-console.log(`Browser icon: ${FAVICON_URL}`);
+console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
 console.log(`Safely rewrote ${rewrittenReferences} SEO references across ${publicHtmlFiles.length} public HTML documents.`);
 console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
-console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required images.`);
+console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required branding files.`);
