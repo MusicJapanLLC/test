@@ -105,7 +105,7 @@ npm run preview              # ビルド結果の確認
 | パス | 内容 |
 |---|---|
 | `/profile/` | プロフィール一覧 |
-| `/profile/<slug>/` | 人物プロフィール（6件。中身は `src/data/profiles.ts`） |
+| `/profile/<slug>/` | 人物プロフィール（現在2件。中身は `src/data/profiles.ts`） |
 | `/verify/?t=...` | 申請者のメール認証（メール内リンク） |
 | `/respond/?t=...` | 掲載者の承認/辞退（メール内リンク） |
 
