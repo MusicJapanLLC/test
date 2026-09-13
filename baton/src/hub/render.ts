@@ -77,11 +77,11 @@ function renderIndexSection(): HTMLElement {
   const section = el('section', { class: 'section', id: 'services' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: 'Index', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '6つのサービス', 'data-reveal': true }),
+        el('span', { class: 'section__label', text: 'For Business', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '法人向け厳選サービス', 'data-reveal': true }),
         el('p', {
           class: 'hub-intro section__note',
-          text: '合同会社Music Japanが提携しています。気になったものから開いてください。',
+          text: '法人の課題に応じて、合同会社Music Japanが選んだ専門サービスを掲載しています。各ページから相談・問い合わせができます。',
           'data-reveal': true,
         }),
       ]),
@@ -121,7 +121,7 @@ function renderAbout(): HTMLElement {
   ]);
 }
 
-/** ハブの本文。目次と Music Japan について */
+/** ハブの本文。法人向けサービス一覧と Music Japan について */
 export function renderHub(app: HTMLElement): void {
   app.append(renderIndexSection(), renderAbout());
 }
