@@ -126,8 +126,13 @@ example: {
 
 2. Ownerから本人の受信用メールアドレスを教えてもらってから
    `recipientEmail` を差し替え、`active: true` にする
-3. 「LINE会話ログ」スプレッドシートの Apps Script プロジェクトを開き、
-   `gas/Code.gs` の内容で中身を丸ごと置き換える
+3. **すでにデプロイ済みのBaton Introduction System用GASプロジェクト**
+   （https://script.google.com/ の一覧にある、`gas/Code.gs` を貼った
+   独立プロジェクト）を開き、中身を新しい `gas/Code.gs` の内容で
+   丸ごと置き換える。**「LINE会話ログ」スプレッドシートの
+   「拡張機能→Apps Script」は絶対に開かないこと**
+   （そちらにはLINEのやり取りを記録する別のスクリプトが紐付いており、
+   上書きすると壊れる。詳しくは `gas/Code.gs` 冒頭のコメント参照）
 4. 関数選択で **`setupBatonSheets`** を実行する
    （**`setupSheets` ではない。それは6サービス用の別関数で、
    このスプレッドシートに無関係なシートを作ってしまう事故の原因になった**）

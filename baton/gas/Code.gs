@@ -15,28 +15,46 @@
  *  そちらは完全に別のスプレッドシート・別のApps Scriptプロジェクトとして
  *  独立に運用すること（詳しくは gas/Code.services.gs の先頭コメント参照）。
  *
- *  ■ 設置手順
+ *  ■ 設置手順（独立プロジェクトとして作る。スプレッドシートには紐付けない）
  *
- *  1. 「LINE会話ログ」スプレッドシートを開き、拡張機能 → Apps Script
- *  2. エディタの中身をすべて消して、このファイルの内容を貼り付ける
- *  3. 保存（Ctrl+S / Cmd+S）
- *  4. 上の BATON_SPREADSHEET_ID が「LINE会話ログ」のURLのIDと
- *     一致しているか確認する
- *  5. 上部の関数選択で setupBatonSheets を選び、「実行」
+ *  「LINE会話ログ」スプレッドシートには、すでに別のApps Scriptプロジェクトが
+ *  紐付いている（LINEのやり取りを記録するためのもの）。1つのスプレッドシート
+ *  に紐付けられるApps Scriptプロジェクトは1つだけなので、このコードを
+ *  そのシートの「拡張機能→Apps Script」に貼ると、既存のLINE記録用スクリプト
+ *  を壊す（上書きする）おそれがある。絶対にそちらでは開かないこと。
+ *
+ *  ★ すでに壁谷さんのプロフィールで動いている場合（既存プロジェクトの更新）
+ *  新しいプロジェクトは作らない。https://script.google.com/ の一覧から、
+ *  すでにデプロイ済みの「Baton Introduction System」プロジェクトを開き、
+ *  中身をこのファイルの内容で丸ごと置き換えて保存 → 下記6を実行 →
+ *  「デプロイ」→「デプロイを管理」→ 鉛筆マーク → 新バージョンで更新する。
+ *  新規デプロイを作り直すとURLが変わり VITE_GAS_ENDPOINT が壊れるので、
+ *  必ず「新バージョン」を使うこと。
+ *
+ *  ★ まだ一度も作っていない場合（新規セットアップ）は、以下の手順どおり:
+ *
+ *  1. https://script.google.com/ を直接開く（スプレッドシート経由ではない）
+ *  2. 「新しいプロジェクト」
+ *  3. エディタの中身をすべて消して、このファイルの内容を貼り付ける
+ *  4. 保存（Ctrl+S / Cmd+S）
+ *  5. 上の BATON_SPREADSHEET_ID が「LINE会話ログ」のURLのIDと
+ *     一致しているか確認する（このコードは openById() で名指しして
+ *     そのスプレッドシートを開くので、紐付けなくても正しく読み書きできる）
+ *  6. 上部の関数選択で setupBatonSheets を選び、「実行」
  *       → 初回は権限の確認画面が出る。
  *         「詳細」→「（プロジェクト名）に移動」→「許可」で承認する
  *       → BATON_REQUESTS シートが用意される（無ければ作る／既存の列は
  *         無傷のまま、足りない列だけ右側に追加する）
- *  6. 右上の「デプロイ」→「新しいデプロイ」
- *  7. 歯車マーク →「ウェブアプリ」を選択
- *  8. 次のとおり設定する
+ *  7. 右上の「デプロイ」→「新しいデプロイ」
+ *  8. 歯車マーク →「ウェブアプリ」を選択
+ *  9. 次のとおり設定する
  *       説明          : Baton Introduction System（任意の文字列でよい）
  *       実行ユーザー  : 自分
  *       アクセスできるユーザー : 全員
- *  9. 「デプロイ」を押し、表示された「ウェブアプリのURL」をコピー
+ * 10. 「デプロイ」を押し、表示された「ウェブアプリのURL」をコピー
  *       （https://script.google.com/macros/s/AKfycb.../exec の形）
- * 10. そのURLを VITE_GAS_ENDPOINT に設定して再デプロイ
- * 11. 時間主導トリガーを1つ追加する（3日リマインド・7日expireに必要）
+ * 11. そのURLを VITE_GAS_ENDPOINT に設定して再デプロイ
+ * 12. 時間主導トリガーを1つ追加する（3日リマインド・7日expireに必要）
  *       「トリガー」→「トリガーを追加」
  *       実行する関数: batonDailyJob
  *       イベントのソース: 時間主導 → 日付ベースのタイマー → 午前9時〜10時 など
@@ -768,6 +786,40 @@ function testBatonFlow() {
     profileId: 'kabeya',
     applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
     purposes: ['情報交換'],
+    comment: 'これは動作確認用のテスト送信です。',
+    note: '',
+    attachments: [],
+    hp: ''
+  });
+
+  Logger.log('結果: ' + JSON.stringify(result));
+  if (result.ok) {
+    batonToast(
+      'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
+  } else {
+    batonToast('失敗: ' + JSON.stringify(result), 'テスト', 8);
+  }
+}
+
+/**
+ * unveilプロフィール専用の動作確認用。
+ *
+ * BATON_PROFILES.unveil がまだ active: false のうちに実行すると、
+ * 「このプロフィールは現在受け付けていません」で失敗するのが正しい
+ * （＝掲載停止中の人物には申請できない、というガードが効いている確認になる）。
+ *
+ * 古谷様の recipientEmail に差し替えて active: true にしたあとにもう一度
+ * 実行すると、BATON_REQUESTS に1件入り、test@example.com 宛の認証メールが
+ * 飛ぶところまで確認できる。そのメールのリンクを開いて認証を完了すると、
+ * 今度は recipientEmail（古谷様の実際のメールアドレス）宛に承認/辞退の
+ * 依頼メールが飛ぶ。本番で最初の申請者を待たせる前に、必ずここまで
+ * 一度自分で通しておくこと。
+ */
+function testBatonFlowUnveil() {
+  var result = batonSubmitTalk({
+    profileId: 'unveil',
+    applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
+    purposes: ['協業'],
     comment: 'これは動作確認用のテスト送信です。',
     note: '',
     attachments: [],
