@@ -22,6 +22,7 @@ const base = process.env.VITE_BASE ?? '/';
  */
 const pages = {
   main: resolve(root, 'index.html'),
+  hub: resolve(root, 'hub', 'index.html'),
   ...Object.fromEntries(
     services.map((s) => [s.id, resolve(root, s.slug, 'index.html')]),
   ),
@@ -33,6 +34,12 @@ const pages = {
   verify: resolve(root, 'verify', 'index.html'),
   respond: resolve(root, 'respond', 'index.html'),
 };
+
+/**
+ * トップページ（/）に出すプロフィール。
+ * 旧6サービスハブはトップから外し、`/hub/` に移動した。
+ */
+const homeProfile: TalkProfile | null = profiles.find((p) => p.slug === 'kabeya') ?? profiles[0] ?? null;
 
 const FONT_HREF =
   'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';
@@ -126,6 +133,7 @@ function batonSeoFiles(): Plugin {
       const siteBase = siteUrl();
       const paths = [
         '',
+        'hub/',
         ...services.map((s) => `${s.slug}/`),
         'privacy/',
         'profile/',
@@ -184,7 +192,8 @@ function batonPages(): Plugin {
             .replace('<!--BATON:HERO-->', serviceHeroHtml(s, base));
         }
 
-        const p = profileForPath(ctx.filename);
+        const isHome = filename === `${root.replace(/\\/g, '/')}/index.html`;
+        const p = profileForPath(ctx.filename) ?? (isHome ? homeProfile : null);
         if (p) {
           const vars = [
             `--primary:${p.theme.primary}`,
@@ -192,14 +201,15 @@ function batonPages(): Plugin {
             `--bg:${p.theme.bg}`,
             `--text:${p.theme.text}`,
           ].join(';');
+          const path = isHome ? '/' : `/profile/${p.slug}/`;
           return html
             .replace(
               '<!--BATON:HEAD-->',
               head({
-                title: `${p.name}｜${p.company} - Baton Talk`,
+                title: isHome ? `${p.name}｜${p.company} - ${site.name}` : `${p.name}｜${p.company} - Baton Talk`,
                 description: p.bio,
                 themeColor: p.theme.primary,
-                path: `/profile/${p.slug}/`,
+                path,
                 vars,
                 extraFontHref: PROFILE_FONT_HREF,
               }),
@@ -253,7 +263,7 @@ function batonPages(): Plugin {
                 ? `${site.operator.name}のプライバシーポリシーです。`
                 : site.description,
               themeColor: site.theme.bg,
-              path: isPrivacy ? '/privacy/' : '/',
+              path: isPrivacy ? '/privacy/' : '/hub/',
               vars,
             }),
           )
