@@ -7,7 +7,16 @@ export type SurveyPayload = {
   contactMethod: string;
 };
 
-const ENDPOINT = (import.meta.env.VITE_GAS_ENDPOINT ?? '').trim();
+/**
+ * Cloudflare Pagesの環境変数(VITE_GAS_ENDPOINT)がビルドに反映されない事象が
+ * 解消できなかったため、暫定的にコードへ直接埋め込んでいる。
+ * 環境変数が設定されていればそちらを優先する。
+ * URLを変更する必要が出たら、下の既定値を書き換えて再デプロイすればよい。
+ */
+const DEFAULT_ENDPOINT =
+  'https://script.google.com/macros/s/AKfycbxET0hbNJoWsk3Q0owleog34TWjDA0sAYulFQNt__Xq9u4QOilbTbW3b8D7NkyviUXu/exec';
+
+const ENDPOINT = (import.meta.env.VITE_GAS_ENDPOINT || DEFAULT_ENDPOINT).trim();
 const TIMEOUT_MS = 15000;
 
 /** プレビュー用。送信先を持たずに、通しで動きだけ確かめたいとき */
