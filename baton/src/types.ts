@@ -94,8 +94,8 @@ export type TalkProfile = {
   bio: string;
   /** 事業内容（文章。段落ごとに配列。未指定なら表示しない） */
   business?: string[];
-  /** 実績やデータ（文章。段落ごとに配列。未指定なら表示しない） */
-  achievements?: string[];
+  /** 運営メディア・サービス（名称＋説明の一覧。未指定なら表示しない） */
+  services?: { name: string; description: string }[];
   /** SECOND TAKE記事 / Podcast / 公式サイトなど。今後増える想定でそのまま並べる */
   media?: { label: string; url: string }[];
   theme: Theme;

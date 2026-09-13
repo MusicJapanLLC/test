@@ -38,11 +38,11 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
     return `
 <header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+  <div class="hero__brand">
+    <span class="hero__brand-logo">Baton -バトン-</span>
+    <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
+  </div>
   <div class="hero__inner">
-    <div class="hero__brand">
-      <span class="hero__brand-logo">Baton</span>
-      <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
-    </div>
     <p class="hero__eyebrow">
       <span class="hero__avatar" aria-hidden="true">${initial}</span>
       <span>${esc(p.company)}</span><span aria-hidden="true">/</span><span>${esc(p.title)}</span>

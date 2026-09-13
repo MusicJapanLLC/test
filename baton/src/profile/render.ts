@@ -26,6 +26,30 @@ function proseSection(opts: {
   ]);
 }
 
+/** 運営メディア・サービス。名称＋説明の一覧（カードにはしない） */
+function servicesSection(profile: TalkProfile): HTMLElement | null {
+  if (!profile.services || !profile.services.length) return null;
+
+  return el('section', { class: 'section', id: 'services' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Services', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '運営メディア・サービス', 'data-reveal': true }),
+      ]),
+      el(
+        'div',
+        { class: 'service-list', 'data-reveal-group': true },
+        profile.services.map((s) =>
+          el('div', { class: 'service-item', 'data-reveal': true }, [
+            el('p', { class: 'service-item__name', text: s.name }),
+            el('p', { class: 'service-item__desc', text: s.description }),
+          ]),
+        ),
+      ),
+    ]),
+  ]);
+}
+
 /**
  * 関連リンク。記事カード風（サムネイル＋タイトル）で並べる。
  * 実際のサムネイル画像はまだ無いため、頭文字を置いたプレースホルダーにしている。
@@ -69,11 +93,11 @@ function requestSection(profile: TalkProfile): HTMLElement {
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: 'Introduction', 'data-reveal': true }),
         el('h2', { class: 'section__title', text: '紹介を希望する', 'data-reveal': true }),
-        el('p', {
-          class: 'section__note',
-          text: '以下のご回答をお願いします。運営が確認した後、双方の確認が取れればご紹介させていただきます。',
-          'data-reveal': true,
-        }),
+        el('p', { class: 'section__note', 'data-reveal': true }, [
+          '以下のご回答をお願いします。',
+          el('br'),
+          '運営が確認した後、双方の確認が取れればご紹介させていただきます。',
+        ]),
       ]),
       mount,
     ]),
@@ -88,12 +112,7 @@ export function renderProfileSections(app: HTMLElement, profile: TalkProfile): v
   app.append(
     ...[
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
-      proseSection({
-        id: 'achievements',
-        label: 'Achievements',
-        title: '実績やデータ',
-        paragraphs: profile.achievements,
-      }),
+      servicesSection(profile),
       mediaSection(profile),
       requestSection(profile),
     ].filter((n): n is HTMLElement => n !== null),

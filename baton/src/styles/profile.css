@@ -41,11 +41,19 @@ body.profile .hero__tagline {
   max-width: 20ch;
 }
 
-/* ページ最上部の小さなBatonブランド表示。ロゴ＋キャッチコピー */
-
+/*
+ * ページ最上部の小さなBatonブランド表示。ロゴ＋キャッチコピー。
+ * .hero は display:grid; align-items:center で本文を縦センターに置くため、
+ * ブランド表示を .hero__inner の中に置くと一緒にセンタリングされてしまい、
+ * 天井との間が不自然に空く。.hero 直下に置いて絶対配置で天井近くに固定する。
+ */
 .hero__brand {
+  position: absolute;
+  top: clamp(1.5rem, 1rem + 2vw, 2.5rem);
+  left: 0;
+  right: 0;
+  z-index: 1;
   text-align: center;
-  margin-bottom: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
 }
 
 .hero__brand-logo {
@@ -89,6 +97,58 @@ body.profile .hero::before {
 .prose p {
   line-height: 1.95;
   color: color-mix(in srgb, var(--text) 88%, transparent);
+}
+
+/*
+ * 「Baton（走者から走者へ手渡す）」を、ページ全体の小さな視覚的モチーフに。
+ * 各セクションの見出しラベルの前に、短い横線＋ドットを置き、
+ * 中継地点を辿っていくような読み進め方を作る。
+ */
+body.profile .section__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55em;
+}
+
+body.profile .section__label::before {
+  content: '';
+  display: inline-block;
+  width: 22px;
+  height: 1px;
+  background: var(--primary);
+}
+
+/* 運営メディア・サービス（名称＋説明の一覧。カードにはしない） */
+
+.service-list {
+  border-top: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+.service-item {
+  display: grid;
+  grid-template-columns: minmax(0, 11rem) 1fr;
+  gap: 0.4rem 1.5rem;
+  padding-block: clamp(1.1rem, 0.9rem + 1vw, 1.6rem);
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+@media (max-width: 560px) {
+  .service-item {
+    grid-template-columns: 1fr;
+    gap: 0.3rem;
+  }
+}
+
+.service-item__name {
+  font-family: var(--font-display);
+  font-size: var(--step-1);
+  font-weight: 600;
+  color: var(--primary);
+}
+
+.service-item__desc {
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+  line-height: 1.85;
 }
 
 /* 関連リンク（記事カード風。サムネイルは実画像が無いのでプレースホルダー） */
