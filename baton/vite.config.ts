@@ -9,6 +9,7 @@ const root = process.cwd();
 
 /** サブパス配信するときだけ設定する。例: GitHub Pages なら /test/ */
 const base = process.env.VITE_BASE ?? '/';
+const CANONICAL_SITE_URL = 'https://baton.music-japan.com';
 
 /** 6サービス + ハブ + プライバシーポリシー = 8エントリ */
 const pages = {
@@ -33,75 +34,58 @@ function serviceForPath(filename: string): Service | null {
   );
 }
 
+function canonicalUrl(path: string): string {
+  const normalized = `/${path.replace(/^\/+/, '')}`.replace(/\/{2,}/g, '/');
+  return `${CANONICAL_SITE_URL}${normalized}`;
+}
+
 function head(opts: {
   title: string;
   description: string;
   themeColor: string;
   path: string;
+  canonicalPath?: string;
   vars: string;
 }) {
+  const canonical = canonicalUrl(opts.canonicalPath ?? opts.path);
+
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!--
-      フォントのCSSは描画を止めない形で読む。
-      素の状態でまず本文が出て、あとから Zen Kaku Gothic New に差し替わる。
-      普通に stylesheet で読むと、ここでLCPが0.7秒ほど遅れる。
+      baton-liart.vercel.app は営業導線として残すが、検索評価は独自ドメイン版へ集約する。
+      noindex にしてもフォームや直接アクセスには影響しない。
     -->
     <link rel="preload" as="style" href="${FONT_HREF}" />
     <link rel="stylesheet" href="${FONT_HREF}" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="${FONT_HREF}" /></noscript>
     <title>${esc(opts.title)}</title>
     <meta name="description" content="${esc(opts.description)}" />
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="${canonical}" />
     <meta name="theme-color" content="${opts.themeColor}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${esc(site.nameJa)}" />
     <meta property="og:title" content="${esc(opts.title)}" />
     <meta property="og:description" content="${esc(opts.description)}" />
-    <meta property="og:url" content="${siteUrl()}${(base + opts.path.replace(/^\//, '')).replace(/\/{2,}/g, '/')}" />
+    <meta property="og:url" content="${canonical}" />
     <meta name="twitter:card" content="summary_large_image" />
     <style>:root{${opts.vars}}</style>`.trim();
 }
 
 /**
- * 本番のドメイン。Vercel なら VERCEL_PROJECT_PRODUCTION_URL が入る。
- * 独自ドメインを当てたら VITE_SITE_URL で上書きする。
+ * Vercel標準URLは直接営業導線として残す。
+ * robots.txt からは独自ドメインのsitemapだけを案内し、検索評価を分散させない。
  */
-function siteUrl(): string {
-  const explicit = process.env.VITE_SITE_URL;
-  if (explicit) return explicit.replace(/\/$/, '');
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
-  return vercel ? `https://${vercel}` : 'http://localhost:4173';
-}
-
-/** robots.txt と sitemap.xml はビルド時に services から作る。手で直す場所を増やさない */
 function batonSeoFiles(): Plugin {
   return {
     name: 'baton-seo-files',
     apply: 'build',
     generateBundle() {
-      const siteBase = siteUrl();
-      const paths = ['', ...services.map((s) => `${s.slug}/`), 'privacy/'].map(
-        (p) => `${base}${p}`.replace(/\/{2,}/g, '/'),
-      );
-
       this.emitFile({
         type: 'asset',
         fileName: 'robots.txt',
-        source: `User-agent: *\nAllow: /\n\nSitemap: ${siteBase}${base}sitemap.xml\n`.replace(
-          /([^:])\/{2,}/g,
-          '$1/',
-        ),
-      });
-
-      this.emitFile({
-        type: 'asset',
-        fileName: 'sitemap.xml',
-        source:
-          '<?xml version="1.0" encoding="UTF-8"?>\n' +
-          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-          paths.map((p) => `  <url><loc>${siteBase}${p}</loc></url>`).join('\n') +
-          '\n</urlset>\n',
+        source: `User-agent: *\nAllow: /\n\nSitemap: ${CANONICAL_SITE_URL}/sitemap.xml\n`,
       });
     },
   };
@@ -149,6 +133,7 @@ function batonPages(): Plugin {
                 : site.description,
               themeColor: site.theme.bg,
               path: isPrivacy ? '/privacy/' : '/',
+              canonicalPath: isPrivacy ? '/privacy/' : '/hub/',
               vars,
             }),
           )
