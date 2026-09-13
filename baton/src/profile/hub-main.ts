@@ -3,8 +3,8 @@ import '../styles/hub.css';
 import '../styles/profile.css';
 
 import { initAnalytics } from '../lib/analytics';
-import { renderFooter } from '../lib/footer';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
+import { renderProfileFooter } from './footer';
 import { renderProfileHub } from './hub-render';
 
 function boot(): void {
@@ -15,7 +15,7 @@ function boot(): void {
   if (!app || !footer) return;
 
   renderProfileHub(app);
-  renderFooter(footer, { backToHub: true });
+  renderProfileFooter(footer);
 
   initSmoothScroll();
   revealOnScroll(document);
