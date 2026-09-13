@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>SECOND TAKE</title>
+    <link>https://secondtake.music-japan.com/</link>
+    <description>経営者の失敗、苦悩、決断、その先を記者インタビューで残す独立メディア</description>
+    <language>ja-JP</language>
+    <atom:link href="https://secondtake.music-japan.com/feed.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>会社を畳むつもりだった夜、彼は社員に何も言えなかった</title>
+      <link>https://secondtake.music-japan.com/articles/rebuild-night/</link>
+      <guid isPermaLink="true">https://secondtake.music-japan.com/articles/rebuild-night/</guid>
+      <pubDate>Sat, 12 Sep 2026 00:00:00 +0900</pubDate>
+      <description>事業撤退を決めた経営者が、残った社員ともう一度会社を作り直すまでの決断を聞くサンプルインタビュー</description>
+    </item>
+    <item>
+      <title>失敗すると分かっていた。それでも新規事業を止めなかった理由</title>
+      <link>https://secondtake.music-japan.com/articles/failure-knew/</link>
+      <guid isPermaLink="true">https://secondtake.music-japan.com/articles/failure-knew/</guid>
+      <pubDate>Thu, 10 Sep 2026 00:00:00 +0900</pubDate>
+      <description>数字が崩れ始めても止められなかった新規事業と、最後に決断を変えた一言について聞くサンプルインタビュー</description>
+    </item>
+    <item>
+      <title>守るために、辞めた。創業した会社を離れるまでの143日</title>
+      <link>https://secondtake.music-japan.com/articles/leave-company/</link>
+      <guid isPermaLink="true">https://secondtake.music-japan.com/articles/leave-company/</guid>
+      <pubDate>Tue, 08 Sep 2026 00:00:00 +0900</pubDate>
+      <description>自分が残ることより会社が続くことを選んだ創業者が、離任までに考えたことを聞くサンプルインタビュー</description>
+    </item>
+  </channel>
+</rss>

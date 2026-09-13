@@ -56,7 +56,7 @@
           <button type="button" data-enable-notifications>新着通知をONにする</button>
           <button type="button" data-reader-size>Aa　文字サイズ：標準</button>
           <button type="button" data-open="cookies">Cookie設定</button>
-          <a href="https://music-japan.pages.dev/" target="_blank" rel="noopener">合同会社Music Japan ↗</a>
+          <a href="https://music-japan.com/" target="_blank" rel="noopener">合同会社Music Japan ↗</a>
         </div>
       </div>
     </dialog>
@@ -132,7 +132,7 @@
             <a href="/#about">私たちについて</a>
             <a href="/#podcast">Podcast</a>
             <button class="footer-button" type="button" data-open="cookies">Cookie設定</button>
-            <a href="https://music-japan.pages.dev/" target="_blank" rel="noopener">運営会社公式サイト ↗</a>
+            <a href="https://music-japan.com/" target="_blank" rel="noopener">運営会社公式サイト ↗</a>
           </nav>
         </div>
         <p class="copyright">© 2026 MUSIC JAPAN LLC　PHOTO: SAMPLE / UNSPLASH</p>
