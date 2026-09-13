@@ -232,10 +232,29 @@ function patchClientBundle() {
   }
 
   const bundleDigest = createHash("sha256").update(bundle).digest("hex").slice(0, 12);
-  const versionedBundleName = bundleName.replace(/\.js$/, `-${bundleDigest}.js`);
-  writeFileSync(join(assetsDirectory, versionedBundleName), bundle);
-  rmSync(bundlePath);
-  return { originalName: bundleName, versionedName: versionedBundleName };
+  writeFileSync(bundlePath, bundle);
+  return { name: bundleName, digest: bundleDigest };
+}
+
+function versionClientModuleGraph(patchedBundle) {
+  const assetsDirectory = join(output, "assets");
+  const assetNames = readdirSync(assetsDirectory);
+  const entryName = assetNames.find((name) => /^index-.*\.js$/.test(name) && readFileSync(join(assetsDirectory, name), "utf8").includes(patchedBundle.name));
+  const layoutName = assetNames.find((name) => /^layout-segment-context-.*\.js$/.test(name));
+  if (!entryName || !layoutName) throw new Error("Could not locate the client module cycle");
+
+  const graphNames = [entryName, layoutName, patchedBundle.name];
+  const version = `v=${patchedBundle.digest}`;
+  for (const assetName of graphNames) {
+    const assetPath = join(assetsDirectory, assetName);
+    let asset = readFileSync(assetPath, "utf8");
+    for (const graphName of graphNames) {
+      asset = asset.replaceAll(`${graphName}`, `${graphName}?${version}`);
+    }
+    writeFileSync(assetPath, asset);
+  }
+
+  return { entryName, version, graphNames };
 }
 
 function arrowSvg() {
@@ -430,6 +449,7 @@ for (const [target, parts] of virtualFiles) {
 rmSync(join(output, "archive-parts"), { recursive: true, force: true });
 
 const patchedClientBundle = patchClientBundle();
+const versionedClientGraph = versionClientModuleGraph(patchedClientBundle);
 
 const publicHtmlFiles = [
   "index.html",
@@ -450,21 +470,31 @@ for (const relativePath of publicHtmlFiles) {
   const markerIndex = original.indexOf(RSC_MARKER);
   if (markerIndex === -1) throw new Error(`RSC marker missing: ${relativePath}`);
 
-  // Vinext/React Server Components append a length-prefixed serialized payload after this marker.
-  // Never mutate that payload. All SEO/favicon rewrites stay inside the real document HTML only.
+  const bootstrapEnd = original.indexOf("</script>", markerIndex);
+  if (bootstrapEnd === -1) throw new Error(`RSC bootstrap close tag missing: ${relativePath}`);
+
+  // The marker script is the client bootstrap. The length-prefixed serialized
+  // payload starts after it and remains byte-for-byte unchanged.
   let documentHtml = original.slice(0, markerIndex);
-  const rscPayload = original.slice(markerIndex);
+  let rscBootstrap = original.slice(markerIndex, bootstrapEnd + "</script>".length);
+  const rscPayload = original.slice(bootstrapEnd + "</script>".length);
   const referenceCount = documentHtml.split(OLD_SITE_URL).length - 1;
   if (referenceCount === 0) throw new Error(`Expected legacy host reference missing in document HTML: ${relativePath}`);
 
   // Canonical/OGP/JSON-LD host migration
   documentHtml = documentHtml.replaceAll(OLD_SITE_URL, SITE_URL);
 
-  // The homepage bundle is patched after the original build, so give those
-  // bytes a content-derived URL instead of reusing a previously cached asset.
-  documentHtml = documentHtml.replaceAll(
-    `/assets/${patchedClientBundle.originalName}`,
-    `/assets/${patchedClientBundle.versionedName}`
+  // A shared query version keeps the cyclic client modules on one fresh graph,
+  // avoiding stale homepage code without duplicating React runtime modules.
+  for (const assetName of versionedClientGraph.graphNames) {
+    documentHtml = documentHtml.replaceAll(
+      `/assets/${assetName}`,
+      `/assets/${assetName}?${versionedClientGraph.version}`
+    );
+  }
+  rscBootstrap = rscBootstrap.replaceAll(
+    `/assets/${versionedClientGraph.entryName}`,
+    `/assets/${versionedClientGraph.entryName}?${versionedClientGraph.version}`
   );
 
   if (relativePath === "index.html" || relativePath === "en/index.html") {
@@ -487,10 +517,10 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes("</head>")) throw new Error(`Head close tag missing: ${relativePath}`);
   documentHtml = documentHtml.replace("</head>", `${faviconTags}\n</head>`);
 
-  const rewritten = documentHtml + rscPayload;
+  const rewritten = documentHtml + rscBootstrap + rscPayload;
 
   // Byte-for-byte protection for hydration data
-  if (rewritten.slice(documentHtml.length) !== rscPayload) {
+  if (rewritten.slice(documentHtml.length + rscBootstrap.length) !== rscPayload) {
     throw new Error(`RSC payload changed unexpectedly: ${relativePath}`);
   }
 
@@ -518,6 +548,7 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes(`rel="icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New favicon missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New shortcut favicon missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="apple-touch-icon" href="${APPLE_ICON_URL}"`)) throw new Error(`Apple touch icon missing: ${relativePath}`);
+  if (!documentHtml.includes(`/assets/${versionedClientGraph.entryName}?${versionedClientGraph.version}`)) throw new Error(`Versioned client entry missing: ${relativePath}`);
 
   if (relativePath === "index.html" || relativePath === "en/index.html") {
     if (!documentHtml.includes('id="news"')) throw new Error(`News section missing: ${relativePath}`);
@@ -525,8 +556,7 @@ for (const relativePath of publicHtmlFiles) {
     if (!documentHtml.includes(SECOND_TAKE_URL)) throw new Error(`SECOND TAKE link missing: ${relativePath}`);
     if (!documentHtml.includes(BATON_URL)) throw new Error(`Baton link missing: ${relativePath}`);
     if (!documentHtml.includes(`href="${MEDIA_STYLESHEET_URL}"`)) throw new Error(`Media refresh stylesheet missing: ${relativePath}`);
-    if (!documentHtml.includes(`/assets/${patchedClientBundle.versionedName}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
-    if (documentHtml.includes(`/assets/${patchedClientBundle.originalName}`)) throw new Error(`Cached client bundle reference remains: ${relativePath}`);
+    if (!documentHtml.includes(`/assets/${patchedClientBundle.name}?${versionedClientGraph.version}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
     if (documentHtml.includes("Standment")) throw new Error(`Legacy Standment copy remains: ${relativePath}`);
     if (!(documentHtml.indexOf('id="news"') < documentHtml.indexOf('class="manifesto content-frame"') &&
       documentHtml.indexOf('class="manifesto content-frame"') < documentHtml.indexOf('id="media"') &&
@@ -536,7 +566,7 @@ for (const relativePath of publicHtmlFiles) {
   }
 }
 
-const patchedBundleContents = readFileSync(join(output, "assets", patchedClientBundle.versionedName), "utf8");
+const patchedBundleContents = readFileSync(join(output, "assets", patchedClientBundle.name), "utf8");
 for (const requiredToken of ["news-strip", "media-feature", SECOND_TAKE_URL, BATON_URL]) {
   if (!patchedBundleContents.includes(requiredToken)) throw new Error(`Client bundle token missing: ${requiredToken}`);
 }
@@ -572,7 +602,7 @@ for (const assetPath of localAssetRefs) {
 console.log(`Prepared static deploy directory: ${output}`);
 console.log(`Canonical host: ${SITE_URL}`);
 console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
-console.log(`Patched homepage content and client bundle: ${patchedClientBundle.versionedName}`);
+console.log(`Patched homepage content and client bundle: ${patchedClientBundle.name}?${versionedClientGraph.version}`);
 console.log(`Safely rewrote ${rewrittenReferences} SEO references across ${publicHtmlFiles.length} public HTML documents.`);
 console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
 console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required branding files.`);
