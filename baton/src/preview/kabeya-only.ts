@@ -4,9 +4,9 @@ import '../styles/profile.css';
 
 import { getProfile } from '../data/profiles';
 import { profileHeroHtml } from '../lib/hero';
-import { renderFooter } from '../lib/footer';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
+import { renderProfileFooter } from '../profile/footer';
 import { renderProfileSections } from '../profile/render';
 
 /**
@@ -24,7 +24,7 @@ const footer = document.getElementById('footer')!;
 
 hero.innerHTML = profileHeroHtml(profile, '#');
 renderProfileSections(app, profile);
-renderFooter(footer);
+renderProfileFooter(footer);
 
 initSmoothScroll();
 revealOnScroll(document);

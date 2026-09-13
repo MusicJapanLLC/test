@@ -4,9 +4,9 @@ import '../styles/profile.css';
 
 import { getProfile } from '../data/profiles';
 import { initAnalytics } from '../lib/analytics';
-import { renderFooter } from '../lib/footer';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
+import { renderProfileFooter } from './footer';
 import { renderProfileSections } from './render';
 
 export function mountProfilePage(profileId: string): void {
@@ -20,7 +20,7 @@ export function mountProfilePage(profileId: string): void {
     if (!app || !footer) return;
 
     renderProfileSections(app, profile);
-    renderFooter(footer, { backToHub: true });
+    renderProfileFooter(footer);
 
     initSmoothScroll();
     revealOnScroll(document);

@@ -39,14 +39,17 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
 <header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="hero__inner">
+    <div class="hero__brand">
+      <span class="hero__brand-logo">Baton</span>
+      <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
+    </div>
     <p class="hero__eyebrow">
       <span class="hero__avatar" aria-hidden="true">${initial}</span>
-      <a class="hero__back" href="${homeHref}">Baton Talk</a><span aria-hidden="true">/</span><span>${esc(p.company)}</span>
+      <span>${esc(p.company)}</span><span aria-hidden="true">/</span><span>${esc(p.title)}</span>
     </p>
-    <h1 class="hero__title">${esc(p.name)}<span class="hero__title-role">${esc(p.title)}</span></h1>
+    <h1 class="hero__title">${esc(p.name)}</h1>
     <p class="hero__tagline">${esc(p.tagline ?? p.title)}</p>
     <p class="hero__desc">${esc(p.bio)}</p>
-    <div class="hero__cta"><a class="btn btn--primary" href="#talk-request">この人と話したい</a></div>
   </div>
   <div class="hero__scroll" aria-hidden="true"><span></span></div>
 </header>`.trim();

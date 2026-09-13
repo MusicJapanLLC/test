@@ -8,6 +8,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MAX_FILES = 3;
 const MAX_FILE_BYTES = 8 * 1024 * 1024;
 
+/** 経営判断ができる立場に絞る。一般社員向けの肩書きは意図して入れていない */
+const TITLE_OPTIONS = ['代表取締役', '執行役員／取締役', '共同経営者・パートナー', '個人事業主', 'その他'];
+
 type State = {
   purposes: string[];
   name: string;
@@ -166,6 +169,7 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
     type?: string;
     multiline?: boolean;
     hint?: string;
+    options?: string[];
     onInput: (value: string) => void;
     initial: string;
   }): { wrap: HTMLElement; validate: () => boolean } {
@@ -179,13 +183,21 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       }),
     );
 
-    const control = opts.multiline
-      ? (el('textarea', { id: inputId, rows: 3 }) as HTMLTextAreaElement)
-      : (el('input', {
-          id: inputId,
-          type: opts.type ?? 'text',
-          autocomplete: opts.type === 'email' ? 'email' : 'off',
-        }) as HTMLInputElement);
+    let control: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+    if (opts.type === 'select') {
+      const select = el('select', { id: inputId }) as HTMLSelectElement;
+      select.append(el('option', { value: '', text: '選択してください' }));
+      (opts.options ?? []).forEach((o) => select.append(el('option', { value: o, text: o })));
+      control = select;
+    } else if (opts.multiline) {
+      control = el('textarea', { id: inputId, rows: 3 }) as HTMLTextAreaElement;
+    } else {
+      control = el('input', {
+        id: inputId,
+        type: opts.type ?? 'text',
+        autocomplete: opts.type === 'email' ? 'email' : 'off',
+      }) as HTMLInputElement;
+    }
     control.value = opts.initial;
 
     const error = el('p', { class: 'field__error' });
@@ -234,6 +246,8 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       id: 'title',
       label: '役職',
       required: false,
+      type: 'select',
+      options: TITLE_OPTIONS,
       initial: state.title,
       onInput: (v) => (state.title = v),
     });
@@ -426,7 +440,7 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
 
     append(step, [
       el('p', { class: 'survey__count', text: `STEP ${index + 1} / ${totalSteps}` }),
-      el('h3', { class: 'survey__question', text: '最後に、ひとことお願いします' }),
+      el('h3', { class: 'survey__question', text: 'お相手方へ伝えたい内容' }),
       el('div', { class: 'survey__fields' }, [commentField.wrap, noteField.wrap, fileField()]),
       honeypot,
       errorBox,

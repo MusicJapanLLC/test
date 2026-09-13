@@ -30,20 +30,10 @@ body.profile {
   vertical-align: -0.35em;
 }
 
-body.profile .hero__title {
+body.profile .hero__title,
+body.profile .section__title {
   font-family: var(--font-display);
   text-wrap: balance;
-}
-
-.hero__title-role {
-  display: inline-block;
-  margin-left: 0.9rem;
-  font-family: var(--font-sans);
-  font-size: 0.42em;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  color: color-mix(in srgb, var(--text) 68%, transparent);
-  vertical-align: middle;
 }
 
 body.profile .hero__tagline {
@@ -51,8 +41,41 @@ body.profile .hero__tagline {
   max-width: 20ch;
 }
 
-.hero__cta {
-  margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+/* ページ最上部の小さなBatonブランド表示。ロゴ＋キャッチコピー */
+
+.hero__brand {
+  text-align: center;
+  margin-bottom: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+}
+
+.hero__brand-logo {
+  display: inline-block;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  padding-left: 0.28em;
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+
+.hero__brand-tagline {
+  margin-top: 0.45rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--text) 58%, transparent);
+}
+
+/*
+ * ヒーロー下端と、次のセクション（無地の --bg）が「ぶつ切り」に見えないよう、
+ * ヒーロー背景の一番下だけ --bg へ溶け込ませる。service.css の .hero::before を
+ * 上書きするのではなく、上にもう1枚フェード用グラデーションを重ねる。
+ */
+body.profile .hero::before {
+  background:
+    linear-gradient(180deg, transparent 55%, var(--bg) 96%),
+    radial-gradient(110% 80% at 82% 12%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 62%),
+    radial-gradient(90% 70% at 8% 92%, color-mix(in srgb, var(--primary) 20%, transparent), transparent 60%),
+    linear-gradient(170deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 82%, var(--primary)) 100%);
 }
 
 /* 事業内容・実績など、カードではなく文章で読ませるセクション */
@@ -66,6 +89,63 @@ body.profile .hero__tagline {
 .prose p {
   line-height: 1.95;
   color: color-mix(in srgb, var(--text) 88%, transparent);
+}
+
+/* 関連リンク（記事カード風。サムネイルは実画像が無いのでプレースホルダー） */
+
+.media-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+}
+
+@media (max-width: 480px) {
+  .media-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.media-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+}
+
+.media-card__thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.5rem + 2vw, 2.8rem);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.media-card:hover .media-card__thumb {
+  transform: scale(1.02);
+}
+
+.media-card__arrow {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 0.7rem;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  display: grid;
+  place-items: center;
+}
+
+.media-card__title {
+  margin-top: 0.7rem;
+  font-size: 0.92rem;
+  font-weight: 500;
+  line-height: 1.6;
 }
 
 /* プロフィール一覧（ハブ） */
@@ -356,4 +436,54 @@ body.action {
 
 .action-card__actions .btn--decline:hover {
   border-color: var(--hub-text);
+}
+
+/*
+ * プロフィールページ専用のフッター（SECOND TAKEの黒背景フッターを参考に）。
+ * 6サービスページ・ハブなどが使う共通フッター（footer.ts）とは別物。
+ */
+
+.profile-footer {
+  background: var(--text);
+  color: color-mix(in srgb, #fff 92%, transparent);
+  padding-block: clamp(2.5rem, 2rem + 2vw, 3.5rem);
+}
+
+.profile-footer__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 2.5rem;
+}
+
+.profile-footer__grid a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.28);
+  padding-bottom: 2px;
+  transition: border-color 0.3s ease;
+}
+
+.profile-footer__grid a:hover {
+  border-color: #fff;
+}
+
+.profile-footer__soon {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.profile-footer__soon small {
+  margin-left: 0.4em;
+  font-size: 0.72em;
+}
+
+.profile-footer__bottom {
+  margin-top: clamp(2rem, 1.4rem + 2vw, 3rem);
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.55);
 }

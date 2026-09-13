@@ -26,13 +26,18 @@ function proseSection(opts: {
   ]);
 }
 
+/**
+ * 関連リンク。記事カード風（サムネイル＋タイトル）で並べる。
+ * 実際のサムネイル画像はまだ無いため、頭文字を置いたプレースホルダーにしている。
+ * 実画像が用意でき次第、.media-card__thumb に <img> を差し込む形に変えられる。
+ */
 function mediaSection(profile: TalkProfile): HTMLElement | null {
   if (!profile.media || !profile.media.length) return null;
 
-  const icon = () => {
-    const span = el('span', { 'aria-hidden': 'true' });
+  const arrow = () => {
+    const span = el('span', { class: 'media-card__arrow', 'aria-hidden': 'true' });
     span.innerHTML =
-      '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M5 3h6v6M11 3L3.5 10.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 3h6v6M11 3L3.5 10.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     return span;
   };
 
@@ -44,11 +49,11 @@ function mediaSection(profile: TalkProfile): HTMLElement | null {
       ]),
       el(
         'div',
-        { class: 'links', 'data-reveal-group': true },
+        { class: 'media-grid', 'data-reveal-group': true },
         profile.media.map((m) =>
-          el('a', { class: 'link-chip', href: m.url, ...externalAttrs, 'data-reveal': true }, [
-            el('span', { text: m.label }),
-            icon(),
+          el('a', { class: 'media-card', href: m.url, ...externalAttrs, 'data-reveal': true }, [
+            el('div', { class: 'media-card__thumb' }, [el('span', { text: m.label.slice(0, 1) }), arrow()]),
+            el('p', { class: 'media-card__title', text: m.label }),
           ]),
         ),
       ),

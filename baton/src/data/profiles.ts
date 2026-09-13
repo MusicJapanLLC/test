@@ -42,7 +42,7 @@ const kabeyaProfile: TalkProfile = {
     'WebGL体験型サイトの制作実績としては、Standmentのポートフォリオを参照。',
   ],
   media: [
-    { label: '公式HP', url: 'https://music-japan.pearly-cedar-3983.chatgpt.site/' },
+    { label: '公式HP', url: 'https://music-japan.pages.dev/' },
     { label: 'SECOND TAKE インタビュー', url: 'https://second-take.vocal-shore-1441.chatgpt.site/' },
   ],
   theme: { primary: '#1B3A6B', accent: '#2E9BA8', bg: '#F5F8FC', text: '#14233D' },
