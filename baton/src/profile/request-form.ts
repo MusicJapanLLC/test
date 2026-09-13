@@ -6,7 +6,10 @@ import { TALK_PURPOSES, type TalkProfile } from '../types';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 const MAX_FILES = 3;
-const MAX_FILE_BYTES = 8 * 1024 * 1024;
+const MAX_FILE_MB = 20;
+const MAX_TOTAL_MB = 30;
+const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024;
+const MAX_TOTAL_BYTES = MAX_TOTAL_MB * 1024 * 1024;
 
 /** 経営判断ができる立場に絞る。一般社員向けの肩書きは意図して入れていない */
 const TITLE_OPTIONS = ['代表取締役', '執行役員／取締役', '共同経営者・パートナー', '個人事業主', 'その他'];
@@ -23,6 +26,37 @@ type State = {
   files: TalkAttachment[];
 };
 
+/** localStorageに保存する分だけ（添付ファイルは容量が大きいため対象外） */
+type Draft = Pick<State, 'purposes' | 'name' | 'company' | 'title' | 'email' | 'comment' | 'note'>;
+
+/**
+ * 入力内容の下書き保存。
+ * プライベートブラウジングなど localStorage が使えない環境でも
+ * フォーム自体は問題なく動くよう、失敗しても握りつぶす。
+ */
+function draftKey(profileId: string): string {
+  return `baton-talk-draft:${profileId}`;
+}
+
+function loadDraft(profileId: string): Partial<Draft> {
+  try {
+    const raw = window.localStorage.getItem(draftKey(profileId));
+    if (!raw) return {};
+    const parsed = JSON.parse(raw) as Partial<Draft>;
+    return {
+      purposes: Array.isArray(parsed.purposes) ? parsed.purposes.filter((p) => typeof p === 'string') : undefined,
+      name: typeof parsed.name === 'string' ? parsed.name : undefined,
+      company: typeof parsed.company === 'string' ? parsed.company : undefined,
+      title: typeof parsed.title === 'string' ? parsed.title : undefined,
+      email: typeof parsed.email === 'string' ? parsed.email : undefined,
+      comment: typeof parsed.comment === 'string' ? parsed.comment : undefined,
+      note: typeof parsed.note === 'string' ? parsed.note : undefined,
+    };
+  } catch {
+    return {};
+  }
+}
+
 /**
  * 「この人と話したい」申請フォーム。
  * 昔のアンケート（survey.ts）と同じ、カード送り式の3ステップにする。
@@ -30,17 +64,43 @@ type State = {
  */
 export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): void {
   const totalSteps = 3;
+  const draft = loadDraft(profile.id);
   const state: State = {
-    purposes: [],
-    name: '',
-    company: '',
-    title: '',
-    email: '',
-    comment: '',
-    note: '',
+    purposes: draft.purposes ?? [],
+    name: draft.name ?? '',
+    company: draft.company ?? '',
+    title: draft.title ?? '',
+    email: draft.email ?? '',
+    comment: draft.comment ?? '',
+    note: draft.note ?? '',
     hp: '',
     files: [],
   };
+
+  function saveDraft(): void {
+    try {
+      const toSave: Draft = {
+        purposes: state.purposes,
+        name: state.name,
+        company: state.company,
+        title: state.title,
+        email: state.email,
+        comment: state.comment,
+        note: state.note,
+      };
+      window.localStorage.setItem(draftKey(profile.id), JSON.stringify(toSave));
+    } catch {
+      /* 保存できない環境では自動保存しないだけにする */
+    }
+  }
+
+  function clearDraft(): void {
+    try {
+      window.localStorage.removeItem(draftKey(profile.id));
+    } catch {
+      /* noop */
+    }
+  }
 
   let index = 0;
   let sending = false;
@@ -141,6 +201,7 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
         button.classList.toggle('is-selected', selected.has(purpose));
         button.setAttribute('aria-pressed', selected.has(purpose) ? 'true' : 'false');
         state.purposes = Array.from(selected);
+        saveDraft();
         syncNext();
       });
 
@@ -233,14 +294,20 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       label: 'お名前',
       required: true,
       initial: state.name,
-      onInput: (v) => (state.name = v),
+      onInput: (v) => {
+        state.name = v;
+        saveDraft();
+      },
     });
     const companyField = fieldRow({
       id: 'company',
       label: '会社名',
       required: true,
       initial: state.company,
-      onInput: (v) => (state.company = v),
+      onInput: (v) => {
+        state.company = v;
+        saveDraft();
+      },
     });
     const titleField = fieldRow({
       id: 'title',
@@ -249,7 +316,10 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       type: 'select',
       options: TITLE_OPTIONS,
       initial: state.title,
-      onInput: (v) => (state.title = v),
+      onInput: (v) => {
+        state.title = v;
+        saveDraft();
+      },
     });
     const emailField = fieldRow({
       id: 'email',
@@ -257,7 +327,10 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       required: true,
       type: 'email',
       initial: state.email,
-      onInput: (v) => (state.email = v),
+      onInput: (v) => {
+        state.email = v;
+        saveDraft();
+      },
     });
 
     const rows = [nameField, companyField, titleField, emailField];
@@ -290,12 +363,19 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
 
     const list = el('div', { class: 'file-list' });
     const errorBox = el('p', { class: 'field__error' });
-    const hint = el('p', { class: 'file-hint', text: `最大${MAX_FILES}件・1件あたり8MBまで（PDF・画像・Office資料など）` });
+    const hint = el('p', {
+      class: 'file-hint',
+      text: `最大${MAX_FILES}件・合計${MAX_TOTAL_MB}MBまで（1件${MAX_FILE_MB}MBまで／PDF・画像・Office資料など）`,
+    });
 
     const input = el('input', {
       type: 'file',
       accept: '.pdf,.doc,.docx,.ppt,.pptx,.png,.jpg,.jpeg',
     }) as HTMLInputElement;
+
+    // state.files には送信用データ(base64)しか持たせないので、
+    // 合計サイズの判定用に生バイト数だけ別配列で並行して持つ
+    const fileSizes: number[] = [];
 
     function renderList(): void {
       list.replaceChildren(
@@ -306,6 +386,7 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
               const btn = el('button', { type: 'button', class: 'file-item__remove', text: '削除' }) as HTMLButtonElement;
               btn.addEventListener('click', () => {
                 state.files.splice(i, 1);
+                fileSizes.splice(i, 1);
                 renderList();
               });
               return btn;
@@ -327,7 +408,12 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
         return;
       }
       if (file.size > MAX_FILE_BYTES) {
-        errorBox.textContent = 'このファイルは8MBを超えています';
+        errorBox.textContent = `このファイルは${MAX_FILE_MB}MBを超えています`;
+        return;
+      }
+      const currentTotal = fileSizes.reduce((sum, n) => sum + n, 0);
+      if (currentTotal + file.size > MAX_TOTAL_BYTES) {
+        errorBox.textContent = `添付の合計が${MAX_TOTAL_MB}MBを超えています`;
         return;
       }
 
@@ -336,6 +422,7 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
         const result = String(reader.result ?? '');
         const base64 = result.slice(result.indexOf(',') + 1);
         state.files.push({ name: file.name, mimeType: file.type || 'application/octet-stream', data: base64 });
+        fileSizes.push(file.size);
         renderList();
       };
       reader.onerror = () => {
@@ -359,7 +446,10 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       required: true,
       multiline: true,
       initial: state.comment,
-      onInput: (v) => (state.comment = v),
+      onInput: (v) => {
+        state.comment = v;
+        saveDraft();
+      },
     });
     const noteField = fieldRow({
       id: 'note',
@@ -367,7 +457,10 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
       required: false,
       multiline: true,
       initial: state.note,
-      onInput: (v) => (state.note = v),
+      onInput: (v) => {
+        state.note = v;
+        saveDraft();
+      },
     });
 
     // ハニーポット。人には見えない欄で、埋まっていたらスパム扱いにする
@@ -425,6 +518,7 @@ export function renderRequestForm(mount: HTMLElement, profile: TalkProfile): voi
           );
         }
         trackTalkRequestSubmit(profile.id);
+        clearDraft();
         setProgress(totalSteps);
         stage.replaceChildren(doneCard());
       } catch (err) {
