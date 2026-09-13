@@ -2,7 +2,7 @@ import { site } from '../data/site';
 import type { Service, TalkProfile } from '../types';
 
 const esc = (s: string) =>
-  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\"/g, '&quot;');
 
 /**
  * ヒーローのHTML。
@@ -33,12 +33,13 @@ export function serviceHeroHtml(s: Service, homeHref = '/'): string {
  */
 export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   const initial = esc(p.name.slice(0, 1));
+  const topHref = homeHref.endsWith('profile/') ? homeHref.slice(0, -'profile/'.length) : homeHref;
 
   if (p.monument || p.heavyWebGL) {
     return `
 <header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
-  <a class="hero__brand" href="${homeHref}">
+  <a class="hero__brand" href="${topHref}">
     <span class="hero__brand-logo">Baton -バトン-</span>
     <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
   </a>
@@ -60,7 +61,7 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   <div class="wrap talk-hero__inner">
     <div class="talk-hero__photo" aria-hidden="true">${initial}</div>
     <div>
-      <p class="talk-hero__eyebrow"><a class="hero__back" href="${homeHref}">Baton Talk</a><span aria-hidden="true"> / </span><span>${esc(p.company)}</span></p>
+      <p class="talk-hero__eyebrow"><a class="hero__back" href="${topHref}">Baton Talk</a><span aria-hidden="true"> / </span><span>${esc(p.company)}</span></p>
       <h1 class="talk-hero__name">${esc(p.name)}</h1>
       <p class="talk-hero__role">${esc(p.title)}・${esc(p.company)}</p>
       <p class="talk-hero__bio">${esc(p.bio)}</p>
@@ -78,7 +79,7 @@ export function profileHubHeroHtml(): string {
   <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="hub-hero__intro" aria-hidden="true"></div>
   <div class="hub-hero__inner">
-    <h1 class="hub-hero__title">Baton -バトン-</h1>
+    <h1 class="hub-hero__title"><a href="/" aria-label="Batonトップへ戻る" style="color:inherit;text-decoration:none">Baton -バトン-</a></h1>
     <p class="hub-hero__tagline">選んだ人が、選んだ人へ。</p>
   </div>
   <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
