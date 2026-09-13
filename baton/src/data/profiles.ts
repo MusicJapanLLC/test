@@ -37,10 +37,10 @@ const kabeyaProfile: TalkProfile = {
     { name: 'Baton -バトン-', description: '招待制紹介サービスで深く長い関係づくりを。' },
   ],
   media: [
-    { label: '公式HP', url: 'https://music-japan.pages.dev/', image: '/media-musicjapan-hp.png' },
+    { label: '公式HP', url: 'https://music-japan.com/', image: '/media-musicjapan-hp.png' },
     {
       label: 'SECOND TAKE インタビュー',
-      url: 'https://second-take.vocal-shore-1441.chatgpt.site/',
+      url: 'https://secondtake.music-japan.com/',
       image: '/media-secondtake-logo.webp',
     },
   ],
