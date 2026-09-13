@@ -662,6 +662,42 @@ function batonSaveAttachments(attachments) {
 
 // ── 申請の作成（① CTA → ② Talk Request） ──────────────────────
 
+/**
+ * 申請者へ送る受付メール。
+ * verifyToken を渡すと「メール認証をお願いします」の案内・リンク付きになる。
+ * null なら（認証済みスキップの場合）、認証の案内なしで「受け付けました」だけになる。
+ */
+function batonSendApplicantMail(email, name, profile, profileId, verifyToken) {
+  var lines = [
+    name + ' 様',
+    '',
+    '名前：' + profile.name + '様',
+    '会社名：' + profile.company,
+    '紹介プロフィール：' + batonProfileUrl(profileId),
+    '',
+    '「紹介申請」を受け付けました。'
+  ];
+
+  if (verifyToken) {
+    lines.push('以下のリンクから、メールアドレスの確認をお願いします（24時間以内）。');
+    lines.push('');
+    lines.push(batonUrl('verify', verifyToken));
+  }
+
+  lines.push('');
+  lines.push('双方の確認が取れ次第、お繋ぎさせていただきます。');
+  lines.push('引き続きよろしくお願いいたします。');
+  lines.push('');
+  lines.push('合同会社Music Japan');
+  lines.push('壁谷 友生');
+
+  MailApp.sendEmail({
+    to: email,
+    subject: verifyToken ? '【Baton】メールアドレスのご確認' : '【Baton】申請を受け付けました',
+    body: lines.join('\n')
+  });
+}
+
 function batonSubmitTalk(data) {
   // ハニーポット。埋まっていたらボット扱いにして、何もせず成功したふりをする
   if (data.hp) return { ok: true };
@@ -705,8 +741,40 @@ function batonSubmitTalk(data) {
 
   var requestId = batonNewId('req');
   var attachmentUrls = batonSaveAttachments(data.attachments);
-  var token = batonRandomToken();
 
+  // このメールアドレスで、過去に1度でもメール認証を完了したことがあるか
+  // （相手の承認・辞退・期限切れ、どの結果でも「認証日時」が入っていれば
+  //   本人確認は済んでいるとみなし、2回目以降は認証メールを省略する）
+  var alreadyVerified = batonReadRequestRows().some(function (r) {
+    return String(r['メール']).toLowerCase() === email.toLowerCase() && r['認証日時'];
+  });
+
+  if (alreadyVerified) {
+    batonAppendRequestRow({
+      request_id: requestId,
+      '申請日時': new Date(),
+      '話したい人': profile.name,
+      '申請者': name,
+      '会社名': company,
+      'メール': email,
+      'コメント': comment,
+      '状態': '未認証',
+      '紹介済': false,
+      'プロフィールURL': batonProfileUrl(profileId),
+      'profile_id': profileId,
+      '役職': title,
+      '目的': purposes.join('、'),
+      '備考': note,
+      '添付資料': attachmentUrls.join('\n')
+    });
+
+    var newRow = batonFindRequestRow('request_id', requestId);
+    batonActivateRequest(newRow, profile);
+    batonSendApplicantMail(email, name, profile, profileId, null);
+    return { ok: true };
+  }
+
+  var token = batonRandomToken();
   batonAppendRequestRow({
     request_id: requestId,
     '申請日時': new Date(),
@@ -727,22 +795,7 @@ function batonSubmitTalk(data) {
     '認証期限': new Date(Date.now() + BATON_VERIFY_TTL_MS)
   });
 
-  MailApp.sendEmail({
-    to: email,
-    subject: '【Baton】メールアドレスのご確認',
-    body: [
-      name + ' 様',
-      '',
-      profile.name + '（' + profile.company + '）さんへの「この人と話したい」申請を受け付けました。',
-      '以下のリンクから、メールアドレスの確認をお願いします（24時間以内）。',
-      '',
-      batonUrl('verify', token),
-      '',
-      'このメールに心当たりがない場合は、破棄してください。',
-      '── 合同会社Music Japan'
-    ].join('\n')
-  });
-
+  batonSendApplicantMail(email, name, profile, profileId, token);
   return { ok: true };
 }
 
@@ -762,19 +815,12 @@ function batonCheckVerify(token) {
   return { ok: true, state: 'ready', profileName: profile ? profile.name + '（' + profile.company + '）' : String(row['話したい人']) };
 }
 
-function batonConfirmVerify(token) {
-  if (!token) return { ok: false, error: 'invalid' };
-  var row = batonFindRequestRow('認証トークンhash', batonHashToken(token));
-  if (!row) return { ok: false, error: 'invalid' };
-  if (row['状態'] === '期限切れ') return { ok: false, error: 'expired' };
-  if (row['状態'] !== '未認証') return { ok: false, error: 'used' };
-
-  var expiresAt = row['認証期限'] ? new Date(row['認証期限']) : null;
-  if (expiresAt && new Date() > expiresAt) return { ok: false, error: 'expired' };
-
-  var profile = batonGetProfile(row['profile_id']);
-  if (!profile) return { ok: false, error: 'invalid' };
-
+/**
+ * 状態を「承認待ち」に進め、掲載者(本人)へ承認/辞退の依頼メールを送り、
+ * 管理者にも通知する。メール認証直後、または後述の「認証スキップ」の
+ * どちらから呼ばれても、この先の処理は完全に共通。
+ */
+function batonActivateRequest(row, profile) {
   var respondExpiresAt = new Date(Date.now() + BATON_RESPOND_TTL_MS);
   var respondToken = batonRandomToken();
 
@@ -789,7 +835,22 @@ function batonConfirmVerify(token) {
     '【Baton】新規申請',
     batonRequestSummaryLines(row, profile).concat(['', '本人・社長の双方に、承認/辞退の依頼メールを送っています。'])
   );
+}
 
+function batonConfirmVerify(token) {
+  if (!token) return { ok: false, error: 'invalid' };
+  var row = batonFindRequestRow('認証トークンhash', batonHashToken(token));
+  if (!row) return { ok: false, error: 'invalid' };
+  if (row['状態'] === '期限切れ') return { ok: false, error: 'expired' };
+  if (row['状態'] !== '未認証') return { ok: false, error: 'used' };
+
+  var expiresAt = row['認証期限'] ? new Date(row['認証期限']) : null;
+  if (expiresAt && new Date() > expiresAt) return { ok: false, error: 'expired' };
+
+  var profile = batonGetProfile(row['profile_id']);
+  if (!profile) return { ok: false, error: 'invalid' };
+
+  batonActivateRequest(row, profile);
   return { ok: true };
 }
 
