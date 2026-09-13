@@ -3,6 +3,7 @@ import '../styles/hub.css';
 import '../styles/profile.css';
 
 import { profileHubHeroHtml } from '../lib/hero';
+import { shouldRender3D, whenIdle } from '../lib/capabilities';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
 import { renderProfileFooter } from '../profile/footer';
 import { renderProfileHub } from '../profile/hub-render';
@@ -24,3 +25,10 @@ renderProfileFooter(footer);
 
 initSmoothScroll();
 revealOnScroll(document);
+
+const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-canvas]');
+if (canvas && shouldRender3D()) {
+  whenIdle(() => {
+    void import('../hub/scene').then(({ mountHubScene }) => mountHubScene(canvas)).catch(() => {});
+  }, 500);
+}

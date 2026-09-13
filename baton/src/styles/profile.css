@@ -290,7 +290,7 @@ body.talk-hub {
 
 @media (min-width: 900px) {
   .talk-hub-card__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) minmax(230px, 280px);
     align-items: center;
     gap: 2rem;
   }
@@ -321,33 +321,36 @@ body.talk-hub {
 
 .talk-hub-card__tags {
   display: grid;
-  gap: 0.3rem;
-}
-
-@media (min-width: 900px) {
-  .talk-hub-card__tags {
-    justify-items: end;
-    text-align: right;
-  }
+  gap: 0.4rem;
+  width: 100%;
 }
 
 .talk-hub-card__tagrow {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.4rem;
 }
 
 .talk-hub-card__tag {
-  font-size: 0.7rem;
-  letter-spacing: 0.03em;
+  display: block;
+  text-align: center;
+  font-size: 0.66rem;
+  letter-spacing: 0;
   color: var(--hub-muted);
+  border: 1px solid var(--hub-line);
+  border-radius: 3px;
+  padding: 0.22rem 0.15rem;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition:
+    border-color 0.3s ease,
+    color 0.3s ease;
 }
 
-.talk-hub-card__tag:not(:last-child)::after {
-  content: '・';
-  margin-left: 0.4rem;
-  color: var(--hub-line);
+.talk-hub-card:hover .talk-hub-card__tag {
+  border-color: color-mix(in srgb, var(--primary, var(--hub-text)) 35%, var(--hub-line));
+  color: var(--hub-text);
 }
 
 .talk-hero {
