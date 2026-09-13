@@ -335,6 +335,17 @@ function patchHomeDocument(documentHtml, locale) {
   navHtml = navHtml.replace(/<\/nav>$/, `${navLinks}</nav>`);
   documentHtml = documentHtml.slice(0, navStart) + navHtml + documentHtml.slice(navEnd + 6);
 
+  const inquiryOptions = locale === "ja"
+    ? ["楽曲・BGM制作のご依頼", "楽曲使用・ライセンス", "Podcast出演・インタビュー掲載", "Baton・ご紹介", "協業・パートナーシップ", "その他"]
+    : ["Music & BGM commissions", "Music usage & licensing", "SECOND TAKE interviews", "Baton introductions", "Partnerships & collaboration", "Other"];
+  const inquiryPlaceholder = locale === "ja" ? "選択してください" : "Please select";
+  const selectStart = documentHtml.indexOf('<select name="type" required="">');
+  const selectContentStart = documentHtml.indexOf(">", selectStart) + 1;
+  const selectEnd = documentHtml.indexOf("</select>", selectContentStart);
+  if (selectStart === -1 || selectContentStart === 0 || selectEnd === -1) throw new Error(`Could not locate ${locale} inquiry options`);
+  const optionMarkup = `<option value="" disabled="" selected="">${inquiryPlaceholder}</option>${inquiryOptions.map((option) => `<option value="${option}">${option}</option>`).join("")}`;
+  documentHtml = documentHtml.slice(0, selectContentStart) + optionMarkup + documentHtml.slice(selectEnd);
+
   return documentHtml;
 }
 
