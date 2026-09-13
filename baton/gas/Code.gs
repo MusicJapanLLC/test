@@ -66,6 +66,20 @@ function batonGetSpreadsheet() {
   return SpreadsheetApp.openById(BATON_SPREADSHEET_ID);
 }
 
+/**
+ * シート右下に出るポップアップ通知。
+ * このスクリプトはスプレッドシートに紐付いていない独立プロジェクトなので、
+ * 呼べない（Cannot call SpreadsheetApp.showNotification()）ことがある。
+ * その場合は諦めて実行ログにだけ残す（処理自体は続く・失敗しない）。
+ */
+function batonToast(message, title, seconds) {
+  try {
+    batonGetSpreadsheet().toast(message, title, seconds);
+  } catch (err) {
+    Logger.log('(通知ポップアップは出せませんでした) ' + title + ': ' + message);
+  }
+}
+
 /** 通知メールの宛先 */
 var NOTIFY_TO = 'music.japan.llc@gmail.com';
 
@@ -197,7 +211,7 @@ function setupSheets() {
     if (extra && ss.getSheets().length > 1 && extra.getLastRow() === 0) ss.deleteSheet(extra);
   }
 
-  batonGetSpreadsheet().toast('6つのシートを用意しました', 'Baton', 5);
+  batonToast('6つのシートを用意しました', 'Baton', 5);
 }
 
 /** 疎通確認用。ブラウザでURLを開くと OK と表示される。Baton側の照会もここを通る */
@@ -349,10 +363,10 @@ function testSubmission() {
   Logger.log('結果: ' + result);
 
   if (result === 'OK') {
-    batonGetSpreadsheet().toast(
+    batonToast(
       'engineer シートに1件入りました。メールも確認してください', 'テスト成功', 8);
   } else {
-    batonGetSpreadsheet().toast('失敗: ' + result, 'テスト', 8);
+    batonToast('失敗: ' + result, 'テスト', 8);
   }
 }
 
@@ -525,7 +539,7 @@ function batonEnsureExtraHeaders(sheet) {
  */
 function setupBatonSheets() {
   batonGetRequestsSheet();
-  batonGetSpreadsheet().toast('BATON_REQUESTS シートを確認・用意しました', 'Baton', 5);
+  batonToast('BATON_REQUESTS シートを確認・用意しました', 'Baton', 5);
 }
 
 /** 現在のヘッダー行から { 列名: 列番号(1始まり) } を作る */
@@ -965,9 +979,9 @@ function testBatonFlow() {
 
   Logger.log('結果: ' + JSON.stringify(result));
   if (result.ok) {
-    batonGetSpreadsheet().toast(
+    batonToast(
       'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
   } else {
-    batonGetSpreadsheet().toast('失敗: ' + JSON.stringify(result), 'テスト', 8);
+    batonToast('失敗: ' + JSON.stringify(result), 'テスト', 8);
   }
 }
