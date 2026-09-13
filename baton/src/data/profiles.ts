@@ -85,8 +85,8 @@ const unveilProfile: TalkProfile = {
     { label: '公式サイト', url: 'https://unveil.style/' },
     { label: '会社概要', url: 'https://unveil.style/outline/' },
   ],
-  industryTags: ['ブランディング', 'Web', 'クリエイティブ'],
   businessTags: ['ブランディング', 'Web制作', '採用支援'],
+  keywordTags: ['ブランディング', 'Web', 'クリエイティブ'],
   theme: { primary: '#6B3FA0', accent: '#A487D9', bg: '#FAF7FC', text: '#241A33' },
   // Batonの外部パートナーとして初めて掲載する人物のため、壁谷さんと同じ
   // フルWebGL演出（scene-standment）を使う。簡易monumentは使わない。
