@@ -120,7 +120,7 @@ function renderReady(card: HTMLElement, token: string, result: RespondCheckResul
       el('dt', { text: '氏名・会社・役職' }),
       el('dd', { text: `${req.applicantName} / ${req.applicantCompany} / ${req.applicantTitle || '(未記入)'}` }),
       el('dt', { text: '目的' }),
-      el('dd', { text: req.purpose }),
+      el('dd', { text: req.purposes.join('、') }),
       el('dt', { text: 'コメント' }),
       el('dd', { text: req.comment }),
       req.note ? el('dt', { text: '補足' }) : null,

@@ -37,6 +37,10 @@ const pages = {
 const FONT_HREF =
   'https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap';
 
+/** プロフィールページの見出し専用。他ページには読み込まない */
+const PROFILE_FONT_HREF =
+  'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap';
+
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -69,7 +73,16 @@ function head(opts: {
   themeColor: string;
   path: string;
   vars: string;
+  /** プロフィールページだけ、見出し用の明朝体をもう1本読み込む */
+  extraFontHref?: string;
 }) {
+  const extraFont = opts.extraFontHref
+    ? `
+    <link rel="preload" as="style" href="${opts.extraFontHref}" />
+    <link rel="stylesheet" href="${opts.extraFontHref}" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="${opts.extraFontHref}" /></noscript>`
+    : '';
+
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -80,7 +93,7 @@ function head(opts: {
     -->
     <link rel="preload" as="style" href="${FONT_HREF}" />
     <link rel="stylesheet" href="${FONT_HREF}" media="print" onload="this.media='all'" />
-    <noscript><link rel="stylesheet" href="${FONT_HREF}" /></noscript>
+    <noscript><link rel="stylesheet" href="${FONT_HREF}" /></noscript>${extraFont}
     <title>${esc(opts.title)}</title>
     <meta name="description" content="${esc(opts.description)}" />
     <meta name="theme-color" content="${opts.themeColor}" />
@@ -188,6 +201,7 @@ function batonPages(): Plugin {
                 themeColor: p.theme.primary,
                 path: `/profile/${p.slug}/`,
                 vars,
+                extraFontHref: PROFILE_FONT_HREF,
               }),
             )
             .replace('<!--BATON:HERO-->', profileHeroHtml(p, `${base}profile/`.replace(/\/{2,}/g, '/')));

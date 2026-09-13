@@ -2,9 +2,15 @@
 /* base.css / service.css の続き。.hero .card .field .btn .survey__* 等は */
 /* service.css をそのまま流用し、ここでは足りない部分だけを足す。 */
 
+/*
+ * プロフィールページだけ、見出し用フォントをリッチな明朝体に差し替える。
+ * --font-display はCSS変数なので、body.profile の中だけ上書きすれば
+ * 6サービスページ・ハブなど他のページには一切影響しない。
+ */
 body.profile {
   background: var(--bg);
   color: var(--text);
+  --font-display: 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
 }
 
 /* 実データ入りプロフィール（.hero を流用するリッチ版）の追加分 */
@@ -24,8 +30,42 @@ body.profile {
   vertical-align: -0.35em;
 }
 
+body.profile .hero__title {
+  font-family: var(--font-display);
+  text-wrap: balance;
+}
+
+.hero__title-role {
+  display: inline-block;
+  margin-left: 0.9rem;
+  font-family: var(--font-sans);
+  font-size: 0.42em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--text) 68%, transparent);
+  vertical-align: middle;
+}
+
+body.profile .hero__tagline {
+  text-wrap: balance;
+  max-width: 20ch;
+}
+
 .hero__cta {
   margin-top: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem);
+}
+
+/* 事業内容・実績など、カードではなく文章で読ませるセクション */
+
+.prose {
+  max-width: var(--measure);
+  display: grid;
+  gap: 1.1rem;
+}
+
+.prose p {
+  line-height: 1.95;
+  color: color-mix(in srgb, var(--text) 88%, transparent);
 }
 
 /* プロフィール一覧（ハブ） */
@@ -170,23 +210,52 @@ body.talk-hub {
   margin-top: clamp(1.75rem, 1.4rem + 1.6vw, 2.5rem);
 }
 
-/* 話せるテーマ */
+/* 資料添付（最大3件） */
 
-.topics {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.6rem 0.7rem;
+.file-field {
+  display: grid;
+  gap: 0.7rem;
 }
 
-.topic-tag {
-  display: inline-flex;
+.file-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.file-item {
+  display: flex;
   align-items: center;
-  padding: 0.55rem 1.1rem;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
-  background: color-mix(in srgb, var(--primary) 5%, #fff);
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--text) 16%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--primary) 4%, #fff);
   font-size: 0.86rem;
-  letter-spacing: 0.02em;
+}
+
+.file-item__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-item__remove {
+  flex: none;
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.file-item__remove:hover {
+  color: var(--primary);
+}
+
+.file-hint {
+  font-size: 0.78rem;
+  color: color-mix(in srgb, var(--text) 60%, transparent);
 }
 
 /* ハニーポット（人には見えず、ボットだけが埋めてしまう欄） */

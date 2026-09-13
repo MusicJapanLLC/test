@@ -1,47 +1,26 @@
-import { el, externalAttrs, pad2 } from '../lib/dom';
+import { el, externalAttrs } from '../lib/dom';
 import type { TalkProfile } from '../types';
 import { renderRequestForm } from './request-form';
 
-/** 事業内容・活動領域。businesses を持つプロフィールだけ表示する */
-function businessSection(profile: TalkProfile): HTMLElement | null {
-  if (!profile.businesses || !profile.businesses.length) return null;
+/** 文章で読ませるセクション（事業内容・実績など）。カードは使わない */
+function proseSection(opts: {
+  id: string;
+  label: string;
+  title: string;
+  paragraphs?: string[];
+}): HTMLElement | null {
+  if (!opts.paragraphs || !opts.paragraphs.length) return null;
 
-  return el('section', { class: 'section section--problems', id: 'businesses' }, [
+  return el('section', { class: 'section', id: opts.id }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: 'Business', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '事業内容・活動領域', 'data-reveal': true }),
+        el('span', { class: 'section__label', text: opts.label, 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: opts.title, 'data-reveal': true }),
       ]),
       el(
         'div',
-        { class: 'grid grid--2', 'data-reveal-group': true },
-        profile.businesses.map((item, i) =>
-          el('article', { class: 'card', 'data-reveal': true }, [
-            el('p', { class: 'card__num', text: pad2(i + 1) }),
-            el('h3', { class: 'card__title', text: item.title }),
-            el('p', { class: 'card__detail', text: item.detail }),
-          ]),
-        ),
-      ),
-    ]),
-  ]);
-}
-
-function topicsSection(profile: TalkProfile): HTMLElement | null {
-  if (!profile.topics.length) return null;
-
-  return el('section', { class: 'section', id: 'topics' }, [
-    el('div', { class: 'wrap' }, [
-      el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: 'Topics', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '話せるテーマ', 'data-reveal': true }),
-      ]),
-      el(
-        'ul',
-        { class: 'topics', 'data-reveal-group': true },
-        profile.topics.map((topic) =>
-          el('li', { class: 'topic-tag', 'data-reveal': true }, [topic]),
-        ),
+        { class: 'prose', 'data-reveal-group': true },
+        opts.paragraphs.map((p) => el('p', { 'data-reveal': true, text: p })),
       ),
     ]),
   ]);
@@ -83,11 +62,11 @@ function requestSection(profile: TalkProfile): HTMLElement {
   const section = el('section', { class: 'section section--survey', id: 'talk-request' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: 'Talk Request', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: 'この人と話したい', 'data-reveal': true }),
+        el('span', { class: 'section__label', text: 'Introduction', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '紹介を希望する', 'data-reveal': true }),
         el('p', {
           class: 'section__note',
-          text: `${profile.name}さんへ、話したい理由を伝えてください。ご本人の承認後、Music Japanが紹介します。`,
+          text: '以下のご回答をお願いします。運営が確認した後、双方の確認が取れればご紹介させていただきます。',
           'data-reveal': true,
         }),
       ]),
@@ -103,8 +82,13 @@ function requestSection(profile: TalkProfile): HTMLElement {
 export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
   app.append(
     ...[
-      businessSection(profile),
-      topicsSection(profile),
+      proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
+      proseSection({
+        id: 'achievements',
+        label: 'Achievements',
+        title: '実績やデータ',
+        paragraphs: profile.achievements,
+      }),
       mediaSection(profile),
       requestSection(profile),
     ].filter((n): n is HTMLElement => n !== null),

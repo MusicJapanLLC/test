@@ -92,10 +92,10 @@ export type TalkProfile = {
   tagline?: string;
   /** 人物紹介（今後、実際の経歴文に差し替えていく前提） */
   bio: string;
-  /** 話せるテーマ */
-  topics: string[];
-  /** 事業内容・活動領域（カード形式。未指定なら表示しない） */
-  businesses?: Item[];
+  /** 事業内容（文章。段落ごとに配列。未指定なら表示しない） */
+  business?: string[];
+  /** 実績やデータ（文章。段落ごとに配列。未指定なら表示しない） */
+  achievements?: string[];
   /** SECOND TAKE記事 / Podcast / 公式サイトなど。今後増える想定でそのまま並べる */
   media?: { label: string; url: string }[];
   theme: Theme;

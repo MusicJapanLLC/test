@@ -80,12 +80,17 @@ export async function submitSurvey(payload: SurveyPayload): Promise<void> {
  *  プリフライトを避けるため POST の Content-Type は text/plain のまま。
  */
 
+export type TalkAttachment = { name: string; mimeType: string; data: string };
+
 export type TalkRequestPayload = {
   profileId: string;
   applicant: { name: string; company: string; title: string; email: string };
-  purpose: string;
+  /** 複数選択可 */
+  purposes: string[];
   comment: string;
   note: string;
+  /** 最大3件。data は base64（data:URLのヘッダは含まない） */
+  attachments: TalkAttachment[];
   /** ハニーポット。人間には見えない欄で、埋まっていたらスパム扱いにする */
   hp: string;
 };
@@ -162,7 +167,7 @@ export type RespondCheckResult = {
     applicantName: string;
     applicantCompany: string;
     applicantTitle: string;
-    purpose: string;
+    purposes: string[];
     comment: string;
     note: string;
   };

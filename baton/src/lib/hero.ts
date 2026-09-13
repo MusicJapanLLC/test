@@ -43,7 +43,7 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
       <span class="hero__avatar" aria-hidden="true">${initial}</span>
       <a class="hero__back" href="${homeHref}">Baton Talk</a><span aria-hidden="true">/</span><span>${esc(p.company)}</span>
     </p>
-    <h1 class="hero__title">${esc(p.name)}</h1>
+    <h1 class="hero__title">${esc(p.name)}<span class="hero__title-role">${esc(p.title)}</span></h1>
     <p class="hero__tagline">${esc(p.tagline ?? p.title)}</p>
     <p class="hero__desc">${esc(p.bio)}</p>
     <div class="hero__cta"><a class="btn btn--primary" href="#talk-request">この人と話したい</a></div>
