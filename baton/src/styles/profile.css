@@ -265,21 +265,45 @@ body.talk-hub {
 }
 
 .talk-hub-card {
+  position: relative;
   display: block;
   text-decoration: none;
   color: inherit;
   border-bottom: 1px solid var(--hub-line);
   padding-block: clamp(0.85rem, 0.6rem + 1.1vw, 1.35rem);
-  transition: background-color 0.3s ease;
+  padding-inline: clamp(0.25rem, 1vw, 0.75rem);
+  isolation: isolate;
+  transition:
+    background-color 0.35s ease,
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .talk-hub-card:first-child {
   border-top: 1px solid var(--hub-line);
 }
 
+.talk-hub-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: 100%;
+  background: var(--card-primary, var(--hub-accent));
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .talk-hub-card:hover,
 .talk-hub-card:focus-visible {
-  background-color: color-mix(in srgb, var(--hub-text) 4%, transparent);
+  background-color: color-mix(in srgb, var(--card-primary, var(--hub-text)) 5%, transparent);
+  transform: translateX(0.4rem);
+}
+
+.talk-hub-card:hover::after,
+.talk-hub-card:focus-visible::after {
+  transform: none;
 }
 
 .talk-hub-card__row {
@@ -298,12 +322,19 @@ body.talk-hub {
 
 .talk-hub-card__names {
   min-width: 0;
+  padding-left: clamp(0.5rem, 1.2vw, 1.25rem);
 }
 
 .talk-hub-card__company {
+  font-family: var(--font-display);
   font-size: var(--step-1);
   font-weight: 600;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
+  transition: color 0.35s ease;
+}
+
+.talk-hub-card:hover .talk-hub-card__company {
+  color: var(--card-primary, var(--hub-text));
 }
 
 .talk-hub-card__person {
@@ -349,7 +380,7 @@ body.talk-hub {
 }
 
 .talk-hub-card:hover .talk-hub-card__tag {
-  border-color: color-mix(in srgb, var(--primary, var(--hub-text)) 35%, var(--hub-line));
+  border-color: color-mix(in srgb, var(--card-primary, var(--hub-text)) 35%, var(--hub-line));
   color: var(--hub-text);
 }
 

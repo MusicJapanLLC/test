@@ -40,6 +40,52 @@ body.hub {
   opacity: 1;
 }
 
+/*
+ * 開いた瞬間だけの「バトンが渡る」演出。中央のラインを、淡い光が
+ * 一度だけ左から右へ駆け抜ける。1周したら消えて、以後は何もしない。
+ */
+.hub-hero__intro {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hub-hero__intro::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: -22%;
+  width: 22%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--hub-accent, #c8102e), transparent);
+  animation: hub-hero-baton-pass 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s 1 both;
+}
+
+@keyframes hub-hero-baton-pass {
+  0% {
+    left: -22%;
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    left: 100%;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-hero__intro::after {
+    animation: none;
+    display: none;
+  }
+}
+
 .hub-hero__inner {
   position: relative;
   text-align: center;

@@ -28,18 +28,23 @@ export function renderProfileHub(app: HTMLElement): void {
             .map((p) =>
               el(
                 'a',
-                { class: 'talk-hub-card', href: withBase(`/profile/${p.slug}/`), 'data-reveal': true },
+                {
+                  class: 'talk-hub-card',
+                  href: withBase(`/profile/${p.slug}/`),
+                  'data-reveal': true,
+                  style: `--card-primary:${p.theme.primary};--card-accent:${p.theme.accent}`,
+                },
                 [
                   el('div', { class: 'talk-hub-card__row' }, [
                     el('div', { class: 'talk-hub-card__names' }, [
                       el('p', { class: 'talk-hub-card__company', text: p.company }),
                       el('p', { class: 'talk-hub-card__person', text: p.name }),
                     ]),
-                    el('p', { class: 'talk-hub-card__tagline', text: p.tagline ?? p.title }),
+                    el('p', { class: 'talk-hub-card__tagline', text: p.listSummary ?? p.tagline ?? p.title }),
                     el(
                       'div',
                       { class: 'talk-hub-card__tags' },
-                      [tagRow(p.industryTags), tagRow(p.businessTags)].filter(
+                      [tagRow(p.businessTags), tagRow(p.keywordTags)].filter(
                         (n): n is HTMLElement => n !== null,
                       ),
                     ),
