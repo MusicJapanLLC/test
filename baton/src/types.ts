@@ -98,6 +98,10 @@ export type TalkProfile = {
   services?: { name: string; description: string }[];
   /** SECOND TAKE記事 / Podcast / 公式サイトなど。今後増える想定でそのまま並べる */
   media?: { label: string; url: string; image?: string }[];
+  /** プロフィール一覧(/profile/)の右側に出す小さなタグ。業界。最大3件 */
+  industryTags?: string[];
+  /** プロフィール一覧(/profile/)の右側に出す小さなタグ。事業。最大3件 */
+  businessTags?: string[];
   theme: Theme;
   /** ヒーローに出す立体（未指定ならCSSグラデーションのみの簡易ヒーロー） */
   monument?: MonumentKind;

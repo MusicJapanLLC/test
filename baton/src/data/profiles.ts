@@ -44,6 +44,8 @@ const kabeyaProfile: TalkProfile = {
       image: '/media-secondtake-logo.webp',
     },
   ],
+  industryTags: ['音楽', 'メディア', '紹介'],
+  businessTags: ['音楽制作', 'メディア運営', '法人紹介'],
   theme: { primary: '#1B3A6B', accent: '#2E9BA8', bg: '#F5F8FC', text: '#14233D' },
   heavyWebGL: true,
   active: true,

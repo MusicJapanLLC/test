@@ -38,10 +38,10 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
     return `
 <header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
-  <div class="hero__brand">
+  <a class="hero__brand" href="${homeHref}">
     <span class="hero__brand-logo">Baton -バトン-</span>
     <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
-  </div>
+  </a>
   <div class="hero__inner">
     <p class="hero__eyebrow">
       <span class="hero__avatar" aria-hidden="true">${initial}</span>
@@ -76,9 +76,8 @@ export function profileHubHeroHtml(): string {
   return `
 <header class="talk-hub-hero" data-hero>
   <div class="wrap talk-hub-hero__inner">
-    <p class="talk-hub-hero__eyebrow"><a class="hero__back" href="/">Baton</a></p>
-    <h1 class="talk-hub-hero__title">Baton Talk</h1>
-    <p class="talk-hub-hero__tagline">この人と話してみたい、を紹介にかえる。</p>
+    <h1 class="talk-hub-hero__title">Baton -バトン-</h1>
+    <p class="talk-hub-hero__tagline">選んだ人が、選んだ人へ。</p>
   </div>
 </header>`.trim();
 }
