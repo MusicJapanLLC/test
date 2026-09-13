@@ -1,6 +1,7 @@
 // Cloudflare Pages deploy build
 // Keep the known-good static copy/reassembly path intact, then apply the official-site content refresh.
 import { cpSync, existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -230,8 +231,11 @@ function patchClientBundle() {
     bundle = replaceRequired(bundle, search, replacement, label);
   }
 
-  writeFileSync(bundlePath, bundle);
-  return bundleName;
+  const bundleDigest = createHash("sha256").update(bundle).digest("hex").slice(0, 12);
+  const versionedBundleName = bundleName.replace(/\.js$/, `-${bundleDigest}.js`);
+  writeFileSync(join(assetsDirectory, versionedBundleName), bundle);
+  rmSync(bundlePath);
+  return { originalName: bundleName, versionedName: versionedBundleName };
 }
 
 function arrowSvg() {
@@ -456,6 +460,13 @@ for (const relativePath of publicHtmlFiles) {
   // Canonical/OGP/JSON-LD host migration
   documentHtml = documentHtml.replaceAll(OLD_SITE_URL, SITE_URL);
 
+  // The homepage bundle is patched after the original build, so give those
+  // bytes a content-derived URL instead of reusing a previously cached asset.
+  documentHtml = documentHtml.replaceAll(
+    `/assets/${patchedClientBundle.originalName}`,
+    `/assets/${patchedClientBundle.versionedName}`
+  );
+
   if (relativePath === "index.html" || relativePath === "en/index.html") {
     const locale = relativePath === "index.html" ? "ja" : "en";
     documentHtml = patchHomeDocument(documentHtml, locale);
@@ -514,6 +525,8 @@ for (const relativePath of publicHtmlFiles) {
     if (!documentHtml.includes(SECOND_TAKE_URL)) throw new Error(`SECOND TAKE link missing: ${relativePath}`);
     if (!documentHtml.includes(BATON_URL)) throw new Error(`Baton link missing: ${relativePath}`);
     if (!documentHtml.includes(`href="${MEDIA_STYLESHEET_URL}"`)) throw new Error(`Media refresh stylesheet missing: ${relativePath}`);
+    if (!documentHtml.includes(`/assets/${patchedClientBundle.versionedName}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
+    if (documentHtml.includes(`/assets/${patchedClientBundle.originalName}`)) throw new Error(`Cached client bundle reference remains: ${relativePath}`);
     if (documentHtml.includes("Standment")) throw new Error(`Legacy Standment copy remains: ${relativePath}`);
     if (!(documentHtml.indexOf('id="news"') < documentHtml.indexOf('class="manifesto content-frame"') &&
       documentHtml.indexOf('class="manifesto content-frame"') < documentHtml.indexOf('id="media"') &&
@@ -523,7 +536,7 @@ for (const relativePath of publicHtmlFiles) {
   }
 }
 
-const patchedBundleContents = readFileSync(join(output, "assets", patchedClientBundle), "utf8");
+const patchedBundleContents = readFileSync(join(output, "assets", patchedClientBundle.versionedName), "utf8");
 for (const requiredToken of ["news-strip", "media-feature", SECOND_TAKE_URL, BATON_URL]) {
   if (!patchedBundleContents.includes(requiredToken)) throw new Error(`Client bundle token missing: ${requiredToken}`);
 }
@@ -559,7 +572,7 @@ for (const assetPath of localAssetRefs) {
 console.log(`Prepared static deploy directory: ${output}`);
 console.log(`Canonical host: ${SITE_URL}`);
 console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
-console.log(`Patched homepage content and client bundle: ${patchedClientBundle}`);
+console.log(`Patched homepage content and client bundle: ${patchedClientBundle.versionedName}`);
 console.log(`Safely rewrote ${rewrittenReferences} SEO references across ${publicHtmlFiles.length} public HTML documents.`);
 console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
 console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required branding files.`);
