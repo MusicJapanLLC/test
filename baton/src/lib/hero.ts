@@ -74,11 +74,13 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
 
 export function profileHubHeroHtml(): string {
   return `
-<header class="talk-hub-hero" data-hero>
-  <div class="wrap talk-hub-hero__inner">
-    <h1 class="talk-hub-hero__title">Baton -バトン-</h1>
-    <p class="talk-hub-hero__tagline">選んだ人が、選んだ人へ。</p>
+<header class="hub-hero" data-hero>
+  <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+  <div class="hub-hero__inner">
+    <h1 class="hub-hero__title">Baton -バトン-</h1>
+    <p class="hub-hero__tagline">選んだ人が、選んだ人へ。</p>
   </div>
+  <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
 </header>`.trim();
 }
 
