@@ -903,6 +903,8 @@ function batonRespondAction(token, decision) {
   batonSetRequestCell(row._row, '本人回答日時', new Date());
   batonSetRequestCell(row._row, '社長通知日時', new Date());
 
+  // 申請の可否は、社長(NOTIFY_TO)にだけ通知する。申請者へは自動送信しない
+  // （紹介するかどうか・どう伝えるかは、社長が個別に判断して連絡する）
   batonSendAdminMail(
     decision === 'approved' ? '【Baton】承認' : '【Baton】辞退',
     batonRequestSummaryLines(row, profile).concat([
@@ -912,22 +914,6 @@ function batonRespondAction(token, decision) {
         : '本人が辞退しました。この申請はここで終了です。'
     ])
   );
-
-  MailApp.sendEmail({
-    to: row['メール'],
-    subject: '【Baton】ご申請の結果について',
-    body: [
-      row['申請者'] + ' 様',
-      '',
-      profile.name + 'さんへのご申請について、ご本人からご回答がありました。',
-      '',
-      decision === 'approved'
-        ? '今回、話をしてもよいとのことです。追って合同会社Music Japanより、ご紹介方法についてご連絡します。'
-        : '今回は見送りたいとのことでした。またの機会にご検討いただけますと幸いです。',
-      '',
-      '── 合同会社Music Japan'
-    ].join('\n')
-  });
 
   return { ok: true };
 }
