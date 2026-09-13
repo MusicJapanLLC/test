@@ -3,25 +3,31 @@
  *  Baton アンケート受信 / Google Apps Script
  * ═══════════════════════════════════════════════════════════════
  *
- *  ■ 設置手順
+ *  ■ 設置手順（独立プロジェクトとして作る。スプレッドシートには紐付けない）
  *
- *  1. 回答を貯めるスプレッドシートを新規作成して開く
- *  2. 上部メニューの「拡張機能」→「Apps Script」
+ *  「LINE会話ログ」スプレッドシートには、すでに別のApps Scriptプロジェクトが
+ *  紐付いている想定なので、このコードは「拡張機能→Apps Script」では貼らない。
+ *  下記の手順で、どのシートにも属さない独立プロジェクトとして作る。
+ *
+ *  1. https://script.google.com/ を直接開く（スプレッドシート経由ではない）
+ *  2. 「新しいプロジェクト」
  *  3. エディタの中身をすべて消して、このファイルの内容を貼り付ける
  *  4. 保存（Ctrl+S / Cmd+S）
- *  5. 上部の関数選択で setupSheets を選び、「実行」
+ *  5. 上の BATON_SPREADSHEET_ID が「LINE会話ログ」のURLのIDと
+ *     一致しているか確認する
+ *  6. 上部の関数選択で setupBatonSheets を選び、「実行」
  *       → 初回は権限の確認画面が出る。
  *         「詳細」→「（プロジェクト名）に移動」→「許可」で承認する
- *       → 6つのシートとヘッダーが一括で作られる
- *  6. 右上の「デプロイ」→「新しいデプロイ」
- *  7. 歯車マーク →「ウェブアプリ」を選択
- *  8. 次のとおり設定する
- *       説明          : Baton survey endpoint（任意の文字列でよい）
+ *       → BATON_REQUESTS シートが用意される
+ *  7. 右上の「デプロイ」→「新しいデプロイ」
+ *  8. 歯車マーク →「ウェブアプリ」を選択
+ *  9. 次のとおり設定する
+ *       説明          : Baton endpoint（任意の文字列でよい）
  *       実行ユーザー  : 自分
  *       アクセスできるユーザー : 全員
- *  9. 「デプロイ」を押し、表示された「ウェブアプリのURL」をコピー
+ * 10. 「デプロイ」を押し、表示された「ウェブアプリのURL」をコピー
  *       （https://script.google.com/macros/s/AKfycb.../exec の形）
- * 10. そのURLを Vercel の環境変数 VITE_GAS_ENDPOINT に設定して再デプロイ
+ * 11. そのURLを VITE_GAS_ENDPOINT に設定して再デプロイ
  *
  *  ■ 疎通確認
  *     コピーしたURLをブラウザで開いて「OK」と表示されれば届いている。
@@ -33,6 +39,32 @@
  *
  * ═══════════════════════════════════════════════════════════════
  */
+
+/**
+ * このスクリプトが読み書きするスプレッドシートのID。
+ *
+ * 「LINE会話ログ」スプレッドシートには、すでに別の（このコードとは無関係な）
+ * Apps Scriptプロジェクトが紐付いている（LINEのやり取りを記録するためのもの）。
+ * 1つのスプレッドシートに紐付けられるApps Scriptプロジェクトは1つだけなので、
+ * このBatonのコードを「拡張機能→Apps Script」で同じ場所に貼ると、
+ * 既存のdoPost/doGetとぶつかって壊れる可能性がある。
+ *
+ * それを避けるため、このスクリプトは「どのシートにも紐付いていない、
+ * 完全に独立したApps Scriptプロジェクト」として作成し、このIDを使って
+ * スプレッドシートを名指しで開く（SpreadsheetApp.openById）。
+ * こうすれば、既存のLINE会話ログ用スクリプトとは完全に別物として動き、
+ * 一切干渉しない。
+ *
+ * 値は「LINE会話ログ」スプレッドシートのURLの
+ * https://docs.google.com/spreadsheets/d/【ここ】/edit
+ * の部分。念のため、実際のURLと一致しているか確認すること。
+ */
+var BATON_SPREADSHEET_ID = '1e5fVGFQiUOx_HMVaTTj6C4TLNI2Pi5Hx2-gnoOnCiew';
+
+/** 上のIDのスプレッドシートを開く。全部の読み書きはこれ経由に統一する */
+function batonGetSpreadsheet() {
+  return SpreadsheetApp.openById(BATON_SPREADSHEET_ID);
+}
 
 /** 通知メールの宛先 */
 var NOTIFY_TO = 'music.japan.llc@gmail.com';
@@ -132,7 +164,7 @@ function nowJst() {
 
 /** シートを取得。なければ作り、ヘッダーが空なら1行目を書き込む */
 function getSheet(serviceId) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = batonGetSpreadsheet();
   var sheet = ss.getSheetByName(serviceId);
   if (!sheet) sheet = ss.insertSheet(serviceId);
 
@@ -158,14 +190,14 @@ function setupSheets() {
   for (var i = 0; i < ids.length; i++) getSheet(ids[i]);
 
   // 新規スプレッドシートに残る空の「シート1」は、使っていなければ消す
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = batonGetSpreadsheet();
   var leftovers = ['シート1', 'Sheet1'];
   for (var j = 0; j < leftovers.length; j++) {
     var extra = ss.getSheetByName(leftovers[j]);
     if (extra && ss.getSheets().length > 1 && extra.getLastRow() === 0) ss.deleteSheet(extra);
   }
 
-  SpreadsheetApp.getActiveSpreadsheet().toast('6つのシートを用意しました', 'Baton', 5);
+  batonGetSpreadsheet().toast('6つのシートを用意しました', 'Baton', 5);
 }
 
 /** 疎通確認用。ブラウザでURLを開くと OK と表示される。Baton側の照会もここを通る */
@@ -272,7 +304,7 @@ function notify(serviceId, profile, answers, data) {
   lines.push('ひとこと : ' + (comment || '（なし）'));
   lines.push('');
   lines.push('スプレッドシート:');
-  lines.push(SpreadsheetApp.getActiveSpreadsheet().getUrl());
+  lines.push(batonGetSpreadsheet().getUrl());
 
   MailApp.sendEmail({
     to: NOTIFY_TO,
@@ -317,10 +349,10 @@ function testSubmission() {
   Logger.log('結果: ' + result);
 
   if (result === 'OK') {
-    SpreadsheetApp.getActiveSpreadsheet().toast(
+    batonGetSpreadsheet().toast(
       'engineer シートに1件入りました。メールも確認してください', 'テスト成功', 8);
   } else {
-    SpreadsheetApp.getActiveSpreadsheet().toast('失敗: ' + result, 'テスト', 8);
+    batonGetSpreadsheet().toast('失敗: ' + result, 'テスト', 8);
   }
 }
 
@@ -462,7 +494,7 @@ function batonHandleGet(params) {
 
 /** BATON_REQUESTS シートを取得。無ければ元の14列で作り、足りない列は右に追加する */
 function batonGetRequestsSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = batonGetSpreadsheet();
   var sheet = ss.getSheetByName(BATON_SHEET_NAME);
   if (!sheet) {
     sheet = ss.insertSheet(BATON_SHEET_NAME);
@@ -493,7 +525,7 @@ function batonEnsureExtraHeaders(sheet) {
  */
 function setupBatonSheets() {
   batonGetRequestsSheet();
-  SpreadsheetApp.getActiveSpreadsheet().toast('BATON_REQUESTS シートを確認・用意しました', 'Baton', 5);
+  batonGetSpreadsheet().toast('BATON_REQUESTS シートを確認・用意しました', 'Baton', 5);
 }
 
 /** 現在のヘッダー行から { 列名: 列番号(1始まり) } を作る */
@@ -933,9 +965,9 @@ function testBatonFlow() {
 
   Logger.log('結果: ' + JSON.stringify(result));
   if (result.ok) {
-    SpreadsheetApp.getActiveSpreadsheet().toast(
+    batonGetSpreadsheet().toast(
       'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
   } else {
-    SpreadsheetApp.getActiveSpreadsheet().toast('失敗: ' + JSON.stringify(result), 'テスト', 8);
+    batonGetSpreadsheet().toast('失敗: ' + JSON.stringify(result), 'テスト', 8);
   }
 }
