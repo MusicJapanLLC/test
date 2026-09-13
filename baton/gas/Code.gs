@@ -456,7 +456,7 @@ var BATON_PROFILES = {
 };
 
 /** 本番のURL。カスタムドメインを取得したらここを差し替える */
-var BATON_SITE_URL = 'https://baton-liart.vercel.app/';
+var BATON_SITE_URL = 'https://baton.music-japan.com/';
 
 /** 添付資料の保存先フォルダ名 */
 var BATON_DRIVE_FOLDER_NAME = 'Baton 添付資料';
