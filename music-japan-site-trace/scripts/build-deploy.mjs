@@ -8,7 +8,8 @@ const root = fileURLToPath(new URL("..", import.meta.url));
 const source = join(root, "dist");
 const output = join(root, "deploy-dist");
 const OLD_SITE_URL = "https://music-japan.pearly-cedar-3983.chatgpt.site";
-const DEFAULT_SITE_URL = "https://music-japan.pages.dev";
+const LEGACY_PAGES_URL = "https://music-japan.pages.dev";
+const DEFAULT_SITE_URL = "https://music-japan.com";
 const SITE_URL = (process.env.PUBLIC_SITE_URL || DEFAULT_SITE_URL).replace(/\/$/, "");
 const RSC_MARKER = '<script id="_R_">';
 const FAVICON_URL = "/favicon-music-japan.svg?v=20260913-final";
@@ -99,7 +100,7 @@ for (const relativePath of machineReadableFiles) {
   const fullPath = join(output, relativePath);
   if (!existsSync(fullPath)) throw new Error(`Missing SEO/AIO file during deploy: ${relativePath}`);
   const original = readFileSync(fullPath, "utf8");
-  writeFileSync(fullPath, original.replaceAll(DEFAULT_SITE_URL, SITE_URL));
+  writeFileSync(fullPath, original.replaceAll(LEGACY_PAGES_URL, SITE_URL));
 }
 
 for (const relativePath of publicHtmlFiles) {
@@ -118,7 +119,9 @@ for (const relativePath of publicHtmlFiles) {
 
 for (const relativePath of machineReadableFiles) {
   const content = readFileSync(join(output, relativePath), "utf8");
-  if (content.includes(OLD_SITE_URL)) throw new Error(`Legacy host remains in SEO/AIO file: ${relativePath}`);
+  if (content.includes(OLD_SITE_URL) || content.includes(LEGACY_PAGES_URL)) {
+    throw new Error(`Legacy host remains in SEO/AIO file: ${relativePath}`);
+  }
 }
 
 for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg"]) {
