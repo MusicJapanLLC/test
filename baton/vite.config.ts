@@ -224,7 +224,7 @@ function batonPages(): Plugin {
             .replace(
               '<!--BATON:HEAD-->',
               head({
-                title: `Baton Talk｜この人と話したい - ${site.name}`,
+                title: `Baton -バトン-｜選んだ人が、選んだ人へ。`,
                 description: 'Music Japanが紹介する人物プロフィール一覧です。',
                 themeColor: site.theme.bg,
                 path: '/profile/',
