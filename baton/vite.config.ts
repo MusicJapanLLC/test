@@ -9,6 +9,13 @@ import {
   profileHubHeroHtml,
   serviceHeroHtml,
 } from './src/lib/hero';
+import {
+  profileHubStructuredData,
+  profileStructuredData,
+  serviceHubStructuredData,
+  serviceStructuredData,
+  type JsonLd,
+} from './src/lib/seo';
 import type { Service, TalkProfile } from './src/types';
 
 const root = process.cwd();
@@ -17,8 +24,8 @@ const root = process.cwd();
 const base = process.env.VITE_BASE ?? '/';
 
 /**
- * 6サービス + ハブ + プライバシーポリシー
- * + Baton Introduction System（プロフィール6枚 + 一覧 + 認証/承認・辞退の2ページ）
+ * 法人向けサービス + ハブ + プライバシーポリシー
+ * + Baton Introduction System（プロフィール一覧 + 各プロフィール + 認証/承認・辞退ページ）
  */
 const pages = {
   main: resolve(root, 'index.html'),
@@ -37,7 +44,7 @@ const pages = {
 
 /**
  * トップページ（/）に出すプロフィール。
- * 旧6サービスハブはトップから外し、`/hub/` に移動した。
+ * 法人向けサービスハブはトップから外し、`/hub/` に置く。
  */
 const homeProfile: TalkProfile | null = profiles.find((p) => p.slug === 'kabeya') ?? profiles[0] ?? null;
 
@@ -48,30 +55,33 @@ const FONT_HREF =
 const PROFILE_FONT_HREF =
   'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap';
 
+const PRODUCTION_SITE_URL = 'https://baton.music-japan.com';
+
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/**
- * ページのパスから、対応するサービス設定を引く（なければハブ/法務ページ）。
- * サービスは常にルート直下（/<slug>/index.html）にあるため、
- * 「/profile/<slug>/index.html」のように途中に別のセグメントが挟まる
- * パスと混同しないよう、直前が root であることまで確認する。
- */
-function serviceForPath(filename: string): Service | null {
-  const normalized = filename.replace(/\\/g, '/');
-  const normalizedRoot = root.replace(/\\/g, '/');
-  return (
-    services.find((s) => normalized === `${normalizedRoot}/${s.slug}/index.html`) ?? null
-  );
+function siteUrl(): string {
+  const explicit = process.env.VITE_SITE_URL?.trim();
+  return (explicit || PRODUCTION_SITE_URL).replace(/\/$/, '');
 }
 
-/** ページのパスから、対応するBaton Talkプロフィールを引く */
-function profileForPath(filename: string): TalkProfile | null {
-  const normalized = filename.replace(/\\/g, '/');
-  const normalizedRoot = root.replace(/\\/g, '/');
-  return (
-    profiles.find((p) => normalized === `${normalizedRoot}/profile/${p.slug}/index.html`) ?? null
-  );
+/**
+ * canonical / schema / sitemap は必ず公開中の独自ドメインを指す。
+ * Vercel / GitHub Pages 等のプレビューURLへ検索評価を分散させない。
+ */
+function absoluteUrl(path: string): string {
+  const cleanPath = `/${path.replace(/^\/+/, '')}`.replace(/\/{2,}/g, '/');
+  return `${siteUrl()}${cleanPath}`;
+}
+
+function jsonLdHtml(items: JsonLd[] | undefined): string {
+  if (!items?.length) return '';
+  return items
+    .map(
+      (item) =>
+        `<script type="application/ld+json">${JSON.stringify(item).replace(/</g, '\\u003c')}</script>`,
+    )
+    .join('\n    ');
 }
 
 function head(opts: {
@@ -80,6 +90,9 @@ function head(opts: {
   themeColor: string;
   path: string;
   vars: string;
+  canonicalPath?: string;
+  ogType?: 'website' | 'profile';
+  jsonLd?: JsonLd[];
   /** プロフィールページだけ、見出し用の明朝体をもう1本読み込む */
   extraFontHref?: string;
 }) {
@@ -89,6 +102,8 @@ function head(opts: {
     <link rel="stylesheet" href="${opts.extraFontHref}" media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href="${opts.extraFontHref}" /></noscript>`
     : '';
+  const canonical = absoluteUrl(opts.canonicalPath ?? opts.path);
+  const structuredData = jsonLdHtml(opts.jsonLd);
 
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -103,28 +118,19 @@ function head(opts: {
     <noscript><link rel="stylesheet" href="${FONT_HREF}" /></noscript>${extraFont}
     <title>${esc(opts.title)}</title>
     <meta name="description" content="${esc(opts.description)}" />
+    <link rel="canonical" href="${canonical}" />
     <meta name="theme-color" content="${opts.themeColor}" />
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content="${opts.ogType ?? 'website'}" />
     <meta property="og:site_name" content="${esc(site.nameJa)}" />
     <meta property="og:title" content="${esc(opts.title)}" />
     <meta property="og:description" content="${esc(opts.description)}" />
-    <meta property="og:url" content="${siteUrl()}${(base + opts.path.replace(/^\//, '')).replace(/\/{2,}/g, '/')}" />
+    <meta property="og:url" content="${canonical}" />
     <meta name="twitter:card" content="summary_large_image" />
+    ${structuredData}
     <style>:root{${opts.vars}}</style>`.trim();
 }
 
-/**
- * 本番のドメイン。Vercel なら VERCEL_PROJECT_PRODUCTION_URL が入る。
- * 独自ドメインを当てたら VITE_SITE_URL で上書きする。
- */
-function siteUrl(): string {
-  const explicit = process.env.VITE_SITE_URL;
-  if (explicit) return explicit.replace(/\/$/, '');
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
-  return vercel ? `https://${vercel}` : 'http://localhost:4173';
-}
-
-/** robots.txt と sitemap.xml はビルド時に services から作る。手で直す場所を増やさない */
+/** robots.txt と sitemap.xml はビルド時に公開中の独自ドメインで生成する */
 function batonSeoFiles(): Plugin {
   return {
     name: 'baton-seo-files',
@@ -132,21 +138,16 @@ function batonSeoFiles(): Plugin {
     generateBundle() {
       const siteBase = siteUrl();
       const paths = [
-        '',
         'hub/',
         ...services.map((s) => `${s.slug}/`),
-        'privacy/',
         'profile/',
-        ...profiles.map((p) => `profile/${p.slug}/`),
-      ].map((p) => `${base}${p}`.replace(/\/{2,}/g, '/'));
+        ...profiles.filter((p) => p.active).map((p) => `profile/${p.slug}/`),
+      ];
 
       this.emitFile({
         type: 'asset',
         fileName: 'robots.txt',
-        source: `User-agent: *\nAllow: /\n\nSitemap: ${siteBase}${base}sitemap.xml\n`.replace(
-          /([^:])\/{2,}/g,
-          '$1/',
-        ),
+        source: `User-agent: *\nAllow: /\n\nSitemap: ${siteBase}/sitemap.xml\n`,
       });
 
       this.emitFile({
@@ -155,7 +156,7 @@ function batonSeoFiles(): Plugin {
         source:
           '<?xml version="1.0" encoding="UTF-8"?>\n' +
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-          paths.map((p) => `  <url><loc>${siteBase}${p}</loc></url>`).join('\n') +
+          paths.map((p) => `  <url><loc>${siteBase}/${p}</loc></url>`).join('\n') +
           '\n</urlset>\n',
       });
     },
@@ -169,6 +170,8 @@ function batonPages(): Plugin {
       order: 'pre',
       handler(html, ctx) {
         const filename = ctx.filename.replace(/\\/g, '/');
+        const profileHubUrl = absoluteUrl('/profile/');
+        const serviceHubUrl = absoluteUrl('/hub/');
 
         const s = serviceForPath(ctx.filename);
         if (s) {
@@ -178,6 +181,8 @@ function batonPages(): Plugin {
             `--bg:${s.theme.bg}`,
             `--text:${s.theme.text}`,
           ].join(';');
+          const servicePath = `/${s.slug}/`;
+          const serviceUrl = absoluteUrl(servicePath);
           return html
             .replace(
               '<!--BATON:HEAD-->',
@@ -185,8 +190,9 @@ function batonPages(): Plugin {
                 title: `${s.serviceName}｜${s.company} - ${site.name}`,
                 description: s.description,
                 themeColor: s.theme.primary,
-                path: `/${s.slug}/`,
+                path: servicePath,
                 vars,
+                jsonLd: serviceStructuredData(s, serviceUrl, serviceHubUrl),
               }),
             )
             .replace('<!--BATON:HERO-->', serviceHeroHtml(s, base));
@@ -202,6 +208,8 @@ function batonPages(): Plugin {
             `--text:${p.theme.text}`,
           ].join(';');
           const path = isHome ? '/' : `/profile/${p.slug}/`;
+          const canonicalPath = `/profile/${p.slug}/`;
+          const profileUrl = absoluteUrl(canonicalPath);
           return html
             .replace(
               '<!--BATON:HEAD-->',
@@ -210,7 +218,10 @@ function batonPages(): Plugin {
                 description: p.bio,
                 themeColor: p.theme.primary,
                 path,
+                canonicalPath,
+                ogType: 'profile',
                 vars,
+                jsonLd: profileStructuredData(p, profileUrl, profileHubUrl),
                 extraFontHref: PROFILE_FONT_HREF,
               }),
             )
@@ -224,11 +235,17 @@ function batonPages(): Plugin {
             .replace(
               '<!--BATON:HEAD-->',
               head({
-                title: `Baton -バトン-｜選んだ人が、選んだ人へ。`,
-                description: 'Music Japanが紹介する人物プロフィール一覧です。',
+                title: 'Baton -バトン-｜選んだ人が、選んだ人へ。',
+                description:
+                  '合同会社Music Japanが実際に対話した経営者・事業者のプロフィールを掲載する、招待制の紹介サービス「Baton -バトン-」です。',
                 themeColor: site.theme.bg,
                 path: '/profile/',
                 vars,
+                jsonLd: profileHubStructuredData(
+                  profiles,
+                  profileHubUrl,
+                  (profile) => absoluteUrl(`/profile/${profile.slug}/`),
+                ),
               }),
             )
             .replace('<!--BATON:HERO-->', profileHubHeroHtml());
@@ -252,25 +269,65 @@ function batonPages(): Plugin {
 
         const isPrivacy = filename.includes('/privacy/');
         const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:${site.theme.bg};--text:${site.theme.text}`;
+        if (isPrivacy) {
+          return html
+            .replace(
+              '<!--BATON:HEAD-->',
+              head({
+                title: `プライバシーポリシー - ${site.name}`,
+                description: `${site.operator.name}のプライバシーポリシーです。`,
+                themeColor: site.theme.bg,
+                path: '/privacy/',
+                vars,
+              }),
+            )
+            .replace('<!--BATON:HERO-->', '');
+        }
+
         return html
           .replace(
             '<!--BATON:HEAD-->',
             head({
-              title: isPrivacy
-                ? `プライバシーポリシー - ${site.name}`
-                : `${site.nameJa}｜${site.tagline}`,
-              description: isPrivacy
-                ? `${site.operator.name}のプライバシーポリシーです。`
-                : site.description,
+              title: '法人向け厳選サービス｜Baton -バトン-',
+              description:
+                '合同会社Music Japanが法人向けに選んだ専門サービスを掲載しています。IT人材、Web制作、システム開発、新卒採用、WordPress、CRMなど、課題に応じて相談できます。',
               themeColor: site.theme.bg,
-              path: isPrivacy ? '/privacy/' : '/hub/',
+              path: '/hub/',
               vars,
+              jsonLd: serviceHubStructuredData(
+                services,
+                serviceHubUrl,
+                (service) => absoluteUrl(`/${service.slug}/`),
+              ),
             }),
           )
-          .replace('<!--BATON:HERO-->', isPrivacy ? '' : hubHeroHtml());
+          .replace('<!--BATON:HERO-->', hubHeroHtml());
       },
     },
   };
+}
+
+/**
+ * ページのパスから、対応するサービス設定を引く（なければハブ/法務ページ）。
+ * サービスは常にルート直下（/<slug>/index.html）にあるため、
+ * 「/profile/<slug>/index.html」のように途中に別のセグメントが挟まる
+ * パスと混同しないよう、直前が root であることまで確認する。
+ */
+function serviceForPath(filename: string): Service | null {
+  const normalized = filename.replace(/\\/g, '/');
+  const normalizedRoot = root.replace(/\\/g, '/');
+  return (
+    services.find((s) => normalized === `${normalizedRoot}/${s.slug}/index.html`) ?? null
+  );
+}
+
+/** ページのパスから、対応するBaton Talkプロフィールを引く */
+function profileForPath(filename: string): TalkProfile | null {
+  const normalized = filename.replace(/\\/g, '/');
+  const normalizedRoot = root.replace(/\\/g, '/');
+  return (
+    profiles.find((p) => normalized === `${normalizedRoot}/profile/${p.slug}/index.html`) ?? null
+  );
 }
 
 export default defineConfig({
