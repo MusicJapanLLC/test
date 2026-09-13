@@ -91,7 +91,7 @@ export function hubHeroHtml(): string {
   <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="hub-hero__inner">
     <h1 class="hub-hero__title">${esc(site.name)}</h1>
-    <p class="hub-hero__tagline">${esc(site.tagline)}</p>
+    <p class="hub-hero__tagline">一つひとつ、確かめて選んだ6つ。</p>
   </div>
   <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
 </header>`.trim();
