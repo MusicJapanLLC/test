@@ -78,9 +78,18 @@ npm run preview              # ビルド結果の確認
 `gas/Code.gs` の先頭に設置手順がある。スプレッドシートの Apps Script に貼って
 `setupSheets()` を実行 → ウェブアプリとしてデプロイ → URLを `VITE_GAS_ENDPOINT` へ。
 
-## デプロイ（Vercel）
+## デプロイ（Cloudflare Pages）
 
-Root Directory を `baton` に設定すること。それ以外は `vercel.json` のとおり。
+本番は `https://baton.music-japan.com`。Cloudflare Pagesの設定:
+
+- Production branch: `claude/baton-backend-implementation-zu0h6k`
+- Root directory: `baton`
+- Build command: `npm run build`
+- Build output directory: `dist`
+- 環境変数(`VITE_GAS_ENDPOINT`など)を追加・変更したときは、
+  「Retry deployment」では新しい環境変数が反映されない（前回ビルド時の
+  設定のまま作り直されてしまう）。新しいコミットをpushして、
+  新規デプロイを起こすこと。
 
 ## Baton Introduction System（紹介システム）
 
