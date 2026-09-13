@@ -12,7 +12,7 @@
  *  5. 上部の関数選択で setupSheets を選び、「実行」
  *       → 初回は権限の確認画面が出る。
  *         「詳細」→「（プロジェクト名）に移動」→「許可」で承認する
- *       → 6つのシートとヘッダーが一括で作られる
+ *       → 7つのシートとヘッダーが一括で作られる
  *  6. 右上の「デプロイ」→「新しいデプロイ」
  *  7. 歯車マーク →「ウェブアプリ」を選択
  *  8. 次のとおり設定する
@@ -106,6 +106,16 @@ var SERVICES = {
       '感じていることはどれが近いですか',
       '事業に関わっているのは何名くらいですか'
     ]
+  },
+  unveil: {
+    name: 'unveil（株式会社unveil）',
+    hasCapital: false,
+    questions: [
+      '今、力を入れたいのはどの分野ですか',
+      '感じていることはどれが近いですか',
+      '検討している時期はいつ頃ですか',
+      '想定している予算はどのくらいですか'
+    ]
   }
 };
 
@@ -151,7 +161,7 @@ function getSheet(serviceId) {
 
 /**
  * 初回セットアップ。
- * この関数を1度だけ実行すると、6シートとヘッダーが一括で作られる。
+ * この関数を1度だけ実行すると、7シートとヘッダーが一括で作られる。
  */
 function setupSheets() {
   var ids = Object.keys(SERVICES);
@@ -165,7 +175,7 @@ function setupSheets() {
     if (extra && ss.getSheets().length > 1 && extra.getLastRow() === 0) ss.deleteSheet(extra);
   }
 
-  SpreadsheetApp.getActiveSpreadsheet().toast('6つのシートを用意しました', 'Baton', 5);
+  SpreadsheetApp.getActiveSpreadsheet().toast('7つのシートを用意しました', 'Baton', 5);
 }
 
 /** 疎通確認用。ブラウザでURLを開くと OK と表示される */

@@ -10,7 +10,7 @@ const root = process.cwd();
 /** サブパス配信するときだけ設定する。例: GitHub Pages なら /test/ */
 const base = process.env.VITE_BASE ?? '/';
 
-/** 6サービス + ハブ + プライバシーポリシー = 8エントリ */
+/** 7サービス + ハブ + プライバシーポリシー = 9エントリ */
 const pages = {
   main: resolve(root, 'index.html'),
   ...Object.fromEntries(
