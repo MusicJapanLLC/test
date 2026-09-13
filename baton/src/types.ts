@@ -97,7 +97,7 @@ export type TalkProfile = {
   /** 運営メディア・サービス（名称＋説明の一覧。未指定なら表示しない） */
   services?: { name: string; description: string }[];
   /** SECOND TAKE記事 / Podcast / 公式サイトなど。今後増える想定でそのまま並べる */
-  media?: { label: string; url: string }[];
+  media?: { label: string; url: string; image?: string }[];
   theme: Theme;
   /** ヒーローに出す立体（未指定ならCSSグラデーションのみの簡易ヒーロー） */
   monument?: MonumentKind;

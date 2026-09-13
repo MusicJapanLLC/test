@@ -76,7 +76,13 @@ function mediaSection(profile: TalkProfile): HTMLElement | null {
         { class: 'media-grid', 'data-reveal-group': true },
         profile.media.map((m) =>
           el('a', { class: 'media-card', href: m.url, ...externalAttrs, 'data-reveal': true }, [
-            el('div', { class: 'media-card__thumb' }, [el('span', { text: m.label.slice(0, 1) }), arrow()]),
+            el(
+              'div',
+              { class: 'media-card__thumb' },
+              m.image
+                ? [el('img', { class: 'media-card__img', src: m.image, alt: '', loading: 'lazy' }), arrow()]
+                : [el('span', { text: m.label.slice(0, 1) }), arrow()],
+            ),
             el('p', { class: 'media-card__title', text: m.label }),
           ]),
         ),
