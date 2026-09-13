@@ -326,61 +326,94 @@ function testSubmission() {
 
 /**
  * ═══════════════════════════════════════════════════════════════
- *  Baton Introduction System（紹介システム）/ 仕様 v1.1
+ *  Baton Introduction System（紹介システム）
  * ═══════════════════════════════════════════════════════════════
  *  上のアンケート受信（SERVICES / setupSheets）とは完全に独立した別機能。
- *  「この人と話したい」→ 申請者メール認証 → 掲載者承認/辞退 → 社長へ通知、を扱う。
+ *  「この人と話したい」→ 申請者メール認証 → 本人の承認/辞退 → 社長へ通知、を扱う。
+ *
+ *  ■ このコードが対象にしているスプレッドシートについて
+ *  このスクリプトは「LINE会話ログ」スプレッドシート（既存の紹介業務で
+ *  使っているもの）に紐づけて使う前提。中の BATON_REQUESTS シートに
+ *  1行＝1申請として書き込む。既存の「会話ログ」「紹介チェック」
+ *  「紹介履歴_RAW」の各シートには一切触れない。
+ *
+ *  BATON_REQUESTS の元々の列（すでにある。順番も含めて変更しない）:
+ *    request_id / 申請日時 / 話したい人 / 申請者 / 会社名 / メール /
+ *    コメント / 状態 / 本人回答 / 本人回答日時 / 社長通知日時 /
+ *    紹介済 / 紹介日時 / プロフィールURL
+ *  このスクリプトが右側に追加する列（setupBatonSheets実行時に無ければ足す）:
+ *    profile_id / 役職 / 目的 / 備考 / 添付資料 /
+ *    認証トークンhash / 認証期限 / 認証日時 /
+ *    回答トークンhash / 回答期限 / リマインド日時
+ *  「紹介済」「紹介日時」はこのスクリプトからは書き換えない。
+ *  実際に紹介した後、社長が手で入れる想定（既存の紹介チェックと同じ運用）。
  *
  *  ■ 追加セットアップ手順
- *  1. 関数選択で setupBatonSheets を選び「実行」
- *       → PROFILES / REQUESTS / TOKENS / RESULTS の4シートができる
- *       → PROFILES には初期6件が入る（掲載者メールは暫定で全員 NOTIFY_TO）
- *  2. 実際の掲載者（承認/辞退する本人）のメールが決まったら、
- *     PROFILES シートの recipient_email 列を直接書き換える（再デプロイ不要）
- *  3. 「デプロイを管理」で新バージョンとして更新する（既存の手順と同じ）
- *  4. 時間主導トリガーを1つ追加する（3日リマインド・7日expireに必要）
+ *  1. 「LINE会話ログ」スプレッドシートを開き、拡張機能 → Apps Script
+ *  2. このファイルの内容を貼り付けて保存
+ *  3. 関数選択で setupBatonSheets を選び「実行」
+ *       → BATON_REQUESTS シートが無ければ作られる
+ *       → 足りない列があれば右側に追加される（既存の列・データは無傷）
+ *  4. 「デプロイ」→「新しいデプロイ」（既存のGASと同じWebアプリ手順。
+ *     すでに一度デプロイ済みなら「デプロイを管理」→新バージョン）
+ *  5. 時間主導トリガーを1つ追加する（3日リマインド・7日expireに必要）
  *       「トリガー」→「トリガーを追加」
  *       実行する関数: batonDailyJob
  *       イベントのソース: 時間主導 → 日付ベースのタイマー → 午前9時〜10時 など
  *
- *  ■ 動作確認
- *     testBatonFlow() を実行すると、engineer プロフィールへのテスト申請を
- *     1件作り、認証メールが飛ぶところまで確認できる（Logger.log に手順が出る）
+ *  ■ プロフィール（掲載者）の設定について
+ *  氏名・会社・掲載者メールは、下の BATON_PROFILES にコードで書く
+ *  （壁谷さんの1件だけの現状では、シートを増やすよりこちらの方が単純なため）。
+ *  人物が増えたら、この中にオブジェクトを1件追加する。
+ *  掲載される公開情報（写真・紹介文など）は src/data/profiles.ts 側の担当。
  *
- *  ■ プロフィールの公開情報（氏名・写真・紹介文など）について
- *     サイト側の表示は src/data/profiles.ts の静的データを使っている
- *     （LCP最適化のため、ページ表示のたびにこのシートを読みには行かない）。
- *     このシートの public_bio / topics / image / media_url は、今後
- *     実データに差し替える際の作業用メモ欄として用意してあるだけで、
- *     現状サイトの表示には使われていない。
- *     実際にサイトへ反映する情報を変えたい場合は profiles.ts を編集する。
- *     一方 recipient_email と active は、このシートの値がそのまま
- *     動作（誰に承認メールを送るか / 申請を受け付けるか）を左右する。
+ *  ■ 添付資料について
+ *  申請フォームで添付されたファイルは、Googleドライブの
+ *  「Baton 添付資料」フォルダ（無ければ自動作成）に保存し、
+ *  リンク共有（閲覧のみ）にしたうえで、そのURLを添付資料列に記録する。
+ *
+ *  ■ 動作確認
+ *     testBatonFlow() を実行すると、kabeya プロフィールへのテスト申請を
+ *     1件作り、認証メールが飛ぶところまで確認できる（Logger.log に結果が出る）
  */
 
-var BATON_SHEETS = { PROFILES: 'PROFILES', REQUESTS: 'REQUESTS', TOKENS: 'TOKENS', RESULTS: 'RESULTS' };
+/** 対象シート名。すでにこの名前でシートが存在する前提 */
+var BATON_SHEET_NAME = 'BATON_REQUESTS';
 
-var BATON_HEADERS = {
-  PROFILES: ['profile_id', 'slug', 'name', 'company', 'title', 'public_bio', 'topics', 'image', 'media_url', 'recipient_email', 'active'],
-  REQUESTS: ['request_id', 'profile_id', 'applicant_name', 'applicant_company', 'applicant_title', 'applicant_email', 'purpose', 'comment', 'note', 'status', 'created_at', 'verified_at', 'expires_at', 'reminded_at'],
-  TOKENS: ['request_id', 'token_hash', 'type', 'created_at', 'expires_at', 'used_at'],
-  RESULTS: ['request_id', 'introduced_at', 'meeting_at', 'next_action', 'outcome', 'memo']
+/** 元々ある列（この順番・名前は変更しない） */
+var BATON_BASE_HEADERS = [
+  'request_id', '申請日時', '話したい人', '申請者', '会社名', 'メール',
+  'コメント', '状態', '本人回答', '本人回答日時', '社長通知日時',
+  '紹介済', '紹介日時', 'プロフィールURL'
+];
+
+/** このスクリプトが右側に追加する列 */
+var BATON_EXTRA_HEADERS = [
+  'profile_id', '役職', '目的', '備考', '添付資料',
+  '認証トークンhash', '認証期限', '認証日時',
+  '回答トークンhash', '回答期限', 'リマインド日時'
+];
+
+/**
+ * プロフィール（掲載者）の設定。
+ * recipientEmail は非公開情報。ここにしか置かない（サイト側のコードには含めない）。
+ */
+var BATON_PROFILES = {
+  kabeya: {
+    name: '壁谷 友生',
+    company: '合同会社Music Japan',
+    slug: 'kabeya',
+    // 壁谷さん本人のプロフィールのため、暫定で社長通知先と同じアドレスにしてある
+    recipientEmail: NOTIFY_TO,
+    active: true
+  }
 };
-
-/** 初期プロフィール。実際の担当者名・掲載者メールが決まり次第シート側で上書きする */
-function batonInitialProfileRows() {
-  return [
-    ['engineer', 'engineer', 'テクフリ', '株式会社アイデンティティー', 'ご担当者', '', '', '', '', NOTIFY_TO, true],
-    ['webgl', 'webgl', 'Standment', '合同会社Music Japan', 'ご担当者', '', '', '', '', NOTIFY_TO, true],
-    ['system', 'system', 'ZOOA', '株式会社ZOOA', 'ご担当者', '', '', '', '', NOTIFY_TO, true],
-    ['newgrad', 'newgrad', 'PEP lab', 'PEP lab', 'ご担当者', '', '', '', '', NOTIFY_TO, true],
-    ['wordpress', 'wordpress', 'サイト引越し屋さん', '株式会社DPパートナーズ', 'ご担当者', '', '', '', '', NOTIFY_TO, true],
-    ['crm', 'crm', 'Empro', '株式会社エボルグ', 'ご担当者', '', '', '', '', NOTIFY_TO, true]
-  ];
-}
 
 /** 本番のURL。カスタムドメインを取得したらここを差し替える */
 var BATON_SITE_URL = 'https://baton-liart.vercel.app/';
+
+/** 添付資料の保存先フォルダ名 */
+var BATON_DRIVE_FOLDER_NAME = 'Baton 添付資料';
 
 /** メール認証は24時間、承認/辞退の回答期限は認証から7日間、リマインドは3日後 */
 var BATON_VERIFY_TTL_MS = 24 * 60 * 60 * 1000;
@@ -427,80 +460,107 @@ function batonHandleGet(params) {
   }
 }
 
-function getBatonSheet(name) {
+/** BATON_REQUESTS シートを取得。無ければ元の14列で作り、足りない列は右に追加する */
+function batonGetRequestsSheet() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName(name);
-  if (!sheet) sheet = ss.insertSheet(name);
-
-  var headers = BATON_HEADERS[name];
-  if (sheet.getLastRow() === 0) {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
-    sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#F1F3F5');
+  var sheet = ss.getSheetByName(BATON_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(BATON_SHEET_NAME);
+    sheet.getRange(1, 1, 1, BATON_BASE_HEADERS.length).setValues([BATON_BASE_HEADERS]);
+    sheet.getRange(1, 1, 1, BATON_BASE_HEADERS.length).setFontWeight('bold').setBackground('#F1F3F5');
     sheet.setFrozenRows(1);
-    for (var i = 1; i <= headers.length; i++) sheet.setColumnWidth(i, 160);
   }
+  batonEnsureExtraHeaders(sheet);
   return sheet;
 }
 
-/**
- * 初回セットアップ。PROFILES / REQUESTS / TOKENS / RESULTS を作り、
- * PROFILES にだけ初期6件を入れる（2回実行しても重複しない）。
- */
-function setupBatonSheets() {
-  var names = Object.keys(BATON_SHEETS);
-  for (var i = 0; i < names.length; i++) getBatonSheet(BATON_SHEETS[names[i]]);
-
-  var profilesSheet = getBatonSheet(BATON_SHEETS.PROFILES);
-  if (profilesSheet.getLastRow() <= 1) {
-    var rows = batonInitialProfileRows();
-    profilesSheet.getRange(2, 1, rows.length, BATON_HEADERS.PROFILES.length).setValues(rows);
-  }
-
-  SpreadsheetApp.getActiveSpreadsheet().toast('Baton Introduction System の4シートを用意しました', 'Baton', 5);
+/** 既存の列はそのまま。BATON_EXTRA_HEADERS のうち無いものだけ右端に追加する */
+function batonEnsureExtraHeaders(sheet) {
+  var lastCol = sheet.getLastColumn();
+  var existing = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  BATON_EXTRA_HEADERS.forEach(function (h) {
+    if (existing.indexOf(h) === -1) {
+      lastCol += 1;
+      sheet.getRange(1, lastCol).setValue(h).setFontWeight('bold').setBackground('#F1F3F5');
+      existing.push(h);
+    }
+  });
 }
 
-/** シートの全データ行を、ヘッダー名をキーにしたオブジェクトの配列で返す（_row は実シート行番号） */
-function batonReadRows(sheetName) {
-  var sheet = getBatonSheet(sheetName);
-  var headers = BATON_HEADERS[sheetName];
+/**
+ * 初回セットアップ。BATON_REQUESTS シートを確認し、無ければ作り、
+ * 足りない列があれば右側に追加する（既存の列・データには触れない）。
+ */
+function setupBatonSheets() {
+  batonGetRequestsSheet();
+  SpreadsheetApp.getActiveSpreadsheet().toast('BATON_REQUESTS シートを確認・用意しました', 'Baton', 5);
+}
+
+/** 現在のヘッダー行から { 列名: 列番号(1始まり) } を作る */
+function batonHeaderIndex(sheet) {
+  var lastCol = sheet.getLastColumn();
+  var headers = lastCol > 0 ? sheet.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  var map = {};
+  headers.forEach(function (h, i) {
+    if (h) map[String(h)] = i + 1;
+  });
+  return map;
+}
+
+/** シートの全データ行を、列名をキーにしたオブジェクトの配列で返す（_row は実シート行番号） */
+function batonReadRequestRows() {
+  var sheet = batonGetRequestsSheet();
+  var idx = batonHeaderIndex(sheet);
   var lastRow = sheet.getLastRow();
+  var lastCol = sheet.getLastColumn();
   if (lastRow < 2) return [];
 
-  var values = sheet.getRange(2, 1, lastRow - 1, headers.length).getValues();
+  var values = sheet.getRange(2, 1, lastRow - 1, lastCol).getValues();
+  var names = Object.keys(idx);
   return values.map(function (row, i) {
     var obj = { _row: i + 2 };
-    headers.forEach(function (h, idx) { obj[h] = row[idx]; });
+    names.forEach(function (h) { obj[h] = row[idx[h] - 1]; });
     return obj;
   });
 }
 
-function batonFindRow(sheetName, keyField, keyValue) {
-  var rows = batonReadRows(sheetName);
+function batonFindRequestRow(headerName, value) {
+  var rows = batonReadRequestRows();
   for (var i = 0; i < rows.length; i++) {
-    if (String(rows[i][keyField]) === String(keyValue)) return rows[i];
+    if (rows[i][headerName] && String(rows[i][headerName]) === String(value)) return rows[i];
   }
   return null;
 }
 
-function batonAppendRow(sheetName, obj) {
-  var headers = BATON_HEADERS[sheetName];
-  var sheet = getBatonSheet(sheetName);
-  var row = headers.map(function (h) { return obj[h] !== undefined ? obj[h] : ''; });
+/** obj のキーは列名。無い列は無視する（想定外の書き込み事故を防ぐ） */
+function batonAppendRequestRow(obj) {
+  var sheet = batonGetRequestsSheet();
+  var idx = batonHeaderIndex(sheet);
+  var lastCol = sheet.getLastColumn();
+  var row = new Array(lastCol).fill('');
+  Object.keys(obj).forEach(function (k) {
+    if (idx[k]) row[idx[k] - 1] = obj[k];
+  });
   sheet.appendRow(row);
 }
 
-function batonSetCell(sheetName, rowIndex, field, value) {
-  var headers = BATON_HEADERS[sheetName];
-  var col = headers.indexOf(field) + 1;
-  if (col <= 0) return;
-  getBatonSheet(sheetName).getRange(rowIndex, col).setValue(value);
+function batonSetRequestCell(rowIndex, headerName, value) {
+  var sheet = batonGetRequestsSheet();
+  var idx = batonHeaderIndex(sheet);
+  if (!idx[headerName]) return;
+  sheet.getRange(rowIndex, idx[headerName]).setValue(value);
 }
 
 function batonGetProfile(profileId) {
-  var row = batonFindRow(BATON_SHEETS.PROFILES, 'profile_id', profileId);
-  if (!row) return null;
-  if (row.active === false || String(row.active).toUpperCase() === 'FALSE') return null;
-  return row;
+  var p = BATON_PROFILES[profileId];
+  if (!p || !p.active) return null;
+  return p;
+}
+
+function batonProfileUrl(profileId) {
+  var p = BATON_PROFILES[profileId];
+  var slug = (p && p.slug) || profileId;
+  return (BATON_SITE_URL.replace(/\/$/, '') + '/profile/' + slug + '/');
 }
 
 function batonNewId(prefix) {
@@ -521,6 +581,39 @@ function batonUrl(path, token) {
   return BATON_SITE_URL.replace(/\/$/, '') + '/' + path + '/?t=' + encodeURIComponent(token);
 }
 
+/** 添付資料の保存先フォルダ。無ければ作る */
+function batonGetAttachmentFolder() {
+  var it = DriveApp.getFoldersByName(BATON_DRIVE_FOLDER_NAME);
+  if (it.hasNext()) return it.next();
+  return DriveApp.createFolder(BATON_DRIVE_FOLDER_NAME);
+}
+
+/**
+ * 添付ファイル（base64）をGoogleドライブに保存し、閲覧リンクのURLを返す。
+ * 1件失敗しても他の添付は続ける（申請自体は失敗させない）。
+ */
+function batonSaveAttachments(attachments) {
+  if (!attachments || !attachments.length) return [];
+  var folder = null;
+  var urls = [];
+
+  for (var i = 0; i < attachments.length && i < 3; i++) {
+    var a = attachments[i];
+    if (!a || !a.data) continue;
+    try {
+      if (!folder) folder = batonGetAttachmentFolder();
+      var bytes = Utilities.base64Decode(a.data);
+      var blob = Utilities.newBlob(bytes, a.mimeType || 'application/octet-stream', a.name || ('attachment' + (i + 1)));
+      var file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      urls.push((a.name || file.getName()) + ': ' + file.getUrl());
+    } catch (err) {
+      urls.push((a.name || 'ファイル' + (i + 1)) + ': 保存に失敗しました');
+    }
+  }
+  return urls;
+}
+
 // ── 申請の作成（① CTA → ② Talk Request） ──────────────────────
 
 function batonSubmitTalk(data) {
@@ -533,11 +626,11 @@ function batonSubmitTalk(data) {
   var company = String(applicant.company || '').trim();
   var title = String(applicant.title || '').trim();
   var email = String(applicant.email || '').trim();
-  var purpose = String(data.purpose || '').trim();
+  var purposes = (data.purposes && data.purposes.length) ? data.purposes : [];
   var comment = String(data.comment || '').trim();
   var note = String(data.note || '').trim();
 
-  if (!name || !company || !email || !purpose || !comment) {
+  if (!name || !company || !email || !purposes.length || !comment) {
     return { ok: false, error: 'invalid', message: '必須項目が未入力です。' };
   }
   if (!BATON_EMAIL_RE.test(email)) {
@@ -554,41 +647,38 @@ function batonSubmitTalk(data) {
   cache.put(rlKey, '1', 60);
 
   // 同一人物からの重複申請だけ防ぐ（「最大3人」のような総数上限は設けない）
-  var existing = batonReadRows(BATON_SHEETS.REQUESTS).some(function (r) {
-    return String(r.profile_id) === profileId &&
-      String(r.applicant_email).toLowerCase() === email.toLowerCase() &&
-      (r.status === 'email_pending' || r.status === 'recipient_pending' || r.status === 'approved');
+  var pendingStates = ['メール未認証', '相手回答待ち', '承認'];
+  var existing = batonReadRequestRows().some(function (r) {
+    return String(r['話したい人']) === profile.name &&
+      String(r['メール']).toLowerCase() === email.toLowerCase() &&
+      pendingStates.indexOf(String(r['状態'])) !== -1;
   });
   if (existing) {
     return { ok: false, error: 'duplicate', message: 'このプロフィールには、すでに申請済みです。' };
   }
 
   var requestId = batonNewId('req');
-  batonAppendRow(BATON_SHEETS.REQUESTS, {
-    request_id: requestId,
-    profile_id: profileId,
-    applicant_name: name,
-    applicant_company: company,
-    applicant_title: title,
-    applicant_email: email,
-    purpose: purpose,
-    comment: comment,
-    note: note,
-    status: 'email_pending',
-    created_at: new Date(),
-    verified_at: '',
-    expires_at: '',
-    reminded_at: ''
-  });
-
+  var attachmentUrls = batonSaveAttachments(data.attachments);
   var token = batonRandomToken();
-  batonAppendRow(BATON_SHEETS.TOKENS, {
+
+  batonAppendRequestRow({
     request_id: requestId,
-    token_hash: batonHashToken(token),
-    type: 'email_verify',
-    created_at: new Date(),
-    expires_at: new Date(Date.now() + BATON_VERIFY_TTL_MS),
-    used_at: ''
+    '申請日時': new Date(),
+    '話したい人': profile.name,
+    '申請者': name,
+    '会社名': company,
+    'メール': email,
+    'コメント': comment,
+    '状態': 'メール未認証',
+    '紹介済': false,
+    'プロフィールURL': batonProfileUrl(profileId),
+    'profile_id': profileId,
+    '役職': title,
+    '目的': purposes.join('、'),
+    '備考': note,
+    '添付資料': attachmentUrls.join('\n'),
+    '認証トークンhash': batonHashToken(token),
+    '認証期限': new Date(Date.now() + BATON_VERIFY_TTL_MS)
   });
 
   MailApp.sendEmail({
@@ -613,111 +703,114 @@ function batonSubmitTalk(data) {
 // ── ③ Email Verify ──────────────────────────────────────────
 
 function batonCheckVerify(token) {
-  var tokenRow = token ? batonFindRow(BATON_SHEETS.TOKENS, 'token_hash', batonHashToken(token)) : null;
-  if (!tokenRow || tokenRow.type !== 'email_verify') return { ok: true, state: 'invalid' };
-  if (tokenRow.used_at) return { ok: true, state: 'used' };
-  if (tokenRow.expires_at && new Date() > new Date(tokenRow.expires_at)) return { ok: true, state: 'expired' };
+  if (!token) return { ok: true, state: 'invalid' };
+  var row = batonFindRequestRow('認証トークンhash', batonHashToken(token));
+  if (!row) return { ok: true, state: 'invalid' };
+  if (row['状態'] === '期限切れ') return { ok: true, state: 'expired' };
+  if (row['状態'] !== 'メール未認証') return { ok: true, state: 'used' };
 
-  var requestRow = batonFindRow(BATON_SHEETS.REQUESTS, 'request_id', tokenRow.request_id);
-  var profile = requestRow ? batonGetProfile(requestRow.profile_id) : null;
-  return { ok: true, state: 'ready', profileName: profile ? profile.name + '（' + profile.company + '）' : undefined };
+  var expiresAt = row['認証期限'] ? new Date(row['認証期限']) : null;
+  if (expiresAt && new Date() > expiresAt) return { ok: true, state: 'expired' };
+
+  var profile = batonGetProfile(row['profile_id']);
+  return { ok: true, state: 'ready', profileName: profile ? profile.name + '（' + profile.company + '）' : String(row['話したい人']) };
 }
 
 function batonConfirmVerify(token) {
-  var tokenRow = token ? batonFindRow(BATON_SHEETS.TOKENS, 'token_hash', batonHashToken(token)) : null;
-  if (!tokenRow || tokenRow.type !== 'email_verify') return { ok: false, error: 'invalid' };
-  if (tokenRow.used_at) return { ok: false, error: 'used' };
-  if (tokenRow.expires_at && new Date() > new Date(tokenRow.expires_at)) return { ok: false, error: 'expired' };
+  if (!token) return { ok: false, error: 'invalid' };
+  var row = batonFindRequestRow('認証トークンhash', batonHashToken(token));
+  if (!row) return { ok: false, error: 'invalid' };
+  if (row['状態'] === '期限切れ') return { ok: false, error: 'expired' };
+  if (row['状態'] !== 'メール未認証') return { ok: false, error: 'used' };
 
-  var requestRow = batonFindRow(BATON_SHEETS.REQUESTS, 'request_id', tokenRow.request_id);
-  if (!requestRow) return { ok: false, error: 'invalid' };
-  var profile = batonGetProfile(requestRow.profile_id);
+  var expiresAt = row['認証期限'] ? new Date(row['認証期限']) : null;
+  if (expiresAt && new Date() > expiresAt) return { ok: false, error: 'expired' };
+
+  var profile = batonGetProfile(row['profile_id']);
   if (!profile) return { ok: false, error: 'invalid' };
 
-  batonSetCell(BATON_SHEETS.TOKENS, tokenRow._row, 'used_at', new Date());
-
-  var expiresAt = new Date(Date.now() + BATON_RESPOND_TTL_MS);
-  batonSetCell(BATON_SHEETS.REQUESTS, requestRow._row, 'status', 'recipient_pending');
-  batonSetCell(BATON_SHEETS.REQUESTS, requestRow._row, 'verified_at', new Date());
-  batonSetCell(BATON_SHEETS.REQUESTS, requestRow._row, 'expires_at', expiresAt);
-
+  var respondExpiresAt = new Date(Date.now() + BATON_RESPOND_TTL_MS);
   var respondToken = batonRandomToken();
-  batonAppendRow(BATON_SHEETS.TOKENS, {
-    request_id: requestRow.request_id,
-    token_hash: batonHashToken(respondToken),
-    type: 'recipient_action',
-    created_at: new Date(),
-    expires_at: expiresAt,
-    used_at: ''
-  });
 
-  batonSendRecipientMail(requestRow, profile, respondToken, false);
+  batonSetRequestCell(row._row, '状態', '相手回答待ち');
+  batonSetRequestCell(row._row, '認証日時', new Date());
+  batonSetRequestCell(row._row, '回答トークンhash', batonHashToken(respondToken));
+  batonSetRequestCell(row._row, '回答期限', respondExpiresAt);
+  batonSetRequestCell(row._row, '社長通知日時', new Date());
+
+  batonSendRecipientMail(row, profile, respondToken, false);
   batonSendAdminMail(
     '【Baton】新規申請',
-    batonRequestSummaryLines(requestRow, profile).concat(['', '掲載者・社長の双方に、承認/辞退の依頼メールを送っています。'])
+    batonRequestSummaryLines(row, profile).concat(['', '本人・社長の双方に、承認/辞退の依頼メールを送っています。'])
   );
 
   return { ok: true };
 }
 
-// ── ④ Recipient（掲載者の承認/辞退） ────────────────────────────
+// ── ④ Recipient（本人の承認/辞退） ────────────────────────────
 
 function batonCheckRespond(token) {
-  var tokenRow = token ? batonFindRow(BATON_SHEETS.TOKENS, 'token_hash', batonHashToken(token)) : null;
-  if (!tokenRow || tokenRow.type !== 'recipient_action') return { ok: true, state: 'invalid' };
-  if (tokenRow.used_at) return { ok: true, state: 'used' };
-  if (tokenRow.expires_at && new Date() > new Date(tokenRow.expires_at)) return { ok: true, state: 'expired' };
+  if (!token) return { ok: true, state: 'invalid' };
+  var row = batonFindRequestRow('回答トークンhash', batonHashToken(token));
+  if (!row) return { ok: true, state: 'invalid' };
+  if (row['状態'] === '期限切れ') return { ok: true, state: 'expired' };
+  if (row['状態'] !== '相手回答待ち') return { ok: true, state: 'used' };
 
-  var requestRow = batonFindRow(BATON_SHEETS.REQUESTS, 'request_id', tokenRow.request_id);
-  if (!requestRow || requestRow.status !== 'recipient_pending') return { ok: true, state: 'used' };
-  var profile = batonGetProfile(requestRow.profile_id);
+  var expiresAt = row['回答期限'] ? new Date(row['回答期限']) : null;
+  if (expiresAt && new Date() > expiresAt) return { ok: true, state: 'expired' };
 
+  var profile = batonGetProfile(row['profile_id']);
   return {
     ok: true,
     state: 'ready',
-    profileName: profile ? profile.name : undefined,
+    profileName: profile ? profile.name : String(row['話したい人']),
     request: {
-      applicantName: requestRow.applicant_name,
-      applicantCompany: requestRow.applicant_company,
-      applicantTitle: requestRow.applicant_title,
-      purpose: requestRow.purpose,
-      comment: requestRow.comment,
-      note: requestRow.note
+      applicantName: row['申請者'],
+      applicantCompany: row['会社名'],
+      applicantTitle: row['役職'],
+      purposes: row['目的'] ? String(row['目的']).split('、') : [],
+      comment: row['コメント'],
+      note: row['備考']
     }
   };
 }
 
 function batonRespondAction(token, decision) {
   if (decision !== 'approved' && decision !== 'declined') return { ok: false, error: 'invalid' };
+  if (!token) return { ok: false, error: 'invalid' };
 
-  var tokenRow = token ? batonFindRow(BATON_SHEETS.TOKENS, 'token_hash', batonHashToken(token)) : null;
-  if (!tokenRow || tokenRow.type !== 'recipient_action') return { ok: false, error: 'invalid' };
-  if (tokenRow.used_at) return { ok: false, error: 'used' };
-  if (tokenRow.expires_at && new Date() > new Date(tokenRow.expires_at)) return { ok: false, error: 'expired' };
+  var row = batonFindRequestRow('回答トークンhash', batonHashToken(token));
+  if (!row) return { ok: false, error: 'invalid' };
+  if (row['状態'] === '期限切れ') return { ok: false, error: 'expired' };
+  if (row['状態'] !== '相手回答待ち') return { ok: false, error: 'used' };
 
-  var requestRow = batonFindRow(BATON_SHEETS.REQUESTS, 'request_id', tokenRow.request_id);
-  if (!requestRow || requestRow.status !== 'recipient_pending') return { ok: false, error: 'used' };
-  var profile = batonGetProfile(requestRow.profile_id);
+  var expiresAt = row['回答期限'] ? new Date(row['回答期限']) : null;
+  if (expiresAt && new Date() > expiresAt) return { ok: false, error: 'expired' };
+
+  var profile = batonGetProfile(row['profile_id']);
   if (!profile) return { ok: false, error: 'invalid' };
 
-  batonSetCell(BATON_SHEETS.TOKENS, tokenRow._row, 'used_at', new Date());
-  batonSetCell(BATON_SHEETS.REQUESTS, requestRow._row, 'status', decision);
+  var statusLabel = decision === 'approved' ? '承認' : '辞退';
+  batonSetRequestCell(row._row, '状態', statusLabel);
+  batonSetRequestCell(row._row, '本人回答', statusLabel);
+  batonSetRequestCell(row._row, '本人回答日時', new Date());
+  batonSetRequestCell(row._row, '社長通知日時', new Date());
 
   batonSendAdminMail(
     decision === 'approved' ? '【Baton】承認' : '【Baton】辞退',
-    batonRequestSummaryLines(requestRow, profile).concat([
+    batonRequestSummaryLines(row, profile).concat([
       '',
       decision === 'approved'
-        ? '掲載者が承認しました。紹介方法・タイミングはこちらでご判断ください（連絡先の自動共有はしていません）。'
-        : '掲載者が辞退しました。この申請はここで終了です。'
+        ? '本人が承認しました。紹介方法・タイミングはこちらでご判断ください（連絡先の自動共有はしていません）。'
+        : '本人が辞退しました。この申請はここで終了です。'
     ])
   );
 
   MailApp.sendEmail({
-    to: requestRow.applicant_email,
-    subject: decision === 'approved' ? '【Baton】ご申請の結果について' : '【Baton】ご申請の結果について',
+    to: row['メール'],
+    subject: '【Baton】ご申請の結果について',
     body: [
-      requestRow.applicant_name + ' 様',
+      row['申請者'] + ' 様',
       '',
       profile.name + 'さんへのご申請について、ご本人からご回答がありました。',
       '',
@@ -734,14 +827,15 @@ function batonRespondAction(token, decision) {
 
 // ── メール本文の共通部分 / 管理者通知 ───────────────────────────
 
-function batonRequestSummaryLines(requestRow, profile) {
+function batonRequestSummaryLines(row, profile) {
   return [
     'プロフィール: ' + profile.name + '（' + profile.company + '）',
-    '申請者     : ' + requestRow.applicant_name + ' / ' + requestRow.applicant_company + ' / ' + (requestRow.applicant_title || '(未記入)'),
-    'メール     : ' + requestRow.applicant_email,
-    '目的       : ' + requestRow.purpose,
-    'コメント   : ' + requestRow.comment,
-    '補足       : ' + (requestRow.note || '(なし)')
+    '申請者     : ' + row['申請者'] + ' / ' + row['会社名'] + ' / ' + (row['役職'] || '(未記入)'),
+    'メール     : ' + row['メール'],
+    '目的       : ' + row['目的'],
+    'コメント   : ' + row['コメント'],
+    '補足       : ' + (row['備考'] || '(なし)'),
+    '添付資料   : ' + (row['添付資料'] || '(なし)')
   ];
 }
 
@@ -749,16 +843,16 @@ function batonSendAdminMail(subject, bodyLines) {
   MailApp.sendEmail({ to: NOTIFY_TO, subject: subject, body: bodyLines.join('\n') });
 }
 
-function batonSendRecipientMail(requestRow, profile, token, isReminder) {
-  var recipient = profile.recipient_email;
+function batonSendRecipientMail(row, profile, token, isReminder) {
+  var recipient = profile.recipientEmail;
   if (!recipient) return;
 
   var lines = [
     (isReminder ? '（リマインドです）' : '') + profile.name + ' 様',
     '',
     'あなたと話したいという方から、Batonを通じて申請が届いています。',
-    '',
-  ].concat(batonRequestSummaryLines(requestRow, profile)).concat([
+    ''
+  ].concat(batonRequestSummaryLines(row, profile)).concat([
     '',
     '内容をご確認のうえ、下記のリンクから承認・辞退をお選びください。',
     batonUrl('respond', token),
@@ -779,22 +873,23 @@ function batonSendRecipientMail(requestRow, profile, token, isReminder) {
 
 function batonDailyJob() {
   var now = new Date();
-  var rows = batonReadRows(BATON_SHEETS.REQUESTS);
+  var rows = batonReadRequestRows();
 
   rows.forEach(function (row) {
-    if (row.status === 'email_pending' && row.created_at) {
-      if (now - new Date(row.created_at) > BATON_VERIFY_TTL_MS) {
-        batonSetCell(BATON_SHEETS.REQUESTS, row._row, 'status', 'expired');
+    if (row['状態'] === 'メール未認証') {
+      var verifyExpires = row['認証期限'] ? new Date(row['認証期限']) : null;
+      if (verifyExpires && now > verifyExpires) {
+        batonSetRequestCell(row._row, '状態', '期限切れ');
       }
       return;
     }
 
-    if (row.status !== 'recipient_pending') return;
+    if (row['状態'] !== '相手回答待ち') return;
 
-    var expiresAt = row.expires_at ? new Date(row.expires_at) : null;
-    if (expiresAt && now > expiresAt) {
-      batonSetCell(BATON_SHEETS.REQUESTS, row._row, 'status', 'expired');
-      var profileForExpire = batonGetProfile(row.profile_id);
+    var respondExpires = row['回答期限'] ? new Date(row['回答期限']) : null;
+    if (respondExpires && now > respondExpires) {
+      batonSetRequestCell(row._row, '状態', '期限切れ');
+      var profileForExpire = batonGetProfile(row['profile_id']);
       if (profileForExpire) {
         batonSendAdminMail(
           '【Baton】期限切れ',
@@ -807,44 +902,39 @@ function batonDailyJob() {
       return;
     }
 
-    if (!row.reminded_at && row.verified_at && now - new Date(row.verified_at) >= BATON_REMIND_AFTER_MS) {
-      var profile = batonGetProfile(row.profile_id);
+    if (!row['リマインド日時'] && row['認証日時'] && now - new Date(row['認証日時']) >= BATON_REMIND_AFTER_MS) {
+      var profile = batonGetProfile(row['profile_id']);
       if (!profile) return;
 
       var token = batonRandomToken();
-      batonAppendRow(BATON_SHEETS.TOKENS, {
-        request_id: row.request_id,
-        token_hash: batonHashToken(token),
-        type: 'recipient_action',
-        created_at: new Date(),
-        expires_at: expiresAt || new Date(Date.now() + BATON_RESPOND_TTL_MS),
-        used_at: ''
-      });
+      batonSetRequestCell(row._row, '回答トークンhash', batonHashToken(token));
+      batonSetRequestCell(row._row, '回答期限', respondExpires || new Date(Date.now() + BATON_RESPOND_TTL_MS));
       batonSendRecipientMail(row, profile, token, true);
-      batonSetCell(BATON_SHEETS.REQUESTS, row._row, 'reminded_at', now);
+      batonSetRequestCell(row._row, 'リマインド日時', now);
     }
   });
 }
 
 /**
- * 動作確認用。engineer プロフィールへテスト申請を1件作り、
+ * 動作確認用。kabeya プロフィールへテスト申請を1件作り、
  * 認証メールが届くところまで確認できる。届いたら、そのメールのリンクを
  * 実際に開いて手続きを進めてよい（テスト行は確認後に手で消してよい）。
  */
 function testBatonFlow() {
   var result = batonSubmitTalk({
-    profileId: 'engineer',
-    applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '担当者', email: 'test@example.com' },
-    purpose: '情報交換',
+    profileId: 'kabeya',
+    applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
+    purposes: ['情報交換'],
     comment: 'これは動作確認用のテスト送信です。',
     note: '',
+    attachments: [],
     hp: ''
   });
 
   Logger.log('結果: ' + JSON.stringify(result));
   if (result.ok) {
     SpreadsheetApp.getActiveSpreadsheet().toast(
-      'REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
+      'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
   } else {
     SpreadsheetApp.getActiveSpreadsheet().toast('失敗: ' + JSON.stringify(result), 'テスト', 8);
   }
