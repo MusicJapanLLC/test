@@ -1,6 +1,6 @@
 // Cloudflare Pages deploy build
 // Keep the known-good static copy/reassembly path intact, then apply the official-site content refresh.
-import { cpSync, existsSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -15,9 +15,10 @@ const SITE_URL = (process.env.PUBLIC_SITE_URL || DEFAULT_SITE_URL).replace(/\/$/
 const RSC_MARKER = '<script id="_R_">';
 const FAVICON_URL = "/favicon-music-japan.svg?v=20260913-final";
 const APPLE_ICON_URL = "/music-japan-symbol.png?v=20260913-final";
-const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260913";
+const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
+const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
-const BATON_URL = "https://baton.music-japan.com/";
+const BATON_URL = "https://baton.music-japan.com/profile/";
 
 const content = {
   ja: {
@@ -26,11 +27,11 @@ const content = {
     newsItems: [
       { date: "2026.09.13", dateTime: "2026-09-13", label: "NEWS", title: "公式サイトを music-japan.com へ移行しました", href: "" },
       { date: "2026.09.13", dateTime: "2026-09-13", label: "MEDIA", title: "経営者メディア「SECOND TAKE」を公開しました", href: SECOND_TAKE_URL },
-      { date: "2026.09.13", dateTime: "2026-09-13", label: "SERVICE", title: "招待制の紹介サービス「Baton」を公開しました", href: BATON_URL }
+      { date: "2026.09.14", dateTime: "2026-09-14", label: "PROFILE", title: "代表プロフィールを公開しました", href: "/profile/" }
     ],
     mediaKicker: "MEDIA / CONNECTION",
-    mediaTitle: "声を記録し、記事に残し、人へつなぐ。",
-    mediaBody: "経営者の決断や苦悩をPodcastと記事で届け、そこから生まれた信頼を次のつながりへ。Music Japanが「取材・発信・紹介」まで一貫して手がけます。",
+    mediaTitle: "人生の困難や逆境を\n自分を彩る表現へと昇華する。",
+    mediaBody: "経営者の決断や苦悩をPodcast×記事に残し、それが次のつながりを生む。\nSECOND TAKEでは弊社が「取材・発信」まで手がけます。",
     mediaCards: [
       {
         label: "PODCAST / INTERVIEW",
@@ -42,7 +43,7 @@ const content = {
       {
         label: "INVITATION-ONLY INTRODUCTION",
         title: "Baton -バトン-",
-        body: "取材や面談で知った人同士を、双方の意思を大切にしながらつなぐ招待制の紹介サービス。",
+        body: "選んだ人から、選んだ人へ。バトンは渡る。",
         cta: "Batonを見る",
         href: BATON_URL
       }
@@ -60,7 +61,7 @@ const content = {
       },
       {
         kicker: "SECOND TAKE",
-        title: "Podcast × インタビュー記事",
+        title: "Podcast × インタビュー",
         body: "経営者の決断や苦悩、その先にある物語を、Podcastとインタビュー記事で記録し、届けます。",
         logo: "/second-take-logo.png",
         alt: "SECOND TAKE Podcast・インタビューメディア",
@@ -71,11 +72,11 @@ const content = {
       {
         kicker: "BATON",
         title: "招待制の紹介サービス",
-        body: "面談済みの方を対象に、双方の意思を大切にしながら人と人をつなぎます。",
-        logo: "/baton-logo.png",
+        body: "お互いの価値観を大切に、深い関係構築を。",
+        logo: "/baton-wordmark-v2.png",
         alt: "Baton -バトン-",
-        width: 580,
-        height: 174,
+        width: 446,
+        height: 65,
         modifier: "baton"
       }
     ]
@@ -86,11 +87,11 @@ const content = {
     newsItems: [
       { date: "2026.09.13", dateTime: "2026-09-13", label: "NEWS", title: "Our official website has moved to music-japan.com", href: "" },
       { date: "2026.09.13", dateTime: "2026-09-13", label: "MEDIA", title: "SECOND TAKE, our executive interview media, is now live", href: SECOND_TAKE_URL },
-      { date: "2026.09.13", dateTime: "2026-09-13", label: "SERVICE", title: "Baton, our invitation-only introduction service, is now live", href: BATON_URL }
+      { date: "2026.09.14", dateTime: "2026-09-14", label: "PROFILE", title: "Our representative profile is now available", href: "/en/profile/" }
     ],
     mediaKicker: "MEDIA / CONNECTION",
-    mediaTitle: "Record the voice. Publish the story. Pass it on.",
-    mediaBody: "We turn the decisions and struggles of business leaders into podcasts and interview articles, then help trusted relationships lead to thoughtful introductions.",
+    mediaTitle: "Transform life’s hardships and adversity\ninto expressions that give color to who we are.",
+    mediaBody: "We preserve the decisions and struggles of business leaders through podcasts and articles, allowing them to lead to new connections.\nThrough SECOND TAKE, we handle everything from interviews to publication.",
     mediaCards: [
       {
         label: "PODCAST / INTERVIEW",
@@ -102,7 +103,7 @@ const content = {
       {
         label: "INVITATION-ONLY INTRODUCTION",
         title: "Baton",
-        body: "An invitation-only service connecting people we have met through interviews and conversations, with care for both sides.",
+        body: "From one chosen person to another. The baton is passed.",
         cta: "Visit Baton",
         href: BATON_URL
       }
@@ -120,7 +121,7 @@ const content = {
       },
       {
         kicker: "SECOND TAKE",
-        title: "Podcasts × interview articles",
+        title: "Podcasts × interviews",
         body: "We document the decisions, hardships and stories of business leaders through podcasts and interview articles.",
         logo: "/second-take-logo.png",
         alt: "SECOND TAKE podcast and interview media",
@@ -131,11 +132,11 @@ const content = {
       {
         kicker: "BATON",
         title: "Invitation-only introductions",
-        body: "We connect people we have met with, respecting the intent and trust of both sides.",
-        logo: "/baton-logo.png",
+        body: "Respecting each other’s values, we nurture deeper relationships.",
+        logo: "/baton-wordmark-v2.png",
         alt: "Baton invitation-only introduction service",
-        width: 580,
-        height: 174,
+        width: 446,
+        height: 65,
         modifier: "baton"
       }
     ]
@@ -185,7 +186,24 @@ function patchClientBundle() {
   const brandRowsBlock = '(0,a.jsx)(`div`,{className:`about__brands`,"data-reveal":!0,children:t.brands.map((e,t)=>(0,a.jsxs)(`article`,{className:`about-brand`,children:[(0,a.jsx)(`div`,{className:`about-brand__logo about-brand__logo--${e.modifier}`,children:(0,a.jsx)(`img`,{src:e.logo,alt:e.alt,width:e.width,height:e.height,loading:`lazy`,decoding:`async`})}),(0,a.jsxs)(`div`,{className:`about-brand__copy`,children:[(0,a.jsxs)(`span`,{className:`about-brand__index`,children:[`0`,t+1]}),(0,a.jsxs)(`div`,{className:`about-brand__heading`,children:[(0,a.jsx)(`p`,{className:`kicker`,children:e.kicker}),(0,a.jsx)(`h3`,{children:e.title})]}),(0,a.jsx)(`p`,{className:`about-brand__body`,children:e.body})]})]},e.kicker))})]}) ,';
   bundle = bundle.slice(0, aboutSystemStart) + brandRowsBlock + bundle.slice(founderStart);
 
-  const newsBlock = '(0,a.jsxs)(`section`,{className:`news-strip content-frame`,id:`news`,"aria-labelledby":`news-title`,children:[(0,a.jsxs)(`div`,{className:`news-strip__heading`,"data-reveal":!0,children:[(0,a.jsx)(`p`,{className:`kicker`,children:t.newsKicker}),(0,a.jsx)(`h2`,{id:`news-title`,children:t.newsTitle})]}),(0,a.jsx)(`div`,{className:`news-strip__list`,"data-reveal":!0,children:t.newsItems.map((t,n)=>{let r=(0,a.jsxs)(a.Fragment,{children:[(0,a.jsx)(`time`,{dateTime:t.dateTime,children:t.date}),(0,a.jsx)(`span`,{className:`news-strip__label`,children:t.label}),(0,a.jsx)(`span`,{className:`news-strip__title`,children:t.title}),(0,a.jsx)(`span`,{className:`news-strip__arrow`,"aria-hidden":`true`,children:t.href?`↗`:``})]});return t.href?(0,a.jsx)(`a`,{className:`news-strip__item`,href:t.href,target:`_blank`,rel:`noopener noreferrer`,"aria-label":`${t.title}${e===`ja`?`（新しいタブで開きます）`:` (opens in a new tab)`}`,children:r},t.title):(0,a.jsx)(`div`,{className:`news-strip__item`,children:r},t.title)})})]})';
+  bundle = replaceRequired(
+    bundle,
+    '(0,a.jsx)(`p`,{className:`founder__statement`,children:t.founderQuote})',
+    '(0,a.jsxs)(`span`,{className:`founder__profile-cta`,children:[e===`ja`?`代表プロフィールを見る`:`View representative profile`,(0,a.jsx)(E,{diagonal:!0})]})',
+    "founder profile CTA"
+  );
+  const founderSectionStart = bundle.indexOf('(0,a.jsxs)(`section`,{className:`founder content-frame`');
+  const founderChildrenMarker = 'children:[';
+  const founderChildrenStart = bundle.indexOf(founderChildrenMarker, founderSectionStart) + founderChildrenMarker.length;
+  const companyTableStart = bundle.indexOf('(0,a.jsxs)(`div`,{className:`company-table`', founderChildrenStart);
+  if (founderSectionStart === -1 || founderChildrenStart === founderChildrenMarker.length - 1 || companyTableStart === -1 || bundle[companyTableStart - 1] !== ",") {
+    throw new Error("Could not isolate the founder profile teaser");
+  }
+  const profileLinkStart = '(0,a.jsxs)(`a`,{className:`founder__profile-link`,href:e===`ja`?`/profile/`:`/en/profile/`,"aria-label":e===`ja`?`壁谷友生の代表プロフィールを見る`:`View Tomoki Kabeya’s representative profile`,children:[';
+  const founderProfileNodes = bundle.slice(founderChildrenStart, companyTableStart - 1);
+  bundle = bundle.slice(0, founderChildrenStart) + profileLinkStart + founderProfileNodes + ']})' + bundle.slice(companyTableStart - 1);
+
+  const newsBlock = '(0,a.jsxs)(`section`,{className:`news-strip content-frame`,id:`news`,"aria-labelledby":`news-title`,children:[(0,a.jsxs)(`div`,{className:`news-strip__heading`,"data-reveal":!0,children:[(0,a.jsx)(`p`,{className:`kicker`,children:t.newsKicker}),(0,a.jsx)(`h2`,{id:`news-title`,children:t.newsTitle})]}),(0,a.jsx)(`div`,{className:`news-strip__list`,"data-reveal":!0,children:t.newsItems.map((t,n)=>{let r=(0,a.jsxs)(a.Fragment,{children:[(0,a.jsx)(`time`,{dateTime:t.dateTime,children:t.date}),(0,a.jsx)(`span`,{className:`news-strip__label`,children:t.label}),(0,a.jsx)(`span`,{className:`news-strip__title`,children:t.title}),(0,a.jsx)(`span`,{className:`news-strip__arrow`,"aria-hidden":`true`,children:t.href?`↗`:``})]});return t.href?(0,a.jsx)(`a`,{className:`news-strip__item`,href:t.href,target:t.href.startsWith(`/`)?void 0:`_blank`,rel:t.href.startsWith(`/`)?void 0:`noopener noreferrer`,"aria-label":t.href.startsWith(`/`)?t.title:`${t.title}${e===`ja`?`（新しいタブで開きます）`:` (opens in a new tab)`}`,children:r},t.title):(0,a.jsx)(`div`,{className:`news-strip__item`,children:r},t.title)})})]})';
   const manifestoMarker = '(0,a.jsxs)(`section`,{className:`manifesto content-frame`';
   const manifestoStart = bundle.indexOf(manifestoMarker);
   if (manifestoStart === -1) throw new Error("Could not locate the manifesto section");
@@ -196,35 +214,36 @@ function patchClientBundle() {
     ['nav:[[`作品`,`#works`],[`私たちについて`,`#about`],[`代表`,`#founder`],[`お問い合わせ`,`#contact`]]', 'nav:[[`音楽`,`#works`],[`メディア`,`#media`],[`私たちについて`,`#about`],[`お問い合わせ`,`#contact`]]', "Japanese navigation"],
     ['heroEyebrow:`合同会社Music Japan · INDEPENDENT MUSIC COMPANY · OSAKA`', 'heroEyebrow:`合同会社Music Japan · MUSIC & MEDIA COMPANY · OSAKA`', "Japanese hero eyebrow"],
     ['heroLead:`日本から。国境を越えて。記憶に残る音楽を。`', 'heroLead:`日本から。音楽と物語を、記憶に残る形へ。`', "Japanese hero lead"],
-    ['heroSub:`アーティスト作品、ジャズ、クラシック、睡眠音楽。異なる音の世界を、一本の赤い周波数で束ねる音楽会社です。`', 'heroSub:`音楽制作・配信を軸に、Podcast、インタビュー記事、招待制の紹介サービスを手がける音楽・メディア会社です。`', "Japanese hero summary"],
+    ['heroSub:`アーティスト作品、ジャズ、クラシック、睡眠音楽。異なる音の世界を、一本の赤い周波数で束ねる音楽会社です。`', 'heroSub:`音楽制作・配信を軸に、Podcastとインタビューで人の声や経験を記録する音楽・メディア会社です。`', "Japanese hero summary"],
     ['manifestoKicker:`ONE SIGNAL. MANY WORLDS.`,manifestoTitle:`音楽は、ジャンルを越えて残っていく。`', 'manifestoKicker:`MUSIC. STORIES. CONNECTIONS.`,manifestoTitle:`音楽は、ジャンルを越えて残っていく。`', "Japanese manifesto kicker"],
-    ['manifestoBody:`一曲をつくる。世界観をつくる。そして、聴かれ続ける場所まで設計する。Music Japanは、アーティストと音楽ブランドの可能性を、日本から世界へ広げます。`,worksKicker:', 'manifestoBody:`一曲をつくる。世界観をつくる。そして、聴かれ続ける場所まで届ける。さらに、人の声と経験をPodcastや記事に残し、次の人へつなぐ。Music Japanは、音楽を軸に新しい出会いまで育てます。`,newsKicker:`NEWS / UPDATES`,newsTitle:`お知らせ`,newsItems:[{date:`2026.09.13`,dateTime:`2026-09-13`,label:`NEWS`,title:`公式サイトを music-japan.com へ移行しました`,href:``},{date:`2026.09.13`,dateTime:`2026-09-13`,label:`MEDIA`,title:`経営者メディア「SECOND TAKE」を公開しました`,href:`https://secondtake.music-japan.com/`},{date:`2026.09.13`,dateTime:`2026-09-13`,label:`SERVICE`,title:`招待制の紹介サービス「Baton」を公開しました`,href:`https://baton.music-japan.com/`}],worksKicker:', "Japanese manifesto and news"],
-    ['aboutTitle:`複数の音楽世界を育てる、独立系音楽会社。`', 'aboutTitle:`音楽を軸に、声と経験を残す会社。`', "Japanese about title"],
+    ['manifestoBody:`一曲をつくる。世界観をつくる。そして、聴かれ続ける場所まで設計する。Music Japanは、アーティストと音楽ブランドの可能性を、日本から世界へ広げます。`,worksKicker:', 'manifestoBody:`一曲をつくる。世界観をつくる。そして、聴かれ続ける場所まで届ける。さらに、人の声と経験をPodcastや記事に残し、次の人へつなぐ。Music Japanは、音楽を軸に新しい出会いまで育てます。`,newsKicker:`NEWS / UPDATES`,newsTitle:`お知らせ`,newsItems:[{date:`2026.09.13`,dateTime:`2026-09-13`,label:`NEWS`,title:`公式サイトを music-japan.com へ移行しました`,href:``},{date:`2026.09.13`,dateTime:`2026-09-13`,label:`MEDIA`,title:`経営者メディア「SECOND TAKE」を公開しました`,href:`https://secondtake.music-japan.com/`},{date:`2026.09.14`,dateTime:`2026-09-14`,label:`PROFILE`,title:`代表プロフィールを公開しました`,href:`/profile/`}],worksKicker:', "Japanese manifesto and news"],
+    ['aboutTitle:`複数の音楽世界を育てる、独立系音楽会社。`', 'aboutTitle:`音楽やメディアを通じて、\nより有意義な未来を創る記録を。`', "Japanese about title"],
     ['aboutBody:`合同会社Music Japanは、アーティスト作品からジャズ、クラシック、睡眠音楽まで、複数の音楽ブランドを企画・制作・発信しています。作品の数ではなく、ひとつひとつの世界観が届き、残り、次の出会いを生むことを大切にしています。`', 'aboutBody:`合同会社Music Japanは、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を中心に、Podcastやインタビュー記事、LPで経営者の経験や事業を届けています。音楽も言葉も、つくって終わらせず、記憶と次のつながりへ残すことを大切にしています。`', "Japanese about summary"],
-    ['pillars:[[`CREATE`,`楽曲・BGMの企画制作`],[`CURATE`,`ジャンルごとの世界観設計`],[`CONNECT`,`国内外のリスナーへ届ける`]]', 'brands:[{kicker:`MUSIC JAPAN`,title:`音楽制作・配信`,body:`アーティスト作品、BGM、Jazz、クラシック、睡眠音楽まで、企画・制作・配信を一貫して手がけます。`,logo:`/music-japan-logo.png`,alt:`合同会社Music Japan`,width:1500,height:500,modifier:`music`},{kicker:`SECOND TAKE`,title:`Podcast × インタビュー記事`,body:`経営者の決断や苦悩、その先にある物語を、Podcastとインタビュー記事で記録し、届けます。`,logo:`/second-take-logo.png`,alt:`SECOND TAKE Podcast・インタビューメディア`,width:2172,height:724,modifier:`second-take`},{kicker:`BATON`,title:`招待制の紹介サービス`,body:`面談済みの方を対象に、双方の意思を大切にしながら人と人をつなぎます。`,logo:`/baton-logo.png`,alt:`Baton -バトン-`,width:580,height:174,modifier:`baton`}]', "Japanese company brands"],
-    ['founderQuote:`音楽を“つくって終わるもの”にしない。聴かれる理由と、記憶に残る世界までつくる。それがMusic Japanの仕事です。`', 'founderQuote:`音楽も、人の経験も、つくって終わるものにしない。聴かれ、読まれ、次の出会いへつながるところまで手がける。それがMusic Japanの仕事です。`', "Japanese founder statement"],
-    ['relatedKicker:`RELATED VENTURES`,relatedTitle:`音楽から始まる、次の接点。`,relatedCards:[{label:`BUSINESS CONNECTION`,title:`企業様のお繋ぎ・経営者様のご紹介`,body:`株式会社Standmentが運営する、法人・経営者様向けのご縁づくり。`,cta:`特設サイト — COMING SOON`,href:``},{label:`WEBGL EXPERIENCE`,title:`WebGL型HP制作「Standment」`,body:`ブランドの空気まで伝える、体験型Webサイト制作。`,cta:`特設サイトへ移動`,href:`https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#contact`}]', 'relatedKicker:`MEDIA / CONNECTION`,relatedTitle:`声を記録し、記事に残し、人へつなぐ。`,relatedBody:`経営者の決断や苦悩をPodcastと記事で届け、そこから生まれた信頼を次のつながりへ。Music Japanが「取材・発信・紹介」まで一貫して手がけます。`,relatedCards:[{label:`PODCAST / INTERVIEW`,title:`SECOND TAKE`,body:`経営者の決断と苦悩、その先にある物語を、Podcastとインタビュー記事で記録する経営者メディア。`,cta:`公式サイトへ移動`,href:`https://secondtake.music-japan.com/`},{label:`INVITATION-ONLY INTRODUCTION`,title:`Baton -バトン-`,body:`取材や面談で知った人同士を、双方の意思を大切にしながらつなぐ招待制の紹介サービス。`,cta:`Batonを見る`,href:`https://baton.music-japan.com/`}]', "Japanese media section"],
+    ['pillars:[[`CREATE`,`楽曲・BGMの企画制作`],[`CURATE`,`ジャンルごとの世界観設計`],[`CONNECT`,`国内外のリスナーへ届ける`]]', 'brands:[{kicker:`MUSIC JAPAN`,title:`音楽制作・配信`,body:`アーティスト作品、BGM、Jazz、クラシック、睡眠音楽まで、企画・制作・配信を一貫して手がけます。`,logo:`/music-japan-logo.png`,alt:`合同会社Music Japan`,width:1500,height:500,modifier:`music`},{kicker:`SECOND TAKE`,title:`Podcast × インタビュー`,body:`経営者の決断や苦悩、その先にある物語を、Podcastとインタビュー記事で記録し、届けます。`,logo:`/second-take-logo.png`,alt:`SECOND TAKE Podcast・インタビューメディア`,width:2172,height:724,modifier:`second-take`},{kicker:`BATON`,title:`招待制の紹介サービス`,body:`お互いの価値観を大切に、深い関係構築を。`,logo:`/baton-wordmark-v2.png`,alt:`Baton -バトン-`,width:446,height:65,modifier:`baton`}]', "Japanese company brands"],
+    ['worksTitle:`日本語で描く、都市と感情。`', 'worksTitle:`Yumaが紡ぐ、想いと軌跡。`', "Japanese Yuma title"],
+    ['founderQuote:`音楽を“つくって終わるもの”にしない。聴かれる理由と、記憶に残る世界までつくる。それがMusic Japanの仕事です。`', 'founderQuote:`どうしようもなくつらい経験、孤独や絶望。それらをただ憎み、退けるのではなく、向き合い表現することで、日常生活では決して生まれないアウトプットが生まれると私は思います。\n\n音楽やメディア、Podcastというのは表現の手段です。\n\n合同会社Music Japanは、あらゆる自己表現とそこの共鳴からうまれる思いを繋ぎ、そして今苦境の最中にいる人の支えになるようなそんな記録を世に残せたらと思っています。`', "Japanese founder statement"],
+    ['relatedKicker:`RELATED VENTURES`,relatedTitle:`音楽から始まる、次の接点。`,relatedCards:[{label:`BUSINESS CONNECTION`,title:`企業様のお繋ぎ・経営者様のご紹介`,body:`株式会社Standmentが運営する、法人・経営者様向けのご縁づくり。`,cta:`特設サイト — COMING SOON`,href:``},{label:`WEBGL EXPERIENCE`,title:`WebGL型HP制作「Standment」`,body:`ブランドの空気まで伝える、体験型Webサイト制作。`,cta:`特設サイトへ移動`,href:`https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#contact`}]', 'relatedKicker:`MEDIA / CONNECTION`,relatedTitle:`人生の困難や逆境を\n自分を彩る表現へと昇華する。`,relatedBody:`経営者の決断や苦悩をPodcast×記事に残し、それが次のつながりを生む。\nSECOND TAKEでは弊社が「取材・発信」まで手がけます。`,relatedCards:[{label:`PODCAST / INTERVIEW`,title:`SECOND TAKE`,body:`経営者の決断と苦悩、その先にある物語を、Podcastとインタビュー記事で記録する経営者メディア。`,cta:`公式サイトへ移動`,href:`https://secondtake.music-japan.com/`},{label:`INVITATION-ONLY INTRODUCTION`,title:`Baton -バトン-`,body:`選んだ人から、選んだ人へ。バトンは渡る。`,cta:`Batonを見る`,href:`https://baton.music-japan.com/profile/`}]', "Japanese media section"],
     ['contactBody:`楽曲制作、BGM、ライセンス、協業のご相談はこちらから。内容を確認後、担当よりご連絡します。`', 'contactBody:`楽曲制作、BGM、Podcast出演、インタビュー掲載、Batonや協業のご相談はこちらから。内容を確認後、担当よりご連絡します。`', "Japanese contact summary"],
     ['options:[`協業・パートナーシップ`,`楽曲・BGM制作のご依頼`,`楽曲使用・ライセンス`,`採用について`,`メディア・取材`,`その他`]', 'options:[`楽曲・BGM制作のご依頼`,`楽曲使用・ライセンス`,`Podcast出演・インタビュー掲載`,`Baton・ご紹介`,`協業・パートナーシップ`,`その他`]', "Japanese inquiry options"],
     ['footerLine:`MUSIC FROM JAPAN. MADE TO TRAVEL. BUILT TO LAST.`,privacy:`プライバシーポリシー`', 'footerLine:`MUSIC. STORIES. CONNECTIONS. FROM JAPAN.`,privacy:`プライバシーポリシー`', "Japanese footer line"],
     ['nav:[[`Works`,`#works`],[`About`,`#about`],[`Founder`,`#founder`],[`Contact`,`#contact`]]', 'nav:[[`Music`,`#works`],[`Media`,`#media`],[`About`,`#about`],[`Contact`,`#contact`]]', "English navigation"],
     ['heroEyebrow:`MUSIC JAPAN LLC · INDEPENDENT MUSIC COMPANY · OSAKA, JAPAN`', 'heroEyebrow:`MUSIC JAPAN LLC · MUSIC & MEDIA COMPANY · OSAKA, JAPAN`', "English hero eyebrow"],
     ['heroLead:`Music from Japan. Made to travel. Built to last.`', 'heroLead:`Music and stories from Japan, made to last.`', "English hero lead"],
-    ['heroSub:`Artist releases, jazz, classical and sleep music—distinct sonic worlds connected by one red frequency.`', 'heroSub:`Music production and distribution at our core, joined by podcasts, interview articles and invitation-only introductions.`', "English hero summary"],
+    ['heroSub:`Artist releases, jazz, classical and sleep music—distinct sonic worlds connected by one red frequency.`', 'heroSub:`Music production and distribution at our core, using podcasts and interviews to preserve people’s voices and experiences.`', "English hero summary"],
     ['manifestoKicker:`ONE SIGNAL. MANY WORLDS.`,manifestoTitle:`Music outlives borders and genres.`', 'manifestoKicker:`MUSIC. STORIES. CONNECTIONS.`,manifestoTitle:`Music outlives borders and genres.`', "English manifesto kicker"],
-    ['manifestoBody:`We make the music, shape the world around it, and design how it keeps reaching listeners. From Japan, Music Japan develops artist releases and focused music brands for audiences worldwide.`,worksKicker:', 'manifestoBody:`We make the music, shape the world around it and help it keep reaching listeners. We also preserve people’s voices and experience through podcasts and articles, carrying each story toward its next connection.`,newsKicker:`NEWS / UPDATES`,newsTitle:`Latest updates`,newsItems:[{date:`2026.09.13`,dateTime:`2026-09-13`,label:`NEWS`,title:`Our official website has moved to music-japan.com`,href:``},{date:`2026.09.13`,dateTime:`2026-09-13`,label:`MEDIA`,title:`SECOND TAKE, our executive interview media, is now live`,href:`https://secondtake.music-japan.com/`},{date:`2026.09.13`,dateTime:`2026-09-13`,label:`SERVICE`,title:`Baton, our invitation-only introduction service, is now live`,href:`https://baton.music-japan.com/`}],worksKicker:', "English manifesto and news"],
-    ['aboutTitle:`An independent music company building many sonic worlds.`', 'aboutTitle:`A music company preserving sound, voices and experience.`', "English about title"],
+    ['manifestoBody:`We make the music, shape the world around it, and design how it keeps reaching listeners. From Japan, Music Japan develops artist releases and focused music brands for audiences worldwide.`,worksKicker:', 'manifestoBody:`We make the music, shape the world around it and help it keep reaching listeners. We also preserve people’s voices and experience through podcasts and articles, carrying each story toward its next connection.`,newsKicker:`NEWS / UPDATES`,newsTitle:`Latest updates`,newsItems:[{date:`2026.09.13`,dateTime:`2026-09-13`,label:`NEWS`,title:`Our official website has moved to music-japan.com`,href:``},{date:`2026.09.13`,dateTime:`2026-09-13`,label:`MEDIA`,title:`SECOND TAKE, our executive interview media, is now live`,href:`https://secondtake.music-japan.com/`},{date:`2026.09.14`,dateTime:`2026-09-14`,label:`PROFILE`,title:`Our representative profile is now available`,href:`/en/profile/`}],worksKicker:', "English manifesto and news"],
+    ['aboutTitle:`An independent music company building many sonic worlds.`', 'aboutTitle:`Through music and media,\nwe leave records that shape a more meaningful future.`', "English about title"],
     ['aboutBody:`Music Japan LLC develops artist releases and dedicated jazz, classical and sleep-music brands. Every release is designed to find its audience, stay with them and lead to the next listen.`', 'aboutBody:`Music Japan LLC creates and distributes artist releases, jazz, classical and sleep music. We also use podcasts, interview articles and dedicated pages to share the experiences and businesses of company leaders—turning music and words into lasting memories and trusted connections.`', "English about summary"],
-    ['pillars:[[`CREATE`,`Original music and BGM production`],[`CURATE`,`Distinct worlds for every sound`],[`CONNECT`,`Reaching listeners across borders`]]', 'brands:[{kicker:`MUSIC JAPAN`,title:`Music production & distribution`,body:`We plan, produce and distribute artist releases, BGM, jazz, classical and sleep music.`,logo:`/music-japan-logo.png`,alt:`Music Japan LLC`,width:1500,height:500,modifier:`music`},{kicker:`SECOND TAKE`,title:`Podcasts × interview articles`,body:`We document the decisions, hardships and stories of business leaders through podcasts and interview articles.`,logo:`/second-take-logo.png`,alt:`SECOND TAKE podcast and interview media`,width:2172,height:724,modifier:`second-take`},{kicker:`BATON`,title:`Invitation-only introductions`,body:`We connect people we have met with, respecting the intent and trust of both sides.`,logo:`/baton-logo.png`,alt:`Baton invitation-only introduction service`,width:580,height:174,modifier:`baton`}]', "English company brands"],
-    ['founderQuote:`Music should never end at creation. We build the reason it gets heard—and the world that makes it remembered.`', 'founderQuote:`Music and human experience should never end at creation. We carry them forward until they are heard, read and connected to the next person.`', "English founder statement"],
-    ['relatedKicker:`RELATED VENTURES`,relatedTitle:`New connections, starting with music.`,relatedCards:[{label:`BUSINESS CONNECTION`,title:`Business & Executive Introductions`,body:`Business introductions for companies and executives, operated by Standment.`,cta:`SPECIAL SITE — COMING SOON`,href:``},{label:`WEBGL EXPERIENCE`,title:`WebGL websites by Standment`,body:`Immersive digital experiences that express the atmosphere of a brand.`,cta:`Visit the special site`,href:`https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#contact`}]', 'relatedKicker:`MEDIA / CONNECTION`,relatedTitle:`Record the voice. Publish the story. Pass it on.`,relatedBody:`We turn the decisions and struggles of business leaders into podcasts and interview articles, then help trusted relationships lead to thoughtful introductions.`,relatedCards:[{label:`PODCAST / INTERVIEW`,title:`SECOND TAKE`,body:`An executive media series documenting the decisions, hardships and stories that follow through podcasts and in-depth interviews.`,cta:`Visit SECOND TAKE`,href:`https://secondtake.music-japan.com/`},{label:`INVITATION-ONLY INTRODUCTION`,title:`Baton`,body:`An invitation-only service connecting people we have met through interviews and conversations, with care for both sides.`,cta:`Visit Baton`,href:`https://baton.music-japan.com/`}]', "English media section"],
+    ['pillars:[[`CREATE`,`Original music and BGM production`],[`CURATE`,`Distinct worlds for every sound`],[`CONNECT`,`Reaching listeners across borders`]]', 'brands:[{kicker:`MUSIC JAPAN`,title:`Music production & distribution`,body:`We plan, produce and distribute artist releases, BGM, jazz, classical and sleep music.`,logo:`/music-japan-logo.png`,alt:`Music Japan LLC`,width:1500,height:500,modifier:`music`},{kicker:`SECOND TAKE`,title:`Podcasts × interviews`,body:`We document the decisions, hardships and stories of business leaders through podcasts and interview articles.`,logo:`/second-take-logo.png`,alt:`SECOND TAKE podcast and interview media`,width:2172,height:724,modifier:`second-take`},{kicker:`BATON`,title:`Invitation-only introductions`,body:`Respecting each other’s values, we nurture deeper relationships.`,logo:`/baton-wordmark-v2.png`,alt:`Baton invitation-only introduction service`,width:446,height:65,modifier:`baton`}]', "English company brands"],
+    ['founderQuote:`Music should never end at creation. We build the reason it gets heard—and the world that makes it remembered.`', 'founderQuote:`Experiences of unbearable pain, loneliness and despair. I believe that by facing and expressing them—rather than simply hating or rejecting them—we can create work that would never emerge from ordinary life.\n\nMusic, media and podcasts are all means of expression.\n\nAt Music Japan LLC, we hope to connect every form of self-expression with the feelings born through resonance, and leave behind records that may support those who are still living through hardship.`', "English founder statement"],
+    ['relatedKicker:`RELATED VENTURES`,relatedTitle:`New connections, starting with music.`,relatedCards:[{label:`BUSINESS CONNECTION`,title:`Business & Executive Introductions`,body:`Business introductions for companies and executives, operated by Standment.`,cta:`SPECIAL SITE — COMING SOON`,href:``},{label:`WEBGL EXPERIENCE`,title:`WebGL websites by Standment`,body:`Immersive digital experiences that express the atmosphere of a brand.`,cta:`Visit the special site`,href:`https://savers-japan-digital.pearly-cedar-3983.chatgpt.site/#contact`}]', 'relatedKicker:`MEDIA / CONNECTION`,relatedTitle:`Transform life’s hardships and adversity\ninto expressions that give color to who we are.`,relatedBody:`We preserve the decisions and struggles of business leaders through podcasts and articles, allowing them to lead to new connections.\nThrough SECOND TAKE, we handle everything from interviews to publication.`,relatedCards:[{label:`PODCAST / INTERVIEW`,title:`SECOND TAKE`,body:`An executive media series documenting the decisions, hardships and stories that follow through podcasts and in-depth interviews.`,cta:`Visit SECOND TAKE`,href:`https://secondtake.music-japan.com/`},{label:`INVITATION-ONLY INTRODUCTION`,title:`Baton`,body:`From one chosen person to another. The baton is passed.`,cta:`Visit Baton`,href:`https://baton.music-japan.com/profile/`}]', "English media section"],
     ['contactBody:`Talk to us about original music, BGM, licensing or partnerships. We’ll review your message and get back to you directly.`', 'contactBody:`Talk to us about music, BGM, licensing, SECOND TAKE interviews, Baton introductions or partnerships. We’ll review your message and get back to you directly.`', "English contact summary"],
     ['options:[`Partnerships & collaboration`,`Music & BGM commissions`,`Music usage & licensing`,`Careers`,`Media & press`,`Other`]', 'options:[`Music & BGM commissions`,`Music usage & licensing`,`SECOND TAKE interviews`,`Baton introductions`,`Partnerships & collaboration`,`Other`]', "English inquiry options"],
     ['footerLine:`MUSIC FROM JAPAN. MADE TO TRAVEL. BUILT TO LAST.`,privacy:`Privacy Policy`', 'footerLine:`MUSIC. STORIES. CONNECTIONS. FROM JAPAN.`,privacy:`Privacy Policy`', "English footer line"],
     ['children:`MUSIC COMPANY`', 'children:`MUSIC & MEDIA`', "header business label"],
     ['children:`001 — 006`', 'children:`001 — 009`', "hero section count"],
-    ['children:`JAZZ · CLASSICAL · SLEEP · J-POP`', 'children:`MUSIC · PODCAST · INTERVIEW · BATON`', "hero orbit label"],
-    ['[`ARTIST`,`JAZZ`,`CLASSICAL`,`SLEEP`,`BGM`].map', '[`ARTIST`,`JAZZ`,`CLASSICAL`,`PODCAST`,`BATON`].map', "manifesto topic list"]
+    ['children:`JAZZ · CLASSICAL · SLEEP · J-POP`', 'children:`MUSIC · PODCAST · INTERVIEW · STORIES`', "hero orbit label"],
+    ['[`ARTIST`,`JAZZ`,`CLASSICAL`,`SLEEP`,`BGM`].map', '[`ARTIST`,`JAZZ`,`CLASSICAL`,`PODCAST`,`STORIES`].map', "manifesto topic list"]
   ];
 
   for (const [search, replacement, label] of bundleReplacements) {
@@ -266,6 +285,7 @@ function renderNews(locale) {
   const items = copy.newsItems.map((item) => {
     const body = `<time dateTime="${item.dateTime}">${item.date}</time><span class="news-strip__label">${item.label}</span><span class="news-strip__title">${item.title}</span><span class="news-strip__arrow" aria-hidden="true">${item.href ? "↗" : ""}</span>`;
     if (!item.href) return `<div class="news-strip__item">${body}</div>`;
+    if (item.href.startsWith("/")) return `<a class="news-strip__item" href="${item.href}" aria-label="${item.title}">${body}</a>`;
     const aria = locale === "ja" ? `${item.title}（新しいタブで開きます）` : `${item.title} (opens in a new tab)`;
     return `<a class="news-strip__item" href="${item.href}" target="_blank" rel="noopener noreferrer" aria-label="${aria}">${body}</a>`;
   }).join("");
@@ -290,24 +310,25 @@ function patchHomeDocument(documentHtml, locale) {
     ["MUSIC COMPANY", "MUSIC &amp; MEDIA"],
     ["合同会社Music Japan · INDEPENDENT MUSIC COMPANY · OSAKA", "合同会社Music Japan · MUSIC &amp; MEDIA COMPANY · OSAKA"],
     ["日本から。国境を越えて。記憶に残る音楽を。", "日本から。音楽と物語を、記憶に残る形へ。"],
-    ["アーティスト作品、ジャズ、クラシック、睡眠音楽。異なる音の世界を、一本の赤い周波数で束ねる音楽会社です。", "音楽制作・配信を軸に、Podcast、インタビュー記事、招待制の紹介サービスを手がける音楽・メディア会社です。"],
+    ["アーティスト作品、ジャズ、クラシック、睡眠音楽。異なる音の世界を、一本の赤い周波数で束ねる音楽会社です。", "音楽制作・配信を軸に、Podcastとインタビューで人の声や経験を記録する音楽・メディア会社です。"],
     ["ONE SIGNAL. MANY WORLDS.", "MUSIC. STORIES. CONNECTIONS."],
     ["一曲をつくる。世界観をつくる。そして、聴かれ続ける場所まで設計する。Music Japanは、アーティストと音楽ブランドの可能性を、日本から世界へ広げます。", "一曲をつくる。世界観をつくる。そして、聴かれ続ける場所まで届ける。さらに、人の声と経験をPodcastや記事に残し、次の人へつなぐ。Music Japanは、音楽を軸に新しい出会いまで育てます。"],
-    ["複数の音楽世界を育てる、独立系音楽会社。", "音楽を軸に、声と経験を残す会社。"],
+    ["複数の音楽世界を育てる、独立系音楽会社。", "音楽やメディアを通じて、\nより有意義な未来を創る記録を。"],
     ["合同会社Music Japanは、アーティスト作品からジャズ、クラシック、睡眠音楽まで、複数の音楽ブランドを企画・制作・発信しています。作品の数ではなく、ひとつひとつの世界観が届き、残り、次の出会いを生むことを大切にしています。", "合同会社Music Japanは、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を中心に、Podcastやインタビュー記事、LPで経営者の経験や事業を届けています。音楽も言葉も、つくって終わらせず、記憶と次のつながりへ残すことを大切にしています。"],
-    ["音楽を“つくって終わるもの”にしない。聴かれる理由と、記憶に残る世界までつくる。それがMusic Japanの仕事です。", "音楽も、人の経験も、つくって終わるものにしない。聴かれ、読まれ、次の出会いへつながるところまで手がける。それがMusic Japanの仕事です。"],
+    ["音楽を“つくって終わるもの”にしない。聴かれる理由と、記憶に残る世界までつくる。それがMusic Japanの仕事です。", "どうしようもなくつらい経験、孤独や絶望。それらをただ憎み、退けるのではなく、向き合い表現することで、日常生活では決して生まれないアウトプットが生まれると私は思います。\n\n音楽やメディア、Podcastというのは表現の手段です。\n\n合同会社Music Japanは、あらゆる自己表現とそこの共鳴からうまれる思いを繋ぎ、そして今苦境の最中にいる人の支えになるようなそんな記録を世に残せたらと思っています。"],
+    ["日本語で描く、都市と感情。", "Yumaが紡ぐ、想いと軌跡。"],
     ["楽曲制作、BGM、ライセンス、協業のご相談はこちらから。内容を確認後、担当よりご連絡します。", "楽曲制作、BGM、Podcast出演、インタビュー掲載、Batonや協業のご相談はこちらから。内容を確認後、担当よりご連絡します。"],
     ["MUSIC FROM JAPAN. MADE TO TRAVEL. BUILT TO LAST.", "MUSIC. STORIES. CONNECTIONS. FROM JAPAN."]
   ] : [
     ["MUSIC COMPANY", "MUSIC &amp; MEDIA"],
     ["MUSIC JAPAN LLC · INDEPENDENT MUSIC COMPANY · OSAKA, JAPAN", "MUSIC JAPAN LLC · MUSIC &amp; MEDIA COMPANY · OSAKA, JAPAN"],
     ["Music from Japan. Made to travel. Built to last.", "Music and stories from Japan, made to last."],
-    ["Artist releases, jazz, classical and sleep music—distinct sonic worlds connected by one red frequency.", "Music production and distribution at our core, joined by podcasts, interview articles and invitation-only introductions."],
+    ["Artist releases, jazz, classical and sleep music—distinct sonic worlds connected by one red frequency.", "Music production and distribution at our core, using podcasts and interviews to preserve people’s voices and experiences."],
     ["ONE SIGNAL. MANY WORLDS.", "MUSIC. STORIES. CONNECTIONS."],
     ["We make the music, shape the world around it, and design how it keeps reaching listeners. From Japan, Music Japan develops artist releases and focused music brands for audiences worldwide.", "We make the music, shape the world around it and help it keep reaching listeners. We also preserve people’s voices and experience through podcasts and articles, carrying each story toward its next connection."],
-    ["An independent music company building many sonic worlds.", "A music company preserving sound, voices and experience."],
+    ["An independent music company building many sonic worlds.", "Through music and media,\nwe leave records that shape a more meaningful future."],
     ["Music Japan LLC develops artist releases and dedicated jazz, classical and sleep-music brands. Every release is designed to find its audience, stay with them and lead to the next listen.", "Music Japan LLC creates and distributes artist releases, jazz, classical and sleep music. We also use podcasts, interview articles and dedicated pages to share the experiences and businesses of company leaders—turning music and words into lasting memories and trusted connections."],
-    ["Music should never end at creation. We build the reason it gets heard—and the world that makes it remembered.", "Music and human experience should never end at creation. We carry them forward until they are heard, read and connected to the next person."],
+    ["Music should never end at creation. We build the reason it gets heard—and the world that makes it remembered.", "Experiences of unbearable pain, loneliness and despair. I believe that by facing and expressing them—rather than simply hating or rejecting them—we can create work that would never emerge from ordinary life.\n\nMusic, media and podcasts are all means of expression.\n\nAt Music Japan LLC, we hope to connect every form of self-expression with the feelings born through resonance, and leave behind records that may support those who are still living through hardship."],
     ["Talk to us about original music, BGM, licensing or partnerships. We’ll review your message and get back to you directly.", "Talk to us about music, BGM, licensing, SECOND TAKE interviews, Baton introductions or partnerships. We’ll review your message and get back to you directly."],
     ["MUSIC FROM JAPAN. MADE TO TRAVEL. BUILT TO LAST.", "MUSIC. STORIES. CONNECTIONS. FROM JAPAN."]
   ];
@@ -336,10 +357,10 @@ function patchHomeDocument(documentHtml, locale) {
   documentHtml = documentHtml
     .replace('<small>MUSIC COMPANY</small>', '<small>MUSIC &amp; MEDIA</small>')
     .replace('<div class="hero__index" aria-hidden="true">001 — 006</div>', '<div class="hero__index" aria-hidden="true">001 — 009</div>')
-    .replace('JAZZ · CLASSICAL · SLEEP · J-POP', 'MUSIC · PODCAST · INTERVIEW · BATON');
+    .replace('JAZZ · CLASSICAL · SLEEP · J-POP', 'MUSIC · PODCAST · INTERVIEW · STORIES');
 
   const oldGenres = ["ARTIST", "JAZZ", "CLASSICAL", "SLEEP", "BGM"];
-  const newGenres = ["ARTIST", "JAZZ", "CLASSICAL", "PODCAST", "BATON"];
+  const newGenres = ["ARTIST", "JAZZ", "CLASSICAL", "PODCAST", "STORIES"];
   for (let index = 0; index < oldGenres.length; index += 1) {
     const oldGenre = `<span><i>0<!-- -->${index + 1}</i>${oldGenres[index]}</span>`;
     const newGenre = `<span><i>0<!-- -->${index + 1}</i>${newGenres[index]}</span>`;
@@ -369,24 +390,39 @@ function patchHomeDocument(documentHtml, locale) {
   const optionMarkup = `<option value="" disabled="" selected="">${inquiryPlaceholder}</option>${inquiryOptions.map((option) => `<option value="${option}">${option}</option>`).join("")}`;
   documentHtml = documentHtml.slice(0, selectContentStart) + optionMarkup + documentHtml.slice(selectEnd);
 
+  const founderStart = documentHtml.indexOf('<section class="founder content-frame"');
+  const founderOpenEnd = documentHtml.indexOf(">", founderStart) + 1;
+  const companyTableStart = documentHtml.indexOf('<div class="company-table"', founderOpenEnd);
+  if (founderStart === -1 || founderOpenEnd === 0 || companyTableStart === -1) throw new Error(`Could not isolate ${locale} founder profile teaser`);
+  let founderProfile = documentHtml.slice(founderOpenEnd, companyTableStart);
+  const founderStatementStart = founderProfile.indexOf('<p class="founder__statement">');
+  const founderStatementEnd = founderProfile.indexOf("</p>", founderStatementStart) + 4;
+  if (founderStatementStart === -1 || founderStatementEnd === 3) throw new Error(`Could not locate ${locale} founder statement`);
+  const profileHref = locale === "ja" ? "/profile/" : "/en/profile/";
+  const profileCta = locale === "ja" ? "代表プロフィールを見る" : "View representative profile";
+  const profileAria = locale === "ja" ? "壁谷友生の代表プロフィールを見る" : "View Tomoki Kabeya’s representative profile";
+  founderProfile = founderProfile.slice(0, founderStatementStart) + `<span class="founder__profile-cta">${profileCta}${arrowSvg()}</span>` + founderProfile.slice(founderStatementEnd);
+  const profileLink = `<a class="founder__profile-link" href="${profileHref}" aria-label="${profileAria}">${founderProfile}</a>`;
+  documentHtml = documentHtml.slice(0, founderOpenEnd) + profileLink + documentHtml.slice(companyTableStart);
+
   return documentHtml;
 }
 
 function updateHomeMetadata(documentHtml, locale) {
   const replacements = locale === "ja" ? [
     ["合同会社Music Japan 公式サイト | 音楽制作・楽曲配信", "合同会社Music Japan 公式サイト | 音楽制作・Podcast・インタビュー"],
-    ["大阪の音楽会社・合同会社Music Japan公式サイト。Yumaのアーティスト作品、ジャズ、クラシック、睡眠音楽、オリジナル楽曲・BGMを企画、制作、配信しています。", "合同会社Music Japan公式サイト。音楽制作・楽曲配信を軸に、Podcast『SECOND TAKE』、インタビュー記事、招待制の紹介サービス『Baton』を運営しています。"],
+    ["大阪の音楽会社・合同会社Music Japan公式サイト。Yumaのアーティスト作品、ジャズ、クラシック、睡眠音楽、オリジナル楽曲・BGMを企画、制作、配信しています。", "合同会社Music Japan公式サイト。音楽制作・楽曲配信を軸に、Podcast『SECOND TAKE』とインタビューを通じて、人の声や経験を記録・発信しています。"],
     ["合同会社Music Japan,Music Japan LLC,音楽制作,楽曲制作,BGM制作,音楽配信,大阪 音楽会社,Yuma", "合同会社Music Japan,Music Japan LLC,音楽制作,楽曲制作,BGM制作,音楽配信,Podcast,ポッドキャスト,経営者インタビュー,SECOND TAKE,Baton,大阪 音楽会社,Yuma"],
-    ["大阪から世界へ。アーティスト作品と複数の音楽ブランドを企画・制作・配信する音楽会社。", "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作、招待制の紹介サービスを展開する音楽・メディア会社。"],
-    ["大阪を拠点に、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を行う独立系音楽会社。", "大阪を拠点に、音楽制作・配信、Podcast、経営者インタビュー、記事制作、招待制の紹介サービスを手がける音楽・メディア会社。"],
-    ["アーティスト作品、ジャズ、クラシック、睡眠音楽を企画・制作・配信する音楽会社の公式サイト。", "音楽制作・配信、Podcast、インタビュー記事、招待制の紹介サービスを手がける合同会社Music Japanの公式サイト。"]
+    ["大阪から世界へ。アーティスト作品と複数の音楽ブランドを企画・制作・配信する音楽会社。", "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"],
+    ["大阪を拠点に、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を行う独立系音楽会社。", "大阪を拠点に、音楽制作・配信、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"],
+    ["アーティスト作品、ジャズ、クラシック、睡眠音楽を企画・制作・配信する音楽会社の公式サイト。", "音楽制作・配信、Podcast、インタビュー記事を手がける合同会社Music Japanの公式サイト。"]
   ] : [
     ["Music Japan LLC Official Website | Music Production &amp; Distribution", "Music Japan LLC | Music, Podcasts &amp; Interviews"],
-    ["The official website of Music Japan LLC, an independent music company in Osaka creating and distributing Yuma releases, jazz, classical, sleep music, original music and BGM.", "The official website of Music Japan LLC: music production and distribution, the SECOND TAKE podcast and interviews, and Baton invitation-only introductions."],
+    ["The official website of Music Japan LLC, an independent music company in Osaka creating and distributing Yuma releases, jazz, classical, sleep music, original music and BGM.", "The official website of Music Japan LLC: music production and distribution, alongside the SECOND TAKE podcast and interviews that preserve people’s voices and experiences."],
     ["合同会社Music Japan,Music Japan LLC,音楽制作,楽曲制作,BGM制作,音楽配信,大阪 音楽会社,Yuma", "Music Japan LLC,music production,music distribution,BGM,podcast,executive interviews,SECOND TAKE,Baton,Osaka music company,Yuma"],
-    ["An independent music company in Osaka building artist releases and focused music brands for listeners worldwide.", "A music and media company in Osaka creating music, podcasts, executive interviews, editorial content and trusted introductions."],
-    ["大阪を拠点に、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を行う独立系音楽会社。", "大阪を拠点に、音楽制作・配信、Podcast、経営者インタビュー、記事制作、招待制の紹介サービスを手がける音楽・メディア会社。"],
-    ["The official website of an independent music company creating and distributing artist releases, jazz, classical and sleep music.", "The official website of Music Japan LLC, creating music, podcasts, executive interviews, editorial content and invitation-only introductions."]
+    ["An independent music company in Osaka building artist releases and focused music brands for listeners worldwide.", "A music and media company in Osaka creating music, podcasts, executive interviews and editorial content."],
+    ["大阪を拠点に、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を行う独立系音楽会社。", "大阪を拠点に、音楽制作・配信、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"],
+    ["The official website of an independent music company creating and distributing artist releases, jazz, classical and sleep music.", "The official website of Music Japan LLC, creating music, podcasts, executive interviews and editorial content."]
   ];
 
   for (const [search, replacement] of replacements) {
@@ -416,6 +452,65 @@ function updateHomeMetadata(documentHtml, locale) {
     ]
   };
   return documentHtml.replace("</head>", `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>\n</head>`);
+}
+
+function renderProfilePage(locale) {
+  const isJa = locale === "ja";
+  const pagePath = isJa ? "/profile/" : "/en/profile/";
+  const alternatePath = isJa ? "/en/profile/" : "/profile/";
+  const homePath = isJa ? "/" : "/en/";
+  const langLabel = isJa ? "EN" : "JP";
+  const title = isJa
+    ? "代表プロフィール | 壁谷 友生 | 合同会社Music Japan"
+    : "Representative Profile | Tomoki Kabeya | Music Japan LLC";
+  const description = isJa
+    ? "合同会社Music Japan 代表社員・壁谷友生のプロフィールと、音楽・メディア・Podcastを通じて残したい記録への思い"
+    : "The profile of Tomoki Kabeya, representative member of Music Japan LLC, and his thoughts on the records he hopes to leave through music, media and podcasts";
+  const portraitAlt = isJa
+    ? "合同会社Music Japan 代表社員 壁谷友生"
+    : "Tomoki Kabeya, representative member of Music Japan LLC";
+  const name = isJa ? "壁谷 友生" : "Tomoki Kabeya";
+  const roman = isJa ? "Kabeya Tomoki" : "壁谷 友生 / Kabeya Tomoki";
+  const role = isJa ? "合同会社Music Japan 代表社員" : "Representative Member, Music Japan LLC";
+  const statement = isJa
+    ? [
+        "どうしようもなくつらい経験、孤独や絶望。それらをただ憎み、退けるのではなく、向き合い表現することで、日常生活では決して生まれないアウトプットが生まれると私は思います。",
+        "音楽やメディア、Podcastというのは表現の手段です。",
+        "合同会社Music Japanは、あらゆる自己表現とそこの共鳴からうまれる思いを繋ぎ、そして今苦境の最中にいる人の支えになるようなそんな記録を世に残せたらと思っています。"
+      ]
+    : [
+        "Experiences of unbearable pain, loneliness and despair. I believe that by facing and expressing them—rather than simply hating or rejecting them—we can create work that would never emerge from ordinary life.",
+        "Music, media and podcasts are all means of expression.",
+        "At Music Japan LLC, we hope to connect every form of self-expression with the feelings born through resonance, and leave behind records that may support those who are still living through hardship."
+      ];
+  const backLabel = isJa ? "公式サイトへ戻る" : "Back to the official site";
+  const profileLabel = isJa ? "代表プロフィール" : "Representative profile";
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "@id": `${SITE_URL}${pagePath}#webpage`,
+    url: `${SITE_URL}${pagePath}`,
+    name: title,
+    description,
+    inLanguage: isJa ? "ja" : "en",
+    mainEntity: {
+      "@type": "Person",
+      "@id": `${SITE_URL}/#founder`,
+      name: "壁谷 友生",
+      alternateName: "Tomoki Kabeya",
+      jobTitle: isJa ? "代表社員" : "Representative Member",
+      image: `${SITE_URL}/kabeya-tomoki.png`,
+      worksFor: { "@id": `${SITE_URL}/#organization` }
+    }
+  };
+  const statementHtml = statement.map((paragraph) => `<p>${paragraph}</p>`).join("");
+
+  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/"/><link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/"/><meta property="og:type" content="profile"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta name="twitter:card" content="summary_large_image"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${PROFILE_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="profile-page locale-${locale}"><header class="profile-header"><a class="profile-brand" href="${homePath}" aria-label="Music Japan LLC"><span class="profile-brand__signal" aria-hidden="true"><i></i></span><span>MUSIC JAPAN LLC</span></a><nav class="profile-nav" aria-label="${isJa ? "プロフィールページ" : "Profile page"}"><a href="${alternatePath}" lang="${isJa ? "en" : "ja"}">${langLabel}</a><a href="${homePath}">${isJa ? "公式サイト" : "Official site"}</a></nav></header><main class="profile-main" id="main-content"><section class="profile-hero" aria-labelledby="profile-title"><div class="profile-portrait"><img src="/kabeya-tomoki.png" alt="${portraitAlt}" width="861" height="859"/><div class="profile-portrait__frame" aria-hidden="true"></div><span class="profile-portrait__label">OSAKA / JAPAN · 2026</span></div><div class="profile-copy"><p class="profile-kicker">REPRESENTATIVE MEMBER</p><h1 id="profile-title">${name}</h1><p class="profile-roman">${roman}</p><p class="profile-role">${role}</p><div class="profile-statement">${statementHtml}</div></div></section><a class="profile-back" href="${homePath}"><span aria-hidden="true">←</span>${backLabel}</a></main><footer class="profile-footer"><span>© 2026 MUSIC JAPAN LLC</span><span>${profileLabel} · OSAKA / JAPAN</span></footer></div></body></html>`;
+}
+
+function appendProfileEntries(sitemapXml) {
+  const entry = (path) => `  <url>\n    <loc>${SITE_URL}${path}</loc>\n    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/" />\n    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/" />\n  </url>\n`;
+  return sitemapXml.replace("</urlset>", `${entry("/profile/")}${entry("/en/profile/")}</urlset>`);
 }
 
 rmSync(output, { recursive: true, force: true });
@@ -458,6 +553,10 @@ const publicHtmlFiles = [
   "en/company/index.html",
   "privacy/index.html",
   "en/privacy/index.html"
+];
+const profileHtmlFiles = [
+  { path: "profile/index.html", locale: "ja" },
+  { path: "en/profile/index.html", locale: "en" }
 ];
 
 let rewrittenReferences = 0;
@@ -536,6 +635,15 @@ for (const relativePath of machineReadableFiles) {
   writeFileSync(fullPath, original.replaceAll(LEGACY_PAGES_URL, SITE_URL));
 }
 
+for (const profile of profileHtmlFiles) {
+  const fullPath = join(output, profile.path);
+  mkdirSync(join(fullPath, ".."), { recursive: true });
+  writeFileSync(fullPath, renderProfilePage(profile.locale));
+}
+
+const sitemapPath = join(output, "sitemap.xml");
+writeFileSync(sitemapPath, appendProfileEntries(readFileSync(sitemapPath, "utf8")));
+
 for (const relativePath of publicHtmlFiles) {
   const html = readFileSync(join(output, relativePath), "utf8");
   const markerIndex = html.indexOf(RSC_MARKER);
@@ -566,6 +674,15 @@ for (const relativePath of publicHtmlFiles) {
   }
 }
 
+for (const profile of profileHtmlFiles) {
+  const html = readFileSync(join(output, profile.path), "utf8");
+  const pagePath = profile.locale === "ja" ? "/profile/" : "/en/profile/";
+  if (!html.includes(`rel="canonical" href="${SITE_URL}${pagePath}"`)) throw new Error(`Profile canonical link missing: ${profile.path}`);
+  if (!html.includes(`href="${PROFILE_STYLESHEET_URL}"`)) throw new Error(`Profile stylesheet missing: ${profile.path}`);
+  if (!html.includes("kabeya-tomoki.png")) throw new Error(`Profile portrait missing: ${profile.path}`);
+  if (!html.includes('application/ld+json')) throw new Error(`Profile structured data missing: ${profile.path}`);
+}
+
 const patchedBundleContents = readFileSync(join(output, "assets", patchedClientBundle.name), "utf8");
 for (const requiredToken of ["news-strip", "media-feature", SECOND_TAKE_URL, BATON_URL]) {
   if (!patchedBundleContents.includes(requiredToken)) throw new Error(`Client bundle token missing: ${requiredToken}`);
@@ -579,7 +696,7 @@ for (const relativePath of machineReadableFiles) {
   }
 }
 
-for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg", "music-japan-logo.png", "second-take-logo.png", "baton-logo.png"]) {
+for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg", "music-japan-logo.png", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png", "assets/music-japan-profile.css"]) {
   const fullPath = join(output, requiredFile);
   if (!existsSync(fullPath) || statSync(fullPath).size === 0) {
     throw new Error(`Required branding/SEO file is missing or empty: ${requiredFile}`);
@@ -587,10 +704,10 @@ for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-ja
 }
 
 const localAssetRefs = new Set();
-for (const relativePath of publicHtmlFiles) {
+for (const relativePath of [...publicHtmlFiles, ...profileHtmlFiles.map((profile) => profile.path)]) {
   const html = readFileSync(join(output, relativePath), "utf8");
   const markerIndex = html.indexOf(RSC_MARKER);
-  const documentHtml = html.slice(0, markerIndex);
+  const documentHtml = markerIndex === -1 ? html : html.slice(0, markerIndex);
   for (const match of documentHtml.matchAll(/(?:href|src)="\/(assets\/[^"?#]+)"/g)) {
     localAssetRefs.add(match[1]);
   }
@@ -603,6 +720,6 @@ console.log(`Prepared static deploy directory: ${output}`);
 console.log(`Canonical host: ${SITE_URL}`);
 console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
 console.log(`Patched homepage content and client bundle: ${patchedClientBundle.name}?${versionedClientGraph.version}`);
-console.log(`Safely rewrote ${rewrittenReferences} SEO references across ${publicHtmlFiles.length} public HTML documents.`);
+console.log(`Safely rewrote ${rewrittenReferences} SEO references and generated ${profileHtmlFiles.length} profile pages.`);
 console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
 console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required branding files.`);
