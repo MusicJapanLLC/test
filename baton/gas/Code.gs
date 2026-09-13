@@ -452,6 +452,16 @@ var BATON_PROFILES = {
     // 壁谷さん本人のプロフィールのため、暫定で社長通知先と同じアドレスにしてある
     recipientEmail: NOTIFY_TO,
     active: true
+  },
+  unveil: {
+    name: '古谷 祐麻',
+    company: '株式会社unveil',
+    slug: 'unveil',
+    // TODO: 古谷様ご本人の受信用メールアドレスに差し替えてから active を true にする。
+    // このファイルはサイトのビルドには含まれず、Apps Script側に手動で貼り付けて使うため、
+    // ここを直接書き換えて「デプロイを管理」→新バージョンで反映すること。
+    recipientEmail: 'REPLACE_ME@example.com',
+    active: false
   }
 };
 
