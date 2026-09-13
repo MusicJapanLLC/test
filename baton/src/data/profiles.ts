@@ -40,7 +40,7 @@ const kabeyaProfile: TalkProfile = {
     { label: '公式HP', url: 'https://music-japan.com/', image: '/media-musicjapan-hp.png' },
     {
       label: 'SECOND TAKE インタビュー',
-      url: 'https://second-take.vocal-shore-1441.chatgpt.site/',
+      url: 'https://secondtake.music-japan.com/',
       image: '/media-secondtake-logo.webp',
     },
   ],
