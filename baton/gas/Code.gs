@@ -214,11 +214,13 @@ var BATON_PROFILES = {
     name: '古谷 祐麻',
     company: '株式会社unveil',
     slug: 'unveil',
-    // TODO: 古谷様ご本人の受信用メールアドレスに差し替えてから active を true にする。
-    // このファイルはサイトのビルドには含まれず、Apps Script側に手動で貼り付けて使うため、
-    // ここを直接書き換えて「デプロイを管理」→新バージョンで反映すること。
-    recipientEmail: 'REPLACE_ME@example.com',
-    active: false
+    // 暫定: 古谷様本人にはまだ見せていないため、社内テスト用にOwner自身の
+    // アドレスに設定している。本人に見せる際は、ここを古谷様ご本人の
+    // 受信用メールアドレスに差し替えること（このファイルはサイトのビルドには
+    // 含まれず、Apps Script側に手動で貼り付けて使うため、ここを直接書き換えて
+    // 「デプロイを管理」→新バージョンで反映する）。
+    recipientEmail: 'tomoki.xxx.1009@gmail.com',
+    active: true
   }
 };
 
@@ -804,16 +806,16 @@ function testBatonFlow() {
 /**
  * unveilプロフィール専用の動作確認用。
  *
- * BATON_PROFILES.unveil がまだ active: false のうちに実行すると、
- * 「このプロフィールは現在受け付けていません」で失敗するのが正しい
- * （＝掲載停止中の人物には申請できない、というガードが効いている確認になる）。
+ * 現在 BATON_PROFILES.unveil.recipientEmail は、古谷様にまだ見せていない
+ * 社内テスト段階のため、Owner自身のアドレスに暫定設定してある
+ * （active: true）。この状態で実行すると、BATON_REQUESTS に1件入り、
+ * test@example.com 宛の認証メールが飛ぶところまで確認できる。そのメールの
+ * リンクを開いて認証を完了すると、今度は recipientEmail（現在はOwner自身の
+ * アドレス）宛に承認/辞退の依頼メールが飛ぶところまで確認できる。
  *
- * 古谷様の recipientEmail に差し替えて active: true にしたあとにもう一度
- * 実行すると、BATON_REQUESTS に1件入り、test@example.com 宛の認証メールが
- * 飛ぶところまで確認できる。そのメールのリンクを開いて認証を完了すると、
- * 今度は recipientEmail（古谷様の実際のメールアドレス）宛に承認/辞退の
- * 依頼メールが飛ぶ。本番で最初の申請者を待たせる前に、必ずここまで
- * 一度自分で通しておくこと。
+ * 古谷様に実際に見せる段階になったら、recipientEmail を古谷様ご本人の
+ * 受信用メールアドレスに差し替えること。差し替え後にもう一度これを実行し、
+ * 本番で最初の申請者を待たせる前に、必ず一度自分で通しておくこと。
  */
 function testBatonFlowUnveil() {
   var result = batonSubmitTalk({
