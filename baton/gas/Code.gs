@@ -693,7 +693,7 @@ function batonSubmitTalk(data) {
   cache.put(rlKey, '1', 60);
 
   // 同一人物からの重複申請だけ防ぐ（「最大3人」のような総数上限は設けない）
-  var pendingStates = ['メール未認証', '相手回答待ち', '承認'];
+  var pendingStates = ['未認証', '承認待ち', '承認'];
   var existing = batonReadRequestRows().some(function (r) {
     return String(r['話したい人']) === profile.name &&
       String(r['メール']).toLowerCase() === email.toLowerCase() &&
@@ -715,7 +715,7 @@ function batonSubmitTalk(data) {
     '会社名': company,
     'メール': email,
     'コメント': comment,
-    '状態': 'メール未認証',
+    '状態': '未認証',
     '紹介済': false,
     'プロフィールURL': batonProfileUrl(profileId),
     'profile_id': profileId,
@@ -753,7 +753,7 @@ function batonCheckVerify(token) {
   var row = batonFindRequestRow('認証トークンhash', batonHashToken(token));
   if (!row) return { ok: true, state: 'invalid' };
   if (row['状態'] === '期限切れ') return { ok: true, state: 'expired' };
-  if (row['状態'] !== 'メール未認証') return { ok: true, state: 'used' };
+  if (row['状態'] !== '未認証') return { ok: true, state: 'used' };
 
   var expiresAt = row['認証期限'] ? new Date(row['認証期限']) : null;
   if (expiresAt && new Date() > expiresAt) return { ok: true, state: 'expired' };
@@ -767,7 +767,7 @@ function batonConfirmVerify(token) {
   var row = batonFindRequestRow('認証トークンhash', batonHashToken(token));
   if (!row) return { ok: false, error: 'invalid' };
   if (row['状態'] === '期限切れ') return { ok: false, error: 'expired' };
-  if (row['状態'] !== 'メール未認証') return { ok: false, error: 'used' };
+  if (row['状態'] !== '未認証') return { ok: false, error: 'used' };
 
   var expiresAt = row['認証期限'] ? new Date(row['認証期限']) : null;
   if (expiresAt && new Date() > expiresAt) return { ok: false, error: 'expired' };
@@ -778,7 +778,7 @@ function batonConfirmVerify(token) {
   var respondExpiresAt = new Date(Date.now() + BATON_RESPOND_TTL_MS);
   var respondToken = batonRandomToken();
 
-  batonSetRequestCell(row._row, '状態', '相手回答待ち');
+  batonSetRequestCell(row._row, '状態', '承認待ち');
   batonSetRequestCell(row._row, '認証日時', new Date());
   batonSetRequestCell(row._row, '回答トークンhash', batonHashToken(respondToken));
   batonSetRequestCell(row._row, '回答期限', respondExpiresAt);
@@ -800,7 +800,7 @@ function batonCheckRespond(token) {
   var row = batonFindRequestRow('回答トークンhash', batonHashToken(token));
   if (!row) return { ok: true, state: 'invalid' };
   if (row['状態'] === '期限切れ') return { ok: true, state: 'expired' };
-  if (row['状態'] !== '相手回答待ち') return { ok: true, state: 'used' };
+  if (row['状態'] !== '承認待ち') return { ok: true, state: 'used' };
 
   var expiresAt = row['回答期限'] ? new Date(row['回答期限']) : null;
   if (expiresAt && new Date() > expiresAt) return { ok: true, state: 'expired' };
@@ -828,7 +828,7 @@ function batonRespondAction(token, decision) {
   var row = batonFindRequestRow('回答トークンhash', batonHashToken(token));
   if (!row) return { ok: false, error: 'invalid' };
   if (row['状態'] === '期限切れ') return { ok: false, error: 'expired' };
-  if (row['状態'] !== '相手回答待ち') return { ok: false, error: 'used' };
+  if (row['状態'] !== '承認待ち') return { ok: false, error: 'used' };
 
   var expiresAt = row['回答期限'] ? new Date(row['回答期限']) : null;
   if (expiresAt && new Date() > expiresAt) return { ok: false, error: 'expired' };
@@ -922,7 +922,7 @@ function batonDailyJob() {
   var rows = batonReadRequestRows();
 
   rows.forEach(function (row) {
-    if (row['状態'] === 'メール未認証') {
+    if (row['状態'] === '未認証') {
       var verifyExpires = row['認証期限'] ? new Date(row['認証期限']) : null;
       if (verifyExpires && now > verifyExpires) {
         batonSetRequestCell(row._row, '状態', '期限切れ');
@@ -930,7 +930,7 @@ function batonDailyJob() {
       return;
     }
 
-    if (row['状態'] !== '相手回答待ち') return;
+    if (row['状態'] !== '承認待ち') return;
 
     var respondExpires = row['回答期限'] ? new Date(row['回答期限']) : null;
     if (respondExpires && now > respondExpires) {
