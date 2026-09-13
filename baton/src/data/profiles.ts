@@ -84,6 +84,8 @@ const unveilProfile: TalkProfile = {
     { label: '公式サイト', url: 'https://unveil.style/' },
     { label: '会社概要', url: 'https://unveil.style/outline/' },
   ],
+  industryTags: ['ブランディング', 'Web', 'クリエイティブ'],
+  businessTags: ['ブランディング', 'Web制作', '採用支援'],
   theme: { primary: '#6B3FA0', accent: '#A487D9', bg: '#FAF7FC', text: '#241A33' },
   monument: 'lattice',
   active: true,
