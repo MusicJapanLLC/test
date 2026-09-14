@@ -34,6 +34,40 @@ export function serviceHeroHtml(s: Service, homeHref = '/'): string {
 export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   const initial = esc(p.name.slice(0, 1));
 
+  if (p.heroVariant === 'editorial') {
+    return `
+<header class="hero hero--editorial" data-hero>
+  <div class="hero__editorial-art" aria-hidden="true">
+    <svg viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" focusable="false">
+      <g class="hero__editorial-bloom">
+        <path d="M540 120 C620 180 660 280 630 380 C700 340 780 360 820 430 C760 470 700 470 650 440 C700 520 690 620 620 690 C590 610 560 540 560 460 C520 540 450 590 370 590 C400 510 450 450 510 410 C430 400 370 350 340 270 C430 260 500 290 540 340 C520 260 530 180 540 120 Z" />
+        <path d="M300 460 C360 500 390 570 370 640 C430 610 500 620 540 670 C490 700 440 700 400 680 C430 750 410 830 350 880 C330 810 320 740 330 680 C280 740 210 760 150 730 C190 670 240 630 300 610 C240 590 200 540 190 470 C250 470 280 480 300 460 Z" opacity="0.72" />
+      </g>
+      <g class="hero__editorial-sprig">
+        <path d="M760 560 C740 640 690 700 620 730 C650 660 660 590 640 520" />
+        <path d="M700 600 C680 620 650 630 625 622" />
+        <path d="M715 650 C695 665 668 670 645 660" />
+      </g>
+    </svg>
+  </div>
+  <div class="hero__editorial-grain" aria-hidden="true"></div>
+  <a class="hero__brand hero__brand--editorial" href="${homeHref}">
+    <span class="hero__brand-logo">Baton -バトン-</span>
+    <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
+  </a>
+  <div class="hero__inner hero__inner--editorial">
+    <p class="hero__eyebrow hero__eyebrow--editorial">
+      <span>${esc(p.company)}</span><span aria-hidden="true">/</span><span>${esc(p.title)}</span>
+    </p>
+    <p class="hero__wordmark" aria-hidden="true">Unveil the <em>Core</em></p>
+    <h1 class="hero__title hero__title--editorial">${esc(p.name)}</h1>
+    <p class="hero__tagline hero__tagline--editorial">${esc(p.tagline ?? p.title)}</p>
+    <p class="hero__desc hero__desc--editorial">${esc(p.bio)}</p>
+  </div>
+  <div class="hero__scroll hero__scroll--editorial" aria-hidden="true"><span></span></div>
+</header>`.trim();
+  }
+
   if (p.monument || p.heavyWebGL) {
     return `
 <header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>

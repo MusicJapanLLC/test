@@ -93,6 +93,164 @@ body.profile .hero::before {
     linear-gradient(170deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 82%, var(--primary)) 100%);
 }
 
+/* ══════════════════════════════════════════════════════════════
+ * Editorial hero variant（heroVariant: 'editorial'）
+ * 写真的な陰影・グレイン・植物のシルエットで、3Dに頼らずブランドごとの
+ * 世界観を出す。unveil.style（古谷様の会社サイト）の、余白の多い・
+ * 淡いグレイの背景に花影を落としたような雰囲気を参照している。
+ * .hero--editorial / body.profile--editorial 配下だけに閉じており、
+ * 壁谷さんのフルWebGLヒーローや他のプロフィールには一切影響しない。
+ * ══════════════════════════════════════════════════════════════ */
+
+.hero__editorial-art {
+  position: absolute;
+  inset: 0;
+  opacity: 0.82;
+  mix-blend-mode: multiply;
+}
+
+.hero__editorial-art svg {
+  width: 100%;
+  height: 100%;
+  filter: blur(3px);
+}
+
+.hero__editorial-bloom path {
+  fill: color-mix(in srgb, var(--text) 70%, transparent);
+  transform-origin: 68% 45%;
+  animation: editorial-drift 26s ease-in-out infinite;
+}
+
+.hero__editorial-sprig path {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text) 46%, transparent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  transform-origin: 68% 45%;
+  animation: editorial-drift 26s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+@keyframes editorial-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-10px, 14px, 0) rotate(1.1deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__editorial-bloom path,
+  .hero__editorial-sprig path {
+    animation: none;
+  }
+}
+
+.hero__editorial-grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.5;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+}
+
+.hero--editorial::after {
+  /* 既存の.hero::afterのフェードは維持しつつ、彩度の強い放射グローは足さない */
+  background: linear-gradient(
+    98deg,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--bg) 88%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 30%, transparent) 55%,
+    transparent 78%
+  );
+}
+
+@media (max-width: 720px) {
+  .hero--editorial::after {
+    background: linear-gradient(
+      180deg,
+      var(--bg) 0%,
+      color-mix(in srgb, var(--bg) 80%, transparent) 44%,
+      transparent 76%
+    );
+  }
+}
+
+.hero__inner--editorial {
+  max-width: 36rem;
+}
+
+.hero__wordmark {
+  font-family: 'Cormorant Garamond', var(--font-display), serif;
+  font-size: clamp(1.3rem, 1rem + 1.3vw, 1.9rem);
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  color: color-mix(in srgb, var(--text) 52%, transparent);
+  margin-bottom: clamp(0.9rem, 0.65rem + 0.9vw, 1.4rem);
+}
+
+.hero__wordmark em {
+  font-style: italic;
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+
+.hero__title--editorial {
+  font-weight: 500;
+  letter-spacing: 0.05em;
+}
+
+.hero__eyebrow--editorial {
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.hero__tagline--editorial {
+  font-style: italic;
+  font-weight: 400;
+}
+
+/*
+ * body.profile--editorial: ヒーローだけでなく、本文セクションにも
+ * 同じ「静かで編集的な」トーンを少しだけ効かせる（構成・文言は変えない）。
+ */
+body.profile--editorial .section__title {
+  font-style: italic;
+  font-weight: 500;
+}
+
+body.profile--editorial .service-item__name {
+  font-style: italic;
+}
+
+body.profile--editorial .media-card__thumb {
+  border-radius: 2px;
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--text) 88%, transparent),
+    color-mix(in srgb, var(--accent) 55%, var(--text))
+  );
+}
+
+body.profile--editorial .survey__stage {
+  border-radius: 3px;
+}
+
+body.profile--editorial .btn--primary {
+  border-radius: 2px;
+  letter-spacing: 0.14em;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+body.profile--editorial .link-chip {
+  border-radius: 2px;
+}
+
 /* 事業内容・実績など、カードではなく文章で読ませるセクション */
 
 .prose {
@@ -164,6 +322,15 @@ body.profile .section__label::before {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+}
+
+/* リンクが1件だけのときは、半端に余らせず横幅いっぱいに広げる */
+.media-grid:has(> :only-child) {
+  grid-template-columns: 1fr;
+}
+
+.media-grid:has(> :only-child) .media-card__thumb {
+  aspect-ratio: 21 / 9;
 }
 
 @media (max-width: 480px) {

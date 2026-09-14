@@ -109,6 +109,13 @@ export type TalkProfile = {
   monument?: MonumentKind;
   /** true のときは Standment ページと同じ、フルの3Dヒーローを使う（monumentより優先） */
   heavyWebGL?: boolean;
+  /**
+   * 個別デザインのヒーロー演出。指定するとWebGL（monument/heavyWebGL）の
+   * 代わりに使われる。'editorial': 写真的な陰影＋グレインの、雑誌広告的な
+   * 静的ヒーロー（3D不要・軽量）。本人のブランドの雰囲気を汲んだ、
+   * プロフィールごとに異なる世界観を作りたいときに使う。
+   */
+  heroVariant?: 'editorial';
   active: boolean;
 };
 

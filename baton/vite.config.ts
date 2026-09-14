@@ -53,7 +53,8 @@ const FONT_HREF =
 
 /** プロフィールページの見出し専用。他ページには読み込まない */
 const PROFILE_FONT_HREF =
-  'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700&display=swap';
+  'https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;600;700' +
+  '&family=Cormorant+Garamond:ital,wght@0,400;1,400;1,500&display=swap';
 
 const PRODUCTION_SITE_URL = 'https://baton.music-japan.com';
 

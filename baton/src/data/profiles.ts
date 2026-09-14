@@ -82,16 +82,19 @@ const unveilProfile: TalkProfile = {
     { name: 'プロダクト開発支援', description: '商品・プロダクトの企画から市場調査、磨き込みまで伴走' },
   ],
   media: [
+    // TODO: 実際のスクリーンショットを受け取り次第、image: '/media-unveil-hp.png' を追加する
     { label: '公式サイト', url: 'https://unveil.style/' },
-    { label: '会社概要', url: 'https://unveil.style/outline/' },
   ],
   listSummary: 'ブランディング・Web制作・採用支援',
   businessTags: ['ブランディング', 'Web制作', 'プロダクト開発'],
   keywordTags: ['世界観の設計', '徹底ヒアリング', 'SEO対策'],
-  theme: { primary: '#6B3FA0', accent: '#A487D9', bg: '#FAF7FC', text: '#241A33' },
-  // Batonの外部パートナーとして初めて掲載する人物のため、壁谷さんと同じ
-  // フルWebGL演出（scene-standment）を使う。簡易monumentは使わない。
-  heavyWebGL: true,
+  // unveil.style（本人の会社サイト）の、余白の多い・淡いグレイに
+  // 花影を落としたような世界観に合わせた配色。
+  theme: { primary: '#2B2622', accent: '#B08968', bg: '#F2EEE6', text: '#3A342C' },
+  // 壁谷さんのフルWebGL演出（heavyWebGL）ではなく、本人のブランドの
+  // 雰囲気を汲んだ写真的な静的ヒーロー（editorial）を使う。
+  // 3D不要で軽量、かつプロフィールごとに異なる世界観を出せる。
+  heroVariant: 'editorial',
   active: true,
 };
 

@@ -15,7 +15,7 @@ import { renderProfileSections } from '../profile/render';
  */
 
 const profile = getProfile('unveil');
-document.body.className = 'profile';
+document.body.className = profile.heroVariant === 'editorial' ? 'profile profile--editorial' : 'profile';
 
 const hero = document.getElementById('hero')!;
 const app = document.getElementById('app')!;
