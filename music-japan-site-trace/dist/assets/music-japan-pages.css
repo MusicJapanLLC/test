@@ -10,6 +10,7 @@
   position: sticky;
   top: 0;
   grid-template-columns: minmax(250px, 1fr) auto auto;
+  column-gap: clamp(14px, 1.8vw, 28px);
   min-height: var(--header-h);
   padding-block: 12px;
   background: linear-gradient(180deg, rgba(5, 5, 6, 0.98), rgba(5, 5, 6, 0.91));
