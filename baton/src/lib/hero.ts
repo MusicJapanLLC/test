@@ -84,7 +84,7 @@ export function profileHubHeroHtml(): string {
     <span class="hub-hero__intro-ring"></span>
   </div>
   <div class="hub-hero__inner">
-    <h1 class="hub-hero__title">Baton -バトン-</h1>
+    <h1 class="hub-hero__title"><a href="/profile/" aria-label="Batonトップへ戻る" style="color:inherit;text-decoration:none">Baton -バトン-</a></h1>
     <p class="hub-hero__tagline">選んだ人が、選んだ人へ。</p>
   </div>
   <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
@@ -97,7 +97,7 @@ export function hubHeroHtml(): string {
   <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="hub-hero__inner">
     <h1 class="hub-hero__title">${esc(site.name)}</h1>
-    <p class="hub-hero__tagline">${esc(site.tagline)}</p>
+    <p class="hub-hero__tagline">一つひとつ、確かめて選んだ6つ。</p>
   </div>
   <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
 </header>`.trim();

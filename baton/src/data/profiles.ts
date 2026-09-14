@@ -37,10 +37,10 @@ const kabeyaProfile: TalkProfile = {
     { name: 'Baton -バトン-', description: '招待制紹介サービスで深く長い関係づくりを。' },
   ],
   media: [
-    { label: '公式HP', url: 'https://music-japan.pages.dev/', image: '/media-musicjapan-hp.png' },
+    { label: '公式HP', url: 'https://music-japan.com/', image: '/media-musicjapan-hp.png' },
     {
       label: 'SECOND TAKE インタビュー',
-      url: 'https://second-take.vocal-shore-1441.chatgpt.site/',
+      url: 'https://secondtake.music-japan.com/',
       image: '/media-secondtake-logo.webp',
     },
   ],
@@ -85,6 +85,7 @@ const unveilProfile: TalkProfile = {
     { label: '公式サイト', url: 'https://unveil.style/' },
     { label: '会社概要', url: 'https://unveil.style/outline/' },
   ],
+  listSummary: 'ブランディング・Web制作・採用支援を横断して伴走するunveil代表',
   businessTags: ['ブランディング', 'Web制作', '採用支援'],
   keywordTags: ['ブランディング', 'Web', 'クリエイティブ'],
   theme: { primary: '#6B3FA0', accent: '#A487D9', bg: '#FAF7FC', text: '#241A33' },
