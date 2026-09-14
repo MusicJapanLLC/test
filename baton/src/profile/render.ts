@@ -67,25 +67,28 @@ function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | n
       el(
         'div',
         { class: 'media-grid', 'data-reveal-group': true },
-        profile.media.map((m) => {
-          const attrs: Record<string, unknown> = {
-            class: 'media-card',
-            href: m.url,
-            ...externalAttrs,
-            'data-reveal': true,
-          };
-          if (richMotion) attrs['data-tilt'] = true;
-          return el('a', attrs, [
-            el(
-              'div',
-              { class: 'media-card__thumb' },
-              m.image
-                ? [el('img', { class: 'media-card__img', src: m.image, alt: '', loading: 'lazy' }), arrow()]
-                : [el('span', { text: m.label.slice(0, 1) }), arrow()],
-            ),
-            el('p', { class: 'media-card__title', text: m.label }),
-          ]);
-        }),
+        profile.media.map((m) =>
+          el(
+            'a',
+            {
+              class: 'media-card',
+              href: m.url,
+              ...externalAttrs,
+              'data-reveal': true,
+              ...(richMotion ? { 'data-tilt': true } : {}),
+            },
+            [
+              el(
+                'div',
+                { class: 'media-card__thumb' },
+                m.image
+                  ? [el('img', { class: 'media-card__img', src: m.image, alt: '', loading: 'lazy' }), arrow()]
+                  : [el('span', { text: m.label.slice(0, 1) }), arrow()],
+              ),
+              el('p', { class: 'media-card__title', text: m.label }),
+            ],
+          ),
+        ),
       ),
     ]),
   ]);
