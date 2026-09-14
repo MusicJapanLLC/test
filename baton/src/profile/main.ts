@@ -1,19 +1,28 @@
 import '../styles/base.css';
 import '../styles/service.css';
 import '../styles/profile.css';
+import '../styles/profile-kabeya.css';
 
 import { getProfile } from '../data/profiles';
 import { initAnalytics } from '../lib/analytics';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
 import { initSmoothScroll, isCoarsePointer, prefersReducedMotion, revealOnScroll } from '../lib/motion';
+import {
+  cursorGlow,
+  drawRules,
+  guardHeroPhoto,
+  heroParallax,
+  magneticButtons,
+  mediaParallax,
+  openingCurtain,
+  revealHero,
+  scrollProgress,
+  splitHeadings,
+  tiltCards,
+} from './effects';
 import { renderProfileFooter } from './footer';
 import { renderProfileSections } from './render';
 
-/**
- * editorial ヒーローの植物シルエットに、ポインター位置に応じたごく僅かな
- * 視差を付ける。3Dヒーローの pointerTracker と同じ発想の軽量版（DOM/CSS
- * transformのみ・WebGL不使用）。指の環境・動きを減らす設定では何もしない。
- */
 function initEditorialParallax(): void {
   if (prefersReducedMotion() || isCoarsePointer()) return;
   const art = document.querySelector<HTMLElement>('[data-editorial-parallax]');
@@ -38,6 +47,9 @@ export function mountProfilePage(profileId: string): void {
   const start = () => {
     initAnalytics();
 
+    // 壁谷プロフィールだけ暗色テーマへ。Unveilのeditorial表示には影響させない。
+    if (profile.id === 'kabeya') document.body.classList.add('profile--dark');
+
     const app = document.getElementById('app');
     const footer = document.getElementById('footer');
     if (!app || !footer) return;
@@ -47,7 +59,28 @@ export function mountProfilePage(profileId: string): void {
 
     initSmoothScroll();
     revealOnScroll(document);
-    initEditorialParallax();
+
+    if (profile.heroVariant === 'editorial') {
+      initEditorialParallax();
+    }
+
+    if (profile.heavyWebGL || profile.monument) {
+      openingCurtain();
+      splitHeadings(document);
+      drawRules(document);
+      mediaParallax();
+      tiltCards(document);
+      magneticButtons(document);
+      scrollProgress();
+      guardHeroPhoto(document);
+
+      const hero = document.querySelector<HTMLElement>('[data-hero]');
+      if (hero) {
+        revealHero(hero);
+        cursorGlow(hero);
+        heroParallax(hero);
+      }
+    }
 
     if (window.location.hash === '#talk-request') {
       window.requestAnimationFrame(() =>
@@ -55,16 +88,14 @@ export function mountProfilePage(profileId: string): void {
       );
     }
 
-    // monument / heavyWebGL を持つプロフィール（実データ入りの「ミニLP」）だけ、
-    // サービスページと同じ3Dヒーローを読み込む
     const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-canvas]');
     if (canvas && shouldRender3D()) {
       if (profile.heavyWebGL) {
         whenIdle(() => {
-          void import('../service/scene-standment')
-            .then(({ mountStandmentScene }) => mountStandmentScene(canvas, profile.theme))
+          void import('./scene-hero')
+            .then(({ mountProfileHeroScene }) => mountProfileHeroScene(canvas, profile.theme))
             .catch(() => {});
-        }, 1500);
+        }, 1200);
       } else if (profile.monument) {
         whenIdle(() => {
           void import('../service/scene-light')
