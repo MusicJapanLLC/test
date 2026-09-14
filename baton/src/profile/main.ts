@@ -47,6 +47,9 @@ export function mountProfilePage(profileId: string): void {
   const start = () => {
     initAnalytics();
 
+    // 壁谷プロフィールだけ暗色テーマへ。Unveilのeditorial表示には影響させない。
+    if (profile.id === 'kabeya') document.body.classList.add('profile--dark');
+
     const app = document.getElementById('app');
     const footer = document.getElementById('footer');
     if (!app || !footer) return;
