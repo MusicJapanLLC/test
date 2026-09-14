@@ -17,8 +17,104 @@ const FAVICON_URL = "/favicon-music-japan.svg?v=20260913-final";
 const APPLE_ICON_URL = "/music-japan-symbol.png?v=20260913-final";
 const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
 const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
+const PAGES_STYLESHEET_URL = "/assets/music-japan-pages.css?v=20260914";
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
 const BATON_URL = "https://baton.music-japan.com/profile/";
+
+const pageCopy = {
+  ja: {
+    brand: "合同会社Music Japan",
+    homeLabel: "合同会社Music Japan home",
+    languageLabel: "Switch to English",
+    menuOpen: "メニューを開く",
+    menuClose: "メニューを閉じる",
+    navLabel: "主要ナビゲーション",
+    nav: [
+      ["music", "音楽"],
+      ["media", "メディア"],
+      ["about", "私たちについて"],
+      ["company", "会社概要"],
+      ["profile", "代表プロフィール"],
+      ["contact", "お問い合わせ"]
+    ],
+    pages: {
+      music: {
+        kicker: "MUSIC / CATALOG",
+        title: "音楽",
+        lead: "アーティスト作品からBGM、Jazz、クラシック、睡眠音楽まで。音をつくり、聴かれ続ける場所まで届けます。",
+        description: "合同会社Music Japanの音楽制作・楽曲配信・アーティスト作品・音楽ブランド"
+      },
+      media: {
+        kicker: "MEDIA / STORIES",
+        title: "メディア",
+        lead: "Podcastとインタビューを通じて、人の声と経験を記録し、次のつながりへ届けます。",
+        description: "合同会社Music Japanが運営するSECOND TAKEとメディア事業"
+      },
+      about: {
+        kicker: "ABOUT MUSIC JAPAN",
+        title: "私たちについて",
+        lead: "音楽やメディアを通じて、より有意義な未来を創る記録を残します。",
+        description: "合同会社Music Japanの事業と、音楽・メディアを通じて残したい記録"
+      },
+      contact: {
+        kicker: "CONTACT / COLLABORATE",
+        title: "お問い合わせ",
+        lead: "楽曲制作、BGM、Podcast出演、インタビュー掲載、Batonや協業についてご相談ください。",
+        description: "合同会社Music Japanへのお問い合わせ、取材、楽曲制作、協業のご相談"
+      }
+    },
+    footer: "MUSIC. STORIES. CONNECTIONS. FROM JAPAN.",
+    rights: "© 2026 合同会社Music Japan. All rights reserved.",
+    privacy: "プライバシーポリシー",
+    backTop: "BACK TO TOP ↑"
+  },
+  en: {
+    brand: "MUSIC JAPAN LLC",
+    homeLabel: "Music Japan LLC home",
+    languageLabel: "日本語に切り替える",
+    menuOpen: "Open menu",
+    menuClose: "Close menu",
+    navLabel: "Primary navigation",
+    nav: [
+      ["music", "Music"],
+      ["media", "Media"],
+      ["about", "About"],
+      ["company", "Company"],
+      ["profile", "Profile"],
+      ["contact", "Contact"]
+    ],
+    pages: {
+      music: {
+        kicker: "MUSIC / CATALOG",
+        title: "Music",
+        lead: "From artist releases and BGM to jazz, classical and sleep music. We create sound and carry it to places where it can keep being heard.",
+        description: "Music production, distribution, artist releases and music brands from Music Japan LLC"
+      },
+      media: {
+        kicker: "MEDIA / STORIES",
+        title: "Media",
+        lead: "Through podcasts and interviews, we preserve people’s voices and experiences and carry them toward new connections.",
+        description: "SECOND TAKE and the media work of Music Japan LLC"
+      },
+      about: {
+        kicker: "ABOUT MUSIC JAPAN",
+        title: "About",
+        lead: "Through music and media, we leave records that shape a more meaningful future.",
+        description: "The work of Music Japan LLC and the records we hope to leave through music and media"
+      },
+      contact: {
+        kicker: "CONTACT / COLLABORATE",
+        title: "Contact",
+        lead: "Talk to us about music, BGM, SECOND TAKE interviews, Baton introductions or partnerships.",
+        description: "Contact Music Japan LLC about music, interviews, media and partnerships"
+      }
+    },
+    footer: "MUSIC. STORIES. CONNECTIONS. FROM JAPAN.",
+    rights: "© 2026 Music Japan LLC. All rights reserved.",
+    privacy: "Privacy Policy",
+    backTop: "BACK TO TOP ↑"
+  }
+};
 
 const content = {
   ja: {
@@ -210,8 +306,8 @@ function patchClientBundle() {
   bundle = bundle.slice(0, manifestoStart) + newsBlock + "," + bundle.slice(manifestoStart);
 
   const bundleReplacements = [
-    ['var g=[[`.hero`,`001 / SIGNAL`],[`.manifesto`,`002 / MANIFESTO`],[`.works`,`003 / ARTIST`],[`.projects`,`004 / CATALOG`],[`.about`,`005 / COMPANY`],[`.founder`,`006 / FOUNDER`],[`.contact-section`,`007 / CONTACT`]];', 'var g=[[`.hero`,`001 / SIGNAL`],[`.news-strip`,`002 / NEWS`],[`.manifesto`,`003 / MANIFESTO`],[`.media-feature`,`004 / MEDIA`],[`.works`,`005 / ARTIST`],[`.projects`,`006 / CATALOG`],[`.about`,`007 / COMPANY`],[`.founder`,`008 / FOUNDER`],[`.contact-section`,`009 / CONTACT`]];', "experience rail sequence"],
-    ['nav:[[`作品`,`#works`],[`私たちについて`,`#about`],[`代表`,`#founder`],[`お問い合わせ`,`#contact`]]', 'nav:[[`音楽`,`#works`],[`メディア`,`#media`],[`私たちについて`,`#about`],[`お問い合わせ`,`#contact`]]', "Japanese navigation"],
+    ['var g=[[`.hero`,`001 / SIGNAL`],[`.manifesto`,`002 / MANIFESTO`],[`.works`,`003 / ARTIST`],[`.projects`,`004 / CATALOG`],[`.about`,`005 / COMPANY`],[`.founder`,`006 / FOUNDER`],[`.contact-section`,`007 / CONTACT`]];', 'var g=[[`.hero`,`001 / SIGNAL`],[`.news-strip`,`002 / NEWS`],[`.manifesto`,`003 / MANIFESTO`],[`.media-feature`,`004 / MEDIA`],[`.works`,`005 / ARTIST`],[`.projects`,`006 / CATALOG`],[`.about`,`007 / COMPANY`]];', "experience rail sequence"],
+    ['nav:[[`作品`,`#works`],[`私たちについて`,`#about`],[`代表`,`#founder`],[`お問い合わせ`,`#contact`]]', 'nav:[[`音楽`,`/music/`],[`メディア`,`/media/`],[`私たちについて`,`/about/`],[`会社概要`,`/company/`],[`代表プロフィール`,`/profile/`],[`お問い合わせ`,`/contact/`]]', "Japanese navigation"],
     ['heroEyebrow:`合同会社Music Japan · INDEPENDENT MUSIC COMPANY · OSAKA`', 'heroEyebrow:`合同会社Music Japan · MUSIC & MEDIA COMPANY · OSAKA`', "Japanese hero eyebrow"],
     ['heroLead:`日本から。国境を越えて。記憶に残る音楽を。`', 'heroLead:`日本から。音楽と物語を、記憶に残る形へ。`', "Japanese hero lead"],
     ['heroSub:`アーティスト作品、ジャズ、クラシック、睡眠音楽。異なる音の世界を、一本の赤い周波数で束ねる音楽会社です。`', 'heroSub:`音楽制作・配信を軸に、Podcastとインタビューで人の声や経験を記録する音楽・メディア会社です。`', "Japanese hero summary"],
@@ -226,7 +322,7 @@ function patchClientBundle() {
     ['contactBody:`楽曲制作、BGM、ライセンス、協業のご相談はこちらから。内容を確認後、担当よりご連絡します。`', 'contactBody:`楽曲制作、BGM、Podcast出演、インタビュー掲載、Batonや協業のご相談はこちらから。内容を確認後、担当よりご連絡します。`', "Japanese contact summary"],
     ['options:[`協業・パートナーシップ`,`楽曲・BGM制作のご依頼`,`楽曲使用・ライセンス`,`採用について`,`メディア・取材`,`その他`]', 'options:[`楽曲・BGM制作のご依頼`,`楽曲使用・ライセンス`,`Podcast出演・インタビュー掲載`,`Baton・ご紹介`,`協業・パートナーシップ`,`その他`]', "Japanese inquiry options"],
     ['footerLine:`MUSIC FROM JAPAN. MADE TO TRAVEL. BUILT TO LAST.`,privacy:`プライバシーポリシー`', 'footerLine:`MUSIC. STORIES. CONNECTIONS. FROM JAPAN.`,privacy:`プライバシーポリシー`', "Japanese footer line"],
-    ['nav:[[`Works`,`#works`],[`About`,`#about`],[`Founder`,`#founder`],[`Contact`,`#contact`]]', 'nav:[[`Music`,`#works`],[`Media`,`#media`],[`About`,`#about`],[`Contact`,`#contact`]]', "English navigation"],
+    ['nav:[[`Works`,`#works`],[`About`,`#about`],[`Founder`,`#founder`],[`Contact`,`#contact`]]', 'nav:[[`Music`,`/en/music/`],[`Media`,`/en/media/`],[`About`,`/en/about/`],[`Company`,`/en/company/`],[`Profile`,`/en/profile/`],[`Contact`,`/en/contact/`]]', "English navigation"],
     ['heroEyebrow:`MUSIC JAPAN LLC · INDEPENDENT MUSIC COMPANY · OSAKA, JAPAN`', 'heroEyebrow:`MUSIC JAPAN LLC · MUSIC & MEDIA COMPANY · OSAKA, JAPAN`', "English hero eyebrow"],
     ['heroLead:`Music from Japan. Made to travel. Built to last.`', 'heroLead:`Music and stories from Japan, made to last.`', "English hero lead"],
     ['heroSub:`Artist releases, jazz, classical and sleep music—distinct sonic worlds connected by one red frequency.`', 'heroSub:`Music production and distribution at our core, using podcasts and interviews to preserve people’s voices and experiences.`', "English hero summary"],
@@ -241,7 +337,7 @@ function patchClientBundle() {
     ['options:[`Partnerships & collaboration`,`Music & BGM commissions`,`Music usage & licensing`,`Careers`,`Media & press`,`Other`]', 'options:[`Music & BGM commissions`,`Music usage & licensing`,`SECOND TAKE interviews`,`Baton introductions`,`Partnerships & collaboration`,`Other`]', "English inquiry options"],
     ['footerLine:`MUSIC FROM JAPAN. MADE TO TRAVEL. BUILT TO LAST.`,privacy:`Privacy Policy`', 'footerLine:`MUSIC. STORIES. CONNECTIONS. FROM JAPAN.`,privacy:`Privacy Policy`', "English footer line"],
     ['children:`MUSIC COMPANY`', 'children:`MUSIC & MEDIA`', "header business label"],
-    ['children:`001 — 006`', 'children:`001 — 009`', "hero section count"],
+    ['children:`001 — 006`', 'children:`001 — 007`', "hero section count"],
     ['children:`JAZZ · CLASSICAL · SLEEP · J-POP`', 'children:`MUSIC · PODCAST · INTERVIEW · STORIES`', "hero orbit label"],
     ['[`ARTIST`,`JAZZ`,`CLASSICAL`,`SLEEP`,`BGM`].map', '[`ARTIST`,`JAZZ`,`CLASSICAL`,`PODCAST`,`STORIES`].map', "manifesto topic list"]
   ];
@@ -249,6 +345,20 @@ function patchClientBundle() {
   for (const [search, replacement, label] of bundleReplacements) {
     bundle = replaceRequired(bundle, search, replacement, label);
   }
+
+  bundle = replaceRequired(
+    bundle,
+    'className:`button button--ghost`,href:`#contact`',
+    'className:`button button--ghost`,href:e===`ja`?`/contact/`:`/en/contact/`',
+    "homepage contact CTA"
+  );
+
+  const homepageFounderStart = bundle.indexOf('(0,a.jsxs)(`section`,{className:`founder content-frame`');
+  const homepageFooterStart = bundle.indexOf('(0,a.jsxs)(`footer`,{className:`site-footer content-frame`', homepageFounderStart);
+  if (homepageFounderStart === -1 || homepageFooterStart === -1 || bundle[homepageFounderStart - 1] !== ",") {
+    throw new Error("Could not remove the homepage founder and contact sections");
+  }
+  bundle = bundle.slice(0, homepageFounderStart - 1) + "]})," + bundle.slice(homepageFooterStart);
 
   const bundleDigest = createHash("sha256").update(bundle).digest("hex").slice(0, 12);
   writeFileSync(bundlePath, bundle);
@@ -305,6 +415,125 @@ function renderBrandRows(locale) {
   return `<div class="about__brands" data-reveal="true">${rows}</div>`;
 }
 
+function internalPath(locale, page) {
+  return locale === "ja" ? `/${page}/` : `/en/${page}/`;
+}
+
+function renderSiteHeader(locale, activePage = "") {
+  const copy = pageCopy[locale];
+  const isJa = locale === "ja";
+  const homePath = isJa ? "/" : "/en/";
+  const alternateLocale = isJa ? "en" : "ja";
+  const alternatePath = activePage ? internalPath(alternateLocale, activePage) : (isJa ? "/en/" : "/");
+  const navLinks = copy.nav.map(([page, label]) => {
+    const current = page === activePage ? ' aria-current="page"' : "";
+    return `<a href="${internalPath(locale, page)}"${current}>${label}</a>`;
+  }).join("");
+
+  return `<header class="site-header inner-site-header"><a class="brand" href="${homePath}" aria-label="${copy.homeLabel}"><span class="brand-symbol" aria-hidden="true"><img src="/music-japan-symbol.png" alt="" width="480" height="480"/></span><span class="brand__text"><strong>${copy.brand}</strong><small>MUSIC &amp; MEDIA</small></span></a><nav id="primary-navigation" class="site-nav" aria-label="${copy.navLabel}">${navLinks}</nav><div class="header-actions"><a class="language-switch" href="${alternatePath}" hreflang="${alternateLocale}" aria-label="${copy.languageLabel}"><span lang="${alternateLocale}">${isJa ? "EN" : "JP"}</span><span class="language-switch__dot"></span></a><button class="menu-button" type="button" aria-label="${copy.menuOpen}" aria-controls="primary-navigation" aria-expanded="false" data-open-label="${copy.menuOpen}" data-close-label="${copy.menuClose}"><span></span><span></span></button></div></header>`;
+}
+
+function renderSiteFooter(locale) {
+  const copy = pageCopy[locale];
+  const homePath = locale === "ja" ? "/" : "/en/";
+  const privacyPath = locale === "ja" ? "/privacy/" : "/en/privacy/";
+  return `<footer class="site-footer content-frame inner-site-footer"><div class="site-footer__top"><span class="frequency-mark" aria-hidden="true"><span class="frequency-mark__arc frequency-mark__arc--top"></span><span class="frequency-mark__arc frequency-mark__arc--bottom"></span><span class="frequency-mark__dot"></span><span class="frequency-mark__line"></span></span><p>${copy.footer}</p></div><div class="site-footer__bottom"><p>${copy.rights}</p><div><a href="${homePath}">${locale === "ja" ? "トップ" : "HOME"}</a><a href="${privacyPath}">${copy.privacy}</a><a href="mailto:music.japan.llc@gmail.com">EMAIL</a><a href="#main-content">${copy.backTop}</a></div></div></footer>`;
+}
+
+function renderInnerPageScript(locale, includeContact = false) {
+  const bodyTemplate = locale === "ja"
+    ? "`お問い合わせ種別：${type}\\nお名前：${name}\\n会社名：${company||'未記入'}\\nメールアドレス：${email}\\n\\nお問い合わせ内容：\\n${message}`"
+    : "`Inquiry type: ${type}\\nName: ${name}\\nCompany: ${company||'Not provided'}\\nEmail: ${email}\\n\\nMessage:\\n${message}`";
+  const formScript = includeContact
+    ? `const form=document.querySelector('.contact-form');form?.addEventListener('submit',event=>{event.preventDefault();const data=new FormData(form);const type=String(data.get('type')??'');const name=String(data.get('name')??'');const company=String(data.get('company')??'');const email=String(data.get('email')??'');const message=String(data.get('message')??'');const body=${bodyTemplate};location.href='mailto:music.japan.llc@gmail.com?subject='+encodeURIComponent('[Music Japan] '+type)+'&body='+encodeURIComponent(body);});`
+    : "";
+  return `<script>(()=>{const button=document.querySelector('.menu-button');const nav=document.querySelector('#primary-navigation');button?.addEventListener('click',()=>{const open=!nav.classList.contains('is-open');nav.classList.toggle('is-open',open);button.classList.toggle('is-open',open);button.setAttribute('aria-expanded',String(open));button.setAttribute('aria-label',open?button.dataset.closeLabel:button.dataset.openLabel);});nav?.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{nav.classList.remove('is-open');button?.classList.remove('is-open');button?.setAttribute('aria-expanded','false');}));${formScript}})();</script>`;
+}
+
+function renderInnerHero(locale, page) {
+  const copy = pageCopy[locale].pages[page];
+  return `<section class="inner-page__hero"><p class="kicker">${copy.kicker}</p><div class="inner-page__index" aria-hidden="true">0${pageCopy[locale].nav.findIndex(([key]) => key === page) + 1}</div><h1>${copy.title}</h1><p>${copy.lead}</p></section>`;
+}
+
+function renderStandalonePage(locale, page, bodyHtml) {
+  const isJa = locale === "ja";
+  const copy = pageCopy[locale].pages[page];
+  const pagePath = internalPath(locale, page);
+  const jaPath = internalPath("ja", page);
+  const enPath = internalPath("en", page);
+  const title = `${copy.title} | ${isJa ? "合同会社Music Japan" : "Music Japan LLC"}`;
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": `${SITE_URL}${pagePath}#webpage`,
+    url: `${SITE_URL}${pagePath}`,
+    name: title,
+    description: copy.description,
+    inLanguage: isJa ? "ja" : "en",
+    isPartOf: { "@id": `${SITE_URL}/#website` }
+  };
+  const visibleBody = bodyHtml.replaceAll(' data-reveal="true"', "").replaceAll(' aria-haspopup="dialog"', "");
+  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${title}</title><meta name="description" content="${copy.description}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}"/><link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}"/><meta property="og:type" content="website"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${copy.description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta name="twitter:card" content="summary_large_image"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="site-shell inner-shell locale-${locale}" lang="${isJa ? "ja" : "en"}">${renderSiteHeader(locale, page)}<main id="main-content" class="inner-page__main" tabindex="-1">${renderInnerHero(locale, page)}<div class="inner-page__content inner-page__content--${page}">${visibleBody}</div></main>${renderSiteFooter(locale)}${renderInnerPageScript(locale, page === "contact")}</div></body></html>`;
+}
+
+function extractSection(documentHtml, marker, label) {
+  const start = documentHtml.indexOf(marker);
+  const end = documentHtml.indexOf("</section>", start);
+  if (start === -1 || end === -1) throw new Error(`Could not extract ${label}`);
+  return documentHtml.slice(start, end + "</section>".length);
+}
+
+function renderContentPage(locale, page, homeDocument) {
+  const sections = page === "music"
+    ? [
+        extractSection(homeDocument, '<section class="works content-frame"', `${locale} music works`),
+        extractSection(homeDocument, '<section class="projects content-frame"', `${locale} music projects`)
+      ]
+    : page === "media"
+      ? [extractSection(homeDocument, '<section class="related media-feature content-frame"', `${locale} media`)]
+      : page === "about"
+        ? [extractSection(homeDocument, '<section class="about content-frame"', `${locale} about`)]
+        : [extractSection(homeDocument, '<section class="contact-section"', `${locale} contact`)];
+  return renderStandalonePage(locale, page, sections.join(""));
+}
+
+function removeHomepageDetailSections(documentHtml, locale) {
+  const founderStart = documentHtml.indexOf('<section class="founder content-frame"');
+  const mainEnd = documentHtml.indexOf("</main>", founderStart);
+  if (founderStart === -1 || mainEnd === -1) throw new Error(`Could not remove ${locale} homepage detail sections`);
+  return documentHtml.slice(0, founderStart) + documentHtml.slice(mainEnd);
+}
+
+function patchExistingInternalHeader(documentHtml, locale, page) {
+  const className = page === "company" ? "entity-page__header" : "privacy-page__header";
+  const start = documentHtml.indexOf(`<header class="${className}">`);
+  const end = documentHtml.indexOf("</header>", start);
+  if (start === -1 || end === -1) throw new Error(`Could not replace ${locale} ${page} header`);
+  documentHtml = documentHtml.slice(0, start) + renderSiteHeader(locale, page === "company" ? "company" : "") + documentHtml.slice(end + "</header>".length);
+
+  if (page === "company") {
+    const replacements = locale === "ja" ? [
+      ["大阪を拠点に、アーティスト作品と複数の音楽ブランドを企画・制作・配信する独立系音楽会社です。日本から、国境を越えて聴かれ続ける音楽を育てます。", "大阪を拠点に、音楽制作・楽曲配信を軸として、Podcastやインタビューを通じて人の声と経験を記録する音楽・メディア会社です。"],
+      ["MUSIC BRANDS", "SECOND TAKE"],
+      ["ジャンルごとの音楽ブランド企画・運営", "Podcast・インタビュー記事の企画・取材・発信"],
+      ["LICENSE / COLLABORATION", "MEDIA / PARTNERSHIP"],
+      ["楽曲使用・ライセンス・協業", "LP掲載・メディア運営・協業"]
+    ] : [
+      ["An independent music company based in Osaka, Japan, developing artist releases and focused music brands for listeners worldwide.", "A music and media company based in Osaka, creating and distributing music while preserving people’s voices and experiences through podcasts and interviews."],
+      ["MUSIC BRANDS", "SECOND TAKE"],
+      ["Development and operation of focused music brands", "Planning, interviews and publication for podcasts and editorial stories"],
+      ["LICENSE / COLLABORATION", "MEDIA / PARTNERSHIP"],
+      ["Music licensing and creative partnerships", "Dedicated pages, media operations and partnerships"]
+    ];
+    for (const [search, replacement] of replacements) {
+      documentHtml = documentHtml.replaceAll(search, replacement);
+    }
+  }
+
+  documentHtml = documentHtml.replace("</head>", `<link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/>\n</head>`);
+  return documentHtml.replace("</body>", `${renderInnerPageScript(locale)}</body>`);
+}
+
 function patchHomeDocument(documentHtml, locale) {
   const visibleReplacements = locale === "ja" ? [
     ["MUSIC COMPANY", "MUSIC &amp; MEDIA"],
@@ -356,8 +585,9 @@ function patchHomeDocument(documentHtml, locale) {
 
   documentHtml = documentHtml
     .replace('<small>MUSIC COMPANY</small>', '<small>MUSIC &amp; MEDIA</small>')
-    .replace('<div class="hero__index" aria-hidden="true">001 — 006</div>', '<div class="hero__index" aria-hidden="true">001 — 009</div>')
-    .replace('JAZZ · CLASSICAL · SLEEP · J-POP', 'MUSIC · PODCAST · INTERVIEW · STORIES');
+    .replace('<div class="hero__index" aria-hidden="true">001 — 006</div>', '<div class="hero__index" aria-hidden="true">001 — 007</div>')
+    .replace('JAZZ · CLASSICAL · SLEEP · J-POP', 'MUSIC · PODCAST · INTERVIEW · STORIES')
+    .replace('class="button button--ghost" href="#contact"', `class="button button--ghost" href="${locale === "ja" ? "/contact/" : "/en/contact/"}"`);
 
   const oldGenres = ["ARTIST", "JAZZ", "CLASSICAL", "SLEEP", "BGM"];
   const newGenres = ["ARTIST", "JAZZ", "CLASSICAL", "PODCAST", "STORIES"];
@@ -367,14 +597,12 @@ function patchHomeDocument(documentHtml, locale) {
     documentHtml = documentHtml.replace(oldGenre, newGenre);
   }
 
-  const nav = locale === "ja"
-    ? [["作品", "音楽", "#works"], ["私たちについて", "メディア", "#media"], ["代表", "私たちについて", "#about"], ["お問い合わせ", "お問い合わせ", "#contact"]]
-    : [["Works", "Music", "#works"], ["About", "Media", "#media"], ["Founder", "About", "#about"], ["Contact", "Contact", "#contact"]];
+  const nav = pageCopy[locale].nav;
   const navStart = documentHtml.indexOf('<nav id="primary-navigation"');
   const navEnd = documentHtml.indexOf("</nav>", navStart);
   if (navStart === -1 || navEnd === -1) throw new Error(`Could not locate ${locale} navigation`);
   let navHtml = documentHtml.slice(navStart, navEnd + 6);
-  const navLinks = nav.map(([, label, href]) => `<a href="${href}">${label}</a>`).join("");
+  const navLinks = nav.map(([page, label]) => `<a href="${internalPath(locale, page)}">${label}</a>`).join("");
   navHtml = navHtml.replace(/<a href="#[^"]+">[^<]+<\/a>/g, "");
   navHtml = navHtml.replace(/<\/nav>$/, `${navLinks}</nav>`);
   documentHtml = documentHtml.slice(0, navStart) + navHtml + documentHtml.slice(navEnd + 6);
@@ -389,21 +617,6 @@ function patchHomeDocument(documentHtml, locale) {
   if (selectStart === -1 || selectContentStart === 0 || selectEnd === -1) throw new Error(`Could not locate ${locale} inquiry options`);
   const optionMarkup = `<option value="" disabled="" selected="">${inquiryPlaceholder}</option>${inquiryOptions.map((option) => `<option value="${option}">${option}</option>`).join("")}`;
   documentHtml = documentHtml.slice(0, selectContentStart) + optionMarkup + documentHtml.slice(selectEnd);
-
-  const founderStart = documentHtml.indexOf('<section class="founder content-frame"');
-  const founderOpenEnd = documentHtml.indexOf(">", founderStart) + 1;
-  const companyTableStart = documentHtml.indexOf('<div class="company-table"', founderOpenEnd);
-  if (founderStart === -1 || founderOpenEnd === 0 || companyTableStart === -1) throw new Error(`Could not isolate ${locale} founder profile teaser`);
-  let founderProfile = documentHtml.slice(founderOpenEnd, companyTableStart);
-  const founderStatementStart = founderProfile.indexOf('<p class="founder__statement">');
-  const founderStatementEnd = founderProfile.indexOf("</p>", founderStatementStart) + 4;
-  if (founderStatementStart === -1 || founderStatementEnd === 3) throw new Error(`Could not locate ${locale} founder statement`);
-  const profileHref = locale === "ja" ? "/profile/" : "/en/profile/";
-  const profileCta = locale === "ja" ? "代表プロフィールを見る" : "View representative profile";
-  const profileAria = locale === "ja" ? "壁谷友生の代表プロフィールを見る" : "View Tomoki Kabeya’s representative profile";
-  founderProfile = founderProfile.slice(0, founderStatementStart) + `<span class="founder__profile-cta">${profileCta}${arrowSvg()}</span>` + founderProfile.slice(founderStatementEnd);
-  const profileLink = `<a class="founder__profile-link" href="${profileHref}" aria-label="${profileAria}">${founderProfile}</a>`;
-  documentHtml = documentHtml.slice(0, founderOpenEnd) + profileLink + documentHtml.slice(companyTableStart);
 
   return documentHtml;
 }
@@ -457,9 +670,7 @@ function updateHomeMetadata(documentHtml, locale) {
 function renderProfilePage(locale) {
   const isJa = locale === "ja";
   const pagePath = isJa ? "/profile/" : "/en/profile/";
-  const alternatePath = isJa ? "/en/profile/" : "/profile/";
   const homePath = isJa ? "/" : "/en/";
-  const langLabel = isJa ? "EN" : "JP";
   const title = isJa
     ? "代表プロフィール | 壁谷 友生 | 合同会社Music Japan"
     : "Representative Profile | Tomoki Kabeya | Music Japan LLC";
@@ -505,12 +716,18 @@ function renderProfilePage(locale) {
   };
   const statementHtml = statement.map((paragraph) => `<p>${paragraph}</p>`).join("");
 
-  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/"/><link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/"/><meta property="og:type" content="profile"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta name="twitter:card" content="summary_large_image"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${PROFILE_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="profile-page locale-${locale}"><header class="profile-header"><a class="profile-brand" href="${homePath}" aria-label="Music Japan LLC"><span class="profile-brand__signal" aria-hidden="true"><i></i></span><span>MUSIC JAPAN LLC</span></a><nav class="profile-nav" aria-label="${isJa ? "プロフィールページ" : "Profile page"}"><a href="${alternatePath}" lang="${isJa ? "en" : "ja"}">${langLabel}</a><a href="${homePath}">${isJa ? "公式サイト" : "Official site"}</a></nav></header><main class="profile-main" id="main-content"><section class="profile-hero" aria-labelledby="profile-title"><div class="profile-portrait"><img src="/kabeya-tomoki.png" alt="${portraitAlt}" width="861" height="859"/><div class="profile-portrait__frame" aria-hidden="true"></div><span class="profile-portrait__label">OSAKA / JAPAN · 2026</span></div><div class="profile-copy"><p class="profile-kicker">REPRESENTATIVE MEMBER</p><h1 id="profile-title">${name}</h1><p class="profile-roman">${roman}</p><p class="profile-role">${role}</p><div class="profile-statement">${statementHtml}</div></div></section><a class="profile-back" href="${homePath}"><span aria-hidden="true">←</span>${backLabel}</a></main><footer class="profile-footer"><span>© 2026 MUSIC JAPAN LLC</span><span>${profileLabel} · OSAKA / JAPAN</span></footer></div></body></html>`;
+  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/"/><link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/"/><meta property="og:type" content="profile"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta name="twitter:card" content="summary_large_image"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${PROFILE_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="profile-page inner-shell locale-${locale}">${renderSiteHeader(locale, "profile")}<main class="profile-main" id="main-content"><section class="profile-hero" aria-labelledby="profile-title"><div class="profile-portrait"><img src="/kabeya-tomoki.png" alt="${portraitAlt}" width="861" height="859"/><div class="profile-portrait__frame" aria-hidden="true"></div><span class="profile-portrait__label">OSAKA / JAPAN · 2026</span></div><div class="profile-copy"><p class="profile-kicker">REPRESENTATIVE MEMBER</p><h1 id="profile-title">${name}</h1><p class="profile-roman">${roman}</p><p class="profile-role">${role}</p><div class="profile-statement">${statementHtml}</div></div></section><a class="profile-back" href="${homePath}"><span aria-hidden="true">←</span>${backLabel}</a></main><footer class="profile-footer"><span>© 2026 MUSIC JAPAN LLC</span><span>${profileLabel} · OSAKA / JAPAN</span></footer>${renderInnerPageScript(locale)}</div></body></html>`;
 }
 
-function appendProfileEntries(sitemapXml) {
-  const entry = (path) => `  <url>\n    <loc>${SITE_URL}${path}</loc>\n    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/" />\n    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/" />\n  </url>\n`;
-  return sitemapXml.replace("</urlset>", `${entry("/profile/")}${entry("/en/profile/")}</urlset>`);
+function appendGeneratedEntries(sitemapXml) {
+  const pageNames = ["music", "media", "about", "profile", "contact"];
+  const entries = pageNames.flatMap((page) => {
+    const jaPath = internalPath("ja", page);
+    const enPath = internalPath("en", page);
+    const entry = (path) => `  <url>\n    <loc>${SITE_URL}${path}</loc>\n    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}" />\n    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}" />\n  </url>\n`;
+    return [entry(jaPath), entry(enPath)];
+  }).join("");
+  return sitemapXml.replace("</urlset>", `${entries}</urlset>`);
 }
 
 rmSync(output, { recursive: true, force: true });
@@ -558,6 +775,11 @@ const profileHtmlFiles = [
   { path: "profile/index.html", locale: "ja" },
   { path: "en/profile/index.html", locale: "en" }
 ];
+const contentPageFiles = [
+  ...["music", "media", "about", "contact"].map((page) => ({ path: `${page}/index.html`, locale: "ja", page })),
+  ...["music", "media", "about", "contact"].map((page) => ({ path: `en/${page}/index.html`, locale: "en", page }))
+];
+const homeDocuments = new Map();
 
 let rewrittenReferences = 0;
 
@@ -599,11 +821,17 @@ for (const relativePath of publicHtmlFiles) {
   if (relativePath === "index.html" || relativePath === "en/index.html") {
     const locale = relativePath === "index.html" ? "ja" : "en";
     documentHtml = patchHomeDocument(documentHtml, locale);
+    homeDocuments.set(locale, documentHtml);
+    documentHtml = removeHomepageDetailSections(documentHtml, locale);
     documentHtml = updateHomeMetadata(documentHtml, locale);
     documentHtml = documentHtml.replace(
       "</head>",
       `<link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/>\n</head>`
     );
+  } else {
+    const locale = relativePath.startsWith("en/") ? "en" : "ja";
+    const page = relativePath.includes("company/") ? "company" : "privacy";
+    documentHtml = patchExistingInternalHeader(documentHtml, locale, page);
   }
 
   // Remove every pre-existing favicon declaration so Chrome has one unambiguous browser-tab icon.
@@ -616,10 +844,11 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes("</head>")) throw new Error(`Head close tag missing: ${relativePath}`);
   documentHtml = documentHtml.replace("</head>", `${faviconTags}\n</head>`);
 
-  const rewritten = documentHtml + rscBootstrap + rscPayload;
+  const isHomepage = relativePath === "index.html" || relativePath === "en/index.html";
+  const rewritten = isHomepage ? documentHtml + rscBootstrap + rscPayload : documentHtml;
 
   // Byte-for-byte protection for hydration data
-  if (rewritten.slice(documentHtml.length + rscBootstrap.length) !== rscPayload) {
+  if (isHomepage && rewritten.slice(documentHtml.length + rscBootstrap.length) !== rscPayload) {
     throw new Error(`RSC payload changed unexpectedly: ${relativePath}`);
   }
 
@@ -641,13 +870,21 @@ for (const profile of profileHtmlFiles) {
   writeFileSync(fullPath, renderProfilePage(profile.locale));
 }
 
+for (const contentPage of contentPageFiles) {
+  const homeDocument = homeDocuments.get(contentPage.locale);
+  if (!homeDocument) throw new Error(`Missing ${contentPage.locale} homepage source for ${contentPage.page}`);
+  const fullPath = join(output, contentPage.path);
+  mkdirSync(join(fullPath, ".."), { recursive: true });
+  writeFileSync(fullPath, renderContentPage(contentPage.locale, contentPage.page, homeDocument));
+}
+
 const sitemapPath = join(output, "sitemap.xml");
-writeFileSync(sitemapPath, appendProfileEntries(readFileSync(sitemapPath, "utf8")));
+writeFileSync(sitemapPath, appendGeneratedEntries(readFileSync(sitemapPath, "utf8")));
 
 for (const relativePath of publicHtmlFiles) {
   const html = readFileSync(join(output, relativePath), "utf8");
   const markerIndex = html.indexOf(RSC_MARKER);
-  const documentHtml = html.slice(0, markerIndex);
+  const documentHtml = markerIndex === -1 ? html : html.slice(0, markerIndex);
 
   if (documentHtml.includes(OLD_SITE_URL)) throw new Error(`Legacy host remains in document HTML: ${relativePath}`);
   if (!documentHtml.includes(SITE_URL)) throw new Error(`Canonical host missing in document HTML: ${relativePath}`);
@@ -656,9 +893,10 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes(`rel="icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New favicon missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New shortcut favicon missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="apple-touch-icon" href="${APPLE_ICON_URL}"`)) throw new Error(`Apple touch icon missing: ${relativePath}`);
-  if (!documentHtml.includes(`/assets/${versionedClientGraph.entryName}?${versionedClientGraph.version}`)) throw new Error(`Versioned client entry missing: ${relativePath}`);
 
   if (relativePath === "index.html" || relativePath === "en/index.html") {
+    const locale = relativePath === "index.html" ? "ja" : "en";
+    if (!documentHtml.includes(`/assets/${versionedClientGraph.entryName}?${versionedClientGraph.version}`)) throw new Error(`Versioned client entry missing: ${relativePath}`);
     if (!documentHtml.includes('id="news"')) throw new Error(`News section missing: ${relativePath}`);
     if (!documentHtml.includes('id="media"')) throw new Error(`Media section missing: ${relativePath}`);
     if (!documentHtml.includes(SECOND_TAKE_URL)) throw new Error(`SECOND TAKE link missing: ${relativePath}`);
@@ -666,11 +904,21 @@ for (const relativePath of publicHtmlFiles) {
     if (!documentHtml.includes(`href="${MEDIA_STYLESHEET_URL}"`)) throw new Error(`Media refresh stylesheet missing: ${relativePath}`);
     if (!documentHtml.includes(`/assets/${patchedClientBundle.name}?${versionedClientGraph.version}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
     if (documentHtml.includes("Standment")) throw new Error(`Legacy Standment copy remains: ${relativePath}`);
+    if (documentHtml.includes('class="founder content-frame"')) throw new Error(`Founder remains on homepage: ${relativePath}`);
+    if (documentHtml.includes('class="contact-section"')) throw new Error(`Contact remains on homepage: ${relativePath}`);
+    for (const [page, label] of pageCopy[locale].nav) {
+      if (!documentHtml.includes(`<a href="${internalPath(locale, page)}">${label}</a>`)) {
+        throw new Error(`Internal navigation link missing on ${relativePath}: ${page}`);
+      }
+    }
     if (!(documentHtml.indexOf('id="news"') < documentHtml.indexOf('class="manifesto content-frame"') &&
       documentHtml.indexOf('class="manifesto content-frame"') < documentHtml.indexOf('id="media"') &&
       documentHtml.indexOf('id="media"') < documentHtml.indexOf('class="works content-frame"'))) {
       throw new Error(`Homepage section order is incorrect: ${relativePath}`);
     }
+  } else {
+    if (!documentHtml.includes('class="site-header inner-site-header"')) throw new Error(`Shared internal header missing: ${relativePath}`);
+    if (!documentHtml.includes('src="/music-japan-symbol.png"')) throw new Error(`Header logo missing: ${relativePath}`);
   }
 }
 
@@ -679,8 +927,22 @@ for (const profile of profileHtmlFiles) {
   const pagePath = profile.locale === "ja" ? "/profile/" : "/en/profile/";
   if (!html.includes(`rel="canonical" href="${SITE_URL}${pagePath}"`)) throw new Error(`Profile canonical link missing: ${profile.path}`);
   if (!html.includes(`href="${PROFILE_STYLESHEET_URL}"`)) throw new Error(`Profile stylesheet missing: ${profile.path}`);
+  if (!html.includes(`href="${PAGES_STYLESHEET_URL}"`)) throw new Error(`Internal page stylesheet missing: ${profile.path}`);
   if (!html.includes("kabeya-tomoki.png")) throw new Error(`Profile portrait missing: ${profile.path}`);
+  if (!html.includes('class="site-header inner-site-header"')) throw new Error(`Shared profile header missing: ${profile.path}`);
+  if (!html.includes('src="/music-japan-symbol.png"')) throw new Error(`Profile header logo missing: ${profile.path}`);
   if (!html.includes('application/ld+json')) throw new Error(`Profile structured data missing: ${profile.path}`);
+}
+
+for (const contentPage of contentPageFiles) {
+  const html = readFileSync(join(output, contentPage.path), "utf8");
+  const pagePath = internalPath(contentPage.locale, contentPage.page);
+  if (!html.includes(`rel="canonical" href="${SITE_URL}${pagePath}"`)) throw new Error(`Page canonical link missing: ${contentPage.path}`);
+  if (!html.includes(`href="${PAGES_STYLESHEET_URL}"`)) throw new Error(`Internal page stylesheet missing: ${contentPage.path}`);
+  if (!html.includes('class="site-header inner-site-header"')) throw new Error(`Shared page header missing: ${contentPage.path}`);
+  if (!html.includes('src="/music-japan-symbol.png"')) throw new Error(`Page header logo missing: ${contentPage.path}`);
+  if (!html.includes('application/ld+json')) throw new Error(`Page structured data missing: ${contentPage.path}`);
+  if (contentPage.page === "contact" && !html.includes('class="contact-form"')) throw new Error(`Contact form missing: ${contentPage.path}`);
 }
 
 const patchedBundleContents = readFileSync(join(output, "assets", patchedClientBundle.name), "utf8");
@@ -688,6 +950,8 @@ for (const requiredToken of ["news-strip", "media-feature", SECOND_TAKE_URL, BAT
   if (!patchedBundleContents.includes(requiredToken)) throw new Error(`Client bundle token missing: ${requiredToken}`);
 }
 if (patchedBundleContents.includes("Standment")) throw new Error("Legacy Standment copy remains in client bundle");
+if (patchedBundleContents.includes('className:`founder content-frame`')) throw new Error("Founder remains in homepage client bundle");
+if (patchedBundleContents.includes('className:`contact-section`')) throw new Error("Contact remains in homepage client bundle");
 
 for (const relativePath of machineReadableFiles) {
   const content = readFileSync(join(output, relativePath), "utf8");
@@ -696,7 +960,7 @@ for (const relativePath of machineReadableFiles) {
   }
 }
 
-for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg", "music-japan-logo.png", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png", "assets/music-japan-profile.css"]) {
+for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg", "music-japan-logo.png", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png", "assets/music-japan-profile.css", "assets/music-japan-pages.css"]) {
   const fullPath = join(output, requiredFile);
   if (!existsSync(fullPath) || statSync(fullPath).size === 0) {
     throw new Error(`Required branding/SEO file is missing or empty: ${requiredFile}`);
@@ -704,7 +968,8 @@ for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-ja
 }
 
 const localAssetRefs = new Set();
-for (const relativePath of [...publicHtmlFiles, ...profileHtmlFiles.map((profile) => profile.path)]) {
+const allHtmlFiles = [...publicHtmlFiles, ...profileHtmlFiles.map((profile) => profile.path), ...contentPageFiles.map((page) => page.path)];
+for (const relativePath of allHtmlFiles) {
   const html = readFileSync(join(output, relativePath), "utf8");
   const markerIndex = html.indexOf(RSC_MARKER);
   const documentHtml = markerIndex === -1 ? html : html.slice(0, markerIndex);
@@ -720,6 +985,6 @@ console.log(`Prepared static deploy directory: ${output}`);
 console.log(`Canonical host: ${SITE_URL}`);
 console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
 console.log(`Patched homepage content and client bundle: ${patchedClientBundle.name}?${versionedClientGraph.version}`);
-console.log(`Safely rewrote ${rewrittenReferences} SEO references and generated ${profileHtmlFiles.length} profile pages.`);
+console.log(`Safely rewrote ${rewrittenReferences} SEO references and generated ${profileHtmlFiles.length + contentPageFiles.length} internal pages.`);
 console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
 console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required branding files.`);
