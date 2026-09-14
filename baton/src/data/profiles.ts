@@ -12,8 +12,7 @@ import type { TalkProfile } from '../types';
  * 実データで作った1件目のプロフィール。
  * 「その人専用の小さなLP」として、人物紹介・事業内容・運営メディア・
  * メディア・話したいCTAまでを1ページに収める。
- * 今後、出演コンテンツが増えるたびに media / services を追記していく想定
- * （写真は未着手のためイニシャル表示のまま）。
+ * 今後、出演コンテンツが増えるたびに media / services を追記していく想定。
  */
 const kabeyaProfile: TalkProfile = {
   id: 'kabeya',
@@ -22,6 +21,11 @@ const kabeyaProfile: TalkProfile = {
   company: '合同会社Music Japan',
   title: '代表社員',
   tagline: '学び、紡ぎ、繋いでいく。',
+  photo: {
+    src: '/profile-kabeya.jpg',
+    alt: '壁谷 友生',
+    caption: 'OSAKA / JAPAN · 2026',
+  },
   bio:
     'Podcast「SECOND TAKE（セカンドテイク）」にて、経営者の決断や苦悩、それらをどう乗り越えてきたのか。' +
     'その人自身の言葉や経験を「インタビュー記事」として記録していく経営者メディアを運営しています。',
@@ -47,7 +51,7 @@ const kabeyaProfile: TalkProfile = {
   listSummary: '招待制紹介サービス「Baton」の運営',
   businessTags: ['音楽制作', 'メディア運営', '法人紹介'],
   keywordTags: ['洋楽/Jazz', '経営者対談', '完全招待制'],
-  theme: { primary: '#1B3A6B', accent: '#2E9BA8', bg: '#F5F8FC', text: '#14233D' },
+  theme: { primary: '#C8102E', accent: '#D9A441', bg: '#0A0A0C', text: '#EDEAE4' },
   heavyWebGL: true,
   active: true,
 };
