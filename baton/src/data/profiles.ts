@@ -86,8 +86,11 @@ const unveilProfile: TalkProfile = {
     { name: 'プロダクト開発支援', description: '商品・プロダクトの企画から市場調査、磨き込みまで伴走' },
   ],
   media: [
-    // TODO: 実際のスクリーンショットを受け取り次第、image: '/media-unveil-hp.png' を追加する
-    { label: '公式サイト', url: 'https://unveil.style/' },
+    {
+      label: '公式サイト',
+      url: 'https://unveil.style/',
+      image: '/media-unveil-hp.webp',
+    },
   ],
   listSummary: 'ブランディング・Web制作・採用支援',
   businessTags: ['ブランディング', 'Web制作', 'プロダクト開発'],
