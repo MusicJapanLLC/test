@@ -4,11 +4,6 @@ import type { Service, TalkProfile } from '../types';
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-/**
- * ヒーローのHTML。
- * 本番ビルドではこれをビルド時にHTMLへ焼き込む（LCPをJS待ちにしないため）。
- * 単一ファイルのプレビューでは同じ関数を実行時に使う。出どころを1つにしておく。
- */
 export function serviceHeroHtml(s: Service, homeHref = '/'): string {
   return `
 <header class="hero${s.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
@@ -23,14 +18,37 @@ export function serviceHeroHtml(s: Service, homeHref = '/'): string {
 </header>`.trim();
 }
 
-/**
- * プロフィールページのヒーロー。サービスページと同じく、ビルド時に
- * 静的HTMLへ焼き込む（写真は今回プレースホルダーのイニシャル表示）。
- *
- * `monument` を持つプロフィール（＝実データが入った「ミニLP」）だけ、
- * サービスページと同じ `.hero`（フル高さ + WebGL立体）を使う。
- * 持たないプロフィール（暫定の6件）は今まで通りの簡易ヒーローのまま。
- */
+function splitChars(text: string): string {
+  return Array.from(text)
+    .map((ch, i) =>
+      ch === ' ' || ch === '\u3000'
+        ? '<span class="pf-name__char pf-name__char--space">&nbsp;</span>'
+        : `<span class="pf-name__char" style="--i:${i}">${esc(ch)}</span>`,
+    )
+    .join('');
+}
+
+function heroShotHtml(p: TalkProfile): string {
+  const initial = esc(p.name.slice(0, 1));
+  const photo = p.photo;
+  const inner = photo
+    ? `<img class="pf-shot__img" src="${esc(photo.src)}" alt="${esc(photo.alt ?? p.name)}" data-shot-img />
+       <span class="pf-shot__initial" aria-hidden="true">${initial}</span>`
+    : `<span class="pf-shot__initial is-only" aria-hidden="true">${initial}</span>`;
+
+  return `
+  <figure class="pf-shot${photo ? '' : ' pf-shot--noimg'}" data-shot>
+    <div class="pf-shot__frame">
+      ${inner}
+      <span class="pf-shot__sheen" aria-hidden="true"></span>
+      <span class="pf-shot__rule" aria-hidden="true"></span>
+      <span class="pf-shot__edge pf-shot__edge--tl" aria-hidden="true"></span>
+      <span class="pf-shot__edge pf-shot__edge--br" aria-hidden="true"></span>
+      ${photo?.caption ? `<figcaption class="pf-shot__caption">${esc(photo.caption)}</figcaption>` : ''}
+    </div>
+  </figure>`;
+}
+
 export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   const initial = esc(p.name.slice(0, 1));
 
@@ -75,20 +93,29 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
 
   if (p.monument || p.heavyWebGL) {
     return `
-<header class="hero${p.heavyWebGL ? ' hero--heavy' : ''}" data-hero>
+<header class="pf-hero${p.heavyWebGL ? ' pf-hero--heavy' : ''}" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+  <div class="pf-hero__veil" aria-hidden="true"></div>
+  <div class="pf-hero__scrim" aria-hidden="true"></div>
+  <div class="pf-hero__rules" aria-hidden="true"></div>
   <a class="hero__brand" href="${homeHref}">
     <span class="hero__brand-logo">Baton -バトン-</span>
     <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
   </a>
-  <div class="hero__inner">
-    <p class="hero__eyebrow">
-      <span class="hero__avatar" aria-hidden="true">${initial}</span>
-      <span>${esc(p.company)}</span><span aria-hidden="true">/</span><span>${esc(p.title)}</span>
-    </p>
-    <h1 class="hero__title">${esc(p.name)}</h1>
-    <p class="hero__tagline">${esc(p.tagline ?? p.title)}</p>
-    <p class="hero__desc">${esc(p.bio)}</p>
+  <div class="pf-hero__inner">
+    ${heroShotHtml(p)}
+    <div class="pf-lead">
+      <p class="pf-lead__eyebrow">
+        <span>${esc(p.company)}</span><span class="pf-lead__slash" aria-hidden="true">/</span><span>${esc(p.title)}</span>
+      </p>
+      <h1 class="pf-name" aria-label="${esc(p.name)}">${splitChars(p.name)}</h1>
+      <p class="pf-lead__tagline">${esc(p.tagline ?? p.title)}</p>
+      <span class="pf-lead__rule" aria-hidden="true"></span>
+      <p class="pf-lead__bio">${esc(p.bio)}</p>
+      <div class="pf-lead__cta">
+        <a class="btn btn--primary" href="#talk-request" data-magnetic>この人と話したい</a>
+      </div>
+    </div>
   </div>
   <div class="hero__scroll" aria-hidden="true"><span></span></div>
 </header>`.trim();
