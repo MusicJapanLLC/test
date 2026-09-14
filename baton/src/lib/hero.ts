@@ -104,7 +104,7 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
       <span class="pf-lead__rule" aria-hidden="true"></span>
       <p class="pf-lead__bio">${esc(p.bio)}</p>
       <div class="pf-lead__cta">
-        <a class="btn btn--primary" href="#talk-request">この人と話したい</a>
+        <a class="btn btn--primary" href="#talk-request" data-magnetic>この人と話したい</a>
       </div>
     </div>
   </div>
