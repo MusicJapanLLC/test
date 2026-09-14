@@ -2,7 +2,6 @@ import { el, externalAttrs } from '../lib/dom';
 import type { TalkProfile } from '../types';
 import { renderRequestForm } from './request-form';
 
-/** 文章で読ませるセクション（事業内容・実績など）。カードは使わない */
 function proseSection(opts: {
   id: string;
   label: string;
@@ -26,7 +25,6 @@ function proseSection(opts: {
   ]);
 }
 
-/** 運営メディア・サービス。名称＋説明の一覧（カードにはしない） */
 function servicesSection(profile: TalkProfile): HTMLElement | null {
   if (!profile.services || !profile.services.length) return null;
 
@@ -50,12 +48,7 @@ function servicesSection(profile: TalkProfile): HTMLElement | null {
   ]);
 }
 
-/**
- * 関連リンク。記事カード風（サムネイル＋タイトル）で並べる。
- * 実際のサムネイル画像はまだ無いため、頭文字を置いたプレースホルダーにしている。
- * 実画像が用意でき次第、.media-card__thumb に <img> を差し込む形に変えられる。
- */
-function mediaSection(profile: TalkProfile): HTMLElement | null {
+function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | null {
   if (!profile.media || !profile.media.length) return null;
 
   const arrow = () => {
@@ -74,8 +67,15 @@ function mediaSection(profile: TalkProfile): HTMLElement | null {
       el(
         'div',
         { class: 'media-grid', 'data-reveal-group': true },
-        profile.media.map((m) =>
-          el('a', { class: 'media-card', href: m.url, ...externalAttrs, 'data-reveal': true }, [
+        profile.media.map((m) => {
+          const attrs: Record<string, unknown> = {
+            class: 'media-card',
+            href: m.url,
+            ...externalAttrs,
+            'data-reveal': true,
+          };
+          if (richMotion) attrs['data-tilt'] = true;
+          return el('a', attrs, [
             el(
               'div',
               { class: 'media-card__thumb' },
@@ -84,8 +84,8 @@ function mediaSection(profile: TalkProfile): HTMLElement | null {
                 : [el('span', { text: m.label.slice(0, 1) }), arrow()],
             ),
             el('p', { class: 'media-card__title', text: m.label }),
-          ]),
-        ),
+          ]);
+        }),
       ),
     ]),
   ]);
@@ -113,13 +113,33 @@ function requestSection(profile: TalkProfile): HTMLElement {
   return section;
 }
 
-/** プロフィールページの本文。ヒーローより下を丸ごと組み立てる */
+function marquee(): HTMLElement {
+  const phrase = '選んだ人が、選んだ人へ。';
+  const run = () =>
+    el(
+      'span',
+      { class: 'pf-marquee__run', 'aria-hidden': 'true' },
+      Array.from({ length: 4 }, () =>
+        el('span', { class: 'pf-marquee__unit' }, [
+          el('span', { text: phrase }),
+          el('span', { class: 'pf-marquee__dot' }),
+        ]),
+      ),
+    );
+
+  return el('div', { class: 'pf-marquee', role: 'presentation' }, [
+    el('div', { class: 'pf-marquee__track' }, [run(), run()]),
+  ]);
+}
+
 export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
+  const richMotion = Boolean(profile.heavyWebGL || profile.monument);
   app.append(
     ...[
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
       servicesSection(profile),
-      mediaSection(profile),
+      richMotion ? marquee() : null,
+      mediaSection(profile, richMotion),
       requestSection(profile),
     ].filter((n): n is HTMLElement => n !== null),
   );
