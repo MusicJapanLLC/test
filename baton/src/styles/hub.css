@@ -41,36 +41,120 @@ body.hub {
 }
 
 /*
- * 開いた瞬間だけの「バトンが渡る」演出。中央のラインを、淡い光が
- * 一度だけ左から右へ駆け抜ける。1周したら消えて、以後は何もしない。
+ * 開いた瞬間だけの「バトンが渡る」演出。
+ * 巨大な光の尾を引く球体（バトン本体）がタイトルの上をかすめて
+ * 左から右へ駆け抜け、中央で画面全体を揺らす爆発的なフラッシュを
+ * 起こして渡る。1周したら消えて、以後は何もしない。
  */
 .hub-hero__intro {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
+  z-index: 2;
 }
 
-.hub-hero__intro::after {
-  content: '';
+.hub-hero__intro-wash {
   position: absolute;
-  top: 50%;
-  left: -22%;
-  width: 22%;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--hub-accent, #c8102e), transparent);
-  animation: hub-hero-baton-pass 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.15s 1 both;
+  inset: 0;
+  background: radial-gradient(
+    circle at 50% 36%,
+    color-mix(in srgb, var(--hub-accent, #c8102e) 30%, transparent),
+    transparent 58%
+  );
+  opacity: 0;
+  animation: hub-hero-wash 2.4s linear 0.1s 1 both;
 }
 
-@keyframes hub-hero-baton-pass {
-  0% {
-    left: -22%;
+.hub-hero__intro-trail {
+  position: absolute;
+  top: 36%;
+  left: -65%;
+  width: 65%;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--hub-accent, #c8102e) 90%, transparent) 55%,
+    #fff 100%
+  );
+  filter: blur(2.5px);
+  box-shadow: 0 0 50px 10px color-mix(in srgb, var(--hub-accent, #c8102e) 55%, transparent);
+  animation: hub-hero-trail 2.4s linear 0.1s 1 both;
+}
+
+.hub-hero__intro-comet {
+  position: absolute;
+  top: 36%;
+  left: -10%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, var(--hub-accent, #c8102e) 48%, transparent 76%);
+  box-shadow:
+    0 0 36px 14px color-mix(in srgb, var(--hub-accent, #c8102e) 85%, transparent),
+    0 0 90px 34px color-mix(in srgb, var(--hub-accent, #c8102e) 55%, transparent),
+    0 0 180px 70px color-mix(in srgb, var(--hub-accent, #c8102e) 28%, transparent);
+  animation: hub-hero-comet 2.4s linear 0.1s 1 both;
+}
+
+.hub-hero__intro-flash {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    #fff 0%,
+    color-mix(in srgb, var(--hub-accent, #c8102e) 85%, transparent) 40%,
+    transparent 72%
+  );
+  transform: translate(-50%, -50%) scale(0);
+  animation: hub-hero-flash 2.4s linear 0.1s 1 both;
+}
+
+.hub-hero__intro-ring {
+  position: absolute;
+  top: 36%;
+  left: 50%;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2.5px solid color-mix(in srgb, var(--hub-accent, #c8102e) 75%, transparent);
+  transform: translate(-50%, -50%) scale(0);
+  animation: hub-hero-ring 2.4s linear 0.1s 1 both;
+}
+
+@keyframes hub-hero-wash {
+  0%,
+  38% {
     opacity: 0;
   }
-  18% {
+  46% {
     opacity: 1;
   }
-  82% {
+  70% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hub-hero-trail {
+  0% {
+    left: -65%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  42% {
     opacity: 1;
   }
   100% {
@@ -79,9 +163,123 @@ body.hub {
   }
 }
 
+@keyframes hub-hero-comet {
+  0% {
+    left: -10%;
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  8% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  38% {
+    transform: scale(1.4);
+  }
+  46% {
+    transform: scale(0.3);
+    opacity: 0.7;
+  }
+  52% {
+    opacity: 0;
+  }
+  100% {
+    left: 108%;
+    opacity: 0;
+  }
+}
+
+@keyframes hub-hero-flash {
+  0%,
+  38% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  46% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  68% {
+    transform: translate(-50%, -50%) scale(9);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes hub-hero-ring {
+  0%,
+  40% {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+  }
+  48% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  85% {
+    transform: translate(-50%, -50%) scale(30);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.hub-hero__canvas {
+  animation: hub-hero-canvas-pulse 2.4s linear 0.1s 1 both;
+}
+
+@keyframes hub-hero-canvas-pulse {
+  0%,
+  38% {
+    filter: brightness(1) saturate(1);
+  }
+  46% {
+    filter: brightness(1.7) saturate(1.5);
+  }
+  62%,
+  100% {
+    filter: brightness(1) saturate(1);
+  }
+}
+
+.hub-hero__title {
+  animation: hub-hero-title-pulse 2.4s linear 0.1s 1 both;
+}
+
+@keyframes hub-hero-title-pulse {
+  0%,
+  40% {
+    text-shadow: none;
+    transform: scale(1);
+  }
+  46% {
+    text-shadow:
+      0 0 12px #fff,
+      0 0 42px color-mix(in srgb, var(--hub-accent, #c8102e) 75%, transparent);
+    transform: scale(1.035);
+  }
+  64%,
+  100% {
+    text-shadow: none;
+    transform: scale(1);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .hub-hero__intro::after {
-    animation: none;
+  .hub-hero__intro-wash,
+  .hub-hero__intro-trail,
+  .hub-hero__intro-comet,
+  .hub-hero__intro-flash,
+  .hub-hero__intro-ring,
+  .hub-hero__canvas,
+  .hub-hero__title {
+    animation: none !important;
+  }
+
+  .hub-hero__intro {
     display: none;
   }
 }

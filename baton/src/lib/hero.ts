@@ -76,7 +76,13 @@ export function profileHubHeroHtml(): string {
   return `
 <header class="hub-hero" data-hero>
   <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
-  <div class="hub-hero__intro" aria-hidden="true"></div>
+  <div class="hub-hero__intro" aria-hidden="true">
+    <span class="hub-hero__intro-wash"></span>
+    <span class="hub-hero__intro-trail"></span>
+    <span class="hub-hero__intro-comet"></span>
+    <span class="hub-hero__intro-flash"></span>
+    <span class="hub-hero__intro-ring"></span>
+  </div>
   <div class="hub-hero__inner">
     <h1 class="hub-hero__title">Baton -バトン-</h1>
     <p class="hub-hero__tagline">選んだ人が、選んだ人へ。</p>
