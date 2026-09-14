@@ -75,7 +75,7 @@ function mediaSection(profile: TalkProfile): HTMLElement | null {
         'div',
         { class: 'media-grid', 'data-reveal-group': true },
         profile.media.map((m) =>
-          el('a', { class: 'media-card', href: m.url, ...externalAttrs, 'data-reveal': true }, [
+          el('a', { class: 'media-card', href: m.url, ...externalAttrs, 'data-reveal': true, 'data-tilt': true }, [
             el(
               'div',
               { class: 'media-card__thumb' },
@@ -113,12 +113,34 @@ function requestSection(profile: TalkProfile): HTMLElement {
   return section;
 }
 
+/**
+ * 節と節のあいだに置く、流れる帯。
+ * 「選んだ人が、選んだ人へ。」が右から左へ渡っていく様子を、そのまま帯にする。
+ */
+function marquee(): HTMLElement {
+  const phrase = '選んだ人が、選んだ人へ。';
+  const run = () =>
+    el('span', { class: 'pf-marquee__run', 'aria-hidden': 'true' },
+      Array.from({ length: 4 }, () =>
+        el('span', { class: 'pf-marquee__unit' }, [
+          el('span', { text: phrase }),
+          el('span', { class: 'pf-marquee__dot' }),
+        ]),
+      ),
+    );
+
+  return el('div', { class: 'pf-marquee', role: 'presentation' }, [
+    el('div', { class: 'pf-marquee__track' }, [run(), run()]),
+  ]);
+}
+
 /** プロフィールページの本文。ヒーローより下を丸ごと組み立てる */
 export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
   app.append(
     ...[
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
       servicesSection(profile),
+      marquee(),
       mediaSection(profile),
       requestSection(profile),
     ].filter((n): n is HTMLElement => n !== null),
