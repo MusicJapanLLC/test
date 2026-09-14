@@ -225,7 +225,11 @@ function batonPages(): Plugin {
                 extraFontHref: PROFILE_FONT_HREF,
               }),
             )
-            .replace('<!--BATON:HERO-->', profileHeroHtml(p, `${base}profile/`.replace(/\/{2,}/g, '/')));
+            .replace('<!--BATON:HERO-->', profileHeroHtml(p, `${base}profile/`.replace(/\/{2,}/g, '/')))
+            .replace(
+              '<body class="profile">',
+              `<body class="profile${isDarkTheme(p.theme.bg) ? ' profile--dark' : ''}">`,
+            );
         }
 
         const isProfileHub = filename.includes('/profile/index.html');
@@ -322,6 +326,20 @@ function serviceForPath(filename: string): Service | null {
 }
 
 /** ページのパスから、対応するBaton Talkプロフィールを引く */
+/**
+ * 背景色が暗いプロフィールかどうか。
+ * 暗いときだけ body に profile--dark を付け、フォーム・カードなど
+ * 白地前提の共通部品をまとめて暗色側へ寄せる（profile.css 側で定義）。
+ */
+function isDarkTheme(hex: string): boolean {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return false;
+  const full = m[1].length === 3 ? m[1].replace(/./g, (c) => c + c) : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255);
+  const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) < 0.2;
+}
+
 function profileForPath(filename: string): TalkProfile | null {
   const normalized = filename.replace(/\\/g, '/');
   const normalizedRoot = root.replace(/\\/g, '/');

@@ -6,6 +6,7 @@ import { getProfile } from '../data/profiles';
 import { initAnalytics } from '../lib/analytics';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
+import { cursorGlow, guardHeroPhoto, heroParallax, revealHero } from './effects';
 import { renderProfileFooter } from './footer';
 import { renderProfileSections } from './render';
 
@@ -24,6 +25,14 @@ export function mountProfilePage(profileId: string): void {
 
     initSmoothScroll();
     revealOnScroll(document);
+
+    guardHeroPhoto(document);
+    const hero = document.querySelector<HTMLElement>('[data-hero]');
+    if (hero) {
+      revealHero(hero);
+      cursorGlow(hero);
+      heroParallax(hero);
+    }
 
     if (window.location.hash === '#talk-request') {
       window.requestAnimationFrame(() =>
