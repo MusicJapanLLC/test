@@ -107,6 +107,8 @@ body.profile .hero::before {
   inset: 0;
   opacity: 0.82;
   mix-blend-mode: multiply;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
 }
 
 .hero__editorial-art svg {
@@ -165,6 +167,23 @@ body.profile .hero::before {
   pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 220px 220px;
+  animation: editorial-grain-drift 9s steps(6) infinite;
+}
+
+/* 粒子が細かく揺れているような質感にする（生成した1枚をずらして再生するだけ） */
+@keyframes editorial-grain-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 220px 165px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__editorial-grain {
+    animation: none;
+  }
 }
 
 .hero--editorial::after {
@@ -191,6 +210,105 @@ body.profile .hero::before {
 
 .hero__inner--editorial {
   max-width: 36rem;
+}
+
+/*
+ * ヒーロー本文を、上から順に間を置いて浮き上がらせる。
+ * フォントの読み込み待ちで文字が一瞬で出てガタつくのを隠す効果もある
+ * （最初から用意された遅延の分、フォントが確定してから出てくる）。
+ */
+.hero__inner--editorial > * {
+  opacity: 0;
+  animation: editorial-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero__eyebrow--editorial {
+  animation-delay: 0.15s;
+}
+.hero__wordmark {
+  animation-delay: 0.32s;
+}
+.hero__title--editorial {
+  animation-delay: 0.48s;
+}
+.hero__tagline--editorial {
+  animation-delay: 0.66s;
+}
+.hero__desc--editorial {
+  animation-delay: 0.84s;
+}
+
+@keyframes editorial-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 22px, 0);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.hero__brand--editorial {
+  opacity: 0;
+  animation: editorial-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__inner--editorial > *,
+  .hero__brand--editorial {
+    opacity: 1;
+    animation: none;
+  }
+}
+
+/* 花のシルエットに、ごく淡い光が斜めに走っていく演出（1回だけ） */
+.hero--editorial .hero__editorial-art::after {
+  content: '';
+  position: absolute;
+  inset: -20% -40%;
+  background: linear-gradient(
+    115deg,
+    transparent 42%,
+    color-mix(in srgb, var(--bg) 85%, transparent) 50%,
+    transparent 58%
+  );
+  transform: translateX(-60%);
+  animation: editorial-sweep 2.4s cubic-bezier(0.4, 0, 0.2, 1) 0.5s 1;
+}
+
+@keyframes editorial-sweep {
+  to {
+    transform: translateX(60%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero--editorial .hero__editorial-art::after {
+    display: none;
+  }
+}
+
+/*
+ * body.profile--editorial だけ、通常より深く・ブラーをかけた
+ * リッチな出現アニメーションにする（talk-hub-listの手法を流用）。
+ */
+body.profile--editorial [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 30px, 0) scale(0.975);
+  filter: blur(4px);
+}
+
+body.profile--editorial [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  filter: blur(0);
+  transition:
+    opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+    filter 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .hero__wordmark {

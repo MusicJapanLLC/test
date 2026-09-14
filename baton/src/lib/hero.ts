@@ -37,7 +37,7 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   if (p.heroVariant === 'editorial') {
     return `
 <header class="hero hero--editorial" data-hero>
-  <div class="hero__editorial-art" aria-hidden="true">
+  <div class="hero__editorial-art" data-editorial-parallax aria-hidden="true">
     <svg viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" focusable="false">
       <g class="hero__editorial-bloom">
         <path d="M620 320 C662 274 672 206 640 136 C598 192 588 264 620 320 Z" />

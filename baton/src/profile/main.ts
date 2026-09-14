@@ -5,9 +5,32 @@ import '../styles/profile.css';
 import { getProfile } from '../data/profiles';
 import { initAnalytics } from '../lib/analytics';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
-import { initSmoothScroll, revealOnScroll } from '../lib/motion';
+import { initSmoothScroll, isCoarsePointer, prefersReducedMotion, revealOnScroll } from '../lib/motion';
 import { renderProfileFooter } from './footer';
 import { renderProfileSections } from './render';
+
+/**
+ * editorial ヒーローの植物シルエットに、ポインター位置に応じたごく僅かな
+ * 視差を付ける。3Dヒーローの pointerTracker と同じ発想の軽量版（DOM/CSS
+ * transformのみ・WebGL不使用）。指の環境・動きを減らす設定では何もしない。
+ */
+function initEditorialParallax(): void {
+  if (prefersReducedMotion() || isCoarsePointer()) return;
+  const art = document.querySelector<HTMLElement>('[data-editorial-parallax]');
+  const hero = document.querySelector<HTMLElement>('.hero--editorial');
+  if (!art || !hero) return;
+
+  hero.addEventListener('pointermove', (e) => {
+    const rect = hero.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width - 0.5;
+    const py = (e.clientY - rect.top) / rect.height - 0.5;
+    art.style.transform = `translate3d(${px * -18}px, ${py * -14}px, 0)`;
+  });
+
+  hero.addEventListener('pointerleave', () => {
+    art.style.transform = '';
+  });
+}
 
 export function mountProfilePage(profileId: string): void {
   const profile = getProfile(profileId);
@@ -24,6 +47,7 @@ export function mountProfilePage(profileId: string): void {
 
     initSmoothScroll();
     revealOnScroll(document);
+    initEditorialParallax();
 
     if (window.location.hash === '#talk-request') {
       window.requestAnimationFrame(() =>
