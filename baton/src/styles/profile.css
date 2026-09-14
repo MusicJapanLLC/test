@@ -116,28 +116,37 @@ body.profile .hero::before {
 }
 
 .hero__editorial-bloom path {
-  fill: color-mix(in srgb, var(--text) 70%, transparent);
-  transform-origin: 68% 45%;
-  animation: editorial-drift 26s ease-in-out infinite;
+  fill: color-mix(in srgb, var(--text) 68%, transparent);
+}
+
+.hero__editorial-bloom {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: editorial-drift 28s ease-in-out infinite;
 }
 
 .hero__editorial-sprig path {
   fill: none;
-  stroke: color-mix(in srgb, var(--text) 46%, transparent);
+  stroke: color-mix(in srgb, var(--text) 44%, transparent);
   stroke-width: 3;
   stroke-linecap: round;
-  transform-origin: 68% 45%;
-  animation: editorial-drift 26s ease-in-out infinite;
-  animation-delay: -4s;
 }
 
+.hero__editorial-sprig {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: editorial-drift 28s ease-in-out infinite;
+  animation-delay: -6s;
+}
+
+/* 花の向きは動かさない。ごくわずかな上下の揺れだけ（回転は使わない） */
 @keyframes editorial-drift {
   0%,
   100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translate3d(-10px, 14px, 0) rotate(1.1deg);
+    transform: translate3d(0, 10px, 0);
   }
 }
 
@@ -185,16 +194,17 @@ body.profile .hero::before {
 }
 
 .hero__wordmark {
-  font-family: 'Cormorant Garamond', var(--font-display), serif;
-  font-size: clamp(1.3rem, 1rem + 1.3vw, 1.9rem);
-  font-weight: 400;
-  letter-spacing: 0.01em;
-  color: color-mix(in srgb, var(--text) 52%, transparent);
+  font-family: 'Jost', 'Zen Kaku Gothic New', sans-serif;
+  font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.3rem);
+  font-weight: 300;
+  letter-spacing: 0.03em;
+  color: color-mix(in srgb, var(--text) 55%, transparent);
   margin-bottom: clamp(0.9rem, 0.65rem + 0.9vw, 1.4rem);
 }
 
 .hero__wordmark em {
   font-style: italic;
+  font-weight: 300;
   color: color-mix(in srgb, var(--text) 82%, transparent);
 }
 
