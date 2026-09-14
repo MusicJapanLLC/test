@@ -85,7 +85,7 @@ const unveilProfile: TalkProfile = {
     {
       label: '公式サイト',
       url: 'https://unveil.style/',
-      image: 'https://storage.googleapis.com/image-capture-bucket/home-hero-screenshots/5888534a-7d7d-44a9-ab34-573774733e46.png',
+      image: 'https://unveil.style/wp-content/uploads/2024/01/スクリーンショット-2024-01-20-22.22.09.png',
     },
     { label: '会社概要', url: 'https://unveil.style/outline/' },
   ],
