@@ -22,6 +22,11 @@ export function renderProfileFooter(mount: HTMLElement): void {
           ['SECOND TAKE'],
         ),
         el('span', { class: 'profile-footer__soon' }, ['Podcast', el('small', { text: '（準備中）' })]),
+        el(
+          'a',
+          { href: 'https://timerex.net/s/music.japan.llc_5445/88d4eb59', ...externalAttrs },
+          ['紹介・掲載をご希望の方'],
+        ),
       ]),
       el('div', { class: 'profile-footer__bottom' }, [
         el('span', { text: `© ${new Date().getFullYear()} 合同会社Music Japan` }),
