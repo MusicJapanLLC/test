@@ -83,7 +83,7 @@ const unveilProfile: TalkProfile = {
     { name: 'ブランディング', description: '企業・商品・地域にある価値を整理し、コンセプトから設計' },
     { name: 'Web制作・UI/UX', description: 'コーポレート・採用・LP・サービスサイトを一貫設計' },
     { name: '採用支援', description: 'ペルソナ設計から求人原稿・媒体連携までワンストップで支援' },
-    { name: 'プロダクト開発支援', description: '商品・プロダクトの企画から市場調査、磨き込みまで伴走' },
+    { name: 'プロダクト開発', description: '商品・プロダクトの企画から市場調査、磨き込みまで伴走' },
   ],
   media: [
     {
