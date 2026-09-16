@@ -243,25 +243,50 @@
   }
 }
 
+/* ── 面の色は、地の色から作る ──────────────────────────────── */
+/*
+ * service.css は白地のサービスページ用に書かれていて、カード・入力欄の
+ * 地を #fff で直に敷いている。プロフィールページは人ごとに地の色が変わるので、
+ * 白をそのまま置くと面だけが浮く。ここで theme の色から作り直す。
+ */
+
+body.profile {
+  /* 明るい地: 地に白を少しだけ混ぜた面。白そのものは使わない */
+  --surface: color-mix(in srgb, #fff 45%, var(--bg));
+  --surface-hover: color-mix(in srgb, #fff 70%, var(--bg));
+  /* 入力欄は面より一段沈める。カードと同じ明度だと境目が消える */
+  --field: color-mix(in srgb, var(--text) 5%, var(--bg));
+  --field-hover: color-mix(in srgb, var(--text) 9%, var(--bg));
+  --hairline: color-mix(in srgb, var(--text) 14%, transparent);
+  --surface-shadow: 0 20px 44px -32px color-mix(in srgb, var(--text) 60%, transparent);
+}
+
 body.profile--dark {
+  /* 暗い地: 逆に、地へ文字色を混ぜて浮かせる。影は効かないので置かない */
   --surface: color-mix(in srgb, var(--text) 6%, var(--bg));
   --surface-hover: color-mix(in srgb, var(--text) 11%, var(--bg));
+  --field: var(--surface);
+  --field-hover: var(--surface-hover);
   --hairline: color-mix(in srgb, var(--text) 16%, transparent);
+  --surface-shadow: none;
   color-scheme: dark;
 }
-body.profile--dark .card,
-body.profile--dark .survey__stage,
-body.profile--dark .link-chip { background: var(--surface); border-color: var(--hairline); }
-body.profile--dark .field input,
-body.profile--dark .field select,
-body.profile--dark .field textarea { background: var(--surface); border-color: var(--hairline); color: var(--text); }
-body.profile--dark .field input:hover,
-body.profile--dark .field select:hover,
-body.profile--dark .field textarea:hover { background: var(--surface-hover); }
+
+body.profile .card,
+body.profile .survey__stage,
+body.profile .link-chip { background: var(--surface); border-color: var(--hairline); }
+body.profile .survey__stage { box-shadow: var(--surface-shadow); }
+body.profile .field input,
+body.profile .field select,
+body.profile .field textarea { background: var(--field); border-color: var(--hairline); color: var(--text); }
+body.profile .field input:hover,
+body.profile .field select:hover,
+body.profile .field textarea:hover { background: var(--field-hover); }
+body.profile .service-list,
+body.profile .service-item { border-color: var(--hairline); }
+
 body.profile--dark .survey__error { background: color-mix(in srgb,#c0392b 22%,var(--bg)); }
 body.profile--dark .profile-footer { background: color-mix(in srgb,var(--text) 5%,var(--bg)); color: color-mix(in srgb,var(--text) 88%,transparent); border-top: 1px solid var(--hairline); }
-body.profile--dark .service-list,
-body.profile--dark .service-item { border-color: var(--hairline); }
 body.profile--dark .service-item__name { color: color-mix(in srgb,var(--primary) 76%,#fff); }
 body.profile--dark .media-card__title { color: color-mix(in srgb,var(--text) 88%,transparent); }
 
