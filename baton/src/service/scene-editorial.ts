@@ -72,11 +72,16 @@ const silkFragment = /* glsl */ `
 const petalVertex = /* glsl */ `
   attribute float aSeed;
   attribute float aSize;
+  attribute float aSpin;
 
   uniform float uTime;
   uniform float uPixelRatio;
+  uniform vec2  uMouse;
+  uniform float uIntro;
 
   varying float vSeed;
+  varying float vAngle;
+  varying float vNear;
 
   void main() {
     vSeed = aSeed;
@@ -84,27 +89,54 @@ const petalVertex = /* glsl */ `
 
     float speed = 0.3 + aSeed * 0.45;
     pos.y = mod(pos.y - uTime * speed, 9.0) - 4.5;
+    /* 落ちながら左右に振れる。振れ幅は粒ごとに変える */
     pos.x += sin(uTime * 0.28 + aSeed * 12.0) * 0.55;
+
+    /* 指先からゆっくり遠ざかる。手前の粒ほど強く逃げる */
+    float depth = smoothstep(-5.0, 1.0, pos.z);
+    pos.xy += uMouse * (0.25 + depth * 0.5);
+
+    /* 落ちながら回る。1枚ずつ向きと速さが違う */
+    vAngle = aSeed * 6.28318 + uTime * aSpin;
+    vNear = depth;
 
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = aSize * uPixelRatio * (260.0 / -mv.z);
+
+    /* 読み込み直後に開いていく */
+    gl_PointSize = aSize * uIntro * uPixelRatio * (260.0 / -mv.z);
   }
 `;
 
 const petalFragment = /* glsl */ `
   varying float vSeed;
+  varying float vAngle;
+  varying float vNear;
 
   uniform vec3 uAccent;
   uniform vec3 uPrimary;
 
   void main() {
+    /* 点を回してから、縦長・上すぼまりに削る。丸ではなく花びらに見せる */
     vec2 c = gl_PointCoord - 0.5;
+    float ca = cos(vAngle);
+    float sa = sin(vAngle);
+    c = mat2(ca, -sa, sa, ca) * c;
+    c.x /= 0.52;
+
     float d = length(c);
     if (d > 0.5) discard;
 
-    float alpha = smoothstep(0.5, 0.05, d) * (0.3 + vSeed * 0.35);
+    float taper = smoothstep(0.55, -0.45, c.y);
+    float alpha = smoothstep(0.5, 0.06, d) * mix(0.3, 1.0, taper);
+
+    /* 奥の粒はぼかして沈める。手前だけ輪郭を残す */
+    alpha *= mix(0.35, 1.0, vNear) * (0.3 + vSeed * 0.35);
+
     vec3 color = mix(uAccent, uPrimary, fract(vSeed * 5.3));
+    /* 中心に置く淡い芯。紙の上の箔のように、わずかに明るく */
+    color += (1.0 - smoothstep(0.0, 0.32, d)) * 0.12;
+
     gl_FragColor = vec4(color, alpha);
   }
 `;
@@ -136,22 +168,27 @@ export function mountEditorialScene(canvas: HTMLCanvasElement, theme: Theme): ()
   bgScene.add(bgMesh);
 
   // 前面: 漂う光の粒子（花びらのイメージ）
-  const count = low ? 24 : 60;
+  const count = low ? 40 : 150;
   const positions = new Float32Array(count * 3);
   const seeds = new Float32Array(count);
   const sizes = new Float32Array(count);
+  const spins = new Float32Array(count);
   for (let i = 0; i < count; i += 1) {
-    positions[i * 3] = (Math.random() - 0.5) * 9;
+    positions[i * 3] = (Math.random() - 0.5) * 11;
     positions[i * 3 + 1] = (Math.random() - 0.5) * 9;
-    positions[i * 3 + 2] = (Math.random() - 0.5) * 4 - 1;
+    // 手前と奥に散らす。手前の少数だけ大きく、ぼけて通り過ぎる
+    const near = Math.random() < 0.22;
+    positions[i * 3 + 2] = near ? 0.5 + Math.random() * 1.5 : (Math.random() - 0.5) * 4 - 2;
     seeds[i] = Math.random();
-    sizes[i] = 0.05 + Math.random() * 0.09;
+    sizes[i] = near ? 0.16 + Math.random() * 0.16 : 0.04 + Math.random() * 0.08;
+    spins[i] = (Math.random() - 0.5) * 0.9;
   }
 
   const petalGeometry = new BufferGeometry();
   petalGeometry.setAttribute('position', new Float32BufferAttribute(positions, 3));
   petalGeometry.setAttribute('aSeed', new Float32BufferAttribute(seeds, 1));
   petalGeometry.setAttribute('aSize', new Float32BufferAttribute(sizes, 1));
+  petalGeometry.setAttribute('aSpin', new Float32BufferAttribute(spins, 1));
 
   const petalMaterial = new ShaderMaterial({
     vertexShader: petalVertex,
@@ -162,6 +199,8 @@ export function mountEditorialScene(canvas: HTMLCanvasElement, theme: Theme): ()
     uniforms: {
       uTime: { value: 0 },
       uPixelRatio: { value: Math.min(window.devicePixelRatio, low ? 1.25 : 1.75) },
+      uMouse: { value: [0, 0] },
+      uIntro: { value: 0 },
       uAccent: { value: new Color(theme.accent) },
       uPrimary: { value: new Color(theme.primary) },
     },
@@ -190,6 +229,10 @@ export function mountEditorialScene(canvas: HTMLCanvasElement, theme: Theme): ()
     (bgMaterial.uniforms.uMouse.value as number[])[0] = m.x;
     (bgMaterial.uniforms.uMouse.value as number[])[1] = m.y;
     petalMaterial.uniforms.uTime.value = elapsed;
+    (petalMaterial.uniforms.uMouse.value as number[])[0] = m.x;
+    (petalMaterial.uniforms.uMouse.value as number[])[1] = m.y;
+    // 読み込み直後だけ、花びらが開いていく
+    petalMaterial.uniforms.uIntro.value = Math.min(1, elapsed / 1.6);
 
     frontCamera.position.x = m.x * 0.4;
     frontCamera.position.y = m.y * 0.3;
