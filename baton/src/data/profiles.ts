@@ -22,7 +22,7 @@ const kabeyaProfile: TalkProfile = {
   title: '代表社員',
   tagline: '学び、紡ぎ、繋いでいく。',
   photo: {
-    src: '/profile-kabeya.jpg',
+    src: '/profile-kabeya.webp',
     alt: '壁谷 友生',
     caption: 'OSAKA / JAPAN · 2026',
   },
