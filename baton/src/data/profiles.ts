@@ -97,11 +97,13 @@ const unveilProfile: TalkProfile = {
   keywordTags: ['世界観の設計', '徹底ヒアリング', 'SEO対策'],
   // unveil.style（本人の会社サイト）の、余白の多い・淡いグレイに
   // 花影を落としたような世界観に合わせた配色。
-  theme: { primary: '#2B2622', accent: '#B08968', bg: '#F2EEE6', text: '#3A342C' },
+  // テンプレートは1つ。プロフィールごとに変わるのは、この4色と中身だけ。
+  // primary は「その人の色」として罫・ラベル・ボタンに出る。
+  // 白抜き文字のボタンに使うので、白に対して読める濃さにしておくこと。
+  theme: { primary: '#8A6338', accent: '#C2A06B', bg: '#F2EEE6', text: '#3A342C' },
   // 壁谷さんのフルWebGL演出（heavyWebGL）ではなく、本人のブランドの
   // 雰囲気を汲んだ写真的な静的ヒーロー（editorial）を使う。
   // 3D不要で軽量、かつプロフィールごとに異なる世界観を出せる。
-  heroVariant: 'editorial',
   active: true,
 };
 

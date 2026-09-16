@@ -1,5 +1,6 @@
 import {
   AdditiveBlending,
+  NormalBlending,
   BufferAttribute,
   BufferGeometry,
   Color,
@@ -94,8 +95,19 @@ const dustFragment = /* glsl */ `
   }
 `;
 
+/** 背景が明るいかどうか。加算合成は白地だと色が飛ぶので、そこで切り替える */
+function isLightBg(hex: string): boolean {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return false;
+  const full = m[1].length === 3 ? m[1].replace(/./g, (c) => c + c) : m[1];
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255);
+  const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) >= 0.2;
+}
+
 export function mountProfileHeroScene(canvas: HTMLCanvasElement, theme: Theme): () => void {
   const low = isLowPower();
+  const light = isLightBg(theme.bg);
   const shellCount = low ? 9000 : 42000;
   const dustCount = low ? 120 : 420;
   const renderer = makeRenderer(canvas);
@@ -127,15 +139,17 @@ export function mountProfileHeroScene(canvas: HTMLCanvasElement, theme: Theme): 
     fragmentShader: shellFragment,
     transparent: true,
     depthWrite: false,
-    blending: AdditiveBlending,
+    // 白地では加算合成だと色が飛ぶ。明るい地では通常合成にそろえる
+    blending: light ? NormalBlending : AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
       uMouse: { value: [0, 0] },
       uPixelRatio: { value: renderer.getPixelRatio() },
       uRadius: { value: 9 },
+      uLift: { value: light ? 0.85 : 1.45 },
       uPrimary: { value: primary },
       uAccent: { value: accent },
-      uOpacity: { value: low ? 0.82 : 0.78 },
+      uOpacity: { value: light ? 0.5 : low ? 0.82 : 0.78 },
     },
   });
   const shell = new Points(shellGeo, shellMat);
@@ -163,14 +177,14 @@ export function mountProfileHeroScene(canvas: HTMLCanvasElement, theme: Theme): 
     fragmentShader: dustFragment,
     transparent: true,
     depthWrite: false,
-    blending: AdditiveBlending,
+    blending: light ? NormalBlending : AdditiveBlending,
     uniforms: {
       uTime: { value: 0 },
       uMouse: { value: [0, 0] },
       uPixelRatio: { value: renderer.getPixelRatio() },
       uSpan: { value: span },
       uAccent: { value: accent },
-      uOpacity: { value: 0.8 },
+      uOpacity: { value: light ? 0.35 : 0.8 },
     },
   });
   const dust = new Points(dustGeo, dustMat);

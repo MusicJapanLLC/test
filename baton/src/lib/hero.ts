@@ -93,9 +93,9 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
 </header>`.trim();
   }
 
-  if (p.monument || p.heavyWebGL) {
+  if (p.heroVariant !== 'simple') {
     return `
-<header class="pf-hero${p.heavyWebGL ? ' pf-hero--heavy' : ''}" data-hero>
+<header class="pf-hero" data-hero>
   <canvas class="hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="pf-hero__veil" aria-hidden="true"></div>
   <div class="pf-hero__scrim" aria-hidden="true"></div>

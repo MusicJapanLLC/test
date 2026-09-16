@@ -265,17 +265,17 @@ body.profile--dark .service-item { border-color: var(--hairline); }
 body.profile--dark .service-item__name { color: color-mix(in srgb,var(--primary) 76%,#fff); }
 body.profile--dark .media-card__title { color: color-mix(in srgb,var(--text) 88%,transparent); }
 
-body.profile--dark .pf-split__slot { display: inline-block; overflow: hidden; vertical-align: bottom; }
-body.profile--dark .pf-split__char {
+.pf-split__slot { display: inline-block; overflow: hidden; vertical-align: bottom; }
+.pf-split__char {
   display: inline-block;
   transform: translateY(100%);
   opacity: 0;
   transition: transform .85s cubic-bezier(.22,1,.36,1), opacity .85s cubic-bezier(.22,1,.36,1);
   transition-delay: calc(var(--i,0) * 42ms);
 }
-body.profile--dark .pf-split.is-in .pf-split__char { transform: none; opacity: 1; }
-body.profile--dark .service-item { position: relative; transition: padding-left .5s cubic-bezier(.22,1,.36,1); }
-body.profile--dark .service-item::after {
+.pf-split.is-in .pf-split__char { transform: none; opacity: 1; }
+.service-item { position: relative; transition: padding-left .5s cubic-bezier(.22,1,.36,1); }
+.service-item::after {
   content: '';
   position: absolute;
   left: 0;
@@ -287,10 +287,10 @@ body.profile--dark .service-item::after {
   transform-origin: left center;
   transition: transform 1s cubic-bezier(.22,1,.36,1);
 }
-body.profile--dark .service-item.is-drawn::after { transform: scaleX(1); }
-body.profile--dark .service-item:hover { padding-left: .6rem; }
-body.profile--dark .media-card { transform: perspective(1000px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)); transition: transform .5s cubic-bezier(.22,1,.36,1); }
-body.profile--dark .media-card__thumb::after {
+.service-item.is-drawn::after { transform: scaleX(1); }
+.service-item:hover { padding-left: .6rem; }
+.media-card { transform: perspective(1000px) rotateX(var(--tilt-x,0deg)) rotateY(var(--tilt-y,0deg)); transition: transform .5s cubic-bezier(.22,1,.36,1); }
+.media-card__thumb::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -300,9 +300,9 @@ body.profile--dark .media-card__thumb::after {
   background: radial-gradient(14rem 14rem at var(--glare-x,50%) var(--glare-y,50%),color-mix(in srgb,#fff 26%,transparent),transparent 66%);
   transition: opacity .45s ease;
 }
-body.profile--dark .media-card:hover .media-card__thumb::after { opacity: 1; }
-body.profile--dark [data-magnetic] { transform: translate3d(var(--pull-x,0px),var(--pull-y,0px),0); transition: transform .45s cubic-bezier(.22,1,.36,1), background .3s ease; }
-body.profile--dark [data-magnetic]:hover { transform: translate3d(var(--pull-x,0px),var(--pull-y,0px),0) scale(1.03); }
+.media-card:hover .media-card__thumb::after { opacity: 1; }
+[data-magnetic] { transform: translate3d(var(--pull-x,0px),var(--pull-y,0px),0); transition: transform .45s cubic-bezier(.22,1,.36,1), background .3s ease; }
+[data-magnetic]:hover { transform: translate3d(var(--pull-x,0px),var(--pull-y,0px),0) scale(1.03); }
 
 .pf-marquee { overflow: hidden; padding-block: clamp(1.6rem,1.2rem + 1.6vw,2.5rem); border-block: 1px solid color-mix(in srgb,var(--text) 12%,transparent); -webkit-mask-image: linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); mask-image: linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); }
 .pf-marquee__track { display: flex; width: max-content; animation: pf-marquee 42s linear infinite; }
@@ -324,8 +324,34 @@ body.profile--dark [data-magnetic]:hover { transform: translate3d(var(--pull-x,0
   .pf-shot__img { transform:none !important; }
   .pf-shot__rule,.pf-lead__rule { transform:scaleX(1) !important; }
   .pf-shot__sheen,.pf-hero::after { display:none; }
-  body.profile--dark .pf-split__char { transform:none !important; opacity:1 !important; }
-  body.profile--dark .service-item::after { transform:scaleX(1) !important; }
+  .pf-split__char { transform:none !important; opacity:1 !important; }
+  .service-item::after { transform:scaleX(1) !important; }
   .pf-marquee__track { animation:none; }
   .pf-curtain { display:none; }
+}
+
+
+/* ── 明るい地のプロフィール ────────────────────────────────── */
+/* テンプレートは同じ。白を混ぜている指定だけ、地の色に合わせて反転させる */
+
+body.profile:not(.profile--dark) .pf-lead__eyebrow {
+  color: color-mix(in srgb, var(--primary) 78%, var(--text));
+}
+
+body.profile:not(.profile--dark) .pf-shot__caption {
+  color: color-mix(in srgb, var(--text) 58%, transparent);
+  text-shadow: none;
+}
+
+body.profile:not(.profile--dark) .pf-shot__sheen {
+  background: linear-gradient(104deg, transparent 38%, color-mix(in srgb, #fff 60%, transparent) 50%, transparent 62%);
+}
+
+body.profile:not(.profile--dark) .pf-hero::after {
+  mix-blend-mode: multiply;
+  opacity: 0.035;
+}
+
+body.profile:not(.profile--dark) .pf-shot__frame {
+  background: color-mix(in srgb, var(--text) 4%, var(--bg));
 }

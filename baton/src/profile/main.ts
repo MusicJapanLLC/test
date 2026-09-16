@@ -32,9 +32,6 @@ export function mountProfilePage(profileId: string): void {
   const start = () => {
     initAnalytics();
 
-    // 壁谷プロフィールだけ暗色テーマへ。Unveilのeditorial表示には影響させない。
-    if (profile.id === 'kabeya') document.body.classList.add('profile--dark');
-
     const app = document.getElementById('app');
     const footer = document.getElementById('footer');
     if (!app || !footer) return;
@@ -57,7 +54,8 @@ export function mountProfilePage(profileId: string): void {
       initEditorialRich();
     }
 
-    if (profile.heavyWebGL || profile.monument) {
+    // テンプレート側の演出。プロフィールごとに変わるのは色と中身だけ
+    if (profile.heroVariant !== 'editorial') {
       splitHeadings(document);
       drawRules(document);
       guardHeroPhoto(document);
@@ -78,7 +76,7 @@ export function mountProfilePage(profileId: string): void {
 
     const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-canvas]');
     if (canvas && shouldRender3D()) {
-      if (profile.heavyWebGL) {
+      if (profile.heroVariant !== 'editorial' && !profile.monument) {
         whenIdle(() => {
           void import('./scene-hero')
             .then(({ mountProfileHeroScene }) => mountProfileHeroScene(canvas, profile.theme))

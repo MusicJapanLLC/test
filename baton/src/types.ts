@@ -120,7 +120,7 @@ export type TalkProfile = {
    * 静的ヒーロー（3D不要・軽量）。本人のブランドの雰囲気を汲んだ、
    * プロフィールごとに異なる世界観を作りたいときに使う。
    */
-  heroVariant?: 'editorial';
+  heroVariant?: 'template' | 'editorial' | 'simple';
   active: boolean;
 };
 
