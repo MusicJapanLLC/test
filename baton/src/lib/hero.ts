@@ -80,6 +80,7 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
     <p class="hero__brand-tagline">選んだ人が、選んだ人へ。</p>
   </a>
   <div class="hero__inner hero__inner--editorial">
+    <div class="hero__veil" data-veil aria-hidden="true"></div>
     <p class="hero__eyebrow hero__eyebrow--editorial">
       <span>${esc(p.company)}</span><span aria-hidden="true">/</span><span>${esc(p.title)}</span>
     </p>

@@ -2,6 +2,7 @@ import '../styles/base.css';
 import '../styles/service.css';
 import '../styles/profile.css';
 import '../styles/profile-kabeya.css';
+import '../styles/profile-unveil.css';
 
 import { getProfile } from '../data/profiles';
 import { initAnalytics } from '../lib/analytics';
@@ -21,6 +22,7 @@ import {
   splitHeadings,
   tiltCards,
 } from './effects';
+import { initEditorialRich } from './editorial-rich';
 import { renderProfileFooter } from './footer';
 import { renderProfileSections } from './render';
 
@@ -43,18 +45,21 @@ export function mountProfilePage(profileId: string): void {
     initSmoothScroll();
     revealOnScroll(document);
 
+    // 幕は全プロフィール共通の入り口にする
+    openingCurtain();
+    scrollProgress();
+    mediaParallax();
+    tiltCards(document);
+    magneticButtons(document);
+
     if (profile.heroVariant === 'editorial') {
       initEditorialMotion();
+      initEditorialRich();
     }
 
     if (profile.heavyWebGL || profile.monument) {
-      openingCurtain();
       splitHeadings(document);
       drawRules(document);
-      mediaParallax();
-      tiltCards(document);
-      magneticButtons(document);
-      scrollProgress();
       guardHeroPhoto(document);
 
       const hero = document.querySelector<HTMLElement>('[data-hero]');

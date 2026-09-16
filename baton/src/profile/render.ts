@@ -136,7 +136,10 @@ function marquee(): HTMLElement {
 }
 
 export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
-  const richMotion = Boolean(profile.heavyWebGL || profile.monument);
+  // 帯・カードの傾きは、暗色ページと editorial の両方で使う
+  const richMotion = Boolean(
+    profile.heavyWebGL || profile.monument || profile.heroVariant === 'editorial',
+  );
   app.append(
     ...[
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),

@@ -1,0 +1,322 @@
+/* ── unveil（古谷さん）プロフィール専用 ─────────────────────── */
+/*
+ * すべて body.profile--editorial 配下に閉じている。
+ * 壁谷さんの暗色ページ（profile-kabeya.css）と、6サービス側には影響しない。
+ *
+ * 世界観は据え置き: アイボリーの紙、ブロンズの箔、明朝とイタリック、広い余白。
+ * 足しているのは色ではなく「光・厚み・間」。
+ */
+
+body.profile--editorial {
+  --paper: color-mix(in srgb, var(--bg) 96%, #fff);
+  --bronze: var(--accent);
+  --hair: color-mix(in srgb, var(--text) 14%, transparent);
+  --hair-strong: color-mix(in srgb, var(--accent) 46%, transparent);
+}
+
+/* ── 紙の地 ─────────────────────────────────────────────────── */
+
+/* ページ全体にごく薄い紙目。スクロールしても動かさない */
+body.profile--editorial::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='p'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='220' height='220' filter='url(%23p)' opacity='0.16'/></svg>");
+}
+
+/* 指先のあたりだけ、紙がわずかに明るくなる */
+body.profile--editorial::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  background: radial-gradient(
+    30vmax 30vmax at var(--paper-x, 50%) var(--paper-y, 30%),
+    color-mix(in srgb, #fff 62%, transparent),
+    transparent 64%
+  );
+}
+
+body.profile--editorial.has-paper-light::after {
+  opacity: 1;
+}
+
+/* 本文は紙目より手前に置く */
+body.profile--editorial .hero,
+body.profile--editorial main,
+body.profile--editorial footer {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── 見出しの箔押し ─────────────────────────────────────────── */
+/* アイボリーの紙に押した箔のように、上に白・下に極薄い影を置く */
+
+body.profile--editorial .hero__title--editorial,
+body.profile--editorial .section__title {
+  text-shadow:
+    0 1px 0 color-mix(in srgb, #fff 75%, transparent),
+    0 -1px 0 color-mix(in srgb, var(--text) 6%, transparent);
+}
+
+/* ── ヒーローにかかった布 ───────────────────────────────────── */
+/*
+ * 社名そのままの動き。読み込み直後、見出しにかかっている布が上へ抜け、
+ * 布の下端のブロンズの線が名前を通り過ぎていく。1回だけ。
+ */
+
+body.profile--editorial .hero__inner--editorial {
+  position: relative;
+}
+
+/* 覆うのは見出しのまわりだけ。花と地はすぐ見えていてよい */
+.hero__veil {
+  position: absolute;
+  inset: -1.5rem -2rem;
+  z-index: 3;
+  pointer-events: none;
+  overflow: hidden;
+  /* 親の editorial-rise を受け継がせない */
+  opacity: 1 !important;
+  animation: none !important;
+}
+
+.hero__veil::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(14px);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--bg) 94%, transparent) 0%,
+    color-mix(in srgb, var(--bg) 92%, transparent) 78%,
+    color-mix(in srgb, var(--bg) 88%, var(--accent)) 100%
+  );
+  transform: translateY(0);
+  transition: transform 1.25s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.hero__veil::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--bronze) 20%,
+    var(--bronze) 80%,
+    transparent
+  );
+  opacity: 0.75;
+  transform: translateY(0);
+  transition:
+    transform 1.25s cubic-bezier(0.76, 0, 0.24, 1),
+    opacity 0.4s ease 0.95s;
+}
+
+.hero__veil.is-lifted::before,
+.hero__veil.is-lifted::after {
+  transform: translateY(-101%);
+}
+
+.hero__veil.is-lifted::after {
+  opacity: 0;
+}
+
+/* ── 節のラベルの罫 ─────────────────────────────────────────── */
+
+body.profile--editorial .section__label::before {
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--bronze);
+}
+
+body.profile--editorial .section__label.is-drawn::before {
+  transform: scaleX(1);
+}
+
+/* ── 本文の左罫 ─────────────────────────────────────────────── */
+
+body.profile--editorial .prose--ruled {
+  position: relative;
+  padding-left: clamp(1rem, 0.6rem + 1.4vw, 2rem);
+}
+
+body.profile--editorial .prose--ruled::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.35em;
+  bottom: 0.35em;
+  width: 1px;
+  background: linear-gradient(180deg, var(--bronze), color-mix(in srgb, var(--bronze) 10%, transparent));
+  transform: scaleY(0);
+  transform-origin: top center;
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.profile--editorial .prose--ruled.is-drawn::before {
+  transform: scaleY(1);
+}
+
+/* ── 一覧の行 ───────────────────────────────────────────────── */
+
+body.profile--editorial .service-item {
+  position: relative;
+  isolation: isolate;
+  border-bottom-color: var(--hair);
+  transition: padding-left 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.profile--editorial .service-list {
+  border-top-color: var(--hair);
+}
+
+/* ホバーで、行の背後の紙の色だけが左から差し替わる */
+body.profile--editorial .service-item--wash::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 -1rem;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--bronze) 12%, transparent),
+    color-mix(in srgb, var(--bronze) 4%, transparent) 55%,
+    transparent
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.profile--editorial .service-item--wash:hover::before {
+  transform: scaleX(1);
+}
+
+body.profile--editorial .service-item:hover {
+  padding-left: 0.85rem;
+}
+
+body.profile--editorial .service-item__name {
+  color: var(--primary);
+  transition: color 0.45s ease;
+}
+
+body.profile--editorial .service-item:hover .service-item__name {
+  color: color-mix(in srgb, var(--bronze) 80%, var(--primary));
+}
+
+/* ── 記事カード ─────────────────────────────────────────────── */
+
+body.profile--editorial .media-card__thumb {
+  border-radius: 2px;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 10%, transparent);
+  transition:
+    box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.profile--editorial .media-card:hover .media-card__thumb {
+  box-shadow:
+    0 22px 46px -26px color-mix(in srgb, var(--text) 52%, transparent),
+    0 2px 6px color-mix(in srgb, var(--text) 12%, transparent);
+}
+
+/* 指先に付いてくる、ブロンズ寄りの照り */
+body.profile--editorial .media-card__thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    14rem 14rem at var(--glare-x, 50%) var(--glare-y, 50%),
+    color-mix(in srgb, #fff 42%, transparent),
+    transparent 62%
+  );
+  transition: opacity 0.5s ease;
+}
+
+body.profile--editorial .media-card:hover .media-card__thumb::after {
+  opacity: 1;
+}
+
+/* 見出しの下線を、ホバーで引く */
+body.profile--editorial .media-card__title {
+  display: inline-block;
+  background-image: linear-gradient(var(--bronze), var(--bronze));
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: left bottom;
+  transition: background-size 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+body.profile--editorial .media-card:hover .media-card__title {
+  background-size: 100% 1px;
+}
+
+/* ── 流れる帯 ───────────────────────────────────────────────── */
+
+body.profile--editorial .pf-marquee {
+  border-block-color: var(--hair);
+}
+
+body.profile--editorial .pf-marquee__unit {
+  font-style: italic;
+  color: color-mix(in srgb, var(--text) 22%, transparent);
+}
+
+body.profile--editorial .pf-marquee__dot {
+  background: var(--bronze);
+}
+
+/* ── 読み進みの線・幕 ───────────────────────────────────────── */
+
+body.profile--editorial .pf-progress span {
+  background: linear-gradient(90deg, color-mix(in srgb, var(--bronze) 55%, transparent), var(--bronze));
+  box-shadow: none;
+}
+
+/* 幕もアイボリー側に寄せる。文字は箔の色 */
+body.profile--editorial .pf-curtain {
+  background: var(--bg);
+}
+
+body.profile--editorial .pf-curtain__mark {
+  color: color-mix(in srgb, var(--bronze) 85%, var(--text));
+}
+
+/* ── ボタン ─────────────────────────────────────────────────── */
+
+body.profile--editorial .btn--primary {
+  box-shadow: 0 16px 34px -22px color-mix(in srgb, var(--primary) 70%, transparent);
+}
+
+/* ── 動きを減らす設定 ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  body.profile--editorial::before,
+  body.profile--editorial::after {
+    display: none;
+  }
+
+  .hero__veil {
+    display: none;
+  }
+
+  body.profile--editorial .section__label::before,
+  body.profile--editorial .prose--ruled::before {
+    transform: none !important;
+  }
+}
