@@ -6,7 +6,8 @@ import '../styles/profile-kabeya.css';
 import { getProfile } from '../data/profiles';
 import { initAnalytics } from '../lib/analytics';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
-import { initSmoothScroll, isCoarsePointer, prefersReducedMotion, revealOnScroll } from '../lib/motion';
+import { initEditorialMotion, mountEditorialWebGL } from '../lib/editorial';
+import { initSmoothScroll, revealOnScroll } from '../lib/motion';
 import {
   cursorGlow,
   drawRules,
@@ -22,24 +23,6 @@ import {
 } from './effects';
 import { renderProfileFooter } from './footer';
 import { renderProfileSections } from './render';
-
-function initEditorialParallax(): void {
-  if (prefersReducedMotion() || isCoarsePointer()) return;
-  const art = document.querySelector<HTMLElement>('[data-editorial-parallax]');
-  const hero = document.querySelector<HTMLElement>('.hero--editorial');
-  if (!art || !hero) return;
-
-  hero.addEventListener('pointermove', (e) => {
-    const rect = hero.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    art.style.transform = `translate3d(${px * -18}px, ${py * -14}px, 0)`;
-  });
-
-  hero.addEventListener('pointerleave', () => {
-    art.style.transform = '';
-  });
-}
 
 export function mountProfilePage(profileId: string): void {
   const profile = getProfile(profileId);
@@ -61,7 +44,7 @@ export function mountProfilePage(profileId: string): void {
     revealOnScroll(document);
 
     if (profile.heroVariant === 'editorial') {
-      initEditorialParallax();
+      initEditorialMotion();
     }
 
     if (profile.heavyWebGL || profile.monument) {
@@ -104,6 +87,7 @@ export function mountProfilePage(profileId: string): void {
         }, 1500);
       }
     }
+    mountEditorialWebGL(profile);
   };
 
   if (document.readyState === 'loading') {

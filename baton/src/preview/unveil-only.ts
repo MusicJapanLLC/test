@@ -5,6 +5,7 @@ import '../styles/profile.css';
 import { getProfile } from '../data/profiles';
 import { profileHeroHtml } from '../lib/hero';
 import { shouldRender3D, whenIdle } from '../lib/capabilities';
+import { initEditorialMotion, mountEditorialWebGL } from '../lib/editorial';
 import { initSmoothScroll, revealOnScroll } from '../lib/motion';
 import { renderProfileFooter } from '../profile/footer';
 import { renderProfileSections } from '../profile/render';
@@ -27,6 +28,7 @@ renderProfileFooter(footer);
 
 initSmoothScroll();
 revealOnScroll(document);
+initEditorialMotion();
 
 const canvas = document.querySelector<HTMLCanvasElement>('[data-hero-canvas]');
 if (canvas && shouldRender3D()) {
@@ -42,3 +44,4 @@ if (canvas && shouldRender3D()) {
     }
   }, 1000);
 }
+mountEditorialWebGL(profile);

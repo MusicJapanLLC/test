@@ -55,6 +55,7 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
   if (p.heroVariant === 'editorial') {
     return `
 <header class="hero hero--editorial" data-hero>
+  <canvas class="hero__canvas hero__canvas--editorial" data-hero-canvas aria-hidden="true"></canvas>
   <div class="hero__editorial-art" data-editorial-parallax aria-hidden="true">
     <svg viewBox="0 0 900 1000" preserveAspectRatio="xMidYMid slice" focusable="false">
       <g class="hero__editorial-bloom">

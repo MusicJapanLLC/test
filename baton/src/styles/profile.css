@@ -102,6 +102,12 @@ body.profile .hero::before {
  * 壁谷さんのフルWebGLヒーローや他のプロフィールには一切影響しない。
  * ══════════════════════════════════════════════════════════════ */
 
+/* WebGL演出（scene-editorial.ts）が読み込まれるまでは、下の静的な花影・グラデ
+   だけで成立する。読み込み後もopacityを抑え、写真的な陰影を邪魔しない */
+.hero__canvas--editorial.is-ready {
+  opacity: 0.85;
+}
+
 .hero__editorial-art {
   position: absolute;
   inset: 0;
@@ -377,6 +383,66 @@ body.profile--editorial .btn--primary {
 
 body.profile--editorial .link-chip {
   border-radius: 2px;
+}
+
+/*
+ * ヒーローの外（本文全体）にも、ごく淡い光の揺らぎを1枚敷いて世界観を続ける。
+ * position: fixed の装飾レイヤーなので、レイアウトやスクロール量には影響しない。
+ */
+body.profile--editorial {
+  position: relative;
+  isolation: isolate;
+}
+
+body.profile--editorial::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 42% at 12% 18%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    radial-gradient(55% 40% at 88% 76%, color-mix(in srgb, var(--primary) 8%, transparent), transparent 70%);
+  background-repeat: no-repeat;
+  animation: editorial-ambient-drift 36s ease-in-out infinite;
+}
+
+@keyframes editorial-ambient-drift {
+  0%,
+  100% {
+    background-position: 0 0, 0 0;
+  }
+  50% {
+    background-position: 3% 4%, -3% -4%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.profile--editorial::before {
+    animation: none;
+  }
+}
+
+/* 記事カード（.media-card）に、JSでポインター追従の3D傾きを付ける（main.ts） */
+body.profile--editorial .media-card {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+body.profile--editorial .media-card__thumb {
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s ease;
+}
+
+body.profile--editorial .media-card:hover .media-card__thumb {
+  box-shadow: 0 22px 44px -16px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+/* スクロール視差（main.ts の initEditorialScrollDepth）を滑らかにする */
+body.profile--editorial .section__head {
+  will-change: transform;
 }
 
 /* 事業内容・実績など、カードではなく文章で読ませるセクション */
