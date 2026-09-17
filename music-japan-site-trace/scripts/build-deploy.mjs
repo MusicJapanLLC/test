@@ -804,11 +804,30 @@ function updateHomeMetadata(documentHtml, locale) {
   return documentHtml.replace("</head>", `<meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script>\n</head>`);
 }
 
-function lockHomeDocumentTitle(documentHtml, locale) {
-  const title = locale === "ja"
-    ? "合同会社Music Japan 公式サイト | 音楽制作・Podcast・インタビュー"
-    : "Music Japan LLC | Music, Podcasts & Interviews";
-  const script = `<script id="music-japan-title-guard">(()=>{const title=${JSON.stringify(title)},apply=()=>{if(document.title!==title)document.title=title};apply();const observer=new MutationObserver(apply);observer.observe(document.head,{childList:true,subtree:true,characterData:true});addEventListener("load",()=>setTimeout(()=>{apply();observer.disconnect()},3000),{once:true});})();</script>`;
+function lockHomeHead(documentHtml, locale) {
+  const isJa = locale === "ja";
+  const config = {
+    title: isJa ? "合同会社Music Japan 公式サイト | 音楽制作・Podcast・インタビュー" : "Music Japan LLC | Music, Podcasts & Interviews",
+    description: isJa
+      ? "合同会社Music Japan公式サイト。音楽制作・楽曲配信を軸に、Podcast『SECOND TAKE』とインタビューを通じて、人の声や経験を記録・発信しています。"
+      : "The official website of Music Japan LLC: music production and distribution, alongside the SECOND TAKE podcast and interviews that preserve people’s voices and experiences.",
+    keywords: isJa
+      ? "合同会社Music Japan,Music Japan LLC,音楽制作,楽曲制作,BGM制作,音楽配信,Podcast,ポッドキャスト,経営者インタビュー,SECOND TAKE,Baton,大阪 音楽会社,Yuma"
+      : "Music Japan LLC,music production,music distribution,BGM,podcast,executive interviews,SECOND TAKE,Baton,Osaka music company,Yuma",
+    canonical: `${SITE_URL}${isJa ? "/" : "/en/"}`,
+    alternates: {
+      "ja-JP": `${SITE_URL}/`,
+      en: `${SITE_URL}/en/`,
+      "x-default": `${SITE_URL}/`
+    },
+    ogTitle: isJa ? "合同会社Music Japan 公式サイト | 音楽・メディア" : "Music Japan LLC | Music & Media",
+    ogDescription: isJa
+      ? "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"
+      : "A music and media company in Osaka creating music, podcasts, executive interviews and editorial content.",
+    ogLocale: isJa ? "ja_JP" : "en_US",
+    ogLocaleAlternate: isJa ? "en_US" : "ja_JP"
+  };
+  const script = `<script id="music-japan-head-guard">(()=>{const c=${JSON.stringify(config)},head=document.head,set=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value)},one=(selector,tag,attrs)=>{const items=[...head.querySelectorAll(selector)],el=items.shift()||document.createElement(tag);for(const [name,value]of Object.entries(attrs))set(el,name,value);if(!el.isConnected)head.append(el);for(const duplicate of items)duplicate.remove()},apply=()=>{if(document.title!==c.title)document.title=c.title;one('meta[name="description"]','meta',{name:'description',content:c.description});one('meta[name="keywords"]','meta',{name:'keywords',content:c.keywords});one('meta[name="robots"]','meta',{name:'robots',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="googlebot"]','meta',{name:'googlebot',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="viewport"]','meta',{name:'viewport',content:'width=device-width, initial-scale=1, viewport-fit=cover'});one('link[rel="author"]','link',{rel:'author',href:'${SITE_URL}/'});one('link[rel="canonical"]','link',{rel:'canonical',href:c.canonical});for(const [lang,href]of Object.entries(c.alternates))one('link[rel="alternate"][hreflang="'+lang+'"]','link',{rel:'alternate',hreflang:lang,href});one('meta[property="og:title"]','meta',{property:'og:title',content:c.ogTitle});one('meta[property="og:description"]','meta',{property:'og:description',content:c.ogDescription});one('meta[property="og:url"]','meta',{property:'og:url',content:c.canonical});one('meta[property="og:site_name"]','meta',{property:'og:site_name',content:'Music Japan LLC'});one('meta[property="og:locale"]','meta',{property:'og:locale',content:c.ogLocale});one('meta[property="og:locale:alternate"]','meta',{property:'og:locale:alternate',content:c.ogLocaleAlternate});one('meta[property="og:image:alt"]','meta',{property:'og:image:alt',content:'Music Japan LLC — Music & Media'});one('meta[name="twitter:title"]','meta',{name:'twitter:title',content:c.ogTitle});one('meta[name="twitter:description"]','meta',{name:'twitter:description',content:c.ogDescription})};apply();const observer=new MutationObserver(apply);observer.observe(head,{childList:true,subtree:true,characterData:true,attributes:true});addEventListener('load',()=>setTimeout(()=>{apply();observer.disconnect()},5000),{once:true});})();</script>`;
   return documentHtml + script;
 }
 
@@ -990,7 +1009,7 @@ for (const relativePath of publicHtmlFiles) {
     homeDocuments.set(locale, documentHtml);
     documentHtml = removeHomepageDetailSections(documentHtml, locale);
     documentHtml = updateHomeMetadata(documentHtml, locale);
-    documentHtml = lockHomeDocumentTitle(documentHtml, locale);
+    documentHtml = lockHomeHead(documentHtml, locale);
     documentHtml = documentHtml.replace(
       "</head>",
       `<link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/>\n</head>`
@@ -1071,7 +1090,7 @@ for (const relativePath of publicHtmlFiles) {
     if (!documentHtml.includes(BATON_URL)) throw new Error(`Baton link missing: ${relativePath}`);
     if (!documentHtml.includes(`href="${MEDIA_STYLESHEET_URL}"`)) throw new Error(`Media refresh stylesheet missing: ${relativePath}`);
     if (!documentHtml.includes(`/assets/${patchedClientBundle.name}?${versionedClientGraph.version}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
-    if (!documentHtml.includes('id="music-japan-title-guard"')) throw new Error(`Hydrated title guard missing: ${relativePath}`);
+    if (!documentHtml.includes('id="music-japan-head-guard"')) throw new Error(`Hydrated metadata guard missing: ${relativePath}`);
     if (documentHtml.includes("Standment")) throw new Error(`Legacy Standment copy remains: ${relativePath}`);
     if (documentHtml.includes('class="founder content-frame"')) throw new Error(`Founder remains on homepage: ${relativePath}`);
     if (documentHtml.includes('class="contact-section"')) throw new Error(`Contact remains on homepage: ${relativePath}`);
