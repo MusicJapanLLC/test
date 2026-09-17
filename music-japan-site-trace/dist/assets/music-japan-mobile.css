@@ -1,0 +1,269 @@
+/* Mobile-first delivery layer for the Music Japan visual system. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (pointer: coarse) {
+  .signal-cursor,
+  .signal-cursor__dot {
+    display: none !important;
+  }
+
+  .about-brand:hover .about-brand__logo img,
+  .founder__profile-link:hover .founder__portrait > img {
+    transform: none;
+  }
+}
+
+@media (width <= 760px) {
+  :root {
+    --frame: calc(100vw - 40px);
+    --header-h: calc(72px + env(safe-area-inset-top));
+  }
+
+  html {
+    scroll-padding-top: calc(var(--header-h) + 16px);
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .site-header,
+  .inner-site-header {
+    min-height: var(--header-h);
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-right: max(20px, env(safe-area-inset-right));
+    padding-bottom: 10px;
+    padding-left: max(20px, env(safe-area-inset-left));
+  }
+
+  .site-nav,
+  .inner-site-header .site-nav {
+    top: var(--header-h);
+    max-height: calc(100dvh - var(--header-h));
+    padding: 10px max(20px, env(safe-area-inset-right)) calc(22px + env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .site-nav a,
+  .inner-site-header .site-nav a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 54px;
+    padding: 14px 0;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  .site-nav a::after {
+    bottom: 7px;
+  }
+
+  .header-actions {
+    gap: 8px;
+  }
+
+  .language-switch,
+  .inner-site-header .language-switch,
+  .menu-button,
+  .inner-site-header .menu-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .menu-button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .brand {
+    min-height: 44px;
+  }
+
+  .brand__text strong {
+    overflow-wrap: anywhere;
+  }
+
+  main section,
+  .inner-page__hero,
+  .profile-hero {
+    scroll-margin-top: calc(var(--header-h) + 16px);
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .webgl-loading-fallback {
+    background:
+      radial-gradient(circle at 78% 18%, rgba(240, 43, 57, 0.2), transparent 29%),
+      radial-gradient(circle at 22% 66%, rgba(142, 17, 28, 0.16), transparent 34%),
+      linear-gradient(150deg, #050506 0 52%, #120609 72%, #050506 100%);
+  }
+
+  .webgl-loading-fallback::before,
+  .webgl-loading-fallback::after {
+    position: absolute;
+    border: 1px solid rgba(217, 31, 44, 0.2);
+    border-radius: 50%;
+    content: "";
+  }
+
+  .webgl-loading-fallback::before {
+    top: 14vh;
+    right: -38vw;
+    width: 96vw;
+    aspect-ratio: 1;
+  }
+
+  .webgl-loading-fallback::after {
+    top: 27vh;
+    right: -19vw;
+    width: 58vw;
+    aspect-ratio: 1;
+    border-color: rgba(240, 43, 57, 0.32);
+  }
+
+  .hero__sub,
+  .manifesto__body,
+  .section-heading__body,
+  .related-card__body,
+  .inner-page__hero > p:last-child,
+  .profile-statement p,
+  .entity-page__lead,
+  .privacy-page__introduction,
+  .privacy-page__body p,
+  .privacy-page__body li {
+    font-size: 16px;
+    line-height: 1.9;
+  }
+
+  .about-brand__body,
+  .release-card__description,
+  .contact-section__intro p,
+  .contact-form__note {
+    font-size: 14px;
+    line-height: 1.85;
+  }
+
+  .kicker,
+  .profile-kicker,
+  .entity-page__eyebrow,
+  .privacy-page__eyebrow {
+    font-size: 11px;
+    line-height: 1.6;
+  }
+
+  .button,
+  .profile-back,
+  .entity-page__actions a,
+  .entity-page__back,
+  .privacy-page__back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 50px;
+    font-size: 13px;
+  }
+
+  .news-strip__item {
+    min-height: 96px;
+  }
+
+  .news-strip__item time,
+  .news-strip__label {
+    font-size: 11px;
+  }
+
+  .news-strip__title {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  .about-brand__copy {
+    min-height: 164px;
+  }
+
+  .related-card__cta,
+  .release-card__credit,
+  .release-card__meta p,
+  .profile-role,
+  .profile-roman {
+    font-size: 12px;
+  }
+
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea {
+    min-height: 50px;
+    font-size: 16px;
+  }
+
+  .site-footer__bottom a,
+  .inner-site-footer a,
+  .profile-footer a,
+  .entity-page__footer a,
+  .privacy-page__footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 12px;
+  }
+
+  .profile-footer,
+  .entity-page__footer,
+  .privacy-page__footer {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+
+  .projects,
+  .about,
+  .media-feature,
+  .site-footer {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 760px;
+  }
+}
+
+@media (width <= 360px) {
+  :root {
+    --frame: calc(100vw - 28px);
+  }
+
+  .site-header,
+  .inner-site-header {
+    padding-right: max(14px, env(safe-area-inset-right));
+    padding-left: max(14px, env(safe-area-inset-left));
+  }
+
+  .brand__text strong,
+  .inner-site-header .brand__text strong {
+    letter-spacing: 0.06em;
+    font-size: 9px;
+  }
+
+  .brand-symbol,
+  .inner-site-header .brand-symbol {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), (prefers-reduced-data: reduce) {
+  .site-noise,
+  .experience-rail {
+    display: none;
+  }
+}

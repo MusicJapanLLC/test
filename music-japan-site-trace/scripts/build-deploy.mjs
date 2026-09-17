@@ -18,6 +18,8 @@ const APPLE_ICON_URL = "/music-japan-symbol.png?v=20260913-final";
 const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
 const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
 const PAGES_STYLESHEET_URL = "/assets/music-japan-pages.css?v=20260914";
+const MOBILE_STYLESHEET_URL = "/assets/music-japan-mobile.css?v=20260917";
+const LAST_MODIFIED = "2026-09-17";
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
 const BATON_URL = "https://baton.music-japan.com/profile/";
 
@@ -348,6 +350,25 @@ function patchClientBundle() {
 
   bundle = replaceRequired(
     bundle,
+    "if(a||l)return;",
+    "if(a||l||window.matchMedia(`(max-width: 760px)`).matches)return;",
+    "mobile motion budget"
+  );
+  bundle = replaceRequired(
+    bundle,
+    "if(n||i?.saveData)return;",
+    "if(n||i?.saveData||window.matchMedia(`(max-width: 760px)`).matches)return;",
+    "mobile WebGL budget"
+  );
+  bundle = replaceRequired(
+    bundle,
+    "width:1200,height:1200,alt:``,loading:`lazy`",
+    "width:1200,height:1200,alt:`${e.title} — ${e.artist}`,loading:`lazy`",
+    "release cover alternative text"
+  );
+
+  bundle = replaceRequired(
+    bundle,
     'className:`button button--ghost`,href:`#contact`',
     'className:`button button--ghost`,href:e===`ja`?`/contact/`:`/en/contact/`',
     "homepage contact CTA"
@@ -415,6 +436,27 @@ function renderBrandRows(locale) {
   return `<div class="about__brands" data-reveal="true">${rows}</div>`;
 }
 
+function patchReleaseImageAltText(documentHtml) {
+  const releases = new Map([
+    ["4550708735521_cover.png", "TOKYO JUNKIES — Yuma"],
+    ["4550708606692_cover.png", "ここにある — Yuma"],
+    ["4550758281023_cover.png", "Beach Sunset — Yuma"],
+    ["4550756733272_cover.png", "I know, but tried — Yuma"],
+    ["4550757942116_cover.png", "Like a drug — Yuma"],
+    ["4550756476070_cover.png", "All I need — Yuma"],
+    ["120faa80-16d3-5b2d-422c-1903d9edd96c", "Late Night Jazz Lounge 2026 — Cozy Cafe Jazz BGM"],
+    ["251d2519-284f-882f-855f-2ea548250999", "Fairytale Classical Music for Study and Reading — Relaxing Classical Music Live"],
+    ["f26b5fc1-d239-5782-1a30-e38af9b67cf7", "Soft Rain Piano for Deep Sleep — Deep Sleep Music Radio"]
+  ]);
+
+  return documentHtml.replace(/<img\s+[^>]*alt=""[^>]*>/g, (tag) => {
+    for (const [needle, alt] of releases) {
+      if (tag.includes(needle)) return tag.replace('alt=""', `alt="${alt}"`);
+    }
+    return tag;
+  });
+}
+
 function internalPath(locale, page) {
   return locale === "ja" ? `/${page}/` : `/en/${page}/`;
 }
@@ -462,18 +504,73 @@ function renderStandalonePage(locale, page, bodyHtml) {
   const jaPath = internalPath("ja", page);
   const enPath = internalPath("en", page);
   const title = `${copy.title} | ${isJa ? "合同会社Music Japan" : "Music Japan LLC"}`;
+  const pageType = page === "contact" ? "ContactPage" : page === "about" ? "AboutPage" : "CollectionPage";
+  const musicItems = isJa
+    ? [
+        ["TOKYO JUNKIES", "Yuma", "https://www.youtube.com/watch?v=zODcrFkELsE"],
+        ["ここにある", "Yuma", "https://www.youtube.com/watch?v=zJV-EFucoks"],
+        ["Beach Sunset", "Yuma", "https://music.apple.com/jp/album/beach-sunset-single/6787415933"],
+        ["Late Night Jazz Lounge 2026", "Cozy Cafe Jazz BGM", "https://music.apple.com/us/album/late-night-jazz-lounge-2026-smooth-piano-city-rain/6785588546"],
+        ["Fairytale Classical Music for Study and Reading", "Relaxing Classical Music Live", "https://music.apple.com/us/album/fairytale-classical-music-for-study-and-reading/6787590947"],
+        ["Soft Rain Piano for Deep Sleep", "Deep Sleep Music Radio", "https://music.apple.com/us/album/soft-rain-piano-for-deep-sleep/6787971338"]
+      ]
+    : [
+        ["I know, but tried", "Yuma", "https://music.apple.com/jp/album/i-know-but-tried-single/6771033082"],
+        ["Like a drug", "Yuma", "https://music.apple.com/jp/album/like-a-drug-ep/6783291301"],
+        ["All I need", "Yuma", "https://music.apple.com/jp/album/all-i-need-single/6768943324"],
+        ["Late Night Jazz Lounge 2026", "Cozy Cafe Jazz BGM", "https://music.apple.com/us/album/late-night-jazz-lounge-2026-smooth-piano-city-rain/6785588546"],
+        ["Fairytale Classical Music for Study and Reading", "Relaxing Classical Music Live", "https://music.apple.com/us/album/fairytale-classical-music-for-study-and-reading/6787590947"],
+        ["Soft Rain Piano for Deep Sleep", "Deep Sleep Music Radio", "https://music.apple.com/us/album/soft-rain-piano-for-deep-sleep/6787971338"]
+      ];
+  const mainEntity = page === "music"
+    ? {
+        "@type": "ItemList",
+        name: isJa ? "合同会社Music Japanの音楽作品" : "Music from Music Japan LLC",
+        numberOfItems: 6,
+        itemListElement: musicItems.map(([name, artist, url], index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          item: { "@type": "MusicRecording", name, byArtist: { "@type": "MusicGroup", name: artist }, sameAs: url }
+        }))
+      }
+    : page === "media"
+      ? {
+          "@type": "ItemList",
+          name: isJa ? "合同会社Music Japanのメディア" : "Media from Music Japan LLC",
+          numberOfItems: 2,
+          itemListElement: [
+            { "@type": "ListItem", position: 1, item: { "@type": "PodcastSeries", name: "SECOND TAKE", url: SECOND_TAKE_URL } },
+            { "@type": "ListItem", position: 2, item: { "@type": "Service", name: "Baton", url: BATON_URL, serviceType: isJa ? "招待制の紹介サービス" : "Invitation-only introduction service" } }
+          ]
+        }
+      : { "@id": `${SITE_URL}/#organization` };
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "@id": `${SITE_URL}${pagePath}#webpage`,
-    url: `${SITE_URL}${pagePath}`,
-    name: title,
-    description: copy.description,
-    inLanguage: isJa ? "ja" : "en",
-    isPartOf: { "@id": `${SITE_URL}/#website` }
+    "@graph": [
+      {
+        "@type": pageType,
+        "@id": `${SITE_URL}${pagePath}#webpage`,
+        url: `${SITE_URL}${pagePath}`,
+        name: title,
+        description: copy.description,
+        dateModified: LAST_MODIFIED,
+        inLanguage: isJa ? "ja" : "en",
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+        about: { "@id": `${SITE_URL}/#organization` },
+        mainEntity
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${SITE_URL}${pagePath}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: isJa ? "トップ" : "Home", item: `${SITE_URL}${isJa ? "/" : "/en/"}` },
+          { "@type": "ListItem", position: 2, name: copy.title, item: `${SITE_URL}${pagePath}` }
+        ]
+      }
+    ]
   };
   const visibleBody = bodyHtml.replaceAll(' data-reveal="true"', "").replaceAll(' aria-haspopup="dialog"', "");
-  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${title}</title><meta name="description" content="${copy.description}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}"/><link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}"/><meta property="og:type" content="website"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${copy.description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta name="twitter:card" content="summary_large_image"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="site-shell inner-shell locale-${locale}" lang="${isJa ? "ja" : "en"}">${renderSiteHeader(locale, page)}<main id="main-content" class="inner-page__main" tabindex="-1">${renderInnerHero(locale, page)}<div class="inner-page__content inner-page__content--${page}">${visibleBody}</div></main>${renderSiteFooter(locale)}${renderInnerPageScript(locale, page === "contact")}</div></body></html>`;
+  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><title>${title}</title><meta name="description" content="${copy.description}"/><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}"/><link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Music Japan LLC"/><meta property="og:locale" content="${isJa ? "ja_JP" : "en_US"}"/><meta property="og:locale:alternate" content="${isJa ? "en_US" : "ja_JP"}"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${copy.description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta property="og:image:width" content="1734"/><meta property="og:image:height" content="907"/><meta property="og:image:alt" content="Music Japan LLC — Music &amp; Media"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${copy.description}"/><meta name="twitter:image" content="${SITE_URL}/music-japan-og.png"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="site-shell inner-shell locale-${locale}" lang="${isJa ? "ja" : "en"}">${renderSiteHeader(locale, page)}<main id="main-content" class="inner-page__main" tabindex="-1">${renderInnerHero(locale, page)}<div class="inner-page__content inner-page__content--${page}">${visibleBody}</div></main>${renderSiteFooter(locale)}${renderInnerPageScript(locale, page === "contact")}</div></body></html>`;
 }
 
 function extractSection(documentHtml, marker, label) {
@@ -530,7 +627,10 @@ function patchExistingInternalHeader(documentHtml, locale, page) {
     }
   }
 
-  documentHtml = documentHtml.replace("</head>", `<link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/>\n</head>`);
+  documentHtml = documentHtml
+    .replace('content="width=device-width, initial-scale=1"', 'content="width=device-width, initial-scale=1, viewport-fit=cover"')
+    .replace('content="index, follow"', 'content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"')
+    .replace("</head>", `<meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/>\n</head>`);
   return documentHtml.replace("</body>", `${renderInnerPageScript(locale)}</body>`);
 }
 
@@ -629,6 +729,9 @@ function updateHomeMetadata(documentHtml, locale) {
     ["大阪から世界へ。アーティスト作品と複数の音楽ブランドを企画・制作・配信する音楽会社。", "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"],
     ["大阪を拠点に、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を行う独立系音楽会社。", "大阪を拠点に、音楽制作・配信、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"],
     ["アーティスト作品、ジャズ、クラシック、睡眠音楽を企画・制作・配信する音楽会社の公式サイト。", "音楽制作・配信、Podcast、インタビュー記事を手がける合同会社Music Japanの公式サイト。"]
+    ,["合同会社Music Japan 公式サイト | RED FREQUENCY", "合同会社Music Japan 公式サイト | 音楽・メディア"]
+    ,["Music Japan LLC — Red Frequency", "Music Japan LLC — Music &amp; Media"]
+    ,["Music from Japan. Made to travel. Built to last.", "Music. Stories. Connections. From Japan."]
   ] : [
     ["Music Japan LLC Official Website | Music Production &amp; Distribution", "Music Japan LLC | Music, Podcasts &amp; Interviews"],
     ["The official website of Music Japan LLC, an independent music company in Osaka creating and distributing Yuma releases, jazz, classical, sleep music, original music and BGM.", "The official website of Music Japan LLC: music production and distribution, alongside the SECOND TAKE podcast and interviews that preserve people’s voices and experiences."],
@@ -636,15 +739,49 @@ function updateHomeMetadata(documentHtml, locale) {
     ["An independent music company in Osaka building artist releases and focused music brands for listeners worldwide.", "A music and media company in Osaka creating music, podcasts, executive interviews and editorial content."],
     ["大阪を拠点に、アーティスト作品、ジャズ、クラシック、睡眠音楽などの企画・制作・配信を行う独立系音楽会社。", "大阪を拠点に、音楽制作・配信、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"],
     ["The official website of an independent music company creating and distributing artist releases, jazz, classical and sleep music.", "The official website of Music Japan LLC, creating music, podcasts, executive interviews and editorial content."]
+    ,["Music Japan LLC Official Website | RED FREQUENCY", "Music Japan LLC | Music &amp; Media"]
+    ,["Music Japan LLC — Red Frequency", "Music Japan LLC — Music &amp; Media"]
+    ,["Music from Japan. Made to travel. Built to last.", "Music. Stories. Connections. From Japan."]
   ];
 
   for (const [search, replacement] of replacements) {
     if (documentHtml.includes(search)) documentHtml = documentHtml.replaceAll(search, replacement);
   }
 
+  documentHtml = documentHtml
+    .replace('content="width=device-width, initial-scale=1"', 'content="width=device-width, initial-scale=1, viewport-fit=cover"')
+    .replace('content="index, follow"', 'content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"')
+    .replaceAll(`${SITE_URL}/en"`, `${SITE_URL}/en/"`);
+
   const structuredData = {
     "@context": "https://schema.org",
     "@graph": [
+      {
+        "@type": "Corporation",
+        "@id": `${SITE_URL}/#organization`,
+        knowsAbout: [
+          "音楽制作",
+          "楽曲配信",
+          "BGM制作",
+          "Podcast制作",
+          "経営者インタビュー",
+          "メディア企画"
+        ],
+        subjectOf: [
+          { "@id": `${SECOND_TAKE_URL}#podcast-series` },
+          { "@id": `${BATON_URL}#service` }
+        ]
+      },
+      {
+        "@type": "Person",
+        "@id": `${SITE_URL}/#founder`,
+        url: `${SITE_URL}${locale === "ja" ? "/profile/" : "/en/profile/"}`
+      },
+      {
+        "@type": "CollectionPage",
+        "@id": `${SITE_URL}${locale === "ja" ? "/" : "/en/"}#webpage`,
+        dateModified: LAST_MODIFIED
+      },
       {
         "@type": "PodcastSeries",
         "@id": `${SECOND_TAKE_URL}#podcast-series`,
@@ -664,7 +801,34 @@ function updateHomeMetadata(documentHtml, locale) {
       }
     ]
   };
-  return documentHtml.replace("</head>", `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>\n</head>`);
+  return documentHtml.replace("</head>", `<meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script>\n</head>`);
+}
+
+function lockHomeHead(documentHtml, locale) {
+  const isJa = locale === "ja";
+  const config = {
+    title: isJa ? "合同会社Music Japan 公式サイト | 音楽制作・Podcast・インタビュー" : "Music Japan LLC | Music, Podcasts & Interviews",
+    description: isJa
+      ? "合同会社Music Japan公式サイト。音楽制作・楽曲配信を軸に、Podcast『SECOND TAKE』とインタビューを通じて、人の声や経験を記録・発信しています。"
+      : "The official website of Music Japan LLC: music production and distribution, alongside the SECOND TAKE podcast and interviews that preserve people’s voices and experiences.",
+    keywords: isJa
+      ? "合同会社Music Japan,Music Japan LLC,音楽制作,楽曲制作,BGM制作,音楽配信,Podcast,ポッドキャスト,経営者インタビュー,SECOND TAKE,Baton,大阪 音楽会社,Yuma"
+      : "Music Japan LLC,music production,music distribution,BGM,podcast,executive interviews,SECOND TAKE,Baton,Osaka music company,Yuma",
+    canonical: `${SITE_URL}${isJa ? "/" : "/en/"}`,
+    alternates: {
+      "ja-JP": `${SITE_URL}/`,
+      en: `${SITE_URL}/en/`,
+      "x-default": `${SITE_URL}/`
+    },
+    ogTitle: isJa ? "合同会社Music Japan 公式サイト | 音楽・メディア" : "Music Japan LLC | Music & Media",
+    ogDescription: isJa
+      ? "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"
+      : "A music and media company in Osaka creating music, podcasts, executive interviews and editorial content.",
+    ogLocale: isJa ? "ja_JP" : "en_US",
+    ogLocaleAlternate: isJa ? "en_US" : "ja_JP"
+  };
+  const script = `<script id="music-japan-head-guard">(()=>{const c=${JSON.stringify(config)},head=document.head,set=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value)},one=(selector,tag,attrs)=>{const items=[...head.querySelectorAll(selector)],el=items.shift()||document.createElement(tag);for(const [name,value]of Object.entries(attrs))set(el,name,value);if(!el.isConnected)head.append(el);for(const duplicate of items)duplicate.remove()},apply=()=>{if(document.title!==c.title)document.title=c.title;one('meta[name="description"]','meta',{name:'description',content:c.description});one('meta[name="keywords"]','meta',{name:'keywords',content:c.keywords});one('meta[name="robots"]','meta',{name:'robots',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="googlebot"]','meta',{name:'googlebot',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="viewport"]','meta',{name:'viewport',content:'width=device-width, initial-scale=1, viewport-fit=cover'});one('link[rel="author"]','link',{rel:'author',href:'${SITE_URL}/'});one('link[rel="canonical"]','link',{rel:'canonical',href:c.canonical});for(const [lang,href]of Object.entries(c.alternates))one('link[rel="alternate"][hreflang="'+lang+'"]','link',{rel:'alternate',hreflang:lang,href});one('meta[property="og:title"]','meta',{property:'og:title',content:c.ogTitle});one('meta[property="og:description"]','meta',{property:'og:description',content:c.ogDescription});one('meta[property="og:url"]','meta',{property:'og:url',content:c.canonical});one('meta[property="og:site_name"]','meta',{property:'og:site_name',content:'Music Japan LLC'});one('meta[property="og:locale"]','meta',{property:'og:locale',content:c.ogLocale});one('meta[property="og:locale:alternate"]','meta',{property:'og:locale:alternate',content:c.ogLocaleAlternate});one('meta[property="og:image"]','meta',{property:'og:image',content:'${SITE_URL}/music-japan-og.png'});one('meta[property="og:image:alt"]','meta',{property:'og:image:alt',content:'Music Japan LLC — Music & Media'});one('meta[name="twitter:title"]','meta',{name:'twitter:title',content:c.ogTitle});one('meta[name="twitter:description"]','meta',{name:'twitter:description',content:c.ogDescription});one('meta[name="twitter:image"]','meta',{name:'twitter:image',content:'${SITE_URL}/music-japan-og.png'});one('link[rel="icon"]','link',{rel:'icon',type:'image/svg+xml',href:'${FAVICON_URL}'});one('link[rel="shortcut icon"]','link',{rel:'shortcut icon',type:'image/svg+xml',href:'${FAVICON_URL}'});one('link[rel="apple-touch-icon"]','link',{rel:'apple-touch-icon',href:'${APPLE_ICON_URL}'});for(const schema of document.querySelectorAll('script[type="application/ld+json"]'))if((schema.textContent||'').includes('pearly-cedar-3983.chatgpt.site'))schema.remove()};apply();const observer=new MutationObserver(apply);observer.observe(head,{childList:true,subtree:true,characterData:true,attributes:true});for(const delay of [0,500,1500,3000])setTimeout(apply,delay);addEventListener('load',()=>setTimeout(()=>{apply();observer.disconnect()},5000),{once:true});})();</script>`;
+  return documentHtml + script;
 }
 
 function renderProfilePage(locale) {
@@ -698,36 +862,56 @@ function renderProfilePage(locale) {
   const profileLabel = isJa ? "代表プロフィール" : "Representative profile";
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "ProfilePage",
-    "@id": `${SITE_URL}${pagePath}#webpage`,
-    url: `${SITE_URL}${pagePath}`,
-    name: title,
-    description,
-    inLanguage: isJa ? "ja" : "en",
-    mainEntity: {
-      "@type": "Person",
-      "@id": `${SITE_URL}/#founder`,
-      name: "壁谷 友生",
-      alternateName: "Tomoki Kabeya",
-      jobTitle: isJa ? "代表社員" : "Representative Member",
-      image: `${SITE_URL}/kabeya-tomoki.png`,
-      worksFor: { "@id": `${SITE_URL}/#organization` }
-    }
+    "@graph": [
+      {
+        "@type": "ProfilePage",
+        "@id": `${SITE_URL}${pagePath}#webpage`,
+        url: `${SITE_URL}${pagePath}`,
+        name: title,
+        description,
+        dateModified: LAST_MODIFIED,
+        inLanguage: isJa ? "ja" : "en",
+        isPartOf: { "@id": `${SITE_URL}/#website` },
+        mainEntity: { "@id": `${SITE_URL}/#founder` }
+      },
+      {
+        "@type": "Person",
+        "@id": `${SITE_URL}/#founder`,
+        url: `${SITE_URL}${pagePath}`,
+        name: "壁谷 友生",
+        alternateName: "Tomoki Kabeya",
+        jobTitle: isJa ? "代表社員" : "Representative Member",
+        image: `${SITE_URL}/kabeya-tomoki.png`,
+        worksFor: { "@id": `${SITE_URL}/#organization` }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${SITE_URL}${pagePath}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: isJa ? "トップ" : "Home", item: `${SITE_URL}${homePath}` },
+          { "@type": "ListItem", position: 2, name: profileLabel, item: `${SITE_URL}${pagePath}` }
+        ]
+      }
+    ]
   };
   const statementHtml = statement.map((paragraph) => `<p>${paragraph}</p>`).join("");
 
-  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="index,follow,max-image-preview:large"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/"/><link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/"/><meta property="og:type" content="profile"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta name="twitter:card" content="summary_large_image"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${PROFILE_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="profile-page inner-shell locale-${locale}">${renderSiteHeader(locale, "profile")}<main class="profile-main" id="main-content"><section class="profile-hero" aria-labelledby="profile-title"><div class="profile-portrait"><img src="/kabeya-tomoki.png" alt="${portraitAlt}" width="861" height="859"/><div class="profile-portrait__frame" aria-hidden="true"></div><span class="profile-portrait__label">OSAKA / JAPAN · 2026</span></div><div class="profile-copy"><p class="profile-kicker">REPRESENTATIVE MEMBER</p><h1 id="profile-title">${name}</h1><p class="profile-roman">${roman}</p><p class="profile-role">${role}</p><div class="profile-statement">${statementHtml}</div></div></section><a class="profile-back" href="${homePath}"><span aria-hidden="true">←</span>${backLabel}</a></main><footer class="profile-footer"><span>© 2026 MUSIC JAPAN LLC</span><span>${profileLabel} · OSAKA / JAPAN</span></footer>${renderInnerPageScript(locale)}</div></body></html>`;
+  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}/profile/"/><link rel="alternate" hreflang="en" href="${SITE_URL}/en/profile/"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}/profile/"/><meta property="og:type" content="profile"/><meta property="og:site_name" content="Music Japan LLC"/><meta property="og:locale" content="${isJa ? "ja_JP" : "en_US"}"/><meta property="og:locale:alternate" content="${isJa ? "en_US" : "ja_JP"}"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}/music-japan-og.png"/><meta property="og:image:width" content="1734"/><meta property="og:image:height" content="907"/><meta property="og:image:alt" content="Music Japan LLC — Music &amp; Media"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${description}"/><meta name="twitter:image" content="${SITE_URL}/music-japan-og.png"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${PROFILE_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="profile-page inner-shell locale-${locale}">${renderSiteHeader(locale, "profile")}<main class="profile-main" id="main-content" tabindex="-1"><section class="profile-hero" aria-labelledby="profile-title"><div class="profile-portrait"><img src="/kabeya-tomoki.png" alt="${portraitAlt}" width="861" height="859" decoding="async" fetchpriority="high"/><div class="profile-portrait__frame" aria-hidden="true"></div><span class="profile-portrait__label">OSAKA / JAPAN · 2026</span></div><div class="profile-copy"><p class="profile-kicker">REPRESENTATIVE MEMBER</p><h1 id="profile-title">${name}</h1><p class="profile-roman">${roman}</p><p class="profile-role">${role}</p><div class="profile-statement">${statementHtml}</div></div></section><a class="profile-back" href="${homePath}"><span aria-hidden="true">←</span>${backLabel}</a></main><footer class="profile-footer"><span>© 2026 MUSIC JAPAN LLC</span><span>${profileLabel} · OSAKA / JAPAN</span></footer>${renderInnerPageScript(locale)}</div></body></html>`;
 }
 
-function appendGeneratedEntries(sitemapXml) {
-  const pageNames = ["music", "media", "about", "profile", "contact"];
-  const entries = pageNames.flatMap((page) => {
-    const jaPath = internalPath("ja", page);
-    const enPath = internalPath("en", page);
-    const entry = (path) => `  <url>\n    <loc>${SITE_URL}${path}</loc>\n    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}" />\n    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}" />\n  </url>\n`;
-    return [entry(jaPath), entry(enPath)];
-  }).join("");
-  return sitemapXml.replace("</urlset>", `${entries}</urlset>`);
+function renderSitemap() {
+  const pagePairs = [
+    ["/", "/en/"],
+    ["/music/", "/en/music/"],
+    ["/media/", "/en/media/"],
+    ["/about/", "/en/about/"],
+    ["/company/", "/en/company/"],
+    ["/profile/", "/en/profile/"],
+    ["/contact/", "/en/contact/"],
+    ["/privacy/", "/en/privacy/"]
+  ];
+  const entries = pagePairs.flatMap(([jaPath, enPath]) => [jaPath, enPath].map((path) => `  <url>\n    <loc>${SITE_URL}${path}</loc>\n    <lastmod>${LAST_MODIFIED}</lastmod>\n    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}" />\n    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}" />\n    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}" />\n  </url>`)).join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries}\n</urlset>\n`;
 }
 
 rmSync(output, { recursive: true, force: true });
@@ -821,12 +1005,14 @@ for (const relativePath of publicHtmlFiles) {
   if (relativePath === "index.html" || relativePath === "en/index.html") {
     const locale = relativePath === "index.html" ? "ja" : "en";
     documentHtml = patchHomeDocument(documentHtml, locale);
+    documentHtml = patchReleaseImageAltText(documentHtml);
     homeDocuments.set(locale, documentHtml);
     documentHtml = removeHomepageDetailSections(documentHtml, locale);
     documentHtml = updateHomeMetadata(documentHtml, locale);
+    documentHtml = lockHomeHead(documentHtml, locale);
     documentHtml = documentHtml.replace(
       "</head>",
-      `<link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/>\n</head>`
+      `<link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/>\n</head>`
     );
   } else {
     const locale = relativePath.startsWith("en/") ? "en" : "ja";
@@ -879,7 +1065,7 @@ for (const contentPage of contentPageFiles) {
 }
 
 const sitemapPath = join(output, "sitemap.xml");
-writeFileSync(sitemapPath, appendGeneratedEntries(readFileSync(sitemapPath, "utf8")));
+writeFileSync(sitemapPath, renderSitemap());
 
 for (const relativePath of publicHtmlFiles) {
   const html = readFileSync(join(output, relativePath), "utf8");
@@ -890,6 +1076,7 @@ for (const relativePath of publicHtmlFiles) {
   if (!documentHtml.includes(SITE_URL)) throw new Error(`Canonical host missing in document HTML: ${relativePath}`);
   if (!documentHtml.includes('rel="canonical"')) throw new Error(`Canonical link missing: ${relativePath}`);
   if (!documentHtml.includes('application/ld+json')) throw new Error(`Structured data missing: ${relativePath}`);
+  if (!documentHtml.includes(`href="${MOBILE_STYLESHEET_URL}"`)) throw new Error(`Mobile stylesheet missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New favicon missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"`)) throw new Error(`New shortcut favicon missing: ${relativePath}`);
   if (!documentHtml.includes(`rel="apple-touch-icon" href="${APPLE_ICON_URL}"`)) throw new Error(`Apple touch icon missing: ${relativePath}`);
@@ -903,6 +1090,7 @@ for (const relativePath of publicHtmlFiles) {
     if (!documentHtml.includes(BATON_URL)) throw new Error(`Baton link missing: ${relativePath}`);
     if (!documentHtml.includes(`href="${MEDIA_STYLESHEET_URL}"`)) throw new Error(`Media refresh stylesheet missing: ${relativePath}`);
     if (!documentHtml.includes(`/assets/${patchedClientBundle.name}?${versionedClientGraph.version}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
+    if (!documentHtml.includes('id="music-japan-head-guard"')) throw new Error(`Hydrated metadata guard missing: ${relativePath}`);
     if (documentHtml.includes("Standment")) throw new Error(`Legacy Standment copy remains: ${relativePath}`);
     if (documentHtml.includes('class="founder content-frame"')) throw new Error(`Founder remains on homepage: ${relativePath}`);
     if (documentHtml.includes('class="contact-section"')) throw new Error(`Contact remains on homepage: ${relativePath}`);
@@ -928,10 +1116,12 @@ for (const profile of profileHtmlFiles) {
   if (!html.includes(`rel="canonical" href="${SITE_URL}${pagePath}"`)) throw new Error(`Profile canonical link missing: ${profile.path}`);
   if (!html.includes(`href="${PROFILE_STYLESHEET_URL}"`)) throw new Error(`Profile stylesheet missing: ${profile.path}`);
   if (!html.includes(`href="${PAGES_STYLESHEET_URL}"`)) throw new Error(`Internal page stylesheet missing: ${profile.path}`);
+  if (!html.includes(`href="${MOBILE_STYLESHEET_URL}"`)) throw new Error(`Mobile stylesheet missing: ${profile.path}`);
   if (!html.includes("kabeya-tomoki.png")) throw new Error(`Profile portrait missing: ${profile.path}`);
   if (!html.includes('class="site-header inner-site-header"')) throw new Error(`Shared profile header missing: ${profile.path}`);
   if (!html.includes('src="/music-japan-symbol.png"')) throw new Error(`Profile header logo missing: ${profile.path}`);
   if (!html.includes('application/ld+json')) throw new Error(`Profile structured data missing: ${profile.path}`);
+  if (!html.includes('"@type":"BreadcrumbList"')) throw new Error(`Profile breadcrumb data missing: ${profile.path}`);
 }
 
 for (const contentPage of contentPageFiles) {
@@ -939,9 +1129,11 @@ for (const contentPage of contentPageFiles) {
   const pagePath = internalPath(contentPage.locale, contentPage.page);
   if (!html.includes(`rel="canonical" href="${SITE_URL}${pagePath}"`)) throw new Error(`Page canonical link missing: ${contentPage.path}`);
   if (!html.includes(`href="${PAGES_STYLESHEET_URL}"`)) throw new Error(`Internal page stylesheet missing: ${contentPage.path}`);
+  if (!html.includes(`href="${MOBILE_STYLESHEET_URL}"`)) throw new Error(`Mobile stylesheet missing: ${contentPage.path}`);
   if (!html.includes('class="site-header inner-site-header"')) throw new Error(`Shared page header missing: ${contentPage.path}`);
   if (!html.includes('src="/music-japan-symbol.png"')) throw new Error(`Page header logo missing: ${contentPage.path}`);
   if (!html.includes('application/ld+json')) throw new Error(`Page structured data missing: ${contentPage.path}`);
+  if (!html.includes('"@type":"BreadcrumbList"')) throw new Error(`Page breadcrumb data missing: ${contentPage.path}`);
   if (contentPage.page === "contact" && !html.includes('class="contact-form"')) throw new Error(`Contact form missing: ${contentPage.path}`);
 }
 
@@ -952,6 +1144,16 @@ for (const requiredToken of ["news-strip", "media-feature", SECOND_TAKE_URL, BAT
 if (patchedBundleContents.includes("Standment")) throw new Error("Legacy Standment copy remains in client bundle");
 if (patchedBundleContents.includes('className:`founder content-frame`')) throw new Error("Founder remains in homepage client bundle");
 if (patchedBundleContents.includes('className:`contact-section`')) throw new Error("Contact remains in homepage client bundle");
+if (patchedBundleContents.includes('width:1200,height:1200,alt:``,loading:`lazy`')) throw new Error("Release image alt text is empty in client bundle");
+if ((patchedBundleContents.match(/matchMedia\(`\(max-width: 760px\)`\)/g) || []).length < 2) throw new Error("Mobile motion and WebGL budgets are missing");
+
+for (const locale of ["ja", "en"]) {
+  const documentHtml = homeDocuments.get(locale) || "";
+  const releaseImages = [...documentHtml.matchAll(/<img[^>]+is1-ssl\.mzstatic\.com[^>]*>/g)].map((match) => match[0]);
+  if (releaseImages.length !== 6 || releaseImages.some((tag) => tag.includes('alt=""'))) {
+    throw new Error(`Descriptive release image alt text missing: ${locale}`);
+  }
+}
 
 for (const relativePath of machineReadableFiles) {
   const content = readFileSync(join(output, relativePath), "utf8");
@@ -960,7 +1162,23 @@ for (const relativePath of machineReadableFiles) {
   }
 }
 
-for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg", "music-japan-logo.png", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png", "assets/music-japan-profile.css", "assets/music-japan-pages.css"]) {
+const sitemapContents = readFileSync(join(output, "sitemap.xml"), "utf8");
+if ((sitemapContents.match(/<url>/g) || []).length !== 16) throw new Error("Sitemap must contain all 16 Japanese and English pages");
+for (const route of ["/", "/en/", "/music/", "/en/music/", "/media/", "/en/media/", "/about/", "/en/about/", "/company/", "/en/company/", "/profile/", "/en/profile/", "/contact/", "/en/contact/", "/privacy/", "/en/privacy/"]) {
+  if (!sitemapContents.includes(`<loc>${SITE_URL}${route}</loc>`)) throw new Error(`Sitemap route missing: ${route}`);
+}
+const robotsContents = readFileSync(join(output, "robots.txt"), "utf8");
+for (const crawler of ["OAI-SearchBot", "GPTBot", "ChatGPT-User", "Googlebot"]) {
+  if (!robotsContents.includes(`User-agent: ${crawler}`)) throw new Error(`Crawler policy missing: ${crawler}`);
+}
+for (const file of ["llms.txt", "llms-full.txt"]) {
+  const context = readFileSync(join(output, file), "utf8");
+  for (const token of ["SECOND TAKE", "Baton", "https://music-japan.com/profile/"]) {
+    if (!context.includes(token)) throw new Error(`${file} is missing current official context: ${token}`);
+  }
+}
+
+for (const requiredFile of ["music-japan-og.png", "kabeya-tomoki.png", "music-japan-symbol.png", "favicon-music-japan.svg", "music-japan-logo.png", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png", "assets/music-japan-profile.css", "assets/music-japan-pages.css", "assets/music-japan-mobile.css"]) {
   const fullPath = join(output, requiredFile);
   if (!existsSync(fullPath) || statSync(fullPath).size === 0) {
     throw new Error(`Required branding/SEO file is missing or empty: ${requiredFile}`);
