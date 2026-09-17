@@ -804,6 +804,14 @@ function updateHomeMetadata(documentHtml, locale) {
   return documentHtml.replace("</head>", `<meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script>\n</head>`);
 }
 
+function lockHomeDocumentTitle(documentHtml, locale) {
+  const title = locale === "ja"
+    ? "合同会社Music Japan 公式サイト | 音楽制作・Podcast・インタビュー"
+    : "Music Japan LLC | Music, Podcasts & Interviews";
+  const script = `<script id="music-japan-title-guard">(()=>{const title=${JSON.stringify(title)},apply=()=>{if(document.title!==title)document.title=title};apply();const observer=new MutationObserver(apply);observer.observe(document.head,{childList:true,subtree:true,characterData:true});addEventListener("load",()=>setTimeout(()=>{apply();observer.disconnect()},3000),{once:true});})();</script>`;
+  return documentHtml + script;
+}
+
 function renderProfilePage(locale) {
   const isJa = locale === "ja";
   const pagePath = isJa ? "/profile/" : "/en/profile/";
@@ -982,6 +990,7 @@ for (const relativePath of publicHtmlFiles) {
     homeDocuments.set(locale, documentHtml);
     documentHtml = removeHomepageDetailSections(documentHtml, locale);
     documentHtml = updateHomeMetadata(documentHtml, locale);
+    documentHtml = lockHomeDocumentTitle(documentHtml, locale);
     documentHtml = documentHtml.replace(
       "</head>",
       `<link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/>\n</head>`
@@ -1062,6 +1071,7 @@ for (const relativePath of publicHtmlFiles) {
     if (!documentHtml.includes(BATON_URL)) throw new Error(`Baton link missing: ${relativePath}`);
     if (!documentHtml.includes(`href="${MEDIA_STYLESHEET_URL}"`)) throw new Error(`Media refresh stylesheet missing: ${relativePath}`);
     if (!documentHtml.includes(`/assets/${patchedClientBundle.name}?${versionedClientGraph.version}`)) throw new Error(`Versioned client bundle missing: ${relativePath}`);
+    if (!documentHtml.includes('id="music-japan-title-guard"')) throw new Error(`Hydrated title guard missing: ${relativePath}`);
     if (documentHtml.includes("Standment")) throw new Error(`Legacy Standment copy remains: ${relativePath}`);
     if (documentHtml.includes('class="founder content-frame"')) throw new Error(`Founder remains on homepage: ${relativePath}`);
     if (documentHtml.includes('class="contact-section"')) throw new Error(`Contact remains on homepage: ${relativePath}`);
