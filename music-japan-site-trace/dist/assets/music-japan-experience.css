@@ -191,7 +191,7 @@ html[data-mj-visibility="hidden"] *, html[data-mj-visibility="hidden"] *::before
   .mj-controls button { padding: 10px 12px; font-size: 10px; }
 }
 @media (width <= 360px) {
-  [data-mj-experience] .about-brand__heading h3 { font-size: 14px; }
+  [data-mj-experience] .about-brand:nth-child(2) .about-brand__heading h3 { font-size: 14px; }
 }
 @media (prefers-reduced-motion: reduce), (prefers-reduced-data: reduce) {
   html[data-mj-experience] *, html[data-mj-experience] *::before, html[data-mj-experience] *::after { animation: none !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
