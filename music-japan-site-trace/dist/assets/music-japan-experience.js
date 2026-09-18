@@ -247,7 +247,6 @@
     scanQueued = true;
     requestAnimationFrame(scan);
   });
-  changes.observe(document.body, { childList: true, subtree: true });
   function scrollProgress() {
     scrollQueued = false;
     const length = document.documentElement.scrollHeight - innerHeight;
@@ -269,7 +268,19 @@
   addEventListener('pagehide', stop);
   addEventListener('pageshow', start);
   compact.addEventListener('change', resize);
-  updateMotion();
-  scan();
-  scrollProgress();
+  let booted = false;
+  function boot() {
+    if (booted) return;
+    booted = true;
+    root.dataset.mjExperience = 'vinyl';
+    changes.observe(document.body, { childList: true, subtree: true });
+    updateMotion();
+    scan();
+    scrollProgress();
+  }
+  // Homepage DOM belongs to React until its effect runs. Never insert decorations
+  // into the server-rendered tree before hydration; static internal pages can boot now.
+  const isHome = /^\/(?:en\/?)?$/.test(location.pathname) || /^\/(?:en\/)?index\.html$/.test(location.pathname);
+  if (!isHome || root.dataset.mjReady === 'true') boot();
+  else window.addEventListener('music-japan:ready', boot, { once: true });
 })();

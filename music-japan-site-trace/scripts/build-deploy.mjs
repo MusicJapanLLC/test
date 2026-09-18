@@ -352,13 +352,13 @@ function patchClientBundle() {
   bundle = replaceRequired(
     bundle,
     "if(a||l)return;",
-    "if(a||l||document.documentElement.hasAttribute(`data-mj-experience`)||window.matchMedia(`(max-width: 760px)`).matches)return;",
+    "if(document.querySelector(`script[src*=\"music-japan-experience.js\"]`)){document.documentElement.dataset.mjExperience=`vinyl`;document.documentElement.dataset.mjReady=`true`;window.dispatchEvent(new Event(`music-japan:ready`));return;}if(a||l||window.matchMedia(`(max-width: 760px)`).matches)return;",
     "mobile motion budget"
   );
   bundle = replaceRequired(
     bundle,
     "if(n||i?.saveData)return;",
-    "if(n||i?.saveData||document.documentElement.hasAttribute(`data-mj-experience`)||window.matchMedia(`(max-width: 760px)`).matches)return;",
+    "if(document.querySelector(`script[src*=\"music-japan-experience.js\"]`)||n||i?.saveData||window.matchMedia(`(max-width: 760px)`).matches)return;",
     "mobile WebGL budget"
   );
   bundle = replaceRequired(

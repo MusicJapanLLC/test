@@ -143,7 +143,7 @@ html[data-mj-experience] { --mj-ease: cubic-bezier(.19,1,.22,1); --mj-red: #ed26
 @keyframes mj-reveal { from { opacity: .25; transform: translateY(28px); } to { opacity: 1; transform: none; } }
 .mj-progress { position: fixed; inset: 0 0 auto; height: 2px; background: linear-gradient(90deg,#8f1224,#ff3549,#fff0df); z-index: 190; transform: scaleX(var(--mj-progress,0)); transform-origin: left; pointer-events: none; }
 .mj-controls { position: fixed; z-index: 95; right: max(20px,env(safe-area-inset-right)); bottom: max(16px,env(safe-area-inset-bottom)); display: flex; border: 1px solid #eee8df35; border-radius: 28px; background: #080809e8; backdrop-filter: blur(16px); box-shadow: 0 4px 22px #0005; }
-.mj-controls button { appearance: none; background: none; color: #e6dfd7; border: 0; min-width: 44px; min-height: 44px; padding: 10px 14px; font: 10px/1.2 inherit; letter-spacing: .06em; cursor: pointer; }
+.mj-controls button { appearance: none; background: none; color: #e6dfd7; border: 0; min-width: 44px; min-height: 44px; padding: 10px 14px; font-family: inherit; font-size: 10px; line-height: 1.2; letter-spacing: .06em; cursor: pointer; }
 .mj-controls button + button { border-left: 1px solid #eee8df28; }
 .mj-controls button:hover { color: #ff6b7b; }
 .mj-controls button:focus-visible { outline: 2px solid #ff6b7b; outline-offset: 3px; border-radius: 22px; }
