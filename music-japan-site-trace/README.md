@@ -41,6 +41,27 @@ npm run check
 
 ## 重要
 
-- このディレクトリは保存専用です
-- デプロイ設定、ホスティング設定、公開処理は含めていません
-- 既存リポジトリの他ディレクトリには変更を加えていません
+## 現在の生成フロー（2026-09-19）
+
+このディレクトリは現在、Cloudflare Pages本番のビルド元です
+上記は取得時点の説明です
+
+1. `dist/` は元サイトを保存した入力スナップショット（通常のビルド生成物ではありません）
+2. `npm run build:deploy` → `scripts/build-deploy.mjs` が `dist/` を `deploy-dist/` にコピー
+3. `scripts/build-experience.mjs` が `src/` の演出ソースをesbuildでバンドルして `deploy-dist/assets/` に生成
+4. 保存HTML・Reactバンドルに既存の文言・ナビ・SEO修正を適用し、内部ページを生成
+5. Cloudflare Pagesは `deploy-dist/` を公開
+
+新しい演出は `src/` を編集してください。`deploy-dist/` は毎回再生成され、Gitには含めません
+旧手書き演出 `dist/assets/music-japan-experience.{js,css}` は `src/` に移管しました
+保存済みGSAP/ScrollTrigger 3.15.0はそのまま再利用し、二重にバンドルしません
+
+```bash
+npm ci
+npm run check
+node --test tests/*.test.mjs
+npm run build:deploy
+```
+
+Three.js背景は別チャンクとして遅延読込されます。背景の読込に失敗してもHTML本文・CSSの盤と波形は表示されます
+詳細な変更・性能検証・ロールバック: `DESIGN-IMMERSIVE.md`
