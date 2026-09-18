@@ -19,6 +19,7 @@ const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
 const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
 const PAGES_STYLESHEET_URL = "/assets/music-japan-pages.css?v=20260914";
 const MOBILE_STYLESHEET_URL = "/assets/music-japan-mobile.css?v=20260917";
+const EXPERIENCE_VERSION = "20260918";
 const LAST_MODIFIED = "2026-09-17";
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
 const BATON_URL = "https://baton.music-japan.com/profile/";
@@ -351,13 +352,13 @@ function patchClientBundle() {
   bundle = replaceRequired(
     bundle,
     "if(a||l)return;",
-    "if(a||l||window.matchMedia(`(max-width: 760px)`).matches)return;",
+    "if(a||l||document.documentElement.hasAttribute(`data-mj-experience`)||window.matchMedia(`(max-width: 760px)`).matches)return;",
     "mobile motion budget"
   );
   bundle = replaceRequired(
     bundle,
     "if(n||i?.saveData)return;",
-    "if(n||i?.saveData||window.matchMedia(`(max-width: 760px)`).matches)return;",
+    "if(n||i?.saveData||document.documentElement.hasAttribute(`data-mj-experience`)||window.matchMedia(`(max-width: 760px)`).matches)return;",
     "mobile WebGL budget"
   );
   bundle = replaceRequired(
@@ -1066,6 +1067,21 @@ for (const contentPage of contentPageFiles) {
 
 const sitemapPath = join(output, "sitemap.xml");
 writeFileSync(sitemapPath, renderSitemap());
+
+// An additive presentation layer: all editorial copy, URLs and SEO remain intact.
+// Set the marker before React runs so only one animation engine owns the page.
+for (const path of [...publicHtmlFiles, ...profileHtmlFiles.map(p => p.path), ...contentPageFiles.map(p => p.path)]) {
+  const fullPath = join(output, path);
+  let html = readFileSync(fullPath, "utf8");
+  html = html.replace("<html ", '<html data-mj-experience="vinyl" ');
+  html = html.replace("</head>", `<link rel="stylesheet" href="/assets/music-japan-experience.css?v=${EXPERIENCE_VERSION}"/><script defer src="/assets/music-japan-experience.js?v=${EXPERIENCE_VERSION}"></script></head>`);
+  writeFileSync(fullPath, html);
+}
+
+// Preview-only responsive review: never emitted by a production build.
+if (process.env.CF_PAGES_BRANCH === "chatgpt/music-japan-cinematic-20260918") {
+  writeFileSync(join(output, "design-review.html"), `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex,nofollow"><title>Music Japan responsive review</title><style>body{margin:0;background:#252525;color:#eee;font:14px system-ui}header{padding:20px;position:sticky;top:0;background:#252525;z-index:2}main{display:flex;gap:24px;padding:24px;align-items:start}iframe{display:block;height:844px;border:1px solid #777;background:#050506}label{display:block;margin-bottom:14px}select{padding:8px}</style></head><body><header>Responsive preview — production content <select aria-label="Page"><option value="/">日本語 TOP</option><option value="/en/">English TOP</option><option value="/media/">メディア</option><option value="/profile/">プロフィール</option><option value="/contact/">お問い合わせ</option></select></header><main><section><label>320 px</label><iframe title="320 pixel mobile" width="320" src="/"></iframe></section><section><label>390 px</label><iframe title="390 pixel mobile" width="390" src="/"></iframe></section><section><label>768 px</label><iframe title="768 pixel tablet" width="768" src="/"></iframe></section></main><script>document.querySelector('select').addEventListener('change',e=>document.querySelectorAll('iframe').forEach(f=>f.src=e.target.value))</script></body></html>`);
+}
 
 for (const relativePath of publicHtmlFiles) {
   const html = readFileSync(join(output, relativePath), "utf8");
