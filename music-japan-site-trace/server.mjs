@@ -3,7 +3,7 @@ import { createServer } from "node:http";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const root = join(fileURLToPath(new URL(".", import.meta.url)), "dist");
+const root = join(fileURLToPath(new URL(".", import.meta.url)), process.argv.includes("--deploy") ? "deploy-dist" : "dist");
 const port = Number(process.env.PORT || 4173);
 
 const virtualFiles = new Map([
@@ -68,7 +68,7 @@ const server = createServer((request, response) => {
   const url = new URL(request.url || "/", `http://${request.headers.host || "localhost"}`);
   const virtual = virtualFiles.get(url.pathname);
 
-  if (virtual) {
+  if (virtual && !existsSync(join(root, url.pathname))) {
     const size = virtual.reduce((total, path) => total + statSync(join(root, path)).size, 0);
     response.writeHead(200, {
       "content-type": "image/png",

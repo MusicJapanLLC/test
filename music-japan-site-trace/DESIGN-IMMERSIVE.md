@@ -46,7 +46,14 @@ Gyroscope follows only if the browser already permits events without a permissio
 
 ## Validation and release status
 
-- Quality monitor unit tests: 4 passed (60fps, ordered degradation, brief dip/suspension, reset)
+- Unit tests: 5 passed (60fps, ordered degradation, brief dip/suspension, reset, offscreen/hidden rAF cancellation and disposal)
+- All 16 generated pages: editorial text, metadata, links identical to baseline; robots/sitemap/llms/llms-full identical
+- Preview: 320/390/768px iframe layouts without horizontal or heading overflow; mobile menu works; effect buttons absent
+- Japanese/English hero titles render as 16 animated characters with a complete accessible heading label
+- Scroll to lower content: visible data-reveal elements reach opacity 1 and clear transforms
+- Browser WebGL is disabled: static fallback verified, real GLSL rendering / GPU FPS / context restore remain unverified
+- English React #418 warning also exists in baseline; content and motion enhancement recover correctly
+- Unthrottled initial preview LCP sample 1152ms, warm reload sample 604ms; these are NOT CPU 4x or comparable baseline measurements and do not establish a performance pass
 - Build reports additional JS bytes separately from reused assets and total loaded JS
 - Additional JS gzip ceiling: 150 KiB; build fails when exceeded
 - No physical iPhone testing performed; user will perform that final check
@@ -58,6 +65,7 @@ Gyroscope follows only if the browser already permits events without a permissio
 ## Manual Chrome DevTools measurement
 
 1. Use the preview URL and baseline `https://927e61e3.music-japan.pages.dev/`, same Chrome/machine/network
+   Alternatively build locally and `npm run preview` (http://127.0.0.1:4173); use the same hosting conditions for baseline and new edition
 2. Device toolbar: 390 x 844, DPR 3; Performance CPU: **4x slowdown**, no network throttle; disable cache
 3. For preview append `?mj-diagnostics=1` to show measured frame windows, quality stage, renderer ratio, loop state and LCP
 4. Clear the intro sessionStorage entry for first-visit measurements; record 5 cold navigation runs per version and compare median LCP

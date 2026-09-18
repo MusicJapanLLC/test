@@ -5,8 +5,10 @@ import { WebGLRenderer } from 'three';
 export const isMobile = () => matchMedia('(pointer: coarse)').matches || innerWidth <= 760;
 export const pixelRatioCap = () => isMobile() ? 1.25 : 1.75;
 export function makeRenderer(canvas) {
-  const renderer = new WebGLRenderer({ canvas, alpha: true, antialias: false,
-    powerPreference: isMobile() ? 'low-power' : 'high-performance', stencil: false, depth: false });
+  const options={alpha:true,antialias:false,powerPreference:isMobile()?'low-power':'high-performance',stencil:false,depth:false};
+  const context=canvas.getContext('webgl2',options);
+  if(!context)throw Error('WebGL2 unavailable');
+  const renderer = new WebGLRenderer({ canvas, context, ...options });
   renderer.setPixelRatio(Math.min(devicePixelRatio || 1, pixelRatioCap()));
   renderer.setClearColor(0x0a0a0a, 0);
   return renderer;
@@ -73,7 +75,7 @@ export function pointerTracker(target) {
     raw.y = Math.max(-1, Math.min(1, (e.beta - 45) / 45));
   };
   target.addEventListener('pointermove', pointer, { passive: true });
-  // No intrusive iOS permission prompt. On permission-gated iOS use touch parallax.
+  // No intrusive iOS permission prompt. Permission-gated iOS keeps ambient motion.
   const gyroAllowed = typeof DeviceOrientationEvent !== 'undefined' && !DeviceOrientationEvent.requestPermission;
   if (gyroAllowed) addEventListener('deviceorientation', orientation, { passive: true });
   return { update(delta) {

@@ -192,6 +192,7 @@ background:repeating-radial-gradient(ellipse at center,transparent 0 28px,#e8123
 [data-mj-motion="on"] .mj-in-view .mj-dust i { animation:mj-drift 12s ease-in-out infinite alternate;animation-delay:calc(var(--dust-index)*-.37s); }
 [data-mj-background="webgl"] .mj-field svg,[data-mj-background="webgl"] .mj-dust { visibility:hidden;animation:none; }
 [data-mj-background="webgl"] .mj-dust i { animation:none; }
+[data-mj-background="static"] .mj-field svg,[data-mj-background="static"] .mj-dust i { animation:none!important; }
 .mj-intro-line { position:absolute;top:43%;left:-10%;width:120%;height:1px;background:linear-gradient(90deg,transparent,#e8123c 24%,#eee8df 60%,transparent);box-shadow:0 0 22px #e8123c;transform-origin:left;opacity:0; }
 @keyframes mj-flow { from { transform:translateY(-12px) rotate(-1deg); } to { transform:translateY(14px) rotate(1deg); } }
 @keyframes mj-drift { from { transform:translate3d(0,-8px,0); } to { transform:translate3d(5px,8px,0); } }

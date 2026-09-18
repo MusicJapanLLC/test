@@ -43,9 +43,13 @@ export function createMotion({hero, repeat, report}) {
     const trace=hero.querySelector('.mj-intro-line');
     const lead=hero.querySelector('.hero__lead'),sub=hero.querySelector('.hero__sub');
     const ctas=[...hero.querySelectorAll('.hero__actions .button')];
-    const tl=gsap.timeline({onComplete:()=>{hero.dataset.mjIntro='complete';report({intro:'complete'});}});
+    const introStart=performance.now();
+    const tl=gsap.timeline({onComplete:()=>{
+      hero.dataset.mjIntro='complete';gsap.set(orbit,{clearProps:'transform,opacity'});
+      report({intro:'complete',introElapsedMs:Math.round(performance.now()-introStart)});
+    }});
     hero.dataset.mjIntro=repeat?'short':'full';
-    report({intro:repeat?'short / 0.6s':'full / 2.0s'});
+    report({intro:repeat?'short / 0.6s':'full / 2.0s',introVariant:repeat?'repeat':'first',introPlannedMs:repeat?600:2000});
     // Hero HTML is present before this independent enhancement and never waits for WebGL.
     if(repeat){
       tl.fromTo(chars,{y:18,opacity:0},{y:0,opacity:1,stagger:.008,duration:.3,ease:'mj-wave'},0)

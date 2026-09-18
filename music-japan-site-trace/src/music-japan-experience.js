@@ -68,7 +68,7 @@ async function configure(){
     if(version!==generation||reduce.matches||saver)return;
     try{const module=await import('./hero-webgl.js');
       if(version===generation)scene=module.createHeroScene(hero,report);
-    }catch(error){report({mode:'css',reason:'webgl-import-error'});}
+    }catch(error){hero.dataset.mjBackground='static';report({mode:'static',reason:'webgl-import-error'});}
   };
   if('requestIdleCallback'in window)requestIdleCallback(load,{timeout:1600});else setTimeout(load,200);
 }

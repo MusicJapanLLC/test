@@ -61,7 +61,9 @@ npm ci
 npm run check
 node --test tests/*.test.mjs
 npm run build:deploy
+npm run preview
 ```
 
 Three.js背景は別チャンクとして遅延読込されます。背景の読込に失敗してもHTML本文・CSSの盤と波形は表示されます
+`npm start` は取得時の入力スナップショット、`npm run preview` はビルド後の公開用サイトを表示します
 詳細な変更・性能検証・ロールバック: `DESIGN-IMMERSIVE.md`

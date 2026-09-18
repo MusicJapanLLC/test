@@ -77,8 +77,9 @@ export function createHeroScene(hero, report = () => {}) {
     if(locked) return;
     locked=true; clearTimeout(restoreTimer); loop?.dispose(); stopResize(); pointer.dispose();
     canvas.remove(); renderer?.dispose();
-    hero.dataset.mjBackground='css';
-    state({mode:'css',reason,raf:'stopped',stage:3});
+    const mode=reason==='average-fps-below-45'?'css':'static';
+    hero.dataset.mjBackground=mode;
+    state({mode,reason,raf:'stopped',stage:3});
   }
   function size(w=width,h=height) {
     width=w; height=h;
@@ -104,7 +105,7 @@ export function createHeroScene(hero, report = () => {}) {
     state({mode:'restoring',raf:'stopped'});
     try {
       const ext=renderer.getContext().getExtension('WEBGL_lose_context');
-      if(ext) setTimeout(()=>{if(!locked&&!disposed){try{ext.restoreContext();}catch{fallback('restore-error');}}},100);
+      if(ext) setTimeout(()=>{if(!locked&&!disposed&&renderer.getContext().isContextLost()){try{ext.restoreContext();}catch{fallback('restore-error');}}},100);
       restoreTimer=setTimeout(()=>fallback('restore-timeout'),2000);
     } catch { fallback('restore-error'); }
   }
