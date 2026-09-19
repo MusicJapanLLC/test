@@ -1,0 +1,5 @@
+Redeploy trigger for Music Japan production
+
+Reason: PR #827 merged into music-japan-production at 2026-09-20 00:30 JST, but Cloudflare Pages default domain and music-japan.com continued serving the previous build when checked after merge.
+
+This file intentionally changes no site behavior. It exists only to create a fresh production-branch commit through the normal PR workflow and re-trigger the existing Cloudflare Pages Git integration.
