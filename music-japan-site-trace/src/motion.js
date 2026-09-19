@@ -8,17 +8,18 @@ export function createMotion({hero, repeat, report}) {
   gsap.registerPlugin(ScrollTrigger, CustomEase);
   CustomEase.create('mj-wave','0.16,1,0.3,1');
   const cleanups=[], timelines=[], triggers=[];
+  let advanceIntro=null, introClockResume=()=>{};
   let disposed=false;
   const lenis=new Lenis({duration:1.1,lerp:0,
     easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)),smoothWheel:true,syncTouch:false,
     autoRaf:false,anchors:true,prevent:node=>Boolean(node.closest('textarea,select,[data-lenis-prevent],.site-nav.is-open'))});
   // Native touch inertia is preserved on iOS (syncTouch deliberately false).
   lenis.on('scroll',ScrollTrigger.update);
-  const tick=time=>lenis.raf(time*1000);
+  const tick=time=>{lenis.raf(time*1000);advanceIntro?.();};
   const wake=()=>{if(!document.hidden&&!disposed)gsap.ticker.add(tick);};
   const sleep=()=>{gsap.ticker.remove(tick);};
   const visibility=()=>{if(document.hidden){sleep();timelines.forEach(t=>t.pause());}
-    else {wake();timelines.filter(t=>t.progress()<1).forEach(t=>t.resume());ScrollTrigger.refresh();}};
+    else {introClockResume();wake();timelines.filter(t=>t.progress()<1).forEach(t=>t.resume());ScrollTrigger.refresh();}};
   wake();gsap.ticker.lagSmoothing(0);
   document.addEventListener('visibilitychange',visibility);
   cleanups.push(()=>{sleep();lenis.destroy();document.removeEventListener('visibilitychange',visibility);});
@@ -43,10 +44,11 @@ export function createMotion({hero, repeat, report}) {
     const trace=hero.querySelector('.mj-intro-line');
     const lead=hero.querySelector('.hero__lead'),sub=hero.querySelector('.hero__sub');
     const ctas=[...hero.querySelectorAll('.hero__actions .button')];
-    const introStart=performance.now();
-    const tl=gsap.timeline({onComplete:()=>{
+    let introElapsed=0, introPrevious=performance.now();
+    const tl=gsap.timeline({paused:true,onComplete:()=>{
+      advanceIntro=null;
       hero.dataset.mjIntro='complete';gsap.set(orbit,{clearProps:'transform,opacity'});
-      report({intro:'complete',introElapsedMs:Math.round(performance.now()-introStart)});
+      report({intro:'complete',introElapsedMs:Math.round(introElapsed)});
     }});
     hero.dataset.mjIntro=repeat?'short':'full';
     report({intro:repeat?'short / 0.6s':'full / 2.0s',introVariant:repeat?'repeat':'first',introPlannedMs:repeat?600:2000});
@@ -64,7 +66,14 @@ export function createMotion({hero, repeat, report}) {
       // End at exactly two seconds, without blocking interaction or adding a loader.
       tl.to({}, {duration:.0},2);
     }
-    timelines.push(tl);
+    // Use visible wall time so shared GSAP clock adjustments cannot stretch the intro.
+    // Hidden time is excluded; the existing ticker stops until the tab is visible.
+    introClockResume=()=>{introPrevious=performance.now();};
+    advanceIntro=()=>{
+      const now=performance.now();introElapsed+=now-introPrevious;introPrevious=now;
+      tl.totalTime(Math.min(introElapsed/1000,repeat?.6:2));
+    };
+    cleanups.push(()=>{advanceIntro=null;tl.kill();});
     cleanups.push(()=>gsap.set([orbit,trace,lead,sub,...ctas].filter(Boolean),{clearProps:'transform,opacity'}));
   }
 
