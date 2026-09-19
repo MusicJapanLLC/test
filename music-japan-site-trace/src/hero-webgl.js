@@ -42,7 +42,7 @@ void main(){
  vAlpha=(.12+position.z*.38)*(.75+.25*sin(uTime*.35+seed*40.));
 }`;
 const particleFragment = `precision mediump float;varying float vAlpha;
-void main(){float d=length(gl_PointCoord-.5);float a=smoothstep(.5,.08,d)*vAlpha;
+void main(){float d=length(gl_PointCoord-.5);float a=(1.-smoothstep(.08,.5,d))*vAlpha;
 gl_FragColor=vec4(.91,.16,.25,a);}`;
 
 export function createHeroScene(hero, report = () => {}) {
