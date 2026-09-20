@@ -15,8 +15,13 @@ const LEGACY_PAGES_URL = "https://music-japan.pages.dev";
 const DEFAULT_SITE_URL = "https://music-japan.com";
 const SITE_URL = (process.env.PUBLIC_SITE_URL || DEFAULT_SITE_URL).replace(/\/$/, "");
 const RSC_MARKER = '<script id="_R_">';
-const FAVICON_URL = "/favicon-music-japan.svg?v=20260913-final";
-const APPLE_ICON_URL = "/music-japan-symbol.png?v=20260913-final";
+// One stamp for every browser-tab asset. Bump it whenever an icon file changes:
+// a query string that stayed frozen while the rest of the site was versioned is
+// how a retired favicon survived several deploys.
+const ICON_VERSION = "20260920-canonical";
+const FAVICON_URL = `/favicon-music-japan.svg?v=${ICON_VERSION}`;
+const APPLE_ICON_URL = `/music-japan-symbol.png?v=${ICON_VERSION}`;
+const LEGACY_FAVICON_HREF = `${OLD_SITE_URL}/favicon.svg`;
 const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
 const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
 const PAGES_STYLESHEET_URL = "/assets/music-japan-pages.css?v=20260914";
@@ -850,9 +855,10 @@ function lockHomeHead(documentHtml, locale) {
       ? "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。"
       : "A music and media company in Osaka creating music, podcasts, executive interviews and editorial content.",
     ogLocale: isJa ? "ja_JP" : "en_US",
-    ogLocaleAlternate: isJa ? "en_US" : "ja_JP"
+    ogLocaleAlternate: isJa ? "en_US" : "ja_JP",
+    icons: [FAVICON_URL, APPLE_ICON_URL]
   };
-  const script = `<script id="music-japan-head-guard">(()=>{const c=${JSON.stringify(config)},head=document.head,set=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value)},one=(selector,tag,attrs)=>{const items=[...head.querySelectorAll(selector)],el=items.shift()||document.createElement(tag);for(const [name,value]of Object.entries(attrs))set(el,name,value);if(!el.isConnected)head.append(el);for(const duplicate of items)duplicate.remove()},apply=()=>{if(document.title!==c.title)document.title=c.title;one('meta[name="description"]','meta',{name:'description',content:c.description});one('meta[name="keywords"]','meta',{name:'keywords',content:c.keywords});one('meta[name="robots"]','meta',{name:'robots',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="googlebot"]','meta',{name:'googlebot',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="viewport"]','meta',{name:'viewport',content:'width=device-width, initial-scale=1, viewport-fit=cover'});one('link[rel="author"]','link',{rel:'author',href:'${SITE_URL}/'});one('link[rel="canonical"]','link',{rel:'canonical',href:c.canonical});for(const [lang,href]of Object.entries(c.alternates))one('link[rel="alternate"][hreflang="'+lang+'"]','link',{rel:'alternate',hreflang:lang,href});one('meta[property="og:title"]','meta',{property:'og:title',content:c.ogTitle});one('meta[property="og:description"]','meta',{property:'og:description',content:c.ogDescription});one('meta[property="og:url"]','meta',{property:'og:url',content:c.canonical});one('meta[property="og:site_name"]','meta',{property:'og:site_name',content:'Music Japan LLC'});one('meta[property="og:locale"]','meta',{property:'og:locale',content:c.ogLocale});one('meta[property="og:locale:alternate"]','meta',{property:'og:locale:alternate',content:c.ogLocaleAlternate});one('meta[property="og:image"]','meta',{property:'og:image',content:'${SITE_URL}/music-japan-og.png'});one('meta[property="og:image:alt"]','meta',{property:'og:image:alt',content:'Music Japan LLC — Music & Media'});one('meta[name="twitter:title"]','meta',{name:'twitter:title',content:c.ogTitle});one('meta[name="twitter:description"]','meta',{name:'twitter:description',content:c.ogDescription});one('meta[name="twitter:image"]','meta',{name:'twitter:image',content:'${SITE_URL}/music-japan-og.png'});one('link[rel="icon"]','link',{rel:'icon',type:'image/svg+xml',href:'${FAVICON_URL}'});one('link[rel="shortcut icon"]','link',{rel:'shortcut icon',type:'image/svg+xml',href:'${FAVICON_URL}'});one('link[rel="apple-touch-icon"]','link',{rel:'apple-touch-icon',href:'${APPLE_ICON_URL}'});for(const schema of document.querySelectorAll('script[type="application/ld+json"]'))if((schema.textContent||'').includes('pearly-cedar-3983.chatgpt.site'))schema.remove()};apply();const observer=new MutationObserver(apply);observer.observe(head,{childList:true,subtree:true,characterData:true,attributes:true});for(const delay of [0,500,1500,3000])setTimeout(apply,delay);addEventListener('load',()=>setTimeout(()=>{apply();observer.disconnect()},5000),{once:true});})();</script>`;
+  const script = `<script id="music-japan-head-guard">(()=>{const c=${JSON.stringify(config)},head=document.head,set=(el,name,value)=>{if(el.getAttribute(name)!==value)el.setAttribute(name,value)},one=(selector,tag,attrs)=>{const items=[...head.querySelectorAll(selector)],el=items.shift()||document.createElement(tag);for(const [name,value]of Object.entries(attrs))set(el,name,value);if(!el.isConnected)head.append(el);for(const duplicate of items)duplicate.remove()},apply=()=>{for(const link of head.querySelectorAll('link[rel~="icon"],link[rel~="apple-touch-icon"]'))if(!c.icons.includes(link.getAttribute('href')))link.remove();if(document.title!==c.title)document.title=c.title;one('meta[name="description"]','meta',{name:'description',content:c.description});one('meta[name="keywords"]','meta',{name:'keywords',content:c.keywords});one('meta[name="robots"]','meta',{name:'robots',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="googlebot"]','meta',{name:'googlebot',content:'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'});one('meta[name="viewport"]','meta',{name:'viewport',content:'width=device-width, initial-scale=1, viewport-fit=cover'});one('link[rel="author"]','link',{rel:'author',href:'${SITE_URL}/'});one('link[rel="canonical"]','link',{rel:'canonical',href:c.canonical});for(const [lang,href]of Object.entries(c.alternates))one('link[rel="alternate"][hreflang="'+lang+'"]','link',{rel:'alternate',hreflang:lang,href});one('meta[property="og:title"]','meta',{property:'og:title',content:c.ogTitle});one('meta[property="og:description"]','meta',{property:'og:description',content:c.ogDescription});one('meta[property="og:url"]','meta',{property:'og:url',content:c.canonical});one('meta[property="og:site_name"]','meta',{property:'og:site_name',content:'Music Japan LLC'});one('meta[property="og:locale"]','meta',{property:'og:locale',content:c.ogLocale});one('meta[property="og:locale:alternate"]','meta',{property:'og:locale:alternate',content:c.ogLocaleAlternate});one('meta[property="og:image"]','meta',{property:'og:image',content:'${SITE_URL}/music-japan-og.png'});one('meta[property="og:image:alt"]','meta',{property:'og:image:alt',content:'Music Japan LLC — Music & Media'});one('meta[name="twitter:title"]','meta',{name:'twitter:title',content:c.ogTitle});one('meta[name="twitter:description"]','meta',{name:'twitter:description',content:c.ogDescription});one('meta[name="twitter:image"]','meta',{name:'twitter:image',content:'${SITE_URL}/music-japan-og.png'});one('link[rel="icon"]','link',{rel:'icon',type:'image/svg+xml',href:'${FAVICON_URL}'});one('link[rel="shortcut icon"]','link',{rel:'shortcut icon',type:'image/svg+xml',href:'${FAVICON_URL}'});one('link[rel="apple-touch-icon"]','link',{rel:'apple-touch-icon',href:'${APPLE_ICON_URL}'});for(const schema of document.querySelectorAll('script[type="application/ld+json"]'))if((schema.textContent||'').includes('pearly-cedar-3983.chatgpt.site'))schema.remove()};apply();const observer=new MutationObserver(apply);observer.observe(head,{childList:true,subtree:true,characterData:true,attributes:true});for(const delay of [0,500,1500,3000])setTimeout(apply,delay);addEventListener('load',()=>setTimeout(apply,5000),{once:true});})();</script>`;
   return documentHtml + script;
 }
 
@@ -1006,11 +1012,17 @@ for (const relativePath of publicHtmlFiles) {
   const bootstrapEnd = original.indexOf("</script>", markerIndex);
   if (bootstrapEnd === -1) throw new Error(`RSC bootstrap close tag missing: ${relativePath}`);
 
-  // The marker script is the client bootstrap. The length-prefixed serialized
-  // payload starts after it and remains byte-for-byte unchanged.
+  // The marker script is the client bootstrap. The serialized payload starts after it.
   let documentHtml = original.slice(0, markerIndex);
   let rscBootstrap = original.slice(markerIndex, bootstrapEnd + "</script>".length);
-  const rscPayload = original.slice(bootstrapEnd + "</script>".length);
+  // The capture recorded the retired host's <link rel="icon">, so React put that icon
+  // back into <head> on every hydration of the two React-owned homepages. The head
+  // guard removed it again, but only after the browser had already latched on to it.
+  // Rewriting the href here means React hydrates the correct icon in the first place.
+  // Element rows in this payload carry no byte-length prefix, so the length may change.
+  const rscPayload = original
+    .slice(bootstrapEnd + "</script>".length)
+    .replaceAll(LEGACY_FAVICON_HREF, FAVICON_URL);
   const referenceCount = documentHtml.split(OLD_SITE_URL).length - 1;
   if (referenceCount === 0) throw new Error(`Expected legacy host reference missing in document HTML: ${relativePath}`);
 
@@ -1061,9 +1073,9 @@ for (const relativePath of publicHtmlFiles) {
   const isHomepage = relativePath === "index.html" || relativePath === "en/index.html";
   const rewritten = isHomepage ? documentHtml + rscBootstrap + rscPayload : documentHtml;
 
-  // Byte-for-byte protection for hydration data
-  if (isHomepage && rewritten.slice(documentHtml.length + rscBootstrap.length) !== rscPayload) {
-    throw new Error(`RSC payload changed unexpectedly: ${relativePath}`);
+  // The retired favicon must not survive anywhere in the page, hydration data included.
+  if (rewritten.includes(LEGACY_FAVICON_HREF)) {
+    throw new Error(`Retired favicon href survived: ${relativePath}`);
   }
 
   writeFileSync(fullPath, rewritten);
@@ -1262,5 +1274,5 @@ console.log(`Canonical host: ${SITE_URL}`);
 console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
 console.log(`Patched homepage content and client bundle: ${patchedClientBundle.name}?${versionedClientGraph.version}`);
 console.log(`Safely rewrote ${rewrittenReferences} SEO references and generated ${profileHtmlFiles.length + contentPageFiles.length} internal pages.`);
-console.log(`Preserved all RSC hydration payloads byte-for-byte.`);
+console.log(`Preserved RSC hydration payloads; only the retired favicon href was rewritten.`);
 console.log(`Validated ${machineReadableFiles.length} SEO/AIO files, ${localAssetRefs.size} local assets, and required branding files.`);
