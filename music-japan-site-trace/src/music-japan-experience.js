@@ -60,7 +60,7 @@ async function configure(){
   try{
     const module=await import('./motion.js');
     if(version!==generation)return;
-    motion=module.createMotion({hero,repeat,report});
+    motion=module.createMotion({hero,repeat,report,introDelay:introDelay()});
   }catch(error){report({scroll:'native fallback',motionError:String(error)});}
   if(!hero||version!==generation)return;
   // Separate network graph: text/intro never wait for Three.js or its GPU setup.
@@ -88,4 +88,30 @@ function boot(){
 document.addEventListener('visibilitychange',()=>{root.dataset.mjVisibility=document.hidden?'hidden':'visible';});
 // The preserved homepage is React-owned. Wait for its committed effect before DOM decoration.
 const home=/^\/(?:en\/?)?$/.test(location.pathname)||/^\/(?:en\/)?index\.html$/.test(location.pathname);
+
+// The curtain has to cover the first paint, so it is built during module evaluation
+// instead of waiting for React's ready event. Only the first visit of a session sees
+// it, it is inert to pointer and assistive technology, and it always clears itself.
+let curtainStart=0;
+function dropCurtain(){
+  if(!home||reduce.matches||saver)return;
+  try{if(sessionStorage.getItem('mj-intro-seen')==='1')return;}catch{return;}
+  const host=document.body;
+  if(!host)return;
+  const curtain=document.createElement('div');
+  curtain.className='mj-curtain';curtain.setAttribute('aria-hidden','true');
+  const bloom=document.createElement('div');bloom.className='mj-curtain__bloom';
+  const line=document.createElement('div');line.className='mj-curtain__line';
+  curtain.append(bloom,line);host.append(curtain);
+  root.dataset.mjCurtain='run';curtainStart=performance.now();
+  let cleared=false;
+  const clear=()=>{if(cleared)return;cleared=true;curtain.remove();delete root.dataset.mjCurtain;};
+  curtain.addEventListener('animationend',event=>{if(event.animationName==='mj-curtain-lift')clear();});
+  setTimeout(clear,2600);
+}
+dropCurtain();
+
+// Hand the hero timeline whatever is left of the curtain, so the headline starts
+// moving as the curtain clears instead of playing behind it.
+const introDelay=()=>curtainStart?Math.max(0,.72-(performance.now()-curtainStart)/1000):0;
 if(!home||root.dataset.mjReady==='true')boot();else addEventListener('music-japan:ready',boot,{once:true});
