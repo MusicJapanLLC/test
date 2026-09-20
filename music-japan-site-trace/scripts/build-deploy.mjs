@@ -1130,6 +1130,7 @@ writeFileSync(redirectsPath, businessRedirects + "\n");
 
 // An additive presentation layer: all editorial copy, URLs and SEO remain intact.
 // Set the marker before React runs so only one animation engine owns the page.
+const curtainBootstrap = `<script id="music-japan-curtain-bootstrap">(()=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches||navigator.connection?.saveData)return;const home=/^\\/(?:en\\/?)?$/.test(location.pathname)||/^\\/(?:en\\/)?index\\.html$/.test(location.pathname);let seen=false;try{seen=sessionStorage.getItem('mj-intro-seen')==='1'}catch{}document.documentElement.dataset.mjCurtain=home?(seen?'short':'full'):'inner';setTimeout(()=>{delete document.documentElement.dataset.mjCurtain},3600)})()</script>`;
 for (const path of [...publicHtmlFiles, ...profileHtmlFiles.map(p => p.path), ...contentPageFiles.map(p => p.path)]) {
   const fullPath = join(output, path);
   let html = readFileSync(fullPath, "utf8");
@@ -1143,7 +1144,7 @@ for (const path of [...publicHtmlFiles, ...profileHtmlFiles.map(p => p.path), ..
     return `<footer class="${classes} footer">${contents}</footer>`;
   });
   if (!foundFooter) throw new Error(`Social footer host missing: ${path}`);
-  html = html.replace("</head>", `<link rel="stylesheet" href="/assets/music-japan-experience.css?v=${EXPERIENCE_VERSION}"/><script type="module" src="/assets/music-japan-experience.js?v=${EXPERIENCE_VERSION}"></script></head>`);
+  html = html.replace("</head>", `${curtainBootstrap}<link rel="stylesheet" href="/assets/music-japan-experience.css?v=${EXPERIENCE_VERSION}"/><script type="module" src="/assets/music-japan-experience.js?v=${EXPERIENCE_VERSION}"></script></head>`);
   writeFileSync(fullPath, html);
 }
 

@@ -1,7 +1,7 @@
 const root=document.documentElement;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)');
 const saver=Boolean(navigator.connection?.saveData);
-let booted=false,scene=null,motion=null,generation=0,repeat=false;
+let booted=false,scene=null,motion=null,pointerFx=null,generation=0,repeat=false;
 const status={mode:'css',stage:0,raf:'stopped',fps:'not measured',lcp:'pending',scroll:'native'};
 let diagnostic=null;
 function report(values){Object.assign(status,values);if(diagnostic)diagnostic.textContent=JSON.stringify(status,null,2);}
@@ -50,13 +50,67 @@ function enhanceDecorations(){
     .forEach(el=>el.setAttribute('data-reveal',''));
 }
 
+function createPointerFollower(){
+  if(!matchMedia('(hover: hover) and (pointer: fine)').matches)return null;
+  let ring=document.querySelector('.signal-cursor');
+  let dot=document.querySelector('.signal-cursor__dot');
+  const ownsRing=!ring,ownsDot=!dot;
+  if(!ring){ring=document.createElement('div');ring.className='signal-cursor';ring.setAttribute('aria-hidden','true');document.body.append(ring);}
+  if(!ring.querySelector('i'))ring.append(document.createElement('i'));
+  let label=ring.querySelector('b');
+  if(!label){label=document.createElement('b');ring.append(label);}
+  if(!dot){dot=document.createElement('span');dot.className='signal-cursor__dot';dot.setAttribute('aria-hidden','true');document.body.append(dot);}
+  root.classList.add('has-signal-cursor');
+  let x=innerWidth/2,y=innerHeight/2,targetX=x,targetY=y,raf=0,visible=false,disposed=false;
+  const frame=()=>{
+    if(disposed)return;
+    const dx=targetX-x,dy=targetY-y;
+    x+=dx*.18;y+=dy*.18;
+    ring.style.transform=`translate3d(${x}px,${y}px,0)`;
+    if(Math.abs(dx)<.05&&Math.abs(dy)<.05){x=targetX;y=targetY;ring.style.transform=`translate3d(${x}px,${y}px,0)`;raf=0;return;}
+    raf=requestAnimationFrame(frame);
+  };
+  const move=event=>{
+    targetX=event.clientX;targetY=event.clientY;
+    dot.style.transform=`translate3d(${targetX}px,${targetY}px,0)`;
+    if(!visible){visible=true;ring.classList.add('is-visible');dot.classList.add('is-visible');}
+    if(!raf)raf=requestAnimationFrame(frame);
+  };
+  const over=event=>{
+    const target=event.target instanceof Element?event.target:null;
+    const release=target?.closest('.release-card,.related-card');
+    const audio=target?.closest('.release-experience__play');
+    const interactive=target?.closest('a,button,input,select,textarea,label');
+    ring.classList.toggle('is-interactive',Boolean(interactive));
+    ring.classList.toggle('is-release',Boolean(release));
+    ring.classList.toggle('is-audio',Boolean(audio));
+    label.textContent=release?'OPEN':audio?'PLAY':'';
+  };
+  const down=()=>ring.classList.add('is-pressed');
+  const up=()=>ring.classList.remove('is-pressed');
+  const leave=()=>{visible=false;ring.classList.remove('is-visible');dot.classList.remove('is-visible');};
+  addEventListener('pointermove',move,{passive:true});
+  document.addEventListener('pointerover',over,{passive:true});
+  addEventListener('pointerdown',down,{passive:true});
+  addEventListener('pointerup',up,{passive:true});
+  document.documentElement.addEventListener('pointerleave',leave);
+  return {dispose(){disposed=true;cancelAnimationFrame(raf);raf=0;
+    removeEventListener('pointermove',move);document.removeEventListener('pointerover',over);
+    removeEventListener('pointerdown',down);removeEventListener('pointerup',up);
+    document.documentElement.removeEventListener('pointerleave',leave);
+    root.classList.remove('has-signal-cursor');ring.classList.remove('is-visible','is-interactive','is-release','is-audio','is-pressed');dot.classList.remove('is-visible');
+    ring.style.removeProperty('transform');dot.style.removeProperty('transform');
+    if(ownsRing)ring.remove();if(ownsDot)dot.remove();}};
+}
+
 async function configure(){
   const version=++generation;
-  motion?.dispose();scene?.dispose();motion=null;scene=null;
+  motion?.dispose();scene?.dispose();pointerFx?.dispose();motion=null;scene=null;pointerFx=null;
   const hero=document.querySelector('.hero');
   root.dataset.mjMotion=reduce.matches||saver?'off':'on';
   if(hero)hero.dataset.mjBackground='css';
   if(reduce.matches||saver){report({mode:'static',scroll:'native',raf:'stopped',intro:'disabled'});return;}
+  pointerFx=createPointerFollower();
   try{
     const module=await import('./motion.js');
     if(version!==generation)return;
@@ -89,29 +143,40 @@ document.addEventListener('visibilitychange',()=>{root.dataset.mjVisibility=docu
 // The preserved homepage is React-owned. Wait for its committed effect before DOM decoration.
 const home=/^\/(?:en\/?)?$/.test(location.pathname)||/^\/(?:en\/)?index\.html$/.test(location.pathname);
 
-// The curtain has to cover the first paint, so it is built during module evaluation
-// instead of waiting for React's ready event. Only the first visit of a session sees
-// it, it is inert to pointer and assistive technology, and it always clears itself.
-let curtainStart=0;
+// The parser-level bootstrap in build-deploy marks the document before first paint.
+// This module supplies the animated panels and always removes both DOM and marker.
+let curtainStart=0,curtainVariant=root.dataset.mjCurtain||'';
 function dropCurtain(){
-  if(!home||reduce.matches||saver)return;
-  try{if(sessionStorage.getItem('mj-intro-seen')==='1')return;}catch{return;}
+  if(reduce.matches||saver){delete root.dataset.mjCurtain;return;}
   const host=document.body;
   if(!host)return;
+  if(!curtainVariant){
+    let seen=false;
+    try{seen=sessionStorage.getItem('mj-intro-seen')==='1';}catch{/* keep the full intro */}
+    curtainVariant=home?(seen?'short':'full'):'inner';
+    root.dataset.mjCurtain=curtainVariant;
+  }
   const curtain=document.createElement('div');
-  curtain.className='mj-curtain';curtain.setAttribute('aria-hidden','true');
+  curtain.className=`mj-curtain mj-curtain--${curtainVariant}`;curtain.setAttribute('aria-hidden','true');
+  const top=document.createElement('div');top.className='mj-curtain__panel mj-curtain__panel--top';
+  const bottom=document.createElement('div');bottom.className='mj-curtain__panel mj-curtain__panel--bottom';
   const bloom=document.createElement('div');bloom.className='mj-curtain__bloom';
   const line=document.createElement('div');line.className='mj-curtain__line';
-  curtain.append(bloom,line);host.append(curtain);
-  root.dataset.mjCurtain='run';curtainStart=performance.now();
+  const mark=document.createElement('div');mark.className='mj-curtain__mark';
+  const symbol=document.createElement('span');symbol.className='mj-curtain__symbol';
+  const word=document.createElement('strong');word.className='mj-curtain__word';word.textContent='MUSIC JAPAN';
+  const pageTitle=document.querySelector('.inner-page__hero h1,.profile-hero h1')?.textContent?.trim();
+  const caption=document.createElement('small');caption.textContent=home?'MUSIC / MEDIA / RECORD':pageTitle||'MUSIC / MEDIA';
+  mark.append(symbol,word,caption);curtain.append(top,bottom,bloom,line,mark);host.append(curtain);
+  curtainStart=performance.now();
   let cleared=false;
   const clear=()=>{if(cleared)return;cleared=true;curtain.remove();delete root.dataset.mjCurtain;};
-  curtain.addEventListener('animationend',event=>{if(event.animationName==='mj-curtain-lift')clear();});
-  setTimeout(clear,2600);
+  curtain.addEventListener('animationend',event=>{if(event.animationName==='mj-curtain-open-bottom')clear();});
+  setTimeout(clear,curtainVariant==='full'?2600:1600);
 }
 dropCurtain();
 
 // Hand the hero timeline whatever is left of the curtain, so the headline starts
 // moving as the curtain clears instead of playing behind it.
-const introDelay=()=>curtainStart?Math.max(0,.72-(performance.now()-curtainStart)/1000):0;
+const introDelay=()=>curtainStart?Math.max(0,(curtainVariant==='full'?1.02:.2)-(performance.now()-curtainStart)/1000):0;
 if(!home||root.dataset.mjReady==='true')boot();else addEventListener('music-japan:ready',boot,{once:true});
