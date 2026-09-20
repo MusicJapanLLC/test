@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildExperience } from "./build-experience.mjs";
+import { renderSocialLinks, renderSocialInner } from "./social-links.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const source = join(root, "dist");
@@ -20,7 +21,7 @@ const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
 const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
 const PAGES_STYLESHEET_URL = "/assets/music-japan-pages.css?v=20260914";
 const MOBILE_STYLESHEET_URL = "/assets/music-japan-mobile.css?v=20260917";
-const EXPERIENCE_VERSION = "20260920-business-hero";
+const EXPERIENCE_VERSION = "20260920-footer-glyph-v2";
 const LAST_MODIFIED = "2026-09-17";
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
 const BATON_URL = "https://baton.music-japan.com/profile/";
@@ -357,6 +358,9 @@ function patchClientBundle() {
   for (const [search, replacement, label] of bundleReplacements) {
     bundle = replaceRequired(bundle, search, replacement, label);
   }
+  const socialNode = '(0,a.jsx)(`nav`,{className:`mj-socials`,"aria-label":e===`ja`?`SNSリンク`:`Social links`,dangerouslySetInnerHTML:{__html:e===`ja`?' + JSON.stringify(renderSocialInner("ja")) + ':' + JSON.stringify(renderSocialInner("en")) + '}}),';
+  bundle = replaceRequired(bundle, '(0,a.jsxs)(`div`,{className:`site-footer__bottom`', socialNode + '(0,a.jsxs)(`div`,{className:`site-footer__bottom`', 'Hydration-safe social footer');
+  bundle = replaceRequired(bundle, 'className:`site-footer content-frame`', 'className:`site-footer content-frame footer`', 'Shared footer class');
   bundle = replaceRequired(bundle, '[[`音楽`,`/music/`],[`メディア`,`/media/`],[`私たちについて`,`/about/`],', '[[`事業概要`,`/business/`],', 'Unified Japanese business navigation');
   bundle = replaceRequired(bundle, '[[`Music`,`/en/music/`],[`Media`,`/en/media/`],[`About`,`/en/about/`],', '[[`Our Business`,`/en/business/`],', 'Unified English business navigation');
 
@@ -387,7 +391,7 @@ function patchClientBundle() {
   );
 
   const homepageFounderStart = bundle.indexOf('(0,a.jsxs)(`section`,{className:`founder content-frame`');
-  const homepageFooterStart = bundle.indexOf('(0,a.jsxs)(`footer`,{className:`site-footer content-frame`', homepageFounderStart);
+  const homepageFooterStart = bundle.indexOf('(0,a.jsxs)(`footer`,{className:`site-footer content-frame footer`', homepageFounderStart);
   if (homepageFounderStart === -1 || homepageFooterStart === -1 || bundle[homepageFounderStart - 1] !== ",") {
     throw new Error("Could not remove the homepage founder and contact sections");
   }
@@ -935,6 +939,10 @@ function renderSitemap() {
 
 rmSync(output, { recursive: true, force: true });
 cpSync(source, output, { recursive: true });
+// Remove retired output even if an older snapshot includes these directories.
+for (const prefix of ["", "en/"]) {
+  for (const page of ["music", "media", "about"]) rmSync(join(output, prefix, page), { recursive: true, force: true });
+}
 await buildExperience(output);
 
 const virtualFiles = new Map([
@@ -980,8 +988,8 @@ const profileHtmlFiles = [
   { path: "en/profile/index.html", locale: "en" }
 ];
 const contentPageFiles = [
-  ...["business", "music", "media", "about", "contact"].map((page) => ({ path: `${page}/index.html`, locale: "ja", page })),
-  ...["business", "music", "media", "about", "contact"].map((page) => ({ path: `en/${page}/index.html`, locale: "en", page }))
+  ...["business", "contact"].map((page) => ({ path: `${page}/index.html`, locale: "ja", page })),
+  ...["business", "contact"].map((page) => ({ path: `en/${page}/index.html`, locale: "en", page }))
 ];
 const homeDocuments = new Map();
 
@@ -1091,17 +1099,7 @@ writeFileSync(sitemapPath, renderSitemap());
 const redirectsPath = join(output, "_redirects");
 const businessRedirects = ["", "/en"].flatMap(prefix => ["music", "media", "about"].flatMap(page =>
   [`${prefix}/${page} ${prefix}/business/ 301`, `${prefix}/${page}/ ${prefix}/business/ 301`])).join("\n");
-writeFileSync(redirectsPath, (existsSync(redirectsPath) ? readFileSync(redirectsPath, "utf8") + "\n" : "") + businessRedirects + "\n");
-
-const socialLinks = [
-  ["LinkedIn", "https://www.linkedin.com/in/%E5%8F%8B%E7%94%9F-%E5%A3%81%E8%B0%B7-4096373a7/", '<path d="M5 9v10M5 5v.1M10 19V9h4v1.5c1-2.5 6-2.5 6 2V19M14 12v7"/>'],
-  ["Instagram", "https://www.instagram.com/music.japan.llc2/", '<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/>'],
-  ["X", "https://x.com/Music_Japan_LLC", '<path d="M4 4h4l12 16h-4L4 4ZM20 4l-7 8M4 20l7-8"/>']
-];
-function renderSocialLinks(locale) {
-  const suffix = locale === "ja" ? "（新しいタブで開きます）" : " (opens in a new tab)";
-  return `<nav class="mj-socials content-frame" aria-label="${locale === "ja" ? "SNSリンク" : "Social links"}"><span class="mj-socials__label">FOLLOW / MUSIC JAPAN</span><div>${socialLinks.map(([name, href, icon]) => `<a href="${href}" target="_blank" rel="noopener noreferrer" aria-label="${name}${suffix}" title="${name}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg><span>${name}</span></a>`).join("")}</div></nav>`;
-}
+writeFileSync(redirectsPath, businessRedirects + "\n");
 
 // An additive presentation layer: all editorial copy, URLs and SEO remain intact.
 // Set the marker before React runs so only one animation engine owns the page.
@@ -1110,7 +1108,14 @@ for (const path of [...publicHtmlFiles, ...profileHtmlFiles.map(p => p.path), ..
   let html = readFileSync(fullPath, "utf8");
   html = html.replace("<html ", '<html data-mj-experience="vinyl" ');
   const socialFooter = renderSocialLinks(path.startsWith("en/") ? "en" : "ja");
-  html = html.includes("</body>") ? html.replace("</body>", `${socialFooter}</body>`) : html + socialFooter;
+  let foundFooter = false;
+  html = html.replace(/<footer class="([^"]*)">([\s\S]*?)<\/footer>/, (_, classes, body) => {
+    foundFooter = true;
+    const marker = '<div class="site-footer__bottom">';
+    const contents = body.includes(marker) ? body.replace(marker, socialFooter + marker) : socialFooter + `<div class="mj-footer-legal">${body}</div>`;
+    return `<footer class="${classes} footer">${contents}</footer>`;
+  });
+  if (!foundFooter) throw new Error(`Social footer host missing: ${path}`);
   html = html.replace("</head>", `<link rel="stylesheet" href="/assets/music-japan-experience.css?v=${EXPERIENCE_VERSION}"/><script type="module" src="/assets/music-japan-experience.js?v=${EXPERIENCE_VERSION}"></script></head>`);
   writeFileSync(fullPath, html);
 }
