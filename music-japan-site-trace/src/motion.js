@@ -4,7 +4,7 @@ import { CustomEase } from 'gsap/CustomEase';
 import Lenis from 'lenis';
 
 // Same libraries and easing as baton/src/lib/motion.ts, with cleanup and reduced-motion support.
-export function createMotion({hero, repeat, report}) {
+export function createMotion({hero, repeat, report, introDelay = 0}) {
   gsap.registerPlugin(ScrollTrigger, CustomEase);
   CustomEase.create('mj-wave','0.16,1,0.3,1');
   const cleanups=[], timelines=[], triggers=[];
@@ -71,10 +71,45 @@ export function createMotion({hero, repeat, report}) {
     introClockResume=()=>{introPrevious=performance.now();};
     advanceIntro=()=>{
       const now=performance.now();introElapsed+=now-introPrevious;introPrevious=now;
-      tl.totalTime(Math.min(introElapsed/1000,repeat?.6:2));
+      const played=Math.max(introElapsed/1000-introDelay,0);
+      tl.totalTime(Math.min(played,repeat?.6:2));
+      if(played>=(repeat?.6:2))tl.progress(1);
     };
     cleanups.push(()=>{advanceIntro=null;tl.kill();});
     cleanups.push(()=>gsap.set([orbit,trace,lead,sub,...ctas].filter(Boolean),{clearProps:'transform,opacity'}));
+  }
+
+  // Headings get the hero's per-character wave. Long strings stay whole: hundreds
+  // of spans cost more than the effect is worth and bloat the accessibility tree.
+  const splitChars=el=>{
+    const label=el.textContent.trim();
+    if(!label||label.length>42||el.querySelector('.mj-char'))return null;
+    el.setAttribute('aria-label',label);
+    const fragment=document.createDocumentFragment();
+    const spans=[];
+    for(const letter of el.textContent){
+      const span=document.createElement('span');span.className='mj-char';
+      span.textContent=letter;span.setAttribute('aria-hidden','true');
+      fragment.append(span);spans.push(span);
+    }
+    const original=el.textContent;
+    el.replaceChildren(fragment);
+    cleanups.push(()=>{el.textContent=original;el.removeAttribute('aria-label');});
+    return spans;
+  };
+
+  // Inner pages have no .hero, so before this they opened with no entrance at all.
+  const innerHero=!hero&&document.querySelector('.inner-page__hero,.profile-hero');
+  if(innerHero){
+    const title=innerHero.querySelector('h1');
+    const chars=title?splitChars(title):null;
+    const rest=[...innerHero.children].filter(el=>el!==title);
+    const tl=gsap.timeline();
+    if(chars)tl.fromTo(chars,{y:26,opacity:0},{y:0,opacity:1,stagger:.022,duration:.5,ease:'mj-wave',clearProps:'transform,opacity'},0);
+    if(rest.length)tl.fromTo(rest,{y:20,opacity:0},{y:0,opacity:1,stagger:.07,duration:.55,ease:'mj-wave',clearProps:'transform,opacity'},chars?.18:0);
+    timelines.push(tl);
+    innerHero.dataset.mjIntro='inner';
+    report({intro:'inner / 0.8s'});
   }
 
   const groups=new Map();
@@ -86,18 +121,47 @@ export function createMotion({hero, repeat, report}) {
     const list=groups.get(key)||[];list.push(el);groups.set(key,list);
   });
   groups.forEach((list,key)=>{
-    const pending=list.filter(el=>el.getBoundingClientRect().top>innerHeight*.88);
+    const pending=list.filter(el=>el.getBoundingClientRect().top>innerHeight*.82);
     if(!pending.length)return;
-    gsap.set(pending,{y:18,opacity:0});
+    gsap.set(pending,{y:32,opacity:0});
+    const headings=pending.flatMap(el=>{
+      const h=el.matches('.section-heading')?el.querySelector('h2'):null;
+      const spans=h?splitChars(h):null;
+      return spans?[{spans}]:[];
+    });
+    headings.forEach(({spans})=>gsap.set(spans,{y:24,opacity:0}));
     const reveal=()=>{
-      const tl=gsap.to(pending,{y:0,opacity:1,duration:.65,stagger:.09,ease:'mj-wave',clearProps:'transform,opacity'});
+      const tl=gsap.to(pending,{y:0,opacity:1,duration:.8,stagger:.11,ease:'mj-wave',clearProps:'transform,opacity'});
       timelines.push(tl);
+      headings.forEach(({spans})=>timelines.push(
+        gsap.to(spans,{y:0,opacity:1,duration:.55,stagger:.02,ease:'mj-wave',clearProps:'transform,opacity'})));
     };
-    triggers.push(ScrollTrigger.create({trigger:pending[0],start:'top 88%',once:true,onEnter:reveal}));
-    const focus=()=>{gsap.killTweensOf(pending);gsap.set(pending,{clearProps:'transform,opacity'});};
+    triggers.push(ScrollTrigger.create({trigger:pending[0],start:'top 85%',once:true,onEnter:reveal}));
+    const focus=()=>{const spans=headings.flatMap(h=>h.spans);
+      gsap.killTweensOf([...pending,...spans]);gsap.set([...pending,...spans],{clearProps:'transform,opacity'});};
     key.addEventListener('focusin',focus);
     cleanups.push(()=>key.removeEventListener('focusin',focus));
   });
+  // Parallax and velocity drive CSS variables rather than transforms: the record
+  // already owns `transform` for its rotation, and `translate` composes with it.
+  const docEl=document.documentElement;
+  if(hero){
+    triggers.push(ScrollTrigger.create({trigger:hero,start:'top top',end:'bottom top',scrub:.6,
+      onUpdate:self=>{const p=self.progress;
+        hero.style.setProperty('--mj-orbit-y',(p*96).toFixed(1)+'px');
+        hero.style.setProperty('--mj-halo-y',(p*-44).toFixed(1)+'px');
+        hero.style.setProperty('--mj-field-y',(p*52).toFixed(1)+'px');}}));
+    cleanups.push(()=>hero.style.removeProperty('--mj-orbit-y'));
+    cleanups.push(()=>{hero.style.removeProperty('--mj-halo-y');hero.style.removeProperty('--mj-field-y');});
+  }
+  const onVelocity=({velocity})=>{
+    const v=Math.max(-1,Math.min(1,velocity/26));
+    docEl.style.setProperty('--mj-vel',v.toFixed(3));
+    docEl.style.setProperty('--mj-vel-abs',Math.abs(v).toFixed(3));
+  };
+  lenis.on('scroll',onVelocity);
+  cleanups.push(()=>{docEl.style.removeProperty('--mj-vel');docEl.style.removeProperty('--mj-vel-abs');});
+
   const refresh=()=>{if(!disposed)ScrollTrigger.refresh();};
   document.fonts?.ready.then(refresh);
   addEventListener('load',refresh,{once:true});
