@@ -284,7 +284,7 @@ background:repeating-radial-gradient(ellipse at center,transparent 0 28px,#e8123
 /* The profile page pins brand/nav/actions with position:relative for a z-index
    fix. That also overrode the closed mobile drawer's own positioning, so 249px
    of hidden menu stayed in the header grid and stretched it to 314px tall. */
-@media (width <= 1100px) {
+@media (width <= 1220px) {
   .profile-page .inner-site-header .site-nav { position: fixed; }
 }
 
@@ -292,16 +292,21 @@ background:repeating-radial-gradient(ellipse at center,transparent 0 28px,#e8123
    so the bar stopped 20px short of each edge (72px on desktop) instead of
    spanning the viewport. Pull it back out, then re-apply the gutter inside. */
 .entity-page > .inner-site-header,
-.privacy-page > .inner-site-header {
-  width: auto;
+.privacy-page > .inner-site-header { width: auto; }
+.entity-page > .inner-site-header {
   margin-top: -28px;
   margin-inline: calc(-1 * max(5vw, 50vw - 690px));
   padding-inline: max(5vw, 50vw - 690px);
 }
+.privacy-page > .inner-site-header {
+  margin-top: -34px;
+  margin-inline: calc(-1 * max(5vw, 50vw - 560px));
+  padding-inline: max(5vw, 50vw - 560px);
+}
 @media (width <= 760px) {
+  .entity-page > .inner-site-header { margin-top: -18px; }
   .entity-page > .inner-site-header,
   .privacy-page > .inner-site-header {
-    margin-top: -18px;
     margin-inline: -20px;
     padding-inline: 20px;
   }
