@@ -26,7 +26,19 @@ const MEDIA_STYLESHEET_URL = "/assets/music-japan-media-refresh.css?v=20260914";
 const PROFILE_STYLESHEET_URL = "/assets/music-japan-profile.css?v=20260914";
 const PAGES_STYLESHEET_URL = "/assets/music-japan-pages.css?v=20260914";
 const MOBILE_STYLESHEET_URL = "/assets/music-japan-mobile.css?v=20260917";
-const EXPERIENCE_VERSION = "20260920-footer-glyph-v2";
+// Derived from the bytes actually shipped, never hand-maintained. A stale query
+// string is what kept browsers on an old stylesheet and an old entry script after
+// the last two deploys; a content hash cannot be forgotten.
+const EXPERIENCE_SOURCES = ["music-japan-experience.css", "music-japan-experience.js", "motion.js", "hero-webgl.js", "webgl-runtime.js", "quality.js"];
+const EXPERIENCE_VERSION = (() => {
+  const digest = createHash("sha256");
+  for (const name of EXPERIENCE_SOURCES) {
+    const file = join(root, "src", name);
+    if (!existsSync(file)) throw new Error(`Experience source missing, cannot version assets: ${name}`);
+    digest.update(name).update(readFileSync(file));
+  }
+  return `20260920-${digest.digest("hex").slice(0, 12)}`;
+})();
 const LAST_MODIFIED = "2026-09-17";
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
 const BATON_URL = "https://baton.music-japan.com/profile/";

@@ -275,3 +275,55 @@ background:repeating-radial-gradient(ellipse at center,transparent 0 28px,#e8123
   .mj-halo { opacity:.45!important; }
   .mj-field svg { opacity:.75!important; }
 }
+
+/* ── Inner-page header repairs ────────────────────────────────────────────── */
+/* Both faults predate the immersive edition: measured identically on the build
+   before it. They only show below the navigation breakpoint and on the two
+   pages that use their own page shell. */
+
+/* The profile page pins brand/nav/actions with position:relative for a z-index
+   fix. That also overrode the closed mobile drawer's own positioning, so 249px
+   of hidden menu stayed in the header grid and stretched it to 314px tall. */
+@media (width <= 1100px) {
+  .profile-page .inner-site-header .site-nav { position: fixed; }
+}
+
+/* The company and privacy pages put the sticky header inside a padded wrapper,
+   so the bar stopped 20px short of each edge (72px on desktop) instead of
+   spanning the viewport. Pull it back out, then re-apply the gutter inside. */
+.entity-page > .inner-site-header,
+.privacy-page > .inner-site-header {
+  width: auto;
+  margin-top: -28px;
+  margin-inline: calc(-1 * max(5vw, 50vw - 690px));
+  padding-inline: max(5vw, 50vw - 690px);
+}
+@media (width <= 760px) {
+  .entity-page > .inner-site-header,
+  .privacy-page > .inner-site-header {
+    margin-top: -18px;
+    margin-inline: -20px;
+    padding-inline: 20px;
+  }
+}
+
+/* ── Section seams ────────────────────────────────────────────────────────── */
+/* Where an ivory section meets the black, a straight cut read as an accident.
+   These paint the dark side as a slow wave on the section's own background
+   layer, so nothing is clipped and no decorative pseudo-element is displaced.
+   The gradient inside each wave dissolves the join instead of ending it. */
+html[data-mj-experience] {
+  --mj-seam-top: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'><defs><linearGradient id='t' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='%23050506' stop-opacity='1'/><stop offset='.62' stop-color='%23050506' stop-opacity='.9'/><stop offset='1' stop-color='%23050506' stop-opacity='0'/></linearGradient></defs><path fill='url(%23t)' d='M0 0h1440v52c-210 32-320-28-540-6s-340-32-570-4c-110 13-220 20-330 16z'/></svg>");
+  --mj-seam-bottom: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 120' preserveAspectRatio='none'><defs><linearGradient id='b' x1='0' y1='1' x2='0' y2='0'><stop offset='0' stop-color='%23050506' stop-opacity='1'/><stop offset='.62' stop-color='%23050506' stop-opacity='.9'/><stop offset='1' stop-color='%23050506' stop-opacity='0'/></linearGradient></defs><path fill='url(%23b)' d='M0 120h1440V68c-210-32-320 28-540 6s-340 32-570 4c-110-13-220-20-330-16z'/></svg>");
+}
+[data-mj-experience] .about.content-frame,
+[data-mj-experience] .manifesto.content-frame {
+  background-image: var(--mj-seam-top), var(--mj-seam-bottom);
+  background-repeat: no-repeat, no-repeat;
+  background-position: top center, bottom center;
+  background-size: 100% 120px, 100% 120px;
+}
+@media (width <= 760px) {
+  [data-mj-experience] .about.content-frame,
+  [data-mj-experience] .manifesto.content-frame { background-size: 100% 68px, 100% 68px; }
+}
