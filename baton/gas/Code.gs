@@ -183,6 +183,16 @@ function doPost(e) {
 /** 対象シート名。すでにこの名前でシートが存在する前提 */
 var BATON_SHEET_NAME = 'BATON_REQUESTS';
 
+/**
+ * 申請を許可するメールアドレスの一覧シート。
+ * 全プロフィール共通（プロフィールごとには分けない）。
+ * 無ければ自動で作る。社長はこのシートに行を足す／消すだけで
+ * 「申請できる人」を管理できる（コードの変更・再デプロイは不要）。
+ * A列にメールアドレスを1行1件で入れる（大文字小文字は区別しない）。
+ */
+var BATON_ALLOWLIST_SHEET_NAME = '申請許可リスト';
+var BATON_ALLOWLIST_HEADERS = ['メール', '備考', '登録日'];
+
 /** 元々ある列（この順番・名前は変更しない） */
 var BATON_BASE_HEADERS = [
   'request_id', '申請日時', '話したい人', '申請者', '会社名', 'メール',
@@ -302,14 +312,50 @@ function batonEnsureExtraHeaders(sheet) {
   });
 }
 
+/** 申請許可リストのシートを取得。無ければヘッダー付きで作る */
+function batonGetAllowlistSheet() {
+  var ss = batonGetSpreadsheet();
+  var sheet = ss.getSheetByName(BATON_ALLOWLIST_SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(BATON_ALLOWLIST_SHEET_NAME);
+    sheet.getRange(1, 1, 1, BATON_ALLOWLIST_HEADERS.length).setValues([BATON_ALLOWLIST_HEADERS]);
+    sheet.getRange(1, 1, 1, BATON_ALLOWLIST_HEADERS.length).setFontWeight('bold').setBackground('#F1F3F5');
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
 /**
- * 初回セットアップ。BATON_REQUESTS シートを確認し、無ければ作り、
- * 足りない列があれば右側に追加する（既存の列・データには触れない）。
- * このファイルには、これ以外の「シートを作る」関数は存在しない。
+ * 申請許可リストのA列（メール）を、小文字化したSetとして読み込む。
+ * 空行・ヘッダーは無視する。
+ */
+function batonReadAllowlistEmails() {
+  var sheet = batonGetAllowlistSheet();
+  var lastRow = sheet.getLastRow();
+  if (lastRow < 2) return {};
+  var values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var set = {};
+  values.forEach(function (row) {
+    var email = String(row[0] || '').trim().toLowerCase();
+    if (email) set[email] = true;
+  });
+  return set;
+}
+
+/** このメールアドレスが申請許可リストに載っているか */
+function batonIsEmailAllowed(email) {
+  var allowed = batonReadAllowlistEmails();
+  return Boolean(allowed[String(email || '').trim().toLowerCase()]);
+}
+
+/**
+ * 初回セットアップ。BATON_REQUESTS シートと申請許可リストシートを確認し、
+ * 無ければ作り、足りない列があれば右側に追加する（既存の列・データには触れない）。
  */
 function setupBatonSheets() {
   batonGetRequestsSheet();
-  batonToast('BATON_REQUESTS シートを確認・用意しました', 'Baton', 5);
+  batonGetAllowlistSheet();
+  batonToast('BATON_REQUESTS / 申請許可リスト シートを確認・用意しました', 'Baton', 5);
 }
 
 /** 現在のヘッダー行から { 列名: 列番号(1始まり) } を作る */
@@ -487,6 +533,13 @@ function batonSubmitTalk(data) {
   }
   if (!BATON_EMAIL_RE.test(email)) {
     return { ok: false, error: 'invalid', message: 'メールアドレスの形式をご確認ください。' };
+  }
+
+  // このメールアドレスが「申請許可リスト」に登録されているかを確認する。
+  // 第三者が勝手に見つけて申請してしまうのを防ぐための唯一のゲート。
+  // シートの管理（追加・削除）だけで運用でき、コードの再デプロイは不要。
+  if (!batonIsEmailAllowed(email)) {
+    return { ok: false, error: 'not_allowed', message: 'このメールアドレスでは、現在お申し込みいただけません。' };
   }
 
   var profile = batonGetProfile(profileId);
