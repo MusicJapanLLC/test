@@ -9,7 +9,7 @@
     "preview": "node server.mjs --deploy",
     "test": "node --test tests/*.test.mjs",
     "check": "node scripts/check-snapshot.mjs",
-    "build:deploy": "node scripts/build-deploy.mjs"
+    "build:deploy": "node scripts/build-deploy.mjs && node scripts/fix-social-share.mjs"
   },
   "devDependencies": {
     "esbuild": "0.25.10"
