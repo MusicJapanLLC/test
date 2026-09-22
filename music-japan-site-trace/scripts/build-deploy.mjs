@@ -962,6 +962,12 @@ function renderSitemap() {
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n${entries}\n</urlset>\n`;
 }
 
+function renderOfficialSharePage() {
+  const title = "合同会社Music Japan 公式サイト | 音楽・メディア";
+  const description = "音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。";
+  return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="noindex,follow"/><link rel="canonical" href="${SITE_URL}/"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Music Japan LLC"/><meta property="og:locale" content="ja_JP"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}/official/"/><meta property="og:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"/><meta property="og:image:width" content="${SOCIAL_IMAGE_WIDTH}"/><meta property="og:image:height" content="${SOCIAL_IMAGE_HEIGHT}"/><meta property="og:image:alt" content="Music Japan LLC corporate logo"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${description}"/><meta name="twitter:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"/><meta http-equiv="refresh" content="0;url=/"/><script>location.replace("/")</script></head><body><p><a href="/">合同会社Music Japan 公式サイトへ移動</a></p></body></html>`;
+}
+
 rmSync(output, { recursive: true, force: true });
 cpSync(source, output, { recursive: true });
 // Remove retired output even if an older snapshot includes these directories.
@@ -1137,6 +1143,19 @@ const redirectsPath = join(output, "_redirects");
 const businessRedirects = ["", "/en"].flatMap(prefix => ["music", "media", "about"].flatMap(page =>
   [`${prefix}/${page} ${prefix}/business/ 301`, `${prefix}/${page}/ ${prefix}/business/ 301`])).join("\n");
 writeFileSync(redirectsPath, businessRedirects + "\n");
+
+// LINE caches previews by the shared page URL and no longer provides a stable
+// public cache-clear tool. This never-before-shared URL gives business contacts
+// the current corporate-logo card immediately, then opens the canonical home.
+const officialSharePath = join(output, "official", "index.html");
+const officialShareHtml = renderOfficialSharePage();
+if (!officialShareHtml.includes(`property="og:url" content="${SITE_URL}/official/"`)) throw new Error("Official share URL metadata missing");
+if (!officialShareHtml.includes(`property="og:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"`)) throw new Error("Official share logo metadata missing");
+if (!officialShareHtml.includes(`property="og:image:width" content="${SOCIAL_IMAGE_WIDTH}"`)) throw new Error("Official share image width is stale");
+if (!officialShareHtml.includes(`property="og:image:height" content="${SOCIAL_IMAGE_HEIGHT}"`)) throw new Error("Official share image height is stale");
+if (!officialShareHtml.includes('<meta http-equiv="refresh" content="0;url=/"/>')) throw new Error("Official share redirect missing");
+mkdirSync(join(officialSharePath, ".."), { recursive: true });
+writeFileSync(officialSharePath, officialShareHtml);
 
 // An additive presentation layer: all editorial copy, URLs and SEO remain intact.
 // Set the marker before React runs so only one animation engine owns the page.
