@@ -71,7 +71,7 @@
 
   function quickResultMarkup(article) {
     return `<a class="quick-result" href="${rootPath(article.href)}">
-      <img src="${rootPath(article.image)}" width="56" height="56" alt="" loading="lazy">
+      <img src="${rootPath(article.image)}" width="56" height="56" alt="" loading="lazy" decoding="async">
       <span><strong>${article.shortTitle}</strong><span>${article.company} / ${article.person}</span></span>
     </a>`;
   }
@@ -92,7 +92,7 @@
 
   function searchResultMarkup(article) {
     return `<a class="search-result-card" href="${rootPath(article.href)}">
-      <img src="${rootPath(article.image)}" width="150" height="180" alt="${article.company} ${article.person}のサンプル写真" loading="lazy">
+      <img src="${rootPath(article.image)}" width="150" height="180" alt="${article.company} ${article.person}のサンプル写真" loading="lazy" decoding="async">
       <span>
         <span class="tag-line">${article.theme} · ${article.readTime}</span>
         <h2>${article.title}</h2>
@@ -163,12 +163,13 @@
   const articleBody = $(".article-body");
   let lastY = window.scrollY;
   let progressWriteTimer;
+  let scrollFrame;
 
   function updateScrollUi() {
     const y = window.scrollY;
     const max = document.documentElement.scrollHeight - window.innerHeight;
     const percent = max > 0 ? Math.min(100, (y / max) * 100) : 0;
-    if (progress) progress.style.width = `${percent}%`;
+    if (progress) progress.style.transform = `scaleX(${percent / 100})`;
     if (scrollTop) scrollTop.classList.toggle("is-visible", y > 520);
     if (siteHeader) siteHeader.classList.toggle("is-scrolled", y > 12);
     if (dock) {
@@ -183,12 +184,20 @@
     }
   }
 
-  window.addEventListener("scroll", updateScrollUi, { passive: true });
+  function requestScrollUiUpdate() {
+    if (scrollFrame) return;
+    scrollFrame = window.requestAnimationFrame(() => {
+      scrollFrame = 0;
+      updateScrollUi();
+    });
+  }
+
+  window.addEventListener("scroll", requestScrollUiUpdate, { passive: true });
   updateScrollUi();
 
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const motionTargets = $$(
-    ".section-head, .feed-card, .popular-item, .theme-link, .notification-panel, .podcast-cover-wrap, .podcast-panel > div, .about-teaser__grid, .brief-box, .article-body h2, .pull-quote, .speaker-card, .listen-card, .next-feature"
+    ".section-head, .feed-card, .popular-item, .theme-link, .notification-panel, .podcast-cover-wrap, .podcast-panel > div, .about-teaser__grid, .brief-box, .article-body h2, .article-body > p, .article-body figure, .article-body blockquote, .speaker-card, .listen-card, .next-feature"
   );
   if (!reduceMotion && "IntersectionObserver" in window) {
     document.documentElement.classList.add("motion-ready");
@@ -198,12 +207,27 @@
         entry.target.classList.add("is-revealed");
         revealObserver.unobserve(entry.target);
       });
-    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
-    motionTargets.forEach((target, index) => {
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+    motionTargets.forEach((target) => {
       target.classList.add("reveal");
-      target.style.setProperty("--reveal-delay", `${(index % 3) * 55}ms`);
       revealObserver.observe(target);
     });
+  }
+
+  const articleHeadings = $$(".article-body h2[id]");
+  const tocLinks = $$('.aside-toc a[href^="#"], #toc-list a[href^="#"]');
+  if (articleHeadings.length && tocLinks.length && "IntersectionObserver" in window) {
+    const tocObserver = new IntersectionObserver((entries) => {
+      const current = entries.find((entry) => entry.isIntersecting);
+      if (!current) return;
+      tocLinks.forEach((link) => {
+        const active = link.getAttribute("href") === `#${current.target.id}`;
+        link.classList.toggle("is-current", active);
+        if (active) link.setAttribute("aria-current", "location");
+        else link.removeAttribute("aria-current");
+      });
+    }, { rootMargin: "-16% 0px -68% 0px", threshold: 0 });
+    articleHeadings.forEach((heading) => tocObserver.observe(heading));
   }
 
   if (scrollTop) {

@@ -10,7 +10,7 @@ window.SECOND_TAKE_ARTICLES = [
     role: "代表取締役",
     theme: "撤退・再起",
     readTime: "8 MIN",
-    image: "/assets/sample-saeki.jpg",
+    image: "/assets/sample-saeki.webp",
     description: "事業撤退を決めた経営者が、残った社員ともう一度会社を作り直すまでの決断を聞く。",
     tags: ["失敗", "決断", "再起", "組織"]
   },
@@ -25,7 +25,7 @@ window.SECOND_TAKE_ARTICLES = [
     role: "共同代表",
     theme: "新規事業・決断",
     readTime: "6 MIN",
-    image: "/assets/sample-kuroda.jpg",
+    image: "/assets/sample-kuroda.webp",
     description: "数字が崩れ始めても止められなかった事業と、最後に決断を変えた一言について。",
     tags: ["新規事業", "失敗", "意思決定"]
   },
@@ -40,7 +40,7 @@ window.SECOND_TAKE_ARTICLES = [
     role: "創業者",
     theme: "離任・承継",
     readTime: "7 MIN",
-    image: "/assets/sample-mori.jpg",
+    image: "/assets/sample-mori.webp",
     description: "自分が残ることより会社が続くことを選んだ創業者が、離任までに考えたこと。",
     tags: ["承継", "組織", "生き方"]
   }

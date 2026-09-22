@@ -7,7 +7,7 @@
     <header class="site-header">
       <div class="site-header__inner">
         <a class="site-logo" href="/" aria-label="SECOND TAKE トップへ">
-          <img src="/assets/second-take-logo-header.png" width="700" height="243" alt="SECOND TAKE BUSINESS × LIFE">
+          <img src="/assets/second-take-logo-header.png" width="700" height="243" alt="SECOND TAKE BUSINESS × LIFE" decoding="async">
         </a>
         <nav class="desktop-nav" aria-label="メインナビゲーション">
           <a href="/#articles">ARTICLES</a>
@@ -30,6 +30,7 @@
   const skipLink = body.querySelector(".skip-link");
   if (skipLink) skipLink.insertAdjacentHTML("afterend", header);
   else body.insertAdjacentHTML("afterbegin", header);
+  body.classList.add("shell-ready");
 
   const dialogs = `
     <dialog class="menu-dialog" id="site-menu" aria-label="サイトメニュー">

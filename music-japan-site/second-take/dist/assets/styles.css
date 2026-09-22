@@ -28,10 +28,13 @@
   --display: "Cormorant Garamond", Georgia, serif;
   --page-pad: clamp(18px, 5vw, 72px);
   --content: 1180px;
-  --reading: 680px;
+  --measure: 42rem;
+  --reading: var(--measure);
   --header-h: 66px;
-  --body-size: 1.0625rem;
-  --body-leading: 2.02;
+  --fs: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+  --lh: 1.9;
+  --body-size: var(--fs);
+  --body-leading: var(--lh);
 }
 
 * {
@@ -52,6 +55,10 @@ body {
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+body:not(.shell-ready) {
+  padding-top: var(--header-h);
 }
 
 body.reader-large {
@@ -98,6 +105,11 @@ img {
   display: block;
   max-width: 100%;
   height: auto;
+}
+
+::selection {
+  background: rgba(200, 0, 30, 0.18);
+  color: var(--ink);
 }
 
 .skip-link {
@@ -247,13 +259,15 @@ img {
 
 .reading-progress {
   position: fixed;
-  top: 0;
-  left: 0;
+  inset: 0 0 auto;
   z-index: 101;
-  width: 0;
-  height: 3px;
+  width: 100%;
+  height: 2px;
   background: var(--red);
-  transition: width 80ms linear;
+  opacity: 0.72;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  will-change: transform;
 }
 
 .demo-ribbon {
@@ -1503,6 +1517,12 @@ button.theme-link {
   color: var(--red);
 }
 
+.aside-toc a.is-current,
+.toc-list a.is-current {
+  color: var(--red);
+  font-weight: 700;
+}
+
 .aside-button {
   width: 100%;
   margin-top: 14px;
@@ -1594,21 +1614,44 @@ button.theme-link {
 }
 
 .article-body > p {
-  margin: 0 0 1.75em;
+  margin-block: 0 1.5em;
+  font-size: var(--body-size);
+  line-height: var(--body-leading);
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+  word-break: normal;
+}
+
+.article-body > p:first-of-type {
+  color: #33302d;
+  font-size: 1.08em;
 }
 
 .article-body h2 {
+  position: relative;
   margin: 3.2em 0 1.1em;
-  padding-top: 0.65em;
+  padding: 0.65em 0 0.52em 0.78em;
   border-top: 1px solid var(--ink);
-  font-family: var(--serif);
   border-bottom: 1px solid rgba(17, 16, 15, 0.16);
-  padding-bottom: 0.52em;
+  font-family: var(--serif);
   font-size: clamp(0.98rem, 4.1vw, 1.65rem);
   font-weight: 700;
-  letter-spacing: -0.06em;
-  line-height: 1.6;
-  white-space: nowrap;
+  letter-spacing: 0.01em;
+  line-height: 1.45;
+  text-wrap: balance;
+  white-space: normal;
+}
+
+.article-body h2::before {
+  position: absolute;
+  top: 0.68em;
+  bottom: 0.58em;
+  left: 0;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--red);
+  content: "";
 }
 
 .article-body h2 .chapter {
@@ -1620,7 +1663,7 @@ button.theme-link {
   letter-spacing: 0.11em;
 }
 
-.question {
+.article-body > p.question {
   margin: 2.4em 0 1em;
   font-family: var(--serif);
   font-size: 0.84rem;
@@ -1660,6 +1703,29 @@ button.theme-link {
   font-size: 6rem;
   line-height: 1;
   content: "“";
+}
+
+.article-body a:not(.inline-next) {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0 1px;
+  text-decoration: underline;
+  text-decoration-color: rgba(200, 0, 30, 0.52);
+  transition: background-size 250ms ease;
+}
+
+.article-body a:not(.inline-next):hover,
+.article-body a:not(.inline-next):focus-visible {
+  background-size: 100% 1px;
+  text-decoration-color: transparent;
+}
+
+.speaker-card,
+.listen-card,
+.related-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 520px;
 }
 
 .inline-next {
@@ -2314,15 +2380,13 @@ button.theme-link {
 
 .motion-ready .reveal {
   opacity: 0;
-  filter: blur(1.5px);
-  transform: translateY(18px) scale(0.992);
-  transition: opacity 620ms ease var(--reveal-delay, 0ms), filter 620ms ease var(--reveal-delay, 0ms), transform 700ms cubic-bezier(0.2, 0.75, 0.25, 1) var(--reveal-delay, 0ms);
-  will-change: opacity, filter, transform;
+  transform: translateY(6px);
+  transition: opacity 500ms ease, transform 500ms ease;
+  will-change: opacity, transform;
 }
 
 .motion-ready .reveal.is-revealed {
   opacity: 1;
-  filter: none;
   transform: none;
   will-change: auto;
 }
@@ -2378,8 +2442,12 @@ dialog[open]::backdrop {
   *::before,
   *::after {
     scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .motion-ready .reveal {
+    opacity: 1;
+    transform: none;
   }
 }

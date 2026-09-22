@@ -64,6 +64,16 @@ for (const file of files.filter((item) => extname(item) === ".html")) {
   const ids = [...source.matchAll(/\sid="([^"]+)"/g)].map((match) => match[1]);
   const duplicates = ids.filter((id, index) => ids.indexOf(id) !== index);
   for (const id of new Set(duplicates)) errors.push(`${relative(root, file)}: duplicate id ${id}`);
+  for (const match of source.matchAll(/<img\b[^>]*>/g)) {
+    const image = match[0];
+    if (!/\bwidth="\d+"/.test(image) || !/\bheight="\d+"/.test(image)) {
+      errors.push(`${page}: image is missing width or height (${image})`);
+    }
+    if (!/\bdecoding="async"/.test(image)) errors.push(`${page}: image is missing decoding=async (${image})`);
+    if (!/\bfetchpriority="high"/.test(image) && !/\bloading="lazy"/.test(image)) {
+      errors.push(`${page}: non-critical image is missing loading=lazy (${image})`);
+    }
+  }
   for (const match of source.matchAll(/(?:href|src)="([^"]+)"/g)) {
     const target = localTarget(match[1], file);
     if (target && !resolves(target)) errors.push(`${relative(root, file)}: missing ${match[1]}`);
@@ -80,6 +90,10 @@ for (const file of [
   "assets/site.js",
   "assets/shell.js",
   "assets/articles.js",
+  "assets/sample-kuroda.webp",
+  "assets/sample-mori.webp",
+  "assets/sample-saeki.webp",
+  "assets/second-take-cover.webp",
   "favicon.svg",
   "manifest.webmanifest",
   "sitemap.xml",
