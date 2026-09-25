@@ -56,58 +56,7 @@ const kabeyaProfile: TalkProfile = {
   active: true,
 };
 
-/**
- * 2件目のプロフィール。株式会社unveil代表・古谷祐麻氏。
- * ブランディング／クリエイティブ制作／プロダクト開発支援／プロジェクト伴走支援を
- * 軸にする独立したパートナーのため、資本金・従業員数などの企業スペックは載せない
- * （このシステムの設計方針どおり、実績は文章の中でのみ触れる）。
- */
-const unveilProfile: TalkProfile = {
-  id: 'unveil',
-  slug: 'unveil',
-  name: '古谷 祐麻',
-  company: '株式会社unveil',
-  title: '代表取締役CEO',
-  tagline: '言葉にし、かたちにし、伴走する。',
-  bio:
-    '大学卒業後、地域密着型のWebメディア立ち上げを経て、カンボジア政府のプロジェクトなど国内外の案件に携わる。' +
-    '現在は株式会社unveilの代表取締役として、企業や商品、地域にある「まだ言葉になっていない価値」を、' +
-    'ブランディングとクリエイティブの力でかたちにしています。',
-  business: [
-    'ブランディング・クリエイティブ制作・プロダクト開発支援・プロジェクト伴走支援を軸に、' +
-      '企業や商品、地域が持つ魅力を言語化し、コンセプト設計から実装まで一貫して手がけています。' +
-      'Web制作やUI/UXにとどまらず、採用戦略、SEO・コンテンツマーケティング、撮影・グラフィック、' +
-      '市場調査、業務改善まで、必要な領域を横断して伴走するのが特徴です。',
-  ],
-  services: [
-    { name: 'ブランディング', description: '企業・商品・地域にある価値を整理し、コンセプトから設計' },
-    { name: 'Web制作・UI/UX', description: 'コーポレート・採用・LP・サービスサイトを一貫設計' },
-    { name: '採用支援', description: 'ペルソナ設計から求人原稿・媒体連携までワンストップで支援' },
-    { name: 'プロダクト開発', description: '商品・プロダクトの企画から市場調査、磨き込みまで伴走' },
-  ],
-  media: [
-    {
-      label: '公式サイト',
-      url: 'https://unveil.style/',
-      image: '/media-unveil-hp.webp',
-    },
-  ],
-  listSummary: 'ブランディング・Web制作・採用支援',
-  businessTags: ['ブランディング', 'Web制作', 'プロダクト開発'],
-  keywordTags: ['世界観の設計', '徹底ヒアリング', 'SEO対策'],
-  // unveil.style（本人の会社サイト）の、余白の多い・淡いグレイに
-  // 花影を落としたような世界観に合わせた配色。
-  // テンプレートは1つ。プロフィールごとに変わるのは、この4色と中身だけ。
-  // primary は「その人の色」として罫・ラベル・ボタンに出る。
-  // 白抜き文字のボタンに使うので、白に対して読める濃さにしておくこと。
-  theme: { primary: '#8A6338', accent: '#C2A06B', bg: '#F2EEE6', text: '#3A342C' },
-  // 壁谷さんのフルWebGL演出（heavyWebGL）ではなく、本人のブランドの
-  // 雰囲気を汲んだ写真的な静的ヒーロー（editorial）を使う。
-  // 3D不要で軽量、かつプロフィールごとに異なる世界観を出せる。
-  active: true,
-};
-
-export const profiles: TalkProfile[] = [kabeyaProfile, unveilProfile];
+export const profiles: TalkProfile[] = [kabeyaProfile];
 
 export const getProfile = (id: string): TalkProfile => {
   const found = profiles.find((p) => p.id === id);
