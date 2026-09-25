@@ -107,6 +107,22 @@ const unveilProfile: TalkProfile = {
   active: true,
 };
 
+/**
+ * 非掲載のプロフィール。
+ * データは消さずにここへ置き、profiles から外すことで公開だけを止める。
+ * 掲載を再開するときは、この配列から profiles 配列へ移すだけでよい。
+ *
+ * profiles から外すと、そのプロフィールは
+ *  - /profile/ の一覧に出ない
+ *  - /profile/<slug>/ 自体がビルドされない（＝404になる）
+ *  - sitemap.xml にも載らない
+ * ようになる。
+ *
+ * ここへ置かずに宣言だけ残すと「宣言したのに使っていない」で
+ * tsc（npm run build）が落ち、本番デプロイが生成されないので注意。
+ */
+export const hiddenProfiles: TalkProfile[] = [unveilProfile];
+
 export const profiles: TalkProfile[] = [kabeyaProfile];
 
 export const getProfile = (id: string): TalkProfile => {
