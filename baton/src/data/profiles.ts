@@ -107,7 +107,7 @@ const unveilProfile: TalkProfile = {
   active: true,
 };
 
-export const profiles: TalkProfile[] = [kabeyaProfile, unveilProfile];
+export const profiles: TalkProfile[] = [kabeyaProfile];
 
 export const getProfile = (id: string): TalkProfile => {
   const found = profiles.find((p) => p.id === id);
