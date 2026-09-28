@@ -18,7 +18,15 @@ export type BuildEnv = {
   siteUrl: string;
   /** true の間は noindex。公開するときに BP_INDEX=1 でビルドする */
   noindex: boolean;
+  /**
+   * true のときは Web フォントを Google Fonts から読み込む（BP_FONTS=google）。
+   * ファイルを直接アップロードしてデプロイするとき、フォントファイル数百個を送らずに済ませるため。
+   */
+  googleFonts: boolean;
 };
+
+const GOOGLE_FONTS =
+  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Noto+Sans+JP:wght@400;700&family=Shippori+Mincho:wght@700;800&display=swap';
 
 /** 「株式会社エボルグ」→「エボルグ」 */
 export const shortName = (p: Partner): string =>
@@ -43,6 +51,7 @@ export function head(meta: PageMeta, env: BuildEnv): string {
 ${env.noindex ? '<meta name="robots" content="noindex, nofollow, noarchive" />' : ''}
 <link rel="canonical" href="${canonical}" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+${env.googleFonts ? `<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link rel="stylesheet" href="${GOOGLE_FONTS}" media="print" onload="this.media='all'" />` : ''}
 <meta name="theme-color" content="${site.colors.paper}" />
 <meta name="format-detection" content="telephone=no" />
 <meta property="og:type" content="${meta.ogType ?? 'website'}" />

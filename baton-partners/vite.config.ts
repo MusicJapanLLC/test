@@ -15,7 +15,8 @@ function siteUrl(): string {
 }
 
 /** デモの間は noindex。公開するときだけ BP_INDEX=1 でビルドする */
-const env: BuildEnv = { siteUrl: siteUrl(), noindex: process.env.BP_INDEX !== '1' };
+const googleFonts = process.env.BP_FONTS === 'google';
+const env: BuildEnv = { siteUrl: siteUrl(), noindex: process.env.BP_INDEX !== '1', googleFonts };
 
 function seoFiles(pages: GeneratedPage[]): Plugin {
   return {
@@ -64,6 +65,7 @@ export default defineConfig(async () => {
   const pages = await generatePages(root, env);
   return {
     plugins: [seoFiles(pages), regenerate()],
+    define: { __GOOGLE_FONTS__: JSON.stringify(googleFonts) },
     build: {
       target: 'es2020',
       // フォントはbase64でCSSに埋め込まない（CSSが肥大化して描画が遅れる）
