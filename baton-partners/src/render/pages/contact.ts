@@ -1,0 +1,174 @@
+import QRCode from 'qrcode';
+import { routes, site } from '../../config/site';
+import type { Partner, Question } from '../../types';
+import { breadcrumbLd, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
+import { pageHero } from '../parts';
+import { esc, heading, jp } from '../text';
+
+const ROLES = ['代表取締役・役員', '部長・マネージャー', '担当者', 'その他'];
+
+function question(q: Question, n: number): string {
+  const type = q.type === 'multi' ? 'checkbox' : 'radio';
+  const opts = q.options
+    .map(
+      (o, i) => `
+        <label class="chip">
+          <input type="${type}" name="${q.id}" value="${esc(o)}"${q.type === 'single' && i === 0 ? ' required' : ''} />
+          <span>${esc(o)}</span>
+        </label>`,
+    )
+    .join('');
+  return `
+    <fieldset class="q" data-q="${q.id}" data-type="${q.type}">
+      <legend class="q-l"><span class="q-no">Q${n}</span><span>${jp(q.label)}</span>${q.type === 'multi' ? '<span class="q-hint">複数選択可</span>' : ''}</legend>
+      <div class="chips">${opts}</div>
+      <p class="q-err" role="alert" hidden>ひとつ以上選んでください</p>
+    </fieldset>`;
+}
+
+export async function renderContact(p: Partner, env: BuildEnv): Promise<string> {
+  const path = routes.contact(p.slug);
+  const name = shortName(p);
+  const qr = await QRCode.toString(site.lineUrl, {
+    type: 'svg',
+    margin: 0,
+    errorCorrectionLevel: 'M',
+    color: { dark: '#141414', light: '#0000' },
+  });
+
+  const steps = [
+    { t: '公式LINEを追加', d: 'Music Japanの公式LINEを追加します。おつなぎの連絡はここから届きます。' },
+    { t: 'アンケートに回答', d: 'ご相談の目的と状況を、約2分でお伺いします。' },
+    { t: 'Music Japanが確認', d: `ご回答をもとに、${name}とのご相談が合うかを確認します。` },
+    { t: `${name}へ事前確認`, d: 'お客様の連絡先は伝えずに、ご相談の概要だけを確認します。' },
+    { t: 'LINEグループでおつなぎ', d: `双方の了承がそろったら、グループを作成します。目安は${site.leadTime}です。` },
+  ]
+    .map(
+      (s, i) => `
+      <li class="step rv" style="--d:${i}">
+        <span class="step-no">${String(i + 1).padStart(2, '0')}</span>
+        <h3 class="step-h">${heading(s.t)}</h3>
+        <p class="step-p">${jp(s.d)}</p>
+      </li>`,
+    )
+    .join('');
+
+  const body = `
+${header(p, 'contact')}
+<main id="main">
+  ${pageHero({
+    p,
+    no: '04',
+    en: 'Contact',
+    title: [`${name}に、`, '相談する。'],
+    lead: `予約カレンダーはありません。Music Japanがご相談の内容を確かめてから、${name}とおつなぎします。`,
+    phase: 2.0,
+    crumbs: [{ name, href: routes.top(p.slug) }, { name: 'お問い合わせ' }],
+  })}
+
+  <section class="sec sec-steps" aria-labelledby="steps-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Flow</p>
+        <h2 id="steps-h" class="sec-h">${heading('おつなぎまでの、5つのステップ。')}</h2>
+      </header>
+      <ol class="steps">${steps}</ol>
+      <p class="fine">${jp('ご紹介の可否とタイミングは、Music Japanが一件ずつ判断します。自動でのマッチングや予約は行っていません。')}</p>
+    </div>
+  </section>
+
+  <section class="sec sec-form" aria-labelledby="form-h">
+    <div class="wrap form-grid">
+      <aside class="line-card rv" aria-labelledby="line-h">
+        <p class="kicker">Step 01</p>
+        <h2 id="line-h" class="line-h">${heading('はじめに、公式LINEを追加')}</h2>
+        <p class="line-p">${jp('おつなぎのご連絡は、Music Japanの公式LINEからお送りします。追加したあと、右のアンケートにお進みください。')}</p>
+        <a class="btn btn-line-app btn-block" href="${site.lineUrl}" target="_blank" rel="noopener" data-line-link>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M12 3C6.5 3 2 6.6 2 11c0 3.9 3.5 7.2 8.3 7.9.3.1.8.2.9.5.1.3.1.7 0 1l-.1.9c0 .3-.2 1 .9.6 1.1-.5 5.9-3.5 8-5.9C21.4 14.4 22 12.8 22 11c0-4.4-4.5-8-10-8z"/></svg>
+          <span>公式LINEを追加する</span>
+        </a>
+        <figure class="qr">
+          <div class="qr-code">${qr}</div>
+          <figcaption>${jp('パソコンでご覧の方は、スマートフォンで読み取ってください。')}</figcaption>
+        </figure>
+      </aside>
+
+      <div class="form-wrap rv">
+        <p class="kicker">Step 02</p>
+        <h2 id="form-h" class="form-h">${heading('ご相談アンケート')}</h2>
+        <p class="form-lead">${jp('すべての方にお願いしています。ご回答はMusic Japanだけが確認し、了承をいただくまで紹介先へお渡ししません。')}</p>
+
+        <form class="form" data-form data-partner="${p.slug}" data-partner-name="${esc(p.company.name)}" novalidate>
+          <div class="form-block">
+            <p class="form-block-t">ご相談について</p>
+            ${p.contact.questions.map((q, i) => question(q, i + 1)).join('')}
+          </div>
+
+          <div class="form-block">
+            <p class="form-block-t">お客様について</p>
+            <div class="fields">
+              <label class="field"><span class="field-l">会社名<em>必須</em></span><input name="company" type="text" autocomplete="organization" required /></label>
+              <label class="field"><span class="field-l">お名前<em>必須</em></span><input name="name" type="text" autocomplete="name" required /></label>
+              <label class="field"><span class="field-l">メールアドレス<em>必須</em></span><input name="email" type="email" autocomplete="email" inputmode="email" required /></label>
+              <label class="field"><span class="field-l">役職</span>
+                <select name="role"><option value="">選択してください</option>${ROLES.map((r) => `<option>${esc(r)}</option>`).join('')}</select>
+              </label>
+              <label class="field field-wide"><span class="field-l">LINEの表示名<span class="opt">任意</span></span><input name="lineName" type="text" placeholder="公式LINEに表示されるお名前" />
+                <span class="field-help">${jp('LINEとアンケートを照らし合わせるために使います。')}</span></label>
+              <label class="field field-wide"><span class="field-l">ひとこと<span class="opt">任意</span></span><textarea name="comment" rows="4" placeholder="聞いてみたいこと、いまの状況など"></textarea></label>
+              <label class="hp" aria-hidden="true">Website<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
+            </div>
+          </div>
+
+          <label class="agree">
+            <input type="checkbox" name="agree" required />
+            <span>${jp(`ご回答はMusic Japanが受け取り、ご紹介の判断に使います。${name}へは、双方の了承後にのみ共有します。`)}<a href="${routes.privacy()}" target="_blank" rel="noopener">プライバシーポリシー</a>に同意のうえ送信します。</span>
+          </label>
+
+          <p class="form-err" role="alert" data-form-err hidden></p>
+          <button class="btn btn-cta btn-lg btn-block" type="submit" data-submit><span>アンケートを送信する</span><span class="arrow" aria-hidden="true">→</span></button>
+        </form>
+
+        <div class="done" data-done hidden tabindex="-1">
+          <p class="kicker">Thank you</p>
+          <p class="done-h">${heading('ご回答を受け付けました。')}</p>
+          <p class="done-id">受付番号 <strong data-receipt>—</strong></p>
+          <ol class="done-next">
+            <li>${jp('Music Japanがご回答の内容を確認します。')}</li>
+            <li>${jp(`${name}へ、ご相談の概要だけを事前に確認します。`)}</li>
+            <li>${jp(`双方の了承がそろったら、公式LINEでグループを作成します（目安：${site.leadTime}）。`)}</li>
+          </ol>
+          <p class="done-note">${jp('まだ公式LINEを追加していない方は、いまのうちに追加をお願いします。')}</p>
+          <a class="btn btn-line-app" href="${site.lineUrl}" target="_blank" rel="noopener"><span>公式LINEを追加する</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+${footer(p)}`;
+
+  return document(
+    {
+      kind: 'contact',
+      path,
+      partner: p,
+      title: `${name}への相談｜お問い合わせ - Baton Partners`,
+      description: `${p.company.name}へのご相談窓口です。公式LINEの追加とアンケートへの回答のあと、Music Japanが内容を確認してからおつなぎします。`,
+      jsonLd: [
+        ...orgLd(env, p),
+        {
+          '@type': 'ContactPage',
+          name: `${p.company.name}への相談`,
+          url: `${env.siteUrl}${path}`,
+          inLanguage: 'ja',
+        },
+        breadcrumbLd(env, [
+          { name: p.company.name, href: routes.top(p.slug) },
+          { name: 'お問い合わせ', href: path },
+        ]),
+      ],
+    },
+    env,
+    body,
+  );
+}

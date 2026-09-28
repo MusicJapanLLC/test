@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.vercel/
+.env
+.env.local
+.env.*.local
+*.local
+.DS_Store
+*.log
+shots/
+
+# ビルド時に src/ から自動生成されるページ（手で編集しない）
+/index.html
+/evorg/
+/privacy/
