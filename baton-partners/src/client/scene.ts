@@ -95,9 +95,9 @@ void main() {
   float ringShape = smoothstep(0.27, 0.33, r) * (1.0 - smoothstep(0.43, 0.5, r));
   float matched = max(ringShape, 1.0 - smoothstep(0.12, 0.18, r));
   float shape = mix(vKind < 0.5 ? dotShape : ringShape, matched, vE2);
+  // 求職者（uInk）と求人（uBrand）が重なると、決定の色（uRed）に変わる
   vec3 col = vKind < 0.5 ? uInk : uBrand;
-  col = mix(col, uBrand, vE2 * 0.55);
-  col = mix(col, uRed, vAccent * vE2);
+  col = mix(col, uRed, vE2 * (0.55 + 0.45 * vAccent));
   float a = shape * vAlpha;
   if (a < 0.01) discard;
   gl_FragColor = vec4(col, a);

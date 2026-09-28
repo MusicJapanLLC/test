@@ -19,7 +19,7 @@ export function renderIndex(list: Partner[], env: BuildEnv): string {
       <li>
         <a class="pcard" href="${routes.top(p.slug)}" style="--brand:${p.brand.primary}">
           <span class="pcard-no">No.${p.no}</span>
-          <img src="${p.brand.logo}" alt="" width="168" height="40" />
+          <img src="${p.brand.logo}" alt="" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
           <span class="pcard-name">${esc(p.company.name)}</span>
           <span class="pcard-svc">${esc(p.service.name)}｜${esc(p.service.category)}</span>
           <span class="arrow" aria-hidden="true">→</span>

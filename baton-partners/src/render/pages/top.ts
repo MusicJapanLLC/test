@@ -102,10 +102,32 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  <section class="sec sec-highlight" aria-labelledby="hl-h">
+    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="1.0" aria-hidden="true"><canvas></canvas></div>
+    <div class="wrap hl-in">
+      <header class="hl-head rv">
+        <p class="kicker">02 — ${esc(t.highlight.en)}</p>
+        <h2 id="hl-h" class="hl-h">${heading(t.highlight.title)}</h2>
+        <p class="hl-lead">${jp(t.highlight.lead)}</p>
+      </header>
+      <ol class="hl-steps">${t.highlight.steps
+        .map(
+          (st, i) => `
+        <li class="hl-step rv" style="--d:${i}">
+          <span class="hl-no">0${i + 1}</span>
+          <h3 class="hl-step-h">${heading(st.title)}</h3>
+          <p class="hl-step-p">${jp(st.detail)}</p>
+        </li>`,
+        )
+        .join('')}</ol>
+      <p class="fine rv">${jp(t.highlight.note)}</p>
+    </div>
+  </section>
+
   <section class="sec sec-numbers" aria-labelledby="num-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
-        <p class="kicker">02 — Numbers</p>
+        <p class="kicker">03 — Numbers</p>
         <h2 id="num-h" class="sec-h">${heading(`数字で見る、${s.name}の手ごたえ。`)}</h2>
       </header>
       <div class="stats">${stats}</div>
@@ -115,7 +137,7 @@ ${header(p, 'top')}
 
   <section class="sec sec-quote" aria-labelledby="about-teaser-h">
     <div class="wrap quote-in">
-      <p class="kicker rv">03 — About</p>
+      <p class="kicker rv">04 — About</p>
       <blockquote class="quote rv">
         <p id="about-teaser-h" class="quote-p">${heading(t.aboutQuote)}</p>
       </blockquote>
@@ -129,8 +151,8 @@ ${header(p, 'top')}
   <section class="sec sec-ink" aria-labelledby="svc-h">
     <div class="wrap">
       <header class="svc-head rv">
-        <p class="kicker kicker-light">04 — Service</p>
-        <p class="svc-name" aria-hidden="true">${esc(s.name)}</p>
+        <p class="kicker kicker-light">05 — Service</p>
+        <p class="logo-plate"><img src="${s.logo}" alt="${esc(s.logoAlt)}" width="${s.logoSize[0]}" height="${s.logoSize[1]}" loading="lazy" /></p>
         <h2 id="svc-h" class="sec-h sec-h-light">${heading(`${s.name}｜${s.category}`)}</h2>
         <p class="svc-lead">${jp(s.description)}</p>
       </header>
@@ -142,7 +164,7 @@ ${header(p, 'top')}
   <section class="sec sec-insight" aria-labelledby="ins-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
-        <p class="kicker">05 — Insights</p>
+        <p class="kicker">06 — Insights</p>
         <h2 id="ins-h" class="sec-h">${heading('読んでから、相談する。')}</h2>
       </header>
       <a class="cover rv" href="${routes.insight(p.slug, p.insight.slug)}">

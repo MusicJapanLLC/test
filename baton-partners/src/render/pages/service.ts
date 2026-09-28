@@ -76,7 +76,7 @@ ${header(p, 'service')}
     p,
     no: '03',
     en: 'Service',
-    big: s.name,
+    logo: { src: s.logo, alt: s.logoAlt, size: s.logoSize },
     title: s.category,
     lead: s.description,
     phase: 1.0,
@@ -124,7 +124,26 @@ ${header(p, 'service')}
     </div>
   </section>
 
-  <section class="sec" aria-labelledby="fit-h">
+  <section class="sec" aria-labelledby="onb-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Onboarding</p>
+        <h2 id="onb-h" class="sec-h">${heading('導入して、終わりにしない。')}</h2>
+      </header>
+      <ul class="stances">${s.onboarding
+        .map(
+          (o, i) => `
+        <li class="stance rv" style="--d:${i}">
+          <span class="stance-no">0${i + 1}</span>
+          <h3 class="stance-h">${heading(o.title)}</h3>
+          <p class="stance-p">${jp(o.detail)}</p>
+        </li>`,
+        )
+        .join('')}</ul>
+    </div>
+  </section>
+
+  <section class="sec sec-tint" aria-labelledby="fit-h">
     <div class="wrap grid-sec">
       <header class="sec-head rv">
         <p class="kicker">For you</p>
@@ -139,7 +158,7 @@ ${header(p, 'service')}
     </div>
   </section>
 
-  <section class="sec sec-tint" aria-labelledby="faq-h">
+  <section class="sec" aria-labelledby="faq-h">
     <div class="wrap grid-sec">
       <header class="sec-head rv">
         <p class="kicker">FAQ</p>

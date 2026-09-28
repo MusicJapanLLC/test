@@ -46,7 +46,7 @@ export function renderInsight(p: Partner, env: BuildEnv): string {
   const promo = `
     <aside class="promo">
       <p class="promo-k">${esc(shortName(p))}のサービス</p>
-      <p class="promo-name">${esc(p.service.name)}</p>
+      <p class="promo-logo"><img src="${p.service.logo}" alt="${esc(p.service.logoAlt)}" width="${p.service.logoSize[0]}" height="${p.service.logoSize[1]}" loading="lazy" /></p>
       <p class="promo-p">${jp(p.service.category)}</p>
       <a class="btn btn-ink btn-block" href="${routes.service(p.slug)}"><span>${esc(p.service.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
       <a class="btn btn-cta btn-block" href="${routes.contact(p.slug)}">相談する</a>

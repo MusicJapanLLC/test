@@ -29,9 +29,10 @@ export function mountScenes(onTop?: (scene: NetworkScene) => void): void {
         canvas,
         count: Math.round(base * (small ? 0.45 : 1)),
         phase: Number(host.dataset.phase ?? (isStage ? HERO_PHASE : 0)),
-        brand: color('--brand', '#147F6E'),
-        ink: color('--ink', '#141414'),
-        red: color('--red', '#C8102E'),
+        // 求職者（点）・求人（輪）・決定（重なり）の3色。企業ごとに head の CSS 変数で渡す
+        ink: color('--scene-a', color('--ink', '#141414')),
+        brand: color('--scene-b', color('--brand', '#147F6E')),
+        red: color('--scene-match', color('--red', '#C8102E')),
         layout: isStage ? 'right' : 'center',
         animate,
       });

@@ -39,9 +39,13 @@ export type Partner = {
   brand: {
     primary: string;
     accent: string;
-    /** public/ 以下のロゴ画像。未支給の間はワードマークSVGを置いておく */
+    /** public/ 以下のロゴ画像（背景透過） */
     logo: string;
     logoAlt: string;
+    /** ロゴ画像の実寸（幅, 高さ）。レイアウトのずれ防止用 */
+    logoSize: [number, number];
+    /** WebGLシーンの色。a=求職者の点、b=求人の輪、match=決定したとき */
+    scene: { a: string; b: string; match: string };
   };
   top: {
     title: string[];
@@ -52,6 +56,8 @@ export type Partner = {
     stats: Stat[];
     statsNote: string;
     aboutQuote: string;
+    /** 看板機能を1つ大きく見せる帯（エボルグなら休眠求職者の掘り起こし） */
+    highlight: { en: string; title: string[]; lead: string; steps: Pair[]; note: string };
   };
   about: {
     title: string[];
@@ -62,6 +68,10 @@ export type Partner = {
   };
   service: {
     name: string;
+    /** サービスのロゴ（背景透過）。暗い背景では白いプレートに載せる */
+    logo: string;
+    logoAlt: string;
+    logoSize: [number, number];
     category: string;
     tagline: string;
     description: string;
@@ -70,6 +80,8 @@ export type Partner = {
     flow: { stage: string; en: string; feature: string }[];
     features: (Pair & { en: string })[];
     fits: string[];
+    /** 導入・サポート */
+    onboarding: Pair[];
   };
   insight: {
     slug: string;

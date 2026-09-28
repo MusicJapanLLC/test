@@ -52,7 +52,7 @@ ${env.noindex ? '<meta name="robots" content="noindex, nofollow, noarchive" />' 
 <meta property="og:url" content="${canonical}" />
 <meta property="og:locale" content="ja_JP" />
 <meta name="twitter:card" content="summary_large_image" />
-${p ? `<style>:root{--brand:${p.brand.primary};--brand-2:${p.brand.accent}}</style>` : ''}
+${p ? `<style>html:root{--brand:${p.brand.primary};--brand-2:${p.brand.accent};--scene-a:${p.brand.scene.a};--scene-b:${p.brand.scene.b};--scene-match:${p.brand.scene.match}}</style>` : ''}
 ${ld}`.trim();
 }
 
@@ -98,7 +98,7 @@ export function header(p: Partner, current: PageKind): string {
 <header class="hdr" data-hdr>
   <div class="hdr-in">
     <a class="brand" href="${routes.top(p.slug)}" aria-label="${esc(p.company.name)} トップへ">
-      <img class="brand-logo" src="${p.brand.logo}" alt="${esc(p.brand.logoAlt)}" width="168" height="40" />
+      <img class="brand-logo" src="${p.brand.logo}" alt="${esc(p.brand.logoAlt)}" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
       <span class="brand-sep" aria-hidden="true"></span>
       <span class="brand-bp"><em>Baton</em> Partners</span>
     </a>
