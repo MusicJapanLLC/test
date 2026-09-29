@@ -1,6 +1,6 @@
 import { routes, site } from '../config/site';
 import type { Partner } from '../types';
-import { esc, jp } from './text';
+import { esc, heading, jp } from './text';
 
 export type PageKind = 'top' | 'about' | 'insight' | 'service' | 'contact' | 'privacy' | 'index';
 
@@ -26,7 +26,7 @@ export type BuildEnv = {
 };
 
 const GOOGLE_FONTS =
-  'https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Noto+Sans+JP:wght@400;700&family=Shippori+Mincho:wght@700;800&display=swap';
+  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Old+Mincho:wght@700;900&display=swap';
 
 /** 「株式会社エボルグ」→「エボルグ」 */
 export const shortName = (p: Partner): string =>
@@ -94,7 +94,7 @@ export function header(p: Partner, current: PageKind): string {
   const menuItems = [
     { kind: 'top' as PageKind, en: 'Top', ja: 'トップ' },
     ...NAV,
-    { kind: 'contact' as PageKind, en: 'Contact', ja: 'お問い合わせ' },
+    { kind: 'contact' as PageKind, en: 'Talk', ja: '話してみる' },
   ]
     .map(
       (n, i) =>
@@ -112,7 +112,7 @@ export function header(p: Partner, current: PageKind): string {
       <span class="brand-bp"><em>Baton</em> Partners</span>
     </a>
     <nav class="nav" aria-label="メインメニュー"><ul>${items}</ul></nav>
-    <a class="btn btn-cta hdr-cta" href="${routes.contact(p.slug)}"${current === 'contact' ? ' aria-current="page"' : ''}>相談する</a>
+    <a class="btn btn-cta hdr-cta" href="${routes.contact(p.slug)}"${current === 'contact' ? ' aria-current="page"' : ''} data-cursor="Talk"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
     <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" data-menu-btn>
       <span class="menu-lines" aria-hidden="true"><i></i><i></i></span><span class="menu-label">Menu</span>
     </button>
@@ -122,7 +122,7 @@ export function header(p: Partner, current: PageKind): string {
   <div class="menu-in">
     <p class="menu-kicker">Baton Partners — No.${p.no}</p>
     <ul class="menu-list">${menuItems}</ul>
-    <a class="btn btn-cta btn-lg menu-cta" href="${routes.contact(p.slug)}">${esc(shortName(p))}に相談する</a>
+    <a class="btn btn-cta btn-lg menu-cta" href="${routes.contact(p.slug)}">${esc(shortName(p))}と、話してみる</a>
   </div>
 </div>`.trim();
 }
@@ -130,11 +130,12 @@ export function header(p: Partner, current: PageKind): string {
 export function ctaBand(p: Partner): string {
   return `
 <section class="cta-band" aria-labelledby="cta-band-h">
+  <div class="scene scene-aurora" data-scene="aurora" data-count="0" aria-hidden="true"><canvas></canvas></div>
   <div class="wrap cta-band-in">
-    <p class="kicker kicker-light">Contact</p>
-    <h2 id="cta-band-h" class="cta-band-h">${jp(`${shortName(p)}に、相談してみる。`)}</h2>
+    <p class="kicker kicker-light">Talk</p>
+    <h2 id="cta-band-h" class="cta-band-h">${heading([`${shortName(p)}と、`, 'まずは話してみる。'])}</h2>
     <p class="cta-band-p">${jp(`予約カレンダーはありません。Music Japanがご相談内容を確認し、双方の了承を得てからLINEでおつなぎします。`)}</p>
-    <a class="btn btn-cta btn-lg" href="${routes.contact(p.slug)}"><span>相談の流れを見る</span><span class="arrow" aria-hidden="true">→</span></a>
+    <a class="btn btn-cta btn-lg" href="${routes.contact(p.slug)}"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
   </div>
 </section>`.trim();
 }
@@ -146,7 +147,7 @@ export function footer(p?: Partner): string {
         <li><a href="${routes.about(p.slug)}">取り組み</a></li>
         <li><a href="${routes.insight(p.slug, p.insight.slug)}">記事</a></li>
         <li><a href="${routes.service(p.slug)}">${esc(p.service.name)}</a></li>
-        <li><a href="${routes.contact(p.slug)}">お問い合わせ</a></li>
+        <li><a href="${routes.contact(p.slug)}">話してみる</a></li>
       </ul>`
     : '';
   const about = p
@@ -215,6 +216,11 @@ export function document(meta: PageMeta, env: BuildEnv, body: string): string {
 ${head(meta, env)}
 </head>
 <body data-page="${meta.kind}"${meta.partner ? ` data-partner="${meta.partner.slug}"` : ''}>
+<div class="progress" aria-hidden="true"><i data-scroll-progress></i></div>
+<div class="curtain" data-curtain aria-hidden="true">
+  <div class="curtain-in">${meta.partner ? `<img src="${meta.partner.brand.logo}" alt="" width="${meta.partner.brand.logoSize[0]}" height="${meta.partner.brand.logoSize[1]}" />` : ''}<span class="curtain-bp"><em>Baton</em> Partners</span><span class="curtain-line"><i></i></span></div>
+</div>
+<div class="cursor" data-cursor-el aria-hidden="true"><span class="cursor-dot"></span><span class="cursor-ring"><span class="cursor-label" data-cursor-label></span></span></div>
 ${body}
 <script type="module" src="/src/client/main.ts"></script>
 </body>

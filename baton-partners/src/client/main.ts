@@ -1,6 +1,8 @@
 import '../styles/base.css';
 import '../styles/pages.css';
+import '../styles/fx.css';
 import { setupContact } from './contact';
+import { setupFx } from './fx';
 import { mountScenes } from './scenes';
 import { setupStage } from './stage';
 import { setupHeader, setupMenu, setupReveal, setupSmoothScroll, setupToc } from './ui';
@@ -15,6 +17,7 @@ setupReveal();
 setupSmoothScroll();
 setupToc();
 setupContact();
+setupFx();
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));

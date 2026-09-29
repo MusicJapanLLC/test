@@ -121,7 +121,7 @@ export function setupContact(): void {
       showError((err as Error).message);
       if (button) {
         button.disabled = false;
-        button.querySelector('span')!.textContent = 'アンケートを送信する';
+        button.querySelector('span')!.textContent = 'この内容で送る';
       }
     }
   });

@@ -31,3 +31,15 @@ export function pageHero(opts: {
   </div>
 </section>`.trim();
 }
+
+/**
+ * 横に流れるテキスト帯。スクロールの速さに合わせて加速・傾く（client/fx.ts）。
+ * 同じ並びを2回出して、継ぎ目なくループさせる。
+ */
+export function marquee(items: string[], opts: { label: string; size?: 'xl' | 'md'; reverse?: boolean }): string {
+  const run = items.map((t) => `<span class="mq-item">${esc(t)}</span><span class="mq-sep" aria-hidden="true">✦</span>`).join('');
+  return `
+<div class="mq mq-${opts.size ?? 'xl'}${opts.reverse ? ' mq-rev' : ''}" data-marquee role="marquee" aria-label="${esc(opts.label)}">
+  <div class="mq-track"><div class="mq-run">${run}</div><div class="mq-run" aria-hidden="true">${run}</div></div>
+</div>`.trim();
+}

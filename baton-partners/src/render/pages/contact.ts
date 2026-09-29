@@ -59,11 +59,11 @@ ${header(p, 'contact')}
   ${pageHero({
     p,
     no: '04',
-    en: 'Contact',
-    title: [`${name}に、`, '相談する。'],
+    en: 'Talk',
+    title: [`${name}と、`, '話してみる。'],
     lead: `予約カレンダーはありません。Music Japanがご相談の内容を確かめてから、${name}とおつなぎします。`,
     phase: 2.0,
-    crumbs: [{ name, href: routes.top(p.slug) }, { name: 'お問い合わせ' }],
+    crumbs: [{ name, href: routes.top(p.slug) }, { name: '話してみる' }],
   })}
 
   <section class="sec sec-steps" aria-labelledby="steps-h">
@@ -95,7 +95,7 @@ ${header(p, 'contact')}
 
       <div class="form-wrap rv">
         <p class="kicker">Step 02</p>
-        <h2 id="form-h" class="form-h">${heading('ご相談アンケート')}</h2>
+        <h2 id="form-h" class="form-h">${heading('話してみる前の、5つの質問')}</h2>
         <p class="form-lead">${jp('すべての方にお願いしています。ご回答はMusic Japanだけが確認し、了承をいただくまで紹介先へお渡ししません。')}</p>
 
         <form class="form" data-form data-partner="${p.slug}" data-partner-name="${esc(p.company.name)}" novalidate>
@@ -126,7 +126,7 @@ ${header(p, 'contact')}
           </label>
 
           <p class="form-err" role="alert" data-form-err hidden></p>
-          <button class="btn btn-cta btn-lg btn-block" type="submit" data-submit><span>アンケートを送信する</span><span class="arrow" aria-hidden="true">→</span></button>
+          <button class="btn btn-cta btn-lg btn-block" type="submit" data-submit><span>この内容で送る</span><span class="arrow" aria-hidden="true">→</span></button>
         </form>
 
         <div class="done" data-done hidden tabindex="-1">
@@ -152,7 +152,7 @@ ${footer(p)}`;
       kind: 'contact',
       path,
       partner: p,
-      title: `${name}への相談｜お問い合わせ - Baton Partners`,
+      title: `${name}と話してみる - Baton Partners`,
       description: `${p.company.name}へのご相談窓口です。公式LINEの追加とアンケートへの回答のあと、Music Japanが内容を確認してからおつなぎします。`,
       jsonLd: [
         ...orgLd(env, p),
@@ -164,7 +164,7 @@ ${footer(p)}`;
         },
         breadcrumbLd(env, [
           { name: p.company.name, href: routes.top(p.slug) },
-          { name: 'お問い合わせ', href: path },
+          { name: '話してみる', href: path },
         ]),
       ],
     },

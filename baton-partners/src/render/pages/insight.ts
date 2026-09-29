@@ -49,7 +49,7 @@ export function renderInsight(p: Partner, env: BuildEnv): string {
       <p class="promo-logo"><img src="${p.service.logo}" alt="${esc(p.service.logoAlt)}" width="${p.service.logoSize[0]}" height="${p.service.logoSize[1]}" loading="lazy" /></p>
       <p class="promo-p">${jp(p.service.category)}</p>
       <a class="btn btn-ink btn-block" href="${routes.service(p.slug)}"><span>${esc(p.service.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
-      <a class="btn btn-cta btn-block" href="${routes.contact(p.slug)}">相談する</a>
+      <a class="btn btn-cta btn-block" href="${routes.contact(p.slug)}">話してみる</a>
     </aside>`;
 
   const body = `
@@ -80,10 +80,10 @@ ${header(p, 'insight')}
         ${sections}
         <aside class="a-end">
           <p class="a-end-k">この記事を読んだ方へ</p>
-          <p class="a-end-h">${heading(`まずは${p.service.name}を知る。気になったら、相談する。`)}</p>
+          <p class="a-end-h">${heading(`まずは${p.service.name}を知る。気になったら、話してみる。`)}</p>
           <div class="a-end-actions">
             <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${esc(p.service.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
-            <a class="btn btn-cta" href="${routes.contact(p.slug)}">相談する</a>
+            <a class="btn btn-cta" href="${routes.contact(p.slug)}" data-cursor="Talk">話してみる</a>
           </div>
         </aside>
         <p class="a-credit">${jp(`この記事はBaton Partners編集部が制作しています。${p.service.name}に関する記載は、${p.company.name}の公開情報にもとづきます。`)}</p>

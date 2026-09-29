@@ -50,6 +50,8 @@ export type Partner = {
   top: {
     title: string[];
     lead: string;
+    /** ヒーロー下の小さなバッジ（公式サイトの表記どおり） */
+    badges: string[];
     verbs: { en: string; ja: string; title: string; body: string }[];
     problemsTitle: string;
     problems: Pair[];
@@ -82,6 +84,9 @@ export type Partner = {
     fits: string[];
     /** 導入・サポート */
     onboarding: Pair[];
+    /** 公式サイトに掲載されている利用企業（テキストで流す） */
+    clients: string[];
+    clientsNote: string;
   };
   insight: {
     slug: string;

@@ -1,13 +1,13 @@
 /*
  * Webフォントは描画をブロックしないよう、main.ts から非同期で読み込む。
  * 読み込み前はOS標準の明朝・ゴシックで表示され、届いたら差し替わる（font-display: swap）。
- * 日本語フォントは1ウェイトあたりCSSだけで約30KB(gzip)あるため、使うウェイトだけに絞る。
+ *   見出し：Zen Old Mincho（700 / 900）… 太いウェイトまでコントラストが美しい明朝
+ *   本文　：Zen Kaku Gothic New（400 / 700）
+ *   欧文　：Fraunces（可変フォント。字幅・光学サイズが連続で変わる）
  */
-@import '@fontsource/noto-sans-jp/400.css';
-@import '@fontsource/noto-sans-jp/700.css';
-@import '@fontsource/shippori-mincho/700.css';
-@import '@fontsource/shippori-mincho/800.css';
-@import '@fontsource/cormorant-garamond/latin-500.css';
-@import '@fontsource/cormorant-garamond/latin-600.css';
-@import '@fontsource/cormorant-garamond/latin-500-italic.css';
-@import '@fontsource/cormorant-garamond/latin-600-italic.css';
+@import '@fontsource/zen-kaku-gothic-new/400.css';
+@import '@fontsource/zen-kaku-gothic-new/700.css';
+@import '@fontsource/zen-old-mincho/700.css';
+@import '@fontsource/zen-old-mincho/900.css';
+@import '@fontsource-variable/fraunces/opsz.css';
+@import '@fontsource-variable/fraunces/opsz-italic.css';

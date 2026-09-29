@@ -1,0 +1,512 @@
+/* ═════════════════════════════════════════════
+   動きと演出（client/fx.ts と対になる）
+   ═════════════════════════════════════════════ */
+
+/* ── 欧文のディスプレイ体：Fraunces の光学サイズを大きく、柔らかく ── */
+.kicker,
+.verb-en,
+.stat-num,
+.issue-no,
+.story-no,
+.hl-no,
+.step-no,
+.feat-meta,
+.nav-en,
+.m-en,
+.ftr-mark,
+.brand-bp,
+.mq-item {
+  font-variation-settings: 'opsz' 144;
+}
+
+/* ── ヒーローの見出し：1文字ずつ、奥から立ち上がる ── */
+.ch {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+html.js .hero-h .ph,
+html.js .phero-h .ph {
+  animation: none;
+}
+html.js .split .ch {
+  opacity: 0;
+  transform: translate3d(0, 0.9em, 0) rotateX(-90deg) scale(0.9);
+  transform-origin: 50% 100%;
+  filter: blur(8px);
+  animation: ch-in 1.2s var(--ease) forwards;
+  animation-delay: calc(var(--c) * 34ms + 150ms);
+}
+@keyframes ch-in {
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+.hero-h,
+.phero-h {
+  perspective: 800px;
+}
+/* 2行目は JS（fx.ts）で1文字ずつ企業色のグラデーションに塗る。JSなしなら企業色一色 */
+.is-grad .ch,
+.is-grad .ph {
+  transition: color 0.6s var(--ease);
+}
+
+/* ── ヒーローのバッジ ── */
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.badges li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  border: 1px solid var(--rule-2);
+  border-radius: 999px;
+  background: color-mix(in srgb, #fff 70%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.badges li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--brand);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 18%, transparent);
+  animation: pulse 2.4s var(--ease) infinite;
+}
+@keyframes pulse {
+  50% {
+    box-shadow: 0 0 0 7px color-mix(in srgb, var(--brand) 0%, transparent);
+  }
+}
+html.js .badges {
+  animation: fade-up 1.2s var(--ease) both;
+  animation-delay: 1.1s;
+}
+
+/* ── 流れるテキスト帯 ── */
+.mq {
+  position: relative;
+  overflow: hidden;
+  border-block: 1px solid var(--rule);
+  background: var(--paper);
+  padding-block: clamp(14px, 2vw, 26px);
+}
+.mq-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  transform: translate3d(var(--mq-x, 0px), 0, 0) skewX(var(--mq-skew, 0deg));
+}
+.mq-run {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.mq-item {
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-weight: 400;
+  font-size: clamp(2.6rem, 1.4rem + 5.6vw, 7.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  padding-inline: 0.35em;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--ink);
+  transition: color 0.4s var(--ease);
+}
+.mq-item:nth-child(4n + 1) {
+  color: var(--ink);
+  -webkit-text-stroke: 0;
+}
+.mq-item:nth-child(4n + 3) {
+  color: var(--brand);
+  -webkit-text-stroke: 0;
+}
+.mq-sep {
+  font-size: clamp(1rem, 0.6rem + 1.2vw, 1.8rem);
+  color: var(--brand-2);
+}
+.mq-md .mq-item {
+  font-family: var(--f-sans);
+  font-style: normal;
+  font-weight: 700;
+  font-size: clamp(1.2rem, 0.9rem + 1.2vw, 2rem);
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+  -webkit-text-stroke: 0;
+  padding-inline: 1.2em;
+}
+.mq-md .mq-item:nth-child(n) {
+  color: var(--ink-2);
+}
+.mq-md .mq-sep {
+  font-size: 0.9rem;
+  color: var(--ink-3);
+}
+html:not(.js) .mq-track {
+  animation: mq-css 40s linear infinite;
+}
+@keyframes mq-css {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.clients {
+  padding-block: clamp(40px, 6vw, 72px) 0;
+  background: var(--paper);
+}
+.clients-h {
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-3);
+  margin-bottom: 18px;
+}
+.clients .mq {
+  border-bottom: 0;
+}
+.clients-svc {
+  border-top: 1px solid var(--rule);
+}
+
+/* ── スクロール進捗 ── */
+.progress {
+  position: fixed;
+  inset: 0 0 auto;
+  height: 2px;
+  z-index: 80;
+  pointer-events: none;
+}
+.progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), var(--scene-match, var(--brand)), var(--brand-2));
+  transform-origin: left;
+  transform: scaleX(var(--sp, 0));
+}
+
+/* ── ページ切り替えの幕 ── */
+.curtain {
+  position: fixed;
+  inset: 0;
+  z-index: 150;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  pointer-events: none;
+  visibility: hidden;
+  clip-path: inset(0 0 100% 0);
+}
+html.js .curtain {
+  visibility: visible;
+}
+.curtain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, var(--brand) 0%, var(--scene-match, var(--brand)) 50%, var(--brand-2) 100%);
+  opacity: 0.07;
+}
+.curtain-in {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+}
+.curtain-in img {
+  height: clamp(40px, 6vw, 64px);
+  width: auto;
+}
+.curtain-bp {
+  font-family: var(--f-latin);
+  font-size: 1.05rem;
+  color: var(--ink-2);
+  letter-spacing: 0.04em;
+}
+.curtain-bp em {
+  color: var(--red);
+}
+.curtain-line {
+  width: 160px;
+  height: 2px;
+  background: var(--rule);
+  overflow: hidden;
+}
+.curtain-line i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--brand), var(--brand-2));
+  transform-origin: left;
+  animation: line-load 0.9s var(--ease) both;
+}
+@keyframes line-load {
+  from {
+    transform: scaleX(0);
+  }
+}
+/* 読み込み直後：幕が上に抜ける */
+html.is-entering .curtain {
+  clip-path: inset(0 0 0 0);
+  animation: curtain-out 1s var(--ease) 0.55s forwards;
+}
+@keyframes curtain-out {
+  to {
+    clip-path: inset(0 0 100% 0);
+  }
+}
+/* リンクを押したとき：下から幕が上がる */
+html.is-leaving .curtain {
+  animation: curtain-in 0.6s var(--ease) forwards;
+}
+html.is-leaving .curtain-line i {
+  animation: none;
+  transform: scaleX(0);
+}
+@keyframes curtain-in {
+  from {
+    clip-path: inset(100% 0 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* ── カスタムカーソル（マウスのあるPCだけ） ── */
+.cursor {
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  html.has-cursor .cursor {
+    display: block;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 160;
+    pointer-events: none;
+  }
+  html.has-cursor,
+  html.has-cursor a,
+  html.has-cursor button,
+  html.has-cursor label {
+    cursor: none;
+  }
+  html.has-cursor input,
+  html.has-cursor textarea,
+  html.has-cursor select {
+    cursor: auto;
+  }
+}
+.cursor-dot,
+.cursor-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 50%;
+  will-change: transform;
+}
+.cursor-dot {
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  background: var(--brand);
+  transform: translate3d(var(--dx, -99px), var(--dy, -99px), 0);
+}
+.cursor-ring {
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
+  border: 1px solid color-mix(in srgb, var(--ink) 45%, transparent);
+  display: grid;
+  place-items: center;
+  transform: translate3d(var(--rx, -99px), var(--ry, -99px), 0) scale(var(--rs, 1));
+  transition:
+    width 0.35s var(--ease),
+    height 0.35s var(--ease),
+    margin 0.35s var(--ease),
+    background-color 0.35s var(--ease),
+    border-color 0.35s var(--ease);
+}
+.cursor.is-link .cursor-ring {
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  border-color: transparent;
+  background: color-mix(in srgb, var(--brand) 14%, transparent);
+  backdrop-filter: blur(2px);
+}
+.cursor.is-label .cursor-ring {
+  width: 86px;
+  height: 86px;
+  margin: -43px 0 0 -43px;
+  background: var(--brand);
+  border-color: var(--brand);
+}
+.cursor-label {
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.25s;
+}
+.cursor.is-label .cursor-label {
+  opacity: 1;
+}
+.cursor.is-down .cursor-ring {
+  --rs: 0.8;
+}
+
+/* ── カード：傾きと、光の反射 ── */
+[data-tilt] {
+  position: relative;
+  transform: perspective(900px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateZ(0);
+  transition: transform 0.5s var(--ease);
+  transform-style: preserve-3d;
+}
+[data-tilt].is-tilting {
+  transition: transform 0.08s linear;
+}
+[data-tilt]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(420px circle at var(--gx, 50%) var(--gy, 50%), color-mix(in srgb, var(--brand-2) 16%, transparent), transparent 55%);
+  opacity: 0;
+  transition: opacity 0.4s var(--ease);
+}
+[data-tilt].is-tilting::after {
+  opacity: 1;
+}
+
+/* ── ボタン：光が走る・色が満ちる ── */
+.btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+}
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(110deg, transparent 20%, rgba(255, 255, 255, 0.45) 45%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.9s var(--ease);
+}
+.btn:hover::before {
+  transform: translateX(120%);
+}
+.btn-cta {
+  background: linear-gradient(120deg, var(--red) 0%, var(--scene-match, var(--red)) 100%);
+  box-shadow: 0 10px 30px -12px color-mix(in srgb, var(--red) 70%, transparent);
+}
+.btn-cta:hover {
+  background: linear-gradient(120deg, var(--red) 0%, var(--scene-match, var(--red)) 100%);
+  box-shadow: 0 16px 40px -12px color-mix(in srgb, var(--red) 80%, transparent);
+}
+.btn-line::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--ink);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.45s var(--ease);
+}
+.btn-line:hover {
+  background: transparent;
+}
+.btn-line:hover::after {
+  transform: scaleY(1);
+}
+
+/* ── ヘッダー：下にスクロールすると隠れ、上に戻すと出る ── */
+.hdr {
+  transition:
+    transform 0.5s var(--ease),
+    border-color 0.4s var(--ease),
+    background-color 0.4s var(--ease);
+}
+.hdr.is-hidden {
+  transform: translateY(-100%);
+}
+
+/* ── 見出し脇の赤い線：伸びて出てくる ── */
+html.js .rv .kicker-rule,
+html.js .kicker .kicker-rule {
+  transform-origin: left;
+  animation: rule-in 1.2s var(--ease) both 0.2s;
+}
+@keyframes rule-in {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+/* ── 出現：下から＋ぼかしが晴れる ── */
+html.js .rv {
+  filter: blur(6px);
+  transition:
+    opacity 1s var(--ease),
+    transform 1.1s var(--ease),
+    filter 1s var(--ease);
+}
+html.js .rv.is-in {
+  filter: none;
+}
+
+/* ── CTA帯：WebGLのオーロラ背景 ── */
+.cta-band .scene-aurora {
+  z-index: 0;
+}
+.cta-band-in {
+  position: relative;
+  z-index: 1;
+}
+.cta-band-h .ln + .ln {
+  color: var(--brand);
+}
+
+/* ── 数字のカウントアップ中は幅を固定して揺れを防ぐ ── */
+.stat-num {
+  font-variant-numeric: tabular-nums lining-nums;
+}
+
+/* ── ロゴプレートは静かに浮く ── */
+.logo-plate {
+  animation: float 6s ease-in-out infinite;
+  box-shadow: 0 20px 50px -20px rgba(0, 0, 0, 0.5);
+}
+@keyframes float {
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mq-track {
+    transform: none !important;
+  }
+  html.js .split .ch {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+  html.is-entering .curtain {
+    display: none;
+  }
+}

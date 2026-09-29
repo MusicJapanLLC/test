@@ -10,6 +10,7 @@ import {
   shortName,
   type BuildEnv,
 } from '../layout';
+import { marquee } from '../parts';
 import { esc, heading, jp, plain } from '../text';
 
 export function renderTop(p: Partner, env: BuildEnv): string {
@@ -67,16 +68,17 @@ ${header(p, 'top')}
 <main id="main">
   <section class="stage" data-stage aria-labelledby="hero-h">
     <div class="stage-sticky">
-      <div class="scene" data-scene="network" data-count="1600" aria-hidden="true"><canvas></canvas></div>
+      <div class="scene" data-scene="network" data-count="3200" aria-hidden="true"><canvas></canvas></div>
       <div class="stage-shade" aria-hidden="true"></div>
       <div class="wrap stage-ui">
         <div class="hero" data-hero>
           <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>Baton Partners — No.${p.no}<span class="kicker-co">${esc(p.company.nameEn)}</span></p>
           <h1 id="hero-h" class="hero-h">${heading(t.title)}</h1>
           <p class="hero-lead">${jp(t.lead)}</p>
+          <ul class="badges">${t.badges.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
           <div class="hero-actions">
             <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${esc(s.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
-            <a class="btn btn-line" href="${routes.contact(p.slug)}">相談する</a>
+            <a class="btn btn-line" href="${routes.contact(p.slug)}" data-cursor="Talk">話してみる</a>
           </div>
         </div>
         <div class="verbs" data-verbs>
@@ -91,6 +93,8 @@ ${header(p, 'top')}
       </div>
     </div>
   </section>
+
+  ${marquee(['Collect', 'Connect', 'Decide', s.name, 'CRM', 'MA', 'LINE', 'AI Matching', 'AI Workflow', 'Dashboard'], { label: `${s.name}の機能` })}
 
   <section class="sec sec-issue" aria-labelledby="issue-h">
     <div class="wrap grid-sec">
@@ -135,6 +139,11 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  <section class="clients" aria-labelledby="clients-h">
+    <p id="clients-h" class="clients-h wrap">${jp(s.clientsNote)}</p>
+    ${marquee(s.clients, { label: '利用企業', size: 'md', reverse: true })}
+  </section>
+
   <section class="sec sec-quote" aria-labelledby="about-teaser-h">
     <div class="wrap quote-in">
       <p class="kicker rv">04 — About</p>
@@ -165,7 +174,7 @@ ${header(p, 'top')}
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
         <p class="kicker">06 — Insights</p>
-        <h2 id="ins-h" class="sec-h">${heading('読んでから、相談する。')}</h2>
+        <h2 id="ins-h" class="sec-h">${heading('読んでから、話してみる。')}</h2>
       </header>
       <a class="cover rv" href="${routes.insight(p.slug, p.insight.slug)}">
         <span class="cover-meta"><span>${esc(p.insight.category)}</span><span>${p.insight.published.replace(/-/g, '.')}</span><span>${p.insight.readingMinutes} min read</span></span>

@@ -1,7 +1,7 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { breadcrumbLd, ctaBand, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
-import { pageHero } from '../parts';
+import { marquee, pageHero } from '../parts';
 import { esc, heading, jp } from '../text';
 
 export function renderService(p: Partner, env: BuildEnv): string {
@@ -83,6 +83,11 @@ ${header(p, 'service')}
     crumbs: [{ name: shortName(p), href: routes.top(p.slug) }, { name: s.name }],
   })}
 
+  <section class="clients clients-svc" aria-labelledby="clients-h">
+    <p id="clients-h" class="clients-h wrap">${jp(s.clientsNote)}</p>
+    ${marquee(s.clients, { label: '利用企業', size: 'md' })}
+  </section>
+
   <section class="sec" aria-labelledby="sol-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
@@ -96,8 +101,8 @@ ${header(p, 'service')}
   <section class="sec sec-tint" aria-labelledby="flow-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
-        <p class="kicker">Workflow</p>
-        <h2 id="flow-h" class="sec-h">${heading('集客から決定まで、ひとつの流れで。')}</h2>
+        <p class="kicker">Roadmap</p>
+        <h2 id="flow-h" class="sec-h">${heading('機能は、進化し続ける。')}</h2>
       </header>
       <ol class="flow">${flow}</ol>
     </div>
@@ -162,7 +167,7 @@ ${header(p, 'service')}
     <div class="wrap grid-sec">
       <header class="sec-head rv">
         <p class="kicker">FAQ</p>
-        <h2 id="faq-h" class="sec-h">${heading('相談の前に')}</h2>
+        <h2 id="faq-h" class="sec-h">${heading('話してみる前に')}</h2>
       </header>
       <div class="faq rv">${faq}</div>
     </div>

@@ -4,22 +4,23 @@
    企業ごとの色は --brand / --brand-2 で差し替える
    ───────────────────────────────────────────── */
 :root {
-  --paper: #f3efe6;
-  --paper-2: #ebe5d8;
-  --card: #faf8f3;
-  --ink: #141414;
-  --ink-2: #3b3834;
-  --ink-3: #6f6a63;
-  --rule: rgba(20, 20, 20, 0.14);
-  --rule-2: rgba(20, 20, 20, 0.28);
+  /* 白を基調に。面の切り替えはごく淡いグレーで */
+  --paper: #ffffff;
+  --paper-2: #f5f6f8;
+  --card: #ffffff;
+  --ink: #0e0f12;
+  --ink-2: #3a3d44;
+  --ink-3: #737782;
+  --rule: rgba(14, 15, 18, 0.1);
+  --rule-2: rgba(14, 15, 18, 0.22);
   --red: #c8102e;
   --brand: #147f6e;
   --brand-2: #34a392;
   --line-app: #06c755;
 
-  --f-sans: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
-  --f-serif: 'Shippori Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
-  --f-latin: 'Cormorant Garamond', 'Shippori Mincho', 'Times New Roman', serif;
+  --f-sans: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
+  --f-serif: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
+  --f-latin: 'Fraunces Variable', 'Fraunces', 'Zen Old Mincho', 'Times New Roman', serif;
 
   --gutter: clamp(16px, 4.4vw, 56px);
   --max: 1320px;
@@ -61,23 +62,6 @@ body {
   overflow-wrap: anywhere;
   line-break: strict;
   overflow-x: clip;
-}
-
-/* 紙の質感。スマホでは描画負荷を避けて切る */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  pointer-events: none;
-  opacity: 0.32;
-  mix-blend-mode: multiply;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.3 0 0 0 0 0.25 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-@media (max-width: 767px) {
-  body::after {
-    display: none;
-  }
 }
 
 img,

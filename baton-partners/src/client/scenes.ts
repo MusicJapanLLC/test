@@ -24,6 +24,7 @@ export function mountScenes(onTop?: (scene: NetworkScene) => void): void {
       if (!canvas) continue;
       const base = Number(host.dataset.count ?? 1000);
       const isStage = host.closest('[data-stage]') !== null;
+      const isAurora = host.dataset.scene === 'aurora';
       const scene = new NetworkScene({
         host,
         canvas,
@@ -35,6 +36,8 @@ export function mountScenes(onTop?: (scene: NetworkScene) => void): void {
         red: color('--scene-match', color('--red', '#C8102E')),
         layout: isStage ? 'right' : 'center',
         animate,
+        mode: isAurora ? 'aurora' : 'network',
+        aurora: isAurora ? 1.2 : isStage ? 1 : 0.8,
       });
       if (isStage) onTop?.(scene);
     }
