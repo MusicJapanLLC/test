@@ -52,7 +52,7 @@ AIっぽい文章は掲載企業の信用を落とす。次を守る。
 - 予約カレンダーは置かない。自動マッチングしない。紹介の判断は社長
 - 掲載企業へは「相談が1件届いた」通知と受付番号だけ。お客様の個人情報は双方了承までMusic Japanだけが持つ
 - デモ中は noindex（meta・robots.txt・X-Robots-Tag）
-- 背景は白。見出し Zen Old Mincho 900、本文 Zen Kaku Gothic New、欧文 Fraunces イタリック
+- 背景は白。書体と装飾は world.theme で決める（editorial は明朝＋Fraunces、mono は太いゴシック＋Archivo）
 - 「動きを減らす」設定・WebGL非対応でも、完成形の見た目は崩れないこと
 
 ## ロゴ
