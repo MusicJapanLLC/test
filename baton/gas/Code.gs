@@ -236,11 +236,9 @@ var BATON_PROFILES = {
     name: '松浦 淳',
     company: '株式会社Central AX',
     slug: 'matsuura',
-    // TODO: 松浦様ご本人の受信用メールアドレスに差し替えるまで active を
-    // true にしない。このアドレスは推測・仮設定で本物らしく書かないこと
-    // （テスト段階でOwner自身のアドレスを使うのは可）。
-    recipientEmail: 'REPLACE_ME@example.com',
-    active: false
+    // 松浦様ご本人の受信用アドレス（Ownerから提供、2026-09-30）
+    recipientEmail: 'jun.matsuura@central-ax.co.jp',
+    active: true
   }
 };
 
@@ -902,9 +900,10 @@ function testBatonFlowUnveil() {
 
 /**
  * matsuuraプロフィール専用の動作確認用。
- * BATON_PROFILES.matsuura が active: false の間は「現在受け付けていません」
- * になるのが正しい動作。recipientEmail を本人の受信用アドレスに差し替えて
- * active: true にしてから実行すること。
+ * 実行すると BATON_REQUESTS に1件入り、test@example.com 宛の認証メールが飛ぶ。
+ * そのリンクを開いて認証を完了すると、松浦様ご本人（recipientEmail）宛に
+ * 承認/辞退の依頼メールが実際に届く。本人に迷惑がかかるので、実行前に
+ * 必ずOwnerに確認すること。
  */
 function testBatonFlowMatsuura() {
   var result = batonSubmitTalk({

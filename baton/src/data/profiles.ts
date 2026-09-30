@@ -60,8 +60,8 @@ const kabeyaProfile: TalkProfile = {
  * 松浦 淳（株式会社Central AX）。
  * 掲載内容は、Ownerが取りまとめた調査メモ（2026-09-30時点）に書かれた事実のみ。
  * 資本金・従業員数・売上などの企業スペックは載せない（ADDING_A_PROFILE.md の方針）。
- * 会社の公式サイトURLは未確認のため media に入れていない（確認でき次第、
- * label を「公式サイト」にして追加すると構造化データにも反映される）。
+ * 公式サイト（https://central-ax.co.jp/）は Owner から提供されたURL。
+ * label を「公式サイト」にしてあるので、構造化データの会社URLにも反映される。
  */
 const matsuuraProfile: TalkProfile = {
   id: 'matsuura',
@@ -133,6 +133,12 @@ const matsuuraProfile: TalkProfile = {
       date: '2026.09.14',
       note: 'Outlook・Teams・Word・Excel・PowerPointなど、既に使っている環境へのAI導入を解説。',
       featured: true,
+    },
+    {
+      label: '公式サイト',
+      url: 'https://central-ax.co.jp/',
+      kind: '公式',
+      note: '株式会社Central AX。AI研修・AI受託開発・LLMO対策のサービス詳細。',
     },
     {
       label: 'ATIS × Central AX 経営者向けAI活用セミナー（四日市）',
