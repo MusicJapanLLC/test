@@ -126,12 +126,18 @@ const exampleProfile: TalkProfile = {
   listSummary: '一覧ページ用の一行説明（未指定ならtaglineで代用）',
   businessTags: ['事業タグ1', '事業タグ2', '事業タグ3'], // /profile/ 一覧の右側。最大3件
   keywordTags: ['キーワード1', 'キーワード2', 'キーワード3'], // 同上。最大3件
+  // 検索・AI向け（docs/SEO_AIO_LLMO.md）。どれも既に書いてある事実から入れる
+  location: '名古屋', // 活動の拠点。本文や写真キャプションにある地名
+  updatedAt: '2026-09-30', // 中身を変えた日。sitemap と構造化データに出る。日付だけ新しくしない
+  // media の各リンクに owner を付けると、構造化データで「同じ人・同じ会社」の印になる
+  //   本人のX・Instagramなど → owner: 'person' / 会社の公式note・公式Xなど → owner: 'company'
   // 任意: サービス一覧の見出し（未指定なら「運営メディア・サービス」）
   servicesTitle: '事業領域',
   // 任意: ページ中ほどで横に流れる帯。未指定なら
   // 会社名 → services の name → businessTags → keywordTags を自動で流す
   marquee: ['会社名', 'サービス名', '事業内容'],
   photo: { src: '/profile-______.webp', alt: '姓 名', caption: 'OSAKA / JAPAN · 2026' }, // 任意
+  // OGP画像（SNS・検索のプレビュー）は public/og/<slug>.jpg に 1200×630 で置く（未設置だと画像なしで共有される）
   theme: { primary: '#______', accent: '#______', bg: '#______', text: '#______' },
   active: true, // false にすると /profile/ 一覧に出ない（GAS側もactive:falseにしておく）
 };

@@ -82,6 +82,9 @@ function boot(): void {
   if (!app || !footer) return;
 
   mountHero();
+  // ビルド時に焼き込んだ静的HTML（検索・AIクローラー向け）を、動く版に置き換える
+  app.replaceChildren();
+  footer.replaceChildren();
   renderProfileHub(app);
   renderProfileFooter(footer);
 

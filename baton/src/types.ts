@@ -99,6 +99,11 @@ export type MediaItem = {
   date?: string;
   /** true のとき大きなカードで出す（数を絞ること） */
   featured?: boolean;
+  /**
+   * 誰のアカウント・公式ページか。構造化データの sameAs（同一人物・同一企業の印）に使う。
+   * 'person' = 本人のSNSなど / 'company' = 会社の公式アカウントなど。未指定なら使わない。
+   */
+  owner?: 'person' | 'company';
 };
 
 /** プロフィールに公開する情報だけを持つ。個人の連絡先は一切含めない */
@@ -128,6 +133,17 @@ export type TalkProfile = {
    * 登壇・掲載などのメディア実績を前面に出したいプロフィール向け。
    */
   mediaFirst?: boolean;
+  /**
+   * 活動の拠点（例: '名古屋'）。本文や写真キャプションなど、
+   * 既に書いてある事実から入れる。検索・AI向けの「どこの人か」の手がかりになる。
+   */
+  location?: string;
+  /**
+   * このプロフィールの内容を最後に更新した日（YYYY-MM-DD）。
+   * sitemap.xml の lastmod と構造化データの dateModified に使う。
+   * 中身を変えたときだけ更新する（日付だけ新しくしない）。
+   */
+  updatedAt?: string;
   /** 「運営メディア・サービス」の見出しを差し替えるとき（例: '事業領域'） */
   servicesTitle?: string;
   /**

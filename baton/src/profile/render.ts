@@ -1,6 +1,24 @@
-import { el, externalAttrs } from '../lib/dom';
+import { profiles } from '../data/profiles';
+import { el, externalAttrs, withBase } from '../lib/dom';
+import {
+  LISTING_CONTACT_URL,
+  officialUrl,
+  oneLiner,
+  profileFaqs,
+  sameAsUrls,
+  serviceNames,
+  type Faq,
+} from '../lib/profile-facts';
 import type { MediaItem, TalkProfile } from '../types';
 import { renderRequestForm } from './request-form';
+
+export type RenderOptions = {
+  /**
+   * true のとき、ビルド時の静的HTML用に描く（フォームを組み立てない）。
+   * AIクローラーはJavaScriptを実行しないので、本文はHTMLに焼き込んでおく。
+   */
+  static?: boolean;
+};
 
 function proseSection(opts: {
   id: string;
@@ -173,14 +191,14 @@ function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | n
   ]);
 }
 
-function requestSection(profile: TalkProfile): HTMLElement {
-  const mount = el('div', { class: 'survey' });
+function requestSection(profile: TalkProfile, opts: RenderOptions): HTMLElement {
+  const mount = el('div', { class: 'survey', 'data-request-mount': true });
 
   const section = el('section', { class: 'section section--survey', id: 'talk-request' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: 'Introduction', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '紹介を希望する', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: `${profile.name}さんへの紹介を希望する`, 'data-reveal': true }),
         el('p', { class: 'section__note', 'data-reveal': true }, [
           '以下のご回答をお願いします。',
           el('br'),
@@ -191,8 +209,142 @@ function requestSection(profile: TalkProfile): HTMLElement {
     ]),
   ]);
 
-  renderRequestForm(mount, profile);
+  if (opts.static) {
+    // フォームはブラウザで組み立てる。HTMLだけを読む相手には、申請先がここだと伝える
+    mount.append(
+      el('p', { class: 'survey__static' }, [
+        'この欄の申請フォームから、',
+        `${profile.name}さんへの紹介を申し込めます（表示にはJavaScriptが必要です）。`,
+      ]),
+    );
+  } else {
+    renderRequestForm(mount, profile);
+  }
   return section;
+}
+
+/** パンくず。Batonトップ → このプロフィール */
+function breadcrumb(profile: TalkProfile): HTMLElement {
+  return el('nav', { class: 'pf-breadcrumb', 'aria-label': 'パンくずリスト' }, [
+    el('ol', { class: 'wrap pf-breadcrumb__list' }, [
+      el('li', {}, [el('a', { href: withBase('/profile/'), text: 'Baton -バトン-' })]),
+      el('li', {}, [el('a', { href: withBase('/profile/'), text: 'プロフィール一覧' })]),
+      el('li', { 'aria-current': 'page', text: profile.name }),
+    ]),
+  ]);
+}
+
+/**
+ * プロフィール概要。「〇〇とは」に一文で答え、続けて要点を表にする。
+ * AI検索は、ページの冒頭で質問にそのまま答えている文を引用しやすい。
+ */
+function overviewSection(profile: TalkProfile): HTMLElement {
+  const official = officialUrl(profile);
+  const accounts = sameAsUrls(profile).filter((u) => u !== official);
+  const row = (term: string, value: Node | string | null) =>
+    value ? el('div', { class: 'pf-facts__row' }, [el('dt', { text: term }), el('dd', {}, [value])]) : null;
+  const link = (url: string, label: string) => el('a', { href: url, ...externalAttrs, text: label });
+  const hostOfUrl = (url: string) => {
+    try {
+      return new URL(url).hostname.replace(/^www\./, '');
+    } catch {
+      return url;
+    }
+  };
+
+  return el('section', { class: 'section section--overview', id: 'overview' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Profile', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: `${profile.name}とは`, 'data-reveal': true }),
+      ]),
+      el('p', { class: 'pf-overview__lead', 'data-reveal': true, text: oneLiner(profile) }),
+      el(
+        'dl',
+        { class: 'pf-facts', 'data-reveal': true },
+        [
+          row('氏名', profile.name),
+          row('所属', official ? link(official, profile.company) : profile.company),
+          row('役職', profile.title),
+          row('拠点', profile.location ?? null),
+          row('事業領域', serviceNames(profile).join('、') || null),
+          row(
+            '発信',
+            accounts.length
+              ? el(
+                  'span',
+                  { class: 'pf-facts__links' },
+                  accounts.map((u) => link(u, hostOfUrl(u))),
+                )
+              : null,
+          ),
+        ].filter((n): n is HTMLDivElement => n !== null),
+      ),
+    ]),
+  ]);
+}
+
+/** よくある質問。中身は profile-facts.ts（構造化データと同じもの） */
+export function faqSection(faqs: Faq[], opts: { id?: string; title?: string } = {}): HTMLElement {
+  return el('section', { class: 'section section--faq', id: opts.id ?? 'faq' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'FAQ', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: opts.title ?? 'よくある質問', 'data-reveal': true }),
+      ]),
+      el(
+        'div',
+        { class: 'pf-faq', 'data-reveal-group': true },
+        faqs.map((f, i) =>
+          el('details', { class: 'pf-faq__item', 'data-reveal': true, ...(i === 0 ? { open: true } : {}) }, [
+            el('summary', { class: 'pf-faq__q' }, [el('h3', { text: f.q })]),
+            el('p', { class: 'pf-faq__a', text: f.a }),
+          ]),
+        ),
+      ),
+    ]),
+  ]);
+}
+
+/** ほかのプロフィールへの内部リンク。回遊と、サイト全体の関係づけのため */
+function relatedSection(profile: TalkProfile): HTMLElement {
+  const others = profiles.filter((p) => p.active && p.id !== profile.id);
+  return el('section', { class: 'section section--related', id: 'related' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Baton Talk', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: 'Batonに掲載中のほかの経営者', 'data-reveal': true }),
+      ]),
+      el(
+        'div',
+        { class: 'pf-related', 'data-reveal-group': true },
+        [
+          ...others.map((p) =>
+            el(
+              'a',
+              {
+                class: 'pf-related__card',
+                href: withBase(`/profile/${p.slug}/`),
+                'data-reveal': true,
+                style: `--card-primary:${p.theme.primary};--card-accent:${p.theme.accent}`,
+              },
+              [
+                el('span', { class: 'pf-related__company', text: p.company }),
+                el('span', { class: 'pf-related__name', text: `${p.name}（${p.title}）` }),
+                el('span', { class: 'pf-related__summary', text: p.listSummary ?? p.tagline ?? p.title }),
+              ],
+            ),
+          ),
+          el('a', { class: 'pf-related__all', href: withBase('/profile/'), 'data-reveal': true }, [
+            el('span', { text: 'Baton -バトン- のプロフィール一覧を見る' }),
+          ]),
+          el('a', { class: 'pf-related__all', href: LISTING_CONTACT_URL, ...externalAttrs, 'data-reveal': true }, [
+            el('span', { text: 'Batonへの掲載・紹介のご相談（予約ページ）' }),
+          ]),
+        ],
+      ),
+    ]),
+  ]);
 }
 
 /**
@@ -237,17 +389,22 @@ function marquee(profile: TalkProfile): HTMLElement | null {
   ]);
 }
 
-export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
+export function renderProfileSections(app: HTMLElement, profile: TalkProfile, opts: RenderOptions = {}): void {
   // 帯・カードの傾きは、暗色ページと editorial の両方で使う
   const richMotion = profile.heroVariant !== 'simple';
   const media = mediaSection(profile, richMotion);
   const services = servicesSection(profile);
-  const band = richMotion ? marquee(profile) : null;
+  // 流れる帯は同じ言葉の繰り返しなので、静的HTML（クローラー向け）には入れない
+  const band = richMotion && !opts.static ? marquee(profile) : null;
   app.append(
     ...[
+      breadcrumb(profile),
+      overviewSection(profile),
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
       ...(profile.mediaFirst ? [band, media, services] : [services, band, media]),
-      requestSection(profile),
+      faqSection(profileFaqs(profile)),
+      requestSection(profile, opts),
+      relatedSection(profile),
     ].filter((n): n is HTMLElement => n !== null),
   );
 }
