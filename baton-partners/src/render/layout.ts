@@ -152,7 +152,7 @@ export function footer(p?: Partner): string {
       </ul>`
     : '';
   const about = p
-    ? `このページは、Baton Partners（運営：${site.operator.name}）が、${p.company.name}のご紹介を目的として制作・運営しています。`
+    ? `このページは、${site.operator.name}が制作・運営しています。掲載内容は、${p.company.name}の公式情報をもとにしています。`
     : `Baton Partnersは、${site.operator.name}が運営する法人向けのパートナープログラムです。`;
   return `
 <footer class="ftr">

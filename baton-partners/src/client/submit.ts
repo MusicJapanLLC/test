@@ -7,12 +7,31 @@ export type ConsultPayload = {
   page: string;
   answers: Record<string, string | string[]>;
   questions: Record<string, string>;
-  profile: { company: string; name: string; email: string; role: string; lineName: string };
+  profile: { company: string; name: string; email: string; role: string };
   comment: string;
+  /** ポートフォリオ・資料のURL（任意） */
+  portfolioUrl: string;
+  /** 事前に共有したい資料（任意）。中身は base64 */
+  files: { name: string; type: string; size: number; data: string }[];
 };
+
+/** 添付の上限。GAS の受け口（gas/Code.gs）と揃える */
+export const FILE_LIMIT = { totalBytes: 30 * 1024 * 1024, count: 5 };
+export const FILE_EXT = /\.(pdf|pptx?|key|docx?|xlsx?|csv|png|jpe?g|gif|webp|zip)$/i;
+
+export function readAsBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
+    r.onerror = () => reject(new Error(`「${file.name}」を読み込めませんでした。`));
+    r.readAsDataURL(file);
+  });
+}
 
 const ENDPOINT = (import.meta.env.VITE_GAS_ENDPOINT ?? '').trim();
 const TIMEOUT_MS = 15000;
+/** 添付があるときは、1MBあたり4秒を足す（回線が遅くても途中で切らない） */
+const timeoutFor = (bytes: number) => TIMEOUT_MS + Math.ceil(bytes / 1024 / 1024) * 4000;
 
 /** 送信先が未設定の間はデモとして動かす（実際には送らない） */
 export const IS_DEMO = !ENDPOINT || import.meta.env.VITE_DEMO === '1';
@@ -24,12 +43,14 @@ export const IS_DEMO = !ENDPOINT || import.meta.env.VITE_DEMO === '1';
  */
 export async function submitConsult(payload: ConsultPayload): Promise<void> {
   if (IS_DEMO) {
-    console.info('[baton-partners] デモのため送信していません:', payload);
+    const files = payload.files.map((f) => ({ ...f, data: `(${f.data.length} chars)` }));
+    console.info('[baton-partners] デモのため送信していません:', { ...payload, files });
     await new Promise((r) => setTimeout(r, 700));
     return;
   }
   const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
+  const bytes = payload.files.reduce((n, f) => n + f.size, 0);
+  const timer = window.setTimeout(() => controller.abort(), timeoutFor(bytes));
   try {
     await fetch(ENDPOINT, {
       method: 'POST',

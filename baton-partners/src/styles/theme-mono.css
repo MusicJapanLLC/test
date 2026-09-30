@@ -319,6 +319,8 @@
 [data-theme='mono'] .field input,
 [data-theme='mono'] .field select,
 [data-theme='mono'] .field textarea,
+[data-theme='mono'] .drop,
+[data-theme='mono'] .drop-ic,
 [data-theme='mono'] .logo-plate {
   border-radius: 0;
 }

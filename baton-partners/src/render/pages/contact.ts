@@ -7,6 +7,16 @@ import { esc, heading, jp } from '../text';
 
 const ROLES = ['代表取締役・役員', '部長・マネージャー', '担当者', 'その他'];
 
+/** 事前に共有できる資料の形式（client/contact.ts・gas/Code.gs と揃える） */
+const FILE_ACCEPT = '.pdf,.ppt,.pptx,.key,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.jpeg,.gif,.webp,.zip';
+
+/** フォームの上に置く、送る前に知っておくと安心なこと */
+const PROMISES = (name: string) => [
+  { t: '連絡先は、つなぐと決まってから', d: `お名前やご連絡先を${name}へお伝えするのは、双方の了承がそろってからです。` },
+  { t: '説明のし直しがいらない', d: '先方はご相談の概要を読んだうえで会うので、最初の打ち合わせから本題に入れます。' },
+  { t: '合わなければ、そこまで', d: '話してみて違うと感じたら、途中でやめていただいて大丈夫です。' },
+];
+
 function question(q: Question, n: number): string {
   const type = q.type === 'multi' ? 'checkbox' : 'radio';
   const opts = q.options
@@ -95,8 +105,11 @@ ${header(p, 'contact')}
 
       <div class="form-wrap rv">
         <p class="kicker">Step 02</p>
-        <h2 id="form-h" class="form-h">${heading('話してみる前の、5つの質問')}</h2>
-        <p class="form-lead">${jp('すべての方にお願いしています。ご回答はMusic Japanだけが確認し、了承をいただくまで紹介先へお渡ししません。')}</p>
+        <h2 id="form-h" class="form-h">${heading(`話してみる前の、${p.contact.questions.length}つの質問`)}</h2>
+        <p class="form-lead">${jp(`ご回答はMusic Japanが確認しだい、ご相談の概要として事前に${name}へ共有します。先方も状況を分かったうえでお話しできるので、はじめの打ち合わせがぐっと早く進みます。`)}</p>
+        <ul class="promises">${PROMISES(name)
+          .map((m) => `<li class="promise"><strong>${jp(m.t)}</strong><span>${jp(m.d)}</span></li>`)
+          .join('')}</ul>
 
         <form class="form" data-form data-partner="${p.slug}" data-partner-name="${esc(p.company.name)}" novalidate>
           <div class="form-block">
@@ -113,8 +126,20 @@ ${header(p, 'contact')}
               <label class="field"><span class="field-l">役職</span>
                 <select name="role"><option value="">選択してください</option>${ROLES.map((r) => `<option>${esc(r)}</option>`).join('')}</select>
               </label>
-              <label class="field field-wide"><span class="field-l">LINEの表示名<span class="opt">任意</span></span><input name="lineName" type="text" placeholder="公式LINEに表示されるお名前" />
-                <span class="field-help">${jp('LINEとアンケートを照らし合わせるために使います。')}</span></label>
+              <div class="field field-wide">
+                <span class="field-l" id="files-l">事前に共有したい資料<span class="opt">任意</span></span>
+                <label class="drop" data-drop>
+                  <input name="files" type="file" multiple accept="${FILE_ACCEPT}" data-files aria-labelledby="files-l" aria-describedby="files-help" />
+                  <span class="drop-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0-4.5 4.5M12 4l4.5 4.5M4 15v3.5A1.5 1.5 0 0 0 5.5 20h13a1.5 1.5 0 0 0 1.5-1.5V15"/></svg></span>
+                  <span class="drop-t">${jp('会社案内・ポートフォリオ・企画書など')}</span>
+                  <span class="drop-s"><span class="drop-pick">ファイルを選ぶ</span><span class="drop-drag">またはここへドラッグ</span></span>
+                </label>
+                <ul class="drop-list" data-file-list hidden></ul>
+                <p class="field-err" role="alert" data-file-err hidden></p>
+                <span class="field-help" id="files-help">${jp(`PDF・スライド・画像などを、まとめて送れます。先方へお渡しするのは、双方の了承後です。`)}</span>
+              </div>
+              <label class="field field-wide"><span class="field-l">ポートフォリオ・資料のURL<span class="opt">任意</span></span><input name="portfolioUrl" type="url" inputmode="url" autocomplete="url" placeholder="https://" />
+                <span class="field-help">${jp('Googleドライブや自社サイトなど、リンクで共有したい場合はこちらへ。')}</span></label>
               <label class="field field-wide"><span class="field-l">ひとこと<span class="opt">任意</span></span><textarea name="comment" rows="4" placeholder="聞いてみたいこと、いまの状況など"></textarea></label>
               <label class="hp" aria-hidden="true">Website<input name="website" type="text" tabindex="-1" autocomplete="off" /></label>
             </div>
@@ -122,7 +147,7 @@ ${header(p, 'contact')}
 
           <label class="agree">
             <input type="checkbox" name="agree" required />
-            <span>${jp(`ご回答はMusic Japanが受け取り、ご紹介の判断に使います。${name}へは、双方の了承後にのみ共有します。`)}<a href="${routes.privacy()}" target="_blank" rel="noopener">プライバシーポリシー</a>に同意のうえ送信します。</span>
+            <span>${jp(`お名前・ご連絡先を${name}へ共有するのは、双方の了承後のみです。`)}<a href="${routes.privacy()}" target="_blank" rel="noopener">プライバシーポリシー</a>に同意のうえ送信します。</span>
           </label>
 
           <p class="form-err" role="alert" data-form-err hidden></p>
