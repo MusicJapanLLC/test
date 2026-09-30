@@ -62,7 +62,8 @@ export function splitHeadings(): void {
   });
 
   // 2行目（.ln + .ln）を、1文字ずつ色を変えてグラデーションに
-  if (stops.length >= 2) {
+  // mono の世界観では色のグラデーションを使わない（2行目は黒い帯に白抜き）
+  if (stops.length >= 2 && document.body.dataset.theme !== 'mono') {
     document.querySelectorAll<HTMLElement>('.hero-h .ln + .ln, .hl-h .ln + .ln').forEach((ln) => {
       const units = ln.querySelectorAll<HTMLElement>('.ch').length ? ln.querySelectorAll<HTMLElement>('.ch') : ln.querySelectorAll<HTMLElement>('.ph');
       const n = units.length;

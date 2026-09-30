@@ -1,5 +1,5 @@
 import { prefersReducedMotion, supportsWebGL } from './env';
-import type { NetworkScene } from './scene';
+import type { PhasedScene } from './scene';
 
 /**
  * トップのステージ。スクロール量から「ヒーロー → 集める → つなぐ → 決める」を切り替え、
@@ -30,14 +30,14 @@ function phaseAt(p: number): number {
 /** ヒーロー表示中（スクロール前）の phase。散らばった点が集まりかけている状態 */
 export const HERO_PHASE = STOPS[0][1];
 
-export function setupStage(): { attach: (s: NetworkScene) => void } | null {
+export function setupStage(): { attach: (s: PhasedScene) => void } | null {
   const stage = document.querySelector<HTMLElement>('[data-stage]');
   if (!stage || prefersReducedMotion() || !supportsWebGL()) return null;
 
   document.documentElement.classList.add('js-stage');
   const bar = stage.querySelector<HTMLElement>('[data-progress]');
   const step = stage.querySelector<HTMLElement>('[data-step]');
-  let scene: NetworkScene | null = null;
+  let scene: PhasedScene | null = null;
   let ticking = false;
 
   const update = () => {

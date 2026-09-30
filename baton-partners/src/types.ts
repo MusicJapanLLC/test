@@ -47,6 +47,24 @@ export type Partner = {
     /** WebGLシーンの色。a=求職者の点、b=求人の輪、match=決定したとき */
     scene: { a: string; b: string; match: string };
   };
+  /**
+   * 世界観。企業のロゴ・トーン＆マナーに合わせて、見た目と演出を切り替える。
+   *   theme  'editorial' … 紙と墨、明朝＋イタリック（エボルグ）
+   *          'mono'      … モノクロ、太いゴシック、グリッドと四角い枠（Central AX）
+   *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
+   *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
+   */
+  world: { theme: 'editorial' | 'mono'; scene: 'network' | 'lattice' };
+  /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
+  leader?: {
+    name: string;
+    nameEn: string;
+    role: string;
+    photo: string;
+    photoSize: [number, number];
+    body: string[];
+    motto?: { label: string; text: string };
+  };
   top: {
     title: string[];
     lead: string;

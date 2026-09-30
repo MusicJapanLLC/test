@@ -43,3 +43,29 @@ export function marquee(items: string[], opts: { label: string; size?: 'xl' | 'm
   <div class="mq-track"><div class="mq-run">${run}</div><div class="mq-run" aria-hidden="true">${run}</div></div>
 </div>`.trim();
 }
+
+/**
+ * 代表の紹介。写真はモノクロで、ロゴの四角い枠に収める（ホバーでカラー）。
+ * 本文は公開されている事実だけで書き、本人の発言は作らない。
+ */
+export function leaderSection(p: Partner): string {
+  const l = p.leader;
+  if (!l) return '';
+  return `
+<section class="sec leader" aria-labelledby="leader-h">
+  <div class="wrap leader-in">
+    <figure class="leader-photo rv">
+      <span class="leader-frame" aria-hidden="true"></span>
+      <img src="${l.photo}" alt="${esc(l.role)} ${esc(l.name)}" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />
+    </figure>
+    <div class="leader-body rv">
+      <p class="kicker">Leader</p>
+      <p class="leader-role">${esc(l.role)}</p>
+      <h2 id="leader-h" class="leader-name">${esc(l.name)}</h2>
+      <p class="leader-en" aria-hidden="true">${esc(l.nameEn)}</p>
+      <div class="leader-text">${l.body.map((t) => `<p>${jp(t)}</p>`).join('')}</div>
+      ${l.motto ? `<p class="leader-motto"><span>${esc(l.motto.label)}</span><strong>${esc(l.motto.text)}</strong></p>` : ''}
+    </div>
+  </div>
+</section>`.trim();
+}

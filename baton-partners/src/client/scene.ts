@@ -266,6 +266,9 @@ void main() {
 }
 `;
 
+/** ステージから操作するための共通の形（NetworkScene / LatticeScene） */
+export type PhasedScene = { phase: number; target: number };
+
 export type SceneOptions = {
   host: HTMLElement;
   canvas: HTMLCanvasElement;

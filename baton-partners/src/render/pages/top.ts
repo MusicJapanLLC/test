@@ -151,6 +151,7 @@ ${header(p, 'top')}
         <p id="about-teaser-h" class="quote-p">${heading(t.aboutQuote)}</p>
       </blockquote>
       <div class="quote-side rv">
+        ${p.leader ? `<figure class="quote-leader"><img src="${p.leader.photo}" alt="" width="${p.leader.photoSize[0]}" height="${p.leader.photoSize[1]}" loading="lazy" decoding="async" /><figcaption><span>${esc(p.leader.role)}</span>${esc(p.leader.name)}</figcaption></figure>` : ''}
         <p>${jp(p.about.lead)}</p>
         <a class="link-arrow" href="${routes.about(p.slug)}"><span>${esc(shortName(p))}の取り組みを読む</span><span class="arrow" aria-hidden="true">→</span></a>
       </div>

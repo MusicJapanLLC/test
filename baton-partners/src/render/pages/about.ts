@@ -1,7 +1,7 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { breadcrumbLd, ctaBand, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
-import { pageHero } from '../parts';
+import { leaderSection, pageHero } from '../parts';
 import { esc, heading, jp, plain } from '../text';
 
 export function renderAbout(p: Partner, env: BuildEnv): string {
@@ -68,6 +68,8 @@ ${header(p, 'about')}
       <div class="stories">${story}</div>
     </div>
   </section>
+
+  ${leaderSection(p)}
 
   <section class="sec sec-tint" aria-labelledby="stance-h">
     <div class="wrap">

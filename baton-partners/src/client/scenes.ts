@@ -1,9 +1,9 @@
 import { prefersReducedMotion, supportsWebGL, whenIdle } from './env';
-import type { NetworkScene } from './scene';
+import type { PhasedScene } from './scene';
 import { HERO_PHASE } from './stage';
 
 /** ページ内の [data-scene] をすべて起動する。three.js は必要になってから読み込む */
-export function mountScenes(onTop?: (scene: NetworkScene) => void): void {
+export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
   const hosts = [...document.querySelectorAll<HTMLElement>('[data-scene]')];
   if (!hosts.length) return;
 
@@ -18,14 +18,16 @@ export function mountScenes(onTop?: (scene: NetworkScene) => void): void {
   const animate = !prefersReducedMotion();
 
   whenIdle(async () => {
-    const { NetworkScene } = await import('./scene');
+    // 企業の世界観で、描くシーンを切り替える（body[data-world-scene]）
+    const lattice = document.body.dataset.worldScene === 'lattice';
+    const Scene = lattice ? (await import('./lattice')).LatticeScene : (await import('./scene')).NetworkScene;
     for (const host of hosts) {
       const canvas = host.querySelector('canvas');
       if (!canvas) continue;
       const base = Number(host.dataset.count ?? 1000);
       const isStage = host.closest('[data-stage]') !== null;
       const isAurora = host.dataset.scene === 'aurora';
-      const scene = new NetworkScene({
+      const scene = new Scene({
         host,
         canvas,
         count: Math.round(base * (small ? 0.45 : 1)),

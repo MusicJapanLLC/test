@@ -39,6 +39,7 @@ export const evorg: Partner = {
     // Empro のロゴ（赤と水色の三角が重なる＝求職者と求人が出会う）をそのままシーンの色に
     scene: { a: '#FC2C2C', b: '#1CCCE8', match: '#A8284A' },
   },
+  world: { theme: 'editorial', scene: 'network' },
 
   top: {
     title: ['集める、つなぐ、', '決めるをひとつに。'],

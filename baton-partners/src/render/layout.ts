@@ -27,7 +27,7 @@ export type BuildEnv = {
 };
 
 const GOOGLE_FONTS =
-  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Zen+Kaku+Gothic+New:wght@400;700&family=Zen+Old+Mincho:wght@700;900&display=swap';
+  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Archivo:wdth,wght@62..125,100..900&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap';
 
 /** 「株式会社エボルグ」→「エボルグ」 */
 export const shortName = (p: Partner): string =>
@@ -216,7 +216,7 @@ export function document(meta: PageMeta, env: BuildEnv, body: string): string {
 <head>
 ${head(meta, env)}
 </head>
-<body data-page="${meta.kind}"${meta.partner ? ` data-partner="${meta.partner.slug}"` : ''}>
+<body data-page="${meta.kind}"${meta.partner ? ` data-partner="${meta.partner.slug}" data-theme="${meta.partner.world.theme}" data-world-scene="${meta.partner.world.scene}"` : ''}>
 <div class="progress" aria-hidden="true"><i data-scroll-progress></i></div>
 <div class="curtain" data-curtain aria-hidden="true">
   <div class="curtain-in">${meta.partner ? `<img src="${meta.partner.brand.logo}" alt="" width="${meta.partner.brand.logoSize[0]}" height="${meta.partner.brand.logoSize[1]}" />` : ''}${bpLogo({ size: 30, animated: true, className: "curtain-bp" })}<span class="curtain-line"><i></i></span></div>
