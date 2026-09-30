@@ -140,22 +140,41 @@ export function profileHeroHtml(p: TalkProfile, homeHref = '/'): string {
 </header>`.trim();
 }
 
+/**
+ * Baton トップ（/profile/）のヒーロー。
+ * 文字は最初から描画しておき（LCPを遅らせない）、暗く沈んだ「消灯」状態から、
+ * WebGLのレーザーが着弾した瞬間に点灯させる。演出は profile/hub-hero-scene.ts。
+ */
 export function profileHubHeroHtml(): string {
+  const title = Array.from('Baton')
+    .map((ch, i) => `<span class="bt-hero__char" style="--i:${i}">${esc(ch)}</span>`)
+    .join('');
   return `
-<header class="hub-hero" data-hero>
-  <canvas class="hub-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
-  <div class="hub-hero__intro" aria-hidden="true">
-    <span class="hub-hero__intro-wash"></span>
-    <span class="hub-hero__intro-trail"></span>
-    <span class="hub-hero__intro-comet"></span>
-    <span class="hub-hero__intro-flash"></span>
-    <span class="hub-hero__intro-ring"></span>
+<header class="bt-hero" data-hero data-bt-hero>
+  <canvas class="bt-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
+  <div class="bt-hero__fallback" aria-hidden="true"><span class="bt-hero__fallback-line"></span></div>
+  <div class="bt-hero__frame" aria-hidden="true">
+    <span class="bt-hero__corner bt-hero__corner--tl"></span>
+    <span class="bt-hero__corner bt-hero__corner--tr"></span>
+    <span class="bt-hero__corner bt-hero__corner--bl"></span>
+    <span class="bt-hero__corner bt-hero__corner--br"></span>
   </div>
-  <div class="hub-hero__inner">
-    <h1 class="hub-hero__title"><a href="/profile/" aria-label="Batonトップへ戻る" style="color:inherit;text-decoration:none">Baton -バトン-</a></h1>
-    <p class="hub-hero__tagline">選んだ人が、選んだ人へ。</p>
+  <div class="bt-hero__inner">
+    <p class="bt-hero__eyebrow"><span class="bt-hero__eyebrow-line" aria-hidden="true"></span>Invitation-only Introduction<span class="bt-hero__eyebrow-line" aria-hidden="true"></span></p>
+    <h1 class="bt-hero__title">
+      <a href="/profile/" aria-label="Baton -バトン- トップへ戻る">
+        <span class="bt-hero__word" aria-hidden="true">${title}</span>
+        <span class="bt-hero__kana" aria-hidden="true">バトン</span>
+      </a>
+    </h1>
+    <span class="bt-hero__rule" data-bt-line aria-hidden="true"></span>
+    <p class="bt-hero__tagline">選んだ人が、選んだ人へ。</p>
   </div>
-  <div class="hub-hero__scroll" aria-hidden="true"><span></span></div>
+  <div class="bt-hero__meta" aria-hidden="true">
+    <span>Est. 2026 — Osaka</span>
+    <span>by Music Japan</span>
+  </div>
+  <div class="bt-hero__scroll" aria-hidden="true"><span>Scroll</span><i></i></div>
 </header>`.trim();
 }
 

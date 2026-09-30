@@ -329,11 +329,12 @@ body.profile--dark .media-card__title { color: color-mix(in srgb,var(--text) 88%
 [data-magnetic] { transform: translate3d(var(--pull-x,0px),var(--pull-y,0px),0); transition: transform .45s cubic-bezier(.22,1,.36,1), background .3s ease; }
 [data-magnetic]:hover { transform: translate3d(var(--pull-x,0px),var(--pull-y,0px),0) scale(1.03); }
 
-.pf-marquee { overflow: hidden; padding-block: clamp(1.6rem,1.2rem + 1.6vw,2.5rem); border-block: 1px solid color-mix(in srgb,var(--text) 12%,transparent); -webkit-mask-image: linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); mask-image: linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent); }
-.pf-marquee__track { display: flex; width: max-content; animation: pf-marquee 42s linear infinite; }
+.pf-marquee { overflow: hidden; padding-block: clamp(1.3rem,1rem + 1.4vw,2.2rem); border-block: 1px solid color-mix(in srgb,var(--text) 12%,transparent); -webkit-mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); mask-image: linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent); }
+.pf-marquee__track { display: flex; width: max-content; animation: pf-marquee var(--marquee-dur,42s) linear infinite; }
 .pf-marquee__run { display: flex; }
-.pf-marquee__unit { display: inline-flex; align-items: center; gap: 1.6rem; padding-inline-end: 1.6rem; font-family: var(--font-display); font-size: clamp(1.1rem,.9rem + 1.2vw,1.9rem); letter-spacing: .12em; white-space: nowrap; color: color-mix(in srgb,var(--text) 26%,transparent); }
-.pf-marquee__dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); flex: none; }
+.pf-marquee__unit { display: inline-flex; align-items: center; gap: clamp(1rem,.8rem + 1vw,1.6rem); padding-inline-end: clamp(1rem,.8rem + 1vw,1.6rem); font-family: var(--font-display); font-size: clamp(1.05rem,.85rem + 1.1vw,1.75rem); font-weight: 500; letter-spacing: .08em; white-space: nowrap; color: color-mix(in srgb,var(--text) 52%,transparent); }
+.pf-marquee__unit.is-company { font-weight: 700; letter-spacing: .06em; color: color-mix(in srgb,var(--text) 92%,transparent); }
+.pf-marquee__dot { width: 5px; height: 5px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 10px color-mix(in srgb,var(--accent) 70%,transparent); flex: none; }
 @keyframes pf-marquee { to { transform: translate3d(-50%,0,0); } }
 
 .pf-progress { position: fixed; inset-block-start: 0; inset-inline: 0; height: 2px; z-index: 80; pointer-events: none; }
