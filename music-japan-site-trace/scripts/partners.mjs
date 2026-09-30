@@ -7,7 +7,7 @@ export const partners = [
     title: "人材紹介の可能性を、次の成長へ。", titleEn: "Helping recruitment businesses grow.",
     body: "人材紹介会社向けのワンストップCRM・MA「Empro」を提供。データとAI、専任コンサルタントの伴走を通じて、採用決定と事業の成長を支援します。",
     bodyEn: "Evorg provides Empro, a CRM and marketing automation platform for recruitment agencies, combining data, AI and dedicated consulting to support placements and business growth.",
-    href: "https://baton-partners-demo.vercel.app/evorg/", cta: "紹介ページを見る", ctaEn: "Explore Evorg"
+    href: "https://partners.music-japan.com/evorg/", cta: "紹介ページを見る", ctaEn: "Explore Evorg"
   },
   {
     id: "central-ax", name: "株式会社Central AX", nameEn: "Central AX Inc.",
@@ -16,7 +16,7 @@ export const partners = [
     title: "AIを学ぶ、その先の実装まで。", titleEn: "From learning AI to putting it to work.",
     body: "生成AI研修、AI受託開発・業務改善、LLMO対策を手がけるAI実装支援会社。名古屋を拠点に、全国の企業のAI活用を支援します。",
     bodyEn: "Based in Nagoya and serving companies across Japan, Central AX supports generative AI training, custom AI development, workflow improvements and AI search optimization.",
-    href: "https://baton-partners-demo.vercel.app/central-ax/", cta: "紹介ページを見る", ctaEn: "Explore Central AX"
+    href: "https://partners.music-japan.com/central-ax/", cta: "紹介ページを見る", ctaEn: "Explore Central AX"
   }
 ];
 
