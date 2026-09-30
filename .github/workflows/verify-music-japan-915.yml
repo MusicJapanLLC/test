@@ -1,4 +1,4 @@
-name: Verify Music Japan PR 915 publication
+name: Verify Music Japan PR 917 publication
 on:
   push:
     branches: [work/verify-music-japan-915]
@@ -13,7 +13,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import { appendFileSync } from 'node:fs';
-          const preview = 'https://94100548.music-japan.pages.dev';
+          const preview = 'https://265f35f3.music-japan.pages.dev';
           const live = 'https://music-japan.com';
           const read = async url => {
             const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(15000) });
@@ -23,7 +23,7 @@ jobs:
           const decodeEmail = hex => { const bytes = Buffer.from(hex, 'hex'); return Buffer.from([...bytes.subarray(1)].map(b => b ^ bytes[0])).toString('utf8'); };
           const pageContent = html => html.replace(/<(a|span)\b[^>]*data-cfemail="([0-9a-f]+)"[^>]*>[\s\S]*?<\/\1>/gi, (_, tag, hex) => decodeEmail(hex)).replace(/<\/?a\b[^>]*>/gi, '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/\s+/g, ' ').trim();
           const bundles = html => JSON.stringify([...html.matchAll(/<script[^>]+type="module"[^>]+src="([^"]+)"/g)].map(m => m[1]).sort());
-          for (const path of ['/', '/en/']) {
+          for (const path of ['/', '/en/', '/works/', '/en/works/', '/works/like-a-drug/']) {
             const expected = await read(preview + path);
             let matches = false;
             for (let attempt = 0; attempt < 2; attempt++) {
@@ -34,7 +34,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 10000));
             }
             if (!matches) throw new Error('Live HTML differs from approved preview: ' + path);
-            const message = live + path + ': HTTP 200, page content and module bundles match PR 915 preview';
+            const message = live + path + ': HTTP 200, page content and module bundles match PR 917 preview';
             console.log(message);
             appendFileSync(process.env.GITHUB_STEP_SUMMARY, '- ' + message + '\n');
           }
