@@ -13,6 +13,7 @@ import {
   serviceHeroHtml,
 } from './src/lib/hero';
 import {
+  faqPageStructuredData,
   profileHubStructuredData,
   profileStructuredData,
   serviceHubStructuredData,
@@ -39,6 +40,7 @@ const pages = {
     services.map((s) => [s.id, resolve(root, s.slug, 'index.html')]),
   ),
   privacy: resolve(root, 'privacy', 'index.html'),
+  faq: resolve(root, 'faq', 'index.html'),
   'profile-hub': resolve(root, 'profile', 'index.html'),
   ...Object.fromEntries(
     profiles.map((p) => [`profile-${p.id}`, resolve(root, 'profile', p.slug, 'index.html')]),
@@ -219,6 +221,7 @@ function batonSeoFiles(): Plugin {
           lastmod: p.updatedAt,
           image: p.photo ? `${siteBase}${p.photo.src}` : undefined,
         })),
+        { path: 'faq/', lastmod: latest },
         { path: 'hub/' },
         ...services.map((s) => ({ path: `${s.slug}/` })),
       ];
@@ -250,7 +253,7 @@ function batonSeoFiles(): Plugin {
   };
 }
 
-type StaticHtml = { profiles: Record<string, string>; hub: string; footer: string };
+type StaticHtml = { profiles: Record<string, string>; hub: string; faq: string; footer: string };
 let staticHtml: Promise<StaticHtml | null> | null = null;
 
 /**
@@ -398,6 +401,30 @@ function batonPages(): Plugin {
             )
             .replace('<!--BATON:HERO-->', profileHubHeroHtml())
             .replace(/^([\s\S]*)$/, (whole) => injectStatic(whole, prerendered?.hub, prerendered?.footer));
+        }
+
+        const isFaq = filename === `${root.replace(/\\/g, '/')}/faq/index.html`;
+        if (isFaq) {
+          const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:#FDFCFA;--text:${site.theme.text}`;
+          const faqUrl = absoluteUrl('/faq/');
+          return injectStatic(
+            html.replace(
+              '<!--BATON:HEAD-->',
+              head({
+                title: 'よくある質問｜Baton -バトン-（招待制の紹介サービス）',
+                description:
+                  'Baton -バトン-とは何か、運営者、掲載されている経営者・事業者を紹介してもらう方法と流れ、掲載のご相談方法をまとめています。',
+                themeColor: '#FDFCFA',
+                path: '/faq/',
+                vars,
+                jsonLd: faqPageStructuredData(faqUrl, profileHubUrl, siteUrl()),
+                extraFontHref: PROFILE_FONT_HREF,
+                ogImage: absoluteUrl('/og/baton.jpg'),
+              }),
+            ),
+            prerendered?.faq,
+            prerendered?.footer,
+          );
         }
 
         const isVerify = filename.includes('/verify/index.html');

@@ -20,6 +20,10 @@ export const BATON_ABOUT =
   `${site.nameJa}は、${site.operator.name}が運営する招待制の紹介サービスです。` +
   '運営が実際に対話した経営者・事業者のプロフィールを掲載し、双方に可能性があると判断した相手どうしを紹介しています。';
 
+/** トップ（/profile/）に置く、Batonを一文で説明する文 */
+export const HUB_LEAD =
+  '運営が実際に対話した経営者・事業者を、双方に可能性があると判断した相手どうしで紹介する、招待制のサービスです。';
+
 /** 紹介を申し込むまでの流れ（申請フォームの案内文と同じ内容） */
 export const REQUEST_FLOW =
   'プロフィールページの「紹介を希望する」フォームから申請できます。' +
@@ -114,12 +118,19 @@ export function profileFaqs(profile: TalkProfile): Faq[] {
   return faqs;
 }
 
-/** プロフィール一覧（/profile/）の「よくある質問」 */
+/** よくある質問ページ（/faq/）の中身 */
 export function hubFaqs(): Faq[] {
   return [
     { q: `${site.nameJa}とは何ですか？`, a: BATON_ABOUT },
     { q: '運営しているのは誰ですか？', a: `${site.operator.name}（${site.operator.representative}）です。` },
     { q: '掲載されている人を紹介してもらうには？', a: REQUEST_FLOW },
+    {
+      q: '紹介までの流れは？',
+      a:
+        '1. プロフィールを読む（運営が実際に対話した経営者・事業者の、事業と人柄を紹介しています）。' +
+        '2. 話してみたい人のページのフォームから、目的・お名前・会社名などを入力して申請する。' +
+        `3. ${site.operator.name}が内容を確認し、双方の確認が取れた場合にご紹介します。`,
+    },
     {
       q: 'Batonに掲載してもらう、または紹介の相談をするには？',
       a: `「紹介・掲載をご希望の方」の予約ページから、${site.operator.name}へご相談いただけます。`,

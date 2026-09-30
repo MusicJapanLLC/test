@@ -44,6 +44,7 @@ npm run preview              # ビルド結果の確認
 | `/wordpress/` | サイト引越し屋さん / 株式会社DPパートナーズ |
 | `/crm/` | Empro / 株式会社エボルグ |
 | `/profile/matsuura/` | 松浦 淳 / 株式会社Central AX（Baton Talk） |
+| `/faq/` | よくある質問（Batonの仕組み・運営者・紹介の流れ。フッターからリンク） |
 | `/privacy/` | プライバシーポリシー |
 
 各サービスページは `#survey` で設問部分に直接飛べる（テレアポ後の共有用）。

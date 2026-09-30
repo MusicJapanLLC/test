@@ -8,7 +8,7 @@
  */
 import { parseHTML } from 'linkedom';
 
-type Output = { profiles: Record<string, string>; hub: string; footer: string };
+type Output = { profiles: Record<string, string>; hub: string; faq: string; footer: string };
 
 export async function renderStatic(): Promise<Output> {
   const { document } = parseHTML('<!doctype html><html><body></body></html>');
@@ -16,15 +16,16 @@ export async function renderStatic(): Promise<Output> {
   const previous = g.document;
   g.document = document;
   try {
-    const [{ profiles }, { renderProfileSections }, { renderProfileHub }, { renderProfileFooter }] =
+    const [{ profiles }, { renderProfileSections }, { renderProfileHub }, { renderProfileFooter }, { renderFaqPage }] =
       await Promise.all([
         import('../data/profiles'),
         import('../profile/render'),
         import('../profile/hub-render'),
         import('../profile/footer'),
+        import('../profile/faq-page'),
       ]);
 
-    const out: Output = { profiles: {}, hub: '', footer: '' };
+    const out: Output = { profiles: {}, hub: '', faq: '', footer: '' };
     for (const profile of profiles) {
       const app = document.createElement('main');
       renderProfileSections(app as unknown as HTMLElement, profile, { static: true });
@@ -33,6 +34,9 @@ export async function renderStatic(): Promise<Output> {
     const hub = document.createElement('main');
     renderProfileHub(hub as unknown as HTMLElement, { static: true });
     out.hub = hub.innerHTML;
+    const faq = document.createElement('main');
+    renderFaqPage(faq as unknown as HTMLElement);
+    out.faq = faq.innerHTML;
     const footer = document.createElement('footer');
     renderProfileFooter(footer as unknown as HTMLElement);
     out.footer = footer.innerHTML;
