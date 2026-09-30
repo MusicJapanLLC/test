@@ -94,7 +94,7 @@ ${header(p, 'top')}
     </div>
   </section>
 
-  ${marquee(['Collect', 'Connect', 'Decide', s.name, 'CRM', 'MA', 'LINE', 'AI Matching', 'AI Workflow', 'Dashboard'], { label: `${s.name}の機能` })}
+  ${marquee(t.marquee, { label: `${s.name}のキーワード` })}
 
   <section class="sec sec-issue" aria-labelledby="issue-h">
     <div class="wrap grid-sec">
@@ -132,7 +132,7 @@ ${header(p, 'top')}
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
         <p class="kicker">03 — Numbers</p>
-        <h2 id="num-h" class="sec-h">${heading(`数字で見る、${s.name}の手ごたえ。`)}</h2>
+        <h2 id="num-h" class="sec-h">${heading(t.numbersTitle)}</h2>
       </header>
       <div class="stats">${stats}</div>
       <p class="fine">${jp(t.statsNote)}</p>

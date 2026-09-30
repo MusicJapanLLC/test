@@ -52,6 +52,10 @@ export type Partner = {
     lead: string;
     /** ヒーロー下の小さなバッジ（公式サイトの表記どおり） */
     badges: string[];
+    /** ヒーロー直後に流れる英字の帯 */
+    marquee: string[];
+    /** 数字セクションの見出し */
+    numbersTitle: string;
     verbs: { en: string; ja: string; title: string; body: string }[];
     problemsTitle: string;
     problems: Pair[];
@@ -84,6 +88,15 @@ export type Partner = {
     fits: string[];
     /** 導入・サポート */
     onboarding: Pair[];
+    /** サービスページの各見出し。企業ごとに言い回しを変える */
+    labels: {
+      flowKicker: string;
+      flowTitle: string;
+      featuresTitle: string;
+      statsTitle: string;
+      onboardingTitle: string;
+      fitsTitle: string;
+    };
     /** 公式サイトに掲載されている利用企業（テキストで流す） */
     clients: string[];
     clientsNote: string;

@@ -12,4 +12,5 @@ shots/
 # ビルド時に src/ から自動生成されるページ（手で編集しない）
 /index.html
 /evorg/
+/central-ax/
 /privacy/

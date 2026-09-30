@@ -101,8 +101,8 @@ ${header(p, 'service')}
   <section class="sec sec-tint" aria-labelledby="flow-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
-        <p class="kicker">Roadmap</p>
-        <h2 id="flow-h" class="sec-h">${heading('機能は、進化し続ける。')}</h2>
+        <p class="kicker">${esc(s.labels.flowKicker)}</p>
+        <h2 id="flow-h" class="sec-h">${heading(s.labels.flowTitle)}</h2>
       </header>
       <ol class="flow">${flow}</ol>
     </div>
@@ -112,7 +112,7 @@ ${header(p, 'service')}
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
         <p class="kicker">Features</p>
-        <h2 id="feat-h" class="sec-h">${heading('6つの機能')}</h2>
+        <h2 id="feat-h" class="sec-h">${heading(s.labels.featuresTitle)}</h2>
       </header>
       <ul class="feats feats-light">${features}</ul>
     </div>
@@ -122,7 +122,7 @@ ${header(p, 'service')}
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
         <p class="kicker">Numbers</p>
-        <h2 id="stat-h" class="sec-h">${heading('導入の手ごたえ')}</h2>
+        <h2 id="stat-h" class="sec-h">${heading(s.labels.statsTitle)}</h2>
       </header>
       <div class="stats">${stats}</div>
       <p class="fine">${jp(p.top.statsNote)}</p>
@@ -133,7 +133,7 @@ ${header(p, 'service')}
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
         <p class="kicker">Onboarding</p>
-        <h2 id="onb-h" class="sec-h">${heading('導入して、終わりにしない。')}</h2>
+        <h2 id="onb-h" class="sec-h">${heading(s.labels.onboardingTitle)}</h2>
       </header>
       <ul class="stances">${s.onboarding
         .map(
@@ -152,7 +152,7 @@ ${header(p, 'service')}
     <div class="wrap grid-sec">
       <header class="sec-head rv">
         <p class="kicker">For you</p>
-        <h2 id="fit-h" class="sec-h">${heading('こんな人材紹介会社に。')}</h2>
+        <h2 id="fit-h" class="sec-h">${heading(s.labels.fitsTitle)}</h2>
       </header>
       <div class="rv">
         <ul class="fits">${fits}</ul>

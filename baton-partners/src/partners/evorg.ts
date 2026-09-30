@@ -44,6 +44,8 @@ export const evorg: Partner = {
     title: ['集める、つなぐ、', '決めるをひとつに。'],
     lead: '人材紹介会社の採用決定を最大化する、ワンストップCRM/MA「Empro」。株式会社エボルグは、データとAI、そして専任コンサルタントの伴走で、紹介事業の売上向上にコミットします。',
     badges: ['セキュリティ対策済み', '最短即日導入', 'データ移行工数0'],
+    marquee: ['Collect', 'Connect', 'Decide', 'Empro', 'CRM', 'MA', 'LINE', 'AI Matching', 'AI Workflow', 'Dashboard'],
+    numbersTitle: '数字で見る、Emproの手ごたえ。',
     verbs: [
       {
         en: 'Collect',
@@ -164,6 +166,14 @@ export const evorg: Partner = {
       { title: '専任コンサルタントの定例', detail: '導入して終わりにせず、専任コンサルタントによる定例を必ず実施します。' },
       { title: 'セキュリティ', detail: '通信はすべてSSL/TLSで暗号化。定期的なセキュリティ監査と脆弱性診断を実施しています。' },
     ],
+    labels: {
+      flowKicker: 'Roadmap',
+      flowTitle: '機能は、進化し続ける。',
+      featuresTitle: '6つの機能',
+      statsTitle: '導入の手ごたえ',
+      onboardingTitle: '導入して、終わりにしない。',
+      fitsTitle: 'こんな人材紹介会社に。',
+    },
     clients: ['COMPASS', 'Unframe', 'ヨリミチ', 'Bit Valley', 'アイエムメディカル', 'Jicou', 'liberty株式会社', 'Kaiketsu株式会社'],
     clientsNote: '規模を問わず、多くの人材紹介会社さまにご利用いただいています（Empro公式サイトより）',
   },

@@ -503,3 +503,49 @@ html.js .rv.is-in {
     display: none;
   }
 }
+
+/* ── スマホのヒーロー：見出しが長い企業でも1画面に収める ──
+   バッジは横スクロールの1行、ボタンは横並び、リードは少し詰める */
+@media (max-width: 959px) {
+  .badges {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(var(--gutter) * -1);
+    padding-inline: var(--gutter);
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 var(--gutter), #000 calc(100% - var(--gutter)), transparent 100%);
+  }
+  .badges::-webkit-scrollbar {
+    display: none;
+  }
+  .badges li {
+    flex: none;
+    font-size: 0.72rem;
+    padding: 6px 12px;
+  }
+  .hero-lead {
+    margin-top: 20px;
+    line-height: 1.85;
+  }
+  .hero-h {
+    margin-top: 18px;
+  }
+  .hero-actions {
+    flex-wrap: nowrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+  .hero-actions .btn {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 50px;
+    padding: 0 0.9em;
+    font-size: 0.84rem;
+    letter-spacing: 0.04em;
+  }
+  html.js-stage .hero {
+    top: auto;
+    max-height: calc(100svh - var(--hdr) - 100px);
+  }
+}
