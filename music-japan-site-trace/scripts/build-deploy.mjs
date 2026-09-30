@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildExperience } from "./build-experience.mjs";
 import { renderSocialLinks, renderSocialInner } from "./social-links.mjs";
+import { renderPartners } from "./partners.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const source = join(root, "dist");
@@ -62,9 +63,16 @@ const pageCopy = {
       ["business", "事業概要"],
       ["company", "会社概要"],
       ["profile", "代表プロフィール"],
+      ["partners", "パートナー"],
       ["contact", "お問い合わせ"]
     ],
     pages: {
+      partners: {
+        kicker: "BATON PARTNERS / CONNECTIONS",
+        title: "パートナー",
+        lead: "事業の強みを知り、次のつながりへ。",
+        description: "合同会社Music JapanのBaton Partners。株式会社エボルグ、株式会社Central AXの事業とサービスをご紹介します。"
+      },
       business: {
         kicker: "BUSINESS / MUSIC & MEDIA",
         title: "事業概要",
@@ -112,9 +120,16 @@ const pageCopy = {
       ["business", "Our Business"],
       ["company", "Company"],
       ["profile", "Profile"],
+      ["partners", "Partners"],
       ["contact", "Contact"]
     ],
     pages: {
+      partners: {
+        kicker: "BATON PARTNERS / CONNECTIONS",
+        title: "Partners",
+        lead: "Discover the companies behind our next connections.",
+        description: "Meet Music Japan LLC's Baton Partners: Evorg and Central AX, their businesses and services."
+      },
       business: {
         kicker: "BUSINESS / MUSIC & MEDIA",
         title: "Our Business",
@@ -421,6 +436,8 @@ function patchClientBundle() {
   }
   bundle = bundle.slice(0, homepageFounderStart - 1) + "]})," + bundle.slice(homepageFooterStart);
 
+  bundle = replaceRequired(bundle, '[`代表プロフィール`,`/profile/`],', '[`代表プロフィール`,`/profile/`],[`パートナー`,`/partners/`],', 'Japanese partners navigation');
+  bundle = replaceRequired(bundle, '[`Profile`,`/en/profile/`],', '[`Profile`,`/en/profile/`],[`Partners`,`/en/partners/`],', 'English partners navigation');
   const bundleDigest = createHash("sha256").update(bundle).digest("hex").slice(0, 12);
   writeFileSync(bundlePath, bundle);
   return { name: bundleName, digest: bundleDigest };
@@ -544,6 +561,7 @@ function renderStandalonePage(locale, page, bodyHtml) {
   const jaPath = internalPath("ja", page);
   const enPath = internalPath("en", page);
   const title = `${copy.title} | ${isJa ? "合同会社Music Japan" : "Music Japan LLC"}`;
+  const partnerStyles = page === "partners" ? `<link rel="stylesheet" href="/assets/music-japan-partners.css?v=${createHash("sha256").update(readFileSync(join(source, "assets/music-japan-partners.css"))).digest("hex").slice(0,12)}"/>` : "";
   const pageType = page === "contact" ? "ContactPage" : page === "about" ? "AboutPage" : "CollectionPage";
   const musicItems = isJa
     ? [
@@ -610,7 +628,7 @@ function renderStandalonePage(locale, page, bodyHtml) {
     ]
   };
   const visibleBody = bodyHtml.replaceAll(' data-reveal="true"', "").replaceAll(' aria-haspopup="dialog"', "");
-  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><title>${title}</title><meta name="description" content="${copy.description}"/><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}"/><link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Music Japan LLC"/><meta property="og:locale" content="${isJa ? "ja_JP" : "en_US"}"/><meta property="og:locale:alternate" content="${isJa ? "en_US" : "ja_JP"}"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${copy.description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"/><meta property="og:image:width" content="${SOCIAL_IMAGE_WIDTH}"/><meta property="og:image:height" content="${SOCIAL_IMAGE_HEIGHT}"/><meta property="og:image:alt" content="Music Japan LLC corporate logo"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${copy.description}"/><meta name="twitter:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script></head><body><div class="site-shell inner-shell locale-${locale}" lang="${isJa ? "ja" : "en"}">${renderSiteHeader(locale, page)}<main id="main-content" class="inner-page__main" tabindex="-1">${renderInnerHero(locale, page)}<div class="inner-page__content inner-page__content--${page}">${visibleBody}</div></main>${renderSiteFooter(locale)}${renderInnerPageScript(locale, page === "contact")}</div></body></html>`;
+  return `<!doctype html><html lang="${isJa ? "ja" : "en"}"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/><title>${title}</title><meta name="description" content="${copy.description}"/><meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="googlebot" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"/><meta name="theme-color" content="#050506"/><meta name="color-scheme" content="dark"/><link rel="canonical" href="${SITE_URL}${pagePath}"/><link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${jaPath}"/><link rel="alternate" hreflang="en" href="${SITE_URL}${enPath}"/><link rel="alternate" hreflang="x-default" href="${SITE_URL}${jaPath}"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Music Japan LLC"/><meta property="og:locale" content="${isJa ? "ja_JP" : "en_US"}"/><meta property="og:locale:alternate" content="${isJa ? "en_US" : "ja_JP"}"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${copy.description}"/><meta property="og:url" content="${SITE_URL}${pagePath}"/><meta property="og:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"/><meta property="og:image:width" content="${SOCIAL_IMAGE_WIDTH}"/><meta property="og:image:height" content="${SOCIAL_IMAGE_HEIGHT}"/><meta property="og:image:alt" content="Music Japan LLC corporate logo"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${copy.description}"/><meta name="twitter:image" content="${SITE_URL}${SOCIAL_IMAGE_URL}"/><link rel="stylesheet" href="/assets/index-DjF1m6Ft.css"/><link rel="stylesheet" href="${MEDIA_STYLESHEET_URL}"/><link rel="stylesheet" href="${PAGES_STYLESHEET_URL}"/><link rel="stylesheet" href="${MOBILE_STYLESHEET_URL}"/><link rel="icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="shortcut icon" type="image/svg+xml" href="${FAVICON_URL}"/><link rel="apple-touch-icon" href="${APPLE_ICON_URL}"/><script type="application/ld+json">${JSON.stringify(structuredData)}</script>${partnerStyles}</head><body><div class="site-shell inner-shell locale-${locale}" lang="${isJa ? "ja" : "en"}">${renderSiteHeader(locale, page)}<main id="main-content" class="inner-page__main" tabindex="-1">${renderInnerHero(locale, page)}<div class="inner-page__content inner-page__content--${page}">${visibleBody}</div></main>${renderSiteFooter(locale)}${renderInnerPageScript(locale, page === "contact")}</div></body></html>`;
 }
 
 function extractSection(documentHtml, marker, label) {
@@ -630,6 +648,7 @@ function renderContentPage(locale, page, homeDocument) {
     ];
     return renderStandalonePage(locale, page, sections.join(""));
   }
+  if (page === "partners") return renderStandalonePage(locale, page, renderPartners(locale));
   const sections = page === "music"
     ? [
         extractSection(homeDocument, '<section class="works content-frame"', `${locale} music works`),
@@ -955,6 +974,7 @@ function renderSitemap() {
     ["/business/", "/en/business/"],
     ["/company/", "/en/company/"],
     ["/profile/", "/en/profile/"],
+    ["/partners/", "/en/partners/"],
     ["/contact/", "/en/contact/"],
     ["/privacy/", "/en/privacy/"]
   ];
@@ -1020,8 +1040,8 @@ const profileHtmlFiles = [
   { path: "en/profile/index.html", locale: "en" }
 ];
 const contentPageFiles = [
-  ...["business", "contact"].map((page) => ({ path: `${page}/index.html`, locale: "ja", page })),
-  ...["business", "contact"].map((page) => ({ path: `en/${page}/index.html`, locale: "en", page }))
+  ...["business", "partners", "contact"].map((page) => ({ path: `${page}/index.html`, locale: "ja", page })),
+  ...["business", "partners", "contact"].map((page) => ({ path: `en/${page}/index.html`, locale: "en", page }))
 ];
 const homeDocuments = new Map();
 
@@ -1283,8 +1303,8 @@ for (const relativePath of machineReadableFiles) {
 }
 
 const sitemapContents = readFileSync(join(output, "sitemap.xml"), "utf8");
-if ((sitemapContents.match(/<url>/g) || []).length !== 12) throw new Error("Sitemap must contain all 12 canonical Japanese and English pages");
-for (const route of ["/", "/en/", "/business/", "/en/business/", "/company/", "/en/company/", "/profile/", "/en/profile/", "/contact/", "/en/contact/", "/privacy/", "/en/privacy/"]) {
+if ((sitemapContents.match(/<url>/g) || []).length !== 14) throw new Error("Sitemap must contain all 14 canonical Japanese and English pages");
+for (const route of ["/", "/en/", "/business/", "/en/business/", "/company/", "/en/company/", "/profile/", "/en/profile/", "/partners/", "/en/partners/", "/contact/", "/en/contact/", "/privacy/", "/en/privacy/"]) {
   if (!sitemapContents.includes(`<loc>${SITE_URL}${route}</loc>`)) throw new Error(`Sitemap route missing: ${route}`);
 }
 const robotsContents = readFileSync(join(output, "robots.txt"), "utf8");
