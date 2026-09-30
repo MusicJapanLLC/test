@@ -9,7 +9,7 @@ export const site = {
     representative: '代表社員 壁谷友生',
     address: '大阪市北区梅田1-2-2 大阪駅前第2ビル12-12',
     email: 'music.japan.llc@gmail.com',
-    url: 'https://music-japan.pearly-cedar-3983.chatgpt.site/',
+    url: 'https://music-japan.com/',
   },
   /** Music Japan 公式LINE。Web から来た人は、ここを追加してからアンケートへ進む */
   lineUrl: 'https://lin.ee/YPbe3ti',
