@@ -1,3 +1,13 @@
+# Music Japan official site (music-japan.com)
+
+**現在の本番: NEEDLE DROP（2026-10-01〜）** — `next/` の Vite + TypeScript + Three.js + GSAP サイト。詳細・戻し方: `DESIGN-NEEDLE-DROP-20261001.md`
+
+- `npm run build:deploy` → 新サイトを `deploy-dist/` に生成（Cloudflare Pages のビルド）
+- Cloudflare Pages のビルド変数 `MJ_SITE=legacy` で再デプロイすると、コード変更なしで以前のサイトに戻ります（`npm run build:legacy` と同じ）
+- 以下は以前のサイト（保存スナップショット + 演出レイヤー）の説明です。`dist/` `src/` `scripts/build-legacy.mjs` はそのまま残しています
+
+---
+
 # Music Japan site trace
 
 2026-09-09時点の公開サイトを、改善やリデザインを加えず保存した静的クローンです
@@ -47,7 +57,7 @@ npm run check
 上記は取得時点の説明です
 
 1. `dist/` は元サイトを保存した入力スナップショット（通常のビルド生成物ではありません）
-2. `npm run build:deploy` → `scripts/build-deploy.mjs` が `dist/` を `deploy-dist/` にコピー
+2. `npm run build:legacy` → `scripts/build-legacy.mjs` が `dist/` を `deploy-dist/` にコピー
 3. `scripts/build-experience.mjs` が `src/` の演出ソースをesbuildでバンドルして `deploy-dist/assets/` に生成
 4. 保存HTML・Reactバンドルに既存の文言・ナビ・SEO修正を適用し、内部ページを生成
 5. Cloudflare Pagesは `deploy-dist/` を公開
