@@ -1,0 +1,494 @@
+/*
+  Music Japan — refined edition (2026-09-30)
+  Typography, brand mark and page-finish layer on top of the vinyl experience.
+  Rules are prefixed with :root only for specificity. The layer is switched by whether
+  this stylesheet is linked at all (React may rewrite <html> attributes when it recovers
+  from a hydration mismatch): building with MJ_REFINE=off drops this stylesheet and the
+  web fonts, and restores the previous edition.
+*/
+
+:root {
+  --mj-jp: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo, sans-serif;
+  --mj-mincho: "Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", serif;
+  --mj-latin: "Archivo", "Inter Tight Variable", "Helvetica Neue", Arial, sans-serif;
+  --mj-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --mj-body: var(--mj-latin), var(--mj-jp);
+  --mj-heading-ja: var(--mj-mincho);
+  --mj-mark: url("/music-japan-mark.svg");
+}
+
+/* ---------- Base type ---------- */
+
+:root body,
+:root button,
+:root input,
+:root select,
+:root textarea {
+  font-family: var(--mj-body);
+  font-feature-settings: "palt" 0;
+}
+
+:root :is(.locale-ja, [lang="ja"]) :is(p, li, dd, td, small, span) {
+  line-break: strict;
+}
+
+:root :is(.locale-ja, [lang="ja"]) :is(h1, h2, h3, .hero__lead) {
+  word-break: auto-phrase;
+  text-wrap: balance;
+  line-break: strict;
+}
+
+:root :is(.locale-ja, [lang="ja"]) :is(p, dd, td) {
+  text-wrap: pretty;
+}
+
+/* Mincho headings: proportional kana (palt) with a little air, as in print. */
+:root :is(.locale-ja, [lang="ja"]) :is(
+  .hero__lead, .section-heading h2, .news-strip__heading h2, .manifesto > h2, .about h2,
+  .about-brand__heading h3, .inner-page__hero h1, .contact-section__intro h2,
+  .release-card__meta h3, .related-card h3, .profile-copy h1,
+  .entity-page h1, .entity-page h2, .privacy-page h1, .privacy-page h2) {
+  font-feature-settings: "palt" 1;
+}
+
+/* Phrase spans from typeset.js: lines break between phrases only. */
+:root .mj-phrase {
+  display: inline-block;
+  white-space: nowrap;
+}
+:root .mj-phrase .mj-char {
+  display: inline-block;
+  white-space: pre;
+}
+
+/* Authored "\n" breaks in section copy (also without JavaScript). */
+:root :is(.section-heading h2, .section-heading__body, .about h2) {
+  white-space: pre-line;
+}
+
+/* Labels: a catalogue mono instead of tracked-out bold caps. */
+:root .kicker {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: .14em;
+}
+:root .kicker::before {
+  content: "— ";
+  opacity: .55;
+}
+:root .hero .kicker::before { content: none; }
+
+/* ---------- Brand mark ----------
+   The official record-groove symbol replaces the red placeholder glyph
+   that was generated for the first edition. */
+
+:root .brand-symbol {
+  background: var(--mj-mark) center / 100% no-repeat;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+}
+:root .brand-symbol img { opacity: 0; }
+
+:root .frequency-mark {
+  width: 56px;
+  height: 56px;
+  background: var(--mj-mark) center / contain no-repeat;
+  filter: none;
+  transform: none;
+}
+:root .frequency-mark > span { display: none; }
+
+:root .release-card__fallback .frequency-mark { width: 64px; height: 64px; margin-bottom: 10px; transform: none; }
+
+:root .site-footer__top .frequency-mark {
+  width: clamp(96px, 11vw, 150px);
+  height: clamp(96px, 11vw, 150px);
+  transform: none;
+}
+
+:root .contact-section__orb .frequency-mark {
+  width: 34%;
+  height: 34%;
+  opacity: .42;
+  filter: grayscale(1) brightness(1.8);
+  transform: none;
+}
+
+/* The hero record: a spindle hole instead of a logo on the label. */
+:root .hero__orbit .frequency-mark {
+  width: 22px;
+  height: 22px;
+  background: radial-gradient(circle, #050506 0 4px, #eee8df 4.5px 7px, #05050680 7.5px 8.5px, transparent 9px);
+  transform: none;
+}
+
+:root .mj-curtain__symbol {
+  border: 0;
+  background: var(--mj-mark) center / contain no-repeat;
+  box-shadow: none;
+  width: 52px;
+  height: 52px;
+}
+
+/* ---------- Header ---------- */
+
+:root .brand__text strong {
+  font-family: var(--mj-body);
+  font-weight: 500;
+  letter-spacing: .06em;
+  font-size: 14px;
+}
+:root .brand__text small {
+  font-family: var(--mj-mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+}
+:root .site-nav a {
+  font-family: var(--mj-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .04em;
+}
+:root .locale-en .site-nav a,
+:root .language-switch {
+  font-family: var(--mj-mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* ---------- Hero ---------- */
+
+:root .hero h1 {
+  font-family: var(--mj-latin);
+  font-weight: 800;
+  font-stretch: 112%;
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -.045em;
+  font-size: clamp(64px, 11.4vw, 196px);
+  line-height: .86;
+}
+:root .hero__outline { font-weight: 700; }
+
+:root .hero__kicker {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: .16em;
+  color: #c9c0b7;
+}
+
+:root .hero__lead {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.5;
+  max-width: 440px;
+  font-size: clamp(22px, 2.15vw, 34px);
+}
+:root .locale-en .hero__lead {
+  font-family: var(--mj-latin);
+  font-weight: 600;
+  letter-spacing: -.02em;
+  line-height: 1.2;
+}
+:root .hero__sub {
+  font-size: 14px;
+  line-height: 2;
+  letter-spacing: .03em;
+  color: #c8bfb6;
+}
+
+:root .button {
+  font-family: var(--mj-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .06em;
+}
+
+:root :is(.hero__index, .hero__scroll, .hero__orbit-label, .experience-rail > span, .experience-rail > b) {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+}
+
+/* ---------- Section headings ---------- */
+
+:root .section-heading h2,
+:root .news-strip__heading h2 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .01em;
+  line-height: 1.42;
+  font-size: clamp(30px, 3.5vw, 54px);
+}
+:root .locale-en .section-heading h2,
+:root .locale-en .news-strip__heading h2 {
+  font-family: var(--mj-latin);
+  font-weight: 600;
+  letter-spacing: -.035em;
+  line-height: 1.08;
+}
+
+:root .section-heading__body,
+:root .manifesto__body {
+  letter-spacing: .02em;
+  line-height: 2.05;
+}
+:root .locale-en :is(.section-heading__body, .manifesto__body) { letter-spacing: 0; line-height: 1.8; }
+
+:root .manifesto > h2 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.3;
+  font-size: clamp(40px, 6.2vw, 100px);
+}
+:root .locale-en .manifesto > h2 {
+  font-family: var(--mj-latin);
+  font-weight: 800;
+  font-variation-settings: "wdth" 108;
+  letter-spacing: -.045em;
+  line-height: 1;
+}
+
+:root .manifesto__genres span,
+:root .manifesto__signal {
+  font-family: var(--mj-mono);
+}
+
+/* News */
+:root .news-strip__item time,
+:root .news-strip__label {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+:root .news-strip__title {
+  letter-spacing: .03em;
+  font-size: 15px;
+}
+
+/* Media cards */
+:root .related-card h3 {
+  font-family: var(--mj-latin), var(--mj-mincho);
+  font-weight: 800;
+  font-variation-settings: "wdth" 110;
+  letter-spacing: -.04em;
+}
+:root .related-card__body { letter-spacing: .03em; line-height: 1.95; }
+:root .related-card__cta,
+:root .related-card__index {
+  font-family: var(--mj-mono);
+  letter-spacing: .08em;
+  font-size: 11px;
+}
+
+/* ---------- Music (player cards stay as they are; type only) ---------- */
+
+:root .release-card__meta h3 {
+  font-family: var(--mj-latin), var(--mj-mincho);
+  font-weight: 600;
+  letter-spacing: -.025em;
+}
+:root .release-card__meta > p:first-child,
+:root .release-card__credit,
+:root .release-card__number,
+:root .release-card__play {
+  font-family: var(--mj-mono);
+  letter-spacing: .08em;
+}
+:root .release-card__description { letter-spacing: .03em; line-height: 1.9; }
+:root .catalog-marquee { font-family: var(--mj-mono); }
+
+/* ---------- Company brand rows ---------- */
+
+:root .about h2 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+:root .about-brand__heading h3 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+:root .locale-en .about-brand__heading h3 { font-family: var(--mj-latin); letter-spacing: -.02em; }
+:root .about-brand__index { font-family: var(--mj-mono); }
+:root .about-brand__body { letter-spacing: .03em; line-height: 1.95; }
+
+/* ---------- Footer ---------- */
+
+:root .site-footer__top p {
+  font-family: var(--mj-latin);
+  font-weight: 800;
+  font-variation-settings: "wdth" 112;
+  letter-spacing: -.05em;
+}
+:root .site-footer__bottom,
+:root .mj-socials,
+:root .profile-footer {
+  font-family: var(--mj-mono);
+  letter-spacing: .06em;
+}
+
+/* ---------- Inner pages ---------- */
+
+:root .inner-page__hero h1 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .02em;
+  line-height: 1.2;
+}
+:root .locale-ja .inner-page__hero h1 { font-size: clamp(44px, 6.4vw, 92px); }
+:root .locale-en .inner-page__hero h1 {
+  font-family: var(--mj-latin);
+  font-weight: 800;
+  font-variation-settings: "wdth" 110;
+  letter-spacing: -.045em;
+  line-height: .95;
+}
+:root .inner-page__hero > p:not(.kicker) {
+  letter-spacing: .03em;
+  line-height: 1.9;
+  max-width: 760px;
+}
+:root .inner-page__index { font-family: var(--mj-mono); }
+
+/* Company and privacy (preserved documents) */
+:root :is(.entity-page__eyebrow, .privacy-page__eyebrow) {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+  word-spacing: normal;
+  letter-spacing: .14em;
+}
+:root :is(.entity-page, .privacy-page) h1,
+:root :is(.entity-page, .privacy-page) h2 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+:root :is(.entity-page, .privacy-page) :is(dt, th) {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+  letter-spacing: .08em;
+}
+:root :is(.entity-page, .privacy-page) :is(p, dd, td, li) {
+  letter-spacing: .03em;
+  line-height: 1.95;
+}
+
+/* Profile */
+:root .profile-copy h1 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+:root :is(.profile-kicker, .profile-roman, .profile-portrait__label) {
+  font-family: var(--mj-mono);
+  font-weight: 500;
+}
+:root .profile-role { letter-spacing: .06em; }
+:root .locale-ja .profile-statement p {
+  font-family: var(--mj-mincho);
+  font-weight: 500;
+  letter-spacing: .04em;
+  line-height: 2.2;
+}
+
+/* ---------- Contact ---------- */
+
+/* The page hero already says "Contact"; the red panel no longer repeats the label
+   and the page lead, so the form sits closer to the top. */
+:root .inner-page__content--contact .contact-section__intro > .kicker { display: none; }
+:root .inner-page__main:has(.inner-page__content--contact) .inner-page__hero > p:not(.kicker) { display: none; }
+:root .inner-page__main:has(.inner-page__content--contact) .inner-page__hero {
+  padding-block: clamp(72px, 8vw, 120px) clamp(36px, 4vw, 56px);
+  border-bottom: 0;
+}
+:root .inner-page__content--contact .contact-section { margin-top: 0; }
+
+:root .contact-section__intro h2 {
+  font-family: var(--mj-heading-ja);
+  font-weight: 600;
+  letter-spacing: .01em;
+  line-height: 1.3;
+  font-size: clamp(40px, 4.6vw, 72px);
+}
+:root .locale-en .contact-section__intro h2 {
+  font-family: var(--mj-latin);
+  font-weight: 800;
+  font-variation-settings: "wdth" 110;
+  letter-spacing: -.045em;
+  line-height: 1;
+}
+:root .contact-section__intro > p:last-of-type { letter-spacing: .03em; line-height: 2; font-size: 15px; }
+
+/* The note used to sit inline with its title; the text column is the second span. */
+:root .schedule-card > span:nth-child(2) {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+:root .schedule-card strong { font-size: 16px; font-weight: 700; letter-spacing: .04em; }
+:root .schedule-card small { font-size: 12px; letter-spacing: .03em; opacity: .78; }
+
+:root .contact-form label > span {
+  font-family: var(--mj-body);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .04em;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+:root .contact-form label > span em {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font-family: var(--mj-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: #fff;
+  opacity: .72;
+}
+:root .contact-form label > span em.is-optional { opacity: .45; }
+:root .contact-form :is(input, select, textarea) { font-size: 16px; letter-spacing: .02em; }
+:root .contact-form__note { font-size: 12px; line-height: 1.8; letter-spacing: .02em; }
+:root .button--submit { font-size: 14px; }
+
+/* ---------- English: Japanese tracking does not apply to Latin text ---------- */
+
+:root .locale-en :is(
+  .hero__sub, .section-heading__body, .manifesto__body, .news-strip__title,
+  .related-card__body, .release-card__description, .about-brand__body,
+  .inner-page__hero > p:not(.kicker), .contact-section__intro > p, .contact-form__note,
+  .schedule-card strong, .schedule-card small, .profile-statement p, .profile-role),
+:root .locale-en:is(.entity-page, .privacy-page) :is(p, dd, td, li):not(.entity-page__eyebrow, .privacy-page__eyebrow) {
+  letter-spacing: 0;
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 760px) {
+  :root .hero h1 {
+    font-stretch: 100%;
+    font-variation-settings: "wdth" 100;
+    font-size: clamp(42px, 12.4vw, 80px);
+    line-height: .9;
+  }
+  :root .hero h1 > span { white-space: nowrap; }
+  :root .hero__kicker { font-size: 9px; letter-spacing: .1em; }
+  :root .hero__lead { font-size: clamp(21px, 6vw, 26px); }
+  :root .hero__sub { font-size: 13px; }
+  :root .section-heading h2,
+  :root .news-strip__heading h2 { font-size: clamp(24px, 6.9vw, 32px); line-height: 1.45; }
+  :root .manifesto > h2 { font-size: clamp(34px, 10vw, 46px); }
+  :root .contact-section__intro h2 { font-size: clamp(34px, 9.5vw, 44px); }
+  :root .brand__text strong { font-size: 12px; }
+  :root .site-nav a { font-size: 18px; }
+  :root .site-footer__top .frequency-mark { width: 84px; height: 84px; margin-bottom: 40px; }
+}
+
