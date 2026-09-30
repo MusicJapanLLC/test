@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+<channel>
+  <title>SECOND TAKE (English)</title>
+  <link>https://secondtake.music-japan.com/en/</link>
+  <description>Long-form interviews with founders and executives about what they chose after the first take went wrong: shutting down, starting over, stepping away.</description>
+  <language>en</language>
+  <item>
+    <title>The morning after he decided to close the company, he couldn’t say a word</title>
+    <link>https://secondtake.music-japan.com/en/articles/rebuild-night/</link>
+    <guid>https://secondtake.music-japan.com/en/articles/rebuild-night/</guid>
+    <pubDate>Sat, 12 Sep 2026 00:00:00 GMT</pubDate>
+    <description>Revenue had fallen by two-thirds, and the cash would last two more months. He came in to announce the shutdown — and found his team had spent the night writing a rescue plan.</description>
+  </item>
+  <item>
+    <title>She knew it would fail. It still took her a year to stop</title>
+    <link>https://secondtake.music-japan.com/en/articles/failure-knew/</link>
+    <guid>https://secondtake.music-japan.com/en/articles/failure-knew/</guid>
+    <pubDate>Thu, 10 Sep 2026 00:00:00 GMT</pubDate>
+    <description>The losses grew every month, and so did the messages from customers who believed in the product. Every signal said stop. She rewrote her own exit criteria three times.</description>
+  </item>
+  <item>
+    <title>He left to protect it: 143 days to walk away from the company he founded</title>
+    <link>https://secondtake.music-japan.com/en/articles/leave-company/</link>
+    <guid>https://secondtake.music-japan.com/en/articles/leave-company/</guid>
+    <pubDate>Tue, 08 Sep 2026 00:00:00 GMT</pubDate>
+    <description>He believed nothing would move without him — until he admitted that he was the one holding the company back.</description>
+  </item>
+</channel>
+</rss>

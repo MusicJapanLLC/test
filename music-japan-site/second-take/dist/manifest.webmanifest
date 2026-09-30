@@ -1,0 +1,12 @@
+{
+  "name": "SECOND TAKE",
+  "short_name": "SECOND TAKE",
+  "description": "経営者は、二度目に何を選んだか。— What leaders chose the second time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0908",
+  "theme_color": "#0a0908",
+  "icons": [
+    { "src": "/assets/second-take-cover.png", "sizes": "1254x1254", "type": "image/png", "purpose": "any" }
+  ]
+}
