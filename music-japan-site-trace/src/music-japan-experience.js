@@ -1,3 +1,4 @@
+import { typesetPage, refineEnabled } from './typeset.js';
 const root=document.documentElement;
 const reduce=matchMedia('(prefers-reduced-motion: reduce)');
 const saver=Boolean(navigator.connection?.saveData);
@@ -130,6 +131,8 @@ async function configure(){
 function boot(){
   if(booted)return;booted=true;
   root.dataset.mjExperience='vinyl';root.dataset.mjEdition='immersive';
+  // React can drop the build-time marker while recovering from a hydration mismatch.
+  const refine=refineEnabled();if(refine&&!root.dataset.mjRefine)root.dataset.mjRefine='on';
   const hero=document.querySelector('.hero');
   if(hero){fallbackArtwork(hero);hero.classList.add('mj-ambient');
     try{repeat=sessionStorage.getItem('mj-intro-seen')==='1';sessionStorage.setItem('mj-intro-seen','1');}catch{/* first visit if storage is unavailable */}}
@@ -137,7 +140,10 @@ function boot(){
     diagnostic=document.createElement('pre');diagnostic.className='mj-diagnostics';diagnostic.setAttribute('aria-label','Performance diagnostics');document.body.append(diagnostic);
     try{new PerformanceObserver(list=>{const last=list.getEntries().at(-1);report({lcp:Math.round(last.startTime)+' ms (unthrottled unless DevTools configured)'});}).observe({type:'largest-contentful-paint',buffered:true});}catch{}
   }
-  enhanceDecorations();configure();reduce.addEventListener('change',configure);
+  enhanceDecorations();
+  // Motion claims the headings it animates first; everything else is typeset statically.
+  configure().finally(()=>{if(refine)typesetPage();});
+  reduce.addEventListener('change',configure);
 }
 document.addEventListener('visibilitychange',()=>{root.dataset.mjVisibility=document.hidden?'hidden':'visible';});
 // The preserved homepage is React-owned. Wait for its committed effect before DOM decoration.
