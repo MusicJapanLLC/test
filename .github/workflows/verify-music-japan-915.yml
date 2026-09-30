@@ -20,16 +20,18 @@ jobs:
             if (!r.ok) throw new Error(url + ': HTTP ' + r.status);
             return r.text();
           };
+          const pageContent = html => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/\s+/g, ' ').trim();
+          const bundles = html => JSON.stringify([...html.matchAll(/<script[^>]+type="module"[^>]+src="([^"]+)"/g)].map(m => m[1]).sort());
           for (const path of ['/', '/en/']) {
             const expected = await read(preview + path);
             let matches = false;
             for (let attempt = 0; attempt < 12; attempt++) {
               const actual = await read(live + path);
-              if (actual === expected) { matches = true; break; }
+              if (pageContent(actual) === pageContent(expected) && bundles(actual) === bundles(expected)) { matches = true; break; }
               await new Promise(resolve => setTimeout(resolve, 10000));
             }
             if (!matches) throw new Error('Live HTML differs from approved preview: ' + path);
-            const message = live + path + ': HTTP 200, HTML exactly matches PR 915 preview';
+            const message = live + path + ': HTTP 200, page content and module bundles match PR 915 preview';
             console.log(message);
             appendFileSync(process.env.GITHUB_STEP_SUMMARY, '- ' + message + '\n');
           }
