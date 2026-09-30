@@ -14,7 +14,8 @@
     "dev": "vite next",
     "typecheck": "tsc -p next/tsconfig.json",
     "og": "node scripts/og-images.mjs",
-    "indexnow": "node scripts/indexnow.mjs"
+    "indexnow": "node scripts/indexnow.mjs",
+    "seo:audit": "node scripts/seo-audit.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.20.4",

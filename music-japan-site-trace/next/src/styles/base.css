@@ -219,7 +219,7 @@ html[data-intro] .wipe, .is-static .wipe { animation: none; }
 .ft-addr { color: var(--mute); font-size: 13px; line-height: 1.8; }
 .ft-mail { font-family: var(--f-mono); font-size: 13px; color: var(--paper-2); text-decoration: underline; text-underline-offset: 5px; text-decoration-color: var(--line-2); }
 .ft-nav { display: grid; gap: 10px; align-content: start; }
-.ft-nav a { font-size: 15px; font-weight: 700; width: fit-content; transition: color 0.3s; }
+.ft-nav a { font-size: 15px; font-weight: 700; width: fit-content; white-space: nowrap; transition: color 0.3s; }
 .ft-nav a:hover { color: var(--red-hot); }
 .ft-social p { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.16em; color: var(--mute); margin-bottom: 16px; }
 .ft-social div { display: flex; gap: 10px; }
@@ -229,8 +229,8 @@ html[data-intro] .wipe, .is-static .wipe { animation: none; }
 .ft-bottom { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 22px var(--pad) 32px; border-top: 1px solid var(--line); font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--mute); }
 .ft-bottom a:hover { color: var(--paper); }
 @media (max-width: 760px) {
-  .ft-grid { grid-template-columns: 1fr 1fr; }
-  .ft-id { grid-column: 1 / -1; }
+  .ft-grid { grid-template-columns: 1fr; gap: 44px; }
+  .ft-nav { grid-template-columns: 1fr 1fr; column-gap: 20px; row-gap: 16px; }
   .ft-bottom { flex-direction: column; }
 }
 

@@ -12,7 +12,7 @@ export function renderBusiness(locale: Locale) {
   const p = copy[locale].pages.business;
   const body = `${innerHero(locale, 'business')}
 ${aboutSection(locale, '01')}
-${crate(locale)}
+${crate(locale, { no: '02' })}
 ${mediaSection(locale, '03')}
 ${ctaBlock(locale)}
 ${player(locale)}`;
@@ -175,4 +175,18 @@ export function renderOfficial() {
   const title = '合同会社Music Japan 公式サイト | 音楽・メディア';
   const description = '音楽制作・配信を軸に、Podcast、経営者インタビュー、記事制作を手がける音楽・メディア会社。';
   return `<!doctype html><html lang="ja"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>${title}</title><meta name="description" content="${description}"/><meta name="robots" content="noindex,follow"/><link rel="canonical" href="${SITE_URL}/"/><meta property="og:type" content="website"/><meta property="og:site_name" content="Music Japan LLC"/><meta property="og:locale" content="ja_JP"/><meta property="og:title" content="${title}"/><meta property="og:description" content="${description}"/><meta property="og:url" content="${SITE_URL}/official/"/><meta property="og:image" content="${SITE_URL}${SOCIAL_IMAGE}"/><meta property="og:image:width" content="1500"/><meta property="og:image:height" content="500"/><meta property="og:image:alt" content="Music Japan LLC corporate logo"/><meta name="twitter:card" content="summary_large_image"/><meta name="twitter:title" content="${title}"/><meta name="twitter:description" content="${description}"/><meta name="twitter:image" content="${SITE_URL}${SOCIAL_IMAGE}"/><meta http-equiv="refresh" content="0;url=/"/><script>location.replace("/")</script></head><body><p><a href="/">合同会社Music Japan 公式サイトへ移動</a></p></body></html>`;
+}
+
+/** Served by Cloudflare Pages for any unknown URL (root /404.html). Bilingual, not indexed. */
+export function renderNotFound() {
+  const body = `<section class="ih nf" data-world-zone="inner-hero">
+  <p class="ih-display" aria-hidden="true" data-split-display>404</p>
+  <div class="ih-copy">
+    <p class="kicker">404 — NEEDLE SKIPPED</p>
+    <h1 class="ih-title" data-split>${phrases('ページが見つかりません')}</h1>
+    <p class="ih-lead">お探しのページは移動したか、削除された可能性があります。<br>The page you were looking for could not be found.</p>
+    <div class="sec-cta">${button('トップへ', path('ja', 'home'))}${button('作品を聴く', path('ja', 'works'), 'line')}${button('English', path('en', 'home'), 'line')}</div>
+  </div>
+</section>`;
+  return page({ locale: 'ja', page: 'home', title: 'ページが見つかりません（404）｜合同会社Music Japan', description: 'お探しのページは見つかりませんでした。', body, noindex: true });
 }

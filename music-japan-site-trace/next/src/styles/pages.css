@@ -181,3 +181,28 @@
   .qa summary { grid-template-columns: 44px 1fr 28px; }
   .qa-a { padding-left: 4px; }
 }
+
+/* ── release page (/works/<id>/) ── */
+.wk { position: relative; min-height: 92svh; display: grid; align-content: end; padding-top: 150px !important; overflow: hidden; }
+.wk .ih-display { color: transparent; -webkit-text-stroke: 1px var(--line-2); }
+.wk-grid { position: relative; display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: clamp(32px, 6vw, 110px); align-items: end; }
+.wk-art { position: relative; display: block; width: 100%; aspect-ratio: 1; cursor: pointer; margin-right: 18%; }
+.wk-art img { position: relative; z-index: 2; width: 100%; height: 100%; object-fit: cover; box-shadow: 0 40px 90px -30px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.06); }
+.wk-disc { position: absolute; z-index: 1; inset: 3%; border-radius: 50%; display: grid; place-items: center; background: repeating-radial-gradient(circle, #111 0 1px, #1b1b1f 1.5px 2.5px), #111; box-shadow: 0 0 0 1px #000, 0 20px 40px rgba(0, 0, 0, 0.6); transform: translateX(22%); transition: transform 1.2s var(--ease); }
+.wk-art:hover .wk-disc, .wk-art:focus-visible .wk-disc { transform: translateX(36%) rotate(160deg); }
+.wk-art .sleeve-play { z-index: 3; transform: none; opacity: 1; }
+.wk-copy { display: grid; gap: 22px; }
+.wk-title { font-family: var(--f-latin), var(--f-jp); font-weight: 900; font-stretch: 112%; font-size: clamp(40px, 5.6vw, 104px); line-height: 1; letter-spacing: -0.025em; overflow-wrap: anywhere; }
+.wk-artist { font-family: var(--f-mono); font-size: 14px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent, var(--red-hot)); }
+.wk .ih-lead { max-width: 640px; }
+.wk-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.wk-about .sec-head { max-width: 900px; }
+.tracklist--works .tl-name { transition: color 0.3s; }
+.tracklist--works .tl-name:hover { color: var(--red-hot); }
+.rel-title a { transition: color 0.3s; }
+.rel-title a:hover { color: var(--red-hot); }
+@media (max-width: 760px) {
+  .wk-grid { grid-template-columns: 1fr; }
+  .wk-art { width: 78%; }
+}
+.nf .ih-title { font-size: clamp(40px, 6vw, 104px); }

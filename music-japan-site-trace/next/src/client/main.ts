@@ -4,10 +4,13 @@ import '../styles/pages.css';
 import { reducedMotion, saveData, supportsWebGL } from './env';
 import { playIntro } from './intro';
 import { heroEntrance, innerEntrance, marquees, reveals, setupScroll, splitChars, worldZones } from './motion';
-import { setupBuddy } from './buddy';
 import { setupPlayer } from './player';
 import { setupContactForm, setupCrate, setupCursor, setupHeader, setupMagnetic, setupTransitions } from './ui';
 import type { World } from './world';
+
+/** The mini character is parked for now (owner's call). Flip to true to bring it back — the code stays in buddy.ts. */
+const BUDDY = false;
+const showBuddy = () => { if (BUDDY) void import('./buddy').then((m) => m.setupBuddy()); };
 
 const root = document.documentElement;
 const isHome = root.dataset.world === 'home';
@@ -59,7 +62,7 @@ async function boot() {
     root.classList.add('is-static');
     document.querySelector('[data-intro-overlay]')?.remove();
     await ready;
-    setupBuddy();
+    showBuddy();
     return;
   }
 
@@ -77,7 +80,7 @@ async function boot() {
   const updateZones = worldZones(world);
   reveals();
   updateZones();
-  setupBuddy();
+  showBuddy();
 }
 
 void boot();

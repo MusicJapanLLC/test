@@ -1,20 +1,24 @@
 import { brandNames, businesses, facts, partners, profile } from '../content/company';
 import { faq } from '../content/faq';
 import { artwork, releases, type Locale } from '../content/releases';
-import { BATON_URL, copy, EMAIL, path, SECOND_TAKE_URL, SITE_URL, TIMEREX_URL, type PageKey } from '../content/site';
+import { BATON_URL, copy, EMAIL, path, SECOND_TAKE_URL, SITE_URL, TIMEREX_URL, workPath, type PageKey } from '../content/site';
 
 /** Public by design: IndexNow verifies ownership by fetching /<key>.txt from the site. */
 export const INDEXNOW_KEY = '844274c99df5a67456015ef85d22911f';
 
-export const PAGES: PageKey[] = ['home', 'business', 'company', 'profile', 'partners', 'contact', 'privacy'];
-export const allUrls = () => PAGES.flatMap((k) => (['ja', 'en'] as Locale[]).map((l) => `${SITE_URL}${path(l, k)}`));
+export const PAGES: PageKey[] = ['home', 'business', 'works', 'company', 'profile', 'partners', 'contact', 'privacy'];
+const LOCALES: Locale[] = ['ja', 'en'];
+export const allUrls = () => [
+  ...PAGES.flatMap((k) => LOCALES.map((l) => `${SITE_URL}${path(l, k)}`)),
+  ...releases.flatMap((r) => LOCALES.map((l) => `${SITE_URL}${workPath(l, r.id)}`)),
+];
 
 const xml = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
 export function sitemap(lastmod: string): string {
   const images: Partial<Record<PageKey, { loc: string; title: string }[]>> = {
     home: releases.map((r) => ({ loc: `${SITE_URL}${artwork(r, 1200)}`, title: `${r.title} — ${r.artist}` })),
-    business: releases.map((r) => ({ loc: `${SITE_URL}${artwork(r, 1200)}`, title: `${r.title} — ${r.artist}` })),
+    works: releases.map((r) => ({ loc: `${SITE_URL}${artwork(r, 1200)}`, title: `${r.title} — ${r.artist}` })),
     profile: [{ loc: `${SITE_URL}/kabeya-tomoki.png`, title: '壁谷 友生 / Tomoki Kabeya' }],
     company: [{ loc: `${SITE_URL}/music-japan-logo.png`, title: '合同会社Music Japan' }],
   };
@@ -33,6 +37,21 @@ ${imgs.map((i) => `    <image:image><image:loc>${xml(i.loc)}</image:loc><image:t
   </url>`;
     }),
   );
+  const works = releases.flatMap((r) =>
+    LOCALES.map(
+      (l) => `  <url>
+    <loc>${SITE_URL}${workPath(l, r.id)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${workPath('ja', r.id)}" />
+    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${workPath('en', r.id)}" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${workPath('ja', r.id)}" />
+    <image:image><image:loc>${SITE_URL}${artwork(r, 1200)}</image:loc><image:title>${xml(`${r.title} — ${r.artist}`)}</image:title></image:image>
+  </url>`,
+    ),
+  );
+  entries.push(...works);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 ${entries.join('\n')}
@@ -86,6 +105,10 @@ ${facts.map((f) => `- ${f.label.ja}: ${f.value.ja}`).join('\n')}
 
 ${businesses.map((b) => `- ${b.name}: ${b.body.ja}`).join('\n')}
 
+## 作品
+
+${releases.map((r) => `- [${r.title} — ${r.artist}](${SITE_URL}${workPath('ja', r.id)})`).join('\n')}
+
 ## 関連サービス
 
 - SECOND TAKE（経営者メディア / Podcast・インタビュー）: ${SECOND_TAKE_URL}
@@ -104,7 +127,7 @@ ${faq.ja.map((i) => `### ${i.q}\n${i.a}`).join('\n\n')}
 export function llmsFull(): string {
   const release = (l: Locale) =>
     releases
-      .map((r, i) => `- MJ-${String(i + 1).padStart(3, '0')} ${r.title} — ${r.artist}（${r.type}）: ${r.description[l]} ${r.platform}: ${r.href}`)
+      .map((r, i) => `- [MJ-${String(i + 1).padStart(3, '0')} ${r.title} — ${r.artist}](${SITE_URL}${workPath(l, r.id)})（${r.type}）: ${r.description[l]} ${r.platform}: ${r.href}`)
       .join('\n');
   return `${llms()}
 ## 作品カタログ
