@@ -231,6 +231,16 @@ var BATON_PROFILES = {
     // 「デプロイを管理」→新バージョンで反映する）。
     recipientEmail: 'standment.2026@gmail.com',
     active: true
+  },
+  matsuura: {
+    name: '松浦 淳',
+    company: '株式会社Central AX',
+    slug: 'matsuura',
+    // TODO: 松浦様ご本人の受信用メールアドレスに差し替えるまで active を
+    // true にしない。このアドレスは推測・仮設定で本物らしく書かないこと
+    // （テスト段階でOwner自身のアドレスを使うのは可）。
+    recipientEmail: 'REPLACE_ME@example.com',
+    active: false
   }
 };
 
@@ -873,6 +883,32 @@ function testBatonFlow() {
 function testBatonFlowUnveil() {
   var result = batonSubmitTalk({
     profileId: 'unveil',
+    applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
+    purposes: ['協業'],
+    comment: 'これは動作確認用のテスト送信です。',
+    note: '',
+    attachments: [],
+    hp: ''
+  });
+
+  Logger.log('結果: ' + JSON.stringify(result));
+  if (result.ok) {
+    batonToast(
+      'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
+  } else {
+    batonToast('失敗: ' + JSON.stringify(result), 'テスト', 8);
+  }
+}
+
+/**
+ * matsuuraプロフィール専用の動作確認用。
+ * BATON_PROFILES.matsuura が active: false の間は「現在受け付けていません」
+ * になるのが正しい動作。recipientEmail を本人の受信用アドレスに差し替えて
+ * active: true にしてから実行すること。
+ */
+function testBatonFlowMatsuura() {
+  var result = batonSubmitTalk({
+    profileId: 'matsuura',
     applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
     purposes: ['協業'],
     comment: 'これは動作確認用のテスト送信です。',

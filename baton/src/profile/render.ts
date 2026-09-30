@@ -1,5 +1,5 @@
 import { el, externalAttrs } from '../lib/dom';
-import type { TalkProfile } from '../types';
+import type { MediaItem, TalkProfile } from '../types';
 import { renderRequestForm } from './request-form';
 
 function proseSection(opts: {
@@ -48,48 +48,120 @@ function servicesSection(profile: TalkProfile): HTMLElement | null {
   ]);
 }
 
+function arrowIcon(className: string): HTMLElement {
+  const span = el('span', { class: className, 'aria-hidden': 'true' });
+  span.innerHTML =
+    '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 3h6v6M11 3L3.5 10.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  return span;
+}
+
+function hostOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+/** 種別バッジ＋日付。登壇だけ塗りつぶしで強調する */
+function metaLine(m: MediaItem): HTMLElement {
+  return el('p', { class: 'media-meta' }, [
+    m.kind ? el('span', { class: 'media-kind', 'data-kind': m.kind, text: m.kind }) : null,
+    m.date ? el('span', { class: 'media-date', text: m.date }) : null,
+  ].filter((n): n is HTMLElement => n !== null));
+}
+
+/**
+ * 実績向けの関連リンク。件数が多くても読めるように、大きさで優先度をつける。
+ * featured は大きなカード、それ以外は1行の一覧。
+ */
+function achievementMedia(items: MediaItem[], richMotion: boolean): Node[] {
+  const featured = items.filter((m) => m.featured);
+  const rest = items.filter((m) => !m.featured);
+
+  const card = (m: MediaItem) =>
+    el(
+      'a',
+      {
+        class: 'media-feature',
+        href: m.url,
+        ...externalAttrs,
+        'data-reveal': true,
+        ...(richMotion ? { 'data-tilt': true } : {}),
+      },
+      [
+        metaLine(m),
+        el('h3', { class: 'media-feature__title', text: m.label }),
+        m.note ? el('p', { class: 'media-feature__note', text: m.note }) : null,
+        el('p', { class: 'media-feature__host' }, [
+          el('span', { text: hostOf(m.url) }),
+          arrowIcon('media-arrow'),
+        ]),
+      ].filter((n): n is HTMLElement => n !== null),
+    );
+
+  const row = (m: MediaItem) =>
+    el('a', { class: 'media-row', href: m.url, ...externalAttrs, 'data-reveal': true }, [
+      metaLine(m),
+      el('span', { class: 'media-row__body' }, [
+        el('span', { class: 'media-row__title', text: m.label }),
+        m.note ? el('span', { class: 'media-row__note', text: m.note }) : null,
+      ].filter((n): n is HTMLElement => n !== null)),
+      el('span', { class: 'media-row__host' }, [el('span', { text: hostOf(m.url) }), arrowIcon('media-arrow')]),
+    ]);
+
+  return [
+    featured.length
+      ? el('div', { class: 'media-features', 'data-reveal-group': true }, featured.map(card))
+      : null,
+    rest.length ? el('div', { class: 'media-rows', 'data-reveal-group': true }, rest.map(row)) : null,
+  ].filter((n): n is HTMLDivElement => n !== null);
+}
+
 function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | null {
   if (!profile.media || !profile.media.length) return null;
 
-  const arrow = () => {
-    const span = el('span', { class: 'media-card__arrow', 'aria-hidden': 'true' });
-    span.innerHTML =
-      '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M5 3h6v6M11 3L3.5 10.5" stroke="#fff" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    return span;
-  };
+  const arrow = () => arrowIcon('media-card__arrow');
+  const achievements = profile.media.some((m) => m.kind);
+
+  const body: Node[] = achievements
+    ? achievementMedia(profile.media, richMotion)
+    : [
+        el(
+          'div',
+          { class: 'media-grid', 'data-reveal-group': true },
+          profile.media.map((m) =>
+            el(
+              'a',
+              {
+                class: 'media-card',
+                href: m.url,
+                ...externalAttrs,
+                'data-reveal': true,
+                ...(richMotion ? { 'data-tilt': true } : {}),
+              },
+              [
+                el(
+                  'div',
+                  { class: 'media-card__thumb' },
+                  m.image
+                    ? [el('img', { class: 'media-card__img', src: m.image, alt: '', loading: 'lazy' }), arrow()]
+                    : [el('span', { text: m.label.slice(0, 1) }), arrow()],
+                ),
+                el('p', { class: 'media-card__title', text: m.label }),
+              ],
+            ),
+          ),
+        ),
+      ];
 
   return el('section', { class: 'section', id: 'media' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: 'Media', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '関連リンク', 'data-reveal': true }),
+        el('span', { class: 'section__label', text: achievements ? 'Media & Appearances' : 'Media', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: achievements ? '登壇・掲載・発信' : '関連リンク', 'data-reveal': true }),
       ]),
-      el(
-        'div',
-        { class: 'media-grid', 'data-reveal-group': true },
-        profile.media.map((m) =>
-          el(
-            'a',
-            {
-              class: 'media-card',
-              href: m.url,
-              ...externalAttrs,
-              'data-reveal': true,
-              ...(richMotion ? { 'data-tilt': true } : {}),
-            },
-            [
-              el(
-                'div',
-                { class: 'media-card__thumb' },
-                m.image
-                  ? [el('img', { class: 'media-card__img', src: m.image, alt: '', loading: 'lazy' }), arrow()]
-                  : [el('span', { text: m.label.slice(0, 1) }), arrow()],
-              ),
-              el('p', { class: 'media-card__title', text: m.label }),
-            ],
-          ),
-        ),
-      ),
+      ...body,
     ]),
   ]);
 }
@@ -137,15 +209,14 @@ function marquee(): HTMLElement {
 
 export function renderProfileSections(app: HTMLElement, profile: TalkProfile): void {
   // 帯・カードの傾きは、暗色ページと editorial の両方で使う
-  const richMotion = Boolean(
-    profile.heavyWebGL || profile.monument || profile.heroVariant === 'editorial',
-  );
+  const richMotion = profile.heroVariant !== 'simple';
+  const media = mediaSection(profile, richMotion);
+  const services = servicesSection(profile);
+  const band = richMotion ? marquee() : null;
   app.append(
     ...[
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
-      servicesSection(profile),
-      richMotion ? marquee() : null,
-      mediaSection(profile, richMotion),
+      ...(profile.mediaFirst ? [band, media, services] : [services, band, media]),
       requestSection(profile),
     ].filter((n): n is HTMLElement => n !== null),
   );
