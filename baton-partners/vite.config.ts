@@ -4,19 +4,30 @@ import type { BuildEnv } from './src/render/layout';
 
 const root = process.cwd();
 
+/** 本番の公開URL（Cloudflare の DNS で partners → cname.vercel-dns.com） */
+const PRODUCTION_URL = 'https://partners.music-japan.com';
+const isProduction = process.env.VERCEL_ENV === 'production';
+
 /**
- * 公開URL。Vercel なら自動で入る。独自ドメイン（サブドメイン）を当てたら VITE_SITE_URL で上書き。
+ * canonical・sitemap に使うURL。本番は独自ドメインに固定する。
+ * VITE_SITE_URL があればそれを優先。プレビューやローカルでは、そのデプロイ自身のURL。
  */
 function siteUrl(): string {
   const explicit = process.env.VITE_SITE_URL;
   if (explicit) return explicit.replace(/\/$/, '');
-  const vercel = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+  if (isProduction) return PRODUCTION_URL;
+  const vercel = process.env.VERCEL_URL;
   return vercel ? `https://${vercel}` : 'http://localhost:4174';
 }
 
-/** デモの間は noindex。公開するときだけ BP_INDEX=1 でビルドする */
+/**
+ * 本番ビルドだけ検索に載せる。プレビュー・ローカルは noindex。
+ * 本番でも止めたいときは BP_NOINDEX=1 でビルドする。
+ * （vercel.app のURLは、本番の中身でも vercel.json の X-Robots-Tag で noindex にしている）
+ */
 const googleFonts = process.env.BP_FONTS === 'google';
-const env: BuildEnv = { siteUrl: siteUrl(), noindex: process.env.BP_INDEX !== '1', googleFonts };
+const noindex = !isProduction || process.env.BP_NOINDEX === '1';
+const env: BuildEnv = { siteUrl: siteUrl(), noindex, googleFonts };
 
 function seoFiles(pages: GeneratedPage[]): Plugin {
   return {

@@ -80,6 +80,31 @@ function setupFiles(form: HTMLFormElement): () => File[] {
 export function setupContact(): void {
   const form = document.querySelector<HTMLFormElement>('[data-form]');
   if (!form) return;
+
+  // 公開中のドメインで送信先（GAS）が未設定なら、回答が消えないようにフォームを閉じて公式LINEへ案内する
+  if (IS_DEMO && !/^(localhost|127\.0\.0\.1)$|\.vercel\.app$/.test(location.hostname)) {
+    const line = document.querySelector<HTMLAnchorElement>('[data-line-link]')?.href ?? '';
+    const note = document.createElement('div');
+    note.className = 'form-paused';
+    const p = document.createElement('p');
+    p.textContent = 'ただいまフォームの受付を準備しています。お手数ですが、公式LINEを追加して、トークから「話してみたい」とお送りください。Music Japanから折り返しご連絡します。';
+    note.append(p);
+    if (line) {
+      const a = document.createElement('a');
+      a.className = 'btn btn-line-app';
+      a.href = line;
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.textContent = '公式LINEを追加する';
+      note.append(a);
+    }
+    form.replaceWith(note);
+    const h = document.querySelector<HTMLElement>('#form-h');
+    if (h) h.textContent = 'アンケートは、準備中です';
+    document.querySelectorAll<HTMLElement>('.form-lead, .promises').forEach((el) => (el.hidden = true));
+    return;
+  }
+
   const done = document.querySelector<HTMLElement>('[data-done]');
   const errBox = form.querySelector<HTMLElement>('[data-form-err]');
   const button = form.querySelector<HTMLButtonElement>('[data-submit]');

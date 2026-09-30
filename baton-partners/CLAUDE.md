@@ -51,7 +51,9 @@ AIっぽい文章は掲載企業の信用を落とす。次を守る。
 - ボタンは「話してみる」。「相談する」「お問い合わせ」は使わない
 - 予約カレンダーは置かない。自動マッチングしない。紹介の判断は社長
 - 掲載企業へは「相談が1件届いた」通知と受付番号だけ。お客様の個人情報は双方了承までMusic Japanだけが持つ
-- デモ中は noindex（meta・robots.txt・X-Robots-Tag）
+- 公開先は `https://partners.music-japan.com/<slug>/`（DNSは Cloudflare で `partners` → `cname.vercel-dns.com`、プロキシはオフ）。
+  本番ビルドだけ検索に載せる。プレビューとローカルは noindex、`*.vercel.app` は X-Robots-Tag で noindex。止めたいときは `BP_NOINDEX=1`
+- 送信先（`VITE_GAS_ENDPOINT`）が未設定のまま公開ドメインで開かれたら、フォームを閉じて公式LINEへ案内する（回答が消えないように）
 - 背景は白。書体と装飾は world.theme で決める（editorial は明朝＋Fraunces、mono は太いゴシック＋Archivo）
 - 「動きを減らす」設定・WebGL非対応でも、完成形の見た目は崩れないこと
 
