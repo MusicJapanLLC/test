@@ -1,4 +1,6 @@
-import { el, externalAttrs } from '../lib/dom';
+import { profiles } from '../data/profiles';
+import { site } from '../data/site';
+import { el, externalAttrs, withBase } from '../lib/dom';
 
 /**
  * プロフィールページ専用のフッター。
@@ -13,7 +15,7 @@ export function renderProfileFooter(mount: HTMLElement): void {
       el('div', { class: 'profile-footer__grid' }, [
         el(
           'a',
-          { href: 'https://music-japan.pages.dev/', ...externalAttrs },
+          { href: site.operator.url, ...externalAttrs },
           ['合同会社Music Japan'],
         ),
         el(
@@ -28,9 +30,17 @@ export function renderProfileFooter(mount: HTMLElement): void {
           ['紹介・掲載をご希望の方'],
         ),
       ]),
+      // サイト内の主要ページへの内部リンク。どのページからも一覧と各プロフィールへ辿れるようにする
+      el('nav', { class: 'profile-footer__nav', 'aria-label': 'Baton サイト内リンク' }, [
+        el('a', { href: withBase('/profile/'), text: 'Baton -バトン- トップ' }),
+        ...profiles
+          .filter((p) => p.active)
+          .map((p) => el('a', { href: withBase(`/profile/${p.slug}/`), text: `${p.name}（${p.company}）` })),
+        el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
+      ]),
       el('div', { class: 'profile-footer__bottom' }, [
-        el('span', { text: `© ${new Date().getFullYear()} 合同会社Music Japan` }),
-        el('span', { text: 'Baton' }),
+        el('span', { text: `© ${new Date().getFullYear()} ${site.operator.name}` }),
+        el('a', { href: withBase('/profile/'), text: 'Baton' }),
       ]),
     ]),
   );

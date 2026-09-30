@@ -1599,3 +1599,319 @@ body.profile--dark .pf-shot__frame::after {
     50% { transform: translateX(8px); opacity: 1; }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════
+ * 検索・AI向けに足したブロック（パンくず／概要／FAQ／ほかの経営者）
+ * 読み手にとっても「この人は誰か」「どう頼めばいいか」がすぐ分かる置き方にする。
+ * ══════════════════════════════════════════════════════════════ */
+
+.pf-breadcrumb {
+  padding-top: clamp(1.4rem, 1rem + 1.4vw, 2.2rem);
+}
+
+.pf-breadcrumb__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.6rem;
+  list-style: none;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  color: color-mix(in srgb, var(--text) 58%, transparent);
+}
+
+.pf-breadcrumb__list li + li::before {
+  content: '/';
+  margin-right: 0.6rem;
+  opacity: 0.5;
+}
+
+.pf-breadcrumb__list a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--text) 20%, transparent);
+}
+
+.pf-breadcrumb__list a:hover {
+  color: var(--text);
+}
+
+.pf-overview__lead {
+  max-width: 44em;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+  line-height: 1.9;
+  word-break: auto-phrase;
+}
+
+.pf-facts {
+  margin-top: clamp(1.4rem, 1rem + 1.6vw, 2.2rem);
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: clamp(1.5rem, 1rem + 2vw, 3rem);
+  border-top: 1px solid var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+}
+
+@media (min-width: 900px) {
+  .pf-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.section--overview {
+  padding-top: clamp(2rem, 1.4rem + 2.4vw, 3.6rem);
+}
+
+.pf-facts__row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  gap: 0.8rem;
+  padding: 0.95rem 0.2rem;
+  border-bottom: 1px solid var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+}
+
+.pf-facts__row dt {
+  font-size: 0.74rem;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--text) 56%, transparent);
+  padding-top: 0.2em;
+}
+
+.pf-facts__row dd {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+.pf-facts__row a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.pf-facts__links {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+}
+
+/* FAQ: 開閉できる質問と答え */
+
+.pf-faq {
+  max-width: 52rem;
+  border-top: 1px solid var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+}
+
+.pf-faq__item {
+  border-bottom: 1px solid var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+}
+
+.pf-faq__q {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.15rem 0.2rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.pf-faq__q::-webkit-details-marker {
+  display: none;
+}
+
+.pf-faq__q h3 {
+  font-family: var(--font-display);
+  font-size: clamp(1rem, 0.94rem + 0.3vw, 1.12rem);
+  font-weight: 600;
+  line-height: 1.6;
+  word-break: auto-phrase;
+}
+
+.pf-faq__q::after {
+  content: '+';
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--text) 22%, transparent);
+  color: var(--accent);
+  font-size: 1rem;
+  line-height: 1;
+  transition: transform 0.35s ease;
+}
+
+.pf-faq__item[open] .pf-faq__q::after {
+  transform: rotate(45deg);
+}
+
+.pf-faq__a {
+  padding: 0 0.2rem 1.3rem;
+  max-width: 46em;
+  line-height: 1.95;
+  color: color-mix(in srgb, var(--text) 82%, transparent);
+}
+
+/* ほかの経営者（内部リンク） */
+
+.pf-related {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: clamp(0.8rem, 0.6rem + 1vw, 1.2rem);
+}
+
+.pf-related__card,
+.pf-related__all {
+  display: grid;
+  gap: 0.3rem;
+  padding: clamp(1.1rem, 0.9rem + 1vw, 1.5rem);
+  border: 1px solid var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.3s ease,
+    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pf-related__card:hover,
+.pf-related__all:hover {
+  border-color: color-mix(in srgb, var(--card-primary, var(--accent)) 55%, transparent);
+  transform: translateY(-2px);
+}
+
+.pf-related__company {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.pf-related__name {
+  font-size: 0.82rem;
+  color: color-mix(in srgb, var(--text) 62%, transparent);
+}
+
+.pf-related__summary {
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.pf-related__all {
+  align-content: center;
+  font-size: 0.9rem;
+}
+
+.pf-related__all span::after {
+  content: ' →';
+  color: var(--accent);
+}
+
+.survey__static {
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
+/* プロフィール一覧（/profile/）の、Batonの説明と流れ */
+
+.talk-hub-intro__lead {
+  max-width: 44em;
+  font-family: var(--font-display);
+  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
+  line-height: 1.95;
+  word-break: auto-phrase;
+}
+
+.talk-hub-steps {
+  margin-top: clamp(1.8rem, 1.2rem + 2vw, 2.8rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: clamp(0.8rem, 0.6rem + 1vw, 1.4rem);
+  list-style: none;
+  counter-reset: none;
+}
+
+.talk-hub-step {
+  position: relative;
+  padding: clamp(1.2rem, 1rem + 1vw, 1.7rem);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--hub-line, rgba(26, 26, 26, 0.12));
+  box-shadow: 0 20px 40px -34px rgba(176, 138, 69, 0.6);
+}
+
+.talk-hub-step__num {
+  font-family: 'Jost', sans-serif;
+  font-weight: 300;
+  font-size: 1.6rem;
+  color: var(--bt-gold, #b08a45);
+}
+
+.talk-hub-step__title {
+  margin-top: 0.4rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.talk-hub-step__body {
+  margin-top: 0.4rem;
+  font-size: 0.9rem;
+  line-height: 1.8;
+  color: var(--hub-muted, #6b6b6b);
+}
+
+.talk-hub-cta .wrap {
+  display: grid;
+  justify-items: center;
+  gap: 1.1rem;
+  text-align: center;
+}
+
+.talk-hub-cta__lead {
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 1rem + 0.6vw, 1.4rem);
+}
+
+.talk-hub-cta .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0.9rem 2rem;
+  border-radius: 999px;
+  background: var(--hub-accent, #c8102e);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-decoration: none;
+  box-shadow: 0 18px 36px -20px rgba(200, 16, 46, 0.8);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.talk-hub-cta .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 24px 44px -20px rgba(200, 16, 46, 0.85);
+}
+
+.profile-footer__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem 1.4rem;
+  margin-top: clamp(1.4rem, 1rem + 1vw, 2rem);
+  font-size: 0.8rem;
+}
+
+.profile-footer__nav a,
+.profile-footer__bottom a {
+  color: inherit;
+  opacity: 0.78;
+  text-decoration: none;
+}
+
+.profile-footer__nav a:hover,
+.profile-footer__bottom a:hover {
+  opacity: 1;
+}

@@ -1,10 +1,10 @@
 import {
-  AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
   Camera,
   Color,
   Mesh,
+  NormalBlending,
   PlaneGeometry,
   Points,
   Scene,
@@ -16,21 +16,21 @@ import { makeRenderer, onResize, pointerTracker, startLoop } from '../lib/webgl'
 /**
  * Baton トップ（/profile/）のヒーロー。
  *
- * 「バトンが渡る瞬間」を光で見せる。
- *   1. 左端から、白熱したレーザーの閃光が尾を引いて走ってくる
- *   2. 画面中央で着弾。閃光・横に伸びるアナモルフィックの光条・
- *      色収差のかかった衝撃波リング・火花が同時に起きる
- *   3. 光は右端まで渡りきり、一本の「バトンの線」として残る
- *      （線の上を、次の走者へ渡る光のパルスが流れ続ける）
- *   4. 余韻として、煙の中をステージレーザーがゆっくり掃き、
- *      残り火が立ちのぼる。マウスに合わせてビームの向きと照り返しが動く
+ * 「いい人から、いい人へ、光が手渡される」瞬間を、白い紙の上の光で描く。
+ *   1. 左から、赤と金の光（バトン）が絹のリボンを描きながら運ばれてくる
+ *   2. 右からは、受け取る側の淡い金の光が近づいてくる
+ *   3. 中央で2つが重なった瞬間に、やわらかな金の光だまりと水面の波紋、
+ *      金の粉がふわりと広がる（＝バトンが渡る）
+ *   4. 光は右端まで渡りきり、リボンとして残る。以後は数本のリボンの上を、
+ *      小さな光が次の人へ次の人へと流れ続ける
  *
- * 全画面の板1枚（フラグメントシェーダ）と、火花・残り火の粒2組だけで描く。
+ * 白地では光を「足す」と色が飛ぶので、すべて地の色へ「混ぜて」描く。
+ * 全画面の板1枚（フラグメントシェーダ）と、金の粉の粒だけで描く。
  * 座標は「縦が -0.5〜0.5、横はアスペクト比ぶん」の平面にそろえている。
  */
 
-const IMPACT_AT = 1.05; // 着弾までの秒数
-const SETTLE = 0.32; // 着弾後、光が右端まで渡りきるまでの秒数
+const IMPACT_AT = 1.35; // バトンが渡るまでの秒数
+const SETTLE = 0.9; // 渡ったあと、光が右端まで届くまでの秒数
 
 const quadVertex = /* glsl */ `
   varying vec2 vUv;
@@ -48,6 +48,8 @@ const quadFragment = /* glsl */ `
   uniform vec2  uMouse;
   uniform vec3  uRed;
   uniform vec3  uGold;
+  uniform vec3  uPaper;
+  uniform vec3  uChamp;
   uniform float uLineY;
   uniform float uLow;
   varying vec2 vUv;
@@ -84,24 +86,25 @@ const quadFragment = /* glsl */ `
     return v;
   }
 
-  // 原点 o から角度 ang へ伸びるステージレーザー1本
-  vec3 beam(vec2 p, vec2 o, float ang, vec3 col, float fog) {
-    vec2 d = vec2(cos(ang), sin(ang));
-    vec2 v = p - o;
-    float along = dot(v, d);
-    if (along < 0.0) return vec3(0.0);
-    float perp = length(v - d * along);
-    float core = exp(-perp * perp * 26000.0);
-    float glow = exp(-perp * 14.0) * 0.22 * fog;
-    float haze = exp(-perp * 3.0) * 0.05 * fog;
-    float fall = exp(-along * 0.55);
-    return col * (core * 0.9 + glow + haze) * fall;
+  // 主役のリボン。中央（タイトルの下）でだけ線の高さに一致し、左右へ向かってゆるやかに波打つ
+  float mainRibbonY(float x, float y0, float time) {
+    float spread = smoothstep(0.0, 0.9, abs(x));
+    return y0 + (sin(x * 2.3 + time * 0.25) * 0.055 + sin(x * 5.1 - time * 0.18) * 0.012) * spread;
   }
 
-  // 着弾の衝撃波リング。半径を少しずつずらして、縁に色収差を出す
-  float ring(vec2 p, vec2 c, float r, float w) {
-    float d = length(p - c) - r;
-    return exp(-d * d * w);
+  // 背景に流れる、絹のリボン
+  float silkY(float x, float base, float amp, float k, float phase, float time) {
+    return base + sin(x * k + phase + time * 0.21) * amp + sin(x * k * 2.1 - phase * 1.3 - time * 0.13) * amp * 0.28;
+  }
+
+  // 曲線 y=f(x) までのおおよその距離（傾きで補正）
+  float curveDist(vec2 p, float y, float slope) {
+    return abs(p.y - y) / sqrt(1.0 + slope * slope);
+  }
+
+  // 色を「地へ混ぜる」。白地の上で光を描くための基本操作
+  vec3 over(vec3 base, vec3 col, float a) {
+    return mix(base, col, clamp(a, 0.0, 1.0));
   }
 
   void main() {
@@ -114,129 +117,131 @@ const quadFragment = /* glsl */ `
     vec2 center = vec2(0.0, y0);
     vec2 mouse = uMouse * vec2(halfW, 0.5);
 
-    // ── 煙と地 ────────────────────────────────
-    vec2 fp = p * 2.1 + vec2(time * 0.028, -time * 0.018);
-    float fog = fbm(fp + fbm(fp * 0.7 + time * 0.02) * 0.9);
-    vec3 col = vec3(0.006, 0.005, 0.006);
-    col += uRed * 0.11 * pow(fog, 2.2);
-    col += uGold * 0.03 * pow(fog, 3.0) * smoothstep(0.6, -0.2, p.y);
-    // 天井から、タイトルへ落ちる柔らかいスポット
-    float cone = smoothstep(0.55, 0.0, abs(p.x) - (0.5 - p.y) * 0.35);
-    col += vec3(1.0, 0.86, 0.72) * 0.045 * cone * smoothstep(-0.2, 0.5, p.y) * (0.6 + fog);
+    // ── 紙と、にじむ水彩 ─────────────────────
+    vec2 fp = p * 1.6 + vec2(time * 0.018, -time * 0.012);
+    float wash = fbm(fp + fbm(fp * 0.8 + time * 0.015) * 0.8);
+    vec3 col = uPaper;
+    col = over(col, mix(uPaper, uRed, 0.3), smoothstep(0.6, 0.95, wash) * 0.07);
+    col = over(col, mix(uPaper, uChamp, 0.6), smoothstep(0.5, 0.95, fbm(fp * 0.7 + 7.3)) * 0.12);
+    // 天井から、タイトルへ落ちるやわらかな光
+    col = mix(col, vec3(1.0), 0.35 * exp(-pow(length((p - vec2(0.0, y0 + 0.18)) * vec2(0.8, 1.3)), 2.0) * 3.0));
 
-    // ── 走ってくる閃光（着弾まで）と、残る「バトンの線」 ──
+    float stage = smoothstep(IMPACT - 0.2, IMPACT + 1.6, t);
+
+    // ── 背景の絹のリボン（渡ったあとに現れる） ──
+    if (stage > 0.0) {
+      for (int i = 0; i < 3; i++) {
+        float fi = float(i);
+        if (uLow > 0.5 && i == 2) break;
+        float base = y0 + (fi - 1.0) * 0.21 + 0.05;
+        float amp = 0.06 + fi * 0.015;
+        float k = 1.6 + fi * 0.55;
+        float ph = fi * 2.1 + uMouse.x * 0.35;
+        float y = silkY(p.x, base, amp, k, ph, time);
+        float dx = 0.002;
+        float slope = (silkY(p.x + dx, base, amp, k, ph, time) - y) / dx;
+        float d = curveDist(p, y, slope);
+        vec3 c = mix(uRed, uGold, 0.35 + fi * 0.25);
+        float body = exp(-d * d * 42000.0) * 0.55 + exp(-d * 90.0) * 0.10;
+        // 絹の艶: ところどころ明るく
+        float sheen = 0.55 + 0.45 * sin(p.x * 3.0 - time * 0.6 + fi);
+        // リボンの上を流れる小さな光（次の人へ渡るバトン）
+        float head = fract(time * (0.07 + fi * 0.018) + fi * 0.41);
+        float hx = mix(-halfW - 0.1, halfW + 0.1, head);
+        float pulse = exp(-pow((p.x - hx) * 9.0, 2.0)) * exp(-d * 60.0);
+        float edge = smoothstep(halfW + 0.02, halfW - 0.25, abs(p.x));
+        col = over(col, c, body * sheen * stage * edge * 0.75);
+        col = over(col, uChamp, pulse * stage * edge * 0.8);
+        col = mix(col, vec3(1.0), pulse * exp(-d * 300.0) * 0.8 * stage);
+      }
+    }
+
+    // ── 主役のリボン（バトンの軌跡） ─────────────
     float travel = clamp(t / IMPACT, 0.0, 1.0);
-    // 加速しながら中央へ。着弾後は一気に右端まで渡る
-    float headX = mix(-halfW - 0.25, 0.0, travel * travel);
+    float ease = 1.0 - pow(1.0 - travel, 2.2);
+    float headL = mix(-halfW - 0.2, 0.0, ease);
+    float headR = mix(halfW + 0.2, 0.0, ease);
     float after = clamp((t - IMPACT) / SETTLE, 0.0, 1.0);
-    headX = t > IMPACT ? mix(0.0, halfW + 0.3, 1.0 - pow(1.0 - after, 3.0)) : headX;
+    float reach = t > IMPACT ? mix(0.0, halfW + 0.3, 1.0 - pow(1.0 - after, 3.0)) : headL;
 
-    float dy = p.y - y0;
-    float lit = smoothstep(headX + 0.015, headX - 0.04, p.x);
-    float behind = max(headX - p.x, 0.0);
-    // 走っている間は尾が熱く、着弾後はやや落ち着いた光量で残る
-    float trailHot = exp(-behind * 2.6) * (1.0 - after);
-    float settled = smoothstep(IMPACT, IMPACT + 1.2, t);
-    // 線の上を流れる光のパルス（次の走者へ渡るバトン）
-    float px = p.x / aspect;
-    float pulse = 0.0;
-    for (int k = 0; k < 3; k++) {
-      float fk = float(k);
-      float ph = fract(time * (0.09 + fk * 0.025) + fk * 0.37);
-      float pos = mix(-0.6, 0.6, ph);
-      pulse += exp(-pow((px - pos) * 22.0, 2.0)) * smoothstep(0.0, 0.1, ph) * smoothstep(1.0, 0.9, ph);
+    float my = mainRibbonY(p.x, y0, time);
+    float mslope = (mainRibbonY(p.x + 0.002, y0, time) - my) / 0.002;
+    float md = curveDist(p, my, mslope);
+    float lit = smoothstep(reach + 0.01, reach - 0.08, p.x);
+    // 左から来た光が通ったところだけリボンになる
+    float ribbonA = exp(-md * md * 30000.0) * 0.85 + exp(-md * 70.0) * 0.16;
+    vec3 ribbonC = mix(uRed, uGold, smoothstep(-halfW, halfW, p.x) * 0.8);
+    float fadeEdge = smoothstep(halfW + 0.05, halfW - 0.3, abs(p.x));
+    col = over(col, ribbonC, ribbonA * lit * mix(1.0, fadeEdge, stage));
+    // 中心のハイライト（絹の光沢）
+    col = mix(col, vec3(1.0, 0.95, 0.86), exp(-md * md * 260000.0) * lit * 0.55);
+
+    // ── 運ばれてくる2つの光 ──────────────────
+    if (t < IMPACT + 0.25) {
+      float on = smoothstep(0.0, 0.25, t) * (1.0 - smoothstep(IMPACT, IMPACT + 0.25, t));
+      vec2 pl = vec2(headL, mainRibbonY(headL, y0, time));
+      vec2 pr = vec2(headR, mainRibbonY(headR, y0, time));
+      float dl = length(p - pl);
+      float dr = length(p - pr);
+      // 渡す側: 赤い芯に、シャンパン色の光輪と横に伸びる光
+      col = over(col, uChamp, exp(-dl * 12.0) * 0.7 * on);
+      col = over(col, mix(uChamp, uRed, 0.25), exp(-abs(p.y - pl.y) * 140.0) * exp(-abs(p.x - pl.x) * 9.0) * 0.6 * on);
+      col = over(col, uRed, exp(-dl * dl * 4200.0) * 0.95 * on);
+      col = mix(col, vec3(1.0), exp(-dl * dl * 30000.0) * on);
+      // 受け取る側: 淡い金の光
+      col = over(col, uChamp, exp(-dr * 14.0) * 0.6 * on);
+      col = over(col, uGold, exp(-dr * dr * 5200.0) * 0.85 * on);
+      col = mix(col, vec3(1.0), exp(-dr * dr * 34000.0) * on);
     }
-    float lineI = lit * (0.42 + trailHot * 2.4 + settled * pulse * 1.6);
-    float lineCore = exp(-dy * dy * 90000.0);
-    float lineGlow = exp(-abs(dy) * 60.0) * 0.28 + exp(-abs(dy) * 9.0) * 0.06;
-    col += mix(uRed, vec3(1.0, 0.9, 0.82), 0.55) * lineCore * lineI * 1.4;
-    col += uRed * lineGlow * lineI * 1.3;
 
-    // 閃光の頭（走っている間だけ）
-    if (t < IMPACT + SETTLE) {
-      vec2 hd = p - vec2(headX, y0);
-      float head = exp(-dot(hd, hd) * 900.0) * 2.2 + exp(-length(hd) * 16.0) * 0.5;
-      float streak = exp(-hd.y * hd.y * 16000.0) * exp(-abs(hd.x) * 7.0) * 1.6;
-      float on = smoothstep(0.0, 0.08, t) * (1.0 - after);
-      col += (vec3(1.0, 0.95, 0.9) * head + mix(uRed, uGold, 0.3) * streak) * on;
-    }
-
-    // ── 着弾 ──────────────────────────────────
+    // ── 渡る瞬間: 光だまりと、水面の波紋 ─────────
     float since = t - IMPACT;
     if (since > 0.0) {
-      float flash = exp(-since * 9.0);
-      float d = length(p - center);
-      // 白く焼ける芯は小さく鋭く、周りは赤く短く。画面全体を灰色にしない
-      col += vec3(1.0, 0.95, 0.9) * flash * exp(-d * 7.0) * 2.6;
-      col += uRed * flash * exp(-d * 1.8) * 0.9;
-      // 横一文字に伸びる光条（アナモルフィック）
-      float streak = exp(-dy * dy * 5200.0) * exp(-abs(p.x) * 0.9);
-      col += mix(vec3(1.0, 0.9, 0.8), uGold, 0.35) * streak * (flash * 3.2 + 0.0);
-      // 衝撃波リング 2本。赤・緑・青で半径をずらす
-      float r1 = since * 1.35;
-      float fade1 = exp(-since * 2.4) * smoothstep(0.0, 0.04, since);
-      col += vec3(
-        ring(p, center, r1 * 1.000, 9000.0),
-        ring(p, center, r1 * 0.992, 9000.0),
-        ring(p, center, r1 * 0.984, 9000.0)
-      ) * fade1 * 1.3;
-      // 衝撃波の内側に、ごく薄い熱の揺らぎ
-      col += uRed * smoothstep(r1, r1 * 0.7, length(p - center)) * fade1 * 0.08;
-      float r2 = since * 0.7;
-      float fade2 = exp(-since * 2.0) * smoothstep(0.08, 0.2, since);
-      col += mix(uRed, uGold, 0.5) * ring(p, center, r2, 16000.0) * fade2 * 0.9;
-      // 着弾点の残光
-      col += mix(uRed, uGold, 0.4) * exp(-d * 9.0) * 0.35 * smoothstep(0.0, 0.3, since) * (0.7 + 0.3 * sin(time * 2.0));
-    }
-
-    // ── ステージレーザー（着弾のあと、煙の中を掃く） ──
-    float stage = smoothstep(IMPACT + 0.15, IMPACT + 1.6, t);
-    if (stage > 0.0) {
-      vec3 b = vec3(0.0);
-      float fogB = 0.35 + fog * 1.3;
-      float m = uMouse.x * 0.18;
-      float s = time * 0.32;
-      vec2 oL = vec2(-halfW - 0.08, -0.62);
-      vec2 oR = vec2( halfW + 0.08, -0.62);
-      // 縦長の画面では、ビームを立てて画面の上まで届かせる
-      float wide = clamp((aspect - 0.5) / 1.1, 0.0, 1.0);
-      float a1 = mix(1.30, 0.95, wide);
-      float a2 = mix(1.14, 0.62, wide);
-      b += beam(p, oL, a1 + sin(s)       * 0.2 + m, uRed,  fogB);
-      b += beam(p, oR, 3.14159 - a1 + sin(s + 1.9) * 0.2 + m, uRed,  fogB);
-      b += beam(p, oL, a2 + sin(s * 0.8 + 3.1) * 0.16 + m, uGold, fogB) * 0.75;
-      b += beam(p, oR, 3.14159 - a2 + sin(s * 0.8 + 0.7) * 0.16 + m, uGold, fogB) * 0.75;
-      if (uLow < 0.5) {
-        vec2 oT = vec2(0.0, 0.62);
-        b += beam(p, oT, -1.57 + sin(s * 0.6) * 0.5 + m * 1.4, mix(uRed, uGold, 0.5), fogB) * 0.6;
-        b += beam(p, oT, -1.57 + sin(s * 0.6 + 3.14) * 0.5 + m * 1.4, uRed, fogB) * 0.5;
+      vec2 q = (p - center) * vec2(1.0, 1.15);
+      float d = length(q);
+      float bloom = exp(-since * 2.2);
+      // シャンパン色の光だまりが、ふわっと広がって溶ける
+      float halo = exp(-pow(d / (0.1 + since * 0.5), 2.0));
+      col = over(col, uChamp, halo * bloom * 0.85);
+      // 中心から、やわらかな光の筋（後光）が放たれる
+      float ang = atan(q.y, q.x);
+      float rays = pow(noise(vec2(ang * 7.0, 3.1)) * 0.6 + noise(vec2(ang * 17.0, since * 0.4 + 9.0)) * 0.4, 2.2);
+      float rayLen = exp(-d / (0.12 + since * 0.55));
+      col = over(col, mix(uChamp, uGold, 0.25), rays * rayLen * exp(-since * 1.5) * smoothstep(0.0, 0.1, since) * 0.9);
+      col = mix(col, vec3(1.0), exp(-d * d * 140.0) * bloom);
+      // 2本の、やわらかな波紋。赤から金へ色が移る
+      for (int k = 0; k < 2; k++) {
+        float fk = float(k);
+        float s = since - fk * 0.3;
+        if (s <= 0.0) continue;
+        float r = s * (0.5 - fk * 0.12);
+        float w = exp(-pow((d - r) * 70.0, 2.0));
+        float fade = exp(-s * 1.6) * smoothstep(0.0, 0.1, s);
+        col = over(col, mix(uChamp, mix(uRed, uGold, 0.6), 0.3), w * fade * 0.55);
+        col = mix(col, vec3(1.0), exp(-pow((d - r + 0.012) * 160.0, 2.0)) * fade * 0.8);
       }
-      // タイトルの上では少し控えて、文字を読ませる
-      float titleMask = 1.0 - 0.55 * exp(-pow(p.y - y0 - 0.12, 2.0) * 18.0) * smoothstep(0.9, 0.0, abs(p.x));
-      col += b * stage * titleMask * 0.8;
     }
 
-    // マウスの照り返し
-    col += mix(uRed, uGold, 0.5) * exp(-length(p - mouse) * 4.5) * 0.07 * (0.4 + fog);
+    // マウスのまわりだけ、紙が少し明るむ
+    col = mix(col, vec3(1.0, 0.985, 0.95), exp(-length(p - mouse) * 5.0) * 0.18);
 
-    // 周辺減光・トーンマップ・粒子感
-    float vig = smoothstep(1.25, 0.25, length(p * vec2(0.85 / max(aspect, 1.0) * 1.6, 1.25)));
-    col *= mix(0.45, 1.0, vig);
-    col = vec3(1.0) - exp(-col * 1.35);
-    col = pow(col, vec3(0.92));
-    col += (hash(gl_FragCoord.xy + fract(time) * 91.0) - 0.5) * 0.028;
+    // 周辺をわずかに沈め、紙の繊維のような粒を足す
+    float vig = smoothstep(1.3, 0.3, length(p * vec2(0.8 / max(aspect, 1.0) * 1.6, 1.2)));
+    col *= mix(0.975, 1.0, vig);
+    col += (hash(gl_FragCoord.xy + fract(time) * 91.0) - 0.5) * 0.012;
     gl_FragColor = vec4(col, 1.0);
   }
 `;
 
-/** 着弾で飛び散る火花。1回きり */
-const sparkVertex = /* glsl */ `
+/** バトンが渡った瞬間に舞う金の粉。ゆっくり広がり、少し浮かんで消える */
+const dustVertex = /* glsl */ `
   attribute float aAngle;
   attribute float aSpeed;
   attribute float aLife;
   attribute float aSize;
   attribute float aSeed;
   uniform float uIntro;
+  uniform float uTime;
   uniform float uAspect;
   uniform float uLineY;
   uniform float uPixelRatio;
@@ -244,21 +249,23 @@ const sparkVertex = /* glsl */ `
   varying float vSeed;
   const float IMPACT = ${IMPACT_AT.toFixed(3)};
   void main() {
-    float t = uIntro - IMPACT - aSeed * 0.08;
+    float t = uIntro - IMPACT - aSeed * 0.15;
     vAge = t / aLife;
     vSeed = aSeed;
-    vec2 dir = vec2(cos(aAngle), sin(aAngle));
-    float drag = 3.2;
+    vec2 dir = vec2(cos(aAngle), sin(aAngle) * 0.75);
+    float drag = 1.6;
     vec2 pos = vec2(0.0, uLineY - 0.5) + dir * aSpeed * (1.0 - exp(-drag * max(t, 0.0))) / drag;
-    pos.y -= 0.16 * t * t;
+    // 最後はふわりと浮かぶ
+    pos.y += 0.03 * max(t, 0.0) * max(t, 0.0);
+    pos.x += sin(uTime * 1.3 + aSeed * 40.0) * 0.006 * max(t, 0.0);
     vec2 clip = vec2(pos.x / (uAspect * 0.5), pos.y / 0.5);
     gl_Position = vec4(clip, 0.0, 1.0);
     float alive = step(0.0, t) * step(vAge, 1.0);
-    gl_PointSize = aSize * 1.7 * uPixelRatio * (1.0 - vAge * 0.6) * alive;
+    gl_PointSize = aSize * (aSeed > 0.6 ? 3.2 : 1.0) * uPixelRatio * (1.0 - vAge * 0.5) * alive;
   }
 `;
 
-const sparkFragment = /* glsl */ `
+const dustFragment = /* glsl */ `
   uniform vec3 uRed;
   uniform vec3 uGold;
   varying float vAge;
@@ -266,15 +273,19 @@ const sparkFragment = /* glsl */ `
   void main() {
     if (vAge < 0.0 || vAge > 1.0) discard;
     float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.0, d);
-    vec3 hot = vec3(1.0, 0.96, 0.9);
-    vec3 col = mix(hot, mix(uGold, uRed, vSeed), smoothstep(0.0, 0.55, vAge));
-    gl_FragColor = vec4(col, a * (1.0 - vAge) * 1.2);
+    float a = smoothstep(0.5, 0.1, d);
+    vec3 col = mix(uGold, uRed, step(0.8, vSeed) * 0.7);
+    float life = smoothstep(0.0, 0.08, vAge) * (1.0 - vAge);
+    // 十字のきらめき（大きい粒だけ）
+    vec2 c = gl_PointCoord - 0.5;
+    float glint = max(exp(-abs(c.x) * 40.0) * exp(-abs(c.y) * 4.0), exp(-abs(c.y) * 40.0) * exp(-abs(c.x) * 4.0));
+    float tw = step(0.6, vSeed) * (0.5 + 0.5 * sin(vAge * 30.0 + vSeed * 50.0));
+    gl_FragColor = vec4(mix(col, vec3(1.0, 0.97, 0.88), tw * 0.4), max(a, glint * tw) * life * 0.95);
   }
 `;
 
-/** 余韻として立ちのぼる残り火。ずっと回る */
-const emberVertex = /* glsl */ `
+/** ずっと漂う、ごく淡い金の粒 */
+const floatVertex = /* glsl */ `
   attribute vec3 aStart;
   attribute float aSeed;
   uniform float uTime;
@@ -283,45 +294,41 @@ const emberVertex = /* glsl */ `
   uniform float uPixelRatio;
   uniform vec2 uMouse;
   varying float vTw;
-  varying float vSeed;
   varying float vIn;
   const float IMPACT = ${IMPACT_AT.toFixed(3)};
   void main() {
-    float speed = 0.02 + aSeed * 0.05;
+    float speed = 0.012 + aSeed * 0.025;
     float y = mod(aStart.y + uTime * speed + 0.6, 1.2) - 0.6;
-    float x = aStart.x * uAspect * 0.5 + sin(uTime * 0.6 + aSeed * 30.0) * 0.02 + uMouse.x * 0.03 * aStart.z;
+    float x = aStart.x * uAspect * 0.5 + sin(uTime * 0.4 + aSeed * 30.0) * 0.02 + uMouse.x * 0.02 * aStart.z;
     vec2 clip = vec2(x / (uAspect * 0.5), y / 0.5);
     gl_Position = vec4(clip, 0.0, 1.0);
-    vTw = 0.55 + 0.45 * sin(uTime * (1.5 + aSeed * 3.0) + aSeed * 40.0);
-    vSeed = aSeed;
-    vIn = smoothstep(IMPACT, IMPACT + 1.8, uIntro) * smoothstep(0.6, 0.2, abs(y));
-    gl_PointSize = (1.0 + aStart.z * 2.6) * uPixelRatio;
+    vTw = 0.5 + 0.5 * sin(uTime * (1.0 + aSeed * 2.0) + aSeed * 40.0);
+    vIn = smoothstep(IMPACT, IMPACT + 2.0, uIntro) * smoothstep(0.6, 0.25, abs(y));
+    gl_PointSize = (1.2 + aStart.z * 2.4) * uPixelRatio;
   }
 `;
 
-const emberFragment = /* glsl */ `
-  uniform vec3 uRed;
+const floatFragment = /* glsl */ `
   uniform vec3 uGold;
   varying float vTw;
-  varying float vSeed;
   varying float vIn;
   void main() {
     float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.0, d);
-    vec3 col = mix(uRed, uGold, step(0.55, vSeed));
-    gl_FragColor = vec4(col * 1.4, a * vTw * vIn * 0.75);
+    float a = smoothstep(0.5, 0.05, d);
+    gl_FragColor = vec4(uGold, a * vTw * vIn * 0.55);
   }
 `;
 
 export type HubHeroOptions = {
   /** 画面上で「バトンの線」を引く高さ（ヒーロー上端からの比率 0〜1） */
   lineY: () => number;
-  /** 着弾した瞬間に呼ぶ。文字の点灯と同期させるため */
+  /** バトンが渡った瞬間に呼ぶ。文字の点灯と同期させるため */
   onImpact: () => void;
-  /** 読み込みが遅れて先に文字を点灯させたとき。着弾を飛ばして余韻から始める */
+  /** 読み込みが遅れて先に文字を点灯させたとき。渡る瞬間を飛ばして余韻から始める */
   skipIntro?: boolean;
   red?: string;
   gold?: string;
+  paper?: string;
 };
 
 export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOptions): () => void {
@@ -332,7 +339,10 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   const scene = new Scene();
   const camera = new Camera();
   const red = new Color(opts.red ?? '#C8102E');
-  const gold = new Color(opts.gold ?? '#D9A441');
+  const gold = new Color(opts.gold ?? '#C9A052');
+  const paper = new Color(opts.paper ?? '#FDFCFA');
+  // 光の色。白地で「光って」見えるよう、紙よりわずかに色の濃いシャンパンゴールド
+  const champ = new Color('#F1D9A6');
 
   const quadMat = new ShaderMaterial({
     vertexShader: quadVertex,
@@ -346,6 +356,8 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
       uMouse: { value: [0, 0] },
       uRed: { value: red },
       uGold: { value: gold },
+      uPaper: { value: paper },
+      uChamp: { value: champ },
       uLineY: { value: 0.5 },
       uLow: { value: low ? 1 : 0 },
     },
@@ -355,39 +367,37 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   quad.frustumCulled = false;
   scene.add(quad);
 
-  // 火花
-  const sparkCount = low ? 420 : 1100;
-  const sparkGeo = new BufferGeometry();
-  const angle = new Float32Array(sparkCount);
-  const speed = new Float32Array(sparkCount);
-  const life = new Float32Array(sparkCount);
-  const size = new Float32Array(sparkCount);
-  const sseed = new Float32Array(sparkCount);
-  for (let i = 0; i < sparkCount; i += 1) {
-    // 7割は線に沿って左右へ、残りは全方位へ
-    const along = Math.random() < 0.7;
-    const side = Math.random() < 0.5 ? 0 : Math.PI;
-    angle[i] = along ? side + (Math.random() - 0.5) * 0.5 : Math.random() * Math.PI * 2;
-    speed[i] = along ? 0.5 + Math.random() ** 2 * 2.6 : 0.15 + Math.random() * 0.9;
-    life[i] = 0.5 + Math.random() * 1.6;
-    size[i] = 1.2 + Math.random() * (along ? 3.2 : 2.2);
-    sseed[i] = Math.random();
+  // 金の粉
+  const dustCount = low ? 260 : 620;
+  const dustGeo = new BufferGeometry();
+  const angle = new Float32Array(dustCount);
+  const speed = new Float32Array(dustCount);
+  const life = new Float32Array(dustCount);
+  const size = new Float32Array(dustCount);
+  const dseed = new Float32Array(dustCount);
+  for (let i = 0; i < dustCount; i += 1) {
+    angle[i] = Math.random() * Math.PI * 2;
+    speed[i] = 0.08 + Math.random() ** 1.6 * 0.75;
+    life[i] = 1.4 + Math.random() * 2.2;
+    size[i] = 1.4 + Math.random() * 3.2;
+    dseed[i] = Math.random();
   }
-  sparkGeo.setAttribute('position', new BufferAttribute(new Float32Array(sparkCount * 3), 3));
-  sparkGeo.setAttribute('aAngle', new BufferAttribute(angle, 1));
-  sparkGeo.setAttribute('aSpeed', new BufferAttribute(speed, 1));
-  sparkGeo.setAttribute('aLife', new BufferAttribute(life, 1));
-  sparkGeo.setAttribute('aSize', new BufferAttribute(size, 1));
-  sparkGeo.setAttribute('aSeed', new BufferAttribute(sseed, 1));
-  const sparkMat = new ShaderMaterial({
-    vertexShader: sparkVertex,
-    fragmentShader: sparkFragment,
+  dustGeo.setAttribute('position', new BufferAttribute(new Float32Array(dustCount * 3), 3));
+  dustGeo.setAttribute('aAngle', new BufferAttribute(angle, 1));
+  dustGeo.setAttribute('aSpeed', new BufferAttribute(speed, 1));
+  dustGeo.setAttribute('aLife', new BufferAttribute(life, 1));
+  dustGeo.setAttribute('aSize', new BufferAttribute(size, 1));
+  dustGeo.setAttribute('aSeed', new BufferAttribute(dseed, 1));
+  const dustMat = new ShaderMaterial({
+    vertexShader: dustVertex,
+    fragmentShader: dustFragment,
     transparent: true,
     depthWrite: false,
     depthTest: false,
-    blending: AdditiveBlending,
+    blending: NormalBlending,
     uniforms: {
       uIntro: { value: 0 },
+      uTime: { value: 0 },
       uAspect: { value: 1 },
       uLineY: { value: 0.5 },
       uPixelRatio: { value: renderer.getPixelRatio() },
@@ -395,51 +405,50 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
       uGold: { value: gold },
     },
   });
-  const sparks = new Points(sparkGeo, sparkMat);
-  sparks.frustumCulled = false;
-  scene.add(sparks);
+  const dust = new Points(dustGeo, dustMat);
+  dust.frustumCulled = false;
+  scene.add(dust);
 
-  // 残り火
-  const emberCount = low ? 90 : 240;
-  const emberGeo = new BufferGeometry();
-  const start = new Float32Array(emberCount * 3);
-  const eseed = new Float32Array(emberCount);
-  for (let i = 0; i < emberCount; i += 1) {
+  // 漂う金の粒
+  const floatCount = low ? 70 : 180;
+  const floatGeo = new BufferGeometry();
+  const start = new Float32Array(floatCount * 3);
+  const fseed = new Float32Array(floatCount);
+  for (let i = 0; i < floatCount; i += 1) {
     start[i * 3] = (Math.random() - 0.5) * 2;
     start[i * 3 + 1] = Math.random() * 1.2 - 0.6;
     start[i * 3 + 2] = Math.random();
-    eseed[i] = Math.random();
+    fseed[i] = Math.random();
   }
-  emberGeo.setAttribute('position', new BufferAttribute(new Float32Array(emberCount * 3), 3));
-  emberGeo.setAttribute('aStart', new BufferAttribute(start, 3));
-  emberGeo.setAttribute('aSeed', new BufferAttribute(eseed, 1));
-  const emberMat = new ShaderMaterial({
-    vertexShader: emberVertex,
-    fragmentShader: emberFragment,
+  floatGeo.setAttribute('position', new BufferAttribute(new Float32Array(floatCount * 3), 3));
+  floatGeo.setAttribute('aStart', new BufferAttribute(start, 3));
+  floatGeo.setAttribute('aSeed', new BufferAttribute(fseed, 1));
+  const floatMat = new ShaderMaterial({
+    vertexShader: floatVertex,
+    fragmentShader: floatFragment,
     transparent: true,
     depthWrite: false,
     depthTest: false,
-    blending: AdditiveBlending,
+    blending: NormalBlending,
     uniforms: {
       uTime: { value: 0 },
       uIntro: { value: 0 },
       uAspect: { value: 1 },
       uPixelRatio: { value: renderer.getPixelRatio() },
       uMouse: { value: [0, 0] },
-      uRed: { value: red },
       uGold: { value: gold },
     },
   });
-  const embers = new Points(emberGeo, emberMat);
-  embers.frustumCulled = false;
-  scene.add(embers);
+  const floaters = new Points(floatGeo, floatMat);
+  floaters.frustumCulled = false;
+  scene.add(floaters);
 
   const pointer = pointerTracker(canvas);
   const syncLine = () => {
     // シェーダの uv は下が0。DOMは上が0なので反転する
     const y = 1 - opts.lineY();
     quadMat.uniforms.uLineY.value = y;
-    sparkMat.uniforms.uLineY.value = y;
+    dustMat.uniforms.uLineY.value = y;
   };
 
   const stopResize = onResize(canvas, (w, h) => {
@@ -447,11 +456,11 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
     const aspect = w / Math.max(h, 1);
     (quadMat.uniforms.uRes.value as number[])[0] = w;
     (quadMat.uniforms.uRes.value as number[])[1] = h;
-    sparkMat.uniforms.uAspect.value = aspect;
-    emberMat.uniforms.uAspect.value = aspect;
+    dustMat.uniforms.uAspect.value = aspect;
+    floatMat.uniforms.uAspect.value = aspect;
     const ratio = renderer.getPixelRatio();
-    sparkMat.uniforms.uPixelRatio.value = ratio;
-    emberMat.uniforms.uPixelRatio.value = ratio;
+    dustMat.uniforms.uPixelRatio.value = ratio;
+    floatMat.uniforms.uPixelRatio.value = ratio;
     syncLine();
   });
   syncLine();
@@ -459,8 +468,8 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   canvas.classList.add('is-ready');
   let introStart = -1;
   let impacted = Boolean(opts.skipIntro);
-  // 着弾を飛ばすときは、火花が消えきった時点から始める
-  const introOffset = opts.skipIntro ? IMPACT_AT + 4 : 0;
+  // 渡る瞬間を飛ばすときは、金の粉が消えきった時点から始める
+  const introOffset = opts.skipIntro ? IMPACT_AT + 5 : 0;
 
   const loop = startLoop(canvas, (elapsed) => {
     if (introStart < 0) introStart = elapsed;
@@ -474,11 +483,12 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
     quadMat.uniforms.uIntro.value = intro;
     (quadMat.uniforms.uMouse.value as number[])[0] = m.x;
     (quadMat.uniforms.uMouse.value as number[])[1] = m.y;
-    sparkMat.uniforms.uIntro.value = intro;
-    emberMat.uniforms.uTime.value = elapsed;
-    emberMat.uniforms.uIntro.value = intro;
-    (emberMat.uniforms.uMouse.value as number[])[0] = m.x;
-    sparks.visible = intro < IMPACT_AT + 2.5;
+    dustMat.uniforms.uIntro.value = intro;
+    dustMat.uniforms.uTime.value = elapsed;
+    floatMat.uniforms.uTime.value = elapsed;
+    floatMat.uniforms.uIntro.value = intro;
+    (floatMat.uniforms.uMouse.value as number[])[0] = m.x;
+    dust.visible = intro < IMPACT_AT + 4.5;
     renderer.render(scene, camera);
   });
 
@@ -488,10 +498,10 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
     pointer.dispose();
     quadGeo.dispose();
     quadMat.dispose();
-    sparkGeo.dispose();
-    sparkMat.dispose();
-    emberGeo.dispose();
-    emberMat.dispose();
+    dustGeo.dispose();
+    dustMat.dispose();
+    floatGeo.dispose();
+    floatMat.dispose();
     renderer.dispose();
   };
 }
