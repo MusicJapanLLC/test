@@ -1,3 +1,4 @@
+import { profiles } from '../data/profiles';
 import { site } from '../data/site';
 import type { Service, TalkProfile } from '../types';
 import {
@@ -23,6 +24,9 @@ const officialCompanyUrl = (service: Service): string | undefined =>
  * 「同じ運営者・同じ人物」と判断する手がかりになる。
  */
 function siteEntities(siteBase: string): JsonLd[] {
+  // 運営者（Music Japan）本人のプロフィールに載っている、会社の公式アカウント
+  const operatorProfile = profiles.find((p) => p.company === site.operator.name);
+  const operatorSameAs = operatorProfile ? companySameAs(operatorProfile) : [];
   return [
     {
       '@type': 'WebSite',
@@ -39,6 +43,7 @@ function siteEntities(siteBase: string): JsonLd[] {
       '@id': `${siteBase}/#operator`,
       name: site.operator.name,
       url: site.operator.url,
+      ...(operatorSameAs.length ? { sameAs: operatorSameAs } : {}),
       founder: { '@type': 'Person', name: site.operator.representative.replace(/^代表社員\s*/, '') },
       address: {
         '@type': 'PostalAddress',
@@ -225,7 +230,27 @@ export function profileHubStructuredData(
               })),
           },
         },
-        faqPage(hubFaqs(), profileHubUrl),
+      ],
+    },
+  ];
+}
+
+/** よくある質問ページ（/faq/） */
+export function faqPageStructuredData(faqUrl: string, profileHubUrl: string, siteBase: string): JsonLd[] {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@graph': [
+        ...siteEntities(siteBase),
+        { ...faqPage(hubFaqs(), faqUrl), isPartOf: { '@id': `${siteBase}/#website` }, name: `よくある質問｜${site.nameJa}` },
+        {
+          '@type': 'BreadcrumbList',
+          '@id': `${faqUrl}#breadcrumb`,
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: site.nameJa, item: profileHubUrl },
+            { '@type': 'ListItem', position: 2, name: 'よくある質問', item: faqUrl },
+          ],
+        },
       ],
     },
   ];

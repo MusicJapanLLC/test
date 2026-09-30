@@ -111,6 +111,12 @@ function achievementMedia(items: MediaItem[], richMotion: boolean): Node[] {
       [
         el('span', { class: 'media-feature__index', 'aria-hidden': 'true', text: String(i + 1).padStart(2, '0') }),
         el('span', { class: 'media-feature__glow', 'aria-hidden': 'true' }),
+        // 画像があるときはポートフォリオのように上に大きく出す
+        m.image
+          ? el('span', { class: 'media-feature__thumb' }, [
+              el('img', { src: m.image, alt: '', loading: 'lazy', decoding: 'async' }),
+            ])
+          : null,
         metaLine(m),
         el('h3', { class: 'media-feature__title', text: m.label }),
         m.note ? el('p', { class: 'media-feature__note', text: m.note }) : null,
@@ -183,8 +189,16 @@ function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | n
   return el('section', { class: `section${achievements ? ' section--achievements' : ''}`, id: 'media' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: achievements ? 'Media & Appearances' : 'Media', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: achievements ? '登壇・掲載・発信' : '関連リンク', 'data-reveal': true }),
+        el('span', {
+          class: 'section__label',
+          text: profile.mediaLabel ?? (achievements ? 'Media & Appearances' : 'Media'),
+          'data-reveal': true,
+        }),
+        el('h2', {
+          class: 'section__title',
+          text: profile.mediaTitle ?? (achievements ? '登壇・掲載・発信' : '関連リンク'),
+          'data-reveal': true,
+        }),
       ]),
       ...body,
     ]),
@@ -285,13 +299,18 @@ function overviewSection(profile: TalkProfile): HTMLElement {
 }
 
 /** よくある質問。中身は profile-facts.ts（構造化データと同じもの） */
-export function faqSection(faqs: Faq[], opts: { id?: string; title?: string } = {}): HTMLElement {
+export function faqSection(
+  faqs: Faq[],
+  opts: { id?: string; title?: string; noHead?: boolean } = {},
+): HTMLElement {
   return el('section', { class: 'section section--faq', id: opts.id ?? 'faq' }, [
     el('div', { class: 'wrap' }, [
-      el('div', { class: 'section__head', 'data-reveal-group': true }, [
-        el('span', { class: 'section__label', text: 'FAQ', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: opts.title ?? 'よくある質問', 'data-reveal': true }),
-      ]),
+      opts.noHead
+        ? null
+        : el('div', { class: 'section__head', 'data-reveal-group': true }, [
+            el('span', { class: 'section__label', text: 'FAQ', 'data-reveal': true }),
+            el('h2', { class: 'section__title', text: opts.title ?? 'よくある質問', 'data-reveal': true }),
+          ]),
       el(
         'div',
         { class: 'pf-faq', 'data-reveal-group': true },

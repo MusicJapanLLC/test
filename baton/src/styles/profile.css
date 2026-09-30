@@ -1816,51 +1816,36 @@ body.profile--dark .pf-shot__frame::after {
 
 /* プロフィール一覧（/profile/）の、Batonの説明と流れ */
 
-.talk-hub-intro__lead {
-  max-width: 44em;
-  font-family: var(--font-display);
-  font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.3rem);
-  line-height: 1.95;
-  word-break: auto-phrase;
-}
-
-.talk-hub-steps {
-  margin-top: clamp(1.8rem, 1.2rem + 2vw, 2.8rem);
+.talk-hub-intro .wrap {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
-  gap: clamp(0.8rem, 0.6rem + 1vw, 1.4rem);
-  list-style: none;
-  counter-reset: none;
+  justify-items: center;
+  gap: 1rem;
+  text-align: center;
 }
 
-.talk-hub-step {
-  position: relative;
-  padding: clamp(1.2rem, 1rem + 1vw, 1.7rem);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--hub-line, rgba(26, 26, 26, 0.12));
-  box-shadow: 0 20px 40px -34px rgba(176, 138, 69, 0.6);
-}
-
-.talk-hub-step__num {
+.talk-hub-intro__label {
   font-family: 'Jost', sans-serif;
+  font-size: 0.7rem;
   font-weight: 300;
-  font-size: 1.6rem;
+  letter-spacing: 0.42em;
+  padding-left: 0.42em;
+  text-transform: uppercase;
   color: var(--bt-gold, #b08a45);
 }
 
-.talk-hub-step__title {
-  margin-top: 0.4rem;
+.talk-hub-intro__lead {
+  max-width: 34em;
   font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: clamp(1rem, 0.92rem + 0.45vw, 1.2rem);
+  line-height: 2;
+  letter-spacing: 0.04em;
+  word-break: auto-phrase;
+  text-wrap: balance;
 }
 
-.talk-hub-step__body {
-  margin-top: 0.4rem;
-  font-size: 0.9rem;
-  line-height: 1.8;
-  color: var(--hub-muted, #6b6b6b);
+/* 一覧は見出しを置かず、説明文のすぐ下に続ける */
+.talk-hub-profiles {
+  padding-top: 0;
 }
 
 .talk-hub-cta .wrap {
@@ -1868,11 +1853,6 @@ body.profile--dark .pf-shot__frame::after {
   justify-items: center;
   gap: 1.1rem;
   text-align: center;
-}
-
-.talk-hub-cta__lead {
-  font-family: var(--font-display);
-  font-size: clamp(1.1rem, 1rem + 0.6vw, 1.4rem);
 }
 
 .talk-hub-cta .btn {
@@ -1886,6 +1866,7 @@ body.profile--dark .pf-shot__frame::after {
   color: #fff;
   font-weight: 600;
   letter-spacing: 0.06em;
+  white-space: nowrap;
   text-decoration: none;
   box-shadow: 0 18px 36px -20px rgba(200, 16, 46, 0.8);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1914,4 +1895,98 @@ body.profile--dark .pf-shot__frame::after {
 .profile-footer__nav a:hover,
 .profile-footer__bottom a:hover {
   opacity: 1;
+}
+
+/* よくある質問ページ（/faq/） */
+
+.faq-head {
+  padding: clamp(4.5rem, 3rem + 5vw, 7rem) 0 0;
+}
+
+.faq-head__brand {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: color-mix(in srgb, var(--hub-text, #1a1a1a) 78%, transparent);
+  text-decoration: none;
+}
+
+.faq-head__title {
+  margin-top: 1rem;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.4rem + 2.6vw, 3.2rem);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+body.doc-faq .section--faq {
+  padding-top: clamp(2rem, 1.4rem + 2vw, 3rem);
+}
+
+/* 実績カードの画像（ポートフォリオ風）。画像があるカードだけ上に大きく出す */
+.media-feature__thumb {
+  display: block;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 0.3rem;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--text) 10%, transparent);
+  background: color-mix(in srgb, var(--text) 6%, var(--bg));
+}
+
+.media-feature__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.media-feature:hover .media-feature__thumb img {
+  transform: scale(1.04);
+}
+
+/* 画像つきのカードでは、番号を画像の上に重ねる */
+.media-feature:has(.media-feature__thumb) .media-feature__index {
+  top: clamp(1.6rem, 1.2rem + 1.4vw, 2.6rem);
+  right: clamp(1.8rem, 1.4rem + 1.4vw, 2.8rem);
+  z-index: 2;
+  -webkit-text-stroke-color: rgba(255, 255, 255, 0.9);
+  /* 下の画像が白でも黒でも読めるよう、背景に対して反転させる */
+  mix-blend-mode: difference;
+}
+
+.media-feature:has(.media-feature__thumb) .media-feature__title {
+  padding-right: 0;
+}
+
+/* カードが奇数枚のときは、1枚目を横いっぱいにして穴を作らない（PCのみ） */
+@media (min-width: 721px) {
+  .section--achievements .media-feature:first-child:nth-last-child(2n + 1) {
+    grid-column: 1 / -1;
+  }
+
+  .section--achievements .media-feature:first-child:nth-last-child(2n + 1):has(.media-feature__thumb) {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    column-gap: clamp(1.4rem, 1rem + 2vw, 2.6rem);
+    align-content: center;
+  }
+
+  .section--achievements .media-feature:first-child:nth-last-child(2n + 1) .media-feature__thumb {
+    grid-row: 1 / span 4;
+    margin-bottom: 0;
+  }
+
+  /* 横長の1枚目では、番号は画像ではなく文字側の右上に置く。見出しとは重ねない */
+  .section--achievements .media-feature:first-child:nth-last-child(2n + 1):has(.media-feature__thumb) .media-feature__index {
+    top: clamp(0.9rem, 0.7rem + 1vw, 1.5rem);
+    right: clamp(1.1rem, 0.9rem + 1vw, 1.7rem);
+    -webkit-text-stroke-color: color-mix(in srgb, var(--text) 18%, transparent);
+    mix-blend-mode: normal;
+  }
+
+  .section--achievements .media-feature:first-child:nth-last-child(2n + 1):has(.media-feature__thumb) .media-feature__title {
+    padding-right: clamp(3rem, 2rem + 3vw, 5rem);
+  }
 }
