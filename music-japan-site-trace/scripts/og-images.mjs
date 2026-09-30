@@ -11,8 +11,8 @@ const built = join(root, "deploy-dist");
 const out = join(root, "next/public/og");
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
-const PAGES = ["home", "business", "company", "profile", "partners", "contact", "privacy"];
-const WORD = { home: "MUSIC JAPAN", business: "BUSINESS", company: "COMPANY", profile: "PROFILE", partners: "PARTNERS", contact: "CONTACT", privacy: "PRIVACY" };
+const PAGES = ["home", "business", "works", "company", "profile", "partners", "contact", "privacy"];
+const WORD = { home: "MUSIC JAPAN", business: "BUSINESS", works: "WORKS", company: "COMPANY", profile: "PROFILE", partners: "PARTNERS", contact: "CONTACT", privacy: "PRIVACY" };
 const decode = (s) => s.replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const esc = (s) => s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 

@@ -157,5 +157,5 @@ export function innerEntrance() {
   const tl = gsap.timeline({ delay: 0.15 });
   tl.fromTo('.ih-display .c', { yPercent: 110 }, { yPercent: 0, duration: 1.3, ease: 'expo.out', stagger: 0.03 })
     .fromTo('.ih-title .c, .pf-name .c', { yPercent: 115 }, { yPercent: 0, duration: 1, ease: 'expo.out', stagger: 0.03 }, 0.2)
-    .fromTo('.ih-copy > :not(.ih-title), .pf-copy > :not(.pf-name), .pf-portrait', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'expo.out', stagger: 0.07 }, 0.35);
+    .fromTo('.ih-copy > :not(.ih-title), .pf-copy > :not(.pf-name), .pf-portrait, .wk-art, .wk-copy > *', { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 1, ease: 'expo.out', stagger: 0.07 }, 0.35);
 }

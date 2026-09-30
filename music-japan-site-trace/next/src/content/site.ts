@@ -8,12 +8,14 @@ export const TIMEREX_URL = 'https://timerex.net/s/music.japan.llc_5445/2f8e527f'
 export const SOCIAL_IMAGE = '/music-japan-logo.png?v=20260921';
 export const LAST_MODIFIED = '2026-10-01';
 
-export type PageKey = 'home' | 'business' | 'company' | 'profile' | 'partners' | 'contact' | 'privacy';
+export type PageKey = 'home' | 'business' | 'works' | 'company' | 'profile' | 'partners' | 'contact' | 'privacy';
 
 export const path = (locale: Locale, page: PageKey) => {
   const base = locale === 'ja' ? '/' : '/en/';
   return page === 'home' ? base : `${base}${page}/`;
 };
+/** One page per release: /works/<id>/ and /en/works/<id>/ */
+export const workPath = (locale: Locale, id: string) => `${path(locale, 'works')}${id}/`;
 
 export const socials = [
   { name: 'LinkedIn', href: 'https://www.linkedin.com/in/%E5%8F%8B%E7%94%9F-%E5%A3%81%E8%B0%B7-4096373a7/' },
@@ -21,12 +23,12 @@ export const socials = [
   { name: 'X', href: 'https://x.com/Music_Japan_LLC' },
 ];
 
-export const nav: PageKey[] = ['business', 'company', 'profile', 'partners', 'contact'];
+export const nav: PageKey[] = ['business', 'works', 'company', 'profile', 'partners', 'contact'];
 
 export const copy = {
   ja: {
     brand: '合同会社Music Japan',
-    navLabels: { home: 'トップ', business: '事業概要', company: '会社概要', profile: '代表プロフィール', partners: 'パートナー', contact: 'お問い合わせ', privacy: 'プライバシーポリシー' },
+    navLabels: { home: 'トップ', business: '事業概要', works: '作品', company: '会社概要', profile: '代表プロフィール', partners: 'パートナー', contact: 'お問い合わせ', privacy: 'プライバシーポリシー' },
     menu: ['メニューを開く', 'メニューを閉じる'],
     skip: '本文へ移動',
     newTab: '（新しいタブで開きます）',
@@ -119,11 +121,12 @@ export const copy = {
     },
     pages: {
       business: { seo: '事業概要｜音楽制作・楽曲配信・Podcast・経営者インタビュー｜合同会社Music Japan', kicker: 'BUSINESS / MUSIC & MEDIA', title: '事業概要', display: 'BUSINESS', lead: '音楽やメディアを通じて、より有意義な未来を創る記録を。', description: '合同会社Music Japanの事業概要。音楽制作・配信、SECOND TAKEのPodcast・インタビュー、Batonと私たちの考え方。' },
+      works: { seo: '作品一覧｜Yuma・Cozy Cafe Jazz BGM・睡眠音楽ほか｜合同会社Music Japan', kicker: 'CATALOG / WORKS', title: '作品', display: 'WORKS', lead: 'Yumaのアーティスト作品と、Jazz・クラシック・睡眠音楽のブランド。ジャケットを選ぶと、その場で試聴できます。', description: '合同会社Music Japanの作品一覧。アーティストYumaの楽曲と、Cozy Cafe Jazz BGM、Relaxing Classical Music Live、Deep Sleep Music Radioの作品を試聴できます。' },
       company: { seo: '会社概要｜大阪の音楽・メディア会社｜合同会社Music Japan', kicker: 'OFFICIAL COMPANY PROFILE / OSAKA, JAPAN', title: '会社概要', display: 'COMPANY', lead: '大阪を拠点に、音楽制作・楽曲配信を軸として、Podcastやインタビューを通じて人の声と経験を記録する音楽・メディア会社です。', description: '合同会社Music Japanの会社概要。所在地、代表社員、事業内容、展開ブランド。' },
       profile: { seo: '代表プロフィール｜壁谷 友生（代表社員）｜合同会社Music Japan', kicker: 'REPRESENTATIVE MEMBER', title: '代表プロフィール', display: 'PROFILE', lead: '', description: '合同会社Music Japan 代表社員・壁谷友生のプロフィールと、音楽・メディア・Podcastを通じて残したい記録への思い' },
       partners: { seo: 'パートナー企業｜エボルグ・Central AX｜合同会社Music Japan', kicker: 'BATON PARTNERS / CONNECTIONS', title: 'パートナー', display: 'PARTNERS', lead: '事業の強みを知り、次のつながりへ。', description: '合同会社Music JapanのBaton Partners。株式会社エボルグ、株式会社Central AX。Music Japanと歩みをともにする企業の事業とサービス。' },
       contact: { seo: 'お問い合わせ｜楽曲制作・BGM・Podcast出演・取材のご相談｜合同会社Music Japan', kicker: 'CONTACT / COLLABORATE', title: 'お問い合わせ', display: 'CONTACT', lead: '楽曲制作、BGM、Podcast出演、インタビュー掲載、Batonや協業についてご相談ください。', description: '合同会社Music Japanへのお問い合わせ、取材、楽曲制作、協業のご相談' },
-      privacy: { seo: 'プライバシーポリシー｜合同会社Music Japan', kicker: 'PRIVACY / INFORMATION POLICY', title: 'プライバシーポリシー', display: 'PRIVACY', lead: '', description: '合同会社Music Japanのプライバシーポリシー' },
+      privacy: { seo: 'プライバシーポリシー｜合同会社Music Japan', kicker: 'PRIVACY / INFORMATION POLICY', title: 'プライバシーポリシー', display: 'PRIVACY', lead: '', description: '合同会社Music Japanのプライバシーポリシー。お問い合わせ等で取得する個人情報の利用目的、管理、第三者提供、開示請求の窓口について定めています。' },
     },
     home: {
       title: '合同会社Music Japan 公式サイト | 音楽制作・Podcast・インタビュー',
@@ -132,7 +135,7 @@ export const copy = {
   },
   en: {
     brand: 'MUSIC JAPAN LLC',
-    navLabels: { home: 'Home', business: 'Business', company: 'Company', profile: 'Profile', partners: 'Partners', contact: 'Contact', privacy: 'Privacy Policy' },
+    navLabels: { home: 'Home', business: 'Business', works: 'Works', company: 'Company', profile: 'Profile', partners: 'Partners', contact: 'Contact', privacy: 'Privacy Policy' },
     menu: ['Open menu', 'Close menu'],
     skip: 'Skip to content',
     newTab: ' (opens in a new tab)',
@@ -224,12 +227,13 @@ export const copy = {
       top: 'BACK TO TOP',
     },
     pages: {
-      business: { seo: 'Our Business: Music Production, Podcasts & Executive Interviews | Music Japan LLC', kicker: 'BUSINESS / MUSIC & MEDIA', title: 'Our Business', display: 'BUSINESS', lead: 'Through music and media, we leave records that shape a more meaningful future.', description: 'Music Japan LLC’s work: music production and distribution, SECOND TAKE podcasts and interviews, Baton, and our approach.' },
+      business: { seo: 'Business: Music Production, Podcasts & Interviews | Music Japan LLC', kicker: 'BUSINESS / MUSIC & MEDIA', title: 'Our Business', display: 'BUSINESS', lead: 'Through music and media, we leave records that shape a more meaningful future.', description: 'Music Japan LLC’s work: music production and distribution, SECOND TAKE podcasts and interviews, Baton, and our approach.' },
+      works: { seo: 'Works: Yuma, Cozy Cafe Jazz BGM, Sleep Music & More | Music Japan LLC', kicker: 'CATALOG / WORKS', title: 'Works', display: 'WORKS', lead: 'Releases by the artist Yuma and our jazz, classical and sleep music brands. Pick a sleeve to preview it right here.', description: 'The Music Japan LLC catalogue: releases by the artist Yuma and by Cozy Cafe Jazz BGM, Relaxing Classical Music Live and Deep Sleep Music Radio, with previews.' },
       company: { seo: 'Company Information: Music & Media Company in Osaka | Music Japan LLC', kicker: 'OFFICIAL COMPANY PROFILE / OSAKA, JAPAN', title: 'Company', display: 'COMPANY', lead: 'A music and media company based in Osaka, creating and distributing music while preserving people’s voices and experiences through podcasts and interviews.', description: 'Company information for Music Japan LLC: address, representative, business and music brands.' },
       profile: { seo: 'Tomoki Kabeya, Representative Member | Music Japan LLC', kicker: 'REPRESENTATIVE MEMBER', title: 'Profile', display: 'PROFILE', lead: '', description: 'The profile of Tomoki Kabeya, representative member of Music Japan LLC, and his thoughts on the records he hopes to leave through music, media and podcasts' },
       partners: { seo: 'Partners: Evorg and Central AX | Music Japan LLC', kicker: 'BATON PARTNERS / CONNECTIONS', title: 'Partners', display: 'PARTNERS', lead: 'Discover the companies behind our next connections.', description: 'Baton Partners of Music Japan LLC: Evorg and Central AX — companies walking alongside Music Japan, and their businesses and services.' },
       contact: { seo: 'Contact: Music, BGM, Podcast & Interview Enquiries | Music Japan LLC', kicker: 'CONTACT / COLLABORATE', title: 'Contact', display: 'CONTACT', lead: 'Talk to us about music, BGM, SECOND TAKE interviews, Baton introductions or partnerships.', description: 'Contact Music Japan LLC about music, interviews, media and partnerships' },
-      privacy: { seo: 'Privacy Policy | Music Japan LLC', kicker: 'PRIVACY / INFORMATION POLICY', title: 'Privacy Policy', display: 'PRIVACY', lead: '', description: 'Privacy policy of Music Japan LLC' },
+      privacy: { seo: 'Privacy Policy | Music Japan LLC', kicker: 'PRIVACY / INFORMATION POLICY', title: 'Privacy Policy', display: 'PRIVACY', lead: '', description: 'Privacy policy of Music Japan LLC: how we use, manage and share personal information received through enquiries, and how to request disclosure.' },
     },
     home: {
       title: 'Music Japan LLC | Music, Podcasts & Interviews',

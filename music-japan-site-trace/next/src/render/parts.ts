@@ -1,7 +1,7 @@
 import { partners } from '../content/company';
 import { faq } from '../content/faq';
 import { artwork, releases, type Locale } from '../content/releases';
-import { copy, path, SITE_URL, type PageKey } from '../content/site';
+import { copy, path, SITE_URL, workPath, type PageKey } from '../content/site';
 import { arrow, esc, ext, phrases, prose } from './html';
 import { mark } from './mark';
 
@@ -29,15 +29,15 @@ export function sleeve(locale: Locale, index: number) {
   </button>
   <div class="rel-meta">
     <p class="rel-no"><span>${no}</span><span>${esc(r.type)}</span></p>
-    <h3 class="rel-title">${esc(r.title)}</h3>
+    <h3 class="rel-title"><a href="${workPath(locale, r.id)}">${esc(r.title)}</a></h3>
     <p class="rel-artist">${esc(r.artist)}</p>
     <a class="rel-link" href="${r.href}" target="_blank" rel="noopener noreferrer">${esc(r.platform)}${arrow('up-right')}<span class="sr">${c.newTab}</span></a>
   </div>
 </article>`;
 }
 
-export function crate(locale: Locale, opts: { heading?: boolean } = {}) {
-  const c = copy[locale].crate;
+/** The player reads every release from this JSON island, so any page with sleeves embeds it once. */
+export function releaseData(locale: Locale) {
   const data = releases.map((r, i) => ({
     id: r.id,
     no: `MJ-${String(i + 1).padStart(3, '0')}`,
@@ -53,9 +53,14 @@ export function crate(locale: Locale, opts: { heading?: boolean } = {}) {
     previews: r.previews,
     credit: r.credit,
   }));
+  return `<script type="application/json" data-releases>${JSON.stringify(data).replaceAll('<', '\\u003c')}</script>`;
+}
+
+export function crate(locale: Locale, opts: { heading?: boolean; no?: string } = {}) {
+  const c = copy[locale].crate;
   return `<section class="crate" id="catalog" data-world-zone="crate" aria-labelledby="crate-title">
   ${opts.heading === false ? '' : `<div class="sec-head">
-    ${kicker(c.kicker, '04')}
+    ${kicker(c.kicker, opts.no ?? '04')}
     <h2 class="hx" id="crate-title" data-split>${phrases(c.title)}</h2>
     <p class="sec-body">${prose(c.body)}</p>
   </div>`}
@@ -63,7 +68,7 @@ export function crate(locale: Locale, opts: { heading?: boolean } = {}) {
     ${(['all', 'yuma', 'brand'] as const).map((f, i) => `<button type="button" data-filter="${f}" aria-pressed="${i === 0}">${c.filters[f]}<sup>${f === 'all' ? releases.length : releases.filter((r) => r.group === f).length}</sup></button>`).join('')}
   </div>
   <div class="crate-grid" data-crate>${releases.map((_, i) => sleeve(locale, i)).join('')}</div>
-  <script type="application/json" data-releases>${JSON.stringify(data).replaceAll('<', '\\u003c')}</script>
+  ${releaseData(locale)}
 </section>`;
 }
 
@@ -175,7 +180,11 @@ export function faqGraph(locale: Locale, page: PageKey) {
   };
 }
 
-export function crumbs(locale: Locale, page: PageKey) {
+/** Visible breadcrumb; mirrors the BreadcrumbList that layout.ts writes into JSON-LD. */
+export function crumbs(locale: Locale, page: PageKey, trail?: { name: string; path: string }[]) {
   const c = copy[locale];
-  return `<nav class="crumbs" aria-label="${locale === 'ja' ? 'パンくずリスト' : 'Breadcrumb'}"><ol><li><a href="${path(locale, 'home')}">${c.navLabels.home}</a></li><li><span aria-current="page">${esc(c.navLabels[page])}</span></li></ol></nav>`;
+  const items = [{ name: c.navLabels.home, path: path(locale, 'home') }, ...(trail ?? [{ name: c.navLabels[page], path: path(locale, page) }])];
+  return `<nav class="crumbs" aria-label="${locale === 'ja' ? 'パンくずリスト' : 'Breadcrumb'}"><ol>${items
+    .map((t, i) => (i === items.length - 1 ? `<li><span aria-current="page">${esc(t.name)}</span></li>` : `<li><a href="${t.path}">${esc(t.name)}</a></li>`))
+    .join('')}</ol></nav>`;
 }

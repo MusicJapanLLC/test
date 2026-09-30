@@ -1,9 +1,10 @@
 import { releases, type Locale } from '../../content/releases';
-import { BATON_URL, copy, path, SECOND_TAKE_URL, SITE_URL } from '../../content/site';
+import { BATON_URL, copy, path, SECOND_TAKE_URL, SITE_URL, workPath } from '../../content/site';
 import { arrow, esc, phrases, prose } from '../html';
 import { page } from '../layout';
 import { introMark, mark } from '../mark';
 import { button, crate, ctaBlock, faqGraph, faqSection, heading, kicker, mediaCards, partnersTeaser, player } from '../parts';
+import { workNode } from './works';
 
 const brandLogos = [
   { src: '/brand-music-japan-logo-white.png', w: 797, h: 176 },
@@ -150,7 +151,8 @@ ${player(locale)}`;
         itemListElement: releases.map((r, i) => ({
           '@type': 'ListItem',
           position: i + 1,
-          item: { '@type': 'MusicRecording', name: r.title, byArtist: { '@type': 'MusicGroup', name: r.artist }, image: r.cdn, url: r.href },
+          url: `${SITE_URL}${workPath(locale, r.id)}`,
+          item: workNode(locale, r),
         })),
       },
     ],
