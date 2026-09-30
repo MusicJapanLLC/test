@@ -6,12 +6,12 @@ import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { loadDefaultJapaneseParser } from "budoux";
 import { articles } from "../src/articles.mjs";
-import { copy, links } from "../src/copy.mjs";
+import { copy, links, nav } from "../src/copy.mjs";
 
 const ORIGIN = "https://secondtake.music-japan.com";
 const DIST = join(process.cwd(), "dist");
 const LANGS = ["ja", "en"];
-const VERSION = "20261001";
+const VERSION = "20261001b";
 const budoux = loadDefaultJapaneseParser();
 
 // ---------- helpers ----------
@@ -29,6 +29,7 @@ const phrase = (lang, text) =>
 const prefix = (lang) => (lang === "en" ? "/en" : "");
 const href = (lang, path) => `${prefix(lang)}${path}`;
 const other = (lang) => (lang === "ja" ? "en" : "ja");
+const stNo = (a) => `ST.${a.no.padStart(3, "0")}`;
 
 const formatDate = (lang, iso) => {
   const [y, m, d] = iso.split("-");
@@ -47,6 +48,7 @@ const external = (url, label, cls = "") =>
 
 const byNo = (a, b) => a.no.localeCompare(b.no);
 const sorted = [...articles].sort(byNo);
+const altPath = (lang, path) => href(other(lang), path === null ? "/" : path);
 
 // ---------- layout ----------
 function head({ lang, path, title, description, image, type = "website", jsonld, article }) {
@@ -62,9 +64,9 @@ function head({ lang, path, title, description, image, type = "website", jsonld,
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <meta name="robots" content="noindex,nofollow">
-<meta name="theme-color" content="#0b0a09">
-${path === null ? "" : `<link rel="canonical" href="${url}">`}
-${path === null ? "" : `<link rel="alternate" hreflang="ja" href="${alt("ja")}">
+<meta name="theme-color" content="#f5f3ee">
+${path === null ? "" : `<link rel="canonical" href="${url}">
+<link rel="alternate" hreflang="ja" href="${alt("ja")}">
 <link rel="alternate" hreflang="en" href="${alt("en")}">
 <link rel="alternate" hreflang="x-default" href="${alt("ja")}">`}
 <link rel="alternate" type="application/rss+xml" title="SECOND TAKE" href="${ORIGIN}${href(lang, "/feed.xml")}">
@@ -81,7 +83,6 @@ ${article ? `<meta property="article:published_time" content="${article.date}T09
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="preload" href="/assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/assets/fonts/bodoni-moda-latin-opsz-italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/fonts.css?v=${VERSION}">
 <link rel="stylesheet" href="/assets/styles.css?v=${VERSION}">
 <script>document.documentElement.classList.add("js")</script>
@@ -90,31 +91,33 @@ ${jsonld ? `<script type="application/ld+json">${JSON.stringify(jsonld)}</script
 </head>`;
 }
 
-function header(lang, path, current) {
-  const t = copy[lang];
-  const navItem = (key, target) =>
-    `<a href="${href(lang, target)}"${current === key ? ' aria-current="page"' : ""}>${t.nav[key]}</a>`;
-  const altLang = other(lang);
-  const altHref = path === null ? href(altLang, "/") : href(altLang, path);
-  return `<a class="skip" href="#main">${t.skip}</a>
-<header class="site-header" data-header>
-  <div class="site-header__bar">
-    <a class="brand" href="${href(lang, "/")}" aria-label="SECOND TAKE">
-      <img class="brand__ink" src="/assets/second-take-logo-header.png" width="700" height="243" alt="SECOND TAKE BUSINESS × LIFE">
-      <img class="brand__white" src="/assets/second-take-logo-header-white.png" width="700" height="243" alt="">
-    </a>
-    <nav class="site-nav" aria-label="${t.navLabel}">
-      ${navItem("stories", "/#stories")}
-      ${navItem("archive", "/articles/")}
-      ${navItem("listen", "/#side-b")}
-      ${navItem("about", "/about/")}
-      ${navItem("contact", "/contact/")}
-    </nav>
-    <div class="site-tools">
-      <span class="lang-switch">
+function langSwitch(lang, path) {
+  const o = other(lang);
+  return `<span class="lang-switch">
         <span class="lang-switch__current" aria-current="true">${lang.toUpperCase()}</span>
-        <a href="${altHref}" hreflang="${altLang}" lang="${altLang}" data-lang-link>${altLang.toUpperCase()}<span class="visually-hidden"> — ${copy[altLang].langName}</span></a>
-      </span>
+        <a href="${altPath(lang, path)}" hreflang="${o}" lang="${o}" data-lang-link>${o.toUpperCase()}<span class="visually-hidden"> — ${copy[o].langName}</span></a>
+      </span>`;
+}
+
+function navLinks(lang, current) {
+  return nav
+    .map(([key, label, target]) => `<a href="${href(lang, target)}"${current === key ? ' aria-current="page"' : ""}>${label}</a>`)
+    .join("\n        ");
+}
+
+function bar(lang, path, current, isHome) {
+  const t = copy[lang];
+  return `<a class="skip" href="#main">${t.skip}</a>
+<header class="bar${isHome ? " bar--home" : ""}" data-bar>
+  <div class="bar__inner">
+    <a class="bar__brand" href="${href(lang, "/")}" aria-label="SECOND TAKE">
+      <img src="/assets/second-take-logo-header.png" width="700" height="243" alt="SECOND TAKE BUSINESS × LIFE">
+    </a>
+    <nav class="bar__nav" aria-label="${t.navLabel}">
+        ${navLinks(lang, current)}
+    </nav>
+    <div class="bar__tools">
+      ${langSwitch(lang, path)}
       <button class="icon-btn" type="button" data-open-search aria-label="${t.search}"><span class="i-search" aria-hidden="true"></span></button>
       <button class="icon-btn icon-btn--menu" type="button" data-open-menu aria-label="${t.menuOpen}"><span class="i-menu" aria-hidden="true"></span></button>
     </div>
@@ -123,10 +126,30 @@ function header(lang, path, current) {
 </header>`;
 }
 
+function masthead(lang, path) {
+  const t = copy[lang];
+  const today = new Date().toISOString().slice(0, 10);
+  return `<div class="masthead" data-masthead>
+  <div class="wrap masthead__util">
+    <span class="masthead__date" data-today>${formatDate(lang, today)}</span>
+    <span class="masthead__tag">${esc(t.tagline)}</span>
+    <div class="masthead__tools">
+      ${langSwitch(lang, path)}
+      <button class="icon-btn" type="button" data-open-search aria-label="${t.search}"><span class="i-search" aria-hidden="true"></span></button>
+    </div>
+  </div>
+  <div class="masthead__brand">
+    <a href="${href(lang, "/")}" aria-label="SECOND TAKE"><img src="/assets/second-take-logo.png" width="2048" height="682" alt="SECOND TAKE BUSINESS × LIFE" fetchpriority="high"></a>
+  </div>
+  <div class="wrap"><nav class="masthead__nav" aria-label="${t.navLabel}">
+        ${navLinks(lang, "")}
+  </nav></div>
+</div>`;
+}
+
 function dialogs(lang, path) {
   const t = copy[lang];
-  const altLang = other(lang);
-  const altHref = path === null ? href(altLang, "/") : href(altLang, path);
+  const o = other(lang);
   return `<dialog class="search-dialog" data-search-dialog aria-label="${t.search}">
   <div class="search-dialog__inner">
     <div class="search-dialog__field">
@@ -140,58 +163,59 @@ function dialogs(lang, path) {
 </dialog>
 <dialog class="menu-dialog" data-menu-dialog aria-label="Menu">
   <div class="menu-dialog__top">
-    <span class="menu-dialog__label">SECOND TAKE</span>
+    <img src="/assets/second-take-logo-header-white.png" width="700" height="243" alt="SECOND TAKE">
     <button class="text-btn" type="button" data-close>${t.menuClose}</button>
   </div>
   <nav class="menu-dialog__nav">
-    <a href="${href(lang, "/#stories")}"><span>01</span>${t.nav.stories}</a>
-    <a href="${href(lang, "/articles/")}"><span>02</span>${t.nav.archive}</a>
-    <a href="${href(lang, "/#side-b")}"><span>03</span>${t.nav.listen}</a>
-    <a href="${href(lang, "/about/")}"><span>04</span>${t.nav.about}</a>
-    <a href="${href(lang, "/contact/")}"><span>05</span>${t.nav.contact}</a>
+    ${nav.map(([, label, target], i) => `<a href="${href(lang, target)}"><span>0${i + 1}</span>${label}</a>`).join("\n    ")}
   </nav>
   <div class="menu-dialog__foot">
-    ${external(links.booking, t.cta.book, "btn btn--light")}
-    <a class="menu-dialog__lang" href="${altHref}" hreflang="${altLang}" lang="${altLang}">${copy[altLang].langName}</a>
+    <a href="${href(lang, "/contact/")}">Contact</a>
+    <a href="${altPath(lang, path)}" hreflang="${o}" lang="${o}">${copy[o].langName}</a>
   </div>
 </dialog>`;
 }
 
 function footer(lang, path) {
-  const t = copy[lang];
-  const altLang = other(lang);
-  const altHref = path === null ? href(altLang, "/") : href(altLang, path);
+  const o = other(lang);
+  const edition = (l) =>
+    l === lang
+      ? `<span aria-current="true">${copy[l].langName}</span>`
+      : `<a href="${altPath(lang, path)}" hreflang="${l}" lang="${l}">${copy[l].langName}</a>`;
   return `<footer class="site-footer">
   <div class="wrap">
-    <div class="site-footer__top">
+    <div class="site-footer__grid">
       <a class="site-footer__brand" href="${href(lang, "/")}" aria-label="SECOND TAKE"><img src="/assets/second-take-logo-header-white.png" width="700" height="243" alt="SECOND TAKE"></a>
-      <nav class="site-footer__nav" aria-label="Footer">
-        <a href="${href(lang, "/#stories")}">${t.nav.stories}</a>
-        <a href="${href(lang, "/articles/")}">${t.nav.archive}</a>
-        <a href="${href(lang, "/#side-b")}">${t.nav.listen}</a>
-        <a href="${href(lang, "/about/")}">${t.nav.about}</a>
-        <a href="${href(lang, "/contact/")}">${t.nav.contact}</a>
+      <nav class="site-footer__col" aria-label="Sections">
+        <p class="site-footer__label">Sections</p>
+        ${nav.map(([, label, target]) => `<a href="${href(lang, target)}">${label}</a>`).join("\n        ")}
       </nav>
-      <div class="site-footer__links">
-        <p class="label">${t.footer.operated}</p>
-        ${external(lang === "en" ? links.companyEn : links.company, lang === "ja" ? "合同会社Music Japan" : "Music Japan LLC")}
+      <div class="site-footer__col">
+        <p class="site-footer__label">Company</p>
+        ${external(lang === "en" ? links.companyEn : links.company, "Music Japan LLC")}
         ${external(links.linkedin, "LinkedIn")}
-        ${external(links.booking, t.cta.book)}
+        <a href="${href(lang, "/contact/")}">Contact</a>
+      </div>
+      <div class="site-footer__col">
+        <p class="site-footer__label">Edition</p>
+        ${edition("ja")}
+        ${edition("en")}
       </div>
     </div>
     <div class="site-footer__bottom">
-      <p>${t.footer.rights}</p>
-      <p class="site-footer__sample">${t.sample}</p>
-      <a href="${altHref}" hreflang="${altLang}" lang="${altLang}">${copy[altLang].langName}</a>
+      <p>© 2026 Music Japan LLC</p>
+      <p>${copy[lang].sample}</p>
     </div>
   </div>
 </footer>`;
 }
 
 function page({ lang, path, current, bodyClass, main, ...meta }) {
+  const isHome = bodyClass === "page-home";
   return `${head({ lang, path, ...meta })}
-<body class="${bodyClass} has-dark-top" data-lang="${lang}">
-${header(lang, path, current)}
+<body class="${bodyClass}" data-lang="${lang}">
+${bar(lang, path, current, isHome)}
+${isHome ? masthead(lang, path) : ""}
 <main id="main">
 ${main}
 </main>
@@ -203,159 +227,145 @@ ${dialogs(lang, path)}
 }
 
 // ---------- shared blocks ----------
-function secHead(lang, en, sub, link) {
-  return `<header class="sec-head reveal">
-  <h2 class="sec-title"><span class="sec-title__en">${en}</span><span class="sec-title__sub">${esc(sub)}</span></h2>
-  ${link ? `<a class="sec-link" href="${link.href}">${esc(link.label)}<span aria-hidden="true">→</span></a>` : ""}
-</header>`;
+function rubric(label, sub, link) {
+  return `<div class="rubric">
+  <h2 class="rubric__title">${label}${sub ? `<small>${esc(sub)}</small>` : ""}</h2>
+  ${link ? `<a class="rubric__link" href="${link.href}">${esc(link.label)}<span aria-hidden="true">→</span></a>` : ""}
+</div>`;
 }
 
-function poster(lang, a) {
+function card(lang, a) {
   const e = a[lang];
-  return `<article class="poster reveal">
-  <a class="poster__link" href="${href(lang, `/articles/${a.slug}/`)}">
-    <figure class="poster__media">
-      ${img(a, { cls: "poster__img", sizes: "(min-width: 900px) 30vw, 80vw" })}
-      <span class="poster__take">Take 2</span>
-      <span class="poster__no">No.${a.no}</span>
+  return `<article class="card reveal">
+  <a class="card__link" href="${href(lang, `/articles/${a.slug}/`)}">
+    <figure class="card__media">
+      ${img(a, { cls: "card__img", sizes: "(min-width: 1080px) 30vw, 80vw" })}
+      <span class="card__no">${stNo(a)}</span>
     </figure>
-    <div class="poster__body">
-      <p class="tags">${e.tags.map(esc).join("<i>/</i>")}</p>
-      <h3 class="poster__title">${phrase(lang, e.title)}</h3>
-      <p class="poster__meta"><span>${esc(e.name)} — ${esc(e.company)}</span><span>${copy[lang].minRead(a.minutes)}</span></p>
-    </div>
+    <p class="kicker">${e.tags.map(esc).join("<i>/</i>")}</p>
+    <h3 class="card__title">${phrase(lang, e.title)}</h3>
+    <p class="card__dek">${esc(e.dek)}</p>
+    <p class="card__by"><span>${esc(e.name)}　${esc(e.company)}</span><span>${copy[lang].minRead(a.minutes)}</span></p>
   </a>
 </article>`;
 }
 
-function contactBand(lang) {
-  const t = copy[lang];
-  return `<section class="contact-band" aria-labelledby="contact-band-title">
-  <div class="wrap contact-band__inner reveal">
-    <p class="eyebrow">Contact</p>
-    <h2 class="contact-band__title" id="contact-band-title">${phrase(lang, t.home.contactHeading)}</h2>
-    <p class="contact-band__body">${esc(t.home.contactBody)}</p>
-    <div class="cta-row">
-      ${external(links.booking, t.cta.book, "btn btn--solid")}
-      ${external(links.linkedin, t.cta.linkedin, "btn btn--line")}
-    </div>
-  </div>
-</section>`;
-}
-
-function record(label = "SIDE B", cls = "") {
+function record(label = "", cls = "") {
   return `<div class="record ${cls}" aria-hidden="true">
-  <div class="record__disc"><div class="record__label"><span>${label}</span></div></div>
+  <div class="record__disc"><div class="record__label">${label ? `<span>${label}</span>` : ""}</div></div>
   <span class="record__slash"></span>
 </div>`;
 }
 
-function pageOpen(lang, eyebrow, title, lead, extra = "") {
-  return `<section class="page-open">
-  <div class="page-open__grain" aria-hidden="true"></div>
-  <div class="wrap page-open__inner">
-    <p class="slate"><span>SECOND TAKE</span><span>${esc(eyebrow)}</span></p>
-    <h1 class="page-open__title">${phrase(lang, title)}</h1>
-    ${lead ? `<p class="page-open__lead">${esc(lead)}</p>` : ""}
+function pageHead(lang, label, title, lead, extra = "") {
+  return `<section class="page-head">
+  <div class="wrap">
+    <p class="page-head__label">${esc(label)}</p>
+    <h1 class="page-head__title">${phrase(lang, title)}</h1>
+    ${lead ? `<p class="page-head__lead">${esc(lead)}</p>` : ""}
     ${extra}
   </div>
-  <div class="letterbox" aria-hidden="true"><span data-timecode>00:00:00:00</span><span>${esc(eyebrow)}</span></div>
 </section>`;
+}
+
+function themeCounts(lang) {
+  const counts = new Map();
+  for (const a of sorted) for (const tag of a[lang].tags) counts.set(tag, (counts.get(tag) || 0) + 1);
+  return [...counts.entries()];
 }
 
 // ---------- pages ----------
 function homePage(lang) {
   const t = copy[lang];
+  const h = t.home;
   const lead = sorted[0];
   const e = lead[lang];
+  const rest = sorted.slice(1);
   const main = `
-<section class="hero" aria-labelledby="hero-title">
-  <div class="hero__frame">
-    ${img(lead, { cls: "hero__img", eager: true, alt: lang === "ja" ? `${e.name}（サンプル写真）` : `${e.name} (sample photo)` })}
-    <div class="hero__shade" aria-hidden="true"></div>
-    <div class="grain" aria-hidden="true"></div>
-    <svg class="hero__slash" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="hero__slash-wide" x1="72" y1="104" x2="104" y2="0" /><line class="hero__slash-narrow" x1="46" y1="45" x2="104" y2="-2" /></svg>
-    <p class="hero__take" aria-hidden="true"><span>Take</span> 2</p>
-    <div class="hero__content">
-      <p class="slate"><span>No.${lead.no}</span><span>Scene 01</span><span>${e.tags.map(esc).join(" / ")}</span></p>
-      <h1 class="hero__title" id="hero-title"><a href="${href(lang, `/articles/${lead.slug}/`)}">${phrase(lang, e.title)}</a></h1>
-      <p class="hero__who">${esc(e.name)}<span>${esc(e.company)}　${esc(e.role)}</span></p>
-      <div class="hero__actions">
-        <a class="cine-link" href="${href(lang, `/articles/${lead.slug}/`)}">${t.readStory}<span class="cine-link__line" aria-hidden="true"></span></a>
-        <a class="quiet-link" href="${href(lang, `/articles/${lead.slug}/#brief`)}">${t.brief}</a>
+<section class="cover" aria-labelledby="cover-title">
+  ${img(lead, { cls: "cover__img", eager: true, alt: lang === "ja" ? `${e.name}（サンプル写真）` : `${e.name} (sample photo)` })}
+  <div class="cover__shade" aria-hidden="true"></div>
+  <div class="grain" aria-hidden="true"></div>
+  <svg class="cover__slash" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line class="slash-wide" x1="64" y1="104" x2="104" y2="4" /><line class="slash-narrow" x1="44" y1="48" x2="104" y2="2" /></svg>
+  <p class="cover__no" aria-hidden="true"><span>ST.</span> ${lead.no.padStart(3, "0")}</p>
+  <div class="wrap cover__content">
+    <p class="kicker kicker--light"><span class="kicker__lead">${h.cover}</span>${e.tags.map(esc).join("<i>/</i>")}</p>
+    <h1 class="cover__title" id="cover-title"><a href="${href(lang, `/articles/${lead.slug}/`)}">${phrase(lang, e.title)}</a></h1>
+    <p class="cover__dek">${esc(e.dek)}</p>
+    <p class="cover__by">${esc(e.name)}<span>${esc(e.company)}　${esc(e.role)}</span><span>${t.minRead(lead.minutes)}</span></p>
+    <div class="cover__actions">
+      <a class="cine-link" href="${href(lang, `/articles/${lead.slug}/`)}">${t.readStory}<span class="cine-link__line" aria-hidden="true"></span></a>
+      <a class="quiet-link" href="${href(lang, `/articles/${lead.slug}/#brief`)}">${t.brief}</a>
+    </div>
+  </div>
+</section>
+
+<section class="section front" id="latest">
+  <div class="wrap">
+    ${rubric(h.latest, h.latestSub, { href: href(lang, "/articles/"), label: h.allStories })}
+    <div class="front__grid">
+      <div class="front__cards">
+        ${rest.map((a) => card(lang, a)).join("\n")}
       </div>
+      <aside class="front__side">
+        <section class="side-block reveal">
+          <p class="side-label">${h.editorLabel}</p>
+          <h3 class="side-block__title">${phrase(lang, h.editorHeading)}</h3>
+          <p class="side-block__body">${esc(h.editorBody)}</p>
+          <a class="rubric__link" href="${href(lang, "/about/")}">${h.editorLink}<span aria-hidden="true">→</span></a>
+        </section>
+        <section class="side-block reveal" id="themes">
+          <p class="side-label">${h.themes}<small>${esc(h.themesSub)}</small></p>
+          <ul class="theme-index">
+            ${themeCounts(lang)
+              .map(([tag, n]) => `<li><a href="${href(lang, `/articles/?theme=${encodeURIComponent(tag)}`)}"><span>${esc(tag)}</span><span class="theme-index__n">${String(n).padStart(2, "0")}</span></a></li>`)
+              .join("\n            ")}
+          </ul>
+        </section>
+      </aside>
     </div>
-    <p class="hero__subtitle"><span>${phrase(lang, e.subtitle)}</span></p>
-  </div>
-  <div class="letterbox" aria-hidden="true">
-    <span data-timecode>00:00:00:00</span>
-    <span>${t.minReadLong(lead.minutes)}</span>
-    <span class="letterbox__rec">SECOND TAKE</span>
   </div>
 </section>
 
-<section class="section stories" id="stories">
+<section class="section briefs" id="briefs">
   <div class="wrap">
-    ${secHead(lang, t.home.storiesTitle, t.home.storiesSub, { href: href(lang, "/articles/"), label: t.home.allStories })}
-    <div class="posters">
-      ${sorted.map((a) => poster(lang, a)).join("\n")}
-    </div>
-  </div>
-</section>
-
-<section class="section decisions" id="decisions">
-  <div class="wrap">
-    ${secHead(lang, t.home.decisionsTitle, t.home.decisionsSub)}
-    <ol class="decision-list">
+    ${rubric(h.briefs, h.briefsSub)}
+    <div class="brief-cols">
       ${sorted
         .map(
-          (a) => `<li class="reveal"><a class="decision" href="${href(lang, `/articles/${a.slug}/`)}" data-float="/assets/${a.image}.webp">
-        <span class="decision__no">${a.no}</span>
-        <span class="decision__text">${phrase(lang, a[lang].decision)}</span>
-        <span class="decision__who">${esc(a[lang].name)}<small>${esc(a[lang].company)}</small></span>
-        <span class="decision__arrow" aria-hidden="true">→</span>
-      </a></li>`
+          (a) => `<article class="brief-col reveal">
+        <p class="brief-col__no">${stNo(a)}<span>${esc(a[lang].name)}</span></p>
+        <h3 class="brief-col__title"><a href="${href(lang, `/articles/${a.slug}/`)}">${phrase(lang, a[lang].title)}</a></h3>
+        <ol>${a[lang].brief.map((b) => `<li>${esc(b)}</li>`).join("")}</ol>
+        <a class="rubric__link" href="${href(lang, `/articles/${a.slug}/#brief`)}">${h.briefsLink}<span aria-hidden="true">→</span></a>
+      </article>`
         )
         .join("\n")}
-    </ol>
-  </div>
-  <figure class="decision-float" aria-hidden="true"><img alt="" data-float-img></figure>
-</section>
-
-<section class="statement">
-  <div class="grain" aria-hidden="true"></div>
-  <div class="wrap statement__inner reveal">
-    <p class="eyebrow">${t.home.statementEyebrow}</p>
-    <p class="statement__text">${phrase(lang, t.home.statement)}</p>
-    <p class="statement__body">${esc(t.home.statementBody)}</p>
-    <a class="cine-link cine-link--light" href="${href(lang, "/about/")}">${t.home.statementLink}<span class="cine-link__line" aria-hidden="true"></span></a>
-  </div>
-</section>
-
-<section class="section side-b" id="side-b" aria-labelledby="side-b-title">
-  <div class="wrap side-b__grid">
-    ${record("SIDE B", "reveal")}
-    <div class="side-b__text reveal">
-      <p class="sec-title__en">${t.home.sideBTitle}</p>
-      <h2 class="side-b__heading" id="side-b-title">${phrase(lang, t.home.sideBHeading)}</h2>
-      <p class="side-b__body">${esc(t.home.sideBBody)}</p>
-      <ol class="tracklist">
-        ${sorted
-          .map(
-            (a, i) => `<li><span class="tracklist__no">B${i + 1}</span><span class="tracklist__title">${esc(a[lang].name)}<small>${esc(a[lang].decision)}</small></span><span class="tracklist__status">${t.home.sideBStatus}</span></li>`
-          )
-          .join("\n")}
-      </ol>
     </div>
   </div>
 </section>
 
-${contactBand(lang)}`;
+<section class="podcast" id="podcast" aria-labelledby="podcast-title">
+  <div class="grain" aria-hidden="true"></div>
+  <div class="wrap podcast__grid">
+    ${record("", "record--band")}
+    <div class="podcast__text">
+      <p class="side-label">${h.podcast}</p>
+      <h2 class="podcast__title" id="podcast-title">${phrase(lang, h.podcastHeading)}</h2>
+      <p class="podcast__body">${esc(h.podcastBody)}</p>
+    </div>
+    <ol class="episodes">
+      ${sorted
+        .map((a) => `<li><span class="episodes__no">EP.${a.no}</span><span class="episodes__name">${esc(a[lang].name)}<small>${esc(a[lang].company)}</small></span><span class="episodes__status">${h.podcastStatus}</span></li>`)
+        .join("\n      ")}
+    </ol>
+  </div>
+</section>`;
 
   return page({
     lang,
     path: "/",
-    current: "stories",
+    current: "",
     bodyClass: "page-home",
     title: t.siteTitle,
     description: t.siteDescription,
@@ -363,13 +373,7 @@ ${contactBand(lang)}`;
     jsonld: {
       "@context": "https://schema.org",
       "@graph": [
-        {
-          "@type": "Organization",
-          "@id": "https://music-japan.com/#organization",
-          name: "合同会社Music Japan",
-          alternateName: "Music Japan LLC",
-          url: "https://music-japan.com/"
-        },
+        { "@type": "Organization", "@id": "https://music-japan.com/#organization", name: "合同会社Music Japan", alternateName: "Music Japan LLC", url: "https://music-japan.com/" },
         {
           "@type": "WebSite",
           "@id": `${ORIGIN}/#website`,
@@ -403,7 +407,7 @@ function articlePage(lang, a) {
       return `<figure class="frame reveal">
         <img class="frame__still" src="/assets/${a.image}.webp" alt="" loading="lazy" decoding="async" style="object-position:${frameCount++ % 2 ? "70% 62%" : "40% 18%"}">
         <div class="grain" aria-hidden="true"></div>
-        <span class="frame__tc" aria-hidden="true">No.${a.no} — ${esc(e.speaker)}</span>
+        <span class="frame__tc" aria-hidden="true">${stNo(a)} — ${esc(e.speaker)}</span>
         <blockquote class="frame__line"><p>${phrase(lang, text)}</p></blockquote>
       </figure>`;
     return `<p>${esc(text)}</p>`;
@@ -415,8 +419,8 @@ function articlePage(lang, a) {
     <div class="grain" aria-hidden="true"></div>
     <div class="wrap story-open__grid">
       <div class="story-open__text">
-        <nav class="crumbs" aria-label="Breadcrumb"><a href="${href(lang, "/")}">SECOND TAKE</a><i>/</i><a href="${href(lang, "/articles/")}">${ta.crumbs}</a><i>/</i><span>No.${a.no}</span></nav>
-        <p class="slate"><span>No.${a.no}</span><span>Take 2</span><span>${e.tags.map(esc).join(" / ")}</span></p>
+        <nav class="crumbs" aria-label="Breadcrumb"><a href="${href(lang, "/")}">SECOND TAKE</a><i>/</i><a href="${href(lang, "/articles/")}">Interviews</a><i>/</i><span>${stNo(a)}</span></nav>
+        <p class="kicker kicker--light"><span class="kicker__lead">${stNo(a)}</span>${e.tags.map(esc).join("<i>/</i>")}</p>
         <h1 class="story-title">${phrase(lang, e.title)}</h1>
         <p class="story-dek">${esc(e.dek)}</p>
         <dl class="story-meta">
@@ -431,7 +435,6 @@ function articlePage(lang, a) {
         <figcaption>${ta.photo}</figcaption>
       </figure>
     </div>
-    <div class="letterbox" aria-hidden="true"><span data-timecode>00:00:00:00</span><span>${ta.scene} 01 — 0${e.scenes.length}</span><span>${t.minReadLong(a.minutes)}</span></div>
   </header>
 
   <div class="story-body">
@@ -439,7 +442,7 @@ function articlePage(lang, a) {
       <div class="story-rail__sticky">
         <p class="label">${ta.toc}</p>
         <ol class="toc" data-toc>
-          ${e.scenes.map((s, n) => `<li><a href="#scene-${n + 1}"><span>0${n + 1}</span>${esc(s.short)}</a></li>`).join("\n")}
+          ${e.scenes.map((s, n) => `<li><a href="#scene-${n + 1}"><span>0${n + 1}</span>${esc(s.short)}</a></li>`).join("\n          ")}
         </ol>
         <button class="size-btn" type="button" data-size-toggle data-sizes="${esc(JSON.stringify(ta.sizes))}" data-label="${esc(ta.textSize)}">Aa<span>${ta.textSize}：${ta.sizes[0]}</span></button>
       </div>
@@ -451,16 +454,16 @@ function articlePage(lang, a) {
         <ol>${e.brief.map((b) => `<li>${phrase(lang, b)}</li>`).join("")}</ol>
       </section>
       <div class="intro">
-        ${e.intro.map((p, n) => (n === 0 ? `<p class="intro__first">${phrase(lang, p)}</p>` : `<p>${esc(p)}</p>`)).join("\n")}
+        ${e.intro.map((p, n) => (n === 0 ? `<p class="intro__first">${phrase(lang, p)}</p>` : `<p>${esc(p)}</p>`)).join("\n        ")}
       </div>
       ${e.scenes
         .map(
           (s, n) => `<section class="scene" id="scene-${n + 1}" data-scene>
         <h2 class="scene__head"><span class="scene__no">${ta.scene} 0${n + 1}</span><span class="scene__title">${phrase(lang, s.heading)}</span></h2>
-        ${s.blocks.map(block).join("\n")}
+        ${s.blocks.map(block).join("\n        ")}
       </section>`
         )
-        .join("\n")}
+        .join("\n      ")}
 
       <div class="story-end">
         <div class="share">
@@ -482,7 +485,7 @@ function articlePage(lang, a) {
           </div>
         </section>
         <section class="listen">
-          ${record("B" + (i + 1), "record--mini")}
+          ${record(`EP.${a.no}`, "record--mini")}
           <div>
             <p class="label">${ta.listenTitle}</p>
             <h2 class="listen__title">${phrase(lang, ta.listenHeading)}</h2>
@@ -498,16 +501,16 @@ function articlePage(lang, a) {
     <div class="next-take__shade" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
     <div class="wrap next-take__inner">
-      <p class="slate"><span>${ta.next}</span><span>No.${next.no}</span></p>
+      <p class="kicker kicker--light"><span class="kicker__lead">${ta.next}</span>${stNo(next)}</p>
       <p class="next-take__title">${phrase(lang, next[lang].title)}</p>
-      <p class="next-take__who">${esc(next[lang].name)} — ${esc(next[lang].company)}<span class="next-take__arrow" aria-hidden="true">→</span></p>
+      <p class="next-take__who">${esc(next[lang].name)}　${esc(next[lang].company)}<span class="next-take__arrow" aria-hidden="true">→</span></p>
     </div>
   </a>
 
   <section class="section more">
     <div class="wrap">
-      ${secHead(lang, ta.more, t.home.storiesSub, { href: href(lang, "/articles/"), label: t.home.allStories })}
-      <div class="posters posters--two">${others.map((x) => poster(lang, x)).join("\n")}</div>
+      ${rubric(ta.more, "", { href: href(lang, "/articles/"), label: t.home.allStories })}
+      <div class="front__cards front__cards--wide">${others.map((x) => card(lang, x)).join("\n")}</div>
     </div>
   </section>
 </article>
@@ -519,7 +522,7 @@ function articlePage(lang, a) {
   return page({
     lang,
     path,
-    current: "archive",
+    current: "interviews",
     bodyClass: "page-article",
     title: `${e.title}｜SECOND TAKE`,
     description: e.dek,
@@ -546,14 +549,13 @@ function articlePage(lang, a) {
 function archivePage(lang) {
   const t = copy[lang];
   const ta = t.archive;
-  const tags = [...new Set(sorted.flatMap((a) => a[lang].tags))];
   const main = `
-${pageOpen(lang, ta.title, ta.sub, ta.lead)}
+${pageHead(lang, ta.label, ta.title, ta.lead)}
 <section class="section archive">
   <div class="wrap">
     <div class="filters" role="group" aria-label="${ta.filterLabel}" data-filters>
       <button type="button" aria-pressed="true" data-filter="">${ta.all}</button>
-      ${tags.map((tag) => `<button type="button" aria-pressed="false" data-filter="${esc(tag)}">${esc(tag)}</button>`).join("\n")}
+      ${themeCounts(lang).map(([tag]) => `<button type="button" aria-pressed="false" data-filter="${esc(tag)}">${esc(tag)}</button>`).join("\n      ")}
     </div>
     <ol class="archive-list">
       ${sorted
@@ -561,137 +563,88 @@ ${pageOpen(lang, ta.title, ta.sub, ta.lead)}
           const e = a[lang];
           return `<li data-tags="${esc(e.tags.join("|"))}" class="reveal">
         <a class="row" href="${href(lang, `/articles/${a.slug}/`)}">
-          <span class="row__no">${a.no}</span>
+          <span class="row__no">${stNo(a)}</span>
           <span class="row__img">${img(a, { sizes: "160px" })}</span>
           <span class="row__main">
-            <span class="tags">${e.tags.map(esc).join("<i>/</i>")}</span>
+            <span class="kicker">${e.tags.map(esc).join("<i>/</i>")}</span>
             <span class="row__title">${phrase(lang, e.title)}</span>
-            <span class="row__who">${esc(e.name)} — ${esc(e.company)}</span>
+            <span class="row__who">${esc(e.name)}　${esc(e.company)}</span>
           </span>
           <span class="row__meta"><time datetime="${a.date}">${formatDate(lang, a.date)}</time><span>${t.minRead(a.minutes)}</span></span>
         </a>
       </li>`;
         })
-        .join("\n")}
+        .join("\n      ")}
     </ol>
   </div>
-</section>
-${contactBand(lang)}`;
-  return page({
-    lang,
-    path: "/articles/",
-    current: "archive",
-    bodyClass: "page-archive",
-    title: `${ta.title} — ${ta.sub}｜SECOND TAKE`,
-    description: ta.lead,
-    main
-  });
+</section>`;
+  return page({ lang, path: "/articles/", current: "interviews", bodyClass: "page-archive", title: `${ta.title}｜SECOND TAKE`, description: ta.lead, main });
 }
 
 function aboutPage(lang) {
-  const t = copy[lang];
-  const ab = t.about;
+  const ab = copy[lang].about;
   const main = `
-${pageOpen(lang, ab.eyebrow, ab.heading, ab.lead)}
-<section class="section principles">
+${pageHead(lang, ab.label, ab.heading, ab.lead)}
+<section class="section">
   <div class="wrap">
-    ${secHead(lang, ab.principlesTitle, lang === "ja" ? "編集方針" : "How we work")}
+    ${rubric(ab.principlesTitle, ab.principlesSub)}
     <ol class="principle-list">
-      ${ab.principles
-        .map(
-          ([title, body], n) => `<li class="reveal"><span class="principle__no">0${n + 1}</span><h3>${phrase(lang, title)}</h3><p>${esc(body)}</p></li>`
-        )
-        .join("\n")}
+      ${ab.principles.map(([title, body], n) => `<li class="reveal"><span class="principle__no">0${n + 1}</span><h3>${phrase(lang, title)}</h3><p>${esc(body)}</p></li>`).join("\n      ")}
     </ol>
   </div>
 </section>
-<section class="section formats">
+<section class="section">
   <div class="wrap">
-    ${secHead(lang, ab.formatTitle, lang === "ja" ? "記事と声" : "Print and voice")}
+    ${rubric(ab.formatTitle, ab.formatSub)}
     <dl class="format-list">
-      ${ab.formats
-        .map(
-          ([en, name, body]) => `<div class="reveal"><dt><span class="didone-i">${esc(en)}</span><small>${esc(name)}</small></dt><dd>${esc(body)}</dd></div>`
-        )
-        .join("\n")}
+      ${ab.formats.map(([en, name, body]) => `<div class="reveal"><dt><span class="format-list__en">${esc(en)}</span><span class="format-list__name">${esc(name)}</span></dt><dd>${esc(body)}</dd></div>`).join("\n      ")}
     </dl>
   </div>
 </section>
 <section class="section publisher">
-  <div class="wrap"><div class="publisher__grid reveal">
-    <div>
-      <p class="sec-title__en">${ab.publisherTitle}</p>
-      <p class="publisher__text">${esc(ab.publisher)}</p>
-    </div>
-    <div class="publisher__links">
-      ${external(lang === "en" ? links.companyEn : links.company, lang === "ja" ? "合同会社Music Japan" : "Music Japan LLC", "publisher__link")}
-      ${external(links.linkedin, `${esc(ab.person)}<small>LinkedIn</small>`, "publisher__link")}
-    </div>
-  </div></div>
-</section>
-${contactBand(lang)}`;
-  return page({
-    lang,
-    path: "/about/",
-    current: "about",
-    bodyClass: "page-about",
-    title: `${ab.title}｜SECOND TAKE`,
-    description: ab.lead,
-    main
-  });
-}
-
-function contactPage(lang) {
-  const t = copy[lang];
-  const c = t.contact;
-  const ctas = `<div class="cta-row">
-      ${external(links.booking, t.cta.book, "btn btn--light")}
-      ${external(links.linkedin, t.cta.linkedin, "btn btn--line-light")}
-    </div>
-    <p class="page-open__note">${esc(t.cta.bookNote)}</p>`;
-  const main = `
-${pageOpen(lang, c.eyebrow, c.heading, c.lead, ctas)}
-<section class="section cases">
   <div class="wrap">
-    ${secHead(lang, "Inquiries", lang === "ja" ? "こんなご相談を受け付けています" : "What we can talk about")}
-    <ol class="case-list">
-      ${c.cases
-        .map(([title, body], n) => `<li class="reveal"><span class="principle__no">0${n + 1}</span><h3>${phrase(lang, title)}</h3><p>${esc(body)}</p></li>`)
-        .join("\n")}
-    </ol>
-    <div class="cases__foot reveal">
-      ${external(links.booking, t.cta.book, "btn btn--solid")}
-      ${external(lang === "en" ? links.companyEn : links.company, t.cta.company, "quiet-link")}
+    ${rubric(ab.publisherTitle, ab.publisherSub)}
+    <div class="publisher__grid reveal">
+      <p class="publisher__text">${esc(ab.publisher)}</p>
+      <div class="publisher__links">
+        ${external(lang === "en" ? links.companyEn : links.company, lang === "ja" ? "合同会社Music Japan" : "Music Japan LLC", "publisher__link")}
+        ${external(links.linkedin, `${esc(ab.person)}<small>LinkedIn</small>`, "publisher__link")}
+      </div>
     </div>
   </div>
 </section>`;
-  return page({
-    lang,
-    path: "/contact/",
-    current: "contact",
-    bodyClass: "page-contact",
-    title: `${c.title}｜SECOND TAKE`,
-    description: c.lead,
-    main
-  });
+  return page({ lang, path: "/about/", current: "about", bodyClass: "page-about", title: `${ab.title}｜SECOND TAKE`, description: ab.lead, main });
+}
+
+function contactPage(lang) {
+  const c = copy[lang].contact;
+  const ctas = `<div class="cta-row">
+      ${external(links.booking, c.book, "btn btn--solid")}
+      ${external(links.linkedin, "LinkedIn", "btn btn--line")}
+    </div>
+    <p class="page-head__note">${esc(c.bookNote)}</p>`;
+  const main = `
+${pageHead(lang, c.label, c.heading, c.lead, ctas)}
+<section class="section">
+  <div class="wrap">
+    ${rubric("Enquiries", lang === "ja" ? "お問い合わせの種類" : "What to contact us about")}
+    <ol class="principle-list">
+      ${c.cases.map(([title, body], n) => `<li class="reveal"><span class="principle__no">0${n + 1}</span><h3>${phrase(lang, title)}</h3><p>${esc(body)}</p></li>`).join("\n      ")}
+    </ol>
+  </div>
+</section>`;
+  return page({ lang, path: "/contact/", current: "", bodyClass: "page-contact", title: `${c.title}｜SECOND TAKE`, description: c.lead, main });
 }
 
 function notFoundPage() {
   const ja = copy.ja.notFound;
   const en = copy.en.notFound;
-  const main = `<section class="page-open page-open--full">
-  <div class="page-open__grain" aria-hidden="true"></div>
-  <div class="wrap page-open__inner">
-    <p class="slate"><span>404</span><span>NG Take</span></p>
-    <h1 class="page-open__title">${phrase("ja", ja.heading)}</h1>
-    <p class="page-open__lead">${esc(ja.body)}</p>
-    <p class="page-open__lead page-open__lead--en" lang="en">${esc(en.heading)} ${esc(en.body)}</p>
+  const extra = `<p class="page-head__lead" lang="en">${esc(en.heading)} ${esc(en.body)}</p>
     <div class="cta-row">
-      <a class="btn btn--light" href="/">${ja.back}</a>
-      <a class="btn btn--line-light" href="/en/" lang="en">${en.back}</a>
-    </div>
-  </div>
-</section>`;
+      <a class="btn btn--solid" href="/">${ja.back}</a>
+      <a class="btn btn--line" href="/en/" lang="en">${en.back}</a>
+    </div>`;
+  const main = pageHead("ja", "404 — NG Take", ja.heading, ja.body, extra);
   return page({ lang: "ja", path: null, current: "", bodyClass: "page-404", title: `${ja.title}｜SECOND TAKE`, description: ja.body, main });
 }
 
@@ -747,14 +700,13 @@ function searchIndex(lang) {
       const e = a[lang];
       return {
         url: href(lang, `/articles/${a.slug}/`),
-        no: a.no,
+        no: stNo(a),
         title: e.title,
         name: e.name,
         company: e.company,
-        decision: e.decision,
         tags: e.tags,
         image: `/assets/${a.image}.webp`,
-        text: [e.dek, ...e.brief].join(" ")
+        text: [e.dek, e.decision, ...e.brief].join(" ")
       };
     })
   );

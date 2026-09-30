@@ -29,11 +29,21 @@
     window.setTimeout(function () { el.remove(); }, 2000);
   })();
 
-  // ---------- header: transparent over the dark opening, solid after ----------
-  var opening = $(".hero, .story-open, .page-open");
+  // ---------- home: compact bar slides in once the masthead scrolls away ----------
+  var mast = $("[data-masthead]");
   function updateHeader() {
-    var limit = opening ? opening.offsetHeight - 80 : 10;
-    body.classList.toggle("is-scrolled", window.scrollY > limit);
+    if (!mast) return;
+    body.classList.toggle("show-bar", window.scrollY > mast.offsetHeight - 10);
+  }
+
+  // ---------- masthead date ----------
+  var today = $("[data-today]");
+  if (today) {
+    try {
+      today.textContent = new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "en-US", lang === "ja"
+        ? { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }
+        : { weekday: "short", month: "short", day: "numeric", year: "numeric" }).format(new Date());
+    } catch (e) { /* keep build date */ }
   }
 
   // ---------- reading progress + resume (articles) ----------
@@ -104,43 +114,6 @@
     reveals.forEach(function (el) { el.classList.add("is-in"); });
   }
 
-  // ---------- timecode (24 fps) ----------
-  var timecodes = $$("[data-timecode]");
-  if (timecodes.length && !reduceMotion) {
-    var t0 = performance.now();
-    var pad = function (n) { return n < 10 ? "0" + n : String(n); };
-    var visible = true;
-    if ("IntersectionObserver" in window) {
-      new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; }).observe(timecodes[0]);
-    }
-    var tick = function (now) {
-      if (visible) {
-        var frames = Math.floor(((now - t0) / 1000) * 24);
-        var ff = frames % 24, s = Math.floor(frames / 24);
-        var text = pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s / 60) % 60) + ":" + pad(s % 60) + ":" + pad(ff);
-        timecodes.forEach(function (el) { el.textContent = text; });
-      }
-      window.requestAnimationFrame(tick);
-    };
-    window.requestAnimationFrame(tick);
-  }
-
-  // ---------- decisions: floating portrait ----------
-  var float = $(".decision-float");
-  var floatImg = $("[data-float-img]");
-  if (float && floatImg && window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
-    $$("[data-float]").forEach(function (link) {
-      link.addEventListener("mouseenter", function () {
-        floatImg.src = link.getAttribute("data-float");
-        float.classList.add("is-on");
-      });
-      link.addEventListener("mouseleave", function () { float.classList.remove("is-on"); });
-      link.addEventListener("mousemove", function (event) {
-        float.style.transform = "translate3d(" + (event.clientX + 28) + "px," + (event.clientY - 150) + "px,0)";
-      });
-    });
-  }
-
   // ---------- dialogs ----------
   function openDialog(dialog) {
     if (!dialog) return;
@@ -208,17 +181,22 @@
   var filters = $("[data-filters]");
   if (filters) {
     var rows = $$(".archive-list li");
-    $$("button", filters).forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var tag = btn.getAttribute("data-filter");
-        $$("button", filters).forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
-        rows.forEach(function (row) {
-          var tags = row.getAttribute("data-tags").split("|");
-          row.hidden = !!tag && tags.indexOf(tag) === -1;
-          if (!row.hidden) row.classList.add("is-in");
-        });
+    var applyFilter = function (btn) {
+      var tag = btn.getAttribute("data-filter");
+      $$("button", filters).forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+      rows.forEach(function (row) {
+        var tags = row.getAttribute("data-tags").split("|");
+        row.hidden = !!tag && tags.indexOf(tag) === -1;
+        if (!row.hidden) row.classList.add("is-in");
       });
+    };
+    $$("button", filters).forEach(function (btn) {
+      btn.addEventListener("click", function () { applyFilter(btn); });
     });
+    var wanted = new URLSearchParams(location.search).get("theme");
+    if (wanted) {
+      $$("button", filters).forEach(function (btn) { if (btn.getAttribute("data-filter") === wanted) applyFilter(btn); });
+    }
   }
 
   // ---------- scene TOC ----------
