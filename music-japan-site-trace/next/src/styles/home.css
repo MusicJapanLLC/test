@@ -249,7 +249,16 @@ a.news-item:hover time, a.news-item:hover .news-label { color: #fff; }
 /* ── ABOUT (brands) ── */
 .about { display: grid; gap: 64px; }
 .brands { border-top: 1px solid var(--line); }
-.brand-row { display: grid; grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: center; padding: clamp(30px, 4vw, 54px) 0; border-bottom: 1px solid var(--line); }
+.brands > li { border-bottom: 1px solid var(--line); }
+.brand-row { position: relative; display: grid; grid-template-columns: 70px minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: center; padding: clamp(30px, 4vw, 54px) 12px; isolation: isolate; transition: color 0.4s; }
+.brand-row::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(225, 34, 47, 0.16), transparent 70%); opacity: 0; transition: opacity 0.5s var(--ease); }
+.brand-row:hover::before { opacity: 1; }
+.brand-row .brand-logo img { transition: transform 0.8s var(--ease); }
+.brand-row:hover .brand-logo img { transform: translateX(10px); }
+.brand-cta { display: inline-flex; align-items: center; gap: 8px; width: fit-content; margin-top: 10px; padding-bottom: 4px; border-bottom: 1px solid var(--line-2); font-weight: 700; font-size: 13px; color: var(--paper) !important; transition: border-color 0.3s, color 0.3s; }
+.brand-cta .i-arrow { width: 15px; height: 15px; }
+.brand-row:hover .brand-cta { border-color: var(--red-hot); color: var(--red-hot) !important; }
+.brand-row:hover .brand-cta .i-arrow { transform: translateX(4px); }
 .brand-no { font-family: var(--f-mono); font-size: 12px; color: var(--red-hot); }
 .brand-logo { display: flex; align-items: center; height: clamp(60px, 7vw, 110px); }
 .brand-logo img { max-height: 100%; width: auto; max-width: min(100%, 420px); object-fit: contain; }
@@ -257,7 +266,7 @@ a.news-item:hover time, a.news-item:hover .news-label { color: #fff; }
 .brand-copy { display: grid; gap: 6px; }
 .brand-kicker { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: var(--mute); }
 .brand-copy strong { font-weight: 900; font-size: clamp(20px, 2vw, 28px); }
-.brand-copy span:last-child { color: var(--paper-2); font-size: 15px; line-height: 1.9; }
+.brand-body { color: var(--paper-2); font-size: 15px; line-height: 1.9; }
 @media (max-width: 760px) { .brand-row { grid-template-columns: 40px 1fr; } .brand-copy { grid-column: 1 / -1; } }
 
 /* ── CTA ── */

@@ -117,6 +117,9 @@ export function setupPlayer(world: World | null) {
     opener = from;
     load(i);
     dlg.showModal();
+    // keep the character on stage (dialogs live in the top layer)
+    const buddy = document.querySelector('.buddy');
+    if (buddy) dlg.append(buddy);
     document.documentElement.classList.add('is-player');
     cancelAnimationFrame(raf);
     draw();
@@ -133,6 +136,8 @@ export function setupPlayer(world: World | null) {
     setPlaying(false);
     cancelAnimationFrame(raf);
     document.documentElement.classList.remove('is-player');
+    const buddy = dlg.querySelector('.buddy');
+    if (buddy) document.body.append(buddy);
     world?.setAccent('#e1222f');
     opener?.focus();
   });

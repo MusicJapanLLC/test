@@ -5,7 +5,7 @@ import { copy, EMAIL, path, SITE_URL, SOCIAL_IMAGE, TIMEREX_URL } from '../../co
 import { arrow, esc, phrases, prose } from '../html';
 import { innerHero, page } from '../layout';
 import { mark } from '../mark';
-import { button, crate, ctaBlock, kicker, partnerSleeve, player } from '../parts';
+import { button, crate, crumbs, ctaBlock, faqGraph, faqSection, kicker, partnerSleeve, player } from '../parts';
 import { aboutSection, mediaSection } from './home';
 
 export function renderBusiness(locale: Locale) {
@@ -16,7 +16,7 @@ ${crate(locale)}
 ${mediaSection(locale, '03')}
 ${ctaBlock(locale)}
 ${player(locale)}`;
-  return page({ locale, page: 'business', title: `${p.title} | ${copy[locale].brand}`, description: p.description, body });
+  return page({ locale, page: 'business', title: p.seo, description: p.description, body });
 }
 
 export function renderCompany(locale: Locale) {
@@ -40,8 +40,9 @@ export function renderCompany(locale: Locale) {
   <ol class="tracklist tracklist--b">${brandNames.map((n, i) => `<li data-reveal><span class="tl-no">B${i + 1}</span><span class="tl-name">${esc(n)}</span><span class="tl-body"></span></li>`).join('')}</ol>
   <div class="sec-cta">${button(ja ? '作品を聴く' : 'Explore the music', `${path(locale, 'business')}#catalog`)}${button(ja ? 'お問い合わせ' : 'Contact us', path(locale, 'contact'), 'line')}</div>
 </section>
+${faqSection(locale, '04')}
 ${ctaBlock(locale)}`;
-  return page({ locale, page: 'company', title: `${p.title} | ${copy[locale].brand}`, description: p.description, body });
+  return page({ locale, page: 'company', title: p.seo, description: p.description, body, graph: [faqGraph(locale, 'company')] });
 }
 
 export function renderProfile(locale: Locale) {
@@ -54,6 +55,7 @@ export function renderProfile(locale: Locale) {
     <figcaption>OSAKA / JAPAN — 2026</figcaption>
   </figure>
   <div class="pf-copy">
+    ${crumbs(locale, 'profile')}
     ${kicker(p.kicker)}
     <h1 class="pf-name" id="pf-title" data-split>${esc(profile.name[locale])}</h1>
     <p class="pf-roman">${esc(profile.roman[locale])}</p>
@@ -66,21 +68,9 @@ ${ctaBlock(locale)}`;
   return page({
     locale,
     page: 'profile',
-    title: locale === 'ja' ? '代表プロフィール | 壁谷 友生 | 合同会社Music Japan' : 'Representative Profile | Tomoki Kabeya | Music Japan LLC',
+    title: p.seo,
     description: p.description,
     body,
-    graph: [
-      {
-        '@type': 'Person',
-        '@id': `${SITE_URL}/#founder`,
-        url: `${SITE_URL}${path(locale, 'profile')}`,
-        name: '壁谷 友生',
-        alternateName: 'Tomoki Kabeya',
-        jobTitle: locale === 'ja' ? '代表社員' : 'Representative Member',
-        image: `${SITE_URL}/kabeya-tomoki.png`,
-        worksFor: { '@id': `${SITE_URL}/#organization` },
-      },
-    ],
   });
 }
 
@@ -90,14 +80,14 @@ export function renderPartners(locale: Locale) {
   const roster = partners
     .map(
       (pt, i) => `<article class="roster" id="${pt.id}" style="--c1:${pt.colors[0]};--c2:${pt.colors[1]}" data-reveal>
-    <a class="roster-sleeve" href="${pt.href}" aria-label="${esc(`${pt.name[locale]} — ${ja ? '紹介ページを見る' : 'Explore'}`)}" data-cursor-label="OPEN">${partnerSleeve(locale, i)}</a>
+    <a class="roster-sleeve" href="${pt.href}" aria-label="${esc(`${pt.name[locale]} — ${ja ? '事業を見る' : 'Explore'}`)}" data-cursor-label="OPEN">${partnerSleeve(locale, i)}</a>
     <div class="roster-copy">
       <p class="roster-no"><span>${pt.no}</span><i></i><span>${esc(pt.category[locale])}</span></p>
       <h2 class="roster-name" data-split>${phrases(pt.name[locale])}</h2>
       <p class="roster-title">${prose(pt.title[locale])}</p>
       <p class="roster-body">${prose(pt.body[locale])}</p>
       <dl class="roster-facts"><div><dt>BASE</dt><dd>${esc(pt.base[locale])}</dd></div>${pt.service ? `<div><dt>SERVICE</dt><dd>${esc(pt.service.name)}</dd></div>` : ''}<div><dt>SERIES</dt><dd>BATON PARTNERS</dd></div></dl>
-      ${button(ja ? '紹介ページを見る' : `Explore ${pt.name.en.replace(' Inc.', '')}`, pt.href)}
+      ${button(ja ? `${pt.name.ja.replace('株式会社', '')}を見る` : `Explore ${pt.name.en.replace(' Inc.', '')}`, pt.href)}
     </div>
   </article>`,
     )
@@ -112,14 +102,14 @@ export function renderPartners(locale: Locale) {
   <div class="lg-track" data-velocity-marquee>${strip.repeat(4)}</div>
 </section>
 <section class="rosters" aria-label="${ja ? 'パートナー企業' : 'Partner companies'}">
-  <div class="sec-head">${kicker('CATALOG — BATON PARTNERS', '01')}<h2 class="hx" data-split>${phrases(ja ? '一社ずつ、\n盤に刻むように。' : 'Each partner,\ncut like a record.')}</h2><p class="sec-body">${prose(ja ? '一社ずつ、レコードのように番号をつけて並べています。事業の強みとサービスは、各社の紹介ページで詳しくご覧いただけます。' : 'Each partner is numbered like a release in our catalog. Their business and services are introduced in detail on each partner page.')}</p></div>
+  <div class="sec-head">${kicker('CATALOG — BATON PARTNERS', '01')}<h2 class="hx" data-split>${phrases(ja ? '一社ずつ、\n盤に刻むように。' : 'Each partner,\ncut like a record.')}</h2><p class="sec-body">${prose(ja ? '一社ずつ、レコードのように番号をつけて並べています。それぞれの事業とサービスは、各社のページで詳しくご覧いただけます。' : 'Each partner is numbered like a release in our catalog. Their business and services are covered in detail on each partner page.')}</p></div>
   ${roster}
 </section>
 ${ctaBlock(locale)}`;
   return page({
     locale,
     page: 'partners',
-    title: `${p.title} | ${copy[locale].brand}`,
+    title: p.seo,
     description: p.description,
     body,
     graph: [
@@ -162,7 +152,7 @@ export function renderContact(locale: Locale) {
     <button class="btn btn--solid ct-send" type="submit" data-magnetic><span class="btn-label">${f.send}</span>${arrow()}</button>
   </form>
 </section>`;
-  return page({ locale, page: 'contact', title: `${p.title} | ${copy[locale].brand}`, description: p.description, body, bodyClass: 'is-contact' });
+  return page({ locale, page: 'contact', title: p.seo, description: p.description, body, bodyClass: 'is-contact' });
 }
 
 export function renderPrivacy(locale: Locale) {
@@ -177,7 +167,7 @@ export function renderPrivacy(locale: Locale) {
     )
     .join('')}
 </section>`;
-  return page({ locale, page: 'privacy', title: `${p.title} | ${copy[locale].brand}`, description: p.description, body });
+  return page({ locale, page: 'privacy', title: p.seo, description: p.description, body });
 }
 
 /** LINE share URL that shows the corporate-logo card, then opens the home page. */

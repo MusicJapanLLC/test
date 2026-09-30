@@ -17,7 +17,7 @@ await build({ configFile: join(root, "next/vite.config.ts"), logLevel: "warn" })
 cpSync(join(source, "audio"), join(output, "audio"), { recursive: true });
 cpSync(join(source, "media"), join(output, "artwork"), { recursive: true });
 cpSync(join(source, "partners"), join(output, "partners"), { recursive: true, force: false, errorOnExist: false });
-for (const file of ["music-japan-logo.png", "music-japan-symbol.png", "favicon-music-japan.svg", "favicon.svg", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png", "llms.txt", "llms-full.txt"]) {
+for (const file of ["music-japan-logo.png", "music-japan-symbol.png", "favicon-music-japan.svg", "favicon.svg", "second-take-logo.png", "baton-logo.png", "baton-wordmark-v2.png"]) {
   cpSync(join(source, file), join(output, file));
 }
 // two large PNGs are stored split into parts in the snapshot
@@ -26,27 +26,8 @@ for (const [target, count] of [["music-japan-og.png", 4], ["kabeya-tomoki.png", 
   writeFileSync(join(output, target), Buffer.concat(parts));
 }
 
-// ── machine-readable files ──
+// ── routing + caching (sitemap, robots, llms and the IndexNow key are emitted by vite) ──
 const pairs = [["/", "/en/"], ...["business", "company", "profile", "partners", "contact", "privacy"].map((p) => [`/${p}/`, `/en/${p}/`])];
-const today = new Date().toISOString().slice(0, 10);
-writeFileSync(join(output, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${pairs.flatMap(([ja, en]) => [ja, en].map((loc) => `  <url>
-    <loc>${SITE_URL}${loc}</loc>
-    <lastmod>${today}</lastmod>
-    <xhtml:link rel="alternate" hreflang="ja-JP" href="${SITE_URL}${ja}" />
-    <xhtml:link rel="alternate" hreflang="en" href="${SITE_URL}${en}" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="${SITE_URL}${ja}" />
-  </url>`)).join("\n")}
-</urlset>
-`);
-writeFileSync(join(output, "robots.txt"), readFileSync(join(source, "robots.txt"), "utf8"));
-for (const file of ["llms.txt", "llms-full.txt"]) {
-  const text = readFileSync(join(output, file), "utf8")
-    .replace(/^- 音楽: .*\n/m, "").replace(/^- メディア: .*\n/m, "")
-    .replace(/^- 私たちについて: .*\n/m, "- 事業概要: https://music-japan.com/business/\n- パートナー: https://music-japan.com/partners/\n");
-  writeFileSync(join(output, file), text);
-}
 writeFileSync(join(output, "_redirects"), ["", "/en"].flatMap((prefix) => ["music", "media", "about"].flatMap((page) => [`${prefix}/${page} ${prefix}/business/ 301`, `${prefix}/${page}/ ${prefix}/business/ 301`])).join("\n") + "\n");
 writeFileSync(join(output, "_headers"), `/assets/*
   Cache-Control: public, max-age=31536000, immutable
@@ -55,6 +36,10 @@ writeFileSync(join(output, "_headers"), `/assets/*
 /audio/*
   Cache-Control: public, max-age=2592000
   X-Robots-Tag: noindex
+/og/*
+  Cache-Control: public, max-age=604800
+/llms*.txt
+  Content-Type: text/plain; charset=utf-8
 `);
 
 // ── validation: fail the build rather than publish a broken site ──
@@ -76,6 +61,11 @@ for (const p of pages) {
     if (ref.endsWith("/")) continue;
     if (!existsSync(join(output, ref))) throw new Error(`${p} references a missing file: ${ref}`);
   }
+}
+for (const f of ["sitemap.xml", "robots.txt", "llms.txt", "llms-full.txt"]) if (!existsSync(join(output, f))) throw new Error(`${f} missing`);
+for (const p of pairs.flat()) {
+  const og = readFileSync(join(output, p, "index.html"), "utf8").match(/<meta property="og:image" content="https:\/\/music-japan\.com(\/og\/[^"?]+)/);
+  if (!og || !existsSync(join(output, og[1]))) throw new Error(`OG image missing for ${p}`);
 }
 if (missing.length) throw new Error(`pages missing: ${missing.join(", ")}`);
 for (const f of readdirSync(join(output, "audio"))) if (!statSync(join(output, "audio", f)).size) throw new Error(`empty audio ${f}`);

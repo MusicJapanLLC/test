@@ -4,6 +4,7 @@ import '../styles/pages.css';
 import { reducedMotion, saveData, supportsWebGL } from './env';
 import { playIntro } from './intro';
 import { heroEntrance, innerEntrance, marquees, reveals, setupScroll, splitChars, worldZones } from './motion';
+import { setupBuddy } from './buddy';
 import { setupPlayer } from './player';
 import { setupContactForm, setupCrate, setupCursor, setupHeader, setupMagnetic, setupTransitions } from './ui';
 import type { World } from './world';
@@ -58,6 +59,7 @@ async function boot() {
     root.classList.add('is-static');
     document.querySelector('[data-intro-overlay]')?.remove();
     await ready;
+    setupBuddy();
     return;
   }
 
@@ -75,6 +77,7 @@ async function boot() {
   const updateZones = worldZones(world);
   reveals();
   updateZones();
+  setupBuddy();
 }
 
 void boot();

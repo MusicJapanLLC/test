@@ -1,6 +1,7 @@
 import type { Locale } from '../content/releases';
-import { copy, EMAIL, LAST_MODIFIED, nav, path, SITE_URL, SOCIAL_IMAGE, socials, type PageKey } from '../content/site';
+import { BATON_URL, copy, EMAIL, LAST_MODIFIED, nav, path, SECOND_TAKE_URL, SITE_URL, socials, type PageKey } from '../content/site';
 import { arrow, esc, prose } from './html';
+import { crumbs } from './parts';
 import { mark } from './mark';
 
 export type PageMeta = {
@@ -21,6 +22,7 @@ export type PageMeta = {
 const FONTS =
   'https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=JetBrains+Mono:wght@400;500&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap';
 const ICON_VERSION = '20261001';
+const OG_VERSION = '20261001';
 
 const socialIcon: Record<string, string> = {
   LinkedIn: '<path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2ZM8 19H5V9.5h3V19ZM6.5 8.2a1.8 1.8 0 1 1 0-3.5 1.8 1.8 0 0 1 0 3.5ZM19 19h-3v-4.6c0-1.1 0-2.5-1.5-2.5S12.8 13 12.8 14.3V19h-3V9.5h2.9v1.3a3.2 3.2 0 0 1 2.9-1.6c3.1 0 3.6 2 3.6 4.7V19Z"/>',
@@ -66,11 +68,13 @@ export function organization(locale: Locale) {
     name: '合同会社Music Japan',
     alternateName: 'Music Japan LLC',
     url: `${SITE_URL}/`,
-    logo: `${SITE_URL}/music-japan-logo.png`,
+    logo: { '@type': 'ImageObject', url: `${SITE_URL}/music-japan-logo.png`, width: 1500, height: 500 },
+    image: `${SITE_URL}/og/ja-home.png`,
     email: EMAIL,
     telephone: '+81-70-3175-7567',
     address: {
       '@type': 'PostalAddress',
+      '@id': `${SITE_URL}/#address`,
       postalCode: '530-0001',
       addressRegion: '大阪府',
       addressLocality: '大阪市北区',
@@ -78,6 +82,12 @@ export function organization(locale: Locale) {
       addressCountry: 'JP',
     },
     founder: { '@id': `${SITE_URL}/#founder` },
+    employee: { '@id': `${SITE_URL}/#founder` },
+    areaServed: { '@type': 'Country', name: 'Japan' },
+    location: { '@type': 'Place', name: '大阪府大阪市北区梅田', address: { '@id': `${SITE_URL}/#address` } },
+    contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: EMAIL, telephone: '+81-70-3175-7567', availableLanguage: ['ja', 'en'], url: `${SITE_URL}${path(locale, 'contact')}` },
+    brand: ['Yuma', 'Cozy Cafe Jazz BGM', 'Relaxing Classical Music Live', 'Deep Sleep Music Radio', 'SECOND TAKE', 'Baton'].map((name) => ({ '@type': 'Brand', name })),
+    owns: [{ '@id': `${SECOND_TAKE_URL}#podcast-series` }, { '@id': `${BATON_URL}#service` }],
     knowsAbout: ['音楽制作', '楽曲配信', 'BGM制作', 'Podcast制作', '経営者インタビュー', 'メディア企画'],
     sameAs: socials.map((s) => s.href),
     identifier: { '@type': 'PropertyValue', propertyID: '法人番号', value: '8120003031493' },
@@ -91,16 +101,19 @@ export function page(m: PageMeta): string {
   const url = `${SITE_URL}${path(locale, key)}`;
   const ja = `${SITE_URL}${path('ja', key)}`;
   const en = `${SITE_URL}${path('en', key)}`;
+  const ogImage = `${SITE_URL}/og/${locale}-${key}.png?v=${OG_VERSION}`;
   const graph = [
     organization(locale),
+    { '@type': 'Person', '@id': `${SITE_URL}/#founder`, name: '壁谷 友生', alternateName: ['Tomoki Kabeya', 'Kabeya Tomoki'], jobTitle: locale === 'ja' ? '代表社員' : 'Representative Member', url: `${SITE_URL}${path(locale, 'profile')}`, image: `${SITE_URL}/kabeya-tomoki.png`, worksFor: { '@id': `${SITE_URL}/#organization` }, sameAs: [socials[0].href] },
+    { '@type': 'PodcastSeries', '@id': `${SECOND_TAKE_URL}#podcast-series`, name: 'SECOND TAKE', url: SECOND_TAKE_URL, inLanguage: 'ja', description: '経営者の決断と苦悩、その先にある物語を、Podcastとインタビュー記事で記録する経営者メディア。', publisher: { '@id': `${SITE_URL}/#organization` } },
+    { '@type': 'Service', '@id': `${BATON_URL}#service`, name: 'Baton', alternateName: 'Baton -バトン-', url: BATON_URL, serviceType: locale === 'ja' ? '招待制の紹介サービス' : 'Invitation-only introduction service', provider: { '@id': `${SITE_URL}/#organization` }, areaServed: { '@type': 'Country', name: 'Japan' } },
     { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: '合同会社Music Japan', alternateName: 'Music Japan LLC', inLanguage: ['ja', 'en'], publisher: { '@id': `${SITE_URL}/#organization` } },
-    { '@type': key === 'contact' ? 'ContactPage' : key === 'profile' ? 'ProfilePage' : key === 'company' ? 'AboutPage' : 'WebPage', '@id': `${url}#webpage`, url, name: m.title, description: m.description, inLanguage: locale, dateModified: LAST_MODIFIED, isPartOf: { '@id': `${SITE_URL}/#website` }, about: { '@id': `${SITE_URL}/#organization` } },
+    { '@type': key === 'contact' ? 'ContactPage' : key === 'profile' ? 'ProfilePage' : key === 'company' ? 'AboutPage' : 'WebPage', '@id': `${url}#webpage`, url, name: m.title, description: m.description, inLanguage: locale, dateModified: LAST_MODIFIED, isPartOf: { '@id': `${SITE_URL}/#website` }, about: { '@id': `${SITE_URL}/#organization` }, primaryImageOfPage: { '@type': 'ImageObject', url: ogImage, width: 1200, height: 630 }, ...(key === 'home' ? {} : { breadcrumb: { '@id': `${url}#breadcrumb` } }), ...(key === 'profile' ? { mainEntity: { '@id': `${SITE_URL}/#founder` } } : {}) },
     ...(key === 'home'
       ? []
       : [{ '@type': 'BreadcrumbList', '@id': `${url}#breadcrumb`, itemListElement: [{ '@type': 'ListItem', position: 1, name: c.navLabels.home, item: `${SITE_URL}${path(locale, 'home')}` }, { '@type': 'ListItem', position: 2, name: c.navLabels[key], item: url }] }]),
     ...(m.graph ?? []),
   ];
-  const ogImage = `${SITE_URL}${SOCIAL_IMAGE}`;
   return `<!doctype html>
 <html lang="${locale}" data-world="${m.world ?? 'inner'}">
 <head>
@@ -109,7 +122,10 @@ export function page(m: PageMeta): string {
 <title>${esc(m.title)}</title>
 <meta name="description" content="${esc(m.description)}">
 <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+<meta name="author" content="合同会社Music Japan">
 <meta name="theme-color" content="#060607">
+<meta name="format-detection" content="telephone=no">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
 <meta name="color-scheme" content="dark">
 <link rel="canonical" href="${url}">
 <link rel="alternate" hreflang="ja-JP" href="${ja}">
@@ -123,10 +139,13 @@ export function page(m: PageMeta): string {
 <meta property="og:description" content="${esc(m.description)}">
 <meta property="og:url" content="${url}">
 <meta property="og:image" content="${ogImage}">
-<meta property="og:image:width" content="1500">
-<meta property="og:image:height" content="500">
-<meta property="og:image:alt" content="Music Japan LLC corporate logo">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(m.title)}">
+<meta property="og:image:type" content="image/png">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@Music_Japan_LLC">
+<meta name="twitter:creator" content="@Music_Japan_LLC">
 <meta name="twitter:title" content="${esc(m.title)}">
 <meta name="twitter:description" content="${esc(m.description)}">
 <meta name="twitter:image" content="${ogImage}">
@@ -162,6 +181,7 @@ export function innerHero(locale: Locale, key: Exclude<PageKey, 'home'>, extra =
   return `<section class="ih" data-world-zone="inner-hero">
   <p class="ih-display" aria-hidden="true" data-split-display>${esc(p.display)}</p>
   <div class="ih-copy">
+    ${crumbs(locale, key)}
     <p class="kicker">${esc(p.kicker)}</p>
     <h1 class="ih-title" data-split>${esc(p.title)}</h1>
     ${p.lead ? `<p class="ih-lead">${prose(p.lead)}</p>` : ''}

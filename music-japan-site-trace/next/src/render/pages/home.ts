@@ -1,15 +1,28 @@
 import { releases, type Locale } from '../../content/releases';
-import { copy, path, SITE_URL } from '../../content/site';
-import { esc, phrases, prose } from '../html';
+import { BATON_URL, copy, path, SECOND_TAKE_URL, SITE_URL } from '../../content/site';
+import { arrow, esc, phrases, prose } from '../html';
 import { page } from '../layout';
 import { introMark, mark } from '../mark';
-import { button, crate, ctaBlock, heading, kicker, mediaCards, partnersTeaser, player } from '../parts';
+import { button, crate, ctaBlock, faqGraph, faqSection, heading, kicker, mediaCards, partnersTeaser, player } from '../parts';
 
 const brandLogos = [
   { src: '/brand-music-japan-logo-white.png', w: 797, h: 176 },
   { src: '/brand-second-take-logo-white.png', w: 1892, h: 658 },
   { src: '/brand-baton-wordmark-white.png', w: 418, h: 37 },
 ];
+
+const brandLinks = (locale: Locale) =>
+  locale === 'ja'
+    ? [
+        { href: '#catalog', label: '作品を聴く' },
+        { href: SECOND_TAKE_URL, label: 'SECOND TAKEを見る' },
+        { href: BATON_URL, label: 'Batonを見る' },
+      ]
+    : [
+        { href: '#catalog', label: 'Listen to the music' },
+        { href: SECOND_TAKE_URL, label: 'Visit SECOND TAKE' },
+        { href: BATON_URL, label: 'Visit Baton' },
+      ];
 
 export function aboutSection(locale: Locale, no = '07') {
   const a = copy[locale].about;
@@ -20,13 +33,16 @@ export function aboutSection(locale: Locale, no = '07') {
     <p class="sec-body">${prose(a.body)}</p>
   </div>
   <ol class="brands">${a.brands
-    .map(
-      (b, i) => `<li class="brand-row" data-reveal>
+    .map((b, i) => {
+      const link = brandLinks(locale)[i];
+      const external = /^https?:/.test(link.href);
+      return `<li data-reveal><a class="brand-row" href="${link.href}"${external ? ' target="_blank" rel="noopener noreferrer"' : ''} data-cursor-label="${external ? 'VISIT' : 'LISTEN'}">
       <span class="brand-no">0${i + 1}</span>
       <span class="brand-logo brand-logo--${i}"><img src="${brandLogos[i].src}" alt="${esc(b.kicker)}" width="${brandLogos[i].w}" height="${brandLogos[i].h}" loading="lazy" decoding="async"></span>
-      <span class="brand-copy"><span class="brand-kicker">${esc(b.kicker)}</span><strong>${esc(b.title)}</strong><span>${prose(b.body)}</span></span>
-    </li>`,
-    )
+      <span class="brand-copy"><span class="brand-kicker">${esc(b.kicker)}</span><strong>${esc(b.title)}</strong><span class="brand-body">${prose(b.body)}</span><span class="brand-cta">${esc(link.label)}${arrow(external ? 'up-right' : 'right')}</span></span>
+      ${external ? `<span class="sr">${copy[locale].newTab}</span>` : ''}
+    </a></li>`;
+    })
     .join('')}</ol>
 </section>`;
 }
@@ -111,6 +127,7 @@ ${crate(locale)}
 ${mediaSection(locale)}
 ${partnersTeaser(locale)}
 ${aboutSection(locale)}
+${faqSection(locale)}
 ${ctaBlock(locale)}
 ${player(locale)}`;
 
@@ -124,6 +141,7 @@ ${player(locale)}`;
     world: 'home',
     bodyClass: 'is-home',
     graph: [
+      faqGraph(locale, 'home'),
       {
         '@type': 'ItemList',
         '@id': `${SITE_URL}${path(locale, 'home')}#catalog`,

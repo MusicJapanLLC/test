@@ -1,6 +1,7 @@
 import { partners } from '../content/company';
+import { faq } from '../content/faq';
 import { artwork, releases, type Locale } from '../content/releases';
-import { copy, path } from '../content/site';
+import { copy, path, SITE_URL, type PageKey } from '../content/site';
 import { arrow, esc, ext, phrases, prose } from './html';
 import { mark } from './mark';
 
@@ -153,4 +154,28 @@ export function ctaBlock(locale: Locale) {
   <p class="sec-body">${prose(c.body)}</p>
   <div class="cta-actions">${button(c.button, path(locale, 'contact'))}</div>
 </section>`;
+}
+
+export function faqSection(locale: Locale, no = '08') {
+  const ja = locale === 'ja';
+  return `<section class="faq" data-world-zone="ambient" aria-labelledby="faq-title">
+  <div class="sec-head">${kicker('FAQ', no)}<h2 class="hx" id="faq-title" data-split>${phrases(ja ? 'よくある質問' : 'Questions, answered')}</h2></div>
+  <div class="faq-list">${faq[locale]
+    .map((item, i) => `<details class="qa"${i === 0 ? ' open' : ''} data-reveal><summary><span class="qa-no">Q${String(i + 1).padStart(2, '0')}</span><span class="qa-q">${esc(item.q)}</span><span class="qa-mark" aria-hidden="true"></span></summary><p class="qa-a">${prose(item.a)}</p></details>`)
+    .join('')}</div>
+</section>`;
+}
+
+export function faqGraph(locale: Locale, page: PageKey) {
+  return {
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}${path(locale, page)}#faq`,
+    inLanguage: locale,
+    mainEntity: faq[locale].map((item) => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })),
+  };
+}
+
+export function crumbs(locale: Locale, page: PageKey) {
+  const c = copy[locale];
+  return `<nav class="crumbs" aria-label="${locale === 'ja' ? 'パンくずリスト' : 'Breadcrumb'}"><ol><li><a href="${path(locale, 'home')}">${c.navLabels.home}</a></li><li><span aria-current="page">${esc(c.navLabels[page])}</span></li></ol></nav>`;
 }
