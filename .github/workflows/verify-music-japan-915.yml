@@ -25,8 +25,10 @@ jobs:
           for (const path of ['/', '/en/']) {
             const expected = await read(preview + path);
             let matches = false;
-            for (let attempt = 0; attempt < 12; attempt++) {
+            for (let attempt = 0; attempt < 2; attempt++) {
               const actual = await read(live + path);
+              console.log(JSON.stringify({ path, liveTitle: actual.match(/<title>(.*?)<\/title>/s)?.[1], previewTitle: expected.match(/<title>(.*?)<\/title>/s)?.[1], liveBundles: bundles(actual), previewBundles: bundles(expected), liveLength: actual.length, previewLength: expected.length }));
+              const a = pageContent(actual), e = pageContent(expected); let diff = 0; while (diff < Math.min(a.length,e.length) && a[diff] === e[diff]) diff++; console.log('First content difference:', a.slice(Math.max(0,diff-80),diff+160), '| EXPECTED |', e.slice(Math.max(0,diff-80),diff+160));
               if (pageContent(actual) === pageContent(expected) && bundles(actual) === bundles(expected)) { matches = true; break; }
               await new Promise(resolve => setTimeout(resolve, 10000));
             }
