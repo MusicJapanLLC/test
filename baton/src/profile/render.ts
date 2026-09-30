@@ -32,13 +32,14 @@ function servicesSection(profile: TalkProfile): HTMLElement | null {
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: 'Services', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '運営メディア・サービス', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: profile.servicesTitle ?? '運営メディア・サービス', 'data-reveal': true }),
       ]),
       el(
         'div',
         { class: 'service-list', 'data-reveal-group': true },
-        profile.services.map((s) =>
+        profile.services.map((s, i) =>
           el('div', { class: 'service-item', 'data-reveal': true }, [
+            el('span', { class: 'service-item__index', 'aria-hidden': 'true', text: String(i + 1).padStart(2, '0') }),
             el('p', { class: 'service-item__name', text: s.name }),
             el('p', { class: 'service-item__desc', text: s.description }),
           ]),
@@ -79,7 +80,7 @@ function achievementMedia(items: MediaItem[], richMotion: boolean): Node[] {
   const featured = items.filter((m) => m.featured);
   const rest = items.filter((m) => !m.featured);
 
-  const card = (m: MediaItem) =>
+  const card = (m: MediaItem, i: number) =>
     el(
       'a',
       {
@@ -90,6 +91,8 @@ function achievementMedia(items: MediaItem[], richMotion: boolean): Node[] {
         ...(richMotion ? { 'data-tilt': true } : {}),
       },
       [
+        el('span', { class: 'media-feature__index', 'aria-hidden': 'true', text: String(i + 1).padStart(2, '0') }),
+        el('span', { class: 'media-feature__glow', 'aria-hidden': 'true' }),
         metaLine(m),
         el('h3', { class: 'media-feature__title', text: m.label }),
         m.note ? el('p', { class: 'media-feature__note', text: m.note }) : null,
@@ -110,12 +113,16 @@ function achievementMedia(items: MediaItem[], richMotion: boolean): Node[] {
       el('span', { class: 'media-row__host' }, [el('span', { text: hostOf(m.url) }), arrowIcon('media-arrow')]),
     ]);
 
-  return [
+  const nodes: (HTMLElement | null)[] = [
     featured.length
       ? el('div', { class: 'media-features', 'data-reveal-group': true }, featured.map(card))
       : null,
+    featured.length > 1
+      ? el('p', { class: 'media-swipe-hint', 'aria-hidden': 'true', text: `Swipe · ${featured.length}` })
+      : null,
     rest.length ? el('div', { class: 'media-rows', 'data-reveal-group': true }, rest.map(row)) : null,
-  ].filter((n): n is HTMLDivElement => n !== null);
+  ];
+  return nodes.filter((n): n is HTMLElement => n !== null);
 }
 
 function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | null {
@@ -155,7 +162,7 @@ function mediaSection(profile: TalkProfile, richMotion = false): HTMLElement | n
         ),
       ];
 
-  return el('section', { class: 'section', id: 'media' }, [
+  return el('section', { class: `section${achievements ? ' section--achievements' : ''}`, id: 'media' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: achievements ? 'Media & Appearances' : 'Media', 'data-reveal': true }),
@@ -188,22 +195,45 @@ function requestSection(profile: TalkProfile): HTMLElement {
   return section;
 }
 
-function marquee(): HTMLElement {
-  const phrase = '選んだ人が、選んだ人へ。';
+/**
+ * 帯に流す言葉。その人の「会社名・サービス名・事業内容」を横に流して、
+ * スクロール途中でも何をしている人かが目に入るようにする。
+ */
+export function marqueeWords(profile: TalkProfile): string[] {
+  const words = profile.marquee?.length
+    ? profile.marquee
+    : [
+        profile.company,
+        ...(profile.services ?? []).map((s) => s.name),
+        ...(profile.businessTags ?? []),
+        ...(profile.keywordTags ?? []),
+      ];
+  return Array.from(new Set(words.map((w) => w.trim()).filter(Boolean)));
+}
+
+function marquee(profile: TalkProfile): HTMLElement | null {
+  const words = marqueeWords(profile);
+  if (!words.length) return null;
+
+  // 1周が短いと画面幅に足りず途切れるので、最低12語ぶんになるまで繰り返す
+  const loops = Math.max(1, Math.ceil(12 / words.length));
   const run = () =>
     el(
       'span',
       { class: 'pf-marquee__run', 'aria-hidden': 'true' },
-      Array.from({ length: 4 }, () =>
-        el('span', { class: 'pf-marquee__unit' }, [
-          el('span', { text: phrase }),
-          el('span', { class: 'pf-marquee__dot' }),
-        ]),
-      ),
+      Array.from({ length: loops }, () => words)
+        .flat()
+        .map((w) =>
+          el('span', { class: `pf-marquee__unit${w === profile.company ? ' is-company' : ''}` }, [
+            el('span', { text: w }),
+            el('span', { class: 'pf-marquee__dot' }),
+          ]),
+        ),
     );
 
   return el('div', { class: 'pf-marquee', role: 'presentation' }, [
-    el('div', { class: 'pf-marquee__track' }, [run(), run()]),
+    // 語数が増えても流れる速さが変わらないよう、長さに比例させる
+    el('div', { class: 'pf-marquee__track', style: `--marquee-dur:${words.length * loops * 3.4}s` }, [run(), run()]),
   ]);
 }
 
@@ -212,7 +242,7 @@ export function renderProfileSections(app: HTMLElement, profile: TalkProfile): v
   const richMotion = profile.heroVariant !== 'simple';
   const media = mediaSection(profile, richMotion);
   const services = servicesSection(profile);
-  const band = richMotion ? marquee() : null;
+  const band = richMotion ? marquee(profile) : null;
   app.append(
     ...[
       proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),

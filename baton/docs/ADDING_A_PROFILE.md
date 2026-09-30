@@ -126,6 +126,11 @@ const exampleProfile: TalkProfile = {
   listSummary: '一覧ページ用の一行説明（未指定ならtaglineで代用）',
   businessTags: ['事業タグ1', '事業タグ2', '事業タグ3'], // /profile/ 一覧の右側。最大3件
   keywordTags: ['キーワード1', 'キーワード2', 'キーワード3'], // 同上。最大3件
+  // 任意: サービス一覧の見出し（未指定なら「運営メディア・サービス」）
+  servicesTitle: '事業領域',
+  // 任意: ページ中ほどで横に流れる帯。未指定なら
+  // 会社名 → services の name → businessTags → keywordTags を自動で流す
+  marquee: ['会社名', 'サービス名', '事業内容'],
   photo: { src: '/profile-______.webp', alt: '姓 名', caption: 'OSAKA / JAPAN · 2026' }, // 任意
   theme: { primary: '#______', accent: '#______', bg: '#______', text: '#______' },
   active: true, // false にすると /profile/ 一覧に出ない（GAS側もactive:falseにしておく）
@@ -151,6 +156,10 @@ export const profiles: TalkProfile[] = [kabeyaProfile, unveilProfile, examplePro
   下段「世界観の設計/徹底ヒアリング/SEO対策」
   ✕ 上段「ブランディング/Web制作/採用支援」・下段「ブランディング/Web/
   クリエイティブ」（同じ言葉の言い換えを繰り返しているだけ）
+- **`services` の `name` は、1行に収まる短さにする。** 全部に同じ語
+  （例: 「AI」）を付けるとくどく見えるので、共通の語は削る。
+  例: ◎「受託開発・業務改善」「LLMO／AI検索」 ✕「AI受託開発・業務改善」
+  「LLMO／AI検索対策」（PCで2行に折れて、AIが続いてくどい）
 - 各タグは日本語で6〜7文字程度まで（英数字が混ざるとやや余裕ができる）。
   それより長いとカードの枠内で見切れる。長い表現は短い言い換えを探す。
 

@@ -22,7 +22,7 @@ const kabeyaProfile: TalkProfile = {
   title: '代表社員',
   tagline: '学び、紡ぎ、繋いでいく。',
   photo: {
-    src: '/profile-kabeya-restored.webp',
+    src: '/profile-kabeya-hd.webp',
     alt: '壁谷 友生',
     caption: 'OSAKA / JAPAN · 2026',
   },
@@ -90,15 +90,15 @@ const matsuuraProfile: TalkProfile = {
   ],
   services: [
     {
-      name: 'AI研修・人材育成',
+      name: '研修・人材育成',
       description: 'ChatGPT・Claude・Copilotなどを、自社の実業務を題材に、社員が使える状態まで',
     },
     {
-      name: 'AI受託開発・業務改善',
+      name: '受託開発・業務改善',
       description: 'ヒアリング→業務整理→PoC→実装→定着。小さく検証してから広げる',
     },
     {
-      name: 'LLMO／AI検索対策',
+      name: 'LLMO／AI検索',
       description: 'ChatGPTやGeminiなどに、企業情報が参照・引用されやすい状態をつくる',
     },
   ],
@@ -167,10 +167,12 @@ const matsuuraProfile: TalkProfile = {
     },
   ],
   mediaFirst: true,
+  servicesTitle: '事業領域',
   listSummary: '企業のAI実装を現場まで伴走',
-  businessTags: ['AI研修', 'AI受託開発', 'LLMO対策'],
+  businessTags: ['AI研修', '受託開発', 'LLMO対策'],
   keywordTags: ['現場定着', 'Claude Code', '東海発'],
-  theme: { primary: '#1B3A9E', accent: '#3F8CFF', bg: '#F2F5FA', text: '#0F172A' },
+  // 淡い水色の地は野暮ったく見えるため、深い紺の地に電光のような青を差す
+  theme: { primary: '#2F5BEA', accent: '#5CC8FF', bg: '#050914', text: '#E6ECF8' },
   active: true,
 };
 
