@@ -1,24 +1,101 @@
+import { site } from '../data/site';
 import type { Service, TalkProfile } from '../types';
+import {
+  BATON_ABOUT,
+  companySameAs,
+  hubFaqs,
+  officialUrl,
+  personSameAs,
+  profileDescription,
+  profileFaqs,
+  profileTitle,
+  type Faq,
+} from './profile-facts';
 
 export type JsonLd = Record<string, unknown>;
 
-const officialProfileUrl = (profile: TalkProfile): string | undefined =>
-  profile.media?.find((item) => /^公式(?:HP|サイト)?$/.test(item.label))?.url;
-
 const officialCompanyUrl = (service: Service): string | undefined =>
   service.links.find((item) => item.label === '会社HP')?.url;
+
+/**
+ * サイト全体で共通の実体（エンティティ）。@id でつなぎ、ページごとに同じものを指す。
+ * 名前・URL・所在地を全ページで一致させることが、検索エンジンとAIが
+ * 「同じ運営者・同じ人物」と判断する手がかりになる。
+ */
+function siteEntities(siteBase: string): JsonLd[] {
+  return [
+    {
+      '@type': 'WebSite',
+      '@id': `${siteBase}/#website`,
+      url: `${siteBase}/profile/`,
+      name: site.nameJa,
+      alternateName: site.name,
+      description: BATON_ABOUT,
+      inLanguage: 'ja',
+      publisher: { '@id': `${siteBase}/#operator` },
+    },
+    {
+      '@type': 'Organization',
+      '@id': `${siteBase}/#operator`,
+      name: site.operator.name,
+      url: site.operator.url,
+      founder: { '@type': 'Person', name: site.operator.representative.replace(/^代表社員\s*/, '') },
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: site.operator.address.replace(/^大阪市北区/, ''),
+        addressLocality: '大阪市北区',
+        addressRegion: '大阪府',
+        addressCountry: 'JP',
+      },
+    },
+  ];
+}
+
+/** その人の会社。運営者本人の会社なら、運営者と同じ @id を使う */
+function companyRef(profile: TalkProfile, profileUrl: string, siteBase: string): { ref: JsonLd; entity: JsonLd | null } {
+  if (profile.company === site.operator.name) {
+    return { ref: { '@id': `${siteBase}/#operator` }, entity: null };
+  }
+  const url = officialUrl(profile);
+  const id = `${profileUrl}#company`;
+  return {
+    ref: { '@id': id },
+    entity: {
+      '@type': 'Organization',
+      '@id': id,
+      name: profile.company,
+      ...(url ? { url } : {}),
+      ...(companySameAs(profile).length ? { sameAs: companySameAs(profile) } : {}),
+      ...(profile.location ? { location: { '@type': 'Place', name: profile.location } } : {}),
+    },
+  };
+}
+
+function faqPage(faqs: Faq[], pageUrl: string): JsonLd {
+  return {
+    '@type': 'FAQPage',
+    '@id': `${pageUrl}#faq`,
+    url: pageUrl,
+    inLanguage: 'ja',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: { '@type': 'Answer', text: f.a },
+    })),
+  };
+}
 
 export function profileStructuredData(
   profile: TalkProfile,
   profileUrl: string,
   profileHubUrl: string,
+  siteBase: string,
+  imageUrl?: string,
 ): JsonLd[] {
-  const companyUrl = officialProfileUrl(profile);
-  const organization: JsonLd = {
-    '@type': 'Organization',
-    name: profile.company,
-    ...(companyUrl ? { url: companyUrl } : {}),
-  };
+  const company = companyRef(profile, profileUrl, siteBase);
+  const sameAs = personSameAs(profile);
+  // 専門分野は「事業タグ」だけ。キーワードタグには地域や方針（東海発・完全招待制など）が混ざるため入れない
+  const knowsAbout = [...new Set(profile.businessTags ?? [])];
 
   const person: JsonLd = {
     '@type': 'Person',
@@ -27,40 +104,47 @@ export function profileStructuredData(
     jobTitle: profile.title,
     description: profile.bio,
     url: profileUrl,
-    worksFor: organization,
-    ...(profile.businessTags?.length || profile.keywordTags?.length
-      ? {
-          knowsAbout: [...new Set([...(profile.businessTags ?? []), ...(profile.keywordTags ?? [])])],
-        }
-      : {}),
+    ...(imageUrl ? { image: imageUrl } : {}),
+    worksFor: company.ref,
+    ...(profile.location ? { workLocation: { '@type': 'Place', name: profile.location } } : {}),
+    ...(knowsAbout.length ? { knowsAbout } : {}),
+    ...(sameAs.length ? { sameAs } : {}),
+    mainEntityOfPage: { '@id': `${profileUrl}#profilepage` },
+  };
+
+  const page: JsonLd = {
+    '@type': 'ProfilePage',
+    '@id': `${profileUrl}#profilepage`,
+    url: profileUrl,
+    name: profileTitle(profile),
+    description: profileDescription(profile),
+    inLanguage: 'ja',
+    isPartOf: { '@id': `${siteBase}/#website` },
+    breadcrumb: { '@id': `${profileUrl}#breadcrumb` },
+    mainEntity: { '@id': `${profileUrl}#person` },
+    ...(imageUrl ? { primaryImageOfPage: imageUrl } : {}),
+    ...(profile.updatedAt ? { dateModified: profile.updatedAt } : {}),
+  };
+
+  const breadcrumb: JsonLd = {
+    '@type': 'BreadcrumbList',
+    '@id': `${profileUrl}#breadcrumb`,
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: site.nameJa, item: profileHubUrl },
+      { '@type': 'ListItem', position: 2, name: profile.name, item: profileUrl },
+    ],
   };
 
   return [
     {
       '@context': 'https://schema.org',
-      '@type': 'ProfilePage',
-      '@id': `${profileUrl}#profilepage`,
-      url: profileUrl,
-      name: `${profile.name}｜${profile.company}`,
-      description: profile.bio,
-      mainEntity: person,
-    },
-    {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Baton -バトン-',
-          item: profileHubUrl,
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: profile.name,
-          item: profileUrl,
-        },
+      '@graph': [
+        ...siteEntities(siteBase),
+        page,
+        person,
+        ...(company.entity ? [company.entity] : []),
+        breadcrumb,
+        faqPage(profileFaqs(profile), profileUrl),
       ],
     },
   ];
@@ -113,25 +197,36 @@ export function profileHubStructuredData(
   profiles: TalkProfile[],
   profileHubUrl: string,
   profileUrlFor: (profile: TalkProfile) => string,
+  siteBase: string,
 ): JsonLd[] {
   return [
     {
       '@context': 'https://schema.org',
-      '@type': 'CollectionPage',
-      '@id': `${profileHubUrl}#collection`,
-      url: profileHubUrl,
-      name: 'Baton -バトン-｜選んだ人が、選んだ人へ。',
-      mainEntity: {
-        '@type': 'ItemList',
-        itemListElement: profiles
-          .filter((profile) => profile.active)
-          .map((profile, index) => ({
-            '@type': 'ListItem',
-            position: index + 1,
-            name: profile.name,
-            url: profileUrlFor(profile),
-          })),
-      },
+      '@graph': [
+        ...siteEntities(siteBase),
+        {
+          '@type': 'CollectionPage',
+          '@id': `${profileHubUrl}#collection`,
+          url: profileHubUrl,
+          name: `${site.nameJa}｜経営者・事業者を紹介する招待制サービス`,
+          description: BATON_ABOUT,
+          inLanguage: 'ja',
+          isPartOf: { '@id': `${siteBase}/#website` },
+          about: { '@id': `${siteBase}/#operator` },
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: profiles
+              .filter((profile) => profile.active)
+              .map((profile, index) => ({
+                '@type': 'ListItem',
+                position: index + 1,
+                name: `${profile.name}（${profile.company} ${profile.title}）`,
+                url: profileUrlFor(profile),
+              })),
+          },
+        },
+        faqPage(hubFaqs(), profileHubUrl),
+      ],
     },
   ];
 }

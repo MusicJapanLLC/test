@@ -36,6 +36,9 @@ export function mountProfilePage(profileId: string): void {
     const footer = document.getElementById('footer');
     if (!app || !footer) return;
 
+    // ビルド時に焼き込んだ静的HTML（検索・AIクローラー向け）を、動く版に置き換える
+    app.replaceChildren();
+    footer.replaceChildren();
     renderProfileSections(app, profile);
     renderProfileFooter(footer);
 
