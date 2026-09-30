@@ -15,6 +15,10 @@ export async function buildExperience(output){
     }}],
     define:{__MJ_REVIEW__:JSON.stringify(process.env.CF_PAGES_BRANCH==='chatgpt/music-japan-immersive-20260918')}});
   copyFileSync(join(root,'src/music-japan-experience.css'),join(assets,'music-japan-experience.css'));
+  // Refined edition layer (typography, brand mark, contact finish). build-deploy decides
+  // whether pages reference it, so MJ_REFINE=off restores the previous look.
+  copyFileSync(join(root,'src/music-japan-refine.css'),join(assets,'music-japan-refine.css'));
+  copyFileSync(join(root,'src/brand/music-japan-mark.svg'),join(output,'music-japan-mark.svg'));
   const files=Object.entries(result.metafile.outputs).filter(([name])=>name.endsWith('.js')).map(([name])=>({file:name.split('/').pop(),gzip:gzipSync(readFileSync(join(root,name))).length}));
   const total=files.reduce((sum,f)=>sum+f.gzip,0);
   const reused=['gsap-DlCALkUl.js','ScrollTrigger-DZQrbmfv.js'].map(file=>({file,gzip:gzipSync(readFileSync(join(assets,file))).length}));

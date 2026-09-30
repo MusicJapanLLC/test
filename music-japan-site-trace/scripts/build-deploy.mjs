@@ -40,7 +40,7 @@ const MOBILE_STYLESHEET_URL = "/assets/music-japan-mobile.css?v=20260917";
 let EXPERIENCE_VERSION = null;
 function versionExperienceAssets(assetsDir) {
   const names = readdirSync(assetsDir)
-    .filter((name) => name === "music-japan-experience.css" || name === "music-japan-experience.js" || /^mj-.+\.js$/.test(name))
+    .filter((name) => name === "music-japan-experience.css" || name === "music-japan-refine.css" || name === "music-japan-experience.js" || /^mj-.+\.js$/.test(name))
     .sort();
   if (names.length < 3) throw new Error(`Experience assets missing, cannot version them: ${names.join(", ")}`);
   const digest = createHash("sha256");
@@ -48,6 +48,31 @@ function versionExperienceAssets(assetsDir) {
   return `20260920-${digest.digest("hex").slice(0, 12)}`;
 }
 const LAST_MODIFIED = "2026-09-17";
+// Refined edition (2026-09-30): web fonts, phrase-aware Japanese line breaking, the
+// official record-groove mark in place of the generated red glyph, contact-page finish
+// and a same-origin fallback for release artwork. Set MJ_REFINE=off in the Cloudflare
+// Pages build environment and redeploy to return to the previous edition unchanged.
+const REFINE = process.env.MJ_REFINE !== "off";
+const REFINE_EDITION = "2026-09-30";
+const REFINE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=IBM+Plex+Mono:wght@400;500&family=Shippori+Mincho+B1:wght@500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap";
+// Release artwork is served by Apple's CDN; identical copies are published at /artwork/
+// (the snapshot's media/ folder shares its path with the retired /media/ page). If the CDN
+// image fails, swap to the local copy before React replaces the cover with a placeholder.
+const ARTWORK_BACKUPS = {
+  "4550708735521": "tokyo-junkies",
+  "4550708606692": "kokoni-aru",
+  "4550758281023": "beach-sunset",
+  "4550756733272": "i-know-but-tried",
+  "4550757942116": "like-a-drug",
+  "4550756476070": "all-i-need",
+  "120faa80-16d3-5b2d-422c-1903d9edd96c": "late-night-jazz",
+  "251d2519-284f-882f-855f-2ea548250999": "fairytale-classical",
+  "f26b5fc1-d239-5782-1a30-e38af9b67cf7": "soft-rain-piano"
+};
+function renderRefineHead() {
+  const artworkScript = `<script id="music-japan-artwork-fallback">(()=>{const m=${JSON.stringify(ARTWORK_BACKUPS)};document.addEventListener('error',e=>{const i=e.target;if(!(i instanceof HTMLImageElement)||i.dataset.mjLocal)return;const s=i.currentSrc||i.src||'';const k=Object.keys(m).find(k=>s.includes(k));if(!k)return;e.stopImmediatePropagation();i.dataset.mjLocal='1';const z=['480','800','1200'].find(z=>s.includes('/'+z+'x'+z+'bb'))||'1200';i.removeAttribute('srcset');i.src='/artwork/'+m[k]+'-'+z+'x'+z+'bb.jpg'},true)})()</script>`;
+  return `<link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link rel="stylesheet" href="${REFINE_FONTS_URL}"/><link rel="stylesheet" href="/assets/music-japan-refine.css?v=${EXPERIENCE_VERSION}"/>${artworkScript}`;
+}
 const SECOND_TAKE_URL = "https://secondtake.music-japan.com/";
 const BATON_URL = "https://baton.music-japan.com/profile/";
 
@@ -995,6 +1020,7 @@ for (const prefix of ["", "en/"]) {
   for (const page of ["music", "media", "about"]) rmSync(join(output, prefix, page), { recursive: true, force: true });
 }
 await buildExperience(output);
+if (REFINE) cpSync(join(source, "media"), join(output, "artwork"), { recursive: true });
 EXPERIENCE_VERSION = versionExperienceAssets(join(output, "assets"));
 
 const virtualFiles = new Map([
@@ -1183,7 +1209,7 @@ const curtainBootstrap = `<script id="music-japan-curtain-bootstrap">(()=>{if(ma
 for (const path of [...publicHtmlFiles, ...profileHtmlFiles.map(p => p.path), ...contentPageFiles.map(p => p.path)]) {
   const fullPath = join(output, path);
   let html = readFileSync(fullPath, "utf8");
-  html = html.replace("<html ", '<html data-mj-experience="vinyl" ');
+  html = html.replace("<html ", REFINE ? `<html data-mj-experience="vinyl" data-mj-refine="${REFINE_EDITION}" ` : '<html data-mj-experience="vinyl" ');
   const socialFooter = renderSocialLinks(path.startsWith("en/") ? "en" : "ja");
   let foundFooter = false;
   html = html.replace(/<footer class="([^"]*)">([\s\S]*?)<\/footer>/, (_, classes, body) => {
@@ -1193,7 +1219,7 @@ for (const path of [...publicHtmlFiles, ...profileHtmlFiles.map(p => p.path), ..
     return `<footer class="${classes} footer">${contents}</footer>`;
   });
   if (!foundFooter) throw new Error(`Social footer host missing: ${path}`);
-  html = html.replace("</head>", `${curtainBootstrap}<link rel="stylesheet" href="/assets/music-japan-experience.css?v=${EXPERIENCE_VERSION}"/><script type="module" src="/assets/music-japan-experience.js?v=${EXPERIENCE_VERSION}"></script></head>`);
+  html = html.replace("</head>", `${curtainBootstrap}<link rel="stylesheet" href="/assets/music-japan-experience.css?v=${EXPERIENCE_VERSION}"/>${REFINE ? renderRefineHead() : ""}<script type="module" src="/assets/music-japan-experience.js?v=${EXPERIENCE_VERSION}"></script></head>`);
   writeFileSync(fullPath, html);
 }
 
@@ -1339,7 +1365,33 @@ for (const assetPath of localAssetRefs) {
   if (!existsSync(join(output, assetPath))) throw new Error(`Referenced local asset is missing: /${assetPath}`);
 }
 
+const refinedPages = [...publicHtmlFiles, ...profileHtmlFiles.map((profile) => profile.path), ...contentPageFiles.map((page) => page.path)];
+for (const relativePath of refinedPages) {
+  const html = readFileSync(join(output, relativePath), "utf8");
+  const head = html.slice(0, html.indexOf("</head>"));
+  const hasLayer = head.includes("/assets/music-japan-refine.css") && head.includes('id="music-japan-artwork-fallback"') && html.includes(`data-mj-refine="${REFINE_EDITION}"`);
+  if (REFINE && !hasLayer) throw new Error(`Refined edition layer missing: ${relativePath}`);
+  if (!REFINE && (head.includes("music-japan-refine.css") || html.includes("data-mj-refine"))) throw new Error(`Refined edition leaked into MJ_REFINE=off build: ${relativePath}`);
+}
+if (REFINE) {
+  // Inline scripts are built from template literals; parse the emitted source so an
+  // escaping slip fails the build instead of the page.
+  const homeHtml = readFileSync(join(output, "index.html"), "utf8");
+  const fallbackSource = homeHtml.match(/<script id="music-japan-artwork-fallback">([\s\S]*?)<\/script>/)?.[1];
+  if (!fallbackSource) throw new Error("Artwork fallback script missing");
+  new Function(fallbackSource);
+  for (const file of ["music-japan-mark.svg", "assets/music-japan-refine.css"]) {
+    if (!existsSync(join(output, file))) throw new Error(`Refined edition asset missing: ${file}`);
+  }
+  for (const name of new Set(Object.values(ARTWORK_BACKUPS))) {
+    for (const size of [480, 800, 1200]) {
+      if (!existsSync(join(output, "artwork", `${name}-${size}x${size}bb.jpg`))) throw new Error(`Artwork backup missing: ${name} ${size}`);
+    }
+  }
+}
+
 console.log(`Prepared static deploy directory: ${output}`);
+console.log(`Refined edition: ${REFINE ? REFINE_EDITION : "off (MJ_REFINE=off)"}`);
 console.log(`Canonical host: ${SITE_URL}`);
 console.log(`Chrome/tab favicon: ${FAVICON_URL}`);
 console.log(`Patched homepage content and client bundle: ${patchedClientBundle.name}?${versionedClientGraph.version}`);

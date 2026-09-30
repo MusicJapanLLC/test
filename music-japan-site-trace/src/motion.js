@@ -2,6 +2,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CustomEase } from 'gsap/CustomEase';
 import Lenis from 'lenis';
+import { typeset, restore, refineEnabled } from './typeset.js';
 
 // Same libraries and easing as baton/src/lib/motion.ts, with cleanup and reduced-motion support.
 export function createMotion({hero, repeat, report, introDelay = 0}) {
@@ -84,6 +85,15 @@ export function createMotion({hero, repeat, report, introDelay = 0}) {
   const splitChars=el=>{
     const label=el.textContent.trim();
     if(!label||label.length>42||el.querySelector('.mj-char'))return null;
+    // Refined edition: characters are grouped into phrases so kinsoku and authored
+    // line breaks survive the animation (see typeset.js).
+    if(refineEnabled()){
+      if(el.dataset.mjTypeset)return null;
+      const original=el.textContent;
+      const spans=typeset(el,{perChar:true});
+      if(spans)cleanups.push(()=>restore(el,original));
+      return spans&&spans.length?spans:null;
+    }
     el.setAttribute('aria-label',label);
     const fragment=document.createDocumentFragment();
     const spans=[];
