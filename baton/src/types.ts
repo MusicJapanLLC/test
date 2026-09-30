@@ -81,6 +81,26 @@ export type Service = {
  *  GAS側（Google Sheets の PROFILES シート）だけが持つ。
  */
 
+/**
+ * 関連リンク1件。label と url だけでも成立する（従来の画像カード表示）。
+ * kind を持つ項目が1件でもあると、実績向けの表示に切り替わる:
+ * featured のものは大きなカード、それ以外は1行の一覧で並ぶ。
+ * url は本人・Ownerから得た実在のURLだけを入れる（推測で入れない）。
+ */
+export type MediaItem = {
+  label: string;
+  url: string;
+  image?: string;
+  /** 種別バッジ。例: 登壇 / 掲載 / 発信。'登壇' だけ塗りつぶしで強調される */
+  kind?: string;
+  /** 一言の補足。事実として確認できる範囲だけを書く */
+  note?: string;
+  /** 表示用の日付。例: '2026.08.10' */
+  date?: string;
+  /** true のとき大きなカードで出す（数を絞ること） */
+  featured?: boolean;
+};
+
 /** プロフィールに公開する情報だけを持つ。個人の連絡先は一切含めない */
 export type TalkProfile = {
   id: string;
@@ -102,7 +122,12 @@ export type TalkProfile = {
   /** 運営メディア・サービス（名称＋説明の一覧。未指定なら表示しない） */
   services?: { name: string; description: string }[];
   /** SECOND TAKE記事 / Podcast / 公式サイトなど。今後増える想定でそのまま並べる */
-  media?: { label: string; url: string; image?: string }[];
+  media?: MediaItem[];
+  /**
+   * true のとき、「関連リンク」を事業内容の直後（サービス一覧より前）に置く。
+   * 登壇・掲載などのメディア実績を前面に出したいプロフィール向け。
+   */
+  mediaFirst?: boolean;
   /** プロフィール一覧(/profile/)の真ん中に出す一行説明。未指定なら tagline を使う */
   listSummary?: string;
   /** プロフィール一覧(/profile/)の右側上段に出す小さなタグ。事業。最大3件 */
