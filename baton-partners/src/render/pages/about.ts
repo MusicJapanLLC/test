@@ -56,6 +56,7 @@ ${header(p, 'about')}
   <section class="sec sec-statement" aria-label="ステートメント">
     <div class="wrap statement">
       <p class="statement-p rv">${heading(p.top.aboutQuote)}</p>
+      ${p.top.aboutQuoteCite ? `<p class="quote-cite rv">${jp(p.top.aboutQuoteCite)}</p>` : ''}
     </div>
   </section>
 

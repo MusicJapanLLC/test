@@ -80,6 +80,8 @@ export type Partner = {
     stats: Stat[];
     statsNote: string;
     aboutQuote: string;
+    /** 引用の出どころ（公開済みの本人コメントを引くときは必ず書く） */
+    aboutQuoteCite?: string;
     /** 看板機能を1つ大きく見せる帯（エボルグなら休眠求職者の掘り起こし） */
     highlight: { en: string; title: string[]; lead: string; steps: Pair[]; note: string };
   };

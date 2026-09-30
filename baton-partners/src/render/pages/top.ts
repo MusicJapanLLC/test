@@ -147,8 +147,9 @@ ${header(p, 'top')}
   <section class="sec sec-quote" aria-labelledby="about-teaser-h">
     <div class="wrap quote-in">
       <p class="kicker rv">04 — About</p>
-      <blockquote class="quote rv">
+      <blockquote class="quote rv${t.aboutQuoteCite ? ' quote-cited' : ''}">
         <p id="about-teaser-h" class="quote-p">${heading(t.aboutQuote)}</p>
+        ${t.aboutQuoteCite ? `<p class="quote-cite">${jp(t.aboutQuoteCite)}</p>` : ''}
       </blockquote>
       <div class="quote-side rv">
         ${p.leader ? `<figure class="quote-leader"><img src="${p.leader.photo}" alt="" width="${p.leader.photoSize[0]}" height="${p.leader.photoSize[1]}" loading="lazy" decoding="async" /><figcaption><span>${esc(p.leader.role)}</span>${esc(p.leader.name)}</figcaption></figure>` : ''}

@@ -14,7 +14,6 @@ const FILE_ACCEPT = '.pdf,.ppt,.pptx,.key,.doc,.docx,.xls,.xlsx,.csv,.png,.jpg,.
 const PROMISES = (name: string) => [
   { t: '連絡先は、つなぐと決まってから', d: `お名前やご連絡先を${name}へお伝えするのは、双方の了承がそろってからです。` },
   { t: '説明のし直しがいらない', d: '先方はご相談の概要を読んだうえで会うので、最初の打ち合わせから本題に入れます。' },
-  { t: '合わなければ、そこまで', d: '話してみて違うと感じたら、途中でやめていただいて大丈夫です。' },
 ];
 
 function question(q: Question, n: number): string {
