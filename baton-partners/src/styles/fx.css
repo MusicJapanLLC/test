@@ -14,7 +14,6 @@
 .nav-en,
 .m-en,
 .ftr-mark,
-.brand-bp,
 .mq-item {
   font-variation-settings: 'opsz' 144;
 }
@@ -229,13 +228,7 @@ html.js .curtain {
   width: auto;
 }
 .curtain-bp {
-  font-family: var(--f-latin);
   font-size: 1.05rem;
-  color: var(--ink-2);
-  letter-spacing: 0.04em;
-}
-.curtain-bp em {
-  color: var(--red);
 }
 .curtain-line {
   width: 160px;

@@ -1,4 +1,5 @@
 import { routes, site } from '../config/site';
+import { bpLogo } from './logo';
 import type { Partner } from '../types';
 import { esc, heading, jp } from './text';
 
@@ -109,7 +110,7 @@ export function header(p: Partner, current: PageKind): string {
     <a class="brand" href="${routes.top(p.slug)}" aria-label="${esc(p.company.name)} トップへ">
       <img class="brand-logo" src="${p.brand.logo}" alt="${esc(p.brand.logoAlt)}" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
       <span class="brand-sep" aria-hidden="true"></span>
-      <span class="brand-bp"><em>Baton</em> Partners</span>
+      ${bpLogo({ size: 26, className: "brand-bp" })}
     </a>
     <nav class="nav" aria-label="メインメニュー"><ul>${items}</ul></nav>
     <a class="btn btn-cta hdr-cta" href="${routes.contact(p.slug)}"${current === 'contact' ? ' aria-current="page"' : ''} data-cursor="Talk"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
@@ -157,7 +158,7 @@ export function footer(p?: Partner): string {
 <footer class="ftr">
   <div class="wrap ftr-in">
     <div class="ftr-brand">
-      <p class="ftr-mark"><em>Baton</em> Partners</p>
+      <p class="ftr-mark">${bpLogo({ size: 40, tone: "paper" })}</p>
       <p class="ftr-about">${jp(about)}</p>
     </div>
     ${partnerLinks}
@@ -218,7 +219,7 @@ ${head(meta, env)}
 <body data-page="${meta.kind}"${meta.partner ? ` data-partner="${meta.partner.slug}"` : ''}>
 <div class="progress" aria-hidden="true"><i data-scroll-progress></i></div>
 <div class="curtain" data-curtain aria-hidden="true">
-  <div class="curtain-in">${meta.partner ? `<img src="${meta.partner.brand.logo}" alt="" width="${meta.partner.brand.logoSize[0]}" height="${meta.partner.brand.logoSize[1]}" />` : ''}<span class="curtain-bp"><em>Baton</em> Partners</span><span class="curtain-line"><i></i></span></div>
+  <div class="curtain-in">${meta.partner ? `<img src="${meta.partner.brand.logo}" alt="" width="${meta.partner.brand.logoSize[0]}" height="${meta.partner.brand.logoSize[1]}" />` : ''}${bpLogo({ size: 30, animated: true, className: "curtain-bp" })}<span class="curtain-line"><i></i></span></div>
 </div>
 <div class="cursor" data-cursor-el aria-hidden="true"><span class="cursor-dot"></span><span class="cursor-ring"><span class="cursor-label" data-cursor-label></span></span></div>
 ${body}

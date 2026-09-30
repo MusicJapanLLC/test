@@ -343,21 +343,65 @@ p {
   height: 24px;
   background: var(--rule-2);
 }
-.brand-bp {
-  font-family: var(--f-latin);
-  font-weight: 600;
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
+/* ── Baton Partners のロゴ（src/render/logo.ts）──
+   「Baton」は元の Baton と同じ組み（Helvetica 500・字間 0.16em）、
+   「Partners」は欧文セリフのイタリックに赤のグラデーション */
+.bpl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6em;
+  line-height: 1;
   white-space: nowrap;
-  color: var(--ink-2);
 }
-.brand-bp em {
+.bp-mark {
+  flex: none;
+  border-radius: 21%;
+  box-shadow:
+    0 8px 18px -8px rgba(200, 16, 46, 0.55),
+    0 2px 5px rgba(0, 0, 0, 0.18);
+}
+.bpl-word {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+}
+.bpl-baton {
+  font-family: 'Helvetica Neue', Helvetica, Arial, system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 1em;
+  letter-spacing: 0.16em;
+  margin-right: -0.16em;
+  color: var(--ink);
+}
+.bpl-partners {
+  font-family: var(--f-latin);
   font-style: italic;
-  color: var(--red);
+  font-weight: 500;
+  font-size: 1.14em;
+  font-variation-settings: 'opsz' 144;
+  padding-right: 0.08em;
+  background: linear-gradient(100deg, #e0142f 0%, #9e0a22 55%, #e2334f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.bpl-paper .bpl-baton {
+  color: #fff;
+}
+.bpl-paper .bpl-partners {
+  background-image: linear-gradient(100deg, #ff6b7d 0%, #e2334f 60%, #ff8a99 100%);
+}
+.brand-bp {
+  font-size: 0.92rem;
 }
 .brand-bp-solo {
-  font-size: 1.35rem;
-  color: var(--ink);
+  font-size: 1.2rem;
+}
+.brand:hover .bp-mark {
+  transform: rotate(-6deg) scale(1.06);
+}
+.bp-mark {
+  transition: transform 0.5s var(--ease);
 }
 
 .nav ul {
@@ -461,8 +505,7 @@ p {
   }
 }
 @media (max-width: 479px) {
-  .brand-sep,
-  .brand .brand-bp:not(.brand-bp-solo) {
+  .brand .brand-bp .bpl-word {
     display: none;
   }
 }
@@ -724,15 +767,8 @@ html.js .rv.is-in .ph {
   gap: 40px;
 }
 .ftr-mark {
-  font-family: var(--f-latin);
-  font-weight: 600;
-  font-size: 1.9rem;
-  color: var(--paper);
-  line-height: 1.2;
-  margin-bottom: 16px;
-}
-.ftr-mark em {
-  color: #e2334f;
+  font-size: 1.35rem;
+  margin-bottom: 20px;
 }
 .ftr-about {
   max-width: 34em;

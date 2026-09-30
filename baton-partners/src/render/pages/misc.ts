@@ -1,4 +1,5 @@
 import { routes, site } from '../../config/site';
+import { bpLogo } from '../logo';
 import type { Partner } from '../../types';
 import { breadcrumb, document, footer, type BuildEnv } from '../layout';
 import { esc, heading, jp } from '../text';
@@ -7,7 +8,7 @@ const simpleHeader = `
 <a class="skip" href="#main">本文へ移動</a>
 <header class="hdr hdr-simple" data-hdr>
   <div class="hdr-in">
-    <a class="brand" href="/"><span class="brand-bp brand-bp-solo"><em>Baton</em> Partners</span></a>
+    <a class="brand" href="/" aria-label="Baton Partners">${bpLogo({ size: 34, animated: true, className: "brand-bp-solo" })}</a>
   </div>
 </header>`;
 

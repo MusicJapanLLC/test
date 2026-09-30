@@ -18,6 +18,14 @@
 
 価格・契約条件はこのサイトには出さない。
 
+## ロゴ
+
+Baton（シンプル）をベースに、Baton Partners（リッチ）を作っている。
+
+- 実装：`src/render/logo.ts`（`bpMark` がマーク、`bpLogo` が文字組み込み）
+- 単体ファイル：`public/brand/baton-partners-mark.svg` / `baton-partners-logo.svg` / `baton-partners-logo-white.svg`、ファビコン（`public/favicon.svg`）。どれもビルド時に `logo.ts` から自動生成
+- サイト上では、ページ切り替えの幕とトップ一覧のロゴだけ、白い丸から赤い丸へ光が渡るアニメーション付き
+
 ## 企業を追加する手順
 
 1. `src/partners/evorg.ts` をコピーして `src/partners/<slug>.ts` を作り、中身を書き換える
