@@ -1253,3 +1253,349 @@ body.action {
   font-size: 0.78rem;
   color: rgba(255, 255, 255, 0.55);
 }
+
+/* ══════════════════════════════════════════════════════════════
+ * 実績（登壇・掲載・発信）のリッチ版
+ * 実績の多い人ほど、ここがページの主役になる。
+ * 大きなカード → 一覧 の順に、大きさで優先度をつける。
+ * 色はすべて theme 変数から取るので、明るい地・暗い地のどちらでも成立する。
+ * ══════════════════════════════════════════════════════════════ */
+
+.section--achievements {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* 背後にごく薄い光だまりと方眼を敷き、ただの色面にしない */
+.section--achievements::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 40% at 85% 8%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 70%),
+    radial-gradient(50% 36% at 6% 70%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 70%),
+    linear-gradient(color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 72px,
+    linear-gradient(90deg, color-mix(in srgb, var(--text) 5%, transparent) 1px, transparent 1px) 0 0 / 72px 100%;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 14%, #000 80%, transparent);
+  mask-image: linear-gradient(180deg, transparent, #000 14%, #000 80%, transparent);
+}
+
+/* 大きなカード */
+
+.section--achievements .media-features {
+  gap: clamp(1rem, 0.8rem + 1vw, 1.5rem);
+  counter-reset: feature;
+}
+
+.section--achievements .media-feature {
+  gap: 0.85rem;
+  min-height: clamp(15rem, 12rem + 8vw, 19rem);
+  padding: clamp(1.4rem, 1.1rem + 1.4vw, 2.2rem);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--text) 12%, transparent);
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--text) 7%, transparent), color-mix(in srgb, var(--text) 2%, transparent) 60%),
+    color-mix(in srgb, var(--primary) 6%, var(--bg));
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 10%, transparent),
+    0 30px 60px -40px color-mix(in srgb, #000 70%, transparent);
+  transform: perspective(1100px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+}
+
+/* 左の縦線はやめ、上辺に光の線を走らせる */
+.section--achievements .media-feature::before {
+  inset: 0 0 auto 0;
+  width: auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent) 30%, var(--primary) 70%, transparent);
+  opacity: 0.7;
+}
+
+.media-feature__glow {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(22rem 22rem at var(--glare-x, 70%) var(--glare-y, 0%), color-mix(in srgb, var(--accent) 22%, transparent), transparent 65%);
+  transition: opacity 0.45s ease;
+}
+
+.media-feature:hover .media-feature__glow,
+.media-feature:focus-visible .media-feature__glow {
+  opacity: 1;
+}
+
+.media-feature > :not(.media-feature__glow):not(.media-feature__index) {
+  position: relative;
+  z-index: 1;
+}
+
+.media-feature__index {
+  position: absolute;
+  top: clamp(0.9rem, 0.7rem + 1vw, 1.5rem);
+  right: clamp(1.1rem, 0.9rem + 1vw, 1.7rem);
+  z-index: 0;
+  font-family: 'Jost', var(--font-display);
+  font-weight: 300;
+  font-size: clamp(3rem, 2.2rem + 3vw, 4.8rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--text) 18%, transparent);
+  pointer-events: none;
+  transition: -webkit-text-stroke-color 0.4s ease;
+}
+
+.media-feature:hover .media-feature__index {
+  -webkit-text-stroke-color: color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+.section--achievements .media-feature__title {
+  font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem);
+  line-height: 1.5;
+  padding-right: clamp(3rem, 2rem + 3vw, 5rem);
+  text-wrap: pretty;
+}
+
+.section--achievements .media-feature:hover,
+.section--achievements .media-feature:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #fff 14%, transparent),
+    0 40px 80px -44px color-mix(in srgb, var(--primary) 90%, transparent);
+}
+
+.section--achievements .media-kind {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  letter-spacing: 0.12em;
+}
+
+.section--achievements .media-kind[data-kind='登壇'] {
+  border-color: transparent;
+  background: linear-gradient(120deg, var(--primary), color-mix(in srgb, var(--accent) 70%, var(--primary)));
+  color: #fff;
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--accent) 80%, transparent);
+}
+
+.section--achievements .media-date {
+  font-family: 'Jost', var(--font-body, inherit);
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--text) 72%, transparent);
+}
+
+/* 一覧（小さい実績） */
+
+.section--achievements .media-rows {
+  border-top-color: var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+}
+
+.section--achievements .media-row {
+  position: relative;
+  padding-inline: clamp(0.4rem, 1vw, 1rem);
+  border-bottom-color: var(--hairline, color-mix(in srgb, var(--text) 14%, transparent));
+}
+
+.section--achievements .media-row::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, var(--accent), transparent 70%);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.section--achievements .media-row:hover::after,
+.section--achievements .media-row:focus-visible::after {
+  transform: none;
+}
+
+.section--achievements .media-row:hover,
+.section--achievements .media-row:focus-visible {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.section--achievements .media-row__title {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+}
+
+/*
+ * スマホ: 大きなカードは縦に4枚積むと長すぎる。
+ * 横スワイプのカルーセルにして、次のカードを少し覗かせる。
+ */
+@media (max-width: 720px) {
+  .section--achievements .media-features {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    grid-auto-columns: 84%;
+    gap: 0.85rem;
+    margin-inline: calc(var(--pad-x) * -1);
+    padding: 0.4rem var(--pad-x) 1.2rem;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--pad-x);
+    scrollbar-width: none;
+  }
+
+  .section--achievements .media-features::-webkit-scrollbar {
+    display: none;
+  }
+
+  .section--achievements .media-feature {
+    scroll-snap-align: start;
+    min-height: 0;
+    transform: none;
+  }
+
+  .section--achievements .media-feature__note {
+    font-size: 0.86rem;
+    line-height: 1.8;
+  }
+
+  .section--achievements .media-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      'meta host'
+      'body body';
+    gap: 0.45rem 1rem;
+    padding-inline: 0;
+  }
+
+  .section--achievements .media-row .media-meta {
+    grid-area: meta;
+  }
+
+  .section--achievements .media-row__body {
+    grid-area: body;
+  }
+
+  .section--achievements .media-row__host {
+    grid-area: host;
+    justify-self: end;
+  }
+}
+
+/* 事業領域・サービス一覧: 番号つきの帯にする */
+
+.service-item {
+  grid-template-columns: 2.6rem minmax(0, 16rem) 1fr;
+  align-items: baseline;
+}
+
+.service-item__index {
+  font-family: 'Jost', var(--font-display);
+  font-weight: 300;
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--accent) 80%, var(--text));
+}
+
+.service-item__name {
+  white-space: nowrap;
+}
+
+@media (max-width: 560px) {
+  .service-item {
+    grid-template-columns: 2.2rem minmax(0, 1fr);
+    gap: 0.3rem 0;
+  }
+
+  .service-item__name {
+    white-space: normal;
+  }
+
+  .service-item__desc {
+    grid-column: 2;
+    font-size: 0.92rem;
+  }
+}
+
+/* 日本語の見出し・キャッチは、文節の途中で折り返さない */
+body.profile .pf-lead__tagline,
+body.profile .section__title,
+body.profile .media-feature__title,
+body.profile .service-item__name,
+body.talk-hub .talk-hub-card__tagline {
+  word-break: auto-phrase;
+}
+
+/* 暗い地では、主色（濃い青・赤）のままだと見出しラベルが沈むので明るく寄せる */
+body.profile--dark .section__label {
+  color: color-mix(in srgb, var(--accent) 70%, #fff);
+}
+
+body.profile--dark .section__label::before {
+  background: var(--accent);
+}
+
+/* 白背景で撮った写真も、暗い地の中で浮かないように縁を光らせ、足元を地へ溶かす */
+body.profile--dark .pf-shot__frame {
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent),
+    0 40px 90px -40px color-mix(in srgb, var(--primary) 80%, transparent);
+}
+
+body.profile--dark .pf-shot__frame::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 62%, color-mix(in srgb, var(--bg) 55%, transparent) 100%);
+}
+
+.section--achievements .media-row .media-date {
+  white-space: nowrap;
+}
+
+@media (min-width: 721px) {
+  .section--achievements .media-row {
+    grid-template-columns: 11rem minmax(0, 1fr) auto;
+  }
+}
+
+/* スマホのカルーセル: 横に続きがあることを示す */
+.media-swipe-hint {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .media-swipe-hint {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin: -0.4rem 0 0.4rem;
+    font-family: 'Jost', sans-serif;
+    font-size: 0.66rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--text) 55%, transparent);
+  }
+
+  .media-swipe-hint::after {
+    content: '';
+    width: 36px;
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    animation: media-swipe 1.8s ease-in-out infinite;
+  }
+
+  @keyframes media-swipe {
+    0%, 100% { transform: translateX(0); opacity: 0.4; }
+    50% { transform: translateX(8px); opacity: 1; }
+  }
+}

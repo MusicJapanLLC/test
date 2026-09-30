@@ -240,9 +240,10 @@ function batonPages(): Plugin {
                 title: 'Baton -バトン-｜選んだ人が、選んだ人へ。',
                 description:
                   '合同会社Music Japanが実際に対話した経営者・事業者のプロフィールを掲載する、招待制の紹介サービス「Baton -バトン-」です。',
-                themeColor: site.theme.bg,
+                themeColor: '#050405',
                 path: '/profile/',
                 vars,
+                extraFontHref: PROFILE_FONT_HREF,
                 jsonLd: profileHubStructuredData(
                   profiles,
                   profileHubUrl,
