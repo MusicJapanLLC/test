@@ -16,7 +16,7 @@ export const partners = [
     title: "AIを学ぶ、その先の実装まで。", titleEn: "From learning AI to putting it to work.",
     body: "生成AI研修、AI受託開発・業務改善、LLMO対策を手がけるAI実装支援会社。名古屋を拠点に、全国の企業のAI活用を支援します。",
     bodyEn: "Based in Nagoya and serving companies across Japan, Central AX supports generative AI training, custom AI development, workflow improvements and AI search optimization.",
-    href: "https://central-ax.co.jp/", cta: "企業サイトを見る", ctaEn: "Visit company website"
+    href: "https://baton-partners-demo.vercel.app/central-ax/", cta: "紹介ページを見る", ctaEn: "Explore Central AX"
   }
 ];
 
