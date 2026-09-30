@@ -3,10 +3,10 @@ import { H, Sprite, W } from './sprite';
 
 /**
  * The Music Japan robot crew. One visual language for all five: a black body with a grey
- * rim, a dark screen for a face, the face itself in red, a grey Ø on the chest, a big head,
- * stubby legs and little arm nubs. They differ only in silhouette.
+ * rim, a dark screen for a face, a grey Ø on the chest, a big head, stubby legs and little
+ * arm nubs. Each one has its own silhouette, its own screen colour and its own resting face.
  */
-export type Face = 'open' | 'blink' | 'smile' | 'laugh' | 'wow' | 'sleep' | 'love' | 'wink' | 'dizzy' | 'sing' | 'talk';
+export type Face = 'open' | 'blink' | 'smile' | 'laugh' | 'wow' | 'sleep' | 'love' | 'wink' | 'dizzy' | 'sing' | 'talk' | 'drowsy' | 'grin' | 'star' | 'cool';
 export type Arm = 'down' | 'out' | 'up' | 'wave1' | 'wave2' | 'hip';
 export type Pose = {
   t: number;
@@ -24,53 +24,82 @@ export type Pose = {
   legs: 'stand' | 'step1' | 'step2' | 'dangle';
   legH: number;
   face: Face;
+  /** eyes glance left (-1) or right (1) */
+  look: number;
+  /** words on the screen instead of a face (tiny 3×5 font) */
+  text: string;
   talkOpen: boolean;
   float: boolean;
   playing: boolean;
   ground: 'dark' | 'light';
 };
 
-export const newPose = (t: number): Pose => ({ t, dy: 0, hy: 0, hx: 0, bx: 0, flip: false, armL: 'down', armR: 'down', legs: 'stand', legH: 3, face: 'open', talkOpen: false, float: false, playing: false, ground: 'dark' });
+export const newPose = (t: number): Pose => ({ t, dy: 0, hy: 0, hx: 0, bx: 0, flip: false, armL: 'down', armR: 'down', legs: 'stand', legH: 3, face: 'open', look: 0, text: '', talkOpen: false, float: false, playing: false, ground: 'dark' });
 
 const BODY = '#131318';
 const HI = '#2c2c37';
 const LO = '#0a0a0d';
 const RIM = '#3d3d49';
 const SCREEN = '#060608';
-const FACE = '#ff2e3e';
-const GLOW = '#2e0a11';
 const GREY = '#62626f';
 
-type Bot = { id: string; name: string; head: (s: Sprite, P: Pose, x: number, y: number) => { fy: number; eyes?: 'reels' } };
+/** each robot's screen colour, and the faint glow it leaves on the glass */
+const glowOf = (hex: string) => {
+  const n = parseInt(hex.slice(1), 16);
+  const mix = (c: number) => Math.round(6 + (c - 6) * 0.17).toString(16).padStart(2, '0');
+  return `#${mix(n >> 16)}${mix((n >> 8) & 255)}${mix(n & 255)}`;
+};
 
-function face(s: Sprite, cx: number, fy: number, P: Pose) {
+const FONT: Record<string, string[]> = {
+  N: ['#..#', '##.#', '#.##', '#..#', '#..#'], U: ['#.#', '#.#', '#.#', '#.#', '###'], L: ['#..', '#..', '#..', '#..', '###'],
+  R: ['##.', '#.#', '##.', '#.#', '#.#'], E: ['###', '#..', '##.', '#..', '###'], C: ['.##', '#..', '#..', '#..', '.##'],
+  Z: ['###', '..#', '.#.', '#..', '###'], O: ['.#.', '#.#', '#.#', '#.#', '.#.'], K: ['#.#', '#.#', '##.', '#.#', '#.#'],
+  H: ['#.#', '#.#', '###', '#.#', '#.#'], I: ['###', '.#.', '.#.', '.#.', '###'], '!': ['.#.', '.#.', '.#.', '...', '.#.'],
+  '?': ['##.', '..#', '.#.', '...', '.#.'], '♪': ['.##', '.#.', '.#.', '##.', '##.'], '.': ['...', '...', '...', '...', '.#.'],
+  '♥': ['...', '#.#', '###', '###', '.#.'], ' ': ['...', '...', '...', '...', '...'], '●': ['...', '###', '###', '###', '...'],
+};
+
+type Bot = { id: string; name: string; color: string; rest: Face; head: (s: Sprite, P: Pose, x: number, y: number) => { fy: number; eyes?: 'reels' } };
+
+function face(s: Sprite, cx: number, fy: number, P: Pose, col: string) {
   const e = P.face;
-  const L = Math.round(cx - 4.5), R = Math.round(cx + 3.5);
-  const m = { '#': FACE };
+  const L = Math.round(cx - 4.5) + P.look, R = Math.round(cx + 3.5) + P.look;
+  const m = { '#': col };
   const eye = (x: number, rows: string[]) => s.st(x, fy, rows, m);
   const open = ['##', '##', '##'];
   switch (e) {
     case 'open': case 'talk': eye(L, open); eye(R, open); break;
     case 'blink': case 'sleep': eye(L, ['..', '..', '##']); eye(R, ['..', '..', '##']); break;
-    case 'smile': case 'sing': eye(L - 1, ['...', '.#.', '#.#']); eye(R, ['...', '.#.', '#.#']); break;
+    case 'drowsy': eye(L - 1, ['...', '###', '.#.']); eye(R, ['...', '###', '.#.']); break;
+    case 'smile': case 'sing': case 'grin': eye(L - 1, ['...', '.#.', '#.#']); eye(R, ['...', '.#.', '#.#']); break;
     case 'laugh': eye(L - 1, ['#..', '.##', '#..']); eye(R, ['..#', '##.', '..#']); break;
     case 'wow': eye(L - 1, ['.#.', '#.#', '.#.']); eye(R, ['.#.', '#.#', '.#.']); break;
     case 'love': eye(L - 1, ['#.#', '###', '.#.']); eye(R, ['#.#', '###', '.#.']); break;
+    case 'star': eye(L - 1, ['.#.', '###', '.#.']); eye(R, ['.#.', '###', '.#.']); break;
     case 'wink': eye(L - 1, ['...', '.#.', '#.#']); eye(R, open); break;
     case 'dizzy': eye(L - 1, ['#.#', '.#.', '#.#']); eye(R, ['#.#', '.#.', '#.#']); break;
+    case 'cool': s.st(Math.round(cx - 6.5) + P.look, fy, ['#############', '.####...####.', '..##.....##..'], m); break;
   }
   const mouth: Record<Face, string[]> = {
     open: ['#..#', '.##.'], blink: ['#..#', '.##.'], smile: ['#..#', '.##.'], wink: ['#..#', '.##.'], love: ['#..#', '.##.'],
-    laugh: ['####', '#..#', '.##.'], sing: ['.##.', '#..#', '.##.'], wow: ['.##.', '#..#', '.##.'],
-    sleep: ['.##.'], dizzy: ['.#.#', '#.#.'],
+    laugh: ['####', '#..#', '.##.'], sing: ['.##.', '#..#', '.##.'], wow: ['.##.', '#..#', '.##.'], star: ['####', '#..#', '.##.'],
+    sleep: ['.##.'], dizzy: ['.#.#', '#.#.'], drowsy: ['....', '.##.'], grin: ['####', '#..#', '.##.'], cool: ['....', '.###'],
     talk: P.talkOpen ? ['.##.', '#..#', '.##.'] : ['####'],
   };
   s.st(Math.round(cx - 1.5), fy + 4, mouth[e], m);
 }
 
+/** tiny words on the screen: NULL, REC●, ZZZ… */
+function words(s: Sprite, cx: number, cy: number, text: string, col: string) {
+  const glyphs = [...text].map((ch) => FONT[ch] ?? FONT[' ']);
+  const w = glyphs.reduce((n, g) => n + g[0].length + 1, -1);
+  let x = Math.round(cx - w / 2);
+  for (const g of glyphs) { s.st(x, cy - 2, g, { '#': col }); x += g[0].length + 1; }
+}
+
 const BOTS: Bot[] = [
   {
-    id: 'tune', name: 'TUNE',
+    id: 'tune', name: 'TUNE', color: '#ff2e3e', rest: 'open',
     head(s, _P, x, y) {
       // hooked antenna with a ball at the end
       s.st(x + 12, y - 8, ['..###..', '.#...#.', '##...#.', '##..#..', '....#..', '....#..', '....#..', '....#..'], { '#': BODY });
@@ -80,7 +109,7 @@ const BOTS: Bot[] = [
     },
   },
   {
-    id: 'spin', name: 'SPIN',
+    id: 'spin', name: 'SPIN', color: '#ffb43d', rest: 'drowsy',
     head(s, P, x, y) {
       s.rect(x + 15, y - 3, 2, 3, BODY);
       const cx = x + 15.5, ry = y - 4.5;
@@ -97,7 +126,7 @@ const BOTS: Bot[] = [
     },
   },
   {
-    id: 'pod', name: 'POD',
+    id: 'pod', name: 'POD', color: '#3fd8ff', rest: 'cool',
     head(s, _P, x, y) {
       // headband: the upper half of a ring (drawn apart so the body below stays intact)
       const band = new Sprite();
@@ -113,7 +142,7 @@ const BOTS: Bot[] = [
     },
   },
   {
-    id: 'reel', name: 'REEL',
+    id: 'reel', name: 'REEL', color: '#7dff8e', rest: 'open',
     head(s, P, x, y) {
       s.st(x + 15, y - 4, ['..#', '.#.', '.#.', '..#'], { '#': BODY });
       s.rr(x + 3, y, 26, 18, 3, BODY);
@@ -123,7 +152,7 @@ const BOTS: Bot[] = [
     },
   },
   {
-    id: 'mic', name: 'MIC',
+    id: 'mic', name: 'MIC', color: '#ff7ad8', rest: 'grin',
     head(s, _P, x, y) {
       s.rect(x + 15, y - 2, 2, 2, BODY);
       s.rr(x + 14, y - 5, 4, 3, 1, BODY);
@@ -136,7 +165,7 @@ const BOTS: Bot[] = [
   },
 ];
 
-export const CREW = BOTS.map((b) => ({ id: b.id, name: b.name }));
+export const CREW = BOTS.map((b) => ({ id: b.id, name: b.name, color: b.color }));
 
 function arm(s: Sprite, which: Arm, side: 'L' | 'R', bx: number, by: number) {
   const pts: Record<Arm, [number, number][]> = {
@@ -174,23 +203,27 @@ export function renderRobot(ctx: CanvasRenderingContext2D, index: number, P: Pos
   s.bevel(BODY, HI, LO);
   // chest Ø
   s.st(14 + P.bx, by + 2, ['.##.', '#.##', '##.#', '.##.'], { '#': GREY });
-  // face
+  // face: 'open' means "this robot's resting face"
   const cx = 15.5 + hx;
-  if (info.eyes === 'reels') {
+  const col = bot.color;
+  const F: Pose = { ...P, face: P.face === 'open' ? bot.rest : P.face };
+  if (P.text) {
+    words(s, cx, info.fy + 3, P.text, col);
+  } else if (info.eyes === 'reels') {
     const spin = P.playing ? P.t * 9 : 0;
-    for (const ex of [11 + hx, 20 + hx]) {
-      s.ring(ex + 0.5, info.fy + 2, 2.6, 2.6, 1, FACE);
+    for (const ex of [11 + hx + P.look, 20 + hx + P.look]) {
+      s.ring(ex + 0.5, info.fy + 2, 2.6, 2.6, 1, col);
       for (let k = 0; k < 3; k++) {
         const a = spin + (k * Math.PI * 2) / 3;
-        s.p(ex + 0.5 + Math.cos(a) * 1.1, info.fy + 2 + Math.sin(a) * 1.1, FACE);
+        s.p(ex + 0.5 + Math.cos(a) * 1.1, info.fy + 2 + Math.sin(a) * 1.1, col);
       }
     }
-    s.st(Math.round(cx - 1.5), info.fy + 5, P.face === 'talk' && P.talkOpen ? ['.##.', '#..#'] : ['#..#', '.##.'], { '#': FACE });
+    s.st(Math.round(cx - 1.5), info.fy + 5, P.face === 'talk' && P.talkOpen ? ['.##.', '#..#'] : ['#..#', '.##.'], { '#': col });
   } else {
-    face(s, cx, info.fy, P);
+    face(s, cx, info.fy, F, col);
   }
-  s.glow(FACE, SCREEN, GLOW);
-  if (bot.id === 'mic' && (P.playing || P.face === 'talk')) s.rr(14 + hx, hyy - 5, 4, 3, 1, FACE);
+  s.glow(col, SCREEN, glowOf(col));
+  if (bot.id === 'mic' && (P.playing || P.face === 'talk')) s.rr(14 + hx, hyy - 5, 4, 3, 1, col);
   s.outline(RIM);
   if (P.float) s.ring(15.5 + hx, hyy - 10, 6, 1.6, 1, '#ffe7a3');
 

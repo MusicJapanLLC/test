@@ -94,7 +94,8 @@ export const releases: Release[] = [
     href: 'https://music.apple.com/jp/album/i-know-but-tried-single/6771033082',
     platform: 'Apple Music',
     cdn: cdn('Music211/v4/54/db/4e/54db4e60-8d52-2fb5-4e9e-ef40d527886d/4550756733272_cover.png'),
-    art: 'i-know-but-tried',
+    // the backup files for these two releases were saved under each other's names
+    art: 'like-a-drug',
     accent: '#678195',
     previews: [{ title: 'I know, but tried', src: '/audio/i-know-but-tried-preview.mp3' }],
     credit: '℗ 2026 Music Japan LLC',
@@ -113,7 +114,8 @@ export const releases: Release[] = [
     href: 'https://music.apple.com/jp/album/like-a-drug-ep/6783291301',
     platform: 'Apple Music',
     cdn: cdn('Music221/v4/89/fd/74/89fd749f-b1af-2ec1-5100-6e0378372c9e/4550757942116_cover.png'),
-    art: 'like-a-drug',
+    // the backup files for these two releases were saved under each other's names
+    art: 'i-know-but-tried',
     accent: '#c12a36',
     previews: [
       { title: 'To Our Future', src: '/audio/like-a-drug-to-our-future-preview.mp3' },
