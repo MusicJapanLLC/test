@@ -1,0 +1,67 @@
+name: SEO post-publish support
+on:
+  push:
+    branches: [work/seo-postpublish-20261001]
+    paths: [.github/workflows/seo-postpublish-20261001.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check published sitemaps and links, notify IndexNow
+        env:
+          NODE_OPTIONS: --unhandled-rejections=strict
+        run: |
+          node --input-type=module <<'NODE'
+          import { appendFileSync } from 'node:fs';
+          const rows = [];
+          const get = async (url) => {
+            const r = await fetch(url, { signal: AbortSignal.timeout(25000) });
+            const text = await r.text();
+            if (!r.ok) throw new Error(url + ': HTTP ' + r.status);
+            return text;
+          };
+          const sites = ['https://music-japan.com', 'https://baton.music-japan.com', 'https://partners.music-japan.com'];
+          for (const site of sites) {
+            for (const path of ['/robots.txt', '/sitemap.xml']) {
+              try {
+                const text = await get(site + path);
+                const urls = [...text.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
+                rows.push(site + path + ': OK' + (path.endsWith('.xml') ? ', ' + urls.length + ' URLs' : ''));
+                if (path.endsWith('.xml') && !text.includes('<urlset') && !text.includes('<sitemapindex')) rows.push('WARNING: response is not a sitemap');
+                if (path.endsWith('.xml') && urls.some(u => !u.startsWith(site + '/'))) rows.push('WARNING: sitemap contains off-site URLs');
+              } catch (e) { rows.push('WARNING: ' + e.message); }
+            }
+          }
+          try {
+            const html = await get('https://music-japan.com/');
+            for (const url of [
+              'https://partners.music-japan.com/evorg/',
+              'https://partners.music-japan.com/central-ax/',
+              'https://baton.music-japan.com/profile/'
+            ]) rows.push('Music Japan HTML link to ' + url + ': ' + (html.includes(url) ? 'found' : 'not found in server HTML'));
+          } catch(e) { rows.push('WARNING: ' + e.message); }
+          const site = 'https://baton.music-japan.com';
+          const key = '384b7059f6bebefee7b9806960da2b0a';
+          try {
+            const keyLocation = site + '/' + key + '.txt';
+            if ((await get(keyLocation)).trim() !== key) throw new Error('IndexNow key file mismatch');
+            const xml = await get(site + '/sitemap.xml');
+            const urlList = [...new Set([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1].replaceAll('&amp;', '&')))];
+            if (!urlList.length || urlList.length > 10000 || urlList.some(u => new URL(u).origin !== site)) throw new Error('Invalid sitemap URL list');
+            const r = await fetch('https://api.indexnow.org/indexnow', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json; charset=utf-8' },
+              body: JSON.stringify({ host: new URL(site).host, key, keyLocation, urlList }),
+              signal: AbortSignal.timeout(25000)
+            });
+            rows.push('IndexNow: HTTP ' + r.status + ', ' + urlList.length + ' URLs; this is a notification, not proof of indexing');
+            if (r.status !== 200 && r.status !== 202) throw new Error('IndexNow request failed: ' + r.status + ' ' + (await r.text()).slice(0,300));
+          } catch(e) { rows.push('ERROR: ' + e.message); process.exitCode = 1; }
+          console.log(rows.join('\n'));
+          appendFileSync(process.env.GITHUB_STEP_SUMMARY, rows.map(r => '- ' + r).join('\n') + '\n');
+          NODE
