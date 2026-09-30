@@ -13,6 +13,8 @@ export const site = {
   },
   /** Music Japan 公式LINE。Web から来た人は、ここを追加してからアンケートへ進む */
   lineUrl: 'https://lin.ee/YPbe3ti',
+  /** サイト共通ページ（一覧・編集部・プライバシー）を最後に大きく見直した日。sitemap の lastmod に使う */
+  updated: '2026-10-01',
   /** ご相談からおつなぎまでの目安（Web流入は約2日でグループ作成、の運用に合わせる） */
   leadTime: '2営業日前後',
   colors: {
@@ -30,4 +32,6 @@ export const routes = {
   service: (slug: string) => `/${slug}/service/`,
   contact: (slug: string) => `/${slug}/contact/`,
   privacy: () => '/privacy/',
+  /** Baton Partners 編集部（運営者・編集方針）。記事の著者情報の参照先 */
+  editorial: () => '/editorial/',
 } as const;

@@ -1,17 +1,9 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
-import {
-  breadcrumbLd,
-  ctaBand,
-  document,
-  footer,
-  header,
-  orgLd,
-  shortName,
-  type BuildEnv,
-} from '../layout';
-import { marquee } from '../parts';
-import { esc, heading, jp, plain } from '../text';
+import { breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
+import { answerBox, marquee, nextReads } from '../parts';
+import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
+import { esc, heading, jp } from '../text';
 
 export function renderTop(p: Partner, env: BuildEnv): string {
   const t = p.top;
@@ -93,6 +85,9 @@ ${header(p, 'top')}
       </div>
     </div>
   </section>
+
+  <div class="wrap crumb-row">${breadcrumb([{ name: shortName(p) }])}</div>
+  ${answerBox(p.seo.top.answer, 'top-answer')}
 
   ${marquee(t.marquee, { label: `${s.name}のキーワード` })}
 
@@ -187,6 +182,8 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${nextReads(p, 'top')}
+
   ${ctaBand(p)}
 </main>
 ${footer(p)}`;
@@ -196,19 +193,22 @@ ${footer(p)}`;
       kind: 'top',
       path,
       partner: p,
-      title: `${p.company.name}｜${s.name} ${s.category} - Baton Partners`,
-      description: p.top.lead,
+      title: p.seo.top.title,
+      description: p.seo.top.description,
+      og: `/og/${p.slug}-top.png`,
       jsonLd: [
         ...orgLd(env, p),
-        {
-          '@type': 'WebPage',
-          name: plain(t.title),
-          url: `${env.siteUrl}${path}`,
-          about: { '@id': `${env.siteUrl}${path}#org` },
-          publisher: { '@id': `${env.siteUrl}/#operator` },
-          inLanguage: 'ja',
-        },
-        breadcrumbLd(env, [{ name: p.company.name, href: path }]),
+        serviceLd(env, p),
+        pageLd(env, {
+          path,
+          name: p.seo.top.title,
+          description: p.seo.top.description,
+          image: `/og/${p.slug}-top.png`,
+          partner: p,
+          dateModified: p.seo.updated,
+          mainEntity: ids.org(env, p),
+        }),
+        breadcrumbLd(env, path, [{ name: shortName(p), href: path }]),
       ],
     },
     env,

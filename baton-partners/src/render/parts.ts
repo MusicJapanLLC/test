@@ -1,5 +1,6 @@
+import { routes } from '../config/site';
 import type { Partner } from '../types';
-import { breadcrumb } from './layout';
+import { breadcrumb, shortName } from './layout';
 import { esc, heading, jp } from './text';
 
 /**
@@ -68,4 +69,68 @@ export function leaderSection(p: Partner): string {
     </div>
   </div>
 </section>`.trim();
+}
+
+/**
+ * ページ冒頭の「問い」と「一言の答え」。
+ * 検索やAIが段落単位で抜き出しても意味が通るよう、答えは単独で完結する文にする。
+ */
+export function answerBox(answer: { q: string; a: string }, id = 'answer'): string {
+  return `
+<section class="answer" aria-labelledby="${id}-h">
+  <div class="wrap answer-in">
+    <p class="answer-k" aria-hidden="true">Q.</p>
+    <div class="answer-body">
+      <h2 id="${id}-h" class="answer-q">${esc(answer.q)}</h2>
+      <p class="answer-a">${jp(answer.a)}</p>
+    </div>
+  </div>
+</section>`.trim();
+}
+
+type Kind = 'top' | 'about' | 'service' | 'insight';
+
+/**
+ * 各ページの末尾に置く「次に読む」。いま見ているページ以外の3ページへ、
+ * 中身が分かる言葉でリンクする（「こちら」は使わない）。話してみる は直後の帯から。
+ */
+export function nextReads(p: Partner, current: Kind): string {
+  const items: { kind: Kind; href: string; k: string; title: string; desc: string }[] = [
+    { kind: 'top', href: routes.top(p.slug), k: 'Top', title: p.seo.top.answer.q, desc: p.seo.top.description },
+    { kind: 'about', href: routes.about(p.slug), k: 'About', title: p.seo.about.answer.q, desc: p.seo.about.description },
+    { kind: 'service', href: routes.service(p.slug), k: 'Service', title: p.seo.service.answer.q, desc: p.seo.service.description },
+    { kind: 'insight', href: routes.insight(p.slug, p.insight.slug), k: 'Insights', title: p.insight.title, desc: p.insight.description },
+  ];
+  const cards = items
+    .filter((it) => it.kind !== current)
+    .map(
+      (it) => `
+      <li>
+        <a class="next-card" href="${it.href}">
+          <span class="next-k">${it.k}</span>
+          <span class="next-t">${heading(it.title)}</span>
+          <span class="next-d">${jp(it.desc)}</span>
+          <span class="arrow" aria-hidden="true">→</span>
+        </a>
+      </li>`,
+    )
+    .join('');
+  return `
+<nav class="sec next-reads" aria-labelledby="next-h">
+  <div class="wrap">
+    <p class="kicker rv">Next</p>
+    <h2 id="next-h" class="sec-h rv">${heading(`${shortName(p)}について、次に読む`)}</h2>
+    <ul class="next-list rv">${cards}</ul>
+  </div>
+</nav>`.trim();
+}
+
+/** 記事の出典。本文の事実・数字・引用の元をたどれるようにする */
+export function sourcesList(sources: { label: string; url: string }[]): string {
+  if (!sources.length) return '';
+  return `
+<aside class="a-sources" aria-labelledby="sources-h">
+  <p id="sources-h" class="a-sources-t">出典</p>
+  <ol>${sources.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.label)}</a></li>`).join('')}</ol>
+</aside>`.trim();
 }

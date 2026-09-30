@@ -1,7 +1,8 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
-import { breadcrumbLd, ctaBand, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
-import { marquee, pageHero } from '../parts';
+import { ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
+import { answerBox, marquee, nextReads, pageHero } from '../parts';
+import { breadcrumbLd, faqLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp } from '../text';
 
 export function renderService(p: Partner, env: BuildEnv): string {
@@ -61,8 +62,8 @@ export function renderService(p: Partner, env: BuildEnv): string {
 
   const faq = p.faq
     .map(
-      (f) => `
-      <details class="faq-item">
+      (f, i) => `
+      <details class="faq-item"${i < 2 ? ' open' : ''}>
         <summary><span class="faq-q">Q</span><span>${jp(f.q)}</span><span class="faq-icon" aria-hidden="true"></span></summary>
         <div class="faq-a"><p>${jp(f.a)}</p></div>
       </details>`,
@@ -82,6 +83,8 @@ ${header(p, 'service')}
     phase: 1.0,
     crumbs: [{ name: shortName(p), href: routes.top(p.slug) }, { name: s.name }],
   })}
+
+  ${answerBox(p.seo.service.answer, 'service-answer')}
 
   <section class="clients clients-svc" aria-labelledby="clients-h">
     <p id="clients-h" class="clients-h wrap">${jp(s.clientsNote)}</p>
@@ -167,11 +170,13 @@ ${header(p, 'service')}
     <div class="wrap grid-sec">
       <header class="sec-head rv">
         <p class="kicker">FAQ</p>
-        <h2 id="faq-h" class="sec-h">${heading('話してみる前に')}</h2>
+        <h2 id="faq-h" class="sec-h">${heading(`${s.name}について、よくある質問`)}</h2>
       </header>
       <div class="faq rv">${faq}</div>
     </div>
   </section>
+
+  ${nextReads(p, 'service')}
 
   ${ctaBand(p)}
 </main>
@@ -182,29 +187,24 @@ ${footer(p)}`;
       kind: 'service',
       path,
       partner: p,
-      title: `${s.name}｜${s.category}｜${p.company.name} - Baton Partners`,
-      description: s.description,
+      title: p.seo.service.title,
+      description: p.seo.service.description,
+      og: `/og/${p.slug}-service.png`,
       jsonLd: [
         ...orgLd(env, p),
-        {
-          '@type': 'Service',
-          name: s.name,
-          serviceType: s.category,
-          description: s.description,
-          url: s.url,
-          areaServed: 'JP',
-          provider: { '@id': `${env.siteUrl}${routes.top(p.slug)}#org` },
-        },
-        {
-          '@type': 'FAQPage',
-          mainEntity: p.faq.map((f) => ({
-            '@type': 'Question',
-            name: f.q,
-            acceptedAnswer: { '@type': 'Answer', text: f.a },
-          })),
-        },
-        breadcrumbLd(env, [
-          { name: p.company.name, href: routes.top(p.slug) },
+        serviceLd(env, p),
+        pageLd(env, {
+          path,
+          name: p.seo.service.title,
+          description: p.seo.service.description,
+          image: `/og/${p.slug}-service.png`,
+          partner: p,
+          dateModified: p.seo.updated,
+          mainEntity: ids.service(env, p),
+        }),
+        faqLd(env, path, p.faq),
+        breadcrumbLd(env, path, [
+          { name: shortName(p), href: routes.top(p.slug) },
           { name: s.name, href: path },
         ]),
       ],

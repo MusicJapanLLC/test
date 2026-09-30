@@ -18,6 +18,16 @@ export type Block =
 
 export type ArticleSection = { id: string; heading: string; blocks: Block[] };
 
+/** 検索結果に出す title と description、ページ冒頭の「一言で答える」要約 */
+export type PageSeo = {
+  /** <title>。全角30字前後。見込み客が検索する言葉を入れる */
+  title: string;
+  /** meta description。全角80〜120字。ページの中身を正確に要約する */
+  description: string;
+  /** ページ冒頭に置く「問い」と「一言の答え」。AIが抜き出しやすいよう、単独で意味が通る文にする */
+  answer: { q: string; a: string };
+};
+
 export type Question = {
   id: string;
   label: string;
@@ -129,10 +139,41 @@ export type Partner = {
     published: string;
     readingMinutes: number;
     lead: string;
+    /** 記事冒頭の「この記事の要点」。1項目で意味が通る文にする */
+    keyPoints: string[];
     sections: ArticleSection[];
+    /** 本文の事実・数字・引用の出典（記事の最後に一覧で出す） */
+    sources: { label: string; url: string }[];
   };
   contact: {
     questions: Question[];
   };
+  /** サービスについてのよくある質問（サービスページに表示）。答えは公式情報の範囲で書く */
   faq: { q: string; a: string }[];
+  /** 検索・AI向けの設計。ページごとの title / description / 要約、構造化データの材料 */
+  seo: {
+    top: PageSeo;
+    about: PageSeo;
+    service: PageSeo;
+    contact: PageSeo;
+    /** 記事の <title>（h1 は insight.title のまま） */
+    insightTitle: string;
+    /** 記事冒頭の問い（答えは keyPoints） */
+    insightQuestion: string;
+    /** 内容を最後に大きく見直した日（sitemap の lastmod と dateModified に使う） */
+    updated: string;
+    /** 構造化データ用。公式サイトの会社概要と同じ表記にする */
+    org: {
+      type: 'Corporation' | 'Organization';
+      address: { region: string; locality: string; street: string };
+      /** 代表者。創業が公式に書かれていれば founder、そうでなければ employee */
+      leader?: { name: string; jobTitle: string; relation: 'founder' | 'employee' };
+      /** 公式サイト・サービスサイトなど、同じ会社を指すURL */
+      sameAs: string[];
+      /** 提供地域（Service.areaServed） */
+      areaServed: string[];
+    };
+    /** サービスの構造化データの種類。ソフトウェアなら SoftwareApplication */
+    serviceType: 'SoftwareApplication' | 'Service';
+  };
 };

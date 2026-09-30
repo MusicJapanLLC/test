@@ -1,9 +1,26 @@
 import QRCode from 'qrcode';
 import { routes, site } from '../../config/site';
 import type { Partner, Question } from '../../types';
-import { breadcrumbLd, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
-import { pageHero } from '../parts';
+import { document, footer, header, shortName, type BuildEnv } from '../layout';
+import { answerBox, pageHero } from '../parts';
+import { breadcrumbLd, faqLd, ids, orgLd, pageLd } from '../seo';
 import { esc, heading, jp } from '../text';
+
+/** 話してみる前の、手続きについての質問（全社共通。社名だけ差し替える） */
+const processFaq = (name: string) => [
+  {
+    q: '話を聞いてみるだけでも、大丈夫ですか。',
+    a: `はい、情報を集めている段階でもかまいません。アンケートの内容を見て、Music Japanからご連絡します。${name}とおつなぎするかどうかは、そのあとで一緒に決めます。`,
+  },
+  {
+    q: '話してみると、すぐに営業の電話がかかってきますか。',
+    a: `いいえ。ご回答は、まずMusic Japanが読みます。お名前や連絡先を${name}へお伝えするのは、お客様と${name}の両方が了承してからです。そのあと、LINEグループでおつなぎします。`,
+  },
+  {
+    q: '予約カレンダーはありますか。',
+    a: 'ありません。ご相談の中身と目的を確かめてからおつなぎしたいので、予約ではなくアンケートでお伺いしています。',
+  },
+];
 
 const ROLES = ['代表取締役・役員', '部長・マネージャー', '担当者', 'その他'];
 
@@ -45,6 +62,17 @@ export async function renderContact(p: Partner, env: BuildEnv): Promise<string> 
     color: { dark: '#141414', light: '#0000' },
   });
 
+  const faq = processFaq(name);
+  const faqHtml = faq
+    .map(
+      (f) => `
+      <details class="faq-item" open>
+        <summary><span class="faq-q">Q</span><span>${jp(f.q)}</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a"><p>${jp(f.a)}</p></div>
+      </details>`,
+    )
+    .join('');
+
   const steps = [
     { t: '公式LINEを追加', d: 'Music Japanの公式LINEを追加します。おつなぎの連絡はここから届きます。' },
     { t: 'アンケートに回答', d: 'ご相談の目的と状況を、約2分でお伺いします。' },
@@ -75,6 +103,8 @@ ${header(p, 'contact')}
     crumbs: [{ name, href: routes.top(p.slug) }, { name: '話してみる' }],
   })}
 
+  ${answerBox(p.seo.contact.answer, 'contact-answer')}
+
   <section class="sec sec-steps" aria-labelledby="steps-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
@@ -83,6 +113,16 @@ ${header(p, 'contact')}
       </header>
       <ol class="steps">${steps}</ol>
       <p class="fine">${jp('ご紹介の可否とタイミングは、Music Japanが一件ずつ判断します。自動でのマッチングや予約は行っていません。')}</p>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="pfaq-h">
+    <div class="wrap grid-sec">
+      <header class="sec-head rv">
+        <p class="kicker">FAQ</p>
+        <h2 id="pfaq-h" class="sec-h">${heading('話してみる前に')}</h2>
+      </header>
+      <div class="faq rv">${faqHtml}</div>
     </div>
   </section>
 
@@ -176,18 +216,24 @@ ${footer(p)}`;
       kind: 'contact',
       path,
       partner: p,
-      title: `${name}と話してみる - Baton Partners`,
-      description: `${p.company.name}へのご相談窓口です。公式LINEの追加とアンケートへの回答のあと、Music Japanが内容を確認してからおつなぎします。`,
+      title: p.seo.contact.title,
+      description: p.seo.contact.description,
+      og: `/og/${p.slug}-contact.png`,
       jsonLd: [
         ...orgLd(env, p),
-        {
-          '@type': 'ContactPage',
-          name: `${p.company.name}への相談`,
-          url: `${env.siteUrl}${path}`,
-          inLanguage: 'ja',
-        },
-        breadcrumbLd(env, [
-          { name: p.company.name, href: routes.top(p.slug) },
+        pageLd(env, {
+          type: 'ContactPage',
+          path,
+          name: p.seo.contact.title,
+          description: p.seo.contact.description,
+          image: `/og/${p.slug}-contact.png`,
+          partner: p,
+          dateModified: p.seo.updated,
+          mainEntity: ids.org(env, p),
+        }),
+        faqLd(env, path, faq),
+        breadcrumbLd(env, path, [
+          { name, href: routes.top(p.slug) },
           { name: '話してみる', href: path },
         ]),
       ],

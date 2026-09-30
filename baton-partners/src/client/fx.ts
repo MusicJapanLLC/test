@@ -132,11 +132,11 @@ function onEnter(els: Iterable<Element>, fn: (el: HTMLElement) => void, margin =
 const NAV_KEY = 'bp-nav';
 function setupTransitions() {
   const html = document.documentElement;
+  // 幕はサイト内でページを移るときだけ。検索から初めて来た人には、すぐ本文を見せる（LCPを遅らせない）
   let entering = false;
   try {
-    entering = sessionStorage.getItem(NAV_KEY) === '1' || sessionStorage.getItem('bp-seen') !== '1';
+    entering = sessionStorage.getItem(NAV_KEY) === '1';
     sessionStorage.removeItem(NAV_KEY);
-    sessionStorage.setItem('bp-seen', '1');
   } catch {
     entering = false;
   }
@@ -194,6 +194,8 @@ function setupCursor() {
     if (label) label.textContent = text;
   });
   ticks.push((dt) => {
+    // 止まっているときは書き換えない（毎フレームのスタイル計算を減らす）
+    if (Math.abs(rx - x) < 0.1 && Math.abs(ry - y) < 0.1) return;
     rx = lerp(rx, x, 0.18 * dt);
     ry = lerp(ry, y, 0.18 * dt);
     el.style.setProperty('--dx', `${x}px`);
@@ -254,10 +256,12 @@ function setupMarquees() {
     let x = 0;
     let skew = 0;
     let visible = true;
+    // 幅は大きさが変わったときだけ測る（毎フレーム offsetWidth を読むとレイアウトの再計算が走る）
+    let w = run.offsetWidth || 1;
+    new ResizeObserver(() => (w = run.offsetWidth || 1)).observe(run);
     new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(m);
     ticks.push((dt, v) => {
       if (!visible) return;
-      const w = run.offsetWidth || 1;
       x += (base + Math.min(Math.abs(v) * 0.35, 30)) * dt * dir;
       if (x <= -w) x += w;
       if (x > 0) x -= w;
@@ -275,9 +279,19 @@ function setupScrollBits() {
   const parallax = [...document.querySelectorAll<HTMLElement>('.phero-logo, .statement-p, .cta-band-h, .svc-head .logo-plate, .hl-head')];
   let hidden = false;
   let acc = 0;
+  // ページの高さは、大きさが変わったときだけ測る
+  let max = 0;
+  const measure = () => (max = document.documentElement.scrollHeight - window.innerHeight);
+  measure();
+  new ResizeObserver(measure).observe(document.body);
+  window.addEventListener('resize', measure, { passive: true });
+  let lastSeen = -1;
   ticks.push((_dt, v) => {
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    bar?.style.setProperty('--sp', String(max > 0 ? window.scrollY / max : 0));
+    // スクロールしていないフレームでは何もしない
+    const y = window.scrollY;
+    if (y === lastSeen && Math.abs(v) < 0.01) return;
+    lastSeen = y;
+    bar?.style.setProperty('--sp', String(max > 0 ? y / max : 0));
     if (hdr && !document.documentElement.classList.contains('menu-open')) {
       acc = Math.sign(v) === Math.sign(acc) ? acc + v : v;
       const shouldHide = window.scrollY > 240 && acc > 24;
@@ -285,13 +299,15 @@ function setupScrollBits() {
       if (shouldHide && !hidden) hdr.classList.add('is-hidden'), (hidden = true);
       else if (shouldShow && hidden) hdr.classList.remove('is-hidden'), (hidden = false);
     }
+    // 位置をまとめて読んでから、まとめて書く（読み書きを交互にしない）
     const vh = window.innerHeight;
-    for (const el of parallax) {
-      const r = el.getBoundingClientRect();
-      if (r.bottom < -100 || r.top > vh + 100) continue;
+    const rects = parallax.map((el) => el.getBoundingClientRect());
+    parallax.forEach((el, i) => {
+      const r = rects[i];
+      if (r.bottom < -100 || r.top > vh + 100) return;
       const off = (r.top + r.height / 2 - vh / 2) * -0.08;
       el.style.translate = `0 ${off.toFixed(1)}px`;
-    }
+    });
   });
 }
 

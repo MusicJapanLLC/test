@@ -1,3 +1,4 @@
+import { onPerfLevel, perfLevel, reportFrame } from './perf';
 import {
   BufferAttribute,
   BufferGeometry,
@@ -311,11 +312,26 @@ export class NetworkScene {
   private ro: ResizeObserver;
   private io: IntersectionObserver;
   phase: number;
-  target: number;
+  private goal = 0;
+  private frames = 0;
+  private lastAt = 0;
+  private stillTimer = 0;
+
+  /** ステージ（スクロール）から渡される目標の場面。静止モードではここで描き直す */
+  get target(): number {
+    return this.goal;
+  }
+  set target(v: number) {
+    this.goal = v;
+    if (perfLevel() === 2 && this.o.animate) {
+      window.clearTimeout(this.stillTimer);
+      this.stillTimer = window.setTimeout(() => this.still(), 120);
+    }
+  }
 
   constructor(private o: SceneOptions) {
     this.phase = o.phase;
-    this.target = o.phase;
+    this.goal = o.phase;
 
     this.renderer = new WebGLRenderer({
       canvas: o.canvas,
@@ -325,6 +341,16 @@ export class NetworkScene {
     });
     this.renderer.setClearColor(0x000000, 0);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    // 重い端末では画素を減らす／静止させる（perf.ts）
+    onPerfLevel((l) => {
+      if (l === 1) {
+        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1) * 0.75);
+        this.resize();
+      } else if (l === 2) {
+        cancelAnimationFrame(this.raf);
+        this.still();
+      }
+    });
     this.camera.position.set(0, 0, 16);
 
     const cA = new Color(o.ink);
@@ -608,14 +634,28 @@ export class NetworkScene {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /** 静止モード：入場の演出を終えた状態で、いまの場面を1回だけ描く */
+  private still() {
+    (this.uniforms.uIntro as { value: number }).value = 1;
+    this.phase = this.goal;
+    this.render((performance.now() - this.start) / 1000);
+  }
+
   private loop = () => {
     cancelAnimationFrame(this.raf);
-    if (!this.visible || document.hidden || !this.o.animate) return;
+    if (!this.visible || document.hidden || !this.o.animate) {
+      this.lastAt = 0; // 止まっていた時間は数えない
+      return;
+    }
+    if (perfLevel() === 2) return this.still();
     this.raf = requestAnimationFrame(this.loop);
+    this.frames += 1;
+    // 軽量モードでは1コマおきに描く
+    if (perfLevel() === 1 && this.frames % 2) return;
     const t = (performance.now() - this.start) / 1000;
     const intro = this.uniforms.uIntro as { value: number };
     intro.value = Math.min(1, intro.value + 0.01);
-    this.phase += (this.target - this.phase) * 0.06;
+    this.phase += (this.goal - this.phase) * 0.06;
     this.mouse.lerp(this.mouseTarget, 0.07);
     this.hover += (this.hoverTarget - this.hover) * 0.06;
     (this.uniforms.uMouse.value as Vector2).copy(this.mouse);
@@ -628,5 +668,10 @@ export class NetworkScene {
     this.group.rotation.x = -this.mouse.y * 0.1;
     this.group.rotation.z = Math.sin(t * 0.05) * 0.05 + (this.phase > 1 ? (this.phase - 1) * 0.08 : 0);
     this.render(t);
+    // コマの間隔を報告する（最初の数フレームはシェーダーの準備で遅いので測らない）
+    const now = performance.now();
+    // 軽量モードは1コマおきなので、間隔を半分にして比べる
+    if (this.frames > 3 && this.lastAt) reportFrame((now - this.lastAt) / (perfLevel() === 1 ? 2 : 1));
+    this.lastAt = now;
   };
 }

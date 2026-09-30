@@ -39,8 +39,14 @@ function splitLong(ph: string): string[] {
 /** **強調** だけを許す最小のリッチテキスト */
 const rich = (s: string): string => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
 
-/** 本文・リード文：文節の切れ目に <wbr> を入れる */
-export function jp(text: string): string {
+/**
+ * 本文中のリンク。[リンクの文言](/evorg/service/) のように書く。
+ * サイト内（/ で始まる）と https の外部だけを許す。外部は新しいタブで開く。
+ */
+const LINK = /\[([^\]]+)\]\(((?:\/|https:\/\/)[^)\s]*)\)/;
+const LINK_SPLIT = /(\[[^\]]+\]\((?:\/|https:\/\/)[^)\s]*\))/g;
+
+function jpText(text: string): string {
   return text
     .split(/(\*\*.+?\*\*)/g)
     .map((chunk) => {
@@ -51,6 +57,23 @@ export function jp(text: string): string {
     })
     .join('');
 }
+
+/** 本文・リード文：文節の切れ目に <wbr> を入れる。**強調** と [リンク](/path/) が使える */
+export function jp(text: string): string {
+  return text
+    .split(LINK_SPLIT)
+    .map((part) => {
+      const m = LINK.exec(part);
+      if (!m || m[0] !== part) return jpText(part);
+      const external = m[2].startsWith('https://');
+      return `<a class="in-link" href="${esc(m[2])}"${external ? ' target="_blank" rel="noopener"' : ''}>${jpText(m[1])}</a>`;
+    })
+    .join('');
+}
+
+/** リンク記法と強調を外した素の文（構造化データ・llms.txt 用） */
+export const text = (s: string): string =>
+  s.replace(new RegExp(LINK.source, 'g'), '$1').replace(/\*\*|[{}]/g, '');
 
 /**
  * 見出し：行ごとに <span class="ln">、文節ごとに <span class="ph">。
@@ -70,7 +93,6 @@ export function heading(lines: string | string[], start = 0): string {
 }
 
 /** 見出しの文字列だけ（title や JSON-LD 用） */
-export const plain = (lines: string | string[]): string =>
-  (Array.isArray(lines) ? lines.join('') : lines).replace(/\*\*|[{}]/g, '');
+export const plain = (lines: string | string[]): string => text(Array.isArray(lines) ? lines.join('') : lines);
 
 export { rich };

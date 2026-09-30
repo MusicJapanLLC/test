@@ -1,46 +1,99 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { routes } from '../config/site';
+import { routes, site } from '../config/site';
 import { bpMark } from './logo';
 import { partners } from '../partners';
 import type { BuildEnv } from './layout';
 import { renderAbout } from './pages/about';
 import { renderContact } from './pages/contact';
 import { renderInsight } from './pages/insight';
-import { renderIndex, renderPrivacy } from './pages/misc';
+import { renderEditorial, renderIndex, renderNotFound, renderPrivacy } from './pages/misc';
 import { renderService } from './pages/service';
 import { renderTop } from './pages/top';
+import { shortName } from './layout';
+import { plain } from './text';
 
-export type GeneratedPage = { key: string; path: string; file: string };
+export type GeneratedPage = { key: string; path: string; file: string; lastmod?: string };
 
 /**
  * src/ のテンプレートと企業データから、各ページの index.html を書き出す。
  * 書き出したファイルは .gitignore 済み。直接編集しない。
  */
 export async function generatePages(root: string, env: BuildEnv): Promise<GeneratedPage[]> {
-  const out: { key: string; path: string; html: string }[] = [
-    { key: 'index', path: '/', html: renderIndex(partners, env) },
-    { key: 'privacy', path: routes.privacy(), html: renderPrivacy(env) },
+  const out: { key: string; path: string; html: string; lastmod?: string; file?: string }[] = [
+    { key: 'index', path: '/', html: renderIndex(partners, env), lastmod: latest() },
+    { key: 'editorial', path: routes.editorial(), html: renderEditorial(partners, env), lastmod: site.updated },
+    { key: 'privacy', path: routes.privacy(), html: renderPrivacy(env), lastmod: site.updated },
+    // 404 は sitemap に載せない（lastmod なし）。Vercel は dist/404.html を自動で返す
+    { key: '404', path: '/404.html', html: renderNotFound(partners, env), file: '404.html' },
   ];
 
   for (const p of partners) {
+    const lastmod = p.seo.updated;
     out.push(
-      { key: `${p.slug}-top`, path: routes.top(p.slug), html: renderTop(p, env) },
-      { key: `${p.slug}-about`, path: routes.about(p.slug), html: renderAbout(p, env) },
-      { key: `${p.slug}-insight`, path: routes.insight(p.slug, p.insight.slug), html: renderInsight(p, env) },
-      { key: `${p.slug}-service`, path: routes.service(p.slug), html: renderService(p, env) },
-      { key: `${p.slug}-contact`, path: routes.contact(p.slug), html: await renderContact(p, env) },
+      { key: `${p.slug}-top`, path: routes.top(p.slug), html: renderTop(p, env), lastmod },
+      { key: `${p.slug}-about`, path: routes.about(p.slug), html: renderAbout(p, env), lastmod },
+      { key: `${p.slug}-insight`, path: routes.insight(p.slug, p.insight.slug), html: renderInsight(p, env), lastmod },
+      { key: `${p.slug}-service`, path: routes.service(p.slug), html: renderService(p, env), lastmod },
+      { key: `${p.slug}-contact`, path: routes.contact(p.slug), html: await renderContact(p, env), lastmod },
     );
   }
 
   writeBrandFiles(root);
+  writeOgManifest(root);
+  checkFontCharset(root, out.map((o) => o.html).join(''));
 
-  return out.map(({ key, path, html }) => {
-    const file = resolve(root, `.${path}`, 'index.html');
+  return out.map(({ key, path, html, lastmod, file: name }) => {
+    const file = resolve(root, name ?? `.${path}/index.html`);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, html);
-    return { key, path, file };
+    return { key, path, file, lastmod };
   });
+}
+
+/**
+ * SNS用画像（public/og/<key>.png）の材料。scripts/og.mjs がこれを読んで 1200×630 の画像を作る。
+ * 画像は手元で作ってコミットする（Vercel のビルドではブラウザを動かさない）。
+ */
+function writeOgManifest(root: string) {
+  const items = [
+    { key: 'site', label: 'Partner Companies', heading: '会う前に、選ばれる理由をつくる。', company: '合同会社Music Japan が運営する紹介プログラム' },
+    ...partners.flatMap((p) => {
+      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme };
+      return [
+        { ...base, key: `${p.slug}-top`, label: `No.${p.no}`, heading: plain(p.top.title) },
+        { ...base, key: `${p.slug}-about`, label: 'About', heading: plain(p.about.title) },
+        { ...base, key: `${p.slug}-service`, label: 'Service', heading: p.seo.service.answer.q },
+        { ...base, key: `${p.slug}-insight`, label: 'Insights', heading: plain(p.insight.title) },
+        { ...base, key: `${p.slug}-contact`, label: 'Talk', heading: `${shortName(p)}と、話してみる。` },
+      ];
+    }),
+  ];
+  writeFileSync(resolve(root, '.og-manifest.json'), JSON.stringify(items, null, 2));
+}
+
+/**
+ * 日本語フォントは使う文字だけに絞っている（scripts/fonts.py）。
+ * ページに、フォントに入っていない文字が増えたら知らせる（その文字だけOSのフォントで表示される）。
+ */
+function checkFontCharset(root: string, html: string) {
+  let charset = '';
+  try {
+    charset = readFileSync(resolve(root, 'src/styles/fonts/charset.txt'), 'utf8');
+  } catch {
+    return;
+  }
+  const have = new Set(charset);
+  const text = html.replace(/<[^>]+>/g, '');
+  const missing = [...new Set(text)].filter((c) => /[\u3000-\u9fff\uff00-\uffef]/.test(c) && !have.has(c));
+  if (missing.length) {
+    console.warn(`\n[fonts] フォントにない文字が ${missing.length} 字あります：${missing.join('')}\n→ npm run fonts でフォントを作り直してください\n`);
+  }
+}
+
+/** 一覧ページの更新日は、掲載企業の中でいちばん新しい日 */
+function latest(): string {
+  return [site.updated, ...partners.map((p) => p.seo.updated)].sort().at(-1) ?? site.updated;
 }
 
 /**

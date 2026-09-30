@@ -1,13 +1,12 @@
 /*
  * Webフォントは描画をブロックしないよう、main.ts から非同期で読み込む。
- * 読み込み前はOS標準の明朝・ゴシックで表示され、届いたら差し替わる（font-display: swap）。
- *   見出し：Zen Old Mincho（700 / 900）… 太いウェイトまでコントラストが美しい明朝
- *   本文　：Zen Kaku Gothic New（400 / 700）
+ *   見出し：Zen Old Mincho（700 / 900）… 太いウェイトまでコントラストが美しい明朝（swap）
+ *   本文　：Zen Kaku Gothic New（400 / 700）… optional（差し替えで段落がずれない。2ページ目からはキャッシュで表示）
  *   欧文　：Fraunces（可変フォント。字幅・光学サイズが連続で変わる）
+ *
+ * 日本語フォントは「このサイトで使う文字だけ」に絞ったファイル（scripts/fonts.py が fonts-faces.css と一緒に生成）。
+ * 文字範囲ごとに分割された約600個の @font-face を照合する負荷がなくなり、スマホでの表示と操作が軽くなる。
  */
-@import '@fontsource/zen-kaku-gothic-new/400.css';
-@import '@fontsource/zen-kaku-gothic-new/700.css';
-@import '@fontsource/zen-old-mincho/700.css';
-@import '@fontsource/zen-old-mincho/900.css';
+@import './fonts-faces.css';
 @import '@fontsource-variable/fraunces/opsz.css';
 @import '@fontsource-variable/fraunces/opsz-italic.css';

@@ -475,3 +475,34 @@
 [data-theme='mono'] .cta-band::before {
   background: linear-gradient(90deg, var(--ink) 0 88px, transparent 88px);
 }
+
+/* 検索・AI向けの部品（mono の世界観：角ばった枠、ゴシック、黒の差し色） */
+[data-theme='mono'] .answer-in,
+[data-theme='mono'] .next-card,
+[data-theme='mono'] .a-keys {
+  border-radius: 0;
+  border-color: var(--rule-2);
+}
+[data-theme='mono'] .answer-in {
+  border-left-color: var(--ink);
+}
+[data-theme='mono'] .answer-k,
+[data-theme='mono'] .next-k {
+  font-family: var(--f-latin);
+  font-style: normal;
+  font-weight: 800;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+[data-theme='mono'] .answer-q,
+[data-theme='mono'] .next-t,
+[data-theme='mono'] .a-keys-h {
+  font-family: var(--f-sans);
+  font-weight: 900;
+}
+[data-theme='mono'] .a-keys {
+  border-top-color: var(--ink);
+}
+[data-theme='mono'] .in-link {
+  text-decoration-color: var(--accent, var(--brand-2));
+}

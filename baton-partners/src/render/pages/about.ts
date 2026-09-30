@@ -1,8 +1,9 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
-import { breadcrumbLd, ctaBand, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
-import { leaderSection, pageHero } from '../parts';
-import { esc, heading, jp, plain } from '../text';
+import { ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
+import { answerBox, leaderSection, nextReads, pageHero } from '../parts';
+import { breadcrumbLd, ids, orgLd, pageLd } from '../seo';
+import { esc, heading, jp } from '../text';
 
 export function renderAbout(p: Partner, env: BuildEnv): string {
   const a = p.about;
@@ -53,6 +54,8 @@ ${header(p, 'about')}
     crumbs: [{ name: shortName(p), href: routes.top(p.slug) }, { name: '取り組み' }],
   })}
 
+  ${answerBox(p.seo.about.answer, 'about-answer')}
+
   <section class="sec sec-statement" aria-label="ステートメント">
     <div class="wrap statement">
       <p class="statement-p rv">${heading(p.top.aboutQuote)}</p>
@@ -98,6 +101,8 @@ ${header(p, 'about')}
     </div>
   </section>
 
+  ${nextReads(p, 'about')}
+
   ${ctaBand(p)}
 </main>
 ${footer(p)}`;
@@ -107,19 +112,23 @@ ${footer(p)}`;
       kind: 'about',
       path,
       partner: p,
-      title: `取り組み｜${p.company.name} - Baton Partners`,
-      description: `${plain(a.title)} ${a.lead}`,
+      title: p.seo.about.title,
+      description: p.seo.about.description,
+      og: `/og/${p.slug}-about.png`,
       jsonLd: [
         ...orgLd(env, p),
-        {
-          '@type': 'AboutPage',
-          name: `${p.company.name}の取り組み`,
-          url: `${env.siteUrl}${path}`,
-          about: { '@id': `${env.siteUrl}${routes.top(p.slug)}#org` },
-          inLanguage: 'ja',
-        },
-        breadcrumbLd(env, [
-          { name: p.company.name, href: routes.top(p.slug) },
+        pageLd(env, {
+          type: 'AboutPage',
+          path,
+          name: p.seo.about.title,
+          description: p.seo.about.description,
+          image: `/og/${p.slug}-about.png`,
+          partner: p,
+          dateModified: p.seo.updated,
+          mainEntity: ids.org(env, p),
+        }),
+        breadcrumbLd(env, path, [
+          { name: shortName(p), href: routes.top(p.slug) },
           { name: '取り組み', href: path },
         ]),
       ],

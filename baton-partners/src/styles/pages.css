@@ -1326,7 +1326,7 @@ html.js .phero-h .ph {
 }
 .a-callout-t {
   font-weight: 700;
-  color: var(--brand);
+  color: color-mix(in srgb, var(--brand) 82%, #000);
   letter-spacing: 0.1em;
   font-size: 0.84rem;
   margin-bottom: 6px;
@@ -2156,4 +2156,194 @@ html.js .phero-h .ph {
 .pv ul {
   list-style: disc;
   padding-left: 1.4em;
+}
+
+/* ═════ 検索・AI向けの部品（SEO/AIO/LLMO） ═════ */
+
+/* トップのステージ直後のパンくず */
+.crumb-row {
+  padding-top: clamp(28px, 4vw, 48px);
+}
+
+/* 一言で答える要約。段落単位で抜き出されても意味が通るように、問いと答えをひとまとまりに */
+.answer {
+  padding-block: clamp(28px, 4vw, 56px);
+}
+.answer-in {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px clamp(16px, 3vw, 36px);
+  align-items: start;
+  padding: clamp(22px, 3vw, 36px) clamp(20px, 3vw, 40px);
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--brand);
+  background: var(--card);
+}
+.answer-k {
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-weight: 600;
+  font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.4rem);
+  line-height: 1;
+  color: var(--brand);
+}
+.answer-body {
+  display: grid;
+  gap: 10px;
+}
+.answer-q {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 0.95rem + 0.6vw, 1.45rem);
+  line-height: 1.5;
+}
+.answer-a {
+  color: var(--ink-2);
+  line-height: 1.95;
+  max-width: 46em;
+}
+
+/* 本文中のリンク */
+.in-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--brand) 60%, transparent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  transition: text-decoration-color 0.2s;
+}
+.in-link:hover {
+  text-decoration-color: var(--brand);
+}
+
+/* 次に読む */
+.next-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+.next-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  height: 100%;
+  padding: 24px 24px 56px;
+  border: 1px solid var(--rule);
+  background: var(--card);
+  transition: border-color 0.3s var(--ease);
+}
+.next-card:hover {
+  border-color: var(--ink);
+}
+.next-k {
+  font-family: var(--f-latin);
+  font-style: italic;
+  font-size: 0.85rem;
+  color: var(--brand);
+}
+.next-t {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+.next-d {
+  font-size: 0.82rem;
+  line-height: 1.8;
+  color: var(--ink-3);
+}
+.next-card .arrow {
+  position: absolute;
+  left: 24px;
+  bottom: 22px;
+}
+@media (max-width: 959px) {
+  .next-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 記事の要点 */
+.a-keys {
+  margin: 28px 0 36px;
+  padding: 24px clamp(20px, 3vw, 32px);
+  border: 1px solid var(--rule);
+  border-top: 3px solid var(--brand);
+  background: var(--card);
+}
+.a-keys-h {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 12px;
+}
+.a-keys ul {
+  display: grid;
+  gap: 10px;
+  padding-left: 1.2em;
+  list-style: disc;
+}
+.a-keys li {
+  line-height: 1.85;
+}
+.a-keys li::marker {
+  color: var(--brand);
+}
+
+/* 記事の出典 */
+.a-sources {
+  margin-top: 36px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+  font-size: 0.84rem;
+  color: var(--ink-2);
+}
+.a-sources-t {
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.a-sources ol {
+  display: grid;
+  gap: 6px;
+  padding-left: 1.4em;
+  list-style: decimal;
+}
+.a-sources a {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  overflow-wrap: anywhere;
+}
+
+/* 一覧ページ：各社の5ページへの入口 */
+.hub-item {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+.pcard-desc {
+  font-size: 0.84rem;
+  line-height: 1.8;
+  color: var(--ink-3);
+  padding-right: 28px;
+}
+.hub-links {
+  display: grid;
+  gap: 2px;
+  font-size: 0.86rem;
+}
+.hub-links a {
+  display: block;
+  padding: 8px 2px;
+  border-bottom: 1px solid var(--rule);
+  transition: color 0.2s;
+}
+.hub-links a:hover {
+  color: var(--brand);
+}
+.index-note {
+  margin-top: 28px;
+  font-size: 0.84rem;
+  color: var(--ink-3);
 }

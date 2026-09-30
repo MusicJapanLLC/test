@@ -1,5 +1,6 @@
 import { defineConfig, type Plugin } from 'vite';
 import { generatePages, type GeneratedPage } from './src/render/generate';
+import { llmsFullTxt, llmsTxt } from './src/render/llms';
 import type { BuildEnv } from './src/render/layout';
 
 const root = process.cwd();
@@ -29,6 +30,19 @@ const googleFonts = process.env.BP_FONTS === 'google';
 const noindex = !isProduction || process.env.BP_NOINDEX === '1';
 const env: BuildEnv = { siteUrl: siteUrl(), noindex, googleFonts };
 
+/**
+ * 検索とAI向けのファイル。
+ *   robots.txt  … 検索エンジンと、AI検索・AIアシスタントのクローラーを名前で明示して許可
+ *   sitemap.xml … canonical のURLだけ。lastmod は内容を大きく見直した日
+ *   llms.txt / llms-full.txt … AIがサイト全体を把握するための索引と全文
+ */
+const AI_BOTS = [
+  // 検索・回答のための取得（ここを止めると AI の回答に出にくくなる）
+  'OAI-SearchBot', 'ChatGPT-User', 'Claude-SearchBot', 'Claude-User', 'PerplexityBot', 'Perplexity-User',
+  // 学習・生成AI機能での利用（Google-Extended と Applebot-Extended は Google 検索・Apple の検索順位には影響しない）
+  'GPTBot', 'ClaudeBot', 'Google-Extended', 'Applebot-Extended', 'CCBot', 'meta-externalagent',
+];
+
 function seoFiles(pages: GeneratedPage[]): Plugin {
   return {
     name: 'bp-seo-files',
@@ -39,7 +53,20 @@ function seoFiles(pages: GeneratedPage[]): Plugin {
         fileName: 'robots.txt',
         source: env.noindex
           ? 'User-agent: *\nDisallow: /\n'
-          : `User-agent: *\nAllow: /\n\nSitemap: ${env.siteUrl}/sitemap.xml\n`,
+          : [
+              '# Baton Partners（合同会社Music Japan）',
+              '# 検索エンジンも AI のクローラーも、すべてのページを読んでかまいません。',
+              '',
+              'User-agent: *',
+              'Allow: /',
+              '',
+              '# AI検索・AIアシスタント（明示的に許可）',
+              ...AI_BOTS.map((b) => `User-agent: ${b}`),
+              'Allow: /',
+              '',
+              `Sitemap: ${env.siteUrl}/sitemap.xml`,
+              '',
+            ].join('\n'),
       });
       this.emitFile({
         type: 'asset',
@@ -47,11 +74,13 @@ function seoFiles(pages: GeneratedPage[]): Plugin {
         source:
           '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
           pages
-            .filter((p) => p.key !== 'index')
-            .map((p) => `  <url><loc>${env.siteUrl}${p.path}</loc></url>`)
+            .filter((p) => p.lastmod)
+            .map((p) => `  <url><loc>${env.siteUrl}${p.path}</loc><lastmod>${p.lastmod}</lastmod></url>`)
             .join('\n') +
           '\n</urlset>\n',
       });
+      this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(env) });
+      this.emitFile({ type: 'asset', fileName: 'llms-full.txt', source: llmsFullTxt(env) });
     },
   };
 }

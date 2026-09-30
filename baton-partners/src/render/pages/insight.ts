@@ -1,7 +1,9 @@
-import { routes, site } from '../../config/site';
+import { routes } from '../../config/site';
 import type { Block, Partner } from '../../types';
-import { breadcrumb, breadcrumbLd, ctaBand, document, footer, header, orgLd, shortName, type BuildEnv } from '../layout';
-import { esc, heading, jp } from '../text';
+import { breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
+import { nextReads, sourcesList } from '../parts';
+import { abs, breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
+import { esc, heading, jp, text } from '../text';
 
 function block(b: Block): string {
   switch (b.type) {
@@ -28,6 +30,8 @@ export function renderInsight(p: Partner, env: BuildEnv): string {
   const a = p.insight;
   const path = routes.insight(p.slug, a.slug);
   const date = a.published.replace(/-/g, '.');
+  const updated = p.seo.updated;
+  const og = `/og/${p.slug}-insight.png`;
 
   const toc = a.sections
     .map((s, i) => `<li><a href="#${s.id}"><span>${String(i + 1).padStart(2, '0')}</span>${jp(s.heading)}</a></li>`)
@@ -55,24 +59,29 @@ export function renderInsight(p: Partner, env: BuildEnv): string {
   const body = `
 ${header(p, 'insight')}
 <main id="main" class="article-main">
-  <article class="article" itemscope itemtype="https://schema.org/Article">
+  <article class="article">
     <header class="a-head">
       <div class="scene scene-sub scene-article" data-scene="network" data-count="700" data-phase="1.55" aria-hidden="true"><canvas></canvas></div>
       <div class="wrap a-head-in">
         ${breadcrumb([{ name: shortName(p), href: routes.top(p.slug) }, { name: '記事' }])}
         <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>02 — Insights<span class="kicker-co">${esc(a.category)}</span></p>
-        <h1 class="a-h1" itemprop="headline">${heading(a.title)}</h1>
+        <h1 class="a-h1">${heading(a.title)}</h1>
         <p class="a-meta">
-          <time datetime="${a.published}" itemprop="datePublished">${date}</time>
+          <span>公開 <time datetime="${a.published}">${date}</time></span>
+          ${updated > a.published ? `<span>更新 <time datetime="${updated}">${updated.replace(/-/g, '.')}</time></span>` : ''}
           <span>${a.readingMinutes}分で読めます</span>
-          <span>Baton Partners 編集部</span>
+          <a href="${routes.editorial()}">Baton Partners 編集部</a>
         </p>
       </div>
     </header>
 
     <div class="wrap a-layout">
-      <div class="a-body" itemprop="articleBody">
+      <div class="a-body">
         <p class="a-lead">${jp(a.lead)}</p>
+        <section class="a-keys" aria-labelledby="keys-h">
+          <h2 id="keys-h" class="a-keys-h">${esc(p.seo.insightQuestion)}</h2>
+          <ul>${a.keyPoints.map((k) => `<li>${jp(k)}</li>`).join('')}</ul>
+        </section>
         <details class="toc toc-inline" open>
           <summary>目次</summary>
           <ol>${toc}</ol>
@@ -86,7 +95,8 @@ ${header(p, 'insight')}
             <a class="btn btn-cta" href="${routes.contact(p.slug)}" data-cursor="Talk">話してみる</a>
           </div>
         </aside>
-        <p class="a-credit">${jp(`この記事はBaton Partners編集部が制作しています。${p.service.name}に関する記載は、${p.company.name}の公開情報にもとづきます。`)}</p>
+        ${sourcesList(a.sources)}
+        <p class="a-credit">${jp(`この記事は[Baton Partners編集部](${routes.editorial()})が制作しています。${p.service.name}に関する記載は、${p.company.name}の公開情報にもとづきます。`)}</p>
       </div>
       <div class="a-side">
         <div class="a-side-sticky">
@@ -96,6 +106,8 @@ ${header(p, 'insight')}
       </div>
     </div>
   </article>
+
+  ${nextReads(p, 'insight')}
 
   ${ctaBand(p)}
 </main>
@@ -107,25 +119,43 @@ ${footer(p)}`;
       path,
       partner: p,
       ogType: 'article',
-      title: `${a.title} - Baton Partners`,
+      title: p.seo.insightTitle,
       description: a.description,
+      og,
+      ogAlt: a.title,
       jsonLd: [
         ...orgLd(env, p),
+        serviceLd(env, p),
+        pageLd(env, {
+          path,
+          name: p.seo.insightTitle,
+          description: a.description,
+          image: og,
+          partner: p,
+          dateModified: updated,
+          mainEntity: ids.article(env, path),
+        }),
         {
           '@type': 'Article',
-          headline: a.title,
+          '@id': ids.article(env, path),
+          headline: text(a.title),
           description: a.description,
+          image: abs(env, og),
           datePublished: a.published,
-          dateModified: a.published,
+          dateModified: updated,
           inLanguage: 'ja',
-          mainEntityOfPage: `${env.siteUrl}${path}`,
-          author: { '@type': 'Organization', name: 'Baton Partners 編集部' },
-          publisher: { '@type': 'Organization', name: site.operator.name, url: site.operator.url },
-          about: { '@id': `${env.siteUrl}${routes.top(p.slug)}#org` },
+          articleSection: a.category,
+          mainEntityOfPage: { '@id': ids.page(env, path) },
+          isPartOf: { '@id': ids.page(env, path) },
+          author: { '@id': ids.editorial(env) },
+          publisher: { '@id': ids.operator },
+          about: { '@id': ids.org(env, p) },
+          mentions: [{ '@id': ids.service(env, p) }],
+          citation: a.sources.map((s) => s.url),
         },
-        breadcrumbLd(env, [
-          { name: p.company.name, href: routes.top(p.slug) },
-          { name: a.title, href: path },
+        breadcrumbLd(env, path, [
+          { name: shortName(p), href: routes.top(p.slug) },
+          { name: '記事', href: path },
         ]),
       ],
     },

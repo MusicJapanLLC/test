@@ -1,9 +1,10 @@
 import { routes, site } from '../config/site';
 import { bpLogo } from './logo';
 import type { Partner } from '../types';
+import { abs, siteLd } from './seo';
 import { esc, heading, jp } from './text';
 
-export type PageKind = 'top' | 'about' | 'insight' | 'service' | 'contact' | 'privacy' | 'index';
+export type PageKind = 'top' | 'about' | 'insight' | 'service' | 'contact' | 'privacy' | 'index' | 'editorial' | 'notfound';
 
 export type PageMeta = {
   kind: PageKind;
@@ -13,6 +14,12 @@ export type PageMeta = {
   partner?: Partner;
   jsonLd?: Record<string, unknown>[];
   ogType?: 'website' | 'article';
+  /** SNS・AIの引用で使う画像（/og/<key>.png、1200×630） */
+  og: string;
+  /** 画像の説明（og:image:alt） */
+  ogAlt?: string;
+  /** 404 など、検索に出さないページ */
+  noindex?: boolean;
 };
 
 export type BuildEnv = {
@@ -33,25 +40,27 @@ const GOOGLE_FONTS =
 export const shortName = (p: Partner): string =>
   p.company.name.replace(/^(株式会社|合同会社|有限会社)|(株式会社|合同会社|有限会社)$/g, '');
 
-const abs = (env: BuildEnv, path: string) => `${env.siteUrl}${path}`;
-
 export function head(meta: PageMeta, env: BuildEnv): string {
   const p = meta.partner;
   const canonical = abs(env, meta.path);
-  const ld = meta.jsonLd?.length
-    ? `<script type="application/ld+json">${JSON.stringify({
-        '@context': 'https://schema.org',
-        '@graph': meta.jsonLd,
-      }).replace(/</g, '\\u003c')}</script>`
-    : '';
+  const graph = [...siteLd(env), ...(meta.jsonLd ?? [])];
+  const ld = `<script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': graph,
+  }).replace(/</g, '\\u003c')}</script>`;
+  const noindex = env.noindex || meta.noindex;
+  const ogImage = abs(env, meta.og);
   return `
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>${esc(meta.title)}</title>
 <meta name="description" content="${esc(meta.description)}" />
-${env.noindex ? '<meta name="robots" content="noindex, nofollow, noarchive" />' : ''}
-<link rel="canonical" href="${canonical}" />
+${noindex ? '<meta name="robots" content="noindex, nofollow, noarchive" />' : '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1" />'}
+${meta.noindex ? '' : `<link rel="canonical" href="${canonical}" />`}
+<link rel="icon" href="/favicon.ico" sizes="48x48" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 ${env.googleFonts ? `<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin /><link rel="stylesheet" href="${GOOGLE_FONTS}" media="print" onload="this.media='all'" />` : ''}
 <meta name="theme-color" content="${site.colors.paper}" />
 <meta name="format-detection" content="telephone=no" />
@@ -61,6 +70,10 @@ ${env.googleFonts ? `<link rel="preconnect" href="https://fonts.googleapis.com" 
 <meta property="og:description" content="${esc(meta.description)}" />
 <meta property="og:url" content="${canonical}" />
 <meta property="og:locale" content="ja_JP" />
+<meta property="og:image" content="${ogImage}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="${esc(meta.ogAlt ?? meta.title)}" />
 <meta name="twitter:card" content="summary_large_image" />
 ${p ? `<style>html:root{--brand:${p.brand.primary};--brand-2:${p.brand.accent};--scene-a:${p.brand.scene.a};--scene-b:${p.brand.scene.b};--scene-match:${p.brand.scene.match}}</style>` : ''}
 ${ld}`.trim();
@@ -164,6 +177,8 @@ export function footer(p?: Partner): string {
     ${partnerLinks}
     <div class="ftr-meta">
       <p>運営：<a href="${site.operator.url}" target="_blank" rel="noopener">${site.operator.name}</a></p>
+      <p><a href="/">掲載企業の一覧</a></p>
+      <p><a href="${routes.editorial()}">Baton Partners 編集部について</a></p>
       <p><a href="${routes.privacy()}">プライバシーポリシー</a></p>
       <p class="ftr-copy">© ${new Date().getFullYear()} ${site.operator.nameEn}</p>
     </div>
@@ -171,43 +186,16 @@ export function footer(p?: Partner): string {
 </footer>`.trim();
 }
 
+/** 画面のパンくず。先頭は必ず Baton Partners（/）。構造化データ（seo.ts の breadcrumbLd）と同じ並び */
 export function breadcrumb(items: { name: string; href?: string }[]): string {
-  return `<nav class="crumb" aria-label="パンくずリスト"><ol>${items
+  const all = [{ name: site.name, href: '/' }, ...items];
+  return `<nav class="crumb" aria-label="パンくずリスト"><ol>${all
     .map((it) =>
       it.href
         ? `<li><a href="${it.href}">${esc(it.name)}</a></li>`
         : `<li><span aria-current="page">${esc(it.name)}</span></li>`,
     )
     .join('')}</ol></nav>`;
-}
-
-export function breadcrumbLd(env: BuildEnv, items: { name: string; href: string }[]) {
-  return {
-    '@type': 'BreadcrumbList',
-    itemListElement: items.map((it, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: it.name,
-      item: abs(env, it.href),
-    })),
-  };
-}
-
-export function orgLd(env: BuildEnv, p: Partner) {
-  return [
-    {
-      '@type': 'Organization',
-      '@id': `${abs(env, routes.top(p.slug))}#org`,
-      name: p.company.name,
-      url: p.company.url,
-    },
-    {
-      '@type': 'Organization',
-      '@id': `${env.siteUrl}/#operator`,
-      name: site.operator.name,
-      url: site.operator.url,
-    },
-  ];
 }
 
 export function document(meta: PageMeta, env: BuildEnv, body: string): string {
