@@ -10,7 +10,8 @@
 .partner-marquee__item { display:grid; place-items:center; width:clamp(240px,28vw,350px); padding-inline:36px; }
 .partner-logo { display:grid; place-items:center; width:100%; height:100px; overflow:hidden; background:#fff; }
 .partner-logo img { display:block; width:100%; height:100%; object-fit:contain; }
-.partner-logo--central-ax img { width:210%; max-width:none; height:210%; object-fit:contain; }
+.partner-logo--central-ax { position:relative; }
+.partner-logo--central-ax img { position:absolute; top:50%; left:50%; width:210%; max-width:none; height:210%; object-fit:contain; transform:translate(-50%,-50%); }
 .partner-strip:hover .partner-marquee__track,.partner-strip:focus-within .partner-marquee__track,.partner-strip.is-paused .partner-marquee__track { animation-play-state:paused; }
 @keyframes partner-drift { to { transform:translateX(-50%); } }
 .partner-directory { margin-top:clamp(64px,8vw,108px); }
