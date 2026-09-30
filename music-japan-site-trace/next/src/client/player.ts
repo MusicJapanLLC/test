@@ -3,7 +3,7 @@ import type { World } from './world';
 
 type Release = {
   id: string; no: string; title: string; artist: string; type: string; description: string;
-  href: string; platform: string; art: string; thumb: string; accent: string;
+  href: string; platform: string; art: string; thumb: string; accent: string; genre: string;
   previews: { title: string; src: string }[]; credit: string;
 };
 
@@ -41,6 +41,7 @@ export function setupPlayer(world: World | null) {
     document.documentElement.classList.toggle('is-audio', on);
     playBtn.setAttribute('aria-label', on ? labels.pause : labels.play);
     if (now) now.textContent = on ? `NOW SPINNING — ${releases[index].no} ${releases[index].title}` : 'NOW SPINNING — MJ-000';
+    document.dispatchEvent(new CustomEvent('mj:play', { detail: { on, genre: releases[index].genre } }));
   };
 
   const load = (i: number, t = 0) => {
@@ -117,9 +118,6 @@ export function setupPlayer(world: World | null) {
     opener = from;
     load(i);
     dlg.showModal();
-    // keep the character on stage (dialogs live in the top layer)
-    const buddy = document.querySelector('.buddy');
-    if (buddy) dlg.append(buddy);
     document.documentElement.classList.add('is-player');
     cancelAnimationFrame(raf);
     draw();
@@ -136,8 +134,6 @@ export function setupPlayer(world: World | null) {
     setPlaying(false);
     cancelAnimationFrame(raf);
     document.documentElement.classList.remove('is-player');
-    const buddy = dlg.querySelector('.buddy');
-    if (buddy) document.body.append(buddy);
     world?.setAccent('#e1222f');
     opener?.focus();
   });

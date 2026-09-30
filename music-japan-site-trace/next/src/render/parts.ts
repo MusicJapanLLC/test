@@ -50,6 +50,7 @@ export function releaseData(locale: Locale) {
     art: artwork(r, 1200),
     thumb: artwork(r, 480),
     accent: r.accent,
+    genre: r.genre,
     previews: r.previews,
     credit: r.credit,
   }));

@@ -17,7 +17,15 @@ export function phrases(text: string, cls = 'ph'): string {
     .split('\n')
     .map((line) => {
       const parts = hasJa(line) ? parser.parse(line) : line.split(/(?<=\s)/);
-      return parts.map((p) => `<span class="${cls}">${esc(p)}</span>`).join('');
+      // Spaces stay *between* the inline-block phrases: a trailing space inside an inline-block
+      // collapses (iOS Safari drops it), which glued English words together.
+      return parts
+        .map((p) => {
+          const [, lead, word, trail] = p.match(/^(\s*)([\s\S]*?)(\s*)$/)!;
+          return `${lead ? ' ' : ''}${word ? `<span class="${cls}">${esc(word)}</span>` : ''}${trail ? ' ' : ''}`;
+        })
+        .join('')
+        .replace(/ {2,}/g, ' ');
     })
     .join('<br>');
 }

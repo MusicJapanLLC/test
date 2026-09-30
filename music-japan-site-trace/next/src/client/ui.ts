@@ -19,12 +19,14 @@ export function setupHeader() {
     btn.setAttribute('aria-expanded', String(open));
     btn.setAttribute('aria-label', open ? btn.dataset.close! : btn.dataset.open!);
     if (open) lenis?.stop(); else lenis?.start();
+    document.dispatchEvent(new CustomEvent('mj:menu', { detail: { open } }));
   });
   nav?.addEventListener('click', (e) => {
     if ((e.target as Element).closest('a')) {
       document.documentElement.classList.remove('is-menu');
       btn?.setAttribute('aria-expanded', 'false');
       lenis?.start();
+      document.dispatchEvent(new CustomEvent('mj:menu', { detail: { open: false } }));
     }
   });
   document.querySelector('[data-top]')?.addEventListener('click', (e) => {

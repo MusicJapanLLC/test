@@ -6,6 +6,8 @@ export type Release = {
   title: string;
   artist: string;
   group: 'yuma' | 'brand';
+  /** drives how the robot crew dances and what they say */
+  genre: 'hiphop' | 'jpop' | 'rnb' | 'jazz' | 'classical' | 'sleep';
   type: string;
   description: L10n;
   href: string;
@@ -26,6 +28,7 @@ export const releases: Release[] = [
     title: 'TOKYO JUNKIES',
     artist: 'Yuma',
     group: 'yuma',
+    genre: 'hiphop',
     type: 'HIP-HOP / J-POP',
     description: {
       ja: '渋谷、六本木、中野、新宿、下北を駆け抜けた若者たちの、くだらなくて最高だった“未完成の青春”を描く一曲。',
@@ -44,6 +47,7 @@ export const releases: Release[] = [
     title: 'ここにある',
     artist: 'Yuma',
     group: 'yuma',
+    genre: 'jpop',
     type: 'J-POP / ELECTRONIC',
     description: {
       ja: '言葉や意味にできない感情を、夜の静けさの中でそっと肯定するJ-Pop／エレクトロニック作品。',
@@ -62,6 +66,7 @@ export const releases: Release[] = [
     title: 'Beach Sunset',
     artist: 'Yuma',
     group: 'yuma',
+    genre: 'jpop',
     type: 'J-POP · SINGLE',
     description: {
       ja: '夕焼けに染まる海辺の余韻を、淡い色彩と切なさで描いたサマーJ-Pop。',
@@ -80,6 +85,7 @@ export const releases: Release[] = [
     title: 'I know, but tried',
     artist: 'Yuma',
     group: 'yuma',
+    genre: 'rnb',
     type: 'R&B · SINGLE',
     description: {
       ja: '結末は分かっていた。それでも挑み、最後には前へ進むことを選ぶ。愛と後悔と手放すことを歌った、率直なR&B。',
@@ -88,7 +94,8 @@ export const releases: Release[] = [
     href: 'https://music.apple.com/jp/album/i-know-but-tried-single/6771033082',
     platform: 'Apple Music',
     cdn: cdn('Music211/v4/54/db/4e/54db4e60-8d52-2fb5-4e9e-ef40d527886d/4550756733272_cover.png'),
-    art: 'i-know-but-tried',
+    // the backup files for these two releases were saved under each other's names
+    art: 'like-a-drug',
     accent: '#678195',
     previews: [{ title: 'I know, but tried', src: '/audio/i-know-but-tried-preview.mp3' }],
     credit: '℗ 2026 Music Japan LLC',
@@ -98,6 +105,7 @@ export const releases: Release[] = [
     title: 'Like a drug',
     artist: 'Yuma',
     group: 'yuma',
+    genre: 'rnb',
     type: 'EP · 6 SONGS',
     description: {
       ja: '魅惑的で、同じだけ危うい街マイアミを舞台にした6曲。美しさと傷が、同じ光の中にある。',
@@ -106,7 +114,8 @@ export const releases: Release[] = [
     href: 'https://music.apple.com/jp/album/like-a-drug-ep/6783291301',
     platform: 'Apple Music',
     cdn: cdn('Music221/v4/89/fd/74/89fd749f-b1af-2ec1-5100-6e0378372c9e/4550757942116_cover.png'),
-    art: 'like-a-drug',
+    // the backup files for these two releases were saved under each other's names
+    art: 'i-know-but-tried',
     accent: '#c12a36',
     previews: [
       { title: 'To Our Future', src: '/audio/like-a-drug-to-our-future-preview.mp3' },
@@ -120,6 +129,7 @@ export const releases: Release[] = [
     title: 'All I need',
     artist: 'Yuma',
     group: 'yuma',
+    genre: 'rnb',
     type: 'R&B · SINGLE',
     description: {
       ja: 'すべてを削ぎ落として辿り着いた、ひとつの答え。必要なのは、ただひとりだけ。生々しいR&Bの告白。',
@@ -138,6 +148,7 @@ export const releases: Release[] = [
     title: 'Late Night Jazz Lounge 2026',
     artist: 'Cozy Cafe Jazz BGM',
     group: 'brand',
+    genre: 'jazz',
     type: 'JAZZ / RELAXATION',
     description: {
       ja: '都市の雨音と滑らかなピアノで、深夜のラウンジを描く全10曲のジャズ・アルバム。',
@@ -156,6 +167,7 @@ export const releases: Release[] = [
     title: 'Fairytale Classical Music for Study and Reading',
     artist: 'Relaxing Classical Music Live',
     group: 'brand',
+    genre: 'classical',
     type: 'CLASSICAL / STUDY',
     description: {
       ja: '童話のページをめくるような穏やかな音像を、学習と読書に寄り添う15曲にまとめた作品。',
@@ -174,6 +186,7 @@ export const releases: Release[] = [
     title: 'Soft Rain Piano for Deep Sleep',
     artist: 'Deep Sleep Music Radio',
     group: 'brand',
+    genre: 'sleep',
     type: 'SLEEP / AMBIENT',
     description: {
       ja: '柔らかな雨音とピアノを重ね、就寝前から静かな休息へ寄り添う全12曲。',
