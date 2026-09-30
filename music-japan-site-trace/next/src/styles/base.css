@@ -112,10 +112,17 @@ p:lang(ja), [lang='ja'] p { word-break: keep-all; overflow-wrap: anywhere; }
   position: fixed; z-index: 60; top: 0; left: 0; right: 0;
   display: flex; align-items: center; gap: 28px;
   padding: 18px var(--pad);
-  transition: transform 0.6s var(--ease), background 0.4s, backdrop-filter 0.4s;
+  transition: transform 0.6s var(--ease);
 }
-.hd.is-scrolled { background: rgba(6, 6, 7, 0.55); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line); }
+/* The frosted bar lives on a pseudo-element: backdrop-filter on .hd itself would become the
+   containing block of the fixed mobile menu and squash it into the header's height. */
+.hd::before {
+  content: ''; position: absolute; inset: 0; z-index: -2; pointer-events: none; opacity: 0; transition: opacity 0.4s;
+  background: rgba(6, 6, 7, 0.55); backdrop-filter: blur(14px) saturate(1.2); -webkit-backdrop-filter: blur(14px) saturate(1.2); border-bottom: 1px solid var(--line);
+}
+.hd.is-scrolled::before { opacity: 1; }
 .hd.is-hidden { transform: translateY(-110%); }
+.is-menu .hd, .is-menu .hd.is-hidden { transform: none; }
 .hd-brand { display: flex; align-items: center; gap: 12px; flex: none; }
 .hd-brand .mj-mark { width: 40px; height: 40px; color: var(--paper); transition: transform 1.2s var(--ease); }
 .hd-brand:hover .mj-mark { transform: rotate(-180deg); }
