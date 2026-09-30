@@ -20,7 +20,8 @@ jobs:
             if (!r.ok) throw new Error(url + ': HTTP ' + r.status);
             return r.text();
           };
-          const pageContent = html => html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/\s+/g, ' ').trim();
+          const decodeEmail = hex => { const bytes = Buffer.from(hex, 'hex'); return Buffer.from([...bytes.subarray(1)].map(b => b ^ bytes[0])).toString('utf8'); };
+          const pageContent = html => html.replace(/<(a|span)\b[^>]*data-cfemail="([0-9a-f]+)"[^>]*>[\s\S]*?<\/\1>/gi, (_, tag, hex) => decodeEmail(hex)).replace(/<\/?a\b[^>]*>/gi, '').replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '').replace(/\s+/g, ' ').trim();
           const bundles = html => JSON.stringify([...html.matchAll(/<script[^>]+type="module"[^>]+src="([^"]+)"/g)].map(m => m[1]).sort());
           for (const path of ['/', '/en/']) {
             const expected = await read(preview + path);
