@@ -1,4 +1,4 @@
-name: Verify Music Japan PR 917 publication
+name: Verify Music Japan PR 918 publication
 on:
   push:
     branches: [work/verify-music-japan-915]
@@ -13,7 +13,7 @@ jobs:
         run: |
           node --input-type=module <<'NODE'
           import { appendFileSync } from 'node:fs';
-          const preview = 'https://265f35f3.music-japan.pages.dev';
+          const preview = 'https://d6399e48.music-japan.pages.dev';
           const live = 'https://music-japan.com';
           const read = async url => {
             const r = await fetch(url, { headers: { 'Cache-Control': 'no-cache' }, signal: AbortSignal.timeout(15000) });
@@ -26,7 +26,7 @@ jobs:
           for (const path of ['/', '/en/', '/works/', '/en/works/', '/works/like-a-drug/']) {
             const expected = await read(preview + path);
             let matches = false;
-            for (let attempt = 0; attempt < 2; attempt++) {
+            for (let attempt = 0; attempt < 8; attempt++) {
               const actual = await read(live + path);
               console.log(JSON.stringify({ path, liveTitle: actual.match(/<title>(.*?)<\/title>/s)?.[1], previewTitle: expected.match(/<title>(.*?)<\/title>/s)?.[1], liveBundles: bundles(actual), previewBundles: bundles(expected), liveLength: actual.length, previewLength: expected.length }));
               const a = pageContent(actual), e = pageContent(expected); let diff = 0; while (diff < Math.min(a.length,e.length) && a[diff] === e[diff]) diff++; console.log('First content difference:', a.slice(Math.max(0,diff-80),diff+160), '| EXPECTED |', e.slice(Math.max(0,diff-80),diff+160));
@@ -34,7 +34,7 @@ jobs:
               await new Promise(resolve => setTimeout(resolve, 10000));
             }
             if (!matches) throw new Error('Live HTML differs from approved preview: ' + path);
-            const message = live + path + ': HTTP 200, page content and module bundles match PR 917 preview';
+            const message = live + path + ': HTTP 200, page content and module bundles match PR 918 preview';
             console.log(message);
             appendFileSync(process.env.GITHUB_STEP_SUMMARY, '- ' + message + '\n');
           }
