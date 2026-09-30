@@ -149,7 +149,49 @@ export function profileHubHeroHtml(): string {
   const title = Array.from('Baton')
     .map((ch, i) => `<span class="bt-hero__char" style="--i:${i}">${esc(ch)}</span>`)
     .join('');
-  return `
+  // ヒーローの下（一覧・フッターの手前）でも、光のリボンがゆっくり流れ続ける背景。CSSだけで動かす
+  const wave = (y: number, amp: number) =>
+    Array.from({ length: 5 }, (_, i) => {
+      const x = i * 720;
+      return `${i === 0 ? `M${x} ${y}` : ''} C${x + 240} ${y - amp} ${x + 480} ${y + amp} ${x + 720} ${y}`;
+    }).join(' ');
+  const ribbons = [
+    { y: 260, amp: 70, cls: 'a' },
+    { y: 470, amp: 95, cls: 'b' },
+    { y: 690, amp: 60, cls: 'c' },
+  ]
+    .map(
+      (r) =>
+        `<g class="bt-ambient__ribbon bt-ambient__ribbon--${r.cls}"><path class="bt-ambient__silk" d="${wave(r.y, r.amp)}"/><path class="bt-ambient__glint" d="${wave(r.y, r.amp)}"/></g>`,
+    )
+    .join('');
+  const dust = Array.from({ length: 14 }, (_, i) => {
+    // 位置と速さは決め打ちの疑似乱数（ビルドごとに変わらないように）
+    const x = (i * 37 + 11) % 100;
+    const d = 18 + ((i * 7) % 11);
+    const delay = -((i * 5.3) % d);
+    const size = 2 + (i % 3);
+    return `<span style="left:${x}%;--d:${d}s;--delay:${delay.toFixed(1)}s;--s:${size}px"></span>`;
+  }).join('');
+  const ambient = `
+<div class="bt-ambient" aria-hidden="true">
+  <span class="bt-ambient__glow bt-ambient__glow--1"></span>
+  <span class="bt-ambient__glow bt-ambient__glow--2"></span>
+  <span class="bt-ambient__glow bt-ambient__glow--3"></span>
+  <svg class="bt-ambient__ribbons" viewBox="0 0 1440 900" preserveAspectRatio="none" focusable="false">
+    <defs>
+      <linearGradient id="bt-silk" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="#c8102e" />
+        <stop offset="0.55" stop-color="#c9a052" />
+        <stop offset="1" stop-color="#c8102e" />
+      </linearGradient>
+    </defs>
+    ${ribbons}
+  </svg>
+  <div class="bt-ambient__dust">${dust}</div>
+</div>`;
+
+  return `${ambient}
 <header class="bt-hero" data-hero data-bt-hero>
   <canvas class="bt-hero__canvas" data-hero-canvas aria-hidden="true"></canvas>
   <div class="bt-hero__fallback" aria-hidden="true"><span class="bt-hero__fallback-line"></span></div>

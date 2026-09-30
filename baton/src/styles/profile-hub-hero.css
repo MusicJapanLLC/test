@@ -401,3 +401,153 @@ body.talk-hub .talk-hub-card__tag {
   color: rgba(26, 26, 26, 0.72);
   background: rgba(255, 255, 255, 0.6);
 }
+
+/* ── ページ全体の背景（ヒーローの下でも、光がゆっくり流れ続ける） ── */
+
+.bt-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bt-ambient__glow {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.bt-ambient__glow--1 {
+  top: -20vmax;
+  left: -18vmax;
+  background: radial-gradient(circle, rgba(241, 217, 166, 0.32), transparent 62%);
+  animation: bt-drift-1 34s ease-in-out infinite alternate;
+}
+
+.bt-ambient__glow--2 {
+  top: 18vh;
+  right: -24vmax;
+  background: radial-gradient(circle, rgba(200, 16, 46, 0.07), transparent 60%);
+  animation: bt-drift-2 42s ease-in-out infinite alternate;
+}
+
+.bt-ambient__glow--3 {
+  bottom: -30vmax;
+  left: 22vw;
+  background: radial-gradient(circle, rgba(241, 217, 166, 0.26), transparent 62%);
+  animation: bt-drift-3 38s ease-in-out infinite alternate;
+}
+
+@keyframes bt-drift-1 {
+  to { transform: translate3d(14vw, 10vh, 0) scale(1.1); }
+}
+
+@keyframes bt-drift-2 {
+  to { transform: translate3d(-16vw, 14vh, 0) scale(0.92); }
+}
+
+@keyframes bt-drift-3 {
+  to { transform: translate3d(-12vw, -12vh, 0) scale(1.08); }
+}
+
+.bt-ambient__ribbons {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* 波を2周期ぶん描いておき、1周期ずつ横へ流す（つなぎ目が出ない） */
+.bt-ambient__ribbon {
+  animation: bt-flow 46s linear infinite;
+}
+
+.bt-ambient__ribbon--b {
+  animation-duration: 58s;
+  animation-direction: reverse;
+}
+
+.bt-ambient__ribbon--c {
+  animation-duration: 38s;
+}
+
+@keyframes bt-flow {
+  to { transform: translateX(-720px); }
+}
+
+.bt-ambient__silk {
+  fill: none;
+  stroke: url(#bt-silk);
+  stroke-width: 1.2;
+  opacity: 0.26;
+  vector-effect: non-scaling-stroke;
+}
+
+/* リボンの上を、小さな光がすべっていく（次の人へ渡るバトン） */
+.bt-ambient__glint {
+  fill: none;
+  stroke: #e9c98a;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 90 2600;
+  opacity: 0.7;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 4px rgba(233, 201, 138, 0.9));
+  animation: bt-glint 11s linear infinite;
+}
+
+.bt-ambient__ribbon--b .bt-ambient__glint {
+  animation-duration: 15s;
+  animation-delay: -6s;
+}
+
+.bt-ambient__ribbon--c .bt-ambient__glint {
+  animation-duration: 13s;
+  animation-delay: -3s;
+}
+
+@keyframes bt-glint {
+  from { stroke-dashoffset: 2690; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* 立ちのぼる金の粉 */
+.bt-ambient__dust span {
+  position: absolute;
+  bottom: -10px;
+  width: var(--s, 3px);
+  height: var(--s, 3px);
+  border-radius: 50%;
+  background: radial-gradient(circle, #e9c98a, rgba(201, 160, 82, 0));
+  opacity: 0;
+  animation: bt-dust var(--d, 22s) linear var(--delay, 0s) infinite;
+}
+
+@keyframes bt-dust {
+  0% { transform: translate3d(0, 0, 0); opacity: 0; }
+  12% { opacity: 0.8; }
+  80% { opacity: 0.5; }
+  100% { transform: translate3d(3vw, -105vh, 0); opacity: 0; }
+}
+
+/* ヒーローの上では、WebGLの演出に任せる（背景は透けさせない） */
+.bt-hero {
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bt-ambient__glow,
+  .bt-ambient__ribbon,
+  .bt-ambient__glint,
+  .bt-ambient__dust span {
+    animation: none !important;
+  }
+
+  .bt-ambient__dust {
+    display: none;
+  }
+}

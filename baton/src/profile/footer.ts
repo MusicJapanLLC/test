@@ -1,4 +1,3 @@
-import { profiles } from '../data/profiles';
 import { site } from '../data/site';
 import { el, externalAttrs, withBase } from '../lib/dom';
 
@@ -30,17 +29,13 @@ export function renderProfileFooter(mount: HTMLElement): void {
           ['紹介・掲載をご希望の方'],
         ),
       ]),
-      // サイト内の主要ページへの内部リンク。どのページからも一覧と各プロフィールへ辿れるようにする
       el('nav', { class: 'profile-footer__nav', 'aria-label': 'Baton サイト内リンク' }, [
-        el('a', { href: withBase('/profile/'), text: 'Baton -バトン- トップ' }),
-        ...profiles
-          .filter((p) => p.active)
-          .map((p) => el('a', { href: withBase(`/profile/${p.slug}/`), text: `${p.name}（${p.company}）` })),
+        el('a', { href: withBase('/faq/'), text: 'よくある質問' }),
         el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
       ]),
       el('div', { class: 'profile-footer__bottom' }, [
         el('span', { text: `© ${new Date().getFullYear()} ${site.operator.name}` }),
-        el('a', { href: withBase('/profile/'), text: 'Baton' }),
+        el('span', { text: 'Baton' }),
       ]),
     ]),
   );

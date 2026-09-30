@@ -99,6 +99,7 @@ export function llmsTxt(profiles: TalkProfile[], url: UrlFor): string {
     '## 紹介・掲載のご相談',
     '',
     `- [プロフィール一覧（Batonトップ）](${url('/profile/')}): ${REQUEST_FLOW}`,
+    `- [よくある質問](${url('/faq/')}): Batonの仕組み・運営者・紹介の流れ`,
     `- [紹介・掲載をご希望の方（予約ページ）](${LISTING_CONTACT_URL}): ${site.operator.name}への相談窓口`,
     `- [${site.operator.name} 公式サイト](${site.operator.url})`,
     '',
