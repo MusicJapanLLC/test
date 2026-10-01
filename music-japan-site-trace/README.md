@@ -1,5 +1,7 @@
 # Music Japan official site (music-japan.com)
 
+> 作業前に、リポジトリ直下の [`README_WEBSITES.md`](../README_WEBSITES.md)（3サイト共通の説明書と作業ログ）を必ず読むこと。
+
 **現在の本番: NEEDLE DROP（2026-10-01〜）** — `next/` の Vite + TypeScript + Three.js + GSAP サイト。詳細・戻し方: `DESIGN-NEEDLE-DROP-20261001.md`
 
 - `npm run build:deploy` → 新サイトを `deploy-dist/` に生成（Cloudflare Pages のビルド）
