@@ -237,6 +237,127 @@ function requestSection(profile: TalkProfile, opts: RenderOptions): HTMLElement 
   return section;
 }
 
+/** 経歴・人物背景（文章＋経歴の一覧＋2枚目の写真） */
+function storySection(profile: TalkProfile): HTMLElement | null {
+  const story = profile.story;
+  if (!story) return null;
+  return el('section', { class: 'section section--story', id: 'story' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Story', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: story.title ?? '経歴・人物背景', 'data-reveal': true }),
+      ]),
+      el('div', { class: `pf-story${story.image ? ' pf-story--image' : ''}` }, [
+        el(
+          'div',
+          { class: 'prose pf-story__text', 'data-reveal-group': true },
+          story.paragraphs.map((p) => el('p', { 'data-reveal': true, text: p })),
+        ),
+        story.image
+          ? el('figure', { class: 'pf-story__figure', 'data-reveal': true }, [
+              el('img', { src: story.image.src, alt: story.image.alt, loading: 'lazy', decoding: 'async' }),
+            ])
+          : null,
+      ]),
+      story.timeline?.length
+        ? el('div', { class: 'pf-timeline-wrap' }, [
+            el('h3', { class: 'pf-timeline__title', text: 'これまでの歩み', 'data-reveal': true }),
+            el(
+              'ol',
+              { class: 'pf-timeline', 'data-reveal-group': true },
+              story.timeline.map((t) =>
+                el('li', { class: 'pf-timeline__item', 'data-reveal': true }, [
+                  el('p', { class: 'pf-timeline__org', text: t.org }),
+                  el('p', { class: 'pf-timeline__role', text: t.role }),
+                  t.note ? el('p', { class: 'pf-timeline__note', text: t.note }) : null,
+                ]),
+              ),
+            ),
+          ])
+        : null,
+    ]),
+  ]);
+}
+
+/** 会社について（ミッション・ビジョン・要点の表） */
+function aboutSection(profile: TalkProfile): HTMLElement | null {
+  const about = profile.about;
+  if (!about) return null;
+  return el('section', { class: 'section section--about', id: 'company' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Company', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: about.title, 'data-reveal': true }),
+      ]),
+      about.paragraphs?.length
+        ? el(
+            'div',
+            { class: 'prose', 'data-reveal-group': true },
+            about.paragraphs.map((p) => el('p', { 'data-reveal': true, text: p })),
+          )
+        : null,
+      about.facts?.length
+        ? el(
+            'dl',
+            { class: 'pf-facts pf-facts--company', 'data-reveal': true },
+            about.facts.map((f) =>
+              el('div', { class: 'pf-facts__row' }, [el('dt', { text: f.term }), el('dd', { text: f.value })]),
+            ),
+          )
+        : null,
+    ]),
+  ]);
+}
+
+/** 価値観。言葉を大きく、説明を小さく */
+function valuesSection(profile: TalkProfile): HTMLElement | null {
+  if (!profile.values?.length) return null;
+  return el('section', { class: 'section section--values', id: 'values' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Values', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: '価値観', 'data-reveal': true }),
+      ]),
+      el(
+        'div',
+        { class: 'pf-values', 'data-reveal-group': true },
+        profile.values.map((v, i) =>
+          el('div', { class: 'pf-value', 'data-reveal': true }, [
+            el('span', { class: 'pf-value__index', 'aria-hidden': 'true', text: String(i + 1).padStart(2, '0') }),
+            el('h3', { class: 'pf-value__title', text: v.title }),
+            el('p', { class: 'pf-value__body', text: v.body }),
+          ]),
+        ),
+      ),
+    ]),
+  ]);
+}
+
+/** こんな方と繋がりたい。最後に申請フォームへの導線を置く */
+function wantSection(profile: TalkProfile): HTMLElement | null {
+  const want = profile.wantToMeet;
+  if (!want?.items.length) return null;
+  return el('section', { class: 'section section--want', id: 'connect' }, [
+    el('div', { class: 'wrap' }, [
+      el('div', { class: 'section__head', 'data-reveal-group': true }, [
+        el('span', { class: 'section__label', text: 'Connect', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: 'こんな方と繋がりたい', 'data-reveal': true }),
+        want.lead ? el('p', { class: 'section__note', text: want.lead, 'data-reveal': true }) : null,
+      ]),
+      el(
+        'ul',
+        { class: 'pf-want', 'data-reveal-group': true },
+        want.items.map((t) => el('li', { class: 'pf-want__item', 'data-reveal': true, text: t })),
+      ),
+      el('p', { class: 'pf-want__cta', 'data-reveal': true }, [
+        el('a', { class: 'btn btn--primary', href: '#talk-request', 'data-magnetic': true }, [
+          `${profile.name}さんへの紹介を希望する`,
+        ]),
+      ]),
+    ]),
+  ]);
+}
+
 /** パンくず。Batonトップ → このプロフィール */
 function breadcrumb(profile: TalkProfile): HTMLElement {
   return el('nav', { class: 'pf-breadcrumb', 'aria-label': 'パンくずリスト' }, [
@@ -358,7 +479,7 @@ function relatedSection(profile: TalkProfile): HTMLElement {
             el('span', { text: 'Baton -バトン- のプロフィール一覧を見る' }),
           ]),
           el('a', { class: 'pf-related__all', href: LISTING_CONTACT_URL, ...externalAttrs, 'data-reveal': true }, [
-            el('span', { text: 'Batonへの掲載・紹介のご相談（予約ページ）' }),
+            el('span', { text: 'Batonへの掲載・紹介のご相談' }),
           ]),
         ],
       ),
@@ -419,8 +540,17 @@ export function renderProfileSections(app: HTMLElement, profile: TalkProfile, op
     ...[
       breadcrumb(profile),
       overviewSection(profile),
-      proseSection({ id: 'business', label: 'Business', title: '事業内容', paragraphs: profile.business }),
+      storySection(profile),
+      proseSection({
+        id: 'business',
+        label: 'Business',
+        title: profile.businessTitle ?? '事業内容',
+        paragraphs: profile.business,
+      }),
+      aboutSection(profile),
       ...(profile.mediaFirst ? [band, media, services] : [services, band, media]),
+      valuesSection(profile),
+      wantSection(profile),
       faqSection(profileFaqs(profile)),
       requestSection(profile, opts),
       relatedSection(profile),
