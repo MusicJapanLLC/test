@@ -11,6 +11,10 @@ const types = {
   ".json": "application/json; charset=utf-8",
   ".png": "image/png",
   ".jpg": "image/jpeg",
+  ".webp": "image/webp",
+  ".woff2": "font/woff2",
+  ".xml": "application/xml; charset=utf-8",
+  ".txt": "text/plain; charset=utf-8",
   ".svg": "image/svg+xml",
   ".webmanifest": "application/manifest+json"
 };
@@ -22,8 +26,10 @@ createServer((request, response) => {
   if (existsSync(target) && statSync(target).isDirectory()) target = join(target, "index.html");
 
   if (!target.startsWith(root) || !existsSync(target) || !statSync(target).isFile()) {
-    response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-    response.end("Not found");
+    const notFound = join(root, "404.html");
+    response.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+    if (existsSync(notFound)) createReadStream(notFound).pipe(response);
+    else response.end("Not found");
     return;
   }
 
