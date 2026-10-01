@@ -25,11 +25,11 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="preload" href="/assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/fonts.css?v=20261001b">
-<link rel="stylesheet" href="/assets/styles.css?v=20261001b">
+<link rel="stylesheet" href="/assets/fonts.css?v=20261001c">
+<link rel="stylesheet" href="/assets/styles.css?v=20261001c">
 <script>document.documentElement.classList.add("js")</script>
-<script defer src="/assets/site.js?v=20261001b"></script>
-
+<script defer src="/assets/site.js?v=20261001c"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SECOND TAKE","item":"https://secondtake.music-japan.com/en/"},{"@type":"ListItem","position":2,"name":"Interviews","item":"https://secondtake.music-japan.com/en/articles/"}]}]}</script>
 </head>
 <body class="page-archive" data-lang="en">
 <a class="skip" href="#main">Skip to content</a>
@@ -40,9 +40,9 @@
     </a>
     <nav class="bar__nav" aria-label="Main navigation">
         <a href="/en/articles/" aria-current="page">Interviews</a>
-        <a href="/en/#briefs">Short Reads</a>
-        <a href="/en/#themes">Themes</a>
-        <a href="/en/#podcast">Podcast</a>
+        <a href="/en/briefs/">Short Reads</a>
+        <a href="/en/themes/">Themes</a>
+        <a href="/en/podcast/">Podcast</a>
         <a href="/en/about/">About</a>
     </nav>
     <div class="bar__tools">
@@ -59,7 +59,7 @@
 
 <main id="main">
 
-<section class="page-head">
+<section class="page-head" data-ghost="Interviews">
   <div class="wrap">
     <p class="page-head__label">Interviews</p>
     <h1 class="page-head__title">All interviews</h1>
@@ -71,36 +71,38 @@
   <div class="wrap">
     <div class="filters" role="group" aria-label="Filter by theme" data-filters>
       <button type="button" aria-pressed="true" data-filter="">All</button>
-      <button type="button" aria-pressed="false" data-filter="Exit">Exit</button>
-      <button type="button" aria-pressed="false" data-filter="Comeback">Comeback</button>
-      <button type="button" aria-pressed="false" data-filter="Team">Team</button>
-      <button type="button" aria-pressed="false" data-filter="New ventures">New ventures</button>
-      <button type="button" aria-pressed="false" data-filter="Decisions">Decisions</button>
       <button type="button" aria-pressed="false" data-filter="Succession">Succession</button>
+      <button type="button" aria-pressed="false" data-filter="Exit">Exit</button>
+      <button type="button" aria-pressed="false" data-filter="Pivot">Pivot</button>
+      <button type="button" aria-pressed="false" data-filter="Team">Team</button>
+      <button type="button" aria-pressed="false" data-filter="Decisions">Decisions</button>
+      <button type="button" aria-pressed="false" data-filter="Co-founders">Co-founders</button>
+      <button type="button" aria-pressed="false" data-filter="New ventures">New ventures</button>
+      <button type="button" aria-pressed="false" data-filter="Comeback">Comeback</button>
     </div>
     <ol class="archive-list">
-      <li data-tags="Exit|Comeback|Team" class="reveal">
-        <a class="row" href="/en/articles/rebuild-night/">
-          <span class="row__no">ST.001</span>
-          <span class="row__img"><img class="" src="/assets/sample-saeki.webp" width="1600" height="2400" alt="" sizes="160px" style="object-position:50% 22%" loading="lazy" decoding="async"></span>
+      <li data-tags="Succession|Exit|Pivot" class="reveal">
+        <a class="row" href="/en/articles/factory-close/">
+          <span class="row__no">ST.005</span>
+          <span class="row__img"><div class=" typo-cover" role="img" aria-label="ST.005"><span class="typo-cover__no">ST.005</span><span class="typo-cover__slash" aria-hidden="true"></span></div></span>
           <span class="row__main">
-            <span class="kicker">Exit<i>/</i>Comeback<i>/</i>Team</span>
-            <span class="row__title">The morning after he decided to close the company, he couldn’t say a word</span>
-            <span class="row__who">Ryo Saeki　NORTHBOUND Inc.</span>
+            <span class="kicker">Succession<i>/</i>Exit<i>/</i>Pivot</span>
+            <span class="row__title">Her father ran the line for 40 years. As his successor, she shut it down</span>
+            <span class="row__who">Mariko Hayase　Hayase Manufacturing</span>
           </span>
-          <span class="row__meta"><time datetime="2026-09-12">Sep 12, 2026</time><span>8 min</span></span>
+          <span class="row__meta"><time datetime="2026-09-28">Sep 28, 2026</time><span>8 min</span></span>
         </a>
       </li>
-      <li data-tags="New ventures|Exit|Decisions" class="reveal">
-        <a class="row" href="/en/articles/failure-knew/">
-          <span class="row__no">ST.002</span>
-          <span class="row__img"><img class="" src="/assets/sample-kuroda.webp" width="1400" height="2100" alt="" sizes="160px" style="object-position:50% 25%" loading="lazy" decoding="async"></span>
+      <li data-tags="Team|Decisions|Co-founders" class="reveal">
+        <a class="row" href="/en/articles/cofounder-split/">
+          <span class="row__no">ST.004</span>
+          <span class="row__img"><div class=" typo-cover" role="img" aria-label="ST.004"><span class="typo-cover__no">ST.004</span><span class="typo-cover__slash" aria-hidden="true"></span></div></span>
           <span class="row__main">
-            <span class="kicker">New ventures<i>/</i>Exit<i>/</i>Decisions</span>
-            <span class="row__title">She knew it would fail. It still took her a year to stop</span>
-            <span class="row__who">Nao Kuroda　SCALE LLC</span>
+            <span class="kicker">Team<i>/</i>Decisions<i>/</i>Co-founders</span>
+            <span class="row__title">He started the company with his best friend from college. Then he asked him to leave</span>
+            <span class="row__who">Takuma Nakamura　LANTERN Inc.</span>
           </span>
-          <span class="row__meta"><time datetime="2026-09-10">Sep 10, 2026</time><span>6 min</span></span>
+          <span class="row__meta"><time datetime="2026-09-22">Sep 22, 2026</time><span>7 min</span></span>
         </a>
       </li>
       <li data-tags="Succession|Team|Decisions" class="reveal">
@@ -115,6 +117,30 @@
           <span class="row__meta"><time datetime="2026-09-08">Sep 8, 2026</time><span>7 min</span></span>
         </a>
       </li>
+      <li data-tags="New ventures|Exit|Decisions" class="reveal">
+        <a class="row" href="/en/articles/failure-knew/">
+          <span class="row__no">ST.002</span>
+          <span class="row__img"><img class="" src="/assets/sample-kuroda.webp" width="1400" height="2100" alt="" sizes="160px" style="object-position:50% 25%" loading="lazy" decoding="async"></span>
+          <span class="row__main">
+            <span class="kicker">New ventures<i>/</i>Exit<i>/</i>Decisions</span>
+            <span class="row__title">She knew it would fail. It still took her a year to stop</span>
+            <span class="row__who">Nao Kuroda　SCALE LLC</span>
+          </span>
+          <span class="row__meta"><time datetime="2026-09-10">Sep 10, 2026</time><span>6 min</span></span>
+        </a>
+      </li>
+      <li data-tags="Exit|Comeback|Team" class="reveal">
+        <a class="row" href="/en/articles/rebuild-night/">
+          <span class="row__no">ST.001</span>
+          <span class="row__img"><img class="" src="/assets/sample-saeki.webp" width="1600" height="2400" alt="" sizes="160px" style="object-position:50% 22%" loading="lazy" decoding="async"></span>
+          <span class="row__main">
+            <span class="kicker">Exit<i>/</i>Comeback<i>/</i>Team</span>
+            <span class="row__title">The morning after he decided to close the company, he couldn’t say a word</span>
+            <span class="row__who">Ryo Saeki　NORTHBOUND Inc.</span>
+          </span>
+          <span class="row__meta"><time datetime="2026-09-12">Sep 12, 2026</time><span>8 min</span></span>
+        </a>
+      </li>
     </ol>
   </div>
 </section>
@@ -126,9 +152,9 @@
       <nav class="site-footer__col" aria-label="Sections">
         <p class="site-footer__label">Sections</p>
         <a href="/en/articles/">Interviews</a>
-        <a href="/en/#briefs">Short Reads</a>
-        <a href="/en/#themes">Themes</a>
-        <a href="/en/#podcast">Podcast</a>
+        <a href="/en/briefs/">Short Reads</a>
+        <a href="/en/themes/">Themes</a>
+        <a href="/en/podcast/">Podcast</a>
         <a href="/en/about/">About</a>
       </nav>
       <div class="site-footer__col">
@@ -167,9 +193,9 @@
   </div>
   <nav class="menu-dialog__nav">
     <a href="/en/articles/"><span>01</span>Interviews</a>
-    <a href="/en/#briefs"><span>02</span>Short Reads</a>
-    <a href="/en/#themes"><span>03</span>Themes</a>
-    <a href="/en/#podcast"><span>04</span>Podcast</a>
+    <a href="/en/briefs/"><span>02</span>Short Reads</a>
+    <a href="/en/themes/"><span>03</span>Themes</a>
+    <a href="/en/podcast/"><span>04</span>Podcast</a>
     <a href="/en/about/"><span>05</span>About</a>
   </nav>
   <div class="menu-dialog__foot">

@@ -11,7 +11,7 @@ import { copy, links, nav } from "../src/copy.mjs";
 const ORIGIN = "https://secondtake.music-japan.com";
 const DIST = join(process.cwd(), "dist");
 const LANGS = ["ja", "en"];
-const VERSION = "20261001b";
+const VERSION = "20261001c";
 const budoux = loadDefaultJapaneseParser();
 
 // ---------- helpers ----------
@@ -26,6 +26,9 @@ const esc = (value) =>
 const phrase = (lang, text) =>
   lang === "ja" ? budoux.parse(text).map(esc).join("<wbr>") : esc(text);
 
+// Copy strings may contain "\n" for a deliberate line break.
+const lines = (lang, text) => text.split("\n").map((t) => phrase(lang, t)).join("<br>");
+
 const prefix = (lang) => (lang === "en" ? "/en" : "");
 const href = (lang, path) => `${prefix(lang)}${path}`;
 const other = (lang) => (lang === "ja" ? "en" : "ja");
@@ -38,7 +41,10 @@ const formatDate = (lang, iso) => {
   return `${month} ${Number(d)}, ${y}`;
 };
 
-const img = (article, { cls = "", eager = false, sizes = "100vw", alt = "" } = {}) => {
+const img = (article, { cls = "", eager = false, sizes = "100vw", alt = "", text = "" } = {}) => {
+  if (!article.image) {
+    return `<div class="${cls} typo-cover" role="img" aria-label="${esc(alt || `ST.${article.no.padStart(3, "0")}`)}"><span class="typo-cover__no">ST.${article.no.padStart(3, "0")}</span>${text ? `<span class="typo-cover__q">${esc(text)}</span>` : ""}<span class="typo-cover__slash" aria-hidden="true"></span></div>`;
+  }
   const [w, h] = article.imageSize;
   return `<img class="${cls}" src="/assets/${article.image}.webp" width="${w}" height="${h}" alt="${esc(alt)}" sizes="${sizes}" style="object-position:${article.focus}" ${eager ? 'fetchpriority="high" decoding="async"' : 'loading="lazy" decoding="async"'}>`;
 };
@@ -46,7 +52,7 @@ const img = (article, { cls = "", eager = false, sizes = "100vw", alt = "" } = {
 const external = (url, label, cls = "") =>
   `<a class="${cls}" href="${esc(url)}" target="_blank" rel="noopener">${label}<span class="ext" aria-hidden="true">↗</span></a>`;
 
-const byNo = (a, b) => a.no.localeCompare(b.no);
+const byNo = (a, b) => b.no.localeCompare(a.no);
 const sorted = [...articles].sort(byNo);
 const altPath = (lang, path) => href(other(lang), path === null ? "/" : path);
 
@@ -239,7 +245,7 @@ function card(lang, a) {
   return `<article class="card reveal">
   <a class="card__link" href="${href(lang, `/articles/${a.slug}/`)}">
     <figure class="card__media">
-      ${img(a, { cls: "card__img", sizes: "(min-width: 1080px) 30vw, 80vw" })}
+      ${img(a, { cls: "card__img", sizes: "(min-width: 1080px) 30vw, 80vw", text: e.subtitle })}
       <span class="card__no">${stNo(a)}</span>
     </figure>
     <p class="kicker">${e.tags.map(esc).join("<i>/</i>")}</p>
@@ -258,14 +264,47 @@ function record(label = "", cls = "") {
 }
 
 function pageHead(lang, label, title, lead, extra = "") {
-  return `<section class="page-head">
+  return `<section class="page-head" data-ghost="${esc(label.split(" / ")[0])}">
   <div class="wrap">
     <p class="page-head__label">${esc(label)}</p>
     <h1 class="page-head__title">${phrase(lang, title)}</h1>
-    ${lead ? `<p class="page-head__lead">${esc(lead)}</p>` : ""}
+    ${lead ? `<p class="page-head__lead">${lines(lang, lead)}</p>` : ""}
     ${extra}
   </div>
 </section>`;
+}
+
+const slugify = (t) => t.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const themeDesc = {
+  exit: ["事業や会社をたたむ、あるいは止めると決めた経営者たち。", "Leaders who decided to close a business or stop a line."],
+  comeback: ["一度つまずいたあと、かたちを変えて立て直した話。", "Rebuilding in a different shape after the first attempt failed."],
+  team: ["社員、共同創業者、マネージャー。人をめぐる決断。", "Decisions about people: staff, co-founders, managers."],
+  "new-ventures": ["新しい事業を始め、続けるか止めるかを迫られた話。", "Starting something new — and deciding whether to keep going."],
+  decisions: ["決めるまでの迷いと、決めた瞬間の記録。", "The doubt before a decision, and the moment it was made."],
+  succession: ["会社を継ぐ、あるいは誰かに渡すという決断。", "Taking over a company, or handing one on."],
+  "co-founders": ["一緒に始めた相手との関係を、どう決着させたか。", "How founders settled things with the person they started with."],
+  pivot: ["事業の軸を、別の場所へ移した経営者たち。", "Leaders who moved the core of their business somewhere new."]
+};
+function themes() {
+  const map = new Map();
+  for (const a of sorted) {
+    a.en.tags.forEach((enTag, i) => {
+      const slug = slugify(enTag);
+      if (!map.has(slug)) map.set(slug, { slug, ja: a.ja.tags[i], en: enTag, items: [] });
+      map.get(slug).items.push(a);
+    });
+  }
+  return [...map.values()].sort((x, y) => y.items.length - x.items.length);
+}
+const themeHref = (lang, tag) => {
+  const t = themes().find((x) => x[lang] === tag);
+  return href(lang, `/themes/${t.slug}/`);
+};
+function breadcrumbs(lang, trail) {
+  return {
+    "@type": "BreadcrumbList",
+    itemListElement: trail.map(([name, path], i) => ({ "@type": "ListItem", position: i + 1, name, item: `${ORIGIN}${href(lang, path)}` }))
+  };
 }
 
 function themeCounts(lang) {
@@ -278,9 +317,10 @@ function themeCounts(lang) {
 function homePage(lang) {
   const t = copy[lang];
   const h = t.home;
-  const lead = sorted[0];
+  const lead = sorted.find((a) => a.image);
   const e = lead[lang];
-  const rest = sorted.slice(1);
+  const rest = sorted.filter((a) => a !== lead).slice(0, 2);
+  const older = sorted.filter((a) => a !== lead && !rest.includes(a));
   const main = `
 <section class="cover" aria-labelledby="cover-title">
   ${img(lead, { cls: "cover__img", eager: true, alt: lang === "ja" ? `${e.name}（サンプル写真）` : `${e.name} (sample photo)` })}
@@ -318,7 +358,7 @@ function homePage(lang) {
           <p class="side-label">${h.themes}<small>${esc(h.themesSub)}</small></p>
           <ul class="theme-index">
             ${themeCounts(lang)
-              .map(([tag, n]) => `<li><a href="${href(lang, `/articles/?theme=${encodeURIComponent(tag)}`)}"><span>${esc(tag)}</span><span class="theme-index__n">${String(n).padStart(2, "0")}</span></a></li>`)
+              .map(([tag, n]) => `<li><a href="${themeHref(lang, tag)}"><span>${esc(tag)}</span><span class="theme-index__n">${String(n).padStart(2, "0")}</span></a></li>`)
               .join("\n            ")}
           </ul>
         </section>
@@ -327,11 +367,25 @@ function homePage(lang) {
   </div>
 </section>
 
+${older.length ? `<section class="section previously">
+  <div class="wrap">
+    ${rubric(t.pages.moreTitle, t.pages.moreSub, { href: href(lang, "/articles/"), label: h.allStories })}
+    <ol class="mini-list">
+      ${older
+        .map(
+          (a) => `<li class="reveal"><a href="${href(lang, `/articles/${a.slug}/`)}"><span class="mini-list__img">${img(a, { sizes: "120px" })}</span><span class="mini-list__body"><span class="kicker">${stNo(a)}<i>/</i>${esc(a[lang].tags[0])}</span><span class="mini-list__title">${phrase(lang, a[lang].title)}</span><span class="mini-list__by">${esc(a[lang].name)}　${esc(a[lang].company)}</span></span></a></li>`
+        )
+        .join("\n      ")}
+    </ol>
+  </div>
+</section>` : ""}
+
 <section class="section briefs" id="briefs">
   <div class="wrap">
-    ${rubric(h.briefs, h.briefsSub)}
+    ${rubric(h.briefs, h.briefsSub, { href: href(lang, "/briefs/"), label: t.pages.briefsTitle })}
     <div class="brief-cols">
       ${sorted
+        .slice(0, 3)
         .map(
           (a) => `<article class="brief-col reveal">
         <p class="brief-col__no">${stNo(a)}<span>${esc(a[lang].name)}</span></p>
@@ -405,7 +459,7 @@ function articlePage(lang, a) {
     if (type === "a") return `<p class="a"><span class="a__who">${esc(e.speaker)}</span>${esc(text)}</p>`;
     if (type === "quote")
       return `<figure class="frame reveal">
-        <img class="frame__still" src="/assets/${a.image}.webp" alt="" loading="lazy" decoding="async" style="object-position:${frameCount++ % 2 ? "70% 62%" : "40% 18%"}">
+        ${a.image ? `<img class="frame__still" src="/assets/${a.image}.webp" alt="" loading="lazy" decoding="async" style="object-position:${frameCount++ % 2 ? "70% 62%" : "40% 18%"}">` : ""}
         <div class="grain" aria-hidden="true"></div>
         <span class="frame__tc" aria-hidden="true">${stNo(a)} — ${esc(e.speaker)}</span>
         <blockquote class="frame__line"><p>${phrase(lang, text)}</p></blockquote>
@@ -431,7 +485,7 @@ function articlePage(lang, a) {
         </dl>
       </div>
       <figure class="story-open__media">
-        ${img(a, { cls: "story-open__img", eager: true, sizes: "(min-width: 960px) 40vw, 100vw", alt: lang === "ja" ? `${e.name}（サンプル写真）` : `${e.name} (sample photo)` })}
+        ${img(a, { cls: "story-open__img", eager: true, sizes: "(min-width: 960px) 40vw, 100vw", text: e.subtitle, alt: lang === "ja" ? `${e.name}（サンプル写真）` : `${e.name} (sample photo)` })}
         <figcaption>${ta.photo}</figcaption>
       </figure>
     </div>
@@ -497,7 +551,7 @@ function articlePage(lang, a) {
   </div>
 
   <a class="next-take" href="${href(lang, `/articles/${next.slug}/`)}">
-    ${img(next, { cls: "next-take__img", sizes: "100vw" })}
+    ${next.image ? img(next, { cls: "next-take__img", sizes: "100vw" }) : ""}
     <div class="next-take__shade" aria-hidden="true"></div>
     <div class="grain" aria-hidden="true"></div>
     <div class="wrap next-take__inner">
@@ -526,18 +580,22 @@ function articlePage(lang, a) {
     bodyClass: "page-article",
     title: `${e.title}｜SECOND TAKE`,
     description: e.dek,
-    image: `/assets/${a.image}.jpg`,
+    image: a.image ? `/assets/${a.image}.jpg` : undefined,
     type: "article",
     article: a,
     main,
     jsonld: {
       "@context": "https://schema.org",
+      "@graph": [breadcrumbs(lang, [["SECOND TAKE", "/"], ["Interviews", "/articles/"], [e.title, path]])],
       "@type": "Article",
+      articleSection: e.tags,
+      keywords: e.tags.join(", "),
+      isAccessibleForFree: true,
       headline: e.title,
       description: e.dek,
       datePublished: `${a.date}T09:00:00+09:00`,
       inLanguage: lang === "ja" ? "ja-JP" : "en",
-      image: `${ORIGIN}/assets/${a.image}.jpg`,
+      image: `${ORIGIN}/assets/${a.image ? `${a.image}.jpg` : "second-take-cover.png"}`,
       author: { "@type": "Organization", name: "SECOND TAKE" },
       publisher: { "@type": "Organization", name: "Music Japan LLC", url: "https://music-japan.com/" },
       about: { "@type": "Person", name: e.name },
@@ -578,7 +636,8 @@ ${pageHead(lang, ta.label, ta.title, ta.lead)}
     </ol>
   </div>
 </section>`;
-  return page({ lang, path: "/articles/", current: "interviews", bodyClass: "page-archive", title: `${ta.title}｜SECOND TAKE`, description: ta.lead, main });
+  return page({ lang, path: "/articles/", current: "interviews", bodyClass: "page-archive", title: `${ta.title}｜SECOND TAKE`, description: ta.lead.replace("\n", ""), main,
+    jsonld: { "@context": "https://schema.org", "@graph": [breadcrumbs(lang, [["SECOND TAKE", "/"], ["Interviews", "/articles/"]])] } });
 }
 
 function aboutPage(lang) {
@@ -601,6 +660,23 @@ ${pageHead(lang, ab.label, ab.heading, ab.lead)}
     </dl>
   </div>
 </section>
+<section class="section">
+  <div class="wrap">
+    <dl class="stats reveal">
+      <div><dt>${copy[lang].pages.statsInterviews}</dt><dd>${String(sorted.length).padStart(2, "0")}</dd></div>
+      <div><dt>${copy[lang].pages.statsThemes}</dt><dd>${String(themes().length).padStart(2, "0")}</dd></div>
+      <div><dt>${copy[lang].pages.statsLanguages}</dt><dd>02</dd></div>
+    </dl>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    ${rubric(copy[lang].pages.facesTitle, copy[lang].pages.facesSub, { href: href(lang, "/articles/"), label: copy[lang].home.allStories })}
+    <ol class="faces">
+      ${sorted.map((a) => `<li class="reveal"><a href="${href(lang, `/articles/${a.slug}/`)}"><span class="faces__img">${img(a, { sizes: "220px", text: "" })}</span><span class="faces__name">${esc(a[lang].name)}</span><span class="faces__co">${esc(a[lang].company)}</span></a></li>`).join("\n      ")}
+    </ol>
+  </div>
+</section>
 <section class="section publisher">
   <div class="wrap">
     ${rubric(ab.publisherTitle, ab.publisherSub)}
@@ -613,7 +689,8 @@ ${pageHead(lang, ab.label, ab.heading, ab.lead)}
     </div>
   </div>
 </section>`;
-  return page({ lang, path: "/about/", current: "about", bodyClass: "page-about", title: `${ab.title}｜SECOND TAKE`, description: ab.lead, main });
+  return page({ lang, path: "/about/", current: "about", bodyClass: "page-about", title: `${ab.title}｜SECOND TAKE`, description: ab.lead.replace(/\n/g, ""), main,
+    jsonld: { "@context": "https://schema.org", "@graph": [breadcrumbs(lang, [["SECOND TAKE", "/"], ["About", "/about/"]]), { "@type": "AboutPage", name: ab.title, publisher: { "@id": "https://music-japan.com/#organization" } }] } });
 }
 
 function contactPage(lang) {
@@ -633,7 +710,21 @@ ${pageHead(lang, c.label, c.heading, c.lead, ctas)}
     </ol>
   </div>
 </section>`;
-  return page({ lang, path: "/contact/", current: "", bodyClass: "page-contact", title: `${c.title}｜SECOND TAKE`, description: c.lead, main });
+  const faq = copy[lang].pages.faq;
+  const main2 = main + `
+<section class="section">
+  <div class="wrap">
+    ${rubric(copy[lang].pages.faqTitle, copy[lang].pages.faqSub)}
+    <div class="faq">
+      ${faq.map(([q, a]) => `<details class="faq__item reveal"><summary>${phrase(lang, q)}</summary><p>${esc(a)}</p></details>`).join("\n      ")}
+    </div>
+  </div>
+</section>`;
+  return page({ lang, path: "/contact/", current: "", bodyClass: "page-contact", title: `${c.title}｜SECOND TAKE`, description: c.lead.replace("\n", ""), main: main2,
+    jsonld: { "@context": "https://schema.org", "@graph": [
+      breadcrumbs(lang, [["SECOND TAKE", "/"], ["Contact", "/contact/"]]),
+      { "@type": "FAQPage", mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })) }
+    ] } });
 }
 
 function notFoundPage() {
@@ -646,6 +737,131 @@ function notFoundPage() {
     </div>`;
   const main = pageHead("ja", "404 — NG Take", ja.heading, ja.body, extra);
   return page({ lang: "ja", path: null, current: "", bodyClass: "page-404", title: `${ja.title}｜SECOND TAKE`, description: ja.body, main });
+}
+
+
+function briefsPage(lang) {
+  const t = copy[lang];
+  const pg = t.pages;
+  const main = `
+${pageHead(lang, "Short Reads", pg.briefsTitle, pg.briefsLead)}
+<section class="section">
+  <div class="wrap">
+    <ol class="digest">
+      ${sorted
+        .map(
+          (a) => `<li class="digest__item reveal">
+        <div class="digest__meta"><span class="digest__no">${stNo(a)}</span><time datetime="${a.date}">${formatDate(lang, a.date)}</time><span>${esc(a[lang].name)}</span></div>
+        <div class="digest__body">
+          <h2 class="digest__title"><a href="${href(lang, `/articles/${a.slug}/`)}">${phrase(lang, a[lang].title)}</a></h2>
+          <ol class="digest__points">${a[lang].brief.map((b) => `<li>${phrase(lang, b)}</li>`).join("")}</ol>
+          <p class="digest__links"><a class="rubric__link" href="${href(lang, `/articles/${a.slug}/`)}">${t.readStory}<span aria-hidden="true">→</span></a><span>${t.minRead(a.minutes)}</span></p>
+        </div>
+      </li>`
+        )
+        .join("\n      ")}
+    </ol>
+  </div>
+</section>`;
+  return page({ lang, path: "/briefs/", current: "briefs", bodyClass: "page-briefs", title: `${pg.briefsTitle}｜SECOND TAKE`, description: pg.briefsLead.replace("\n", ""), main,
+    jsonld: { "@context": "https://schema.org", "@graph": [breadcrumbs(lang, [["SECOND TAKE", "/"], ["Short Reads", "/briefs/"]])] } });
+}
+
+function themesPage(lang) {
+  const pg = copy[lang].pages;
+  const list = themes();
+  const main = `
+${pageHead(lang, "Themes", pg.themesTitle, pg.themesLead)}
+<section class="section">
+  <div class="wrap">
+    <ol class="theme-rows">
+      ${list
+        .map(
+          (th, i) => `<li class="reveal"><a class="theme-row" href="${href(lang, `/themes/${th.slug}/`)}">
+        <span class="theme-row__no">${String(i + 1).padStart(2, "0")}</span>
+        <span class="theme-row__name">${esc(th[lang])}<small>${esc(lang === "ja" ? th.en : th.ja)}</small></span>
+        <span class="theme-row__desc">${phrase(lang, themeDesc[th.slug]?.[lang === "ja" ? 0 : 1] || "")}</span>
+        <span class="theme-row__faces">${th.items.slice(0, 3).map((a) => `<span class="theme-row__face">${img(a, { sizes: "64px" })}</span>`).join("")}</span>
+        <span class="theme-row__count">${pg.themeCount(th.items.length)}</span>
+      </a></li>`
+        )
+        .join("\n      ")}
+    </ol>
+  </div>
+</section>`;
+  return page({ lang, path: "/themes/", current: "themes", bodyClass: "page-themes", title: `${pg.themesTitle}｜SECOND TAKE`, description: pg.themesLead.replace("\n", ""), main,
+    jsonld: { "@context": "https://schema.org", "@graph": [breadcrumbs(lang, [["SECOND TAKE", "/"], ["Themes", "/themes/"]])] } });
+}
+
+function themePage(lang, th) {
+  const t = copy[lang];
+  const desc = themeDesc[th.slug]?.[lang === "ja" ? 0 : 1] || "";
+  const main = `
+${pageHead(lang, `Themes / ${th.en}`, th[lang], desc, `<p class="page-head__note">${t.pages.themeCount(th.items.length)}　<a class="quiet-link" href="${href(lang, "/themes/")}">${t.pages.themesTitle}</a></p>`)}
+<section class="section">
+  <div class="wrap">
+    <div class="front__cards front__cards--three">${th.items.map((a) => card(lang, a)).join("\n")}</div>
+  </div>
+</section>`;
+  return page({ lang, path: `/themes/${th.slug}/`, current: "themes", bodyClass: "page-theme", title: `${th[lang]}｜SECOND TAKE`, description: desc, main,
+    jsonld: { "@context": "https://schema.org", "@graph": [
+      breadcrumbs(lang, [["SECOND TAKE", "/"], ["Themes", "/themes/"], [th[lang], `/themes/${th.slug}/`]]),
+      { "@type": "CollectionPage", name: th[lang], description: desc, inLanguage: lang === "ja" ? "ja-JP" : "en",
+        mainEntity: { "@type": "ItemList", itemListElement: th.items.map((a, i) => ({ "@type": "ListItem", position: i + 1, url: `${ORIGIN}${href(lang, `/articles/${a.slug}/`)}` })) } }
+    ] } });
+}
+
+function podcastPage(lang) {
+  const t = copy[lang];
+  const pg = t.pages;
+  const main = `
+<section class="podcast-hero">
+  <div class="grain" aria-hidden="true"></div>
+  <div class="wrap podcast-hero__grid">
+    <div>
+      <p class="page-head__label">SECOND TAKE Podcast</p>
+      <h1 class="podcast-hero__title">${lines(lang, pg.podcastTitle)}</h1>
+      <p class="podcast-hero__lead">${lines(lang, pg.podcastLead)}</p>
+      <span class="status-pill status-pill--light">${pg.podcastStatus}</span>
+    </div>
+    ${record("SIDE B", "record--hero")}
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    ${rubric("Episodes", lang === "ja" ? "配信予定のエピソード" : "Upcoming episodes")}
+    <ol class="episode-list">
+      ${sorted
+        .map(
+          (a) => `<li class="reveal"><a href="${href(lang, `/articles/${a.slug}/`)}">
+        <span class="episode-list__no">EP.${a.no}</span>
+        <span class="episode-list__img">${img(a, { sizes: "96px" })}</span>
+        <span class="episode-list__body"><span class="episode-list__name">${esc(a[lang].name)}<small>${esc(a[lang].company)}</small></span><span class="episode-list__title">${phrase(lang, a[lang].title)}</span></span>
+        <span class="episode-list__status">${pg.podcastStatus}</span>
+      </a></li>`
+        )
+        .join("\n      ")}
+    </ol>
+    <p class="page-head__note">${esc(pg.podcastNote)}</p>
+  </div>
+</section>`;
+  return page({ lang, path: "/podcast/", current: "podcast", bodyClass: "page-podcast", title: `Podcast｜SECOND TAKE`, description: pg.podcastLead.replace("\n", ""), main,
+    jsonld: { "@context": "https://schema.org", "@graph": [breadcrumbs(lang, [["SECOND TAKE", "/"], ["Podcast", "/podcast/"]])] } });
+}
+
+function llmsFull() {
+  const out = ["# SECOND TAKE — full text", "", "Interview publication by Music Japan LLC. Japanese edition at /, English edition at /en/. All people and companies currently published are fictional samples.", ""];
+  for (const a of sorted) {
+    for (const lang of LANGS) {
+      const e = a[lang];
+      out.push(`## ${e.title}`, "", `- URL: ${ORIGIN}${href(lang, `/articles/${a.slug}/`)}`, `- Interviewee: ${e.name}, ${e.company} (${e.role})`, `- Published: ${a.date}`, `- Themes: ${e.tags.join(", ")}`, "", `> ${e.dek}`, "", ...e.brief.map((b) => `- ${b}`), "", ...e.intro, "");
+      for (const sc of e.scenes) {
+        out.push(`### ${sc.heading}`, "");
+        for (const [type, text] of sc.blocks) out.push(type === "q" ? `**Q:** ${text}` : type === "a" ? `**${e.speaker}:** ${text}` : type === "quote" ? `> ${text}` : text, "");
+      }
+    }
+  }
+  return out.join("\n");
 }
 
 // ---------- feeds, sitemap, search ----------
@@ -705,7 +921,7 @@ function searchIndex(lang) {
         name: e.name,
         company: e.company,
         tags: e.tags,
-        image: `/assets/${a.image}.webp`,
+        image: a.image ? `/assets/${a.image}.webp` : "/assets/second-take-cover.webp",
         text: [e.dek, e.decision, ...e.brief].join(" ")
       };
     })
@@ -719,7 +935,7 @@ function write(relPath, content) {
   writeFileSync(target, content);
 }
 
-for (const generated of ["index.html", "404.html", "articles", "about", "contact", "en"]) {
+for (const generated of ["index.html", "404.html", "articles", "about", "contact", "briefs", "themes", "podcast", "en"]) {
   const target = join(DIST, generated);
   if (existsSync(target)) rmSync(target, { recursive: true });
 }
@@ -732,12 +948,17 @@ for (const lang of LANGS) {
   write(`${base}about/index.html`, aboutPage(lang));
   write(`${base}contact/index.html`, contactPage(lang));
   for (const a of sorted) write(`${base}articles/${a.slug}/index.html`, articlePage(lang, a));
+  write(`${base}briefs/index.html`, briefsPage(lang));
+  write(`${base}themes/index.html`, themesPage(lang));
+  for (const th of themes()) write(`${base}themes/${th.slug}/index.html`, themePage(lang, th));
+  write(`${base}podcast/index.html`, podcastPage(lang));
   write(`${base}feed.xml`, feed(lang));
   write(`assets/search-${lang}.json`, searchIndex(lang));
-  for (const p of ["/", "/articles/", "/about/", "/contact/", ...sorted.map((a) => `/articles/${a.slug}/`)]) {
+  for (const p of ["/", "/articles/", "/briefs/", "/themes/", "/podcast/", "/about/", "/contact/", ...themes().map((th) => `/themes/${th.slug}/`), ...sorted.map((a) => `/articles/${a.slug}/`)]) {
     sitemapPaths.push(href(lang, p));
   }
 }
 write("404.html", notFoundPage());
 write("sitemap.xml", sitemap(sitemapPaths));
+write("llms-full.txt", llmsFull());
 process.stdout.write(`build: ${sitemapPaths.length} pages + 404\n`);

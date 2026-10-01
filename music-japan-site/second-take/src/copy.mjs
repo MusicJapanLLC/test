@@ -10,9 +10,9 @@ export const links = {
 // Navigation labels are English in both editions (masthead, bar, footer).
 export const nav = [
   ["interviews", "Interviews", "/articles/"],
-  ["briefs", "Short Reads", "/#briefs"],
-  ["themes", "Themes", "/#themes"],
-  ["podcast", "Podcast", "/#podcast"],
+  ["briefs", "Short Reads", "/briefs/"],
+  ["themes", "Themes", "/themes/"],
+  ["podcast", "Podcast", "/podcast/"],
   ["about", "About", "/about/"]
 ];
 
@@ -57,7 +57,7 @@ export const copy = {
     archive: {
       label: "Interviews",
       title: "すべてのインタビュー",
-      lead: "経営者が迷い、選び、やり直した記録。テーマから絞り込めます。",
+      lead: "経営者が迷い、選び、やり直した記録。\nテーマから絞り込めます。",
       all: "すべて",
       filterLabel: "テーマで絞り込む"
     },
@@ -89,7 +89,7 @@ export const copy = {
       title: "SECOND TAKEについて",
       label: "About",
       heading: "失敗の続きに、その人がいる。",
-      lead: "SECOND TAKEは、経営者が一度目につまずいたあと、二度目に何を選んだのかを聞くインタビューメディアです。成功までの道のりを語り直すのではなく、決めきれなかった時間と、決めた瞬間を記録します。",
+      lead: "SECOND TAKEは、経営者が一度目につまずいたあと、\n二度目に何を選んだのかを聞くインタビューメディアです。\n決めきれなかった時間と、決めた瞬間を記録します。",
       principlesTitle: "Principles",
       principlesSub: "編集方針",
       principles: [
@@ -113,7 +113,7 @@ export const copy = {
       title: "お問い合わせ",
       label: "Contact",
       heading: "お問い合わせ",
-      lead: "SECOND TAKEへのご連絡は、オンラインでの打ち合わせで承ります。日程調整のページから、ご都合のよい時間をお選びください。",
+      lead: "SECOND TAKEへのご連絡は、オンラインでの打ち合わせで承ります。\n日程調整のページから、ご都合のよい時間をお選びください。",
       cases: [
         ["メディア・プレス", "記事の転載や引用、取材に関するお問い合わせ。"],
         ["協業・パートナーシップ", "共同での企画や、事業に関するご相談。"],
@@ -121,6 +121,32 @@ export const copy = {
       ],
       book: "打ち合わせを予約する",
       bookNote: "TimeRexの日程調整ページが開きます"
+    },
+    pages: {
+      briefsTitle: "3分で要点",
+      briefsLead: "忙しい日に、決断だけを読む。\n各インタビューの要点を三行にまとめています。",
+      themesTitle: "テーマから読む",
+      themesLead: "撤退、承継、組織。\n経営者が向き合った決断を、テーマごとにまとめています。",
+      themeCount: (n) => `${n}本のインタビュー`,
+      podcastTitle: "記事に入りきらなかった話を、本人の声で。",
+      podcastLead: "SECOND TAKEのインタビューは、すべて録音しています。\n記事では削った寄り道や沈黙も含めて、ポッドキャストとして配信する予定です。",
+      podcastStatus: "配信準備中",
+      podcastNote: "配信開始のお知らせは、このページでお伝えします。",
+      moreTitle: "Previously",
+      moreSub: "これまでのインタビュー",
+      statsInterviews: "Interviews",
+      statsThemes: "Themes",
+      statsLanguages: "Languages",
+      facesTitle: "In this issue",
+      facesSub: "これまで話を聞いた人",
+      faqTitle: "FAQ",
+      faqSub: "よくある質問",
+      faq: [
+        ["取材を申し込むことはできますか？", "SECOND TAKEの取材は、編集部からお声がけしています。掲載のお申し込みは受け付けていません。"],
+        ["記事を引用・転載できますか？", "引用は出典（SECOND TAKE・記事URL）を明記のうえご自由にどうぞ。転載をご希望の場合は、打ち合わせでご相談ください。"],
+        ["英語での問い合わせはできますか？", "はい。英語でのお打ち合わせにも対応しています。"],
+        ["打ち合わせはどのような形式ですか？", "オンラインで行います。日程調整ページ（TimeRex）からご予約ください。"]
+      ]
     },
     notFound: {
       title: "ページが見つかりません",
@@ -226,7 +252,7 @@ export const copy = {
       title: "Contact",
       label: "Contact",
       heading: "Contact",
-      lead: "We take enquiries through a short online meeting. Choose a time that suits you on our scheduling page.",
+      lead: "We take enquiries through a short online meeting.\nChoose a time that suits you on our scheduling page.",
       cases: [
         ["Media and press", "Republishing, quoting our stories, or press enquiries."],
         ["Partnerships", "Co-produced projects and business enquiries."],
@@ -234,6 +260,32 @@ export const copy = {
       ],
       book: "Book a meeting",
       bookNote: "Opens our TimeRex scheduling page"
+    },
+    pages: {
+      briefsTitle: "Short Reads",
+      briefsLead: "Just the decision, for busy days.\nEvery interview, in three lines.",
+      themesTitle: "Read by theme",
+      themesLead: "Exits, successions, teams.\nThe decisions our guests faced, grouped by theme.",
+      themeCount: (n) => `${n} ${n === 1 ? "interview" : "interviews"}`,
+      podcastTitle: "What didn’t fit in the article, in their own voice.",
+      podcastLead: "Every SECOND TAKE interview is recorded.\nWe plan to release them as a podcast, detours and silences included.",
+      podcastStatus: "Coming soon",
+      podcastNote: "We’ll announce the launch on this page.",
+      moreTitle: "Previously",
+      moreSub: "Earlier interviews",
+      statsInterviews: "Interviews",
+      statsThemes: "Themes",
+      statsLanguages: "Languages",
+      facesTitle: "In this issue",
+      facesSub: "The people we’ve spoken to",
+      faqTitle: "FAQ",
+      faqSub: "Common questions",
+      faq: [
+        ["Can I apply to be interviewed?", "Interviews for SECOND TAKE are by invitation from our editors. We don’t accept applications for coverage."],
+        ["Can I quote or republish your stories?", "You’re welcome to quote us with a credit (SECOND TAKE and the article URL). To republish, please talk to us first."],
+        ["Can I contact you in English?", "Yes. Meetings can be held in English."],
+        ["What format are meetings?", "Online. Please book a time through our TimeRex scheduling page."]
+      ]
     },
     notFound: {
       title: "Page not found",

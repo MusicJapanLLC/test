@@ -25,11 +25,11 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="preload" href="/assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/fonts.css?v=20261001b">
-<link rel="stylesheet" href="/assets/styles.css?v=20261001b">
+<link rel="stylesheet" href="/assets/fonts.css?v=20261001c">
+<link rel="stylesheet" href="/assets/styles.css?v=20261001c">
 <script>document.documentElement.classList.add("js")</script>
-<script defer src="/assets/site.js?v=20261001b"></script>
-
+<script defer src="/assets/site.js?v=20261001c"></script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"SECOND TAKE","item":"https://secondtake.music-japan.com/"},{"@type":"ListItem","position":2,"name":"Interviews","item":"https://secondtake.music-japan.com/articles/"}]}]}</script>
 </head>
 <body class="page-archive" data-lang="ja">
 <a class="skip" href="#main">本文へ移動</a>
@@ -40,9 +40,9 @@
     </a>
     <nav class="bar__nav" aria-label="メインナビゲーション">
         <a href="/articles/" aria-current="page">Interviews</a>
-        <a href="/#briefs">Short Reads</a>
-        <a href="/#themes">Themes</a>
-        <a href="/#podcast">Podcast</a>
+        <a href="/briefs/">Short Reads</a>
+        <a href="/themes/">Themes</a>
+        <a href="/podcast/">Podcast</a>
         <a href="/about/">About</a>
     </nav>
     <div class="bar__tools">
@@ -59,11 +59,11 @@
 
 <main id="main">
 
-<section class="page-head">
+<section class="page-head" data-ghost="Interviews">
   <div class="wrap">
     <p class="page-head__label">Interviews</p>
     <h1 class="page-head__title">すべての<wbr>インタビュー</h1>
-    <p class="page-head__lead">経営者が迷い、選び、やり直した記録。テーマから絞り込めます。</p>
+    <p class="page-head__lead">経営者が<wbr>迷い、<wbr>選び、<wbr>やり直した<wbr>記録。<br>テーマから<wbr>絞り込めます。</p>
     
   </div>
 </section>
@@ -71,36 +71,38 @@
   <div class="wrap">
     <div class="filters" role="group" aria-label="テーマで絞り込む" data-filters>
       <button type="button" aria-pressed="true" data-filter="">すべて</button>
-      <button type="button" aria-pressed="false" data-filter="撤退">撤退</button>
-      <button type="button" aria-pressed="false" data-filter="再起">再起</button>
-      <button type="button" aria-pressed="false" data-filter="組織">組織</button>
-      <button type="button" aria-pressed="false" data-filter="新規事業">新規事業</button>
-      <button type="button" aria-pressed="false" data-filter="決断">決断</button>
       <button type="button" aria-pressed="false" data-filter="承継">承継</button>
+      <button type="button" aria-pressed="false" data-filter="撤退">撤退</button>
+      <button type="button" aria-pressed="false" data-filter="事業転換">事業転換</button>
+      <button type="button" aria-pressed="false" data-filter="組織">組織</button>
+      <button type="button" aria-pressed="false" data-filter="決断">決断</button>
+      <button type="button" aria-pressed="false" data-filter="共同創業">共同創業</button>
+      <button type="button" aria-pressed="false" data-filter="新規事業">新規事業</button>
+      <button type="button" aria-pressed="false" data-filter="再起">再起</button>
     </div>
     <ol class="archive-list">
-      <li data-tags="撤退|再起|組織" class="reveal">
-        <a class="row" href="/articles/rebuild-night/">
-          <span class="row__no">ST.001</span>
-          <span class="row__img"><img class="" src="/assets/sample-saeki.webp" width="1600" height="2400" alt="" sizes="160px" style="object-position:50% 22%" loading="lazy" decoding="async"></span>
+      <li data-tags="承継|撤退|事業転換" class="reveal">
+        <a class="row" href="/articles/factory-close/">
+          <span class="row__no">ST.005</span>
+          <span class="row__img"><div class=" typo-cover" role="img" aria-label="ST.005"><span class="typo-cover__no">ST.005</span><span class="typo-cover__slash" aria-hidden="true"></span></div></span>
           <span class="row__main">
-            <span class="kicker">撤退<i>/</i>再起<i>/</i>組織</span>
-            <span class="row__title">会社を<wbr>畳むと<wbr>決めた<wbr>翌朝、<wbr>彼は<wbr>社員に<wbr>何も<wbr>言えなかった</span>
-            <span class="row__who">佐伯 遼　株式会社NORTHBOUND</span>
+            <span class="kicker">承継<i>/</i>撤退<i>/</i>事業転換</span>
+            <span class="row__title">父が<wbr>40年<wbr>守った<wbr>工場の<wbr>ラインを、<wbr>二代目の<wbr>私が<wbr>止めた</span>
+            <span class="row__who">早瀬 真理子　早瀬製作所</span>
           </span>
-          <span class="row__meta"><time datetime="2026-09-12">2026.09.12</time><span>8分</span></span>
+          <span class="row__meta"><time datetime="2026-09-28">2026.09.28</time><span>8分</span></span>
         </a>
       </li>
-      <li data-tags="新規事業|撤退|決断" class="reveal">
-        <a class="row" href="/articles/failure-knew/">
-          <span class="row__no">ST.002</span>
-          <span class="row__img"><img class="" src="/assets/sample-kuroda.webp" width="1400" height="2100" alt="" sizes="160px" style="object-position:50% 25%" loading="lazy" decoding="async"></span>
+      <li data-tags="組織|決断|共同創業" class="reveal">
+        <a class="row" href="/articles/cofounder-split/">
+          <span class="row__no">ST.004</span>
+          <span class="row__img"><div class=" typo-cover" role="img" aria-label="ST.004"><span class="typo-cover__no">ST.004</span><span class="typo-cover__slash" aria-hidden="true"></span></div></span>
           <span class="row__main">
-            <span class="kicker">新規事業<i>/</i>撤退<i>/</i>決断</span>
-            <span class="row__title">失敗すると<wbr>分かっていた。<wbr>それでも、<wbr>事業を<wbr>止めるまでに<wbr>一年かかった</span>
-            <span class="row__who">黒田 奈緒　合同会社SCALE</span>
+            <span class="kicker">組織<i>/</i>決断<i>/</i>共同創業</span>
+            <span class="row__title">大学の<wbr>同級生と<wbr>始めた<wbr>会社で、<wbr>その<wbr>同級生に<wbr>辞めて<wbr>もらった</span>
+            <span class="row__who">中村 拓真　株式会社LANTERN</span>
           </span>
-          <span class="row__meta"><time datetime="2026-09-10">2026.09.10</time><span>6分</span></span>
+          <span class="row__meta"><time datetime="2026-09-22">2026.09.22</time><span>7分</span></span>
         </a>
       </li>
       <li data-tags="承継|組織|決断" class="reveal">
@@ -115,6 +117,30 @@
           <span class="row__meta"><time datetime="2026-09-08">2026.09.08</time><span>7分</span></span>
         </a>
       </li>
+      <li data-tags="新規事業|撤退|決断" class="reveal">
+        <a class="row" href="/articles/failure-knew/">
+          <span class="row__no">ST.002</span>
+          <span class="row__img"><img class="" src="/assets/sample-kuroda.webp" width="1400" height="2100" alt="" sizes="160px" style="object-position:50% 25%" loading="lazy" decoding="async"></span>
+          <span class="row__main">
+            <span class="kicker">新規事業<i>/</i>撤退<i>/</i>決断</span>
+            <span class="row__title">失敗すると<wbr>分かっていた。<wbr>それでも、<wbr>事業を<wbr>止めるまでに<wbr>一年かかった</span>
+            <span class="row__who">黒田 奈緒　合同会社SCALE</span>
+          </span>
+          <span class="row__meta"><time datetime="2026-09-10">2026.09.10</time><span>6分</span></span>
+        </a>
+      </li>
+      <li data-tags="撤退|再起|組織" class="reveal">
+        <a class="row" href="/articles/rebuild-night/">
+          <span class="row__no">ST.001</span>
+          <span class="row__img"><img class="" src="/assets/sample-saeki.webp" width="1600" height="2400" alt="" sizes="160px" style="object-position:50% 22%" loading="lazy" decoding="async"></span>
+          <span class="row__main">
+            <span class="kicker">撤退<i>/</i>再起<i>/</i>組織</span>
+            <span class="row__title">会社を<wbr>畳むと<wbr>決めた<wbr>翌朝、<wbr>彼は<wbr>社員に<wbr>何も<wbr>言えなかった</span>
+            <span class="row__who">佐伯 遼　株式会社NORTHBOUND</span>
+          </span>
+          <span class="row__meta"><time datetime="2026-09-12">2026.09.12</time><span>8分</span></span>
+        </a>
+      </li>
     </ol>
   </div>
 </section>
@@ -126,9 +152,9 @@
       <nav class="site-footer__col" aria-label="Sections">
         <p class="site-footer__label">Sections</p>
         <a href="/articles/">Interviews</a>
-        <a href="/#briefs">Short Reads</a>
-        <a href="/#themes">Themes</a>
-        <a href="/#podcast">Podcast</a>
+        <a href="/briefs/">Short Reads</a>
+        <a href="/themes/">Themes</a>
+        <a href="/podcast/">Podcast</a>
         <a href="/about/">About</a>
       </nav>
       <div class="site-footer__col">
@@ -167,9 +193,9 @@
   </div>
   <nav class="menu-dialog__nav">
     <a href="/articles/"><span>01</span>Interviews</a>
-    <a href="/#briefs"><span>02</span>Short Reads</a>
-    <a href="/#themes"><span>03</span>Themes</a>
-    <a href="/#podcast"><span>04</span>Podcast</a>
+    <a href="/briefs/"><span>02</span>Short Reads</a>
+    <a href="/themes/"><span>03</span>Themes</a>
+    <a href="/podcast/"><span>04</span>Podcast</a>
     <a href="/about/"><span>05</span>About</a>
   </nav>
   <div class="menu-dialog__foot">

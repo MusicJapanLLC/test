@@ -414,5 +414,283 @@ export const articles = [
       ],
       profile: "Founder of a B2B software company. In its ninth year he proposed his own replacement as CEO, then took 143 days to leave."
     }
+  },
+  {
+    slug: "cofounder-split",
+    no: "04",
+    date: "2026-09-22",
+    minutes: 7,
+    image: null,
+    ja: {
+      name: "中村 拓真",
+      speaker: "中村",
+      company: "株式会社LANTERN",
+      role: "代表取締役",
+      tags: ["組織", "決断", "共同創業"],
+      title: "大学の同級生と始めた会社で、その同級生に辞めてもらった",
+      dek: "創業メンバーは二人。肩書きも株も半分ずつ。社員が30人を超えたころ、意見が割れても決められない会社になっていた。",
+      decision: "共同創業者に、退任を切り出した。",
+      subtitle: "仲がいいことと、一緒に経営できることは別だった。",
+      brief: [
+        "株も権限も半分ずつで、最後に決める人がいなかった",
+        "半年かけて話し合い、共同創業者に退任を頼んだ",
+        "いまも年に一度、二人で飲みに行く"
+      ],
+      intro: [
+        "取材の途中、中村拓真は一度だけ黙った。共同創業者の名前を口にしたときだ。",
+        "神田の雑居ビルの4階。窓際の会議室で、彼は湯呑みを両手で包んだまま、しばらく言葉を探していた。",
+        "大学のゼミで知り合った二人が会社をつくったのは、27歳のとき。資本金も肩書きも、きっちり半分ずつにした。それが一番公平だと、当時は本気で思っていた。"
+      ],
+      scenes: [
+        {
+          heading: "半分ずつ、が公平だと思っていた",
+          short: "半分ずつの会社",
+          blocks: [
+            ["q", "株も権限も半分ずつ、というのは珍しいですよね。"],
+            ["a", "周りからは止められました。でも、どっちが上とか決めたくなかったんです。あいつがいなかったら会社をつくってないので。"],
+            ["q", "うまく回っていた時期もあった。"],
+            ["a", "最初の5年は本当に楽しかったです。僕が売って、あいつがつくる。ケンカしても、夜には一緒にラーメン食べてました。"],
+            ["p", "変わったのは、社員が30人を超えたあたりからだという。採用の基準、値上げのタイミング、新しい事業に人を割くかどうか。二人の意見が割れると、会議はそこで止まった。"],
+            ["quote", "仲がいいことと、一緒に経営できることは別だった。"]
+          ]
+        },
+        {
+          heading: "決められない会議が、毎週続いた",
+          short: "決められない会議",
+          blocks: [
+            ["q", "意見が割れたら、どうしていたんですか。"],
+            ["a", "持ち越しです。次の週に持ち越して、また割れて、また持ち越す。社員はどっちの顔色を見ればいいのか分からなくなっていました。"],
+            ["a", "ある日、マネージャーの一人に言われたんです。『お二人の意見が揃うまで、僕たちは何もできません』って。責めるような言い方じゃなかったのが、逆にきつかった。"],
+            ["p", "中村はその夜、共同創業者に「話がある」とだけメッセージを送った。返事は「俺も」だった。"]
+          ]
+        },
+        {
+          heading: "辞めてくれ、と言うまでの半年",
+          short: "切り出すまで",
+          blocks: [
+            ["q", "すぐに退任の話をしたんですか。"],
+            ["a", "いえ。最初は役割を分ければいいと思っていました。僕が経営、あいつが開発のトップ。でも、それをやっても最後の判断はやっぱり二人で並んでしまう。"],
+            ["a", "半年くらい、週に一回、会社の外で話しました。最後は向こうから『どっちかが降りないと終わらないな』って言ったんです。僕は、それを待っていたのかもしれない。それがいまでも少し引っかかってます。"],
+            ["p", "共同創業者は株の一部を残したまま取締役を退き、半年後、別の会社のCTOになった。"],
+            ["quote", "言い出してもらうのを、待っていたのかもしれない。"]
+          ]
+        },
+        {
+          heading: "いまも、年に一度は飲みに行く",
+          short: "その後の二人",
+          blocks: [
+            ["q", "いまの関係はどうですか。"],
+            ["a", "年に一回、創業した日に二人で飲みます。仕事の話はほとんどしません。向こうの会社の愚痴を聞くくらいですね。"],
+            ["q", "もう一度会社をつくるなら、同じ形にしますか。"],
+            ["a", "しないです。仲のいい人とやるのはいい。でも、最後に誰が決めるかだけは最初に決めておく。それで関係が壊れるなら、そもそも一緒にやらないほうがいいと思っています。"]
+          ]
+        }
+      ],
+      profile: "法人向けSaaSを開発する企業の代表。大学の同級生と共同で創業し、9年目に経営体制を一本化した。"
+    },
+    en: {
+      name: "Takuma Nakamura",
+      speaker: "Nakamura",
+      company: "LANTERN Inc.",
+      role: "CEO",
+      tags: ["Team", "Decisions", "Co-founders"],
+      title: "He started the company with his best friend from college. Then he asked him to leave",
+      dek: "Two founders, equal titles, equal shares. By the time they had 30 employees, nobody could make the final call.",
+      decision: "He asked his co-founder to step down.",
+      subtitle: "Getting along and running a company together turned out to be different things.",
+      brief: [
+        "With equal shares and equal authority, nobody had the final say.",
+        "After six months of talks, he asked his co-founder to step down.",
+        "They still go out for a drink together once a year."
+      ],
+      intro: [
+        "Partway through the interview, Takuma Nakamura went quiet. It was the moment he said his co-founder’s name.",
+        "We were on the fourth floor of an old office building in Kanda, Tokyo. He held his teacup in both hands and took a while to find the words.",
+        "The two met in a university seminar and started the company at 27. They split the capital and the titles exactly down the middle. At the time, he genuinely believed that was the fairest way."
+      ],
+      scenes: [
+        {
+          heading: "Fifty-fifty seemed fair",
+          short: "Fifty-fifty",
+          blocks: [
+            ["q", "Equal shares and equal authority is unusual."],
+            ["a", "People told us not to. But I didn’t want to decide who was on top. Without him, I wouldn’t have started the company at all."],
+            ["q", "And for a while it worked."],
+            ["a", "The first five years were genuinely fun. I sold, he built. We’d argue, and by the evening we’d be eating ramen together."],
+            ["p", "Things changed once they passed 30 employees. Hiring standards, when to raise prices, whether to put people on a new product. When the two disagreed, the meeting simply stopped."],
+            ["quote", "Getting along and running a company together turned out to be different things."]
+          ]
+        },
+        {
+          heading: "Weekly meetings that decided nothing",
+          short: "No decisions",
+          blocks: [
+            ["q", "What happened when you disagreed?"],
+            ["a", "We postponed. Pushed it to the next week, disagreed again, pushed it again. The team didn’t know whose face to read anymore."],
+            ["a", "One day a manager told me, “Until the two of you agree, we can’t do anything.” He didn’t say it as a complaint. That made it worse."],
+            ["p", "That night Nakamura sent his co-founder a message that said only, “We need to talk.” The reply: “Me too.”"]
+          ]
+        },
+        {
+          heading: "Six months before he could say it",
+          short: "Six months",
+          blocks: [
+            ["q", "Did you raise the idea of him leaving right away?"],
+            ["a", "No. At first I thought we could split roles — me on the business, him leading engineering. But even then, the final call still sat with both of us."],
+            ["a", "For about six months we met once a week outside the office. In the end, he was the one who said, “This won’t end unless one of us steps down.” Maybe I was waiting for him to say it. That still bothers me a little."],
+            ["p", "His co-founder left the board while keeping part of his stake. Six months later he became CTO at another company."],
+            ["quote", "Maybe I was waiting for him to say it first."]
+          ]
+        },
+        {
+          heading: "A drink, once a year",
+          short: "Once a year",
+          blocks: [
+            ["q", "How are things between you now?"],
+            ["a", "Once a year, on the day we founded the company, we go out for a drink. We barely talk about work. Mostly I listen to him complain about his company."],
+            ["q", "If you started again, would you set it up the same way?"],
+            ["a", "No. Starting a company with a friend is fine. But decide up front who makes the final call. If that breaks the friendship, you probably shouldn’t have started together."]
+          ]
+        }
+      ],
+      profile: "CEO of a B2B SaaS company he co-founded with a college classmate. In the company’s ninth year he consolidated leadership under one CEO."
+    }
+  },
+  {
+    slug: "factory-close",
+    no: "05",
+    date: "2026-09-28",
+    minutes: 8,
+    image: null,
+    ja: {
+      name: "早瀬 真理子",
+      speaker: "早瀬",
+      company: "早瀬製作所",
+      role: "代表取締役（二代目）",
+      tags: ["承継", "撤退", "事業転換"],
+      title: "父が40年守った工場のラインを、二代目の私が止めた",
+      dek: "継いで3年目、主力だった自動車部品の受注が半分になった。残ったのは、父の代から働く職人たちと、赤字のライン。",
+      decision: "父の代の主力ラインを止めた。",
+      subtitle: "止めると決めた日、父は工場に来なかった。",
+      brief: [
+        "主力の自動車部品の受注が、3年で半分になった",
+        "父の代からの主力ラインを止め、試作品の加工に絞った",
+        "職人は一人も辞めず、売上は2年で元の水準に戻った"
+      ],
+      intro: [
+        "早瀬製作所の工場に入ると、まず油の匂いがする。早瀬真理子は「この匂いで育ったので」と笑った。",
+        "埼玉県の工業団地にある、従業員18人の金属加工の会社。父が40年前に始め、彼女は銀行勤めを辞めて3年前に継いだ。",
+        "継いだ年、主力だった自動車部品の受注は前年の半分になっていた。"
+      ],
+      scenes: [
+        {
+          heading: "継いだときには、もう減っていた",
+          short: "継いだとき",
+          blocks: [
+            ["q", "継いだ時点で、状況は分かっていたんですか。"],
+            ["a", "数字は見ていました。銀行にいたので、決算書を読むのは得意だったんです。でも、工場にいる人たちの顔を見ると、数字の話がなかなかできなくて。"],
+            ["q", "お父様は何と。"],
+            ["a", "『そのうち戻る』と。父の時代は、実際に何度も戻ってきたんです。だから父の言うことも分かる。でも、今回は戻らない理由がいくつもありました。"],
+            ["quote", "数字の話が、なかなかできなかった。"]
+          ]
+        },
+        {
+          heading: "職人に、先に相談した",
+          short: "職人に相談",
+          blocks: [
+            ["q", "ラインを止めると決めるまで、誰に相談しましたか。"],
+            ["a", "父より先に、一番古い職人の佐藤さんに話しました。60代で、私が子どものころから工場にいる人です。怒られると思っていました。"],
+            ["a", "そうしたら『社長が決めたなら、俺らは新しいほうを覚えるだけだよ』って。拍子抜けしたのと同時に、泣きそうになりました。"],
+            ["p", "早瀬が考えていたのは、量産をやめて、大学や研究機関向けの試作品の加工に絞ることだった。一個から受ける。単価は高いが、図面のない相談も多い。職人の腕が一番生きる仕事でもあった。"]
+          ]
+        },
+        {
+          heading: "止めると決めた日、父は来なかった",
+          short: "父との距離",
+          blocks: [
+            ["q", "お父様には、いつ伝えたんですか。"],
+            ["a", "全部決めてからです。ずるいやり方だったと思います。父は何も言わずに聞いて、『お前の会社だ』とだけ言いました。"],
+            ["a", "ラインを止めた日、父は工場に来ませんでした。毎日来ていた人が、その日だけ来なかった。それが答えだったんだと思います。"],
+            ["quote", "止めると決めた日、父は工場に来なかった。"]
+          ]
+        },
+        {
+          heading: "2年後、売上は元に戻った",
+          short: "2年後",
+          blocks: [
+            ["q", "いまはどうなっていますか。"],
+            ["a", "職人は一人も辞めていません。売上は2年で継いだときの水準に戻りました。利益は、正直、父の代より出ています。"],
+            ["q", "お父様は、いまは。"],
+            ["a", "最近また工場に来るようになりました。試作品を手に取って、『こんなもんよく作るな』って。褒めてるのかどうか分からないんですけど、私はそれで十分です。"]
+          ]
+        }
+      ],
+      profile: "金属加工会社の二代目代表。銀行勤務を経て家業を継ぎ、量産から試作品加工へ事業の軸を移した。"
+    },
+    en: {
+      name: "Mariko Hayase",
+      speaker: "Hayase",
+      company: "Hayase Manufacturing",
+      role: "President (second generation)",
+      tags: ["Succession", "Exit", "Pivot"],
+      title: "Her father ran the line for 40 years. As his successor, she shut it down",
+      dek: "Three years after she took over, orders for their main product — auto parts — had halved. What remained: craftsmen who’d worked for her father, and a production line losing money.",
+      decision: "She shut down her father’s main production line.",
+      subtitle: "The day she decided to stop the line, her father didn’t come to the factory.",
+      brief: [
+        "Orders for their core auto parts fell by half in three years.",
+        "She shut the mass-production line and focused on prototype machining.",
+        "No craftsman left, and revenue recovered within two years."
+      ],
+      intro: [
+        "The first thing you notice in the Hayase Manufacturing workshop is the smell of machine oil. “I grew up with this smell,” Mariko Hayase said, laughing.",
+        "It’s an 18-person metalworking company on an industrial estate in Saitama. Her father started it 40 years ago; she left a job at a bank to take over three years ago.",
+        "In the year she took over, orders for their main product, auto parts, were half what they’d been the year before."
+      ],
+      scenes: [
+        {
+          heading: "When she took over, orders were already falling",
+          short: "Taking over",
+          blocks: [
+            ["q", "Did you know the situation when you took over?"],
+            ["a", "I’d seen the numbers. I came from a bank, so reading financial statements was the one thing I was good at. But when I looked at the people in the workshop, it was hard to talk about numbers."],
+            ["q", "What did your father say?"],
+            ["a", "“It’ll come back.” In his time, it really did come back, many times. So I understood him. But this time there were too many reasons it wouldn’t."],
+            ["quote", "It was hard to talk about numbers."]
+          ]
+        },
+        {
+          heading: "She asked the craftsmen first",
+          short: "The craftsmen",
+          blocks: [
+            ["q", "Who did you talk to before deciding to stop the line?"],
+            ["a", "Before my father, I went to Mr. Sato, our longest-serving craftsman. He’s in his sixties and has been here since I was a child. I expected him to be angry."],
+            ["a", "Instead he said, “If the boss has decided, we’ll just learn the new work.” I was taken aback, and close to tears."],
+            ["p", "Her plan was to stop mass production and focus on prototype machining for universities and research labs — orders from a single piece, higher prices, and plenty of requests that arrive without drawings. It was also the work that used the craftsmen’s skills best."]
+          ]
+        },
+        {
+          heading: "The day she decided, her father stayed away",
+          short: "Her father",
+          blocks: [
+            ["q", "When did you tell your father?"],
+            ["a", "After everything was decided. It wasn’t fair of me. He listened without a word and then said, “It’s your company.”"],
+            ["a", "On the day we stopped the line, he didn’t come to the factory. He’d come every single day, and that day he didn’t. I think that was his answer."],
+            ["quote", "The day she decided to stop the line, her father didn’t come to the factory."]
+          ]
+        },
+        {
+          heading: "Two years on, revenue is back",
+          short: "Two years on",
+          blocks: [
+            ["q", "Where do things stand now?"],
+            ["a", "Not one craftsman has left. Revenue was back to where it was when I took over within two years. Honestly, profit is higher than in my father’s day."],
+            ["q", "And your father?"],
+            ["a", "He’s started coming by again. He picks up a prototype and says, “Can’t believe you make stuff like this.” I can’t tell if it’s praise, but it’s enough for me."]
+          ]
+        }
+      ],
+      profile: "Second-generation president of a metalworking company. After a career in banking she took over the family business and moved it from mass production to prototype machining."
+    }
   }
 ];
