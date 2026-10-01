@@ -133,6 +133,25 @@ export type TalkProfile = {
    * 登壇・掲載などのメディア実績を前面に出したいプロフィール向け。
    */
   mediaFirst?: boolean;
+  /** 「事業内容」の見出しを差し替えるとき（例: '現在の事業'） */
+  businessTitle?: string;
+  /**
+   * 経歴・人物背景。人物ストーリーが濃い人向け（概要の直後に出す）。
+   * paragraphs は本人の発言・公開情報で確認できる事実だけ。timeline は経歴の一覧。
+   */
+  story?: {
+    title?: string;
+    paragraphs: string[];
+    /** 横に添える2枚目の写真（public/ 直下の絶対パス） */
+    image?: { src: string; alt: string };
+    timeline?: { org: string; role: string; note?: string }[];
+  };
+  /** 会社について（ミッション・ビジョンなど）。facts は要点の表 */
+  about?: { title: string; paragraphs?: string[]; facts?: { term: string; value: string }[] };
+  /** 価値観。title は本人・会社が掲げる言葉、body はその説明 */
+  values?: { title: string; body: string }[];
+  /** こんな方と繋がりたい。lead は前置き（誰の見立てかを明記する） */
+  wantToMeet?: { lead?: string; items: string[] };
   /** 「登壇・掲載・発信」の見出しを差し替えるとき（例: '運営メディア・発信'） */
   mediaTitle?: string;
   /** 同じく、見出し上の小さな英字ラベル（例: 'Media & Works'） */

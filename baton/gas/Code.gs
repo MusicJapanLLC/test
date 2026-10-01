@@ -239,6 +239,15 @@ var BATON_PROFILES = {
     // 松浦様ご本人の受信用アドレス（Ownerから提供、2026-09-30）
     recipientEmail: 'jun.matsuura@central-ax.co.jp',
     active: true
+  },
+  ishii: {
+    name: '石井 嵩大',
+    company: '株式会社C.C',
+    slug: 'ishii',
+    // 石井様ご本人の受信用アドレス（Ownerから提供、2026-10-01）。
+    // 石井様のページ（profileId: 'ishii'）から来た申請の承認／辞退依頼だけがここへ届く
+    recipientEmail: 'ishii_shuta@cc-official.jp',
+    active: true
   }
 };
 
@@ -908,6 +917,34 @@ function testBatonFlowUnveil() {
 function testBatonFlowMatsuura() {
   var result = batonSubmitTalk({
     profileId: 'matsuura',
+    applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
+    purposes: ['協業'],
+    comment: 'これは動作確認用のテスト送信です。',
+    note: '',
+    attachments: [],
+    hp: ''
+  });
+
+  Logger.log('結果: ' + JSON.stringify(result));
+  if (result.ok) {
+    batonToast(
+      'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
+  } else {
+    batonToast('失敗: ' + JSON.stringify(result), 'テスト', 8);
+  }
+}
+
+/**
+ * ishiiプロフィール専用の動作確認用。
+ * 実行すると BATON_REQUESTS に1件入り、test@example.com 宛の認証メールが飛ぶ。
+ * そのリンクを開いて認証を完了すると、石井様ご本人（recipientEmail）宛に
+ * 承認/辞退の依頼メールが実際に届く。本人に迷惑がかかるので、実行前に
+ * 必ずOwnerに確認すること。
+ * ※ test@example.com が「申請許可リスト」に無いと not_allowed で止まる（正常な動作）。
+ */
+function testBatonFlowIshii() {
+  var result = batonSubmitTalk({
+    profileId: 'ishii',
     applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
     purposes: ['協業'],
     comment: 'これは動作確認用のテスト送信です。',

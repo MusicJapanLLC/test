@@ -216,7 +216,210 @@ const matsuuraProfile: TalkProfile = {
   active: true,
 };
 
-export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile];
+/**
+ * 石井 嵩大（株式会社C.C）。
+ * 掲載内容は、Ownerから受け取った調査メモ（2026-10-01、公開ページ50件以上を5周で照合）と、
+ * 本人が公開しているLinkedIn・X、C.C公式サイト、インタビュー・Podcastで確認できる事実のみ。
+ * 調査メモの注意点に従い、次は載せない／書き方を変えている:
+ *  - 設立月（公式2025年5月とPR TIMES 2025年4月で食い違い）→「2025年設立」とだけ書く
+ *  - 年齢（誕生日が未確認）→ 載せない
+ *  - 売上・資本金・従業員数（企業スペック）→ 載せない（ADDING_A_PROFILE.md の方針）
+ *  - 開発事例の数値 → 「同社公開事例では」と出典を明記する
+ *  - PASの料金・条件（変わりやすい）→ 公式サイト参照とする
+ * Facebook は本人のアカウントを確認できなかったため載せていない。
+ */
+const ishiiProfile: TalkProfile = {
+  id: 'ishii',
+  slug: 'ishii',
+  name: '石井 嵩大',
+  company: '株式会社C.C',
+  title: '代表取締役社長',
+  tagline: '経営に、余白を。人生に、本質を。',
+  photo: {
+    src: '/profile-ishii.webp',
+    alt: '石井 嵩大',
+    caption: 'TOKYO / JAPAN · 2026',
+  },
+  bio:
+    '経営者コミュニティ・人材紹介・SES営業など、人と人をつなぐ事業を経験したのち、' +
+    '自身が業務に追われた経験を原点に、双子の弟・石井皓晟と株式会社C.Cを経営。' +
+    'AIとシステムで、経営者が本当に向き合うべきことに時間を使える「余白」をつくっています。',
+  story: {
+    paragraphs: [
+      '転機は大学3年の頃。母親の病気を知り、「普通に就職して少しずつ貯金して親孝行していたのでは、間に合わないかもしれない」と考えたことから、起業を目標にBtoB営業の世界に入りました。インターン、事業責任者、会社づくりを経験していきます（本人がPodcast「経営者の志」で語った内容）。',
+      '経営者コミュニティや人材紹介など、人と人・企業と企業をつなぐ仕事に携わるなかで、日々はどんどん忙しくなり、本来の目的だった家族との時間からは、むしろ遠ざかっていきました。',
+      'そこで双子の弟・皓晟が、人材紹介の業務用システムを作り、履歴書・推薦文・企業選定などを効率化。仕組みで時間が戻ってきたこの経験が、「余白をつくる」という株式会社C.Cの発想の原点になっています。',
+      '様々な事業に手を出していた時期を、本人は「キャリアロンダリングになりかけた」と振り返ります。大学卒業前に「何をしたいのか」から逆算して事業を整理し、一つに振り切りました（未来共創のインタビューより）。',
+    ],
+    image: { src: '/profile-ishii-2.webp', alt: '石井 嵩大' },
+    timeline: [
+      { org: '株式会社ボードルア', role: '事業統括本部', note: 'SES領域の営業・採用構築' },
+      {
+        org: '株式会社ポロック',
+        role: '経営者コミュニティ「Bowers」事業部長',
+        note: '本人プロフィールでは、約2,100名規模から3,500名規模へ拡大',
+      },
+      { org: '株式会社バジェットアドテクノロジーズ', role: 'CSO', note: 'SNSマーケティング、BtoB営業戦略' },
+      {
+        org: '株式会社FUBAR',
+        role: '人材紹介事業「咲縁」の立ち上げ・運営',
+        note: '本人プロフィールでは、月100名以上を集客',
+      },
+      { org: '株式会社C.C', role: '代表取締役社長（2025年設立）', note: '営業・マーケティング・事業構築を担当' },
+    ],
+  },
+  businessTitle: '現在の事業',
+  business: [
+    '株式会社C.Cの代表取締役社長として、主に営業・マーケティング・事業構築を担当しています。技術面は、双子の弟でフルスタックエンジニアの石井皓晟がバックオフィスとエンジニアリングを担い、「事業をつくる兄」と「仕組みをつくる弟」の共同経営で会社を動かしています。',
+    'C.Cは「余白を設計する会社」として、AI導入支援・DXコンサルティング、CAIO顧問、AIシステムの受託開発、経営者向けサービス「PAS」を手がけています。支援は「棚卸 → 余白設計 → 仕組化 → 伴走」の順に進め、繰り返し作業・転記・確認・集計などを特定したうえで、既存のSaaS・AI・自動化・独自開発を組み合わせます。システムを納品して終わりではなく、現場で使われ続け、属人化が消えるところまでを扱います。',
+    '2026年8月に正式提供を始めた「PAS」は、日程調整・紹介文・お繋ぎ文・商談準備・紹介履歴などの反復業務をLINE中心で簡略化しつつ、人脈そのものを交換できる経営者向けのサービスです。C.Cが直接会った500社以上の経営者のデータベースから、相性の良い経営者を紹介する仕組みも持っています（同社公表）。',
+    '既存の経営者マッチングでは「営業したい人同士がマッチングすると、お互いが営業になる」という問題意識から、PASではAさんとBさんを直接ではなく、Bさんが持っている人脈とAさんをつなぐ設計にしています（Podcastでの本人談）。',
+  ],
+  about: {
+    title: '株式会社C.Cについて',
+    paragraphs: [
+      '社長が業務に追われ、本当に向き合うべきことに時間を使えない。その状態を、AIとシステムで終わらせるために生まれた会社です。「社長は、本来忙しくあるべきではない」という考えが創業の原点にあります。',
+    ],
+    facts: [
+      { term: 'MISSION', value: '経営に余白を。人生に本質を。' },
+      { term: 'VISION', value: '時間に追われる状態を終わらせる。すべての人が、本質に時間を使える社会へ' },
+      {
+        term: 'VALUE',
+        value: 'PURPOSE FIRST／VALUE OVER BUSY／CREATE TIME／COMMIT TO CONTINUITY／SYSTEMIZE RESULTS',
+      },
+      { term: '経営体制', value: '石井嵩大（営業・マーケティング・事業構築）／石井皓晟（バックオフィス・エンジニアリング）' },
+      { term: '設立', value: '2025年' },
+      { term: '所在地', value: '東京都港区北青山' },
+    ],
+  },
+  servicesTitle: 'サービス・強み',
+  services: [
+    { name: 'ニブンノイチ', description: '価格・納期・作業時間を、従来のおよそ半分にするAI／システム導入支援' },
+    { name: 'CAIO顧問', description: '企業の最高AI責任者に近い立場で、何をAI化すべきかの戦略から実装まで伴走' },
+    { name: 'AI受託開発', description: 'SaaS・AI・自動化・独自開発を組み合わせ、現場で使われ続ける仕組みに' },
+    { name: 'PAS', description: '日程調整・紹介文・商談準備をLINEで簡略化し、人脈を交換できる経営者向けサービス' },
+  ],
+  values: [
+    { title: '愛のない行動は、しない', body: 'C.C公式サイトに、石井自身の行動基準として掲げている言葉。' },
+    {
+      title: '社長は、本来忙しくあるべきではない',
+      body: '自身が業務に追われた経験からたどり着いた、C.C創業の原点となる考え。',
+    },
+    {
+      title: 'できないことを、はっきりさせる',
+      body: '経験で年上に敵わない部分は教えてもらう。一方で、AI・システムの領域では「任せてください」と言い切る（インタビューより）。',
+    },
+    {
+      title: '「何をしたいのか」から逆算する',
+      body: '手を広げすぎた時期を振り返り、大学卒業前に事業を一つに絞った経験から。',
+    },
+  ],
+  wantToMeet: {
+    lead: 'C.Cの事業内容から、Batonが特にご縁をつなぎたいと考えている方です。',
+    items: [
+      'AI・DXを進めたいが、何から始めるかが決まっていない経営者',
+      '営業やバックオフィスが属人化している企業',
+      'SFA／CRMや業務システムの導入・見直しを考えている企業',
+      '経営者紹介・コミュニティ・人脈を軸にした事業を営む方',
+    ],
+  },
+  media: [
+    {
+      label: '株式会社C.C石井嵩大が「社長の100時間を創る」理由',
+      url: 'https://miraikyoso.jp/interview/ishiishuta/',
+      kind: '掲載',
+      date: '2026',
+      note: '未来共創によるロングインタビュー。事業を一つに絞った経緯、「できないことをはっきりさせる」という考え方、これからの会社像を語っている。',
+      featured: true,
+    },
+    {
+      label: 'Podcast「経営者の志」#1117 石井嵩大さん',
+      url: 'https://spirit.koelab.net/1117/',
+      kind: '出演',
+      date: '2026.09',
+      note: '起業の原点となった家族の話と、PASに込めた「人脈そのものをつなぐ」という考えを語っている。',
+      featured: true,
+    },
+    {
+      label: '経営者向けサービス「PAS」',
+      url: 'https://www.cc-official.jp/PAS/',
+      kind: '事業',
+      date: '2026.08',
+      note: '日程調整・紹介文・商談準備などをLINE中心で簡略化し、人脈を交換できる経営者向けサービス。料金・条件は公式サイトを参照。',
+      featured: true,
+    },
+    {
+      label: '開発事例：営業案件管理Webアプリ',
+      url: 'https://www.cc-official.jp/works/sales-management-app/',
+      kind: '事例',
+      note: '顧客情報・商談履歴・案件進捗・見込み売上・次回アクションを一元化。同社公開事例では、営業管理作業が月約40時間から約15時間に。',
+      featured: true,
+    },
+    {
+      label: '株式会社C.C 公式サイト',
+      url: 'https://www.cc-official.jp/',
+      kind: '公式',
+      note: 'CAIO・AI受託開発・企業のAI導入支援。',
+      owner: 'company',
+    },
+    {
+      label: 'サービス一覧',
+      url: 'https://www.cc-official.jp/service/',
+      kind: '公式',
+      note: 'ニブンノイチ・CAIO顧問・AI受託開発・AI導入支援／DXコンサルティング。',
+    },
+    {
+      label: '開発事例：AIナレッジ検索',
+      url: 'https://www.cc-official.jp/works/ai-knowledge-system/',
+      kind: '事例',
+      note: 'PDF・Word・スプレッドシートなどの社内資料を横断検索。同社公開事例では、情報検索が平均約15分から約2分に。',
+    },
+    {
+      label: '開発実績一覧（WORKS）',
+      url: 'https://www.cc-official.jp/works/',
+      kind: '事例',
+      note: '営業案件管理・問い合わせ管理・申請ワークフロー・AIナレッジ検索・経営KPIダッシュボード・予約／顧客管理など。',
+    },
+    {
+      label: 'PAS 提供開始のお知らせ（PR TIMES）',
+      url: 'https://prtimes.jp/main/html/rd/p/000000002.000188300.html',
+      kind: 'リリース',
+      date: '2026.08',
+      note: '株式会社C.Cによるプレスリリース。',
+    },
+    {
+      label: '「経営者の志」同エピソード（LISTEN）',
+      url: 'https://listen.style/p/spirit/jqkb2rwq',
+      kind: '出演',
+      note: '文字起こし付きで読めるPodcastページ。',
+    },
+    {
+      label: 'LinkedIn',
+      url: 'https://www.linkedin.com/in/%E5%B5%A9%E5%A4%A7-%E7%9F%B3%E4%BA%95-9390b2313/',
+      kind: '発信',
+      note: '経歴と、AI導入・ニブンノイチについての発信。',
+      owner: 'person',
+    },
+    {
+      label: 'X @IshiiShuta',
+      url: 'https://x.com/IshiiShuta',
+      kind: '発信',
+      owner: 'person',
+    },
+  ],
+  mediaTitle: '実績・メディア',
+  mediaLabel: 'Works & Media',
+  location: '東京',
+  updatedAt: '2026-10-01',
+  listSummary: 'AIとシステムで、経営者に余白をつくる',
+  businessTags: ['AI導入支援', 'AI受託開発', '経営者向けSaaS'],
+  keywordTags: ['余白の設計', '双子で共同経営', 'CAIO顧問'],
+  // C.Cの「余白」を、象牙色の紙と墨の文字で。写真の赤を差し色に
+  theme: { primary: '#B3121C', accent: '#1F2C4D', bg: '#F5F2EC', text: '#17181C' },
+  active: true,
+};
+
+export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile, ishiiProfile];
 
 export const getProfile = (id: string): TalkProfile => {
   const found = profiles.find((p) => p.id === id);
