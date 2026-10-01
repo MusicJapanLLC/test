@@ -1,335 +1,260 @@
 (function () {
-  const articles = window.SECOND_TAKE_ARTICLES || [];
-  const $ = (selector, root = document) => root.querySelector(selector);
-  const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
+  "use strict";
 
-  function rootPath(path) {
-    return path;
+  var doc = document;
+  var body = doc.body;
+  var lang = body.getAttribute("data-lang") || "ja";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var $ = function (sel, root) { return (root || doc).querySelector(sel); };
+  var $$ = function (sel, root) { return Array.prototype.slice.call((root || doc).querySelectorAll(sel)); };
+  var store = {
+    get: function (key) { try { return window.localStorage.getItem(key); } catch (e) { return null; } },
+    set: function (key, value) { try { window.localStorage.setItem(key, value); } catch (e) { /* storage unavailable */ } }
+  };
+
+  // ---------- intro curtain: once per session, first page only ----------
+  (function curtain() {
+    if (reduceMotion) return;
+    try {
+      if (window.sessionStorage.getItem("st-intro")) return;
+      window.sessionStorage.setItem("st-intro", "1");
+    } catch (e) { return; }
+    var el = doc.createElement("div");
+    el.className = "curtain";
+    el.setAttribute("aria-hidden", "true");
+    el.innerHTML =
+      '<div class="curtain__inner"><div class="record"><div class="record__disc"><div class="record__label"></div></div><span class="record__slash"></span></div>' +
+      '<p class="curtain__text">SECOND <i>/</i> TAKE</p></div>';
+    body.appendChild(el);
+    window.setTimeout(function () { el.remove(); }, 2000);
+  })();
+
+  // ---------- home: compact bar slides in once the masthead scrolls away ----------
+  var mast = $("[data-masthead]");
+  function updateHeader() {
+    if (!mast) return;
+    body.classList.toggle("show-bar", window.scrollY > mast.offsetHeight - 10);
   }
 
+  // ---------- masthead date ----------
+  var today = $("[data-today]");
+  if (today) {
+    try {
+      today.textContent = new Intl.DateTimeFormat(lang === "ja" ? "ja-JP" : "en-US", lang === "ja"
+        ? { year: "numeric", month: "2-digit", day: "2-digit", weekday: "short" }
+        : { weekday: "short", month: "short", day: "numeric", year: "numeric" }).format(new Date());
+    } catch (e) { /* keep build date */ }
+  }
+
+  // ---------- reading progress + resume (articles) ----------
+  var story = $("[data-story]");
+  var progressBar = $("[data-progress]");
+  var progressKey = "st-progress:" + location.pathname;
+  var lastSave = 0;
+  function readRatio() {
+    if (!story) return 0;
+    var start = story.offsetTop;
+    var end = start + story.offsetHeight - window.innerHeight;
+    return Math.min(1, Math.max(0, (window.scrollY - start) / Math.max(1, end - start)));
+  }
+  function updateProgress() {
+    if (!story || !progressBar) return;
+    var ratio = readRatio();
+    progressBar.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+    var now = Date.now();
+    if (now - lastSave > 1200) {
+      lastSave = now;
+      store.set(progressKey, String(Math.round(ratio * 100)));
+    }
+  }
+
+  var ticking = false;
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(function () {
+      updateHeader();
+      updateProgress();
+      ticking = false;
+    });
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll);
+  updateHeader();
+
+  if (story) {
+    var saved = Number(store.get(progressKey) || 0);
+    var resume = $("[data-resume]");
+    if (resume && saved > 8 && saved < 92 && !location.hash) {
+      resume.hidden = false;
+      $("[data-resume-go]", resume).addEventListener("click", function () {
+        var start = story.offsetTop;
+        var end = start + story.offsetHeight - window.innerHeight;
+        window.scrollTo({ top: start + (end - start) * (saved / 100), behavior: reduceMotion ? "auto" : "smooth" });
+        resume.hidden = true;
+      });
+      $("[data-resume-close]", resume).addEventListener("click", function () { resume.hidden = true; });
+      window.setTimeout(function () { resume.hidden = true; }, 12000);
+    }
+  }
+
+  // ---------- reveal on scroll ----------
+  var reveals = $$(".reveal");
+  if ("IntersectionObserver" in window && !reduceMotion) {
+    var revealObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-in");
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    reveals.forEach(function (el) { revealObserver.observe(el); });
+  } else {
+    reveals.forEach(function (el) { el.classList.add("is-in"); });
+  }
+
+  // ---------- dialogs ----------
   function openDialog(dialog) {
     if (!dialog) return;
-    $$('dialog[open]').forEach((open) => {
-      if (open !== dialog) open.close();
-    });
-    if (dialog.open) return;
-    dialog.showModal();
-    document.body.classList.add("modal-open");
+    if (typeof dialog.showModal === "function") dialog.showModal();
+    else dialog.setAttribute("open", "");
+    body.style.overflow = "hidden";
   }
-
   function closeDialog(dialog) {
     if (!dialog) return;
-    dialog.close();
-    if (!$("dialog[open]")) document.body.classList.remove("modal-open");
+    if (typeof dialog.close === "function") dialog.close();
+    else dialog.removeAttribute("open");
   }
+  $$("dialog").forEach(function (dialog) {
+    dialog.addEventListener("close", function () { body.style.overflow = ""; });
+    dialog.addEventListener("click", function (event) { if (event.target === dialog) closeDialog(dialog); });
+    $$("[data-close]", dialog).forEach(function (btn) { btn.addEventListener("click", function () { closeDialog(dialog); }); });
+  });
 
-  const menu = $("#site-menu");
-  const searchDialog = $("#search-dialog");
-  const tocDialog = $("#toc-dialog");
-  const cookieDialog = $("#cookie-dialog");
-  const notificationDialog = $("#notification-dialog");
+  var menu = $("[data-menu-dialog]");
+  $$("[data-open-menu]").forEach(function (btn) { btn.addEventListener("click", function () { openDialog(menu); }); });
+  if (menu) $$("a", menu).forEach(function (a) { a.addEventListener("click", function () { closeDialog(menu); }); });
 
-  $$('[data-open="menu"]').forEach((button) => button.addEventListener("click", () => openDialog(menu)));
-  $$('[data-open="search"]').forEach((button) => button.addEventListener("click", () => {
-    const query = button.dataset.searchQuery;
+  // ---------- search ----------
+  var searchDialog = $("[data-search-dialog]");
+  var searchInput = $("[data-search-input]");
+  var searchResults = $("[data-search-results]");
+  var index = null;
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; });
+  }
+  function render(query) {
+    if (!index || !searchResults) return;
+    var q = query.trim().toLowerCase();
+    var hits = index.filter(function (item) {
+      if (!q) return true;
+      return [item.title, item.name, item.company, item.decision, item.tags.join(" "), item.text].join(" ").toLowerCase().indexOf(q) !== -1;
+    });
+    searchResults.innerHTML = hits.length
+      ? hits.map(function (item) {
+          return '<li><a href="' + item.url + '"><img src="' + item.image + '" alt="" width="56" height="70" loading="lazy"><div><strong>' +
+            escapeHtml(item.title) + "</strong><span>No." + item.no + " — " + escapeHtml(item.name) + " / " + escapeHtml(item.company) + "</span></div></a></li>";
+        }).join("")
+      : '<li class="empty">' + escapeHtml(searchResults.getAttribute("data-empty")) + "</li>";
+  }
+  function openSearch() {
     openDialog(searchDialog);
-    if (query && pageSearch) {
-      pageSearch.value = query;
-      pageSearch.dispatchEvent(new Event("input"));
-    }
-    window.setTimeout(() => pageSearch?.focus(), 40);
-  }));
-  $$('[data-open="toc"]').forEach((button) => button.addEventListener("click", () => openDialog(tocDialog)));
-  $$('[data-open="cookies"]').forEach((button) => button.addEventListener("click", () => openDialog(cookieDialog)));
-
-  $$('[data-close]').forEach((button) => {
-    button.addEventListener("click", () => closeDialog(button.closest("dialog")));
-  });
-
-  $$("dialog").forEach((dialog) => {
-    dialog.addEventListener("click", (event) => {
-      if (event.target === dialog && !dialog.classList.contains("menu-dialog")) closeDialog(dialog);
-    });
-    dialog.addEventListener("close", () => {
-      if (!$("dialog[open]")) document.body.classList.remove("modal-open");
-    });
-  });
-
-  function articleMatches(article, query) {
-    const haystack = [
-      article.title,
-      article.shortTitle,
-      article.person,
-      article.company,
-      article.role,
-      article.theme,
-      article.description,
-      ...(article.tags || [])
-    ].join(" ").toLowerCase();
-    return haystack.includes(query.trim().toLowerCase());
+    if (searchInput) window.setTimeout(function () { searchInput.focus(); }, 30);
+    if (index) { render(searchInput ? searchInput.value : ""); return; }
+    fetch("/assets/search-" + lang + ".json")
+      .then(function (r) { return r.json(); })
+      .then(function (data) { index = data; render(searchInput ? searchInput.value : ""); })
+      .catch(function () { /* offline */ });
   }
-
-  function quickResultMarkup(article) {
-    return `<a class="quick-result" href="${rootPath(article.href)}">
-      <img src="${rootPath(article.image)}" width="56" height="56" alt="" loading="lazy" decoding="async">
-      <span><strong>${article.shortTitle}</strong><span>${article.company} / ${article.person}</span></span>
-    </a>`;
-  }
-
-  const quickInput = $("#menu-search-input");
-  const quickResults = $("#menu-search-results");
-  if (quickInput && quickResults) {
-    quickInput.addEventListener("input", () => {
-      const query = quickInput.value;
-      const matches = query ? articles.filter((article) => articleMatches(article, query)) : [];
-      quickResults.innerHTML = matches.slice(0, 3).map(quickResultMarkup).join("");
-      quickResults.hidden = !query;
-      if (query && matches.length === 0) {
-        quickResults.innerHTML = '<p class="empty-state">一致するサンプル記事はありません</p>';
-      }
-    });
-  }
-
-  function searchResultMarkup(article) {
-    return `<a class="search-result-card" href="${rootPath(article.href)}">
-      <img src="${rootPath(article.image)}" width="150" height="180" alt="${article.company} ${article.person}のサンプル写真" loading="lazy" decoding="async">
-      <span>
-        <span class="tag-line">${article.theme} · ${article.readTime}</span>
-        <h2>${article.title}</h2>
-        <p>${article.description}</p>
-      </span>
-    </a>`;
-  }
-
-  const pageSearch = $("#page-search-input");
-  const pageResults = $("#search-results");
-  const searchCount = $("#search-count");
-  if (pageSearch && pageResults) {
-    const renderSearch = () => {
-      const query = pageSearch.value;
-      const matches = query ? articles.filter((article) => articleMatches(article, query)) : articles;
-      pageResults.innerHTML = matches.length
-        ? matches.map(searchResultMarkup).join("")
-        : '<p class="empty-state">一致するサンプル記事はありません<br>人物名、会社名、テーマを変えて検索してください</p>';
-      if (searchCount) searchCount.textContent = `${matches.length} ARTICLES`;
-    };
-    pageSearch.addEventListener("input", renderSearch);
-    renderSearch();
-  }
-
-  const readerModes = ["reader-compact", "", "reader-large"];
-  const readerLabels = ["小", "標準", "大"];
-  let readerIndex = Number(localStorage.getItem("st-reader-index") || 1);
-
-  function showStatus(message) {
-    let status = $("#site-status");
-    if (!status) {
-      status = document.createElement("div");
-      status.id = "site-status";
-      status.className = "site-status";
-      status.setAttribute("role", "status");
-      status.setAttribute("aria-live", "polite");
-      document.body.appendChild(status);
-    }
-    status.textContent = message;
-    status.classList.add("is-visible");
-    window.clearTimeout(showStatus.timer);
-    showStatus.timer = window.setTimeout(() => status.classList.remove("is-visible"), 2200);
-  }
-
-  function applyReaderMode() {
-    document.body.classList.remove("reader-compact", "reader-large");
-    if (readerModes[readerIndex]) document.body.classList.add(readerModes[readerIndex]);
-    $$('[data-reader-size]').forEach((button) => {
-      button.textContent = `Aa　文字サイズ：${readerLabels[readerIndex]}`;
-      button.setAttribute("aria-label", `文字サイズを変更 現在${readerLabels[readerIndex]}`);
-    });
-  }
-  applyReaderMode();
-  $$('[data-reader-size]').forEach((button) => {
-    button.addEventListener("click", () => {
-      readerIndex = (readerIndex + 1) % readerModes.length;
-      localStorage.setItem("st-reader-index", String(readerIndex));
-      applyReaderMode();
-      if (menu?.open) closeDialog(menu);
-      showStatus(`文字サイズを「${readerLabels[readerIndex]}」に変更しました`);
-    });
-  });
-
-  const progress = $("#reading-progress");
-  const dock = $("#bottom-dock");
-  const scrollTop = $("#scroll-top");
-  const siteHeader = $(".site-header");
-  const articleBody = $(".article-body");
-  let lastY = window.scrollY;
-  let progressWriteTimer;
-  let scrollFrame;
-
-  function updateScrollUi() {
-    const y = window.scrollY;
-    const max = document.documentElement.scrollHeight - window.innerHeight;
-    const percent = max > 0 ? Math.min(100, (y / max) * 100) : 0;
-    if (progress) progress.style.transform = `scaleX(${percent / 100})`;
-    if (scrollTop) scrollTop.classList.toggle("is-visible", y > 520);
-    if (siteHeader) siteHeader.classList.toggle("is-scrolled", y > 12);
-    if (dock) {
-      dock.classList.toggle("is-hidden", y > lastY && y > 180);
-      lastY = y;
-    }
-    if (articleBody && y > 240) {
-      clearTimeout(progressWriteTimer);
-      progressWriteTimer = setTimeout(() => {
-        localStorage.setItem(`st-progress:${location.pathname}`, String(Math.round(percent)));
-      }, 250);
-    }
-  }
-
-  function requestScrollUiUpdate() {
-    if (scrollFrame) return;
-    scrollFrame = window.requestAnimationFrame(() => {
-      scrollFrame = 0;
-      updateScrollUi();
-    });
-  }
-
-  window.addEventListener("scroll", requestScrollUiUpdate, { passive: true });
-  updateScrollUi();
-
-  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const motionTargets = $$(
-    ".section-head, .feed-card, .popular-item, .theme-link, .notification-panel, .podcast-cover-wrap, .podcast-panel > div, .about-teaser__grid, .brief-box, .article-body h2, .article-body > p, .article-body figure, .article-body blockquote, .speaker-card, .listen-card, .next-feature"
-  );
-  if (!reduceMotion && "IntersectionObserver" in window) {
-    document.documentElement.classList.add("motion-ready");
-    const revealObserver = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        entry.target.classList.add("is-revealed");
-        revealObserver.unobserve(entry.target);
-      });
-    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
-    motionTargets.forEach((target) => {
-      target.classList.add("reveal");
-      revealObserver.observe(target);
-    });
-  }
-
-  const articleHeadings = $$(".article-body h2[id]");
-  const tocLinks = $$('.aside-toc a[href^="#"], #toc-list a[href^="#"]');
-  if (articleHeadings.length && tocLinks.length && "IntersectionObserver" in window) {
-    const tocObserver = new IntersectionObserver((entries) => {
-      const current = entries.find((entry) => entry.isIntersecting);
-      if (!current) return;
-      tocLinks.forEach((link) => {
-        const active = link.getAttribute("href") === `#${current.target.id}`;
-        link.classList.toggle("is-current", active);
-        if (active) link.setAttribute("aria-current", "location");
-        else link.removeAttribute("aria-current");
-      });
-    }, { rootMargin: "-16% 0px -68% 0px", threshold: 0 });
-    articleHeadings.forEach((heading) => tocObserver.observe(heading));
-  }
-
-  if (scrollTop) {
-    scrollTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
-  }
-
-  const savedProgress = Number(localStorage.getItem(`st-progress:${location.pathname}`) || 0);
-  if (articleBody && savedProgress >= 10 && savedProgress <= 90) {
-    const banner = document.createElement("div");
-    banner.className = "continue-banner";
-    banner.innerHTML = `前回は${savedProgress}%まで読みました　<button type="button" data-resume>続きから読む</button><button type="button" class="continue-banner__close" aria-label="閉じる">×</button>`;
-    document.body.appendChild(banner);
-    $("[data-resume]", banner).addEventListener("click", () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      window.scrollTo({ top: max * (savedProgress / 100), behavior: "smooth" });
-      banner.remove();
-    });
-    $(".continue-banner__close", banner).addEventListener("click", () => banner.remove());
-  }
-
-  async function enableNotifications(button) {
-    const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-    if (isIos && !isStandalone) {
-      if (menu?.open) closeDialog(menu);
-      openDialog(notificationDialog);
-      return;
-    }
-
-    if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-      showStatus("このブラウザでは通知を利用できません");
-      return;
-    }
-    try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      const permission = await Notification.requestPermission();
-      if (permission === "granted") {
-        localStorage.setItem("st-notifications", "enabled");
-        await registration.showNotification("SECOND TAKE", {
-          body: "新着通知の準備ができました。これはサンプル通知です。",
-          icon: "/assets/second-take-cover.png",
-          badge: "/favicon.svg"
-        });
-        $$('[data-enable-notifications]').forEach((target) => { target.textContent = "通知はONです"; });
-        if (menu?.open) closeDialog(menu);
-        showStatus("新着通知をONにしました");
-      } else {
-        showStatus("通知の許可が必要です。ブラウザの設定をご確認ください");
-      }
-    } catch (error) {
-      showStatus("通知設定をご確認ください");
-    }
-  }
-
-  $$('[data-enable-notifications]').forEach((button) => {
-    if (localStorage.getItem("st-notifications") === "enabled") button.textContent = "通知はONです";
-    button.addEventListener("click", () => enableNotifications(button));
-  });
-
-  $$('[data-newsletter-form]').forEach((form) => {
-    form.addEventListener("submit", (event) => {
+  $$("[data-open-search]").forEach(function (btn) { btn.addEventListener("click", openSearch); });
+  if (searchInput) searchInput.addEventListener("input", function () { render(searchInput.value); });
+  doc.addEventListener("keydown", function (event) {
+    var tag = (event.target && event.target.tagName) || "";
+    if (event.key === "/" && !/INPUT|TEXTAREA/.test(tag) && !doc.querySelector("dialog[open]")) {
       event.preventDefault();
-      const email = $("input[type=email]", form);
-      const status = $(".form-status", form);
-      if (!email || !email.checkValidity()) {
-        if (status) status.textContent = "メールアドレスを確認してください";
-        return;
-      }
-      localStorage.setItem("st-newsletter-demo", "registered");
-      if (status) status.textContent = "表示テスト完了　入力内容は保存・送信していません";
-      email.value = "";
+      openSearch();
+    }
+  });
+
+  // ---------- archive filters ----------
+  var filters = $("[data-filters]");
+  if (filters) {
+    var rows = $$(".archive-list li");
+    var applyFilter = function (btn) {
+      var tag = btn.getAttribute("data-filter");
+      $$("button", filters).forEach(function (b) { b.setAttribute("aria-pressed", String(b === btn)); });
+      rows.forEach(function (row) {
+        var tags = row.getAttribute("data-tags").split("|");
+        row.hidden = !!tag && tags.indexOf(tag) === -1;
+        if (!row.hidden) row.classList.add("is-in");
+      });
+    };
+    $$("button", filters).forEach(function (btn) {
+      btn.addEventListener("click", function () { applyFilter(btn); });
+    });
+    var wanted = new URLSearchParams(location.search).get("theme");
+    if (wanted) {
+      $$("button", filters).forEach(function (btn) { if (btn.getAttribute("data-filter") === wanted) applyFilter(btn); });
+    }
+  }
+
+  // ---------- scene TOC ----------
+  var tocLinks = $$("[data-toc] a");
+  if (tocLinks.length && "IntersectionObserver" in window) {
+    var scenes = $$("[data-scene]");
+    var sceneObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        var id = "#" + entry.target.id;
+        tocLinks.forEach(function (a) { a.setAttribute("aria-current", String(a.getAttribute("href") === id)); });
+      });
+    }, { rootMargin: "-30% 0px -60% 0px" });
+    scenes.forEach(function (s) { sceneObserver.observe(s); });
+  }
+
+  // ---------- text size ----------
+  var sizeBtn = $("[data-size-toggle]");
+  if (sizeBtn) {
+    var sizes = JSON.parse(sizeBtn.getAttribute("data-sizes"));
+    var classes = ["", "text-large", "text-small"];
+    var current = Number(store.get("st-text-size") || 0) % 3;
+    var applySize = function () {
+      body.classList.remove("text-large", "text-small");
+      if (classes[current]) body.classList.add(classes[current]);
+      sizeBtn.querySelector("span").textContent = sizeBtn.getAttribute("data-label") + "：" + sizes[current];
+    };
+    applySize();
+    sizeBtn.addEventListener("click", function () {
+      current = (current + 1) % 3;
+      store.set("st-text-size", String(current));
+      applySize();
+    });
+  }
+
+  // ---------- copy link ----------
+  $$("[data-copy]").forEach(function (btn) {
+    var label = btn.textContent;
+    btn.addEventListener("click", function () {
+      var done = function () {
+        btn.textContent = btn.getAttribute("data-copied");
+        window.setTimeout(function () { btn.textContent = label; }, 2000);
+      };
+      if (navigator.clipboard) navigator.clipboard.writeText(btn.getAttribute("data-copy")).then(done, function () {});
     });
   });
 
-  const cookieBanner = $("#cookie-banner");
-  const consentKey = "st-cookie-consent";
-  if (cookieBanner && !localStorage.getItem(consentKey)) cookieBanner.hidden = false;
-
-  function saveConsent(analytics) {
-    localStorage.setItem(consentKey, JSON.stringify({ essential: true, analytics, updatedAt: new Date().toISOString() }));
-    if (cookieBanner) cookieBanner.hidden = true;
-    closeDialog(cookieDialog);
-  }
-
-  $$('[data-cookie-accept]').forEach((button) => button.addEventListener("click", () => saveConsent(true)));
-  $$('[data-cookie-essential]').forEach((button) => button.addEventListener("click", () => saveConsent(false)));
-  const cookieSave = $("#cookie-save");
-  if (cookieSave) {
-    cookieSave.addEventListener("click", () => {
-      const analytics = $("#cookie-analytics");
-      saveConsent(Boolean(analytics && analytics.checked));
+  // ---------- language switch keeps the reader's position within an article ----------
+  $$("[data-lang-link]").forEach(function (a) {
+    a.addEventListener("click", function () {
+      if (story) store.set("st-progress:" + a.getAttribute("href"), String(Math.round(readRatio() * 100)));
     });
-  }
+  });
 
-  const currentConsent = localStorage.getItem(consentKey);
-  if (currentConsent) {
-    try {
-      const parsed = JSON.parse(currentConsent);
-      const analytics = $("#cookie-analytics");
-      if (analytics) analytics.checked = Boolean(parsed.analytics);
-    } catch (_) {}
+  // ---------- retire the old service worker ----------
+  if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      regs.forEach(function (reg) { reg.unregister(); });
+    }).catch(function () {});
   }
-
-  $$('[data-close-menu-link]').forEach((link) => link.addEventListener("click", () => closeDialog(menu)));
 })();
