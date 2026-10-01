@@ -349,6 +349,8 @@ function batonPages(): Plugin {
             `--accent:${p.theme.accent}`,
             `--bg:${p.theme.bg}`,
             `--text:${p.theme.text}`,
+            // 明るい色をボタン地に使うプロフィールでは、ボタンの文字を地の色にする
+            ...(isLightColor(p.theme.primary) ? [`--on-primary:${p.theme.bg}`] : []),
           ].join(';');
           const path = isHome ? '/' : `/profile/${p.slug}/`;
           const canonicalPath = `/profile/${p.slug}/`;
@@ -359,7 +361,7 @@ function batonPages(): Plugin {
               head({
                 title: profileTitle(p),
                 description: profileDescription(p),
-                themeColor: p.theme.primary,
+                themeColor: isLightColor(p.theme.primary) ? p.theme.bg : p.theme.primary,
                 path,
                 canonicalPath,
                 ogType: 'profile',
@@ -506,18 +508,29 @@ function serviceForPath(filename: string): Service | null {
  * （カード・入力欄・フッター）を暗色側へまとめて寄せる。
  */
 function isDarkTheme(hex: string): boolean {
+  return relativeLuminance(hex) < 0.2;
+}
+
+/** ボタン地にしたとき、白い文字が読めない明るさか */
+function isLightColor(hex: string): boolean {
+  return relativeLuminance(hex) >= 0.45;
+}
+
+function relativeLuminance(hex: string): number {
   const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return false;
+  if (!m) return Number.NaN;
   const full = m[1].length === 3 ? m[1].replace(/./g, (c) => c + c) : m[1];
   const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16) / 255);
   const lin = (c: number) => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b) < 0.2;
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
 }
 
 /** そのプロフィールの body クラス。テンプレート／色の出し分けはここ1箇所 */
 function profileBodyClass(p: TalkProfile): string {
   const classes = ['profile'];
   if (isDarkTheme(p.theme.bg)) classes.push('profile--dark');
+  // 黒地に生成りのボタン（モノクロ）。ヒーローの光と文字組みをモノクロ用に寄せる
+  if (isDarkTheme(p.theme.bg) && isLightColor(p.theme.primary)) classes.push('profile--mono');
   if (p.heroVariant === 'editorial') classes.push('profile--editorial');
   return classes.join(' ');
 }

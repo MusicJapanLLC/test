@@ -297,7 +297,7 @@ body.service {
 .link-chip:hover {
   background: var(--primary);
   border-color: var(--primary);
-  color: #fff;
+  color: var(--on-primary, #fff);
 }
 
 .link-chip svg {
@@ -622,7 +622,7 @@ body.service {
 
 .btn--primary {
   background: var(--primary);
-  color: #fff;
+  color: var(--on-primary, #fff);
 }
 
 .btn--primary:hover {
@@ -655,8 +655,8 @@ body.service {
 .survey__spinner {
   width: 15px;
   height: 15px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  border: 2px solid color-mix(in srgb, var(--on-primary, #fff) 35%, transparent);
+  border-top-color: var(--on-primary, #fff);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
