@@ -40,7 +40,17 @@ export type Partner = {
   /** 掲載番号。music-japan.com/partners と同じ「BP-001」の形で表示する */
   no: string;
   /** 一覧（music-japan.com/partners と同じカタログ）に出す拠点と事業の分類 */
-  catalog: { base: string; category: string };
+  catalog: {
+    base: string;
+    category: string;
+    /** 一覧のカードに出す一言と紹介文（music-japan.com/partners と同じ文言） */
+    catch: string;
+    lead: string;
+    /** カードの SERVICE 欄。本体サイトで出していない会社は省く */
+    service?: string;
+    /** 一覧の流れるロゴ帯に出す、黒背景用のロゴ */
+    logos: { src: string; alt: string; size: [number, number] }[];
+  };
   company: {
     name: string;
     nameEn: string;

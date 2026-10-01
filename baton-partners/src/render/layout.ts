@@ -158,20 +158,24 @@ export function ctaBand(p: Partner): string {
 }
 
 /**
- * 本体サイト（music-japan.com）と同じヘッダー。一覧・編集部・プライバシー・404 で使う。
- * 「05 パートナー」を現在地にして、ここが Music Japan のパートナーのページだと分かるようにする。
+ * Baton Partners のヘッダー（一覧・編集部・プライバシー・404）。
+ * 本体サイトのヘッダーは使わない。ここは「Baton Partners」というブランドの入口なので、ロゴとパートナー企業だけを並べる。
  */
-export function mjHeader(): string {
+export function bpHeader(list: Partner[], current: 'index' | 'editorial' | 'other' = 'other'): string {
+  const items = [
+    { no: '01', label: 'パートナー', href: '/#catalog', on: current === 'index' },
+    ...list.map((p) => ({ no: bpNo(p), label: shortName(p), href: routes.top(p.slug), on: false })),
+    { no: String(list.length + 2).padStart(2, '0'), label: '編集部', href: routes.editorial(), on: current === 'editorial' },
+  ];
   return `
 <a class="skip" href="#main">本文へ移動</a>
-<header class="mj-hdr" data-hdr>
-  <div class="mj-hdr-in">
-    <a class="mj-brand" href="${site.operator.url}"><span class="mj-brand-s">合同会社</span><strong>Music Japan</strong></a>
-    <nav class="mj-nav" aria-label="Music Japan のメニュー">
-      <ul>${site.mainNav
-        .map((n) => `<li><a href="${n.url}"${n.no === '05' ? ' aria-current="page"' : ''}><i>${n.no}</i>${esc(n.label)}</a></li>`)
-        .join('')}</ul>
+<header class="bph" data-hdr>
+  <div class="bph-in">
+    <a class="bph-brand" href="/" aria-label="Baton Partners トップへ">${bpLogo({ size: 30, tone: 'paper', animated: true })}</a>
+    <nav class="bph-nav" aria-label="Baton Partners のメニュー">
+      <ul>${items.map((n) => `<li><a href="${n.href}"${n.on ? ' aria-current="page"' : ''}><i>${n.no}</i>${esc(n.label)}</a></li>`).join('')}</ul>
     </nav>
+    <a class="bph-mj" href="${site.operator.url}" aria-label="運営：合同会社Music Japan">MJ</a>
   </div>
 </header>`.trim();
 }
@@ -196,7 +200,8 @@ export function footer(p?: Partner): string {
   <div class="ftr-mq" aria-hidden="true"><div class="ftr-mq-track">${run}${run}</div></div>
   <div class="wrap ftr-in">
     <div class="ftr-brand">
-      <a class="mj-brand ftr-mj" href="${site.operator.url}"><span class="mj-brand-s">合同会社</span><strong>Music Japan</strong></a>
+      <a class="ftr-bp" href="/" aria-label="Baton Partners トップへ">${bpLogo({ size: 34, tone: 'paper' })}</a>
+      <p class="ftr-op">運営　<a href="${site.operator.url}">${esc(site.operator.name)}</a></p>
       <p class="ftr-addr">${esc(site.operator.address).replace(' ', '<br />')}</p>
       <p><a href="mailto:${site.operator.email}">${site.operator.email}</a></p>
       ${p ? `<p class="ftr-about">${jp(`${p.company.name}は、合同会社Music Japanのパートナー企業です。このページは Music Japan が制作・運営し、掲載内容は${shortName(p)}の公式情報をもとにしています。`)}</p>` : ''}

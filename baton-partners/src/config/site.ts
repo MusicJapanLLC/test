@@ -2,7 +2,7 @@
 export const site = {
   name: 'Baton Partners',
   /** パンくずの先頭・一覧ページの呼び名（本体サイトの「パートナー」と同じ位置づけ） */
-  hubName: 'Music Japan パートナー',
+  hubName: 'Baton Partners',
   description:
     '合同会社Music Japanのパートナー企業。各社の事業とサービスを、一社ずつ専用のページで紹介しています。',
   operator: {

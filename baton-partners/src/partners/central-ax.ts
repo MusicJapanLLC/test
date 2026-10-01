@@ -15,7 +15,13 @@ import type { Partner } from '../types';
 export const centralAx: Partner = {
   slug: 'central-ax',
   no: '02',
-  catalog: { base: '名古屋', category: 'AI研修 / 開発・業務改善' },
+  catalog: {
+    base: '名古屋',
+    category: 'AI研修 / 開発・業務改善',
+    catch: 'AIを学ぶ、その先の実装まで。',
+    lead: '生成AI研修、AI受託開発・業務改善、LLMO対策を手がけるAI実装支援会社。名古屋を拠点に、全国の企業のAI活用を支援します。',
+    logos: [{ src: '/partners/central-ax/logo-white.png', alt: 'CENTRAL AX', size: [691, 210] }],
+  },
   company: {
     name: '株式会社Central AX',
     nameEn: 'Central AX',

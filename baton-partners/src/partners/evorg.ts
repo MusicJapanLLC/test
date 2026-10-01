@@ -16,7 +16,17 @@ import type { Partner } from '../types';
 export const evorg: Partner = {
   slug: 'evorg',
   no: '01',
-  catalog: { base: '福岡', category: '人材紹介 / CRM・MA' },
+  catalog: {
+    base: '福岡',
+    category: '人材紹介 / CRM・MA',
+    catch: '人材紹介の可能性を、次の成長へ。',
+    lead: '人材紹介会社向けのワンストップCRM・MA「Empro」を提供。データとAI、専任コンサルタントの伴走を通じて、採用決定と事業の成長を支援します。',
+    service: 'Empro',
+    logos: [
+      { src: '/partners/evorg/logo-light.png', alt: 'Evorg', size: [517, 137] },
+      { src: '/partners/evorg/empro-light.png', alt: 'Empro', size: [525, 154] },
+    ],
+  },
   company: {
     name: '株式会社エボルグ',
     nameEn: 'Evorg',

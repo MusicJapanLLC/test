@@ -12,7 +12,8 @@ document.documentElement.classList.add('js');
 // Google Fonts で配信するビルドでは、自前のフォントを読み込まない（チャンクごと出力されない）
 if (!__GOOGLE_FONTS__) {
   void import('../styles/fonts.css');
-  if (document.body.dataset.theme === 'mono') void import('../styles/fonts-mono.css');
+  if (document.body.dataset.theme === 'mono' || document.body.dataset.page === 'index')
+    void import('../styles/fonts-mono.css');
 }
 
 setupHeader();
