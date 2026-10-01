@@ -43,8 +43,31 @@ export function profileMarkdown(profile: TalkProfile, url: UrlFor): string {
     '',
   ];
 
+  if (profile.story) {
+    lines.push(`## ${profile.story.title ?? '経歴・人物背景'}`, '', ...profile.story.paragraphs.flatMap((p) => [p, '']));
+    if (profile.story.timeline?.length) {
+      lines.push('### これまでの歩み', '');
+      profile.story.timeline.forEach((t) => lines.push(`- ${t.org}: ${t.role}${t.note ? `（${t.note}）` : ''}`));
+      lines.push('');
+    }
+  }
   if (profile.business?.length) {
-    lines.push('## 事業内容', '', ...profile.business.flatMap((p) => [p, '']));
+    lines.push(`## ${profile.businessTitle ?? '事業内容'}`, '', ...profile.business.flatMap((p) => [p, '']));
+  }
+  if (profile.about) {
+    lines.push(`## ${profile.about.title}`, '', ...(profile.about.paragraphs ?? []).flatMap((p) => [p, '']));
+    (profile.about.facts ?? []).forEach((f) => lines.push(`- ${f.term}: ${f.value}`));
+    lines.push('');
+  }
+  if (profile.values?.length) {
+    lines.push('## 価値観', '');
+    profile.values.forEach((v) => lines.push(`- **${v.title}**: ${v.body}`));
+    lines.push('');
+  }
+  if (profile.wantToMeet?.items.length) {
+    lines.push('## こんな方と繋がりたい', '', ...(profile.wantToMeet.lead ? [profile.wantToMeet.lead, ''] : []));
+    profile.wantToMeet.items.forEach((t) => lines.push(`- ${t}`));
+    lines.push('');
   }
   if (profile.services?.length) {
     lines.push(`## ${profile.servicesTitle ?? '運営メディア・サービス'}`, '');

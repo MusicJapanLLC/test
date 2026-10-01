@@ -47,17 +47,14 @@ export function companySameAs(profile: TalkProfile): string[] {
   return Array.from(new Set((profile.media ?? []).filter((m) => m.owner === 'company').map((m) => m.url)));
 }
 
-/** 本人・会社として発信しているアカウント（画面の「発信」欄に使う） */
+/** 本人・会社のアカウント（画面の「発信」欄に使う）。media の owner が付いたものだけ */
 export function sameAsUrls(profile: TalkProfile): string[] {
-  const urls = (profile.media ?? [])
-    .filter((m) => m.kind === '発信' || m.kind === '公式' || /^公式/.test(m.label))
-    .map((m) => m.url);
-  return Array.from(new Set(urls));
+  return Array.from(new Set((profile.media ?? []).filter((m) => m.owner).map((m) => m.url)));
 }
 
 /** 登壇・掲載の実績（新しい順に並んでいる前提。データの並びのまま使う） */
 export function appearances(profile: TalkProfile): MediaItem[] {
-  return (profile.media ?? []).filter((m) => m.kind === '登壇' || m.kind === '掲載');
+  return (profile.media ?? []).filter((m) => m.kind === '登壇' || m.kind === '掲載' || m.kind === '出演');
 }
 
 /** 事業領域の名前だけを並べる */
@@ -97,7 +94,7 @@ export function profileFaqs(profile: TalkProfile): Faq[] {
   const shows = appearances(profile);
   if (shows.length) {
     faqs.push({
-      q: `${profile.name}さんの登壇・掲載の実績は？`,
+      q: `${profile.name}さんの${Array.from(new Set(shows.map((m) => m.kind))).join('・')}の実績は？`,
       a:
         shows
           .map((m) => `${m.date ? `${m.date} ` : ''}「${m.label}」（${m.kind}）`)
