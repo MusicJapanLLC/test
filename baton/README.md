@@ -45,6 +45,7 @@ npm run preview              # ビルド結果の確認
 | `/crm/` | Empro / 株式会社エボルグ |
 | `/profile/matsuura/` | 松浦 淳 / 株式会社Central AX（Baton Talk） |
 | `/profile/ishii/` | 石井 嵩大 / 株式会社C.C（Baton Talk） |
+| `/profile/miyamoto/` | 宮本 康太 / 株式会社ZETTAICHI（Baton Talk） |
 | `/faq/` | よくある質問（Batonの仕組み・運営者・紹介の流れ。フッターからリンク） |
 | `/privacy/` | プライバシーポリシー |
 

@@ -419,7 +419,184 @@ const ishiiProfile: TalkProfile = {
   active: true,
 };
 
-export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile, ishiiProfile];
+/**
+ * 宮本 康太（株式会社ZETTAICHI）。
+ * 掲載内容は、Ownerから受け取った調査メモ（調査基準日 2026-10-02、80件以上をスクリーニング）のうち、
+ * 公式サイト・本人LinkedIn／Wantedly・外部インタビュー・イベント実績で確認できる事実のみ。
+ * 調査メモの「書かない方がいい」に従い、次は載せない／書き方を変えている:
+ *  - ZETTAICHIの従業員数・売上・資本金（企業スペック。ADDING_A_PROFILE.md の方針）→ 載せない
+ *  - n1a の会員数（確認不能）→ 載せない
+ *  - 10万人は「保有」ではなく「紹介可能」（本人表現）
+ *  - Biz Summit! の1,000名は「開催済み」ではなく、同社が掲げるイベントの形 → 人数は書かない
+ *  - AddBox の実績（900件超・継続率90%など）は別法人のため ZETTAICHI の実績にしない
+ *  - 生年月日・年齢は個人情報で、年齢は毎年変わるため載せない
+ * X・Instagram は本人と確実に特定できる公開アカウントが無いため載せていない。
+ */
+const miyamotoProfile: TalkProfile = {
+  id: 'miyamoto',
+  slug: 'miyamoto',
+  name: '宮本 康太',
+  company: '株式会社ZETTAICHI',
+  title: '代表取締役',
+  tagline: '見えない波長を、つなぐ。',
+  photo: {
+    src: '/profile-miyamoto.webp',
+    alt: '宮本 康太',
+    caption: 'TOKYO / JAPAN · 2026',
+    tint: '#3A1A78',
+  },
+  bio:
+    '博報堂DYグループの読売広告社、サイバーエージェントでの広告運用、AddBox取締役COOを経て、' +
+    '2026年7月に株式会社ZETTAICHIを設立。決裁者と直接つなぐ営業支援、人柄で経営者をつなぐ「n1a」、' +
+    '遊びを通じて出会う経営者交流会「ASOBMENT」などで、経営者同士の出会いを設計しています。',
+  story: {
+    paragraphs: [
+      '青山学院大学法学部を卒業後、新卒で博報堂DYグループの読売広告社に入社。営業として、国内大手デベロッパーの支援、人気ゲームIPの広告プランニング、スポーツメディアでのアスリート取材、公営競技領域のテレビCM制作などに携わりました（本人LinkedInより）。',
+      'その後、フリーランスとしてサイバーエージェントに参画。月間1億円規模の広告運用で、クライアント対応からレポーティングまでを一気通貫で担当しました。',
+      '2024年6月からの約2年間は、株式会社AddBoxの取締役COOとして、営業代行・BtoBマッチング、フリーランス人材紹介、経営者交流会「Next Meet Up」などの事業を統括。AI開発を軸にした社内DXにも取り組みました。',
+      '広告、営業、人材、コミュニティ運営と立場は変わっても、仕事の中心にはいつも「人と人、企業と企業をつなぐこと」がありました。2026年7月に株式会社ZETTAICHIを立ち上げ、いまは会社の規模や肩書きだけでなく、人柄や価値観、共通の体験まで含めた経営者同士の出会いを設計しています。',
+    ],
+    timeline: [
+      { org: '青山学院大学 法学部', role: '卒業' },
+      {
+        org: '株式会社読売広告社（博報堂DYグループ）',
+        role: '営業',
+        note: '本人LinkedInでは、大手デベロッパー4社の支援、ゲームIP 2案件の広告プランニング、アスリート50名超の取材、テレビCM10本の制作',
+      },
+      { org: '株式会社サイバーエージェント', role: 'フリーランスとして参画', note: '月間1億円規模の広告運用' },
+      { org: '株式会社AddBox', role: '取締役COO（2024年6月〜2026年6月）', note: '全事業の統括、AI開発を軸にした社内DX' },
+      { org: '株式会社ZETTAICHI', role: '代表取締役（2026年7月設立）', note: '営業支援・n1a・ASOBMENT・Biz Summit!' },
+    ],
+  },
+  businessTitle: '現在の事業',
+  business: [
+    'ZETTAICHIの事業は、営業支援（SALES）、経営者マッチング「n1a」、経営者コミュニティ・イベント「CxO MEET UP」の3つ。経営者同士の出会いを、関係の深さと人数に合わせて複数の入口で設計しています。1対1でつなぐ「n1a」、15名ほどの少人数で遊びを通じて出会う「ASOBMENT」、スポンサー企業を迎えるカンファレンス形式の「Biz Summit!」、そして決裁者と直接つなぐ成果報酬型の営業支援です。',
+    '営業支援では、担当者ではなく経営者・決裁者へ直接アプローチします。初期費用・月額利用料はなく、商談単位の成果報酬型。リードを大量に渡すのではなく、決裁者と直接つなぎ、受注までの距離を短くすることを狙っています。',
+    '「n1a」は、会社の規模・売上・業界・役職といったスペックだけでなく、経営者個人の価値観・人柄・相性を軸に経営者同士をつなぐサービスです。同社はこれを「見えない波長を分析し、つなぐ」と表現しています。',
+    '「ASOBMENT」のコンセプトは「アソビの先でビジネスを」。名刺と会社概要から入るのではなく、人狼やボードゲームなどを一緒に楽しむなかで、思考力・判断力・人柄が自然に見え、その先でビジネスにつながる経営者交流会です。役員以上を対象に15名ほどに絞って開催しており、2026年9月25日に第6回を開催、第7回は10月27日に予定しています（ティーズエージェンシーホールディングス・ROCKTOONとの3社共催）。',
+    '本人公表では、これまでに営業代行で1,500企業のマッチングに携わり、10万人を超えるフリーランス人材を紹介できるネットワークを持っています。',
+  ],
+  about: {
+    title: '株式会社ZETTAICHIについて',
+    paragraphs: [
+      '経営者・決裁者どうしの出会いを、営業支援・1対1のマッチング・経営者コミュニティとイベントという形でつくる会社です。2026年7月に、宮本が立ち上げました。',
+    ],
+    facts: [
+      { term: '代表', value: '宮本 康太（代表取締役）' },
+      { term: '設立', value: '2026年7月' },
+      { term: '所在地', value: '東京都狛江市' },
+      { term: '事業', value: '営業支援（SALES）／n1a／CxO MEET UP（ASOBMENT・Biz Summit!）' },
+      { term: '資格', value: '宮本は宅地建物取引士の資格も持つ' },
+    ],
+  },
+  servicesTitle: '事業・サービス',
+  services: [
+    { name: '営業支援', description: '経営者・決裁者へ直接アプローチする、商談単位の成果報酬型（初期費用・月額なし）' },
+    { name: 'n1a', description: '価値観・人柄・相性を軸に、経営者同士を1対1でつなぐマッチング' },
+    { name: 'ASOBMENT', description: '人狼やボードゲームを通じて出会う、15名ほどの少人数の経営者交流会' },
+    { name: 'Biz Summit!', description: 'スポンサー企業を迎える、カンファレンス形式の経営者コミュニティ' },
+  ],
+  valuesTitle: '大切にしている考え方',
+  values: [
+    {
+      title: 'アソビの先で、ビジネスを',
+      body: 'ASOBMENTのコンセプト。肩書きより先に、人柄や判断の仕方が見える出会いを。',
+    },
+    {
+      title: '見えない波長を、つなぐ',
+      body: 'n1aの考え方。会社のスペックではなく、価値観と人柄の相性で経営者同士をつなぐ。',
+    },
+    {
+      title: '受注までの距離を、短くする',
+      body: '営業支援の考え方。リードの数ではなく、決裁者と直接つながる商談を届ける。',
+    },
+    {
+      title: '“最適なつながり”をデザインする',
+      body: 'AddBox時代のインタビューの言葉。営業でも採用でもなく、人と企業の最適な関係をつくる。',
+    },
+  ],
+  wantToMeet: {
+    lead: 'ZETTAICHIの事業内容から、Batonが特にご縁をつなぎたいと考えている方です。',
+    items: [
+      '決裁者と直接つながる営業の手段を探している企業',
+      '規模や肩書きではなく、人柄で付き合える経営者仲間を探している方',
+      '経営者向けイベント・コミュニティへの協賛や共催を考えている企業',
+      'フリーランス人材の活用を考えている企業',
+    ],
+  },
+  media: [
+    {
+      label: 'ASOBMENT（アソビの先でビジネスを）',
+      url: 'https://asobment.studio.site/',
+      kind: '主催',
+      date: '2026.09',
+      note: '人狼やボードゲームを通じて出会う、役員以上の経営者向け交流会。2026年9月25日に第6回を開催、第7回は10月27日に予定。',
+      featured: true,
+    },
+    {
+      label: 'n1a（人柄でつなぐ経営者マッチング）',
+      url: 'https://n1a-cxo.com/',
+      kind: '事業',
+      note: 'スペックではなく、経営者個人の価値観・人柄・相性を軸にした1対1のマッチング。',
+      featured: true,
+    },
+    {
+      label: '営業でも採用でもない。“最適なつながり”をデザインする会社',
+      url: 'https://media.tunakare.jp/jinji-no-koe/1387861076/',
+      kind: '掲載',
+      date: '2026.01.28',
+      note: 'ツナカレメディアによるロングインタビュー（AddBox取締役COO当時）。創業背景、営業代行・人材・交流会、経営者プラットフォーム構想を語っている。',
+      featured: true,
+    },
+    {
+      label: 'ホンマルラジオ「サクトーーク！！」第141回',
+      url: 'https://stage.honmaru-radio.com/sakuma0141/',
+      kind: '出演',
+      date: '2026.05.10',
+      note: 'AddBox取締役としてゲスト出演。',
+      featured: true,
+    },
+    {
+      label: '株式会社ZETTAICHI 公式サイト',
+      url: 'https://zettaichi.co.jp/',
+      kind: '公式',
+      note: '営業支援（SALES）・n1a・CxO MEET UP。',
+      owner: 'company',
+    },
+    {
+      label: 'Biz Summit!',
+      url: 'https://biz-summit.studio.site/',
+      kind: '事業',
+      note: 'スポンサー企業を迎える、カンファレンス形式の経営者コミュニティ。',
+    },
+    {
+      label: 'LinkedIn',
+      url: 'https://jp.linkedin.com/in/%E5%BA%B7%E5%A4%AA-%E5%AE%AE%E6%9C%AC-3a5826327',
+      kind: '発信',
+      note: '経歴と、経営者交流会・事業についての発信。',
+      owner: 'person',
+    },
+    {
+      label: 'Wantedly',
+      url: 'https://www.wantedly.com/id/kota_miyamoto3838',
+      kind: '発信',
+      note: '読売広告社からサイバーエージェント、独立までのキャリア。',
+      owner: 'person',
+    },
+  ],
+  mediaTitle: '実績・メディア',
+  mediaLabel: 'Works & Media',
+  location: '東京',
+  updatedAt: '2026-10-02',
+  listSummary: '人柄でつなぐ、経営者の出会いを設計',
+  businessTags: ['営業支援', 'マッチング', '交流会運営'],
+  keywordTags: ['元広告代理店', '人柄でつなぐ', 'ゲーム交流会'],
+  // 濃いダーク、深淵のような深紫。モノクロの写真が浮かび上がるように
+  theme: { primary: '#7A3FE0', accent: '#B892FF', bg: '#0A0612', text: '#ECE7F6' },
+  active: true,
+};
+
+export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile, ishiiProfile, miyamotoProfile];
 
 export const getProfile = (id: string): TalkProfile => {
   const found = profiles.find((p) => p.id === id);

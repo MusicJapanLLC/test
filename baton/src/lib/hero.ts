@@ -37,7 +37,9 @@ function heroShotHtml(p: TalkProfile): string {
     : `<span class="pf-shot__initial is-only" aria-hidden="true">${initial}</span>`;
 
   return `
-  <figure class="pf-shot${photo ? '' : ' pf-shot--noimg'}" data-shot>
+  <figure class="pf-shot${photo ? '' : ' pf-shot--noimg'}${photo?.tint ? ' pf-shot--tint' : ''}" data-shot${
+    photo?.tint ? ` style="--shot-tint:${esc(photo.tint)}"` : ''
+  }>
     <div class="pf-shot__frame">
       ${inner}
       <span class="pf-shot__sheen" aria-hidden="true"></span>

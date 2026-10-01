@@ -2255,3 +2255,21 @@ body.doc-faq .section--faq {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* 写真の足元を地の色へ沈める（photo.tint を指定したプロフィールだけ） */
+.pf-shot--tint .pf-shot__frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, transparent 35%, color-mix(in srgb, var(--shot-tint) 70%, transparent) 100%),
+    radial-gradient(120% 80% at 50% 0%, transparent 55%, color-mix(in srgb, var(--shot-tint) 45%, transparent) 100%);
+  mix-blend-mode: multiply;
+}
+
+.pf-shot--tint .pf-shot__frame {
+  border-color: color-mix(in srgb, var(--accent) 35%, transparent);
+  box-shadow: 0 40px 100px -40px color-mix(in srgb, var(--primary) 85%, transparent);
+}
