@@ -2347,3 +2347,239 @@ html.js .phero-h .ph {
   font-size: 0.84rem;
   color: var(--ink-3);
 }
+
+/* ═════ 一覧（music-japan.com/partners と同じカタログ） ═════ */
+.mj-hdr ~ .pv-main,
+.mj-hdr ~ .mjp {
+  padding-top: clamp(28px, 4vw, 56px);
+}
+.mjp {
+  padding-bottom: 0;
+}
+.mjp-hero {
+  display: grid;
+  gap: 18px;
+  padding-bottom: clamp(48px, 6vw, 88px);
+}
+.mjp-kicker,
+.mjp-sec-k,
+.mjp-count {
+  font-size: 0.74rem;
+  letter-spacing: 0.24em;
+  color: var(--ink-3);
+}
+.mjp-kicker {
+  margin-top: clamp(24px, 4vw, 56px);
+}
+.mjp-h1 {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  font-size: clamp(3rem, 1.4rem + 7vw, 8rem);
+  line-height: 1.1;
+  letter-spacing: 0.24em;
+}
+.mjp-sub {
+  font-size: clamp(1rem, 0.9rem + 0.5vw, 1.3rem);
+  color: var(--ink-2);
+}
+.mjp-count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--rule);
+}
+.mjp-count strong {
+  font-family: var(--f-latin);
+  font-size: 2.6rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--ink);
+  white-space: nowrap;
+  word-break: keep-all;
+}
+.mjp-cat {
+  display: grid;
+  gap: 20px;
+  padding-block: clamp(64px, 8vw, 128px);
+}
+.mjp-sec-k span {
+  margin-right: 14px;
+  color: var(--red);
+}
+.mjp-h2 {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  font-size: clamp(1.8rem, 1rem + 3vw, 3.6rem);
+  line-height: 1.35;
+}
+.recs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr));
+  gap: 28px;
+  margin-top: 28px;
+}
+.rec {
+  display: grid;
+  gap: 0;
+  align-content: start;
+}
+.rec-card {
+  position: relative;
+  display: grid;
+  gap: 14px;
+  padding: clamp(24px, 3vw, 36px);
+  border: 1px solid var(--rule-2);
+  background: var(--card);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+.rec-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--brand);
+}
+.rec-card:hover {
+  border-color: var(--ink);
+  box-shadow: 0 18px 40px -24px rgba(14, 15, 18, 0.35);
+}
+.rec-top {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-3);
+}
+.rec-no {
+  color: var(--ink);
+  font-weight: 700;
+}
+.rec-base {
+  margin-left: auto;
+}
+.rec-logo {
+  display: grid;
+  place-items: center start;
+  min-height: 96px;
+  padding-block: 18px;
+  border-block: 1px solid var(--rule);
+}
+.rec-logo img {
+  height: 44px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+.rec-cat {
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  color: var(--brand);
+  font-weight: 700;
+}
+.rec-name {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem);
+  line-height: 1.3;
+}
+.rec-catch {
+  font-size: 1rem;
+  font-weight: 700;
+}
+.rec-desc {
+  font-size: 0.86rem;
+  line-height: 1.9;
+  color: var(--ink-2);
+}
+.rec-spec {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--rule);
+  margin-top: 4px;
+}
+.rec-spec > span {
+  display: grid;
+  gap: 2px;
+  padding: 12px 10px 0 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.rec-spec i {
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 400;
+  letter-spacing: 0.2em;
+  color: var(--ink-3);
+}
+.rec-go {
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  padding: 14px 18px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+.rec-card:hover .rec-go {
+  background: var(--brand);
+}
+.rec-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 14px 4px 0;
+  font-size: 0.8rem;
+  color: var(--ink-2);
+}
+.rec-links a {
+  text-decoration: underline;
+  text-decoration-color: var(--rule-2);
+  text-underline-offset: 0.3em;
+}
+.rec-links a:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+.mjp-band {
+  background: var(--paper-2);
+  border-top: 1px solid var(--rule);
+  padding-block: clamp(72px, 9vw, 140px);
+}
+.mjp-band-in {
+  display: grid;
+  justify-items: start;
+  gap: 22px;
+}
+.mjp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 16px 28px;
+  border: 1px solid var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition:
+    background-color 0.3s,
+    color 0.3s;
+}
+.mjp-btn:hover {
+  background: var(--ink);
+  color: #fff;
+}
+.mjp .answer {
+  margin-bottom: 0;
+}
+.mjp-count small {
+  margin-left: 4px;
+  font-family: var(--f-sans);
+  font-size: 0.8rem;
+}

@@ -16,6 +16,7 @@ import type { Partner } from '../types';
 export const evorg: Partner = {
   slug: 'evorg',
   no: '01',
+  catalog: { base: '福岡', category: '人材紹介 / CRM・MA' },
   company: {
     name: '株式会社エボルグ',
     nameEn: 'Evorg',

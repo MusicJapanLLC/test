@@ -56,7 +56,7 @@ export function siteLd(env: BuildEnv): Ld[] {
         addressCountry: 'JP',
         addressRegion: '大阪府',
         addressLocality: '大阪市北区',
-        streetAddress: '梅田1-2-2 大阪駅前第2ビル12-12',
+        streetAddress: '梅田1丁目2番2号 大阪駅前第2ビル12-12',
       },
       founder: { '@type': 'Person', name: '壁谷友生', jobTitle: '代表社員' },
     },
@@ -167,7 +167,7 @@ export function pageLd(
 
 /** パンくず。先頭は必ず Baton Partners（/）。画面のパンくずと同じ並び */
 export function breadcrumbLd(env: BuildEnv, path: string, items: { name: string; href: string }[]): Ld {
-  const all = [{ name: site.name, href: '/' }, ...items];
+  const all = [{ name: site.hubName, href: '/' }, ...items];
   return {
     '@type': 'BreadcrumbList',
     '@id': ids.crumb(env, path),

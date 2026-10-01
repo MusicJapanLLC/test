@@ -36,6 +36,9 @@ export type BuildEnv = {
 const GOOGLE_FONTS =
   'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Archivo:wdth,wght@62..125,100..900&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap';
 
+/** 掲載番号。music-japan.com/partners と同じ「BP-001」 */
+export const bpNo = (p: Partner): string => `BP-${p.no.padStart(3, '0')}`;
+
 /** 「株式会社エボルグ」→「エボルグ」 */
 export const shortName = (p: Partner): string =>
   p.company.name.replace(/^(株式会社|合同会社|有限会社)|(株式会社|合同会社|有限会社)$/g, '');
@@ -134,7 +137,7 @@ export function header(p: Partner, current: PageKind): string {
 </header>
 <div class="menu" id="menu" data-menu hidden>
   <div class="menu-in">
-    <p class="menu-kicker">Baton Partners — No.${p.no}</p>
+    <p class="menu-kicker">Music Japan Partners — ${bpNo(p)}</p>
     <ul class="menu-list">${menuItems}</ul>
     <a class="btn btn-cta btn-lg menu-cta" href="${routes.contact(p.slug)}">${esc(shortName(p))}と、話してみる</a>
   </div>
@@ -154,41 +157,76 @@ export function ctaBand(p: Partner): string {
 </section>`.trim();
 }
 
+/**
+ * 本体サイト（music-japan.com）と同じヘッダー。一覧・編集部・プライバシー・404 で使う。
+ * 「05 パートナー」を現在地にして、ここが Music Japan のパートナーのページだと分かるようにする。
+ */
+export function mjHeader(): string {
+  return `
+<a class="skip" href="#main">本文へ移動</a>
+<header class="mj-hdr" data-hdr>
+  <div class="mj-hdr-in">
+    <a class="mj-brand" href="${site.operator.url}"><span class="mj-brand-s">合同会社</span><strong>Music Japan</strong></a>
+    <nav class="mj-nav" aria-label="Music Japan のメニュー">
+      <ul>${site.mainNav
+        .map((n) => `<li><a href="${n.url}"${n.no === '05' ? ' aria-current="page"' : ''}><i>${n.no}</i>${esc(n.label)}</a></li>`)
+        .join('')}</ul>
+    </nav>
+  </div>
+</header>`.trim();
+}
+
+/** 本体サイトと同じフッター。各社のページでも共通にして、Music Japan のパートナーであることを示す */
 export function footer(p?: Partner): string {
   const partnerLinks = p
-    ? `<ul class="ftr-links">
-        <li><a href="${routes.top(p.slug)}">トップ</a></li>
-        <li><a href="${routes.about(p.slug)}">取り組み</a></li>
-        <li><a href="${routes.insight(p.slug, p.insight.slug)}">記事</a></li>
-        <li><a href="${routes.service(p.slug)}">${esc(p.service.name)}</a></li>
-        <li><a href="${routes.contact(p.slug)}">話してみる</a></li>
-      </ul>`
+    ? `<div class="ftr-col">
+        <p class="ftr-k">${esc(p.company.name)}｜${bpNo(p)}</p>
+        <ul class="ftr-links">
+          <li><a href="${routes.top(p.slug)}">トップ</a></li>
+          <li><a href="${routes.about(p.slug)}">取り組み</a></li>
+          <li><a href="${routes.service(p.slug)}">${esc(p.service.name)}</a></li>
+          <li><a href="${routes.insight(p.slug, p.insight.slug)}">記事</a></li>
+          <li><a href="${routes.contact(p.slug)}">話してみる</a></li>
+        </ul>
+      </div>`
     : '';
-  const about = p
-    ? `このページは、${site.operator.name}が制作・運営しています。掲載内容は、${p.company.name}の公式情報をもとにしています。`
-    : `Baton Partnersは、${site.operator.name}が運営する法人向けのパートナープログラムです。`;
+  const run = Array.from({ length: 4 }, () => '<span>MUSIC. STORIES. CONNECTIONS. FROM JAPAN.</span>').join('');
   return `
 <footer class="ftr">
+  <div class="ftr-mq" aria-hidden="true"><div class="ftr-mq-track">${run}${run}</div></div>
   <div class="wrap ftr-in">
     <div class="ftr-brand">
-      <p class="ftr-mark">${bpLogo({ size: 40, tone: "paper" })}</p>
-      <p class="ftr-about">${jp(about)}</p>
+      <a class="mj-brand ftr-mj" href="${site.operator.url}"><span class="mj-brand-s">合同会社</span><strong>Music Japan</strong></a>
+      <p class="ftr-addr">${esc(site.operator.address).replace(' ', '<br />')}</p>
+      <p><a href="mailto:${site.operator.email}">${site.operator.email}</a></p>
+      ${p ? `<p class="ftr-about">${jp(`${p.company.name}は、合同会社Music Japanのパートナー企業です。このページは Music Japan が制作・運営し、掲載内容は${shortName(p)}の公式情報をもとにしています。`)}</p>` : ''}
     </div>
     ${partnerLinks}
-    <div class="ftr-meta">
-      <p>運営：<a href="${site.operator.url}" target="_blank" rel="noopener">${site.operator.name}</a></p>
-      <p><a href="/">掲載企業の一覧</a></p>
-      <p><a href="${routes.editorial()}">Baton Partners 編集部について</a></p>
-      <p><a href="${routes.privacy()}">プライバシーポリシー</a></p>
-      <p class="ftr-copy">© ${new Date().getFullYear()} ${site.operator.nameEn}</p>
+    <div class="ftr-col">
+      <p class="ftr-k">Music Japan</p>
+      <ul class="ftr-links">
+        <li><a href="${site.operator.url}">トップ</a></li>
+        ${site.mainNav.map((n) => `<li><a href="${n.url}">${esc(n.label)}</a></li>`).join('')}
+      </ul>
+    </div>
+    <div class="ftr-col">
+      <p class="ftr-k">Partners</p>
+      <ul class="ftr-links">
+        <li><a href="/">パートナー企業の一覧</a></li>
+        <li><a href="${routes.editorial()}">編集部について</a></li>
+        <li><a href="${routes.privacy()}">プライバシーポリシー</a></li>
+      </ul>
+      <p class="ftr-k ftr-k-follow">Follow</p>
+      <ul class="ftr-social">${site.social.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${s.label}</a></li>`).join('')}</ul>
     </div>
   </div>
+  <p class="wrap ftr-copy">© ${new Date().getFullYear()} ${site.operator.nameEn}</p>
 </footer>`.trim();
 }
 
 /** 画面のパンくず。先頭は必ず Baton Partners（/）。構造化データ（seo.ts の breadcrumbLd）と同じ並び */
 export function breadcrumb(items: { name: string; href?: string }[]): string {
-  const all = [{ name: site.name, href: '/' }, ...items];
+  const all = [{ name: site.hubName, href: '/' }, ...items];
   return `<nav class="crumb" aria-label="パンくずリスト"><ol>${all
     .map((it) =>
       it.href

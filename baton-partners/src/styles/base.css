@@ -754,49 +754,200 @@ html.js .rv.is-in .ph {
   color: var(--ink-2);
 }
 
-/* ── フッター ─────────────────────────────── */
+/* ── フッター（music-japan.com と同じ構成） ── */
 .ftr {
   background: var(--ink);
-  color: rgba(243, 239, 230, 0.78);
-  padding-block: 64px 40px;
+  color: rgba(255, 255, 255, 0.72);
+  padding-bottom: 40px;
   font-size: 0.84rem;
+  overflow: hidden;
+}
+.ftr-mq {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  padding-block: 22px;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.ftr-mq-track {
+  display: inline-flex;
+  gap: 0;
+  animation: ftr-mq 48s linear infinite;
+}
+.ftr-mq-track span {
+  padding-right: 1.2em;
+  font-family: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 800;
+  font-size: clamp(1.6rem, 1rem + 2.6vw, 3.4rem);
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.92);
+}
+.ftr-mq-track span:nth-child(even) {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.5);
+}
+@keyframes ftr-mq {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ftr-mq-track {
+    animation: none;
+  }
 }
 .ftr-in {
   display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 4fr) minmax(0, 3fr);
+  grid-template-columns: minmax(0, 5fr) repeat(3, minmax(0, 3fr));
   gap: 40px;
+  padding-top: 64px;
 }
-.ftr-mark {
-  font-size: 1.35rem;
-  margin-bottom: 20px;
+.ftr-brand {
+  display: grid;
+  gap: 12px;
+  align-content: start;
 }
-.ftr-about {
-  max-width: 34em;
+.ftr-mj {
+  color: #fff;
+  margin-bottom: 8px;
+}
+.ftr-addr {
   line-height: 1.9;
 }
-.ftr-links {
+.ftr-about {
+  max-width: 30em;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  line-height: 1.9;
+  color: rgba(255, 255, 255, 0.6);
+}
+.ftr-k {
+  margin-bottom: 14px;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+.ftr-k-follow {
+  margin-top: 28px;
+}
+.ftr-links,
+.ftr-social {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
-  gap: 10px 36px;
+  gap: 10px;
   align-content: start;
+}
+.ftr a {
+  transition: color 0.2s;
 }
 .ftr a:hover {
-  color: var(--paper);
-}
-.ftr-meta {
-  display: grid;
-  gap: 8px;
-  align-content: start;
+  color: #fff;
 }
 .ftr-copy {
-  margin-top: 16px;
-  font-family: var(--f-latin);
-  letter-spacing: 0.08em;
-  color: rgba(243, 239, 230, 0.5);
+  margin-top: 56px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  font-size: 0.74rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.45);
 }
 @media (max-width: 959px) {
   .ftr-in {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 32px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 36px 24px;
+  }
+  .ftr-brand {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ── Music Japan 本体と同じヘッダー（一覧・編集部・プライバシー・404） ── */
+.mj-brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.mj-brand-s {
+  font-size: 0.72em;
+  letter-spacing: 0.18em;
+}
+.mj-brand strong {
+  font-family: 'Archivo Variable', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 1.32em;
+  letter-spacing: 0.01em;
+}
+.mj-hdr {
+  position: sticky;
+  top: 0;
+  z-index: 70;
+  background: color-mix(in srgb, var(--paper) 90%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--rule);
+  transition: translate 0.4s var(--ease);
+}
+.mj-hdr.is-hidden {
+  translate: 0 -100%;
+}
+.mj-hdr-in {
+  max-width: calc(var(--max) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+  min-height: var(--hdr);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+.mj-nav ul {
+  display: flex;
+  gap: 26px;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+.mj-nav a {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding-block: 6px;
+  white-space: nowrap;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+.mj-nav i {
+  font-style: normal;
+  font-size: 0.66rem;
+  color: var(--ink-3);
+  letter-spacing: 0.1em;
+}
+.mj-nav a:hover,
+.mj-nav a[aria-current='page'] {
+  border-bottom-color: var(--ink);
+}
+@media (max-width: 1023px) {
+  .mj-hdr-in {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+    padding-block: 12px 4px;
+    padding-inline: 0;
+  }
+  .mj-hdr-in > .mj-brand {
+    padding-inline: var(--gutter);
+  }
+  .mj-nav {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .mj-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .mj-nav ul {
+    width: max-content;
+    padding-inline: var(--gutter);
+    gap: 20px;
   }
 }

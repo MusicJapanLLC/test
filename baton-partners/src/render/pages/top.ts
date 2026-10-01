@@ -1,6 +1,6 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
-import { breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
+import { bpNo, breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
 import { answerBox, marquee, nextReads } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp } from '../text';
@@ -64,7 +64,7 @@ ${header(p, 'top')}
       <div class="stage-shade" aria-hidden="true"></div>
       <div class="wrap stage-ui">
         <div class="hero" data-hero>
-          <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>Baton Partners — No.${p.no}<span class="kicker-co">${esc(p.company.nameEn)}</span></p>
+          <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>Music Japan Partners — ${bpNo(p)}<span class="kicker-co">${esc(p.company.nameEn)}</span></p>
           <h1 id="hero-h" class="hero-h">${heading(t.title)}</h1>
           <p class="hero-lead">${jp(t.lead)}</p>
           <ul class="badges">${t.badges.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>

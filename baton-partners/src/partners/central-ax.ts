@@ -15,6 +15,7 @@ import type { Partner } from '../types';
 export const centralAx: Partner = {
   slug: 'central-ax',
   no: '02',
+  catalog: { base: '名古屋', category: 'AI研修 / 開発・業務改善' },
   company: {
     name: '株式会社Central AX',
     nameEn: 'Central AX',

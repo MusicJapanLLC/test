@@ -28,7 +28,7 @@ export function llmsTxt(env: BuildEnv): string {
   return [
     `# ${site.name}`,
     '',
-    `> ${site.description} 掲載企業ごとに、トップ・取り組み・サービス・記事・話してみる の5ページがあります。価格や契約条件は載せていません。`,
+    `> ${site.description} 価格や契約条件は載せていません。`,
     '',
     `運営は${site.operator.name}（${site.operator.url}）。掲載企業との相談は、各社の「話してみる」ページから公式LINEとアンケートで受け付け、Music Japanが内容を確かめてから、双方の了承を得ておつなぎします。`,
     '',

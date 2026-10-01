@@ -1,60 +1,70 @@
 import { routes, site } from '../../config/site';
-import { bpLogo } from '../logo';
 import type { Partner } from '../../types';
-import { breadcrumb, document, footer, shortName, type BuildEnv } from '../layout';
+import { bpNo, breadcrumb, document, footer, mjHeader, shortName, type BuildEnv } from '../layout';
 import { answerBox } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd } from '../seo';
 import { esc, heading, jp } from '../text';
 
-const simpleHeader = `
-<a class="skip" href="#main">本文へ移動</a>
-<header class="hdr hdr-simple" data-hdr>
-  <div class="hdr-in">
-    <a class="brand" href="/" aria-label="Baton Partners">${bpLogo({ size: 34, animated: true, className: "brand-bp-solo" })}</a>
-  </div>
-</header>`;
-
 const SITE_ANSWER = {
-  q: 'Baton Partnersとは？',
-  a: '合同会社Music Japanが運営する、法人向けの紹介プログラムです。掲載している会社ごとに、事業の中身やサービス、考え方をまとめたページを用意しています。話してみたい会社があれば、公式LINEとアンケートで状況をお伺いし、Music Japanが双方の了承を得てからおつなぎします。',
+  q: 'Music Japanのパートナー企業とは？',
+  a: '合同会社Music Japanが事業の中身を確かめたうえで、パートナーとして迎えている会社です。一社ずつ専用のページを設けて、事業とサービスを紹介しています。',
 };
 
-/** ルート：掲載企業の一覧。各社の5ページへの入口 */
+const INDEX_TITLE = 'パートナー企業｜合同会社Music Japan';
+
+/** ルート：パートナー企業の一覧。music-japan.com/partners と同じカタログの見せ方にそろえる */
 export function renderIndex(list: Partner[], env: BuildEnv): string {
+  const count = String(list.length).padStart(2, '0');
   const cards = list
     .map(
       (p) => `
-      <li class="hub-item">
-        <a class="pcard" href="${routes.top(p.slug)}" style="--brand:${p.brand.primary}">
-          <span class="pcard-no">No.${p.no}</span>
-          <img src="${p.brand.logo}" alt="" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
-          <span class="pcard-name">${esc(p.company.name)}</span>
-          <span class="pcard-svc">${esc(p.service.name)}｜${esc(p.service.category)}</span>
-          <span class="pcard-desc">${jp(p.seo.top.description)}</span>
-          <span class="arrow" aria-hidden="true">→</span>
+      <li class="rec" style="--brand:${p.brand.primary}">
+        <a class="rec-card" href="${routes.top(p.slug)}">
+          <span class="rec-top"><span class="rec-no">${bpNo(p)}</span><span>BATON PARTNERS</span><span class="rec-base">${esc(p.catalog.base)} — JAPAN</span></span>
+          <span class="rec-logo"><img src="${p.brand.logo}" alt="" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" loading="lazy" /></span>
+          <span class="rec-cat">${bpNo(p)}　${esc(p.catalog.category)}</span>
+          <span class="rec-name">${esc(p.company.name)}</span>
+          <span class="rec-catch">${jp(p.service.tagline)}</span>
+          <span class="rec-desc">${jp(p.seo.top.description)}</span>
+          <span class="rec-spec">
+            <span><i>BASE</i>${esc(p.catalog.base)}</span>
+            <span><i>SERVICE</i>${esc(p.service.name)}</span>
+            <span><i>SERIES</i>BATON PARTNERS</span>
+          </span>
+          <span class="rec-go">${esc(shortName(p))}を見る<span class="arrow" aria-hidden="true">→</span></span>
         </a>
-        <ul class="hub-links">
-          <li><a href="${routes.about(p.slug)}">${esc(p.seo.about.answer.q)}</a></li>
-          <li><a href="${routes.service(p.slug)}">${esc(p.seo.service.answer.q)}</a></li>
-          <li><a href="${routes.insight(p.slug, p.insight.slug)}">記事：${esc(p.seo.insightTitle)}</a></li>
-          <li><a href="${routes.contact(p.slug)}">${esc(shortName(p))}と話してみる</a></li>
+        <ul class="rec-links">
+          <li><a href="${routes.about(p.slug)}">取り組み</a></li>
+          <li><a href="${routes.service(p.slug)}">${esc(p.service.name)}</a></li>
+          <li><a href="${routes.insight(p.slug, p.insight.slug)}">記事</a></li>
+          <li><a href="${routes.contact(p.slug)}">話してみる</a></li>
         </ul>
       </li>`,
     )
     .join('');
   const body = `
-${simpleHeader}
-<main id="main" class="index-main">
-  <section class="wrap index-in">
-    <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>Partner Companies</p>
-    <h1 class="index-h">${heading(['会う前に、', '選ばれる理由をつくる。'])}</h1>
-    <p class="index-lead">${jp('紹介したい会社のことを、会う前にきちんと知ってもらうための場所です。掲載企業ごとに、トップ・取り組み・サービス・記事・話してみる、の5ページを用意しています。')}</p>
+${mjHeader()}
+<main id="main" class="mjp">
+  <section class="wrap mjp-hero">
+    <nav class="crumb" aria-label="パンくずリスト"><ol><li><a href="${site.operator.url}">トップ</a></li><li><span aria-current="page">パートナー</span></li></ol></nav>
+    <p class="mjp-kicker">BATON PARTNERS / CONNECTIONS</p>
+    <h1 class="mjp-h1">パートナー</h1>
+    <p class="mjp-sub">${jp('事業の強みを知り、次のつながりへ。')}</p>
+    <p class="mjp-count"><strong>${count}<small>社</small></strong>BATON PARTNERS / MUSIC JAPAN</p>
   </section>
   ${answerBox(SITE_ANSWER, 'site-answer')}
-  <section class="wrap index-in" aria-labelledby="hub-h">
-    <h2 id="hub-h" class="sec-h">${heading('掲載している会社')}</h2>
-    <ul class="pcards">${cards}</ul>
-    <p class="index-note">${jp(`どの会社も、公式サイトや公開資料をもとに[Baton Partners 編集部](${routes.editorial()})がまとめています。`)}</p>
+  <section class="wrap mjp-cat" aria-labelledby="cat-h">
+    <p class="mjp-sec-k"><span>01</span>CATALOG — BATON PARTNERS</p>
+    <h2 id="cat-h" class="mjp-h2">${heading(['一社ずつ、', '盤に刻むように。'])}</h2>
+    <ul class="recs">${cards}</ul>
+    <p class="index-note">${jp(`各社のページは、公式サイトや公開資料をもとに[編集部](${routes.editorial()})がまとめています。`)}</p>
+  </section>
+  <section class="mjp-band" aria-labelledby="band-h">
+    <div class="wrap mjp-band-in">
+      <p class="mjp-sec-k"><span>02</span>CONTACT — MUSIC JAPAN</p>
+      <h2 id="band-h" class="mjp-h2">${heading(['次の音を、', '一緒につくろう。'])}</h2>
+      <a class="mjp-btn" href="https://music-japan.com/contact/">話を始める<span class="arrow" aria-hidden="true">→</span></a>
+    </div>
   </section>
 </main>
 ${footer()}`;
@@ -62,14 +72,15 @@ ${footer()}`;
     {
       kind: 'index',
       path: '/',
-      title: 'Baton Partners｜Music Japanが紹介する会社とサービス',
-      description: '合同会社Music Japanが運営する法人向けの紹介プログラム。人材紹介会社向けCRM/MA「Empro」のエボルグ、名古屋のAI研修・導入支援のCentral AXなど、掲載企業のサービスと考え方をまとめています。',
+      title: INDEX_TITLE,
+      description:
+        '合同会社Music Japanのパートナー企業です。福岡で人材紹介会社向けCRM/MA「Empro」を開発するエボルグ、名古屋でAI研修と開発を手がけるCentral AX。各社の事業とサービスを、一社ずつ専用のページで紹介しています。',
       og: '/og/site.png',
       jsonLd: [
         pageLd(env, {
           type: 'CollectionPage',
           path: '/',
-          name: 'Baton Partners｜Music Japanが紹介する会社とサービス',
+          name: INDEX_TITLE,
           description: SITE_ANSWER.a,
           image: '/og/site.png',
           dateModified: site.updated,
@@ -77,7 +88,7 @@ ${footer()}`;
         {
           '@type': 'ItemList',
           '@id': `${env.siteUrl}/#partners`,
-          name: '掲載企業',
+          name: 'Music Japan のパートナー企業',
           itemListElement: list.map((p, i) => ({
             '@type': 'ListItem',
             position: i + 1,
@@ -111,12 +122,12 @@ export function renderEditorial(list: Partner[], env: BuildEnv): string {
     a: `合同会社Music Japan の Baton Partners 編集部です。掲載企業の公式サイトや公開資料をもとに書き、出典を記事に載せています。運営会社の代表は${site.operator.representative.replace('代表社員 ', '')}さんです。`,
   };
   const body = `
-${simpleHeader}
+${mjHeader()}
 <main id="main" class="pv-main">
   <div class="wrap pv">
     ${breadcrumb([{ name: 'Baton Partners 編集部' }])}
     <h1 class="pv-h1">Baton Partners 編集部について</h1>
-    <p>${jp('Baton Partnersは、合同会社Music Japanが運営する法人向けの紹介プログラムです。編集部は、掲載企業のページと記事の制作を担当しています。')}</p>
+    <p>${jp('Baton Partnersは、合同会社Music Japanのパートナー企業を紹介するページです。編集部は、各社のページと記事の制作を担当しています。')}</p>
   </div>
   ${answerBox(answer, 'editorial-answer')}
   <div class="wrap pv">
@@ -138,7 +149,7 @@ ${simpleHeader}
       <p>${jp('話してみたい会社があれば、各社の「話してみる」ページから、公式LINEの追加とアンケートへの回答をお願いしています。Music Japanが内容を確かめ、ご相談の概要を先方に共有したうえで、双方の了承がそろったらLINEグループでおつなぎします。お名前や連絡先が先方に伝わるのは、その時点です。')}</p>
     </section>
     <section class="pv-sec">
-      <h2 class="pv-h">掲載している会社</h2>
+      <h2 class="pv-h">パートナー企業</h2>
       <ul>${partners}</ul>
     </section>
   </div>
@@ -179,14 +190,14 @@ export function renderNotFound(list: Partner[], env: BuildEnv): string {
     )
     .join('');
   const body = `
-${simpleHeader}
+${mjHeader()}
 <main id="main" class="pv-main">
   <div class="wrap pv">
     <h1 class="pv-h1">ページが見つかりませんでした</h1>
     <p>${jp('URLが変わったか、ページが削除された可能性があります。お探しの内容に近いページを、下から選んでください。')}</p>
     <section class="pv-sec">
-      <h2 class="pv-h">掲載している会社</h2>
-      <ul><li><a href="/">掲載企業の一覧</a></li>${links}</ul>
+      <h2 class="pv-h">パートナー企業</h2>
+      <ul><li><a href="/">パートナー企業の一覧</a></li>${links}</ul>
     </section>
   </div>
 </main>
@@ -196,7 +207,7 @@ ${footer()}`;
       kind: 'notfound',
       path: '/404.html',
       title: 'ページが見つかりません - Baton Partners',
-      description: 'お探しのページは見つかりませんでした。掲載企業の一覧からお探しください。',
+      description: 'お探しのページは見つかりませんでした。パートナー企業の一覧からお探しください。',
       og: '/og/site.png',
       noindex: true,
     },
@@ -248,12 +259,12 @@ export function renderPrivacy(env: BuildEnv): string {
     </section>`,
   ).join('');
   const body = `
-${simpleHeader}
+${mjHeader()}
 <main id="main" class="pv-main">
   <div class="wrap pv">
     ${breadcrumb([{ name: 'プライバシーポリシー' }])}
     <h1 class="pv-h1">プライバシーポリシー</h1>
-    <p>${jp(`${site.operator.name}（以下「当社」）は、Baton Partnersの運営にあたり、お客様の個人情報を次のとおり取り扱います。`)}</p>
+    <p>${jp(`${site.operator.name}（以下「当社」）は、パートナー企業のページ（Baton Partners）の運営にあたり、お客様の個人情報を次のとおり取り扱います。`)}</p>
     ${blocks}
   </div>
 </main>

@@ -57,11 +57,11 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
  */
 function writeOgManifest(root: string) {
   const items = [
-    { key: 'site', label: 'Partner Companies', heading: '会う前に、選ばれる理由をつくる。', company: '合同会社Music Japan が運営する紹介プログラム' },
+    { key: 'site', label: 'Music Japan Partners', heading: 'パートナー｜事業の強みを知り、次のつながりへ。', company: '合同会社Music Japan のパートナー企業' },
     ...partners.flatMap((p) => {
       const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme };
       return [
-        { ...base, key: `${p.slug}-top`, label: `No.${p.no}`, heading: plain(p.top.title) },
+        { ...base, key: `${p.slug}-top`, label: `Music Japan Partners — BP-${p.no.padStart(3, '0')}`, heading: plain(p.top.title) },
         { ...base, key: `${p.slug}-about`, label: 'About', heading: plain(p.about.title) },
         { ...base, key: `${p.slug}-service`, label: 'Service', heading: p.seo.service.answer.q },
         { ...base, key: `${p.slug}-insight`, label: 'Insights', heading: plain(p.insight.title) },

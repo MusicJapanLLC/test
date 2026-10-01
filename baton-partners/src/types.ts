@@ -37,8 +37,10 @@ export type Question = {
 
 export type Partner = {
   slug: string;
-  /** Baton Partners 内での掲載番号（表紙の「No.01」） */
+  /** 掲載番号。music-japan.com/partners と同じ「BP-001」の形で表示する */
   no: string;
+  /** 一覧（music-japan.com/partners と同じカタログ）に出す拠点と事業の分類 */
+  catalog: { base: string; category: string };
   company: {
     name: string;
     nameEn: string;
