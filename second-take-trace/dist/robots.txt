@@ -1,2 +1,4 @@
 User-agent: *
 Disallow: /
+
+Sitemap: https://secondtake.music-japan.com/sitemap.xml
