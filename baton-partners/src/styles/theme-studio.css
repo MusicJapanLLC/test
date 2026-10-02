@@ -1902,3 +1902,13 @@ html.js .film-frame.is-in .vf-af i {
     animation: none;
   }
 }
+
+/* 記事の横のサービス紹介：列が細いので、ボタンの文字は折り返して枠に収める */
+[data-theme='studio'] .promo .btn {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  padding: 12px 1.2em;
+}
