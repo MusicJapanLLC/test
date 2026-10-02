@@ -34,7 +34,7 @@ export type BuildEnv = {
 };
 
 const GOOGLE_FONTS =
-  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400..800&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap';
+  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Archivo:ital,wdth,wght@0,62..125,100..900;1,62..125,100..900&family=Dela+Gothic+One&family=JetBrains+Mono:wght@400..800&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap';
 
 /** 掲載番号。music-japan.com/partners と同じ「BP-001」 */
 export const bpNo = (p: Partner): string => `BP-${p.no.padStart(3, '0')}`;

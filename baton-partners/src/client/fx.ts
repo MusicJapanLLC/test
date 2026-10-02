@@ -63,7 +63,7 @@ export function splitHeadings(): void {
 
   // 2行目（.ln + .ln）を、1文字ずつ色を変えてグラデーションに
   // mono・console の世界観では色のグラデーションを使わない（2行目は帯に白抜き）
-  if (stops.length >= 2 && !['mono', 'console', 'minka'].includes(document.body.dataset.theme ?? '')) {
+  if (stops.length >= 2 && !['mono', 'console', 'minka', 'studio'].includes(document.body.dataset.theme ?? '')) {
     document.querySelectorAll<HTMLElement>('.hero-h .ln + .ln, .hl-h .ln + .ln').forEach((ln) => {
       const units = ln.querySelectorAll<HTMLElement>('.ch').length ? ln.querySelectorAll<HTMLElement>('.ch') : ln.querySelectorAll<HTMLElement>('.ph');
       const n = units.length;

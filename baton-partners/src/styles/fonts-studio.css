@@ -1,0 +1,4 @@
+/* studio の世界観（Smartaleck など）でだけ読み込む。見出しは極太の Dela Gothic One、欧文は細長くもできる Archivo（立体とイタリック） */
+@import './fonts-faces-studio.css';
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/archivo/wdth-italic.css';
