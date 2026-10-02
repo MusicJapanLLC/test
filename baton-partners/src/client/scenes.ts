@@ -18,13 +18,17 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
   const animate = !prefersReducedMotion();
 
   // three.js とシーンは1回だけ読み込む
-  let load: Promise<typeof import('./scene').NetworkScene | typeof import('./lattice').LatticeScene> | null = null;
+  let load: Promise<
+    typeof import('./scene').NetworkScene | typeof import('./lattice').LatticeScene | typeof import('./vault').VaultScene
+  > | null = null;
   const sceneClass = () =>
     (load ??=
       // 企業の世界観で、描くシーンを切り替える（body[data-world-scene]）
       document.body.dataset.worldScene === 'lattice'
         ? import('./lattice').then((m) => m.LatticeScene)
-        : import('./scene').then((m) => m.NetworkScene));
+        : document.body.dataset.worldScene === 'vault'
+          ? import('./vault').then((m) => m.VaultScene)
+          : import('./scene').then((m) => m.NetworkScene));
 
   const mount = async (host: HTMLElement) => {
     const Scene = await sceneClass();

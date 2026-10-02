@@ -55,10 +55,16 @@ export function leaderSection(p: Partner): string {
   return `
 <section class="sec leader" aria-labelledby="leader-h">
   <div class="wrap leader-in">
-    <figure class="leader-photo rv">
+    ${
+      l.photo && l.photoSize
+        ? `<figure class="leader-photo rv">
       <span class="leader-frame" aria-hidden="true"></span>
       <img src="${l.photo}" alt="${esc(l.role)} ${esc(l.name)}" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />
-    </figure>
+    </figure>`
+        : `<ol class="leader-timeline rv" aria-label="${esc(l.name)}さんの歩み">${(l.timeline ?? [])
+            .map((t) => `<li><span class="lt-y">${esc(t.year)}</span><span class="lt-t">${jp(t.text)}</span></li>`)
+            .join('')}</ol>`
+    }
     <div class="leader-body rv">
       <p class="kicker">Leader</p>
       <p class="leader-role">${esc(l.role)}</p>

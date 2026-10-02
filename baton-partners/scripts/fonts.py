@@ -19,6 +19,9 @@ CACHE = ROOT / '.font-cache'
 OUT = ROOT / 'public' / 'fonts'  # 固定URLで配信し、見出しの書体を <link rel=preload> で先に読む
 CHARSET = ROOT / 'src' / 'styles' / 'fonts' / 'charset.txt'
 BASE = 'https://raw.githubusercontent.com/google/fonts/main/ofl'
+# 生成済みのページ（企業ごとのフォルダは src/partners から拾う。企業を足しても書き換えなくてよい）
+SLUGS = sorted({l.split("'")[1] for f in (ROOT / 'src' / 'partners').glob('*.ts') for l in f.read_text(encoding='utf-8').splitlines() if l.startswith("  slug: '")})
+PAGE_GLOBS = ['*.html', 'privacy/*.html', 'editorial/*.html', *[f'{s}/**/*.html' for s in SLUGS]]
 FONTS = [
     ('zenoldmincho', 'ZenOldMincho-Bold.ttf', 'zen-old-mincho-700'),
     ('zenoldmincho', 'ZenOldMincho-Black.ttf', 'zen-old-mincho-900'),
@@ -31,7 +34,7 @@ FONTS = [
 def used_chars() -> str:
     chars = set()
     # ソース（データ・テンプレート・画面に出す文言）と、生成済みのページ
-    for pat in ['src/**/*.ts', 'src/**/*.css', '*.html', 'evorg/**/*.html', 'central-ax/**/*.html', 'privacy/*.html', 'editorial/*.html']:
+    for pat in ['src/**/*.ts', 'src/**/*.css', *PAGE_GLOBS]:
         for f in ROOT.glob(pat):
             chars |= set(f.read_text(encoding='utf-8'))
     # 余裕を持たせる：ASCII、全角記号、ひらがな、カタカナ、よく使う記号
@@ -47,7 +50,7 @@ def heading_chars() -> str:
     """全ページの大見出し（h1）に使う文字。見出しの太い書体はこれだけを小さい先読みファイルに分ける"""
     import re
     chars = set()
-    for pat in ['*.html', 'evorg/**/*.html', 'central-ax/**/*.html', 'privacy/*.html', 'editorial/*.html']:
+    for pat in PAGE_GLOBS:
         for f in ROOT.glob(pat):
             html = f.read_text(encoding='utf-8')
             for m in re.findall(r'<h1[^>]*>(.*?)</h1>', html, flags=re.S):

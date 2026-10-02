@@ -99,7 +99,7 @@ export function orgLd(env: BuildEnv, p: Partner): Ld[] {
       name: o.leader.name,
       jobTitle: o.leader.jobTitle,
       worksFor: { '@id': ids.org(env, p) },
-      ...(p.leader ? { image: abs(env, p.leader.photo) } : {}),
+      ...(p.leader?.photo ? { image: abs(env, p.leader.photo) } : {}),
     });
   }
   return [org, ...people];

@@ -37,6 +37,8 @@ export type Question = {
 
 export type Partner = {
   slug: string;
+  /** 先方の確認前。true の間はプレビューにだけ出し、本番ビルドには含めない（partners/index.ts） */
+  draft?: boolean;
   /** 掲載番号。music-japan.com/partners と同じ「BP-001」の形で表示する */
   no: string;
   /** 一覧（music-japan.com/partners と同じカタログ）に出す拠点と事業の分類 */
@@ -73,17 +75,21 @@ export type Partner = {
    * 世界観。企業のロゴ・トーン＆マナーに合わせて、見た目と演出を切り替える。
    *   theme  'editorial' … 紙と墨、明朝＋イタリック（エボルグ）
    *          'mono'      … モノクロ、太いゴシック、グリッドと四角い枠（Central AX）
+   *          'console'   … 監視画面と設計図。等幅の英字、ステータス表示、紺と復旧の緑（DPパートナーズ）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
+   *          'vault'     … サーバーの引越し（移す→守る→戻す。壊れても、別の場所の控えから戻る）
    */
-  world: { theme: 'editorial' | 'mono'; scene: 'network' | 'lattice' };
+  world: { theme: 'editorial' | 'mono' | 'console'; scene: 'network' | 'lattice' | 'vault' };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
     name: string;
     nameEn: string;
     role: string;
-    photo: string;
-    photoSize: [number, number];
+    /** 写真がない企業は、写真の代わりに経歴の年表を出す（timeline） */
+    photo?: string;
+    photoSize?: [number, number];
+    timeline?: { year: string; text: string }[];
     body: string[];
     motto?: { label: string; text: string };
   };
@@ -106,6 +112,12 @@ export type Partner = {
     aboutQuoteCite?: string;
     /** 看板機能を1つ大きく見せる帯（エボルグなら休眠求職者の掘り起こし） */
     highlight: { en: string; title: string[]; lead: string; steps: Pair[]; note: string };
+    /** ヒーローに添える作業ログ風の一覧（console の世界観）。数字は入れず、扱う作業の名前だけ */
+    console?: { label: string; lines: { k: string; v: string; ok?: boolean }[] };
+    /** 公式サイトに掲載されているお客様の声（掲載許可を得たものとして公表されている範囲で、出典つき） */
+    voices?: { title: string; note: string; items: { who: string; text: string }[] };
+    /** 取材・登壇・提携など、外から見た実績（第三者の掲載とプレス配信は分けて書く） */
+    media?: { title: string; items: { kind: string; title: string; by: string; date: string; url?: string }[] };
   };
   about: {
     title: string[];

@@ -69,7 +69,7 @@ ${header(p, 'top')}
           <p class="hero-lead">${jp(t.lead)}</p>
           <ul class="badges">${t.badges.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
           <div class="hero-actions">
-            <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${esc(s.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
+            <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${s.name.length > 8 ? 'サービスを見る' : `${esc(s.name)}を見る`}</span><span class="arrow" aria-hidden="true">→</span></a>
             <a class="btn btn-line" href="${routes.contact(p.slug)}" data-cursor="Talk">話してみる</a>
           </div>
         </div>
@@ -91,6 +91,8 @@ ${header(p, 'top')}
 
   ${marquee(t.marquee, { label: `${s.name}のキーワード` })}
 
+  ${consoleBand(p)}
+
   <section class="sec sec-issue" aria-labelledby="issue-h">
     <div class="wrap grid-sec">
       <header class="sec-head rv">
@@ -102,7 +104,7 @@ ${header(p, 'top')}
   </section>
 
   <section class="sec sec-highlight" aria-labelledby="hl-h">
-    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="1.0" aria-hidden="true"><canvas></canvas></div>
+    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
     <div class="wrap hl-in">
       <header class="hl-head rv">
         <p class="kicker">02 — ${esc(t.highlight.en)}</p>
@@ -134,10 +136,14 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${voicesSection(p)}
+
   <section class="clients" aria-labelledby="clients-h">
     <p id="clients-h" class="clients-h wrap">${jp(s.clientsNote)}</p>
     ${marquee(s.clients, { label: '利用企業', size: 'md', reverse: true })}
   </section>
+
+  ${mediaSection(p)}
 
   <section class="sec sec-quote" aria-labelledby="about-teaser-h">
     <div class="wrap quote-in">
@@ -147,7 +153,7 @@ ${header(p, 'top')}
         ${t.aboutQuoteCite ? `<p class="quote-cite">${jp(t.aboutQuoteCite)}</p>` : ''}
       </blockquote>
       <div class="quote-side rv">
-        ${p.leader ? `<figure class="quote-leader"><img src="${p.leader.photo}" alt="" width="${p.leader.photoSize[0]}" height="${p.leader.photoSize[1]}" loading="lazy" decoding="async" /><figcaption><span>${esc(p.leader.role)}</span>${esc(p.leader.name)}</figcaption></figure>` : ''}
+        ${p.leader?.photo && p.leader.photoSize ? `<figure class="quote-leader"><img src="${p.leader.photo}" alt="" width="${p.leader.photoSize[0]}" height="${p.leader.photoSize[1]}" loading="lazy" decoding="async" /><figcaption><span>${esc(p.leader.role)}</span>${esc(p.leader.name)}</figcaption></figure>` : ''}
         <p>${jp(p.about.lead)}</p>
         <a class="link-arrow" href="${routes.about(p.slug)}"><span>${esc(shortName(p))}の取り組みを読む</span><span class="arrow" aria-hidden="true">→</span></a>
       </div>
@@ -214,4 +220,76 @@ ${footer(p)}`;
     env,
     body,
   );
+}
+
+/** 引き受ける作業を、監視画面のログのように1行ずつ打ち出す帯（console の世界観）。最後の行は動き続ける */
+function consoleBand(p: Partner): string {
+  const c = p.top.console;
+  if (!c) return '';
+  return `
+  <section class="console-band" aria-labelledby="console-h">
+    <div class="wrap console-in">
+      <header class="console-head rv">
+        <p class="kicker kicker-light">${esc(p.top.verbs.map((v) => v.en).join(' / '))}</p>
+        <h2 id="console-h" class="console-h">${heading(`${shortName(p)}が、まとめて引き受けること。`)}</h2>
+        <p class="console-lead">${jp(p.service.description)}</p>
+      </header>
+      <div class="term rv" role="group" aria-label="${esc(c.label)}">
+        <p class="term-bar"><span class="term-dot" aria-hidden="true"></span><span>${esc(c.label)}</span><span class="term-clock" aria-hidden="true">24/365</span></p>
+        <ul class="term-list">${c.lines
+          .map(
+            (l, i) =>
+              `<li style="--i:${i}"><span class="term-k">${esc(l.k)}</span><span class="term-v">${esc(l.v)}</span><span class="term-s${l.ok ? ' is-ok' : ' is-live'}">${l.ok ? 'OK' : 'LIVE'}</span></li>`,
+          )
+          .join('')}</ul>
+        <p class="term-cursor" aria-hidden="true"><span>$</span><i></i></p>
+      </div>
+    </div>
+  </section>`;
+}
+
+/** 公式サイトに載っているお客様の声（出典つき）。ない企業では何も出さない */
+function voicesSection(p: Partner): string {
+  const v = p.top.voices;
+  if (!v) return '';
+  return `
+  <section class="sec sec-voices" aria-labelledby="voices-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Voices</p>
+        <h2 id="voices-h" class="sec-h">${heading(v.title)}</h2>
+      </header>
+      <ul class="voices">${v.items
+        .map(
+          (it, i) => `
+        <li class="voice rv" style="--d:${i}">
+          <blockquote class="voice-q"><p>${jp(it.text)}</p></blockquote>
+          <p class="voice-who">${esc(it.who)}</p>
+        </li>`,
+        )
+        .join('')}</ul>
+      <p class="fine">${jp(v.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 取材・登壇・提携。第三者の掲載と、企業自身の発表は kind で分けて見せる */
+function mediaSection(p: Partner): string {
+  const m = p.top.media;
+  if (!m) return '';
+  return `
+  <section class="sec sec-media" aria-labelledby="media-h">
+    <div class="wrap grid-sec">
+      <header class="sec-head rv">
+        <p class="kicker">Record</p>
+        <h2 id="media-h" class="sec-h">${heading(m.title)}</h2>
+      </header>
+      <ol class="media rv">${m.items
+        .map((it) => {
+          const inner = `<span class="media-kind">${esc(it.kind)}</span><span class="media-t">${jp(it.title)}</span><span class="media-by">${esc(it.by)}${it.date ? `<span class="media-date">${esc(it.date)}</span>` : ''}</span>`;
+          return `<li>${it.url ? `<a class="media-row" href="${it.url}" target="_blank" rel="noopener">${inner}<span class="ext" aria-hidden="true">↗</span></a>` : `<div class="media-row">${inner}<span class="ext" aria-hidden="true"></span></div>`}</li>`;
+        })
+        .join('')}</ol>
+    </div>
+  </section>`;
 }

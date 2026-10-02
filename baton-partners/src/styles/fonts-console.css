@@ -1,0 +1,3 @@
+/* console の世界観（DPパートナーズなど）でだけ読み込む。見出しの太いゴシックと、監視画面の等幅英字 */
+@import './fonts-faces-mono.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';

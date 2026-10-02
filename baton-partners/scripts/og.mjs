@@ -23,7 +23,9 @@ const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>'
 const bpLogo = readFileSync(resolve(root, 'public/brand/baton-partners-logo.svg'), 'utf8');
 
 function html(it) {
-  const mono = it.theme === 'mono';
+  const con = it.theme === 'console';
+  // console（DPパートナーズなど）も見出しは太いゴシック。方眼は点、縦の帯は紺から復旧の緑へ
+  const mono = it.theme === 'mono' || con;
   const brand = it.brand ?? '#C8102E';
   const accent = it.accent ?? '#1CCCE8';
   const long = it.heading.length > 26;
@@ -34,14 +36,14 @@ function html(it) {
 <style>
   *{margin:0;box-sizing:border-box}
   body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:#0E0F12;position:relative;overflow:hidden}
-  .grid{position:absolute;inset:0;background-image:${mono ? 'linear-gradient(#0000000d 1px,transparent 1px),linear-gradient(90deg,#0000000d 1px,transparent 1px)' : 'none'};background-size:48px 48px}
+  .grid{position:absolute;inset:0;background-image:${con ? 'radial-gradient(#0a163024 1.4px,transparent 1.8px)' : mono ? 'linear-gradient(#0000000d 1px,transparent 1px),linear-gradient(90deg,#0000000d 1px,transparent 1px)' : 'none'};background-size:${con ? '28px 28px' : '48px 48px'}}
   .glow{position:absolute;right:-160px;top:-160px;width:620px;height:620px;border-radius:50%;background:radial-gradient(circle, ${brand}22, transparent 65%)}
   .glow2{position:absolute;right:120px;bottom:-220px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle, ${accent}22, transparent 65%)}
-  .bar{position:absolute;left:0;top:0;bottom:0;width:14px;background:${mono ? '#0E0F12' : `linear-gradient(180deg, ${brand}, ${accent})`}}
+  .bar{position:absolute;left:0;top:0;bottom:0;width:14px;background:${con ? `linear-gradient(180deg, ${brand}, ${accent})` : mono ? '#0E0F12' : `linear-gradient(180deg, ${brand}, ${accent})`}}
   .in{position:absolute;inset:64px 80px 56px 96px;display:flex;flex-direction:column;justify-content:space-between}
   .top{display:flex;align-items:center;gap:24px}
   .top img{height:56px;width:auto}
-  .label{font-size:22px;font-weight:700;letter-spacing:.12em;color:${mono ? '#0E0F12' : brand};text-transform:uppercase}
+  .label{font-size:22px;font-weight:700;letter-spacing:.12em;color:${con ? brand : mono ? '#0E0F12' : brand};text-transform:uppercase}
   h1{font-family:${mono ? "'Zen Kaku Gothic New'" : "'Zen Old Mincho'"},serif;font-weight:900;font-size:${long ? 52 : 68}px;line-height:1.4;letter-spacing:.01em;max-width:980px;word-break:keep-all;overflow-wrap:anywhere}
   .foot{display:flex;align-items:center;justify-content:space-between;font-size:24px;font-weight:700;color:#3a3b40}
   .foot svg{height:40px;width:auto}
