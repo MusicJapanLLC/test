@@ -45,7 +45,7 @@
 [data-theme='studio'] .next-t,
 [data-theme='studio'] .a-keys-h,
 [data-theme='studio'] .leader-name,
-[data-theme='studio'] .ch-h {
+[data-theme='studio'] .chn-h {
   font-family: var(--f-serif);
   font-weight: 400;
   font-synthesis: none;
@@ -60,10 +60,25 @@
   letter-spacing: 0.02em;
 }
 [data-theme='studio'] .phero-h {
-  font-size: clamp(1.7rem, 0.8rem + 2.9vw, 3.6rem);
+  font-size: clamp(1.7rem, 0.8rem + 2.6vw, 3.4rem);
+}
+/* 下層のヒーロー：右側の画面の壁とかぶらないよう、文字の列を半分までに */
+@media (min-width: 960px) {
+  [data-theme='studio'] .phero-in > * {
+    max-width: min(900px, 48vw);
+  }
 }
 [data-theme='studio'] .a-h1 {
   max-width: 17em;
+}
+/* Dela Gothic One は字幅が広いので、細い列に置く見出しは一回り小さく */
+[data-theme='studio'] .grid-sec > .sec-head .sec-h {
+  font-size: clamp(1.35rem, 0.9rem + 1.3vw, 2.15rem);
+}
+/* 記事の表：1列目も折り返す（スマホで列が押し広げられないように） */
+[data-theme='studio'] .a-table tbody th {
+  white-space: normal;
+  min-width: 8em;
 }
 
 /* 欧文：細長い太字のイタリック。スポーツ中継のテロップのように */
@@ -92,7 +107,7 @@
 [data-theme='studio'] .faq-q,
 [data-theme='studio'] .next-k,
 [data-theme='studio'] .answer-k,
-[data-theme='studio'] .ch-no,
+[data-theme='studio'] .chn-no,
 [data-theme='studio'] .ftl-y,
 [data-theme='studio'] .cursor-label {
   font-family: var(--f-latin);
@@ -185,6 +200,16 @@
 [data-theme='studio'] .hdr-cta {
   box-shadow: none;
 }
+/* サービス名が長いので、スマホではボタンの文字を折り返す（横にはみ出さない） */
+@media (max-width: 599px) {
+  [data-theme='studio'] .btn:not(.hdr-cta) {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+    line-height: 1.45;
+    padding-block: 12px;
+  }
+}
 [data-theme='studio'] .hdr-cta:hover {
   box-shadow: var(--pop-sm);
 }
@@ -223,6 +248,18 @@
   [data-theme='studio'] .stage-shade {
     background: linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.25) 24%, rgba(255, 255, 255, 0.9) 46%, #fff 62%);
   }
+  /* スマホのスクロール前は文章が画面いっぱいに来るので、画面の壁は淡い背景に下げる */
+  [data-theme='studio'] .stage-shade::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.84) 14%, rgba(255, 255, 255, 0.9) 60%, #fff 100%);
+    opacity: 0;
+    transition: opacity 0.7s var(--ease);
+  }
+  html.js-stage [data-theme='studio'] .stage[data-state='0'] .stage-shade::after {
+    opacity: 1;
+  }
 }
 
 /* 1行目は墨の極太。2行目の HERO は、細長いイタリックを大きく、墨の縁とずらした影で */
@@ -239,7 +276,7 @@
   font-style: italic;
   font-weight: 900;
   font-stretch: 72%;
-  font-size: clamp(5.4rem, 2.4rem + 12vw, 13.5rem);
+  font-size: clamp(5rem, 2.2rem + 9vw, 10.6rem);
   line-height: 0.84;
   letter-spacing: -0.01em;
   color: var(--blue);
@@ -277,8 +314,25 @@
   }
 }
 [data-theme='studio'] .hero-lead {
-  margin-top: 24px;
-  max-width: 34em;
+  margin-top: 22px;
+  max-width: 36em;
+  font-size: clamp(0.9rem, 0.84rem + 0.22vw, 1.02rem);
+  line-height: 1.9;
+}
+[data-theme='studio'] .hero-actions {
+  margin-top: 28px;
+}
+/* 背の低い画面では、ヒーローを詰めて1画面に収める */
+@media (min-width: 960px) and (max-height: 820px) {
+  [data-theme='studio'] .hero-h .ln + .ln {
+    font-size: clamp(4.4rem, 1.6rem + 7vw, 8.4rem);
+  }
+  [data-theme='studio'] .ticker {
+    margin-top: 16px;
+  }
+  [data-theme='studio'] .badges {
+    display: none;
+  }
 }
 
 /* よく届く相談：吹き出しが1つずつ入れ替わる */
@@ -488,8 +542,11 @@ html.js .ticker {
     var(--tone-ink) 0 0 / 14px 14px,
     #fff;
 }
+/* トークの画面のように、1列で上から順に */
 [data-theme='studio'] .issues {
-  gap: 20px clamp(20px, 3vw, 40px);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 34px;
+  max-width: 760px;
 }
 [data-theme='studio'] .issue {
   position: relative;
@@ -556,13 +613,13 @@ html.js .issue.rv.is-in {
     radial-gradient(ellipse at 80% 0%, rgba(31, 146, 202, 0.12), transparent 55%),
     var(--paper-2);
 }
-.ch-lead {
+.chn-lead {
   max-width: 42em;
   margin-top: -16px;
   margin-bottom: clamp(36px, 5vw, 64px);
   color: var(--ink-2);
 }
-.chs {
+.chns {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: clamp(14px, 2vw, 28px);
@@ -571,22 +628,22 @@ html.js .issue.rv.is-in {
   list-style: none;
   align-items: start;
 }
-.ch {
+.chn {
   display: grid;
   gap: 18px;
   align-content: start;
 }
-.ch-fig {
+.chn-fig {
   margin: 0;
   display: grid;
   place-items: end center;
   height: clamp(200px, 17vw, 280px);
 }
-.ch-note {
+.chn-note {
   display: grid;
   gap: 8px;
 }
-.ch-no {
+.chn-no {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
@@ -596,7 +653,7 @@ html.js .issue.rv.is-in {
   line-height: 1;
   color: var(--blue);
 }
-.ch-no span {
+.chn-no span {
   font-family: var(--f-sans);
   font-style: normal;
   font-stretch: 100%;
@@ -605,32 +662,32 @@ html.js .issue.rv.is-in {
   letter-spacing: 0.06em;
   color: var(--ink-3);
 }
-.ch-h {
-  font-size: clamp(1rem, 0.9rem + 0.3vw, 1.16rem);
-  line-height: 1.5;
+.chn-h {
+  font-size: clamp(0.98rem, 0.86rem + 0.28vw, 1.12rem);
+  line-height: 1.55;
 }
-.ch-p {
+.chn-p {
   font-size: 0.86rem;
   line-height: 1.85;
   color: var(--ink-2);
 }
 @media (max-width: 1099px) {
-  .chs {
+  .chns {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     row-gap: 48px;
   }
 }
 @media (max-width: 639px) {
-  .chs {
+  .chns {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 32px;
   }
-  .ch {
+  .chn {
     grid-template-columns: 112px minmax(0, 1fr);
     gap: 18px;
     align-items: start;
   }
-  .ch-fig {
+  .chn-fig {
     height: 168px;
     place-items: start center;
   }
@@ -647,7 +704,7 @@ html.js .issue.rv.is-in {
   box-shadow: var(--pop);
   transition: transform 0.5s var(--ease);
 }
-.ch:hover .dev {
+.chn:hover .dev {
   transform: translateY(-6px) rotate(-1.5deg);
 }
 .dev span,
@@ -1421,10 +1478,33 @@ html.js .film-frame.is-in .vf-af i {
   }
   .film-cap {
     right: auto;
-    left: clamp(14px, 4vw, 30px);
-    bottom: auto;
-    top: calc(100% - 22px);
-    position: absolute;
+    left: 50%;
+    bottom: 12px;
+    transform: translateX(-50%);
+    padding: 4px 12px;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+}
+@media (max-width: 479px) {
+  .film-tl {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 0;
+  }
+  .film-tl li {
+    grid-template-columns: 4.4em minmax(0, 1fr);
+    align-items: baseline;
+    padding: 16px 0 14px 26px;
+    border-top: 0;
+    border-left: 3px solid var(--ink);
+  }
+  .film-tl li::before {
+    left: -9px;
+    top: 20px;
+  }
+  .ftl-y {
+    font-size: 1.3rem;
   }
 }
 
@@ -1450,6 +1530,7 @@ html.js .film-frame.is-in .vf-af i {
 [data-theme='studio'] .stat-unit {
   font-family: var(--f-serif);
   font-weight: 400;
+  font-size: clamp(1.3rem, 0.9rem + 1.2vw, 2.2rem);
   color: var(--ink);
 }
 

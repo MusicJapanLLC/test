@@ -53,6 +53,7 @@ uniform float uPhase;
 uniform float uIntro;
 uniform float uAmbient;
 uniform vec2 uScatter;
+uniform vec2 uScatterC;
 uniform mat4 uRig;
 uniform vec2 uMouse;
 uniform float uHover;
@@ -84,7 +85,8 @@ void main() {
   float e2 = smoothstep(0.0, 1.0, clamp((uPhase - 1.0 - aInfo.z * 0.35) / 0.65, 0.0, 1.0));
 
   // 漂う：画面いっぱいに、ゆっくり回りながら
-  vec3 sc = vec3(aScatter.xy * uScatter * (1.0 + (1.0 - uIntro) * 0.7), aScatter.z * 4.0 - 1.0);
+  // 漂う範囲は文字のない側に寄せる（PCは右、スマホは上）。中心 uScatterC、広さ uScatter
+  vec3 sc = vec3(uScatterC + aScatter.xy * uScatter * (1.0 + (1.0 - uIntro) * 0.7), aScatter.z * 4.0 - 1.0);
   sc += vec3(sin(t * 0.19 + aInfo.y * 40.0), cos(t * 0.15 + aInfo.w * 30.0), sin(t * 0.11 + aInfo.y * 17.0)) * 0.5;
   mat3 tumble = rotXYZ(vec3(sin(t * 0.35 + aInfo.y * 9.0) * 0.7, sin(t * 0.27 + aInfo.w * 6.0) * 0.9, sin(t * 0.2 + aInfo.y * 4.0) * 0.4));
 
@@ -369,7 +371,7 @@ export class FeedScene {
       const c = i % COLS;
       const r = Math.floor(i / COLS);
       // 列ごとに種類を変え、同じ列でも少しずらす（モニター壁の不揃いな並び）
-      const kind = (c * 3 + r * 2 + (c % 2)) % 4;
+      const kind = (c + r * 3) % 4;
       const ang = (c - (COLS - 1) / 2) * 0.135;
       const y = (r - (ROWS - 1) / 2) * 1.2 + (c % 2 ? 0.08 : -0.08);
       aWall.set([ang, y, 0], i * 3);
@@ -398,6 +400,7 @@ export class FeedScene {
       uIntro: { value: o.animate ? 0 : 1 },
       uAmbient: { value: ambient ? 1 : 0 },
       uScatter: { value: new Vector2(8, 5) },
+      uScatterC: { value: new Vector2(0, 0) },
       uRig: { value: new Matrix4() },
       uMouse: { value: new Vector2(9, 9) },
       uHover: { value: 0 },
@@ -534,12 +537,23 @@ export class FeedScene {
     this.camera.updateProjectionMatrix();
     const halfH = Math.tan((this.camera.fov * Math.PI) / 360) * this.camera.position.z;
     const halfW = halfH * this.camera.aspect;
-    (this.cardU.uScatter.value as Vector2).set(halfW * 1.02, halfH * 1.02);
     this.cardU.uAspect.value = this.camera.aspect;
     const wide = this.o.layout === 'right' && this.camera.aspect > 1.15;
+    const sc = this.cardU.uScatter.value as Vector2;
+    const scc = this.cardU.uScatterC.value as Vector2;
     if (wide) {
-      this.offset.set(halfW * 0.4, 0, 0);
-      this.baseScale = Math.min(0.72, (halfW * 0.6) / 6.6, (halfH * 1.5) / 4.2);
+      sc.set(halfW * 0.62, halfH * 1.02);
+      scc.set(halfW * 0.4, 0);
+    } else if (this.o.layout === 'right') {
+      sc.set(halfW * 1.02, halfH * 0.36);
+      scc.set(0, halfH * 0.6);
+    } else {
+      sc.set(halfW * 1.02, halfH * 1.02);
+      scc.set(0, 0);
+    }
+    if (wide) {
+      this.offset.set(halfW * 0.44, 0, 0);
+      this.baseScale = Math.min(0.64, (halfW * 0.5) / 6.6, (halfH * 1.4) / 4.2);
     } else if (this.o.layout === 'right') {
       // スマホ：文字は下半分に来るので、壁は上の空いた場所に
       this.offset.set(0, halfH * 0.48, 0);

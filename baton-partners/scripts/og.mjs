@@ -57,8 +57,58 @@ function minka(it) {
 </div></body></html>`;
 }
 
+// studio（Smartaleckなど）は白地に青の網点と集中線、ファインダーの四隅とREC。右に代表の写真をコマの枠で
+function studio(it) {
+  const brand = it.brand ?? '#1F92CA';
+  const ink = it.accent ?? '#231815';
+  const long = it.heading.length > 20;
+  const hero = /HERO$/.test(it.heading);
+  const head = hero
+    ? `<span class="h1a">${esc(it.heading.replace(/HERO$/, ''))}</span><span class="h1b">HERO</span>`
+    : esc(it.heading);
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'DGOh';src:url('${fontFile('dela-gothic-one-400-h.woff2')}') format('woff2')}
+  @font-face{font-family:'DGOr';src:url('${fontFile('dela-gothic-one-400.woff2')}') format('woff2')}
+  @font-face{font-family:'ArchivoX';font-style:italic;font-weight:100 900;font-stretch:62% 125%;src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource-variable/archivo/files/archivo-latin-wdth-italic.woff2')).href}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:${ink};position:relative;overflow:hidden}
+  .tone{position:absolute;inset:0;background:radial-gradient(circle,${brand}55 1.5px,transparent 2px) 0 0/14px 14px;-webkit-mask:radial-gradient(ellipse 50% 80% at 86% 50%,#000,transparent 80%);mask:radial-gradient(ellipse 50% 80% at 86% 50%,#000,transparent 80%)}
+  .speed{position:absolute;left:640px;top:-250px;width:1130px;height:1130px;border-radius:50%;background:repeating-conic-gradient(${ink}1c 0 .7deg,transparent .7deg 4.3deg);-webkit-mask:radial-gradient(circle,transparent 20%,#000 32%,transparent 66%);mask:radial-gradient(circle,transparent 20%,#000 32%,transparent 66%)}
+  .c{position:absolute;width:46px;height:46px;border:0 solid ${ink}}
+  .tl{left:28px;top:28px;border-left-width:5px;border-top-width:5px}
+  .tr{right:28px;top:28px;border-right-width:5px;border-top-width:5px}
+  .bl{left:28px;bottom:28px;border-left-width:5px;border-bottom-width:5px}
+  .br{right:28px;bottom:28px;border-right-width:5px;border-bottom-width:5px}
+  .rec{position:absolute;right:92px;top:36px;display:flex;align-items:center;gap:10px;font-family:'ArchivoX',sans-serif;font-style:italic;font-weight:900;font-stretch:78%;font-size:22px;letter-spacing:.08em}
+  .rec i{width:16px;height:16px;border-radius:50%;background:#FF3B30}
+  .photo{position:absolute;right:96px;top:104px;width:290px;height:392px;border:5px solid ${ink};border-radius:30px;overflow:hidden;box-shadow:12px 12px 0 ${brand};background:#eee}
+  .photo img{width:100%;height:100%;object-fit:cover;object-position:50% 22%}
+  .in{position:absolute;inset:70px 450px 58px 84px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:22px}
+  .top img{height:34px;width:auto}
+  .label{font-family:'ArchivoX',sans-serif;font-style:italic;font-weight:800;font-stretch:80%;font-size:21px;letter-spacing:.14em;color:${ink};text-transform:uppercase}
+  h1{font-family:'DGOh','DGOr','Zen Kaku Gothic New',sans-serif;font-weight:400;font-size:${long ? 46 : 60}px;line-height:1.36;letter-spacing:.02em;word-break:keep-all;overflow-wrap:anywhere}
+  .h1a{display:block;font-size:46px}
+  .h1b{display:block;margin-top:6px;font-family:'ArchivoX',sans-serif;font-style:italic;font-weight:900;font-stretch:72%;font-size:190px;line-height:.86;color:${brand};-webkit-text-stroke:5px ${ink};paint-order:stroke fill;text-shadow:9px 9px 0 ${ink}}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:21px;font-weight:700;color:#4b403b;width:calc(100% + 360px)}
+  .foot svg{height:38px;width:auto}
+</style></head><body>
+<div class="tone"></div><div class="speed"></div>
+<div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
+<div class="rec"><i></i>REC</div>
+${it.photo ? `<div class="photo"><img src="${file(it.photo)}" alt=""></div>` : ''}
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span class="label">${esc(it.label)}</span></div>
+  <h1>${head}</h1>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</div></body></html>`;
+}
+
 function html(it) {
   if (it.theme === 'minka') return minka(it);
+  if (it.theme === 'studio') return studio(it);
   const con = it.theme === 'console';
   // console（DPパートナーズなど）も見出しは太いゴシック。方眼は点、縦の帯は紺から復旧の緑へ
   const mono = it.theme === 'mono' || con;
@@ -97,7 +147,7 @@ const page = await browser.newPage({ viewport: { width: 1200, height: 630 } });
 mkdirSync(resolve(root, 'public/og'), { recursive: true });
 // about:blank からは file:// の書体・画像を読めないので、一時ファイルに書いて開く
 const tmp = resolve(root, '.og-tmp.html');
-for (const it of items) {
+for (const it of items.filter((x) => !process.env.OG_ONLY || x.key.startsWith(process.env.OG_ONLY))) {
   writeFileSync(tmp, html(it));
   await page.goto(pathToFileURL(tmp).href, { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
@@ -107,7 +157,8 @@ for (const it of items) {
 
 // ファビコン（SVG のマークを PNG に）
 const mark = readFileSync(resolve(root, 'public/favicon.svg'), 'utf8');
-for (const [name, size] of [['favicon-192.png', 192], ['apple-touch-icon.png', 180], ['.favicon-48.png', 48]]) {
+// OG_ONLY を付けたときは、指定した企業の画像だけ作り直す（ファビコンには触らない）
+for (const [name, size] of process.env.OG_ONLY ? [] : [['favicon-192.png', 192], ['apple-touch-icon.png', 180], ['.favicon-48.png', 48]]) {
   const p = await browser.newPage({ viewport: { width: size, height: size } });
   await p.setContent(`<html><body style="margin:0;background:${name.startsWith('apple') ? '#fff' : 'transparent'}">${mark.replace('<svg', `<svg width="${size}" height="${size}"`)}</body></html>`);
   await p.screenshot({ path: resolve(root, 'public', name), omitBackground: !name.startsWith('apple') });

@@ -107,19 +107,19 @@ export const smartaleck: Partner = {
     problemsTitle: '最初のひと言は、{だいたいこのあたり。}',
     problems: [
       {
-        title: '「採用がうまくいかないから、{Instagramをやりたい}」',
+        title: '{「採用が}{うまくいかないから、}{Instagramをやりたい」}',
         detail: '求人サイトに載せても応募が来ない。来ても、思っていた人と少し違う。職場の空気や、一緒に働く人の顔が伝わっていないのかもしれない。そう感じた会社が、採用のためのアカウントを考えはじめます。',
       },
       {
-        title: '「認知を上げたいから、{YouTubeを始めたい}」',
+        title: '{「認知を上げたいから、}{YouTubeを始めたい」}',
         detail: '商品には自信がある。でも、そもそも名前を知られていない。広告を出し続けるのとは別に、見られるほど積み上がっていく入口がほしい。そういう会社に向いているのが、企業のYouTubeチャンネルです。',
       },
       {
-        title: '「Z世代に、{ちゃんと届けたい}」',
+        title: '{「Z世代に、}{ちゃんと届けたい」}',
         detail: '若い人向けの商品なのに、チラシや検索広告では手応えがない。その世代がふだん見ている人に紹介してもらう。そこで候補にあがるのが、インフルエンサーの起用です。',
       },
       {
-        title: '「LINE公式を作ったけど、{成果につながらない}」',
+        title: '{「LINE公式を}{作ったけど、}{成果につながらない」}',
         detail: '友だちは増えた。でも、全員に同じメッセージを送るだけで、ブロックも少しずつ増えていく。飲食店や店舗型のお店でよく聞く話です。',
       },
     ],
@@ -130,31 +130,31 @@ export const smartaleck: Partner = {
         {
           kind: 'reel',
           label: 'Instagram・TikTok・Threads・X',
-          service: 'SNSアカウント運営代行',
+          service: 'SNS{アカウント}{運営代行}',
           note: '市場調査と競合分析から企画を立て、撮影、リール制作、投稿文、予約投稿、分析まで。企業のアカウントとして、ブランドと認知を育てる運用です。',
         },
         {
           kind: 'video',
           label: 'YouTube',
-          service: 'YouTubeチャンネル運営代行',
+          service: 'YouTube{チャンネル}{運営代行}',
           note: 'チャンネル設計、撮影、編集、サムネイル、ABテスト、分析。再生数で稼ぐYouTuberではなく、会社とサービスを知ってもらうためのチャンネルをつくります。',
         },
         {
           kind: 'influencer',
           label: 'インフルエンサーの投稿',
-          service: 'インフルエンサーマーケティング',
+          service: '{インフルエンサー}{マーケティング}',
           note: 'ジャンルに強いインフルエンサーに、商品やサービスを紹介してもらいます。投稿はLPや公式サイトにも使えるので、広告とブランドづくりを一緒に進められます。',
         },
         {
           kind: 'line',
           label: 'LINE公式アカウント',
-          service: 'LINE公式アカウント運営代行',
+          service: 'LINE公式{アカウント}{運営代行}',
           note: '属性ごとの配信、セグメントの管理、Lステップでの自動化、ブロック率の改善。一度来てくれた人に、もう一度来てもらう流れをつくります。',
         },
         {
           kind: 'ai',
           label: 'AIの答え',
-          service: 'AIO（AI検索への対策）',
+          service: 'AIO{（AI検索への対策）}',
           note: 'ChatGPTやGoogleのAIに聞かれたとき、会社やサービスがどう紹介されるかを確かめ、公式サイトやSNSに置く情報を整えます。',
         },
       ],
@@ -201,7 +201,7 @@ export const smartaleck: Partner = {
       { label: 'Schooで担当した講座', value: '6', unit: '回', note: '「デジマ大全2026年度版」。競合の調べ方から採用、AIまで' },
     ],
     statsNote: '数字は、株式会社Smartaleckの公式サイトと、Schooの講座ページに掲載されている内容にもとづきます（2026年10月時点）。',
-    aboutQuote: '自分で売ってきた人に、{売り方を相談する。}',
+    aboutQuote: '{自分で}{売ってきた人に、}{売り方を相談する。}',
     media: {
       title: '外から見た、{河井さんの仕事。}',
       items: [
@@ -249,11 +249,11 @@ export const smartaleck: Partner = {
   },
 
   service: {
-    name: 'デジタルマーケティング支援',
+    name: '{デジタル}{マーケティング}{支援}',
     logo: '/partners/smartaleck/logo.png',
     logoAlt: 'Smartaleck 株式会社Smartaleck',
     logoSize: [800, 126],
-    category: 'SNS・動画・LINE・採用のマーケティング支援',
+    category: '{SNS・}{YouTube・}{LINE・}{インフルエンサー・}{採用}',
     tagline: '企画から撮影、運用、分析まで一社で。',
     description:
       'Smartaleckの支援は、企業のSNS、YouTube、LINE公式アカウント、インフルエンサーの起用、採用、広告まで。どれか一つだけ頼むこともできますし、採用のためにInstagramと求人ページを一緒に直す、といった組み合わせ方もできます。',
@@ -274,27 +274,27 @@ export const smartaleck: Partner = {
     features: [
       {
         en: 'Social',
-        title: 'SNSアカウント運営代行',
+        title: 'SNS{アカウント}{運営代行}',
         detail: 'Instagram、X、TikTok、Threads。市場調査と競合分析から、企画、撮影、クリエイティブ制作、投稿文、予約投稿、分析まで。リール動画の制作だけ、投稿文だけでも頼めます。',
       },
       {
         en: 'YouTube',
-        title: 'YouTubeチャンネル運営代行',
+        title: 'YouTube{チャンネル}{運営代行}',
         detail: 'チャンネル設計、撮影、編集、サムネイル制作、ABテスト、アナリティクス解析。撮影だけ、編集だけ、コンサルティングだけの依頼にも対応しています。',
       },
       {
         en: 'Influencer',
-        title: 'インフルエンサーマーケティング',
+        title: '{インフルエンサー}{マーケティング}',
         detail: 'ジャンルに特化したインフルエンサーで、商品やサービスの認知を広げます。投稿はLPや公式サイトに二次利用できます。',
       },
       {
         en: 'LINE',
-        title: 'LINE公式アカウント運営代行',
+        title: 'LINE公式{アカウント}{運営代行}',
         detail: 'LINE公式アカウントの運用と、Lステップの構築。属性別の配信設計、セグメント管理、自動化、ブロック率の改善まで。',
       },
       {
         en: 'Recruit',
-        title: '採用マーケティング',
+        title: '{採用}{マーケティング}',
         detail: '競合分析、求人設計、写真撮影、求人ページの改修、スカウトメール、面接の日程調整まで。臨床心理士による面接の設計もオプションで加えられます。',
       },
       {

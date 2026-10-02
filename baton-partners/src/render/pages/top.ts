@@ -518,22 +518,22 @@ function channelsSection(p: Partner): string {
   const c = p.top.channels;
   if (!c) return '';
   return `
-  <section class="sec sec-channels" aria-labelledby="ch-h">
+  <section class="sec sec-channels" aria-labelledby="chn-title">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
         <p class="kicker">Screens</p>
-        <h2 id="ch-h" class="sec-h">${heading(c.title)}</h2>
+        <h2 id="chn-title" class="sec-h">${heading(c.title)}</h2>
       </header>
-      <p class="ch-lead rv">${jp(c.lead)}</p>
-      <ol class="chs">${c.items
+      <p class="chn-lead rv">${jp(c.lead)}</p>
+      <ol class="chns">${c.items
         .map(
           (it, i) => `
-        <li class="ch ch-${it.kind} rv" style="--d:${i}">
-          <figure class="ch-fig" aria-hidden="true">${screen(it.kind)}</figure>
-          <div class="ch-note">
-            <p class="ch-no">0${i + 1}<span>${esc(it.label)}</span></p>
-            <h3 class="ch-h">${heading(it.service)}</h3>
-            <p class="ch-p">${jp(it.note)}</p>
+        <li class="chn chn-${it.kind} rv" style="--d:${i}">
+          <figure class="chn-fig" aria-hidden="true">${screen(it.kind)}</figure>
+          <div class="chn-note">
+            <p class="chn-no">0${i + 1}<span>${esc(it.label)}</span></p>
+            <h3 class="chn-h">${heading(it.service)}</h3>
+            <p class="chn-p">${jp(it.note)}</p>
           </div>
         </li>`,
         )
