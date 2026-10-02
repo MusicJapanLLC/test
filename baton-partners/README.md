@@ -6,6 +6,12 @@
 - 既存の `baton/`（Baton本体）とは別プロジェクト。`baton/` には一切手を入れていない
 - デモの間は **noindex**（meta・robots.txt・X-Robots-Tag の3重）。本番サイトからもリンクしない
 
+## 運営会社のページ（BP-000）
+
+`/music-japan/` は、合同会社Music Japan が運営する Baton Partners そのものの紹介（専用LP × SEO × AIO × 紹介）。
+同じ5ページの骨組みに、独自の世界観（relay：トラックとバトン）と、予約ページ（TimeRex）で日程を選ぶ「話してみる」を載せている。
+詳しい決まりは `CLAUDE.md` の「運営会社のページ」。
+
 ## 1社＝5ページのテンプレート
 
 | # | ページ | URL（エボルグの場合） | 中身 |

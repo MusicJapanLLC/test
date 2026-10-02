@@ -1,6 +1,6 @@
 import { routes, site } from '../../config/site';
 import type { Partner } from '../../types';
-import { partners } from '../../partners';
+import { operatorPartner, partners } from '../../partners';
 import { bpMark } from '../logo';
 import { bpHeader, bpNo, breadcrumb, document, footer, shortName, type BuildEnv } from '../layout';
 import { answerBox } from '../parts';
@@ -87,6 +87,12 @@ ${bpHeader(list, 'index')}
       <h1 class="bpx-h1">パートナー</h1>
       <p class="bpx-sub">${jp('事業の強みを知り、次のつながりへ。')}</p>
       <p class="bpx-count"><strong>${count}</strong><span>社 — BATON PARTNERS / MUSIC JAPAN</span></p>
+      <a class="bpx-origin" href="${routes.top(operatorPartner.slug)}">
+        <b>${bpNo(operatorPartner)}</b>
+        <span class="bpx-origin-t">Baton Partnersとは</span>
+        <span class="bpx-origin-s">${esc(`運営：${operatorPartner.company.name}　専用LP × SEO × AIO × 紹介`)}</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
     </div>
   </section>
   <div class="bpx-logos" aria-hidden="true"><div class="bpx-logos-track">${logoRun}${logoRun}</div></div>
@@ -187,6 +193,10 @@ ${bpHeader(list, 'editorial')}
     <section class="pv-sec">
       <h2 class="pv-h">紹介の進め方</h2>
       <p>${jp('話してみたい会社があれば、各社の「話してみる」ページから、公式LINEの追加とアンケートへの回答をお願いしています。Music Japanが内容を確かめ、ご相談の概要を先方に共有したうえで、双方の了承がそろったらLINEグループでおつなぎします。お名前や連絡先が先方に伝わるのは、その時点です。')}</p>
+    </section>
+    <section class="pv-sec">
+      <h2 class="pv-h">Baton Partnersについて</h2>
+      <p>${jp(`Baton Partnersのサービス内容と、運営会社・代表者については、[Baton Partnersとは](${routes.top(operatorPartner.slug)})のページにまとめています。`)}</p>
     </section>
     <section class="pv-sec">
       <h2 class="pv-h">パートナー企業</h2>

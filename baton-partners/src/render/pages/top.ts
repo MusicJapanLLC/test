@@ -103,10 +103,12 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${relaySection(p)}
+
   ${serpSection(p)}
 
   <section class="sec sec-highlight" aria-labelledby="hl-h">
-    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
+    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'relay' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
     <div class="wrap hl-in">
       <header class="hl-head rv">
         <p class="kicker">02 — ${esc(t.highlight.en)}</p>
@@ -144,8 +146,12 @@ ${header(p, 'top')}
 
   <section class="clients" aria-labelledby="clients-h">
     <p id="clients-h" class="clients-h wrap">${jp(s.clientsNote)}</p>
-    ${marquee(s.clients, { label: '利用企業', size: 'md', reverse: true })}
+    ${marquee(s.clients, { label: p.operator ? 'ページの裏側で使っているもの' : '利用企業', size: 'md', reverse: true })}
   </section>
+
+  ${partnerLogosSection(p)}
+
+  ${spotlightSection(p)}
 
   ${productSection(p)}
 
@@ -302,6 +308,13 @@ function mediaSection(p: Partner): string {
   </section>`;
 }
 
+/** 図の番号。minka は「其の一」、relay は「LANE 1」、ほかは「01」 */
+function seq(p: Partner, i: number): string {
+  if (p.world.theme === 'minka') return `其の${['一', '二', '三', '四', '五'][i] ?? i + 1}`;
+  if (p.world.theme === 'relay') return `LANE ${i + 1}`;
+  return String(i + 1).padStart(2, '0');
+}
+
 const fmt = (n: number) => (Number.isInteger(n) ? n.toLocaleString('ja-JP') : String(n));
 
 /** 導入事例：数字を棒・順位のはしご・前後の比較で見せる（minka などで使う。データがない企業では出さない） */
@@ -358,7 +371,7 @@ function casesSection(p: Partner): string {
       return `
       <article class="case rv" style="--d:${idx}">
         <header class="case-head">
-          <p class="case-no" aria-hidden="true">其の${['一', '二', '三', '四', '五'][idx] ?? idx + 1}</p>
+          <p class="case-no" aria-hidden="true">${seq(p, idx)}</p>
           <p class="case-co"><span>${esc(it.industry)}</span>${esc(it.company)}</p>
           <h3 class="case-h">${heading(it.headline)}</h3>
           <p class="case-period">${esc(it.period)}</p>
@@ -414,7 +427,7 @@ function serpSection(p: Partner): string {
     return `
         <li class="sr sr-${r.kind}" style="--i:${i}">
           <div class="sr-box">${body}</div>
-          <div class="sr-note"><span class="sr-seal">其の${['一', '二', '三', '四', '五'][i] ?? i + 1}</span><p class="sr-label">${esc(r.label)}</p><p class="sr-service">${esc(r.service)}</p><p class="sr-p">${jp(r.note)}</p></div>
+          <div class="sr-note"><span class="sr-seal">${seq(p, i)}</span><p class="sr-label">${esc(r.label)}</p><p class="sr-service">${esc(r.service)}</p><p class="sr-p">${jp(r.note)}</p></div>
         </li>`;
   };
   return `
@@ -477,6 +490,104 @@ function missionSection(p: Partner): string {
         <ul class="fuda" aria-label="Value">${m.values.map((v, i) => `<li style="--i:${i}"><span>${esc(v)}</span></li>`).join('')}</ul>
         <p class="fine">${jp(m.note)}</p>
       </div>
+    </div>
+  </section>`;
+}
+
+/**
+ * 4つの区間を、リレーのように見せる（relay の世界観で使う）。
+ * 区間が画面に入るたびに、バトンが次の区間へ渡る（client/relay-track.ts が --leg を進める）。
+ * 動きを減らす設定・JSなしでは、4区間が並んだ静止画として読める。
+ */
+function relaySection(p: Partner): string {
+  const r = p.top.relay;
+  if (!r) return '';
+  const legs = r.legs
+    .map(
+      (l, i) => `
+        <li class="leg" data-leg="${i}" style="--i:${i}">
+          <div class="leg-bib" aria-hidden="true"><span class="leg-bib-no">${i + 1}</span><span class="leg-bib-pin"></span></div>
+          <p class="leg-meta"><span class="leg-run">${esc(l.leg)}</span><span class="leg-en">${esc(l.en)}</span></p>
+          <p class="leg-name">${esc(l.name)}</p>
+          <h3 class="leg-h">${heading(l.title)}</h3>
+          <p class="leg-p">${jp(l.body)}</p>
+          ${i < r.legs.length - 1 ? '<span class="leg-zone" aria-hidden="true"><i></i><i></i><i></i></span>' : '<span class="leg-finish" aria-hidden="true"></span>'}
+        </li>`,
+    )
+    .join('');
+  return `
+  <section class="sec sec-relay" aria-labelledby="relay-h" data-relay>
+    <div class="relay-lanes" aria-hidden="true">${Array.from({ length: 8 }, (_, i) => `<span><b>${i + 1}</b></span>`).join('')}</div>
+    <div class="wrap">
+      <header class="relay-head rv">
+        <p class="kicker">Relay — 4 legs</p>
+        <h2 id="relay-h" class="relay-h">${heading(r.title)}</h2>
+        <p class="relay-lead">${jp(r.lead)}</p>
+      </header>
+      <div class="relay-track">
+        <div class="relay-rail" aria-hidden="true"><span class="relay-baton" data-baton><i></i></span><span class="relay-fill" data-relay-fill></span></div>
+        <ol class="legs">${legs}</ol>
+      </div>
+      <p class="fine rv">${jp(r.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 外部メディアの紹介（スコアボード風）。数字と掲載企業は、そのメディアの公表情報だけ */
+function spotlightSection(p: Partner): string {
+  const m = p.top.spotlight;
+  if (!m) return '';
+  return `
+  <section class="sec sec-spot" aria-labelledby="spot-h">
+    <div class="wrap spot-in">
+      <header class="spot-head rv">
+        <p class="kicker kicker-light">${esc(m.kicker)}</p>
+        <h2 id="spot-h" class="spot-h">${heading(m.title)}</h2>
+        <p class="spot-lead">${jp(m.lead)}</p>
+        <a class="link-arrow spot-link" href="${m.url}" target="_blank" rel="noopener"><span>${esc(m.name)}を見る</span><span class="arrow" aria-hidden="true">↗</span></a>
+      </header>
+      <div class="board rv" role="group" aria-label="${esc(m.name)}について">
+        <p class="board-bar"><span class="board-dot" aria-hidden="true"></span><span>${esc(m.name)}</span><span class="board-live" aria-hidden="true">ON AIR</span></p>
+        <dl class="board-facts">${m.facts
+          .map((f) => `<div class="board-fact"><dt>${esc(f.label)}</dt><dd><span class="board-num">${esc(f.value)}</span><span class="board-unit">${esc(f.unit)}</span></dd></div>`)
+          .join('')}</dl>
+        <div class="board-q">
+          <p class="board-t">${esc(m.questionsTitle)}</p>
+          <ol>${m.questions.map((q) => `<li>「${esc(q)}」</li>`).join('')}</ol>
+        </div>
+        <div class="board-names">
+          <p class="board-t">${esc(m.namesTitle)}</p>
+          <ul>${m.names.map((n) => `<li><strong>${esc(n.name)}</strong><span>${esc(n.detail)}</span></li>`).join('')}</ul>
+        </div>
+      </div>
+      <p class="fine fine-light rv">${jp(m.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 掲載中のパートナー企業。ロゴがない会社（了承済み・準備中）は社名の文字で出す */
+function partnerLogosSection(p: Partner): string {
+  const l = p.top.partnerLogos;
+  if (!l) return '';
+  const items = l.items
+    .map((it) => {
+      const mark = it.logo
+        ? `<img src="${it.logo.src}" alt="${esc(it.name)}" width="${it.logo.size[0]}" height="${it.logo.size[1]}" loading="lazy" decoding="async" />`
+        : `<span class="pl-word">${esc(it.name.replace(/^株式会社|株式会社$/g, ''))}</span>`;
+      const inner = `<span class="pl-mark">${mark}</span><span class="pl-name">${esc(it.name)}</span><span class="pl-status">${esc(it.status ?? 'ページを見る')}</span>`;
+      return `<li class="pl rv">${it.href ? `<a class="pl-in" href="${it.href}">${inner}<span class="arrow" aria-hidden="true">→</span></a>` : `<div class="pl-in is-soon">${inner}</div>`}</li>`;
+    })
+    .join('');
+  return `
+  <section class="sec sec-pl" aria-labelledby="pl-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Partners</p>
+        <h2 id="pl-h" class="sec-h">${heading(l.title)}</h2>
+      </header>
+      <p class="pl-lead rv">${jp(l.lead)}</p>
+      <ul class="pls">${items}</ul>
+      <p class="fine">${jp(l.note)}</p>
     </div>
   </section>`;
 }

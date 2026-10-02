@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { routes, site } from '../config/site';
 import { bpMark } from './logo';
-import { partners } from '../partners';
+import { partners, sites } from '../partners';
 import type { BuildEnv } from './layout';
 import { renderAbout } from './pages/about';
 import { renderContact } from './pages/contact';
@@ -28,7 +28,7 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
     { key: '404', path: '/404.html', html: renderNotFound(partners, env), file: '404.html' },
   ];
 
-  for (const p of partners) {
+  for (const p of sites) {
     const lastmod = p.seo.updated;
     out.push(
       { key: `${p.slug}-top`, path: routes.top(p.slug), html: renderTop(p, env), lastmod },
@@ -58,7 +58,7 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
 function writeOgManifest(root: string) {
   const items = [
     { key: 'site', label: 'Music Japan Partners', heading: 'パートナー｜事業の強みを知り、次のつながりへ。', company: '合同会社Music Japan のパートナー企業' },
-    ...partners.flatMap((p) => {
+    ...sites.flatMap((p) => {
       const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme };
       return [
         { ...base, key: `${p.slug}-top`, label: `Music Japan Partners — BP-${p.no.padStart(3, '0')}`, heading: plain(p.top.title) },
@@ -93,7 +93,7 @@ function checkFontCharset(root: string, html: string) {
 
 /** 一覧ページの更新日は、掲載企業の中でいちばん新しい日 */
 function latest(): string {
-  return [site.updated, ...partners.map((p) => p.seo.updated)].sort().at(-1) ?? site.updated;
+  return [site.updated, ...sites.map((p) => p.seo.updated)].sort().at(-1) ?? site.updated;
 }
 
 /**

@@ -53,6 +53,7 @@ function question(q: Question, n: number): string {
 }
 
 export async function renderContact(p: Partner, env: BuildEnv): Promise<string> {
+  if (p.contact.booking) return renderBooking(p, env);
   const path = routes.contact(p.slug);
   const name = shortName(p);
   const qr = await QRCode.toString(site.lineUrl, {
@@ -232,6 +233,123 @@ ${footer(p)}`;
           mainEntity: ids.org(env, p),
         }),
         faqLd(env, path, faq),
+        breadcrumbLd(env, path, [
+          { name, href: routes.top(p.slug) },
+          { name: '話してみる', href: path },
+        ]),
+      ],
+    },
+    env,
+    body,
+  );
+}
+
+/**
+ * 運営会社（Music Japan）の「話してみる」。アンケートの代わりに、予約ページ（TimeRex）で日程を選んでもらう。
+ * 予約ページへのボタンは、このページにだけ置く（ほかのページの「話してみる」は、すべてここへ来る）。
+ */
+function renderBooking(p: Partner, env: BuildEnv): string {
+  const b = p.contact.booking!;
+  const path = routes.contact(p.slug);
+  const name = shortName(p);
+  const rep = site.operator.representative.replace('代表社員 ', '');
+  const steps = b.steps
+    .map(
+      (s, i) => `
+      <li class="step rv" style="--d:${i}">
+        <span class="step-no">${String(i + 1).padStart(2, '0')}</span>
+        <h3 class="step-h">${heading(s.title)}</h3>
+        <p class="step-p">${jp(s.detail)}</p>
+      </li>`,
+    )
+    .join('');
+  const faqHtml = b.faq
+    .map(
+      (f) => `
+      <details class="faq-item" open>
+        <summary><span class="faq-q">Q</span><span>${jp(f.q)}</span><span class="faq-icon" aria-hidden="true"></span></summary>
+        <div class="faq-a"><p>${jp(f.a)}</p></div>
+      </details>`,
+    )
+    .join('');
+
+  const body = `
+${header(p, 'contact')}
+<main id="main">
+  ${pageHero({
+    p,
+    no: '04',
+    en: 'Talk',
+    title: [`${name}と、`, '話してみる。'],
+    lead: `Baton Partnersのご相談は、空いている日時を選んでいただく形で受けています。お話しするのは、代表の${rep}です。`,
+    phase: 2.0,
+    crumbs: [{ name, href: routes.top(p.slug) }, { name: '話してみる' }],
+  })}
+
+  ${answerBox(p.seo.contact.answer, 'contact-answer')}
+
+  <section class="sec sec-book" aria-labelledby="book-h">
+    <div class="wrap book-grid">
+      <div class="book-card rv">
+        <p class="kicker">Start</p>
+        <h2 id="book-h" class="book-h">${heading(['日程を選んで、', '{話してみる}。'])}</h2>
+        <p class="book-p">${jp(`下のボタンから${b.service}の予約ページを開き、空いている日時を選んでください。オンラインで、${rep}がお話を伺います。`)}</p>
+        <a class="btn btn-cta btn-lg btn-block book-btn" href="${b.url}" target="_blank" rel="noopener" data-cursor="Start" data-book-link>
+          <span>日程を選ぶ</span><span class="arrow" aria-hidden="true">→</span>
+        </a>
+        <p class="book-sub">${jp(`${b.service}の予約ページが、新しいタブで開きます。`)}</p>
+        <p class="book-alt">${jp(b.alt)}</p>
+      </div>
+      <figure class="book-person rv">
+        ${p.leader?.photo && p.leader.photoSize ? `<img src="${p.leader.photo}" alt="${esc(p.leader.role)} ${esc(p.leader.name)}" width="${p.leader.photoSize[0]}" height="${p.leader.photoSize[1]}" loading="lazy" decoding="async" />` : ''}
+        <figcaption><span>お話しするのは</span><strong>${esc(p.leader?.name ?? rep)}</strong><em>${esc(p.leader?.role ?? site.operator.representative)}</em></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec sec-steps" aria-labelledby="steps-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Flow</p>
+        <h2 id="steps-h" class="sec-h">${heading('日程を選んでから、{お話しするまで}。')}</h2>
+      </header>
+      <ol class="steps steps-3">${steps}</ol>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="pfaq-h">
+    <div class="wrap grid-sec">
+      <header class="sec-head rv">
+        <p class="kicker">FAQ</p>
+        <h2 id="pfaq-h" class="sec-h">${heading('話してみる前に')}</h2>
+      </header>
+      <div class="faq rv">${faqHtml}</div>
+    </div>
+  </section>
+</main>
+${footer(p)}`;
+
+  return document(
+    {
+      kind: 'contact',
+      path,
+      partner: p,
+      title: p.seo.contact.title,
+      description: p.seo.contact.description,
+      og: `/og/${p.slug}-contact.png`,
+      jsonLd: [
+        ...orgLd(env, p),
+        pageLd(env, {
+          type: 'ContactPage',
+          path,
+          name: p.seo.contact.title,
+          description: p.seo.contact.description,
+          image: `/og/${p.slug}-contact.png`,
+          partner: p,
+          dateModified: p.seo.updated,
+          mainEntity: ids.org(env, p),
+        }),
+        faqLd(env, path, b.faq),
         breadcrumbLd(env, path, [
           { name, href: routes.top(p.slug) },
           { name: '話してみる', href: path },

@@ -34,7 +34,7 @@ export type BuildEnv = {
 };
 
 const GOOGLE_FONTS =
-  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400..800&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&display=swap';
+  'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400..800&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Zen+Old+Mincho:wght@700;900&family=Big+Shoulders+Display:wght@100..900&family=Jost:wght@100..900&display=swap';
 
 /** 掲載番号。music-japan.com/partners と同じ「BP-001」 */
 export const bpNo = (p: Partner): string => `BP-${p.no.padStart(3, '0')}`;
@@ -151,7 +151,11 @@ export function ctaBand(p: Partner): string {
   <div class="wrap cta-band-in">
     <p class="kicker kicker-light">Talk</p>
     <h2 id="cta-band-h" class="cta-band-h">${heading([`${shortName(p)}と、`, 'まずは話してみる。'])}</h2>
-    <p class="cta-band-p">${jp(`予約カレンダーはありません。Music Japanがご相談内容を確認し、双方の了承を得てからLINEでおつなぎします。`)}</p>
+    <p class="cta-band-p">${jp(
+      p.contact.booking
+        ? `ご相談は、空いている日時を選んでいただく形で受けています。お話しするのは、代表の${site.operator.representative.replace('代表社員 ', '')}です。`
+        : `予約カレンダーはありません。Music Japanがご相談内容を確認し、双方の了承を得てからLINEでおつなぎします。`,
+    )}</p>
     <a class="btn btn-cta btn-lg" href="${routes.contact(p.slug)}"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
   </div>
 </section>`.trim();
@@ -164,6 +168,7 @@ export function ctaBand(p: Partner): string {
 export function bpHeader(list: Partner[], current: 'index' | 'editorial' | 'other' = 'other'): string {
   const items = [
     { no: '01', label: 'パートナー', href: '/#catalog', on: current === 'index' },
+    { no: 'BP-000', label: 'Baton Partnersとは', href: routes.top(site.service.slug), on: false },
     ...list.map((p) => ({ no: bpNo(p), label: shortName(p), href: routes.top(p.slug), on: false })),
     { no: String(list.length + 2).padStart(2, '0'), label: '編集部', href: routes.editorial(), on: current === 'editorial' },
   ];
@@ -182,6 +187,8 @@ export function bpHeader(list: Partner[], current: 'index' | 'editorial' | 'othe
 
 /** 本体サイトと同じフッター。各社のページでも共通にして、Music Japan のパートナーであることを示す */
 export function footer(p?: Partner): string {
+  // 運営会社（Music Japan）のページは、Baton Partners の紹介に絞る（本体サイトの作品ページには案内しない）
+  const mainNav = p?.operator ? site.mainNav.filter((n) => !n.url.includes('/works/')) : site.mainNav;
   const partnerLinks = p
     ? `<div class="ftr-col">
         <p class="ftr-k">${esc(p.company.name)}｜${bpNo(p)}</p>
@@ -194,7 +201,8 @@ export function footer(p?: Partner): string {
         </ul>
       </div>`
     : '';
-  const run = Array.from({ length: 4 }, () => '<span>MUSIC. STORIES. CONNECTIONS. FROM JAPAN.</span>').join('');
+  const runText = p?.operator ? 'BATON PARTNERS. LANDING PAGE × SEO × AIO × REFERRAL. UMEDA, OSAKA.' : 'MUSIC. STORIES. CONNECTIONS. FROM JAPAN.';
+  const run = Array.from({ length: 4 }, () => `<span>${runText}</span>`).join('');
   return `
 <footer class="ftr">
   <div class="ftr-mq" aria-hidden="true"><div class="ftr-mq-track">${run}${run}</div></div>
@@ -204,19 +212,28 @@ export function footer(p?: Partner): string {
       <p class="ftr-op">運営　<a href="${site.operator.url}">${esc(site.operator.name)}</a></p>
       <p class="ftr-addr">${esc(site.operator.address).replace(' ', '<br />')}</p>
       <p><a href="mailto:${site.operator.email}">${site.operator.email}</a></p>
-      ${p ? `<p class="ftr-about">${jp(`${p.company.name}は、合同会社Music Japanのパートナー企業です。このページは Music Japan が制作・運営し、掲載内容は${shortName(p)}の公式情報をもとにしています。`)}</p>` : ''}
+      ${
+        p
+          ? `<p class="ftr-about">${jp(
+              p.operator
+                ? `このページは、合同会社Music Japanが運営する「Baton Partners」の紹介です。掲載しているパートナー企業のページは、各社の公式情報をもとに制作しています。`
+                : `${p.company.name}は、合同会社Music Japanのパートナー企業です。このページは Music Japan が制作・運営し、掲載内容は${shortName(p)}の公式情報をもとにしています。`,
+            )}</p>`
+          : ''
+      }
     </div>
     ${partnerLinks}
     <div class="ftr-col">
       <p class="ftr-k">Music Japan</p>
       <ul class="ftr-links">
         <li><a href="${site.operator.url}">トップ</a></li>
-        ${site.mainNav.map((n) => `<li><a href="${n.url}">${esc(n.label)}</a></li>`).join('')}
+        ${mainNav.map((n) => `<li><a href="${n.url}">${esc(n.label)}</a></li>`).join('')}
       </ul>
     </div>
     <div class="ftr-col">
       <p class="ftr-k">Partners</p>
       <ul class="ftr-links">
+        <li><a href="${routes.top(site.service.slug)}">Baton Partnersとは</a></li>
         <li><a href="/">パートナー企業の一覧</a></li>
         <li><a href="${routes.editorial()}">編集部について</a></li>
         <li><a href="${routes.privacy()}">プライバシーポリシー</a></li>

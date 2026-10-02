@@ -39,6 +39,13 @@ export type Partner = {
   slug: string;
   /** 先方の確認前。true の間はプレビューにだけ出し、本番ビルドには含めない（partners/index.ts） */
   draft?: boolean;
+  /**
+   * 運営会社（Music Japan）自身のページ。true のとき：
+   *   - 構造化データの会社は music-japan.com の @id（運営者と同じノード）を使う
+   *   - 一覧（パートナー企業のカタログ）には並べず、BP-000 として別枠で案内する
+   *   - 「パートナー企業です」「Music Japanが確認してから先方へ」の定型文を出さない
+   */
+  operator?: boolean;
   /** 掲載番号。music-japan.com/partners と同じ「BP-001」の形で表示する */
   no: string;
   /** 一覧（music-japan.com/partners と同じカタログ）に出す拠点と事業の分類 */
@@ -77,12 +84,17 @@ export type Partner = {
    *          'mono'      … モノクロ、太いゴシック、グリッドと四角い枠（Central AX）
    *          'console'   … 監視画面と設計図。等幅の英字、ステータス表示、紺と復旧の緑（DPパートナーズ）
    *          'minka'     … 古民家と縁。朱と墨と生成り、明朝、麻の葉・格子・赤い糸・判子・縦書き（Cominka）
+   *          'relay'     … 日の丸の赤とトラック。極太ゴシック＋スタジアムの数字、レーン・ゼッケン・バトン（Music Japan）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
    *          'vault'     … サーバーの引越し（移す→守る→戻す。壊れても、別の場所の控えから戻る）
    *          'en'        … 縁（散らばった検索の札が格子に並び、赤い糸で一つのサイトに結ばれる）
+   *          'relay'     … 陸上のリレー（光の点がトラックに集まり、レーンを走り、バトンが渡る）
    */
-  world: { theme: 'editorial' | 'mono' | 'console' | 'minka'; scene: 'network' | 'lattice' | 'vault' | 'en' };
+  world: {
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'relay';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'relay';
+  };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
     name: string;
@@ -143,6 +155,37 @@ export type Partner = {
     mission?: { glyph: string; title: string; body: string; values: string[]; note: string };
     /** 取材・登壇・提携など、外から見た実績（第三者の掲載とプレス配信は分けて書く） */
     media?: { title: string; items: { kind: string; title: string; by: string; date: string; url?: string }[] };
+    /**
+     * 区間に分けて見せる仕組み（relay の世界観なら、第1走〜アンカーのリレー）。
+     * スクロールに合わせて、バトンが区間から区間へ渡っていく
+     */
+    relay?: {
+      title: string[];
+      lead: string;
+      legs: { leg: string; en: string; name: string; title: string; body: string }[];
+      note: string;
+    };
+    /** 外部メディアの紹介枠（掲載の可能性を伝える。数字と掲載企業は、そのメディアの公表情報だけ） */
+    spotlight?: {
+      kicker: string;
+      title: string[];
+      lead: string;
+      name: string;
+      url: string;
+      facts: Stat[];
+      questionsTitle: string;
+      questions: string[];
+      namesTitle: string;
+      names: { name: string; detail: string }[];
+      note: string;
+    };
+    /** 掲載中のパートナー企業（ロゴは掲載の了承を得たものだけ。正式ロゴが届くまでは社名の文字で出す） */
+    partnerLogos?: {
+      title: string;
+      lead: string;
+      items: { name: string; href?: string; status?: string; logo?: { src: string; size: [number, number] } }[];
+      note: string;
+    };
   };
   about: {
     title: string[];
@@ -196,6 +239,18 @@ export type Partner = {
   };
   contact: {
     questions: Question[];
+    /**
+     * 予約ページで日程を選んでもらう形（運営会社のページ）。あるときはアンケートの代わりに、
+     * 予約ページへのボタンと、日程が決まるまでの流れ・よくある質問を出す
+     */
+    booking?: {
+      url: string;
+      service: string;
+      steps: Pair[];
+      faq: { q: string; a: string }[];
+      /** 予約が合わないときの連絡先の案内 */
+      alt: string;
+    };
   };
   /** サービスについてのよくある質問（サービスページに表示）。答えは公式情報の範囲で書く */
   faq: { q: string; a: string }[];

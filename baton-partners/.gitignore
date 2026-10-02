@@ -11,6 +11,7 @@ shots/
 
 # ビルド時に src/ から自動生成されるページ（手で編集しない）
 /index.html
+/music-japan/
 /evorg/
 /central-ax/
 /dp-partners/

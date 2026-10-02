@@ -1,0 +1,6 @@
+/* relay の世界観（Music Japan など）でだけ読み込む。
+   見出しは極太のゴシック、数字はスタジアムの電光掲示板のような細長い欧文（Big Shoulders Display）、
+   小さな英字はロゴに近い幾何学的なサンセリフ（Jost） */
+@import './fonts-faces-mono.css';
+@import '@fontsource-variable/big-shoulders-display/wght';
+@import '@fontsource-variable/jost/wght.css';

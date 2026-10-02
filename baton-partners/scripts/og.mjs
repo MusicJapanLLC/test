@@ -1,5 +1,6 @@
 // SNS・AIの引用で使う画像（1200×630）と、PNG/ICO のファビコンを作る。
 // 使い方：`npm run build` のあとに `npm run og`（ブラウザは Playwright の Chromium を使う）。
+// 一部の会社だけ作り直すとき：`OG_ONLY=music-japan npm run og`（キーの先頭で絞る。ファビコンは作り直さない）
 // 出力：public/og/<key>.png、public/favicon-192.png、public/apple-touch-icon.png、public/favicon.ico
 // Google の検索結果は SVG のファビコンに対応していないため、PNG と ICO も用意する。
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
@@ -16,7 +17,8 @@ try {
   ({ chromium } = require('/opt/node22/lib/node_modules/playwright'));
 }
 
-const items = JSON.parse(readFileSync(resolve(root, '.og-manifest.json'), 'utf8'));
+const only = process.env.OG_ONLY;
+const items = JSON.parse(readFileSync(resolve(root, '.og-manifest.json'), 'utf8')).filter((it) => !only || it.key.startsWith(only));
 const font = (pkg, weight) => pathToFileURL(resolve(root, 'node_modules/@fontsource', pkg, `${weight}.css`)).href;
 const file = (p) => pathToFileURL(resolve(root, 'public', p.replace(/^\//, ''))).href;
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
@@ -57,8 +59,41 @@ function minka(it) {
 </div></body></html>`;
 }
 
+// relay（Music Japan）は白に、ロゴの赤い輪と点。足もとにトラックのレーン、見出しは極太のゴシック
+function relay(it) {
+  const red = it.accent ?? '#C8102E';
+  const long = it.heading.length > 24;
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 900)}">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:#0D0D0F;position:relative;overflow:hidden}
+  .lanes{position:absolute;left:0;right:0;bottom:0;height:150px;background:repeating-linear-gradient(180deg,transparent 0 24px,#ffffff66 24px 26px),linear-gradient(180deg,#C8102E,#A8112A)}
+  .lanes::after{content:'';position:absolute;left:640px;top:0;bottom:0;width:12px;background:#fff}
+  .ring{position:absolute;right:96px;top:70px;width:250px;height:250px;border-radius:50%;border:5px solid ${red}}
+  .dot{position:absolute;right:203px;top:177px;width:36px;height:36px;border-radius:50%;background:${red}}
+  .baton{position:absolute;left:700px;bottom:58px;width:130px;height:32px;border-radius:99px;background:linear-gradient(90deg,transparent 0 66%,${red} 66% 74%,transparent 74%),linear-gradient(180deg,#fff,#eee);box-shadow:-40px 0 0 -10px #ffffff88,-80px 0 0 -12px #ffffff44}
+  .in{position:absolute;inset:60px 80px 186px 88px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:22px}
+  .top img{height:44px;width:auto}
+  .label{font-size:20px;font-weight:700;letter-spacing:.2em;color:#0D0D0F;text-transform:uppercase}
+  h1{font-weight:900;font-size:${long ? 50 : 66}px;line-height:1.3;letter-spacing:0;max-width:760px;word-break:keep-all;overflow-wrap:anywhere}
+  .foot{position:absolute;left:88px;right:80px;bottom:52px;display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:22px;font-weight:700}
+  .foot svg{height:38px;width:auto;background:#fff;border-radius:99px;padding:6px 16px}
+</style></head><body>
+<div class="ring"></div><div class="dot"></div><div class="lanes"></div><div class="baton"></div>
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span class="label">${esc(it.label)}</span></div>
+  <h1>${esc(it.heading)}</h1>
+</div>
+<div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</body></html>`;
+}
+
 function html(it) {
   if (it.theme === 'minka') return minka(it);
+  if (it.theme === 'relay') return relay(it);
   const con = it.theme === 'console';
   // console（DPパートナーズなど）も見出しは太いゴシック。方眼は点、縦の帯は紺から復旧の緑へ
   const mono = it.theme === 'mono' || con;
@@ -105,9 +140,9 @@ for (const it of items) {
   console.log('og', it.key);
 }
 
-// ファビコン（SVG のマークを PNG に）
+// ファビコン（SVG のマークを PNG に）。一部だけ作り直すときは触らない
 const mark = readFileSync(resolve(root, 'public/favicon.svg'), 'utf8');
-for (const [name, size] of [['favicon-192.png', 192], ['apple-touch-icon.png', 180], ['.favicon-48.png', 48]]) {
+for (const [name, size] of only ? [] : [['favicon-192.png', 192], ['apple-touch-icon.png', 180], ['.favicon-48.png', 48]]) {
   const p = await browser.newPage({ viewport: { width: size, height: size } });
   await p.setContent(`<html><body style="margin:0;background:${name.startsWith('apple') ? '#fff' : 'transparent'}">${mark.replace('<svg', `<svg width="${size}" height="${size}"`)}</body></html>`);
   await p.screenshot({ path: resolve(root, 'public', name), omitBackground: !name.startsWith('apple') });

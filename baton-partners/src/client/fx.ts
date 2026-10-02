@@ -54,7 +54,8 @@ export function splitHeadings(): void {
         const s = document.createElement('span');
         s.className = 'ch';
         s.style.setProperty('--c', String(c++));
-        s.textContent = ch;
+        // 1文字ずつの inline-block では半角スペースが消えるので、詰まらない空白に置き換える（「Music Japan」「Central AX」）
+        s.textContent = ch === ' ' ? '\u00a0' : ch;
         ph.append(s);
       }
     });
@@ -62,8 +63,8 @@ export function splitHeadings(): void {
   });
 
   // 2行目（.ln + .ln）を、1文字ずつ色を変えてグラデーションに
-  // mono・console の世界観では色のグラデーションを使わない（2行目は帯に白抜き）
-  if (stops.length >= 2 && !['mono', 'console', 'minka'].includes(document.body.dataset.theme ?? '')) {
+  // mono・console の世界観では色のグラデーションを使わない（2行目は帯に白抜き）。minka・relay は一色（朱・日の丸の赤）
+  if (stops.length >= 2 && !['mono', 'console', 'minka', 'relay'].includes(document.body.dataset.theme ?? '')) {
     document.querySelectorAll<HTMLElement>('.hero-h .ln + .ln, .hl-h .ln + .ln').forEach((ln) => {
       const units = ln.querySelectorAll<HTMLElement>('.ch').length ? ln.querySelectorAll<HTMLElement>('.ch') : ln.querySelectorAll<HTMLElement>('.ph');
       const n = units.length;

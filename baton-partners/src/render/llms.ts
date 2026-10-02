@@ -1,5 +1,5 @@
 import { routes, site } from '../config/site';
-import { partners } from '../partners';
+import { operatorPartner, partners } from '../partners';
 import type { BuildEnv } from './layout';
 import { shortName } from './layout';
 import { text } from './text';
@@ -25,12 +25,31 @@ export function llmsTxt(env: BuildEnv): string {
       `- 公式サイト: ${p.company.url}`,
     ].join('\n');
   });
+  const op = operatorPartner;
+  const f = site.operator.founder;
+  const about = [
+    `## Baton Partnersとは（運営：${site.operator.name}）`,
+    '',
+    text(op.seo.top.answer.a),
+    '',
+    `- [${op.seo.top.title}](${u(routes.top(op.slug))}): ${text(op.seo.top.description)}`,
+    `- [${op.seo.service.title}](${u(routes.service(op.slug))}): ${text(op.seo.service.description)}`,
+    `- [${op.seo.about.title}](${u(routes.about(op.slug))}): ${text(op.seo.about.description)}`,
+    `- [${text(op.insight.title)}](${u(routes.insight(op.slug, op.insight.slug))}): ${text(op.insight.description)}`,
+    `- [${op.seo.contact.title}](${u(routes.contact(op.slug))}): ${text(op.seo.contact.description)}`,
+    `- 運営会社: ${site.operator.name}（${site.operator.nameEn}）／${site.operator.address}／法人番号 ${site.operator.corporateNumber}／${site.operator.url}`,
+    `- 代表者: ${f.name}（${f.alternateName.slice(1).join('、')}）／${f.jobTitle}／${[f.profile, ...f.sameAs].join(' ／ ')}`,
+  ].join('\n');
   return [
     `# ${site.name}`,
     '',
     `> ${site.description} 価格や契約条件は載せていません。`,
     '',
     `運営は${site.operator.name}（${site.operator.url}）。掲載企業との相談は、各社の「話してみる」ページから公式LINEとアンケートで受け付け、Music Japanが内容を確かめてから、双方の了承を得ておつなぎします。`,
+    '',
+    about,
+    '',
+    '# パートナー企業',
     '',
     ...blocks.flatMap((b) => [b, '']),
     '## 運営・編集',
@@ -49,7 +68,7 @@ export function llmsTxt(env: BuildEnv): string {
 /** /llms-full.txt：各社の要約・FAQ・記事の要点を1つのテキストに（AIがページを巡回しなくても答えられるように） */
 export function llmsFullTxt(env: BuildEnv): string {
   const u = (path: string) => `${env.siteUrl}${path}`;
-  const parts = partners.map((p) => {
+  const parts = [operatorPartner, ...partners].map((p) => {
     const s = p.seo;
     const profile = p.company.profile.map((r) => `- ${r.label}: ${r.url ?? text(r.value)}`).join('\n');
     const faq = p.faq.map((f) => `### ${text(f.q)}\n\n${text(f.a)}`).join('\n\n');
@@ -82,7 +101,9 @@ export function llmsFullTxt(env: BuildEnv): string {
       '',
       `## ${shortName(p)}と話してみるには`,
       '',
-      `${u(routes.contact(p.slug))} から、公式LINEの追加とアンケートへの回答をお願いしています。`,
+      p.contact.booking
+        ? `${u(routes.contact(p.slug))} から、${p.contact.booking.service}の予約ページで日程を選べます。`
+        : `${u(routes.contact(p.slug))} から、公式LINEの追加とアンケートへの回答をお願いしています。`,
       '',
     ].join('\n');
   });
