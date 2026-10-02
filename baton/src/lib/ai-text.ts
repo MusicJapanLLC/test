@@ -60,7 +60,7 @@ export function profileMarkdown(profile: TalkProfile, url: UrlFor): string {
     lines.push('');
   }
   if (profile.values?.length) {
-    lines.push('## 価値観', '');
+    lines.push(`## ${profile.valuesTitle ?? '価値観'}`, '');
     profile.values.forEach((v) => lines.push(`- **${v.title}**: ${v.body}`));
     lines.push('');
   }
