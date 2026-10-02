@@ -237,8 +237,8 @@ a.news-item:hover time, a.news-item:hover .news-label { color: #fff; }
 
 /* ── PARTNERS TEASER ── */
 .pt { display: grid; gap: 56px; }
-.pt-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-.pt-item { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr); gap: 28px; align-items: center; padding: 22px; border: 1px solid var(--line); background: rgba(12, 12, 15, 0.72); transition: border-color 0.4s; }
+.pt-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
+.pt-item { display: grid; grid-template-columns: 1fr; gap: 18px; align-items: center; padding: 22px; border: 1px solid var(--line); background: rgba(12, 12, 15, 0.72); transition: border-color 0.4s; }
 .pt-item:hover { border-color: var(--line-2); }
 .pt-meta { display: grid; gap: 8px; }
 .pt-no { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--red-hot); }
