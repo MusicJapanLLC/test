@@ -27,19 +27,64 @@ const kabeyaProfile: TalkProfile = {
     caption: 'OSAKA / JAPAN · 2026',
   },
   bio:
-    'Podcast「SECOND TAKE（セカンドテイク）」にて、経営者の決断や苦悩、それらをどう乗り越えてきたのか。' +
-    'その人自身の言葉や経験を「インタビュー記事」として記録していく経営者メディアを運営しています。',
+    '大阪・梅田の合同会社Music Japan代表。海外に向けてJazzやBGMをつくって配信し、' +
+    'Podcast「SECOND TAKE」では経営者の決断と苦悩を記事に残し、話を聞いた人どうしを招待制の「Baton -バトン-」でつないでいます。',
+  // 経歴の年表は、本人から公開してよい内容をもらってから足す（いまは事業と考え方だけ）
+  story: {
+    title: '音と、言葉と、人のあいだで',
+    paragraphs: [
+      '大阪・梅田を拠点に、音楽、メディア、紹介という三つの仕事をしています。並べるとばらばらに見えますが、やっていることは似ています。',
+      '音楽では、海外のリスナーに向けてJazzやBGMをつくる。SECOND TAKEでは、経営者が積み上げてきた決断と遠回りを、その人自身の言葉のまま記事にして残す。',
+      'そして話を聞いた人のなかから、この二人は会ったほうがいいと思える相手どうしを引き合わせる。それがBatonです。名簿から選ぶのではなく、実際に会って話した人だけを、自分の判断でつなぎます。',
+      '受け取って、形にして、次の人へ渡す。タグラインの「学び、紡ぎ、繋いでいく。」は、その順番をそのまま言葉にしたものです。',
+    ],
+  },
   business: [
-    '「音楽制作・メディア運営・法人紹介」の三事業を展開。' +
-      '招待制の紹介サービス「Baton -バトン-」では、運営が実際に面談した経営者・事業者の中から、' +
-      '双方に可能性があると判断した相手を紹介しています。',
+    '事業は三つ。音楽制作・配信、メディア運営、法人紹介です。',
+    '音楽では、海外のリスナーに向けたJazzやBGMを制作し、配信しています。',
+    'メディアの中心はPodcast「SECOND TAKE（セカンドテイク）」。経営者に、何を決め、どこで迷い、どう越えてきたかを聞き、本人の言葉のまま記事にして残しています。',
+    '法人紹介は、招待制の「Baton -バトン-」。運営が実際に会って話した経営者・事業者のなかから、双方に可能性があると判断した相手どうしを紹介します。紹介の数を増やすより、長く続く関係をひとつずつつくるためのサービスです。',
   ],
+  about: {
+    title: '合同会社Music Japanについて',
+    paragraphs: ['大阪・梅田にある、音楽とメディアと紹介の会社です。Batonの運営元でもあります。'],
+    facts: [
+      { term: '代表', value: '壁谷 友生（代表社員）' },
+      { term: '所在地', value: '大阪市北区梅田' },
+      { term: '事業', value: '音楽制作・配信／メディア運営（SECOND TAKE）／法人紹介（Baton -バトン-）' },
+      { term: '公式サイト', value: 'music-japan.com' },
+    ],
+  },
   services: [
-    { name: 'Music Japan', description: '海外向け音楽、Jazz、BGMの制作・配信' },
-    { name: 'SECOND TAKE', description: '経営者の決断と苦悩を記録するPodcast' },
-    { name: 'Interview', description: '経営者の人生と事業を残す記事メディア' },
-    { name: 'Baton -バトン-', description: '招待制紹介サービスで深く長い関係づくりを。' },
+    { name: 'Music Japan', description: '海外向けのJazz・BGMの制作と配信' },
+    { name: 'SECOND TAKE', description: '経営者の決断と苦悩を聞くPodcast' },
+    { name: 'Interview', description: '経営者の人生と事業を、記事で残す' },
+    { name: 'Baton -バトン-', description: '会って話した人どうしを紹介する、招待制のサービス' },
   ],
+  valuesTitle: '学び、紡ぎ、繋いでいく。',
+  values: [
+    {
+      title: '学ぶ',
+      body: '経営者の話を、先入観を持たずに最後まで聞く。SECOND TAKEの取材も、Batonの面談も、ここから始まります。',
+    },
+    {
+      title: '紡ぐ',
+      body: '聞いた話は、その人自身の言葉で残す。音も言葉も、つくったものが誰かの手元に届いて、はじめて意味を持つ。',
+    },
+    {
+      title: '繋ぐ',
+      body: '会って話した人だけを、双方に意味があると思えたときだけ紹介する。数より、長く続く関係を。',
+    },
+  ],
+  wantToMeet: {
+    lead: '壁谷がいま会いたい方です。',
+    items: [
+      'SECOND TAKEで、自分の決断や遠回りを言葉にして残したい経営者',
+      '紹介でしか出会えない相手と、時間をかけて関係をつくりたい方',
+      'Batonに掲載して、紹介の輪に加わりたい経営者・事業者',
+      '音楽やメディアの分野で、一緒に何かをつくりたい方',
+    ],
+  },
   // 松浦プロフィールと同じ「大きなカード＋一覧」の見せ方。説明文は本文・サービス欄にある事実だけ
   media: [
     {
@@ -83,7 +128,7 @@ const kabeyaProfile: TalkProfile = {
   mediaTitle: '運営メディア・発信',
   mediaLabel: 'Media & Works',
   location: '大阪',
-  updatedAt: '2026-09-30',
+  updatedAt: '2026-10-01',
   listSummary: '招待制紹介サービス「Baton」の運営',
   businessTags: ['音楽制作', 'メディア運営', '法人紹介'],
   keywordTags: ['洋楽/Jazz', '経営者対談', '完全招待制'],
@@ -419,7 +464,177 @@ const ishiiProfile: TalkProfile = {
   active: true,
 };
 
-export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile, ishiiProfile];
+/**
+ * 宮本 康太（株式会社ZETTAICHI）。
+ * 掲載内容は、Ownerから受け取った調査メモ（調査基準日 2026-10-02、80件以上をスクリーニング）のうち、
+ * 公式サイト・本人LinkedIn／Wantedly・外部インタビュー・イベント実績で確認できる事実のみ。
+ * 調査メモの「書かない方がいい」に従い、次は載せない／書き方を変えている:
+ *  - ZETTAICHIの従業員数・売上・資本金（企業スペック。ADDING_A_PROFILE.md の方針）→ 載せない
+ *  - n1a の会員数（確認不能）→ 載せない
+ *  - 10万人は「保有」ではなく「紹介可能」（本人表現）
+ *  - Biz Summit! の1,000名は「開催済み」ではなく、同社が掲げるイベントの形 → 人数は書かない
+ *  - AddBox の実績（900件超・継続率90%など）は別法人のため ZETTAICHI の実績にしない
+ *  - 生年月日・年齢は個人情報で、年齢は毎年変わるため載せない
+ * X・Instagram は本人と確実に特定できる公開アカウントが無いため載せていない。
+ */
+const miyamotoProfile: TalkProfile = {
+  id: 'miyamoto',
+  slug: 'miyamoto',
+  name: '宮本 康太',
+  company: '株式会社ZETTAICHI',
+  title: '代表取締役',
+  tagline: '見えない波長を、つなぐ。',
+  photo: {
+    src: '/profile-miyamoto.webp',
+    alt: '宮本 康太',
+    caption: 'TOKYO / JAPAN · 2026',
+    tint: '#141114',
+  },
+  bio:
+    '読売広告社の営業、サイバーエージェントでの広告運用、AddBoxの取締役COOを経て、2026年7月に株式会社ZETTAICHIを設立。' +
+    '決裁者に直接つなぐ営業支援、人柄で経営者同士を引き合わせる「n1a」、人狼やボードゲームで出会う交流会「ASOBMENT」を手がけています。',
+  story: {
+    paragraphs: [
+      '青山学院大学法学部を出て、新卒で博報堂DYグループの読売広告社へ。営業として、不動産デベロッパーの広告、ゲームIPのプロモーション、スポーツメディアでのアスリート取材、テレビCMの制作と、ジャンルを問わず現場を回りました。',
+      'その後は独立し、フリーランスとしてサイバーエージェントの広告運用に参加。クライアントとのやり取りからレポートまでを、ひとりで受け持っていました。',
+      '2024年6月、株式会社AddBoxの取締役COOに就任。営業代行とBtoBのマッチング、フリーランス人材の紹介、経営者交流会「Next Meet Up」を見ながら、社内のDXにも手をつけました。',
+      '広告、営業、人材、コミュニティ。肩書きは何度も変わりましたが、やってきたことはずっと「人と会社をつなぐこと」でした。2026年7月にZETTAICHIを設立し、いまは規模や業界より先に、人柄や価値観が合うかどうかで経営者同士を引き合わせています。',
+    ],
+    timeline: [
+      { org: '青山学院大学 法学部', role: '卒業' },
+      { org: '株式会社読売広告社（博報堂DYグループ）', role: '営業', note: '不動産・ゲーム・スポーツ・テレビCM' },
+      { org: '株式会社サイバーエージェント', role: 'フリーランスとして参画', note: '広告運用' },
+      { org: '株式会社AddBox', role: '取締役COO（2024年6月〜2026年6月）', note: '営業代行・人材紹介・経営者交流会を統括' },
+      { org: '株式会社ZETTAICHI', role: '代表取締役（2026年7月設立）', note: '営業支援／n1a／ASOBMENT／Biz Summit!' },
+    ],
+  },
+  businessTitle: '現在の事業',
+  business: [
+    'ZETTAICHIの仕事を一言でいえば、経営者と経営者を会わせること。入口は4つあります。決裁者に直接つなぐ営業支援、1対1で引き合わせる「n1a」、15人ほどでゲームを囲む「ASOBMENT」、スポンサー企業も加わるカンファレンス「Biz Summit!」。公式サイトでは、営業支援（SALES）・n1a・CxO MEET UPの3事業として紹介されています。',
+    '営業支援は、担当者を飛ばして決裁者に直接アプローチします。初期費用も月額もなく、料金は商談1件ごとの成果報酬。リストを大量に渡すより、話が早い相手と確実に会えることを優先しています。',
+    '「n1a」が見るのは、売上や業界、役職ではありません。その人が何を大事にしていて、誰となら気持ちよく仕事ができるか。ZETTAICHIはそれを「見えない波長」と呼んでいます。',
+    '「ASOBMENT」は、名刺交換から始まらない交流会です。人狼やボードゲームを一緒にやると、考え方の癖も、決めるときの速さも隠しようがなく出てくる。参加は役員以上、15人ほどに絞っています。2026年9月25日に第6回を開き、第7回は10月27日。ティーズエージェンシーホールディングス、ROCKTOONとの共催です。',
+    '本人によれば、営業代行で携わったマッチングは1,500社。10万人を超えるフリーランス人材を紹介できるネットワークもあります。',
+  ],
+  about: {
+    title: '株式会社ZETTAICHIについて',
+    paragraphs: ['経営者・決裁者どうしの出会いをつくる会社です。2026年7月、宮本が設立しました。'],
+    facts: [
+      { term: '代表', value: '宮本 康太（代表取締役）' },
+      { term: '設立', value: '2026年7月' },
+      { term: '所在地', value: '東京都狛江市' },
+      { term: '事業', value: '営業支援（SALES）／n1a／CxO MEET UP（ASOBMENT・Biz Summit!）' },
+      { term: '資格', value: '宅地建物取引士（宮本）' },
+    ],
+  },
+  servicesTitle: '事業・サービス',
+  services: [
+    { name: '営業支援', description: '決裁者に直接アプローチ。初期費用・月額なし、商談ごとの成果報酬' },
+    { name: 'n1a', description: '人柄と価値観の相性で、経営者を1対1で引き合わせる' },
+    { name: 'ASOBMENT', description: '人狼やボードゲームを囲む、15人ほどの経営者交流会' },
+    { name: 'Biz Summit!', description: 'スポンサー企業も加わる、カンファレンス形式の経営者の集まり' },
+  ],
+  valuesTitle: '大切にしている考え方',
+  values: [
+    {
+      title: 'アソビの先で、ビジネスを',
+      body: '一緒に遊ぶと、肩書きより先に人柄が見える。ASOBMENTの出発点です。',
+    },
+    {
+      title: '見えない波長を、つなぐ',
+      body: 'スペックが合っても、人が合わなければ続かない。n1aはそこから考えています。',
+    },
+    {
+      title: '受注までの距離を、短くする',
+      body: 'リストの件数より、決める人に会えるかどうか。営業支援はそのための仕組みです。',
+    },
+    {
+      title: '最適なつながりを、デザインする',
+      body: 'AddBox時代のインタビューで語っていた言葉。営業でも採用でもなく、人と会社のいちばんいい組み合わせを探す。',
+    },
+  ],
+  wantToMeet: {
+    lead: 'Batonから見て、宮本さんと話すと面白いと思う方です。',
+    items: [
+      '決裁者に直接会える営業の方法を探している会社',
+      '肩書き抜きで付き合える経営者仲間がほしい方',
+      '経営者向けのイベントやコミュニティに、協賛・共催で関わりたい会社',
+      'フリーランス人材の活用を考えている会社',
+    ],
+  },
+  media: [
+    {
+      label: 'ASOBMENT（アソビの先でビジネスを）',
+      url: 'https://asobment.studio.site/',
+      kind: '主催',
+      date: '2026.09',
+      note: '役員以上が集まる、人狼とボードゲームの交流会。第6回は2026年9月25日、第7回は10月27日。',
+      featured: true,
+    },
+    {
+      label: 'n1a（人柄でつなぐ経営者マッチング）',
+      url: 'https://n1a-cxo.com/',
+      kind: '事業',
+      note: '売上や業界ではなく、価値観と人柄で経営者を1対1でつなぐ。',
+      featured: true,
+    },
+    {
+      label: '営業でも採用でもない。“最適なつながり”をデザインする会社',
+      url: 'https://media.tunakare.jp/jinji-no-koe/1387861076/',
+      kind: '掲載',
+      date: '2026.01.28',
+      note: 'AddBox取締役COO時代のロングインタビュー。創業の経緯から、営業代行・人材・交流会、経営者プラットフォームの構想まで。',
+      featured: true,
+    },
+    {
+      label: 'ホンマルラジオ「サクトーーク！！」第141回',
+      url: 'https://stage.honmaru-radio.com/sakuma0141/',
+      kind: '出演',
+      date: '2026.05.10',
+      note: 'AddBox取締役としてゲスト出演。',
+      featured: true,
+    },
+    {
+      label: '株式会社ZETTAICHI 公式サイト',
+      url: 'https://zettaichi.co.jp/',
+      kind: '公式',
+      note: '営業支援（SALES）・n1a・CxO MEET UP。',
+      owner: 'company',
+    },
+    {
+      label: 'Biz Summit!',
+      url: 'https://biz-summit.studio.site/',
+      kind: '事業',
+      note: 'スポンサー企業も加わる、カンファレンス形式の経営者の集まり。',
+    },
+    {
+      label: 'LinkedIn',
+      url: 'https://jp.linkedin.com/in/%E5%BA%B7%E5%A4%AA-%E5%AE%AE%E6%9C%AC-3a5826327',
+      kind: '発信',
+      note: '経歴と、交流会や事業の近況。',
+      owner: 'person',
+    },
+    {
+      label: 'Wantedly',
+      url: 'https://www.wantedly.com/id/kota_miyamoto3838',
+      kind: '発信',
+      note: '読売広告社からサイバーエージェント、独立までの経緯。',
+      owner: 'person',
+    },
+  ],
+  mediaTitle: '実績・メディア',
+  mediaLabel: 'Works & Media',
+  location: '東京',
+  updatedAt: '2026-10-01',
+  listSummary: '人柄で、経営者同士をつなぐ',
+  businessTags: ['営業支援', 'マッチング', '交流会運営'],
+  keywordTags: ['元広告代理店', '人柄でつなぐ', 'ゲーム交流会'],
+  // モノクロの写真に合わせた、黒と生成りのノワール。紫はアクセントの灰色にかすかに残すだけ
+  theme: { primary: '#E7E2D9', accent: '#9D8FA3', bg: '#0B0A0C', text: '#ECE9E4' },
+  active: true,
+};
+
+export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile, ishiiProfile, miyamotoProfile];
 
 export const getProfile = (id: string): TalkProfile => {
   const found = profiles.find((p) => p.id === id);

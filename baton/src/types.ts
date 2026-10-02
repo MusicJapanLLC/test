@@ -119,7 +119,13 @@ export type TalkProfile = {
    * ヒーローに置く本人写真。未指定・読み込み失敗のときは頭文字表示に戻る。
    * src は public/ 直下からの絶対パス（例: '/profile-kabeya.jpg'）。
    */
-  photo?: { src: string; alt?: string; caption?: string };
+  photo?: {
+    src: string;
+    alt?: string;
+    caption?: string;
+    /** 写真の足元を、この色へ沈める（モノクロ写真を地の色になじませたいとき。例: '#3B1A7A'） */
+    tint?: string;
+  };
   /** 人物紹介（今後、実際の経歴文に差し替えていく前提） */
   bio: string;
   /** 事業内容（文章。段落ごとに配列。未指定なら表示しない） */
@@ -148,6 +154,8 @@ export type TalkProfile = {
   };
   /** 会社について（ミッション・ビジョンなど）。facts は要点の表 */
   about?: { title: string; paragraphs?: string[]; facts?: { term: string; value: string }[] };
+  /** 価値観セクションの見出し（未指定なら「価値観」） */
+  valuesTitle?: string;
   /** 価値観。title は本人・会社が掲げる言葉、body はその説明 */
   values?: { title: string; body: string }[];
   /** こんな方と繋がりたい。lead は前置き（誰の見立てかを明記する） */

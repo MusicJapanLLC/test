@@ -316,7 +316,7 @@ function valuesSection(profile: TalkProfile): HTMLElement | null {
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
         el('span', { class: 'section__label', text: 'Values', 'data-reveal': true }),
-        el('h2', { class: 'section__title', text: '価値観', 'data-reveal': true }),
+        el('h2', { class: 'section__title', text: profile.valuesTitle ?? '価値観', 'data-reveal': true }),
       ]),
       el(
         'div',
