@@ -20,7 +20,6 @@ function machineFiles(): Plugin {
         'sitemap.xml': sitemap(),
         'llms.txt': llms(),
         'llms-full.txt': llmsFull(),
-        'index.md': llmsFull(),
         'feed.xml': atom(),
         'activity.json': jsonFeed(),
       };
@@ -46,13 +45,14 @@ function regenerate(): Plugin {
 }
 
 export default defineConfig(() => {
-  generate(root, { noindex });
+  const pages = generate(root, { noindex });
   return {
     plugins: [machineFiles(), regenerate()],
     build: {
       target: 'es2022',
       assetsInlineLimit: (file: string) => (/\.(woff2?|ttf)$/.test(file) ? false : undefined),
       rollupOptions: {
+        input: pages,
         output: {
           manualChunks(id: string) {
             if (id.includes('/node_modules/three/')) return 'three';

@@ -22,9 +22,13 @@ export function introMark(): string {
   return `<svg class="im" viewBox="0 0 64 64" aria-hidden="true"><defs><clipPath id="imL"><rect width="32" height="64"/></clipPath><clipPath id="imR"><rect x="32" width="32" height="64"/></clipPath></defs><g fill="none" stroke="currentColor"><g clip-path="url(#imL)">${rings}</g><g clip-path="url(#imR)" stroke-opacity=".5">${rings}</g></g><path class="im-arc" pathLength="1" d="M24.6 31A7.6 7.6 0 0 1 31.4 24.4" fill="none" stroke="#e1222f" stroke-width="1.3" stroke-linecap="round"/><circle class="im-dot" cx="34.6" cy="24.4" r="1.55" fill="#e1222f"/><path class="im-wave" pathLength="1" d="M5 35.6C13 31.4 20 38.6 29.5 34.4 38 30.6 45 37.4 60.5 32.6" fill="none" stroke="#e1222f" stroke-width="1.6" stroke-linecap="round"/></svg>`;
 }
 
-/** ファビコン用（単体のSVGファイル） */
+/** ファビコン用（単体のSVGファイル）。明るいタブでは墨、暗いタブでは生成り */
 export const mjMarkFile = (): string =>
-  mjMark({ id: 'f' }).replace('class="mj-mark" ', 'xmlns="http://www.w3.org/2000/svg" ').replaceAll('currentColor', '#eee8df').replaceAll('var(--red,#e1222f)', '#e1222f');
+  mjMark({ id: 'f' })
+    .replace('class="mj-mark" ', 'xmlns="http://www.w3.org/2000/svg" ')
+    .replace('<defs>', '<style>.mk{stroke:#141414}@media (prefers-color-scheme:dark){.mk{stroke:#eee8df}}</style><defs>')
+    .replace('<g fill="none" stroke="currentColor">', '<g fill="none" class="mk">')
+    .replaceAll('var(--red,#e1222f)', '#d62b33');
 
 /**
  * Baton Partners のマーク（baton-partners/src/render/logo.ts と同じもの）。

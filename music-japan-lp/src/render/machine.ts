@@ -1,13 +1,14 @@
 import * as C from '../content/copy';
 import { dotDate, sortedActivity } from '../content/activity';
-import { faq } from '../content/faq';
+import { faqGeneral, faqPartners } from '../content/faq';
+import { PAGES } from '../content/pages';
 import { projects } from '../content/projects';
 import { BATON_URL, company, EMAIL, LP_URL, OFFICIAL_URL, PARTNERS_URL, SECOND_TAKE_URL, socials, TIMEREX_URL, UPDATED } from '../content/site';
 import { plain } from './text';
 
 /**
  * 検索エンジンとAI向けのファイル（ビルド時に書き出す）。
- *   robots.txt / sitemap.xml / llms.txt / llms-full.txt / index.md / feed.xml（Atom）/ activity.json（JSON Feed）
+ *   robots.txt / sitemap.xml / llms.txt / llms-full.txt / feed.xml（Atom）/ activity.json（JSON Feed）
  */
 
 const AI_BOTS = [
@@ -18,7 +19,7 @@ const AI_BOTS = [
 export function robots(noindex: boolean): string {
   if (noindex) return 'User-agent: *\nDisallow: /\n';
   return [
-    '# 合同会社Music Japan — Music Japanの仕事（Baton Partners / Baton / SECOND TAKE）',
+    '# 合同会社Music Japan（Baton Partners / Baton / SECOND TAKE）',
     `# AI向けの要約: ${LP_URL}/llms.txt（全文: ${LP_URL}/llms-full.txt）`,
     '',
     'User-agent: *',
@@ -33,43 +34,47 @@ export function robots(noindex: boolean): string {
 }
 
 export function sitemap(): string {
+  const images: Record<string, string[]> = {
+    top: projects.map((p) => p.shots.desktop),
+    works: projects.flatMap((p) => [p.shots.desktop, p.shots.desktop2]),
+    about: ['/people/kabeya-800.webp'],
+  };
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-  <url>
-    <loc>${LP_URL}/</loc>
+${PAGES.map(
+  (p) => `  <url>
+    <loc>${LP_URL}${p.path}</loc>
     <lastmod>${UPDATED}</lastmod>
-    <image:image><image:loc>${LP_URL}/og/ja-top.png</image:loc></image:image>
-    <image:image><image:loc>${LP_URL}/people/kabeya-800.webp</image:loc></image:image>
-${projects.map((p) => `    <image:image><image:loc>${LP_URL}${p.shots.desktop}</image:loc></image:image>`).join('\n')}
-  </url>
+    <changefreq>${p.changefreq}</changefreq>
+    <priority>${p.priority}</priority>
+    <image:image><image:loc>${LP_URL}/og/${p.key}.png</image:loc></image:image>
+${(images[p.key] ?? []).map((src) => `    <image:image><image:loc>${LP_URL}${src}</image:loc></image:image>`).join('\n')}
+  </url>`,
+).join('\n')}
 </urlset>
 `;
 }
 
-const links = () => [
-  `- Baton Partners（企業の専用ページと紹介）: ${PARTNERS_URL}`,
-  ...projects.map((p) => `  - ${p.no} ${p.name}: ${p.href}`),
-  `- Baton（招待制のプロフィールと紹介）: ${BATON_URL}`,
-  `- SECOND TAKE（経営者インタビュー）: ${SECOND_TAKE_URL}`,
-  `- 合同会社Music Japan 公式サイト: ${OFFICIAL_URL}/`,
-  `- 打ち合わせの予約（TimeRex）: ${TIMEREX_URL}`,
-];
+const pageList = () => PAGES.map((p) => `- [${p.crumb}](${LP_URL}${p.path}): ${p.description}`).join('\n');
 
 export function llms(): string {
-  return `# 合同会社Music Japan — Music Japanの仕事
+  return `# 合同会社Music Japan
 
-> ${plain(C.hero.lead)}
+> ${plain(C.top.lead)}
 
-このページ（${LP_URL}/）は、合同会社Music Japan（大阪）が企業・経営者と一緒にする仕事を1ページにまとめたものです。
-会社の公式情報の正本は公式サイト（${OFFICIAL_URL}/）です。
+合同会社Music Japan（大阪・梅田）のサイトです。会社の公式情報の正本は、公式サイト（${OFFICIAL_URL}/）にあります。
 
-## 4つの段階
+## このサイトのページ
 
-${C.what.stages.map((s, i) => `${i + 1}. ${s.title}（${s.en}）: ${plain(s.body)}`).join('\n')}
+${pageList()}
 
-## サービス
+## サービスのサイト
 
-${links().join('\n')}
+- Baton Partners（会社の専用ページ）: ${PARTNERS_URL}
+${projects.map((p) => `  - ${p.no} ${p.name}: ${p.href}`).join('\n')}
+- Baton（経営者の招待制プロフィール）: ${BATON_URL}
+- SECOND TAKE（経営者インタビュー）: ${SECOND_TAKE_URL}
+- 相談の予約（TimeRex）: ${TIMEREX_URL}
 
 ## 会社
 
@@ -78,128 +83,121 @@ ${links().join('\n')}
 - 所在地: 〒${company.postal} ${company.address}
 - 法人番号: ${company.corporateNo}
 - メール: ${EMAIL}
-- 公式SNS: ${socials.map((s) => `${s.name} ${s.href}`).join(' / ')}
+- SNS: ${socials.map((s) => `${s.name} ${s.href}`).join(' / ')}
 
-## よくある質問
-
-${faq.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
+全文は ${LP_URL}/llms-full.txt にあります。
 `;
 }
 
-/** ページの文章をそのままMarkdownにしたもの（AIが本文を読むため） */
 export function llmsFull(): string {
+  const T = C.top;
   const P = C.partners;
-  return `# ${plain(C.hero.title)}
+  const B = C.baton;
+  const S = C.secondTake;
+  return `# ${plain(T.title)}
 
-${plain(C.hero.pre)}
+${plain(T.lead)}
 
-${plain(C.hero.lead)}
+## ${plain(T.answer.title)}
 
-## ${plain(C.what.title)}
+${T.answer.body.map(plain).join('\n\n')}
 
-${plain(C.what.lead)}
+${T.answer.music}
 
-${C.what.stages.map((s) => `### ${s.title}（${s.en}）\n${plain(s.body)}\n関わるサービス: ${s.where.join('、')}`).join('\n\n')}
+## ${plain(T.services.title)}
 
-${plain(C.what.aside)}
+${T.services.items.map((s) => `- ${s.name}（${s.kind}）: ${plain(s.body)} ${LP_URL}${s.href}`).join('\n')}
 
-## ${plain(C.ecosystem.title)}
+---
 
-${plain(C.ecosystem.lead)}
+# Baton Partners（${P.label}）
 
-${C.ecosystem.nodes.map((n) => `- ${n.name}（${n.sub}）: ${plain(n.body)}${n.href ? ` ${n.href}` : ''}`).join('\n')}
-
-${plain(C.ecosystem.example.title)}${plain(C.ecosystem.example.body)}
-
-## Baton Partners — ${plain(P.title)}
+${plain(P.catch)}
 
 ${plain(P.lead)}
 
-### ${P.anatomy.title}
+## ${plain(P.pages.title)}
 
-${plain(P.anatomy.lead)}
+${P.pages.items.map((it, i) => `${i + 1}. ${it.name}: ${plain(it.body)}`).join('\n')}
 
-${P.anatomy.pages.map((pg) => `- ${pg.name}（${pg.en}）: ${plain(pg.body)}`).join('\n')}
+## ${plain(P.build.title)}
 
-${P.anatomy.parts.map((pt) => `- ${pt.name}: ${plain(pt.body)}`).join('\n')}
+${P.build.steps.map((s, i) => `${i + 1}. ${s.name}: ${plain(s.body)}`).join('\n')}
 
-### ${plain(P.world.title)}
-
-${plain(P.world.lead)}
-
-### ${plain(P.after.title)}
+## ${plain(P.after.title)}
 
 ${P.after.steps.map((s, i) => `${i + 1}. ${s.name}: ${plain(s.body)}`).join('\n')}
 
-${plain(P.after.note)}
+${P.after.note} ${plain(P.after.noteBody)}
 
-「${P.after.quote}」— ${P.after.quoteBy}
+## 公開中のページ
 
-### ${plain(P.origin.title)}
+${projects.map((p) => `- ${p.no} ${p.name}（${p.category}、${p.base}）: ${p.href}\n  ${plain(p.world.note)}`).join('\n')}
 
-${P.origin.paragraphs.map(plain).join('\n\n')}
+## よくある質問（Baton Partners）
 
-## ${plain(C.build.title)}
+${faqPartners.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
 
-${plain(C.build.lead)}
+---
 
-${C.build.steps.map((s, i) => `${i + 1}. ${s.name}（${s.en}）: ${plain(s.body)}`).join('\n')}
+# Baton（${B.label}）
 
-## ${plain(C.live.title)}
+${plain(B.catch)}
 
-${projects.map((p) => `### ${p.no} ${p.name}\n${p.category}（${p.base}）。${p.catch}\n${plain(p.world.note)}\n${p.pages.map((pg) => `- ${pg.label}: ${pg.href}`).join('\n')}`).join('\n\n')}
+${plain(B.lead)}
 
-## Baton — ${plain(C.baton.title)}
+${B.rules.items.map((r) => `- ${r.name}: ${plain(r.body)}`).join('\n')}
 
-${plain(C.baton.lead)}
+${B.flow.steps.map((s, i) => `${i + 1}. ${s.name}: ${plain(s.body)}`).join('\n')}
 
-${C.baton.points.map((p) => `- ${p.title}: ${plain(p.body)}`).join('\n')}
+${plain(B.versus.title)}: ${plain(B.versus.body)}
 
-紹介までの流れ: ${C.baton.flow.map((f) => f.name).join(' → ')}
+---
 
-${plain(C.baton.stat.label)}: ${C.baton.stat.value}${C.baton.stat.unit}（${C.baton.stat.source}）
+# SECOND TAKE（${S.label}）
 
-## SECOND TAKE — ${plain(C.secondTake.title)}
+${plain(S.catch)}
 
-${plain(C.secondTake.lead)}
+${plain(S.lead)}
 
-${C.secondTake.outputs.map((o) => `- ${o.name}: ${plain(o.body)}`).join('\n')}
+${S.outputs.items.map((o) => `- ${o.name}: ${plain(o.body)}`).join('\n')}
 
-${C.secondTake.principles.map((p) => `- ${p.name}: ${plain(p.body)}`).join('\n')}
+${S.rules.items.map((r) => `- ${r.name}: ${plain(r.body)}`).join('\n')}
 
-${plain(C.secondTake.notAd)} ${C.secondTake.status}
+${plain(S.now.body)}
 
-## ${plain(C.search.title)}
+---
 
-${plain(C.search.lead)}
-
-${plain(C.search.principle)}
-
-## ${plain(C.now.title)}
+# お知らせ
 
 ${sortedActivity()
-  .map((a) => `- ${dotDate(a.date)} [${a.type}] ${a.title}${a.body ? ` — ${plain(a.body)}` : ''}${a.href ? ` ${a.href}` : ''}`)
+  .map((a) => `- ${dotDate(a.date)} ${a.title}${a.body ? `: ${plain(a.body)}` : ''}${a.href ? ` ${a.href}` : ''}`)
   .join('\n')}
 
-## ${C.about.title}
+---
+
+# 会社概要
 
 ${C.about.official}
 
-${C.about.own}
-
-代表社員 ${C.about.person.name}（${C.about.person.kana} / ${C.about.person.en}）: ${plain(C.about.person.bio)}
-
-${C.about.person.statement.join('\n\n')}
+- 会社名: ${company.name}（${company.nameEn}）
+- 代表社員: ${company.representative}
+- 所在地: 〒${company.postal} ${company.address}
+- 法人番号: ${company.corporateNo}
+- していること: ${C.about.business.join('、')}
+- メール: ${EMAIL}
 
 ## よくある質問
 
-${faq.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
+${faqGeneral.map((f) => `### ${f.q}\n${f.a}`).join('\n\n')}
 
-## 話してみる
+---
 
-${plain(C.cta.lead)}
+# 話してみる
 
-${C.talk.steps.map((s) => `${s.no}. ${s.title}: ${plain(s.body)}`).join('\n')}
+${plain(C.talk.lead)}
+
+${C.talk.topics.map((t) => `- ${t.name}: ${t.body}`).join('\n')}
 
 予約: ${TIMEREX_URL}
 `;
@@ -207,25 +205,27 @@ ${C.talk.steps.map((s) => `${s.no}. ${s.title}: ${plain(s.body)}`).join('\n')}
 
 const xml = (s: string) => s.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 const iso = (d: string) => (d.length === 7 ? `${d}-01` : d) + 'T09:00:00+09:00';
+const NEWS = `${LP_URL}/news/`;
 
 export function atom(): string {
   const items = sortedActivity();
   return `<?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom" xml:lang="ja">
-  <title>Music Japan — NOW</title>
-  <subtitle>${xml(plain(C.now.lead))}</subtitle>
+  <title>Music Japan お知らせ</title>
+  <subtitle>${xml(plain(C.news.lead))}</subtitle>
   <link href="${LP_URL}/feed.xml" rel="self"/>
-  <link href="${LP_URL}/#now"/>
-  <id>${LP_URL}/#now</id>
+  <link href="${NEWS}"/>
+  <id>${NEWS}</id>
   <updated>${iso(UPDATED)}</updated>
   <author><name>${company.name}</name></author>
 ${items
   .map(
     (a, i) => `  <entry>
-    <title>${xml(`[${a.type}] ${a.title}`)}</title>
-    <link href="${xml(a.href ?? `${LP_URL}/#now`)}"/>
-    <id>${LP_URL}/#now-${a.date}-${i}</id>
+    <title>${xml(a.title)}</title>
+    <link href="${xml(a.href ?? NEWS)}"/>
+    <id>${NEWS}#${a.date}-${i}</id>
     <updated>${iso(a.date)}</updated>
+    <category term="${xml(C.news.types[a.type] ?? a.type)}"/>
     <summary>${xml(plain(a.body ?? a.title))}</summary>
   </entry>`,
   )
@@ -238,17 +238,17 @@ export function jsonFeed(): string {
   return JSON.stringify(
     {
       version: 'https://jsonfeed.org/version/1.1',
-      title: 'Music Japan — NOW',
-      home_page_url: `${LP_URL}/`,
+      title: 'Music Japan お知らせ',
+      home_page_url: NEWS,
       feed_url: `${LP_URL}/activity.json`,
       language: 'ja',
       items: sortedActivity().map((a, i) => ({
         id: `${a.date}-${i}`,
         title: a.title,
         content_text: plain(a.body ?? a.title),
-        url: a.href ?? `${LP_URL}/#now`,
+        url: a.href ?? NEWS,
         date_published: iso(a.date),
-        tags: [a.type, a.source],
+        tags: [C.news.types[a.type] ?? a.type, a.source],
       })),
     },
     null,

@@ -1,46 +1,40 @@
 /* ═══════════════════════════════════════════════════════════════
-   MUSIC JAPAN — RELAY
-   離れた点（会社・人）に情報が加わり、線が生まれ、ページと検索の形になり、
-   最後に二つの点が、人の手でつながる。
-   色：墨（ink）・生成り（paper）・Music Japanの赤。書体は Archivo ＋ Zen Kaku Gothic New ＋ JetBrains Mono の3つだけ
+   MUSIC JAPAN
+   生成りの紙に墨の文字。赤は、点ひとつ分だけ。
+   見出しは明朝（Zen Old Mincho）、本文はゴシック（Zen Kaku Gothic New）、数字と欧文の小さな文字は Archivo。
    ═══════════════════════════════════════════════════════════════ */
-@property --ang {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
+@view-transition {
+  navigation: auto;
 }
 
 :root {
-  --ink: #060607;
-  --ink-2: #0d0d10;
-  --ink-3: #16161b;
-  --sumi: #111114;
-  --studio: #0b0607;
-  --paper: #efe9e0;
-  --paper-2: #e5ded3;
-  --paper-3: #d8d0c4;
-  --paper-ink: #151210;
-  --paper-mute: #6b635a;
-  --mute: #8f887f;
-  --red: #e1222f;
-  --red-hot: #ff3a48;
-  --red-deep: #6e0a14;
-  --line: rgba(239, 233, 224, 0.12);
-  --line-2: rgba(239, 233, 224, 0.24);
-  --line-p: rgba(21, 18, 16, 0.14);
-  --line-p2: rgba(21, 18, 16, 0.3);
+  --paper: #f6f4ef;
+  --paper-2: #eeebe4;
+  --white: #ffffff;
+  --ink: #141414;
+  --ink-2: #3b3936;
+  --mute: #847f78;
+  --line: rgba(20, 20, 20, 0.1);
+  --line-2: rgba(20, 20, 20, 0.2);
+  --accent: #d62b33;
+  --accent-2: #b61f28;
+  --dark: #111113;
+  --dark-2: #1b1b1f;
+  --on-dark: #f2efe9;
+  --on-dark-2: rgba(242, 239, 233, 0.74);
+  --on-dark-mute: #9a958d;
+  --line-d: rgba(242, 239, 233, 0.12);
+  --line-d2: rgba(242, 239, 233, 0.24);
+  --f-serif: 'Zen Old Mincho', 'Hiragino Mincho ProN', 'Yu Mincho', 'YuMincho', serif;
+  --f-sans: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', Meiryo, sans-serif;
   --f-latin: 'Archivo Variable', 'Archivo', 'Helvetica Neue', Arial, sans-serif;
-  --f-jp: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', Meiryo, sans-serif;
-  --f-body: var(--f-latin), var(--f-jp);
-  --f-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, Menlo, monospace;
-  --pad: clamp(20px, 4.4vw, 76px);
+  --pad: clamp(20px, 5vw, 64px);
+  --max: 1200px;
   --hd: 72px;
+  --r: 20px;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-io: cubic-bezier(0.65, 0, 0.35, 1);
-  --fg: var(--paper);
-  --fg-mute: var(--mute);
-  --edge: var(--line);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *,
@@ -48,47 +42,38 @@
 *::after {
   box-sizing: border-box;
 }
-/* display を指定した部品でも、hidden を付けたら必ず隠す */
 [hidden] {
   display: none !important;
 }
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  background: var(--ink);
-  transition: background-color 0.6s var(--ease);
-}
-html[data-air='paper'] {
   background: var(--paper);
+  scroll-padding-top: calc(var(--hd) + 16px);
 }
-html[data-air='red'] {
-  background: var(--red);
-}
-html.lenis,
-html.lenis body {
-  height: auto;
-}
-.lenis.lenis-smooth {
-  scroll-behavior: auto !important;
-}
-.lenis.lenis-stopped {
-  overflow: hidden;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 body {
   margin: 0;
-  background: transparent;
-  color: var(--paper);
-  font-family: var(--f-body);
+  background: var(--paper);
+  color: var(--ink-2);
+  font-family: var(--f-sans);
   font-size: 16px;
   line-height: 1.95;
   letter-spacing: 0.03em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: clip;
   line-break: strict;
   /* 日本語は文節（ビルド時に入れた <wbr>）で折り返す。入りきらない語だけ、どこでも折る */
   word-break: keep-all;
   overflow-wrap: anywhere;
+  overflow-x: clip;
+}
+wbr {
+  display: inline;
 }
 img,
 svg,
@@ -99,6 +84,23 @@ canvas {
 img {
   height: auto;
 }
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+dl,
+dd,
+figure,
+blockquote {
+  margin: 0;
+  padding: 0;
+}
+ul,
+ol {
+  list-style: none;
+}
 a {
   color: inherit;
   text-decoration: none;
@@ -106,556 +108,230 @@ a {
 button {
   font: inherit;
   color: inherit;
-  cursor: pointer;
   background: none;
   border: 0;
   padding: 0;
-}
-p,
-h1,
-h2,
-h3,
-h4,
-figure,
-blockquote,
-dl,
-dd,
-ol,
-ul {
-  margin: 0;
-}
-ol,
-ul {
-  list-style: none;
-  padding: 0;
-}
-::selection {
-  background: var(--red);
-  color: var(--paper);
+  cursor: pointer;
 }
 :focus-visible {
-  outline: 2px solid var(--red-hot);
-  outline-offset: 4px;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
-p:lang(ja),
-li,
-dd,
-h1,
-h2,
-h3,
-h4 {
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-/* ボタンの文も、文節の切れ目でだけ折り返す */
-.btn-label,
-.btn-sub,
-.float-txt {
-  word-break: keep-all;
-  overflow-wrap: anywhere;
-}
-wbr {
-  display: inline;
-}
-.sr {
-  position: absolute !important;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
+::selection {
+  background: var(--ink);
+  color: var(--paper);
 }
 .skip {
-  position: fixed;
-  z-index: 300;
-  top: 12px;
+  position: absolute;
   left: 12px;
+  top: -60px;
+  z-index: 200;
   padding: 10px 16px;
-  background: var(--paper);
-  color: var(--ink);
-  transform: translateY(-200%);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
 }
 .skip:focus {
-  transform: none;
+  top: 12px;
 }
 main {
-  position: relative;
-  z-index: 2;
   display: block;
-  /* WebGLに合わせて動くラベルなどが画面の外へ出ても、ページの横幅を広げない（スマホで縮小表示にならないように） */
   overflow-x: clip;
 }
 
-/* 見出しの文節：途中で折り返さない。1文字ずつ立ち上げる */
-.ph {
-  display: inline-block;
-  white-space: nowrap;
+/* ── 置き場所 ── */
+.wrap {
+  width: min(100% - var(--pad) * 2, var(--max));
+  margin-inline: auto;
 }
+.wrap-pad {
+  padding-inline: max(var(--pad), calc((100vw - var(--max)) / 2));
+}
+.sec {
+  padding-block: clamp(64px, 8.5vw, 124px);
+}
+.is-dark {
+  background: var(--dark);
+  color: var(--on-dark-2);
+  --line: var(--line-d);
+  --line-2: var(--line-d2);
+  --mute: var(--on-dark-mute);
+}
+
+/* ── 見出しの文節：途中で折り返さない ── */
 .ln {
   display: block;
 }
-[data-split] .ph {
-  overflow: hidden;
-  padding-bottom: 0.1em;
-  margin-bottom: -0.1em;
-  vertical-align: bottom;
-}
-.c {
+.ph {
   display: inline-block;
-  white-space: pre;
-}
-.ph.hl {
-  color: var(--red);
 }
 
-/* ── 世界（WebGL）と、その上の質感 ── */
-.webgl-world {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  width: 100vw;
-  height: 100vh;
-  height: 100lvh;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 1.2s var(--ease);
-}
-html.webgl .webgl-world.is-ready {
-  opacity: 1;
-}
-.world-fallback {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(60% 50% at 78% 30%, rgba(225, 34, 47, 0.16), transparent 70%),
-    radial-gradient(40% 40% at 15% 85%, rgba(239, 233, 224, 0.06), transparent 70%),
-    radial-gradient(circle at 1px 1px, rgba(239, 233, 224, 0.13) 1px, transparent 1.6px) 0 0 / 34px 34px;
-}
-html.webgl .world-fallback {
-  display: none;
-}
-.grain {
-  position: fixed;
-  inset: -50%;
-  z-index: 90;
-  pointer-events: none;
-  opacity: 0.075;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain 1.2s steps(6) infinite;
-}
-@keyframes grain {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-3%, 2%); }
-  40% { transform: translate(2%, -4%); }
-  60% { transform: translate(-2%, 3%); }
-  80% { transform: translate(4%, 1%); }
-  100% { transform: translate(0, 0); }
-}
-
-/* ── 小見出し（番号・罫・欧文） ── */
-.kicker {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-family: var(--f-mono);
-  font-size: 11.5px;
-  font-weight: 500;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  line-height: 1.4;
-  color: var(--fg-mute);
-}
-.kicker-no {
-  flex: none;
-  white-space: nowrap;
-  color: var(--red);
-  font-weight: 600;
-}
-.kicker-rule {
-  flex: none;
-  width: 44px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.5;
-  transform-origin: left;
-}
-.kicker-txt {
-  min-width: 0;
-  white-space: nowrap;
-}
-@media (max-width: 720px) {
-  .kicker {
-    gap: 10px;
-  }
-  .kicker-rule {
-    width: 24px;
-  }
-  .kicker-txt {
-    white-space: normal;
-  }
-}
-
-/* ── 見出し・本文 ── */
-.h2 {
-  font-family: var(--f-latin), var(--f-jp);
-  font-weight: 900;
-  font-size: clamp(2.05rem, 1.05rem + 3.9vw, 5rem);
-  line-height: 1.16;
-  letter-spacing: -0.005em;
-  font-variation-settings: 'wdth' 100;
-}
-.h2-sm {
-  font-size: clamp(1.75rem, 0.95rem + 2.9vw, 3.7rem);
-}
-/* 4つの文を、1文ずつ並べる見出し（つながりの章） */
-.h2-eco {
-  font-size: clamp(1.6rem, 0.9rem + 2.05vw, 2.95rem);
-  line-height: 1.22;
-}
-.sec-lead {
-  max-width: 40em;
-  font-size: clamp(15px, 0.9rem + 0.25vw, 17.5px);
-  line-height: 2;
-  color: color-mix(in oklab, var(--fg) 80%, transparent);
-}
-.sec-head {
+/* ── セクションの見出し ── */
+.sh {
   display: grid;
-  gap: clamp(18px, 2.2vw, 30px);
-  margin-bottom: clamp(48px, 7vw, 110px);
+  gap: 18px;
+  max-width: 820px;
+  margin-bottom: clamp(40px, 5vw, 72px);
 }
-.sec-head-row {
-  grid-template-columns: minmax(0, 1fr);
+.sh-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--f-sans);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  line-height: 1.6;
+  color: var(--mute);
 }
-@media (min-width: 1080px) {
-  .sec-head-row {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
-    align-items: end;
-    column-gap: clamp(40px, 6vw, 110px);
-  }
-  .sec-head-row .kicker {
-    grid-column: 1 / -1;
-  }
-  .sec-head-row .sec-lead {
-    padding-bottom: 0.6em;
-  }
+.sh-label::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex: none;
 }
-.wrap {
-  width: min(100%, 1480px);
-  margin-inline: auto;
-  padding-inline: var(--pad);
+.sh-title {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 1.05rem + 2.2vw, 3rem);
+  line-height: 1.42;
+  letter-spacing: 0.02em;
+  color: var(--ink);
 }
-.in-link,
-.link-arrow {
-  color: inherit;
+.is-dark .sh-title {
+  color: var(--on-dark);
 }
-.in-link {
-  background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+.sh-lead {
+  max-width: 38em;
+  font-size: clamp(15px, 0.9rem + 0.2vw, 17px);
 }
-.link-arrow {
+
+/* ── 小さなリンク（文の終わりの「〜について →」） ── */
+.more {
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  padding-block: 6px;
   font-weight: 700;
-  font-size: 14px;
-  letter-spacing: 0.06em;
-  padding-bottom: 4px;
-  background: linear-gradient(var(--red), var(--red)) 0 100% / 0% 1.5px no-repeat, linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
-  transition: background-size 0.6s var(--ease), color 0.3s;
-}
-.link-arrow:hover {
-  background-size: 100% 1.5px, 100% 1px;
-}
-.i-arrow {
-  width: 1em;
-  height: 1em;
-  flex: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transition: transform 0.45s var(--ease);
-}
-a:hover > .i-arrow,
-a:hover .btn-icon .i-arrow {
-  transform: translate(3px, -3px);
-}
-
-/* ── ボタン（すべて予約ページへ） ── */
-.btn {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 18px;
-  min-height: 56px;
-  padding: 12px 14px 12px 28px;
-  border-radius: 999px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.3;
-  isolation: isolate;
-  transition: transform 0.5s var(--ease), color 0.35s, background-color 0.35s;
-  will-change: transform;
-}
-.btn-txt {
-  display: grid;
-  gap: 2px;
-}
-.btn-label {
   font-size: 15px;
+  line-height: 1.5;
+  color: var(--ink);
+  background: linear-gradient(currentColor, currentColor) 0 100% / 100% 1px no-repeat;
+  transition: background-size 0.5s var(--ease), color 0.3s;
 }
-.btn-sub {
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  opacity: 0.8;
+.is-dark .more {
+  color: var(--on-dark);
 }
-.btn-icon {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  flex: none;
-  font-size: 15px;
-  transition: transform 0.5s var(--ease), background-color 0.35s, color 0.35s;
-}
-.btn-talk {
-  color: #fff;
-  background: var(--red);
-  box-shadow: 0 0 0 0 rgba(225, 34, 47, 0.5), 0 18px 48px -18px rgba(225, 34, 47, 0.75);
-}
-.btn-talk::before {
-  /* 回り続ける光の縁（@property で角度を動かす） */
-  content: '';
-  position: absolute;
-  inset: -2px;
-  z-index: -1;
-  border-radius: inherit;
-  padding: 2px;
-  background: conic-gradient(from var(--ang), transparent 0 62%, rgba(255, 255, 255, 0.95) 76%, var(--red-hot) 86%, transparent 96%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  animation: spin-border 3.6s linear infinite;
-}
-.btn-talk::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
-  background: radial-gradient(120% 140% at var(--mx, 50%) var(--my, 50%), var(--red-hot), var(--red) 55%);
-  opacity: 0;
-  transition: opacity 0.4s;
-}
-.btn-talk:hover::after {
-  opacity: 1;
-}
-.btn-talk .btn-icon {
-  background: #fff;
-  color: var(--red);
-}
-.btn-talk:hover .btn-icon {
-  transform: rotate(45deg) scale(1.06);
-}
-.btn-talk .btn-icon .i-arrow {
-  transition: none;
-}
-@keyframes spin-border {
-  to {
-    --ang: 360deg;
-  }
-}
-.btn-xl {
-  min-height: 68px;
-  padding-left: 32px;
-}
-.btn-xl .btn-label {
-  font-size: 17px;
-}
-.btn-xl .btn-icon {
-  width: 48px;
-  height: 48px;
-}
-.btn-xxl {
-  min-height: clamp(76px, 7vw, 104px);
-  padding: 14px 16px 14px clamp(30px, 3vw, 46px);
-  gap: clamp(20px, 3vw, 40px);
-}
-.btn-xxl .btn-label {
-  font-size: clamp(17px, 1rem + 0.5vw, 23px);
-}
-.btn-xxl .btn-sub {
-  font-size: 12.5px;
-}
-.btn-xxl .btn-icon {
-  width: clamp(52px, 4.6vw, 70px);
-  height: clamp(52px, 4.6vw, 70px);
-  font-size: 20px;
-}
-.btn-ghost {
-  color: var(--fg);
-  box-shadow: inset 0 0 0 1px var(--line-2);
-}
-.btn-ghost:hover {
-  box-shadow: inset 0 0 0 1px var(--fg);
-}
-.btn-ghost .btn-icon {
-  box-shadow: inset 0 0 0 1px var(--line-2);
-}
-.btn-ink {
-  color: var(--paper);
-  background: var(--ink);
-  box-shadow: 0 22px 50px -24px rgba(0, 0, 0, 0.7);
-}
-.btn-ink::before {
-  background: conic-gradient(from var(--ang), transparent 0 62%, rgba(255, 255, 255, 0.8) 76%, #fff 86%, transparent 96%);
-}
-.btn-ink::after {
-  background: radial-gradient(120% 140% at var(--mx, 50%) var(--my, 50%), #2a2a30, var(--ink) 60%);
-}
-.btn-ink .btn-icon {
-  background: var(--red);
-  color: #fff;
-}
-
-/* 予約のハードルを下げるひとこと */
-.ease {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 22px;
-  font-size: 12.5px;
-  letter-spacing: 0.06em;
-  color: var(--fg-mute);
-}
-.ease li {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.ease li::before {
-  content: '';
+.more svg {
   width: 14px;
   height: 14px;
   flex: none;
-  border-radius: 50%;
-  background: no-repeat center / 9px url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2 6.4 4.8 9 10 3' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"), var(--red);
+  transition: transform 0.5s var(--ease);
+}
+.more:hover {
+  color: var(--accent);
+  background-size: 0 1px;
+  background-position: 100% 100%;
+}
+.more:hover svg {
+  transform: translateX(4px);
+}
+.i-arrow {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
-/* 点滅する「LIVE」の点 */
+/* 点滅する赤い点 */
 .live-dot {
   position: relative;
   display: inline-block;
   width: 8px;
   height: 8px;
-  flex: none;
   border-radius: 50%;
-  background: var(--red);
+  background: var(--accent);
+  flex: none;
 }
 .live-dot::after {
   content: '';
   position: absolute;
-  inset: -5px;
+  inset: -4px;
   border-radius: 50%;
-  border: 1px solid var(--red);
-  animation: ping 1.8s var(--ease) infinite;
+  border: 1px solid var(--accent);
+  animation: pulse 1.8s var(--ease) infinite;
 }
-@keyframes ping {
+@keyframes pulse {
   from {
-    transform: scale(0.4);
+    transform: scale(0.5);
     opacity: 1;
   }
   to {
-    transform: scale(1.7);
+    transform: scale(1.8);
     opacity: 0;
   }
 }
 
 /* ── ヘッダー ── */
 .hd {
-  position: fixed;
-  z-index: 80;
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
+  z-index: 80;
   height: var(--hd);
+  view-transition-name: site-header;
+  transition: background-color 0.4s, box-shadow 0.4s;
+}
+html.is-scrolled .hd {
+  background: color-mix(in oklab, var(--paper) 86%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 1px 0 var(--line);
+}
+.hd-in {
+  height: 100%;
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding-inline: var(--pad);
-  color: var(--paper);
-  transition: color 0.5s var(--ease), transform 0.6s var(--ease);
-}
-.hd::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  bottom: -18px;
-  background: linear-gradient(rgba(6, 6, 7, 0.92) 30%, rgba(6, 6, 7, 0));
-  opacity: 0;
-  transition: opacity 0.5s;
-}
-html.is-scrolled .hd::before {
-  opacity: 1;
-}
-html[data-hd='paper'] .hd {
-  color: var(--paper-ink);
-}
-html[data-hd='paper'] .hd::before {
-  background: linear-gradient(rgba(239, 233, 224, 0.95) 30%, rgba(239, 233, 224, 0));
-}
-html[data-hd='red'] .hd::before {
-  background: linear-gradient(rgba(225, 34, 47, 0.94) 30%, rgba(225, 34, 47, 0));
-}
-html[data-hd='red'] .hd-talk {
-  background: var(--ink);
-}
-html.is-hidden-hd .hd {
-  transform: translateY(-110%);
+  gap: clamp(14px, 2vw, 32px);
+  width: min(100% - var(--pad) * 2, 1320px);
+  margin-inline: auto;
 }
 .hd-brand {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   font-family: var(--f-latin);
   font-weight: 800;
-  font-size: 15px;
-  letter-spacing: 0.04em;
-  font-variation-settings: 'wdth' 112;
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
 }
-.hd-brand .mj-mark {
-  width: 34px;
-  height: 34px;
+.mj-mark {
+  width: 32px;
+  height: 32px;
+  color: var(--ink);
   transition: transform 1.2s var(--ease);
 }
 .hd-brand:hover .mj-mark {
-  transform: rotate(360deg);
+  transform: rotate(-200deg);
 }
 .hd-nav {
   display: none;
   margin-left: auto;
-  gap: clamp(14px, 1.6vw, 28px);
+  gap: clamp(16px, 1.8vw, 30px);
 }
 .hd-nav a {
   position: relative;
-  display: inline-flex;
-  gap: 6px;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  color: var(--ink);
   padding-block: 6px;
-}
-.hd-nav a i {
-  font-style: normal;
-  font-family: var(--f-mono);
-  font-size: 10px;
-  color: var(--red);
-  opacity: 0.9;
+  white-space: nowrap;
 }
 .hd-nav a::after {
   content: '';
@@ -670,134 +346,122 @@ html.is-hidden-hd .hd {
   transition: transform 0.5s var(--ease);
 }
 .hd-nav a:hover::after,
-.hd-nav a.is-current::after {
+.hd-nav a[aria-current='page']::after {
   transform: scaleX(1);
   transform-origin: left;
+}
+.hd-nav a[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 .hd-talk {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  min-height: 42px;
-  padding: 0 20px;
+  height: 42px;
+  padding: 0 20px 0 16px;
   border-radius: 999px;
-  background: var(--red);
-  color: #fff;
+  box-shadow: inset 0 0 0 1px var(--ink);
+  font-size: 14px;
   font-weight: 700;
-  font-size: 13.5px;
-  letter-spacing: 0.08em;
-  box-shadow: 0 10px 30px -12px rgba(225, 34, 47, 0.8);
-  transition: transform 0.5s var(--ease), background-color 0.3s;
+  color: var(--ink);
+  white-space: nowrap;
+  transition: background-color 0.35s, color 0.35s;
 }
-.hd-talk .live-dot {
-  background: #fff;
+.hd-talk:hover,
+.hd-talk[aria-current='page'] {
+  background: var(--ink);
+  color: var(--paper);
 }
-.hd-talk .live-dot::after {
-  border-color: #fff;
+.hd-talk-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 .hd-menu {
   display: grid;
   gap: 6px;
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   place-content: center;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 1px currentColor;
+  box-shadow: inset 0 0 0 1px var(--line-2);
+  flex: none;
 }
 .hd-menu span {
-  width: 18px;
+  width: 16px;
   height: 1.5px;
-  background: currentColor;
+  background: var(--ink);
 }
-@media (max-width: 480px) {
-  .hd {
-    gap: 10px;
-  }
-  .hd-brand {
-    gap: 9px;
-    font-size: 14px;
-    white-space: nowrap;
-  }
-  .hd-brand .mj-mark {
-    width: 30px;
-    height: 30px;
-  }
-  .hd-talk {
-    gap: 8px;
-    min-height: 40px;
-    padding: 0 15px;
-    font-size: 13px;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-  .hd-menu {
-    flex: none;
-    width: 40px;
-    height: 40px;
-  }
-}
-@media (min-width: 1180px) {
+@media (min-width: 1100px) {
   .hd-nav {
     display: flex;
   }
   .hd-talk {
-    margin-left: 18px;
+    margin-left: 8px;
   }
   .hd-menu {
     display: none;
   }
 }
+@media (max-width: 480px) {
+  .hd-in {
+    gap: 10px;
+  }
+  .hd-brand {
+    font-size: 15px;
+    gap: 9px;
+  }
+  .mj-mark {
+    width: 28px;
+    height: 28px;
+  }
+  .hd-talk {
+    height: 38px;
+    padding: 0 14px 0 12px;
+    font-size: 13px;
+  }
+  .hd-menu {
+    width: 38px;
+    height: 38px;
+  }
+}
 
 /* メニュー（スマホ）：Popover API */
 .menu {
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
   max-width: none;
   max-height: none;
   margin: 0;
+  padding: 0;
   border: 0;
-  padding: calc(var(--hd) + 20px) var(--pad) 40px;
-  background: var(--ink);
-  color: var(--paper);
-  flex-direction: column;
-  gap: 36px;
+  background: var(--paper);
+  color: var(--ink);
 }
-.menu:popover-open {
-  display: flex;
-  animation: menu-in 0.7s var(--ease);
+.menu::backdrop {
+  background: transparent;
 }
-@keyframes menu-in {
-  from {
-    clip-path: circle(0% at calc(100% - 40px) 36px);
-  }
-  to {
-    clip-path: circle(150% at calc(100% - 40px) 36px);
-  }
-}
-.menu-nav {
+.menu-in {
   display: grid;
-  gap: 4px;
-}
-.menu-nav a {
-  display: flex;
-  align-items: baseline;
-  gap: 14px;
-  font-weight: 900;
-  font-size: clamp(1.7rem, 7.5vw, 3rem);
-  line-height: 1.35;
-}
-.menu-nav a i {
-  font-style: normal;
-  font-family: var(--f-mono);
-  font-size: 12px;
-  color: var(--red);
+  align-content: start;
+  gap: 28px;
+  min-height: 100%;
+  padding: 16px var(--pad) 40px;
 }
 .menu-close {
-  position: absolute;
-  top: 16px;
-  right: var(--pad);
+  justify-self: end;
   height: 40px;
   padding: 0 18px;
   border-radius: 999px;
@@ -805,312 +469,283 @@ html.is-hidden-hd .hd {
   font-size: 13px;
   font-weight: 700;
 }
-
-/* ── 位置の目盛り（右端） ── */
-.rail {
-  position: fixed;
-  z-index: 70;
-  right: clamp(10px, 1.4vw, 22px);
-  top: 50%;
-  transform: translateY(-50%);
-  display: none;
-  flex-direction: column;
-  gap: 10px;
-  color: var(--paper);
-  mix-blend-mode: difference;
+.menu-nav {
+  display: grid;
 }
-.rail a {
-  position: relative;
+.menu-nav a {
+  padding: 14px 2px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--ink);
+}
+.menu-nav a:last-child {
+  color: var(--accent);
+}
+.menu:popover-open {
+  animation: menu-in 0.45s var(--ease);
+}
+@keyframes menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* ── パンくず ── */
+.crumbs ol {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  height: 14px;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--mute);
 }
-.rail i {
-  width: 14px;
-  height: 1px;
-  background: currentColor;
-  opacity: 0.45;
-  transition: width 0.5s var(--ease), opacity 0.3s;
+.crumbs li + li::before {
+  content: '/';
+  margin-right: 10px;
+  color: var(--line-2);
 }
-.rail span {
-  font-family: var(--f-mono);
-  font-size: 10px;
-  opacity: 0;
-  transform: translateX(6px);
-  transition: opacity 0.3s, transform 0.4s var(--ease);
-}
-.rail a.is-on i {
-  width: 30px;
-  opacity: 1;
-}
-.rail a.is-on span,
-.rail a:hover span {
-  opacity: 1;
-  transform: none;
-}
-@media (min-width: 1180px) and (pointer: fine) {
-  .rail {
-    display: flex;
-  }
+.crumbs a:hover {
+  color: var(--ink);
 }
 
-/* ── ずっと手元にある「話してみる」 ── */
-.float-talk {
-  position: fixed;
-  z-index: 75;
-  right: clamp(14px, 2vw, 28px);
-  bottom: calc(clamp(14px, 2vw, 28px) + env(safe-area-inset-bottom));
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  padding: 10px 14px 10px 18px;
-  border-radius: 999px;
-  background: var(--red);
-  color: #fff;
-  box-shadow: 0 20px 50px -18px rgba(225, 34, 47, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
-  transform: translateY(160%);
-  transition: transform 0.7s var(--ease);
-}
-.float-talk.is-on {
-  transform: none;
-}
-.float-talk .live-dot {
-  background: #fff;
-}
-.float-talk .live-dot::after {
-  border-color: #fff;
-}
-.float-txt {
-  display: grid;
-  line-height: 1.25;
-}
-.float-txt b {
-  font-size: 14px;
-  letter-spacing: 0.08em;
-}
-.float-txt small {
-  font-size: 10.5px;
-  opacity: 0.85;
-  letter-spacing: 0.06em;
-}
-.float-talk .i-arrow {
-  width: 30px;
-  height: 30px;
-  padding: 7px;
-  border-radius: 50%;
-  background: #fff;
-  color: var(--red);
-}
-@media (max-width: 720px) {
-  .float-talk {
-    left: 12px;
-    right: 12px;
-    justify-content: center;
-    padding-block: 12px;
-  }
-  .float-txt {
-    grid-auto-flow: column;
-    align-items: baseline;
-    gap: 10px;
-  }
-}
-
-/* ── カーソル ── */
-.cursor {
-  position: fixed;
-  z-index: 200;
-  left: 0;
-  top: 0;
-  pointer-events: none;
-  display: none;
-}
-@media (pointer: fine) {
-  html.has-cursor .cursor {
-    display: block;
-  }
-}
-.cursor i {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  margin: -4px 0 0 -4px;
-  border-radius: 50%;
-  background: var(--red);
-  transform: translate3d(var(--x, -100px), var(--y, -100px), 0);
-}
-.cursor b {
-  position: absolute;
-  display: grid;
-  place-items: center;
-  width: 44px;
-  height: 44px;
-  margin: -22px 0 0 -22px;
-  border-radius: 50%;
-  border: 1px solid rgba(239, 233, 224, 0.5);
-  font-family: var(--f-mono);
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-  color: transparent;
-  transform: translate3d(var(--rx, -100px), var(--ry, -100px), 0) scale(var(--s, 1));
-  transition: width 0.45s var(--ease), height 0.45s var(--ease), margin 0.45s var(--ease), background-color 0.3s, border-color 0.3s, color 0.3s;
-  mix-blend-mode: normal;
-}
-.cursor.is-label b {
-  width: 86px;
-  height: 86px;
-  margin: -43px 0 0 -43px;
-  background: var(--red);
-  border-color: var(--red);
-  color: #fff;
-}
-.cursor.is-label i {
-  opacity: 0;
-}
-html[data-air='paper'] .cursor b {
-  border-color: rgba(21, 18, 16, 0.4);
-}
-
-/* ── 導入（初回 約1.6秒、2回目以降 約0.8秒、クリック・スクロールで飛ばせる） ── */
-.intro {
-  position: fixed;
-  inset: 0;
-  z-index: 250;
-  display: none;
-  place-items: center;
-  color: var(--paper);
-  pointer-events: none;
-}
-html[data-intro] .intro {
-  display: grid;
-}
-.intro::before,
-.intro::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 50.5%;
-  background: var(--ink);
-  transition: transform 0.9s var(--ease-io);
-}
-.intro::before {
-  top: 0;
-}
-.intro::after {
-  bottom: 0;
-}
-.intro-mark {
-  position: relative;
-  z-index: 2;
-  width: 76px;
-  transition: opacity 0.4s, transform 0.9s var(--ease);
-}
-.intro-mark .im {
+/* ── 線画：画面に入ったら線を引く ── */
+.ill {
   width: 100%;
+  height: auto;
+  overflow: visible;
+  color: var(--ink);
 }
-.im-ring {
-  stroke-dasharray: var(--c);
-  stroke-dashoffset: var(--c);
-  animation: im-draw 0.7s var(--ease) forwards;
-  animation-delay: calc(var(--i) * 0.06s);
-}
-.im-arc,
-.im-wave {
+.ill-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: im-draw 0.5s var(--ease) 0.45s forwards;
+  transition: stroke-dashoffset 1.6s var(--ease);
 }
-.im-dot {
+.ill.is-in .ill-line {
+  stroke-dashoffset: 0;
+}
+.ill-soft {
+  opacity: 0.4;
+}
+.ill-thick {
+  stroke-width: 3.2;
+}
+.ill-accent-line {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+.ill-fill,
+.ill-paper {
   opacity: 0;
-  animation: im-pop 0.3s var(--ease) 0.6s forwards;
+  transition: opacity 0.9s var(--ease) 0.5s, transform 0.9s var(--ease);
 }
-@keyframes im-draw {
-  to {
-    stroke-dashoffset: 0;
+.ill.is-in .ill-fill,
+.ill.is-in .ill-paper {
+  opacity: 1;
+}
+.ill-paper {
+  fill: var(--white);
+}
+.ill-accent {
+  fill: var(--accent);
+}
+.ill-ink {
+  fill: var(--ink);
+}
+.ill-text {
+  font-family: var(--f-latin);
+  font-weight: 800;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  fill: var(--ink);
+}
+.ill-small {
+  font-size: 7px;
+  font-weight: 600;
+  fill: var(--mute);
+}
+.ill-num {
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: 50px;
+  fill: var(--accent);
+}
+
+/* ── フッター ── */
+.ft {
+  position: relative;
+  overflow: hidden;
+  background: var(--dark);
+  color: var(--on-dark-2);
+  padding-top: clamp(64px, 8vw, 110px);
+  --line: var(--line-d);
+  --mute: var(--on-dark-mute);
+}
+.ft-in {
+  display: grid;
+  gap: 36px 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+/* スマホ：会社の紹介とSNSは横いっぱい、ページへのリンクは2列 */
+.ft-brand,
+.ft-sns {
+  grid-column: 1 / -1;
+}
+.ft-col.ft-sns ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+@media (min-width: 900px) {
+  .ft-brand,
+  .ft-sns {
+    grid-column: auto;
+  }
+  .ft-col.ft-sns ul {
+    display: grid;
+    gap: 8px;
   }
 }
-@keyframes im-pop {
-  to {
-    opacity: 1;
+@media (min-width: 900px) {
+  .ft-in {
+    grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr));
   }
 }
-.intro-line {
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 2px;
-  margin-top: -1px;
-  background: var(--red);
-  box-shadow: 0 0 18px 2px rgba(255, 58, 72, 0.7);
-  transform: scaleX(0);
-  animation: intro-line 0.55s var(--ease-io) 0.75s forwards;
+.ft-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--f-latin);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--on-dark);
 }
-@keyframes intro-line {
-  to {
-    transform: scaleX(1);
-  }
+.ft-logo .mj-mark {
+  color: var(--on-dark);
 }
-.intro-txt {
-  position: absolute;
-  z-index: 2;
-  left: 0;
-  right: 0;
-  top: calc(50% + 58px);
+.ft-lead {
+  margin-top: 18px;
+  max-width: 26em;
+  font-size: 14px;
+}
+.ft-music {
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--mute);
+}
+.ft-music a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--on-dark);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.ft-music svg {
+  width: 12px;
+  height: 12px;
+}
+.ft-title {
+  font-family: var(--f-latin);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--mute);
+  margin-bottom: 14px;
+}
+.ft-col ul {
+  display: grid;
+  gap: 8px;
+}
+.ft-col a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--on-dark);
+  transition: color 0.3s;
+}
+.ft-col a:hover {
+  color: var(--accent);
+}
+.ft-col a svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.ft-bottom {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-top: 64px;
+  padding-block: 22px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--mute);
+}
+.ft-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 22px;
+}
+.ft-links a:hover {
+  color: var(--on-dark);
+}
+.ft-word {
+  margin: clamp(24px, 4vw, 56px) 0 0;
+  padding-bottom: 0.06em;
   text-align: center;
-  font-family: var(--f-mono);
-  font-size: 11px;
-  letter-spacing: 0.32em;
-  opacity: 0;
-  animation: im-pop 0.4s 0.9s forwards;
+  font-family: var(--f-serif);
+  font-weight: 700;
+  font-size: clamp(3.4rem, 15vw, 15rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: rgba(246, 244, 239, 0.035);
+  -webkit-text-stroke: 1px rgba(246, 244, 239, 0.16);
+  user-select: none;
 }
-html[data-intro='short'] .im-ring,
-html[data-intro='short'] .im-arc,
-html[data-intro='short'] .im-wave,
-html[data-intro='short'] .im-dot {
-  animation-duration: 0.25s;
-  animation-delay: 0s;
+
+/* ── ページの切り替え（同じサイトの中を移るとき） ── */
+::view-transition-old(root) {
+  animation: vt-out 0.28s var(--ease-io) both;
 }
-html[data-intro='short'] .intro-line {
-  animation-delay: 0.15s;
-  animation-duration: 0.35s;
+::view-transition-new(root) {
+  animation: vt-in 0.55s var(--ease) both;
 }
-html[data-intro='short'] .intro-txt {
-  display: none;
-}
-.intro.is-out::before {
-  transform: translateY(-101%);
-}
-.intro.is-out::after {
-  transform: translateY(101%);
-}
-.intro.is-out .intro-mark,
-.intro.is-out .intro-txt {
-  opacity: 0;
-  transform: scale(0.6);
-}
-.intro.is-out .intro-line {
-  animation: intro-line-out 0.7s var(--ease-io) forwards;
-}
-@keyframes intro-line-out {
-  from {
-    transform: scaleX(1);
-  }
+@keyframes vt-out {
   to {
-    transform: scaleX(1) scaleY(0);
     opacity: 0;
+    transform: translateY(-8px);
   }
 }
-/* JSが動かなくても、導入は必ず消える */
-html[data-intro] .intro {
-  animation: intro-safety 0.01s 4.5s forwards;
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
 }
-@keyframes intro-safety {
-  to {
-    visibility: hidden;
+
+/* ── 動きを減らす設定 ── */
+html.rm *,
+html.rm *::before,
+html.rm *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+  scroll-behavior: auto !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
   }
 }

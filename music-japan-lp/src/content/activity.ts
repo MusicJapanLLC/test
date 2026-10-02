@@ -31,8 +31,8 @@ export const activity: Activity[] = [
     date: '2026-10-02',
     type: 'BUILD LOG',
     source: 'Music Japan',
-    title: 'Music Japanの仕事を、1ページにまとめました',
-    body: '「Music Japanって何をしている会社？」に答えるために、このページを新しくつくりました。',
+    title: 'このサイトを公開しました',
+    body: '「Music Japanは何をしている会社なのか」に答えるためのサイトです。Baton Partners、Baton、SECOND TAKEのことを、ページを分けて書きました。',
   },
   {
     date: '2026-10-01',
@@ -47,7 +47,7 @@ export const activity: Activity[] = [
     type: 'LATEST',
     source: 'Baton Partners',
     title: 'エボルグとCentral AXの専用ページを公開しました',
-    body: '2社とも、トップ・取り組み・記事・サービス・話してみるの5ページです。世界観は一社ずつ一からつくりました。',
+    body: '2社とも、トップ、取り組み、記事、サービス、話してみるの5ページです。色と書体は、1社ずつ一から決めました。',
     href: 'https://partners.music-japan.com/',
   },
   {
@@ -56,20 +56,6 @@ export const activity: Activity[] = [
     source: 'Baton',
     title: 'Batonに、松浦淳さん（Central AX）のプロフィールを公開しました',
     href: 'https://baton.music-japan.com/profile/matsuura/',
-  },
-  {
-    date: '2026-09',
-    type: 'JOURNAL',
-    source: 'Baton',
-    title: '9月は、16組の経営者をおつなぎしました',
-    body: '双方の了承を取ったうえでの接続です。つないだあと、当事者どうしの面談まで進んだ組も複数あります。',
-  },
-  {
-    date: '2026-09',
-    type: 'JOURNAL',
-    source: 'Music Japan',
-    title: '約1か月で、30件ほどの商談と打ち合わせ',
-    body: '初めての方との打ち合わせと、2回目以降の打ち合わせを合わせた数です。',
   },
   {
     date: '2026-09-20',

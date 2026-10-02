@@ -1,12 +1,14 @@
 """
-日本語フォント（Zen Kaku Gothic New）を「このページで使う文字だけ」に絞る。
+日本語フォントを、使う文字だけに絞って書き出す（scripts/fonts.mjs から呼ばれる）。
 
-使い方：文章を変えたら `npm run build`（index.html を作る）→ `npm run fonts` → もう一度 `npm run build`。
-必要なもの：python3、pip install fonttools brotli
+  Zen Old Mincho 700 / 900 … 見出し（900 はトップの h1 だけ）
+  Zen Kaku Gothic New 400 / 700 … 本文
+
+引数：文字の一覧（.font-cache/chars.json。キーは zom-700 / zom-700-h / zom-900-h / zkg-400 / zkg-700 など）
+出力：public/fonts/<名前>.<ハッシュ>.woff2、src/styles/fonts-jp.css、src/render/fonts.json（先読みするファイル名）
 元のフォント：Google Fonts（SIL Open Font License）。.font-cache/ に保存し、リポジトリには入れない。
-欧文（Archivo / JetBrains Mono）は @fontsource-variable から読む（src/styles/fonts.css）。
 """
-import pathlib, re, unicodedata, urllib.request
+import hashlib, json, pathlib, sys, urllib.request
 from fontTools import subset
 from fontTools.ttLib import TTFont
 
@@ -14,28 +16,24 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 CACHE = ROOT / '.font-cache'
 OUT = ROOT / 'public' / 'fonts'
 CSS = ROOT / 'src' / 'styles' / 'fonts-jp.css'
-BASE = 'https://raw.githubusercontent.com/google/fonts/main/ofl/zenkakugothicnew'
-FONTS = [('ZenKakuGothicNew-Regular.ttf', 400), ('ZenKakuGothicNew-Bold.ttf', 700), ('ZenKakuGothicNew-Black.ttf', 900)]
+MANIFEST = ROOT / 'src' / 'render' / 'fonts.json'
+GF = 'https://raw.githubusercontent.com/google/fonts/main/ofl'
+FAMILY = {
+    'zom': ('Zen Old Mincho', 'zenoldmincho', 'ZenOldMincho', {700: 'Bold', 900: 'Black'}),
+    'zkg': ('Zen Kaku Gothic New', 'zenkakugothicnew', 'ZenKakuGothicNew', {400: 'Regular', 700: 'Bold'}),
+}
+# どの書体にも入れておく文字（JSで変わる数字や、記号のため）
+BASIC = {chr(c) for c in range(0x20, 0x7F)} | set('、。，．・ー「」『』（）！？：／〜…')
 
 
-def used_chars() -> str:
-    chars = set()
-    for pat in ['src/**/*.ts', 'src/**/*.css', 'index.html']:
-        for f in ROOT.glob(pat):
-            chars |= set(f.read_text(encoding='utf-8'))
-    for a, b in [(0x20, 0x7E), (0xA0, 0xFF), (0x2010, 0x206F), (0x2190, 0x21FF), (0x25A0, 0x25FF), (0x3000, 0x303F), (0x3040, 0x309F), (0x30A0, 0x30FF), (0xFF00, 0xFFEF)]:
-        chars |= {chr(c) for c in range(a, b + 1)}
-    return ''.join(sorted(c for c in chars if unicodedata.category(c)[0] != 'C'))
-
-
-def heading_chars() -> str:
-    """ファーストビューの見出し（h1 と、その上の一文）だけの文字。先読みする小さいファイルにする"""
-    html = (ROOT / 'index.html').read_text(encoding='utf-8')
-    chars = set()
-    for m in re.findall(r'<h1[^>]*>(.*?)</h1>', html, flags=re.S) + re.findall(r'class="hero-pre"[^>]*>(.*?)</p>', html, flags=re.S):
-        chars |= set(re.sub(r'<[^>]+>', '', m))
-    chars |= {chr(c) for c in range(0x20, 0x7F)} | set('、。「」・ー')
-    return ''.join(sorted(c for c in chars if unicodedata.category(c)[0] != 'C'))
+def source(fam: str, weight: int) -> pathlib.Path:
+    _, folder, stem, names = FAMILY[fam]
+    name = f'{stem}-{names[weight]}.ttf'
+    path = CACHE / name
+    if not path.exists():
+        print('download', name)
+        urllib.request.urlretrieve(f'{GF}/{folder}/{name}', path)
+    return path
 
 
 def ranges(text: str) -> str:
@@ -54,8 +52,8 @@ def ranges(text: str) -> str:
     return ', '.join(out)
 
 
-def save_subset(src, text, dest):
-    font = TTFont(src)
+def save(src: pathlib.Path, text: str, stem: str) -> str:
+    font = TTFont(src, recalcTimestamp=False)
     opts = subset.Options()
     opts.flavor = 'woff2'
     opts.layout_features = ['*']
@@ -65,39 +63,47 @@ def save_subset(src, text, dest):
     sub.populate(text=text)
     sub.subset(font)
     font.flavor = 'woff2'
-    font.save(dest)
-    return dest.stat().st_size // 1024
+    tmp = OUT / f'{stem}.tmp'
+    font.save(tmp)
+    digest = hashlib.sha256(tmp.read_bytes()).hexdigest()[:8]
+    name = f'{stem}.{digest}.woff2'
+    tmp.rename(OUT / name)
+    print(f'{name}: {len(text)}字 {(OUT / name).stat().st_size // 1024} KB')
+    return name
 
 
-def face(weight, file, rng=None):
-    r = f"\n  unicode-range: {rng};" if rng else ''
-    return (f"@font-face {{\n  font-family: 'Zen Kaku Gothic New';\n  font-style: normal;\n  font-weight: {weight};\n"
+def face(family: str, weight: int, file: str, rng: str | None) -> str:
+    r = f'\n  unicode-range: {rng};' if rng else ''
+    return (f"@font-face {{\n  font-family: '{family}';\n  font-style: normal;\n  font-weight: {weight};\n"
             f"  font-display: swap;\n  src: url('/fonts/{file}') format('woff2');{r}\n}}\n")
 
 
 def main():
+    chars: dict[str, str] = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding='utf-8'))
     CACHE.mkdir(exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
-    text = used_chars()
-    head = heading_chars()
-    rest = ''.join(c for c in text if c not in set(head))
-    css = '/* scripts/fonts.py が生成。手で編集しない（文章を変えたら npm run fonts） */\n'
-    for name, w in FONTS:
-        src = CACHE / name
-        if not src.exists():
-            print('download', name)
-            urllib.request.urlretrieve(f'{BASE}/{name}', src)
-        if w == 900:
-            ka = save_subset(src, head, OUT / 'zkg-900-h.woff2')
-            kb = save_subset(src, rest, OUT / 'zkg-900.woff2')
-            css += face(900, 'zkg-900-h.woff2', ranges(head)) + face(900, 'zkg-900.woff2', ranges(rest))
-            print(f'zkg-900: 見出し {ka} KB ＋ 残り {kb} KB')
-        else:
-            k = save_subset(src, text, OUT / f'zkg-{w}.woff2')
-            css += face(w, f'zkg-{w}.woff2')
-            print(f'zkg-{w}: {k} KB')
+    for old in OUT.glob('*.woff2'):
+        old.unlink()
+    css = '/* scripts/fonts.py が生成。手で編集しない（文章を変えたら npm run build → npm run fonts → npm run build） */\n'
+    manifest = {}
+    for fam, (family, _, _, names) in FAMILY.items():
+        for w in names:
+            head = set(chars.get(f'{fam}-{w}-h', ''))
+            used = set(chars.get(f'{fam}-{w}', ''))
+            src = source(fam, w)
+            if head:
+                # 見出しの文字だけの小さいファイル（先読みする）と、それ以外
+                h = save(src, ''.join(sorted(head)), f'{fam}-{w}-h')
+                css += face(family, w, h, ranges(''.join(head)))
+                manifest['top' if w == 900 else 'page'] = f'/fonts/{h}'
+                if not used:
+                    continue  # 見出しにしか使っていない太さ（900 はトップの h1 だけ）
+            rest = (used | BASIC) - head
+            r = save(src, ''.join(sorted(rest)), f'{fam}-{w}')
+            css += face(family, w, r, ranges(''.join(rest)) if head else None)
     CSS.write_text(css, encoding='utf-8')
-    print('文字数:', len(text))
+    MANIFEST.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    print('fonts.json:', manifest)
 
 
 main()
