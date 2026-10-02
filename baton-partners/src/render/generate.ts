@@ -59,7 +59,7 @@ function writeOgManifest(root: string) {
   const items = [
     { key: 'site', label: 'Music Japan Partners', heading: 'パートナー｜事業の強みを知り、次のつながりへ。', company: '合同会社Music Japan のパートナー企業' },
     ...sites.flatMap((p) => {
-      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme };
+      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme, photo: p.leader?.photo };
       return [
         { ...base, key: `${p.slug}-top`, label: `Music Japan Partners — BP-${p.no.padStart(3, '0')}`, heading: plain(p.top.title) },
         { ...base, key: `${p.slug}-about`, label: 'About', heading: plain(p.about.title) },

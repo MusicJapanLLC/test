@@ -67,6 +67,7 @@ ${header(p, 'top')}
           <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>Music Japan Partners — ${bpNo(p)}<span class="kicker-co">${esc(p.company.nameEn)}</span></p>
           <h1 id="hero-h" class="hero-h">${heading(t.title)}</h1>
           <p class="hero-lead">${jp(t.lead)}</p>
+          ${tickerBlock(p)}
           <ul class="badges">${t.badges.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
           <div class="hero-actions">
             <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${s.name.length > 8 ? 'サービスを見る' : `${esc(s.name)}を見る`}</span><span class="arrow" aria-hidden="true">→</span></a>
@@ -107,8 +108,10 @@ ${header(p, 'top')}
 
   ${serpSection(p)}
 
+  ${channelsSection(p)}
+
   <section class="sec sec-highlight" aria-labelledby="hl-h">
-    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'relay' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
+    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'relay' || p.world.scene === 'feed' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
     <div class="wrap hl-in">
       <header class="hl-head rv">
         <p class="kicker">02 — ${esc(t.highlight.en)}</p>
@@ -128,6 +131,8 @@ ${header(p, 'top')}
       <p class="fine rv">${jp(t.highlight.note)}</p>
     </div>
   </section>
+
+  ${filmSection(p)}
 
   ${casesSection(p)}
 
@@ -588,6 +593,98 @@ function partnerLogosSection(p: Partner): string {
       <p class="pl-lead rv">${jp(l.lead)}</p>
       <ul class="pls">${items}</ul>
       <p class="fine">${jp(l.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** ヒーローの「よく届く相談」。吹き出しが1つずつ入れ替わる（動きを減らす設定では、4つとも並べて見せる） */
+function tickerBlock(p: Partner): string {
+  const tk = p.top.ticker;
+  if (!tk) return '';
+  return `
+          <div class="ticker" role="group" aria-label="${esc(tk.label)}" style="--n:${tk.items.length}">
+            <p class="ticker-k"><span class="ticker-dot" aria-hidden="true"></span>${esc(tk.label)}</p>
+            <ul class="ticker-list">${tk.items.map((it, i) => `<li style="--i:${i}"><span class="ticker-b">${esc(it)}</span></li>`).join('')}</ul>
+          </div>`;
+}
+
+/** 画面ごとの小さな見本（HTMLとCSSだけで描く。実際のアプリの画面ではない） */
+function screen(kind: NonNullable<Partner['top']['channels']>['items'][number]['kind']): string {
+  switch (kind) {
+    case 'reel':
+      return `<div class="dev dev-reel"><span class="sc-top">Reels</span><span class="sc-icons"><i></i><i></i><i></i></span><span class="sc-cap"><b></b><b></b></span><span class="sc-prog"><i></i></span></div>`;
+    case 'video':
+      return `<div class="dev dev-video"><span class="sc-thumb"><b></b><b></b><span class="sc-play"></span><span class="sc-time">12:04</span><span class="sc-prog"><i></i></span></span><span class="sc-meta"><i></i><b></b><b></b></span></div>`;
+    case 'influencer':
+      return `<div class="dev dev-post"><span class="sc-user"><i></i><b></b><em>PR</em></span><span class="sc-photo"></span><span class="sc-acts"><i></i><i></i><i></i></span><span class="sc-cap"><b></b><b></b></span></div>`;
+    case 'line':
+      return `<div class="dev dev-line"><span class="sc-bar"><i></i><b></b></span><span class="sc-msg sc-in"></span><span class="sc-msg sc-in sc-short"></span><span class="sc-coupon"><b>COUPON</b></span><span class="sc-menu"><i></i><i></i><i></i><i></i><i></i><i></i></span></div>`;
+    default:
+      return `<div class="dev dev-ai"><span class="sc-q"></span><span class="sc-spark">✦</span><span class="sc-lines"><b></b><b></b><b></b><b></b></span><span class="sc-src"><i></i><i></i><i></i></span></div>`;
+  }
+}
+
+/** お客さんが会社に出会う画面と、そこで効く施策（studio の世界観。データがない企業では出さない） */
+function channelsSection(p: Partner): string {
+  const c = p.top.channels;
+  if (!c) return '';
+  return `
+  <section class="sec sec-channels" aria-labelledby="chn-title">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Screens</p>
+        <h2 id="chn-title" class="sec-h">${heading(c.title)}</h2>
+      </header>
+      <p class="chn-lead rv">${jp(c.lead)}</p>
+      <ol class="chns">${c.items
+        .map(
+          (it, i) => `
+        <li class="chn chn-${it.kind} rv" style="--d:${i}">
+          <figure class="chn-fig" aria-hidden="true">${screen(it.kind)}</figure>
+          <div class="chn-note">
+            <p class="chn-no">0${i + 1}<span>${esc(it.label)}</span></p>
+            <h3 class="chn-h">${heading(it.service)}</h3>
+            <p class="chn-p">${jp(it.note)}</p>
+          </div>
+        </li>`,
+        )
+        .join('')}</ol>
+      <p class="fine">${jp(c.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 代表の横長の写真を、カメラのファインダー越しに見せる。横に会社の歩み */
+function filmSection(p: Partner): string {
+  const f = p.top.film;
+  if (!f) return '';
+  const [fx, fy] = f.photo.focus;
+  return `
+  <section class="sec sec-film" aria-labelledby="film-h">
+    <figure class="film-frame rv">
+      <picture>
+        <source media="(max-width: 767px)" srcset="${f.photo.small}" />
+        <img src="${f.photo.src}" alt="${esc(f.photo.alt)}" width="${f.photo.size[0]}" height="${f.photo.size[1]}" loading="lazy" decoding="async" style="object-position:${fx}% ${fy}%" />
+      </picture>
+      <div class="vf" aria-hidden="true" style="--fx:${fx}%;--fy:${fy}%">
+        <span class="vf-c vf-tl"></span><span class="vf-c vf-tr"></span><span class="vf-c vf-bl"></span><span class="vf-c vf-br"></span>
+        <span class="vf-rec"><i></i>REC</span>
+        <span class="vf-tc" data-timecode>00:00:00:00</span>
+        <span class="vf-af"><i>AF</i></span>
+        <span class="vf-meta">1/250　F2.8　ISO 100</span>
+        <span class="vf-bat"><i></i><i></i><i></i></span>
+      </div>
+      <figcaption class="film-cap">${esc(f.caption)}</figcaption>
+    </figure>
+    <div class="wrap film-in">
+      <header class="film-head rv">
+        <p class="kicker">${esc(f.kicker)}</p>
+        <h2 id="film-h" class="sec-h">${heading(f.title)}</h2>
+      </header>
+      <div class="film-body rv">${f.body.map((b) => `<p>${jp(b)}</p>`).join('')}</div>
+      <ol class="film-tl rv" aria-label="${esc(shortName(p))}の歩み">${f.timeline
+        .map((t, i) => `<li style="--i:${i}"><span class="ftl-y">${esc(t.year)}</span><span class="ftl-t">${jp(t.text)}</span></li>`)
+        .join('')}</ol>
     </div>
   </section>`;
 }

@@ -141,8 +141,8 @@ export function serviceLd(env: BuildEnv, p: Partner): Ld {
   const s = p.service;
   const base = {
     '@id': ids.service(env, p),
-    name: s.name,
-    ...(p.operator ? { alternateName: site.service.alternateName, brand: { '@type': 'Brand', name: s.name } } : {}),
+    name: text(s.name),
+    ...(p.operator ? { alternateName: site.service.alternateName, brand: { '@type': 'Brand', name: text(s.name) } } : {}),
     description: text(s.description),
     url: p.operator ? abs(env, routes.service(p.slug)) : s.url,
     provider: { '@id': ids.org(env, p) },
@@ -153,16 +153,16 @@ export function serviceLd(env: BuildEnv, p: Partner): Ld {
       '@type': 'SoftwareApplication',
       ...base,
       applicationCategory: 'BusinessApplication',
-      applicationSubCategory: s.category,
+      applicationSubCategory: text(s.category),
       operatingSystem: 'Web',
-      featureList: s.features.map((f) => f.title),
+      featureList: s.features.map((f) => text(f.title)),
       image: abs(env, s.logo),
     };
   }
   return {
     '@type': 'Service',
     ...base,
-    serviceType: s.features.map((f) => f.title),
+    serviceType: s.features.map((f) => text(f.title)),
   };
 }
 
@@ -206,7 +206,7 @@ export function breadcrumbLd(env: BuildEnv, path: string, items: { name: string;
     itemListElement: all.map((it, i) => ({
       '@type': 'ListItem',
       position: i + 1,
-      name: it.name,
+      name: text(it.name),
       item: abs(env, it.href),
     })),
   };

@@ -13,7 +13,7 @@ export function llmsTxt(env: BuildEnv): string {
   const blocks = partners.map((p) => {
     const s = p.seo;
     return [
-      `## ${p.company.name}（${p.service.name}）`,
+      `## ${p.company.name}（${text(p.service.name)}）`,
       '',
       text(s.top.answer.a),
       '',
@@ -73,7 +73,7 @@ export function llmsFullTxt(env: BuildEnv): string {
     const profile = p.company.profile.map((r) => `- ${r.label}: ${r.url ?? text(r.value)}`).join('\n');
     const faq = p.faq.map((f) => `### ${text(f.q)}\n\n${text(f.a)}`).join('\n\n');
     return [
-      `# ${p.company.name}（${p.service.name}）`,
+      `# ${p.company.name}（${text(p.service.name)}）`,
       '',
       `出典ページ: ${u(routes.top(p.slug))}　最終更新: ${s.updated}`,
       '',
@@ -82,11 +82,11 @@ export function llmsFullTxt(env: BuildEnv): string {
       '',
       profile,
       '',
-      `## ${p.service.name}の機能`,
+      `## ${text(p.service.name)}の機能`,
       '',
-      p.service.features.map((f) => `- ${f.title}: ${text(f.detail)}`).join('\n'),
+      p.service.features.map((f) => `- ${text(f.title)}: ${text(f.detail)}`).join('\n'),
       '',
-      `## ${p.service.name}について、よくある質問`,
+      `## ${text(p.service.name)}について、よくある質問`,
       '',
       faq,
       '',

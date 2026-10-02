@@ -4,8 +4,9 @@ import { cominka } from './cominka';
 import { dpPartners } from './dp-partners';
 import { evorg } from './evorg';
 import { musicJapan } from './music-japan';
+import { smartaleck } from './smartaleck';
 
-const all: Partner[] = [evorg, centralAx, dpPartners, cominka];
+const all: Partner[] = [evorg, centralAx, dpPartners, cominka, smartaleck];
 
 /**
  * 準備中（draft）の企業は、プレビュー（*.vercel.app）とローカルにだけ出す。

@@ -85,15 +85,17 @@ export type Partner = {
    *          'console'   … 監視画面と設計図。等幅の英字、ステータス表示、紺と復旧の緑（DPパートナーズ）
    *          'minka'     … 古民家と縁。朱と墨と生成り、明朝、麻の葉・格子・赤い糸・判子・縦書き（Cominka）
    *          'relay'     … 日の丸の赤とトラック。極太ゴシック＋スタジアムの数字、レーン・ゼッケン・バトン（Music Japan）
+   *          'studio'    … 撮影スタジオと漫画のヒーロー。墨とロゴの青、極太の見出し、網点・集中線・ファインダー・吹き出し（Smartaleck）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
    *          'vault'     … サーバーの引越し（移す→守る→戻す。壊れても、別の場所の控えから戻る）
    *          'en'        … 縁（散らばった検索の札が格子に並び、赤い糸で一つのサイトに結ばれる）
+   *          'feed'      … 画面の壁（散らばったリール・動画・トーク画面が壁に並び、集中線になって中心の一点に集まる）
    *          'relay'     … 陸上のリレー（光の点がトラックに集まり、レーンを走り、バトンが渡る）
    */
   world: {
-    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'relay';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'relay';
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'relay';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'relay';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
@@ -185,6 +187,24 @@ export type Partner = {
       lead: string;
       items: { name: string; href?: string; status?: string; logo?: { src: string; size: [number, number] } }[];
       note: string;
+    };
+    /** ヒーローに添える「よく届く相談」の吹き出し。1つずつ入れ替わる（studio の世界観） */
+    ticker?: { label: string; items: string[] };
+    /** お客さんが会社に出会う画面ごとに、どの施策が効くかを並べた図（イメージ図） */
+    channels?: {
+      title: string;
+      lead: string;
+      items: { kind: 'reel' | 'video' | 'influencer' | 'line' | 'ai'; label: string; service: string; note: string }[];
+      note: string;
+    };
+    /** 代表の横長の写真と、会社の歩み（ファインダー越しに見せる）。写真は本人・会社から受け取ったものだけ */
+    film?: {
+      kicker: string;
+      title: string;
+      body: string[];
+      photo: { src: string; small: string; size: [number, number]; alt: string; focus: [number, number] };
+      timeline: { year: string; text: string }[];
+      caption: string;
     };
   };
   about: {
