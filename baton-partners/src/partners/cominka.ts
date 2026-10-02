@@ -19,6 +19,8 @@ import type { Partner } from '../types';
  */
 export const cominka: Partner = {
   slug: 'cominka',
+  /** 先方の確認前のため draft。独自ドメイン（本番）には出さず、プレビュー（*.vercel.app）にだけ出す（partners/index.ts） */
+  draft: true,
   no: '04',
   catalog: {
     base: '大阪',

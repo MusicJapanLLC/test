@@ -18,6 +18,8 @@ import type { Partner } from '../types';
  */
 export const dpPartners: Partner = {
   slug: 'dp-partners',
+  /** 先方の確認前のため draft。独自ドメイン（本番）には出さず、プレビュー（*.vercel.app）にだけ出す（partners/index.ts） */
+  draft: true,
   no: '03',
   catalog: {
     base: '東京',
