@@ -3,7 +3,8 @@ import type { Partner } from '../types';
 /**
  * 株式会社DPパートナーズ（サイト引越し屋さん）
  *
- * 世界観：サーバーの監視画面と設計図（console / vault）。紺の線、等幅の英字、復旧の緑。
+ * 世界観：ロゴの「箱（DP）」と「地球とトラック（サイト引越し屋さん）」から、引越しの荷物と配送。
+ *   DPの青と空色、トラックのオレンジ。等角（アイソメ）の方眼、段ボールのような箱、監視画面のログ。
  *   「移す → 守る → 戻す」を、サーバーの引越し・見張り・別の場所の控えからの復旧として描く。
  * 文章：取材したライターが書いた体裁。代表の発言は、公開されている取材記事・公式ページからだけ引く。
  *
@@ -14,11 +15,9 @@ import type { Partner } from '../types';
  *   取材 … Houn（2026年4月、保守の実務・名義・選び方）、KUSANAGI パートナー訪問記（2025年9月）
  * 載せないもの：料金・プラン名・割引・補償額などの契約条件（Baton Partners の方針）、
  *   「業界No.1」「日本で最も利用されている」（第三者の裏づけを確認できないため）、従業員数・資本金・売上（非公開）
- * 先方の確認前のため draft。プレビューにだけ出す（partners/index.ts）。
  */
 export const dpPartners: Partner = {
   slug: 'dp-partners',
-  draft: true,
   no: '03',
   catalog: {
     base: '東京',
@@ -27,8 +26,8 @@ export const dpPartners: Partner = {
     lead: 'WordPressの引越し代行と保守管理『サイト引越し屋さん』を運営。累計3,500件を超える案件の経験をもとに、サーバー移転から24時間365日の監視、万が一の復旧まで引き受けます。',
     service: 'サイト引越し屋さん',
     logos: [
-      { src: '/partners/dp-partners/logo-light.svg', alt: 'DP Partners', size: [421, 120] },
-      { src: '/partners/dp-partners/service-light.svg', alt: 'サイト引越し屋さん', size: [566, 120] },
+      { src: '/partners/dp-partners/logo-light.png', alt: '株式会社DPパートナーズ', size: [1000, 203] },
+      { src: '/partners/dp-partners/service-light.png', alt: 'サイト引越し屋さん', size: [1000, 242] },
     ],
   },
   company: {
@@ -49,14 +48,14 @@ export const dpPartners: Partner = {
     ],
   },
   brand: {
-    // ロゴは仮（文字だけのワードマーク）。正式なロゴをもらったら差し替える
-    // 紺＝設計図とサーバーの線、緑＝復旧（監視画面の「正常」）、青＝引越しで流れるデータ
-    primary: '#0B2A66',
-    accent: '#00A870',
-    logo: '/partners/dp-partners/logo.svg',
-    logoAlt: 'DP Partners 株式会社DPパートナーズ',
-    logoSize: [421, 120],
-    scene: { a: '#0A1630', b: '#2F6BFF', match: '#00A870' },
+    // ロゴの色から：DPの青（箱の正面と社名）、空色（箱の側面）、サイト引越し屋さんのオレンジ（トラック）
+    // シーンは 線＝濃い青、引越しで運ばれるもの＝オレンジ、守る・戻す＝空色
+    primary: '#0086C7',
+    accent: '#FF8317',
+    logo: '/partners/dp-partners/logo.png',
+    logoAlt: '株式会社DPパートナーズ',
+    logoSize: [1000, 203],
+    scene: { a: '#0A3A66', b: '#FF8317', match: '#00B1E9' },
   },
   world: { theme: 'console', scene: 'vault' },
   leader: {
@@ -202,9 +201,9 @@ export const dpPartners: Partner = {
 
   service: {
     name: 'サイト引越し屋さん',
-    logo: '/partners/dp-partners/service.svg',
-    logoAlt: 'サイト引越し屋さん',
-    logoSize: [566, 120],
+    logo: '/partners/dp-partners/service.png',
+    logoAlt: 'サイト引越し屋さん by 株式会社DPパートナーズ',
+    logoSize: [1000, 242],
     category: 'WordPressの引越し代行・保守管理',
     tagline: 'WordPressの引越しと、保守管理。',
     description:

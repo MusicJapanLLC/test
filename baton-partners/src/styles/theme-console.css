@@ -1,24 +1,30 @@
 /* ═════════════════════════════════════════════
    console の世界観（DPパートナーズなど）
-   Webサイトの引越し・見張り・復旧 → サーバーの監視画面と設計図
-   紺の線、等幅の英字、点の方眼。差し色は「正常」の緑と、データが流れる青。異常の赤は警告にだけ使う
+   ロゴの「箱（DP）」と「地球とトラック（サイト引越し屋さん）」→ 引越しの荷物と、それを見張る画面
+   DPの青と空色、トラックのオレンジ。等角（アイソメ）の方眼、立方体の印、等幅の英字。異常の赤は警告にだけ使う
    ═════════════════════════════════════════════ */
 [data-theme='console'] {
-  --ink: #0a1630;
-  --ink-2: #34425e;
-  --ink-3: #5c6884;
-  --rule: rgba(10, 22, 48, 0.1);
-  --rule-2: rgba(10, 22, 48, 0.22);
-  --paper-2: #f3f6fb;
+  --ink: #0a2540;
+  --ink-2: #2f4a66;
+  --ink-3: #577089;
+  --rule: rgba(0, 72, 128, 0.12);
+  --rule-2: rgba(0, 72, 128, 0.24);
+  --paper-2: #f1f8fd;
+  --dp: #0086c7;
+  --dp-sky: #00b1e9;
+  --dp-orange: #ff8317;
   --f-serif: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
   --f-latin: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
-  --ok: #00a870;
-  --ok-2: #00c785;
-  --move: #2f6bff;
+  --ok: #0086c7;
+  --ok-2: #00b1e9;
+  --move: #ff8317;
   --alert: #e5484d;
   --scene-alert: #e5484d;
-  --night: #071022;
-  --dots: radial-gradient(rgba(10, 22, 48, 0.13) 1px, transparent 1.3px);
+  --night: #003a63;
+  /* 等角の方眼（DPのロゴの箱と同じ角度） */
+  --dots:
+    repeating-linear-gradient(30deg, transparent 0 31px, rgba(0, 134, 199, 0.075) 31px 32px),
+    repeating-linear-gradient(150deg, transparent 0 31px, rgba(0, 134, 199, 0.075) 31px 32px);
   --radius: 10px;
 }
 
@@ -58,8 +64,9 @@
   display: inline-block;
   margin-top: 0.12em;
   padding: 0.02em 0.2em 0.06em;
-  background: var(--ink);
+  background: linear-gradient(100deg, var(--dp), var(--dp-sky));
   color: #fff;
+  box-shadow: 0.18em 0.18em 0 rgba(0, 58, 99, 0.18);
 }
 [data-theme='console'] .hero-h .ln + .ln .ch {
   color: #fff;
@@ -73,7 +80,7 @@
   height: 0.86em;
   margin-left: 0.1em;
   vertical-align: -0.06em;
-  background: var(--ok-2);
+  background: var(--dp-orange);
   animation: console-caret 1.05s steps(1) infinite;
 }
 @keyframes console-caret {
@@ -131,21 +138,36 @@
 [data-theme='console'] .kicker-light {
   color: rgba(230, 236, 250, 0.72);
 }
+/* キッカーの印は、ロゴと同じ「箱」（上面・左面・右面の3色の立方体） */
 [data-theme='console'] .kicker-rule {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--ok);
-  box-shadow: 0 0 0 4px rgba(0, 168, 112, 0.14);
-  animation: console-led 2.4s ease-in-out infinite;
+  width: 13px;
+  height: 15px;
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+  background: conic-gradient(from -60deg at 50% 50%, #8adcf7 0 120deg, var(--dp) 120deg 240deg, var(--dp-sky) 240deg 360deg);
+  box-shadow: none;
+  animation: console-box 4s var(--ease) infinite;
+}
+@keyframes console-box {
+  0%,
+  70%,
+  100% {
+    transform: none;
+  }
+  80% {
+    transform: translateY(-3px);
+  }
+  90% {
+    transform: translateY(0);
+  }
 }
 @keyframes console-led {
   0%,
   100% {
-    box-shadow: 0 0 0 3px rgba(0, 168, 112, 0.16);
+    box-shadow: 0 0 0 3px rgba(0, 177, 233, 0.2);
   }
   50% {
-    box-shadow: 0 0 0 7px rgba(0, 168, 112, 0.04);
+    box-shadow: 0 0 0 7px rgba(0, 177, 233, 0.04);
   }
 }
 [data-theme='console'] .verb-en {
@@ -166,30 +188,36 @@
   font-weight: 600;
   vertical-align: 0.62em;
   letter-spacing: 0;
-  color: var(--ok);
+  color: var(--dp-orange);
 }
 [data-theme='console'] .verb-no::after {
   background: var(--ok);
 }
 [data-theme='console'] .stat-num {
   font-weight: 700;
-  letter-spacing: -0.04em;
-  color: var(--ink);
+  letter-spacing: -0.05em;
+  /* 等幅の数字は幅を取るので、桁が多くても1行に収まる大きさにする */
+  font-size: clamp(3rem, 1.6rem + 4.2vw, 6.2rem);
+  white-space: nowrap;
+  color: var(--dp);
 }
 [data-theme='console'] .stat-v {
-  color: var(--ink);
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  color: var(--dp);
 }
 [data-theme='console'] .stat-unit {
   font-family: var(--f-sans);
   font-weight: 900;
-  color: var(--ok);
+  white-space: nowrap;
+  color: var(--dp-orange);
 }
 [data-theme='console'] .stats {
   border-top: 2px solid var(--ink);
 }
 [data-theme='console'] .stat-label::before {
-  content: '● ';
-  color: var(--ok);
+  content: '■ ';
+  color: var(--dp-sky);
 }
 [data-theme='console'] .issue-no,
 [data-theme='console'] .story-no,
@@ -198,7 +226,7 @@
 [data-theme='console'] .stance-no {
   font-weight: 700;
   letter-spacing: 0;
-  color: var(--ink);
+  color: var(--dp);
 }
 /* 困りごとは、監視画面の「警告」として並べる */
 [data-theme='console'] .issue-no::before {
@@ -207,7 +235,7 @@
   margin-right: 0.5em;
   padding: 0.18em 0.45em;
   border-radius: 4px;
-  background: var(--alert);
+  background: var(--dp-orange);
   color: #fff;
   font-size: 0.36em;
   font-weight: 700;
@@ -216,7 +244,7 @@
 }
 [data-theme='console'] .hl-no::before {
   content: 'STEP ';
-  color: var(--ok);
+  color: var(--dp-sky);
 }
 [data-theme='console'] .stance-no::before {
   content: '#';
@@ -250,8 +278,6 @@
 [data-theme='console'] .leader {
   background-color: #fff;
   background-image: var(--dots);
-  background-size: 22px 22px;
-  background-position: -1px -1px;
 }
 [data-theme='console'] .sec-highlight {
   background-color: var(--paper-2);
@@ -283,7 +309,7 @@
 }
 [data-theme='console'] .badges li::before {
   background: var(--ok);
-  box-shadow: 0 0 0 3px rgba(0, 168, 112, 0.18);
+  box-shadow: 0 0 0 3px rgba(0, 177, 233, 0.22);
 }
 [data-theme='console'] .cover,
 [data-theme='console'] .line-card,
@@ -332,7 +358,7 @@
   background-color: var(--ok);
 }
 [data-theme='console'] .a-body strong {
-  background: linear-gradient(transparent 60%, rgba(0, 168, 112, 0.2) 60%);
+  background: linear-gradient(transparent 60%, rgba(255, 131, 23, 0.22) 60%);
 }
 [data-theme='console'] .fits li::before {
   border-color: var(--ok);
@@ -382,15 +408,19 @@
 [data-theme='console'] .sec-ink {
   background-color: var(--night);
   background-image:
-    linear-gradient(rgba(120, 160, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 160, 255, 0.06) 1px, transparent 1px),
-    radial-gradient(80% 60% at 85% 0%, rgba(47, 107, 255, 0.22), transparent 70%),
-    radial-gradient(60% 50% at 0% 100%, rgba(0, 168, 112, 0.16), transparent 70%);
-  background-size:
-    44px 44px,
-    44px 44px,
-    100% 100%,
-    100% 100%;
+    repeating-linear-gradient(30deg, transparent 0 39px, rgba(255, 255, 255, 0.05) 39px 40px),
+    repeating-linear-gradient(150deg, transparent 0 39px, rgba(255, 255, 255, 0.05) 39px 40px),
+    radial-gradient(80% 70% at 90% 0%, rgba(0, 177, 233, 0.45), transparent 70%),
+    radial-gradient(60% 60% at 0% 100%, rgba(255, 131, 23, 0.18), transparent 70%),
+    linear-gradient(160deg, #004b7f, #002c4d);
+}
+[data-theme='console'] .btn-ink {
+  background: var(--dp);
+  border-color: var(--dp);
+}
+[data-theme='console'] .btn-ink:hover {
+  background: var(--ink);
+  border-color: var(--ink);
 }
 
 /* カーソル：十字の照準 */
@@ -404,7 +434,7 @@
   border-radius: 6px;
 }
 [data-theme='console'] .cursor.is-link .cursor-ring {
-  background: rgba(0, 168, 112, 0.1);
+  background: rgba(0, 134, 199, 0.1);
   border-color: var(--ok);
 }
 [data-theme='console'] .cursor.is-label .cursor-ring {
@@ -412,7 +442,7 @@
   border-color: var(--ink);
 }
 [data-theme='console'] .progress i {
-  background: linear-gradient(90deg, var(--move), var(--ok));
+  background: linear-gradient(90deg, var(--dp), var(--dp-sky), var(--dp-orange));
 }
 
 /* 「話してみる」は Baton の赤一色 */
@@ -455,16 +485,13 @@
 .console-band {
   position: relative;
   padding-block: clamp(80px, 10vw, 150px);
-  background-color: var(--night, #071022);
+  background-color: var(--night, #003a63);
   background-image:
-    linear-gradient(rgba(120, 160, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 160, 255, 0.05) 1px, transparent 1px),
-    radial-gradient(70% 80% at 100% 50%, rgba(47, 107, 255, 0.2), transparent 70%);
-  background-size:
-    44px 44px,
-    44px 44px,
-    100% 100%;
-  color: #e6ecfa;
+    repeating-linear-gradient(30deg, transparent 0 39px, rgba(255, 255, 255, 0.05) 39px 40px),
+    repeating-linear-gradient(150deg, transparent 0 39px, rgba(255, 255, 255, 0.05) 39px 40px),
+    radial-gradient(70% 80% at 100% 40%, rgba(0, 177, 233, 0.4), transparent 70%),
+    linear-gradient(160deg, #004b7f, #002c4d);
+  color: #e6f3fb;
   overflow: hidden;
 }
 .console-in {
@@ -491,7 +518,7 @@
   position: relative;
   border: 1px solid rgba(120, 160, 255, 0.22);
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(14, 28, 60, 0.96), rgba(7, 16, 34, 0.98));
+  background: linear-gradient(180deg, rgba(0, 44, 77, 0.96), rgba(0, 30, 54, 0.98));
   box-shadow:
     0 0 0 1px rgba(0, 0, 0, 0.4),
     0 40px 80px -40px rgba(0, 0, 0, 0.8),
@@ -521,13 +548,13 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--ok-2, #00c785);
-  box-shadow: 0 0 10px var(--ok-2, #00c785);
+  background: var(--ok-2, #00b1e9);
+  box-shadow: 0 0 10px var(--ok-2, #00b1e9);
   animation: console-led 2.4s ease-in-out infinite;
 }
 .term-clock {
   margin-left: auto;
-  color: var(--ok-2, #00c785);
+  color: var(--ok-2, #00b1e9);
 }
 .term-list {
   display: grid;
@@ -544,7 +571,7 @@
 }
 .term-k {
   font-weight: 700;
-  color: #8fb0ff;
+  color: var(--dp-orange, #ff8317);
   letter-spacing: 0.04em;
 }
 .term-v {
@@ -560,11 +587,11 @@
   border-radius: 4px;
 }
 .term-s.is-ok {
-  color: #04140d;
-  background: var(--ok-2, #00c785);
+  color: #002c4d;
+  background: var(--ok-2, #00b1e9);
 }
 .term-s.is-live {
-  color: var(--ok-2, #00c785);
+  color: var(--dp-orange, #ff8317);
   border: 1px solid currentColor;
   animation: console-live 1.6s ease-in-out infinite;
 }
@@ -578,13 +605,13 @@
   gap: 10px;
   align-items: center;
   padding: 6px 18px 18px;
-  color: var(--ok-2, #00c785);
+  color: var(--ok-2, #00b1e9);
   font-size: 0.9rem;
 }
 .term-cursor i {
   width: 0.6em;
   height: 1.1em;
-  background: var(--ok-2, #00c785);
+  background: var(--ok-2, #00b1e9);
   animation: console-caret 1.05s steps(1) infinite;
 }
 /* 画面に入ったら、1行ずつ打ち出す */
@@ -649,7 +676,7 @@ html.js .term.rv.is-in .term-s.is-ok {
   font-family: var(--f-latin);
   font-size: 4.4rem;
   line-height: 1;
-  color: var(--ok, var(--brand));
+  color: var(--dp-orange, var(--brand));
 }
 .voice-q p {
   font-size: 0.98rem;
@@ -692,7 +719,8 @@ a.media-row:hover {
 .media-kind {
   justify-self: start;
   padding: 3px 9px;
-  border: 1px solid var(--ink);
+  border: 1px solid var(--dp);
+  color: var(--dp);
   border-radius: 4px;
   font-size: 0.7rem;
   font-weight: 700;
@@ -766,9 +794,9 @@ a.media-row:hover {
   border: 2px solid var(--ink);
 }
 .leader-timeline li:last-child::before {
-  background: var(--ok, var(--brand));
-  border-color: var(--ok, var(--brand));
-  box-shadow: 0 0 0 5px rgba(0, 168, 112, 0.16);
+  background: var(--dp-orange, var(--brand));
+  border-color: var(--dp-orange, var(--brand));
+  box-shadow: 0 0 0 5px rgba(255, 131, 23, 0.18);
 }
 .lt-y {
   font-weight: 700;

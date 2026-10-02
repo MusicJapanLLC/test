@@ -198,7 +198,8 @@ void main() {
   float w = fwidth(dEdge);
   float edge = 1.0 - smoothstep(0.03, 0.03 + w * 1.5, dEdge);
 
-  vec3 face = vec3(vShade);
+  // 板の面は、ほんのり企業の色（DPなら空色）を含んだ白
+  vec3 face = vShade * mix(vec3(1.0), uOk, 0.07);
   face = mix(face, vec3(0.9, 0.915, 0.94), vOld * 0.55);
   face = mix(face, mix(vec3(1.0), uMove, 0.32), clamp(vFly, 0.0, 1.0));
   face = mix(face, mix(vec3(1.0), uAlert, 0.6), clamp(vAlert, 0.0, 1.0));
@@ -399,7 +400,8 @@ export class VaultScene {
     const okC = new Color(o.red);
     const css = getComputedStyle(document.documentElement);
     const alertC = new Color(css.getPropertyValue('--scene-alert').trim() || '#E5484D');
-    const backC = move.clone().lerp(okC, 0.45);
+    // 控え（保管庫へ流れる粒）は、守る・戻すと同じ色
+    const backC = okC.clone();
     const ambient = o.mode === 'aurora';
 
     // ── 配置：古いサーバー（左奥）、新しいサーバー（右手前）、別の場所の保管庫（さらに右奥・上） ──
