@@ -1,0 +1,4 @@
+/* 欧文：Archivo（幅の軸 62〜125 ＋太さ）と JetBrains Mono。和文は使う文字だけに絞った Zen Kaku Gothic New */
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
+@import './fonts-jp.css';

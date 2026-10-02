@@ -1,0 +1,30 @@
+{
+  "name": "music-japan-lp",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "合同会社Music Japan — 企業・経営者向けの集客LP（Baton Partners / Baton / SECOND TAKE）",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && node scripts/audit.mjs",
+    "preview": "vite preview --port 4180",
+    "audit": "node scripts/audit.mjs",
+    "og": "node scripts/og.mjs",
+    "shots": "node scripts/shots.mjs",
+    "fonts": "python3 scripts/fonts.py"
+  },
+  "dependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "@fontsource-variable/jetbrains-mono": "^5.3.0",
+    "budoux": "^0.9.3",
+    "gsap": "^3.15.0",
+    "lenis": "^1.3.26",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  }
+}
