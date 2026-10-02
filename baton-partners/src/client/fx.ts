@@ -63,7 +63,7 @@ export function splitHeadings(): void {
 
   // 2行目（.ln + .ln）を、1文字ずつ色を変えてグラデーションに
   // mono・console の世界観では色のグラデーションを使わない（2行目は帯に白抜き）
-  if (stops.length >= 2 && !['mono', 'console'].includes(document.body.dataset.theme ?? '')) {
+  if (stops.length >= 2 && !['mono', 'console', 'minka'].includes(document.body.dataset.theme ?? '')) {
     document.querySelectorAll<HTMLElement>('.hero-h .ln + .ln, .hl-h .ln + .ln').forEach((ln) => {
       const units = ln.querySelectorAll<HTMLElement>('.ch').length ? ln.querySelectorAll<HTMLElement>('.ch') : ln.querySelectorAll<HTMLElement>('.ph');
       const n = units.length;
@@ -81,15 +81,17 @@ function countUp(el: HTMLElement) {
   const [, sign, num] = m;
   const target = Number(num);
   if (!target) return;
+  // 小数の実績（34.91% など）は、桁を丸めずに最後まで同じ桁数で数える
+  const digits = num.split('.')[1]?.length ?? 0;
   const start = performance.now();
   const dur = 1600;
   const step = (now: number) => {
     const t = Math.min(1, (now - start) / dur);
     const e = 1 - Math.pow(1 - t, 4);
-    el.textContent = `${sign}${Math.round(target * e)}`;
+    el.textContent = t < 1 ? `${sign}${(target * e).toFixed(digits)}` : raw.trim();
     if (t < 1) requestAnimationFrame(step);
   };
-  el.textContent = `${sign}0`;
+  el.textContent = `${sign}${(0).toFixed(digits)}`;
   requestAnimationFrame(step);
 }
 

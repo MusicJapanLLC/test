@@ -103,8 +103,10 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${serpSection(p)}
+
   <section class="sec sec-highlight" aria-labelledby="hl-h">
-    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
+    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
     <div class="wrap hl-in">
       <header class="hl-head rv">
         <p class="kicker">02 — ${esc(t.highlight.en)}</p>
@@ -125,6 +127,8 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${casesSection(p)}
+
   <section class="sec sec-numbers" aria-labelledby="num-h">
     <div class="wrap">
       <header class="sec-head sec-head-row rv">
@@ -143,7 +147,11 @@ ${header(p, 'top')}
     ${marquee(s.clients, { label: '利用企業', size: 'md', reverse: true })}
   </section>
 
+  ${productSection(p)}
+
   ${mediaSection(p)}
+
+  ${missionSection(p)}
 
   <section class="sec sec-quote" aria-labelledby="about-teaser-h">
     <div class="wrap quote-in">
@@ -290,6 +298,185 @@ function mediaSection(p: Partner): string {
           return `<li>${it.url ? `<a class="media-row" href="${it.url}" target="_blank" rel="noopener">${inner}<span class="ext" aria-hidden="true">↗</span></a>` : `<div class="media-row">${inner}<span class="ext" aria-hidden="true"></span></div>`}</li>`;
         })
         .join('')}</ol>
+    </div>
+  </section>`;
+}
+
+const fmt = (n: number) => (Number.isInteger(n) ? n.toLocaleString('ja-JP') : String(n));
+
+/** 導入事例：数字を棒・順位のはしご・前後の比較で見せる（minka などで使う。データがない企業では出さない） */
+function casesSection(p: Partner): string {
+  const c = p.top.cases;
+  if (!c) return '';
+  const metric = (m: NonNullable<Partner['top']['cases']>['items'][number]['metrics'][number]) => {
+    if (m.kind === 'rank' && m.from !== undefined) {
+      const top = 1;
+      const bottom = Math.ceil(m.from + 1);
+      const pos = (v: number) => ((v - top) / (bottom - top)) * 100;
+      return `
+          <div class="cm cm-rank">
+            <p class="cm-label">${esc(m.label)}</p>
+            <p class="cm-v"><span class="cm-from">${m.from}<small>位</small></span><span class="cm-arrow" aria-hidden="true">→</span><span class="cm-num">${m.value}</span><small>位</small></p>
+            <div class="rank-ladder" aria-hidden="true" style="--from:${pos(m.from)}%;--to:${pos(m.value)}%">
+              ${Array.from({ length: bottom - top + 1 }, (_, i) => `<span class="rung"><i>${top + i}</i></span>`).join('')}
+              <b class="rank-dot"></b>
+            </div>
+          </div>`;
+    }
+    if (m.kind === 'ratio') {
+      const pct = Math.min(100, (100 / m.value) * 100);
+      return `
+          <div class="cm cm-ratio">
+            <p class="cm-label">${esc(m.label)}</p>
+            <p class="cm-v"><span class="cm-num">${fmt(m.value)}</span><small>${esc(m.unit ?? '%')}</small></p>
+            <div class="vs" aria-hidden="true">
+              <span class="vs-bar vs-before" style="--w:${pct}%"><i>前 100</i></span>
+              <span class="vs-bar vs-after" style="--w:100%"><i>後 ${fmt(m.value)}</i></span>
+            </div>
+          </div>`;
+    }
+    if (m.kind === 'count') {
+      return `
+          <div class="cm cm-count">
+            <p class="cm-label">${esc(m.label)}</p>
+            <p class="cm-v"><span class="cm-num">${fmt(m.value)}</span><small>${esc(m.unit ?? '')}</small></p>
+          </div>`;
+    }
+    return `
+          <div class="cm cm-up">
+            <p class="cm-label">${esc(m.label)}</p>
+            <p class="cm-v"><span class="cm-plus">＋</span><span class="cm-num">${fmt(m.value)}</span><small>${esc(m.unit ?? '%')}</small></p>
+            <div class="vs" aria-hidden="true">
+              <span class="vs-bar vs-before" style="--w:${(100 / (100 + m.value)) * 100}%"><i>前年</i></span>
+              <span class="vs-bar vs-after" style="--w:100%"><i>今年</i></span>
+            </div>
+          </div>`;
+  };
+  const items = c.items
+    .map((it, idx) => {
+      const max = it.bars ? Math.max(...it.bars.items.map((b) => b.value)) : 1;
+      return `
+      <article class="case rv" style="--d:${idx}">
+        <header class="case-head">
+          <p class="case-no" aria-hidden="true">其の${['一', '二', '三', '四', '五'][idx] ?? idx + 1}</p>
+          <p class="case-co"><span>${esc(it.industry)}</span>${esc(it.company)}</p>
+          <h3 class="case-h">${heading(it.headline)}</h3>
+          <p class="case-period">${esc(it.period)}</p>
+        </header>
+        <div class="case-metrics">${it.metrics.map(metric).join('')}</div>
+        ${
+          it.bars
+            ? `<figure class="case-bars">
+          <figcaption>${esc(it.bars.title)}</figcaption>
+          <ul>${it.bars.items
+            .map(
+              (b, i) =>
+                `<li style="--w:${(b.value / max) * 100}%;--i:${i}"><span class="cb-l">${esc(b.label)}</span><span class="cb-bar"><i></i></span><span class="cb-v">＋${fmt(b.value)}%</span></li>`,
+            )
+            .join('')}</ul>
+        </figure>`
+            : ''
+        }
+        <div class="case-did">
+          <p class="case-did-t">やったこと</p>
+          <ul>${it.did.map((d) => `<li>${jp(d)}</li>`).join('')}</ul>
+          <a class="link-arrow" href="${it.url}" target="_blank" rel="noopener"><span>公式の事例を読む</span><span class="arrow" aria-hidden="true">↗</span></a>
+        </div>
+      </article>`;
+    })
+    .join('');
+  return `
+  <section class="sec sec-cases" aria-labelledby="cases-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Cases</p>
+        <h2 id="cases-h" class="sec-h">${heading(c.title)}</h2>
+      </header>
+      <div class="cases">${items}</div>
+      <p class="fine">${jp(c.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 検索結果の画面に、どの施策がどこで効くかを重ねた図（イメージ図） */
+function serpSection(p: Partner): string {
+  const s = p.top.serp;
+  if (!s) return '';
+  const row = (r: NonNullable<Partner['top']['serp']>['rows'][number], i: number) => {
+    const body =
+      r.kind === 'ai'
+        ? `<span class="sr-ai-t">✦ AIによる概要</span><span class="skl w90"></span><span class="skl w75"></span><span class="skl w60"></span><span class="sr-cite"><i></i><i></i><i></i></span>`
+        : r.kind === 'ad'
+          ? `<span class="sr-tag">スポンサー</span><span class="skl t w55"></span><span class="skl w80"></span>`
+          : r.kind === 'map'
+            ? `<span class="sr-pins" aria-hidden="true"><i style="--x:22%;--y:38%"></i><i style="--x:58%;--y:62%"></i><i style="--x:76%;--y:30%"></i></span><span class="skl t w45"></span><span class="skl w70"></span>`
+            : `<span class="sr-url">example.co.jp › service</span><span class="skl t w65"></span><span class="skl w85"></span><span class="skl w50"></span>`;
+    return `
+        <li class="sr sr-${r.kind}" style="--i:${i}">
+          <div class="sr-box">${body}</div>
+          <div class="sr-note"><span class="sr-seal">其の${['一', '二', '三', '四', '五'][i] ?? i + 1}</span><p class="sr-label">${esc(r.label)}</p><p class="sr-service">${esc(r.service)}</p><p class="sr-p">${jp(r.note)}</p></div>
+        </li>`;
+  };
+  return `
+  <section class="sec sec-serp" aria-labelledby="serp-h">
+    <div class="wrap serp-in">
+      <header class="serp-head rv">
+        <p class="kicker">Search</p>
+        <h2 id="serp-h" class="sec-h">${heading(s.title)}</h2>
+        <p class="serp-lead">${jp(s.lead)}</p>
+      </header>
+      <figure class="serp rv" aria-label="検索結果の画面と施策の対応（イメージ図）">
+        <p class="serp-bar"><span class="serp-q">${esc(s.query)}</span><span class="serp-caret" aria-hidden="true"></span><span class="serp-btn" aria-hidden="true">⌕</span></p>
+        <ol class="serp-rows">${s.rows.map(row).join('')}</ol>
+        <figcaption class="fine">${jp(s.note)}</figcaption>
+      </figure>
+    </div>
+  </section>`;
+}
+
+/** 自社開発のプロダクトと受賞。受賞は公表された部門名のまま、判子の形で */
+function productSection(p: Partner): string {
+  const pr = p.top.product;
+  if (!pr) return '';
+  return `
+  <section class="sec sec-product" aria-labelledby="product-h">
+    <div class="wrap product-in">
+      <div class="product-body rv">
+        <p class="kicker">Product</p>
+        <h2 id="product-h" class="product-h">${esc(pr.name)}</h2>
+        <p class="product-lead">${jp(pr.lead)}</p>
+        <ul class="product-feats">${pr.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
+      </div>
+      <div class="awards rv">${pr.awards
+        .map(
+          (a) => `
+        <div class="award">
+          <p class="award-t">${esc(a.title)}</p>
+          <ul class="award-seals">${a.items.map((it, i) => `<li style="--i:${i}"><span>${esc(it)}</span></li>`).join('')}</ul>
+        </div>`,
+        )
+        .join('')}
+        <p class="fine">${jp(pr.note)}</p>
+      </div>
+    </div>
+  </section>`;
+}
+
+/** 経営理念：縦書きの見出しと大きな一文字、価値観は木札にして吊るす */
+function missionSection(p: Partner): string {
+  const m = p.top.mission;
+  if (!m) return '';
+  return `
+  <section class="sec sec-mission" aria-labelledby="mission-h">
+    <p class="mission-glyph" aria-hidden="true">${esc(m.glyph)}</p>
+    <div class="wrap mission-in">
+      <h2 id="mission-h" class="mission-h rv">${esc(m.title)}</h2>
+      <div class="mission-body rv">
+        <p class="kicker">Mission</p>
+        <p class="mission-p">${jp(m.body)}</p>
+        <ul class="fuda" aria-label="Value">${m.values.map((v, i) => `<li style="--i:${i}"><span>${esc(v)}</span></li>`).join('')}</ul>
+        <p class="fine">${jp(m.note)}</p>
+      </div>
     </div>
   </section>`;
 }

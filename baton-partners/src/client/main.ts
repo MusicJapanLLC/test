@@ -3,6 +3,7 @@ import '../styles/pages.css';
 import '../styles/fx.css';
 import '../styles/theme-mono.css';
 import '../styles/theme-console.css';
+import '../styles/theme-minka.css';
 import { setupContact } from './contact';
 import { setupFx } from './fx';
 import { mountScenes } from './scenes';
@@ -16,6 +17,7 @@ if (!__GOOGLE_FONTS__) {
   if (document.body.dataset.theme === 'mono' || document.body.dataset.page === 'index')
     void import('../styles/fonts-mono.css');
   if (document.body.dataset.theme === 'console') void import('../styles/fonts-console.css');
+  if (document.body.dataset.theme === 'minka') void import('../styles/fonts-minka.css');
 }
 
 setupHeader();

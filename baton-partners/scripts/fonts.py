@@ -28,6 +28,8 @@ FONTS = [
     ('zenkakugothicnew', 'ZenKakuGothicNew-Regular.ttf', 'zen-kaku-gothic-new-400'),
     ('zenkakugothicnew', 'ZenKakuGothicNew-Bold.ttf', 'zen-kaku-gothic-new-700'),
     ('zenkakugothicnew', 'ZenKakuGothicNew-Black.ttf', 'zen-kaku-gothic-new-900'),
+    # minka の世界観（Cominka など）の見出し。古民家の柱のような、太く端正な明朝
+    ('shipporiminchob1', 'ShipporiMinchoB1-ExtraBold.ttf', 'shippori-mincho-b1-800'),
 ]
 
 
@@ -94,13 +96,14 @@ def save_subset(src, text, dest):
 
 # 見出し（h1）の太い書体は「見出しの文字」と「それ以外」に分ける。
 # 見出しの分は小さくすぐ届くので、書体の差し替えで見出しの下がずれる時間が短くなる（CLS対策）
-SPLIT = {'zen-old-mincho-900', 'zen-kaku-gothic-new-900'}
+SPLIT = {'zen-old-mincho-900', 'zen-kaku-gothic-new-900', 'shippori-mincho-b1-800'}
 FACES = {
     'zen-old-mincho-700': ('Zen Old Mincho', 700, 'swap'),
     'zen-old-mincho-900': ('Zen Old Mincho', 900, 'swap'),
     'zen-kaku-gothic-new-400': ('Zen Kaku Gothic New', 400, 'optional'),
     'zen-kaku-gothic-new-700': ('Zen Kaku Gothic New', 700, 'optional'),
     'zen-kaku-gothic-new-900': ('Zen Kaku Gothic New', 900, 'swap'),
+    'shippori-mincho-b1-800': ('Shippori Mincho B1', 800, 'swap'),
 }
 
 
@@ -138,6 +141,7 @@ def main():
     (ROOT / 'src/styles/fonts-faces.css').write_text(
         note + ''.join(css[k] for k in ['zen-old-mincho-700', 'zen-old-mincho-900', 'zen-kaku-gothic-new-400', 'zen-kaku-gothic-new-700']), encoding='utf-8')
     (ROOT / 'src/styles/fonts-faces-mono.css').write_text(note + css['zen-kaku-gothic-new-900'], encoding='utf-8')
+    (ROOT / 'src/styles/fonts-faces-minka.css').write_text(note + css['shippori-mincho-b1-800'], encoding='utf-8')
     print(f'文字数: {len(text)}')
 
 

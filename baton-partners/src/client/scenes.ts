@@ -19,7 +19,10 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
 
   // three.js とシーンは1回だけ読み込む
   let load: Promise<
-    typeof import('./scene').NetworkScene | typeof import('./lattice').LatticeScene | typeof import('./vault').VaultScene
+    | typeof import('./scene').NetworkScene
+    | typeof import('./lattice').LatticeScene
+    | typeof import('./vault').VaultScene
+    | typeof import('./en').EnScene
   > | null = null;
   const sceneClass = () =>
     (load ??=
@@ -28,7 +31,9 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
         ? import('./lattice').then((m) => m.LatticeScene)
         : document.body.dataset.worldScene === 'vault'
           ? import('./vault').then((m) => m.VaultScene)
-          : import('./scene').then((m) => m.NetworkScene));
+          : document.body.dataset.worldScene === 'en'
+            ? import('./en').then((m) => m.EnScene)
+            : import('./scene').then((m) => m.NetworkScene));
 
   const mount = async (host: HTMLElement) => {
     const Scene = await sceneClass();

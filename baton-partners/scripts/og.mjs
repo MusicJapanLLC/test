@@ -22,7 +22,43 @@ const file = (p) => pathToFileURL(resolve(root, 'public', p.replace(/^\//, '')))
 const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const bpLogo = readFileSync(resolve(root, 'public/brand/baton-partners-logo.svg'), 'utf8');
 
+// minka（Cominkaなど）は生成りの和紙に麻の葉、朱の判子。見出しはしっぽり明朝
+const asanoha = readFileSync(resolve(root, 'src/styles/theme-minka.css'), 'utf8').match(/--asanoha:\s*url\("([^"]+)"\)/)?.[1] ?? '';
+const fontFile = (name) => pathToFileURL(resolve(root, 'public/fonts', name)).href;
+
+function minka(it) {
+  const brand = it.brand ?? '#E5262B';
+  const long = it.heading.length > 26;
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-old-mincho', 900)}">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'SMB1h';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800-h.woff2')}') format('woff2')}
+  @font-face{font-family:'SMB1r';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800.woff2')}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#F6F1E6;font-family:'Zen Kaku Gothic New',sans-serif;color:#1A1311;position:relative;overflow:hidden}
+  .wa{position:absolute;right:0;top:0;bottom:0;width:430px;background-image:url("${asanoha}");background-size:36px 62.36px;-webkit-mask:linear-gradient(90deg,transparent,#000 60%);mask:linear-gradient(90deg,transparent,#000 60%)}
+  .ink{position:absolute;left:0;top:0;bottom:0;width:18px;background:#1A1311}
+  .shu{position:absolute;left:18px;top:0;bottom:0;width:6px;background:${brand}}
+  .seal{position:absolute;right:96px;top:220px;width:132px;height:132px;background:${brand};color:#fff;display:grid;place-items:center;font-family:'SMB1h','SMB1r','Zen Old Mincho',serif;font-weight:800;font-size:92px;line-height:1;transform:rotate(-4deg);box-shadow:inset 0 0 0 6px ${brand},inset 0 0 0 9px #ffffffcc;border-radius:6px}
+  .in{position:absolute;inset:64px 300px 56px 96px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:24px}
+  .top img{height:52px;width:auto}
+  .label{font-size:20px;font-weight:700;letter-spacing:.18em;color:${brand};text-transform:uppercase}
+  h1{font-family:'SMB1h','SMB1r','Zen Old Mincho',serif;font-weight:800;font-size:${long ? 50 : 72}px;line-height:1.42;letter-spacing:.02em;word-break:keep-all;overflow-wrap:anywhere}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:22px;font-weight:700;color:#5A3A28;width:calc(100% + 220px)}
+  .foot svg{height:40px;width:auto}
+</style></head><body>
+<div class="wa"></div><div class="ink"></div><div class="shu"></div><div class="seal">縁</div>
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span class="label">${esc(it.label)}</span></div>
+  <h1>${esc(it.heading)}</h1>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</div></body></html>`;
+}
+
 function html(it) {
+  if (it.theme === 'minka') return minka(it);
   const con = it.theme === 'console';
   // console（DPパートナーズなど）も見出しは太いゴシック。方眼は点、縦の帯は紺から復旧の緑へ
   const mono = it.theme === 'mono' || con;

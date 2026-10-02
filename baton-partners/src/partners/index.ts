@@ -1,9 +1,10 @@
 import type { Partner } from '../types';
 import { centralAx } from './central-ax';
+import { cominka } from './cominka';
 import { dpPartners } from './dp-partners';
 import { evorg } from './evorg';
 
-const all: Partner[] = [evorg, centralAx, dpPartners];
+const all: Partner[] = [evorg, centralAx, dpPartners, cominka];
 
 /**
  * 準備中（draft）の企業は、プレビュー（*.vercel.app）とローカルにだけ出す。

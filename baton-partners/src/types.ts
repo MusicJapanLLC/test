@@ -76,11 +76,13 @@ export type Partner = {
    *   theme  'editorial' … 紙と墨、明朝＋イタリック（エボルグ）
    *          'mono'      … モノクロ、太いゴシック、グリッドと四角い枠（Central AX）
    *          'console'   … 監視画面と設計図。等幅の英字、ステータス表示、紺と復旧の緑（DPパートナーズ）
+   *          'minka'     … 古民家と縁。朱と墨と生成り、明朝、麻の葉・格子・赤い糸・判子・縦書き（Cominka）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
    *          'vault'     … サーバーの引越し（移す→守る→戻す。壊れても、別の場所の控えから戻る）
+   *          'en'        … 縁（散らばった検索の札が格子に並び、赤い糸で一つのサイトに結ばれる）
    */
-  world: { theme: 'editorial' | 'mono' | 'console'; scene: 'network' | 'lattice' | 'vault' };
+  world: { theme: 'editorial' | 'mono' | 'console' | 'minka'; scene: 'network' | 'lattice' | 'vault' | 'en' };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
     name: string;
@@ -116,6 +118,29 @@ export type Partner = {
     console?: { label: string; lines: { k: string; v: string; ok?: boolean }[] };
     /** 公式サイトに掲載されているお客様の声（掲載許可を得たものとして公表されている範囲で、出典つき） */
     voices?: { title: string; note: string; items: { who: string; text: string }[] };
+    /** 公開されている導入事例（企業名・期間・比較条件つき）。数字はグラフで見せる */
+    cases?: {
+      title: string;
+      note: string;
+      items: {
+        company: string;
+        industry: string;
+        headline: string;
+        period: string;
+        url: string;
+        /** 大きく見せる数字。kind=up は「＋◯％」、ratio は「前と比べて◯％」、rank は「◯位 → ◯位」 */
+        metrics: { label: string; kind: 'up' | 'ratio' | 'rank' | 'count'; value: number; from?: number; unit?: string }[];
+        /** 横棒グラフ（前年比の増加率など）。棒の長さは最大値に合わせる */
+        bars?: { title: string; items: { label: string; value: number }[] };
+        did: string[];
+      }[];
+    };
+    /** 検索結果の画面に、どの施策がどこで効くかを重ねた図（イメージ図） */
+    serp?: { title: string; lead: string; query: string; rows: { kind: 'ai' | 'ad' | 'map' | 'organic'; label: string; service: string; note: string }[]; note: string };
+    /** 自社開発のプロダクト（あれば）。受賞は公表された部門名のまま */
+    product?: { name: string; lead: string; features: string[]; awards: { title: string; items: string[] }[]; note: string };
+    /** 経営理念を大きく見せる帯（縦書きの見出しと、価値観の札） */
+    mission?: { glyph: string; title: string; body: string; values: string[]; note: string };
     /** 取材・登壇・提携など、外から見た実績（第三者の掲載とプレス配信は分けて書く） */
     media?: { title: string; items: { kind: string; title: string; by: string; date: string; url?: string }[] };
   };
