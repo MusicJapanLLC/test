@@ -63,7 +63,7 @@
 |---|---|
 | 文言 | `next/src/content/site.ts`（日英） |
 | 作品を足す | `next/src/content/releases.ts` に1件（`genre` も必ず入れる）＋ `dist/media/` にジャケット＋ `dist/audio/` に試聴mp3 |
-| 会社情報・パートナー企業 | `next/src/content/company.ts` |
+| 会社情報・パートナー企業 | `next/src/content/company.ts`（企業を足したら `site.ts` のパートナーページの title/description も更新。ロゴは黒背景用の白抜きPNGを `next/public/partners/` に） |
 | よくある質問（画面・構造化データ・llms.txt に同時反映） | `next/src/content/faq.ts` |
 | ロボット（下記） | `next/src/client/crew/` |
 | sitemap / robots / llms.txt | `next/src/render/machine.ts`（ビルド時に自動生成） |
@@ -123,7 +123,8 @@
 
 | 日付 | サイト | やったこと | PR |
 |---|---|---|---|
-| 2026-10-01 | 全体 | この説明書を作成 | （このPR） |
+| 2026-10-02 | MJ公式 | パートナーに株式会社Smartaleck（BP-003）を追加。トップのパートナー欄を3列に。ロゴは baton-partners の `logo-light.png` から白抜き版を作成 | #925 |
+| 2026-10-01 | 全体 | この説明書を作成 | #925 |
 | 2026-09-30 | MJ公式 | ロボに個性（色・性格・セリフ）、間隔調整、ジャケットの入れ替わり修正 | #918 |
 | 2026-09-30 | MJ公式 | ロボ5体を実装（再生中に全員ダンス、メニューに2〜3体）、メニューつぶれ・英語スペース修正 | #918 |
 | 2026-09-30 | MJ公式 | 作品ページ（一覧＋9作品×日英）、SEO自動チェック、セキュリティヘッダー、404、旧キャラ非表示 | #917 |

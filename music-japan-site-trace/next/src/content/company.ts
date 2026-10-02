@@ -96,4 +96,21 @@ export const partners: Partner[] = [
     href: 'https://partners.music-japan.com/central-ax/',
     colors: ['#eeeef2', '#5b5bf0'],
   },
+  {
+    id: 'smartaleck',
+    no: 'BP-003',
+    name: { ja: '株式会社Smartaleck', en: 'Smartaleck Inc.' },
+    logo: '/partners/smartaleck-white.png',
+    logoW: 800,
+    logoH: 126,
+    category: { ja: 'SNS・動画 / デジタルマーケティング', en: 'SOCIAL & VIDEO / DIGITAL MARKETING' },
+    title: { ja: '採用も、認知も、スマホの画面から。', en: 'Hiring and awareness, starting on the phone screen.' },
+    body: {
+      ja: 'Instagram、YouTube、インフルエンサー、LINE公式アカウント、AIの検索。企業の採用と集客を、企画から撮影、運用、分析までまとめて引き受ける大阪・淀屋橋の会社です。',
+      en: 'Instagram, YouTube, influencers, LINE official accounts and AI search. Based in Yodoyabashi, Osaka, Smartaleck takes on companies’ recruiting and marketing, from planning and filming to running accounts and reading the numbers.',
+    },
+    base: { ja: '大阪', en: 'OSAKA' },
+    href: 'https://partners.music-japan.com/smartaleck/',
+    colors: ['#1f92ca', '#eef4f8'],
+  },
 ];

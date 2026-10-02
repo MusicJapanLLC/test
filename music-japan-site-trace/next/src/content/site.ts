@@ -55,6 +55,7 @@ export const copy = {
       kicker: 'NEWS',
       title: 'お知らせ',
       items: [
+        { date: '2026.10.02', label: 'PARTNERS', title: '株式会社Smartaleckのページを公開しました', href: '/partners/#smartaleck' },
         { date: '2026.09.30', label: 'PARTNERS', title: 'パートナー企業のページを公開しました', href: '/partners/' },
         { date: '2026.09.14', label: 'PROFILE', title: '代表プロフィールを公開しました', href: '/profile/' },
         { date: '2026.09.13', label: 'MEDIA', title: '経営者メディア「SECOND TAKE」を公開しました', href: SECOND_TAKE_URL },
@@ -124,7 +125,7 @@ export const copy = {
       works: { seo: '作品一覧｜Yuma・Cozy Cafe Jazz BGM・睡眠音楽ほか｜合同会社Music Japan', kicker: 'CATALOG / WORKS', title: '作品', display: 'WORKS', lead: 'Yumaのアーティスト作品と、Jazz・クラシック・睡眠音楽のブランド。ジャケットを選ぶと、その場で試聴できます。', description: '合同会社Music Japanの作品一覧。アーティストYumaの楽曲と、Cozy Cafe Jazz BGM、Relaxing Classical Music Live、Deep Sleep Music Radioの作品を試聴できます。' },
       company: { seo: '会社概要｜大阪の音楽・メディア会社｜合同会社Music Japan', kicker: 'OFFICIAL COMPANY PROFILE / OSAKA, JAPAN', title: '会社概要', display: 'COMPANY', lead: '大阪を拠点に、音楽制作・楽曲配信を軸として、Podcastやインタビューを通じて人の声と経験を記録する音楽・メディア会社です。', description: '合同会社Music Japanの会社概要。所在地、代表社員、事業内容、展開ブランド。' },
       profile: { seo: '代表プロフィール｜壁谷 友生（代表社員）｜合同会社Music Japan', kicker: 'REPRESENTATIVE MEMBER', title: '代表プロフィール', display: 'PROFILE', lead: '', description: '合同会社Music Japan 代表社員・壁谷友生のプロフィールと、音楽・メディア・Podcastを通じて残したい記録への思い' },
-      partners: { seo: 'パートナー企業｜エボルグ・Central AX｜合同会社Music Japan', kicker: 'BATON PARTNERS / CONNECTIONS', title: 'パートナー', display: 'PARTNERS', lead: '事業の強みを知り、次のつながりへ。', description: '合同会社Music JapanのBaton Partners。株式会社エボルグ、株式会社Central AX。Music Japanと歩みをともにする企業の事業とサービス。' },
+      partners: { seo: 'パートナー企業｜エボルグ・Central AX・Smartaleck｜合同会社Music Japan', kicker: 'BATON PARTNERS / CONNECTIONS', title: 'パートナー', display: 'PARTNERS', lead: '事業の強みを知り、次のつながりへ。', description: '合同会社Music JapanのBaton Partners。株式会社エボルグ、株式会社Central AX、株式会社Smartaleck。Music Japanと歩みをともにする企業の事業とサービス。' },
       contact: { seo: 'お問い合わせ｜楽曲制作・BGM・Podcast出演・取材のご相談｜合同会社Music Japan', kicker: 'CONTACT / COLLABORATE', title: 'お問い合わせ', display: 'CONTACT', lead: '楽曲制作、BGM、Podcast出演、インタビュー掲載、Batonや協業についてご相談ください。', description: '合同会社Music Japanへのお問い合わせ、取材、楽曲制作、協業のご相談' },
       privacy: { seo: 'プライバシーポリシー｜合同会社Music Japan', kicker: 'PRIVACY / INFORMATION POLICY', title: 'プライバシーポリシー', display: 'PRIVACY', lead: '', description: '合同会社Music Japanのプライバシーポリシー。お問い合わせ等で取得する個人情報の利用目的、管理、第三者提供、開示請求の窓口について定めています。' },
     },
@@ -162,6 +163,7 @@ export const copy = {
       kicker: 'NEWS',
       title: 'Latest updates',
       items: [
+        { date: '2026.10.02', label: 'PARTNERS', title: 'Smartaleck joins Baton Partners', href: '/en/partners/#smartaleck' },
         { date: '2026.09.30', label: 'PARTNERS', title: 'Our partner directory is now live', href: '/en/partners/' },
         { date: '2026.09.14', label: 'PROFILE', title: 'Our representative profile is now available', href: '/en/profile/' },
         { date: '2026.09.13', label: 'MEDIA', title: 'SECOND TAKE, our executive interview media, is now live', href: SECOND_TAKE_URL },
@@ -231,7 +233,7 @@ export const copy = {
       works: { seo: 'Works: Yuma, Cozy Cafe Jazz BGM, Sleep Music & More | Music Japan LLC', kicker: 'CATALOG / WORKS', title: 'Works', display: 'WORKS', lead: 'Releases by the artist Yuma and our jazz, classical and sleep music brands. Pick a sleeve to preview it right here.', description: 'The Music Japan LLC catalogue: releases by the artist Yuma and by Cozy Cafe Jazz BGM, Relaxing Classical Music Live and Deep Sleep Music Radio, with previews.' },
       company: { seo: 'Company Information: Music & Media Company in Osaka | Music Japan LLC', kicker: 'OFFICIAL COMPANY PROFILE / OSAKA, JAPAN', title: 'Company', display: 'COMPANY', lead: 'A music and media company based in Osaka, creating and distributing music while preserving people’s voices and experiences through podcasts and interviews.', description: 'Company information for Music Japan LLC: address, representative, business and music brands.' },
       profile: { seo: 'Tomoki Kabeya, Representative Member | Music Japan LLC', kicker: 'REPRESENTATIVE MEMBER', title: 'Profile', display: 'PROFILE', lead: '', description: 'The profile of Tomoki Kabeya, representative member of Music Japan LLC, and his thoughts on the records he hopes to leave through music, media and podcasts' },
-      partners: { seo: 'Partners: Evorg and Central AX | Music Japan LLC', kicker: 'BATON PARTNERS / CONNECTIONS', title: 'Partners', display: 'PARTNERS', lead: 'Discover the companies behind our next connections.', description: 'Baton Partners of Music Japan LLC: Evorg and Central AX — companies walking alongside Music Japan, and their businesses and services.' },
+      partners: { seo: 'Partners: Evorg, Central AX and Smartaleck | Music Japan LLC', kicker: 'BATON PARTNERS / CONNECTIONS', title: 'Partners', display: 'PARTNERS', lead: 'Discover the companies behind our next connections.', description: 'Baton Partners of Music Japan LLC: Evorg, Central AX and Smartaleck — companies walking alongside Music Japan, and their businesses and services.' },
       contact: { seo: 'Contact: Music, BGM, Podcast & Interview Enquiries | Music Japan LLC', kicker: 'CONTACT / COLLABORATE', title: 'Contact', display: 'CONTACT', lead: 'Talk to us about music, BGM, SECOND TAKE interviews, Baton introductions or partnerships.', description: 'Contact Music Japan LLC about music, interviews, media and partnerships' },
       privacy: { seo: 'Privacy Policy | Music Japan LLC', kicker: 'PRIVACY / INFORMATION POLICY', title: 'Privacy Policy', display: 'PRIVACY', lead: '', description: 'Privacy policy of Music Japan LLC: how we use, manage and share personal information received through enquiries, and how to request disclosure.' },
     },
