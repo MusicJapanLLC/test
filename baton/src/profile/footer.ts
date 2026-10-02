@@ -19,7 +19,7 @@ export function renderProfileFooter(mount: HTMLElement): void {
         ),
         el(
           'a',
-          { href: 'https://second-take.vocal-shore-1441.chatgpt.site/', ...externalAttrs },
+          { href: 'https://secondtake.music-japan.com/', ...externalAttrs },
           ['SECOND TAKE'],
         ),
         el('span', { class: 'profile-footer__soon' }, ['Podcast', el('small', { text: '（準備中）' })]),
