@@ -1,0 +1,97 @@
+{
+  "timestamp": "2026-10-03T13:33:09.273682",
+  "target": "https://kabeya-authorized-test-range.onrender.com",
+  "total_attacks": 45,
+  "successful_exploits": 0,
+  "success_rate": 0.0,
+  "generations_executed": 3,
+  "discovered_endpoints": 35,
+  "detected_technologies": {},
+  "learning_snapshots": [
+    {
+      "generation": 1,
+      "timestamp": "2026-10-03T13:33:09.230610",
+      "successful_strategies": [],
+      "failed_strategies": [
+        "sql_injection@/",
+        "path_traversal@/",
+        "ldap_injection@/",
+        "xxe@/api",
+        "xss@/api",
+        "ldap_injection@/api",
+        "xxe@/admin",
+        "template_injection@/admin",
+        "deserialization@/admin",
+        "deserialization@/login",
+        "sql_injection@/login",
+        "idor@/login",
+        "xxe@/register",
+        "path_traversal@/register",
+        "idor@/register"
+      ],
+      "most_effective_payload_pattern": "",
+      "adaptation_score": 0.3,
+      "discovered_endpoints": [],
+      "next_strategy_mutations": []
+    },
+    {
+      "generation": 2,
+      "timestamp": "2026-10-03T13:33:09.244859",
+      "successful_strategies": [],
+      "failed_strategies": [
+        "auth_bypass@/",
+        "deserialization@/",
+        "idor@/",
+        "auth_bypass@/api",
+        "command_injection@/api",
+        "sql_injection@/api",
+        "idor@/admin",
+        "command_injection@/admin",
+        "ldap_injection@/admin",
+        "ldap_injection@/login",
+        "deserialization@/login",
+        "auth_bypass@/login",
+        "xss@/register",
+        "auth_bypass@/register",
+        "template_injection@/register"
+      ],
+      "most_effective_payload_pattern": "",
+      "adaptation_score": 0.3,
+      "discovered_endpoints": [],
+      "next_strategy_mutations": []
+    },
+    {
+      "generation": 3,
+      "timestamp": "2026-10-03T13:33:09.259522",
+      "successful_strategies": [],
+      "failed_strategies": [
+        "ldap_injection@/",
+        "xxe@/",
+        "command_injection@/",
+        "path_traversal@/api",
+        "ldap_injection@/api",
+        "template_injection@/api",
+        "xss@/admin",
+        "sql_injection@/admin",
+        "path_traversal@/admin",
+        "xxe@/login",
+        "deserialization@/login",
+        "xss@/login",
+        "deserialization@/register",
+        "xss@/register",
+        "command_injection@/register"
+      ],
+      "most_effective_payload_pattern": "",
+      "adaptation_score": 0.3,
+      "discovered_endpoints": [],
+      "next_strategy_mutations": []
+    }
+  ],
+  "sample_successful_exploits": [],
+  "authorization": {
+    "target_url": "https://kabeya-authorized-test-range.onrender.com",
+    "scope": "AUTHORIZED_TEST_TARGETS.json",
+    "federation": "the-world-security-test-federation-v1",
+    "status": "AUTHORIZED"
+  }
+}
