@@ -80,7 +80,7 @@
   };
 
   // ---------------------------------------------------------------- 数値
-  S.expNeed = (lv) => Math.round(8 * Math.pow(1.42, lv - 1));
+  S.expNeed = (lv) => Math.round(8 * Math.pow(1.33, lv - 1));
   S.power = function (a, s = G.state) {
     const base = D.CLASSES[a.cls].pow;
     return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10));
@@ -152,22 +152,36 @@
   });
 
   // 現在のギルド戦力に合った依頼を1枚作る
-  S.genQuest = function (s = G.state) {
+  //  ほどよい難しさのエリアを中心に、たまに一段上（憧れ）と一段下（安定）を混ぜる
+  S.comfortArea = function (s = G.state) {
     const areas = S.unlockedAreas(s);
-    const top = areas[areas.length - 1];
-    let area = top;
-    if (areas.length > 1 && Math.random() < 0.35) area = areas[areas.length - 2];
-    if (areas.length > 2 && Math.random() < 0.12) area = G.pick(areas);
-    const q = S.makeQuest(area.index);
-    // 1枚は確実に受けられる依頼にする
-    const idle = s.adv.filter((a) => a.status === 'idle');
-    const best = idle.map((a) => S.power(a, s)).sort((a, b) => b - a);
-    const cap = best.slice(0, q.size).reduce((x, y) => x + y, 0);
-    if (cap > 0 && !s.board.some((b) => S.canDo(b, s)) && cap < q.req) {
-      // 弱めに作り直す
-      return S.makeQuest(Math.max(0, area.index - (cap < area.pow[0] ? 1 : 0)), { k: 0.1 });
-    }
-    return q;
+    const pows = s.adv.map((a) => S.power(a, s)).sort((a, b) => b - a);
+    let comfy = 0;
+    areas.forEach((ar, i) => {
+      const size = Math.min(ar.size, Math.max(1, pows.length));
+      const cap = pows.slice(0, size).reduce((x, y) => x + y, 0);
+      const req = G.lerp(ar.pow[0], ar.pow[1], 0.5) * [0, 0.55, 0.85, 1, 1.25][size];
+      if (cap / req >= 0.95) comfy = i;
+    });
+    return { areas, comfy };
+  };
+  S.genQuest = function (s = G.state) {
+    const { areas, comfy } = S.comfortArea(s);
+    let idx = comfy;
+    const r = Math.random();
+    if (r < 0.22 && comfy + 1 < areas.length) idx = comfy + 1;
+    else if (r < 0.45 && comfy > 0) idx = comfy - 1;
+    return S.makeQuest(areas[idx].index);
+  };
+  // 掲示板が手に負えない依頼ばかりなら、受けられる依頼に差し替える
+  S.ensureDoable = function (s = G.state) {
+    if (!s.adv.length) return;
+    const all = s.adv;
+    const ok = s.board.some((q) => !q.boss && S.bestParty(q, all, 'lean', s).length > 0);
+    if (ok || !s.board.length) return;
+    const { areas, comfy } = S.comfortArea(s);
+    const i = s.board.findIndex((q) => !q.boss);
+    if (i >= 0) s.board[i] = S.makeQuest(areas[comfy].index, { k: 0.15 });
   };
   S.canDo = function (q, s = G.state) {
     const idle = s.adv.filter((a) => a.status === 'idle');
@@ -198,7 +212,7 @@
       // n人の組み合わせで、なるべく弱いメンバー構成
       for (let i = 0; i + n <= asc.length; i++) {
         const pick = asc.slice(i, i + n);
-        if (S.partyInfo(q, pick, s).p >= 0.85) return pick;
+        if (S.partyInfo(q, pick, s).p >= 0.8) return pick;
       }
     }
     return [];
@@ -487,10 +501,14 @@
       } else if (kind === 'board') {
         s.board.push(S.genQuest(s));
         s.boardAt = nextT;
+        S.ensureDoable(s);
         if (s.flags.autoDispatch && nextT < capEnd) out.autoSent += S.autoDispatch(nextT, s);
       }
     }
-    if (s.board.length >= S.boardSize(s)) s.boardAt = Math.max(s.boardAt, now - S.BOARD_INTERVAL * 0.5);
+    if (s.board.length >= S.boardSize(s)) {
+      // 満杯の間も定期的に見直す
+      if (now - s.boardAt > S.BOARD_INTERVAL) { S.ensureDoable(s); s.boardAt = now - S.BOARD_INTERVAL * 0.5; }
+    }
     // 求職者の入れ替え
     if (now - s.candAt > S.CAND_INTERVAL) S.rollCandidates(s);
     return out;
@@ -558,7 +576,7 @@
   // ---------------------------------------------------------------- セーブ
   S.save = function () {
     const s = G.state;
-    if (!s) return;
+    if (!s || G.resetting) return;
     s.lastSeen = G.now();
     try {
       localStorage.setItem(SAVE_KEY, JSON.stringify(s));

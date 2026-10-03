@@ -41,7 +41,14 @@
     comp.ratio.value = 3;
     comp.attack.value = 0.005;
     comp.release.value = 0.25;
-    master.connect(comp).connect(ctx.destination);
+    // 最後にリミッター：派手な効果音が重なっても割れない
+    const limiter = ctx.createDynamicsCompressor();
+    limiter.threshold.value = -2;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.002;
+    limiter.release.value = 0.1;
+    master.connect(comp).connect(limiter).connect(ctx.destination);
 
     musicGain = ctx.createGain();
     musicLP = ctx.createBiquadFilter();
@@ -124,8 +131,8 @@
     if (!ctx) return;
     const s = G.state ? G.state.settings : { bgm: 0.6, sfx: 0.8 };
     const t = ctx.currentTime;
-    musicGain.gain.setTargetAtTime(Math.pow(s.bgm, 1.4) * 0.55 * (A.muffled ? 0.7 : 1), t, 0.08);
-    sfxGain.gain.setTargetAtTime(Math.pow(s.sfx, 1.2) * 0.9, t, 0.05);
+    musicGain.gain.setTargetAtTime(Math.pow(s.bgm, 1.4) * 2.3 * (A.muffled ? 0.62 : 1), t, 0.08);
+    sfxGain.gain.setTargetAtTime(Math.pow(s.sfx, 1.2) * 1.7, t, 0.05);
   };
 
   // メニューを開いた時、音楽を少しこもらせる
@@ -157,6 +164,8 @@
       if (current) current.resync();
     });
   };
+
+  A._debug = () => ({ ctx, master, musicGain, sfxGain });
 
   // ---------------------------------------------------------------- instruments
   function env(g, t, a, peak, d, sus, rel, end) {
@@ -582,7 +591,7 @@
       murmur = src;
     }
     const s = G.state ? G.state.settings.sfx : 0.8;
-    ambGain.gain.setTargetAtTime(level * 0.05 * s, ctx.currentTime, 0.8);
+    ambGain.gain.setTargetAtTime(level * 0.09 * s, ctx.currentTime, 0.8);
   };
 
   function crackle() {

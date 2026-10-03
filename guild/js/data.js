@@ -58,13 +58,13 @@
     },
     {
       id: 'castle', name: '灰の古城', short: '古城', rank: 6, size: 4,
-      pow: [240, 400], dur: [540, 1080], gold: [2400, 3900], mat: [6, 12], fame: [30, 50], exp: [70, 110],
+      pow: [200, 340], dur: [540, 1080], gold: [2400, 3900], mat: [6, 12], fame: [30, 50], exp: [70, 110],
       monsters: ['skeleton', 'knight'],
       pal: { sky1: '#6b6487', sky2: '#c9b9c9', far: '#5c5575', mid: '#47415e', near: '#332e45', ground: '#5f5868', accent: '#ffb3d0' },
     },
     {
       id: 'peak', name: '竜の背嶺', short: '竜嶺', rank: 8, size: 4,
-      pow: [620, 980], dur: [1500, 3000], gold: [9000, 15000], mat: [14, 26], fame: [80, 130], exp: [200, 320],
+      pow: [480, 820], dur: [1500, 3000], gold: [9000, 15000], mat: [14, 26], fame: [80, 130], exp: [200, 320],
       monsters: ['wyvern', 'dragon'],
       pal: { sky1: '#d9744a', sky2: '#ffd2a1', far: '#a35b4f', mid: '#7a4140', near: '#552c30', ground: '#6e4a42', accent: '#ffe08a' },
     },

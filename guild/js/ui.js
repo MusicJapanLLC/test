@@ -72,7 +72,8 @@
     G.on('resolved', ({ reel }) => {
       if (!G.scene.ready) return;
       const p = reel.party[0];
-      U.toast(`${p ? p.name : 'パーティ'}たちが帰ってきた！ 冒険譚が届いています`, 'reel');
+      const n = G.reels.unseen().length;
+      U.toast(n > 1 ? `${p ? p.name : 'パーティ'}たちも帰ってきた！ 冒険譚が ${n}本 届いています` : `${p ? p.name : 'パーティ'}たちが帰ってきた！ 冒険譚が届いています`, 'reel', 'reel');
       bumpTab('reels');
       if (sheetTab) renderSheet();
     });
@@ -105,6 +106,7 @@
     const hud = G.$('#hud').getBoundingClientRect();
     const tabs = G.$('#tabs').getBoundingClientRect();
     G.scene.setPads(hud.bottom + 4, window.innerHeight - tabs.top + 6);
+    G.$('#toasts').style.top = hud.bottom + 10 + 'px';
   }
 
   // ---------------------------------------------------------------- HUD
@@ -128,7 +130,9 @@
       chip.classList.toggle('done', ob.done);
     } else chip.hidden = true;
     // 遠征ストリップ
+    const had = G.$('#expStrip').children.length;
     renderExpStrip();
+    if (had !== G.$('#expStrip').children.length) layoutPads();
     // タブのバッジ
     const unseen = G.reels.unseen();
     const rb = G.$('#tab-reels .badge');
@@ -676,7 +680,7 @@
       <div><small>成功</small><b>${G.fmt(ss.success)}</b></div>
       <div><small>大成功</small><b>${G.fmt(ss.great)}</b></div>
       <div><small>伝説級</small><b>${G.fmt(ss.legend)}</b></div>
-      <div><small>稼いだゴールド</small><b>${G.fmt(ss.goldEarned)}</b></div>
+      <div><small>稼いだG</small><b>${G.fmt(ss.goldEarned)}</b></div>
       <div><small>応援した回数</small><b>${G.fmt(ss.likes)}</b></div>
       <div><small>見た冒険譚</small><b>${G.fmt(ss.reels)}</b></div>
       <div><small>遊んだ時間</small><b>${G.fmtTime(ss.playSec)}</b></div>
@@ -733,7 +737,7 @@
     if (silhouette) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.globalCompositeOperation = 'source-in';
-      ctx.fillStyle = '#2a1f1a';
+      ctx.fillStyle = 'rgba(255,236,200,0.14)';
       ctx.fillRect(0, 0, c.width, c.height);
     }
     const url = c.toDataURL();
@@ -772,14 +776,27 @@
   }
   U.modalOpen = () => !G.$('#modal').hidden;
 
-  U.toast = function (text, kind = 'info') {
+  // key を渡すと、表示中の同じ種類のお知らせを書き換える（連続で出ても積み上がらない）
+  const toastKeys = {};
+  U.toast = function (text, kind = 'info', key) {
     const box = G.$('#toasts');
+    const prev = key && toastKeys[key];
+    if (prev && prev.el.isConnected && !prev.el.classList.contains('out')) {
+      prev.el.textContent = text;
+      prev.el.classList.remove('bump'); void prev.el.offsetWidth; prev.el.classList.add('bump');
+      clearTimeout(prev.t1); clearTimeout(prev.t2);
+      prev.t1 = setTimeout(() => { prev.el.classList.remove('in'); prev.el.classList.add('out'); }, 2600);
+      prev.t2 = setTimeout(() => prev.el.remove(), 3000);
+      return;
+    }
     const el = G.el('div', 'toast ' + kind, G.esc(text));
     box.appendChild(el);
     while (box.children.length > 3) box.firstChild.remove();
     requestAnimationFrame(() => el.classList.add('in'));
-    setTimeout(() => { el.classList.remove('in'); el.classList.add('out'); }, 2600);
-    setTimeout(() => el.remove(), 3000);
+    const rec = { el };
+    rec.t1 = setTimeout(() => { el.classList.remove('in'); el.classList.add('out'); }, 2600);
+    rec.t2 = setTimeout(() => el.remove(), 3000);
+    if (key) toastKeys[key] = rec;
   };
 
   function showRankUp(r) {

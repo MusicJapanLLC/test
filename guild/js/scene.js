@@ -163,6 +163,8 @@
       return Math.abs(p[0] - wx) < 11 && wy < p[1] + 3 && wy > p[1] - 44;
     }).sort((a, b) => agentPos(b)[1] - agentPos(a)[1])[0];
     if (hit) { tapAgent(hit); return; }
+    // 掲示板をタップしたら依頼を開く
+    if (wx > 106 && wx < 174 && wy > -94 && wy < -30) { G.audio.sfx('tap'); G.ui.openSheet('quests'); return; }
     // 階
     const f = Math.floor(-wy / FH);
     const nv = visibleFloors();
@@ -1137,13 +1139,17 @@
     ctx.fillStyle = G.rgba('#6b74b0', n * 0.45);
     // 建物の形（壁＋屋根＋煙突）だけを沈める
     ctx.beginPath();
-    ctx.moveTo(WL - 20, 12);
+    ctx.moveTo(WL - 6, 12);
+    ctx.lineTo(WL - 6, y + 8);
     ctx.lineTo(WL - 20, y + 8);
+    ctx.lineTo(WL - 20, y + 4);
     ctx.lineTo(WL - 18, y + 4);
     ctx.lineTo((WL + WR) / 2, y - 70);
     ctx.lineTo(WR + 18, y + 4);
+    ctx.lineTo(WR + 20, y + 4);
     ctx.lineTo(WR + 20, y + 8);
-    ctx.lineTo(WR + 20, 12);
+    ctx.lineTo(WR + 6, y + 8);
+    ctx.lineTo(WR + 6, 12);
     ctx.closePath();
     ctx.rect(312, y - 69, 20, 45);
     ctx.fill();

@@ -362,7 +362,7 @@
           const a = G.state.adv.find((x) => x.id === pa.id);
           if (a && a.bond < 10) a.bond = Math.min(10, a.bond + (a.trait === 'drinker' || a.trait === 'singer' ? 1 : 0.5));
         });
-        if (cur.party.length) addPart({ type: 'text', x: 180, y: Hd * 0.3, vx: 0, vy: -24, life: 0, max: 1.4, text: '絆が深まった ♥', col: '#ffb3c6' });
+        if (cur.party.length) addPart({ type: 'text', x: 110, y: Hd * 0.6 - 130, vx: 0, vy: -24, life: 0, max: 1.4, text: '絆が深まった ♥', col: '#ffb3c6' });
       }
       updateDom();
     }
