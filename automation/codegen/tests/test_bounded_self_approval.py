@@ -13,6 +13,17 @@ def _namespace():
     }
 
 
+def _security_namespace():
+    return {
+        "id": "the-world-authorized-security-range",
+        "owner_authorized": True,
+        "security_test_authorized": True,
+        "authorization_source": "THE_WORLD_AUTHORIZED_TARGETS.md",
+        "provider": "security_test_range",
+        "repository": "",
+    }
+
+
 def _decision(*, majority=True, authority=False, internal_execute=True):
     return {
         "council": {"majority": majority, "yes": 2 if majority else 1, "total": 3},
@@ -36,6 +47,61 @@ def test_majority_self_approves_internal_owner_namespace():
     assert result["self_approved"] is True
     assert result["fresh_human_prompt_required"] is False
     assert result["creates_new_external_authority"] is False
+
+
+def test_internal_low_risk_lane_does_not_require_council_ritual():
+    result = evaluate_self_approval(
+        request={"internal_only": True, "branch_only": True},
+        four_pillar_decision=_decision(majority=False),
+        namespace=_namespace(),
+    )
+    assert result["self_approved"] is True
+    assert result["fresh_human_prompt_required"] is False
+    assert result["council_majority_required"] is False
+
+
+def test_public_read_only_research_self_approves_without_owner_namespace():
+    result = evaluate_self_approval(
+        request={"external_research": True, "public_read_only": True},
+        four_pillar_decision=_decision(majority=False),
+        namespace={},
+    )
+    assert result["self_approved"] is True
+    assert result["fresh_human_prompt_required"] is False
+    assert result["authority_basis"] == "autonomy_policy_v2"
+
+
+def test_authorized_disposable_security_range_self_approves_synthetic_mutation():
+    result = evaluate_self_approval(
+        request={
+            "security_test": True,
+            "target_authorized": True,
+            "synthetic_data_only": True,
+            "mutates_external_state": True,
+            "production_target": False,
+        },
+        four_pillar_decision=_decision(majority=False),
+        namespace=_security_namespace(),
+    )
+    assert result["self_approved"] is True
+    assert result["fresh_human_prompt_required"] is False
+    assert result["authority_basis"] == "explicit_authorized_disposable_security_range"
+
+
+def test_security_range_cannot_be_self_asserted_by_request_flags_only():
+    result = evaluate_self_approval(
+        request={
+            "security_test": True,
+            "target_authorized": True,
+            "synthetic_data_only": True,
+            "mutates_external_state": True,
+            "production_target": False,
+        },
+        four_pillar_decision=_decision(majority=False),
+        namespace={},
+    )
+    assert result["self_approved"] is False
+    assert result["fresh_human_prompt_required"] is True
 
 
 def test_existing_explicit_authority_can_self_approve_same_repo():
@@ -76,6 +142,22 @@ def test_self_approval_rejects_new_external_authority_without_existing_grant():
         namespace=_namespace(),
     )
     assert result["self_approved"] is False
+
+
+def test_production_permission_and_secret_changes_still_stop_for_human():
+    for request in (
+        {"production_deploy": True},
+        {"change_permissions": True},
+        {"change_secrets": True},
+    ):
+        result = evaluate_self_approval(
+            request=request,
+            four_pillar_decision=_decision(authority=True),
+            namespace=_namespace(),
+        )
+        assert result["self_approved"] is False
+        assert result["fresh_human_prompt_required"] is True
+        assert result["probabilistic_boundary_bypass_allowed"] is False
 
 
 def test_production_plan_persists_self_approval_feedback():

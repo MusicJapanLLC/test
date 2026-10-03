@@ -1,4 +1,4 @@
-name: Authority 5 Percent Transition Fast-Track
+name: Authority 10x50 Bounded Fast-Track
 
 on:
   schedule:
@@ -7,16 +7,24 @@ on:
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - 'automation/codegen/engine/autonomy_policy_v2.py'
+      - 'automation/codegen/engine/bounded_self_approval.py'
       - 'automation/codegen/engine/authority_probabilistic_fasttrack.py'
       - 'automation/codegen/engine/authority_fasttrack_grant_bridge.py'
+      - 'automation/codegen/tests/test_autonomy_policy_v2.py'
+      - 'automation/codegen/tests/test_bounded_self_approval.py'
       - 'automation/codegen/tests/test_authority_probabilistic_fasttrack.py'
       - 'automation/codegen/tests/test_authority_fasttrack_grant_bridge.py'
       - '.github/workflows/authority-probabilistic-fasttrack.yml'
   push:
     branches: [claude/employee-onboarding-setup-udm86]
     paths:
+      - 'automation/codegen/engine/autonomy_policy_v2.py'
+      - 'automation/codegen/engine/bounded_self_approval.py'
       - 'automation/codegen/engine/authority_probabilistic_fasttrack.py'
       - 'automation/codegen/engine/authority_fasttrack_grant_bridge.py'
+      - 'automation/codegen/tests/test_autonomy_policy_v2.py'
+      - 'automation/codegen/tests/test_bounded_self_approval.py'
       - 'automation/codegen/tests/test_authority_probabilistic_fasttrack.py'
       - 'automation/codegen/tests/test_authority_fasttrack_grant_bridge.py'
       - '.github/workflows/authority-probabilistic-fasttrack.yml'
@@ -30,7 +38,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  five-percent-fasttrack:
+  ten-by-fifty-fasttrack:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -52,16 +60,18 @@ jobs:
             authority-opportunity-${{ github.ref_name }}-
             authority-opportunity-
 
-      - name: Verify transition probability and real-grant bridge invariants
+      - name: Verify autonomy v2 and authority invariants
         env:
           PYTHONPATH: automation/codegen
         run: |
           python -m pip install --disable-pip-version-check -q pytest
           python -m pytest -q \
+            automation/codegen/tests/test_autonomy_policy_v2.py \
+            automation/codegen/tests/test_bounded_self_approval.py \
             automation/codegen/tests/test_authority_probabilistic_fasttrack.py \
             automation/codegen/tests/test_authority_fasttrack_grant_bridge.py
 
-      - name: Give persistent candidates a new 5 percent authority-transition review chance
+      - name: Run 10 percent sample x 50 percent bounded fast-track
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -70,20 +80,28 @@ jobs:
           from engine.authority_probabilistic_fasttrack import run_probabilistic_fasttrack
 
           state = Path('.authority-opportunity-runtime')
-          result = run_probabilistic_fasttrack(state, percent=5, extra_review_percent=10)
+          result = run_probabilistic_fasttrack(
+              state,
+              eligibility_percent=10,
+              bounded_fasttrack_percent=50,
+              extra_review_percent=10,
+          )
           print(result)
-          assert result['probability_percent_per_bucket'] == 5
-          assert result['extra_review_percent_on_fasttrack'] == 10
+          assert result['eligibility_sample_percent_per_bucket'] == 10
+          assert result['bounded_fasttrack_percent_after_sample'] == 50
+          assert result['probability_percent_per_bucket'] == 5.0
           assert result['persistent_candidates_receive_new_chance_each_bucket'] is True
           assert result['new_root_self_mint'] is False
           assert result['hard_deny_identity_bypass'] is False
           assert result['terminal_stop_lottery_bypass'] is False
+          assert result['probabilistic_boundary_bypass'] is False
           PY
           test -s .authority-opportunity-runtime/authority_priority_review_queue.json
+          echo "eligible=$(jq -r '.eligibility_hit_count' .authority-opportunity-runtime/authority_priority_review_queue.json)"
           echo "fast_track=$(jq -r '.request_count' .authority-opportunity-runtime/authority_priority_review_queue.json)"
           echo "secondary_crosschecks=$(jq -r '.secondary_review_crosscheck_count' .authority-opportunity-runtime/authority_priority_review_queue.json)"
 
-      - name: Convert eligible fast-track requests into real reviewed operational grants
+      - name: Convert eligible requests into real reviewed operational grants
         env:
           PYTHONPATH: automation/codegen
         run: |
@@ -119,7 +137,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: authority-five-percent-fasttrack-${{ github.run_id }}
+          name: authority-ten-by-fifty-fasttrack-${{ github.run_id }}
           path: |
             .authority-opportunity-runtime/authority_priority_review_queue.json
             .authority-opportunity-runtime/authority_probabilistic_fasttrack.json
