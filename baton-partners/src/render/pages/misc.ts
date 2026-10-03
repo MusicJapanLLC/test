@@ -297,6 +297,15 @@ const PRIVACY: { h: string; body: string[]; list?: string[] }[] = [
     h: '6. お問い合わせ窓口',
     body: [`${site.operator.name}　${site.operator.representative}`, `所在地：${site.operator.address}`, `メール：${site.operator.email}`],
   },
+  {
+    h: '7. Cookie・アクセス解析について',
+    body: [
+      '本サイトはGoogle LLCのGoogle アナリティクス 4を利用し、閲覧ページ、アクセス日時、端末・ブラウザ情報等をCookieとともに取得して、サイトと企業ページの閲覧数の把握と改善に使用します。フォームの氏名・連絡先・回答内容はアクセス解析に送信しません。URLのクエリ文字列・フラグメントは計測対象から除き、広告パーソナライズは無効にしています。',
+      'Googleの情報利用について：https://policies.google.com/technologies/partner-sites?hl=ja',
+      'Google アナリティクス オプトアウト アドオン：https://tools.google.com/dlpage/gaoptout?hl=ja',
+      '改定日：2026年10月3日',
+    ],
+  },
 ];
 
 export function renderPrivacy(env: BuildEnv): string {
@@ -304,7 +313,7 @@ export function renderPrivacy(env: BuildEnv): string {
     (b) => `
     <section class="pv-sec">
       <h2 class="pv-h">${esc(b.h)}</h2>
-      ${b.body.map((t) => `<p>${jp(t)}</p>`).join('')}
+      ${b.body.map((t) => `<p>${t.includes('https://policies.google.com/') || t.includes('https://tools.google.com/') ? esc(t).replace(/https:\/\/(?:policies\.google\.com\/technologies\/partner-sites|tools\.google\.com\/dlpage\/gaoptout)\?hl=ja/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`) : jp(t)}</p>`).join('')}
       ${b.list ? `<ul>${b.list.map((t) => `<li>${jp(t)}</li>`).join('')}</ul>` : ''}
     </section>`,
   ).join('');
