@@ -33,7 +33,7 @@ function itemSection(opts: {
   ]);
 }
 
-function statsSection(service: Service): HTMLElement {
+function statsSection(service: Service, staticRender = false): HTMLElement {
   const isNumeric = (v: string) => /^[+-]?[\d,]+(\.\d+)?$/.test(v);
 
   const cells = service.stats.map((stat) => {
@@ -41,7 +41,7 @@ function statsSection(service: Service): HTMLElement {
       class: `stat__num${isNumeric(stat.value) ? '' : ' stat__num--text'}`,
       text: stat.value,
     });
-    countUp(num, stat.value);
+    if (!staticRender) countUp(num, stat.value);
 
     return el('div', { class: 'stat', 'data-reveal': true }, [
       el('p', { class: 'stat__label', text: stat.label }),
@@ -98,7 +98,7 @@ function linksSection(service: Service): HTMLElement {
   ]);
 }
 
-function surveySection(service: Service): HTMLElement {
+function surveySection(service: Service, staticRender = false): HTMLElement {
   const mount = el('div', { class: 'survey' });
 
   const section = el('section', { class: 'section section--survey', id: 'survey' }, [
@@ -116,12 +116,12 @@ function surveySection(service: Service): HTMLElement {
     ]),
   ]);
 
-  renderSurvey(mount, service);
+  if (!staticRender) renderSurvey(mount, service);
   return section;
 }
 
 /** サービスページの本文。ヒーローより下を丸ごと組み立てる */
-export function renderServiceSections(app: HTMLElement, service: Service): void {
+export function renderServiceSections(app: HTMLElement, service: Service, opts: { static?: boolean } = {}): void {
   app.append(
     itemSection({
       id: 'problems',
@@ -145,8 +145,8 @@ export function renderServiceSections(app: HTMLElement, service: Service): void 
       items: service.strengths,
       columns: 2,
     }),
-    statsSection(service),
+    statsSection(service, opts.static),
     linksSection(service),
-    surveySection(service),
+    surveySection(service, opts.static),
   );
 }

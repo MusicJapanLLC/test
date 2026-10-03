@@ -14,6 +14,8 @@ function boot(): void {
   const footer = document.getElementById('footer');
   if (!app || !footer) return;
 
+  app.replaceChildren();
+  footer.replaceChildren();
   renderHub(app);
   renderFooter(footer);
 

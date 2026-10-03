@@ -73,7 +73,7 @@ function attachTilt(link: HTMLAnchorElement): void {
   });
 }
 
-function renderIndexSection(): HTMLElement {
+function renderIndexSection(staticRender = false): HTMLElement {
   const section = el('section', { class: 'section', id: 'services' }, [
     el('div', { class: 'wrap' }, [
       el('div', { class: 'section__head', 'data-reveal-group': true }, [
@@ -91,7 +91,7 @@ function renderIndexSection(): HTMLElement {
   const list = el('div', { class: 'hub-list wrap', 'data-reveal-group': true });
   services.forEach((s, i) => {
     const link = card(i, s.id);
-    attachTilt(link);
+    if (!staticRender) attachTilt(link);
     list.append(link);
   });
   section.append(list);
@@ -122,6 +122,6 @@ function renderAbout(): HTMLElement {
 }
 
 /** ハブの本文。法人向けサービス一覧と Music Japan について */
-export function renderHub(app: HTMLElement): void {
-  app.append(renderIndexSection(), renderAbout());
+export function renderHub(app: HTMLElement, opts: { static?: boolean } = {}): void {
+  app.append(renderIndexSection(opts.static), renderAbout());
 }

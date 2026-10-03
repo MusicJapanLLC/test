@@ -18,6 +18,8 @@ export function mountServicePage(serviceId: string): void {
     const footer = document.getElementById('footer');
     if (!app || !footer) return;
 
+    app.replaceChildren();
+    footer.replaceChildren();
     renderServiceSections(app, service);
     renderFooter(footer, { backToHub: true });
 
