@@ -1,0 +1,22 @@
+name: Adaptive Homage Lab
+
+on:
+  pull_request:
+    paths:
+      - 'security/homage_lab/**'
+      - '.github/workflows/adaptive-homage-lab.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run simulation-only homage tests
+        run: python -m unittest security.homage_lab.test_adaptive_homage
