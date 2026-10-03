@@ -43,8 +43,8 @@ export function audit(out) {
   const walk = (dir) => {
     for (const name of readdirSync(dir)) {
       const f = join(dir, name);
-      if (statSync(f).isDirectory()) { if (!["assets", "audio", "artwork", "og", "partners"].includes(name)) walk(f); }
-      else if (name === "index.html") built.push("/" + f.slice(out.length + 1, -"index.html".length));
+      if (statSync(f).isDirectory()) { if (!["assets", "audio", "artwork", "og"].includes(name)) walk(f); }
+      else if (name === "index.html") built.push("/" + f.slice(out.length + 1, -"index.html".length).replaceAll("\\", "/"));
     }
   };
   walk(out);

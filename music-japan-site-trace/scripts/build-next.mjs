@@ -27,7 +27,7 @@ for (const [target, count] of [["music-japan-og.png", 4], ["kabeya-tomoki.png", 
 }
 
 // ── routing, caching and response headers (sitemap, robots, llms and the IndexNow key are emitted by vite) ──
-writeFileSync(join(output, "_redirects"), ["", "/en"].flatMap((prefix) => ["music", "media", "about"].flatMap((page) => [`${prefix}/${page} ${prefix}/business/ 301`, `${prefix}/${page}/ ${prefix}/business/ 301`])).join("\n") + "\n");
+writeFileSync(join(output, "_redirects"), ["/en /en/ 301", ...["", "/en"].flatMap((prefix) => ["music", "media", "about"].flatMap((page) => [`${prefix}/${page} ${prefix}/business/ 301`, `${prefix}/${page}/ ${prefix}/business/ 301`]))].join("\n") + "\n");
 writeFileSync(join(output, "_headers"), `/*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
