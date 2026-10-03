@@ -1,0 +1,164 @@
+name: RED + Senju Live Range Learning
+
+on:
+  workflow_run:
+    workflows:
+      - "Senju Owned Range Active Evolution"
+    types:
+      - completed
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "security/live_range_shared_learning.py"
+      - ".github/workflows/red-senju-live-range-learning.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: red-senju-live-range-learning-${{ github.event.workflow_run.id || github.run_id }}
+  cancel-in-progress: false
+
+env:
+  GH_TOKEN: ${{ github.token }}
+  PYTHONPATH: ${{ github.workspace }}/senju
+  AUTHORIZED_HOST: kabeya-authorized-test-range.onrender.com
+
+jobs:
+  shared-learning:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout exact default-branch implementation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Prepare evidence directory
+        run: mkdir -p /tmp/red-senju-live
+
+      - name: Reuse evidence from scheduled Senju live run
+        if: ${{ github.event_name == 'workflow_run' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          RUN_ID="${{ github.event.workflow_run.id }}"
+          gh run download "$RUN_ID" --repo "$GITHUB_REPOSITORY" \
+            --name senju-owned-range-active-evidence \
+            --dir /tmp/red-senju-live/source
+          REPORT="$(find /tmp/red-senju-live/source -name report.json -print -quit)"
+          MEMORY="$(find /tmp/red-senju-live/source -name memory.next.json -print -quit)"
+          test -n "$REPORT" && test -n "$MEMORY"
+          cp "$REPORT" /tmp/red-senju-live/report.json
+          cp "$MEMORY" /tmp/red-senju-live/memory.next.json
+
+      - name: Run one bounded live cycle on initial install/manual dispatch
+        if: ${{ github.event_name != 'workflow_run' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python senju/scripts/owned_range_active_loop.py \
+            --scope senju/config/authorized-test-range.json \
+            --base-url "https://${AUTHORIZED_HOST}/" \
+            --memory /tmp/red-senju-live/memory.json \
+            --out /tmp/red-senju-live/report.json \
+            --memory-out /tmp/red-senju-live/memory.next.json \
+            --max-pages 18 \
+            --max-probes 24 \
+            --max-writes 3 \
+            --write-cooldown-seconds 3600
+
+      - name: Verify exact-host live evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          host = 'kabeya-authorized-test-range.onrender.com'
+          d = json.loads(Path('/tmp/red-senju-live/report.json').read_text())
+          assert d['authorized_host'] == host
+          assert d['same_origin_only'] is True
+          assert d['authority_self_expansion'] is False
+          assert d['destructive_requests'] is False
+          assert d['credential_guessing'] is False
+          assert d['denial_of_service'] is False
+          assert 1 <= int(d['request_count']) <= 140
+          assert 0 <= int(d['write_attempts']) <= 3
+          for probe in d.get('probes', []):
+              for req in probe.get('requests', []):
+                  url = req.get('url')
+                  if url:
+                      assert urlsplit(url).hostname == host, url
+          for write in d.get('writes', []):
+              url = write.get('action_url')
+              if url:
+                  assert urlsplit(url).hostname == host, url
+              for rb in write.get('readbacks', []):
+                  url = rb.get('url')
+                  if url:
+                      assert urlsplit(url).hostname == host, url
+          PY
+
+      - name: Build RED + Senju shared learning packet
+        run: |
+          set -euo pipefail
+          python security/live_range_shared_learning.py \
+            --report /tmp/red-senju-live/report.json \
+            --memory /tmp/red-senju-live/memory.next.json \
+            --out /tmp/red-senju-live/shared-learning.json
+
+      - name: Publish human-readable learning summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('/tmp/red-senju-live/shared-learning.json').read_text())
+          lines = [
+              '## RED + Senju live-range learning',
+              '',
+              f"- exact authorized host: `{p['authorized_host']}`",
+              '- source: **real live test evidence** (not simulation)',
+              f"- requests: **{p['run']['request_count']}**",
+              f"- pages: **{p['run']['pages_discovered']}**",
+              f"- writes: **{p['run']['write_attempts']}**",
+              f"- counterexamples: **{p['run']['counterexample_count']}**",
+              f"- evidence digest: `{p['run']['evidence_digest']}`",
+              f"- shared packet: `{p['packet_sha256']}`",
+              '',
+              '### Current empirically ranked probe families',
+          ]
+          for row in p['learning']['probe_ranking']:
+              lines.append(
+                  f"- `{row['family']}` score={row['score']} hit_rate={row['hit_rate']} attempts={row['attempts']}"
+              )
+          Path('/tmp/red-senju-live/summary.md').write_text('\n'.join(lines) + '\n')
+          PY
+          cat /tmp/red-senju-live/summary.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload shared learning for RED, Senju and Security Society
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: red-senju-live-range-learning
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            /tmp/red-senju-live/shared-learning.json
+            /tmp/red-senju-live/report.json
+            /tmp/red-senju-live/memory.next.json
+            /tmp/red-senju-live/summary.md
