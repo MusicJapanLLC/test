@@ -1,10 +1,10 @@
-# Baton Partners（非公開デモ）
+# Baton Partners
 
 合同会社Music Japanが運営する法人向けパートナープログラム「Baton Partners」の、**掲載企業ごとの専用サイト**。
-1社目は株式会社エボルグ（Empro）。
+公開先は `https://partners.music-japan.com/`。公開済みの企業と準備中の企業は `src/partners/index.ts` と各社の `draft` で管理する。
 
 - 既存の `baton/`（Baton本体）とは別プロジェクト。`baton/` には一切手を入れていない
-- デモの間は **noindex**（meta・robots.txt・X-Robots-Tag の3重）。本番サイトからもリンクしない
+- プレビューは **noindex**。本番ビルド（`VERCEL_ENV=production`）からは準備中の企業を除外する
 
 ## 運営会社のページ（BP-000）
 
@@ -76,7 +76,13 @@ npm run preview   # http://localhost:4174/evorg/
   「動きを減らす」設定では静止画、WebGL非対応ならCSSの代替表示
 - **フォント**：自前配信（Google Fontsに依存しない）で、非同期読み込み。描画をブロックするCSSは約9KB gzip
 - **SEO**：ページごとの title / description / canonical / OGP、構造化データ（Organization・WebPage・AboutPage・Service・FAQPage・Article・BreadcrumbList）、sitemap.xml。
-  公開するときは `BP_INDEX=1` でビルドし、`vercel.json` の `X-Robots-Tag` を外す
+  本番は Vercel の production 環境でビルドする。プレビューの検索除外は維持する。
+
+## 企業追加とサイトマップ
+
+`src/partners/index.ts` の企業データから、LP・一覧への内部リンク・構造化データ・llms ファイル・サイトマップを同じビルドで生成する。確認中の企業は `draft: true` にし、公開情報と更新日を確認してから公開する。
+
+`npm run build` は生成後に `scripts/seo-check.mjs` を実行する。index可能なHTMLとサイトマップの一致、self canonical、lastmod、見出し・メタデータ・構造化データ・内部リンクを検査し、登録漏れやnoindexページの混入があれば公開ビルドを止める。現在の23URLは単一の `sitemap.xml` で管理する。
 
 ## 文言の出どころ（エボルグ）
 

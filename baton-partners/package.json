@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/seo-check.mjs",
+    "seo:check": "node scripts/seo-check.mjs",
     "preview": "vite preview --port 4174",
     "indexnow": "node scripts/indexnow.mjs",
     "og": "node scripts/og.mjs",

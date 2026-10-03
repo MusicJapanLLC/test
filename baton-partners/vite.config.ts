@@ -74,7 +74,7 @@ function seoFiles(pages: GeneratedPage[]): Plugin {
         source:
           '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
           pages
-            .filter((p) => p.lastmod)
+            .filter((p) => p.indexable)
             .map((p) => `  <url><loc>${env.siteUrl}${p.path}</loc><lastmod>${p.lastmod}</lastmod></url>`)
             .join('\n') +
           '\n</urlset>\n',

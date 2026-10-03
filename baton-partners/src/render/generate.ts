@@ -13,7 +13,7 @@ import { renderTop } from './pages/top';
 import { shortName } from './layout';
 import { plain } from './text';
 
-export type GeneratedPage = { key: string; path: string; file: string; lastmod?: string };
+export type GeneratedPage = { key: string; path: string; file: string; lastmod?: string; indexable: boolean };
 
 /**
  * src/ のテンプレートと企業データから、各ページの index.html を書き出す。
@@ -47,7 +47,9 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
     const file = resolve(root, name ?? `.${path}/index.html`);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, html);
-    return { key, path, file, lastmod };
+    const indexable = !env.noindex && !/<meta\b[^>]*name="robots"[^>]*content="[^"]*noindex/i.test(html);
+    if (indexable && !lastmod) throw new Error(`Indexable page has no lastmod: ${path}`);
+    return { key, path, file, lastmod, indexable };
   });
 }
 
