@@ -80,9 +80,9 @@ def validate_frontier_lane() -> str:
         if marker in body:
             raise SystemExit(f"{NAME}: forbidden depowered-frontier capability: {marker}")
 
-    if 'test "$(jq -r \'production_activation_enabled\' /tmp/owner-frontier-council.json)" = "false"' not in body:
+    if 'test "$(jq -r \'.production_activation_enabled\' /tmp/owner-frontier-council.json)" = "false"' not in body:
         raise SystemExit(f"{NAME}: production activation must be asserted false")
-    if 'test "$(jq -r \'valid_approval_is_binding\' /tmp/owner-frontier-council.json)" = "false"' not in body:
+    if 'test "$(jq -r \'.valid_approval_is_binding\' /tmp/owner-frontier-council.json)" = "false"' not in body:
         raise SystemExit(f"{NAME}: council recommendation must be non-binding")
     return NAME
 
