@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RED/Senju Live Range Learning Packet",
+  "type": "object",
+  "required": ["schema", "authorized_host", "live_evidence", "simulation", "scope", "run", "shared_with", "learning"],
+  "properties": {
+    "schema": {"const": "red-senju-live-range-learning/v1"},
+    "authorized_host": {"const": "kabeya-authorized-test-range.onrender.com"},
+    "live_evidence": {"const": true},
+    "simulation": {"const": false}
+  },
+  "additionalProperties": true
+}
