@@ -24,6 +24,8 @@
     sword: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="14,2 18,2 18,6 9,15 5,11" fill="currentColor"/><polygon points="3,13 7,17 5,19 1,15" fill="currentColor"/></svg>',
     people: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="7,3 10,5 10,8 7,10 4,8 4,5" fill="currentColor"/><polygon points="1,18 3,12 11,12 13,18" fill="currentColor"/><polygon points="14,5 16.5,6.5 16.5,9 14,10.5 11.5,9 11.5,6.5" fill="currentColor" opacity=".7"/><polygon points="13,18 13.5,13 17,13 19,18" fill="currentColor" opacity=".7"/></svg>',
     heart: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,18 1.5,9.5 2.5,4 6,2.5 10,6 14,2.5 17.5,4 18.5,9.5" fill="currentColor"/></svg>',
+    treasure: '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="3,11 21,11 21,21 3,21" fill="currentColor" opacity=".25"/><path d="M3 11h18v10H3zM3.5 11c0-4.5 3.5-7 8.5-7s8.5 2.5 8.5 7M3 15h7M14 15h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><polygon points="10,12 14,12 14,17 12,18.5 10,17" fill="currentColor"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,2 14.2,5.2 18,4.6 18.6,8.4 21.8,10.6 20,14 21.8,17.4 18.6,19.6 18,23.4 14.2,22.8 12,26 9.8,22.8 6,23.4 5.4,19.6 2.2,17.4 4,14 2.2,10.6 5.4,8.4 6,4.6 9.8,5.2" transform="scale(.92) translate(1,-1.4)" fill="currentColor" opacity=".9"/><circle cx="12" cy="12" r="3.6" fill="#0b1330"/></svg>',
   };
   U.IC = IC;
 
@@ -39,7 +41,8 @@
     G.$('#tab-roster .ti').innerHTML = IC.roster;
     G.$('#tab-reels .ti').innerHTML = IC.play;
     G.$('#tab-build .ti').innerHTML = IC.build;
-    G.$('#tab-records .ti').innerHTML = IC.book;
+    G.$('#tab-treasury .ti').innerHTML = IC.treasure;
+    G.$('#menuBtn').innerHTML = IC.menu;
     G.$('#goldPill .ic').innerHTML = IC.coin;
     G.$('#matPill .ic').innerHTML = IC.gem;
     G.$('#reelGold .ic').innerHTML = IC.coin;
@@ -58,7 +61,7 @@
     G.$('#sheetClose').addEventListener('click', () => U.closeSheet());
     G.$('#objChip').addEventListener('click', onObjective);
     G.$('#rankBtn').addEventListener('click', showRankInfo);
-    G.$('#soundBtn').addEventListener('click', toggleSound);
+    G.$('#menuBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'records') U.closeSheet(); else U.openSheet('records'); });
     G.$('#expStrip').addEventListener('click', () => U.openSheet('quests'));
     setupSheetDrag();
     window.addEventListener('resize', layoutPads);
@@ -69,11 +72,8 @@
     disp.mat = G.state.mat;
 
     G.on('dispatch', () => { if (sheetTab) renderSheet(); });
-    G.on('resolved', ({ reel }) => {
+    G.on('resolved', () => {
       if (!G.scene.ready) return;
-      const p = reel.party[0];
-      const n = G.reels.unseen().length;
-      U.toast(n > 1 ? `${p ? p.name : 'パーティ'}たちも帰ってきた！ 冒険譚が ${n}本 届いています` : `${p ? p.name : 'パーティ'}たちが帰ってきた！ 冒険譚が届いています`, 'reel', 'reel');
       bumpTab('reels');
       if (sheetTab) renderSheet();
     });
@@ -83,7 +83,6 @@
       if (sheetTab) renderSheet();
     });
     G.on('built', (id) => {
-      U.toast(`${D.FAC[id].name}が完成しました！`, 'good');
       G.audio.sfx('built');
       G.haptic(30);
       if (id === 'tavern') setTimeout(() => U.toast('お客さんが飲み終わると、テーブルにチップが置かれます', 'info'), 1800);
@@ -146,6 +145,7 @@
     const free = S.slots() - st.active.length;
     setDot('quests', idle > 0 && free > 0 && st.board.length > 0);
     setDot('roster', st.cands.some((c) => c.free) || (st.adv.length < S.beds() && st.cands.some((c) => st.gold >= (c.free ? 0 : S.hireCost(c.lv)))));
+    setDot('treasury', G.treasury.hasNews());
     setDot('build', D.FACILITIES.some((f) => {
       const s2 = S.facState(f.id);
       return (s2 === 'buildable' || s2 === 'upgradable') && S.canAfford(S.facCost(f.id));
@@ -243,10 +243,13 @@
     syncSoundBtn();
   }
   function syncSoundBtn() {
+    const b = G.$('#muteBtn');
+    if (!b) return;
     const st = G.state.settings;
-    G.$('#soundBtn').innerHTML = st.bgm > 0 || st.sfx > 0 ? IC.sound : IC.mute;
-    G.$('#soundBtn').setAttribute('aria-label', st.bgm > 0 || st.sfx > 0 ? '音を消す' : '音を出す');
+    const on = st.bgm > 0 || st.sfx > 0;
+    b.innerHTML = (on ? IC.sound : IC.mute) + `<span>${on ? '音を消す' : '音を出す'}</span>`;
   }
+  U.toggleSound = toggleSound;
   U.syncSoundBtn = syncSoundBtn;
 
   // ---------------------------------------------------------------- sheet
@@ -322,8 +325,10 @@
     back.onclick = () => { subView = null; G.audio.sfx('soft'); renderSheet(); };
     back.innerHTML = IC.back;
     if (subView && subView.kind === 'dispatch') { title.textContent = '派遣するメンバー'; renderDispatch(body); return; }
-    const titles = { quests: '依頼', roster: '冒険者', build: '施設', records: '記録と設定' };
+    const titles = { quests: '依頼', roster: '冒険者', build: '施設', records: '記録と設定', treasury: '宝物庫', inbox: 'お知らせ' };
     title.textContent = titles[sheetTab] || '';
+    if (sheetTab === 'treasury') { G.treasury.render(body); U._sig = sheetSig(); return; }
+    if (sheetTab === 'inbox') { G.notify.render(body); U._sig = sheetSig(); return; }
     if (sheetTab === 'quests') renderQuests(body);
     else if (sheetTab === 'roster') renderRoster(body);
     else if (sheetTab === 'build') renderBuild(body);
@@ -347,7 +352,7 @@
   // シートの中身が変わる出来事だけを拾う（お金の増減では描き直さない）
   function sheetSig() {
     const st = G.state;
-    return [sheetTab, st.rank, st.board.map((q) => q.id).join(), st.active.length, st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
+    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
   }
   function refreshAfford() {
     const st = G.state;
@@ -409,7 +414,8 @@
     });
     if (!st.board.length) h += `<p class="empty">新しい依頼が届くのを待っています…</p>`;
     const cd = st.refreshAt - now;
-    h += `<button class="btn ghost wide" id="refreshBoard" ${cd > 0 ? 'disabled' : ''}>${cd > 0 ? `入れ替えまで <span data-countdown="${st.refreshAt}">${G.fmtClock(cd)}</span>` : '依頼を入れ替える'}</button>`;
+    if (st.flags.tut < 10) h += '';
+    else h += `<button class="btn ghost wide" id="refreshBoard" ${cd > 0 ? 'disabled' : ''}>${cd > 0 ? `入れ替えまで <span data-countdown="${st.refreshAt}">${G.fmtClock(cd)}</span>` : '依頼を入れ替える'}</button>`;
     h += `</div>`;
     body.innerHTML = h;
     G.$$('[data-dispatch]', body).forEach((b) => b.addEventListener('click', (e) => {
@@ -544,7 +550,7 @@
         <div class="grow">
           <div class="a-top"><b>${G.esc(a.name)}</b><span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span></div>
           <div class="bar exp"><i style="width:${(a.exp / need) * 100}%"></i></div>
-          <div class="a-meta"><span>${IC.sword}${G.fmt(S.power(a))}</span><span class="trait">${D.TRAITS[a.trait].name}</span><span class="bond" title="絆">${'♥'.repeat(Math.min(5, Math.ceil(hearts / 2)))}<i>${'♥'.repeat(Math.max(0, 5 - Math.ceil(hearts / 2)))}</i></span></div>
+          <div class="a-meta"><span>${IC.sword}${G.fmt(S.power(a))}</span><span class="trait">${D.TRAITS[a.trait].name}</span>${a.equip && G.items.get(a.equip) ? `<img class="eq-mini" alt="" src="${U.itemThumb(G.items.get(a.equip), 18)}">` : ''}${(a.skills || []).length ? `<span class="sk">閃${a.skills.length}</span>` : ''}<span class="bond" title="絆">${'♥'.repeat(Math.min(5, Math.ceil(hearts / 2)))}<i>${'♥'.repeat(Math.max(0, 5 - Math.ceil(hearts / 2)))}</i></span></div>
         </div>
         ${status}
       </div>`;
@@ -588,12 +594,16 @@
     if (!a) return;
     G.audio.sfx('tap');
     const cls = D.CLASSES[a.cls];
+    const eq = a.equip && G.items ? G.items.get(a.equip) : null;
+    const skills = a.skills || [];
+    const eqHtml = eq ? `<button class="eq-chip r${eq.rarity}" id="advEquip"><img alt="" src="${U.itemThumb(eq, 30)}"><span><b>${G.esc(eq.name)}</b><small>${G.items.RARITY[eq.rarity].id} ・ 変更する</small></span></button>` : `<button class="eq-chip none" id="advEquip"><span><b>装備なし</b><small>${(st.items || []).length ? 'タップして装備を選ぶ' : '宝箱から装備品が手に入ります'}</small></span></button>`;
     const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(S.power(a))}</p>
-      <dl><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${S.expNeed(a.lv)}</dd></dl></div>`;
+      ${eqHtml}
+      <dl><dt>閃いた技</dt><dd>${skills.length ? skills.map((x) => `<span class="skill-chip">${G.esc(x)}</span>`).join('') : 'まだない（冒険譚で閃くことがある・1つにつき戦力 +3%）'}</dd><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${S.expNeed(a.lv)}</dd></dl></div>`;
     U.modal(html, [
       st.adv.length > 1 && a.status === 'idle' ? { text: '解雇する', cls: 'ghost danger', fn: () => confirmDismiss(a) } : null,
       { text: '閉じる', cls: 'primary' },
-    ].filter(Boolean));
+    ].filter(Boolean), { onShow: (card) => { const b = G.$('#advEquip', card); if (b) b.addEventListener('click', () => { closeModal(); setTimeout(() => G.treasury.pickFor(a.id), 240); }); } });
   }
   function confirmDismiss(a) {
     U.modal(`<div class="confirm"><h2>${G.esc(a.name)}を解雇しますか？</h2><p>この操作は取り消せません。</p></div>`, [
@@ -693,13 +703,16 @@
     });
     h += `</div><p class="hint">大成功で ★、伝説級で「伝」の印がつきます</p></div>`;
     h += `<div class="sec settings"><h3>設定</h3>
+      <button class="row mute" id="muteBtn"></button>
       <label class="row"><span>BGM</span><input type="range" id="setBgm" min="0" max="1" step="0.05" value="${s.bgm}"></label>
       <label class="row"><span>効果音</span><input type="range" id="setSfx" min="0" max="1" step="0.05" value="${s.sfx}"></label>
       <label class="row tog"><span>振動</span><input type="checkbox" id="setHaptics" ${s.haptics ? 'checked' : ''}><i class="sw"></i></label>
       <label class="row tog"><span>冒険譚を自動で次へ</span><input type="checkbox" id="setAuto" ${s.autoplay ? 'checked' : ''}><i class="sw"></i></label>
+      <label class="row tog"><span>流れるコメント</span><input type="checkbox" id="setDanmaku" ${s.danmaku !== false ? 'checked' : ''}><i class="sw"></i></label>
+      <label class="row tog"><span>お知らせ（端末への通知も）</span><input type="checkbox" id="setNotify" ${s.notify ? 'checked' : ''}><i class="sw"></i></label>
       <label class="row tog"><span>動きをひかえめに</span><input type="checkbox" id="setMotion" ${s.reduceMotion ? 'checked' : ''}><i class="sw"></i></label>
       <button class="btn ghost danger wide" id="resetBtn">最初からやり直す</button>
-      <p class="hint">セーブはこの端末のブラウザに自動で保存されます。版 ${G.VERSION}</p>
+      <p class="hint">セーブ：${G.save.where()}に自動で保存（数秒ごと・操作のたび）。版 ${G.VERSION}</p>
     </div>`;
     body.innerHTML = h;
     const bind = (id, fn) => G.$(id, body).addEventListener('input', fn);
@@ -707,11 +720,21 @@
     bind('#setSfx', (e) => { s.sfx = +e.target.value; G.audio.applyVolumes(); G.audio.setAmbient(st.fac.tavern > 0 ? 1 : 0); syncSoundBtn(); G.audio.sfx('coin', 3); });
     bind('#setHaptics', (e) => { s.haptics = e.target.checked; G.haptic(12); });
     bind('#setAuto', (e) => { s.autoplay = e.target.checked; });
+    bind('#setDanmaku', (e) => { s.danmaku = e.target.checked; });
+    bind('#setNotify', async (e) => {
+      s.notify = e.target.checked;
+      if (s.notify && G.notify.permission() === 'default') {
+        const r = await G.notify.request();
+        if (r !== 'granted') U.toast(r === 'unsupported' ? 'この環境では端末通知が使えません。ギルドの中のお知らせは届きます' : '端末への通知は許可されませんでした。ギルドの中のお知らせは届きます', 'info');
+      }
+    });
+    G.$('#muteBtn', body).addEventListener('click', () => { toggleSound(); renderSheet(); });
+    syncSoundBtn();
     bind('#setMotion', (e) => { s.reduceMotion = e.target.checked; document.documentElement.classList.toggle('calm', s.reduceMotion); });
     G.$('#resetBtn', body).addEventListener('click', () => {
       U.modal('<div class="confirm"><h2>最初からやり直しますか？</h2><p>ギルドも冒険者もすべて消えます。取り消せません。</p></div>', [
         { text: 'やめる', cls: 'ghost' },
-        { text: 'やり直す', cls: 'danger', fn: () => { G.resetting = true; S.reset(); location.reload(); } },
+        { text: 'やり直す', cls: 'danger', fn: () => { G.resetting = true; const go = () => location.reload(); Promise.race([S.reset(), new Promise((r) => setTimeout(r, 2500))]).then(go, go); } },
       ]);
     });
     U._sig = sheetSig();
@@ -745,6 +768,37 @@
     return url;
   };
 
+  // 装備・秘宝のサムネイル（レア度の枠つき）
+  U.itemThumb = function (item, size) {
+    const key = 'it:' + (item.kind === 'relic' ? 'r-' + item.rid : item.tid) + ':' + item.rarity;
+    return art.url(art.cached(key, size, (ctx, sz) => {
+      const rc = art.RARITY_COL[item.rarity];
+      const g = ctx.createLinearGradient(0, 0, 0, sz);
+      g.addColorStop(0, G.shade(rc.dark, -0.25));
+      g.addColorStop(1, '#0a1022');
+      art.rrect(ctx, 0.5, 0.5, sz - 1, sz - 1, sz * 0.18);
+      ctx.fillStyle = g;
+      ctx.fill();
+      const rg = ctx.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz * 0.5);
+      rg.addColorStop(0, G.rgba(rc.glow, 0.45));
+      rg.addColorStop(1, G.rgba(rc.glow, 0));
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, sz, sz);
+      ctx.lineWidth = Math.max(1, sz * 0.04);
+      if (item.rarity === 4) {
+        const lg = ctx.createLinearGradient(0, 0, sz, sz);
+        for (let i = 0; i <= 6; i++) lg.addColorStop(i / 6, `hsl(${i * 60},90%,68%)`);
+        ctx.strokeStyle = lg;
+      } else ctx.strokeStyle = rc.accent;
+      art.rrect(ctx, 1, 1, sz - 2, sz - 2, sz * 0.18);
+      ctx.stroke();
+      ctx.save();
+      ctx.translate(sz / 2, sz / 2);
+      art.itemIcon(ctx, item, sz * 0.66, 0.6);
+      ctx.restore();
+    }));
+  };
+
   // ---------------------------------------------------------------- modal / toast
   let modalQueue = [];
   U.modal = function (html, buttons = [{ text: 'OK', cls: 'primary' }], opts = {}) {
@@ -764,6 +818,7 @@
     G.audio.setMuffle(true);
     if (opts.onShow) opts.onShow(card);
   };
+  U.closeModal = () => closeModal();
   function closeModal() {
     const m = G.$('#modal');
     m.classList.remove('shown');
@@ -995,24 +1050,33 @@
   };
 
   // ---------------------------------------------------------------- tutorial
+  const tutQuestBtn = () => G.$(`[data-dispatch="${G.state.flags.tutQ}"]`) || G.$('.card.quest .go');
   const TUT = [
-    { text: 'ようこそ、新しいギルドマスター！ 受付のリナです。…見ての通りボロボロですけど、今日からここがあなたのギルドです！', tap: true },
-    { text: 'さっそく依頼を受けてみましょう。下の「依頼」をタップしてください。', target: '#tab-quests', done: () => sheetTab === 'quests' },
-    { text: '「草原のスライム退治」、ガルドさんにぴったりです。「派遣」を押してください。', target: '.card.quest .go', need: () => sheetTab === 'quests', back: 1, done: () => subView && subView.kind === 'dispatch' },
-    { text: '成功率が高いですね！ 「出発！」で送り出しましょう。', target: '#dpGo', need: () => subView && subView.kind === 'dispatch', back: 2, event: 'dispatch' },
+    { text: 'ようこそ、新しいギルドマスター！ 受付のリナです。…見てのとおりボロボロですけど、今日からここがあなたのギルドです！', tap: true },
+    { text: 'さっそく依頼を受けてみましょう。下の「依頼」をタップしてください。', target: '#tab-quests', done: () => sheetTab === 'quests' && !subView },
+    { text: '「草原のスライム退治」がガルドさんにぴったりです。「派遣」を押してください。', targetEl: tutQuestBtn, need: () => sheetTab === 'quests', back: 1, done: () => subView && subView.kind === 'dispatch' },
+    { text: '成功率が高いですね！「出発！」で送り出しましょう。', target: '#dpGo', need: () => subView && subView.kind === 'dispatch', back: 2, event: 'dispatch' },
     {
-      text: 'いってらっしゃい！ …あ、受付に相談料が届いてます。光っているコインをタップして受け取りましょう。',
+      text: 'いってらっしゃい！ …あ、受付に相談料が届いています。光っているコインをタップして受け取りましょう。',
       enter: () => { U.closeSheet(true); if (G.state.deskCoins <= 0) G.state.deskCoins = 6; G.scene.focusBottom(); },
       targetFn: () => G.scene.deskCoinScreen(), event: 'deskCollected',
     },
-    { text: 'ガルドさんが帰ってくるまで少し待ちましょう。帰ってくると「冒険譚」が届きます。', target: '#expStrip', done: () => G.reels.unseen().length > 0 },
-    { text: '冒険譚が届きました！ 真ん中のボタンで見てみましょう。', target: '#tab-reels', event: 'reelsOpen' },
+    { text: 'ガルドさんが帰ってくるまで少し待ちましょう。帰ってくると「冒険譚」が届きます。', target: '#expStrip', done: () => G.reels.unseen().length > 0, stuck: () => !G.state.active.length && !G.reels.unseen().length, skipTo: 8 },
+    { text: '冒険譚が届きました！ 真ん中のボタンで見てみましょう。戦いの様子とコメントが流れてきますよ。', target: '#tab-reels', event: 'reelsOpen', stuck: () => !G.reels.unseen().length && !G.reels.isOpen(), skipTo: 8 },
     { text: '', hidden: true, event: 'reelsClosed' },
-    { text: '報酬が入りましたね！ 次は仲間を増やしましょう。「冒険者」を開いてください。', target: '#tab-roster', done: () => sheetTab === 'roster' },
-    { text: '求職者を雇ってみましょう。「雇う」をタップ！', target: '.card.cand .hire', need: () => sheetTab === 'roster', back: 8, done: () => G.state.adv.length >= 2 },
-    { text: 'これでパーティが組めます！ 画面上の「目標」をこなすと報酬がもらえますよ。いっしょにギルドを大きくしていきましょうね！', target: '#objChip', tap: true, enter: () => U.closeSheet(true) },
+    {
+      text: '報酬が入りましたね！ 次は仲間を増やしましょう。「冒険者」を開いてください。',
+      enter: () => {
+        // 最初の1人はリナのつてで無料（お金が足りなくて止まらないように）
+        const st = G.state;
+        if (st.adv.length < 2 && st.cands.length && !st.cands.some((c) => c.free)) { st.cands[0].free = true; st.cands[0].price = 0; }
+      },
+      target: '#tab-roster', done: () => sheetTab === 'roster' || G.state.adv.length >= 2,
+    },
+    { text: '最初の1人は、わたしの知り合いなので無料です！「仲間にする」をタップしてください。', targetEl: () => G.$('.card.cand.free .hire') || G.$('.card.cand .hire'), need: () => sheetTab === 'roster' || G.state.adv.length >= 2, back: 8, done: () => G.state.adv.length >= 2 },
+    { text: 'これでパーティが組めます！ 画面上の「目標」をこなすと報酬がもらえますよ。宝物庫の黄金の宝箱も、ぜひ開けてみてくださいね！', target: '#objChip', tap: true, enter: () => U.closeSheet(true) },
   ];
-  let tutStep = -1, tutTyped = 0, tutFired = false;
+  let tutStep = -1, tutTyped = 0, tutFired = false, tutTick0 = 0;
   U.startTutorial = function () {
     const st = G.state;
     if (st.flags.tut >= TUT.length) return;
@@ -1031,6 +1095,7 @@
     if (i >= TUT.length) { endTutorial(); return; }
     const s = TUT[i];
     tutTyped = 0;
+    tutTick0 = 0;
     tutFired = false;
     if (s.enter) s.enter();
     G.$('#tut').hidden = !!s.hidden;
@@ -1061,17 +1126,27 @@
     el.hidden = false;
     if (s.need && !s.need()) { setStep(s.back); return; }
     if (s.done && s.done()) { setStep(tutStep + 1); return; }
-    // 文字送り
+    if (s.stuck && s.stuck()) { setStep(s.skipTo); return; }
+    // 文字送り（3文字ごとに小さな音）
     if (tutTyped < s.text.length) {
       tutTyped = Math.min(s.text.length, tutTyped + dt * 38);
-      G.$('#tutText').textContent = s.text.slice(0, Math.floor(tutTyped));
-      if (Math.floor(tutTyped) % 3 === 0) G.audio.sfx('tick');
+      const n = Math.floor(tutTyped);
+      G.$('#tutText').textContent = s.text.slice(0, n);
+      if (n - tutTick0 >= 3) { tutTick0 = n; G.audio.sfx('tick'); }
     }
     // 指差し
     let rect = null;
-    if (s.target) {
-      const t = G.$(s.target);
-      if (t && t.offsetParent !== null) rect = t.getBoundingClientRect();
+    if (s.target || s.targetEl) {
+      const t = s.targetEl ? s.targetEl() : G.$(s.target);
+      if (t && t.offsetParent !== null) {
+        rect = t.getBoundingClientRect();
+        // シートの中で見えていなければスクロールして見せる
+        const body = G.$('#sheetBody');
+        if (body.contains(t)) {
+          const br = body.getBoundingClientRect();
+          if (rect.bottom > br.bottom - 8 || rect.top < br.top + 8) { t.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
+        }
+      }
     } else if (s.targetFn) {
       const p = s.targetFn();
       if (p) rect = { left: p[0] - 18, top: p[1] - 18, width: 36, height: 36 };

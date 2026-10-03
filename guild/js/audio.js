@@ -810,6 +810,116 @@
       case 'whoosh':
         noise({ f: 400, f2: 1600, dur: 0.3, vol: 0.05, q: 0.6, a: 0.1 });
         break;
+      // ---- 戦闘
+      case 'swish': // 剣を振る・魔物が飛びかかる
+        if (!throttle('swish', 50)) return;
+        if (arg === 1) noise({ f: 260, f2: 1300, dur: 0.16, vol: 0.07, q: 0.9, a: 0.03 });
+        else noise({ f: 900, f2: 5200, dur: 0.11, vol: 0.075, q: 1.4, a: 0.015 });
+        break;
+      case 'impact': { // 0=通常 1=会心 2=重い
+        if (!throttle('impact', 35)) return;
+        const hv = arg || 0;
+        tone({ f: 150 - hv * 20, f2: 42, dur: 0.16 + hv * 0.12, vol: 0.2 + hv * 0.06 });
+        noise({ f: 1800, f2: 300, dur: 0.1 + hv * 0.08, vol: 0.12 + hv * 0.03, q: 0.7 });
+        noise({ f: 5000, dur: 0.025, vol: 0.06, q: 2, ft: 'highpass' });
+        if (hv >= 2) tone({ t: t + 0.02, f: 70, f2: 30, dur: 0.5, vol: 0.18 });
+        break;
+      }
+      case 'crit': // 会心：金属が鳴る
+        tone({ f: 1760, dur: 0.35, vol: 0.05, type: 'triangle', a: 0.002 });
+        tone({ f: 2637, dur: 0.25, vol: 0.03, a: 0.002 });
+        tone({ f: 3520, dur: 0.18, vol: 0.018, a: 0.002 });
+        noise({ f: 6000, f2: 2500, dur: 0.18, vol: 0.05, q: 1.2 });
+        tone({ f: 130, f2: 40, dur: 0.3, vol: 0.22 });
+        break;
+      case 'cast':
+        if (!throttle('cast', 60)) return;
+        [79, 83, 86, 91].forEach((m, i) => tone({ t: t + i * 0.03, f: mtof(m), dur: 0.22, vol: 0.03 }));
+        noise({ f: 2500, f2: 7000, dur: 0.25, vol: 0.035, q: 3, a: 0.05 });
+        break;
+      case 'arrow':
+        noise({ f: 4200, f2: 1400, dur: 0.16, vol: 0.06, q: 6, a: 0.01 });
+        break;
+      case 'heal':
+        [74, 78, 81, 86, 90].forEach((m, i) => harp(t + i * 0.05, m, 0.07, sfxGain, 1.4));
+        noise({ t: t + 0.1, f: 7000, dur: 0.6, vol: 0.02, q: 0.6, ft: 'highpass', a: 0.2 });
+        break;
+      case 'miss':
+        noise({ f: 2400, f2: 500, dur: 0.14, vol: 0.06, q: 1, a: 0.01 });
+        tone({ f: 880, f2: 1320, dur: 0.08, vol: 0.025, type: 'triangle' });
+        break;
+      case 'hurt':
+        tone({ f: 220, f2: 110, dur: 0.16, vol: 0.12, type: 'triangle' });
+        noise({ f: 900, f2: 200, dur: 0.12, vol: 0.09, q: 0.8 });
+        break;
+      case 'roar': { // 大きな魔物の咆哮
+        const o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(95, t);
+        o.frequency.linearRampToValueAtTime(140, t + 0.25);
+        o.frequency.exponentialRampToValueAtTime(60, t + 0.95);
+        const lfo = ctx.createOscillator();
+        lfo.frequency.value = 23;
+        const lg = ctx.createGain();
+        lg.gain.value = 18;
+        lfo.connect(lg).connect(o.frequency);
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.value = 700;
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.linearRampToValueAtTime(0.13, t + 0.08);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 1);
+        o.connect(lp).connect(g).connect(sfxGain);
+        o.start(t); lfo.start(t);
+        o.stop(t + 1.05); lfo.stop(t + 1.05);
+        noise({ f: 500, f2: 200, dur: 0.9, vol: 0.06, q: 0.5, a: 0.1 });
+        break;
+      }
+      case 'encounter':
+        tone({ f: mtof(76), dur: 0.12, vol: 0.05, type: 'triangle' });
+        tone({ t: t + 0.09, f: mtof(79), dur: 0.3, vol: 0.05, type: 'triangle' });
+        bodhran(t, 1, 0.3, sfxGain);
+        break;
+      case 'flash': // 閃き：ピキーン
+        tone({ f: 2093, dur: 0.9, vol: 0.06, a: 0.002 });
+        tone({ f: 3136, dur: 0.7, vol: 0.035, a: 0.002 });
+        tone({ t: t + 0.07, f: 4186, dur: 0.6, vol: 0.025, a: 0.002 });
+        noise({ f: 8000, dur: 0.5, vol: 0.025, q: 0.5, ft: 'highpass', a: 0.05 });
+        break;
+      case 'cutin': {
+        noise({ f: 300, f2: 6000, dur: 0.32, vol: 0.09, q: 0.7, a: 0.1 });
+        [50, 57, 62, 69].forEach((m) => tone({ t: t + 0.12, f: mtof(m), dur: 0.7, vol: 0.035, type: 'sawtooth', lp: 1800 }));
+        [74, 81].forEach((m) => tone({ t: t + 0.12, f: mtof(m), dur: 0.6, vol: 0.03, type: 'triangle' }));
+        bodhran(t + 0.12, 1, 0.42, sfxGain);
+        break;
+      }
+      case 'shatter':
+        for (let i = 0; i < 10; i++) tone({ t: t + Math.random() * 0.12, f: 1800 + Math.random() * 3200, dur: 0.12 + Math.random() * 0.2, vol: 0.016, type: 'triangle', a: 0.001 });
+        noise({ f: 3000, f2: 800, dur: 0.4, vol: 0.09, q: 0.5 });
+        tone({ f: 110, f2: 38, dur: 0.4, vol: 0.2 });
+        break;
+      case 'rarity': { // 宝箱の色が変わる・レア確定
+        const r = G.clamp(arg || 1, 1, 4);
+        const base = [0, 79, 81, 84, 86][r];
+        const steps = r >= 4 ? [0, 4, 7, 12, 16, 19, 24] : r >= 3 ? [0, 4, 7, 12, 16] : [0, 7, 12];
+        steps.forEach((d, i) => tone({ t: t + i * 0.045, f: mtof(base + d), dur: 0.5, vol: 0.04, type: i % 2 ? 'sine' : 'triangle', a: 0.002 }));
+        if (r >= 3) noise({ t: t + 0.1, f: 7000, dur: 0.9, vol: 0.03, q: 0.5, ft: 'highpass', a: 0.2 });
+        if (r >= 4) for (let i = 0; i < 12; i++) harp(t + 0.3 + i * 0.04, 74 + PENTA[i % PENTA.length], 0.06, sfxGain, 1.8);
+        break;
+      }
+      case 'commentPop':
+        if (!throttle('commentPop', 110)) return;
+        tone({ f: 880 + Math.random() * 200, f2: 1500, dur: 0.07, vol: 0.022, slide: 0.05 });
+        break;
+      case 'gift':
+        for (let i = 0; i < 5; i++) tone({ t: t + i * 0.06, f: mtof(91 + PENTA[i]), dur: 0.3, vol: 0.035, type: 'triangle' });
+        tone({ t: t + 0.3, f: mtof(103), dur: 0.6, vol: 0.02 });
+        break;
+      case 'stamp': // 結果のはんこ
+        tone({ f: 120, f2: 50, dur: 0.22, vol: 0.2 });
+        noise({ f: 1200, f2: 300, dur: 0.1, vol: 0.08, q: 0.8 });
+        break;
     }
   };
 })();

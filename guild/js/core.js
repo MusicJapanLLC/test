@@ -2,8 +2,19 @@
 'use strict';
 const G = (window.G = window.G || {});
 
-G.VERSION = '0.1.0';
+G.VERSION = '0.2.0';
 G.WORLD_W = 400;
+
+// ---------- fonts ----------
+//  ui   : 本文・ボタン（Zen Kaku Gothic New）
+//  head : 見出し・技名・ロゴ（Shippori Mincho B1）
+//  num  : 数字・欧文（Cinzel。和文は明朝に落ちる）
+G.FONT = {
+  ui: '"Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif',
+  head: '"Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif',
+  num: '"Cinzel", "Shippori Mincho B1", "Hiragino Mincho ProN", serif',
+};
+G.font = (w, px, kind = 'ui') => `${w} ${px}px ${G.FONT[kind] || G.FONT.ui}`;
 
 // ---------- math ----------
 G.clamp = (v, a, b) => (v < a ? a : v > b ? b : v);

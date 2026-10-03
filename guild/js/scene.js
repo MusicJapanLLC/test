@@ -1389,7 +1389,7 @@
           // 楽団の看板
           art.poly(ctx, [182, top + 34, 222, top + 34, 222, top + 48, 182, top + 48], '#e8d8b0');
           ctx.fillStyle = '#5a3a26';
-          ctx.font = '700 6px "M PLUS Rounded 1c", sans-serif';
+          ctx.font = G.font(700, 6);
           ctx.textAlign = 'center';
           ctx.fillText('本日の一杯', 202, top + 43.5);
         }
@@ -1444,7 +1444,7 @@
         // 張り紙
         art.poly(ctx, [190, top + 16, 216, top + 14, 217, top + 34, 191, top + 35], '#efe2c4');
         ctx.fillStyle = '#7a3a2e';
-        ctx.font = '800 6px "M PLUS Rounded 1c", sans-serif';
+        ctx.font = G.font(800, 6);
         ctx.textAlign = 'center';
         ctx.fillText('根性', 204, top + 28);
         break;
@@ -1561,7 +1561,7 @@
     // 看板の文字
     art.poly(ctx, [x + 12, y - 12, x + w - 12, y - 12, x + w - 12, y - 4, x + 12, y - 4], '#e8d8b0');
     ctx.fillStyle = '#5a3a26';
-    ctx.font = '800 5.5px "M PLUS Rounded 1c", sans-serif';
+    ctx.font = G.font(800, 5.5);
     ctx.textAlign = 'center';
     ctx.fillText('依頼', x + w / 2, y - 6.2);
   }
@@ -1597,7 +1597,7 @@
       ctx.fillStyle = '#f0c94a';
       ctx.fill();
       ctx.fillStyle = '#fff6dc';
-      ctx.font = '800 7px "M PLUS Rounded 1c", sans-serif';
+      ctx.font = G.font(800, 7);
       ctx.textAlign = 'center';
       ctx.fillText(`${fac.name}を建設中… ${G.fmtClock(b.endAt - G.now())}`, cx, top + 17);
     } else {
@@ -1607,9 +1607,9 @@
       art.poly(ctx, [cx - 2, top + 58, cx + 2, top + 58, cx + 2, bot, cx - 2, bot], '#7a5230');
       ctx.textAlign = 'center';
       ctx.fillStyle = '#5a3a26';
-      ctx.font = '800 8px "M PLUS Rounded 1c", sans-serif';
+      ctx.font = G.font(800, 8);
       ctx.fillText(stt === 'locked' ? `${fac.name}（ランク${fac.rank}）` : `${fac.name} 建設予定地`, cx, top + 44);
-      ctx.font = '700 6.5px "M PLUS Rounded 1c", sans-serif';
+      ctx.font = G.font(700, 6.5);
       ctx.fillStyle = stt === 'buildable' ? '#3f8a5e' : '#8a6a4a';
       const c = fac.cost(0);
       ctx.fillText(stt === 'locked' ? 'ギルドランクを上げると建てられる' : `タップして建てる ・ ${G.fmt(c.gold)}G${c.mat ? ' ' + c.mat + '素材' : ''}`, cx, top + 53);
@@ -1784,7 +1784,7 @@
         case 'text':
           ctx.save();
           ctx.globalAlpha = Math.min(1, a * 2);
-          ctx.font = '900 9px "M PLUS Rounded 1c", sans-serif';
+          ctx.font = G.font(900, 9);
           ctx.textAlign = 'center';
           ctx.lineWidth = 2.5;
           ctx.strokeStyle = 'rgba(60,30,10,0.8)';
@@ -1796,7 +1796,7 @@
         case 'note':
           ctx.save();
           ctx.globalAlpha = Math.min(1, a * 1.6);
-          ctx.font = `800 ${p.size || 8}px "M PLUS Rounded 1c", sans-serif`;
+          ctx.font = G.font(800, p.size || 8);
           ctx.textAlign = 'center';
           ctx.fillStyle = p.col;
           ctx.fillText(p.text, p.x + Math.sin(p.life * 4) * 2, p.y);
@@ -1839,7 +1839,7 @@
       ctx.fillRect(-14, -18, 28, 28);
       art.coin(ctx, 0, -4, c.kind === 'desk' ? 5.5 : 4.6, time + i);
       if (c.kind === 'desk') {
-        ctx.font = '800 6px "M PLUS Rounded 1c", sans-serif';
+        ctx.font = G.font(800, 6);
         ctx.textAlign = 'center';
         ctx.fillStyle = '#fff6dc';
         ctx.strokeStyle = 'rgba(60,30,10,0.7)';

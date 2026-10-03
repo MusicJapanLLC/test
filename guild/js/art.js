@@ -779,7 +779,7 @@
     ctx.globalAlpha *= alpha;
     ctx.translate(x, y);
     ctx.scale(scale, scale);
-    ctx.font = '700 7px "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", system-ui, sans-serif';
+    ctx.font = G.font(700, 7);
     const w = Math.max(12, ctx.measureText(text).width + 8);
     const h = 11;
     ctx.fillStyle = 'rgba(40,24,14,0.18)';
@@ -796,22 +796,299 @@
     ctx.restore();
   };
 
+  // ---------- 小さなキャンバスのキャッシュ ----------
+  // DOM の <img> にも、Canvas の drawImage にも使える。描画は1回だけ。
+  const cvCache = new Map();
+  art.cached = (key, size, draw) => {
+    const k = key + '@' + size;
+    let c = cvCache.get(k);
+    if (c) return c;
+    c = document.createElement('canvas');
+    const dpr = Math.min(2.5, window.devicePixelRatio || 1);
+    c.width = c.height = Math.max(1, Math.round(size * dpr));
+    const g = c.getContext('2d');
+    g.scale(dpr, dpr);
+    draw(g, size);
+    if (cvCache.size > 500) cvCache.clear();
+    cvCache.set(k, c);
+    return c;
+  };
+  art.url = (c) => c._url || (c._url = c.toDataURL());
+
   // ---------- 似顔絵（DOM 用） ----------
-  const portraitCache = new Map();
-  art.portrait = (look, size = 64, key) => {
-    const k = (key || JSON.stringify(look)) + size;
-    if (portraitCache.has(k)) return portraitCache.get(k);
-    const c = document.createElement('canvas');
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    c.width = c.height = size * dpr;
-    const ctx = c.getContext('2d');
-    ctx.scale(dpr, dpr);
-    const s = size / 26;
-    ctx.translate(size / 2 - s * 0.8, size * 1.64);
+  art.portraitCanvas = (look, size = 64, key) => art.cached('p:' + (key || JSON.stringify(look)), size, (ctx, sz) => {
+    const s = sz / 26;
+    ctx.translate(sz / 2 - s * 0.8, sz * 1.64);
     ctx.scale(s, s);
     art.person(ctx, look, { t: 0.8, state: 'stand', facing: 1, noShadow: true });
-    const url = c.toDataURL();
-    portraitCache.set(k, url);
-    return url;
+  });
+  art.portrait = (look, size = 64, key) => art.url(art.portraitCanvas(look, size, key));
+
+  // ギルドの猫ミケ
+  art.catCanvas = (size) => art.cached('cat', size, (ctx, sz) => {
+    const u = sz / 40;
+    ctx.scale(u, u);
+    ctx.fillStyle = '#2a3550';
+    ctx.fillRect(0, 0, 40, 40);
+    poly(ctx, [8, 30, 6, 10, 15, 17], '#f2a65a');
+    poly(ctx, [32, 30, 34, 10, 25, 17], '#3a2a22');
+    poly(ctx, [9, 25, 8.5, 13, 13.5, 17.5], '#f6c8c0');
+    facet(ctx, 20, 26, 14, 11.5, 9, '#fff4e6', 0.2, 0.08);
+    poly(ctx, [6, 26, 12, 16, 20, 15, 18, 26, 10, 34], '#f2a65a');
+    poly(ctx, [34, 26, 28, 16, 22, 16, 23, 25, 30, 34], '#3a2a22');
+    ellipse(ctx, 15, 25, 1.6, 2.2, '#2b1d17');
+    ellipse(ctx, 25, 25, 1.6, 2.2, '#2b1d17');
+    ellipse(ctx, 15.5, 24.2, 0.5, 0.6, '#fff');
+    ellipse(ctx, 25.5, 24.2, 0.5, 0.6, '#fff');
+    poly(ctx, [19, 28, 21, 28, 20, 29.4], '#e88a8a');
+    ctx.strokeStyle = '#2b1d17';
+    ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(20, 29.4); ctx.quadraticCurveTo(18.5, 31.4, 17, 30.4); ctx.moveTo(20, 29.4); ctx.quadraticCurveTo(21.5, 31.4, 23, 30.4); ctx.stroke();
+  });
+
+  // 名前の頭文字（旅人など）
+  art.letterCanvas = (name, size) => art.cached('l:' + name, size, (ctx, sz) => {
+    let h = 0;
+    for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    const hue = h % 360;
+    const g = ctx.createLinearGradient(0, 0, 0, sz);
+    g.addColorStop(0, `hsl(${hue},38%,46%)`);
+    g.addColorStop(1, `hsl(${(hue + 30) % 360},42%,28%)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, sz, sz);
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    ctx.font = G.font(800, sz * 0.46, 'head');
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(name.replace(/^.*の/, '').slice(0, 1), sz / 2, sz / 2 + sz * 0.03);
+  });
+
+  // ギルドの紋章（マスター＝あなた）
+  art.crestCanvas = (size) => art.cached('crest', size, (ctx, sz) => {
+    const u = sz / 40;
+    ctx.scale(u, u);
+    const g = ctx.createLinearGradient(0, 0, 0, 40);
+    g.addColorStop(0, '#22345e');
+    g.addColorStop(1, '#0f1a33');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 40, 40);
+    poly(ctx, [20, 5, 32, 9, 31, 22, 20, 34, 9, 22, 8, 9], '#e8bd4c');
+    poly(ctx, [20, 7.5, 29.6, 10.6, 28.8, 21.2, 20, 31, 11.2, 21.2, 10.4, 10.6], '#1a2a4e');
+    poly(ctx, [17, 13, 23, 13, 24.5, 16, 24.5, 24, 15.5, 24, 15.5, 16], '#ffd36a');
+    poly(ctx, [18, 15.5, 22, 15.5, 22.6, 17, 22.6, 22.4, 17.4, 22.4, 17.4, 17], '#fff4c8');
+    poly(ctx, [16.5, 11.6, 23.5, 11.6, 23, 13, 17, 13], '#c8901e');
+    poly(ctx, [15, 24, 25, 24, 24, 25.6, 16, 25.6], '#c8901e');
+  });
+
+  // 閃き（電球）
+  art.bulb = (ctx, x, y, r, glow = 1, t = 0) => {
+    ctx.save();
+    ctx.translate(x, y);
+    const g = ctx.createRadialGradient(0, -r * 0.2, 0, 0, -r * 0.2, r * 3.2);
+    g.addColorStop(0, `rgba(255,248,190,${0.75 * glow})`);
+    g.addColorStop(1, 'rgba(255,240,160,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(0, -r * 0.2, r * 3.2, 0, TAU); ctx.fill();
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * TAU + t * 0.6;
+      const r1 = r * 1.5, r2 = r * (2.1 + 0.25 * Math.sin(t * 9 + i));
+      ctx.strokeStyle = `rgba(255,236,140,${0.9 * glow})`;
+      ctx.lineWidth = r * 0.16;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(Math.cos(a) * r1, Math.sin(a) * r1 - r * 0.2); ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2 - r * 0.2); ctx.stroke();
+    }
+    facet(ctx, 0, -r * 0.25, r, r * 1.05, 10, '#fff2a0', 0.3, 0.16);
+    poly(ctx, [-r * 0.42, r * 0.62, r * 0.42, r * 0.62, r * 0.36, r * 1.15, -r * 0.36, r * 1.15], '#9aa2b0');
+    poly(ctx, [-r * 0.36, r * 0.8, r * 0.36, r * 0.8, r * 0.36, r * 0.9, -r * 0.36, r * 0.9], '#6c7480');
+    poly(ctx, [-r * 0.45, -r * 0.7, -r * 0.1, -r * 0.95, -r * 0.3, -r * 0.4], 'rgba(255,255,255,0.8)');
+    ctx.restore();
   };
+
+  // ---------- レア度の色 ----------
+  art.RARITY_COL = [
+    { metal: '#cfd3da', dark: '#7a808a', accent: '#b08a5a', glow: '#f2ead8', name: 'N' },
+    { metal: '#dcefff', dark: '#5a8ac0', accent: '#4f8de0', glow: '#9fd0ff', name: 'R' },
+    { metal: '#f2e4ff', dark: '#8858c8', accent: '#c27cff', glow: '#d8a8ff', name: 'SR' },
+    { metal: '#fff4c8', dark: '#c48c1c', accent: '#ffc83a', glow: '#ffe27a', name: 'SSR' },
+    { metal: '#ffffff', dark: '#b878c8', accent: '#ff7ab8', glow: '#ffffff', name: 'UR' },
+  ];
+  const rainbow = (t, i = 0, l = 66) => `hsl(${(t * 140 + i * 47) % 360},92%,${l}%)`;
+  art.rainbow = rainbow;
+  const rc = (rank, key, t) => (rank === 4 && key === 'accent' ? rainbow(t) : art.RARITY_COL[rank][key]);
+
+  // ---------- 装備・秘宝のアイコン（中心 0,0 ・ 大きさ s） ----------
+  art.itemIcon = (ctx, item, s, t = 0) => {
+    const u = s / 2;
+    const r = item.rarity || 0;
+    const metal = rc(r, 'metal', t), dark = rc(r, 'dark', t), acc = rc(r, 'accent', t);
+    ctx.save();
+    ctx.scale(u, u);
+    const wood = '#8a5a32', leather = '#5a3a26';
+    const id = item.kind === 'relic' ? 'relic:' + item.rid : (G.items && G.items.EQUIP[item.tid] ? G.items.EQUIP[item.tid].icon : 'sword');
+    switch (id) {
+      case 'sword':
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.09, 0.3, 0.09, 0.3, 0.1, -0.78, 0, -0.98, -0.1, -0.78], metal);
+        poly(ctx, [0, 0.3, 0.09, 0.3, 0.1, -0.78, 0, -0.98], dark);
+        poly(ctx, [-0.012, 0.22, 0.012, 0.22, 0.012, -0.8, -0.012, -0.8], 'rgba(255,255,255,0.7)');
+        poly(ctx, [-0.34, 0.26, 0.34, 0.26, 0.38, 0.36, -0.38, 0.36], acc);
+        poly(ctx, [-0.06, 0.36, 0.06, 0.36, 0.06, 0.72, -0.06, 0.72], leather);
+        facet(ctx, 0, 0.78, 0.1, 0.1, 6, acc, 0, 0.25);
+        break;
+      case 'dagger':
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.12, 0.12, 0.12, 0.12, 0.08, -0.5, -0.02, -0.8, -0.1, -0.45], metal);
+        poly(ctx, [0, 0.12, 0.12, 0.12, 0.08, -0.5, -0.02, -0.8], dark);
+        poly(ctx, [-0.3, 0.1, 0.3, 0.1, 0.24, 0.2, -0.24, 0.2], acc);
+        poly(ctx, [-0.06, 0.2, 0.06, 0.2, 0.06, 0.55, -0.06, 0.55], leather);
+        facet(ctx, 0, 0.6, 0.09, 0.09, 6, acc, 0, 0.25);
+        break;
+      case 'staff':
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.05, 0.95, 0.05, 0.95, 0.05, -0.5, -0.05, -0.5], wood);
+        poly(ctx, [0, 0.95, 0.05, 0.95, 0.05, -0.5, 0, -0.5], G.shade(wood, -0.2));
+        poly(ctx, [-0.22, -0.48, -0.06, -0.5, -0.1, -0.86, -0.26, -0.72], dark);
+        poly(ctx, [0.22, -0.48, 0.06, -0.5, 0.1, -0.86, 0.26, -0.72], dark);
+        ctx.fillStyle = G.rgba(r === 4 ? '#ffffff' : acc.startsWith('#') ? acc : '#ffffff', 0.3);
+        ctx.beginPath(); ctx.arc(0, -0.7, 0.3, 0, TAU); ctx.fill();
+        facet(ctx, 0, -0.7, 0.17, 0.17, 6, acc.startsWith('#') ? acc : '#ffd0f0', t, 0.28);
+        break;
+      case 'mace':
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.05, 0.9, 0.05, 0.9, 0.05, -0.3, -0.05, -0.3], wood);
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * TAU;
+          poly(ctx, [Math.cos(a - 0.3) * 0.2, -0.55 + Math.sin(a - 0.3) * 0.2, Math.cos(a) * 0.38, -0.55 + Math.sin(a) * 0.38, Math.cos(a + 0.3) * 0.2, -0.55 + Math.sin(a + 0.3) * 0.2], dark);
+        }
+        facet(ctx, 0, -0.55, 0.24, 0.24, 8, metal, 0.2, 0.25);
+        facet(ctx, 0, -0.55, 0.08, 0.08, 6, acc.startsWith('#') ? acc : '#ffd0f0', t, 0.2);
+        poly(ctx, [-0.12, 0.92, 0.12, 0.92, 0.1, 1, -0.1, 1], acc.startsWith('#') ? acc : '#fff');
+        break;
+      case 'bow':
+        ctx.rotate(-Math.PI / 4);
+        ctx.strokeStyle = wood; ctx.lineWidth = 0.13; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(-0.35, 0, 0.82, -1.15, 1.15); ctx.stroke();
+        ctx.strokeStyle = acc.startsWith('#') ? acc : rainbow(t); ctx.lineWidth = 0.07;
+        ctx.beginPath(); ctx.arc(-0.35, 0, 0.82, -0.25, 0.25); ctx.stroke();
+        ctx.strokeStyle = 'rgba(245,240,225,0.9)'; ctx.lineWidth = 0.025;
+        ctx.beginPath(); ctx.moveTo(-0.35 + Math.cos(-1.15) * 0.82, Math.sin(-1.15) * 0.82); ctx.lineTo(-0.35 + Math.cos(1.15) * 0.82, Math.sin(1.15) * 0.82); ctx.stroke();
+        poly(ctx, [-0.05, -0.02, 0.62, -0.02, 0.62, 0.02, -0.05, 0.02], '#d8c8a8');
+        poly(ctx, [0.6, -0.08, 0.82, 0, 0.6, 0.08], metal);
+        break;
+      case 'armor':
+        facetPoly(ctx, [-0.62, -0.5, -0.24, -0.66, 0, -0.5, 0.24, -0.66, 0.62, -0.5, 0.52, 0.1, 0.4, 0.72, 0, 0.86, -0.4, 0.72, -0.52, 0.1], metal, 0.18);
+        poly(ctx, [-0.24, -0.66, 0, -0.5, 0.24, -0.66, 0.14, -0.38, -0.14, -0.38], dark);
+        poly(ctx, [-0.04, -0.36, 0.04, -0.36, 0.04, 0.8, -0.04, 0.8], dark);
+        facet(ctx, -0.62, -0.42, 0.24, 0.2, 6, dark, 0, 0.2);
+        facet(ctx, 0.62, -0.42, 0.24, 0.2, 6, dark, 0, 0.2);
+        facet(ctx, 0, 0.05, 0.14, 0.14, 6, acc.startsWith('#') ? acc : '#ffd0f0', t, 0.25);
+        break;
+      case 'charm':
+        ctx.strokeStyle = metal; ctx.lineWidth = 0.06;
+        ctx.beginPath(); ctx.moveTo(-0.5, -0.8); ctx.quadraticCurveTo(0, 0.1, 0.5, -0.8); ctx.stroke();
+        facet(ctx, 0, 0.25, 0.42, 0.5, 6, dark, Math.PI / 2, 0.15);
+        facet(ctx, 0, 0.25, 0.3, 0.38, 6, acc.startsWith('#') ? acc : rainbow(t), Math.PI / 2, 0.3);
+        poly(ctx, [-0.12, 0.05, 0.02, -0.02, -0.06, 0.18], 'rgba(255,255,255,0.75)');
+        break;
+      case 'relic:map':
+        facetPoly(ctx, [-0.8, -0.55, 0.75, -0.62, 0.8, 0.58, -0.76, 0.64], '#ecd9a8', 0.08);
+        ctx.strokeStyle = '#a07a4a'; ctx.lineWidth = 0.05; ctx.setLineDash([0.1, 0.08]);
+        ctx.beginPath(); ctx.moveTo(-0.55, 0.35); ctx.quadraticCurveTo(-0.1, -0.4, 0.4, 0.05); ctx.stroke(); ctx.setLineDash([]);
+        ctx.strokeStyle = '#c4553a'; ctx.lineWidth = 0.09;
+        ctx.beginPath(); ctx.moveTo(0.3, -0.05); ctx.lineTo(0.5, 0.15); ctx.moveTo(0.5, -0.05); ctx.lineTo(0.3, 0.15); ctx.stroke();
+        break;
+      case 'relic:bell':
+        poly(ctx, [-0.08, -0.85, 0.08, -0.85, 0.08, -0.65, -0.08, -0.65], '#9aa2b0');
+        facetPoly(ctx, [0, -0.7, 0.36, -0.5, 0.46, 0.2, 0.66, 0.5, -0.66, 0.5, -0.46, 0.2, -0.36, -0.5], '#dfe5ee', 0.2);
+        facet(ctx, 0, 0.62, 0.14, 0.14, 6, '#9aa2b0', 0, 0.2);
+        break;
+      case 'relic:mug':
+        facetPoly(ctx, [-0.5, -0.5, 0.42, -0.5, 0.38, 0.75, -0.46, 0.75], '#f2b632', 0.18);
+        poly(ctx, [-0.56, -0.66, 0.48, -0.66, 0.42, -0.42, -0.5, -0.42], '#fff6dc');
+        ctx.strokeStyle = '#c8901e'; ctx.lineWidth = 0.12;
+        ctx.beginPath(); ctx.arc(0.52, 0.1, 0.24, -1.4, 1.4); ctx.stroke();
+        break;
+      case 'relic:harp':
+        ctx.strokeStyle = '#e8bd4c'; ctx.lineWidth = 0.12; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-0.5, 0.75); ctx.quadraticCurveTo(-0.7, -0.6, 0, -0.8); ctx.quadraticCurveTo(0.6, -0.6, 0.5, 0.75); ctx.lineTo(-0.5, 0.75); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 0.025;
+        for (let i = -2; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(i * 0.16, -0.55 + Math.abs(i) * 0.06); ctx.lineTo(i * 0.16, 0.7); ctx.stroke(); }
+        break;
+      case 'relic:grail':
+        facetPoly(ctx, [-0.6, -0.65, 0.6, -0.65, 0.42, -0.05, 0.1, 0.12, -0.1, 0.12, -0.42, -0.05], '#ffd45a', 0.2);
+        poly(ctx, [-0.08, 0.1, 0.08, 0.1, 0.1, 0.6, -0.1, 0.6], '#e0a32a');
+        poly(ctx, [-0.42, 0.6, 0.42, 0.6, 0.34, 0.8, -0.34, 0.8], '#ffd45a');
+        facet(ctx, 0, -0.35, 0.12, 0.12, 6, '#ff5a5a', 0, 0.2);
+        ctx.fillStyle = 'rgba(255,240,180,0.45)';
+        ctx.beginPath(); ctx.ellipse(0, -0.68, 0.55, 0.1, 0, 0, TAU); ctx.fill();
+        break;
+      case 'relic:scale':
+        facetPoly(ctx, [0, -0.85, 0.6, -0.1, 0.3, 0.75, -0.3, 0.75, -0.6, -0.1], '#d8452e', 0.24);
+        poly(ctx, [0, -0.85, 0.2, -0.1, 0, 0.75, -0.2, -0.1], '#ff7a5a');
+        break;
+      case 'relic:lantern':
+        ctx.fillStyle = 'rgba(255,200,100,0.35)';
+        ctx.beginPath(); ctx.arc(0, 0.1, 0.8, 0, TAU); ctx.fill();
+        poly(ctx, [-0.06, -0.95, 0.06, -0.95, 0.06, -0.72, -0.06, -0.72], '#5a3a26');
+        poly(ctx, [-0.44, -0.72, 0.44, -0.72, 0.36, -0.56, -0.36, -0.56], '#5a3a26');
+        poly(ctx, [-0.34, -0.56, 0.34, -0.56, 0.4, 0.62, -0.4, 0.62], '#ffd36a');
+        poly(ctx, [-0.2, -0.4, 0.2, -0.4, 0.24, 0.48, -0.24, 0.48], '#fff4c8');
+        poly(ctx, [-0.5, 0.62, 0.5, 0.62, 0.44, 0.8, -0.44, 0.8], '#5a3a26');
+        break;
+      default:
+        facet(ctx, 0, 0, 0.6, 0.6, 6, acc.startsWith('#') ? acc : '#fff', 0, 0.2);
+    }
+    ctx.restore();
+  };
+
+  // ---------- レア度つきの宝箱 ----------
+  // rank: 0=N 1=R 2=SR 3=SSR 4=UR  ・ open: 0..1
+  art.chestR = (ctx, open, rank, t = 0) => {
+    const P = [
+      { wood: '#8a5a2e', band: '#a8946e', lock: '#d8c08a' },
+      { wood: '#2f5f9a', band: '#d4e2f2', lock: '#9fd0ff' },
+      { wood: '#5a2f92', band: '#e8bd4c', lock: '#ead2ff' },
+      { wood: '#d39a2a', band: '#fff2c0', lock: '#ff6a5a' },
+      { wood: '#7a5ae0', band: '#ffffff', lock: '#ffffff' },
+    ][G.clamp(rank | 0, 0, 4)];
+    const wood = rank === 4 ? `hsl(${(t * 90) % 360},62%,58%)` : P.wood;
+    const C2 = (c, a) => (c.startsWith('hsl') ? c : C(c, a));
+    if (open > 0) {
+      ctx.save();
+      ctx.translate(0, -16 - open * 9);
+      ctx.scale(1, 1 - open * 0.55);
+      poly(ctx, [-16, 0, 16, 0, 15, -9, 0, -12, -15, -9], C2(wood, -0.15));
+      poly(ctx, [-16, 0, 16, 0, 16, -2, -16, -2], C(P.band, -0.15));
+      ctx.restore();
+      poly(ctx, [-15, -16, 15, -16, 13, -19 - open * 2, -13, -19 - open * 2], '#1a0e08');
+      const gl = rank === 4 ? rainbow(t, 0, 80) : art.RARITY_COL[rank].glow;
+      poly(ctx, [-12, -16.5, 12, -16.5, 10, -18.5 - open * 1.5, -10, -18.5 - open * 1.5], G.rgba(gl.startsWith('#') ? gl : '#fff0d0', 0.95 * open));
+    }
+    // 胴
+    poly(ctx, [-16, 0, 16, 0, 16, -16, -16, -16], C2(wood));
+    poly(ctx, [-16, 0, 0, 0, 0, -16, -16, -16], C2(wood, 0.08));
+    poly(ctx, [-16, -16, 16, -16, 16, -13.5, -16, -13.5], C(P.band, -0.1));
+    poly(ctx, [-16, -1.6, 16, -1.6, 16, 0, -16, 0], C(P.band, -0.25));
+    poly(ctx, [-11, 0, -8, 0, -8, -16, -11, -16], C(P.band, -0.15));
+    poly(ctx, [8, 0, 11, 0, 11, -16, 8, -16], C(P.band, -0.22));
+    // 鋲
+    [-12.8, 12.8].forEach((x) => [-4, -10].forEach((y) => ellipse(ctx, x, y, 0.8, 0.8, C(P.band, 0.2))));
+    // 錠前
+    poly(ctx, [-3, -14, 3, -14, 3, -6.5, 0, -5, -3, -6.5], C(P.band));
+    facet(ctx, 0, -10.2, 1.6, 1.8, 6, rank === 4 ? rainbow(t + 0.5) : P.lock, t, 0.25);
+    if (rank >= 3) poly(ctx, [-14, -12, -9, -12, -11.5, -6], 'rgba(255,255,255,0.18)');
+    if (open <= 0) {
+      ctx.save();
+      ctx.translate(0, -16);
+      poly(ctx, [-16, 0, 16, 0, 15, -8, 0, -11, -15, -8], C2(wood, 0.04));
+      poly(ctx, [-16, 0, 0, 0, 0, -11, -15, -8], C2(wood, 0.14));
+      poly(ctx, [-16, 0, 16, 0, 16, -2, -16, -2], C(P.band));
+      poly(ctx, [-11, 0, -8, 0, -8, -9.2, -11, -8.4], C(P.band, -0.1));
+      poly(ctx, [8, 0, 11, 0, 11, -8.4, 8, -9.2], C(P.band, -0.18));
+      poly(ctx, [-2.5, 0, 2.5, 0, 2.5, -5, -2.5, -5], C(P.band, 0.1));
+      if (rank >= 2) facet(ctx, 0, -7.5, 2, 1.6, 6, rank === 4 ? rainbow(t) : P.lock, 0, 0.25);
+      ctx.restore();
+    }
+  };
+
 })();

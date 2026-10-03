@@ -28,7 +28,7 @@ const standalone = html
 writeFileSync(join(root, 'dist/index.html'), standalone);
 
 const artifact = `${title}
-<meta name="theme-color" content="#160f0c">
+<meta name="theme-color" content="#060a16">
 ${fonts}
 <style>
 ${css}

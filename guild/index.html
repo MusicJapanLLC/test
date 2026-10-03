@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#160f0c">
+<meta name="theme-color" content="#060a16">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>ギルドの灯</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -31,7 +31,8 @@
         <span class="pill gold" id="goldPill"><span class="ic"></span><b id="goldVal">0</b></span>
         <span class="pill mat" id="matPill"><span class="ic"></span><b id="matVal">0</b></span>
       </div>
-      <button id="soundBtn" class="icon-btn" aria-label="音を消す"></button>
+      <button id="bellBtn" class="icon-btn bell" aria-label="お知らせ"></button>
+      <button id="menuBtn" class="icon-btn" aria-label="記録と設定"></button>
     </div>
     <button id="objChip" class="obj"><span class="obj-label">目標</span><span id="objText"></span><span class="obj-prog"><i id="objFill"></i></span><span id="objCount"></span></button>
     <div id="expStrip" aria-label="遠征中のパーティ"></div>
@@ -51,10 +52,11 @@
     <button id="tab-roster" data-tab="roster"><span class="ti"></span>冒険者<i class="dot" hidden></i></button>
     <button id="tab-reels" data-tab="reels" aria-label="冒険譚を見る"><span class="disc-shadow"></span><span class="disc"><span class="ti"></span></span><span class="badge" hidden>0</span><span id="reelSub">冒険譚</span></button>
     <button id="tab-build" data-tab="build"><span class="ti"></span>施設<i class="dot" hidden></i></button>
-    <button id="tab-records" data-tab="records"><span class="ti"></span>記録<i class="dot" hidden></i></button>
+    <button id="tab-treasury" data-tab="treasury"><span class="ti"></span>宝物庫<i class="dot" hidden></i></button>
   </nav>
 
   <div id="toasts" aria-live="polite"></div>
+  <div id="notice" hidden role="status"></div>
   <div id="advPop" hidden></div>
 
   <div id="tut" hidden>
@@ -97,13 +99,15 @@
     <div id="comments" hidden>
       <div id="commentsBackdrop"></div>
       <div class="c-sheet">
-        <div class="c-head"><span style="width:30px"></span><b id="commentsCount">コメント</b><button id="commentsClose" aria-label="コメントを閉じる"></button></div>
+        <div class="c-head"><span class="c-grip"></span><b id="commentsCount">コメント</b><span id="commentsPlus"></span><button id="commentsClose" aria-label="コメントを閉じる"></button></div>
         <div id="commentsList"></div>
+        <div id="commentsPost"></div>
       </div>
     </div>
   </section>
 
   <div id="modal" hidden><div class="modal-card" id="modalCard" role="dialog"></div></div>
+  <div id="chestFx" hidden><canvas id="chestCanvas"></canvas><div class="cf-ui"></div></div>
   <canvas id="fx"></canvas>
   <div id="safeProbe"></div>
 
@@ -122,13 +126,18 @@
 </div>
 <!--/BODY-->
 <script src="js/core.js"></script>
+<script src="js/save.js"></script>
 <script src="js/data.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/art.js"></script>
+<script src="js/items.js"></script>
+<script src="js/comments.js"></script>
 <script src="js/sim.js"></script>
 <script src="js/scene.js"></script>
 <script src="js/reels.js"></script>
+<script src="js/treasury.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/notify.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

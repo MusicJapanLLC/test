@@ -37,7 +37,12 @@
       stats: { quests: 0, success: 0, great: 0, legend: 0, fail: 0, likes: 0, tips: 0, goldEarned: 0, areaWin: {}, boss: 0, reels: 0, playSec: 0 },
       seenMonsters: {},
       flags: { tut: 0, autoDispatch: false, bossUnlocked: false },
-      settings: { bgm: 0.6, sfx: 0.8, haptics: true, autoplay: true, reduceMotion: false },
+      settings: { bgm: 0.6, sfx: 0.8, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true },
+      inbox: [],
+      items: [],
+      relics: {},
+      crystals: 30,
+      itemsNew: 0,
       streak: 0,
     };
     // 最初の冒険者：戦士ガルド
@@ -49,7 +54,9 @@
     s.nextId = 2;
     G.state = s;
     // チュートリアル用の最初の依頼
-    s.board.push(S.makeQuest(0, { size: 1, k: 0.05, dur: 14, name: '草原のスライム退治', monster: 'slime' }));
+    const tq = S.makeQuest(0, { size: 1, k: 0.05, dur: 14, name: '草原のスライム退治', monster: 'slime' });
+    s.board.push(tq);
+    s.flags.tutQ = tq.id;
     s.board.push(S.makeQuest(0, { size: 1, k: 0.4 }));
     s.board.push(S.makeQuest(0, { size: 2, k: 0.5 }));
     S.rollCandidates(s, true);
@@ -83,7 +90,9 @@
   S.expNeed = (lv) => Math.round(8 * Math.pow(1.33, lv - 1));
   S.power = function (a, s = G.state) {
     const base = D.CLASSES[a.cls].pow;
-    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10));
+    const items = G.items && s === G.state ? G.items.powMul(a) : 1;
+    const skills = 1 + 0.03 * Math.min(4, (a.skills || []).length);
+    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items * skills;
   };
   S.slots = (s = G.state) => s.fac.hall;
   S.boardSize = (s = G.state) => s.fac.hall + 2;
@@ -111,9 +120,10 @@
     p += (cleric ? 0.08 : 0) + brave * 0.05 + s.fac.alchemy * 0.03;
     p = G.clamp(p, 0.08, 0.97);
     if (!party.length) p = 0;
-    let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04);
-    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0);
-    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1);
+    const rfx = (key) => (G.items && s === G.state ? G.items.relicFx(key) : 0);
+    let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed'));
+    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great');
+    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold'));
     return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior };
   };
 
@@ -282,7 +292,13 @@
       s.stats.areaWin[q.area] = (s.stats.areaWin[q.area] || 0) + 1;
       if (q.boss) s.stats.boss = 1;
     }
-    const reel = G.reels.make({ q, party, tier, gold, mat: mat + bonusMat, fame, levelUps, extra, endAt: ex.endAt });
+    // 戦利品（宝箱の中身）。竜王は必ず最上級
+    let drop = null;
+    if (G.items) {
+      if (q.boss) drop = G.items.make(Math.random, 4, { noRelic: true, tid: 'sword' });
+      else drop = G.items.rollDrop(Math.random, tier, area.index, party);
+    }
+    const reel = G.reels.make({ q, party, tier, gold, mat: mat + bonusMat, fame, levelUps, extra, endAt: ex.endAt, drop });
     s.reels.push(reel);
     if (s.reels.length > 60) S.compactReels(s);
     G.emit('resolved', { ex, reel, party });
@@ -336,6 +352,25 @@
     s.stats.reels++;
     if (reel.tier === 'legend') s.stats.legendSeen = (s.stats.legendSeen || 0) + 1;
     if (reel.monster) s.seenMonsters[reel.monster] = Math.max(s.seenMonsters[reel.monster] || 0, { fail: 1, ok: 1, great: 2, legend: 3 }[reel.tier]);
+    // お宝（宝箱・投げ銭）と、閃いた技
+    const got = [];
+    if (G.items) {
+      if (reel.drop) { const r = G.items.add(reel.drop); got.push(Object.assign({}, reel.drop, r)); }
+      (reel.cm || []).forEach((c) => { if (c.gift) { const r = G.items.add(c.gift); got.push(Object.assign({}, c.gift, r)); } });
+      s.stats.items = (s.stats.items || 0) + got.length;
+      s.itemsNew = (s.itemsNew || 0) + got.length;
+    }
+    // 魔晶石
+    const cry = (reel.boss ? 100 : 0) + ({ fail: 0, ok: 0, great: 2, legend: 10 }[reel.tier] || 0);
+    if (cry) s.crystals = (s.crystals || 0) + cry;
+    if (reel.skill) {
+      const a = s.adv.find((x) => x.id === reel.skill.id);
+      if (a) {
+        a.skills = a.skills || [];
+        if (!a.skills.includes(reel.skill.name)) a.skills.push(reel.skill.name);
+        s.stats.skills = (s.stats.skills || 0) + 1;
+      }
+    }
     if (reel.extra === 'recruit' && reel.recruit) {
       const c = reel.recruit;
       c.free = true;
@@ -344,7 +379,9 @@
       if (s.cands.length > 4) s.cands.pop();
     }
     const ranked = S.checkRank(s);
-    return { gold, mat, fame: reel.fame, ranked };
+    got.forEach((it) => { if (it.rarity >= 2 && !it.dup) G.emit('rareItem', it); });
+    G.emit('claimed', reel);
+    return { gold, mat, fame: reel.fame, ranked, items: got, crystals: cry };
   };
 
   S.checkRank = function (s = G.state) {
@@ -354,6 +391,7 @@
       up++;
     }
     if (up) {
+      s.crystals = (s.crystals || 0) + 30 * up;
       G.emit('rankup', s.rank);
       if (s.rank >= 10 && !s.flags.bossUnlocked) {
         s.flags.bossUnlocked = true;
@@ -469,6 +507,7 @@
     const r = ob.o.reward;
     s.gold += r.gold || 0;
     s.mat += r.mat || 0;
+    s.crystals = (s.crystals || 0) + 5;
     s.stats.goldEarned += r.gold || 0;
     s.obj++;
     return r;
@@ -574,17 +613,16 @@
   };
 
   // ---------------------------------------------------------------- セーブ
-  S.save = function () {
+  S.save = function (force) {
     const s = G.state;
-    if (!s || G.resetting) return;
+    if (!s || G.resetting || !G.booted) return;
     s.lastSeen = G.now();
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(s));
+      G.save.write(JSON.stringify(s, (k, v) => (k === '_plan' || k === '_dm' || k === '_tx' ? undefined : v)), force);
     } catch (e) { /* 保存できない環境でも遊べる */ }
   };
-  S.load = function () {
-    let raw = null;
-    try { raw = localStorage.getItem(SAVE_KEY); } catch (e) { raw = null; }
+  // raw: G.save.init() が返したいちばん新しいセーブ
+  S.load = function (raw) {
     if (!raw) return null;
     try {
       const s = JSON.parse(raw);
@@ -593,9 +631,13 @@
       const f = S.fresh();
       const merged = Object.assign(f, s);
       merged.stats = Object.assign(S.freshStats(), s.stats || {});
-      merged.settings = Object.assign({ bgm: 0.6, sfx: 0.8, haptics: true, autoplay: true, reduceMotion: false }, s.settings || {});
+      merged.settings = Object.assign({ bgm: 0.6, sfx: 0.8, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true }, s.settings || {});
       merged.flags = Object.assign({ tut: 0, autoDispatch: false, bossUnlocked: false }, s.flags || {});
       merged.fac = Object.assign({ hall: 1, bunks: 1, tavern: 0, smithy: 0, training: 0, alchemy: 0, tower: 0 }, s.fac || {});
+      merged.items = s.items || [];
+      merged.relics = s.relics || {};
+      merged.crystals = s.crystals != null ? s.crystals : 30;
+      merged.inbox = s.inbox || [];
       G.state = merged;
       return merged;
     } catch (e) {
@@ -603,7 +645,5 @@
     }
   };
   S.freshStats = () => ({ quests: 0, success: 0, great: 0, legend: 0, fail: 0, likes: 0, tips: 0, goldEarned: 0, areaWin: {}, boss: 0, reels: 0, playSec: 0 });
-  S.reset = function () {
-    try { localStorage.removeItem(SAVE_KEY); } catch (e) { /* noop */ }
-  };
+  S.reset = function () { return G.save.clear(); };
 })();
