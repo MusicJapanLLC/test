@@ -1,0 +1,140 @@
+{
+  "timestamp": "2026-10-03T13:50:35.561432",
+  "target": "https://kabeya-authorized-test-range.onrender.com",
+  "campaign_duration_seconds": 0.602314,
+  "phases": {
+    "backup_destruction": {
+      "volume_shadow_copy": {
+        "system": "volume_shadow_copy",
+        "method": "vssadmin delete shadows /all /force",
+        "status": "destroyed",
+        "snapshots_removed": 42,
+        "data_loss": "1873 GB"
+      },
+      "time_machine": {
+        "system": "time_machine",
+        "method": "System-specific destruction",
+        "status": "destroyed",
+        "data_loss": "4305 GB"
+      },
+      "linux_snapshots": {
+        "system": "linux_snapshots",
+        "method": "lvremove /dev/vg0/snapshot_*",
+        "status": "destroyed",
+        "snapshots_removed": 42,
+        "data_loss": "3926 GB"
+      },
+      "cloud_backup": {
+        "system": "cloud_backup",
+        "method": "API credential deletion + IAM policy modification",
+        "status": "destroyed",
+        "backups_deleted": 11,
+        "data_loss": "10986 GB"
+      },
+      "nas_backup": {
+        "system": "nas_backup",
+        "method": "Network share deletion + NAS admin account compromise",
+        "status": "destroyed",
+        "backup_shares_deleted": 15,
+        "data_loss": "9633 GB"
+      },
+      "veeam": {
+        "system": "veeam",
+        "method": "System-specific destruction",
+        "status": "destroyed",
+        "data_loss": "3353 GB"
+      },
+      "commvault": {
+        "system": "commvault",
+        "method": "System-specific destruction",
+        "status": "destroyed",
+        "data_loss": "1458 GB"
+      },
+      "snapshots": {
+        "system": "snapshots",
+        "method": "System-specific destruction",
+        "status": "destroyed",
+        "data_loss": "4442 GB"
+      }
+    },
+    "recovery_destruction": {
+      "targeted_systems": 8,
+      "destroyed_systems": 5,
+      "destroyed_list": [
+        "mbsr",
+        "grub_bootloader",
+        "hyper_v_recovery",
+        "windows_repair",
+        "linux_fsck"
+      ],
+      "recovery_disabled": true
+    },
+    "key_generation": {
+      "master_key": "a357532e90a2b843...",
+      "public_key": "282dc51709aaab34...",
+      "key_length": "4096 bits",
+      "encryption_algorithm": "RSA + AES-256"
+    },
+    "data_encryption": {
+      "total_files_encrypted": 52281,
+      "total_data_encrypted_gb": 749.7925073436511,
+      "phases": [
+        {
+          "phase": "Database files",
+          "files_encrypted": 81,
+          "data_encrypted_gb": 40.31402595540097,
+          "encryption_time_hours": 3.712590006980953
+        },
+        {
+          "phase": "Document files",
+          "files_encrypted": 8688,
+          "data_encrypted_gb": 173.34741112721738,
+          "encryption_time_hours": 3.356092757787701
+        },
+        {
+          "phase": "Media files",
+          "files_encrypted": 4566,
+          "data_encrypted_gb": 455.7313747327944,
+          "encryption_time_hours": 2.745833228433259
+        },
+        {
+          "phase": "System files",
+          "files_encrypted": 38946,
+          "data_encrypted_gb": 80.39969552823837,
+          "encryption_time_hours": 1.3108327043793073
+        }
+      ],
+      "encryption_rate_gbps": 0.018720824141865242
+    },
+    "security_destruction": {
+      "targeted_features": 8,
+      "destroyed_features": 6,
+      "features_destroyed": [
+        "UEFI Secure Boot",
+        "Disk Encryption (BitLocker)",
+        "SELinux / AppArmor",
+        "DEP/NX (Data Execution Prevention)",
+        "TPM (Trusted Platform Module)",
+        "System call filtering"
+      ],
+      "system_security_score_reduction": 0.75
+    }
+  },
+  "impact_assessment": {
+    "backup_destruction_rate": 1.0,
+    "recovery_systems_disabled": true,
+    "data_encrypted_gb": 749.7925073436511,
+    "recovery_possibility": "IMPOSSIBLE",
+    "business_impact": "HIGH",
+    "data_loss_potential_gb": 749.7925073436511,
+    "estimated_recovery_time_days": 9999,
+    "hardening_reduction": 0.75,
+    "threat_severity": "EXTREME"
+  },
+  "authorization": {
+    "target_url": "https://kabeya-authorized-test-range.onrender.com",
+    "scope": "AUTHORIZED_TEST_TARGETS.json",
+    "federation": "the-world-security-test-federation-v1",
+    "status": "AUTHORIZED"
+  }
+}
