@@ -84,11 +84,35 @@ function checkFontCharset(root: string, html: string) {
     return;
   }
   const have = new Set(charset);
-  const text = html.replace(/<[^>]+>/g, '');
+  const text = htmlTextForFontAudit(html);
   const missing = [...new Set(text)].filter((c) => /[\u3000-\u9fff\uff00-\uffef]/.test(c) && !have.has(c));
   if (missing.length) {
     console.warn(`\n[fonts] フォントにない文字が ${missing.length} 字あります：${missing.join('')}\n→ npm run fonts でフォントを作り直してください\n`);
   }
+}
+
+/**
+ * Build-time only text extraction for the font character audit.
+ * This is deliberately not an HTML sanitizer: generated markup is trusted build output.
+ * A small state machine avoids regex-based multi-character sanitization warnings while
+ * preserving the previous behavior of counting text outside tag delimiters.
+ */
+function htmlTextForFontAudit(html: string): string {
+  let text = '';
+  let inTag = false;
+  for (const ch of html) {
+    if (ch === '<') {
+      inTag = true;
+      continue;
+    }
+    if (ch === '>') {
+      inTag = false;
+      text += ' ';
+      continue;
+    }
+    if (!inTag) text += ch;
+  }
+  return text;
 }
 
 /** 一覧ページの更新日は、掲載企業の中でいちばん新しい日 */
