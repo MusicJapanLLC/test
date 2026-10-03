@@ -21,7 +21,7 @@ declare global {
 export function logo(kind: LogoKind, className: string, alt: string): HTMLElement {
   const img = el('img', {
     class: className,
-    src: window.__BATON_LOGOS?.[kind] ?? withBase(`/logo-${kind}.png`),
+    src: (typeof window !== 'undefined' ? window.__BATON_LOGOS?.[kind] : undefined) ?? withBase(`/logo-${kind}.png`),
     alt,
     loading: 'lazy',
     decoding: 'async',
