@@ -172,7 +172,9 @@ ${m.noindex ? '' : `<link rel="canonical" href="${url}">
 <link rel="apple-touch-icon" href="/music-japan-symbol.png?v=${ICON_VERSION}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="${FONTS}">
+<link rel="preload" as="style" href="${FONTS}">
+<link rel="stylesheet" href="${FONTS}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="${FONTS}"></noscript>
 <script>document.documentElement.classList.add('js');try{if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&document.documentElement.dataset.world==='home'){document.documentElement.dataset.intro=sessionStorage.getItem('mj-intro')?'short':'full'}}catch(e){}</script>
 ${m.noindex ? '' : `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replaceAll('<', '\\u003c')}</script>`}
 <script type="module" src="/src/client/main.ts"></script>
