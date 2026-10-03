@@ -6,6 +6,7 @@ on:
       - 'claude/employee-onboarding-setup-udm86'
     paths:
       - 'monitoring/owned_site_monitor.py'
+      - 'monitoring/test_owned_site_monitor.py'
       - '.github/workflows/owned-site-monitor.yml'
   schedule:
     - cron: '23 */6 * * *'
@@ -29,6 +30,8 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: '3.12'
+      - name: Verify audit scope
+        run: python -m unittest monitoring.test_owned_site_monitor
       - name: Run live defensive audit
         run: python monitoring/owned_site_monitor.py | tee owned-site-monitor-report.json
       - name: Publish summary
