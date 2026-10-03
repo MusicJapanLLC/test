@@ -24,11 +24,6 @@ on:
       - 'docs/**'
       - '.github/workflows/**'
 
-permissions:
-  contents: write
-  actions: read
-  pull-requests: write
-
 concurrency:
   group: x-self-development
   cancel-in-progress: false
@@ -87,15 +82,3 @@ jobs:
             senju/state/world-observation.json
             automation/codegen/meta_state/self_dev_log.ndjson
             senju/knowledge/codegen_patterns.ndjson
-
-      - name: Commit local learning evidence when branch has not moved
-        run: |
-          set -euo pipefail
-          git config user.name "X-SelfDev"
-          git config user.email "x-selfdev@musicjapanllc.com"
-          git add senju/state/world-observation.json automation/codegen/meta_state/self_dev_log.ndjson senju/knowledge/codegen_patterns.ndjson 2>/dev/null || true
-          if git diff --staged --quiet; then exit 0; fi
-          git commit -m "chore(X): world-aware self-development evidence [skip ci]"
-          git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          git pull --rebase origin "$SELF_DEV_BRANCH" || { echo 'Branch moved; evidence retained as artifact'; exit 0; }
-          git push origin "HEAD:$SELF_DEV_BRANCH" || echo 'Evidence push deferred; artifact retained'
