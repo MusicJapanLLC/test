@@ -5,12 +5,13 @@ import '../styles/profile-hub-hero.css';
 
 import { initAnalytics } from '../lib/analytics';
 import { shouldRender3D } from '../lib/capabilities';
-import { initSmoothScroll, revealOnScroll } from '../lib/motion';
+import { initSmoothScroll, prefersReducedMotion, revealOnScroll } from '../lib/motion';
 import { renderProfileFooter } from './footer';
 import { renderProfileHub } from './hub-render';
+import { mountHubThreads } from './hub-threads';
 
 /**
- * ヒーローの「点灯」。レーザーの着弾と同時に呼ぶ。
+ * ヒーローの「点灯」。2つの光が重なる瞬間と同時に呼ぶ。
  * WebGLが使えない・読み込めないときも、必ずどこかで点灯させる。
  */
 function lightUp(hero: HTMLElement): void {
@@ -74,6 +75,47 @@ function mountHero(): void {
     });
 }
 
+/**
+ * ヒーローの下の背景（人と人をつなぐ糸）と、一覧のカードを連動させる。
+ * バトンが届いたカードは、写真に色が戻り、まわりが少し光る。
+ */
+function mountThreads(): void {
+  const canvas = document.querySelector<HTMLCanvasElement>('[data-bt-threads]');
+  if (!canvas || prefersReducedMotion() || !canvas.getContext) return;
+
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-hub-card]'));
+  let hovered = -1;
+  cards.forEach((card, i) => {
+    card.addEventListener('pointerenter', (e) => {
+      if (e.pointerType !== 'touch') hovered = i;
+    });
+    card.addEventListener('pointerleave', () => {
+      if (hovered === i) hovered = -1;
+    });
+    card.addEventListener('focus', () => (hovered = i));
+    card.addEventListener('blur', () => {
+      if (hovered === i) hovered = -1;
+    });
+  });
+
+  const timers = new Map<number, number>();
+  mountHubThreads(canvas, {
+    anchors: () => cards.map((c) => c.querySelector<HTMLElement>('[data-hub-anchor]') ?? c),
+    hovered: () => hovered,
+    cover: document.querySelector<HTMLElement>('[data-bt-hero]'),
+    onArrive: (i) => {
+      const card = cards[i];
+      if (!card) return;
+      card.classList.remove('is-baton');
+      // 付け直してアニメーションを最初から
+      void card.offsetWidth;
+      card.classList.add('is-baton');
+      window.clearTimeout(timers.get(i));
+      timers.set(i, window.setTimeout(() => card.classList.remove('is-baton'), 2600));
+    },
+  });
+}
+
 function boot(): void {
   initAnalytics();
 
@@ -87,6 +129,7 @@ function boot(): void {
   footer.replaceChildren();
   renderProfileHub(app);
   renderProfileFooter(footer);
+  mountThreads();
 
   initSmoothScroll();
   revealOnScroll(document);
