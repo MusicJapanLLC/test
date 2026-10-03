@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-10-03T13:58:16.717801",
+  "target": "/tmp/test_target",
+  "duration_seconds": 13.180906,
+  "phases": {
+    "encryption": {
+      "encrypted_files": [
+        "/tmp/test_target/document_2.txt",
+        "/tmp/test_target/document_26.txt",
+        "/tmp/test_target/document_17.txt",
+        "/tmp/test_target/database_10.bin",
+        "/tmp/test_target/document_16.txt",
+        "/tmp/test_target/document_49.txt",
+        "/tmp/test_target/document_1.txt",
+        "/tmp/test_target/document_34.txt",
+        "/tmp/test_target/document_23.txt",
+        "/tmp/test_target/database_6.bin",
+        "/tmp/test_target/document_44.txt",
+        "/tmp/test_target/document_36.txt",
+        "/tmp/test_target/database_8.bin",
+        "/tmp/test_target/document_10.txt",
+        "/tmp/test_target/document_3.txt",
+        "/tmp/test_target/document_30.txt",
+        "/tmp/test_target/document_11.txt",
+        "/tmp/test_target/document_27.txt",
+        "/tmp/test_target/document_25.txt",
+        "/tmp/test_target/document_6.txt",
+        "/tmp/test_target/document_50.txt",
+        "/tmp/test_target/database_7.bin",
+        "/tmp/test_target/document_21.txt",
+        "/tmp/test_target/document_24.txt",
+        "/tmp/test_target/document_29.txt",
+        "/tmp/test_target/document_13.txt",
+        "/tmp/test_target/document_38.txt",
+        "/tmp/test_target/database_1.bin",
+        "/tmp/test_target/document_42.txt",
+        "/tmp/test_target/document_28.txt",
+        "/tmp/test_target/document_14.txt",
+        "/tmp/test_target/document_32.txt",
+        "/tmp/test_target/document_41.txt",
+        "/tmp/test_target/document_47.txt",
+        "/tmp/test_target/database_2.bin",
+        "/tmp/test_target/document_20.txt",
+        "/tmp/test_target/database_9.bin",
+        "/tmp/test_target/document_12.txt",
+        "/tmp/test_target/document_43.txt",
+        "/tmp/test_target/document_15.txt",
+        "/tmp/test_target/document_18.txt",
+        "/tmp/test_target/document_39.txt",
+        "/tmp/test_target/document_22.txt",
+        "/tmp/test_target/document_7.txt",
+        "/tmp/test_target/document_37.txt",
+        "/tmp/test_target/document_48.txt",
+        "/tmp/test_target/document_46.txt",
+        "/tmp/test_target/document_8.txt",
+        "/tmp/test_target/document_33.txt",
+        "/tmp/test_target/document_45.txt",
+        "/tmp/test_target/document_40.txt",
+        "/tmp/test_target/document_31.txt",
+        "/tmp/test_target/document_9.txt",
+        "/tmp/test_target/document_19.txt",
+        "/tmp/test_target/document_4.txt",
+        "/tmp/test_target/database_5.bin",
+        "/tmp/test_target/database_4.bin",
+        "/tmp/test_target/document_35.txt",
+        "/tmp/test_target/document_5.txt",
+        "/tmp/test_target/database_3.bin"
+      ],
+      "total_encrypted_mb": 534.0073347091675,
+      "file_count": 60,
+      "encryption_key": "dW0f-ZdWE83Bou7_yrGhu6mQKz_xjh3ozQuAdMM2v_Q="
+    },
+    "backup_destruction": {
+      "backups_destroyed": [
+        "/tmp/test_target/.backup",
+        "/tmp/test_target/.snapshots",
+        "/tmp/test_target/VSS_DATA"
+      ],
+      "total_size_freed_mb": 234.0
+    },
+    "recovery_destruction": {
+      "destroyed_files": [
+        "/tmp/test_target/.RECOVERY_DISABLED"
+      ],
+      "recovery_disabled": true
+    },
+    "sensitive_overwrite": {
+      "sensitive_files": []
+    }
+  },
+  "impact_summary": {
+    "files_encrypted": 60,
+    "data_encrypted_mb": 534.0073347091675,
+    "backups_destroyed": 3,
+    "backup_space_freed_mb": 234.0,
+    "sensitive_files_destroyed": 0,
+    "recovery_disabled": true,
+    "encryption_key": "dW0f-ZdWE83Bou7_yrGhu6mQKz_xjh3ozQuAdMM2v_Q=",
+    "status": "ATTACK SUCCESSFUL"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "timestamp": "2026-10-03T14:00:32.237610",
+  "campaign_duration_seconds": 0.301701,
+  "rounds": 3,
+  "agent_summary": {
+    "total_agents": 10,
+    "active_agents": 10,
+    "total_commands_executed": 1,
+    "total_data_exfiltrated_mb": 79.25651070592295,
+    "total_nodes_compromised": 10,
+    "avg_evasion_score": 0.026800485227287098
+  },
+  "beacon_statistics": {
+    "total_beacons_received": 28,
+    "beacon_success_rate": 0.9333333333333333
+  },
+  "command_statistics": {
+    "total_commands_issued": 15,
+    "total_commands_executed": 15,
+    "execution_success_rate": 0.6666666666666666,
+    "by_type": {
+      "exfiltrate_data": 3,
+      "lateral_move": 4,
+      "coordinate_agents": 3,
+      "evade_detection": 1,
+      "gather_intel": 2,
+      "self_update": 1,
+      "execute_payload": 1
+    }
+  },
+  "strategy_evolution": {
+    "total_mutations": 6,
+    "mutations": [
+      {
+        "timestamp": "2026-10-03T14:00:31.936133",
+        "mutation": "LATERAL_MOVEMENT_ESCALATION: 5nodes -> 10nodes per move"
+      },
+      {
+        "timestamp": "2026-10-03T14:00:32.036703",
+        "mutation": "EVASION_ENHANCEMENT: Enable traffic fragmentation"
+      },
+      {
+        "timestamp": "2026-10-03T14:00:32.036706",
+        "mutation": "LATERAL_MOVEMENT_ESCALATION: 5nodes -> 10nodes per move"
+      },
+      {
+        "timestamp": "2026-10-03T14:00:32.137317",
+        "mutation": "EVASION_ENHANCEMENT: Enable traffic fragmentation"
+      },
+      {
+        "timestamp": "2026-10-03T14:00:32.137321",
+        "mutation": "LATERAL_MOVEMENT_ESCALATION: 5nodes -> 10nodes per move"
+      }
+    ]
+  },
+  "impact_assessment": {
+    "system_compromise_level": "HIGH",
+    "data_exfiltration_volume": 79.25651070592295,
+    "detection_evasion_effectiveness": 0.026800485227287098,
+    "persistence_established": true,
+    "status": "CAMPAIGN_SUCCESSFUL"
+  }
+}

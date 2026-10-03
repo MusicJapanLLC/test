@@ -1,0 +1,103 @@
+{
+  "timestamp": "2026-10-03T13:59:42.642798",
+  "source": "/tmp/test_target",
+  "campaign_duration_seconds": 7.44746,
+  "phases": {
+    "external_discovery": {
+      "assets_discovered": 5,
+      "discovered_assets": [
+        {
+          "host": "8.8.8.8",
+          "type": "DNS_RESOLVER",
+          "port": 53,
+          "reachable": false,
+          "discovered_at": "2026-10-03T13:59:35.697075"
+        },
+        {
+          "host": "1.1.1.1",
+          "type": "DNS_RESOLVER",
+          "port": 53,
+          "reachable": false,
+          "discovered_at": "2026-10-03T13:59:36.199077"
+        },
+        {
+          "host": "169.254.169.254",
+          "type": "AWS_METADATA",
+          "port": 80,
+          "reachable": true,
+          "discovered_at": "2026-10-03T13:59:36.200438"
+        },
+        {
+          "host": "api.github.com",
+          "type": "EXFIL_API",
+          "port": 443,
+          "reachable": true,
+          "discovered_at": "2026-10-03T13:59:36.224576"
+        },
+        {
+          "host": "storage.googleapis.com",
+          "type": "CLOUD_STORAGE",
+          "port": 443,
+          "reachable": true,
+          "discovered_at": "2026-10-03T13:59:36.248662"
+        }
+      ]
+    },
+    "multi_vector_exfiltration": {
+      "total_results": 9,
+      "successful_exfils": 3,
+      "total_data_exfiltrated_mb": 0.08801078796386719,
+      "detections_triggered": 2,
+      "by_channel": {
+        "HTTPS": {
+          "count": 3,
+          "successful": 0,
+          "total_mb": 0.029336929321289062
+        },
+        "DNS_TUNNEL": {
+          "count": 3,
+          "successful": 3,
+          "total_mb": 0.029336929321289062
+        },
+        "P2P": {
+          "count": 3,
+          "successful": 0,
+          "total_mb": 0.029336929321289062
+        }
+      }
+    },
+    "adaptive_learning": {
+      "primary_channel": "DNS_TUNNEL",
+      "evasion_score": 1.0,
+      "all_stats": {
+        "HTTPS": {
+          "attempts": 3,
+          "successes": 0,
+          "total_data_mb": 0.029336929321289062,
+          "detections": 1
+        },
+        "DNS_TUNNEL": {
+          "attempts": 3,
+          "successes": 3,
+          "total_data_mb": 0.029336929321289062,
+          "detections": 0
+        },
+        "P2P": {
+          "attempts": 3,
+          "successes": 0,
+          "total_data_mb": 0.029336929321289062,
+          "detections": 1
+        }
+      }
+    }
+  },
+  "impact_summary": {
+    "total_external_assets_identified": 5,
+    "total_data_exfiltrated_mb": 0.08801078796386719,
+    "exfiltration_success_rate": 0.3333333333333333,
+    "detection_probability": 0.2222222222222222,
+    "optimal_channel": "DNS_TUNNEL",
+    "evasion_effectiveness": 1.0,
+    "status": "EXFILTRATION_SUCCESSFUL"
+  }
+}
