@@ -2,7 +2,7 @@
 // sitemap and search indexes into dist/. Static assets in dist/assets are
 // hand-maintained and left untouched.
 //   npm run build
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { loadDefaultJapaneseParser } from "budoux";
 import { articles } from "../src/articles.mjs";
@@ -850,9 +850,10 @@ function podcastPage(lang) {
 }
 
 function llmsFull() {
-  const out = ["# SECOND TAKE — full text", "", "Interview publication by Music Japan LLC. Japanese edition at /, English edition at /en/. All people and companies currently published are fictional samples.", ""];
+  const out = ["# SECOND TAKE — full text", "", "Publisher: 合同会社Music Japan / Music Japan LLC — https://music-japan.com/", "", "SECOND TAKEは、経営者の二度目の選択を扱うインタビューメディアです。", "SECOND TAKE is an interview publication about founders' and executives' second choices.", "", "## 公開状態 / Publication status", "", "現在の人物・企業・記事はデザイン確認用の架空サンプルで、検索登録を停止しています。サンプルの本文はこのファイルに収録しません。", "The current people, companies and stories are fictional design samples. Indexing is disabled; sample stories are excluded from this file.", ""];
   for (const a of sorted) {
     for (const lang of LANGS) {
+      if (!indexable(href(lang, `/articles/${a.slug}/`))) continue;
       const e = a[lang];
       out.push(`## ${e.title}`, "", `- URL: ${ORIGIN}${href(lang, `/articles/${a.slug}/`)}`, `- Interviewee: ${e.name}, ${e.company} (${e.role})`, `- Published: ${a.date}`, `- Themes: ${e.tags.join(", ")}`, "", `> ${e.dek}`, "", ...e.brief.map((b) => `- ${b}`), "", ...e.intro, "");
       for (const sc of e.scenes) {
@@ -868,6 +869,7 @@ function llmsFull() {
 function feed(lang) {
   const t = copy[lang];
   const items = sorted
+    .filter((a) => indexable(href(lang, `/articles/${a.slug}/`)))
     .map((a) => {
       const e = a[lang];
       const url = `${ORIGIN}${href(lang, `/articles/${a.slug}/`)}`;
@@ -895,6 +897,7 @@ ${items}
 
 function sitemap(paths) {
   const urls = paths
+    .filter(indexable)
     .map(
       (p) => `  <url>
     <loc>${ORIGIN}${p}</loc>
@@ -929,6 +932,16 @@ function searchIndex(lang) {
 }
 
 // ---------- write ----------
+// Derive discovery files from the HTML actually built. A sample/noindex page
+// must never enter a sitemap, syndication feed or AI full-text export.
+function indexable(path) {
+  const file = join(DIST, path, "index.html");
+  if (!existsSync(file)) return false;
+  const html = readFileSync(file, "utf8");
+  return !/<meta\b[^>]*name="robots"[^>]*content="[^"]*noindex/i.test(html)
+    && html.includes(`<link rel="canonical" href="${ORIGIN}${path}">`);
+}
+
 function write(relPath, content) {
   const target = join(DIST, relPath);
   mkdirSync(dirname(target), { recursive: true });

@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: /
 
-Sitemap: https://secondtake.music-japan.com/sitemap.xml
+# Sitemap submission starts after verified articles replace the samples.
