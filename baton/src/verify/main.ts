@@ -89,7 +89,7 @@ function renderReady(card: HTMLElement, token: string, profileName?: string): vo
       el('h1', { class: 'action-card__title', text: '認証が完了しました。' }),
       el('p', {
         class: 'action-card__note',
-        text: 'ご申請ありがとうございます。相手の方の確認後、結果をメールでお知らせします。',
+        text: 'ご申請ありがとうございます。相手の方の確認後、Music Japanが紹介方法を個別に判断してご案内します。',
       }),
     );
   });
