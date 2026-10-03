@@ -1,8 +1,9 @@
 {
-  "scope_id": "kabeya-authorized-test-range",
+  "scope_id": "owner-authorized-red-live-ranges",
   "owner": "Owner/BOSS",
   "domain_roots": [
-    "kabeya-authorized-test-range.onrender.com"
+    "kabeya-authorized-test-range.onrender.com",
+    "sustainaboy-works.onrender.com"
   ],
   "effect_level": "state_change",
   "allowed_methods": [
@@ -21,5 +22,5 @@
   "retries": 2,
   "recursive_same_origin": true,
   "path_scope": "/**",
-  "note": "Every HTTPS URL on this exact host, including discovered internal/relative links, paths, queries and fragments, is explicitly authorized. Other hosts are not inherited."
+  "note": "Every HTTPS URL on either exact owner-authorized host, including discovered internal/relative links, paths, queries and fragments, is explicitly authorized for the bounded RED live-range loop. Authorization does not transfer to linked third-party hosts."
 }
