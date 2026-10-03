@@ -160,6 +160,8 @@ jobs:
         run: |
           git checkout -- senju/state/world-observation.json 2>/dev/null || true
 
+      # repair_loop.py imports automation/ai_foundry/sandbox_exec.py and executes
+      # bounded allowlisted test commands in a scrubbed environment before publish.
       - name: Autonomous sandbox test and repair loop
         if: steps.claim.outputs.has_job == 'true' && steps.claim.outputs.mode == 'repo'
         env:
