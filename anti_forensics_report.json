@@ -1,0 +1,210 @@
+{
+  "timestamp": "2026-10-03T13:44:04.326924",
+  "target": "https://kabeya-authorized-test-range.onrender.com",
+  "phases": {
+    "log_sanitization": {
+      "linux_logs": {
+        "platform": "Linux",
+        "targeted_logs": 9,
+        "cleared": [
+          "/var/log/auth.log",
+          "/var/log/syslog",
+          "/var/log/apache2/access.log",
+          "/var/log/nginx/access.log",
+          "/var/log/audit/audit.log",
+          "~/.bash_history",
+          "/var/log/wtmp",
+          "/var/log/lastlog"
+        ],
+        "success_rate": 0.8888888888888888
+      },
+      "windows_logs": {
+        "platform": "Windows",
+        "targeted_logs": 8,
+        "cleared": [
+          "Event Log: System",
+          "Event Log: Application",
+          "Event Log: Sysmon",
+          "Event Log: Task Scheduler",
+          "Event Log: Terminal Services"
+        ],
+        "success_rate": 0.625
+      },
+      "application_logs": {
+        "platform": "Application",
+        "targeted_logs": 7,
+        "cleared": [
+          "Apache access.log",
+          "Nginx access.log",
+          "PostgreSQL postgres.log",
+          "IIS logs",
+          "Application Insights",
+          "CloudTrail logs"
+        ],
+        "success_rate": 0.8571428571428571
+      },
+      "cloud_logs": {
+        "platform": "Cloud",
+        "targeted_logs": 6,
+        "cleared": [
+          "AWS CloudTrail",
+          "Datadog logs"
+        ],
+        "success_rate": 0.3333333333333333
+      }
+    },
+    "timestomp": {
+      "total_files": 7,
+      "modified": 5,
+      "files_list": [
+        {
+          "file": "/usr/bin/nc",
+          "timestamp_changed": true,
+          "new_timestamp": "2025-11-29T13:44:04.627581"
+        },
+        {
+          "file": "/tmp/*",
+          "timestamp_changed": true,
+          "new_timestamp": "2026-01-29T13:44:04.627749"
+        },
+        {
+          "file": "/var/tmp/*",
+          "timestamp_changed": true,
+          "new_timestamp": "2026-03-12T13:44:04.627758"
+        },
+        {
+          "file": "~/.ssh/authorized_keys",
+          "timestamp_changed": true,
+          "new_timestamp": "2026-07-13T13:44:04.627773"
+        },
+        {
+          "file": "/etc/cron.d/*",
+          "timestamp_changed": true,
+          "new_timestamp": "2026-01-06T13:44:04.627790"
+        }
+      ],
+      "success_rate": 0.7142857142857143
+    },
+    "behavioral_evasion": {
+      "timestamp": "2026-10-03T13:44:04.928637",
+      "techniques_applied": [
+        "sleep_obfuscation",
+        "process_timing_variance",
+        "resource_usage_normalization",
+        "network_pattern_mimicry"
+      ],
+      "evasion_details": {
+        "sleep_obfuscation": {
+          "techniques": [
+            "CPU-bound operations during sleep",
+            "Jitter injection (±50ms variance)",
+            "Memory access patterns during delay"
+          ],
+          "effectiveness": 0.8
+        },
+        "process_timing_variance": {
+          "techniques": [
+            "Callback timing randomization",
+            "Traffic shaping (variable packet rates)",
+            "Staggered command execution"
+          ],
+          "effectiveness": 0.85
+        },
+        "resource_usage_normalization": {
+          "methods": [
+            "CPU usage <= 15%",
+            "Memory footprint <= 100MB",
+            "Disk I/O throttling",
+            "Network bandwidth limiting"
+          ],
+          "compliance_rate": 0.95
+        },
+        "network_pattern_mimicry": {
+          "patterns": [
+            "Legitimate process spawning",
+            "Normal file system operations",
+            "Standard network protocols",
+            "Scheduled task patterns",
+            "Office application behavior"
+          ],
+          "fidelity": 0.9
+        }
+      },
+      "detection_avoidance_score": 0.7798248594170692
+    },
+    "siem_bypass": {
+      "traffic_fragmentation": {
+        "method": "Packet fragmentation",
+        "packet_size": 497,
+        "fragment_interval": "59ms",
+        "success_rate": 0.92
+      },
+      "dns_tunneling": {
+        "method": "DNS tunneling (dnscat2-like)",
+        "data_per_query": 238,
+        "query_interval": "1729ms",
+        "detection_evasion": 0.88
+      },
+      "https_covert": {
+        "method": "HTTPS header steganography",
+        "carrier": "User-Agent, X-Forwarded-For, Referer",
+        "bytes_per_request": 44,
+        "baseline_detection": 0.15
+      },
+      "low_volume": {
+        "method": "Slow exfiltration",
+        "rate": "1 KB/min",
+        "duration": "92 hours",
+        "total_possible_exfil": "35 MB",
+        "detection_probability": 0.05
+      },
+      "protocol_mimicry": {
+        "protocols": [
+          "Windows Update communications",
+          "SSL/TLS standard patterns",
+          "Cloud service protocols (Office365, Dropbox)"
+        ],
+        "fidelity": 0.93,
+        "false_positive_rate": 0.08
+      }
+    },
+    "memory_erasure": {
+      "timestamp": "2026-10-03T13:44:05.530094",
+      "artifacts_erased": 4,
+      "techniques": {
+        "heap_overwriting": {
+          "size": "10MB",
+          "pattern": "Random + Zero + DWORD pattern",
+          "success": true
+        },
+        "stack_scrubbing": {
+          "method": "Stack pointer reset + overwrite",
+          "success": true
+        },
+        "handle_table_cleanup": {
+          "handles_closed": 15,
+          "success": true
+        },
+        "dlls_unloading": {
+          "dlls_unloaded": [
+            "wldp.dll",
+            "etw_processor.dll"
+          ],
+          "success": true
+        }
+      },
+      "forensic_resistance": 0.87
+    }
+  },
+  "summary": {
+    "total_logs_cleared": 21,
+    "files_timestomped": 5,
+    "evasion_techniques": 5,
+    "overall_detection_reduction": 0.75,
+    "authorization": {
+      "target_url": "https://kabeya-authorized-test-range.onrender.com",
+      "scope": "AUTHORIZED_TEST_TARGETS.json",
+      "status": "AUTHORIZED"
+    }
+  }
+}
