@@ -2,26 +2,45 @@ name: X — Self-Development Cycle
 
 on:
   schedule:
-    - cron: '0 */6 * * *'
+    - cron: '23 */2 * * *'
   workflow_dispatch:
     inputs:
       focus:
-        description: 'Focus area for improvement (empty=auto-detect)'
+        description: 'Focus area for improvement (empty=world-aware auto-detect)'
         required: false
         default: ''
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'music-japan-lp/**'
+      - 'baton-partners/**'
+      - 'music-japan/**'
+      - 'second-take/**'
+      - 'baton/**'
+      - 'automation/**'
+      - 'api/**'
+      - 'senju/**'
+      - 'research/**'
+      - 'docs/**'
+      - '.github/workflows/**'
+
+concurrency:
+  group: x-self-development
+  cancel-in-progress: false
 
 jobs:
   self-develop:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      SELF_DEV_BRANCH: ${{ github.ref_name }}
+      SELF_DEV_BRANCH: claude/employee-onboarding-setup-udm86
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: claude/employee-onboarding-setup-udm86
           fetch-depth: 0
           persist-credentials: false
 
@@ -32,16 +51,34 @@ jobs:
       - name: Install dependencies
         run: pip install requests anthropic 2>/dev/null || pip install requests
 
-      - name: Run self-development cycle
+      - name: Build shared THE WORLD observation snapshot
+        run: |
+          set -euo pipefail
+          python automation/world/world_observer.py --output senju/state/world-observation.json
+          python - <<'PY'
+          import json
+          p='senju/state/world-observation.json'
+          d=json.load(open(p,encoding='utf-8'))
+          assert d.get('autonomy_level') == 95
+          assert d['repository']['observed_roots'] >= 10
+          print('WORLD_OBSERVATION_OK', d['repository'])
+          PY
+
+      - name: Run world-aware self-development cycle
         working-directory: automation/codegen
         run: |
           FOCUS="${{ github.event.inputs.focus || '' }}"
+          if [ -z "$FOCUS" ]; then FOCUS="world-aware verified autonomy and learning efficiency"; fi
           python3 orchestrator.py selfdev "$FOCUS"
 
-      - name: Commit self-improvements
-        run: |
-          git config user.name "X-SelfDev"
-          git config user.email "x-selfdev@musicjapanllc.com"
-          git add -A
-          git diff --staged --quiet || git commit -m "feat(X/self-dev): autonomous engine improvement [skip ci]"
-          git push origin HEAD || true
+      - name: Preserve observation and learning evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: x-self-dev-world-evidence-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            senju/state/world-observation.json
+            automation/codegen/meta_state/self_dev_log.ndjson
+            senju/knowledge/codegen_patterns.ndjson

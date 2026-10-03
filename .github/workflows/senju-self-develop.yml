@@ -2,7 +2,7 @@ name: Senju Autonomous Self-Development Loop
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "*/15 * * * *"   # four autonomous research cycles per hour
   workflow_dispatch:
 
 concurrency:
@@ -13,7 +13,7 @@ jobs:
   analyze-generate-verify:
     name: Verify → ELO gap plan → deduplicated PR
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     permissions:
       contents: write
       pull-requests: write
@@ -36,6 +36,18 @@ jobs:
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
+
+      - name: Build current THE WORLD observation
+        shell: bash
+        run: |
+          set -euo pipefail
+          python automation/world/world_observer.py --output /tmp/world-observation.json
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/world-observation.json',encoding='utf-8'))
+          r=d.get('repository') or {}
+          print(f"observed_roots={r.get('observed_roots')} active_roots={r.get('active_roots')} tracked_files={r.get('tracked_files')}")
+          PY
 
       - name: Install test dependency with layout compatibility
         env:
@@ -114,7 +126,7 @@ jobs:
           python senju/scripts/self_code_gen.py \
             --summary /tmp/evolution-summary.json \
             --labs-dir senju/labs \
-            --max-manifests 10 \
+            --max-manifests 24 \
             --report-json /tmp/self-code-gen-report.json
 
           python - <<'PY' >> "$GITHUB_OUTPUT"
@@ -155,6 +167,7 @@ jobs:
           name: senju-self-development-${{ github.run_id }}
           path: |
             /tmp/evolution-summary.json
+            /tmp/world-observation.json
             /tmp/self-code-gen-report.json
           if-no-files-found: warn
           retention-days: 30
@@ -170,4 +183,5 @@ jobs:
           - Equivalent open PR reused: **${{ steps.generate.outputs.deduplicated || 'false' }}**
           - Plan fingerprint: **${{ steps.generate.outputs.campaign_fingerprint || 'none' }}**
           - PR: ${{ steps.generate.outputs.pr || 'none' }}
+          - Autonomous lab ceiling per cycle: **24**
           EOF
