@@ -1266,6 +1266,12 @@ a.sleeve-in:hover .sleeve-status .arrow {
     #060607;
   border-top: 1px solid var(--rule);
 }
+[data-theme='needle'] .spot-h {
+  line-height: 1.35;
+}
+[data-theme='needle'] .spot-h .ph {
+  white-space: nowrap;
+}
 [data-theme='needle'] .board {
   background: #0c0c0f;
   box-shadow:

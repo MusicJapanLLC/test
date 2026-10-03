@@ -172,7 +172,7 @@ export const musicJapan: Partner = {
     },
     spotlight: {
       kicker: 'Media',
-      title: ['経営者メディア『ミラエラ』に、', '{載るという道も}。'],
+      title: ['{経営者メディア}', '{『ミラエラ』に、}', '{載るという道も。}'],
       lead: '代表の壁谷友生は、経営者メディア『ミラエラ』の認定インタビュアーとして、経営者への取材をしています。ご希望があれば、Baton Partnersのページとあわせて、ミラエラのインタビューもご案内します。',
       name: 'ミラエラ',
       url: 'https://miraerror.jp/',
