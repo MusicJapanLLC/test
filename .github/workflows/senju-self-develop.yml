@@ -2,8 +2,12 @@ name: Senju Autonomous Self-Development Loop
 
 on:
   schedule:
-    - cron: "0 * * * *"   # every hour
+    - cron: "0 * * * *"
   workflow_dispatch:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/state/last-evolution-summary.json'
 
 concurrency:
   group: senju-self-develop
@@ -65,7 +69,10 @@ jobs:
               --name senju-validated-promotion --dir /tmp/senju-memory || true
           fi
 
-          if [[ -f /tmp/senju-memory/last-evolution-summary.json ]]; then
+          if [[ "${GITHUB_EVENT_NAME}" == "push" && -f senju/state/last-evolution-summary.json ]]; then
+            cp senju/state/last-evolution-summary.json /tmp/evolution-summary.json
+            echo "restored_source=scan-state-push" >> "$GITHUB_ENV"
+          elif [[ -f /tmp/senju-memory/last-evolution-summary.json ]]; then
             cp /tmp/senju-memory/last-evolution-summary.json /tmp/evolution-summary.json
             echo "restored_source=artifact:$PREV_RUN" >> "$GITHUB_ENV"
           elif [[ -f senju/state/last-evolution-summary.json ]]; then
