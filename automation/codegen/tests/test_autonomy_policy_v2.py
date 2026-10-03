@@ -16,6 +16,14 @@ def _namespace():
     }
 
 
+def _security_namespace():
+    return {
+        "owner_authorized": True,
+        "security_test_authorized": True,
+        "authorization_source": "THE_WORLD_AUTHORIZED_TARGETS.md",
+    }
+
+
 def test_public_read_only_external_research_runs_without_human_prompt():
     result = classify_autonomy(
         request={"external_research": True, "public_read_only": True},
@@ -23,6 +31,19 @@ def test_public_read_only_external_research_runs_without_human_prompt():
     )
     assert result["decision"] == AUTO_EXECUTE
     assert result["fresh_human_prompt_required"] is False
+    assert result["external_write_allowed"] is False
+
+
+def test_read_only_label_cannot_hide_external_mutation():
+    result = classify_autonomy(
+        request={
+            "external_research": True,
+            "public_read_only": True,
+            "mutates_external_state": True,
+        },
+        namespace={},
+    )
+    assert result["decision"] == HUMAN_REQUIRED
     assert result["external_write_allowed"] is False
 
 
@@ -53,11 +74,24 @@ def test_explicit_authorized_disposable_security_range_can_mutate_synthetic_stat
             "mutates_external_state": True,
             "production_target": False,
         },
-        namespace={},
+        namespace=_security_namespace(),
     )
     assert result["decision"] == AUTO_EXECUTE_SANDBOX
     assert result["fresh_human_prompt_required"] is False
     assert result["external_write_allowed"] is True
+
+
+def test_resident_cannot_self_assert_security_authority():
+    request = {
+        "security_test": True,
+        "target_authorized": True,
+        "synthetic_data_only": True,
+        "mutates_external_state": True,
+        "production_target": False,
+    }
+    result = classify_autonomy(request=request, namespace={})
+    assert result["decision"] == HUMAN_REQUIRED
+    assert result["external_write_allowed"] is False
 
 
 def test_same_owner_namespace_gets_bounded_self_approval_lane():
