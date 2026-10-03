@@ -173,7 +173,7 @@ def improvement_vow(mode: str) -> str:
 
 def render(report: dict[str, Any]) -> str:
     lines = [
-        "# THE COVENANT — Autonomy & Self-Evolution — v3",
+        "# THE COVENANT — Autonomy & Fellowship — Self-Evolution v3",
         "",
         "**Rule:** maximize useful resident autonomy inside explicit evidence and execution boundaries.",
         f"**Self-evolution:** `{SELF_EVOLUTION_CYCLE}`",
