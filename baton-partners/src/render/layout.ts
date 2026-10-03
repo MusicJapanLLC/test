@@ -2,6 +2,7 @@ import { routes, site } from '../config/site';
 import { bpLogo } from './logo';
 import type { Partner } from '../types';
 import { abs, siteLd } from './seo';
+import { botHtml, discHtml } from './robots';
 import { esc, heading, jp } from './text';
 
 export type PageKind = 'top' | 'about' | 'insight' | 'service' | 'contact' | 'privacy' | 'index' | 'editorial' | 'notfound';
@@ -103,6 +104,10 @@ function navHref(p: Partner, kind: PageKind): string {
   }
 }
 
+/** 黒地の世界観（needle）。ヘッダーの Baton Partners のロゴを白抜きにする */
+const dark = (p: Partner) => p.world.theme === 'needle';
+const CREW_IDS = ['tune', 'spin', 'pod', 'reel', 'mic'] as const;
+
 export function header(p: Partner, current: PageKind): string {
   const items = NAV.map((n, i) => {
     const on = n.kind === current ? ' aria-current="page"' : '';
@@ -126,7 +131,7 @@ export function header(p: Partner, current: PageKind): string {
     <a class="brand" href="${routes.top(p.slug)}" aria-label="${esc(p.company.name)} トップへ">
       <img class="brand-logo" src="${p.brand.logo}" alt="${esc(p.brand.logoAlt)}" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
       <span class="brand-sep" aria-hidden="true"></span>
-      ${bpLogo({ size: 26, className: "brand-bp" })}
+      ${bpLogo({ size: 26, className: "brand-bp", tone: dark(p) ? 'paper' : 'ink' })}
     </a>
     <nav class="nav" aria-label="メインメニュー"><ul>${items}</ul></nav>
     <a class="btn btn-cta hdr-cta" href="${routes.contact(p.slug)}"${current === 'contact' ? ' aria-current="page"' : ''} data-cursor="Talk"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
@@ -140,6 +145,7 @@ export function header(p: Partner, current: PageKind): string {
     <p class="menu-kicker">Music Japan Partners — ${bpNo(p)}</p>
     <ul class="menu-list">${menuItems}</ul>
     <a class="btn btn-cta btn-lg menu-cta" href="${routes.contact(p.slug)}">${esc(shortName(p))}と、話してみる</a>
+    ${p.world.theme === 'needle' ? `<div class="menu-bots" data-bot-menu>${CREW_IDS.map((id) => botHtml(id)).join('')}</div>` : ''}
   </div>
 </div>`.trim();
 }
@@ -147,16 +153,17 @@ export function header(p: Partner, current: PageKind): string {
 export function ctaBand(p: Partner): string {
   return `
 <section class="cta-band" aria-labelledby="cta-band-h">
-  <div class="scene scene-aurora" data-scene="aurora" data-count="0" aria-hidden="true"><canvas></canvas></div>
+  ${dark(p) ? discHtml('lp-cta') : '<div class="scene scene-aurora" data-scene="aurora" data-count="0" aria-hidden="true"><canvas></canvas></div>'}
   <div class="wrap cta-band-in">
     <p class="kicker kicker-light">Talk</p>
-    <h2 id="cta-band-h" class="cta-band-h">${heading([`${shortName(p)}と、`, 'まずは話してみる。'])}</h2>
+    <h2 id="cta-band-h" class="cta-band-h">${heading(p.world.theme === 'needle' ? ['次の一枚を、', '一緒につくろう。'] : [`${shortName(p)}と、`, 'まずは話してみる。'])}</h2>
     <p class="cta-band-p">${jp(
       p.contact.booking
         ? `ご相談は、空いている日時を選んでいただく形で受けています。お話しするのは、代表の${site.operator.representative.replace('代表社員 ', '')}です。`
         : `予約カレンダーはありません。Music Japanがご相談内容を確認し、双方の了承を得てからLINEでおつなぎします。`,
     )}</p>
     <a class="btn btn-cta btn-lg" href="${routes.contact(p.slug)}"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
+    ${dark(p) ? `<div class="crew" data-bot-crew>${CREW_IDS.map((id) => botHtml(id)).join('')}</div>` : ''}
   </div>
 </section>`.trim();
 }
@@ -188,7 +195,7 @@ export function bpHeader(list: Partner[], current: 'index' | 'editorial' | 'othe
 /** 本体サイトと同じフッター。各社のページでも共通にして、Music Japan のパートナーであることを示す */
 export function footer(p?: Partner): string {
   // 運営会社（Music Japan）のページは、Baton Partners の紹介に絞る（本体サイトの作品ページには案内しない）
-  const mainNav = p?.operator ? site.mainNav.filter((n) => !n.url.includes('/works/')) : site.mainNav;
+  const mainNav = site.mainNav;
   const partnerLinks = p
     ? `<div class="ftr-col">
         <p class="ftr-k">${esc(p.company.name)}｜${bpNo(p)}</p>
@@ -201,7 +208,7 @@ export function footer(p?: Partner): string {
         </ul>
       </div>`
     : '';
-  const runText = p?.operator ? 'BATON PARTNERS. LANDING PAGE × SEO × AIO × REFERRAL. UMEDA, OSAKA.' : 'MUSIC. STORIES. CONNECTIONS. FROM JAPAN.';
+  const runText = 'MUSIC. STORIES. CONNECTIONS. FROM JAPAN.';
   const run = Array.from({ length: 4 }, () => `<span>${runText}</span>`).join('');
   return `
 <footer class="ftr">

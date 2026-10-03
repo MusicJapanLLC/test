@@ -3,18 +3,20 @@ import type { Partner } from '../types';
 /**
  * 合同会社Music Japan（運営会社）／Baton Partners
  *
- * 世界観：ロゴの「赤い輪」と「赤い点」を、陸上のトラックとバトンに見立てる（relay）。
- *         白と墨、日の丸の赤。極太ゴシックとスタジアムの数字、レーン・ゼッケン・バトン。
+ * 世界観：公式サイト music-japan.com（NEEDLE DROP）へのオマージュ（needle / vinyl）。
+ *         黒い盤面、公式シンボルを刷った赤いラベル、CUT → SPIN → DROP。公式サイトのちびロボ5体も出す。
+ *         オーナーの指示：音楽やレコードは見た目に使ってよい。文章で音楽の話はしない。
  * 文章：大阪の小さな会社の「ひとり」が、相手ひとりに宛てて書く体裁（music-japan-lp/docs/writing-sources.md の決まり）。
  *       否定から入る対比・三つ並べ・ダッシュ・比喩の抽象語を使わない。言えることだけを言い切る。
  *
  * 載せないもの（オーナーの指示）：音楽の話、SECOND TAKE、紹介業を始めた経緯、料金・契約条件。
+ *   「料金は出さない」「公開前に必ず見せる」とページに書くこともしない（オーナーの指示）。
  * 事実の出どころ：
- *   公式サイト（music-japan.com）… 会社概要、所在地、法人番号、代表者
+ *   公式サイト（music-japan.com）… 会社概要、所在地、法人番号、代表者、ジャケット写真
  *   このサイトの実装 …………………… 5ページの構成、robots.txt で許可しているAIクローラー12種、llms.txt、紹介の流れ（gas/Code.gs）
  *   ミラエラ（miraerror.jp）……… 2020年から運営、450社超の経営者インタビュー、掲載企業（オーナーの案内文より）
  *   Batonの代表プロフィール ………… 「学び、紡ぎ、繋いでいく。」
- * パートナー企業のロゴ：エボルグ・Central AX は掲載了承済み。Smartaleck は了承済み・ページ準備中のため、正式ロゴが届くまで社名の文字で出す。
+ * パートナー企業のロゴ：エボルグ・Central AX・Smartaleck は掲載了承済み（黒地なので白抜き版を使う）。
  */
 export const musicJapan: Partner = {
   slug: 'music-japan',
@@ -44,15 +46,15 @@ export const musicJapan: Partner = {
     ],
   },
   brand: {
-    // ロゴは細い欧文と、日の丸の赤（輪と点）。強調は墨、赤はバトンと要所だけに使う
-    primary: '#111113',
-    accent: '#C8102E',
-    logo: '/partners/music-japan/logo.png',
+    // 公式サイトと同じ黒地。文字は生成り（#efe9e0）、赤（#e1222f）はラベルと要所だけ
+    primary: '#e1222f',
+    accent: '#ff3a48',
+    logo: '/partners/music-japan/logo-white.png',
     logoAlt: 'MUSIC JAPAN LLC 合同会社Music Japan',
     logoSize: [809, 190],
-    scene: { a: '#111113', b: '#C8102E', match: '#FF2D47' },
+    scene: { a: '#efe9e0', b: '#e1222f', match: '#ff3a48' },
   },
-  world: { theme: 'relay', scene: 'relay' },
+  world: { theme: 'needle', scene: 'vinyl' },
   leader: {
     name: '壁谷 友生',
     nameEn: 'Tomoki Kabeya',
@@ -68,6 +70,8 @@ export const musicJapan: Partner = {
   },
 
   top: {
+    display: ['PASS', 'THE', 'BATON.'],
+    deck: ['45 RPM', 'SIDE A', 'NOW SPINNING — BP-000'],
     title: ['検索から、商談まで。', 'バトンをつなぐ。'],
     lead: 'Baton Partnersは大阪・梅田の合同会社Music Japanが運営する、法人向けのサービスです。御社のためだけのページを5枚つくり、Googleの検索結果とAIの答えに出るよう整えます。読んだ人から「話してみたい」と声がかかれば、私たちが間に入っておつなぎします。',
     badges: ['大阪・梅田', '1社につき5ページ', '全国オンライン対応'],
@@ -75,22 +79,22 @@ export const musicJapan: Partner = {
     numbersTitle: 'ページの裏側を、{数字で}。',
     verbs: [
       {
-        en: 'Found',
+        en: 'Cut',
+        ja: 'つくる',
+        title: '御社だけの、{5枚のページ}。',
+        body: 'トップ、取り組み、記事、サービス、話してみる。公式サイトとは別の入口を、partners.music-japan.com の下につくります。色と書体と動きは、ロゴを見て決めます。',
+      },
+      {
+        en: 'Spin',
         ja: '見つかる',
-        title: '社名で検索されたとき、{もう1枚}。',
-        body: '名刺を受け取った人は、たいてい帰りの電車で社名を検索します。公式サイトの隣に、御社を説明するページがもう1枚並ぶ。最初の入口はそこです。',
+        title: '検索にも、{AIの答えにも}。',
+        body: '悩みの言葉で記事を書き、会社の情報は構造化データとllms.txtでつなぎます。Googleで探す人にも、ChatGPTに聞く人にも、名前が届くように。',
       },
       {
-        en: 'Read',
-        ja: '読まれる',
-        title: '悩みで探す人にも、{届くように}。',
-        body: 'まだ御社の名前を知らない人は、悩みの言葉で検索します。そこに答える記事を書いて、読んだ人がサービスのページへ進めるようにします。',
-      },
-      {
-        en: 'Passed',
-        ja: 'つながる',
-        title: '最後のひと押しは、{人が渡す}。',
-        body: '「話してみたい」という相談は、Music Japanが確かめてから御社へ渡します。検索から来た人も、AIの答えで名前を知った人も、最後は同じ窓口です。',
+        en: 'Drop',
+        ja: 'つなぐ',
+        title: '最後は、{人の手で渡す}。',
+        body: '相談はそのまま流さず、Music Japanが一度読んでから御社へ渡します。検索から来た人も、AIの答えで名前を知った人も、最後は同じ窓口です。',
       },
     ],
     problemsTitle: '問い合わせが増えない会社で、{よく聞く話}。',
@@ -130,36 +134,37 @@ export const musicJapan: Partner = {
       ],
       note: 'イメージ図です。順位や表示のされ方を約束するものではありません。',
     },
-    relay: {
-      title: ['専用LP×SEO×AIO×紹介。', '{4つの区間を}、{ひとつの窓口で}。'],
-      lead: 'ページをつくる会社、記事を書く会社、AI検索の対策をする会社、紹介してくれる人。ふつうは別々に頼むものを、Baton Partnersではまとめて引き受けます。途中でバトンを落とさないためです。',
-      legs: [
+    tracklist: {
+      title: ['専用LP×SEO×AIO×紹介。', '{4つを}、{ひとつの窓口で}。'],
+      lead: 'ページをつくる会社、記事を書く会社、AI検索の対策をする会社、紹介してくれる人。ふつうは別々に頼むものを、Baton Partnersではまとめて引き受けます。頼む先が分かれていると、途中で話が止まりやすいからです。',
+      jacket: { title: 'BATON PARTNERS', sub: 'LP × SEO × AIO × REFERRAL' },
+      tracks: [
         {
-          leg: '第1走',
-          en: 'Landing Page',
+          no: 'A1',
           name: '専用LP',
-          title: '御社だけの、{5枚のページ}',
-          body: 'トップ、取り組み、記事、サービス、話してみる。partners.music-japan.com の下に、公式サイトとは別の入口をつくります。色と書体と3Dの動きは、ロゴから決めます。',
+          meta: '5 PAGES',
+          title: '社名で検索されたとき、{もう1枚}。',
+          body: '名刺を受け取った人は、たいてい帰りの電車で社名を検索します。そのとき公式サイトの隣に、御社を説明するページが並ぶように。トップ、取り組み、記事、サービス、話してみるの5枚をつくります。',
         },
         {
-          leg: '第2走',
-          en: 'SEO',
+          no: 'A2',
           name: 'SEO',
-          title: '悩みの言葉から、{記事を書く}',
-          body: 'お客さんが検索窓に打ちこむ言葉を調べて、記事を1本書きます。タイトルと説明文、見出し、内部リンクも、検索の決まりに沿ってそろえます。',
+          meta: 'ARTICLE',
+          title: '悩みの言葉から、{記事を書く}。',
+          body: 'まだ御社の名前を知らない人は、悩みの言葉で検索します。その言葉を調べて記事を1本書き、タイトル、説明文、見出し、内部リンクまで、検索の決まりに沿ってそろえます。',
         },
         {
-          leg: '第3走',
-          en: 'AIO',
+          no: 'B1',
           name: 'AIO',
-          title: 'AIの答えに、{拾われる形に}',
-          body: 'ChatGPTやGeminiが答えをつくるときに読みやすいよう、ページの冒頭に問いと答えを置きます。会社の情報は、構造化データとllms.txtでつなぎます。',
+          meta: 'STRUCTURED DATA',
+          title: 'AIの答えに、{拾われる形に}。',
+          body: 'ChatGPTやGeminiが答えをつくるときに読みやすいよう、ページの冒頭に問いと答えを置きます。会社名、所在地、代表者、サービスは、構造化データとllms.txtでつなぎます。',
         },
         {
-          leg: 'アンカー',
-          en: 'Referral',
+          no: 'B2',
           name: '紹介',
-          title: '最後は、{人の手で渡す}',
+          meta: 'REFERRAL',
+          title: '紹介を、{待つだけにしない}。',
           body: 'ページを読んで「話してみたい」と思った人の相談を、Music Japanが先に読みます。合いそうなら御社に確かめて、双方が了承したらLINEでおつなぎします。',
         },
       ],
@@ -192,11 +197,26 @@ export const musicJapan: Partner = {
       title: 'Baton Partnersに、{載っている会社}。',
       lead: '公開しているページは、どれも1社ずつ、色と書体を決めてつくっています。',
       items: [
-        { name: '株式会社エボルグ', href: '/evorg/', logo: { src: '/partners/evorg/logo.png', size: [517, 137] } },
-        { name: '株式会社Central AX', href: '/central-ax/', logo: { src: '/partners/central-ax/logo.png', size: [691, 210] } },
-        { name: '株式会社Smartaleck', status: 'ページ準備中' },
+        { name: '株式会社エボルグ', no: 'BP-001', href: '/evorg/', tint: '#e83c4f', logo: { src: '/partners/evorg/logo-light.png', size: [517, 137] } },
+        { name: '株式会社Central AX', no: 'BP-002', href: '/central-ax/', tint: '#5b6170', logo: { src: '/partners/central-ax/logo-white.png', size: [691, 210] } },
+        { name: '株式会社Smartaleck', no: 'BP-005', href: '/smartaleck/', tint: '#1f92ca', logo: { src: '/partners/smartaleck/logo-light.png', size: [800, 126] } },
       ],
       note: 'ロゴと社名は、各社の了承を得て掲載しています。',
+    },
+    crate: {
+      label: 'Music Japanの公式サイトへ',
+      href: 'https://music-japan.com/',
+      items: [
+        '/partners/music-japan/jackets/tokyo-junkies.webp',
+        '/partners/music-japan/jackets/kokoni-aru.webp',
+        '/partners/music-japan/jackets/beach-sunset.webp',
+        '/partners/music-japan/jackets/late-night-jazz.webp',
+        '/partners/music-japan/jackets/fairytale-classical.webp',
+        '/partners/music-japan/jackets/soft-rain-piano.webp',
+        '/partners/music-japan/jackets/all-i-need.webp',
+        '/partners/music-japan/jackets/i-know-but-tried.webp',
+        '/partners/music-japan/jackets/like-a-drug.webp',
+      ],
     },
   },
 
@@ -214,21 +234,22 @@ export const musicJapan: Partner = {
       },
       {
         heading: '1社ずつ、見た目を変える',
-        body: 'エボルグのページは紙と明朝体、Central AXは白黒の建築模型。どれも、その会社のロゴと、代表がよく使う言葉から決めました。同じ型の色違いにすると、どの会社も同じに見えてしまうからです。',
+        body: 'エボルグのページは紙と明朝体、Central AXは白黒の建築模型、Smartaleckは漫画のヒーロー。どれも、その会社のロゴと、代表がよく使う言葉から決めました。同じ型の色違いにすると、どの会社も同じに見えてしまうからです。',
       },
     ],
     stanceTitle: '決めていること',
     stance: [
-      { title: '書けることだけ書く', detail: '数字や実績は、公表されているものだけを使います。確かめられなかったことは書きません。' },
-      { title: '公開の前に見てもらう', detail: '文章も数字も、掲載する会社に全ページを確認してもらってから公開します。' },
-      { title: '料金はページに出さない', detail: '条件は会社ごとに違うので、お話しするときに直接お伝えしています。' },
-      { title: '紹介は人が決める', detail: '受付と通知は仕組みに任せて、誰と誰をつなぐかは、毎回、人が決めます。' },
+      { title: '最初に、話を聞く', detail: '取材と同じで、まずは御社の話を聞くところから始めます。公式サイトに載っていない話ほど、ページの芯になります。', bot: 'mic' },
+      { title: '書けることだけ書く', detail: '数字や実績は、公表されているものだけを使います。確かめられなかったことは書きません。', bot: 'reel' },
+      { title: '1社ずつ、見た目を変える', detail: '色と書体と動きは、ロゴと会社の言葉から決めます。ほかの会社の色違いには、しません。', bot: 'pod' },
+      { title: '紹介は人が決める', detail: '受付と通知は仕組みに任せて、誰と誰をつなぐかは、毎回、人が決めます。', bot: 'tune' },
+      { title: '公開してからも育てる', detail: '記事を足したり、実績が増えたら書き換えたり。ページは、公開した日がいちばん古い状態です。', bot: 'spin' },
     ],
   },
 
   service: {
     name: 'Baton Partners',
-    logo: '/brand/baton-partners-logo.svg',
+    logo: '/brand/baton-partners-logo-white.svg',
     logoAlt: 'Baton Partners',
     logoSize: [330, 64],
     category: '{専用LP・}{SEO・}{AIO・}{紹介}',
@@ -246,7 +267,7 @@ export const musicJapan: Partner = {
       { stage: '話を聞く', en: 'Step 01', feature: 'まずはオンラインで' },
       { stage: '調べる', en: 'Step 02', feature: '公式サイトと資料を読む' },
       { stage: 'つくる', en: 'Step 03', feature: '色・書体・3D・文章' },
-      { stage: '見てもらう', en: 'Step 04', feature: '全ページを確認して公開' },
+      { stage: '公開する', en: 'Step 04', feature: '5ページと記事を公開' },
       { stage: 'つなぐ', en: 'Step 05', feature: '紹介と、記事の追加' },
     ],
     features: [
@@ -266,10 +287,10 @@ export const musicJapan: Partner = {
       '営業メールばかり届く問い合わせ窓口に、疲れている',
     ],
     onboarding: [
-      { title: 'まずは公式サイトから', detail: '公式サイト、会社案内、代表のインタビュー記事。公開されているものを先に読んでから、お話を伺います。' },
-      { title: '公開の前に、全部見てもらう', detail: '文章も数字も、御社に確認してもらってから公開します。' },
-      { title: '公開したあとも', detail: '記事を足したり、実績が増えたら書き換えたり。ページは公開してからも育てます。' },
-      { title: '取材の相談も', detail: 'ご希望があれば、経営者メディア『ミラエラ』のインタビューもご案内します。' },
+      { title: 'まずは公式サイトから', detail: '公式サイト、会社案内、代表のインタビュー記事。公開されているものを先に読んでから、お話を伺います。', bot: 'reel' },
+      { title: '用意してもらうものは、少しだけ', detail: 'ロゴのデータと、載せてよい実績や写真。文章と画像の手配は、こちらで進めます。', bot: 'tune' },
+      { title: '公開したあとも', detail: '記事を足したり、実績が増えたら書き換えたり。ページは公開してからも育てます。', bot: 'spin' },
+      { title: '取材の相談も', detail: 'ご希望があれば、経営者メディア『ミラエラ』のインタビューもご案内します。', bot: 'mic' },
     ],
     labels: {
       flowKicker: 'Process',
@@ -384,7 +405,7 @@ export const musicJapan: Partner = {
               '紹介：相談はMusic Japanが先に読み、双方の了承を得てからおつなぎ',
             ],
           },
-          { type: 'p', text: 'いま公開しているページは、[エボルグ](/evorg/)と[Central AX](/central-ax/)の2社です。どちらも、その会社のロゴと言葉から色と書体を決めています。' },
+          { type: 'p', text: 'いま公開しているページは、[エボルグ](/evorg/)、[Central AX](/central-ax/)、[Smartaleck](/smartaleck/)の3社です。どれも、その会社のロゴと言葉から色と書体を決めています。' },
         ],
       },
       {
@@ -421,10 +442,9 @@ export const musicJapan: Partner = {
           q: 'どんな話をしますか。',
           a: 'いまの集客の状況と、困っていることを伺います。そのうえで、御社のページをつくるなら何を書くかを、具体的にお話しします。',
         },
-        { q: '料金は、どこで分かりますか。', a: 'このサイトには載せていません。会社ごとに条件が違うので、お話しするときにお伝えします。' },
         {
           q: '掲載している会社と話してみたいときは？',
-          a: '[エボルグ](/evorg/contact/)や[Central AX](/central-ax/contact/)など、各社のページにある「話してみる」から相談できます。',
+          a: '[エボルグ](/evorg/contact/)、[Central AX](/central-ax/contact/)、[Smartaleck](/smartaleck/contact/)など、各社のページにある「話してみる」から相談できます。',
         },
         { q: 'ミラエラの取材について聞くこともできますか。', a: 'できます。取材の流れや、どんな記事になるのかをお話しします。' },
       ],

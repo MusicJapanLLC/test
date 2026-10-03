@@ -1,7 +1,7 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { bpNo, breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
-import { answerBox, marquee, nextReads } from '../parts';
+import { answerBox, discHtml, marquee, nextReads } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp } from '../text';
 
@@ -14,7 +14,7 @@ export function renderTop(p: Partner, env: BuildEnv): string {
     .map(
       (v, i) => `
       <article class="verb" data-verb="${i}">
-        <p class="verb-no"><span>0${i + 1}</span><span class="verb-ja">${esc(v.ja)}</span></p>
+        <p class="verb-no"><span>${p.world.theme === 'needle' ? `A${i + 1}` : `0${i + 1}`}</span><span class="verb-ja">${esc(v.ja)}</span></p>
         <p class="verb-en" aria-hidden="true">${esc(v.en)}.</p>
         <h3 class="verb-h">${heading(v.title)}</h3>
         <p class="verb-p">${jp(v.body)}</p>
@@ -63,8 +63,10 @@ ${header(p, 'top')}
       <div class="scene" data-scene="network" data-count="3200" aria-hidden="true"><canvas></canvas></div>
       <div class="stage-shade" aria-hidden="true"></div>
       <div class="wrap stage-ui">
+        ${t.deck ? `<p class="hero-deck" aria-hidden="true">${t.deck.map((l) => `<span>${esc(l)}</span>`).join('')}</p>` : ''}
         <div class="hero" data-hero>
           <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>Music Japan Partners — ${bpNo(p)}<span class="kicker-co">${esc(p.company.nameEn)}</span></p>
+          ${t.display ? `<p class="hero-display" aria-hidden="true">${t.display.map((l) => `<span>${esc(l)}</span>`).join('')}</p>` : ''}
           <h1 id="hero-h" class="hero-h">${heading(t.title)}</h1>
           <p class="hero-lead">${jp(t.lead)}</p>
           ${tickerBlock(p)}
@@ -104,14 +106,14 @@ ${header(p, 'top')}
     </div>
   </section>
 
-  ${relaySection(p)}
+  ${tracklistSection(p)}
 
   ${serpSection(p)}
 
   ${channelsSection(p)}
 
   <section class="sec sec-highlight" aria-labelledby="hl-h">
-    <div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'relay' || p.world.scene === 'feed' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>
+    ${p.world.theme === 'needle' ? discHtml('lp-hl') : `<div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'feed' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>`}
     <div class="wrap hl-in">
       <header class="hl-head rv">
         <p class="kicker">02 — ${esc(t.highlight.en)}</p>
@@ -148,6 +150,8 @@ ${header(p, 'top')}
   </section>
 
   ${voicesSection(p)}
+
+  ${crateSection(p)}
 
   <section class="clients" aria-labelledby="clients-h">
     <p id="clients-h" class="clients-h wrap">${jp(s.clientsNote)}</p>
@@ -313,10 +317,10 @@ function mediaSection(p: Partner): string {
   </section>`;
 }
 
-/** 図の番号。minka は「其の一」、relay は「LANE 1」、ほかは「01」 */
+/** 図の番号。minka は「其の一」、needle はレコードの曲番号「A1」、ほかは「01」 */
 function seq(p: Partner, i: number): string {
   if (p.world.theme === 'minka') return `其の${['一', '二', '三', '四', '五'][i] ?? i + 1}`;
-  if (p.world.theme === 'relay') return `LANE ${i + 1}`;
+  if (p.world.theme === 'needle') return `${i < 2 ? 'A' : 'B'}${(i % 2) + 1}`;
   return String(i + 1).padStart(2, '0');
 }
 
@@ -500,41 +504,67 @@ function missionSection(p: Partner): string {
 }
 
 /**
- * 4つの区間を、リレーのように見せる（relay の世界観で使う）。
- * 区間が画面に入るたびに、バトンが次の区間へ渡る（client/relay-track.ts が --leg を進める）。
- * 動きを減らす設定・JSなしでは、4区間が並んだ静止画として読める。
+ * レコードの曲目リスト（needle の世界観）。左にジャケットと盤、右に A面・B面の曲。
+ * スクロールに合わせて「再生中」の曲が進む（client/tracklist.ts）。押した曲を再生中にもできる。
+ * 動きを減らす設定・JSなしでは、全曲の説明が開いた一覧として読める。
  */
-function relaySection(p: Partner): string {
-  const r = p.top.relay;
+function tracklistSection(p: Partner): string {
+  const r = p.top.tracklist;
   if (!r) return '';
-  const legs = r.legs
+  const tracks = r.tracks
     .map(
-      (l, i) => `
-        <li class="leg" data-leg="${i}" style="--i:${i}">
-          <div class="leg-bib" aria-hidden="true"><span class="leg-bib-no">${i + 1}</span><span class="leg-bib-pin"></span></div>
-          <p class="leg-meta"><span class="leg-run">${esc(l.leg)}</span><span class="leg-en">${esc(l.en)}</span></p>
-          <p class="leg-name">${esc(l.name)}</p>
-          <h3 class="leg-h">${heading(l.title)}</h3>
-          <p class="leg-p">${jp(l.body)}</p>
-          ${i < r.legs.length - 1 ? '<span class="leg-zone" aria-hidden="true"><i></i><i></i><i></i></span>' : '<span class="leg-finish" aria-hidden="true"></span>'}
-        </li>`,
+      (tr, i) => `
+          <li class="track" data-track="${i}">
+            <button class="track-row" type="button" aria-controls="track-${i}">
+              <span class="tr-no">${esc(tr.no)}</span>
+              <span class="tr-name">${esc(tr.name)}</span>
+              <span class="tr-meta">${esc(tr.meta)}</span>
+              <span class="tr-bar" aria-hidden="true"><i></i></span>
+            </button>
+            <div class="tr-detail" id="track-${i}">
+              <h3 class="tr-h">${heading(tr.title)}</h3>
+              <p class="tr-p">${jp(tr.body)}</p>
+            </div>
+          </li>`,
     )
     .join('');
   return `
-  <section class="sec sec-relay" aria-labelledby="relay-h" data-relay>
-    <div class="relay-lanes" aria-hidden="true">${Array.from({ length: 8 }, (_, i) => `<span><b>${i + 1}</b></span>`).join('')}</div>
+  <section class="sec sec-tracks" aria-labelledby="tracks-h" data-tracklist>
     <div class="wrap">
-      <header class="relay-head rv">
-        <p class="kicker">Relay — 4 legs</p>
-        <h2 id="relay-h" class="relay-h">${heading(r.title)}</h2>
-        <p class="relay-lead">${jp(r.lead)}</p>
+      <header class="tracks-head rv">
+        <p class="kicker">Tracklist — Side A / Side B</p>
+        <h2 id="tracks-h" class="tracks-h">${heading(r.title)}</h2>
+        <p class="tracks-lead">${jp(r.lead)}</p>
       </header>
-      <div class="relay-track">
-        <div class="relay-rail" aria-hidden="true"><span class="relay-baton" data-baton><i></i></span><span class="relay-fill" data-relay-fill></span></div>
-        <ol class="legs">${legs}</ol>
+      <div class="player rv">
+        <div class="player-art" aria-hidden="true">
+          <span class="player-disc"><img src="/partners/music-japan/mark.svg" alt="" width="64" height="64" /></span>
+          <span class="jacket">
+            <span class="jacket-top"><b>BP-000</b>BATON PARTNERS</span>
+            <img class="jacket-mark" src="/partners/music-japan/mark.svg" alt="" width="64" height="64" />
+            <span class="jacket-t">${esc(r.jacket.title)}</span>
+            <span class="jacket-s">${esc(r.jacket.sub)}</span>
+          </span>
+        </div>
+        <div class="player-body">
+          <p class="player-now"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span><span>Now Playing</span><b data-now>${esc(r.tracks[0]?.no ?? '')}</b></p>
+          <ol class="tracks">${tracks}</ol>
+        </div>
       </div>
       <p class="fine rv">${jp(r.note)}</p>
     </div>
+  </section>`;
+}
+
+/** ジャケット写真の棚（公式サイトのジャケット）。2周ぶん並べて、ゆっくり流す */
+function crateSection(p: Partner): string {
+  const c = p.top.crate;
+  if (!c) return '';
+  const imgs = c.items.map((src) => `<img src="${src}" alt="" width="320" height="320" loading="lazy" decoding="async" />`).join('');
+  return `
+  <section class="crate" aria-label="${esc(c.label)}">
+    <div class="crate-track" aria-hidden="true"><div class="crate-run">${imgs}</div><div class="crate-run">${imgs}</div></div>
+    <a class="crate-link" href="${c.href}" target="_blank" rel="noopener"><span>${esc(c.label)}</span><span class="arrow" aria-hidden="true">↗</span></a>
   </section>`;
 }
 
@@ -570,17 +600,23 @@ function spotlightSection(p: Partner): string {
   </section>`;
 }
 
-/** 掲載中のパートナー企業。ロゴがない会社（了承済み・準備中）は社名の文字で出す */
+/** 掲載中のパートナー企業を、レコードのジャケットとして並べる（公式サイトのパートナー欄と同じ見せ方） */
 function partnerLogosSection(p: Partner): string {
   const l = p.top.partnerLogos;
   if (!l) return '';
   const items = l.items
-    .map((it) => {
-      const mark = it.logo
-        ? `<img src="${it.logo.src}" alt="${esc(it.name)}" width="${it.logo.size[0]}" height="${it.logo.size[1]}" loading="lazy" decoding="async" />`
-        : `<span class="pl-word">${esc(it.name.replace(/^株式会社|株式会社$/g, ''))}</span>`;
-      const inner = `<span class="pl-mark">${mark}</span><span class="pl-name">${esc(it.name)}</span><span class="pl-status">${esc(it.status ?? 'ページを見る')}</span>`;
-      return `<li class="pl rv">${it.href ? `<a class="pl-in" href="${it.href}">${inner}<span class="arrow" aria-hidden="true">→</span></a>` : `<div class="pl-in is-soon">${inner}</div>`}</li>`;
+    .map((it, i) => {
+      const inner = `
+          <span class="sleeve-art">
+            <span class="sleeve-top"><b>${esc(it.no)}</b><span>BATON PARTNERS</span></span>
+            <img src="${it.logo.src}" alt="${esc(it.name)}" width="${it.logo.size[0]}" height="${it.logo.size[1]}" loading="lazy" decoding="async" />
+          </span>
+          <span class="sleeve-vinyl" aria-hidden="true"><i></i></span>
+          <span class="sleeve-body">
+            <span class="sleeve-name">${esc(it.name)}</span>
+            <span class="sleeve-status">${esc(it.status ?? 'ページを見る')}${it.href ? '<span class="arrow" aria-hidden="true">→</span>' : ''}</span>
+          </span>`;
+      return `<li class="sleeve rv" style="--tint:${it.tint};--d:${i}">${it.href ? `<a class="sleeve-in" href="${it.href}">${inner}</a>` : `<div class="sleeve-in">${inner}</div>`}</li>`;
     })
     .join('');
   return `
@@ -591,7 +627,7 @@ function partnerLogosSection(p: Partner): string {
         <h2 id="pl-h" class="sec-h">${heading(l.title)}</h2>
       </header>
       <p class="pl-lead rv">${jp(l.lead)}</p>
-      <ul class="pls">${items}</ul>
+      <ul class="sleeves">${items}</ul>
       <p class="fine">${jp(l.note)}</p>
     </div>
   </section>`;

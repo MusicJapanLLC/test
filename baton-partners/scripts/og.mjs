@@ -58,36 +58,51 @@ function minka(it) {
 </div></body></html>`;
 }
 
-// relay（Music Japan）は白に、ロゴの赤い輪と点。足もとにトラックのレーン、見出しは極太のゴシック
-function relay(it) {
-  const red = it.accent ?? '#C8102E';
+// needle（Music Japan）は公式サイトと同じ黒。右に、公式シンボルを刷った赤いラベルのレコード。見出しは極太のゴシック
+const bpLogoWhite = readFileSync(resolve(root, 'public/brand/baton-partners-logo-white.svg'), 'utf8');
+const fsv = (pkg, name) => pathToFileURL(resolve(root, 'node_modules/@fontsource-variable', pkg, 'files', name)).href;
+function needle(it) {
+  const red = it.brand ?? '#e1222f';
+  const top = it.key.endsWith('-top');
   const long = it.heading.length > 24;
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <link rel="stylesheet" href="${font('zen-kaku-gothic-new', 900)}">
 <link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
 <style>
+  @font-face{font-family:'ArchivoW';font-weight:100 900;font-stretch:62% 125%;src:url('${fsv('archivo', 'archivo-latin-wdth-normal.woff2')}') format('woff2')}
+  @font-face{font-family:'JBM';font-weight:100 800;src:url('${fsv('jetbrains-mono', 'jetbrains-mono-latin-wght-normal.woff2')}') format('woff2')}
   *{margin:0;box-sizing:border-box}
-  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:#0D0D0F;position:relative;overflow:hidden}
-  .lanes{position:absolute;left:0;right:0;bottom:0;height:150px;background:repeating-linear-gradient(180deg,transparent 0 24px,#ffffff66 24px 26px),linear-gradient(180deg,#C8102E,#A8112A)}
-  .lanes::after{content:'';position:absolute;left:640px;top:0;bottom:0;width:12px;background:#fff}
-  .ring{position:absolute;right:96px;top:70px;width:250px;height:250px;border-radius:50%;border:5px solid ${red}}
-  .dot{position:absolute;right:203px;top:177px;width:36px;height:36px;border-radius:50%;background:${red}}
-  .baton{position:absolute;left:700px;bottom:58px;width:130px;height:32px;border-radius:99px;background:linear-gradient(90deg,transparent 0 66%,${red} 66% 74%,transparent 74%),linear-gradient(180deg,#fff,#eee);box-shadow:-40px 0 0 -10px #ffffff88,-80px 0 0 -12px #ffffff44}
-  .in{position:absolute;inset:60px 80px 186px 88px;display:flex;flex-direction:column;justify-content:space-between}
+  body{width:1200px;height:630px;background:#060607;font-family:'Zen Kaku Gothic New',sans-serif;color:#efe9e0;position:relative;overflow:hidden}
+  .lp{position:absolute;right:-170px;top:50px;width:640px;height:640px;border-radius:50%;
+    background:radial-gradient(circle,transparent 0 31%,#0008 31.3%,transparent 32.4%),
+      radial-gradient(circle,transparent 0 62%,#efe9e012 62.3%,transparent 62.8%,transparent 80%,#efe9e010 80.3%,transparent 80.8%),
+      repeating-radial-gradient(circle,#09090b 0 1.5px,#1d1d22 1.5px 2.2px,#09090b 2.2px 3.4px);
+    box-shadow:0 0 0 1px #efe9e01a,0 40px 90px -30px #000}
+  .shine{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from 30deg,transparent 0deg,#ffffff1c 20deg,#78b4ff12 34deg,transparent 60deg,transparent 180deg,#ffffff16 200deg,#ff788c10 214deg,transparent 240deg)}
+  .label{position:absolute;inset:33%;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 40% 35%,#f0303d,${red} 55%,#b11320)}
+  .label img{width:46%}
+  .glow{position:absolute;right:40px;top:120px;width:520px;height:520px;border-radius:50%;background:radial-gradient(circle,#e1222f2a,transparent 65%)}
+  .deck{position:absolute;right:56px;top:44px;display:grid;justify-items:end;gap:6px;font-family:'JBM',monospace;font-size:14px;letter-spacing:.26em;color:#8d867e}
+  .in{position:absolute;inset:56px 430px 52px 72px;display:flex;flex-direction:column;justify-content:space-between}
   .top{display:flex;align-items:center;gap:22px}
-  .top img{height:44px;width:auto}
-  .label{font-size:20px;font-weight:700;letter-spacing:.2em;color:#0D0D0F;text-transform:uppercase}
-  h1{font-weight:900;font-size:${long ? 50 : 66}px;line-height:1.3;letter-spacing:0;max-width:760px;word-break:keep-all;overflow-wrap:anywhere}
-  .foot{position:absolute;left:88px;right:80px;bottom:52px;display:flex;align-items:center;justify-content:space-between;color:#fff;font-size:22px;font-weight:700}
-  .foot svg{height:38px;width:auto;background:#fff;border-radius:99px;padding:6px 16px}
+  .top img{height:34px;width:auto}
+  .k{font-family:'JBM',monospace;font-size:16px;letter-spacing:.22em;color:${red};text-transform:uppercase}
+  .disp{font-family:'ArchivoW',sans-serif;font-weight:900;font-stretch:112%;font-size:108px;line-height:.84;letter-spacing:-.035em;margin-bottom:18px}
+  .disp span{display:block}.disp span:nth-child(2){padding-left:.9em}.disp span:last-child{color:${red}}
+  h1{font-weight:900;font-size:${top ? 40 : long ? 50 : 64}px;line-height:1.36;letter-spacing:.02em;word-break:keep-all;overflow-wrap:anywhere}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:20px;font-weight:700;color:#cfc7bc;width:calc(100% + 360px)}
+  .foot svg{height:36px;width:auto}
 </style></head><body>
-<div class="ring"></div><div class="dot"></div><div class="lanes"></div><div class="baton"></div>
+<div class="glow"></div>
+<div class="lp"><div class="shine"></div><div class="label"><img src="${file('/partners/music-japan/mark.svg')}" alt=""></div></div>
+<div class="deck"><span>45 RPM</span><span>SIDE A</span><span>NOW SPINNING — BP-000</span></div>
 <div class="in">
-  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span class="label">${esc(it.label)}</span></div>
-  <h1>${esc(it.heading)}</h1>
-</div>
-<div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
-</body></html>`;
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span class="k">${esc(it.label)}</span></div>
+  <div>${top ? '<p class="disp"><span>PASS</span><span>THE</span><span>BATON.</span></p>' : ''}<h1>${esc(it.heading)}</h1></div>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
+</div></body></html>`;
+}
+
 // studio（Smartaleckなど）は白地に青の網点と集中線、ファインダーの四隅とREC。右に代表の写真をコマの枠で
 function studio(it) {
   const brand = it.brand ?? '#1F92CA';
@@ -139,7 +154,7 @@ ${it.photo ? `<div class="photo"><img src="${file(it.photo)}" alt=""></div>` : '
 
 function html(it) {
   if (it.theme === 'minka') return minka(it);
-  if (it.theme === 'relay') return relay(it);
+  if (it.theme === 'needle') return needle(it);
   if (it.theme === 'studio') return studio(it);
   const con = it.theme === 'console';
   // console（DPパートナーズなど）も見出しは太いゴシック。方眼は点、縦の帯は紺から復旧の緑へ

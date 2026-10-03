@@ -140,3 +140,5 @@ export function sourcesList(sources: { label: string; url: string }[]): string {
   <ol>${sources.map((s) => `<li><a href="${s.url}" target="_blank" rel="noopener">${esc(s.label)}</a></li>`).join('')}</ol>
 </aside>`.trim();
 }
+
+export { botHtml, discHtml } from './robots';

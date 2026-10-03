@@ -23,7 +23,7 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
     | typeof import('./lattice').LatticeScene
     | typeof import('./vault').VaultScene
     | typeof import('./en').EnScene
-    | typeof import('./relay').RelayScene
+    | typeof import('./vinyl').VinylScene
     | typeof import('./feed').FeedScene
   > | null = null;
   const sceneClass = () =>
@@ -35,8 +35,8 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
           ? import('./vault').then((m) => m.VaultScene)
           : document.body.dataset.worldScene === 'en'
             ? import('./en').then((m) => m.EnScene)
-            : document.body.dataset.worldScene === 'relay'
-              ? import('./relay').then((m) => m.RelayScene)
+            : document.body.dataset.worldScene === 'vinyl'
+              ? import('./vinyl').then((m) => m.VinylScene)
               : document.body.dataset.worldScene === 'feed'
                 ? import('./feed').then((m) => m.FeedScene)
               : import('./scene').then((m) => m.NetworkScene));

@@ -3,7 +3,10 @@
  * 企業を増やすときは src/partners/<slug>.ts を1つ足して、partners/index.ts に登録するだけ。
  */
 
-export type Pair = { title: string; detail: string };
+export type Bot = 'tune' | 'spin' | 'pod' | 'reel' | 'mic';
+
+/** bot を入れると、その項目に Music Japan のロボット（公式サイトの5体）が付く（needle の世界観） */
+export type Pair = { title: string; detail: string; bot?: Bot };
 
 export type Stat = { label: string; value: string; unit: string; note?: string };
 
@@ -84,18 +87,18 @@ export type Partner = {
    *          'mono'      … モノクロ、太いゴシック、グリッドと四角い枠（Central AX）
    *          'console'   … 監視画面と設計図。等幅の英字、ステータス表示、紺と復旧の緑（DPパートナーズ）
    *          'minka'     … 古民家と縁。朱と墨と生成り、明朝、麻の葉・格子・赤い糸・判子・縦書き（Cominka）
-   *          'relay'     … 日の丸の赤とトラック。極太ゴシック＋スタジアムの数字、レーン・ゼッケン・バトン（Music Japan）
+   *          'needle'    … 公式サイト（music-japan.com）の NEEDLE DROP。黒地に赤、Archivo＋Zen Kaku Gothic New＋JetBrains Mono、レコード・ジャケット・ロボット5体（Music Japan）
    *          'studio'    … 撮影スタジオと漫画のヒーロー。墨とロゴの青、極太の見出し、網点・集中線・ファインダー・吹き出し（Smartaleck）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
    *          'vault'     … サーバーの引越し（移す→守る→戻す。壊れても、別の場所の控えから戻る）
    *          'en'        … 縁（散らばった検索の札が格子に並び、赤い糸で一つのサイトに結ばれる）
    *          'feed'      … 画面の壁（散らばったリール・動画・トーク画面が壁に並び、集中線になって中心の一点に集まる）
-   *          'relay'     … 陸上のリレー（光の点がトラックに集まり、レーンを走り、バトンが渡る）
+   *          'vinyl'     … 公式シンボルのレコード（CUTで溝が刻まれ、SPINでジャケットが回り、DROPで針が落ちて波形になる）
    */
   world: {
-    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'relay';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'relay';
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
@@ -157,14 +160,19 @@ export type Partner = {
     mission?: { glyph: string; title: string; body: string; values: string[]; note: string };
     /** 取材・登壇・提携など、外から見た実績（第三者の掲載とプレス配信は分けて書く） */
     media?: { title: string; items: { kind: string; title: string; by: string; date: string; url?: string }[] };
+    /** ヒーローの見出しの上に置く、大きな英字（飾り。読み上げない） */
+    display?: string[];
+    /** ヒーロー右上の小さな英字の行（needle：公式サイトの「33⅓ RPM / SIDE A」にならう） */
+    deck?: string[];
     /**
-     * 区間に分けて見せる仕組み（relay の世界観なら、第1走〜アンカーのリレー）。
-     * スクロールに合わせて、バトンが区間から区間へ渡っていく
+     * レコードの曲目リスト（needle の世界観）。サービスの中身を A面・B面の曲として並べ、
+     * スクロールに合わせて「再生中」の曲が進む（client/tracklist.ts）
      */
-    relay?: {
+    tracklist?: {
       title: string[];
       lead: string;
-      legs: { leg: string; en: string; name: string; title: string; body: string }[];
+      jacket: { title: string; sub: string };
+      tracks: { no: string; name: string; meta: string; title: string; body: string }[];
       note: string;
     };
     /** 外部メディアの紹介枠（掲載の可能性を伝える。数字と掲載企業は、そのメディアの公表情報だけ） */
@@ -181,13 +189,15 @@ export type Partner = {
       names: { name: string; detail: string }[];
       note: string;
     };
-    /** 掲載中のパートナー企業（ロゴは掲載の了承を得たものだけ。正式ロゴが届くまでは社名の文字で出す） */
+    /** 掲載中のパートナー企業をレコードのジャケットとして並べる（ロゴは掲載の了承を得たものだけ。黒地用の白抜き版） */
     partnerLogos?: {
       title: string;
       lead: string;
-      items: { name: string; href?: string; status?: string; logo?: { src: string; size: [number, number] } }[];
+      items: { name: string; no: string; href?: string; status?: string; tint: string; logo: { src: string; size: [number, number] } }[];
       note: string;
     };
+    /** ジャケット写真の棚（公式サイトのジャケット。飾りとして流す） */
+    crate?: { label: string; href: string; items: string[] };
     /** ヒーローに添える「よく届く相談」の吹き出し。1つずつ入れ替わる（studio の世界観） */
     ticker?: { label: string; items: string[] };
     /** お客さんが会社に出会う画面ごとに、どの施策が効くかを並べた図（イメージ図） */
