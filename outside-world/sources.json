@@ -1,8 +1,8 @@
 {
-  "schema": "outside-world-sources/v1",
+  "schema": "outside-world-sources/v2",
   "policy": "company-society/EXTERNAL_CONTACT.md",
   "mode": "public_read_only_discovery",
-  "max_items_per_source": 12,
+  "max_items_per_source": 24,
   "sources": [
     {
       "id": "hacker-news-newest",
@@ -19,6 +19,27 @@
       "weight": 0.9
     },
     {
+      "id": "github-security",
+      "kind": "rss",
+      "category": "security",
+      "url": "https://github.blog/security/feed/",
+      "weight": 1.15
+    },
+    {
+      "id": "cloudflare-blog",
+      "kind": "rss",
+      "category": "security",
+      "url": "https://blog.cloudflare.com/rss/",
+      "weight": 1.1
+    },
+    {
+      "id": "google-project-zero",
+      "kind": "rss",
+      "category": "security-research",
+      "url": "https://googleprojectzero.blogspot.com/feeds/posts/default",
+      "weight": 1.2
+    },
+    {
       "id": "devto-ai",
       "kind": "rss",
       "category": "builders",
@@ -30,23 +51,37 @@
       "kind": "rss",
       "category": "research",
       "url": "https://export.arxiv.org/rss/cs.AI",
-      "weight": 0.8
+      "weight": 0.9
+    },
+    {
+      "id": "arxiv-cs-cr",
+      "kind": "rss",
+      "category": "security-research",
+      "url": "https://export.arxiv.org/rss/cs.CR",
+      "weight": 1.15
     }
   ],
   "web_search_lanes": [
+    "public security advisories and defensive writeups",
+    "public CVE and vulnerability research summaries",
+    "public engineering blogs",
+    "public GitHub repositories and issues",
+    "public AI and agent research",
+    "public browser and Web security research",
     "public note.com posts",
     "public YouTube videos and channels",
-    "public blogs",
-    "public GitHub repositories and issues",
     "strange creative coding projects",
     "small experiments with no obvious business value"
   ],
   "rules": {
     "public_only": true,
+    "read_only": true,
     "login_bypass": false,
     "robots_or_access_control_bypass": false,
     "comments_or_posts_from_feed_scout": false,
     "third_party_email": false,
+    "active_scanning_of_discovered_targets": false,
+    "discovered_urls_must_not_become_attack_targets": true,
     "store_minimal_metadata_only": true,
     "allow_fun_without_utility": true
   }

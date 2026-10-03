@@ -3,7 +3,7 @@ name: Outside World Scout
 on:
   workflow_dispatch:
   schedule:
-    - cron: '13,43 * * * *'
+    - cron: '3,13,23,33,43,53 * * * *'
 
 concurrency:
   group: outside-world-scout
@@ -16,7 +16,7 @@ permissions:
 jobs:
   scout:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     env:
       GH_TOKEN: ${{ github.token }}
       RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
@@ -86,7 +86,7 @@ jobs:
               print('No discovery to report.')
               raise SystemExit(0)
           category=pick.get('category')
-          if category not in {'engineering','research','builders','weird-tech'}:
+          if category not in {'engineering','research','builders','weird-tech','security','security-research'}:
               print('Non-technical discovery stays in Child Guild memory.')
               raise SystemExit(0)
           child=state['child']
