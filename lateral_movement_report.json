@@ -1,0 +1,122 @@
+{
+  "timestamp": "2026-10-03T13:39:37.558925",
+  "target_network": "https://kabeya-authorized-test-range.onrender.com",
+  "discovered_nodes": 5,
+  "lateral_paths": 12,
+  "propagation": {
+    "total_waves": 2,
+    "nodes_compromised": 5,
+    "total_nodes": 5,
+    "infection_rate": 100.0,
+    "compromised_nodes": [
+      "app-server-002",
+      "web-server-001",
+      "database-001",
+      "admin-workstation",
+      "api-gateway-001"
+    ],
+    "propagation_timeline": [
+      {
+        "wave_number": 1,
+        "timestamp": "2026-10-03T13:39:37.057155",
+        "newly_compromised": [
+          "app-server-002",
+          "database-001",
+          "admin-workstation",
+          "app-server-002",
+          "api-gateway-001",
+          "api-gateway-001",
+          "app-server-002",
+          "api-gateway-001",
+          "database-001"
+        ],
+        "total_compromised": 5,
+        "infection_rate": 100.0,
+        "strategy_mix": {
+          "service_account_abuse": 2,
+          "trust_relationship": 1,
+          "token_impersonation": 1,
+          "supply_chain_pivot": 3,
+          "kerberos_relay": 1,
+          "credential_delegation": 1
+        }
+      },
+      {
+        "wave_number": 2,
+        "timestamp": "2026-10-03T13:39:37.558072",
+        "newly_compromised": [],
+        "total_compromised": 5,
+        "infection_rate": 100.0,
+        "strategy_mix": {}
+      }
+    ]
+  },
+  "credential_delegation": {
+    "success": true,
+    "credentials_obtained": true,
+    "target_access_granted": true,
+    "credentials": {
+      "username": "svc_web",
+      "password_hash": "b8ed4f3a18bb0eebc001c0ac0ab28ca7",
+      "token": "ZGVsZWdhdGlvbl8xNzkxMDM0Nzc3LjU1ODYxMg==",
+      "session_id": "7ddaea7f0ab777fc"
+    }
+  },
+  "chain_attacks": {
+    "total_chains": 10,
+    "executed_chains": 5,
+    "successful_chains": 2,
+    "chains": [
+      {
+        "chain": [
+          "admin-workstation",
+          "api-gateway-001",
+          "web-server-001",
+          "database-001"
+        ],
+        "success": true,
+        "impact": "high"
+      },
+      {
+        "chain": [
+          "database-001",
+          "api-gateway-001"
+        ],
+        "success": false,
+        "impact": "low"
+      },
+      {
+        "chain": [
+          "app-server-002",
+          "database-001",
+          "api-gateway-001"
+        ],
+        "success": false,
+        "impact": "low"
+      },
+      {
+        "chain": [
+          "app-server-002",
+          "api-gateway-001"
+        ],
+        "success": false,
+        "impact": "low"
+      },
+      {
+        "chain": [
+          "database-001",
+          "admin-workstation",
+          "api-gateway-001",
+          "web-server-001"
+        ],
+        "success": true,
+        "impact": "high"
+      }
+    ]
+  },
+  "authorization": {
+    "target_url": "https://kabeya-authorized-test-range.onrender.com",
+    "scope": "AUTHORIZED_TEST_TARGETS.json",
+    "status": "AUTHORIZED"
+  }
+}
