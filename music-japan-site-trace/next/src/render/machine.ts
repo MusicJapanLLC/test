@@ -1,7 +1,7 @@
 import { brandNames, businesses, facts, partners, profile } from '../content/company';
 import { faq } from '../content/faq';
 import { artwork, releases, type Locale } from '../content/releases';
-import { BATON_URL, copy, EMAIL, path, SECOND_TAKE_URL, SITE_URL, TIMEREX_URL, workPath, type PageKey } from '../content/site';
+import { BATON_PARTNERS_URL, BATON_URL, copy, EMAIL, path, SECOND_TAKE_URL, SITE_URL, TIMEREX_URL, workPath, type PageKey } from '../content/site';
 
 /** Public by design: IndexNow verifies ownership by fetching /<key>.txt from the site. */
 export const INDEXNOW_KEY = '844274c99df5a67456015ef85d22911f';
@@ -113,6 +113,7 @@ ${releases.map((r) => `- [${r.title} — ${r.artist}](${SITE_URL}${workPath('ja'
 
 - SECOND TAKE（経営者メディア / Podcast・インタビュー）: ${SECOND_TAKE_URL}
 - Baton（招待制の紹介サービス）: ${BATON_URL}
+- Baton Partners（会社の専用LP・SEO・AIO・紹介）: ${BATON_PARTNERS_URL}
 
 ## よくある質問
 

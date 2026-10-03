@@ -1,11 +1,11 @@
 import { brandNames, businesses, facts, partners, profile } from '../../content/company';
 import { privacy } from '../../content/privacy';
 import type { Locale } from '../../content/releases';
-import { copy, EMAIL, path, SITE_URL, SOCIAL_IMAGE, TIMEREX_URL } from '../../content/site';
+import { BATON_PARTNERS_URL, copy, EMAIL, path, SITE_URL, SOCIAL_IMAGE, TIMEREX_URL } from '../../content/site';
 import { arrow, esc, phrases, prose } from '../html';
 import { innerHero, page } from '../layout';
 import { mark } from '../mark';
-import { button, crate, crumbs, ctaBlock, faqGraph, faqSection, kicker, partnerSleeve, player } from '../parts';
+import { button, crate, crumbs, ctaBlock, faqGraph, faqSection, joinSleeve, kicker, partnerSleeve, player } from '../parts';
 import { aboutSection, mediaSection } from './home';
 
 export function renderBusiness(locale: Locale) {
@@ -92,6 +92,18 @@ export function renderPartners(locale: Locale) {
   </article>`,
     )
     .join('');
+  // 最後の1枚は、ここに並ぶページをつくっている Baton Partners そのもの（運営：Music Japan）
+  const join = `<article class="roster roster--join" id="baton-partners" style="--c1:#e1222f;--c2:#ff3a48" data-reveal>
+    <a class="roster-sleeve" href="${BATON_PARTNERS_URL}" target="_blank" rel="noopener" aria-label="${esc(ja ? 'Baton Partnersを見る（新しいタブで開きます）' : 'Visit Baton Partners (opens in a new tab)')}" data-cursor-label="VISIT">${joinSleeve(locale)}</a>
+    <div class="roster-copy">
+      <p class="roster-no"><span>BP-000</span><i></i><span>${ja ? '専用LP / SEO / AIO / 紹介' : 'LP / SEO / AIO / REFERRAL'}</span></p>
+      <h2 class="roster-name" data-split>Baton Partners</h2>
+      <p class="roster-title">${prose(ja ? '検索から、商談まで。バトンをつなぐ。' : 'From search to a first meeting, we pass the baton.')}</p>
+      <p class="roster-body">${prose(ja ? '会社ごとの専用ページを5枚つくり、Googleの検索結果とAIの答えに出るよう整えます。ページを読んで「話してみたい」と思った人の相談は、Music Japanが確かめてからおつなぎします。上の各社のページも、Baton Partnersでつくりました。' : 'We build five dedicated pages for each company and shape them to be found in Google results and AI answers. When a reader wants to talk, Music Japan reviews the request and makes the introduction. Every partner page above was made with Baton Partners.')}</p>
+      <dl class="roster-facts"><div><dt>BASE</dt><dd>${ja ? '大阪・梅田' : 'UMEDA, OSAKA'}</dd></div><div><dt>BY</dt><dd>MUSIC JAPAN</dd></div><div><dt>SERIES</dt><dd>BATON PARTNERS</dd></div></dl>
+      ${button(ja ? 'Baton Partnersを見る' : 'Visit Baton Partners', BATON_PARTNERS_URL, 'solid', locale)}
+    </div>
+  </article>`;
   const logos = [
     ...partners.map((pt) => ({ src: pt.logo, w: pt.logoW, h: pt.logoH, alt: pt.name[locale] })),
     { src: '/partners/empro-white.png', w: 525, h: 154, alt: 'Empro' },
@@ -104,6 +116,7 @@ export function renderPartners(locale: Locale) {
 <section class="rosters" aria-label="${ja ? 'パートナー企業' : 'Partner companies'}">
   <div class="sec-head">${kicker('CATALOG — BATON PARTNERS', '01')}<h2 class="hx" data-split>${phrases(ja ? '一社ずつ、\n盤に刻むように。' : 'Each partner,\ncut like a record.')}</h2><p class="sec-body">${prose(ja ? '一社ずつ、レコードのように番号をつけて並べています。それぞれの事業とサービスは、各社のページで詳しくご覧いただけます。' : 'Each partner is numbered like a release in our catalog. Their business and services are covered in detail on each partner page.')}</p></div>
   ${roster}
+  ${join}
 </section>
 ${ctaBlock(locale)}`;
   return page({
