@@ -1,0 +1,75 @@
+{
+  "schema": "the-world-autonomy-policy/v1",
+  "name": "THE WORLD high-autonomy operating policy",
+  "autonomy_level": 95,
+  "intent": "Expand repository observation, experimentation, cross-system learning, self-improvement and autonomous branch work while keeping production releases behind explicit approval.",
+  "capability_budget": {
+    "repository_observation": 100,
+    "local_experimentation": 100,
+    "cross_system_learning": 100,
+    "autonomous_branch_changes": 95,
+    "self_improvement_after_tests": 95,
+    "pull_request_generation": 95,
+    "default_branch_learning_state_updates": 80,
+    "production_release": 5
+  },
+  "observation_roots": [
+    "music-japan-lp",
+    "baton-partners",
+    "music-japan",
+    "second-take",
+    "baton",
+    "automation",
+    "api",
+    "senju",
+    "research",
+    "docs",
+    "gas",
+    ".github/workflows"
+  ],
+  "context_files": [
+    "package.json",
+    "pyproject.toml",
+    "requirements.txt",
+    "vercel.json",
+    "wrangler.toml",
+    "vite.config.ts",
+    "vite.config.js",
+    "README.md",
+    "CLAUDE.md"
+  ],
+  "autonomous_learning_roots": [
+    "automation/codegen/engine",
+    "automation/ai_foundry",
+    "automation/unified-knowledge",
+    "senju/state",
+    "senju/knowledge",
+    "research",
+    "knowledge",
+    "public/generated"
+  ],
+  "review_first_roots": [
+    ".github/workflows",
+    "automation/control_plane",
+    "senju/config"
+  ],
+  "protected_production_refs": [
+    "music-japan-production",
+    "chatgpt/second-take-trace-20260913",
+    "claude/baton-backend-implementation-zu0h6k",
+    "claude/admiring-thompson-dvsmf5"
+  ],
+  "release_policy": {
+    "direct_production_release": false,
+    "production_ref_update": false,
+    "independent_review_for_control_plane_changes": true,
+    "human_merge_gate": true
+  },
+  "merge_evidence": [
+    "tests",
+    "build_or_runtime_evidence",
+    "security_scan",
+    "changed_file_inventory",
+    "rollback_path"
+  ]
+}
