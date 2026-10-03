@@ -11,7 +11,13 @@ import type { Partner } from '../types';
  *   PR TIMES（7/23）   … 正式提供開始 2026-07-01、市場の数字、開発の考え方、代表コメント、今後の開発
  *   導入事例 UnFrame   … 渡邊卓哉さんの発言（AI登録、属人化した記録、選んだ理由）
  *   9/29 商談（社長同席）… 介護・保育などの専門職の紹介会社での導入、地図マッチング → 公開情報ではないので「〜そうです」
- * 載せないもの：料金（Baton Partners の方針）、本人の発言の創作
+ *   代表の経歴（2026-10-03 照合）… evorg.co.jp の Member、本人が公開している LinkedIn（年と所属・担当・地域）
+ *   執筆・取材          … getempro.jp の記事（「執筆：宮崎将成」と書かれたものだけ執筆と書く）、導入事例の聞き手
+ *   市場の数字          … 正式提供時のリリース（PR TIMES 7/23）：市場規模 約4,490億円（2025年）、事業所 約3万、約7割が10名以下
+ * 載せないもの：料金（Baton Partners の方針）、本人の発言の創作、LinkedIn の売上額などの自己申告の数字
+ *
+ * 世界観：Empro のロゴ（赤い三角と水色の三角が重なり、重なりがワイン色）。白地に赤・水色・ワイン、
+ * 丸ゴシックの見出しと幾何学的な欧文。通知のトースト、選考ボード、面談の記録カード。WebGL は三角が重なって大きな印になる。
  */
 export const evorg: Partner = {
   slug: 'evorg',
@@ -51,7 +57,26 @@ export const evorg: Partner = {
     // Empro のロゴ（赤と水色の三角が重なる＝求職者と求人が出会う）をそのままシーンの色に
     scene: { a: '#FC2C2C', b: '#1CCCE8', match: '#A8284A' },
   },
-  world: { theme: 'editorial', scene: 'network' },
+  world: { theme: 'match', scene: 'pair' },
+  leader: {
+    name: '宮崎 将成',
+    nameEn: 'Masanari Miyazaki',
+    role: '代表取締役',
+    timeline: [
+      { year: '2014', text: '九州大学経済学部を卒業し、凸版印刷（現・TOPPAN）へ。大阪で法人営業を担当' },
+      { year: '2017', text: 'ネオキャリアへ移り、中途の人材紹介を始める' },
+      { year: '2019', text: '同社の中途人材紹介で、福岡の責任者に。九州全域で20代の転職を支える' },
+      { year: '2022', text: 'ITスタートアップで、インサイドセールスの責任者に' },
+      { year: '2024', text: '福岡で株式会社エボルグを設立。採用と人事の支援を始める' },
+      { year: '2026', text: '人材紹介会社のためのCRM/MA「Empro」の正式提供を始める' },
+    ],
+    body: [
+      '最初の職場は凸版印刷（現・TOPPAN）でした。大阪で3年半、チラシやカタログの提案から、LINEやWEBを使った販促まで担当しています。',
+      'そのあとネオキャリアで、中途の人材紹介を5年近く。後半の3年は福岡の責任者として、九州全域で20代の転職を受け持ちました。新卒の就職がうまくいかなかった人や、1社目で苦労した人の相談を、数多く聞いてきたそうです。',
+      'Emproの公式サイトに並ぶ記事の多くは、宮崎さん本人が書いています。KPIの組み立て方、手数料の相場、開業の手続き。導入事例のインタビューでは、聞き手も務めています。',
+    ],
+    motto: { label: 'LinkedInのプロフィールより', text: 'とにかくハンズオンで入ります。' },
+  },
 
   top: {
     title: ['集める、つなぐ、', '決めるをひとつに。'],
@@ -94,6 +119,114 @@ export const evorg: Partner = {
     statsNote: '*β版の機能を含みます。数値は株式会社エボルグ調べです。',
     aboutQuote: '人材紹介は人の人生の転機を扱う仕事であり、担当者の時間は求職者と企業に向き合うことに使われるべき。',
     aboutQuoteCite: '株式会社エボルグ 代表取締役 宮崎将成さん（Empro正式提供時のコメントより）',
+    activity: {
+      label: 'Emproの通知',
+      note: '画面はイメージです',
+      items: [
+        { tag: 'AI登録', text: '履歴書3件を読み取って、求職者を登録しました', meta: '10秒' },
+        { tag: 'MA', text: '最後の連絡から60日たった12名に、新着求人をLINEで送りました', meta: '自動' },
+        { tag: 'LINE', text: 'K.Sさんから返信「来月なら面談できます」', meta: 'いま' },
+        { tag: 'マッチング', text: '経歴と住所から、合いそうな求人を5件挙げました', meta: 'AI' },
+        { tag: '決定', text: '今月の決定が8件に。見込みはあと3件です', meta: '集計' },
+      ],
+    },
+    market: {
+      title: '紹介会社の7割は、{10人に満たない}。',
+      lead: '有料職業紹介の事業所は全国に約3万あり、その約7割は従業員10名以下です。少ない人数で、集客も面談も、企業とのやり取りも、入社後のフォローも抱えている。使うツールが増えるほど、そのあいだを埋める手作業も増えていきます。',
+      big: { value: '約3万', unit: '事業所', label: '全国の有料職業紹介の事業所' },
+      share: 70,
+      shareLabel: '従業員10名以下',
+      restLabel: 'それより大きい事業所',
+      facts: [
+        { label: '国内の人材紹介市場（2025年）', value: '約4,490', unit: '億円' },
+        { label: '従業員10名以下の事業所', value: '約7', unit: '割' },
+      ],
+      note: '数字は、Emproの正式提供を伝える株式会社エボルグのリリース（2026年7月23日、PR TIMES）にもとづきます。点の図は割合を表したイメージです。',
+    },
+    board: {
+      title: '求職者の{いま}が、{一枚に並ぶ}。',
+      lead: 'Emproでは、求職者ひとりひとりの選考の進み具合を、こうしたボードで追えます。左端は、しばらく連絡が途切れている人たち。MAのシナリオでLINEが届き、返事が来た人は、もう一度面談の列に戻ってきます。',
+      sleep: { name: '眠っている', en: 'Dormant' },
+      columns: [
+        { name: '登録', en: 'Entry' },
+        { name: '面談', en: 'Meeting' },
+        { name: '推薦', en: 'Refer' },
+        { name: '面接', en: 'Screening' },
+        { name: '内定', en: 'Offer' },
+        { name: '決定', en: 'Hired' },
+      ],
+      backTo: 1,
+      cards: [
+        { col: 0, name: 'T.N', meta: '介護職・34歳', tag: 'AI登録' },
+        { col: 0, name: 'M.A', meta: '営業・27歳' },
+        { col: 0, name: 'Y.K', meta: '保育士・29歳' },
+        { col: 1, name: 'R.O', meta: 'エンジニア・31歳' },
+        { col: 1, name: 'H.I', meta: '経理・36歳' },
+        { col: 2, name: 'S.M', meta: '施工管理・42歳', tag: 'AIマッチング' },
+        { col: 2, name: 'A.T', meta: '看護師・28歳' },
+        { col: 3, name: 'K.W', meta: '人事・33歳' },
+        { col: 4, name: 'N.F', meta: 'マーケター・30歳' },
+        { col: 5, name: 'E.Y', meta: '介護職・38歳', tag: '決定' },
+      ],
+      sleepers: [
+        { name: 'K.S', meta: '事務・26歳', days: 62 },
+        { name: 'J.H', meta: '販売・31歳', days: 75 },
+        { name: 'C.U', meta: '介護職・45歳', days: 98 },
+      ],
+      callouts: [
+        { label: 'AI登録', title: '履歴書を渡せば、{登録は終わる}', text: '履歴書や職務経歴書をドラッグすると、AIが中身を読んで項目を埋めます。一度に10件まで。求人票や企業の情報も同じ要領です。' },
+        { label: 'LINE・メール', title: '連絡は、{会社の履歴}に残る', text: 'LINEもメールもEmproから送ります。担当が替わっても、誰が何を話したかは画面に残っています。' },
+        { label: 'MA', title: '眠っている人に、{自動で声をかける}', text: '最後の連絡から日がたった人へ、決めたシナリオどおりにLINEとメールが届きます。返事が来た人から話せば足ります。' },
+        { label: 'ダッシュボード', title: '今月あと何件か、{すぐ分かる}', text: '決定数や売上の見込みは、その場で集計されます。月末にスプレッドシートを並べ替える必要はありません。' },
+      ],
+      note: '画面はイメージです。Emproの実際の画面や項目とは異なります。名前と年齢は架空のものです。',
+    },
+    story: {
+      title: 'ひとりで回す紹介会社に、{面談の時間が戻った}。',
+      company: '株式会社UnFrame',
+      industry: '人材紹介（スタートアップ特化・ミドル〜ハイクラス）',
+      url: 'https://getempro.jp/case-studies/unframe',
+      date: '2026年8月5日公開',
+      pull: 'それが、10秒で終わりますから。',
+      who: '渡邊卓哉さん（株式会社UnFrame 代表取締役）',
+      profile:
+        'シリーズA〜Dのスタートアップを中心に、CxO・VP・マネージャー層の採用を手伝う紹介会社です。2025年11月の設立から、求職者との面談も、企業との要件のすり合わせも、応募書類づくりも、代表の渡邊さんが基本的にひとりで担っています。Emproは創業とほぼ同時に入れ、記事の公開時点で約8か月使っています。',
+      interviewer: '聞き手：宮崎将成（エボルグ代表）',
+      rows: [
+        { label: '前の職場での悩み', items: ['求職者の登録と面談所感の入力が、担当者まかせになっていた', '担当者が辞めると、何を話したのか読めない記録だけが残る'] },
+        { label: '選んだ理由', items: ['当時の機能の多さより、これから伸びていく将来性', '業界を知っている人がつくっている、という顧客目線'] },
+        { label: 'よく使う機能', items: ['求職者・求人・企業のAI登録', '面談の文字起こしからのAI更新', '応募書類の生成'] },
+        { label: '変わったこと', items: ['登録の心理的なハードルが消え、面談に時間を回せるようになった', '個人情報の管理が、担当者の頑張りに頼らなくなった'] },
+      ],
+      quotes: [
+        { text: '結局、その人が退職した後にシステムを見てみると、何の話をしているのか分からない。', context: '前職で使っていたCRMの運用を振り返って' },
+        { text: '他社製品で有名どころのサービスはほぼ全部聞きました。', context: '創業のとき、CRMやATSをひととおり比べて' },
+        { text: 'AI登録しか使っていない、と言えるくらいです。', context: 'いちばん使っている機能を聞かれて' },
+      ],
+      demo: { label: 'AI登録', files: ['履歴書.pdf', '職務経歴書.pdf', '求人票.pdf'], seconds: 10, fields: ['氏名', '希望職種', '経験年数', '希望勤務地'] },
+      note: '発言は、Empro公式サイトの導入事例（2026年8月5日公開）から原文のまま引用しています。小さな画面の動きはイメージです。',
+    },
+    founder: {
+      kicker: 'Founder',
+      title: '紹介の現場にいた人が、{欲しかった道具}をつくっている。',
+      quote: { text: 'とにかくハンズオンで入ります。', cite: '宮崎将成さん（LinkedInのプロフィールより）' },
+      links: [
+        { label: 'エボルグの公式サイト', url: 'https://www.evorg.co.jp/' },
+        { label: 'Emproの記事を読む', url: 'https://getempro.jp/articles' },
+      ],
+    },
+    media: {
+      title: '書いて、聞いて、{発表する}。',
+      items: [
+        { kind: 'プレス', title: '人材紹介会社の「集める、つなぐ、決める」をひとつに。ワンストップCRM/MA・Empro 正式提供開始', by: 'PR TIMES', date: '2026.07.23', url: 'https://prtimes.jp/main/html/rd/p/000000005.000184827.html' },
+        { kind: '聞き手', title: '株式会社UnFrame｜入力の心理的ハードルが消え、面談に時間が戻った', by: 'Empro 導入事例', date: '2026.08.05', url: 'https://getempro.jp/case-studies/unframe' },
+        { kind: '執筆', title: '人材紹介のKPI管理 完全ガイド｜売上を決定数×決定単価から逆算する', by: 'Empro', date: '2026.07.12', url: 'https://getempro.jp/articles/recruitment-kpi-guide' },
+        { kind: '執筆', title: '人材紹介システムの選び方｜CRM/MAとの違い・比較の軸・導入手順', by: 'Empro', date: '2026.07.21', url: 'https://getempro.jp/articles/recruitment-system-guide' },
+        { kind: '執筆', title: '人材紹介の手数料相場｜30〜35%の根拠と法的上限・理論年収・返戻金の実務', by: 'Empro', date: '2026.07.28', url: 'https://getempro.jp/articles/recruitment-fee-rate' },
+        { kind: '執筆', title: '有料職業紹介事業とは｜許可要件・申請手続き・年次義務と開業までの全ステップ', by: 'Empro', date: '2026.08.03', url: 'https://getempro.jp/articles/recruitment-agency-startup' },
+        { kind: '調査', title: '人材紹介ツール カオスマップ（6カテゴリ・約30サービス）', by: 'Empro', date: '', url: 'https://getempro.jp/recruitment-tool-map' },
+      ],
+    },
     highlight: {
       en: 'Reactivation',
       title: ['眠っている求職者に、', 'もう一度、声をかける。'],

@@ -10,7 +10,12 @@ import type { Partner } from '../types';
  *   公式サイト・PR TIMES … タグライン、3本柱（学ぶ・つくる・見つけてもらう）、会社概要、20社支援、支援の5段階
  *   イベント告知          … 会計士向けClaude Code実演（120名申込）、四日市の共同セミナー（30社で定員到達）、登壇
  *   松浦氏のXプロフィール … Claude Codeをリリース日から活用、座右の銘「環境が全て」
- * 載せないもの：売上・従業員数（非公開）、料金（Baton Partners の方針）、本人の発言の創作
+ *   Baton のプロフィール（baton/src/data/profiles.ts）… 登壇・掲載の一覧、設立の経緯（設立時のリリースより）
+ *   PR TIMES（9/26）    … 四日市セミナー（ATIS主催・共催、定員30社・1社3名まで）、COO近藤活さんの経歴（名大経済・首席入学・休学中、ATISのAX推進に参画）
+ *   Luma（松浦淳）      … 9/2 AIエージェント・セキュリティ第2回（主催）、名古屋AI飲み会 10/16・渋谷 10/22（共同主催）
+ * 載せないもの：売上・従業員数（非公開）、料金（Baton Partners の方針）、本人の発言の創作、商談で聞いた未公開の数字
+ *
+ * 世界観：モノクロの方眼と、ロゴの四角い枠。「Central」＝名古屋が真ん中。座標、同心円の地図、端末、チケットの半券。
  */
 export const centralAx: Partner = {
   slug: 'central-ax',
@@ -52,10 +57,18 @@ export const centralAx: Partner = {
     role: '代表取締役CEO',
     photo: '/partners/central-ax/matsuura.jpg',
     photoSize: [900, 1261],
+    timeline: [
+      { year: '2026.05', text: '名古屋大学に在学しながら、株式会社Central AXを設立。COOの近藤活さんと2人代表' },
+      { year: '2026.07', text: 'LLMO対策（AI検索最適化）の提供を始める' },
+      { year: '2026.08', text: '公認会計士と、Claude Codeの実演イベント。120名が申し込む' },
+      { year: '2026.08', text: '設立から8月末までに、20社を支援' },
+      { year: '2026.09', text: 'Copilotのセミナーと、製造業向けの展示会セミナーに登壇' },
+      { year: '2026.10', text: '四日市商工会議所で、経営者向けのAIセミナー（予定）' },
+    ],
     body: [
-      'Claude Codeは、リリースされたその日から仕事で使っているそうです。AIと業務改善についての発信も、ほぼ毎日のように続けています。',
-      '2026年8月には公認会計士と組んで、監査調書や企業分析をClaude Codeでこなす実演イベントを開き、120名の申し込みを集めました。9月にはMicrosoft 365 Copilotの活用セミナーや、製造業向けの展示会でも登壇しています。',
-      'COOの近藤活さんとふたりで、名古屋から東海の会社のAI導入を支えています。',
+      '名古屋大学に在学しながら、2026年5月にCentral AXを立ち上げました。きっかけは、東京へ行くたびに感じていた温度差だそうです。東京ではAIを当たり前に使う会社が増えているのに、東海ではまだそうなっていない。',
+      'Claude Codeは、リリースされたその日から仕事で使っています。8月には公認会計士と組んで、監査調書や企業分析をClaude Codeでこなす実演イベントを開き、120名の申し込みを集めました。',
+      'XとnoteでAIと仕事の話を書き続け、人の前に立つ回数も多い人です。COOの近藤活さんとふたりで、名古屋から東海の会社のAI導入を支えています。',
     ],
     motto: { label: '座右の銘', text: '環境が全て' },
   },
@@ -64,6 +77,7 @@ export const centralAx: Partner = {
     title: ['AI実装で、現場を楽に、', '顧客にもっと。'],
     lead: '名古屋・名駅に拠点を置き、東海の会社を中心にAIの導入を手伝っています。研修をして終わり、システムを納めて終わり、にはしません。現場の人が次の日も当たり前に使っている。そこまで来てようやく一区切り、と考えている会社です。',
     badges: ['名古屋・名駅', '東海4県を重点に全国対応', '設立から20社を支援'],
+    deck: ['35.17°N 136.88°E', 'NAGOYA / MEIEKI'],
     marquee: ['Learn', 'Build', 'Be found', 'ChatGPT', 'Claude', 'Claude Code', 'Gemini', 'Copilot', 'RAG', 'MCP', 'LLMO'],
     numbersTitle: '設立から、まだ4か月。',
     verbs: [
@@ -100,6 +114,78 @@ export const centralAx: Partner = {
     ],
     statsNote: '数字はCentral AXの発表と、各イベントの告知にもとづきます（2026年9月時点）。',
     aboutQuote: 'ツールを覚える前に、どの業務を楽にするかを決める。',
+    terminal: {
+      title: 'Claude Codeは、{リリースの日から}使っている。',
+      lead: '松浦さんは、Claude Codeを公開されたその日から仕事で使っているそうです。研修でも、まず自社の資料を開いて、AIに頼んでみるところから始めます。下は、見積書の下書きを頼んだときの流れをイメージにしたものです。',
+      file: 'claude ─ 見積書_A社',
+      lines: [
+        { who: 'you', text: '先月のA社の見積書3件を見て、今回の下書きをつくって。単価は最新の原価表に合わせて' },
+        { who: 'ai', text: '見積書を3件読みました（2026-08_A社_1.xlsx ほか）。品目と数量の並びは共通しています' },
+        { who: 'ai', text: '原価表.xlsx で、単価が変わった品目が4つありました。新しい単価で計算しています' },
+        { who: 'ok', text: '見積書_A社_下書き.xlsx をつくりました（12行・合計は再計算済み）' },
+        { who: 'ask', text: '送料の扱いと見積の有効期限は、前回と同じでいいですか' },
+      ],
+      points: [
+        { title: '自社の資料で、{その日に試す}', detail: '一般的な例題ではなく、実際の見積書や日報、議事録を使います。研修の翌日から、同じことを自分でできます。' },
+        { title: '小さく試してから、{広げる}', detail: 'ひとつの業務で効き目を確かめてから、ほかの部署へ進めます。いきなり全社には広げません。' },
+        { title: '入れていい情報を、{先に決める}', detail: '図面や原価表をAIに渡していいか。社内の線引きを、研修や開発の前に一緒に決めます。' },
+      ],
+      note: '画面はイメージです。研修の中身や使うAIは、会社ごとに変わります。',
+    },
+    events: {
+      title: '設立から4か月、{人前に立った記録}。',
+      lead: 'つくったものを、見せる場まで自分たちで用意する会社です。会計士の前でClaude Codeを動かし、製造業の展示会では機密情報の扱いを話し、商工会議所では経営者にAI導入の順番を話す。公開されている告知から並べました。',
+      items: [
+        { date: '2026.08.10', kind: '登壇', title: 'AIで変わる会計士実務 ― Claude Code実演デモ', host: '公認会計士・税理士の畠山謙人氏と共同開催', body: '監査調書や財務DD、企業分析を、Claude Codeで処理する様子をその場で見せました。', figure: { value: '120', unit: '名', label: '申し込み' }, art: 'ledger', url: 'https://luma.com/ud5yi7ed' },
+        { date: '2026.09.02', kind: '主催', title: 'Claude Code利用者向け AIエージェント・セキュリティ ― 危険性の地図と対策 第2回', host: '松浦淳さんの主催', body: 'AIエージェントを仕事で使うとき、どこに危険があるのか。対策と一緒に整理する勉強会の2回目です。', art: 'studio', url: 'https://luma.com/user/junp1ayer' },
+        { date: '2026.09.14', kind: '登壇', title: 'Microsoft 365 Copilot活用ユースケース徹底攻略20選', host: 'Lumaで告知されたセミナー', body: 'Outlook、Teams、Word、Excel、PowerPoint。すでに使っている環境にAIを入れる方法を、20の使い方で話しました。', figure: { value: '20', unit: '選', label: 'ユースケース' }, art: 'office', url: 'https://luma.com/aideeplive_260914' },
+        { date: '2026.09', kind: '登壇', title: '製造業向け展示会セミナー｜生成AIの機密情報・シャドーAI対策', host: 'ネプコン ジャパンなどの関連セミナー', body: '図面や仕様書、原価表をAIに入れるとき、どこで線を引くか。製造業の現場向けに話しました。', art: 'shield', url: 'https://biz.q-pass.jp/f/13216/inw_autumn_seminar26/seminar_register?fid=E1mNKjK3Zn03kn05&tag=16009' },
+        { date: '2026.10.05', kind: '共催', title: 'HUMANITY, POWERED BY AI ─ AI共存（四日市）', host: '主催：株式会社ATIS／共催：Central AX', body: '四日市商工会議所で、経営者向けにAI導入の順番を話すセミナー。AI検索やSNSの話もあり、終わったあとに個別相談会を開きます。', figure: { value: '30', unit: '社', label: '定員（1社3名まで）' }, art: 'hall', url: 'https://prtimes.jp/main/html/rd/p/000000005.000188813.html' },
+        { date: '2026.10.16', kind: '共同主催', title: '名古屋AI飲み会', host: '山本敏行さんほかと共同主催', body: 'AIと経営を語り合う飲み会を、仲間と続けています。8月に続いて、10月は名古屋（16日）と渋谷（22日）で開きます。', art: 'cheers', url: 'https://luma.com/user/junp1ayer' },
+      ],
+      note: '日付と人数は、各イベントの告知ページとPR TIMESのリリースにもとづきます（2026年10月3日時点）。開催前のものは予定です。',
+    },
+    radar: {
+      title: '名古屋の真ん中から、{東海の現場へ}。',
+      lead: '社名のCentralには、名古屋・中部から日本のAXの中心へ、という意味が込められています。拠点は名古屋駅のすぐそば。愛知・岐阜・三重・静岡を重点に、工場や事務所へ足を運びます。対面での支援も、東海に限っていません。',
+      center: { name: '名古屋・名駅', sub: 'CENTRAL AX' },
+      rings: ['愛知', '東海4県（重点）', '全国（対面も可）'],
+      points: [
+        { name: '名古屋大学', sub: '愛知', bearing: 100, ring: -1, event: 'CEOの松浦さんも、COOの近藤さんも名古屋大学の出身' },
+        { name: '名古屋', sub: '愛知', bearing: 0, ring: -1, event: '10月16日、名古屋AI飲み会（共同主催）' },
+        { name: '岐阜', sub: '重点エリア', bearing: 345, ring: 1 },
+        { name: '四日市', sub: '三重', bearing: 222, ring: 1, event: '10月5日、四日市商工会議所で経営者向けのAIセミナー（ATISと共催、定員30社）' },
+        { name: '静岡', sub: '重点エリア', bearing: 102, ring: 1 },
+        { name: '渋谷', sub: '東京', bearing: 66, ring: 2, event: '10月22日、渋谷AI飲み会（共同主催）' },
+        { name: '大阪', sub: '関西', bearing: 255, ring: 2 },
+      ],
+      note: '方角は名古屋駅から見た実際の向きです。距離は輪の段で表したイメージ図です。',
+    },
+    founder: {
+      kicker: 'Founders',
+      title: '名古屋大学から、{東海のAXの真ん中へ}。',
+      quote: { text: '東海をAIで盛り上げたい', cite: '松浦淳さん（設立時のプレスリリースより）' },
+      partner: {
+        name: '近藤 活',
+        role: '代表取締役COO',
+        body: '名古屋大学経済学部に首席で入学し、いまは休学中。Central AXを共同で立ち上げ、企業へのAI実装を担当しています。四日市のクリエイティブ会社ATISのAX推進にも加わり、三重の会社のAI導入を現場で手伝っています。',
+      },
+      links: [
+        { label: 'Central AXの公式サイト', url: 'https://central-ax.co.jp/' },
+        { label: '公式note', url: 'https://note.com/central_ax' },
+        { label: 'X @JunP1ayer', url: 'https://x.com/JunP1ayer' },
+      ],
+    },
+    media: {
+      title: '発表と、{発信}。',
+      items: [
+        { kind: 'プレス', title: 'AI実装で現場を楽に、顧客にもっと。東海のAI実装支援会社「株式会社Central AX」を設立', by: 'PR TIMES', date: '2026.08.31', url: 'https://prtimes.jp/main/html/rd/p/000000003.000188813.html' },
+        { kind: 'プレス', title: '三重県内企業の51.8%が正社員不足　ATIS×Central AX、経営者向けAI活用セミナーを10月5日に四日市商工会議所で開催', by: 'PR TIMES', date: '2026.09.26', url: 'https://prtimes.jp/main/html/rd/p/000000005.000188813.html' },
+        { kind: '掲載', title: '四日市セミナーのリリースの転載', by: 'テレ東プラス', date: '', url: 'https://www.tv-tokyo.co.jp/plus/external-pr/entry/255701.html' },
+        { kind: '発信', title: 'AI導入、業務効率化、Claude Code、現場への定着', by: 'Central AX 公式note', date: '', url: 'https://note.com/central_ax' },
+        { kind: '発信', title: 'AIでの業務改善、Claude Code、企業へのAI導入', by: 'X @JunP1ayer', date: '', url: 'https://x.com/JunP1ayer' },
+      ],
+    },
     highlight: {
       en: 'Adoption',
       title: ['入れたあとが、', '本当の仕事。'],

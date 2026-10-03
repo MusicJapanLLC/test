@@ -2,11 +2,13 @@ import '../styles/base.css';
 import '../styles/pages.css';
 import '../styles/fx.css';
 import '../styles/operator.css';
+import '../styles/sections.css';
 import '../styles/theme-mono.css';
 import '../styles/theme-console.css';
 import '../styles/theme-minka.css';
 import '../styles/theme-needle.css';
 import '../styles/theme-studio.css';
+import '../styles/theme-match.css';
 import { setupContact } from './contact';
 import { setupFx } from './fx';
 import { mountScenes } from './scenes';
@@ -24,6 +26,7 @@ if (!__GOOGLE_FONTS__) {
   if (document.body.dataset.theme === 'minka') void import('../styles/fonts-minka.css');
   if (document.body.dataset.theme === 'needle') void import('../styles/fonts-needle.css');
   if (document.body.dataset.theme === 'studio') void import('../styles/fonts-studio.css');
+  if (document.body.dataset.theme === 'match') void import('../styles/fonts-match.css');
 }
 
 setupHeader();

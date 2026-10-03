@@ -32,6 +32,8 @@ FONTS = [
     ('shipporiminchob1', 'ShipporiMinchoB1-ExtraBold.ttf', 'shippori-mincho-b1-800'),
     # studio の世界観（Smartaleck など）の見出し。漫画のヒーローの吹き出しのような、ずんぐりした極太
     ('delagothicone', 'DelaGothicOne-Regular.ttf', 'dela-gothic-one-400'),
+    # match の世界観（エボルグ / Empro など）の見出し。ロゴの角の丸い三角に合わせた、太い丸ゴシック
+    ('zenmarugothic', 'ZenMaruGothic-Black.ttf', 'zen-maru-gothic-900'),
 ]
 
 
@@ -98,7 +100,7 @@ def save_subset(src, text, dest):
 
 # 見出し（h1）の太い書体は「見出しの文字」と「それ以外」に分ける。
 # 見出しの分は小さくすぐ届くので、書体の差し替えで見出しの下がずれる時間が短くなる（CLS対策）
-SPLIT = {'zen-old-mincho-900', 'zen-kaku-gothic-new-900', 'shippori-mincho-b1-800', 'dela-gothic-one-400'}
+SPLIT = {'zen-old-mincho-900', 'zen-kaku-gothic-new-900', 'shippori-mincho-b1-800', 'dela-gothic-one-400', 'zen-maru-gothic-900'}
 FACES = {
     'zen-old-mincho-700': ('Zen Old Mincho', 700, 'swap'),
     'zen-old-mincho-900': ('Zen Old Mincho', 900, 'swap'),
@@ -107,6 +109,7 @@ FACES = {
     'zen-kaku-gothic-new-900': ('Zen Kaku Gothic New', 900, 'swap'),
     'shippori-mincho-b1-800': ('Shippori Mincho B1', 800, 'swap'),
     'dela-gothic-one-400': ('Dela Gothic One', 400, 'swap'),
+    'zen-maru-gothic-900': ('Zen Maru Gothic', 900, 'swap'),
 }
 
 
@@ -146,6 +149,7 @@ def main():
     (ROOT / 'src/styles/fonts-faces-mono.css').write_text(note + css['zen-kaku-gothic-new-900'], encoding='utf-8')
     (ROOT / 'src/styles/fonts-faces-minka.css').write_text(note + css['shippori-mincho-b1-800'], encoding='utf-8')
     (ROOT / 'src/styles/fonts-faces-studio.css').write_text(note + css['dela-gothic-one-400'], encoding='utf-8')
+    (ROOT / 'src/styles/fonts-faces-match.css').write_text(note + css['zen-maru-gothic-900'], encoding='utf-8')
     print(f'文字数: {len(text)}')
 
 

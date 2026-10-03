@@ -89,7 +89,10 @@ export type Partner = {
    *          'minka'     … 古民家と縁。朱と墨と生成り、明朝、麻の葉・格子・赤い糸・判子・縦書き（Cominka）
    *          'needle'    … 公式サイト（music-japan.com）の NEEDLE DROP。黒地に赤、Archivo＋Zen Kaku Gothic New＋JetBrains Mono、レコード・ジャケット・ロボット5体（Music Japan）
    *          'studio'    … 撮影スタジオと漫画のヒーロー。墨とロゴの青、極太の見出し、網点・集中線・ファインダー・吹き出し（Smartaleck）
+   *          'match'     … Empro のロゴ（赤と水色の三角が重なる）。白地に赤・水色・重なりのワイン、丸ゴシックの見出し、
+   *                        通知のトースト・選考ボード・面談の記録カード（エボルグ）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
+   *          'pair'      … 赤い三角（求職者）と水色の三角（求人）。散らばる→表に並ぶ→線でつながる→重なって大きな Empro の印になる
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
    *          'vault'     … サーバーの引越し（移す→守る→戻す。壊れても、別の場所の控えから戻る）
    *          'en'        … 縁（散らばった検索の札が格子に並び、赤い糸で一つのサイトに結ばれる）
@@ -97,8 +100,8 @@ export type Partner = {
    *          'vinyl'     … 公式シンボルのレコード（CUTで溝が刻まれ、SPINでジャケットが回り、DROPで針が落ちて波形になる）
    */
   world: {
-    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl';
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
@@ -215,6 +218,95 @@ export type Partner = {
       photo: { src: string; small: string; size: [number, number]; alt: string; focus: [number, number] };
       timeline: { year: string; text: string }[];
       caption: string;
+    };
+    /** ヒーローに添える、システムの通知（イメージ）。1つずつ入れ替わる（match の世界観） */
+    activity?: { label: string; items: { tag: string; text: string; meta: string }[]; note: string };
+    /**
+     * 選考ボード（イメージ図）。列＝選考の段階、カード＝求職者。
+     * 左の「眠っている」列のカードが、通知で目を覚まして面談の列へ戻る。callouts はボードのどこに機能が効くか
+     */
+    board?: {
+      title: string;
+      lead: string;
+      sleep: { name: string; en: string };
+      columns: { name: string; en: string }[];
+      /** 目を覚ましたカードが戻る列の番号（columns の何番目か） */
+      backTo: number;
+      cards: { col: number; name: string; meta: string; tag?: string }[];
+      sleepers: { name: string; meta: string; days: number }[];
+      callouts: { label: string; title: string; text: string }[];
+      note: string;
+    };
+    /** 公開されている導入事例を、取材記事のように1社深く。発言は公開された記事の原文のまま（出典つき） */
+    story?: {
+      title: string;
+      company: string;
+      industry: string;
+      url: string;
+      date: string;
+      pull: string;
+      who: string;
+      profile: string;
+      interviewer?: string;
+      rows: { label: string; items: string[] }[];
+      quotes: { text: string; context: string }[];
+      /** 記事で語られている機能を、小さな画面の動きで見せる（イメージ） */
+      demo?: { label: string; files: string[]; seconds: number; fields: string[] };
+      note: string;
+    };
+    /** 市場の数字を、100個の点で見せる（share 個に色がつく）。数字は公表済みのものだけ */
+    market?: {
+      title: string;
+      lead: string;
+      big: { value: string; unit: string; label: string };
+      share: number;
+      shareLabel: string;
+      restLabel: string;
+      facts: Stat[];
+      note: string;
+    };
+    /** 代表の歩みを、トップで大きく見せる（leader の写真・年表・本文を使う）。partner は共同代表など */
+    founder?: {
+      kicker: string;
+      title: string;
+      quote?: { text: string; cite: string };
+      partner?: { name: string; role: string; body: string };
+      links?: { label: string; url: string }[];
+    };
+    /** 端末の画面で、AIに頼む様子を1行ずつ見せる（イメージ。実際の製品の画面ではない） */
+    terminal?: {
+      title: string;
+      lead: string;
+      file: string;
+      lines: { who: 'you' | 'ai' | 'ok' | 'ask'; text: string }[];
+      points: Pair[];
+      note: string;
+    };
+    /** 拠点を中心にした同心円の地図（イメージ図。方角は実際の地理に合わせ、距離は輪の段で表す） */
+    radar?: {
+      title: string;
+      lead: string;
+      center: { name: string; sub: string };
+      rings: string[];
+      /** ring が -1 の点は地図に描かず、横の一覧にだけ出す（真ん中に近すぎる場所など） */
+      points: { name: string; sub: string; bearing: number; ring: number; event?: string }[];
+      note: string;
+    };
+    /** 登壇・主催・共催・伴走の記録を、チケットのようなカードで（公開されている告知の範囲で） */
+    events?: {
+      title: string;
+      lead: string;
+      items: {
+        date: string;
+        kind: string;
+        title: string;
+        host: string;
+        body: string;
+        figure?: { value: string; unit: string; label: string };
+        art: 'ledger' | 'shield' | 'office' | 'hall' | 'cheers' | 'studio';
+        url?: string;
+      }[];
+      note: string;
     };
   };
   about: {

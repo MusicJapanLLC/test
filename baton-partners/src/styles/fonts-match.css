@@ -1,0 +1,3 @@
+/* match の世界観（エボルグ / Empro など）でだけ読み込む。見出しは太い丸ゴシック Zen Maru Gothic、欧文と数字は幾何学的な Plus Jakarta Sans */
+@import './fonts-faces-match.css';
+@import '@fontsource-variable/plus-jakarta-sans/wght.css';

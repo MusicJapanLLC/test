@@ -70,6 +70,7 @@ ${header(p, 'top')}
           <h1 id="hero-h" class="hero-h">${heading(t.title)}</h1>
           <p class="hero-lead">${jp(t.lead)}</p>
           ${tickerBlock(p)}
+          ${activityBlock(p)}
           <ul class="badges">${t.badges.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
           <div class="hero-actions">
             <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${s.name.length > 8 ? 'サービスを見る' : `${esc(s.name)}を見る`}</span><span class="arrow" aria-hidden="true">→</span></a>
@@ -106,14 +107,20 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${marketSection(p)}
+
   ${tracklistSection(p)}
 
   ${serpSection(p)}
 
   ${channelsSection(p)}
 
+  ${terminalSection(p)}
+
+  ${boardSection(p)}
+
   <section class="sec sec-highlight" aria-labelledby="hl-h">
-    ${p.world.theme === 'needle' ? discHtml('lp-hl') : `<div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'feed' ? '2.0' : '1.0'}" aria-hidden="true"><canvas></canvas></div>`}
+    ${p.world.theme === 'needle' ? discHtml('lp-hl') : `<div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'feed' ? '2.0' : p.world.scene === 'pair' ? '0.0' : '1.0'}"${p.world.scene === 'pair' ? ' data-sleep="1"' : ''} aria-hidden="true"><canvas></canvas></div>`}
     <div class="wrap hl-in">
       <header class="hl-head rv">
         <p class="kicker">02 — ${esc(t.highlight.en)}</p>
@@ -136,6 +143,8 @@ ${header(p, 'top')}
 
   ${filmSection(p)}
 
+  ${storySection(p)}
+
   ${casesSection(p)}
 
   <section class="sec sec-numbers" aria-labelledby="num-h">
@@ -148,6 +157,10 @@ ${header(p, 'top')}
       <p class="fine">${jp(t.statsNote)}</p>
     </div>
   </section>
+
+  ${eventsSection(p)}
+
+  ${radarSection(p)}
 
   ${voicesSection(p)}
 
@@ -163,6 +176,8 @@ ${header(p, 'top')}
   ${spotlightSection(p)}
 
   ${productSection(p)}
+
+  ${founderSection(p)}
 
   ${mediaSection(p)}
 
@@ -721,6 +736,320 @@ function filmSection(p: Partner): string {
       <ol class="film-tl rv" aria-label="${esc(shortName(p))}の歩み">${f.timeline
         .map((t, i) => `<li style="--i:${i}"><span class="ftl-y">${esc(t.year)}</span><span class="ftl-t">${jp(t.text)}</span></li>`)
         .join('')}</ol>
+    </div>
+  </section>`;
+}
+
+/** ヒーローの通知（match の世界観）。システムの通知が下から積み上がる（イメージ）。動きを減らす設定では3つを並べて止める */
+function activityBlock(p: Partner): string {
+  const a = p.top.activity;
+  if (!a) return '';
+  return `
+          <div class="act" role="group" aria-label="${esc(a.label)}（${esc(a.note)}）" style="--n:${a.items.length}">
+            <p class="act-k"><span class="act-dot" aria-hidden="true"></span>${esc(a.label)}<span class="act-note">${esc(a.note)}</span></p>
+            <ul class="act-list">${a.items
+              .map(
+                (it, i) =>
+                  `<li style="--i:${i}"><span class="act-card"><span class="act-tag">${esc(it.tag)}</span><span class="act-t">${esc(it.text)}</span><span class="act-m">${esc(it.meta)}</span></span></li>`,
+              )
+              .join('')}</ul>
+          </div>`;
+}
+
+/** 市場の数字を100個の点で（match の世界観では、点はロゴの三角） */
+function marketSection(p: Partner): string {
+  const m = p.top.market;
+  if (!m) return '';
+  const dots = Array.from({ length: 100 }, (_, i) => `<li${i < m.share ? ' class="on"' : ''} style="--i:${i}"></li>`).join('');
+  return `
+  <section class="sec sec-market" aria-labelledby="market-h">
+    <div class="wrap mk-in">
+      <header class="mk-head rv">
+        <p class="kicker">Market</p>
+        <h2 id="market-h" class="sec-h">${heading(m.title)}</h2>
+        <p class="mk-lead">${jp(m.lead)}</p>
+        <dl class="mk-facts">${m.facts
+          .map((f) => `<div class="mk-fact"><dt>${esc(f.label)}</dt><dd><span class="mk-fv">${esc(f.value)}</span><span class="mk-fu">${esc(f.unit)}</span></dd>${f.note ? `<dd class="mk-fn">${jp(f.note)}</dd>` : ''}</div>`)
+          .join('')}</dl>
+      </header>
+      <figure class="mk-fig rv" aria-label="${esc(m.big.label)}：${esc(m.shareLabel)}が約${m.share}%">
+        <p class="mk-big"><span class="mk-label">${esc(m.big.label)}</span><span class="mk-num">${esc(m.big.value)}</span><span class="mk-unit">${esc(m.big.unit)}</span></p>
+        <ol class="mk-dots" aria-hidden="true">${dots}</ol>
+        <figcaption class="mk-legend"><span class="mk-key is-on"><i aria-hidden="true"></i>${esc(m.shareLabel)}<b>約${m.share}%</b></span><span class="mk-key"><i aria-hidden="true"></i>${esc(m.restLabel)}</span></figcaption>
+      </figure>
+      <p class="fine mk-note rv">${jp(m.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 選考ボード（イメージ図）。眠っている列のカードが、通知で目を覚ます */
+function boardSection(p: Partner): string {
+  const b = p.top.board;
+  if (!b) return '';
+  const col = (i: number) => b.cards.filter((c) => c.col === i);
+  const card = (c: { name: string; meta: string; tag?: string }, extra = '') =>
+    `<li class="pc${extra}"><span class="pc-av" aria-hidden="true">${esc(c.name.slice(0, 1))}</span><span class="pc-n">${esc(c.name)}</span><span class="pc-m">${esc(c.meta)}</span>${c.tag ? `<span class="pc-tag">${esc(c.tag)}</span>` : ''}</li>`;
+  const cols = b.columns
+    .map(
+      (c, i) => `
+          <div class="pipe-col${i === b.columns.length - 1 ? ' is-win' : ''}" style="--c:${i}">
+            <p class="pipe-h"><span>${esc(c.name)}</span><small>${esc(c.en)}</small><b>${col(i).length + (i === b.backTo ? 1 : 0)}</b></p>
+            <ul>${i === b.backTo ? card({ name: b.sleepers[0].name, meta: b.sleepers[0].meta, tag: '返信あり' }, ' is-back') : ''}${col(i)
+              .map((c, k) => card(c, i === b.columns.length - 1 && k === 0 ? ' is-new' : ''))
+              .join('')}</ul>
+          </div>`,
+    )
+    .join('');
+  return `
+  <section class="sec sec-board" aria-labelledby="board-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Pipeline</p>
+        <h2 id="board-h" class="sec-h">${heading(b.title)}</h2>
+      </header>
+      <p class="board-lead rv">${jp(b.lead)}</p>
+      <figure class="pipe rv" aria-label="選考ボード（イメージ図）">
+        <p class="pipe-bar" aria-hidden="true"><span class="pipe-mark"><i></i><i></i></span><span class="pipe-app">選考ボード</span><span class="pipe-q"></span><span class="pipe-me"></span></p>
+        <div class="pipe-scroll" tabindex="0" aria-label="ボードを横にスクロール">
+          <div class="pipe-cols">
+            <div class="pipe-col pipe-sleep">
+              <p class="pipe-h"><span>${esc(b.sleep.name)}</span><small>${esc(b.sleep.en)}</small><b>${b.sleepers.length}</b></p>
+              <ul>${b.sleepers
+                .map(
+                  (s, i) =>
+                    `<li class="pc is-sleep${i === 0 ? ' is-waking' : ''}"><span class="pc-av" aria-hidden="true">${esc(s.name.slice(0, 1))}</span><span class="pc-n">${esc(s.name)}</span><span class="pc-m">${esc(s.meta)}</span><span class="pc-days">最後の連絡から${s.days}日</span>${i === 0 ? '<span class="pc-ping" aria-hidden="true">LINE</span>' : ''}</li>`,
+                )
+                .join('')}</ul>
+            </div>${cols}
+          </div>
+        </div>
+        <figcaption class="fine">${jp(b.note)}</figcaption>
+      </figure>
+      <ol class="pipe-notes">${b.callouts
+        .map(
+          (c, i) => `
+        <li class="pn rv" style="--d:${i}">
+          <p class="pn-k"><span>${seq(p, i)}</span>${esc(c.label)}</p>
+          <h3 class="pn-h">${heading(c.title)}</h3>
+          <p class="pn-p">${jp(c.text)}</p>
+        </li>`,
+        )
+        .join('')}</ol>
+    </div>
+  </section>`;
+}
+
+/** 導入事例を、取材記事のように1社深く。引用は公開された記事の原文のまま */
+function storySection(p: Partner): string {
+  const s = p.top.story;
+  if (!s) return '';
+  const demo = s.demo
+    ? `
+          <div class="ar" aria-hidden="true">
+            <p class="ar-bar"><span class="ar-k">${esc(s.demo.label)}</span><span class="ar-time"><i></i><b>${s.demo.seconds}</b>秒</span></p>
+            <div class="ar-in">
+              <ul class="ar-files">${s.demo.files.map((f, i) => `<li style="--i:${i}"><span class="ar-doc"></span>${esc(f)}</li>`).join('')}</ul>
+              <span class="ar-flow"><i></i></span>
+              <ul class="ar-fields">${s.demo.fields.map((f, i) => `<li style="--i:${i}"><span>${esc(f)}</span><b></b></li>`).join('')}</ul>
+            </div>
+            <p class="ar-done"><i></i>登録しました</p>
+          </div>`
+    : '';
+  return `
+  <section class="sec sec-story" aria-labelledby="cs-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Case Study</p>
+        <h2 id="cs-h" class="sec-h">${heading(s.title)}</h2>
+      </header>
+      <article class="cs rv">
+        <div class="cs-main">
+          <p class="cs-co"><span class="cs-ind">${esc(s.industry)}</span><strong>${esc(s.company)}</strong></p>
+          <blockquote class="cs-pull">
+            <p>${jp(s.pull)}</p>
+            <footer>${esc(s.who)}</footer>
+          </blockquote>
+          <p class="cs-profile">${jp(s.profile)}</p>
+          ${demo}
+        </div>
+        <dl class="cs-rows">${s.rows
+          .map((r, i) => `<div class="cs-row" style="--i:${i}"><dt>${esc(r.label)}</dt><dd><ul>${r.items.map((it) => `<li>${jp(it)}</li>`).join('')}</ul></dd></div>`)
+          .join('')}</dl>
+      </article>
+      <ol class="cs-quotes">${s.quotes
+        .map(
+          (q, i) => `
+        <li class="csq rv" style="--d:${i}">
+          <blockquote><p>${jp(q.text)}</p></blockquote>
+          <p class="csq-c">${jp(q.context)}</p>
+        </li>`,
+        )
+        .join('')}</ol>
+      <p class="cs-src rv"><a class="link-arrow" href="${s.url}" target="_blank" rel="noopener"><span>公式の導入事例を読む</span><span class="arrow" aria-hidden="true">↗</span></a><span>${s.interviewer ? `${esc(s.interviewer)}・` : ''}${esc(s.date)}</span></p>
+      <p class="fine">${jp(s.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 代表の歩みを大きく（写真があれば写真、なければ名刺）。年表は横に流れる段階として */
+function founderSection(p: Partner): string {
+  const f = p.top.founder;
+  const l = p.leader;
+  if (!f || !l) return '';
+  const visual =
+    l.photo && l.photoSize
+      ? `<figure class="fd-photo">
+          <img src="${l.photo}" alt="${esc(l.role)} ${esc(l.name)}" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />
+          <span class="fd-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+          <figcaption><span>${esc(l.role)}</span>${esc(l.name)}</figcaption>
+        </figure>`
+      : `<div class="fd-card" aria-hidden="true">
+          <span class="fd-card-mark"><i></i><i></i></span>
+          <span class="fd-card-role">${esc(l.role)}</span>
+          <span class="fd-card-name">${esc(l.name)}</span>
+          <span class="fd-card-en">${esc(l.nameEn)}</span>
+          <span class="fd-card-co">${esc(p.company.name)}</span>
+        </div>`;
+  return `
+  <section class="sec sec-founder" aria-labelledby="fd-h">
+    <div class="wrap fd-in">
+      <div class="fd-visual rv">${visual}</div>
+      <div class="fd-body rv">
+        <p class="kicker">${esc(f.kicker)}</p>
+        <h2 id="fd-h" class="sec-h">${heading(f.title)}</h2>
+        <p class="fd-name"><span>${esc(l.role)}</span>${esc(l.name)}</p>
+        <div class="fd-text">${l.body.map((b) => `<p>${jp(b)}</p>`).join('')}</div>
+        ${f.quote ? `<blockquote class="fd-quote"><p>${jp(f.quote.text)}</p><cite>${esc(f.quote.cite)}</cite></blockquote>` : ''}
+        ${f.partner ? `<div class="fd-partner"><p class="fd-pr">${esc(f.partner.role)}</p><p class="fd-pn">${esc(f.partner.name)}</p><p class="fd-pp">${jp(f.partner.body)}</p></div>` : ''}
+        ${f.links ? `<p class="fd-links">${f.links.map((k) => `<a class="link-arrow" href="${k.url}" target="_blank" rel="noopener"><span>${esc(k.label)}</span><span class="arrow" aria-hidden="true">↗</span></a>`).join('')}</p>` : ''}
+      </div>
+    </div>
+    ${
+      l.timeline?.length
+        ? `<div class="wrap"><ol class="fd-tl rv" aria-label="${esc(l.name)}さんの歩み">${l.timeline
+            .map((t, i) => `<li style="--i:${i}"><span class="fdt-y">${esc(t.year)}</span><span class="fdt-t">${jp(t.text)}</span></li>`)
+            .join('')}</ol></div>`
+        : ''
+    }
+  </section>`;
+}
+
+/** 端末の画面で、AIに頼む様子を1行ずつ（イメージ） */
+function terminalSection(p: Partner): string {
+  const t = p.top.terminal;
+  if (!t) return '';
+  const who = { you: 'あなた', ai: 'AI', ok: '完了', ask: '確認' } as const;
+  return `
+  <section class="sec sec-term" aria-labelledby="term-h">
+    <div class="wrap tm-in">
+      <header class="tm-head rv">
+        <p class="kicker">Hands-on</p>
+        <h2 id="term-h" class="sec-h">${heading(t.title)}</h2>
+        <p class="tm-lead">${jp(t.lead)}</p>
+        <ol class="tm-points">${t.points
+          .map((pt, i) => `<li><span class="tm-pno">${seq(p, i)}</span><h3 class="tm-ph">${heading(pt.title)}</h3><p class="tm-pp">${jp(pt.detail)}</p></li>`)
+          .join('')}</ol>
+      </header>
+      <figure class="tm rv" aria-label="AIに頼む様子（イメージ）">
+        <p class="tm-bar" aria-hidden="true"><i></i><i></i><i></i><span>${esc(t.file)}</span></p>
+        <ol class="tm-lines">${t.lines
+          .map((l, i) => `<li class="tm-${l.who}" style="--i:${i}"><span class="tm-who">${who[l.who]}</span><span class="tm-t">${esc(l.text)}</span></li>`)
+          .join('')}</ol>
+        <p class="tm-cursor" aria-hidden="true"><span>›</span><i></i></p>
+        <figcaption class="fine">${jp(t.note)}</figcaption>
+      </figure>
+    </div>
+  </section>`;
+}
+
+/** 拠点を中心にした同心円の地図（方角は実際の地理、距離は輪の段） */
+function radarSection(p: Partner): string {
+  const r = p.top.radar;
+  if (!r) return '';
+  const n = r.rings.length;
+  return `
+  <section class="sec sec-radar" aria-labelledby="radar-h">
+    <div class="wrap rd-in">
+      <header class="rd-head rv">
+        <p class="kicker">Central</p>
+        <h2 id="radar-h" class="sec-h">${heading(r.title)}</h2>
+        <p class="rd-lead">${jp(r.lead)}</p>
+        <ul class="rd-list">${r.points
+          .filter((pt) => pt.event)
+          .map((pt) => `<li><b>${esc(pt.name)}</b><span>${jp(pt.event ?? '')}</span></li>`)
+          .join('')}</ul>
+      </header>
+      <figure class="rd rv" aria-label="${esc(r.center.name)}を中心にした地図（イメージ図）">
+        <div class="rd-map" aria-hidden="true">
+          ${r.rings.map((label, i) => `<span class="rd-ring" style="--k:${(i + 1) / n}"><i>${esc(label)}</i></span>`).join('')}
+          <span class="rd-sweep"></span>
+          <span class="rd-axis rd-x"></span><span class="rd-axis rd-y"></span>
+          <span class="rd-n">N</span>
+          ${r.points
+            .filter((pt) => pt.ring >= 0)
+            .map(
+              (pt, i) =>
+                `<span class="rd-pt${pt.event ? ' is-ev' : ''}" style="--a:${pt.bearing}deg;--k:${(pt.ring + 0.62) / n};--i:${i}"><span class="rd-pt-in"><i></i><b>${esc(pt.name)}</b><small>${esc(pt.sub)}</small></span></span>`,
+            )
+            .join('')}
+          <span class="rd-center"><i></i><b>${esc(r.center.name)}</b><small>${esc(r.center.sub)}</small></span>
+        </div>
+        <figcaption class="fine">${jp(r.note)}</figcaption>
+      </figure>
+    </div>
+  </section>`;
+}
+
+/** イベントの小さな絵（HTMLとCSSだけ） */
+function eventArt(kind: NonNullable<Partner['top']['events']>['items'][number]['art']): string {
+  switch (kind) {
+    case 'ledger':
+      return `<span class="ea-sheet">${Array.from({ length: 15 }, (_, i) => `<i${[4, 7, 11].includes(i) ? ' class="hl"' : ''}></i>`).join('')}</span><span class="ea-check"></span>`;
+    case 'shield':
+      return `<span class="ea-shield"></span><span class="ea-doc"><i></i><i></i><i></i></span>`;
+    case 'office':
+      return `<span class="ea-apps">${['O', 'T', 'W', 'X', 'P'].map((c) => `<i>${c}</i>`).join('')}</span><span class="ea-count">20</span>`;
+    case 'hall':
+      return `<span class="ea-stage"></span><span class="ea-seats">${Array.from({ length: 30 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</span>`;
+    case 'cheers':
+      return `<span class="ea-net">${Array.from({ length: 7 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</span>`;
+    default:
+      return `<span class="ea-term"><i></i><i></i><i></i><b></b></span>`;
+  }
+}
+
+/** 登壇・主催・共催・伴走の記録。チケットのようなカード */
+function eventsSection(p: Partner): string {
+  const e = p.top.events;
+  if (!e) return '';
+  return `
+  <section class="sec sec-events" aria-labelledby="ev-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Live record</p>
+        <h2 id="ev-h" class="sec-h">${heading(e.title)}</h2>
+      </header>
+      <p class="ev-lead rv">${jp(e.lead)}</p>
+      <ol class="evs">${e.items
+        .map(
+          (it, i) => `
+        <li class="ev rv" style="--d:${i % 3}">
+          <article class="ev-in">
+            <div class="ev-art ev-art-${it.art}" aria-hidden="true">${eventArt(it.art)}</div>
+            <div class="ev-body">
+              <p class="ev-meta"><span class="ev-date">${esc(it.date)}</span><span class="ev-kind">${esc(it.kind)}</span></p>
+              <h3 class="ev-h">${heading(it.title)}</h3>
+              <p class="ev-host">${esc(it.host)}</p>
+              <p class="ev-p">${jp(it.body)}</p>
+              ${it.figure ? `<p class="ev-fig"><b>${esc(it.figure.value)}</b><small>${esc(it.figure.unit)}</small><span>${esc(it.figure.label)}</span></p>` : ''}
+              ${it.url ? `<a class="ev-link" href="${it.url}" target="_blank" rel="noopener"><span>告知を見る</span><span aria-hidden="true">↗</span></a>` : ''}
+            </div>
+            <span class="ev-stub" aria-hidden="true"><b>No.${String(i + 1).padStart(2, '0')}</b></span>
+          </article>
+        </li>`,
+        )
+        .join('')}</ol>
+      <p class="fine">${jp(e.note)}</p>
     </div>
   </section>`;
 }

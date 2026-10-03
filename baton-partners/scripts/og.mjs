@@ -152,10 +152,111 @@ ${it.photo ? `<div class="photo"><img src="${file(it.photo)}" alt=""></div>` : '
 </div></body></html>`;
 }
 
+// 長い見出しは、句読点（、。）のあとで改行し、いちばん長い行が幅に収まる大きさにする（単語の途中で折り返さない）
+function fitLines(text, width, max) {
+  const lines = text.replace(/([、。])/g, '$1\n').split('\n').map((l) => l.trim()).filter(Boolean);
+  const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0);
+  const size = Math.min(max, Math.floor(width / Math.max(...lines.map(len))));
+  return { size, html: lines.map((l) => `<span style="display:block;white-space:nowrap">${esc(l)}</span>`).join('') };
+}
+
+// match（エボルグ / Empro など）は白地に方眼の点。右に、赤と水色の三角が重なった大きな印。見出しは太い丸ゴシック
+function match(it) {
+  const red = '#EF2B33';
+  const cyan = it.accent ?? '#1CCCE8';
+  const plum = '#A8284A';
+  const fit = fitLines(it.heading, 620, 58);
+  const clip = 'polygon(0 0,50% 41.7%,100% 0,100% 100%,50% 58.3%,0 100%)';
+  const fill = `linear-gradient(90deg,${red} 0 42%,${plum} 42% 58%,${cyan} 58%)`;
+  // 小さな三角を散らす（決まった並び。毎回同じ画像になるように）
+  const tris = Array.from({ length: 26 }, (_, i) => {
+    const x = 640 + ((i * 137) % 520);
+    const y = 30 + ((i * 89) % 560);
+    const s = 16 + ((i * 7) % 22);
+    const r = (i * 47) % 360;
+    const c = i % 5 === 0 ? '#c3c8d0' : i % 2 ? red : cyan;
+    const dir = i % 2 ? 'polygon(0 0,100% 50%,0 100%)' : 'polygon(100% 0,0 50%,100% 100%)';
+    return `<i style="left:${x}px;top:${y}px;width:${s}px;height:${s}px;background:${c};clip-path:${dir};transform:rotate(${r}deg);opacity:.55"></i>`;
+  }).join('');
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'ZMGh';font-weight:900;src:url('${fontFile('zen-maru-gothic-900-h.woff2')}') format('woff2')}
+  @font-face{font-family:'ZMGr';font-weight:900;src:url('${fontFile('zen-maru-gothic-900.woff2')}') format('woff2')}
+  @font-face{font-family:'PJS';font-weight:200 800;src:url('${fsv('plus-jakarta-sans', 'plus-jakarta-sans-latin-wght-normal.woff2')}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:#121826;position:relative;overflow:hidden}
+  .dots{position:absolute;inset:0;background:radial-gradient(circle,#12182618 1.4px,transparent 1.9px) 0 0/22px 22px;-webkit-mask:radial-gradient(ellipse 55% 85% at 80% 50%,#000,transparent 80%);mask:radial-gradient(ellipse 55% 85% at 80% 50%,#000,transparent 80%)}
+  .sc i{position:absolute;display:block}
+  .mark{position:absolute;right:76px;top:196px;width:340px;height:236px;background:${fill};clip-path:${clip};filter:drop-shadow(0 30px 40px #12182633)}
+  .ring{position:absolute;right:30px;top:58px;width:520px;height:520px;border-radius:50%;border:2px solid ${plum}33}
+  .ring2{position:absolute;right:-40px;top:-12px;width:660px;height:660px;border-radius:50%;border:2px solid ${plum}1a}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:10px;background:linear-gradient(90deg,${red},${plum} 50%,${cyan})}
+  .in{position:absolute;inset:66px 560px 60px 80px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:22px}
+  .top img{height:40px;width:auto}
+  .label{font-family:'PJS',sans-serif;font-weight:800;font-size:19px;letter-spacing:.16em;text-transform:uppercase;display:flex;align-items:center;gap:12px}
+  .label::before{content:'';width:30px;height:20px;background:${fill};clip-path:${clip}}
+  h1{font-family:'ZMGh','ZMGr','Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:${fit.size}px;line-height:1.36;letter-spacing:.02em;width:calc(100% + 80px)}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:21px;font-weight:700;color:#3a4252;width:calc(100% + 480px)}
+  .foot svg{height:38px;width:auto}
+</style></head><body>
+<div class="dots"></div><div class="sc">${tris}</div><div class="ring2"></div><div class="ring"></div><div class="mark"></div><div class="bar"></div>
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}</div>
+  <div><p class="label">${esc(it.label)}</p><h1 style="margin-top:18px">${fit.html}</h1></div>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</div></body></html>`;
+}
+
+// mono（Central AX など）は白地に方眼、名古屋駅の座標と十字線。右に代表の写真をトンボの枠で（白黒）
+function monoOg(it) {
+  const signal = it.accent ?? '#2B4BFF';
+  const fit = fitLines(it.heading, 660, 62);
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 900)}">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'JBM';font-weight:100 800;src:url('${fsv('jetbrains-mono', 'jetbrains-mono-latin-wght-normal.woff2')}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:#0E0F12;position:relative;overflow:hidden}
+  .grid{position:absolute;inset:0;background-image:linear-gradient(#0000000f 1px,transparent 1px),linear-gradient(90deg,#0000000f 1px,transparent 1px);background-size:40px 40px}
+  .cx{position:absolute;left:0;right:0;top:300px;height:1px;background:#0E0F1240}
+  .cy{position:absolute;top:0;bottom:0;left:940px;width:1px;background:#0E0F1240}
+  .scan{position:absolute;left:640px;right:0;top:420px;height:3px;background:linear-gradient(90deg,transparent,${signal} 30%,${signal} 70%,transparent);box-shadow:0 0 22px 3px ${signal}66}
+  .deck{position:absolute;right:48px;top:36px;display:grid;justify-items:end;gap:4px;font-family:'JBM',monospace;font-size:15px;font-weight:600;letter-spacing:.12em}
+  .deck span:first-child::before{content:'';display:inline-block;width:11px;height:11px;background:${signal};margin-right:10px}
+  .deck span:last-child{color:#6a6e79}
+  .photo{position:absolute;right:120px;top:96px;width:300px;height:400px;padding:14px;background:#fff}
+  .photo img{width:100%;height:100%;object-fit:cover;object-position:50% 16%;filter:grayscale(1) contrast(1.06)}
+  .m{position:absolute;width:28px;height:28px;border:0 solid #0E0F12}
+  .m1{left:0;top:0;border-left-width:4px;border-top-width:4px}.m2{right:0;top:0;border-right-width:4px;border-top-width:4px}
+  .m3{left:0;bottom:0;border-left-width:4px;border-bottom-width:4px}.m4{right:0;bottom:0;border-right-width:4px;border-bottom-width:4px}
+  .cap{position:absolute;left:14px;right:14px;bottom:-30px;display:flex;justify-content:space-between;font-family:'JBM',monospace;font-size:13px;font-weight:600;letter-spacing:.08em}
+  .bar{position:absolute;left:0;top:0;bottom:0;width:14px;background:#0E0F12}
+  .in{position:absolute;inset:64px 480px 56px 86px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:22px}
+  .top img{height:50px;width:auto}
+  .label{font-size:19px;font-weight:700;letter-spacing:.18em;text-transform:uppercase}
+  h1{font-weight:900;font-size:${fit.size}px;line-height:1.38;letter-spacing:.01em;width:calc(100% + 60px)}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:21px;font-weight:700;color:#3a3b40;width:calc(100% + 400px)}
+  .foot svg{height:38px;width:auto}
+</style></head><body>
+<div class="grid"></div><div class="cx"></div><div class="cy"></div><div class="scan"></div><div class="bar"></div>
+<div class="deck"><span>35.17°N 136.88°E</span><span>NAGOYA / MEIEKI</span></div>
+${it.photo ? `<div class="photo"><img src="${file(it.photo)}" alt=""><i class="m m1"></i><i class="m m2"></i><i class="m m3"></i><i class="m m4"></i><p class="cap"><span>CEO</span><span>${esc(it.company)}</span></p></div>` : ''}
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span class="label">${esc(it.label)}</span></div>
+  <h1>${fit.html}</h1>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</div></body></html>`;
+}
 function html(it) {
   if (it.theme === 'minka') return minka(it);
   if (it.theme === 'needle') return needle(it);
   if (it.theme === 'studio') return studio(it);
+  if (it.theme === 'match') return match(it);
+  if (it.theme === 'mono') return monoOg(it);
   const con = it.theme === 'console';
   // console（DPパートナーズなど）も見出しは太いゴシック。方眼は点、縦の帯は紺から復旧の緑へ
   const mono = it.theme === 'mono' || con;
