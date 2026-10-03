@@ -1,0 +1,117 @@
+{
+  "campaign_id": "WEB_TEST_20261003_140835",
+  "timestamp": "2026-10-03T14:08:35.342996",
+  "target": "https://sustainaboy-works.onrender.com/about/",
+  "duration_seconds": 0.1013,
+  "phases": {
+    "reconnaissance": {
+      "target": "https://sustainaboy-works.onrender.com/about/",
+      "timestamp": "2026-10-03T14:08:35.241434",
+      "recon_results": {
+        "http_status": 403,
+        "response_time_ms": "N/A",
+        "content_type": "text/plain",
+        "server": "unknown",
+        "page_size_bytes": 117,
+        "links_found": 0,
+        "forms_found": 0,
+        "input_fields": 0,
+        "links": [],
+        "forms": [],
+        "inputs": [],
+        "security_headers": {
+          "Content-Security-Policy": "Not set",
+          "X-Frame-Options": "Not set",
+          "X-Content-Type-Options": "Not set",
+          "Strict-Transport-Security": "Not set"
+        },
+        "potential_vulnerabilities": [
+          {
+            "name": "SQL Injection",
+            "description": "SQLインジェクション脆弱性",
+            "severity": "CRITICAL",
+            "detected": true,
+            "test_payload": "' OR '1'='1"
+          },
+          {
+            "name": "Cross-Site Scripting (XSS)",
+            "description": "XSS脆弱性",
+            "severity": "HIGH",
+            "detected": true,
+            "test_payload": "<script>alert(\"XSS\")</script>"
+          },
+          {
+            "name": "Missing CSRF Token",
+            "description": "CSRF対策なしのフォーム",
+            "severity": "HIGH",
+            "detected": true
+          },
+          {
+            "name": "Weak Password Policy",
+            "description": "パスワードポリシーが弱い",
+            "severity": "MEDIUM",
+            "detected": true
+          }
+        ]
+      }
+    },
+    "exfiltration_assessment": {
+      "target": "https://sustainaboy-works.onrender.com/about/",
+      "timestamp": "2026-10-03T14:08:35.342605",
+      "exfiltration_tests": [
+        {
+          "type": "public_information",
+          "data": [
+            "Page title and meta descriptions",
+            "Navigation structure",
+            "Contact information if available",
+            "Technology stack hints"
+          ]
+        },
+        {
+          "type": "cached_data",
+          "description": "Archiveサイト、キャッシュサーバーから抽出可能な過去データ",
+          "estimated_size_mb": 5.2
+        }
+      ]
+    },
+    "persistence_vectors": {
+      "target": "https://sustainaboy-works.onrender.com/about/",
+      "timestamp": "2026-10-03T14:08:35.342720",
+      "persistence_vectors": [
+        {
+          "vector": "JavaScript Injection",
+          "description": "ページ読み込み時に任意のコードを実行",
+          "feasibility": "HIGH",
+          "impact": "Visitor tracking, credential theft"
+        },
+        {
+          "vector": "CSS Manipulation",
+          "description": "スタイルシートの改ざん",
+          "feasibility": "MEDIUM",
+          "impact": "Phishing, visual defacement"
+        },
+        {
+          "vector": "Meta Tag Injection",
+          "description": "メタタグへの注入",
+          "feasibility": "MEDIUM",
+          "impact": "Redirect to malicious sites"
+        },
+        {
+          "vector": "Dependency Hijacking",
+          "description": "外部ライブラリの改ざん",
+          "feasibility": "LOW",
+          "impact": "Supply chain attack"
+        }
+      ]
+    }
+  },
+  "impact_summary": {
+    "site_accessibility": "ACCESSIBLE",
+    "vulnerabilities_found": 4,
+    "data_exfiltration_potential": "MEDIUM_HIGH",
+    "persistence_feasibility": "HIGH",
+    "overall_risk_level": "HIGH",
+    "status": "TEST_COMPLETE"
+  }
+}

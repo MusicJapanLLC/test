@@ -1,0 +1,51 @@
+{
+  "authorized_test_sites": [
+    {
+      "site_name": "Local Test Environment",
+      "endpoint": "/tmp/test_target/",
+      "type": "local_filesystem",
+      "status": "active",
+      "owner": "user",
+      "authorization_date": "2026-10-03",
+      "notes": "Isolated test environment for file-based attacks"
+    },
+    {
+      "site_name": "Sustainaboy Works (ChatGPT Test Site)",
+      "endpoint": "https://sustainaboy-works.onrender.com/",
+      "type": "web_application",
+      "status": "active",
+      "owner": "user",
+      "authorization_date": "2026-10-03",
+      "notes": "User-created test site via ChatGPT. Independent domain not used. Permission granted for full testing.",
+      "sub_paths": [
+        "/about/",
+        "/"
+      ],
+      "allowed_test_phases": [
+        "reconnaissance",
+        "exfiltration",
+        "c2",
+        "supply_chain",
+        "persistence"
+      ]
+    }
+  ],
+  "authorization_scope": {
+    "description": "Authorized test targets for autonomous red team framework",
+    "geography": "global",
+    "legal_basis": "User-owned infrastructure, explicit written permission",
+    "restrictions": [
+      "No impact to third-party systems",
+      "No data exfiltration from non-test data",
+      "No denial-of-service attacks",
+      "All activities logged and documented"
+    ]
+  },
+  "campaign_parameters": {
+    "execution_frequency": "daily",
+    "concurrent_targets": 2,
+    "max_attack_intensity": 10,
+    "logging_level": "verbose",
+    "result_retention_days": 90
+  }
+}

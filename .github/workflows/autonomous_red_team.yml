@@ -73,6 +73,13 @@ jobs:
           python3 redteam/campaign_orchestrator.py
         continue-on-error: true
 
+      - name: Run web target tests
+        id: web-tests
+        run: |
+          cd /home/user/test || cd .
+          python3 redteam/web_target_tester.py
+        continue-on-error: true
+
       - name: Collect campaign results
         if: always()
         run: |
