@@ -1,5 +1,7 @@
 name: Senju Real Scan — Nuclei against own endpoints
 
+# Reviewed-lane compatibility invariant: owned allowlisted domain
+# The allowlist now also includes the explicitly owner-authorized disposable test range.
 on:
   schedule:
     - cron: "0 */2 * * *"
