@@ -30,6 +30,8 @@ export function renderProfileFooter(mount: HTMLElement): void {
         ),
       ]),
       el('nav', { class: 'profile-footer__nav', 'aria-label': 'Baton サイト内リンク' }, [
+        el('a', { href: withBase('/profile/'), text: 'プロフィール一覧' }),
+        el('a', { href: withBase('/hub/'), text: '法人向けサービス' }),
         el('a', { href: withBase('/faq/'), text: 'よくある質問' }),
         el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
       ]),

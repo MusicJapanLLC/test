@@ -15,6 +15,16 @@ import {
 
 export type JsonLd = Record<string, unknown>;
 
+/** The existing policy body identifies the same operator as the rest of Baton. */
+export function privacyStructuredData(pageUrl: string, siteBase: string): JsonLd[] {
+  return [...siteEntities(siteBase), {
+    '@type': 'WebPage', '@id': `${pageUrl}#webpage`, url: pageUrl,
+    name: `プライバシーポリシー - ${site.name}`, inLanguage: 'ja',
+    isPartOf: { '@id': `${siteBase}/#website` },
+    publisher: { '@id': `${siteBase}/#operator` },
+  }];
+}
+
 const officialCompanyUrl = (service: Service): string | undefined =>
   service.links.find((item) => item.label === '会社HP')?.url;
 

@@ -16,6 +16,7 @@ import {
   faqPageStructuredData,
   profileHubStructuredData,
   profileStructuredData,
+  privacyStructuredData,
   serviceHubStructuredData,
   serviceStructuredData,
   type JsonLd,
@@ -222,6 +223,7 @@ function batonSeoFiles(): Plugin {
           image: p.photo ? `${siteBase}${p.photo.src}` : undefined,
         })),
         { path: 'faq/', lastmod: latest },
+        { path: 'privacy/' },
         { path: 'hub/' },
         ...services.map((s) => ({ path: `${s.slug}/` })),
       ];
@@ -253,12 +255,12 @@ function batonSeoFiles(): Plugin {
   };
 }
 
-type StaticHtml = { profiles: Record<string, string>; hub: string; faq: string; footer: string };
+type StaticHtml = { profiles: Record<string, string>; hub: string; faq: string; footer: string; services: Record<string, string>; serviceHub: string; privacy: string; serviceFooter: string; hubFooter: string };
 let staticHtml: Promise<StaticHtml | null> | null = null;
 
 /**
  * 本文の静的HTML（src/prerender/entry.ts）を1回だけ組み立てる。
- * 失敗してもビルドは止めない（その場合は従来どおりブラウザだけで描く）。
+ * 生成に失敗したらビルドを止め、本文のないページを公開しない。
  */
 function loadStaticHtml(): Promise<StaticHtml | null> {
   staticHtml ??= (async () => {
@@ -287,8 +289,7 @@ function loadStaticHtml(): Promise<StaticHtml | null> {
       const mod = (await import(pathToFileURL(outFile).href)) as { renderStatic: () => Promise<StaticHtml> };
       return await mod.renderStatic();
     } catch (err) {
-      console.warn('[baton] 静的HTMLの生成に失敗したため、ブラウザ描画のみで出力します:', err);
-      return null;
+      throw new Error(`[baton] 静的HTMLの生成に失敗しました: ${String(err)}`, { cause: err });
     }
   })();
   return staticHtml;
@@ -298,10 +299,10 @@ function loadStaticHtml(): Promise<StaticHtml | null> {
 const NOSCRIPT_REVEAL =
   '<noscript><style>[data-reveal]{opacity:1!important;transform:none!important;filter:none!important}</style></noscript>';
 
-function injectStatic(html: string, body: string | undefined, footer: string | undefined): string {
+function injectStatic(html: string, body: string | undefined, footer: string | undefined, footerClass = 'profile-footer'): string {
   let out = html;
   if (body) out = out.replace('<main id="app"></main>', `<main id="app">${body}</main>`);
-  if (footer) out = out.replace('<footer id="footer"></footer>', `<footer id="footer" class="profile-footer">${footer}</footer>`);
+  if (footer) out = out.replace('<footer id="footer"></footer>', `<footer id="footer" class="${footerClass}">${footer}</footer>`);
   return out.replace('</head>', `    ${NOSCRIPT_REVEAL}\n  </head>`);
 }
 
@@ -338,7 +339,8 @@ function batonPages(): Plugin {
                 jsonLd: serviceStructuredData(s, serviceUrl, serviceHubUrl),
               }),
             )
-            .replace('<!--BATON:HERO-->', serviceHeroHtml(s, base));
+            .replace('<!--BATON:HERO-->', serviceHeroHtml(s, base))
+            .replace(/^([\s\S]*)$/, (whole) => injectStatic(whole, prerendered?.services[s.id], prerendered?.serviceFooter, 'footer'));
         }
 
         const isHome = filename === `${root.replace(/\\/g, '/')}/index.html`;
@@ -458,9 +460,11 @@ function batonPages(): Plugin {
                 themeColor: site.theme.bg,
                 path: '/privacy/',
                 vars,
+                jsonLd: privacyStructuredData(absoluteUrl('/privacy/'), siteUrl()),
               }),
             )
-            .replace('<!--BATON:HERO-->', '');
+            .replace('<!--BATON:HERO-->', '')
+            .replace(/^([\s\S]*)$/, (whole) => injectStatic(whole, prerendered?.privacy, prerendered?.serviceFooter, 'footer'));
         }
 
         return html
@@ -480,7 +484,8 @@ function batonPages(): Plugin {
               ),
             }),
           )
-          .replace('<!--BATON:HERO-->', hubHeroHtml());
+          .replace('<!--BATON:HERO-->', hubHeroHtml())
+          .replace(/^([\s\S]*)$/, (whole) => injectStatic(whole, prerendered?.serviceHub, prerendered?.hubFooter, 'footer'));
       },
     },
   };
