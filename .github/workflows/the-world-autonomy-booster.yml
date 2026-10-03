@@ -1,0 +1,76 @@
+name: THE WORLD - Runtime Density Booster v2
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-autonomy-booster.yml'
+      - 'automation/world/autonomy_booster.py'
+      - 'automation/world/autonomy_booster_policy.json'
+      - 'automation/world/realtime_plan.json'
+      - 'automation/world/test_autonomy_booster.py'
+
+concurrency:
+  group: the-world-runtime-density-v2
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  boost:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify runtime density engine
+        working-directory: automation/world
+        run: python -m unittest -v test_autonomy_booster.py
+
+      - name: Run global runtime density booster
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python automation/world/autonomy_booster.py \
+            --apply \
+            --out /tmp/the-world-autonomy-booster.json
+
+      - name: Summarize fanout
+        if: always()
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json, pathlib
+          path = pathlib.Path('/tmp/the-world-autonomy-booster.json')
+          if not path.exists():
+              raise SystemExit(0)
+          data = json.loads(path.read_text(encoding='utf-8'))
+          print('## THE WORLD Runtime Density Booster v2')
+          print(f"- Workers seen: **{data.get('workers_seen')}**")
+          print(f"- Due: **{data.get('workers_due')}**")
+          print(f"- Selected: **{data.get('workers_selected')}**")
+          print(f"- Selected profiles: `{data.get('selected_profile_counts')}`")
+          print(f"- Authority model: `{data.get('authority_model')}`")
+          PY
+
+      - name: Preserve runtime evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-world-runtime-density-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: /tmp/the-world-autonomy-booster.json
