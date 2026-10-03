@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Shippori+Mincho+B1:wght@600;800&family=Cinzel:wght@600;800&display=swap">
+<style>body{margin:0;background:#111}canvas{display:block;width:480px;image-rendering:pixelated}</style></head><body>
+<script src="px.js"></script><script src="sprites.js"></script><script src="scenes.js"></script><script src="scenes2.js"></script>
+<script>
+const name = new URLSearchParams(location.search).get('s') || 'plaza';
+document.fonts.load('32px "DotGothic16"').then(() => document.fonts.load('800 40px "Shippori Mincho B1"')).then(() => document.fonts.load('700 20px "Cinzel"')).then(() => {
+  const t0 = performance.now();
+  const cv = SCENES[name]();
+  console.log('render ms', Math.round(performance.now() - t0));
+  document.body.appendChild(cv);
+});
+</script></body></html>

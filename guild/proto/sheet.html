@@ -1,0 +1,19 @@
+<!doctype html><html><body style="margin:0;background:#3a3040">
+<canvas id="c"></canvas>
+<script src="px.js"></script><script src="sprites.js"></script>
+<script>
+const S = 6, names = Object.keys(SP.CAST);
+const cv = document.getElementById('c'); cv.width = 16 * S * 4 * 1.25 + 40; cv.height = names.length * 30 * S / 2 + 400;
+const c = cv.getContext('2d'); c.imageSmoothingEnabled = false;
+names.forEach((n, i) => {
+  ['front', 'side', 'back', 'step'].forEach((p, j) => {
+    const s = SP.make(SP.CAST[n], p);
+    const col = i % 2, row = Math.floor(i / 2);
+    c.drawImage(s, 10 + col * 4 * 20 * S / 2 * 1.1 + j * 18 * S / 2 * 1.1, 10 + row * 31 * S / 2, 16 * S / 2, s.height * S / 2);
+  });
+});
+// portrait
+const P = SP.PORTRAIT_RINA, pal = SP.palette(SP.CAST.rina); pal.G = '#e0b040';
+const pc = PX.canvas(40, 40); PX.sprite(pc.ctx, P, pal, 0, 0);
+c.drawImage(pc.cv, 20, names.length * 31 * S / 4 + 40, 240, 240); c.drawImage(SP.portrait("rina"), 280, names.length * 31 * S / 4 + 40, 240, 240);
+</script></body></html>
