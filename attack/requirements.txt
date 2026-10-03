@@ -1,0 +1,41 @@
+# ATTACK Framework Requirements
+# Automated Test Coverage Kaleidoscope
+
+# 非同期処理
+aiohttp>=3.8.0
+asyncio-contextmanager>=1.0.0
+
+# データ処理
+pydantic>=2.0.0
+dataclasses-json>=0.5.0
+
+# セキュリティ関連
+paramiko>=3.0.0  # SSH
+cryptography>=41.0.0
+hashlib  # 標準ライブラリ
+
+# スキャン・検査
+bandit>=1.7.0  # Python セキュリティスキャン
+safety>=2.0.0  # 依存関係脆弱性チェック
+requests>=2.31.0
+
+# リポート生成
+jinja2>=3.1.0
+markupsafe>=2.1.0
+
+# ユーティリティ
+python-dotenv>=1.0.0
+colorama>=0.4.6  # 出力カラー化
+tabulate>=0.9.0  # テーブル出力
+
+# オプション（拡張機能）
+# dns.resolver - DNS クエリ
+dnspython>=2.4.0
+
+# shodan - デバイス探索
+# shodan>=1.30.0
+
+# 開発・テスト用
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.0.0
