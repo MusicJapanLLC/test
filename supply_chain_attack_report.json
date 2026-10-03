@@ -1,0 +1,98 @@
+{
+  "timestamp": "2026-10-03T14:01:53.341708",
+  "campaign_duration_seconds": 0.105489,
+  "phases": {
+    "initial_vendor_compromise": {
+      "targeted_vendors": 8,
+      "compromised_vendors": 1,
+      "success_rate": 0.125,
+      "compromise_vectors": [
+        "account_takeover"
+      ]
+    },
+    "downstream_customer_impact": {
+      "total_customers_identified": 50,
+      "data_types_exposed": [
+        "user_credentials",
+        "api_keys",
+        "database_backups",
+        "customer_records",
+        "transaction_history"
+      ],
+      "critical_severity_count": 50,
+      "high_severity_count": 0
+    },
+    "cascading_compromise": [
+      {
+        "initial_vendor": "DataSync Cloud",
+        "propagation_stages": [
+          {
+            "stage": 1,
+            "vendor": "BackupVault Pro",
+            "customers_affected": 571,
+            "data_accessed_mb": 1767.373969016843
+          },
+          {
+            "stage": 1,
+            "vendor": "PaymentGateway Corp",
+            "customers_affected": 1142,
+            "data_accessed_mb": 1672.2664201239459
+          },
+          {
+            "stage": 1,
+            "vendor": "CodeDeploy Hub",
+            "customers_affected": 710,
+            "data_accessed_mb": 4535.459237751227
+          }
+        ],
+        "total_vendors_in_cascade": 4,
+        "cascading_effect_active": true
+      }
+    ],
+    "vendor_summary": [
+      {
+        "vendor_name": "DataSync Cloud",
+        "vendor_type": "cloud_provider",
+        "compromised": true,
+        "customers_impacted": 1146,
+        "data_accessed_mb": 1210.1565878037802,
+        "infection_spread": 0.8863375159766558
+      },
+      {
+        "vendor_name": "PaymentGateway Corp",
+        "vendor_type": "payment_processor",
+        "compromised": true,
+        "customers_impacted": 1142,
+        "data_accessed_mb": 1672.2664201239459,
+        "infection_spread": 0.7182061186503128
+      },
+      {
+        "vendor_name": "CodeDeploy Hub",
+        "vendor_type": "software_vendor",
+        "compromised": true,
+        "customers_impacted": 710,
+        "data_accessed_mb": 4535.459237751227,
+        "infection_spread": 0.46804360699525477
+      },
+      {
+        "vendor_name": "BackupVault Pro",
+        "vendor_type": "backup_service",
+        "compromised": true,
+        "customers_impacted": 571,
+        "data_accessed_mb": 1767.373969016843,
+        "infection_spread": 0.5994428544101269
+      }
+    ]
+  },
+  "impact_assessment": {
+    "supply_chain_compromise_level": "CRITICAL",
+    "total_vendors_compromised": 4,
+    "total_customers_affected": 50,
+    "total_data_exposed_mb": 9185.256214695795,
+    "cascading_effect_triggered": true,
+    "cascade_generations": 1,
+    "downstream_exposure_multiplier": 12.5,
+    "trust_chain_broken": true,
+    "status": "SUPPLY_CHAIN_BREACH_SUCCESSFUL"
+  }
+}

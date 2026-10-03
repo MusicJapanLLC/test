@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-10-03T14:02:47.321160",
+  "campaign_duration_days": 30,
+  "campaign_duration_seconds": 0.000694,
+  "phases": {
+    "persistence_installation": {
+      "total_mechanisms": 6,
+      "installed_mechanisms": 5,
+      "installation_success_rate": 0.8333333333333334,
+      "mechanisms_by_layer": {
+        "bootkit": 1,
+        "kernel_rootkit": 1,
+        "userland_agent": 1,
+        "cron_job": 1,
+        "systemd_service": 1
+      }
+    },
+    "detection_and_response": {
+      "simulation_days": 30,
+      "total_check_ins": 30,
+      "total_detections": 4,
+      "detection_rate": 0.13333333333333333,
+      "false_positives": 0
+    },
+    "auto_healing": {
+      "healing_events": 4,
+      "successful_healings": 3,
+      "failed_healings": 1,
+      "healing_success_rate": 0.75,
+      "healing_strategies_used": {
+        "supply_chain": {
+          "count": 2,
+          "success": 1
+        },
+        "lateral_restore": {
+          "count": 1,
+          "success": 1
+        },
+        "auto_restore": {
+          "count": 1,
+          "success": 1
+        }
+      }
+    }
+  },
+  "impact_assessment": {
+    "persistence_strength": 0.8240000000000001,
+    "average_online_mechanisms": 5,
+    "persistence_detected_but_recovered": 3,
+    "persistence_failed_recovery": 1,
+    "threat_sustainability": "LONG_TERM",
+    "self_healing_effectiveness": 0.75,
+    "status": "PERSISTENT_INFECTION_ESTABLISHED"
+  }
+}
