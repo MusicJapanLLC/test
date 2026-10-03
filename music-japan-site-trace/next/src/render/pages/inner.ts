@@ -176,7 +176,7 @@ export function renderPrivacy(locale: Locale) {
   <p class="doc-intro">${prose(d.intro ?? '')}</p>
   ${d.sections
     .map(
-      (s) => `<section class="doc-sec"><h2>${esc(s.h)}</h2>${s.p.map((t) => `<p>${esc(t).replaceAll('\n', '<br>')}</p>`).join('')}${s.li.length ? `<ul>${s.li.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}</section>`,
+      (s) => `<section class="doc-sec"><h2>${esc(s.h)}</h2>${s.p.map((t) => `<p>${esc(t).replace(/https:\/\/(?:policies\.google\.com\/technologies\/partner-sites|tools\.google\.com\/dlpage\/gaoptout)\?hl=(?:ja|en)/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`).replaceAll('\n', '<br>')}</p>`).join('')}${s.li.length ? `<ul>${s.li.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>` : ''}</section>`,
     )
     .join('')}
 </section>`;
