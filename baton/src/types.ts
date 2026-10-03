@@ -125,6 +125,10 @@ export type TalkProfile = {
     caption?: string;
     /** 写真の足元を、この色へ沈める（モノクロ写真を地の色になじませたいとき。例: '#3B1A7A'） */
     tint?: string;
+    /** 一覧（/profile/）のカードに使う小さい写真（幅520px程度）。未指定なら src を使う */
+    thumb?: string;
+    /** 一覧のカードで写真を切り抜くときの中心（CSSの object-position。例: '36% 18%'）。顔が入るように */
+    focus?: string;
   };
   /** 人物紹介（今後、実際の経歴文に差し替えていく前提） */
   bio: string;

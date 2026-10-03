@@ -17,15 +17,15 @@ import { makeRenderer, onResize, pointerTracker, startLoop } from '../lib/webgl'
  * Baton トップ（/profile/）のヒーロー。
  *
  * 「いい人から、いい人へ、光が手渡される」瞬間を、白い紙の上の光で描く。
- *   1. 左から、赤と金の光（バトン）が絹のリボンを描きながら運ばれてくる
- *   2. 右からは、受け取る側の淡い金の光が近づいてくる
- *   3. 中央で2つが重なった瞬間に、やわらかな金の光だまりと水面の波紋、
- *      金の粉がふわりと広がる（＝バトンが渡る）
+ *   1. 左から、灰青の光（バトン）が絹のリボンを描きながら運ばれてくる
+ *   2. 右からは、受け取る側の藤色の光が近づいてくる
+ *   3. 中央で2つが重なった瞬間に、真珠色の光だまりと水面の波紋、
+ *      光の粉がふわりと広がる（＝バトンが渡る）。2人の色が混ざって白い光になる
  *   4. 光は右端まで渡りきり、リボンとして残る。以後は数本のリボンの上を、
  *      小さな光が次の人へ次の人へと流れ続ける
  *
  * 白地では光を「足す」と色が飛ぶので、すべて地の色へ「混ぜて」描く。
- * 全画面の板1枚（フラグメントシェーダ）と、金の粉の粒だけで描く。
+ * 全画面の板1枚（フラグメントシェーダ）と、光の粉の粒だけで描く。
  * 座標は「縦が -0.5〜0.5、横はアスペクト比ぶん」の平面にそろえている。
  */
 
@@ -142,7 +142,7 @@ const quadFragment = /* glsl */ `
         float slope = (silkY(p.x + dx, base, amp, k, ph, time) - y) / dx;
         float d = curveDist(p, y, slope);
         vec3 c = mix(uRed, uGold, 0.35 + fi * 0.25);
-        float body = exp(-d * d * 42000.0) * 0.55 + exp(-d * 90.0) * 0.10;
+        float body = exp(-d * d * 60000.0) * 0.46 + exp(-d * 90.0) * 0.08;
         // 絹の艶: ところどころ明るく
         float sheen = 0.55 + 0.45 * sin(p.x * 3.0 - time * 0.6 + fi);
         // リボンの上を流れる小さな光（次の人へ渡るバトン）
@@ -169,12 +169,12 @@ const quadFragment = /* glsl */ `
     float md = curveDist(p, my, mslope);
     float lit = smoothstep(reach + 0.01, reach - 0.08, p.x);
     // 左から来た光が通ったところだけリボンになる
-    float ribbonA = exp(-md * md * 30000.0) * 0.85 + exp(-md * 70.0) * 0.16;
+    float ribbonA = exp(-md * md * 42000.0) * 0.8 + exp(-md * 70.0) * 0.14;
     vec3 ribbonC = mix(uRed, uGold, smoothstep(-halfW, halfW, p.x) * 0.8);
     float fadeEdge = smoothstep(halfW + 0.05, halfW - 0.3, abs(p.x));
     col = over(col, ribbonC, ribbonA * lit * mix(1.0, fadeEdge, stage));
     // 中心のハイライト（絹の光沢）
-    col = mix(col, vec3(1.0, 0.95, 0.86), exp(-md * md * 260000.0) * lit * 0.55);
+    col = mix(col, vec3(0.97, 0.98, 1.0), exp(-md * md * 260000.0) * lit * 0.6);
 
     // ── 運ばれてくる2つの光 ──────────────────
     if (t < IMPACT + 0.25) {
@@ -183,12 +183,12 @@ const quadFragment = /* glsl */ `
       vec2 pr = vec2(headR, mainRibbonY(headR, y0, time));
       float dl = length(p - pl);
       float dr = length(p - pr);
-      // 渡す側: 赤い芯に、シャンパン色の光輪と横に伸びる光
+      // 渡す側: 灰青の芯に、真珠色の光輪と横に伸びる光
       col = over(col, uChamp, exp(-dl * 12.0) * 0.7 * on);
       col = over(col, mix(uChamp, uRed, 0.25), exp(-abs(p.y - pl.y) * 140.0) * exp(-abs(p.x - pl.x) * 9.0) * 0.6 * on);
       col = over(col, uRed, exp(-dl * dl * 4200.0) * 0.95 * on);
       col = mix(col, vec3(1.0), exp(-dl * dl * 30000.0) * on);
-      // 受け取る側: 淡い金の光
+      // 受け取る側: 藤色の光
       col = over(col, uChamp, exp(-dr * 14.0) * 0.6 * on);
       col = over(col, uGold, exp(-dr * dr * 5200.0) * 0.85 * on);
       col = mix(col, vec3(1.0), exp(-dr * dr * 34000.0) * on);
@@ -209,7 +209,7 @@ const quadFragment = /* glsl */ `
       float rayLen = exp(-d / (0.12 + since * 0.55));
       col = over(col, mix(uChamp, uGold, 0.25), rays * rayLen * exp(-since * 1.5) * smoothstep(0.0, 0.1, since) * 0.9);
       col = mix(col, vec3(1.0), exp(-d * d * 140.0) * bloom);
-      // 2本の、やわらかな波紋。赤から金へ色が移る
+      // 2本の、やわらかな波紋。灰青から藤色へ色が移る
       for (int k = 0; k < 2; k++) {
         float fk = float(k);
         float s = since - fk * 0.3;
@@ -223,7 +223,7 @@ const quadFragment = /* glsl */ `
     }
 
     // マウスのまわりだけ、紙が少し明るむ
-    col = mix(col, vec3(1.0, 0.985, 0.95), exp(-length(p - mouse) * 5.0) * 0.18);
+    col = mix(col, vec3(0.99, 0.995, 1.0), exp(-length(p - mouse) * 5.0) * 0.2);
 
     // 周辺をわずかに沈め、紙の繊維のような粒を足す
     float vig = smoothstep(1.3, 0.3, length(p * vec2(0.8 / max(aspect, 1.0) * 1.6, 1.2)));
@@ -233,7 +233,7 @@ const quadFragment = /* glsl */ `
   }
 `;
 
-/** バトンが渡った瞬間に舞う金の粉。ゆっくり広がり、少し浮かんで消える */
+/** バトンが渡った瞬間に舞う光の粉。ゆっくり広がり、少し浮かんで消える */
 const dustVertex = /* glsl */ `
   attribute float aAngle;
   attribute float aSpeed;
@@ -280,11 +280,11 @@ const dustFragment = /* glsl */ `
     vec2 c = gl_PointCoord - 0.5;
     float glint = max(exp(-abs(c.x) * 40.0) * exp(-abs(c.y) * 4.0), exp(-abs(c.y) * 40.0) * exp(-abs(c.x) * 4.0));
     float tw = step(0.6, vSeed) * (0.5 + 0.5 * sin(vAge * 30.0 + vSeed * 50.0));
-    gl_FragColor = vec4(mix(col, vec3(1.0, 0.97, 0.88), tw * 0.4), max(a, glint * tw) * life * 0.95);
+    gl_FragColor = vec4(mix(col, vec3(0.96, 0.97, 1.0), tw * 0.45), max(a, glint * tw) * life * 0.9);
   }
 `;
 
-/** ずっと漂う、ごく淡い金の粒 */
+/** ずっと漂う、ごく淡い光の粒 */
 const floatVertex = /* glsl */ `
   attribute vec3 aStart;
   attribute float aSeed;
@@ -329,6 +329,7 @@ export type HubHeroOptions = {
   red?: string;
   gold?: string;
   paper?: string;
+  glow?: string;
 };
 
 export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOptions): () => void {
@@ -338,11 +339,12 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, low ? 1 : 1.5));
   const scene = new Scene();
   const camera = new Camera();
-  const red = new Color(opts.red ?? '#C8102E');
-  const gold = new Color(opts.gold ?? '#C9A052');
-  const paper = new Color(opts.paper ?? '#FDFCFA');
-  // 光の色。白地で「光って」見えるよう、紙よりわずかに色の濃いシャンパンゴールド
-  const champ = new Color('#F1D9A6');
+  // 渡す人（灰青）と受け取る人（藤色）。どちらも彩度を落とし、白×薄いグレーの地になじませる
+  const red = new Color(opts.red ?? '#7D8FB3');
+  const gold = new Color(opts.gold ?? '#A898C6');
+  const paper = new Color(opts.paper ?? '#FFFFFF');
+  // 光の色。白地で「光って」見えるよう、紙よりわずかに沈んだ真珠色
+  const champ = new Color(opts.glow ?? '#DCE2EE');
 
   const quadMat = new ShaderMaterial({
     vertexShader: quadVertex,
@@ -367,7 +369,7 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   quad.frustumCulled = false;
   scene.add(quad);
 
-  // 金の粉
+  // 光の粉
   const dustCount = low ? 260 : 620;
   const dustGeo = new BufferGeometry();
   const angle = new Float32Array(dustCount);
@@ -409,7 +411,7 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   dust.frustumCulled = false;
   scene.add(dust);
 
-  // 漂う金の粒
+  // 漂う光の粒
   const floatCount = low ? 70 : 180;
   const floatGeo = new BufferGeometry();
   const start = new Float32Array(floatCount * 3);
@@ -468,7 +470,7 @@ export function mountHubHeroScene(canvas: HTMLCanvasElement, opts: HubHeroOption
   canvas.classList.add('is-ready');
   let introStart = -1;
   let impacted = Boolean(opts.skipIntro);
-  // 渡る瞬間を飛ばすときは、金の粉が消えきった時点から始める
+  // 渡る瞬間を飛ばすときは、光の粉が消えきった時点から始める
   const introOffset = opts.skipIntro ? IMPACT_AT + 5 : 0;
 
   const loop = startLoop(canvas, (elapsed) => {

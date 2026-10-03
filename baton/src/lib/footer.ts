@@ -13,7 +13,6 @@ export function renderFooter(mount: HTMLElement, opts: { backToHub?: boolean } =
       el('div', { class: 'footer__links' }, [
         el('a', { href: site.producer.works, ...externalAttrs, text: 'Standment 制作実績' }),
         opts.backToHub ? el('a', { href: withBase('/'), text: 'Baton トップへ' }) : null,
-        el('a', { href: withBase('/hub/'), text: 'サービス一覧' }),
         el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
       ]),
     ]),

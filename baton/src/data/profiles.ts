@@ -23,6 +23,8 @@ const kabeyaProfile: TalkProfile = {
   tagline: '学び、紡ぎ、繋いでいく。',
   photo: {
     src: '/profile-kabeya-hd.webp',
+    thumb: '/thumb/kabeya.webp',
+    focus: '34% 22%',
     alt: '壁谷 友生',
     caption: 'OSAKA / JAPAN · 2026',
   },
@@ -155,6 +157,8 @@ const matsuuraProfile: TalkProfile = {
   tagline: 'AIを、現場で使われるところまで。',
   photo: {
     src: '/profile-matsuura.webp',
+    thumb: '/thumb/matsuura.webp',
+    focus: '50% 18%',
     alt: '松浦 淳',
     caption: 'NAGOYA / JAPAN · 2026',
   },
@@ -330,6 +334,8 @@ const ishiiProfile: TalkProfile = {
   tagline: '経営に、余白を。人生に、本質を。',
   photo: {
     src: '/profile-ishii.webp',
+    thumb: '/thumb/ishii.webp',
+    focus: '52% 24%',
     alt: '石井 嵩大',
     caption: 'TOKYO / JAPAN · 2026',
   },
@@ -534,6 +540,8 @@ const miyamotoProfile: TalkProfile = {
   tagline: '見えない波長を、つなぐ。',
   photo: {
     src: '/profile-miyamoto.webp',
+    thumb: '/thumb/miyamoto.webp',
+    focus: '52% 14%',
     alt: '宮本 康太',
     caption: 'TOKYO / JAPAN · 2026',
     tint: '#141114',

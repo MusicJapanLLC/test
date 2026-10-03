@@ -224,7 +224,6 @@ function batonSeoFiles(): Plugin {
         })),
         { path: 'faq/', lastmod: latest },
         { path: 'privacy/' },
-        { path: 'hub/' },
         ...services.map((s) => ({ path: `${s.slug}/` })),
       ];
       this.emitFile({
@@ -389,7 +388,7 @@ function batonPages(): Plugin {
                 title: 'Baton -バトン-｜経営者・事業者を紹介する招待制サービス｜合同会社Music Japan',
                 description:
                   '合同会社Music Japanが実際に対話した経営者・事業者のプロフィールを掲載し、双方に可能性があると判断した相手どうしを紹介する、招待制の紹介サービス「Baton -バトン-」です。',
-                themeColor: '#FDFCFA',
+                themeColor: '#FFFFFF',
                 path: '/profile/',
                 vars,
                 extraFontHref: PROFILE_FONT_HREF,
@@ -409,7 +408,7 @@ function batonPages(): Plugin {
 
         const isFaq = filename === `${root.replace(/\\/g, '/')}/faq/index.html`;
         if (isFaq) {
-          const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:#FDFCFA;--text:${site.theme.text}`;
+          const vars = `--primary:${site.theme.text};--accent:${site.theme.accent};--bg:#FFFFFF;--text:${site.theme.text}`;
           const faqUrl = absoluteUrl('/faq/');
           return injectStatic(
             html.replace(
@@ -418,7 +417,7 @@ function batonPages(): Plugin {
                 title: 'よくある質問｜Baton -バトン-（招待制の紹介サービス）',
                 description:
                   'Baton -バトン-とは何か、運営者、掲載されている経営者・事業者を紹介してもらう方法と流れ、掲載のご相談方法をまとめています。',
-                themeColor: '#FDFCFA',
+                themeColor: '#FFFFFF',
                 path: '/faq/',
                 vars,
                 jsonLd: faqPageStructuredData(faqUrl, profileHubUrl, siteUrl()),
@@ -477,6 +476,8 @@ function batonPages(): Plugin {
               themeColor: site.theme.bg,
               path: '/hub/',
               vars,
+              // /hub/ は公開しないURL（Owner指示 2026-10-03）。リンク・サイトマップから外し、検索にも出さない
+              noindex: true,
               jsonLd: serviceHubStructuredData(
                 services,
                 serviceHubUrl,
