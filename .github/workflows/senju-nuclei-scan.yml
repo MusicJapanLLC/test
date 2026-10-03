@@ -15,7 +15,7 @@ concurrency:
 
 permissions:
   contents: write
-  actions: write
+  actions: read
 
 jobs:
   nuclei-scan:
@@ -187,7 +187,7 @@ jobs:
                   raise
 
           payload = {
-              'message': 'chore(senju): nuclei scan findings [skip ci]',
+              'message': 'chore(senju): nuclei scan findings',
               'content': base64.b64encode(state_path.read_bytes()).decode('ascii'),
               'branch': branch,
           }
@@ -203,13 +203,6 @@ jobs:
               result = json.loads(response.read())
           print(f"state persisted: {result.get('content', {}).get('path', path)}")
           PY
-
-      - name: Trigger Senju self-development from observed vulnerability evidence
-        if: steps.ingest.outputs.finding_count != '0'
-        shell: bash
-        run: |
-          set -euo pipefail
-          gh workflow run senju-self-develop.yml --ref "$TARGET_BRANCH"
 
       - name: Upload nuclei findings artifact
         if: always()
