@@ -1,5 +1,5 @@
 import type { Locale } from '../content/releases';
-import { BATON_URL, copy, EMAIL, LAST_MODIFIED, nav, path, SECOND_TAKE_URL, SITE_URL, socials, type PageKey } from '../content/site';
+import { BATON_PARTNERS_URL, BATON_URL, copy, EMAIL, LAST_MODIFIED, nav, path, SECOND_TAKE_URL, SITE_URL, socials, type PageKey } from '../content/site';
 import { arrow, esc, prose } from './html';
 import { crumbs } from './parts';
 import { mark } from './mark';
@@ -59,6 +59,8 @@ function header(locale: Locale, page: PageKey, paths?: Record<Locale, string>): 
 </header>`;
 }
 
+const BP_SERVICE_ID = 'https://partners.music-japan.com/music-japan/service/#service';
+
 function footer(locale: Locale): string {
   const c = copy[locale];
   const line = `<span>${esc(c.footer.line)}</span>${mark({ id: 'fmq' })}`;
@@ -98,8 +100,8 @@ export function organization(locale: Locale) {
     areaServed: { '@type': 'Country', name: 'Japan' },
     location: { '@type': 'Place', name: '大阪府大阪市北区梅田', address: { '@id': `${SITE_URL}/#address` } },
     contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: EMAIL, telephone: '+81-70-3175-7567', availableLanguage: ['ja', 'en'], url: `${SITE_URL}${path(locale, 'contact')}` },
-    brand: ['Yuma', 'Cozy Cafe Jazz BGM', 'Relaxing Classical Music Live', 'Deep Sleep Music Radio', 'SECOND TAKE', 'Baton'].map((name) => ({ '@type': 'Brand', name })),
-    owns: [{ '@id': `${SECOND_TAKE_URL}#podcast-series` }, { '@id': `${BATON_URL}#service` }],
+    brand: ['Yuma', 'Cozy Cafe Jazz BGM', 'Relaxing Classical Music Live', 'Deep Sleep Music Radio', 'SECOND TAKE', 'Baton', 'Baton Partners'].map((name) => ({ '@type': 'Brand', name })),
+    owns: [{ '@id': `${SECOND_TAKE_URL}#podcast-series` }, { '@id': `${BATON_URL}#service` }, { '@id': BP_SERVICE_ID }],
     knowsAbout: ['音楽制作', '楽曲配信', 'BGM制作', 'Podcast制作', '経営者インタビュー', 'メディア企画'],
     sameAs: socials.map((s) => s.href),
     identifier: { '@type': 'PropertyValue', propertyID: '法人番号', value: '8120003031493' },
@@ -122,6 +124,8 @@ export function page(m: PageMeta): string {
     { '@type': 'Person', '@id': `${SITE_URL}/#founder`, name: '壁谷 友生', alternateName: ['Tomoki Kabeya', 'Kabeya Tomoki'], jobTitle: locale === 'ja' ? '代表社員' : 'Representative Member', url: `${SITE_URL}${path(locale, 'profile')}`, image: `${SITE_URL}/kabeya-tomoki.png`, worksFor: { '@id': `${SITE_URL}/#organization` }, sameAs: [socials[0].href] },
     { '@type': 'PodcastSeries', '@id': `${SECOND_TAKE_URL}#podcast-series`, name: 'SECOND TAKE', url: SECOND_TAKE_URL, inLanguage: 'ja', description: '経営者の決断と苦悩、その先にある物語を、Podcastとインタビュー記事で記録する経営者メディア。', publisher: { '@id': `${SITE_URL}/#organization` } },
     { '@type': 'Service', '@id': `${BATON_URL}#service`, name: 'Baton', alternateName: 'Baton -バトン-', url: BATON_URL, serviceType: locale === 'ja' ? '招待制の紹介サービス' : 'Invitation-only introduction service', provider: { '@id': `${SITE_URL}/#organization` }, areaServed: { '@type': 'Country', name: 'Japan' } },
+    // Baton Partners の @id は partners.music-japan.com 側の構造化データと同じ（サイトをまたいで同じサービスだと伝える）
+    { '@type': 'Service', '@id': BP_SERVICE_ID, name: 'Baton Partners', alternateName: 'バトンパートナーズ', url: BATON_PARTNERS_URL, serviceType: locale === 'ja' ? '専用LP・SEO・AIO・紹介' : 'Dedicated landing pages, SEO, AI search optimization and referrals', provider: { '@id': `${SITE_URL}/#organization` }, areaServed: { '@type': 'Country', name: 'Japan' } },
     { '@type': 'WebSite', '@id': `${SITE_URL}/#website`, url: `${SITE_URL}/`, name: '合同会社Music Japan', alternateName: 'Music Japan LLC', inLanguage: ['ja', 'en'], publisher: { '@id': `${SITE_URL}/#organization` } },
     { '@type': pageType, '@id': `${url}#webpage`, url, name: m.title, description: m.description, inLanguage: locale, dateModified: LAST_MODIFIED, isPartOf: { '@id': `${SITE_URL}/#website` }, about: { '@id': `${SITE_URL}/#organization` }, primaryImageOfPage: { '@type': 'ImageObject', url: ogImage, width: img.width, height: img.height }, ...(trail.length === 0 ? {} : { breadcrumb: { '@id': `${url}#breadcrumb` } }), ...(key === 'profile' ? { mainEntity: { '@id': `${SITE_URL}/#founder` } } : {}) },
     ...(trail.length === 0

@@ -276,3 +276,8 @@ a.news-item:hover time, a.news-item:hover .news-label { color: #fff; }
 .cta .sec-body { margin-inline: auto; }
 .cta-actions .btn { min-height: 76px; padding-inline: 38px; font-size: 16px; }
 .cta-wave { position: absolute; inset: 0; z-index: -1; background: radial-gradient(60% 50% at 50% 60%, rgba(225, 34, 47, calc(0.25 + var(--level) * 0.6)), transparent 70%); }
+
+/* Baton Partners（BP-000）への入口：掲載企業と同じ札に、外へ出る矢印だけ添える */
+.pt-item--join .pt-no { color: var(--paper); }
+.pt-item--join .pt-meta .pt-ext { margin-left: 0.4em; font-family: inherit; font-size: 0.8em; letter-spacing: 0; color: var(--red-hot); }
+.pt-item--join:hover { border-color: var(--red); }

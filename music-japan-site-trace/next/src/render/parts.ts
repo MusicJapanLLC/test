@@ -1,7 +1,7 @@
 import { partners } from '../content/company';
 import { faq } from '../content/faq';
 import { artwork, releases, type Locale } from '../content/releases';
-import { copy, path, SITE_URL, workPath, type PageKey } from '../content/site';
+import { BATON_PARTNERS_URL, copy, path, SITE_URL, workPath, type PageKey } from '../content/site';
 import { arrow, esc, ext, phrases, prose } from './html';
 import { mark } from './mark';
 
@@ -134,6 +134,20 @@ export function partnerSleeve(locale: Locale, i: number, size: 'lg' | 'sm' = 'lg
   </div>`;
 }
 
+/** Baton Partners（BP-000）のスリーブ。掲載企業と同じ盤に、Music Japan のロゴとラベルの赤 */
+export function joinSleeve(locale: Locale, size: 'lg' | 'sm' = 'lg') {
+  return `<div class="ps ps--${size}" style="--c1:#e1222f;--c2:#ff3a48" aria-hidden="true">
+    <span class="ps-disc"><span class="ps-grooves"></span><span class="ps-label"></span></span>
+    <span class="ps-cover">
+      <span class="ps-no">BP-000</span>
+      <span class="ps-series">BATON PARTNERS</span>
+      <img src="/brand-music-japan-logo-white.png" alt="" width="797" height="176" loading="lazy" decoding="async">
+      <span class="ps-base">${locale === 'ja' ? 'OSAKA' : 'OSAKA'} — JAPAN</span>
+      ${mark({ id: `psj${size}`, cls: 'mj-mark ps-mark' })}
+    </span>
+  </div>`;
+}
+
 export function partnersTeaser(locale: Locale) {
   const t = copy[locale].partnersTeaser;
   return `<section class="pt" data-world-zone="ambient" aria-labelledby="pt-title">
@@ -146,7 +160,7 @@ export function partnersTeaser(locale: Locale) {
     .map(
       (p, i) => `<a class="pt-item" href="${path(locale, 'partners')}#${p.id}" data-reveal data-cursor-label="OPEN">${partnerSleeve(locale, i, 'sm')}<span class="pt-meta"><span class="pt-no">${p.no}</span><strong>${esc(p.name[locale])}</strong><span>${esc(p.category[locale])}</span></span></a>`,
     )
-    .join('')}</div>
+    .join('')}<a class="pt-item pt-item--join" href="${BATON_PARTNERS_URL}" target="_blank" rel="noopener" data-reveal data-cursor-label="VISIT">${joinSleeve(locale, 'sm')}<span class="pt-meta"><span class="pt-no">BP-000</span><strong>${esc(t.join.title)}<span class="pt-ext" aria-hidden="true">↗</span></strong><span>${esc(t.join.meta)}</span></span><span class="sr">${copy[locale].newTab}</span></a></div>
   <div class="sec-cta">${button(t.cta, path(locale, 'partners'), 'line')}</div>
 </section>`;
 }

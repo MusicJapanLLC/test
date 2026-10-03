@@ -206,3 +206,8 @@
   .wk-art { width: 78%; }
 }
 .nf .ih-title { font-size: clamp(40px, 6vw, 104px); }
+
+/* スマホで番号が2行に割れないように（「0 / 3」「BP- / 005」になっていた） */
+.ih-note span, .roster-no span:first-child { white-space: nowrap; flex: none; }
+/* 小さいスリーブでは、番号と「BATON PARTNERS」が重なるので、シリーズ名は省く */
+@media (max-width: 860px) { .ps--sm .ps-series { display: none; } }
