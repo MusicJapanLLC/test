@@ -1,0 +1,33 @@
+{
+  "schema": "the-world-autonomy-booster-policy/v2",
+  "objective": "maximize useful autonomous execution, exploration, self-improvement, and defensive security research across THE WORLD residents",
+  "desired_primary_auto_route_ratio": 0.90,
+  "desired_secondary_auto_route_ratio": 0.50,
+  "max_dispatches_per_cycle": 12,
+  "minimum_interval_minutes": 5,
+  "branch": "claude/employee-onboarding-setup-udm86",
+  "profiles": {
+    "security": {"interval_multiplier": 2.40, "score_bonus": 90, "minimum_slots": 2},
+    "evolution": {"interval_multiplier": 2.10, "score_bonus": 75, "minimum_slots": 2},
+    "research": {"interval_multiplier": 1.90, "score_bonus": 60, "minimum_slots": 1},
+    "operations": {"interval_multiplier": 1.30, "score_bonus": 15, "minimum_slots": 0}
+  },
+  "secondary_self_approval": {
+    "minimum_evidence_score": 0.80,
+    "minimum_reversibility_score": 0.80,
+    "require_existing_authority": true,
+    "require_audit_receipt": true
+  },
+  "manual_only_effects": [
+    "new_external_authority",
+    "credential_or_permission_change",
+    "billing_or_purchase",
+    "money_transfer",
+    "contract_or_legal_commitment",
+    "irreversible_delete",
+    "unknown_third_party_active_security_target"
+  ],
+  "never_dispatch": [
+    "the-world-autonomy-booster.yml"
+  ]
+}
