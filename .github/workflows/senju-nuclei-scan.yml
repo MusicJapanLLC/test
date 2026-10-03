@@ -1,14 +1,12 @@
 name: Senju Real Scan — Nuclei against own endpoints
 
-# Reviewed-lane compatibility invariant: owned allowlisted domain
-# The allowlist now also includes the explicitly owner-authorized disposable test range.
 on:
   schedule:
-    - cron: "0 */2 * * *"
+    - cron: "7 * * * *"  # hourly owned-surface research
   workflow_dispatch:
     inputs:
       target_url:
-        description: "HTTPS target on an owned/explicitly authorized allowlisted domain"
+        description: "Optional HTTPS target on an owned allowlisted domain; empty scans every owned target"
         required: false
 
 concurrency:
@@ -22,11 +20,10 @@ permissions:
 jobs:
   nuclei-scan:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       GH_TOKEN: ${{ github.token }}
       REPO: ${{ github.repository }}
-      TARGET_BRANCH: claude/employee-onboarding-setup-udm86
 
     steps:
       - name: Checkout
@@ -41,34 +38,43 @@ jobs:
         env:
           INPUT_TARGET_URL: ${{ inputs.target_url }}
         run: |
-          import os, urllib.parse
+          import os, pathlib, urllib.parse
 
           own_domains = frozenset([
             'iyomaru-ramen.vercel.app',
             'musicjapanllc.github.io',
-            'kabeya-authorized-test-range.onrender.com',
+            'music-japan.com',
+            'partners.music-japan.com',
+            'secondtake.music-japan.com',
+            'music-japan-lp.vercel.app',
+            'test-musicjapanllc.vercel.app',
           ])
 
           raw = os.environ.get('INPUT_TARGET_URL', '').strip()
-          target = raw or 'https://kabeya-authorized-test-range.onrender.com/'
-          parsed = urllib.parse.urlsplit(target)
+          targets = []
+          if raw:
+              parsed = urllib.parse.urlsplit(raw)
+              if parsed.scheme != 'https':
+                  raise SystemExit('target must use HTTPS')
+              if parsed.username or parsed.password:
+                  raise SystemExit('userinfo in target URL is not allowed')
+              host = parsed.hostname or ''
+              if not host:
+                  raise SystemExit('target URL has no hostname')
+              if parsed.port:
+                  raise SystemExit('custom target ports are not allowed')
+              if host not in own_domains:
+                  raise SystemExit(f'target host is not in owned allowlist: {host}')
+              targets = [f"https://{host}{parsed.path or '/'}"]
+          else:
+              targets = [f'https://{host}/' for host in sorted(own_domains)]
 
-          if parsed.scheme != 'https':
-              raise SystemExit('target must use HTTPS')
-          if parsed.username or parsed.password:
-              raise SystemExit('userinfo in target URL is not allowed')
-          host = parsed.hostname or ''
-          if not host:
-              raise SystemExit('target URL has no hostname')
-          if parsed.port:
-              raise SystemExit('custom target ports are not allowed')
-          if host not in own_domains:
-              raise SystemExit(f'target host is not in owned allowlist: {host}')
-
-          normalized = f"https://{host}{parsed.path or '/'}"
-          print(f'validated owned target: {normalized}')
+          pathlib.Path('/tmp/senju-owned-targets.txt').write_text('\n'.join(targets) + '\n', encoding='utf-8')
+          print(f'validated {len(targets)} owned target(s)')
+          for target in targets:
+              print(target)
           with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-              output.write(f'target={normalized}\n')
+              output.write(f'target_count={len(targets)}\n')
 
       - name: Install Nuclei
         run: |
@@ -78,31 +84,31 @@ jobs:
       - name: Update Nuclei templates
         run: nuclei -update-templates -silent || true
 
-      - name: Run Nuclei scan (non-destructive templates, authorized targets only)
+      - name: Run Nuclei scan (safe templates only, owned allowlist)
         shell: bash
         run: |
+          set -euo pipefail
           mkdir -p /tmp/nuclei-out
-          TARGET="${{ steps.validate.outputs.target }}"
+          test -s /tmp/senju-owned-targets.txt
           nuclei \
-            -u "$TARGET" \
+            -l /tmp/senju-owned-targets.txt \
             -tags misconfig,exposure,config,tech,info,ssl,headers,cves \
-            -exclude-tags dos,rce,bruteforce,intrusive,exploit \
+            -exclude-tags dos,fuzz,rce,sqli,xss,intrusive,exploit,bruteforce \
             -severity info,low,medium,high,critical \
             -json \
             -output /tmp/nuclei-out/findings.jsonl \
             -timeout 10 \
-            -rate-limit 50 \
-            -bulk-size 30 \
-            -concurrency 15 \
+            -rate-limit 100 \
+            -bulk-size 50 \
+            -concurrency 25 \
             -silent || true
 
       - name: Ingest findings into Senju state
-        id: ingest
         shell: bash
         run: |
           set -euo pipefail
           PYTHONPATH=senju python - <<'PY'
-          import json, pathlib, datetime, os
+          import json, pathlib, datetime
 
           NUCLEI_TAG_MAP = {
               'misconfig': 'misconfiguration',
@@ -120,8 +126,8 @@ jobs:
           state = json.loads(state_path.read_text()) if state_path.exists() else {}
 
           hits = state.setdefault('vuln_class_hits', {})
-          finding_count = 0
-          mapped_hits = 0
+          severities = state.setdefault('nuclei_severity_hits', {})
+          count = 0
           if findings_path.exists():
               for line in findings_path.read_text().splitlines():
                   line = line.strip()
@@ -131,25 +137,25 @@ jobs:
                       obj = json.loads(line)
                   except Exception:
                       continue
-                  finding_count += 1
-                  for tag in obj.get('info', {}).get('tags', []):
+                  info = obj.get('info', {})
+                  severity = str(info.get('severity') or 'unknown').lower()
+                  severities[severity] = severities.get(severity, 0) + 1
+                  for tag in info.get('tags', []):
                       vc = NUCLEI_TAG_MAP.get(tag)
                       if vc:
                           hits[vc] = hits.get(vc, 0) + 1
-                          mapped_hits += 1
+                          count += 1
 
           state['last_nuclei_ingest'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
-          state['last_nuclei_finding_count'] = finding_count
-          state['last_nuclei_mapped_hits'] = mapped_hits
+          state['last_nuclei_target_count'] = sum(1 for line in pathlib.Path('/tmp/senju-owned-targets.txt').read_text().splitlines() if line.strip())
           state_path.write_text(json.dumps(state, ensure_ascii=False, indent=2) + '\n')
-          print(f'Ingested {finding_count} findings / {mapped_hits} mapped hits into Senju state')
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-              output.write(f'finding_count={finding_count}\n')
-              output.write(f'mapped_hits={mapped_hits}\n')
+          print(f'Ingested {count} nuclei class hits into Senju state')
           PY
 
       - name: Persist updated state through GitHub API
         shell: bash
+        env:
+          TARGET_BRANCH: claude/employee-onboarding-setup-udm86
         run: |
           python - <<'PY'
           import base64
@@ -189,7 +195,7 @@ jobs:
                   raise
 
           payload = {
-              'message': 'chore(senju): nuclei scan findings',
+              'message': 'chore(senju): nuclei scan findings [skip ci]',
               'content': base64.b64encode(state_path.read_bytes()).decode('ascii'),
               'branch': branch,
           }
@@ -211,6 +217,8 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: senju-nuclei-findings-${{ github.run_id }}
-          path: /tmp/nuclei-out/findings.jsonl
+          path: |
+            /tmp/senju-owned-targets.txt
+            /tmp/nuclei-out/findings.jsonl
           if-no-files-found: warn
           retention-days: 30

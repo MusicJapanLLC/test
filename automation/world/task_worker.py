@@ -101,7 +101,6 @@ def _apply_research_hints(data: dict[str, Any]) -> dict[str, Any]:
         else:
             candidate_pressure += quality
 
-    # Weak preliminary learning, stronger replicated learning, strong caution for contradiction.
     nudge = min(0.015, candidate_pressure * 0.0015) + min(0.040, replicated_pressure * 0.006) - min(0.040, contested_pressure * 0.008)
     adjusted = max(0.05, min(0.80, base + nudge))
     policy["exploration_rate"] = round(adjusted, 6)
@@ -116,6 +115,50 @@ def _apply_research_hints(data: dict[str, Any]) -> dict[str, Any]:
         "hint_count": len(hints),
         "used_finding_ids": used[:24],
         "authority": "exploration_geometry_only",
+    }
+    return data
+
+
+def _apply_world_observation(data: dict[str, Any]) -> dict[str, Any]:
+    """Use repository breadth as a small exploration-only signal.
+
+    This signal cannot alter targets, scope, permissions, budgets or external behavior.
+    It only increases simulator exploration slightly when more owned repository surfaces
+    are visible, so broader observation produces more diversity rather than more access.
+    """
+    path = os.environ.get("WORLD_OBSERVATION_PATH", "").strip()
+    if not path or not Path(path).exists():
+        data["world_feedback"] = {"available": False, "bounded_nudge": 0.0}
+        return data
+    try:
+        observation = _read(path)
+    except Exception:
+        data["world_feedback"] = {"available": False, "bounded_nudge": 0.0}
+        return data
+
+    repository = observation.get("repository") or {}
+    active_roots = max(0, int(repository.get("active_roots") or 0))
+    observed_roots = max(1, int(repository.get("observed_roots") or 1))
+    breadth = max(0.0, min(1.0, active_roots / observed_roots))
+
+    policy = dict(data.get("policy") or {})
+    try:
+        base = float(policy.get("exploration_rate") or 0.35)
+    except Exception:
+        base = 0.35
+    nudge = min(0.02, breadth * 0.02)
+    adjusted = max(0.05, min(0.80, base + nudge))
+    policy["exploration_rate"] = round(adjusted, 6)
+    data["policy"] = policy
+    data["world_feedback"] = {
+        "available": True,
+        "active_roots": active_roots,
+        "observed_roots": observed_roots,
+        "tracked_files": repository.get("tracked_files"),
+        "base_exploration_rate": round(base, 6),
+        "adjusted_exploration_rate": round(adjusted, 6),
+        "bounded_nudge": round(nudge, 6),
+        "authority": "simulator_exploration_rate_only",
     }
     return data
 
@@ -179,16 +222,21 @@ def main() -> int:
         return 0
 
     if args.cmd == "experiment-config":
-        data = _apply_research_hints(_edge({"action": "experiment_config", "policy_key": args.policy_key}))
+        data = _edge({"action": "experiment_config", "policy_key": args.policy_key})
+        data = _apply_research_hints(data)
+        data = _apply_world_observation(data)
         _write(args.out, data)
         policy = data.get("policy") or {}
         feedback = data.get("research_feedback") or {}
+        world_feedback = data.get("world_feedback") or {}
         print(json.dumps({
             "trial_multiplier": policy.get("trial_multiplier"),
             "exploration_rate": policy.get("exploration_rate"),
             "history_runs": len(data.get("history") or []),
             "research_hints": len(data.get("research_hints") or []),
             "research_nudge": feedback.get("bounded_nudge"),
+            "world_nudge": world_feedback.get("bounded_nudge"),
+            "observed_roots": world_feedback.get("observed_roots"),
         }, ensure_ascii=False))
         return 0
 
