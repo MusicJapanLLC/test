@@ -19,7 +19,7 @@ export function renderProfileFooter(mount: HTMLElement): void {
         ),
         el(
           'a',
-          { href: 'https://second-take.vocal-shore-1441.chatgpt.site/', ...externalAttrs },
+          { href: 'https://secondtake.music-japan.com/', ...externalAttrs },
           ['SECOND TAKE'],
         ),
         el('span', { class: 'profile-footer__soon' }, ['Podcast', el('small', { text: '（準備中）' })]),
@@ -30,6 +30,8 @@ export function renderProfileFooter(mount: HTMLElement): void {
         ),
       ]),
       el('nav', { class: 'profile-footer__nav', 'aria-label': 'Baton サイト内リンク' }, [
+        el('a', { href: withBase('/profile/'), text: 'プロフィール一覧' }),
+        el('a', { href: withBase('/hub/'), text: '法人向けサービス' }),
         el('a', { href: withBase('/faq/'), text: 'よくある質問' }),
         el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
       ]),

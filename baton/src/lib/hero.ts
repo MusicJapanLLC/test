@@ -32,7 +32,7 @@ function heroShotHtml(p: TalkProfile): string {
   const initial = esc(p.name.slice(0, 1));
   const photo = p.photo;
   const inner = photo
-    ? `<img class="pf-shot__img" src="${esc(photo.src)}" alt="${esc(photo.alt ?? p.name)}" data-shot-img />
+    ? `<img class="pf-shot__img" src="${esc(photo.src)}" alt="${esc(photo.alt ?? p.name)}" fetchpriority="high" decoding="async" data-shot-img />
        <span class="pf-shot__initial" aria-hidden="true">${initial}</span>`
     : `<span class="pf-shot__initial is-only" aria-hidden="true">${initial}</span>`;
 
