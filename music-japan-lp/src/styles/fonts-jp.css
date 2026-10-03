@@ -1,0 +1,39 @@
+/* scripts/fonts.py が生成。手で編集しない（文章を変えたら npm run build → npm run fonts → npm run build） */
+@font-face {
+  font-family: 'Zen Old Mincho';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/zom-700-h.0b072cfc.woff2') format('woff2');
+  unicode-range: U+41-45, U+4B, U+4E-50, U+53-54, U+61, U+65, U+6E-6F, U+72-74, U+A0, U+3001-3002, U+3046, U+304A-304C, U+3054, U+3057, U+305B, U+3060, U+3064, U+3066, U+3068, U+306B, U+306E, U+3072, U+3078, U+307E-307F, U+3082, U+3089-308B, U+3092-3093, U+30B8, U+30DA-30DB, U+30E0, U+30FC, U+4E2D, U+4E8C, U+4EBA, U+4F1A, U+4F55, U+516C, U+5EA6, U+6982, U+76EE, U+77E5, U+793E, U+8981, U+898B, U+8A71, U+9078, U+958B;
+}
+@font-face {
+  font-family: 'Zen Old Mincho';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/zom-700.a63f811f.woff2') format('woff2');
+  unicode-range: U+20-40, U+46-4A, U+4C-4D, U+51-52, U+55-60, U+62-64, U+66-6D, U+70-71, U+75-7E, U+2026, U+300C-300F, U+301C, U+3042, U+3044, U+3048, U+304D-3051, U+3053, U+3055, U+3058-305A, U+305D, U+305F, U+3061, U+3063, U+3067, U+3069-306A, U+306F-3070, U+3076, U+3079, U+3080-3081, U+3084, U+3088, U+308C, U+30A2-30A4, U+30A8, U+30B0, U+30B5, U+30B9, U+30BF, U+30C3, U+30C7-30C8, U+30D3, U+30D5, U+30D7, U+30DC, U+30E1, U+30E5, U+30EB, U+30ED, U+30F3, U+30FB, U+4E00, U+4E8B, U+4ECB, U+4EE3, U+4F01, U+4FE1, U+5099, U+5148, U+5168, U+51FA, U+5206, U+5236, U+524D, U+52D5, U+5316, U+53CB, U+53D6, U+53EF, U+540C-540D, U+5411, U+554F, U+55B6, U+58C1, U+5931, U+5B57, U+5B66, U+5B9F, U+5C02, U+5C4A, U+5F0F, U+5F62, U+5F85, U+6027, U+6210, U+624B, U+62DB, U+6301, U+63A2, U+63B2, U+6557, U+6570, U+65E5, U+6642, U+66F2, U+66F8, U+6700, U+672C, U+6750, U+677E, U+682A, U+691C, U+696D, U+6B21, U+6B8B, U+6C17, U+6C7A, U+6D66, U+6DF3, U+6E96, U+751F, U+7528, U+7533, U+7684, U+76F4, U+79C1, U+79FB, U+7A0B, U+7D22, U+7D39, U+7D44, U+7D4C, U+8005, U+805E, U+8074, U+80B2, U+80FD, U+81EA, U+8449, U+8868, U+88C5, U+8A00, U+8A18, U+8AAD, U+8ABF, U+8ACB, U+8C37, U+8CEA, U+8F09, U+8FBC, U+8FD1, U+8FF7, U+9032, U+914D, U+91CD, U+9577, U+9593, U+9762, U+9806, U+FF01, U+FF08-FF09, U+FF0C, U+FF0E-FF0F, U+FF1A, U+FF1F;
+}
+@font-face {
+  font-family: 'Zen Old Mincho';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/zom-900-h.fe16602d.woff2') format('woff2');
+  unicode-range: U+4A, U+4D, U+61, U+63, U+69, U+6E, U+70, U+73, U+75, U+A0, U+3001-3002, U+3044, U+304B, U+305C, U+306A, U+306E-306F, U+3089, U+3092, U+58F2, U+697D, U+97F3;
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/zkg-400.6ced5c45.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Zen Kaku Gothic New';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/zkg-700.b4b3595a.woff2') format('woff2');
+}

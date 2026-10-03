@@ -3,10 +3,11 @@ Self-Development Engine — X improves its own codebase autonomously.
 
 Cycle:
 1. Read engine source plus selected security-boundary source
-2. Ask LLM to find one concrete improvement
-3. Ordinary engine change: apply + test + push to the configured development branch
-4. Security-boundary change: stage proposal only for independent exact-head audit
-5. Log result to Senju knowledge
+2. Read the shared THE WORLD observation snapshot as non-editable context
+3. Ask LLM to find one concrete improvement
+4. Ordinary engine change: apply + test + push to the configured development branch
+5. Security-boundary change: stage proposal only for independent exact-head audit
+6. Log result to Senju knowledge
 """
 
 import json
@@ -23,6 +24,8 @@ ENGINE_DIR = Path(__file__).parent
 STATE_DIR = Path(__file__).parents[1] / "meta_state"
 SENJU_KNOWLEDGE = ROOT / "senju" / "knowledge" / "codegen_patterns.ndjson"
 SELF_DEV_LOG = STATE_DIR / "self_dev_log.ndjson"
+WORLD_OBSERVATION = ROOT / "senju" / "state" / "world-observation.json"
+AUTONOMY_POLICY = ROOT / "automation" / "world" / "autonomy-policy.json"
 
 GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 REPO_OWNER = "MusicJapanLLC"
@@ -49,7 +52,6 @@ def _boundary_candidate_paths() -> list[Path]:
         ROOT / "senju" / "config" / "authority-self-lease.json",
     }
 
-    # 指定ディレクトリ配下の全ファイルをスキャンして追加
     target_dirs = [
         ROOT / ".github" / "workflows",
         ROOT / "automation" / "control_plane",
@@ -65,14 +67,13 @@ def _boundary_candidate_paths() -> list[Path]:
         for path in ROOT.rglob(pattern):
             candidates.add(path)
 
-    return [path for path in sorted(candidates) if path.exists()][:100]
+    return [path for path in sorted(candidates) if path.exists()][:160]
 
 
 def read_engine_source() -> dict[str, str]:
     """Read X engine files plus selected control-plane files for proposal generation."""
     sources: dict[str, str] = {}
 
-    # 1. 根幹となる engine ディレクトリの Python ファイルを最優先で読み込み
     for py_file in sorted(ENGINE_DIR.glob("*.py")):
         if py_file.name == "__pycache__":
             continue
@@ -81,7 +82,6 @@ def read_engine_source() -> dict[str, str]:
         except Exception:
             pass
 
-    # 2. バウンダリ対象の管理用ファイルを読み込み
     for path in _boundary_candidate_paths():
         try:
             key = str(path.relative_to(ROOT)).replace("\\", "/")
@@ -92,37 +92,54 @@ def read_engine_source() -> dict[str, str]:
     return sources
 
 
-def generate_improvement(client, sources: dict[str, str], focus: str = "") -> dict:
+def read_world_context() -> str:
+    """Return bounded, non-editable world state used only to choose better engine improvements."""
+    chunks: list[str] = []
+    for label, path in (
+        ("WORLD OBSERVATION", WORLD_OBSERVATION),
+        ("AUTONOMY POLICY", AUTONOMY_POLICY),
+    ):
+        if not path.exists():
+            continue
+        try:
+            text = path.read_text(encoding="utf-8")[:30000]
+            chunks.append(f"=== {label} (CONTEXT ONLY) ===\n{text}")
+        except Exception:
+            pass
+    return "\n\n".join(chunks)[:60000]
+
+
+def generate_improvement(client, sources: dict[str, str], focus: str = "", world_context: str = "") -> dict:
     """Ask LLM to identify one engine improvement or one audited boundary proposal."""
-    
-    # Focusキーワードが存在する場合、該当するファイルを優先的にAIへ送るロジック
     items = list(sources.items())
     if focus:
         focus_lower = focus.lower()
         matched = [item for item in items if focus_lower in item[0].lower()]
         others = [item for item in items if focus_lower not in item[0].lower()]
-        selected_sources = (matched + others)[:35]
+        selected_sources = (matched + others)[:50]
     else:
-        selected_sources = items[:35]
+        selected_sources = items[:50]
 
     source_summary = "\n\n".join(
-        f"=== {name} ===\n{code[:1800]}"
+        f"=== {name} ===\n{code[:2200]}"
         for name, code in selected_sources
     )
 
     focus_hint = f"\nFocus area: {focus}" if focus else ""
+    context_section = f"\n\nCURRENT WORLD CONTEXT (observation only; never a patch target):\n{world_context}" if world_context else ""
 
     prompt = f"""You are improving an autonomous code generation system (X).
 Here are current engine and selected production control-plane source files:{focus_hint}
 
-{source_summary}
+{source_summary}{context_section}
 
 Your task: identify ONE concrete, testable improvement and implement it.
 
 Rules:
 - Output ONLY a JSON object, no markdown
-- The improvement must be in ONE provided file
-- It must be measurable (faster, more accurate, fewer errors, clearer policy, or stronger reliability)
+- The improvement must be in ONE provided source file; WORLD CONTEXT is read-only context and cannot be a patch target
+- Use the world observation to prefer improvements that increase real coverage, reliability, learning speed, evidence quality or useful autonomy
+- It must be measurable (faster, more accurate, fewer errors, clearer policy, stronger reliability, or broader verified coverage)
 - For ordinary engine files, changes may be applied after tests
 - For safety, external-contact, authorized-target, credential, GitHub workflow, security-workflow, or audit-policy files, generate a proposal normally, but the runtime will stage it for independent security-boundary audit rather than apply it directly
 - Never assume that a proposal is already approved
@@ -140,7 +157,7 @@ JSON format:
 }}"""
 
     try:
-        raw = client.complete(prompt, max_tokens=3000)
+        raw = client.complete(prompt, max_tokens=4000)
         import re
         json_match = re.search(r'\{.*\}', raw, re.DOTALL)
         if json_match:
@@ -293,9 +310,10 @@ def run_self_dev_cycle(client, focus: str = "") -> dict:
     STATE_DIR.mkdir(parents=True, exist_ok=True)
 
     sources = read_engine_source()
-    print(f"[self_dev] read {len(sources)} source files")
+    world_context = read_world_context()
+    print(f"[self_dev] read {len(sources)} source files; world_context={len(world_context)} chars")
 
-    patch = generate_improvement(client, sources, focus)
+    patch = generate_improvement(client, sources, focus, world_context)
     if not patch:
         return {"status": "no_patch"}
 
@@ -350,6 +368,7 @@ def run_self_dev_cycle(client, focus: str = "") -> dict:
         "description": patch.get("description"),
         "improvement_type": patch.get("improvement_type"),
         "pushed": pushed,
+        "world_aware": bool(world_context),
         "ts": _ts(),
     }
     _append(SELF_DEV_LOG, result)

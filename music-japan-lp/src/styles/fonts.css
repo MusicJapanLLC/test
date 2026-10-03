@@ -1,0 +1,3 @@
+/* 欧文：Archivo（幅の軸 62〜125 ＋太さ）。和文は、使う文字だけに絞った Zen Old Mincho（見出し）と Zen Kaku Gothic New（本文） */
+@import '@fontsource-variable/archivo/wdth.css';
+@import './fonts-jp.css';
