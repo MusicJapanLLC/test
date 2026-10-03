@@ -506,7 +506,7 @@ export const centralAx: Partner = {
     },
     insightTitle: '生成AIが社内で定着しない理由と、立て直す5つの手順',
     insightQuestion: 'この記事の要点',
-    updated: '2026-10-01',
+    updated: '2026-10-03',
     org: {
       type: 'Corporation',
       address: { region: '愛知県', locality: '名古屋市中村区', street: '名駅4-24-5 第2森ビル401' },

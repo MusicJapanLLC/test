@@ -544,7 +544,7 @@ export const evorg: Partner = {
     },
     insightTitle: '休眠求職者の掘り起こし方｜人材紹介で決定を増やす5つの手順',
     insightQuestion: 'この記事の要点',
-    updated: '2026-10-01',
+    updated: '2026-10-03',
     org: {
       type: 'Corporation',
       address: { region: '福岡県', locality: '福岡市中央区', street: '天神4-5-10' },
