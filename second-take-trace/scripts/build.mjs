@@ -66,6 +66,7 @@ function head({ lang, path, title, description, image, type = "website", jsonld,
 <html lang="${t.htmlLang}">
 <head>
 <meta charset="utf-8">
+${path === null ? '' : '<script defer src="/analytics.js?v=20261003" data-ga4-id="G-S2P0JCW50M" data-ga4-host="secondtake.music-japan.com"></script>'}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
@@ -202,6 +203,7 @@ function footer(lang, path) {
         <p class="site-footer__label">Company</p>
         ${external(lang === "en" ? links.companyEn : links.company, "Music Japan LLC")}
         ${external(links.linkedin, "LinkedIn")}
+        ${external(lang === "en" ? "https://music-japan.com/en/privacy/" : "https://music-japan.com/privacy/", lang === "en" ? "Privacy Policy" : "プライバシーポリシー")}
         <a href="${href(lang, "/contact/")}">Contact</a>
       </div>
       <div class="site-footer__col">
@@ -974,6 +976,7 @@ for (const lang of LANGS) {
   }
 }
 write("404.html", notFoundPage());
+write("analytics.js", readFileSync(join(process.cwd(), "src/analytics.js"), "utf8"));
 write("sitemap.xml", sitemap(sitemapPaths));
 write("llms-full.txt", llmsFull());
 process.stdout.write(`build: ${sitemapPaths.length} pages + 404\n`);
