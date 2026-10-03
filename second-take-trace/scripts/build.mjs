@@ -89,7 +89,9 @@ ${article ? `<meta property="article:published_time" content="${article.date}T09
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="preload" href="/assets/fonts/inter-tight-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/assets/fonts.css?v=${VERSION}">
+<link rel="preload" as="style" href="/assets/fonts.css?v=${VERSION}">
+<link rel="stylesheet" href="/assets/fonts.css?v=${VERSION}" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/assets/fonts.css?v=${VERSION}"></noscript>
 <link rel="stylesheet" href="/assets/styles.css?v=${VERSION}">
 <script>document.documentElement.classList.add("js")</script>
 <script defer src="/assets/site.js?v=${VERSION}"></script>
