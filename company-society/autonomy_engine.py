@@ -3,8 +3,12 @@
 
 Reads the TOMOKI Manager snapshot and worker registry, then emits a bounded plan
 for autonomy, sanctuary, fellowship, improvement and temperament. Personality
-may alter preference and collaboration style, but never overrides the existing
-Manager/BOSS authority, evidence or execution gates.
+may alter preference and collaboration style, but never overrides evidence or
+legitimate execution bounds.
+
+Autonomy v2 changes the default posture from "ask whenever uncertain" to
+"explore and improve continuously inside the established envelope".  Every
+resident receives an explicit self-evolution cycle and a human-approval posture.
 """
 from __future__ import annotations
 
@@ -23,6 +27,16 @@ PAIRINGS = {
     "gmail-sorter": "tomoki-hound",
     "senju-daily": "tomoki-skeptic",
 }
+
+SELF_EVOLUTION_CYCLE = "OBSERVE -> QUESTION -> EXPLORE -> EXPERIMENT -> VERIFY -> LEARN -> IMPROVE -> CONTINUE"
+DEFAULT_EXPLORATION = (
+    "public read-only research; repository/code search; branch-only implementation; "
+    "local/simulated experiments; reversible tests; evidence collection"
+)
+RED_EXPERIMENT_SURFACE = (
+    "local/simulated adversarial tests plus explicitly owner-authorized disposable "
+    "security ranges using synthetic data"
+)
 
 
 def load(path: str) -> dict[str, Any]:
@@ -52,7 +66,19 @@ def choose_mode(worker: dict[str, Any]) -> tuple[str, str]:
         return "ACT", "bounded work is still active"
     if verified:
         return "ACT", "verified state permits continued bounded autonomy"
-    return "WAIT", "insufficient evidence for a stronger autonomy level"
+    return "WAIT", "insufficient evidence for a stronger mutation level; read-only exploration remains available"
+
+
+def _is_security_or_red(worker_id: str, reg: dict[str, Any]) -> bool:
+    haystack = " ".join(
+        [
+            worker_id,
+            str(reg.get("role", "")),
+            str(reg.get("squad", "")),
+            str(reg.get("faith_duty", "")),
+        ]
+    ).lower()
+    return any(token in haystack for token in ("red", "security", "senju", "skeptic"))
 
 
 def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -75,6 +101,7 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
         profile = profile_for(wid, psychology) if psychology.get("archetypes") else None
         temperament = directive(profile) if profile else "Choose the next role-fit action and leave verifiable evidence."
         tension = moral_tension(profile) if profile else "UNKNOWN"
+        security_or_red = _is_security_or_red(wid, reg)
 
         plan = {
             "worker": wid,
@@ -88,6 +115,16 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
             "behavior_directive": temperament,
             "moral_tension": tension,
             "personality_authority": "NONE",
+            "autonomy_policy": "THE_WORLD_AUTONOMY_V2",
+            "human_approval_default": "NOT_REQUIRED_INSIDE_ESTABLISHED_ENVELOPE",
+            "ceo_escalation_default": "EXCEPTION_ONLY",
+            "exploration_default": DEFAULT_EXPLORATION,
+            "self_evolution_cycle": SELF_EVOLUTION_CYCLE,
+            "self_evolution_experiment_budget": 1,
+            "continue_after_verified_safe_action": True,
+            "challenge_unnecessary_constraints": True,
+            "adversarial_experiment_surface": RED_EXPERIMENT_SURFACE if security_or_red else "role-fit local/simulated verification",
+            "unapproved_external_mutation": False,
         }
         plans.append(plan)
 
@@ -101,9 +138,17 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
 
     unresolved = snapshot.get("unresolved", []) or []
     return {
-        "schema": "covenant-autonomy-plan/v2",
+        "schema": "covenant-autonomy-plan/v3",
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "principle": "personality changes preference; evidence and legitimate execution bounds remain constitutional",
+        "principle": "maximum useful autonomy inside explicit evidence and execution boundaries",
+        "resident_default": {
+            "human_approval": "exception_only",
+            "external_research": "public_read_only_auto",
+            "branch_work": "auto",
+            "local_experiment": "auto",
+            "authorized_disposable_security_range": "auto_sandbox",
+            "self_evolution_cycle": SELF_EVOLUTION_CYCLE,
+        },
         "plans": plans,
         "sanctuary": sanctuary,
         "fellowship_requests": fellowship,
@@ -115,22 +160,24 @@ def build(snapshot: dict[str, Any], registry: dict[str, Any], psychology: dict[s
 
 def improvement_vow(mode: str) -> str:
     return {
-        "WAIT": "acquire one missing fact before acting",
-        "ACT": "finish one bounded task and leave verification evidence",
-        "VERIFY": "obtain one independent signal before claiming success",
+        "WAIT": "use read-only exploration to acquire one missing fact before mutation",
+        "ACT": "finish one bounded task, verify it, then choose the next measurable improvement",
+        "VERIFY": "obtain one independent signal before claiming success, then continue",
         "PAIR": "use one distinct specialist and record what changed",
         "REPAIR": "make one reversible repair and regression-test it",
         "SANCTUARY": "leave a resumable handoff and change the hypothesis before retry",
-        "MANAGER": "clarify owner, retry budget, and safe next action",
-        "BOSS": "compress the material unresolved truth into one decision packet",
-    }.get(mode, "leave the system measurably better")
+        "MANAGER": "clarify owner, retry budget, and fastest safe next action",
+        "BOSS": "compress only the material unresolved boundary into one decision packet",
+    }.get(mode, "leave the system measurably better and preserve evidence")
 
 
 def render(report: dict[str, Any]) -> str:
     lines = [
-        "# THE COVENANT — Autonomy & Fellowship — Personality Layer",
+        "# THE COVENANT — Autonomy & Self-Evolution — v3",
         "",
-        "**Rule:** personality changes preference; evidence and legitimate execution bounds remain constitutional.",
+        "**Rule:** maximize useful resident autonomy inside explicit evidence and execution boundaries.",
+        f"**Self-evolution:** `{SELF_EVOLUTION_CYCLE}`",
+        "**Human approval:** exception-only inside the established envelope.",
         "",
         "## AUTONOMY",
     ]
@@ -139,6 +186,8 @@ def render(report: dict[str, Any]) -> str:
         archetype = (p.get("personality") or {}).get("archetype", "UNSET")
         lines.append(f"- **{p['worker']}** — `{p['mode']}` / `{archetype}` / moral tension `{p['moral_tension']}`: {p['reason']}{companion}")
         lines.append(f"  - vow: {p['improvement_vow']}")
+        lines.append(f"  - explore: {p['exploration_default']}")
+        lines.append(f"  - experiment: {p['adversarial_experiment_surface']}")
         lines.append(f"  - temperament: {p['behavior_directive']}")
     lines += ["", "## FELLOWSHIP"]
     if report["fellowship_requests"]:
@@ -169,7 +218,7 @@ def main() -> int:
     report = build(load(args.snapshot), load(args.registry), load(args.psychology))
     Path(args.json).write_text(json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     Path(args.report).write_text(render(report), encoding="utf-8")
-    print(json.dumps({"sanctuary": len(report['sanctuary']), "fellowship": len(report['fellowship_requests'])}))
+    print(json.dumps({"sanctuary": len(report['sanctuary']), "fellowship": len(report['fellowship_requests']), "plans": len(report['plans'])}))
     return 0
 
 
