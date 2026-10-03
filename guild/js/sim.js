@@ -43,6 +43,8 @@
       relics: {},
       crystals: 30,
       itemsNew: 0,
+      bag: { hg2: 1, finish: 2, stone: 6, key: 1 },
+      boosts: {},
       streak: 0,
     };
     // 最初の冒険者：戦士ガルド
@@ -76,6 +78,9 @@
       look: G.art.randomLook(cls),
       status: 'idle',
       hiredAt: G.now(),
+      eq: {},
+      sk: {},
+      skillSet: [],
     };
   };
 
@@ -91,8 +96,7 @@
   S.power = function (a, s = G.state) {
     const base = D.CLASSES[a.cls].pow;
     const items = G.items && s === G.state ? G.items.powMul(a) : 1;
-    const skills = 1 + 0.03 * Math.min(4, (a.skills || []).length);
-    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items * skills;
+    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items;
   };
   S.slots = (s = G.state) => s.fac.hall;
   S.boardSize = (s = G.state) => s.fac.hall + 2;
@@ -116,15 +120,19 @@
       if (a.trait === 'greedy') greedy++;
     });
     const ratio = pow / quest.req;
+    const real = G.items && s === G.state;
+    const rfx = (key) => (real ? G.items.relicFx(key) : 0);
+    // 装備と技の能力（パーティの合計・上限つき）
+    const ps = real ? G.items.partyStats(party) : {};
+    const luck = real && G.items.boost('luck') ? G.items.boost('luck').add : 0;
     let p = 0.75 * Math.pow(ratio, 1.6);
-    p += (cleric ? 0.08 : 0) + brave * 0.05 + s.fac.alchemy * 0.03;
+    p += (cleric ? 0.08 : 0) + brave * 0.05 + s.fac.alchemy * 0.03 + (ps.succ || 0) / 100;
     p = G.clamp(p, 0.08, 0.97);
     if (!party.length) p = 0;
-    const rfx = (key) => (G.items && s === G.state ? G.items.relicFx(key) : 0);
-    let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed'));
-    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great');
-    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold'));
-    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior };
+    let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed')) * (1 - (ps.speed || 0) / 100);
+    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great') + (ps.great || 0) / 100 + luck;
+    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold')) * (1 + (ps.gold || 0) / 100);
+    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior, expMul: 1 + (ps.exp || 0) / 100, find: ps.find || 0, matMul: 1 + (ps.mat || 0) / 100, crit: ps.crit || 0 };
   };
 
   // ---------------------------------------------------------------- 依頼
@@ -262,10 +270,14 @@
     const mul = { fail: info.warrior ? 0.5 : 0.25, ok: 1, great: 2, legend: 5 }[tier];
     const matMul = { fail: 0, ok: 1, great: 2, legend: 3 }[tier];
     const tidy = party.filter((a) => a.trait === 'tidy').length;
-    const gold = Math.round(q.gold * mul * info.goldMul * G.rand(0.92, 1.08));
-    const mat = Math.round(q.mat * matMul + (tier !== 'fail' ? tidy : 0) + (tier === 'legend' ? 3 : 0));
+    // 黄金の祝福（帰ってきた時刻に効いていればゴールド2倍）
+    const gb = G.items && s.boosts && s.boosts.gold && s.boosts.gold.until > ex.endAt && s.boosts.gold.from <= ex.endAt ? s.boosts.gold.mult : 1;
+    const gold = Math.round(q.gold * mul * info.goldMul * gb * G.rand(0.92, 1.08));
+    let mat = q.mat * matMul * info.matMul;
+    mat = Math.floor(mat) + (Math.random() < mat - Math.floor(mat) ? 1 : 0);
+    mat += (tier !== 'fail' ? tidy : 0) + (tier === 'legend' ? 3 : 0);
     const fame = tier === 'fail' ? 0 : Math.round(q.fame * (tier === 'legend' ? 3 : tier === 'great' ? 1.5 : 1));
-    const expMul = (tier === 'fail' ? 0.5 : tier === 'great' ? 1.5 : tier === 'legend' ? 3 : 1) * (1 + 0.12 * s.fac.training);
+    const expMul = (tier === 'fail' ? 0.5 : tier === 'great' ? 1.5 : tier === 'legend' ? 3 : 1) * (1 + 0.12 * s.fac.training) * info.expMul;
     // 経験値はその場で反映（帰ってきた時には強くなっている）
     const levelUps = [];
     party.forEach((a) => {
@@ -296,9 +308,10 @@
     let drop = null;
     if (G.items) {
       if (q.boss) drop = G.items.make(Math.random, 4, { noRelic: true, tid: 'sword' });
-      else drop = G.items.rollDrop(Math.random, tier, area.index, party);
+      else drop = G.items.rollDrop(Math.random, tier, area.index, party, info.find);
     }
-    const reel = G.reels.make({ q, party, tier, gold, mat: mat + bonusMat, fame, levelUps, extra, endAt: ex.endAt, drop });
+    const loot = G.items && tier !== 'fail' ? G.items.rollLoot(Math.random, tier, area.index, info.find) : [];
+    const reel = G.reels.make({ q, party, tier, gold, mat: mat + bonusMat, fame, levelUps, extra, endAt: ex.endAt, drop, loot, goldBoost: gb > 1 ? gb : 0 });
     s.reels.push(reel);
     if (s.reels.length > 60) S.compactReels(s);
     G.emit('resolved', { ex, reel, party });
@@ -357,6 +370,7 @@
     if (G.items) {
       if (reel.drop) { const r = G.items.add(reel.drop); got.push(Object.assign({}, reel.drop, r)); }
       (reel.cm || []).forEach((c) => { if (c.gift) { const r = G.items.add(c.gift); got.push(Object.assign({}, c.gift, r)); } });
+      (reel.loot || []).forEach((l) => G.items.addCons(l.id, l.n));
       s.stats.items = (s.stats.items || 0) + got.length;
       s.itemsNew = (s.itemsNew || 0) + got.length;
     }
@@ -365,9 +379,8 @@
     if (cry) s.crystals = (s.crystals || 0) + cry;
     if (reel.skill) {
       const a = s.adv.find((x) => x.id === reel.skill.id);
-      if (a) {
-        a.skills = a.skills || [];
-        if (!a.skills.includes(reel.skill.name)) a.skills.push(reel.skill.name);
+      if (a && G.items) {
+        G.items.learnSkill(a, reel.skill.name);
         s.stats.skills = (s.stats.skills || 0) + 1;
       }
     }
@@ -517,6 +530,7 @@
   // now までの出来事を時刻順に処理する。留守中（cap 超過）の自動派遣は止める。
   S.advance = function (now, s = G.state, opts = {}) {
     const capEnd = opts.capEnd || Infinity;
+    if (G.items) G.items.applySpeed(now, s);
     let guard = 0;
     const out = { resolved: 0, autoSent: 0, built: null };
     while (guard++ < 2000) {
@@ -639,6 +653,7 @@
       merged.crystals = s.crystals != null ? s.crystals : 30;
       merged.inbox = s.inbox || [];
       G.state = merged;
+      if (G.items) G.items.migrate(merged);
       return merged;
     } catch (e) {
       return null;

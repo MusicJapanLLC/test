@@ -1,7 +1,8 @@
-/* ギルドの灯 — treasury: 宝物庫（装備品・秘宝・黄金の宝箱）
- *  - 黄金の宝箱は魔晶石で開ける。4時間ごとに1回は無料。30回以内に SSR 以上が必ず出る
- *  - 魔晶石は遊んで集める（大成功・伝説級の冒険譚、ランクアップ、目標、重複した秘宝）
- *  - 装備は冒険者1人に1つ。職業に合う武器は効果が満額、合わない武器は半分
+/* ギルドの灯 — treasury: 宝物庫（宝箱・装備・持ち物・ショップ）とログインボーナス
+ *  - 宝箱：黄金の宝箱（魔晶石・無料・鍵）。10連は SR 以上が1つ確定。30回以内に SSR 以上
+ *  - 装備：絞り込み・並べ替え・おまかせ装備・まとめて分解・強化・鍵
+ *  - 持ち物：砂時計（倍速）・時短の巻物・黄金の祝福・四つ葉・鍵・閃きの書・経験の書
+ *  - ショップ：魔晶石やゴールドで持ち物を買う。魔晶石の販売はアプリ版で（いまは購入できない）
  */
 'use strict';
 (function () {
@@ -11,39 +12,66 @@
   const D = G.D;
 
   const CRY = '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 16,6 13,19 7,19 4,6" fill="#6f7cf0"/><polygon points="10,1 16,6 10,8" fill="#b9c2ff"/><polygon points="10,1 4,6 10,8" fill="#dfe4ff"/><polygon points="4,6 10,8 7,19" fill="#5a66d8"/><polygon points="16,6 10,8 13,19" fill="#4a52b8"/><polygon points="10,8 13,19 7,19" fill="#7f8cff"/></svg>';
+  const LOCK = '<svg viewBox="0 0 20 20" aria-hidden="true"><rect x="4" y="9" width="12" height="9" rx="1.5" fill="currentColor"/><path d="M6.5 9V6.5a3.5 3.5 0 017 0V9" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
   T.CRY = CRY;
-  const TYPE_NAME = { weapon: '武器', armor: '防具', charm: '装飾品' };
   const thumb = (it, s) => G.ui.itemThumb(it, s);
+  const consThumb = (id, s) => G.ui.itemThumb({ kind: 'cons', id, rarity: IT.CONS[id] ? IT.CONS[id].rarity : 2, name: id }, s);
   const stars = (r) => '★'.repeat(r + 1);
+  const pct = (v) => '+' + IT.fmtV(v) + '%';
+  let tab = 'chest';
+  let gearSlot = 'all', gearSort = 'rarity';
 
   T.sig = function () {
     const st = G.state;
-    return [(st.items || []).length, st.crystals || 0, IT.canFree() ? 1 : 0, Object.keys(st.relics || {}).length, st.adv.map((a) => a.equip || '').join(), st.pity || 0].join('|');
+    return [tab, gearSlot, gearSort, (st.items || []).length, st.crystals || 0, IT.canFree() ? 1 : 0, Object.keys(st.relics || {}).length, st.adv.map((a) => JSON.stringify(a.eq || {})).join(), st.pity || 0, JSON.stringify(st.bag || {}), Object.keys(st.boosts || {}).filter((k) => IT.boost(k)).join()].join('|');
   };
   T.hasNews = () => IT.canFree() || (G.state.itemsNew || 0) > 0;
+  T.open = function (t) { tab = t || tab; G.ui.openSheet('treasury'); };
 
   // ---------------------------------------------------------------- シート
   T.render = function (body) {
     const st = G.state;
     st.itemsNew = 0;
+    const tabs = [['chest', '宝箱'], ['gear', '装備'], ['bag', '持ち物'], ['shop', 'ショップ']];
+    let h = `<div class="seg">${tabs.map(([k, n]) => `<button class="${tab === k ? 'on' : ''}" data-ttab="${k}">${n}${k === 'chest' && IT.canFree() ? '<i class="dot"></i>' : ''}</button>`).join('')}</div>`;
+    h += boostBar();
+    if (tab === 'chest') h += chestTab();
+    else if (tab === 'gear') h += gearTab();
+    else if (tab === 'bag') h += bagTab();
+    else h += shopTab();
+    body.innerHTML = h;
+    G.$$('[data-ttab]', body).forEach((b) => b.addEventListener('click', () => { tab = b.dataset.ttab; G.audio.sfx('soft'); G.ui.renderSheet(); body.scrollTop = 0; }));
+    bind(body);
+  };
+
+  function boostBar() {
+    const act = ['speed', 'gold', 'luck'].map((k) => [k, IT.boost(k)]).filter((x) => x[1]);
+    if (!act.length) return '';
+    return `<div class="boosts">${act.map(([k, b]) => `<span class="boost ${k}">${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'ゴールド×2' : '大成功+10%'}<b data-countdown="${b.until}">${G.fmtClock(b.until - G.now())}</b></span>`).join('')}</div>`;
+  }
+
+  // ---- 宝箱
+  function chestTab() {
+    const st = G.state;
     const now = G.now();
     const free = IT.canFree();
     const freeAt = (st.freeChestAt || 0) + IT.FREE_INTERVAL;
     const pityLeft = Math.max(1, IT.PITY - (st.pity || 0));
     const cry = st.crystals || 0;
+    const keys = IT.cons('key');
     let h = `<div class="tr-gacha">
       <div class="tr-top"><span class="tr-cry">${CRY}<b>${G.fmt(cry)}</b><small>魔晶石</small></span><button class="link" id="trRates">提供割合</button></div>
       <div class="tr-stage"><img alt="" src="${chestImg(3, 132)}"></div>
       <h3>黄金の宝箱</h3>
-      <p>装備品や秘宝が手に入ります。あと <b>${pityLeft}回</b> で SSR 以上が必ず出る</p>
+      <p>装備品・秘宝・持ち物が出る。あと <b>${pityLeft}回</b> で SSR 以上が必ず出る</p>
       <div class="tr-btns">
         <button class="btn ${free ? 'go pulse' : 'ghost'}" id="trFree" ${free ? '' : 'disabled'}>${free ? '無料で開ける' : `無料まで<span data-countdown="${freeAt}">${G.fmtClock(freeAt - now)}</span>`}</button>
         <button class="btn primary ${cry < IT.CHEST_COST ? 'cant' : ''}" id="trOne">1回<span>${CRY}${IT.CHEST_COST}</span></button>
-        <button class="btn primary ${cry < IT.CHEST5_COST ? 'cant' : ''}" id="trFive">5回<span>${CRY}${IT.CHEST5_COST}</span></button>
+        <button class="btn primary ${cry < IT.CHEST10_COST ? 'cant' : ''}" id="trTen">10連<span>${CRY}${IT.CHEST10_COST}</span></button>
       </div>
-      <small class="tr-how">魔晶石は大成功・伝説級の冒険譚、ランクアップ、目標の達成で手に入ります</small>
+      ${keys ? `<button class="btn wide key-btn" id="trKey">宝箱の鍵で開ける<span>のこり ${keys}本</span></button>` : ''}
+      <small class="tr-how">10連は SR 以上が1つ確定 ・ 魔晶石は大成功の冒険譚、ランクアップ、目標、ログインボーナスで手に入ります</small>
     </div>`;
-    // 秘宝
     const owned = IT.RELICS.filter((r) => st.relics && st.relics[r.id]);
     h += `<div class="sec"><h3>秘宝 <small>${owned.length}/${IT.RELICS.length}</small><span class="h-right">ギルド全体に効く</span></h3><div class="relics">`;
     IT.RELICS.forEach((r) => {
@@ -52,28 +80,113 @@
       h += `<div class="relic ${own ? 'own' : 'unknown'} r${r.r}"><img alt="" src="${thumb(it, 48)}"><span><b>${own ? r.name : '？？？'}</b><small>${own ? r.desc : IT.RARITY[r.r].id + ' ・ どこかの宝箱に'}</small></span></div>`;
     });
     h += `</div></div>`;
-    // 装備品
-    const items = (st.items || []).slice().sort((a, b) => b.rarity - a.rarity || a.tid.localeCompare(b.tid));
+    return h;
+  }
+
+  // ---- 装備
+  function gearTab() {
+    const st = G.state;
+    let items = (st.items || []).slice();
+    if (gearSlot !== 'all') items = items.filter((x) => x.slot === gearSlot);
+    const by = { rarity: (a, b) => b.rarity - a.rarity || b.ilv - a.ilv, level: (a, b) => b.ilv - a.ilv || b.rarity - a.rarity, plus: (a, b) => (b.plus || 0) - (a.plus || 0) || b.rarity - a.rarity, new: (a, b) => (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0) || b.rarity - a.rarity };
+    items.sort(by[gearSort]);
     const dex = Object.keys(st.dex || {}).length;
-    h += `<div class="sec"><h3>装備品 <small>${items.length}個</small><span class="h-right">図鑑 ${dex}/${IT.EQUIP_IDS.length * 5}</span></h3>`;
-    if (!items.length) h += `<p class="empty">まだ装備品がありません。冒険譚の宝箱や、町の人からの贈り物で手に入ります。</p>`;
+    let h = `<div class="gear-tools">
+      <div class="chips">${[['all', 'すべて'], ['weapon', '武器'], ['armor', '防具'], ['acc', '装飾品']].map(([k, n]) => `<button class="chip ${gearSlot === k ? 'on' : ''}" data-gslot="${k}">${n}</button>`).join('')}</div>
+      <label class="sort"><span class="sr-only">並べ替え</span><select id="gearSort">${[['rarity', 'レア度順'], ['level', 'Lv順'], ['plus', '強化値順'], ['new', '新しい順']].map(([k, n]) => `<option value="${k}" ${gearSort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
+    </div>
+    <div class="gear-actions"><button class="btn sm primary" id="gAuto">おまかせ装備</button><button class="btn sm ghost" id="gBulk">まとめて分解</button><span class="stone-count">${consIcon('stone')}<b>${G.fmt(IT.cons('stone'))}</b></span></div>`;
+    h += `<div class="sec"><h3>装備品 <small>${(st.items || []).length}/150</small><span class="h-right">図鑑 ${dex}/${IT.EQUIP_IDS.length * 5}</span></h3>`;
+    if (!items.length) h += `<p class="empty">${gearSlot === 'all' ? 'まだ装備品がありません。冒険譚の宝箱や宝物庫の黄金の宝箱で手に入ります。' : 'この種類の装備はまだありません。'}</p>`;
     else {
       h += `<div class="gear">`;
       items.forEach((it) => {
         const who = IT.equippedBy(it.uid);
-        h += `<button class="gi r${it.rarity}" data-item="${it.uid}" aria-label="${G.esc(it.name)}"><img alt="" src="${thumb(it, 60)}">${who ? `<img class="gi-who" alt="" src="${art.portrait(who.look, 22)}">` : ''}<small>${G.esc(it.name)}</small></button>`;
+        h += `<button class="gi r${it.rarity}" data-item="${it.uid}" aria-label="${G.esc(it.name)}"><img alt="" src="${thumb(it, 60)}">${it.plus ? `<i class="gi-plus">+${it.plus}</i>` : ''}<i class="gi-lv">Lv${it.ilv}</i>${who ? `<img class="gi-who" alt="" src="${art.portrait(who.look, 22)}">` : ''}${it.lock ? `<i class="gi-lock">${LOCK}</i>` : ''}${it.isNew ? '<i class="gi-new"></i>' : ''}<small>${G.esc(it.name)}</small></button>`;
       });
       h += `</div>`;
     }
     h += `</div>`;
-    body.innerHTML = h;
-    G.$('#trFree', body).addEventListener('click', () => open('free'));
-    G.$('#trOne', body).addEventListener('click', () => open('one'));
-    G.$('#trFive', body).addEventListener('click', () => open('five'));
-    G.$('#trRates', body).addEventListener('click', showRates);
-    G.$$('[data-item]', body).forEach((b) => b.addEventListener('click', () => T.showItem(b.dataset.item)));
-  };
+    return h;
+  }
 
+  // ---- 持ち物
+  function bagTab() {
+    let h = '<div class="sec bag">';
+    const any = IT.CONS_ORDER.some((id) => IT.cons(id) > 0);
+    if (!any) h += '<p class="empty">持ち物はありません。冒険譚のおまけ、宝箱、ショップ、ログインボーナスで手に入ります。</p>';
+    IT.CONS_ORDER.forEach((id) => {
+      const n = IT.cons(id);
+      if (!n) return;
+      const c = IT.CONS[id];
+      const usable = id !== 'stone';
+      h += `<div class="card cons r${c.rarity}"><img alt="" src="${consThumb(id, 48)}"><div class="grow"><b>${c.name} <em>×${n}</em></b><small>${c.desc}</small></div>${usable ? `<button class="btn sm ${c.boost ? 'primary' : ''}" data-use="${id}">${id === 'key' ? '開ける' : '使う'}</button>` : ''}</div>`;
+    });
+    h += '</div>';
+    return h;
+  }
+
+  // ---- ショップ
+  const SHOP_CRY = [['hg2', 1, 40], ['hg3', 1, 90], ['goldx2', 1, 30], ['luck', 1, 30], ['finish', 1, 15], ['key', 1, 30], ['stone', 10, 20], ['book', 1, 90]];
+  const shopGold = () => { const r = G.state.rank; return [['stone', 5, 120 * r], ['finish', 1, 400 * r], ['expbook', 1, 250 * r]]; };
+  T.PACKS = [{ id: 'cry_60', n: 60, label: '魔晶石 60' }, { id: 'cry_330', n: 330, label: '魔晶石 330', bonus: '+10%' }, { id: 'cry_1100', n: 1100, label: '魔晶石 1100', bonus: '+25%' }];
+  function shopTab() {
+    const st = G.state;
+    const today = T.today();
+    const freeCry = st.dailyCry !== today;
+    let h = `<div class="sec"><h3>魔晶石</h3>
+      <div class="card shop-free ${freeCry ? '' : 'done'}"><img alt="" src="${consThumb('cry', 44)}"><div class="grow"><b>今日の魔晶石 ×10</b><small>1日1回、無料でもらえます</small></div><button class="btn sm ${freeCry ? 'go' : ''}" id="shFree" ${freeCry ? '' : 'disabled'}>${freeCry ? '受け取る' : '受け取り済み'}</button></div>
+      <div class="packs">${T.PACKS.map((p) => `<button class="pack" data-pack="${p.id}"><img alt="" src="${consThumb('cry', 40)}"><b>${p.label}</b>${p.bonus ? `<i>${p.bonus}</i>` : ''}<small>アプリ版で</small></button>`).join('')}</div>
+      <p class="hint">魔晶石の購入はアプリ版で対応します。いまは遊んで集めた魔晶石で楽しめます。</p></div>`;
+    h += `<div class="sec"><h3>魔晶石で買う</h3>${SHOP_CRY.map(([id, n, cost]) => shopRow(id, n, cost, 'cry')).join('')}</div>`;
+    h += `<div class="sec"><h3>ゴールドで買う</h3>${shopGold().map(([id, n, cost]) => shopRow(id, n, cost, 'gold')).join('')}</div>`;
+    return h;
+  }
+  function shopRow(id, n, cost, cur) {
+    const c = IT.CONS[id];
+    const st = G.state;
+    const ok = cur === 'cry' ? (st.crystals || 0) >= cost : st.gold >= cost;
+    return `<div class="card shop r${c.rarity}"><img alt="" src="${consThumb(id, 40)}"><div class="grow"><b>${c.name}${n > 1 ? ` ×${n}` : ''}</b><small>${c.desc}</small></div><button class="btn sm ${ok ? 'primary' : 'cant'}" data-buy="${id}:${n}:${cost}:${cur}">${cur === 'cry' ? CRY : G.ui.IC.coin}<span>${G.fmt(cost)}</span></button></div>`;
+  }
+  function consIcon(id) { return `<img class="ci" alt="" src="${consThumb(id, 18)}">`; }
+
+  function bind(body) {
+    const on = (sel, fn) => { const el = G.$(sel, body); if (el) el.addEventListener('click', fn); };
+    on('#trFree', () => openChest('free'));
+    on('#trOne', () => openChest('one'));
+    on('#trTen', () => openChest('ten'));
+    on('#trKey', () => openChest('key'));
+    on('#trRates', showRates);
+    G.$$('[data-item]', body).forEach((b) => b.addEventListener('click', () => T.showItem(b.dataset.item)));
+    G.$$('[data-gslot]', body).forEach((b) => b.addEventListener('click', () => { gearSlot = b.dataset.gslot; G.audio.sfx('soft'); G.ui.renderSheet(); }));
+    const so = G.$('#gearSort', body);
+    if (so) so.addEventListener('change', () => { gearSort = so.value; G.ui.renderSheet(); });
+    on('#gAuto', () => {
+      const n = IT.autoEquip();
+      G.audio.sfx(n ? 'upgrade' : 'soft');
+      G.ui.toast(n ? `${n}か所の装備を、いちばん強いものに替えました` : 'いまの装備がいちばん強い組み合わせです', n ? 'good' : 'info');
+      G.ui.renderSheet();
+    });
+    on('#gBulk', bulkDismantle);
+    G.$$('[data-use]', body).forEach((b) => b.addEventListener('click', () => useCons(b.dataset.use)));
+    G.$$('[data-buy]', body).forEach((b) => b.addEventListener('click', () => buy(b.dataset.buy)));
+    on('#shFree', () => {
+      const st = G.state;
+      if (st.dailyCry === T.today()) return;
+      st.dailyCry = T.today();
+      st.crystals = (st.crystals || 0) + 10;
+      G.audio.sfx('gift');
+      G.ui.toast('魔晶石を 10 受け取りました', 'good');
+      G.sim.save();
+      G.ui.renderSheet();
+    });
+    G.$$('[data-pack]', body).forEach((b) => b.addEventListener('click', () => {
+      G.audio.sfx('soft');
+      G.store.purchase(b.dataset.pack).then((r) => { if (!r.ok) G.ui.toast('魔晶石の購入はアプリ版で対応します', 'info'); });
+    }));
+  }
+
+  // ---------------------------------------------------------------- 宝箱を開ける
   function chestImg(rank, size) {
     return art.url(art.cached('chestimg' + rank, size, (ctx, sz) => {
       const g = ctx.createRadialGradient(sz / 2, sz * 0.6, 0, sz / 2, sz * 0.6, sz * 0.5);
@@ -87,27 +200,24 @@
       art.chestR(ctx, 0, rank, 0.4);
     }));
   }
-
   function showRates() {
     G.audio.sfx('tap');
     const row = (k) => IT.RARITY.map((r, i) => `<li class="r${i}"><b>${r.id}</b><span>${r.name}</span><em>${k[i]}%</em></li>`).join('');
-    G.ui.modal(`<div class="rates"><h2>提供割合</h2><h3 class="mini">魔晶石の宝箱</h3><ul>${row([40, 35, 18, 6, 1])}</ul><h3 class="mini">無料の宝箱</h3><ul>${row([62, 30, 7, 1, 0])}</ul><p class="hint">秘宝が出ることもあります。持っている秘宝が出たときは魔晶石になります。</p></div>`, [{ text: '閉じる', cls: 'primary' }]);
+    G.ui.modal(`<div class="rates"><h2>提供割合</h2><h3 class="mini">魔晶石・鍵の宝箱</h3><ul>${row([40, 35, 18, 6, 1])}</ul><h3 class="mini">無料の宝箱</h3><ul>${row([62, 30, 7, 1, 0])}</ul><p class="hint">装備品のほか、秘宝や持ち物が出ることがあります。10連は SR 以上が1つ確定。30回以内に SSR 以上が必ず出ます。持っている秘宝が出たときは魔晶石になります。</p></div>`, [{ text: '閉じる', cls: 'primary' }]);
   }
-
-  function open(kind) {
+  function openChest(kind) {
     G.audio.init();
     const st = G.state;
-    const cost = kind === 'five' ? IT.CHEST5_COST : kind === 'one' ? IT.CHEST_COST : 0;
-    if (kind !== 'free' && (st.crystals || 0) < cost) {
+    const cost = kind === 'ten' ? IT.CHEST10_COST : kind === 'one' ? IT.CHEST_COST : 0;
+    if ((kind === 'one' || kind === 'ten') && (st.crystals || 0) < cost) {
       G.audio.sfx('error');
-      G.ui.toast(`魔晶石が足りません（あと ${cost - (st.crystals || 0)}）`, 'bad');
+      G.ui.toast(`魔晶石が足りません（あと ${cost - (st.crystals || 0)}）。ショップで毎日10個もらえます`, 'bad');
       return;
     }
     const got = IT.openChest(kind);
     if (!got) { G.audio.sfx('error'); return; }
     const res = got.map((item) => {
-      const key = item.tid + ':' + item.rarity;
-      const isNew = item.kind === 'relic' ? !(st.relics && st.relics[item.rid]) : !(st.dex && st.dex[key]);
+      const isNew = item.kind === 'relic' ? !(st.relics && st.relics[item.rid]) : item.kind === 'cons' ? false : !(st.dex && st.dex[item.tid + ':' + item.rarity]);
       const r = IT.add(item);
       return { item, isNew, dup: r.dup, crystals: r.crystals || 0 };
     });
@@ -116,86 +226,292 @@
     T.chestShow(res, () => G.ui.renderSheet());
   }
 
-  // ---------------------------------------------------------------- 装備品の詳細
-  T.showItem = function (uid) {
+  // ---------------------------------------------------------------- 装備の詳細・強化
+  T.showItem = function (u, replace) {
     const st = G.state;
-    const it = IT.get(uid);
+    const it = IT.get(u);
     if (!it) return;
-    G.audio.sfx('tap');
+    if (!replace) G.audio.sfx('tap');
+    it.isNew = false;
     const e = IT.EQUIP[it.tid];
     const R = IT.RARITY[it.rarity];
-    const who = IT.equippedBy(uid);
+    const who = IT.equippedBy(u);
+    const main = IT.MAIN[it.slot];
     const fitName = e.cls ? D.CLASSES[e.cls].name : null;
-    const advs = st.adv.slice().sort((a, b) => (fits(e, b) - fits(e, a)) || G.sim.power(b) - G.sim.power(a));
+    const c = IT.enhanceCost(it);
+    const maxed = (it.plus || 0) >= IT.MAX_PLUS;
+    const canEnh = !maxed && st.gold >= c.gold && IT.cons('stone') >= c.stone;
+    const aff = (it.affixes || []).map((a) => `<li><span>${IT.STAT[a.k].name}</span><i class="q" style="--q:${Math.round(G.clamp(a.q, 0.1, 1) * 100)}%"></i><b>${pct(a.v * (1 + 0.04 * (it.plus || 0)))}</b></li>`).join('');
+    const advs = st.adv.slice().sort((a, b) => (IT.fits(it, b) - IT.fits(it, a)) || G.sim.power(b) - G.sim.power(a));
     const list = advs.map((a) => {
-      const cur = a.equip ? IT.get(a.equip) : null;
-      const fit = fits(e, a);
-      return `<button class="pick ${a === who ? 'on' : ''}" data-eq="${a.id}"><img alt="" src="${art.portrait(a.look, 40)}"><span><b>${G.esc(a.name)}</b><small>${D.CLASSES[a.cls].name} Lv${a.lv} ・ ${cur ? '装備中：' + G.esc(cur.name) : '装備なし'}</small></span><em class="fit ${fit ? 'ok' : 'half'}">${fit ? '適性◎' : '効果半分'}</em></button>`;
+      const cur = a.eq && a.eq[it.slot] ? IT.get(a.eq[it.slot]) : null;
+      const fit = IT.fits(it, a);
+      const diff = cur && cur !== it ? IT.score(it, a) - IT.score(cur, a) : null;
+      return `<button class="pick ${a === who ? 'on' : ''}" data-eq="${a.id}"><img alt="" src="${art.portrait(a.look, 40)}"><span><b>${G.esc(a.name)}</b><small>${D.CLASSES[a.cls].name} Lv${a.lv} ・ ${cur ? (cur === it ? '装備中' : 'いま：' + G.esc(cur.name)) : '空き'}</small></span>${diff != null ? `<em class="cmp ${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'}</em>` : ''}${it.slot === 'weapon' ? `<em class="fit ${fit ? 'ok' : 'half'}">${fit ? '適性◎' : '効果半分'}</em>` : ''}</button>`;
     }).join('');
-    const html = `<div class="item-detail r${it.rarity}"><div class="id-img"><img alt="" src="${thumb(it, 104)}"></div><small class="rar">${R.id} ${stars(it.rarity)}</small><h2>${G.esc(it.name)}</h2>
-      <p class="sub">${TYPE_NAME[e.type]}${fitName ? ` ・ ${fitName}向け` : ' ・ だれでも'} ・ 戦力 +${Math.round(R.bonus * 100)}%</p>
+    const html = `<div class="item-detail r${it.rarity}"><div class="id-img"><img alt="" src="${thumb(it, 104)}">${it.plus ? `<i class="id-plus">+${it.plus}</i>` : ''}</div><small class="rar">${R.id} ${stars(it.rarity)}</small><h2>${G.esc(it.name)}${it.plus ? ` <span class="plus">+${it.plus}</span>` : ''}</h2>
+      <p class="sub">${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv}${fitName ? ` ・ ${fitName}向け` : ''}</p>
+      <div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${aff ? `<ul>${aff}</ul>` : '<p class="hint">追加能力なし（R 以上で付きます）</p>'}</div>
+      <div class="enh">${maxed ? '<b class="maxed-t">強化は最大です（+10）</b>' : `<div class="enh-row"><span>強化 <b>+${it.plus || 0}</b> → <b class="nx">+${(it.plus || 0) + 1}</b></span><span class="rate">成功率 ${Math.round(IT.enhanceRate(it) * 100)}%</span></div><div class="enh-row cost"><span>${G.ui.IC.coin}${G.fmt(c.gold)}</span><span>${consIcon('stone')}${c.stone}<small>（所持 ${IT.cons('stone')}）</small></span><button class="btn sm ${canEnh ? 'primary' : 'cant'}" id="enhBtn">強化する</button></div>`}</div>
       ${who ? `<p class="eq-now">いまは <b>${G.esc(who.name)}</b> が装備しています</p>` : ''}
-      <h3 class="mini">装備させる冒険者</h3><div class="pick-list">${list}</div></div>`;
+      <h3 class="mini">装備させる冒険者</h3><div class="pick-list">${list}</div>
+      <div class="id-tools"><button class="btn sm ghost ${it.lock ? 'on' : ''}" id="lockBtn">${LOCK}${it.lock ? '鍵をはずす' : '鍵をかける'}</button>${!who && !it.lock ? `<button class="btn sm ghost" id="disBtn">分解（強化石 +${IT.dismantleValue(it)}）</button><button class="btn sm ghost" id="sellBtn">売る</button>` : ''}</div></div>`;
     const btns = [];
-    if (!who) btns.push({ text: `売る（+${G.fmt(R.sell)}G）`, cls: 'ghost', fn: () => confirmSell(it) });
-    else btns.push({ text: '外す', cls: 'ghost', fn: () => { IT.equip(who.id, null); G.ui.toast(`${who.name}は《${it.name}》を外した`, 'info'); G.ui.renderSheet(); } });
-    btns.push({ text: '閉じる', cls: 'primary' });
+    if (who) btns.push({ text: '外す', cls: 'ghost', fn: () => { IT.equip(who.id, null, it.slot); G.ui.toast(`${who.name}は《${it.name}》を外した`, 'info'); G.ui.renderSheet(); } });
+    btns.push({ text: '閉じる', cls: 'primary', fn: () => G.ui.renderSheet() });
     G.ui.modal(html, btns, {
-      cls: 'wide',
+      cls: 'wide', replace: !!replace,
       onShow: (card) => {
         G.$$('[data-eq]', card).forEach((b) => b.addEventListener('click', () => {
           const a = st.adv.find((x) => x.id === +b.dataset.eq);
           if (!a) return;
-          IT.equip(a.id, uid);
+          IT.equip(a.id, u);
           G.audio.sfx('upgrade');
           G.haptic(14);
-          G.ui.toast(`${a.name}が《${it.name}》を装備した！${fits(e, a) ? '' : '（職業が合わないので効果半分）'}`, 'rare' + it.rarity);
+          G.ui.toast(`${a.name}が《${it.name}》を装備した！${it.slot === 'weapon' && !IT.fits(it, a) ? '（職業が合わないので効果半分）' : ''}`, 'rare' + it.rarity);
           G.ui.closeModal();
           G.ui.renderSheet();
+        }));
+        const enh = G.$('#enhBtn', card);
+        if (enh) enh.addEventListener('click', () => doEnhance(u, card));
+        G.$('#lockBtn', card).addEventListener('click', () => { it.lock = !it.lock; G.audio.sfx('tap'); G.emit('itemsChanged'); T.showItem(u, true); });
+        const dis = G.$('#disBtn', card);
+        if (dis) dis.addEventListener('click', () => {
+          if (it.rarity >= 2) { confirmBox(`《${G.esc(it.name)}》を分解しますか？`, `強化石が ${IT.dismantleValue(it)} 個手に入ります。取り消せません。`, '分解する', () => { const n = IT.dismantle(u); G.audio.sfx('shatter'); G.ui.toast(`分解して強化石を ${n} 個手に入れました`, 'good'); G.ui.renderSheet(); }); return; }
+          const n = IT.dismantle(u);
+          G.audio.sfx('shatter');
+          G.ui.toast(`分解して強化石を ${n} 個手に入れました`, 'good');
+          G.ui.closeModal();
+          G.ui.renderSheet();
+        });
+        const sell = G.$('#sellBtn', card);
+        if (sell) sell.addEventListener('click', () => confirmBox(`《${G.esc(it.name)}》を売りますか？`, '取り消せません。', '売る', () => { const g = IT.sell(u); if (g) { G.audio.sfx('coins'); G.ui.toast(`${G.fmt(g)}G で売りました`, 'good'); G.ui.refreshHud(); G.ui.renderSheet(); } }));
+      },
+    });
+  };
+  function confirmBox(title, text, ok, fn) {
+    G.ui.closeModal();
+    setTimeout(() => G.ui.modal(`<div class="confirm"><h2>${title}</h2><p>${text}</p></div>`, [{ text: 'やめる', cls: 'ghost' }, { text: ok, cls: 'danger', fn }]), 240);
+  }
+  function doEnhance(u, card) {
+    const it = IT.get(u);
+    const r = IT.enhance(u);
+    if (!r.ok) {
+      G.audio.sfx('error');
+      G.ui.toast(r.why === 'gold' ? 'ゴールドが足りません' : r.why === 'stone' ? '強化石が足りません。いらない装備を分解すると手に入ります' : 'これ以上は強化できません', 'bad');
+      return;
+    }
+    const img = G.$('.id-img', card);
+    img.classList.remove('hit', 'ok', 'ng'); void img.offsetWidth; img.classList.add('hit');
+    G.audio.sfx('clank');
+    G.audio.sfx('build');
+    G.haptic(10);
+    setTimeout(() => {
+      img.classList.add(r.success ? 'ok' : 'ng');
+      if (r.success) {
+        G.audio.sfx(it.plus >= 8 ? 'rarity' : 'upgrade', 3);
+        G.haptic(24);
+        G.ui.toast(`強化成功！《${it.name}》+${it.plus}`, 'rare' + Math.min(4, it.rarity + (it.plus >= 7 ? 1 : 0)));
+      } else {
+        G.audio.sfx('error');
+        G.ui.toast('強化失敗…（装備はそのまま残っています）', 'bad');
+      }
+      setTimeout(() => T.showItem(u, true), 520);
+      G.ui.refreshHud();
+    }, 380);
+  }
+  function bulkDismantle() {
+    G.audio.sfx('tap');
+    const st = G.state;
+    const cnt = (r) => (st.items || []).filter((x) => x.rarity <= r && !x.lock && !IT.equippedBy(x.uid)).length;
+    G.ui.modal(`<div class="confirm"><h2>まとめて分解</h2><p>装備していない・鍵をかけていない装備を、強化石にします。</p></div>`, [
+      { text: `N（${cnt(0)}）`, cls: 'ghost', fn: () => doBulk(0) },
+      { text: `R以下（${cnt(1)}）`, cls: 'ghost', fn: () => doBulk(1) },
+      { text: `SR以下（${cnt(2)}）`, cls: 'danger', fn: () => doBulk(2) },
+    ]);
+  }
+  function doBulk(r) {
+    const res = IT.bulkDismantle(r);
+    if (!res.count) { G.ui.toast('分解できる装備はありません', 'info'); return; }
+    G.audio.sfx('shatter');
+    G.ui.toast(`${res.count}個を分解して、強化石を ${res.stones} 個手に入れました`, 'good');
+    G.ui.renderSheet();
+  }
+
+  // ---------------------------------------------------------------- 持ち物を使う
+  function useCons(id) {
+    const st = G.state;
+    const c = IT.CONS[id];
+    G.audio.init();
+    if (c.boost) {
+      if (!IT.useBoost(id)) return;
+      G.audio.sfx('rarity', 3);
+      G.haptic(20);
+      G.ui.fx.burst(window.innerWidth / 2, window.innerHeight * 0.4);
+      G.ui.toast(`${c.name}を使った！ ${c.boost.k === 'speed' ? `30分間 ${c.boost.mult}倍速` : c.boost.k === 'gold' ? '30分間 ゴールド2倍' : '30分間 大成功率 +10%'}`, 'rare3');
+      G.ui.refreshHud();
+      G.ui.renderSheet();
+      return;
+    }
+    if (id === 'key') { openChest('key'); return; }
+    if (id === 'finish') {
+      if (!st.active.length) { G.ui.toast('遠征中のパーティがいません', 'info'); return; }
+      const list = st.active.slice().sort((a, b) => b.endAt - a.endAt).map((ex) => {
+        const adv = st.adv.find((a) => a.id === ex.party[0]);
+        return `<button class="pick" data-ex="${ex.q.id}">${adv ? `<img alt="" src="${art.portrait(adv.look, 40)}">` : ''}<span><b>${G.esc(ex.q.name)}</b><small>帰還まで ${G.fmtClock(ex.endAt - G.now())}</small></span></button>`;
+      }).join('');
+      G.ui.modal(`<div class="item-pick"><h2>どのパーティを帰還させますか？</h2><div class="pick-list">${list}</div></div>`, [{ text: 'やめる', cls: 'ghost' }], {
+        cls: 'wide',
+        onShow: (card) => G.$$('[data-ex]', card).forEach((b) => b.addEventListener('click', () => {
+          const ex = IT.finishOne(b.dataset.ex);
+          G.ui.closeModal();
+          if (!ex) return;
+          G.audio.sfx('flash');
+          G.sim.advance(G.now());
+          G.ui.toast('時短の巻物を使った！ パーティが帰ってきました', 'rare1');
+          G.ui.renderSheet();
+        })),
+      });
+      return;
+    }
+    if (id === 'book' || id === 'expbook') {
+      const list = st.adv.slice().sort((a, b) => b.lv - a.lv).map((a) => {
+        const unk = IT.unknownSkills(a).length;
+        return `<button class="pick" data-adv="${a.id}"><img alt="" src="${art.portrait(a.look, 40)}"><span><b>${G.esc(a.name)}</b><small>${D.CLASSES[a.cls].name} Lv${a.lv}${id === 'book' ? ` ・ 覚えていない技 ${unk}` : ''}</small></span></button>`;
+      }).join('');
+      G.ui.modal(`<div class="item-pick"><h2>${c.name}を誰に使いますか？</h2><div class="pick-list">${list}</div></div>`, [{ text: 'やめる', cls: 'ghost' }], {
+        cls: 'wide',
+        onShow: (card) => G.$$('[data-adv]', card).forEach((b) => b.addEventListener('click', () => {
+          const a = st.adv.find((x) => x.id === +b.dataset.adv);
+          G.ui.closeModal();
+          if (!a || IT.cons(id) <= 0) return;
+          IT.addCons(id, -1);
+          if (id === 'book') {
+            const unk = IT.unknownSkills(a);
+            const known = Object.keys(a.sk || {}).filter((n) => a.sk[n] < 5);
+            const name = unk.length ? G.pick(unk) : known.length ? G.pick(known) : null;
+            if (!name) { IT.addCons(id, 1); G.ui.toast(`${a.name}はすべての技を極めています`, 'info'); return; }
+            const r = IT.learnSkill(a, name);
+            G.audio.sfx('flash');
+            setTimeout(() => G.ui.modal(`<div class="skill-get"><div class="sg-bulb"></div><small>${G.esc(a.name)}、閃いた！</small><h2>${G.esc(name)}${r.up ? ` <span>Lv${r.lv}</span>` : ''}</h2><p>${IT.skillDesc(a.cls, name, r.lv)}</p>${a.skillSet.includes(name) ? '<p class="hint">技をセットしました</p>' : '<p class="hint">冒険者の詳細から技をセットできます</p>'}</div>`, [{ text: 'やったね！', cls: 'primary big' }], { cls: 'celebrate', onShow: () => G.ui.fx.confetti() }), 260);
+          } else {
+            const before = a.lv;
+            G.sim.gainExp(a, Math.round(G.sim.expNeed(a.lv) * 1.6));
+            G.audio.sfx('levelup');
+            G.ui.toast(`${a.name}に経験値！ ${a.lv > before ? `Lv${before} → Lv${a.lv}` : ''}`, 'good');
+          }
+          G.ui.renderSheet();
+        })),
+      });
+    }
+  }
+
+  function buy(spec) {
+    const [id, n, cost, cur] = spec.split(':');
+    const st = G.state;
+    const c = +cost;
+    if (cur === 'cry' ? (st.crystals || 0) < c : st.gold < c) {
+      G.audio.sfx('error');
+      G.ui.toast(cur === 'cry' ? '魔晶石が足りません' : 'ゴールドが足りません', 'bad');
+      return;
+    }
+    if (cur === 'cry') st.crystals -= c; else st.gold -= c;
+    IT.addCons(id, +n);
+    G.audio.sfx('coins');
+    G.ui.toast(`${IT.CONS[id].name}${+n > 1 ? ` ×${n}` : ''} を買いました`, 'good');
+    G.sim.save();
+    G.ui.refreshHud();
+    G.ui.renderSheet();
+  }
+
+  // ---------------------------------------------------------------- 冒険者の詳細（装備3枠・技）
+  T.advDetail = function (id, replace) {
+    const st = G.state;
+    const a = st.adv.find((x) => x.id === id);
+    if (!a) return;
+    if (!replace) G.audio.sfx('tap');
+    const cls = D.CLASSES[a.cls];
+    const sAll = IT.advStats(a);
+    const slots = IT.SLOTS.map((slot) => {
+      const it = a.eq && a.eq[slot] ? IT.get(a.eq[slot]) : null;
+      return `<button class="eq-slot ${it ? 'r' + it.rarity : 'none'}" data-slot="${slot}">${it ? `<img alt="" src="${thumb(it, 46)}">${it.plus ? `<i>+${it.plus}</i>` : ''}` : `<span class="es-empty">${IT.SLOT_NAME[slot]}</span>`}<small>${it ? G.esc(it.name) : '空き'}</small></button>`;
+    }).join('');
+    const known = Object.keys(a.sk || {});
+    const nSlots = IT.skillSlots(a);
+    const skills = known.length ? known.map((n) => {
+      const on = (a.skillSet || []).includes(n);
+      return `<button class="skill-row ${on ? 'on' : ''}" data-skill="${G.esc(n)}"><b>${G.esc(n)}</b><em>Lv${a.sk[n]}</em><small>${IT.skillDesc(a.cls, n, a.sk[n])}</small><i>${on ? 'セット中' : 'セット'}</i></button>`;
+    }).join('') : '<p class="hint">まだ技を覚えていません。冒険譚で「閃く」か、閃きの書で覚えます。</p>';
+    const statList = IT.STAT_IDS.filter((k) => sAll[k]).map((k) => `<span>${IT.STAT[k].name}<b>${pct(sAll[k])}</b></span>`).join('') || '<span class="none">装備や技で能力が上がります</span>';
+    const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}</p>
+      <div class="eq-slots">${slots}</div>
+      <div class="adv-stats">${statList}</div>
+      <h3 class="mini">技 <small>セット ${(a.skillSet || []).length}/${nSlots}${a.lv < 20 ? '（Lv20で3枠）' : ''}</small></h3><div class="skills">${skills}</div>
+      <dl><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${G.sim.expNeed(a.lv)}</dd></dl></div>`;
+    G.ui.modal(html, [
+      st.adv.length > 1 && a.status === 'idle' ? { text: '解雇する', cls: 'ghost danger', fn: () => G.ui.confirmDismiss(a) } : null,
+      { text: '閉じる', cls: 'primary', fn: () => G.ui.renderSheet() },
+    ].filter(Boolean), {
+      cls: 'wide', replace: !!replace,
+      onShow: (card) => {
+        G.$$('[data-slot]', card).forEach((b) => b.addEventListener('click', () => pickFor(a, b.dataset.slot)));
+        G.$$('[data-skill]', card).forEach((b) => b.addEventListener('click', () => {
+          if (!IT.toggleSkill(a, b.dataset.skill)) { G.audio.sfx('error'); G.ui.toast(`技は ${nSlots} つまでセットできます。どれかを外してください`, 'bad'); return; }
+          G.audio.sfx('tap');
+          T.advDetail(a.id, true);
         }));
       },
     });
   };
-  const fits = (e, a) => (!e.cls || e.cls === a.cls ? 1 : 0);
-
-  function confirmSell(it) {
-    G.ui.modal(`<div class="confirm"><h2>《${G.esc(it.name)}》を売りますか？</h2><p>${G.fmt(IT.RARITY[it.rarity].sell)}G になります。取り消せません。</p></div>`, [
-      { text: 'やめる', cls: 'ghost' },
-      { text: '売る', cls: 'danger', fn: () => { const g = IT.sell(it.uid); if (g) { G.audio.sfx('coins'); G.ui.toast(`《${it.name}》を ${G.fmt(g)}G で売りました`, 'good'); G.ui.refreshHud(); G.ui.renderSheet(); } } },
-    ]);
-  }
-
-  // 冒険者の詳細から：装備を選ぶ
-  T.pickFor = function (advId) {
+  function pickFor(a, slot) {
     const st = G.state;
-    const a = st.adv.find((x) => x.id === advId);
-    if (!a) return;
-    const items = (st.items || []).slice().sort((x, y) => {
-      const fx = fits(IT.EQUIP[x.tid], a), fy = fits(IT.EQUIP[y.tid], a);
-      return (fy - fx) || y.rarity - x.rarity;
-    });
-    if (!items.length) { G.ui.toast('装備品がありません。冒険譚の宝箱を開けてみましょう', 'info'); return; }
+    const items = (st.items || []).filter((x) => x.slot === slot).sort((x, y) => IT.score(y, a) - IT.score(x, a));
+    const cur = a.eq && a.eq[slot] ? IT.get(a.eq[slot]) : null;
+    if (!items.length) { G.ui.toast(`${IT.SLOT_NAME[slot]}を持っていません。宝箱から手に入ります`, 'info'); return; }
     const list = items.map((it) => {
       const who = IT.equippedBy(it.uid);
-      const fit = fits(IT.EQUIP[it.tid], a);
-      return `<button class="pick ${who === a ? 'on' : ''}" data-it="${it.uid}"><img alt="" src="${thumb(it, 40)}"><span><b>${G.esc(it.name)}</b><small>${IT.RARITY[it.rarity].id} ・ 戦力 +${Math.round(IT.RARITY[it.rarity].bonus * (fit ? 100 : 50))}%${who && who !== a ? ` ・ ${G.esc(who.name)}が装備中` : ''}</small></span><em class="fit ${fit ? 'ok' : 'half'}">${fit ? '◎' : '△'}</em></button>`;
+      const diff = cur && cur !== it ? IT.score(it, a) - IT.score(cur, a) : null;
+      const main = IT.MAIN[slot];
+      return `<button class="pick ${who === a ? 'on' : ''}" data-it="${it.uid}"><img alt="" src="${thumb(it, 40)}"><span><b>${G.esc(it.name)}${it.plus ? ` +${it.plus}` : ''}</b><small>${IT.RARITY[it.rarity].id} ・ Lv${it.ilv} ・ ${IT.STAT[main.k].name} ${pct(IT.mainVal(it, a))}${who && who !== a ? ` ・ ${G.esc(who.name)}が装備中` : ''}</small></span>${diff != null ? `<em class="cmp ${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'}</em>` : ''}</button>`;
     }).join('');
-    G.ui.modal(`<div class="item-pick"><h2>${G.esc(a.name)}の装備</h2><div class="pick-list">${list}</div></div>`, [
-      a.equip ? { text: '外す', cls: 'ghost', fn: () => { IT.equip(a.id, null); G.ui.renderSheet(); } } : null,
-      { text: '閉じる', cls: 'primary' },
+    G.ui.modal(`<div class="item-pick"><h2>${G.esc(a.name)}の${IT.SLOT_NAME[slot]}</h2><div class="pick-list">${list}</div></div>`, [
+      cur ? { text: '外す', cls: 'ghost', fn: () => { IT.equip(a.id, null, slot); setTimeout(() => T.advDetail(a.id), 240); } } : null,
+      { text: '戻る', cls: 'primary', fn: () => setTimeout(() => T.advDetail(a.id), 240) },
     ].filter(Boolean), {
-      cls: 'wide',
-      onShow: (card) => {
-        G.$$('[data-it]', card).forEach((b) => b.addEventListener('click', () => {
-          const it = IT.get(b.dataset.it);
-          IT.equip(a.id, b.dataset.it);
-          G.audio.sfx('upgrade');
-          G.ui.toast(`${a.name}が《${it.name}》を装備した！`, 'rare' + it.rarity);
-          G.ui.closeModal();
-          G.ui.renderSheet();
-        }));
-      },
+      cls: 'wide', replace: true,
+      onShow: (card) => G.$$('[data-it]', card).forEach((b) => b.addEventListener('click', () => {
+        const it = IT.get(b.dataset.it);
+        IT.equip(a.id, b.dataset.it);
+        G.audio.sfx('upgrade');
+        G.ui.toast(`${a.name}が《${it.name}》を装備した！`, 'rare' + it.rarity);
+        T.advDetail(a.id, true);
+      })),
     });
+  }
+
+  // ---------------------------------------------------------------- ログインボーナス
+  T.today = () => { const d = new Date(G.now() * 1000); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+  const DAILY = [{ cry: 20 }, { stone: 10 }, { finish: 2 }, { cry: 30 }, { hg2: 1 }, { key: 2 }, { cry: 100, book: 1 }];
+  const rewardText = (r) => Object.entries(r).map(([k, n]) => (k === 'cry' ? `魔晶石 ×${n}` : `${IT.CONS[k].name} ×${n}`)).join('・');
+  T.checkDaily = function () {
+    const st = G.state;
+    st.login = st.login || { n: 0, last: '' };
+    const today = T.today();
+    if (st.login.last === today) return false;
+    st.login.last = today;
+    st.login.n++;
+    const day = ((st.login.n - 1) % 7);
+    const r = DAILY[day];
+    Object.entries(r).forEach(([k, n]) => IT.addCons(k, n));
+    G.sim.save(true);
+    const cells = DAILY.map((d, i) => {
+      const firstK = Object.keys(d)[0];
+      const state = i < day ? 'got' : i === day ? 'today' : '';
+      return `<div class="dl ${state}"><small>${i + 1}日目</small><img alt="" src="${consThumb(firstK, 34)}"><b>${firstK === 'cry' ? '×' + d.cry : '×' + d[firstK]}</b>${state === 'got' ? '<i>受取済</i>' : ''}</div>`;
+    }).join('');
+    G.ui.modal(`<div class="daily"><small>ログインボーナス ・ 通算 ${st.login.n}日目</small><h2>今日のおくりもの</h2><div class="dl-grid">${cells}</div><p class="dl-got">${rewardText(r)} を受け取りました</p><p class="hint">毎日ギルドに顔を出すと、7日目に豪華なおくりもの</p></div>`, [{ text: '受け取る', cls: 'primary big', fn: () => { G.audio.sfx('gift'); G.ui.refreshHud(); } }], { cls: 'celebrate', onShow: () => { G.audio.sfx('rarity', 2); } });
+    if (G.notify) G.notify.push({ kind: 'daily', silent: true, action: 'treasury', title: 'ログインボーナス', body: rewardText(r) });
+    return true;
   };
 
   // ---------------------------------------------------------------- 宝箱を開ける演出
@@ -205,9 +521,12 @@
     cv = G.$('#chestCanvas');
     ctx = cv.getContext('2d');
     el.hidden = false;
-    el.querySelector('.cf-ui').innerHTML = '';
+    const ui = el.querySelector('.cf-ui');
+    ui.innerHTML = list.length > 1 ? '<button class="cf-skip" id="cfSkip">まとめて見る ››</button>' : '';
     resize();
     fx = { list, i: 0, t: 0, done: onDone, parts: [], fired: {} };
+    const sk = G.$('#cfSkip');
+    if (sk) sk.addEventListener('click', (e) => { e.stopPropagation(); if (fx && !fx.summary) { G.audio.sfx('tap'); const best = Math.max(...fx.list.map((r) => r.item.rarity)); if (best >= 2) G.audio.sfx('rarity', best); summary(); } });
     prep();
     requestAnimationFrame(() => el.classList.add('shown'));
     el.onclick = tap;
@@ -248,7 +567,7 @@
   function summary() {
     fx.summary = true;
     const box = G.$('#chestFx .cf-ui');
-    box.innerHTML = `<div class="cf-sum"><h2>手に入れたもの</h2><div class="cf-grid">${fx.list.map((r) => `<div class="cf-it r${r.item.rarity}"><img alt="" src="${thumb(r.item, 64)}">${r.isNew ? '<i>NEW</i>' : ''}<small>${G.esc(r.item.name)}</small>${r.dup ? `<em>${CRY}+${r.crystals}</em>` : ''}</div>`).join('')}</div><button class="btn primary big" id="cfClose">宝物庫へ</button></div>`;
+    box.innerHTML = `<div class="cf-sum"><h2>手に入れたもの</h2><div class="cf-grid${fx.list.length > 6 ? ' many' : ''}">${fx.list.map((r) => `<div class="cf-it r${r.item.rarity}"><img alt="" src="${thumb(r.item, 64)}">${r.isNew ? '<i>NEW</i>' : ''}<small>${G.esc(r.item.name)}</small>${r.dup ? `<em>${CRY}+${r.crystals}</em>` : ''}</div>`).join('')}</div><button class="btn primary big" id="cfClose">宝物庫へ</button></div>`;
     G.$('#cfClose').addEventListener('click', (e) => { e.stopPropagation(); finish(); });
   }
   function finish() {
@@ -271,7 +590,6 @@
     const it = r.item;
     const s = Math.min(W / 360, H / 640);
     const cx = W / 2, cy = H * 0.56;
-    // 音と粒
     if (once('drop', 0.32)) G.audio.sfx('bounce');
     if (once('roll', 0.62)) G.audio.sfx('roll');
     fx.steps.forEach((rk, i) => { if (i > 0 && once('st' + i, fx.stepT[i])) { G.audio.sfx('rarity', rk); G.haptic(12 + rk * 4); fx.flash = 0.35; fx.flashCol = art.RARITY_COL[rk].glow; } });
@@ -294,7 +612,6 @@
     fx.stepT.forEach((st, i) => { if (fx.t >= st) si = i; });
     const rank = fx.steps[si];
     const t = fx.t;
-    // 光
     if (t > fx.reveal) {
       const a = G.seg(t, fx.reveal, fx.reveal + 0.35);
       ctx.save();
@@ -319,7 +636,6 @@
       ctx.fillStyle = g;
       ctx.fillRect(cx - rr, cy - 30 * s - rr, rr * 2, rr * 2);
     }
-    // 宝箱
     const dropK = G.seg(t, 0, 0.55);
     const by = dropK < 1 ? -Math.abs(Math.cos(dropK * Math.PI * 2.2)) * (1 - dropK) * 300 * s : 0;
     const shaking = t > 0.6 && t < fx.reveal;
@@ -331,7 +647,6 @@
     art.ellipse(ctx, 0, 0, 18, 3, 'rgba(0,0,0,0.35)');
     art.chestR(ctx, op, rank, t);
     ctx.restore();
-    // 中身
     if (t > fx.reveal + 0.1) {
       const k2 = G.ease.outBack(G.seg(t, fx.reveal + 0.1, fx.reveal + 0.5));
       const iy = G.lerp(cy - 40 * s, cy - 210 * s, k2);
@@ -364,15 +679,26 @@
       ctx.font = G.font(700, 13 * s);
       ctx.fillStyle = '#ffe39a';
       ctx.fillText(stars(it.rarity), cx, cy - 98 * s);
-      ctx.font = G.font(800, 22 * s, 'head');
+      ctx.font = G.font(800, (it.name.length > 10 ? 18 : 22) * s, 'head');
       ctx.lineWidth = 5 * s;
       ctx.strokeText(it.name, cx, cy + 62 * s);
       ctx.fillStyle = '#fbf3de';
       ctx.fillText(it.name, cx, cy + 62 * s);
       ctx.font = G.font(700, 12 * s);
       ctx.fillStyle = 'rgba(246,236,210,0.8)';
-      const sub = it.kind === 'relic' ? (r.dup ? `持っている秘宝 → 魔晶石 +${r.crystals}` : '秘宝 ・ ' + IT.RELIC[it.rid].desc) : `${TYPE_NAME[IT.EQUIP[it.tid].type]} ・ 戦力 +${Math.round(R.bonus * 100)}%`;
+      let sub;
+      if (it.kind === 'relic') sub = r.dup ? `持っている秘宝 → 魔晶石 +${r.crystals}` : '秘宝 ・ ' + IT.RELIC[it.rid].desc;
+      else if (it.kind === 'cons') sub = '持ち物 ・ ' + IT.CONS[it.id].desc;
+      else {
+        const m = IT.MAIN[it.slot];
+        sub = `${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv} ・ ${IT.STAT[m.k].name} ${pct(IT.mainVal(it))}`;
+      }
       ctx.fillText(sub, cx, cy + 84 * s);
+      if (it.kind === 'equip' && it.affixes && it.affixes.length) {
+        ctx.font = G.font(700, 11 * s);
+        ctx.fillStyle = '#a8dcff';
+        ctx.fillText(it.affixes.map((x) => `${IT.STAT[x.k].name}${pct(x.v)}`).join('  '), cx, cy + 102 * s);
+      }
       if (r.isNew) {
         ctx.font = G.font(900, 13 * s, 'num');
         ctx.fillStyle = '#ff7a6a';
@@ -380,7 +706,6 @@
       }
       ctx.restore();
     }
-    // 粒
     for (let i = fx.parts.length - 1; i >= 0; i--) {
       const p = fx.parts[i];
       p.life += dt;
@@ -396,7 +721,6 @@
       ctx.fillStyle = G.rgba(fx.flashCol || '#ffffff', fx.flash);
       ctx.fillRect(0, 0, W, H);
     }
-    // 案内
     if (!fx.summary) {
       ctx.textAlign = 'center';
       ctx.font = G.font(700, 12);
@@ -405,4 +729,11 @@
       ctx.fillText(msg, cx, H - 40);
     }
   }
+
+  // ---------------------------------------------------------------- 課金のつなぎ口（アプリ版で差し替える）
+  G.store = G.store || {
+    available: false,
+    products: T.PACKS,
+    purchase: () => Promise.resolve({ ok: false, reason: 'unavailable' }),
+  };
 })();

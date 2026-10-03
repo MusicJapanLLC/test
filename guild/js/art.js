@@ -725,11 +725,12 @@
     poly(ctx, [-r * 0.15, -r * 0.35, r * 0.15, -r * 0.35, r * 0.15, r * 0.35, -r * 0.15, r * 0.35], '#d9952a');
     ctx.restore();
   };
+  // 素材（青銅のインゴット）
   art.gem = (ctx, x, y, r) => {
-    poly(ctx, [x, y - r, x + r * 0.8, y - r * 0.2, x, y + r, x - r * 0.8, y - r * 0.2], '#7d6cf0');
-    poly(ctx, [x, y - r, x + r * 0.8, y - r * 0.2, x, y - r * 0.05], '#a99cff');
-    poly(ctx, [x, y - r, x - r * 0.8, y - r * 0.2, x, y - r * 0.05], '#c9c0ff');
-    poly(ctx, [x - r * 0.8, y - r * 0.2, x, y - r * 0.05, x, y + r], '#6655d8');
+    poly(ctx, [x - r, y + r * 0.3, x - r * 0.55, y - r * 0.5, x + r, y - r * 0.5, x + r * 0.55, y + r * 0.3], '#e0a05a');
+    poly(ctx, [x - r, y + r * 0.3, x + r * 0.55, y + r * 0.3, x + r * 0.55, y + r * 0.75, x - r, y + r * 0.75], '#b06a32');
+    poly(ctx, [x + r * 0.55, y + r * 0.3, x + r, y - r * 0.5, x + r, y, x + r * 0.55, y + r * 0.75], '#8a4e22');
+    poly(ctx, [x - r * 0.55, y - r * 0.5, x + r, y - r * 0.5, x + r * 0.8, y - r * 0.28, x - r * 0.4, y - r * 0.28], '#ffd9a0');
   };
   art.fameStar = (ctx, x, y, r) => {
     star(ctx, x, y, r, '#ffcf4a');
@@ -918,6 +919,7 @@
 
   // ---------- 装備・秘宝のアイコン（中心 0,0 ・ 大きさ s） ----------
   art.itemIcon = (ctx, item, s, t = 0) => {
+    if (item.kind === 'cons') { art.consIcon(ctx, item.id, s, t); return; }
     const u = s / 2;
     const r = item.rarity || 0;
     const metal = rc(r, 'metal', t), dark = rc(r, 'dark', t), acc = rc(r, 'accent', t);
@@ -983,6 +985,23 @@
         facet(ctx, 0.62, -0.42, 0.24, 0.2, 6, dark, 0, 0.2);
         facet(ctx, 0, 0.05, 0.14, 0.14, 6, acc.startsWith('#') ? acc : '#ffd0f0', t, 0.25);
         break;
+      case 'robe':
+        facetPoly(ctx, [-0.32, -0.78, 0.32, -0.78, 0.5, -0.4, 0.62, 0.86, 0.12, 0.92, 0, 0.6, -0.12, 0.92, -0.62, 0.86, -0.5, -0.4], dark, 0.16);
+        poly(ctx, [-0.18, -0.78, 0.18, -0.78, 0.08, -0.2, -0.08, -0.2], metal);
+        poly(ctx, [-0.5, -0.4, -0.8, 0.2, -0.62, 0.3, -0.42, -0.1], dark);
+        poly(ctx, [0.5, -0.4, 0.8, 0.2, 0.62, 0.3, 0.42, -0.1], G.shade(dark.startsWith('#') ? dark : '#888888', -0.15));
+        poly(ctx, [-0.56, 0.7, 0.56, 0.7, 0.6, 0.86, -0.6, 0.86], acc.startsWith('#') ? acc : rainbow(t));
+        facet(ctx, 0, -0.1, 0.1, 0.1, 6, acc.startsWith('#') ? acc : '#ffd0f0', t, 0.25);
+        break;
+      case 'ring':
+        ctx.strokeStyle = metal; ctx.lineWidth = 0.2;
+        ctx.beginPath(); ctx.ellipse(0, 0.22, 0.5, 0.42, 0, 0, TAU); ctx.stroke();
+        ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 0.05;
+        ctx.beginPath(); ctx.ellipse(0, 0.22, 0.5, 0.42, 0, Math.PI * 1.1, Math.PI * 1.6); ctx.stroke();
+        poly(ctx, [-0.22, -0.2, 0.22, -0.2, 0.16, -0.38, -0.16, -0.38], dark);
+        facet(ctx, 0, -0.5, 0.26, 0.24, 6, acc.startsWith('#') ? acc : rainbow(t), Math.PI / 6, 0.32);
+        poly(ctx, [-0.1, -0.6, 0.02, -0.66, -0.04, -0.5], 'rgba(255,255,255,0.8)');
+        break;
       case 'charm':
         ctx.strokeStyle = metal; ctx.lineWidth = 0.06;
         ctx.beginPath(); ctx.moveTo(-0.5, -0.8); ctx.quadraticCurveTo(0, 0.1, 0.5, -0.8); ctx.stroke();
@@ -1037,6 +1056,83 @@
         break;
       default:
         facet(ctx, 0, 0, 0.6, 0.6, 6, acc.startsWith('#') ? acc : '#fff', 0, 0.2);
+    }
+    ctx.restore();
+  };
+
+  // ---------- 持ち物のアイコン（中心 0,0 ・ 大きさ s） ----------
+  art.consIcon = (ctx, id, s, t = 0) => {
+    const def = G.items && G.items.CONS[id];
+    if (def) id = def.icon;
+    ctx.save();
+    ctx.scale(s / 2, s / 2);
+    switch (id) {
+      case 'hourglass':
+      case 'hourglass3': {
+        const sand = id === 'hourglass3' ? '#ffd36a' : '#7fd0ff';
+        poly(ctx, [-0.56, -0.86, 0.56, -0.86, 0.5, -0.72, -0.5, -0.72], '#8a5a32');
+        poly(ctx, [-0.56, 0.86, 0.56, 0.86, 0.5, 0.72, -0.5, 0.72], '#8a5a32');
+        poly(ctx, [-0.42, -0.72, 0.42, -0.72, 0.08, 0, 0.42, 0.72, -0.42, 0.72, -0.08, 0], 'rgba(220,240,255,0.35)');
+        poly(ctx, [-0.3, -0.56, 0.3, -0.56, 0.06, -0.06, -0.06, -0.06], sand);
+        poly(ctx, [-0.34, 0.72, 0.34, 0.72, 0.1, 0.32, -0.1, 0.32], sand);
+        poly(ctx, [-0.02, -0.06, 0.02, -0.06, 0.02, 0.4, -0.02, 0.4], sand);
+        poly(ctx, [-0.62, -0.72, -0.5, -0.72, -0.5, 0.72, -0.62, 0.72], '#c8a060');
+        poly(ctx, [0.5, -0.72, 0.62, -0.72, 0.62, 0.72, 0.5, 0.72], '#a07a40');
+        if (id === 'hourglass3') star(ctx, 0.56, -0.62, 0.22, '#fff6c0');
+        break;
+      }
+      case 'scroll':
+        poly(ctx, [-0.6, -0.5, 0.6, -0.5, 0.6, 0.5, -0.6, 0.5], '#f0e0b8');
+        ctx.strokeStyle = '#b08a5a'; ctx.lineWidth = 0.05;
+        for (let i = -1; i <= 1; i++) { ctx.beginPath(); ctx.moveTo(-0.4, i * 0.22); ctx.lineTo(0.4, i * 0.22); ctx.stroke(); }
+        facet(ctx, -0.66, 0, 0.16, 0.56, 6, '#a0703c', 0, 0.2);
+        facet(ctx, 0.66, 0, 0.16, 0.56, 6, '#a0703c', 0, 0.2);
+        poly(ctx, [0.05, 0.3, 0.35, 0.3, 0.2, 0.62], '#d4493a');
+        break;
+      case 'coinbag':
+        facetPoly(ctx, [-0.5, 0.82, 0.5, 0.82, 0.66, 0.2, 0.3, -0.36, -0.3, -0.36, -0.66, 0.2], '#c48a3a', 0.18);
+        poly(ctx, [-0.3, -0.36, 0.3, -0.36, 0.42, -0.62, -0.42, -0.62], '#a06a2a');
+        poly(ctx, [-0.34, -0.42, 0.34, -0.42, 0.34, -0.32, -0.34, -0.32], '#ffd45a');
+        art.coin(ctx, 0, 0.3, 0.3, 0);
+        break;
+      case 'clover':
+        [0, 1, 2, 3].forEach((i) => { const a = i * Math.PI / 2 + Math.PI / 4; facet(ctx, Math.cos(a) * 0.3, Math.sin(a) * 0.3 - 0.1, 0.28, 0.28, 7, i % 2 ? '#5cc06a' : '#4aa85a', a, 0.2); });
+        ctx.strokeStyle = '#3a8a4a'; ctx.lineWidth = 0.08;
+        ctx.beginPath(); ctx.moveTo(0, -0.1); ctx.quadraticCurveTo(0.1, 0.5, 0.35, 0.85); ctx.stroke();
+        break;
+      case 'key':
+        ctx.strokeStyle = '#e8bd4c'; ctx.lineWidth = 0.16;
+        ctx.beginPath(); ctx.arc(-0.36, -0.36, 0.28, 0, TAU); ctx.stroke();
+        poly(ctx, [-0.2, -0.28, -0.08, -0.4, 0.78, 0.46, 0.66, 0.58], '#e8bd4c');
+        poly(ctx, [0.38, 0.3, 0.5, 0.18, 0.66, 0.34, 0.54, 0.46], '#c8901e');
+        poly(ctx, [0.58, 0.5, 0.7, 0.38, 0.86, 0.54, 0.74, 0.66], '#c8901e');
+        facet(ctx, -0.36, -0.36, 0.1, 0.1, 6, '#ff6a5a', 0, 0.2);
+        break;
+      case 'stone':
+        facetPoly(ctx, [-0.2, -0.78, 0.46, -0.5, 0.7, 0.2, 0.26, 0.76, -0.5, 0.62, -0.72, -0.06], '#7f8ca8', 0.24);
+        poly(ctx, [-0.2, -0.78, 0.46, -0.5, 0.1, -0.2, -0.36, -0.3], '#b8c4dc');
+        ctx.strokeStyle = '#9ff0ff'; ctx.lineWidth = 0.06;
+        ctx.beginPath(); ctx.moveTo(-0.3, 0.1); ctx.lineTo(0.05, -0.05); ctx.lineTo(0.3, 0.35); ctx.stroke();
+        break;
+      case 'book':
+      case 'book2': {
+        const cv = id === 'book' ? '#6a3fa0' : '#2f6f55';
+        facetPoly(ctx, [-0.62, -0.74, 0.5, -0.74, 0.62, -0.62, 0.62, 0.8, -0.5, 0.8, -0.62, 0.68], cv, 0.14);
+        poly(ctx, [-0.5, 0.68, 0.62, 0.68, 0.62, 0.8, -0.5, 0.8], '#f2e6c8');
+        poly(ctx, [-0.62, -0.74, -0.46, -0.74, -0.46, 0.68, -0.62, 0.68], G.shade(cv, -0.3));
+        if (id === 'book') art.bulb(ctx, 0.08, -0.06, 0.24, 0.6, t);
+        else star(ctx, 0.08, -0.04, 0.32, '#ffd36a');
+        break;
+      }
+      case 'cry':
+        poly(ctx, [0, -0.86, 0.6, -0.3, 0.32, 0.86, -0.32, 0.86, -0.6, -0.3], '#6f7cf0');
+        poly(ctx, [0, -0.86, 0.6, -0.3, 0, -0.14], '#b9c2ff');
+        poly(ctx, [0, -0.86, -0.6, -0.3, 0, -0.14], '#dfe4ff');
+        poly(ctx, [-0.6, -0.3, 0, -0.14, -0.32, 0.86], '#5a66d8');
+        poly(ctx, [0, -0.14, 0.32, 0.86, -0.32, 0.86], '#7f8cff');
+        break;
+      default:
+        facet(ctx, 0, 0, 0.6, 0.6, 6, '#cccccc', 0, 0.2);
     }
     ctx.restore();
   };

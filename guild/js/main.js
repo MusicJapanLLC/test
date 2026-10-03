@@ -118,7 +118,8 @@
       }
     }
     if (!G.reels.isOpen()) {
-      G.scene.update(dt);
+      // 倍速中はギルドの人たちもせかせか動く
+      G.scene.update(dt * (G.items.speedMul() > 1 ? 1.5 : 1));
       G.scene.render();
     } else {
       G.reels.update(dt);

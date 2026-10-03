@@ -9,7 +9,7 @@
   // ---------------------------------------------------------------- icons (polygon SVG)
   const IC = {
     coin: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 16.4,3.6 19,10 16.4,16.4 10,19 3.6,16.4 1,10 3.6,3.6" fill="#f2b632"/><polygon points="10,1 16.4,3.6 10,10" fill="#ffd45a"/><polygon points="3.6,3.6 10,1 10,10 1,10" fill="#ffe08a"/><polygon points="10,5 13.5,6.5 15,10 13.5,13.5 10,15 6.5,13.5 5,10 6.5,6.5" fill="#ffd45a"/><rect x="9" y="7" width="2" height="6" fill="#d9952a"/></svg>',
-    gem: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 18,8 10,19 2,8" fill="#7d6cf0"/><polygon points="10,1 18,8 10,9" fill="#a99cff"/><polygon points="10,1 2,8 10,9" fill="#c9c0ff"/><polygon points="2,8 10,9 10,19" fill="#6655d8"/></svg>',
+    gem: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="2,13 6,7 18,7 14,13" fill="#e0a05a"/><polygon points="2,13 14,13 14,17 2,17" fill="#b06a32"/><polygon points="14,13 18,7 18,11 14,17" fill="#8a4e22"/><polygon points="6,7 18,7 16,9 7,9" fill="#ffd9a0"/></svg>',
     star: '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 12.6,7 19,7.4 14,11.6 15.6,18.6 10,15 4.4,18.6 6,11.6 1,7.4 7.4,7" fill="#ffcf4a"/><polygon points="10,1 12.6,7 10,10 7.4,7" fill="#ffe58f"/></svg>',
     quests: '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="5,3 17,3 19,6 19,21 7,21 5,18" fill="currentColor" opacity=".25"/><polygon points="5,3 17,3 17,18 5,18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 8h6M8.5 11.5h6M8.5 15h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><polygon points="17,18 19,21 7,21 5,18" fill="currentColor"/></svg>',
     roster: '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,2 19,6 19,13 12,22 5,13 5,6" fill="currentColor" opacity=".25"/><polygon points="12,2 19,6 19,13 12,22 5,13 5,6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 10.5h7M12 7v10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>',
@@ -61,6 +61,11 @@
     G.$('#sheetClose').addEventListener('click', () => U.closeSheet());
     G.$('#objChip').addEventListener('click', onObjective);
     G.$('#rankBtn').addEventListener('click', showRankInfo);
+    G.$('#cryPill .ic').innerHTML = G.treasury.CRY;
+    G.$('#cryPill').addEventListener('click', () => { G.audio.init(); G.treasury.open('shop'); });
+    G.$('#boostChip').addEventListener('click', () => { G.audio.init(); G.treasury.open('bag'); });
+    G.on('boost', () => { boostKey = ''; U.refreshHud(); });
+    G.on('started', () => { if (G.state.flags.tut >= 90) setTimeout(() => G.treasury.checkDaily(), 900); });
     G.$('#menuBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'records') U.closeSheet(); else U.openSheet('records'); });
     G.$('#expStrip').addEventListener('click', () => U.openSheet('quests'));
     setupSheetDrag();
@@ -195,6 +200,8 @@
     disp.mat = st.mat;
     G.$('#goldVal').textContent = G.fmt(disp.gold);
     G.$('#matVal').textContent = G.fmt(disp.mat);
+    G.$('#cryVal').textContent = G.fmt(st.crystals || 0);
+    tickBoosts();
     hudTimer -= dt;
     if (hudTimer <= 0) {
       hudTimer = 0.25;
@@ -205,6 +212,23 @@
     tutTick(dt);
     if (popAgent) positionPop();
   };
+
+  // ブースト（倍速など）の残り時間
+  let boostKey = '';
+  function tickBoosts() {
+    const chip = G.$('#boostChip');
+    const act = ['speed', 'gold', 'luck'].map((k) => [k, G.items.boost(k)]).filter((x) => x[1]);
+    const key = act.map((x) => x[0] + x[1].mult).join();
+    if (key !== boostKey) {
+      boostKey = key;
+      chip.hidden = !act.length;
+      chip.innerHTML = act.map(([k, b]) => `<span class="bc ${k}"><i>${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'G×2' : '幸運'}</i><b data-bt="${k}"></b></span>`).join('');
+      document.documentElement.classList.toggle('fast', act.some((x) => x[0] === 'speed'));
+      if (sheetTab) layoutPads();
+      setTimeout(layoutPads, 30);
+    }
+    act.forEach(([k, b]) => { const el = chip.querySelector(`[data-bt="${k}"]`); if (el) el.textContent = G.fmtClock(b.until - G.now()); });
+  }
 
   function onObjective() {
     G.audio.init();
@@ -550,7 +574,7 @@
         <div class="grow">
           <div class="a-top"><b>${G.esc(a.name)}</b><span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span></div>
           <div class="bar exp"><i style="width:${(a.exp / need) * 100}%"></i></div>
-          <div class="a-meta"><span>${IC.sword}${G.fmt(S.power(a))}</span><span class="trait">${D.TRAITS[a.trait].name}</span>${a.equip && G.items.get(a.equip) ? `<img class="eq-mini" alt="" src="${U.itemThumb(G.items.get(a.equip), 18)}">` : ''}${(a.skills || []).length ? `<span class="sk">閃${a.skills.length}</span>` : ''}<span class="bond" title="絆">${'♥'.repeat(Math.min(5, Math.ceil(hearts / 2)))}<i>${'♥'.repeat(Math.max(0, 5 - Math.ceil(hearts / 2)))}</i></span></div>
+          <div class="a-meta"><span>${IC.sword}${G.fmt(S.power(a))}</span><span class="trait">${D.TRAITS[a.trait].name}</span>${G.items.equipped(a).map((it) => `<img class="eq-mini" alt="" src="${U.itemThumb(it, 18)}">`).join('')}${(a.skillSet || []).length ? `<span class="sk">技${a.skillSet.length}</span>` : ''}<span class="bond" title="絆">${'♥'.repeat(Math.min(5, Math.ceil(hearts / 2)))}<i>${'♥'.repeat(Math.max(0, 5 - Math.ceil(hearts / 2)))}</i></span></div>
         </div>
         ${status}
       </div>`;
@@ -588,23 +612,9 @@
     U._sig = sheetSig();
   }
 
-  function showAdvDetail(id) {
-    const st = G.state;
-    const a = st.adv.find((x) => x.id === id);
-    if (!a) return;
-    G.audio.sfx('tap');
-    const cls = D.CLASSES[a.cls];
-    const eq = a.equip && G.items ? G.items.get(a.equip) : null;
-    const skills = a.skills || [];
-    const eqHtml = eq ? `<button class="eq-chip r${eq.rarity}" id="advEquip"><img alt="" src="${U.itemThumb(eq, 30)}"><span><b>${G.esc(eq.name)}</b><small>${G.items.RARITY[eq.rarity].id} ・ 変更する</small></span></button>` : `<button class="eq-chip none" id="advEquip"><span><b>装備なし</b><small>${(st.items || []).length ? 'タップして装備を選ぶ' : '宝箱から装備品が手に入ります'}</small></span></button>`;
-    const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(S.power(a))}</p>
-      ${eqHtml}
-      <dl><dt>閃いた技</dt><dd>${skills.length ? skills.map((x) => `<span class="skill-chip">${G.esc(x)}</span>`).join('') : 'まだない（冒険譚で閃くことがある・1つにつき戦力 +3%）'}</dd><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${S.expNeed(a.lv)}</dd></dl></div>`;
-    U.modal(html, [
-      st.adv.length > 1 && a.status === 'idle' ? { text: '解雇する', cls: 'ghost danger', fn: () => confirmDismiss(a) } : null,
-      { text: '閉じる', cls: 'primary' },
-    ].filter(Boolean), { onShow: (card) => { const b = G.$('#advEquip', card); if (b) b.addEventListener('click', () => { closeModal(); setTimeout(() => G.treasury.pickFor(a.id), 240); }); } });
-  }
+  function showAdvDetail(id) { G.treasury.advDetail(id); }
+  U.showAdvDetail = showAdvDetail;
+  U.confirmDismiss = (a) => confirmDismiss(a);
   function confirmDismiss(a) {
     U.modal(`<div class="confirm"><h2>${G.esc(a.name)}を解雇しますか？</h2><p>この操作は取り消せません。</p></div>`, [
       { text: 'やめる', cls: 'ghost' },
@@ -770,7 +780,7 @@
 
   // 装備・秘宝のサムネイル（レア度の枠つき）
   U.itemThumb = function (item, size) {
-    const key = 'it:' + (item.kind === 'relic' ? 'r-' + item.rid : item.tid) + ':' + item.rarity;
+    const key = 'it:' + (item.kind === 'relic' ? 'r-' + item.rid : item.kind === 'cons' ? 'c-' + item.id : item.tid) + ':' + item.rarity;
     return art.url(art.cached(key, size, (ctx, sz) => {
       const rc = art.RARITY_COL[item.rarity];
       const g = ctx.createLinearGradient(0, 0, 0, sz);
@@ -1103,8 +1113,10 @@
     G.$('#tutNext').hidden = !s.tap;
   }
   function endTutorial() {
+    const was = tutStep >= 0;
     tutStep = -1;
     G.state.flags.tut = 99;
+    if (was) setTimeout(() => G.treasury.checkDaily(), 1200);
     G.$('#tut').hidden = true;
     document.body.classList.remove('tut-top');
     G.sim.save();

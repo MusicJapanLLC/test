@@ -98,7 +98,7 @@
 
   // ---------------------------------------------------------------- 冒険譚を作る
   let seq = 1;
-  R.make = function ({ q, party, tier, gold, mat, fame, levelUps, extra, endAt, drop }) {
+  R.make = function ({ q, party, tier, gold, mat, fame, levelUps, extra, endAt, drop, loot, goldBoost }) {
     const st = G.state;
     const area = D.AREA_BY_ID[q.area];
     const md = D.MONSTERS[q.monster];
@@ -123,10 +123,10 @@
       monster: q.monster,
       count: q.count || 1,
       boss: !!q.boss,
-      party: party.map((a) => ({ id: a.id, name: a.name, cls: a.cls, lv: a.lv, look: a.look, trait: a.trait, skills: (a.skills || []).slice() })),
+      party: party.map((a) => ({ id: a.id, name: a.name, cls: a.cls, lv: a.lv, look: a.look, trait: a.trait, skills: Object.keys(a.sk || {}), set: (a.skillSet || []).slice(), crit: G.items ? Math.round(G.items.advStats(a).crit || 0) : 0 })),
       tier, gold, mat, fame,
       levelUps: levelUps || [],
-      extra, recruit, drop: drop || null,
+      extra, recruit, drop: drop || null, loot: loot || [], goldBoost: goldBoost || 0,
       caption, tags,
       views, likes: Math.round(views * G.lerp(0.05, 0.12, rnd())),
       song: pickR(rnd, D.SONGS),
@@ -271,7 +271,9 @@
           t += 1.6;
         } else {
           b.kind = 'hit';
-          b.crit = rnd() < critP;
+          // セットした技を使うことがある
+          if (p.set && p.set.length && rnd() < 0.38) b.use = p.set[Math.floor(rnd() * p.set.length)];
+          b.crit = rnd() < critP + (p.crit || 0) / 200 + (b.use ? 0.15 : 0);
           b.at = t + (b.melee ? 0.17 : 0.22);
           b.dmg = Math.round(dmgOf(p) * (b.crit ? 2.3 : 1));
           b.ono = b.crit ? pickR(rnd, ['ズバァッ!!', 'ザンッ!!', 'ドゴォッ!!', 'バキィッ!!']) : pickR(rnd, c.ono);
@@ -1544,6 +1546,28 @@
           art.bulb(ctx, x + 4, y - 118 - kk * 6, 9 * kk, 1, t);
         }
       });
+      // 技の名前
+      pl.beats.forEach((b) => {
+        if (b.use && b.who === i && t > b.t - 0.08 && t < b.t + 0.62) {
+          const k1 = G.ease.outBack(G.seg(t, b.t - 0.08, b.t + 0.06));
+          const a1 = 1 - G.seg(t, b.t + 0.45, b.t + 0.62);
+          const x0 = partyX(reel, pl, b.t, L, i);
+          ctx.save();
+          ctx.globalAlpha = a1;
+          ctx.translate(G.clamp(x0, 50, 250), y - 116);
+          ctx.scale(k1, k1);
+          ctx.font = F(800, 13, 'head');
+          ctx.textAlign = 'center';
+          const w = ctx.measureText(b.use).width + 18;
+          art.poly(ctx, [-w / 2 - 6, -9, w / 2, -9, w / 2 + 6, 6, -w / 2, 6], 'rgba(10,16,38,0.88)');
+          ctx.strokeStyle = '#e0b84e';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(-w / 2 - 6, -9); ctx.lineTo(w / 2, -9); ctx.lineTo(w / 2 + 6, 6); ctx.lineTo(-w / 2, 6); ctx.closePath(); ctx.stroke();
+          ctx.fillStyle = '#ffe39a';
+          ctx.fillText(b.use, 0, 2);
+          ctx.restore();
+        }
+      });
       if (pl.fail && t > pl.fleeT && t < pl.fleeT + 1.2) art.poly(ctx, [x + 14, y - 92, x + 18, y - 84, x + 14, y - 82, x + 11, y - 86], '#9fd8ff');
       // レベルアップ
       const lu = reel.levelUps.find((l) => l.id === p.id);
@@ -2301,6 +2325,7 @@
     if (!rewatch && (cheer > 0 || bonus > 0)) notes.push({ text: (cheer > 0 ? `応援 ×${cheer} ・ ` : '') + 'ボーナス込み', col: '#ffe27a' });
     if (reel.skill) notes.push({ text: `${reel.party.find((p) => p.id === reel.skill.id)?.name || ''}が「${reel.skill.name}」を習得`, col: '#ffd36a' });
     if (reel.extra === 'cache') notes.push({ text: '隠し財宝を見つけた！ 素材ボーナス', col: '#c9c0ff' });
+    if (reel.goldBoost) notes.unshift({ text: `黄金の祝福 ゴールド×${reel.goldBoost}`, col: '#ffd36a' });
     notes.forEach((nt, i) => {
       ctx.save();
       ctx.globalAlpha = G.seg(t, pl.resT + 0.5 + i * 0.15, pl.resT + 0.7 + i * 0.15);
@@ -2313,6 +2338,40 @@
       ctx.fillText(nt.text, 180, cy + 36 + i * 16);
       ctx.restore();
     });
+    // おまけ（魔晶石・持ち物）
+    const loot = reel.loot || [];
+    if (loot.length) {
+      const t0 = pl.resT + 0.45;
+      const lw = loot.length * 64;
+      const ly = cy + 36 + notes.length * 16 + 14;
+      ctx.save();
+      ctx.globalAlpha = G.seg(t, t0, t0 + 0.2);
+      ctx.font = F(700, 9.5, 'ui');
+      ctx.textAlign = 'center';
+      ctx.fillStyle = 'rgba(246,236,210,0.7)';
+      ctx.fillText('おまけ', 180, ly - 14);
+      ctx.restore();
+      loot.forEach((l, i) => {
+        const kk = G.ease.outBack(G.seg(t, t0 + i * 0.1, t0 + 0.25 + i * 0.1));
+        if (kk <= 0) return;
+        const x = 180 - lw / 2 + 32 + i * 64;
+        ctx.save();
+        ctx.translate(x - 12, ly);
+        ctx.scale(kk, kk);
+        art.consIcon(ctx, l.id, 22, t);
+        ctx.restore();
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, kk);
+        ctx.font = F(800, 12, 'num');
+        ctx.textAlign = 'left';
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = 'rgba(8,12,28,0.85)';
+        ctx.strokeText('×' + l.n, x + 2, ly + 4);
+        ctx.fillStyle = '#fbf3de';
+        ctx.fillText('×' + l.n, x + 2, ly + 4);
+        ctx.restore();
+      });
+    }
     // 伝説級の虹枠
     if (reel.tier === 'legend') {
       ctx.save();

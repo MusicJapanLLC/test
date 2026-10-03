@@ -1,31 +1,55 @@
-/* ギルドの灯 — items: 装備・秘宝・宝箱
- *  レア度は N / R / SR / SSR / UR の5段階。
- *  装備は冒険者1人に1つ（職業に合う武器は効果が満額）。秘宝はギルド全体に効く。
- *  宝物庫の「黄金の宝箱」は魔晶石で開ける（課金はない。魔晶石は遊んで集める）。
+/* ギルドの灯 — items: 装備・能力・強化・技・持ち物（ハクスラ）
+ *  装備は 武器 / 防具 / 装飾品 の3枠。レア度は N / R / SR / SSR / UR。
+ *  - 主能力：武器＝攻撃%、防具＝成功率、装飾品＝大成功率（アイテムLvと強化値で伸びる）
+ *  - 追加能力：レア度ぶんだけランダムに付く（R=1 … UR=4）。いちばん強い能力が名前の頭に付く
+ *  - 強化：強化石とゴールドで +10 まで。+6 からは失敗することがある（壊れない）
+ *  - 分解：いらない装備は強化石に
+ *  - 技：閃き・閃きの書で覚える。セットした技だけが効く（2枠、Lv20 で3枠）
+ *  - 持ち物：砂時計（倍速）、時短の巻物、黄金の祝福、四つ葉、宝箱の鍵、強化石、書
  */
 'use strict';
 (function () {
   const IT = (G.items = {});
 
   IT.RARITY = [
-    { id: 'N', name: 'ノーマル', stars: 1, color: '#c9c0b0', glow: '#e8e0d0', bonus: 0.05, sell: 20 },
-    { id: 'R', name: 'レア', stars: 2, color: '#6ab4ff', glow: '#bfe2ff', bonus: 0.1, sell: 60 },
-    { id: 'SR', name: 'スーパーレア', stars: 3, color: '#c27cff', glow: '#ead2ff', bonus: 0.18, sell: 180 },
-    { id: 'SSR', name: 'ダブルスーパーレア', stars: 4, color: '#ffc83a', glow: '#fff0b0', bonus: 0.3, sell: 600 },
-    { id: 'UR', name: 'アルティメット', stars: 5, color: '#ff7ab8', glow: '#ffffff', bonus: 0.5, sell: 2000, rainbow: true },
+    { id: 'N', name: 'ノーマル', stars: 1, color: '#c9c0b0', glow: '#e8e0d0', mul: 1, sell: 20, stone: 1 },
+    { id: 'R', name: 'レア', stars: 2, color: '#6ab4ff', glow: '#bfe2ff', mul: 1.15, sell: 60, stone: 3 },
+    { id: 'SR', name: 'スーパーレア', stars: 3, color: '#c27cff', glow: '#ead2ff', mul: 1.32, sell: 180, stone: 8 },
+    { id: 'SSR', name: 'ダブルスーパーレア', stars: 4, color: '#ffc83a', glow: '#fff0b0', mul: 1.55, sell: 600, stone: 20 },
+    { id: 'UR', name: 'アルティメット', stars: 5, color: '#ff7ab8', glow: '#ffffff', mul: 1.9, sell: 2000, stone: 50, rainbow: true },
   ];
+  IT.SLOTS = ['weapon', 'armor', 'acc'];
+  IT.SLOT_NAME = { weapon: '武器', armor: '防具', acc: '装飾品' };
 
-  // 装備（[N, R, SR, SSR, UR] の名前）
+  // 装備の種類（[N, R, SR, SSR, UR] の名前）
   IT.EQUIP = {
-    sword: { type: 'weapon', cls: 'warrior', icon: 'sword', names: ['錆びた剣', '鋼のロングソード', '蒼月の剣', '竜牙の大剣', '聖剣ルミナス'] },
-    staff: { type: 'weapon', cls: 'mage', icon: 'staff', names: ['樫の杖', '魔石の杖', '星詠みのロッド', '賢者の霊杖', '天球儀の杖アストラ'] },
-    dagger: { type: 'weapon', cls: 'thief', icon: 'dagger', names: ['果物ナイフ', '盗賊のダガー', '影縫いの短刀', '夜鴉の双刃', '月喰らい'] },
-    mace: { type: 'weapon', cls: 'cleric', icon: 'mace', names: ['木の聖印', '銀のメイス', '祈りの錫杖', '聖女の鐘', '灯火の聖槌'] },
-    bow: { type: 'weapon', cls: 'archer', icon: 'bow', names: ['狩人の弓', '樫の長弓', '風切りの弓', '翠玉の神弓', '星穿ちの弓'] },
-    armor: { type: 'armor', icon: 'armor', names: ['布の服', '革の鎧', 'ミスリルの胸当て', '竜鱗の鎧', '灯王の外套'] },
-    charm: { type: 'charm', icon: 'charm', names: ['木彫りのお守り', '銀の指輪', '妖精の首飾り', '不死鳥の羽根', '女神の涙'] },
+    sword: { slot: 'weapon', cls: 'warrior', icon: 'sword', names: ['錆びた剣', '鋼のロングソード', '蒼月の剣', '竜牙の大剣', '聖剣ルミナス'] },
+    staff: { slot: 'weapon', cls: 'mage', icon: 'staff', names: ['樫の杖', '魔石の杖', '星詠みのロッド', '賢者の霊杖', '天球儀の杖アストラ'] },
+    dagger: { slot: 'weapon', cls: 'thief', icon: 'dagger', names: ['果物ナイフ', '盗賊のダガー', '影縫いの短刀', '夜鴉の双刃', '月喰らい'] },
+    mace: { slot: 'weapon', cls: 'cleric', icon: 'mace', names: ['木の聖印', '銀のメイス', '祈りの錫杖', '聖女の鐘', '灯火の聖槌'] },
+    bow: { slot: 'weapon', cls: 'archer', icon: 'bow', names: ['狩人の弓', '樫の長弓', '風切りの弓', '翠玉の神弓', '星穿ちの弓'] },
+    armor: { slot: 'armor', icon: 'armor', names: ['布の服', '革の鎧', 'ミスリルの胸当て', '竜鱗の鎧', '灯王の鎧'] },
+    robe: { slot: 'armor', icon: 'robe', names: ['旅人のローブ', '魔導士のローブ', '星織りの法衣', '月影の聖衣', '天衣ルミナリア'] },
+    charm: { slot: 'acc', icon: 'charm', names: ['木彫りのお守り', '銀の首飾り', '妖精の首飾り', '不死鳥の羽根', '女神の涙'] },
+    ring: { slot: 'acc', icon: 'ring', names: ['銅の指輪', '銀の指輪', '紅玉の指輪', '竜眼の指輪', '永遠の環'] },
   };
   IT.EQUIP_IDS = Object.keys(IT.EQUIP);
+
+  // 能力
+  IT.STAT = {
+    atk: { name: '攻撃', lo: 3, hi: 8, prefix: '猛き', cap: 999 },
+    crit: { name: '会心率', lo: 3, hi: 8, prefix: '鋭き', cap: 60 },
+    succ: { name: '成功率', lo: 1, hi: 3, prefix: '守りの', cap: 25 },
+    great: { name: '大成功率', lo: 1, hi: 2.5, prefix: '幸運の', cap: 20 },
+    speed: { name: '遠征時間短縮', lo: 2, hi: 6, prefix: '疾風の', cap: 40 },
+    gold: { name: '獲得ゴールド', lo: 4, hi: 12, prefix: '黄金の', cap: 100 },
+    exp: { name: '獲得経験値', lo: 5, hi: 15, prefix: '賢者の', cap: 100 },
+    find: { name: 'レア発見', lo: 5, hi: 15, prefix: '探求の', cap: 150 },
+    mat: { name: '素材', lo: 6, hi: 16, prefix: '職人の', cap: 100 },
+  };
+  IT.STAT_IDS = Object.keys(IT.STAT);
+  IT.MAIN = { weapon: { k: 'atk', base: [6, 10, 16, 24, 34] }, armor: { k: 'succ', base: [2, 3, 4, 6, 8] }, acc: { k: 'great', base: [1, 2, 3, 4.5, 6] } };
+  const AREA_ILV = [[1, 6], [6, 16], [16, 28], [28, 42], [42, 60]];
 
   // 秘宝（集めるとギルド全体が少し強くなる）
   IT.RELICS = [
@@ -40,6 +64,37 @@
   IT.RELIC = {};
   IT.RELICS.forEach((r) => (IT.RELIC[r.id] = r));
 
+  // 技（閃き・閃きの書で覚える。セットした技が効く）
+  IT.SKILLS = {
+    warrior: { 烈風斬: { atk: 8 }, '剛断・灯火割り': { crit: 8 }, 獅子奮迅撃: { atk: 6, succ: 2 }, 大地裂き: { great: 3 }, 十文字斬り: { crit: 6, atk: 4 }, 流星剣: { atk: 12 } },
+    mage: { 蒼炎の槍: { atk: 10 }, 星降りの陣: { great: 3 }, 雷鳴の輪舞: { crit: 8 }, 氷華結界: { succ: 4 }, 紅蓮の柱: { atk: 12 }, 月光砲: { find: 15 } },
+    thief: { 影縫い: { succ: 3 }, 月下千刃: { crit: 10 }, 燕返し: { speed: 6 }, 夜霧の舞: { gold: 15 }, 乱れ椿: { atk: 8 } },
+    cleric: { 聖灯の祈り: { succ: 5 }, 天使の鐘: { exp: 15 }, 光輪の裁き: { atk: 8 }, 浄化の陽: { great: 3 } },
+    archer: { 流星の矢: { crit: 8 }, 風穿ち: { speed: 6 }, 千里一射: { atk: 10 }, 五月雨撃ち: { atk: 6, crit: 4 }, 翠嵐の矢: { find: 15 } },
+  };
+  IT.skillFx = (cls, name) => (IT.SKILLS[cls] && IT.SKILLS[cls][name]) || null;
+  IT.skillSlots = (a) => (a.lv >= 20 ? 3 : 2);
+  IT.skillDesc = (cls, name, lv = 1) => {
+    const fx = IT.skillFx(cls, name);
+    if (!fx) return '';
+    return Object.entries(fx).map(([k, v]) => `${IT.STAT[k].name} +${fmtV(v * (1 + 0.25 * (lv - 1)))}%`).join('・');
+  };
+
+  // 持ち物
+  IT.CONS = {
+    hg2: { name: '疾風の砂時計', desc: '30分間、遠征と建設が2倍の速さで進む', icon: 'hourglass', rarity: 2, boost: { k: 'speed', mult: 2, sec: 1800 } },
+    hg3: { name: '神速の砂時計', desc: '30分間、遠征と建設が3倍の速さで進む', icon: 'hourglass3', rarity: 3, boost: { k: 'speed', mult: 3, sec: 1800 } },
+    finish: { name: '時短の巻物', desc: '遠征中のパーティ1組を、すぐに帰還させる', icon: 'scroll', rarity: 1, use: 'finish' },
+    goldx2: { name: '黄金の祝福', desc: '30分間、依頼で手に入るゴールドが2倍', icon: 'coinbag', rarity: 2, boost: { k: 'gold', mult: 2, sec: 1800 } },
+    luck: { name: '幸運の四つ葉', desc: '30分間、大成功率 +10%', icon: 'clover', rarity: 2, boost: { k: 'luck', add: 0.1, sec: 1800 } },
+    key: { name: '宝箱の鍵', desc: '黄金の宝箱を1回開けられる', icon: 'key', rarity: 2, use: 'key' },
+    stone: { name: '強化石', desc: '装備の強化に使う。いらない装備を分解しても手に入る', icon: 'stone', rarity: 0 },
+    book: { name: '閃きの書', desc: '冒険者1人が、新しい技を1つ閃く（覚えている技なら技Lvが上がる）', icon: 'book', rarity: 3, use: 'book' },
+    expbook: { name: '経験の書', desc: '冒険者1人に、たっぷり経験値を与える', icon: 'book2', rarity: 1, use: 'exp' },
+  };
+  IT.CONS_ORDER = ['hg3', 'hg2', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'stone'];
+  IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ' };
+
   // ---------------------------------------------------------------- 抽選
   const pickW = (rnd, arr, wf) => {
     let t = 0;
@@ -48,7 +103,6 @@
     for (const x of arr) { r -= wf(x); if (r <= 0) return x; }
     return arr[arr.length - 1];
   };
-  // 結果ごとのレア度の重み [N, R, SR, SSR, UR]
   const TABLE = {
     ok: [58, 30, 9, 2.6, 0.4],
     great: [26, 40, 23, 9, 2],
@@ -57,89 +111,140 @@
     chest: [40, 35, 18, 6, 1],
     free: [62, 30, 7, 1, 0],
   };
-  IT.dropChance = { fail: 0, ok: 0.2, great: 0.5, legend: 1 };
+  IT.dropChance = { fail: 0, ok: 0.28, great: 0.6, legend: 1 };
 
-  IT.rollRarity = function (rnd, kind, areaIdx = 0) {
+  IT.rollRarity = function (rnd, kind, areaIdx = 0, find = 0) {
     const w = TABLE[kind].slice();
-    // 奥のエリアほど少し良いものが出る
     for (let i = 0; i < areaIdx; i++) { w[0] *= 0.82; w[3] *= 1.08; w[4] *= 1.08; }
+    // レア発見：上のレア度ほど重みが増える
+    const f = 1 + find / 100;
+    w[2] *= f; w[3] *= f * f; w[4] *= f * f;
     return pickW(rnd, [0, 1, 2, 3, 4], (i) => w[i]);
   };
+  IT.ilvFor = (rnd, areaIdx) => {
+    const [a, b] = AREA_ILV[G.clamp(areaIdx | 0, 0, 4)];
+    return Math.round(G.lerp(a, b, rnd()));
+  };
+  IT.maxArea = () => {
+    const st = G.state;
+    return st ? Math.max(0, G.D.AREAS.filter((a) => a.rank <= st.rank).length - 1) : 0;
+  };
+  const fmtV = (v) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
+  IT.fmtV = fmtV;
+
+  function rollAffixes(rnd, n, ilv, rarity, slot) {
+    const main = IT.MAIN[slot].k;
+    const pool = IT.STAT_IDS.filter((k) => k !== main);
+    const out = [];
+    for (let i = 0; i < n && pool.length; i++) {
+      const k = pool.splice(Math.floor(rnd() * pool.length), 1)[0];
+      const S = IT.STAT[k];
+      const v = G.lerp(S.lo, S.hi, rnd()) * IT.RARITY[rarity].mul * (1 + 0.01 * (ilv - 1));
+      out.push({ k, v: Math.round(v * 10) / 10, q: (v / (S.hi * IT.RARITY[rarity].mul)) });
+    }
+    return out;
+  }
+  function nameOf(it) {
+    const base = IT.EQUIP[it.tid].names[it.rarity];
+    if (it.rarity === 0 || it.rarity === 4 || !it.affixes || !it.affixes.length) return base;
+    const top = it.affixes.slice().sort((a, b) => b.q - a.q)[0];
+    return IT.STAT[top.k].prefix + base;
+  }
+  IT.nameOf = nameOf;
 
   IT.make = function (rnd, rarity, opt = {}) {
     // 秘宝は SR 以上でまれに
     const relicPool = IT.RELICS.filter((r) => r.r <= rarity && r.r >= rarity - 1);
-    if (!opt.noRelic && relicPool.length && rarity >= 1 && rnd() < 0.18) {
+    if (!opt.noRelic && relicPool.length && rarity >= 2 && rnd() < 0.14) {
       const rel = relicPool[Math.floor(rnd() * relicPool.length)];
       return { uid: uid(), kind: 'relic', rid: rel.id, rarity: rel.r, name: rel.name };
     }
     let tid = opt.tid;
     if (!tid) {
-      const pool = IT.EQUIP_IDS.filter((id) => !opt.cls || IT.EQUIP[id].cls === opt.cls || !IT.EQUIP[id].cls);
+      let pool = IT.EQUIP_IDS;
+      if (opt.slot) pool = pool.filter((id) => IT.EQUIP[id].slot === opt.slot);
+      // 職業に合う武器が出やすい
+      if (opt.cls && rnd() < 0.6) {
+        const w = pool.filter((id) => IT.EQUIP[id].cls === opt.cls);
+        if (w.length) pool = w;
+      }
       tid = pool[Math.floor(rnd() * pool.length)];
     }
     const e = IT.EQUIP[tid];
-    return { uid: uid(), kind: 'equip', tid, rarity, name: e.names[rarity] };
+    const ilv = opt.ilv || IT.ilvFor(rnd, opt.area != null ? opt.area : IT.maxArea());
+    const it = { uid: uid(), kind: 'equip', tid, slot: e.slot, rarity, ilv, plus: 0, affixes: rollAffixes(rnd, rarity, ilv, rarity, e.slot), isNew: true };
+    it.name = nameOf(it);
+    return it;
   };
   let seq = 0;
-  function uid() { return 'i' + Date.now().toString(36) + (seq++).toString(36); }
+  function uid() { return 'i' + Date.now().toString(36) + (seq++).toString(36) + Math.floor(Math.random() * 1296).toString(36); }
 
-  // 依頼の戦利品（冒険譚の生成時に決める）
-  IT.rollDrop = function (rnd, tier, areaIdx, party) {
-    if (rnd() >= IT.dropChance[tier]) return null;
-    const rarity = IT.rollRarity(rnd, tier, areaIdx);
-    // パーティの誰かに合う武器が出やすい
+  // 依頼の戦利品
+  IT.rollDrop = function (rnd, tier, areaIdx, party, find = 0) {
+    if (rnd() >= Math.min(1, IT.dropChance[tier] * (1 + find / 200))) return null;
+    const rarity = IT.rollRarity(rnd, tier, areaIdx, find);
     const cls = party.length && rnd() < 0.55 ? party[Math.floor(rnd() * party.length)].cls : null;
-    return IT.make(rnd, rarity, { cls });
+    return IT.make(rnd, rarity, { cls, area: areaIdx });
+  };
+  // おまけ（魔晶石・持ち物）
+  IT.rollLoot = function (rnd, tier, areaIdx, find = 0) {
+    const out = [];
+    const f = 1 + find / 200;
+    const add = (id, n) => { const ex = out.find((x) => x.id === id); if (ex) ex.n += n; else out.push({ id, n }); };
+    const p = { fail: 0.05, ok: 0.22, great: 0.5, legend: 1 }[tier] * f;
+    if (rnd() < p) add('stone', 1 + Math.floor(rnd() * (2 + areaIdx)));
+    if (rnd() < p * 0.45) add('cry', [3, 5, 8, 10, 15][Math.floor(rnd() * 5)] + areaIdx * 2);
+    if (rnd() < p * 0.12) add(pickW(rnd, ['finish', 'expbook', 'hg2', 'goldx2', 'luck', 'key'], (k) => ({ finish: 4, expbook: 3, hg2: 1.5, goldx2: 1.5, luck: 1.5, key: 1 })[k]), 1);
+    if (tier === 'legend' && rnd() < 0.3) add(rnd() < 0.5 ? 'book' : 'hg3', 1);
+    return out;
   };
   IT.rollGift = function (rnd) {
     const rarity = IT.rollRarity(rnd, 'gift');
-    return IT.make(rnd, rarity);
+    return IT.make(rnd, rarity, { noRelic: true });
   };
 
-  // ---------------------------------------------------------------- 所持・効果
-  IT.add = function (item) {
-    const st = G.state;
-    if (!st.items) st.items = [];
-    if (item.kind === 'relic') {
-      if (!st.relics) st.relics = {};
-      if (st.relics[item.rid]) {
-        // 重複した秘宝は魔晶石に
-        const gem = [5, 10, 20, 40, 80][item.rarity];
-        st.crystals = (st.crystals || 0) + gem;
-        return { dup: true, crystals: gem };
-      }
-      st.relics[item.rid] = 1;
-      return { relic: true };
+  // ---------------------------------------------------------------- 能力の計算
+  IT.mainVal = function (it, adv) {
+    const m = IT.MAIN[it.slot];
+    let v = m.base[it.rarity] * (1 + 0.015 * (it.ilv - 1)) * (1 + 0.08 * (it.plus || 0));
+    if (adv && it.slot === 'weapon') {
+      const e = IT.EQUIP[it.tid];
+      if (e.cls && e.cls !== adv.cls) v *= 0.5;
     }
-    st.items.push(item);
-    if (st.items.length > 120) {
-      // 持ちきれないときは、装備していない一番弱いものを売る
-      const free = st.items.filter((x) => !IT.equippedBy(x.uid)).sort((a, b) => a.rarity - b.rarity);
-      const sold = free[0];
-      if (sold) { st.items.splice(st.items.indexOf(sold), 1); st.gold += IT.RARITY[sold.rarity].sell; }
-    }
-    st.dex = st.dex || {};
-    st.dex[item.tid + ':' + item.rarity] = 1;
-    G.emit('itemsChanged');
-    return { added: true };
+    return v;
   };
-  IT.equippedBy = function (uidv) {
-    return G.state.adv.find((a) => a.equip === uidv) || null;
+  IT.fits = (it, adv) => { const e = IT.EQUIP[it.tid]; return !e.cls || e.cls === adv.cls; };
+  // 1つの装備の能力 { atk, succ, ... }
+  IT.itemStats = function (it, adv) {
+    const s = {};
+    if (!it || it.kind !== 'equip') return s;
+    const m = IT.MAIN[it.slot];
+    s[m.k] = (s[m.k] || 0) + IT.mainVal(it, adv);
+    const pm = 1 + 0.04 * (it.plus || 0);
+    (it.affixes || []).forEach((a) => { s[a.k] = (s[a.k] || 0) + a.v * pm; });
+    return s;
   };
-  IT.get = (uidv) => (G.state.items || []).find((x) => x.uid === uidv) || null;
-  // 装備による戦力の倍率
+  // 冒険者の能力（装備＋技）
+  IT.advStats = function (adv) {
+    const s = {};
+    const addAll = (o, mul = 1) => Object.entries(o).forEach(([k, v]) => { s[k] = (s[k] || 0) + v * mul; });
+    IT.equipped(adv).forEach((it) => addAll(IT.itemStats(it, adv)));
+    (adv.skillSet || []).forEach((n) => {
+      const fx = IT.skillFx(adv.cls, n);
+      if (fx) addAll(fx, 1 + 0.25 * (((adv.sk || {})[n] || 1) - 1));
+    });
+    return s;
+  };
+  // パーティの合計（上限つき）
+  IT.partyStats = function (party) {
+    const s = {};
+    party.forEach((a) => Object.entries(IT.advStats(a)).forEach(([k, v]) => { if (k !== 'atk') s[k] = (s[k] || 0) + v; }));
+    Object.keys(s).forEach((k) => { s[k] = Math.min(IT.STAT[k].cap, s[k]); });
+    return s;
+  };
   IT.powMul = function (adv) {
-    let m = 1;
-    if (adv.equip) {
-      const it = IT.get(adv.equip);
-      if (it) {
-        const e = IT.EQUIP[it.tid];
-        const fit = !e.cls || e.cls === adv.cls ? 1 : 0.5;
-        m += IT.RARITY[it.rarity].bonus * fit;
-      }
-    }
-    return m * (1 + IT.relicFx('pow'));
+    const st = IT.advStats(adv);
+    return (1 + (st.atk || 0) / 100) * (1 + IT.relicFx('pow'));
   };
   IT.relicFx = function (key) {
     const st = G.state;
@@ -148,41 +253,242 @@
     Object.keys(st.relics).forEach((id) => { const r = IT.RELIC[id]; if (r && r.fx[key]) v += r.fx[key]; });
     return v;
   };
-  IT.equip = function (advId, uidv) {
+  // 装備の点数（おまかせ装備・比較用）
+  IT.score = function (it, adv) {
+    const s = IT.itemStats(it, adv);
+    const w = { atk: 1, crit: 0.35, succ: 2.2, great: 2.4, speed: 0.9, gold: 0.5, exp: 0.4, find: 0.35, mat: 0.3 };
+    return Object.entries(s).reduce((x, [k, v]) => x + v * (w[k] || 0.3), 0);
+  };
+
+  // ---------------------------------------------------------------- 所持
+  IT.get = (u) => (G.state.items || []).find((x) => x.uid === u) || null;
+  IT.equipped = function (adv) {
+    const eq = adv.eq || {};
+    return IT.SLOTS.map((s) => (eq[s] ? IT.get(eq[s]) : null)).filter(Boolean);
+  };
+  IT.equippedBy = function (u) {
+    return G.state.adv.find((a) => a.eq && IT.SLOTS.some((s) => a.eq[s] === u)) || null;
+  };
+  IT.add = function (item) {
+    const st = G.state;
+    if (!st.items) st.items = [];
+    if (item.kind === 'relic') {
+      if (!st.relics) st.relics = {};
+      if (st.relics[item.rid]) {
+        const gem = [5, 10, 20, 40, 80][item.rarity];
+        st.crystals = (st.crystals || 0) + gem;
+        return { dup: true, crystals: gem };
+      }
+      st.relics[item.rid] = 1;
+      G.emit('itemsChanged');
+      return { relic: true };
+    }
+    if (item.kind === 'cons') { IT.addCons(item.id, item.n || 1); return { cons: true }; }
+    st.items.push(item);
+    let auto = null;
+    if (st.items.length > 150) {
+      // 持ちきれないときは、装備していない・鍵のない一番弱いものを分解
+      const free = st.items.filter((x) => !x.lock && !IT.equippedBy(x.uid) && x !== item).sort((a, b) => a.rarity - b.rarity || a.ilv - b.ilv);
+      if (free[0]) auto = IT.dismantle(free[0].uid, true);
+    }
+    st.dex = st.dex || {};
+    st.dex[item.tid + ':' + item.rarity] = 1;
+    G.emit('itemsChanged');
+    return { added: true, auto };
+  };
+  IT.equip = function (advId, u, slot) {
     const st = G.state;
     const a = st.adv.find((x) => x.id === advId);
     if (!a) return false;
-    const other = uidv ? IT.equippedBy(uidv) : null;
-    if (other && other !== a) other.equip = null;
-    a.equip = uidv || null;
+    a.eq = a.eq || {};
+    if (!u) { if (slot) a.eq[slot] = null; G.emit('itemsChanged'); return true; }
+    const it = IT.get(u);
+    if (!it) return false;
+    const other = IT.equippedBy(u);
+    if (other && other !== a) other.eq[it.slot] = null;
+    a.eq[it.slot] = u;
+    it.isNew = false;
     G.emit('itemsChanged');
     return true;
   };
-  IT.sell = function (uidv) {
+  IT.sell = function (u) {
     const st = G.state;
-    const it = IT.get(uidv);
-    if (!it || IT.equippedBy(uidv)) return 0;
+    const it = IT.get(u);
+    if (!it || it.lock || IT.equippedBy(u)) return 0;
     st.items.splice(st.items.indexOf(it), 1);
-    const g = IT.RARITY[it.rarity].sell;
+    const g = Math.round(IT.RARITY[it.rarity].sell * (1 + it.ilv / 20) * (1 + 0.3 * (it.plus || 0)));
     st.gold += g;
     G.emit('itemsChanged');
     return g;
   };
+  IT.dismantleValue = (it) => IT.RARITY[it.rarity].stone + (it.plus || 0) * 2 + Math.floor(it.ilv / 15);
+  IT.dismantle = function (u, silent) {
+    const st = G.state;
+    const it = IT.get(u);
+    if (!it || it.lock || IT.equippedBy(u)) return 0;
+    st.items.splice(st.items.indexOf(it), 1);
+    const n = IT.dismantleValue(it);
+    IT.addCons('stone', n);
+    if (!silent) G.emit('itemsChanged');
+    return n;
+  };
+  IT.bulkDismantle = function (maxRarity) {
+    const st = G.state;
+    const list = (st.items || []).filter((x) => x.rarity <= maxRarity && !x.lock && !IT.equippedBy(x.uid));
+    let n = 0;
+    list.forEach((x) => { n += IT.dismantle(x.uid, true); });
+    G.emit('itemsChanged');
+    return { count: list.length, stones: n };
+  };
 
-  // ---------------------------------------------------------------- 宝物庫の宝箱（ガチャ）
+  // ---------------------------------------------------------------- 強化
+  IT.MAX_PLUS = 10;
+  IT.enhanceCost = function (it) {
+    const p = it.plus || 0;
+    return { gold: Math.round(30 * (it.rarity + 1) * (1 + it.ilv / 12) * Math.pow(1.55, p)), stone: 1 + p + it.rarity };
+  };
+  IT.enhanceRate = (it) => [1, 1, 1, 1, 1, 0.9, 0.8, 0.7, 0.6, 0.5][it.plus || 0] || 0;
+  IT.enhance = function (u) {
+    const st = G.state;
+    const it = IT.get(u);
+    if (!it || (it.plus || 0) >= IT.MAX_PLUS) return { ok: false, why: 'max' };
+    const c = IT.enhanceCost(it);
+    if (st.gold < c.gold) return { ok: false, why: 'gold' };
+    if (IT.cons('stone') < c.stone) return { ok: false, why: 'stone' };
+    st.gold -= c.gold;
+    IT.addCons('stone', -c.stone);
+    const success = Math.random() < IT.enhanceRate(it);
+    if (success) it.plus = (it.plus || 0) + 1;
+    st.stats.enhance = (st.stats.enhance || 0) + 1;
+    G.emit('itemsChanged');
+    return { ok: true, success, plus: it.plus };
+  };
+
+  // おまかせ装備：戦力の高い人から、空いている一番いい装備を
+  IT.autoEquip = function () {
+    const st = G.state;
+    const advs = st.adv.slice().sort((a, b) => G.sim.power(b) - G.sim.power(a));
+    let changed = 0;
+    advs.forEach((a) => {
+      a.eq = a.eq || {};
+      IT.SLOTS.forEach((slot) => {
+        const cur = a.eq[slot] ? IT.get(a.eq[slot]) : null;
+        let best = cur, bs = cur ? IT.score(cur, a) : -1;
+        st.items.forEach((it) => {
+          if (it.slot !== slot) return;
+          const who = IT.equippedBy(it.uid);
+          if (who && who !== a) return;
+          const sc = IT.score(it, a);
+          if (sc > bs + 0.01) { best = it; bs = sc; }
+        });
+        if (best && best !== cur) { a.eq[slot] = best.uid; best.isNew = false; changed++; }
+      });
+    });
+    if (changed) G.emit('itemsChanged');
+    return changed;
+  };
+
+  // ---------------------------------------------------------------- 技
+  IT.learnSkill = function (adv, name) {
+    adv.sk = adv.sk || {};
+    adv.skillSet = adv.skillSet || [];
+    const had = !!adv.sk[name];
+    adv.sk[name] = Math.min(5, (adv.sk[name] || 0) + 1);
+    if (!had && adv.skillSet.length < IT.skillSlots(adv)) adv.skillSet.push(name);
+    G.emit('itemsChanged');
+    return { lv: adv.sk[name], up: had };
+  };
+  IT.toggleSkill = function (adv, name) {
+    adv.skillSet = adv.skillSet || [];
+    const i = adv.skillSet.indexOf(name);
+    if (i >= 0) adv.skillSet.splice(i, 1);
+    else {
+      if (adv.skillSet.length >= IT.skillSlots(adv)) return false;
+      adv.skillSet.push(name);
+    }
+    G.emit('itemsChanged');
+    return true;
+  };
+  IT.unknownSkills = (adv) => Object.keys(IT.SKILLS[adv.cls] || {}).filter((n) => !(adv.sk || {})[n]);
+
+  // ---------------------------------------------------------------- 持ち物・ブースト
+  IT.cons = (id) => ((G.state.bag || {})[id] || 0);
+  IT.addCons = function (id, n) {
+    const st = G.state;
+    if (id === 'cry') { st.crystals = (st.crystals || 0) + n; return; }
+    st.bag = st.bag || {};
+    st.bag[id] = Math.max(0, (st.bag[id] || 0) + n);
+    G.emit('itemsChanged');
+  };
+  IT.boost = function (k) {
+    const b = (G.state.boosts || {})[k];
+    return b && b.until > G.now() ? b : null;
+  };
+  IT.speedMul = () => { const b = IT.boost('speed'); return b ? b.mult : 1; };
+  IT.useBoost = function (id) {
+    const st = G.state;
+    const c = IT.CONS[id];
+    if (!c || !c.boost || IT.cons(id) <= 0) return false;
+    st.boosts = st.boosts || {};
+    const now = G.now();
+    const cur = IT.boost(c.boost.k);
+    const rest = cur ? cur.until - now : 0;
+    st.boosts[c.boost.k] = { mult: Math.max(c.boost.mult || 1, cur ? cur.mult : 1), add: c.boost.add || 0, from: cur ? cur.from : now, until: now + rest + c.boost.sec, src: id };
+    IT.addCons(id, -1);
+    G.emit('boost', c.boost.k);
+    return true;
+  };
+  // 倍速：前回からの経過時間のうち、倍速中だったぶんだけ遠征と建設を前に進める
+  IT.applySpeed = function (now, s = G.state) {
+    const b = s.boosts && s.boosts.speed;
+    const cur = s.speedCursor || now;
+    s.speedCursor = now;
+    if (!b || b.mult <= 1) return;
+    const ov = Math.max(0, Math.min(now, b.until) - Math.max(cur, b.from));
+    if (ov <= 0) return;
+    const extra = ov * (b.mult - 1);
+    s.active.forEach((ex) => { ex.endAt -= extra; ex.startAt -= extra; });
+    if (s.building) s.building.endAt -= extra;
+  };
+  IT.finishOne = function (exId) {
+    const st = G.state;
+    const ex = st.active.find((e) => e.q.id === exId) || st.active.slice().sort((a, b) => a.endAt - b.endAt)[0];
+    if (!ex || IT.cons('finish') <= 0) return null;
+    const now = G.now();
+    const d = ex.endAt - now;
+    ex.endAt = now - 0.01;
+    ex.startAt -= Math.max(0, d);
+    IT.addCons('finish', -1);
+    return ex;
+  };
+
+  // ---------------------------------------------------------------- 黄金の宝箱（ガチャ）
   IT.CHEST_COST = 30;
-  IT.CHEST5_COST = 140;
+  IT.CHEST10_COST = 280;
   IT.FREE_INTERVAL = 4 * 3600;
-  IT.PITY = 30; // 30回で SSR 以上が確定
+  IT.PITY = 30;
   IT.canFree = () => G.now() - (G.state.freeChestAt || 0) >= IT.FREE_INTERVAL;
+  // ガチャの中身：装備（ほとんど）と、ときどき持ち物
+  const CONS_BY_RANK = [[['stone', 6], ['finish', 1], ['expbook', 1]], [['stone', 12], ['finish', 2], ['expbook', 2]], [['hg2', 1], ['goldx2', 1], ['luck', 1], ['key', 1]], [['hg3', 1], ['book', 1]], [['book', 2]]];
+  function chestOne(rnd, r) {
+    if (r <= 3 && rnd() < 0.18) {
+      const opts = CONS_BY_RANK[r];
+      const [id, n] = opts[Math.floor(rnd() * opts.length)];
+      return { uid: uid(), kind: 'cons', id, n, rarity: Math.max(r, IT.CONS[id].rarity), name: IT.CONS[id].name + (n > 1 ? ` ×${n}` : '') };
+    }
+    return IT.make(rnd, r);
+  }
   IT.openChest = function (kind) {
     const st = G.state;
-    const n = kind === 'five' ? 5 : 1;
+    const n = kind === 'ten' ? 10 : 1;
     if (kind === 'free') {
       if (!IT.canFree()) return null;
       st.freeChestAt = G.now();
+    } else if (kind === 'key') {
+      if (IT.cons('key') <= 0) return null;
+      IT.addCons('key', -1);
     } else {
-      const cost = kind === 'five' ? IT.CHEST5_COST : IT.CHEST_COST;
+      const cost = kind === 'ten' ? IT.CHEST10_COST : IT.CHEST_COST;
       if ((st.crystals || 0) < cost) return null;
       st.crystals -= cost;
     }
@@ -192,13 +498,43 @@
       st.pity = (st.pity || 0) + (kind === 'free' ? 0 : 1);
       let r = IT.rollRarity(rnd, kind === 'free' ? 'free' : 'chest');
       if (kind !== 'free' && st.pity >= IT.PITY && r < 3) r = 3;
-      // 5連の最後は SR 以上
-      if (kind === 'five' && i === 4 && !out.some((x) => x.rarity >= 2) && r < 2) r = 2;
+      if (kind === 'ten' && i === n - 1 && !out.some((x) => x.rarity >= 2) && r < 2) r = 2;
       if (r >= 3) st.pity = 0;
-      const item = IT.make(rnd, r);
-      out.push(item);
+      out.push(chestOne(rnd, r));
     }
     st.stats.chests = (st.stats.chests || 0) + n;
     return out;
+  };
+
+  // ---------------------------------------------------------------- 古いセーブの変換
+  IT.migrate = function (st) {
+    const rnd = Math.random;
+    (st.items || []).forEach((it) => {
+      if (it.kind !== 'equip') return;
+      if (!it.slot) {
+        const e = IT.EQUIP[it.tid] || IT.EQUIP.sword;
+        if (!IT.EQUIP[it.tid]) it.tid = 'sword';
+        it.slot = e.slot;
+        it.ilv = it.ilv || 1 + it.rarity * 6;
+        it.plus = it.plus || 0;
+        it.affixes = it.affixes || rollAffixes(rnd, it.rarity, it.ilv, it.rarity, it.slot);
+        it.name = nameOf(it);
+      }
+    });
+    st.adv.forEach((a) => {
+      if (!a.eq) {
+        a.eq = {};
+        if (a.equip) { const it = (st.items || []).find((x) => x.uid === a.equip); if (it && it.slot) a.eq[it.slot] = it.uid; }
+      }
+      delete a.equip;
+      if (!a.sk) {
+        a.sk = {};
+        (a.skills || []).forEach((n) => { a.sk[n] = 1; });
+        a.skillSet = (a.skills || []).slice(0, 2);
+      }
+      delete a.skills;
+    });
+    st.bag = st.bag || {};
+    st.boosts = st.boosts || {};
   };
 })();

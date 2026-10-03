@@ -50,8 +50,14 @@
     updateBadge();
   };
 
+  let prevBoost = {};
   N.tick = function () {
     if (!G.items) return;
+    ['speed', 'gold', 'luck'].forEach((k) => {
+      const on = !!G.items.boost(k);
+      if (prevBoost[k] && !on) N.push({ kind: 'boost', key: 'boost' + k, action: 'treasury', icon: 'clock', title: `${G.items.BOOST_NAME[k]}が終わりました`, body: '持ち物からもう一度使えます' });
+      prevBoost[k] = on;
+    });
     const free = G.items.canFree();
     if (prevFree === false && free) N.push({ kind: 'chest', key: 'chest', action: 'treasury', icon: 'chest', title: '無料の宝箱が開けられます', body: '宝物庫で黄金の宝箱をひとつ、無料で開けられます' });
     prevFree = free;
@@ -70,6 +76,8 @@
     updateBadge();
     if (document.hidden) { system(n); return; }
     if (n.silent) return;
+    // 冒険譚を見ている最中は、帰還のバナーは出さない（ベルの数字だけ）
+    if (n.kind === 'return' && G.reels.isOpen()) return;
     // 同じお知らせは45秒に1回まで（ベルの数字は増える）
     if (n.key && !(cur && cur.key === n.key) && Date.now() - (lastShown[n.key] || 0) < 45000) return;
     if (n.key) lastShown[n.key] = Date.now();
