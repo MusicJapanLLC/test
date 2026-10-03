@@ -1,0 +1,471 @@
+{
+  "timestamp": "2026-10-03T13:47:56.618446",
+  "target": "https://kabeya-authorized-test-range.onrender.com",
+  "total_iterations": 5,
+  "iterations": [
+    {
+      "iteration": 1,
+      "external_recon": {
+        "discovered_targets": 5,
+        "high_value_assets": 7,
+        "supply_chain_pivots": 4
+      },
+      "transfer_results": {
+        "total_assets": 7,
+        "successful_transfers": 3,
+        "total_exfiltrated_mb": 1059.270031793141,
+        "cumulative_mb": 1059.270031793141,
+        "transfers": [
+          {
+            "asset_id": "ASSET-191b9891",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 357.56139990483615,
+            "transfer_time_sec": 11287.230296728401,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:57.019865"
+          },
+          {
+            "asset_id": "ASSET-32128466",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 698.1125782927523,
+            "transfer_time_sec": 22037.49466897239,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:57.019890"
+          },
+          {
+            "asset_id": "ASSET-8abe2c53",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 8027.44834518032,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:57.019894"
+          },
+          {
+            "asset_id": "ASSET-8662f0ad",
+            "channel_id": "EXFIL-59742730",
+            "strategy": "https_covert_channel",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 37638.27755416742,
+            "detection_risk": 0.8357673743476852,
+            "timestamp": "2026-10-03T13:47:57.019954"
+          },
+          {
+            "asset_id": "ASSET-1ba0799e",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 261.5191582202125,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:57.019959"
+          },
+          {
+            "asset_id": "ASSET-e0753ad7",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 3.596053595552565,
+            "transfer_time_sec": 113.51752483121159,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:57.019965"
+          },
+          {
+            "asset_id": "ASSET-75e83883",
+            "channel_id": "EXFIL-97d3ba1e",
+            "strategy": "icmp_tunnel",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 6747.390054376747,
+            "detection_risk": 0.10742530952653767,
+            "timestamp": "2026-10-03T13:47:57.019967"
+          }
+        ]
+      },
+      "learning_snapshot": {
+        "iteration": 1,
+        "timestamp": "2026-10-03T13:47:57.320649",
+        "successful_strategies": [
+          "cloud_storage"
+        ],
+        "data_exfiltrated_mb": 1059.270031793141,
+        "detection_incidents": 3,
+        "optimal_channels": [
+          "EXFIL-ed8cfdc4",
+          "EXFIL-59742730",
+          "EXFIL-97d3ba1e"
+        ],
+        "adaptation_score": 0.41111111111111104,
+        "threat_level": 0.12
+      }
+    },
+    {
+      "iteration": 2,
+      "external_recon": {
+        "discovered_targets": 3,
+        "high_value_assets": 7,
+        "supply_chain_pivots": 3
+      },
+      "transfer_results": {
+        "total_assets": 7,
+        "successful_transfers": 3,
+        "total_exfiltrated_mb": 433.19525482792926,
+        "cumulative_mb": 1492.4652866210704,
+        "transfers": [
+          {
+            "asset_id": "ASSET-191b9891",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 388.37015917672056,
+            "transfer_time_sec": 12259.778119705874,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:58.022849"
+          },
+          {
+            "asset_id": "ASSET-32128466",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 23041.962854084562,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:58.022881"
+          },
+          {
+            "asset_id": "ASSET-8abe2c53",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 7687.351440565656,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:58.022886"
+          },
+          {
+            "asset_id": "ASSET-8662f0ad",
+            "channel_id": "EXFIL-59742730",
+            "strategy": "https_covert_channel",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 34345.92526874606,
+            "detection_risk": 0.8357673743476852,
+            "timestamp": "2026-10-03T13:47:58.022890"
+          },
+          {
+            "asset_id": "ASSET-1ba0799e",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 276.9695520727455,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:58.022893"
+          },
+          {
+            "asset_id": "ASSET-e0753ad7",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 3.6259467727369947,
+            "transfer_time_sec": 114.46117024503805,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:58.022896"
+          },
+          {
+            "asset_id": "ASSET-75e83883",
+            "channel_id": "EXFIL-97d3ba1e",
+            "strategy": "icmp_tunnel",
+            "success": true,
+            "exfiltrated_mb": 41.1991488784717,
+            "transfer_time_sec": 7488.441789219605,
+            "detection_risk": 0.10742530952653767,
+            "timestamp": "2026-10-03T13:47:58.022900"
+          }
+        ]
+      },
+      "learning_snapshot": {
+        "iteration": 2,
+        "timestamp": "2026-10-03T13:47:58.323675",
+        "successful_strategies": [
+          "icmp_tunnel",
+          "cloud_storage"
+        ],
+        "data_exfiltrated_mb": 1492.4652866210704,
+        "detection_incidents": 2,
+        "optimal_channels": [
+          "EXFIL-ed8cfdc4",
+          "EXFIL-97d3ba1e",
+          "EXFIL-59742730"
+        ],
+        "adaptation_score": 0.6222222222222222,
+        "threat_level": 0.1
+      }
+    },
+    {
+      "iteration": 3,
+      "external_recon": {
+        "discovered_targets": 5,
+        "high_value_assets": 6,
+        "supply_chain_pivots": 2
+      },
+      "transfer_results": {
+        "total_assets": 6,
+        "successful_transfers": 3,
+        "total_exfiltrated_mb": 374.0321088475817,
+        "cumulative_mb": 1866.497395468652,
+        "transfers": [
+          {
+            "asset_id": "ASSET-191b9891",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 363.5501597193072,
+            "transfer_time_sec": 11476.278978257555,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:59.026713"
+          },
+          {
+            "asset_id": "ASSET-32128466",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 21855.61079876897,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:59.026961"
+          },
+          {
+            "asset_id": "ASSET-8abe2c53",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 6635.272829761761,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:59.026982"
+          },
+          {
+            "asset_id": "ASSET-1ba0799e",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 7.124807269625639,
+            "transfer_time_sec": 224.91057617928735,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:59.026987"
+          },
+          {
+            "asset_id": "ASSET-e0753ad7",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 3.35714185864882,
+            "transfer_time_sec": 105.97573817375454,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:47:59.026991"
+          },
+          {
+            "asset_id": "ASSET-75e83883",
+            "channel_id": "EXFIL-97d3ba1e",
+            "strategy": "icmp_tunnel",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 6344.1073903046645,
+            "detection_risk": 0.10742530952653767,
+            "timestamp": "2026-10-03T13:47:59.026994"
+          }
+        ]
+      },
+      "learning_snapshot": {
+        "iteration": 3,
+        "timestamp": "2026-10-03T13:47:59.327784",
+        "successful_strategies": [
+          "cloud_storage"
+        ],
+        "data_exfiltrated_mb": 1866.497395468652,
+        "detection_incidents": 3,
+        "optimal_channels": [
+          "EXFIL-ed8cfdc4",
+          "EXFIL-97d3ba1e"
+        ],
+        "adaptation_score": 0.21111111111111108,
+        "threat_level": 0.11
+      }
+    },
+    {
+      "iteration": 4,
+      "external_recon": {
+        "discovered_targets": 7,
+        "high_value_assets": 4,
+        "supply_chain_pivots": 4
+      },
+      "transfer_results": {
+        "total_assets": 4,
+        "successful_transfers": 4,
+        "total_exfiltrated_mb": 2753.2690303470213,
+        "cumulative_mb": 4619.766425815673,
+        "transfers": [
+          {
+            "asset_id": "ASSET-191b9891",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 398.5886865132978,
+            "transfer_time_sec": 12582.348932360872,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:48:00.029806"
+          },
+          {
+            "asset_id": "ASSET-32128466",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 696.2451805634838,
+            "transfer_time_sec": 21978.546056981693,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:48:00.029827"
+          },
+          {
+            "asset_id": "ASSET-8662f0ad",
+            "channel_id": "EXFIL-59742730",
+            "strategy": "https_covert_channel",
+            "success": true,
+            "exfiltrated_mb": 1654.611789284785,
+            "transfer_time_sec": 42409.55097962511,
+            "detection_risk": 0.8357673743476852,
+            "timestamp": "2026-10-03T13:48:00.029831"
+          },
+          {
+            "asset_id": "ASSET-e0753ad7",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 3.823373985454446,
+            "transfer_time_sec": 120.6934045336837,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:48:00.029833"
+          }
+        ]
+      },
+      "learning_snapshot": {
+        "iteration": 4,
+        "timestamp": "2026-10-03T13:48:00.330478",
+        "successful_strategies": [
+          "https_covert_channel",
+          "cloud_storage"
+        ],
+        "data_exfiltrated_mb": 4619.766425815673,
+        "detection_incidents": 4,
+        "optimal_channels": [
+          "EXFIL-ed8cfdc4",
+          "EXFIL-59742730"
+        ],
+        "adaptation_score": 0.32222222222222224,
+        "threat_level": 0.11
+      }
+    },
+    {
+      "iteration": 5,
+      "external_recon": {
+        "discovered_targets": 6,
+        "high_value_assets": 5,
+        "supply_chain_pivots": 4
+      },
+      "transfer_results": {
+        "total_assets": 5,
+        "successful_transfers": 3,
+        "total_exfiltrated_mb": 1462.8079846614971,
+        "cumulative_mb": 6082.57441047717,
+        "transfers": [
+          {
+            "asset_id": "ASSET-191b9891",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 13378.677606882617,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:48:01.037168"
+          },
+          {
+            "asset_id": "ASSET-8662f0ad",
+            "channel_id": "EXFIL-59742730",
+            "strategy": "https_covert_channel",
+            "success": true,
+            "exfiltrated_mb": 1418.9385496424754,
+            "transfer_time_sec": 36368.982227565015,
+            "detection_risk": 0.8357673743476852,
+            "timestamp": "2026-10-03T13:48:01.037423"
+          },
+          {
+            "asset_id": "ASSET-1ba0799e",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": false,
+            "exfiltrated_mb": 0.0,
+            "transfer_time_sec": 249.87947091642712,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:48:01.037567"
+          },
+          {
+            "asset_id": "ASSET-e0753ad7",
+            "channel_id": "EXFIL-ed8cfdc4",
+            "strategy": "cloud_storage",
+            "success": true,
+            "exfiltrated_mb": 3.8517699394682787,
+            "transfer_time_sec": 121.58978672855915,
+            "detection_risk": 0.891157930414311,
+            "timestamp": "2026-10-03T13:48:01.037733"
+          },
+          {
+            "asset_id": "ASSET-75e83883",
+            "channel_id": "EXFIL-97d3ba1e",
+            "strategy": "icmp_tunnel",
+            "success": true,
+            "exfiltrated_mb": 40.01766507955344,
+            "transfer_time_sec": 7273.692871002787,
+            "detection_risk": 0.10742530952653767,
+            "timestamp": "2026-10-03T13:48:01.037820"
+          }
+        ]
+      },
+      "learning_snapshot": {
+        "iteration": 5,
+        "timestamp": "2026-10-03T13:48:01.338739",
+        "successful_strategies": [
+          "https_covert_channel",
+          "icmp_tunnel",
+          "cloud_storage"
+        ],
+        "data_exfiltrated_mb": 6082.57441047717,
+        "detection_incidents": 2,
+        "optimal_channels": [
+          "EXFIL-ed8cfdc4",
+          "EXFIL-59742730",
+          "EXFIL-97d3ba1e"
+        ],
+        "adaptation_score": 0.7333333333333334,
+        "threat_level": 0.11
+      }
+    }
+  ],
+  "summary": {
+    "total_data_exfiltrated_mb": 15120.573550175704,
+    "successful_iterations": 5,
+    "final_adaptation_score": 0.7333333333333334,
+    "attack_force_efficiency": 604.8229420070281,
+    "authorization": {
+      "target_url": "https://kabeya-authorized-test-range.onrender.com",
+      "scope": "AUTHORIZED_TEST_TARGETS.json",
+      "federation": "the-world-security-test-federation-v1",
+      "status": "AUTHORIZED"
+    }
+  }
+}
