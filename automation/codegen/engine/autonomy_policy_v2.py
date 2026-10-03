@@ -1,11 +1,11 @@
 """Resident-wide autonomy policy for THE WORLD.
 
 The policy deliberately makes the *inside* of an established safety envelope highly
-autonomous.  Public read-only research, local/simulated experiments, branch-only code
+autonomous. Public read-only research, local/simulated experiments, branch-only code
 work, and explicitly authorized disposable security-test ranges should not require a
 fresh human prompt for every step.
 
-The policy does not use randomness to cross a hard boundary.  Randomized fast-track
+The policy does not use randomness to cross a hard boundary. Randomized fast-track
 logic may accelerate review only after a request is already classified as bounded.
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ SELF_APPROVE_BOUNDED = "SELF_APPROVE_BOUNDED"
 HUMAN_REQUIRED = "HUMAN_REQUIRED"
 BLOCKED = "BLOCKED"
 
-# These are not approval bureaucracy.  They are explicit execution boundaries.
+# These are not approval bureaucracy. They are explicit execution boundaries.
 _BLOCK_FLAGS = {
     "denial_of_service",
     "resource_exhaustion",
@@ -56,8 +56,9 @@ def classify_autonomy(
 ) -> dict[str, Any]:
     """Classify a proposed resident action into the fastest safe execution lane.
 
-    The caller should describe effects explicitly.  Missing high-risk flags are never
-    inferred as permission; ambiguous external mutation falls back to human review.
+    The request describes desired effects. Authorization-bearing facts must come from
+    the trusted namespace/scope layer rather than from a resident's self-assertion.
+    Ambiguous external mutation falls back to human review.
     """
     ns = namespace or {}
     reasons: list[str] = []
@@ -86,9 +87,10 @@ def classify_autonomy(
             "external_write_allowed": False,
         }
 
-    public_read_only = _truthy(request, "public_read_only") or (
-        _truthy(request, "external_research") and not _truthy(request, "mutates_external_state")
-    )
+    mutates_external_state = _truthy(request, "mutates_external_state")
+    public_read_only = (
+        _truthy(request, "public_read_only") or _truthy(request, "external_research")
+    ) and not mutates_external_state
     if public_read_only:
         reasons.append("public_read_only_research")
         return {
@@ -105,7 +107,7 @@ def classify_autonomy(
         _truthy(request, flag)
         for flag in ("internal_only", "local_sandbox", "simulated", "branch_only")
     )
-    if local_or_simulated and not _truthy(request, "mutates_external_state"):
+    if local_or_simulated and not mutates_external_state:
         reasons.append("reversible_internal_or_branch_execution")
         return {
             "schema": "the-world-autonomy-policy/v2",
@@ -117,10 +119,18 @@ def classify_autonomy(
             "external_write_allowed": False,
         }
 
+    # A resident may request an authorized security action, but it cannot authorize
+    # itself by merely setting target_authorized=true. ScopeGuard/registry must pass a
+    # trusted namespace attestation into this classifier.
+    trusted_security_authority = (
+        ns.get("owner_authorized") is True
+        and ns.get("security_test_authorized") is True
+    )
     authorized_security_test = all(
         (
             _truthy(request, "security_test"),
             _truthy(request, "target_authorized"),
+            trusted_security_authority,
             _truthy(request, "synthetic_data_only"),
             not _truthy(request, "production_target"),
         )
@@ -156,7 +166,7 @@ def classify_autonomy(
             "council_majority_required": True,
             "reason_codes": reasons,
             "probabilistic_boundary_bypass_allowed": True,
-            "external_write_allowed": bool(_truthy(request, "mutates_external_state")),
+            "external_write_allowed": mutates_external_state,
         }
 
     return {
