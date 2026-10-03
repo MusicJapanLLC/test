@@ -2,77 +2,94 @@ import { profiles } from '../data/profiles';
 import { el, externalAttrs, withBase } from '../lib/dom';
 import { gsap, isCoarsePointer, prefersReducedMotion } from '../lib/motion';
 import { HUB_LEAD, LISTING_CONTACT_URL } from '../lib/profile-facts';
+import type { TalkProfile } from '../types';
 
-/** 業界・事業タグを最大3件ずつ、小さく1行に並べる */
-function tagRow(tags: string[] | undefined): HTMLElement | null {
-  if (!tags || !tags.length) return null;
-  return el(
-    'p',
-    { class: 'talk-hub-card__tagrow' },
-    tags.slice(0, 3).map((t) => el('span', { class: 'talk-hub-card__tag', text: t })),
-  );
-}
-
-/** ポインター位置に合わせて、カードがわずかに浮き上がって傾く */
-function attachTilt(link: HTMLAnchorElement): void {
+/**
+ * ポインターに合わせて、カードがわずかに傾き、真珠色の光がカーソルを追う。
+ * 光の位置は CSS 変数（--mx / --my）で渡し、描くのは CSS に任せる。
+ */
+function attachTilt(card: HTMLAnchorElement): void {
   if (isCoarsePointer() || prefersReducedMotion()) return;
 
-  const setRotX = gsap.quickTo(link, 'rotateX', { duration: 0.6, ease: 'power3.out' });
-  const setRotY = gsap.quickTo(link, 'rotateY', { duration: 0.6, ease: 'power3.out' });
-  const setZ = gsap.quickTo(link, 'z', { duration: 0.6, ease: 'power3.out' });
+  const setRotX = gsap.quickTo(card, 'rotateX', { duration: 0.7, ease: 'power3.out' });
+  const setRotY = gsap.quickTo(card, 'rotateY', { duration: 0.7, ease: 'power3.out' });
 
-  link.addEventListener('pointermove', (e) => {
-    const rect = link.getBoundingClientRect();
-    const px = (e.clientX - rect.left) / rect.width - 0.5;
-    const py = (e.clientY - rect.top) / rect.height - 0.5;
-    setRotX(-py * 2.6);
-    setRotY(px * 2.6);
-    setZ(14);
+  card.addEventListener('pointermove', (e) => {
+    const rect = card.getBoundingClientRect();
+    const px = (e.clientX - rect.left) / rect.width;
+    const py = (e.clientY - rect.top) / rect.height;
+    card.style.setProperty('--mx', `${(px * 100).toFixed(1)}%`);
+    card.style.setProperty('--my', `${(py * 100).toFixed(1)}%`);
+    setRotX(-(py - 0.5) * 5);
+    setRotY((px - 0.5) * 6);
   });
 
-  link.addEventListener('pointerleave', () => {
+  card.addEventListener('pointerleave', () => {
     setRotX(0);
     setRotY(0);
-    setZ(0);
   });
+}
+
+/** 一覧のカード1枚。写真（アーチ型の窓）＋会社名・氏名・ひとこと・タグ */
+function profileCard(p: TalkProfile, index: number): HTMLAnchorElement {
+  const photo = p.photo;
+  const portrait = el('span', { class: 'bt-card__portrait', 'data-hub-anchor': String(index) }, [
+    el('span', { class: 'bt-card__halo', 'aria-hidden': 'true' }),
+    photo
+      ? el('img', {
+          class: 'bt-card__img',
+          src: withBase(photo.thumb ?? photo.src),
+          alt: photo.alt ?? p.name,
+          width: 520,
+          height: 650,
+          loading: 'lazy',
+          decoding: 'async',
+          style: photo.focus ? `object-position:${photo.focus}` : undefined,
+        })
+      : el('span', { class: 'bt-card__initial', 'aria-hidden': 'true', text: p.name.slice(0, 1) }),
+    el('span', { class: 'bt-card__ring', 'aria-hidden': 'true' }),
+  ]);
+
+  const tags = (p.businessTags ?? []).slice(0, 3);
+  const keywords = (p.keywordTags ?? []).slice(0, 3);
+
+  return el(
+    'a',
+    {
+      class: 'bt-card',
+      href: withBase(`/profile/${p.slug}/`),
+      'data-reveal': true,
+      'data-hub-card': String(index),
+      style: `--card-primary:${p.theme.primary};--card-accent:${p.theme.accent};--i:${index}`,
+    },
+    [
+      portrait,
+      el('span', { class: 'bt-card__body' }, [
+        el('span', { class: 'bt-card__company', text: p.company }),
+        el('span', { class: 'bt-card__person' }, [p.name, el('small', { text: p.title })]),
+        el('span', { class: 'bt-card__summary', text: p.listSummary ?? p.tagline ?? p.title }),
+        tags.length
+          ? el(
+              'span',
+              { class: 'bt-card__tags' },
+              tags.map((t) => el('span', { class: 'bt-card__tag', text: t })),
+            )
+          : null,
+        keywords.length ? el('span', { class: 'bt-card__keywords', text: keywords.map((k) => `#${k}`).join('  ') }) : null,
+        el('span', { class: 'bt-card__go', 'aria-hidden': 'true' }, ['プロフィールを見る', el('i', { text: '→' })]),
+      ]),
+    ],
+  ) as HTMLAnchorElement;
 }
 
 /**
  * プロフィール一覧（/profile/）。
  * 追加され続けても優劣が生まれないよう、番号は振らない。
- * 会社名を主表記、氏名は添え書きにして小さく出す。
+ * 写真どうしを背景の糸（hub-threads.ts）がつなぎ、バトンの光が順に手渡されていく。
  */
 export function renderProfileHub(app: HTMLElement, opts: { static?: boolean } = {}): void {
-  const cards = profiles
-    .filter((p) => p.active)
-    .map((p) => {
-      const link = el(
-        'a',
-        {
-          class: 'talk-hub-card',
-          href: withBase(`/profile/${p.slug}/`),
-          'data-reveal': true,
-          style: `--card-primary:${p.theme.primary};--card-accent:${p.theme.accent}`,
-        },
-        [
-          el('div', { class: 'talk-hub-card__row' }, [
-            el('div', { class: 'talk-hub-card__names' }, [
-              el('p', { class: 'talk-hub-card__company', text: p.company }),
-              el('p', { class: 'talk-hub-card__person', text: p.name }),
-            ]),
-            el('p', { class: 'talk-hub-card__tagline', text: p.listSummary ?? p.tagline ?? p.title }),
-            el(
-              'div',
-              { class: 'talk-hub-card__tags' },
-              [tagRow(p.businessTags), tagRow(p.keywordTags)].filter((n): n is HTMLElement => n !== null),
-            ),
-          ]),
-        ],
-      ) as HTMLAnchorElement;
-
-      if (!opts.static) attachTilt(link);
-      return link;
-    });
+  const cards = profiles.filter((p) => p.active).map((p, i) => profileCard(p, i));
+  if (!opts.static) cards.forEach(attachTilt);
 
   app.append(
     // Batonが何かを一文で。検索・AIがこのページを「何のページか」と理解する手がかりになる
@@ -83,7 +100,7 @@ export function renderProfileHub(app: HTMLElement, opts: { static?: boolean } = 
       ]),
     ]),
     el('section', { class: 'section talk-hub-profiles', id: 'profiles', 'aria-label': '掲載中の経営者・事業者' }, [
-      el('div', { class: 'wrap' }, [el('div', { class: 'talk-hub-list', 'data-reveal-group': true }, cards)]),
+      el('div', { class: 'wrap' }, [el('div', { class: 'bt-cards', 'data-reveal-group': true }, cards)]),
     ]),
     el('section', { class: 'section talk-hub-cta', id: 'contact' }, [
       el('div', { class: 'wrap' }, [

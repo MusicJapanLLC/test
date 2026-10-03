@@ -129,7 +129,6 @@ export function llmsTxt(profiles: TalkProfile[], url: UrlFor): string {
     '## Optional',
     '',
     `- [全プロフィールの本文（1ファイル）](${url('/llms-full.txt')})`,
-    `- [法人向け厳選サービス](${url('/hub/')}): ${site.operator.name}が法人向けに選んだ専門サービスの紹介`,
     `- [プライバシーポリシー](${url(site.privacyPath)})`,
     '',
   ].join('\n');

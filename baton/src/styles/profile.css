@@ -299,7 +299,7 @@ body.profile .hero::before {
 
 /*
  * body.profile--editorial だけ、通常より深く・ブラーをかけた
- * リッチな出現アニメーションにする（talk-hub-listの手法を流用）。
+ * リッチな出現アニメーションにする（深さ＋ブラーで浮かび上がらせる）。
  */
 body.profile--editorial [data-reveal] {
   opacity: 0;
@@ -775,202 +775,6 @@ body.profile .section__label::before {
 
 body.talk-hub {
   background: var(--hub-bg);
-  color: var(--hub-text);
-}
-
-.talk-hub-hero {
-  padding: clamp(5rem, 3.5rem + 6vw, 7.5rem) 0 clamp(2.5rem, 1.8rem + 3vw, 4rem);
-  background:
-    radial-gradient(90% 70% at 80% 0%, rgba(200, 16, 46, 0.05), transparent 60%),
-    var(--hub-bg);
-}
-
-.talk-hub-hero__eyebrow {
-  margin-bottom: 1rem;
-  font-size: 0.78rem;
-  letter-spacing: 0.14em;
-}
-
-.talk-hub-hero__title {
-  font-family: var(--font-display);
-  font-size: var(--step-3);
-  font-weight: 500;
-  letter-spacing: 0.1em;
-}
-
-.talk-hub-hero__tagline {
-  margin-top: 0.9rem;
-  color: var(--hub-muted);
-  font-size: var(--step-1);
-}
-
-.talk-hub-list {
-  display: grid;
-  gap: 0;
-}
-
-/* このリストだけ、汎用の[data-reveal]より大きく・奥行きをつけて出す */
-.talk-hub-list [data-reveal] {
-  opacity: 0;
-  transform: translate3d(0, 42px, 0) scale(0.965);
-  filter: blur(5px);
-}
-
-.talk-hub-list [data-reveal].is-in {
-  opacity: 1;
-  transform: none;
-  filter: blur(0);
-  transition:
-    opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
-    transform 1s cubic-bezier(0.16, 1, 0.3, 1),
-    filter 1s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.talk-hub-card {
-  position: relative;
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  border-bottom: 1px solid var(--hub-line);
-  padding-block: clamp(0.85rem, 0.6rem + 1.1vw, 1.35rem);
-  padding-inline: clamp(0.25rem, 1vw, 0.75rem);
-  isolation: isolate;
-  transform-style: preserve-3d;
-  will-change: transform;
-  transition:
-    background-color 0.35s ease,
-    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.talk-hub-card:first-child {
-  border-top: 1px solid var(--hub-line);
-}
-
-.talk-hub-card::before {
-  content: '';
-  position: absolute;
-  inset: 0 clamp(-1.5rem, -1vw, -0.75rem);
-  z-index: -1;
-  background: linear-gradient(
-    100deg,
-    color-mix(in srgb, var(--card-primary, var(--hub-text)) 10%, transparent),
-    color-mix(in srgb, var(--card-accent, var(--hub-accent)) 6%, transparent)
-  );
-  opacity: 0;
-  transform: scaleX(0.94);
-  transform-origin: left center;
-  transition:
-    opacity 0.5s ease,
-    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.talk-hub-card::after {
-  content: '';
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  width: 100%;
-  background: linear-gradient(90deg, var(--card-primary, var(--hub-accent)), var(--card-accent, var(--hub-accent)));
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-.talk-hub-card:hover,
-.talk-hub-card:focus-visible {
-  background-color: transparent;
-  transform: translateX(0.6rem) scale(1.012);
-  box-shadow: 0 18px 40px -24px color-mix(in srgb, var(--card-primary, var(--hub-text)) 45%, transparent);
-}
-
-.talk-hub-card:hover::before,
-.talk-hub-card:focus-visible::before {
-  opacity: 1;
-  transform: none;
-}
-
-.talk-hub-card:hover::after,
-.talk-hub-card:focus-visible::after {
-  transform: none;
-}
-
-.talk-hub-card__row {
-  display: grid;
-  gap: 0.3rem 1.5rem;
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 900px) {
-  .talk-hub-card__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 0.85fr) minmax(230px, 280px);
-    align-items: center;
-    gap: 2rem;
-  }
-}
-
-.talk-hub-card__names {
-  min-width: 0;
-  padding-left: clamp(0.5rem, 1.2vw, 1.25rem);
-}
-
-.talk-hub-card__company {
-  font-family: var(--font-display);
-  font-size: var(--step-1);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  transition: color 0.35s ease;
-}
-
-.talk-hub-card:hover .talk-hub-card__company {
-  color: var(--card-primary, var(--hub-text));
-}
-
-.talk-hub-card__person {
-  margin-top: 0.2rem;
-  font-size: 0.78rem;
-  color: var(--hub-muted);
-  letter-spacing: 0.04em;
-}
-
-.talk-hub-card__tagline {
-  color: color-mix(in srgb, var(--hub-text) 78%, transparent);
-  font-size: 0.88rem;
-  line-height: 1.6;
-}
-
-.talk-hub-card__tags {
-  display: grid;
-  gap: 0.4rem;
-  width: 100%;
-}
-
-.talk-hub-card__tagrow {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.4rem;
-}
-
-.talk-hub-card__tag {
-  display: block;
-  text-align: center;
-  font-size: 0.66rem;
-  letter-spacing: 0;
-  color: var(--hub-muted);
-  border: 1px solid var(--hub-line);
-  border-radius: 3px;
-  padding: 0.22rem 0.15rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition:
-    border-color 0.3s ease,
-    color 0.3s ease;
-}
-
-.talk-hub-card:hover .talk-hub-card__tag {
-  border-color: color-mix(in srgb, var(--card-primary, var(--hub-text)) 35%, var(--hub-line));
   color: var(--hub-text);
 }
 
@@ -1527,7 +1331,7 @@ body.profile .pf-lead__tagline,
 body.profile .section__title,
 body.profile .media-feature__title,
 body.profile .service-item__name,
-body.talk-hub .talk-hub-card__tagline {
+body.talk-hub .bt-card__summary {
   word-break: auto-phrase;
 }
 
@@ -1830,7 +1634,7 @@ body.profile--dark .pf-shot__frame::after {
   letter-spacing: 0.42em;
   padding-left: 0.42em;
   text-transform: uppercase;
-  color: var(--bt-gold, #b08a45);
+  color: var(--bt-silver, #8e95a3);
 }
 
 .talk-hub-intro__lead {
@@ -1856,25 +1660,41 @@ body.profile--dark .pf-shot__frame::after {
 }
 
 .talk-hub-cta .btn {
+  position: relative;
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  padding: 0.9rem 2rem;
+  min-height: 54px;
+  padding: 0.95rem 2.3rem;
   border-radius: 999px;
-  background: var(--hub-accent, #c8102e);
+  background: var(--hub-accent, #16181d);
   color: #fff;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   white-space: nowrap;
   text-decoration: none;
-  box-shadow: 0 18px 36px -20px rgba(200, 16, 46, 0.8);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 22px 44px -26px rgba(22, 24, 29, 0.7);
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+}
+
+/* ホバーで、真珠色の光がボタンの上をすべる */
+.talk-hub-cta .btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(220, 226, 238, 0.55) 45%, rgba(214, 202, 236, 0.45) 55%, transparent 70%);
+  transform: translateX(-110%);
+  transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .talk-hub-cta .btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 24px 44px -20px rgba(200, 16, 46, 0.85);
+  box-shadow: 0 28px 52px -26px rgba(22, 24, 29, 0.75);
+}
+
+.talk-hub-cta .btn:hover::after {
+  transform: translateX(110%);
 }
 
 .profile-footer__nav {

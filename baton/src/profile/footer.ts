@@ -1,6 +1,9 @@
 import { site } from '../data/site';
 import { el, externalAttrs, withBase } from '../lib/dom';
 
+/** Baton Partners（別サイト）。/hub/ は公開しないURLなので、フッターには載せない */
+const BATON_PARTNERS_URL = 'https://partners.music-japan.com/music-japan/';
+
 /**
  * プロフィールページ専用のフッター。
  * 6サービスページ・ハブが使う共通フッター（lib/footer.ts）とは別物で、
@@ -31,7 +34,7 @@ export function renderProfileFooter(mount: HTMLElement): void {
       ]),
       el('nav', { class: 'profile-footer__nav', 'aria-label': 'Baton サイト内リンク' }, [
         el('a', { href: withBase('/profile/'), text: 'プロフィール一覧' }),
-        el('a', { href: withBase('/hub/'), text: '法人向けサービス' }),
+        el('a', { href: BATON_PARTNERS_URL, ...externalAttrs, text: 'Baton Partners' }),
         el('a', { href: withBase('/faq/'), text: 'よくある質問' }),
         el('a', { href: withBase(site.privacyPath), text: 'プライバシーポリシー' }),
       ]),
