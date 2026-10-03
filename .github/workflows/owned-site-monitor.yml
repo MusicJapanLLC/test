@@ -1,0 +1,45 @@
+name: Owned Test Site Monitor
+
+on:
+  push:
+    branches:
+      - 'claude/employee-onboarding-setup-udm86'
+    paths:
+      - 'monitoring/owned_site_monitor.py'
+      - '.github/workflows/owned-site-monitor.yml'
+  schedule:
+    - cron: '23 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: owned-test-site-monitor
+  cancel-in-progress: false
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Check owned test sites
+        run: python monitoring/owned_site_monitor.py | tee owned-site-monitor-report.json
+      - name: Publish summary
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          report = json.loads(Path('owned-site-monitor-report.json').read_text(encoding='utf-8'))
+          print('## Owned test site monitor')
+          print()
+          for row in report['results']:
+              print(f"- `{row['url']}` — status: `{row.get('status', row.get('error', 'unknown'))}` — latency: `{row.get('latency_ms', '-')}` ms")
+          PY
