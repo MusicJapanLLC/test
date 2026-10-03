@@ -73,8 +73,10 @@ export async function submitConsult(payload: ConsultPayload): Promise<void> {
 /** 例: BP-EVORG-260928-7K2Q */
 export function makeReceiptId(partner: string, now = new Date()): string {
   const d = `${String(now.getFullYear()).slice(2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
+  // 32-character alphabet: each output symbol maps to exactly 8 byte values.
+  // Using the high five bits avoids modulo reduction and keeps the mapping uniform.
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const bytes = crypto.getRandomValues(new Uint8Array(4));
-  const rand = [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
+  const rand = [...bytes].map((b) => alphabet[b >>> 3]).join('');
   return `BP-${partner.toUpperCase()}-${d}-${rand}`;
 }
