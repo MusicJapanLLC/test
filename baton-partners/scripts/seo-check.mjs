@@ -27,7 +27,6 @@ const indexable = [];
 const links = new Set();
 for (const file of pages) {
   const html = readFileSync(file, 'utf8');
-  for (const [, href] of html.matchAll(/<a\b[^>]*href="([^"]+)"/g)) links.add(href.split('#')[0]);
   const path = '/' + relative(root, file).replaceAll('\\', '/').replace(/index\.html$/, '');
   const canonical = [...html.matchAll(/<link\b[^>]*rel="canonical"[^>]*href="([^"]+)"/g)].map((m) => m[1]);
   if (/name="robots"[^>]*content="[^"]*noindex/i.test(html)) {
@@ -46,6 +45,11 @@ for (const file of pages) {
     assert.ok(schemas.some((s) => s['@graph']?.some((n) => ['Organization', 'Corporation'].includes(n['@type']))), `Missing company data: ${path}`);
   }
   indexable.push(canonical[0]);
+  // A self-link, draft or 404 page must not hide an orphaned published page.
+  for (const [, href] of html.matchAll(/<a\b[^>]*href="([^"]+)"/g)) {
+    const target = new URL(href, canonical[0]);
+    if (target.origin === new URL(canonical[0]).origin && target.pathname !== path) links.add(target.pathname);
+  }
 }
 assert.deepEqual([...urls].sort(), [...indexable].sort(), 'Sitemap must equal indexable generated pages');
 for (const url of indexable) {
