@@ -1,0 +1,70 @@
+{
+  "timestamp": "2026-10-03T13:49:15.936514",
+  "target": "https://kabeya-authorized-test-range.onrender.com",
+  "rounds": [
+    {
+      "round": 1,
+      "duration_seconds": 2.499321,
+      "commands_executed": 9,
+      "beacons_received": 8,
+      "total_exfiltrated_mb": 2598.6000319152918,
+      "nodes_compromised": 42,
+      "threat_level": 0.8125,
+      "c2_mutations": {
+        "beacon_interval_mutation": "adaptive",
+        "encryption_rotation": "AES",
+        "communication_protocol": "P2P",
+        "payload_encoding": "polyglot",
+        "agent_behavior": "stealthy"
+      }
+    },
+    {
+      "round": 2,
+      "duration_seconds": 2.073512,
+      "commands_executed": 5,
+      "beacons_received": 8,
+      "total_exfiltrated_mb": 2311.3035838448445,
+      "nodes_compromised": 42,
+      "threat_level": 0.8125,
+      "c2_mutations": {
+        "beacon_interval_mutation": "fixed",
+        "encryption_rotation": "AES",
+        "communication_protocol": "DNS",
+        "payload_encoding": "polyglot",
+        "agent_behavior": "adaptive"
+      }
+    },
+    {
+      "round": 3,
+      "duration_seconds": 2.371881,
+      "commands_executed": 7,
+      "beacons_received": 8,
+      "total_exfiltrated_mb": 1764.0600210523264,
+      "nodes_compromised": 43,
+      "threat_level": 0.8125,
+      "c2_mutations": {
+        "beacon_interval_mutation": "fixed",
+        "encryption_rotation": "AES",
+        "communication_protocol": "HTTPS",
+        "payload_encoding": "base64",
+        "agent_behavior": "adaptive"
+      }
+    }
+  ],
+  "summary": {
+    "total_duration_seconds": 6.944714,
+    "total_commands_executed": 45,
+    "total_data_exfiltrated_mb": 6673.963636812463,
+    "total_nodes_compromised": 127,
+    "active_agents_count": 10,
+    "agent_network_resilience": 10,
+    "final_threat_level": 0.8125,
+    "c2_mutations_applied": 3,
+    "authorization": {
+      "target_url": "https://kabeya-authorized-test-range.onrender.com",
+      "scope": "AUTHORIZED_TEST_TARGETS.json",
+      "federation": "the-world-security-test-federation-v1",
+      "status": "AUTHORIZED"
+    }
+  }
+}
