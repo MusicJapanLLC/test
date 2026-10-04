@@ -444,10 +444,12 @@
             const name = unk.length ? G.pick(unk) : known.length ? G.pick(known) : null;
             if (!name) { IT.addCons(id, 1); G.ui.toast(`${a.name}はすべての技を極めています`, 'info'); return; }
             const r = IT.learnSkill(a, name);
+            IT.used();
             G.audio.sfx('flash');
             setTimeout(() => G.ui.modal(`<div class="skill-get"><div class="sg-bulb"></div><small>${G.esc(a.name)}、閃いた！</small><h2>${G.esc(name)}${r.up ? ` <span>Lv${r.lv}</span>` : ''}</h2><p>${IT.skillDesc(a.cls, name, r.lv)}</p>${a.skillSet.includes(name) ? '<p class="hint">技をセットしました</p>' : '<p class="hint">冒険者の詳細から技をセットできます</p>'}</div>`, [{ text: 'やったね！', cls: 'primary big' }], { cls: 'celebrate', onShow: () => G.ui.fx.confetti() }), 260);
           } else {
             const before = a.lv;
+            IT.used();
             G.sim.gainExp(a, Math.round(G.sim.expNeed(a.lv) * 1.6));
             G.audio.sfx('levelup');
             G.ui.toast(`${a.name}に経験値！ ${a.lv > before ? `Lv${before} → Lv${a.lv}` : ''}`, 'good');

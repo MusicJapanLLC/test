@@ -37,7 +37,7 @@
       stats: { quests: 0, success: 0, great: 0, legend: 0, fail: 0, likes: 0, tips: 0, goldEarned: 0, areaWin: {}, boss: 0, reels: 0, playSec: 0 },
       seenMonsters: {},
       flags: { tut: 0, autoDispatch: false, bossUnlocked: false },
-      settings: { bgm: 0.6, sfx: 0.8, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true },
+      settings: { bgm: 0.6, sfx: 0.8, env: 0.7, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true },
       inbox: [],
       items: [],
       relics: {},
@@ -352,7 +352,7 @@
   };
 
   // 冒険譚を見た（＝報酬受け取り）
-  S.claimReel = function (reel, bonus = 0, s = G.state) {
+  S.claimReel = function (reel, bonus = 0, s = G.state, opts = {}) {
     if (!reel || reel.claimed) return null;
     reel.claimed = true;
     const mul = 1 + bonus;
@@ -362,6 +362,7 @@
     s.mat += mat;
     s.fame += reel.fame;
     s.stats.goldEarned += gold;
+    s.stats.matGot = (s.stats.matGot || 0) + mat;
     s.stats.reels++;
     if (reel.tier === 'legend') s.stats.legendSeen = (s.stats.legendSeen || 0) + 1;
     if (reel.monster) s.seenMonsters[reel.monster] = Math.max(s.seenMonsters[reel.monster] || 0, { fail: 1, ok: 1, great: 2, legend: 3 }[reel.tier]);
@@ -369,7 +370,8 @@
     const got = [];
     if (G.items) {
       if (reel.drop) { const r = G.items.add(reel.drop); got.push(Object.assign({}, reel.drop, r)); }
-      (reel.cm || []).forEach((c) => { if (c.gift) { const r = G.items.add(c.gift); got.push(Object.assign({}, c.gift, r)); } });
+      // 町の人からの贈り物は、見届けたときだけ
+      if (opts.gifts !== false) (reel.cm || []).forEach((c) => { if (c.gift) { const r = G.items.add(c.gift); got.push(Object.assign({}, c.gift, r)); } });
       (reel.loot || []).forEach((l) => G.items.addCons(l.id, l.n));
       s.stats.items = (s.stats.items || 0) + got.length;
       s.itemsNew = (s.itemsNew || 0) + got.length;
@@ -494,6 +496,7 @@
     if (!S.canAfford(c, s)) return { ok: false, why: 'cost' };
     s.gold -= c.gold;
     s.mat -= c.mat;
+    s.stats.upgrades = (s.stats.upgrades || 0) + 1;
     if (st === 'buildable') {
       const dur = D.FAC[id].buildTime;
       s.building = { id, endAt: G.now() + dur, dur };
@@ -645,7 +648,7 @@
       const f = S.fresh();
       const merged = Object.assign(f, s);
       merged.stats = Object.assign(S.freshStats(), s.stats || {});
-      merged.settings = Object.assign({ bgm: 0.6, sfx: 0.8, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true }, s.settings || {});
+      merged.settings = Object.assign({ bgm: 0.6, sfx: 0.8, env: 0.7, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true }, s.settings || {});
       merged.flags = Object.assign({ tut: 0, autoDispatch: false, bossUnlocked: false }, s.flags || {});
       merged.fac = Object.assign({ hall: 1, bunks: 1, tavern: 0, smithy: 0, training: 0, alchemy: 0, tower: 0 }, s.fac || {});
       merged.items = s.items || [];

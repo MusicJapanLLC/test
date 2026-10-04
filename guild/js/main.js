@@ -126,7 +126,9 @@
       G.reels.render();
     }
     G.ui.tick(dt);
+    G.audio.envTick(dt, !G.reels.isOpen());
     if (G.notify) G.notify.tick(dt);
+    if (G.missions) G.missions.tick(dt);
     saveT += dt;
     if (saveT > 3) { saveT = 0; G.sim.save(); }
   }

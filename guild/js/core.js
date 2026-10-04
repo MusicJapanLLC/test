@@ -2,7 +2,7 @@
 'use strict';
 const G = (window.G = window.G || {});
 
-G.VERSION = '0.2.0';
+G.VERSION = '0.3.0';
 G.WORLD_W = 400;
 
 // ---------- fonts ----------

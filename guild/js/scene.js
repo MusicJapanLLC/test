@@ -893,6 +893,7 @@
     return G.lerp(1, 0.7, (p - 0.9) / 0.1);
   }
   SC.night = () => night;
+  SC.dayPhase = () => dayPhase;
 
   // ---------------------------------------------------------------- render
   const SKY = {

@@ -485,6 +485,12 @@
     placeHitAreas();
   }
 
+  // 冒険譚ごとの曲（場所・ボス戦で変わる。TikTok の「楽曲」のように画面下に流れる）
+  const AREA_TRACK = { meadow: 'reels', forest: 'forest', cave: 'cave', castle: 'castle', peak: 'peak' };
+  const trackOf = (r) => (!r || r.end ? null : r.digest ? 'reels' : r.boss ? 'boss' : AREA_TRACK[r.area] || 'reels');
+  const songOf = (r) => G.audio.trackTitle(trackOf(r)) || r.song;
+  R.trackOf = trackOf;
+
   R.unseen = () => G.state.reels.filter((r) => !r.claimed);
   R.pendingGold = () => R.unseen().reduce((x, r) => x + r.gold, 0);
 
@@ -524,7 +530,7 @@
     root.classList.remove('closing');
     requestAnimationFrame(() => root.classList.add('shown'));
     resize();
-    G.audio.playTrack('reels');
+    G.audio.playTrack(trackOf(items[0]) || 'reels');
     G.audio.sfx('open');
     updateDom();
     hintShown = G.state.stats.reels > 2;
@@ -542,7 +548,7 @@
     root.classList.remove('shown');
     root.classList.add('closing');
     setTimeout(() => { if (!open) root.hidden = true; }, 320);
-    G.audio.playTrack('guild');
+    G.audio.playHome();
     G.audio.sfx('close');
     G.sim.save();
     G.emit('reelsClosed', { count: sessionCount, gold: sessionGold, ranked: rankedInFeed });
@@ -563,13 +569,34 @@
   }
 
   // ---------------------------------------------------------------- 受け取り
+  // 見届けた＝敵を倒す（撤退する）ところまで見た。見届けると +20%・町の人の贈り物・連続ボーナスが続く
+  const claimInfo = new Map();
+  R.watchInfo = (reel) => claimInfo.get(reel.id) || null;
+  function witnessedNow(reel) {
+    if (reel.digest) return true;
+    return firedFor === reel && rt >= planOf(reel).finishT + 0.1;
+  }
+  let skipNoted = false;
   function claim(reel, quick) {
     if (rewatch || reel.claimed) return;
     const st = G.state;
-    const bonus = Math.min(0.3, st.streak * 0.05) + cheer * 0.01;
-    const res = G.sim.claimReel(reel, bonus);
+    const seen = !quick || witnessedNow(reel);
+    const streakB = seen ? Math.min(0.3, st.streak * 0.05) : 0;
+    const bonus = (seen ? 0.2 : 0) + streakB + cheer * 0.01;
+    const res = G.sim.claimReel(reel, bonus, st, { gifts: seen });
     if (!res) return;
-    st.streak++;
+    claimInfo.set(reel.id, { seen, streak: seen ? st.streak + 1 : 0, streakB, cheer, gold: res.gold });
+    if (seen) {
+      st.streak++;
+      st.stats.witnessed = (st.stats.witnessed || 0) + 1;
+    } else {
+      const lost = st.streak;
+      st.streak = 0;
+      if (!skipNoted && !reel.digest) {
+        skipNoted = true;
+        G.ui.toast(lost ? `途中で飛ばしたので、連続視聴ボーナス（${lost}本）が途切れました` : '敵を倒すところまで見ると、ゴールド+20%と贈り物がもらえます', 'info', 'skip');
+      }
+    }
     sessionCount++;
     sessionGold += res.gold;
     const from = [ox + 180 * k, Hd * 0.3 * k];
@@ -585,13 +612,14 @@
     const left = items.filter((r) => !r.end && !r.claimed);
     if (!left.length) return;
     let gold = 0, got = 0;
+    G.state.streak = 0;
     left.forEach((r) => {
-      const res = G.sim.claimReel(r, 0);
+      const res = G.sim.claimReel(r, 0, G.state, { gifts: false });
       if (res) { gold += res.gold; sessionGold += res.gold; sessionCount++; got += (res.items || []).length; }
     });
     G.ui.flyCoins(W / 2, H / 2, gold, false, G.$('#reelGold'));
     G.audio.sfx('coins');
-    G.ui.toast(`${left.length}本ぶん まとめて受け取りました（+${G.fmt(gold)}G${got ? `・お宝${got}個` : ''}）`, 'good');
+    G.ui.toast(`${left.length}本ぶん まとめて受け取りました（+${G.fmt(gold)}G${got ? `・お宝${got}個` : ''}）。見届けボーナスと贈り物はなし`, 'good');
     goTo(items.length - 1);
     G.ui.refreshHud();
     updateDom();
@@ -968,8 +996,8 @@
     G.$('#reelAll').textContent = `まとめて受け取る（${left}）`;
     const streak = Math.min(0.3, st.streak * 0.05);
     const sc = G.$('#reelStreak');
-    sc.hidden = rewatch || cmOpen || streak <= 0 || (cur && cur.end) || !items.some((r) => !r.end && !r.claimed);
-    sc.textContent = `連続視聴ボーナス +${Math.round(streak * 100)}%`;
+    sc.hidden = rewatch || cmOpen || (cur && cur.end) || !cur || cur.claimed || cur.digest;
+    sc.innerHTML = `見届けると <b>+${Math.round((0.2 + streak) * 100)}%</b>${st.streak ? `<small>連続${st.streak}本</small>` : ''}`;
     const showHit = cur && !cur.end && !cmOpen;
     G.$('#reelLike').hidden = !showHit;
     G.$('#reelComments').hidden = !showHit;
@@ -1063,7 +1091,7 @@
     const settled = !anim && !drag;
     warpNow = 1;
     if (cur && !cur.end && settled && !paused && !R._debug.hold) {
-      if (firedFor !== cur) { firedFor = cur; rt = 0; fired = {}; cheer = 0; cmSeen = 0; cmBumpT = 9; }
+      if (firedFor !== cur) { firedFor = cur; rt = 0; fired = {}; cheer = 0; cmSeen = 0; cmBumpT = 9; G.audio.playTrack(trackOf(cur), { fade: 0.7 }); }
       const pl = cur.digest ? null : planOf(cur);
       warpNow = warp(pl, rt);
       rt += dt * warpNow;
@@ -2329,7 +2357,10 @@
 
     // 報酬
     const cy = y0 + 54;
-    const list = [{ icon: 'coin', v: reel.gold }];
+    // 表示するゴールドは、見届けボーナス込みの額
+    const ci0 = claimInfo.get(reel.id);
+    const dispGold = ci0 ? ci0.gold : rewatch || reel.claimed ? reel.gold : Math.round(reel.gold * (1.2 + Math.min(0.3, G.state.streak * 0.05) + cheer * 0.01));
+    const list = [{ icon: 'coin', v: dispGold }];
     if (reel.mat) list.push({ icon: 'gem', v: reel.mat });
     if (reel.fame) list.push({ icon: 'star', v: reel.fame });
     const w = list.length * 92;
@@ -2362,9 +2393,9 @@
     });
     // 付記
     const notes = [];
-    const st = G.state;
-    const bonus = Math.min(0.3, Math.max(0, st.streak - 1) * 0.05) + cheer * 0.01;
-    if (!rewatch && (cheer > 0 || bonus > 0)) notes.push({ text: (cheer > 0 ? `応援 ×${cheer} ・ ` : '') + 'ボーナス込み', col: '#ffe27a' });
+    const ci = claimInfo.get(reel.id);
+    if (!rewatch && ci && ci.seen) notes.push({ text: `見届けボーナス +20%${ci.streakB > 0 ? ` ・ 連続${ci.streak}本 +${Math.round(ci.streakB * 100)}%` : ''}${ci.cheer > 0 ? ` ・ 応援×${ci.cheer}` : ''}`, col: '#ffe27a' });
+    else if (!rewatch && !ci && !reel.claimed) notes.push({ text: '見届けボーナス +20% 込み', col: '#ffe27a' });
     if (reel.skill) notes.push({ text: `${reel.party.find((p) => p.id === reel.skill.id)?.name || ''}が「${reel.skill.name}」を習得`, col: '#ffd36a' });
     if (reel.extra === 'cache') notes.push({ text: '隠し財宝を見つけた！ 素材ボーナス', col: '#c9c0ff' });
     if (reel.goldBoost) notes.unshift({ text: `黄金の祝福 ゴールド×${reel.goldBoost}`, col: '#ffd36a' });
@@ -2560,10 +2591,11 @@
     ctx.clip();
     ctx.font = F(500, 11, 'ui');
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    const sw = ctx.measureText(reel.song).width + 40;
+    const song = songOf(reel);
+    const sw = textW(ctx.font, song) + 40;
     const mx = 34 - ((t * 28) % sw);
-    ctx.fillText(reel.song, mx, bottom - 33);
-    ctx.fillText(reel.song, mx + sw, bottom - 33);
+    ctx.fillText(song, mx, bottom - 33);
+    ctx.fillText(song, mx + sw, bottom - 33);
     ctx.restore();
     ctx.font = F(700, 12, 'ui');
     ctx.fillStyle = '#fff';

@@ -143,7 +143,15 @@
     A.applyVolumes();
   };
 
-  A.setNight = function (n) { A.night = n; };
+  // 夜になったら夜の曲へ、朝になったら昼の曲へ（ギルドにいるときだけ）
+  let homeDay = 'guild';
+  A.playHome = function (fade) { A.playTrack(A.night ? 'night' : homeDay, fade || 1.1); };
+  A.setNight = function (n) {
+    if (A.night === n) return;
+    A.night = n;
+    if (!ctx) { if (TRACKS[wantTrack] && TRACKS[wantTrack].home) wantTrack = n ? 'night' : homeDay; return; }
+    if (current && TRACKS[current.name].home && wantTrack === current.name) A.playHome(2.6);
+  };
 
   // タブを離れたらふわっと消え、戻ったらふわっと戻る
   A.pause = function () {
@@ -301,12 +309,13 @@
   }
 
   // ---------------------------------------------------------------- tunes
-  // ABC 記法のごく一部を読む。調号はニ長調（F#, C#）。
-  function parseABC(str) {
+  // ABC 記法のごく一部を読む。調号は曲ごと（既定はニ長調 F#, C#）。
+  const KEYS = { D: { F: 1, C: 1 }, G: { F: 1 }, C: {}, Dm: { B: -1 }, F: { B: -1 } };
+  function parseABC(str, key) {
     const out = [];
     const re = /(=|\^|_)?([A-Ga-gz])([,']*)(\d*)/g;
     const base = { C: 60, D: 62, E: 64, F: 65, G: 67, A: 69, B: 71 };
-    const sig = { F: 1, C: 1 };
+    const sig = KEYS[key || 'D'];
     let m;
     let t = 0;
     while ((m = re.exec(str))) {
@@ -329,6 +338,8 @@
     const minor = /m$/.test(name);
     let pc = PC[name[0]];
     if (name[1] === '#') pc += 1;
+    else if (name[1] === 'b') pc -= 1;
+    if (pc < 0) pc += 12;
     let root = 48 + pc;
     if (root > 53) root -= 12;
     return { root, fifth: root + 7, third: root + 12 + (minor ? 3 : 4), oct: root + 12 };
@@ -346,11 +357,23 @@
   const REEL_CH_A = ['Em', 'Em', 'G', 'G', 'D', 'D', 'D', 'Bm', 'Em', 'Em', 'G', 'D', 'Em', 'D', 'Em', 'Em'];
   const REEL_CH_B = ['Em', 'Em', 'D', 'D', 'Em', 'Em', 'D', 'Em', 'Em', 'Em', 'D', 'G', 'G', 'D', 'Em', 'Em'];
 
+  const HARP_PAT = {
+    6: (c) => [[0, c.root, 1], [1, c.fifth, 0.72], [2, c.third, 0.72]],
+    4: (c) => [[0, c.root, 1], [1, c.fifth, 0.72], [2, c.oct, 0.72], [3, c.third, 0.72]],
+    3: (c) => [[0, c.root, 1], [1, c.fifth, 0.7], [2, c.oct, 0.7], [3, c.third, 0.75], [4, c.oct, 0.62], [5, c.fifth, 0.55]],
+  };
+  const DRUM_PAT = {
+    6: (e) => (e === 0 ? [1] : e === 3 ? [0.7] : e === 5 || e === 2 ? [0.32, 1] : null),
+    4: (e) => (e % 2 === 0 ? [e === 0 ? 1 : e === 4 ? 0.8 : 0.5] : [0.25, 1]),
+    3: (e) => (e === 0 ? [1] : e === 2 || e === 4 ? [0.42, 1] : null),
+  };
   function buildTune(def) {
-    const A1 = parseABC(def.A), B1 = parseABC(def.B);
+    const A1 = parseABC(def.A, def.key), B1 = parseABC(def.B, def.key);
     const events = [];
     const bar = def.bar; // 1小節の8分音符数
-    const half = bar / 2;
+    const beat = def.beat || (def.meter === 6 ? 3 : def.meter === 3 ? 2 : 4);
+    const harpPat = def.harpPat || HARP_PAT[def.meter];
+    const drumPat = def.drumPat || DRUM_PAT[def.meter];
     let off = 0;
     const parts = [
       [A1, def.chA, 0],
@@ -360,27 +383,20 @@
     ];
     parts.forEach(([p, ch, rep], pi) => {
       p.notes.forEach((n) => {
-        const beatAcc = n.t % (def.meter === 6 ? 3 : 4) === 0 ? 1 : 0.82;
+        const beatAcc = n.t % beat === 0 ? 1 : 0.82;
         events.push({ t: off + n.t, d: n.d, m: n.m, i: 'mel', acc: beatAcc, part: pi, rep });
       });
+      const cd = p.len / ch.length; // 和音1つの長さ
       ch.forEach((name, k) => {
         const c = chordNotes(name);
-        const t0 = off + k * half;
-        const pat = def.meter === 6 ? [c.root, c.fifth, c.third] : [c.root, c.fifth, c.oct, c.third];
-        pat.forEach((m, j) => events.push({ t: t0 + j, m, i: 'harp', acc: j === 0 ? 1 : 0.72, part: pi }));
+        const t0 = off + k * cd;
+        harpPat(c, cd).forEach(([o, m, acc]) => { if (o < cd) events.push({ t: t0 + o, m, i: 'harp', acc, part: pi }); });
       });
       const bars = p.len / bar;
       for (let b = 0; b < bars; b++) {
         for (let e = 0; e < bar; e++) {
-          const t = off + b * bar + e;
-          if (def.meter === 6) {
-            if (e === 0) events.push({ t, i: 'drum', acc: 1 });
-            else if (e === 3) events.push({ t, i: 'drum', acc: 0.7 });
-            else if (e === 5 || e === 2) events.push({ t, i: 'drum', acc: 0.32, ghost: true });
-          } else {
-            if (e % 2 === 0) events.push({ t, i: 'drum', acc: e === 0 ? 1 : e === 4 ? 0.8 : 0.5 });
-            else events.push({ t, i: 'drum', acc: 0.25, ghost: true });
-          }
+          const d = drumPat(e, b);
+          if (d) events.push({ t: off + b * bar + e, i: 'drum', acc: d[0], ghost: !!d[1] });
         }
       }
       off += p.len;
@@ -389,9 +405,31 @@
     return { events, len: off };
   }
 
+  // 「市場の朝」2/4 ポルカ（ト長調）— 昼のギルド・2曲目
+  const POLKA_A = 'd2 B2 G2 B2 | dcBA G2 D2 | E2 F2 G2 A2 | B2 A2 G2 E2 | d2 B2 G2 B2 | dcBA G2 B2 | A2 F2 D2 F2 | G4 G2 z2';
+  const POLKA_B = 'g2 fe d2 B2 | c2 e2 A2 c2 | B2 dB G2 B2 | A2 cA F2 A2 | g2 fe d2 B2 | c2 e2 A2 c2 | B2 G2 A2 F2 | G4 G2 z2';
+  // 「星降る窓辺」3/4 スロー・エア（ト長調）— 夜のギルド
+  const AIR_A = 'D2 G2 A2 | B3 A G2 | E2 D2 E2 | G4 A2 | B2 d2 B2 | A3 G E2 | D2 E2 G2 | G6';
+  const AIR_B = 'd2 e2 d2 | B3 A G2 | A2 B2 d2 | e4 d2 | g3 f e2 | d3 B A2 | B2 A2 F2 | G6';
+  // 「ささやきの森のジグ」6/8（ホ短調）
+  const FJIG_A = 'E2B BAB | E2B BAG | F2A ABA | F2A AGF | E2B BAB | E2B B2c | d2B AGF | GEE E3';
+  const FJIG_B = 'e2f g2e | f2d d2B | e2f gfe | d2B A2F | e2f g2e | f2d dcB | AGF GFE | FEE E3';
+  // 「こだまの底で」3/4（ニ短調）
+  const CAVE_A = 'D2 F2 A2 | G3 F E2 | F2 E2 D2 | ^C4 A,2 | D2 F2 A2 | d3 c A2 | B2 A2 G2 | A6';
+  const CAVE_B = 'd2 c2 A2 | B3 A G2 | A2 G2 F2 | E4 ^C2 | D2 F2 A2 | G2 B2 d2 | ^c2 A2 E2 | D6';
+  // 「灰の城の行進」4/4（ロ短調）
+  const MARCH_A = 'B,2 D2 F3 E | D2 C2 B,4 | F2 B2 A3 G | F2 E2 D4 | B,2 D2 F3 E | D2 F2 B3 c | d2 c2 B2 A2 | B4 B,4';
+  const MARCH_B = 'd3 c B2 F2 | G2 F2 E4 | c3 B A2 E2 | F2 E2 D4 | d3 c B2 F2 | G2 B2 e4 | d2 c2 B2 A2 | B8';
+  // 「竜の背を越えて」4/4 リール（イ・ドリア）
+  const PEAK_A = 'A2eA fAeA | G2dG BGdG | A2eA fAea | gedB A4 | A2eA fAeA | G2dG BGdG | cBcd eage | dBGB A4';
+  const PEAK_B = 'a2ea fa e2 | g2dg bg d2 | a2ea faea | gedB A4 | e2ae f2ef | g2fg a2ga | bagf gfed | edBG A4';
+  // 「紅蓮の竜王」4/4（ニ短調）— ボス戦
+  const BOSS_A = 'd2 Ad fdAd | c2 Gc ecGc | B2 FB dBFB | A2 ^CE A4 | d2 Ad fdAd | c2 Gc ecGc | B2 dB A2 ^c2 | d4 D4';
+  const BOSS_B = 'f2 ef gfed | e2 de fedc | d2 cd edcB | ^c2 A2 E2 A2 | f2 ef gfed | e2 de fedc | dcBA B2 ^c2 | d8';
+
   const TRACKS = {
     guild: {
-      A: JIG_A, B: JIG_B, chA: JIG_CH_A, chB: JIG_CH_B, bar: 6, meter: 6,
+      A: JIG_A, B: JIG_B, chA: JIG_CH_A, chB: JIG_CH_B, bar: 6, meter: 6, rotate: 2,
       bpm: 86, // 付点四分 = 86
       drone: [38, 45],
       arrange(pass, night) {
@@ -416,10 +454,116 @@
       },
     },
   };
+  Object.assign(TRACKS, {
+    guild2: {
+      title: '♪ 市場の朝 — ギルド楽団', home: true, rotate: 2,
+      A: POLKA_A, B: POLKA_B, key: 'G', bar: 8, meter: 4, beat: 2,
+      chA: ['G', 'G', 'D', 'G', 'C', 'D', 'G', 'Em', 'G', 'G', 'D', 'G', 'D', 'D', 'G', 'G'],
+      chB: ['G', 'G', 'C', 'Am', 'G', 'G', 'D', 'D', 'G', 'G', 'C', 'Am', 'G', 'D', 'G', 'G'],
+      bpm: 236, drone: [43, 50],
+      // ブン・チャッ（低い音と和音を交互に）
+      harpPat: (c) => [[0, c.root, 1], [2, c.third, 0.6], [2, c.fifth + 12, 0.42], [3, c.oct, 0.35]],
+      drumPat: (e) => (e % 4 === 0 ? [1] : e % 4 === 2 ? [0.55] : [0.22, 1]),
+      arrange(pass) {
+        return [
+          { mel: 0.09, harp: 0.11, fid: 0, drum: 0.17, drone: 0.012, tempo: 1 },
+          { mel: 0.09, harp: 0.1, fid: 0.03, drum: 0.2, drone: 0.014, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    night: {
+      title: '♪ 星降る窓辺 — ギルド楽団', home: true,
+      A: AIR_A, B: AIR_B, key: 'G', bar: 6, meter: 3,
+      chA: ['G', 'G', 'Em', 'C', 'G', 'Am', 'D', 'G'],
+      chB: ['G', 'Em', 'D', 'C', 'Em', 'G', 'D', 'G'],
+      bpm: 128, drone: [43, 50],
+      arrange(pass) {
+        return [
+          { mel: 0.07, harp: 0.12, fid: 0, drum: 0, drone: 0.014, tempo: 1 },
+          { mel: 0.05, lead: 'fid', harp: 0.11, fid: 0, drum: 0, drone: 0.016, tempo: 0.97 },
+          { mel: 0.065, harp: 0.13, fid: 0.022, drum: 0, drone: 0.014, tempo: 1 },
+        ][pass % 3];
+      },
+    },
+    forest: {
+      title: '♪ ささやきの森のジグ — ギルド楽団',
+      A: FJIG_A, B: FJIG_B, key: 'G', bar: 6, meter: 6,
+      chA: ['Em', 'Em', 'Em', 'G', 'D', 'D', 'D', 'D', 'Em', 'Em', 'Em', 'C', 'D', 'D', 'Em', 'Em'],
+      chB: ['Em', 'C', 'D', 'Bm', 'Em', 'Em', 'G', 'D', 'Em', 'C', 'D', 'G', 'D', 'Em', 'B', 'Em'],
+      bpm: 100, drone: [40, 47],
+      arrange(pass) {
+        return [
+          { mel: 0.085, harp: 0.11, fid: 0, drum: 0.18, drone: 0.018, tempo: 1 },
+          { mel: 0.09, harp: 0.1, fid: 0.032, drum: 0.21, drone: 0.02, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    cave: {
+      title: '♪ こだまの底で — ギルド楽団',
+      A: CAVE_A, B: CAVE_B, key: 'Dm', bar: 6, meter: 3,
+      chA: ['Dm', 'Gm', 'Dm', 'A', 'Dm', 'Dm', 'Gm', 'A'],
+      chB: ['Dm', 'Gm', 'Dm', 'A', 'Dm', 'Gm', 'A', 'Dm'],
+      bpm: 150, drone: [38, 45],
+      // 心臓の音のような太鼓
+      drumPat: (e) => (e === 0 ? [1] : e === 1 ? [0.5] : null),
+      arrange(pass) {
+        return [
+          { mel: 0.06, lead: 'fid', harp: 0.13, fid: 0, drum: 0.15, drone: 0.03, tempo: 1 },
+          { mel: 0.07, harp: 0.12, fid: 0.026, drum: 0.17, drone: 0.03, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    castle: {
+      title: '♪ 灰の城の行進 — ギルド楽団',
+      A: MARCH_A, B: MARCH_B, key: 'D', bar: 8, meter: 4,
+      chA: ['Bm', 'Bm', 'F#', 'Bm', 'Bm', 'A', 'D', 'D', 'Bm', 'Bm', 'Bm', 'F#', 'G', 'A', 'Bm', 'Bm'],
+      chB: ['Bm', 'Bm', 'G', 'Em', 'A', 'A', 'D', 'D', 'Bm', 'Bm', 'G', 'Em', 'G', 'A', 'Bm', 'Bm'],
+      bpm: 200, drone: [35, 42],
+      // 行進の太鼓：ドン・タ・ドン・タ、小節の終わりに小さな連打
+      drumPat: (e) => (e === 0 ? [1] : e === 4 ? [0.85] : e % 2 === 0 ? [0.55] : e === 7 ? [0.4] : [0.18, 1]),
+      arrange(pass) {
+        return [
+          { mel: 0.085, harp: 0.1, fid: 0.02, drum: 0.26, drone: 0.02, tempo: 1 },
+          { mel: 0.08, harp: 0.11, fid: 0.035, drum: 0.28, drone: 0.022, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    peak: {
+      title: '♪ 竜の背を越えて — ギルド楽団',
+      A: PEAK_A, B: PEAK_B, key: 'G', bar: 8, meter: 4,
+      chA: ['Am', 'D', 'G', 'G', 'Am', 'D', 'G', 'Am', 'Am', 'D', 'G', 'G', 'C', 'Am', 'G', 'Am'],
+      chB: ['Am', 'D', 'G', 'G', 'Am', 'D', 'G', 'Am', 'Am', 'D', 'G', 'Am', 'Em', 'G', 'G', 'Am'],
+      bpm: 232, drone: [45, 52],
+      arrange(pass) {
+        return [
+          { mel: 0.085, harp: 0.1, fid: 0, drum: 0.22, drone: 0.016, tempo: 1 },
+          { mel: 0.085, harp: 0.1, fid: 0.035, drum: 0.25, drone: 0.018, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    boss: {
+      title: '♪ 紅蓮の竜王 — ギルド楽団',
+      A: BOSS_A, B: BOSS_B, key: 'Dm', bar: 8, meter: 4,
+      chA: ['Dm', 'Dm', 'C', 'C', 'Bb', 'Bb', 'A', 'A', 'Dm', 'Dm', 'C', 'C', 'Bb', 'A', 'Dm', 'Dm'],
+      chB: ['Dm', 'Gm', 'C', 'F', 'Bb', 'Gm', 'A', 'A', 'Dm', 'Gm', 'C', 'F', 'Gm', 'A', 'Dm', 'Dm'],
+      bpm: 240, drone: [38, 45],
+      drumPat: (e) => (e % 4 === 0 ? [1] : e % 2 === 0 ? [0.75] : [0.42]),
+      arrange(pass) {
+        return [
+          { mel: 0.09, harp: 0.1, fid: 0.035, fidAll: true, drum: 0.3, drone: 0.03, tempo: 1 },
+          { mel: 0.09, harp: 0.11, fid: 0.045, fidAll: true, drum: 0.32, drone: 0.032, tempo: 1.02 },
+        ][pass % 2];
+      },
+    },
+  });
+  TRACKS.guild.title = '♪ 灯りの酒場 — ギルド楽団';
+  TRACKS.guild.home = true;
+  TRACKS.reels.title = '♪ 草原を行け — ギルド楽団';
   Object.values(TRACKS).forEach((d) => Object.assign(d, buildTune(d)));
+  A.trackTitle = (name) => (TRACKS[name] ? TRACKS[name].title : '');
 
   class Track {
-    constructor(name) {
+    constructor(name, at) {
       this.name = name;
       this.def = TRACKS[name];
       this.out = ctx.createGain();
@@ -430,7 +574,7 @@
       this.alive = true;
       this.mix = this.def.arrange(0, A.night);
       this.spe = this.secPerEighth();
-      this.loopStart = ctx.currentTime + 0.12;
+      this.loopStart = at && at > ctx.currentTime ? at : ctx.currentTime + 0.12;
       this.startDrone();
     }
     secPerEighth() {
@@ -504,9 +648,16 @@
     }
     schedule(until) {
       const d = this.def;
+      if (this.ended) return;
       let guard = 0;
       while (guard++ < 200) {
         if (this.idx >= d.events.length) {
+          // 昼のギルドは2曲を交互に（曲の切れ目で、きれいに入れ替える）
+          if (d.rotate && this.pass + 1 >= d.rotate && current === this && !this.fading && !A.night) {
+            homeDay = this.name === 'guild' ? 'guild2' : 'guild';
+            A.playTrack(homeDay, { cut: true, fade: 2.6, fadeIn: 0.25, at: this.loopStart + d.len * this.spe });
+            return;
+          }
           this.loopStart += d.len * this.spe;
           this.idx = 0;
           this.pass++;
@@ -528,9 +679,12 @@
       const vel = 0.9 + Math.random() * 0.2;
       if (ev.i === 'mel') {
         const dur = ev.d * this.spe;
-        if (mx.mel > 0) whistle(t + hum, ev.m, dur, mx.mel * ev.acc * vel, this.out);
-        // フィドルは繰り返しの2回目だけ1オクターブ下で重なる
-        if (mx.fid > 0 && ev.rep === 1) fiddle(t + hum, ev.m - 12, dur, mx.fid * vel, this.out);
+        if (mx.mel > 0) {
+          if (mx.lead === 'fid') fiddle(t + hum, ev.m, dur, mx.mel * ev.acc * vel, this.out);
+          else whistle(t + hum, ev.m, dur, mx.mel * ev.acc * vel, this.out);
+        }
+        // フィドルは繰り返しの2回目だけ1オクターブ下で重なる（ボス戦はずっと）
+        if (mx.fid > 0 && (ev.rep === 1 || mx.fidAll)) fiddle(t + hum, ev.m - 12, dur, mx.fid * vel, this.out);
       } else if (ev.i === 'harp') {
         if (mx.harp > 0) harp(t + hum * 0.5, ev.m, mx.harp * ev.acc * vel, this.out);
       } else if (ev.i === 'drum') {
@@ -547,18 +701,23 @@
     if (ambientLevel > 0 && Math.random() < 0.09 * ambientLevel) crackle();
   }
 
-  A.playTrack = function (name, first) {
+  // opt: true=起動直後 / 数値=切り替えの秒数 / {fade, fadeIn, at, cut}
+  A.playTrack = function (name, opt) {
+    if (!TRACKS[name]) name = 'guild';
+    const o = typeof opt === 'object' && opt ? opt : { first: opt === true, fade: typeof opt === 'number' ? opt : 0 };
     wantTrack = name;
     if (!ctx) return;
     if (current && current.name === name && !current.fading) return;
     if (current) {
       if (A._old) A._old.dispose();
       A._old = current;
-      current.fadeOut(first ? 0.1 : 1.1);
+      if (o.cut) current.ended = true;
+      current.fadeOut(o.first ? 0.1 : o.fade || 1.1);
     }
-    current = new Track(name);
-    current.fadeIn(first ? 2.4 : 1.4);
+    current = new Track(name, o.at);
+    current.fadeIn(o.first ? 2.4 : o.fadeIn || (o.fade ? Math.max(0.45, o.fade * 0.9) : 1.4));
   };
+  A.track = () => (current ? current.name : wantTrack);
 
   // ---------------------------------------------------------------- ambient
   A.setAmbient = function (level) {
@@ -608,6 +767,512 @@
     n.connect(hp).connect(g).connect(ambGain);
     n.start(t, Math.random() * 1.5, 0.05);
   }
+
+  // ---------------------------------------------------------------- 環境音（街とギルド）
+  // 海・風・雨はずっと流れる「床」。鳥・カモメ・虫・フクロウ・鐘は、時間帯と天気に合わせてときどき鳴る。
+  // ギルドの画面にいる間だけ。音量は設定の「環境音」に従う。
+  const E = { on: false, bus: null, beds: null, next: {}, waveAt: 0, gustAt: 0, lastPhase: -1, level: 0, voices: 0 };
+  const rr = (a, b) => a + Math.random() * (b - a);
+  function panNode(v) {
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = G.clamp(v, -1, 1); return p; }
+    return ctx.createGain();
+  }
+  function envBuses() {
+    if (E.bus) return E.bus;
+    const out = ctx.createGain();
+    out.gain.value = 0;
+    out.connect(master);
+    // 近い音：そのまま＋ほんの少し残響
+    const near = ctx.createGain();
+    near.connect(out);
+    const ns = ctx.createGain();
+    ns.gain.value = 0.12;
+    near.connect(ns).connect(convolver);
+    // 遠い音：高い音が丸く、残響が多め
+    const far = ctx.createGain();
+    const flp = ctx.createBiquadFilter();
+    flp.type = 'lowpass';
+    flp.frequency.value = 3200;
+    far.connect(flp).connect(out);
+    const fs = ctx.createGain();
+    fs.gain.value = 0.55;
+    flp.connect(fs).connect(convolver);
+    E.bus = { out, near, far };
+    return E.bus;
+  }
+  function loopSrc(buf) {
+    const s = ctx.createBufferSource();
+    s.buffer = buf;
+    s.loop = true;
+    s.start(ctx.currentTime, Math.random() * (buf.duration - 0.1));
+    return s;
+  }
+  // ずっと流れる床（風・雨・海の低いうねり）
+  function envBeds() {
+    if (E.beds) return E.beds;
+    const b = envBuses();
+    // 風：帯域ノイズ。周波数と強さがゆっくり揺れる
+    const wSrc = loopSrc(noiseBuf);
+    const wBP = ctx.createBiquadFilter();
+    wBP.type = 'bandpass';
+    wBP.frequency.value = 420;
+    wBP.Q.value = 0.9;
+    const wG = ctx.createGain();
+    wG.gain.value = 0;
+    const wPan = panNode(0);
+    wSrc.connect(wBP).connect(wG).connect(wPan).connect(b.near);
+    // 風の口笛（ひゅう…）
+    const hSrc = loopSrc(noiseBuf);
+    const hBP = ctx.createBiquadFilter();
+    hBP.type = 'bandpass';
+    hBP.frequency.value = 800;
+    hBP.Q.value = 16;
+    const hG = ctx.createGain();
+    hG.gain.value = 0;
+    hSrc.connect(hBP).connect(hG).connect(b.far);
+    // 雨：明るいざー
+    const rSrc = loopSrc(noiseBuf);
+    const rHP = ctx.createBiquadFilter();
+    rHP.type = 'highpass';
+    rHP.frequency.value = 1100;
+    const rLP = ctx.createBiquadFilter();
+    rLP.type = 'lowpass';
+    rLP.frequency.value = 6500;
+    const rG = ctx.createGain();
+    rG.gain.value = 0;
+    rSrc.connect(rHP).connect(rLP).connect(rG).connect(b.near);
+    // 海の低いうねり（波の合間もしんとしない）
+    const sSrc = loopSrc(brownBuf);
+    const sLP = ctx.createBiquadFilter();
+    sLP.type = 'lowpass';
+    sLP.frequency.value = 260;
+    const sG = ctx.createGain();
+    sG.gain.value = 0;
+    sSrc.connect(sLP).connect(sG).connect(b.near);
+    E.beds = { wBP, wG, wPan, hBP, hG, rG, rLP, sG };
+    return E.beds;
+  }
+
+  // ---- 声と音
+  // 波：寄せて、砕けて（しゅわー）、引く。左右どちらかの海から
+  function wave(t, vol) {
+    const b = envBuses();
+    const dur = rr(5, 8);
+    const p = panNode(G.pick([-1, 1]) * rr(0.35, 0.85));
+    p.connect(b.near);
+    const src = ctx.createBufferSource();
+    src.buffer = brownBuf;
+    src.loop = true;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 0.5;
+    lp.frequency.setValueAtTime(200, t);
+    lp.frequency.exponentialRampToValueAtTime(rr(800, 1400), t + dur * 0.4);
+    lp.frequency.exponentialRampToValueAtTime(240, t + dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + dur * 0.42);
+    g.gain.exponentialRampToValueAtTime(vol * 0.4, t + dur * 0.62);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(lp).connect(g).connect(p);
+    src.start(t, Math.random() * 3);
+    src.stop(t + dur + 0.1);
+    const f = ctx.createBufferSource();
+    f.buffer = noiseBuf;
+    f.loop = true;
+    const bp = ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.setValueAtTime(rr(2400, 3600), t);
+    bp.frequency.exponentialRampToValueAtTime(1600, t + dur);
+    bp.Q.value = 0.7;
+    const fg = ctx.createGain();
+    fg.gain.setValueAtTime(0.0001, t);
+    fg.gain.setValueAtTime(0.0001, t + dur * 0.36);
+    fg.gain.exponentialRampToValueAtTime(vol * 0.16, t + dur * 0.48);
+    fg.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.96);
+    f.connect(bp).connect(fg).connect(p);
+    f.start(t, Math.random() * 1.5);
+    f.stop(t + dur + 0.1);
+  }
+  function chirp(t, f0, f1, d, vol, dest, type) {
+    const o = ctx.createOscillator();
+    o.type = type || 'sine';
+    o.frequency.setValueAtTime(f0, t);
+    o.frequency.exponentialRampToValueAtTime(f1, t + d);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + Math.min(0.012, d * 0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.connect(g).connect(dest);
+    o.start(t);
+    o.stop(t + d + 0.02);
+  }
+  // スズメ：チュン、チュチュン
+  function sparrow(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.85, 0.85));
+    p.connect(Math.random() < 0.5 ? b.near : b.far);
+    const n = 2 + Math.floor(Math.random() * 4);
+    const base = rr(3800, 5000);
+    const v = rr(0.018, 0.034);
+    for (let i = 0; i < n; i++) {
+      const f = base * rr(0.96, 1.08);
+      chirp(t, f * 0.86, f * 1.08, 0.018, v * 0.7, p);
+      chirp(t + 0.016, f * 1.08, f * rr(0.62, 0.72), rr(0.05, 0.08), v, p);
+      t += rr(0.1, 0.2) + (Math.random() < 0.2 ? 0.25 : 0);
+    }
+    return n * 0.18;
+  }
+  // 歌う小鳥：笛のような節（朝によく歌う）
+  function songbird(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.7, 0.7));
+    p.connect(b.far);
+    const scale = [0, 2, 4, 7, 9, 12, 14, 16];
+    const root = rr(2000, 2600);
+    const v = rr(0.02, 0.032);
+    const n = 4 + Math.floor(Math.random() * 6);
+    let t0 = t;
+    for (let i = 0; i < n; i++) {
+      const f = root * Math.pow(2, G.pick(scale) / 12);
+      if (Math.random() < 0.22) {
+        // さえずりのトリル
+        for (let k = 0; k < 6; k++) chirp(t0 + k * 0.034, f * (k % 2 ? 1.12 : 1), f * (k % 2 ? 1.0 : 1.1), 0.03, v * 0.75, p);
+        t0 += 0.22;
+      } else {
+        const d = rr(0.07, 0.2);
+        chirp(t0, f * rr(0.9, 1.04), f * rr(0.98, 1.18), d, v, p);
+        t0 += d + rr(0.03, 0.09);
+      }
+    }
+    return t0 - t;
+  }
+  // カモメ：ミャーオ、ミャー（海のほうから）
+  function gull(t) {
+    const b = envBuses();
+    const p = panNode(G.pick([-1, 1]) * rr(0.5, 0.95));
+    p.connect(b.far);
+    const n = 2 + Math.floor(Math.random() * 3);
+    let s = rr(0.92, 1.12);
+    const v = rr(0.02, 0.034);
+    for (let i = 0; i < n; i++) {
+      const d = rr(0.22, 0.4);
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(900 * s, t);
+      o.frequency.linearRampToValueAtTime(1450 * s, t + d * 0.25);
+      o.frequency.exponentialRampToValueAtTime(820 * s, t + d);
+      const vib = ctx.createOscillator();
+      vib.frequency.value = rr(24, 32);
+      const vg = ctx.createGain();
+      vg.gain.value = 22 * s;
+      vib.connect(vg).connect(o.frequency);
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 1700 * s;
+      bp.Q.value = 2.4;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(v, t + 0.035);
+      g.gain.setValueAtTime(v, t + d * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(bp).connect(g).connect(p);
+      o.start(t); vib.start(t);
+      o.stop(t + d + 0.02); vib.stop(t + d + 0.02);
+      t += d + rr(0.08, 0.22);
+      s *= rr(0.94, 0.99);
+    }
+    return n * 0.45;
+  }
+  // カラス：カァ、カァ（夕方）
+  function crow(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.8, 0.8));
+    p.connect(b.far);
+    const n = 2 + Math.floor(Math.random() * 2);
+    const v = rr(0.026, 0.04);
+    const f0 = rr(380, 470);
+    for (let i = 0; i < n; i++) {
+      const d = rr(0.32, 0.46);
+      const o = ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(f0 * 1.08, t);
+      o.frequency.exponentialRampToValueAtTime(f0 * 0.86, t + d);
+      // しゃがれ声：速いゆらぎ
+      const am = ctx.createOscillator();
+      am.frequency.value = rr(55, 75);
+      const amg = ctx.createGain();
+      amg.gain.value = 0.45;
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      am.connect(amg).connect(g.gain);
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 1150;
+      bp.Q.value = 1.6;
+      const env2 = ctx.createGain();
+      env2.gain.setValueAtTime(0.0001, t);
+      env2.gain.linearRampToValueAtTime(v, t + 0.04);
+      env2.gain.exponentialRampToValueAtTime(0.0001, t + d);
+      o.connect(bp).connect(g).connect(env2).connect(p);
+      g.gain.setValueAtTime(0.55, t);
+      o.start(t); am.start(t);
+      o.stop(t + d + 0.02); am.stop(t + d + 0.02);
+      t += d + rr(0.25, 0.45);
+    }
+    return n * 0.8;
+  }
+  // ひぐらし：カナカナカナ…（夕暮れ）
+  function higurashi(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.8, 0.8));
+    p.connect(b.far);
+    const f = rr(4100, 4700);
+    const n = 14 + Math.floor(Math.random() * 10);
+    const v = rr(0.012, 0.02);
+    const o = ctx.createOscillator();
+    o.type = 'sine';
+    const trem = ctx.createOscillator();
+    trem.frequency.value = rr(80, 110);
+    const tg = ctx.createGain();
+    tg.gain.value = 0.5;
+    const g = ctx.createGain();
+    g.gain.value = 0.5;
+    trem.connect(tg).connect(g.gain);
+    const env2 = ctx.createGain();
+    env2.gain.setValueAtTime(0, t);
+    let tt = t;
+    let gap = 0.12;
+    o.frequency.setValueAtTime(f, t);
+    for (let i = 0; i < n; i++) {
+      const k = i / n;
+      const amp = v * Math.min(1, (i + 1) / 3) * (1 - k * 0.75);
+      o.frequency.setValueAtTime(f * (1 - k * 0.07) * (i % 2 ? 0.97 : 1), tt);
+      env2.gain.setValueAtTime(0, tt);
+      env2.gain.linearRampToValueAtTime(amp, tt + 0.02);
+      env2.gain.linearRampToValueAtTime(amp * 0.5, tt + gap * 0.5);
+      env2.gain.linearRampToValueAtTime(0, tt + gap * 0.9);
+      tt += gap;
+      gap *= 1.018;
+    }
+    o.connect(g).connect(env2).connect(p);
+    o.start(t); trem.start(t);
+    o.stop(tt + 0.1); trem.stop(tt + 0.1);
+    return tt - t;
+  }
+  // コオロギ：コロコロ（3〜4発の短い音を、くり返し）
+  function cricket(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.9, 0.9));
+    p.connect(Math.random() < 0.6 ? b.near : b.far);
+    const f = rr(4300, 5300);
+    const v = rr(0.008, 0.016);
+    const o = ctx.createOscillator();
+    o.frequency.value = f;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    const chirps = 4 + Math.floor(Math.random() * 7);
+    const per = rr(0.42, 0.7);
+    const pulses = 3 + Math.floor(Math.random() * 2);
+    let tt = t;
+    for (let c = 0; c < chirps; c++) {
+      for (let k = 0; k < pulses; k++) {
+        const s = tt + k * 0.032;
+        g.gain.setValueAtTime(0, s);
+        g.gain.linearRampToValueAtTime(v, s + 0.006);
+        g.gain.linearRampToValueAtTime(0, s + 0.02);
+      }
+      tt += per;
+    }
+    o.connect(g).connect(p);
+    o.start(t);
+    o.stop(tt + 0.05);
+    return tt - t;
+  }
+  // 鈴虫：リーン、リーン
+  function suzumushi(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.85, 0.85));
+    p.connect(b.near);
+    const f = rr(3900, 4500);
+    const v = rr(0.007, 0.013);
+    const o = ctx.createOscillator();
+    o.frequency.value = f;
+    const trem = ctx.createOscillator();
+    trem.frequency.value = rr(40, 55);
+    const tg = ctx.createGain();
+    tg.gain.value = 0.5;
+    const am = ctx.createGain();
+    am.gain.value = 0.5;
+    trem.connect(tg).connect(am.gain);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    const n = 3 + Math.floor(Math.random() * 4);
+    let tt = t;
+    for (let i = 0; i < n; i++) {
+      const d = rr(0.45, 0.85);
+      g.gain.setValueAtTime(0, tt);
+      g.gain.linearRampToValueAtTime(v, tt + 0.06);
+      g.gain.setValueAtTime(v, tt + d * 0.7);
+      g.gain.linearRampToValueAtTime(0, tt + d);
+      tt += d + rr(0.25, 0.5);
+    }
+    o.connect(am).connect(g).connect(p);
+    o.start(t); trem.start(t);
+    o.stop(tt + 0.05); trem.stop(tt + 0.05);
+    return tt - t;
+  }
+  // フクロウ：ホー… ホッホー
+  function owl(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.6, 0.6));
+    p.connect(b.far);
+    const f = rr(330, 400);
+    const v = rr(0.02, 0.03);
+    const pat = Math.random() < 0.5 ? [[0, 0.42], [0.85, 0.18], [1.12, 0.18], [1.4, 0.55]] : [[0, 0.5], [0.9, 0.6]];
+    pat.forEach(([o0, d]) => {
+      const s = t + o0;
+      const o = ctx.createOscillator();
+      o.frequency.setValueAtTime(f * 1.03, s);
+      o.frequency.exponentialRampToValueAtTime(f * 0.94, s + d);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, s);
+      g.gain.linearRampToValueAtTime(v, s + 0.07);
+      g.gain.setValueAtTime(v, s + d * 0.6);
+      g.gain.exponentialRampToValueAtTime(0.0001, s + d);
+      const o2 = ctx.createOscillator();
+      o2.frequency.value = f * 2.01;
+      const g2 = ctx.createGain();
+      g2.gain.value = 0.12;
+      o2.connect(g2).connect(g);
+      o.connect(g).connect(p);
+      o.start(s); o2.start(s);
+      o.stop(s + d + 0.02); o2.stop(s + d + 0.02);
+    });
+    return 2.2;
+  }
+  // 雨だれ：ぽつ、ぽつ
+  function drip(t) {
+    const b = envBuses();
+    const p = panNode(rr(-0.9, 0.9));
+    p.connect(b.near);
+    const f = rr(1800, 3400);
+    chirp(t, f, f * 0.55, rr(0.02, 0.04), rr(0.01, 0.022), p);
+    return 0.05;
+  }
+  // 町の鐘：ゴーン（昼と夕方）
+  function bell(t, n) {
+    const b = envBuses();
+    const p = panNode(rr(-0.3, 0.3));
+    p.connect(b.far);
+    const f = 220 * rr(0.98, 1.02);
+    const parts = [[0.5, 0.5, 5], [1, 1, 4.2], [1.19, 0.45, 3], [1.5, 0.32, 2.6], [2, 0.28, 2], [2.52, 0.16, 1.5], [3.01, 0.1, 1.1], [4.07, 0.06, 0.8]];
+    for (let i = 0; i < n; i++) {
+      const s = t + i * 2.6;
+      parts.forEach(([r, a, dec]) => {
+        const o = ctx.createOscillator();
+        o.frequency.value = f * r * (1 + (Math.random() - 0.5) * 0.002);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, s);
+        g.gain.linearRampToValueAtTime(0.018 * a, s + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, s + dec);
+        o.connect(g).connect(p);
+        o.start(s);
+        o.stop(s + dec + 0.05);
+      });
+    }
+    return n * 2.6 + 3;
+  }
+
+  // 時間帯の窓（p は 0〜1 の1日。夜明け 0.9〜0.12、昼 0.04〜0.56、夕方 0.55〜0.7、夜 0.68〜0.92）
+  function win(p, a, b, fade = 0.03) {
+    const d = (x) => ((x % 1) + 1) % 1;
+    const len = d(b - a);
+    const x = d(p - a);
+    if (x > len) return 0;
+    return Math.min(1, x / fade, (len - x) / fade);
+  }
+  // 各声の「1分あたりの回数」と、鳴ってよい時間帯
+  const VOICES = {
+    sparrow: { fn: sparrow, rate: 7, gap: 3, w: (p, wx) => (win(p, 0.92, 0.2) * 1.3 + win(p, 0.15, 0.56) * 0.55) * (1 - wx.rain * 0.9) },
+    songbird: { fn: songbird, rate: 4, gap: 6, w: (p, wx) => (win(p, 0.9, 0.16) * 1.4 + win(p, 0.16, 0.5) * 0.25) * (1 - wx.rain) },
+    gull: { fn: gull, rate: 2.6, gap: 9, w: (p, wx) => (win(p, 0.02, 0.62) * 1 + win(p, 0.94, 0.04) * 0.4) * (1 - wx.rain * 0.7) },
+    crow: { fn: crow, rate: 2.4, gap: 8, w: (p, wx) => win(p, 0.54, 0.7, 0.04) * (1 - wx.rain * 0.8) },
+    higurashi: { fn: higurashi, rate: 2.2, gap: 7, w: (p, wx) => win(p, 0.56, 0.69, 0.03) * (1 - wx.rain) * (wx.cloud ? 0.6 : 1) },
+    cricket: { fn: cricket, rate: 9, gap: 1.2, w: (p, wx) => win(p, 0.66, 0.95, 0.04) * (1 - wx.rain * 0.85) },
+    suzumushi: { fn: suzumushi, rate: 5, gap: 2.5, w: (p, wx) => win(p, 0.68, 0.92, 0.04) * (1 - wx.rain * 0.9) },
+    owl: { fn: owl, rate: 0.9, gap: 18, w: (p, wx) => win(p, 0.72, 0.9, 0.03) * (1 - wx.rain * 0.6) },
+    drip: { fn: drip, rate: 70, gap: 0.08, w: (p, wx) => Math.max(0, wx.rain - 0.25) * 1.3 },
+  };
+  E.busy = {};
+
+  // 毎フレーム呼ぶ。active=ギルドの画面が見えているか
+  A.envTick = function (dt, active) {
+    if (!ctx || ctx.state !== 'running' || !G.state || !G.scene || !G.scene.dayPhase) return;
+    const s = G.state.settings;
+    const vol = s.env == null ? 0.7 : s.env;
+    const want = active && vol > 0 && s.sfx > 0 ? Math.pow(vol, 1.2) * 4.2 * Math.min(1, 0.4 + s.sfx) * (A.muffled ? 0.55 : 1) : 0;
+    if (!E.bus && want <= 0) return;
+    const b = envBuses();
+    const bd = envBeds();
+    const now = ctx.currentTime;
+    if (Math.abs(want - E.level) > 0.004) {
+      E.level = want;
+      b.out.gain.setTargetAtTime(want, now, want > 0 ? 0.9 : 0.35);
+    }
+    if (want <= 0) return;
+    const p = G.scene.dayPhase();
+    const wx = G.scene.weather();
+    const night = G.scene.night();
+    // 床の強さ（0.5秒ごとに少しずつ）
+    E.bedT = (E.bedT || 0) - dt;
+    if (E.bedT <= 0) {
+      E.bedT = rr(0.9, 1.8);
+      const windBase = 0.012 + night * 0.006 + (wx.cloud ? 0.008 : 0) + wx.rain * 0.012 + win(p, 0.55, 0.72) * 0.006;
+      const gust = E.gustUntil > now ? 1 : 0;
+      bd.wG.gain.setTargetAtTime(windBase * rr(0.55, 1.1) * (gust ? 2.4 : 1), now, gust ? 0.8 : 1.6);
+      bd.wBP.frequency.setTargetAtTime(rr(280, 560) * (gust ? 1.7 : 1), now, 1.4);
+      if (bd.wPan.pan) bd.wPan.pan.setTargetAtTime(rr(-0.5, 0.5), now, 2.5);
+      bd.hG.gain.setTargetAtTime(gust && Math.random() < 0.6 ? windBase * 0.9 : 0.0001, now, 1.1);
+      bd.hBP.frequency.setTargetAtTime(rr(620, 1150), now, 1.6);
+      bd.rG.gain.setTargetAtTime(wx.rain * 0.05, now, 2);
+      bd.rLP.frequency.setTargetAtTime(4500 + wx.rain * 3000, now, 2);
+      bd.sG.gain.setTargetAtTime(0.03 + night * 0.012, now, 2);
+    }
+    // 突風
+    if (now > (E.gustAt || 0)) {
+      E.gustAt = now + rr(14, 40) / (1 + (wx.cloud ? 0.6 : 0) + wx.rain);
+      E.gustUntil = now + rr(3, 6);
+      E.bedT = 0;
+    }
+    // 波：数秒おきに寄せる（夜は少し大きく聞こえる）
+    if (now > E.waveAt - 0.05) {
+      const t = Math.max(now + 0.05, E.waveAt);
+      wave(t, rr(0.09, 0.15) * (1 + night * 0.25) * (1 + wx.rain * 0.2));
+      E.waveAt = t + rr(4.2, 7.5);
+    }
+    // 町の鐘：昼（正午）と夕暮れ
+    if (E.lastPhase >= 0) {
+      const cross = (x) => (E.lastPhase < x && p >= x) || (E.lastPhase > p && x <= p);
+      if (cross(0.3)) bell(now + 0.3, 3);
+      else if (cross(0.6)) bell(now + 0.3, 5);
+    }
+    E.lastPhase = p;
+    // 生きものたち
+    for (const k in VOICES) {
+      const vc = VOICES[k];
+      if ((E.busy[k] || 0) > now) continue;
+      const w = vc.w(p, wx);
+      if (w <= 0.001) continue;
+      if (Math.random() < (vc.rate / 60) * w * dt) {
+        const len = vc.fn(now + rr(0.02, 0.2)) || 1;
+        E.busy[k] = now + vc.gap * rr(0.7, 1.4) + (k === 'cricket' || k === 'drip' ? 0 : len);
+      }
+    }
+  };
+  // テスト用：声をすぐ鳴らす
+  A.envPlay = function (k) { if (!ctx) return; if (k === 'wave') wave(ctx.currentTime + 0.05, 0.07); else if (k === 'bell') bell(ctx.currentTime + 0.05, 2); else VOICES[k].fn(ctx.currentTime + 0.05); };
+  A.envState = () => ({ level: E.level, busy: Object.assign({}, E.busy) });
 
   // ---------------------------------------------------------------- sfx helpers
   const last = {};

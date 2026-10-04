@@ -981,3 +981,43 @@ img.ci { width: 18px; height: 18px; vertical-align: -4px; }
   .icon-btn { width: 31px; height: 31px; }
   .icon-btn svg { width: 16px; height: 16px; }
 }
+
+#reelStreak b { font-family: var(--font-num); font-size: 13px; }
+#reelStreak small { margin-left: 6px; font-size: 10px; font-weight: 800; opacity: 0.85; }
+
+/* ================================================================ 任務 */
+.obj-row { display: flex; gap: 6px; align-items: stretch; }
+.obj-row .obj { flex: 1; min-width: 0; }
+.mis-btn {
+  position: relative; flex: none; display: flex; align-items: center; gap: 4px;
+  padding: 0 10px 0 8px; border-radius: 12px; color: var(--brass);
+  font-family: var(--font-head); font-weight: 800; font-size: 12px; letter-spacing: 0.06em;
+  background: linear-gradient(180deg, rgba(22, 35, 74, 0.94), rgba(10, 17, 40, 0.94));
+  border: 1px solid var(--line-2);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 236, 190, 0.12);
+}
+.mis-btn svg { width: 18px; height: 18px; }
+.mis-btn span { color: #e9d9a8; }
+.mis-btn .nb { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--ember); color: #fff; font-style: normal; font-size: 10px; font-weight: 900; display: grid; place-items: center; box-shadow: 0 0 0 2px #0b1330; font-family: var(--font-num); }
+.mis-btn.ready { border-color: rgba(240, 194, 74, 0.8); animation: glow 1.4s ease-in-out infinite; }
+.mis-btn.ready svg { animation: misWiggle 2.4s ease-in-out infinite; }
+@keyframes misWiggle { 0%, 80%, 100% { transform: rotate(0); } 85% { transform: rotate(-12deg); } 90% { transform: rotate(10deg); } 95% { transform: rotate(-5deg); } }
+@media (max-width: 380px) { .mis-btn span { display: none; } .mis-btn { padding: 0 8px; } }
+
+.card.mis, .card.mis-bonus { display: flex; align-items: center; gap: 10px; }
+.card.mis img, .card.mis-bonus img { width: 40px; height: 40px; flex: none; border-radius: 10px; }
+.card.mis .grow, .card.mis-bonus .grow { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.card.mis b, .card.mis-bonus b { font-size: 13px; }
+.card.mis small, .card.mis-bonus small { font-size: 11px; color: var(--muted); }
+.card.mis .bar { height: 5px; }
+.card.mis.done { border-color: rgba(240, 194, 74, 0.6); background: linear-gradient(90deg, rgba(255, 200, 58, 0.12), rgba(120, 150, 255, 0.03)); }
+.card.mis.done .bar i { background: var(--gold-grad); }
+.card.mis.got, .card.mis-bonus.got { opacity: 0.55; }
+.card.mis-bonus { border-color: rgba(255, 200, 58, 0.45); background: linear-gradient(90deg, rgba(255, 200, 58, 0.16), rgba(180, 120, 255, 0.08)); }
+.card.mis-bonus.done { animation: glow 1.4s ease-in-out infinite; }
+.card .stamp {
+  flex: none; font-family: var(--font-head); font-weight: 900; font-size: 12px; letter-spacing: 0.1em;
+  color: #e0563a; border: 2px solid #e0563a; border-radius: 8px; padding: 3px 8px;
+  transform: rotate(-10deg); opacity: 0.9;
+}
+.card.mis .btn, .card.mis-bonus .btn { min-width: 78px; }

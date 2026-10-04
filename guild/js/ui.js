@@ -66,6 +66,7 @@
     G.$('#boostChip').addEventListener('click', () => { G.audio.init(); G.treasury.open('bag'); });
     G.on('boost', () => { boostKey = ''; U.refreshHud(); });
     G.on('started', () => { if (G.state.flags.tut >= 90) setTimeout(() => G.treasury.checkDaily(), 900); });
+    G.$('#missionBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'missions') U.closeSheet(); else U.openSheet('missions'); });
     G.$('#menuBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'records') U.closeSheet(); else U.openSheet('records'); });
     G.$('#expStrip').addEventListener('click', () => U.openSheet('quests'));
     setupSheetDrag();
@@ -349,10 +350,11 @@
     back.onclick = () => { subView = null; G.audio.sfx('soft'); renderSheet(); };
     back.innerHTML = IC.back;
     if (subView && subView.kind === 'dispatch') { title.textContent = '派遣するメンバー'; renderDispatch(body); return; }
-    const titles = { quests: '依頼', roster: '冒険者', build: '施設', records: '記録と設定', treasury: '宝物庫', inbox: 'お知らせ' };
+    const titles = { quests: '依頼', roster: '冒険者', build: '施設', records: '記録と設定', treasury: '宝物庫', inbox: 'お知らせ', missions: '任務' };
     title.textContent = titles[sheetTab] || '';
     if (sheetTab === 'treasury') { G.treasury.render(body); U._sig = sheetSig(); return; }
     if (sheetTab === 'inbox') { G.notify.render(body); U._sig = sheetSig(); return; }
+    if (sheetTab === 'missions') { G.missions.render(body); U._sig = sheetSig(); return; }
     if (sheetTab === 'quests') renderQuests(body);
     else if (sheetTab === 'roster') renderRoster(body);
     else if (sheetTab === 'build') renderBuild(body);
@@ -376,7 +378,7 @@
   // シートの中身が変わる出来事だけを拾う（お金の増減では描き直さない）
   function sheetSig() {
     const st = G.state;
-    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
+    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
   }
   function refreshAfford() {
     const st = G.state;
@@ -716,6 +718,7 @@
       <button class="row mute" id="muteBtn"></button>
       <label class="row"><span>BGM</span><input type="range" id="setBgm" min="0" max="1" step="0.05" value="${s.bgm}"></label>
       <label class="row"><span>効果音</span><input type="range" id="setSfx" min="0" max="1" step="0.05" value="${s.sfx}"></label>
+      <label class="row"><span>環境音 <small>海・風・鳥・虫</small></span><input type="range" id="setEnv" min="0" max="1" step="0.05" value="${s.env == null ? 0.7 : s.env}"></label>
       <label class="row tog"><span>振動</span><input type="checkbox" id="setHaptics" ${s.haptics ? 'checked' : ''}><i class="sw"></i></label>
       <label class="row tog"><span>冒険譚を自動で次へ</span><input type="checkbox" id="setAuto" ${s.autoplay ? 'checked' : ''}><i class="sw"></i></label>
       <label class="row tog"><span>流れるコメント</span><input type="checkbox" id="setDanmaku" ${s.danmaku !== false ? 'checked' : ''}><i class="sw"></i></label>
@@ -728,6 +731,7 @@
     const bind = (id, fn) => G.$(id, body).addEventListener('input', fn);
     bind('#setBgm', (e) => { s.bgm = +e.target.value; G.audio.applyVolumes(); syncSoundBtn(); });
     bind('#setSfx', (e) => { s.sfx = +e.target.value; G.audio.applyVolumes(); G.audio.setAmbient(st.fac.tavern > 0 ? 1 : 0); syncSoundBtn(); G.audio.sfx('coin', 3); });
+    bind('#setEnv', (e) => { s.env = +e.target.value; });
     bind('#setHaptics', (e) => { s.haptics = e.target.checked; G.haptic(12); });
     bind('#setAuto', (e) => { s.autoplay = e.target.checked; });
     bind('#setDanmaku', (e) => { s.danmaku = e.target.checked; });

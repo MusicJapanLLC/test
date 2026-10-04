@@ -421,6 +421,8 @@
     st.bag[id] = Math.max(0, (st.bag[id] || 0) + n);
     G.emit('itemsChanged');
   };
+  // 任務用：持ち物を使った数
+  IT.used = function (n = 1) { const st = G.state; st.stats.itemsUsed = (st.stats.itemsUsed || 0) + n; };
   IT.boost = function (k) {
     const b = (G.state.boosts || {})[k];
     return b && b.until > G.now() ? b : null;
@@ -436,6 +438,7 @@
     const rest = cur ? cur.until - now : 0;
     st.boosts[c.boost.k] = { mult: Math.max(c.boost.mult || 1, cur ? cur.mult : 1), add: c.boost.add || 0, from: cur ? cur.from : now, until: now + rest + c.boost.sec, src: id };
     IT.addCons(id, -1);
+    IT.used();
     G.emit('boost', c.boost.k);
     return true;
   };
@@ -458,6 +461,7 @@
     const now = G.now();
     st.active.forEach((ex) => { const d = ex.endAt - now; ex.endAt = now - 0.01; ex.startAt -= Math.max(0, d); });
     IT.addCons('horn', -1);
+    IT.used();
     return st.active.length;
   };
   IT.finishOne = function (exId) {
@@ -469,6 +473,7 @@
     ex.endAt = now - 0.01;
     ex.startAt -= Math.max(0, d);
     IT.addCons('finish', -1);
+    IT.used();
     return ex;
   };
 
@@ -497,6 +502,7 @@
     } else if (kind === 'key') {
       if (IT.cons('key') <= 0) return null;
       IT.addCons('key', -1);
+      IT.used();
     } else {
       const cost = kind === 'ten' ? IT.CHEST10_COST : IT.CHEST_COST;
       if ((st.crystals || 0) < cost) return null;
