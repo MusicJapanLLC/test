@@ -42,6 +42,7 @@
       setTimeout(() => {
         if (off && off.away > 60 && (off.tavern > 0 || off.resolved > 0 || off.trained > 0)) G.ui.welcomeBack(off);
         if (G.state.flags.tut < 90) G.ui.startTutorial();
+        if (G.stars) G.stars.afterBoot();
         G.emit('started');
       }, 650);
     };

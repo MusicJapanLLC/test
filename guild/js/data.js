@@ -10,8 +10,12 @@
     thief: { name: '盗賊', pow: 9, color: '#3c9a6a', rank: 3, perk: '獲得ゴールド +15%' },
     cleric: { name: '僧侶', pow: 8, color: '#e2c870', rank: 4, perk: 'パーティの成功率 +8%' },
     archer: { name: '弓使い', pow: 12, color: '#a0703c', rank: 6, perk: '遠征時間 -10%' },
+    // 灯火の星で開く職業
+    knight: { name: '騎士', pow: 11, color: '#6f86b0', rank: 3, star: 'knight', perk: 'パーティの成功率 +6%・失敗しても報酬の半分' },
+    bard: { name: '吟遊詩人', pow: 8, color: '#c8609a', rank: 2, star: 'bard', perk: '獲得名声 +20%・パーティの経験値 +15%・歌で仲間を癒やす' },
+    alchemist: { name: '錬金術師', pow: 10, color: '#3f9e8e', rank: 4, star: 'alch', perk: '素材 +30%・レア発見 +20%' },
   };
-  D.CLASS_ORDER = ['warrior', 'mage', 'thief', 'cleric', 'archer'];
+  D.CLASS_ORDER = ['warrior', 'mage', 'thief', 'cleric', 'archer', 'knight', 'bard', 'alchemist'];
 
   // ---------------- 性格 ----------------
   D.TRAITS = {
@@ -68,6 +72,19 @@
       monsters: ['wyvern', 'dragon'],
       pal: { sky1: '#d9744a', sky2: '#ffd2a1', far: '#a35b4f', mid: '#7a4140', near: '#552c30', ground: '#6e4a42', accent: '#ffe08a' },
     },
+    // 灯火の星で開く土地
+    {
+      id: 'harbor', name: '潮風の港', short: '港', rank: 9, size: 4, star: 'harbor',
+      pow: [700, 1150], dur: [2400, 4200], gold: [16000, 26000], mat: [20, 34], fame: [120, 190], exp: [300, 460],
+      monsters: ['crab', 'kraken'],
+      pal: { sky1: '#5fb8e0', sky2: '#d8f2ff', far: '#7fa8c0', mid: '#5a7f96', near: '#3e5e74', ground: '#9a7a52', accent: '#ffe7a0' },
+    },
+    {
+      id: 'sky', name: '天空城', short: '天空', rank: 10, size: 4, star: 'sky',
+      pow: [1100, 1800], dur: [3600, 6000], gold: [30000, 48000], mat: [30, 50], fame: [180, 280], exp: [460, 700],
+      monsters: ['griffin', 'sentinel'],
+      pal: { sky1: '#8aa8f0', sky2: '#fbefff', far: '#c8c8ec', mid: '#b0b4dc', near: '#9098c8', ground: '#eeeaf6', accent: '#ffe08a' },
+    },
   ];
   D.AREA_BY_ID = {};
   D.AREAS.forEach((a, i) => { a.index = i; D.AREA_BY_ID[a.id] = a; });
@@ -90,8 +107,12 @@
     knight: { name: '亡霊騎士', color: '#5b5f8f', verb: '討伐' },
     wyvern: { name: 'ワイバーン', color: '#4f9a72', verb: '討伐' },
     dragon: { name: '紅蓮竜', color: '#c8402e', verb: '討伐' },
+    crab: { name: 'オオバサミガニ', color: '#e0603a', verb: '退治' },
+    kraken: { name: '港のクラーケン', color: '#8a4ab0', verb: '討伐' },
+    griffin: { name: 'グリフォン', color: '#c8a060', verb: '討伐' },
+    sentinel: { name: '天翼の守護像', color: '#e8e4f0', verb: '鎮圧' },
   };
-  D.MONSTER_ORDER = ['slime', 'rabbit', 'wolf', 'mushroom', 'bat', 'golem', 'skeleton', 'knight', 'wyvern', 'dragon'];
+  D.MONSTER_ORDER = ['slime', 'rabbit', 'wolf', 'mushroom', 'bat', 'golem', 'skeleton', 'knight', 'wyvern', 'dragon', 'crab', 'kraken', 'griffin', 'sentinel'];
 
   // ---------------- 施設 ----------------
   // floor の順に積み上がる。cost(lv) は「lv → lv+1」に必要な費用。lv=0 は建設。
@@ -161,7 +182,7 @@
     5: ['錬金室を建てられる', '受付嬢の「自動派遣」'],
     6: ['職業「弓使い」', 'エリア「灰の古城」', '深淵の迷宮（B1F〜B100F）'],
     7: ['見張り塔を建てられる'],
-    8: ['エリア「竜の背嶺」'],
+    8: ['エリア「竜の背嶺」', 'ギルドの再建（灯火の星）'],
     9: ['ギルドの金の旗'],
     10: ['最終依頼「紅蓮竜王の討伐」'],
   };

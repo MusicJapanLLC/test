@@ -28,6 +28,9 @@
     dagger: { slot: 'weapon', cls: 'thief', icon: 'dagger', names: ['果物ナイフ', '盗賊のダガー', '影縫いの短刀', '夜鴉の双刃', '月喰らい'] },
     mace: { slot: 'weapon', cls: 'cleric', icon: 'mace', names: ['木の聖印', '銀のメイス', '祈りの錫杖', '聖女の鐘', '灯火の聖槌'] },
     bow: { slot: 'weapon', cls: 'archer', icon: 'bow', names: ['狩人の弓', '樫の長弓', '風切りの弓', '翠玉の神弓', '星穿ちの弓'] },
+    lance: { slot: 'weapon', cls: 'knight', icon: 'lance', names: ['見習いの槍', '騎士の槍', '白銀のランス', '竜騎士の聖槍', '王槍グラディウス'] },
+    lute: { slot: 'weapon', cls: 'bard', icon: 'lute', names: ['古びたリュート', '旅のリュート', '月光の竪琴', '妖精王のハープ', '天上の調べ'] },
+    flask: { slot: 'weapon', cls: 'alchemist', icon: 'flask', names: ['ガラスのフラスコ', '錬金術の小瓶', '賢者の蒸留器', 'エリクサーの瓶', '創世のアランビック'] },
     armor: { slot: 'armor', icon: 'armor', names: ['布の服', '革の鎧', 'ミスリルの胸当て', '竜鱗の鎧', '灯王の鎧'] },
     robe: { slot: 'armor', icon: 'robe', names: ['旅人のローブ', '魔導士のローブ', '星織りの法衣', '月影の聖衣', '天衣ルミナリア'] },
     charm: { slot: 'acc', icon: 'charm', names: ['木彫りのお守り', '銀の首飾り', '妖精の首飾り', '不死鳥の羽根', '女神の涙'] },
@@ -72,6 +75,9 @@
     thief: { 影縫い: { succ: 3 }, 月下千刃: { crit: 10 }, 燕返し: { speed: 6 }, 夜霧の舞: { gold: 15 }, 乱れ椿: { atk: 8 } },
     cleric: { 聖灯の祈り: { succ: 5 }, 天使の鐘: { exp: 15 }, 光輪の裁き: { atk: 8 }, 浄化の陽: { great: 3 } },
     archer: { 流星の矢: { crit: 8 }, 風穿ち: { speed: 6 }, 千里一射: { atk: 10 }, 五月雨撃ち: { atk: 6, crit: 4 }, 翠嵐の矢: { find: 15 } },
+    knight: { 聖盾突撃: { atk: 8 }, 不動の誓い: { succ: 5 }, 蒼天の槍: { crit: 8 }, '王剣・灯守り': { atk: 10, succ: 2 } },
+    bard: { 勇気の歌: { great: 3 }, 眠りの子守唄: { succ: 4 }, 英雄譚の詩: { exp: 15 }, 喝采のフィナーレ: { gold: 15 } },
+    alchemist: { 爆裂フラスコ: { atk: 10 }, 賢者の霧: { find: 15 }, 黄金錬成: { gold: 15 }, 万能薬の雨: { succ: 4 } },
   };
   IT.skillFx = (cls, name) => (IT.SKILLS[cls] && IT.SKILLS[cls][name]) || null;
   IT.skillSlots = (a) => (a.lv >= 20 ? 3 : 2);
@@ -130,7 +136,7 @@
   };
   IT.maxArea = () => {
     const st = G.state;
-    return st ? Math.max(0, G.D.AREAS.filter((a) => a.rank <= st.rank).length - 1) : 0;
+    return st ? Math.max(0, (G.sim ? G.sim.unlockedAreas(st) : G.D.AREAS.filter((a) => a.rank <= st.rank)).reduce((m, a) => Math.max(m, a.index), 0)) : 0;
   };
   const fmtV = (v) => (v >= 10 ? Math.round(v) : Math.round(v * 10) / 10);
   IT.fmtV = fmtV;

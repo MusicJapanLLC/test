@@ -362,11 +362,12 @@
     back.onclick = () => { subView = null; G.audio.sfx('soft'); renderSheet(); };
     back.innerHTML = IC.back;
     if (subView && subView.kind === 'dispatch') { title.textContent = '派遣するメンバー'; renderDispatch(body); return; }
-    const titles = { quests: '依頼', roster: '冒険者', build: '施設', records: '記録と設定', treasury: '宝物庫', inbox: 'お知らせ', missions: '任務' };
+    const titles = { quests: '依頼', roster: '冒険者', build: '施設', records: '記録と設定', treasury: '宝物庫', inbox: 'お知らせ', missions: '任務', stars: '灯火の星' };
     title.textContent = titles[sheetTab] || '';
     if (sheetTab === 'treasury') { G.treasury.render(body); U._sig = sheetSig(); return; }
     if (sheetTab === 'inbox') { G.notify.render(body); U._sig = sheetSig(); return; }
     if (sheetTab === 'missions') { G.missions.render(body); U._sig = sheetSig(); return; }
+    if (sheetTab === 'stars') { G.stars.render(body); U._sig = sheetSig(); return; }
     if (sheetTab === 'quests') renderQuests(body);
     else if (sheetTab === 'roster') renderRoster(body);
     else if (sheetTab === 'build') renderBuild(body);
@@ -390,7 +391,7 @@
   // シートの中身が変わる出来事だけを拾う（お金の増減では描き直さない）
   function sheetSig() {
     const st = G.state;
-    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
+    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : sheetTab === 'stars' ? G.stars.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
   }
   function refreshAfford() {
     const st = G.state;
@@ -545,6 +546,9 @@
     if (picked.some((a) => a.cls === 'thief')) perks.push('盗賊 ゴールド+15%');
     if (picked.some((a) => a.cls === 'archer')) perks.push('弓使い 時間-10%');
     if (picked.some((a) => a.cls === 'warrior')) perks.push('戦士 失敗でも半分');
+    if (picked.some((a) => a.cls === 'knight')) perks.push('騎士 成功率+6%');
+    if (picked.some((a) => a.cls === 'bard')) perks.push('吟遊詩人 名声+20%');
+    if (picked.some((a) => a.cls === 'alchemist')) perks.push('錬金術師 素材+30%');
     let h = `<div class="dp-head" style="--area:${area.pal.mid}">
       <img class="mon big" alt="" src="${U.monsterThumb(q.monster, 84)}">
       <div class="grow"><span class="area">${area.name}</span><b class="q-name">${G.esc(q.name)}</b><div class="q-meta"><span>${IC.sword}必要戦力 ${G.fmt(q.req)}</span><span>${IC.people}${q.size}人まで</span></div><div class="q-rw">${rewardRow(q)}</div></div>
@@ -628,6 +632,14 @@
       </div>`;
     });
     h += `</div>`;
+    if ((st.alumni || []).length) {
+      const full = st.adv.length >= beds;
+      h += `<div class="sec"><h3>かつての仲間 <small>${st.alumni.length}人</small><span class="h-right">無料で呼び戻せる</span></h3>`;
+      st.alumni.slice(0, 12).forEach((a) => {
+        h += `<div class="card cand alumni"><img class="face" alt="" src="${art.portrait(a.look, 56)}" style="--cls:${D.CLASSES[a.cls].color}"><div class="grow"><div class="a-top"><b>${G.esc(a.name)}</b><span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span></div><div class="a-meta"><span class="trait">${D.TRAITS[a.trait].name}</span>${Object.keys(a.sk || {}).length ? `<span class="sk">技${Object.keys(a.sk).length}</span>` : ''}</div></div><button class="btn sm go" data-recall="${a.id}" ${full ? 'disabled' : ''}>${full ? 'ベッド不足' : '呼び戻す'}</button></div>`;
+      });
+      h += `</div>`;
+    }
     const nextC = st.candAt + S.CAND_INTERVAL;
     h += `<div class="sec"><h3>求職者 <span class="h-right">入れ替わりまで <b data-countdown="${nextC}">${G.fmtClock(nextC - now)}</b></span></h3>`;
     st.cands.forEach((c) => {
@@ -645,6 +657,14 @@
     });
     h += `</div>`;
     body.innerHTML = h;
+    G.$$('[data-recall]', body).forEach((b) => b.addEventListener('click', () => {
+      const r = S.recall(+b.dataset.recall);
+      if (!r.ok) { G.audio.sfx('error'); U.toast('ベッドが足りません。宿舎を強化しましょう', 'bad'); return; }
+      G.audio.sfx('door');
+      G.haptic(14);
+      U.toast(`${r.adv.name}が帰ってきた！「おかえり、マスター」`, 'good');
+      renderSheet();
+    }));
     G.$$('[data-hire]', body).forEach((b) => b.addEventListener('click', () => {
       const r = S.hire(+b.dataset.hire);
       if (!r.ok) {
@@ -938,7 +958,10 @@
     U.modal(`<div class="rankup info"><div class="ru-crest"><span>${st.rank}</span></div><small>ギルドランク</small><h2>${D.RANK_TITLES[st.rank - 1]}</h2>
       ${hi ? `<p>次のランクまで 名声 <b>${G.fmt(hi - st.fame)}</b></p><div class="bar big"><i style="width:${G.clamp((st.fame - D.RANK_FAME[st.rank - 1]) / (hi - D.RANK_FAME[st.rank - 1]), 0, 1) * 100}%"></i></div>` : '<p>最高ランクです！</p>'}
       ${nx ? `<p class="next">次のランクで：${nx.join('、')}</p>` : ''}
-      <p class="hint">名声は依頼を成功させると手に入ります</p></div>`, [{ text: '閉じる', cls: 'primary' }]);
+      <p class="hint">名声は依頼を成功させると手に入ります</p></div>`, [
+      st.rank >= S.REBIRTH_RANK || S.prestige().runs > 0 ? { text: `灯火の星（${S.prestige().stars}）`, cls: 'ghost', fn: () => setTimeout(() => G.stars.open(), 200) } : null,
+      { text: '閉じる', cls: 'primary' },
+    ].filter(Boolean));
   }
 
   U.welcomeBack = function (res) {

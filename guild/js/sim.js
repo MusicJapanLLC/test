@@ -87,6 +87,7 @@
   S.uniqueName = function () {
     const used = new Set((G.state ? G.state.adv : []).map((a) => a.name));
     (G.state ? G.state.cands : []).forEach((c) => used.add(c.name));
+    (G.state ? G.state.alumni || [] : []).forEach((c) => used.add(c.name));
     const free = D.NAMES.filter((n) => !used.has(n));
     return free.length ? G.pick(free) : G.pick(D.NAMES) + 'Ⅱ';
   };
@@ -103,11 +104,12 @@
   S.boardSize = (s = G.state) => s.fac.hall + 2;
   S.beds = (s = G.state) => D.beds(s.fac.bunks);
   S.offlineCap = (s = G.state) => (3 + s.fac.tower * 2) * 3600;
-  S.unlockedAreas = (s = G.state) => D.AREAS.filter((a) => a.rank <= s.rank);
-  S.unlockedClasses = (s = G.state) => D.CLASS_ORDER.filter((c) => D.CLASSES[c].rank <= s.rank);
+  const starOk = (x, s) => !x.star || S.starLv(x.star, s) > 0;
+  S.unlockedAreas = (s = G.state) => D.AREAS.filter((a) => a.rank <= s.rank && starOk(a, s));
+  S.unlockedClasses = (s = G.state) => D.CLASS_ORDER.filter((c) => D.CLASSES[c].rank <= s.rank && starOk(D.CLASSES[c], s));
 
   S.partyInfo = function (quest, party, s = G.state) {
-    let pow = 0, cleric = false, archer = false, warrior = false, thief = false;
+    let pow = 0, cleric = false, archer = false, warrior = false, thief = false, knight = false, bard = false, alch = false;
     let brave = 0, swift = 0, lucky = 0, greedy = 0;
     party.forEach((a) => {
       pow += S.power(a, s);
@@ -115,6 +117,9 @@
       if (a.cls === 'archer') archer = true;
       if (a.cls === 'warrior') warrior = true;
       if (a.cls === 'thief') thief = true;
+      if (a.cls === 'knight') knight = true;
+      if (a.cls === 'bard') bard = true;
+      if (a.cls === 'alchemist') alch = true;
       if (a.trait === 'brave') brave++;
       if (a.trait === 'swift') swift++;
       if (a.trait === 'lucky') lucky++;
@@ -127,13 +132,14 @@
     const ps = real ? G.items.partyStats(party) : {};
     const luck = real && G.items.boost('luck') ? G.items.boost('luck').add : 0;
     let p = 0.75 * Math.pow(ratio, 1.6);
-    p += (cleric ? 0.08 : 0) + brave * 0.05 + s.fac.alchemy * 0.03 + (ps.succ || 0) / 100;
+    p += (cleric ? 0.08 : 0) + (knight ? 0.06 : 0) + brave * 0.05 + s.fac.alchemy * 0.03 + (ps.succ || 0) / 100;
     p = G.clamp(p, 0.08, 0.97);
     if (!party.length) p = 0;
-    let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed')) * (1 - (ps.speed || 0) / 100);
-    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great') + (ps.great || 0) / 100 + luck;
-    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold')) * (1 + (ps.gold || 0) / 100);
-    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior, expMul: 1 + (ps.exp || 0) / 100, find: ps.find || 0, matMul: 1 + (ps.mat || 0) / 100, crit: ps.crit || 0 };
+    const sf = (k) => S.starFx(k, s);
+    let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed')) * (1 - (ps.speed || 0) / 100) * (1 - sf('speed'));
+    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great') + (ps.great || 0) / 100 + luck + sf('great');
+    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold')) * (1 + (ps.gold || 0) / 100) * (1 + sf('gold'));
+    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior: warrior || knight, expMul: (1 + (ps.exp || 0) / 100) * (1 + sf('exp')) * (bard ? 1.15 : 1), fameMul: bard ? 1.2 : 1, find: (ps.find || 0) + sf('find') + (alch ? 20 : 0), matMul: (1 + (ps.mat || 0) / 100) * (alch ? 1.3 : 1), crit: ps.crit || 0 };
   };
 
   // ---------------------------------------------------------------- 依頼
@@ -347,7 +353,7 @@
     let mat = q.mat * matMul * info.matMul;
     mat = Math.floor(mat) + (Math.random() < mat - Math.floor(mat) ? 1 : 0);
     mat += (tier !== 'fail' ? tidy : 0) + (tier === 'legend' ? 3 : 0);
-    const fame = tier === 'fail' ? 0 : Math.round(q.fame * (tier === 'legend' ? 3 : tier === 'great' ? 1.5 : 1));
+    const fame = tier === 'fail' ? 0 : Math.round(q.fame * (tier === 'legend' ? 3 : tier === 'great' ? 1.5 : 1) * (1 + S.starFx('fame', s)) * (info.fameMul || 1));
     const expMul = (tier === 'fail' ? 0.5 : tier === 'great' ? 1.5 : tier === 'legend' ? 3 : 1) * (1 + 0.12 * s.fac.training) * info.expMul;
     // 経験値はその場で反映（帰ってきた時には強くなっている）
     const levelUps = [];
@@ -373,7 +379,7 @@
     if (tier !== 'fail') {
       if (tier !== 'ok') s.stats.success++;
       s.stats.areaWin[q.area] = (s.stats.areaWin[q.area] || 0) + 1;
-      if (q.boss) s.stats.boss = 1;
+      if (q.boss) { s.stats.boss = 1; s.flags.runBoss = true; }
     }
     // 戦利品（宝箱の中身）。竜王は必ず最上級
     let drop = null;
@@ -501,6 +507,113 @@
     return up;
   };
 
+  // ---------------------------------------------------------------- 転生「ギルドの再建」と灯火の星
+  //  ランク8から、ギルドを建て直せる。名声などに応じて「灯火の星」が手に入り、
+  //  星座を灯すとずっと強くなる（新しい職業・新しい土地もここで開く）。
+  S.REBIRTH_RANK = 8;
+  S.STAR_NODES = [
+    { id: 'start', short: '再出発', name: '再出発の灯', max: 5, base: 3, inc: 2, x: 50, y: 7, from: 'pow', desc: (l) => `再建時のゴールド +${G.fmt(2000 * l)}${l >= 2 ? '・宿舎Lv2から' : ''}${l >= 4 ? '・受付ホールLv2から' : ''}` },
+    { id: 'pow', short: '戦力', name: '戦力の灯', max: 25, base: 1, inc: 1, per: 0.08, x: 50, y: 27, desc: (l) => `全員の戦力 +${Math.round(l * 8)}%` },
+    { id: 'great', short: '幸運', name: '幸運の灯', max: 10, base: 2, inc: 1, per: 0.01, x: 23, y: 39, desc: (l) => `大成功率 +${l}%` },
+    { id: 'gold', short: '黄金', name: '黄金の灯', max: 20, base: 1, inc: 1, per: 0.1, x: 77, y: 39, desc: (l) => `依頼のゴールド +${l * 10}%` },
+    { id: 'speed', short: '疾風', name: '疾風の灯', max: 10, base: 2, inc: 1, per: 0.03, x: 23, y: 65, desc: (l) => `遠征時間 -${l * 3}%` },
+    { id: 'exp', short: '叡智', name: '叡智の灯', max: 15, base: 1, inc: 1, per: 0.1, x: 77, y: 65, desc: (l) => `獲得経験値 +${l * 10}%` },
+    { id: 'fame', short: '名声', name: '名声の灯', max: 15, base: 2, inc: 1, per: 0.08, x: 50, y: 77, desc: (l) => `獲得名声 +${l * 8}%` },
+    { id: 'build', short: '匠', name: '匠の灯', max: 10, base: 1, inc: 1, per: 0.04, x: 12, y: 18, from: 'great', desc: (l) => `施設の費用 -${l * 4}%` },
+    { id: 'find', short: '宝探し', name: '宝探しの灯', max: 15, base: 2, inc: 1, per: 6, x: 88, y: 18, from: 'gold', desc: (l) => `レア発見 +${l * 6}%` },
+    { id: 'harbor', short: '潮風の港', name: '新天地「潮風の港」', max: 1, base: 5, inc: 0, x: 9, y: 90, from: 'speed', unlock: true, desc: () => 'エリア「潮風の港」が開く（ランク9から・竜嶺のその先）' },
+    { id: 'sky', short: '天空城', name: '新天地「天空城」', max: 1, base: 15, inc: 0, x: 27, y: 103, from: 'harbor', unlock: true, desc: () => 'エリア「天空城」が開く（ランク10から・最難関）' },
+    { id: 'knight', short: '騎士', name: '新職業「騎士」', max: 1, base: 3, inc: 0, x: 91, y: 90, from: 'exp', unlock: true, desc: () => '職業「騎士」が求職者に来るようになる' },
+    { id: 'bard', short: '吟遊詩人', name: '新職業「吟遊詩人」', max: 1, base: 6, inc: 0, x: 73, y: 103, from: 'knight', unlock: true, desc: () => '職業「吟遊詩人」が求職者に来るようになる' },
+    { id: 'alch', short: '錬金術師', name: '新職業「錬金術師」', max: 1, base: 10, inc: 0, x: 50, y: 99, from: 'fame', unlock: true, desc: () => '職業「錬金術師」が求職者に来るようになる' },
+  ];
+  const NODE = {};
+  S.STAR_NODES.forEach((n) => (NODE[n.id] = n));
+  S.STAR_NODE = NODE;
+  S.prestige = (s = G.state) => s.prestige || (s.prestige = { stars: 0, total: 0, runs: 0, tree: {}, abyssAt: 0 });
+  S.starLv = (id, s = G.state) => (s && s.prestige && s.prestige.tree[id]) || 0;
+  S.starFx = (key, s = G.state) => { const n = NODE[key]; return s && n && n.per ? n.per * S.starLv(key, s) : 0; };
+  S.starCost = (id, s = G.state) => { const n = NODE[id]; return n.base + n.inc * S.starLv(id, s); };
+  S.starOpen = (id, s = G.state) => { const n = NODE[id]; return !n.from || S.starLv(n.from, s) > 0; };
+  S.buyStar = function (id, s = G.state) {
+    const n = NODE[id];
+    const pr = S.prestige(s);
+    if (!n || S.starLv(id, s) >= n.max) return { ok: false, why: 'max' };
+    if (!S.starOpen(id, s)) return { ok: false, why: 'locked' };
+    const c = S.starCost(id, s);
+    if (pr.stars < c) return { ok: false, why: 'stars' };
+    pr.stars -= c;
+    pr.tree[id] = S.starLv(id, s) + 1;
+    G.emit('starBought', id);
+    return { ok: true, lv: pr.tree[id] };
+  };
+  S.canRebirth = (s = G.state) => s.rank >= S.REBIRTH_RANK;
+  S.rebirthStars = function (s = G.state) {
+    const pr = S.prestige(s);
+    const fame = Math.floor(Math.sqrt(Math.max(0, s.fame)) / 4);
+    const boss = s.flags.runBoss ? 10 : 0;
+    const abyss = Math.floor(Math.max(0, S.abyss(s).best - (pr.abyssAt || 0)) / 5);
+    return { fame, boss, abyss, total: fame + boss + abyss };
+  };
+  S.rebirth = function (s = G.state) {
+    if (!S.canRebirth(s)) return null;
+    const pr = S.prestige(s);
+    const now = G.now();
+    const earned = S.rebirthStars(s).total;
+    pr.stars += earned;
+    pr.total += earned;
+    pr.runs++;
+    pr.abyssAt = Math.max(pr.abyssAt || 0, S.abyss(s).best);
+    // 見ていない冒険譚は受け取り済みに（見届けボーナスなし）、遠征中は結果なしで帰還
+    s.reels.filter((r) => !r.claimed).forEach((r) => S.claimReel(r, 0, s, { gifts: false }));
+    s.reels = s.reels.slice(-10);
+    s.active = [];
+    const startLv = S.starLv('start', s);
+    s.gold = 300 + 2000 * startLv;
+    s.mat = 5 * startLv;
+    s.fame = 0;
+    s.rank = 1;
+    s.fac = { hall: startLv >= 4 ? 2 : 1, bunks: startLv >= 2 ? 2 : 1, tavern: 0, smithy: 0, training: 0, alchemy: 0, tower: 0 };
+    s.building = null;
+    s.board = [];
+    s.boardAt = now;
+    s.refreshAt = 0;
+    s.tips = [];
+    s.deskCoins = 0;
+    s.deskAt = now;
+    s.obj = 0;
+    s.flags.autoDispatch = false;
+    s.flags.bossUnlocked = false;
+    s.flags.runBoss = false;
+    // 冒険者：レベルの高い順にベッドの数だけ残る。ほかは「かつての仲間」として、いつでも呼び戻せる
+    const reset = (a) => { a.lv = 1; a.exp = 0; a.status = 'idle'; a.questId = null; a._tx = 0; return a; };
+    const sorted = s.adv.slice().sort((a, b) => b.lv - a.lv);
+    const beds = D.beds(s.fac.bunks);
+    s.adv = sorted.slice(0, beds).map(reset);
+    s.alumni = (s.alumni || []).concat(sorted.slice(beds).map((a) => { reset(a); a.eq = {}; return a; }));
+    s.cands = [];
+    S.rollCandidates(s, false);
+    for (let i = 0; i < 3; i++) s.board.push(S.makeQuest(0, { size: Math.min(2, i + 1), k: 0.3 + i * 0.2 }));
+    s.stats.rebirths = (s.stats.rebirths || 0) + 1;
+    s.flags.justReborn = earned;
+    s.lastSeen = now;
+    s.speedCursor = now;
+    G.emit('rebirth', { earned });
+    return { earned };
+  };
+  // かつての仲間を呼び戻す（無料）
+  S.recall = function (id, s = G.state) {
+    const i = (s.alumni || []).findIndex((a) => a.id === id);
+    if (i < 0) return { ok: false, why: 'none' };
+    if (s.adv.length >= S.beds(s)) return { ok: false, why: 'beds' };
+    const a = s.alumni.splice(i, 1)[0];
+    a.status = 'idle';
+    a.hiredAt = G.now();
+    s.adv.push(a);
+    G.emit('hired', a);
+    return { ok: true, adv: a };
+  };
+
   // ---------------------------------------------------------------- 求職者
   S.hireCost = function (lv, s = G.state) {
     return Math.round(40 * Math.pow(1.7, Math.max(0, s.adv.length - 1)) * (1 + 0.35 * (lv - 1)));
@@ -558,7 +671,11 @@
   };
 
   // ---------------------------------------------------------------- 施設
-  S.facCost = (id, s = G.state) => D.FAC[id].cost(s.fac[id]);
+  S.facCost = (id, s = G.state) => {
+    const c = D.FAC[id].cost(s.fac[id]);
+    const k = 1 - S.starFx('build', s);
+    return { gold: Math.round(c.gold * k), mat: Math.round(c.mat * k) };
+  };
   S.canAfford = (c, s = G.state) => s.gold >= c.gold && s.mat >= c.mat;
   S.facState = function (id, s = G.state) {
     const f = D.FAC[id];
@@ -743,6 +860,8 @@
       G.state = merged;
       S.abyss(merged);
       if (merged.abyss.open) merged.flags.abyssNoticed = true;
+      S.prestige(merged);
+      merged.alumni = s.alumni || [];
       if (G.items) G.items.migrate(merged);
       return merged;
     } catch (e) {

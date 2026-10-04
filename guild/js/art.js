@@ -113,6 +113,7 @@
     outfit: G.shade(G.D.CLASSES[cls].color, G.rand(-0.12, 0.08)),
     pants: G.pick(['#4b3a2e', '#3d3f52', '#5a4632', '#384a3c', '#55433f']),
     blush: Math.random() < 0.6,
+    crest: cls === 'knight' ? G.pick(['#3a5aa0', '#c4553a', '#e2b84a', '#5a9a6a', '#8a4ab0']) : undefined,
   });
 
   // ---------- 髪 ----------
@@ -177,6 +178,35 @@
       poly(ctx, [-7.4, -22.5, -7.8, -29, -5.6, -34.4, -1, -36.4, 3.6, -35.6, 6.8, -32.6, 7.3, -28.4, 5.6, -30.4, 3.8, -31.2, 1, -31.4, -2.6, -30.6, -4, -27, -4.4, -21.5], C(c));
       poly(ctx, [6.8, -32.6, 7.3, -28.4, 5.6, -30.4, 3.8, -31.2, 1, -31.4, 1.2, -32.6, 4, -32.8], C('#e2b84a'));
       poly(ctx, [-5.6, -34.4, -1, -36.4, 3.6, -35.6, 1, -34.4, -3.4, -33], C(c, 0.1));
+    } else if (cls === 'knight') {
+      // 騎士：面頬つきの兜と羽飾り
+      const s2 = '#c4ccd8';
+      poly(ctx, [-7.2, -23.5, -7.2, -31, -4.8, -35, 0, -36.6, 4.8, -35, 7.2, -31, 7.2, -23.5], C(s2));
+      poly(ctx, [-7.2, -31, -4.8, -35, 0, -36.6, -0.4, -31, -7.2, -27], C(s2, 0.18));
+      poly(ctx, [0, -36.6, 4.8, -35, 7.2, -31, 7.2, -23.5, 1.6, -28], C(s2, -0.12));
+      poly(ctx, [-6.4, -28.6, 6.6, -28.6, 6.6, -27.4, -6.4, -27.4], C('#1a2030'));
+      poly(ctx, [-0.5, -36.4, 0.5, -36.4, 0.5, -23.6, -0.5, -23.6], C(s2, -0.25));
+      const fl = Math.sin(t * 3 + L.seed) * 0.8 + sway;
+      poly(ctx, [-0.6, -36.4, 1.6, -37.2, -3 + fl, -43.5, -8 + fl, -41.5, -4 + fl, -38.6], C(L.crest || '#3a5aa0'));
+      poly(ctx, [-0.6, -36.4, -3 + fl, -43.5, -4 + fl, -38.6], C(L.crest || '#3a5aa0', 0.18));
+    } else if (cls === 'bard') {
+      // 吟遊詩人：つば広の帽子と長い羽根
+      const c = G.shade(L.outfit, -0.15);
+      poly(ctx, [-10, -30.2, 10.4, -30.2, 8, -32.2, -7.6, -32.2], C(c, -0.12));
+      poly(ctx, [-6, -31.8, 6, -31.8, 5, -37, 0, -38.6, -5, -37], C(c));
+      poly(ctx, [-6, -31.8, 0, -31.8, 0, -38.6, -5, -37], C(c, 0.12));
+      poly(ctx, [-6, -32.6, 6, -32.6, 6, -33.8, -6, -33.8], C('#f2d36a'));
+      const f = Math.sin(t * 2.6 + L.seed) * 1 + sway * 1.2;
+      poly(ctx, [3.8, -33.4, 5.2, -34.2, 13 + f, -42, 11.6 + f, -42.6], C('#fff4e0'));
+      poly(ctx, [5.2, -34.2, 13 + f, -42, 12.4 + f, -40], C('#ffb8d8'));
+    } else if (cls === 'alchemist') {
+      // 錬金術師：額にゴーグル
+      poly(ctx, [-7, -28.8, 7, -28.8, 7, -27.2, -7, -27.2], C('#4a3326'));
+      [[-3, '#8fe0ff'], [3, '#8fe0ff']].forEach(([x, g]) => {
+        facet(ctx, x, -29.6, 2.6, 2.4, 8, '#8a6a3a', 0, 0.2);
+        facet(ctx, x, -29.6, 1.8, 1.6, 8, g, t * 0.4, 0.3);
+        poly(ctx, [x - 1, -30.6, x, -30.6, x - 0.4, -29.4], 'rgba(255,255,255,0.8)');
+      });
     } else if (cls === 'archer') {
       const c = '#4f8a46';
       poly(ctx, [-6.9, -29, -5.4, -33.8, 0, -35.6, 5.4, -33.4, 8.2, -30.4, 2, -31.2], C(c));
@@ -291,6 +321,32 @@
     ctx.beginPath(); ctx.moveTo(Math.cos(-1.2) * 8, Math.sin(-1.2) * 8); ctx.lineTo(Math.cos(1.2) * 8, Math.sin(1.2) * 8); ctx.stroke();
     ctx.restore();
   }
+  // 騎士の盾（紋章入り）
+  function shield(ctx, x, y, crest, sc = 1) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(sc, sc);
+    poly(ctx, [-4.2, -5.6, 4.2, -5.6, 4.2, 0.6, 0, 6, -4.2, 0.6], C('#b8c4d4'));
+    poly(ctx, [-4.2, -5.6, 0, -5.6, 0, 6, -4.2, 0.6], C('#d8e2ee'));
+    poly(ctx, [-3.2, -4.6, 3.2, -4.6, 3.2, 0.2, 0, 4.6, -3.2, 0.2], C(crest || '#3a5aa0'));
+    poly(ctx, [-0.6, -4.2, 0.6, -4.2, 0.6, 3.6, -0.6, 3.6], C('#f2d36a'));
+    poly(ctx, [-2.8, -1.6, 2.8, -1.6, 2.8, -0.4, -2.8, -0.4], C('#f2d36a'));
+    ctx.restore();
+  }
+  // 吟遊詩人のリュート
+  function lute(ctx, x, y, ang) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(ang);
+    facet(ctx, 0, 2.4, 3.6, 4.2, 9, '#b8783a', 0.2, 0.18);
+    facet(ctx, 0, 2.8, 1.1, 1.1, 6, '#3a2418', 0, 0.1);
+    poly(ctx, [-0.6, -1.6, 0.6, -1.6, 0.5, -9, -0.5, -9], C('#6a4426'));
+    poly(ctx, [-1.1, -9, 1.1, -9, 0.8, -11, -0.8, -11], C('#4a2e1a'));
+    ctx.strokeStyle = 'rgba(255,245,220,0.7)';
+    ctx.lineWidth = 0.18;
+    ctx.beginPath(); ctx.moveTo(-0.3, -9); ctx.lineTo(-0.4, 5); ctx.moveTo(0.3, -9); ctx.lineTo(0.4, 5); ctx.stroke();
+    ctx.restore();
+  }
   function mug(ctx, x, y) {
     poly(ctx, [x - 1.8, y - 3.5, x + 1.8, y - 3.5, x + 1.6, y + 1.2, x - 1.6, y + 1.2], C('#b07a44'));
     poly(ctx, [x - 1.8, y - 3.5, x + 1.8, y - 3.5, x + 1.8, y - 4.6, x - 1.8, y - 4.6], C('#fff6dc'));
@@ -342,6 +398,8 @@
     // 背中の武器
     const armed = P.armed;
     if (!armed && !L.role) {
+      if (L.cls === 'knight') shield(ctx, -4.6, -15 + (sit ? 4 : 0), L.crest, 0.95);
+      if (L.cls === 'bard') lute(ctx, -4.4, -15 + (sit ? 4 : 0), 0.5);
       if (L.cls === 'warrior') sword(ctx, -3.4, -13 + (sit ? 4 : 0), 0.55, 12);
       if (L.cls === 'archer') {
         bow(ctx, -3.8, -16 + (sit ? 4 : 0), 0.5);
@@ -392,11 +450,12 @@
     if (st === 'write') { frontA = -1.1 + Math.sin(t * 7) * 0.12; backA = -0.9; }
     const skin = L.skin;
     const sleeve = L.role === 'bartender' ? '#f1e9d8' : L.outfit;
-    limb(ctx, -1.2, sh, 9.2, 2.9, backA, C(sleeve, -0.18), C(skin, -0.12), 1.9, 2.8);
+    const bh = limb(ctx, -1.2, sh, 9.2, 2.9, backA, C(sleeve, -0.18), C(skin, -0.12), 1.9, 2.8);
+    if (armed && L.cls === 'knight' && !L.role) shield(ctx, bh[0] - 1, bh[1] - 1, L.crest, 1.05);
 
     // 胴
     const lightL = 0.08 * f, lightR = -0.08 * f;
-    const robe = L.robe || L.cls === 'mage' || L.cls === 'cleric';
+    const robe = L.robe || L.cls === 'mage' || L.cls === 'cleric' || (L.cls === 'alchemist' && !L.role);
     const body = L.cls === 'cleric' && !L.role ? '#f2ede0' : L.outfit;
     if (robe && !sit) {
       poly(ctx, [-4.4, hipY - 0.5, 4.4, hipY - 0.5, 5.8, -1.6, -5.8, -1.6], C(body, -0.06));
@@ -424,6 +483,27 @@
       // 肩当て
       facet(ctx, -0.6, torsoTop + 1, 3.4, 2.4, 6, '#a3acb6', 0, 0.2);
     }
+    if (L.cls === 'knight' && !L.role) {
+      // 胸当てと両肩の鎧
+      poly(ctx, [-4.0, hipY + 0.2, 4.0, hipY + 0.2, 4.4, torsoTop + 0.8, -4.2, torsoTop + 0.8], C('#c4ccd8', lightL * 0.5));
+      poly(ctx, [0, hipY + 0.2, 4.0, hipY + 0.2, 4.4, torsoTop + 0.8, 0, torsoTop + 0.8], C('#c4ccd8', -0.12));
+      poly(ctx, [-1.4, torsoTop + 1.5, 1.4, torsoTop + 1.5, 1.2, hipY - 1, -1.2, hipY - 1], C(L.outfit));
+      facet(ctx, -2.8, torsoTop + 1.2, 2.8, 2.2, 6, '#d8e0ea', 0, 0.2);
+      facet(ctx, 2.8, torsoTop + 1.2, 2.8, 2.2, 6, '#aab4c4', 0, 0.2);
+    }
+    if (L.cls === 'bard' && !L.role) {
+      // 襟とたすき
+      poly(ctx, [-4.4, torsoTop + 0.4, 4.6, torsoTop + 0.4, 3, torsoTop + 3, 0, torsoTop + 1.6, -3, torsoTop + 3], C('#fff4e0'));
+      poly(ctx, [3.8, torsoTop + 1, 4.8, torsoTop + 2, -3.4, hipY - 0.4, -4.4, hipY - 1.4], C('#6a4426'));
+    }
+    if (L.cls === 'alchemist' && !L.role) {
+      // 前掛けと腰の小瓶
+      poly(ctx, [-2.6, hipY + 4, 3.2, hipY + 4, 3.2, torsoTop + 3, -2.2, torsoTop + 3], C('#e8dcc0'));
+      [[-3.6, '#ff7ab8'], [3.6, '#7fd0ff']].forEach(([x, c]) => {
+        poly(ctx, [x - 0.8, hipY + 0.6, x + 0.8, hipY + 0.6, x + 1.1, hipY + 3.4, x - 1.1, hipY + 3.4], C(c));
+        poly(ctx, [x - 0.4, hipY - 0.4, x + 0.4, hipY - 0.4, x + 0.4, hipY + 0.6, x - 0.4, hipY + 0.6], C('#e8f4f0'));
+      });
+    }
     // 首と頭
     poly(ctx, [-1.3, torsoTop + 0.5, 1.6, torsoTop + 0.5, 1.6, torsoTop - 1.6, -1.3, torsoTop - 1.6], C(skin, -0.1));
     ctx.save();
@@ -431,7 +511,7 @@
     hairBack(ctx, L, t, sway);
     facet(ctx, 0, -27.6, 6.4, 6.3, 8, skin, 0.4, 0.1);
     face(ctx, L, P);
-    if (!(L.cls === 'thief' || L.cls === 'cleric' || L.hood) || L.role) hairFront(ctx, L);
+    if (!(L.cls === 'thief' || L.cls === 'cleric' || L.cls === 'knight' || L.hood) || L.role) hairFront(ctx, L);
     if (L.cls === 'mage' && !L.role) { /* 魔法使いは帽子の下に髪 */ }
     headwear(ctx, L, t, sway);
     ctx.restore();
@@ -441,6 +521,13 @@
     if (armed && L.cls === 'warrior') sword(ctx, hand[0], hand[1], frontA + Math.PI * 0.95, 13);
     else if (armed && L.cls === 'thief') sword(ctx, hand[0], hand[1], frontA + Math.PI * 0.9, 6);
     else if (armed && L.cls === 'archer') bow(ctx, hand[0] + 1, hand[1], 0);
+    else if (armed && L.cls === 'knight') sword(ctx, hand[0], hand[1], frontA + Math.PI * 0.95, 14);
+    else if (armed && L.cls === 'bard') lute(ctx, hand[0] - 1, hand[1] + 2, -1.1 + Math.sin(t * 9) * 0.06);
+    if (L.cls === 'alchemist' && !L.role && (armed || P.item === undefined)) {
+      poly(ctx, [hand[0] - 1.4, hand[1] - 0.6, hand[0] + 1.8, hand[1] - 0.6, hand[0] + 2.6, hand[1] + 3.6, hand[0] - 2.2, hand[1] + 3.6], C('#7fe0a0'));
+      poly(ctx, [hand[0] - 1.4, hand[1] - 0.6, hand[0] + 0.2, hand[1] - 0.6, hand[0] + 0.2, hand[1] + 3.6, hand[0] - 2.2, hand[1] + 3.6], C('#b8ffd0'));
+      poly(ctx, [hand[0] - 0.5, hand[1] - 2.8, hand[0] + 0.9, hand[1] - 2.8, hand[0] + 0.9, hand[1] - 0.6, hand[0] - 0.5, hand[1] - 0.6], C('#e8f4f0'));
+    }
     if (L.cls === 'mage' && !L.role) staff(ctx, hand[0] + 0.6, hand[1], L.outfit, '#9fd8ff', t);
     if (L.cls === 'cleric' && !L.role) staff(ctx, hand[0] + 0.6, hand[1], '#fff', null, t, true);
     if (P.item === 'mug') mug(ctx, hand[0] + 1, hand[1] - 0.5);
@@ -599,6 +686,163 @@
     ctx.restore();
     ctx.save(); ctx.translate(-16, -30); ctx.rotate(0.2);
     facetPoly(ctx, [-6, -1, 3, 0, 2, 19, -7, 18], c, 0.18);
+    ctx.restore();
+    ctx.restore();
+  };
+  // ---- 潮風の港 ----
+  M.crab = (ctx, s) => {
+    const t = s.t, at = s.atk || 0;
+    const c = s.color || '#e0603a';
+    ellipse(ctx, 0, 0, 22, 3, 'rgba(0,0,0,0.2)');
+    ctx.save(); ctx.translate(at * 5, -Math.abs(Math.sin(t * 5)) * 0.8);
+    for (let i = 0; i < 3; i++) {
+      const x = -12 + i * 7, sw = Math.sin(t * 6 + i * 1.7) * 1.4;
+      poly(ctx, [x, -10, x - 6 + sw, -5, x - 8 + sw, 0, x - 6 + sw, 0, x - 3 + sw, -4, x + 2, -9], C(c, -0.2));
+    }
+    // 小さいほうのハサミ（奥）
+    ctx.save(); ctx.translate(12, -18); ctx.rotate(-0.9 + Math.sin(t * 2.2) * 0.15);
+    poly(ctx, [0, -1.5, 6, -2.5, 6.5, 0.5, 0, 1.5], C(c, -0.2));
+    facetPoly(ctx, [6, -3, 12, -6, 14, -3, 11, 1, 6, 1.5], C(c, -0.12), 0.12);
+    ctx.restore();
+    // 甲羅
+    facetPoly(ctx, [-19, -9, -15, -20, -5, -25, 8, -25, 18, -19, 21, -9, 10, -5, -10, -5], c, 0.18);
+    poly(ctx, [-15, -20, -5, -25, 8, -25, 2, -19.5, -8, -18.5], C(c, 0.22));
+    [[-9, -14, 1.6], [-2, -12, 1.2], [6, -15, 1.4], [12, -11, 1]].forEach(([x, y, r]) => facet(ctx, x, y, r, r * 0.8, 6, C(c, 0.32), 0, 0.1));
+    poly(ctx, [-12, -7, 14, -7, 10, -5, -9, -5], C(c, -0.3));
+    // 目
+    const e = Math.sin(t * 2) * 0.8;
+    [[3, 0], [9, 0.4]].forEach(([x]) => {
+      poly(ctx, [x - 0.7, -24, x + 0.7, -24, x + 1 + e, -31, x - 0.5 + e, -31], C(c, -0.08));
+      facet(ctx, x + e * 1.2 + 0.2, -32, 2.1, 2.1, 6, '#ffffff', 0, 0.1);
+      facet(ctx, x + e * 1.2 + 0.8, -32, 1.1, 1.1, 6, '#1a1a22', 0, 0.1);
+    });
+    // 大きなハサミ（手前）：カチカチ
+    const snap = Math.max(0, Math.sin(t * 3.2)) * 0.45 + at * 0.7;
+    ctx.save(); ctx.translate(18, -12); ctx.rotate(-0.35 - at * 0.6);
+    poly(ctx, [0, -2.2, 9, -3.2, 9.6, 0.8, 0, 2.2], C(c, -0.1));
+    ctx.translate(9, -1.6);
+    facetPoly(ctx, [0, -2.5, 9, -9.5, 16, -7.5, 14, -1.5, 4, 2], c, 0.2);
+    poly(ctx, [9, -9.5, 16, -7.5, 13, -6], C(c, 0.3));
+    ctx.rotate(snap);
+    facetPoly(ctx, [0, 0.5, 13, 1.5, 14, 6, 4, 6], C(c, -0.1), 0.15);
+    ctx.restore();
+    ctx.restore();
+  };
+  function tentacle(ctx, x0, y0, len, ang, curl, w, col, tip, t) {
+    const L = [], R = [];
+    let x = x0, y = y0, a = ang;
+    const n = 9;
+    for (let i = 0; i <= n; i++) {
+      const k = i / n;
+      const ww = w * (1 - k * 0.85);
+      L.push(x + Math.cos(a - Math.PI / 2) * ww, y + Math.sin(a - Math.PI / 2) * ww);
+      R.unshift(x + Math.cos(a + Math.PI / 2) * ww, y + Math.sin(a + Math.PI / 2) * ww);
+      a += curl * (0.6 + k) + Math.sin(t * 2 + i * 0.7) * 0.08;
+      x += Math.cos(a) * (len / n);
+      y += Math.sin(a) * (len / n);
+    }
+    poly(ctx, L.concat(R), col);
+    poly(ctx, L.slice(0, 10).concat(R.slice(-10)), tip);
+  }
+  M.kraken = (ctx, s) => {
+    const t = s.t, at = s.atk || 0;
+    const c = s.color || '#8a4ab0';
+    ctx.save(); ctx.scale(0.86, 0.86);
+    ellipse(ctx, 0, 0, 36, 6, 'rgba(50,120,190,0.45)');
+    ellipse(ctx, 0, -1, 28, 4, 'rgba(170,225,255,0.35)');
+    ctx.save(); ctx.translate(at * 8, Math.sin(t * 1.4) * 1.2);
+    // 奥の触手
+    [-1, 1].forEach((d, i) => tentacle(ctx, d * 10, -18, 40, -Math.PI / 2 - d * 0.6, d * 0.16 + Math.sin(t * 1.6 + i) * 0.05, 4.2, C(c, -0.22), C(c, -0.12), t + i));
+    // 胴
+    facetPoly(ctx, [-17, -12, -19, -36, -11, -58, 0, -67, 11, -58, 19, -36, 17, -12], c, 0.18);
+    poly(ctx, [-11, -58, 0, -67, 4, -50, -6, -40], C(c, 0.22));
+    [[-9, -46, 1.6], [6, -52, 1.3], [10, -38, 1.5], [-12, -30, 1.2]].forEach(([x, y, r]) => facet(ctx, x, y, r, r, 6, C(c, 0.3), 0, 0.1));
+    // 目
+    const blink = Math.sin(t * 0.9) > 0.97 ? 0.2 : 1;
+    [-7, 7].forEach((x) => {
+      facet(ctx, x, -26, 4.6, 4.2 * blink, 8, '#ffe28a', 0, 0.1);
+      poly(ctx, [x - 0.9, -26 - 3.4 * blink, x + 0.9, -26 - 3.4 * blink, x + 0.9, -26 + 3.4 * blink, x - 0.9, -26 + 3.4 * blink], '#1a1020');
+    });
+    // 手前の触手（攻撃で前へ）
+    for (let i = 0; i < 4; i++) {
+      const d = i < 2 ? -1 : 1;
+      const base = -12 + i * 8;
+      const ang = (d < 0 ? Math.PI * 0.85 : Math.PI * 0.15) - (i === 3 ? at * 0.9 : 0);
+      tentacle(ctx, base, -10, 26 + (i % 2) * 8 + (i === 3 ? at * 18 : 0), ang, -d * (0.12 + Math.sin(t * 2 + i) * 0.05), 4.6, C(c, -0.05), C('#f0b8e0'), t + i * 0.9);
+    }
+    ctx.restore();
+    ctx.restore();
+  };
+  // ---- 天空城 ----
+  M.griffin = (ctx, s) => {
+    const t = s.t, at = s.atk || 0;
+    const fl = Math.sin(t * 6);
+    const y = -36 + Math.sin(t * 2.5) * 4 - at * 6;
+    ellipse(ctx, 0, 0, 22, 3, 'rgba(0,0,0,0.15)');
+    ctx.save(); ctx.translate(at * 10, y);
+    const c = s.color || '#c8a060';
+    const W = '#f6f0e4';
+    poly(ctx, [-2, -8, -16, -28 - fl * 10, -28, -22 - fl * 8, -24, -12 - fl * 4, -10, -2], C(W, -0.18));
+    poly(ctx, [-16, 2, -28, 3, -32, 8, -27, 7, -16, 6], C(c, -0.1));
+    facet(ctx, -31, 7.5, 2.4, 2.2, 6, C(c, -0.25), 0, 0.15);
+    limb(ctx, -12, 4, 9, 3, 0.3 + Math.sin(t * 3) * 0.1, C(c, -0.12), C(c, -0.3), 2, 3.4);
+    facetPoly(ctx, [-18, -4, -10, -10, 8, -10, 14, -4, 12, 6, -16, 6], c, 0.15);
+    poly(ctx, [-10, -10, 8, -10, 4, -6, -8, -6], C(c, 0.15));
+    limb(ctx, 9, 4, 8, 2.6, -0.4 - at * 0.6, C('#e8c070'), C('#e8c070', -0.2), 2, 3);
+    facetPoly(ctx, [7, -8, 13, -18, 21, -23, 28, -19, 26, -11, 16, -3], W, 0.14);
+    poly(ctx, [13, -18, 21, -23, 18, -14], C(W, -0.08));
+    poly(ctx, [20, -23, 18, -28, 23, -24], C(W, -0.12));
+    poly(ctx, [24, -22, 25, -27, 27, -22], C(W, -0.12));
+    poly(ctx, [26, -20.5, 34.5, -17.5, 31, -13, 26, -14.5], '#f0b030');
+    poly(ctx, [31, -16, 34.5, -17.5, 33.5, -14, 31, -13], '#c88a20');
+    facet(ctx, 23, -18.5, 1.5, 1.5, 6, '#1a1a22', 0, 0.1);
+    poly(ctx, [22, -20, 25, -20.5, 24.5, -19.6], '#ffffff');
+    // 手前の翼
+    poly(ctx, [0, -8, -10, -32 - fl * 12, -25, -27 - fl * 10, -20, -15 - fl * 5, -6, -2], W);
+    poly(ctx, [-10, -32 - fl * 12, -25, -27 - fl * 10, -17, -24 - fl * 8], C(W, 0.06));
+    ctx.strokeStyle = 'rgba(180,160,130,0.6)'; ctx.lineWidth = 0.6;
+    for (let k = 0; k < 3; k++) { ctx.beginPath(); ctx.moveTo(-3 - k * 2, -6); ctx.lineTo(-14 - k * 4, -26 - fl * 9 + k * 3); ctx.stroke(); }
+    ctx.restore();
+  };
+  M.sentinel = (ctx, s) => {
+    const t = s.t, at = s.atk || 0;
+    const y = -6 + Math.sin(t * 1.8) * 3;
+    const c = s.color || '#e8e4f0';
+    ctx.save(); ctx.scale(0.88, 0.88);
+    ellipse(ctx, 0, 0, 18, 3, 'rgba(0,0,0,0.15)');
+    ctx.fillStyle = 'rgba(255,220,140,0.12)';
+    ctx.beginPath(); ctx.arc(0, -40, 34, 0, TAU); ctx.fill();
+    ctx.save(); ctx.translate(at * 6, y);
+    // 翼（石）
+    const wf = Math.sin(t * 1.2) * 0.06;
+    [[-1, -0.1], [1, 0.05]].forEach(([d, k]) => {
+      ctx.save(); ctx.translate(d * 4, -40); ctx.rotate(d * (0.15 + wf));
+      facetPoly(ctx, [0, 0, d * 22, -18, d * 30, -10, d * 26, 2, d * 18, 8, d * 8, 6], C(c, k - 0.06), 0.12);
+      ctx.strokeStyle = 'rgba(150,140,170,0.6)'; ctx.lineWidth = 0.7;
+      for (let i = 1; i < 4; i++) { ctx.beginPath(); ctx.moveTo(d * 3, 2); ctx.lineTo(d * (10 + i * 6), -14 + i * 5); ctx.stroke(); }
+      ctx.restore();
+    });
+    // 衣（足はなく、浮いている）
+    facetPoly(ctx, [-9, -42, 9, -42, 13, -6, 6, -2, 0, -6, -6, -2, -13, -6], c, 0.14);
+    poly(ctx, [-13, -6, -6, -2, 0, -6, 6, -2, 13, -6, 12, -9, -12, -9], C('#e2b84a'));
+    poly(ctx, [-1, -42, 1, -42, 1, -9, -1, -9], C(c, -0.12));
+    // 胸の核
+    const gl = 0.6 + Math.sin(t * 3) * 0.4;
+    ctx.fillStyle = G.rgba('#ffd36a', 0.4 * gl);
+    ctx.beginPath(); ctx.arc(0, -32, 5, 0, TAU); ctx.fill();
+    facet(ctx, 0, -32, 2.2, 2.6, 6, '#ffe9a0', t, 0.3);
+    // 頭と兜
+    facetPoly(ctx, [-5.5, -42, 5.5, -42, 6, -52, 0, -56, -6, -52], c, 0.18);
+    poly(ctx, [-4.6, -48.6, 4.6, -48.6, 4.6, -47.2, -4.6, -47.2], G.rgba('#ffd36a', 0.6 + gl * 0.4));
+    poly(ctx, [-0.7, -51, 0.7, -51, 0.7, -44.5, -0.7, -44.5], G.rgba('#ffd36a', 0.6 + gl * 0.4));
+    ctx.strokeStyle = 'rgba(255,220,120,0.9)'; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.ellipse(0, -60, 7, 2, 0, 0, TAU); ctx.stroke();
+    // 槍（攻撃で突き出す）
+    ctx.save(); ctx.translate(9 + at * 10, -30); ctx.rotate(-1.2 + at * 1.1);
+    poly(ctx, [-0.8, 14, 0.8, 14, 0.8, -26, -0.8, -26], C('#c8c0d8'));
+    poly(ctx, [-2.4, -26, 2.4, -26, 0, -36], '#ffd36a');
+    poly(ctx, [0, -26, 2.4, -26, 0, -36], '#e8a830');
+    ctx.restore();
     ctx.restore();
     ctx.restore();
   };
@@ -976,6 +1220,34 @@
         ctx.beginPath(); ctx.moveTo(-0.35 + Math.cos(-1.15) * 0.82, Math.sin(-1.15) * 0.82); ctx.lineTo(-0.35 + Math.cos(1.15) * 0.82, Math.sin(1.15) * 0.82); ctx.stroke();
         poly(ctx, [-0.05, -0.02, 0.62, -0.02, 0.62, 0.02, -0.05, 0.02], '#d8c8a8');
         poly(ctx, [0.6, -0.08, 0.82, 0, 0.6, 0.08], metal);
+        break;
+      case 'lance':
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.05, 0.95, 0.05, 0.95, 0.05, -0.3, -0.05, -0.3], wood);
+        poly(ctx, [-0.12, -0.3, 0.12, -0.3, 0.04, -0.98, -0.04, -0.98], metal);
+        poly(ctx, [0, -0.3, 0.12, -0.3, 0.04, -0.98, 0, -0.98], dark);
+        poly(ctx, [-0.26, 0.3, 0.26, 0.3, 0.12, -0.3, -0.12, -0.3], metal);
+        poly(ctx, [0, 0.3, 0.26, 0.3, 0.12, -0.3, 0, -0.3], dark);
+        poly(ctx, [0.05, -0.24, 0.42, -0.1, 0.38, 0.06, 0.05, -0.04], acc.startsWith('#') ? acc : rainbow(t));
+        break;
+      case 'lute':
+        ctx.rotate(-Math.PI / 5);
+        facet(ctx, 0, 0.32, 0.48, 0.52, 10, wood, 0.2, 0.18);
+        facet(ctx, 0, 0.36, 0.14, 0.14, 6, '#3a2418', 0, 0.1);
+        poly(ctx, [-0.08, -0.16, 0.08, -0.16, 0.07, -0.86, -0.07, -0.86], G.shade(wood, -0.2));
+        poly(ctx, [-0.14, -0.86, 0.14, -0.86, 0.1, -1, -0.1, -1], dark);
+        ctx.strokeStyle = acc.startsWith('#') ? acc : rainbow(t); ctx.lineWidth = 0.025;
+        ctx.beginPath(); ctx.moveTo(-0.04, -0.86); ctx.lineTo(-0.05, 0.7); ctx.moveTo(0.04, -0.86); ctx.lineTo(0.05, 0.7); ctx.stroke();
+        poly(ctx, [-0.2, 0.62, 0.2, 0.62, 0.16, 0.7, -0.16, 0.7], metal);
+        break;
+      case 'flask':
+        poly(ctx, [-0.16, -0.5, 0.16, -0.5, 0.16, -0.18, 0.56, 0.62, -0.56, 0.62, -0.16, -0.18], 'rgba(220,240,255,0.35)');
+        poly(ctx, [-0.3, 0.12, 0.3, 0.12, 0.5, 0.56, -0.5, 0.56], acc.startsWith('#') ? acc : rainbow(t));
+        poly(ctx, [-0.3, 0.12, 0, 0.12, 0, 0.56, -0.5, 0.56], 'rgba(255,255,255,0.3)');
+        poly(ctx, [-0.2, -0.62, 0.2, -0.62, 0.2, -0.5, -0.2, -0.5], metal);
+        poly(ctx, [-0.12, -0.78, 0.12, -0.78, 0.12, -0.62, -0.12, -0.62], wood);
+        facet(ctx, 0.18, 0.32, 0.06, 0.06, 6, '#ffffff', 0, 0.1);
+        facet(ctx, -0.14, 0.26, 0.04, 0.04, 6, '#ffffff', 0, 0.1);
         break;
       case 'armor':
         facetPoly(ctx, [-0.62, -0.5, -0.24, -0.66, 0, -0.5, 0.24, -0.66, 0.62, -0.5, 0.52, 0.1, 0.4, 0.72, 0, 0.86, -0.4, 0.72, -0.52, 0.1], metal, 0.18);

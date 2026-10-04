@@ -423,6 +423,12 @@
   // 「竜の背を越えて」4/4 リール（イ・ドリア）
   const PEAK_A = 'A2eA fAeA | G2dG BGdG | A2eA fAea | gedB A4 | A2eA fAeA | G2dG BGdG | cBcd eage | dBGB A4';
   const PEAK_B = 'a2ea fa e2 | g2dg bg d2 | a2ea faea | gedB A4 | e2ae f2ef | g2fg a2ga | bagf gfed | edBG A4';
+  // 「潮騒のホーンパイプ」4/4（ニ長調）— 潮風の港
+  const HARBOR_A = 'A3G F3G | A2d2 d3c | B3A G3F | E2A2 A3G | F3G A3B | c2e2 e3d | c3B A3G | F2D2 D4';
+  const HARBOR_B = 'd3e f3e | d2f2 a3f | g3f e3d | c2e2 e3c | d3e f3g | a2f2 d3B | A3F G3E | D2F2 D4';
+  // 「天空の回廊」3/4（ハ長調）— 天空城
+  const SKY_A = 'E2 G2 c2 | e4 d2 | c2 B2 A2 | G6 | F2 A2 c2 | f4 e2 | d2 c2 B2 | c6';
+  const SKY_B = 'g2 e2 c2 | d4 G2 | A2 B2 c2 | d6 | e2 f2 g2 | a4 g2 | f2 e2 d2 | c6';
   // 「深淵の螺旋」6/8（ホ短調）— 深淵の迷宮
   const ABYSS_A = 'E3 B3 | A2G F2E | D3 A3 | G2F E3 | E3 B3 | c2B A2G | F2G A2F | E6';
   const ABYSS_B = 'e3 d3 | B2c d2B | A3 G3 | F2G A3 | e3 g3 | f2e d2B | c2B A2F | E6';
@@ -541,6 +547,33 @@
         return [
           { mel: 0.085, harp: 0.1, fid: 0, drum: 0.22, drone: 0.016, tempo: 1 },
           { mel: 0.085, harp: 0.1, fid: 0.035, drum: 0.25, drone: 0.018, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    harbor: {
+      title: '♪ 潮騒のホーンパイプ — ギルド楽団',
+      A: HARBOR_A, B: HARBOR_B, key: 'D', bar: 8, meter: 4,
+      chA: ['D', 'D', 'D', 'A', 'G', 'D', 'A', 'A', 'D', 'G', 'A', 'A', 'A', 'Em', 'D', 'D'],
+      chB: ['D', 'D', 'D', 'D', 'G', 'D', 'A', 'A', 'D', 'G', 'D', 'Bm', 'D', 'A', 'D', 'D'],
+      bpm: 188, drone: [38, 45],
+      drumPat: (e) => (e === 0 ? [1] : e === 4 ? [0.8] : e % 2 === 0 ? [0.5] : e === 3 || e === 7 ? [0.3, 1] : null),
+      arrange(pass) {
+        return [
+          { mel: 0.085, harp: 0.11, fid: 0.02, drum: 0.2, drone: 0.016, tempo: 1 },
+          { mel: 0.085, harp: 0.1, fid: 0.035, drum: 0.22, drone: 0.018, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    sky: {
+      title: '♪ 天空の回廊 — ギルド楽団',
+      A: SKY_A, B: SKY_B, key: 'C', bar: 6, meter: 3,
+      chA: ['C', 'C', 'Am', 'G', 'F', 'F', 'G', 'C'],
+      chB: ['C', 'G', 'F', 'G', 'C', 'F', 'G', 'C'],
+      bpm: 156, drone: [36, 43],
+      arrange(pass) {
+        return [
+          { mel: 0.08, harp: 0.13, fid: 0.025, drum: 0.1, drone: 0.016, tempo: 1 },
+          { mel: 0.07, lead: 'fid', harp: 0.13, fid: 0, drum: 0.12, drone: 0.018, tempo: 1 },
         ][pass % 2];
       },
     },

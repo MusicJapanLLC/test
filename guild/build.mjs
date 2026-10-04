@@ -27,7 +27,8 @@ const standalone = html
   .replace(/(<script src="[^"]+"><\/script>\n?)+/, () => `<script>\n${safeJs}\n</script>\n`);
 writeFileSync(join(root, 'dist/index.html'), standalone);
 
-const artifact = `${title}
+const artifact = `<meta charset="utf-8">
+${title}
 <meta name="theme-color" content="#060a16">
 ${fonts}
 <style>

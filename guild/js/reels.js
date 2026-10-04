@@ -35,9 +35,12 @@
     mage: { mul: 1.25, col: '#8fd0ff', ono: ['ドォン', 'バシュウ', 'ゴォッ'] },
     cleric: { mul: 0.72, col: '#fff0a0', ono: ['キィン', 'パァン'] },
     archer: { mul: 1.1, ono: ['ヒュン', 'ドスッ', 'ストン'] },
+    knight: { melee: true, mul: 1.05, ono: ['ガギィン', 'ドゴッ', 'ズバァ'] },
+    bard: { mul: 0.85, col: '#ffb0e0', ono: ['♪ジャラン', '♪ポロロン', '♪ラ〜'] },
+    alchemist: { mul: 1.0, col: '#7fe0a0', ono: ['ボカン', 'シュワッ', 'バシャッ'] },
   };
-  const BIG = { golem: 1, knight: 1, wyvern: 1, dragon: 1, wolf: 0 };
-  const FLYING = { bat: 1, wyvern: 1 };
+  const BIG = { golem: 1, knight: 1, wyvern: 1, dragon: 1, wolf: 0, kraken: 1, griffin: 1, sentinel: 1 };
+  const FLYING = { bat: 1, wyvern: 1, griffin: 1 };
 
   // 閃きで覚える技（ロマサガの「閃き」へのオマージュ）
   const SKILLS = {
@@ -46,6 +49,9 @@
     thief: ['影縫い', '月下千刃', '燕返し', '夜霧の舞', '乱れ椿'],
     cleric: ['聖灯の祈り', '天使の鐘', '光輪の裁き', '浄化の陽'],
     archer: ['流星の矢', '風穿ち', '千里一射', '五月雨撃ち', '翠嵐の矢'],
+    knight: ['聖盾突撃', '不動の誓い', '蒼天の槍', '王剣・灯守り'],
+    bard: ['勇気の歌', '眠りの子守唄', '英雄譚の詩', '喝采のフィナーレ'],
+    alchemist: ['爆裂フラスコ', '賢者の霧', '黄金錬成', '万能薬の雨'],
   };
 
   // 本人のセリフ（性格・職業・出来事ごと）
@@ -71,6 +77,9 @@
       mage: ['燃えろ！', '穿て！', '吹き飛べ！'],
       cleric: ['光よ！', '天罰です！'],
       archer: ['射抜く！', '狙いどおり', '外さない'],
+      knight: ['この盾にかけて！', '押し通る！', '騎士の誇りを！'],
+      bard: ['聴いていけ！', 'クライマックスだ！', 'アンコールはなしだ♪'],
+      alchemist: ['調合完了！', '配合はバッチリ', '爆ぜろ！'],
     },
     hurt: ['くっ…！', 'いったぁ！', 'まだまだ！', 'やるな…', 'うぐっ'],
     dodge: ['当たらないよ', 'おっと', '遅い遅い', 'ひらりっ'],
@@ -85,7 +94,7 @@
   };
   const MON_ONO = ['ガブッ', 'ドンッ', 'バキッ', 'ゴッ'];
   const MON_ONO_BIG = ['ズドォン!!', 'グシャア!!', 'ドゴォッ!!'];
-  const ROAR = { dragon: 'グオオオオッ!!', wyvern: 'ギャオオッ!', golem: 'ゴゴゴゴ…', knight: 'オォォ…', wolf: 'ガルルル…', bat: 'キキーッ' };
+  const ROAR = { dragon: 'グオオオオッ!!', wyvern: 'ギャオオッ!', golem: 'ゴゴゴゴ…', knight: 'オォォ…', wolf: 'ガルルル…', bat: 'キキーッ', kraken: 'ゴボボボボ…!', griffin: 'キュアアアッ!', sentinel: '…シンニュウシャ、ハイジョ', crab: 'カチカチッ' };
 
   // 投稿の一言（結果は見せない）
   const CAPTIONS = [
@@ -225,7 +234,8 @@
       for (let k = 0; k < cnt; k++) { const m = mid(); if (m !== skillIdx && m < nb - 1) monIdx.add(m); }
     }
     // 回復（僧侶がいて、被弾のあと）
-    const clericIdx = P.findIndex((p) => p.cls === 'cleric');
+    let clericIdx = P.findIndex((p) => p.cls === 'cleric');
+    if (clericIdx < 0) clericIdx = P.findIndex((p) => p.cls === 'bard');
     const healIdx = new Map();
     if (clericIdx >= 0) {
       monIdx.forEach((m) => {
@@ -497,7 +507,7 @@
   }
 
   // 冒険譚ごとの曲（場所・ボス戦で変わる。TikTok の「楽曲」のように画面下に流れる）
-  const AREA_TRACK = { meadow: 'reels', forest: 'forest', cave: 'cave', castle: 'castle', peak: 'peak' };
+  const AREA_TRACK = { meadow: 'reels', forest: 'forest', cave: 'cave', castle: 'castle', peak: 'peak', harbor: 'harbor', sky: 'sky' };
   const trackOf = (r) => (!r || r.end ? null : r.digest ? 'reels' : r.boss || r.guardian ? 'boss' : r.abyss ? 'abyss' : AREA_TRACK[r.area] || 'reels');
   const songOf = (r) => G.audio.trackTitle(trackOf(r)) || r.song;
   R.trackOf = trackOf;
@@ -1682,21 +1692,26 @@
           slash(L.mx - 4, my, t - b.at, b.ang, b.crit ? 1.35 : 1, b.crit);
           if (p && p.cls === 'thief') slash(L.mx + 4, my - 6, t - b.at - 0.05, b.ang + 1.4, 0.8, false);
         } else if (p && p.cls === 'archer') arrow(px + 18, L.gy - 58, L.mx - 10, my, t - b.t, b.at - b.t, b.crit);
+        else if (p && p.cls === 'bard') notes(px + 20, L.gy - 58, L.mx - 10, my, t - b.t, b.at - b.t, b.crit);
+        else if (p && p.cls === 'alchemist') flaskThrow(px + 18, L.gy - 60, L.mx - 10, my, t - b.t, b.at - b.t, b.crit);
         else orb(px + 20, L.gy - 62, L.mx - 10, my, t - b.t, b.at - b.t, p && p.cls === 'cleric' ? '#fff0a0' : '#8fd0ff', b.crit);
         burst(L.mx - 6, my, t - b.at, b.crit ? 1.25 : 0.7, b.crit ? '#fff6c0' : '#ffffff');
       } else if (b.kind === 'skill') {
         const d = t - b.at;
         const cls = p ? p.cls : 'warrior';
-        if (cls === 'warrior') {
+        if (cls === 'warrior' || cls === 'knight') {
           slash(L.mx, my, d + 0.04, -0.75, 2.1, true);
           slash(L.mx, my, d, 0.75, 2.1, true);
+          if (cls === 'knight') ring(L.mx, my, d + 0.08, 80, '#cfe0ff');
         } else if (cls === 'thief') {
           for (let j = 0; j < 5; j++) slash(L.mx + (j - 2) * 6, my + ((j * 37) % 11) - 5, d + 0.2 - j * 0.05, -1.2 + j * 0.6, 1.1, true);
         } else if (cls === 'archer') {
           const px = partyX(reel, pl, b.t, L, b.who);
           arrow(px + 18, L.gy - 58, L.mx - 10, my, t - (b.at - 0.14), 0.14, true, 2.2);
         } else {
-          pillar(L.mx, L.gy, d, cls === 'cleric' ? '#fff3b0' : '#7fc8ff', cls === 'cleric' ? '#ffd36a' : '#c8a0ff');
+          const PC = { cleric: ['#fff3b0', '#ffd36a'], bard: ['#ffd0ee', '#ff7ab8'], alchemist: ['#c8ffd8', '#3fd8a0'] }[cls] || ['#7fc8ff', '#c8a0ff'];
+          pillar(L.mx, L.gy, d, PC[0], PC[1]);
+          if (cls === 'bard') for (let j = 0; j < 4; j++) notes(L.mx - 60 + j * 40, L.gy - 140, L.mx + (j - 1.5) * 12, my, d + 0.3 - j * 0.06, 0.3, true);
         }
         burst(L.mx, my, d, 2.1, '#fff6c0');
         ring(L.mx, my, d, 120, '#ffe9a0');
@@ -1862,6 +1877,45 @@
     ctx.fillStyle = g;
     ctx.beginPath(); ctx.arc(x, y, crit ? 20 : 15, 0, TAU); ctx.fill();
     ctx.restore();
+  }
+  // 吟遊詩人：音符が踊りながら飛ぶ
+  function notes(x0, y0, x1, y1, d, dur, crit) {
+    if (d < 0 || d > dur) return;
+    const kk = G.ease.inOut(d / dur);
+    ctx.save();
+    for (let i = 0; i < 3; i++) {
+      const k2 = Math.max(0, kk - i * 0.12);
+      const x = G.lerp(x0, x1, k2), y = G.lerp(y0, y1, k2) - Math.sin(k2 * Math.PI) * 30 + Math.sin(k2 * 18 + i * 2) * 6;
+      const sc = (crit ? 1.25 : 1) * (1 - i * 0.18);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(Math.sin(k2 * 10 + i) * 0.4);
+      ctx.scale(sc, sc);
+      ctx.fillStyle = i ? 'rgba(255,170,220,0.7)' : '#ffd0ee';
+      ctx.beginPath(); ctx.ellipse(-3, 6, 5, 3.6, -0.4, 0, TAU); ctx.fill();
+      ctx.fillRect(1, -10, 2, 16);
+      ctx.beginPath(); ctx.moveTo(3, -10); ctx.quadraticCurveTo(12, -6, 8, 2); ctx.lineTo(7, 0); ctx.quadraticCurveTo(9, -5, 3, -6); ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+  // 錬金術師：フラスコが回りながら弧を描いて飛ぶ
+  function flaskThrow(x0, y0, x1, y1, d, dur, crit) {
+    if (d < 0 || d > dur) return;
+    const kk = d / dur;
+    const x = G.lerp(x0, x1, kk), y = G.lerp(y0, y1, kk) - Math.sin(kk * Math.PI) * 60;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(kk * 9);
+    const s2 = crit ? 1.3 : 1;
+    ctx.scale(s2, s2);
+    art.poly(ctx, [-5, -2, 5, -2, 7, 8, -7, 8], '#7fe0a0');
+    art.poly(ctx, [-5, -2, 0, -2, 0, 8, -7, 8], '#b8ffd0');
+    art.poly(ctx, [-2, -8, 2, -8, 2, -2, -2, -2], '#e8f4f0');
+    art.poly(ctx, [-3, -10, 3, -10, 3, -8, -3, -8], '#8a5a32');
+    ctx.restore();
+    ctx.fillStyle = 'rgba(127,224,160,0.35)';
+    ctx.beginPath(); ctx.arc(x, y, 9, 0, TAU); ctx.fill();
   }
   function pillar(x, gy, d, c1, c2) {
     if (d < -0.12 || d > 0.6) return;
@@ -2922,6 +2976,137 @@
         ctx.fillStyle = 'rgba(230,220,240,0.12)';
         ctx.beginPath(); ctx.ellipse(x, gy - 10 - i * 8, 90, 14, 0, 0, TAU); ctx.fill();
       }
+    } else if (id === 'harbor') {
+      // 潮風の港：水平線、灯台、帆船、桟橋
+      art.facet(ctx, 280, 80, 22, 22, 10, '#fff4c8', t * 0.1, 0.1);
+      cloudR(((80 - t * 5 - scroll * 0.08) % 470 + 470) % 470 - 60, 70, 44);
+      cloudR(((300 - t * 3.4 - scroll * 0.08) % 470 + 470) % 470 - 60, 116, 32);
+      const hz = gy - 64;
+      bgLayer(sk + 'A', cacheable, () => {
+        layer(p.far, 26, hz - 4, 6, 0.08, 141, false);
+        // 海
+        const sg = ctx.createLinearGradient(0, hz, 0, gy);
+        sg.addColorStop(0, '#3f8fc0');
+        sg.addColorStop(1, '#2a6a9a');
+        ctx.fillStyle = sg;
+        ctx.fillRect(-20, hz, 400, gy - hz + 4);
+        // 灯台
+        const lx = 70 - scroll * 0.1;
+        art.poly(ctx, [lx - 8, hz + 2, lx + 8, hz + 2, lx + 5, hz - 50, lx - 5, hz - 50], '#f4efe6');
+        [0, 1, 2].forEach((i) => art.poly(ctx, [lx - 7.4 + i * 1, hz - 6 - i * 16, lx + 7.4 - i * 1, hz - 6 - i * 16, lx + 6.8 - i * 1, hz - 13 - i * 16, lx - 6.8 + i * 1, hz - 13 - i * 16], '#d4493a'));
+        art.poly(ctx, [lx - 6, hz - 50, lx + 6, hz - 50, lx + 6, hz - 58, lx - 6, hz - 58], '#3a4a5a');
+        art.poly(ctx, [lx - 7, hz - 58, lx + 7, hz - 58, lx, hz - 66], '#d4493a');
+        // 桟橋の床
+        art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, Hd + 20, -20, Hd + 20], p.ground);
+        for (let i = 0; i < 26; i++) {
+          const x = ((i * 17 - scroll) % 442 + 442) % 442 - 30;
+          art.poly(ctx, [x, gy - 2, x + 1.4, gy - 2, x + 1.4 + (x - 180) * 0.25, Hd + 20, x + (x - 180) * 0.25, Hd + 20], 'rgba(60,40,20,0.35)');
+        }
+        art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, gy + 4, -20, gy + 4], G.shade(p.ground, 0.14));
+        const gg = ctx.createLinearGradient(0, gy, 0, Hd);
+        gg.addColorStop(0, 'rgba(0,0,0,0)');
+        gg.addColorStop(1, 'rgba(4,8,18,0.35)');
+        ctx.fillStyle = gg;
+        ctx.fillRect(-20, gy, 400, Hd - gy + 20);
+      });
+      // 灯台の光
+      const lx = 70 - scroll * 0.1;
+      const beam = Math.sin(t * 0.8);
+      ctx.save();
+      ctx.globalAlpha = 0.18 + Math.max(0, beam) * 0.2;
+      ctx.fillStyle = '#fff4c0';
+      ctx.beginPath(); ctx.moveTo(lx, hz - 54); ctx.lineTo(lx + 160 * beam, hz - 74); ctx.lineTo(lx + 160 * beam, hz - 34); ctx.fill();
+      ctx.restore();
+      // 波のきらめき
+      for (let i = 0; i < 14; i++) {
+        const x = ((G.hash(i) * 400 + t * (6 + (i % 3) * 3) - scroll * 0.2) % 420 + 420) % 420 - 20;
+        const y = hz + 6 + G.hash(i * 5) * (gy - hz - 12);
+        ctx.fillStyle = `rgba(255,255,255,${0.25 + 0.25 * Math.sin(t * 3 + i)})`;
+        ctx.fillRect(x, y, 6 + G.hash(i * 3) * 8, 1.2);
+      }
+      // 帆船
+      const sx = ((260 - t * 4 - scroll * 0.15) % 520 + 520) % 520 - 80, sy = hz + 4 + Math.sin(t * 1.4) * 1.2;
+      art.poly(ctx, [sx - 26, sy - 8, sx + 26, sy - 8, sx + 18, sy, sx - 18, sy], '#6a4426');
+      art.poly(ctx, [sx - 1, sy - 8, sx + 1, sy - 8, sx + 1, sy - 48, sx - 1, sy - 48], '#4a2e1a');
+      art.poly(ctx, [sx + 2, sy - 46, sx + 2, sy - 14, sx + 20, sy - 16, sx + 16, sy - 30], '#f4efe6');
+      art.poly(ctx, [sx - 2, sy - 42, sx - 2, sy - 14, sx - 18, sy - 16, sx - 15, sy - 28], '#e8e0d2');
+      art.poly(ctx, [sx, sy - 48, sx + 9, sy - 45, sx, sy - 42], '#d4493a');
+      // 樽と杭
+      for (let i = 0; i < 3; i++) {
+        const x = ((i * 160 + 30 - scroll * 0.9) % 480 + 480) % 480 - 40;
+        art.poly(ctx, [x - 3, gy + 2, x + 3, gy + 2, x + 3, gy - 22, x - 3, gy - 22], '#5a3a22');
+        art.poly(ctx, [x - 3.6, gy - 22, x + 3.6, gy - 22, x + 3, gy - 25, x - 3, gy - 25], '#6a4a2e');
+        ctx.strokeStyle = 'rgba(230,210,170,0.8)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(x + 3, gy - 18); ctx.quadraticCurveTo(x + 40, gy - 8, x + 80, gy - 18); ctx.stroke();
+        art.facet(ctx, x + 22, gy - 8, 7, 9, 8, '#8a5a32', 0, 0.16);
+        art.poly(ctx, [x + 15, gy - 12, x + 29, gy - 12, x + 29, gy - 10.6, x + 15, gy - 10.6], '#3a2a20');
+      }
+      // カモメ
+      for (let i = 0; i < 3; i++) {
+        const x = ((t * (14 + i * 4) + i * 140) % 460) - 40, y = 60 + i * 26 + Math.sin(t * 1.6 + i) * 8;
+        const w2 = Math.sin(t * 7 + i) * 3;
+        ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.moveTo(x - 7, y - w2); ctx.quadraticCurveTo(x - 3, y - 4, x, y); ctx.quadraticCurveTo(x + 3, y - 4, x + 7, y - w2); ctx.stroke();
+      }
+    } else if (id === 'sky') {
+      // 天空城：雲海、浮島と滝、白い尖塔、光の帯
+      bgLayer(sk + 'A', cacheable, () => {
+        // 遠くの城
+        const cx = 230 - scroll * 0.1;
+        [[-40, 70], [-14, 96], [14, 120], [40, 84], [62, 60]].forEach(([d, h]) => {
+          art.poly(ctx, [cx + d - 9, gy - 60, cx + d + 9, gy - 60, cx + d + 9, gy - 60 - h, cx + d - 9, gy - 60 - h], '#e8e6f6');
+          art.poly(ctx, [cx + d - 9, gy - 60, cx + d - 2, gy - 60, cx + d - 2, gy - 60 - h, cx + d - 9, gy - 60 - h], '#f8f6ff');
+          art.poly(ctx, [cx + d - 11, gy - 60 - h, cx + d + 11, gy - 60 - h, cx + d, gy - 60 - h - 22], '#8aa0e0');
+          ctx.fillStyle = 'rgba(255,220,140,0.7)';
+          ctx.fillRect(cx + d - 1.5, gy - 60 - h + 12, 3, 6);
+        });
+        // 浮島
+        [[60, gy - 120, 34], [320, gy - 150, 26]].forEach(([x, y, w]) => {
+          const xx = x - scroll * 0.14;
+          art.facetPoly(ctx, [xx - w, y, xx + w, y, xx + w * 0.5, y + w * 0.7, xx, y + w * 1.1, xx - w * 0.6, y + w * 0.6], '#a89cc8', 0.14);
+          art.poly(ctx, [xx - w, y, xx + w, y, xx + w * 0.9, y - 4, xx - w * 0.9, y - 4], '#8ad08a');
+          art.poly(ctx, [xx + w * 0.2, y + 2, xx + w * 0.3, y + 2, xx + w * 0.34, y + w * 1.6, xx + w * 0.16, y + w * 1.6], 'rgba(220,240,255,0.55)');
+        });
+        // 雲海（地平）
+        layer('#f4f0ff', 14, gy - 50, 9, 0.25, 151, false);
+        layer('#e6e0f8', 10, gy - 22, 9, 0.45, 161, false);
+        // 大理石の床
+        art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, Hd + 20, -20, Hd + 20], p.ground);
+        for (let i = 0; i < 12; i++) {
+          const x = ((i * 40 - scroll) % 480 + 480) % 480 - 40;
+          art.poly(ctx, [x, gy - 2, x + 1, gy - 2, x + 1 + (x - 180) * 0.3, Hd + 20, x + (x - 180) * 0.3, Hd + 20], 'rgba(150,140,190,0.25)');
+        }
+        art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, gy + 3, -20, gy + 3], '#ffe08a');
+        const gg = ctx.createLinearGradient(0, gy, 0, Hd);
+        gg.addColorStop(0, 'rgba(0,0,0,0)');
+        gg.addColorStop(1, 'rgba(40,30,80,0.3)');
+        ctx.fillStyle = gg;
+        ctx.fillRect(-20, gy, 400, Hd - gy + 20);
+      });
+      // 光の帯
+      ctx.save();
+      for (let i = 0; i < 3; i++) {
+        const x = 60 + i * 120 + Math.sin(t * 0.3 + i) * 10;
+        const lg = ctx.createLinearGradient(x, 0, x + 40, gy);
+        lg.addColorStop(0, 'rgba(255,240,200,0.28)');
+        lg.addColorStop(1, 'rgba(255,240,200,0)');
+        ctx.fillStyle = lg;
+        ctx.beginPath(); ctx.moveTo(x, -20); ctx.lineTo(x + 30, -20); ctx.lineTo(x + 70, gy); ctx.lineTo(x + 20, gy); ctx.fill();
+      }
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = 0.7;
+      cloudR(((40 - t * 6 - scroll * 0.2) % 480 + 480) % 480 - 60, gy - 30, 50);
+      cloudR(((260 - t * 4 - scroll * 0.2) % 480 + 480) % 480 - 60, gy - 44, 36);
+      ctx.restore();
+      // 手前の柱
+      for (let i = 0; i < 2; i++) {
+        const x = ((i * 220 + 100 - scroll * 0.75) % 440 + 440) % 440 - 40;
+        art.poly(ctx, [x - 9, gy, x + 9, gy, x + 8, gy - 110, x - 8, gy - 110], '#f2f0fa');
+        art.poly(ctx, [x - 9, gy, x - 3, gy, x - 3, gy - 110, x - 8, gy - 110], '#ffffff');
+        art.poly(ctx, [x - 12, gy - 110, x + 12, gy - 110, x + 12, gy - 116, x - 12, gy - 116], '#e2b84a');
+        art.poly(ctx, [x - 12, gy, x + 12, gy, x + 12, gy - 5, x - 12, gy - 5], '#d8d2ec');
+      }
     } else if (id === 'abyss') {
       // 深淵：紫の闇に浮かぶ石柱と、ゆらめく松明、光る結晶
       bgLayer(sk + 'A', cacheable, () => {
@@ -3010,6 +3195,14 @@
         const x = (G.hash(i) * 400 + t * 14) % 400 - 20, y = (t * 30 + G.hash(i * 3) * 300) % (gy + 20);
         ctx.save(); ctx.translate(x + Math.sin(t * 2 + i) * 8, y); ctx.rotate(t * 2 + i);
         art.poly(ctx, [-3, 0, 0, -2, 3, 0, 0, 2], '#a8c860');
+        ctx.restore();
+      }
+    } else if (id === 'sky') {
+      for (let i = 0; i < 10; i++) {
+        const k = (t * (0.04 + G.hash(i) * 0.05) + G.hash(i * 9)) % 1;
+        const x = G.hash(i * 13) * 380 - 10 + Math.sin(t * 0.8 + i) * 10;
+        ctx.save(); ctx.translate(x, k * gy); ctx.rotate(Math.sin(t + i) * 0.8);
+        art.poly(ctx, [-3, 0, 0, -1.4, 3, 0, 0, 1.4], 'rgba(255,250,235,0.85)');
         ctx.restore();
       }
     } else if (id === 'abyss') {
