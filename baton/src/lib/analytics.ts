@@ -1,9 +1,9 @@
 /**
- * GA4 と Meta Pixel。どちらも ID が空なら一切読み込まない。
+ * GA4 は公開ホストだけで計測。Meta Pixel は ID が空なら読み込まない。
  * 広告最適化の軸は survey_complete = Meta の Lead イベント。
  */
 
-const GA4_ID = (import.meta.env.VITE_GA4_ID ?? '').trim();
+const GA4_ID = (import.meta.env.VITE_GA4_ID ?? '').trim() || 'G-S2P0JCW50M';
 const META_PIXEL_ID = (import.meta.env.VITE_META_PIXEL_ID ?? '').trim();
 
 type Params = Record<string, string | number | boolean | undefined>;
@@ -20,7 +20,14 @@ declare global {
 let ready = false;
 
 function loadGA4(): void {
-  if (!GA4_ID) return;
+  if (!GA4_ID || window.location.hostname !== 'baton.music-japan.com') return;
+  // Verification/response links contain private tokens and never participate in analytics.
+  if (/^\/(?:verify|respond)(?:\/|$)/.test(window.location.pathname)) return;
+
+  function publicUrl(value: string): string {
+    try { const url = new URL(value); return url.origin + url.pathname; }
+    catch { return ''; }
+  }
 
   const s = document.createElement('script');
   s.async = true;
@@ -33,7 +40,13 @@ function loadGA4(): void {
     window.dataLayer!.push(arguments);
   };
   window.gtag('js', new Date());
-  window.gtag('config', GA4_ID, { send_page_view: true });
+  window.gtag('config', GA4_ID, {
+    send_page_view: true,
+    page_location: publicUrl(window.location.href),
+    page_referrer: publicUrl(document.referrer),
+    allow_google_signals: false,
+    allow_ad_personalization_signals: false,
+  });
 }
 
 function loadMetaPixel(): void {
