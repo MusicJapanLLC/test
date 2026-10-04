@@ -98,7 +98,13 @@
 
   // ---------------------------------------------------------------- 冒険譚を作る
   let seq = 1;
-  R.make = function ({ q, party, tier, gold, mat, fame, levelUps, extra, endAt, drop, loot, goldBoost }) {
+  const ABYSS_CAP = {
+    ok: ['B{f}F 突破。まだまだ底は見えない', '深淵、ひんやりしてる…', 'B{f}F、ここも静かすぎる'],
+    great: ['B{f}F を一気に駆け抜けた！', '深淵の宝、見つけちゃった', 'この階、楽勝だったかも'],
+    legend: ['【深淵】B{f}F で伝説を見た', '深淵の底から光が…！'],
+    fail: ['B{f}F、深淵は甘くない…', '一度戻って、装備を整えよう', '暗すぎて前が見えない…'],
+  };
+  R.make = function ({ q, party, tier, gold, mat, fame, levelUps, extra, endAt, drop, loot, goldBoost, firstClear }) {
     const st = G.state;
     const area = D.AREA_BY_ID[q.area];
     const md = D.MONSTERS[q.monster];
@@ -106,8 +112,12 @@
     const seed = Math.floor(Math.random() * 1e9);
     const rnd = mulberry(seed ^ 0x51ab);
     const c = { area: area.short, monster: md.name, verb: md.verb, leader: leader ? leader.name : '', cls: leader ? D.CLASSES[leader.cls].name : '' };
-    const caption = q.boss ? '最終依頼。紅蓮竜王、ついに――' : fill(pickR(rnd, CAPTIONS), c);
-    const tags = TAGS_BASE.slice().sort(() => rnd() - 0.5).slice(0, 3).map((x) => fill(x, c));
+    let caption = q.boss ? '最終依頼。紅蓮竜王、ついに――' : fill(pickR(rnd, CAPTIONS), c);
+    let tags = TAGS_BASE.slice().sort(() => rnd() - 0.5).slice(0, 3).map((x) => fill(x, c));
+    if (q.abyss) {
+      caption = q.guardian && tier !== 'fail' ? `B${q.abyss}F の守護者、${md.name}を撃破！` : pickR(rnd, ABYSS_CAP[tier]).replace('{f}', q.abyss);
+      tags = ['#深淵の迷宮', `#B${q.abyss}F`, q.guardian ? '#守護者' : fill(pickR(rnd, TAGS_BASE), c)];
+    }
     const viewsBase = { fail: [300, 1600], ok: [900, 4200], great: [12000, 58000], legend: [120000, 520000] }[tier];
     const views = Math.round(G.lerp(viewsBase[0], viewsBase[1], rnd()) * (1 + st.rank * 0.15));
     let recruit = null;
@@ -123,6 +133,7 @@
       monster: q.monster,
       count: q.count || 1,
       boss: !!q.boss,
+      abyss: q.abyss || 0, guardian: !!q.guardian, farm: !!q.farm, firstClear: !!firstClear,
       party: party.map((a) => ({ id: a.id, name: a.name, cls: a.cls, lv: a.lv, look: a.look, trait: a.trait, skills: Object.keys(a.sk || {}), set: (a.skillSet || []).slice(), crit: G.items ? Math.round(G.items.advStats(a).crit || 0) : 0 })),
       tier, gold, mat, fame,
       levelUps: levelUps || [],
@@ -185,7 +196,7 @@
     const tier = reel.tier;
     const fail = tier === 'fail';
     const mon = reel.monster;
-    const big = !!(reel.boss || BIG[mon]);
+    const big = !!(reel.boss || reel.guardian || BIG[mon]);
     const pl = { beats: [], speech: [], stops: [], slows: [], encT: 1.05, big, fail };
     const nb = reel.boss ? 8 : fail ? 5 : tier === 'ok' ? 4 + (rnd() < 0.45 ? 1 : 0) : tier === 'great' ? 5 + (rnd() < 0.5 ? 1 : 0) : 6 + (rnd() < 0.5 ? 1 : 0);
     const critP = { fail: 0.1, ok: 0.2, great: 0.4, legend: 0.5 }[tier];
@@ -487,7 +498,7 @@
 
   // 冒険譚ごとの曲（場所・ボス戦で変わる。TikTok の「楽曲」のように画面下に流れる）
   const AREA_TRACK = { meadow: 'reels', forest: 'forest', cave: 'cave', castle: 'castle', peak: 'peak' };
-  const trackOf = (r) => (!r || r.end ? null : r.digest ? 'reels' : r.boss ? 'boss' : AREA_TRACK[r.area] || 'reels');
+  const trackOf = (r) => (!r || r.end ? null : r.digest ? 'reels' : r.boss || r.guardian ? 'boss' : r.abyss ? 'abyss' : AREA_TRACK[r.area] || 'reels');
   const songOf = (r) => G.audio.trackTitle(trackOf(r)) || r.song;
   R.trackOf = trackOf;
 
@@ -1457,7 +1468,7 @@
       ctx.translate(mx + c * 34, L.gy - c * 6 + my + ky);
       ctx.scale(-sc, sc);
       art.setFlash(c === 0 ? hit * 0.85 : 0);
-      art.monster[reel.monster](ctx, { t: t + c * 0.7, atk: c === 0 ? atk : 0, color: D.MONSTERS[reel.monster].color });
+      art.monster[reel.monster](ctx, { t: t + c * 0.7, atk: c === 0 ? atk : 0, color: monColor(reel) });
       art.setFlash(0);
       ctx.restore();
     }
@@ -1500,7 +1511,7 @@
     ctx.textAlign = 'left';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(8,12,26,0.85)';
-    const name = (reel.boss ? '竜王 ' : '') + D.MONSTERS[reel.monster].name + (reel.count > 1 ? ` ×${Math.min(3, reel.count)}` : '');
+    const name = (reel.boss ? '竜王 ' : reel.guardian ? '守護者 ' : reel.abyss ? '深淵の' : '') + D.MONSTERS[reel.monster].name + (reel.count > 1 ? ` ×${Math.min(3, reel.count)}` : '');
     ctx.strokeText(name, x, y - 5);
     ctx.fillStyle = '#f6ecd2';
     ctx.fillText(name, x, y - 5);
@@ -2304,6 +2315,10 @@
         g.font = F(900, 10, 'num');
         g.fillStyle = '#ff8a6a';
         g.fillText('FINAL QUEST', 0, 24);
+      } else if (reel.abyss) {
+        g.font = F(900, 10, 'num');
+        g.fillStyle = reel.guardian ? '#ff8ad8' : '#c89bff';
+        g.fillText(`DEPTH B${reel.abyss}F${reel.guardian ? ' ・ GUARDIAN' : ''}`, 0, 24);
       }
     });
     ctx.save();
@@ -2312,9 +2327,11 @@
     ctx.restore();
   }
 
+  // 深淵の魔物は、紫がかった色に
+  const monColor = (reel) => (reel.abyss ? G.mix(D.MONSTERS[reel.monster].color, reel.guardian ? '#b0306a' : '#5a3a9a', reel.guardian ? 0.42 : 0.38) : D.MONSTERS[reel.monster].color);
   function drawResult(reel, pl, t, L) {
     const a = G.ease.outBack(G.seg(t, pl.resT, pl.resT + 0.25));
-    const label = reel.boss ? '竜王討伐！！' : { fail: '撤退…', ok: '依頼達成', great: '大成功！', legend: '伝説級！！' }[reel.tier];
+    const label = reel.boss ? '竜王討伐！！' : reel.abyss && reel.tier !== 'fail' && reel.guardian ? '守護者撃破！' : reel.abyss && reel.tier !== 'fail' && reel.firstClear && reel.tier === 'ok' ? `B${reel.abyss}F 突破！` : { fail: '撤退…', ok: '依頼達成', great: '大成功！', legend: '伝説級！！' }[reel.tier];
     const y0 = Hd * 0.2;
     // リボン
     ctx.save();
@@ -2905,6 +2922,63 @@
         ctx.fillStyle = 'rgba(230,220,240,0.12)';
         ctx.beginPath(); ctx.ellipse(x, gy - 10 - i * 8, 90, 14, 0, 0, TAU); ctx.fill();
       }
+    } else if (id === 'abyss') {
+      // 深淵：紫の闇に浮かぶ石柱と、ゆらめく松明、光る結晶
+      bgLayer(sk + 'A', cacheable, () => {
+        for (let i = 0; i < 26; i++) {
+          const x = G.hash(i * 17) * 380 - 10, y = G.hash(i * 31) * (gy - 60);
+          ctx.fillStyle = `rgba(200,160,255,${0.15 + G.hash(i) * 0.3})`;
+          ctx.fillRect(x, y, 1.4, 1.4);
+        }
+        // 遠くのアーチ
+        for (let i = 0; i < 4; i++) {
+          const cx = ((i * 120 - scroll * 0.12) % 480 + 480) % 480 - 60;
+          const top = gy - 150 - G.hash(i * 9) * 40;
+          art.poly(ctx, [cx - 34, gy, cx - 22, gy, cx - 22, top + 30, cx, top + 10, cx + 22, top + 30, cx + 22, gy, cx + 34, gy, cx + 34, top + 24, cx, top - 6, cx - 34, top + 24], p.far);
+        }
+        layer(p.mid, 46, gy - 30, 7, 0.3, 131, true);
+        // 床：石畳とルーン
+        art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, Hd + 20, -20, Hd + 20], p.ground);
+        art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, gy + 3, -20, gy + 3], G.shade(p.ground, 0.16));
+        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = 1;
+        for (let r = 0; r < 4; r++) {
+          const y = gy + 10 + r * r * 14;
+          ctx.beginPath(); ctx.moveTo(-20, y); ctx.lineTo(380, y); ctx.stroke();
+          for (let i = 0; i < 9; i++) {
+            const x = ((i * 50 + r * 25 - scroll) % 450 + 450) % 450 - 30;
+            ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x - 6 - r * 6, y + 10 + r * 10); ctx.stroke();
+          }
+        }
+        const gg = ctx.createLinearGradient(0, gy, 0, Hd);
+        gg.addColorStop(0, 'rgba(0,0,0,0)');
+        gg.addColorStop(1, 'rgba(6,2,14,0.55)');
+        ctx.fillStyle = gg;
+        ctx.fillRect(-20, gy, 400, Hd - gy + 20);
+      });
+      // 石柱と松明（手前・ゆらめく）
+      for (let i = 0; i < 3; i++) {
+        const x = ((i * 150 + 40 - scroll * 0.7) % 450 + 450) % 450 - 45;
+        art.poly(ctx, [x - 11, gy, x + 11, gy, x + 9, gy - 120, x - 9, gy - 120], p.near);
+        art.poly(ctx, [x - 11, gy, x - 3, gy, x - 2, gy - 120, x - 9, gy - 120], G.shade(p.near, 0.12));
+        art.poly(ctx, [x - 14, gy - 120, x + 14, gy - 120, x + 12, gy - 128, x - 12, gy - 128], G.shade(p.near, 0.2));
+        const fl = 0.75 + Math.sin(t * 13 + i * 2) * 0.15 + Math.sin(t * 7.3 + i) * 0.1;
+        ctx.fillStyle = `rgba(255,150,90,${0.16 * fl})`;
+        ctx.beginPath(); ctx.arc(x + 14, gy - 86, 30 * fl, 0, TAU); ctx.fill();
+        art.poly(ctx, [x + 9, gy - 80, x + 19, gy - 80, x + 16, gy - 72, x + 12, gy - 72], '#3a2a20');
+        art.poly(ctx, [x + 10, gy - 81, x + 18, gy - 81, x + 14 + Math.sin(t * 15 + i) * 1.5, gy - 81 - 12 * fl], '#ffb35a');
+        art.poly(ctx, [x + 12, gy - 81, x + 16, gy - 81, x + 14, gy - 81 - 7 * fl], '#fff0b0');
+      }
+      // 光る結晶
+      for (let i = 0; i < 5; i++) {
+        const x = ((i * 83 + 20 - scroll * 0.85) % 460 + 460) % 460 - 50;
+        const gl = 0.6 + Math.sin(t * 1.6 + i * 1.3) * 0.35;
+        ctx.fillStyle = G.rgba('#c89bff', 0.18 * gl);
+        ctx.beginPath(); ctx.arc(x, gy - 8, 20, 0, TAU); ctx.fill();
+        art.poly(ctx, [x - 6, gy, x - 1, gy - 22, x + 4, gy], '#a878f0');
+        art.poly(ctx, [x - 1, gy - 22, x + 4, gy, x + 1, gy], '#e2ccff');
+        art.poly(ctx, [x + 3, gy, x + 7, gy - 12, x + 10, gy], '#8a5ad8');
+      }
     } else if (id === 'peak') {
       bgLayer(sk + 'A', cacheable, () => {
         art.facet(ctx, 270, 110, 34, 34, 10, '#ffe2a0', 0, 0.08);
@@ -2937,6 +3011,13 @@
         ctx.save(); ctx.translate(x + Math.sin(t * 2 + i) * 8, y); ctx.rotate(t * 2 + i);
         art.poly(ctx, [-3, 0, 0, -2, 3, 0, 0, 2], '#a8c860');
         ctx.restore();
+      }
+    } else if (id === 'abyss') {
+      for (let i = 0; i < 14; i++) {
+        const k = (t * (0.05 + G.hash(i) * 0.06) + G.hash(i * 7)) % 1;
+        const x = G.hash(i * 13) * 380 - 10 + Math.sin(t + i) * 6;
+        ctx.fillStyle = `rgba(210,170,255,${0.5 * Math.sin(k * Math.PI)})`;
+        ctx.fillRect(x, gy - k * gy, 1.8, 1.8);
       }
     } else if (id === 'cave') {
       for (let i = 0; i < 3; i++) {

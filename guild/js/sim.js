@@ -99,6 +99,7 @@
     return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items;
   };
   S.slots = (s = G.state) => s.fac.hall;
+  S.busy = (s = G.state) => s.active.filter((e) => !e.abyss).length;
   S.boardSize = (s = G.state) => s.fac.hall + 2;
   S.beds = (s = G.state) => D.beds(s.fac.bunks);
   S.offlineCap = (s = G.state) => (3 + s.fac.tower * 2) * 3600;
@@ -239,7 +240,7 @@
   S.dispatch = function (questId, partyIds, at, s = G.state) {
     const qi = s.board.findIndex((q) => q.id === questId);
     if (qi < 0) return null;
-    if (s.active.length >= S.slots(s)) return null;
+    if (S.busy(s) >= S.slots(s)) return null;
     const party = partyIds.map((id) => s.adv.find((a) => a.id === id)).filter((a) => a && a.status === 'idle');
     if (!party.length) return null;
     const q = s.board[qi];
@@ -250,6 +251,66 @@
     s.board.splice(qi, 1);
     s.active.push(ex);
     s.stats.quests++;
+    G.emit('dispatch', ex);
+    return ex;
+  };
+
+  // ---------------------------------------------------------------- 深淵の迷宮
+  //  1階ずつ攻略する。10階ごとに守護者。深いほど強い装備（アイテムLv 最大150）が出る。
+  //  ふつうの派遣枠とは別の「迷宮枠」1つ。自動派遣は迷宮に行かない。
+  S.ABYSS_MAX = 100;
+  const ABYSS_MON = ['slime', 'rabbit', 'wolf', 'mushroom', 'bat', 'golem', 'skeleton', 'knight', 'wyvern', 'dragon'];
+  const ABYSS_GUARD = ['golem', 'knight', 'wyvern', 'dragon'];
+  S.abyssIlv = (f) => Math.min(150, 40 + Math.round(f * 1.1));
+  S.abyss = (s = G.state) => {
+    if (!s.abyss) s.abyss = { open: false, floor: 1, best: 0 };
+    if (!s.abyss.open && s.rank >= D.ABYSS.rank) s.abyss.open = true;
+    return s.abyss;
+  };
+  S.abyssQuest = function (f, farm) {
+    f = G.clamp(f | 0, 1, S.ABYSS_MAX);
+    const guard = f % 10 === 0;
+    const mon = guard ? ABYSS_GUARD[(f / 10 - 1) % ABYSS_GUARD.length] : ABYSS_MON[Math.min(9, Math.floor((f - 1) / 12) + ((f * 7) % 3))];
+    const md = D.MONSTERS[mon];
+    return {
+      id: 'abyss-' + f + (farm ? 'f' : ''),
+      area: 'abyss', abyss: f, farm: !!farm, guardian: guard,
+      name: guard ? `B${f}F 守護者・${md.name}` : `B${f}F ${md.name}の巣`,
+      monster: mon,
+      count: guard ? 1 : 2 + (f % 2),
+      size: 4,
+      req: Math.round(260 * Math.pow(1.045, f - 1) * (guard ? 1.25 : 1)),
+      dur: Math.round((240 + f * 6) * (guard ? 1.4 : 1)),
+      gold: Math.round(700 * Math.pow(1.048, f - 1) * (guard ? 2 : 1)),
+      mat: 4 + Math.floor(f / 5) + (guard ? 6 : 0),
+      fame: 12 + f * 2,
+      exp: Math.round((60 + f * 9) * (guard ? 1.5 : 1)),
+      stars: Math.min(5, 3 + Math.floor(f / 34)),
+      boss: false,
+    };
+  };
+  S.abyssActive = (s = G.state) => s.active.find((e) => e.abyss) || null;
+  // 次に挑む階（farm=true：最深の階で稼ぐ）
+  S.abyssNext = function (farm, s = G.state) {
+    const ab = S.abyss(s);
+    if (farm || ab.floor > S.ABYSS_MAX) return S.abyssQuest(Math.max(1, Math.min(ab.best, S.ABYSS_MAX)), true);
+    return S.abyssQuest(ab.floor, false);
+  };
+  S.dispatchAbyss = function (partyIds, farm, at, s = G.state) {
+    const ab = S.abyss(s);
+    if (!ab.open || S.abyssActive(s)) return null;
+    if (farm && ab.best < 1) return null;
+    const party = partyIds.map((id) => s.adv.find((a) => a.id === id)).filter((a) => a && a.status === 'idle');
+    if (!party.length) return null;
+    const q = S.abyssNext(farm, s);
+    q.id += '-' + Math.floor((at || G.now()) * 1000).toString(36);
+    const info = S.partyInfo(q, party, s);
+    const t0 = at || G.now();
+    const ex = { q, party: party.map((a) => a.id), startAt: t0, endAt: t0 + info.dur, p: info.p, abyss: true };
+    party.forEach((a) => { a.status = 'away'; a.questId = q.id; });
+    s.active.push(ex);
+    s.stats.quests++;
+    s.stats.abyssRuns = (s.stats.abyssRuns || 0) + 1;
     G.emit('dispatch', ex);
     return ex;
   };
@@ -267,6 +328,16 @@
       tier = r < legendP ? 'legend' : r < legendP + info.great ? 'great' : 'ok';
     } else tier = 'fail';
     if (q.boss && tier !== 'fail') tier = 'legend';
+    // 深淵：初めて越えた階なら記録を更新
+    let firstClear = false;
+    if (q.abyss) {
+      const ab = S.abyss(s);
+      if (tier !== 'fail' && !q.farm && q.abyss >= ab.floor) {
+        ab.best = Math.max(ab.best, q.abyss);
+        ab.floor = q.abyss + 1;
+        firstClear = true;
+      }
+    }
     const mul = { fail: info.warrior ? 0.5 : 0.25, ok: 1, great: 2, legend: 5 }[tier];
     const matMul = { fail: 0, ok: 1, great: 2, legend: 3 }[tier];
     const tidy = party.filter((a) => a.trait === 'tidy').length;
@@ -308,10 +379,22 @@
     let drop = null;
     if (G.items) {
       if (q.boss) drop = G.items.make(Math.random, 4, { noRelic: true, tid: 'sword' });
-      else drop = G.items.rollDrop(Math.random, tier, area.index, party, info.find);
+      else if (q.abyss) {
+        const ilv = S.abyssIlv(q.abyss);
+        const cls = party.length && Math.random() < 0.55 ? G.pick(party).cls : null;
+        // 守護者は必ず SR 以上、ふつうの階も落としやすい
+        if (q.guardian && tier !== 'fail') drop = G.items.make(Math.random, Math.max(2, G.items.rollRarity(Math.random, 'legend', 4, info.find)), { cls, ilv });
+        else drop = G.items.rollDrop(Math.random, tier, 4, party, info.find + 25, { ilv });
+      } else drop = G.items.rollDrop(Math.random, tier, area.index, party, info.find);
     }
     const loot = G.items && tier !== 'fail' ? G.items.rollLoot(Math.random, tier, area.index, info.find) : [];
-    const reel = G.reels.make({ q, party, tier, gold, mat: mat + bonusMat, fame, levelUps, extra, endAt: ex.endAt, drop, loot, goldBoost: gb > 1 ? gb : 0 });
+    if (q.abyss && tier !== 'fail') {
+      const add = (id, n) => { const e = loot.find((x) => x.id === id); if (e) e.n += n; else loot.push({ id, n }); };
+      if (firstClear) add('cry', q.guardian ? 50 : 3);
+      if (q.guardian && (firstClear || Math.random() < 0.25)) add('shard', firstClear ? 2 : 1);
+      add('stone', 2 + Math.floor(q.abyss / 10));
+    }
+    const reel = G.reels.make({ q, party, tier, gold, mat: mat + bonusMat, fame, levelUps, extra, endAt: ex.endAt, drop, loot, goldBoost: gb > 1 ? gb : 0, firstClear });
     s.reels.push(reel);
     if (s.reels.length > 60) S.compactReels(s);
     G.emit('resolved', { ex, reel, party });
@@ -408,6 +491,8 @@
     if (up) {
       s.crystals = (s.crystals || 0) + 30 * up;
       G.emit('rankup', s.rank);
+      const ab = S.abyss(s);
+      if (ab.open && !s.flags.abyssNoticed) { s.flags.abyssNoticed = true; G.emit('abyssOpen'); }
       if (s.rank >= 10 && !s.flags.bossUnlocked) {
         s.flags.bossUnlocked = true;
         s.board.unshift(S.bossQuest());
@@ -574,7 +659,7 @@
   S.autoDispatch = function (at, s = G.state) {
     let sent = 0;
     let guard = 0;
-    while (s.active.length < S.slots(s) && guard++ < 10) {
+    while (S.busy(s) < S.slots(s) && guard++ < 10) {
       const idle = s.adv.filter((a) => a.status === 'idle');
       if (!idle.length) break;
       let best = null, bestScore = 0, bestParty = null;
@@ -656,6 +741,8 @@
       merged.crystals = s.crystals != null ? s.crystals : 30;
       merged.inbox = s.inbox || [];
       G.state = merged;
+      S.abyss(merged);
+      if (merged.abyss.open) merged.flags.abyssNoticed = true;
       if (G.items) G.items.migrate(merged);
       return merged;
     } catch (e) {

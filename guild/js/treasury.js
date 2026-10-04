@@ -102,7 +102,7 @@
       h += `<div class="gear">`;
       items.forEach((it) => {
         const who = IT.equippedBy(it.uid);
-        h += `<button class="gi r${it.rarity}" data-item="${it.uid}" aria-label="${G.esc(it.name)}"><img alt="" src="${thumb(it, 60)}">${it.plus ? `<i class="gi-plus">+${it.plus}</i>` : ''}<i class="gi-lv">Lv${it.ilv}</i>${who ? `<img class="gi-who" alt="" src="${art.portrait(who.look, 22)}">` : ''}${it.lock ? `<i class="gi-lock">${LOCK}</i>` : ''}${it.isNew ? '<i class="gi-new"></i>' : ''}<small>${G.esc(it.name)}</small></button>`;
+        h += `<button class="gi r${it.rarity}" data-item="${it.uid}" aria-label="${G.esc(it.name)}"><img alt="" src="${thumb(it, 60)}">${it.plus ? `<i class="gi-plus">+${it.plus}</i>` : ''}${it.lb ? `<i class="gi-lb">${'★'.repeat(it.lb)}</i>` : ''}<i class="gi-lv">Lv${it.ilv}</i>${who ? `<img class="gi-who" alt="" src="${art.portrait(who.look, 22)}">` : ''}${it.lock ? `<i class="gi-lock">${LOCK}</i>` : ''}${it.isNew ? '<i class="gi-new"></i>' : ''}<small>${G.esc(it.name)}</small></button>`;
       });
       h += `</div>`;
     }
@@ -137,6 +137,7 @@
     { id: 'stone', n: 10, cost: 50, per: 'day', max: 5 },
     { id: 'expbook', n: 3, cost: 60, per: 'day', max: 3 },
     { id: 'book', n: 1, cost: 300, per: 'week', max: 1 },
+    { id: 'shard', n: 1, cost: 250, per: 'week', max: 2 },
   ];
   const BUNDLES = [
     { key: 'b_start', name: 'はじめての冒険パック', desc: '神速の砂時計・帰還の角笛・閃きの書', items: [['hg3', 1], ['horn', 1], ['book', 1]], cost: 300, per: 'once', max: 1, icon: 'book', tag: '1回だけ' },
@@ -279,9 +280,12 @@
     const main = IT.MAIN[it.slot];
     const fitName = e.cls ? D.CLASSES[e.cls].name : null;
     const c = IT.enhanceCost(it);
-    const maxed = (it.plus || 0) >= IT.MAX_PLUS;
+    const maxP = IT.maxPlus(it);
+    const maxed = (it.plus || 0) >= maxP;
     const canEnh = !maxed && st.gold >= c.gold && IT.cons('stone') >= c.stone;
-    const aff = (it.affixes || []).map((a) => `<li><span>${IT.STAT[a.k].name}</span><i class="q" style="--q:${Math.round(G.clamp(a.q, 0.1, 1) * 100)}%"></i><b>${pct(a.v * (1 + 0.04 * (it.plus || 0)))}</b></li>`).join('');
+    const rc = IT.rerollCost(it);
+    const aff = (it.affixes || []).map((a, i) => `<li><span>${IT.STAT[a.k].name}</span><i class="q" style="--q:${Math.round(G.clamp(a.q, 0.1, 1) * 100)}%"></i><b>${pct(a.v * (1 + 0.04 * (it.plus || 0)))}</b><button class="rr" data-rr="${i}" aria-label="付け直す">${CRY}<span>${rc}</span></button></li>`).join('');
+    const lbHtml = it.rarity >= 4 ? `<div class="lb"><div class="lb-stars">${Array.from({ length: IT.MAX_LB }, (_, i) => `<i class="${i < (it.lb || 0) ? 'on' : ''}">★</i>`).join('')}</div>${IT.canLimitBreak(it) ? `<span class="lb-txt">限界突破 ★${(it.lb || 0) + 1}：主能力 +10%・強化上限 +2</span><button class="btn sm ${IT.cons('shard') >= IT.lbCost(it) ? 'primary' : 'cant'}" id="lbBtn">${consIcon('shard')}${IT.lbCost(it)}<small>（${IT.cons('shard')}）</small></button>` : '<span class="lb-txt">限界突破は最大です</span>'}</div>` : '';
     const advs = st.adv.slice().sort((a, b) => (IT.fits(it, b) - IT.fits(it, a)) || G.sim.power(b) - G.sim.power(a));
     const list = advs.map((a) => {
       const cur = a.eq && a.eq[it.slot] ? IT.get(a.eq[it.slot]) : null;
@@ -291,8 +295,9 @@
     }).join('');
     const html = `<div class="item-detail r${it.rarity}"><div class="id-img"><img alt="" src="${thumb(it, 104)}">${it.plus ? `<i class="id-plus">+${it.plus}</i>` : ''}</div><small class="rar">${R.id} ${stars(it.rarity)}</small><h2>${G.esc(it.name)}${it.plus ? ` <span class="plus">+${it.plus}</span>` : ''}</h2>
       <p class="sub">${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv}${fitName ? ` ・ ${fitName}向け` : ''}</p>
-      <div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${aff ? `<ul>${aff}</ul>` : '<p class="hint">追加能力なし（R 以上で付きます）</p>'}</div>
-      <div class="enh">${maxed ? '<b class="maxed-t">強化は最大です（+10）</b>' : `<div class="enh-row"><span>強化 <b>+${it.plus || 0}</b> → <b class="nx">+${(it.plus || 0) + 1}</b></span><span class="rate">成功率 ${Math.round(IT.enhanceRate(it) * 100)}%</span></div><div class="enh-row cost"><span>${G.ui.IC.coin}${G.fmt(c.gold)}</span><span>${consIcon('stone')}${c.stone}<small>（所持 ${IT.cons('stone')}）</small></span><button class="btn sm ${canEnh ? 'primary' : 'cant'}" id="enhBtn">強化する</button></div>`}</div>
+      <div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${aff ? `<ul>${aff}</ul><p class="rr-hint">魔晶石で、追加能力を1つずつ付け直せます</p>` : '<p class="hint">追加能力なし（R 以上で付きます）</p>'}</div>
+      ${lbHtml}
+      <div class="enh">${maxed ? `<b class="maxed-t">強化は最大です（+${maxP}）${it.rarity >= 4 && IT.canLimitBreak(it) ? '・限界突破で上限が上がります' : ''}</b>` : `<div class="enh-row"><span>強化 <b>+${it.plus || 0}</b> → <b class="nx">+${(it.plus || 0) + 1}</b></span><span class="rate">成功率 ${Math.round(IT.enhanceRate(it) * 100)}%</span></div><div class="enh-row cost"><span>${G.ui.IC.coin}${G.fmt(c.gold)}</span><span>${consIcon('stone')}${c.stone}<small>（所持 ${IT.cons('stone')}）</small></span><button class="btn sm ${canEnh ? 'primary' : 'cant'}" id="enhBtn">強化する</button></div>`}</div>
       ${who ? `<p class="eq-now">いまは <b>${G.esc(who.name)}</b> が装備しています</p>` : ''}
       <h3 class="mini">装備させる冒険者</h3><div class="pick-list">${list}</div>
       <div class="id-tools"><button class="btn sm ghost ${it.lock ? 'on' : ''}" id="lockBtn">${LOCK}${it.lock ? '鍵をはずす' : '鍵をかける'}</button>${!who && !it.lock ? `<button class="btn sm ghost" id="disBtn">分解（強化石 +${IT.dismantleValue(it)}）</button><button class="btn sm ghost" id="sellBtn">売る</button>` : ''}</div></div>`;
@@ -314,6 +319,9 @@
         }));
         const enh = G.$('#enhBtn', card);
         if (enh) enh.addEventListener('click', () => doEnhance(u, card));
+        G.$$('[data-rr]', card).forEach((b) => b.addEventListener('click', () => doReroll(u, +b.dataset.rr)));
+        const lb = G.$('#lbBtn', card);
+        if (lb) lb.addEventListener('click', () => doLimitBreak(u, card));
         G.$('#lockBtn', card).addEventListener('click', () => { it.lock = !it.lock; G.audio.sfx('tap'); G.emit('itemsChanged'); T.showItem(u, true); });
         const dis = G.$('#disBtn', card);
         if (dis) dis.addEventListener('click', () => {
@@ -359,6 +367,46 @@
       setTimeout(() => T.showItem(u, true), 520);
       G.ui.refreshHud();
     }, 380);
+  }
+  // 追加能力の付け直し：結果を並べて、どちらにするか選ぶ
+  function doReroll(u, idx) {
+    const it = IT.get(u);
+    if (!it) return;
+    const r = IT.reroll(u, idx);
+    if (!r.ok) {
+      G.audio.sfx('error');
+      G.ui.toast(r.why === 'cry' ? `魔晶石が足りません（${IT.rerollCost(it)}必要）` : '付け直せません', 'bad');
+      return;
+    }
+    G.audio.init();
+    G.audio.sfx('cast');
+    G.haptic(12);
+    G.ui.refreshHud();
+    const row = (a, tag) => `<div class="rr-card ${tag}"><small>${tag === 'old' ? 'いまの能力' : '新しい能力'}</small><b>${IT.STAT[a.k].name}</b><em>${pct(a.v * (1 + 0.04 * (it.plus || 0)))}</em><i class="q" style="--q:${Math.round(G.clamp(a.q, 0.1, 1) * 100)}%"></i></div>`;
+    const better = r.nu.q >= r.old.q;
+    setTimeout(() => G.audio.sfx(better ? 'rarity' : 'soft', better ? 2 : 0), 220);
+    G.ui.modal(`<div class="reroll"><h2>付け直しの結果</h2><div class="rr-pair">${row(r.old, 'old')}<span class="rr-arrow">→</span>${row(r.nu, 'nu' + (better ? ' good' : ''))}</div><p class="hint">どちらを残しますか？（魔晶石は戻りません）</p></div>`, [
+      { text: '元に戻す', cls: 'ghost', fn: () => { IT.revertReroll(u, idx, r.old); G.sim.save(); setTimeout(() => T.showItem(u), 240); } },
+      { text: '新しい能力にする', cls: 'primary', fn: () => { G.sim.save(); G.ui.toast(`《${it.name}》の能力が変わった！`, 'rare' + it.rarity); setTimeout(() => T.showItem(u), 240); } },
+    ], { cls: 'wide', replace: true });
+  }
+  function doLimitBreak(u, card) {
+    const it = IT.get(u);
+    const r = IT.limitBreak(u);
+    if (!r.ok) {
+      G.audio.sfx('error');
+      G.ui.toast(r.why === 'shard' ? '虹の欠片が足りません。深淵の迷宮の守護者や、URの分解で手に入ります' : 'これ以上は限界突破できません', 'bad');
+      return;
+    }
+    const img = G.$('.id-img', card);
+    img.classList.remove('hit', 'ok', 'ng', 'lbfx'); void img.offsetWidth; img.classList.add('lbfx');
+    G.audio.sfx('flash');
+    G.audio.sfx('rarity', 4);
+    G.haptic(30);
+    G.ui.fx.confetti();
+    G.ui.toast(`限界突破！《${it.name}》★${r.lb}（強化の上限 +${IT.maxPlus(it)}）`, 'rare4');
+    G.sim.save();
+    setTimeout(() => T.showItem(u, true), 900);
   }
   function bulkDismantle() {
     G.audio.sfx('tap');
@@ -519,8 +567,11 @@
       return `<button class="skill-row ${on ? 'on' : ''}" data-skill="${G.esc(n)}"><b>${G.esc(n)}</b><em>Lv${a.sk[n]}</em><small>${IT.skillDesc(a.cls, n, a.sk[n])}</small><i>${on ? 'セット中' : 'セット'}</i></button>`;
     }).join('') : '<p class="hint">まだ技を覚えていません。冒険譚で「閃く」か、閃きの書で覚えます。</p>';
     const statList = IT.STAT_IDS.filter((k) => sAll[k]).map((k) => `<span>${IT.STAT[k].name}<b>${pct(sAll[k])}</b></span>`).join('') || '<span class="none">装備や技で能力が上がります</span>';
+    const sb = IT.setBonus(a);
+    const setHtml = sb ? `<div class="set-bonus t${sb.tier}"><b>${sb.name}</b><span>${sb.desc}</span></div>` : '<div class="set-bonus none"><span>3枠を SR 以上でそろえると「そろいボーナス」</span></div>';
     const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}</p>
       <div class="eq-slots">${slots}</div>
+      ${setHtml}
       <div class="adv-stats">${statList}</div>
       <h3 class="mini">技 <small>セット ${(a.skillSet || []).length}/${nSlots}${a.lv < 20 ? '（Lv20で3枠）' : ''}</small></h3><div class="skills">${skills}</div>
       <dl><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${G.sim.expNeed(a.lv)}</dd></dl></div>`;

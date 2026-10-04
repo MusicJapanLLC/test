@@ -1021,3 +1021,55 @@ img.ci { width: 18px; height: 18px; vertical-align: -4px; }
   transform: rotate(-10deg); opacity: 0.9;
 }
 .card.mis .btn, .card.mis-bonus .btn { min-width: 78px; }
+
+/* ================================================================ 付け直し・限界突破・そろいボーナス */
+.stats-box li { grid-template-columns: 1fr 56px auto auto; }
+.stats-box .rr { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px 2px 4px; border-radius: 8px; border: 1px solid rgba(140, 160, 255, 0.4); background: rgba(80, 100, 220, 0.18); color: #dfe4ff; font-family: var(--font-num); font-size: 11px; font-weight: 800; }
+.stats-box .rr svg { width: 12px; height: 12px; }
+.stats-box .rr:active { transform: scale(0.94); }
+.rr-hint { margin: 6px 0 0; font-size: 10.5px; color: var(--muted); }
+.reroll h2 { margin-bottom: 12px; }
+.rr-pair { display: flex; align-items: center; gap: 8px; justify-content: center; }
+.rr-card { flex: 1; max-width: 150px; padding: 10px; border-radius: 12px; background: rgba(6, 10, 24, 0.55); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 4px; text-align: center; }
+.rr-card small { font-size: 10px; color: var(--muted); }
+.rr-card b { font-family: var(--font-head); color: #e9d9a8; font-size: 14px; }
+.rr-card em { font-style: normal; font-family: var(--font-num); font-size: 20px; font-weight: 900; color: #e6f4ff; }
+.rr-card .q { height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.08); position: relative; overflow: hidden; }
+.rr-card .q::after { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--q); background: linear-gradient(90deg, #6ab4ff, #bfe2ff); }
+.rr-card.nu { border-color: rgba(140, 160, 255, 0.6); animation: pop 0.4s cubic-bezier(.3, 1.6, .5, 1); }
+.rr-card.nu.good { border-color: rgba(255, 210, 110, 0.85); box-shadow: 0 0 18px rgba(255, 210, 110, 0.35); }
+.rr-card.nu.good em { color: #ffe39a; }
+.rr-arrow { font-size: 20px; color: var(--brass); font-weight: 900; }
+.lb { margin: 8px 0; padding: 8px 10px; border-radius: 12px; background: linear-gradient(90deg, rgba(255, 122, 184, 0.12), rgba(120, 180, 255, 0.12)); border: 1px solid rgba(255, 180, 220, 0.4); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; justify-content: space-between; text-align: left; }
+.lb-stars { display: flex; gap: 2px; }
+.lb-stars i { font-style: normal; font-size: 16px; color: rgba(255, 255, 255, 0.18); }
+.lb-stars i.on { color: #ffd36a; text-shadow: 0 0 8px rgba(255, 210, 110, 0.8); }
+.lb-txt { font-size: 11px; font-weight: 700; color: #ffd8ec; flex: 1; min-width: 140px; }
+.lb .btn svg, .lb .btn img { width: 16px; height: 16px; }
+.lb .btn small { font-size: 10px; opacity: 0.8; margin-left: 2px; }
+.item-detail .id-img.lbfx img { animation: lbFx 0.9s cubic-bezier(.2, 1.4, .4, 1); filter: drop-shadow(0 0 26px rgba(255, 160, 220, 0.95)); }
+@keyframes lbFx { 0% { transform: scale(1) rotate(0); } 30% { transform: scale(0.85) rotate(-8deg); } 60% { transform: scale(1.25) rotate(6deg); } 100% { transform: scale(1) rotate(0); } }
+.gi .gi-lb { position: absolute; right: 5px; top: 4px; font-style: normal; font-size: 8px; letter-spacing: -1px; color: #ffd36a; text-shadow: 0 1px 2px #000; }
+.set-bonus { margin: 8px 0 2px; padding: 6px 10px; border-radius: 10px; display: flex; gap: 8px; align-items: center; justify-content: center; font-size: 11.5px; font-weight: 700; border: 1px solid var(--line); background: rgba(6, 10, 24, 0.45); }
+.set-bonus b { font-family: var(--font-head); font-weight: 900; padding: 1px 8px; border-radius: 6px; color: #1a1204; }
+.set-bonus.t2 b { background: #c27cff; color: #fff; } .set-bonus.t3 b { background: var(--gold-grad); } .set-bonus.t4 b { background: linear-gradient(90deg, #ff7ab8, #ffd36a, #7fe0ff); }
+.set-bonus.t2 { border-color: rgba(194, 124, 255, 0.5); } .set-bonus.t3 { border-color: rgba(255, 200, 58, 0.6); } .set-bonus.t4 { border-color: rgba(255, 160, 220, 0.7); }
+.set-bonus.none { color: var(--muted); font-weight: 600; }
+.lb .btn { flex-direction: row; gap: 4px; min-width: 96px; }
+.lb .btn img { width: 18px; height: 18px; }
+.pill b { white-space: nowrap; }
+
+/* ================================================================ 深淵の迷宮 */
+.card.abyss { cursor: pointer; border-color: rgba(200, 155, 255, 0.45); background: linear-gradient(110deg, rgba(90, 58, 154, 0.32), rgba(18, 10, 36, 0.6) 60%), rgba(10, 6, 22, 0.6); box-shadow: inset 0 0 30px rgba(140, 90, 255, 0.12); }
+.card.abyss.guard { border-color: rgba(255, 138, 216, 0.6); background: linear-gradient(110deg, rgba(176, 48, 106, 0.35), rgba(18, 10, 36, 0.6) 60%), rgba(10, 6, 22, 0.6); }
+.card.abyss.locked { opacity: 0.6; cursor: default; }
+.card.abyss .grow small { color: var(--muted); font-size: 11px; }
+.ab-depth { flex: none; width: 58px; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 0; border-radius: 10px; background: radial-gradient(circle at 50% 40%, rgba(200, 155, 255, 0.35), rgba(20, 10, 40, 0.9)); border: 1px solid rgba(200, 155, 255, 0.4); }
+.ab-depth small { font-size: 9px; color: #d8c4ff; font-weight: 800; }
+.ab-depth b { font-family: var(--font-num); font-size: 17px; font-weight: 900; color: #f2e8ff; text-shadow: 0 0 10px rgba(200, 155, 255, 0.8); }
+.ab-depth i { font-style: normal; font-size: 9px; font-weight: 900; color: #fff; background: #b0306a; padding: 0 5px; border-radius: 4px; }
+.rw.ilv, .rw.shard { font-size: 10.5px; font-weight: 800; padding: 1px 6px; border-radius: 6px; background: rgba(200, 155, 255, 0.18); color: #e2d0ff; }
+.rw.shard { background: linear-gradient(90deg, rgba(255, 122, 184, 0.3), rgba(127, 224, 255, 0.3)); color: #fff; }
+.card.abyss-act { border-color: rgba(200, 155, 255, 0.4); }
+.abyss-open .ao-gate { width: 92px; height: 110px; margin: 0 auto 8px; border-radius: 46px 46px 6px 6px; background: radial-gradient(ellipse at 50% 70%, #c89bff 0%, #5a3a9a 35%, #120a24 75%); box-shadow: 0 0 40px rgba(200, 155, 255, 0.6), inset 0 0 0 4px #3a2a20, inset 0 0 0 8px #6a5040; animation: gatePulse 2.4s ease-in-out infinite; }
+@keyframes gatePulse { 50% { box-shadow: 0 0 60px rgba(200, 155, 255, 0.9), inset 0 0 0 4px #3a2a20, inset 0 0 0 8px #6a5040; } }

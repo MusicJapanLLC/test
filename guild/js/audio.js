@@ -423,6 +423,9 @@
   // 「竜の背を越えて」4/4 リール（イ・ドリア）
   const PEAK_A = 'A2eA fAeA | G2dG BGdG | A2eA fAea | gedB A4 | A2eA fAeA | G2dG BGdG | cBcd eage | dBGB A4';
   const PEAK_B = 'a2ea fa e2 | g2dg bg d2 | a2ea faea | gedB A4 | e2ae f2ef | g2fg a2ga | bagf gfed | edBG A4';
+  // 「深淵の螺旋」6/8（ホ短調）— 深淵の迷宮
+  const ABYSS_A = 'E3 B3 | A2G F2E | D3 A3 | G2F E3 | E3 B3 | c2B A2G | F2G A2F | E6';
+  const ABYSS_B = 'e3 d3 | B2c d2B | A3 G3 | F2G A3 | e3 g3 | f2e d2B | c2B A2F | E6';
   // 「紅蓮の竜王」4/4（ニ短調）— ボス戦
   const BOSS_A = 'd2 Ad fdAd | c2 Gc ecGc | B2 FB dBFB | A2 ^CE A4 | d2 Ad fdAd | c2 Gc ecGc | B2 dB A2 ^c2 | d4 D4';
   const BOSS_B = 'f2 ef gfed | e2 de fedc | d2 cd edcB | ^c2 A2 E2 A2 | f2 ef gfed | e2 de fedc | dcBA B2 ^c2 | d8';
@@ -538,6 +541,20 @@
         return [
           { mel: 0.085, harp: 0.1, fid: 0, drum: 0.22, drone: 0.016, tempo: 1 },
           { mel: 0.085, harp: 0.1, fid: 0.035, drum: 0.25, drone: 0.018, tempo: 1 },
+        ][pass % 2];
+      },
+    },
+    abyss: {
+      title: '♪ 深淵の螺旋 — ギルド楽団',
+      A: ABYSS_A, B: ABYSS_B, key: 'G', bar: 6, meter: 6,
+      chA: ['Em', 'Em', 'Am', 'B', 'D', 'D', 'G', 'Em', 'Em', 'Em', 'C', 'Am', 'D', 'B', 'Em', 'Em'],
+      chB: ['Em', 'D', 'G', 'G', 'Am', 'G', 'D', 'D', 'Em', 'Em', 'D', 'G', 'Am', 'B', 'Em', 'Em'],
+      bpm: 66, drone: [40, 47],
+      drumPat: (e) => (e === 0 ? [1] : e === 1 ? [0.45] : null),
+      arrange(pass) {
+        return [
+          { mel: 0.06, lead: 'fid', harp: 0.13, fid: 0, drum: 0.14, drone: 0.032, tempo: 1 },
+          { mel: 0.065, harp: 0.12, fid: 0.024, drum: 0.16, drone: 0.034, tempo: 1 },
         ][pass % 2];
       },
     },

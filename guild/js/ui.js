@@ -95,6 +95,9 @@
       if (sheetTab) renderSheet();
     });
     G.on('upgraded', () => { if (sheetTab) renderSheet(); });
+    G.on('abyssOpen', () => {
+      U.whenFree(() => U.modal(`<div class="skill-get abyss-open"><div class="ao-gate"></div><small>ランク${D.ABYSS.rank}の特典</small><h2>深淵の迷宮</h2><p>ギルドの地下に、古い扉が見つかりました。<br>B1F〜B100F。10階ごとに守護者が待ち、深いほど強い装備が眠っています。</p><p class="hint">依頼の画面から挑めます（派遣枠とは別に、1組まで）</p></div>`, [{ text: 'のぞいてみる', cls: 'primary big', fn: () => U.openSheet('quests') }], { cls: 'celebrate' }), 1200);
+    });
     G.on('rankup', (r) => {
       if (G.reels.isOpen()) pendingRank = Math.max(pendingRank, r);
       else showRankUp(r);
@@ -106,6 +109,15 @@
     U.refreshHud(true);
   };
   let pendingRank = 0;
+  // ほかの窓（ランクアップ・冒険譚・チュートリアル）が閉じてから出す
+  U.whenFree = function (fn, delay = 600) {
+    const go = () => {
+      const busy = !G.$('#modal').hidden || G.reels.isOpen() || pendingRank || (G.state.flags.tut < 99 && G.state.flags.tut > 0 && G.$('#tut') && !G.$('#tut').hidden);
+      if (busy) { setTimeout(go, 700); return; }
+      fn();
+    };
+    setTimeout(go, delay);
+  };
 
   function layoutPads() {
     const hud = G.$('#hud').getBoundingClientRect();
@@ -148,7 +160,7 @@
     sub.textContent = unseen.length ? `+${G.fmt(pg)}G` : '冒険譚';
     G.$('#tab-reels').classList.toggle('has', unseen.length > 0);
     const idle = st.adv.filter((a) => a.status === 'idle').length;
-    const free = S.slots() - st.active.length;
+    const free = S.slots() - S.busy();
     setDot('quests', idle > 0 && free > 0 && st.board.length > 0);
     setDot('roster', st.cands.some((c) => c.free) || (st.adv.length < S.beds() && st.cands.some((c) => st.gold >= (c.free ? 0 : S.hireCost(c.lv)))));
     setDot('treasury', G.treasury.hasNews());
@@ -378,7 +390,7 @@
   // シートの中身が変わる出来事だけを拾う（お金の増減では描き直さない）
   function sheetSig() {
     const st = G.state;
-    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
+    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
   }
   function refreshAfford() {
     const st = G.state;
@@ -403,16 +415,18 @@
     if (st.rank >= 5) {
       h += `<label class="auto ${st.flags.autoDispatch ? 'on' : ''}"><span><b>受付嬢におまかせ</b><small>待機中の冒険者を、リナが自動で派遣します</small></span><input type="checkbox" id="autoToggle" ${st.flags.autoDispatch ? 'checked' : ''}><i class="sw"></i></label>`;
     }
-    h += `<div class="sec"><h3>遠征中 <small>${st.active.length}/${slots}</small></h3>`;
-    if (!st.active.length) h += `<p class="empty">いまは誰も出かけていません</p>`;
-    st.active.slice().sort((a, b) => a.endAt - b.endAt).forEach((ex) => {
+    const busy = S.busy();
+    h += `<div class="sec"><h3>遠征中 <small>${busy}/${slots}</small></h3>`;
+    if (!busy) h += `<p class="empty">いまは誰も出かけていません</p>`;
+    st.active.filter((e) => !e.abyss).sort((a, b) => a.endAt - b.endAt).forEach((ex) => {
       const party = ex.party.map((id) => st.adv.find((a) => a.id === id)).filter(Boolean);
       const area = D.AREA_BY_ID[ex.q.area];
       h += `<div class="card act" style="--area:${area.pal.mid}"><div class="faces">${party.map((a) => `<img alt="" src="${art.portrait(a.look, 40)}">`).join('')}</div><div class="grow"><b>${G.esc(ex.q.name)}</b><div class="bar"><i data-progress="${ex.startAt},${ex.endAt}"></i></div><small>成功率 ${Math.round(ex.p * 100)}% ・ 結果は冒険譚で</small></div><span class="time" data-countdown="${ex.endAt}">${G.fmtClock(ex.endAt - now)}</span></div>`;
     });
-    for (let i = st.active.length; i < slots; i++) h += `<div class="card slot">空き枠</div>`;
+    for (let i = busy; i < slots; i++) h += `<div class="card slot">空き枠</div>`;
     if (slots < D.FAC.hall.maxLv) h += `<button class="link" data-goto-fac="hall">受付ホールを強化すると、同時派遣が増えます</button>`;
     h += `</div>`;
+    h += abyssSection(st, now);
     const nextAt = st.boardAt + S.BOARD_INTERVAL;
     const full = st.board.length >= S.boardSize();
     h += `<div class="sec"><h3>依頼掲示板 <small>${st.board.length}/${S.boardSize()}</small><span class="h-right">${full ? '' : `次の依頼 <b data-countdown="${nextAt}">${G.fmtClock(nextAt - now)}</b>`}</span></h3>`;
@@ -424,7 +438,7 @@
       const p = info ? info.p : 0;
       const pc = p >= 0.8 ? 'good' : p >= 0.5 ? 'mid' : 'bad';
       let btn;
-      if (st.active.length >= slots) btn = `<button class="btn sm" disabled>枠なし</button>`;
+      if (busy >= slots) btn = `<button class="btn sm" disabled>枠なし</button>`;
       else if (!idle.length) btn = `<button class="btn sm" disabled>全員外出中</button>`;
       else btn = `<button class="btn sm go" data-dispatch="${q.id}">派遣</button>`;
       h += `<div class="card quest ${q.boss ? 'boss' : ''}" style="--area:${area.pal.mid}" data-qi="${qi}">
@@ -452,6 +466,7 @@
       const b = c.querySelector('[data-dispatch]');
       if (b) openDispatch(b.dataset.dispatch);
     }));
+    G.$$('[data-abyss]', body).forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); openDispatch(b.dataset.abyss); }));
     bindGotoFac(body);
     const rb = G.$('#refreshBoard', body);
     if (rb) rb.addEventListener('click', () => {
@@ -472,9 +487,38 @@
     U._sig = sheetSig();
   }
 
+  // 深淵の迷宮：掲示板の下に、次の階と最深記録
+  function abyssSection(st, now) {
+    const ab = S.abyss();
+    if (!ab.open) {
+      if (st.rank < 4) return '';
+      return `<div class="sec"><h3>深淵の迷宮</h3><div class="card abyss locked"><div class="ab-depth"><small>封印</small><b>?</b></div><div class="grow"><b>ランク${D.ABYSS.rank}で扉が開きます</b><small>B1F〜B100F。深いほど強い装備が眠る、終わりのない迷宮</small></div></div></div>`;
+    }
+    const act = S.abyssActive();
+    let h = `<div class="sec"><h3>深淵の迷宮 <small>最深 B${ab.best}F</small><span class="h-right">${ab.floor > S.ABYSS_MAX ? '踏破！' : `守護者まで あと${10 - ((ab.floor - 1) % 10)}階`}</span></h3>`;
+    if (act) {
+      const party = act.party.map((id) => st.adv.find((a) => a.id === id)).filter(Boolean);
+      h += `<div class="card act abyss-act" style="--area:#5a3a9a"><div class="faces">${party.map((a) => `<img alt="" src="${art.portrait(a.look, 40)}">`).join('')}</div><div class="grow"><b>${G.esc(act.q.name)}</b><div class="bar"><i data-progress="${act.startAt},${act.endAt}"></i></div><small>成功率 ${Math.round(act.p * 100)}% ・ 迷宮枠（派遣枠とは別）</small></div><span class="time" data-countdown="${act.endAt}">${G.fmtClock(act.endAt - now)}</span></div>`;
+    } else {
+      const q = S.abyssNext(false);
+      const idle = st.adv.filter((a) => a.status === 'idle');
+      const pick = S.bestParty(q, idle, 'max');
+      const p = pick.length ? S.partyInfo(q, pick).p : 0;
+      const pc = p >= 0.8 ? 'good' : p >= 0.5 ? 'mid' : 'bad';
+      h += `<div class="card abyss ${q.guardian ? 'guard' : ''}" data-abyss="abyss">
+        <div class="ab-depth"><small>${q.farm ? '最深' : '次の階'}</small><b>B${q.abyss}F</b>${q.guardian ? '<i>守護者</i>' : ''}</div>
+        <div class="grow"><b class="q-name">${G.esc(q.name)}</b>
+          <div class="q-meta"><span>${IC.sword}必要戦力 ${G.fmt(q.req)}</span><span>${IC.clock}${G.fmtTime(q.dur)}</span></div>
+          <div class="q-rw">${rewardRow(q)}<span class="rw ilv">装備Lv${S.abyssIlv(q.abyss)}</span>${q.guardian ? '<span class="rw shard">虹の欠片</span>' : ''}</div></div>
+        <div class="q-go"><span class="pct ${pc}">${pick.length ? Math.round(p * 100) + '%' : '—'}</span><button class="btn sm go" data-abyss="abyss" ${idle.length ? '' : 'disabled'}>挑む</button></div></div>`;
+      if (ab.best >= 1 && ab.floor <= S.ABYSS_MAX) h += `<button class="link" data-abyss="abyss-farm">B${Math.min(ab.best, S.ABYSS_MAX)}F で稼ぐ（記録は進まないが、装備集めに）</button>`;
+    }
+    return h + '</div>';
+  }
+  const questOf = (qid) => (qid === 'abyss' ? S.abyssNext(false) : qid === 'abyss-farm' ? S.abyssNext(true) : G.state.board.find((x) => x.id === qid));
   function openDispatch(qid) {
     const st = G.state;
-    const q = st.board.find((x) => x.id === qid);
+    const q = questOf(qid);
     if (!q) return;
     const idle = st.adv.filter((a) => a.status === 'idle');
     subView = { kind: 'dispatch', questId: qid, picked: S.bestParty(q, idle, 'max').map((a) => a.id) };
@@ -485,7 +529,9 @@
   }
   function renderDispatch(body) {
     const st = G.state;
-    const q = st.board.find((x) => x.id === subView.questId);
+    const q = questOf(subView.questId);
+    const isAbyss = !!(q && q.abyss);
+    if (isAbyss && S.abyssActive()) { subView = null; renderSheet(); return; }
     if (!q) { subView = null; renderSheet(); return; }
     const area = D.AREA_BY_ID[q.area];
     const picked = subView.picked.map((id) => st.adv.find((a) => a.id === id)).filter((a) => a && a.status === 'idle');
@@ -547,14 +593,14 @@
       renderSheet();
     });
     G.$('#dpGo', body).addEventListener('click', () => {
-      const ex = S.dispatch(q.id, subView.picked);
+      const ex = isAbyss ? S.dispatchAbyss(subView.picked, q.farm) : S.dispatch(q.id, subView.picked);
       if (!ex) { G.audio.sfx('error'); return; }
       G.audio.sfx('depart');
       G.haptic(14);
       U.toast(`「${q.name}」へ出発！ 帰還まで ${G.fmtTime(ex.endAt - ex.startAt)}`, 'go');
       subView = null;
       // 次の派遣ができなければ閉じてギルドを眺めてもらう
-      const canMore = st.active.length < S.slots() && st.adv.some((a) => a.status === 'idle') && st.board.length;
+      const canMore = S.busy() < S.slots() && st.adv.some((a) => a.status === 'idle') && st.board.length;
       if (canMore) renderSheet();
       else U.closeSheet(true);
     });
