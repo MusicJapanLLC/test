@@ -53,9 +53,9 @@
   let prevBoost = {};
   N.tick = function () {
     if (!G.items) return;
-    ['speed', 'gold', 'luck'].forEach((k) => {
+    ['speed', 'gold', 'luck', 'feast'].forEach((k) => {
       const on = !!G.items.boost(k);
-      if (prevBoost[k] && !on) N.push({ kind: 'boost', key: 'boost' + k, action: 'treasury', icon: 'clock', title: `${G.items.BOOST_NAME[k]}が終わりました`, body: '持ち物からもう一度使えます' });
+      if (prevBoost[k] && !on) N.push({ kind: 'boost', key: 'boost' + k, action: k === 'feast' ? 'build' : 'treasury', icon: 'clock', title: `${G.items.BOOST_NAME[k]}が終わりました`, body: k === 'feast' ? '施設の画面から、また宴を開けます' : '持ち物からもう一度使えます' });
       prevBoost[k] = on;
     });
     const free = G.items.canFree();

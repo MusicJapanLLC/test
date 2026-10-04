@@ -1069,6 +1069,125 @@
   });
   art.portrait = (look, size = 64, key) => art.url(art.portraitCanvas(look, size, key));
 
+  // ---------- 受付のリナ（表情つきの立ち絵・胸から上） ----------
+  //  expr: smile / happy / wink / surprise / worry / proud
+  art.RINA_EXPR = ['smile', 'happy', 'wink', 'surprise', 'worry', 'proud'];
+  art.rinaCanvas = (size = 96, expr = 'smile', bg = true) => art.cached('rina:' + expr + (bg ? '' : ':n'), size, (ctx, sz) => {
+    const u = sz / 100;
+    ctx.scale(u, u);
+    if (bg) {
+      const g = ctx.createLinearGradient(0, 0, 0, 100);
+      g.addColorStop(0, '#2c4a7a');
+      g.addColorStop(1, '#152444');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 100, 100);
+      const rg = ctx.createRadialGradient(50, 40, 4, 50, 40, 60);
+      rg.addColorStop(0, 'rgba(255,214,140,0.45)');
+      rg.addColorStop(1, 'rgba(255,214,140,0)');
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, 100, 100);
+      for (let i = 0; i < 9; i++) { ctx.fillStyle = `rgba(255,240,200,${0.25 + G.hash(i * 3) * 0.4})`; ctx.fillRect(G.hash(i) * 100, G.hash(i * 7) * 50, 1.2, 1.2); }
+    }
+    const HAIR = '#8a4a2a', HAIR_D = '#6a3418', HAIR_L = '#b06a3a', SKIN = '#f8dcc2', SKIN_D = '#ecc0a0';
+    const VEST = '#3f8f6e', VEST_D = '#2f6f55', BLOUSE = '#fbf6ec';
+    // ポニーテール（後ろ）
+    poly(ctx, [66, 26, 80, 30, 88, 46, 86, 64, 80, 72, 76, 58, 72, 42], HAIR_D);
+    poly(ctx, [70, 28, 82, 34, 86, 50, 82, 62, 78, 50, 74, 38], HAIR);
+    // 後ろ髪
+    poly(ctx, [26, 34, 28, 22, 40, 13, 56, 11, 70, 18, 76, 32, 76, 58, 70, 66, 30, 66, 24, 56], HAIR_D);
+    // 体：ブラウスとベスト
+    poly(ctx, [14, 100, 18, 80, 30, 70, 44, 66, 56, 66, 70, 70, 82, 80, 86, 100], VEST);
+    poly(ctx, [14, 100, 18, 80, 30, 70, 44, 66, 50, 70, 50, 100], G.shade(VEST, 0.08));
+    poly(ctx, [40, 66, 60, 66, 58, 76, 50, 90, 42, 76], BLOUSE);
+    poly(ctx, [40, 66, 50, 74, 44, 80, 36, 70], '#ffffff');
+    poly(ctx, [60, 66, 50, 74, 56, 80, 64, 70], '#ece6da');
+    poly(ctx, [36, 74, 42, 76, 50, 92, 46, 100, 30, 100, 28, 84], VEST_D);
+    poly(ctx, [64, 74, 58, 76, 50, 92, 54, 100, 70, 100, 72, 84], VEST_D);
+    // リボンタイ
+    poly(ctx, [50, 72, 43, 69, 42, 77], '#d4493a');
+    poly(ctx, [50, 72, 57, 69, 58, 77], '#b83a2e');
+    facet(ctx, 50, 72.5, 2.2, 2.2, 6, '#e85a48', 0, 0.1);
+    poly(ctx, [48.5, 74, 51.5, 74, 53, 84, 50, 82, 47, 84], '#c4402f');
+    // ギルドの紋章（ランタン）
+    facet(ctx, 33, 85, 3.6, 3.6, 8, '#e8bd4c', 0.2, 0.2);
+    poly(ctx, [31.6, 83.4, 34.4, 83.4, 34.8, 86.8, 31.2, 86.8], '#fff0b0');
+    // 首
+    poly(ctx, [44, 58, 56, 58, 56, 68, 50, 70, 44, 68], SKIN_D);
+    // 顔
+    poly(ctx, [30, 36, 31, 50, 36, 59, 44, 64, 50, 65, 56, 64, 64, 59, 69, 50, 70, 36, 64, 22, 50, 17, 36, 22], SKIN);
+    poly(ctx, [50, 65, 56, 64, 64, 59, 69, 50, 70, 36, 66, 46, 60, 56], SKIN_D);
+    // ほっぺ
+    ctx.fillStyle = expr === 'surprise' || expr === 'worry' ? 'rgba(255,140,150,0.28)' : 'rgba(255,120,130,0.42)';
+    ctx.beginPath(); ctx.ellipse(37, 51, 4.6, 2.6, 0, 0, TAU); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(63, 51, 4.6, 2.6, 0, 0, TAU); ctx.fill();
+    // 目
+    const eye = (x, kind, flip) => {
+      if (kind === 'closed') {
+        ctx.strokeStyle = '#3a2418'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x - 4.4, 44); ctx.quadraticCurveTo(x, 39.5, x + 4.4, 44); ctx.stroke();
+        return;
+      }
+      if (kind === 'line') {
+        ctx.strokeStyle = '#3a2418'; ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(x - 4.4, 42.4); ctx.quadraticCurveTo(x, 45.6, x + 4.4, 42.4); ctx.stroke();
+        return;
+      }
+      const big = kind === 'round';
+      const h = big ? 6.4 : 6;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(x, 43, 4.2, h, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#5a3420';
+      ctx.beginPath(); ctx.ellipse(x + (flip ? -0.3 : 0.3), 43.6, big ? 2.2 : 3.4, big ? 3 : 5, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#2a1408';
+      ctx.beginPath(); ctx.ellipse(x + (flip ? -0.3 : 0.3), 44.2, big ? 1.2 : 2, big ? 1.8 : 3, 0, 0, TAU); ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.ellipse(x - 1.1, 41.2, 1.4, 1.7, 0, 0, TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x + 1.4, 46, 0.7, 0.8, 0, 0, TAU); ctx.fill();
+      // まつげ
+      ctx.strokeStyle = '#3a2418'; ctx.lineWidth = 1.5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x - 4.8, 39.6); ctx.quadraticCurveTo(x, 35.8 - (big ? 1 : 0), x + 4.8, 39.6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x + (flip ? -4.6 : 4.6), 39.6); ctx.lineTo(x + (flip ? -6.2 : 6.2), 38.4); ctx.stroke();
+    };
+    const L = { smile: ['open', 'open'], happy: ['closed', 'closed'], wink: ['open', 'line'], surprise: ['round', 'round'], worry: ['open', 'open'], proud: ['line', 'line'] }[expr] || ['open', 'open'];
+    eye(40.5, L[0], true);
+    eye(59.5, L[1], false);
+    // 眉
+    ctx.strokeStyle = HAIR_D; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+    const bw = expr === 'worry' ? [[36, 34, 44, 31.6], [56, 31.6, 64, 34]] : expr === 'surprise' ? [[36, 31, 44, 30], [56, 30, 64, 31]] : [[36, 33.4, 44, 32.6], [56, 32.6, 64, 33.4]];
+    bw.forEach(([a, b, c, d]) => { ctx.beginPath(); ctx.moveTo(a, b); ctx.lineTo(c, d); ctx.stroke(); });
+    // 口
+    ctx.strokeStyle = '#8a3a2a'; ctx.lineWidth = 1.4;
+    if (expr === 'happy') {
+      poly(ctx, [45.5, 53, 54.5, 53, 52.6, 57.6, 47.4, 57.6], '#a83a32');
+      poly(ctx, [47.6, 56.2, 52.4, 56.2, 51.6, 57.6, 48.4, 57.6], '#f08a8a');
+    } else if (expr === 'surprise') {
+      ctx.fillStyle = '#a83a32'; ctx.beginPath(); ctx.ellipse(50, 55.4, 2.2, 2.8, 0, 0, TAU); ctx.fill();
+    } else if (expr === 'worry') {
+      ctx.beginPath(); ctx.moveTo(46.6, 56); ctx.quadraticCurveTo(50, 53.8, 53.4, 56); ctx.stroke();
+    } else if (expr === 'proud') {
+      ctx.beginPath(); ctx.moveTo(45.6, 54); ctx.quadraticCurveTo(50, 57.4, 54.6, 53.4); ctx.stroke();
+    } else {
+      ctx.beginPath(); ctx.moveTo(46, 54); ctx.quadraticCurveTo(50, 57.6, 54, 54); ctx.stroke();
+    }
+    if (expr === 'worry') { ctx.fillStyle = 'rgba(160,210,255,0.85)'; ctx.beginPath(); ctx.moveTo(68, 34); ctx.quadraticCurveTo(71, 39, 68.6, 41); ctx.quadraticCurveTo(66, 39, 68, 34); ctx.fill(); }
+    // 前髪
+    poly(ctx, [28, 40, 28, 26, 36, 16, 50, 12, 64, 16, 72, 26, 72, 40, 68, 30, 64, 34, 60, 26, 54, 32, 50, 24, 44, 32, 40, 26, 34, 34, 32, 30], HAIR);
+    poly(ctx, [36, 16, 50, 12, 58, 14, 50, 18, 42, 22], HAIR_L);
+    poly(ctx, [28, 40, 28, 26, 32, 30, 32, 48, 30, 54], HAIR_D);
+    poly(ctx, [72, 40, 72, 26, 68, 30, 68, 48, 70, 54], HAIR_D);
+    // アホ毛
+    ctx.strokeStyle = HAIR; ctx.lineWidth = 1.6;
+    ctx.beginPath(); ctx.moveTo(50, 12.5); ctx.quadraticCurveTo(54, 4, 60, 7); ctx.stroke();
+    // リボン
+    poly(ctx, [68, 22, 78, 14, 82, 24, 74, 28], '#d4493a');
+    poly(ctx, [68, 22, 70, 32, 62, 34, 64, 26], '#b83a2e');
+    facet(ctx, 69, 25, 3, 3, 6, '#e8bd4c', 0.3, 0.2);
+    // ウインクの星
+    if (expr === 'wink') star(ctx, 68, 40, 2.6, '#ffe28a');
+    if (expr === 'happy' || expr === 'proud') { star(ctx, 22, 26, 2.2, '#ffe28a'); star(ctx, 80, 50, 1.6, '#fff4c0'); }
+  });
+  art.rina = (size = 96, expr = 'smile', bg = true) => art.url(art.rinaCanvas(size, expr, bg));
+
   // ギルドの猫ミケ
   art.catCanvas = (size) => art.cached('cat', size, (ctx, sz) => {
     const u = sz / 40;

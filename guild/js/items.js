@@ -102,7 +102,7 @@
     expbook: { name: '経験の書', desc: '冒険者1人に、たっぷり経験値を与える', icon: 'book2', rarity: 1, use: 'exp' },
   };
   IT.CONS_ORDER = ['hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'stone'];
-  IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ' };
+  IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ', feast: '宴' };
 
   // ---------------------------------------------------------------- 抽選
   const pickW = (rnd, arr, wf) => {

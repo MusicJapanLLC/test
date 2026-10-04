@@ -45,9 +45,9 @@
   };
 
   function boostBar() {
-    const act = ['speed', 'gold', 'luck'].map((k) => [k, IT.boost(k)]).filter((x) => x[1]);
+    const act = ['speed', 'gold', 'luck', 'feast'].map((k) => [k, IT.boost(k)]).filter((x) => x[1]);
     if (!act.length) return '';
-    return `<div class="boosts">${act.map(([k, b]) => `<span class="boost ${k}">${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'ゴールド×2' : '大成功+10%'}<b data-countdown="${b.until}">${G.fmtClock(b.until - G.now())}</b></span>`).join('')}</div>`;
+    return `<div class="boosts">${act.map(([k, b]) => `<span class="boost ${k}">${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'ゴールド×2' : k === 'feast' ? '宴 名声+25%' : '大成功+10%'}<b data-countdown="${b.until}">${G.fmtClock(b.until - G.now())}</b></span>`).join('')}</div>`;
   }
 
   // ---- 宝箱
@@ -636,7 +636,7 @@
       const state = i < day ? 'got' : i === day ? 'today' : '';
       return `<div class="dl ${state}"><small>${i + 1}日目</small><img alt="" src="${consThumb(firstK, 34)}"><b>${firstK === 'cry' ? '×' + d.cry : '×' + d[firstK]}</b>${state === 'got' ? '<i>受取済</i>' : ''}</div>`;
     }).join('');
-    G.ui.modal(`<div class="daily"><small>ログインボーナス ・ 通算 ${st.login.n}日目</small><h2>今日のおくりもの</h2><div class="dl-grid">${cells}</div><p class="dl-got">${rewardText(r)} を受け取りました</p><p class="hint">毎日ギルドに顔を出すと、7日目に豪華なおくりもの</p></div>`, [{ text: '受け取る', cls: 'primary big', fn: () => { G.audio.sfx('gift'); G.ui.refreshHud(); } }], { cls: 'celebrate', onShow: () => { G.audio.sfx('rarity', 2); } });
+    G.ui.modal(`<div class="daily"><img class="rina-face" alt="" src="${G.art.rina(144, day === 6 ? 'happy' : 'wink')}"><small>ログインボーナス ・ 通算 ${st.login.n}日目</small><h2>今日のおくりもの</h2><div class="dl-grid">${cells}</div><p class="dl-got">${rewardText(r)} を受け取りました</p><p class="hint">毎日ギルドに顔を出すと、7日目に豪華なおくりもの</p></div>`, [{ text: '受け取る', cls: 'primary big', fn: () => { G.audio.sfx('gift'); G.ui.refreshHud(); } }], { cls: 'celebrate', onShow: () => { G.audio.sfx('rarity', 2); } });
     if (G.notify) G.notify.push({ kind: 'daily', silent: true, action: 'treasury', title: 'ログインボーナス', body: rewardText(r) });
     return true;
   };

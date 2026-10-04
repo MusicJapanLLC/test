@@ -96,7 +96,7 @@
     });
     G.on('upgraded', () => { if (sheetTab) renderSheet(); });
     G.on('abyssOpen', () => {
-      U.whenFree(() => U.modal(`<div class="skill-get abyss-open"><div class="ao-gate"></div><small>ランク${D.ABYSS.rank}の特典</small><h2>深淵の迷宮</h2><p>ギルドの地下に、古い扉が見つかりました。<br>B1F〜B100F。10階ごとに守護者が待ち、深いほど強い装備が眠っています。</p><p class="hint">依頼の画面から挑めます（派遣枠とは別に、1組まで）</p></div>`, [{ text: 'のぞいてみる', cls: 'primary big', fn: () => U.openSheet('quests') }], { cls: 'celebrate' }), 1200);
+      U.whenFree(() => U.modal(`<div class="skill-get abyss-open"><div class="ao-gate"><img class="rina-peek" alt="" src="${art.rina(96, 'surprise', false)}"></div><small>ランク${D.ABYSS.rank}の特典</small><h2>深淵の迷宮</h2><p>ギルドの地下に、古い扉が見つかりました。<br>B1F〜B100F。10階ごとに守護者が待ち、深いほど強い装備が眠っています。</p><p class="hint">依頼の画面から挑めます（派遣枠とは別に、1組まで）</p></div>`, [{ text: 'のぞいてみる', cls: 'primary big', fn: () => U.openSheet('quests') }], { cls: 'celebrate' }), 1200);
     });
     G.on('rankup', (r) => {
       if (G.reels.isOpen()) pendingRank = Math.max(pendingRank, r);
@@ -109,6 +109,19 @@
     U.refreshHud(true);
   };
   let pendingRank = 0;
+  // 魔導鏡の波紋：冒険譚を開くときの短い遷移（ボタンから光の輪が広がる）
+  U.mirrorFx = function (fromSel) {
+    if (G.state && G.state.settings.reduceMotion) return;
+    const src = fromSel && G.$(fromSel);
+    const r = src ? src.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight / 2, width: 0, height: 0 };
+    const el = document.createElement('div');
+    el.className = 'mirror-fx';
+    el.style.left = r.left + r.width / 2 + 'px';
+    el.style.top = r.top + r.height / 2 + 'px';
+    el.innerHTML = '<i></i><i></i><b></b>';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  };
   // ほかの窓（ランクアップ・冒険譚・チュートリアル）が閉じてから出す
   U.whenFree = function (fn, delay = 600) {
     const go = () => {
@@ -230,12 +243,12 @@
   let boostKey = '';
   function tickBoosts() {
     const chip = G.$('#boostChip');
-    const act = ['speed', 'gold', 'luck'].map((k) => [k, G.items.boost(k)]).filter((x) => x[1]);
+    const act = ['speed', 'gold', 'luck', 'feast'].map((k) => [k, G.items.boost(k)]).filter((x) => x[1]);
     const key = act.map((x) => x[0] + x[1].mult).join();
     if (key !== boostKey) {
       boostKey = key;
       chip.hidden = !act.length;
-      chip.innerHTML = act.map(([k, b]) => `<span class="bc ${k}"><i>${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'G×2' : '幸運'}</i><b data-bt="${k}"></b></span>`).join('');
+      chip.innerHTML = act.map(([k, b]) => `<span class="bc ${k}"><i>${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'G×2' : k === 'feast' ? '宴' : '幸運'}</i><b data-bt="${k}"></b></span>`).join('');
       document.documentElement.classList.toggle('fast', act.some((x) => x[0] === 'speed'));
       if (sheetTab) layoutPads();
       setTimeout(layoutPads, 30);
@@ -693,7 +706,13 @@
   // ---------------------------------------------------------------- build
   function renderBuild(body) {
     const st = G.state;
-    let h = '<div class="sec">';
+    let h = '';
+    if (st.fac.tavern > 0) {
+      const fc = S.feastCost();
+      const fb = G.items.boost('feast');
+      h += `<div class="sec"><div class="card feast ${fb ? 'on' : ''}"><div class="fz-icon"></div><div class="grow"><b>宴を開く</b><small>20分間、名声と経験値 +25%（重ねると延長）${fb ? `・残り <b data-countdown="${fb.until}">${G.fmtClock(fb.until - G.now())}</b>` : ''}</small></div><button class="btn sm ${st.gold >= fc ? 'go' : 'cant'}" id="feastBtn">宴だ！<span>${IC.coin}${G.fmt(fc)}</span></button></div></div>`;
+    }
+    h += '<div class="sec">';
     let shownLocked = 0;
     D.FACILITIES.forEach((f) => {
       const lv = st.fac[f.id];
@@ -702,7 +721,7 @@
         shownLocked++;
         if (shownLocked > 1) { h += `<div class="card fac locked mystery"><b>？？？</b><small>ランク${f.rank}で解放</small></div>`; return; }
       }
-      const c = lv < f.maxLv ? f.cost(lv) : null;
+      const c = lv < f.maxLv ? S.facCost(f.id) : null;
       const afford = c && S.canAfford(c);
       let btn = '';
       if (state === 'max') btn = `<span class="maxed">最大レベル</span>`;
@@ -724,6 +743,19 @@
     });
     h += '</div>';
     body.innerHTML = h;
+    const fbtn = G.$('#feastBtn', body);
+    if (fbtn) fbtn.addEventListener('click', () => {
+      const r = S.feast();
+      if (!r.ok) { G.audio.sfx('error'); U.toast('ゴールドが足りません', 'bad'); return; }
+      G.audio.sfx('cheer');
+      G.audio.sfx('coins');
+      G.haptic(18);
+      U.fx.confetti();
+      U.toast('かんぱーい！ 宴のあいだ、名声と経験値 +25%', 'rare3');
+      G.emit('itemsChanged');
+      U.refreshHud();
+      renderSheet();
+    });
     G.$$('[data-up]', body).forEach((b) => b.addEventListener('click', (e) => {
       e.stopPropagation();
       const id = b.dataset.up;
@@ -972,7 +1004,7 @@
     if (res.resolved > 0) lines.push(`<li>${IC.play}<span>帰ってきたパーティ</span><b>${res.resolved}組</b></li>`);
     if (res.built) lines.push(`<li>${IC.build}<span>完成した施設</span><b>${D.FAC[res.built].name}</b></li>`);
     const unseen = G.reels.unseen().length;
-    const html = `<div class="welcome"><small>留守にしていた時間 ${G.fmtTime(res.away)}${res.capped ? `（上限 ${G.fmtTime(res.cap)}）` : ''}</small><h2>おかえりなさい、マスター！</h2>
+    const html = `<div class="welcome"><img class="rina-face" alt="" src="${art.rina(144, res.resolved > 0 || res.tavern > 0 ? 'happy' : 'smile')}"><small>留守にしていた時間 ${G.fmtTime(res.away)}${res.capped ? `（上限 ${G.fmtTime(res.cap)}）` : ''}</small><h2>おかえりなさい、マスター！</h2>
       ${lines.length ? `<ul>${lines.join('')}</ul>` : '<p>ギルドは静かでした。</p>'}
       ${unseen ? `<p class="reels-wait">冒険譚が <b>${unseen}本</b> 届いています</p>` : ''}
       ${res.capped ? '<p class="hint">見張り塔を建てると、留守番できる時間が延びます</p>' : ''}</div>`;
@@ -1163,7 +1195,7 @@
   U.startTutorial = function () {
     const st = G.state;
     if (st.flags.tut >= TUT.length) return;
-    G.$('#tutFace').src = art.portrait({ cls: 'warrior', role: 'rina', seed: 3, skin: '#f6d3b3', hair: '#8a4a2a', style: 'pony', outfit: '#3f8f6e', vest: '#2f6f55', pants: '#3d3f52', blush: true }, 56);
+    G.$('#tutFace').src = art.rina(112, 'smile');
     G.$('#tutBox').addEventListener('click', tutTap);
     G.$('#tutSkip').addEventListener('click', (e) => { e.stopPropagation(); endTutorial(); });
     TUT.forEach((s, i) => {
@@ -1182,9 +1214,19 @@
     tutFired = false;
     if (s.enter) s.enter();
     G.$('#tut').hidden = !!s.hidden;
+    G.$('#tutFace').src = art.rina(112, s.face || rinaFace(s.text || ''));
     G.$('#tutText').textContent = '';
     G.$('#tutNext').hidden = !s.tap;
   }
+  // せりふから表情を選ぶ
+  function rinaFace(text) {
+    if (/ようこそ|おめでとう|やったね|楽しんで|入りましたね|届きました/.test(text)) return 'happy';
+    if (/ボロボロ|足りない|気をつけ/.test(text)) return 'worry';
+    if (/ぜひ|ですよ♪|任せて/.test(text)) return 'wink';
+    if (/高いですね|すごい|！？/.test(text)) return 'surprise';
+    return 'smile';
+  }
+  U.rinaFace = rinaFace;
   function endTutorial() {
     const was = tutStep >= 0;
     tutStep = -1;

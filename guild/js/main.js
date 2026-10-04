@@ -36,15 +36,17 @@
       started = true;
       G.audio.init();
       G.audio.setAmbient(G.state.fac.tavern > 0 ? 1 : 0);
+      G.audio.sfx('flash');
       G.audio.sfx('door');
-      splash.classList.add('gone');
-      setTimeout(() => splash.remove(), 700);
+      splash.classList.add('go');
+      setTimeout(() => splash.classList.add('gone'), 380);
+      setTimeout(() => splash.remove(), 1100);
       setTimeout(() => {
         if (off && off.away > 60 && (off.tavern > 0 || off.resolved > 0 || off.trained > 0)) G.ui.welcomeBack(off);
         if (G.state.flags.tut < 90) G.ui.startTutorial();
         if (G.stars) G.stars.afterBoot();
         G.emit('started');
-      }, 650);
+      }, 900);
     };
     splash.addEventListener('pointerup', go);
     splash.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') go(); });
@@ -133,6 +135,28 @@
     saveT += dt;
     if (saveT > 3) { saveT = 0; G.sim.save(); }
   }
+
+  // タイトルの演出：灯りがともり、題字が1文字ずつ現れ、火の粉が舞う
+  function titleFx() {
+    const boot = G.$('#boot');
+    const h1 = G.$('#boot .logo h1');
+    if (!boot || !h1 || h1.dataset.split) return;
+    h1.dataset.split = 1;
+    h1.setAttribute('aria-label', h1.textContent);
+    h1.innerHTML = [...h1.textContent].map((c, i) => `<span style="--i:${i}" aria-hidden="true">${c}</span>`).join('');
+    const em = document.createElement('div');
+    em.className = 'embers';
+    em.innerHTML = Array.from({ length: 22 }, () => `<i style="--x:${(Math.random() * 100).toFixed(1)}%;--d:${(4 + Math.random() * 5).toFixed(2)}s;--w:${(Math.random() * 60 - 30).toFixed(0)}px;--delay:${(Math.random() * 6).toFixed(2)}s;--s:${(0.5 + Math.random() * 1.1).toFixed(2)}"></i>`).join('');
+    boot.prepend(em);
+    const sp = document.createElement('div');
+    sp.className = 'sparks';
+    sp.innerHTML = Array.from({ length: 12 }, (_, i) => `<i style="--a:${(i / 12) * 360 + Math.random() * 20}deg;--r:${(40 + Math.random() * 50).toFixed(0)}px"></i>`).join('');
+    G.$('#boot .lantern').appendChild(sp);
+    const fl = document.createElement('div');
+    fl.className = 'boot-flash';
+    boot.appendChild(fl);
+  }
+  titleFx();
 
   const ready = () => {
     // フォントとセーブを待ってから（待ちすぎない）

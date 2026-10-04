@@ -353,8 +353,9 @@
     let mat = q.mat * matMul * info.matMul;
     mat = Math.floor(mat) + (Math.random() < mat - Math.floor(mat) ? 1 : 0);
     mat += (tier !== 'fail' ? tidy : 0) + (tier === 'legend' ? 3 : 0);
-    const fame = tier === 'fail' ? 0 : Math.round(q.fame * (tier === 'legend' ? 3 : tier === 'great' ? 1.5 : 1) * (1 + S.starFx('fame', s)) * (info.fameMul || 1));
-    const expMul = (tier === 'fail' ? 0.5 : tier === 'great' ? 1.5 : tier === 'legend' ? 3 : 1) * (1 + 0.12 * s.fac.training) * info.expMul;
+    const feast = s.boosts && s.boosts.feast && s.boosts.feast.until > ex.endAt && s.boosts.feast.from <= ex.endAt ? s.boosts.feast : null;
+    const fame = tier === 'fail' ? 0 : Math.round(q.fame * (tier === 'legend' ? 3 : tier === 'great' ? 1.5 : 1) * (1 + S.starFx('fame', s)) * (info.fameMul || 1) * S.runFame(s) * (feast ? 1 + feast.add : 1));
+    const expMul = (tier === 'fail' ? 0.5 : tier === 'great' ? 1.5 : tier === 'legend' ? 3 : 1) * (1 + 0.12 * s.fac.training) * info.expMul * (feast ? 1 + feast.add : 1);
     // 経験値はその場で反映（帰ってきた時には強くなっている）
     const levelUps = [];
     party.forEach((a) => {
@@ -518,7 +519,7 @@
     { id: 'gold', short: '黄金', name: '黄金の灯', max: 20, base: 1, inc: 1, per: 0.1, x: 77, y: 39, desc: (l) => `依頼のゴールド +${l * 10}%` },
     { id: 'speed', short: '疾風', name: '疾風の灯', max: 10, base: 2, inc: 1, per: 0.03, x: 23, y: 65, desc: (l) => `遠征時間 -${l * 3}%` },
     { id: 'exp', short: '叡智', name: '叡智の灯', max: 15, base: 1, inc: 1, per: 0.1, x: 77, y: 65, desc: (l) => `獲得経験値 +${l * 10}%` },
-    { id: 'fame', short: '名声', name: '名声の灯', max: 15, base: 2, inc: 1, per: 0.08, x: 50, y: 77, desc: (l) => `獲得名声 +${l * 8}%` },
+    { id: 'fame', short: '名声', name: '名声の灯', max: 15, base: 2, inc: 1, per: 0.12, x: 50, y: 77, desc: (l) => `獲得名声 +${l * 12}%` },
     { id: 'build', short: '匠', name: '匠の灯', max: 10, base: 1, inc: 1, per: 0.04, x: 12, y: 18, from: 'great', desc: (l) => `施設の費用 -${l * 4}%` },
     { id: 'find', short: '宝探し', name: '宝探しの灯', max: 15, base: 2, inc: 1, per: 6, x: 88, y: 18, from: 'gold', desc: (l) => `レア発見 +${l * 6}%` },
     { id: 'harbor', short: '潮風の港', name: '新天地「潮風の港」', max: 1, base: 5, inc: 0, x: 9, y: 90, from: 'speed', unlock: true, desc: () => 'エリア「潮風の港」が開く（ランク9から・竜嶺のその先）' },
@@ -548,6 +549,24 @@
     return { ok: true, lv: pr.tree[id] };
   };
   S.canRebirth = (s = G.state) => s.rank >= S.REBIRTH_RANK;
+  // 再建を重ねるほど、名声が集まりやすい（1回ごとに +10%、最大 +100%）
+  S.runFame = (s = G.state) => 1 + 0.1 * Math.min(10, (s.prestige && s.prestige.runs) || 0);
+  // 宴：ゴールドを使って、20分間 名声と経験値 +25%（終盤のゴールドの使い道）
+  S.FEAST_SEC = 1200;
+  S.feastCost = (s = G.state) => Math.round(600 * Math.pow(1.62, s.rank - 1));
+  S.feast = function (s = G.state) {
+    if (s.fac.tavern < 1) return { ok: false, why: 'tavern' };
+    const c = S.feastCost(s);
+    if (s.gold < c) return { ok: false, why: 'gold' };
+    s.gold -= c;
+    s.boosts = s.boosts || {};
+    const now = G.now();
+    const cur = s.boosts.feast && s.boosts.feast.until > now ? s.boosts.feast : null;
+    s.boosts.feast = { add: 0.25, mult: 1, from: cur ? cur.from : now, until: (cur ? cur.until : now) + S.FEAST_SEC, src: 'feast' };
+    s.stats.feasts = (s.stats.feasts || 0) + 1;
+    G.emit('boost', 'feast');
+    return { ok: true, cost: c };
+  };
   S.rebirthStars = function (s = G.state) {
     const pr = S.prestige(s);
     const fame = Math.floor(Math.sqrt(Math.max(0, s.fame)) / 4);

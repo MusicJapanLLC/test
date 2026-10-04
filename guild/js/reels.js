@@ -517,6 +517,7 @@
 
   R.open = function () {
     if (open) return;
+    G.ui.mirrorFx('#tab-reels .disc');
     const unseen = R.unseen().sort((a, b) => (a.digest ? -1 : b.digest ? 1 : a.ts - b.ts));
     // 一番いい結果は少しだけ後ろに置く（期待を溜める）
     if (unseen.length >= 3) {
