@@ -170,8 +170,7 @@ function doPost(e) {
       MailApp.sendEmail({
         to: NOTIFY_TO,
         subject: '【Baton】受信エラー',
-        body: '受信処理でエラーが発生しました。\n\n' + err + '\n\n受信内容:\n' +
-          (e && e.postData ? e.postData.contents : '(なし)')
+        body: '受信処理でエラーが発生しました。実行ログをご確認ください。'
       });
     } catch (ignore) {}
     return ContentService.createTextOutput('ERROR');
@@ -190,8 +189,10 @@ var BATON_SHEET_NAME = 'BATON_REQUESTS';
  * 「申請できる人」を管理できる（コードの変更・再デプロイは不要）。
  * A列にメールアドレスを1行1件で入れる（大文字小文字は区別しない）。
  */
-var BATON_ALLOWLIST_SHEET_NAME = '申請許可リスト';
-var BATON_ALLOWLIST_HEADERS = ['メール', '備考', '登録日'];
+var BATON_ALLOWLIST_SHEET_NAME = 'Baton：許可リスト';
+// 既存schemaの先頭3列を維持し、掲載者の許可管理を追加する。
+var BATON_ALLOWLIST_HEADERS = ['メール', '備考', '登録日', '氏名', '会社名',
+  '許可状態', 'profile_id', 'プロフィールURL', 'プロフィール公開状態', '通知有効'];
 
 /** 元々ある列（この順番・名前は変更しない） */
 var BATON_BASE_HEADERS = [
@@ -342,8 +343,8 @@ function batonEnsureExtraHeaders(sheet) {
 function batonGetAllowlistSheet() {
   var ss = batonGetSpreadsheet();
   var sheet = ss.getSheetByName(BATON_ALLOWLIST_SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(BATON_ALLOWLIST_SHEET_NAME);
+  if (!sheet) sheet = ss.insertSheet(BATON_ALLOWLIST_SHEET_NAME);
+  if (sheet.getLastRow() === 0) {
     sheet.getRange(1, 1, 1, BATON_ALLOWLIST_HEADERS.length).setValues([BATON_ALLOWLIST_HEADERS]);
     sheet.getRange(1, 1, 1, BATON_ALLOWLIST_HEADERS.length).setFontWeight('bold').setBackground('#F1F3F5');
     sheet.setFrozenRows(1);
@@ -356,7 +357,10 @@ function batonGetAllowlistSheet() {
  * 空行・ヘッダーは無視する。
  */
 function batonReadAllowlistEmails() {
-  var sheet = batonGetAllowlistSheet();
+  // 古い「申請許可リスト」が既にある場合だけ、招待制の申請者制限を維持する。
+  // 掲載者の許可リストを申請者メールの許可に転用しない。新規シートも作らない。
+  var sheet = batonGetSpreadsheet().getSheetByName('申請許可リスト');
+  if (!sheet) return null;
   var lastRow = sheet.getLastRow();
   if (lastRow < 2) return {};
   var values = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
@@ -371,6 +375,7 @@ function batonReadAllowlistEmails() {
 /** このメールアドレスが申請許可リストに載っているか */
 function batonIsEmailAllowed(email) {
   var allowed = batonReadAllowlistEmails();
+  if (allowed === null) return true;
   return Boolean(allowed[String(email || '').trim().toLowerCase()]);
 }
 
@@ -381,7 +386,7 @@ function batonIsEmailAllowed(email) {
 function setupBatonSheets() {
   batonGetRequestsSheet();
   batonGetAllowlistSheet();
-  batonToast('BATON_REQUESTS / 申請許可リスト シートを確認・用意しました', 'Baton', 5);
+  batonToast('BATON_REQUESTS / Baton：許可リスト シートを確認しました', 'Baton', 5);
 }
 
 /** 現在のヘッダー行から { 列名: 列番号(1始まり) } を作る */
@@ -442,7 +447,19 @@ function batonSetRequestCell(rowIndex, headerName, value) {
 function batonGetProfile(profileId) {
   var p = BATON_PROFILES[profileId];
   if (!p || !p.active) return null;
-  return p;
+  var sheet = batonGetAllowlistSheet();
+  var idx = batonHeaderIndex(sheet);
+  var required = ['profile_id', 'メール', '許可状態', 'プロフィール公開状態', '通知有効'];
+  if (required.some(function (h) { return !idx[h]; }) || sheet.getLastRow() < 2) return null;
+  var rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).getValues();
+  var matches = rows.filter(function (r) { return String(r[idx.profile_id - 1]).trim() === profileId; });
+  if (matches.length !== 1) return null;
+  var row = matches[0];
+  var email = String(row[idx['メール'] - 1] || '').trim();
+  if (String(row[idx['許可状態'] - 1]).trim() !== '許可済' ||
+      String(row[idx['プロフィール公開状態'] - 1]).trim() !== '公開中' ||
+      String(row[idx['通知有効'] - 1]).trim() !== '有効' || !BATON_EMAIL_RE.test(email)) return null;
+  return Object.assign({}, p, { recipientEmail: email });
 }
 
 function batonProfileUrl(profileId) {
@@ -527,7 +544,7 @@ function batonSendApplicantMail(email, name, profile, profileId, verifyToken) {
   }
 
   lines.push('');
-  lines.push('双方の確認が取れ次第、お繋ぎさせていただきます。');
+    lines.push('双方の確認後、Music Japanが紹介方法を個別に判断してご案内します。');
   lines.push('引き続きよろしくお願いいたします。');
   lines.push('');
   lines.push('合同会社Music Japan');
@@ -591,37 +608,7 @@ function batonSubmitTalk(data) {
   var requestId = batonNewId('req');
   var attachmentUrls = batonSaveAttachments(data.attachments);
 
-  // このメールアドレスで、過去に1度でもメール認証を完了したことがあるか
-  // （相手の承認・辞退・期限切れ、どの結果でも「認証日時」が入っていれば
-  //   本人確認は済んでいるとみなし、2回目以降は認証メールを省略する）
-  var alreadyVerified = batonReadRequestRows().some(function (r) {
-    return String(r['メール']).toLowerCase() === email.toLowerCase() && r['認証日時'];
-  });
-
-  if (alreadyVerified) {
-    batonAppendRequestRow({
-      request_id: requestId,
-      '申請日時': new Date(),
-      '話したい人': profile.name,
-      '申請者': name,
-      '会社名': company,
-      'メール': email,
-      'コメント': comment,
-      '状態': '未認証',
-      '紹介済': false,
-      'プロフィールURL': batonProfileUrl(profileId),
-      'profile_id': profileId,
-      '役職': title,
-      '目的': purposes.join('、'),
-      '備考': note,
-      '添付資料': attachmentUrls.join('\n')
-    });
-
-    var newRow = batonFindRequestRow('request_id', requestId);
-    batonActivateRequest(newRow, profile);
-    batonSendApplicantMail(email, name, profile, profileId, null);
-    return { ok: true };
-  }
+  // 過去の認証日時だけでは現在の申請者を証明できない。申請ごとに認証する。
 
   var token = batonRandomToken();
   batonAppendRequestRow({
@@ -769,11 +756,11 @@ function batonRespondAction(token, decision) {
 
 // ── メール本文の共通部分 / 管理者通知 ───────────────────────────
 
-function batonRequestSummaryLines(row, profile) {
+function batonRequestSummaryLines(row, profile, hideContact) {
   return [
     'プロフィール: ' + profile.name + '（' + profile.company + '）',
     '申請者     : ' + row['申請者'] + ' / ' + row['会社名'] + ' / ' + (row['役職'] || '(未記入)'),
-    'メール     : ' + row['メール'],
+    hideContact ? '連絡先はMusic Japanが管理します。' : 'メール     : ' + row['メール'],
     '目的       : ' + row['目的'],
     'コメント   : ' + row['コメント'],
     '補足       : ' + (row['備考'] || '(なし)'),
@@ -794,7 +781,7 @@ function batonSendRecipientMail(row, profile, token, isReminder) {
     '',
     'あなたと話したいという方から、Batonを通じて申請が届いています。',
     ''
-  ].concat(batonRequestSummaryLines(row, profile)).concat([
+  ].concat(batonRequestSummaryLines(row, profile, true)).concat([
     '',
     '内容をご確認のうえ、下記のリンクから承認・辞退をお選びください。',
     batonUrl('respond', token),
@@ -814,6 +801,12 @@ function batonSendRecipientMail(row, profile, token, isReminder) {
 // ── 3日リマインド・7日expire（時間主導トリガーで毎日実行する） ───────
 
 function batonDailyJob() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return;
+  try { batonRunDailyJob(); } finally { lock.releaseLock(); }
+}
+
+function batonRunDailyJob() {
   var now = new Date();
   var rows = batonReadRequestRows();
 

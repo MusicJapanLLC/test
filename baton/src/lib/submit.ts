@@ -17,6 +17,8 @@ const DEFAULT_ENDPOINT =
   'https://script.google.com/macros/s/AKfycbxET0hbNJoWsk3Q0owleog34TWjDA0sAYulFQNt__Xq9u4QOilbTbW3b8D7NkyviUXu/exec';
 
 const ENDPOINT = (import.meta.env.VITE_GAS_ENDPOINT || DEFAULT_ENDPOINT).trim();
+// 通常Baton専用。6サービスのアンケート送信先と分離して管理する。
+const BATON_ENDPOINT = (import.meta.env.VITE_BATON_GAS_ENDPOINT || DEFAULT_ENDPOINT).trim();
 const TIMEOUT_MS = 15000;
 
 /** プレビュー用。送信先を持たずに、通しで動きだけ確かめたいとき */
@@ -110,7 +112,7 @@ export type BatonResult<T = {}> = ({ ok: true } & T) | { ok: false; error: strin
 async function batonFetch<T>(
   init: { method: 'GET' | 'POST'; query?: Record<string, string>; body?: unknown },
 ): Promise<BatonResult<T>> {
-  if (!ENDPOINT) {
+  if (!BATON_ENDPOINT) {
     return { ok: false, error: 'no_endpoint' };
   }
 
@@ -118,7 +120,7 @@ async function batonFetch<T>(
   const timer = window.setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const url = new URL(ENDPOINT);
+    const url = new URL(BATON_ENDPOINT);
     if (init.method === 'GET' && init.query) {
       Object.entries(init.query).forEach(([k, v]) => url.searchParams.set(k, v));
     }
@@ -132,9 +134,12 @@ async function batonFetch<T>(
         : {}),
     });
 
+    if (!res.ok) return { ok: false, error: 'server_error' };
     const text = await res.text();
     try {
-      return JSON.parse(text) as BatonResult<T>;
+      const result = JSON.parse(text);
+      if (!result || typeof result.ok !== 'boolean') return { ok: false, error: 'bad_response' };
+      return result as BatonResult<T>;
     } catch {
       return { ok: false, error: 'bad_response' };
     }
@@ -150,7 +155,7 @@ async function batonFetch<T>(
 
 /** 「この人と話したい」の申請を送る */
 export function submitTalkRequest(payload: TalkRequestPayload): Promise<BatonResult> {
-  if (DEMO || (!ENDPOINT && import.meta.env.DEV)) {
+  if (DEMO && import.meta.env.DEV) {
     console.info('[baton] プレビューのため送信していません。内容:', payload);
     return new Promise((resolve) => window.setTimeout(() => resolve({ ok: true }), 700));
   }
