@@ -514,6 +514,8 @@
     }
     if (up) {
       s.crystals = (s.crystals || 0) + 30 * up;
+      // ランク5：受付嬢のおまかせ札をはじめてもらえる
+      if (s.rank >= 5 && !s.flags.autoGift && G.items) { s.flags.autoGift = 1; G.items.addCons('auto30', 3); G.items.addCons('auto180', 1); }
       G.emit('rankup', s.rank);
       const ab = S.abyss(s);
       if (ab.open && !s.flags.abyssNoticed) { s.flags.abyssNoticed = true; G.emit('abyssOpen'); }
@@ -826,6 +828,7 @@
     if (s.building && s.building.id === id) return 'building';
     if (lv >= f.maxLv) return 'max';
     if (s.rank < f.rank) return 'locked';
+    if (lv > 0 && s.rank < D.facRankFor(f, lv)) return 'rank';
     // 下の階が建っていないと建てられない
     if (lv === 0) {
       const below = D.FACILITIES[f.floor - 1];
@@ -893,7 +896,7 @@
         const ex = s.active.splice(idx, 1)[0];
         S.resolve(ex, s);
         out.resolved++;
-        if (s.flags.autoDispatch && nextT < capEnd) out.autoSent += S.autoDispatch(nextT, s);
+        if (nextT < capEnd && S.autoOn(nextT, s)) out.autoSent += S.autoDispatch(nextT, s);
       } else if (kind === 'build') {
         s.fac[s.building.id] = 1;
         out.built = s.building.id;
@@ -903,7 +906,7 @@
         s.board.push(S.genQuest(s));
         s.boardAt = nextT;
         S.ensureDoable(s);
-        if (s.flags.autoDispatch && nextT < capEnd) out.autoSent += S.autoDispatch(nextT, s);
+        if (nextT < capEnd && S.autoOn(nextT, s)) out.autoSent += S.autoDispatch(nextT, s);
       }
     }
     if (s.board.length >= S.boardSize(s)) {
@@ -915,6 +918,7 @@
     return out;
   };
   S.BOARD_INTERVAL = 35;
+  S.autoOn = (at, s = G.state) => (G.items ? G.items.autoOn(at, s) : false);
 
   S.autoDispatch = function (at, s = G.state) {
     let sent = 0;
@@ -971,7 +975,7 @@
     }
     const newReels = s.reels.filter((r) => !r.claimed).length - reelsBefore;
     s.lastSeen = now;
-    return { away, capped: away > cap, cap, tavern, newReels: Math.max(0, newReels), resolved: res.resolved, trained, built: res.built };
+    return { away, capped: away > cap, cap, tavern, newReels: Math.max(0, newReels), resolved: res.resolved, autoSent: res.autoSent, trained, built: res.built };
   };
 
   // ---------------------------------------------------------------- セーブ

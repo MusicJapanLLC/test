@@ -6,11 +6,11 @@ G.VERSION = '0.4.0';
 G.WORLD_W = 400;
 
 // ---------- fonts ----------
-//  ui   : 本文・ボタン（Zen Kaku Gothic New）
+//  ui   : 本文・ボタン（Shippori Mincho B1。世界観をそろえるため、文字はすべて明朝に）
 //  head : 見出し・技名・ロゴ（Shippori Mincho B1）
 //  num  : 数字・欧文（Cinzel。和文は明朝に落ちる）
 G.FONT = {
-  ui: '"Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif',
+  ui: '"Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif',
   head: '"Shippori Mincho B1", "Hiragino Mincho ProN", "Yu Mincho", serif',
   num: '"Cinzel", "Shippori Mincho B1", "Hiragino Mincho ProN", serif',
 };

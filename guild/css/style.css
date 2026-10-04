@@ -23,7 +23,7 @@
   --font-head: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif;
   --font-num: 'Cinzel', 'Shippori Mincho B1', 'Hiragino Mincho ProN', serif;
   --font-display: var(--font-head);
-  --font-body: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP', system-ui, sans-serif;
+  --font-body: var(--font-head);
   --safe-t: env(safe-area-inset-top, 0px);
   --safe-b: env(safe-area-inset-bottom, 0px);
   --tabs-h: 66px;
@@ -37,6 +37,8 @@ body {
   color: var(--parch);
   font-family: var(--font-body);
   font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -1292,3 +1294,49 @@ img.ci { width: 18px; height: 18px; vertical-align: -4px; }
 .save-tools { display: flex; gap: 6px; margin-top: 6px; }
 .save-tools .btn { flex: 1; }
 .save-io textarea { width: 100%; height: 140px; margin-top: 8px; border-radius: 10px; padding: 8px; font: 11px/1.35 ui-monospace, monospace; color: #e8f0ff; background: rgba(6, 10, 24, 0.7); border: 1px solid var(--line); word-break: break-all; resize: vertical; }
+
+/* ================================================================ おまかせ札 */
+div.auto { cursor: default; flex-wrap: wrap; }
+.auto .auto-face { width: 40px; height: 40px; border-radius: 50%; background: rgba(255, 255, 255, 0.06); box-shadow: 0 0 0 1px rgba(79, 176, 143, 0.4); flex: none; }
+.auto.on { background: linear-gradient(90deg, rgba(79, 176, 143, 0.22), rgba(79, 176, 143, 0.08)); border-color: rgba(120, 220, 180, 0.6); box-shadow: 0 0 18px rgba(79, 176, 143, 0.18) inset; }
+.auto.on .auto-face { animation: autoBob 2.4s ease-in-out infinite; box-shadow: 0 0 0 2px rgba(120, 220, 180, 0.8), 0 0 12px rgba(120, 220, 180, 0.5); }
+@keyframes autoBob { 50% { transform: translateY(-2px) rotate(-3deg); } }
+.auto small b { color: #bff5dc; font-family: var(--font-num); }
+.auto-btns { display: flex; gap: 6px; flex: none; }
+.auto-btns .btn { display: grid; justify-items: center; gap: 1px; padding: 6px 10px; min-width: 64px; line-height: 1.1; }
+.auto-btns .btn span { font-size: 10px; opacity: 0.85; font-family: var(--font-num); }
+@media (max-width: 380px) { .auto-btns { width: 100%; } .auto-btns .btn { flex: 1; } }
+
+/* 技のおまかせセット */
+.skill-row { position: relative; overflow: visible; }
+.skill-row.sk-pop { animation: skPop 0.7s var(--d, 0s) cubic-bezier(.2, 1.4, .4, 1) both; }
+.skill-row.sk-pop::after { content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(105deg, transparent 30%, rgba(255, 240, 190, 0.75) 48%, transparent 66%) no-repeat; background-size: 220% 100%; animation: skSweep 0.9s var(--d, 0s) ease-out both; }
+@keyframes skPop { 0% { transform: scale(0.96); filter: brightness(1); } 35% { transform: scale(1.04); filter: brightness(1.6); box-shadow: 0 0 0 2px rgba(255, 214, 120, 0.9), 0 0 22px rgba(255, 200, 100, 0.7); } 100% { transform: none; filter: none; } }
+@keyframes skSweep { from { background-position: 120% 0; } to { background-position: -120% 0; } }
+.sk-spark { position: absolute; left: 22px; top: 50%; width: 0; height: 0; pointer-events: none; z-index: 2; }
+.sk-spark i { position: absolute; width: 5px; height: 5px; margin: -2.5px; border-radius: 50%; background: #ffe7a0; box-shadow: 0 0 8px #ffb347; animation: spark 0.8s ease-out both; }
+.h3-btn, h3 .link.inline { margin-left: 8px; }
+.skill-get .rina-face { width: 104px; height: 104px; margin: -4px auto 2px; display: block; }
+.a-meta .sk.sk-pop { animation: skPop 0.7s var(--d, 0s) cubic-bezier(.2, 1.4, .4, 1) both; border-radius: 6px; }
+.dl { position: relative; }
+.dl em { position: absolute; right: 3px; top: 3px; font-style: normal; font-size: 9px; font-weight: 900; font-family: var(--font-num); color: #1a1204; background: var(--gold-grad); border-radius: 8px; padding: 0 4px; line-height: 14px; }
+
+/* ================================================================ タイトルの「世界」 */
+#boot { background: #05060c; backdrop-filter: none; -webkit-backdrop-filter: none; place-items: start center; padding-top: calc(var(--safe-t, 0px) + 11vh); }
+.title-world { position: absolute; inset: 0; z-index: 0; display: block; pointer-events: none; }
+#boot .boot-flash { display: none; }
+#boot .logo h1 { text-shadow: 0 3px 0 #6b3a14, 0 8px 30px rgba(255, 170, 70, 0.45), 0 0 24px rgba(6, 10, 22, 0.6); }
+#boot .logo .en { text-shadow: 0 1px 6px rgba(6, 10, 22, 0.9); }
+#bootSub { text-shadow: 0 1px 6px rgba(6, 10, 22, 0.95); color: #f2e4c4; }
+#bootHint { position: fixed; left: 0; right: 0; bottom: calc(var(--safe-b, 0px) + 11vh); margin: 0; text-shadow: 0 2px 10px rgba(6, 10, 22, 0.95), 0 0 2px rgba(6, 10, 22, 0.9); }
+#boot.gone { opacity: 0; transform: none; transition: opacity 0.65s ease-out; }
+html.entered #scene { animation: sceneIn 1s cubic-bezier(.2, .9, .3, 1) both; }
+@keyframes sceneIn { from { transform: scale(1.14); filter: brightness(1.7) saturate(0.8); } }
+html.calm.entered #scene { animation: none; }
+#boot.go #bootHint, #boot.go #bootSub { animation: none !important; opacity: 0 !important; transition: opacity 0.25s; }
+
+/* ================================================================ 文字：すべて明朝＋数字は Cinzel でそろえる */
+small, .hint, .desc, .empty { font-weight: 700; }
+input, textarea, select { font-family: var(--font-body); }
+.rw, .q-meta span, .tag, .pill, .badge, .lv, .stamp, .maxed { white-space: nowrap; }
+#boostChip .bc.auto i { background: linear-gradient(180deg, #c8f5e0, #3fb08a); }

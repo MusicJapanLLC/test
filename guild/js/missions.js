@@ -9,7 +9,7 @@
   const IT = () => G.items;
 
   const POOL = [
-    { id: 'dispatch', text: '依頼を{n}回出す', stat: 'quests', n: [4, 6, 8], rw: { cry: 10 } },
+    { id: 'dispatch', text: '依頼を{n}回出す', stat: 'quests', n: [4, 6, 8], rw: { cry: 10, auto30: 1 } },
     { id: 'watch', text: '冒険譚を{n}本 見届ける', stat: 'witnessed', n: [3, 5], rw: { cry: 15 } },
     { id: 'great', text: '大成功を{n}回出す', stat: 'great', n: [1, 2], rw: { stone: 6 } },
     { id: 'chest', text: '黄金の宝箱を{n}回開ける', stat: 'chests', n: [1], rw: { cry: 10 } },
@@ -23,7 +23,7 @@
     { id: 'abyss', text: '深淵の迷宮に{n}回挑む', stat: 'abyssRuns', n: [1, 2], rw: { cry: 20 }, need: (st) => !!(st.abyss && st.abyss.open) },
   ];
   const WEEKLY = [
-    { id: 'w_dispatch', text: '依頼を40回出す', stat: 'quests', n: 40, rw: { cry: 60 } },
+    { id: 'w_dispatch', text: '依頼を40回出す', stat: 'quests', n: 40, rw: { cry: 60, auto180: 1 } },
     { id: 'w_watch', text: '冒険譚を25本 見届ける', stat: 'witnessed', n: 25, rw: { hg2: 2 } },
     { id: 'w_great', text: '大成功を8回出す', stat: 'great', n: 8, rw: { book: 1 } },
     { id: 'w_daily', text: 'デイリー任務を5日クリアする', stat: 'dailyClears', n: 5, rw: { cry: 100, horn: 1 } },

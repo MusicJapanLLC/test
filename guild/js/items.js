@@ -103,9 +103,11 @@
     candy: { name: 'かぼちゃ飴', desc: 'かぼちゃ灯籠祭のあいだ、依頼の成功で手に入る。お祭りの交換所で限定の品と交換できる', icon: 'candy', rarity: 3 },
     shard: { name: '虹の欠片', desc: 'URの装備を限界突破するのに使う。深淵の迷宮の守護者や、URの分解で手に入る', icon: 'shard', rarity: 4 },
     expbook: { name: '経験の書', desc: '冒険者1人に、たっぷり経験値を与える', icon: 'book2', rarity: 1, use: 'exp' },
+    auto30: { name: 'おまかせ札（30分）', desc: '30分間、受付嬢リナが待機中の冒険者を自動で派遣してくれる', icon: 'bell', rarity: 1, boost: { k: 'auto', sec: 1800 } },
+    auto180: { name: 'おまかせ札（3時間）', desc: '3時間、受付嬢リナが待機中の冒険者を自動で派遣してくれる。留守番中も働きます', icon: 'bell3', rarity: 2, boost: { k: 'auto', sec: 10800 } },
   };
-  IT.CONS_ORDER = ['hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'candy', 'stone'];
-  IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ', feast: '宴' };
+  IT.CONS_ORDER = ['auto180', 'auto30', 'hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'candy', 'stone'];
+  IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ', feast: '宴', auto: 'おまかせ' };
 
   // ---------------------------------------------------------------- 抽選
   const pickW = (rnd, arr, wf) => {
@@ -206,7 +208,7 @@
     const p = { fail: 0.05, ok: 0.22, great: 0.5, legend: 1 }[tier] * f;
     if (rnd() < p) add('stone', 1 + Math.floor(rnd() * (2 + areaIdx)));
     if (rnd() < p * 0.45) add('cry', [3, 5, 8, 10, 15][Math.floor(rnd() * 5)] + areaIdx * 2);
-    if (rnd() < p * 0.12) add(pickW(rnd, ['finish', 'expbook', 'hg2', 'goldx2', 'luck', 'key'], (k) => ({ finish: 4, expbook: 3, hg2: 1.5, goldx2: 1.5, luck: 1.5, key: 1 })[k]), 1);
+    if (rnd() < p * 0.12) add(pickW(rnd, ['finish', 'expbook', 'hg2', 'goldx2', 'luck', 'key', 'auto30'], (k) => ({ finish: 4, expbook: 3, hg2: 1.5, goldx2: 1.5, luck: 1.5, key: 1, auto30: 1.2 })[k]), 1);
     if (tier === 'legend' && rnd() < 0.3) add(rnd() < 0.5 ? 'book' : 'hg3', 1);
     return out;
   };
@@ -523,6 +525,28 @@
     G.emit('itemsChanged');
     return true;
   };
+  // 技のおまかせセット：効果の大きい順に枠いっぱいまで
+  const SK_W = { atk: 1, crit: 0.35, succ: 2.2, great: 2.4, speed: 0.9, gold: 0.5, exp: 0.4, find: 0.35, mat: 0.3 };
+  IT.skillScore = function (adv, name) {
+    const fx = IT.skillFx(adv.cls, name);
+    if (!fx) return 0;
+    const k = 1 + 0.25 * (((adv.sk || {})[name] || 1) - 1);
+    return Object.entries(fx).reduce((x, [key, v]) => x + v * (SK_W[key] || 0.3), 0) * k;
+  };
+  IT.autoSkills = function (adv) {
+    const known = Object.keys(adv.sk || {}).filter((n) => IT.skillFx(adv.cls, n));
+    const best = known.sort((x, y) => IT.skillScore(adv, y) - IT.skillScore(adv, x)).slice(0, IT.skillSlots(adv));
+    const before = (adv.skillSet || []).slice().sort().join('|');
+    adv.skillSet = best;
+    const changed = best.slice().sort().join('|') !== before;
+    if (changed) G.emit('itemsChanged');
+    return { changed, set: best };
+  };
+  IT.autoSkillsAll = function () {
+    let n = 0;
+    G.state.adv.forEach((a) => { if (IT.autoSkills(a).changed) n++; });
+    return n;
+  };
   IT.unknownSkills = (adv) => Object.keys(IT.SKILLS[adv.cls] || {}).filter((n) => !(adv.sk || {})[n]);
 
   // ---------------------------------------------------------------- 持ち物・ブースト
@@ -552,8 +576,14 @@
     st.boosts[c.boost.k] = { mult: Math.max(c.boost.mult || 1, cur ? cur.mult : 1), add: c.boost.add || 0, from: cur ? cur.from : now, until: now + rest + c.boost.sec, src: id };
     IT.addCons(id, -1);
     IT.used();
+    if (c.boost.k === 'auto') st.stats.autoUsed = (st.stats.autoUsed || 0) + 1;
     G.emit('boost', c.boost.k);
     return true;
+  };
+  // おまかせ札が効いているか（留守番中の計算では、その時刻で判定する）
+  IT.autoOn = function (at, s = G.state) {
+    const b = s.boosts && s.boosts.auto;
+    return !!b && b.until > at && (b.from || 0) <= at + 1;
   };
   // 倍速：前回からの経過時間のうち、倍速中だったぶんだけ遠征と建設を前に進める
   IT.applySpeed = function (now, s = G.state) {
@@ -669,5 +699,14 @@
     });
     st.bag = st.bag || {};
     st.boosts = st.boosts || {};
+    // 「受付嬢におまかせ」が無制限のスイッチだった頃のセーブ：札に置きかえて渡す
+    st.flags = st.flags || {};
+    if (!st.flags.autoGift && (st.flags.autoDispatch || st.rank >= 5)) {
+      st.flags.autoGift = 1;
+      st.bag.auto180 = (st.bag.auto180 || 0) + 3;
+      st.bag.auto30 = (st.bag.auto30 || 0) + 5;
+      st.flags.autoMoved = 1;
+    }
+    st.flags.autoDispatch = false;
   };
 })();

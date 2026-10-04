@@ -120,43 +120,43 @@
   const geo = (base, r, lv) => Math.round(base * Math.pow(r, lv));
   D.FACILITIES = [
     {
-      id: 'hall', name: '受付ホール', floor: 0, rank: 1, maxLv: 5, buildTime: 0,
+      id: 'hall', name: '受付ホール', floor: 0, rank: 1, maxLv: 7, buildTime: 0, hiFrom: 5,
       desc: '依頼掲示板と受付。強化すると同時に出せる依頼が増える。',
-      cost: (lv) => ({ gold: [0, 60, 420, 2600, 16000][lv] || 0, mat: [0, 0, 3, 10, 30][lv] || 0 }),
+      cost: (lv) => ({ gold: [0, 60, 420, 2600, 16000, 120000, 650000][lv] || 0, mat: [0, 0, 3, 10, 30, 70, 160][lv] || 0 }),
       effect: (lv) => `同時派遣 ${lv}件 ・ 掲示板 ${lv + 2}枚`,
     },
     {
-      id: 'bunks', name: '宿舎', floor: 1, rank: 1, maxLv: 7, buildTime: 0,
+      id: 'bunks', name: '宿舎', floor: 1, rank: 1, maxLv: 15, buildTime: 0, hiFrom: 7,
       desc: '冒険者が眠る場所。ベッドの数だけ冒険者を雇える。',
-      cost: (lv) => ({ gold: [0, 40, 160, 650, 2600, 9500, 32000][lv] || 0, mat: [0, 0, 1, 3, 6, 12, 25][lv] || 0 }),
+      cost: (lv) => ({ gold: [0, 40, 160, 650, 2600, 9500, 32000, 70000, 140000, 260000, 450000, 750000, 1200000, 1900000, 3000000][lv] || 0, mat: [0, 0, 1, 3, 6, 12, 25, 40, 60, 85, 115, 150, 200, 260, 340][lv] || 0 }),
       effect: (lv) => `ベッド ${lv + 1}台`,
     },
     {
-      id: 'tavern', name: '酒場', floor: 2, rank: 2, maxLv: 8, buildTime: 6,
+      id: 'tavern', name: '酒場', floor: 2, rank: 2, maxLv: 12, buildTime: 6, hiFrom: 8,
       desc: '町の人がやってきて一杯やる。チップがギルドの収入になる。',
       cost: (lv) => ({ gold: lv === 0 ? 120 : geo(240, 2.55, lv - 1), mat: lv === 0 ? 0 : geo(2, 1.75, lv - 1) }),
-      effect: (lv) => `席 ${Math.min(8, lv + 1)} ・ チップ ${G.fmt(D.tipValue(lv))}G` + (lv >= 4 ? ' ・ 自動回収' : ''),
+      effect: (lv) => `席 ${Math.min(12, lv + 1)} ・ チップ ${G.fmt(D.tipValue(lv))}G` + (lv >= 4 ? ' ・ 自動回収' : ''),
     },
     {
-      id: 'smithy', name: '鍛冶場', floor: 3, rank: 3, maxLv: 10, buildTime: 15,
+      id: 'smithy', name: '鍛冶場', floor: 3, rank: 3, maxLv: 15, buildTime: 15, hiFrom: 10,
       desc: 'ドワーフのボルグが武具を鍛える。全員の戦力が上がる。',
       cost: (lv) => ({ gold: lv === 0 ? 600 : geo(520, 1.85, lv - 1), mat: lv === 0 ? 4 : geo(3, 1.55, lv - 1) }),
       effect: (lv) => `戦力 +${lv * 12}%`,
     },
     {
-      id: 'training', name: '訓練場', floor: 4, rank: 4, maxLv: 8, buildTime: 30,
+      id: 'training', name: '訓練場', floor: 4, rank: 4, maxLv: 12, buildTime: 30, hiFrom: 8,
       desc: '待機中の冒険者が鍛錬し、少しずつ経験値を得る。',
       cost: (lv) => ({ gold: lv === 0 ? 2200 : geo(1600, 1.85, lv - 1), mat: lv === 0 ? 10 : geo(6, 1.5, lv - 1) }),
       effect: (lv) => `獲得経験値 +${lv * 12}% ・ 待機中も成長`,
     },
     {
-      id: 'alchemy', name: '錬金室', floor: 5, rank: 5, maxLv: 6, buildTime: 45,
+      id: 'alchemy', name: '錬金室', floor: 5, rank: 5, maxLv: 10, buildTime: 45, hiFrom: 6,
       desc: '薬と護符を調合する。依頼の成功率と大成功率が上がる。',
       cost: (lv) => ({ gold: lv === 0 ? 6500 : geo(5000, 1.95, lv - 1), mat: lv === 0 ? 20 : geo(12, 1.5, lv - 1) }),
       effect: (lv) => `成功率 +${lv * 3}% ・ 大成功率 +${(lv * 1.5).toFixed(1)}%`,
     },
     {
-      id: 'tower', name: '見張り塔', floor: 6, rank: 7, maxLv: 5, buildTime: 60,
+      id: 'tower', name: '見張り塔', floor: 6, rank: 7, maxLv: 8, buildTime: 60, hiFrom: 5,
       desc: '遠くまで見渡せる塔。留守中の稼ぎの上限が延び、遠征も早くなる。',
       cost: (lv) => ({ gold: lv === 0 ? 22000 : geo(16000, 2.0, lv - 1), mat: lv === 0 ? 40 : geo(25, 1.6, lv - 1) }),
       effect: (lv) => `留守番 ${3 + lv * 2}時間 ・ 遠征時間 -${lv * 4}%`,
@@ -164,11 +164,13 @@
   ];
   D.FAC = {};
   D.FACILITIES.forEach((f) => (D.FAC[f.id] = f));
+  // 上限開放ぶん（hiFrom 以降）は、ギルドランクが上がるごとに一段ずつ解禁
+  D.facRankFor = (f, lv) => (lv < f.hiFrom ? f.rank : Math.min(10, Math.max(f.rank + 2, 6) + Math.floor(((lv - f.hiFrom) * 4) / Math.max(1, f.maxLv - f.hiFrom))));
 
   D.tipValue = (lv) => (lv <= 0 ? 0 : Math.round(3 * Math.pow(1.38, lv - 1)));
   D.tipInterval = (lv) => Math.max(3.6, 12.5 - lv * 1.1);
   D.tipCap = (lv) => 4 + lv * 2;
-  D.seats = (lv) => Math.min(8, lv + 1);
+  D.seats = (lv) => Math.min(12, lv + 1);
   D.beds = (lv) => lv + 1;
 
   // ---------------- ランク ----------------
@@ -180,7 +182,7 @@
     2: ['酒場を建てられる', '職業「魔法使い」', 'エリア「ささやきの森」'],
     3: ['鍛冶場を建てられる', '職業「盗賊」'],
     4: ['訓練場を建てられる', '職業「僧侶」', 'エリア「こだま洞窟」'],
-    5: ['錬金室を建てられる', '受付嬢の「自動派遣」'],
+    5: ['錬金室を建てられる', '受付嬢の「おまかせ札」（自動派遣）'],
     6: ['職業「弓使い」', 'エリア「灰の古城」', '深淵の迷宮（B1F〜B100F）'],
     7: ['見張り塔を建てられる'],
     8: ['エリア「竜の背嶺」', 'ギルドの再建（灯火の星）'],
@@ -212,7 +214,7 @@
     { text: '訓練場を建てる', check: (s) => [s.fac.training > 0 ? 1 : 0, 1], reward: { gold: 1500 } },
     { text: '伝説級の冒険譚を見る', check: (s) => [st(s).legend, 1], reward: { gold: 2000, mat: 8 } },
     { text: 'ギルドランクを5にする', check: (s) => [s.rank, 5], reward: { gold: 3000 } },
-    { text: '自動派遣をオンにする', check: (s) => [s.flags.autoDispatch ? 1 : 0, 1], reward: { mat: 10 } },
+    { text: 'おまかせ札を使ってみる', check: (s) => [(s.stats.autoUsed || 0) > 0 ? 1 : 0, 1], reward: { mat: 10 } },
     { text: '錬金室を建てる', check: (s) => [s.fac.alchemy > 0 ? 1 : 0, 1], reward: { gold: 5000 } },
     { text: '冒険者を6人にする', check: (s) => [s.adv.length, 6], reward: { gold: 6000, mat: 10 } },
     { text: 'ギルドランクを6にする', check: (s) => [s.rank, 6], reward: { gold: 8000 } },

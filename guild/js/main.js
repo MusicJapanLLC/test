@@ -47,17 +47,24 @@
       started = true;
       G.audio.init();
       G.audio.setAmbient(G.state.fac.tavern > 0 ? 1 : 0);
-      G.audio.sfx('flash');
-      G.audio.sfx('door');
+      G.audio.sfx('enter');
+      setTimeout(() => G.audio.sfx('whoosh'), 320);
       splash.classList.add('go');
-      setTimeout(() => splash.classList.add('gone'), 380);
-      setTimeout(() => splash.remove(), 1100);
+      // 灯りが弾けて、世界からギルドへ飛びこむ
+      const enter = () => {
+        G.audio.sfx('door');
+        splash.classList.add('gone');
+        document.documentElement.classList.add('entered');
+        setTimeout(() => { splash.remove(); if (G.title) G.title.stop(); }, 700);
+      };
+      if (G.title && !G.state.settings.reduceMotion) G.title.go(enter);
+      else setTimeout(enter, 380);
       setTimeout(() => {
         if (off && off.away > 60 && (off.tavern > 0 || off.resolved > 0 || off.trained > 0)) G.ui.welcomeBack(off);
         if (G.state.flags.tut < 90) G.ui.startTutorial();
         if (G.stars) G.stars.afterBoot();
         G.emit('started');
-      }, 900);
+      }, 1700);
     };
     splash.addEventListener('pointerup', go);
     splash.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') go(); });
@@ -169,11 +176,12 @@
     boot.appendChild(fl);
   }
   titleFx();
+  if (G.title) G.title.start();
 
   const ready = () => {
     // フォントとセーブを待ってから（待ちすぎない）
     const fonts = document.fonts && document.fonts.load ? Promise.race([
-      Promise.all([document.fonts.load('700 12px "Zen Kaku Gothic New"'), document.fonts.load('800 20px "Shippori Mincho B1"'), document.fonts.load('800 20px "Cinzel"')]),
+      Promise.all([document.fonts.load('600 12px "Shippori Mincho B1"'), document.fonts.load('800 20px "Shippori Mincho B1"'), document.fonts.load('800 20px "Cinzel"')]),
       new Promise((r) => setTimeout(r, 1200)),
     ]).catch(() => {}) : Promise.resolve();
     const hint = G.$('#bootHint');

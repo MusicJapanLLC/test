@@ -1529,6 +1529,23 @@
         if (id === 'hourglass3') star(ctx, 0.56, -0.62, 0.22, '#fff6c0');
         break;
       }
+      case 'bell':
+      case 'bell3': {
+        // おまかせ札：紐で吊るした木札と、受付の呼び鈴
+        const gold = id === 'bell3';
+        ctx.strokeStyle = gold ? '#d4493a' : '#c86a8a'; ctx.lineWidth = 0.07;
+        ctx.beginPath(); ctx.moveTo(-0.3, -0.42); ctx.lineTo(0, -0.86); ctx.lineTo(0.3, -0.42); ctx.stroke();
+        facetPoly(ctx, [-0.56, -0.46, 0.56, -0.46, 0.62, -0.36, 0.62, 0.52, 0.52, 0.62, -0.52, 0.62, -0.62, 0.52, -0.62, -0.36], gold ? '#e8bd4c' : '#c89058', 0.2);
+        poly(ctx, [-0.46, -0.34, 0.46, -0.34, 0.46, 0.5, -0.46, 0.5], gold ? '#fff0b8' : '#f0d8a8');
+        ctx.strokeStyle = gold ? '#b0802a' : '#a0703c'; ctx.lineWidth = 0.06;
+        for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(-0.3, -0.14 + i * 0.2); ctx.lineTo(0.3 - (i === 2 ? 0.16 : 0), -0.14 + i * 0.2); ctx.stroke(); }
+        // 呼び鈴
+        poly(ctx, [0.2, 0.86, 0.9, 0.86, 0.86, 0.76, 0.24, 0.76], '#6a4a2a');
+        facetPoly(ctx, [0.28, 0.76, 0.82, 0.76, 0.74, 0.5, 0.55, 0.38, 0.36, 0.5], '#ffd45a', 0.22);
+        poly(ctx, [0.52, 0.38, 0.58, 0.38, 0.58, 0.3, 0.52, 0.3], '#c8901e');
+        if (gold) star(ctx, -0.5, -0.56, 0.2, '#fff6c0');
+        break;
+      }
       case 'scroll':
         poly(ctx, [-0.6, -0.5, 0.6, -0.5, 0.6, 0.5, -0.6, 0.5], '#f0e0b8');
         ctx.strokeStyle = '#b08a5a'; ctx.lineWidth = 0.05;

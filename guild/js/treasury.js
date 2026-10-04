@@ -129,6 +129,8 @@
 
   // ---- ショップ（魔晶石だけで買う。品ごとに1日・1週の上限）
   const SHOP = [
+    { id: 'auto30', n: 1, cost: 30, per: 'day', max: 4 },
+    { id: 'auto180', n: 1, cost: 120, per: 'day', max: 1 },
     { id: 'hg2', n: 1, cost: 80, per: 'day', max: 3 },
     { id: 'hg3', n: 1, cost: 200, per: 'day', max: 1 },
     { id: 'horn', n: 1, cost: 150, per: 'week', max: 2 },
@@ -142,7 +144,7 @@
   ];
   const BUNDLES = [
     { key: 'b_start', name: 'はじめての冒険パック', desc: '神速の砂時計・帰還の角笛・閃きの書', items: [['hg3', 1], ['horn', 1], ['book', 1]], cost: 300, per: 'once', max: 1, icon: 'book', tag: '1回だけ' },
-    { key: 'b_week', name: '冒険者応援パック', desc: '疾風の砂時計×2・時短の巻物×3・強化石×20', items: [['hg2', 2], ['finish', 3], ['stone', 20]], cost: 250, per: 'week', max: 1, icon: 'hg2', tag: '毎週' },
+    { key: 'b_week', name: '冒険者応援パック', desc: '疾風の砂時計×2・時短の巻物×3・おまかせ札（3時間）×1・強化石×20', items: [['hg2', 2], ['finish', 3], ['auto180', 1], ['stone', 20]], cost: 250, per: 'week', max: 1, icon: 'hg2', tag: '毎週' },
   ];
   const EX_COST = [20, 40, 80];
   T.exGold = () => Math.round((600 * Math.pow(1.95, G.state.rank - 1)) / 100) * 100;
@@ -597,6 +599,24 @@
   }
 
   // ---------------------------------------------------------------- 冒険者の詳細（装備3枠・技）
+  // 技をセットした瞬間：選ばれた技が光って弾ける
+  let skFxNext = null;
+  function skillFx(card, set) {
+    const rows = G.$$('.skill-row[data-skill]', card).filter((r) => set.includes(r.dataset.skill));
+    rows.forEach((r, i) => {
+      r.classList.remove('sk-pop');
+      void r.offsetWidth;
+      r.style.setProperty('--d', i * 0.12 + 's');
+      r.classList.add('sk-pop');
+      const sp = document.createElement('span');
+      sp.className = 'sk-spark';
+      sp.innerHTML = Array.from({ length: 8 }, (_, k) => `<i style="--a:${k * 45 + Math.random() * 20}deg;--r:${(26 + Math.random() * 22).toFixed(0)}px"></i>`).join('');
+      r.appendChild(sp);
+      setTimeout(() => sp.remove(), 1400);
+    });
+    if (rows.length) setTimeout(() => G.audio.sfx('rarity', 2), 160);
+  }
+  T.skillFx = skillFx;
   T.advDetail = function (id, replace) {
     const st = G.state;
     const a = st.adv.find((x) => x.id === id);
@@ -636,7 +656,7 @@
       ${IT.equipped(a).length ? `<button class="link" id="advEnh">この冒険者の装備をまとめて強化</button>` : ''}
       ${setHtml}
       <div class="adv-stats">${statList}</div>
-      <h3 class="mini">技 <small>セット ${(a.skillSet || []).length}/${nSlots}${a.lv < 20 ? '（Lv20で3枠）' : ''}</small></h3><div class="skills">${skills}${crossHtml}</div>
+      <h3 class="mini">技 <small>セット ${(a.skillSet || []).length}/${nSlots}${a.lv < 20 ? '（Lv20で3枠）' : ''}</small>${known.length > 1 ? '<button class="link inline" id="skAuto">おまかせセット</button>' : ''}</h3><div class="skills">${skills}${crossHtml}</div>
       <dl><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${G.sim.expNeed(a.lv)}</dd></dl></div>`;
     G.ui.modal(html, [
       st.adv.length > 1 && a.status === 'idle' ? { text: '解雇する', cls: 'ghost danger', fn: () => G.ui.confirmDismiss(a) } : null,
@@ -645,6 +665,17 @@
       cls: 'wide', replace: !!replace,
       onShow: (card) => {
         G.$$('[data-slot]', card).forEach((b) => b.addEventListener('click', () => pickFor(a, b.dataset.slot)));
+        if (skFxNext) { const set = skFxNext; skFxNext = null; skillFx(card, set); }
+        const ska = G.$('#skAuto', card);
+        if (ska) ska.addEventListener('click', () => {
+          const r = IT.autoSkills(a);
+          if (!r.changed) { skillFx(card, r.set); G.audio.sfx('soft'); G.ui.toast('いまのセットがいちばん強い組み合わせです', 'info'); return; }
+          G.audio.sfx('flash');
+          G.haptic(14);
+          G.ui.toast(`技をセット：${r.set.join('・')}`, 'good');
+          skFxNext = r.set;
+          T.advDetail(a.id, true);
+        });
         const ae = G.$('#advEnh', card);
         if (ae) ae.addEventListener('click', () => { G.ui.closeModal(); setTimeout(() => T.enhanceMenu(a), 240); });
         G.$('#advChange', card).addEventListener('click', () => changeMenu(a));
@@ -771,7 +802,7 @@
 
   // ---------------------------------------------------------------- ログインボーナス
   T.today = () => { const d = new Date(G.now() * 1000); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
-  const DAILY = [{ cry: 20 }, { stone: 10 }, { finish: 2 }, { cry: 30 }, { hg2: 1 }, { key: 2 }, { cry: 100, book: 1 }];
+  const DAILY = [{ cry: 20, auto30: 1 }, { stone: 10 }, { finish: 2, auto30: 1 }, { cry: 30 }, { hg2: 1, auto30: 1 }, { key: 2 }, { cry: 100, book: 1, auto180: 1 }];
   const rewardText = (r) => Object.entries(r).map(([k, n]) => (k === 'cry' ? `魔晶石 ×${n}` : `${IT.CONS[k].name} ×${n}`)).join('・');
   T.checkDaily = function () {
     const st = G.state;
@@ -789,7 +820,7 @@
     const cells = DAILY.map((d, i) => {
       const firstK = Object.keys(d)[0];
       const state = i < day ? 'got' : i === day ? 'today' : '';
-      return `<div class="dl ${state}"><small>${i + 1}日目</small><img alt="" src="${consThumb(firstK, 34)}"><b>${firstK === 'cry' ? '×' + d.cry : '×' + d[firstK]}</b>${state === 'got' ? '<i>受取済</i>' : ''}</div>`;
+      return `<div class="dl ${state}"><small>${i + 1}日目</small><img alt="" src="${consThumb(firstK, 34)}"><b>${firstK === 'cry' ? '×' + d.cry : '×' + d[firstK]}</b>${Object.keys(d).length > 1 ? `<em title="${rewardText(d)}">+${Object.keys(d).length - 1}</em>` : ''}${state === 'got' ? '<i>受取済</i>' : ''}</div>`;
     }).join('');
     G.ui.modal(`<div class="daily"><img class="rina-face" alt="" src="${G.art.rina(144, day === 6 ? 'happy' : 'wink')}"><small>ログインボーナス ・ 通算 ${st.login.n}日目</small><h2>今日のおくりもの</h2><div class="dl-grid">${cells}</div><p class="dl-got">${rewardText(r)} を受け取りました</p><p class="hint">毎日ギルドに顔を出すと、7日目に豪華なおくりもの</p></div>`, [{ text: '受け取る', cls: 'primary big', fn: () => { G.audio.sfx('gift'); G.ui.refreshHud(); } }], { cls: 'celebrate', onShow: () => { G.audio.sfx('rarity', 2); } });
     if (G.notify) G.notify.push({ kind: 'daily', silent: true, action: 'treasury', title: 'ログインボーナス', body: rewardText(r) });

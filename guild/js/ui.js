@@ -65,7 +65,18 @@
     G.$('#cryPill').addEventListener('click', () => { G.audio.init(); G.treasury.open('shop'); });
     G.$('#boostChip').addEventListener('click', () => { G.audio.init(); G.treasury.open('bag'); });
     G.$('#eventChip').addEventListener('click', () => G.events.open());
-    G.on('boost', () => { boostKey = ''; U.refreshHud(); });
+    G.on('boost', (k) => {
+      boostKey = '';
+      if (k === 'auto') { const n = S.autoDispatch(G.now()); if (n) setTimeout(() => U.toast(`リナが ${n} 組を派遣しました`, 'good'), 600); }
+      U.refreshHud();
+    });
+    G.on('started', () => {
+      const st = G.state;
+      if (st.flags.autoMoved === 1) {
+        st.flags.autoMoved = 2;
+        U.whenFree(() => U.modal(`<div class="skill-get"><img class="rina-face" alt="" src="${art.rina(112, 'wink')}"><small>受付からのお知らせ</small><h2>おまかせ札</h2><p>「受付嬢におまかせ」は、時間を決めて使う<b>おまかせ札</b>になりました。<br>ずっと任せきりだと、どんな魔物と戦っているか見られませんから…ね？</p><p class="hint">おまかせ札（3時間）×3 と（30分）×5 をお渡しします。依頼の画面から使えます</p></div>`, [{ text: 'わかった', cls: 'primary big' }]), 1600);
+      }
+    });
     G.on('started', () => { if (G.state.flags.tut >= 90) setTimeout(() => G.treasury.checkDaily(), 900); });
     G.$('#missionBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'missions') U.closeSheet(); else U.openSheet('missions'); });
     G.$('#menuBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'records') U.closeSheet(); else U.openSheet('records'); });
@@ -259,12 +270,12 @@
   let boostKey = '';
   function tickBoosts() {
     const chip = G.$('#boostChip');
-    const act = ['speed', 'gold', 'luck', 'feast'].map((k) => [k, G.items.boost(k)]).filter((x) => x[1]);
+    const act = ['auto', 'speed', 'gold', 'luck', 'feast'].map((k) => [k, G.items.boost(k)]).filter((x) => x[1]);
     const key = act.map((x) => x[0] + x[1].mult).join();
     if (key !== boostKey) {
       boostKey = key;
       chip.hidden = !act.length;
-      chip.innerHTML = act.map(([k, b]) => `<span class="bc ${k}"><i>${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'G×2' : k === 'feast' ? '宴' : '幸運'}</i><b data-bt="${k}"></b></span>`).join('');
+      chip.innerHTML = act.map(([k, b]) => `<span class="bc ${k}"><i>${k === 'speed' ? `${b.mult}倍速` : k === 'gold' ? 'G×2' : k === 'feast' ? '宴' : k === 'auto' ? 'おまかせ' : '幸運'}</i><b data-bt="${k}"></b></span>`).join('');
       document.documentElement.classList.toggle('fast', act.some((x) => x[0] === 'speed'));
       if (sheetTab) layoutPads();
       setTimeout(layoutPads, 30);
@@ -420,7 +431,7 @@
   // シートの中身が変わる出来事だけを拾う（お金の増減では描き直さない）
   function sheetSig() {
     const st = G.state;
-    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : sheetTab === 'stars' ? G.stars.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, st.flags.autoDispatch].join('|');
+    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : sheetTab === 'stars' ? G.stars.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, G.items.boost('auto') ? 1 : 0, G.items.cons('auto30'), G.items.cons('auto180')].join('|');
   }
   function refreshAfford() {
     const st = G.state;
@@ -437,14 +448,19 @@
   function stars(n) {
     return '<span class="stars">' + '★'.repeat(Math.min(5, n)) + '<i>' + '★'.repeat(Math.max(0, 5 - n)) + '</i></span>';
   }
+  // 受付嬢のおまかせ札：使っているあいだだけ、リナが待機中の冒険者を自動で送り出す
+  function autoCard() {
+    const ab = G.items.boost('auto');
+    const n30 = G.items.cons('auto30'), n180 = G.items.cons('auto180');
+    const btn = (id, label, n) => `<button class="btn sm ${n ? (ab ? '' : 'primary') : 'ghost'}" data-auto-use="${id}">${label}<span>${n ? `×${n}` : 'ショップ'}</span></button>`;
+    return `<div class="auto ${ab ? 'on' : ''}"><img class="auto-face" alt="" src="${art.rina(80, ab ? 'happy' : 'smile')}"><span><b>${ab ? '受付嬢におまかせ中' : '受付嬢におまかせ'}</b><small>${ab ? `残り <b data-countdown="${ab.until}">${G.fmtClock(ab.until - G.now())}</b> ・ 待機中の冒険者をリナが送り出します` : 'おまかせ札を使うと、そのあいだリナが自動で派遣します'}</small></span><div class="auto-btns">${btn('auto30', ab ? '+30分' : '30分', n30)}${btn('auto180', ab ? '+3時間' : '3時間', n180)}</div></div>`;
+  }
   function renderQuests(body) {
     const st = G.state;
     const now = G.now();
     const slots = S.slots();
     let h = '';
-    if (st.rank >= 5) {
-      h += `<label class="auto ${st.flags.autoDispatch ? 'on' : ''}"><span><b>受付嬢におまかせ</b><small>待機中の冒険者を、リナが自動で派遣します</small></span><input type="checkbox" id="autoToggle" ${st.flags.autoDispatch ? 'checked' : ''}><i class="sw"></i></label>`;
-    }
+    if (st.rank >= 5 || G.items.cons('auto30') || G.items.cons('auto180') || G.items.boost('auto')) h += autoCard();
     const busy = S.busy();
     h += `<div class="sec"><h3>遠征中 <small>${busy}/${slots}</small></h3>`;
     if (!busy) h += `<p class="empty">いまは誰も出かけていません</p>`;
@@ -507,13 +523,17 @@
       G.audio.sfx('whoosh');
       renderSheet();
     });
-    const at = G.$('#autoToggle', body);
-    if (at) at.addEventListener('change', () => {
-      st.flags.autoDispatch = at.checked;
-      G.audio.sfx(at.checked ? 'claim' : 'soft');
-      if (at.checked) { const n = S.autoDispatch(G.now()); if (n) U.toast(`リナが ${n} 組を派遣しました`, 'good'); }
-      renderSheet();
-    });
+    G.$$('[data-auto-use]', body).forEach((bt) => bt.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = bt.dataset.autoUse;
+      if (!G.items.cons(id)) { G.audio.sfx('soft'); G.treasury.open('shop'); return; }
+      if (G.items.useBoost(id)) {
+        G.audio.sfx('claim');
+        G.haptic(12);
+        U.toast(`リナ「おまかせください！ ${id === 'auto180' ? '3時間' : '30分'}、しっかり受付しますね」`, 'good');
+        renderSheet();
+      }
+    }));
     U._sig = sheetSig();
   }
 
@@ -644,7 +664,7 @@
     const st = G.state;
     const now = G.now();
     const beds = S.beds();
-    let h = `<div class="sec"><h3>ギルドの仲間 <small>ベッド ${st.adv.length}/${beds}</small>${st.adv.length >= beds && st.fac.bunks < D.FAC.bunks.maxLv ? '<button class="link inline" data-goto-fac="bunks">宿舎を強化</button>' : ''}</h3>`;
+    let h = `<div class="sec"><h3>ギルドの仲間 <small>ベッド ${st.adv.length}/${beds}</small>${st.adv.length >= beds && st.fac.bunks < D.FAC.bunks.maxLv ? '<button class="link inline" data-goto-fac="bunks">宿舎を強化</button>' : ''}${st.adv.some((a) => Object.keys(a.sk || {}).length > 1) ? '<button class="link inline" id="skAutoAll">技をおまかせ</button>' : ''}</h3>`;
     st.adv.slice().sort((a, b) => b.lv - a.lv).forEach((a) => {
       const need = S.expNeed(a.lv);
       const ex = st.active.find((e) => e.party.includes(a.id));
@@ -705,6 +725,16 @@
       renderSheet();
     }));
     G.$$('[data-adv]', body).forEach((c) => c.addEventListener('click', () => showAdvDetail(+c.dataset.adv)));
+    const ska = G.$('#skAutoAll', body);
+    if (ska) ska.addEventListener('click', () => {
+      const n = G.items.autoSkillsAll();
+      G.audio.sfx(n ? 'flash' : 'soft');
+      if (n) G.haptic(14);
+      U.toast(n ? `${n}人の技を、いちばん強い組み合わせにセットしました` : 'みんな、いまのセットがいちばん強い組み合わせです', n ? 'good' : 'info');
+      renderSheet();
+      G.$$('.a-meta .sk', body).forEach((el, i) => { el.style.setProperty('--d', i * 0.06 + 's'); el.classList.add('sk-pop'); });
+      if (n) setTimeout(() => G.audio.sfx('rarity', 2), 160);
+    });
     bindGotoFac(body);
     U._sig = sheetSig();
   }
@@ -742,7 +772,8 @@
       let btn = '';
       if (state === 'max') btn = `<span class="maxed">最大レベル</span>`;
       else if (state === 'building') btn = `<span class="maxed">建設中 <b data-countdown="${st.building.endAt}">${G.fmtClock(st.building.endAt - G.now())}</b></span>`;
-      else if (state === 'locked') btn = `<span class="maxed">ランク${f.rank}で解放</span>`;
+      else if (state === 'locked') btn = `<span class="maxed">${st.rank >= f.rank ? '下の階を<br>先に建てる' : `ランク${f.rank}で解放`}</span>`;
+      else if (state === 'rank') btn = `<span class="maxed">ランク${D.facRankFor(f, lv)}で<br>上限開放</span>`;
       else if (state === 'busy') btn = `<span class="maxed">ほかの建設中</span>`;
       else btn = `<button class="btn sm ${state === 'buildable' ? 'primary' : ''} ${afford ? '' : 'cant'}" data-up="${f.id}" data-cost-gold="${c.gold}" data-cost-mat="${c.mat}">${state === 'buildable' ? '建てる' : '強化'}<span>${IC.coin}${G.fmt(c.gold)}${c.mat ? ` ${IC.gem}${c.mat}` : ''}</span></button>`;
       const now = lv > 0 ? f.effect(lv) : '未建設';
@@ -1068,6 +1099,7 @@
     if (res.tavern > 0) lines.push(`<li>${IC.coin}<span>酒場の売上</span><b data-count="${res.tavern}">0</b></li>`);
     if (res.trained > 0) lines.push(`<li>${IC.sword}<span>訓練で得た経験値</span><b>${G.fmt(res.trained)}</b></li>`);
     if (res.resolved > 0) lines.push(`<li>${IC.play}<span>帰ってきたパーティ</span><b>${res.resolved}組</b></li>`);
+    if (res.autoSent > 0) lines.push(`<li>${IC.people}<span>リナがおまかせで送り出した</span><b>${res.autoSent}組</b></li>`);
     if (res.built) lines.push(`<li>${IC.build}<span>完成した施設</span><b>${D.FAC[res.built].name}</b></li>`);
     const unseen = G.reels.unseen().length;
     const html = `<div class="welcome"><img class="rina-face" alt="" src="${art.rina(144, res.resolved > 0 || res.tavern > 0 ? 'happy' : 'smile')}"><small>留守にしていた時間 ${G.fmtTime(res.away)}${res.capped ? `（上限 ${G.fmtTime(res.cap)}）` : ''}</small><h2>おかえりなさい、マスター！</h2>
