@@ -56,6 +56,7 @@ export function head(meta: PageMeta, env: BuildEnv): string {
   const ogImage = abs(env, meta.og);
   return `
 <meta charset="UTF-8" />
+${noindex ? '' : '<script defer src="/analytics.js?v=20261003" data-ga4-id="G-S2P0JCW50M" data-ga4-host="partners.music-japan.com"></script>'}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>${esc(meta.title)}</title>
 <meta name="description" content="${esc(meta.description)}" />
