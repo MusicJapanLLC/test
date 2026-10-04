@@ -138,8 +138,9 @@
     const sf = (k) => S.starFx(k, s);
     let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed')) * (1 - (ps.speed || 0) / 100) * (1 - sf('speed'));
     const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great') + (ps.great || 0) / 100 + luck + sf('great');
-    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold')) * (1 + (ps.gold || 0) / 100) * (1 + sf('gold'));
-    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior: warrior || knight, expMul: (1 + (ps.exp || 0) / 100) * (1 + sf('exp')) * (bard ? 1.15 : 1), fameMul: bard ? 1.2 : 1, find: (ps.find || 0) + sf('find') + (alch ? 20 : 0), matMul: (1 + (ps.mat || 0) / 100) * (alch ? 1.3 : 1), crit: ps.crit || 0 };
+    const ev = (k) => (G.events && real ? G.events.bonus(k) : 0);
+    const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold')) * (1 + (ps.gold || 0) / 100) * (1 + sf('gold')) * (1 + ev('gold'));
+    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior: warrior || knight, expMul: (1 + (ps.exp || 0) / 100) * (1 + sf('exp')) * (bard ? 1.15 : 1) * (1 + ev('exp')), fameMul: bard ? 1.2 : 1, find: (ps.find || 0) + sf('find') + (alch ? 20 : 0), matMul: (1 + (ps.mat || 0) / 100) * (alch ? 1.3 : 1) * (1 + ev('mat')), crit: ps.crit || 0 };
   };
 
   // ---------------------------------------------------------------- 依頼
@@ -150,7 +151,9 @@
     const k = o.k != null ? o.k : Math.random();
     const sizeMul = [0, 0.55, 0.85, 1, 1.25][size];
     const req = Math.round(G.lerp(area.pow[0], area.pow[1], k) * sizeMul);
-    const monster = o.monster || G.pick(area.monsters);
+    let monster = o.monster || G.pick(area.monsters);
+    // かぼちゃ灯籠祭：手前の土地に、かぼちゃおばけが出る
+    if (!o.monster && G.events && G.events.theme() === 'pumpkin' && areaIdx <= 2 && Math.random() < 0.28) monster = 'pumpkin';
     const md = D.MONSTERS[monster];
     const rew = (r) => G.lerp(r[0], r[1], k) * sizeMul;
     return {
@@ -330,7 +333,7 @@
     let tier;
     if (Math.random() < info.p) {
       const r = Math.random();
-      const legendP = 0.018 + party.filter((a) => a.trait === 'lucky').length * 0.012 + s.fac.alchemy * 0.004;
+      const legendP = 0.018 + party.filter((a) => a.trait === 'lucky').length * 0.012 + s.fac.alchemy * 0.004 + (G.events ? G.events.bonus('legend') : 0);
       tier = r < legendP ? 'legend' : r < legendP + info.great ? 'great' : 'ok';
     } else tier = 'fail';
     if (q.boss && tier !== 'fail') tier = 'legend';
@@ -395,6 +398,9 @@
       } else drop = G.items.rollDrop(Math.random, tier, area.index, party, info.find);
     }
     const loot = G.items && tier !== 'fail' ? G.items.rollLoot(Math.random, tier, area.index, info.find) : [];
+    // お祭りのかぼちゃ飴
+    const candy = G.events ? G.events.dropFor(tier, area.index) * (q.monster === 'pumpkin' ? 2 : 1) : 0;
+    if (candy) { const e = loot.find((x) => x.id === 'candy'); if (e) e.n += candy; else loot.push({ id: 'candy', n: candy }); }
     if (q.abyss && tier !== 'fail') {
       const add = (id, n) => { const e = loot.find((x) => x.id === id); if (e) e.n += n; else loot.push({ id, n }); };
       if (firstClear) add('cry', q.guardian ? 50 : 3);

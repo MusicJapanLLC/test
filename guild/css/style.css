@@ -1189,3 +1189,33 @@ img.ci { width: 18px; height: 18px; vertical-align: -4px; }
 .mirror-fx b { position: absolute; left: 0; top: 0; width: 80px; height: 80px; margin: -40px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 245, 220, 0.9), rgba(120, 140, 255, 0.35) 45%, rgba(20, 30, 80, 0) 70%); animation: mirrorCore 0.7s ease-out both; }
 @keyframes mirrorRing { 0% { transform: scale(0.3); opacity: 1; } 100% { transform: scale(16); opacity: 0; } }
 @keyframes mirrorCore { 0% { transform: scale(0.4); opacity: 0.9; } 60% { opacity: 0.6; } 100% { transform: scale(14); opacity: 0; } }
+#rankBtn { position: relative; }
+#rankBtn.star-ready::after { content: '✦'; position: absolute; left: 34px; top: -4px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; color: #1a1204; background: var(--gold-grad); box-shadow: 0 0 0 2px #0b1330, 0 0 10px rgba(255, 210, 110, 0.8); animation: chipGlow 1.6s ease-in-out infinite; }
+
+/* ================================================================ 期間限定イベント */
+#eventChip { justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px; border-radius: 999px; background: linear-gradient(90deg, rgba(240, 138, 42, 0.35), rgba(58, 36, 80, 0.92)); border: 1px solid rgba(255, 170, 90, 0.7); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35); }
+#eventChip[hidden] { display: none; }
+#eventChip b { font-family: var(--font-head); font-weight: 800; font-size: 11.5px; color: #ffe2b0; letter-spacing: 0.04em; }
+#eventChip small { font-size: 10px; color: #f0d8c0; font-weight: 700; }
+#eventChip .ev-cur { display: inline-flex; align-items: center; gap: 2px; font-family: var(--font-num); font-weight: 800; font-size: 12px; color: #fff; padding-left: 4px; border-left: 1px solid rgba(255, 255, 255, 0.2); }
+#eventChip .ev-cur img { width: 16px; height: 16px; }
+.ev-ic { width: 20px; height: 20px; border-radius: 50%; flex: none; background: radial-gradient(circle at 50% 58%, #ffcf5a 0 14%, #f08a2a 15% 62%, transparent 63%), radial-gradient(circle at 50% 18%, #4a8a3a 0 12%, transparent 13%); }
+#eventChip.weekend { background: linear-gradient(90deg, rgba(255, 214, 106, 0.3), rgba(10, 17, 40, 0.92)); border-color: rgba(255, 214, 106, 0.6); }
+#eventChip.weekend .ev-ic { background: radial-gradient(circle, #ffe9a0 0 30%, #e0a32a 31% 60%, transparent 61%); }
+#eventChip.sakura { background: linear-gradient(90deg, rgba(255, 170, 200, 0.35), rgba(10, 17, 40, 0.92)); border-color: rgba(255, 180, 210, 0.7); }
+#eventChip.sakura .ev-ic { background: radial-gradient(circle, #fff0f6 0 20%, #ff9ac0 21% 60%, transparent 61%); }
+#eventChip.winter .ev-ic, #eventChip.newyear .ev-ic, #eventChip.meteor .ev-ic, #eventChip.summer .ev-ic { background: radial-gradient(circle, #ffffff 0 22%, #9fd0ff 23% 60%, transparent 61%); }
+.event-panel .ev-hero { position: relative; }
+.event-panel.halloween h2 { color: #ffb36a; text-shadow: 0 0 14px rgba(240, 138, 42, 0.5); }
+.event-panel .ev-have { font-size: 12.5px; }
+.event-panel .ev-have b { font-family: var(--font-num); font-size: 18px; color: #ffcf7a; }
+.event-panel .ev-have small { display: block; color: var(--muted); font-size: 10.5px; }
+.ev-shop { display: grid; gap: 6px; text-align: left; max-height: 44vh; overflow-y: auto; margin-top: 8px; }
+.card.ev-item img { width: 40px; height: 40px; border-radius: 10px; flex: none; }
+.card.ev-item .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.card.ev-item b { font-size: 12.5px; }
+.card.ev-item small { font-size: 10.5px; color: var(--muted); }
+.card.ev-item .btn { flex-direction: row; gap: 3px; min-width: 70px; }
+.card.ev-item .btn img { width: 16px; height: 16px; }
+.card.ev-item .btn span { font-family: var(--font-num); font-size: 13px; opacity: 1; }
+.card.ev-item.got { opacity: 0.55; }

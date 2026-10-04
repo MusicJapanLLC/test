@@ -628,7 +628,9 @@
     st.login.last = today;
     st.login.n++;
     const day = ((st.login.n - 1) % 7);
-    const r = DAILY[day];
+    const r = Object.assign({}, DAILY[day]);
+    const lc = G.events ? G.events.bonus('loginCry') : 0;
+    if (lc && r.cry) r.cry *= lc;
     Object.entries(r).forEach(([k, n]) => IT.addCons(k, n));
     G.sim.save(true);
     const cells = DAILY.map((d, i) => {

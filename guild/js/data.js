@@ -111,8 +111,9 @@
     kraken: { name: '港のクラーケン', color: '#8a4ab0', verb: '討伐' },
     griffin: { name: 'グリフォン', color: '#c8a060', verb: '討伐' },
     sentinel: { name: '天翼の守護像', color: '#e8e4f0', verb: '鎮圧' },
+    pumpkin: { name: 'かぼちゃおばけ', color: '#f08a2a', verb: '退治' },
   };
-  D.MONSTER_ORDER = ['slime', 'rabbit', 'wolf', 'mushroom', 'bat', 'golem', 'skeleton', 'knight', 'wyvern', 'dragon', 'crab', 'kraken', 'griffin', 'sentinel'];
+  D.MONSTER_ORDER = ['slime', 'rabbit', 'wolf', 'mushroom', 'bat', 'golem', 'skeleton', 'knight', 'wyvern', 'dragon', 'crab', 'kraken', 'griffin', 'sentinel', 'pumpkin'];
 
   // ---------------- 施設 ----------------
   // floor の順に積み上がる。cost(lv) は「lv → lv+1」に必要な費用。lv=0 は建設。

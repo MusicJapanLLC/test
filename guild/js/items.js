@@ -35,8 +35,10 @@
     robe: { slot: 'armor', icon: 'robe', names: ['旅人のローブ', '魔導士のローブ', '星織りの法衣', '月影の聖衣', '天衣ルミナリア'] },
     charm: { slot: 'acc', icon: 'charm', names: ['木彫りのお守り', '銀の首飾り', '妖精の首飾り', '不死鳥の羽根', '女神の涙'] },
     ring: { slot: 'acc', icon: 'ring', names: ['銅の指輪', '銀の指輪', '紅玉の指輪', '竜眼の指輪', '永遠の環'] },
+    // 期間限定（かぼちゃ灯籠祭の交換所だけ）
+    jack: { slot: 'acc', icon: 'jack', eventOnly: true, names: ['かぼちゃのお面', '灯籠かぼちゃ', 'ゆらめくジャック', '月夜のジャック', '灯籠祭の大王冠'] },
   };
-  IT.EQUIP_IDS = Object.keys(IT.EQUIP);
+  IT.EQUIP_IDS = Object.keys(IT.EQUIP).filter((id) => !IT.EQUIP[id].eventOnly);
 
   // 能力
   IT.STAT = {
@@ -98,10 +100,11 @@
     key: { name: '宝箱の鍵', desc: '黄金の宝箱を1回開けられる', icon: 'key', rarity: 2, use: 'key' },
     stone: { name: '強化石', desc: '装備の強化に使う。いらない装備を分解しても手に入る', icon: 'stone', rarity: 0 },
     book: { name: '閃きの書', desc: '冒険者1人が、新しい技を1つ閃く（覚えている技なら技Lvが上がる）', icon: 'book', rarity: 3, use: 'book' },
+    candy: { name: 'かぼちゃ飴', desc: 'かぼちゃ灯籠祭のあいだ、依頼の成功で手に入る。お祭りの交換所で限定の品と交換できる', icon: 'candy', rarity: 3 },
     shard: { name: '虹の欠片', desc: 'URの装備を限界突破するのに使う。深淵の迷宮の守護者や、URの分解で手に入る', icon: 'shard', rarity: 4 },
     expbook: { name: '経験の書', desc: '冒険者1人に、たっぷり経験値を与える', icon: 'book2', rarity: 1, use: 'exp' },
   };
-  IT.CONS_ORDER = ['hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'stone'];
+  IT.CONS_ORDER = ['hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'candy', 'stone'];
   IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ', feast: '宴' };
 
   // ---------------------------------------------------------------- 抽選

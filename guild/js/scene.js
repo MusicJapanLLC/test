@@ -165,6 +165,16 @@
     if (hit) { tapAgent(hit); return; }
     // 掲示板をタップしたら依頼を開く
     if (wx > 106 && wx < 174 && wy > -94 && wy < -30) { G.audio.sfx('tap'); G.ui.openSheet('quests'); return; }
+    // 深淵の扉
+    if (SC.abyssDoorHit(wx, wy)) {
+      const ab = G.state.abyss;
+      if (ab && ab.open) {
+        G.audio.sfx('open');
+        G.ui.openSheet('quests');
+        setTimeout(() => { const el = G.$('.card.abyss, .card.abyss-act'); if (el) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); el.classList.add('flash'); } }, 80);
+      } else { G.audio.sfx('soft'); G.ui.toast('古い扉に鎖がかかっている…（ランク6で開く）', 'info'); }
+      return;
+    }
     // 階
     const f = Math.floor(-wy / FH);
     const nv = visibleFloors();
@@ -947,6 +957,16 @@
 
   function drawSkyObjects(L, R, n, duskK) {
     const viewTop = camTop, viewBot = camTop + cssH / s;
+    // かぼちゃ灯籠祭：夕方から夜にコウモリが飛ぶ
+    if (G.events && G.events.theme() === 'pumpkin' && (n > 0.2 || duskK > 0.2)) {
+      for (let i = 0; i < 5; i++) {
+        const x = L + ((time * (16 + i * 5) + i * 140) % (R - L + 80)) - 40;
+        const y = camTop + 60 + i * 34 + Math.sin(time * 1.3 + i * 2) * 14;
+        const w = Math.sin(time * 12 + i * 3);
+        ctx.fillStyle = 'rgba(30,20,40,0.85)';
+        art.poly(ctx, [x, y, x - 6, y - 3 - w * 3, x - 3, y + 0.5, x - 1, y + 1.5, x + 1, y + 1.5, x + 3, y + 0.5, x + 6, y - 3 - w * 3], 'rgba(30,20,40,0.85)');
+      }
+    }
     // 星
     if (n > 0.05) {
       for (let i = 0; i < 70; i++) {
@@ -1187,6 +1207,19 @@
     art.poly(ctx, [lx - 5, -46, lx + 5, -46, lx + 3, -56, lx - 3, -56], G.mix('#3a3a44', '#15151d', n));
     art.poly(ctx, [lx - 3, -47, lx + 3, -47, lx + 2, -54, lx - 2, -54], n > 0.3 ? '#ffd88a' : '#d8e4ea');
     art.poly(ctx, [lx - 6, -56, lx + 6, -56, lx, -61], G.mix('#3a3a44', '#15151d', n));
+    // かぼちゃ灯籠祭の飾り
+    if (G.events && G.events.theme() === 'pumpkin') {
+      [[8, 1], [31, 0.8], [WL - 14, 0.7]].forEach(([x, k], i) => {
+        const g = 0.65 + Math.sin(time * 5 + i * 2) * 0.25;
+        art.facet(ctx, x, -5.5 * k, 7 * k, 5.6 * k, 10, G.mix('#f08a2a', '#6a3a1a', n * 0.5), 0.2, 0.18);
+        art.poly(ctx, [x - 0.6, -11 * k, x + 0.8, -11 * k, x + 1.2, -14 * k, x, -13.6 * k], '#4a8a3a');
+        const ey = G.rgba('#ffe28a', g);
+        art.poly(ctx, [x - 4 * k, -6.6 * k, x - 1.4 * k, -8 * k, x - 1.8 * k, -5.2 * k], ey);
+        art.poly(ctx, [x + 4 * k, -6.6 * k, x + 1.4 * k, -8 * k, x + 1.8 * k, -5.2 * k], ey);
+        art.poly(ctx, [x - 3.6 * k, -3.6 * k, x, -2.4 * k, x + 3.6 * k, -3.6 * k, x, -1.6 * k], ey);
+        lightGlowList().push([x, -6 * k, 22, 0.7 * g, '#ff9a3a']);
+      });
+    }
     // 樽
     art.facetPoly(ctx, [38, 0, 48, 0, 49, -7, 48, -14, 38, -14, 37, -7], G.mix('#9a6a3a', '#2e2430', n * 0.7), 0.12);
     art.poly(ctx, [37.3, -4, 48.7, -4, 48.8, -5.2, 37.2, -5.2], G.mix('#5a4a3a', '#1e1820', n * 0.7));
@@ -1498,6 +1531,40 @@
 
   function lightGlowList() { return SC._lights || (SC._lights = []); }
 
+  // 深淵の扉：ランク6で封印が解ける。開くと紫の光がもれる
+  const ABYSS_DOOR = { x: 358, w: 20, h: 28 };
+  function drawAbyssDoor(st, bot) {
+    const ab = st.abyss;
+    const open = !!(ab && ab.open);
+    const { x, w, h } = ABYSS_DOOR;
+    // 石のアーチ
+    art.poly(ctx, [x - 3, bot, x + w + 3, bot, x + w + 3, bot - h + 6, x + w / 2, bot - h - 3, x - 3, bot - h + 6], '#6e6a72');
+    art.poly(ctx, [x - 3, bot, x, bot, x, bot - h + 6, x + w / 2, bot - h, x + w / 2, bot - h - 3, x - 3, bot - h + 6], '#8a868e');
+    // 扉の中
+    const glow = open ? 0.6 + Math.sin(time * 2.2) * 0.25 : 0;
+    art.poly(ctx, [x, bot, x + w, bot, x + w, bot - h + 7, x + w / 2, bot - h + 1, x, bot - h + 7], open ? G.mix('#2a1648', '#7a4ac8', glow * 0.6) : '#3a2a20');
+    if (open) {
+      for (let i = 0; i < 3; i++) {
+        const k = (time * 0.35 + i / 3) % 1;
+        ctx.fillStyle = `rgba(210,170,255,${0.8 * Math.sin(k * Math.PI)})`;
+        ctx.fillRect(x + 4 + i * 6, bot - 4 - k * 26, 1.4, 1.4);
+      }
+      lightGlowList().push([x + w / 2, bot - 12, 34, 0.55 * glow, '#b88aff']);
+      // 小さな札
+      art.poly(ctx, [x + 3, bot - h - 9, x + w - 3, bot - h - 9, x + w - 3, bot - h - 4, x + 3, bot - h - 4], '#e8dcc0');
+      ctx.fillStyle = '#5a3a9a';
+      ctx.font = '700 4px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('深淵', x + w / 2, bot - h - 5.2);
+    } else {
+      // 封印の鎖
+      art.poly(ctx, [x, bot - h + 9, x + w, bot - 6, x + w, bot - 8, x, bot - h + 7], '#9a948a');
+      art.poly(ctx, [x + w, bot - h + 9, x, bot - 6, x, bot - 8, x + w, bot - h + 7], '#7a746c');
+      art.facet(ctx, x + w / 2, bot - h / 2 - 1, 2.6, 3, 6, '#c8a040', 0, 0.2);
+    }
+  }
+  SC.abyssDoorHit = (wx, wy) => wx > ABYSS_DOOR.x - 4 && wx < ABYSS_DOOR.x + ABYSS_DOOR.w + 4 && wy > -ABYSS_DOOR.h - 10 && wy < 2;
+
   function drawRoom(st, f, fac, lv) {
     const bot = floorY(f), top = floorY(f + 1) + 9;
     const lights = lightGlowList();
@@ -1551,6 +1618,8 @@
             art.poly(ctx, [305, bot - 10, 305 + Math.sin(a) * 12 - 2, bot - 10 - Math.cos(a) * 14, 305 + Math.sin(a) * 12 + 2, bot - 10 - Math.cos(a) * 14], G.shade('#4f9445', i * 0.05));
           }
         }
+        // 階段下の古い扉（深淵の迷宮）
+        drawAbyssDoor(st, bot);
         // 掲示板
         drawBoard(st, bot);
         // ベンチ
@@ -1603,6 +1672,24 @@
           [300, 314].forEach((x, i) => {
             art.facetPoly(ctx, [x - 7, bot - 2, x + 7, bot - 2, x + 8, bot - 10, x + 7, bot - 18, x - 7, bot - 18, x - 8, bot - 10], '#9a6a3a', 0.12);
           });
+        }
+        // 宴の飾り（宴のあいだ）
+        if (G.items && G.items.boost('feast')) {
+          const cols = ['#e05a4a', '#f0c94a', '#5ac08a', '#4a8ae0', '#c27cff'];
+          for (let r = 0; r < 2; r++) {
+            const y0 = top + 6 + r * 10, x0 = IL + 50 + r * 20, x1 = 250 - r * 10;
+            ctx.strokeStyle = '#5a3a26'; ctx.lineWidth = 0.6;
+            ctx.beginPath(); ctx.moveTo(x0, y0); ctx.quadraticCurveTo((x0 + x1) / 2, y0 + 10, x1, y0); ctx.stroke();
+            for (let i = 0; i < 9; i++) {
+              const k = (i + 0.5) / 9;
+              const px = G.lerp(x0, x1, k), py = y0 + Math.sin(k * Math.PI) * 7.5;
+              const sw = Math.sin(time * 3 + i + r) * 0.6;
+              art.poly(ctx, [px - 3, py, px + 3, py, px + sw, py + 6], cols[(i + r * 2) % cols.length]);
+            }
+          }
+          if (Math.random() < 0.06) {
+            addPart({ type: 'tri', x: G.rand(IL + 40, 250), y: top + 10, vx: G.rand(-6, 6), vy: G.rand(4, 12), g: 6, life: 0, max: 2.6, col: G.pick(cols), size: 1.4, rot: Math.random() * 6, vr: G.rand(-4, 4) });
+          }
         }
         // 吊りランプ
         [140, 200].forEach((x) => {
@@ -1894,10 +1981,10 @@
     const k = 0.18 + n * 0.75;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    lights.forEach(([x, y, r, a]) => {
+    lights.forEach(([x, y, r, a, col]) => {
       const g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, `rgba(255,170,80,${0.32 * a * k})`);
-      g.addColorStop(1, 'rgba(255,170,80,0)');
+      g.addColorStop(0, col ? G.rgba(col, 0.5 * a * (0.5 + k)) : `rgba(255,170,80,${0.32 * a * k})`);
+      g.addColorStop(1, col ? G.rgba(col, 0) : 'rgba(255,170,80,0)');
       ctx.fillStyle = g;
       ctx.fillRect(x - r, y - r, r * 2, r * 2);
     });

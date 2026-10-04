@@ -64,6 +64,7 @@
     G.$('#cryPill .ic').innerHTML = G.treasury.CRY;
     G.$('#cryPill').addEventListener('click', () => { G.audio.init(); G.treasury.open('shop'); });
     G.$('#boostChip').addEventListener('click', () => { G.audio.init(); G.treasury.open('bag'); });
+    G.$('#eventChip').addEventListener('click', () => G.events.open());
     G.on('boost', () => { boostKey = ''; U.refreshHud(); });
     G.on('started', () => { if (G.state.flags.tut >= 90) setTimeout(() => G.treasury.checkDaily(), 900); });
     G.$('#missionBtn').addEventListener('click', () => { G.audio.init(); G.haptic(6); if (sheetTab === 'missions') U.closeSheet(); else U.openSheet('missions'); });
@@ -145,6 +146,11 @@
     if (instant) { disp.gold = st.gold - heldGold; disp.mat = st.mat; }
     G.$('#rankNum').textContent = st.rank;
     G.$('#rankTitle').textContent = D.RANK_TITLES[st.rank - 1];
+    // 灯せる星があれば、ランクの紋章に小さな星
+    const pr = st.prestige;
+    const canStar = !!(pr && pr.stars > 0 && S.STAR_NODES.some((n) => S.starOpen(n.id) && S.starLv(n.id) < n.max && pr.stars >= S.starCost(n.id)));
+    const rbtn = G.$('#rankBtn');
+    rbtn.classList.toggle('star-ready', canStar || (S.canRebirth() && !(pr && pr.runs)));
     const lo = D.RANK_FAME[st.rank - 1], hi = D.RANK_FAME[st.rank];
     const fk = hi ? G.clamp((st.fame - lo) / (hi - lo), 0, 1) : 1;
     G.$('#fameFill').style.width = fk * 100 + '%';
@@ -232,6 +238,7 @@
     if (hudTimer <= 0) {
       hudTimer = 0.25;
       U.refreshHud();
+      if (G.events) G.events.renderChip();
       if (sheetTab) tickSheet();
     }
     U.fx.update(dt);

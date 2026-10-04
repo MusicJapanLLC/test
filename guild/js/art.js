@@ -148,6 +148,16 @@
   // ---------- 帽子・兜 ----------
   function headwear(ctx, L, t, sway) {
     const cls = L.role ? null : L.cls;
+    // かぼちゃ灯籠祭：リナは魔女の帽子
+    if (L.role === 'rina' && G.events && G.events.theme() === 'pumpkin') {
+      const tip = 4 + Math.sin(t * 1.6) * 0.8 + sway;
+      poly(ctx, [-10, -30, 10.4, -30, 7.6, -32.4, -7.4, -32.4], C('#2a1a3a'));
+      poly(ctx, [-6, -32, 6, -32, tip + 2, -42, tip + 7, -44, tip + 1, -45], C('#3a2450'));
+      poly(ctx, [-6, -32, 0, -32, tip + 1, -45], C('#4a3062'));
+      poly(ctx, [-6, -32.4, 6, -32.4, 5.6, -34.2, -5.8, -34.2], C('#f08a2a'));
+      star(ctx, 3, -38, 1.2, C('#ffe28a'));
+      return;
+    }
     if (L.hood) {
       poly(ctx, [-7.4, -22.5, -7.8, -29, -5.6, -34.4, -1, -36.4, 3.6, -35.6, 6.8, -32.6, 7.3, -28.4, 5.6, -30.4, 3.8, -31.2, 1, -31.4, -2.6, -30.6, -4, -27, -4.4, -21.5], C(L.hood));
       poly(ctx, [-5.6, -34.4, -1, -36.4, 3.6, -35.6, 1, -34.4, -3.4, -33], C(L.hood, 0.14));
@@ -846,6 +856,29 @@
     ctx.restore();
     ctx.restore();
   };
+  // ---- お祭り：かぼちゃおばけ ----
+  M.pumpkin = (ctx, s) => {
+    const t = s.t, at = s.atk || 0;
+    const c = s.color || '#f08a2a';
+    const hop = Math.abs(Math.sin(t * 3.2)) * 4 + at * 4;
+    ellipse(ctx, 0, 0, 14 - hop * 0.6, 2.6, 'rgba(0,0,0,0.2)');
+    ctx.save(); ctx.translate(at * 6, -hop);
+    // ぼろ布のマント
+    const fl = Math.sin(t * 5) * 1.5;
+    poly(ctx, [-11, -12, 11, -12, 13 + fl, 0, 6, -3, 0, 1, -6, -3, -13 - fl, 0], '#3a2a4a');
+    facetPoly(ctx, [-15, -16, -13, -26, -6, -31, 6, -31, 13, -26, 15, -16, 10, -9, -10, -9], c, 0.2);
+    [-7, 0, 7].forEach((x) => poly(ctx, [x - 0.8, -30.5, x + 0.8, -30.5, x + 0.8, -9.5, x - 0.8, -9.5], G.rgba('#8a3a08', 0.35)));
+    poly(ctx, [-1.5, -31, 1.8, -31, 3, -37, 0, -36.5], '#4a8a3a');
+    poly(ctx, [1.8, -34, 7, -36, 5, -33], '#5aa04a');
+    const g = 0.7 + Math.sin(t * 6) * 0.3;
+    const ey = G.rgba('#ffe28a', g);
+    poly(ctx, [-9, -21, -3, -24, -4, -18], ey);
+    poly(ctx, [9, -21, 3, -24, 4, -18], ey);
+    poly(ctx, [-8, -14, -4, -12, 0, -14.5, 4, -12, 8, -14, 5, -11, 0, -12.5, -5, -11], ey);
+    ctx.fillStyle = G.rgba('#ffcf5a', 0.18 * g);
+    ctx.beginPath(); ctx.arc(0, -18, 14, 0, TAU); ctx.fill();
+    ctx.restore();
+  };
   M.skeleton = (ctx, s) => {
     const t = s.t;
     const c = s.color || '#ece6d6';
@@ -1072,7 +1105,7 @@
   // ---------- 受付のリナ（表情つきの立ち絵・胸から上） ----------
   //  expr: smile / happy / wink / surprise / worry / proud
   art.RINA_EXPR = ['smile', 'happy', 'wink', 'surprise', 'worry', 'proud'];
-  art.rinaCanvas = (size = 96, expr = 'smile', bg = true) => art.cached('rina:' + expr + (bg ? '' : ':n'), size, (ctx, sz) => {
+  art.rinaCanvas = (size = 96, expr = 'smile', bg = true) => art.cached('rina:' + expr + (bg ? '' : ':n') + (G.events && G.events.theme() === 'pumpkin' ? ':hw' : ''), size, (ctx, sz) => {
     const u = sz / 100;
     ctx.scale(u, u);
     if (bg) {
@@ -1182,6 +1215,14 @@
     poly(ctx, [68, 22, 78, 14, 82, 24, 74, 28], '#d4493a');
     poly(ctx, [68, 22, 70, 32, 62, 34, 64, 26], '#b83a2e');
     facet(ctx, 69, 25, 3, 3, 6, '#e8bd4c', 0.3, 0.2);
+    // かぼちゃ灯籠祭：魔女の帽子
+    if (G.events && G.events.theme() === 'pumpkin') {
+      poly(ctx, [18, 22, 84, 20, 76, 14, 26, 15], '#2a1a3a');
+      poly(ctx, [32, 16, 70, 15, 64, 2, 78, -6, 58, -4, 48, 4], '#3a2450');
+      poly(ctx, [32, 16, 50, 15.5, 48, 4], '#4a3062');
+      poly(ctx, [31, 16, 71, 15, 70, 11, 32, 12], '#f08a2a');
+      star(ctx, 58, 8, 2.2, '#ffe28a');
+    }
     // ウインクの星
     if (expr === 'wink') star(ctx, 68, 40, 2.6, '#ffe28a');
     if (expr === 'happy' || expr === 'proud') { star(ctx, 22, 26, 2.2, '#ffe28a'); star(ctx, 80, 50, 1.6, '#fff4c0'); }
@@ -1340,6 +1381,22 @@
         poly(ctx, [-0.05, -0.02, 0.62, -0.02, 0.62, 0.02, -0.05, 0.02], '#d8c8a8');
         poly(ctx, [0.6, -0.08, 0.82, 0, 0.6, 0.08], metal);
         break;
+      case 'jack': {
+        // 限定：かぼちゃの冠（ジャック・オ・ランタン）
+        const glow = 0.6 + Math.sin(t * 3) * 0.3;
+        facet(ctx, 0, 0.12, 0.72, 0.6, 12, '#f08a2a', 0.2, 0.2);
+        [-0.36, 0, 0.36].forEach((x) => poly(ctx, [x - 0.04, -0.44, x + 0.04, -0.44, x + 0.04, 0.68, x - 0.04, 0.68], 'rgba(150,60,10,0.4)'));
+        poly(ctx, [-0.08, -0.46, 0.1, -0.46, 0.16, -0.72, 0.0, -0.7], '#4a8a3a');
+        const ey = G.rgba('#ffe28a', glow);
+        poly(ctx, [-0.42, -0.06, -0.14, -0.2, -0.18, 0.04], ey);
+        poly(ctx, [0.42, -0.06, 0.14, -0.2, 0.18, 0.04], ey);
+        poly(ctx, [-0.4, 0.24, -0.2, 0.32, 0, 0.22, 0.2, 0.32, 0.4, 0.24, 0.24, 0.46, 0, 0.4, -0.24, 0.46], ey);
+        if (r >= 3) {
+          poly(ctx, [-0.6, -0.42, -0.4, -0.86, -0.2, -0.5, 0, -0.96, 0.2, -0.5, 0.4, -0.86, 0.6, -0.42], r === 4 ? rainbow(t) : '#ffd36a');
+          facet(ctx, 0, -0.62, 0.08, 0.08, 6, '#ff5a8a', 0, 0.2);
+        }
+        break;
+      }
       case 'lance':
         ctx.rotate(Math.PI / 4);
         poly(ctx, [-0.05, 0.95, 0.05, 0.95, 0.05, -0.3, -0.05, -0.3], wood);
@@ -1521,6 +1578,19 @@
         poly(ctx, [-0.62, -0.74, -0.46, -0.74, -0.46, 0.68, -0.62, 0.68], G.shade(cv, -0.3));
         if (id === 'book') art.bulb(ctx, 0.08, -0.06, 0.24, 0.6, t);
         else star(ctx, 0.08, -0.04, 0.32, '#ffd36a');
+        break;
+      }
+      case 'candy': {
+        // かぼちゃ飴（包み紙つき）
+        poly(ctx, [-0.92, -0.26, -0.5, -0.1, -0.5, 0.1, -0.92, 0.26, -0.82, 0], '#7a4ab0');
+        poly(ctx, [0.92, -0.26, 0.5, -0.1, 0.5, 0.1, 0.92, 0.26, 0.82, 0], '#7a4ab0');
+        facet(ctx, 0, 0, 0.56, 0.5, 10, '#f08a2a', 0.2, 0.2);
+        [-0.28, 0, 0.28].forEach((x) => poly(ctx, [x - 0.03, -0.46, x + 0.03, -0.46, x + 0.03, 0.46, x - 0.03, 0.46], 'rgba(160,70,10,0.45)'));
+        poly(ctx, [-0.05, -0.5, 0.08, -0.5, 0.12, -0.72, -0.02, -0.7], '#4a8a3a');
+        poly(ctx, [-0.3, -0.12, -0.14, -0.2, -0.16, -0.04], '#3a1a08');
+        poly(ctx, [0.3, -0.12, 0.14, -0.2, 0.16, -0.04], '#3a1a08');
+        poly(ctx, [-0.26, 0.12, 0.26, 0.12, 0.12, 0.26, 0, 0.18, -0.12, 0.26], '#3a1a08');
+        poly(ctx, [-0.36, -0.3, -0.18, -0.4, -0.22, -0.26], 'rgba(255,255,255,0.55)');
         break;
       }
       case 'shard': {

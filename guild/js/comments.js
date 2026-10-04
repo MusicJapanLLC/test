@@ -294,6 +294,12 @@
       lastAuthor = a.key;
     }
 
+    // お祭りのひとこと
+    if (G.events && G.events.theme() === 'pumpkin' && rnd() < 0.6) {
+      const HW = ['トリック・オア・トリート！', 'かぼちゃ飴ちょうだい〜', '灯籠祭、今年もきたね', 'ギルドの飾りつけかわいい', 'かぼちゃおばけ、ちょっとかわいい', '仮装していこうかな'];
+      const who = pickW(rnd, Object.keys(CM.PERSONAS).filter((k) => !CM.PERSONAS[k].rival), (k) => CM.PERSONAS[k].w || 1);
+      out.push({ id: 'hw' + out.length, t: Math.min(dur, 0.8 + rnd() * dur * 0.6), a: 'p:' + who, text: HW[Math.floor(rnd() * HW.length)], likes: 10 + Math.round(rnd() * 30), topic: 'event', replies: [] });
+    }
     // リナ（必ず1つ・ときどき噛む）
     const rinaBank = f.drop && f.dropRank >= 2 && rnd() < 0.5 ? RINA.drop : RINA[f.tier];
     let rinaText = fill(rinaBank[Math.floor(rnd() * rinaBank.length)], ctx);
