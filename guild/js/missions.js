@@ -19,6 +19,7 @@
     { id: 'build', text: '施設を{n}回 建てる・強化する', stat: 'upgrades', n: [1, 2], rw: { finish: 1 } },
     { id: 'tips', text: '酒場のチップを{n}回受け取る', stat: 'tips', n: [6, 10], rw: { cry: 10 }, need: (st) => st.fac.tavern > 0 && st.fac.tavern < 4 },
     { id: 'use', text: '持ち物を{n}個使う', stat: 'itemsUsed', n: [1, 2], rw: { cry: 10 } },
+    { id: 'fish', text: '裏の桟橋で魚を{n}匹釣る', stat: 'fish', n: [2, 3], rw: { cry: 10, stone: 3 }, need: (st) => st.flags.tut >= 90 },
     { id: 'mat', text: '素材を{n}個集める', stat: 'matGot', n: [5, 10, 15], rw: { stone: 5 } },
     { id: 'abyss', text: '深淵の迷宮に{n}回挑む', stat: 'abyssRuns', n: [1, 2], rw: { cry: 20 }, need: (st) => !!(st.abyss && st.abyss.open) },
   ];

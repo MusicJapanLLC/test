@@ -65,6 +65,15 @@
     G.$('#cryPill').addEventListener('click', () => { G.audio.init(); G.treasury.open('shop'); });
     G.$('#boostChip').addEventListener('click', () => { G.audio.init(); G.treasury.open('bag'); });
     G.$('#eventChip').addEventListener('click', () => G.events.open());
+    G.$('#fishBtn').addEventListener('click', () => { G.audio.init(); if (G.fishing) G.fishing.open(); });
+    // みんな出かけたら、リナが釣りをすすめる（1回の起動につき1度）
+    let fishTipShown = false;
+    G.on('dispatch', () => {
+      const st = G.state;
+      if (fishTipShown || st.flags.tut < 90 || !st.adv.length || !st.adv.every((a) => a.status === 'away')) return;
+      fishTipShown = true;
+      setTimeout(() => U.toast('リナ「みんな出かけちゃいましたね。裏の桟橋で釣りでもどうです？」', 'info', 'fishtip'), 1400);
+    });
     G.on('boost', (k) => {
       boostKey = '';
       if (k === 'auto') { const n = S.autoDispatch(G.now()); if (n) setTimeout(() => U.toast(`リナが ${n} 組を派遣しました`, 'good'), 600); }
@@ -195,6 +204,11 @@
     const rb = G.$('#tab-reels .badge');
     rb.hidden = !unseen.length;
     rb.textContent = unseen.length > 99 ? '99+' : unseen.length;
+    const fb = G.$('#fishBtn');
+    if (fb) {
+      fb.hidden = st.flags.tut < 90;
+      fb.classList.toggle('idle', st.adv.length > 0 && st.adv.every((a) => a.status === 'away'));
+    }
     const sub = G.$('#reelSub');
     sub.textContent = unseen.length ? `${unseen.length}本` : '冒険譚';
     G.$('#tab-reels').classList.toggle('has', unseen.length > 0);
