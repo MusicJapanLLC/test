@@ -598,7 +598,6 @@
     if (reel.digest) return true;
     return firedFor === reel && rt >= planOf(reel).finishT + 0.1;
   }
-  let skipNoted = false;
   function claim(reel, quick) {
     if (rewatch || reel.claimed) return;
     const st = G.state;
@@ -612,12 +611,8 @@
       st.streak++;
       st.stats.witnessed = (st.stats.witnessed || 0) + 1;
     } else {
-      const lost = st.streak;
+      // 飛ばしても責めない。連続視聴ボーナスは静かに次の一本から数え直す
       st.streak = 0;
-      if (!skipNoted && !reel.digest) {
-        skipNoted = true;
-        G.ui.toast(lost ? `途中で飛ばしたので、連続視聴ボーナス（${lost}本）が途切れました` : '敵を倒すところまで見ると、ゴールド+20%と贈り物がもらえます', 'info', 'skip');
-      }
     }
     sessionCount++;
     sessionGold += res.gold;

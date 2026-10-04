@@ -95,7 +95,8 @@
       <div class="chips">${[['all', 'すべて'], ['weapon', '武器'], ['armor', '防具'], ['acc', '装飾品']].map(([k, n]) => `<button class="chip ${gearSlot === k ? 'on' : ''}" data-gslot="${k}">${n}</button>`).join('')}</div>
       <label class="sort"><span class="sr-only">並べ替え</span><select id="gearSort">${[['rarity', 'レア度順'], ['level', 'Lv順'], ['plus', '強化値順'], ['new', '新しい順']].map(([k, n]) => `<option value="${k}" ${gearSort === k ? 'selected' : ''}>${n}</option>`).join('')}</select></label>
     </div>
-    <div class="gear-actions"><button class="btn sm primary" id="gAuto">おまかせ装備</button><button class="btn sm ghost" id="gBulk">まとめて分解</button><span class="stone-count">${consIcon('stone')}<b>${G.fmt(IT.cons('stone'))}</b></span></div>`;
+    <div class="gear-actions"><button class="btn sm primary" id="gAuto">おまかせ装備</button><button class="btn sm go" id="gEnh">まとめて強化</button><button class="btn sm ghost" id="gBulk">まとめて分解</button><span class="stone-count">${consIcon('stone')}<b>${G.fmt(IT.cons('stone'))}</b></span></div>
+    <label class="auto auto-enh ${st.settings.autoEnh ? 'on' : ''}"><span><b>自動で強化</b><small>1分ごとに、余ったゴールドの2割までで装備中の品を強化（施設の費用は残します）</small></span><input type="checkbox" id="autoEnh" ${st.settings.autoEnh ? 'checked' : ''}><i class="sw"></i></label>`;
     h += `<div class="sec"><h3>装備品 <small>${(st.items || []).length}/150</small><span class="h-right">図鑑 ${dex}/${IT.EQUIP_IDS.length * 5}</span></h3>`;
     if (!items.length) h += `<p class="empty">${gearSlot === 'all' ? 'まだ装備品がありません。冒険譚の宝箱や宝物庫の黄金の宝箱で手に入ります。' : 'この種類の装備はまだありません。'}</p>`;
     else {
@@ -209,6 +210,9 @@
       G.ui.renderSheet();
     });
     on('#gBulk', bulkDismantle);
+    on('#gEnh', () => T.enhanceMenu());
+    const ae = G.$('#autoEnh', body);
+    if (ae) ae.addEventListener('change', () => { G.state.settings.autoEnh = ae.checked; G.audio.sfx(ae.checked ? 'claim' : 'soft'); G.sim.save(); G.ui.renderSheet(); });
     G.$$('[data-use]', body).forEach((b) => b.addEventListener('click', () => useCons(b.dataset.use)));
     G.$$('[data-buy]', body).forEach((b) => b.addEventListener('click', () => buy(b.dataset.buy)));
     on('#shFree', () => {
@@ -408,6 +412,50 @@
     G.sim.save();
     setTimeout(() => T.showItem(u, true), 900);
   }
+  // まとめて強化：使うゴールドを選ぶ → 結果を一覧で
+  T.enhanceMenu = function (who) {
+    const st = G.state;
+    G.audio.init();
+    G.audio.sfx('tap');
+    const eq = (who ? [who] : st.adv).reduce((n, a) => n + IT.equipped(a).length, 0);
+    if (!eq) { G.ui.toast('装備している品がありません。「おまかせ装備」で装備させましょう', 'info'); return; }
+    const opt = (k, label) => ({ text: `${label}（${G.fmt(Math.floor(st.gold * k))}G）`, cls: k >= 1 ? 'danger' : 'ghost', fn: () => setTimeout(() => runEnhance(Math.floor(st.gold * k), who), 220) });
+    G.ui.modal(`<div class="confirm"><h2>まとめて強化</h2><p>${who ? `${G.esc(who.name)}の` : 'みんなの'}装備中の品を、安い順に強化します。<br>+6 からは失敗することがあります（壊れません）。</p><p class="hint">強化石 ${G.fmt(IT.cons('stone'))}個 ・ 所持 ${G.fmt(st.gold)}G</p></div>`, [opt(0.3, '3割まで'), opt(0.6, '6割まで'), opt(1, 'ぜんぶ使う')], { cls: 'wide' });
+  };
+  function runEnhance(budget, who) {
+    const r = IT.autoEnhance(budget, who);
+    if (!r.tries) {
+      G.audio.sfx('error');
+      G.ui.toast(r.why === 'stone' ? '強化石が足りません。いらない装備を分解すると手に入ります' : r.why === 'max' ? '装備中の品はすべて最大まで強化されています' : 'ゴールドが足りません', 'bad');
+      return;
+    }
+    G.audio.sfx('clank');
+    G.audio.sfx(r.ok ? 'upgrade' : 'error', 3);
+    G.haptic(20);
+    const rows = Object.values(r.items).filter((x) => x.to !== x.from || true).map((x) => `<li class="r${x.rarity}"><span>${G.esc(x.name)}</span><b>+${x.from} → <em>+${x.to}</em></b></li>`).join('');
+    G.ui.modal(`<div class="enh-sum"><h2>まとめて強化 完了</h2><p><b>${r.tries}</b>回（成功 <b class="ok">${r.ok}</b>・失敗 ${r.ng}） ・ ${G.fmt(r.spent)}G ・ 強化石 ${r.stones}</p><ul>${rows}</ul>${r.why === 'stone' ? '<p class="hint">強化石が尽きました。いらない装備を分解すると手に入ります</p>' : ''}</div>`, [{ text: 'OK', cls: 'primary', fn: () => G.ui.renderSheet() }], { cls: 'wide', onShow: () => { if (r.ok >= 3) G.ui.fx.confetti(); } });
+    G.sim.save();
+    G.ui.refreshHud();
+  }
+  // 自動強化（1分ごと）：施設の次の費用を残し、余りの2割まで
+  let autoT = 0;
+  T.autoTick = function (dt) {
+    const st = G.state;
+    if (!st || !st.settings.autoEnh) return;
+    autoT += dt;
+    if (autoT < 60) return;
+    autoT = 0;
+    let reserve = 0;
+    G.D.FACILITIES.forEach((f) => { const s2 = G.sim.facState(f.id); if (s2 === 'buildable' || s2 === 'upgradable') { const c = G.sim.facCost(f.id); if (!reserve || c.gold < reserve) reserve = c.gold; } });
+    const budget = Math.floor(Math.max(0, st.gold - reserve) * 0.2);
+    if (budget <= 0) return;
+    const r = IT.autoEnhance(budget);
+    if (r.ok) {
+      const best = Object.values(r.items).sort((a, b) => b.to - a.to)[0];
+      G.ui.toast(`自動強化：${r.ok}回成功（${best ? `《${best.name}》+${best.to}` : ''}）`, 'good', 'autoenh');
+      G.ui.refreshHud();
+    }
+  };
   function bulkDismantle() {
     G.audio.sfx('tap');
     const st = G.state;
@@ -569,11 +617,26 @@
     const statList = IT.STAT_IDS.filter((k) => sAll[k]).map((k) => `<span>${IT.STAT[k].name}<b>${pct(sAll[k])}</b></span>`).join('') || '<span class="none">装備や技で能力が上がります</span>';
     const sb = IT.setBonus(a);
     const setHtml = sb ? `<div class="set-bonus t${sb.tier}"><b>${sb.name}</b><span>${sb.desc}</span></div>` : '<div class="set-bonus none"><span>3枠を SR 以上でそろえると「そろいボーナス」</span></div>';
-    const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}</p>
+    // 熟練（職業ごとの★）
+    const S = G.sim;
+    const mast = S.unlockedClasses().map((c) => {
+      const n = S.mastStars(a, c);
+      const nx = S.mastNext(a, c);
+      return `<span class="ms ${c === a.cls ? 'cur' : ''} ${n >= 5 ? 'max' : ''}" style="--cls:${D.CLASSES[c].color}" title="${D.CLASSES[c].name}"><b>${D.CLASSES[c].name}</b><i>${'★'.repeat(n)}<u>${'★'.repeat(5 - n)}</u></i>${c === a.cls && nx.next ? `<small>${nx.q}/${nx.next}</small>` : ''}</span>`;
+    }).join('');
+    const mt = S.mastTotal(a);
+    const growing = S.isGrowing(a);
+    const crossOpts = S.crossOptions(a);
+    const cross = a.cross && a.cross.cls !== a.cls ? a.cross : null;
+    const crossHtml = crossOpts.length || cross ? `<button class="skill-row cross ${cross ? 'on' : ''}" id="crossBtn"><b>継承スキル</b><em>${cross ? D.CLASSES[cross.cls].name : '空き'}</em><small>${cross ? `${G.esc(cross.name)}：${IT.skillDesc(cross.cls, cross.name, ((a.skBy || {})[cross.cls] || {})[cross.name] || 1)}` : '熟練★3 の職業の技を、1つ使える'}</small><i>${cross ? '変える' : 'えらぶ'}</i></button>` : '';
+    const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}${growing ? ' ・ <span class="grow-tag">伸び盛り 経験値×2.5</span>' : ''}</p>
+      <div class="mastery"><div class="ms-head"><b>熟練</b><small>★の合計 ${mt} ・ 戦力 +${mt * 2}%</small></div><div class="ms-list">${mast}</div><small class="ms-hint">★3：その職業の技を継承スキルに ・ ★5：その職業の特技を、転職しても持ち続ける</small></div>
+      <div class="adv-actions"><button class="btn sm ghost" id="advChange">転職する${a.lv < S.CHANGE_LV ? `<span>Lv${S.CHANGE_LV}から</span>` : ''}</button><button class="btn sm ghost" id="advInherit">後継者に託す${a.lv < S.INHERIT_LV ? `<span>Lv${S.INHERIT_LV}から</span>` : ''}</button></div>
       <div class="eq-slots">${slots}</div>
+      ${IT.equipped(a).length ? `<button class="link" id="advEnh">この冒険者の装備をまとめて強化</button>` : ''}
       ${setHtml}
       <div class="adv-stats">${statList}</div>
-      <h3 class="mini">技 <small>セット ${(a.skillSet || []).length}/${nSlots}${a.lv < 20 ? '（Lv20で3枠）' : ''}</small></h3><div class="skills">${skills}</div>
+      <h3 class="mini">技 <small>セット ${(a.skillSet || []).length}/${nSlots}${a.lv < 20 ? '（Lv20で3枠）' : ''}</small></h3><div class="skills">${skills}${crossHtml}</div>
       <dl><dt>職業の特技</dt><dd>${cls.perk}</dd><dt>性格「${D.TRAITS[a.trait].name}」</dt><dd>${D.TRAITS[a.trait].desc}</dd><dt>絆</dt><dd>${a.bond.toFixed(1)} / 10（冒険譚で応援すると深まり、戦力が少し上がる）</dd><dt>次のレベルまで</dt><dd>経験値 ${a.exp} / ${G.sim.expNeed(a.lv)}</dd></dl></div>`;
     G.ui.modal(html, [
       st.adv.length > 1 && a.status === 'idle' ? { text: '解雇する', cls: 'ghost danger', fn: () => G.ui.confirmDismiss(a) } : null,
@@ -582,6 +645,12 @@
       cls: 'wide', replace: !!replace,
       onShow: (card) => {
         G.$$('[data-slot]', card).forEach((b) => b.addEventListener('click', () => pickFor(a, b.dataset.slot)));
+        const ae = G.$('#advEnh', card);
+        if (ae) ae.addEventListener('click', () => { G.ui.closeModal(); setTimeout(() => T.enhanceMenu(a), 240); });
+        G.$('#advChange', card).addEventListener('click', () => changeMenu(a));
+        G.$('#advInherit', card).addEventListener('click', () => inheritMenu(a));
+        const cb = G.$('#crossBtn', card);
+        if (cb) cb.addEventListener('click', () => crossMenu(a));
         G.$$('[data-skill]', card).forEach((b) => b.addEventListener('click', () => {
           if (!IT.toggleSkill(a, b.dataset.skill)) { G.audio.sfx('error'); G.ui.toast(`技は ${nSlots} つまでセットできます。どれかを外してください`, 'bad'); return; }
           G.audio.sfx('tap');
@@ -590,6 +659,90 @@
       },
     });
   };
+  // ---------------------------------------------------------------- 転職
+  function changeMenu(a) {
+    const S = G.sim;
+    G.audio.sfx('tap');
+    if (a.lv < S.CHANGE_LV) { G.ui.toast(`転職は Lv${S.CHANGE_LV} からできます（いま Lv${a.lv}）`, 'info'); return; }
+    if (a.status !== 'idle') { G.ui.toast('遠征から帰ってきたら転職できます', 'info'); return; }
+    const cost = S.changeCost(a);
+    const w = a.eq && a.eq.weapon ? IT.get(a.eq.weapon) : null;
+    const list = S.unlockedClasses().map((c) => {
+      const C = D.CLASSES[c];
+      const n = S.mastStars(a, c);
+      const has = Object.keys((a.skBy || {})[c] || (c === a.cls ? a.sk : {}) || {}).length;
+      const look = Object.assign({}, a.look, { cls: c, outfit: G.shade(C.color, 0), crest: a.look.crest || (c === 'knight' ? '#3a5aa0' : undefined) });
+      return `<button class="pick ${c === a.cls ? 'on' : ''}" data-cls="${c}" ${c === a.cls ? 'disabled' : ''}><img alt="" src="${art.portrait(look, 44)}"><span><b>${C.name}${c === a.cls ? '（いま）' : ''} <i class="mstar">${'★'.repeat(n)}</i></b><small>${C.perk}${has ? ` ・ 覚えた技 ${has}` : ''}</small></span></button>`;
+    }).join('');
+    G.ui.modal(`<div class="item-pick"><h2>${G.esc(a.name)}の転職</h2><p class="hint">レベル（Lv${a.lv}）はそのまま。熟練と覚えた技は職業ごとに残り、いつでも戻れます。費用 ${G.ui.IC.coin}${G.fmt(cost)}${w ? '・合わない武器ははずれます' : ''}</p><div class="pick-list">${list}</div></div>`, [{ text: 'やめる', cls: 'ghost', fn: () => setTimeout(() => T.advDetail(a.id), 240) }], {
+      cls: 'wide', replace: true,
+      onShow: (card) => G.$$('[data-cls]', card).forEach((b) => b.addEventListener('click', () => {
+        const r = S.changeClass(a, b.dataset.cls);
+        if (!r.ok) { G.audio.sfx('error'); G.ui.toast(r.why === 'gold' ? `ゴールドが足りません（${G.fmt(cost)}G）` : '転職できません', 'bad'); return; }
+        G.audio.sfx('rankup');
+        G.haptic(24);
+        G.ui.fx.confetti();
+        G.ui.toast(`${a.name}は${D.CLASSES[a.cls].name}に転職した！`, 'rare3');
+        G.sim.save();
+        G.ui.refreshHud();
+        G.ui.closeModal();
+        setTimeout(() => T.advDetail(a.id), 260);
+      })),
+    });
+  }
+  // 継承スキルをえらぶ
+  function crossMenu(a) {
+    const S = G.sim;
+    const opts = S.crossOptions(a);
+    G.audio.sfx('tap');
+    if (!opts.length) { G.ui.toast('熟練★3 の職業で覚えた技が、継承スキルとして使えます', 'info'); return; }
+    const list = opts.map((o) => `<button class="pick ${a.cross && a.cross.cls === o.cls && a.cross.name === o.name ? 'on' : ''}" data-xc="${o.cls}" data-xn="${G.esc(o.name)}"><span><b>${G.esc(o.name)} <em>Lv${o.lv}</em></b><small>${D.CLASSES[o.cls].name}の技${o.gift ? '（託された技）' : ''} ・ ${IT.skillDesc(o.cls, o.name, o.lv)}</small></span></button>`).join('');
+    G.ui.modal(`<div class="item-pick"><h2>継承スキル</h2><p class="hint">ほかの職業の技を1つだけ、いまの職業でも使えます</p><div class="pick-list">${list}</div></div>`, [
+      a.cross ? { text: 'はずす', cls: 'ghost', fn: () => { S.setCross(a, null); setTimeout(() => T.advDetail(a.id), 240); } } : null,
+      { text: '戻る', cls: 'primary', fn: () => setTimeout(() => T.advDetail(a.id), 240) },
+    ].filter(Boolean), {
+      cls: 'wide', replace: true,
+      onShow: (card) => G.$$('[data-xc]', card).forEach((b) => b.addEventListener('click', () => {
+        S.setCross(a, b.dataset.xc, b.dataset.xn);
+        G.audio.sfx('flash');
+        G.ui.toast(`継承スキル「${b.dataset.xn}」をセットしました`, 'good');
+        G.ui.closeModal();
+        setTimeout(() => T.advDetail(a.id), 240);
+      })),
+    });
+  }
+  // ---------------------------------------------------------------- 継承（後継者に託す）
+  function inheritMenu(a) {
+    const S = G.sim;
+    const st = G.state;
+    G.audio.sfx('tap');
+    if (a.lv < S.INHERIT_LV) { G.ui.toast(`後継者に託せるのは Lv${S.INHERIT_LV} からです`, 'info'); return; }
+    if (a.status !== 'idle') { G.ui.toast('遠征から帰ってきたら託せます', 'info'); return; }
+    const others = st.adv.filter((b) => b !== a && b.status === 'idle').sort((x, y) => x.lv - y.lv);
+    if (!others.length) { G.ui.toast('託せる相手（待機中の冒険者）がいません', 'info'); return; }
+    const best = Object.entries(a.sk || {}).sort((x, y) => y[1] - x[1])[0];
+    const list = others.map((b) => `<button class="pick" data-to="${b.id}"><img alt="" src="${art.portrait(b.look, 40)}"><span><b>${G.esc(b.name)}</b><small>${D.CLASSES[b.cls].name} ・ Lv${b.lv} → <em class="up">Lv${S.inheritPreview(a, b)}</em></small></span></button>`).join('');
+    G.ui.modal(`<div class="item-pick"><h2>${G.esc(a.name)}が後輩に託す</h2><p class="hint">${G.esc(a.name)}は引退して殿堂入りします（ギルド全体の戦力 +1%・最大+10%）。<br>経験の6割・熟練の半分${best ? `・技「${G.esc(best[0])}」` : ''}が、選んだ冒険者に受け継がれます。装備は倉庫に戻ります。</p><div class="pick-list">${list}</div></div>`, [{ text: 'やめる', cls: 'ghost', fn: () => setTimeout(() => T.advDetail(a.id), 240) }], {
+      cls: 'wide', replace: true,
+      onShow: (card) => G.$$('[data-to]', card).forEach((b) => b.addEventListener('click', () => {
+        const B = st.adv.find((x) => x.id === +b.dataset.to);
+        G.ui.closeModal();
+        setTimeout(() => G.ui.modal(`<div class="confirm"><h2>${G.esc(a.name)} → ${G.esc(B.name)}</h2><p>${G.esc(a.name)}は引退します。取り消せません。</p></div>`, [
+          { text: 'やめる', cls: 'ghost' },
+          { text: '託す', cls: 'danger', fn: () => {
+            const r = S.inherit(a.id, B.id);
+            if (!r.ok) { G.audio.sfx('error'); return; }
+            G.audio.sfx('levelup');
+            G.audio.sfx('rarity', 3);
+            G.ui.fx.confetti();
+            G.ui.toast(`${B.name}が想いを受け継いだ！ Lv${r.from} → Lv${r.to}${r.skill ? `・技「${r.skill}」` : ''}`, 'rare4');
+            G.sim.save();
+            setTimeout(() => T.advDetail(B.id), 300);
+          } },
+        ]), 240);
+      })),
+    });
+  }
   function pickFor(a, slot) {
     const st = G.state;
     const items = (st.items || []).filter((x) => x.slot === slot).sort((x, y) => IT.score(y, a) - IT.score(x, a));

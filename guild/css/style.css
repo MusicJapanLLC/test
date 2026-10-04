@@ -1219,3 +1219,76 @@ img.ci { width: 18px; height: 18px; vertical-align: -4px; }
 .card.ev-item .btn img { width: 16px; height: 16px; }
 .card.ev-item .btn span { font-family: var(--font-num); font-size: 13px; opacity: 1; }
 .card.ev-item.got { opacity: 0.55; }
+
+/* ================================================================ HUD がはみ出さないように（狭い画面・桁の多い数字） */
+#hud { grid-template-columns: minmax(0, 1fr); }
+.hud-row { min-width: 0; }
+.res { flex: 0 1 auto; min-width: 0; }
+.pill { min-width: 0; flex: 0 1 auto; }
+.pill b { min-width: 0; overflow: hidden; text-overflow: clip; }
+.hud-row > .icon-btn { flex: none; }
+@media (max-width: 400px) {
+  .hud-row { gap: 4px; }
+  .rank { padding: 3px 6px 3px 3px; gap: 5px; }
+  .crest { width: 34px; height: 34px; font-size: 15px; }
+  .rank-txt { min-width: 26px; }
+  .fame { width: 26px; }
+  .res { gap: 3px; }
+  .pill { height: 30px; padding: 0 6px 0 3px; gap: 2px; }
+  .pill .ic { width: 16px; height: 16px; }
+  .pill b { font-size: 12px; }
+  .icon-btn { width: 30px; height: 30px; }
+  .icon-btn svg { width: 15px; height: 15px; }
+}
+#hud.tight .rank-txt { display: none; }
+#hud.tight .rank { padding-right: 3px; }
+#hud.tight .pill { padding: 0 5px 0 2px; }
+#hud.tight .pill b { font-size: 11px; }
+.gear-actions { flex-wrap: wrap; }
+.auto-enh { margin: 8px 0 4px; }
+.enh-sum ul { list-style: none; padding: 0; margin: 10px 0 0; display: grid; gap: 4px; text-align: left; max-height: 40vh; overflow-y: auto; }
+.enh-sum li { display: flex; justify-content: space-between; gap: 8px; padding: 6px 10px; border-radius: 8px; background: rgba(6, 10, 24, 0.5); font-size: 12px; }
+.enh-sum li span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.enh-sum li b { font-family: var(--font-num); white-space: nowrap; }
+.enh-sum li em { font-style: normal; color: #ffe39a; }
+.enh-sum li.r2 span { color: #d8b0ff; } .enh-sum li.r3 span { color: #ffd36a; } .enh-sum li.r4 span { color: #ff9ad0; }
+.enh-sum .ok { color: #8ff0b0; }
+
+/* ================================================================ 熟練・転職・継承 */
+.mastery { margin: 8px 0; padding: 8px 10px; border-radius: 12px; background: rgba(6, 10, 24, 0.5); border: 1px solid var(--line); text-align: left; }
+.ms-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+.ms-head b { font-family: var(--font-head); color: #e9d9a8; font-size: 13px; }
+.ms-head small { font-size: 11px; color: #ffd36a; font-weight: 800; }
+.ms-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 4px; }
+.ms { display: flex; flex-direction: column; gap: 1px; padding: 4px 6px; border-radius: 8px; background: rgba(255, 255, 255, 0.03); border-left: 3px solid var(--cls); }
+.ms b { font-size: 10.5px; color: var(--parch-dim); }
+.ms i { font-style: normal; font-size: 10px; color: #ffd36a; letter-spacing: -1px; }
+.ms i u { text-decoration: none; color: rgba(255, 255, 255, 0.15); }
+.ms small { font-family: var(--font-num); font-size: 9px; color: var(--muted); }
+.ms.cur { background: rgba(255, 214, 106, 0.1); box-shadow: inset 0 0 0 1px rgba(255, 214, 106, 0.35); }
+.ms.max i { color: #fff; text-shadow: 0 0 6px rgba(255, 210, 110, 0.9); }
+.ms-hint { display: block; margin-top: 6px; font-size: 10px; color: var(--muted); }
+.adv-actions { display: flex; gap: 6px; justify-content: center; margin: 4px 0 8px; }
+.adv-actions .btn { flex: 1; flex-direction: column; gap: 0; }
+.adv-actions .btn span { font-size: 9.5px; opacity: 0.7; }
+.grow-tag { display: inline-block; font-size: 9.5px; font-weight: 900; color: #10301c; background: linear-gradient(180deg, #b8f5c8, #4ac07a); padding: 1px 6px; border-radius: 6px; margin-left: 4px; vertical-align: 1px; font-family: var(--font-body); }
+.mst { font-size: 10px; font-weight: 900; color: #ffd36a; margin-left: 4px; font-family: var(--font-num); }
+.skill-row.cross { border-style: dashed; }
+.skill-row.cross.on { border-style: solid; border-color: rgba(200, 160, 255, 0.6); background: rgba(160, 120, 255, 0.1); }
+.pick .mstar { font-style: normal; color: #ffd36a; font-size: 11px; }
+.pick em.up { font-style: normal; color: #8ff0b0; font-weight: 900; }
+.hall { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 6px; }
+.hf { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 4px; border-radius: 10px; background: rgba(255, 214, 106, 0.06); border: 1px solid rgba(255, 214, 106, 0.25); }
+.hf img { width: 40px; height: 40px; border-radius: 50%; }
+.hf b { font-size: 11.5px; }
+.hf small { font-size: 9.5px; color: var(--muted); }
+.hf .to { color: #ffd36a; }
+.hint svg, .item-pick p svg { width: 1.05em; height: 1.05em; vertical-align: -0.15em; }
+/* セーブ */
+.savebox .save-card { align-items: center; border-color: rgba(143, 240, 176, 0.35); }
+.savebox .save-card .grow { display: flex; flex-direction: column; gap: 2px; }
+.savebox .save-card b { font-size: 12.5px; }
+.savebox .save-card small { font-size: 10.5px; color: var(--muted); }
+.save-tools { display: flex; gap: 6px; margin-top: 6px; }
+.save-tools .btn { flex: 1; }
+.save-io textarea { width: 100%; height: 140px; margin-top: 8px; border-radius: 10px; padding: 8px; font: 11px/1.35 ui-monospace, monospace; color: #e8f0ff; background: rgba(6, 10, 24, 0.7); border: 1px solid var(--line); word-break: break-all; resize: vertical; }

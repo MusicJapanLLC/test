@@ -96,6 +96,9 @@
       if (sheetTab) renderSheet();
     });
     G.on('upgraded', () => { if (sheetTab) renderSheet(); });
+    G.on('mastery', ({ a, cls, stars }) => {
+      U.toast(`${a.name}の${D.CLASSES[cls].name}の熟練が★${stars}に！${stars === 3 ? '（継承スキルが使える）' : stars === 5 ? '（特技を極めた）' : ''}`, stars >= 3 ? 'rare3' : 'good', 'mastery');
+    });
     G.on('abyssOpen', () => {
       U.whenFree(() => U.modal(`<div class="skill-get abyss-open"><div class="ao-gate"><img class="rina-peek" alt="" src="${art.rina(96, 'surprise', false)}"></div><small>ランク${D.ABYSS.rank}の特典</small><h2>深淵の迷宮</h2><p>ギルドの地下に、古い扉が見つかりました。<br>B1F〜B100F。10階ごとに守護者が待ち、深いほど強い装備が眠っています。</p><p class="hint">依頼の画面から挑めます（派遣枠とは別に、1組まで）</p></div>`, [{ text: 'のぞいてみる', cls: 'primary big', fn: () => U.openSheet('quests') }], { cls: 'celebrate' }), 1200);
     });
@@ -126,7 +129,7 @@
   // ほかの窓（ランクアップ・冒険譚・チュートリアル）が閉じてから出す
   U.whenFree = function (fn, delay = 600) {
     const go = () => {
-      const busy = !G.$('#modal').hidden || G.reels.isOpen() || pendingRank || (G.state.flags.tut < 99 && G.state.flags.tut > 0 && G.$('#tut') && !G.$('#tut').hidden);
+      const busy = !!document.getElementById('boot') || !G.$('#modal').hidden || G.reels.isOpen() || pendingRank || (G.state.flags.tut < 99 && G.state.flags.tut > 0 && G.$('#tut') && !G.$('#tut').hidden);
       if (busy) { setTimeout(go, 700); return; }
       fn();
     };
@@ -149,6 +152,13 @@
     // 灯せる星があれば、ランクの紋章に小さな星
     const pr = st.prestige;
     const canStar = !!(pr && pr.stars > 0 && S.STAR_NODES.some((n) => S.starOpen(n.id) && S.starLv(n.id) < n.max && pr.stars >= S.starCost(n.id)));
+    // それでも収まらない画面では、さらに詰める
+    const row = G.$('#hud .hud-row');
+    if (row) {
+      const hud = G.$('#hud');
+      if (!hud.classList.contains('tight') && row.scrollWidth > row.clientWidth + 1) hud.classList.add('tight');
+      else if (hud.classList.contains('tight') && row.clientWidth > 420) hud.classList.remove('tight');
+    }
     const rbtn = G.$('#rankBtn');
     rbtn.classList.toggle('star-ready', canStar || (S.canRebirth() && !(pr && pr.runs)));
     const lo = D.RANK_FAME[st.rank - 1], hi = D.RANK_FAME[st.rank];
@@ -174,9 +184,8 @@
     const rb = G.$('#tab-reels .badge');
     rb.hidden = !unseen.length;
     rb.textContent = unseen.length > 99 ? '99+' : unseen.length;
-    const pg = G.reels.pendingGold();
     const sub = G.$('#reelSub');
-    sub.textContent = unseen.length ? `+${G.fmt(pg)}G` : '冒険譚';
+    sub.textContent = unseen.length ? `${unseen.length}本` : '冒険譚';
     G.$('#tab-reels').classList.toggle('has', unseen.length > 0);
     const idle = st.adv.filter((a) => a.status === 'idle').length;
     const free = S.slots() - S.busy();
@@ -644,7 +653,7 @@
       h += `<div class="card adv" data-adv="${a.id}">
         <img class="face" alt="" src="${art.portrait(a.look, 56)}" style="--cls:${D.CLASSES[a.cls].color}">
         <div class="grow">
-          <div class="a-top"><b>${G.esc(a.name)}</b><span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span></div>
+          <div class="a-top"><b>${G.esc(a.name)}</b><span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span>${S.isGrowing(a) ? '<span class="grow-tag">伸び盛り</span>' : ''}${S.mastTotal(a) ? `<span class="mst">★${S.mastTotal(a)}</span>` : ''}</div>
           <div class="bar exp"><i style="width:${(a.exp / need) * 100}%"></i></div>
           <div class="a-meta"><span>${IC.sword}${G.fmt(S.power(a))}</span><span class="trait">${D.TRAITS[a.trait].name}</span>${G.items.equipped(a).map((it) => `<img class="eq-mini" alt="" src="${U.itemThumb(it, 18)}">`).join('')}${(a.skillSet || []).length ? `<span class="sk">技${a.skillSet.length}</span>` : ''}<span class="bond" title="絆">${'♥'.repeat(Math.min(5, Math.ceil(hearts / 2)))}<i>${'♥'.repeat(Math.max(0, 5 - Math.ceil(hearts / 2)))}</i></span></div>
         </div>
@@ -812,6 +821,9 @@
       <div><small>見た冒険譚</small><b>${G.fmt(ss.reels)}</b></div>
       <div><small>遊んだ時間</small><b>${G.fmtTime(ss.playSec)}</b></div>
     </div></div>`;
+    if ((st.hall || []).length) {
+      h += `<div class="sec"><h3>殿堂 <small>${st.hall.length}人 ・ ギルドの戦力 +${Math.round(S.hallBonus() * 100)}%</small></h3><div class="hall">${st.hall.slice().reverse().map((x) => `<div class="hf"><img alt="" src="${art.portrait(x.look, 48)}"><b>${G.esc(x.name)}</b><small>${D.CLASSES[x.cls].name} Lv${x.lv}</small><small class="to">→ ${G.esc(x.to)}</small></div>`).join('')}</div></div>`;
+    }
     const seen = D.MONSTER_ORDER.filter((m) => st.seenMonsters[m]).length;
     h += `<div class="sec"><h3>魔物図鑑 <small>${seen}/${D.MONSTER_ORDER.length}</small></h3><div class="dex">`;
     D.MONSTER_ORDER.forEach((m) => {
@@ -830,8 +842,16 @@
       <label class="row tog"><span>お知らせ（端末への通知も）</span><input type="checkbox" id="setNotify" ${s.notify ? 'checked' : ''}><i class="sw"></i></label>
       <label class="row tog"><span>動きをひかえめに</span><input type="checkbox" id="setMotion" ${s.reduceMotion ? 'checked' : ''}><i class="sw"></i></label>
       <button class="btn ghost danger wide" id="resetBtn">最初からやり直す</button>
-      <p class="hint">セーブ：${G.save.where()}に自動で保存（数秒ごと・操作のたび）。版 ${G.VERSION}</p>
+      <p class="hint">版 ${G.VERSION}</p>
     </div>`;
+    // セーブ（自動＋手動・書き出し）を設定のいちばん上に
+    const sv = G.save.status;
+    const ago = (t) => (t ? `${Math.max(0, Math.round((Date.now() - t) / 1000))}秒前` : 'まだ');
+    const saveSec = `<div class="sec savebox"><h3>セーブ</h3>
+      <div class="card save-card"><div class="grow"><b>自動セーブ：${G.save.where()}</b><small>端末 ${ago(sv.lastAt)}${sv.cloudReady ? ` ・ クラウド ${ago(sv.cloudAt)}` : ''}${sv.err && !sv.cloud ? ' ・ クラウドは混雑中（自動で再試行）' : ''}</small></div><button class="btn sm primary" id="saveNow">今すぐセーブ</button></div>
+      <div class="save-tools"><button class="btn sm ghost" id="saveExport">セーブを書き出す</button><button class="btn sm ghost" id="saveImport">書き出したセーブを読み込む</button></div>
+      <p class="hint">数秒ごと・操作のたびに自動で保存しています。機種変更や念のための控えには「書き出す」を使ってください。</p></div>`;
+    h = saveSec + h;
     body.innerHTML = h;
     const bind = (id, fn) => G.$(id, body).addEventListener('input', fn);
     bind('#setBgm', (e) => { s.bgm = +e.target.value; G.audio.applyVolumes(); syncSoundBtn(); });
@@ -850,6 +870,45 @@
     G.$('#muteBtn', body).addEventListener('click', () => { toggleSound(); renderSheet(); });
     syncSoundBtn();
     bind('#setMotion', (e) => { s.reduceMotion = e.target.checked; document.documentElement.classList.toggle('calm', s.reduceMotion); });
+    G.$('#saveNow', body).addEventListener('click', async () => {
+      G.audio.sfx('tap');
+      const json = S.serialize();
+      const r = await G.save.saveNow(json);
+      const ok = r.local || r.idb || r.cloud;
+      G.audio.sfx(ok ? 'claim' : 'error');
+      U.toast(ok ? `セーブしました（${[r.cloud ? 'クラウド' : null, r.local || r.idb ? 'この端末' : null].filter(Boolean).join('・')}）${r.cloud === false ? '　※クラウドは混雑中。あとで自動で保存します' : ''}` : '保存できませんでした。「セーブを書き出す」で控えを残してください', ok ? 'good' : 'bad');
+      renderSheet();
+    });
+    G.$('#saveExport', body).addEventListener('click', async () => {
+      G.audio.sfx('tap');
+      const json = S.serialize();
+      const z = await G.save.zip(json).catch(() => null);
+      const code = z ? 'GA1:' + z : 'GA0:' + btoa(unescape(encodeURIComponent(json)));
+      U.modal(`<div class="save-io"><h2>セーブの書き出し</h2><p class="hint">この文字列をメモ帳などに保存しておくと、あとで「読み込む」から復元できます。</p><textarea readonly id="saveCode">${code}</textarea></div>`, [
+        { text: 'コピー', cls: 'primary', keep: true, fn: () => { const ta = G.$('#saveCode'); ta.select(); try { navigator.clipboard.writeText(code).then(() => U.toast('コピーしました', 'good'), () => { document.execCommand('copy'); U.toast('コピーしました', 'good'); }); } catch (e) { document.execCommand('copy'); U.toast('コピーしました', 'good'); } } },
+        { text: '閉じる', cls: 'ghost' },
+      ], { cls: 'wide', onShow: (card) => { const ta = G.$('#saveCode', card); ta.addEventListener('focus', () => ta.select()); } });
+    });
+    G.$('#saveImport', body).addEventListener('click', () => {
+      G.audio.sfx('tap');
+      U.modal(`<div class="save-io"><h2>セーブの読み込み</h2><p class="hint">書き出した文字列を貼り付けてください。いまの進み具合は置きかわります。</p><textarea id="saveIn" placeholder="GA1:..."></textarea></div>`, [
+        { text: 'やめる', cls: 'ghost' },
+        { text: '読み込む', cls: 'danger', keep: true, fn: async () => {
+          const v = (G.$('#saveIn').value || '').trim();
+          let json = null;
+          try {
+            if (v.startsWith('GA1:')) json = await G.save.unzip(v.slice(4));
+            else if (v.startsWith('GA0:')) json = decodeURIComponent(escape(atob(v.slice(4))));
+            else if (v.startsWith('{')) json = v;
+          } catch (e) { json = null; }
+          if (!json || G.save.stamp(json) < 0) { G.audio.sfx('error'); U.toast('読み込めませんでした。文字列をもう一度確かめてください', 'bad'); return; }
+          G.resetting = true;
+          await G.save.replace(json);
+          U.toast('読み込みました。再読み込みします…', 'good');
+          setTimeout(() => location.reload(), 600);
+        } },
+      ], { cls: 'wide' });
+    });
     G.$('#resetBtn', body).addEventListener('click', () => {
       U.modal('<div class="confirm"><h2>最初からやり直しますか？</h2><p>ギルドも冒険者もすべて消えます。取り消せません。</p></div>', [
         { text: 'やめる', cls: 'ghost' },
@@ -929,7 +988,7 @@
     G.$$('[data-mi]', card).forEach((b) => b.addEventListener('click', () => {
       const bt = buttons[+b.dataset.mi];
       G.audio.sfx('tap');
-      closeModal();
+      if (!bt.keep) closeModal();
       if (bt.fn) bt.fn();
     }));
     m.hidden = false;

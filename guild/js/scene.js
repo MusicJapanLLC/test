@@ -1553,7 +1553,7 @@
       // 小さな札
       art.poly(ctx, [x + 3, bot - h - 9, x + w - 3, bot - h - 9, x + w - 3, bot - h - 4, x + 3, bot - h - 4], '#e8dcc0');
       ctx.fillStyle = '#5a3a9a';
-      ctx.font = '700 4px sans-serif';
+      ctx.font = G.font(700, 4, 'head');
       ctx.textAlign = 'center';
       ctx.fillText('深淵', x + w / 2, bot - h - 5.2);
     } else {

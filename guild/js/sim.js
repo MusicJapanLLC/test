@@ -37,7 +37,7 @@
       stats: { quests: 0, success: 0, great: 0, legend: 0, fail: 0, likes: 0, tips: 0, goldEarned: 0, areaWin: {}, boss: 0, reels: 0, playSec: 0 },
       seenMonsters: {},
       flags: { tut: 0, autoDispatch: false, bossUnlocked: false },
-      settings: { bgm: 0.6, sfx: 0.8, env: 0.7, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true },
+      settings: { bgm: 0.6, sfx: 0.8, env: 0.7, autoEnh: false, haptics: true, autoplay: true, reduceMotion: false, danmaku: true, notify: true },
       inbox: [],
       items: [],
       relics: {},
@@ -81,6 +81,7 @@
       eq: {},
       sk: {},
       skillSet: [],
+      mast: {},
     };
   };
 
@@ -97,7 +98,7 @@
   S.power = function (a, s = G.state) {
     const base = D.CLASSES[a.cls].pow;
     const items = G.items && s === G.state ? G.items.powMul(a) : 1;
-    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items;
+    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items * (1 + 0.02 * S.mastTotal(a)) * (1 + S.hallBonus(s));
   };
   S.slots = (s = G.state) => s.fac.hall;
   S.busy = (s = G.state) => s.active.filter((e) => !e.abyss).length;
@@ -113,13 +114,14 @@
     let brave = 0, swift = 0, lucky = 0, greedy = 0;
     party.forEach((a) => {
       pow += S.power(a, s);
-      if (a.cls === 'cleric') cleric = true;
-      if (a.cls === 'archer') archer = true;
-      if (a.cls === 'warrior') warrior = true;
-      if (a.cls === 'thief') thief = true;
-      if (a.cls === 'knight') knight = true;
-      if (a.cls === 'bard') bard = true;
-      if (a.cls === 'alchemist') alch = true;
+      // 職業の特技（極めた職業＝熟練★5 の特技は、転職しても使える）
+      if (S.hasPerk(a, 'cleric')) cleric = true;
+      if (S.hasPerk(a, 'archer')) archer = true;
+      if (S.hasPerk(a, 'warrior')) warrior = true;
+      if (S.hasPerk(a, 'thief')) thief = true;
+      if (S.hasPerk(a, 'knight')) knight = true;
+      if (S.hasPerk(a, 'bard')) bard = true;
+      if (S.hasPerk(a, 'alchemist')) alch = true;
       if (a.trait === 'brave') brave++;
       if (a.trait === 'swift') swift++;
       if (a.trait === 'lucky') lucky++;
@@ -361,9 +363,18 @@
     const expMul = (tier === 'fail' ? 0.5 : tier === 'great' ? 1.5 : tier === 'legend' ? 3 : 1) * (1 + 0.12 * s.fac.training) * info.expMul * (feast ? 1 + feast.add : 1);
     // 経験値はその場で反映（帰ってきた時には強くなっている）
     const levelUps = [];
+    const topLv = Math.max(1, ...s.adv.map((x) => x.lv));
     party.forEach((a) => {
       const before = a.lv;
-      S.gainExp(a, Math.round(q.exp * expMul * (a.trait === 'sleepy' ? 1.1 : 1)), s);
+      // 熟練：その職業で依頼を成功させるほど上がる
+      if (tier !== 'fail') {
+        a.mast = a.mast || {};
+        const st0 = S.mastStars(a, a.cls);
+        a.mast[a.cls] = (a.mast[a.cls] || 0) + (q.abyss ? 2 : 1);
+        const st1 = S.mastStars(a, a.cls);
+        if (st1 > st0) G.emit('mastery', { a, cls: a.cls, stars: st1 });
+      }
+      S.gainExp(a, Math.round(q.exp * expMul * (a.trait === 'sleepy' ? 1.1 : 1) * S.catchup(a, topLv)), s);
       if (a.lv > before) levelUps.push({ id: a.id, name: a.name, to: a.lv });
       a.status = 'idle';
       a.questId = null;
@@ -639,6 +650,113 @@
     return { ok: true, adv: a };
   };
 
+  // ---------------------------------------------------------------- 熟練・転職・継承・伸び盛り
+  //  熟練：職業ごとに、依頼を成功させた回数で ★1〜★5。★の合計ぶん戦力が上がる（1つ +2%）
+  //    ★3：その職業の技を「継承スキル」として、ほかの職業でも1つ使える
+  //    ★5：その職業の特技（僧侶の成功率など）を、転職しても持ち続ける
+  //  転職：Lv10 から。レベルはそのまま、職業だけ変わる（覚えた技は職業ごとに残る）
+  //  継承：Lv15 以上の冒険者が引退し、経験・熟練の一部と技を後輩に託す。引退した人は殿堂へ
+  //  伸び盛り：ギルドで一番強い人の 3/4 に届かない冒険者は、経験値 2.5倍
+  S.MAST_STEPS = [5, 20, 50, 100, 200];
+  S.mastStars = (a, cls) => { const q = (a.mast && a.mast[cls]) || 0; let n = 0; S.MAST_STEPS.forEach((v) => { if (q >= v) n++; }); return n; };
+  S.mastTotal = (a) => (a.mast ? Object.keys(a.mast).reduce((x, c) => x + S.mastStars(a, c), 0) : 0);
+  S.mastNext = (a, cls) => { const q = (a.mast && a.mast[cls]) || 0; const nx = S.MAST_STEPS.find((v) => q < v); return { q, next: nx || null }; };
+  S.hasPerk = (a, cls) => a.cls === cls || S.mastStars(a, cls) >= 5;
+  S.hallBonus = (s = G.state) => Math.min(0.1, ((s && s.hall) || []).length * 0.01);
+  S.catchup = (a, top) => (a.lv < top * 0.75 ? 2.5 : 1);
+  S.isGrowing = (a, s = G.state) => S.catchup(a, Math.max(1, ...s.adv.map((x) => x.lv))) > 1;
+  S.CHANGE_LV = 10;
+  S.changeCost = (a) => Math.round(200 + a.lv * a.lv * 12);
+  S.changeClass = function (a, cls, s = G.state) {
+    if (a.cls === cls) return { ok: false, why: 'same' };
+    if (a.lv < S.CHANGE_LV) return { ok: false, why: 'lv' };
+    if (a.status !== 'idle') return { ok: false, why: 'away' };
+    if (!S.unlockedClasses(s).includes(cls)) return { ok: false, why: 'locked' };
+    const c = S.changeCost(a);
+    if (s.gold < c) return { ok: false, why: 'gold' };
+    s.gold -= c;
+    a.skBy = a.skBy || {};
+    a.setBy = a.setBy || {};
+    a.skBy[a.cls] = a.sk || {};
+    a.setBy[a.cls] = a.skillSet || [];
+    const from = a.cls;
+    a.cls = cls;
+    a.sk = a.skBy[cls] || {};
+    a.skillSet = (a.setBy[cls] || []).filter((n) => a.sk[n]);
+    a.look.cls = cls;
+    a.look.outfit = G.shade(D.CLASSES[cls].color, G.rand(-0.1, 0.06));
+    if (cls === 'knight' && !a.look.crest) a.look.crest = G.pick(['#3a5aa0', '#c4553a', '#e2b84a', '#5a9a6a']);
+    // 職業に合わない武器ははずす（倉庫へ）
+    if (G.items && a.eq && a.eq.weapon) { const w = G.items.get(a.eq.weapon); if (w && !G.items.fits(w, a)) a.eq.weapon = null; }
+    if (a.cross && a.cross.cls === cls) a.cross = null;
+    s.stats.classChanges = (s.stats.classChanges || 0) + 1;
+    G.emit('classChanged', { a, from });
+    return { ok: true, from, cost: c };
+  };
+  // 継承スキル：★3 以上の、いまと違う職業で覚えた技から1つ
+  S.crossOptions = function (a) {
+    const out = [];
+    Object.keys(a.skBy || {}).forEach((c) => {
+      if (c === a.cls) return;
+      if (S.mastStars(a, c) < 3) return;
+      Object.keys(a.skBy[c] || {}).forEach((n) => out.push({ cls: c, name: n, lv: a.skBy[c][n] }));
+    });
+    if (a.cross && a.cross.gift && a.cross.cls !== a.cls && !out.some((o) => o.cls === a.cross.cls && o.name === a.cross.name)) out.push({ cls: a.cross.cls, name: a.cross.name, lv: ((a.skBy || {})[a.cross.cls] || {})[a.cross.name] || 1, gift: true });
+    return out;
+  };
+  S.setCross = function (a, cls, name) {
+    if (!cls) { a.cross = null; G.emit('itemsChanged'); return true; }
+    const o = S.crossOptions(a).find((x) => x.cls === cls && x.name === name);
+    if (!o) return false;
+    a.cross = { cls, name, gift: !!o.gift };
+    G.emit('itemsChanged');
+    return true;
+  };
+  S.totalExp = (a) => { let e = a.exp; for (let l = 1; l < a.lv; l++) e += S.expNeed(l); return e; };
+  S.INHERIT_LV = 15;
+  S.inheritPreview = function (A, B) {
+    const c = { lv: B.lv, exp: B.exp };
+    S.gainExp(c, Math.round(S.totalExp(A) * 0.6));
+    return c.lv;
+  };
+  S.inherit = function (fromId, toId, s = G.state) {
+    const A = s.adv.find((x) => x.id === fromId), B = s.adv.find((x) => x.id === toId);
+    if (!A || !B || A === B) return { ok: false, why: 'none' };
+    if (A.lv < S.INHERIT_LV) return { ok: false, why: 'lv' };
+    if (A.status !== 'idle' || B.status !== 'idle') return { ok: false, why: 'away' };
+    const before = B.lv;
+    S.gainExp(B, Math.round(S.totalExp(A) * 0.6), s);
+    B.mast = B.mast || {};
+    Object.entries(A.mast || {}).forEach(([c, q]) => { B.mast[c] = (B.mast[c] || 0) + Math.floor(q / 2); });
+    // いちばん育った技を1つ託す（同じ職業ならそのまま、違えば継承スキルに）
+    const best = Object.entries(A.sk || {}).sort((x, y) => y[1] - x[1])[0];
+    let skill = null;
+    if (best) {
+      skill = best[0];
+      if (A.cls === B.cls) {
+        B.sk = B.sk || {};
+        B.sk[skill] = Math.max(B.sk[skill] || 0, best[1]);
+        B.skillSet = B.skillSet || [];
+        if (!B.skillSet.includes(skill) && B.skillSet.length < (G.items ? G.items.skillSlots(B) : 2)) B.skillSet.push(skill);
+      } else {
+        B.skBy = B.skBy || {};
+        B.skBy[A.cls] = B.skBy[A.cls] || {};
+        B.skBy[A.cls][skill] = Math.max(B.skBy[A.cls][skill] || 0, best[1]);
+        B.cross = { cls: A.cls, name: skill, gift: true };
+      }
+    }
+    B.bond = Math.min(10, (B.bond || 0) + (A.bond || 0) * 0.5);
+    A.eq = {};
+    s.adv.splice(s.adv.indexOf(A), 1);
+    s.hall = s.hall || [];
+    s.hall.push({ name: A.name, cls: A.cls, lv: A.lv, look: A.look, trait: A.trait, to: B.name, at: G.now() });
+    if (s.hall.length > 40) s.hall.shift();
+    s.stats.inherits = (s.stats.inherits || 0) + 1;
+    G.emit('dismissed', A);
+    G.emit('inherited', { A, B });
+    return { ok: true, from: before, to: B.lv, skill };
+  };
+
   // ---------------------------------------------------------------- 求職者
   S.hireCost = function (lv, s = G.state) {
     return Math.round(40 * Math.pow(1.7, Math.max(0, s.adv.length - 1)) * (1 + 0.35 * (lv - 1)));
@@ -857,12 +975,16 @@
   };
 
   // ---------------------------------------------------------------- セーブ
+  S.serialize = function () {
+    const s = G.state;
+    s.lastSeen = G.now();
+    return JSON.stringify(s, (k, v) => (k === '_plan' || k === '_dm' || k === '_tx' ? undefined : v));
+  };
   S.save = function (force) {
     const s = G.state;
     if (!s || G.resetting || !G.booted) return;
-    s.lastSeen = G.now();
     try {
-      G.save.write(JSON.stringify(s, (k, v) => (k === '_plan' || k === '_dm' || k === '_tx' ? undefined : v)), force);
+      G.save.write(S.serialize(), force);
     } catch (e) { /* 保存できない環境でも遊べる */ }
   };
   // raw: G.save.init() が返したいちばん新しいセーブ

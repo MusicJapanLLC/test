@@ -247,6 +247,12 @@
       const fx = IT.skillFx(adv.cls, n);
       if (fx) addAll(fx, 1 + 0.25 * (((adv.sk || {})[n] || 1) - 1));
     });
+    // 継承スキル（ほかの職業の技）
+    if (adv.cross && adv.cross.cls !== adv.cls) {
+      const fx = IT.skillFx(adv.cross.cls, adv.cross.name);
+      const lv = ((adv.skBy || {})[adv.cross.cls] || {})[adv.cross.name] || 1;
+      if (fx) addAll(fx, 1 + 0.25 * (lv - 1));
+    }
     return s;
   };
   // パーティの合計（上限つき）
@@ -395,6 +401,35 @@
     st.stats.enhance = (st.stats.enhance || 0) + 1;
     G.emit('itemsChanged');
     return { ok: true, success, plus: it.plus };
+  };
+
+  // まとめて強化：装備中のものを、安い順に（全員がまんべんなく強くなる）
+  //  budget: 使ってよいゴールド / who: 冒険者を1人にしぼる（省略で全員）
+  IT.autoEnhance = function (budget, who) {
+    const st = G.state;
+    const advs = who ? [who] : st.adv;
+    const res = { tries: 0, ok: 0, ng: 0, spent: 0, stones: 0, items: {}, why: '' };
+    let guard = 0;
+    while (guard++ < 400) {
+      const cands = [];
+      advs.forEach((a) => IT.equipped(a).forEach((it) => { if ((it.plus || 0) < IT.maxPlus(it)) cands.push(it); }));
+      if (!cands.length) { res.why = 'max'; break; }
+      cands.sort((x, y) => IT.enhanceCost(x).gold - IT.enhanceCost(y).gold);
+      const it = cands[0];
+      const c = IT.enhanceCost(it);
+      if (res.spent + c.gold > budget || st.gold < c.gold) { res.why = 'gold'; break; }
+      if (IT.cons('stone') < c.stone) { res.why = 'stone'; break; }
+      const before = it.plus || 0;
+      const r = IT.enhance(it.uid);
+      if (!r.ok) break;
+      res.tries++;
+      res.spent += c.gold;
+      res.stones += c.stone;
+      if (r.success) res.ok++; else res.ng++;
+      const rec = res.items[it.uid] || (res.items[it.uid] = { name: it.name, from: before, to: before, rarity: it.rarity });
+      rec.to = it.plus || 0;
+    }
+    return res;
   };
 
   // 限界突破（URだけ）：虹の欠片で ★ が増え、主能力 +10%・強化の上限 +2
@@ -627,6 +662,10 @@
         a.skillSet = (a.skills || []).slice(0, 2);
       }
       delete a.skills;
+    });
+    // 熟練の導入前のセーブ：いまのレベルから、いまの職業の熟練を見積もる
+    st.adv.concat(st.alumni || []).forEach((a) => {
+      if (!a.mast) { a.mast = {}; a.mast[a.cls] = Math.round((a.lv - 1) * 2.5); }
     });
     st.bag = st.bag || {};
     st.boosts = st.boosts || {};

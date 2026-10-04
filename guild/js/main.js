@@ -8,6 +8,17 @@
   let hiddenAt = 0;
   let bgTimer = 0;
 
+  // 起動のあとで、クラウドにもっと新しいセーブが見つかったとき
+  G.save.onNewer = function (raw) {
+    let info = '';
+    try { const s = JSON.parse(raw); info = `ランク${s.rank} ・ 冒険者${(s.adv || []).length}人 ・ ${new Date((s.lastSeen || 0) * 1000).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`; } catch (e) { /* noop */ }
+    const show = () => G.ui.modal(`<div class="confirm"><h2>クラウドに新しいセーブがあります</h2><p>${info}</p><p class="hint">こちらで続けますか？（いまの画面の進み具合は、このセーブに置きかわります）</p></div>`, [
+      { text: 'いまのまま続ける', cls: 'ghost', fn: () => G.save.flush() },
+      { text: 'クラウドのセーブで続ける', cls: 'primary', fn: async () => { G.resetting = true; await G.save.replace(raw); location.reload(); } },
+    ]);
+    if (G.ui && G.ui.whenFree) G.ui.whenFree(show, 300); else setTimeout(show, 1500);
+  };
+
   function boot(raw) {
     let st = G.sim.load(raw);
     const isNew = !st;
@@ -132,6 +143,7 @@
     G.audio.envTick(dt, !G.reels.isOpen());
     if (G.notify) G.notify.tick(dt);
     if (G.missions) G.missions.tick(dt);
+    if (G.treasury.autoTick) G.treasury.autoTick(dt);
     saveT += dt;
     if (saveT > 3) { saveT = 0; G.sim.save(); }
   }
@@ -166,7 +178,8 @@
     ]).catch(() => {}) : Promise.resolve();
     const hint = G.$('#bootHint');
     if (hint) hint.textContent = 'セーブデータを読み込み中…';
-    Promise.all([fonts, G.save.init().catch(() => null)]).then(([, raw]) => boot(raw));
+    const prog = (k) => { if (hint && k === 'cloud') hint.textContent = 'クラウドのセーブを確認中…'; };
+    Promise.all([fonts, G.save.init(prog).catch(() => null)]).then(([, raw]) => boot(raw));
   };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
   else ready();

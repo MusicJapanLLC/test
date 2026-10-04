@@ -156,6 +156,7 @@
       G.ui.closeSheet(true);
       S.rebirth();
       G.sim.save(true);
+      G.save.handoff(G.sim.serialize());
       setTimeout(() => location.reload(), 900);
     }, 1600);
   }
