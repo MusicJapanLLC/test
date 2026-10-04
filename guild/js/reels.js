@@ -430,11 +430,14 @@
   let cmSeen = 0, cmBumpT = 9, cmBumpN = 0;
   let warpNow = 1;
   R.isOpen = () => open;
+  let mainCtxRef = null;
+  const mainCtx = () => mainCtxRef;
 
   R.init = function () {
     root = G.$('#reels');
     cv = G.$('#reelCanvas');
     ctx = cv.getContext('2d');
+    mainCtxRef = ctx;
     window.addEventListener('resize', () => { if (open) resize(); });
     cv.addEventListener('pointerdown', onDown);
     cv.addEventListener('pointermove', onMove);
@@ -474,6 +477,11 @@
     Hd = H / k;
     const probe = G.$('#safeProbe');
     safeB = probe ? probe.offsetHeight / k : 0;
+    // 背景の描き置きは、カメラが寄ってもにじまないよう少し大きめに
+    const nb = Math.min(4, dpr * k * 1.2);
+    if (Math.abs(nb - bgScale) > 0.01) { bgScale = nb; bgCache.clear(); treeCache.clear(); }
+    sprites.clear();
+    skyGrad.clear();
     placeHitAreas();
   }
 
@@ -495,6 +503,7 @@
     }
     unseen.forEach(ensureComments);
     items = unseen.concat([{ end: true }]);
+    setTimeout(() => { warm(items[0]); warm(items[1]); }, 60);
     rewatch = false;
     pos = target = 0;
     anim = null;
@@ -998,9 +1007,36 @@
     G.$('#endHistory').hidden = rewatch || !st.reels.some((r) => r.claimed && !r.digest);
   }
 
+  // 次に流す冒険譚の下ごしらえ（段取り・流れるコメント・顔・地形の絵・文字の絵）
+  function warm(reel) {
+    if (!open || !reel || reel.end || reel.digest || !W) return;
+    try {
+      const pl = planOf(reel);
+      danmakuOf(reel);
+      (reel.cm || []).forEach((c) => { avatarCanvas(authorOf(c.a, reel), 36); c.replies.forEach((r) => avatarCanvas(authorOf(r.a, reel), 36)); });
+      overlaySprite(reel);
+      const area = D.AREA_BY_ID[reel.area];
+      const L = layout(reel);
+      // 地形の絵を作る（画面には出さない）
+      const saved = ctx;
+      ctx = offscreenDummy();
+      ctx.save();
+      drawBg(area, 120, 2, L.gy, true);
+      ctx.restore();
+      ctx = saved;
+      void pl;
+    } catch (e) { /* 下ごしらえは失敗しても再生には影響しない */ }
+  }
+  let dummyCtx = null;
+  function offscreenDummy() {
+    if (!dummyCtx) { const c = document.createElement('canvas'); c.width = c.height = 2; dummyCtx = c.getContext('2d'); }
+    return dummyCtx;
+  }
+
   // ---------------------------------------------------------------- 進行
+  let rmNow = false;
   function warp(pl, t) {
-    if (!pl || G.reducedMotion()) return 1;
+    if (!pl || rmNow) return 1;
     for (const s of pl.stops) if (t >= s.t && t < s.t + s.d * 0.05) return 0.05;
     for (const s of pl.slows) if (t >= s.a && t < s.b) return s.f;
     return 1;
@@ -1008,6 +1044,7 @@
 
   R.update = function (dt) {
     if (!open) return;
+    rmNow = G.reducedMotion();
     viewK += ((cmOpen ? 1 : 0) - viewK) * Math.min(1, dt * 11);
     if (Math.abs(viewK - (cmOpen ? 1 : 0)) < 0.002) viewK = cmOpen ? 1 : 0;
     if (anim) {
@@ -1018,6 +1055,7 @@
         anim = null;
         if (firedFor !== items[pos]) { rt = 0; fired = {}; cheer = 0; parts = []; }
         updateDom();
+        setTimeout(() => warm(items[pos + 1]), 120);
       }
     }
     const idx = Math.round(pos);
@@ -1223,7 +1261,7 @@
     const walk = G.clamp(t / 1.1, 0, 1);
     z += 0.1 * (1 - G.ease.inOut(walk));
     let bx = G.lerp(110, 180, G.ease.inOut(walk)), by = Hd * 0.5;
-    if (!pl || G.reducedMotion()) return { z: 1, x: 180, y: Hd * 0.5 };
+    if (!pl || rmNow) return { z: 1, x: 180, y: Hd * 0.5 };
     const imp = (t0, rise, dur, amp, x, y) => {
       const d = t - t0;
       if (d < -rise || d > dur) return;
@@ -1259,7 +1297,7 @@
     return { z, x: fx, y: fy };
   }
   function shakeAt(reel, pl, t) {
-    if (!pl || G.reducedMotion()) return [0, 0];
+    if (!pl || rmNow) return [0, 0];
     let sx = 0, sy = 0;
     const kick = (t0, amp, dur) => {
       const d = t - t0;
@@ -1331,8 +1369,9 @@
     ctx.scale(cam.z, cam.z);
     ctx.translate(-cam.x + shx, -cam.y + shy);
     const walkK = G.clamp(t / 1.1, 0, 1);
-    const scroll = G.ease.outCubic(walkK) * 120 + (pl.fail && t > pl.fleeT ? -(t - pl.fleeT) * 220 : 0);
-    drawBg(area, scroll, t, L.gy);
+    const fleeing = pl.fail && t > pl.fleeT;
+    const scroll = G.ease.outCubic(walkK) * 120 + (fleeing ? -(t - pl.fleeT) * 220 : 0);
+    drawBg(area, scroll, t, L.gy, walkK >= 1 && !fleeing);
     drawMagicCircles(reel, pl, t, L);
     drawMonster(reel, pl, t, L);
     drawParty(reel, pl, t, L);
@@ -1877,7 +1916,7 @@
 
   // 集中線（会心・閃き・とどめ）
   function drawSpeedLines(reel, pl, t) {
-    if (G.reducedMotion()) return;
+    if (rmNow) return;
     let a = 0, cx = 266, cy = Hd * 0.45;
     pl.beats.forEach((b) => {
       if (b.crit && b.kind === 'hit') { const d = t - b.at; if (d > -0.05 && d < 0.25) a = Math.max(a, 1 - G.seg(d, 0, 0.25)); }
@@ -2213,32 +2252,35 @@
   function drawTitleCard(reel, area, pl, t) {
     const tIn = G.ease.outBack(G.seg(t, 0.1, 0.45)) * (1 - G.seg(t, pl.encT + 0.4, pl.encT + 0.8));
     if (tIn <= 0.01) return;
+    const spr = tsprite('tc:' + reel.id, 360, 76, (g) => {
+      g.translate(180, 46);
+      g.textAlign = 'center';
+      g.font = F(700, 11, 'head');
+      const an = area.name;
+      const aw = g.measureText(an).width;
+      g.fillStyle = 'rgba(240,220,170,0.95)';
+      g.fillText(an, 0, -20);
+      g.fillStyle = '#d8b25a';
+      g.fillRect(-aw / 2 - 44, -24, 34, 1);
+      g.fillRect(aw / 2 + 10, -24, 34, 1);
+      art.poly(g, [-aw / 2 - 8, -24, -aw / 2 - 5, -27, -aw / 2 - 2, -24, -aw / 2 - 5, -21], '#d8b25a');
+      art.poly(g, [aw / 2 + 8, -24, aw / 2 + 5, -27, aw / 2 + 2, -24, aw / 2 + 5, -21], '#d8b25a');
+      g.font = F(800, 23, 'head');
+      g.lineJoin = 'round';
+      g.lineWidth = 6;
+      g.strokeStyle = 'rgba(8,12,28,0.7)';
+      g.strokeText(reel.quest, 0, 6);
+      g.fillStyle = '#fbf3de';
+      g.fillText(reel.quest, 0, 6);
+      if (reel.boss) {
+        g.font = F(900, 10, 'num');
+        g.fillStyle = '#ff8a6a';
+        g.fillText('FINAL QUEST', 0, 24);
+      }
+    });
     ctx.save();
     ctx.globalAlpha = Math.min(1, tIn);
-    ctx.translate(180, 132 - (1 - Math.min(1, tIn)) * 24);
-    ctx.textAlign = 'center';
-    ctx.font = F(700, 11, 'head');
-    const an = area.name;
-    const aw = ctx.measureText(an).width;
-    ctx.fillStyle = 'rgba(240,220,170,0.95)';
-    ctx.fillText(an, 0, -20);
-    ctx.fillStyle = '#d8b25a';
-    ctx.fillRect(-aw / 2 - 44, -24, 34, 1);
-    ctx.fillRect(aw / 2 + 10, -24, 34, 1);
-    art.poly(ctx, [-aw / 2 - 8, -24, -aw / 2 - 5, -27, -aw / 2 - 2, -24, -aw / 2 - 5, -21], '#d8b25a');
-    art.poly(ctx, [aw / 2 + 8, -24, aw / 2 + 5, -27, aw / 2 + 2, -24, aw / 2 + 5, -21], '#d8b25a');
-    ctx.font = F(800, 23, 'head');
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 6;
-    ctx.strokeStyle = 'rgba(8,12,28,0.7)';
-    ctx.strokeText(reel.quest, 0, 6);
-    ctx.fillStyle = '#fbf3de';
-    ctx.fillText(reel.quest, 0, 6);
-    if (reel.boss) {
-      ctx.font = F(900, 10, 'num');
-      ctx.fillStyle = '#ff8a6a';
-      ctx.fillText('FINAL QUEST', 0, 24);
-    }
+    ctx.drawImage(spr, 0, 132 - 46 - (1 - Math.min(1, tIn)) * 24, 360, 76);
     ctx.restore();
   }
 
@@ -2391,23 +2433,27 @@
     const dm = danmakuOf(reel);
     const pl = planOf(reel);
     alpha *= 1 - 0.75 * G.seg(t, pl.resT, pl.resT + 0.3);
+    const font = F(800, 13, 'ui');
     ctx.save();
-    ctx.font = F(800, 13, 'ui');
-    ctx.lineJoin = 'round';
-    ctx.textAlign = 'left';
     dm.forEach((d) => {
       const dur = 4.2 / d.speed;
       const kk = (t - d.t) / dur;
       if (kk < 0 || kk > 1) return;
-      const w = ctx.measureText(d.text).width;
+      const w = textW(font, d.text);
       const x = 372 - kk * (372 + w + 20);
       const y = 172 + (d.lane % 4) * 20;
+      const spr = tsprite('dm:' + (d.gold ? 'g' : 'w') + d.text, w + 8, 22, (g) => {
+        g.font = font;
+        g.textAlign = 'left';
+        g.lineJoin = 'round';
+        g.lineWidth = 3;
+        g.strokeStyle = 'rgba(4,8,18,0.7)';
+        g.strokeText(d.text, 4, 16);
+        g.fillStyle = d.gold ? '#ffe08a' : '#ffffff';
+        g.fillText(d.text, 4, 16);
+      });
       ctx.globalAlpha = alpha * 0.82;
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = 'rgba(4,8,18,0.7)';
-      ctx.strokeText(d.text, x, y);
-      ctx.fillStyle = d.gold ? '#ffe08a' : '#ffffff';
-      ctx.fillText(d.text, x, y);
+      ctx.drawImage(spr, x - 4, y - 16, spr._w, spr._h);
     });
     ctx.restore();
   }
@@ -2430,37 +2476,41 @@
       const fadeOld = slot === 2 ? 0.45 * (1 - shift) + 0.0 : slot === 1 ? 0.78 : 1;
       const a = alpha * fadeOld * inK;
       if (a <= 0.02) return;
-      const au = authorOf(e.c.a, reel);
       const x0 = 12 - (1 - G.ease.outBack(inK)) * 24;
+      const spr = tickerSprite(reel, e);
       ctx.save();
       ctx.globalAlpha = a;
-      ctx.font = F(800, 10.5, 'ui');
-      const nm = (e.parent ? '↳ ' : '') + au.name;
-      const nw = ctx.measureText(nm).width;
-      ctx.font = F(500, 11, 'ui');
-      let text = e.c.text;
-      const maxT = 262 - nw - 40;
-      while (ctx.measureText(text).width > maxT && text.length > 2) text = text.slice(0, -2) + '…';
-      const tw = ctx.measureText(text).width;
-      const w = 34 + nw + 8 + tw + 12;
-      art.rrect(ctx, x0, y - 10, w, 21, 10.5);
-      ctx.fillStyle = e.c.gift ? 'rgba(90,60,10,0.62)' : e.c.a === 'master' ? 'rgba(40,60,110,0.62)' : 'rgba(6,10,22,0.5)';
-      ctx.fill();
-      if (e.c.gift) { ctx.strokeStyle = 'rgba(255,214,110,0.8)'; ctx.lineWidth = 1; ctx.stroke(); }
-      // 顔
+      ctx.drawImage(spr, x0, y - 10, spr._w, spr._h);
+      ctx.restore();
+    });
+  }
+  function tickerSprite(reel, e) {
+    const au = authorOf(e.c.a, reel);
+    const fN = F(800, 10.5, 'ui'), fT = F(500, 11, 'ui');
+    const nm = (e.parent ? '↳ ' : '') + au.name;
+    const nw = textW(fN, nm);
+    let text = e.c.text;
+    const maxT = 262 - nw - 40;
+    while (textW(fT, text) > maxT && text.length > 2) text = text.slice(0, -2) + '…';
+    const tw = textW(fT, text);
+    const w = 34 + nw + 8 + tw + 12;
+    return tsprite('tk:' + reel.id + ':' + e.key, w + 2, 22, (g) => {
+      art.rrect(g, 0, 0, w, 21, 10.5);
+      g.fillStyle = e.c.gift ? 'rgba(90,60,10,0.62)' : e.c.a === 'master' ? 'rgba(40,60,110,0.62)' : 'rgba(6,10,22,0.5)';
+      g.fill();
+      if (e.c.gift) { g.strokeStyle = 'rgba(255,214,110,0.8)'; g.lineWidth = 1; g.stroke(); }
       const av = avatarCanvas(au, 36);
-      ctx.save();
-      ctx.beginPath(); ctx.arc(x0 + 12, y + 0.5, 8.5, 0, TAU); ctx.clip();
-      ctx.drawImage(av, x0 + 3.5, y - 8, 17, 17);
-      ctx.restore();
-      ctx.textAlign = 'left';
-      ctx.font = F(800, 10.5, 'ui');
-      ctx.fillStyle = nameColor(au);
-      ctx.fillText(nm, x0 + 26, y + 4);
-      ctx.font = F(500, 11, 'ui');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(text, x0 + 26 + nw + 7, y + 4);
-      ctx.restore();
+      g.save();
+      g.beginPath(); g.arc(12, 10.5, 8.5, 0, TAU); g.clip();
+      g.drawImage(av, 3.5, 2, 17, 17);
+      g.restore();
+      g.textAlign = 'left';
+      g.font = fN;
+      g.fillStyle = nameColor(au);
+      g.fillText(nm, 26, 14);
+      g.font = fT;
+      g.fillStyle = '#ffffff';
+      g.fillText(text, 26 + nw + 7, 14);
     });
   }
 
@@ -2470,15 +2520,21 @@
     const bottom = Hd - safeB;
     ctx.save();
     ctx.globalAlpha = alpha;
-    const g = ctx.createLinearGradient(0, bottom - 220, 0, Hd);
-    g.addColorStop(0, 'rgba(4,8,18,0)');
-    g.addColorStop(1, 'rgba(4,8,18,0.7)');
-    ctx.fillStyle = g;
+    const gk = 'ovg|' + bottom.toFixed(1) + '|' + Hd.toFixed(1);
+    let gr = skyGrad.get(gk);
+    if (!gr) {
+      const g = ctx.createLinearGradient(0, bottom - 220, 0, Hd);
+      g.addColorStop(0, 'rgba(4,8,18,0)');
+      g.addColorStop(1, 'rgba(4,8,18,0.7)');
+      const tg = ctx.createLinearGradient(0, 0, 0, 120);
+      tg.addColorStop(0, 'rgba(4,8,18,0.5)');
+      tg.addColorStop(1, 'rgba(4,8,18,0)');
+      gr = [g, tg];
+      skyGrad.set(gk, gr);
+    }
+    ctx.fillStyle = gr[0];
     ctx.fillRect(0, bottom - 220, 360, 220 + safeB);
-    const tg = ctx.createLinearGradient(0, 0, 0, 120);
-    tg.addColorStop(0, 'rgba(4,8,18,0.5)');
-    tg.addColorStop(1, 'rgba(4,8,18,0)');
-    ctx.fillStyle = tg;
+    ctx.fillStyle = gr[1];
     ctx.fillRect(0, 0, 360, 120);
     ctx.restore();
 
@@ -2488,35 +2544,13 @@
     ctx.globalAlpha = alpha;
     ctx.textAlign = 'left';
     const lead = reel.party[0];
-    const handle = reel.digest ? '@受付のリナ' : `@${lead ? lead.name : '???'}${reel.party.length > 1 ? ` ほか${reel.party.length - 1}名` : ''}`;
-    ctx.font = F(900, 14, 'ui');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(handle, 16, bottom - 100);
-    if (lead) {
-      const hw = ctx.measureText(handle).width;
-      const badge = `${D.CLASSES[lead.cls].name} Lv${lead.lv}`;
-      ctx.font = F(700, 9.5, 'ui');
-      const bw = ctx.measureText(badge).width + 12;
-      art.rrect(ctx, 22 + hw, bottom - 111, bw, 15, 7.5);
-      ctx.fillStyle = 'rgba(224,184,78,0.22)';
-      ctx.fill();
-      ctx.fillStyle = '#ffe39a';
-      ctx.fillText(badge, 28 + hw, bottom - 100.5);
-    }
-    ctx.font = F(500, 13, 'ui');
-    ctx.fillStyle = '#fbf3de';
-    const lines = wrap(reel.caption, 262);
-    lines.slice(0, 2).forEach((ln, i) => ctx.fillText(ln, 16, bottom - 79 + i * 18));
-    ctx.font = F(700, 12, 'ui');
-    ctx.fillStyle = '#a8d8ff';
-    const tags = reel.tags.join(' ');
-    const ty = bottom - 79 + Math.min(2, lines.length) * 18;
-    ctx.fillText(tags, 16, ty);
+    const ov = overlaySprite(reel);
+    ctx.drawImage(ov, 0, bottom - 118, ov._w, ov._h);
     if (pl && t > pl.resT + 0.4 && TIER_TAG[reel.tier]) {
-      const tw = ctx.measureText(tags + ' ').width;
+      ctx.font = F(700, 12, 'ui');
       ctx.globalAlpha = alpha * G.seg(t, pl.resT + 0.4, pl.resT + 0.7);
       ctx.fillStyle = '#ffd36a';
-      ctx.fillText(TIER_TAG[reel.tier], 16 + tw, ty);
+      ctx.fillText(TIER_TAG[reel.tier], 16 + ov._tagW, bottom - 118 + ov._tagY);
       ctx.globalAlpha = alpha;
     }
     // 音楽のマーキー
@@ -2615,6 +2649,40 @@
     ctx.restore();
   }
 
+  // 名前・職業・キャプション・タグ（冒険譚ごとに1度だけ描く）
+  function overlaySprite(reel) {
+    return tsprite('ov:' + reel.id, 300, 82, (g) => {
+      g.textAlign = 'left';
+      const lead = reel.party[0];
+      const handle = reel.digest ? '@受付のリナ' : `@${lead ? lead.name : '???'}${reel.party.length > 1 ? ` ほか${reel.party.length - 1}名` : ''}`;
+      g.font = F(900, 14, 'ui');
+      g.fillStyle = '#ffffff';
+      g.fillText(handle, 16, 18);
+      if (lead) {
+        const hw = g.measureText(handle).width;
+        const badge = `${D.CLASSES[lead.cls].name} Lv${lead.lv}`;
+        g.font = F(700, 9.5, 'ui');
+        const bw = g.measureText(badge).width + 12;
+        art.rrect(g, 22 + hw, 7, bw, 15, 7.5);
+        g.fillStyle = 'rgba(224,184,78,0.22)';
+        g.fill();
+        g.fillStyle = '#ffe39a';
+        g.fillText(badge, 28 + hw, 17.5);
+      }
+      g.font = F(500, 13, 'ui');
+      g.fillStyle = '#fbf3de';
+      const lines = wrap(reel.caption, 262);
+      lines.slice(0, 2).forEach((ln, i) => g.fillText(ln, 16, 39 + i * 18));
+      g.font = F(700, 12, 'ui');
+      g.fillStyle = '#a8d8ff';
+      const tags = reel.tags.join(' ');
+      const ty = 39 + Math.min(2, lines.length) * 18;
+      g.fillText(tags, 16, ty);
+      g.canvas._tagW = g.measureText(tags + ' ').width;
+      g.canvas._tagY = ty;
+    });
+  }
+
   const wrapCache = new Map();
   function wrap(text, maxW) {
     const key = text + '|' + maxW + '|' + ctx.font;
@@ -2631,15 +2699,84 @@
     return out;
   }
 
+  // ---------------------------------------------------------------- 文字の描き置き
+  // 毎フレーム同じ文字（流れるコメント・コメントの行・キャプション・タイトル）は1度だけ描く
+  const sprites = new Map();
+  function tsprite(key, w, h, draw) {
+    const sc = dpr * k;
+    const k2 = key + '@' + sc.toFixed(2);
+    let c = sprites.get(k2);
+    if (!c) {
+      c = offscreen(w, h, sc, draw);
+      c._w = w; c._h = h;
+      if (sprites.size > 500) sprites.clear();
+      sprites.set(k2, c);
+    }
+    return c;
+  }
+  const twCache = new Map();
+  function textW(font, text) {
+    const key = font + '|' + text;
+    let v = twCache.get(key);
+    if (v == null) {
+      const f = ctx.font;
+      ctx.font = font;
+      v = ctx.measureText(text).width;
+      ctx.font = f;
+      if (twCache.size > 2000) twCache.clear();
+      twCache.set(key, v);
+    }
+    return v;
+  }
+
   // ---------------------------------------------------------------- 背景
-  function drawBg(area, scroll, t, gy) {
-    const p = area.pal;
-    const g = ctx.createLinearGradient(0, 0, 0, gy);
-    g.addColorStop(0, p.sky1);
-    g.addColorStop(1, p.sky2);
+  // 動かない地形（遠景・中景・地面）は冒険譚ごとに1度だけ描いて使い回す。
+  // 空・太陽・雲・木漏れ日・霧・光る結晶・舞う粒・木の揺れは、これまでどおり毎フレーム描く。
+  const bgCache = new Map();
+  const treeCache = new Map();
+  const skyGrad = new Map();
+  let bgScale = 2;
+  function offscreen(w, h, sc, draw) {
+    const c = document.createElement('canvas');
+    c.width = Math.max(1, Math.ceil(w * sc));
+    c.height = Math.max(1, Math.ceil(h * sc));
+    const g = c.getContext('2d');
+    g.scale(sc, sc);
+    const saved = ctx;
+    ctx = g;
+    try { draw(g); } finally { ctx = saved; }
+    return c;
+  }
+  // key ごとの地形の絵（ワールド座標 x:-20〜380, y:-20〜Hd+20）
+  function bgLayer(key, cacheable, draw) {
+    if (!cacheable) { draw(); return; }
+    const k2 = key + '|' + Hd.toFixed(1) + '|' + bgScale.toFixed(2);
+    let c = bgCache.get(k2);
+    if (!c) {
+      c = offscreen(400, Hd + 40, bgScale, (g) => { g.translate(20, 20); draw(); });
+      if (bgCache.size > 10) bgCache.clear();
+      bgCache.set(k2, c);
+    }
+    ctx.drawImage(c, -20, -20, 400, Hd + 40);
+  }
+  function skyFill(area, gy) {
+    const key = area.id + '|' + gy.toFixed(1);
+    let g = skyGrad.get(key);
+    if (!g) {
+      g = ctx.createLinearGradient(0, 0, 0, gy);
+      g.addColorStop(0, area.pal.sky1);
+      g.addColorStop(1, area.pal.sky2);
+      if (skyGrad.size > 20) skyGrad.clear();
+      skyGrad.set(key, g);
+    }
     ctx.fillStyle = g;
     ctx.fillRect(-20, -20, 400, gy + 22);
+  }
+  function drawBg(area, scroll, t, gy, cacheable) {
+    const p = area.pal;
     const id = area.id;
+    const sk = id + ':' + Math.round(scroll);
+    skyFill(area, gy);
     const layer = (col, amp, base, n, par, seed, jag) => {
       const span = 400 / n;
       const sh = scroll * par;
@@ -2654,13 +2791,26 @@
       pts.push(440, gy + 2);
       art.facetPoly(ctx, pts, col, 0.06);
     };
+    const ground = () => {
+      art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, Hd + 20, -20, Hd + 20], p.ground);
+      art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, gy + 3, -20, gy + 3], G.shade(p.ground, 0.12));
+      const gg = ctx.createLinearGradient(0, gy, 0, Hd);
+      gg.addColorStop(0, 'rgba(0,0,0,0)');
+      gg.addColorStop(1, 'rgba(4,8,18,0.35)');
+      ctx.fillStyle = gg;
+      ctx.fillRect(-20, gy, 400, Hd - gy + 20);
+      for (let i = 0; i < 18; i++) {
+        const x = ((i * 31 - scroll) % 420 + 420) % 420 - 30;
+        const y = gy + 14 + G.hash(i * 5) * (Hd - gy - 40);
+        art.facet(ctx, x, y, 4 + G.hash(i) * 5, 2 + G.hash(i) * 2, 5, G.shade(p.ground, -0.12), i, 0.14);
+      }
+    };
     if (id === 'meadow') {
       art.facet(ctx, 290, 90, 24, 24, 10, '#fff2b0', t * 0.1, 0.1);
       cloudR(((60 - t * 6 - scroll * 0.1) % 460 + 460) % 460 - 50, 120, 50);
       cloudR(((240 - t * 4 - scroll * 0.1) % 460 + 460) % 460 - 50, 70, 36);
-      layer(p.far, 60, gy - 70, 6, 0.15, 11, false);
-      layer(p.mid, 40, gy - 24, 8, 0.4, 23, false);
-      treesR(p, scroll, gy, 'round', t);
+      bgLayer(sk + 'A', cacheable, () => { layer(p.far, 60, gy - 70, 6, 0.15, 11, false); layer(p.mid, 40, gy - 24, 8, 0.4, 23, false); ground(); });
+      treesR(area, scroll, gy, 'round', t);
     } else if (id === 'forest') {
       // 木漏れ日
       ctx.save();
@@ -2673,19 +2823,22 @@
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x + 26, 0); ctx.lineTo(x + 90, gy); ctx.lineTo(x + 40, gy); ctx.fill();
       }
       ctx.restore();
-      layer(p.far, 70, gy - 80, 7, 0.15, 31, true);
-      treesR(p, scroll * 0.5, gy - 30, 'pine-far', t);
-      layer(p.mid, 20, gy - 10, 8, 0.4, 41, false);
-      treesR(p, scroll, gy, 'pine', t);
+      bgLayer(sk + 'A', cacheable, () => layer(p.far, 70, gy - 80, 7, 0.15, 31, true));
+      treesR(area, scroll * 0.5, gy - 30, 'pine-far', t);
+      bgLayer(sk + 'B', cacheable, () => { layer(p.mid, 20, gy - 10, 8, 0.4, 41, false); ground(); });
+      treesR(area, scroll, gy, 'pine', t);
     } else if (id === 'cave') {
-      ctx.fillStyle = 'rgba(0,0,0,0.25)';
-      ctx.fillRect(-20, -20, 400, gy + 20);
-      for (let i = 0; i < 9; i++) {
-        const x = ((i * 52 - scroll * 0.5) % 470 + 470) % 470 - 50;
-        const h = 30 + G.hash(i * 3) * 60;
-        art.facetPoly(ctx, [x - 14, -20, x + 14, -20, x, h], p.mid, 0.12);
-      }
-      layer(p.far, 50, gy - 40, 7, 0.3, 51, true);
+      bgLayer(sk + 'A', cacheable, () => {
+        ctx.fillStyle = 'rgba(0,0,0,0.25)';
+        ctx.fillRect(-20, -20, 400, gy + 20);
+        for (let i = 0; i < 9; i++) {
+          const x = ((i * 52 - scroll * 0.5) % 470 + 470) % 470 - 50;
+          const h = 30 + G.hash(i * 3) * 60;
+          art.facetPoly(ctx, [x - 14, -20, x + 14, -20, x, h], p.mid, 0.12);
+        }
+        layer(p.far, 50, gy - 40, 7, 0.3, 51, true);
+        ground();
+      });
       for (let i = 0; i < 6; i++) {
         const x = ((i * 77 - scroll * 0.8) % 480 + 480) % 480 - 60;
         const gl = 0.6 + Math.sin(t * 2 + i) * 0.3;
@@ -2695,46 +2848,49 @@
         art.poly(ctx, [x, gy - 26, x + 5, gy, x + 1, gy], '#bff4ff');
       }
     } else if (id === 'castle') {
-      art.facet(ctx, 80, 80, 20, 20, 10, '#f2eedc', 0, 0.1);
-      layer(p.far, 40, gy - 60, 6, 0.12, 61, false);
-      const cx = 220 - scroll * 0.25;
-      art.poly(ctx, [cx - 60, gy - 30, cx + 60, gy - 30, cx + 60, gy - 120, cx - 60, gy - 120], p.mid);
-      [-60, -20, 20, 60].forEach((d, i) => {
-        const h = i % 2 ? 150 : 170;
-        art.poly(ctx, [cx + d - 12, gy - 30, cx + d + 12, gy - 30, cx + d + 12, gy - h, cx + d - 12, gy - h], G.shade(p.mid, 0.05));
-        art.poly(ctx, [cx + d - 15, gy - h, cx + d + 15, gy - h, cx + d, gy - h - 26], p.near);
-        ctx.fillStyle = 'rgba(255,200,120,0.6)';
-        ctx.fillRect(cx + d - 2, gy - h + 18, 4, 8);
+      bgLayer(sk + 'A', cacheable, () => {
+        art.facet(ctx, 80, 80, 20, 20, 10, '#f2eedc', 0, 0.1);
+        layer(p.far, 40, gy - 60, 6, 0.12, 61, false);
+        const cx = 220 - scroll * 0.25;
+        art.poly(ctx, [cx - 60, gy - 30, cx + 60, gy - 30, cx + 60, gy - 120, cx - 60, gy - 120], p.mid);
+        [-60, -20, 20, 60].forEach((d, i) => {
+          const h = i % 2 ? 150 : 170;
+          art.poly(ctx, [cx + d - 12, gy - 30, cx + d + 12, gy - 30, cx + d + 12, gy - h, cx + d - 12, gy - h], G.shade(p.mid, 0.05));
+          art.poly(ctx, [cx + d - 15, gy - h, cx + d + 15, gy - h, cx + d, gy - h - 26], p.near);
+          ctx.fillStyle = 'rgba(255,200,120,0.6)';
+          ctx.fillRect(cx + d - 2, gy - h + 18, 4, 8);
+        });
+        layer(p.near, 18, gy - 6, 8, 0.6, 71, false);
+        ground();
       });
-      layer(p.near, 18, gy - 6, 8, 0.6, 71, false);
+      ctx.save();
+      ctx.globalAlpha = 0.32;
+      cloudR(((40 - t * 5) % 470 + 470) % 470 - 60, 60, 44);
+      cloudR(((260 - t * 3.2) % 470 + 470) % 470 - 60, 104, 30);
+      ctx.restore();
       for (let i = 0; i < 4; i++) {
         const x = ((t * 10 + i * 120) % 520) - 80;
         ctx.fillStyle = 'rgba(230,220,240,0.12)';
         ctx.beginPath(); ctx.ellipse(x, gy - 10 - i * 8, 90, 14, 0, 0, TAU); ctx.fill();
       }
     } else if (id === 'peak') {
-      art.facet(ctx, 270, 110, 34, 34, 10, '#ffe2a0', 0, 0.08);
-      layer(p.far, 140, gy - 50, 5, 0.1, 81, true);
-      layer(p.mid, 60, gy - 20, 7, 0.35, 91, true);
+      bgLayer(sk + 'A', cacheable, () => {
+        art.facet(ctx, 270, 110, 34, 34, 10, '#ffe2a0', 0, 0.08);
+        layer(p.far, 140, gy - 50, 5, 0.1, 81, true);
+        layer(p.mid, 60, gy - 20, 7, 0.35, 91, true);
+        ground();
+      });
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      cloudR(((90 - t * 7) % 470 + 470) % 470 - 60, 66, 52);
+      cloudR(((300 - t * 4.5) % 470 + 470) % 470 - 60, 140, 34);
+      ctx.restore();
       for (let i = 0; i < 20; i++) {
         const x = (G.hash(i) * 380 + t * 8) % 380 - 10;
         const y = (G.hash(i * 7) * gy + t * (20 + G.hash(i) * 30)) % gy;
         ctx.fillStyle = 'rgba(255,190,120,0.6)';
         ctx.fillRect(x, y, 1.6, 1.6);
       }
-    }
-    // 地面
-    art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, Hd + 20, -20, Hd + 20], p.ground);
-    art.poly(ctx, [-20, gy - 2, 380, gy - 2, 380, gy + 3, -20, gy + 3], G.shade(p.ground, 0.12));
-    const gg = ctx.createLinearGradient(0, gy, 0, Hd);
-    gg.addColorStop(0, 'rgba(0,0,0,0)');
-    gg.addColorStop(1, 'rgba(4,8,18,0.35)');
-    ctx.fillStyle = gg;
-    ctx.fillRect(-20, gy, 400, Hd - gy + 20);
-    for (let i = 0; i < 18; i++) {
-      const x = ((i * 31 - scroll) % 420 + 420) % 420 - 30;
-      const y = gy + 14 + G.hash(i * 5) * (Hd - gy - 40);
-      art.facet(ctx, x, y, 4 + G.hash(i) * 5, 2 + G.hash(i) * 2, 5, G.shade(p.ground, -0.12), i, 0.14);
     }
     if (id === 'meadow') {
       for (let i = 0; i < 3; i++) {
@@ -2761,26 +2917,50 @@
   function cloudR(x, y, w) {
     art.poly(ctx, [x - w, y, x - w * 0.6, y - w * 0.4, x - w * 0.1, y - w * 0.55, x + w * 0.5, y - w * 0.35, x + w, y], 'rgba(255,255,255,0.85)');
   }
-  function treesR(p, scroll, gy, kind, t) {
+  // 木：1本ずつ絵にしておき、揺れは「傾け」で出す（根元は動かず、上ほど揺れる）
+  function treeSprite(area, kind, i) {
+    const s = 0.8 + G.hash(i * 13) * 0.5;
+    const key = area.id + kind + i + '|' + bgScale.toFixed(2);
+    let c = treeCache.get(key);
+    if (c) return c;
+    const p = area.pal;
+    let x0, y0, w, h;
+    if (kind === 'round') { x0 = -24 * s; y0 = -62 * s; w = 48 * s; h = 64 * s; }
+    else { const th = (kind === 'pine-far' ? 70 : 100) * s; x0 = -26 * s; y0 = -(14 + 0.94 * th); w = 52 * s; h = -y0 + 3; }
+    c = offscreen(w, h, bgScale, (g) => {
+      g.translate(-x0, -y0);
+      if (kind === 'round') {
+        art.poly(g, [-3, 0, 3, 0, 2, -30 * s, -2, -30 * s], '#7a5230');
+        art.facet(g, 0, -40 * s, 20 * s, 18 * s, 7, p.near, i, 0.16);
+      } else {
+        const th = (kind === 'pine-far' ? 70 : 100) * s;
+        const col = kind === 'pine-far' ? p.mid : p.near;
+        art.poly(g, [-3, 0, 3, 0, 3, -12, -3, -12], '#4a3020');
+        for (let j = 0; j < 3; j++) {
+          const yb = -10 - j * th * 0.26;
+          const ww = (24 - j * 6) * s;
+          art.poly(g, [-ww, yb, ww, yb, 0, yb - th * 0.42], G.shade(col, j * 0.04));
+          art.poly(g, [-ww, yb, 0, yb - th * 0.42, 0, yb], G.shade(col, 0.1 + j * 0.04));
+        }
+      }
+    });
+    c._x0 = x0; c._y0 = y0; c._w = w; c._h = h; c._top = kind === 'round' ? 40 * s : 10 + 0.94 * (kind === 'pine-far' ? 70 : 100) * s;
+    c._k = kind === 'round' ? 1 : 1.2;
+    if (treeCache.size > 120) treeCache.clear();
+    treeCache.set(key, c);
+    return c;
+  }
+  function treesR(area, scroll, gy, kind, t) {
     for (let i = 0; i < 7; i++) {
       const span = 470;
       const x = ((i * 70 - scroll * (kind === 'pine-far' ? 0.5 : 0.8)) % span + span) % span - 55;
-      const s = 0.8 + G.hash(i * 13) * 0.5;
       const sway = Math.sin(t * 1.2 + i) * 1.2;
-      if (kind === 'round') {
-        art.poly(ctx, [x - 3, gy, x + 3, gy, x + 2, gy - 30 * s, x - 2, gy - 30 * s], '#7a5230');
-        art.facet(ctx, x + sway, gy - 40 * s, 20 * s, 18 * s, 7, p.near, i, 0.16);
-      } else {
-        const h = (kind === 'pine-far' ? 70 : 100) * s;
-        const col = kind === 'pine-far' ? p.mid : p.near;
-        art.poly(ctx, [x - 3, gy, x + 3, gy, x + 3, gy - 12, x - 3, gy - 12], '#4a3020');
-        for (let j = 0; j < 3; j++) {
-          const y0 = gy - 10 - j * h * 0.26;
-          const w = (24 - j * 6) * s;
-          art.poly(ctx, [x - w, y0, x + w, y0, x + sway * (j + 1) * 0.4, y0 - h * 0.42], G.shade(col, j * 0.04));
-          art.poly(ctx, [x - w, y0, x + sway * (j + 1) * 0.4, y0 - h * 0.42, x, y0], G.shade(col, 0.1 + j * 0.04));
-        }
-      }
+      const c = treeSprite(area, kind, i);
+      ctx.save();
+      ctx.translate(x, gy);
+      ctx.transform(1, 0, (-sway * c._k) / c._top, 1, 0, 0);
+      ctx.drawImage(c, c._x0, c._y0, c._w, c._h);
+      ctx.restore();
     }
   }
 

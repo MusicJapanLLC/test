@@ -955,3 +955,29 @@ img.ci { width: 18px; height: 18px; vertical-align: -4px; }
   .rank-txt b, .fame-txt { display: none; }
   .fame { width: 44px; }
 }
+
+/* ショップ：上限・両替所・パック */
+.shop-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.shop-head small { font-size: 11px; color: var(--muted); font-weight: 600; line-height: 1.4; }
+.card .lim { display: block; color: #ffd36a !important; font-weight: 700 !important; }
+.card.soldout { opacity: 0.55; }
+.card.soldout .lim { color: var(--muted) !important; }
+.card.exch { border-color: rgba(255, 214, 106, 0.5); background: linear-gradient(90deg, rgba(127, 140, 255, 0.12), rgba(255, 214, 106, 0.1)); }
+.card.exch img { width: 36px; height: 36px; flex: none; }
+.card.exch .arrow { font-style: normal; color: var(--brass); font-weight: 900; }
+.card.exch .coinbig svg { width: 30px; height: 30px; }
+.card.exch b { font-family: var(--font-num); font-size: 16px; color: #ffe39a; }
+.card.exch .btn, .card.bundle .btn { flex-direction: row; gap: 3px; min-width: 70px; }
+.card.exch .btn svg, .card.bundle .btn svg { width: 14px; height: 14px; }
+.card.exch .btn span, .card.bundle .btn span { font-family: var(--font-num); font-size: 13px; opacity: 1; }
+.card.bundle { border-color: rgba(255, 200, 58, 0.55); background: linear-gradient(90deg, rgba(255, 200, 58, 0.14), rgba(120, 150, 255, 0.04)); }
+.card.bundle .per { font-style: normal; font-size: 9.5px; font-weight: 900; color: #1a1204; background: var(--gold-grad); padding: 1px 6px; border-radius: 4px; margin-left: 6px; vertical-align: 2px; font-family: var(--font-body); }
+@media (max-width: 430px) {
+  .hud-row { gap: 5px; }
+  .res { gap: 4px; min-width: 0; }
+  .pill { height: 30px; padding: 0 7px 0 4px; gap: 3px; }
+  .pill b { font-size: 12.5px; }
+  .pill .ic { width: 17px; height: 17px; }
+  .icon-btn { width: 31px; height: 31px; }
+  .icon-btn svg { width: 16px; height: 16px; }
+}

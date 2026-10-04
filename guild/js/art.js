@@ -1100,6 +1100,14 @@
         ctx.strokeStyle = '#3a8a4a'; ctx.lineWidth = 0.08;
         ctx.beginPath(); ctx.moveTo(0, -0.1); ctx.quadraticCurveTo(0.1, 0.5, 0.35, 0.85); ctx.stroke();
         break;
+      case 'horn':
+        ctx.strokeStyle = '#c8901e'; ctx.lineWidth = 0.08;
+        ctx.beginPath(); ctx.moveTo(-0.62, 0.3); ctx.quadraticCurveTo(-0.2, 0.78, 0.4, 0.42); ctx.stroke();
+        facetPoly(ctx, [-0.78, 0.18, -0.5, 0.02, 0.1, -0.2, 0.52, -0.62, 0.78, -0.38, 0.44, 0.06, -0.1, 0.34, -0.56, 0.46], '#f2e2c0', 0.18);
+        poly(ctx, [0.52, -0.62, 0.86, -0.74, 0.92, -0.34, 0.78, -0.38], '#e8bd4c');
+        poly(ctx, [-0.86, 0.12, -0.72, 0.06, -0.62, 0.48, -0.78, 0.5], '#e8bd4c');
+        [[-0.3, 0.12], [0.1, -0.06], [0.42, -0.3]].forEach(([x, y]) => poly(ctx, [x - 0.05, y - 0.12, x + 0.05, y - 0.16, x + 0.09, y + 0.12, x - 0.01, y + 0.16], '#c8901e'));
+        break;
       case 'key':
         ctx.strokeStyle = '#e8bd4c'; ctx.lineWidth = 0.16;
         ctx.beginPath(); ctx.arc(-0.36, -0.36, 0.28, 0, TAU); ctx.stroke();

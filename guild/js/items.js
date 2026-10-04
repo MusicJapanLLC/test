@@ -85,6 +85,7 @@
     hg2: { name: '疾風の砂時計', desc: '30分間、遠征と建設が2倍の速さで進む', icon: 'hourglass', rarity: 2, boost: { k: 'speed', mult: 2, sec: 1800 } },
     hg3: { name: '神速の砂時計', desc: '30分間、遠征と建設が3倍の速さで進む', icon: 'hourglass3', rarity: 3, boost: { k: 'speed', mult: 3, sec: 1800 } },
     finish: { name: '時短の巻物', desc: '遠征中のパーティ1組を、すぐに帰還させる', icon: 'scroll', rarity: 1, use: 'finish' },
+    horn: { name: '帰還の角笛', desc: '遠征中のパーティ全員を、すぐに帰還させる', icon: 'horn', rarity: 3, use: 'horn' },
     goldx2: { name: '黄金の祝福', desc: '30分間、依頼で手に入るゴールドが2倍', icon: 'coinbag', rarity: 2, boost: { k: 'gold', mult: 2, sec: 1800 } },
     luck: { name: '幸運の四つ葉', desc: '30分間、大成功率 +10%', icon: 'clover', rarity: 2, boost: { k: 'luck', add: 0.1, sec: 1800 } },
     key: { name: '宝箱の鍵', desc: '黄金の宝箱を1回開けられる', icon: 'key', rarity: 2, use: 'key' },
@@ -92,7 +93,7 @@
     book: { name: '閃きの書', desc: '冒険者1人が、新しい技を1つ閃く（覚えている技なら技Lvが上がる）', icon: 'book', rarity: 3, use: 'book' },
     expbook: { name: '経験の書', desc: '冒険者1人に、たっぷり経験値を与える', icon: 'book2', rarity: 1, use: 'exp' },
   };
-  IT.CONS_ORDER = ['hg3', 'hg2', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'stone'];
+  IT.CONS_ORDER = ['hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'stone'];
   IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ' };
 
   // ---------------------------------------------------------------- 抽選
@@ -450,6 +451,15 @@
     s.active.forEach((ex) => { ex.endAt -= extra; ex.startAt -= extra; });
     if (s.building) s.building.endAt -= extra;
   };
+  // 帰還の角笛：遠征中の全員をすぐに帰す
+  IT.finishAll = function () {
+    const st = G.state;
+    if (!st.active.length || IT.cons('horn') <= 0) return 0;
+    const now = G.now();
+    st.active.forEach((ex) => { const d = ex.endAt - now; ex.endAt = now - 0.01; ex.startAt -= Math.max(0, d); });
+    IT.addCons('horn', -1);
+    return st.active.length;
+  };
   IT.finishOne = function (exId) {
     const st = G.state;
     const ex = st.active.find((e) => e.q.id === exId) || st.active.slice().sort((a, b) => a.endAt - b.endAt)[0];
@@ -469,7 +479,7 @@
   IT.PITY = 30;
   IT.canFree = () => G.now() - (G.state.freeChestAt || 0) >= IT.FREE_INTERVAL;
   // ガチャの中身：装備（ほとんど）と、ときどき持ち物
-  const CONS_BY_RANK = [[['stone', 6], ['finish', 1], ['expbook', 1]], [['stone', 12], ['finish', 2], ['expbook', 2]], [['hg2', 1], ['goldx2', 1], ['luck', 1], ['key', 1]], [['hg3', 1], ['book', 1]], [['book', 2]]];
+  const CONS_BY_RANK = [[['stone', 6], ['finish', 1], ['expbook', 1]], [['stone', 12], ['finish', 2], ['expbook', 2]], [['hg2', 1], ['goldx2', 1], ['luck', 1], ['key', 1]], [['hg3', 1], ['book', 1], ['horn', 1]], [['book', 2]]];
   function chestOne(rnd, r) {
     if (r <= 3 && rnd() < 0.18) {
       const opts = CONS_BY_RANK[r];

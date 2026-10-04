@@ -907,6 +907,10 @@
     let bot = G.mix(SKY.day[1], SKY.night[1], night);
     top = G.mix(top, SKY.dusk[0], duskK * 0.6);
     bot = G.mix(bot, SKY.dusk[1], duskK * 0.8);
+    // 雨の日・曇りの日は空が灰色がかる
+    const wx = weather();
+    const gray = wx.rain * 0.5 + (wx.cloud ? 0.12 : 0);
+    if (gray > 0.01) { top = G.mix(top, '#6c7688', gray); bot = G.mix(bot, '#a8b0bc', gray); }
     return [top, bot, duskK];
   }
   SC.skyColors = skyColors;
@@ -933,6 +937,7 @@
     drawAgents();
     drawFront(st);
     drawNight(nq);
+    drawRain(st);
     drawLights(st, nq);
     drawParticles();
     drawCoins();
@@ -973,15 +978,92 @@
       art.ellipse(ctx, x + 3, y - 2, 2.2, 2.2, 'rgba(180,170,150,0.5)');
       art.ellipse(ctx, x - 3, y + 3, 1.5, 1.5, 'rgba(180,170,150,0.4)');
     }
-    // 雲
-    for (let i = 0; i < 9; i++) {
-      const sp = 3 + G.hash(i * 3) * 5;
-      const span = R - L + 160;
-      const x = L - 80 + ((G.hash(i * 17) * span + time * sp) % span);
-      const y = -80 - G.hash(i * 11) * 900 + camTop * 0.5;
-      if (y < viewTop - 40 || y > viewBot + 20) continue;
-      const w = 30 + G.hash(i * 5) * 40;
-      cloud(x, y, w, n);
+    const wx = weather();
+    // オーロラ（夜、ときどき）
+    if (n > 0.6 && G.hash(wx.day * 31 + 7) > 0.55) {
+      const ay = -760 + camTop * 0.85;
+      if (ay > viewTop - 260 && ay < viewBot) {
+        ctx.save();
+        ['#5cffb0', '#5ad0ff', '#c08aff'].forEach((col, j) => {
+          const g = ctx.createLinearGradient(0, ay - 60 + j * 26, 0, ay + 40 + j * 26);
+          g.addColorStop(0, G.rgba(col, 0));
+          g.addColorStop(0.5, G.rgba(col, 0.13 * (n - 0.5) * 2));
+          g.addColorStop(1, G.rgba(col, 0));
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          const base = ay + j * 26;
+          ctx.moveTo(L, base + 40);
+          for (let k = 0; k <= 24; k++) {
+            const x = G.lerp(L, R, k / 24);
+            ctx.lineTo(x, base - 50 + Math.sin(k * 0.7 + time * 0.35 + j) * 22 + Math.sin(k * 1.9 - time * 0.2) * 8);
+          }
+          ctx.lineTo(R, base + 40);
+          ctx.closePath();
+          ctx.fill();
+        });
+        ctx.restore();
+      }
+    }
+    // 流れ星（夜）
+    if (n > 0.55) {
+      const per = 6.5;
+      const idx = Math.floor(time / per);
+      const kk = (time % per) / 0.7;
+      if (kk < 1 && G.hash(idx * 17) > 0.35) {
+        const sx = G.lerp(L, R, G.hash(idx * 3));
+        const sy = viewTop + 30 + G.hash(idx * 5) * 160;
+        const x1 = sx + kk * 90, y1 = sy + kk * 40;
+        const g = ctx.createLinearGradient(x1 - 40, y1 - 18, x1, y1);
+        g.addColorStop(0, 'rgba(255,255,240,0)');
+        g.addColorStop(1, `rgba(255,255,240,${0.9 * (1 - kk) * n})`);
+        ctx.strokeStyle = g;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath(); ctx.moveTo(x1 - 40, y1 - 18); ctx.lineTo(x1, y1); ctx.stroke();
+      }
+    }
+    // 朝夕の光の筋
+    if (duskK > 0.15 && sunK >= 0 && sunK <= 1) {
+      const sx = G.lerp(L - 20, R + 20, sunK), sy = camTop + topPad / s + 40 + Math.pow(sunK * 2 - 1, 2) * 110;
+      ctx.save();
+      for (let i = 0; i < 5; i++) {
+        const a0 = 1.2 + i * 0.32 + Math.sin(time * 0.2 + i) * 0.04;
+        ctx.fillStyle = `rgba(255,200,140,${0.06 * duskK})`;
+        ctx.beginPath(); ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + Math.cos(a0 - 0.05) * 600, sy + Math.sin(a0 - 0.05) * 600);
+        ctx.lineTo(sx + Math.cos(a0 + 0.05) * 600, sy + Math.sin(a0 + 0.05) * 600);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+    // 雲（遠くの小さな雲はゆっくり、近くの大きな雲は速く）
+    const nCloud = wx.cloud || wx.rain ? 16 : 11;
+    for (let i = 0; i < nCloud; i++) {
+      const nearC = i % 3 === 0;
+      const sp = (nearC ? 9 : 4) + G.hash(i * 3) * (nearC ? 8 : 5);
+      const span = R - L + 200;
+      const x = L - 100 + ((G.hash(i * 17) * span + time * sp) % span);
+      const y = -80 - G.hash(i * 11) * 900 + camTop * (nearC ? 0.6 : 0.45) + Math.sin(time * 0.3 + i) * 2;
+      if (y < viewTop - 50 || y > viewBot + 20) continue;
+      const w = (nearC ? 50 : 26) + G.hash(i * 5) * (nearC ? 46 : 30);
+      cloud(x, y, w, Math.min(1, n + (wx.rain ? 0.35 : wx.cloud ? 0.12 : 0)));
+    }
+    // 飛行船（昼、ときどき）
+    if (n < 0.4) {
+      const per = 140;
+      const kk = (time % per) / 70;
+      if (kk < 1) {
+        const ax = G.lerp(R + 60, L - 60, kk);
+        const ay = viewTop + 70 + Math.sin(time * 0.5) * 4;
+        ctx.save();
+        ctx.translate(ax, ay);
+        art.facet(ctx, 0, 0, 22, 8, 10, '#c86a4a', 0, 0.16);
+        art.poly(ctx, [18, -2, 26, -7, 26, 7, 18, 2], '#a04a3a');
+        art.poly(ctx, [-6, 8, 6, 8, 5, 12, -5, 12], '#6a4a32');
+        ctx.strokeStyle = 'rgba(60,40,30,0.6)'; ctx.lineWidth = 0.5;
+        ctx.beginPath(); ctx.moveTo(-8, 6); ctx.lineTo(-5, 8); ctx.moveTo(8, 6); ctx.lineTo(5, 8); ctx.stroke();
+        art.star(ctx, -2, 0, 3, '#f0c94a');
+        ctx.restore();
+      }
     }
     // 鳥（昼）
     if (n < 0.3) {
@@ -1022,6 +1104,7 @@
     ctx.restore();
     ctx.save();
     ctx.translate(0, camTop * 0.12);
+    drawSea(L, R, n);
     pts = [L, 10];
     for (let i = 0; i <= 18; i++) {
       const x = G.lerp(L, R, i / 18);
@@ -1036,6 +1119,30 @@
       house(x, -2, 26 + G.hash(i * 3) * 10, 22 + G.hash(i * 5) * 18, n, i);
     }
     ctx.restore();
+  }
+  // 遠くの海（画面が広いとき、ギルドの左右に見える）
+  function drawSea(L, R, n) {
+    const hy = -50;
+    const [, , duskK] = skyColors();
+    const top = G.mix(G.mix('#7cc4ea', '#e8a070', duskK * 0.5), '#1c2c58', n);
+    const bot = G.mix('#3f8fc8', '#0f1a3a', n);
+    const g = ctx.createLinearGradient(0, hy, 0, 12);
+    g.addColorStop(0, top);
+    g.addColorStop(1, bot);
+    ctx.fillStyle = g;
+    ctx.fillRect(L, hy, R - L, 62);
+    ctx.fillStyle = G.rgba(G.mix('#eaf8ff', '#5a6a9a', n), 0.6);
+    ctx.fillRect(L, hy, R - L, 0.8);
+    const span = R - L + 40;
+    for (let i = 0; i < 40; i++) {
+      const x = L - 20 + ((G.hash(i * 7) * span + time * (2 + G.hash(i) * 3)) % span);
+      if (x > WL - 10 && x < WR + 10) continue;
+      const y = hy + 3 + G.hash(i * 13) * 34;
+      const a = (0.3 + 0.35 * Math.sin(time * 1.6 + i * 1.7)) * (1 - n * 0.5);
+      const w = 2 + G.hash(i * 3) * 6;
+      ctx.fillStyle = `rgba(235,248,255,${a})`;
+      ctx.fillRect(x - w / 2, y, w, 0.7);
+    }
   }
   function house(x, y, w, h, n, i) {
     const wall = G.mix(['#d9c3a0', '#c9a98a', '#e0d0b0'][i % 3], '#2a3150', n * 0.8);
@@ -1230,20 +1337,87 @@
   }
 
   function windowAt(x, y, w, h, f) {
-    const [skyT, skyB] = skyColors();
+    const [skyT, skyB, duskK] = skyColors();
     art.poly(ctx, [x - 3, y - 3, x + w + 3, y - 3, x + w + 3, y + h + 3, x - 3, y + h + 3], '#5a3a26');
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x, y, w, h); ctx.clip();
     const g = ctx.createLinearGradient(0, y, 0, y + h);
     g.addColorStop(0, skyT);
     g.addColorStop(1, skyB);
     ctx.fillStyle = g;
     ctx.fillRect(x, y, w, h);
-    // 窓の外の雲・星
+    const wx = weather();
+    // 窓の外：空
     if (night > 0.4) {
-      for (let i = 0; i < 4; i++) { ctx.fillStyle = `rgba(255,250,220,${0.6 * night})`; ctx.fillRect(x + G.hash(i + x) * w, y + G.hash(i * 3 + x) * h * 0.6, 0.7, 0.7); }
-    } else {
-      const cx = x + ((time * 2 + x) % (w + 20)) - 10;
-      art.poly(ctx, [cx - 6, y + h * 0.4, cx + 6, y + h * 0.4, cx + 2, y + h * 0.28, cx - 3, y + h * 0.3], 'rgba(255,255,255,0.7)');
+      for (let i = 0; i < 6; i++) {
+        const tw = 0.5 + 0.5 * Math.sin(time * (1.5 + G.hash(i + x)) + i);
+        ctx.fillStyle = `rgba(255,250,220,${(0.35 + tw * 0.5) * night})`;
+        ctx.fillRect(x + G.hash(i + x) * w, y + G.hash(i * 3 + x) * h * 0.5, 0.7, 0.7);
+      }
     }
+    for (let i = 0; i < 2; i++) {
+      const cw = 7 + i * 3;
+      const cx = x + ((time * (2.4 + i * 1.3) + x * 3 + i * 23) % (w + cw * 2)) - cw;
+      const cy = y + h * (0.18 + i * 0.16);
+      const c = G.mix('#ffffff', '#4a5680', night * 0.85);
+      art.poly(ctx, [cx - cw, cy, cx - cw * 0.5, cy - cw * 0.3, cx, cy - cw * 0.42, cx + cw * 0.6, cy - cw * 0.25, cx + cw, cy], G.rgba(c, 0.75 * (wx.cloud ? 1 : 0.8)));
+    }
+    // 窓の外：海（波・光の反射・ときどき船）
+    const hy = y + h * 0.6;
+    const seaT = G.mix(G.mix('#6cb8e4', '#e89a6a', duskK * 0.6), '#1a2a54', night);
+    const seaB = G.mix('#2f7fbf', '#0c1634', night);
+    const sg = ctx.createLinearGradient(0, hy, 0, y + h);
+    sg.addColorStop(0, seaT);
+    sg.addColorStop(1, seaB);
+    ctx.fillStyle = sg;
+    ctx.fillRect(x, hy, w, y + h - hy);
+    ctx.fillStyle = G.rgba(G.mix('#eaf8ff', '#7080b0', night), 0.7);
+    ctx.fillRect(x, hy, w, 0.6);
+    for (let i = 0; i < Math.ceil(w / 5); i++) {
+      const wy = hy + 1.5 + G.hash(i * 5 + x) * (y + h - hy - 2);
+      const ww = 1.5 + G.hash(i * 7 + x) * 3;
+      const wxp = x + ((G.hash(i * 3 + x) * w + time * (1.2 + G.hash(i) * 1.5)) % (w + 6)) - 3;
+      const a = (0.3 + 0.35 * Math.sin(time * 2 + i * 1.9 + x)) * (1 - night * 0.55);
+      ctx.fillStyle = `rgba(240,250,255,${a})`;
+      ctx.fillRect(wxp, wy, ww, 0.5);
+    }
+    // 太陽や月の照り返し
+    const glx = x + w * (0.3 + 0.4 * ((dayPhase * 3) % 1));
+    for (let j = 0; j < 4; j++) {
+      const a = 0.25 + 0.25 * Math.sin(time * 5 + j * 2);
+      ctx.fillStyle = night > 0.5 ? `rgba(220,230,255,${a * 0.6})` : duskK > 0.3 ? `rgba(255,190,120,${a})` : `rgba(255,250,220,${a})`;
+      const ww = 4 - j * 0.7;
+      ctx.fillRect(glx - ww / 2 + Math.sin(time * 3 + j) * 0.8, hy + 2 + j * 2.2, ww, 0.6);
+    }
+    // 帆船がゆっくり横切る
+    const bspan = w + 30;
+    const bx = x - 15 + ((time * 1.6 + x * 7) % (bspan * 3));
+    if (bx < x + w + 15) {
+      const by = hy + 1.4 + Math.sin(time * 1.8) * 0.3;
+      art.poly(ctx, [bx - 4, by, bx + 4, by, bx + 3, by + 1.6, bx - 3, by + 1.6], G.mix('#6a4a32', '#20182a', night));
+      art.poly(ctx, [bx - 0.3, by, bx - 0.3, by - 6, bx + 3.4, by - 0.6], G.mix('#fff8ea', '#5a6080', night * 0.8));
+      art.poly(ctx, [bx - 0.8, by, bx - 0.8, by - 4.4, bx - 3.6, by - 0.6], G.mix('#e8d8c0', '#4a5070', night * 0.8));
+      if (night > 0.5) { ctx.fillStyle = 'rgba(255,210,120,0.9)'; ctx.fillRect(bx + 2, by - 0.6, 0.8, 0.8); }
+    }
+    // 夜の灯台のひかり
+    if (night > 0.4) {
+      const a = Math.max(0, Math.sin(time * 1.2 + x * 0.1)) ** 6;
+      ctx.fillStyle = `rgba(255,240,180,${a * 0.9 * night})`;
+      ctx.beginPath(); ctx.arc(x + w * 0.85, hy - 1, 1.2 + a * 1.5, 0, Math.PI * 2); ctx.fill();
+    }
+    // 雨
+    if (wx.rain > 0) {
+      ctx.strokeStyle = `rgba(200,220,255,${0.35 * wx.rain})`;
+      ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const rx = x + ((G.hash(i + x) * w + time * 20) % w);
+        const ry = y + ((G.hash(i * 9 + x) * h + time * 60) % h);
+        ctx.moveTo(rx, ry); ctx.lineTo(rx - 1, ry + 3);
+      }
+      ctx.stroke();
+    }
+    ctx.restore();
     art.poly(ctx, [x, y, x + w * 0.35, y, x, y + h * 0.5], 'rgba(255,255,255,0.18)');
     // 桟
     ctx.fillStyle = '#5a3a26';
@@ -1251,7 +1425,7 @@
     ctx.fillRect(x, y + h / 2 - 1, w, 2);
     art.poly(ctx, [x - 4, y + h + 2, x + w + 4, y + h + 2, x + w + 3, y + h + 5, x - 3, y + h + 5], '#7e5a3e');
     // 昼の光の帯
-    if (night < 0.6) {
+    if (night < 0.6 && !wx.rain) {
       ctx.fillStyle = `rgba(255,240,200,${0.07 * (1 - night)})`;
       ctx.beginPath();
       ctx.moveTo(x, y + h);
@@ -1262,6 +1436,58 @@
       ctx.fill();
     }
   }
+
+  // 雨（建物の外だけに降る）
+  function drawRain(st) {
+    const wx = weather();
+    if (!wx.rain) return;
+    const viewTop = camTop, viewBot = camTop + cssH / s;
+    const L = -offX / s - 4, R = (cssW - offX) / s + 4;
+    const roofY = floorY(G.sim.builtFloors(st)) + 4;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(L, viewTop, R - L, viewBot - viewTop);
+    ctx.rect(WR + 6, roofY, -(WR - WL + 12), 6 - roofY);
+    ctx.clip('evenodd');
+    ctx.fillStyle = `rgba(40,52,74,${0.1 * wx.rain})`;
+    ctx.fillRect(L, viewTop, R - L, viewBot - viewTop);
+    ctx.strokeStyle = `rgba(215,228,250,${0.55 * wx.rain})`;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    const n = Math.round(130 * wx.rain);
+    for (let i = 0; i < n; i++) {
+      const x = L + ((G.hash(i * 7) * (R - L) + time * 30) % (R - L));
+      const y = viewTop + ((G.hash(i * 13) * (viewBot - viewTop) + time * (260 + G.hash(i) * 80)) % (viewBot - viewTop));
+      ctx.moveTo(x, y); ctx.lineTo(x - 2.2, y + 9);
+    }
+    ctx.stroke();
+    // 地面の水しぶき
+    for (let i = 0; i < 10; i++) {
+      const x = L + G.hash(i * 31 + Math.floor(time * 3)) * (R - L);
+      if (x > WL - 6 && x < WR + 6) continue;
+      const k = (time * 3) % 1;
+      ctx.strokeStyle = `rgba(210,225,250,${0.4 * (1 - k) * wx.rain})`;
+      ctx.beginPath(); ctx.ellipse(x, 1, 1 + k * 4, 0.5 + k * 1.2, 0, 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 天気：ゲーム内の1日ごとに決まる（晴れが多い。ときどき曇り・雨）
+  let wxCache = { day: -1 };
+  function weather() {
+    const day = Math.floor(Date.now() / 1000 / DAY_LEN);
+    if (wxCache.day !== day) {
+      const h = G.hash(day * 977 + 13);
+      wxCache = { day, cloud: h > 0.62, rain: 0, rainDay: h > 0.86 };
+    }
+    // 雨は1日のうち一部だけ、ふわっと降って止む
+    if (wxCache.rainDay) {
+      const k = dayPhase;
+      wxCache.rain = G.clamp(G.bump((k - 0.2) / 0.45) * 1.3, 0, 1);
+    } else wxCache.rain = 0;
+    return wxCache;
+  }
+  SC.weather = weather;
 
   function box(x, yb, w, h, col, top = 3) {
     art.poly(ctx, [x, yb, x + w, yb, x + w, yb - h, x, yb - h], col);

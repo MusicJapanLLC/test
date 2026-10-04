@@ -126,27 +126,67 @@
     return h;
   }
 
-  // ---- ショップ
-  const SHOP_CRY = [['hg2', 1, 40], ['hg3', 1, 90], ['goldx2', 1, 30], ['luck', 1, 30], ['finish', 1, 15], ['key', 1, 30], ['stone', 10, 20], ['book', 1, 90]];
-  const shopGold = () => { const r = G.state.rank; return [['stone', 5, 120 * r], ['finish', 1, 400 * r], ['expbook', 1, 250 * r]]; };
+  // ---- ショップ（魔晶石だけで買う。品ごとに1日・1週の上限）
+  const SHOP = [
+    { id: 'hg2', n: 1, cost: 80, per: 'day', max: 3 },
+    { id: 'hg3', n: 1, cost: 200, per: 'day', max: 1 },
+    { id: 'horn', n: 1, cost: 150, per: 'week', max: 2 },
+    { id: 'finish', n: 1, cost: 40, per: 'day', max: 5 },
+    { id: 'goldx2', n: 1, cost: 60, per: 'day', max: 2 },
+    { id: 'luck', n: 1, cost: 60, per: 'day', max: 2 },
+    { id: 'stone', n: 10, cost: 50, per: 'day', max: 5 },
+    { id: 'expbook', n: 3, cost: 60, per: 'day', max: 3 },
+    { id: 'book', n: 1, cost: 300, per: 'week', max: 1 },
+  ];
+  const BUNDLES = [
+    { key: 'b_start', name: 'はじめての冒険パック', desc: '神速の砂時計・帰還の角笛・閃きの書', items: [['hg3', 1], ['horn', 1], ['book', 1]], cost: 300, per: 'once', max: 1, icon: 'book', tag: '1回だけ' },
+    { key: 'b_week', name: '冒険者応援パック', desc: '疾風の砂時計×2・時短の巻物×3・強化石×20', items: [['hg2', 2], ['finish', 3], ['stone', 20]], cost: 250, per: 'week', max: 1, icon: 'hg2', tag: '毎週' },
+  ];
+  const EX_COST = [20, 40, 80];
+  T.exGold = () => Math.round((600 * Math.pow(1.95, G.state.rank - 1)) / 100) * 100;
+  T.week = () => { const d = new Date(G.now() * 1000); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000 + 3) / 7); };
+  function shopState() {
+    const st = G.state;
+    const today = T.today(), wk = T.week();
+    st.shop = st.shop || { day: today, week: wk, d: {}, w: {}, once: {} };
+    if (st.shop.day !== today) { st.shop.day = today; st.shop.d = {}; }
+    if (st.shop.week !== wk) { st.shop.week = wk; st.shop.w = {}; }
+    st.shop.once = st.shop.once || {};
+    return st.shop;
+  }
+  const bought = (key, per) => { const sh = shopState(); return (per === 'day' ? sh.d : per === 'week' ? sh.w : sh.once)[key] || 0; };
+  const addBought = (key, per) => { const sh = shopState(); const m = per === 'day' ? sh.d : per === 'week' ? sh.w : sh.once; m[key] = (m[key] || 0) + 1; };
+  const perName = { day: '今日', week: '今週', once: '' };
   T.PACKS = [{ id: 'cry_60', n: 60, label: '魔晶石 60' }, { id: 'cry_330', n: 330, label: '魔晶石 330', bonus: '+10%' }, { id: 'cry_1100', n: 1100, label: '魔晶石 1100', bonus: '+25%' }];
   function shopTab() {
     const st = G.state;
     const today = T.today();
     const freeCry = st.dailyCry !== today;
-    let h = `<div class="sec"><h3>魔晶石</h3>
+    const cry = st.crystals || 0;
+    let h = `<div class="shop-head"><span class="tr-cry">${CRY}<b>${G.fmt(cry)}</b><small>魔晶石</small></span><small>品ごとに、1日・1週に買える数が決まっています</small></div>`;
+    h += `<div class="sec"><h3>魔晶石</h3>
       <div class="card shop-free ${freeCry ? '' : 'done'}"><img alt="" src="${consThumb('cry', 44)}"><div class="grow"><b>今日の魔晶石 ×10</b><small>1日1回、無料でもらえます</small></div><button class="btn sm ${freeCry ? 'go' : ''}" id="shFree" ${freeCry ? '' : 'disabled'}>${freeCry ? '受け取る' : '受け取り済み'}</button></div>
       <div class="packs">${T.PACKS.map((p) => `<button class="pack" data-pack="${p.id}"><img alt="" src="${consThumb('cry', 40)}"><b>${p.label}</b>${p.bonus ? `<i>${p.bonus}</i>` : ''}<small>アプリ版で</small></button>`).join('')}</div>
       <p class="hint">魔晶石の購入はアプリ版で対応します。いまは遊んで集めた魔晶石で楽しめます。</p></div>`;
-    h += `<div class="sec"><h3>魔晶石で買う</h3>${SHOP_CRY.map(([id, n, cost]) => shopRow(id, n, cost, 'cry')).join('')}</div>`;
-    h += `<div class="sec"><h3>ゴールドで買う</h3>${shopGold().map(([id, n, cost]) => shopRow(id, n, cost, 'gold')).join('')}</div>`;
+    // 両替所
+    const exN = bought('ex', 'day');
+    const exLeft = EX_COST.length - exN;
+    const exCost = EX_COST[Math.min(exN, EX_COST.length - 1)];
+    h += `<div class="sec"><h3>両替所</h3><div class="card exch ${exLeft ? '' : 'soldout'}"><img alt="" src="${consThumb('cry', 40)}"><i class="arrow">→</i><span class="coinbig">${G.ui.IC.coin}</span><div class="grow"><b>${G.fmt(T.exGold())}G</b><small>${exLeft ? `今日あと ${exLeft}回（回を重ねるほど魔晶石が多く要ります）` : '今日の両替は終わりました。明日また使えます'}</small></div><button class="btn sm ${exLeft && cry >= exCost ? 'primary' : 'cant'}" data-buy="ex" ${exLeft ? '' : 'disabled'}>${CRY}<span>${exCost}</span></button></div><p class="hint">両替できるゴールドは、ギルドランクが上がるほど増えます</p></div>`;
+    // お得パック
+    h += `<div class="sec"><h3>お得パック</h3>${BUNDLES.map((b) => {
+      const left = b.max - bought(b.key, b.per);
+      return `<div class="card shop bundle ${left > 0 ? '' : 'soldout'}"><img alt="" src="${consThumb(b.icon, 44)}"><div class="grow"><b>${b.name}<em class="per">${b.tag}</em></b><small>${b.desc}</small></div><button class="btn sm ${left > 0 && cry >= b.cost ? 'primary' : 'cant'}" data-buy="bundle:${b.key}" ${left > 0 ? '' : 'disabled'}>${left > 0 ? `${CRY}<span>${G.fmt(b.cost)}</span>` : '<span>購入済み</span>'}</button></div>`;
+    }).join('')}</div>`;
+    h += `<div class="sec"><h3>魔晶石で買う</h3>${SHOP.map((it) => shopRow(it)).join('')}</div>`;
     return h;
   }
-  function shopRow(id, n, cost, cur) {
-    const c = IT.CONS[id];
+  function shopRow(it) {
+    const c = IT.CONS[it.id];
     const st = G.state;
-    const ok = cur === 'cry' ? (st.crystals || 0) >= cost : st.gold >= cost;
-    return `<div class="card shop r${c.rarity}"><img alt="" src="${consThumb(id, 40)}"><div class="grow"><b>${c.name}${n > 1 ? ` ×${n}` : ''}</b><small>${c.desc}</small></div><button class="btn sm ${ok ? 'primary' : 'cant'}" data-buy="${id}:${n}:${cost}:${cur}">${cur === 'cry' ? CRY : G.ui.IC.coin}<span>${G.fmt(cost)}</span></button></div>`;
+    const left = it.max - bought(it.id, it.per);
+    const ok = left > 0 && (st.crystals || 0) >= it.cost;
+    return `<div class="card shop r${c.rarity} ${left > 0 ? '' : 'soldout'}"><img alt="" src="${consThumb(it.id, 40)}"><div class="grow"><b>${c.name}${it.n > 1 ? ` ×${it.n}` : ''}</b><small>${c.desc}</small><small class="lim">${left > 0 ? `${perName[it.per]}あと ${left}/${it.max}` : `${perName[it.per]}の分は売り切れ（${it.per === 'day' ? '明日' : '来週'}また入荷）`}</small></div><button class="btn sm ${ok ? 'primary' : 'cant'}" data-buy="item:${it.id}" ${left > 0 ? '' : 'disabled'}>${left > 0 ? `${CRY}<span>${G.fmt(it.cost)}</span>` : '<span>売り切れ</span>'}</button></div>`;
   }
   function consIcon(id) { return `<img class="ci" alt="" src="${consThumb(id, 18)}">`; }
 
@@ -354,6 +394,18 @@
       return;
     }
     if (id === 'key') { openChest('key'); return; }
+    if (id === 'horn') {
+      if (!st.active.length) { G.ui.toast('遠征中のパーティがいません', 'info'); return; }
+      const n = IT.finishAll();
+      if (!n) return;
+      G.audio.sfx('rankup');
+      G.haptic(30);
+      G.ui.fx.burst(window.innerWidth / 2, window.innerHeight * 0.4);
+      G.sim.advance(G.now());
+      G.ui.toast(`帰還の角笛を吹いた！ ${n}組のパーティが帰ってきました`, 'rare3');
+      G.ui.renderSheet();
+      return;
+    }
     if (id === 'finish') {
       if (!st.active.length) { G.ui.toast('遠征中のパーティがいません', 'info'); return; }
       const list = st.active.slice().sort((a, b) => b.endAt - a.endAt).map((ex) => {
@@ -407,18 +459,40 @@
   }
 
   function buy(spec) {
-    const [id, n, cost, cur] = spec.split(':');
     const st = G.state;
-    const c = +cost;
-    if (cur === 'cry' ? (st.crystals || 0) < c : st.gold < c) {
-      G.audio.sfx('error');
-      G.ui.toast(cur === 'cry' ? '魔晶石が足りません' : 'ゴールドが足りません', 'bad');
-      return;
+    const pay = (cost) => {
+      if ((st.crystals || 0) < cost) { G.audio.sfx('error'); G.ui.toast(`魔晶石が足りません（あと ${cost - (st.crystals || 0)}）`, 'bad'); return false; }
+      st.crystals -= cost;
+      return true;
+    };
+    if (spec === 'ex') {
+      const n = bought('ex', 'day');
+      if (n >= EX_COST.length) return;
+      if (!pay(EX_COST[n])) return;
+      addBought('ex', 'day');
+      const g = T.exGold();
+      st.gold += g;
+      G.audio.sfx('coins');
+      const b = G.$('[data-buy="ex"]');
+      if (b) { const r = b.getBoundingClientRect(); G.ui.flyCoins(r.left + r.width / 2, r.top, g, true); }
+      G.ui.toast(`魔晶石を両替して ${G.fmt(g)}G 手に入れました`, 'good');
+    } else if (spec.startsWith('bundle:')) {
+      const b = BUNDLES.find((x) => x.key === spec.slice(7));
+      if (!b || bought(b.key, b.per) >= b.max) return;
+      if (!pay(b.cost)) return;
+      addBought(b.key, b.per);
+      b.items.forEach(([id, n]) => IT.addCons(id, n));
+      G.audio.sfx('gift');
+      G.ui.toast(`${b.name}を買いました`, 'rare3');
+    } else {
+      const it = SHOP.find((x) => x.id === spec.slice(5));
+      if (!it || bought(it.id, it.per) >= it.max) return;
+      if (!pay(it.cost)) return;
+      addBought(it.id, it.per);
+      IT.addCons(it.id, it.n);
+      G.audio.sfx('coins');
+      G.ui.toast(`${IT.CONS[it.id].name}${it.n > 1 ? ` ×${it.n}` : ''} を買いました`, 'good');
     }
-    if (cur === 'cry') st.crystals -= c; else st.gold -= c;
-    IT.addCons(id, +n);
-    G.audio.sfx('coins');
-    G.ui.toast(`${IT.CONS[id].name}${+n > 1 ? ` ×${n}` : ''} を買いました`, 'good');
     G.sim.save();
     G.ui.refreshHud();
     G.ui.renderSheet();
