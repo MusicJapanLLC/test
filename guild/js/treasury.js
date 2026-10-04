@@ -639,7 +639,7 @@
       G.audio.sfx('rarity', 3);
       G.haptic(20);
       G.ui.fx.burst(window.innerWidth / 2, window.innerHeight * 0.4);
-      G.ui.toast(`${c.name}を使った！ ${c.boost.k === 'speed' ? `30分間 ${c.boost.mult}倍速` : c.boost.k === 'gold' ? '30分間 ゴールド2倍' : '30分間 大成功率 +10%'}`, 'rare3');
+      G.ui.toast(`${c.name}を使った！ ${c.boost.k === 'speed' ? `30分間 ${c.boost.mult}倍速` : c.boost.k === 'gold' ? '30分間 ゴールド2倍' : c.boost.k === 'auto' ? `${c.boost.sec >= 3600 ? '3時間' : '30分間'} リナにおまかせ` : '30分間 大成功率 +10%'}`, 'rare3');
       G.ui.refreshHud();
       G.ui.renderSheet();
       return;
