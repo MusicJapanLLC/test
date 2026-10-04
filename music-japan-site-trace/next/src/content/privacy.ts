@@ -1,4 +1,4 @@
-// Extracted verbatim from the previous privacy pages (2026-08-22 edition).
+// Original 2026-08-22 policy, with the GA4 disclosure added on 2026-10-03.
 export const privacy = {
   "ja": {
     "intro": "合同会社Music Japan（以下「当社」といいます。）は、当社が運営するウェブサイトおよび当社へのお問い合わせ等を通じて取り扱う情報について、以下の方針に基づき適切な管理に努めます。",
@@ -47,7 +47,9 @@ export const privacy = {
       {
         "h": "5. Cookie等について",
         "p": [
-          "当サイトは、表示機能の維持、利便性の向上、利用状況の把握等のため、Cookieまたはこれに類する技術を利用する場合があります。ブラウザの設定によりCookieを無効にできますが、その場合、一部の機能が正しく動作しないことがあります。"
+          "当サイトは、表示機能の維持、利便性の向上、利用状況の把握等のため、Cookieまたはこれに類する技術を利用する場合があります。ブラウザの設定によりCookieを無効にできますが、その場合、一部の機能が正しく動作しないことがあります。",
+          "当社が運営するMusic Japan、Baton Partners、SECOND TAKE、Batonの公開ページでは、Google LLCのGoogle アナリティクス 4を利用し、閲覧ページ、アクセス日時、端末・ブラウザ情報等をCookieとともに取得して、サイトごとの閲覧数の把握と改善に使用します。フォームの氏名・連絡先・回答内容はアクセス解析に送信しません。URLのクエリ文字列・フラグメントは計測対象から除き、広告パーソナライズは無効にしています。",
+          "Googleの情報利用について：https://policies.google.com/technologies/partner-sites?hl=ja\nGoogle アナリティクス オプトアウト アドオン：https://tools.google.com/dlpage/gaoptout?hl=ja"
         ],
         "li": []
       },
@@ -77,7 +79,7 @@ export const privacy = {
         "p": [
           "本ポリシーまたは当社における情報の取扱いに関するお問い合わせは、下記までご連絡ください。",
           "合同会社Music Japan\nメール：music.japan.llc@gmail.com",
-          "制定日：2026年8月22日"
+          "制定日：2026年8月22日\n改定日：2026年10月3日"
         ],
         "li": []
       }
@@ -130,7 +132,9 @@ export const privacy = {
       {
         "h": "5. Cookies and Similar Technologies",
         "p": [
-          "Our website may use cookies or similar technologies to maintain functionality, improve convenience, and understand usage. You can control or disable cookies through your browser settings, although doing so may cause some features to operate incorrectly."
+          "Our website may use cookies or similar technologies to maintain functionality, improve convenience, and understand usage. You can control or disable cookies through your browser settings, although doing so may cause some features to operate incorrectly.",
+          "Public pages on Music Japan, Baton Partners, SECOND TAKE and Baton use Google Analytics 4, provided by Google LLC. Page views, access times and device/browser information are collected with cookies to understand traffic for each site and improve our websites. Names, contact details and form responses are not sent to analytics. URL query strings and fragments are excluded from measurement, and advertising personalization is disabled.",
+          "How Google uses information: https://policies.google.com/technologies/partner-sites?hl=en\nGoogle Analytics Opt-out Browser Add-on: https://tools.google.com/dlpage/gaoptout?hl=en"
         ],
         "li": []
       },
@@ -160,7 +164,7 @@ export const privacy = {
         "p": [
           "For questions about this Policy or our handling of information, please contact:",
           "Music Japan LLC\nEmail: music.japan.llc@gmail.com",
-          "Effective date: August 22, 2026"
+          "Effective date: August 22, 2026\nUpdated: October 3, 2026"
         ],
         "li": []
       }

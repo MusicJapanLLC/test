@@ -137,6 +137,7 @@ export function page(m: PageMeta): string {
 <html lang="${locale}" data-world="${m.world ?? 'inner'}">
 <head>
 <meta charset="utf-8">
+${m.noindex ? '' : '<script defer src="/analytics.js?v=20261003" data-ga4-id="G-S2P0JCW50M" data-ga4-host="music-japan.com"></script>'}
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${esc(m.title)}</title>
 <meta name="description" content="${esc(m.description)}">
