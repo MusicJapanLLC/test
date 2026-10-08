@@ -1,0 +1,280 @@
+/* ギルドの灯 — 黄金の宝箱（ガチャ）
+ *  宝物庫の宝箱パネル（天井の見える化・初回10連・演出を短く・提供割合）と、開けるときの演出
+ *  演出：鍵を回す → 箱の色が昇格（木・銀・金・虹）→ 光の柱 → 10連はカードをめくる → UR だけの特別演出
+ *  動きは transform / opacity が中心（光の粒だけ canvas）。演出の部品はすべて #chestFx.gx の中
+ */
+
+/* ---------------------------------------------------------------- 宝物庫のパネル */
+.gx-rlink { display: inline-flex; align-items: center; gap: 4px; padding: 4px 2px; text-decoration: underline; text-underline-offset: 3px; }
+.gx-rlink i { display: grid; place-items: center; width: 14px; height: 14px; border-radius: 50%; border: 1.2px solid currentColor; font-style: normal; font-family: var(--font-num); font-size: 9px; font-weight: 900; line-height: 1; }
+
+.gx-pity { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px 8px; width: 100%; margin-top: 4px; padding: 7px 12px 9px; border-radius: 12px; text-align: left; background: rgba(6, 10, 24, 0.55); border: 1px solid rgba(255, 200, 58, 0.28); }
+.gx-pt { font-size: 12px; font-weight: 800; color: var(--parch-dim); letter-spacing: 0.04em; }
+.gx-pt b { margin: 0 2px 0 5px; font-family: var(--font-num); font-size: 19px; font-weight: 900; color: #ffd36a; }
+.gx-pity em { font-style: normal; font-size: 10.5px; font-weight: 900; color: #3a1e08; background: var(--gold-grad); padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.gx-pbar { grid-column: 1 / -1; position: relative; display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.gx-pbar > i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, #b8862a, #ffd36a); }
+.gx-pity.near { border-color: rgba(255, 200, 58, 0.65); box-shadow: 0 0 14px rgba(255, 200, 58, 0.18); }
+.gx-pity.near .gx-pbar > i { background: linear-gradient(90deg, #ffd36a, #fff0b8); animation: gxBarGlow 1.6s ease-in-out infinite; }
+@keyframes gxBarGlow { 50% { opacity: 0.6; } }
+
+.tr-gacha .tr-btns { margin-top: 12px; }
+.gx-ten { position: relative; display: grid; }
+.gx-ten .btn { width: 100%; }
+.gx-badge { position: absolute; z-index: 1; top: -9px; left: 50%; transform: translateX(-50%); white-space: nowrap; pointer-events: none; font-style: normal; font-size: 9.5px; font-weight: 900; letter-spacing: 0.02em; line-height: 1.5; color: #fff; padding: 1px 8px; border-radius: 999px; background: linear-gradient(180deg, #ff7a5a, #d8382a); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 240, 200, 0.55); animation: gxBadge 1.8s ease-in-out infinite; }
+@keyframes gxBadge { 50% { transform: translateX(-50%) translateY(-2px); } }
+
+.gx-short { width: 100%; margin: 6px 0 0; padding: 8px 12px; text-align: left; background: rgba(6, 10, 24, 0.45); border-color: rgba(224, 184, 78, 0.25); }
+.gx-short b { font-size: 12.5px; }
+.gx-short small { font-size: 10.5px; line-height: 1.45; }
+
+/* 提供割合 */
+.gx-rates ul { margin-bottom: 8px; }
+.rates li.r0 b { color: #c9c0b0; }
+.gx-rules { margin: 6px 0 10px; padding: 0; list-style: none; display: grid; gap: 5px; text-align: left; }
+.gx-rates .gx-rules li { display: block; padding: 7px 10px; border-radius: 8px; background: rgba(120, 150, 255, 0.06); font-size: 11.5px; font-weight: 600; line-height: 1.55; color: var(--parch-dim); }
+.gx-rules li b { display: block; font-size: 12px; font-weight: 800; color: #ffd36a; }
+.gx-rules li small { color: var(--muted); }
+.gx-rates .hint { text-align: left; line-height: 1.6; font-size: 11.5px; }
+
+/* ---------------------------------------------------------------- 演出の土台 */
+#chestFx.gx { --cw: min(196px, 50vw); --cy: 44%; --uy: 38%; --ry: calc(44% + 8px); background: #04070f; overflow: hidden; }
+@media (max-height: 720px) { #chestFx.gx { --cw: min(170px, 46vw); --cy: 41%; --uy: 42%; --ry: 48%; } }
+#chestFx.gx #chestCanvas { z-index: 4; pointer-events: none; }
+#chestFx.gx .cf-ui { display: block; }
+#chestFx.gx .cf-skip { z-index: 8; }
+#chestFx.gx-final .cf-skip { display: none; }
+
+.gx-bg { position: absolute; inset: 0; z-index: 0; overflow: hidden; background: radial-gradient(ellipse at 50% var(--cy), #1e2e5c, #04070f 72%); }
+.gx-tint { position: absolute; inset: 0; background: radial-gradient(circle at 50% var(--cy), var(--pc), transparent 62%); opacity: 0; transition: opacity 0.6s; }
+.gx-pil .gx-tint { opacity: 0.26; }
+.gx-p3 .gx-tint, .gx-p4 .gx-tint { opacity: 0.4; }
+.gx-cardson .gx-tint { opacity: 0.16; }
+.gx-rays { position: absolute; left: 50%; top: var(--cy); width: 760px; height: 760px; margin: -380px 0 0 -380px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(255, 240, 200, 0.18) 0deg 6deg, transparent 6deg 22.5deg); -webkit-mask-image: radial-gradient(circle, #000 8%, transparent 50%); mask-image: radial-gradient(circle, #000 8%, transparent 50%); opacity: 0; transition: opacity 0.8s; }
+.gx-p3 .gx-rays, .gx-p4 .gx-rays { opacity: 1; animation: gxSpin 26s linear infinite; }
+.gx-p4 .gx-rays { background: repeating-conic-gradient(from 0deg, rgba(255, 150, 200, 0.24) 0deg 5deg, transparent 5deg 15deg, rgba(255, 230, 120, 0.22) 15deg 20deg, transparent 20deg 30deg, rgba(130, 220, 255, 0.22) 30deg 35deg, transparent 35deg 45deg); }
+@keyframes gxSpin { to { transform: rotate(360deg); } }
+
+/* ---------------------------------------------------------------- 宝箱 */
+.gx-stage { position: absolute; inset: 0; z-index: 1; }
+.gx-stage.quake { animation: gxQuake 0.5s linear; }
+@keyframes gxQuake { 20% { transform: translate(3px, -2px); } 40% { transform: translate(-3px, 2px); } 60% { transform: translate(2px, 1px); } 80% { transform: translate(-1px, -1px); } }
+.gx-chestwrap { position: absolute; left: 50%; top: var(--cy); transform: translate(-50%, -50%); transition: opacity 0.5s, transform 0.55s cubic-bezier(0.3, 0.9, 0.3, 1); animation: gxDrop 0.6s 0.05s cubic-bezier(0.3, 1.25, 0.5, 1) backwards; }
+.gx-quick .gx-chestwrap { animation-duration: 0.35s; animation-delay: 0s; }
+@keyframes gxDrop { from { opacity: 0; transform: translate(-50%, -50%) translateY(-55vh) scale(0.9); } 60% { opacity: 1; } }
+.gx-cardson .gx-chestwrap, .gx-single .gx-chestwrap { opacity: 0.22; transform: translate(-50%, -50%) translateY(16%) scale(0.84); }
+.gx-shadow { position: absolute; z-index: 0; left: 50%; bottom: calc(var(--cw) * -0.05); width: calc(var(--cw) * 1.05); height: calc(var(--cw) * 0.14); margin-left: calc(var(--cw) * -0.525); border-radius: 50%; background: radial-gradient(ellipse, rgba(0, 0, 0, 0.55), transparent 70%); }
+
+.gx-chest { position: relative; z-index: 1; width: var(--cw); height: calc(var(--cw) * 0.8412); transform-origin: 50% 100%; }
+.gx-chest::before { content: ''; position: absolute; z-index: 0; left: -45%; right: -45%; top: -40%; bottom: -30%; border-radius: 50%; background: radial-gradient(circle, var(--aura, transparent), transparent 62%); opacity: 0; transition: opacity 0.35s; }
+.gx-chest.t1::before { --aura: rgba(220, 235, 255, 0.4); opacity: 1; }
+.gx-chest.t2::before { --aura: rgba(255, 200, 58, 0.5); opacity: 1; }
+.gx-chest.t3::before { --aura: rgba(255, 154, 208, 0.55); opacity: 1; }
+.gx-lid { position: absolute; z-index: 2; left: 0; top: 1.5px; width: 100%; height: calc(var(--cw) * 0.3412); transform-origin: 50% 100%; transition: transform 0.4s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.gx-body { position: absolute; z-index: 4; left: 0; bottom: 0; width: 100%; height: calc(var(--cw) * 0.5); }
+.gx-lid svg, .gx-body > svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.gx-open .gx-lid { transform: translateY(-34%) scaleY(0.5); }
+.gx-skipped .gx-lid, .gx-skipped .gx-pillar, .gx-skipped .gx-chestwrap { transition: none; }
+.gx-mouth { position: absolute; z-index: 1; left: 5%; right: 5%; top: calc(var(--cw) * 0.22); height: calc(var(--cw) * 0.13); background: #1a0e08; clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%); opacity: 0; transition: opacity 0.2s; }
+.gx-mouth::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 100%, #ffffff, var(--pc) 45%, transparent 75%); }
+.gx-open .gx-mouth { opacity: 1; }
+
+/* 箱の色：木・銀・金・虹（SVG の塗りは変数で切りかえる） */
+.gx-chest .w { fill: var(--w); } .gx-chest .wl { fill: var(--wl); } .gx-chest .wh { fill: var(--wh); }
+.gx-chest .b { fill: var(--b); } .gx-chest .bl { fill: var(--bl); } .gx-chest .bd { fill: var(--bd); } .gx-chest .bk { fill: var(--bk); }
+.gx-chest .lk { fill: var(--lk); } .gx-chest .hole { fill: #1a0e08; } .gx-chest .sh { fill: rgba(255, 255, 255, 0.16); }
+.gx-chest.t0 { --w: #8a5a2e; --wl: #9a6837; --wh: #a87442; --b: #b8a47c; --bl: #d8c8a0; --bd: #a08c64; --bk: #7a6a4c; --lk: #d8c08a; --rc: #d8c08a; }
+.gx-chest.t1 { --w: #6f7f9c; --wl: #8292b0; --wh: #97a8c6; --b: #eef3fa; --bl: #ffffff; --bd: #cfd8e6; --bk: #a4b0c4; --lk: #9fd0ff; --rc: #e6eef8; }
+.gx-chest.t2 { --w: #d39a2a; --wl: #e0aa3a; --wh: #f0c050; --b: #fff2c0; --bl: #fffbe8; --bd: #ecd28a; --bk: #c49a3a; --lk: #ff6a5a; --rc: #ffc83a; }
+.gx-chest.t3 { --w: url(#gxRb); --wl: url(#gxRb2); --wh: url(#gxRb2); --b: #ffffff; --bl: #ffffff; --bd: #f2eaff; --bk: #d8c8ee; --lk: #ffffff; --rc: #ff9ad0; }
+.gx-chest.t3 .gx-lid svg, .gx-chest.t3 .gx-body > svg { animation: gxHue 3s linear infinite; }
+@keyframes gxHue { to { filter: hue-rotate(360deg); } }
+.gx-shine { position: absolute; left: 3%; right: 3%; top: 0; bottom: 6%; overflow: hidden; pointer-events: none; }
+.gx-shine::after { content: ''; position: absolute; top: -20%; bottom: -20%; left: -40%; width: 28%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent); transform: skewX(-20deg); opacity: 0; }
+.t1 .gx-shine::after, .t2 .gx-shine::after, .t3 .gx-shine::after { opacity: 1; animation: gxShine 2.2s ease-in-out infinite; }
+@keyframes gxShine { 0%, 35% { transform: translateX(0) skewX(-20deg); } 100% { transform: translateX(560%) skewX(-20deg); } }
+
+/* 昇格の瞬間：光と輪 */
+.gx-flash { position: absolute; z-index: 5; left: -35%; right: -35%; top: -35%; bottom: -20%; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 60%); opacity: 0; pointer-events: none; }
+.gx-ring { position: absolute; z-index: 5; left: 50%; top: 55%; width: calc(var(--cw) * 1.1); height: calc(var(--cw) * 1.1); margin: calc(var(--cw) * -0.55) 0 0 calc(var(--cw) * -0.55); border-radius: 50%; border: 3px solid var(--rc); opacity: 0; pointer-events: none; }
+.gx-pop .gx-flash { animation: gxFlash 0.55s ease-out; }
+.gx-pop .gx-ring { animation: gxRing 0.7s ease-out; }
+@keyframes gxFlash { 0% { opacity: 0; transform: scale(0.6); } 20% { opacity: 1; } 100% { opacity: 0; transform: scale(1.3); } }
+@keyframes gxRing { 0% { opacity: 1; transform: scale(0.3); } 100% { opacity: 0; transform: scale(2); } }
+.gx-rm .gx-pop .gx-flash { animation-name: gxFlashRm; }
+@keyframes gxFlashRm { 30% { opacity: 0.45; } 100% { opacity: 0; } }
+
+/* 揺れ：強いほど良いもの */
+.gx-chest.sh1 { animation: gxSh1 0.36s linear; }
+.gx-chest.sh2 { animation: gxSh2 0.46s linear; }
+.gx-chest.sh3 { animation: gxSh3 0.58s linear; }
+.gx-chest.sh4 { animation: gxSh4 0.76s linear; }
+.gx-rm .gx-chest.sh3, .gx-rm .gx-chest.sh4 { animation-name: gxSh2; }
+.gx-rm .gx-stage.quake { animation: none; }
+@keyframes gxSh1 { 20% { transform: translateX(-2px) rotate(-1deg); } 40% { transform: translateX(2px) rotate(1deg); } 60% { transform: translateX(-2px) rotate(-0.5deg); } 80% { transform: translateX(1px); } }
+@keyframes gxSh2 { 10% { transform: translate(-4px, -3px) rotate(-2deg); } 25% { transform: translate(4px, -5px) rotate(2deg); } 40% { transform: translate(-4px, -2px) rotate(-2deg); } 55% { transform: translate(3px, 0) rotate(1.5deg); } 70% { transform: translate(-2px, 0) rotate(-1deg); } 85% { transform: translate(1px, 0); } }
+@keyframes gxSh3 { 8% { transform: translate(-6px, -8px) rotate(-4deg); } 18% { transform: translate(7px, -12px) rotate(4deg); } 28% { transform: translate(-7px, -6px) rotate(-4deg); } 38% { transform: translate(6px, -10px) rotate(3deg); } 50% { transform: translate(-5px, -2px) rotate(-3deg); } 62% { transform: translate(4px, 0) rotate(2deg); } 76% { transform: translate(-2px, 0) rotate(-1deg); } }
+@keyframes gxSh4 { 6% { transform: translate(-8px, -10px) rotate(-6deg) scale(1.03); } 14% { transform: translate(9px, -18px) rotate(6deg) scale(1.06); } 22% { transform: translate(-9px, -12px) rotate(-6deg) scale(1.06); } 30% { transform: translate(9px, -20px) rotate(5deg) scale(1.08); } 40% { transform: translate(-8px, -8px) rotate(-5deg) scale(1.05); } 52% { transform: translate(6px, -4px) rotate(4deg); } 66% { transform: translate(-4px, 0) rotate(-2deg); } 80% { transform: translate(2px, 0) rotate(1deg); } }
+
+/* 鍵（正面から見た持ち手。回すたびに 120° ずつ） */
+.gx-key { position: absolute; z-index: 2; left: 50%; top: 35%; width: 34%; aspect-ratio: 24 / 26; transform: translate(-50%, -50%) scale(0); opacity: 0; transition: transform 0.32s cubic-bezier(0.3, 1.6, 0.5, 1), opacity 0.2s; pointer-events: none; filter: drop-shadow(0 3px 3px rgba(0, 0, 0, 0.45)); }
+.gx-key svg { display: block; width: 100%; height: 100%; transform: rotate(var(--rot, 0deg)); transition: transform 0.34s cubic-bezier(0.3, 1.7, 0.5, 1); }
+.gx-keyon .gx-key { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+.gx-unlock .gx-key { transform: translate(-50%, -50%) scale(1.6); opacity: 0; transition: transform 0.35s ease-out, opacity 0.3s 0.05s; }
+.gx-unlock .gx-key svg { transform: rotate(calc(var(--rot, 0deg) + 90deg)); }
+.gx-quick .gx-key, .gx-quick .gx-prompt { display: none; }
+.gx-key .k1 { fill: #e8c35a; } .gx-key .k2 { fill: #b8862a; } .gx-key .k3 { fill: #ff6a5a; }
+.gx-key .kh { fill: none; stroke: #fff4c8; stroke-width: 1; stroke-linecap: round; opacity: 0.85; }
+.gx-key::before { content: ''; position: absolute; inset: -28%; border-radius: 50%; border: 2px solid rgba(255, 230, 160, 0.85); opacity: 0; }
+.gx-ask .gx-key::before { animation: gxPing 1.4s ease-out infinite; }
+@keyframes gxPing { 0% { opacity: 0.9; transform: scale(0.6); } 100% { opacity: 0; transform: scale(1.3); } }
+
+.gx-prompt { position: absolute; left: 0; right: 0; top: calc(var(--cy) + var(--cw) * 0.5 + 16px); display: grid; justify-items: center; gap: 9px; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
+.gx-ask .gx-prompt { opacity: 1; transform: none; }
+.gx-prompt span { position: relative; padding: 8px 18px 8px 40px; border-radius: 999px; background: rgba(6, 10, 24, 0.75); border: 1px solid var(--line-2); color: #ffe39a; font-weight: 800; font-size: 13.5px; letter-spacing: 0.06em; white-space: nowrap; }
+.gx-hand { position: absolute; left: 10px; top: 50%; width: 24px; height: 24px; margin-top: -13px; animation: gxTapHand 1.1s ease-in-out infinite; }
+@keyframes gxTapHand { 50% { transform: translate(2px, 3px) scale(0.92); } }
+.gx-nudge .gx-prompt span, .gx-first .gx-prompt span { animation: gxNudge 1.1s ease-in-out infinite; }
+@keyframes gxNudge { 50% { transform: scale(1.06); box-shadow: 0 0 16px rgba(255, 220, 130, 0.45); } }
+.gx-dots { display: flex; gap: 9px; }
+.gx-dots b { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid #e8c35a; transition: background 0.2s, box-shadow 0.2s; }
+.gx-dots b.on { background: #ffd36a; box-shadow: 0 0 8px #ffd36a; }
+
+/* 「金の宝箱！！」の札 */
+.gx-up { position: absolute; z-index: 2; left: 0; right: 0; top: calc(var(--cy) - var(--cw) * 0.42 - 78px); display: grid; justify-items: center; gap: 4px; pointer-events: none; opacity: 0; }
+.gx-up b { font-family: var(--font-head); font-weight: 800; font-size: 27px; letter-spacing: 0.08em; color: #fff; text-shadow: 0 2px 0 rgba(0, 0, 0, 0.55), 0 0 18px var(--uc); white-space: nowrap; }
+.gx-up small { font-size: 12px; font-weight: 900; color: #1a1204; background: var(--uc); padding: 2px 12px; border-radius: 999px; letter-spacing: 0.06em; }
+.gx-up.u1 { --uc: #dfe8f5; } .gx-up.u2 { --uc: #ffc83a; } .gx-up.u3 { --uc: #ff9ad0; }
+.gx-up.u3 small { background: linear-gradient(90deg, #ff9ad0, #ffe39a, #9fffc0, #9fd8ff, #d8a8ff); }
+.gx-up.go { animation: gxUpIn 1.7s cubic-bezier(0.2, 0.9, 0.3, 1) forwards; }
+@keyframes gxUpIn { 0% { opacity: 0; transform: scale(0.6); } 14% { opacity: 1; transform: scale(1.12); } 24% { transform: scale(1); } 80% { opacity: 1; transform: none; } 100% { opacity: 0; transform: translateY(-14px); } }
+.gx-cardson .gx-up, .gx-cardson .gx-prompt, .gx-single .gx-up, .gx-single .gx-prompt { display: none; }
+
+/* ---------------------------------------------------------------- 光の柱 */
+.gx-pillar { position: absolute; z-index: 3; left: 50%; bottom: calc(var(--cw) * 0.44); width: calc(var(--cw) * 0.8); height: 130vh; margin-left: calc(var(--cw) * -0.4); pointer-events: none; opacity: 0; transform: scale(0.35, 0); transform-origin: 50% 100%; background: linear-gradient(0deg, #ffffff 0%, var(--pc) 14%, rgba(0, 0, 0, 0) 85%); -webkit-mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent); mask-image: linear-gradient(90deg, transparent, #000 28%, #000 72%, transparent); }
+.gx-pillar > i { position: absolute; left: 36%; right: 36%; top: 0; bottom: 0; background: linear-gradient(0deg, #ffffff, rgba(255, 255, 255, 0.75) 35%, rgba(255, 255, 255, 0) 85%); }
+.gx-pil .gx-pillar { opacity: 1; transform: none; transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.3, 1), opacity 0.2s; }
+.gx-pil .gx-pillar > i { animation: gxPulse 1.2s ease-in-out infinite; }
+@keyframes gxPulse { 50% { opacity: 0.55; } }
+.gx-p0.gx-pil .gx-pillar { opacity: 0.5; width: calc(var(--cw) * 0.5); margin-left: calc(var(--cw) * -0.25); }
+.gx-p1.gx-pil .gx-pillar { opacity: 0.8; width: calc(var(--cw) * 0.62); margin-left: calc(var(--cw) * -0.31); }
+.gx-p4 .gx-pillar { background: linear-gradient(0deg, #ffffff 0%, rgba(255, 255, 255, 0) 70%), linear-gradient(90deg, #ff6a8a, #ffd36a, #7affa0, #6ad0ff, #c79bff, #ff6a8a); animation: gxHue 2.4s linear infinite; }
+
+/* ---------------------------------------------------------------- 流れるコメント（常連） */
+.gx-chat { position: absolute; z-index: 6; left: 0; right: 0; top: calc(var(--safe-t) + 62px); height: 138px; pointer-events: none; overflow: hidden; }
+@media (max-height: 720px) { .gx-chat { top: calc(var(--safe-t) + 56px); height: 70px; } }
+.gx-dm { position: absolute; left: 100%; display: inline-flex; align-items: center; gap: 5px; height: 30px; white-space: nowrap; padding: 3px 12px 3px 3px; border-radius: 999px; background: rgba(6, 10, 24, 0.62); border: 1px solid rgba(255, 255, 255, 0.14); color: #fff; font-size: 13px; font-weight: 800; animation: gxDm 4.4s linear forwards; will-change: transform; }
+.gx-dm > span:first-child { padding-left: 9px; }
+.gx-dm img { width: 24px; height: 24px; border-radius: 50%; background: #24336a; }
+.gx-dm b { font-size: 10px; color: #ffd36a; font-weight: 800; }
+.gx-dm.big span { font-size: 15.5px; color: #ffe39a; text-shadow: 0 0 8px rgba(255, 200, 58, 0.55); }
+.gx-dm.ur span { color: #ffd6f0; text-shadow: 0 0 10px rgba(255, 154, 208, 0.8); }
+@keyframes gxDm { to { transform: translateX(calc(-100vw - 100%)); } }
+
+/* ---------------------------------------------------------------- リナとボタン */
+.gx-foot { position: absolute; z-index: 7; left: 12px; right: 12px; bottom: calc(var(--safe-b) + 14px); max-width: 460px; margin: 0 auto; display: grid; gap: 10px; pointer-events: none; }
+.gx-rina { display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px; border-radius: 16px; background: linear-gradient(180deg, rgba(26, 40, 82, 0.93), rgba(10, 17, 41, 0.95)); border: 1px solid var(--line-2); box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+.gx-rina img { width: 50px; height: 50px; flex: none; border-radius: 50%; background: #24336a; box-shadow: 0 0 0 2px #e8c35a; }
+.gx-rina > div { display: grid; gap: 1px; min-width: 0; }
+.gx-rina small { font-size: 10px; font-weight: 800; color: #e8c35a; letter-spacing: 0.12em; }
+.gx-rina p { margin: 0; font-family: var(--font-head); font-size: 13.5px; font-weight: 700; line-height: 1.5; color: var(--parch); }
+.gx-rina.say { animation: gxSay 0.35s cubic-bezier(0.3, 1.4, 0.5, 1); }
+@keyframes gxSay { from { transform: translateY(6px) scale(0.98); opacity: 0.4; } }
+.gx-btns { display: flex; gap: 8px; justify-content: center; pointer-events: auto; }
+.gx-btns:empty { display: none; }
+.gx-uron .gx-btns { visibility: hidden; }
+.gx-btns .btn { flex: 1; max-width: 300px; }
+
+/* ---------------------------------------------------------------- カード（10連） */
+.gx-cards { position: absolute; z-index: 2; left: 12px; right: 12px; top: 47%; transform: translateY(-50%); max-width: 430px; margin: 0 auto; pointer-events: none; }
+.gx-h { margin: 0 0 12px; text-align: center; font-family: var(--font-head); font-weight: 800; letter-spacing: 0.14em; font-size: 18px; color: transparent; background: var(--gold-grad); -webkit-background-clip: text; background-clip: text; opacity: 0; transition: opacity 0.4s; }
+.gx-final .gx-h { opacity: 1; }
+.gx-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.gx-card { position: relative; aspect-ratio: 5 / 7.4; perspective: 700px; pointer-events: auto; }
+.gx-cards.deal .gx-card { animation: gxDeal 0.5s cubic-bezier(0.2, 0.9, 0.3, 1) backwards; animation-delay: calc(var(--i) * 60ms + 60ms); }
+@keyframes gxDeal { from { opacity: 0; transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.2) rotate(-20deg); } }
+.gx-cards.quick .gx-card { animation: gxCardIn 0.32s cubic-bezier(0.3, 1.4, 0.5, 1) backwards; animation-delay: calc(var(--i) * 40ms); }
+@keyframes gxCardIn { from { opacity: 0; transform: translateY(14px) scale(0.7); } }
+.gx-cin { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 0.5s cubic-bezier(0.3, 1.2, 0.5, 1); }
+.gx-card.on .gx-cin { transform: rotateY(180deg); }
+.gx-cards.instant .gx-cin, .gx-cards.instant .gx-card { transition: none; animation: none; }
+.gx-back, .gx-face { position: absolute; inset: 0; border-radius: 9px; -webkit-backface-visibility: hidden; backface-visibility: hidden; overflow: hidden; }
+.gx-back { background: repeating-linear-gradient(45deg, rgba(232, 195, 90, 0.08) 0 4px, transparent 4px 10px), linear-gradient(160deg, #22356c, #0c1534); border: 1.5px solid #c8a04a; box-shadow: inset 0 0 0 3px rgba(10, 17, 41, 0.9), inset 0 0 0 4px rgba(232, 195, 90, 0.35), 0 4px 10px rgba(0, 0, 0, 0.4); }
+.gx-back i { position: absolute; left: 50%; top: 50%; width: 42%; aspect-ratio: 1; transform: translate(-50%, -50%) rotate(45deg); border: 1.5px solid #e8c35a; background: radial-gradient(circle, #ffe9a6 0 16%, #b8862a 17% 28%, transparent 29%); }
+.gx-card.r3 .gx-back { border-color: #ffe08a; box-shadow: inset 0 0 0 3px rgba(10, 17, 41, 0.9), 0 0 14px 2px rgba(255, 200, 58, 0.85); animation: gxCardGlow 1.2s ease-in-out infinite; }
+.gx-card.r4 .gx-back { border-color: #ffffff; box-shadow: inset 0 0 0 3px rgba(10, 17, 41, 0.9), 0 0 18px 3px rgba(255, 154, 208, 0.95); animation: gxCardGlow 1s ease-in-out infinite; }
+@keyframes gxCardGlow { 50% { filter: brightness(1.3); } }
+.gx-card.pre { z-index: 1; }
+.gx-card.pre .gx-cin { animation: gxPre 0.7s ease-in; }
+.gx-card.pre .gx-back { box-shadow: 0 0 28px 8px rgba(255, 255, 255, 0.9); }
+@keyframes gxPre { 20% { transform: rotate(-4deg) scale(1.05); } 40% { transform: rotate(4deg) scale(1.1); } 60% { transform: rotate(-5deg) scale(1.15); } 80% { transform: rotate(5deg) scale(1.2); } 100% { transform: scale(1.25); } }
+.gx-face { transform: rotateY(180deg); display: grid; justify-items: center; align-content: start; gap: 1px; padding: 15px 3px 4px; background: linear-gradient(180deg, var(--fc1), #0a1022 85%); border: 1.5px solid var(--fc); }
+.gx-card.r0 { --fc: #b08a5a; --fc1: #3a3428; } .gx-card.r1 { --fc: #4f8de0; --fc1: #1a2e58; } .gx-card.r2 { --fc: #c27cff; --fc1: #3a2266; } .gx-card.r3 { --fc: #ffc83a; --fc1: #5a4214; } .gx-card.r4 { --fc: #ff9ad0; --fc1: #4a2250; }
+.gx-card.on.r3 .gx-face { box-shadow: 0 0 12px rgba(255, 200, 58, 0.7); }
+.gx-card.on.r4 .gx-face { border-color: #fff; box-shadow: 0 0 14px rgba(255, 154, 208, 0.9); }
+.gx-face img { width: 84%; aspect-ratio: 1; height: auto; }
+.gx-cr { position: absolute; top: 2px; left: 5px; text-align: left; font-style: normal; font-family: var(--font-num); font-weight: 900; font-size: 11px; line-height: 1.1; color: var(--fc); text-shadow: 0 1px 0 #000; }
+.gx-face small { font-size: 8.5px; font-weight: 700; line-height: 1.25; text-align: center; color: var(--parch); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
+.gx-new { position: absolute; top: 3px; right: 3px; font-style: normal; font-family: var(--font-num); font-size: 7.5px; font-weight: 900; line-height: 1.4; color: #fff; background: #e0503a; padding: 0 3px; border-radius: 3px; }
+.gx-dup { position: absolute; top: 50px; right: 4px; padding: 0 3px; border-radius: 4px; background: rgba(6, 10, 24, 0.8); display: inline-flex; align-items: center; gap: 1px; font-style: normal; font-size: 8px; font-weight: 800; color: #b9c2ff; }
+.gx-dup svg { width: 9px; height: 9px; }
+
+/* ---------------------------------------------------------------- 1回の結果 */
+.gx-res { position: absolute; z-index: 6; left: 16px; right: 16px; top: var(--ry); max-width: 360px; margin: 0 auto; display: grid; justify-items: center; gap: 3px; padding: 14px 16px 16px; text-align: center; border-radius: 20px; background: linear-gradient(180deg, rgba(26, 40, 82, 0.95), rgba(10, 17, 41, 0.97)); border: 1px solid var(--rcol); box-shadow: 0 0 0 3px rgba(10, 17, 41, 0.8), 0 0 30px var(--rglow), 0 20px 40px rgba(0, 0, 0, 0.5); transform: translateY(-50%); animation: gxResIn 0.5s cubic-bezier(0.3, 1.3, 0.5, 1) both; pointer-events: auto; cursor: default; }
+@keyframes gxResIn { from { opacity: 0; transform: translateY(-50%) scale(0.8); } }
+.gx-res.r0 { --rcol: #c9c0b0; --rglow: rgba(201, 192, 176, 0.12); } .gx-res.r1 { --rcol: #6ab4ff; --rglow: rgba(106, 180, 255, 0.2); } .gx-res.r2 { --rcol: #c27cff; --rglow: rgba(194, 124, 255, 0.28); } .gx-res.r3 { --rcol: #ffc83a; --rglow: rgba(255, 200, 58, 0.38); } .gx-res.r4 { --rcol: #ff9ad0; --rglow: rgba(255, 154, 208, 0.45); }
+.gx-rimg { position: relative; width: 120px; height: 120px; }
+.gx-rimg > i { position: absolute; inset: -28px; border-radius: 50%; background: radial-gradient(circle, var(--rglow), transparent 66%); }
+.gx-rimg img { position: relative; width: 120px; height: 120px; animation: trBob 2.4s ease-in-out infinite; }
+.gx-rimg .gx-new { top: 2px; right: -8px; font-size: 10px; padding: 1px 6px; }
+.gx-rr { display: grid; justify-items: center; font-family: var(--font-num); font-weight: 900; font-size: 22px; letter-spacing: 0.06em; line-height: 1; color: var(--rcol); text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5); }
+.gx-rr span { margin-top: 3px; font-size: 11px; letter-spacing: 0; color: #ffe39a; }
+.gx-res h2 { margin: 4px 0 0; font-family: var(--font-head); font-weight: 800; font-size: 21px; letter-spacing: 0.04em; line-height: 1.3; }
+.gx-res p { margin: 0; font-size: 11.5px; font-weight: 700; line-height: 1.5; color: var(--parch-dim); }
+.gx-res ul { list-style: none; padding: 0; margin: 6px 0 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; }
+.gx-res li { font-size: 10.5px; font-weight: 700; color: #a8dcff; background: rgba(120, 170, 255, 0.1); padding: 2px 8px; border-radius: 999px; }
+.gx-res li b { margin-left: 3px; font-family: var(--font-num); }
+
+/* ---------------------------------------------------------------- UR だけの演出 */
+.gx-dim { position: absolute; inset: 0; z-index: 3; background: radial-gradient(circle at 50% var(--uy), rgba(24, 10, 34, 0.84), rgba(0, 0, 0, 0.95) 70%); opacity: 0; transition: opacity 0.45s; pointer-events: none; }
+.gx-uron .gx-dim { opacity: 1; }
+.gx-ur { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.gx-ur.out { opacity: 0; transition: opacity 0.3s; }
+.gx-core { position: absolute; left: 50%; top: var(--uy); width: 190px; height: 190px; margin: -95px 0 0 -95px; border-radius: 50%; background: radial-gradient(circle, #ffffff 0, rgba(255, 240, 220, 0.85) 18%, rgba(255, 154, 208, 0.35) 42%, transparent 70%); transform: scale(0); opacity: 0; }
+.gx-ur.go .gx-core { animation: gxCore 1.35s cubic-bezier(0.5, 0, 0.9, 0.5) forwards; }
+.gx-quick .gx-ur.go .gx-core { animation-duration: 0.5s; }
+.gx-ur.boom .gx-core { animation: gxCoreOut 0.6s ease-out forwards; }
+@keyframes gxCore { 0% { transform: scale(0); opacity: 0; } 30% { opacity: 0.9; } 100% { transform: scale(0.8); opacity: 1; } }
+@keyframes gxCoreOut { from { transform: scale(0.8); opacity: 1; } to { transform: scale(2.6); opacity: 0; } }
+.gx-urrays { position: absolute; left: 50%; top: var(--uy); width: 760px; height: 760px; margin: -380px 0 0 -380px; opacity: 0; transform: scale(0.4); }
+.gx-urrays::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(255, 160, 210, 0.42) 0deg 5deg, transparent 5deg 15deg, rgba(255, 230, 120, 0.4) 15deg 20deg, transparent 20deg 30deg, rgba(130, 220, 255, 0.38) 30deg 35deg, transparent 35deg 45deg); -webkit-mask-image: radial-gradient(circle, #000 6%, transparent 50%); mask-image: radial-gradient(circle, #000 6%, transparent 50%); animation: gxSpin 18s linear infinite; }
+.gx-ur.boom .gx-urrays { opacity: 1; transform: none; transition: opacity 0.4s, transform 0.9s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.gx-wflash { position: absolute; inset: 0; background: #ffffff; opacity: 0; }
+.gx-ur.boom .gx-wflash { animation: gxWFlash 0.9s ease-out forwards; }
+.gx-rm .gx-ur.boom .gx-wflash { animation-name: gxWFlashRm; }
+@keyframes gxWFlash { 0% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes gxWFlashRm { 0% { opacity: 0.45; } 100% { opacity: 0; } }
+.gx-urimg { position: absolute; left: 50%; top: var(--uy); width: 132px; height: 132px; margin: -66px 0 0 -66px; transform: scale(0); }
+.gx-urimg > i { position: absolute; inset: -40px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 255, 255, 0.55), rgba(255, 154, 208, 0.25) 45%, transparent 70%); }
+.gx-urimg img { position: relative; width: 132px; height: 132px; }
+.gx-ur.boom .gx-urimg { transform: none; transition: transform 0.6s cubic-bezier(0.3, 1.6, 0.5, 1); }
+.gx-ur.boom .gx-urimg img { animation: trBob 2.4s 0.6s ease-in-out infinite; }
+.gx-urtag { position: absolute; left: 0; right: 0; top: calc(var(--uy) - 136px); display: grid; justify-items: center; gap: 2px; opacity: 0; transform: translateY(-16px); }
+.gx-urtag b { font-family: var(--font-num); font-weight: 900; font-size: 46px; line-height: 1; letter-spacing: 0.06em; color: transparent; background: linear-gradient(90deg, #ff9ad0, #ffe39a, #9fffc0, #9fd8ff, #d8a8ff, #ff9ad0); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; animation: gxRainbowText 2.4s linear infinite; }
+.gx-urtag span { font-size: 11px; font-weight: 800; color: #ffe39a; letter-spacing: 0.1em; }
+@keyframes gxRainbowText { to { background-position: 200% 0; } }
+.gx-ur.boom .gx-urtag { opacity: 1; transform: none; transition: opacity 0.4s 0.2s, transform 0.5s 0.2s cubic-bezier(0.3, 1.5, 0.5, 1); }
+.gx-urtxt { position: absolute; left: 16px; right: 16px; top: calc(var(--uy) + 86px); display: grid; justify-items: center; gap: 2px; text-align: center; }
+.gx-urname { margin: 0; font-family: var(--font-head); font-weight: 800; letter-spacing: 0.08em; line-height: 1.25; white-space: nowrap; filter: drop-shadow(0 0 10px rgba(255, 154, 208, 0.65)) drop-shadow(0 2px 0 rgba(0, 0, 0, 0.6)); }
+.gx-urname span { display: inline-block; color: transparent; background: linear-gradient(180deg, #ffffff 25%, #fff0b8 55%, #ffb0d8); -webkit-background-clip: text; background-clip: text; clip-path: inset(0 100% 0 0); }
+.gx-ur.boom .gx-urname span { clip-path: inset(0 0 0 0); transition: clip-path 0.85s 0.4s cubic-bezier(0.5, 0, 0.3, 1); }
+.gx-brush { width: min(78%, 300px); height: 12px; overflow: visible; }
+.gx-brush path { fill: none; stroke: #ffd36a; stroke-width: 3.2; stroke-linecap: round; stroke-dasharray: 220; stroke-dashoffset: 220; opacity: 0.9; }
+.gx-ur.boom .gx-brush path { stroke-dashoffset: 0; transition: stroke-dashoffset 0.6s 1s ease-out; }
+.gx-urtxt p { margin: 4px 0 0; font-size: 12px; font-weight: 700; color: rgba(246, 236, 210, 0.85); opacity: 0; }
+.gx-ur.boom .gx-urtxt p { opacity: 1; transition: opacity 0.4s 1.1s; }
+.gx-quick .gx-ur.boom .gx-urname span { transition-delay: 0.1s; transition-duration: 0.5s; }
+.gx-quick .gx-ur.boom .gx-brush path, .gx-quick .gx-ur.boom .gx-urtxt p { transition-delay: 0.4s; }
+.gx-urtap { position: absolute; left: 0; right: 0; top: calc(var(--uy) + 196px); margin: 0; text-align: center; font-size: 12px; font-weight: 800; color: rgba(246, 236, 210, 0.75); opacity: 0; }
+.gx-ur.ready .gx-urtap { opacity: 1; animation: gxBlink 1.4s ease-in-out infinite; }
+@keyframes gxBlink { 50% { opacity: 0.4; } }

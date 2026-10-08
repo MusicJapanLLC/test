@@ -2649,6 +2649,26 @@
         if (r >= 4) for (let i = 0; i < 12; i++) harp(t + 0.3 + i * 0.04, 74 + PENTA[i % PENTA.length], 0.06, sfxGain, 1.8);
         break;
       }
+      case 'keyTurn': { // 宝箱の鍵を回す：カチッ（arg 1〜3：回すたびに少し高く）
+        const k = G.clamp(arg || 1, 1, 3);
+        noise({ f: 4200 + k * 500, dur: 0.03, vol: 0.06, q: 3 });
+        tone({ f: 1500 + k * 180, f2: 900, dur: 0.05, vol: 0.05, type: 'triangle' });
+        tone({ t: t + 0.05, f: 2600 + k * 220, dur: 0.12, vol: 0.025, type: 'triangle', a: 0.002 });
+        tone({ f: 140, f2: 80, dur: 0.08, vol: 0.08 });
+        break;
+      }
+      case 'cardFlip': // カードをめくる：ぱらっ
+        if (!throttle('cardFlip', 45)) return;
+        noise({ f: 1800, f2: 5200, dur: 0.07, vol: 0.05, q: 0.9, a: 0.01 });
+        tone({ t: t + 0.03, f: 1200, f2: 1700, dur: 0.05, vol: 0.02, type: 'triangle' });
+        break;
+      case 'gather': // UR：光が集まってくる（ひゅうう…と上がる）
+        if (!throttle('gather', 400)) return;
+        tone({ f: 180, f2: 720, dur: 1.2, vol: 0.045, a: 0.6, type: 'sawtooth', lp: 1400, slide: 1.2 });
+        tone({ f: 360, f2: 1440, dur: 1.2, vol: 0.03, a: 0.6, slide: 1.2 });
+        noise({ f: 600, f2: 6000, dur: 1.25, vol: 0.05, q: 0.6, a: 1 });
+        for (let i = 0; i < 8; i++) tone({ t: t + 0.3 + i * 0.11, f: mtof(86 + PENTA[i]), dur: 0.25, vol: 0.012 + i * 0.002 });
+        break;
       case 'commentPop':
         if (!throttle('commentPop', 110)) return;
         tone({ f: 880 + Math.random() * 200, f2: 1500, dur: 0.07, vol: 0.022, slide: 0.05 });

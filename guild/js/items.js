@@ -641,18 +641,25 @@
   IT.FREE_INTERVAL = 4 * 3600;
   IT.PITY = 30;
   IT.canFree = () => G.now() - (G.state.freeChestAt || 0) >= IT.FREE_INTERVAL;
+  // 提供割合の表示はここから読む（数字を二か所に書かない）
+  IT.CHEST_RATES = { chest: TABLE.chest, free: TABLE.free };
+  IT.CHEST_CONS = 0.18; // N〜SSR の枠が持ち物になる割合
   // ガチャの中身：装備（ほとんど）と、ときどき持ち物
+  //  表示のレア度は、いつも引いた枠のレア度（提供割合の表と同じ）。秘宝も枠より低いものは出さない
   const CONS_BY_RANK = [[['stone', 6], ['finish', 1], ['expbook', 1]], [['stone', 12], ['finish', 2], ['expbook', 2]], [['hg2', 1], ['goldx2', 1], ['luck', 1], ['key', 1]], [['hg3', 1], ['book', 1], ['horn', 1]], [['book', 2]]];
-  function chestOne(rnd, r) {
-    if (r <= 3 && rnd() < 0.18) {
+  function chestOne(rnd, r, noCons) {
+    if (!noCons && r <= 3 && rnd() < IT.CHEST_CONS) {
       const opts = CONS_BY_RANK[r];
       const [id, n] = opts[Math.floor(rnd() * opts.length)];
-      return { uid: uid(), kind: 'cons', id, n, rarity: Math.max(r, IT.CONS[id].rarity), name: IT.CONS[id].name + (n > 1 ? ` ×${n}` : '') };
+      return { uid: uid(), kind: 'cons', id, n, rarity: r, name: IT.CONS[id].name + (n > 1 ? ` ×${n}` : '') };
     }
-    return IT.make(rnd, r);
+    let it = IT.make(rnd, r);
+    if (it.kind === 'relic' && it.rarity < r) it = IT.make(rnd, r, { noRelic: true });
+    return it;
   }
   IT.openChest = function (kind) {
     const st = G.state;
+    st.flags = st.flags || {};
     const n = kind === 'ten' ? 10 : 1;
     if (kind === 'free') {
       if (!IT.canFree()) return null;
@@ -667,14 +674,21 @@
     }
     const rnd = Math.random;
     const out = [];
+    // 初めての10連は、SSR 以上の装備品か秘宝が1つ確定（持ち物の SSR では満たさない）
+    const first10 = kind === 'ten' && !st.flags.first10;
     for (let i = 0; i < n; i++) {
       st.pity = (st.pity || 0) + (kind === 'free' ? 0 : 1);
       let r = IT.rollRarity(rnd, kind === 'free' ? 'free' : 'chest');
       if (kind !== 'free' && st.pity >= IT.PITY && r < 3) r = 3;
       if (kind === 'ten' && i === n - 1 && !out.some((x) => x.rarity >= 2) && r < 2) r = 2;
+      let noCons = false;
+      if (first10 && i === n - 1 && !out.some((x) => x.rarity >= 3 && x.kind !== 'cons')) { if (r < 3) r = 3; noCons = true; }
       if (r >= 3) st.pity = 0;
-      out.push(chestOne(rnd, r));
+      out.push(chestOne(rnd, r, noCons));
     }
+    if (first10) st.flags.first10 = 1;
+    // 10連は並びをまぜる（確定の1つが、いつも最後のカードにならないように）
+    if (kind === 'ten') for (let i = out.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [out[i], out[j]] = [out[j], out[i]]; }
     st.stats.chests = (st.stats.chests || 0) + n;
     return out;
   };

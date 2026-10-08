@@ -56,21 +56,27 @@
     const now = G.now();
     const free = IT.canFree();
     const freeAt = (st.freeChestAt || 0) + IT.FREE_INTERVAL;
-    const pityLeft = Math.max(1, IT.PITY - (st.pity || 0));
+    const pity = G.clamp(st.pity || 0, 0, IT.PITY - 1);
+    const pityLeft = IT.PITY - pity;
     const cry = st.crystals || 0;
     const keys = IT.cons('key');
+    const flags = st.flags || {};
+    const first10 = !flags.first10;
+    const short = !!st.settings.chestShort;
     let h = `<div class="tr-gacha">
-      <div class="tr-top"><span class="tr-cry">${CRY}<b>${G.fmt(cry)}</b><small>魔晶石</small></span><button class="link" id="trRates">提供割合</button></div>
+      <div class="tr-top"><span class="tr-cry">${CRY}<b>${G.fmt(cry)}</b><small>魔晶石</small></span><button class="link gx-rlink" id="trRates"><i>i</i>提供割合</button></div>
       <div class="tr-stage"><img alt="" src="${chestImg(3, 132)}"></div>
       <h3>黄金の宝箱</h3>
-      <p>装備品・秘宝・持ち物が出る。あと <b>${pityLeft}回</b> で SSR 以上が必ず出る</p>
+      <p>装備品・秘宝・持ち物が出る</p>
+      <div class="gx-pity ${pityLeft <= 10 ? 'near' : ''}" role="status"><span class="gx-pt">SSR確定まで あと<b>${pityLeft}</b>回</span>${pityLeft <= 10 ? '<em>次の10連で確定</em>' : ''}<i class="gx-pbar" aria-hidden="true"><i style="width:${Math.round((pity / IT.PITY) * 100)}%"></i></i></div>
       <div class="tr-btns">
         <button class="btn ${free ? 'go pulse' : 'ghost'}" id="trFree" ${free ? '' : 'disabled'}>${free ? '無料で開ける' : `無料まで<span data-countdown="${freeAt}">${G.fmtClock(freeAt - now)}</span>`}</button>
         <button class="btn primary ${cry < IT.CHEST_COST ? 'cant' : ''}" id="trOne">1回<span>${CRY}${IT.CHEST_COST}</span></button>
-        <button class="btn primary ${cry < IT.CHEST10_COST ? 'cant' : ''}" id="trTen">10連<span>${CRY}${IT.CHEST10_COST}</span></button>
+        <div class="gx-ten">${first10 ? '<em class="gx-badge">初回SSR確定</em>' : ''}<button class="btn primary ${cry < IT.CHEST10_COST ? 'cant' : ''}" id="trTen">10連<span>${CRY}${IT.CHEST10_COST}</span></button></div>
       </div>
       ${keys ? `<button class="btn wide key-btn" id="trKey">宝箱の鍵で開ける<span>のこり ${keys}本</span></button>` : ''}
-      <small class="tr-how">10連は SR 以上が1つ確定 ・ 魔晶石は大成功の冒険譚、ランクアップ、目標、ログインボーナスで手に入ります</small>
+      ${flags.chestSeen && (!G.feature || G.feature('chestFx')) ? `<label class="auto gx-short ${short ? 'on' : ''}"><span><b>演出を短く</b><small>鍵を回す演出をはぶいて、すぐに結果を見る（UR のときだけ少し光ります）</small></span><input type="checkbox" id="trShort" ${short ? 'checked' : ''}><i class="sw"></i></label>` : ''}
+      <small class="tr-how">10連は SR 以上が1つ確定${first10 ? '（初めての10連は SSR 以上も1つ確定）' : ''} ・ 魔晶石は大成功の冒険譚、ランクアップ、目標、ログインボーナスで手に入ります</small>
     </div>`;
     const owned = IT.RELICS.filter((r) => st.relics && st.relics[r.id]);
     h += `<div class="sec"><h3>秘宝 <small>${owned.length}/${IT.RELICS.length}</small><span class="h-right">ギルド全体に効く</span></h3><div class="relics">`;
@@ -326,6 +332,8 @@
     on('#trTen', () => openChest('ten'));
     on('#trKey', () => openChest('key'));
     on('#trRates', showRates);
+    const tsh = G.$('#trShort', body);
+    if (tsh) tsh.addEventListener('change', () => { G.state.settings.chestShort = tsh.checked; G.audio.sfx(tsh.checked ? 'claim' : 'soft'); G.sim.save(); G.ui.renderSheet(); });
     G.$$('[data-item]', body).forEach((b) => b.addEventListener('click', () => T.showItem(b.dataset.item)));
     G.$$('[data-gslot]', body).forEach((b) => b.addEventListener('click', () => { gearSlot = b.dataset.gslot; G.audio.sfx('soft'); G.ui.renderSheet(); }));
     const so = G.$('#gearSort', body);
@@ -394,12 +402,26 @@
       art.chestR(ctx, 0, rank, 0.4);
     }));
   }
+  // 提供割合：数字は items.js の表（IT.CHEST_RATES・IT.CHEST_CONS・IT.PITY）から読む
   function showRates() {
     G.audio.sfx('tap');
+    const R = IT.CHEST_RATES;
     const row = (k) => IT.RARITY.map((r, i) => `<li class="r${i}"><b>${r.id}</b><span>${r.name}</span><em>${k[i]}%</em></li>`).join('');
-    G.ui.modal(`<div class="rates"><h2>提供割合</h2><h3 class="mini">魔晶石・鍵の宝箱</h3><ul>${row([40, 35, 18, 6, 1])}</ul><h3 class="mini">無料の宝箱</h3><ul>${row([62, 30, 7, 1, 0])}</ul><p class="hint">装備品のほか、秘宝や持ち物が出ることがあります。10連は SR 以上が1つ確定。30回以内に SSR 以上が必ず出ます。持っている秘宝が出たときは魔晶石になります。</p></div>`, [{ text: '閉じる', cls: 'primary' }]);
+    const first10 = !(G.state.flags && G.state.flags.first10);
+    G.ui.modal(`<div class="rates gx-rates"><h2>提供割合</h2>
+      <h3 class="mini">黄金の宝箱（魔晶石・宝箱の鍵）</h3><ul>${row(R.chest)}</ul>
+      <h3 class="mini">無料の宝箱</h3><ul>${row(R.free)}</ul>
+      <h3 class="mini">確定のしくみ</h3>
+      <ol class="gx-rules">
+        <li><b>10連</b>SR 以上がかならず1つ入ります</li>
+        <li><b>天井</b>魔晶石・鍵で ${IT.PITY} 回開けるうちに SSR 以上が出なかったときは、${IT.PITY} 回目が SSR になります（10連は10回と数えます）。SSR 以上が出たら数えなおし。無料の宝箱は回数に入りません</li>
+        <li><b>初めての10連</b>SSR 以上の装備品か秘宝が1つ確定${first10 ? '' : '<small>（使用済み）</small>'}</li>
+        <li><b>箱の色</b>開けるときに箱が銀になれば SR 以上、金なら SSR 以上、虹なら UR が入っています</li>
+      </ol>
+      <p class="hint">N〜SSR の枠は、約${Math.round(IT.CHEST_CONS * 100)}%で装備品のかわりに持ち物（強化石・砂時計・閃きの書など）になります。SR 以上の枠では、ときどき秘宝が出ます（持っている秘宝は魔晶石になります）。表は1つの枠ごとの割合で、確定や天井で上がるぶんは含みません。</p></div>`, [{ text: '閉じる', cls: 'primary' }], { cls: 'gx-rates-modal' });
   }
   function openChest(kind) {
+    if (T.chestOpen()) return; // 演出中に二重で開けない
     G.audio.init();
     const st = G.state;
     const cost = kind === 'ten' ? IT.CHEST10_COST : kind === 'one' ? IT.CHEST_COST : 0;
@@ -408,8 +430,10 @@
       G.ui.toast(`魔晶石が足りません（あと ${cost - (st.crystals || 0)}）。ショップで毎日10個もらえます`, 'bad');
       return;
     }
+    const first10 = kind === 'ten' && !(st.flags && st.flags.first10);
     const got = IT.openChest(kind);
     if (!got) { G.audio.sfx('error'); return; }
+    // 中身は演出の前に全部しまう（とばしても・途中で閉じても、なくならないし増えない）
     const res = got.map((item) => {
       const isNew = item.kind === 'relic' ? !(st.relics && st.relics[item.rid]) : item.kind === 'cons' ? false : !(st.dex && st.dex[item.tid + ':' + item.rarity]);
       const r = IT.add(item);
@@ -417,7 +441,7 @@
     });
     G.sim.save();
     G.audio.sfx('open');
-    T.chestShow(res, () => G.ui.renderSheet());
+    T.chestShow(res, () => G.ui.renderSheet(), { kind, first10 });
   }
 
   // ---------------------------------------------------------------- 装備の詳細・強化
@@ -836,8 +860,9 @@
     const cross = a.cross && a.cross.cls !== a.cls ? a.cross : null;
     const crossHtml = crossOpts.length || cross ? `<button class="skill-row cross ${cross ? 'on' : ''}" id="crossBtn"><b>継承スキル</b><em>${cross ? D.CLASSES[cross.cls].name : '空き'}</em><small>${cross ? `${G.esc(cross.name)}：${IT.skillDesc(cross.cls, cross.name, ((a.skBy || {})[cross.cls] || {})[cross.name] || 1)}` : '熟練★3 の職業の技を、1つ使える'}</small><i>${cross ? '変える' : 'えらぶ'}</i></button>` : '';
     const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}${growing ? ' <span class="grow-tag">伸び盛り 経験値×2.5</span>' : ''}</p>
+      ${G.oshi ? G.oshi.detailHtml(a) : ''}
       <div class="mastery"><div class="ms-head"><b>熟練</b><small>★の合計 ${mt} ・ 戦力 +${mt * 2}%</small></div><div class="ms-list">${mast}</div><small class="ms-hint">★3：その職業の技を継承スキルに ・ ★5：その職業の特技を、転職しても持ち続ける</small></div>
-      <div class="adv-actions"><button class="btn sm ghost" id="advChange">転職する${a.lv < S.CHANGE_LV ? `<span>Lv${S.CHANGE_LV}から</span>` : ''}</button><button class="btn sm ghost" id="advInherit">後継者に託す${a.lv < S.INHERIT_LV ? `<span>Lv${S.INHERIT_LV}から</span>` : ''}</button></div>
+      <div class="adv-actions">${G.talent ? G.talent.buttonHtml(a) : ''}<button class="btn sm ghost" id="advChange">転職する${a.lv < S.CHANGE_LV ? `<span>Lv${S.CHANGE_LV}から</span>` : ''}</button><button class="btn sm ghost" id="advInherit">後継者に託す${a.lv < S.INHERIT_LV ? `<span>Lv${S.INHERIT_LV}から</span>` : ''}</button></div>
       <div class="eq-slots">${slots}</div>
       ${IT.equipped(a).length ? `<button class="link" id="advEnh">この冒険者の装備をまとめて強化</button>` : ''}
       ${setHtml}
@@ -851,6 +876,9 @@
       cls: 'wide', replace: !!replace,
       onShow: (card) => {
         G.$$('[data-slot]', card).forEach((b) => b.addEventListener('click', () => pickFor(a, b.dataset.slot)));
+        if (G.oshi) G.oshi.bindDetail(card, a, () => T.advDetail(a.id, true));
+        const tb = G.$('#advTalent', card);
+        if (tb) tb.addEventListener('click', () => { G.audio.sfx('open'); G.talent.open(a, true); });
         if (skFxNext) { const set = skFxNext; skFxNext = null; skillFx(card, set); }
         const ska = G.$('#skAuto', card);
         if (ska) ska.addEventListener('click', () => {
@@ -1014,219 +1042,877 @@
   };
 
   // ---------------------------------------------------------------- 宝箱を開ける演出
-  let fx = null, cv = null, ctx = null, W = 0, H = 0, dpr = 1, raf = 0, last = 0;
-  T.chestShow = function (list, onDone) {
-    const el = G.$('#chestFx');
-    cv = G.$('#chestCanvas');
-    ctx = cv.getContext('2d');
-    el.hidden = false;
-    const ui = el.querySelector('.cf-ui');
-    ui.innerHTML = list.length > 1 ? '<button class="cf-skip" id="cfSkip">まとめて見る ››</button>' : '';
-    resize();
-    fx = { list, i: 0, t: 0, done: onDone, parts: [], fired: {} };
-    const sk = G.$('#cfSkip');
-    if (sk) sk.addEventListener('click', (e) => { e.stopPropagation(); if (fx && !fx.summary) { G.audio.sfx('tap'); const best = Math.max(...fx.list.map((r) => r.item.rarity)); if (best >= 2) G.audio.sfx('rarity', best); summary(); } });
-    prep();
-    requestAnimationFrame(() => el.classList.add('shown'));
-    el.onclick = tap;
-    G.audio.setMuffle(true);
-    last = performance.now();
-    cancelAnimationFrame(raf);
-    raf = requestAnimationFrame(loop);
+  //  1) 鍵を回す：タップするたびに鍵が回って箱が揺れる（強く揺れるほど良いもの。ときどきフェイント）
+  //  2) 箱の色が昇格：木 → 銀（SR 以上）→ 金（SSR 以上）→ 虹（UR 確定）。箱の色はうそをつかない
+  //  3) 光の柱：いちばん良いレア度の色。リナと常連のひとこと
+  //  4) 10連はカードをめくる（1枚ずつ・全部めくる）
+  //  5) UR だけ：暗転 → 光が集まる → 名前を大きく
+  //  中身は演出の前に宝物庫へ入っている。演出は見せるだけ（とばしても閉じても数は変わらない）
+  //  「演出を短く」（settings.chestShort）：鍵とカードめくりをはぶいて、すぐに結果へ
+  //  動きは CSS（css/gacha.css）の transform / opacity。光の粒だけ canvas
+  const BOX_UP = [null, ['銀の宝箱！', 'SR以上確定'], ['金の宝箱！！', 'SSR以上確定'], ['虹の宝箱！！！', 'UR確定']];
+  const BOX_COL = ['#c8a070', '#e6eef8', '#ffc83a', '#ff9ad0'];
+  const BOX_KEY = ['', 'silver', 'gold', 'rainbow'];
+  const RAINBOW = ['#ff6a8a', '#ffb36a', '#ffe76a', '#7affa0', '#6ad0ff', '#b98aff', '#ffffff'];
+  const boxOf = (r) => (r >= 4 ? 3 : r >= 3 ? 2 : r >= 2 ? 1 : 0);
+  const shuf = (a) => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  const RINA = {
+    first: ['鍵を差しこみました！ 画面をタップして、鍵を回してみてください'],
+    intro: ['さあ、鍵を回して…！ 何が出るかな', '今日の運だめし、いきましょう！', 'どきどきしますね…！ ゆっくり回してください', '開ける前のこの瞬間、好きなんです'],
+    ten: ['10連ですね！ 鍵を回して、いっきに開けましょう', '10個ぶんの宝箱…！ 腕が鳴りますね'],
+    first10: ['初めての10連は、SSRがひとつ確定です。…さあ、鍵を回して！'],
+    feint: ['…あれ？ 今、すごく揺れたのに', 'ふふ、じらしますね〜', 'い、今のは…気のせい？'],
+    silver: ['あっ、銀色に…！ SR以上が入ってます！', '銀色！ いい感じですよ'],
+    gold: ['き、金色です！！ SSR以上確定ですよ！', 'わっ、金色に…！ 手がふるえます'],
+    rainbow: ['にじ…虹色！？ マスター、これって…！', '虹色の箱なんて、伝説の中だけかと…！'],
+    pillar: [['ささやかでも、冒険の役に立つ品ですよ'], ['青い光！ いい品の予感です'], ['紫の光…！ なかなかの掘り出し物ですよ'], ['金色の光の柱…！ マスター、すごいです！'], ['虹の柱です！！ わたし、初めて見ました…！']],
+    cards: ['カードをタップしてめくってください。「全部めくる」もできますよ'],
+    gather: ['……っ！？ 光が、集まって…！'],
+    ur: ['伝説の品です…！ ギルドの宝にしましょう！', 'マスター…これ、歴史に残りますよ…！'],
+    done: [['ふふ、こういう日もありますよ。次はきっと！', 'どれも冒険の役に立ちますよ。大事に使いましょうね'], ['紫の品！ 冒険者さんたち、喜びますよ'], ['金色の品…！ さっそく装備してみませんか？'], ['伝説の品が、うちのギルドに…！ 夢みたいです']],
   };
+  // 常連（comments.js の顔ぶれ）の、宝箱のときのひとこと
+  const CHAT = {
+    teo: { n: 'テオ', start: ['宝箱だ…！ どきどき'], silver: ['銀色になりました！'], gold: ['金きた！！ 金ですよ！！'], rainbow: ['に、虹…！？ 本物ですか！？'], feint: ['い、今の揺れは…！？'], sr: ['紫！ かっこいいです！'], ssr: ['金色だ！ 弟子にしてください！'], ur: ['う、うわああ伝説だああ！！'], low: ['次はきっと金です！'] },
+    gordon: { n: 'ゴードン', start: ['よっ、開けろ開けろー'], silver: ['お、銀か。一杯いけるな'], gold: ['金だ金だ！ 祝い酒だー！'], rainbow: ['虹ぃ！？ 酔いが一発でさめた'], feint: ['ひっく…揺れたのは酒のせいか？'], sr: ['いいねえ、つまみが増えた'], ssr: ['金色に乾杯！！'], ur: ['伝説に乾杯！！ 樽ごと持ってこい！'], low: ['まあまあ、一杯やろうや'] },
+    morris: { n: 'モリス', start: ['焼き上がりを待つ気分だね'], silver: ['銀のトレーみたいでいいね'], gold: ['焼きたてみたいな金色だ！'], rainbow: ['虹色のパン…作るしかない'], feint: ['生地みたいに、ふくらんでしぼんだね'], sr: ['いい色の紫だねえ'], ssr: ['今日は記念のパンを焼くよ'], ur: ['手が震えて生地がこねられない'], low: ['パンでも食べて、もう一回'] },
+    luce: { n: 'ルーチェ', start: ['♪鍵の音が 鳴りひびく'], silver: ['♪銀の鈴が鳴る'], gold: ['♪黄金の光 箱からあふれ'], rainbow: ['♪七色の柱 天まで届け'], feint: ['♪じらしの前奏、長めです'], sr: ['♪紫の夜明け'], ssr: ['今夜の酒場で歌うね'], ur: ['伝説の誕生…歌が止まらない'], low: ['♪小さな宝も 旅の友'] },
+    yona: { n: 'ヨナ', start: ['水晶が…光っているわ'], silver: ['銀…悪くない相ね'], gold: ['水晶に映っていた金色ね'], rainbow: ['…星が落ちた。虹の兆し'], feint: ['ふふ、まだ早いわ'], sr: ['紫は神秘の色'], ssr: ['予言どおりね'], ur: ['水晶が割れるほどの運命ね'], low: ['次の箱に吉兆あり'] },
+    valk: { n: 'ヴァルク', start: ['どうせ大したもんは出ねえよ'], silver: ['銀くらいで浮かれるなよ'], gold: ['ちっ…金かよ'], rainbow: ['な、虹だと…！？'], feint: ['はっ、ビビらせやがって'], sr: ['フン、まあまあだな'], ssr: ['…まあ、運だけはいいな'], ur: ['……認めてやるよ、今日だけはな'], low: ['ハハッ、そんなもんだろ'] },
+    mia: { n: 'ミーア', start: ['わくわく！'], silver: ['銀色きれい〜！'], gold: ['きゃー！ 金色！！'], rainbow: ['虹！？ すごいすごい！！'], feint: ['えっ、いまの何！？'], sr: ['紫、かわいい〜'], ssr: ['おめでとうございます〜！'], ur: ['伝説…！ 泣いちゃう…'], low: ['かわいいの出ましたね'] },
+    cat: { n: 'ミケ', start: ['にゃ？'], silver: ['にゃ'], gold: ['にゃっ！！'], rainbow: ['にゃーーーーん！！'], feint: ['にゃ…？'], sr: ['にゃーん'], ssr: ['ごろごろ…'], ur: ['にゃーーーーん！！'], low: ['にゃーん'] },
+  };
+  const CROWD = {
+    start: ['ドキドキ', 'たのむ…', '開けて', 'きた', '宝箱！'],
+    silver: ['銀きた', '銀！', 'お、銀箱'],
+    gold: ['金きた！！', '金箱！？', 'きたああ', 'うおおお'],
+    rainbow: ['虹！？！？', '虹きたあああ', 'ふるえる', 'うそだろ'],
+    feint: ['あれ？', 'フェイントかｗ', 'じらすなあ', '揺れたのに…'],
+    sr: ['紫！', 'いいね', 'SRおめ'],
+    ssr: ['おめでとう！！', '神引き', 'まじか', 'SSRきた'],
+    ur: ['伝説…', '保存した', '鳥肌', '歴史的瞬間'],
+    low: ['ドンマイ', '次いこ次', 'まあまあ', '強化石は大事'],
+  };
+
+  // ---- 箱・鍵の絵（art.chestR と同じ形。色は CSS の変数で木・銀・金・虹に）
+  const hexPts = (cx, cy, rx, ry) => Array.from({ length: 6 }, (_, i) => { const a = (i / 6) * Math.PI * 2 + Math.PI / 6; return `${(cx + Math.cos(a) * rx).toFixed(2)},${(cy + Math.sin(a) * ry).toFixed(2)}`; }).join(' ');
+  const LID_SVG = `<svg viewBox="-17 -11.6 34 11.6" aria-hidden="true"><polygon class="w" points="-16,0 16,0 15,-8 0,-11 -15,-8"/><polygon class="wh" points="-16,0 0,0 0,-11 -15,-8"/><polygon class="b" points="-16,0 16,0 16,-2 -16,-2"/><polygon class="bd" points="-11,0 -8,0 -8,-9.2 -11,-8.4"/><polygon class="bk" points="8,0 11,0 11,-8.4 8,-9.2"/><polygon class="bl" points="-2.5,0 2.5,0 2.5,-5 -2.5,-5"/><polygon class="lk" points="${hexPts(0, -7.6, 2, 1.6)}"/></svg>`;
+  const BODY_SVG = `<svg viewBox="-17 -16 34 17" aria-hidden="true"><defs><linearGradient id="gxRb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff6a9a"/><stop offset=".25" stop-color="#ffb35a"/><stop offset=".5" stop-color="#f0d84a"/><stop offset=".72" stop-color="#5ad0a0"/><stop offset="1" stop-color="#6a8aff"/></linearGradient><linearGradient id="gxRb2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffa0c0"/><stop offset=".3" stop-color="#ffd090"/><stop offset=".55" stop-color="#fff0a0"/><stop offset=".8" stop-color="#a0f0d0"/><stop offset="1" stop-color="#b0c0ff"/></linearGradient></defs><polygon class="w" points="-16,0 16,0 16,-16 -16,-16"/><polygon class="wl" points="-16,0 0,0 0,-16 -16,-16"/><polygon class="bd" points="-16,-16 16,-16 16,-13.5 -16,-13.5"/><polygon class="bk" points="-16,-1.6 16,-1.6 16,0 -16,0"/><polygon class="bd" points="-11,0 -8,0 -8,-16 -11,-16"/><polygon class="bk" points="8,0 11,0 11,-16 8,-16"/>${[-12.8, 12.8].map((x) => [-4, -10].map((y) => `<circle class="bl" cx="${x}" cy="${y}" r=".8"/>`).join('')).join('')}<polygon class="b" points="-3,-14 3,-14 3,-6.5 0,-5 -3,-6.5"/><circle class="hole" cx="0" cy="-10.6" r="1.05"/><polygon class="hole" points="-.55,-10.3 .55,-10.3 .95,-7.8 -.95,-7.8"/><polygon class="sh" points="-14,-12 -9,-12 -11.5,-6"/></svg>`;
+  // 鍵は正面から見た持ち手。回すと、その場でくるりと回る（3回タップで1回転）
+  const KEY_SVG = `<svg viewBox="-12 -13 24 26" aria-hidden="true"><path class="k1" fill-rule="evenodd" d="M-6.6,-2a6.6,8 0 1,0 13.2,0a6.6,8 0 1,0 -13.2,0ZM-3.2,-2.6a3.2,4.4 0 1,0 6.4,0a3.2,4.4 0 1,0 -6.4,0Z"/><path class="k2" d="M0,-10A6.6,8 0 0,1 0,6A5,8 0 0,0 0,-10Z"/><polygon class="k1" points="-3.4,-9 -2.3,-12.4 -0.9,-10 0,-12.9 0.9,-10 2.3,-12.4 3.4,-9"/><polygon class="k2" points="-3,5.4 3,5.4 2.4,8.2 -2.4,8.2"/><polygon class="k1" points="-1.6,8 1.6,8 0,11.8"/><polygon class="k3" points="0,-5.6 1.7,-2.6 0,0.4 -1.7,-2.6"/><path class="kh" d="M-5.2,-4.6Q-4.6,-8.4 -1.4,-9.3"/></svg>`;
+  const HAND = '<svg class="gx-hand" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11.5V5.2a1.6 1.6 0 013.2 0V10h.4V8.6a1.6 1.6 0 013.2 0V10h.4a1.6 1.6 0 013.2.2v4.6c0 3.6-2.5 6.2-6 6.2h-1.3c-1.9 0-3.3-.8-4.5-2.3l-3-4a1.6 1.6 0 012.5-2z" fill="#fff4dc" stroke="#3a1e08" stroke-width="1.1" stroke-linejoin="round"/></svg>';
+
+  // ---- 光の粒（canvas）：きらめき・紙ふぶき・UR で集まる光
+  let cv = null, ctx = null, W = 0, H = 0, dpr = 1, raf = 0, last = 0, gath = null;
+  const parts = [];
   function resize() {
-    dpr = Math.min(2.5, window.devicePixelRatio || 1);
+    if (!cv) return;
+    dpr = Math.min(2, window.devicePixelRatio || 1);
     W = window.innerWidth; H = window.innerHeight;
-    cv.width = W * dpr; cv.height = H * dpr;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
   }
-  function prep() {
-    const it = fx.list[fx.i].item;
-    const rank = it.rarity;
-    let s0 = rank;
-    if (rank >= 2) s0 = Math.max(0, rank - (Math.random() < 0.5 ? 1 : 2));
-    if (rank >= 3 && Math.random() < 0.35) s0 = 0;
-    fx.steps = [];
-    for (let r = s0; r <= rank; r++) fx.steps.push(r);
-    fx.stepT = fx.steps.map((_, i) => (i === 0 ? 0 : 0.95 + i * 0.45));
-    fx.reveal = 1.35 + (fx.steps.length - 1) * 0.45;
-    fx.t = 0;
-    fx.fired = {};
-    fx.parts = [];
+  window.addEventListener('resize', () => { if (fx) resize(); });
+  function kick() { if (!raf && ctx) { last = performance.now(); raf = requestAnimationFrame(loop); } }
+  function spark(x, y, n, cols, o = {}) {
+    if (G.reducedMotion()) n = Math.ceil(n / 3);
+    for (let i = 0; i < n; i++) {
+      const a = o.up ? -Math.PI / 2 + G.rand(-0.7, 0.7) : G.rand(0, Math.PI * 2);
+      const v = G.rand(o.v0 || 120, o.v1 || 420);
+      parts.push({ k: o.k || 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0, max: G.rand(o.l0 || 0.6, o.l1 || 1.2), col: cols[i % cols.length], size: G.rand(o.s0 || 1.6, o.s1 || 3.4), rot: G.rand(0, 6), vr: G.rand(-9, 9) });
+    }
+    kick();
   }
-  function tap() {
-    if (!fx || fx.summary) return;
-    if (fx.t < fx.reveal) { fx.t = fx.reveal; return; }
-    if (fx.t < fx.reveal + 0.35) return;
-    G.audio.sfx('tap');
-    if (fx.i < fx.list.length - 1) { fx.i++; prep(); return; }
-    if (fx.list.length > 1) summary();
-    else finish();
-  }
-  function summary() {
-    fx.summary = true;
-    const box = G.$('#chestFx .cf-ui');
-    box.innerHTML = `<div class="cf-sum"><h2>手に入れたもの</h2><div class="cf-grid${fx.list.length > 6 ? ' many' : ''}">${fx.list.map((r) => `<div class="cf-it r${r.item.rarity}"><img alt="" src="${thumb(r.item, 64)}">${r.isNew ? '<i>NEW</i>' : ''}<small>${G.esc(r.item.name)}</small>${r.dup ? `<em>${CRY}+${r.crystals}</em>` : ''}</div>`).join('')}</div><button class="btn primary big" id="cfClose">宝物庫へ</button></div>`;
-    G.$('#cfClose').addEventListener('click', (e) => { e.stopPropagation(); finish(); });
-  }
-  function finish() {
-    const el = G.$('#chestFx');
-    el.classList.remove('shown');
-    setTimeout(() => { el.hidden = true; cancelAnimationFrame(raf); }, 300);
-    if (!G.ui.modalOpen()) G.audio.setMuffle(!!G.ui.sheetTab());
-    const done = fx && fx.done;
-    fx = null;
-    if (done) done();
-  }
-  function once(k, at) { if (fx.t >= at && !fx.fired[k]) { fx.fired[k] = true; return true; } return false; }
   function loop(now) {
-    if (!fx) return;
-    raf = requestAnimationFrame(loop);
+    raf = 0;
+    if (!ctx) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now;
-    if (!fx.summary) fx.t += dt;
-    const r = fx.list[fx.i];
-    const it = r.item;
-    const s = Math.min(W / 360, H / 640);
-    const cx = W / 2, cy = H * 0.56;
-    if (once('drop', 0.32)) G.audio.sfx('bounce');
-    if (once('roll', 0.62)) G.audio.sfx('roll');
-    fx.steps.forEach((rk, i) => { if (i > 0 && once('st' + i, fx.stepT[i])) { G.audio.sfx('rarity', rk); G.haptic(12 + rk * 4); fx.flash = 0.35; fx.flashCol = art.RARITY_COL[rk].glow; } });
-    if (once('rev', fx.reveal)) {
-      G.audio.sfx('chest');
-      G.audio.sfx('reveal', it.rarity >= 3 ? 'legend' : it.rarity >= 1 ? 'great' : 'ok');
-      if (it.rarity >= 2) G.audio.sfx('rarity', it.rarity);
-      for (let i = 0; i < [16, 30, 60, 100, 160][it.rarity]; i++) {
-        fx.parts.push({ x: cx, y: cy - 40 * s, vx: G.rand(-260, 260) * s, vy: G.rand(-520, -160) * s, life: 0, max: G.rand(1.4, 2.4), col: G.pick(['#ffcf4a', '#ff7a6a', '#6ad0ff', '#8fe08a', '#c79bff', '#ffffff']), size: G.rand(4, 8) * s, rot: G.rand(0, 6), vr: G.rand(-9, 9) });
-      }
-      if (it.rarity >= 3) { fx.flash = 0.8; fx.flashCol = it.rarity >= 4 ? '#ffffff' : '#fff0b0'; G.haptic(40); }
-    }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const bg = ctx.createRadialGradient(cx, cy - 60 * s, 0, cx, cy, Math.max(W, H) * 0.75);
-    bg.addColorStop(0, '#1e2e5c');
-    bg.addColorStop(1, '#04070f');
-    ctx.fillStyle = bg;
-    ctx.fillRect(0, 0, W, H);
-    let si = 0;
-    fx.stepT.forEach((st, i) => { if (fx.t >= st) si = i; });
-    const rank = fx.steps[si];
-    const t = fx.t;
-    if (t > fx.reveal) {
-      const a = G.seg(t, fx.reveal, fx.reveal + 0.35);
-      ctx.save();
-      ctx.translate(cx, cy - 40 * s);
-      ctx.rotate(t * 0.5);
-      const n = 16;
-      for (let i = 0; i < n; i++) {
-        const ang = (i / n) * Math.PI * 2;
-        ctx.fillStyle = it.rarity >= 4 ? `hsla(${(i * 360) / n + t * 120},90%,70%,${0.3 * a})` : G.rgba(art.RARITY_COL[it.rarity].glow, 0.28 * a);
-        ctx.beginPath(); ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(ang - 0.08) * 900, Math.sin(ang - 0.08) * 900);
-        ctx.lineTo(Math.cos(ang + 0.08) * 900, Math.sin(ang + 0.08) * 900);
-        ctx.fill();
-      }
-      ctx.restore();
-    } else if (t > 0.5) {
-      const col = rank === 4 ? art.rainbow(t, 0, 70) : art.RARITY_COL[rank].glow;
-      const rr = (70 + (t - 0.5) * 30) * s;
-      const g = ctx.createRadialGradient(cx, cy - 30 * s, 0, cx, cy - 30 * s, rr);
-      g.addColorStop(0, G.rgba(col.startsWith('#') ? col : '#ffffff', rank >= 1 ? 0.55 : 0.25));
-      g.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = g;
-      ctx.fillRect(cx - rr, cy - 30 * s - rr, rr * 2, rr * 2);
+    ctx.clearRect(0, 0, W, H);
+    if (gath) {
+      // 画面の外から、渦を巻いて真ん中へ
+      gath.acc += gath.rate * dt;
+      const R = Math.max(W, H) * 0.62;
+      for (; gath.acc >= 1; gath.acc--) parts.push({ k: 'ember', a: G.rand(0, Math.PI * 2), r: R * G.rand(0.55, 1), w: G.rand(1.2, 2.6) * (Math.random() < 0.5 ? -1 : 1), sp: G.rand(140, 260), tx: gath.x, ty: gath.y, life: 0, max: 3, col: Math.random() < 0.35 ? G.pick(RAINBOW) : G.pick(['#ffcf6a', '#ffe9a6', '#ff9a5a', '#fff4dc']), size: G.rand(1.4, 3.2) });
     }
-    const dropK = G.seg(t, 0, 0.55);
-    const by = dropK < 1 ? -Math.abs(Math.cos(dropK * Math.PI * 2.2)) * (1 - dropK) * 300 * s : 0;
-    const shaking = t > 0.6 && t < fx.reveal;
-    const sh = shaking ? Math.sin(t * 60) * (1.5 + (t - 0.6) * 3) * s : 0;
-    const op = G.ease.outBack(G.seg(t, fx.reveal, fx.reveal + 0.3));
-    ctx.save();
-    ctx.translate(cx + sh, cy + by);
-    ctx.scale(3.4 * s, 3.4 * s);
-    art.ellipse(ctx, 0, 0, 18, 3, 'rgba(0,0,0,0.35)');
-    art.chestR(ctx, op, rank, t);
-    ctx.restore();
-    if (t > fx.reveal + 0.1) {
-      const k2 = G.ease.outBack(G.seg(t, fx.reveal + 0.1, fx.reveal + 0.5));
-      const iy = G.lerp(cy - 40 * s, cy - 210 * s, k2);
-      ctx.save();
-      ctx.translate(cx, iy);
-      ctx.scale(k2, k2);
-      const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, 70 * s);
-      gl.addColorStop(0, G.rgba(art.RARITY_COL[it.rarity].glow, 0.6));
-      gl.addColorStop(1, 'rgba(255,255,255,0)');
-      ctx.fillStyle = gl;
-      ctx.fillRect(-70 * s, -70 * s, 140 * s, 140 * s);
-      art.itemIcon(ctx, it, 92 * s, t);
-      ctx.restore();
-      const a = G.seg(t, fx.reveal + 0.3, fx.reveal + 0.55);
-      ctx.save();
-      ctx.globalAlpha = a;
-      ctx.textAlign = 'center';
-      const R = IT.RARITY[it.rarity];
-      ctx.font = G.font(900, 30 * s, 'num');
-      ctx.lineWidth = 6 * s;
-      ctx.lineJoin = 'round';
-      ctx.strokeStyle = '#0a0612';
-      ctx.strokeText(R.id, cx, cy - 118 * s);
-      if (it.rarity >= 4) {
-        const ug = ctx.createLinearGradient(cx - 60 * s, 0, cx + 60 * s, 0);
-        for (let i = 0; i <= 6; i++) ug.addColorStop(i / 6, `hsl(${i * 60 + t * 160},95%,70%)`);
-        ctx.fillStyle = ug;
-      } else ctx.fillStyle = art.RARITY_COL[it.rarity].accent;
-      ctx.fillText(R.id, cx, cy - 118 * s);
-      ctx.font = G.font(700, 13 * s);
-      ctx.fillStyle = '#ffe39a';
-      ctx.fillText(stars(it.rarity), cx, cy - 98 * s);
-      ctx.font = G.font(800, (it.name.length > 10 ? 18 : 22) * s, 'head');
-      ctx.lineWidth = 5 * s;
-      ctx.strokeText(it.name, cx, cy + 62 * s);
-      ctx.fillStyle = '#fbf3de';
-      ctx.fillText(it.name, cx, cy + 62 * s);
-      ctx.font = G.font(700, 12 * s);
-      ctx.fillStyle = 'rgba(246,236,210,0.8)';
-      let sub;
-      if (it.kind === 'relic') sub = r.dup ? `持っている秘宝 → 魔晶石 +${r.crystals}` : '秘宝 ・ ' + IT.RELIC[it.rid].desc;
-      else if (it.kind === 'cons') sub = '持ち物 ・ ' + IT.CONS[it.id].desc;
-      else {
-        const m = IT.MAIN[it.slot];
-        sub = `${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv} ・ ${IT.STAT[m.k].name} ${pct(IT.mainVal(it))}`;
-      }
-      ctx.fillText(sub, cx, cy + 84 * s);
-      if (it.kind === 'equip' && it.affixes && it.affixes.length) {
-        ctx.font = G.font(700, 11 * s);
-        ctx.fillStyle = '#a8dcff';
-        ctx.fillText(it.affixes.map((x) => `${IT.STAT[x.k].name}${pct(x.v)}`).join('  '), cx, cy + 102 * s);
-      }
-      if (r.isNew) {
-        ctx.font = G.font(900, 13 * s, 'num');
-        ctx.fillStyle = '#ff7a6a';
-        ctx.fillText('NEW!', cx + 70 * s, cy - 150 * s);
-      }
-      ctx.restore();
-    }
-    for (let i = fx.parts.length - 1; i >= 0; i--) {
-      const p = fx.parts[i];
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
       p.life += dt;
-      if (p.life > p.max) { fx.parts.splice(i, 1); continue; }
-      p.vy += 520 * s * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
-      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
-      ctx.globalAlpha = Math.min(1, (1 - p.life / p.max) * 2);
-      art.poly(ctx, [-p.size, p.size * 0.6, p.size, p.size * 0.6, 0, -p.size], p.col);
-      ctx.restore();
+      if (p.life > p.max) { parts.splice(i, 1); continue; }
+      if (p.k === 'ember') {
+        p.r -= (p.sp + 700 * p.life) * dt;
+        p.a += p.w * dt * (1 + 60 / Math.max(30, p.r));
+        if (p.r < 8) { parts.splice(i, 1); continue; }
+        const x = p.tx + Math.cos(p.a) * p.r, y = p.ty + Math.sin(p.a) * p.r;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = Math.min(1, p.life * 3);
+        ctx.fillStyle = p.col;
+        ctx.beginPath(); ctx.arc(x, y, p.size, 0, Math.PI * 2); ctx.fill();
+        continue;
+      }
+      const k = p.life / p.max;
+      if (p.k === 'shard') {
+        p.vy += 520 * dt; p.vx *= 1 - 0.6 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = Math.min(1, (1 - k) * 2);
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        art.poly(ctx, [-p.size, p.size * 0.6, p.size, p.size * 0.6, 0, -p.size], p.col);
+        ctx.restore();
+      } else {
+        const damp = 1 - 2.4 * dt;
+        p.vx *= damp; p.vy = p.vy * damp + 40 * dt;
+        p.x += p.vx * dt; p.y += p.vy * dt;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 1 - k;
+        ctx.fillStyle = p.col;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size * (1 - k * 0.5), 0, Math.PI * 2); ctx.fill();
+      }
     }
-    if (fx.flash > 0) {
-      fx.flash = Math.max(0, fx.flash - dt * 2);
-      ctx.fillStyle = G.rgba(fx.flashCol || '#ffffff', fx.flash);
-      ctx.fillRect(0, 0, W, H);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    if (parts.length || gath) raf = requestAnimationFrame(loop);
+  }
+
+  // ---- 進行
+  let fx = null, hideT = 0;
+  const later = (f, ms, fn) => { const id = setTimeout(() => { if (fx === f) fn(); }, ms); f.timers.push(id); return id; };
+  const restartCls = (el, c) => { if (!el) return; el.classList.remove(c); void el.offsetWidth; el.classList.add(c); };
+  const fxEl = () => G.$('#chestFx');
+  const newFx = () => !G.feature || G.feature('chestFx');
+  T.chestOpen = () => !!fx || legacy.busy();
+  T.chestShow = function (list, onDone, opts = {}) {
+    if (!newFx()) { legacy.show(list, onDone); return; }
+    const el = fxEl();
+    clearTimeout(hideT);
+    if (fx) fx.timers.forEach(clearTimeout);
+    cv = G.$('#chestCanvas');
+    ctx = cv.getContext('2d');
+    resize();
+    parts.length = 0;
+    gath = null;
+    const st = G.state;
+    st.flags = st.flags || {};
+    const best = Math.max(...list.map((r) => r.item.rarity));
+    const f = (fx = { list, done: onDone, opts, best, multi: list.length > 1, short: !!st.settings.chestShort, first: !st.flags.chestSeen, phase: 'intro', timers: [], notch: 0, pending: 0, busy: false, keyReady: false, flipped: list.map(() => false), laneAt: [0, 0, 0, 0], said: new Set(), idAt: {}, plan: makePlan(best) });
+    el.className = 'gx' + (G.reducedMotion() ? ' gx-rm' : '') + (f.short ? ' gx-quick' : '') + (f.first ? ' gx-first' : '');
+    el.removeAttribute('style');
+    el.style.setProperty('--pc', IT.RARITY[best].color);
+    el.hidden = false;
+    G.$('.cf-ui', el).innerHTML = layout(f);
+    G.$('#cfSkip', el).addEventListener('click', (e) => { e.stopPropagation(); skipAll(f); });
+    el.onclick = onTap;
+    requestAnimationFrame(() => el.classList.add('shown'));
+    G.audio.setMuffle(true);
+    if (f.short) runShort(f);
+    else runIntro(f);
+  };
+  function layout(f) {
+    return `<div class="gx-bg"><i class="gx-tint"></i><i class="gx-rays"></i></div>
+      <div class="gx-stage">
+        <div class="gx-chestwrap">
+          <i class="gx-shadow"></i>
+          <div class="gx-chest t0" id="gxChest">
+            <i class="gx-mouth"></i>
+            <div class="gx-lid">${LID_SVG}</div>
+            <i class="gx-pillar"><i></i></i>
+            <div class="gx-body">${BODY_SVG}<i class="gx-shine"></i><span class="gx-key" id="gxKey">${KEY_SVG}</span></div>
+            <i class="gx-flash"></i><i class="gx-ring"></i>
+          </div>
+        </div>
+        <div class="gx-up" id="gxUp"></div>
+        <div class="gx-prompt"><span>${HAND}タップで鍵を回す</span><i class="gx-dots"><b></b><b></b><b></b></i></div>
+      </div>
+      <div class="gx-cards" id="gxCards" hidden></div>
+      <i class="gx-dim"></i>
+      <div class="gx-ur" id="gxUr" hidden></div>
+      <div class="gx-chat" id="gxChat" aria-hidden="true"></div>
+      <div class="gx-res" id="gxRes" hidden></div>
+      <div class="gx-foot"><div class="gx-rina" id="gxRina" hidden><img alt="" src=""><div><small>受付のリナ</small><p></p></div></div><div class="gx-btns" id="gxBtns"></div></div>
+      <button class="cf-skip" id="cfSkip">スキップ ››</button>`;
+  }
+  // 箱の昇格の段取り：3回のうちどこで上がるか（虹はかならず最後）。上がらない回に、たまにフェイント
+  function makePlan(best) {
+    let tier = boxOf(best);
+    if (tier === 1 && Math.random() < 0.25) tier = 0; // SR はときどき木のまま（柱の色で驚く）
+    const at = tier === 3 ? [1, 2, 3] : shuf([1, 2, 3]).slice(0, tier);
+    const steps = [0];
+    for (let n = 1; n <= 3; n++) steps[n] = steps[n - 1] + (at.includes(n) ? 1 : 0);
+    const feint = [false, false, false, false];
+    const free = [1, 2, 3].filter((n) => !at.includes(n));
+    if (free.length && Math.random() < 0.3) feint[G.pick(free)] = true;
+    return { tier, steps, feint };
+  }
+  function say(text, expr = 'smile') {
+    const r = G.$('#gxRina');
+    if (!r) return;
+    G.$('img', r).src = art.rina(96, expr);
+    G.$('p', r).textContent = text;
+    r.hidden = false;
+    restartCls(r, 'say');
+  }
+  // 常連のコメントが流れる（設定の「流れるコメント」に従う）
+  function chat(kind, n = 1) {
+    const f = fx;
+    if (!f || G.state.settings.danmaku === false) return;
+    const P = (G.comments && G.comments.PERSONAS) || {};
+    const ids = shuf(Object.keys(CHAT).filter((id) => CHAT[id][kind] && (id === 'cat' || (P[id] && P[id].look))));
+    const fresh = (arr) => { const a = arr.filter((x) => !f.said.has(x)); const t = G.pick(a.length ? a : arr); f.said.add(t); return t; };
+    for (let k = 0; k < n; k++) {
+      later(f, k * 300 + Math.random() * 140, () => {
+        const box = G.$('#gxChat');
+        if (!box || box.childElementCount > 12) return;
+        // 空いているレーン（前のコメントのしっぽが画面に入りきったレーン）へ。どこも混んでいれば流さない
+        const lanes = Math.max(1, Math.min(4, Math.floor(box.clientHeight / 34)));
+        const now = performance.now();
+        let lane = 0;
+        for (let i = 1; i < lanes; i++) if (f.laneAt[i] < f.laneAt[lane]) lane = i;
+        if (f.laneAt[lane] > now + 900) return;
+        const delay = Math.max(0, f.laneAt[lane] - now);
+        f.laneAt[lane] = now + delay + 2000; // 流すときに、長さから正しく決めなおす
+        later(f, delay, () => emit(lane));
+      });
     }
-    if (!fx.summary) {
-      ctx.textAlign = 'center';
-      ctx.font = G.font(700, 12);
-      ctx.fillStyle = `rgba(246,236,210,${0.5 + 0.3 * Math.sin(now / 300)})`;
-      const msg = t < fx.reveal ? 'タップでとばす' : fx.i < fx.list.length - 1 ? `タップで次へ（${fx.i + 1}/${fx.list.length}）` : 'タップで閉じる';
-      ctx.fillText(msg, cx, H - 40);
+    function emit(lane) {
+      const box = G.$('#gxChat');
+      if (!box) return;
+      let face = '', name = '', text;
+      // 同じ常連が続けて書きこまない
+      const id = ids.find((x) => !(f.idAt[x] > performance.now() - 2500));
+      if (id && Math.random() < 0.7) {
+        f.idAt[id] = performance.now();
+        const c = CHAT[id];
+        text = fresh(c[kind]);
+        name = c.n;
+        face = id === 'cat' ? art.url(art.catCanvas(28)) : art.portrait(P[id].look, 28, 'gx-' + id);
+      } else text = fresh(CROWD[kind] || CROWD.low);
+      const big = kind === 'gold' || kind === 'rainbow' || kind === 'ur' || kind === 'ssr';
+      const d = G.el('div', 'gx-dm' + (big ? ' big' : '') + (kind === 'rainbow' || kind === 'ur' ? ' ur' : ''), `${face ? `<img alt="" src="${face}">` : ''}${name ? `<b>${name}</b>` : ''}<span>${G.esc(text)}</span>`);
+      // 速さは一定（長いコメントが前のコメントに追いつかない）
+      d.style.top = lane * 34 + 'px';
+      d.style.animation = 'none';
+      box.appendChild(d);
+      const wd = d.offsetWidth || 160;
+      const speed = big ? 175 : 145;
+      d.style.animation = '';
+      d.style.animationDuration = ((W + wd) / speed).toFixed(2) + 's';
+      d.addEventListener('animationend', () => d.remove());
+      // しっぽが右端から出てくるまで、同じレーンには流さない
+      f.laneAt[lane] = performance.now() + ((wd + 18) / speed) * 1000;
+      G.audio.sfx('commentPop');
     }
   }
+  function btns(f, list) {
+    const box = G.$('#gxBtns');
+    if (!box) return;
+    box.innerHTML = list.map((b) => `<button class="btn ${b.cls || ''}" id="${b.id}">${b.text}</button>`).join('');
+    list.forEach((b) => G.$('#' + b.id, box).addEventListener('click', (e) => { e.stopPropagation(); if (fx !== f) return; if (!b.quiet) G.audio.sfx('tap'); b.fn(); }));
+  }
+  function shake(lv) {
+    const c = G.$('#gxChest');
+    if (!c) return;
+    c.classList.remove('sh1', 'sh2', 'sh3', 'sh4');
+    void c.offsetWidth;
+    c.classList.add('sh' + lv);
+    if (lv >= 4) restartCls(G.$('#chestFx .gx-stage'), 'quake');
+  }
+  const chestPt = (ky = 0.5) => { const c = G.$('#gxChest'); const b = c ? c.getBoundingClientRect() : { left: W / 2, top: H / 2, width: 0, height: 0 }; return [b.left + b.width / 2, b.top + b.height * ky]; };
+
+  // 1) 鍵
+  function runIntro(f) {
+    say(f.first ? RINA.first[0] : f.opts.first10 ? RINA.first10[0] : G.pick(f.multi ? RINA.ten : RINA.intro), f.first ? 'smile' : 'wink');
+    G.audio.sfx('whoosh');
+    later(f, 400, () => { G.audio.sfx('bounce'); G.haptic(8); });
+    later(f, 560, () => { fxEl().classList.add('gx-keyon'); G.audio.sfx('clank'); });
+    later(f, 820, () => {
+      f.phase = 'key';
+      f.keyReady = true;
+      fxEl().classList.add('gx-ask');
+      chat('start', 1);
+      if (f.pending > 0) { f.pending--; turnKey(f); }
+    });
+    later(f, 4200, () => { if (f.phase === 'key' && f.notch === 0) fxEl().classList.add('gx-nudge'); });
+  }
+  const SHAKE_MS = [0, 360, 460, 580, 760];
+  function turnKey(f) {
+    if (f.phase !== 'key' && f.phase !== 'intro') return;
+    if (!f.keyReady || f.busy) { f.pending = Math.min(3 - f.notch, f.pending + 1); return; } // 連打は残りの回数ぶんだけためる
+    f.busy = true;
+    const n = ++f.notch;
+    const p = f.plan;
+    const el = fxEl();
+    el.classList.remove('gx-nudge');
+    if (n >= 3) el.classList.remove('gx-ask');
+    G.$('#gxKey').style.setProperty('--rot', n * 120 + 'deg');
+    G.$$('.gx-dots b', el).forEach((b, i) => b.classList.toggle('on', i < n));
+    G.audio.sfx('keyTurn', n);
+    G.haptic(10);
+    const up = p.steps[n] > p.steps[n - 1];
+    const lv = up ? 1 + p.steps[n] : p.feint[n] ? 3 : p.steps[n - 1] >= 1 ? 2 : 1;
+    later(f, 140, () => { shake(lv); G.audio.sfx(lv >= 3 ? 'roll' : 'bounce'); G.haptic(lv * 6); });
+    let end = 140 + SHAKE_MS[lv];
+    if (up) { later(f, end, () => promote(f, p.steps[n])); end += 560; }
+    else if (p.feint[n]) { later(f, end, () => { say(G.pick(RINA.feint), 'worry'); chat('feint', 2); }); end += 280; }
+    else end += 60;
+    later(f, end, () => {
+      f.busy = false;
+      if (f.notch >= 3) unlock(f);
+      else if (f.pending > 0) { f.pending--; turnKey(f); }
+    });
+  }
+  // 2) 箱の色が上がる
+  function promote(f, tier) {
+    const c = G.$('#gxChest');
+    c.classList.remove('t0', 't1', 't2', 't3');
+    c.classList.add('t' + tier);
+    restartCls(c, 'gx-pop');
+    G.audio.sfx('rarity', tier + 1);
+    if (tier >= 3) G.audio.sfx('flash');
+    G.haptic([0, 18, 30, 50][tier]);
+    const [x, y] = chestPt(0.55);
+    spark(x, y, [0, 26, 44, 70][tier], tier === 3 ? RAINBOW : [BOX_COL[tier], '#ffffff', BOX_COL[tier]], { v1: 520 });
+    const up = G.$('#gxUp');
+    up.className = 'gx-up u' + tier;
+    up.innerHTML = `<b>${BOX_UP[tier][0]}</b><small>${BOX_UP[tier][1]}</small>`;
+    restartCls(up, 'go');
+    say(G.pick(RINA[BOX_KEY[tier]]), 'surprise');
+    chat(BOX_KEY[tier], tier + 1);
+  }
+  function unlock(f) {
+    f.phase = 'open';
+    f.pending = 0;
+    const el = fxEl();
+    el.classList.remove('gx-ask', 'gx-nudge');
+    el.classList.add('gx-unlock');
+    G.audio.sfx('chest');
+    G.audio.sfx('stamp');
+    G.haptic(24);
+    later(f, 280, () => openLid(f));
+  }
+  function openLid(f) {
+    fxEl().classList.add('gx-open');
+    G.audio.sfx('whoosh');
+    later(f, 170, () => pillar(f));
+  }
+  // 3) 光の柱
+  function pillar(f) {
+    f.phase = 'pillar';
+    f.pillarAt = performance.now();
+    const r = f.best;
+    fxEl().classList.add('gx-pil', 'gx-p' + r);
+    G.audio.sfx('reveal', r >= 3 ? 'legend' : r >= 2 ? 'great' : 'ok');
+    if (r >= 2) G.audio.sfx('rarity', r);
+    G.haptic(r >= 3 ? 40 : r >= 2 ? 18 : 8);
+    const [x, y] = chestPt(0.36);
+    spark(x, y, [16, 24, 40, 70, 110][r], r >= 4 ? RAINBOW : [IT.RARITY[r].color, art.RARITY_COL[r].glow, '#ffffff'], { up: true, v0: 220, v1: 680, l1: 1.5 });
+    if (!f.short) {
+      say(G.pick(RINA.pillar[r]), ['smile', 'smile', 'happy', 'happy', 'surprise'][r]);
+      if (r >= 4) chat('ur', 4);
+      else if (r >= 3) chat('ssr', 3);
+      else if (r === 2) chat('sr', 1);
+      else chat('low', 1);
+    }
+    f.pillarT = later(f, f.short ? 650 : r >= 3 ? 1800 : 1250, () => afterPillar(f));
+  }
+  function afterPillar(f) {
+    if (f.phase !== 'pillar') return;
+    clearTimeout(f.pillarT);
+    if (f.multi) {
+      const u = f.list.findIndex((x) => x.item.rarity >= 4);
+      if (!f.short) dealCards(f);
+      else if (u >= 0) urReveal(f, u, () => quickCards(f));
+      else quickCards(f);
+    } else if (f.list[0].item.rarity >= 4) urReveal(f, 0, () => showResult(f));
+    else showResult(f);
+  }
+  function runShort(f) {
+    f.phase = 'open';
+    const tier = boxOf(f.best);
+    const c = G.$('#gxChest');
+    c.classList.remove('t0');
+    c.classList.add('t' + tier);
+    later(f, 240, () => { shake(Math.min(4, 1 + tier)); G.audio.sfx('bounce'); });
+    later(f, 560, () => { G.audio.sfx('chest'); openLid(f); });
+  }
+
+  // 4) カード（10連）
+  const cardEl = (i) => G.$(`#gxCards [data-ci="${i}"]`);
+  function buildCards(f) {
+    const box = G.$('#gxCards');
+    if (f.cardsBuilt) return box;
+    f.cardsBuilt = true;
+    box.innerHTML = `<h2 class="gx-h">手に入れたもの</h2><div class="gx-grid">${f.list.map((r, i) => {
+      const it = r.item;
+      return `<button class="gx-card r${it.rarity}" data-ci="${i}" style="--i:${i}" aria-label="${i + 1}枚目をめくる"><span class="gx-cin"><span class="gx-back"><i></i></span><span class="gx-face"><em class="gx-cr">${IT.RARITY[it.rarity].id}</em><img alt="" src="${thumb(it, 56)}"><small>${G.esc(it.name)}</small>${r.isNew ? '<i class="gx-new">NEW</i>' : ''}${r.dup ? `<i class="gx-dup">${CRY}+${r.crystals}</i>` : ''}</span></span></button>`;
+    }).join('')}</div>`;
+    box.hidden = false;
+    G.$$('.gx-card', box).forEach((b) => b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (fx === f && f.phase === 'cards') flipCard(f, +b.dataset.ci);
+    }));
+    return box;
+  }
+  function dealCards(f) {
+    f.phase = 'cards';
+    fxEl().classList.add('gx-cardson');
+    const box = buildCards(f);
+    const [ox, oy] = chestPt(0.4);
+    G.$$('.gx-card', box).forEach((c, i) => {
+      const b = c.getBoundingClientRect();
+      c.style.setProperty('--dx', Math.round(ox - (b.left + b.width / 2)) + 'px');
+      c.style.setProperty('--dy', Math.round(oy - (b.top + b.height / 2)) + 'px');
+      later(f, 80 + i * 60, () => G.audio.sfx('cardFlip'));
+    });
+    box.classList.add('deal');
+    say(RINA.cards[0], 'smile');
+    btns(f, [{ id: 'gxAll', text: '全部めくる', cls: 'primary big', fn: () => flipAll(f) }]);
+  }
+  function flipCard(f, i) {
+    if (f.flipped[i] || f.urBusy || f.flipping) return;
+    if (f.list[i].item.rarity >= 4) { urCard(f, i, () => afterFlip(f)); return; }
+    doFlip(f, i);
+    afterFlip(f);
+  }
+  // UR のカード：ふるえて光ってから、特別な演出へ
+  function urCard(f, i, then) {
+    f.urBusy = true;
+    const c = cardEl(i);
+    if (c) c.classList.add('pre');
+    G.audio.sfx('roll');
+    G.haptic(20);
+    later(f, 700, () => {
+      if (c) c.classList.remove('pre');
+      urReveal(f, i, () => { f.urBusy = false; doFlip(f, i, true); then(); });
+    });
+  }
+  function doFlip(f, i, quiet) {
+    if (f.flipped[i]) return;
+    f.flipped[i] = true;
+    const c = cardEl(i);
+    if (!c) return;
+    c.classList.add('on');
+    if (quiet) return;
+    const r = f.list[i].item.rarity;
+    G.audio.sfx('cardFlip');
+    if (r >= 2) later(f, 160, () => G.audio.sfx('rarity', r));
+    if (r >= 3) {
+      G.haptic(18);
+      later(f, 220, () => { const b = c.getBoundingClientRect(); spark(b.left + b.width / 2, b.top + b.height / 2, 34, [IT.RARITY[r].color, '#fff0b0', '#ffffff'], { v1: 360 }); });
+      chat('ssr', 1);
+    }
+  }
+  function afterFlip(f) {
+    if (f.phase === 'cards' && f.flipped.every(Boolean)) later(f, 480, () => finalCards(f));
+  }
+  function flipAll(f) {
+    if (f.phase !== 'cards' || f.flipping || f.urBusy) return;
+    f.flipping = true;
+    const all = G.$('#gxAll');
+    if (all) all.disabled = true;
+    const rest = f.list.map((_, i) => i).filter((i) => !f.flipped[i]);
+    const plain = rest.filter((i) => f.list[i].item.rarity < 4);
+    const urs = rest.filter((i) => f.list[i].item.rarity >= 4);
+    plain.forEach((i, k) => later(f, k * 90, () => doFlip(f, i)));
+    const next = () => {
+      const i = urs.shift();
+      if (i == null) { f.flipping = false; afterFlip(f); return; }
+      urCard(f, i, () => later(f, 300, next));
+    };
+    later(f, plain.length * 90 + 320, next);
+  }
+  // 演出を短く・スキップ：カードはすぐ表に
+  function quickCards(f, instant) {
+    f.phase = 'cards';
+    fxEl().classList.add('gx-cardson');
+    const box = buildCards(f);
+    box.classList.remove('deal');
+    box.classList.add(instant ? 'instant' : 'quick');
+    if (instant) { f.list.forEach((_, i) => doFlip(f, i, true)); finalCards(f); return; }
+    f.list.forEach((_, i) => later(f, 80 + i * 45, () => doFlip(f, i, true)));
+    G.audio.sfx('cardFlip');
+    if (f.best >= 2) later(f, 300, () => G.audio.sfx('rarity', f.best));
+    later(f, 80 + f.list.length * 45 + 380, () => finalCards(f));
+  }
+  function finalCards(f) {
+    if (f.phase === 'final') return;
+    f.phase = 'final';
+    fxEl().classList.add('gx-final');
+    doneLine(f);
+    btns(f, [{ id: 'cfClose', text: '宝物庫へ', cls: 'primary big', fn: finish }]);
+  }
+  const doneLine = (f) => say(G.pick(RINA.done[Math.max(0, f.best - 1)] || RINA.done[0]), f.best >= 3 ? 'happy' : f.best >= 2 ? 'wink' : 'smile');
+
+  // 1回のときの結果
+  function subOf(r) {
+    const it = r.item;
+    if (it.kind === 'relic') return r.dup ? `持っている秘宝 → 魔晶石 +${r.crystals}` : '秘宝 ・ ' + IT.RELIC[it.rid].desc;
+    if (it.kind === 'cons') return '持ち物 ・ ' + IT.CONS[it.id].desc;
+    const m = IT.MAIN[it.slot];
+    return `${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv} ・ ${IT.STAT[m.k].name} ${pct(IT.mainVal(it))}`;
+  }
+  function showResult(f) {
+    if (f.phase === 'final') return;
+    f.phase = 'final';
+    const r = f.list[0];
+    const it = r.item;
+    fxEl().classList.add('gx-final', 'gx-single');
+    const res = G.$('#gxRes');
+    res.className = 'gx-res r' + it.rarity;
+    res.innerHTML = `<div class="gx-rimg"><i></i><img alt="" src="${thumb(it, 120)}">${r.isNew ? '<em class="gx-new">NEW</em>' : ''}</div><b class="gx-rr">${IT.RARITY[it.rarity].id}<span>${stars(it.rarity)}</span></b><h2>${G.esc(it.name)}</h2><p>${G.esc(subOf(r))}</p>${it.kind === 'equip' && it.affixes && it.affixes.length ? `<ul>${it.affixes.map((x) => `<li>${IT.STAT[x.k].name}<b>${pct(x.v)}</b></li>`).join('')}</ul>` : ''}`;
+    res.hidden = false;
+    if (it.rarity >= 3) { const b = res.getBoundingClientRect(); spark(b.left + b.width / 2, b.top + 70, 50, it.rarity >= 4 ? RAINBOW : ['#ffc83a', '#fff0b0', '#ffffff'], { k: 'shard', v0: 160, v1: 460, l0: 1, l1: 2, s0: 3, s1: 6 }); }
+    doneLine(f);
+    btns(f, [{ id: 'cfClose', text: '宝物庫へ', cls: 'primary big', fn: finish }]);
+  }
+
+  // 5) UR だけの演出
+  const urY = () => { const b = G.$('#gxUr .gx-urimg'); if (b) { const r = b.getBoundingClientRect(); return r.top + r.height / 2; } return H * 0.38; };
+  function urReveal(f, i, then) {
+    const r = f.list[i];
+    const it = r.item;
+    f.ur = { prev: f.phase, then, boomed: false, ready: false };
+    f.phase = 'ur';
+    const u = G.$('#gxUr');
+    const fs = Math.max(20, Math.min(38, Math.floor((Math.min(W, 460) - 44) / Math.max(5, [...it.name].length))));
+    u.innerHTML = `<i class="gx-core"></i><i class="gx-urrays"></i><div class="gx-urtag"><b>UR</b><span>★★★★★ アルティメット</span></div><div class="gx-urimg"><i></i><img alt="" src="${thumb(it, 132)}"></div><div class="gx-urtxt"><h2 class="gx-urname" style="font-size:${fs}px"><span>${G.esc(it.name)}</span></h2><svg class="gx-brush" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path d="M5 9 C40 2, 90 13, 130 6 S185 5, 195 8"/></svg><p>${G.esc(subOf(r))}</p></div><p class="gx-urtap">タップで次へ</p><i class="gx-wflash"></i>`;
+    u.hidden = false;
+    u.className = 'gx-ur';
+    fxEl().classList.add('gx-uron');
+    void u.offsetWidth;
+    u.classList.add('go');
+    G.audio.sfx('gather');
+    G.haptic(12);
+    gath = { x: W / 2, y: urY(), rate: G.reducedMotion() ? 40 : 120, acc: 0 };
+    kick();
+    say(RINA.gather[0], 'surprise');
+    f.ur.t = later(f, f.short ? 520 : 1350, () => urBoom(f));
+  }
+  function urBoom(f) {
+    const U = f.ur;
+    if (!U || U.boomed) return;
+    U.boomed = true;
+    clearTimeout(U.t);
+    gath = null;
+    const u = G.$('#gxUr');
+    u.classList.add('boom');
+    G.audio.sfx('flash');
+    G.audio.sfx('rarity', 4);
+    G.audio.sfx('reveal', 'legend');
+    G.haptic(70);
+    const y = urY();
+    spark(W / 2, y, 110, RAINBOW, { k: 'shard', v0: 200, v1: 720, l0: 1.2, l1: 2.4, s0: 4, s1: 8 });
+    spark(W / 2, y, 60, ['#ffffff', '#fff0b0', '#ffd6f0'], { v0: 300, v1: 900, l1: 1 });
+    say(G.pick(RINA.ur), 'proud');
+    chat('rainbow', 2);
+    chat('ur', 4);
+    later(f, f.short ? 450 : 1100, () => { U.ready = true; u.classList.add('ready'); });
+  }
+  function urClose(f) {
+    const U = f.ur;
+    if (!U || !U.ready || U.closing) return;
+    U.closing = true;
+    const u = G.$('#gxUr');
+    u.classList.add('out');
+    fxEl().classList.remove('gx-uron');
+    G.audio.sfx('soft');
+    later(f, 320, () => {
+      u.hidden = true;
+      u.className = 'gx-ur';
+      u.innerHTML = '';
+      f.ur = null;
+      f.phase = U.prev;
+      U.then();
+    });
+  }
+
+  // タップ：鍵を回す・柱から先へ・UR を進める（ボタンとカードは自分で受ける）
+  function onTap(e) {
+    const f = fx;
+    if (!f) return;
+    if (e && e.target && e.target.closest && e.target.closest('button, .gx-res')) return;
+    if (f.phase === 'ur') { if (!f.ur) return; if (!f.ur.boomed) urBoom(f); else urClose(f); return; }
+    if (f.short) { if (f.phase !== 'final') skipAll(f); return; }
+    if (f.phase === 'intro' || f.phase === 'key') turnKey(f);
+    else if (f.phase === 'pillar' && performance.now() - f.pillarAt > 450) afterPillar(f);
+  }
+  // スキップ：途中の演出を止めて、結果（10連はカード一覧・1回は結果のカード）へ
+  function skipAll(f) {
+    if (fx !== f || f.phase === 'final') return;
+    f.timers.forEach(clearTimeout);
+    f.timers = [];
+    gath = null;
+    G.audio.sfx('tap');
+    const u = G.$('#gxUr');
+    u.hidden = true;
+    u.className = 'gx-ur';
+    u.innerHTML = '';
+    f.ur = null;
+    f.urBusy = false;
+    f.flipping = false;
+    f.busy = false;
+    const el = fxEl();
+    el.classList.remove('gx-uron', 'gx-ask', 'gx-nudge');
+    el.classList.add('gx-skipped', 'gx-keyon', 'gx-unlock', 'gx-open', 'gx-pil', 'gx-p' + f.best);
+    const c = G.$('#gxChest');
+    c.classList.remove('t0', 't1', 't2', 't3', 'sh1', 'sh2', 'sh3', 'sh4');
+    c.classList.add('t' + boxOf(f.best));
+    G.$$('.gx-card.pre', el).forEach((x) => x.classList.remove('pre'));
+    if (f.best >= 2) G.audio.sfx('rarity', f.best);
+    if (f.multi) quickCards(f, true);
+    else showResult(f);
+  }
+  function finish() {
+    const f = fx;
+    if (!f) return;
+    f.timers.forEach(clearTimeout);
+    gath = null;
+    parts.length = 0;
+    fx = null;
+    const el = fxEl();
+    el.classList.remove('shown');
+    el.onclick = null;
+    clearTimeout(hideT);
+    hideT = setTimeout(() => {
+      if (fx) return;
+      el.hidden = true;
+      el.className = '';
+      el.removeAttribute('style');
+      G.$('.cf-ui', el).innerHTML = '';
+      cancelAnimationFrame(raf);
+      raf = 0;
+      if (ctx) { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height); }
+    }, 320);
+    const st = G.state;
+    st.flags = st.flags || {};
+    const firstTime = !st.flags.chestSeen;
+    st.flags.chestSeen = (st.flags.chestSeen || 0) + 1;
+    G.sim.save();
+    if (!G.ui.modalOpen()) G.audio.setMuffle(!!G.ui.sheetTab());
+    if (f.done) f.done();
+    if (firstTime) G.ui.toast('リナ「次からは宝箱の画面で『演出を短く』も選べますよ」', 'info');
+  }
+
+  // ---- 以前のシンプルな演出（G.feature('chestFx') が OFF のとき。中身は前のまま）
+  const legacy = (function () {
+    const el0 = () => G.$('#chestFx');
+    let fx = null, cv = null, ctx = null, W = 0, H = 0, dpr = 1, raf = 0, last = 0;
+    const show = function (list, onDone) {
+      el0().className = '';
+      el0().removeAttribute('style');
+      const el = G.$('#chestFx');
+      cv = G.$('#chestCanvas');
+      ctx = cv.getContext('2d');
+      el.hidden = false;
+      const ui = el.querySelector('.cf-ui');
+      ui.innerHTML = list.length > 1 ? '<button class="cf-skip" id="cfSkip">まとめて見る ››</button>' : '';
+      resize();
+      fx = { list, i: 0, t: 0, done: onDone, parts: [], fired: {} };
+      const sk = G.$('#cfSkip');
+      if (sk) sk.addEventListener('click', (e) => { e.stopPropagation(); if (fx && !fx.summary) { G.audio.sfx('tap'); const best = Math.max(...fx.list.map((r) => r.item.rarity)); if (best >= 2) G.audio.sfx('rarity', best); summary(); } });
+      prep();
+      requestAnimationFrame(() => el.classList.add('shown'));
+      el.onclick = tap;
+      G.audio.setMuffle(true);
+      last = performance.now();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(loop);
+    };
+    function resize() {
+      dpr = Math.min(2.5, window.devicePixelRatio || 1);
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = W * dpr; cv.height = H * dpr;
+      cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    }
+    function prep() {
+      const it = fx.list[fx.i].item;
+      const rank = it.rarity;
+      let s0 = rank;
+      if (rank >= 2) s0 = Math.max(0, rank - (Math.random() < 0.5 ? 1 : 2));
+      if (rank >= 3 && Math.random() < 0.35) s0 = 0;
+      fx.steps = [];
+      for (let r = s0; r <= rank; r++) fx.steps.push(r);
+      fx.stepT = fx.steps.map((_, i) => (i === 0 ? 0 : 0.95 + i * 0.45));
+      fx.reveal = 1.35 + (fx.steps.length - 1) * 0.45;
+      fx.t = 0;
+      fx.fired = {};
+      fx.parts = [];
+    }
+    function tap() {
+      if (!fx || fx.summary) return;
+      if (fx.t < fx.reveal) { fx.t = fx.reveal; return; }
+      if (fx.t < fx.reveal + 0.35) return;
+      G.audio.sfx('tap');
+      if (fx.i < fx.list.length - 1) { fx.i++; prep(); return; }
+      if (fx.list.length > 1) summary();
+      else finish();
+    }
+    function summary() {
+      fx.summary = true;
+      const box = G.$('#chestFx .cf-ui');
+      box.innerHTML = `<div class="cf-sum"><h2>手に入れたもの</h2><div class="cf-grid${fx.list.length > 6 ? ' many' : ''}">${fx.list.map((r) => `<div class="cf-it r${r.item.rarity}"><img alt="" src="${thumb(r.item, 64)}">${r.isNew ? '<i>NEW</i>' : ''}<small>${G.esc(r.item.name)}</small>${r.dup ? `<em>${CRY}+${r.crystals}</em>` : ''}</div>`).join('')}</div><button class="btn primary big" id="cfClose">宝物庫へ</button></div>`;
+      G.$('#cfClose').addEventListener('click', (e) => { e.stopPropagation(); finish(); });
+    }
+    function finish() {
+      const el = G.$('#chestFx');
+      el.classList.remove('shown');
+      setTimeout(() => { el.hidden = true; cancelAnimationFrame(raf); }, 300);
+      if (!G.ui.modalOpen()) G.audio.setMuffle(!!G.ui.sheetTab());
+      const done = fx && fx.done;
+      fx = null;
+      if (done) done();
+    }
+    function once(k, at) { if (fx.t >= at && !fx.fired[k]) { fx.fired[k] = true; return true; } return false; }
+    function loop(now) {
+      if (!fx) return;
+      raf = requestAnimationFrame(loop);
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      if (!fx.summary) fx.t += dt;
+      const r = fx.list[fx.i];
+      const it = r.item;
+      const s = Math.min(W / 360, H / 640);
+      const cx = W / 2, cy = H * 0.56;
+      if (once('drop', 0.32)) G.audio.sfx('bounce');
+      if (once('roll', 0.62)) G.audio.sfx('roll');
+      fx.steps.forEach((rk, i) => { if (i > 0 && once('st' + i, fx.stepT[i])) { G.audio.sfx('rarity', rk); G.haptic(12 + rk * 4); fx.flash = 0.35; fx.flashCol = art.RARITY_COL[rk].glow; } });
+      if (once('rev', fx.reveal)) {
+        G.audio.sfx('chest');
+        G.audio.sfx('reveal', it.rarity >= 3 ? 'legend' : it.rarity >= 1 ? 'great' : 'ok');
+        if (it.rarity >= 2) G.audio.sfx('rarity', it.rarity);
+        for (let i = 0; i < [16, 30, 60, 100, 160][it.rarity]; i++) {
+          fx.parts.push({ x: cx, y: cy - 40 * s, vx: G.rand(-260, 260) * s, vy: G.rand(-520, -160) * s, life: 0, max: G.rand(1.4, 2.4), col: G.pick(['#ffcf4a', '#ff7a6a', '#6ad0ff', '#8fe08a', '#c79bff', '#ffffff']), size: G.rand(4, 8) * s, rot: G.rand(0, 6), vr: G.rand(-9, 9) });
+        }
+        if (it.rarity >= 3) { fx.flash = 0.8; fx.flashCol = it.rarity >= 4 ? '#ffffff' : '#fff0b0'; G.haptic(40); }
+      }
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const bg = ctx.createRadialGradient(cx, cy - 60 * s, 0, cx, cy, Math.max(W, H) * 0.75);
+      bg.addColorStop(0, '#1e2e5c');
+      bg.addColorStop(1, '#04070f');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+      let si = 0;
+      fx.stepT.forEach((st, i) => { if (fx.t >= st) si = i; });
+      const rank = fx.steps[si];
+      const t = fx.t;
+      if (t > fx.reveal) {
+        const a = G.seg(t, fx.reveal, fx.reveal + 0.35);
+        ctx.save();
+        ctx.translate(cx, cy - 40 * s);
+        ctx.rotate(t * 0.5);
+        const n = 16;
+        for (let i = 0; i < n; i++) {
+          const ang = (i / n) * Math.PI * 2;
+          ctx.fillStyle = it.rarity >= 4 ? `hsla(${(i * 360) / n + t * 120},90%,70%,${0.3 * a})` : G.rgba(art.RARITY_COL[it.rarity].glow, 0.28 * a);
+          ctx.beginPath(); ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(ang - 0.08) * 900, Math.sin(ang - 0.08) * 900);
+          ctx.lineTo(Math.cos(ang + 0.08) * 900, Math.sin(ang + 0.08) * 900);
+          ctx.fill();
+        }
+        ctx.restore();
+      } else if (t > 0.5) {
+        const col = rank === 4 ? art.rainbow(t, 0, 70) : art.RARITY_COL[rank].glow;
+        const rr = (70 + (t - 0.5) * 30) * s;
+        const g = ctx.createRadialGradient(cx, cy - 30 * s, 0, cx, cy - 30 * s, rr);
+        g.addColorStop(0, G.rgba(col.startsWith('#') ? col : '#ffffff', rank >= 1 ? 0.55 : 0.25));
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(cx - rr, cy - 30 * s - rr, rr * 2, rr * 2);
+      }
+      const dropK = G.seg(t, 0, 0.55);
+      const by = dropK < 1 ? -Math.abs(Math.cos(dropK * Math.PI * 2.2)) * (1 - dropK) * 300 * s : 0;
+      const shaking = t > 0.6 && t < fx.reveal;
+      const sh = shaking ? Math.sin(t * 60) * (1.5 + (t - 0.6) * 3) * s : 0;
+      const op = G.ease.outBack(G.seg(t, fx.reveal, fx.reveal + 0.3));
+      ctx.save();
+      ctx.translate(cx + sh, cy + by);
+      ctx.scale(3.4 * s, 3.4 * s);
+      art.ellipse(ctx, 0, 0, 18, 3, 'rgba(0,0,0,0.35)');
+      art.chestR(ctx, op, rank, t);
+      ctx.restore();
+      if (t > fx.reveal + 0.1) {
+        const k2 = G.ease.outBack(G.seg(t, fx.reveal + 0.1, fx.reveal + 0.5));
+        const iy = G.lerp(cy - 40 * s, cy - 210 * s, k2);
+        ctx.save();
+        ctx.translate(cx, iy);
+        ctx.scale(k2, k2);
+        const gl = ctx.createRadialGradient(0, 0, 0, 0, 0, 70 * s);
+        gl.addColorStop(0, G.rgba(art.RARITY_COL[it.rarity].glow, 0.6));
+        gl.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = gl;
+        ctx.fillRect(-70 * s, -70 * s, 140 * s, 140 * s);
+        art.itemIcon(ctx, it, 92 * s, t);
+        ctx.restore();
+        const a = G.seg(t, fx.reveal + 0.3, fx.reveal + 0.55);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.textAlign = 'center';
+        const R = IT.RARITY[it.rarity];
+        ctx.font = G.font(900, 30 * s, 'num');
+        ctx.lineWidth = 6 * s;
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = '#0a0612';
+        ctx.strokeText(R.id, cx, cy - 118 * s);
+        if (it.rarity >= 4) {
+          const ug = ctx.createLinearGradient(cx - 60 * s, 0, cx + 60 * s, 0);
+          for (let i = 0; i <= 6; i++) ug.addColorStop(i / 6, `hsl(${i * 60 + t * 160},95%,70%)`);
+          ctx.fillStyle = ug;
+        } else ctx.fillStyle = art.RARITY_COL[it.rarity].accent;
+        ctx.fillText(R.id, cx, cy - 118 * s);
+        ctx.font = G.font(700, 13 * s);
+        ctx.fillStyle = '#ffe39a';
+        ctx.fillText(stars(it.rarity), cx, cy - 98 * s);
+        ctx.font = G.font(800, (it.name.length > 10 ? 18 : 22) * s, 'head');
+        ctx.lineWidth = 5 * s;
+        ctx.strokeText(it.name, cx, cy + 62 * s);
+        ctx.fillStyle = '#fbf3de';
+        ctx.fillText(it.name, cx, cy + 62 * s);
+        ctx.font = G.font(700, 12 * s);
+        ctx.fillStyle = 'rgba(246,236,210,0.8)';
+        let sub;
+        if (it.kind === 'relic') sub = r.dup ? `持っている秘宝 → 魔晶石 +${r.crystals}` : '秘宝 ・ ' + IT.RELIC[it.rid].desc;
+        else if (it.kind === 'cons') sub = '持ち物 ・ ' + IT.CONS[it.id].desc;
+        else {
+          const m = IT.MAIN[it.slot];
+          sub = `${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv} ・ ${IT.STAT[m.k].name} ${pct(IT.mainVal(it))}`;
+        }
+        ctx.fillText(sub, cx, cy + 84 * s);
+        if (it.kind === 'equip' && it.affixes && it.affixes.length) {
+          ctx.font = G.font(700, 11 * s);
+          ctx.fillStyle = '#a8dcff';
+          ctx.fillText(it.affixes.map((x) => `${IT.STAT[x.k].name}${pct(x.v)}`).join('  '), cx, cy + 102 * s);
+        }
+        if (r.isNew) {
+          ctx.font = G.font(900, 13 * s, 'num');
+          ctx.fillStyle = '#ff7a6a';
+          ctx.fillText('NEW!', cx + 70 * s, cy - 150 * s);
+        }
+        ctx.restore();
+      }
+      for (let i = fx.parts.length - 1; i >= 0; i--) {
+        const p = fx.parts[i];
+        p.life += dt;
+        if (p.life > p.max) { fx.parts.splice(i, 1); continue; }
+        p.vy += 520 * s * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.rot += p.vr * dt;
+        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+        ctx.globalAlpha = Math.min(1, (1 - p.life / p.max) * 2);
+        art.poly(ctx, [-p.size, p.size * 0.6, p.size, p.size * 0.6, 0, -p.size], p.col);
+        ctx.restore();
+      }
+      if (fx.flash > 0) {
+        fx.flash = Math.max(0, fx.flash - dt * 2);
+        ctx.fillStyle = G.rgba(fx.flashCol || '#ffffff', fx.flash);
+        ctx.fillRect(0, 0, W, H);
+      }
+      if (!fx.summary) {
+        ctx.textAlign = 'center';
+        ctx.font = G.font(700, 12);
+        ctx.fillStyle = `rgba(246,236,210,${0.5 + 0.3 * Math.sin(now / 300)})`;
+        const msg = t < fx.reveal ? 'タップでとばす' : fx.i < fx.list.length - 1 ? `タップで次へ（${fx.i + 1}/${fx.list.length}）` : 'タップで閉じる';
+        ctx.fillText(msg, cx, H - 40);
+      }
+    }
+    return { show, busy: () => !!fx };
+  })();
 
 })();
