@@ -150,6 +150,7 @@
     G.audio.envTick(dt, !G.reels.isOpen());
     if (G.notify) G.notify.tick(dt);
     if (G.missions) G.missions.tick(dt);
+    if (G.achieve) G.achieve.tick(dt);
     if (G.treasury.autoTick) G.treasury.autoTick(dt);
     saveT += dt;
     if (saveT > 3) { saveT = 0; G.sim.save(); }

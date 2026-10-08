@@ -806,7 +806,7 @@
     return reel === cur ? rt : 999;
   }
   function authorOf(key, reel) {
-    if (key === 'master') return { name: 'ギルドマスター', master: true };
+    if (key === 'master') { const tt = G.achieve && G.achieve.title(); return { name: tt ? `ギルドマスター《${tt}》` : 'ギルドマスター', master: true }; }
     return G.comments ? G.comments.author(key, reel) : { name: key };
   }
   function avatarCanvas(au, size) {

@@ -92,7 +92,11 @@
       const cls = [l >= x.max ? 'max' : l > 0 ? 'on' : '', S.starOpen(x.id) ? '' : 'locked', x.unlock ? 'unl' : '', x.id === sel ? 'sel' : '', !S.starOpen(x.id) || l >= x.max || pr.stars < S.starCost(x.id) ? '' : 'can'].join(' ');
       return `<button class="sn ${cls}" data-star="${x.id}" style="left:${x.x}%;top:${(x.y / 118) * 100}%" aria-label="${G.esc(x.name)}">${STAR_SVG}<i>${x.short}<em>${x.max > 1 ? `${l}/${x.max}` : l ? '開放' : ''}</em></i></button>`;
     }).join('');
+    const run = S.run();
+    const best = pr.best || {};
+    const bestTxt = [8, 10].filter((r) => best[r] != null).map((r) => `ランク${r} <b>${G.fmtTime(best[r])}</b>`).join(' ・ ');
     let h = `<div class="stars-top"><span class="st-have">${STAR_SVG}<b>${G.fmt(pr.stars)}</b><small>灯火の星</small></span><span class="st-runs">再建 <b>${pr.runs}</b>回 ・ これまでに <b>${G.fmt(pr.total)}</b>個</span></div>
+      <div class="run-now"><span>いまは <b>${run.n}周目</b> ・ 経過 <b data-runclock>${G.fmtTime(S.runSec())}</b></span>${bestTxt ? `<span class="run-best">最速 ${bestTxt}</span>` : ''}</div>
       <div class="sky" style="background-image:url(${skyImage(W, H)});aspect-ratio:100/118">${nodes}</div>
       <div class="card sn-detail ${maxed ? 'max' : ''}"><div class="grow"><b>${G.esc(n.name)}${n.max > 1 ? ` <small>Lv${lv}/${n.max}</small>` : ''}</b>
         <small>${lv ? `いま：${n.desc(lv)}` : 'まだ灯していません'}</small>
@@ -104,9 +108,12 @@
     h += `<div class="sec rebirth"><h3>ギルドの再建</h3><div class="card rb ${can ? 'ready' : ''}">
       <div class="rb-head"><div class="rb-earn"><small>いま再建すると</small><b>${STAR_SVG}+${rb.total}</b></div>
         <ul class="rb-break"><li><span>名声 ${G.fmt(st.fame)}</span><b>+${rb.fame}</b></li><li><span>竜王の討伐</span><b>+${rb.boss}</b></li><li><span>深淵 新記録</span><b>+${rb.abyss}</b></li></ul></div>
-      <div class="rb-keep"><div><b>残るもの</b><small>装備・秘宝・魔晶石・持ち物・技・深淵の記録・灯火の星・図鑑</small></div><div><b>最初からになるもの</b><small>ゴールド・素材・名声とランク・施設・冒険者のレベル（上位${beds}人はそのまま、ほかは「かつての仲間」として無料で呼び戻せる）</small></div></div>
+      <div class="rb-keep"><div><b>残るもの</b><small>装備・秘宝・魔晶石・持ち物・技・熟練・深淵の記録・灯火の星・図鑑・実績${S.starLv('memory') ? `・施設（Lv${S.starLv('memory')}まで）` : ''}${S.starLv('veteran') ? `・冒険者のレベルの${S.starLv('veteran') * 10}%` : ''}</small></div><div><b>最初からになるもの</b><small>ゴールド・素材・名声とランク・施設・冒険者のレベル（上位${beds}人はそのまま、ほかは「かつての仲間」として無料で呼び戻せる）</small></div></div>
       <button class="btn ${can ? 'danger big' : 'cant'} wide" id="rebirthBtn">${can ? 'ギルドを再建する' : `ランク${S.REBIRTH_RANK}から再建できます（いまランク${st.rank}）`}</button></div>
       <p class="hint">灯火の星を灯すと、再建したあとも、ずっと強いままです。新しい職業や土地も、ここで開きます。</p></div>`;
+    if ((pr.history || []).length) {
+      h += `<div class="sec run-hist"><h3>これまでの周回</h3>${pr.history.slice().reverse().slice(0, 6).map((x) => `<div class="rh"><b>${x.n}周目</b><span>${G.fmtTime(x.sec)}</span><span>ランク${x.rank}</span><span>依頼 ${G.fmt(x.quests)}</span><span class="st">${STAR_SVG}+${x.stars}</span></div>`).join('')}</div>`;
+    }
     body.innerHTML = h;
     G.$$('[data-star]', body).forEach((b) => b.addEventListener('click', () => { sel = b.dataset.star; G.audio.sfx('tap'); G.ui.renderSheet(); }));
     const bb = G.$('#starBuy', body);
@@ -168,6 +175,8 @@
     const n = st.flags.justReborn;
     delete st.flags.justReborn;
     G.sim.save();
-    G.ui.whenFree(() => G.ui.modal(`<div class="skill-get rb-done"><div class="rf-flame small"></div><small>再建 ${S.prestige().runs}回目</small><h2>新しいギルドの始まり</h2><p>灯火の星 <b>+${n}</b> を手に入れました。<br>ランクの紋章から「灯火の星」を開いて、星座を灯しましょう。</p>${(st.alumni || []).length ? `<p class="hint">かつての仲間 ${st.alumni.length}人は、冒険者の画面からいつでも呼び戻せます</p>` : ''}</div>`, [{ text: '星座を見る', cls: 'primary big', fn: () => SR.open() }], { cls: 'celebrate', onShow: () => G.ui.fx.confetti() }), 900);
+    const lr = S.prestige().lastRun;
+    const sum = lr ? `<div class="rb-sum"><small>${lr.n}周目のまとめ</small><div><span>かかった時間<b>${G.fmtTime(lr.sec)}</b></span><span>最高ランク<b>${lr.rank}</b></span><span>依頼<b>${G.fmt(lr.quests)}回</b></span><span>稼いだG<b>${G.fmt(lr.gold)}</b></span></div></div>` : '';
+    G.ui.whenFree(() => G.ui.modal(`<div class="skill-get rb-done"><div class="rf-flame small"></div><small>再建 ${S.prestige().runs}回目 ・ ${S.run().n}周目のはじまり</small><h2>新しいギルドの始まり</h2>${sum}<p>灯火の星 <b>+${n}</b> を手に入れました。<br>ランクの紋章から「灯火の星」を開いて、星座を灯しましょう。</p>${(st.alumni || []).length ? `<p class="hint">かつての仲間 ${st.alumni.length}人は、冒険者の画面からいつでも呼び戻せます</p>` : ''}</div>`, [{ text: '星座を見る', cls: 'primary big', fn: () => SR.open() }], { cls: 'celebrate', onShow: () => G.ui.fx.confetti() }), 900);
   };
 })();

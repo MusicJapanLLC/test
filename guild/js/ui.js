@@ -206,6 +206,8 @@
     const rb = G.$('#tab-reels .badge');
     rb.hidden = !unseen.length;
     rb.textContent = unseen.length > 99 ? '99+' : unseen.length;
+    const mb = G.$('#menuBtn');
+    if (mb && G.achieve) mb.classList.toggle('has-dot', G.achieve.claimable() > 0);
     const fb = G.$('#fishBtn');
     if (fb) {
       fb.hidden = st.flags.tut < 90;
@@ -435,6 +437,7 @@
   function tickSheet() {
     const now = G.now();
     G.$$('#sheetBody [data-countdown]').forEach((el) => { el.textContent = G.fmtClock(+el.dataset.countdown - now); });
+    G.$$('#sheetBody [data-runclock]').forEach((el) => { el.textContent = G.fmtTime(S.runSec()); });
     G.$$('#sheetBody [data-progress]').forEach((el) => {
       const [a, b] = el.dataset.progress.split(',').map(Number);
       el.style.width = G.clamp((now - a) / (b - a), 0, 1) * 100 + '%';
@@ -860,6 +863,8 @@
     const st = G.state;
     const ss = st.stats;
     const s = st.settings;
+    const achN = G.achieve ? G.achieve.claimable() : 0;
+    const achCard = G.achieve ? `<button class="card ach-card ${achN ? 'ready' : ''}" id="achOpen"><span class="ach-ic">✦</span><span class="grow"><b>実績と称号</b><small>${G.achieve.done()} / ${G.achieve.total()} 段 ・ 称号 ${G.achieve.titles().length}${G.achieve.title() ? ` ・ いま《${G.esc(G.achieve.title())}》` : ''}</small></span>${achN ? `<em>${achN}</em>` : ''}<i>›</i></button>` : '';
     let h = `<div class="sec"><h3>ギルドの記録</h3><div class="stats">
       <div><small>依頼の数</small><b>${G.fmt(ss.quests)}</b></div>
       <div><small>成功</small><b>${G.fmt(ss.success)}</b></div>
@@ -900,8 +905,10 @@
       <div class="card save-card"><div class="grow"><b>自動セーブ：${G.save.where()}</b><small>端末 ${ago(sv.lastAt)}${sv.cloudReady ? ` ・ クラウド ${ago(sv.cloudAt)}` : ''}${sv.err && !sv.cloud ? ' ・ クラウドは混雑中（自動で再試行）' : ''}</small></div><button class="btn sm primary" id="saveNow">今すぐセーブ</button></div>
       <div class="save-tools"><button class="btn sm ghost" id="saveExport">セーブを書き出す</button><button class="btn sm ghost" id="saveImport">セーブを読み込む</button></div>
       <p class="hint">数秒ごと・操作のたびに自動で保存しています。機種変更や念のための控えには「書き出す」を使ってください。</p></div>`;
-    h = saveSec + h;
+    h = achCard + saveSec + h;
     body.innerHTML = h;
+    const ao = G.$('#achOpen', body);
+    if (ao) ao.addEventListener('click', () => { G.audio.sfx('tap'); G.achieve.open(); });
     const bind = (id, fn) => G.$(id, body).addEventListener('input', fn);
     bind('#setBgm', (e) => { s.bgm = +e.target.value; G.audio.applyVolumes(); syncSoundBtn(); });
     bind('#setSfx', (e) => { s.sfx = +e.target.value; G.audio.applyVolumes(); G.audio.setAmbient(st.fac.tavern > 0 ? 1 : 0); syncSoundBtn(); G.audio.sfx('coin', 3); });
@@ -1087,7 +1094,11 @@
     G.haptic(40);
     const unlocks = D.RANK_UNLOCKS[r] || [];
     const nx = D.RANK_UNLOCKS[r + 1];
+    const rr = G.state.runRank;
+    const runs = S.prestige().runs;
+    const runLine = rr && runs >= 1 ? `<p class="ru-run">${S.run().n}周目 ・ ランク${r}まで <b>${G.fmtTime(rr.sec)}</b>${rr.best ? `<em>自己ベスト更新！ ${G.fmtTime(rr.prev - rr.sec)} 早い</em>` : rr.prev != null ? `<span>最速 ${G.fmtTime(rr.prev)}</span>` : ''}</p>` : '';
     U.modal(`<div class="rankup"><div class="ru-crest"><span>${r}</span></div><small>ギルドランク アップ</small><h2>${D.RANK_TITLES[r - 1]}</h2>
+      ${runLine}
       ${unlocks.length ? `<ul>${unlocks.map((u) => `<li>${u}</li>`).join('')}</ul>` : ''}
       ${nx ? `<p class="next">次のランクで：${nx.join('、')}</p>` : ''}</div>`, [{ text: 'やったね！', cls: 'primary big' }], { cls: 'celebrate', onShow: () => { U.fx.confetti(); } });
     // 新しい依頼を混ぜる

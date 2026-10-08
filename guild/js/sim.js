@@ -394,7 +394,7 @@
     if (tier !== 'fail') {
       if (tier !== 'ok') s.stats.success++;
       s.stats.areaWin[q.area] = (s.stats.areaWin[q.area] || 0) + 1;
-      if (q.boss) { s.stats.boss = 1; s.flags.runBoss = true; }
+      if (q.boss) { s.stats.boss = (s.stats.boss || 0) + 1; s.flags.runBoss = true; }
     }
     // 戦利品（宝箱の中身）。竜王は必ず最上級
     let drop = null;
@@ -514,6 +514,7 @@
     }
     if (up) {
       s.crystals = (s.crystals || 0) + 30 * up;
+      s.runRank = S.recordRank(s);
       // ランク5：受付嬢のおまかせ札をはじめてもらえる
       if (s.rank >= 5 && !s.flags.autoGift && G.items) { s.flags.autoGift = 1; G.items.addCons('auto30', 3); G.items.addCons('auto180', 1); }
       G.emit('rankup', s.rank);
@@ -545,6 +546,9 @@
     { id: 'sky', short: '天空城', name: '新天地「天空城」', max: 1, base: 15, inc: 0, x: 27, y: 103, from: 'harbor', unlock: true, desc: () => 'エリア「天空城」が開く（ランク10から・最難関）' },
     { id: 'knight', short: '騎士', name: '新職業「騎士」', max: 1, base: 3, inc: 0, x: 91, y: 90, from: 'exp', unlock: true, desc: () => '職業「騎士」が求職者に来るようになる' },
     { id: 'bard', short: '吟遊詩人', name: '新職業「吟遊詩人」', max: 1, base: 6, inc: 0, x: 73, y: 103, from: 'knight', unlock: true, desc: () => '職業「吟遊詩人」が求職者に来るようになる' },
+    { id: 'memory', short: '記憶', name: '記憶の灯', max: 3, base: 6, inc: 6, x: 31, y: 9, from: 'start', desc: (l) => `再建しても、建てていた施設が Lv${l} から始まる` },
+    { id: 'veteran', short: '古参', name: '古参の灯', max: 5, base: 4, inc: 3, x: 69, y: 9, from: 'start', desc: (l) => `再建しても、残る冒険者がレベルの ${l * 10}% を持ち越す` },
+    { id: 'autostar', short: 'おまかせ', name: 'おまかせの灯', max: 3, base: 3, inc: 3, x: 8, y: 53, from: 'speed', desc: (l) => `再建のたびに おまかせ札（3時間）×${l}` },
     { id: 'alch', short: '錬金術師', name: '新職業「錬金術師」', max: 1, base: 10, inc: 0, x: 50, y: 99, from: 'fame', unlock: true, desc: () => '職業「錬金術師」が求職者に来るようになる' },
   ];
   const NODE = {};
@@ -568,6 +572,21 @@
     return { ok: true, lv: pr.tree[id] };
   };
   S.canRebirth = (s = G.state) => s.rank >= S.REBIRTH_RANK;
+  // 周回の記録：今回の周回が始まった時刻と、各ランクに届いた時間。ランクごとの最速は灯火の星と一緒に残る
+  S.newRun = (s = G.state, n) => ({ n: n || ((s.prestige && s.prestige.runs) || 0) + 1, start: G.now(), ranks: {}, q0: (s.stats && s.stats.quests) || 0, g0: (s.stats && s.stats.goldEarned) || 0 });
+  S.run = (s = G.state) => s.run || (s.run = S.newRun(s));
+  S.runSec = (s = G.state) => Math.max(0, G.now() - S.run(s).start);
+  S.recordRank = function (s = G.state) {
+    const run = S.run(s), pr = S.prestige(s);
+    pr.best = pr.best || {};
+    const sec = Math.round(S.runSec(s));
+    if (run.ranks[s.rank] != null) return null;
+    run.ranks[s.rank] = sec;
+    const prev = pr.best[s.rank];
+    // 初めての周回は記録だけ（比べる相手がいない）
+    if (prev == null || sec < prev) { pr.best[s.rank] = sec; return { sec, prev, best: prev != null }; }
+    return { sec, prev, best: false };
+  };
   // 再建を重ねるほど、名声が集まりやすい（1回ごとに +10%、最大 +100%）
   S.runFame = (s = G.state) => 1 + 0.1 * Math.min(10, (s.prestige && s.prestige.runs) || 0);
   // 宴：ゴールドを使って、20分間 名声と経験値 +25%（終盤のゴールドの使い道）
@@ -598,6 +617,10 @@
     const pr = S.prestige(s);
     const now = G.now();
     const earned = S.rebirthStars(s).total;
+    const run = S.run(s);
+    pr.lastRun = { n: run.n, sec: Math.round(S.runSec(s)), rank: s.rank, quests: (s.stats.quests || 0) - (run.q0 || 0), gold: (s.stats.goldEarned || 0) - (run.g0 || 0), stars: earned, at: now };
+    pr.history = (pr.history || []).concat([pr.lastRun]).slice(-10);
+    const prevFac = Object.assign({}, s.fac);
     pr.stars += earned;
     pr.total += earned;
     pr.runs++;
@@ -612,6 +635,9 @@
     s.fame = 0;
     s.rank = 1;
     s.fac = { hall: startLv >= 4 ? 2 : 1, bunks: startLv >= 2 ? 2 : 1, tavern: 0, smithy: 0, training: 0, alchemy: 0, tower: 0 };
+    // 記憶の灯：建てていた施設は、そのレベルから
+    const mem = S.starLv('memory', s);
+    if (mem) Object.keys(s.fac).forEach((id) => { if (prevFac[id] > 0) s.fac[id] = Math.max(s.fac[id], Math.min(prevFac[id], mem)); });
     s.building = null;
     s.board = [];
     s.boardAt = now;
@@ -625,14 +651,19 @@
     s.flags.runBoss = false;
     // 冒険者：レベルの高い順にベッドの数だけ残る。ほかは「かつての仲間」として、いつでも呼び戻せる
     const reset = (a) => { a.lv = 1; a.exp = 0; a.status = 'idle'; a.questId = null; a._tx = 0; return a; };
+    const vet = S.starLv('veteran', s) * 0.1;
+    const keep = (a) => { const lv = Math.max(1, Math.round(a.lv * vet)); reset(a); a.lv = lv; return a; };
     const sorted = s.adv.slice().sort((a, b) => b.lv - a.lv);
     const beds = D.beds(s.fac.bunks);
-    s.adv = sorted.slice(0, beds).map(reset);
+    s.adv = sorted.slice(0, beds).map(keep);
     s.alumni = (s.alumni || []).concat(sorted.slice(beds).map((a) => { reset(a); a.eq = {}; return a; }));
     s.cands = [];
     S.rollCandidates(s, false);
     for (let i = 0; i < 3; i++) s.board.push(S.makeQuest(0, { size: Math.min(2, i + 1), k: 0.3 + i * 0.2 }));
     s.stats.rebirths = (s.stats.rebirths || 0) + 1;
+    const au = S.starLv('autostar', s);
+    if (au && G.items) G.items.addCons('auto180', au);
+    s.run = S.newRun(s, pr.runs + 1);
     s.flags.justReborn = earned;
     s.lastSeen = now;
     s.speedCursor = now;
@@ -1012,6 +1043,7 @@
       S.abyss(merged);
       if (merged.abyss.open) merged.flags.abyssNoticed = true;
       S.prestige(merged);
+      if (!merged.run) merged.run = S.newRun(merged);
       merged.alumni = s.alumni || [];
       if (G.items) G.items.migrate(merged);
       return merged;
