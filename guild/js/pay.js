@@ -165,26 +165,32 @@
       const r = await fetch('/api/shop/claim', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session, save: d.sid }) });
       const j = await r.json().catch(() => ({}));
       if (r.status === 402) { if (!quiet) G.ui.toast('お支払いの確認がまだです。少し時間をおいて開き直してください', 'info'); return; }
-      if (!r.ok || !j.ok) { if (!quiet) G.ui.toast('購入の受け取りに失敗しました。開き直すと、もう一度受け取りを試します', 'bad'); if (r.status === 409) clearPending(); return; }
+      if (r.status === 410) { clearPending(); if (!quiet) G.ui.toast('この支払いは返金済みのため、受け取れません', 'info'); return; }
+      if (!r.ok || !j.ok) { if (!quiet) G.ui.toast(r.status === 409 ? 'この購入は、別のセーブデータのものです' : '購入の受け取りに失敗しました。開き直すと、もう一度受け取りを試します', 'bad'); if (r.status === 409) clearPending(); return; }
       if (d.done.includes(session)) return;
-      grant(j.product, session, j.amount);
+      grant(j.product, session, j.amount, j.at);
       clearPending();
     } catch (e) {
       if (!quiet) G.ui.toast('通信できませんでした。開き直すと、もう一度受け取りを試します', 'bad');
     }
   }
-  function grant(p, session, amount) {
+  function grant(p, session, amount, paidAt) {
     const st = G.state, d = data();
     d.done.push(session);
     d.hist.push({ id: p.id, name: p.name, price: amount != null ? amount : p.price, at: G.now(), session });
-    d.month.yen += amount != null ? amount : p.price;
+    // 今月の合計（復元した昔の購入は、その月のぶんなので足さない）
+    const ym = paidAt ? new Date(paidAt * 1000).toISOString().slice(0, 7) : d.month.ym;
+    if (ym === d.month.ym) d.month.yen += amount != null ? amount : p.price;
     give(p.grant);
     if (p.kind === 'once') d.once[p.id] = 1;
     if (p.kind === 'perm') { d.perm[p.id] = 1; d.once[p.id] = 1; }
-    if (p.kind === 'run') d.run[G.sim.run().n] = 1;
+    // 周回パック：この周回で買ったものだけ「この周回は購入済み」にする（復元した昔のものは数えない）
+    if (p.kind === 'run' && (!paidAt || paidAt >= G.sim.run().start - 60)) d.run[G.sim.run().n] = 1;
     if (p.kind === 'pass') {
+      // 期間は支払った時から（復元した昔の定期便が、今日から始まり直さないように）
       const now = G.now();
-      d.pass.until = Math.max(now, d.pass.until || 0) + (p.days || 30) * 86400;
+      const start = paidAt && paidAt < now ? paidAt : now;
+      d.pass.until = Math.max(start, d.pass.until || 0) + (p.days || 30) * 86400;
       d.pass.daily = p.daily;
       d.pass.last = '';
     }
@@ -219,6 +225,23 @@
   P.history = function () {
     const d = data();
     const rows = d.hist.slice().reverse().map((h) => `<li><span>${new Date(h.at * 1000).toLocaleDateString('ja-JP')}</span><b>${G.esc(h.name)}</b><em>¥${G.fmt(h.price)}</em></li>`).join('') || '<li class="none">まだ購入はありません</li>';
-    G.ui.modal(`<div class="pay-hist"><h2>購入履歴</h2><p class="sub">今月 ¥${G.fmt(d.month.yen)}${d.age ? ` ・ ${AGE_NAME[d.age]}${isFinite(LIMIT[d.age]) ? `（上限 ¥${G.fmt(LIMIT[d.age])}）` : ''}` : ''} ・ 有償の魔晶石 ${G.fmt(G.items.cryPaid())}</p><ul>${rows}</ul><p class="hint">お問い合わせのときは、購入日と品名をお知らせください</p></div>`, [{ text: '閉じる', cls: 'primary' }], { cls: 'wide' });
+    G.ui.modal(`<div class="pay-hist"><h2>購入履歴</h2><p class="sub">今月 ¥${G.fmt(d.month.yen)}${d.age ? ` ・ ${AGE_NAME[d.age]}${isFinite(LIMIT[d.age]) ? `（上限 ¥${G.fmt(LIMIT[d.age])}）` : ''}` : ''} ・ 有償の魔晶石 ${G.fmt(G.items.cryPaid())}</p><ul>${rows}</ul><p class="hint">お問い合わせのときは、購入日と品名をお知らせください</p></div>`, [P.web ? { text: '購入を復元', cls: 'ghost', fn: () => P.restore() } : null, { text: '閉じる', cls: 'primary' }].filter(Boolean), { cls: 'wide' });
+  };
+  // 購入の復元：このセーブで支払い済みなのに、まだ受け取っていないものを受け取る
+  P.restore = async function () {
+    if (!WEB) return;
+    const d = data();
+    G.ui.toast('購入を確認しています…', 'info', 'payRestore');
+    try {
+      const r = await fetch('/api/shop/restore', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ save: d.sid }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.ok) { G.ui.toast('いまは確認できません。時間をおいてお試しください', 'bad', 'payRestore'); return; }
+      const todo = (j.items || []).filter((x) => x.session && !d.done.includes(x.session));
+      if (!todo.length) { G.ui.toast('受け取っていない購入はありません', 'info', 'payRestore'); return; }
+      todo.forEach((x) => grant(x.product, x.session, x.amount, x.at));
+      G.ui.toast(`購入 ${todo.length}件を受け取りました`, 'good', 'payRestore');
+    } catch (e) {
+      G.ui.toast('通信できませんでした', 'bad', 'payRestore');
+    }
   };
 })();

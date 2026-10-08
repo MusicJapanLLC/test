@@ -1,0 +1,27 @@
+/* 才能の樹 */
+.talent { text-align: center; }
+.talent > small { display: block; font-size: 12px; color: var(--muted); letter-spacing: 0.15em; }
+.talent h2 { margin: 2px 0 8px; }
+.tl-pts { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-bottom: 10px; }
+.tl-pts span { font-size: 13px; }
+.tl-pts b { font-family: var(--font-num); font-size: 20px; color: #ffe08a; margin: 0 2px; }
+.tl-pts small { font-size: 11px; color: var(--muted); }
+.tl-tree { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.tl-col { display: flex; flex-direction: column; align-items: stretch; }
+.tl-col h4 { margin: 0 0 6px; font-size: 13px; color: var(--c); }
+.tl-node { position: relative; display: grid; gap: 2px; padding: 7px 4px; border-radius: 10px; font: inherit; color: var(--parch); text-align: center; cursor: pointer; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); transition: transform 0.12s, box-shadow 0.2s; }
+.tl-node b { font-size: 11.5px; line-height: 1.25; }
+.tl-node small { font-size: 10px; color: var(--muted); line-height: 1.3; }
+.tl-node em { font-style: normal; font-size: 9.5px; color: #ffb38a; }
+.tl-node:active { transform: scale(0.96); }
+.tl-node.on { background: color-mix(in srgb, var(--c) 22%, #0e1630); border-color: var(--c); box-shadow: 0 0 12px color-mix(in srgb, var(--c) 45%, transparent); }
+.tl-node.on small { color: var(--parch-dim); }
+.tl-node.can { border: 1.5px dashed var(--c); animation: tlPulse 1.8s ease-in-out infinite; }
+@keyframes tlPulse { 50% { box-shadow: 0 0 12px color-mix(in srgb, var(--c) 50%, transparent); } }
+.tl-node.lock { opacity: 0.45; }
+.tl-node.rest { opacity: 0.7; border-style: dotted; }
+.tl-link { display: block; width: 2px; height: 8px; margin: 0 auto; background: color-mix(in srgb, var(--c) 45%, transparent); }
+.tl-sum { margin: 10px 0 0; font-size: 12px; color: var(--parch-dim); }
+.tl-modal .m-actions .btn span { display: block; font-size: 10.5px; opacity: 0.75; }
+.tl-open { position: relative; }
+.tl-badge { position: absolute; top: -6px; right: -6px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; font-size: 11px; line-height: 18px; color: #1a1020; background: #ffe08a; box-shadow: 0 0 8px rgba(255, 220, 120, 0.7); }

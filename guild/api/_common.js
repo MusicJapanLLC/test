@@ -9,7 +9,7 @@ function readiness() {
   const missing = [];
   if (!process.env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY');
   ['name', 'rep', 'address', 'phone', 'email'].forEach((k) => { if (!s[k]) missing.push('SELLER_' + k.toUpperCase()); });
-  return { enabled: missing.length === 0 && process.env.SHOP_ENABLED !== '0', missing };
+  return { enabled: missing.length === 0 && process.env.SHOP_ENABLED !== '0', keyed: !!process.env.STRIPE_SECRET_KEY, missing };
 }
 function json(res, status, body) {
   res.statusCode = status;

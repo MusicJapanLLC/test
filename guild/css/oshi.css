@@ -1,0 +1,38 @@
+/* 推し — 冒険者の詳細・一覧の印・推し度アップ */
+.oshi-badge { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-left: 4px; border-radius: 50%; font-size: 11px; line-height: 1; color: #1a0f18; background: var(--oshi, #ff8fb8); box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.55), 0 0 10px color-mix(in srgb, var(--oshi, #ff8fb8) 70%, transparent); vertical-align: 1px; }
+
+.oshi-box { margin: 10px 0 4px; padding: 10px 12px; border-radius: 14px; text-align: left; }
+.oshi-box.off { display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.04); border: 1px dashed var(--line-2); }
+.oshi-box.off small { font-size: 11px; color: var(--muted); line-height: 1.45; }
+.oshi-box .oshi-set { flex: none; color: #ffd3e3; border-color: rgba(255, 143, 184, 0.55); }
+.oshi-box.on { background: linear-gradient(160deg, color-mix(in srgb, var(--oshi) 22%, #0e1630), #0e1630 70%); border: 1.5px solid color-mix(in srgb, var(--oshi) 70%, transparent); box-shadow: 0 0 18px color-mix(in srgb, var(--oshi) 25%, transparent); }
+.ob-head { display: flex; align-items: baseline; gap: 8px; }
+.ob-heart { color: var(--oshi); font-size: 18px; text-shadow: 0 0 10px var(--oshi); animation: obBeat 1.6s ease-in-out infinite; }
+@keyframes obBeat { 0%, 100% { transform: scale(1); } 12% { transform: scale(1.25); } 24% { transform: scale(1); } 36% { transform: scale(1.15); } }
+.ob-head b { font-size: 14px; color: var(--parch); }
+.ob-head em { font-style: normal; font-size: 12px; font-weight: 800; color: var(--oshi); }
+.ob-head small { margin-left: auto; font-family: var(--font-num); font-size: 11px; color: var(--parch-dim); }
+.ob-bar { height: 6px; margin: 8px 0; border-radius: 6px; background: rgba(255, 255, 255, 0.08); overflow: hidden; }
+.ob-bar i { display: block; height: 100%; border-radius: 6px; background: linear-gradient(90deg, color-mix(in srgb, var(--oshi) 60%, #fff), var(--oshi)); box-shadow: 0 0 8px var(--oshi); transition: width 0.6s; }
+.ob-cols { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ob-cols small { font-size: 11px; color: var(--muted); margin-right: 2px; }
+.oshi-col { width: 24px; height: 24px; padding: 0; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.25); background: var(--c); cursor: pointer; transition: transform 0.15s; }
+.oshi-col.on { border-color: #fff; transform: scale(1.12); box-shadow: 0 0 10px var(--c); }
+.ob-list { margin-top: 8px; font-size: 12px; }
+.ob-list summary { cursor: pointer; color: var(--parch-dim); font-weight: 800; }
+.ob-list ul { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 3px; }
+.ob-list li { color: var(--muted); }
+.ob-list li b { display: inline-block; min-width: 34px; font-family: var(--font-num); color: var(--muted); }
+.ob-list li.got { color: var(--parch); }
+.ob-list li.got b { color: var(--oshi); }
+.ob-list .hint { margin: 6px 0 0; font-size: 11px; }
+.oshi-box #oshiOff { margin-top: 6px; font-size: 11px; color: var(--muted); }
+
+.oshi-up { text-align: center; padding: 6px 0 2px; }
+.oshi-up .ou-heart { font-size: 64px; line-height: 1; color: var(--oshi); text-shadow: 0 0 24px var(--oshi), 0 0 48px var(--oshi); animation: ouPop 0.9s cubic-bezier(0.2, 1.6, 0.4, 1) both, obBeat 1.6s 0.9s ease-in-out infinite; }
+@keyframes ouPop { 0% { transform: scale(0.2); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+.oshi-up small { display: block; margin-top: 6px; font-size: 12px; color: var(--muted); letter-spacing: 0.2em; }
+.oshi-up h2 { margin: 4px 0; }
+.oshi-up .ou-lv { margin: 0; font-weight: 800; color: var(--oshi); }
+.oshi-up .ou-lv b { font-family: var(--font-num); margin-left: 4px; }
+.oshi-up .ou-new { margin: 10px auto 0; max-width: 260px; padding: 8px 10px; border-radius: 10px; font-size: 13px; background: color-mix(in srgb, var(--oshi) 16%, transparent); border: 1px solid color-mix(in srgb, var(--oshi) 50%, transparent); }

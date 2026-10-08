@@ -51,8 +51,11 @@
   };
 
   let prevBoost = {};
-  N.tick = function () {
+  let badgeAcc = 0;
+  N.tick = function (dt) {
     if (!G.items) return;
+    badgeAcc += dt || 0;
+    if (badgeAcc > 1) { badgeAcc = 0; updateBadge(); }
     ['speed', 'gold', 'luck', 'feast'].forEach((k) => {
       const on = !!G.items.boost(k);
       if (prevBoost[k] && !on) N.push({ kind: 'boost', key: 'boost' + k, action: k === 'feast' ? 'build' : 'treasury', icon: 'clock', title: `${G.items.BOOST_NAME[k]}が終わりました`, body: k === 'feast' ? '施設の画面から、また宴を開けます' : '持ち物からもう一度使えます' });
@@ -128,10 +131,45 @@
   function updateBadge() {
     const b = G.$('#bellBtn .nb');
     if (!b || !G.state) return;
-    const n = (G.state.inbox || []).filter((x) => !x.read).length;
+    const gifts = N.claimable();
+    const n = (G.state.inbox || []).filter((x) => !x.read).length + gifts;
     b.hidden = !n;
     b.textContent = n > 9 ? '9+' : n;
+    G.$('#bellBtn').classList.toggle('gift', gifts > 0);
   }
+
+  // ---------------------------------------------------------------- ごほうびをまとめて受け取る
+  N.claimable = () => {
+    if (!G.state || G.state.flags.tut < 90) return 0;
+    return (G.missions ? G.missions.claimable() : 0) + (G.achieve ? G.achieve.claimable() : 0) + (G.trail ? G.trail.claimable() : 0);
+  };
+  N.claimAll = function () {
+    const m = G.missions ? G.missions.collect() : { n: 0, sum: {} };
+    const a = G.achieve ? G.achieve.claimAll() : { n: 0, cry: 0, titles: [] };
+    const g = G.trail ? G.trail.collect() : { n: 0, stars: 0, cry: 0 };
+    if (!m.n && !m.bonus && !a.n && !g.n) return null;
+    const sum = Object.assign({}, m.sum);
+    if (a.cry) sum.cry = (sum.cry || 0) + a.cry;
+    if (g.cry) sum.cry = (sum.cry || 0) + g.cry;
+    if (g.stars) sum.star = g.stars;
+    G.sim.save();
+    G.ui.refreshHud();
+    updateBadge();
+    const IT = G.items;
+    const cells = Object.entries(sum).map(([k, v], i) => {
+      const ic = k === 'cry' ? `<span class="cc-cry">${G.treasury.CRY}</span>` : k === 'star' ? `<span class="cc-cry cc-star">${G.stars.STAR_SVG}</span>` : `<img alt="" src="${G.ui.itemThumb({ kind: 'cons', id: k, rarity: IT.CONS[k] ? IT.CONS[k].rarity : 1, name: '' }, 48)}">`;
+      const name = k === 'cry' ? '魔晶石' : k === 'star' ? '灯火の星' : IT.CONS[k] ? IT.CONS[k].name : k;
+      return `<div class="cc-cell" style="--d:${0.25 + i * 0.12}s">${ic}<b>×${G.fmt(v)}</b><small>${G.esc(name)}</small></div>`;
+    }).join('');
+    const parts = [];
+    if (m.n) parts.push(`任務 ${m.n}件`);
+    if (m.bonus) parts.push('ぜんぶ達成ボーナス');
+    if (a.n) parts.push(`実績 ${a.n}段`);
+    if (g.n) parts.push(`周回の目標 ${g.n}件`);
+    const titles = a.titles.length ? `<p class="cc-title">新しい称号：${a.titles.map((t) => `《${G.esc(t)}》`).join('')}</p>` : '';
+    G.ui.modal(`<div class="claim-sum"><small>まとめて受け取りました</small><h2>${parts.map((x) => `<span>${x}</span>`).join('<i>・</i>')}</h2><div class="cc-grid">${cells}</div>${titles}</div>`, [{ text: 'OK', cls: 'primary', fn: () => G.ui.renderSheet() }], { cls: 'celebrate', onShow: () => { G.audio.sfx('rarity', 3); G.haptic(20); G.ui.fx.confetti(); } });
+    return { m, a, sum };
+  };
 
   // ---------------------------------------------------------------- 端末への通知
   function system(n) {
@@ -163,6 +201,11 @@
     const st = G.state;
     const list = st.inbox || [];
     let h = '';
+    const gifts = N.claimable();
+    if (gifts) {
+      const mn = G.missions ? G.missions.claimable() : 0, an = G.achieve ? G.achieve.claimable() : 0, gn = G.trail ? G.trail.claimable() : 0;
+      h += `<div class="card claim-center"><span class="ni gift">${ICON.gift}</span><div class="grow"><b>受け取れるごほうび</b><small>${[mn ? `任務 ${mn}件` : '', an ? `実績 ${an}段` : '', gn ? `周回の目標 ${gn}件` : ''].filter(Boolean).join(' ・ ')}</small></div><button class="btn sm go pulse" id="ccAll">全部受け取る</button></div>`;
+    }
     const perm = N.permission();
     if (perm !== 'granted' && perm !== 'unsupported' && st.settings.notify) {
       h += `<button class="card notif-ask" id="nAsk"><span class="ni">${ICON.bell}</span><div class="grow"><b>端末にも知らせる</b><small>画面を離れている間にパーティが帰ってきたら、端末の通知でお知らせします</small></div></button>`;
@@ -178,6 +221,8 @@
       const n = list.find((x) => x.id === b.dataset.nid);
       if (n && n.action) { G.ui.closeSheet(true); act(n.action); }
     }));
+    const cc = G.$('#ccAll', body);
+    if (cc) cc.addEventListener('click', () => { if (!N.claimAll()) G.ui.renderSheet(); });
     const ask = G.$('#nAsk', body);
     if (ask) ask.addEventListener('click', async () => {
       const r = await N.request();
@@ -185,7 +230,7 @@
       G.ui.renderSheet();
     });
   };
-  N.sig = () => (G.state.inbox || []).length + ':' + ((G.state.inbox || [])[0] || {}).ts;
+  N.sig = () => (G.state.inbox || []).length + ':' + ((G.state.inbox || [])[0] || {}).ts + ':' + N.claimable();
   function ago(ts) {
     const s = Math.max(0, G.now() - ts);
     if (s < 60) return 'たった今';

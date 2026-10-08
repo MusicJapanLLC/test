@@ -22,6 +22,8 @@
     { id: 'fish', text: '裏の桟橋で魚を{n}匹釣る', stat: 'fish', n: [2, 3], rw: { cry: 10, stone: 3 }, need: (st) => st.flags.tut >= 90 },
     { id: 'mat', text: '素材を{n}個集める', stat: 'matGot', n: [5, 10, 15], rw: { stone: 5 } },
     { id: 'abyss', text: '深淵の迷宮に{n}回挑む', stat: 'abyssRuns', n: [1, 2], rw: { cry: 20 }, need: (st) => !!(st.abyss && st.abyss.open) },
+    { id: 'nice', text: '冒険譚でナイス指示を{n}回出す', stat: 'nice', n: [1, 2, 3], rw: { cry: 15 }, need: (st) => st.flags.tut >= 90 },
+    { id: 'oshi', text: '推し度を{n}上げる', stat: 'oshiPts', n: [10, 20], rw: { cry: 10, stone: 3 }, need: (st) => !!(st.oshi && st.oshi.id) },
   ];
   const WEEKLY = [
     { id: 'w_dispatch', text: '依頼を40回出す', stat: 'quests', n: 40, rw: { cry: 60, auto180: 1 } },
@@ -121,6 +123,27 @@
     G.ui.refreshHud();
     G.ui.renderSheet();
   }
+  // 受け取れる任務をぜんぶ受け取る（画面なし）。ぜんぶ達成ボーナスも含む
+  M.collect = function () {
+    const m = ensure();
+    const sum = {};
+    let n = 0, bonus = false;
+    [[dailyList(), m.claimed], [weeklyList(), m.wclaimed]].forEach(([list, got]) => list.forEach((x) => {
+      if (!x.done || x.claimed) return;
+      got[x.key] = true;
+      Object.entries(x.rw).forEach(([k, v]) => { sum[k] = (sum[k] || 0) + v; });
+      n++;
+    }));
+    if (!m.bonus && dailyList().every((x) => x.claimed)) {
+      m.bonus = true;
+      bonus = true;
+      G.state.stats.dailyClears = (G.state.stats.dailyClears || 0) + 1;
+      Object.entries(ALL_CLEAR).forEach(([k, v]) => { sum[k] = (sum[k] || 0) + v; });
+    }
+    if (n || bonus) give(sum);
+    return { n, bonus, sum };
+  };
+  M.rwText = rwText;
   // まとめて受け取る（今日・今週・ぜんぶ達成ボーナス）
   function claimAll() {
     const m = ensure();
@@ -183,7 +206,7 @@
 
   // ---------------------------------------------------------------- 画面
   const ICON = {
-    dispatch: 'scroll', watch: 'book', great: 'clover', chest: 'key', enhance: 'stone', like: 'book2', post: 'book2', build: 'hourglass', tips: 'coinbag', use: 'hourglass', mat: 'stone', abyss: 'horn',
+    dispatch: 'scroll', watch: 'book', great: 'clover', chest: 'key', enhance: 'stone', like: 'book2', post: 'book2', build: 'hourglass', tips: 'coinbag', use: 'hourglass', mat: 'stone', abyss: 'horn', nice: 'horn', oshi: 'book2',
     w_dispatch: 'scroll', w_watch: 'book', w_great: 'clover', w_daily: 'horn',
   };
   M.render = function (body) {

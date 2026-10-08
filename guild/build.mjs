@@ -10,7 +10,8 @@ const root = dirname(fileURLToPath(import.meta.url));
 const read = (p) => readFileSync(join(root, p), 'utf8');
 
 const html = read('index.html');
-const css = read('css/style.css');
+const cssFiles = [...html.matchAll(/<link rel="stylesheet" href="(css\/[^"]+)">/g)].map((m) => m[1]);
+const css = cssFiles.map((src) => `/* ---- ${src} ---- */\n${read(src)}`).join('\n');
 const scripts = [...html.matchAll(/<script src="([^"]+)"><\/script>/g)].map((m) => m[1]);
 const js = scripts.map((src) => `/* ---- ${src} ---- */\n${read(src)}`).join('\n');
 
@@ -23,7 +24,7 @@ const safeJs = js.replace(/<\/script/gi, '<\\/script');
 mkdirSync(join(root, 'dist'), { recursive: true });
 
 const standalone = html
-  .replace('<link rel="stylesheet" href="css/style.css">', () => `<style>\n${css}\n</style>`)
+  .replace(/(<link rel="stylesheet" href="css\/[^"]+">\n?)+/, () => `<style>\n${css}\n</style>\n`)
   .replace(/(<script src="[^"]+"><\/script>\n?)+/, () => `<script>\n${safeJs}\n</script>\n`);
 writeFileSync(join(root, 'dist/index.html'), standalone);
 

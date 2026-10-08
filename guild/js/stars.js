@@ -10,7 +10,7 @@
   const STAR_SVG = '<svg viewBox="0 0 20 20" aria-hidden="true"><polygon points="10,1 12.4,7.2 19,7.6 13.9,11.8 15.6,18.4 10,14.8 4.4,18.4 6.1,11.8 1,7.6 7.6,7.2" fill="currentColor"/></svg>';
   SR.STAR_SVG = STAR_SVG;
 
-  SR.sig = () => { const pr = S.prestige(); return [pr.stars, pr.runs, JSON.stringify(pr.tree), sel, G.state.rank, G.state.fame].join('|'); };
+  SR.sig = () => { const pr = S.prestige(); return [pr.stars, pr.runs, JSON.stringify(pr.tree), sel, G.state.rank, G.state.fame, G.trail ? G.trail.sig() : ''].join('|'); };
   SR.open = () => { G.audio.init(); G.ui.openSheet('stars'); };
 
   // 夜空（星くず・星雲・線）を1枚の絵に
@@ -97,6 +97,7 @@
     const bestTxt = [8, 10].filter((r) => best[r] != null).map((r) => `ランク${r} <b>${G.fmtTime(best[r])}</b>`).join(' ・ ');
     let h = `<div class="stars-top"><span class="st-have">${STAR_SVG}<b>${G.fmt(pr.stars)}</b><small>灯火の星</small></span><span class="st-runs">再建 <b>${pr.runs}</b>回 ・ これまでに <b>${G.fmt(pr.total)}</b>個</span></div>
       <div class="run-now"><span>いまは <b>${run.n}周目</b> ・ 経過 <b data-runclock>${G.fmtTime(S.runSec())}</b></span>${bestTxt ? `<span class="run-best">最速 ${bestTxt}</span>` : ''}</div>
+      ${G.trail ? G.trail.panelHtml() : ''}
       <div class="sky" style="background-image:url(${skyImage(W, H)});aspect-ratio:100/118">${nodes}</div>
       <div class="card sn-detail ${maxed ? 'max' : ''}"><div class="grow"><b>${G.esc(n.name)}${n.max > 1 ? ` <small>Lv${lv}/${n.max}</small>` : ''}</b>
         <small>${lv ? `いま：${n.desc(lv)}` : 'まだ灯していません'}</small>
@@ -107,7 +108,7 @@
     const beds = D.beds(Math.max(1, S.starLv('start') >= 2 ? 2 : 1));
     h += `<div class="sec rebirth"><h3>ギルドの再建</h3><div class="card rb ${can ? 'ready' : ''}">
       <div class="rb-head"><div class="rb-earn"><small>いま再建すると</small><b>${STAR_SVG}+${rb.total}</b></div>
-        <ul class="rb-break"><li><span>名声 ${G.fmt(st.fame)}</span><b>+${rb.fame}</b></li><li><span>竜王の討伐</span><b>+${rb.boss}</b></li><li><span>深淵 新記録</span><b>+${rb.abyss}</b></li>${rb.book ? `<li><span>星詠みの書</span><b>+${rb.book}</b></li>` : ''}</ul></div>
+        <ul class="rb-break"><li><span>名声 ${G.fmt(st.fame)}</span><b>+${rb.fame}</b></li><li><span>竜王の討伐</span><b>+${rb.boss}</b></li><li><span>深淵 新記録</span><b>+${rb.abyss}</b></li>${rb.book ? `<li><span>星詠みの書</span><b>+${rb.book}</b></li>` : ''}${rb.trial ? `<li><span>試練の札</span><b>+${rb.trial}</b></li>` : ''}</ul></div>
       <div class="rb-keep"><div><b>残るもの</b><small>装備・秘宝・魔晶石・持ち物・技・熟練・深淵の記録・灯火の星・図鑑・実績${S.starLv('memory') ? `・施設（Lv${S.starLv('memory')}まで）` : ''}${S.starLv('veteran') ? `・冒険者のレベルの${S.starLv('veteran') * 10}%` : ''}</small></div><div><b>最初からになるもの</b><small>ゴールド・素材・名声とランク・施設・冒険者のレベル（上位${beds}人はそのまま、ほかは「かつての仲間」として無料で呼び戻せる）</small></div></div>
       <button class="btn ${can ? 'danger big' : 'cant'} wide" id="rebirthBtn">${can ? 'ギルドを再建する' : `ランク${S.REBIRTH_RANK}から再建できます（いまランク${st.rank}）`}</button></div>
       <p class="hint">灯火の星を灯すと、再建したあとも、ずっと強いままです。新しい職業や土地も、ここで開きます。</p></div>`;
@@ -115,6 +116,7 @@
       h += `<div class="sec run-hist"><h3>これまでの周回</h3>${pr.history.slice().reverse().slice(0, 6).map((x) => `<div class="rh"><b>${x.n}周目</b><span>${G.fmtTime(x.sec)}</span><span>ランク${x.rank}</span><span>依頼 ${G.fmt(x.quests)}</span><span class="st">${STAR_SVG}+${x.stars}</span></div>`).join('')}</div>`;
     }
     body.innerHTML = h;
+    if (G.trail) G.trail.bindPanel(body);
     G.$$('[data-star]', body).forEach((b) => b.addEventListener('click', () => { sel = b.dataset.star; G.audio.sfx('tap'); G.ui.renderSheet(); }));
     const bb = G.$('#starBuy', body);
     if (bb) bb.addEventListener('click', () => buy(n.id));
@@ -142,13 +144,14 @@
 
   function confirmRebirth() {
     const st = G.state;
+    if (G.trail) G.trail.resetPicker();
     const rb = S.rebirthStars();
     const away = st.active.length, unseen = G.reels.unseen().length;
     G.audio.sfx('open');
-    G.ui.modal(`<div class="confirm rb-confirm"><h2>ギルドを再建しますか？</h2><p>灯火の星 <b>+${rb.total}</b> を手に、ギルドを一から建て直します。</p>${away ? `<p class="warn">遠征中の ${away} 組は、結果なしで帰ってきます。</p>` : ''}${unseen ? `<p class="warn">まだ見ていない冒険譚 ${unseen} 本は、見届けボーナスなしで受け取ります。</p>` : ''}<p class="hint">取り消せません。</p></div>`, [
+    G.ui.modal(`<div class="confirm rb-confirm"><h2>ギルドを再建しますか？</h2><p>灯火の星 <b>+${rb.total}</b> を手に、ギルドを一から建て直します。</p>${away ? `<p class="warn">遠征中の ${away} 組は、結果なしで帰ってきます。</p>` : ''}${unseen ? `<p class="warn">まだ見ていない冒険譚 ${unseen} 本は、見届けボーナスなしで受け取ります。</p>` : ''}${G.trail ? G.trail.trialPickerHtml() : ''}<p class="hint">取り消せません。</p></div>`, [
       { text: 'やめる', cls: 'ghost' },
       { text: '再建する', cls: 'danger', fn: () => setTimeout(doRebirth, 200) },
-    ]);
+    ], { cls: 'wide', onShow: (card) => { if (G.trail) G.trail.bindPicker(card); } });
   }
   function doRebirth() {
     const ov = document.createElement('div');
@@ -161,7 +164,9 @@
     requestAnimationFrame(() => ov.classList.add('on'));
     setTimeout(() => {
       G.ui.closeSheet(true);
+      const trials = G.trail ? G.trail.chosenTrials() : [];
       S.rebirth();
+      if (G.trail) G.trail.applyTrials(trials);
       G.sim.save(true);
       G.save.handoff(G.sim.serialize());
       setTimeout(() => location.reload(), 900);

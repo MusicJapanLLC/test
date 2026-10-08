@@ -1,0 +1,21 @@
+/* ごほうびをまとめて受け取る（お知らせ箱の上） */
+#bellBtn.gift { color: #ffe08a; box-shadow: 0 0 0 1.5px rgba(255, 214, 110, 0.65), 0 0 14px rgba(255, 200, 90, 0.45); animation: bellGift 2.4s ease-in-out infinite; }
+@keyframes bellGift { 0%, 86%, 100% { transform: rotate(0); } 89% { transform: rotate(-12deg); } 92% { transform: rotate(10deg); } 95% { transform: rotate(-6deg); } }
+.card.claim-center { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; border: 1.5px solid rgba(255, 214, 110, 0.6); background: linear-gradient(160deg, rgba(255, 210, 110, 0.16), rgba(14, 22, 48, 0.9) 70%); box-shadow: 0 0 16px rgba(255, 200, 90, 0.18); }
+.card.claim-center .ni { color: #ffd66e; }
+.card.claim-center b { color: #ffe9a8; }
+.card.claim-center .btn { flex: none; }
+
+.claim-sum { text-align: center; }
+.claim-sum > small { display: block; font-size: 12px; letter-spacing: 0.2em; color: var(--muted); }
+.claim-sum h2 { margin: 4px 0 12px; font-size: 18px; }
+.cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 8px; }
+.cc-cell { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); opacity: 0; transform: translateY(10px) scale(0.6); animation: ccPop 0.5s var(--d, 0.2s) cubic-bezier(0.2, 1.5, 0.4, 1) forwards; }
+@keyframes ccPop { to { opacity: 1; transform: none; } }
+.cc-cell img, .cc-cell .cc-cry { width: 44px; height: 44px; display: grid; place-items: center; }
+.cc-cell .cc-cry svg { width: 34px; height: 34px; filter: drop-shadow(0 0 8px rgba(160, 200, 255, 0.7)); }
+.cc-cell b { font-family: var(--font-num); font-size: 14px; color: var(--parch); }
+.cc-cell small { font-size: 10.5px; color: var(--muted); line-height: 1.2; }
+.cc-title { margin: 12px 0 0; font-size: 13px; color: #ffe08a; }
+.claim-sum h2 span { display: inline-block; }
+.claim-sum h2 i { font-style: normal; color: var(--muted); margin: 0 2px; }

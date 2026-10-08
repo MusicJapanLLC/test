@@ -182,7 +182,7 @@
       else if (hud.classList.contains('tight') && row.clientWidth > 420) hud.classList.remove('tight');
     }
     const rbtn = G.$('#rankBtn');
-    rbtn.classList.toggle('star-ready', canStar || (S.canRebirth() && !(pr && pr.runs)));
+    rbtn.classList.toggle('star-ready', canStar || (S.canRebirth() && !(pr && pr.runs)) || (G.trail && (G.trail.picks() > 0 || G.trail.claimable() > 0)));
     const lo = D.RANK_FAME[st.rank - 1], hi = D.RANK_FAME[st.rank];
     const fk = hi ? G.clamp((st.fame - lo) / (hi - lo), 0, 1) : 1;
     G.$('#fameFill').style.width = fk * 100 + '%';
@@ -450,7 +450,7 @@
   // シートの中身が変わる出来事だけを拾う（お金の増減では描き直さない）
   function sheetSig() {
     const st = G.state;
-    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : sheetTab === 'stars' ? G.stars.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, G.items.boost('auto') ? 1 : 0, G.items.cons('auto30'), G.items.cons('auto180')].join('|');
+    return [sheetTab, sheetTab === 'treasury' ? G.treasury.sig() : sheetTab === 'inbox' ? G.notify.sig() : sheetTab === 'missions' ? G.missions.sig() : sheetTab === 'stars' ? G.stars.sig() : '', st.rank, st.board.map((q) => q.id).join(), st.active.length, st.abyss ? st.abyss.floor + ':' + st.abyss.best : '', st.adv.map((a) => a.id + a.status + a.lv).join(), st.cands.map((c) => c.id).join(), st.building ? st.building.id : '', JSON.stringify(st.fac), st.refreshAt > G.now() ? 1 : 0, G.items.boost('auto') ? 1 : 0, G.items.cons('auto30'), G.items.cons('auto180'), G.oshi ? G.oshi.id() + G.oshi.colorId() : ''].join('|');
   }
   function refreshAfford() {
     const st = G.state;
@@ -694,7 +694,7 @@
       h += `<div class="card adv" data-adv="${a.id}">
         <img class="face" alt="" src="${art.portrait(a.look, 56)}" style="--cls:${D.CLASSES[a.cls].color}">
         <div class="grow">
-          <div class="a-top"><b>${G.esc(a.name)}</b><span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span>${S.isGrowing(a) ? '<span class="grow-tag">伸び盛り</span>' : ''}${S.mastTotal(a) ? `<span class="mst">★${S.mastTotal(a)}</span>` : ''}</div>
+          <div class="a-top"><b>${G.esc(a.name)}</b>${G.oshi ? G.oshi.badge(a) : ''}<span class="cls" style="--cls:${D.CLASSES[a.cls].color}">${D.CLASSES[a.cls].name}</span><span class="lv">Lv${a.lv}</span>${S.isGrowing(a) ? '<span class="grow-tag">伸び盛り</span>' : ''}${S.mastTotal(a) ? `<span class="mst">★${S.mastTotal(a)}</span>` : ''}</div>
           <div class="bar exp"><i style="width:${(a.exp / need) * 100}%"></i></div>
           <div class="a-meta"><span>${IC.sword}${G.fmt(S.power(a))}</span><span class="trait">${D.TRAITS[a.trait].name}</span>${G.items.equipped(a).map((it) => `<img class="eq-mini" alt="" src="${U.itemThumb(it, 18)}">`).join('')}${(a.skillSet || []).length ? `<span class="sk">技${a.skillSet.length}</span>` : ''}<span class="bond" title="絆">${'♥'.repeat(Math.min(5, Math.ceil(hearts / 2)))}<i>${'♥'.repeat(Math.max(0, 5 - Math.ceil(hearts / 2)))}</i></span></div>
         </div>

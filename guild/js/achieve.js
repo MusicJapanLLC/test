@@ -23,6 +23,8 @@
     { id: 'witness', cat: '冒険譚', name: '冒険譚を見届ける', unit: '本', v: () => ss().witnessed || 0, n: [10, 100, 500, 2000], title: '最前列の観客' },
     { id: 'likes', cat: '冒険譚', name: '冒険譚で応援する', unit: '回', v: () => ss().likes || 0, n: [20, 200, 1000, 5000], title: '応援団長' },
     { id: 'posts', cat: '冒険譚', name: 'マスターとしてコメント', unit: '回', v: () => ss().posts || 0, n: [1, 10, 50, 200], title: '名物マスター' },
+    { id: 'nice', cat: '冒険譚', name: 'ナイス指示を出す', unit: '回', v: () => ss().nice || 0, n: [1, 20, 100, 500, 2000], title: '名指揮官' },
+    { id: 'oshi', cat: '冒険譚', name: '推し度を上げる', unit: 'Lv', v: () => (G.oshi ? Math.max(0, ...Object.values((G.state.oshi || {}).pts || {}).map((p) => G.oshi.levelOf(p))) : 0), n: [1, 2, 3, 4, 5], title: '推し一筋' },
     { id: 'rank', cat: 'ギルド', name: 'ギルドランクを上げる', unit: '', v: () => G.state.rank, n: [3, 5, 8, 10], title: '竜をも恐れぬギルド長' },
     { id: 'facmax', cat: 'ギルド', name: '施設を最大レベルに', unit: '棟', v: facMax, n: [1, 3, 5, 7], title: '匠の館の主' },
     { id: 'gold', cat: 'ギルド', name: 'ゴールドを稼ぐ', unit: 'G', v: () => ss().goldEarned || 0, n: [1e5, 1e7, 1e9, 1e11, 1e13], title: '黄金の主' },
@@ -42,6 +44,9 @@
     { id: 'fishdex', cat: '図鑑', name: '魚図鑑を埋める', unit: '種', v: fishDex, n: [5, 10, 15, 19], title: '釣り名人' },
     { id: 'runs', cat: '再建', name: 'ギルドを再建する', unit: '回', v: () => pr().runs || 0, n: [1, 3, 5, 10, 20, 50], title: '不滅の灯' },
     { id: 'stars', cat: '再建', name: '灯火の星を集める', unit: '個', v: () => pr().total || 0, n: [20, 100, 300, 1000], title: '星を継ぐ者' },
+    { id: 'trials', cat: '再建', name: '試練の札を積んで再建', unit: '枚', v: () => pr().trialsDone || 0, n: [1, 5, 15, 30], title: '試練を越えし者' },
+    { id: 'goals', cat: '再建', name: '周回の目標を達成', unit: '件', v: () => ss().goalsDone || 0, n: [1, 10, 30, 100], title: '旅路の達人' },
+    { id: 'relics', cat: '再建', name: '遺物を選ぶ', unit: '個', v: () => ss().relicsPicked || 0, n: [5, 30, 100, 300], title: '遺物の目利き' },
   ];
   A.BY = {};
   A.LINES.forEach((l) => (A.BY[l.id] = l));

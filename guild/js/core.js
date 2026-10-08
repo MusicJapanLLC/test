@@ -4,6 +4,19 @@ const G = (window.G = window.G || {});
 
 G.VERSION = '0.4.0';
 G.WORLD_W = 400;
+// 新しい遊びの ON/OFF（不具合が出たら、その機能だけ止められるように）
+//   止め方：URL に ?off=trail,talent をつける（その端末に記録される）／ ?on=all で元に戻す
+G.FEATURES = ['oshi', 'trail', 'talent', 'orders', 'chestFx'];
+G.feature = (() => {
+  let off = [];
+  try {
+    const q = new URLSearchParams(location.search);
+    if (q.get('on') === 'all') localStorage.removeItem('guild-feature-off');
+    else if (q.get('off')) localStorage.setItem('guild-feature-off', q.get('off'));
+    off = (localStorage.getItem('guild-feature-off') || '').split(',').map((x) => x.trim()).filter(Boolean);
+  } catch (e) { /* 記録できない環境では全部 ON */ }
+  return (name) => !off.includes(name);
+})();
 
 // ---------- fonts ----------
 //  ui   : 本文・ボタン（Shippori Mincho B1。世界観をそろえるため、文字はすべて明朝に）

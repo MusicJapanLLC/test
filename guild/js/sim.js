@@ -98,12 +98,13 @@
   S.power = function (a, s = G.state) {
     const base = D.CLASSES[a.cls].pow;
     const items = G.items && s === G.state ? G.items.powMul(a) : 1;
-    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items * (1 + 0.02 * S.mastTotal(a)) * (1 + S.hallBonus(s));
+    const tal = G.talent && s === G.state ? (G.talent.advFx(a).pow || 0) / 100 : 0;
+    return base * (1 + 0.3 * (a.lv - 1)) * (1 + 0.12 * s.fac.smithy) * (1 + 0.03 * Math.min(a.bond, 10)) * items * (1 + 0.02 * S.mastTotal(a)) * (1 + S.hallBonus(s)) * (1 + tal);
   };
   S.slots = (s = G.state) => s.fac.hall;
   S.busy = (s = G.state) => s.active.filter((e) => !e.abyss).length;
   S.boardSize = (s = G.state) => s.fac.hall + 2;
-  S.beds = (s = G.state) => D.beds(s.fac.bunks);
+  S.beds = (s = G.state) => (G.trail && s === G.state && G.trail.hasTrial('few') ? Math.min(4, D.beds(s.fac.bunks)) : D.beds(s.fac.bunks));
   S.offlineCap = (s = G.state) => (3 + s.fac.tower * 2 + (G.pay && G.pay.passActive() ? 2 : 0)) * 3600;
   const starOk = (x, s) => !x.star || S.starLv(x.star, s) > 0;
   S.unlockedAreas = (s = G.state) => D.AREAS.filter((a) => a.rank <= s.rank && starOk(a, s));
@@ -127,22 +128,24 @@
       if (a.trait === 'lucky') lucky++;
       if (a.trait === 'greedy') greedy++;
     });
-    const ratio = pow / quest.req;
+    const ratio = pow / (quest.req * (1 + S.starFx('req', s)));
     const real = G.items && s === G.state;
     const rfx = (key) => (real ? G.items.relicFx(key) : 0);
     // 装備と技の能力（パーティの合計・上限つき）
     const ps = real ? G.items.partyStats(party) : {};
+    // 才能の樹（冒険者ごと）
+    if (real && G.talent) Object.entries(G.talent.partyFx(party)).forEach(([k, v]) => { ps[k] = (ps[k] || 0) + v; });
     const luck = real && G.items.boost('luck') ? G.items.boost('luck').add : 0;
     let p = 0.75 * Math.pow(ratio, 1.6);
-    p += (cleric ? 0.08 : 0) + (knight ? 0.06 : 0) + brave * 0.05 + s.fac.alchemy * 0.03 + (ps.succ || 0) / 100;
+    p += (cleric ? 0.08 : 0) + (knight ? 0.06 : 0) + brave * 0.05 + s.fac.alchemy * 0.03 + (ps.succ || 0) / 100 + S.starFx('succ', s);
     p = G.clamp(p, 0.08, 0.97);
     if (!party.length) p = 0;
     const sf = (k) => S.starFx(k, s);
     let dur = quest.dur * (archer ? 0.9 : 1) * Math.pow(0.92, swift) * (1 - s.fac.tower * 0.04) * (1 - rfx('speed')) * (1 - (ps.speed || 0) / 100) * (1 - sf('speed'));
-    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great') + (ps.great || 0) / 100 + luck + sf('great');
+    const great = 0.12 + lucky * 0.06 + s.fac.alchemy * 0.015 + (ratio > 1.4 ? 0.06 : 0) + rfx('great') + (ps.great || 0) / 100 + luck + sf('great') + (real && G.oshi ? G.oshi.partyGreat(party) : 0);
     const ev = (k) => (G.events && real ? G.events.bonus(k) : 0);
     const goldMul = (thief ? 1.15 : 1) * (1 + greedy * 0.1) * (1 + rfx('gold')) * (1 + (ps.gold || 0) / 100) * (1 + sf('gold')) * (1 + ev('gold'));
-    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior: warrior || knight, expMul: (1 + (ps.exp || 0) / 100) * (1 + sf('exp')) * (bard ? 1.15 : 1) * (1 + ev('exp')), fameMul: bard ? 1.2 : 1, find: (ps.find || 0) + sf('find') + (alch ? 20 : 0), matMul: (1 + (ps.mat || 0) / 100) * (alch ? 1.3 : 1) * (1 + ev('mat')), crit: ps.crit || 0 };
+    return { pow, ratio, p, dur: Math.max(5, dur), great, goldMul, warrior: warrior || knight, expMul: (1 + (ps.exp || 0) / 100) * (1 + sf('exp')) * (bard ? 1.15 : 1) * (1 + ev('exp')), fameMul: bard ? 1.2 : 1, find: (ps.find || 0) + sf('find') + (alch ? 20 : 0), matMul: (1 + (ps.mat || 0) / 100) * (alch ? 1.3 : 1) * (1 + ev('mat')) * (1 + sf('mat')), crit: ps.crit || 0 };
   };
 
   // ---------------------------------------------------------------- 依頼
@@ -475,6 +478,14 @@
     if (reel.monster) s.seenMonsters[reel.monster] = Math.max(s.seenMonsters[reel.monster] || 0, { fail: 1, ok: 1, great: 2, legend: 3 }[reel.tier]);
     // お宝（宝箱・投げ銭）と、閃いた技
     const got = [];
+    // マスターのナイス指示：宝のレア度がひとつ上がることがある
+    if (G.items && opts.nice > 0 && reel.drop && reel.drop.kind === 'equip' && reel.drop.rarity < 4 && Math.random() < Math.min(0.5, 0.25 * opts.nice)) {
+      const d = reel.drop;
+      const up = G.items.make(Math.random, d.rarity + 1, { tid: d.tid, ilv: d.ilv, noRelic: true });
+      up.niceUp = true;
+      reel.drop = up;
+      s.stats.niceUp = (s.stats.niceUp || 0) + 1;
+    }
     if (G.items) {
       if (reel.drop) { const r = G.items.add(reel.drop); got.push(Object.assign({}, reel.drop, r)); }
       // 町の人からの贈り物は、見届けたときだけ
@@ -556,7 +567,8 @@
   S.STAR_NODE = NODE;
   S.prestige = (s = G.state) => s.prestige || (s.prestige = { stars: 0, total: 0, runs: 0, tree: {}, abyssAt: 0 });
   S.starLv = (id, s = G.state) => (s && s.prestige && s.prestige.tree[id]) || 0;
-  S.starFx = (key, s = G.state) => { const n = NODE[key]; return s && n && n.per ? n.per * S.starLv(key, s) : 0; };
+  // 星の効果（＋この周回の遺物・試練の札）
+  S.starFx = (key, s = G.state) => { const n = NODE[key]; return (s && n && n.per ? n.per * S.starLv(key, s) : 0) + (G.trail && s === G.state ? G.trail.fx(key) : 0); };
   S.starCost = (id, s = G.state) => { const n = NODE[id]; return n.base + n.inc * S.starLv(id, s); };
   S.starOpen = (id, s = G.state) => { const n = NODE[id]; return !n.from || S.starLv(n.from, s) > 0; };
   S.buyStar = function (id, s = G.state) {
@@ -613,7 +625,9 @@
     const base = fame + boss + abyss;
     // 星詠みの書：再建で手に入る星 +20%
     const book = G.pay && G.pay.perm('starbook') ? Math.floor(base * 0.2) : 0;
-    return { fame, boss, abyss, book, total: base + book };
+    // 試練の札：自分で難しくした周回は、星が多い
+    const trial = G.trail && s === G.state ? Math.floor(base * G.trail.trialStars()) : 0;
+    return { fame, boss, abyss, book, trial, total: base + book + trial };
   };
   S.rebirth = function (s = G.state) {
     if (!S.canRebirth(s)) return null;
@@ -622,6 +636,8 @@
     const earned = S.rebirthStars(s).total;
     const run = S.run(s);
     pr.lastRun = { n: run.n, sec: Math.round(S.runSec(s)), rank: s.rank, quests: (s.stats.quests || 0) - (run.q0 || 0), gold: (s.stats.goldEarned || 0) - (run.g0 || 0), stars: earned, at: now };
+    if ((run.trials || []).length) { pr.lastRun.trials = run.trials.slice(); pr.trialsDone = (pr.trialsDone || 0) + run.trials.length; }
+    pr.lastRun.relics = (run.relics || []).length;
     pr.history = (pr.history || []).concat([pr.lastRun]).slice(-10);
     const prevFac = Object.assign({}, s.fac);
     pr.stars += earned;
