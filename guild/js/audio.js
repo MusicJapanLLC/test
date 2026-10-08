@@ -1,14 +1,23 @@
 /* ギルドの灯 — audio: Web Audio だけで鳴らすケルト風BGMと効果音
  *  - 外部音源ファイルは使わない。曲はこのファイルの中で作曲したオリジナル。
- *  - 楽器: ティンホイッスル / ハープ / フィドル / バウロン / ドローン
+ *  - 楽器（すべて合成）:
+ *      ティンホイッスル・木のフルート（息の音・ビブラート・カット/ロール/スライドの装飾音）
+ *      イーリアンパイプ（チャンターとドローン）・フィドル/チェロ（弓の立ち上がり・ビブラート）・アコーディオン（ミュゼット）
+ *      ハープ/ギター/ブズーキ/ピチカート/ベース（カープラス＝ストロングで1音ずつ作ってキャッシュ）
+ *      グロッケン/チェレスタ・パッド・バウロン・シェイカー
+ *  - 曲 = 「部品（A/B…の旋律と和音）」×「編曲（部品ごとの楽器の割り当て）」。
+ *    ハーモニー・対旋律・ベース・伴奏は和音から自動で作り、くり返すたびに装飾音・変奏・楽器が変わる。
+ *  - ミックス: 楽器ごとのEQ・定位・残響センド → 曲ごとの音量 → BGM音量 → こもり(LPF) → コンプ → リミッター。
  *  - BGM は場面ごとにクロスフェード、メニューを開くとローパスで「こもる」。
+ *  公開: init / applyVolumes / setMuffle / playTrack(name, opt)=play / playHome / playTitle / setNight /
+ *        setEvent / eventTrack / isEvent / pause / resume / sfx / setAmbient / envTick / track / tracks / trackTitle
  */
 'use strict';
 (function () {
   const A = (G.audio = {});
   let ctx = null;
-  let master, comp, musicGain, musicLP, sfxGain, ambGain, convolver, revReturn, musicSend, sfxSend;
-  let noiseBuf = null, brownBuf = null, harpWave = null;
+  let master, comp, limiter, musicIn, musicGain, musicLP, musicWetIn, musicWetGain, musicWetLP, sfxGain, ambGain, convolver, revReturn, sfxSend;
+  let noiseBuf = null, brownBuf = null;
   let current = null; // 再生中のトラック
   let wantTrack = 'guild';
   let schedTimer = null;
@@ -19,11 +28,16 @@
   A.muffled = false;
 
   const mtof = (m) => 440 * Math.pow(2, (m - 69) / 12);
+  const rr = (a, b) => a + Math.random() * (b - a);
+  const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
+  const MUSIC_K = 2.1; // BGM 音量の係数（設定 0.6 で効果音と釣り合う大きさ）
+  let errCount = 0;
+  function report(e) { if (errCount++ < 3) console.error('[audio]', e); }
 
   // ---------------------------------------------------------------- init
   A.init = function () {
     if (ctx) {
-      if (ctx.state === 'suspended') ctx.resume();
+      if (ctx.state === 'suspended') resumeCtx();
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -31,18 +45,41 @@
     try {
       ctx = new AC({ latencyHint: 'interactive' });
     } catch (e) {
+      try { ctx = new AC(); } catch (e2) { ctx = null; return; }
+    }
+    try {
+      buildGraph();
+    } catch (e) {
+      console.warn('[audio] init failed', e);
+      try { ctx.close(); } catch (e2) { /* noop */ }
+      ctx = null;
       return;
     }
+    A.ready = true;
+    schedTimer = setInterval(schedule, 30);
+    if (ctx.state === 'suspended') resumeCtx();
+    A.playTrack(wantTrack, true);
+    A.setAmbient(ambientLevel);
+  };
+  function resumeCtx() {
+    try {
+      const p = ctx.resume();
+      if (p && p.catch) p.catch(() => {});
+      return p;
+    } catch (e) { return null; }
+  }
+
+  function buildGraph() {
     master = ctx.createGain();
     master.gain.value = 0;
     comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -16;
     comp.knee.value = 12;
     comp.ratio.value = 3;
-    comp.attack.value = 0.005;
+    comp.attack.value = 0.006;
     comp.release.value = 0.25;
     // 最後にリミッター：派手な効果音が重なっても割れない
-    const limiter = ctx.createDynamicsCompressor();
+    limiter = ctx.createDynamicsCompressor();
     limiter.threshold.value = -2;
     limiter.knee.value = 0;
     limiter.ratio.value = 20;
@@ -50,45 +87,46 @@
     limiter.release.value = 0.1;
     master.connect(comp).connect(limiter).connect(ctx.destination);
 
-    musicGain = ctx.createGain();
-    musicLP = ctx.createBiquadFilter();
-    musicLP.type = 'lowpass';
-    musicLP.frequency.value = 18000;
-    musicLP.Q.value = 0.5;
-    musicGain.connect(musicLP).connect(master);
-
-    sfxGain = ctx.createGain();
-    sfxGain.connect(master);
-    ambGain = ctx.createGain();
-    ambGain.gain.value = 0;
-    ambGain.connect(master);
-
     convolver = ctx.createConvolver();
     convolver.buffer = makeIR(2.6);
     revReturn = ctx.createGain();
     revReturn.gain.value = 0.32;
     convolver.connect(revReturn).connect(master);
-    musicSend = ctx.createGain();
-    musicSend.gain.value = 0.55;
-    musicLP.connect(musicSend).connect(convolver);
+
+    // 音楽：乾いた音 → 音量 → こもり → master ／ 残響へ送る音 → 音量 → こもり → 残響（効果音と共用）
+    musicIn = ctx.createGain();
+    musicGain = ctx.createGain();
+    musicLP = ctx.createBiquadFilter();
+    musicLP.type = 'lowpass';
+    musicLP.frequency.value = 18000;
+    musicLP.Q.value = 0.5;
+    musicIn.connect(musicGain).connect(musicLP).connect(master);
+    musicWetIn = ctx.createGain();
+    musicWetGain = ctx.createGain();
+    musicWetLP = ctx.createBiquadFilter();
+    musicWetLP.type = 'lowpass';
+    musicWetLP.frequency.value = 18000;
+    musicWetLP.Q.value = 0.5;
+    musicWetIn.connect(musicWetGain).connect(musicWetLP).connect(convolver);
+
+    sfxGain = ctx.createGain();
+    sfxGain.connect(master);
     sfxSend = ctx.createGain();
     sfxSend.gain.value = 0.18;
     sfxGain.connect(sfxSend).connect(convolver);
+    ambGain = ctx.createGain();
+    ambGain.gain.value = 0;
+    ambGain.connect(master);
 
     noiseBuf = makeNoise(2, false);
     brownBuf = makeNoise(4, true);
-    const real = new Float32Array([0, 0, 0, 0, 0, 0, 0, 0]);
-    const imag = new Float32Array([0, 1, 0.46, 0.24, 0.13, 0.07, 0.035, 0.02]);
-    harpWave = ctx.createPeriodicWave(real, imag);
+    // 太鼓は最初に作っておく（短いので軽い）
+    ['open', 'mid', 'top', 'shk', 'shk2'].forEach((k) => { for (let v = 0; v < 3; v++) drumBuf(k, v); });
 
     A.applyVolumes();
-    A.ready = true;
     master.gain.setValueAtTime(0, ctx.currentTime);
     master.gain.linearRampToValueAtTime(1, ctx.currentTime + 1.8);
-    schedTimer = setInterval(schedule, 30);
-    A.playTrack(wantTrack, true);
-    A.setAmbient(ambientLevel);
-  };
+  }
 
   function makeNoise(sec, brown) {
     const len = Math.floor(ctx.sampleRate * sec);
@@ -130,27 +168,22 @@
   A.applyVolumes = function () {
     if (!ctx) return;
     const s = G.state ? G.state.settings : { bgm: 0.6, sfx: 0.8 };
+    const bgm = s.bgm == null ? 0.6 : s.bgm, sfx = s.sfx == null ? 0.8 : s.sfx;
     const t = ctx.currentTime;
-    musicGain.gain.setTargetAtTime(Math.pow(s.bgm, 1.4) * 2.3 * (A.muffled ? 0.62 : 1), t, 0.08);
-    sfxGain.gain.setTargetAtTime(Math.pow(s.sfx, 1.2) * 1.7, t, 0.05);
+    const mv = Math.pow(bgm, 1.4) * MUSIC_K * (A.muffled ? 0.62 : 1);
+    musicGain.gain.setTargetAtTime(mv, t, 0.08);
+    musicWetGain.gain.setTargetAtTime(mv, t, 0.08);
+    sfxGain.gain.setTargetAtTime(Math.pow(sfx, 1.2) * 1.7, t, 0.05);
   };
 
   // メニューを開いた時、音楽を少しこもらせる
   A.setMuffle = function (on) {
     A.muffled = on;
     if (!ctx) return;
-    musicLP.frequency.setTargetAtTime(on ? 1150 : 18000, ctx.currentTime, on ? 0.09 : 0.18);
+    const f = on ? 1150 : 18000, tc = on ? 0.09 : 0.18;
+    musicLP.frequency.setTargetAtTime(f, ctx.currentTime, tc);
+    musicWetLP.frequency.setTargetAtTime(f, ctx.currentTime, tc);
     A.applyVolumes();
-  };
-
-  // 夜になったら夜の曲へ、朝になったら昼の曲へ（ギルドにいるときだけ）
-  let homeDay = 'guild';
-  A.playHome = function (fade) { A.playTrack(A.night ? 'night' : homeDay, fade || 1.1); };
-  A.setNight = function (n) {
-    if (A.night === n) return;
-    A.night = n;
-    if (!ctx) { if (TRACKS[wantTrack] && TRACKS[wantTrack].home) wantTrack = n ? 'night' : homeDay; return; }
-    if (current && TRACKS[current.name].home && wantTrack === current.name) A.playHome(2.6);
   };
 
   // タブを離れたらふわっと消え、戻ったらふわっと戻る
@@ -160,166 +193,485 @@
     master.gain.cancelScheduledValues(t);
     master.gain.setValueAtTime(master.gain.value, t);
     master.gain.linearRampToValueAtTime(0, t + 0.35);
-    setTimeout(() => { if (document.hidden && ctx) ctx.suspend(); }, 420);
+    setTimeout(() => { if (document.hidden && ctx) { try { const p = ctx.suspend(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* noop */ } } }, 420);
   };
   A.resume = function () {
     if (!ctx) return;
-    ctx.resume().then(() => {
+    const go = () => {
+      if (!ctx) return;
       const t = ctx.currentTime;
       master.gain.cancelScheduledValues(t);
       master.gain.setValueAtTime(0, t);
       master.gain.linearRampToValueAtTime(1, t + 1.4);
-      if (current) current.resync();
-    });
+      try { if (current) current.resync(); if (A._old && A._old.alive) A._old.resync(); } catch (e) { report(e); }
+    };
+    const p = resumeCtx();
+    if (p && p.then) p.then(go, () => {});
+    else go();
   };
 
-  A._debug = () => ({ ctx, master, musicGain, sfxGain });
+  A._debug = () => ({ ctx, master, musicGain, musicIn, sfxGain, voices: VS.ends.length, INST });
 
-  // ---------------------------------------------------------------- instruments
-  function env(g, t, a, peak, d, sus, rel, end) {
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(peak, t + a);
-    if (d) g.gain.linearRampToValueAtTime(peak * sus, t + a + d);
-    g.gain.setValueAtTime(peak * sus, end);
-    g.gain.linearRampToValueAtTime(0.0001, end + rel);
+  // ---------------------------------------------------------------- 音源の部品
+  function mkPan(v) {
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = clamp(v, -1, 1); return p; }
+    return ctx.createGain();
   }
-
-  function whistle(t, m, dur, vol, dest) {
-    const f = mtof(m);
-    const o = ctx.createOscillator();
-    o.type = 'sine';
-    const o2 = ctx.createOscillator();
-    o2.type = 'sine';
-    const g2 = ctx.createGain();
-    g2.gain.value = 0.11;
-    const g = ctx.createGain();
-    o.frequency.setValueAtTime(f, t);
-    o2.frequency.setValueAtTime(f * 2, t);
-    // 装飾音（カット）: 一瞬上の音を鳴らしてから本来の音へ
-    if (dur > 0.26 && Math.random() < 0.2) {
-      o.frequency.setValueAtTime(mtof(m + 2), t);
-      o.frequency.setValueAtTime(f, t + 0.032);
-      o2.frequency.setValueAtTime(mtof(m + 2) * 2, t);
-      o2.frequency.setValueAtTime(f * 2, t + 0.032);
+  // 倍音の配合（PeriodicWave は AudioContext ごとに作る）
+  const WAVE_DEF = {
+    whistle: [1, 0.14, 0.06, 0.025, 0.012],
+    flute: [1, 0.34, 0.12, 0.05, 0.022, 0.01],
+    chanter: [1, 0.62, 0.92, 0.48, 0.66, 0.34, 0.42, 0.24, 0.24, 0.14, 0.12, 0.07, 0.06],
+    reed: [1, 0.78, 0.62, 0.5, 0.44, 0.36, 0.3, 0.25, 0.2, 0.16, 0.12, 0.09, 0.07, 0.05],
+    drone: [1, 0.3, 0.55, 0.18, 0.36, 0.12, 0.22, 0.08, 0.12, 0.05, 0.06],
+  };
+  const WAVES = new WeakMap();
+  function pwave(name) {
+    let w = WAVES.get(ctx);
+    if (!w) { w = {}; WAVES.set(ctx, w); }
+    if (!w[name]) {
+      const h = WAVE_DEF[name];
+      const re = new Float32Array(h.length + 1), im = new Float32Array(h.length + 1);
+      h.forEach((a, i) => { im[i + 1] = a; });
+      w[name] = ctx.createPeriodicWave(re, im);
     }
-    env(g, t, 0.022, vol, 0.08, 0.82, 0.06, t + dur * 0.92);
-    o.connect(g);
-    o2.connect(g2).connect(g);
-    g.connect(dest);
-    // ビブラート（長い音だけ、後からかかる）
-    if (dur > 0.34) {
-      const l = ctx.createOscillator();
-      l.frequency.value = 5.3 + Math.random() * 0.6;
-      const lg = ctx.createGain();
-      lg.gain.setValueAtTime(0, t);
-      lg.gain.linearRampToValueAtTime(0, t + 0.14);
-      lg.gain.linearRampToValueAtTime(f * 0.0075, t + dur * 0.85);
-      l.connect(lg);
-      lg.connect(o.frequency);
-      l.start(t);
-      l.stop(t + dur + 0.1);
+    return w[name];
+  }
+  // 1音ずつ作った音（弦・鉄琴・太鼓）のキャッシュ。AudioBuffer はどの AudioContext でも使える
+  const BUF = new Map();
+  function cached(key, make) {
+    let b = BUF.get(key);
+    if (!b) {
+      b = make();
+      BUF.set(key, b);
+      if (BUF.size > 240) BUF.delete(BUF.keys().next().value);
     }
-    // 息の音
-    const n = ctx.createBufferSource();
-    n.buffer = noiseBuf;
-    const bf = ctx.createBiquadFilter();
-    bf.type = 'bandpass';
-    bf.frequency.value = f * 1.6;
-    bf.Q.value = 0.9;
-    const ng = ctx.createGain();
-    ng.gain.setValueAtTime(vol * 0.32, t);
-    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-    n.connect(bf).connect(ng).connect(dest);
-    n.start(t, Math.random() * 1.5, 0.09);
-    o.start(t);
-    o2.start(t);
-    o.stop(t + dur + 0.12);
-    o2.stop(t + dur + 0.12);
+    return b;
+  }
+  function toBuffer(data, sr) {
+    const b = ctx.createBuffer(1, data.length, sr);
+    if (b.copyToChannel) b.copyToChannel(data, 0);
+    else b.getChannelData(0).set(data);
+    return b;
+  }
+  // ピークをそろえて、終わりをなめらかに消す
+  function finish(out, fadeFrac) {
+    let pk = 0;
+    for (let i = 0; i < out.length; i++) { const a = Math.abs(out[i]); if (a > pk) pk = a; }
+    const k = pk > 0 ? 0.95 / pk : 0;
+    const n = out.length, fade = Math.max(1, Math.floor(n * fadeFrac));
+    for (let i = 0; i < n; i++) out[i] *= i > n - fade ? (k * (n - i)) / fade : k;
   }
 
-  function harp(t, m, vol, dest, ring = 1.9) {
-    const f = mtof(m);
-    const o = ctx.createOscillator();
-    o.setPeriodicWave(harpWave);
-    o.frequency.value = f;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.Q.value = 0.6;
-    lp.frequency.setValueAtTime(Math.min(9000, f * 9), t);
-    lp.frequency.exponentialRampToValueAtTime(Math.max(500, f * 1.6), t + 0.45);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(vol, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(vol * 0.32, t + 0.22);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + ring);
-    o.connect(lp).connect(g).connect(dest);
-    o.start(t);
-    o.stop(t + ring + 0.05);
+  // ---- カープラス＝ストロング（はじく弦）
+  const KS = {
+    harp: { t60: (f) => clamp(3.6 - Math.log2(f / 98) * 0.7, 1.0, 3.6), bright: 0.42, pos: 0.27, cap: 2.4 },
+    guitar: { t60: (f) => clamp(2.6 - Math.log2(f / 98) * 0.5, 0.8, 2.6), bright: 0.62, pos: 0.17, cap: 1.6 },
+    bouz: { t60: (f) => clamp(2.2 - Math.log2(f / 110) * 0.4, 0.8, 2.2), bright: 0.85, pos: 0.12, cap: 1.5, dbl: 1.0035, oct: 1 },
+    bass: { t60: () => 2.2, bright: 0.28, pos: 0.2, cap: 1.8 },
+    pizz: { t60: () => 0.5, bright: 0.5, pos: 0.22, cap: 0.55 },
+  };
+  function ksString(out, sr, f, t60, P, amp) {
+    const p = sr / f;
+    const S = f > 400 ? clamp(0.5 - (f - 400) / 2400, 0.18, 0.5) : 0.5; // ループのフィルタ（高い弦ほど軽く）
+    let N = Math.floor(p - S), frac = p - S - N;
+    if (frac < 0.15) { N -= 1; frac += 1; }
+    if (N < 2) return;
+    const C = (1 - frac) / (1 + frac); // 端数の遅れはオールパスで（音程を正確に）
+    const line = new Float32Array(N);
+    let lp = 0;
+    const a = P.bright;
+    for (let i = 0; i < N; i++) { lp += a * (Math.random() * 2 - 1 - lp); line[i] = lp; }
+    const d = Math.max(1, Math.round(N * P.pos)); // はじく位置（櫛形フィルタ）
+    for (let i = N - 1; i >= d; i--) line[i] -= line[i - d];
+    let mean = 0;
+    for (let i = 0; i < N; i++) mean += line[i];
+    mean /= N;
+    for (let i = 0; i < N; i++) line[i] -= mean;
+    const rho = Math.pow(0.001, 1 / (f * t60));
+    const S1 = 1 - S;
+    let idx = 0, prev = 0, ax = 0, ay = 0;
+    for (let i = 0; i < out.length; i++) {
+      const cur = line[idx];
+      out[i] += cur * amp;
+      const lv = S1 * cur + S * prev;
+      prev = cur;
+      const y = C * lv + ax - C * ay;
+      ax = lv;
+      ay = y;
+      line[idx] = y * rho;
+      if (++idx === N) idx = 0;
+    }
   }
+  function renderKS(kind, m) {
+    const P = KS[kind], f = mtof(m);
+    const sr = f < 160 ? 16000 : f < 520 ? 22050 : 32000;
+    const t60 = P.t60(f);
+    const n = Math.max(256, Math.floor(Math.min(P.cap, t60 * 0.8 + 0.05) * sr));
+    const out = new Float32Array(n);
+    ksString(out, sr, f, t60, P, 1);
+    if (P.dbl) ksString(out, sr, f * P.dbl, t60, P, 0.7); // 複弦（少しずらしてうなり）
+    if (P.oct && f < 300) ksString(out, sr, f * 2.001, t60 * 0.8, P, 0.35); // 低い弦はオクターブ複弦
+    finish(out, 0.15);
+    return toBuffer(out, sr);
+  }
+  // ---- 鉄琴（グロッケン / チェレスタ）
+  const MALLET = {
+    glock: { p: [[1, 1, 1.9], [2.76, 0.3, 0.55], [5.4, 0.12, 0.2], [8.93, 0.05, 0.09]], att: 0.0015, click: 0.12, cap: 1.9 },
+    celesta: { p: [[1, 1, 1.3], [2, 0.2, 0.5], [3, 0.07, 0.22], [4.16, 0.05, 0.12]], att: 0.004, click: 0.04, cap: 1.4 },
+  };
+  function renderMallet(kind, m) {
+    const P = MALLET[kind], f = mtof(m), sr = 32000;
+    const n = Math.floor(P.cap * sr);
+    const out = new Float32Array(n);
+    for (const [r, a, t60] of P.p) {
+      const fr = f * r;
+      if (fr > sr * 0.45) continue;
+      const w = (2 * Math.PI * fr) / sr, c2 = 2 * Math.cos(w), k = Math.pow(0.001, 1 / (t60 * sr));
+      const ph = Math.random() * 6.28;
+      let y1 = Math.sin(ph - w), y2 = Math.sin(ph - 2 * w), env = a;
+      for (let i = 0; i < n; i++) {
+        const y = c2 * y1 - y2;
+        y2 = y1;
+        y1 = y;
+        out[i] += y * env;
+        env *= k;
+      }
+    }
+    const na = Math.floor(P.att * sr);
+    for (let i = 0; i < na; i++) out[i] *= i / na;
+    const nc = Math.floor(0.004 * sr);
+    for (let i = 0; i < nc; i++) out[i] += (Math.random() * 2 - 1) * P.click * (1 - i / nc);
+    finish(out, 0.2);
+    return toBuffer(out, sr);
+  }
+  // ---- 太鼓（バウロン：皮の音＋叩く音）とシェイカー
+  const DRUM = {
+    open: { f0: 128, f1: 64, gl: 0.07, dec: 0.4, tone: 1, ov: 0.22, nz: 0.55, nlp: 0.07, ndec: 0.035 },
+    mid: { f0: 205, f1: 120, gl: 0.04, dec: 0.17, tone: 0.9, ov: 0.18, nz: 0.5, nlp: 0.16, ndec: 0.026 },
+    top: { f0: 320, f1: 240, gl: 0.02, dec: 0.065, tone: 0.5, ov: 0.1, nz: 0.8, nlp: 0.5, ndec: 0.016 },
+    boom: { f0: 96, f1: 42, gl: 0.12, dec: 0.8, tone: 1, ov: 0.2, nz: 0.35, nlp: 0.045, ndec: 0.05 },
+    shk: { tone: 0, nz: 1, hp: 0.8, att: 0.012, ndec: 0.045 },
+    shk2: { tone: 0, nz: 1, hp: 0.8, att: 0.018, ndec: 0.075 },
+  };
+  function renderDrum(kind, v) {
+    const P = DRUM[kind], sr = 22050;
+    const len = Math.floor(((P.dec || 0) * 1.1 + P.ndec * 5 + (P.att || 0) + 0.02) * sr);
+    const out = new Float32Array(len);
+    const det = 1 + (v - 1) * 0.035;
+    if (P.tone) {
+      let ph = 0, ph2 = 0, env = P.tone;
+      const kd = Math.pow(0.001, 1 / (P.dec * sr));
+      for (let i = 0; i < len; i++) {
+        const t = i / sr;
+        const f = (P.f1 + (P.f0 - P.f1) * Math.exp(-t / P.gl)) * det;
+        ph += (2 * Math.PI * f) / sr;
+        ph2 += (2 * Math.PI * f * 1.59) / sr;
+        const a = i < 40 ? i / 40 : 1;
+        out[i] += (Math.sin(ph) + Math.sin(ph2) * P.ov * Math.exp(-t / (P.dec * 0.25))) * env * a;
+        env *= kd;
+      }
+    }
+    let lp = 0, x1 = 0, hp = 0;
+    for (let i = 0; i < len; i++) {
+      const t = i / sr;
+      const w = Math.random() * 2 - 1;
+      let s;
+      if (P.hp) { hp = P.hp * (hp + w - x1); x1 = w; s = hp * (0.7 + 0.3 * Math.random()); }
+      else { lp += P.nlp * (w - lp); s = (lp * 0.5) / Math.sqrt(P.nlp); }
+      const at = P.att || 0;
+      out[i] += s * P.nz * (at ? Math.min(1, t / at) : 1) * Math.exp(-Math.max(0, t - at) / P.ndec);
+    }
+    finish(out, 0.1);
+    return toBuffer(out, sr);
+  }
+  const drumBuf = (kind, v) => cached('dr:' + kind + v, () => renderDrum(kind, v));
 
-  function fiddle(t, m, dur, vol, dest) {
-    const f = mtof(m);
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.value = f;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 1900;
-    lp.Q.value = 0.8;
-    const pk = ctx.createBiquadFilter();
-    pk.type = 'peaking';
-    pk.frequency.value = 900;
-    pk.gain.value = 5;
-    const g = ctx.createGain();
-    env(g, t, 0.05, vol, 0.1, 0.85, 0.09, t + dur * 0.95);
+  // ---------------------------------------------------------------- 楽器
+  function cleanup(src, nodes) {
+    src.onended = () => { for (const n of nodes) { try { n.disconnect(); } catch (e) { /* noop */ } } };
+  }
+  // 装飾音：カット（上の音を一瞬）・タップ（下の音）・ロール（上・本・下・本）・スライド（下からずり上げ）
+  function setPitch(params, f, t, dur, ev) {
+    const orn = ev && ev.orn;
+    const gr = Math.min(0.034, dur * 0.22);
+    for (const p of params) {
+      if (orn === 'cut' && dur > 0.1) { p.setValueAtTime(mtof(ev.up), t); p.setValueAtTime(f, t + gr); }
+      else if (orn === 'tap' && dur > 0.1) { p.setValueAtTime(mtof(ev.dn), t); p.setValueAtTime(f, t + gr); }
+      else if (orn === 'slide' && dur > 0.2) { p.setValueAtTime(mtof(ev.dn), t); p.exponentialRampToValueAtTime(f, t + Math.min(0.14, dur * 0.3)); }
+      else {
+        p.setValueAtTime(f, t);
+        if (orn === 'roll' && dur > 0.24) {
+          const s = dur / 3;
+          p.setValueAtTime(mtof(ev.up), t + s - gr);
+          p.setValueAtTime(f, t + s);
+          p.setValueAtTime(mtof(ev.dn), t + 2 * s - gr);
+          p.setValueAtTime(f, t + 2 * s);
+        }
+      }
+    }
+  }
+  function vibrato(params, f, t, dur, end, depth, nodes) {
     const l = ctx.createOscillator();
-    l.frequency.value = 5.8;
+    l.frequency.value = 4.8 + Math.random();
     const lg = ctx.createGain();
-    lg.gain.value = f * 0.005;
-    l.connect(lg).connect(o.frequency);
-    o.connect(lp).connect(pk).connect(g).connect(dest);
-    o.start(t);
+    lg.gain.setValueAtTime(0, t);
+    lg.gain.setValueAtTime(0, t + 0.16);
+    lg.gain.linearRampToValueAtTime(f * depth, t + Math.min(dur, 0.8));
+    l.connect(lg);
+    for (const p of params) lg.connect(p);
     l.start(t);
-    o.stop(t + dur + 0.15);
-    l.stop(t + dur + 0.15);
+    l.stop(end);
+    nodes.push(l, lg);
   }
 
-  function bodhran(t, acc, vol, dest) {
+  // 笛（ホイッスル・フルート・チャンター）
+  function windNote(t, m, dur, vel, dest, ev, I) {
+    const f = mtof(m), end = t + Math.max(0.04, dur);
+    const leg = ev && ev.leg;
+    const att = I.wave === 'chanter' ? 0.01 : leg ? 0.014 : 0.026;
+    const rel = I.rel || 0.06;
     const o = ctx.createOscillator();
-    o.type = 'sine';
-    o.frequency.setValueAtTime(150, t);
-    o.frequency.exponentialRampToValueAtTime(54, t + 0.14);
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.linearRampToValueAtTime(vol * acc, t + 0.003);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
+    o.setPeriodicWave(pwave(I.wave));
+    const g = ctx.createGain(), gg = g.gain;
+    gg.setValueAtTime(0, t);
+    gg.linearRampToValueAtTime(vel, t + att);
+    if (dur > 0.5 && I.swell) { gg.linearRampToValueAtTime(vel * 0.8, t + att + 0.1); gg.linearRampToValueAtTime(vel * 0.95, t + dur * 0.6); }
+    else if (dur > 0.18) gg.linearRampToValueAtTime(vel * 0.84, t + att + 0.09);
+    gg.linearRampToValueAtTime(vel * 0.78, end);
+    gg.linearRampToValueAtTime(0, end + rel);
+    setPitch([o.frequency], f, t, dur, ev);
+    const nodes = [o, g];
+    if (I.vib && dur > 0.38) vibrato([o.frequency], f, t, dur, end + rel, I.vib, nodes);
+    if (I.breath) {
+      const n = ctx.createBufferSource();
+      n.buffer = noiseBuf;
+      n.loop = true;
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = Math.min(8000, f * 2.4);
+      bp.Q.value = 0.8;
+      const ng = ctx.createGain();
+      const b = vel * I.breath;
+      ng.gain.setValueAtTime(0, t);
+      ng.gain.linearRampToValueAtTime(b * (leg ? 0.45 : 1), t + 0.012);
+      // 短い音は吹き始めの「ふっ」だけ（軽くするため）、長い音は息の音がずっと続く
+      const held = dur > 0.34;
+      ng.gain.linearRampToValueAtTime(held ? b * 0.22 : 0, t + (held ? 0.07 : 0.08));
+      if (held) { ng.gain.setValueAtTime(b * 0.22, end); ng.gain.linearRampToValueAtTime(0, end + rel); }
+      n.connect(bp).connect(ng).connect(dest);
+      n.start(t, Math.random() * 1.6);
+      n.stop(held ? end + rel + 0.02 : t + 0.09);
+      nodes.push(n, bp, ng);
+    }
     o.connect(g).connect(dest);
     o.start(t);
-    o.stop(t + 0.35);
-    const n = ctx.createBufferSource();
-    n.buffer = noiseBuf;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = acc > 0.7 ? 700 : 1600;
-    const ng = ctx.createGain();
-    ng.gain.setValueAtTime(vol * 0.35 * acc, t);
-    ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-    n.connect(lp).connect(ng).connect(dest);
-    n.start(t, Math.random(), 0.06);
+    o.stop(end + rel + 0.02);
+    cleanup(o, nodes);
+    return end + rel;
   }
 
-  // ---------------------------------------------------------------- tunes
-  // ABC 記法のごく一部を読む。調号は曲ごと（既定はニ長調 F#, C#）。
-  const KEYS = { D: { F: 1, C: 1 }, G: { F: 1 }, C: {}, Dm: { B: -1 }, F: { B: -1 } };
+  // フィドル / チェロ：2本のノコギリ波を少しずらし、弓が弦をとらえるまでフィルタが開いていく
+  function fiddleNote(t, m, dur, vel, dest, ev, I) {
+    const f = mtof(m), end = t + Math.max(0.05, dur);
+    const leg = ev && ev.leg;
+    const att = I.cello ? 0.07 : leg ? 0.03 : 0.045;
+    const rel = I.cello ? 0.12 : 0.08;
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+    o1.type = 'sawtooth';
+    o2.type = 'sawtooth';
+    o1.detune.value = -4 - Math.random() * 3;
+    o2.detune.value = 4 + Math.random() * 3;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 0.7;
+    const top = Math.min(I.cello ? 2600 : 6500, f * (I.cello ? 7 : 10));
+    lp.frequency.setValueAtTime(Math.max(200, f * 1.6), t);
+    lp.frequency.linearRampToValueAtTime(top, t + att * 1.6);
+    if (dur > 0.25) lp.frequency.linearRampToValueAtTime(top * 0.72, end);
+    const g = ctx.createGain(), gg = g.gain, pk = vel * 0.5;
+    gg.setValueAtTime(0, t);
+    gg.linearRampToValueAtTime(pk, t + att);
+    if (dur > 0.3) gg.linearRampToValueAtTime(pk * 0.86, t + att + 0.12);
+    gg.linearRampToValueAtTime(pk * 0.8, end);
+    gg.linearRampToValueAtTime(0, end + rel);
+    setPitch([o1.frequency, o2.frequency], f, t, dur, ev);
+    const nodes = [o1, o2, lp, g];
+    if (I.vib && dur > 0.35) vibrato([o1.frequency, o2.frequency], f, t, dur, end + rel, I.vib, nodes);
+    o1.connect(lp);
+    o2.connect(lp);
+    lp.connect(g).connect(dest);
+    o1.start(t);
+    o2.start(t);
+    o1.stop(end + rel + 0.02);
+    o2.stop(end + rel + 0.02);
+    cleanup(o1, nodes);
+    return end + rel;
+  }
+
+  // アコーディオン：2枚のリードを少しずらして（ミュゼット）、ゆれる
+  function accNote(t, m, dur, vel, dest, ev) {
+    const f = mtof(m), end = t + Math.max(0.04, dur), rel = 0.05;
+    const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+    o1.setPeriodicWave(pwave('reed'));
+    o2.setPeriodicWave(pwave('reed'));
+    o1.detune.value = -9;
+    o2.detune.value = 10;
+    const g = ctx.createGain(), gg = g.gain, pk = vel * 0.5;
+    gg.setValueAtTime(0, t);
+    gg.linearRampToValueAtTime(pk, t + 0.022);
+    gg.linearRampToValueAtTime(pk * 0.9, end);
+    gg.linearRampToValueAtTime(0, end + rel);
+    setPitch([o1.frequency, o2.frequency], f, t, dur, ev);
+    o1.connect(g);
+    o2.connect(g);
+    g.connect(dest);
+    o1.start(t);
+    o2.start(t);
+    o1.stop(end + rel + 0.02);
+    o2.stop(end + rel + 0.02);
+    cleanup(o1, [o1, o2, g]);
+    return end + rel;
+  }
+
+  // はじく弦（キャッシュした1音を鳴らすだけ。dur があればそこで指で止める）
+  function pluckNote(t, m, dur, vel, dest, ev, I) {
+    const buf = cached('ks:' + I.ks + ':' + m, () => renderKS(I.ks, m));
+    return playBuf(buf, t, dur, vel, dest, I.damp || 0.12);
+  }
+  function malletNote(t, m, dur, vel, dest, ev, I) {
+    const buf = cached('ml:' + I.kind + ':' + m, () => renderMallet(I.kind, m));
+    return playBuf(buf, t, 0, vel, dest, 0);
+  }
+  function playBuf(buf, t, dur, vel, dest, damp) {
+    const s = ctx.createBufferSource();
+    s.buffer = buf;
+    const rate = 1 + (Math.random() - 0.5) * 0.0024;
+    s.playbackRate.value = rate;
+    const g = ctx.createGain();
+    let stop = t + buf.duration / rate;
+    g.gain.setValueAtTime(vel, t);
+    if (dur > 0 && t + dur + 0.02 < stop) {
+      g.gain.setValueAtTime(vel, t + dur);
+      g.gain.linearRampToValueAtTime(0, t + dur + damp);
+      stop = t + dur + damp + 0.01;
+    }
+    s.connect(g).connect(dest);
+    s.start(t);
+    s.stop(stop);
+    cleanup(s, [s, g]);
+    return stop;
+  }
+  function drumHit(t, kind, vel, dest) {
+    const buf = drumBuf(kind, Math.floor(Math.random() * 3));
+    const s = ctx.createBufferSource();
+    s.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.value = vel;
+    s.connect(g).connect(dest);
+    s.start(t);
+    cleanup(s, [s, g]);
+    return t + buf.duration;
+  }
+
+  // パッド：ずらしたノコギリ波を左右に分けて、ゆっくり開くローパスで
+  function padChord(t, ms, dur, vel, dL, dR) {
+    const end = t + dur, att = Math.min(1.4, dur * 0.4), rel = 1.6;
+    const nodes = [];
+    let first = null;
+    [[dL, -1], [dR, 1]].forEach(([dest, side]) => {
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.Q.value = 0.6;
+      lp.frequency.setValueAtTime(600, t);
+      lp.frequency.linearRampToValueAtTime(1500, t + att + 0.5);
+      lp.frequency.linearRampToValueAtTime(800, end + rel);
+      const g = ctx.createGain(), pk = vel / ms.length;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(pk, t + att);
+      g.gain.linearRampToValueAtTime(pk * 0.85, end);
+      g.gain.linearRampToValueAtTime(0, end + rel);
+      lp.connect(g).connect(dest);
+      nodes.push(lp, g);
+      for (const m of ms) {
+        const o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.value = mtof(m);
+        o.detune.value = side * (6 + Math.random() * 4);
+        o.connect(lp);
+        o.start(t);
+        o.stop(end + rel + 0.05);
+        nodes.push(o);
+        if (!first) first = o;
+      }
+    });
+    if (first) cleanup(first, nodes);
+    return end + rel;
+  }
+
+  // 楽器の表：音の出し方・移調(oct)・音量・定位・残響・EQ・装飾の可否・重さ(w)
+  const INST = {
+    wh: { play: windNote, wave: 'whistle', oct: 12, vol: 0.2, pan: 0.06, rev: 0.3, breath: 0.32, vib: 0.0045, orn: 2, w: 2, hum: 0.008, eq: [['highpass', 400, 0.7]] },
+    fl: { play: windNote, wave: 'flute', oct: 0, vol: 0.26, pan: -0.04, rev: 0.4, breath: 0.55, vib: 0.006, orn: 2, w: 2, swell: 1, rel: 0.09, hum: 0.01, range: [60, 81], eq: [['highpass', 180, 0.7], ['lowpass', 5000, 0.6]] },
+    pp: { play: windNote, wave: 'chanter', oct: 12, vol: 0.11, pan: 0.04, rev: 0.32, orn: 2, w: 1.5, hum: 0.006, eq: [['highpass', 260, 0.7], ['peaking', 1250, 1.1, 4], ['lowpass', 4600, 0.7]] },
+    fd: { play: fiddleNote, oct: 0, vol: 0.16, pan: -0.18, rev: 0.36, vib: 0.006, orn: 2, w: 2, hum: 0.01, range: [55, 79], eq: [['peaking', 480, 1.2, 3], ['peaking', 2700, 1.4, 4], ['lowpass', 7000, 0.6]] },
+    vc: { play: fiddleNote, cello: 1, oct: -12, vol: 0.18, pan: -0.3, rev: 0.4, vib: 0.005, orn: 0, w: 2, hum: 0.012, range: [38, 62], eq: [['peaking', 240, 1, 3], ['lowpass', 2800, 0.7]] },
+    ac: { play: accNote, oct: 0, vol: 0.09, pan: 0.26, rev: 0.26, orn: 1, w: 1.5, hum: 0.006, range: [53, 74], eq: [['peaking', 1300, 1, 3], ['lowpass', 3800, 0.7]] },
+    hp: { play: pluckNote, ks: 'harp', vol: 0.24, pan: -0.32, rev: 0.45, damp: 0.3, w: 0.5, hum: 0.006, eq: [['lowpass', 7500, 0.5]] },
+    gt: { play: pluckNote, ks: 'guitar', vol: 0.15, pan: 0.34, rev: 0.25, damp: 0.08, w: 0.5, hum: 0.004, eq: [['peaking', 180, 1, 2], ['lowpass', 6000, 0.6]] },
+    bz: { play: pluckNote, ks: 'bouz', vol: 0.13, pan: 0.38, rev: 0.25, damp: 0.07, w: 0.5, hum: 0.004, eq: [['highpass', 120, 0.7], ['peaking', 2400, 1, 3]] },
+    pz: { play: pluckNote, ks: 'pizz', vol: 0.3, pan: -0.12, rev: 0.3, damp: 0.06, w: 0.4, hum: 0.006, eq: [['peaking', 420, 1, 4], ['lowpass', 3800, 0.6]] },
+    bs: { play: pluckNote, ks: 'bass', vol: 0.36, pan: 0, rev: 0.1, damp: 0.12, w: 0.5, hum: 0.004, eq: [['lowpass', 1500, 0.7]] },
+    gl: { play: malletNote, kind: 'glock', oct: 24, vol: 0.1, pan: 0.42, rev: 0.5, w: 0.4, hum: 0.004 },
+    ce: { play: malletNote, kind: 'celesta', oct: 12, vol: 0.13, pan: 0.3, rev: 0.5, w: 0.4, hum: 0.004 },
+    pad: { vol: 0.07, rev: 0.6, w: 3 },
+    dr: { vol: 0.42, pan: 0.06, rev: 0.12, w: 0.4, hum: 0.003, eq: [['peaking', 90, 1, 2]] },
+    sh: { vol: 0.08, pan: -0.45, rev: 0.12, w: 0.3, hum: 0.004, eq: [['highpass', 2500, 0.7]] },
+    drone: { vol: 1, pan: 0, rev: 0.3 },
+  };
+  // 役割：L=主旋律 D=重ね H=ハーモニー C=対旋律 A/A2=伴奏 B=ベース P=パッド R=太鼓 K=シェイカー G=鉄琴のきらめき N=ドローン
+  const ROLE_PAN = { L: 0.04, D: -0.24, H: 0.3, C: -0.34 };
+  const ROLE_VOL = { L: 1, D: 0.55, H: 0.6, C: 0.62, A: 1, A2: 0.75, B: 1, P: 1, R: 1, K: 1, G: 1, N: 1 };
+  const ROLE_PRIO = { L: 3, B: 3, D: 2, H: 2, R: 2, A: 2, A2: 1, C: 1, P: 1, K: 1, G: 1 };
+
+  // 同時発音の上限（スマホ向け）。重さの合計で数え、混んだら目立たないパートから省く
+  let VS = { ends: [], w: [] };
+  const MAXW = 44;
+  function voiceOK(t, end, w, prio) {
+    const E = VS.ends, W = VS.w;
+    let tot = 0;
+    for (let i = E.length - 1; i >= 0; i--) {
+      if (E[i] < t) { E.splice(i, 1); W.splice(i, 1); } else tot += W[i];
+    }
+    if (prio < 3 && tot + w > MAXW + (prio === 2 ? 8 : 0)) return false;
+    E.push(end);
+    W.push(w);
+    return true;
+  }
+
+  // 効果音から使う楽器（昔の呼び方のまま）
+  function whistle(t, m, dur, vol, dest) { windNote(t, m, dur, vol, dest, null, INST.wh); }
+  function harp(t, m, vol, dest, ring = 1.9) { pluckNote(t, m, ring, vol, dest, null, INST.hp); }
+  function bodhran(t, acc, vol, dest) { drumHit(t, acc > 0.7 ? 'open' : 'mid', vol * acc, dest); }
+  function celesta(t, m, vol, dest) { malletNote(t, m, 0, vol, dest, null, INST.ce); }
+
+  // ---------------------------------------------------------------- 楽譜
+  // ABC 記法のごく一部を読む（1 = 8分音符、A2=4分、A/=16分、(3abc=3連符、, ' でオクターブ、^ = _ で臨時記号）
+  const KEYS = { D: { F: 1, C: 1 }, G: { F: 1 }, C: {}, F: { B: -1 }, A: { F: 1, C: 1, G: 1 }, Dm: { B: -1 }, Em: { F: 1 }, Am: {}, Bm: { F: 1, C: 1 } };
+  const SIG_TONIC = { D: 2, G: 7, C: 0, F: 5, A: 9, Dm: 5, Em: 7, Am: 0, Bm: 2 };
+  const scaleOf = (key) => new Set([0, 2, 4, 5, 7, 9, 11].map((x) => (x + (SIG_TONIC[key] || 0)) % 12));
   function parseABC(str, key) {
     const out = [];
-    const re = /(=|\^|_)?([A-Ga-gz])([,']*)(\d*)/g;
+    const re = /(\(3)|(=|\^|_)?([A-Ga-gz])([,']*)(\d*)(\/?)(\d*)/g;
     const base = { C: 60, D: 62, E: 64, F: 65, G: 67, A: 69, B: 71 };
-    const sig = KEYS[key || 'D'];
-    let m;
-    let t = 0;
+    const sig = KEYS[key || 'D'] || {};
+    let m, t = 0, trip = 0;
     while ((m = re.exec(str))) {
-      const acc = m[1], L = m[2], oct = m[3], len = m[4] ? parseInt(m[4], 10) : 1;
+      if (m[1]) { trip = 3; continue; }
+      const acc = m[2], L = m[3], oct = m[4];
+      let len = m[5] ? parseInt(m[5], 10) : 1;
+      if (m[6]) len /= m[7] ? parseInt(m[7], 10) : 2;
+      if (trip > 0) { len = (len * 2) / 3; trip--; }
       if (L === 'z') { t += len; continue; }
       const U = L.toUpperCase();
       let midi = base[U] + (L === U ? 0 : 12);
@@ -332,83 +684,349 @@
     }
     return { notes: out, len: t };
   }
-
-  const PC = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-  function chordNotes(name) {
-    const minor = /m$/.test(name);
-    let pc = PC[name[0]];
-    if (name[1] === '#') pc += 1;
-    else if (name[1] === 'b') pc -= 1;
-    if (pc < 0) pc += 12;
-    let root = 48 + pc;
-    if (root > 53) root -= 12;
-    return { root, fifth: root + 7, third: root + 12 + (minor ? 3 : 4), oct: root + 12 };
+  const PCN = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+  function chordInfo(name) {
+    const mm = /^([A-G])([#b]?)(m?)(7|5|sus4|sus2)?$/.exec(name);
+    if (!mm) return null;
+    const root = (PCN[mm[1]] + (mm[2] === '#' ? 1 : mm[2] === 'b' ? -1 : 0) + 12) % 12;
+    const minor = mm[3] === 'm', ext = mm[4];
+    let iv = ext === '5' ? [0, 7] : ext === 'sus4' ? [0, 5, 7] : ext === 'sus2' ? [0, 2, 7] : [0, minor ? 3 : 4, 7];
+    if (ext === '7') iv = iv.concat([10]);
+    return { name, root, minor, third: ext === '5' || (ext && ext[0] === 's') ? null : minor ? 3 : 4, pcs: iv.map((x) => (x + root) % 12) };
+  }
+  // 和音：配列（部品全体を等分）か 'D | G A | ...'（小節ごと、小節内は等分）
+  function parseChords(spec, len, bar) {
+    const segs = [];
+    if (Array.isArray(spec)) {
+      const cd = len / spec.length;
+      spec.forEach((n, k) => segs.push({ t: k * cd, d: cd, c: chordInfo(n) }));
+    } else {
+      spec.split('|').forEach((b, bi) => {
+        const toks = b.trim().split(/\s+/).filter(Boolean);
+        const cd = bar / toks.length;
+        toks.forEach((n, k) => segs.push({ t: bi * bar + k * cd, d: cd, c: chordInfo(n) }));
+      });
+    }
+    return segs;
+  }
+  const inRange = (pc, lo) => lo + ((((pc - lo) % 12) + 12) % 12); // lo 以上で一番低い pc の音
+  const near = (pc, tg) => { const d = ((((pc - tg) % 12) + 12) % 12); return d > 6 ? tg + d - 12 : tg + d; };
+  function scUp(m, sc) { for (let k = 1; k <= 3; k++) if (sc.has((m + k) % 12)) return m + k; return m + 2; }
+  function scDn(m, sc) { for (let k = 1; k <= 3; k++) if (sc.has((m - k + 120) % 12)) return m - k; return m - 2; }
+  function chordAt(P, t) { const ch = P.ch; for (let i = ch.length - 1; i >= 0; i--) if (ch[i].t <= t + 1e-6) return ch[i].c; return ch[0].c; }
+  function noteAt(notes, t) { let r = null; for (const n of notes) { if (n.t > t + 1e-6) break; if (n.t + n.d > t + 1e-6) r = n; } return r; }
+  // 同じ和音が続くところはつなげる（max を超える長さは区切る）
+  function mergeSegs(P, max) {
+    const out = [];
+    for (const s of P.ch) {
+      const l = out[out.length - 1];
+      if (l && l.c.name === s.c.name && (!max || l.d + s.d <= max + 1e-6)) l.d += s.d;
+      else out.push({ t: s.t, d: s.d, c: s.c });
+    }
+    return out;
+  }
+  function arpVoice(c, lo) {
+    const r = inRange(c.root, lo);
+    return [r, r + 7, r + 12, c.third != null ? r + 12 + c.third : r + 19, r + 19, r + 24];
+  }
+  function strumVoice(c, inst) {
+    const r = inRange(c.root, inst === 'bz' ? 45 : 43);
+    const th = c.third != null ? r + 12 + c.third : r + 19;
+    return inst === 'bz' ? [r, r + 7, r + 12, th] : [r, r + 7, r + 12, th, r + 19];
+  }
+  const closeVoice = (c, center) => c.pcs.slice(0, 3).map((pc) => near(pc, center)).sort((a, b) => a - b);
+  function harmPitch(m, c, sc) {
+    let best = null, bd = 1e9;
+    for (let p = m - 9; p <= m - 3; p++) {
+      if (!c.pcs.includes(((p % 12) + 12) % 12)) continue;
+      const d = Math.abs(p - (m - 4));
+      if (d < bd) { bd = d; best = p; }
+    }
+    return best == null ? scDn(scDn(m, sc), sc) : best;
   }
 
-  // 「灯りの酒場」6/8 ジグ（AABB）— このゲームのために作曲
+  // ---------------------------------------------------------------- 編曲
+  // 伴奏のパターン（位置は8分音符、拍子の「1小節の長さ/拍の長さ」ごと）
+  const STRUM = {
+    '6/3': [[0, 1, 1], [2, -1, 0.45], [3, 1, 0.8], [5, -1, 0.5]],
+    '9/3': [[0, 1, 1], [2, -1, 0.42], [3, 1, 0.75], [5, -1, 0.42], [6, 1, 0.78], [8, -1, 0.45]],
+    '8/2': [[0, 1, 1], [2, 1, 0.5], [3, -1, 0.42], [4, 1, 0.85], [6, 1, 0.5], [7, -1, 0.45]],
+    '6/2': [[0, 1, 1], [2, 1, 0.55], [4, 1, 0.55], [5, -1, 0.35]],
+  };
+  const OOM = { '6/3': { b: [0, 3], c: [2, 5] }, '9/3': { b: [0, 3, 6], c: [2, 5, 8] }, '8/2': { b: [0, 4], c: [2, 6] }, '6/2': { b: [0], c: [2, 4] } };
+  // バウロン [位置, 音, 強さ, 抜いてよい]
+  const DRUMS = {
+    jig: [[0, 'open', 1], [1, 'top', 0.22, 1], [2, 'top', 0.42], [3, 'mid', 0.78], [4, 'top', 0.22, 1], [5, 'top', 0.45]],
+    slip: [[0, 'open', 1], [1, 'top', 0.2, 1], [2, 'top', 0.4], [3, 'mid', 0.75], [4, 'top', 0.2, 1], [5, 'top', 0.4], [6, 'mid', 0.78], [7, 'top', 0.2, 1], [8, 'top', 0.42]],
+    reel: [[0, 'open', 1], [1, 'top', 0.3], [2, 'mid', 0.6], [3, 'top', 0.35], [4, 'open', 0.85], [5, 'top', 0.3], [6, 'mid', 0.62], [7, 'top', 0.45], [7.5, 'top', 0.2, 1]],
+    hp: [[0, 'open', 1], [2, 'mid', 0.55], [3, 'top', 0.4], [4, 'open', 0.85], [6, 'mid', 0.55], [7, 'top', 0.45], [5, 'top', 0.2, 1]],
+    polka: [[0, 'open', 1], [1, 'top', 0.35], [2, 'mid', 0.8], [3, 'top', 0.45], [4, 'open', 0.9], [5, 'top', 0.35], [6, 'mid', 0.8], [7, 'top', 0.45]],
+    march: [[0, 'boom', 1], [2, 'mid', 0.45], [4, 'open', 0.8], [6, 'mid', 0.45], [7, 'top', 0.35], [7.5, 'top', 0.3]],
+    waltz: [[0, 'open', 0.9], [2, 'top', 0.38], [4, 'top', 0.38], [5, 'top', 0.18, 1]],
+    heart: [[0, 'open', 1], [1, 'open', 0.5]],
+    boss: [[0, 'boom', 1], [1, 'top', 0.4], [2, 'mid', 0.7], [3, 'top', 0.45], [4, 'open', 0.9], [5, 'top', 0.4], [6, 'mid', 0.75], [7, 'mid', 0.6]],
+    creep: [[0, 'open', 0.9], [2, 'top', 0.5], [3, 'top', 0.25, 1], [4, 'mid', 0.7], [6, 'top', 0.5], [7, 'top', 0.3]],
+  };
+
+  function accent(def, t) {
+    const pb = ((t % def.bar) + def.bar) % def.bar;
+    if (pb < 1e-6) return 1;
+    if (Math.abs(pb % def.beat) < 1e-6) return 0.9;
+    return Math.abs(pb - Math.round(pb)) < 1e-6 ? 0.8 : 0.72;
+  }
+  function nt(t, d, i, r, m, v, orn, def) {
+    const e = { t, d, k: 'n', i, r, m, v };
+    if (orn) {
+      e.orn = orn;
+      e.up = i === 'fd' || i === 'ac' ? scUp(m, def.sc) : scUp(scUp(m, def.sc), def.sc);
+      e.dn = scDn(m, def.sc);
+    }
+    return e;
+  }
+  function ornFor(def, I, n, V) {
+    if (!I.orn) return null;
+    const r = Math.random();
+    const onBeat = Math.abs(n.t % def.beat) < 1e-6;
+    if (def.fast) {
+      if (n.d >= def.beat && I.orn > 1 && r < 0.28 + V * 0.4) return 'roll';
+      if (n.d >= 2 && r < 0.5 + V * 0.2) return 'cut';
+      if (onBeat && r < 0.1 + V * 0.18) return 'cut';
+      return null;
+    }
+    if (n.d >= 3 && I.orn > 1 && r < 0.22 + V * 0.2) return 'slide';
+    if (n.d >= 2 && r < 0.25 + V * 0.15) return 'cut';
+    return null;
+  }
+  // 変奏：長い音を経過音や刺繍音に割る（速い曲だけ）
+  function vary(notes, def, V) {
+    const out = [], sc = def.sc;
+    for (let i = 0; i < notes.length; i++) {
+      const n = notes[i], nx = notes[i + 1];
+      if (nx && Number.isInteger(n.d) && n.d >= 2 && n.d <= 4 && Math.abs(nx.t - n.t - n.d) < 1e-6 && Math.random() < V * 0.22) {
+        let tw = nx.m > n.m ? scUp(n.m, sc) : nx.m < n.m ? scDn(n.m, sc) : scUp(n.m, sc);
+        if (tw === nx.m) tw = nx.m > n.m ? scDn(n.m, sc) : scUp(n.m, sc);
+        if (n.d === 2) out.push({ t: n.t, d: 1, m: n.m }, { t: n.t + 1, d: 1, m: tw });
+        else if (n.d === 3 && Math.random() < 0.5) out.push({ t: n.t, d: 2, m: n.m }, { t: n.t + 2, d: 1, m: tw });
+        else if (n.d === 3) out.push({ t: n.t, d: 1, m: n.m }, { t: n.t + 1, d: 1, m: scUp(n.m, sc) }, { t: n.t + 2, d: 1, m: n.m });
+        else out.push({ t: n.t, d: 2, m: n.m }, { t: n.t + 2, d: 1, m: scUp(n.m, sc) }, { t: n.t + 3, d: 1, m: n.m });
+        continue;
+      }
+      out.push(n);
+    }
+    return out;
+  }
+
+  // 1つの部品（例: A を1回）を、編曲 sp に従ってイベント列にする
+  function genSection(def, P, sp, off, E, pass) {
+    const dyn = sp.dyn || 1, V = sp.V || 0;
+    const half = P.len / 2, notes = P.notes, bar = def.bar, nb = Math.round(P.len / bar);
+    const leadOct = sp.L ? INST[sp.L].oct : null;
+    E.push({ t: off, k: 'drone', v: sp.N != null ? sp.N : def.N != null ? def.N : 0.5 });
+    // 主旋律（装飾音つき）
+    if (sp.L) {
+      const mel = V > 0 && def.fast ? vary(notes, def, V) : notes;
+      let prev = null;
+      for (const n of mel) {
+        const inst = sp.L2 && n.t >= half ? sp.L2 : sp.L;
+        const I = INST[inst];
+        const e = nt(off + n.t, n.d, inst, 'L', n.m + I.oct, accent(def, n.t) * dyn, ornFor(def, I, n, V), def);
+        if (prev && Math.abs(prev.t + prev.d - n.t) < 1e-6 && Math.random() < 0.55) e.leg = 1;
+        E.push(e);
+        prev = n;
+      }
+    }
+    // 重ね（ユニゾン/オクターブ。装飾は別々に付くのでヘテロフォニーになる）
+    if (sp.D) {
+      const [inst, o] = sp.D.split(':');
+      const I = INST[inst], oc = o != null ? +o : I.oct;
+      for (const n of notes) E.push(nt(off + n.t, n.d, inst, 'D', n.m + oc, accent(def, n.t) * dyn, Math.random() < 0.3 ? ornFor(def, I, n, 0) : null, def));
+    }
+    // ハーモニー（3度下を和音の音で。速い曲は拍ごとの骨組みだけ）
+    if (sp.H) {
+      const I = INST[sp.H];
+      let last = null;
+      const push = (t, d, m, v) => {
+        if (last && last.m === m && Math.abs(last.t + last.d - t) < 1e-6) { last.d += d; return; }
+        last = nt(t, d, sp.H, 'H', m, v, null, def);
+        E.push(last);
+      };
+      if (def.fast) {
+        for (let b = 0; b < P.len - 1e-6; b += def.beat) {
+          const n = noteAt(notes, b);
+          if (!n) { last = null; continue; }
+          push(off + b, def.beat, harmPitch(n.m, chordAt(P, b), def.sc) + I.oct, 0.85 * dyn);
+        }
+      } else for (const n of notes) push(off + n.t, n.d, harmPitch(n.m, chordAt(P, n.t), def.sc) + I.oct, accent(def, n.t) * 0.9 * dyn);
+    }
+    // 対旋律（和音の音をなめらかにつなぐ、主旋律とぶつからない長い音）
+    if (sp.C) {
+      const I = INST[sp.C], [lo, hi] = I.range || [55, 76];
+      let prev = Math.round((lo + hi) / 2);
+      for (const s of mergeSegs(P, bar)) {
+        const n = noteAt(notes, s.t);
+        const lm = n && leadOct != null ? n.m + leadOct : null;
+        let best = null, bs = 1e9;
+        for (let p = lo; p <= hi; p++) {
+          if (!s.c.pcs.includes(p % 12)) continue;
+          let sc = Math.abs(p - prev) + (p === prev ? 1.5 : 0);
+          if (lm != null) {
+            const iv = Math.abs(lm - p) % 12;
+            if (iv === 0) sc += 3;
+            if (iv === 1 || iv === 2 || iv === 10 || iv === 11) sc += 6;
+            if (p > lm) sc += 4;
+          }
+          if (sc < bs) { bs = sc; best = p; }
+        }
+        if (best == null) continue;
+        E.push(nt(off + s.t, s.d, sp.C, 'C', best, 0.8 * dyn, null, def));
+        prev = best;
+      }
+    }
+    if (sp.A) accomp(def, P, sp.A, 'A', off, E, dyn, pass);
+    if (sp.A2) accomp(def, P, sp.A2, 'A2', off, E, dyn, pass);
+    if (sp.B) bassLine(def, P, sp.B, off, E, dyn);
+    if (sp.P) for (const s of mergeSegs(P)) E.push({ t: off + s.t, d: s.d, k: 'pad', i: 'pad', r: 'P', ms: closeVoice(s.c, 62), v: sp.P * dyn });
+    if (sp.R && DRUMS[sp.R]) {
+      for (let b = 0; b < nb; b++) {
+        const last = sp.F && b === nb - 1;
+        for (const [pos, kind, vel, ghost] of DRUMS[sp.R]) {
+          if (last && pos >= bar / 2) continue;
+          if (ghost && Math.random() < 0.4) continue;
+          E.push({ t: off + b * bar + pos, k: 'hit', i: 'dr', r: 'R', kind, v: vel * dyn });
+        }
+        if (last) { // 小節の後半をだんだん強くたたき込むフィル
+          const st = Math.ceil(bar / 2), step = def.fast ? 0.5 : 1, n = Math.round((bar - st) / step);
+          for (let k = 0; k < n; k++) E.push({ t: off + b * bar + st + k * step, k: 'hit', i: 'dr', r: 'R', kind: k === n - 1 ? 'open' : k % 2 ? 'mid' : 'top', v: (0.4 + (0.55 * k) / Math.max(1, n - 1)) * dyn });
+        }
+      }
+    }
+    if (sp.K) for (let u = 0; u < P.len; u++) { const on = u % def.beat === 0; E.push({ t: off + u, k: 'hit', i: 'sh', r: 'K', kind: on ? 'shk2' : 'shk', v: (on ? 0.9 : 0.55) * dyn }); }
+    if (sp.G) sparkle(def, P, sp.G, off, E, dyn);
+  }
+
+  function accomp(def, P, spec, role, off, E, dyn, pass) {
+    const [inst, pat] = spec.split(':');
+    const bar = def.bar, nb = Math.round(P.len / bar), key = bar + '/' + def.beat;
+    const push = (t, d, m, v, dt) => E.push({ t: off + t, d, k: 'n', i: inst, r: role, m, v: v * dyn, dt });
+    if (pat === 'arp' || pat === 'arp2') {
+      const step = pat === 'arp2' ? 2 : 1;
+      const seqs = pat === 'arp2' ? [[0, 2, 3, 2], [0, 3, 2, 4], [0, 1, 3, 2]] : def.beat === 3 ? [[0, 1, 2, 3, 2, 1, 0, 2, 4], [0, 2, 3, 4, 3, 2, 0, 3, 5]] : [[0, 1, 2, 3, 4, 3, 2, 1], [0, 2, 1, 3, 2, 4, 3, 1]];
+      const seq = seqs[(pass + Math.floor(Math.random() * 2)) % seqs.length];
+      for (const s of P.ch) {
+        const v = arpVoice(s.c, inst === 'hp' ? 43 : 45);
+        let k = 0;
+        for (let u = 0; u < s.d - 1e-6; u += step, k++) push(s.t + u, s.d - u + (k === 0 ? 3 : 1.5), v[seq[k % seq.length]], k === 0 ? 1 : 0.68);
+      }
+    } else if (pat === 'block') { // ゆっくり鳴らす分散和音（ジャラーン）
+      for (const s of mergeSegs(P)) {
+        const v = arpVoice(s.c, 43);
+        [v[0], v[1], v[3], v[5]].forEach((m, j) => push(s.t, s.d + 2, m, 1 - j * 0.12, j * 0.04));
+      }
+    } else if (pat === 'strum') { // かき鳴らし（ダウンは低い弦から、アップは高い弦から）
+      const pt = STRUM[key] || STRUM['8/2'];
+      for (let b = 0; b < nb; b++) {
+        for (let j = 0; j < pt.length; j++) {
+          const [pos, dir, vel] = pt[j];
+          const nx = j + 1 < pt.length ? pt[j + 1][0] : bar + pt[0][0];
+          const t = b * bar + pos;
+          let v = strumVoice(chordAt(P, t), inst);
+          if (dir < 0) v = v.slice(1).reverse();
+          v.forEach((m, q) => push(t, nx - pos + 0.2, m, vel * (dir < 0 ? 0.75 : 1) * (1 - q * 0.05), q * 0.011));
+        }
+      }
+    } else if (pat === 'oom') { // ブン・チャッ
+      const o = OOM[key] || OOM['8/2'];
+      const pz = inst === 'pz';
+      for (let b = 0; b < nb; b++) {
+        o.b.forEach((pos, j) => {
+          const t = b * bar + pos, c = chordAt(P, t);
+          let m = inRange(c.root, 40);
+          if (j % 2 === 1) m = m + 7 > 52 ? m - 5 : m + 7;
+          push(t, pz ? 1.2 : 1.6, m, j === 0 ? 1 : 0.85);
+        });
+        o.c.forEach((pos) => {
+          const t = b * bar + pos;
+          closeVoice(chordAt(P, t), 60).forEach((m, q) => push(t, pz ? 0.7 : 1.1, m, 0.55, q * 0.006));
+        });
+      }
+    }
+  }
+
+  function bassLine(def, P, spec, off, E, dyn) {
+    const [inst, pat] = spec.split(':');
+    const segs = pat === 'pedal' ? mergeSegs(P) : P.ch;
+    const push = (t, d, m, v) => E.push({ t: off + t, d, k: 'n', i: inst, r: 'B', m, v: v * dyn });
+    segs.forEach((s, i) => {
+      const nx = segs[i + 1] || segs[0];
+      const r = inRange(s.c.root, 38);
+      const fifth = r + 7 <= 50 ? r + 7 : r - 5;
+      if (pat === 'pedal') { push(s.t, s.d, r, 0.9); return; }
+      const nbeats = Math.round(s.d / def.beat);
+      if (nbeats >= 2) {
+        if (pat === 'walk' && nbeats === 4) {
+          const nr = inRange(nx.c.root, 38);
+          const ap = nr > r ? scDn(nr, def.sc) : scUp(nr, def.sc);
+          [[0, r], [2, fifth], [4, r + 12 <= 55 ? r + 12 : r], [6, ap]].forEach(([u, m], j) => push(s.t + u, 2, m, j === 0 ? 1 : 0.8));
+        } else if (def.bar === 6 && def.beat === 2) { push(s.t, 4, r, 1); push(s.t + 4, 2, fifth, 0.7); }
+        else { const hb = def.beat * Math.floor(nbeats / 2); push(s.t, hb, r, 1); push(s.t + hb, s.d - hb, fifth, 0.82); }
+      } else push(s.t, s.d, r, 1);
+    });
+  }
+
+  // 鉄琴：'sp' = 4小節ごとの終わりにきらめく分散和音、'dr' = 洞窟のしずくのようにぽつり
+  function sparkle(def, P, spec, off, E, dyn) {
+    const [inst, mode] = spec.split(':');
+    const bar = def.bar, nb = Math.round(P.len / bar), base = inst === 'gl' ? 84 : 76;
+    if (mode === 'dr') {
+      for (let b = 0; b < nb; b++) {
+        if (Math.random() > 0.55) continue;
+        const u = Math.floor(Math.random() * bar), c = chordAt(P, b * bar + u);
+        const pc = c.pcs[Math.floor(Math.random() * c.pcs.length)];
+        E.push({ t: off + b * bar + u, d: 6, k: 'n', i: inst, r: 'G', m: inRange(pc, base + Math.floor(Math.random() * 8)), v: 0.6 * dyn });
+      }
+      return;
+    }
+    for (let b = 3; b < nb; b += 4) {
+      const st = bar - 4, c = chordAt(P, b * bar + st);
+      const tones = [];
+      for (let p = base; tones.length < 4 && p < base + 30; p++) if (c.pcs.includes(p % 12)) tones.push(p);
+      tones.forEach((m, k) => E.push({ t: off + b * bar + st + k, d: 4, k: 'n', i: inst, r: 'G', m, v: (0.55 + k * 0.12) * dyn }));
+    }
+  }
+
+  // 1周分（pass）をイベント列にする。毎回作り直すので、装飾・変奏・伴奏の形が毎回少し違う
+  function compile(def, pass, night) {
+    const form = def.passes[pass % def.passes.length];
+    const E = [];
+    let off = 0;
+    for (const [pn, sp0] of form) {
+      const P = def.P[pn];
+      let sp = sp0 || {};
+      if (night && def.nightSoft) sp = Object.assign({}, sp, { R: 0, K: 0, F: 0, dyn: (sp.dyn || 1) * 0.85 });
+      genSection(def, P, sp, off, E, pass);
+      off += P.len;
+    }
+    E.sort((a, b) => a.t - b.t);
+    return { ev: E, len: off };
+  }
+
+  // ---------------------------------------------------------------- 曲（すべてこのゲームのために作曲）
+  // 「灯りの酒場」6/8 ジグ（ニ長調）
   const JIG_A = 'd2e f2d | e2c A2G | F2A d2f | e2d c2A | d2e f2g | a2f g2e | f2d e2c | d3 d2A';
+  const JIG_A2 = 'd2e f2d | e2c A2G | F2A d2f | e2d c2A | d2e f2g | a2f g2e | fdf ecA | d3 d2e';
   const JIG_B = 'fga b2a | g2e =c2e | fga b2a | ge=c d3 | fga b2a | g2b a2f | g2e f2d | ecA d3';
+  const JIG_B2 = 'fga b2a | g2e =c2e | fga b2a | ge=c d2e | fga bag | g2b a2f | gbg fed | ecA d3';
   const JIG_CH_A = ['D', 'D', 'A', 'A', 'D', 'D', 'A', 'A', 'D', 'D', 'D', 'G', 'D', 'A', 'D', 'D'];
   const JIG_CH_B = ['D', 'G', 'C', 'C', 'D', 'G', 'C', 'D', 'D', 'G', 'G', 'D', 'G', 'D', 'A', 'D'];
-
-  // 「草原を行け」4/4 リール（ホ・ドリア）— 冒険譚用
+  // 「草原を行け」4/4 リール（ホ・ドリア）
   const REEL_A = 'E2BE dEBE | G2AB dBAG | F2AF DFAF | d2cd BAFA | E2BE dEBE | G2AB d2ef | gfed BAFA | B2E2 E4';
   const REEL_B = 'e2Be geBe | f2df afdf | e2Be gefg | afdf e4 | e2Be geBe | f2af gfed | BdAF DEFA | B2E2 E4';
   const REEL_CH_A = ['Em', 'Em', 'G', 'G', 'D', 'D', 'D', 'Bm', 'Em', 'Em', 'G', 'D', 'Em', 'D', 'Em', 'Em'];
   const REEL_CH_B = ['Em', 'Em', 'D', 'D', 'Em', 'Em', 'D', 'Em', 'Em', 'Em', 'D', 'G', 'G', 'D', 'Em', 'Em'];
-
-  const HARP_PAT = {
-    6: (c) => [[0, c.root, 1], [1, c.fifth, 0.72], [2, c.third, 0.72]],
-    4: (c) => [[0, c.root, 1], [1, c.fifth, 0.72], [2, c.oct, 0.72], [3, c.third, 0.72]],
-    3: (c) => [[0, c.root, 1], [1, c.fifth, 0.7], [2, c.oct, 0.7], [3, c.third, 0.75], [4, c.oct, 0.62], [5, c.fifth, 0.55]],
-  };
-  const DRUM_PAT = {
-    6: (e) => (e === 0 ? [1] : e === 3 ? [0.7] : e === 5 || e === 2 ? [0.32, 1] : null),
-    4: (e) => (e % 2 === 0 ? [e === 0 ? 1 : e === 4 ? 0.8 : 0.5] : [0.25, 1]),
-    3: (e) => (e === 0 ? [1] : e === 2 || e === 4 ? [0.42, 1] : null),
-  };
-  function buildTune(def) {
-    const A1 = parseABC(def.A, def.key), B1 = parseABC(def.B, def.key);
-    const events = [];
-    const bar = def.bar; // 1小節の8分音符数
-    const beat = def.beat || (def.meter === 6 ? 3 : def.meter === 3 ? 2 : 4);
-    const harpPat = def.harpPat || HARP_PAT[def.meter];
-    const drumPat = def.drumPat || DRUM_PAT[def.meter];
-    let off = 0;
-    const parts = [
-      [A1, def.chA, 0],
-      [A1, def.chA, 1],
-      [B1, def.chB, 0],
-      [B1, def.chB, 1],
-    ];
-    parts.forEach(([p, ch, rep], pi) => {
-      p.notes.forEach((n) => {
-        const beatAcc = n.t % beat === 0 ? 1 : 0.82;
-        events.push({ t: off + n.t, d: n.d, m: n.m, i: 'mel', acc: beatAcc, part: pi, rep });
-      });
-      const cd = p.len / ch.length; // 和音1つの長さ
-      ch.forEach((name, k) => {
-        const c = chordNotes(name);
-        const t0 = off + k * cd;
-        harpPat(c, cd).forEach(([o, m, acc]) => { if (o < cd) events.push({ t: t0 + o, m, i: 'harp', acc, part: pi }); });
-      });
-      const bars = p.len / bar;
-      for (let b = 0; b < bars; b++) {
-        for (let e = 0; e < bar; e++) {
-          const d = drumPat(e, b);
-          if (d) events.push({ t: off + b * bar + e, i: 'drum', acc: d[0], ghost: !!d[1] });
-        }
-      }
-      off += p.len;
-    });
-    events.sort((a, b) => a.t - b.t);
-    return { events, len: off };
-  }
-
-  // 「市場の朝」2/4 ポルカ（ト長調）— 昼のギルド・2曲目
+  // 「市場の朝」ポルカ（ト長調、2/4 を2小節ずつ）
   const POLKA_A = 'd2 B2 G2 B2 | dcBA G2 D2 | E2 F2 G2 A2 | B2 A2 G2 E2 | d2 B2 G2 B2 | dcBA G2 B2 | A2 F2 D2 F2 | G4 G2 z2';
   const POLKA_B = 'g2 fe d2 B2 | c2 e2 A2 c2 | B2 dB G2 B2 | A2 cA F2 A2 | g2 fe d2 B2 | c2 e2 A2 c2 | B2 G2 A2 F2 | G4 G2 z2';
-  // 「星降る窓辺」3/4 スロー・エア（ト長調）— 夜のギルド
+  // 「星降る窓辺」3/4 スロー・エア（ト長調）
   const AIR_A = 'D2 G2 A2 | B3 A G2 | E2 D2 E2 | G4 A2 | B2 d2 B2 | A3 G E2 | D2 E2 G2 | G6';
   const AIR_B = 'd2 e2 d2 | B3 A G2 | A2 B2 d2 | e4 d2 | g3 f e2 | d3 B A2 | B2 A2 F2 | G6';
   // 「ささやきの森のジグ」6/8（ホ短調）
@@ -423,330 +1041,602 @@
   // 「竜の背を越えて」4/4 リール（イ・ドリア）
   const PEAK_A = 'A2eA fAeA | G2dG BGdG | A2eA fAea | gedB A4 | A2eA fAeA | G2dG BGdG | cBcd eage | dBGB A4';
   const PEAK_B = 'a2ea fa e2 | g2dg bg d2 | a2ea faea | gedB A4 | e2ae f2ef | g2fg a2ga | bagf gfed | edBG A4';
-  // 「潮騒のホーンパイプ」4/4（ニ長調）— 潮風の港
+  // 「潮騒のホーンパイプ」4/4（ニ長調）
   const HARBOR_A = 'A3G F3G | A2d2 d3c | B3A G3F | E2A2 A3G | F3G A3B | c2e2 e3d | c3B A3G | F2D2 D4';
   const HARBOR_B = 'd3e f3e | d2f2 a3f | g3f e3d | c2e2 e3c | d3e f3g | a2f2 d3B | A3F G3E | D2F2 D4';
-  // 「天空の回廊」3/4（ハ長調）— 天空城
+  // 「天空の回廊」3/4（ハ長調）
   const SKY_A = 'E2 G2 c2 | e4 d2 | c2 B2 A2 | G6 | F2 A2 c2 | f4 e2 | d2 c2 B2 | c6';
   const SKY_B = 'g2 e2 c2 | d4 G2 | A2 B2 c2 | d6 | e2 f2 g2 | a4 g2 | f2 e2 d2 | c6';
-  // 「深淵の螺旋」6/8（ホ短調）— 深淵の迷宮
+  // 「深淵の螺旋」6/8（ホ短調）
   const ABYSS_A = 'E3 B3 | A2G F2E | D3 A3 | G2F E3 | E3 B3 | c2B A2G | F2G A2F | E6';
   const ABYSS_B = 'e3 d3 | B2c d2B | A3 G3 | F2G A3 | e3 g3 | f2e d2B | c2B A2F | E6';
-  // 「紅蓮の竜王」4/4（ニ短調）— ボス戦
+  // 「紅蓮の竜王」4/4（ニ短調）
   const BOSS_A = 'd2 Ad fdAd | c2 Gc ecGc | B2 FB dBFB | A2 ^CE A4 | d2 Ad fdAd | c2 Gc ecGc | B2 dB A2 ^c2 | d4 D4';
   const BOSS_B = 'f2 ef gfed | e2 de fedc | d2 cd edcB | ^c2 A2 E2 A2 | f2 ef gfed | e2 de fedc | dcBA B2 ^c2 | d8';
+  // 「ギルドの灯」3/4 メインテーマ（ニ長調）— タイトル画面
+  const THEME_A = 'D2 F2 A2 | d4 cd | B2 A2 G2 | A4 F2 | G2 B2 d2 | g4 fe | f2 d2 B2 | A6';
+  const THEME_A2 = 'D2 F2 A2 | d4 cd | B2 A2 G2 | A4 F2 | G2 B2 d2 | g4 fe | f2 d2 c2 | d6';
+  const THEME_B = 'B2 c2 d2 | e4 dc | d2 e2 f2 | g4 fe | a4 gf | g2 e2 =c2 | d2 B2 G2 | A6';
+  // 「麦穂のスリップジグ」9/8（ト長調）— 昼のギルド・3曲目
+  const SLIP_A = 'G2B d2B c2A | B2G A2F D3 | G2B d2g e2d | c2e d2B A3 | G2B d2B c2A | B2d g2e d2B | c2A B2G A2F | A2F G3 G3';
+  const SLIP_A2 = 'G2B d2B c2A | B2G A2F D3 | G2B d2g e2d | c2e d2B A3 | G2B d2B c2A | B2d g2e d2B | c2A B2G A2F | A2F G3 G2d';
+  const SLIP_B = 'd2g g2f g2a | b2g a2f d3 | e2g f2a g2e | d2B c2A B2d | d2g g2f g2a | b2a g2f e2d | c2A B2G A2F | A2F G3 G3';
+  const SLIP_B2 = 'd2g g2f g2a | b2g a2f d3 | e2g f2a g2e | d2B c2A B2d | d2g g2f g2a | b2a g2f e2d | c2A B2G A2F | A2F G3 G2D';
+  // 「月影の子守歌」4/4 スロー・エア（ホ短調）— 夜のギルド・2曲目
+  const LULL_A = 'E2 G2 B3 A | G2 F2 D4 | E2 G2 B2 d2 | e6 d2 | B2 d2 e3 d | B2 A2 G4 | A2 B2 G2 F2 | E8';
+  const LULL_B = 'e3 f g2 e2 | d3 B A2 G2 | A2 B2 c2 e2 | d6 B2 | e3 f g2 b2 | a3 g f2 d2 | e2 B2 d2 F2 | E8';
+  // 「かぼちゃ灯籠の行進」4/4 スウィング（イ短調）— 10月のイベント
+  const PUMP_A = 'A,2 C2 E2 ^D E | A2 E2 C2 A,2 | D2 F2 A2 ^G A | B2 ^G2 E4 | A,2 C2 E2 ^D E | F2 A2 c2 B A | F2 D2 B,2 ^G,2 | A,2 ^G, A, z4';
+  const PUMP_B = 'e2 c2 G2 c2 | d2 B2 G2 B2 | c2 A2 E2 A2 | B2 ^G2 E2 ^G2 | A2 c2 f3 e | d2 A2 F2 D2 | E2 ^G2 B2 d2 | c2 B2 A2 z2';
 
+  // 編曲の記号 — L:主旋律 L2:後半の主旋律 D:重ね('楽器:移調') H:ハーモニー C:対旋律 A/A2:伴奏('楽器:型')
+  //   B:ベース('楽器:型') P:パッド R:太鼓 K:シェイカー G:鉄琴('gl:sp'|'ce:sp'|'gl:dr') N:ドローン F:最後の小節にフィル V:変奏 dyn:強さ
+  //   楽器: wh ホイッスル / fl フルート / pp パイプ / fd フィドル / vc チェロ / ac アコーディオン / hp ハープ /
+  //         gt ギター / bz ブズーキ / pz ピチカート / bs ベース / gl グロッケン / ce チェレスタ
   const TRACKS = {
+    theme: {
+      title: '♪ ギルドの灯 — メインテーマ', key: 'D', meter: '3/4', bpm: 84, drone: [38, 50], N: 0.4, lvl: 1,
+      parts: { I: 'z6 | z6 | z6 | z4 A,2', A: THEME_A, A2: THEME_A2, B: THEME_B, T: 'z6 | z6' },
+      chords: { I: 'D | G | Bm | A', A: 'D | Bm | G | D | G | Em | Bm | A', A2: 'D | Bm | G | D | G | Em | D D A | D', B: 'G | A | Bm | Em | D | C | G | A', T: 'D | D' },
+      passes: [
+        [
+          ['I', { L: 'fl', A: 'hp:arp2', P: 0.8, N: 0.5 }],
+          ['A', { L: 'fl', A: 'hp:arp2', P: 1, N: 0.5 }],
+          ['A2', { L: 'wh', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.8 }],
+          ['B', { L: 'fd', H: 'wh', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', P: 0.6, R: 'waltz', G: 'gl:sp', dyn: 0.95 }],
+          ['A', { L: 'wh', D: 'fd:0', H: 'ac', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', R: 'waltz', K: 1, P: 0.5 }],
+          ['A2', { L: 'wh', D: 'fd:0', H: 'ac', C: 'vc', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', R: 'waltz', K: 1, G: 'ce:sp', P: 0.5 }],
+          ['T', { A: 'hp:block', P: 1, N: 0.6 }],
+        ],
+        [
+          ['A', { L: 'fd', A: 'hp:arp2', P: 1, N: 0.5 }],
+          ['A2', { L: 'fl', H: 'fd', A: 'hp:arp', B: 'bs:pedal', P: 0.8 }],
+          ['B', { L: 'wh', H: 'fd', C: 'vc', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', R: 'waltz', G: 'ce:sp', P: 0.5 }],
+          ['A2', { L: 'wh', D: 'fd:0', H: 'ac', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', R: 'waltz', K: 1, P: 0.5 }],
+          ['T', { A: 'hp:block', P: 1, N: 0.6 }],
+        ],
+      ],
+    },
     guild: {
-      A: JIG_A, B: JIG_B, chA: JIG_CH_A, chB: JIG_CH_B, bar: 6, meter: 6, rotate: 2,
-      bpm: 86, // 付点四分 = 86
-      drone: [38, 45],
-      arrange(pass, night) {
-        if (night) return { mel: 0.075, harp: 0.11, fid: 0, drum: 0, drone: 0.018, tempo: 0.86 };
-        return [
-          { mel: 0.1, harp: 0.12, fid: 0, drum: 0, drone: 0.022, tempo: 1 },
-          { mel: 0.1, harp: 0.11, fid: 0.03, drum: 0.2, drone: 0.024, tempo: 1 },
-          { mel: 0.065, harp: 0.13, fid: 0, drum: 0.16, drone: 0.02, tempo: 1 },
-          { mel: 0.1, harp: 0.11, fid: 0.035, drum: 0.22, drone: 0.026, tempo: 1 },
-        ][pass % 4];
-      },
+      title: '♪ 灯りの酒場 — ギルド楽団', home: true, rotate: 2, key: 'D', meter: '6/8', bpm: 92, swing: 0.07, fast: true, drone: [38, 45], N: 0.45,
+      parts: { I: 'z6 | z3 z2A', A: JIG_A, A2: JIG_A2, B: JIG_B, B2: JIG_B2 },
+      chords: { I: 'D | G A', A: JIG_CH_A, A2: JIG_CH_A, B: JIG_CH_B, B2: JIG_CH_B },
+      passes: [
+        [
+          ['I', { L: 'wh', A: 'hp:arp', N: 0.5 }],
+          ['A', { L: 'wh', A: 'hp:arp', B: 'bs:root', V: 0.2 }],
+          ['A2', { L: 'wh', D: 'fd:0', A: 'hp:arp', A2: 'bz:strum', B: 'bs:root', R: 'jig', V: 0.4 }],
+          ['B', { L: 'fd', H: 'wh', A: 'bz:strum', B: 'bs:root', R: 'jig', K: 1 }],
+          ['B2', { L: 'wh', D: 'fd:0', H: 'ac', A: 'bz:strum', A2: 'hp:arp', B: 'bs:root', R: 'jig', K: 1, F: 1, V: 0.5 }],
+        ],
+        [
+          ['A', { L: 'ac', A: 'gt:strum', B: 'bs:root', R: 'jig', dyn: 0.9 }],
+          ['A2', { L: 'ac', D: 'wh', A: 'gt:strum', A2: 'hp:arp', B: 'bs:root', R: 'jig', K: 1, V: 0.4 }],
+          ['B', { L: 'wh', L2: 'fd', A: 'hp:arp', B: 'bs:root', P: 0.4, dyn: 0.9 }],
+          ['B2', { L: 'fd', D: 'wh', H: 'ac', C: 'vc', A: 'bz:strum', B: 'bs:root', R: 'jig', K: 1, G: 'gl:sp', F: 1, V: 0.5 }],
+        ],
+      ],
     },
-    reels: {
-      A: REEL_A, B: REEL_B, chA: REEL_CH_A, chB: REEL_CH_B, bar: 8, meter: 4,
-      bpm: 104 * 2, // 8分音符 = 208
-      drone: [40, 47],
-      arrange(pass) {
-        return [
-          { mel: 0.085, harp: 0.11, fid: 0, drum: 0.2, drone: 0.016, tempo: 1 },
-          { mel: 0.09, harp: 0.1, fid: 0.03, drum: 0.22, drone: 0.018, tempo: 1 },
-        ][pass % 2];
-      },
-    },
-  };
-  Object.assign(TRACKS, {
     guild2: {
-      title: '♪ 市場の朝 — ギルド楽団', home: true, rotate: 2,
-      A: POLKA_A, B: POLKA_B, key: 'G', bar: 8, meter: 4, beat: 2,
-      chA: ['G', 'G', 'D', 'G', 'C', 'D', 'G', 'Em', 'G', 'G', 'D', 'G', 'D', 'D', 'G', 'G'],
-      chB: ['G', 'G', 'C', 'Am', 'G', 'G', 'D', 'D', 'G', 'G', 'C', 'Am', 'G', 'D', 'G', 'G'],
-      bpm: 236, drone: [43, 50],
-      // ブン・チャッ（低い音と和音を交互に）
-      harpPat: (c) => [[0, c.root, 1], [2, c.third, 0.6], [2, c.fifth + 12, 0.42], [3, c.oct, 0.35]],
-      drumPat: (e) => (e % 4 === 0 ? [1] : e % 4 === 2 ? [0.55] : [0.22, 1]),
-      arrange(pass) {
-        return [
-          { mel: 0.09, harp: 0.11, fid: 0, drum: 0.17, drone: 0.012, tempo: 1 },
-          { mel: 0.09, harp: 0.1, fid: 0.03, drum: 0.2, drone: 0.014, tempo: 1 },
-        ][pass % 2];
+      title: '♪ 市場の朝 — ギルド楽団', home: true, rotate: 2, key: 'G', meter: '4/4', bpm: 118, swing: 0.04, fast: true, drone: [43, 50], N: 0.3,
+      parts: { I: 'z8 | z6 D2', A: POLKA_A, B: POLKA_B },
+      chords: {
+        I: 'G | D',
+        A: ['G', 'G', 'D', 'G', 'C', 'D', 'G', 'Em', 'G', 'G', 'D', 'G', 'D', 'D', 'G', 'G'],
+        B: ['G', 'G', 'C', 'Am', 'G', 'G', 'D', 'D', 'G', 'G', 'C', 'Am', 'G', 'D', 'G', 'G'],
       },
+      passes: [
+        [
+          ['I', { L: 'wh', A: 'ac:oom' }],
+          ['A', { L: 'wh', A: 'ac:oom', R: 'polka', V: 0.2, dyn: 0.9 }],
+          ['A', { L: 'wh', H: 'fd', A: 'ac:oom', R: 'polka', K: 1, V: 0.3 }],
+          ['B', { L: 'fd', A: 'gt:oom', R: 'polka', G: 'gl:sp' }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', A: 'gt:oom', R: 'polka', K: 1, F: 1, V: 0.4 }],
+        ],
+        [
+          ['A', { L: 'ac', A: 'gt:oom', R: 'polka', dyn: 0.9 }],
+          ['A', { L: 'ac', D: 'fd:0', A: 'gt:oom', A2: 'hp:arp', R: 'polka', K: 1, V: 0.3 }],
+          ['B', { L: 'wh', A: 'hp:arp', B: 'bs:root', dyn: 0.85 }],
+          ['B', { L: 'fd', D: 'wh', H: 'ac', A: 'gt:oom', R: 'polka', K: 1, F: 1, G: 'gl:sp' }],
+        ],
+      ],
+    },
+    guild3: {
+      title: '♪ 麦穂のスリップジグ — ギルド楽団', home: true, rotate: 2, key: 'G', meter: '9/8', bpm: 112, swing: 0.07, fast: true, drone: [43, 50], N: 0.45,
+      parts: { I: 'z9 | z6 z2D', A: SLIP_A, A2: SLIP_A2, B: SLIP_B, B2: SLIP_B2 },
+      chords: {
+        I: 'G | D',
+        A: 'G | G D D | G G C | C G D | G | G Em G | C G D | D G G',
+        A2: 'G | G D D | G G C | C G D | G | G Em G | C G D | D G G',
+        B: 'G | G D D | C D Em | G D G | G | G Em C | C G D | D G G',
+        B2: 'G | G D D | C D Em | G D G | G | G Em C | C G D | D G G',
+      },
+      passes: [
+        [
+          ['I', { L: 'fl', A: 'hp:arp' }],
+          ['A', { L: 'fl', A: 'hp:arp', B: 'bs:root', V: 0.2 }],
+          ['A2', { L: 'fl', H: 'fd', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', R: 'slip' }],
+          ['B', { L: 'wh', A: 'gt:strum', B: 'bs:root', R: 'slip', K: 1, V: 0.3 }],
+          ['B2', { L: 'wh', D: 'fl:0', H: 'fd', A: 'gt:strum', A2: 'hp:arp', B: 'bs:root', R: 'slip', K: 1, G: 'gl:sp', F: 1 }],
+        ],
+        [
+          ['A', { L: 'fd', A: 'hp:arp', P: 0.5, dyn: 0.85 }],
+          ['A2', { L: 'fd', D: 'wh', A: 'gt:strum', B: 'bs:root', R: 'slip', V: 0.4 }],
+          ['B', { L: 'ac', H: 'fl', A: 'hp:arp', B: 'bs:root', R: 'slip' }],
+          ['B2', { L: 'fd', D: 'wh', H: 'ac', C: 'vc', A: 'gt:strum', B: 'bs:root', R: 'slip', K: 1, F: 1, V: 0.5 }],
+        ],
+      ],
     },
     night: {
-      title: '♪ 星降る窓辺 — ギルド楽団', home: true,
-      A: AIR_A, B: AIR_B, key: 'G', bar: 6, meter: 3,
-      chA: ['G', 'G', 'Em', 'C', 'G', 'Am', 'D', 'G'],
-      chB: ['G', 'Em', 'D', 'C', 'Em', 'G', 'D', 'G'],
-      bpm: 128, drone: [43, 50],
-      arrange(pass) {
-        return [
-          { mel: 0.07, harp: 0.12, fid: 0, drum: 0, drone: 0.014, tempo: 1 },
-          { mel: 0.05, lead: 'fid', harp: 0.11, fid: 0, drum: 0, drone: 0.016, tempo: 0.97 },
-          { mel: 0.065, harp: 0.13, fid: 0.022, drum: 0, drone: 0.014, tempo: 1 },
-        ][pass % 3];
+      title: '♪ 星降る窓辺 — ギルド楽団', home: true, rotate: 1, key: 'G', meter: '3/4', bpm: 64, drone: [43, 50], N: 0.35,
+      parts: { I: 'z6 | z6', A: AIR_A, B: AIR_B, T: 'z6 | z6' },
+      chords: { I: 'G | C', A: ['G', 'G', 'Em', 'C', 'G', 'Am', 'D', 'G'], B: ['G', 'Em', 'D', 'C', 'Em', 'G', 'D', 'G'], T: 'G | G' },
+      passes: [
+        [
+          ['I', { A: 'hp:arp2', P: 0.9 }],
+          ['A', { L: 'fl', A: 'hp:arp2', P: 1 }],
+          ['B', { L: 'fl', C: 'vc', A: 'hp:arp2', P: 1 }],
+          ['A', { L: 'fd', H: 'fl', A: 'hp:arp2', B: 'bs:pedal', P: 0.8 }],
+          ['B', { L: 'fl', H: 'fd', A: 'hp:arp2', B: 'bs:pedal', G: 'ce:sp', P: 0.8 }],
+          ['T', { A: 'hp:block', P: 1 }],
+        ],
+      ],
+    },
+    night2: {
+      title: '♪ 月影の子守歌 — ギルド楽団', home: true, rotate: 1, key: 'G', meter: '4/4', bpm: 62, drone: [40, 52], N: 0.35,
+      parts: { I: 'z8 | z8', A: LULL_A, B: LULL_B, T: 'z8 | z8' },
+      chords: {
+        I: 'Em | C',
+        A: 'Em | D | Em G | C | G Em | Em D G G | D G G D | Em',
+        B: 'C | G D | Am C | G | C Em | D | Em D | Em',
+        T: 'Em | Em',
       },
+      passes: [
+        [
+          ['I', { A: 'hp:block', P: 1 }],
+          ['A', { L: 'fl', A: 'hp:arp2', P: 1 }],
+          ['B', { L: 'fl', C: 'vc', A: 'hp:arp2', P: 1 }],
+          ['A', { L: 'fd', H: 'fl', A: 'hp:arp2', B: 'bs:pedal', P: 0.8 }],
+          ['B', { L: 'fl', H: 'fd', A: 'hp:arp2', B: 'bs:pedal', G: 'ce:sp', P: 0.9 }],
+          ['T', { A: 'hp:block', P: 1 }],
+        ],
+      ],
+    },
+    halloween: {
+      title: '♪ かぼちゃ灯籠の行進 — ギルド楽団', home: true, rotate: 1, nightSoft: true, key: 'Am', meter: '4/4', bpm: 112, swing: 0.16, fast: true, drone: [45, 52], N: 0.3,
+      parts: { I: 'z8 | z8', A: PUMP_A, B: PUMP_B },
+      chords: { I: 'Am | E7', A: 'Am | Am | Dm | E | Am | F | E7 | Am', B: 'C | G | Am | E | F | Dm | E7 | Am' },
+      passes: [
+        [
+          ['I', { A: 'pz:oom', G: 'gl:sp' }],
+          ['A', { L: 'gl', A: 'pz:oom', R: 'creep', dyn: 0.75 }],
+          ['A', { L: 'wh', D: 'gl', A: 'pz:oom', R: 'creep', K: 1 }],
+          ['B', { L: 'ac', A: 'pz:oom', R: 'creep', K: 1 }],
+          ['B', { L: 'fd', D: 'gl', H: 'ac', A: 'pz:oom', R: 'creep', K: 1, F: 1 }],
+        ],
+        [
+          ['A', { L: 'fd', A: 'pz:oom', R: 'creep', dyn: 0.85 }],
+          ['A', { L: 'ac', D: 'gl', H: 'fd', A: 'pz:oom', R: 'creep', K: 1 }],
+          ['B', { L: 'wh', A: 'pz:oom', A2: 'hp:arp', R: 'creep' }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', A: 'pz:oom', G: 'gl:sp', R: 'creep', K: 1, F: 1 }],
+        ],
+      ],
+    },
+    reels: {
+      title: '♪ 草原を行け — ギルド楽団', key: 'D', meter: '4/4', bpm: 104, swing: 0.06, fast: true, drone: [40, 47], N: 0.4,
+      parts: { I: 'z8 | z8', A: REEL_A, B: REEL_B },
+      chords: { I: 'Em | D', A: REEL_CH_A, B: REEL_CH_B },
+      passes: [
+        [
+          ['I', { A: 'bz:strum', R: 'reel', dyn: 0.75 }],
+          ['A', { L: 'wh', A: 'bz:strum', B: 'bs:root', R: 'reel' }],
+          ['A', { L: 'wh', D: 'fd:0', A: 'bz:strum', A2: 'hp:arp', B: 'bs:root', R: 'reel', V: 0.4 }],
+          ['B', { L: 'fd', H: 'wh', A: 'bz:strum', B: 'bs:walk', R: 'reel', K: 1 }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', A: 'bz:strum', B: 'bs:walk', R: 'reel', K: 1, F: 1, V: 0.5 }],
+        ],
+        [
+          ['A', { L: 'fd', A: 'gt:strum', B: 'bs:root', dyn: 0.85 }],
+          ['A', { L: 'fd', D: 'wh', A: 'gt:strum', B: 'bs:root', R: 'reel', V: 0.4 }],
+          ['B', { L: 'ac', H: 'fd', A: 'hp:arp', B: 'bs:root', R: 'reel', K: 1 }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', C: 'vc', A: 'bz:strum', B: 'bs:walk', R: 'reel', K: 1, F: 1, G: 'gl:sp' }],
+        ],
+      ],
     },
     forest: {
-      title: '♪ ささやきの森のジグ — ギルド楽団',
-      A: FJIG_A, B: FJIG_B, key: 'G', bar: 6, meter: 6,
-      chA: ['Em', 'Em', 'Em', 'G', 'D', 'D', 'D', 'D', 'Em', 'Em', 'Em', 'C', 'D', 'D', 'Em', 'Em'],
-      chB: ['Em', 'C', 'D', 'Bm', 'Em', 'Em', 'G', 'D', 'Em', 'C', 'D', 'G', 'D', 'Em', 'B', 'Em'],
-      bpm: 100, drone: [40, 47],
-      arrange(pass) {
-        return [
-          { mel: 0.085, harp: 0.11, fid: 0, drum: 0.18, drone: 0.018, tempo: 1 },
-          { mel: 0.09, harp: 0.1, fid: 0.032, drum: 0.21, drone: 0.02, tempo: 1 },
-        ][pass % 2];
+      title: '♪ ささやきの森のジグ — ギルド楽団', key: 'G', meter: '6/8', bpm: 100, swing: 0.07, fast: true, drone: [40, 47], N: 0.5,
+      parts: { I: 'z6 | z6', A: FJIG_A, B: FJIG_B },
+      chords: {
+        I: 'Em | D',
+        A: ['Em', 'Em', 'Em', 'G', 'D', 'D', 'D', 'D', 'Em', 'Em', 'Em', 'C', 'D', 'D', 'Em', 'Em'],
+        B: ['Em', 'C', 'D', 'Bm', 'Em', 'Em', 'G', 'D', 'Em', 'C', 'D', 'G', 'D', 'Em', 'B', 'Em'],
       },
+      passes: [
+        [
+          ['I', { A: 'hp:arp', G: 'ce:sp', N: 0.6 }],
+          ['A', { L: 'fl', A: 'hp:arp', B: 'bs:root', P: 0.4, G: 'ce:sp' }],
+          ['A', { L: 'wh', A: 'hp:arp', A2: 'bz:strum', B: 'bs:root', R: 'jig', V: 0.3 }],
+          ['B', { L: 'fd', H: 'fl', A: 'bz:strum', B: 'bs:root', R: 'jig', K: 1 }],
+          ['B', { L: 'wh', D: 'fd:0', A: 'bz:strum', A2: 'hp:arp', B: 'bs:root', R: 'jig', K: 1, G: 'gl:sp', F: 1, V: 0.4 }],
+        ],
+        [
+          ['A', { L: 'fd', A: 'hp:arp', P: 0.5, dyn: 0.85 }],
+          ['A', { L: 'fd', D: 'wh', A: 'gt:strum', B: 'bs:root', R: 'jig', V: 0.4 }],
+          ['B', { L: 'wh', H: 'fd', A: 'gt:strum', B: 'bs:root', R: 'jig', K: 1 }],
+          ['B', { L: 'fl', D: 'fd:0', C: 'vc', A: 'bz:strum', A2: 'hp:arp', B: 'bs:root', R: 'jig', K: 1, F: 1, G: 'ce:sp' }],
+        ],
+      ],
     },
     cave: {
-      title: '♪ こだまの底で — ギルド楽団',
-      A: CAVE_A, B: CAVE_B, key: 'Dm', bar: 6, meter: 3,
-      chA: ['Dm', 'Gm', 'Dm', 'A', 'Dm', 'Dm', 'Gm', 'A'],
-      chB: ['Dm', 'Gm', 'Dm', 'A', 'Dm', 'Gm', 'A', 'Dm'],
-      bpm: 150, drone: [38, 45],
-      // 心臓の音のような太鼓
-      drumPat: (e) => (e === 0 ? [1] : e === 1 ? [0.5] : null),
-      arrange(pass) {
-        return [
-          { mel: 0.06, lead: 'fid', harp: 0.13, fid: 0, drum: 0.15, drone: 0.03, tempo: 1 },
-          { mel: 0.07, harp: 0.12, fid: 0.026, drum: 0.17, drone: 0.03, tempo: 1 },
-        ][pass % 2];
-      },
+      title: '♪ こだまの底で — ギルド楽団', key: 'Dm', meter: '3/4', bpm: 75, drone: [38, 45], N: 0.9, droneLP: 700,
+      parts: { I: 'z6 | z6', A: CAVE_A, B: CAVE_B },
+      chords: { I: 'Dm | A', A: ['Dm', 'Gm', 'Dm', 'A', 'Dm', 'Dm', 'Gm', 'A'], B: ['Dm', 'Gm', 'Dm', 'A', 'Dm', 'Gm', 'A', 'Dm'] },
+      passes: [
+        [
+          ['I', { P: 1, N: 1, G: 'gl:dr' }],
+          ['A', { L: 'fd', A: 'hp:arp2', P: 0.9, R: 'heart', G: 'gl:dr' }],
+          ['A', { L: 'fl', C: 'vc', A: 'hp:arp2', P: 0.8, R: 'heart' }],
+          ['B', { L: 'fd', H: 'fl', A: 'hp:arp', B: 'bs:pedal', P: 0.8, R: 'heart', G: 'gl:dr' }],
+          ['B', { L: 'fd', D: 'fl:0', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.7, R: 'heart' }],
+        ],
+        [
+          ['A', { L: 'fl', A: 'hp:arp2', P: 1, G: 'gl:dr', N: 1 }],
+          ['A', { L: 'fd', C: 'vc', A: 'hp:arp2', B: 'bs:pedal', P: 0.8, R: 'heart' }],
+          ['B', { L: 'pp', A: 'hp:arp2', P: 0.9, R: 'heart', G: 'gl:dr' }],
+          ['B', { L: 'fd', H: 'fl', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.7, R: 'heart' }],
+        ],
+      ],
     },
     castle: {
-      title: '♪ 灰の城の行進 — ギルド楽団',
-      A: MARCH_A, B: MARCH_B, key: 'D', bar: 8, meter: 4,
-      chA: ['Bm', 'Bm', 'F#', 'Bm', 'Bm', 'A', 'D', 'D', 'Bm', 'Bm', 'Bm', 'F#', 'G', 'A', 'Bm', 'Bm'],
-      chB: ['Bm', 'Bm', 'G', 'Em', 'A', 'A', 'D', 'D', 'Bm', 'Bm', 'G', 'Em', 'G', 'A', 'Bm', 'Bm'],
-      bpm: 200, drone: [35, 42],
-      // 行進の太鼓：ドン・タ・ドン・タ、小節の終わりに小さな連打
-      drumPat: (e) => (e === 0 ? [1] : e === 4 ? [0.85] : e % 2 === 0 ? [0.55] : e === 7 ? [0.4] : [0.18, 1]),
-      arrange(pass) {
-        return [
-          { mel: 0.085, harp: 0.1, fid: 0.02, drum: 0.26, drone: 0.02, tempo: 1 },
-          { mel: 0.08, harp: 0.11, fid: 0.035, drum: 0.28, drone: 0.022, tempo: 1 },
-        ][pass % 2];
+      title: '♪ 灰の城の行進 — ギルド楽団', key: 'D', meter: '4/4', bpm: 100, drone: [35, 47, 54], N: 0.8, droneLvl: 1.1,
+      parts: { I: 'z8 | z8', A: MARCH_A, B: MARCH_B },
+      chords: {
+        I: 'Bm | F#',
+        A: ['Bm', 'Bm', 'F#', 'Bm', 'Bm', 'A', 'D', 'D', 'Bm', 'Bm', 'Bm', 'F#', 'G', 'A', 'Bm', 'Bm'],
+        B: ['Bm', 'Bm', 'G', 'Em', 'A', 'A', 'D', 'D', 'Bm', 'Bm', 'G', 'Em', 'G', 'A', 'Bm', 'Bm'],
       },
+      passes: [
+        [
+          ['I', { R: 'march', N: 1, dyn: 0.85 }],
+          ['A', { L: 'pp', B: 'bs:root', R: 'march', N: 1 }],
+          ['A', { L: 'pp', D: 'fd:0', C: 'vc', A: 'hp:arp', B: 'bs:root', R: 'march' }],
+          ['B', { L: 'fd', H: 'ac', C: 'vc', B: 'bs:root', R: 'march', P: 0.4 }],
+          ['B', { L: 'pp', D: 'fd:0', H: 'ac', C: 'vc', A: 'bz:strum', B: 'bs:walk', R: 'march', F: 1 }],
+        ],
+        [
+          ['A', { L: 'fd', A: 'hp:arp', B: 'bs:root', R: 'march', dyn: 0.8 }],
+          ['A', { L: 'wh', D: 'fd:0', A: 'bz:strum', B: 'bs:root', R: 'march' }],
+          ['B', { L: 'pp', C: 'vc', B: 'bs:root', R: 'march', N: 1 }],
+          ['B', { L: 'pp', D: 'fd:0', H: 'ac', C: 'vc', A: 'bz:strum', B: 'bs:walk', R: 'march', F: 1 }],
+        ],
+      ],
     },
     peak: {
-      title: '♪ 竜の背を越えて — ギルド楽団',
-      A: PEAK_A, B: PEAK_B, key: 'G', bar: 8, meter: 4,
-      chA: ['Am', 'D', 'G', 'G', 'Am', 'D', 'G', 'Am', 'Am', 'D', 'G', 'G', 'C', 'Am', 'G', 'Am'],
-      chB: ['Am', 'D', 'G', 'G', 'Am', 'D', 'G', 'Am', 'Am', 'D', 'G', 'Am', 'Em', 'G', 'G', 'Am'],
-      bpm: 232, drone: [45, 52],
-      arrange(pass) {
-        return [
-          { mel: 0.085, harp: 0.1, fid: 0, drum: 0.22, drone: 0.016, tempo: 1 },
-          { mel: 0.085, harp: 0.1, fid: 0.035, drum: 0.25, drone: 0.018, tempo: 1 },
-        ][pass % 2];
+      title: '♪ 竜の背を越えて — ギルド楽団', key: 'G', meter: '4/4', bpm: 116, swing: 0.06, fast: true, drone: [45, 52], N: 0.4,
+      parts: { I: 'z8 | z8', A: PEAK_A, B: PEAK_B },
+      chords: {
+        I: 'Am | G',
+        A: ['Am', 'D', 'G', 'G', 'Am', 'D', 'G', 'Am', 'Am', 'D', 'G', 'G', 'C', 'Am', 'G', 'Am'],
+        B: ['Am', 'D', 'G', 'G', 'Am', 'D', 'G', 'Am', 'Am', 'D', 'G', 'Am', 'Em', 'G', 'G', 'Am'],
       },
+      passes: [
+        [
+          ['I', { A: 'bz:strum', R: 'reel', dyn: 0.8 }],
+          ['A', { L: 'wh', A: 'bz:strum', B: 'bs:root', R: 'reel' }],
+          ['A', { L: 'wh', D: 'fd:0', A: 'bz:strum', B: 'bs:walk', R: 'reel', V: 0.4 }],
+          ['B', { L: 'fd', H: 'wh', A: 'bz:strum', A2: 'hp:arp', B: 'bs:root', R: 'reel', K: 1 }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', A: 'bz:strum', B: 'bs:walk', R: 'reel', K: 1, F: 1, G: 'gl:sp' }],
+        ],
+        [
+          ['A', { L: 'ac', A: 'gt:strum', B: 'bs:root', R: 'reel', dyn: 0.9 }],
+          ['A', { L: 'fd', D: 'ac:0', A: 'gt:strum', B: 'bs:root', R: 'reel', K: 1, V: 0.3 }],
+          ['B', { L: 'fl', H: 'fd', A: 'hp:arp', B: 'bs:root', P: 0.5 }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', C: 'vc', A: 'bz:strum', B: 'bs:walk', R: 'reel', K: 1, F: 1 }],
+        ],
+      ],
     },
     harbor: {
-      title: '♪ 潮騒のホーンパイプ — ギルド楽団',
-      A: HARBOR_A, B: HARBOR_B, key: 'D', bar: 8, meter: 4,
-      chA: ['D', 'D', 'D', 'A', 'G', 'D', 'A', 'A', 'D', 'G', 'A', 'A', 'A', 'Em', 'D', 'D'],
-      chB: ['D', 'D', 'D', 'D', 'G', 'D', 'A', 'A', 'D', 'G', 'D', 'Bm', 'D', 'A', 'D', 'D'],
-      bpm: 188, drone: [38, 45],
-      drumPat: (e) => (e === 0 ? [1] : e === 4 ? [0.8] : e % 2 === 0 ? [0.5] : e === 3 || e === 7 ? [0.3, 1] : null),
-      arrange(pass) {
-        return [
-          { mel: 0.085, harp: 0.11, fid: 0.02, drum: 0.2, drone: 0.016, tempo: 1 },
-          { mel: 0.085, harp: 0.1, fid: 0.035, drum: 0.22, drone: 0.018, tempo: 1 },
-        ][pass % 2];
+      title: '♪ 潮騒のホーンパイプ — ギルド楽団', key: 'D', meter: '4/4', bpm: 92, swing: 0.28, fast: true, drone: [38, 45], N: 0.35,
+      parts: { I: 'z8 | z8', A: HARBOR_A, B: HARBOR_B },
+      chords: {
+        I: 'D | A',
+        A: ['D', 'D', 'D', 'A', 'G', 'D', 'A', 'A', 'D', 'G', 'A', 'A', 'A', 'Em', 'D', 'D'],
+        B: ['D', 'D', 'D', 'D', 'G', 'D', 'A', 'A', 'D', 'G', 'D', 'Bm', 'D', 'A', 'D', 'D'],
       },
+      passes: [
+        [
+          ['I', { A: 'ac:oom', R: 'hp', dyn: 0.8 }],
+          ['A', { L: 'ac', A: 'gt:oom', R: 'hp' }],
+          ['A', { L: 'ac', D: 'wh', A: 'gt:strum', B: 'bs:root', R: 'hp', K: 1, V: 0.3 }],
+          ['B', { L: 'wh', H: 'ac', A: 'gt:strum', B: 'bs:root', R: 'hp' }],
+          ['B', { L: 'fd', D: 'wh', H: 'ac', A: 'gt:strum', B: 'bs:walk', R: 'hp', K: 1, F: 1, G: 'gl:sp' }],
+        ],
+        [
+          ['A', { L: 'wh', A: 'hp:arp', B: 'bs:root', dyn: 0.9 }],
+          ['A', { L: 'fd', D: 'ac:0', A: 'gt:strum', B: 'bs:root', R: 'hp', V: 0.3 }],
+          ['B', { L: 'ac', A: 'gt:oom', R: 'hp', K: 1 }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', C: 'vc', A: 'gt:strum', B: 'bs:walk', R: 'hp', K: 1, F: 1 }],
+        ],
+      ],
     },
     sky: {
-      title: '♪ 天空の回廊 — ギルド楽団',
-      A: SKY_A, B: SKY_B, key: 'C', bar: 6, meter: 3,
-      chA: ['C', 'C', 'Am', 'G', 'F', 'F', 'G', 'C'],
-      chB: ['C', 'G', 'F', 'G', 'C', 'F', 'G', 'C'],
-      bpm: 156, drone: [36, 43],
-      arrange(pass) {
-        return [
-          { mel: 0.08, harp: 0.13, fid: 0.025, drum: 0.1, drone: 0.016, tempo: 1 },
-          { mel: 0.07, lead: 'fid', harp: 0.13, fid: 0, drum: 0.12, drone: 0.018, tempo: 1 },
-        ][pass % 2];
-      },
+      title: '♪ 天空の回廊 — ギルド楽団', key: 'C', meter: '3/4', bpm: 78, drone: [36, 43], N: 0.3,
+      parts: { I: 'z6 | z6', A: SKY_A, B: SKY_B },
+      chords: { I: 'C | G', A: ['C', 'C', 'Am', 'G', 'F', 'F', 'G', 'C'], B: ['C', 'G', 'F', 'G', 'C', 'F', 'G', 'C'] },
+      passes: [
+        [
+          ['I', { A: 'hp:arp', P: 1, G: 'ce:sp' }],
+          ['A', { L: 'fl', A: 'hp:arp', P: 1, G: 'ce:sp' }],
+          ['A', { L: 'wh', C: 'fd', A: 'hp:arp', B: 'bs:pedal', P: 0.8, R: 'waltz', dyn: 0.9 }],
+          ['B', { L: 'fd', H: 'wh', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', P: 0.7, R: 'waltz', G: 'gl:sp' }],
+          ['B', { L: 'wh', D: 'fd:0', C: 'vc', A: 'hp:arp', B: 'bs:root', P: 0.7, R: 'waltz', K: 1, G: 'ce:sp' }],
+        ],
+        [
+          ['A', { L: 'ce', A: 'hp:arp2', P: 1 }],
+          ['A', { L: 'fl', D: 'gl:12', A: 'hp:arp', B: 'bs:pedal', P: 0.8 }],
+          ['B', { L: 'wh', H: 'fl', C: 'vc', A: 'hp:arp', A2: 'gt:strum', B: 'bs:root', P: 0.7, R: 'waltz', K: 1 }],
+          ['B', { L: 'fd', D: 'wh', H: 'ac', A: 'hp:arp', B: 'bs:root', P: 0.7, R: 'waltz', G: 'gl:sp' }],
+        ],
+      ],
     },
     abyss: {
-      title: '♪ 深淵の螺旋 — ギルド楽団',
-      A: ABYSS_A, B: ABYSS_B, key: 'G', bar: 6, meter: 6,
-      chA: ['Em', 'Em', 'Am', 'B', 'D', 'D', 'G', 'Em', 'Em', 'Em', 'C', 'Am', 'D', 'B', 'Em', 'Em'],
-      chB: ['Em', 'D', 'G', 'G', 'Am', 'G', 'D', 'D', 'Em', 'Em', 'D', 'G', 'Am', 'B', 'Em', 'Em'],
-      bpm: 66, drone: [40, 47],
-      drumPat: (e) => (e === 0 ? [1] : e === 1 ? [0.45] : null),
-      arrange(pass) {
-        return [
-          { mel: 0.06, lead: 'fid', harp: 0.13, fid: 0, drum: 0.14, drone: 0.032, tempo: 1 },
-          { mel: 0.065, harp: 0.12, fid: 0.024, drum: 0.16, drone: 0.034, tempo: 1 },
-        ][pass % 2];
+      title: '♪ 深淵の螺旋 — ギルド楽団', key: 'G', meter: '6/8', bpm: 66, swing: 0.05, drone: [40, 47], N: 1, droneLP: 650, droneLvl: 1.15,
+      parts: { I: 'z6 | z6', A: ABYSS_A, B: ABYSS_B },
+      chords: {
+        I: 'Em | B',
+        A: ['Em', 'Em', 'Am', 'B', 'D', 'D', 'G', 'Em', 'Em', 'Em', 'C', 'Am', 'D', 'B', 'Em', 'Em'],
+        B: ['Em', 'D', 'G', 'G', 'Am', 'G', 'D', 'D', 'Em', 'Em', 'D', 'G', 'Am', 'B', 'Em', 'Em'],
       },
+      passes: [
+        [
+          ['I', { P: 1, G: 'gl:dr' }],
+          ['A', { L: 'fd', A: 'hp:arp2', P: 1, R: 'heart' }],
+          ['A', { L: 'fl', C: 'vc', A: 'hp:arp', P: 0.9, R: 'heart', G: 'gl:dr' }],
+          ['B', { L: 'fd', H: 'fl', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.8, R: 'heart' }],
+          ['B', { L: 'pp', D: 'fd:0', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.8, R: 'heart', G: 'gl:dr' }],
+        ],
+        [
+          ['A', { L: 'pp', A: 'hp:arp2', P: 1, G: 'gl:dr' }],
+          ['A', { L: 'fd', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.9, R: 'heart' }],
+          ['B', { L: 'fl', H: 'fd', A: 'hp:arp2', P: 1, R: 'heart', G: 'gl:dr' }],
+          ['B', { L: 'fd', D: 'fl:0', C: 'vc', A: 'hp:arp', B: 'bs:pedal', P: 0.8, R: 'heart' }],
+        ],
+      ],
     },
     boss: {
-      title: '♪ 紅蓮の竜王 — ギルド楽団',
-      A: BOSS_A, B: BOSS_B, key: 'Dm', bar: 8, meter: 4,
-      chA: ['Dm', 'Dm', 'C', 'C', 'Bb', 'Bb', 'A', 'A', 'Dm', 'Dm', 'C', 'C', 'Bb', 'A', 'Dm', 'Dm'],
-      chB: ['Dm', 'Gm', 'C', 'F', 'Bb', 'Gm', 'A', 'A', 'Dm', 'Gm', 'C', 'F', 'Gm', 'A', 'Dm', 'Dm'],
-      bpm: 240, drone: [38, 45],
-      drumPat: (e) => (e % 4 === 0 ? [1] : e % 2 === 0 ? [0.75] : [0.42]),
-      arrange(pass) {
-        return [
-          { mel: 0.09, harp: 0.1, fid: 0.035, fidAll: true, drum: 0.3, drone: 0.03, tempo: 1 },
-          { mel: 0.09, harp: 0.11, fid: 0.045, fidAll: true, drum: 0.32, drone: 0.032, tempo: 1.02 },
-        ][pass % 2];
+      title: '♪ 紅蓮の竜王 — ギルド楽団', key: 'Dm', meter: '4/4', bpm: 120, swing: 0.03, fast: true, drone: [38, 45, 50], N: 0.9,
+      parts: { I: 'z8 | z8', A: BOSS_A, B: BOSS_B },
+      chords: {
+        I: 'Dm | A',
+        A: ['Dm', 'Dm', 'C', 'C', 'Bb', 'Bb', 'A', 'A', 'Dm', 'Dm', 'C', 'C', 'Bb', 'A', 'Dm', 'Dm'],
+        B: ['Dm', 'Gm', 'C', 'F', 'Bb', 'Gm', 'A', 'A', 'Dm', 'Gm', 'C', 'F', 'Gm', 'A', 'Dm', 'Dm'],
       },
+      passes: [
+        [
+          ['I', { A: 'bz:strum', R: 'boss', N: 1 }],
+          ['A', { L: 'fd', D: 'vc', A: 'bz:strum', B: 'bs:root', R: 'boss' }],
+          ['A', { L: 'fd', D: 'vc', H: 'ac', A: 'bz:strum', B: 'bs:walk', R: 'boss', K: 1, V: 0.3 }],
+          ['B', { L: 'pp', D: 'fd:0', C: 'vc', A: 'bz:strum', B: 'bs:root', R: 'boss' }],
+          ['B', { L: 'fd', D: 'pp', H: 'ac', C: 'vc', A: 'bz:strum', A2: 'hp:arp', B: 'bs:walk', R: 'boss', K: 1, F: 1 }],
+        ],
+        [
+          ['A', { L: 'wh', D: 'fd:0', A: 'bz:strum', B: 'bs:root', R: 'boss' }],
+          ['A', { L: 'pp', D: 'fd:0', H: 'ac', A: 'bz:strum', B: 'bs:walk', R: 'boss', K: 1 }],
+          ['B', { L: 'fd', D: 'vc', C: 'ac', A: 'hp:arp', B: 'bs:root', R: 'boss' }],
+          ['B', { L: 'wh', D: 'fd:0', H: 'ac', C: 'vc', A: 'bz:strum', B: 'bs:walk', R: 'boss', K: 1, F: 1 }],
+        ],
+      ],
     },
+  };
+  // 拍子・音階・部品の解析（読み込み時に1回だけ）
+  Object.values(TRACKS).forEach((d) => {
+    const [num, den] = d.meter.split('/').map(Number);
+    d.bar = den === 8 ? num : num * 2; // 1小節の8分音符の数
+    d.beat = den === 8 ? 3 : 2; // 1拍の8分音符の数（bpm はこの拍で数える）
+    d.sc = scaleOf(d.key);
+    const s = d.swing || 0;
+    d.swPts = d.beat === 3 ? [0, 1 + s, 2 + s * 0.5, 3] : [0, 1 + s, 2];
+    d.P = {};
+    for (const k in d.parts) {
+      const p = parseABC(d.parts[k], d.key);
+      p.ch = parseChords(d.chords[k], p.len, d.bar);
+      d.P[k] = p;
+    }
   });
-  TRACKS.guild.title = '♪ 灯りの酒場 — ギルド楽団';
-  TRACKS.guild.home = true;
-  TRACKS.reels.title = '♪ 草原を行け — ギルド楽団';
-  Object.values(TRACKS).forEach((d) => Object.assign(d, buildTune(d)));
   A.trackTitle = (name) => (TRACKS[name] ? TRACKS[name].title : '');
+  A.tracks = () => Object.keys(TRACKS);
 
+  // ---------------------------------------------------------------- 再生
+  const DRONE_LVL = 0.05;
   class Track {
-    constructor(name, at) {
+    constructor(name, at, o) {
+      o = o || {};
       this.name = name;
       this.def = TRACKS[name];
+      this.offline = !!o.offline;
+      this.night = o.night != null ? !!o.night : A.night;
+      this.solo = o.solo || null;
+      this.lvl = this.def.lvl || 1;
       this.out = ctx.createGain();
       this.out.gain.value = 0;
-      this.out.connect(musicGain);
-      this.pass = 0;
+      this.out.connect(musicIn);
+      this.wet = ctx.createGain();
+      this.wet.gain.value = 0;
+      this.wet.connect(musicWetIn);
+      this.strips = {};
+      this.nodes = [];
+      this.pass = o.pass || 0;
+      this.spu = 60 / (this.def.bpm * (this.night && this.def.nightSoft ? 0.92 : 1)) / this.def.beat; // 8分音符1つの秒数
+      this.cur = compile(this.def, this.pass, this.night);
       this.idx = 0;
+      this.t0 = at && at > ctx.currentTime ? at : ctx.currentTime + 0.12; // この周の頭の時刻
       this.alive = true;
-      this.mix = this.def.arrange(0, A.night);
-      this.spe = this.secPerEighth();
-      this.loopStart = at && at > ctx.currentTime ? at : ctx.currentTime + 0.12;
       this.startDrone();
     }
-    secPerEighth() {
+    // 8分音符の位置 → 時刻（スウィング/ジグの跳ねを入れる）
+    time(u) {
       const d = this.def;
-      const tempo = this.mix.tempo || 1;
-      // 6/8 は付点四分基準、4/4 は8分基準
-      return d.meter === 6 ? 60 / (d.bpm * tempo * 3) : 60 / (d.bpm * tempo);
+      if (!d.swing) return this.t0 + u * this.spu;
+      const b = d.beat, k = Math.floor(u / b), x = u - k * b, i = Math.min(b - 1, Math.floor(x)), p = d.swPts;
+      return this.t0 + (k * b + p[i] + (p[i + 1] - p[i]) * (x - i)) * this.spu;
     }
+    // 楽器ごとのチャンネル（EQ → 定位 → 乾いた音 / 残響センド）
+    strip(role, inst) {
+      const key = role + ':' + inst;
+      if (this.strips[key]) return this.strips[key];
+      const I = INST[inst] || INST.pad;
+      const pan = inst === 'padL' ? -0.55 : inst === 'padR' ? 0.55 : ROLE_PAN[role] != null ? ROLE_PAN[role] : I.pan || 0;
+      const inp = ctx.createGain();
+      this.nodes.push(inp);
+      let node = inp;
+      for (const [type, f, q, g] of I.eq || []) {
+        const b = ctx.createBiquadFilter();
+        b.type = type;
+        b.frequency.value = f;
+        if (q != null) b.Q.value = q;
+        if (g != null) b.gain.value = g;
+        node.connect(b);
+        node = b;
+        this.nodes.push(b);
+      }
+      const p = mkPan(pan);
+      node.connect(p);
+      p.connect(this.out);
+      this.nodes.push(p);
+      if (I.rev > 0) {
+        const sg = ctx.createGain();
+        sg.gain.value = I.rev;
+        p.connect(sg);
+        sg.connect(this.wet);
+        this.nodes.push(sg);
+      }
+      return (this.strips[key] = inp);
+    }
+    // イーリアンパイプのドローン（ずっと鳴っていて、部品ごとに強さが変わる）
     startDrone() {
-      const [a, b] = this.def.drone;
-      this.droneG = ctx.createGain();
-      this.droneG.gain.value = 0;
+      const ds = this.def.drone;
+      if (!ds || !ds.length || (this.solo && !this.solo.includes('N'))) return;
+      const st = this.strip('N', 'drone');
       const lp = ctx.createBiquadFilter();
       lp.type = 'lowpass';
-      lp.frequency.value = 430;
-      lp.Q.value = 1.2;
-      const lfo = ctx.createOscillator();
-      lfo.frequency.value = 0.07;
-      const lfoG = ctx.createGain();
-      lfoG.gain.value = 120;
-      lfo.connect(lfoG).connect(lp.frequency);
-      this.droneOsc = [a, b, a + 12].map((m, i) => {
+      lp.frequency.value = this.def.droneLP || 950;
+      lp.Q.value = 0.8;
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      const l = ctx.createOscillator();
+      l.frequency.value = 0.09 + Math.random() * 0.04;
+      const lg = ctx.createGain();
+      lg.gain.value = 160;
+      l.connect(lg).connect(lp.frequency);
+      lp.connect(g).connect(st);
+      const t = Math.max(ctx.currentTime, this.t0 - 0.1);
+      this.droneOsc = [l];
+      ds.forEach((m, i) => {
         const o = ctx.createOscillator();
-        o.type = 'sawtooth';
-        o.frequency.value = mtof(m) * (i === 2 ? 1.003 : 1);
+        o.setPeriodicWave(pwave('drone'));
+        o.frequency.value = mtof(m);
+        o.detune.value = i % 2 ? 3 : -3;
         o.connect(lp);
-        o.start();
-        return o;
+        o.start(t);
+        this.droneOsc.push(o);
       });
-      lp.connect(this.droneG).connect(this.out);
-      lfo.start();
-      this.droneOsc.push(lfo);
-      this.droneG.gain.setTargetAtTime(this.mix.drone, ctx.currentTime, 1.2);
+      l.start(t);
+      this.droneG = g;
+      this.nodes.push(lp, g, lg);
     }
-    fadeIn(sec) {
-      const t = ctx.currentTime;
-      this.out.gain.cancelScheduledValues(t);
-      this.out.gain.setValueAtTime(this.out.gain.value, t);
-      this.out.gain.linearRampToValueAtTime(1, t + sec);
-    }
+    fadeIn(sec) { this.ramp(this.lvl, sec); }
     fadeOut(sec) {
-      const t = ctx.currentTime;
-      this.out.gain.cancelScheduledValues(t);
-      this.out.gain.setValueAtTime(this.out.gain.value, t);
-      this.out.gain.linearRampToValueAtTime(0, t + sec);
-      setTimeout(() => this.dispose(), sec * 1000 + 600);
+      this.ramp(0, sec);
       this.fading = true;
+      setTimeout(() => this.dispose(), sec * 1000 + 600);
     }
-    dispose() {
-      this.alive = false;
-      try { this.droneOsc.forEach((o) => o.stop()); } catch (e) { /* already */ }
-      try { this.out.disconnect(); } catch (e) { /* noop */ }
-    }
-    // タブ復帰時：止まっていた間の音を一斉に鳴らさないよう、次の小節から再開
-    resync() {
-      const bar = this.def.bar;
+    ramp(v, sec) {
       const t = ctx.currentTime;
-      if (this.loopStart + this.def.events[Math.min(this.idx, this.def.events.length - 1)].t * this.spe < t) {
-        // 現在位置を次の小節頭に合わせる
-        const pos = (t - this.loopStart) / this.spe;
-        let nextBar = Math.ceil(pos / bar) * bar;
-        if (nextBar >= this.def.len) {
-          this.loopStart += this.def.len * this.spe;
-          nextBar = 0;
-          this.pass++;
-        }
-        this.idx = this.def.events.findIndex((e) => e.t >= nextBar);
-        if (this.idx < 0) this.idx = 0;
-        this.loopStart = t + 0.1 - nextBar * this.spe;
+      for (const g of [this.out.gain, this.wet.gain]) {
+        g.cancelScheduledValues(t);
+        g.setValueAtTime(g.value, t);
+        g.linearRampToValueAtTime(v, t + sec);
       }
     }
+    dispose() {
+      if (!this.alive) return;
+      this.alive = false;
+      for (const o of this.droneOsc || []) { try { o.stop(); o.disconnect(); } catch (e) { /* already */ } }
+      for (const n of this.nodes.concat([this.out, this.wet])) { try { n.disconnect(); } catch (e) { /* noop */ } }
+    }
+    // タブ復帰・処理落ちのあと：遅れた音を一斉に鳴らさず、次の小節頭から再開
+    resync() {
+      if (!this.alive || this.idx >= this.cur.ev.length) return;
+      const now = ctx.currentTime;
+      if (this.time(this.cur.ev[this.idx].t) >= now - 0.05) return;
+      const bar = this.def.bar;
+      let nb = Math.ceil((now - this.t0) / this.spu / bar) * bar;
+      if (nb >= this.cur.len) {
+        this.pass++;
+        this.cur = compile(this.def, this.pass, this.night);
+        nb = 0;
+      }
+      this.idx = this.cur.ev.findIndex((e) => e.t >= nb - 1e-6);
+      if (this.idx < 0) this.idx = this.cur.ev.length;
+      this.t0 = now + 0.1 - nb * this.spu;
+    }
     schedule(until) {
-      const d = this.def;
-      if (this.ended) return;
+      if (this.ended || !this.alive) return;
+      const now = ctx.currentTime;
+      if (!this.offline && this.idx < this.cur.ev.length && this.time(this.cur.ev[this.idx].t) < now - 0.25) this.resync();
       let guard = 0;
-      while (guard++ < 200) {
-        if (this.idx >= d.events.length) {
-          // 昼のギルドは2曲を交互に（曲の切れ目で、きれいに入れ替える）
-          if (d.rotate && this.pass + 1 >= d.rotate && current === this && !this.fading && !A.night) {
-            homeDay = this.name === 'guild' ? 'guild2' : 'guild';
-            A.playTrack(homeDay, { cut: true, fade: 2.6, fadeIn: 0.25, at: this.loopStart + d.len * this.spe });
-            return;
+      while (guard++ < 600) {
+        if (this.idx >= this.cur.ev.length) {
+          const endT = this.time(this.cur.len);
+          if (endT > until) break;
+          // ギルドの曲は何周かしたら次の曲へ（曲の切れ目で、きれいに入れ替える）
+          if (!this.offline && this.def.home && current === this && !this.fading && this.pass + 1 >= (this.def.rotate || 2)) {
+            const nx = nextHome(this.name);
+            if (nx && nx !== this.name) {
+              A.playTrack(nx, { cut: true, fade: 2.6, fadeIn: 0.25, at: endT });
+              return;
+            }
           }
-          this.loopStart += d.len * this.spe;
-          this.idx = 0;
+          this.t0 = endT;
           this.pass++;
-          this.mix = d.arrange(this.pass, A.night);
-          this.spe = this.secPerEighth();
-          this.droneG.gain.setTargetAtTime(this.mix.drone, this.loopStart, 1.5);
+          this.cur = compile(this.def, this.pass, this.night);
+          this.idx = 0;
+          continue;
         }
-        const ev = d.events[this.idx];
-        const t = this.loopStart + ev.t * this.spe;
+        const ev = this.cur.ev[this.idx];
+        const t = this.time(ev.t);
         if (t > until) break;
         this.idx++;
-        if (t < ctx.currentTime - 0.02) continue;
+        if (t < now - 0.03 && !this.offline) continue;
         this.play(ev, t);
       }
     }
     play(ev, t) {
-      const mx = this.mix;
-      const hum = (Math.random() - 0.5) * 0.012;
-      const vel = 0.9 + Math.random() * 0.2;
-      if (ev.i === 'mel') {
-        const dur = ev.d * this.spe;
-        if (mx.mel > 0) {
-          if (mx.lead === 'fid') fiddle(t + hum, ev.m, dur, mx.mel * ev.acc * vel, this.out);
-          else whistle(t + hum, ev.m, dur, mx.mel * ev.acc * vel, this.out);
-        }
-        // フィドルは繰り返しの2回目だけ1オクターブ下で重なる（ボス戦はずっと）
-        if (mx.fid > 0 && (ev.rep === 1 || mx.fidAll)) fiddle(t + hum, ev.m - 12, dur, mx.fid * vel, this.out);
-      } else if (ev.i === 'harp') {
-        if (mx.harp > 0) harp(t + hum * 0.5, ev.m, mx.harp * ev.acc * vel, this.out);
-      } else if (ev.i === 'drum') {
-        if (mx.drum > 0 && !(ev.ghost && Math.random() < 0.35)) bodhran(t, ev.acc, mx.drum * vel, this.out);
+      if (ev.k === 'drone') {
+        if (this.droneG) this.droneG.gain.setTargetAtTime(ev.v * DRONE_LVL * (this.def.droneLvl || 1), Math.max(t, ctx.currentTime), 1.4);
+        return;
       }
+      if (this.solo && !this.solo.includes(ev.r)) return;
+      const I = INST[ev.i];
+      const tt = Math.max(ctx.currentTime, t + (ev.dt || 0) + (I.hum ? (Math.random() - 0.5) * I.hum : 0));
+      const dur = ev.d != null ? Math.max(0.03, this.time(ev.t + ev.d) - t) : 0;
+      const vel = ev.v * (I.vol || 0.1) * (ROLE_VOL[ev.r] || 1) * (0.9 + Math.random() * 0.2);
+      if (!(vel > 0)) return;
+      const prio = ROLE_PRIO[ev.r] || 1;
+      if (ev.k === 'pad') {
+        if (voiceOK(tt, tt + dur + 1.6, I.w, prio)) padChord(tt, ev.ms, dur, vel, this.strip('P', 'padL'), this.strip('P', 'padR'));
+      } else if (ev.k === 'hit') {
+        if (voiceOK(tt, tt + 0.35, I.w, prio)) drumHit(tt, ev.kind, vel, this.strip(ev.r, ev.i));
+      } else if (voiceOK(tt, tt + dur + 0.3, I.w, prio)) I.play(tt, ev.m, dur, vel, this.strip(ev.r, ev.i), ev, I);
     }
   }
 
   function schedule() {
     if (!ctx || ctx.state !== 'running') return;
-    if (current && current.alive) current.schedule(ctx.currentTime + 0.25);
-    if (A._old && A._old.alive) A._old.schedule(ctx.currentTime + 0.25);
+    try {
+      const until = ctx.currentTime + (document.hidden ? 1.2 : 0.3);
+      if (current && current.alive) current.schedule(until);
+      if (A._old && A._old !== current && A._old.alive) A._old.schedule(until);
+    } catch (e) { report(e); }
     // 暖炉のパチパチ
     if (ambientLevel > 0 && Math.random() < 0.09 * ambientLevel) crackle();
   }
@@ -757,17 +1647,143 @@
     const o = typeof opt === 'object' && opt ? opt : { first: opt === true, fade: typeof opt === 'number' ? opt : 0 };
     wantTrack = name;
     if (!ctx) return;
-    if (current && current.name === name && !current.fading) return;
-    if (current) {
-      if (A._old) A._old.dispose();
-      A._old = current;
-      if (o.cut) current.ended = true;
-      current.fadeOut(o.first ? 0.1 : o.fade || 1.1);
-    }
-    current = new Track(name, o.at);
-    current.fadeIn(o.first ? 2.4 : o.fadeIn || (o.fade ? Math.max(0.45, o.fade * 0.9) : 1.4));
+    try {
+      if (current && current.name === name && !current.fading) return;
+      if (current) {
+        if (A._old) A._old.dispose();
+        A._old = current;
+        if (o.cut) current.ended = true;
+        current.fadeOut(o.first ? 0.1 : o.fade || 1.1);
+      }
+      current = new Track(name, o.at);
+      current.fadeIn(o.first ? 2.4 : o.fadeIn || (o.fade ? Math.max(0.45, o.fade * 0.9) : 1.4));
+    } catch (e) { report(e); }
   };
+  A.play = (name, opt) => A.playTrack(name, opt);
   A.track = () => (current ? current.name : wantTrack);
+  // タイトル画面のメインテーマ（init 前に呼んでもよい。init すると流れ出す）。ギルドに入ったら playHome()
+  A.playTitle = (fade) => A.playTrack('theme', fade || 1.2);
+
+  // ギルドの曲の巡回：昼は 灯りの酒場 → 市場の朝 → 麦穂のスリップジグ、夜は 星降る窓辺 → 月影の子守歌。
+  // 期間限定イベント中（10月）は「かぼちゃ灯籠の行進」が昼にも夜にも混ざる
+  const ROT = { day: ['guild', 'guild2', 'guild3'], night: ['night', 'night2'] };
+  const homeIdx = { day: 0, night: 0 };
+  let evOverride; // undefined=日付から自動 / null=なし / 曲名=その曲
+  A.eventTrack = function () {
+    if (evOverride !== undefined) return evOverride;
+    try { return G.events && G.events.theme && G.events.theme() === 'pumpkin' ? 'halloween' : null; } catch (e) { return null; }
+  };
+  A.isEvent = () => !!A.eventTrack();
+  A.setEvent = function (name) { evOverride = name === undefined ? undefined : TRACKS[name] ? name : null; };
+  function homeList(night) {
+    const l = ROT[night ? 'night' : 'day'].slice();
+    const ev = A.eventTrack();
+    if (ev && TRACKS[ev]) l.splice(1, 0, ev);
+    return l;
+  }
+  function homeName(night) {
+    const l = homeList(night);
+    return l[homeIdx[night ? 'night' : 'day'] % l.length];
+  }
+  function nextHome(name) {
+    const k = A.night ? 'night' : 'day', l = homeList(A.night);
+    const i = l.indexOf(name);
+    homeIdx[k] = (i < 0 ? homeIdx[k] : i) + 1;
+    return l[homeIdx[k] % l.length];
+  }
+  A.playHome = function (fade) { A.playTrack(homeName(A.night), fade || 1.1); };
+  // 夜になったら夜の曲へ、朝になったら昼の曲へ（ギルドにいるときだけ）
+  A.setNight = function (n) {
+    if (A.night === n) return;
+    A.night = n;
+    if (!ctx) { if (TRACKS[wantTrack] && TRACKS[wantTrack].home) wantTrack = homeName(n); return; }
+    if (current && TRACKS[current.name].home && wantTrack === current.name) A.playHome(2.6);
+  };
+
+  // ---------------------------------------------------------------- テスト用
+  // 曲をオフラインで書き出して、音量を測る（opt: {sr, night, pass, solo:['L','A'..], keep}）
+  A._render = function (name, sec, opt) {
+    opt = opt || {};
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    if (!OAC || !TRACKS[name]) return Promise.resolve(null);
+    const sr = opt.sr || 44100;
+    const off = new OAC(2, Math.ceil(sr * sec), sr);
+    const saved = [ctx, musicIn, musicWetIn, VS];
+    let tr = null;
+    try {
+      ctx = off;
+      if (!noiseBuf) noiseBuf = makeNoise(2, false);
+      VS = { ends: [], w: [] };
+      musicIn = off.createGain();
+      musicIn.connect(off.destination);
+      musicWetIn = off.createGain();
+      const conv = off.createConvolver();
+      conv.buffer = makeIR(2.6);
+      const ret = off.createGain();
+      ret.gain.value = opt.dry ? 0 : 0.32;
+      musicWetIn.connect(conv).connect(ret).connect(off.destination);
+      tr = new Track(name, 0.05, { offline: true, night: opt.night, pass: opt.pass, solo: opt.solo });
+      tr.out.gain.value = tr.lvl;
+      tr.wet.gain.value = tr.lvl;
+      for (let g = 0; g < 20000; g++) {
+        const before = tr.pass * 1e6 + tr.idx;
+        tr.schedule(sec);
+        if (tr.pass * 1e6 + tr.idx === before) break;
+      }
+    } finally {
+      [ctx, musicIn, musicWetIn, VS] = saved;
+    }
+    const passes = tr ? tr.pass : 0;
+    return off.startRendering().then((buf) => {
+      const L = buf.getChannelData(0), R = buf.getChannelData(1);
+      let pk = 0, ss = 0;
+      const win = sr * 3, wins = [];
+      let ws = 0;
+      for (let i = 0; i < L.length; i++) {
+        const a = Math.abs(L[i]), b = Math.abs(R[i]);
+        if (a > pk) pk = a;
+        if (b > pk) pk = b;
+        const e = L[i] * L[i] + R[i] * R[i];
+        ss += e;
+        ws += e;
+        if ((i + 1) % win === 0) { wins.push(Math.sqrt(ws / (2 * win))); ws = 0; }
+      }
+      const db = (x) => +(20 * Math.log10(x + 1e-9)).toFixed(1);
+      const rms = Math.sqrt(ss / (2 * L.length));
+      return { name, peak: db(pk), rms: db(rms), loud: db(Math.max(...wins.slice(1))), quiet: db(Math.min(...wins.slice(1))), passes, buf: opt.keep ? buf : null };
+    });
+  };
+  // 楽譜の検算（小節の長さ・和音・編曲の楽器名）
+  A._check = function () {
+    const errs = [];
+    for (const [name, d] of Object.entries(TRACKS)) {
+      for (const k in d.parts) {
+        const P = d.P[k];
+        if (Math.abs(P.len % d.bar) > 1e-6) errs.push(`${name}.${k}: len ${P.len} not multiple of ${d.bar}`);
+        d.parts[k].split('|').forEach((chunk, bi) => { const l = parseABC(chunk, d.key).len; if (Math.abs(l - d.bar) > 1e-6) errs.push(`${name}.${k} bar${bi + 1}: ${l}/${d.bar}`); });
+        const cl = P.ch.reduce((a, s) => a + s.d, 0);
+        if (Math.abs(cl - P.len) > 1e-6) errs.push(`${name}.${k}: chords ${cl}/${P.len}`);
+        P.ch.forEach((s) => { if (!s.c) errs.push(`${name}.${k}: bad chord`); });
+      }
+      d.passes.forEach((ps, i) => ps.forEach(([pn, sp]) => {
+        if (!d.P[pn]) errs.push(`${name}#${i}: no part ${pn}`);
+        for (const r of ['L', 'L2', 'H', 'C']) if (sp[r] && !INST[sp[r]]) errs.push(`${name}#${i} ${pn}: bad ${r}=${sp[r]}`);
+        for (const r of ['D', 'A', 'A2', 'B', 'G']) if (sp[r] && !INST[sp[r].split(':')[0]]) errs.push(`${name}#${i} ${pn}: bad ${r}=${sp[r]}`);
+        if (sp.R && !DRUMS[sp.R]) errs.push(`${name}#${i} ${pn}: bad R=${sp.R}`);
+      }));
+    }
+    return errs;
+  };
+  // 今の曲の位置を周の frac（0〜1）へ飛ばす（巡回のテスト用）
+  A._seek = function (frac) {
+    if (!ctx || !current) return;
+    const tr = current, u = Math.floor((tr.cur.len * frac) / tr.def.bar) * tr.def.bar;
+    tr.idx = tr.cur.ev.findIndex((e) => e.t >= u);
+    if (tr.idx < 0) tr.idx = tr.cur.ev.length;
+    tr.t0 = ctx.currentTime + 0.1 - u * tr.spu;
+  };
+  A._state = () => ({ track: current ? current.name : null, pass: current ? current.pass : -1, old: A._old && A._old.alive ? A._old.name : null, voices: VS.ends.length, cache: BUF.size, ctx: ctx ? ctx.state : 'none', home: { day: homeList(false), night: homeList(true) } });
+  A._passLen = (name) => { const d = TRACKS[name]; return d.passes.map((ps) => ps.reduce((a, [pn]) => a + d.P[pn].len, 0) * (60 / d.bpm / d.beat)); };
 
   // ---------------------------------------------------------------- ambient
   A.setAmbient = function (level) {
@@ -822,7 +1838,6 @@
   // 海・風・雨はずっと流れる「床」。鳥・カモメ・虫・フクロウ・鐘は、時間帯と天気に合わせてときどき鳴る。
   // ギルドの画面にいる間だけ。音量は設定の「環境音」に従う。
   const E = { on: false, bus: null, beds: null, next: {}, waveAt: 0, gustAt: 0, lastPhase: -1, level: 0, voices: 0 };
-  const rr = (a, b) => a + Math.random() * (b - a);
   function panNode(v) {
     if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = G.clamp(v, -1, 1); return p; }
     return ctx.createGain();
@@ -1374,7 +2389,18 @@
 
   // ---------------------------------------------------------------- sfx
   A.sfx = function (name, arg) {
-    if (!ctx || ctx.state !== 'running') return;
+    if (!ctx) return;
+    if (ctx.state !== 'running') {
+      // タイトルをタップした瞬間（init と同じ操作の中）はまだ起動中のことがある：起きたら鳴らす
+      if (name === 'enter' && ctx.state === 'suspended' && !document.hidden) {
+        const p = resumeCtx();
+        if (p && p.then) p.then(() => { if (ctx && ctx.state === 'running') A.sfx(name, arg); }, () => {});
+      }
+      return;
+    }
+    try { sfxPlay(name, arg); } catch (e) { report(e); }
+  };
+  function sfxPlay(name, arg) {
     const t = ctx.currentTime;
     switch (name) {
       case 'tap':
@@ -1635,6 +2661,95 @@
         tone({ f: 120, f2: 50, dur: 0.22, vol: 0.2 });
         noise({ f: 1200, f2: 300, dur: 0.1, vol: 0.08, q: 0.8 });
         break;
+      case 'enter': // タイトルをタップ：ふぁああーん！と光が弾ける
+        if (!throttle('enter', 800)) return;
+        enterSwell(t);
+        break;
+      // ---- 釣り
+      case 'splash': // ぽちゃん（浮きが水に落ちる）＋しずく
+        if (!throttle('splash', 120)) return;
+        splash(t, 1);
+        break;
+      case 'bite': // くいっ（魚がかかった）＋小さな鈴
+        if (!throttle('bite', 200)) return;
+        tone({ f: 300, f2: 820, dur: 0.07, vol: 0.12, slide: 0.05 });
+        noise({ f: 900, f2: 380, dur: 0.11, vol: 0.06, q: 0.9 });
+        [[1, 0.05, 0.55], [2.76, 0.016, 0.26], [5.4, 0.006, 0.12]].forEach(([r, v, d]) => tone({ t: t + 0.07, f: 1760 * r, dur: d, vol: v, a: 0.002 }));
+        tone({ t: t + 0.2, f: 2093, dur: 0.4, vol: 0.03, a: 0.002 });
+        break;
+      case 'reel': // リールを巻くカチカチ（1秒に何度も呼ばれるので、小さく軽く）
+        if (!throttle('reel', 45)) return;
+        noise({ f: 3200 + Math.random() * 1200, dur: 0.012, vol: 0.02, q: 4 });
+        tone({ f: 2300, dur: 0.008, vol: 0.006, type: 'square', lp: 5000 });
+        break;
+      case 'catch': // 釣れた！：水しぶき＋明るい3音
+        if (!throttle('catch', 400)) return;
+        splash(t, 0.7);
+        [62, 66, 69, 74].forEach((m, i) => harp(t + 0.1 + i * 0.025, m, 0.08, sfxGain, 1.6));
+        [81, 86, 90].forEach((m, i) => whistle(t + 0.14 + i * 0.12, m, i === 2 ? 0.6 : 0.11, 0.075, sfxGain));
+        for (let i = 0; i < 5; i++) tone({ t: t + 0.4 + i * 0.05, f: mtof(98 + PENTA[G.randi(0, 5)]), dur: 0.25, vol: 0.016 });
+        break;
     }
-  };
+  }
+  function splash(t, k) {
+    tone({ t, f: 380, f2: 1100, dur: 0.09, vol: 0.12 * k, slide: 0.07 });
+    noise({ t, f: 1300, f2: 450, dur: 0.22, vol: 0.08 * k, q: 0.7, a: 0.01 });
+    noise({ t: t + 0.02, f: 5000, f2: 2500, dur: 0.16, vol: 0.025 * k, q: 0.8 });
+    for (let i = 0; i < 5; i++) {
+      const f = rr(1300, 2600);
+      tone({ t: t + rr(0.07, 0.42), f, f2: f * 1.6, dur: 0.035, vol: rr(0.015, 0.03) * k });
+    }
+  }
+  // 「ふぁああーん」：低いぼわん → 長三和音がふくらむ（合唱のような響き）→ 上へ駆けるきらめき → 光の余韻
+  function enterSwell(t) {
+    const s = G.state && G.state.settings.sfx != null ? G.state.settings.sfx : 0.8;
+    const bus = ctx.createGain();
+    bus.connect(sfxGain);
+    const wet = ctx.createGain(); // いつもより深い残響（効果音の音量に合わせる）
+    wet.gain.value = Math.pow(s, 1.2) * 1.7 * 0.45;
+    bus.connect(wet).connect(convolver);
+    setTimeout(() => { try { bus.disconnect(); wet.disconnect(); } catch (e) { /* noop */ } }, 4500);
+    tone({ t, f: 92, f2: 46, dur: 0.6, vol: 0.16, a: 0.02, dest: bus });
+    noise({ t, f: 160, f2: 900, dur: 0.5, vol: 0.05, q: 0.7, a: 0.12, ft: 'lowpass', dest: bus });
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.Q.value = 0.8;
+    lp.frequency.setValueAtTime(500, t);
+    lp.frequency.exponentialRampToValueAtTime(3800, t + 0.32);
+    lp.frequency.exponentialRampToValueAtTime(900, t + 1.75);
+    const vow = ctx.createBiquadFilter(); // 「あー」の母音のふくらみ
+    vow.type = 'peaking';
+    vow.frequency.value = 900;
+    vow.Q.value = 1.2;
+    vow.gain.value = 6;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.05, t + 0.13);
+    g.gain.linearRampToValueAtTime(0.034, t + 0.6);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.75);
+    lp.connect(vow).connect(g).connect(bus);
+    const nodes = [lp, vow, g];
+    let first = null;
+    [50, 57, 62, 66, 69, 74].forEach((m, i) => {
+      [-1, 1].forEach((side) => {
+        const o = ctx.createOscillator();
+        o.type = i % 2 ? 'triangle' : 'sawtooth';
+        o.frequency.value = mtof(m);
+        o.detune.value = side * (7 + Math.random() * 4);
+        o.connect(lp);
+        o.start(t);
+        o.stop(t + 1.8);
+        nodes.push(o);
+        if (!first) first = o;
+      });
+    });
+    cleanup(first, nodes);
+    [74, 76, 78, 81, 83, 86, 88, 90, 93, 95, 98].forEach((m, i) => {
+      harp(t + 0.06 + i * 0.045, m, 0.06, bus, 1.3);
+      if (i % 2 === 0 && m <= 90) celesta(t + 0.08 + i * 0.045, m, 0.035, bus);
+    });
+    noise({ t: t + 0.25, f: 7000, dur: 1.4, vol: 0.022, q: 0.5, ft: 'highpass', a: 0.4, dest: bus });
+    celesta(t + 0.62, 93, 0.045, bus);
+    celesta(t + 0.8, 98, 0.035, bus);
+  }
 })();
