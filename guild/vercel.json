@@ -1,0 +1,13 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    {
+      "source": "/lantern-journey",
+      "destination": "https://lantern-journey.vocal-shore-1441.chatgpt.site/"
+    },
+    {
+      "source": "/lantern-journey/:path*",
+      "destination": "https://lantern-journey.vocal-shore-1441.chatgpt.site/:path*"
+    }
+  ]
+}
