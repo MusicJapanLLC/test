@@ -1381,6 +1381,123 @@
         poly(ctx, [-0.05, -0.02, 0.62, -0.02, 0.62, 0.02, -0.05, 0.02], '#d8c8a8');
         poly(ctx, [0.6, -0.08, 0.82, 0, 0.6, 0.08], metal);
         break;
+      case 'axe': {
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.05, 0.95, 0.05, 0.95, 0.05, -0.82, -0.05, -0.82], wood);
+        poly(ctx, [0, 0.95, 0.05, 0.95, 0.05, -0.82, 0, -0.82], G.shade(wood, -0.2));
+        poly(ctx, [0.04, -0.72, 0.42, -0.98, 0.66, -0.6, 0.62, -0.18, 0.4, 0.04, 0.04, -0.18], metal);
+        poly(ctx, [0.04, -0.45, 0.62, -0.18, 0.4, 0.04, 0.04, -0.18], dark);
+        poly(ctx, [0.42, -0.98, 0.66, -0.6, 0.62, -0.18, 0.56, -0.2, 0.6, -0.6, 0.4, -0.9], 'rgba(255,255,255,0.65)');
+        poly(ctx, [-0.04, -0.72, -0.28, -0.6, -0.28, -0.3, -0.04, -0.22], dark);
+        poly(ctx, [-0.09, -0.12, 0.09, -0.12, 0.09, -0.02, -0.09, -0.02], acc.startsWith('#') ? acc : rainbow(t));
+        facet(ctx, 0, 0.92, 0.09, 0.09, 6, acc.startsWith('#') ? acc : rainbow(t), 0, 0.25);
+        break;
+      }
+      case 'tome':
+      case 'scripture': {
+        const holy = id === 'scripture';
+        ctx.rotate(-0.18);
+        facetPoly(ctx, [-0.62, -0.78, 0.56, -0.8, 0.62, 0.74, -0.56, 0.8], holy ? '#f4efe2' : dark, 0.14);
+        poly(ctx, [0.56, -0.8, 0.68, -0.72, 0.72, 0.78, 0.62, 0.74], holy ? '#cfc6ae' : '#f0e6cc');
+        poly(ctx, [-0.62, -0.78, -0.48, -0.78, -0.42, 0.8, -0.56, 0.8], holy ? acc.startsWith('#') ? acc : rainbow(t) : G.shade(dark.startsWith('#') ? dark : '#888888', -0.25));
+        if (holy) {
+          poly(ctx, [-0.06, -0.5, 0.08, -0.5, 0.08, 0.5, -0.06, 0.5], acc.startsWith('#') ? acc : rainbow(t));
+          poly(ctx, [-0.32, -0.2, 0.34, -0.2, 0.34, -0.06, -0.32, -0.06], acc.startsWith('#') ? acc : rainbow(t));
+        } else {
+          ctx.strokeStyle = acc.startsWith('#') ? acc : rainbow(t); ctx.lineWidth = 0.05;
+          ctx.beginPath(); ctx.arc(0.02, 0, 0.32, 0, TAU); ctx.stroke();
+          facet(ctx, 0.02, 0, 0.14, 0.14, 6, metal, t, 0.3);
+          poly(ctx, [0.5, -0.12, 0.74, -0.12, 0.74, 0.12, 0.5, 0.12], metal);
+        }
+        break;
+      }
+      case 'knives':
+        for (let i = -1; i <= 1; i++) {
+          ctx.save();
+          ctx.rotate(i * 0.42);
+          ctx.translate(0, 0.12);
+          poly(ctx, [-0.08, -0.1, 0.08, -0.1, 0.03, -0.86, -0.03, -0.86], metal);
+          poly(ctx, [0, -0.1, 0.08, -0.1, 0.03, -0.86, 0, -0.86], dark);
+          poly(ctx, [-0.14, -0.12, 0.14, -0.12, 0.12, -0.04, -0.12, -0.04], acc.startsWith('#') ? acc : rainbow(t, i + 1));
+          poly(ctx, [-0.04, -0.04, 0.04, -0.04, 0.04, 0.32, -0.04, 0.32], leather);
+          ctx.strokeStyle = metal; ctx.lineWidth = 0.035;
+          ctx.beginPath(); ctx.arc(0, 0.4, 0.08, 0, TAU); ctx.stroke();
+          ctx.restore();
+        }
+        break;
+      case 'crossbow':
+        ctx.rotate(-Math.PI / 4);
+        poly(ctx, [-0.07, -0.2, 0.07, -0.2, 0.09, 0.92, -0.09, 0.92], wood);
+        poly(ctx, [0, -0.2, 0.07, -0.2, 0.09, 0.92, 0, 0.92], G.shade(wood, -0.2));
+        ctx.strokeStyle = dark.startsWith('#') ? dark : '#888'; ctx.lineWidth = 0.11; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(-0.78, 0.0); ctx.quadraticCurveTo(0, -0.42, 0.78, 0.0); ctx.stroke();
+        ctx.strokeStyle = 'rgba(245,240,225,0.9)'; ctx.lineWidth = 0.025;
+        ctx.beginPath(); ctx.moveTo(-0.76, 0.02); ctx.lineTo(0, 0.26); ctx.lineTo(0.76, 0.02); ctx.stroke();
+        poly(ctx, [-0.025, 0.26, 0.025, 0.26, 0.025, -0.82, -0.025, -0.82], '#d8c8a8');
+        poly(ctx, [-0.08, -0.8, 0.08, -0.8, 0, -1], metal);
+        facet(ctx, 0, -0.18, 0.1, 0.1, 6, acc.startsWith('#') ? acc : rainbow(t), 0, 0.25);
+        break;
+      case 'shield':
+        facetPoly(ctx, [-0.66, -0.8, 0.66, -0.8, 0.66, 0.08, 0, 0.94, -0.66, 0.08], metal, 0.18);
+        poly(ctx, [-0.52, -0.66, 0.52, -0.66, 0.52, 0.04, 0, 0.74, -0.52, 0.04], dark);
+        poly(ctx, [-0.08, -0.6, 0.08, -0.6, 0.08, 0.6, -0.08, 0.6], acc.startsWith('#') ? acc : rainbow(t));
+        poly(ctx, [-0.44, -0.24, 0.44, -0.24, 0.44, -0.1, -0.44, -0.1], acc.startsWith('#') ? acc : rainbow(t));
+        facet(ctx, 0, -0.17, 0.16, 0.16, 6, metal, t, 0.3);
+        poly(ctx, [-0.66, -0.8, -0.3, -0.8, -0.56, -0.2], 'rgba(255,255,255,0.35)');
+        break;
+      case 'flute':
+        ctx.rotate(Math.PI / 4);
+        poly(ctx, [-0.07, -0.95, 0.07, -0.95, 0.07, 0.95, -0.07, 0.95], metal);
+        poly(ctx, [0, -0.95, 0.07, -0.95, 0.07, 0.95, 0, 0.95], dark);
+        for (let i = 0; i < 5; i++) { ctx.fillStyle = '#1a1420'; ctx.beginPath(); ctx.arc(-0.005, -0.35 + i * 0.2, 0.035, 0, TAU); ctx.fill(); }
+        poly(ctx, [-0.1, -0.7, 0.1, -0.7, 0.1, -0.62, -0.1, -0.62], acc.startsWith('#') ? acc : rainbow(t));
+        poly(ctx, [-0.1, 0.72, 0.1, 0.72, 0.1, 0.8, -0.1, 0.8], acc.startsWith('#') ? acc : rainbow(t, 2));
+        ctx.strokeStyle = acc.startsWith('#') ? acc : rainbow(t); ctx.lineWidth = 0.025;
+        ctx.beginPath(); ctx.moveTo(0.1, -0.66); ctx.quadraticCurveTo(0.4, -0.4, 0.22, 0); ctx.stroke();
+        break;
+      case 'bomb': {
+        facet(ctx, -0.04, 0.22, 0.58, 0.58, 10, dark.startsWith('#') ? G.shade(dark, -0.3) : '#3a3040', 0.1, 0.22);
+        poly(ctx, [-0.36, -0.06, -0.14, -0.2, -0.24, 0.06], 'rgba(255,255,255,0.5)');
+        poly(ctx, [-0.14, -0.4, 0.1, -0.4, 0.12, -0.28, -0.16, -0.28], metal);
+        ctx.strokeStyle = '#c8a878'; ctx.lineWidth = 0.05;
+        ctx.beginPath(); ctx.moveTo(-0.02, -0.4); ctx.quadraticCurveTo(0.1, -0.7, 0.38, -0.7); ctx.stroke();
+        const fl = 0.7 + Math.sin(t * 9) * 0.3;
+        facet(ctx, 0.44, -0.72, 0.14 * fl + 0.06, 0.14 * fl + 0.06, 5, acc.startsWith('#') ? acc : rainbow(t), t * 3, 0.1);
+        facet(ctx, 0.44, -0.72, 0.06, 0.06, 5, '#fff6c0', 0, 0.05);
+        break;
+      }
+      case 'leather':
+        facetPoly(ctx, [-0.54, -0.56, -0.22, -0.7, 0, -0.56, 0.22, -0.7, 0.54, -0.56, 0.48, 0.2, 0.36, 0.78, -0.36, 0.78, -0.48, 0.2], '#8a5a32', 0.2);
+        poly(ctx, [-0.22, -0.7, 0, -0.56, 0.22, -0.7, 0.12, -0.42, -0.12, -0.42], '#5a3a26');
+        [-0.1, 0.18, 0.46].forEach((y) => poly(ctx, [-0.46, y, 0.46, y, 0.44, y + 0.08, -0.44, y + 0.08], dark.startsWith('#') ? dark : '#5a3a26'));
+        [-0.1, 0.18, 0.46].forEach((y) => facet(ctx, 0, y + 0.04, 0.07, 0.06, 4, metal, 0, 0.2));
+        facet(ctx, 0, -0.28, 0.1, 0.1, 6, acc.startsWith('#') ? acc : rainbow(t), t, 0.25);
+        break;
+      case 'cloak':
+        facetPoly(ctx, [-0.22, -0.82, 0.22, -0.82, 0.7, 0.8, 0.3, 0.9, 0, 0.78, -0.3, 0.9, -0.7, 0.8], dark, 0.16);
+        poly(ctx, [-0.22, -0.82, 0, -0.82, -0.3, 0.9, -0.7, 0.8], G.shade(dark.startsWith('#') ? dark : '#888888', 0.12));
+        poly(ctx, [-0.34, -0.86, 0.34, -0.86, 0.3, -0.7, -0.3, -0.7], metal);
+        poly(ctx, [-0.66, 0.7, 0.66, 0.7, 0.7, 0.8, 0.3, 0.9, 0, 0.78, -0.3, 0.9, -0.7, 0.8], acc.startsWith('#') ? acc : rainbow(t));
+        facet(ctx, 0, -0.78, 0.13, 0.13, 6, acc.startsWith('#') ? acc : rainbow(t), t, 0.3);
+        break;
+      case 'earring':
+        ctx.strokeStyle = metal; ctx.lineWidth = 0.07; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.arc(0, -0.62, 0.2, Math.PI * 0.9, Math.PI * 2.3); ctx.stroke();
+        ctx.lineWidth = 0.04;
+        ctx.beginPath(); ctx.moveTo(0, -0.42); ctx.lineTo(0, -0.08); ctx.stroke();
+        facet(ctx, 0, -0.1, 0.1, 0.1, 6, metal, 0, 0.25);
+        facetPoly(ctx, [0, -0.02, 0.32, 0.36, 0, 0.92, -0.32, 0.36], acc.startsWith('#') ? acc : rainbow(t), 0.3);
+        poly(ctx, [0, -0.02, 0.32, 0.36, 0, 0.42], 'rgba(255,255,255,0.35)');
+        poly(ctx, [-0.12, 0.24, -0.02, 0.14, -0.06, 0.4], 'rgba(255,255,255,0.8)');
+        break;
+      case 'emblem':
+        poly(ctx, [-0.3, 0.4, -0.12, 0.4, -0.2, 0.95, -0.36, 0.82], acc.startsWith('#') ? acc : rainbow(t));
+        poly(ctx, [0.3, 0.4, 0.12, 0.4, 0.2, 0.95, 0.36, 0.82], acc.startsWith('#') ? G.shade(acc, -0.2) : rainbow(t, 2));
+        facet(ctx, 0, -0.08, 0.66, 0.66, 12, metal, 0.1, 0.18);
+        facet(ctx, 0, -0.08, 0.5, 0.5, 12, dark, 0.1, 0.12);
+        poly(ctx, [0, -0.5, 0.12, -0.2, 0.42, -0.18, 0.18, 0.02, 0.26, 0.32, 0, 0.14, -0.26, 0.32, -0.18, 0.02, -0.42, -0.18, -0.12, -0.2], acc.startsWith('#') ? acc : rainbow(t));
+        poly(ctx, [-0.4, -0.5, -0.1, -0.66, -0.3, -0.3], 'rgba(255,255,255,0.4)');
+        break;
       case 'jack': {
         // 限定：かぼちゃの冠（ジャック・オ・ランタン）
         const glow = 0.6 + Math.sin(t * 3) * 0.3;
@@ -1515,6 +1632,25 @@
     ctx.save();
     ctx.scale(s / 2, s / 2);
     switch (id) {
+      case 'rune_r':
+      case 'rune_b':
+      case 'rune_g':
+      case 'rune_y': {
+        const col = { rune_r: '#ff6a4a', rune_b: '#4fb4ff', rune_g: '#5fd88a', rune_y: '#f2c14e' }[id];
+        ctx.fillStyle = G.rgba(col, 0.28);
+        ctx.beginPath(); ctx.arc(0, 0, 0.92, 0, TAU); ctx.fill();
+        facet(ctx, 0, 0.02, 0.74, 0.8, 6, '#3a3448', Math.PI / 6, 0.22);
+        facet(ctx, 0, 0.02, 0.58, 0.64, 6, col, Math.PI / 6, 0.3);
+        ctx.strokeStyle = '#fffbe8'; ctx.lineWidth = 0.09; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.beginPath();
+        if (id === 'rune_r') { ctx.moveTo(-0.2, 0.34); ctx.lineTo(0.06, -0.36); ctx.lineTo(0.22, 0.02); ctx.lineTo(-0.06, 0.04); }
+        else if (id === 'rune_b') { ctx.moveTo(0, -0.38); ctx.lineTo(0, 0.38); ctx.moveTo(-0.26, -0.12); ctx.lineTo(0, 0.1); ctx.lineTo(0.26, -0.12); }
+        else if (id === 'rune_g') { ctx.moveTo(0, 0.38); ctx.lineTo(0, -0.2); ctx.moveTo(0, -0.04); ctx.lineTo(-0.24, -0.3); ctx.moveTo(0, -0.04); ctx.lineTo(0.24, -0.3); }
+        else { ctx.moveTo(-0.24, -0.3); ctx.lineTo(0.24, -0.3); ctx.lineTo(-0.24, 0.3); ctx.lineTo(0.24, 0.3); }
+        ctx.stroke();
+        poly(ctx, [-0.42, -0.42, -0.18, -0.6, -0.3, -0.2], 'rgba(255,255,255,0.55)');
+        break;
+      }
       case 'hourglass':
       case 'hourglass3': {
         const sand = id === 'hourglass3' ? '#ffd36a' : '#7fd0ff';

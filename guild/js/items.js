@@ -35,6 +35,19 @@
     robe: { slot: 'armor', icon: 'robe', names: ['旅人のローブ', '魔導士のローブ', '星織りの法衣', '月影の聖衣', '天衣ルミナリア'] },
     charm: { slot: 'acc', icon: 'charm', names: ['木彫りのお守り', '銀の首飾り', '妖精の首飾り', '不死鳥の羽根', '女神の涙'] },
     ring: { slot: 'acc', icon: 'ring', names: ['銅の指輪', '銀の指輪', '紅玉の指輪', '竜眼の指輪', '永遠の環'] },
+    // もう1系統（同じ職業でも、型で戦い方が変わる。mul＝主能力の倍率、innate＝型の特性）
+    axe: { slot: 'weapon', cls: 'warrior', icon: 'axe', role: '会心型', mul: 0.85, innate: { k: 'crit', v: [2, 3, 4, 6, 8] }, names: ['手斧', '鋼の戦斧', '紅蓮の大斧', '巨人殺しの斧', '覇斧ラグナ'] },
+    tome: { slot: 'weapon', cls: 'mage', icon: 'tome', role: '大成功型', mul: 0.85, innate: { k: 'great', v: [0.5, 1, 1.5, 2, 3] }, names: ['古い魔導書', '紋章の魔導書', '星辰の魔典', '禁書アルカナ', '原初の魔典ゲネシス'] },
+    knives: { slot: 'weapon', cls: 'thief', icon: 'knives', role: '速攻型', mul: 0.8, innate: { k: 'speed', v: [1, 2, 3, 4, 6] }, names: ['投げナイフ', '鋼の投げ刃', '燕の飛刃', '影喰いの飛刃', '千夜の流星刃'] },
+    scripture: { slot: 'weapon', cls: 'cleric', icon: 'scripture', role: '守護型', mul: 0.8, innate: { k: 'succ', v: [0.5, 1, 1.5, 2, 3] }, names: ['祈りの小冊子', '銀の聖典', '光輪の福音書', '天使の聖書', '灯火の大聖典'] },
+    crossbow: { slot: 'weapon', cls: 'archer', icon: 'crossbow', role: '狙撃型', mul: 0.9, innate: { k: 'crit', v: [1, 2, 3, 4, 5] }, names: ['木の弩', '鋼のクロスボウ', '連射の弩', '竜骨の大弩', '天穿つ大弩'] },
+    shield: { slot: 'weapon', cls: 'knight', icon: 'shield', role: '鉄壁型', mul: 0.7, innate: { k: 'succ', v: [1, 1.5, 2, 3, 4] }, names: ['木の盾', '鉄の大盾', '白銀の聖盾', '竜鱗の城壁盾', '不落の盾イージス'] },
+    flute: { slot: 'weapon', cls: 'bard', icon: 'flute', role: '育成型', mul: 0.8, innate: { k: 'exp', v: [3, 5, 7, 10, 14] }, names: ['葦笛', '銀の横笛', '風精のフルート', '妖精王の角笛', '天空の笛オーロラ'] },
+    bomb: { slot: 'weapon', cls: 'alchemist', icon: 'bomb', role: '火力型', mul: 1.12, names: ['煙玉', '炸裂玉', '雷鳴の爆弾袋', '紅蓮の錬成弾', '賢者の極光弾'] },
+    leather: { slot: 'armor', icon: 'leather', role: '身軽', mul: 0.8, innate: { k: 'speed', v: [1, 1.5, 2, 3, 4] }, names: ['革の胴着', '狩人の革鎧', '影縫いの革鎧', '飛竜革の軽鎧', '風神の衣'] },
+    cloak: { slot: 'armor', icon: 'cloak', role: '探索', mul: 0.8, innate: { k: 'find', v: [3, 5, 7, 10, 14] }, names: ['旅人の外套', '騎兵のマント', '月夜のクローク', '星詠みの外套', '灯王のマント'] },
+    earring: { slot: 'acc', icon: 'earring', role: '鋭さ', mul: 0.8, innate: { k: 'crit', v: [1, 2, 3, 4, 5] }, names: ['銅の耳飾り', '銀の耳飾り', '紫水晶の耳飾り', '竜涙の耳飾り', '星屑の耳飾り'] },
+    emblem: { slot: 'acc', icon: 'emblem', role: '富', mul: 0.8, innate: { k: 'gold', v: [2, 3, 5, 7, 10] }, names: ['木の紋章', '銀の紋章', '翠玉の紋章', '王家の紋章', '灯火の大紋章'] },
     // 期間限定（かぼちゃ灯籠祭の交換所だけ）
     jack: { slot: 'acc', icon: 'jack', eventOnly: true, names: ['かぼちゃのお面', '灯籠かぼちゃ', 'ゆらめくジャック', '月夜のジャック', '灯籠祭の大王冠'] },
   };
@@ -104,9 +117,66 @@
     shard: { name: '虹の欠片', desc: 'URの装備を限界突破するのに使う。深淵の迷宮の守護者や、URの分解で手に入る', icon: 'shard', rarity: 4 },
     expbook: { name: '経験の書', desc: '冒険者1人に、たっぷり経験値を与える', icon: 'book2', rarity: 1, use: 'exp' },
     auto30: { name: 'おまかせ札（30分）', desc: '30分間、受付嬢リナが待機中の冒険者を自動で派遣してくれる', icon: 'bell', rarity: 1, boost: { k: 'auto', sec: 1800 } },
+    rune_r: { name: '紅の刻印石', desc: '装備の刻印の穴にはめる。攻撃 +4%・会心率 +2%。紅を3つそろえると共鳴', icon: 'rune_r', rarity: 2 },
+    rune_b: { name: '蒼の刻印石', desc: '装備の刻印の穴にはめる。成功率 +1.5%・大成功率 +0.8%。蒼を3つそろえると共鳴', icon: 'rune_b', rarity: 2 },
+    rune_g: { name: '翠の刻印石', desc: '装備の刻印の穴にはめる。レア発見 +6・素材 +6%。翠を3つそろえると共鳴', icon: 'rune_g', rarity: 2 },
+    rune_y: { name: '金の刻印石', desc: '装備の刻印の穴にはめる。獲得ゴールド +5%・経験値 +5%。金を3つそろえると共鳴', icon: 'rune_y', rarity: 2 },
     auto180: { name: 'おまかせ札（3時間）', desc: '3時間、受付嬢リナが待機中の冒険者を自動で派遣してくれる。留守番中も働きます', icon: 'bell3', rarity: 2, boost: { k: 'auto', sec: 10800 } },
   };
-  IT.CONS_ORDER = ['auto180', 'auto30', 'hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'candy', 'stone'];
+  IT.CONS_ORDER = ['auto180', 'auto30', 'hg3', 'hg2', 'horn', 'finish', 'goldx2', 'luck', 'key', 'book', 'expbook', 'shard', 'rune_r', 'rune_b', 'rune_g', 'rune_y', 'candy', 'stone'];
+
+  // ---------------------------------------------------------------- 刻印（装備の穴に刻印石をはめる。同じ色を3つで共鳴）
+  IT.RUNES = {
+    r: { name: '紅', cons: 'rune_r', col: '#ff6a4a', fx: { atk: 4, crit: 2 }, res: { atk: 10, crit: 4 }, resText: '攻撃 +10%・会心率 +4%' },
+    b: { name: '蒼', cons: 'rune_b', col: '#4fb4ff', fx: { succ: 1.5, great: 0.8 }, res: { succ: 3, great: 1.5 }, resText: '成功率 +3%・大成功率 +1.5%' },
+    g: { name: '翠', cons: 'rune_g', col: '#5fd88a', fx: { find: 6, mat: 6 }, res: { find: 15, mat: 15 }, resText: 'レア発見 +15・素材 +15%' },
+    y: { name: '金', cons: 'rune_y', col: '#f2c14e', fx: { gold: 5, exp: 5 }, res: { gold: 12, exp: 12 }, resText: '獲得ゴールド +12%・経験値 +12%' },
+  };
+  IT.RUNE_IDS = Object.keys(IT.RUNES);
+  // 穴の数：R 1・SR 1・SSR 2・UR 3（UR は覚醒★2で +1）
+  IT.sockets = (it) => (it && it.kind === 'equip' ? [0, 1, 1, 2, 3][it.rarity] + (it.rarity >= 4 && (it.lb || 0) >= 2 ? 1 : 0) : 0);
+  IT.runesOf = (it) => { const n = IT.sockets(it); const r = (it.runes || []).slice(0, n); while (r.length < n) r.push(null); return r; };
+  IT.setRune = function (u, idx, color) {
+    const it = IT.get(u);
+    const R = IT.RUNES[color];
+    if (!it || !R || idx < 0 || idx >= IT.sockets(it)) return { ok: false, why: 'slot' };
+    const cur = IT.runesOf(it);
+    if (cur[idx]) return { ok: false, why: 'used' };
+    if (IT.cons(R.cons) <= 0) return { ok: false, why: 'none' };
+    IT.addCons(R.cons, -1);
+    cur[idx] = color;
+    it.runes = cur;
+    G.state.stats.runes = (G.state.stats.runes || 0) + 1;
+    G.emit('itemsChanged');
+    return { ok: true };
+  };
+  IT.runeRemoveCost = () => Math.max(100, Math.round((80 * Math.pow(1.5, Math.max(0, (G.state.rank || 1) - 1))) / 10) * 10);
+  IT.removeRune = function (u, idx) {
+    const it = IT.get(u);
+    const cur = it ? IT.runesOf(it) : [];
+    if (!it || !cur[idx]) return { ok: false, why: 'empty' };
+    const c = IT.runeRemoveCost();
+    if (G.state.gold < c) return { ok: false, why: 'gold' };
+    G.state.gold -= c;
+    IT.addCons(IT.RUNES[cur[idx]].cons, 1);
+    cur[idx] = null;
+    it.runes = cur;
+    G.emit('itemsChanged');
+    return { ok: true, cost: c };
+  };
+  // 冒険者の装備にはまっている刻印の色の数 → 共鳴
+  IT.runeCount = (adv) => { const c = {}; IT.equipped(adv).forEach((it) => IT.runesOf(it).forEach((x) => { if (x) c[x] = (c[x] || 0) + 1; })); return c; };
+  IT.resonance = (adv) => { const c = IT.runeCount(adv); return IT.RUNE_IDS.filter((k) => (c[k] || 0) >= 3); };
+  IT.randomRune = (rnd = Math.random) => IT.RUNE_IDS[Math.floor(rnd() * IT.RUNE_IDS.length)];
+
+  // ---------------------------------------------------------------- UR の覚醒（限界突破の★）
+  //  ★1：主能力 +10%（いままでどおり）・★2：刻印の穴 +1・★3：真価解放（主能力 +15%・型の特性 ×1.5）・★5：極光（追加能力 +20%）
+  IT.AWAKEN = [
+    { lb: 1, name: '覚醒', text: '主能力 +10%・強化上限 +2（★ごと）' },
+    { lb: 2, name: '刻印の穴', text: '刻印の穴が1つ増える' },
+    { lb: 3, name: '真価解放', text: '主能力 +15%・型の特性 ×1.5' },
+    { lb: 5, name: '極光', text: '追加能力 +20%・装備が虹色に輝く' },
+  ];
   IT.BOOST_NAME = { speed: '倍速', gold: 'ゴールド2倍', luck: '大成功アップ', feast: '宴', auto: 'おまかせ' };
 
   // ---------------------------------------------------------------- 抽選
@@ -220,12 +290,24 @@
   // ---------------------------------------------------------------- 能力の計算
   IT.mainVal = function (it, adv) {
     const m = IT.MAIN[it.slot];
-    let v = m.base[it.rarity] * (1 + 0.015 * (it.ilv - 1)) * (1 + 0.08 * (it.plus || 0)) * (1 + 0.1 * (it.lb || 0));
+    const e = IT.EQUIP[it.tid] || {};
+    let v = m.base[it.rarity] * (1 + 0.015 * (it.ilv - 1)) * (1 + 0.08 * (it.plus || 0)) * (1 + 0.1 * (it.lb || 0)) * (e.mul || 1) * ((it.lb || 0) >= 3 ? 1.15 : 1);
     if (adv && it.slot === 'weapon') {
-      const e = IT.EQUIP[it.tid];
       if (e.cls && e.cls !== adv.cls) v *= 0.5;
     }
     return v;
+  };
+  // 型の特性（斧＝会心率、外套＝レア発見 など）。強化と限界突破で少し伸びる
+  IT.innate = function (it) {
+    const e = it && it.kind === 'equip' ? IT.EQUIP[it.tid] : null;
+    if (!e || !e.innate) return null;
+    return { k: e.innate.k, v: e.innate.v[it.rarity] * (1 + 0.04 * (it.plus || 0)) * (1 + 0.1 * (it.lb || 0)) * ((it.lb || 0) >= 3 ? 1.5 : 1), role: e.role };
+  };
+  IT.innateHtml = function (it) {
+    const e = it && it.kind === 'equip' ? IT.EQUIP[it.tid] : null;
+    if (!e || !e.role) return '';
+    const n = IT.innate(it);
+    return `<div class="innate"><span>型「${e.role}」${n ? `・${IT.STAT[n.k].name}` : `・主能力 ×${e.mul}`}</span>${n ? `<b>+${IT.fmtV(n.v)}%</b>` : ''}</div>`;
   };
   IT.fits = (it, adv) => { const e = IT.EQUIP[it.tid]; return !e.cls || e.cls === adv.cls; };
   // 1つの装備の能力 { atk, succ, ... }
@@ -234,7 +316,10 @@
     if (!it || it.kind !== 'equip') return s;
     const m = IT.MAIN[it.slot];
     s[m.k] = (s[m.k] || 0) + IT.mainVal(it, adv);
-    const pm = 1 + 0.04 * (it.plus || 0);
+    const inn = IT.innate(it);
+    if (inn) s[inn.k] = (s[inn.k] || 0) + inn.v;
+    IT.runesOf(it).forEach((x) => { if (x) Object.entries(IT.RUNES[x].fx).forEach(([k, v]) => { s[k] = (s[k] || 0) + v; }); });
+    const pm = (1 + 0.04 * (it.plus || 0)) * ((it.lb || 0) >= 5 ? 1.2 : 1);
     (it.affixes || []).forEach((a) => { s[a.k] = (s[a.k] || 0) + a.v * pm; });
     return s;
   };
@@ -245,6 +330,7 @@
     IT.equipped(adv).forEach((it) => addAll(IT.itemStats(it, adv)));
     const sb = IT.setBonus(adv);
     if (sb) addAll(sb.fx);
+    IT.resonance(adv).forEach((k) => addAll(IT.RUNES[k].res));
     (adv.skillSet || []).forEach((n) => {
       const fx = IT.skillFx(adv.cls, n);
       if (fx) addAll(fx, 1 + 0.25 * (((adv.sk || {})[n] || 1) - 1));
@@ -368,6 +454,9 @@
     const n = IT.dismantleValue(it);
     IT.addCons('stone', n);
     if (it.rarity >= 4) IT.addCons('shard', 2 + (it.lb || 0));
+    // はめていた刻印石は戻る。SR 以上は刻印石が出ることがある
+    IT.runesOf(it).forEach((x) => { if (x) IT.addCons(IT.RUNES[x].cons, 1); });
+    if (it.rarity >= 2 && Math.random() < [0, 0, 0.2, 0.5, 1][it.rarity]) IT.addCons(IT.RUNES[IT.randomRune()].cons, 1);
     if (!silent) G.emit('itemsChanged');
     return n;
   };

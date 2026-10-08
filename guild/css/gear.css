@@ -1,0 +1,37 @@
+/* 装備：型の特性・刻印・UR の覚醒 */
+.stats-box .innate { display: flex; justify-content: space-between; align-items: baseline; margin: 4px 0 2px; padding: 4px 8px; border-radius: 8px; font-size: 12px; color: #ffe9a8; background: rgba(255, 214, 110, 0.08); border: 1px dashed rgba(255, 214, 110, 0.35); }
+.stats-box .innate b { font-family: var(--font-num); }
+
+.runes { margin: 10px 0 4px; padding: 8px 10px; border-radius: 12px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); text-align: left; }
+.rn-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.rn-head b { font-size: 13px; }
+.rn-head small { display: flex; gap: 6px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+.rn-head small span { color: var(--c); font-weight: 800; }
+.rn-head small span.res { padding: 0 6px; border-radius: 8px; color: #1a1020; background: var(--c); box-shadow: 0 0 8px var(--c); }
+.rn-slots { display: flex; gap: 8px; margin-top: 6px; }
+.rn { flex: 1; display: grid; justify-items: center; gap: 2px; padding: 6px 4px; border-radius: 10px; font: inherit; color: var(--parch); cursor: pointer; background: rgba(0, 0, 0, 0.2); border: 1px solid var(--line); }
+.rn img { width: 36px; height: 36px; }
+.rn span { font-size: 11px; }
+.rn.on { border-color: var(--c); background: color-mix(in srgb, var(--c) 14%, #0e1630); box-shadow: inset 0 0 12px color-mix(in srgb, var(--c) 30%, transparent); }
+.rn.empty i { display: grid; place-items: center; width: 36px; height: 36px; font-style: normal; font-size: 20px; color: var(--muted); border-radius: 50%; border: 1.5px dashed var(--line-2); }
+.rn.empty span { color: var(--muted); }
+
+.rn-menu h2 { margin-top: 0; }
+.rn-picks { display: grid; gap: 8px; }
+.rn-pick { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; text-align: left; font: inherit; color: var(--parch); cursor: pointer; background: color-mix(in srgb, var(--c) 10%, #0e1630); border: 1px solid color-mix(in srgb, var(--c) 50%, transparent); }
+.rn-pick img { width: 40px; height: 40px; flex: none; }
+.rn-pick span { display: grid; gap: 1px; }
+.rn-pick b { font-size: 13px; }
+.rn-pick b small { color: var(--muted); font-family: var(--font-num); }
+.rn-pick small { font-size: 11px; color: var(--parch-dim); }
+.rn-pick small.res { color: var(--c); }
+.rn-pick.none { opacity: 0.45; }
+
+.lb .aw-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 3px; text-align: left; width: 100%; }
+.lb .aw-list li { font-size: 11.5px; color: var(--muted); }
+.lb .aw-list li b { display: inline-block; min-width: 28px; color: var(--muted); }
+.lb .aw-list li small { margin-left: 6px; font-size: 10.5px; }
+.lb .aw-list li.got { color: var(--parch); }
+.lb .aw-list li.got b { color: #ffe08a; }
+.item-detail.aw5 .id-img { animation: aw5 3s linear infinite; border-radius: 22px; }
+@keyframes aw5 { 0% { box-shadow: 0 0 22px #ff7ab8; } 33% { box-shadow: 0 0 22px #7ad8ff; } 66% { box-shadow: 0 0 22px #ffe27a; } 100% { box-shadow: 0 0 22px #ff7ab8; } }
