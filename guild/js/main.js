@@ -63,6 +63,7 @@
         if (off && off.away > 60 && (off.tavern > 0 || off.resolved > 0 || off.trained > 0)) G.ui.welcomeBack(off);
         if (G.state.flags.tut < 90) G.ui.startTutorial();
         if (G.stars) G.stars.afterBoot();
+        if (G.pay) G.pay.afterBoot();
         G.emit('started');
       }, 1700);
     };
@@ -151,6 +152,7 @@
     if (G.notify) G.notify.tick(dt);
     if (G.missions) G.missions.tick(dt);
     if (G.achieve) G.achieve.tick(dt);
+    if (G.pay) G.pay.tick(dt);
     if (G.treasury.autoTick) G.treasury.autoTick(dt);
     saveT += dt;
     if (saveT > 3) { saveT = 0; G.sim.save(); }

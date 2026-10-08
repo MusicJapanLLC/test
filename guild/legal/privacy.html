@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>プライバシーポリシー | ギルドの灯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&display=swap">
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #0b1330; color: #efe4c8; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif; font-weight: 600; line-height: 1.8; }
+main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-size: 22px; letter-spacing: .06em; color: #fff3d6; border-bottom: 1px solid rgba(255,214,106,.4); padding-bottom: 8px; }
+h2 { font-size: 16px; color: #ffe39a; margin-top: 28px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.12); }
+th { width: 34%; color: #cfc2a0; font-weight: 700; }
+a { color: #9fd8ff; }
+.pending { color: #ff9a80; }
+small, .note { color: #b8ad92; font-size: 12.5px; }
+ol, ul { padding-left: 1.4em; }
+.back { display: inline-block; margin-top: 30px; }
+</style>
+</head>
+<body><main>
+<h1>プライバシーポリシー</h1>
+<h2>取得する情報</h2>
+<ul><li>ゲームの進行データ：お客様の端末のブラウザに保存されます。当社のサーバーには送信しません（Claude 上で遊ぶ場合は、その保存領域に保存されます）。</li>
+<li>購入の情報：決済は Stripe, Inc. が行い、カード番号などの決済情報を当社が受け取ることはありません。当社は、購入の確認のために、Stripe から決済の識別番号・金額・品目・ゲーム内のセーブ識別子を受け取ります。</li></ul>
+<h2>利用目的</h2>
+<p>購入した品の付与、お問い合わせへの対応、不正な購入の防止のために利用します。</p>
+<h2>第三者への提供</h2>
+<p>法令に基づく場合を除き、ご本人の同意なく第三者に提供しません。決済の処理のため、Stripe, Inc. に必要な情報が送信されます（Stripe のプライバシーポリシーをご覧ください）。</p>
+<h2>お問い合わせ</h2>
+<p>特定商取引法に基づく表記に記載の連絡先までお問い合わせください。</p>
+
+<p class="note">最終更新日：2026年10月8日</p>
+<p><a href="../legal/tokushoho.html">特定商取引法に基づく表記</a> ・ <a href="../legal/shikin.html">資金決済法に基づく表示</a> ・ <a href="../legal/terms.html">利用規約</a> ・ <a href="../legal/privacy.html">プライバシーポリシー</a></p>
+<a class="back" href="../">ギルドの灯へ戻る</a>
+</main>
+<script>
+// 事業者の情報はサーバーの設定から（未設定の項目は「準備中」と表示）
+fetch('../api/shop/config', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+  var s = (j && j.seller) || {};
+  document.querySelectorAll('[data-seller]').forEach(function (el) {
+    var v = s[el.getAttribute('data-seller')];
+    if (v) { el.textContent = v; el.classList.remove('pending'); }
+  });
+}).catch(function () {});
+</script>
+</body></html>

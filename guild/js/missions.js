@@ -121,6 +121,28 @@
     G.ui.refreshHud();
     G.ui.renderSheet();
   }
+  // まとめて受け取る（今日・今週・ぜんぶ達成ボーナス）
+  function claimAll() {
+    const m = ensure();
+    const sum = {};
+    let n = 0;
+    [[dailyList(), m.claimed], [weeklyList(), m.wclaimed]].forEach(([list, got]) => list.forEach((x) => {
+      if (!x.done || x.claimed) return;
+      got[x.key] = true;
+      Object.entries(x.rw).forEach(([k, v]) => { sum[k] = (sum[k] || 0) + v; });
+      n++;
+    }));
+    if (!n) return;
+    give(sum);
+    G.audio.sfx('rarity', 2);
+    G.haptic(16);
+    G.ui.toast(`任務 ${n}件をまとめて受け取りました：${rwText(sum)}`, 'good');
+    G.sim.save();
+    G.ui.refreshHud();
+    // ぜんぶ達成なら、ボーナスも続けて
+    if (!m.bonus && dailyList().every((x) => x.claimed)) setTimeout(claimBonus, 500);
+    else G.ui.renderSheet();
+  }
   function claimBonus() {
     const st = G.state;
     const m = ensure();
@@ -175,12 +197,16 @@
       const pct = Math.round((x.cur / x.n) * 100);
       return `<div class="card mis ${x.claimed ? 'got' : x.done ? 'done' : ''}"><img alt="" src="${G.ui.itemThumb({ kind: 'cons', id: icon, rarity: x.weekly ? 3 : 1, name: '' }, 40)}"><div class="grow"><b>${G.esc(x.text)}</b><div class="bar"><i style="width:${pct}%"></i></div><small>${x.cur}/${x.n} ・ ${rwText(x.rw)}</small></div>${x.claimed ? '<span class="stamp">達成</span>' : `<button class="btn sm ${x.done ? 'go' : ''}" data-mis="${x.key}" data-weekly="${x.weekly ? 1 : 0}" ${x.done ? '' : 'disabled'}>${x.done ? '受け取る' : `あと${x.n - x.cur}`}</button>`}</div>`;
     };
-    let h = `<div class="sec"><h3>今日の任務 <small>${d.filter((x) => x.claimed).length}/${d.length}</small><span class="h-right">入れ替えまで <b data-countdown="${next}">${G.fmtClock(next - G.now())}</b></span></h3>${d.map(row).join('')}
+    const ready = d.concat(w).filter((x) => x.done && !x.claimed).length;
+    let h = ready > 1 ? `<button class="btn primary wide mis-all" id="misAll">まとめて受け取る（${ready}件）</button>` : '';
+    h += `<div class="sec"><h3>今日の任務 <small>${d.filter((x) => x.claimed).length}/${d.length}</small><span class="h-right">入れ替えまで <b data-countdown="${next}">${G.fmtClock(next - G.now())}</b></span></h3>${d.map(row).join('')}
       <div class="card mis-bonus ${m.bonus ? 'got' : allClaimed ? 'done' : ''}"><img alt="" src="${G.ui.itemThumb({ kind: 'cons', id: 'key', rarity: 3, name: '' }, 44)}"><div class="grow"><b>ぜんぶ達成ボーナス</b><small>今日の任務を5つ受け取ると ・ ${rwText(ALL_CLEAR)}</small></div>${m.bonus ? '<span class="stamp">達成</span>' : `<button class="btn sm ${allClaimed ? 'go pulse' : ''}" id="misBonus" ${allClaimed ? '' : 'disabled'}>${allClaimed ? '受け取る' : 'あと' + d.filter((x) => !x.claimed).length}</button>`}</div></div>`;
     h += `<div class="sec"><h3>今週の任務 <small>${w.filter((x) => x.claimed).length}/${w.length}</small><span class="h-right">月曜に入れ替え</span></h3>${w.map(row).join('')}</div>`;
     body.innerHTML = h;
     G.$$('[data-mis]', body).forEach((b) => b.addEventListener('click', () => claim(b.dataset.mis, b.dataset.weekly === '1')));
     const bb = G.$('#misBonus', body);
     if (bb) bb.addEventListener('click', claimBonus);
+    const ma = G.$('#misAll', body);
+    if (ma) ma.addEventListener('click', claimAll);
   };
 })();

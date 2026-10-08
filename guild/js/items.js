@@ -456,8 +456,7 @@
     const it = IT.get(u);
     if (!it || !it.affixes || !it.affixes[idx]) return { ok: false, why: 'none' };
     const cost = IT.rerollCost(it);
-    if ((st.crystals || 0) < cost) return { ok: false, why: 'cry' };
-    st.crystals -= cost;
+    if (!IT.spendCry(cost)) return { ok: false, why: 'cry' };
     const old = Object.assign({}, it.affixes[idx]);
     const others = it.affixes.filter((a, i) => i !== idx).map((a) => a.k);
     const main = IT.MAIN[it.slot].k;
@@ -551,6 +550,22 @@
 
   // ---------------------------------------------------------------- 持ち物・ブースト
   IT.cons = (id) => ((G.state.bag || {})[id] || 0);
+  // 魔晶石：有償（購入したぶん）と無償を分けて数える。使うときは無償から
+  IT.cryPaid = () => Math.min(G.state.crystals || 0, G.state.cryPaid || 0);
+  IT.spendCry = function (n) {
+    const st = G.state;
+    if ((st.crystals || 0) < n) return false;
+    const paid = IT.cryPaid();
+    const free = (st.crystals || 0) - paid;
+    st.crystals -= n;
+    st.cryPaid = n > free ? Math.max(0, paid - (n - free)) : paid;
+    return true;
+  };
+  IT.addPaidCry = function (n) {
+    const st = G.state;
+    st.crystals = (st.crystals || 0) + n;
+    st.cryPaid = (st.cryPaid || 0) + n;
+  };
   IT.addCons = function (id, n) {
     const st = G.state;
     if (id === 'cry') { st.crystals = (st.crystals || 0) + n; return; }
@@ -648,8 +663,7 @@
       IT.used();
     } else {
       const cost = kind === 'ten' ? IT.CHEST10_COST : IT.CHEST_COST;
-      if ((st.crystals || 0) < cost) return null;
-      st.crystals -= cost;
+      if (!IT.spendCry(cost)) return null;
     }
     const rnd = Math.random;
     const out = [];

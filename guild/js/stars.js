@@ -107,7 +107,7 @@
     const beds = D.beds(Math.max(1, S.starLv('start') >= 2 ? 2 : 1));
     h += `<div class="sec rebirth"><h3>ギルドの再建</h3><div class="card rb ${can ? 'ready' : ''}">
       <div class="rb-head"><div class="rb-earn"><small>いま再建すると</small><b>${STAR_SVG}+${rb.total}</b></div>
-        <ul class="rb-break"><li><span>名声 ${G.fmt(st.fame)}</span><b>+${rb.fame}</b></li><li><span>竜王の討伐</span><b>+${rb.boss}</b></li><li><span>深淵 新記録</span><b>+${rb.abyss}</b></li></ul></div>
+        <ul class="rb-break"><li><span>名声 ${G.fmt(st.fame)}</span><b>+${rb.fame}</b></li><li><span>竜王の討伐</span><b>+${rb.boss}</b></li><li><span>深淵 新記録</span><b>+${rb.abyss}</b></li>${rb.book ? `<li><span>星詠みの書</span><b>+${rb.book}</b></li>` : ''}</ul></div>
       <div class="rb-keep"><div><b>残るもの</b><small>装備・秘宝・魔晶石・持ち物・技・熟練・深淵の記録・灯火の星・図鑑・実績${S.starLv('memory') ? `・施設（Lv${S.starLv('memory')}まで）` : ''}${S.starLv('veteran') ? `・冒険者のレベルの${S.starLv('veteran') * 10}%` : ''}</small></div><div><b>最初からになるもの</b><small>ゴールド・素材・名声とランク・施設・冒険者のレベル（上位${beds}人はそのまま、ほかは「かつての仲間」として無料で呼び戻せる）</small></div></div>
       <button class="btn ${can ? 'danger big' : 'cant'} wide" id="rebirthBtn">${can ? 'ギルドを再建する' : `ランク${S.REBIRTH_RANK}から再建できます（いまランク${st.rank}）`}</button></div>
       <p class="hint">灯火の星を灯すと、再建したあとも、ずっと強いままです。新しい職業や土地も、ここで開きます。</p></div>`;

@@ -257,6 +257,32 @@
     ], { cls: 'gs-modal' });
   }
   const R_NAME = (r) => IT.RARITY[r].id;
+  // ---- 課金の売り場（値段と中身はサーバーから）
+  function payHtml() {
+    const P = G.pay;
+    if (!P) return '';
+    if (P.web && !P.products().length) P.load().then((c) => { if (c && tab === 'shop') G.ui.renderSheet(); });
+    const paid = IT.cryPaid(), all = G.state.crystals || 0;
+    const ready = P.ready();
+    const list = P.products();
+    const fallback = [{ id: 'cry60', name: '魔晶石 60', price: 120, kind: 'cry', grant: { cry: 60 } }, { id: 'cry330', name: '魔晶石 330', price: 600, kind: 'cry', bonus: '+10%', grant: { cry: 330 } }, { id: 'cry1100', name: '魔晶石 1,100', price: 1800, kind: 'cry', bonus: '+22%', grant: { cry: 1100 } }];
+    const items = list.length ? list : fallback;
+    const btnLabel = (p) => (!P.web ? 'ブラウザ版で' : ready ? `¥${G.fmt(p.price)}` : '準備中');
+    let h = `<div class="sec pay"><h3>魔晶石を買う <small>有償 ${G.fmt(paid)} ・ 無償 ${G.fmt(all - paid)}</small></h3>`;
+    h += `<div class="packs">${items.filter((p) => p.kind === 'cry').map((p) => `<button class="pack ${ready ? 'on' : ''}" data-pay="${p.id}"><img alt="" src="${consThumb('cry', 40)}"><b>${G.esc(p.name)}</b>${p.bonus ? `<i>${p.bonus}</i>` : ''}<small>${btnLabel(p)}</small></button>`).join('')}</div>`;
+    const sp = items.filter((p) => p.kind !== 'cry');
+    if (sp.length) {
+      h += `<h3 class="mini">特別なパック</h3>${sp.map((p) => {
+        const can = P.available(p);
+        const tag = { once: '1回だけ', pass: P.passActive() ? `のこり${P.passDays()}日` : '30日', run: '周回ごと', perm: 'ずっと' }[p.kind] || '';
+        const ic = { starter: 'book', pass30: 'cry', runpack: 'hg3', starbook: 'book2' }[p.id] || 'cry';
+        return `<div class="card shop bundle pay-sp ${can ? '' : 'soldout'}"><img alt="" src="${consThumb(ic, 44)}"><div class="grow"><b>${G.esc(p.name)}<em class="per">${tag}</em></b><small>${G.esc(p.desc)}</small></div><button class="btn sm ${can && ready ? 'primary' : 'cant'}" data-pay="${p.id}" ${can ? '' : 'disabled'}>${can ? `<span>${btnLabel(p)}</span>` : '<span>購入済み</span>'}</button></div>`;
+      }).join('')}`;
+    }
+    h += `<p class="hint">${!P.web ? '購入はブラウザ版（game.music-japan.com）で受け付けています。' : ready ? 'お支払いは Stripe の決済ページで行います。購入した魔晶石は有償の魔晶石として数えます（使うときは無償から）。' : 'ただいま購入の受付を準備しています。'}</p>
+      <p class="pc-legal"><a href="legal/tokushoho.html" target="_blank" rel="noopener">特定商取引法に基づく表記</a><a href="legal/shikin.html" target="_blank" rel="noopener">資金決済法に基づく表示</a><a href="legal/terms.html" target="_blank" rel="noopener">利用規約</a><button class="link" id="payHist">購入履歴</button></p></div>`;
+    return h;
+  }
   function shopTab() {
     const st = G.state;
     const today = T.today();
@@ -265,9 +291,8 @@
     let h = `<div class="shop-head"><span class="tr-cry">${CRY}<b>${G.fmt(cry)}</b><small>魔晶石</small></span><span class="tr-cry gold">${G.ui.IC.coin}<b>${G.fmt(st.gold)}</b><small>ゴールド</small></span></div>`;
     h += gshopHtml();
     h += `<div class="sec"><h3>魔晶石</h3>
-      <div class="card shop-free ${freeCry ? '' : 'done'}"><img alt="" src="${consThumb('cry', 44)}"><div class="grow"><b>今日の魔晶石 ×10</b><small>1日1回、無料でもらえます</small></div><button class="btn sm ${freeCry ? 'go' : ''}" id="shFree" ${freeCry ? '' : 'disabled'}>${freeCry ? '受け取る' : '受け取り済み'}</button></div>
-      <div class="packs">${T.PACKS.map((p) => `<button class="pack" data-pack="${p.id}"><img alt="" src="${consThumb('cry', 40)}"><b>${p.label}</b>${p.bonus ? `<i>${p.bonus}</i>` : ''}<small>アプリ版で</small></button>`).join('')}</div>
-      <p class="hint">魔晶石の購入はアプリ版で対応します。いまは遊んで集めた魔晶石で楽しめます。</p></div>`;
+      <div class="card shop-free ${freeCry ? '' : 'done'}"><img alt="" src="${consThumb('cry', 44)}"><div class="grow"><b>今日の魔晶石 ×10</b><small>1日1回、無料でもらえます</small></div><button class="btn sm ${freeCry ? 'go' : ''}" id="shFree" ${freeCry ? '' : 'disabled'}>${freeCry ? '受け取る' : '受け取り済み'}</button></div></div>`;
+    h += payHtml();
     // 両替所
     const exN = bought('ex', 'day');
     const exLeft = EX_COST.length - exN;
@@ -317,6 +342,8 @@
     if (ae) ae.addEventListener('change', () => { G.state.settings.autoEnh = ae.checked; G.audio.sfx(ae.checked ? 'claim' : 'soft'); G.sim.save(); G.ui.renderSheet(); });
     G.$$('[data-use]', body).forEach((b) => b.addEventListener('click', () => useCons(b.dataset.use)));
     G.$$('[data-buy]', body).forEach((b) => b.addEventListener('click', () => buy(b.dataset.buy)));
+    G.$$('[data-pay]', body).forEach((b) => b.addEventListener('click', () => { G.audio.sfx('tap'); G.pay.buy(b.dataset.pay); }));
+    on('#payHist', () => G.pay.history());
     G.$$('[data-gs]', body).forEach((b) => b.addEventListener('click', () => {
       if (+b.dataset.rot !== T.gshopRot()) { G.ui.toast('ペトラ「ちょうど荷を入れ替えたところだよ！」', 'info'); G.ui.renderSheet(); return; }
       G.audio.sfx('tap');
@@ -351,10 +378,6 @@
       G.sim.save();
       G.ui.renderSheet();
     });
-    G.$$('[data-pack]', body).forEach((b) => b.addEventListener('click', () => {
-      G.audio.sfx('soft');
-      G.store.purchase(b.dataset.pack).then((r) => { if (!r.ok) G.ui.toast('魔晶石の購入はアプリ版で対応します', 'info'); });
-    }));
   }
 
   // ---------------------------------------------------------------- 宝箱を開ける
@@ -587,10 +610,11 @@
     G.audio.sfx('tap');
     const st = G.state;
     const cnt = (r) => (st.items || []).filter((x) => x.rarity <= r && !x.lock && !IT.equippedBy(x.uid)).length;
-    G.ui.modal(`<div class="confirm"><h2>まとめて分解</h2><p>装備していない・鍵をかけていない装備を、強化石にします。<br>次の画面で、分解する品を確かめられます。</p></div>`, [
+    G.ui.modal(`<div class="confirm"><h2>まとめて分解</h2><p>装備していない・鍵をかけていない装備を、強化石にします。<br>次の画面で、分解する品を確かめて、残したい品を外せます。</p><p class="hint">URは分解しません（1つずつ分解できます）。大事な品には鍵をかけておきましょう</p></div>`, [
       { text: `N（${cnt(0)}）`, cls: 'ghost', fn: () => bulkPick(0) },
       { text: `R以下（${cnt(1)}）`, cls: 'ghost', fn: () => bulkPick(1) },
       { text: `SR以下（${cnt(2)}）`, cls: 'ghost', fn: () => bulkPick(2) },
+      { text: `SSR以下（${cnt(3)}）`, cls: 'ghost danger', fn: () => bulkPick(3) },
       { text: '戻る', cls: 'primary back' },
     ], { cls: 'bulk-pick' });
   }
@@ -714,8 +738,7 @@
   function buy(spec) {
     const st = G.state;
     const pay = (cost) => {
-      if ((st.crystals || 0) < cost) { G.audio.sfx('error'); G.ui.toast(`魔晶石が足りません（あと ${cost - (st.crystals || 0)}）`, 'bad'); return false; }
-      st.crystals -= cost;
+      if (!IT.spendCry(cost)) { G.audio.sfx('error'); G.ui.toast(`魔晶石が足りません（あと ${cost - (st.crystals || 0)}）`, 'bad'); return false; }
       return true;
     };
     if (spec === 'g2c') {
@@ -1206,10 +1229,4 @@
     }
   }
 
-  // ---------------------------------------------------------------- 課金のつなぎ口（アプリ版で差し替える）
-  G.store = G.store || {
-    available: false,
-    products: T.PACKS,
-    purchase: () => Promise.resolve({ ok: false, reason: 'unavailable' }),
-  };
 })();

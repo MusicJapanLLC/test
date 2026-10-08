@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>特定商取引法に基づく表記 | ギルドの灯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&display=swap">
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #0b1330; color: #efe4c8; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif; font-weight: 600; line-height: 1.8; }
+main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-size: 22px; letter-spacing: .06em; color: #fff3d6; border-bottom: 1px solid rgba(255,214,106,.4); padding-bottom: 8px; }
+h2 { font-size: 16px; color: #ffe39a; margin-top: 28px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.12); }
+th { width: 34%; color: #cfc2a0; font-weight: 700; }
+a { color: #9fd8ff; }
+.pending { color: #ff9a80; }
+small, .note { color: #b8ad92; font-size: 12.5px; }
+ol, ul { padding-left: 1.4em; }
+.back { display: inline-block; margin-top: 30px; }
+</style>
+</head>
+<body><main>
+<h1>特定商取引法に基づく表記</h1>
+<table>
+<tr><th>販売事業者</th><td><span class="pending" data-seller="name">（準備中）</span></td></tr>
+<tr><th>運営統括責任者</th><td><span class="pending" data-seller="rep">（準備中）</span></td></tr>
+<tr><th>所在地</th><td><span class="pending" data-seller="address">（準備中）</span></td></tr>
+<tr><th>電話番号</th><td><span class="pending" data-seller="phone">（準備中）</span><br><small>受付時間：<span class="pending" data-seller="hours">（準備中）</span></small></td></tr>
+<tr><th>メールアドレス</th><td><span class="pending" data-seller="email">（準備中）</span></td></tr>
+<tr><th>販売価格</th><td>購入画面に、品ごとに税込価格で表示しています。</td></tr>
+<tr><th>商品代金以外の必要料金</th><td>インターネット接続にかかる通信料は、お客様のご負担となります。</td></tr>
+<tr><th>支払方法</th><td>クレジットカード（Apple Pay・Google Pay を含む）。決済は Stripe, Inc. の決済サービスで行います。</td></tr>
+<tr><th>支払時期</th><td>購入手続きの完了時にお支払いが確定します。</td></tr>
+<tr><th>商品の引渡時期</th><td>決済の完了後、ゲームに戻った時点で直ちに付与します。通信の状況により付与されなかった場合は、ゲームを開き直すと自動で再度受け取りを試みます。</td></tr>
+<tr><th>返品・キャンセル</th><td>デジタルコンテンツの性質上、購入後の返品・キャンセル・返金はお受けできません。ただし、法令で認められる場合や、当社の責めに帰すべき事由により商品が付与されなかった場合は、この限りではありません。</td></tr>
+<tr><th>動作環境</th><td>最新版の Safari・Google Chrome などの主要なブラウザ。セーブデータはお使いの端末のブラウザに保存されます。</td></tr>
+<tr><th>販売数量の制限・年齢による制限</th><td>一部の品は購入できる回数に限りがあります。15歳以下の方は1か月5,000円まで、16〜19歳の方は1か月10,000円までご購入いただけます。未成年の方は保護者の同意を得てからご購入ください。</td></tr>
+</table>
+
+<p class="note">最終更新日：2026年10月8日</p>
+<p><a href="../legal/tokushoho.html">特定商取引法に基づく表記</a> ・ <a href="../legal/shikin.html">資金決済法に基づく表示</a> ・ <a href="../legal/terms.html">利用規約</a> ・ <a href="../legal/privacy.html">プライバシーポリシー</a></p>
+<a class="back" href="../">ギルドの灯へ戻る</a>
+</main>
+<script>
+// 事業者の情報はサーバーの設定から（未設定の項目は「準備中」と表示）
+fetch('../api/shop/config', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+  var s = (j && j.seller) || {};
+  document.querySelectorAll('[data-seller]').forEach(function (el) {
+    var v = s[el.getAttribute('data-seller')];
+    if (v) { el.textContent = v; el.classList.remove('pending'); }
+  });
+}).catch(function () {});
+</script>
+</body></html>

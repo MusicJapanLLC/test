@@ -104,7 +104,7 @@
   S.busy = (s = G.state) => s.active.filter((e) => !e.abyss).length;
   S.boardSize = (s = G.state) => s.fac.hall + 2;
   S.beds = (s = G.state) => D.beds(s.fac.bunks);
-  S.offlineCap = (s = G.state) => (3 + s.fac.tower * 2) * 3600;
+  S.offlineCap = (s = G.state) => (3 + s.fac.tower * 2 + (G.pay && G.pay.passActive() ? 2 : 0)) * 3600;
   const starOk = (x, s) => !x.star || S.starLv(x.star, s) > 0;
   S.unlockedAreas = (s = G.state) => D.AREAS.filter((a) => a.rank <= s.rank && starOk(a, s));
   S.unlockedClasses = (s = G.state) => D.CLASS_ORDER.filter((c) => D.CLASSES[c].rank <= s.rank && starOk(D.CLASSES[c], s));
@@ -610,7 +610,10 @@
     const fame = Math.floor(Math.sqrt(Math.max(0, s.fame)) / 4);
     const boss = s.flags.runBoss ? 10 : 0;
     const abyss = Math.floor(Math.max(0, S.abyss(s).best - (pr.abyssAt || 0)) / 5);
-    return { fame, boss, abyss, total: fame + boss + abyss };
+    const base = fame + boss + abyss;
+    // 星詠みの書：再建で手に入る星 +20%
+    const book = G.pay && G.pay.perm('starbook') ? Math.floor(base * 0.2) : 0;
+    return { fame, boss, abyss, book, total: base + book };
   };
   S.rebirth = function (s = G.state) {
     if (!S.canRebirth(s)) return null;

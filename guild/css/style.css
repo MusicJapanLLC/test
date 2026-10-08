@@ -1503,3 +1503,30 @@ html.in-reels #toasts { top: auto; bottom: calc(var(--safe-b) + 34%); }
 .rb-sum div { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px 10px; margin-top: 4px; }
 .rb-sum span { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--parch-dim); }
 .rb-sum span b { font-family: var(--font-num); color: #fff3d6; }
+
+/* ================================================================ 課金 */
+.sec.pay h3 small { font-family: var(--font-body); }
+.pack.on small { color: #ffe39a; font-family: var(--font-num); font-weight: 800; font-size: 12px; }
+.pay-sp .per { white-space: nowrap; }
+.pc-legal { display: flex; flex-wrap: wrap; gap: 4px 14px; justify-content: center; font-size: 10.5px; margin: 6px 0 0; }
+.pc-legal a, .pc-legal .link { color: var(--sky); text-decoration: underline; text-underline-offset: 2px; font-size: 10.5px; padding: 0; }
+.pay-confirm { text-align: center; }
+.pay-confirm > small { color: var(--parch-dim); }
+.pay-confirm h2 { margin: 2px 0; }
+.pc-price { font-family: var(--font-num); font-size: 28px; font-weight: 800; color: #fff3d6; margin: 2px 0 8px; }
+.pc-price small { font-family: var(--font-body); font-size: 11px; color: var(--parch-dim); margin-left: 4px; }
+.pc-box { text-align: left; padding: 10px 12px; border-radius: 12px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); }
+.pc-box b { font-size: 12px; color: var(--parch-dim); }
+.pc-box p { margin: 4px 0 0; font-size: 12.5px; line-height: 1.55; }
+.pc-items { color: #ffe39a; font-weight: 800; }
+.pc-warn { color: #ffb8a0; font-size: 12px; font-weight: 800; margin: 8px 0 0; }
+.pc-notes { text-align: left; margin: 10px 0 0; padding-left: 1.2em; font-size: 11px; line-height: 1.6; color: var(--parch-dim); }
+.pay-thanks .pt-gem { width: 84px; height: 84px; margin: 0 auto 6px; border-radius: 50%; background: radial-gradient(circle, rgba(190, 200, 255, 0.95), rgba(110, 124, 240, 0.6) 45%, rgba(110, 124, 240, 0) 70%); animation: ptGem 1.6s ease-in-out infinite; }
+@keyframes ptGem { 50% { transform: scale(1.12); filter: brightness(1.3); } }
+.pay-hist ul { list-style: none; padding: 0; margin: 8px 0; max-height: 46vh; overflow: auto; }
+.pay-hist li { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; padding: 7px 4px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.pay-hist li span { color: var(--muted); font-family: var(--font-num); font-size: 11px; }
+.pay-hist li em { font-style: normal; font-family: var(--font-num); color: #ffe39a; }
+.pay-hist li.none { display: block; color: var(--muted); text-align: center; }
+.pay-hist .sub { color: var(--parch-dim); font-size: 11.5px; margin: 2px 0; }
+.mis-all { margin-bottom: 12px; }

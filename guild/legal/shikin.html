@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>資金決済法に基づく表示 | ギルドの灯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&display=swap">
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #0b1330; color: #efe4c8; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif; font-weight: 600; line-height: 1.8; }
+main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-size: 22px; letter-spacing: .06em; color: #fff3d6; border-bottom: 1px solid rgba(255,214,106,.4); padding-bottom: 8px; }
+h2 { font-size: 16px; color: #ffe39a; margin-top: 28px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.12); }
+th { width: 34%; color: #cfc2a0; font-weight: 700; }
+a { color: #9fd8ff; }
+.pending { color: #ff9a80; }
+small, .note { color: #b8ad92; font-size: 12.5px; }
+ol, ul { padding-left: 1.4em; }
+.back { display: inline-block; margin-top: 30px; }
+</style>
+</head>
+<body><main>
+<h1>資金決済法に基づく表示</h1>
+<p>「ギルドの灯」で販売する「魔晶石」は、資金決済に関する法律に定める前払式支払手段（自家型）にあたります。</p>
+<table>
+<tr><th>前払式支払手段の名称</th><td>魔晶石（有償）</td></tr>
+<tr><th>発行者</th><td><span class="pending" data-seller="name">（準備中）</span></td></tr>
+<tr><th>支払可能金額等</th><td>上限はありません（年齢による1か月の購入上限があります）。</td></tr>
+<tr><th>有効期間</th><td>有効期間はありません。ただし、本サービスを終了する場合は、法令に従い払い戻しを行います。</td></tr>
+<tr><th>お問い合わせ先</th><td><span class="pending" data-seller="email">（準備中）</span><br><span class="pending" data-seller="phone">（準備中）</span></td></tr>
+<tr><th>使用できる場所</th><td>「ギルドの灯」の中（宝箱・ショップ・追加能力の付け直しなど）</td></tr>
+<tr><th>利用上の注意</th><td>魔晶石は払い戻しできません（法令で定める場合を除く）。ほかのサービスやほかのセーブには移せません。ゲーム内では無償の魔晶石から先に使われます。セーブデータを消すと魔晶石も失われますので、機種変更の前には「記録と設定 → セーブを書き出す」で控えをとってください。</td></tr>
+<tr><th>未使用残高の確認方法</th><td>ゲーム内「宝物庫 → ショップ」の「魔晶石を買う」欄（有償・無償の内訳）と「購入履歴」でご確認いただけます。</td></tr>
+<tr><th>利用規約</th><td><a href="terms.html">利用規約</a>をご覧ください。</td></tr>
+</table>
+
+<p class="note">最終更新日：2026年10月8日</p>
+<p><a href="../legal/tokushoho.html">特定商取引法に基づく表記</a> ・ <a href="../legal/shikin.html">資金決済法に基づく表示</a> ・ <a href="../legal/terms.html">利用規約</a> ・ <a href="../legal/privacy.html">プライバシーポリシー</a></p>
+<a class="back" href="../">ギルドの灯へ戻る</a>
+</main>
+<script>
+// 事業者の情報はサーバーの設定から（未設定の項目は「準備中」と表示）
+fetch('../api/shop/config', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+  var s = (j && j.seller) || {};
+  document.querySelectorAll('[data-seller]').forEach(function (el) {
+    var v = s[el.getAttribute('data-seller')];
+    if (v) { el.textContent = v; el.classList.remove('pending'); }
+  });
+}).catch(function () {});
+</script>
+</body></html>

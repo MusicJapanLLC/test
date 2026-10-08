@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>利用規約 | ギルドの灯</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&display=swap">
+<style>
+:root { color-scheme: dark; }
+body { margin: 0; background: #0b1330; color: #efe4c8; font-family: 'Shippori Mincho B1', 'Hiragino Mincho ProN', 'Yu Mincho', serif; font-weight: 600; line-height: 1.8; }
+main { max-width: 760px; margin: 0 auto; padding: 28px 18px 60px; }
+h1 { font-size: 22px; letter-spacing: .06em; color: #fff3d6; border-bottom: 1px solid rgba(255,214,106,.4); padding-bottom: 8px; }
+h2 { font-size: 16px; color: #ffe39a; margin-top: 28px; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 8px; border-bottom: 1px solid rgba(255,255,255,.12); }
+th { width: 34%; color: #cfc2a0; font-weight: 700; }
+a { color: #9fd8ff; }
+.pending { color: #ff9a80; }
+small, .note { color: #b8ad92; font-size: 12.5px; }
+ol, ul { padding-left: 1.4em; }
+.back { display: inline-block; margin-top: 30px; }
+</style>
+</head>
+<body><main>
+<h1>利用規約</h1>
+<p>この利用規約（以下「本規約」）は、「ギルドの灯」（以下「本サービス」）の利用条件を定めるものです。本サービスを利用した時点で、本規約に同意したものとみなします。</p>
+<h2>第1条（本サービス）</h2>
+<p>本サービスは、ブラウザで遊べるギルド経営ゲームです。セーブデータはお客様の端末のブラウザ（および Claude 上で遊ぶ場合はその保存領域）に保存されます。</p>
+<h2>第2条（有償アイテム）</h2>
+<ol><li>本サービスでは、魔晶石や一部のパックを有償で販売します。価格は購入画面に税込で表示します。</li>
+<li>購入した品は、決済完了後に本サービス内で付与します。購入の権利を第三者に譲渡・貸与・売買することはできません。</li>
+<li>デジタルコンテンツの性質上、購入後の返品・返金はできません。ただし、法令で認められる場合や、当社の責めに帰すべき事由により付与されなかった場合を除きます。</li>
+<li>未成年の方は、保護者の同意を得てからご購入ください。年齢に応じて1か月の購入上限を設けています。</li></ol>
+<h2>第3条（セーブデータ）</h2>
+<p>セーブデータはお客様の端末に保存されるため、端末の故障・ブラウザのデータ削除・機種変更などで失われる場合があります。「セーブを書き出す」機能で控えをとってください。当社に故意または重大な過失がある場合を除き、セーブデータの消失について責任を負いません。</p>
+<h2>第4条（禁止事項）</h2>
+<ul><li>法令または公序良俗に反する行為</li><li>本サービスの不具合を意図的に利用する行為、セーブデータやプログラムを改ざんする行為</li><li>本サービスの運営を妨げる行為、サーバーに過度な負荷をかける行為</li><li>有償アイテムを不正な方法で取得する行為</li></ul>
+<h2>第5条（サービスの変更・終了）</h2>
+<p>当社は、お客様に事前に告知したうえで、本サービスの内容を変更し、または提供を終了することがあります。有償の魔晶石の未使用残高がある状態で本サービスを終了する場合は、資金決済に関する法律に従い払い戻しを行います。</p>
+<h2>第6条（免責）</h2>
+<p>当社は、本サービスに事実上または法律上の瑕疵がないことを保証しません。当社の責任は、当社に故意または重大な過失がある場合を除き、お客様が直近1か月に本サービスで支払った金額を上限とします。</p>
+<h2>第7条（規約の変更）</h2>
+<p>当社は、必要に応じて本規約を変更できます。変更後の規約は、本ページに掲示した時点から効力を生じます。</p>
+<h2>第8条（準拠法・管轄）</h2>
+<p>本規約は日本法に準拠します。本サービスに関して紛争が生じた場合は、当社の所在地を管轄する地方裁判所を第一審の専属的合意管轄裁判所とします。</p>
+
+<p class="note">最終更新日：2026年10月8日</p>
+<p><a href="../legal/tokushoho.html">特定商取引法に基づく表記</a> ・ <a href="../legal/shikin.html">資金決済法に基づく表示</a> ・ <a href="../legal/terms.html">利用規約</a> ・ <a href="../legal/privacy.html">プライバシーポリシー</a></p>
+<a class="back" href="../">ギルドの灯へ戻る</a>
+</main>
+<script>
+// 事業者の情報はサーバーの設定から（未設定の項目は「準備中」と表示）
+fetch('../api/shop/config', { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+  var s = (j && j.seller) || {};
+  document.querySelectorAll('[data-seller]').forEach(function (el) {
+    var v = s[el.getAttribute('data-seller')];
+    if (v) { el.textContent = v; el.classList.remove('pending'); }
+  });
+}).catch(function () {});
+</script>
+</body></html>
