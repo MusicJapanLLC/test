@@ -2,7 +2,7 @@
 //   node guild/build.mjs
 //   dist/index.html    … そのままブラウザで開ける単体ファイル
 //   dist/artifact.html … claude.ai の Artifact 用（<html>/<head>/<body> を外した版）
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -43,3 +43,7 @@ writeFileSync(join(root, 'dist/artifact.html'), artifact);
 
 const kb = (s) => (Buffer.byteLength(s) / 1024).toFixed(0) + 'KB';
 console.log(`dist/index.html ${kb(standalone)} / dist/artifact.html ${kb(artifact)} (${scripts.length} scripts)`);
+
+// Independent Mayor game: preserve the existing root build and copy its reviewed static release
+mkdirSync(join(root, 'dist/mayor'), { recursive: true });
+copyFileSync(join(root, 'mayor/index.html'), join(root, 'dist/mayor/index.html'));
