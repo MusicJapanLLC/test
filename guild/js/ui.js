@@ -126,7 +126,9 @@
       if (G.reels.isOpen()) pendingRank = Math.max(pendingRank, r);
       else showRankUp(r);
     });
+    G.on('reelsOpen', () => document.documentElement.classList.add('in-reels'));
     G.on('reelsClosed', () => {
+      document.documentElement.classList.remove('in-reels');
       if (pendingRank) { const r = pendingRank; pendingRank = 0; setTimeout(() => showRankUp(r), 380); }
       if (sheetTab) renderSheet();
     });
@@ -483,7 +485,9 @@
       const area = D.AREA_BY_ID[ex.q.area];
       h += `<div class="card act" style="--area:${area.pal.mid}"><div class="faces">${party.map((a) => `<img alt="" src="${art.portrait(a.look, 40)}">`).join('')}</div><div class="grow"><b>${G.esc(ex.q.name)}</b><div class="bar"><i data-progress="${ex.startAt},${ex.endAt}"></i></div><small>成功率 ${Math.round(ex.p * 100)}% ・ 結果は冒険譚で</small></div><span class="time" data-countdown="${ex.endAt}">${G.fmtClock(ex.endAt - now)}</span></div>`;
     });
-    for (let i = busy; i < slots; i++) h += `<div class="card slot">空き枠</div>`;
+    const freeSlots = slots - busy;
+    if (freeSlots > 2) h += `<div class="card slot">空き枠 <b>×${freeSlots}</b></div>`;
+    else for (let i = busy; i < slots; i++) h += `<div class="card slot">空き枠</div>`;
     if (slots < D.FAC.hall.maxLv) h += `<button class="link" data-goto-fac="hall">受付ホールを強化すると、同時派遣が増えます</button>`;
     h += `</div>`;
     h += abyssSection(st, now);
@@ -894,7 +898,7 @@
     const ago = (t) => (t ? `${Math.max(0, Math.round((Date.now() - t) / 1000))}秒前` : 'まだ');
     const saveSec = `<div class="sec savebox"><h3>セーブ</h3>
       <div class="card save-card"><div class="grow"><b>自動セーブ：${G.save.where()}</b><small>端末 ${ago(sv.lastAt)}${sv.cloudReady ? ` ・ クラウド ${ago(sv.cloudAt)}` : ''}${sv.err && !sv.cloud ? ' ・ クラウドは混雑中（自動で再試行）' : ''}</small></div><button class="btn sm primary" id="saveNow">今すぐセーブ</button></div>
-      <div class="save-tools"><button class="btn sm ghost" id="saveExport">セーブを書き出す</button><button class="btn sm ghost" id="saveImport">書き出したセーブを読み込む</button></div>
+      <div class="save-tools"><button class="btn sm ghost" id="saveExport">セーブを書き出す</button><button class="btn sm ghost" id="saveImport">セーブを読み込む</button></div>
       <p class="hint">数秒ごと・操作のたびに自動で保存しています。機種変更や念のための控えには「書き出す」を使ってください。</p></div>`;
     h = saveSec + h;
     body.innerHTML = h;
@@ -1029,6 +1033,7 @@
     if (!m.hidden && !opts.replace) { modalQueue.push([html, buttons, opts]); return; }
     const card = G.$('#modalCard');
     card.className = 'modal-card ' + (opts.cls || '');
+    card.scrollTop = 0;
     card.innerHTML = html + `<div class="m-actions">${buttons.map((b, i) => `<button class="btn ${b.cls || ''}" data-mi="${i}">${b.text}</button>`).join('')}</div>`;
     G.$$('[data-mi]', card).forEach((b) => b.addEventListener('click', () => {
       const bt = buttons[+b.dataset.mi];

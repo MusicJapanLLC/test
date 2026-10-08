@@ -579,7 +579,7 @@
     G.audio.sfx('open');
     updateDom();
     hintShown = G.state.stats.reels > 2;
-    G.$('#reelHint').hidden = hintShown || items.length < 2;
+    G.$('#reelHint').hidden = true;
     G.emit('reelsOpen');
   };
 
@@ -1451,6 +1451,12 @@
       const t = cur ? rt : (it.claimed && !rewatch ? 99 : 0.35);
       drawReel(it, t, cur, vk);
       ctx.restore();
+      // スワイプの案内は、戦いが終わって結果が出てから（戦いの絵を隠さない）
+      if (cur && !hintShown && items.length >= 2 && !it.digest) {
+        const show = t > planOf(it).resT + 0.6;
+        const hel = G.$('#reelHint');
+        if (hel.hidden === show) hel.hidden = !show;
+      }
     });
     if (banner) drawBanner();
   };
@@ -4255,6 +4261,8 @@
     const pl = planOf(reel);
     alpha *= 1 - 0.75 * G.seg(t, pl.resT, pl.resT + 0.3);
     const font = F(800, 13, 'ui');
+    const dmTop = Math.max(128, Math.min(172, Hd * 0.6 - 236));
+    const dmLanes = Hd < 700 ? 3 : 4;
     ctx.save();
     dm.forEach((d) => {
       const dur = 4.2 / d.speed;
@@ -4262,7 +4270,8 @@
       if (kk < 0 || kk > 1) return;
       const w = textW(font, d.text);
       const x = 372 - kk * (372 + w + 20);
-      const y = 172 + (d.lane % 4) * 20;
+      // 背の低い画面では、魔物の名前とHPバーにかぶらないよう上に寄せて段数を減らす
+      const y = dmTop + (d.lane % dmLanes) * 20;
       const spr = tsprite('dm:' + (d.gold ? 'g' : 'w') + d.text, w + 8, 22, (g) => {
         g.font = font;
         g.textAlign = 'left';

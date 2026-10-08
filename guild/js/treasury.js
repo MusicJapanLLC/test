@@ -812,7 +812,7 @@
     const crossOpts = S.crossOptions(a);
     const cross = a.cross && a.cross.cls !== a.cls ? a.cross : null;
     const crossHtml = crossOpts.length || cross ? `<button class="skill-row cross ${cross ? 'on' : ''}" id="crossBtn"><b>継承スキル</b><em>${cross ? D.CLASSES[cross.cls].name : '空き'}</em><small>${cross ? `${G.esc(cross.name)}：${IT.skillDesc(cross.cls, cross.name, ((a.skBy || {})[cross.cls] || {})[cross.name] || 1)}` : '熟練★3 の職業の技を、1つ使える'}</small><i>${cross ? '変える' : 'えらぶ'}</i></button>` : '';
-    const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}${growing ? ' ・ <span class="grow-tag">伸び盛り 経験値×2.5</span>' : ''}</p>
+    const html = `<div class="adv-detail"><img alt="" src="${art.portrait(a.look, 120)}" style="--cls:${cls.color}"><h2>${G.esc(a.name)}</h2><p class="sub">${cls.name} ・ Lv${a.lv} ・ 戦力 ${G.fmt(G.sim.power(a))}${growing ? ' <span class="grow-tag">伸び盛り 経験値×2.5</span>' : ''}</p>
       <div class="mastery"><div class="ms-head"><b>熟練</b><small>★の合計 ${mt} ・ 戦力 +${mt * 2}%</small></div><div class="ms-list">${mast}</div><small class="ms-hint">★3：その職業の技を継承スキルに ・ ★5：その職業の特技を、転職しても持ち続ける</small></div>
       <div class="adv-actions"><button class="btn sm ghost" id="advChange">転職する${a.lv < S.CHANGE_LV ? `<span>Lv${S.CHANGE_LV}から</span>` : ''}</button><button class="btn sm ghost" id="advInherit">後継者に託す${a.lv < S.INHERIT_LV ? `<span>Lv${S.INHERIT_LV}から</span>` : ''}</button></div>
       <div class="eq-slots">${slots}</div>

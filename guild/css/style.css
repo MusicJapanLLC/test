@@ -1448,3 +1448,9 @@ input, textarea, select { font-family: var(--font-body); }
 .fd-cell small { font-size: 9.5px; color: var(--muted); line-height: 1.3; }
 .fd-cell.got.r2 { border-color: rgba(190, 140, 255, 0.6); } .fd-cell.got.r3 { border-color: rgba(255, 200, 90, 0.8); } .fd-cell.got.r4 { border-color: #fff; box-shadow: 0 0 10px rgba(255, 140, 220, 0.35); }
 .fd-cell:not(.got) b { color: var(--muted); }
+
+/* 冒険譚の上では、通知を画面の下寄せに（戦いの絵とHPバーを隠さない） */
+html.in-reels #toasts { top: auto; bottom: calc(var(--safe-b) + 34%); }
+.card.slot b { font-family: var(--font-num); color: var(--parch-dim); margin-left: 4px; }
+#reelHint { top: auto; bottom: calc(31% + 10px); left: 14px; transform: none; max-width: calc(100% - 104px); white-space: normal; font-size: 12px; line-height: 1.35; padding: 7px 14px 7px 34px; animation: hintUpL 1.6s ease-in-out infinite; }
+@keyframes hintUpL { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
