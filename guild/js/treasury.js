@@ -177,6 +177,7 @@
     { id: 'stone', n: 10, k: 0.5 }, { id: 'stone', n: 30, k: 1.3 }, { id: 'expbook', n: 2, k: 0.8 }, { id: 'finish', n: 2, k: 0.6 },
     { id: 'auto30', n: 1, k: 0.5 }, { id: 'auto180', n: 1, k: 2 }, { id: 'hg2', n: 1, k: 1.2 }, { id: 'goldx2', n: 1, k: 1 }, { id: 'luck', n: 1, k: 1 },
     { id: 'key', n: 1, k: 2.5, w: 0.6 }, { id: 'hg3', n: 1, k: 3, w: 0.4 }, { id: 'horn', n: 1, k: 2.5, w: 0.4 }, { id: 'book', n: 1, k: 6, w: 0.25 }, { id: 'shard', n: 1, k: 8, w: 0.25, rank: 8 },
+    { id: 'rune_r', n: 1, k: 1.6, w: 0.45, rank: 3 }, { id: 'rune_b', n: 1, k: 1.6, w: 0.45, rank: 3 }, { id: 'rune_g', n: 1, k: 1.6, w: 0.45, rank: 3 }, { id: 'rune_y', n: 1, k: 1.6, w: 0.45, rank: 3 },
   ];
   function rollGshop() {
     const st = G.state;
@@ -241,7 +242,7 @@
     let info = '';
     if (it) {
       const main = IT.MAIN[it.slot];
-      info = `<div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${(it.affixes || []).length ? `<ul>${it.affixes.map((a) => `<li><span>${IT.STAT[a.k].name}</span><b>+${IT.fmtV(a.v)}%</b></li>`).join('')}</ul>` : ''}</div>`;
+      info = `<div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${IT.innateHtml(it)}${(it.affixes || []).length ? `<ul>${it.affixes.map((a) => `<li><span>${IT.STAT[a.k].name}</span><b>+${IT.fmtV(a.v)}%</b></li>`).join('')}</ul>` : ''}</div>`;
     } else info = `<p>${IT.CONS[o.id].desc}</p>`;
     G.ui.modal(`<div class="gs-confirm r${it ? it.rarity : IT.CONS[o.id].rarity}"><img alt="" src="${it ? thumb(it, 88) : consThumb(o.id, 88)}"><h2>${G.esc(name)}</h2>${it ? `<p class="sub">${R_NAME(it.rarity)} ・ ${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv}</p>` : ''}${info}<p class="gs-pay">${G.ui.IC.coin}<b>${G.fmt(o.price)}</b>G${o.sale ? ' <em>3割引</em>' : ''}</p></div>`, [
       { text: '戻る', cls: 'ghost' },
@@ -461,8 +462,16 @@
     const maxed = (it.plus || 0) >= maxP;
     const canEnh = !maxed && st.gold >= c.gold && IT.cons('stone') >= c.stone;
     const rc = IT.rerollCost(it);
-    const aff = (it.affixes || []).map((a, i) => `<li><span>${IT.STAT[a.k].name}</span><i class="q" style="--q:${Math.round(G.clamp(a.q, 0.1, 1) * 100)}%"></i><b>${pct(a.v * (1 + 0.04 * (it.plus || 0)))}</b><button class="rr" data-rr="${i}" aria-label="付け直す">${CRY}<span>${rc}</span></button></li>`).join('');
-    const lbHtml = it.rarity >= 4 ? `<div class="lb"><div class="lb-stars">${Array.from({ length: IT.MAX_LB }, (_, i) => `<i class="${i < (it.lb || 0) ? 'on' : ''}">★</i>`).join('')}</div>${IT.canLimitBreak(it) ? `<span class="lb-txt">限界突破 ★${(it.lb || 0) + 1}：主能力 +10%・強化上限 +2</span><button class="btn sm ${IT.cons('shard') >= IT.lbCost(it) ? 'primary' : 'cant'}" id="lbBtn">${consIcon('shard')}${IT.lbCost(it)}<small>（${IT.cons('shard')}）</small></button>` : '<span class="lb-txt">限界突破は最大です</span>'}</div>` : '';
+    const aff = (it.affixes || []).map((a, i) => `<li><span>${IT.STAT[a.k].name}</span><i class="q" style="--q:${Math.round(G.clamp(a.q, 0.1, 1) * 100)}%"></i><b>${pct(a.v * (1 + 0.04 * (it.plus || 0)) * ((it.lb || 0) >= 5 ? 1.2 : 1))}</b><button class="rr" data-rr="${i}" aria-label="付け直す">${CRY}<span>${rc}</span></button></li>`).join('');
+    // 刻印の穴
+    const rn = IT.runesOf(it);
+    const rcount = who ? IT.runeCount(who) : null;
+    const runeHtml = rn.length ? `<div class="runes"><div class="rn-head"><b>刻印</b><small>${who ? IT.RUNE_IDS.filter((k) => rcount[k]).map((k) => `<span class="${rcount[k] >= 3 ? 'res' : ''}" style="--c:${IT.RUNES[k].col}">${IT.RUNES[k].name} ${Math.min(3, rcount[k])}/3</span>`).join('') || '同じ色を3つそろえると共鳴' : '同じ色を3つそろえると共鳴'}</small></div><div class="rn-slots">${rn.map((x, i) => (x ? `<button class="rn on" data-rn="${i}" style="--c:${IT.RUNES[x].col}"><img alt="" src="${consThumb(IT.RUNES[x].cons, 36)}"><span>${IT.RUNES[x].name}</span></button>` : `<button class="rn empty" data-rn="${i}"><i>＋</i><span>空き</span></button>`)).join('')}</div></div>` : '';
+    // UR の覚醒
+    const nextLb = (it.lb || 0) + 1;
+    const awText = nextLb === 2 ? '刻印の穴 +1・主能力 +10%' : nextLb === 3 ? '真価解放：主能力 +15%・型の特性 ×1.5' : nextLb === 5 ? '極光：追加能力 +20%・虹色に輝く' : '主能力 +10%・強化上限 +2';
+    const awList = it.rarity >= 4 ? `<ul class="aw-list">${IT.AWAKEN.map((a) => `<li class="${(it.lb || 0) >= a.lb ? 'got' : ''}"><b>★${a.lb}</b>${a.name}<small>${a.text}</small></li>`).join('')}</ul>` : '';
+    const lbHtml = it.rarity >= 4 ? `<div class="lb"><div class="lb-stars">${Array.from({ length: IT.MAX_LB }, (_, i) => `<i class="${i < (it.lb || 0) ? 'on' : ''}">★</i>`).join('')}</div>${IT.canLimitBreak(it) ? `<span class="lb-txt">覚醒 ★${nextLb}：${awText}</span><button class="btn sm ${IT.cons('shard') >= IT.lbCost(it) ? 'primary' : 'cant'}" id="lbBtn">${consIcon('shard')}${IT.lbCost(it)}<small>（${IT.cons('shard')}）</small></button>` : '<span class="lb-txt">覚醒は最大です</span>'}${awList}</div>` : '';
     const advs = st.adv.slice().sort((a, b) => (IT.fits(it, b) - IT.fits(it, a)) || G.sim.power(b) - G.sim.power(a));
     const list = advs.map((a) => {
       const cur = a.eq && a.eq[it.slot] ? IT.get(a.eq[it.slot]) : null;
@@ -470,9 +479,10 @@
       const diff = cur && cur !== it ? IT.score(it, a) - IT.score(cur, a) : null;
       return `<button class="pick ${a === who ? 'on' : ''}" data-eq="${a.id}"><img alt="" src="${art.portrait(a.look, 40)}"><span><b>${G.esc(a.name)}</b><small>${D.CLASSES[a.cls].name} Lv${a.lv} ・ ${cur ? (cur === it ? '装備中' : 'いま：' + G.esc(cur.name)) : '空き'}</small></span>${diff != null ? `<em class="cmp ${diff >= 0 ? 'up' : 'down'}">${diff >= 0 ? '▲' : '▼'}</em>` : ''}${it.slot === 'weapon' ? `<em class="fit ${fit ? 'ok' : 'half'}">${fit ? '適性◎' : '効果半分'}</em>` : ''}</button>`;
     }).join('');
-    const html = `<div class="item-detail r${it.rarity}"><div class="id-img"><img alt="" src="${thumb(it, 104)}">${it.plus ? `<i class="id-plus">+${it.plus}</i>` : ''}</div><small class="rar">${R.id} ${stars(it.rarity)}</small><h2>${G.esc(it.name)}${it.plus ? ` <span class="plus">+${it.plus}</span>` : ''}</h2>
+    const html = `<div class="item-detail r${it.rarity}${(it.lb || 0) >= 5 ? ' aw5' : ''}"><div class="id-img"><img alt="" src="${thumb(it, 104)}">${it.plus ? `<i class="id-plus">+${it.plus}</i>` : ''}</div><small class="rar">${R.id} ${stars(it.rarity)}</small><h2>${G.esc(it.name)}${it.plus ? ` <span class="plus">+${it.plus}</span>` : ''}</h2>
       <p class="sub">${IT.SLOT_NAME[it.slot]} ・ Lv${it.ilv}${fitName ? ` ・ ${fitName}向け` : ''}</p>
-      <div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${aff ? `<ul>${aff}</ul><p class="rr-hint">魔晶石で、追加能力を1つずつ付け直せます</p>` : '<p class="hint">追加能力なし（R 以上で付きます）</p>'}</div>
+      <div class="stats-box"><div class="main"><span>${IT.STAT[main.k].name}</span><b>${pct(IT.mainVal(it))}</b></div>${IT.innateHtml(it)}${aff ? `<ul>${aff}</ul><p class="rr-hint">魔晶石で、追加能力を1つずつ付け直せます</p>` : '<p class="hint">追加能力なし（R 以上で付きます）</p>'}</div>
+      ${runeHtml}
       ${lbHtml}
       <div class="enh">${maxed ? `<b class="maxed-t">強化は最大です（+${maxP}）${it.rarity >= 4 && IT.canLimitBreak(it) ? '・限界突破で上限が上がります' : ''}</b>` : `<div class="enh-row"><span>強化 <b>+${it.plus || 0}</b> → <b class="nx">+${(it.plus || 0) + 1}</b></span><span class="rate">成功率 ${Math.round(IT.enhanceRate(it) * 100)}%</span></div><div class="enh-row cost"><span>${G.ui.IC.coin}${G.fmt(c.gold)}</span><span>${consIcon('stone')}${c.stone}<small>（所持 ${IT.cons('stone')}）</small></span><button class="btn sm ${canEnh ? 'primary' : 'cant'}" id="enhBtn">強化する</button></div>`}</div>
       ${who ? `<p class="eq-now">いまは <b>${G.esc(who.name)}</b> が装備しています</p>` : ''}
@@ -499,6 +509,7 @@
         G.$$('[data-rr]', card).forEach((b) => b.addEventListener('click', () => doReroll(u, +b.dataset.rr)));
         const lb = G.$('#lbBtn', card);
         if (lb) lb.addEventListener('click', () => doLimitBreak(u, card));
+        G.$$('[data-rn]', card).forEach((b) => b.addEventListener('click', () => runeMenu(u, +b.dataset.rn)));
         G.$('#lockBtn', card).addEventListener('click', () => { it.lock = !it.lock; G.audio.sfx('tap'); G.emit('itemsChanged'); T.showItem(u, true); });
         const dis = G.$('#disBtn', card);
         if (dis) dis.addEventListener('click', () => {
@@ -514,6 +525,47 @@
       },
     });
   };
+  // 刻印：空きの穴 → 刻印石をえらぶ／はまっている穴 → 外す
+  function runeMenu(u, idx) {
+    const it = IT.get(u);
+    if (!it) return;
+    const cur = IT.runesOf(it)[idx];
+    G.audio.sfx('tap');
+    if (cur) {
+      const R = IT.RUNES[cur];
+      const c = IT.runeRemoveCost();
+      G.ui.modal(`<div class="confirm"><h2>${R.name}の刻印石を外しますか？</h2><p>外した刻印石は持ち物に戻ります。<br>${G.ui.IC.coin}${G.fmt(c)} かかります。</p></div>`, [
+        { text: '戻る', cls: 'ghost', fn: () => T.showItem(u, true), keep: true },
+        { text: '外す', cls: 'primary', keep: true, fn: () => {
+          const r = IT.removeRune(u, idx);
+          if (!r.ok) { G.audio.sfx('error'); G.ui.toast(r.why === 'gold' ? 'ゴールドが足りません' : '外せませんでした', 'bad'); return; }
+          G.audio.sfx('soft');
+          G.ui.refreshHud();
+          T.showItem(u, true);
+        } },
+      ], { replace: true });
+      return;
+    }
+    const opts = IT.RUNE_IDS.map((k) => {
+      const R = IT.RUNES[k];
+      const n = IT.cons(R.cons);
+      return `<button class="rn-pick ${n ? '' : 'none'}" data-rc="${k}" style="--c:${R.col}"><img alt="" src="${consThumb(R.cons, 40)}"><span><b>${R.name}の刻印石 <small>×${n}</small></b><small>${Object.entries(R.fx).map(([kk, v]) => `${IT.STAT[kk].name} +${v}${kk === 'find' ? '' : '%'}`).join('・')}</small><small class="res">共鳴：${R.resText}</small></span></button>`;
+    }).join('');
+    G.ui.modal(`<div class="rn-menu"><h2>刻印石をはめる</h2><div class="rn-picks">${opts}</div><p class="hint">刻印石は、SR 以上の装備の分解や、ゴールドの市場で手に入ります。外すときはゴールドがかかります。</p></div>`, [{ text: '戻る', cls: 'primary', keep: true, fn: () => T.showItem(u, true) }], {
+      cls: 'wide', replace: true,
+      onShow: (card) => G.$$('[data-rc]', card).forEach((b) => b.addEventListener('click', () => {
+        const r = IT.setRune(u, idx, b.dataset.rc);
+        if (!r.ok) { G.audio.sfx('error'); G.ui.toast(r.why === 'none' ? 'その刻印石を持っていません' : 'はめられませんでした', 'bad'); return; }
+        G.audio.sfx('flash');
+        G.haptic(14);
+        const who = IT.equippedBy(u);
+        const res = who ? IT.resonance(who) : [];
+        if (res.includes(b.dataset.rc)) G.ui.toast(`共鳴！ ${IT.RUNES[b.dataset.rc].name}：${IT.RUNES[b.dataset.rc].resText}`, 'rare4');
+        else G.ui.toast(`${IT.RUNES[b.dataset.rc].name}の刻印石をはめた`, 'good');
+        T.showItem(u, true);
+      })),
+    });
+  }
   function confirmBox(title, text, ok, fn, back) {
     G.ui.closeModal();
     setTimeout(() => G.ui.modal(`<div class="confirm"><h2>${title}</h2><p>${text}</p></div>`, [{ text: '戻る', cls: 'ghost', fn: back ? () => setTimeout(back, 240) : null }, { text: ok, cls: 'danger', fn }]), 240);

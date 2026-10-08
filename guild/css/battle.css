@@ -1,0 +1,42 @@
+/* 冒険譚の戦い — マスターの指示（避けて！／守れ！／今だ！）
+ *  位置と幅は reels.js が画面に合わせて決める（パーティの足もとの下・右の列にはかからない） */
+#reelOrder { position: absolute; z-index: 4; pointer-events: none; opacity: 0; transform: translateY(16px) scale(0.94); transform-origin: 50% 100%; transition: opacity 0.16s ease-out, transform 0.26s cubic-bezier(0.2, 1.5, 0.4, 1); }
+#reelOrder.shown { opacity: 1; transform: none; }
+#reelOrder .ro-row { display: flex; gap: 7px; }
+#reelOrder .ro-btn {
+  flex: 1 1 0; min-width: 0; height: 54px; padding: 0 4px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  border-radius: 14px; border: 2px solid rgba(255, 255, 255, 0.78);
+  color: #fff; font-family: var(--font-head); font-weight: 800; font-size: 16px; line-height: 1.1; letter-spacing: 0.02em; white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5), 0 0 6px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+  pointer-events: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none;
+  transition: transform 0.1s, filter 0.18s, opacity 0.2s, box-shadow 0.2s;
+}
+#reelOrder .ro-btn b { font-weight: 800; }
+#reelOrder .ro-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.4)); }
+#reelOrder .ro-btn[data-ord='dodge'] { background: linear-gradient(180deg, #8fdcff, #2f80e0 58%, #1c4aa0); }
+#reelOrder .ro-btn[data-ord='guard'] { background: linear-gradient(180deg, #b0f0a6, #38a860 58%, #1c6638); }
+#reelOrder .ro-btn[data-ord='now'] { background: linear-gradient(180deg, #ffe48e, #f08a2a 58%, #b23c1c); }
+#reelOrder.shown .ro-btn { pointer-events: auto; animation: roBob 0.9s ease-in-out infinite; }
+#reelOrder.shown .ro-btn:nth-child(2) { animation-delay: 0.12s; }
+#reelOrder.shown .ro-btn:nth-child(3) { animation-delay: 0.24s; }
+#reelOrder .ro-btn:active { transform: scale(0.93); }
+#reelOrder.done .ro-btn { pointer-events: none; animation: none; }
+#reelOrder.done .ro-btn:not(.pick) { opacity: 0.28; filter: grayscale(0.75); }
+#reelOrder .ro-btn.pick.ok { transform: scale(1.08); box-shadow: 0 0 0 3px #fff, 0 0 26px 6px rgba(255, 226, 122, 0.85); }
+#reelOrder .ro-btn.pick.ng { transform: scale(0.95); filter: grayscale(0.55) brightness(0.8); }
+#reelOrder .ro-foot { display: flex; align-items: center; gap: 8px; margin: 6px 4px 0; }
+#reelOrder .ro-tag { flex: none; font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; color: #ffe8a8; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8); }
+#reelOrder .ro-bar { flex: 1; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, 0.2); overflow: hidden; }
+#reelOrder .ro-bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #ffe08a, #ff7a4a); transform-origin: left center; }
+#reelOrder.done .ro-foot { opacity: 0; transition: opacity 0.2s; }
+@keyframes roBob { 0%, 100% { transform: none; } 50% { transform: translateY(-2px); box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45), 0 0 14px rgba(255, 240, 180, 0.45), inset 0 2px 0 rgba(255, 255, 255, 0.45), inset 0 -3px 0 rgba(0, 0, 0, 0.25); } }
+@media (max-width: 340px) {
+  #reelOrder .ro-btn { height: 50px; font-size: 14px; }
+  #reelOrder .ro-btn svg { width: 16px; height: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #reelOrder, #reelOrder .ro-btn { transition: none; }
+  #reelOrder.shown .ro-btn { animation: none; }
+}
