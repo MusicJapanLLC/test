@@ -155,8 +155,11 @@
       const b = bs[i];
       const d = t - b.at;
       if (b.kind === 'mon') {
-        if (d >= 0 && !b.miss) { hits += b.big ? 2 : 1; M.imp = b.at; M.impK = b.big ? 1 : 0.4; }
-        if (d >= 0 && d < 1.1) { M.k = b.miss ? 'miss' : b.big ? 'bighurt' : 'hurt'; M.d = d; }
+        // マスターの指示で避けた・防いだ攻撃は「ミス」あつかい
+        const miss = b.miss || (b.oi >= 0 && G.reels && G.reels.niceOf && G.reels.niceOf(reel, b.oi));
+        const big = b.big || b.aoe;
+        if (d >= 0 && !miss) { hits += big ? 2 : 1; M.imp = b.at; M.impK = big ? 1 : 0.4; }
+        if (d >= 0 && d < 1.1) { M.k = miss ? 'miss' : big ? 'bighurt' : 'hurt'; M.d = d; }
       } else if (b.kind === 'skill') {
         if (t > b.t - 0.55 && d < 0) { M.k = 'charge'; M.d = t - (b.t - 0.55); }
         else if (d >= 0 && d < 1.5) { M.k = 'skill'; M.d = d; }
@@ -166,6 +169,19 @@
         if (d >= 0) { M.imp = b.at; M.impK = b.crit ? 0.8 : 0.22; if (b.crit) M.critSeen = true; }
       } else if (b.kind === 'heal') {
         if (d >= 0 && d < 0.9) { M.k = 'heal'; M.d = d; }
+      }
+    }
+    // 敵の行動（溜め・回復・守り＝固唾をのむ／乱入・変身・怒り・逃走＝驚く）
+    const acts = pl.acts;
+    if (acts) {
+      for (let i = 0; i < acts.length; i++) {
+        const a = acts[i];
+        if (t < a.t0 || t >= a.t1) continue;
+        const d = t - a.t0;
+        if (a.kind === 'intrude' || a.kind === 'transform' || a.kind === 'rage' || a.kind === 'flee') { M.k = 'enc'; M.d = d; M.big = a.kind !== 'flee'; }
+        else if ((a.kind === 'charge' || a.kind === 'aoe' || a.kind === 'heal') && t < a.land) { M.k = 'charge'; M.d = d; }
+        else if (a.kind === 'guard' && t < a.up + 0.4) { M.k = 'charge'; M.d = d; }
+        else if (a.kind === 'summon') { M.k = 'enc'; M.d = d; }
       }
     }
     M.pinch = pl.fail ? (hits >= 2 ? 1 : hits ? 0.6 : 0) : hits >= 3 ? 0.6 : 0;

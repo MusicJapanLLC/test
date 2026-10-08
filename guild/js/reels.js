@@ -154,6 +154,11 @@
       claimed: false,
       seed,
     };
+    // 精鋭（まれに出る強い個体）：硬い・速い・分裂する。ゴールドが 1.3 倍
+    if (!q.boss && !q.guardian && Math.random() < 0.05) {
+      reel.elite = { trait: G.pick(Object.keys(ELITE)) };
+      reel.gold = Math.round(gold * 1.3);
+    }
     const pl = makePlan(reel);
     if (pl.skill) reel.skill = { id: reel.party[pl.skill.who].id, name: pl.skill.name };
     reel.cm = genComments(reel, pl);
@@ -327,16 +332,28 @@
       }
       pl.beats.push(b);
     }
+    // 敵の行動（別の乱数で、段取りの上に重ねる。守りを固めると与えたダメージも変わる）
+    planActs(reel, pl, P, n);
+    dealt = 0; maxDmg = 0; byWho.fill(0);
+    pl.beats.forEach((b) => {
+      if (b.kind !== 'hit' && b.kind !== 'skill') return;
+      dealt += b.dmg; byWho[b.who] += b.dmg;
+      if (b.dmg > maxDmg) maxDmg = b.dmg;
+    });
     byWho.forEach((v, i) => { if (v > byWho[mvp]) mvp = i; });
     const last = pl.beats[pl.beats.length - 1];
     pl.finishT = last.at;
     if (!fail) last.finish = true;
-    pl.maxHp = fail ? Math.round(dealt / (0.36 + rnd() * 0.24)) : dealt;
-    // 残りHP
+    let healHp = 0;
+    pl.acts.forEach((a) => { if (a.kind === 'heal') healHp += a.hp; });
+    pl.maxHp = fail ? Math.round(dealt / (0.36 + rnd() * 0.24)) : Math.max(1, dealt - healHp);
+    // 残りHP（魔物の回復を含む。指示で変わる分は描くときに足す）
     let acc = 0;
     pl.beats.forEach((b) => {
       if (b.kind === 'hit' || b.kind === 'skill') acc += b.dmg;
-      b.hpAfter = Math.max(0, 1 - acc / Math.max(1, pl.maxHp));
+      let h = 0;
+      pl.acts.forEach((a) => { if (a.kind === 'heal' && a.land <= b.at) h += a.hp; });
+      b.hpAfter = Math.max(0, 1 - (acc - h) / Math.max(1, pl.maxHp));
     });
 
     // とどめ以降
@@ -418,17 +435,395 @@
       drop: !!reel.drop, dropName: reel.drop ? reel.drop.name : '', dropRank: reel.drop ? reel.drop.rarity : -1,
       hurt: !!hurtB, hurtT: hurtB ? hurtB.at : null, hurtName: hurtB && P[hurtB.target] ? P[hurtB.target].name : '', hurtId: hurtB && P[hurtB.target] ? P[hurtB.target].id : null,
       levelUps: reel.levelUps.length > 0, reveal: pl.reveal, finishT: pl.finishT, dur: pl.end,
+      encT: pl.encT, acts: pl.acts.map((a) => a.kind), elite: !!reel.elite,
     };
     return pl;
   }
 
+  // ---------------------------------------------------------------- 敵の行動（段取りの上に重ねる）
+  // 魔物ごとのくせ（[行動, 重み]）。先頭がいちばん得意な行動。
+  // 行動は戦いの見え方を変えるだけ：成功なら最後は必ず倒れ、撤退なら必ず逃げ帰る。
+  // 冒険譚の seed から決まるので、見直しても同じ戦いになる（指示の結果だけはその場かぎり）
+  const HABIT = {
+    slime: [['summon', 3], ['charge', 1.5]],
+    rabbit: [['flee', 3], ['charge', 0.8]],
+    wolf: [['rage', 3], ['charge', 1.6]],
+    mushroom: [['status', 3], ['aoe', 1.3]],
+    bat: [['status', 3], ['charge', 1.3]],
+    golem: [['charge', 3], ['guard', 1.3]],
+    skeleton: [['summon', 3], ['guard', 1.4]],
+    knight: [['guard', 3], ['charge', 1.4]],
+    wyvern: [['charge', 3], ['aoe', 1.1]],
+    dragon: [['charge', 3], ['aoe', 2]],
+    crab: [['guard', 3], ['charge', 0.9]],
+    kraken: [['aoe', 3], ['status', 1.1]],
+    griffin: [['rage', 3], ['charge', 1.6]],
+    sentinel: [['heal', 3], ['aoe', 1.2]],
+    pumpkin: [['flee', 3], ['status', 1.1]],
+  };
+  // 予兆のある行動と、それに合うマスターの指示
+  const ORDER_OK = { charge: 'dodge', aoe: 'guard', guard: 'now', flee: 'now', heal: 'now' };
+  const ORDER_TEXT = { dodge: '避けて！', guard: '守れ！', now: '今だ！' };
+  const STATUS_OF = { mushroom: ['poison', 'sleep'], bat: ['confuse', 'sleep'], kraken: ['confuse', 'poison'], pumpkin: ['confuse', 'sleep'] };
+  const STATUS_ONO = { mushroom: 'ボフッ', bat: 'キィィン', kraken: 'ブシャッ', pumpkin: 'ヒュ〜ドロ' };
+  const STATUS_COL = { poison: '#b46cff', sleep: '#8fc8ff', confuse: '#ffd36a' };
+  const ELITE = { hard: '硬い', fast: '速い', split: '分裂する' };
+  R.ELITE = ELITE;
+  const SUMMON_OF = { slime: 'slime', skeleton: 'skeleton' };
+  const BIGGER = ['golem', 'wyvern', 'kraken', 'griffin', 'knight', 'dragon'];
+  // 行動のために差し込む時間（秒）
+  const ACT_PRE = { charge: 1.0, aoe: 0.9, guardUp: 0.6, crack: 0.5, summon: 0.75, rage: 0.6, cure: 0.9, flee: 2.4, transform: 1.3, heal: 1.15, intrude: 1.9 };
+  const ACT_MARK = { charge: ['溜', '#ff5a4a'], aoe: ['全', '#c86aff'], guard: ['守', '#8fc8ff'], crack: ['割', '#8fc8ff'], summon: ['呼', '#8fe08a'], rage: ['怒', '#ff3a2a'], status: ['状', '#c890ff'], flee: ['逃', '#ffd36a'], transform: ['変', '#ff4fa0'], heal: ['癒', '#7fe0a0'], intrude: ['乱', '#a8a0d8'], elite: ['精', '#ffd36a'] };
+  const ACT_SPEECH = {
+    charge: ['来るぞ…！', 'まずい、溜めてる！', 'あれは食らえない…！'],
+    aoe: ['みんな、来るよ！', '足もとが光ってる…！', '広がってくる！'],
+    guard: ['かたっ…！', '刃が通らない！', '守りに入ったか'],
+    crack: ['ヒビが入った！', 'もう少しで割れる！'],
+    summon: ['増えた！？', '仲間を呼んだぞ', 'わらわら来た…'],
+    split: ['分かれた！？', 'ちっちゃいのが増えた！'],
+    rage: ['怒らせちゃった…', '目つきが変わった', '気をつけろ、速くなる！'],
+    poison: ['うっ…毒が…', 'なんか、くらくらする…'],
+    sleep: ['ぐぅ…すぴー…', 'まぶたが…重い…'],
+    confuse: ['あれ？ どっちが前…？', '目が回る〜'],
+    cureCleric: ['いま治すね！', '浄化します！', 'じっとしてて！'],
+    cureBard: ['目覚めの一曲！', '♪しゃきっとして〜'],
+    cureSelf: ['…はっ！ 治った！', 'もう平気！'],
+    flee: ['待てー！', '返せー！', 'お宝泥棒め！'],
+    transform: ['まだ変わるのか…！', '本気になったぞ…！', '空気が変わった…'],
+    heal: ['回復してる！？', 'ずるい！', '止めないと…！'],
+    intrude: ['な、なんだ！？', 'でかいのが来た！', 'まとめて片付ける！'],
+  };
+  // 指示がうまくいったときのひとこと（その場で出す）
+  const NICE_SPEECH = {
+    charge: ['見切った！', 'マスターの声、聞こえた！', 'あぶなっ…助かった！'],
+    aoe: ['守りは任せて！', 'みんな、伏せて！', 'これくらい平気！'],
+    guard: ['そこだっ！', '隙ありっ！', '割れたところを狙う！'],
+    flee: ['つかまえた！', 'お宝、返してもらうよ！', '逃がさない！'],
+    heal: ['させるか！', '回復なんてさせない！', '止めたっ！'],
+  };
+
+  function planActs(reel, pl, P, n) {
+    const acts = (pl.acts = []);
+    pl.labels = [];
+    const B = pl.beats;
+    const last = B.length - 1;
+    const fail = pl.fail;
+    const r = mulberry((reel.seed ^ 0x3c6ef372) >>> 0);
+    const mon = reel.monster;
+    const habit = HABIT[mon] || [['charge', 1]];
+    const el = reel.elite && ELITE[reel.elite.trait] ? reel.elite.trait : null;
+    const pk = (arr) => arr[Math.floor(r() * arr.length)];
+    const mn = reel.boss ? '竜王' : (D.MONSTERS[mon] || {}).name || '魔物';
+    // ---- 何をするか
+    let kinds = [];
+    if (Array.isArray(reel.dbgActs)) kinds = reel.dbgActs.slice();
+    else if (reel.boss) { kinds.push('transform', 'aoe'); if (r() < 0.7) kinds.push('charge'); }
+    else if (reel.guardian) {
+      kinds.push('transform');
+      const tele = habit.filter((h) => ORDER_OK[h[0]]);
+      kinds.push(tele.length ? tele[0][0] : 'charge');
+      if (r() < 0.35) kinds.push(tele.length > 1 ? tele[1][0] : 'aoe');
+    } else {
+      if (el === 'hard') kinds.push('guard');
+      else if (el === 'split') kinds.push('summon');
+      else if (el === 'fast') kinds.push('charge');
+      if (r() < (reel.abyss ? 0.7 : 0.62)) kinds.push(habit[0][0]);
+      if (habit[1] && r() < 0.3) kinds.push(habit[1][0]);
+      if (r() < 0.03) kinds.push('intrude');
+    }
+    kinds = kinds.filter((k2, i) => kinds.indexOf(k2) === i);
+    let tele = 0;
+    kinds = kinds.filter((k2) => !ORDER_OK[k2] || ++tele <= 2).slice(0, B.length <= 4 ? 2 : 3);
+    if (!kinds.length || B.length < 3) return finishActs(reel, pl, P, r, mn, el);
+
+    // ---- どこでするか（拍そのものに時間を差し込む。_pre：拍の前に足す秒）
+    const used = new Set();
+    const plain = (b) => b && b.kind === 'hit' && b.w0 == null;
+    const free = (i) => i >= 1 && i <= last && !used.has(B[i]) && B[i].kind !== 'skill';
+    const pre = (b, d) => { b._pre = (b._pre || 0) + d; };
+    const ins = [];
+    const range = (lo, hi) => { const o = []; for (let i = Math.max(1, lo); i <= Math.min(last, hi); i++) if (free(i)) o.push(i); return o; };
+    const dmgVs = (tg, m) => Math.round((6 + ((P[tg] || { lv: 1 }).lv) * 4) * (0.8 + r() * 0.5) * m);
+    const has = (k2) => kinds.indexOf(k2) >= 0;
+    const tot = () => { let s = 0; B.forEach((b) => { if (b.kind === 'hit' || b.kind === 'skill') s += b.dmg; }); return s; };
+
+    // 守りを固める：素手の攻撃を1〜2回はじいて、次の一撃で割れる
+    if (has('guard')) {
+      const opts = [];
+      // 割る一撃は、とどめになってもよい（成功のときの最後の素手の一撃）
+      const hiB = fail ? last - 1 : last;
+      for (let j = 1; j < last; j++) {
+        if (!plain(B[j]) || !free(j)) continue;
+        let g2 = -1, brk = -1;
+        for (let k2 = j + 1; k2 <= hiB; k2++) {
+          // 技・閃きの一撃が殻の間に入るなら、そこで打ち切り（技は殻を素通りしない）
+          if (B[k2].kind === 'skill' || (B[k2].kind === 'hit' && B[k2].w0 != null)) break;
+          if (!plain(B[k2])) continue;
+          if (g2 < 0) { g2 = k2; continue; }
+          if (free(k2)) { brk = k2; break; }
+        }
+        if (brk < 0 && g2 > 0 && free(g2)) { brk = g2; g2 = -1; }
+        if (brk > 0) opts.push([j, g2, brk]);
+      }
+      // とどめで割れるものは後回し（途中で割れるほうが、その後の戦いも見える）
+      opts.sort((x, y) => (x[2] === last) - (y[2] === last));
+      if (opts.length) {
+        const [j, g2, brk] = opts[Math.floor(r() * Math.min(2, opts.length))];
+        const gs = [B[j]];
+        if (g2 > 0) gs.push(B[g2]);
+        gs.forEach((b) => { b.guarded = true; b.crit = false; b.dmg = Math.max(1, Math.round(b.dmg * 0.3)); b.ono = 'かたい！'; });
+        const bb = B[brk];
+        bb.brk = true; bb.crit = false; bb.bonus = Math.round(bb.dmg * 0.8); bb.ono = 'パリーン!!';
+        pre(B[j], ACT_PRE.guardUp); pre(bb, ACT_PRE.crack);
+        used.add(B[j]); used.add(bb);
+        acts.push({ kind: 'guard', g0: B[j], brkB: bb, gs });
+      }
+    }
+    // 魔物の攻撃に重ねる行動（溜め攻撃・全体攻撃・状態異常）
+    const monKinds = ['charge', 'aoe', 'status'].filter(has);
+    const setMon = (kind, M) => {
+      M.act = kind; M.miss = false;
+      if (kind === 'charge') { M.big = true; M.dmg = dmgVs(M.target, 2.4); M.ono = pk(MON_ONO_BIG); }
+      else if (kind === 'aoe') { M.aoe = true; M.big = false; M.dmgs = P.map((_, i) => dmgVs(i, 1.15)); M.dmg = Math.max(...M.dmgs, 1); M.ono = 'ドドォン!!'; }
+      else { M.status = pk(STATUS_OF[mon] || ['poison', 'sleep', 'confuse']); M.dmg = Math.max(1, Math.round(dmgVs(M.target, 0.5))); M.ono = STATUS_ONO[mon] || 'ボフッ'; }
+    };
+    const placeMon = (kind, allowNew) => {
+      const ex = [];
+      for (let i = 1; i < last; i++) { const b = B[i]; if (b.kind === 'mon' && !b.big && !b.act && free(i)) ex.push(i); }
+      let M = null, at = -1;
+      if (ex.length) {
+        at = pk(ex); M = B[at]; used.add(M);
+        if (kind !== 'status') { pre(M, ACT_PRE[kind]); if (B[at + 1]) pre(B[at + 1], 0.21); }
+      } else if (allowNew) {
+        const cs = range(1, last).filter((i) => !ins.some((x) => x.before === B[i]));
+        if (!cs.length) return null;
+        at = pk(cs);
+        M = { i: 0, t: 0, ang: -0.9 + r() * 1.8, jx: r() * 2 - 1, jy: r() * 2 - 1, kind: 'mon', target: Math.floor(r() * n), big: false, miss: false, _new: true, _dur: kind === 'status' ? 0.64 : 0.85, _pre: kind === 'status' ? 0 : ACT_PRE[kind] };
+        ins.push({ b: M, before: B[at] });
+        // 状態異常は差し込む時間がないので、そのすぐ後ろで治してもよい
+        if (kind !== 'status') used.add(B[at]);
+      } else return null;
+      setMon(kind, M);
+      const a = { kind, M };
+      if (kind === 'status') {
+        // 治るのは、その人の次の出番の前（いなければすぐ次の拍の前）
+        const from = M._new ? at : at + 1;
+        let ci = -1;
+        for (let i = from; i <= last; i++) if (B[i].who === M.target && (B[i].kind === 'hit' || B[i].kind === 'heal') && free(i)) { ci = i; break; }
+        if (ci < 0) for (let i = from; i <= last; i++) if (free(i)) { ci = i; break; }
+        if (ci >= 0) { a.C = B[ci]; pre(B[ci], ACT_PRE.cure); used.add(B[ci]); }
+        a.st = M.status;
+        let cu = P.findIndex((p) => p.cls === 'cleric');
+        if (cu < 0) cu = P.findIndex((p) => p.cls === 'bard');
+        a.curer = cu;
+      }
+      acts.push(a);
+      return a;
+    };
+    const later = [];
+    monKinds.forEach((k2) => { if (!placeMon(k2, false)) later.push(k2); });
+    // HP がおよそ半分を切ったところ（怒り・形態変化）
+    const cross = (frac) => {
+      const all = tot();
+      let acc = 0;
+      for (let i = 0; i < B.length; i++) { const b = B[i]; if (b.kind === 'hit' || b.kind === 'skill') acc += b.dmg; if (acc >= all * frac) return i; }
+      return -1;
+    };
+    // 半分を切った直後の拍。あいていなければ、少し早めの所で
+    const afterCross = (frac) => {
+      for (let f = frac; f > 0.1; f -= 0.15) {
+        const c = cross(f);
+        if (c < 0) continue;
+        const cs = range(c + 1, last);
+        if (cs.length) return cs[0];
+      }
+      // それでもだめなら、半分を切る一撃の直前
+      const c = cross(frac);
+      const cs = c > 0 ? range(c, c) : [];
+      return cs.length ? cs[0] : -1;
+    };
+    if (has('transform')) {
+      const i = afterCross(0.45);
+      if (i > 0) { pre(B[i], ACT_PRE.transform); used.add(B[i]); acts.push({ kind: 'transform', A: B[i] }); }
+    }
+    if (has('rage')) {
+      const i = afterCross(0.5);
+      if (i > 0) { pre(B[i], ACT_PRE.rage); used.add(B[i]); acts.push({ kind: 'rage', A: B[i] }); }
+    }
+    if (has('summon')) {
+      const cs = range(1, Math.max(1, last - 2));
+      if (cs.length) {
+        const i = cs[Math.floor(r() * Math.min(2, cs.length))];
+        pre(B[i], ACT_PRE.summon); used.add(B[i]);
+        const kos = [];
+        for (let j = i; j < B.length && kos.length < 2; j++) if (B[j].kind === 'hit' || B[j].kind === 'skill') kos.push(B[j]);
+        acts.push({ kind: 'summon', A: B[i], kos, minion: el === 'split' ? mon : SUMMON_OF[mon] || mon, split: el === 'split' || !SUMMON_OF[mon] });
+      }
+    }
+    if (has('flee')) {
+      const cs = range(B.length >= 5 ? 2 : 1, last - 1);
+      if (cs.length) {
+        const i = pk(cs);
+        pre(B[i], ACT_PRE.flee); used.add(B[i]);
+        let ch = P.findIndex((p) => p.cls === 'thief');
+        if (ch < 0) ch = P.findIndex((p) => p.trait === 'swift');
+        if (ch < 0) ch = P.findIndex((p) => CLS[p.cls] && CLS[p.cls].melee);
+        acts.push({ kind: 'flee', A: B[i], who: Math.max(0, ch) });
+      }
+    }
+    if (has('heal')) {
+      const cs = range(2, last - 1);
+      if (cs.length) {
+        const i = pk(cs);
+        pre(B[i], ACT_PRE.heal); used.add(B[i]);
+        const iw = P.findIndex((p) => CLS[p.cls] && CLS[p.cls].melee);
+        acts.push({ kind: 'heal', A: B[i], hp: Math.max(1, Math.round(tot() * 0.15)), who: Math.max(0, iw) });
+      }
+    }
+    if (has('intrude')) {
+      const cs = range(1, last - 1);
+      if (cs.length) {
+        const i = pk(cs);
+        pre(B[i], ACT_PRE.intrude); used.add(B[i]);
+        const pool = BIGGER.filter((m) => m !== mon);
+        acts.push({ kind: 'intrude', A: B[i], mon: pk(pool), dm: [0, 1, 2].map((j) => Math.round((12 + ((P[j % n] || { lv: 1 }).lv) * 7) * (1.2 + r() * 0.8))) });
+      }
+    }
+    later.forEach((k2) => placeMon(k2, true));
+    // ボスと守護者は、必ず1度は指示の場面がある
+    if ((reel.boss || reel.guardian) && !Array.isArray(reel.dbgActs) && !acts.some((a) => ORDER_OK[a.kind])) {
+      if (!placeMon('charge', true)) placeMon('aoe', true);
+    }
+
+    // ---- 新しい拍を入れて、時間をずらす
+    ins.forEach(({ b, before }) => { b._t0 = before.t; B.splice(B.indexOf(before), 0, b); });
+    let shift = 0;
+    const sh = [];
+    B.forEach((b) => {
+      shift += b._pre || 0;
+      if (b._new) {
+        b.t = b._t0 + shift;
+        b.at = b.t + 0.28;
+        shift += b._dur;
+      } else {
+        const o = b.t;
+        b.t += shift; b.at += shift;
+        if (b.w0 != null) { b.w0 += shift; b.s0 += shift; }
+        sh.push(o, shift);
+      }
+    });
+    pl.stops.forEach((s) => { let d = 0; for (let j = 0; j < sh.length; j += 2) { if (sh[j] <= s.t + 1e-9) d = sh[j + 1]; else break; } s.t += d; });
+    B.forEach((b, i) => { b.i = i; delete b._pre; delete b._dur; delete b._new; delete b._t0; });
+    // 連続ヒットは、魔物の番・行動の差し込みで途切れる
+    let combo = 0;
+    const cut = new Set();
+    acts.forEach((a) => { if (a.A) cut.add(a.A); if (a.g0) cut.add(a.g0); });
+    B.forEach((b) => {
+      if (b.kind === 'mon' || cut.has(b)) combo = 0;
+      if (b.kind === 'hit' || b.kind === 'skill') b.combo = ++combo;
+    });
+    return finishActs(reel, pl, P, r, mn, el);
+  }
+
+  // 行動の時刻・ラベル・指示の場面・セリフを決める（時間をずらしたあと）
+  function finishActs(reel, pl, P, r, mn, el) {
+    const acts = pl.acts;
+    const B = pl.beats;
+    const endAt = B[B.length - 1].at;
+    const n = Math.max(1, P.length);
+    const pk = (arr) => arr[Math.floor(r() * arr.length)];
+    const nm = (i) => (P[i] ? P[i].name : '');
+    acts.forEach((a) => {
+      switch (a.kind) {
+        case 'charge': a.t0 = a.M.t - ACT_PRE.charge; a.land = a.M.at; a.t1 = a.M.at + 0.3; a.who = a.M.target; a.label = `${mn}は力をためている…`; break;
+        case 'aoe': a.t0 = a.M.t - ACT_PRE.aoe; a.land = a.M.at; a.t1 = a.M.at + 0.3; a.label = `${mn}の全体攻撃が来る！`; break;
+        case 'status':
+          a.t0 = a.M.at; a.who = a.M.target;
+          a.cure = a.C ? a.C.t - 0.4 : a.M.at + 1.2;
+          a.t1 = a.cure + 0.4;
+          a.label = `${nm(a.who)}は${{ poison: '毒を受けた！', sleep: '眠ってしまった！', confuse: '混乱している！' }[a.st]}`;
+          break;
+        case 'guard': a.t0 = a.g0.t - ACT_PRE.guardUp; a.up = a.t0 + 0.45; a.crack = a.brkB.t - ACT_PRE.crack; a.land = a.brkB.at; a.t1 = a.land + 0.6; a.label = `${mn}は守りを固めた！`; break;
+        case 'summon':
+          a.t0 = a.A.t - ACT_PRE.summon; a.t1 = a.A.t;
+          a.ko = [0, 1].map((j) => (a.kos[j] ? a.kos[j].at : pl.fail ? 1e9 : endAt));
+          a.label = a.split ? `${mn}が分裂した！` : `${mn}は仲間を呼んだ！`;
+          break;
+        case 'rage': a.t0 = a.A.t - ACT_PRE.rage; a.t1 = a.A.t; a.label = `${mn}は怒り狂っている！`; break;
+        case 'transform': a.t0 = a.A.t - ACT_PRE.transform; a.flash = a.t0 + 0.85; a.t1 = a.A.t; a.label = reel.boss ? '竜王の姿が変わっていく…' : reel.guardian ? '守護者が真の姿を現した！' : `${mn}の姿が変わっていく…`; break;
+        case 'flee': a.t0 = a.A.t - ACT_PRE.flee; a.grab = a.t0 + 0.2; a.run = a.t0 + 0.5; a.land = a.t0 + 1.1; a.t1 = a.A.t; a.label = `${mn}がお宝を持って逃げた！`; break;
+        case 'heal': a.t0 = a.A.t - ACT_PRE.heal; a.land = a.t0 + 0.9; a.t1 = a.A.t; a.label = `${mn}は傷を癒やしている…`; break;
+        case 'intrude': a.t0 = a.A.t - ACT_PRE.intrude; a.t1 = a.A.t; a.label = 'なにかが乱入してきた！'; break;
+      }
+    });
+    acts.sort((a, b) => a.t0 - b.t0);
+    let oi = 0;
+    acts.forEach((a, ai) => {
+      a.oi = -1;
+      if (ORDER_OK[a.kind] && oi < 2) {
+        a.oi = oi++;
+        a.want = ORDER_OK[a.kind];
+        a.wa = a.kind === 'guard' ? a.crack + 0.02 : a.kind === 'flee' ? a.run - 0.12 : a.t0 + 0.2;
+        // 指示を待つあいだ、少しだけゆっくりに（見ているときだけ効く）
+        pl.slows.push({ a: a.wa + 0.06, b: a.land, f: 0.55, oi: a.oi });
+      }
+      if (a.M) { a.M.ai = ai; a.M.oi = a.oi; }
+      if (a.brkB) { a.brkB.ai = ai; a.brkB.oi = a.oi; }
+      if (a.kind === 'charge') pl.stops.push({ t: a.M.at, d: 0.12 });
+      if (a.kind === 'aoe') pl.stops.push({ t: a.M.at, d: 0.1 });
+      if (a.kind === 'guard') pl.stops.push({ t: a.land, d: 0.1 });
+      const mk = ACT_MARK[a.kind];
+      // 予兆のある行動は、とどく瞬間までラベルを出す
+      const ld = a.kind === 'status' ? 1.3 : a.kind === 'guard' ? Math.min(1.6, a.crack - a.t0 - 0.05) : a.land != null ? Math.max(1.1, a.land - a.t0 + 0.08) : 1.6;
+      pl.labels.push({ t: a.t0, d: ld, text: a.label, mark: mk[0], col: mk[1] });
+      if (a.kind === 'guard') pl.labels.push({ t: a.crack, d: Math.max(0.6, a.land - a.crack + 0.2), text: '守りにヒビが入った！', mark: ACT_MARK.crack[0], col: ACT_MARK.crack[1] });
+    });
+    if (el) {
+      const mk = ACT_MARK.elite;
+      pl.labels.push({ t: pl.encT + 0.85, d: 1.5, text: `精鋭・${ELITE[el]}${mn}が現れた！`, mark: mk[0], col: mk[1] });
+    }
+    pl.labels.sort((a, b) => a.t - b.t);
+    // 色（毎フレーム混ぜ直さないように）
+    const c0 = monColor(reel);
+    pl.col0 = c0;
+    pl.rageCol = G.mix(c0, '#ff2a1a', 0.42);
+    pl.formCol = reel.boss ? G.mix(c0, '#3a0a4a', 0.4) : G.mix(c0, '#ff3a9a', 0.32);
+    // セリフ（行動ごと）
+    const sayA = (t, who, bank, dur = 1.1) => { if (who == null || who < 0 || !P[who] || !bank) return; pl.speech.push({ t, who, text: pk(bank), dur }); };
+    const any = () => Math.floor(r() * n);
+    acts.forEach((a) => {
+      switch (a.kind) {
+        case 'charge': sayA(a.t0 + 0.3, a.who, ACT_SPEECH.charge, 0.9); break;
+        case 'aoe': sayA(a.t0 + 0.25, any(), ACT_SPEECH.aoe, 0.9); break;
+        case 'guard': sayA(a.gs[0].at + 0.08, a.gs[0].who, ACT_SPEECH.guard, 0.9); sayA(a.crack + 0.06, a.brkB.who, ACT_SPEECH.crack, Math.max(0.4, a.land - a.crack - 0.1)); break;
+        case 'summon': sayA(a.t0 + 0.45, any(), a.split ? ACT_SPEECH.split : ACT_SPEECH.summon, 1); break;
+        case 'rage': sayA(a.t0 + 0.25, any(), ACT_SPEECH.rage, 1); break;
+        case 'status':
+          sayA(a.t0 + 0.12, a.who, ACT_SPEECH[a.st], 0.9);
+          if (a.curer >= 0) sayA(a.cure - 0.32, a.curer, P[a.curer].cls === 'bard' ? ACT_SPEECH.cureBard : ACT_SPEECH.cureCleric, 0.8);
+          else sayA(a.cure + 0.05, a.who, ACT_SPEECH.cureSelf, 0.8);
+          break;
+        case 'flee': sayA(a.run + 0.05, a.who, ACT_SPEECH.flee, 0.9); break;
+        case 'transform': sayA(a.flash + 0.2, any(), ACT_SPEECH.transform, 1.1); break;
+        case 'heal': sayA(a.t0 + 0.25, any(), ACT_SPEECH.heal, 0.9); break;
+        case 'intrude': sayA(a.t0 + 0.4, any(), ACT_SPEECH.intrude, 1); break;
+      }
+    });
+    return acts;
+  }
+
   function danmakuOf(reel) {
-    if (reel._dm) return reel._dm;
+    const oid = G.oshi && reel.party ? G.oshi.id() : null;
+    if (reel._dm && reel._dmO === oid) return reel._dm;
     if (!G.comments || reel.digest) return (reel._dm = []);
     const pl = planOf(reel);
+    const oi = oid ? reel.party.findIndex((p) => p.id === oid) : -1;
     const proxy = {
       encT: pl.encT, finishT: pl.finishT, chestRank: pl.chestRank, dropT: pl.dropT, reveal: pl.reveal,
-      beats: pl.beats.map((b) => ({ t: b.at - 0.1, kind: b.kind === 'mon' && b.miss ? 'miss' : b.kind, crit: b.crit })),
+      beats: pl.beats.map((b) => ({ t: b.at - 0.1, kind: b.kind === 'mon' && b.miss ? 'miss' : b.kind, crit: b.crit, act: b.act || null, st: b.status || null, who: b.who })),
+      acts: (pl.acts || []).map((a) => ({ t: a.t0, kind: a.kind, land: a.land, st: a.st, cure: a.cure, split: !!a.split })),
+      oshi: oi >= 0 ? { name: reel.party[oi].name, i: oi } : null,
+      elite: !!reel.elite,
     };
     const raw = G.comments.danmaku(reel, pl.facts, proxy);
     // 4本の列に、前の文字が流れ切ってから入れる（入らないものは捨てる）
@@ -444,7 +839,8 @@
       free[lane] = d.t + w / v + 0.15;
       dm.push(Object.assign({}, d, { lane }));
     });
-    Object.defineProperty(reel, '_dm', { value: dm, enumerable: false, configurable: true });
+    Object.defineProperty(reel, '_dm', { value: dm, enumerable: false, configurable: true, writable: true });
+    Object.defineProperty(reel, '_dmO', { value: oid, enumerable: false, configurable: true, writable: true });
     return dm;
   }
 
@@ -470,6 +866,33 @@
   let warpNow = 1;
   let popY = 80; // 常連の通知カードの上端（設計座標）
   let lastCam = { z: 1, x: 180, y: 300 }; // いま描いている冒険譚のカメラ（画面側の文字の位置合わせ）
+  // マスターの指示（このセッションでの結果だけ。段取りそのものは変えない）
+  const orders = new Map(); // reel.id → [{ ok, k, t }]（指示の場面ごと）
+  const dynSay = new Map(); // reel.id → [{ t, who, text, dur }]（その場のひとこと）
+  const dmExtra = new Map(); // reel.id → [{ t, text, lane, speed, gold }]（その場の弾幕）
+  let ordFx = null; // 「ナイス指示！」「おしい…」
+  let ordLiveReel = null; // いま指示を出せる冒険譚
+  const ordersOn = () => !G.feature || G.feature('orders');
+  function niceOf(reel, oi) {
+    if (rewatch || oi == null || oi < 0 || !reel) return false;
+    const o = orders.get(reel.id);
+    return !!(o && o[oi] && o[oi].ok);
+  }
+  R.niceOf = niceOf;
+  const effMiss = (reel, b) => b.miss || (b.act === 'charge' && niceOf(reel, b.oi));
+  const blocked = (reel, b) => b.act === 'aoe' && niceOf(reel, b.oi);
+  function pushSay(reel, who, text, t, dur = 1.2) {
+    let a = dynSay.get(reel.id);
+    if (!a) { a = []; dynSay.set(reel.id, a); }
+    a.push({ t, who, text, dur, rw: rewatch });
+    if (a.length > 8) a.shift();
+  }
+  function pushDm(reel, bank, n, t, gold) {
+    let a = dmExtra.get(reel.id);
+    if (!a) { a = []; dmExtra.set(reel.id, a); }
+    for (let i = 0; i < n; i++) a.push({ t: t + i * 0.22 + Math.random() * 0.15, text: G.pick(bank), lane: (a.length + i) % 4, speed: 0.95 + Math.random() * 0.3, gold });
+    if (a.length > 24) a.splice(0, a.length - 24);
+  }
   R.isOpen = () => open;
   let mainCtxRef = null;
   const mainCtx = () => mainCtxRef;
@@ -495,6 +918,7 @@
     G.$('#endQuests').addEventListener('click', () => { R.close(); setTimeout(() => G.ui.openSheet('quests'), 260); });
     G.$('#endBack').addEventListener('click', () => R.close());
     G.$('#endHistory').addEventListener('click', () => startRewatch());
+    buildOrderUi();
     G.on('rankup', () => {
       if (open) {
         banner = { text: `ギルドランク ${G.state.rank} に上がった！`, t: 0 };
@@ -527,6 +951,7 @@
     sprites.clear();
     skyGrad.clear();
     placeHitAreas();
+    placeOrder();
   }
 
   // 冒険譚ごとの曲（場所・ボス戦で変わる。TikTok の「楽曲」のように画面下に流れる）
@@ -569,6 +994,7 @@
     paused = false;
     cmOpen = false;
     viewK = 0;
+    ordFx = null;
     open = true;
     G.state.streak = 0;
     root.hidden = false;
@@ -589,6 +1015,7 @@
     const cur = items[Math.round(pos)];
     if (cur && !cur.end && !cur.claimed && rt > 0.6) claim(cur, true);
     open = false;
+    hideOrderUi(true);
     closeComments(true);
     root.classList.remove('shown');
     root.classList.add('closing');
@@ -605,6 +1032,7 @@
     past.forEach(ensureComments);
     items = past.concat([{ end: true }]);
     rewatch = true;
+    hideOrderUi(true);
     pos = target = 0;
     rt = 0;
     fired = {};
@@ -626,10 +1054,23 @@
     const st = G.state;
     const seen = !quick || witnessedNow(reel);
     const streakB = seen ? Math.min(0.3, st.streak * 0.05) : 0;
-    const bonus = (seen ? 0.2 : 0) + streakB + cheer * 0.01;
-    const res = G.sim.claimReel(reel, bonus, st, { gifts: seen });
+    // ナイス指示：1回 +20%（2回まで）。宝のレア度が上がることもある
+    const nice = seen && ordersOn() ? reel.nice || 0 : 0;
+    const niceB = Math.min(0.4, nice * 0.2);
+    const bonus = (seen ? 0.2 : 0) + streakB + cheer * 0.01 + niceB;
+    const res = G.sim.claimReel(reel, bonus, st, { gifts: seen, nice });
     if (!res) return;
-    claimInfo.set(reel.id, { seen, streak: seen ? st.streak + 1 : 0, streakB, cheer, gold: res.gold });
+    const niceUp = !!(nice && reel.drop && reel.drop.niceUp);
+    claimInfo.set(reel.id, { seen, streak: seen ? st.streak + 1 : 0, streakB, cheer, gold: res.gold, niceB, niceUp });
+    if (niceUp && open && items[Math.round(pos)] === reel) {
+      // 宝箱から出た品が、その場でひとつ上のレア度に
+      const rc = art.RARITY_COL[reel.drop.rarity] || art.RARITY_COL[0];
+      flashT = 0.32; flashCol = rc.glow;
+      sfx('rarity', reel.drop.rarity);
+      const y = Hd * 0.6 - 128;
+      for (let i = 0; i < 16; i++) addPart(sparkP(236 + G.rand(-70, 70), y + G.rand(-20, 20), i % 2 ? rc.glow : '#ffffff', true));
+      G.haptic(20);
+    }
     if (seen) {
       st.streak++;
       st.stats.witnessed = (st.stats.witnessed || 0) + 1;
@@ -663,6 +1104,111 @@
     goTo(items.length - 1);
     G.ui.refreshHud();
     updateDom();
+  }
+
+  // ---------------------------------------------------------------- マスターの指示
+  // 予兆のある行動（溜め・全体攻撃・守りが割れる・逃げる・回復）の直前、見ている最中だけ
+  // 少しスローになって「避けて！」「守れ！」「今だ！」が出る。合っていればナイス指示（報酬アップ）。
+  // 外れても遅れても罰はない。指示の結果はこのセッションだけのもの（見直すときは元の戦い）
+  const ORD_KEYS = ['dodge', 'guard', 'now'];
+  const ORD_ICON = {
+    dodge: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8h8M2 12h9M3 16h8"/><path d="M13 5l7 7-7 7"/></svg>',
+    guard: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l8 3v6c0 5-3.4 8.6-8 10.5-4.6-1.9-8-5.5-8-10.5v-6z"/></svg>',
+    now: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19L18 6M15 3.5l5.5 5.5M3.5 20.5l2.5-.8-1.7-1.7z"/></svg>',
+  };
+  const NICE_DM = ['ナイス指示！', 'マスター有能', '指示うますぎ', 'さすがマスター', '神指示', '読んでた！？', 'ナイス！！'];
+  const OSHII_DM = ['おしい', 'どんまい', '次いこ次'];
+  let ordEl = null, ordBar = null;
+  const ordUi = { shown: false, reel: null, act: null, tm: 0 };
+  function buildOrderUi() {
+    if (ordEl || !root) return;
+    ordEl = G.el('div', '', `<div class="ro-row">${ORD_KEYS.map((k2) => `<button class="ro-btn" data-ord="${k2}" aria-label="${ORDER_TEXT[k2]}">${ORD_ICON[k2]}<b>${ORDER_TEXT[k2]}</b></button>`).join('')}</div><div class="ro-foot"><span class="ro-tag">マスター、指示を！</span><div class="ro-bar"><i></i></div></div>`);
+    ordEl.setAttribute('role', 'group');
+    ordEl.setAttribute('aria-label', 'マスターの指示');
+    ordEl.id = 'reelOrder';
+    ordEl.hidden = true;
+    root.appendChild(ordEl);
+    ordBar = ordEl.querySelector('.ro-bar i');
+    G.$$('.ro-btn', ordEl).forEach((b) => {
+      const go = (e) => { e.preventDefault(); e.stopPropagation(); G.audio.init(); onOrder(b.dataset.ord, b); };
+      b.addEventListener('pointerdown', go);
+      b.addEventListener('click', go);
+    });
+  }
+  // ボタンはパーティの足もとの下（HPバー・パーティ・右のいいね／コメントの列にはかからない）
+  function placeOrder() {
+    if (!ordEl || !W) return;
+    ordEl.style.left = ox + 10 * k + 'px';
+    ordEl.style.width = 282 * k + 'px';
+    ordEl.style.top = (Hd * 0.6 + 26) * k + 'px';
+  }
+  const orderLive = (reel) => open && ordersOn() && !rewatch && !!reel && !reel.end && !reel.digest && !reel.claimed && !cmOpen;
+  function orderAct(pl, t) {
+    const acts = pl && pl.acts;
+    if (!acts) return null;
+    for (let j = 0; j < acts.length; j++) { const a = acts[j]; if (a.oi >= 0 && t >= a.wa && t < a.land + 0.4) return a; }
+    return null;
+  }
+  function syncOrderUi(reel) {
+    if (!ordEl) return;
+    const a = reel && orderLive(reel) ? orderAct(planOf(reel), rt) : null;
+    const o = a ? orders.get(reel.id) : null;
+    const rec = o ? o[a.oi] : null;
+    const show = !!a && (!rec || rt < rec.t + 0.55);
+    if (show) {
+      if (!ordUi.shown || ordUi.act !== a || ordUi.reel !== reel) showOrderUi(reel, a);
+      if (!rec && ordBar) ordBar.style.transform = `scaleX(${G.clamp((a.land - rt) / Math.max(0.1, a.land - a.wa), 0, 1).toFixed(3)})`;
+    } else if (ordUi.shown) hideOrderUi();
+  }
+  function showOrderUi(reel, a) {
+    ordUi.shown = true; ordUi.reel = reel; ordUi.act = a;
+    clearTimeout(ordUi.tm);
+    ordEl.hidden = false;
+    ordEl.classList.remove('shown', 'done');
+    G.$$('.ro-btn', ordEl).forEach((b) => b.classList.remove('pick', 'ok', 'ng'));
+    if (ordBar) ordBar.style.transform = 'scaleX(1)';
+    placeOrder();
+    void ordEl.offsetWidth;
+    ordEl.classList.add('shown');
+    sfx('flash');
+    G.haptic(12);
+  }
+  function hideOrderUi(now) {
+    if (!ordEl) return;
+    ordUi.shown = false; ordUi.reel = null; ordUi.act = null;
+    ordEl.classList.remove('shown');
+    clearTimeout(ordUi.tm);
+    if (now) ordEl.hidden = true;
+    else ordUi.tm = setTimeout(() => { if (!ordUi.shown) ordEl.hidden = true; }, 240);
+  }
+  function onOrder(kind, btn) {
+    const cur = items[Math.round(pos)];
+    const a = ordUi.act;
+    if (!ordUi.shown || ordUi.reel !== cur || !a || !orderLive(cur)) return;
+    let o = orders.get(cur.id);
+    if (!o) { o = []; orders.set(cur.id, o); }
+    if (o[a.oi]) return;
+    const ok = kind === a.want && rt <= a.land;
+    o[a.oi] = { ok, k: kind, t: rt };
+    btn.classList.add('pick', ok ? 'ok' : 'ng');
+    ordEl.classList.add('done');
+    ordFx = { id: cur.id, t: rt, ok, n: 0 };
+    if (ok) {
+      cur.nice = (cur.nice || 0) + 1;
+      const st = G.state;
+      st.stats.nice = (st.stats.nice || 0) + 1;
+      if (G.oshi) G.oshi.onReel(cur, 'nice');
+      ordFx.n = cur.nice;
+      sfx('upgrade');
+      sfx('crit');
+      G.haptic(30);
+      for (let i = 0; i < 18; i++) addPart(sparkP(180 + G.rand(-90, 90), Hd * 0.3 + G.rand(-16, 16), i % 3 ? '#ffe27a' : '#ffffff', true));
+      pushDm(cur, NICE_DM, 3, rt + 0.1, true);
+    } else {
+      sfx('soft');
+      G.haptic(6);
+      pushDm(cur, OSHII_DM, 1, rt + 0.2, false);
+    }
   }
 
   // ---------------------------------------------------------------- 入力
@@ -762,6 +1308,7 @@
     G.haptic(10);
     if (!cur.liked) {
       cur.liked = true;
+      if (!cur.digest) oshiLike(cur);
       if (!rewatch) {
         G.state.stats.likes++;
         // 冒険者の絆が深まる
@@ -771,6 +1318,7 @@
           if (a && a.bond < 10) a.bond = Math.min(10, a.bond + (a.trait === 'drinker' || a.trait === 'singer' ? 1 : 0.5) * mul);
         });
         if (cur.party.length) addPart({ type: 'text', ui: true, x: 110, y: Hd * 0.6 - 140, vx: 0, vy: -24, life: 0, max: 1.4, text: '絆が深まった ♥', col: '#ffb3c6' });
+        if (G.oshi) G.oshi.onReel(cur, 'like');
       }
       updateDom();
     }
@@ -807,7 +1355,10 @@
   }
   function authorOf(key, reel) {
     if (key === 'master') { const tt = G.achieve && G.achieve.title(); return { name: tt ? `ギルドマスター《${tt}》` : 'ギルドマスター', master: true }; }
-    return G.comments ? G.comments.author(key, reel) : { name: key };
+    const au = G.comments ? G.comments.author(key, reel) : { name: key };
+    // マスターの推しは、推し色の名前に ♥
+    if (G.oshi && au.member && typeof key === 'string' && G.oshi.is(+key.split(':')[1])) au.oshi = true;
+    return au;
   }
   function avatarCanvas(au, size) {
     if (au.rina) return art.rinaCanvas ? art.rinaCanvas(size, 'smile') : art.letterCanvas('リナ', size);
@@ -817,6 +1368,7 @@
     return art.letterCanvas(au.name || '?', size);
   }
   function nameColor(au) {
+    if (au.oshi && G.oshi) return G.oshi.color();
     if (au.rina) return '#8ff0cf';
     if (au.master) return '#ffe39a';
     if (au.self) return '#ffd36a';
@@ -872,7 +1424,7 @@
       gift = `<div class="c-gift r${it.rarity}">${thumb}<span><b>${art.RARITY_COL[it.rarity].name}</b>${G.esc(it.name)}</span></div>`;
     }
     const liked = c.liked ? ' on' : '';
-    return `<img class="c-ava" alt="" src="${ava}"><div class="c-body"><div class="c-name"><b style="color:${nameColor(au)}">${G.esc(au.name)}</b>${badgeOf(au, c)}<span class="c-time">たった今</span></div><p>${G.esc(c.text)}</p>${gift}</div><button class="c-like${liked}" aria-label="いいね"><svg viewBox="0 0 20 20"><polygon points="10,18 1.5,9.5 2.5,4 6,2.5 10,6 14,2.5 17.5,4 18.5,9.5"/></svg><span>${G.fmt(c.likes + (c.liked ? 1 : 0))}</span></button>`;
+    return `<img class="c-ava" alt="" src="${ava}"><div class="c-body"><div class="c-name"><b style="color:${nameColor(au)}">${au.oshi ? '♥ ' : ''}${G.esc(au.name)}</b>${badgeOf(au, c)}<span class="c-time">たった今</span></div><p>${G.esc(c.text)}</p>${gift}</div><button class="c-like${liked}" aria-label="いいね"><svg viewBox="0 0 20 20"><polygon points="10,18 1.5,9.5 2.5,4 6,2.5 10,6 14,2.5 17.5,4 18.5,9.5"/></svg><span>${G.fmt(c.likes + (c.liked ? 1 : 0))}</span></button>`;
   }
 
   function syncComments(initial) {
@@ -1005,6 +1557,7 @@
     reel.cm.push(c);
     reel.posted = true;
     st.stats.posts = (st.stats.posts || 0) + 1;
+    if (G.oshi && !rewatch) G.oshi.onReel(reel, 'post');
     G.audio.sfx('commentPop');
     G.haptic(8);
     syncComments(false);
@@ -1106,8 +1659,19 @@
   function warp(pl, t) {
     if (!pl || rmNow) return 1;
     for (const s of pl.stops) if (t >= s.t && t < s.t + s.d * 0.05) return 0.05;
-    for (const s of pl.slows) if (t >= s.a && t < s.b) return s.f;
+    for (const s of pl.slows) {
+      if (t < s.a || t >= s.b) continue;
+      // 指示を待つスローは、見ている最中・まだ指示していないときだけ
+      if (s.oi != null && !slowLive(s.oi)) continue;
+      return s.f;
+    }
     return 1;
+  }
+  function slowLive(oi) {
+    const r = ordLiveReel;
+    if (!r) return false;
+    const o = orders.get(r.id);
+    return !(o && o[oi]);
   }
 
   R.update = function (dt) {
@@ -1133,6 +1697,7 @@
     if (cur && !cur.end && settled && !paused && !R._debug.hold) {
       if (firedFor !== cur) { firedFor = cur; rt = 0; fired = {}; cheer = 0; cmSeen = 0; cmBumpT = 9; G.audio.playTrack(trackOf(cur), { fade: 0.7 }); }
       const pl = cur.digest ? null : planOf(cur);
+      ordLiveReel = orderLive(cur) ? cur : null;
       warpNow = warp(pl, rt);
       rt += dt * warpNow;
       events(cur, pl);
@@ -1150,6 +1715,7 @@
       const autoAt = pl ? pl.end : 4.5;
       if (G.state.settings.autoplay && rt > autoAt && !cmOpen) goTo(Math.min(items.length - 1, idx + 1));
     }
+    syncOrderUi(settled && cur && !cur.end && !cur.digest ? cur : null);
     cmBumpT += dt;
     if (cmOpen) {
       cmView.syncT -= dt;
@@ -1215,7 +1781,8 @@
         skillEvents(reel, pl, b, i, L, mcy, mcol, false);
       } else if (b.kind === 'hit') {
         if (once('sw' + i, b.t + 0.02)) sfx(b.melee ? 'swish' : p && p.cls === 'archer' ? 'arrow' : 'cast');
-        if (once('h' + i, b.at)) {
+        if ((b.guarded || b.brk) && once('h' + i, b.at)) guardHit(reel, b, L, mcy);
+        else if (once('h' + i, b.at)) {
           sfx(b.crit ? 'crit' : 'impact', b.crit ? 1 : 0);
           for (let j = 0; j < (b.crit ? 16 : 7); j++) addPart(shardP(L.mx - 6, mcy, mcol));
           if (b.crit) for (let j = 0; j < 8; j++) addPart(sparkP(L.mx, mcy, '#ffe9a0'));
@@ -1224,7 +1791,8 @@
         }
       } else if (b.kind === 'mon') {
         if (once('mw' + i, b.t + 0.05)) sfx('swish', 1);
-        if (once('m' + i, b.at)) {
+        if (b.act && once('m' + i, b.at)) actMonHit(reel, b, L);
+        else if (once('m' + i, b.at)) {
           const px = L.px[b.target] != null ? L.px[b.target] : L.px[0];
           if (b.miss) {
             sfx('miss');
@@ -1246,6 +1814,18 @@
         }
       }
     });
+    if (pl.acts.length) actEvents(reel, pl, L, mcy);
+    const os = oshiOf(reel);
+    if (os.i >= 0) {
+      if (os.lv >= 1 && once('oshiIn', 0.12)) { sfx('cutin'); sfx('heart'); G.haptic(10); }
+      if (os.lv >= 5 && !pl.fail && once('oshiPose', pl.finishT + 0.92)) {
+        const ox2 = L.px[os.i], oy2 = L.gy - 70;
+        for (let j = 0; j < 18; j++) addPart(sparkP(ox2, oy2, j % 3 ? os.col : '#ffffff'));
+        for (let j = 0; j < 8; j++) addPart(fxP('star', ox2, oy2, j % 2 ? os.col : '#fff6c0', 150, 5, 0.9, 120, 60));
+        sfx('rarity', 2);
+        G.haptic(14);
+      }
+    }
     if (!pl.fail) {
       if (once('shatter', pl.finishT + 0.02)) {
         sfx('shatter');
@@ -1346,6 +1926,182 @@
     }
   }
 
+  // ---------------------------------------------------------------- 敵の行動の音・手ごたえ・パーティクル
+  // 守りを固めた魔物への攻撃（はじかれる／割る）
+  function guardHit(reel, b, L, mcy) {
+    if (b.guarded) {
+      sfx('clank');
+      sfx('impact', 0);
+      for (let j = 0; j < 8; j++) addPart(sparkP(L.mx - 18, mcy, j % 2 ? '#ffffff' : '#bfe4ff'));
+      addDmg(L.mx + b.jx * 14, L.gy - L.mh - 12, b.dmg, 'guard');
+      G.haptic(4);
+      return;
+    }
+    const nice = niceOf(reel, b.oi);
+    sfx('shatter');
+    sfx('crit');
+    for (let j = 0; j < 26; j++) addPart(shardP(L.mx, mcy, j % 3 ? '#bfe4ff' : '#ffffff', true));
+    if (nice) for (let j = 0; j < 10; j++) addPart(sparkP(L.mx, mcy, '#ffe27a'));
+    addDmg(L.mx + b.jx * 10, L.gy - L.mh - 16, b.dmg + (nice ? b.bonus : 0), nice ? 'weak' : 'crit');
+    if (!rmNow) { flashT = 0.3; flashCol = '#e0f4ff'; }
+    G.haptic(nice ? 30 : 18);
+    if (nice) pushSay(reel, b.who, G.pick(NICE_SPEECH.guard), b.at + 0.05, 1.1);
+  }
+  // 魔物の攻撃のうち、行動つきのもの（溜め攻撃・全体攻撃・状態異常）
+  function actMonHit(reel, b, L) {
+    const P = reel.party;
+    if (b.aoe) {
+      if (blocked(reel, b)) {
+        sfx('clank'); sfx('miss');
+        P.forEach((_, j) => {
+          const px = L.px[j];
+          for (let q = 0; q < 4; q++) addPart(sparkP(px, L.gy - 60, '#ffe9a0'));
+          addPart({ type: 'dmg', x: px, y: L.gy - 96, vx: 0, vy: -50, g: 90, life: 0, max: 0.9, text: String(Math.max(1, Math.round(b.dmgs[j] * 0.06))), kind: 'tiny' });
+        });
+        let gi = P.findIndex((p) => p.cls === 'knight');
+        if (gi < 0) gi = P.findIndex((p) => p.cls === 'cleric');
+        pushSay(reel, Math.max(0, gi), G.pick(NICE_SPEECH.aoe), b.at + 0.05, 1.1);
+        G.haptic(10);
+      } else {
+        sfx('impact', 2); sfx('hurt', 0);
+        P.forEach((_, j) => {
+          const px = L.px[j];
+          for (let q = 0; q < 5; q++) addPart(sparkP(px, L.gy - 40, '#f0c8ff'));
+          addPart({ type: 'dmg', x: px + (j % 2 ? 6 : -6), y: L.gy - 88 - (j % 2) * 20, vx: 0, vy: -60, g: 120, life: 0, max: 1, text: String(b.dmgs[j] || b.dmg), kind: 'hurt' });
+        });
+        if (!rmNow) { flashT = 0.4; flashCol = '#c040ff'; }
+        G.haptic(26);
+      }
+      return;
+    }
+    const px = L.px[b.target] != null ? L.px[b.target] : L.px[0];
+    if (effMiss(reel, b)) {
+      // 避けた（ナイス指示）
+      sfx('miss'); sfx('whoosh');
+      addPart({ type: 'dmg', x: px, y: L.gy - 92, vx: 0, vy: -50, g: 90, life: 0, max: 0.9, text: 'MISS', kind: 'miss' });
+      for (let j = 0; j < 8; j++) addPart(sparkP(px - 20, L.gy - 50, '#cfe6ff'));
+      pushSay(reel, b.target, G.pick(NICE_SPEECH.charge), b.at + 0.05, 1.1);
+      G.haptic(12);
+      return;
+    }
+    if (b.status) {
+      sfx('cast'); sfx('hurt', 0);
+      const col = STATUS_COL[b.status] || '#c890ff';
+      for (let j = 0; j < 10; j++) addPart({ type: 'puff', x: px + G.rand(-18, 18), y: L.gy - 50 + G.rand(-20, 16), vx: G.rand(-20, 20), vy: G.rand(-30, -8), life: 0, max: G.rand(0.6, 1), size: G.rand(7, 12), col });
+      addPart({ type: 'dmg', x: px, y: L.gy - 92, vx: 0, vy: -60, g: 120, life: 0, max: 0.95, text: String(b.dmg), kind: 'hurt' });
+      G.haptic(10);
+      return;
+    }
+    sfx('impact', 2);
+    for (let j = 0; j < 12; j++) addPart(sparkP(px, L.gy - 40, '#ffffff'));
+    addPart({ type: 'dmg', x: px, y: L.gy - 92, vx: 0, vy: -60, g: 120, life: 0, max: 0.95, text: String(b.dmg), kind: 'hurt' });
+    if (!rmNow) { flashT = 0.45; flashCol = '#ff4030'; }
+    G.haptic(30);
+  }
+  // 時刻で起きること（行動の始まり・とどく瞬間・治る・つかまえる…）
+  function actEvents(reel, pl, L, mcy) {
+    const acts = pl.acts;
+    for (let j = 0; j < acts.length; j++) {
+      const a = acts[j], key = 'a' + j;
+      if (rt < a.t0 - 0.05) continue;
+      switch (a.kind) {
+        case 'charge': case 'aoe':
+          if (once(key, a.t0)) { sfx('magic'); sfx('roar'); G.haptic(14); }
+          break;
+        case 'guard':
+          if (once(key, a.t0)) { sfx('clank'); sfx('magic'); }
+          if (once(key + 'u', a.up)) for (let q = 0; q < 10; q++) addPart(sparkP(L.mx, mcy, q % 2 ? '#ffffff' : '#bfe4ff'));
+          if (once(key + 'c', a.crack)) { sfx('clank'); G.haptic(8); }
+          break;
+        case 'summon':
+          if (once(key, a.t0)) sfx('roar');
+          for (let m = 0; m < 2; m++) {
+            const x = L.mx + MIN_POS[m * 2], y = L.gy + MIN_POS[m * 2 + 1];
+            if (once(key + 'p' + m, a.t0 + 0.25 + m * 0.17)) {
+              sfx('pop');
+              for (let q = 0; q < 6; q++) addPart({ type: 'puff', x: x + G.rand(-12, 12), y: y - G.rand(4, 24), vx: G.rand(-30, 30), vy: G.rand(-30, -6), life: 0, max: G.rand(0.4, 0.7), size: G.rand(6, 10), col: '#f0ecff' });
+            }
+            if (a.ko[m] < 1e8 && once(key + 'k' + m, a.ko[m])) { sfx('bounce'); for (let q = 0; q < 6; q++) addPart(sparkP(x, y - 20, '#fff6c0')); }
+          }
+          break;
+        case 'rage':
+          if (once(key, a.t0)) {
+            sfx('roar');
+            if (!rmNow) { flashT = 0.25; flashCol = '#ff3020'; }
+            for (let q = 0; q < 14; q++) addPart(sparkP(L.mx, mcy, q % 2 ? '#ff5a3a' : '#ffd0a0'));
+            G.haptic(16);
+          }
+          break;
+        case 'status':
+          if (once(key + 'c', a.cure)) {
+            const x = partyX(reel, pl, a.cure, L, a.who);
+            sfx('heal');
+            for (let q = 0; q < 10; q++) addPart(sparkP(x, L.gy - 60, q % 2 ? '#fff0a0' : '#ffffff'));
+            const txt = a.curer >= 0 ? (reel.party[a.curer].cls === 'bard' ? '♪お目覚め！' : 'キュア！') : 'ハッ！';
+            addPart({ type: 'text', x, y: L.gy - 120, vx: 0, vy: -26, life: 0, max: 1.1, text: txt, col: '#fff3b0' });
+          }
+          break;
+        case 'flee': {
+          const nice = niceOf(reel, a.oi);
+          if (once(key, a.grab)) sfx('swish');
+          if (once(key + 'r', a.run)) sfx('whoosh');
+          if (once(key + 'l', a.land)) {
+            if (nice) {
+              sfx('catch'); sfx('coins');
+              const x = L.mx + 64;
+              for (let q = 0; q < 16; q++) addPart({ type: 'coin', x: x + G.rand(-10, 10), y: L.gy - L.mh - 10, vx: G.rand(-150, 90), vy: G.rand(-260, -120), g: 520, life: 0, max: G.rand(0.8, 1.2), size: G.rand(3.5, 5.5), rot: G.rand(0, 6) });
+              addPart({ type: 'text', x: x - 20, y: L.gy - L.mh - 40, vx: 0, vy: -26, life: 0, max: 1.3, text: 'お宝を取り返した！', col: '#ffe27a' });
+              pushSay(reel, a.who, G.pick(NICE_SPEECH.flee), a.land + 0.05, 1.1);
+              G.haptic(24);
+            } else sfx('whoosh');
+          }
+          if (!nice && once(key + 'd', a.land + 0.42)) { sfx('impact', 0); G.haptic(10); }
+          if (!nice && once(key + 'b', a.t1 - 0.1)) sfx('bounce');
+          break;
+        }
+        case 'transform':
+          if (once(key, a.t0)) { sfx('magic'); G.haptic(10); }
+          if (once(key + 'f', a.flash)) {
+            sfx('flash'); sfx('roar');
+            if (!rmNow) { flashT = 0.6; flashCol = '#ffffff'; }
+            for (let q = 0; q < 24; q++) addPart(sparkP(L.mx, mcy, q % 2 ? '#ff9ae0' : '#ffffff'));
+            G.haptic(30);
+          }
+          break;
+        case 'heal':
+          if (once(key, a.t0)) sfx('magic');
+          if (once(key + 'l', a.land)) {
+            if (niceOf(reel, a.oi)) {
+              sfx('slash'); sfx('crit');
+              for (let q = 0; q < 14; q++) addPart(shardP(L.mx, mcy, '#7fffb0'));
+              addPart({ type: 'text', x: L.mx - 10, y: L.gy - L.mh - 30, vx: 0, vy: -28, life: 0, max: 1.2, text: '回復を阻止！', col: '#ffe27a' });
+              pushSay(reel, a.who, G.pick(NICE_SPEECH.heal), a.land - 0.15, 1.1);
+              G.haptic(22);
+            } else {
+              sfx('heal');
+              for (let q = 0; q < 12; q++) addPart({ type: 'plus', x: L.mx + G.rand(-24, 24), y: L.gy - G.rand(10, L.mh + 20), vx: 0, vy: G.rand(-50, -20), life: 0, max: G.rand(0.7, 1.1), size: G.rand(3, 5) });
+              addPart({ type: 'dmg', x: L.mx, y: L.gy - L.mh - 20, vx: 0, vy: -45, g: 80, life: 0, max: 1, text: '+' + G.fmt(a.hp), kind: 'heal' });
+            }
+          }
+          break;
+        case 'intrude':
+          if (once(key, a.t0)) { sfx('roar'); G.haptic(20); }
+          for (let m = 0; m < 3; m++) {
+            if (once(key + 'h' + m, a.t0 + 0.8 + m * 0.16)) {
+              const o = intrudePos(a, a.t0 + 0.8, L);
+              sfx('impact', 1);
+              addDmg(o.x - 40 + m * 18, o.y - 120 - m * 10, a.dm[m], m === 2 ? 'crit' : 'hit');
+              for (let q = 0; q < 6; q++) addPart(sparkP(o.x - 40 + m * 18, o.y - 80 - m * 14, '#ffffff'));
+              G.haptic(8);
+            }
+          }
+          if (once(key + 'k', a.t0 + 1.3)) { sfx('crit'); sfx('whoosh'); G.haptic(20); }
+          if (once(key + 's', a.t0 + 1.78)) sfx('tick');
+          break;
+      }
+    }
+  }
+
   // ---------------------------------------------------------------- 配置・カメラ
   function layout(reel) {
     const gy = Hd * 0.6;
@@ -1386,6 +2142,12 @@
         imp(b.at, 0.08, b.big ? 0.6 : 0.3, b.big ? 0.16 : 0.05, px, L.gy - 50);
       }
     });
+    for (let j = 0; j < pl.acts.length; j++) {
+      const a = pl.acts[j];
+      if (a.kind === 'transform') imp(a.flash, 0.5, 0.8, 0.14, L.mx, my);
+      else if (a.kind === 'charge') imp(a.M.t, 0.6, 0.2, 0.06, L.mx, my);
+      else if (a.kind === 'flee') imp(a.land, 0.5, 0.8, 0.05, L.mx + 50, my);
+    }
     if (!pl.fail) {
       imp(pl.finishT, 0.25, 0.95, reel.tier === 'legend' ? 0.26 : 0.18, L.mx, my);
       // 宝箱：揺れている間はぐっと寄る
@@ -1418,8 +2180,17 @@
       if (b.kind === 'hit' && b.use) kick(b.at, (b.crit ? 8 : 6) * ((skillFx(b.use).shake) || 1), 0.4);
       else if (b.kind === 'hit') kick(b.at, b.crit ? 6 : 2.4, 0.3);
       else if (b.kind === 'skill') kick(b.at, 10 * ((skillFx(b.skill).shake) || 1), 0.5);
-      else if (b.kind === 'mon' && !b.miss) kick(b.at, b.big ? 10 : 3.4, b.big ? 0.5 : 0.3);
+      else if (b.kind === 'mon' && !effMiss(reel, b) && !blocked(reel, b)) kick(b.at, b.big ? 10 : b.aoe ? 8 : 3.4, b.big || b.aoe ? 0.5 : 0.3);
     });
+    const acts = pl.acts;
+    for (let j = 0; j < acts.length; j++) {
+      const a = acts[j];
+      if (a.kind === 'transform') kick(a.flash, 9, 0.5);
+      else if (a.kind === 'rage') kick(a.t0, 5, 0.5);
+      else if (a.kind === 'guard') kick(a.land, 6, 0.35);
+      else if (a.kind === 'intrude') { kick(a.t0 + 0.5, 6, 0.4); kick(a.t0 + 1.3, 7, 0.4); }
+      else if (a.kind === 'flee' && !niceOf(reel, a.oi)) kick(a.t1 - 0.1, 4, 0.3);
+    }
     if (!pl.fail) kick(pl.finishT, 8, 0.4);
     if (pl.big) kick(pl.encT, 5, 0.6);
     if (!pl.fail && pl.chestRank >= 3) kick(pl.reveal, 6, 0.4);
@@ -1478,6 +2249,8 @@
     const pl = planOf(reel);
     const cam = camAt(reel, pl, t, L);
     const [shx, shy] = shakeAt(reel, pl, t);
+    monState(reel, pl, t);
+    const os = oshiOf(reel);
     // ---- 世界（カメラの中）
     ctx.save();
     ctx.translate(180, Hd / 2);
@@ -1491,9 +2264,12 @@
     drawBg(area, scroll, t, L.gy, walkK >= 1 && !fleeing);
     if (FX) FX.drawBack(ctx, area, scroll, t, L.gy, pl, reel, L);
     drawMagicCircles(reel, pl, t, L);
+    drawActs(reel, pl, t, L, 0);
     drawMonster(reel, pl, t, L);
-    drawParty(reel, pl, t, L);
+    drawActs(reel, pl, t, L, 1);
+    drawParty(reel, pl, t, L, os);
     drawAttackFx(reel, pl, t, L);
+    drawActs(reel, pl, t, L, 2);
     if (FX) FX.drawFront(ctx, area, scroll, t, L.gy, pl, reel);
     drawChest(reel, pl, t, L);
     drawRecruit(reel, pl, t, L);
@@ -1508,10 +2284,13 @@
     drawDanmaku(reel, t, 1 - vk);
     drawTitleCard(reel, area, pl, t);
     drawCutin(reel, pl, t);
+    if (cur && os.i >= 0 && os.lv >= 1) drawOshiCutin(reel, t, os);
+    drawActLabel(reel, pl, t, 1 - vk);
     if (t > pl.resT) drawResult(reel, pl, t, L);
     if (pl.itemT && t > pl.itemT) drawItemCard(reel, pl, t, L);
     drawOverlay(reel, t, cur, pl, 1 - vk);
     if (cur) {
+      drawOrderFx(reel, t);
       drawParts(true);
       if (flashT > 0) {
         ctx.fillStyle = G.rgba(flashCol.startsWith('#') ? flashCol : '#ffffff', Math.min(0.85, flashT));
@@ -1539,16 +2318,25 @@
     // とどめの直前は白く光る
     if (!pl.fail && t > pl.finishT - 0.01) hit = 1;
     const fly = FLYING[reel.monster];
+    const ms = MS; // 敵の行動（逃げる・怒る・形態変化…）で変わる姿
     const mx = L.mx + (fly ? 0 : (1 - enter) * 180) + kx;
     const my = fly ? -(1 - enter) * 220 : 0;
     const count = Math.min(3, reel.count || 1);
     for (let c = count - 1; c >= 0; c--) {
       ctx.save();
-      const sc = L.ms * (c ? 0.78 : 1);
-      ctx.translate(mx + c * 34, L.gy - c * 6 + my + ky);
-      ctx.scale(-sc, sc);
-      art.setFlash(c === 0 ? hit * 0.85 : 0);
-      art.monster[reel.monster](ctx, { t: t + c * 0.7, atk: c === 0 ? atk : 0, color: monColor(reel) });
+      if (c === 0) {
+        const sc = L.ms * ms.sc;
+        ctx.translate(mx + ms.dx, L.gy + my + ky + ms.dy);
+        ctx.scale(-sc * ms.face, sc * ms.sq);
+        art.setFlash(Math.max(hit * 0.85, ms.flash));
+        art.monster[reel.monster](ctx, { t: ms.tt, atk: Math.max(atk, ms.atk), color: ms.col });
+      } else {
+        const sc = L.ms * 0.78;
+        ctx.translate(mx + c * 34, L.gy - c * 6 + my + ky);
+        ctx.scale(-sc, sc);
+        art.setFlash(0);
+        art.monster[reel.monster](ctx, { t: t + c * 0.7, atk: 0, color: pl.col0 || monColor(reel) });
+      }
       art.setFlash(0);
       ctx.restore();
     }
@@ -1573,34 +2361,50 @@
     const a0 = pl.encT + 0.35;
     const a1 = pl.fail ? pl.resT + 0.2 : pl.finishT + 0.35;
     if (t < a0 || t > a1) return;
-    const a = G.seg(t, a0, a0 + 0.2) * (1 - G.seg(t, a1 - 0.2, a1));
-    const hpAt = (tt) => {
-      let hp = 1;
-      pl.beats.forEach((b) => { if ((b.kind === 'hit' || b.kind === 'skill') && b.at <= tt) hp = b.hpAfter; });
-      return hp;
-    };
-    const hp = hpAt(t);
-    const lag = hpAt(t - 0.35);
+    // 逃げて画面の外にいる間は消す
+    const off = G.seg(Math.abs(MS.dx), 90, 140);
+    const a = G.seg(t, a0, a0 + 0.2) * (1 - G.seg(t, a1 - 0.2, a1)) * (1 - off);
+    if (a <= 0.01) return;
+    const hp = monHp(reel, pl, t);
+    const lag = monHp(reel, pl, t - 0.35);
     const w = 118, h = 7;
-    const x = G.clamp(L.mx - w / 2, 8, 352 - w);
-    const y = L.gy - L.mh - (FLYING[reel.monster] ? 64 : 34);
+    const x = G.clamp(L.mx + MS.dx - w / 2, 8, 352 - w);
+    const y = L.gy - L.mh * MS.sc - (FLYING[reel.monster] ? 64 : 34);
     ctx.save();
     ctx.globalAlpha = a;
-    // 名前
-    ctx.font = F(800, 11, 'head');
+    // 名前（精鋭は金の札つき）
     ctx.textAlign = 'left';
+    if (reel.elite && ELITE[reel.elite.trait]) {
+      const tag = '精鋭・' + ELITE[reel.elite.trait];
+      ctx.font = F(800, 9, 'ui');
+      const tw = textW(ctx.font, tag) + 12;
+      art.rrect(ctx, x - 1, y - 33, tw, 13, 6.5);
+      ctx.fillStyle = '#e8b84a';
+      ctx.fill();
+      ctx.strokeStyle = '#fff0b8';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.fillStyle = '#2a1404';
+      ctx.fillText(tag, x + 5, y - 23.5);
+    }
+    ctx.font = F(800, 11, 'head');
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(8,12,26,0.85)';
     const name = (reel.boss ? '竜王 ' : reel.guardian ? '守護者 ' : reel.abyss ? '深淵の' : '') + D.MONSTERS[reel.monster].name + (reel.count > 1 ? ` ×${Math.min(3, reel.count)}` : '');
     ctx.strokeText(name, x, y - 5);
-    ctx.fillStyle = '#f6ecd2';
+    ctx.fillStyle = reel.elite ? '#ffe39a' : '#f6ecd2';
     ctx.fillText(name, x, y - 5);
-    // 枠
+    // 枠（回復の溜め中は緑に光る）
+    let healing = 0;
+    for (let j = 0; j < pl.acts.length; j++) {
+      const ha = pl.acts[j];
+      if (ha.kind === 'heal' && t > ha.t0 && t < ha.land && !niceOf(reel, ha.oi)) healing = 0.6 + 0.4 * Math.sin(t * 16);
+    }
     art.rrect(ctx, x - 2, y - 2, w + 4, h + 4, 3);
     ctx.fillStyle = 'rgba(8,12,26,0.85)';
     ctx.fill();
-    ctx.strokeStyle = '#c9a24a';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = healing ? '#7fffb0' : '#c9a24a';
+    ctx.lineWidth = healing ? 2 : 1;
     ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.fillRect(x, y, w * lag, h);
@@ -1610,6 +2414,7 @@
     g.addColorStop(1, col[1]);
     ctx.fillStyle = g;
     ctx.fillRect(x, y, w * hp, h);
+    if (hp > lag + 0.002) { ctx.fillStyle = '#7fffb0'; ctx.fillRect(x + w * lag, y, w * (hp - lag), h); }
     ctx.fillStyle = 'rgba(255,255,255,0.3)';
     ctx.fillRect(x, y, w * hp, 2);
     // 連続ヒット
@@ -1649,25 +2454,29 @@
           x = G.lerp(L.px[i], L.mx - 44, G.ease.outCubic(go) * (1 - G.ease.inOut(back)));
         }
       }
-      if (b.kind === 'mon' && b.target === i) {
+      if (b.kind === 'mon' && (b.target === i || b.aoe)) {
         const d = t - b.at;
         if (d > -0.12 && d < 0.5) {
-          if (b.miss) x -= G.bump(G.seg(d, -0.12, 0.3)) * 22;
+          if (b.aoe) { if (d > 0) x -= G.bump(d / 0.5) * (blocked(reel, b) ? 5 : 20); }
+          else if (effMiss(reel, b)) x -= G.bump(G.seg(d, -0.12, 0.3)) * (b.big ? 34 : 22);
           else if (d > 0) x -= G.bump(d / 0.5) * (b.big ? 30 : 16);
         }
       }
     });
+    if (pl.acts && pl.acts.length) x = actPartyX(reel, pl, t, L, i, x);
     if (pl.fail && t > pl.fleeT) x -= (t - pl.fleeT) * 270 + i * 10;
     void p;
     return x;
   }
-  function drawParty(reel, pl, t, L) {
+  function drawParty(reel, pl, t, L, os) {
     const walkK = G.clamp(t / 1.1, 0, 1);
+    const hasActs = pl.acts && pl.acts.length > 0;
     reel.party.forEach((p, i) => {
       const x = partyX(reel, pl, t, L, i);
       let y = L.gy;
       let state = walkK < 1 ? 'walk' : 'stand';
-      let facing = 1, swing = 0, armed = true, expr = null;
+      let facing = 1, swing = 0, armed = true, expr = null, blink = Math.sin(t * 3 + i * 2) > 0.97;
+      let stMark = null, stA = 0;
       const phase = t * 9 + i;
       pl.beats.forEach((b) => {
         if (b.kind === 'skill' && b.who === i && t > b.t - 0.5 && t < b.w0) { state = 'stand'; expr = 'happy'; }
@@ -1680,18 +2489,31 @@
           }
         }
         if (b.kind === 'heal' && b.who === i && t > b.t && t < b.t + 0.45) state = 'cast';
-        if (b.kind === 'mon' && b.target === i && !b.miss) {
+        if (b.kind === 'mon' && (b.target === i || b.aoe)) {
           const d = t - b.at;
-          if (d > 0 && d < 0.5) { state = 'hurt'; expr = 'hurt'; }
-        }
-        if (b.kind === 'mon' && b.target === i && b.miss) {
-          const d = t - b.at;
-          if (d > -0.12 && d < 0.25) y -= G.bump(G.seg(d, -0.12, 0.25)) * 14;
+          const miss = !b.aoe && effMiss(reel, b);
+          if (!miss) {
+            if (d > 0 && d < 0.5 && !blocked(reel, b)) { state = 'hurt'; expr = 'hurt'; }
+          } else if (d > -0.12 && d < 0.25) y -= G.bump(G.seg(d, -0.12, 0.25)) * (b.big ? 22 : 14);
         }
       });
+      // 敵の行動に合わせたポーズ（状態異常・追いかける・守りの壁・乱入）
+      if (hasActs && !(pl.fail && t > pl.fleeT)) {
+        PO.state = state; PO.facing = facing; PO.swing = swing; PO.expr = expr; PO.blink = blink;
+        const po = actPose(reel, pl, t, i);
+        state = po.state; facing = po.facing; swing = po.swing; expr = po.expr; blink = po.blink; y += po.y;
+        stMark = po.st; stA = po.stA;
+      }
+      // 推し：勝ったら特別なポーズ（Lv5）
+      const isOshi = os && os.i === i;
+      let pose = 0;
+      if (isOshi && os.lv >= 5 && !pl.fail) pose = G.seg(t, pl.finishT + 0.5, pl.finishT + 1.35);
       if (pl.fail && t > pl.fleeT) { state = 'run'; facing = -1; armed = false; expr = 'hurt'; }
       else if (pl.fail && t > pl.finishT && t <= pl.fleeT) { state = 'hurt'; expr = 'hurt'; }
-      else if (!pl.fail && t > pl.finishT + 0.2) { state = t > pl.resT ? 'cheer' : 'stand'; expr = 'happy'; }
+      else if (!pl.fail && t > pl.finishT + 0.2) { state = t > pl.resT || (pose > 0 && pose < 1) ? 'cheer' : 'stand'; expr = 'happy'; }
+      if (pose > 0 && pose < 1) y -= G.bump(pose) * 34;
+      // 推しのオーラ（Lv3）
+      if (isOshi && os.lv >= 3 && t > 1.0 && !(pl.fail && t > pl.fleeT + 0.4)) drawOshiAura(x, L.gy, os, t);
       // 技：溜めの光・残像・技ごとのポーズ
       const sb = !(pl.fail && t > pl.fleeT) ? skillBeatOf(pl, i, t) : null;
       const sfx2 = sb ? beatFx(sb, p) : null;
@@ -1709,9 +2531,18 @@
         ctx.globalAlpha = mo.alpha;
         ctx.scale(2.35 * mo.sx, 2.35 * mo.sy);
       } else ctx.scale(2.35, 2.35);
-      art.person(ctx, p.look, { t: t + i, state, phase, facing, swing, armed, expr, blink: Math.sin(t * 3 + i * 2) > 0.97 });
+      art.person(ctx, p.look, { t: t + i, state, phase, facing, swing, armed, expr, blink });
       ctx.restore();
       if (mo) y -= mo.y;
+      if (stMark) drawStatusMark(stMark, x + 20, y - 92, t, stA);
+      // 推しの名札（足もと）。勝利のポーズのあとは「推し一筋」
+      if (isOshi && t > 1.1 && t < pl.resT + 0.5 && !(pl.fail && t > pl.fleeT)) {
+        const one = os.lv >= 5 && !pl.fail && t > pl.finishT + 0.8;
+        ctx.save();
+        ctx.globalAlpha = 1 - G.seg(t, pl.resT + 0.2, pl.resT + 0.5);
+        drawOshiTag(x, L.gy + 7, os, t, one ? '♥ 推し一筋' : null);
+        ctx.restore();
+      }
       // 驚きマーク
       if (t > pl.encT + 0.1 && t < pl.encT + 0.75) drawMark(x, y - 104, '!', G.ease.outBack(G.seg(t, pl.encT + 0.1, pl.encT + 0.25)));
       // 閃きの電球
@@ -1772,8 +2603,9 @@
         ring(L.mx, my, d, 120, '#ffe9a0');
         ring(L.mx, my, d - 0.08, 160, beatFx(b, p).col);
       } else if (b.kind === 'mon') {
+        if (b.aoe) return; // 全体攻撃は drawAoeFx
         const px = L.px[b.target] != null ? partyX(reel, pl, b.at, L, b.target) : L.px[0];
-        if (!b.miss) {
+        if (!effMiss(reel, b)) {
           claw(px + 4, L.gy - 46, t - b.at, b.big ? 1.6 : 1);
           burst(px, L.gy - 46, t - b.at, b.big ? 1.3 : 0.6, '#ffd0c0');
           if (b.big) ring(px, L.gy - 40, t - b.at, 90, '#ff8060');
@@ -3697,10 +4529,10 @@
       }
       let x, y;
       if (b.kind === 'mon') {
-        const px = L.px[b.target] != null ? L.px[b.target] : L.px[0];
-        x = px + 26 + b.jx * 8; y = L.gy - 112 + b.jy * 6;
+        const px = b.aoe ? (L.px[0] + L.px[L.px.length - 1]) / 2 : L.px[b.target] != null ? L.px[b.target] : L.px[0];
+        x = px + 26 + b.jx * 8; y = L.gy - (b.aoe ? 150 : 112) + b.jy * 6;
       } else { x = L.mx - 58 + b.jx * 10; y = L.gy - L.mh * 0.62 + b.jy * 10; }
-      const big = b.kind === 'skill' || b.crit || b.big;
+      const big = b.kind === 'skill' || b.crit || b.big || b.brk;
       const kk = G.ease.outBack(G.seg(d, 0, 0.12));
       ctx.save();
       ctx.globalAlpha = 1 - G.seg(d, dur * 0.65, dur);
@@ -3708,6 +4540,8 @@
       ctx.rotate(-0.18 + b.jx * 0.1);
       ctx.scale(kk, kk);
       if (b.kind === 'mon' && b.miss) jagText(b.ono, 0, 0, 15, '#e8f4ff', '#1a2c48');
+      else if (b.kind === 'mon' && (effMiss(reel, b) || blocked(reel, b))) jagText(b.aoe ? 'ガード！' : 'ミス！', 0, 0, 19, '#e8f4ff', '#1a2c48');
+      else if (b.guarded) jagText(b.ono, 0, 0, 16, '#d8ecff', '#14203c');
       else jagText(b.ono, 0, 0, b.kind === 'skill' ? 30 : big ? 24 : 17, b.kind === 'mon' ? '#ffd0c8' : big ? '#fff2b8' : '#ffffff', b.kind === 'mon' ? '#5a0e0a' : '#2a1404');
       ctx.restore();
     });
@@ -3837,6 +4671,986 @@
     ctx.fillStyle = 'rgba(255,240,200,0.8)';
     ctx.fillText('NEW SKILL', 0, 32);
     ctx.restore();
+    ctx.restore();
+  }
+
+  // ================================================================ 敵の行動の演出
+  // 光のにじみは、色ごとに1度だけ描いた絵を伸ばして使う（毎フレーム グラデーションを作らない）
+  function glowSpr(col) {
+    return tsprite('gl:' + col, 64, 64, (g) => {
+      const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, G.rgba(col, 0.9));
+      gr.addColorStop(0.45, G.rgba(col, 0.32));
+      gr.addColorStop(1, G.rgba(col, 0));
+      g.fillStyle = gr;
+      g.fillRect(0, 0, 64, 64);
+    });
+  }
+  function glowAt(x, y, r, col, a) {
+    if (a <= 0.004 || r <= 1) return;
+    ctx.globalAlpha = a > 1 ? 1 : a;
+    ctx.drawImage(glowSpr(col), x - r, y - r, r * 2, r * 2);
+  }
+  // 立ちのぼる光の柱（回復）
+  function pillarSpr(col) {
+    return tsprite('pil:' + col, 40, 120, (g) => {
+      const gx = g.createLinearGradient(0, 0, 40, 0);
+      gx.addColorStop(0, G.rgba(col, 0));
+      gx.addColorStop(0.5, G.rgba(col, 0.75));
+      gx.addColorStop(1, G.rgba(col, 0));
+      g.fillStyle = gx;
+      g.fillRect(0, 0, 40, 120);
+      g.globalCompositeOperation = 'destination-in';
+      const gy2 = g.createLinearGradient(0, 0, 0, 120);
+      gy2.addColorStop(0, 'rgba(0,0,0,0)');
+      gy2.addColorStop(0.5, 'rgba(0,0,0,1)');
+      gy2.addColorStop(1, 'rgba(0,0,0,0.6)');
+      g.fillStyle = gy2;
+      g.fillRect(0, 0, 40, 120);
+    });
+  }
+  // 乱入してくる大物の影（その魔物の形を暗く塗りつぶしたもの）
+  function silSpr(id) {
+    return tsprite('sil:' + id, 260, 230, (g) => {
+      const s = id === 'dragon' ? 1.75 : id === 'kraken' || id === 'griffin' ? 2.5 : 2.9;
+      g.save();
+      g.translate(150, 222);
+      g.scale(-s, s);
+      art.setFlash(0);
+      if (art.monster[id]) art.monster[id](g, { t: 0.4, atk: 0.2 });
+      g.restore();
+      g.save();
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.globalCompositeOperation = 'source-atop';
+      const sg = g.createLinearGradient(0, 0, 0, g.canvas.height);
+      sg.addColorStop(0, '#2a1e44');
+      sg.addColorStop(1, '#0c0814');
+      g.fillStyle = sg;
+      g.fillRect(0, 0, g.canvas.width, g.canvas.height);
+      g.restore();
+    });
+  }
+
+  // 魔物のいまの姿（位置・向き・色・大きさ）。MS を書きかえて返す（毎フレーム使い回す）
+  const MS = { dx: 0, dy: 0, sc: 1, face: 1, flash: 0, tt: 0, atk: 0, col: '#ffffff', rage: 0, form: 0, sq: 1 };
+  function monState(reel, pl, t) {
+    const o = MS;
+    o.dx = 0; o.dy = 0; o.sc = 1; o.face = 1; o.flash = 0; o.atk = 0; o.rage = 0; o.form = 0; o.sq = 1;
+    o.tt = reel.elite && reel.elite.trait === 'fast' ? t * 1.35 : t;
+    o.col = pl.col0 || monColor(reel);
+    const acts = pl.acts;
+    if (!acts) return o;
+    for (let j = 0; j < acts.length; j++) {
+      const a = acts[j];
+      if (t < a.t0) continue;
+      switch (a.kind) {
+        case 'charge':
+          if (t < a.M.t) { const k2 = G.seg(t, a.t0, a.M.t); o.dx += 8 * G.ease.outCubic(k2) + Math.sin(t * 70) * 1.8 * k2; o.atk = Math.max(o.atk, 0.3 * k2); o.sq = 1 - 0.07 * k2; }
+          break;
+        case 'aoe':
+          if (t < a.land) { const k2 = G.seg(t, a.t0, a.t0 + 0.3); o.dy -= 8 * k2 * (1 - G.seg(t, a.land - 0.12, a.land)); o.atk = Math.max(o.atk, 0.5 * k2); }
+          break;
+        case 'guard':
+          if (t < a.land) o.sq = Math.min(o.sq, 1 - 0.08 * G.seg(t, a.t0, a.up));
+          break;
+        case 'rage':
+          o.rage = G.seg(t, a.t0, a.t0 + 0.3);
+          o.tt += (t - a.t0) * 0.7;
+          if (t < a.t1) o.dx += Math.sin(t * 60) * 2 * (1 - G.seg(t, a.t0 + 0.35, a.t1));
+          break;
+        case 'transform':
+          if (t < a.flash) {
+            const k2 = G.seg(t, a.t0, a.flash);
+            o.flash = Math.max(o.flash, (0.25 + 0.3 * Math.sin(t * 24)) * k2);
+            o.dx += Math.sin(t * 55) * 2.4 * k2;
+          } else {
+            o.form = 1;
+            o.sc = 1 + 0.15 * G.ease.outBack(G.seg(t, a.flash, a.flash + 0.3));
+            if (t < a.flash + 0.15) o.flash = Math.max(o.flash, 1 - G.seg(t, a.flash, a.flash + 0.15));
+          }
+          break;
+        case 'flee':
+          if (t < a.t1) fleeMon(a, t, o, niceOf(reel, a.oi));
+          break;
+        case 'heal':
+          if (t < a.land + 0.2) { const k2 = G.seg(t, a.t0, a.t0 + 0.3); o.dy -= (5 + Math.sin(t * 6) * 2) * k2; }
+          break;
+        case 'intrude':
+          if (t < a.t1) { const k2 = G.seg(t, a.t0, a.t0 + 0.2) * (1 - G.seg(t, a.t1 - 0.3, a.t1)); o.dx += -10 * k2 + Math.sin(t * 50) * 1.2 * k2; }
+          break;
+      }
+    }
+    if (o.form) o.col = pl.formCol;
+    else if (o.rage > 0) o.col = o.rage >= 1 ? pl.rageCol : G.mix(pl.col0, '#ff2a1a', 0.42 * o.rage);
+    return o;
+  }
+  // 逃げる魔物：袋をつかんで右へ。つかまえれば画面の中で、だめなら一度画面の外へ出てから連れ戻される
+  function fleeMon(a, t, o, nice) {
+    if (t < a.run) {
+      o.dy -= Math.abs(Math.sin((t - a.t0) * 14)) * 6 * G.seg(t, a.t0, a.grab);
+      if (t > a.grab + 0.15) o.face = -1;
+      return;
+    }
+    if (t < a.land) {
+      const k2 = G.seg(t, a.run, a.land);
+      o.dx = 64 * k2 * k2; o.face = -1;
+      o.dy -= Math.abs(Math.sin(t * 18)) * 5;
+      return;
+    }
+    if (nice) {
+      if (t < a.land + 0.45) { o.dx = 64 + Math.sin(t * 50) * 2.5; o.face = -1; return; }
+      const k2 = G.ease.inOut(G.seg(t, a.land + 0.45, a.t1 - 0.15));
+      o.dx = 64 * (1 - k2); o.dy -= Math.sin(k2 * Math.PI) * 6;
+      return;
+    }
+    if (t < a.land + 0.35) { o.dx = 64 + 120 * G.seg(t, a.land, a.land + 0.35); o.face = -1; return; }
+    if (t < a.land + 0.8) { o.dx = 200; return; }
+    const k2 = G.seg(t, a.land + 0.8, a.t1 - 0.1);
+    o.dx = 170 * (1 - k2);
+    o.dy -= Math.sin(k2 * Math.PI) * 70;
+    if (k2 >= 1) o.dy = -Math.abs(Math.sin((t - a.t1 + 0.1) * 20)) * 4;
+  }
+  // 追いかける人
+  function chaseX(reel, a, t, home, L) {
+    if (t < a.run + 0.08) return home;
+    const nice = niceOf(reel, a.oi);
+    if (t < a.land) return G.lerp(home, L.mx + 18, G.ease.inOut(G.seg(t, a.run + 0.08, a.land)));
+    if (nice) {
+      if (t < a.land + 0.45) return L.mx + 18 + 14 * G.ease.outCubic(G.seg(t, a.land, a.land + 0.1));
+      return G.lerp(L.mx + 32, home, G.ease.inOut(G.seg(t, a.land + 0.45, a.t1 - 0.1)));
+    }
+    if (t < a.land + 0.45) return G.lerp(L.mx + 18, 430, G.seg(t, a.land, a.land + 0.45));
+    if (t < a.land + 0.85) return 430;
+    return G.lerp(430, home, G.ease.outCubic(G.seg(t, a.land + 0.85, a.t1)));
+  }
+  // 行動に合わせた立ち位置（追いかける・割り込む・乱入者に飛びかかる）
+  function actPartyX(reel, pl, t, L, i, x) {
+    const acts = pl.acts;
+    for (let j = 0; j < acts.length; j++) {
+      const a = acts[j];
+      if (t < a.t0 || t > a.t1 + 0.1) continue;
+      if (a.kind === 'flee' && a.who === i) x = chaseX(reel, a, t, L.px[i], L);
+      else if (a.kind === 'heal' && a.who === i && niceOf(reel, a.oi)) {
+        const d = t - a.land;
+        if (d > -0.22 && d < 0.55) x = G.lerp(L.px[i], L.mx - 44, G.ease.outCubic(G.seg(d, -0.22, -0.04)) * (1 - G.ease.inOut(G.seg(d, 0.2, 0.55))));
+      } else if (a.kind === 'intrude') {
+        const p = reel.party[i];
+        const d = t - a.t0 - 0.72 - (i % 3) * 0.12;
+        if (p && CLS[p.cls] && CLS[p.cls].melee && d > 0 && d < 0.5) x += G.bump(d / 0.5) * 64;
+      }
+    }
+    return x;
+  }
+  // 行動に合わせたポーズ（状態異常・追いかける・守りの壁・乱入）。PO を書きかえて返す
+  const PO = { state: 'stand', facing: 1, swing: 0, expr: null, y: 0, blink: false, st: null, stA: 0 };
+  function actPose(reel, pl, t, i) {
+    const o = PO;
+    o.y = 0; o.st = null; o.stA = 0;
+    const acts = pl.acts;
+    const p = reel.party[i];
+    for (let j = 0; j < acts.length; j++) {
+      const a = acts[j];
+      if (t < a.t0 - 0.3 || t > a.t1 + 0.6) continue;
+      switch (a.kind) {
+        case 'status':
+          if (a.who === i && t >= a.t0 && t < a.cure + 0.12) {
+            o.st = a.st;
+            o.stA = G.seg(t, a.t0, a.t0 + 0.15) * (1 - G.seg(t, a.cure, a.cure + 0.12));
+            if (o.state !== 'hurt') {
+              if (a.st === 'sleep') { o.blink = true; o.state = 'stand'; o.y += 2; o.expr = null; }
+              else if (a.st === 'confuse') { o.facing = Math.sin(t * 6) > 0 ? 1 : -1; }
+              else if (Math.sin(t * 4) > 0.2) o.expr = 'hurt';
+            }
+          }
+          if (a.curer === i && t > a.cure - 0.36 && t < a.cure + 0.12) { o.state = 'cast'; o.expr = 'happy'; }
+          break;
+        case 'flee':
+          if (a.who === i && t > a.run + 0.08) {
+            const nice = niceOf(reel, a.oi);
+            if (t < a.land) { o.state = 'run'; o.facing = 1; }
+            else if (nice && t < a.land + 0.45) { o.state = 'lunge'; o.swing = 1; o.facing = 1; o.expr = 'happy'; }
+            else if (t < a.t1) { o.state = 'run'; o.facing = nice || t > a.land + 0.85 ? -1 : 1; }
+          }
+          break;
+        case 'heal':
+          if (a.who === i && niceOf(reel, a.oi)) {
+            const d = t - a.land;
+            if (d > -0.22 && d < 0.4) { o.state = 'lunge'; o.swing = G.seg(d, -0.1, 0.02); }
+          }
+          break;
+        case 'aoe':
+          if (a.gi === i && blocked(reel, a.M)) { const d = t - a.land; if (d > -0.28 && d < 0.45) { o.state = 'cast'; o.expr = 'happy'; } }
+          break;
+        case 'intrude': {
+          const d = t - a.t0;
+          if (d > 0.05 && d < 0.7 && o.state === 'stand') o.expr = 'hurt';
+          const d2 = d - 0.72 - (i % 3) * 0.12;
+          if (d2 > 0 && d2 < 0.5) {
+            if (p && CLS[p.cls] && CLS[p.cls].melee) { o.state = 'lunge'; o.swing = G.seg(d2, 0.1, 0.3); o.y -= G.bump(d2 / 0.5) * 22; }
+            else o.state = 'cast';
+          }
+          break;
+        }
+      }
+    }
+    return o;
+  }
+
+  // 魔物のHP（指示で変わる分も足す：割れた守りへの追撃・止めた回復）
+  function monHp(reel, pl, tt) {
+    if (!pl.fail && tt >= pl.finishT) return 0;
+    let acc = 0, ext = false;
+    const bs = pl.beats;
+    for (let i = 0; i < bs.length; i++) {
+      const b = bs[i];
+      if (b.at > tt || (b.kind !== 'hit' && b.kind !== 'skill')) continue;
+      acc += b.dmg;
+      if (b.brk && niceOf(reel, b.oi)) { acc += b.bonus; ext = true; }
+    }
+    const acts = pl.acts;
+    if (acts) {
+      for (let i = 0; i < acts.length; i++) {
+        const a = acts[i];
+        if (a.kind !== 'heal') continue;
+        if (niceOf(reel, a.oi)) ext = true;
+        else if (tt > a.land) acc -= a.hp * G.ease.outCubic(G.seg(tt, a.land, a.land + 0.35));
+      }
+    }
+    const lo = ext ? 0.04 : 0; // 指示で削れても、とどめの前に 0 にはしない
+    const hp = 1 - acc / Math.max(1, pl.maxHp);
+    return hp < lo ? lo : hp > 1 ? 1 : hp;
+  }
+
+  // layer 0：魔物の後ろ／1：魔物の上（殻・手下・袋）／2：いちばん手前
+  function drawActs(reel, pl, t, L, layer) {
+    const acts = pl.acts;
+    const cx = L.mx + MS.dx, cy = L.gy - L.mh * 0.5 + MS.dy;
+    if (layer === 0 && reel.elite && t > pl.encT && !(pl.fail ? t > pl.fleeT + 0.5 : t > pl.finishT)) {
+      // 精鋭：金色のにじみ
+      ctx.save();
+      glowAt(cx, cy, L.mh * 0.7 + 26 + Math.sin(t * 3) * 4, '#ffd36a', 0.28);
+      ctx.restore();
+    }
+    if (!acts || !acts.length) return;
+    for (let j = 0; j < acts.length; j++) {
+      const a = acts[j];
+      if (t < a.t0 - 0.05) continue;
+      ctx.save();
+      switch (a.kind) {
+        case 'charge': drawChargeFx(reel, pl, a, t, L, cx, cy, layer); break;
+        case 'aoe': drawAoeFx(reel, pl, a, t, L, cx, layer); break;
+        case 'guard': if (layer === 1) drawGuardFx(reel, a, t, L, cx, cy); else if (layer === 2) drawBreakFx(reel, a, t, L, cx, cy); break;
+        case 'summon': if (layer === 1) drawSummonFx(reel, pl, a, t, L); break;
+        case 'rage': drawRageFx(pl, a, t, L, cx, cy, layer); break;
+        case 'status': if (layer === 2) drawCureFx(reel, pl, a, t, L); break;
+        case 'flee': drawFleeFx(reel, pl, a, t, L, cx, layer); break;
+        case 'transform': drawFormFx(reel, pl, a, t, L, cx, cy, layer); break;
+        case 'heal': drawHealFx(reel, pl, a, t, L, cx, cy, layer); break;
+        case 'intrude': drawIntrudeFx(reel, pl, a, t, L, layer); break;
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawChargeFx(reel, pl, a, t, L, cx, cy, layer) {
+    const b = a.M;
+    if (t > b.at + 0.05) return;
+    const k2 = G.seg(t, a.t0, b.t);
+    if (layer === 0) { glowAt(cx, cy, 40 + 56 * k2 + Math.sin(t * 18) * 4, '#ff3a20', 0.55 * k2); return; }
+    if (layer === 1) {
+      // 集まってくる赤い光
+      ctx.globalCompositeOperation = 'lighter';
+      glowAt(cx, cy, 26 + 34 * k2, '#ff4020', 0.3 * k2 * (0.8 + 0.2 * Math.sin(t * 30)));
+      ctx.strokeStyle = '#ff7a5a';
+      ctx.lineCap = 'round';
+      ctx.lineWidth = 2.2;
+      for (let j = 0; j < 10; j++) {
+        const ph = (t * 1.6 + G.hash(j * 7 + 1)) % 1;
+        const an = G.hash(j * 13 + 5) * TAU;
+        const r0 = 96 * (1 - ph) + 8, r1 = r0 + 18;
+        ctx.globalAlpha = k2 * ph * 0.9;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(an) * r1, cy + Math.sin(an) * r1 * 0.8);
+        ctx.lineTo(cx + Math.cos(an) * r0, cy + Math.sin(an) * r0 * 0.8);
+        ctx.stroke();
+      }
+      return;
+    }
+    // ねらわれた人に照準
+    if (t > b.at - 0.02) return;
+    const tx = partyX(reel, pl, t, L, a.who), ty = L.gy - 46;
+    const sk = G.ease.outBack(G.seg(t, a.t0 + 0.15, a.t0 + 0.45));
+    const r = 30 - 12 * k2 + Math.sin(t * 16) * 1.5;
+    ctx.globalAlpha = 0.85 * sk;
+    ctx.strokeStyle = '#ff5a4a';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(tx, ty, r * sk, 0, TAU); ctx.stroke();
+    ctx.lineWidth = 2.5;
+    for (let j = 0; j < 4; j++) {
+      const an = j * (Math.PI / 2) + t * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(tx + Math.cos(an) * (r + 3) * sk, ty + Math.sin(an) * (r + 3) * sk);
+      ctx.lineTo(tx + Math.cos(an) * (r + 11) * sk, ty + Math.sin(an) * (r + 11) * sk);
+      ctx.stroke();
+    }
+  }
+
+  function drawAoeFx(reel, pl, a, t, L, cx, layer) {
+    const b = a.M;
+    if (layer === 0) {
+      // 予兆：地面に広がる輪
+      if (t > b.at + 0.04) return;
+      const k2 = G.ease.outCubic(G.seg(t, a.t0 + 0.05, b.at - 0.1));
+      const reach = L.mx - L.px[L.px.length - 1] + 50;
+      const r = 24 + reach * k2;
+      ctx.translate(cx, L.gy + 2);
+      ctx.scale(1, 0.24);
+      ctx.globalAlpha = 0.16 + 0.08 * Math.sin(t * 20);
+      ctx.fillStyle = '#b040ff';
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.fill();
+      ctx.globalAlpha = 0.9;
+      ctx.strokeStyle = '#e8b0ff';
+      ctx.lineWidth = 7;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); ctx.stroke();
+      ctx.globalAlpha = 0.45;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.72, 0, TAU); ctx.stroke();
+      ctx.fillStyle = '#f4d8ff';
+      for (let j = 0; j < 14; j++) {
+        const an = (j / 14) * TAU + t * 1.4;
+        ctx.globalAlpha = 0.8;
+        ctx.fillRect(Math.cos(an) * r * 0.86 - 3, Math.sin(an) * r * 0.86 - 6, 6, 12);
+      }
+      return;
+    }
+    if (layer !== 2) return;
+    const d = t - b.at;
+    if (d < -0.3 || d > 0.7) return;
+    const n = reel.party.length;
+    const x0 = L.px[n - 1] - 30, x1 = L.px[0] + 30;
+    if (blocked(reel, b)) {
+      // 守りの壁（ナイス指示）
+      const k2 = G.ease.outBack(G.seg(d, -0.26, -0.08)) * (1 - G.seg(d, 0.35, 0.6));
+      if (k2 <= 0.01) return;
+      const mx = (x0 + x1) / 2, rx = (x1 - x0) / 2 + 12, ry = 92;
+      ctx.translate(mx, L.gy);
+      ctx.scale(k2, k2);
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = '#ffe27a';
+      ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, Math.PI, TAU); ctx.closePath(); ctx.fill();
+      const hit = d > 0 && d < 0.3 ? 1 - d / 0.3 : 0;
+      ctx.globalAlpha = 0.75 + 0.25 * hit;
+      ctx.strokeStyle = '#fff3b0';
+      ctx.lineWidth = 3 + hit * 3;
+      ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, Math.PI, TAU); ctx.stroke();
+      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 1.2;
+      for (let j = 1; j < 4; j++) { ctx.beginPath(); ctx.ellipse(0, 0, rx * (j / 4), ry, 0, Math.PI, TAU); ctx.stroke(); }
+      for (let j = 1; j < 3; j++) { ctx.beginPath(); ctx.ellipse(0, 0, rx, ry * (j / 3), 0, Math.PI, TAU); ctx.stroke(); }
+      return;
+    }
+    if (d < 0) return;
+    // 衝撃波が全員を飲みこむ
+    const k2 = G.seg(d, 0, 0.5);
+    fxRing(cx - 40, L.gy, 40 + (cx - x0) * G.ease.outCubic(k2), 9 * (1 - k2) + 1, '#e8b0ff', 1 - k2, 0.22);
+    fxRing(cx - 40, L.gy, 20 + (cx - x0) * 0.7 * G.ease.outCubic(k2), 5 * (1 - k2) + 1, '#ffffff', 0.8 * (1 - k2), 0.22);
+    for (let j = 0; j < n; j++) {
+      const px = partyX(reel, pl, b.at, L, j);
+      burst(px, L.gy - 46, d - j * 0.03, 0.9, '#f0c8ff');
+    }
+  }
+
+  // 守りを固める：魔物をつつむ光の殻。はじくたびに光り、ヒビが入って、割れる
+  function drawGuardFx(reel, a, t, L, cx, cy) {
+    if (t > a.land + 0.02) return;
+    const up = G.ease.outBack(G.seg(t, a.t0, a.up));
+    if (up <= 0.01) return;
+    const rx = L.mh * 0.62 + 22, ry = L.mh * 0.6 + 16;
+    const crack = G.seg(t, a.crack, a.land);
+    const flick = crack > 0 ? 0.65 + 0.35 * Math.sin(t * 60) : 1;
+    let ping = 0;
+    for (let j = 0; j < a.gs.length; j++) { const d = t - a.gs[j].at; if (d >= 0 && d < 0.3) ping = Math.max(ping, 1 - d / 0.3); }
+    ctx.translate(cx, cy);
+    ctx.scale(up, up);
+    ctx.globalAlpha = (0.16 + 0.12 * ping) * flick;
+    ctx.fillStyle = '#8fd0ff';
+    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, TAU); ctx.fill();
+    ctx.globalAlpha = (0.85 + 0.15 * ping) * flick;
+    ctx.strokeStyle = ping > 0 ? '#ffffff' : '#d8f0ff';
+    ctx.lineWidth = 2.5 + ping * 2.5;
+    ctx.beginPath(); ctx.ellipse(0, 0, rx, ry, 0, 0, TAU); ctx.stroke();
+    // 六角の模様（ゆっくり流れる）
+    ctx.globalAlpha = 0.3 * flick;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let j = 0; j < 6; j++) {
+      const an = (j / 6) * TAU + t * 0.4;
+      ctx.moveTo(Math.cos(an) * rx * 0.5, Math.sin(an) * ry * 0.5);
+      ctx.lineTo(Math.cos(an + TAU / 6) * rx * 0.5, Math.sin(an + TAU / 6) * ry * 0.5);
+      ctx.moveTo(Math.cos(an) * rx * 0.5, Math.sin(an) * ry * 0.5);
+      ctx.lineTo(Math.cos(an) * rx * 0.98, Math.sin(an) * ry * 0.98);
+    }
+    ctx.stroke();
+    // 光の照り返し
+    ctx.globalAlpha = 0.5 * flick;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.ellipse(-rx * 0.38, -ry * 0.5, rx * 0.16, ry * 0.08, -0.5, 0, TAU); ctx.fill();
+    // ヒビ
+    if (crack > 0) {
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
+      for (let j = 0; j < 5; j++) {
+        const an = G.hash(j * 17 + 3) * TAU;
+        const len = (0.35 + 0.65 * Math.min(1, crack * 1.6 - j * 0.12)) * 0.95;
+        if (len <= 0.35) continue;
+        ctx.beginPath();
+        let px = Math.cos(an) * rx * 0.15, py = Math.sin(an) * ry * 0.15;
+        ctx.moveTo(px, py);
+        for (let s = 1; s <= 4; s++) {
+          const f = (s / 4) * len;
+          const wob = (G.hash(j * 31 + s) - 0.5) * 0.5;
+          px = Math.cos(an + wob) * rx * f; py = Math.sin(an + wob) * ry * f;
+          ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+    }
+  }
+  function drawBreakFx(reel, a, t, L, cx, cy) {
+    const d = t - a.land;
+    if (d < 0 || d > 0.8) return;
+    const nice = niceOf(reel, a.oi);
+    fxRing(cx, cy, 30 + 120 * G.ease.outCubic(G.seg(d, 0, 0.45)), 7 * (1 - G.seg(d, 0, 0.45)) + 1, '#d8f0ff', 1 - G.seg(d, 0, 0.45), 0.7);
+    const kk = G.ease.outBack(G.seg(d, 0, 0.14));
+    ctx.globalAlpha = 1 - G.seg(d, 0.55, 0.8);
+    ctx.translate(cx - 6, L.gy - L.mh - 70 - d * 14);
+    ctx.rotate(-0.08);
+    ctx.scale(kk, kk);
+    jagText(nice ? '弱点を突いた！' : 'ガードブレイク！', 0, 0, nice ? 19 : 17, nice ? '#ffe27a' : '#d8f0ff', '#14203c');
+  }
+
+  // 仲間を呼ぶ・分裂する：小さな手下が2体。次の攻撃で1体ずつ吹き飛ぶ
+  const MIN_POS = [-74, 4, -26, 14];
+  function drawSummonFx(reel, pl, a, t, L) {
+    const fn = art.monster[a.minion];
+    if (!fn) return;
+    const base = L.ms * (a.split ? 0.52 : a.minion === 'slime' ? 0.6 : 0.62);
+    const col = a.minion === reel.monster ? pl.col0 : undefined;
+    for (let m = 0; m < 2; m++) {
+      const t0 = a.t0 + 0.25 + m * 0.17;
+      if (t < t0) continue;
+      const dk = t - a.ko[m];
+      if (dk > 0.75) continue;
+      if (pl.fail && t > pl.fleeT + 0.8) continue;
+      let x = L.mx + MIN_POS[m * 2], y = L.gy + MIN_POS[m * 2 + 1], rot = 0, al = 1;
+      const s = base * G.ease.outBack(G.seg(t, t0, t0 + 0.25));
+      if (dk > 0) {
+        // ポカッと吹き飛ぶ
+        x += dk * 280; y -= dk * 330 - dk * dk * 220; rot = dk * 14; al = 1 - G.seg(dk, 0.45, 0.75);
+      }
+      ctx.save();
+      ctx.globalAlpha = al;
+      ctx.translate(x, y);
+      if (rot) ctx.rotate(rot);
+      ctx.scale(-s, s);
+      art.setFlash(dk > 0 && dk < 0.12 ? 0.8 : 0);
+      fn(ctx, { t: t * 1.3 + m * 0.9, atk: 0, color: col });
+      art.setFlash(0);
+      ctx.restore();
+      if (dk > 0 && dk < 0.5) fxTwinkle(x, y - 20, 12 * (1 - dk / 0.5) + 3, '#fff6c0', 1 - dk / 0.5);
+    }
+  }
+
+  // 怒り：赤いオーラ・湯気・怒りマーク
+  function drawRageFx(pl, a, t, L, cx, cy, layer) {
+    if (pl.fail ? t > pl.fleeT + 1 : t > pl.finishT) return;
+    const k2 = G.seg(t, a.t0, a.t0 + 0.3);
+    if (layer === 0) { glowAt(cx, cy, L.mh * 0.72 + 26 + Math.sin(t * 9) * 5, '#ff2010', 0.42 * k2); return; }
+    if (layer !== 2) return;
+    const top = L.gy - L.mh + MS.dy;
+    for (let j = 0; j < 4; j++) {
+      const ph = (t * 1.3 + j * 0.25) % 1;
+      fxPuff(cx - L.mh * 0.18 + (j - 1.5) * 9 + Math.sin(t * 3 + j) * 3, top + 6 - ph * 34, 4 + ph * 8, '#ffffff', 0.5 * (1 - ph) * k2);
+    }
+    // 怒りマーク（ぴくぴく）
+    const s = (0.8 + 0.25 * Math.max(0, Math.sin(t * 9))) * k2;
+    const mx = cx - L.mh * 0.32, my = top + 4;
+    ctx.globalAlpha = k2;
+    ctx.strokeStyle = '#ff2a2a';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    for (let j = 0; j < 4; j++) {
+      const an = j * (Math.PI / 2) + Math.PI / 4;
+      const ox2 = Math.cos(an) * 5 * s, oy2 = Math.sin(an) * 5 * s;
+      ctx.beginPath();
+      ctx.moveTo(mx + ox2 * 0.5, my + oy2 * 0.5);
+      ctx.quadraticCurveTo(mx + ox2 * 1.5 + oy2 * 0.4, my + oy2 * 1.5 - ox2 * 0.4, mx + ox2 * 2, my + oy2 * 2);
+      ctx.stroke();
+    }
+  }
+
+  // 状態異常のしるし（頭の横）
+  function drawStatusMark(st, x, y, t, a) {
+    if (a <= 0.01) return;
+    ctx.save();
+    ctx.translate(x, y);
+    if (st === 'sleep') {
+      ctx.textAlign = 'center';
+      ctx.lineJoin = 'round';
+      for (let j = 0; j < 3; j++) {
+        const ph = (t * 0.9 + j / 3) % 1;
+        ctx.globalAlpha = a * Math.min(1, (1 - ph) * 2);
+        ctx.save();
+        ctx.translate(ph * 12, -ph * 24);
+        ctx.scale(0.6 + ph * 0.7, 0.6 + ph * 0.7);
+        ctx.font = F(900, 12, 'num');
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = '#14203c';
+        ctx.strokeText('Z', 0, 0);
+        ctx.fillStyle = '#cfe6ff';
+        ctx.fillText('Z', 0, 0);
+        ctx.restore();
+      }
+    } else if (st === 'poison') {
+      for (let j = 0; j < 3; j++) {
+        const ph = (t * 1.2 + j / 3) % 1;
+        fxCircle(Math.sin(t * 4 + j * 2) * 4 + (j - 1) * 5, -ph * 20, 2.4 + ph * 2.2, '#c890ff', a * (1 - ph));
+      }
+      // 毒のしずく
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#9a4ae0';
+      ctx.beginPath(); ctx.moveTo(0, -12); ctx.quadraticCurveTo(6, -3, 0, 0); ctx.quadraticCurveTo(-6, -3, 0, -12); ctx.fill();
+      ctx.fillStyle = '#e8d0ff';
+      ctx.fillRect(-1.6, -6, 1.4, 1.4); ctx.fillRect(0.6, -6, 1.4, 1.4);
+    } else {
+      for (let j = 0; j < 3; j++) {
+        const an = t * 5 + (j / 3) * TAU;
+        fxStar(Math.cos(an) * 11, Math.sin(an) * 4 - 4, 4, an, j ? '#ffe27a' : '#ffffff', a);
+      }
+    }
+    ctx.restore();
+  }
+  function drawCureFx(reel, pl, a, t, L) {
+    const d = t - a.cure;
+    if (d < -0.3 || d > 0.6) return;
+    const x = partyX(reel, pl, t, L, a.who);
+    if (d < 0) { glowAt(x, L.gy - 48, 30, STATUS_COL[a.st], 0.25 * G.seg(d, -0.3, 0)); return; }
+    const k2 = d / 0.6;
+    for (let j = 0; j < 8; j++) {
+      const an = (j / 8) * TAU + d * 3;
+      const r = 14 + 34 * G.ease.outCubic(k2);
+      fxTwinkle(x + Math.cos(an) * r, L.gy - 48 + Math.sin(an) * r * 0.7, 7 * (1 - k2) + 2, j % 2 ? '#ffffff' : '#fff0a0', 1 - k2);
+    }
+  }
+
+  // 逃げる：袋・土ぼこり
+  function sackAt(x, y, s, t) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(s, s);
+    ctx.rotate(Math.sin(t * 9) * 0.12);
+    art.poly(ctx, [-7, 0, 7, 0, 9, -8, 5, -14, -5, -14, -9, -8], '#b08050');
+    art.poly(ctx, [-7, 0, 0, 0, 0, -14, -5, -14, -9, -8], '#c89a64');
+    art.poly(ctx, [-3, -14, 3, -14, 4, -17, -4, -17], '#7a5434');
+    fxCircle(-3, -16, 2.2, '#ffd84a', 1);
+    fxCircle(2, -17, 2, '#ffe680', 1);
+    ctx.restore();
+  }
+  function drawFleeFx(reel, pl, a, t, L, cx, layer) {
+    if (t > a.t1 + 0.3) return;
+    const nice = niceOf(reel, a.oi);
+    if (layer === 1) {
+      // お宝の袋（魔物が持つ → だめなら取り返して戻ってくる）
+      if (t < a.grab) return;
+      const pop = G.ease.outBack(G.seg(t, a.grab, a.grab + 0.2));
+      if (nice ? t < a.land : t < a.land + 0.8) sackAt(cx + 10 * MS.face, L.gy - L.mh * 0.95 + MS.dy, 1.6 * pop, t);
+      else if (!nice && t < a.t1 + 0.3) sackAt(partyX(reel, pl, t, L, a.who) + 4, L.gy - 104, 1.4 * (1 - G.seg(t, a.t1, a.t1 + 0.3)), t);
+      return;
+    }
+    if (layer !== 2) return;
+    if (t > a.run && t < a.land) {
+      // 走る土けむり
+      for (let j = 0; j < 3; j++) {
+        const ph = (t * 3 + j / 3) % 1;
+        fxPuff(cx - 18 - ph * 26, L.gy - 4 - ph * 6, 4 + ph * 6, '#e8dcc0', 0.5 * (1 - ph));
+      }
+    }
+    if (!nice && t > a.land + 0.3 && t < a.land + 0.95) {
+      // 画面の外でドタバタ
+      const k2 = G.seg(t, a.land + 0.3, a.land + 0.95);
+      const a2 = G.seg(k2, 0, 0.15) * (1 - G.seg(k2, 0.8, 1));
+      for (let j = 0; j < 4; j++) {
+        const an = t * 7 + j * 1.6;
+        fxPuff(338 + Math.cos(an) * 12, L.gy - 26 + Math.sin(an) * 9, 13 + Math.sin(t * 13 + j) * 3, '#f0e6d0', 0.85 * a2);
+      }
+      for (let j = 0; j < 3; j++) fxStar(326 + j * 12, L.gy - 52 + Math.sin(t * 20 + j) * 6, 4, t * 6 + j, '#ffe27a', a2);
+      ctx.globalAlpha = a2;
+      ctx.translate(318, L.gy - 72);
+      ctx.rotate(-0.12);
+      jagText('ドタバタ', 0, 0, 15, '#fff2b8', '#2a1404');
+    }
+  }
+
+  // 形態変化：光って、色と大きさが変わる
+  function drawFormFx(reel, pl, a, t, L, cx, cy, layer) {
+    if (pl.fail ? t > pl.fleeT + 1 : t > pl.finishT) return;
+    const col = reel.boss ? '#b040ff' : '#ff4fa0';
+    if (layer === 0) {
+      if (t < a.flash) glowAt(cx, cy, 60 + 70 * G.seg(t, a.t0, a.flash), '#ffffff', 0.45 * G.seg(t, a.t0, a.flash));
+      else glowAt(cx, cy, L.mh * 0.95 + 34 + Math.sin(t * 5) * 6, col, 0.42);
+      return;
+    }
+    if (layer !== 2) return;
+    if (t < a.flash) {
+      const k2 = G.seg(t, a.t0, a.t0 + 0.3);
+      for (let j = 0; j < 3; j++) {
+        const ph = (t * 1.8 + j / 3) % 1;
+        fxRing(cx, cy, 130 * (1 - ph) + 12, 2.5, '#ffe0f4', ph * k2, 0.6);
+      }
+    } else {
+      const d = t - a.flash;
+      if (d < 0.6) fxRing(cx, cy, 30 + 230 * G.ease.outCubic(d / 0.6), 9 * (1 - d / 0.6) + 1, '#ffffff', 1 - d / 0.6, 0.55);
+      for (let j = 0; j < 7; j++) {
+        const ph = (t * 0.7 + G.hash(j * 9 + 2)) % 1;
+        fxCircle(cx + (G.hash(j * 3 + 1) - 0.5) * L.mh * 1.1, cy + L.mh * 0.45 - ph * L.mh * 1.4, 2.2, j % 2 ? col : '#ffd0f0', (1 - ph) * 0.8);
+      }
+    }
+  }
+
+  // 回復：緑の光。ナイス指示なら斬りつけて止める
+  function drawHealFx(reel, pl, a, t, L, cx, cy, layer) {
+    const nice = niceOf(reel, a.oi);
+    const end = nice ? a.land : a.land + 0.3;
+    if (t > end + 0.35) return;
+    const k2 = G.seg(t, a.t0, a.t0 + 0.3) * (1 - G.seg(t, end, end + 0.25));
+    if (layer === 0) {
+      glowAt(cx, cy, L.mh * 0.8 + 34 + Math.sin(t * 8) * 4, '#5aff9a', 0.45 * k2);
+      if (k2 > 0.01) { ctx.globalAlpha = 0.7 * k2; ctx.drawImage(pillarSpr('#7fffb0'), cx - 34, L.gy - L.mh - 90, 68, L.mh + 96); }
+      return;
+    }
+    if (layer !== 2) return;
+    ctx.fillStyle = '#9ff0b8';
+    for (let j = 0; j < 9; j++) {
+      const ph = (t * 1.1 + G.hash(j * 5 + 1)) % 1;
+      const x = cx + (G.hash(j * 11 + 3) - 0.5) * L.mh * 1.2, y = L.gy - ph * (L.mh + 46), s = 3.4;
+      ctx.globalAlpha = (1 - ph) * k2;
+      ctx.fillRect(x - s, y - s * 0.3, s * 2, s * 0.6);
+      ctx.fillRect(x - s * 0.3, y - s, s * 0.6, s * 2);
+    }
+    if (nice) {
+      const d = t - a.land;
+      if (d >= 0 && d < 0.4) {
+        ctx.globalAlpha = 1;
+        slash(L.mx - 4, cy, d, -0.7, 1.45, true);
+        burst(L.mx - 4, cy, d, 1.2, '#e0ffe8');
+      }
+    }
+  }
+
+  // 大物の乱入：奥から影が乗りこんできて、みんなで追い返す
+  const IP = { x: 0, y: 0, rot: 0, s: 1, a: 1 };
+  function intrudePos(a, t, L) {
+    const d = t - a.t0, o = IP, ex = L.mx + 50;
+    o.rot = 0; o.s = 1; o.a = 1;
+    if (d < 0.6) { const k2 = G.ease.outCubic(d / 0.6); o.x = G.lerp(450, ex, k2); o.y = L.gy - 8 - Math.abs(Math.sin(d * 12)) * 7 * (1 - k2); o.a = G.seg(d, 0, 0.12); }
+    else if (d < 1.3) { o.x = ex + (d > 0.8 ? Math.sin(d * 70) * 3 : 0); o.y = L.gy - 8; }
+    else { const k2 = G.seg(d, 1.3, 1.85); o.x = ex + k2 * 250; o.y = L.gy - 8 - k2 * 430; o.rot = k2 * 9; o.s = 1 - 0.75 * k2; o.a = 1 - G.seg(k2, 0.85, 1); }
+    return o;
+  }
+  function drawIntrudeFx(reel, pl, a, t, L, layer) {
+    const d = t - a.t0;
+    if (d < 0 || d > 2.05) return;
+    const o = intrudePos(a, t, L);
+    if (layer === 0) {
+      if (d > 1.9) return;
+      glowAt(o.x - 10, o.y - 90 * o.s, 120 * o.s, '#7a40d0', 0.35 * o.a);
+      ctx.globalAlpha = 0.95 * o.a;
+      ctx.translate(o.x, o.y);
+      if (o.rot) ctx.rotate(o.rot);
+      ctx.scale(o.s, o.s);
+      ctx.drawImage(silSpr(a.mon), -150, -222, 260, 230);
+      // 光る目
+      const blink = Math.sin(t * 3) > 0.92 ? 0.2 : 1;
+      fxCircle(-62, -150, 3.2 * blink, '#ff4a3a', 1);
+      fxCircle(-48, -152, 3.2 * blink, '#ff4a3a', 1);
+      glowAt(-55, -151, 14, '#ff4a3a', 0.6);
+      return;
+    }
+    if (layer !== 2) return;
+    // 咆哮
+    if (d > 0.55 && d < 1.0) {
+      const al = G.seg(d, 0.55, 0.65) * (1 - G.seg(d, 0.85, 1.0));
+      ctx.save();
+      ctx.globalAlpha = al;
+      ctx.translate(o.x - 30 + Math.sin(t * 80) * 2, o.y - 200);
+      ctx.rotate(-0.1);
+      jagText(ROAR[a.mon] || 'ゴゴゴゴ…', 0, 0, 19, '#e8dcff', '#1a0e2a');
+      ctx.restore();
+    }
+    // みんなで攻撃
+    for (let m = 0; m < 3; m++) {
+      const dm = d - 0.8 - m * 0.16;
+      if (dm < 0 || dm > 0.3) continue;
+      ctx.save();
+      slash(o.x - 40 + m * 18, o.y - 80 - m * 14, dm, -0.5 + m * 0.7, 1.3, m === 2);
+      burst(o.x - 40 + m * 18, o.y - 80 - m * 14, dm, 1.1, '#ffffff');
+      ctx.restore();
+    }
+    // キラーン
+    const ds = d - 1.78;
+    if (ds > 0 && ds < 0.27) fxTwinkle(L.mx + 50 + 250, L.gy - 8 - 430, 16 * G.bump(ds / 0.27) + 2, '#ffffff', 1);
+  }
+
+  // 行動のラベル（画面側の帯。技の帯と同じつくり）
+  function actLabelSprite(text, mark, col) {
+    return tsprite('al:' + mark + text, 300, 34, (g) => {
+      g.font = F(800, 13.5, 'head');
+      const tw = Math.min(232, g.measureText(text).width);
+      const w = tw + 48, x0 = (300 - w) / 2, h = 24, y0 = 5;
+      const bg = g.createLinearGradient(0, y0, 0, y0 + h);
+      bg.addColorStop(0, 'rgba(58,20,28,0.95)');
+      bg.addColorStop(1, 'rgba(14,8,22,0.95)');
+      g.fillStyle = bg;
+      g.beginPath(); g.moveTo(x0 + 8, y0); g.lineTo(x0 + w, y0); g.lineTo(x0 + w - 8, y0 + h); g.lineTo(x0, y0 + h); g.closePath(); g.fill();
+      g.strokeStyle = '#e0b84e'; g.lineWidth = 1.2; g.stroke();
+      g.fillStyle = col;
+      g.beginPath(); g.moveTo(x0 + 8, y0); g.lineTo(x0 + 27, y0); g.lineTo(x0 + 19, y0 + h); g.lineTo(x0, y0 + h); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(14,6,10,0.9)';
+      g.font = F(900, 11, 'head');
+      g.textAlign = 'center';
+      g.fillText(mark, x0 + 13.5, y0 + 16.5);
+      g.textAlign = 'left';
+      g.font = F(800, 13.5, 'head');
+      g.lineJoin = 'round';
+      g.lineWidth = 3; g.strokeStyle = 'rgba(4,4,12,0.9)';
+      g.strokeText(text, x0 + 32, y0 + 17.5, 232);
+      const tg = g.createLinearGradient(0, y0 + 5, 0, y0 + 20);
+      tg.addColorStop(0, '#ffffff'); tg.addColorStop(0.6, '#ffe0d8'); tg.addColorStop(1, '#ffb0a0');
+      g.fillStyle = tg;
+      g.fillText(text, x0 + 32, y0 + 17.5, 232);
+      g.canvas._bw = w; g.canvas._bx = x0;
+    });
+  }
+  const dmTopY = () => Math.max(128, Math.min(172, Hd * 0.6 - 236));
+  const labelY = () => Math.max(popY + 76, dmTopY() + 12);
+  function labelAt(pl, t) {
+    const ls = pl.labels;
+    if (!ls) return null;
+    for (let j = ls.length - 1; j >= 0; j--) { const l = ls[j]; if (t >= l.t && t < l.t + l.d) return l; }
+    return null;
+  }
+  function drawActLabel(reel, pl, t, alpha) {
+    const lb = labelAt(pl, t);
+    if (!lb || alpha <= 0.02) return;
+    const spr = actLabelSprite(lb.text, lb.mark, lb.col);
+    const inK = G.ease.outBack(G.seg(t, lb.t, lb.t + 0.18));
+    const a = G.seg(t, lb.t, lb.t + 0.08) * (1 - G.seg(t, lb.t + lb.d - 0.2, lb.t + lb.d)) * alpha;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(180, labelY());
+    ctx.scale(G.lerp(0.3, 1, Math.min(1.1, inK)), G.lerp(0.6, 1, Math.min(1, inK)));
+    ctx.translate(-150, -17);
+    ctx.drawImage(spr, 0, 0, 300, 34);
+    const sk = G.seg(t, lb.t + 0.08, lb.t + 0.45);
+    if (sk > 0 && sk < 1) {
+      const bx = spr._bx || 30, bw = spr._bw || 240;
+      const sx = bx - 20 + (bw + 40) * sk;
+      ctx.beginPath(); ctx.moveTo(bx + 8, 5); ctx.lineTo(bx + bw, 5); ctx.lineTo(bx + bw - 8, 29); ctx.lineTo(bx, 29); ctx.closePath(); ctx.clip();
+      ctx.globalAlpha = a * 0.5;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath(); ctx.moveTo(sx, 5); ctx.lineTo(sx + 12, 5); ctx.lineTo(sx + 2, 29); ctx.lineTo(sx - 10, 29); ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  // 「ナイス指示！」「おしい…」
+  function drawOrderFx(reel, t) {
+    const f = ordFx;
+    if (!f || f.id !== reel.id || rewatch) return;
+    const d = t - f.t;
+    if (f.ok) {
+      if (d < 0 || d > 1.3) return;
+      const kk = G.ease.outBack(G.seg(d, 0, 0.22));
+      const a = 1 - G.seg(d, 1.0, 1.3);
+      ctx.save();
+      ctx.translate(180, Math.max(Hd * 0.3, labelY() + 46));
+      if (!rmNow) {
+        ctx.save();
+        ctx.rotate(d * 0.8);
+        ctx.globalAlpha = 0.4 * a * (1 - G.seg(d, 0.25, 1.2));
+        ctx.fillStyle = '#ffe27a';
+        ctx.beginPath();
+        for (let j = 0; j < 10; j++) {
+          const an = (j / 10) * TAU, r2 = 70 + 50 * G.ease.outCubic(G.seg(d, 0, 0.5));
+          ctx.moveTo(0, 0); ctx.lineTo(Math.cos(an - 0.1) * r2, Math.sin(an - 0.1) * r2 * 0.6); ctx.lineTo(Math.cos(an + 0.1) * r2, Math.sin(an + 0.1) * r2 * 0.6);
+        }
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.scale(kk, kk);
+      ctx.globalAlpha = a;
+      ctx.textAlign = 'center';
+      ctx.lineJoin = 'round';
+      ctx.font = F(800, 32, 'head');
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#2a1404';
+      ctx.strokeText('ナイス指示！', 0, 10);
+      const g = ctx.createLinearGradient(0, -16, 0, 12);
+      g.addColorStop(0, '#fffbe8'); g.addColorStop(0.55, '#ffd36a'); g.addColorStop(1, '#e08a1e');
+      ctx.fillStyle = g;
+      ctx.fillText('ナイス指示！', 0, 10);
+      ctx.font = F(800, 12, 'ui');
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(20,10,4,0.85)';
+      const sub = `ゴールド +${Math.min(40, f.n * 20)}%`;
+      ctx.strokeText(sub, 0, 32);
+      ctx.fillStyle = '#fff3c0';
+      ctx.fillText(sub, 0, 32);
+      ctx.restore();
+    } else {
+      if (d < 0 || d > 0.9) return;
+      ctx.save();
+      ctx.globalAlpha = G.seg(d, 0, 0.08) * (1 - G.seg(d, 0.6, 0.9));
+      ctx.font = F(800, 14, 'head');
+      ctx.textAlign = 'center';
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = 'rgba(8,12,28,0.85)';
+      ctx.strokeText('おしい…', 150, Hd * 0.6 + 16 - d * 10);
+      ctx.fillStyle = '#cfe0f0';
+      ctx.fillText('おしい…', 150, Hd * 0.6 + 16 - d * 10);
+      ctx.restore();
+    }
+  }
+
+  // ================================================================ 推し（パーティにいると、冒険譚が少し特別になる）
+  const OS = { i: -1, lv: -1, col: '#ff8fb8', name: '', id: null };
+  function oshiOf(reel) {
+    OS.i = -1;
+    if (!G.oshi || !reel || reel.digest || !reel.party) return OS;
+    const id = G.oshi.id();
+    if (!id) return OS;
+    for (let j = 0; j < reel.party.length; j++) if (reel.party[j].id === id) { OS.i = j; break; }
+    if (OS.i < 0) return OS;
+    OS.id = id;
+    OS.lv = Math.max(0, G.oshi.level());
+    OS.col = G.oshi.color();
+    OS.name = reel.party[OS.i].name;
+    return OS;
+  }
+  const OSHI_THANKS = ['マスター、見ててくれた？', 'えへへ、いいねありがと！', 'マスターのいいね、届いたよ！', 'もっと頑張っちゃうね！', '…見られてると、ちょっと照れる', 'よーし、もっといいとこ見せる！'];
+  function oshiLike(reel) {
+    const os = oshiOf(reel);
+    if (os.i < 0) return;
+    if (os.lv >= 2) {
+      pushSay(reel, os.i, G.pick(OSHI_THANKS), rt + 0.15, 1.7);
+      for (let j = 0; j < 5; j++) addPart({ type: 'heart', x: L0x(reel, os.i) + G.rand(-14, 14), y: Hd * 0.6 - G.rand(60, 90), vx: G.rand(-20, 20), vy: G.rand(-70, -40), life: 0, max: G.rand(0.8, 1.2), size: G.rand(6, 10), rot: G.rand(-0.4, 0.4), col: os.col });
+    }
+    if (os.lv >= 4 && !rmNow) {
+      // ハートの雨（推し色）
+      for (let j = 0; j < 30; j++) addPart({ type: 'heart', ui: true, x: G.rand(4, 356), y: G.rand(-120, -8), vx: G.rand(-16, 16), vy: G.rand(170, 270), g: 40, life: 0, max: G.rand(2.6, 3.4), size: G.rand(9, 19), rot: G.rand(-0.5, 0.5), vr: G.rand(-1.4, 1.4), col: j % 4 ? os.col : '#ffffff' });
+      setTimeout(() => G.audio.sfx('heart'), 160);
+    }
+  }
+  const L0x = (reel, i) => layout(reel).px[i] || 120;
+  // 入場のカットイン（推し色の斜めの帯・顔・名前）
+  function drawOshiCutin(reel, t, os) {
+    const T0 = 0.12, DUR = 0.9;
+    const k2 = (t - T0) / DUR;
+    if (k2 < 0 || k2 > 1) return;
+    const inK = G.ease.outCubic(G.seg(k2, 0, 0.2)), outK = G.ease.inCubic(G.seg(k2, 0.8, 1));
+    const cy = Hd * 0.42, col = os.col;
+    ctx.save();
+    ctx.translate((1 - inK) * 420 - outK * 420, 0);
+    const band = [-30, cy - 34, 390, cy - 74, 390, cy + 40, -30, cy + 80];
+    ctx.beginPath();
+    ctx.moveTo(band[0], band[1]);
+    for (let j = 2; j < 8; j += 2) ctx.lineTo(band[j], band[j + 1]);
+    ctx.closePath();
+    ctx.save();
+    ctx.clip();
+    const g = ctx.createLinearGradient(0, cy - 80, 0, cy + 80);
+    g.addColorStop(0, G.shade(col, -0.35));
+    g.addColorStop(0.5, G.shade(col, -0.62));
+    g.addColorStop(1, G.shade(col, -0.45));
+    ctx.fillStyle = g;
+    ctx.fillRect(-40, cy - 90, 440, 180);
+    for (let j = 0; j < 18; j++) {
+      const h = G.hash(j * 23 + 5);
+      const x = ((h * 520 - t * (700 + h * 500)) % 520 + 520) % 520 - 80;
+      ctx.globalAlpha = 0.1 + h * 0.3;
+      ctx.fillStyle = j % 3 ? '#ffffff' : col;
+      ctx.fillRect(x, cy - 70 + h * 140, 50 + h * 100, 1.5 + h * 2);
+    }
+    ctx.globalAlpha = 1;
+    for (let j = 0; j < 7; j++) {
+      const h = G.hash(j * 41 + 9);
+      art.heart(ctx, 30 + h * 300, cy - 50 + G.hash(j * 7 + 2) * 100 - ((t * 40 + h * 60) % 60), 5 + h * 5, G.rgba('#ffffff', 0.35));
+    }
+    const p = reel.party[os.i];
+    ctx.save();
+    ctx.translate(270, cy + 128);
+    ctx.scale(4.3, 4.3);
+    art.person(ctx, p.look, { t, state: 'cheer', facing: -1, armed: true, expr: 'happy', noShadow: true });
+    ctx.restore();
+    ctx.restore();
+    ctx.strokeStyle = '#ffffff';
+    ctx.globalAlpha = 0.9;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.moveTo(band[0], band[1]); ctx.lineTo(band[2], band[3]); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(band[6], band[7]); ctx.lineTo(band[4], band[5]); ctx.stroke();
+    const tk = G.ease.outBack(G.seg(k2, 0.1, 0.3));
+    ctx.globalAlpha = 1;
+    ctx.translate(112, cy + 6);
+    ctx.scale(tk, tk);
+    ctx.textAlign = 'center';
+    ctx.lineJoin = 'round';
+    ctx.font = F(800, 11, 'head');
+    ctx.lineWidth = 3.5;
+    ctx.strokeStyle = 'rgba(10,6,14,0.85)';
+    ctx.strokeText('♥ 推しの出番！', 0, -24);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText('♥ 推しの出番！', 0, -24);
+    ctx.font = F(800, os.name.length > 6 ? 22 : 27, 'head');
+    ctx.lineWidth = 7;
+    ctx.strokeStyle = G.shade(col, -0.7);
+    ctx.strokeText(os.name, 0, 8);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(os.name, 0, 8);
+    ctx.fillStyle = col;
+    ctx.fillRect(-64, 18, 128, 2);
+    ctx.restore();
+  }
+  // 推しの名札（足もと）とオーラ
+  function drawOshiTag(x, y, os, t, text) {
+    ctx.save();
+    ctx.font = F(800, 9.5, 'ui');
+    const label = text || '♥ ' + os.name;
+    const w = textW(ctx.font, label) + 12;
+    art.rrect(ctx, x - w / 2, y, w, 14, 7);
+    ctx.fillStyle = 'rgba(10,8,20,0.72)';
+    ctx.fill();
+    ctx.strokeStyle = os.col;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = os.col;
+    ctx.textAlign = 'center';
+    ctx.fillText(label, x, y + 10.4);
+    ctx.restore();
+  }
+  function drawOshiAura(x, gy, os, t) {
+    ctx.save();
+    glowAt(x, gy - 42, 50 + Math.sin(t * 3) * 4, os.col, 0.36);
+    for (let j = 0; j < 7; j++) {
+      const ph = (t * 0.55 + G.hash(j * 19 + 4)) % 1;
+      const xx = x + (G.hash(j * 7 + 1) - 0.5) * 50 + Math.sin(t * 2 + j) * 4;
+      const yy = gy - 8 - ph * 96;
+      const a = Math.min(1, ph * 4) * (1 - ph) * 0.9;
+      if (j % 3 === 0) { ctx.globalAlpha = a; art.heart(ctx, xx, yy, 3.6, os.col); }
+      else fxCircle(xx, yy, 1.8, j % 2 ? '#ffffff' : os.col, a);
+    }
     ctx.restore();
   }
 
@@ -4008,6 +5822,16 @@
   // ---------------------------------------------------------------- 吹き出し
   function drawSpeech(reel, pl, t, L) {
     const act = pl.speech.filter((s) => t >= s.t && t < s.t + s.dur);
+    // その場のひとこと（指示がうまくいった・推しのお礼）は、同じ人の段取りのセリフより優先
+    const dyn = dynSay.get(reel.id);
+    if (dyn) {
+      for (let j = 0; j < dyn.length; j++) {
+        const s = dyn[j];
+        if (!!s.rw !== rewatch || t < s.t || t >= s.t + s.dur) continue;
+        for (let q = act.length - 1; q >= 0; q--) if (act[q].who === s.who) act.splice(q, 1);
+        act.push(s);
+      }
+    }
     act.forEach((s, j) => {
       if (!reel.party[s.who]) return;
       const x = partyX(reel, pl, t, L, s.who);
@@ -4155,7 +5979,8 @@
     const cy = y0 + 54;
     // 表示するゴールドは、見届けボーナス込みの額
     const ci0 = claimInfo.get(reel.id);
-    const dispGold = ci0 ? ci0.gold : rewatch || reel.claimed ? reel.gold : Math.round(reel.gold * (1.2 + Math.min(0.3, G.state.streak * 0.05) + cheer * 0.01));
+    const niceB0 = ordersOn() ? Math.min(0.4, (reel.nice || 0) * 0.2) : 0;
+    const dispGold = ci0 ? ci0.gold : rewatch || reel.claimed ? reel.gold : Math.round(reel.gold * (1.2 + Math.min(0.3, G.state.streak * 0.05) + cheer * 0.01 + niceB0));
     const list = [{ icon: 'coin', v: dispGold }];
     if (reel.mat) list.push({ icon: 'gem', v: reel.mat });
     if (reel.fame) list.push({ icon: 'star', v: reel.fame });
@@ -4192,6 +6017,10 @@
     const ci = claimInfo.get(reel.id);
     if (!rewatch && ci && ci.seen) notes.push({ text: `見届けボーナス +20%${ci.streakB > 0 ? ` ・ 連続${ci.streak}本 +${Math.round(ci.streakB * 100)}%` : ''}${ci.cheer > 0 ? ` ・ 応援×${ci.cheer}` : ''}`, col: '#ffe27a' });
     else if (!rewatch && !ci && !reel.claimed) notes.push({ text: '見届けボーナス +20% 込み', col: '#ffe27a' });
+    if (!rewatch && ci && ci.niceB > 0) notes.push({ text: `ナイス指示ボーナス +${Math.round(ci.niceB * 100)}%`, col: '#9fe8ff' });
+    else if (!rewatch && !ci && !reel.claimed && niceB0 > 0) notes.push({ text: `ナイス指示ボーナス +${Math.round(niceB0 * 100)}% 込み`, col: '#9fe8ff' });
+    if (reel.drop && reel.drop.niceUp) notes.push({ text: '指示のおかげで宝のレア度が上がった！', col: '#ffc8f4' });
+    if (reel.elite && ELITE[reel.elite.trait]) notes.push({ text: `精鋭（${ELITE[reel.elite.trait]}）ボーナス ゴールド×1.3`, col: '#ffd36a' });
     if (reel.skill) notes.push({ text: `${reel.party.find((p) => p.id === reel.skill.id)?.name || ''}が「${reel.skill.name}」を習得`, col: '#ffd36a' });
     if (reel.extra === 'cache') notes.push({ text: '隠し財宝を見つけた！ 素材ボーナス', col: '#c9c0ff' });
     if (reel.goldBoost) notes.unshift({ text: `黄金の祝福 ゴールド×${reel.goldBoost}`, col: '#ffd36a' });
@@ -4260,32 +6089,38 @@
     const dm = danmakuOf(reel);
     const pl = planOf(reel);
     alpha *= 1 - 0.75 * G.seg(t, pl.resT, pl.resT + 0.3);
+    // 行動のラベルが出ている間は、うしろに下がる
+    const lb = labelAt(pl, t);
+    if (lb) alpha *= 1 - 0.65 * G.seg(t, lb.t, lb.t + 0.15) * (1 - G.seg(t, lb.t + lb.d - 0.2, lb.t + lb.d));
+    const oc = G.oshi ? G.oshi.color() : '#ff8fb8';
     const font = F(800, 13, 'ui');
-    const dmTop = Math.max(128, Math.min(172, Hd * 0.6 - 236));
-    const dmLanes = Hd < 700 ? 3 : 4;
     ctx.save();
-    dm.forEach((d) => {
-      const dur = 4.2 / d.speed;
-      const kk = (t - d.t) / dur;
-      if (kk < 0 || kk > 1) return;
-      const w = textW(font, d.text);
-      const x = 372 - kk * (372 + w + 20);
-      // 背の低い画面では、魔物の名前とHPバーにかぶらないよう上に寄せて段数を減らす
-      const y = dmTop + (d.lane % dmLanes) * 20;
-      const spr = tsprite('dm:' + (d.gold ? 'g' : 'w') + d.text, w + 8, 22, (g) => {
-        g.font = font;
-        g.textAlign = 'left';
-        g.lineJoin = 'round';
-        g.lineWidth = 3;
-        g.strokeStyle = 'rgba(4,8,18,0.7)';
-        g.strokeText(d.text, 4, 16);
-        g.fillStyle = d.gold ? '#ffe08a' : '#ffffff';
-        g.fillText(d.text, 4, 16);
-      });
-      ctx.globalAlpha = alpha * 0.82;
-      ctx.drawImage(spr, x - 4, y - 16, spr._w, spr._h);
-    });
+    for (let j = 0; j < dm.length; j++) drawDm(dm[j], t, alpha, oc, font);
+    const ex = dmExtra.get(reel.id);
+    if (ex && !rewatch) for (let j = 0; j < ex.length; j++) drawDm(ex[j], t, alpha, oc, font);
     ctx.restore();
+  }
+  function drawDm(d, t, alpha, oc, font) {
+    const dur = 4.2 / d.speed;
+    const kk = (t - d.t) / dur;
+    if (kk < 0 || kk > 1) return;
+    const w = textW(font, d.text);
+    const x = 372 - kk * (372 + w + 20);
+    // 背の低い画面では、魔物の名前とHPバーにかぶらないよう上に寄せて段数を減らす
+    const y = dmTopY() + (d.lane % (Hd < 700 ? 3 : 4)) * 20;
+    const col = d.oshi ? oc : d.gold ? '#ffe08a' : '#ffffff';
+    const spr = tsprite('dm:' + col + d.text, w + 8, 22, (g) => {
+      g.font = font;
+      g.textAlign = 'left';
+      g.lineJoin = 'round';
+      g.lineWidth = 3;
+      g.strokeStyle = d.oshi ? 'rgba(20,6,18,0.8)' : 'rgba(4,8,18,0.7)';
+      g.strokeText(d.text, 4, 16);
+      g.fillStyle = col;
+      g.fillText(d.text, 4, 16);
+    });
+    ctx.globalAlpha = alpha * (d.oshi ? 0.95 : 0.82);
+    ctx.drawImage(spr, x - 4, y - 16, spr._w, spr._h);
   }
 
   function tickerRows(reel, t) {
@@ -4317,14 +6152,14 @@
   function tickerSprite(reel, e) {
     const au = authorOf(e.c.a, reel);
     const fN = F(800, 10.5, 'ui'), fT = F(500, 11, 'ui');
-    const nm = (e.parent ? '↳ ' : '') + au.name;
+    const nm = (e.parent ? '↳ ' : '') + (au.oshi ? '♥ ' : '') + au.name;
     const nw = textW(fN, nm);
     let text = e.c.text;
     const maxT = 262 - nw - 40;
     while (textW(fT, text) > maxT && text.length > 2) text = text.slice(0, -2) + '…';
     const tw = textW(fT, text);
     const w = 34 + nw + 8 + tw + 12;
-    return tsprite('tk:' + reel.id + ':' + e.key, w + 2, 22, (g) => {
+    return tsprite('tk:' + reel.id + ':' + e.key + (au.oshi ? ':o' + nameColor(au) : ''), w + 2, 22, (g) => {
       art.rrect(g, 0, 0, w, 21, 10.5);
       g.fillStyle = e.c.gift ? 'rgba(90,60,10,0.62)' : e.c.a === 'master' ? 'rgba(40,60,110,0.62)' : 'rgba(6,10,22,0.5)';
       g.fill();
@@ -4368,7 +6203,8 @@
     ctx.fillRect(0, 0, 360, 120);
     ctx.restore();
 
-    if (!reel.digest) drawTicker(reel, t, bottom, alpha);
+    // 指示のボタンが出ている間は、流れるコメントを薄く（ボタンと重ならないように）
+    if (!reel.digest) drawTicker(reel, t, bottom, alpha * (ordUi.shown && ordUi.reel === reel ? 0.2 : 1));
     if (!reel.digest && pl) drawSkillBanners(reel, pl, t, alpha);
     if (!reel.digest && pl) drawRegularPop(reel, pl, t, alpha);
 
@@ -4486,7 +6322,7 @@
   // 町の常連の書き込みが届くと、スマホを手にした顔とひとことが左上にポンと出る。
   // 1度に1枚、1本につき最大3枚。会心・閃き・とどめなど大事な場面への書き込みを優先する
   const POP_DUR = 2.6;
-  const POP_PRI = { flash: 3.2, crit: 3, finish: 3, legend: 2.2, drop: 2, great: 2, hurt: 1.6, fail: 1.5, level: 1.4, event: 1.2, next: 1.1, any: 1 };
+  const POP_PRI = { flash: 3.2, crit: 3, finish: 3, oshi: 2.4, legend: 2.2, drop: 2, great: 2, hurt: 1.6, fail: 1.5, level: 1.4, event: 1.2, next: 1.1, any: 1 };
   const NO_POPS = [];
   const popCache = new Map();
   function regularOf(a) {
@@ -5306,7 +7142,7 @@
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
         const sc = G.ease.outBack(Math.min(1, p.life / 0.2));
-        art.heart(ctx, 0, 0, p.size * sc, '#ff4f6d');
+        art.heart(ctx, 0, 0, p.size * sc, p.col || '#ff4f6d');
         ctx.restore();
       } else if (p.type === 'text') {
         ctx.save();
@@ -5325,7 +7161,7 @@
         ctx.save();
         ctx.globalAlpha = Math.min(1, a * 2.5);
         const uk = p.kind === 'use' || p.kind === 'usecrit';
-        const big = p.kind === 'skill' ? 1.9 : p.kind === 'usecrit' ? 1.65 : p.kind === 'use' ? 1.4 : p.kind === 'crit' ? 1.45 : 1;
+        const big = p.kind === 'skill' ? 1.9 : p.kind === 'usecrit' ? 1.65 : p.kind === 'use' ? 1.4 : p.kind === 'crit' || p.kind === 'weak' ? 1.45 : p.kind === 'guard' ? 0.85 : p.kind === 'tiny' ? 0.75 : 1;
         const sc = G.ease.outBack(Math.min(1, p.life / 0.14)) * big;
         ctx.translate(p.x, p.y);
         ctx.scale(sc, sc);
@@ -5335,15 +7171,15 @@
         ctx.lineWidth = 4.5;
         ctx.strokeStyle = p.kind === 'heal' ? '#0a3020' : p.kind === 'hurt' ? '#3a0808' : '#1a0c02';
         ctx.strokeText(p.text, 0, 0);
-        if (p.kind === 'crit' || p.kind === 'skill' || uk) {
+        if (p.kind === 'crit' || p.kind === 'skill' || p.kind === 'weak' || uk) {
           const g = ctx.createLinearGradient(0, -14, 0, 4);
           g.addColorStop(0, '#fffbe8');
-          g.addColorStop(1, uk && p.col ? p.col : '#ffb83a');
+          g.addColorStop(1, uk && p.col ? p.col : p.kind === 'weak' ? '#ff7a4a' : '#ffb83a');
           ctx.fillStyle = g;
-        } else ctx.fillStyle = p.kind === 'hurt' ? '#ff9a8a' : p.kind === 'heal' ? '#9ff0b8' : p.kind === 'miss' ? '#cfe6ff' : '#ffffff';
+        } else ctx.fillStyle = p.kind === 'hurt' ? '#ff9a8a' : p.kind === 'heal' ? '#9ff0b8' : p.kind === 'miss' || p.kind === 'tiny' ? '#cfe6ff' : p.kind === 'guard' ? '#b8c8e0' : '#ffffff';
         ctx.fillText(p.text, 0, 0);
-        if (p.kind === 'crit' || p.kind === 'skill' || p.kind === 'usecrit') {
-          const lb = p.kind === 'skill' ? '閃き' : '会心';
+        if (p.kind === 'crit' || p.kind === 'skill' || p.kind === 'usecrit' || p.kind === 'weak') {
+          const lb = p.kind === 'skill' ? '閃き' : p.kind === 'weak' ? '弱点' : '会心';
           ctx.font = F(800, 8.5, 'head');
           ctx.lineWidth = 3;
           ctx.strokeText(lb, 0, -16);
@@ -5436,4 +7272,12 @@
   R._debug.go = (i) => { pos = target = i; anim = null; firedFor = null; rt = 0; fired = {}; parts = []; updateDom(); };
   R._debug.pops = (r) => popsOf(r || items[Math.round(pos)]);
   R._debug.SKILL_FX = SKILL_FX;
+  R._debug.orders = orders;
+  R._debug.ordFx = () => ordFx;
+  R._debug.ordUi = () => ({ shown: ordUi.shown, act: ordUi.act ? ordUi.act.kind : null, want: ordUi.act ? ordUi.act.want : null });
+  R._debug.monHp = (r, t) => monHp(r, planOf(r), t);
+  R._debug.labelAt = (r, t) => labelAt(planOf(r), t);
+  R._debug.oshiLike = (r) => oshiLike(r || items[Math.round(pos)]);
+  R._debug.clearPlans = () => planCache.clear();
+  R._debug.warp = () => warpNow;
 })();

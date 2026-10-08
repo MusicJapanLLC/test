@@ -181,6 +181,38 @@
     ur: ['虹！？！？', '伝説の秘宝', 'ふるえる', '歴史的瞬間'],
     fail: ['逃げてー', 'ドンマイ', '生きて', '次がある', '撤退は勇気'],
     legend: ['伝説', '鳥肌', '保存した', '歴史が動いた'],
+    // 敵の行動
+    charge: ['ためてる…', 'やばいの来る', 'よけてーー', 'あれ食らったらまずい', '光ってる！？'],
+    chargeHit: ['いったぁ', '重い一撃…', 'ひえっ', '大丈夫！？'],
+    aoe: ['全体攻撃！？', 'みんな逃げてー', '地面が光ってる', '範囲広すぎ'],
+    aoeHit: ['全員まとめて…', 'いたたた', '耐えてー'],
+    guard: ['かたっ', '殻にこもった', '効いてない！？', 'ガード固すぎ'],
+    guardBreak: ['割れた！！', 'ガードブレイク！', 'いまだー！'],
+    summon: ['増えた！？', '仲間呼んだ', 'わらわら', 'ちびっこいの来た'],
+    split: ['分裂した！？', '増殖してる', 'ちっちゃいのいっぱい'],
+    rage: ['怒った', 'キレてる', '赤くなった！', 'ガチギレ'],
+    poison: ['毒！？', '顔色わるい', '毒消しはやく'],
+    sleep: ['寝ちゃった', 'おきてー', 'すやぁ…'],
+    confuse: ['混乱してる', 'そっちじゃない', 'ぐるぐる'],
+    cure: ['治った！', 'ナイス回復', 'たすかる'],
+    flee: ['逃げた！', 'お宝持ってかれる！', '待てーー', 'どろぼう！'],
+    transform: ['第二形態！？', '変身した…', 'まだ本気じゃなかったのか', 'ラスボス感'],
+    heal: ['回復してる！', 'ずるい', '止めて！', '回復はずるい'],
+    intrude: ['なんか来た！？', '乱入！？', 'でっか！', 'だれ！？'],
+    elite: ['精鋭だ', '強そう…', '名札が金色', 'レアなやつ'],
+    // マスターの推し（推し色で流れる）
+    oshiEnc: ['推し来た！', '{oshi}きたああ', '{oshi}ーー！', '待ってました{oshi}', '{oshi}の出番だ'],
+    oshiHit: ['{oshi}つよい', '{oshi}かっこいい', 'さすが{oshi}', '{oshi}ーー！'],
+    oshiWin: ['{oshi}最高', '{oshi}優勝', '推しが尊い', '{oshi}えらい！'],
+  };
+  const ACT_DM = { charge: 'charge', aoe: 'aoe', guard: 'guard', summon: 'summon', rage: 'rage', flee: 'flee', transform: 'transform', heal: 'heal', intrude: 'intrude' };
+  // 常連が、マスターの推しに気づいて書き込む
+  const OSHI_REG = {
+    mia: ['{name}様きたああ！！', '推し来た！！心の準備が…', '{name}様、今日も推せる…！'],
+    teo: ['{name}さんだ！推し来た！', '{name}さんきたああ！', '{name}さんの出番、待ってました！'],
+    luce: ['♪推しが来た 胸が鳴る', '{name}の登場、前奏から鳥肌', '推し来た…歌が浮かぶ'],
+    morris: ['お、{name}さんだ。推し来たね', '{name}さんきたああ！店番忘れた', 'マスターの推し、今日も元気そうだ'],
+    gordon: ['{name}きたああ！乾杯！', '推し来たぞー！ひっく'],
   };
 
   // ---------------------------------------------------------------- 生成
@@ -294,6 +326,16 @@
       lastAuthor = a.key;
     }
 
+    // マスターの推しが出ると、常連が出会いの場面で気づく
+    const oId = G.oshi && G.oshi.id ? G.oshi.id() : null;
+    const oP = oId ? party.find((p) => p.id === oId) : null;
+    if (oP) {
+      const keys = Object.keys(OSHI_REG);
+      const who = keys[Math.floor(rnd() * keys.length)];
+      const text = fill(pick(rnd, OSHI_REG[who]), { name: oP.name });
+      out.push({ id: 'oshi', t: (f.encT || 1.05) + 0.25 + rnd() * 0.5, a: 'p:' + who, text, likes: 20 + Math.round(rnd() * 40), topic: 'oshi', replies: [] });
+      if (rnd() < 0.5) out[out.length - 1].replies.push({ t: out[out.length - 1].t + 1.3, a: 'party:' + oP.id, text: pick(rnd, SELF_REPLY.fan), likes: 30 + Math.round(rnd() * 60) });
+    }
     // お祭りのひとこと
     if (G.events && G.events.theme() === 'pumpkin' && rnd() < 0.6) {
       const HW = ['トリック・オア・トリート！', 'かぼちゃ飴ちょうだい〜', '灯籠祭、今年もきたね', 'ギルドの飾りつけかわいい', 'かぼちゃおばけ、ちょっとかわいい', '仮装していこうかな'];
@@ -374,29 +416,49 @@
   // 流れるコメント（見るたびに作る：seed で決まる）
   CM.danmaku = function (reel, f, plan) {
     const rnd = R_rng(reel.seed ^ 0x2545f491);
-    const ctx = { leader: reel.party[0] ? reel.party[0].name : '', monster: (G.D.MONSTERS[reel.monster] || {}).name || '', dmg: f.maxDmg ? G.fmt(f.maxDmg) : '', skill: f.skill || '', hurt: f.hurtName || '' };
+    const oshi = plan.oshi || null;
+    const ctx = { leader: reel.party[0] ? reel.party[0].name : '', monster: (G.D.MONSTERS[reel.monster] || {}).name || '', dmg: f.maxDmg ? G.fmt(f.maxDmg) : '', skill: f.skill || '', hurt: f.hurtName || '', oshi: oshi ? oshi.name : '' };
     const out = [];
-    const add = (key, t, n, gold) => {
+    const add = (key, t, n, gold, mark) => {
       const bank = DANMAKU[key];
       for (let i = 0; i < n; i++) {
         const text = fill(bank[Math.floor(rnd() * bank.length)], ctx);
         if (!text || /\{/.test(text)) continue;
-        out.push({ t: t + rnd() * 0.7, text, lane: Math.floor(rnd() * 6), speed: 0.8 + rnd() * 0.5, gold: gold && rnd() < 0.5 });
+        const d = { t: t + rnd() * 0.7, text, lane: Math.floor(rnd() * 6), speed: 0.8 + rnd() * 0.5, gold: gold && rnd() < 0.5 };
+        if (mark) d.oshi = true;
+        out.push(d);
       }
     };
     const busy = G.state.rank >= 3 ? 1.3 : 1;
     add('start', 0.2, Math.round(2 * busy));
     add('encounter', plan.encT + 0.1, Math.round(2 * busy));
+    if (plan.elite) add('elite', plan.encT + 0.9, 2, true);
+    if (oshi) add('oshiEnc', plan.encT + 0.25, Math.round(2 * busy), false, true);
     plan.beats.forEach((b) => {
+      if (b.act) {
+        // 行動つきの魔物の攻撃（溜め・全体・状態異常）
+        if (b.act === 'charge') add('chargeHit', b.t + 0.3, 2);
+        else if (b.act === 'aoe') add('aoeHit', b.t + 0.3, 2);
+        else if (b.st && DANMAKU[b.st]) add(b.st, b.t + 0.3, 2);
+        return;
+      }
       if (b.kind === 'hit' && rnd() < 0.5) add('hit', b.t + 0.2, 1);
       if (b.crit) add('crit', b.t + 0.2, Math.round(3 * busy), true);
       if (b.kind === 'mon') add('hurt', b.t + 0.3, 2);
       if (b.kind === 'heal') add('heal', b.t + 0.2, 1);
       if (b.kind === 'miss') add('miss', b.t + 0.2, 1);
       if (b.kind === 'skill') add('skill', b.t + 0.8, Math.round(4 * busy), true);
+      if (oshi && b.who === oshi.i && (b.kind === 'hit' || b.kind === 'skill') && rnd() < 0.55) add('oshiHit', b.t + 0.3, 1, false, true);
+    });
+    (plan.acts || []).forEach((a) => {
+      const key = a.kind === 'summon' && a.split ? 'split' : ACT_DM[a.kind];
+      if (key) add(key, a.t + 0.15, 2);
+      if (a.kind === 'guard' && a.land) add('guardBreak', a.land, 2, true);
+      if (a.kind === 'status' && a.cure) add('cure', a.cure, 1);
     });
     if (reel.tier === 'fail') add('fail', plan.finishT + 0.2, 4);
     else add('finish', plan.finishT + 0.1, Math.round(4 * busy), true);
+    if (oshi && reel.tier !== 'fail') add('oshiWin', plan.finishT + 0.35, 2, false, true);
     if (plan.chestRank != null) {
       add('chest', plan.dropT, 2);
       if (plan.chestRank >= 3) add('rare', plan.reveal, 4, true);

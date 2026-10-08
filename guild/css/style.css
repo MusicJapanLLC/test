@@ -1450,7 +1450,7 @@ input, textarea, select { font-family: var(--font-body); }
 .fd-cell:not(.got) b { color: var(--muted); }
 
 /* 冒険譚の上では、通知を画面の下寄せに（戦いの絵とHPバーを隠さない） */
-html.in-reels #toasts { top: auto; bottom: calc(var(--safe-b) + 34%); }
+html.in-reels #toasts { top: auto !important; bottom: calc(var(--safe-b) + 34%); align-content: end; }
 .card.slot b { font-family: var(--font-num); color: var(--parch-dim); margin-left: 4px; }
 #reelHint { top: auto; bottom: calc(31% + 10px); left: 14px; transform: none; max-width: calc(100% - 104px); white-space: normal; font-size: 12px; line-height: 1.35; padding: 7px 14px 7px 34px; animation: hintUpL 1.6s ease-in-out infinite; }
 @keyframes hintUpL { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
