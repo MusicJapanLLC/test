@@ -1,0 +1,42 @@
+[
+  {
+    "name": "v12-slash",
+    "seconds": 0.86,
+    "peak": 0.75
+  },
+  {
+    "name": "v12-hit",
+    "seconds": 0.89,
+    "peak": 0.629
+  },
+  {
+    "name": "v12-fire",
+    "seconds": 1.62,
+    "peak": 0.698
+  },
+  {
+    "name": "v12-frost",
+    "seconds": 1.1,
+    "peak": 0.43
+  },
+  {
+    "name": "v12-gale",
+    "seconds": 0.96,
+    "peak": 0.667
+  },
+  {
+    "name": "v12-storm",
+    "seconds": 1.29,
+    "peak": 0.595
+  },
+  {
+    "name": "v12-tide",
+    "seconds": 1.34,
+    "peak": 0.386
+  },
+  {
+    "name": "v12-light",
+    "seconds": 1.2,
+    "peak": 0.517
+  }
+]
