@@ -8,8 +8,9 @@
  * DoS / resource exhaustion はフェデレーション規約で禁止されているため、
  * このゲートは一切の volumetric / flooding モジュールを許可しない。
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+// ビルド時にバンドルされる静的インポート（どのランタイムでも確実に読める）。
+// 実行時にファイルを書き換えた場合は再ビルドで反映。
+import targetsData from '../../AUTHORIZED_TEST_TARGETS.json';
 
 export type Federation = {
   id: string;
@@ -50,17 +51,12 @@ export const HARD_PROHIBITED = [
   'social_engineering',
 ] as const;
 
-let cache: TargetsFile | null = null;
-
-export function loadTargets(root = process.cwd()): TargetsFile {
-  if (cache) return cache;
-  const raw = readFileSync(join(root, 'AUTHORIZED_TEST_TARGETS.json'), 'utf8');
-  cache = JSON.parse(raw) as TargetsFile;
-  return cache;
+export function loadTargets(): TargetsFile {
+  return targetsData as unknown as TargetsFile;
 }
 
-export function listTargets(root?: string): Target[] {
-  return loadTargets(root).targets ?? [];
+export function listTargets(): Target[] {
+  return loadTargets().targets ?? [];
 }
 
 export type ScopeResult =
@@ -73,7 +69,7 @@ export type ScopeResult =
  * - authority_root 配下 / owner公開リンク継承 → 認可
  * それ以外はスコープ外（実行ロック）。
  */
-export function checkScope(input: string, root?: string): ScopeResult {
+export function checkScope(input: string): ScopeResult {
   let url: URL;
   try {
     url = new URL(input);
@@ -84,7 +80,7 @@ export function checkScope(input: string, root?: string): ScopeResult {
     return { inScope: false, reason: 'HTTPS以外は認可対象外です' };
   }
 
-  const file = loadTargets(root);
+  const file = loadTargets();
   const host = url.host.toLowerCase();
 
   const direct = file.targets.find((t) => t.host.toLowerCase() === host);
