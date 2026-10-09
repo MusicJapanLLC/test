@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { pickModel, suggestTier, SYSTEM_PERSONA, type ReasoningTier } from '../../lib/models';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 const enc = new TextEncoder();

@@ -4,7 +4,7 @@ import '../../lib/modules/recon'; // register() を走らせる
 import '../../lib/modules/web';
 import '../../lib/modules/deep';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 // POST {toolId, url, options?}: ゲート付き実行。
 // スコープ外 / 禁止手法は execute() 内で runner に到達する前に拒否される。

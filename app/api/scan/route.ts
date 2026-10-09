@@ -4,7 +4,7 @@ import '../../lib/modules/recon'; // register() を走らせる
 import '../../lib/modules/web';
 import '../../lib/modules/deep';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 // POST {url}: その対象に実行可能な手法を列挙（右ペインのプルダウン）
 export async function POST(req: NextRequest) {

@@ -5,7 +5,7 @@ import '../../lib/modules/recon';
 import '../../lib/modules/web';
 import '../../lib/modules/deep';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 const enc = new TextEncoder();
 const line = (o: unknown) => enc.encode(JSON.stringify(o) + '\n');
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));

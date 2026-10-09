@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listTargets, checkScope } from '../../lib/targets';
 
-export const runtime = 'nodejs';
+export const runtime = 'edge';
 
 // GET: 認可済みターゲット一覧（右ペインのレジストリ用）
 export async function GET() {

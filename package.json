@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "pages:build": "npx @cloudflare/next-on-pages",
+    "pages:deploy": "wrangler pages deploy .vercel/output/static --project-name=standment-redteam-console --branch=main --commit-dirty=true"
   },
   "dependencies": {
     "ai": "^6.0.0",
@@ -16,9 +18,11 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "typescript": "^5.7.3",
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@types/node": "^22.10.0",
     "@types/react": "^19.1.0",
-    "@types/react-dom": "^19.1.0"
+    "@types/react-dom": "^19.1.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.149.0"
   }
 }

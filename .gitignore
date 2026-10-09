@@ -17,3 +17,5 @@ package-lock.json
 next-env.d.ts
 *.tsbuildinfo
 supreme-god-report.json
+.vercel/
+.wrangler/
