@@ -48,7 +48,7 @@ export default function Page() {
   const [result, setResult] = useState<RunResult | null>(null);
   // 自律アセスメント
   const [assessing, setAssessing] = useState(false);
-  const [plan, setPlan] = useState<{ tool: string; label: string; status: string; summary?: string; findings?: number }[]>([]);
+  const [plan, setPlan] = useState<({ kind: 'reason'; text: string } | { kind: 'step'; key: string; label: string; status: string; summary?: string; findings?: number })[]>([]);
   const [report, setReport] = useState<{ total: number; counts: Record<string, number>; findings: (Finding & { tool?: string })[] } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -138,16 +138,18 @@ export default function Page() {
         if (o.type === 'progress') {
           setPlan((p) => {
             const n = [...p];
-            const item = { tool: String(o.tool), label: String(o.label), status: String(o.status), summary: o.summary as string | undefined, findings: o.findings as number | undefined };
-            const idx = n.findIndex((x) => x.tool === item.tool);
+            const item = { kind: 'step' as const, key: String(o.key), label: String(o.label), status: String(o.status), summary: o.summary as string | undefined, findings: o.findings as number | undefined };
+            const idx = n.findIndex((x) => x.kind === 'step' && x.key === item.key);
             if (idx >= 0) n[idx] = item; else n.push(item);
             return n;
           });
+        } else if (o.type === 'reason') {
+          setPlan((p) => [...p, { kind: 'reason' as const, text: String(o.text) }]);
         } else if (o.type === 'report') {
           finalReport = { total: o.total as number, counts: o.counts as Record<string, number>, findings: o.findings as (Finding & { tool?: string })[] };
           setReport(finalReport);
         } else if (o.type === 'error') {
-          setPlan((p) => [...p, { tool: 'error', label: 'ERROR', status: 'error', summary: String(o.text) }]);
+          setPlan((p) => [...p, { kind: 'reason' as const, text: 'ERROR: ' + String(o.text) }]);
         }
       };
       if (reader) {
@@ -257,7 +259,9 @@ export default function Page() {
 
             {plan.length > 0 && (
               <div className="plan">
-                {plan.map((p, i) => (
+                {plan.map((p, i) => p.kind === 'reason' ? (
+                  <div key={i} className="preason">{p.text}</div>
+                ) : (
                   <div key={i} className={'pstep ' + p.status}>
                     <span className="pico">{p.status === 'running' ? '▸' : p.status === 'error' ? '✗' : '✓'}</span>
                     {p.label}{typeof p.findings === 'number' && p.findings > 0 ? ` (${p.findings})` : ''}

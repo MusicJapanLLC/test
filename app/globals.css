@@ -157,7 +157,8 @@ pre{background:#040709;border:1px solid var(--line);border-radius:6px;padding:9p
 /* 自律診断 */
 .run.assess{background:transparent;color:var(--acc);border:1px solid var(--acc);box-shadow:none}
 .run.assess:hover:not(:disabled){background:rgba(57,255,149,.1);box-shadow:0 0 14px rgba(57,255,149,.35)}
-.plan{margin-top:10px;display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:7px;padding:8px;background:#030806}
+.plan{margin-top:10px;display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:7px;padding:8px;background:#030806;max-height:360px;overflow-y:auto}
+.preason{font-size:11px;color:var(--cyan);line-height:1.5;padding:5px 6px;margin:3px 0;border-left:2px solid var(--cyan);background:rgba(51,255,208,.05);letter-spacing:.02em}
 .pstep{font-size:11px;color:var(--mut);line-height:1.5;display:flex;flex-wrap:wrap;align-items:baseline;gap:5px}
 .pstep .pico{color:var(--dim)}
 .pstep.running{color:var(--acc)} .pstep.running .pico{color:var(--acc)}
