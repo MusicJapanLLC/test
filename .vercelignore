@@ -1,39 +1,38 @@
 # このブランチのVercelデプロイ対象を「レッドチーム・コンソール(Next app)」だけに絞る。
-# 目的: root の api/*.js が Serverless Function として多数検出され、Hobbyの12関数上限を
-# 超える問題を回避する。ファイル自体は削除しない（デプロイ対象から除外するだけ）。
+# 重要: 先頭 "/" でルート限定にする。無印 "api/" は app/api/ まで誤除外するため厳禁。
 
 # 旧 static+functions デプロイ用（本コンソールには不要）
-api/
-public/
+/api/
+/public/
 
-# 無関係なサブプロジェクト群
-automation/
-senju/
-baton/
-baton-partners/
-company-memory/
-company-society/
-iyomaru-ramen/
-madlab-deepguard/
-music-japan-lp/
-sales-command-30/
-standment-rnd/
-standment-security/
-the-world-5th-power/
-the-world-strong-new-game/
-tomoki-agents/
-value-lab/
-outside-world/
-authority_precedent_site/
-sbw-assets/
-runtime/
-ops/
-monitoring/
-legal-check/
-config/
-templates/
-tests/
-docs/
-chatgpt-os/
-src/
-data/
+# 無関係なサブプロジェクト群（ルート直下のみ除外）
+/automation/
+/senju/
+/baton/
+/baton-partners/
+/company-memory/
+/company-society/
+/iyomaru-ramen/
+/madlab-deepguard/
+/music-japan-lp/
+/sales-command-30/
+/standment-rnd/
+/standment-security/
+/the-world-5th-power/
+/the-world-strong-new-game/
+/tomoki-agents/
+/value-lab/
+/outside-world/
+/authority_precedent_site/
+/sbw-assets/
+/runtime/
+/ops/
+/monitoring/
+/legal-check/
+/config/
+/templates/
+/tests/
+/docs/
+/chatgpt-os/
+/src/
+/data/

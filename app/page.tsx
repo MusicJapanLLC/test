@@ -147,7 +147,7 @@ export default function Page() {
           ))}
           {!convos.length && <div className="empty">履歴なし</div>}
         </div>
-        <div className="brand">STANDMENT · REDTEAM CONSOLE<small>authorized scope only</small></div>
+        <div className="brand"><b>STANDMENT</b> // REDTEAM CONSOLE<small>authorized scope only</small></div>
       </aside>
 
       {/* 中央: 会話 */}
@@ -180,6 +180,8 @@ export default function Page() {
 
       {/* 右: 実行パネル */}
       <aside className="pane right">
+        <div className="rhead">target console</div>
+        <div className="rbody">
         <h2>ターゲット</h2>
         <input className="url" value={url} onChange={(e) => checkUrl(e.target.value)} placeholder="https://...（認可済みのみ）" />
         {scope && <div className={'scope ' + (scope.inScope ? 'ok' : 'no')}>{scope.inScope ? '✓ 認可スコープ内' : '✗ スコープ外（実行ロック）'}<small>{scope.reason}</small></div>}
@@ -223,6 +225,7 @@ export default function Page() {
             ) : <div className="rerr">拒否 / エラー: {result.error}</div>}
           </div>
         )}
+        </div>
       </aside>
     </main>
   );
