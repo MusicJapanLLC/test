@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Role = 'user' | 'assistant';
-type Msg = { role: Role; content: string };
+type Msg = { role: Role; content: string; thinking?: string };
 type Convo = { id: string; title: string; messages: Msg[] };
 type Tier = 'deep' | 'balanced' | 'longctx';
 type Target = { id: string; name: string; base_url: string; host: string; rate_limit_rps: number; allowed: number };
@@ -19,6 +19,18 @@ const TIERS: { v: Tier; label: string }[] = [
   { v: 'balanced', label: 'BALANCED / 標準' },
   { v: 'longctx', label: 'LONG-CTX / 長文' },
 ];
+
+function ThinkBlock({ text }: { text: string }) {
+  const [open, setOpen] = useState(true);
+  return (
+    <div className="think">
+      <button className="thinkhdr" onClick={() => setOpen((o) => !o)}>
+        {open ? '▾' : '▸'} 推論プロセス <span className="thinklen">{text.length}字</span>
+      </button>
+      {open && <pre className="thinkbody">{text}</pre>}
+    </div>
+  );
+}
 
 export default function Page() {
   const [convos, setConvos] = useState<Convo[]>([]);
@@ -78,17 +90,19 @@ export default function Page() {
       const res = await fetch('/api/chat', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ messages: history, tier }) });
       const reader = res.body?.getReader();
       const dec = new TextDecoder();
-      let acc = '';
+      let textAcc = '', thinkAcc = '', buf = '';
+      const apply = () => setConvos((v) => v.map((c) => { if (c.id !== id) return c; const m = [...c.messages]; m[m.length - 1] = { role: 'assistant', content: textAcc, thinking: thinkAcc || undefined }; return { ...c, messages: m }; }));
+      const consume = (ln: string) => { const s = ln.trim(); if (!s) return; try { const o = JSON.parse(s); if (o.type === 'text') textAcc += o.text; else if (o.type === 'thinking') thinkAcc += o.text; else if (o.type === 'error') textAcc += '\n[ERROR] ' + o.text; } catch { textAcc += s; } };
       if (reader) {
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
-          acc += dec.decode(value, { stream: true });
-          setConvos((v) => v.map((c) => { if (c.id !== id) return c; const m = [...c.messages]; m[m.length - 1] = { role: 'assistant', content: acc }; return { ...c, messages: m }; }));
+          buf += dec.decode(value, { stream: true });
+          const parts = buf.split('\n'); buf = parts.pop() ?? '';
+          for (const p of parts) consume(p);
+          apply();
         }
-      } else {
-        acc = await res.text();
-        setConvos((v) => v.map((c) => { if (c.id !== id) return c; const m = [...c.messages]; m[m.length - 1] = { role: 'assistant', content: acc }; return { ...c, messages: m }; }));
+        if (buf) { consume(buf); apply(); }
       }
     } catch {
       setConvos((v) => v.map((c) => { if (c.id !== id) return c; const m = [...c.messages]; m[m.length - 1] = { role: 'assistant', content: '通信エラー' }; return { ...c, messages: m }; }));
@@ -138,6 +152,7 @@ export default function Page() {
 
       {/* 中央: 会話 */}
       <section className="pane center">
+        <div className="termbar">standment@redteam:~$ session://{activeId || 'new'} · model={tier} · scope=authorized-only <span className="blink">▋</span></div>
         <div className="chat" ref={scrollRef}>
           {!active?.messages.length && (
             <div className="welcome">
@@ -148,8 +163,9 @@ export default function Page() {
           )}
           {active?.messages.map((m, i) => (
             <div key={i} className={'msg ' + m.role}>
-              <span className="who">{m.role === 'user' ? 'YOU' : 'ORCHESTRATOR'}</span>
-              <div className="body">{m.content || '…'}</div>
+              <span className="who">{m.role === 'user' ? 'root@you' : 'orchestrator'}</span>
+              {m.thinking ? <ThinkBlock text={m.thinking} /> : null}
+              <div className="body">{m.content || (m.thinking ? '' : '…')}</div>
             </div>
           ))}
         </div>

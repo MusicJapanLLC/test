@@ -23,7 +23,16 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 
 /* 中央 */
 .center{background:var(--bg)}
-.chat{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:16px}
+.termbar{font-size:11px;color:var(--acc);background:#060a10;border-bottom:1px solid var(--line);padding:5px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blink{animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:0}}
+.chat{flex:1;overflow-y:auto;padding:14px 18px;display:flex;flex-direction:column;gap:11px;line-height:1.5}
+
+/* 推論ブロック */
+.think{border:1px solid var(--line);border-left:2px solid var(--acc2);border-radius:5px;background:#070c13;max-width:760px}
+.thinkhdr{width:100%;text-align:left;background:transparent;border:none;color:var(--acc2);font-family:var(--mono);font-size:11px;padding:6px 9px;cursor:pointer;letter-spacing:.03em}
+.thinklen{color:var(--mut);float:right}
+.thinkbody{margin:0;padding:8px 10px;border-top:1px dashed var(--line);white-space:pre-wrap;color:#8fb8d6;font-size:11.5px;line-height:1.55;max-height:320px;overflow-y:auto;opacity:.92}
 .welcome h1{font-size:18px;color:var(--fg)}
 .welcome p{color:var(--mut);max-width:560px;line-height:1.6}
 .welcome .muted{color:var(--warn);opacity:.8;font-size:12px}
