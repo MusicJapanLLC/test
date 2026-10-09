@@ -1,5 +1,6 @@
 import { NextRequest,NextResponse } from 'next/server';
 import { orchestrate } from '../../lib/orchestrator';
+export const runtime = 'edge';
 function valid(v:string){try{const u=new URL(v);return ['http:','https:'].includes(u.protocol)?u:null}catch{return null}}
 export async function POST(req:NextRequest){
  const body=await req.json().catch(()=>({})); const target=valid(String(body.url||''));

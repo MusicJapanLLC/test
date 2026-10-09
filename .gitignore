@@ -13,4 +13,9 @@ token.json
 /reports/standment-security-rnd/
 node_modules/
 package-lock.json
+.next/
+next-env.d.ts
+*.tsbuildinfo
 supreme-god-report.json
+.vercel/
+.wrangler/
