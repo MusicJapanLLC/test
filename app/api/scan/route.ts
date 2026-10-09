@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { availableFor } from '../../lib/tools';
 import '../../lib/modules/recon'; // register() を走らせる
 import '../../lib/modules/web';
+import '../../lib/modules/deep';
 
 export const runtime = 'nodejs';
 

@@ -22,9 +22,9 @@ export async function POST(req: NextRequest) {
 
   if (!key) {
     const text =
-      `【モデル未配線】ANTHROPIC_API_KEY が未設定です。` +
-      `Vercelのプロジェクト設定→Environment Variables に入れて再デプロイすると ${spec.label}（${spec.model}）が応答します。` +
-      ` UI・認可ゲート・検出モジュールは鍵なしでも動作します。`;
+      `このコンソールの頭脳は Claude Code セッション側で動かす設計です（単体サイト用のLLM鍵は未配線）。` +
+      `右パネルの検出モジュールと「AUTO-ASSESS（自律診断）」は鍵なしで動きます。` +
+      `対象を選んで AUTO-ASSESS を押すと、認可レンジに検出手法を計画順で自動連鎖実行し、重大度順の統合レポートを出します。`;
     return new Response(line({ type: 'text', text }), {
       headers: { 'content-type': 'application/x-ndjson; charset=utf-8' },
     });

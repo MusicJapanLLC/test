@@ -46,6 +46,10 @@ export default function Page() {
   const [tools, setTools] = useState<Tool[]>([]);
   const [selectedTool, setSelectedTool] = useState('');
   const [result, setResult] = useState<RunResult | null>(null);
+  // 自律アセスメント
+  const [assessing, setAssessing] = useState(false);
+  const [plan, setPlan] = useState<{ tool: string; label: string; status: string; summary?: string; findings?: number }[]>([]);
+  const [report, setReport] = useState<{ total: number; counts: Record<string, number>; findings: (Finding & { tool?: string })[] } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const active = convos.find((c) => c.id === activeId);
@@ -119,6 +123,48 @@ export default function Page() {
       setTools(s?.tools ?? []);
       setSelectedTool(s?.tools?.[0]?.id ?? '');
     }
+  };
+
+  const autoAssess = async () => {
+    if (!url || assessing) return;
+    setAssessing(true); setPlan([]); setReport(null);
+    try {
+      const res = await fetch('/api/assess', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ url }) });
+      const reader = res.body?.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      let finalReport: { total: number; counts: Record<string, number>; findings: (Finding & { tool?: string })[] } | null = null;
+      const handle = (o: { type: string; [k: string]: unknown }) => {
+        if (o.type === 'progress') {
+          setPlan((p) => {
+            const n = [...p];
+            const item = { tool: String(o.tool), label: String(o.label), status: String(o.status), summary: o.summary as string | undefined, findings: o.findings as number | undefined };
+            const idx = n.findIndex((x) => x.tool === item.tool);
+            if (idx >= 0) n[idx] = item; else n.push(item);
+            return n;
+          });
+        } else if (o.type === 'report') {
+          finalReport = { total: o.total as number, counts: o.counts as Record<string, number>, findings: o.findings as (Finding & { tool?: string })[] };
+          setReport(finalReport);
+        } else if (o.type === 'error') {
+          setPlan((p) => [...p, { tool: 'error', label: 'ERROR', status: 'error', summary: String(o.text) }]);
+        }
+      };
+      if (reader) {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const parts = buf.split('\n'); buf = parts.pop() ?? '';
+          for (const pp of parts) { const s = pp.trim(); if (!s) continue; try { handle(JSON.parse(s)); } catch { /* skip */ } }
+        }
+      }
+      if (active && finalReport) {
+        const fr = finalReport as { total: number; counts: Record<string, number> };
+        const note = `【AUTO-ASSESS 完了】${url}\n所見 ${fr.total}件 — ` + Object.entries(fr.counts).map(([k, v]) => `${k}:${v}`).join(' / ');
+        patchActive((c) => ({ ...c, messages: [...c.messages, { role: 'assistant', content: note }] }));
+      }
+    } catch { /* noop */ } finally { setAssessing(false); }
   };
 
   const runTool = async () => {
@@ -204,6 +250,35 @@ export default function Page() {
             </select>
             {selectedTool && <p className="note">{tools.find((t) => t.id === selectedTool)?.note}</p>}
             <button className="run" disabled={busy || !selectedTool} onClick={runTool}>{busy ? '実行中…' : '実行'}</button>
+
+            <h3>自律診断 / AUTO-ASSESS</h3>
+            <p className="note">全手法を計画順で自動連鎖実行し、重大度順の統合レポートを生成（鍵不要）。</p>
+            <button className="run assess" disabled={assessing || !url} onClick={autoAssess}>{assessing ? '診断中…' : '⟐ AUTO-ASSESS 実行'}</button>
+
+            {plan.length > 0 && (
+              <div className="plan">
+                {plan.map((p, i) => (
+                  <div key={i} className={'pstep ' + p.status}>
+                    <span className="pico">{p.status === 'running' ? '▸' : p.status === 'error' ? '✗' : '✓'}</span>
+                    {p.label}{typeof p.findings === 'number' && p.findings > 0 ? ` (${p.findings})` : ''}
+                    {p.summary ? <small>{p.summary}</small> : null}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {report && (
+              <div className="report">
+                <div className="rcounts">所見 {report.total} 件 — {['critical', 'high', 'medium', 'low', 'info'].filter((s) => report.counts[s]).map((s) => `${s}:${report.counts[s]}`).join(' / ') || 'なし'}</div>
+                {report.findings.map((f, i) => (
+                  <article key={i} className={'finding sev-' + f.severity}>
+                    <b>[{f.severity}] {f.title}</b>
+                    <div>影響: {f.impact}</div>
+                    <div className="fix">修正: {f.remediation}</div>
+                  </article>
+                ))}
+              </div>
+            )}
           </>
         )}
 
