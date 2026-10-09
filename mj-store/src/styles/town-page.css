@@ -1,0 +1,28 @@
+/* ═══════════ 404（MJタウンを歩けるページ） ═══════════ */
+
+.lost__head {
+  padding-top: calc(var(--header-h) + clamp(40px, 6vw, 80px));
+  text-align: center;
+}
+.lost__head .eyebrow {
+  justify-content: center;
+}
+.lost__title {
+  margin-top: 18px;
+  font-size: clamp(30px, 5vw, 64px);
+  font-weight: 900;
+  line-height: 1.2;
+}
+.lost__text {
+  max-width: 560px;
+  margin: 18px auto 0;
+  color: var(--mute);
+}
+.lost__town {
+  margin-top: clamp(32px, 5vw, 56px);
+}
+.lost__actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
