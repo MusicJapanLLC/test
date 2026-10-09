@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "widths": [
+    320,
+    390,
+    430
+  ],
+  "equipmentRarityAndOwner": true,
+  "guardian10Summon": true,
+  "guardianEquipAndReload": true,
+  "storyVoicesAbsent": true,
+  "bossVisibleDuringDialogue": true,
+  "waveSlate": true,
+  "guardianCombatAt2x": true,
+  "enemyTurns": true,
+  "errors": [],
+  "failed": []
+}
