@@ -25,7 +25,7 @@ export const MODELS: Record<ReasoningTier, ModelSpec> = {
   deep: {
     tier: 'deep',
     provider: 'anthropic',
-    model: process.env.MODEL_DEEP ?? 'claude-opus-4-8',
+    model: process.env.MODEL_DEEP ?? 'claude-opus-5-5',
     reasoningBudget: 32000,
     label: 'DEEP / 最大推論',
     description: '攻撃連鎖設計・根本原因分析・難関エクスプロイトの論理構築',
@@ -33,7 +33,7 @@ export const MODELS: Record<ReasoningTier, ModelSpec> = {
   balanced: {
     tier: 'balanced',
     provider: 'anthropic',
-    model: process.env.MODEL_BALANCED ?? 'claude-sonnet-4-8',
+    model: process.env.MODEL_BALANCED ?? 'claude-sonnet-5-5',
     reasoningBudget: 12000,
     label: 'BALANCED / 標準推論',
     description: '対象解析・手法提案・レポート生成の主力',
@@ -41,7 +41,7 @@ export const MODELS: Record<ReasoningTier, ModelSpec> = {
   longctx: {
     tier: 'longctx',
     provider: process.env.MODEL_LONGCTX_PROVIDER === 'openai' ? 'openai' : 'anthropic',
-    model: process.env.MODEL_LONGCTX ?? 'claude-opus-4-8',
+    model: process.env.MODEL_LONGCTX ?? 'claude-opus-5-5',
     reasoningBudget: 16000,
     label: 'LONG-CTX / 長文推論',
     description: '大量スキャン出力・ソースツリー全体の読解と相関',
