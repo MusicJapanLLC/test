@@ -72,8 +72,8 @@ export function initLightbox(): void {
     d.setAttribute('tabindex', '0');
     d.setAttribute('aria-label', '実際の画面を大きく見る');
     const go = () => {
-      const shots = Array.from(d.querySelectorAll('.device__shot'));
-      open(Math.max(0, shots.findIndex((s) => s.classList.contains('is-on'))), d);
+      const on = d.querySelector<HTMLElement>('.device__shot.is-on');
+      open(Number(on?.dataset.shot ?? 0), d);
     };
     d.addEventListener('click', go);
     d.addEventListener('keydown', (e) => {

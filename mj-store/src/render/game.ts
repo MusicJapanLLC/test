@@ -7,6 +7,7 @@ import {
   catchEm,
   catchHtml,
   deviceHtml,
+  isBrowserShot,
   dot,
   esc,
   href,
@@ -94,6 +95,9 @@ function aboutHtml(g: Game): string {
 
 function shotsHtml(ctx: RenderCtx, g: Game): string {
   if (!g.shots.length) return '';
+  /* ブラウザで撮った画面とフル画面が混ざるときは、ブラウザの画面の比率にそろえる */
+  const ref = g.device === 'phone' ? g.shots.find(isBrowserShot) : undefined;
+  const ratio = ref ? ` style="--shot-ratio:${ref.w} / ${ref.h}"` : '';
   return `
   <section class="g-sec g-shots g-shots--${g.device}" id="screenshots">
     <div class="container">
@@ -102,13 +106,13 @@ function shotsHtml(ctx: RenderCtx, g: Game): string {
         <h2 class="g-head__ja">実際の画面</h2>
       </header>
     </div>
-    <ul class="shots shots--${g.device}" data-shots>
+    <ul class="shots shots--${g.device}" data-shots${ratio}>
       ${g.shots
         .map(
           (s, i) => `
       <li class="shot" data-reveal style="--d:${i}">
         <button type="button" class="shot__btn" data-lightbox="${i}" aria-label="${esc(s.caption)}を大きく見る" data-sfx>
-          ${shotImg(ctx, s, { cls: 'shot__img' })}
+          ${shotImg(ctx, s, { cls: 'shot__img', style: s.focus ? `object-position:${s.focus}` : undefined })}
         </button>
         <p class="shot__cap"><span class="shot__no">${pad2(i + 1)}</span>${esc(s.caption)}</p>
       </li>`,

@@ -1657,6 +1657,99 @@ ol {
   aspect-ratio: 1440 / 900;
 }
 
+/* スマホのブラウザで遊んでいる画面：上にアドレスバー、下にタブバー */
+.device--safari {
+  --dw: var(--device-w, 300px);
+}
+.device--safari .device__screen {
+  display: flex;
+  flex-direction: column;
+  background: #2a2d31;
+}
+.device__top {
+  flex: none;
+  display: flex;
+  align-items: flex-end;
+  height: calc(var(--dw) * 0.3);
+  padding: 0 calc(var(--dw) * 0.045) calc(var(--dw) * 0.03);
+}
+.device__url {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--dw) * 0.016);
+  height: calc(var(--dw) * 0.108);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.11);
+  font: 500 calc(var(--dw) * 0.043) / 1 -apple-system, BlinkMacSystemFont, 'Helvetica Neue', 'Zen Kaku Gothic New', sans-serif;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.86);
+  white-space: nowrap;
+}
+.device__url svg {
+  width: calc(var(--dw) * 0.036);
+  height: calc(var(--dw) * 0.036);
+  opacity: 0.6;
+}
+.device__view {
+  position: relative;
+  flex: none;
+  width: 100%;
+  overflow: hidden;
+  background: #000;
+}
+.device__tabs {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-around;
+  padding: calc(var(--dw) * 0.05) calc(var(--dw) * 0.04) 0;
+}
+.device__tabs i,
+.device__tabs b {
+  width: calc(var(--dw) * 0.06);
+  height: calc(var(--dw) * 0.06);
+  border: solid rgba(255, 255, 255, 0.55);
+  border-width: 0 0 2px 2px;
+  transform: rotate(45deg);
+}
+.device__tabs i:nth-child(2) {
+  transform: rotate(-135deg);
+  opacity: 0.45;
+}
+.device__tabs b {
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  transform: none;
+  position: relative;
+}
+.device__tabs b::before,
+.device__tabs b::after {
+  content: '';
+  position: absolute;
+  inset: 50% 25% auto;
+  height: 2px;
+  margin-top: -1px;
+  background: rgba(255, 255, 255, 0.7);
+}
+.device__tabs b::after {
+  transform: rotate(90deg);
+}
+.device__tabs i:nth-child(4) {
+  border-width: 2px;
+  border-radius: 4px;
+  transform: none;
+}
+.device__tabs i:nth-child(5) {
+  width: calc(var(--dw) * 0.075);
+  height: 4px;
+  margin-top: calc(var(--dw) * 0.028);
+  border: 0;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.6) 1.5px, transparent 2px) 0 50% / 33.3% 100%;
+  transform: none;
+}
+
 /* 光の粒 */
 .ambient {
   position: absolute;

@@ -43,6 +43,8 @@ export interface Shot {
   alt: string;
   /** 画像の下に出す短い見出し */
   caption: string;
+  /** 一覧で縦横比をそろえて切り抜くときに残す位置（object-position） */
+  focus?: string;
 }
 
 export interface GameTheme {

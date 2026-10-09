@@ -43,9 +43,19 @@ function gameOg(g) {
   const t = g.theme;
   const play = g.shots[1] ?? g.shots[0];
   const phone = g.device === 'phone';
+  /* スマホのブラウザで撮った画面は、アドレスバーごと見せる（ストアの実機フレームと同じ） */
+  const inBrowser = play.h < play.w * 1.95;
+  const host = g.playUrl.replace(/^https?:\/\//, '').split('/')[0];
+  const screen = inBrowser
+    ? `<div style="display:flex;flex-direction:column;width:100%;height:100%;border-radius:32px;overflow:hidden;background:#2a2d31">
+         <div style="flex:none;height:72px;display:flex;align-items:flex-end;padding:0 12px 9px"><span style="flex:1;height:27px;border-radius:999px;background:rgba(255,255,255,.12);display:grid;place-items:center;font:500 11px/1 'Helvetica Neue',sans-serif;color:rgba(255,255,255,.85)">${esc(host)}</span></div>
+         <img src="${file(play.src)}" style="display:block;width:100%">
+       </div>`
+    : `<img src="${file(play.src)}" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:32px">`;
   const device = phone
     ? `<div style="position:absolute;right:70px;top:46px;width:250px;height:541px;padding:9px;border-radius:40px;background:linear-gradient(145deg,#2b2b31,#0d0d10);box-shadow:0 40px 80px rgba(0,0,0,.55),inset 0 0 0 1.5px rgba(255,255,255,.14);transform:rotate(3deg)">
-         <img src="${file(play.src)}" style="width:100%;height:100%;object-fit:cover;object-position:top;border-radius:32px">
+         ${screen}
+         <span style="position:absolute;top:18px;left:50%;width:74px;height:21px;margin-left:-37px;border-radius:999px;background:#050506"></span>
        </div>
        ${g.shots[0] && g.shots[1] ? `<div style="position:absolute;right:300px;top:120px;width:190px;height:411px;padding:7px;border-radius:32px;background:#0d0d10;box-shadow:0 30px 60px rgba(0,0,0,.5);transform:rotate(-6deg);opacity:.92">
          <img src="${file(g.shots[0].src)}" style="width:100%;height:100%;object-fit:cover;border-radius:26px">

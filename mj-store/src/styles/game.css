@@ -78,6 +78,11 @@
   padding-bottom: clamp(56px, 8vw, 110px);
   padding-right: calc(var(--gutter) + var(--device-space));
   container-type: inline-size;
+  /* 右側の空きを素通しして、うしろの実機フレームを押せるようにする */
+  pointer-events: none;
+}
+.g-hero__inner > * {
+  pointer-events: auto;
 }
 .g-hero__device {
   position: absolute;
@@ -495,6 +500,8 @@
   height: auto;
 }
 .shots--phone .shot__img {
+  aspect-ratio: var(--shot-ratio, auto);
+  object-fit: cover;
   border-radius: 22px;
 }
 .shot__btn:hover {

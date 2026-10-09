@@ -20,6 +20,15 @@ const phone = (dir: string, name: string, alt: string, caption: string): Shot =>
   caption,
 });
 
+/** スマホのブラウザで遊んでいる画面（アドレスバーとタブバーのぶん背が低い）。ストアではブラウザごと見せる */
+const mobile = (dir: string, name: string, alt: string, caption: string): Shot => ({
+  src: `shots/${dir}/${name}.webp`,
+  w: 720,
+  h: 1233,
+  alt,
+  caption,
+});
+
 const wide = (dir: string, name: string, alt: string, caption: string): Shot => ({
   src: `shots/${dir}/${name}.webp`,
   w: 1440,
@@ -170,7 +179,7 @@ export const games: Game[] = [
       },
       {
         title: '手動とオートを切り替える戦術バトル',
-        body: 'じっくり指示を出すのも、オートで流れを見守るのも自由。敵の行動ごとに演出が変わるドット絵のバトルです。',
+        body: 'じっくり指示を出すのも、オートで流れを見守るのも自由。連携・猛攻・堅守の作戦と、仲間ごとのリミットスキルで戦況をひっくり返す、ドット絵のバトルです。',
       },
       {
         title: '七つの灯をめぐる物語',
@@ -205,7 +214,40 @@ export const games: Game[] = [
     device: 'phone',
     cardFocus: '50% 40%',
     shots: [
-      phone('lantern', '01-title', '灯の旅路のタイトル画面。夕日の海と港町を見下ろす、旅立ちの一行', 'タイトル'),
+      {
+        ...phone('lantern', '01-title', '灯の旅路のタイトル画面。夕日の海と港町を見下ろす、旅立ちの一行', 'タイトル'),
+        focus: '50% 62%',
+      },
+      mobile(
+        'lantern',
+        '02-home',
+        'ホーム画面。灯のともる石畳の坂道を仲間たちが歩く。第2章「息を返す祠」へ出発する「冒険へ出る」ボタンと、育成・航路パス・潮灯祭のメニュー',
+        'ホーム ── 第2章「息を返す祠」',
+      ),
+      mobile(
+        'lantern',
+        '03-battle',
+        '戦闘画面。声喰いの主・セイルとの戦いで、ソルのリミットスキル「日輪の福音」が発動。アレン・ミナ・ソル・セラの体力と技ゲージ、オートと手動の切り替え、連携・猛攻・堅守の作戦',
+        'バトル ── リミットスキル発動',
+      ),
+      mobile(
+        'lantern',
+        '04-victory',
+        'ステージ2-3「息を返す祠」のクリア画面「灯をつないだ」。ゴールド・灯晶・技書・覚醒印・灯輝石・経験値の獲得と、「物語の続きを見る」ボタン',
+        'クリア ── 灯をつないだ',
+      ),
+      mobile(
+        'lantern',
+        '05-summon',
+        '召喚画面「灯に集う者たち」。26人の召喚仲間から3人のイラストと「運命の灯を、つなごう」の文字',
+        '召喚 ── 灯に集う者たち',
+      ),
+      mobile(
+        'lantern',
+        '06-companions',
+        '召喚の結果画面「新しい灯が、ここに」。SRのゼノ（紫電の槍士）とSSRのシズク（雨音の剣姫）が新しく仲間に加わる',
+        '新しい仲間 ── ゼノとシズク',
+      ),
     ],
     news: [
       {

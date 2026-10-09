@@ -32,9 +32,10 @@ export const abs = (ctx: RenderCtx, path: string): string =>
 export function shotImg(
   ctx: RenderCtx,
   shot: Shot,
-  opts: { cls?: string; lazy?: boolean; priority?: boolean; style?: string; sizes?: string } = {},
+  opts: { cls?: string; lazy?: boolean; priority?: boolean; style?: string; sizes?: string; data?: string } = {},
 ): string {
   const attrs = [
+    opts.data ?? '',
     `src="${href(ctx, shot.src)}"`,
     `width="${shot.w}"`,
     `height="${shot.h}"`,
@@ -53,13 +54,19 @@ export function shotImg(
  * 中の画像は JS で数秒ごとに切り替わる（[data-device]）。
  */
 export function deviceHtml(ctx: RenderCtx, g: Game, opts: { priority?: boolean; max?: number } = {}): string {
-  const shots = g.shots.slice(0, opts.max ?? g.shots.length);
-  const imgs = shots
-    .map((s, i) =>
+  /* スマホのブラウザで撮った画面（アドレスバーのぶん背が低い）があれば、ブラウザごと見せる */
+  const inBrowser = g.device === 'phone' && g.shots.some(isBrowserShot);
+  const picked = g.shots
+    .map((s, index) => ({ s, index }))
+    .filter(({ s }) => !inBrowser || isBrowserShot(s))
+    .slice(0, opts.max ?? g.shots.length);
+  const imgs = picked
+    .map(({ s, index }, i) =>
       shotImg(ctx, s, {
         cls: `device__shot${i === 0 ? ' is-on' : ''}`,
         priority: opts.priority && i === 0,
         lazy: !(opts.priority && i === 0),
+        data: `data-shot="${index}"`,
       }),
     )
     .join('');
@@ -71,11 +78,29 @@ export function deviceHtml(ctx: RenderCtx, g: Game, opts: { priority?: boolean; 
       <div class="device__screen">${imgs}</div>
     </div>`;
   }
+  if (inBrowser) {
+    const first = picked[0].s;
+    const host = play.split('/')[0];
+    return `
+    <div class="device device--phone device--safari" data-device>
+      <div class="device__screen">
+        <div class="device__top" aria-hidden="true"><span class="device__url">${icon.lock}${esc(host)}</span></div>
+        <div class="device__view" style="aspect-ratio:${first.w} / ${first.h}">${imgs}</div>
+        <div class="device__tabs" aria-hidden="true"><i></i><i></i><b></b><i></i><i></i></div>
+      </div>
+      <span class="device__island" aria-hidden="true"></span>
+    </div>`;
+  }
   return `
     <div class="device device--phone" data-device>
       <div class="device__screen">${imgs}</div>
       <span class="device__island" aria-hidden="true"></span>
     </div>`;
+}
+
+/** スマホのブラウザ（アドレスバーつき）で撮った、縦横比が短めの画面か */
+export function isBrowserShot(s: Shot): boolean {
+  return s.h < s.w * 1.95 && s.h > s.w;
 }
 
 /**
@@ -147,6 +172,7 @@ export const icon = {
   ),
   mail: svg('<path d="M3 5h18v14H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 6l8.5 7 8.5-7" fill="none" stroke="currentColor" stroke-width="2"/>'),
   close: svg('<path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="2.2" stroke-linecap="square"/>'),
+  lock: svg('<path d="M6.5 11h11v9.5h-11zM9 11V8a3 3 0 0 1 6 0v3" fill="none" stroke="currentColor" stroke-width="2.2"/>'),
   star: svg('<path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4L2.8 9.5l6.4-.8z" fill="currentColor"/>'),
   repost: svg('<path d="M4 10V7h13l-3-3M20 14v3H7l3 3" fill="none" stroke="currentColor" stroke-width="2"/>'),
   reply: svg('<path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2"/>'),
