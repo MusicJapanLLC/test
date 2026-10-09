@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "sizes": [
+    {
+      "width": 320,
+      "height": 568
+    },
+    {
+      "width": 390,
+      "height": 844
+    },
+    {
+      "width": 430,
+      "height": 932
+    }
+  ],
+  "titleAmbience": true,
+  "freshTutorialThrough10Summons": true,
+  "resultHeaderAnchored": true,
+  "trophyClaimsIdempotent": true,
+  "reload": true,
+  "errors": [],
+  "failed": []
+}

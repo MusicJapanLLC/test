@@ -1,0 +1,95 @@
+[
+  {
+    "file": "core-portraits.webp",
+    "width": 1086,
+    "height": 1448,
+    "columns": 3,
+    "rows": 4,
+    "characters": [
+      "allen",
+      "mina",
+      "rio",
+      "noah"
+    ],
+    "expressions": [
+      "neutral",
+      "happy",
+      "determined"
+    ],
+    "mapping": "one character per row, one expression per column"
+  },
+  {
+    "file": "allies-portraits-a.webp",
+    "width": 1086,
+    "height": 1448,
+    "columns": 3,
+    "rows": 4,
+    "characters": [
+      "sera",
+      "balt",
+      "finn",
+      "lyra",
+      "yuna",
+      "leon",
+      "kagetsu",
+      "iris",
+      "nene",
+      "zeno",
+      "marina",
+      "aster"
+    ],
+    "mapping": "row-major"
+  },
+  {
+    "file": "allies-portraits-b.webp",
+    "width": 887,
+    "height": 1774,
+    "columns": 2,
+    "rows": 4,
+    "characters": [
+      "rose",
+      "gald",
+      "koharu",
+      "dario",
+      "lucia",
+      "sol",
+      "lumina",
+      "orphe"
+    ],
+    "mapping": "row-major"
+  },
+  {
+    "file": "town-portraits.webp",
+    "width": 1254,
+    "height": 1254,
+    "columns": 3,
+    "rows": 3,
+    "characters": [
+      "hana",
+      "dorn",
+      "fisherman"
+    ],
+    "expressions": [
+      "neutral",
+      "happy",
+      "worried"
+    ],
+    "mapping": "one character per row, one expression per column"
+  },
+  {
+    "file": "guardians-portraits.webp",
+    "width": 1024,
+    "height": 1536,
+    "columns": 2,
+    "rows": 3,
+    "characters": [
+      "elfina",
+      "brigitte",
+      "selene",
+      "nagisa",
+      "tsubaki",
+      "aurora"
+    ],
+    "mapping": "row-major"
+  }
+]

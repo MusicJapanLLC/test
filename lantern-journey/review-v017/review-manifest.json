@@ -1,0 +1,239 @@
+{
+  "version": "0.18.0",
+  "source_commit": "5bbf1dfebb911e75a177275b6c67723595e5b27d",
+  "play": "https://lantern-journey.vocal-shore-1441.chatgpt.site",
+  "scope": "Client review snapshot, not a standalone build; artwork, audio, fonts and server are in canonical Sites source",
+  "files": [
+    {
+      "path": "lantern-journey/review-v017/font.css",
+      "sha256": "481dd86fbc475607509efc2b548b7bc31178d19860e6eba4a4747a9fce85550e"
+    },
+    {
+      "path": "lantern-journey/review-v017/trials.js",
+      "sha256": "b5fc038959ee09585a525e99a9bd2722615f056d7ba09b1fdc9457c4fe2a6fd6"
+    },
+    {
+      "path": "lantern-journey/review-v017/cloud-auth.js",
+      "sha256": "a9f213291cbcb40fef70214ce6fd7b7e355e0e3bcda4abe681cc42626ac495ba"
+    },
+    {
+      "path": "lantern-journey/review-v017/effects.js",
+      "sha256": "84e6ffe565e9d2c825830f003f2649ed7bc6c3a0c08138ebca33dd69ba99dcf2"
+    },
+    {
+      "path": "lantern-journey/review-v017/story-v17.js",
+      "sha256": "a0bffda9c3ae07e71b5889b24fdd393121bfacc0b6efa1ed2741600c4e410ff5"
+    },
+    {
+      "path": "lantern-journey/review-v017/expansion.js",
+      "sha256": "a1f6a924a01ad6b12583a9c16d9cfdf36d8cd23d9cb89d3af30680f32875398c"
+    },
+    {
+      "path": "lantern-journey/review-v017/festival-content.js",
+      "sha256": "b7106cd3e43bf33caa4e48538df284c9107f61019de229249ae5f1e20b663f16"
+    },
+    {
+      "path": "lantern-journey/review-v017/story.js",
+      "sha256": "2a092dbd48ec05fdb36646c4cbd4da9b53e679e7a245768a29417581805ff544"
+    },
+    {
+      "path": "lantern-journey/review-v017/retro.css",
+      "sha256": "d8dfefc482efeb4c82b00cda0233ecf127f14614659a6c0938616e72438e0997"
+    },
+    {
+      "path": "lantern-journey/review-v017/save-transfer.js",
+      "sha256": "ab608e650b3a8dce204a26e58a8fa2372347060a9bddb1f07a42b438da6c373d"
+    },
+    {
+      "path": "lantern-journey/review-v017/cloud-save.js",
+      "sha256": "df5915b327ead43c35bb3fd3411568ba75a16539f644a87035032f7e814a2df2"
+    },
+    {
+      "path": "lantern-journey/review-v017/game.js",
+      "sha256": "7df162f529fbc1b770f43403fa17f59425c587427661c3ba9bbe6676d88c257a"
+    },
+    {
+      "path": "lantern-journey/review-v017/voice-pack.js",
+      "sha256": "4ddf6295c1670a0eed529730628c8843d516614341e0d8d23427b9d56a84002d"
+    },
+    {
+      "path": "lantern-journey/review-v017/forge.js",
+      "sha256": "e1ff0436a74a55fbbe095d2754ee3d90dec2fc2a14c4d275b68e006f107bfa06"
+    },
+    {
+      "path": "lantern-journey/review-v017/sampled-audio.js",
+      "sha256": "e646fdff127a9b3518b95cbc4afa4480071c2d3a040fe21fff0bf6e3e8ced545"
+    },
+    {
+      "path": "lantern-journey/review-v017/progression.js",
+      "sha256": "1e5eb8dc57bef2ad0bcdc4c2d33ed10c6a17a41844ffe5e6e49c62d6627992bf"
+    },
+    {
+      "path": "lantern-journey/review-v017/workshop.js",
+      "sha256": "7d7eb7c6b69af989917adc66e5b9420e2dd21db4b456def117f5b4f2650bf3fa"
+    },
+    {
+      "path": "lantern-journey/review-v017/index.html",
+      "sha256": "d46e251fadece0d55911f05ab9c0c597d520408212af3f9f857910c05ed54ae6"
+    },
+    {
+      "path": "lantern-journey/review-v017/festival.js",
+      "sha256": "b6fae508c309cd7f9ad46648e791fd85093102aebd07c7eed5a8a05844b4ec62"
+    },
+    {
+      "path": "lantern-journey/review-v017/rewards.js",
+      "sha256": "b588044739e3dcf504c65c4cf8c24d80a2370e4c935454a3b2a90612e0c3f03f"
+    },
+    {
+      "path": "lantern-journey/review-v017/cloud-sdk-entry.js",
+      "sha256": "95d5a32f2ce22068fb4fcbdc6320eec1c453c6b5a8c86d586552c72d228ba4b1"
+    },
+    {
+      "path": "lantern-journey/review-v017/journey.js",
+      "sha256": "a36d06fbab8b6a1732fabf28c7f8e9219b7810a32d4f154b4bf53ef2635b3c91"
+    },
+    {
+      "path": "lantern-journey/review-v017/rpg.js",
+      "sha256": "43bde06efa5d7434f8e430d22e01067bec0b12b24625a1ba2b5fa52f839a8d13"
+    },
+    {
+      "path": "lantern-journey/review-v017/narrative.js",
+      "sha256": "f7f4c2669b5e3c14759d16bdf8bc519dfd088c3a70189dc6173386d133e4dfc5"
+    },
+    {
+      "path": "lantern-journey/review-v017/campaign.js",
+      "sha256": "10862243cd2120bf938fbcbc12acfca0da1372e8556a8864e3c5da134abaa0e5"
+    },
+    {
+      "path": "lantern-journey/review-v017/tactics.js",
+      "sha256": "c02d57b2165a142f6ba74023ae7eecc4afc881820cc81710dd58f5abd2f5d2a7"
+    },
+    {
+      "path": "lantern-journey/review-v017/journey-v18.css",
+      "sha256": "d354960701f6b1c834bbe506b6a3611afc4c4f01061e0862f926412f539b9b38"
+    },
+    {
+      "path": "lantern-journey/review-v017/music.js",
+      "sha256": "65984285b0118d93b8a81a4d16e82352c72150048a38afadf1327890f06dcdda"
+    },
+    {
+      "path": "lantern-journey/review-v017/stage.js",
+      "sha256": "06ee4307264acdbeee717d99154b1294b46be064866210ed85a8a9d1e29d4995"
+    },
+    {
+      "path": "lantern-journey/review-v017/cloud-ui.js",
+      "sha256": "c48b8ac6cbf376215fcbc0c5c29cc83ba7471eef01fdae51ce605ded8f190710"
+    },
+    {
+      "path": "lantern-journey/review-v017/trophies.js",
+      "sha256": "29789b22818f311c8aa5991cb42277fb3ec0d31d02e1e32cae8a36f93f74b36a"
+    },
+    {
+      "path": "lantern-journey/review-v017/experience.css",
+      "sha256": "7833c1cb14828a1261209ccf061de74264e369b9f7b3f10faeb922d83f3b217d"
+    },
+    {
+      "path": "lantern-journey/review-v017/content.js",
+      "sha256": "a2c86ce5cdb80abd2c3a38dc343274eeecc280f7417eb11c28158f8088a5c847"
+    },
+    {
+      "path": "lantern-journey/review-v017/guardians.js",
+      "sha256": "fa237d37ec9df93d3a5096f2861e5238fc2633ffd05a53c9fbc64fda8fbfad78"
+    },
+    {
+      "path": "lantern-journey/review-v017/style.css",
+      "sha256": "89ea2d3bb652bae2eb7b835b206596950f3d05b7eec5e93de2abd028e4beff7f"
+    },
+    {
+      "path": "lantern-journey/review-v017/telemetry.js",
+      "sha256": "e38f88f6fb42ff0ac42e6afa6995672c77fa827ab6b3eee9342a26d78b4c0e2b"
+    },
+    {
+      "path": "lantern-journey/review-v017/combat.js",
+      "sha256": "8d528769772d40daa7d1c993f9b8699e7a50f87adc21f60a742bfd817a6021de"
+    },
+    {
+      "path": "lantern-journey/review-v017/loot.js",
+      "sha256": "ae0f940dca0a748e2afa52d7002402f06a380140822379ee87218f6adffb0fa0"
+    },
+    {
+      "path": "lantern-journey/review-v017/roster.js",
+      "sha256": "385e976c4376fefbec990a49d3e5e5013c3408793cab29621f5bfd715ad6a3a1"
+    },
+    {
+      "path": "lantern-journey/review-v017/portraits.js",
+      "sha256": "819bfe3950512131942a1332e3f4cffba4d0853391a444b56cc44eab4ee66855"
+    },
+    {
+      "path": "lantern-journey/review-v017/commerce.js",
+      "sha256": "eae397501900f2c2065975e978a0abd51a46564c5bb9016647b6148b67381f06"
+    },
+    {
+      "path": "lantern-journey/review-v017/art.js",
+      "sha256": "249b3c2e4b9020c5ec97e62570867b52da91b5a5d1c62ad53f2fa8434d1c55bc"
+    },
+    {
+      "path": "lantern-journey/review-v017/pass.js",
+      "sha256": "568cac2c36be744bb4a7e74c844958bdb10eee7c2fc431fb7215babcd1411b47"
+    },
+    {
+      "path": "lantern-journey/review-v017/docs/v18/atlas-layout.json",
+      "sha256": "71685d22a065a5375c4af3b050d9eb2999bd9a8f620c4a50ed8912e750ca2594"
+    },
+    {
+      "path": "lantern-journey/review-v017/docs/v18/RELEASE.md",
+      "sha256": "5577a35c15c5b7b1bb94b2675648bf347faece3d0bdd0553a391491fd08b6d92"
+    },
+    {
+      "path": "lantern-journey/review-v017/docs/v18/generation-manifest.json",
+      "sha256": "cdd1da4133272a786c873c0a60ef05b3e96245f15cdd3a6b8b4107224ba8c973"
+    },
+    {
+      "path": "lantern-journey/review-v017/tests/v18-guardians.cjs",
+      "sha256": "cc4ba9aa90b8c5d21ce95f308663c75eba7ffa03a09e7bd00facb4c060e17b08"
+    },
+    {
+      "path": "lantern-journey/review-v017/tests/v18-review.cjs",
+      "sha256": "77eb5cab9e28d98b467ae1f8e39f3d386ff49ab3ea3d70fd5011ad02db5bee97"
+    },
+    {
+      "path": "lantern-journey/review-v017/tests/v18-smoke.cjs",
+      "sha256": "d023385b6d55d46eaac2ad4253b8778d3b64550ba46917e24952367c680734f7"
+    },
+    {
+      "path": "lantern-journey/review-v017/tests/results/v18-smoke.json",
+      "sha256": "b384a4f5bc76503b52e8ed006f5af698f086af559128bf73f27dcd307ab1da22"
+    },
+    {
+      "path": "lantern-journey/review-v017/tests/results/v18-review.json",
+      "sha256": "4236c8ed519e1f0f488990ad9501ade636c5f9777e3cd49ee70441f50b094779"
+    }
+  ],
+  "new_art": [
+    {
+      "file": "allies-portraits-a.webp",
+      "sha256": "962d2f2027a333a534fba3962ac881401299edb12360a65b251515a11233e52c",
+      "bytes": 547968
+    },
+    {
+      "file": "core-portraits.webp",
+      "sha256": "20b5704cc62a82bbdee391cda39698f4292a9ba097e8ed682c52d91bea296b25",
+      "bytes": 427530
+    },
+    {
+      "file": "guardians-portraits.webp",
+      "sha256": "a884cea8156fd1fb668862f924de313ca7e039f81d345f24600667fa1a5d8f11",
+      "bytes": 470294
+    },
+    {
+      "file": "town-portraits.webp",
+      "sha256": "f4e42d94649a1308241a2bf46a350b51161c891913672b3b40f07b0c86de4534",
+      "bytes": 360642
+    },
+    {
+      "file": "allies-portraits-b.webp",
+      "sha256": "245078ab93e209d16a16810060547eaae6a99cafb51da2bb0c2b611ab5d3b462",
+      "bytes": 476474
+    }
+  ]
+}
