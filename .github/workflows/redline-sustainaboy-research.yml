@@ -1,0 +1,72 @@
+name: REDLINE Sustainaboy Research
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'security/redline-sustainaboy-research.mjs'
+      - 'security/redline-sustainaboy-research.test.mjs'
+      - 'package.json'
+      - '.github/workflows/redline-sustainaboy-research.yml'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'security/redline-sustainaboy-research.mjs'
+      - 'security/redline-sustainaboy-research.test.mjs'
+      - 'package.json'
+      - '.github/workflows/redline-sustainaboy-research.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  research-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '24'
+      - name: Check JavaScript syntax
+        run: |
+          node --check security/redline-sustainaboy-research.mjs
+          node --check security/redline-sustainaboy-research.test.mjs
+      - name: Run offline regression tests
+        run: npm run test:sustainaboy
+      - name: Fetch official research documents
+        if: github.event_name == 'workflow_dispatch'
+        run: node security/redline-sustainaboy-research.mjs > sustainaboy-research.json
+      - name: Validate collected evidence
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { readFileSync } from 'node:fs';
+          import { references } from './security/redline-sustainaboy-research.mjs';
+          const report = JSON.parse(readFileSync('sustainaboy-research.json', 'utf8'));
+          assert.equal(report.schema, 'redline-sustainaboy-research/v1');
+          assert.deepEqual(report.documents.map(document => document.id), references.map(reference => reference.id));
+          for (const document of report.documents) {
+            assert.equal(document.outcome, 'fetched', document.id + ': ' + document.reason);
+            assert.equal(document.status, 200, document.id);
+            assert.match(document.sha256, /^[a-f0-9]{64}$/);
+            assert.ok(Array.isArray(document.passages) && document.passages.length > 0, document.id + ': missing passages');
+          }
+          NODE
+      - name: Upload research evidence
+        if: always() && github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sustainaboy-research-${{ github.sha }}
+          path: sustainaboy-research.json
+          retention-days: 14
+          if-no-files-found: error
