@@ -135,12 +135,15 @@ const discover: ToolModule = {
         lines.push(`${r.status}  /${p}`);
         if (r.status === 200 || r.status === 401 || r.status === 403) {
           const sev: Finding['severity'] = /\.git|\.env|backup|config\.json|phpinfo/.test(p) ? 'high' : 'low';
+          const protectedPath = r.status === 401 || r.status === 403;
           findings.push({
-            title: `/${p} が応答 (HTTP ${r.status})`,
+            title: `/${p} が応答 (HTTP ${r.status})` + (protectedPath ? ' — アクセス制御テスト候補' : ''),
             severity: r.status === 200 ? sev : 'info',
             reproduce: `curl -s -o /dev/null -w "%{http_code}" ${origin}/${p}`,
-            impact: r.status === 200 ? '機微ファイル/管理面の露出の可能性' : '存在が確認できる（認証で保護）',
-            remediation: '不要な公開パスを削除、機微ファイルは配信対象外に',
+            impact: r.status === 200 ? '機微ファイル/管理面の露出の可能性' : '認可境界が存在。設定不備なら回避され得る（要手動検証）',
+            remediation: protectedPath
+              ? '認可をパス正規化の後に一元適用し、信頼できない転送ヘッダに依存しない。※実際のバイパス検証は人間+LLMが手動で実施する運用（本ツールは候補の提示まで）'
+              : '不要な公開パスを削除、機微ファイルは配信対象外に',
           });
         }
       } catch { lines.push(`ERR  /${p}`); }
