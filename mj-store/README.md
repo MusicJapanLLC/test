@@ -33,11 +33,25 @@ npm run build      # 型チェック + 本番ビルド
 npm run preview
 ```
 
-## 公開（Vercel）
+## 公開
 
-- Root Directory：`mj-store`
-- 環境変数：`VITE_GAS_ENDPOINT`（ご要望の送信先）、必要なら `VITE_SITE_URL`
-- 独自ドメイン：`store.music-japan.com` を想定（`src/data/site.ts` の `url`）。Cloudflare で CNAME を Vercel に向ける。別のドメインにするなら `site.ts` の `url` か `VITE_SITE_URL` を変える
+`music-japan.com` の DNS は Cloudflare にある。`store.music-japan.com` で出す（`src/data/site.ts` の `url`。別のドメインにするなら `url` か `VITE_SITE_URL` を変える）。
+
+### Cloudflare Pages（DNS も同じ画面で済む）
+
+1. Workers & Pages →「作成」→ Pages →「Git に接続」→ `MusicJapanLLC/test`
+2. 本番ブランチ：公開したいブランチ（`main` に入れたら `main`）
+3. ビルド設定：フレームワーク「なし」／ビルドコマンド `npm run build`／出力ディレクトリ `dist`／ルートディレクトリ `mj-store`
+4. 環境変数：`VITE_GAS_ENDPOINT`（ご要望の送信先）
+5. デプロイ後「カスタムドメイン」→ `store.music-japan.com`（DNS レコードは自動で入る）
+
+キャッシュ・セキュリティのヘッダーは `public/_headers`、Node のバージョンは `.node-version`。
+
+### Vercel
+
+- Root Directory：`mj-store`（ビルド設定は `vercel.json` から読まれる）
+- 環境変数：`VITE_GAS_ENDPOINT`
+- 独自ドメイン：Settings → Domains に `store.music-japan.com` を足し、Cloudflare の DNS に `store` の CNAME を Vercel の表示どおりに追加（プロキシは「DNS のみ」）
 
 ## ご要望フォームの受け口
 
