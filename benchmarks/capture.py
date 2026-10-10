@@ -28,7 +28,17 @@ def new_plan(rows,revision):
  counts={t:sum(t in s['text'].lower() for s in rows) for t in TERMS}
  ordered=sorted(TERMS,key=lambda t:((2 if t in COUNTER else 1)/(1+counts[t])),reverse=True)
  scarce=[t for t in ordered if t not in COUNTER][:2]
- return [{'term':t,'query_term':t if revision==0 or t in COUNTER else t+' '+scarce[(i+revision)%2] if t not in scarce and i%5==revision%5 else t,'priority':round((2 if t in COUNTER else 1)/(1+counts[t]),6),'reason':'observed keyword coverage deficit; heuristic, not estimated probability','revision':revision} for i,t in enumerate(ordered)]
+ year_counts=collections.Counter(s['record'].get('firstPublicationDate','')[:4] for s in rows)
+ years=sorted([str(y) for y in range(2016,2027)],key=lambda y:(year_counts[y],-int(y)))[:3]
+ return [{'term':t,'query_term':t if revision==0 or t in COUNTER else t+' '+scarce[(i+revision)%2] if t not in scarce and i%5==revision%5 else t,'priority':round((2 if t in COUNTER else 1)/(1+counts[t]),6),'reason':'observed keyword coverage deficit; heuristic, not estimated probability','revision':revision, 'from':(years[i%len(years)]+'-01-01') if revision else '2016-01-01', 'to':min((years[i%len(years)]+'-12-31'),'2026-10-10') if revision else '2026-10-10'} for i,t in enumerate(ordered)]
+
+def select_query(options,logs,explore):
+ def history(q):return [x for x in logs if x.get('kind')=='search' and x.get('key')==q['key']]
+ if explore:return min(options,key=lambda q:len(history(q)))
+ def score(q):
+  h=history(q); accepted=sum(x.get('accepted_count',0) for x in h); returned=sum(x.get('returned_count',0) for x in h)
+  return (accepted+5)/(returned+20)*(1+min(1,q['priority']))
+ return max(options,key=score)
 
 def coverage(rows):
  def dist(f):return dict(collections.Counter(f(s) or 'unknown' for s in rows))
@@ -75,17 +85,21 @@ class Capture:
     wave_logs=[]
     while len(self.rows)<wave*250:
      if self.mode=='single_shot' and self.used: self.state='single_request_finished';return
-     options=[q for q in plan if cursors.get(q['query_term'],'*') is not None and errors[q['query_term']]<3]
-     if self.mode!='adaptive':options=[{'query_term':'validation','term':'validation','priority':1}]
+     options=[dict(q,key=q['query_term']+'|'+q['from']+'|'+q['to']) for q in plan]
+     if self.mode!='adaptive':options=[{'query_term':'validation','term':'validation','priority':1,'from':'2016-01-01','to':'2026-10-10','key':'validation|2016-01-01|2026-10-10'}]
+     options=[q for q in options if cursors.get(q['key'],'*') is not None and errors[q['key']]<3]
      if not options: self.state='query_portfolio_exhausted';return
-     q=min(options,key=lambda x:attempts[(wave,x['query_term'])]/max(.005,x['priority']));term=q['query_term'];attempts[(wave,term)]+=1
-     expression='("machine learning" OR "deep learning") AND ('+' AND '.join(term.split())+') AND OPEN_ACCESS:Y AND FIRST_PDATE:[2016-01-01 TO 2026-10-10]'
-     limit=min(100,wave*250-len(self.rows));params={'query':expression,'format':'json','resultType':'core','pageSize':limit,'cursorMark':cursors.get(term,'*')}
+     need_counter=self.mode=='adaptive' and not any(x.get('counterevidence_search') and x.get('status')=='success' for x in wave_logs)
+     choice=[q for q in options if q['term'] in COUNTER] if need_counter else options
+     if not choice:choice=options
+     q=select_query(choice,self.logs,len(wave_logs)%5==4);term=q['query_term'];key=q['key'];attempts[(wave,key)]+=1
+     expression='("machine learning" OR "deep learning") AND ('+' AND '.join(term.split())+') AND OPEN_ACCESS:Y AND FIRST_PDATE:['+q['from']+' TO '+q['to']+']'
+     limit=min(100,wave*250-len(self.rows));params={'query':expression,'format':'json','resultType':'core','pageSize':limit,'cursorMark':cursors.get(key,'*')}
      try:data,log=self.request('/search',params,wave,'search',term)
      except RuntimeError:raise
-     except Exception:errors[term]+=1;continue
-     records=data.get('resultList',{}).get('result',[]);next_cursor=data.get('nextCursorMark');cursors[term]=next_cursor if records and next_cursor!=params['cursorMark'] else None
-     accepted=0
+     except Exception:errors[key]+=1;continue
+     records=data.get('resultList',{}).get('result',[]);next_cursor=data.get('nextCursorMark');cursors[key]=next_cursor if records and next_cursor!=params['cursorMark'] else None
+     log['key']=key;log['query_window']={'from':q['from'],'to':q['to']};accepted=0
      for r in records:
       good,text,reasons=screen(r);doi=re.sub(r'^https?://(?:dx\.)?doi\.org/','',r.get('doi',''),flags=re.I).strip().lower();sid='doi:'+doi if doi else 'epmc:'+r.get('source','MED')+':'+str(r.get('id',''))
       root=re.search(r'\b(?:NCT\d{8}|ISRCTN\d{8}|GSE\d{4,}|UK Biobank|MIMIC-IV|MIMIC-III|ADNI|TCGA)\b',text,re.I);origin='dataset:'+root[0].lower().replace(' ','_') if root else sid
@@ -96,7 +110,7 @@ class Capture:
      log['accepted_count']=accepted;log['counterevidence_search']=q['term'] in COUNTER;wave_logs.append(log);self.save('ingestion',{'request_id':log['request_id'],'accepted':accepted,'cumulative':len(self.rows)});print(canonical({'mode':self.mode,'wave':wave,'accepted':len(self.rows),'requests':self.used}),flush=True)
     if self.mode=='adaptive':self.references(wave)
     gaps=coverage(self.rows);next_plan=new_plan(self.rows,wave) if self.mode=='adaptive' else plan
-    gate={'wave':wave,'unique_eligible':len(self.rows),'source_ids':[s['source_id'] for s in self.rows if s['wave']==wave],'source_hashes':{s['source_id']:s['content_sha256'] for s in self.rows if s['wave']==wave},'coverage_and_gaps':gaps,'counterevidence_searches':[x['request_id'] for x in wave_logs if x.get('counterevidence_search')],'previous_checkpoint_hash':self.previous,'next_query_portfolio':next_plan,'replan_reason':'Observed term/publisher/language/method gaps; keyword priorities recomputed. No semantic truth claims.' if self.mode=='adaptive' else 'Fixed-query benchmark control; unchanged deliberately','committed_at':NOW(),'gate_passed':True,'execution_mode':'live_api_capture'}
+    gate={'wave':wave,'unique_eligible':len(self.rows),'source_ids':[s['source_id'] for s in self.rows if s['wave']==wave],'source_hashes':{s['source_id']:s['content_sha256'] for s in self.rows if s['wave']==wave},'coverage_and_gaps':gaps,'counterevidence_searches':[x['request_id'] for x in wave_logs if x.get('counterevidence_search')],'previous_checkpoint_hash':self.previous,'next_query_portfolio':next_plan,'replan_reason':'Observed year gaps select three least-covered in-scope years; observed unique-yield penalizes duplicate queries; 20 percent exploration retained. No semantic truth claims.' if self.mode=='adaptive' else 'Fixed-query benchmark control; unchanged deliberately','committed_at':NOW(),'gate_passed':True,'execution_mode':'live_api_capture'}
     gate['checkpoint_hash']=digest(canonical(gate));self.save('gate',gate);self.gates.append(gate);self.previous=gate['checkpoint_hash'];plan=next_plan
    self.state='screened_target_reached'
   except Exception as exc:self.state='partial';self.save('failure',{'error':str(exc)[:400]})
@@ -104,7 +118,7 @@ class Capture:
  def export(self):
   for name,rows in [('accepted',self.rows),('candidates',self.candidates),('searches',self.logs),('gates',self.gates),('bibliographic_edges',self.edges)]:
    (self.out/(name+'.jsonl')).write_text(''.join(canonical(x)+'\n' for x in rows),encoding='utf8')
-  result={'mode':self.mode,'status':self.state,'target':1500,'records_observed':len(self.candidates),'distinct_candidate_ids':len({s['source_id'] for s in self.candidates}),'reusable_substantive_unique_screened':len(self.rows),'gates':len(self.gates),'requests':self.used,'elapsed_seconds':round(time.monotonic()-self.start,3),'paid_api_calls':0,'infrastructure_cost_measured':False,'full_text':0,'deep_analyzed':0,'human_relevance_precision':None,'human_refutation_recall':None,'verified_dataset_independence':0,'adaptive_advantage_established':False,'extraction':'licensed abstracts, not full paper reading','bibliographic_edges':len(self.edges),'coverage':coverage(self.rows),'execution_environment':'GitHub Actions' if 'GITHUB_ACTIONS' in __import__('os').environ else 'local','node_reference_pipeline_live_e2e':False}
+  result={'algorithm_version':'capture-v2-year-yield','mode':self.mode,'status':self.state,'target':1500,'records_observed':len(self.candidates),'distinct_candidate_ids':len({s['source_id'] for s in self.candidates}),'reusable_substantive_unique_screened':len(self.rows),'gates':len(self.gates),'requests':self.used,'elapsed_seconds':round(time.monotonic()-self.start,3),'paid_api_calls':0,'infrastructure_cost_measured':False,'full_text':0,'deep_analyzed':0,'human_relevance_precision':None,'human_refutation_recall':None,'verified_dataset_independence':0,'adaptive_advantage_established':False,'extraction':'licensed abstracts, not full paper reading','bibliographic_edges':len(self.edges),'coverage':coverage(self.rows),'execution_environment':'GitHub Actions' if 'GITHUB_ACTIONS' in __import__('os').environ else 'local','node_reference_pipeline_live_e2e':False}
   (self.out/'summary.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf8');self.db.close();print(json.dumps(result),flush=True)
 if __name__=='__main__':
  mode=sys.argv[1] if len(sys.argv)>1 else 'adaptive'
