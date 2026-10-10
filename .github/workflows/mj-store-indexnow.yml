@@ -1,0 +1,47 @@
+# MJ STORE（store.music-japan.com）を更新したら、検索エンジンに知らせる（IndexNow）。
+# Bing・Yandex・Naver・Seznam などが、サイトマップの全ページをすぐ読みに来る。
+# Cloudflare Pages の公開が終わるのを待ってから、公開中の sitemap.xml の URL を送る。
+name: MJ STORE IndexNow
+
+on:
+  push:
+    branches: [main, claude/music-japan-game-site-sbuax7]
+    paths:
+      - 'mj-store/**'
+      - '.github/workflows/mj-store-indexnow.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mj-store-indexnow
+  cancel-in-progress: true
+
+jobs:
+  indexnow:
+    runs-on: ubuntu-latest
+    env:
+      HOST: store.music-japan.com
+      KEY: 1fa70acfeb4fd7854ee4a403215aa477
+    steps:
+      - name: Cloudflare Pages の公開を待つ
+        run: sleep 180
+
+      - name: 鍵のファイルが公開されているか確かめる
+        run: |
+          test "$(curl -fsSL "https://$HOST/$KEY.txt")" = "$KEY"
+
+      - name: サイトマップの URL を送る
+        run: |
+          set -euo pipefail
+          urls=$(curl -fsSL "https://$HOST/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g' | jq -R . | jq -s -c .)
+          echo "送る URL: $urls"
+          body=$(jq -n --arg host "$HOST" --arg key "$KEY" --argjson urls "$urls" \
+            '{host: $host, key: $key, keyLocation: ("https://" + $host + "/" + $key + ".txt"), urlList: $urls}')
+          code=$(curl -sS -o response.txt -w '%{http_code}' -X POST https://api.indexnow.org/indexnow \
+            -H 'Content-Type: application/json; charset=utf-8' -d "$body")
+          echo "IndexNow: $code"
+          cat response.txt || true
+          # 200 / 202 が受付。それ以外は失敗にする
+          test "$code" = 200 -o "$code" = 202
