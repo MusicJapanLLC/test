@@ -1,94 +1,13 @@
-# mj-sales-automation
+# RESEARCH 1500 — bounded live API capture benchmark
 
-合同会社Music Japanの営業・管理自動化ツール群。
+This isolated test branch is NOT intended to merge into a production branch.
+It contains only a generic public-data benchmark and one scoped workflow.
+No business data, uploaded private development kit, credentials, or production application files are included.
 
-## 初期プロジェクト: `legalon_outreach`
+Run: `python3 benchmarks/capture.py adaptive output/adaptive`
 
-リーガルオンクラウド向けアポ獲得のための営業メール自動配信ツール。
+The three arms use the same source corpus, licensing filter, maximum 160 requests and 420 seconds per arm. Single-shot intentionally uses only one search request. Fixed paging keeps its query unchanged. Adaptive recomputes a 24-query portfolio at every exact 250 accepted abstracts, preserving receipts before the next wave.
 
-### MVP 要件
+This independent live-capture harness is NOT the Node/SQLite reference pipeline and does NOT certify its live end-to-end operation. Content is licensed abstracts, not full paper reading. Dataset independence, semantic counterevidence, human relevance precision, and causal two-hop explanations remain unverified. A 1,500 screened count must not be called 1,500 independently human-verified sources.
 
-1. **リスト読込**: Google Sheetsから送信先リストを取得
-2. **テンプレート差し込み**: 会社名・担当者名等を差し込み
-3. **送信**: Gmail API（またはSendGrid API）経由でメール配信
-4. **送信ログ記録**: SQLiteに送信履歴・結果を記録
-
-設計方針: **明日の売上を生む最小構成**。完璧さより速度。
-
-## 技術スタック
-
-| レイヤ | 技術 |
-|---|---|
-| メインロジック | Python 3.11+ |
-| メール配信 | Gmail API / SendGrid API |
-| リスト管理 | Google Sheets API |
-| ログDB | SQLite |
-| （将来）ダッシュボード統合 | Next.js 15 / Prisma / Neon |
-
-## プロジェクト構造
-
-```
-.
-├── README.md
-├── requirements.txt
-├── .env.example
-├── .gitignore
-├── config/
-│   └── settings.py         # 環境変数ローダ
-├── src/
-│   ├── main.py             # エントリポイント
-│   ├── sheets_client.py    # Google Sheets読込
-│   ├── mail_client.py      # Gmail/SendGrid送信
-│   ├── template_renderer.py # テンプレート差し込み
-│   └── log_db.py           # SQLiteログ記録
-├── templates/
-│   └── legalon_cloud_intro.txt
-├── data/                   # SQLite DBファイル保存先（.gitignore）
-└── tests/
-```
-
-## セットアップ
-
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-# .env を編集し、API キー等を設定
-```
-
-## 実行
-
-```bash
-# Gmail OAuth 初期セットアップ（1回のみ）
-python -m scripts.gmail_auth --credentials ./gmail_credentials.json
-
-# 内容確認（送信なし）
-python -m src.main --dry-run
-python -m src.main --dry-run --csv ./leads.csv
-
-# 段階配信（最初は5通だけ）
-python -m src.main --confirm --limit 5
-
-# 本番送信（DAILY_SEND_LIMIT まで）
-python -m src.main --confirm
-
-# テスト
-pytest
-```
-
-### CSV フォーマット
-
-`fetch_leads_from_csv` は1行目をヘッダとして扱い、列順は以下:
-
-```
-company,contact_name,email,title,note
-株式会社A,鈴木一郎,suzuki@example.com,法務部長,既存接点あり
-```
-
-## ロードマップ
-
-- **Day 1**: 雛形・READMEの作成、Sheets読込とテンプレートレンダリングの実装
-- **Day 2**: Gmail API送信、SQLiteログ記録
-- **Day 3**: E2Eテスト、リスト投入、初回配信
-- **将来**: 返信検知、A/Bテスト、Next.jsダッシュボード統合
+No Supabase function, denied database operation, or production deployment is performed by this workflow.

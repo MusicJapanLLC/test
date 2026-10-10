@@ -1,0 +1,34 @@
+name: RESEARCH1500 bounded live capture
+on:
+  push:
+    branches: ['research1500/capture-20261010']
+permissions:
+  contents: read
+concurrency:
+  group: research1500-capture-20261010
+  cancel-in-progress: false
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [single_shot, fixed, adaptive]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - name: Bounded public-data collection
+        run: |
+          mkdir -p output
+          python3 --version > output/runtime.txt
+          sha256sum benchmarks/capture.py > output/code.sha256
+          python3 -u benchmarks/capture.py '${{ matrix.mode }}' 'output/${{ matrix.mode }}' | tee 'output/${{ matrix.mode }}.log'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: research1500-${{ matrix.mode }}
+          path: output/
+          retention-days: 30
+          if-no-files-found: error

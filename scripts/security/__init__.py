@@ -1,1 +1,0 @@
-"""Standment defensive security tooling."""

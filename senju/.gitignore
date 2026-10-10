@@ -1,7 +1,0 @@
-reports/*.md
-!reports/*.json
-!reports/.gitkeep
-__pycache__/
-*.pyc
-.pytest_cache/
-*.egg-info/
