@@ -73,12 +73,6 @@
   flex-wrap: wrap;
   gap: 12px;
 }
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.chip,
 .view-btn {
   height: 38px;
   padding: 0 16px;
@@ -92,11 +86,9 @@
     color 0.25s,
     border-color 0.25s;
 }
-.chip:hover,
 .view-btn:hover {
   color: var(--text);
 }
-.chip.is-on,
 .view-btn.is-on {
   background: var(--text);
   border-color: var(--text);
@@ -347,4 +339,43 @@
   .lib-next {
     min-height: 300px;
   }
+}
+
+/* ちびロボ */
+.lib-head__top {
+  position: relative;
+}
+.lib-head__bot {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+.lib-head__bot .bot {
+  --bot-w: clamp(56px, 7vw, 84px);
+}
+.lib-head__bot .bot__say {
+  left: auto;
+  right: 0;
+  border-radius: 12px 12px 3px 12px;
+}
+.lib-head__bot .bot__say::after {
+  left: auto;
+  right: calc(var(--bot-w) / 2 - 6px);
+}
+.lib-next__bot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+.lib-next__bot .bot {
+  --bot-w: 60px;
+}
+.lib-next__bot .bot__say {
+  left: auto;
+  right: 0;
+  border-radius: 12px 12px 3px 12px;
+}
+.lib-next__bot .bot__say::after {
+  left: auto;
+  right: calc(var(--bot-w) / 2 - 6px);
 }

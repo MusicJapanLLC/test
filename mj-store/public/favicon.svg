@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect x="2" y="2" width="60" height="60" rx="16" fill="#FF4D2E"/><path d="M14 46V18h7l6 12 6-12h7v28h-6V29l-5 10h-4l-5-10v17z" fill="#fff"/><path d="M44 18h6v20a8 8 0 0 1-8 8h-3v-6h3a2 2 0 0 0 2-2z" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2b33"/><stop offset=".55" stop-color="#16161b"/><stop offset="1" stop-color="#0a0a0d"/></linearGradient>
+    <radialGradient id="red" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ff7a6b"/><stop offset=".45" stop-color="#ef2a2a"/><stop offset="1" stop-color="#a50f1c"/></radialGradient>
+    <clipPath id="l"><rect width="32" height="64"/></clipPath>
+    <clipPath id="r"><rect x="32" width="32" height="64"/></clipPath>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#bg)"/>
+  <g fill="none" stroke="#efe9e0">
+    <g clip-path="url(#l)" stroke-width="2.4"><circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="16"/></g>
+    <g clip-path="url(#r)" stroke-opacity=".45" stroke-width="1.8"><circle cx="32" cy="32" r="22"/><circle cx="32" cy="32" r="16"/></g>
+  </g>
+  <path d="M27.5 24.5 40.5 32 27.5 39.5Z" fill="url(#red)" stroke="url(#red)" stroke-width="3" stroke-linejoin="round"/>
+</svg>

@@ -407,7 +407,8 @@
 }
 .review__quote {
   margin-top: 6px;
-  word-break: auto-phrase;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
   text-wrap: balance;
   font-family: var(--g-font);
   font-size: clamp(22px, 2.2vw, 30px);
@@ -416,6 +417,40 @@
 .review__by {
   font-size: 12px;
   color: var(--g-mute);
+}
+/* 店員（ちびロボ）のひとこと */
+.review__bot {
+  display: flex;
+  justify-content: flex-end;
+  margin: 18px 0 4px;
+}
+.review__bot .bot {
+  --bot-w: 58px;
+}
+.review__bot .bot__say {
+  left: auto;
+  right: calc(100% - 12px);
+  bottom: 40%;
+  border-radius: 12px 12px 3px 12px;
+}
+.review__bot .bot__say::after {
+  display: none;
+}
+.g-head__bot {
+  margin-left: auto;
+  align-self: flex-end;
+}
+.g-head__bot .bot {
+  --bot-w: 46px;
+}
+.g-head__bot .bot__say {
+  left: auto;
+  right: 0;
+  border-radius: 12px 12px 3px 12px;
+}
+.g-head__bot .bot__say::after {
+  left: auto;
+  right: calc(var(--bot-w) / 2 - 6px);
 }
 
 /* FEATURES */
@@ -792,15 +827,6 @@
 }
 .info__row.is-mj dd {
   color: var(--g-accent);
-}
-.info__row.is-mj dd::after {
-  content: '自社製';
-  margin-left: 10px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  border: 1px solid currentColor;
-  font-size: 10px;
-  vertical-align: 0.15em;
 }
 
 /* MORE */

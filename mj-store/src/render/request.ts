@@ -1,45 +1,14 @@
 import { games } from '../data/games';
-import { esc, icon, themeVars, type RenderCtx } from './util';
+import { REQUEST_TYPES, SEVERITY } from '../data/request';
+import { botHtml, crewHtml } from './brand';
+import { esc, icon, ph, themeVars, type RenderCtx } from './util';
 
-export const REQUEST_TYPES = [
-  {
-    id: 'bug',
-    label: 'バグを見つけた',
-    note: '見つけた人が、いちばん偉い。',
-    icon: icon.bug,
-    placeholder:
-      'どこで・何をしたら・どうなったかを教えてください。\n例）村長が、海の上を歩いていました。',
-  },
-  {
-    id: 'idea',
-    label: 'こうしたらいいやん',
-    note: 'その一言、採用するかもしれません。',
-    icon: icon.idea,
-    placeholder: '思いついたこと、そのまま書いてください。\n例）ギルドのみんなで記念写真を撮れる機能がほしい。',
-  },
-  {
-    id: 'love',
-    label: 'ここが好き',
-    note: '開発チームの燃料になります。',
-    icon: icon.heart,
-    placeholder: '好きなところを、好きなだけ。\n例）灯の旅路の宿屋のBGMが、ずっと聴いていられる。',
-  },
-  {
-    id: 'other',
-    label: 'そのほか',
-    note: 'なんでもどうぞ。',
-    icon: icon.mail,
-    placeholder: 'ご質問、取材のご相談、そのほか何でもどうぞ。',
-  },
-] as const;
-
-export const SEVERITY = [
-  '気のせいかも',
-  'ちょっと気になる',
-  'けっこう困る',
-  '進めない',
-  '世界がバグってる',
-] as const;
+const TYPE_ICON: Record<(typeof REQUEST_TYPES)[number]['id'], string> = {
+  bug: icon.bug,
+  idea: icon.idea,
+  love: icon.heart,
+  other: icon.mail,
+};
 
 export function requestBody(_ctx: RenderCtx): string {
   return `
@@ -47,10 +16,11 @@ export function requestBody(_ctx: RenderCtx): string {
     <section class="req-hero container">
       <p class="eyebrow" data-reveal><span>REQUEST</span><span>ご要望・バグ報告</span></p>
       <h1 class="req-title" data-reveal>
-        <span>見つけたバグは、</span>
+        <span>${ph('見つけたバグは、')}</span>
         <span><em>あなたの手柄</em>です。</span>
       </h1>
-      <p class="req-lead" data-reveal>バグの報告も、「こうしたらいいやん」も、「ここが好き」も。<br class="pc" />ここから送った声は、開発チームに直接届きます。全部読みます。次のアップデートは、ここから生まれます。</p>
+      <p class="req-lead" data-reveal>${ph('バグの報告も、「こうしたらいいやん」も、「ここが好き」も。')}<br class="pc" />${ph('ここから送った声は、開発チームに直接届きます。全部読みます。次のアップデートは、ここから生まれます。')}</p>
+      <div class="req-hero__bot" data-reveal>${botHtml('mic', { note: 'ご用件をどうぞ！', line: 'マイク、オン！｜どんな声でも、届けるよ！' })}</div>
       <ol class="req-steps" data-reveal aria-label="送るまでの流れ">
         <li><b>01</b>用件をえらぶ</li>
         <li><b>02</b>作品をえらぶ</li>
@@ -68,7 +38,7 @@ export function requestBody(_ctx: RenderCtx): string {
             <label class="type" data-sfx>
               <input type="radio" name="type" value="${t.id}"${i === 0 ? ' checked' : ''} />
               <span class="type__box">
-                <span class="type__icon">${t.icon}</span>
+                <span class="type__icon">${TYPE_ICON[t.id]}</span>
                 <span class="type__label">${t.label}</span>
                 <span class="type__note">${t.note}</span>
               </span>
@@ -152,6 +122,10 @@ export function requestBody(_ctx: RenderCtx): string {
             <div><dt>作品</dt><dd data-ticket-game></dd></div>
           </dl>
           <p class="ticket__msg">開発チームに届きました。<br />ありがとうございます！</p>
+        </div>
+        <div class="ticket__crew">
+          ${crewHtml()}
+          <p class="ticket__thanks">${ph('ちびロボ一同、よろこんでいます。')}</p>
         </div>
         <div class="ticket__actions">
           <button type="button" class="btn btn--ghost" data-ticket-again data-sfx><span>もうひとつ送る</span>${icon.arrow}</button>

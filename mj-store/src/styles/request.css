@@ -600,3 +600,49 @@
     font-size: 15px;
   }
 }
+
+/* ちびロボ */
+.req-hero {
+  position: relative;
+}
+.req-hero__bot {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 0;
+}
+.req-hero__bot .bot {
+  --bot-w: clamp(64px, 8vw, 100px);
+}
+.req-hero__bot .bot__say {
+  left: auto;
+  right: 0;
+  border-radius: 12px 12px 3px 12px;
+}
+.req-hero__bot .bot__say::after {
+  left: auto;
+  right: calc(var(--bot-w) / 2 - 6px);
+}
+@media (max-width: 720px) {
+  .req-hero__bot {
+    position: static;
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 56px;
+  }
+}
+.ticket__crew {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+}
+.ticket__crew .crew {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  --bot-w: 48px;
+}
+.ticket__thanks {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--mute);
+}

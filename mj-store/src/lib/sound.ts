@@ -1,17 +1,31 @@
 import { local } from './storage';
 
 /**
- * 効果音。音源ファイルは使わず、その場で鳴らしている（だからこれも自社製）。
- * 初期状態はオフ。ヘッダーのスピーカーで切り替える。
+ * 効果音。音源ファイルは使わず、その場で鳴らしている。
+ * 初期状態はオン（オフにした人だけ、その設定を覚えておく）。ヘッダーのスピーカーで切り替える。
+ * ブラウザの決まりで、最初に画面を押すまでは鳴らない。
  */
 
 const KEY = 'mjstore:sound';
 let ac: AudioContext | null = null;
 let master: GainNode | null = null;
-let enabled = local.get(KEY) === '1';
+let enabled = local.get(KEY) !== '0';
+/** 一度でも押した・キーを打ったか。それまでは音の準備もしない */
+let gestured = false;
 const listeners = new Set<(on: boolean) => void>();
 
+if (typeof window !== 'undefined') {
+  const mark = () => {
+    gestured = true;
+    window.removeEventListener('pointerdown', mark, true);
+    window.removeEventListener('keydown', mark, true);
+  };
+  window.addEventListener('pointerdown', mark, true);
+  window.addEventListener('keydown', mark, true);
+}
+
 function ensure(): AudioContext | null {
+  if (!gestured) return null;
   if (!ac) {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return null;
@@ -70,6 +84,20 @@ export const sfx = {
   },
   send() {
     [784, 988, 1175, 1568].forEach((f, i) => tone(f, 0.12, 'square', 0.12, i * 0.06));
+  },
+  /** ちびロボの声。5体それぞれ高さが違う */
+  bot(i: number) {
+    const base = [880, 587.33, 659.25, 783.99, 1046.5][i % 5];
+    tone(base, 0.06, 'square', 0.12);
+    tone(base * 1.5, 0.08, 'square', 0.1, 0.06);
+    tone(base * 1.26, 0.1, 'triangle', 0.12, 0.13);
+  },
+  menu(open: boolean) {
+    if (open) [523.25, 783.99].forEach((f, i) => tone(f, 0.08, 'square', 0.11, i * 0.05));
+    else [783.99, 523.25].forEach((f, i) => tone(f, 0.07, 'square', 0.09, i * 0.04));
+  },
+  tick() {
+    tone(1318.5, 0.025, 'square', 0.06);
   },
 };
 

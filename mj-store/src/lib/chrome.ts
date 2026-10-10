@@ -6,6 +6,7 @@ import {
   unlock,
 } from './achievements';
 import { onSoundChange, setSound, sfx, soundOn } from './sound';
+import { shuffleMenuBots } from './robots';
 import { listenKonami } from './town';
 
 /** ヘッダー・メニュー・実績・サウンド・フッターなど、全ページ共通の動き */
@@ -27,11 +28,14 @@ function initMenu(): void {
   const btn = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
   const sheet = document.querySelector<HTMLElement>('[data-menu-sheet]');
   if (!btn || !sheet) return;
+  const items = Array.from(sheet.querySelectorAll<HTMLElement>('.cmd__item, .menu-games a'));
   const set = (open: boolean) => {
     btn.setAttribute('aria-expanded', String(open));
     btn.setAttribute('aria-label', open ? 'メニューを閉じる' : 'メニューを開く');
     document.documentElement.classList.toggle('menu-open', open);
+    sfx.menu(open);
     if (open) {
+      shuffleMenuBots(sheet);
       sheet.hidden = false;
       requestAnimationFrame(() => sheet.classList.add('is-open'));
     } else {
@@ -46,7 +50,16 @@ function initMenu(): void {
     if ((e.target as HTMLElement).closest('a')) set(false);
   });
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') set(false);
+    if (btn.getAttribute('aria-expanded') !== 'true') return;
+    if (e.key === 'Escape') set(false);
+    /* ゲームのメニューのように、↑↓でカーソルを動かす */
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      const at = items.indexOf(document.activeElement as HTMLElement);
+      const next = items[(at + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length];
+      next?.focus();
+      sfx.tick();
+    }
   });
 }
 
@@ -105,9 +118,8 @@ function initSound(): void {
   paint(soundOn());
   onSoundChange(paint);
   btn.addEventListener('click', () => {
-    const next = !soundOn();
-    setSound(next);
-    if (next) unlock('sound');
+    setSound(!soundOn());
+    unlock('sound');
   });
 }
 

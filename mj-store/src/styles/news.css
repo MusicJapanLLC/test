@@ -1,0 +1,94 @@
+/* ═══════════ お知らせ・更新 ═══════════ */
+
+.page-hero {
+  position: relative;
+  padding-top: calc(var(--header-h) + clamp(32px, 6vw, 80px));
+  padding-bottom: clamp(24px, 4vw, 48px);
+}
+.page-hero .crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: clamp(28px, 4vw, 48px);
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--mute);
+}
+.page-hero .crumbs a:hover {
+  color: var(--text);
+}
+.page-hero .crumbs span[aria-current] {
+  font-family: var(--font);
+  letter-spacing: 0.04em;
+  color: var(--text);
+}
+.page-hero__title {
+  margin-top: 16px;
+  font-size: clamp(40px, 7vw, 96px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.page-hero__lead {
+  max-width: 34em;
+  margin-top: 18px;
+  color: var(--mute);
+}
+.page-hero__bots {
+  position: absolute;
+  right: var(--gutter);
+  bottom: clamp(24px, 4vw, 48px);
+  display: flex;
+  align-items: flex-end;
+  gap: 18px;
+  --bot-w: clamp(56px, 7vw, 84px);
+}
+.page-hero__bots .bot:first-child .bot__say {
+  bottom: calc(100% + 54px);
+  left: auto;
+  right: -40px;
+  border-radius: 12px 12px 3px 12px;
+}
+.page-hero__bots .bot:first-child .bot__say::after {
+  left: auto;
+  right: calc(var(--bot-w) / 2 + 34px);
+}
+@media (max-width: 860px) {
+  .page-hero__bots {
+    position: static;
+    justify-content: flex-end;
+    margin-top: 64px;
+  }
+  .page-hero__bots .bot:first-child .bot__say {
+    bottom: calc(100% + 6px);
+    right: auto;
+    left: 0;
+    border-radius: 12px 12px 12px 3px;
+  }
+  .page-hero__bots .bot:first-child .bot__say::after {
+    left: calc(var(--bot-w) / 2 - 6px);
+    right: auto;
+  }
+  /* 吹き出しが重ならないよう、スマホでは押したときだけ */
+  .page-hero__bots .bot:last-child:not(.is-talking) .bot__say {
+    display: none;
+  }
+}
+
+.news-page .chips {
+  position: sticky;
+  top: calc(var(--header-h) + 8px);
+  z-index: 5;
+  padding: 10px 0;
+}
+.news-sec {
+  margin-top: clamp(48px, 6vw, 80px);
+}
+.news-sec > * {
+  max-width: 1040px;
+}
+.news-sec__empty {
+  margin-top: 24px;
+  color: var(--mute);
+}

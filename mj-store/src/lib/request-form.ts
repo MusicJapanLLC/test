@@ -1,5 +1,5 @@
 import { games } from '../data/games';
-import { REQUEST_TYPES, SEVERITY } from '../render/request';
+import { REQUEST_TYPES, SEVERITY } from '../data/request';
 import { unlock } from './achievements';
 import { sfx } from './sound';
 import { submitRequest, type RequestPayload } from './submit';

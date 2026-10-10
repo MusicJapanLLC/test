@@ -1,3 +1,4 @@
+import { loadDefaultJapaneseParser } from 'budoux';
 import type { Game, Platform, Shot } from '../data/types';
 
 export interface RenderCtx {
@@ -13,6 +14,14 @@ export const esc = (s: string): string =>
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+
+const budoux = loadDefaultJapaneseParser();
+
+/**
+ * 見出し・題名用。文節の切れ目にだけ <wbr> を入れる。
+ * CSS の word-break: keep-all と組み合わせて、「ここ／にある」のような途中の改行を防ぐ（iPhone の Safari でも効く）
+ */
+export const ph = (s: string): string => budoux.parse(s).map(esc).join('<wbr>');
 
 export const pad2 = (n: number): string => String(n).padStart(2, '0');
 

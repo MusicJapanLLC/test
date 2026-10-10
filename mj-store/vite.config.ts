@@ -6,6 +6,7 @@ import { site } from './src/data/site';
 import { gameBody, gameJsonLd } from './src/render/game';
 import { footerHtml, headerHtml, headHtml, type NavKey, type PageMeta } from './src/render/layout';
 import { libraryBody } from './src/render/library';
+import { newsBody } from './src/render/news';
 import { notFoundBody } from './src/render/notfound';
 import { faqJsonLd } from './src/render/parts';
 import { requestBody } from './src/render/request';
@@ -81,12 +82,12 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
   if (rel === 'index.html') {
     return {
       meta: {
-        title: `${site.name}｜音楽も、物語も、システムも。ぜんぶ自社製のゲームストア`,
+        title: `${site.name}｜Music Japanのゲームストア ─ ブラウザで遊べる基本無料のゲーム`,
         description: desc,
         path: '/',
         themeColor: '#0C0C0E',
         image: 'og/store.jpg',
-        imageAlt: 'MJ STORE ── 音楽も、物語も、システムも。ぜんぶ自社製のゲームストア',
+        imageAlt: 'MJ STORE ── Music Japanのゲームストア',
         preloadImage: games[0] ? heroBgShot(games[0])?.src : undefined,
         jsonLd: [itemList(ctx), faqJsonLd([...site.faq], `${ctx.siteUrl}/`)],
       },
@@ -152,6 +153,41 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
       nav: 'request',
       body: requestBody(ctx),
       bodyAttrs: 'class="page page-request"',
+    };
+  }
+
+  if (rel === 'news/index.html') {
+    const url = abs(ctx, 'news/');
+    return {
+      meta: {
+        title: `お知らせ・アップデート情報｜${games.map((g) => g.title).join('・')} - ${site.name}`,
+        description: `MJ STOREと全作品（${games.map((g) => g.title).join('、')}）のお知らせと、バージョン履歴（アップデート内容）をまとめて読めるページです。`,
+        path: '/news/',
+        themeColor: '#0C0C0E',
+        image: 'og/store.jpg',
+        imageAlt: 'MJ STORE お知らせ・更新',
+        jsonLd: [
+          {
+            '@type': 'CollectionPage',
+            '@id': `${url}#page`,
+            name: 'お知らせ・更新',
+            url,
+            dateModified: storeUpdated(),
+            about: { '@id': `${ctx.siteUrl}/#website` },
+            hasPart: games.map((g) => ({ '@id': `${abs(ctx, `games/${g.slug}/`)}#game` })),
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: site.name, item: `${ctx.siteUrl}/` },
+              { '@type': 'ListItem', position: 2, name: 'お知らせ・更新', item: url },
+            ],
+          },
+        ],
+      },
+      nav: 'news',
+      body: newsBody(ctx),
+      bodyAttrs: 'class="page page-news"',
     };
   }
 
@@ -238,6 +274,7 @@ ${games
 
 - [ストア](${ctx.siteUrl}/): 特集・全作品・お知らせ・バージョン履歴
 - [作品一覧](${abs(ctx, 'games/')}): すべての作品
+- [お知らせ・更新](${abs(ctx, 'news/')}): ストアと全作品のお知らせ、全作品のバージョン履歴
 - [ご要望・バグ報告](${abs(ctx, 'request/')}): バグの報告、提案、感想を開発チームへ送る窓口
 
 ## Optional
@@ -324,6 +361,7 @@ function mjSeoFiles(ctx: RenderCtx): Plugin {
           images: games.flatMap((g) => (g.shots[0] ? [{ loc: abs(ctx, g.shots[0].src), title: g.shots[0].alt }] : [])),
         },
         { path: '/games/', lastmod: storeUpdated(), images: [] },
+        { path: '/news/', lastmod: storeUpdated(), images: [] },
         { path: '/request/', lastmod: storeUpdated(), images: [] },
         ...games.map((g) => ({
           path: `/games/${g.slug}/`,
@@ -383,6 +421,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: resolve(root, 'index.html'),
           library: resolve(root, 'games', 'index.html'),
+          news: resolve(root, 'news', 'index.html'),
           request: resolve(root, 'request', 'index.html'),
           notfound: resolve(root, '404.html'),
           ...Object.fromEntries(

@@ -105,7 +105,9 @@ export const games: Game[] = [
       ambient: 'fireflies',
     },
     device: 'browser',
-    cardFocus: '72% 50%',
+    cardShot: 1,
+    cardFocus: '50% 50%',
+    bot: { id: 'pod', line: '…夜の灯り、悪くない。ヘッドホンで遊んでみて' },
     shots: [
       wide('world', '01-title', 'The World のタイトル画面。川と村、雨晶の並ぶ草原を見下ろすドット絵の世界', 'タイトル'),
       wide('world', '02-field', 'はじまりの草原。焚き火と宝箱のそばに立つ旅人、川辺に並ぶ青い雨晶', 'はじまりの草原'),
@@ -212,7 +214,8 @@ export const games: Game[] = [
       ambient: 'lanterns',
     },
     device: 'phone',
-    cardFocus: '50% 40%',
+    cardFocus: '50% 60%',
+    bot: { id: 'tune', line: '王道RPG、大好き！ 仲間集め、たのしいよ！' },
     shots: [
       {
         ...phone('lantern', '01-title', '灯の旅路のタイトル画面。夕日の海と港町を見下ろす、旅立ちの一行', 'タイトル'),
@@ -332,7 +335,9 @@ export const games: Game[] = [
       ambient: 'leaves',
     },
     device: 'phone',
-    cardFocus: '50% 30%',
+    cardShot: 1,
+    cardFocus: '50% 45%',
+    bot: { id: 'spin', line: '村長…世界まで…行っちゃった…。ついてく…' },
     shots: [
       phone('mayor', '01-title', '村長、世界まで行くんですか？のタイトル画面。辞令の書類と、家を荷車に積んで引っ越す住民たち', 'タイトル'),
       phone('mayor', '02-village', '昼の村。焚き火の就任所と、まわりの森に立つ村長', '辞令だけは立派な村'),
@@ -431,7 +436,8 @@ export const games: Game[] = [
       ambient: 'embers',
     },
     device: 'phone',
-    cardFocus: '50% 32%',
+    cardFocus: '50% 46%',
+    bot: { id: 'mic', line: 'いいねで強くなるって、最高じゃない？' },
     shots: [
       phone('guild', '01-title', 'ギルドの灯のタイトル画面。山あいの町にそびえる、灯りのともるギルドの塔', 'タイトル'),
       phone('guild', '02-guild', 'ギルドの断面図。依頼に出発する冒険者と、受付のリナ', '断面図のギルド'),
@@ -491,6 +497,9 @@ export const games: Game[] = [
 export function statusOf(g: Game): GameStatus {
   return g.status ?? (g.playUrl ? 'live' : 'soon');
 }
+
+/** カード・メニュー・一覧に使う絵 */
+export const cardArt = (g: Game) => g.shots[g.cardShot ?? 0] ?? g.shots[0];
 
 export const STATUS_LABEL: Record<GameStatus, string> = {
   live: '配信中',

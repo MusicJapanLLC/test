@@ -26,3 +26,19 @@
   justify-content: center;
   margin-top: 32px;
 }
+.lost__bot {
+  display: flex;
+  justify-content: center;
+  margin-top: 64px;
+}
+.lost__bot .bot {
+  --bot-w: 72px;
+}
+.lost__bot .bot__say {
+  left: 50%;
+  translate: -50% 0;
+  border-radius: 12px;
+}
+.lost__bot .bot__say::after {
+  left: calc(50% - 6px);
+}

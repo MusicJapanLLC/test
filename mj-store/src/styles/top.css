@@ -148,48 +148,6 @@
 
 /* ───── 名乗り（h1） ───── */
 
-.store-intro {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 6px 24px;
-  max-width: var(--max);
-  margin-inline: auto;
-  padding: calc(var(--header-h) + 10px) var(--gutter) 14px;
-}
-.store-intro__title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px 14px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--mute);
-  text-wrap: wrap;
-}
-.store-intro__name {
-  font-family: var(--display);
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  color: var(--text);
-}
-.store-intro__meta {
-  font-family: var(--display);
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--dim);
-}
-.store-intro__meta b {
-  color: var(--accent);
-  font-size: 13px;
-}
-.store-intro__meta i {
-  margin: 0 8px;
-  font-style: normal;
-  opacity: 0.5;
-}
-
 /* ───── 特集カルーセル ───── */
 
 .feature {
@@ -198,7 +156,7 @@
   gap: 16px;
   max-width: calc(var(--max) + 0px);
   margin-inline: auto;
-  padding: 0 var(--gutter);
+  padding: calc(var(--header-h) + 12px) var(--gutter) 0;
 }
 .feature__stage {
   position: relative;
@@ -528,13 +486,51 @@
   }
 }
 @media (max-width: 720px) {
-  .store-intro__meta {
+  /* スマホ：実機は上、文字は下。高さから実機の大きさを決めて、文字と重ならないようにする */
+  .feature__stage {
+    --stage-h: max(600px, min(calc(100svh - var(--header-h) - 120px), 720px));
+    height: var(--stage-h);
+    border-radius: 22px;
+  }
+  .slide__device,
+  .slide.is-active .slide__device {
+    top: 18px;
+    --device-w: clamp(112px, calc((var(--stage-h) - 360px) / 2.2), 168px);
+  }
+  .slide--browser .slide__device,
+  .slide--browser.is-active .slide__device {
+    top: 22px;
+    --device-w: min(84vw, 360px);
+  }
+  .slide__body {
+    padding: 22px;
+  }
+  .slide__genre {
     display: none;
   }
-  .feature__stage {
-    height: min(calc(100svh - var(--header-h) - 110px), 760px);
-    min-height: 600px;
-    border-radius: 22px;
+  .slide__title {
+    margin-top: 12px;
+    font-size: 17px;
+  }
+  .slide__note {
+    margin-top: 8px;
+    font-size: 13px;
+  }
+  .slide__cta {
+    flex-wrap: nowrap;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  .slide__cta .price-chip {
+    flex: none;
+  }
+  .slide__cta .price-chip span {
+    display: none;
+  }
+  .slide__cta .price-chip::after {
+    content: '無料';
+    font-size: 12px;
+    font-weight: 700;
   }
   .slide__shade {
     background:
@@ -547,44 +543,11 @@
     display: none;
   }
   .slide__cta .btn {
-    min-height: 48px;
-    padding: 0 20px;
-    font-size: 14px;
+    min-height: 46px;
+    padding: 0 16px;
+    font-size: 13px;
+    white-space: nowrap;
   }
-}
-
-/* ───── ティッカー ───── */
-
-.ticker {
-  margin-top: clamp(48px, 7vw, 96px);
-  padding: 18px 0;
-  border-block: 1px solid var(--line);
-  overflow: hidden;
-  white-space: nowrap;
-}
-.ticker__track {
-  display: inline-flex;
-  align-items: center;
-  animation: marquee 36s linear infinite;
-}
-.ticker span {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 14px;
-  padding: 0 28px;
-  font-size: clamp(22px, 3vw, 40px);
-  font-weight: 900;
-}
-.ticker b {
-  font-family: var(--display);
-  font-weight: 800;
-  color: transparent;
-  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.55);
-}
-.ticker i {
-  font-style: normal;
-  color: var(--accent);
-  font-size: 0.8em;
 }
 
 /* ───── 棚 ───── */
@@ -601,128 +564,118 @@
   gap: clamp(40px, 6vw, 96px);
   margin-top: clamp(80px, 10vw, 140px);
 }
-.updates__note {
-  margin-top: 16px;
-  font-size: 12px;
-  color: var(--dim);
-}
 @media (max-width: 900px) {
   .updates {
     grid-template-columns: 1fr;
   }
 }
 
-/* ───── 自社製 ───── */
+/* ───── 店員（ちびロボ）と数字 ───── */
 
-.made {
+.crew-sec {
   position: relative;
-  margin-top: clamp(96px, 12vw, 180px);
-  padding-block: clamp(80px, 10vw, 150px);
-  overflow: hidden;
+  margin-top: clamp(96px, 12vw, 160px);
+  padding-block: clamp(64px, 9vw, 120px);
   background:
-    radial-gradient(50% 60% at 85% 10%, rgba(255, 77, 46, 0.16), transparent 70%),
-    radial-gradient(40% 50% at 0% 100%, rgba(255, 181, 71, 0.1), transparent 70%),
-    var(--bg-2);
+    radial-gradient(60% 80% at 50% 100%, rgba(255, 77, 46, 0.12), transparent 70%),
+    linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.02));
   border-block: 1px solid var(--line);
+  overflow: hidden;
 }
-.made::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
-  background-size: 64px 64px;
-  mask-image: radial-gradient(70% 70% at 50% 40%, #000, transparent);
-  pointer-events: none;
-}
-.made .container {
-  position: relative;
-}
-.made__title {
-  display: grid;
-  margin-top: 28px;
-  font-size: clamp(36px, 6.4vw, 104px);
-  font-weight: 900;
-  line-height: 1.08;
-  letter-spacing: -0.02em;
-}
-.made__line--big {
-  margin-top: 0.12em;
-  font-size: 1.32em;
-}
-.made__title em {
-  font-style: normal;
-  color: var(--accent);
-  background: linear-gradient(transparent 72%, rgba(255, 77, 46, 0.22) 72%);
-}
-.made__lead {
-  max-width: 640px;
-  margin-top: 32px;
-  font-size: clamp(15px, 1.3vw, 18px);
-  font-weight: 500;
+.crew-sec__lead {
+  max-width: 40em;
+  margin-top: -12px;
   color: var(--mute);
 }
-.made__pillars {
+.crew-sec__list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  margin-top: clamp(48px, 6vw, 88px);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(10px, 2vw, 24px);
+  margin-top: clamp(40px, 6vw, 72px);
 }
-.pillar {
-  position: relative;
-  padding: 32px 28px 30px;
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.025);
+.crew-card {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 8px;
+  padding: 28px 14px 22px;
+  border-radius: 20px;
+  background: var(--card);
   border: 1px solid var(--line);
+  text-align: center;
   transition:
     border-color 0.3s,
-    transform 0.5s var(--ease);
+    transform 0.4s var(--ease);
 }
-.pillar:hover {
-  border-color: rgba(255, 77, 46, 0.5);
+.crew-card:hover {
   transform: translateY(-4px);
+  border-color: var(--line-2);
 }
-.pillar__icon {
-  display: grid;
-  place-items: center;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  background: rgba(255, 77, 46, 0.12);
-  color: var(--accent);
-  font-size: 26px;
+.crew-card .bot {
+  --bot-w: clamp(64px, 7vw, 92px);
+  margin-bottom: 6px;
 }
-.pillar__en {
-  margin-top: 26px;
-  font-family: var(--display);
-  font-size: 11px;
-  letter-spacing: 0.24em;
-  color: var(--dim);
+.crew-card .bot__say {
+  left: 50%;
+  translate: -50% 0;
+  border-radius: 12px;
 }
-.pillar__ja {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-top: 4px;
-  font-size: 26px;
-  font-weight: 900;
+.crew-card .bot__say::after {
+  left: calc(50% - 6px);
 }
-.pillar__ja span {
+.crew-card__role {
+  font-family: 'Silkscreen', var(--mono);
   font-size: 12px;
-  font-weight: 700;
-  color: var(--accent);
-  white-space: nowrap;
+  letter-spacing: 0.12em;
+  color: var(--crew, var(--accent));
 }
-.pillar__body {
-  margin-top: 12px;
-  font-size: 14px;
+.crew-card--tune {
+  --crew: #ff2e3e;
+}
+.crew-card--spin {
+  --crew: #ffb43d;
+}
+.crew-card--pod {
+  --crew: #3fd8ff;
+}
+.crew-card--reel {
+  --crew: #7dff8e;
+}
+.crew-card--mic {
+  --crew: #ff7ad8;
+}
+.crew-card__body {
+  font-size: 12px;
+  line-height: 1.7;
   color: var(--mute);
+}
+@media (max-width: 900px) {
+  .crew-sec__list {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .crew-card {
+    grid-column: span 2;
+  }
+  .crew-card:nth-child(4) {
+    grid-column: 2 / span 2;
+  }
+}
+@media (max-width: 560px) {
+  .crew-sec__list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .crew-card,
+  .crew-card:nth-child(4) {
+    grid-column: auto;
+  }
+  .crew-card:last-child {
+    grid-column: 1 / -1;
+  }
 }
 .made__stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  margin-top: clamp(48px, 6vw, 80px);
+  margin-top: clamp(48px, 7vw, 88px);
   border-top: 1px solid var(--line);
 }
 .stat {
@@ -759,9 +712,6 @@
   color: var(--accent);
 }
 @media (max-width: 900px) {
-  .made__pillars {
-    grid-template-columns: 1fr;
-  }
   .made__stats {
     grid-template-columns: 1fr 1fr;
   }

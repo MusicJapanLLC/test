@@ -3,6 +3,7 @@ import { initAmbient } from '../lib/ambient';
 import { initDevices, initLightbox } from '../lib/device';
 import { initChrome } from '../lib/chrome';
 import { initCountUp, initReveal, initTilt } from '../lib/motion';
+import { initRobots } from '../lib/robots';
 
 /** 全ページ共通の起動処理 */
 export function startPage(): void {
@@ -14,4 +15,5 @@ export function startPage(): void {
   initReveal();
   initTilt();
   initCountUp();
+  initRobots();
 }

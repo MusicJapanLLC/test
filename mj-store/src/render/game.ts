@@ -1,6 +1,7 @@
 import { faqOf, games, statusOf } from '../data/games';
 import { site } from '../data/site';
 import type { Game } from '../data/types';
+import { botHtml } from './brand';
 import { faqHtml, faqJsonLd, gameCard, requestBand, statusBadge } from './parts';
 import {
   abs,
@@ -13,6 +14,7 @@ import {
   href,
   icon,
   pad2,
+  ph,
   platformsHtml,
   heroBgShot,
   shotImg,
@@ -42,11 +44,11 @@ function heroHtml(ctx: RenderCtx, g: Game): string {
         <span aria-current="page">${esc(g.title)}</span>
       </nav>
       <div class="g-hero__head">
-        <p class="g-hero__title">${esc(g.title)}<small>${esc(g.titleEn)}</small></p>
+        <p class="g-hero__title">${ph(g.title)}<small>${esc(g.titleEn)}</small></p>
         ${statusBadge(g)}
       </div>
       <h1 class="g-hero__catch catch"><span class="sr">${esc(g.title)}｜</span>${catchHtml(g.catch)}</h1>
-      <p class="g-hero__note">${esc(g.catchNote)}</p>
+      <p class="g-hero__note">${ph(g.catchNote)}</p>
       <div class="g-hero__buy" data-buy-anchor>
         ${playButton(g)}
         <div class="price">
@@ -76,7 +78,7 @@ function aboutHtml(g: Game): string {
     </header>
     <div class="g-about__grid">
       <div class="g-about__text" data-reveal>
-        <p class="g-about__lead">${esc(g.lead)}</p>
+        <p class="g-about__lead">${ph(g.lead)}</p>
         ${g.description.map((p) => `<p>${esc(p)}</p>`).join('')}
         <ul class="tags">${g.tags.map((t) => `<li>#${esc(t)}</li>`).join('')}</ul>
       </div>
@@ -85,6 +87,7 @@ function aboutHtml(g: Game): string {
         ${stars()}
         <p class="review__quote">「${esc(g.review)}」</p>
         <p class="review__by">── 開発チーム調べ</p>
+        <div class="review__bot">${botHtml(g.bot.id, { note: g.bot.line })}</div>
         <dl class="facts">
           ${facts.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}
         </dl>
@@ -141,7 +144,7 @@ function featuresHtml(g: Game): string {
           <span class="feat__name">${esc(g.title)} 公式<small>@${esc(g.slug.replace(/-/g, '_'))}</small></span>
         </div>
         <span class="feat__no" data-alt="${KANJI[i] ?? pad2(i + 1)}">${pad2(i + 1)}</span>
-        <h3 class="feat__title">${esc(f.title)}</h3>
+        <h3 class="feat__title">${ph(f.title)}</h3>
         <p class="feat__body">${esc(f.body)}</p>
         <div class="feat__actions" aria-hidden="true">
           <span>${icon.reply}返信</span><span>${icon.repost}リポスト</span><span class="is-liked">${icon.heart}いいね</span>
@@ -167,7 +170,7 @@ function logHtml(ctx: RenderCtx, g: Game): string {
             (n) => `
         <li class="g-news__item" data-reveal>
           <p class="g-news__meta"><time datetime="${n.date}">${dot(n.date)}</time><span class="g-news__tag">${esc(n.tag)}</span></p>
-          <p class="g-news__title">${esc(n.title)}</p>
+          <p class="g-news__title">${ph(n.title)}</p>
           ${n.body ? `<p class="g-news__body">${esc(n.body)}</p>` : ''}
         </li>`,
           )
@@ -178,6 +181,7 @@ function logHtml(ctx: RenderCtx, g: Game): string {
       <header class="g-head" data-reveal>
         <p class="g-head__en">VERSION HISTORY</p>
         <h2 class="g-head__ja">バージョン履歴</h2>
+        <div class="g-head__bot">${botHtml('reel', { note: `最新は ${g.currentVersion}`, line: '更新、ぜんぶ記録してるよ｜アーカイブ完了！' })}</div>
       </header>
       <ol class="vers" data-versions>
         <li class="ver ver--next" data-reveal>
@@ -189,8 +193,8 @@ function logHtml(ctx: RenderCtx, g: Game): string {
           .map(
             (v, i) => `
         <li class="ver${i === 0 ? ' is-latest' : ''}" data-reveal>
-          <p class="ver__head"><span class="ver__no">${esc(v.version)}</span><time class="ver__date" datetime="${v.date}">${dot(v.date)}</time>${i === 0 ? '<span class="ver__latest">LATEST</span>' : ''}</p>
-          <p class="ver__title">${esc(v.title)}</p>
+          <p class="ver__head"><span class="ver__no">${esc(v.version)}</span>${v.version === dot(v.date) ? '' : `<time class="ver__date" datetime="${v.date}">${dot(v.date)}</time>`}${i === 0 ? '<span class="ver__latest">LATEST</span>' : ''}</p>
+          <p class="ver__title">${ph(v.title)}</p>
           <ul class="ver__notes">${v.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>
         </li>`,
           )
@@ -256,7 +260,7 @@ function moreHtml(ctx: RenderCtx, g: Game): string {
     <div class="container">
       <header class="sec-head" data-reveal>
         <p class="eyebrow"><span>MORE</span><span>ほかの作品</span></p>
-        <h2 class="sec-title">こちらも、自社製です。</h2>
+        <h2 class="sec-title">${ph('ほかの作品も、遊んでみて。')}</h2>
         <a class="link-more" href="${href(ctx, 'games/')}" data-sfx><span>作品一覧へ</span>${icon.arrow}</a>
       </header>
       <ul class="shelf__grid">${others.map((o, i) => gameCard(ctx, o, i)).join('')}</ul>

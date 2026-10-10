@@ -1,6 +1,7 @@
-import { games } from '../data/games';
+import { cardArt, games } from '../data/games';
 import { site } from '../data/site';
-import { abs, esc, gameHref, href, icon, type RenderCtx } from './util';
+import { BOT_IDS, botHtml, brandDefs, logoHtml, musicJapanLogo, type BotId } from './brand';
+import { abs, esc, gameHref, href, icon, ph, shotImg, type RenderCtx } from './util';
 
 export const FONT_HREF =
   'https://fonts.googleapis.com/css2?' +
@@ -11,6 +12,7 @@ export const FONT_HREF =
     'family=DotGothic16',
     'family=Shippori+Mincho+B1:wght@700;800',
     'family=Cinzel:wght@600;700',
+    'family=Silkscreen:wght@400;700',
   ].join('&') +
   '&display=swap';
 
@@ -99,32 +101,44 @@ export function headHtml(ctx: RenderCtx, m: PageMeta): string {
     <script type="application/ld+json">${JSON.stringify(graph).replace(/</g, '\\u003c')}</script>`.trim();
 }
 
-export type NavKey = 'store' | 'library' | 'request' | null;
+export type NavKey = 'store' | 'library' | 'news' | 'request' | null;
+
+/** メニューのちびロボのひとこと（開くたびに2〜3体が出る） */
+const MENU_BOT_NOTE: Record<BotId, string> = {
+  tune: 'どこ行く？',
+  spin: 'ねむ…どれでも…',
+  pod: '…音はオンで',
+  reel: '更新はNEWSに',
+  mic: 'ご要望もどうぞ！',
+};
 
 export function headerHtml(ctx: RenderCtx, active: NavKey): string {
   const link = (key: Exclude<NavKey, null>, path: string, ja: string, en: string) =>
     `<a href="${href(ctx, path)}" class="nav-link${active === key ? ' is-active' : ''}"${
       active === key ? ' aria-current="page"' : ''
-    }><span class="nav-link__en">${en}</span><span class="nav-link__ja">${ja}</span></a>`;
+    } data-sfx><span class="nav-link__en">${en}</span><span class="nav-link__ja">${ja}</span></a>`;
+  const cmd = (key: Exclude<NavKey, null>, path: string, ja: string, en: string) =>
+    `<a class="cmd__item${active === key ? ' is-current' : ''}" href="${href(ctx, path)}"${
+      active === key ? ' aria-current="page"' : ''
+    } data-sfx><span class="cmd__cursor" aria-hidden="true"></span><span class="cmd__ja">${ja}</span><span class="cmd__en">${en}</span></a>`;
 
   return `
+  ${brandDefs()}
   <a class="skip" href="#main">本文へ移動</a>
   <header class="chrome" data-chrome>
     <div class="chrome__inner">
-      <a class="logo" href="${href(ctx, '')}" aria-label="MJ STORE トップへ" data-sfx>
-        <span class="logo__mark" aria-hidden="true">MJ</span>
-        <span class="logo__word">STORE</span>
-      </a>
+      ${logoHtml(ctx, { attrs: 'data-sfx' })}
       <nav class="chrome__nav" aria-label="メインメニュー">
         ${link('store', '', 'ストア', 'STORE')}
         ${link('library', 'games/', '作品一覧', 'LIBRARY')}
+        ${link('news', 'news/', 'お知らせ', 'NEWS')}
         ${link('request', 'request/', 'ご要望', 'REQUEST')}
       </nav>
       <div class="chrome__tools">
         <button type="button" class="tool tool--trophy" data-ach-toggle aria-expanded="false" aria-controls="ach-panel" aria-label="実績を見る">
           ${icon.trophy}<span class="tool__count" data-ach-count>0/0</span>
         </button>
-        <button type="button" class="tool tool--sound" data-sound-toggle aria-pressed="false" aria-label="サウンドをオンにする">
+        <button type="button" class="tool tool--sound is-on" data-sound-toggle aria-pressed="true" aria-label="サウンドをオフにする">
           <span class="tool__off">${icon.soundOff}</span><span class="tool__on">${icon.soundOn}</span>
         </button>
         <button type="button" class="tool tool--menu" data-menu-toggle aria-expanded="false" aria-controls="menu-sheet" aria-label="メニューを開く">
@@ -134,46 +148,64 @@ export function headerHtml(ctx: RenderCtx, active: NavKey): string {
     </div>
   </header>
   <div class="ach-panel" id="ach-panel" role="dialog" aria-label="実績" hidden data-ach-panel></div>
-  <div class="menu-sheet" id="menu-sheet" hidden data-menu-sheet>
-    <nav class="menu-sheet__nav" aria-label="メニュー">
-      <a href="${href(ctx, '')}"><small>01</small>ストア</a>
-      <a href="${href(ctx, 'games/')}"><small>02</small>作品一覧</a>
-      <a href="${href(ctx, 'request/')}"><small>03</small>ご要望・バグ報告</a>
-    </nav>
-    <ul class="menu-sheet__games">
-      ${games
-        .map(
-          (g) =>
-            `<li><a href="${gameHref(ctx, g)}" style="--g-accent:${g.theme.accent};font-family:${esc(g.theme.font)}">${esc(g.title)}</a></li>`,
-        )
-        .join('')}
-    </ul>
+  <div class="menu-sheet" id="menu-sheet" hidden data-menu-sheet role="dialog" aria-label="メニュー">
+    <div class="menu-sheet__inner">
+      <p class="menu-sheet__head" aria-hidden="true"><span class="menu-sheet__pause"><i></i><i></i>PAUSE</span><span>MJ STORE</span></p>
+      <nav class="cmd" aria-label="メニュー">
+        ${cmd('store', '', 'ストア', 'STORE')}
+        ${cmd('library', 'games/', '作品一覧', 'LIBRARY')}
+        ${cmd('news', 'news/', 'お知らせ・更新', 'NEWS')}
+        ${cmd('request', 'request/', 'ご要望・バグ報告', 'REQUEST')}
+      </nav>
+      <p class="menu-sheet__label">GAMES</p>
+      <ul class="menu-games">
+        ${games
+          .map(
+            (g) => `
+        <li><a href="${gameHref(ctx, g)}" style="--g-accent:${g.theme.accent}" data-sfx>
+          <span class="menu-games__art">${cardArt(g) ? shotImg(ctx, cardArt(g)!, { cls: 'menu-games__img', style: `object-position:${g.cardFocus}` }) : ''}</span>
+          <span class="menu-games__title" style="font-family:${esc(g.theme.font)}">${ph(g.title)}</span>
+        </a></li>`,
+          )
+          .join('')}
+      </ul>
+      <div class="menu-sheet__foot">
+        <div class="menu-bots" data-bot-menu>${BOT_IDS.map((id) => botHtml(id, { note: MENU_BOT_NOTE[id] })).join('')}</div>
+        <p class="menu-sheet__hint" aria-hidden="true">↑↑↓↓←→←→BA</p>
+      </div>
+    </div>
   </div>
   <div class="toasts" aria-live="polite" data-toasts></div>`;
 }
 
 export function footerHtml(ctx: RenderCtx): string {
-  const word = 'MJ STORE';
   return `
   <footer class="foot" data-foot>
-    <div class="foot__giant" aria-hidden="true"><div class="foot__giant-track">${`<span>${word}</span><i>✦</i>`.repeat(6)}</div></div>
+    <div class="foot__stage">
+      <div class="container foot__stage-inner">
+        <p class="foot__staff">${ph('またのご来店を、お待ちしています。')}</p>
+        <div class="foot__crew">${BOT_IDS.map((id) => botHtml(id)).join('')}</div>
+      </div>
+    </div>
     <div class="foot__grid container">
       <div class="foot__brand">
-        <button type="button" class="logo logo--lg" data-town-tap aria-label="MJ STORE">
-          <span class="logo__mark" aria-hidden="true">MJ</span>
-          <span class="logo__word">STORE</span>
-        </button>
-        <p>音楽も、物語も、システムも。<br />ぜんぶ自社製のゲームストア。</p>
+        ${logoHtml(ctx, { as: 'button', cls: 'logo--lg', attrs: 'data-town-tap' })}
+        <p>${ph('音楽も、物語も、システムも。')}<br />${ph('Music Japanがつくったゲームが、ぜんぶここに。')}</p>
       </div>
       <nav class="foot__col" aria-label="フッターメニュー">
         <p class="foot__label">MENU</p>
         <a href="${href(ctx, '')}">ストア</a>
         <a href="${href(ctx, 'games/')}">作品一覧</a>
+        <a href="${href(ctx, 'news/')}">お知らせ・更新</a>
         <a href="${href(ctx, 'request/')}">ご要望・バグ報告</a>
+        <a class="foot__corp" href="${esc(site.operator.url)}" target="_blank" rel="noopener">
+          ${musicJapanLogo(ctx, 'foot__corp-logo')}
+          <span class="foot__corp-name">${esc(site.operator.name)}<span class="foot__corp-go" aria-hidden="true">↗</span></span>
+        </a>
       </nav>
       <nav class="foot__col" aria-label="作品">
         <p class="foot__label">GAMES</p>
-        ${games.map((g) => `<a href="${gameHref(ctx, g)}">${esc(g.title)}</a>`).join('')}
+        ${games.map((g) => `<a href="${gameHref(ctx, g)}">${ph(g.title)}</a>`).join('')}
       </nav>
     </div>
     <div class="foot__bottom container">

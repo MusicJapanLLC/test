@@ -14,7 +14,12 @@ export interface NewsItem {
   tag: 'お知らせ' | 'アップデート' | '配信' | 'イベント';
   title: string;
   body?: string;
+  /** 押したときの行き先（サイト内のパス）。作品のお知らせは作品ページへ自動でつながる */
+  href?: string;
 }
+
+/** Music Japan のちびロボ5体（公式サイトと同じドット絵。名前はまだ無い） */
+export type BotId = 'tune' | 'spin' | 'pod' | 'reel' | 'mic';
 
 export interface VersionEntry {
   /** 表示そのまま（例: v0.18 / prototype05 / 2026.10.08） */
@@ -104,8 +109,12 @@ export interface Game {
   theme: GameTheme;
   /** 実機の画面の形。phone なら縦長、browser なら PC のブラウザ */
   device: 'phone' | 'browser';
+  /** カードに使う画面（shots の番号。省略時は1枚目）。タイトル文字が大きい画面は、カードの題名とぶつかるので避ける */
+  cardShot?: number;
   /** カードで切り抜くときの位置（object-position） */
   cardFocus: string;
+  /** ストアページで、ちびロボがひとこと添える */
+  bot: { id: BotId; line: string };
   shots: Shot[];
   news: NewsItem[];
   /** 新しい順に並べる */

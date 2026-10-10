@@ -1,26 +1,29 @@
-import { games } from '../data/games';
+import { cardArt, games } from '../data/games';
 import { site } from '../data/site';
-import { allNews, faqHtml, gameCard, newsList, patchList, priceChip, requestBand } from './parts';
+import type { BotId } from '../data/types';
+import { botHtml, markSvg, wordHtml } from './brand';
+import { allNews, faqHtml, gameCard, newsList, patchList, priceChip, requestBand, secHead } from './parts';
 import {
   catchEm,
   catchHtml,
   deviceHtml,
   esc,
   gameHref,
+  heroBgShot,
   href,
   icon,
   pad2,
+  ph,
   platformsHtml,
-  heroBgShot,
   shotImg,
   themeVars,
   type RenderCtx,
 } from './util';
 
 const BOOT_LINES: [string, string, string][] = [
-  ['MUSIC', '自社製', 'OK'],
-  ['STORY', '自社製', 'OK'],
-  ['SYSTEM', '自社製', 'OK'],
+  ['MUSIC', 'BGM・効果音', 'OK'],
+  ['GAMES', `${games.length} TITLES`, 'OK'],
+  ['ROBOTS', '5体 出勤', 'OK'],
   ['LOVE', '過積載', 'OK'],
 ];
 
@@ -28,9 +31,9 @@ function bootHtml(): string {
   return `
   <div class="boot" data-boot hidden aria-hidden="true">
     <div class="boot__panel">
-      <div class="boot__mark"><span class="logo__mark">MJ</span><span class="boot__word">STORE</span></div>
+      <div class="boot__mark logo logo--boot">${markSvg('logo__mark')}${wordHtml()}</div>
       <ol class="boot__log">
-        <li class="boot__line boot__line--head"><span>MJ STORE SYSTEM</span><span>v1.0</span></li>
+        <li class="boot__line boot__line--head"><span>MJ STORE SYSTEM</span><span>v2.0</span></li>
         ${BOOT_LINES.map(
           ([k, v, ok], i) =>
             `<li class="boot__line" style="--i:${i}"><span class="boot__key">${k}</span><span class="boot__dots"></span><span class="boot__val">${v}</span><span class="boot__ok">[ ${ok} ]</span></li>`,
@@ -56,8 +59,8 @@ function featureHtml(ctx: RenderCtx): string {
         <div class="slide__shade" aria-hidden="true"></div>
         <div class="slide__device">${deviceHtml(ctx, g, { max: 4 })}</div>
         <div class="slide__body">
-          <p class="slide__eyebrow"><span class="slide__badge">FEATURED</span><span>${pad2(i + 1)} / ${pad2(n)}</span><span class="slide__genre">${esc(g.genre)}</span></p>
-          <p class="slide__title">${esc(g.title)}</p>
+          <p class="slide__eyebrow"><span class="slide__badge">FEATURED</span><span class="slide__count">${pad2(i + 1)} / ${pad2(n)}</span><span class="slide__genre">${esc(g.genre)}</span></p>
+          <p class="slide__title">${ph(g.title)}</p>
           <h2 class="slide__catch catch">${catchHtml(g.catch)}</h2>
           <p class="slide__note">${esc(g.catchNote)}</p>
           <div class="slide__cta">
@@ -73,11 +76,12 @@ function featureHtml(ctx: RenderCtx): string {
     </div>
     <ol class="feature__rail" role="tablist" aria-label="作品を選ぶ">
       ${games
-        .map(
-          (g, i) => `
+        .map((g, i) => {
+          const art = cardArt(g);
+          return `
       <li role="presentation">
         <button type="button" class="rail${i === 0 ? ' is-active' : ''}" role="tab" aria-selected="${i === 0}" data-goto="${i}" style="${themeVars(g)}" data-sfx>
-          <span class="rail__thumb">${g.shots[0] ? shotImg(ctx, g.shots[0], { cls: 'rail__img', style: `object-position:${g.cardFocus}` }) : ''}</span>
+          <span class="rail__thumb">${art ? shotImg(ctx, art, { cls: 'rail__img', style: `object-position:${g.cardFocus}` }) : ''}</span>
           <span class="rail__meta">
             <span class="rail__no">${pad2(i + 1)}</span>
             <span class="rail__title">${esc(g.title)}</span>
@@ -85,71 +89,41 @@ function featureHtml(ctx: RenderCtx): string {
           </span>
           <span class="rail__bar" aria-hidden="true"><i></i></span>
         </button>
-      </li>`,
-        )
+      </li>`;
+        })
         .join('')}
     </ol>
   </section>`;
 }
 
-function tickerHtml(): string {
-  const unit = [
-    ['MUSIC', '自社製'],
-    ['STORY', '自社製'],
-    ['SYSTEM', '自社製'],
-    ['LOVE', '自社製'],
-  ]
-    .map(([en, ja]) => `<span><b>${en}</b>${ja}</span><i>✦</i>`)
-    .join('');
-  return `<div class="ticker" aria-hidden="true"><div class="ticker__track">${unit.repeat(4)}</div></div>`;
-}
-
-function madeHtml(): string {
-  const pillars = [
-    {
-      en: 'MUSIC',
-      ja: '音楽',
-      body: 'BGMも、効果音も、ぜんぶ自分たちで鳴らしています。音楽の会社がつくるゲームは、耳から楽しい。',
-      svg: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M12 6h14v4H16v14a5 5 0 1 1-4-4.9z" fill="currentColor"/></svg>',
-    },
-    {
-      en: 'STORY',
-      ja: '物語',
-      body: '引っ越す村長も、灯を探す旅人も、ギルドの受付のリナも。物語はぜんぶ、ここで生まれました。キャラクターは全員、うちの子です。',
-      svg: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 6h10a4 4 0 0 1 2 .6A4 4 0 0 1 18 6h10v20H18a2 2 0 0 0-2 2 2 2 0 0 0-2-2H4z" fill="currentColor"/></svg>',
-    },
-    {
-      en: 'SYSTEM',
-      ja: 'システム',
-      body: 'ゲームの仕組みも、このストアも、自分たちで組み上げました。遊び心の置き場所まで、ぜんぶ設計しています。',
-      svg: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M14 3h4l.7 3.4 2.6 1.1 2.9-1.9 2.8 2.8-1.9 2.9 1.1 2.6L29 14v4l-3.4.7-1.1 2.6 1.9 2.9-2.8 2.8-2.9-1.9-2.6 1.1L18 29h-4l-.7-3.4-2.6-1.1-2.9 1.9-2.8-2.8 1.9-2.9-1.1-2.6L3 18v-4l3.4-.7 1.1-2.6-1.9-2.9 2.8-2.8 2.9 1.9 2.6-1.1zM16 11a5 5 0 1 0 0 10 5 5 0 0 0 0-10z" fill="currentColor"/></svg>',
-    },
+/** ストアの店員：Music Japan のちびロボ5体 */
+function crewSection(): string {
+  const roles: [BotId, string, string][] = [
+    ['tune', '案内係', 'いらっしゃいませ担当。元気だけは負けない。'],
+    ['spin', '夜ふかし係', 'いつも眠そう。プロペラで浮いている。'],
+    ['pod', '音響係', 'ヘッドホンは外さない。BGMにうるさい。'],
+    ['reel', '記録係', '更新は、ぜんぶ覚えている。'],
+    ['mic', '司会係', 'お知らせとご要望の窓口。声が大きい。'],
   ];
   const stats = [
-    { v: '100', u: '%', l: '自社製率' },
-    { v: String(games.length), u: 'TITLES', l: '配信作品数' },
+    { v: String(games.length), u: 'TITLES', l: '配信中の作品' },
     { v: '0', u: '円', l: '全作品 基本プレイ料金', prefix: '¥' },
-    { v: '∞', u: '', l: '作品への愛' },
+    { v: '0', u: '回', l: 'インストール' },
+    { v: '5', u: '体', l: 'ストアの店員' },
   ];
   return `
-  <section class="made" data-made>
+  <section class="crew-sec" data-crew-sec>
     <div class="container">
-      <p class="eyebrow" data-reveal><span>04</span><span>MADE IN MUSIC JAPAN</span></p>
-      <h2 class="made__title" data-reveal>
-        <span class="made__line">音楽も、物語も、</span>
-        <span class="made__line">システムも。</span>
-        <span class="made__line made__line--big">ぜんぶ<em>自社製</em>。</span>
-      </h2>
-      <p class="made__lead" data-reveal>だから、ほかのどこにも売っていない。<br />Music Japanが本気でつくって、本気で好きなゲームだけを並べています。</p>
-      <ul class="made__pillars">
-        ${pillars
+      ${secHead({ no: '04', en: 'STORE CREW', title: 'ストアの店員は、ちびロボです。' })}
+      <p class="crew-sec__lead" data-reveal>${ph('Music Japanのちびロボ5体が、ストアのあちこちで作品を案内しています。')}${ph('見かけたら、押してみてください。しゃべります。')}</p>
+      <ul class="crew-sec__list" data-bot-crew>
+        ${roles
           .map(
-            (p, i) => `
-        <li class="pillar" data-reveal style="--d:${i}">
-          <span class="pillar__icon">${p.svg}</span>
-          <p class="pillar__en">${p.en}</p>
-          <h3 class="pillar__ja">${p.ja}<span>──── 自社製</span></h3>
-          <p class="pillar__body">${p.body}</p>
+            ([id, role, body], i) => `
+        <li class="crew-card crew-card--${id}" data-reveal style="--d:${i}">
+          ${botHtml(id)}
+          <p class="crew-card__role">${role}</p>
+          <p class="crew-card__body">${ph(body)}</p>
         </li>`,
           )
           .join('')}
@@ -173,19 +147,17 @@ export function topBody(ctx: RenderCtx): string {
   return `
   ${bootHtml()}
   <main id="main" class="store">
-    <div class="store-intro">
-      <h1 class="store-intro__title"><span class="store-intro__name">MJ STORE</span><span class="store-intro__tag">音楽も、物語も、システムも。ぜんぶ自社製のゲームストア</span></h1>
-      <p class="store-intro__meta"><b>${games.length}</b> TITLES<i aria-hidden="true">／</i>全作品 基本プレイ無料<i aria-hidden="true">／</i>ブラウザですぐ遊べる</p>
-    </div>
+    <h1 class="sr">${site.name}｜${site.tagline}</h1>
     ${featureHtml(ctx)}
-    ${tickerHtml()}
 
     <section class="shelf container">
-      <header class="sec-head" data-reveal>
-        <p class="eyebrow"><span>01</span><span>ALL TITLES</span></p>
-        <h2 class="sec-title">ぜんぶ、ここにある。</h2>
-        <a class="link-more" href="${href(ctx, 'games/')}" data-sfx><span>作品一覧へ</span>${icon.arrow}</a>
-      </header>
+      ${secHead({
+        no: '01',
+        en: 'ALL TITLES',
+        title: 'ぜんぶ、ここにある。',
+        more: { href: href(ctx, 'games/'), label: '作品一覧へ' },
+        bot: botHtml('tune', { note: '気になる作品、押してみて！' }),
+      })}
       <ul class="shelf__grid">
         ${games.map((g, i) => gameCard(ctx, g, i)).join('')}
       </ul>
@@ -193,29 +165,33 @@ export function topBody(ctx: RenderCtx): string {
 
     <section class="updates container">
       <div class="updates__col">
-        <header class="sec-head sec-head--small" data-reveal>
-          <p class="eyebrow"><span>02</span><span>NEWS</span></p>
-          <h2 class="sec-title">お知らせ</h2>
-        </header>
-        ${newsList(ctx, allNews(games, site.news), 6)}
+        ${secHead({
+          no: '02',
+          en: 'NEWS',
+          title: 'お知らせ',
+          small: true,
+          more: { href: href(ctx, 'news/'), label: 'すべて見る' },
+          bot: botHtml('mic', { note: 'お知らせだよー！' }),
+        })}
+        ${newsList(ctx, allNews(games, site.news), 5)}
       </div>
       <div class="updates__col">
-        <header class="sec-head sec-head--small" data-reveal>
-          <p class="eyebrow"><span>03</span><span>PATCH NOTES</span></p>
-          <h2 class="sec-title">バージョン履歴</h2>
-        </header>
+        ${secHead({
+          no: '03',
+          en: 'PATCH NOTES',
+          title: 'バージョン履歴',
+          small: true,
+          more: { href: href(ctx, 'news/#patch'), label: 'すべて見る' },
+          bot: botHtml('reel', { note: '更新、ぜんぶ記録してるよ' }),
+        })}
         ${patchList(ctx, games)}
-        <p class="updates__note" data-reveal>各作品の履歴は、それぞれのストアページにすべて載っています。</p>
       </div>
     </section>
 
-    ${madeHtml()}
+    ${crewSection()}
 
     <section class="top-faq container" aria-labelledby="top-faq-title">
-      <header class="sec-head" data-reveal>
-        <p class="eyebrow"><span>05</span><span>FAQ</span></p>
-        <h2 class="sec-title" id="top-faq-title">よくある質問</h2>
-      </header>
+      ${secHead({ no: '05', en: 'FAQ', title: 'よくある質問', id: 'top-faq-title', bot: botHtml('pod', { note: '…困ったら、ここ' }) })}
       ${faqHtml([...site.faq])}
     </section>
 
