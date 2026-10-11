@@ -16,9 +16,9 @@ vm.runInContext(engineScript,realm);
 for(const filename of ['japanese-data.js','conversation-course.js'])vm.runInContext(readFileSync(join(appDir,filename),'utf8'),realm,{filename});
 const C=realm.WahranConversation,data=C.enrich(raw),old=realm.WahranEngine,E=C.extend(old.create(data));
 const plain=x=>JSON.parse(JSON.stringify(x));
-test('release has the English profile and bilingual teaching assets',()=>{assert.match(html,/name="wahran-version" content="1\.2\.0"/);assert.match(html,/I am…/);assert.match(html,/I’m speaking to…/);assert.match(html,/conversation-ui\.css/)});
-test('all original Arabic, IPA and stable IDs are retained',()=>{assert.deepEqual(plain([...data.words,...data.lessons.flatMap(x=>x.lines)].map(x=>[x.id,x.ar,x.ipa])),originalArabic);assert.equal(data.words.length,500);assert.equal(data.lessons.flatMap(x=>x.lines).length,160);assert.equal(new Set(Array.from({length:10000},(_,n)=>E.combo(n).ar)).size,10000)});
-test('all 660 fixed entries have Japanese meanings and usage notes',()=>{for(const x of [...data.words,...data.lessons.flatMap(l=>l.lines)]){assert.match(x.ja,/[ぁ-んァ-ン一-龯]/,x.id);assert.ok(x.usageJa.length>=12,x.id)}});
+test('release has the English profile and bilingual teaching assets',()=>{assert.match(html,/name="wahran-version" content="1\.3\.0"/);assert.match(html,/I am…/);assert.match(html,/I’m speaking to…/);assert.match(html,/conversation-ui\.css/)});
+test('all original Arabic, IPA and stable IDs are retained',()=>{assert.deepEqual(plain([...data.words,...data.lessons.flatMap(x=>x.lines)].map(x=>[x.id,x.ar,x.ipa])),originalArabic);assert.equal(data.words.filter(x=>!x.personal).length,500);assert.equal(data.lessons.filter(x=>x.track!=='personal').flatMap(x=>x.lines).length,160);assert.equal(new Set(Array.from({length:10000},(_,n)=>E.combo(n).ar)).size,10000)});
+test('all fixed entries have Japanese meanings and usage notes',()=>{for(const x of [...data.words,...data.lessons.flatMap(l=>l.lines)]){assert.match(x.ja,/[ぁ-んァ-ン一-龯]/,x.id);assert.ok(x.usageJa.length>=12,x.id)}});
 test('all 10000 combinations have Japanese meanings and explanations',()=>{for(let i=0;i<10000;i++){const x=E.combo(i);assert.match(x.ja,/[ぁ-んァ-ン一-龯]/);assert.ok(x.usageJa.length>=15);assert.ok(!/[{}]|undefined/.test(x.ja));assert.equal(E.entry(x.id).ja,x.ja)}});
 for(const speaker of ['m','f'])for(const listener of ['m','f']){
 const p={speaker,listener};

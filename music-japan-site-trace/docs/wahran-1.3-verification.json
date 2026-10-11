@@ -1,0 +1,126 @@
+{
+  "release": "1.3.0",
+  "words": 700,
+  "examples": 240,
+  "lessons": 30,
+  "newWords": 200,
+  "newExamples": 80,
+  "newMp3": 280,
+  "oldMp3Unchanged": 804,
+  "unitTests": {
+    "passed": 58,
+    "failed": 0
+  },
+  "localBrowser": {
+    "url": "http://127.0.0.1:4179/wahran/",
+    "limits": [
+      "Virtual browsers, not physical iPhone",
+      "Synthetic audio progression observed, not native Oran acoustic certification"
+    ],
+    "results": [
+      {
+        "browser": "chromium",
+        "profile": "m-f",
+        "checks": [
+          "Actual recording decodes with a generated fake microphone, not human speech",
+          "10 new lessons have matching speaker/listener forms, IPA, English and Japanese meaning/usage",
+          "Original greeting and old audio remain usable",
+          "Old/new saved IDs and conversation profile survive an actual reload",
+          "Personal quiz draws actual everyday phrases; translations hidden until an answer",
+          "Personal shadowing default and Next line retain Japanese and form filters",
+          "Original 10,000th combination and Japanese explanation remain",
+          "Five tabs at three mobile widths, no horizontal overflow or page exceptions"
+        ],
+        "counts": {
+          "words": 700,
+          "lessons": 30,
+          "examples": 240,
+          "files": 1084
+        },
+        "new_audio": {
+          "duration": 3.216,
+          "time": 3.216,
+          "src": "http://127.0.0.1:4179/wahran/audio/b8a95d79c2b3343e9e208fd2.mp3",
+          "error": null,
+          "ended": true,
+          "rate": 1
+        },
+        "old_audio": {
+          "duration": 2.496,
+          "time": 2.496,
+          "src": "http://127.0.0.1:4179/wahran/audio/673864421395a2c41d0cc321.mp3",
+          "error": null,
+          "ended": true,
+          "rate": 1
+        },
+        "status": "PASS"
+      },
+      {
+        "browser": "chromium",
+        "profile": "m-m",
+        "checks": [
+          "10 new lessons have matching speaker/listener forms, IPA, English and Japanese meaning/usage",
+          "Original greeting and old audio remain usable",
+          "Old/new saved IDs and conversation profile survive an actual reload",
+          "Personal quiz draws actual everyday phrases; translations hidden until an answer",
+          "Personal shadowing default and Next line retain Japanese and form filters",
+          "Original 10,000th combination and Japanese explanation remain",
+          "Five tabs at three mobile widths, no horizontal overflow or page exceptions"
+        ],
+        "counts": {
+          "words": 700,
+          "lessons": 30,
+          "examples": 240,
+          "files": 1084
+        },
+        "status": "PASS"
+      },
+      {
+        "browser": "chromium",
+        "profile": "f-m",
+        "checks": [
+          "10 new lessons have matching speaker/listener forms, IPA, English and Japanese meaning/usage",
+          "Original greeting and old audio remain usable",
+          "Old/new saved IDs and conversation profile survive an actual reload",
+          "Personal quiz draws actual everyday phrases; translations hidden until an answer",
+          "Personal shadowing default and Next line retain Japanese and form filters",
+          "Original 10,000th combination and Japanese explanation remain",
+          "Five tabs at three mobile widths, no horizontal overflow or page exceptions"
+        ],
+        "counts": {
+          "words": 700,
+          "lessons": 30,
+          "examples": 240,
+          "files": 1084
+        },
+        "status": "PASS"
+      },
+      {
+        "browser": "chromium",
+        "profile": "f-f",
+        "checks": [
+          "10 new lessons have matching speaker/listener forms, IPA, English and Japanese meaning/usage",
+          "Original greeting and old audio remain usable",
+          "Old/new saved IDs and conversation profile survive an actual reload",
+          "Personal quiz draws actual everyday phrases; translations hidden until an answer",
+          "Personal shadowing default and Next line retain Japanese and form filters",
+          "Original 10,000th combination and Japanese explanation remain",
+          "Five tabs at three mobile widths, no horizontal overflow or page exceptions"
+        ],
+        "counts": {
+          "words": 700,
+          "lessons": 30,
+          "examples": 240,
+          "files": 1084
+        },
+        "status": "PASS"
+      }
+    ]
+  },
+  "limits": [
+    "No physical iPhone test",
+    "No native Oran linguistic or acoustic certification",
+    "Independent external model review was not executed; code and automated checks were reviewed in this session"
+  ],
+  "htmlSha256": "7169587709a6ae0d77ff2843a332de208f18f976fa68876b2554a09250bc7be6"
+}

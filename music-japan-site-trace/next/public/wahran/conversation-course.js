@@ -31,12 +31,13 @@ function validProfile(p){return !!p&&!Array.isArray(p)&&typeof p==='object'&&['m
 function roles(x){return {speaker:x?.speaker||'any',listener:x?.listener||'any'}}
 function visible(x,p){if(!x)return false;if(!validProfile(p))return false;const r=roles(x);return(r.speaker==='any'||r.speaker===p.speaker)&&(r.listener==='any'||r.listener===p.listener)}
 function wordNote(w,ja){if(wordSpecial[w.id])return wordSpecial[w.id];let text=`「${ja}」を表す語　${topicNotes[w.topic]||''}`;if(w.pos==='noun.f'||w.pos==='noun.m')text+='　名詞の男性・女性は文法上の区別で、話す人や相手の性別ではない';return text}
+function checkPersonal(x){if(!x.ja||!x.usageJa||!x.ipa||!['m','f','any'].includes(x.speaker)||!['m','f','any'].includes(x.listener))throw new Error('Incomplete personal course annotation: '+x.id)}
 function enrich(data){
- data.words.forEach((w,i)=>{w.ja=J.words[i];w.usageJa=wordNote(w,w.ja);w.speaker='any';w.listener='any';if(w.id==='w002')w.listener='m';if(w.id==='w003')w.listener='f';if(w.topic==='feelings'&&w.pos==='adj.m')w.speaker='m'});
- data.lessons.forEach((l,i)=>{l.noteJa=J.lessonNotes[i];l.lines.forEach(x=>{const v=J.lines[x.id];if(!v)throw new Error('Missing Japanese lesson: '+x.id);[x.ja,x.usageJa]=v;x.speaker=SPEAKER_M.includes(x.id)?'m':SPEAKER_F.includes(x.id)?'f':'any';x.listener=LISTENER_M.includes(x.id)?'m':LISTENER_F.includes(x.id)?'f':'any'})});
+ data.words.forEach((w,i)=>{if(w.personal){checkPersonal(w);return}w.ja=J.words[i];w.usageJa=wordNote(w,w.ja);w.speaker='any';w.listener='any';if(w.id==='w002')w.listener='m';if(w.id==='w003')w.listener='f';if(w.topic==='feelings'&&w.pos==='adj.m')w.speaker='m'});
+ data.lessons.forEach((l,i)=>{if(l.track==='personal'){if(!l.noteJa)throw new Error('Missing personal lesson guide');l.lines.forEach(checkPersonal);return}l.noteJa=J.lessonNotes[i];l.lines.forEach(x=>{const v=J.lines[x.id];if(!v)throw new Error('Missing Japanese lesson: '+x.id);[x.ja,x.usageJa]=v;x.speaker=SPEAKER_M.includes(x.id)?'m':SPEAKER_F.includes(x.id)?'f':'any';x.listener=LISTENER_M.includes(x.id)?'m':LISTENER_F.includes(x.id)?'f':'any'})});
  data.families.forEach((f,i)=>{f.noteJa=J.familyNotes[i];f.frames.forEach((x,n)=>{x.ja=J.frames[i][n];x.speaker='any';x.listener=i===0&&n===7?'m':i===0&&n===8?'f':'any'});f.items.forEach((x,n)=>x.ja=J.items[i][n]);f.contexts.forEach((x,n)=>x.ja=J.contexts[i][n])});
  data.culture.forEach((x,i)=>{[x.textJa,x.practiceJa]=J.culture[i]});data.sounds.forEach((x,i)=>x.textJa=J.sounds[i]);data.scenes.forEach((x,i)=>{x.situationJa=J.scenes[i];x.promptsJa=J.scenePrompts[i]});
- data.meta.version='1.2.0';data.meta.profileScope='Explicit speaker/listener labels; existing source sentences and audio preserved. Not automatic gender rewriting.';
+ data.meta.version='1.3.0';data.meta.profileScope='Explicit speaker/listener labels; existing source sentences and audio preserved. Not automatic gender rewriting.';
  return data;
 }
 function extend(E){
