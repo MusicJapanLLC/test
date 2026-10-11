@@ -1,7 +1,7 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
-import { answerBox, marquee, nextReads, pageHero } from '../parts';
+import { answerBox, botHtml, marquee, nextReads, pageHero } from '../parts';
 import { breadcrumbLd, faqLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp } from '../text';
 
@@ -141,7 +141,8 @@ ${header(p, 'service')}
       <ul class="stances">${s.onboarding
         .map(
           (o, i) => `
-        <li class="stance rv" style="--d:${i}">
+        <li class="stance rv${o.bot ? ' has-bot' : ''}" style="--d:${i}">
+          ${o.bot ? botHtml(o.bot) : ''}
           <span class="stance-no">0${i + 1}</span>
           <h3 class="stance-h">${heading(o.title)}</h3>
           <p class="stance-p">${jp(o.detail)}</p>

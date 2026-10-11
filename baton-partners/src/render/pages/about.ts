@@ -1,7 +1,7 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
-import { answerBox, leaderSection, nextReads, pageHero } from '../parts';
+import { answerBox, botHtml, leaderSection, nextReads, pageHero } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd } from '../seo';
 import { esc, heading, jp } from '../text';
 
@@ -23,7 +23,8 @@ export function renderAbout(p: Partner, env: BuildEnv): string {
   const stance = a.stance
     .map(
       (s, i) => `
-      <li class="stance rv">
+      <li class="stance rv${s.bot ? ' has-bot' : ''}">
+        ${s.bot ? botHtml(s.bot) : ''}
         <span class="stance-no">0${i + 1}</span>
         <h3 class="stance-h">${heading(s.title)}</h3>
         <p class="stance-p">${jp(s.detail)}</p>
