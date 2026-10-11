@@ -33,11 +33,12 @@ jobs:
           import assert from 'node:assert/strict';
           import vm from 'node:vm';
           const bytes=readFileSync('deploy-dist/wahran/index.html');
-          assert.equal(createHash('sha256').update(bytes).digest('hex'),'1c38d002512ab978f8ecc27949963745fe5df6567eb8cfaf445fd751f7cd27ae');
+          assert.equal(createHash('sha256').update(bytes).digest('hex'),'8738826cb4dd06301b837fb61592fde36faed534cfb49eb8f5ef075b1cb6d4fe');
           assert.ok(readFileSync('deploy-dist/_headers','utf8').includes('/wahran/*\n  ! Permissions-Policy'));
           const c={window:{}};vm.runInNewContext(readFileSync('deploy-dist/wahran/audio-manifest.js','utf8'),c);
           const m=c.window.WahranFiles;assert.equal(m.entriesCount,660);assert.equal(m.combinationCount,10000);
           for(const p of Object.values(m.entries))assert.ok(statSync('deploy-dist/wahran/'+p).size>=1000);
           assert.ok(statSync('deploy-dist/wahran/hosted-audio.js').size>1000);
+          for(const p of ['conversation-course.js','conversation-ui.css','japanese-data.js'])assert.ok(statSync('deploy-dist/wahran/'+p).size>1000);
           console.log('Verified publication output:', bytes.length, 'HTML bytes;', m.filesCount, 'MP3 files;',m.voice);
           JS
