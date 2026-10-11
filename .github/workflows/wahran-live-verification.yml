@@ -14,68 +14,67 @@ jobs:
         run: |
           python -m pip install playwright==1.57.0 --quiet
           python -m playwright install --with-deps chromium webkit > /tmp/browser-install.log 2>&1 || { tail -80 /tmp/browser-install.log; exit 1; }
-      - name: Test public course; no server writes or account login
+      - name: Verify public course and mobile workflows
         run: |
           mkdir -p evidence
           cat > /tmp/check.py <<'PY'
-          import json, hashlib, pathlib, datetime, urllib.request, re
+          import json, hashlib, pathlib, datetime, urllib.request
           from playwright.sync_api import sync_playwright, expect
-          OUT=pathlib.Path('evidence')
-          URL='https://music-japan.com/wahran/'
-          EXPECTED='996f48eb35ed437ad7656c960938aff717e0c10181fd041aafcde7c13e98c4e4'
-          CANONICAL='https://raw.githubusercontent.com/MusicJapanLLC/test/03871bcbb9c194b32e43a7544f4ffa378dce600c/music-japan-site-trace/next/public/wahran/index.html'
-          canonical=urllib.request.urlopen(CANONICAL,timeout=40).read()
-          assert hashlib.sha256(canonical).hexdigest()==EXPECTED,'Pinned repository source changed'
-          expected_scripts=re.findall(rb'<script\b[^>]*>.*?</script>',canonical,re.S)
-          report={'url':URL,'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'browsers':{},'limits':['Virtual Linux browsers, not a physical iPhone','Microphone test uses generated fake input, not a human speaker','Device synthesis availability is observed; no native Oran pronunciation claim']}
+          OUT=pathlib.Path('evidence'); URL='https://music-japan.com/wahran/'
+          PIN='03871bcbb9c194b32e43a7544f4ffa378dce600c'
+          canonical=urllib.request.urlopen('https://raw.githubusercontent.com/MusicJapanLLC/test/'+PIN+'/music-japan-site-trace/next/public/wahran/index.html',timeout=40).read()
+          assert hashlib.sha256(canonical).hexdigest()=='996f48eb35ed437ad7656c960938aff717e0c10181fd041aafcde7c13e98c4e4'
+          # The exact 214-byte Pages insertion was isolated in run 38118419021.
+          # Removing ANY OTHER markup or script is deliberately forbidden.
+          beacon=b'''<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a85d5764223a4d2ba9be0d38c9111758"}'></script><!-- Cloudflare Pages Analytics -->'''
+          def verify_bytes(body):
+              assert body.count(beacon)<=1,'Unexpected duplicate beacon'
+              assert body.replace(beacon,b'')==canonical,'Public course changed beyond the reviewed Pages insertion'
+          verify_bytes(canonical);verify_bytes(canonical.replace(b'</body>',beacon+b'</body>'))
+          for bad in [canonical+b'<script>other()</script>',canonical.replace(b'Start speaking',b'Something else'),canonical+beacon+beacon]:
+              try:verify_bytes(bad)
+              except AssertionError:pass
+              else:raise AssertionError('Integrity regression: accepted an unrelated change')
+          report={'url':URL,'time':datetime.datetime.now(datetime.timezone.utc).isoformat(),'browsers':{},'limits':['Virtual Linux browsers, not a physical iPhone','Recording uses fake microphone input, not a human voice','Arabic TTS needs a device Arabic voice; no native Oran audio or linguistic validation is claimed']}
           failures=[]
-          def difference(a,b):
-              first=0
-              while first<min(len(a),len(b)) and a[first]==b[first]:first+=1
-              last=0
-              while last<min(len(a),len(b))-first and a[-1-last]==b[-1-last]:last+=1
-              ae=len(a)-last;be=len(b)-last
-              return {'expected_length':len(a),'received_length':len(b),'equal_prefix_bytes':first,'equal_suffix_bytes':last,'expected_delta':a[first:ae].decode('utf-8','replace')[:2000],'received_delta':b[first:be].decode('utf-8','replace')[:2000]}
-          def save():OUT.joinpath('live-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
           with sync_playwright() as p:
               for name in ['chromium','webkit']:
-                  row={'checks':[]};report['browsers'][name]=row;b=None
+                  r={'checks':[]};report['browsers'][name]=r;b=None
                   try:
                       args=['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream'] if name=='chromium' else []
                       b=getattr(p,name).launch(headless=True,args=args)
-                      kwargs={'viewport':{'width':390,'height':844},'is_mobile':True,'has_touch':True}
-                      if name=='chromium':kwargs['permissions']=['microphone']
-                      ctx=b.new_context(**kwargs);page=ctx.new_page();page.set_default_timeout(15000)
-                      errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+                      options={'viewport':{'width':390,'height':844},'is_mobile':True,'has_touch':True}
+                      if name=='chromium':options['permissions']=['microphone']
+                      ctx=b.new_context(**options);page=ctx.new_page();page.set_default_timeout(15000)
+                      errors=[];violations=[]
+                      page.on('pageerror',lambda e:errors.append(str(e)))
                       response=page.goto(URL,wait_until='networkidle',timeout=60000)
-                      assert response and response.status==200,'Public page must return HTTP 200'
-                      row['status']=response.status;row['final_url']=page.url;row['headers']=response.all_headers()
-                      assert page.url==URL,'Unexpected redirect'
-                      source=response.body();row['html_sha256']=hashlib.sha256(source).hexdigest()
-                      OUT.joinpath(name+'-received.html').write_bytes(source)
-                      if row['html_sha256']!=EXPECTED:row['delivery_difference']=difference(canonical,source)
-                      actual_scripts=re.findall(rb'<script\b[^>]*>.*?</script>',source,re.S)
-                      row['script_count']={'expected':len(expected_scripts),'actual':len(actual_scripts)}
-                      row['source_script_preservation']=[x in actual_scripts for x in expected_scripts]
-                      row['extra_script_headers']=[x[:min(x.find(b'>')+1,600)].decode('utf8','replace') for x in actual_scripts if x not in expected_scripts]
-                      assert all(row['source_script_preservation']),'Original course or application scripts differ'
-                      expect(page.get_by_role('heading',name='Speak in Oran',exact=True)).to_be_visible()
+                      assert response.status==200 and page.url==URL
+                      source=response.body();verify_bytes(source)
+                      r['http_status']=response.status;r['html_sha256']=hashlib.sha256(source).hexdigest()
+                      r['source_integrity']='Exact original bytes after removing only the independently reviewed Pages beacon'
+                      headers=response.all_headers();r['headers']={k:headers.get(k) for k in ['content-type','x-robots-tag','permissions-policy']}
                       assert page.evaluate('isSecureContext')
-                      assert 'microphone=()' not in row['headers'].get('permissions-policy','').replace(' ',''),'Microphone denied by delivery policy'
-                      row['checks'].append('HTTPS, source scripts unchanged, public rendering, microphone policy')
-                      d=json.loads(page.locator('#course-data').text_content())
-                      assert len(d['words'])==500 and sum(len(x['lines']) for x in d['lessons'])==160
+                      assert 'microphone=()' not in headers.get('permissions-policy','').replace(' ','')
+                      expect(page.get_by_role('heading',name='Speak in Oran',exact=True)).to_be_visible()
+                      r['checks'].append('Live HTTPS rendering, complete source integrity, microphone policy')
+                      data=json.loads(page.locator('#course-data').text_content())
+                      assert len(data['words'])==500 and sum(len(x['lines']) for x in data['lessons'])==160
                       assert page.evaluate('''() => {const e=WahranEngine.create(JSON.parse(document.querySelector('#course-data').textContent));return new Set(Array.from({length:10000},(_,n)=>e.combo(n).ar)).size}''')==10000
-                      row['checks'].append('500 words, 160 examples, 10000 unique Arabic combinations')
+                      r['checks'].append('500 words, 160 examples and 10000 unique Arabic combinations')
                       page.screenshot(path=str(OUT/f'{name}-home.png'))
                       page.get_by_role('button',name='Start speaking',exact=False).click()
                       assert page.locator('.phrase').count()==8
-                      for cls in ['ar','ipa','en']:expect(page.locator('.phrase .'+cls).first).to_be_visible()
+                      for c in ['ar','ipa','en']:expect(page.locator('.phrase .'+c).first).to_be_visible()
+                      r['checks'].append('Start speaking opens 8 lines with Arabic, IPA and English')
                       page.screenshot(path=str(OUT/f'{name}-lesson.png'))
-                      row['checks'].append('Start speaking opens 8 Arabic/IPA/English lines')
-                      row['speech_capability']=page.evaluate('''() => ({api:!!window.speechSynthesis,voices:window.speechSynthesis?.getVoices().map(v=>({name:v.name,lang:v.lang}))||[]})''')
+                      r['arabic_voices']=page.evaluate('speechSynthesis.getVoices().filter(v=>/^ar(?:[-_]|$)/i.test(v.lang)).map(v=>({name:v.name,lang:v.lang}))')
                       page.locator('[data-play="l01-01"]').first.click();page.wait_for_timeout(1000)
-                      row['audio_observation']={'status':page.locator('#audio-status').inner_text(),'notice':page.locator('#toast').inner_text(),'playing_bar':page.locator('#audio-bar').is_visible()}
+                      r['audio_result']={'status':page.locator('#audio-status').inner_text(),'notice':page.locator('#toast').inner_text(),'playing':page.locator('#audio-bar').is_visible()}
+                      if not r['arabic_voices']:
+                          assert 'No Arabic voice' in r['audio_result']['notice']
+                          r['audio_verdict']='Arabic system voice absent in virtual test device; audible output NOT VERIFIED'
+                      else:r['audio_verdict']='Voice available; acoustic pronunciation quality NOT VERIFIED'
                       page.locator('[data-practice="l01-01"]').click()
                       expect(page.get_by_role('button',name='Record my voice',exact=True)).to_be_visible()
                       assert page.evaluate('!!navigator.mediaDevices?.getUserMedia')
@@ -84,46 +83,43 @@ jobs:
                           expect(page.locator('#record-button')).to_contain_text('Stop recording')
                           page.wait_for_timeout(1200);page.locator('#record-button').click()
                           page.wait_for_selector('#learner-audio audio')
-                          page.wait_for_function('document.querySelector("#learner-audio audio").readyState >= 1')
-                          row['recording']={'blob_url':page.locator('#learner-audio audio').get_attribute('src').startswith('blob:'),'decodable':True,'input':'Chromium fake audio device'}
-                          row['checks'].append('Real MediaRecorder produces decodable local clip from fake microphone')
+                          page.wait_for_function('document.querySelector("#learner-audio audio").readyState>=1')
+                          r['checks'].append('Actual MediaRecorder creates decodable local audio from fake microphone')
                       page.locator('[data-action="close-dialog"]').click()
                       page.locator('.bottom-nav [data-tab="words"]').click();page.locator('#word-search').fill('Oran')
                       assert page.locator('.word-row').count()>0
-                      page.locator('#word-search').fill('');page.locator('#word-topic').select_option('food')
-                      assert page.locator('.word-row').count()==25
+                      page.locator('#word-search').fill('');page.locator('#word-topic').select_option('food');assert page.locator('.word-row').count()==25
                       page.locator('#word-topic').select_option('all');page.locator('[data-open="w001"]').click();page.locator('dialog [data-save="w001"]').click()
                       page.reload(wait_until='networkidle');page.locator('.bottom-nav [data-tab="words"]').click();page.locator('#word-scope').select_option('saved')
                       assert page.locator('.word-row').count()==1
-                      row['checks'].append('Search, 25-word topic filter, real persistent favourite after reload')
+                      r['checks'].append('Word search, topic filtering and persisted saved word after actual reload')
                       page.locator('.bottom-nav [data-tab="build"]').click()
-                      for selector,value in [('family','4'),('frame','9'),('item','19'),('context','9')]:page.locator('#'+selector).select_option(value)
+                      for sel,val in [('family','4'),('frame','9'),('item','19'),('context','9')]:page.locator('#'+sel).select_option(val)
                       expect(page.locator('[data-combo-id="c09999"]')).to_be_visible()
                       page.locator('[data-action="chunk-current"]').click()
                       for i in [0,1,2]:page.locator(f'[data-pick="{i}"]').click()
                       page.locator('[data-action="check-chunks"]').click();expect(page.locator('#chunk-feedback')).to_contain_text('You built it')
-                      page.locator('[data-action="close-dialog"]').click();row['checks'].append('10000th combination and correct chunk-order feedback')
+                      page.locator('[data-action="close-dialog"]').click()
+                      r['checks'].append('10000th combination and correct three-chunk answer feedback')
                       page.locator('.bottom-nav [data-tab="speak"]').click();page.locator('[data-action="quiz-read"]').click();page.locator('[data-choice]').first.click()
                       assert page.locator('#quiz-feedback').inner_text()
                       page.locator('[data-action="quiz-next"]').click();assert page.locator('[data-choice]').count()==4
-                      page.locator('[data-action="close-dialog"]').click();row['checks'].append('Meaning quiz feedback and next question')
+                      page.locator('[data-action="close-dialog"]').click();r['checks'].append('Meaning quiz feedback and next question')
                       for width in [320,390,430]:
                           page.set_viewport_size({'width':width,'height':844})
                           for tab in ['learn','words','build','speak','culture']:
                               page.locator('.bottom-nav [data-tab="'+tab+'"]').click()
-                              assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'Overflow at {width} on {tab}'
+                              assert page.evaluate('document.documentElement.scrollWidth<=innerWidth'),f'{width}px overflow on {tab}'
                       assert page.locator('.culture-card').count()==14
                       assert not errors,errors
-                      row['checks'].append('Five tabs, three smartphone widths, 14 culture notes, no page errors')
-                      row['outcome']='PASS_UI'
-                      if 'delivery_difference' in row:failures.append(name+': delivery difference requires separate review')
+                      r['checks'].append('All five tabs at 320/390/430px, 14 culture notes, no page exceptions')
+                      r['outcome']='PASS for listed automated checks; see audio/device limits'
                       ctx.close()
-                  except Exception as e:
-                      row['outcome']='FAIL';row['error']=str(e);failures.append(name+': '+str(e))
+                  except Exception as e:r['outcome']='FAIL';r['error']=str(e);failures.append(name+': '+str(e))
                   finally:
                       if b:b.close()
-                      save()
-          print('WAHRAN_LIVE_REPORT_BEGIN');print(json.dumps(report,ensure_ascii=False,indent=2));print('WAHRAN_LIVE_REPORT_END')
+                      OUT.joinpath('live-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print('WAHRAN_REPORT_BEGIN');print(json.dumps(report,ensure_ascii=False,indent=2));print('WAHRAN_REPORT_END')
           if failures:raise SystemExit('\n'.join(failures))
           PY
           python /tmp/check.py
