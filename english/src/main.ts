@@ -13,10 +13,12 @@ const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = docum
 const app = $('#app');
 
 /* ── theme ── */
+// only clear a theme we set ourselves, so a host page's own data-theme survives "Auto"
+let themed = false;
 function applyTheme() {
   const t = state.settings.theme;
-  if (t === 'auto') delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = t;
+  if (t !== 'auto') { document.documentElement.dataset.theme = t; themed = true; }
+  else if (themed) { delete document.documentElement.dataset.theme; themed = false; }
 }
 applyTheme();
 
@@ -259,8 +261,9 @@ function share(c: Card) {
   const onSite = /music-japan\.com$|vercel\.app$/.test(location.hostname);
   const url = onSite ? `${location.origin}/c/${c.id}/` : `${location.href.split('#')[0]}#/c/${c.id}`;
   const text = `${c.h} — ${c.ja}`;
-  if (navigator.share) navigator.share({ title: `${c.h} · MJ ENGLISH`, text, url }).catch(() => undefined);
-  else navigator.clipboard?.writeText(url).then(() => toast('Link copied'), () => toast(url));
+  const copy = () => (navigator.clipboard ? navigator.clipboard.writeText(url).then(() => toast('Link copied'), () => toast(url)) : toast(url));
+  if (navigator.share) navigator.share({ title: `${c.h} · MJ ENGLISH`, text, url }).catch((e: Error) => { if (e?.name !== 'AbortError') copy(); });
+  else copy();
 }
 
 /* ── filters ── */
