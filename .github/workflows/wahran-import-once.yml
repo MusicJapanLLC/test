@@ -1,0 +1,40 @@
+name: Wahran one-time verified source import
+on:
+  push:
+    branches: [chatgpt/wahran-mobile-public-20261011]
+    paths: [.github/workflows/wahran-import-once.yml]
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/wahran-mobile-public-20261011
+      - name: Fetch and verify the user-approved public course only
+        env:
+          SOURCE_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-7ff8-8206-ba2e-f3472710837c/raw?se=2026-10-11T05%3A55%3A49Z&sp=r&sv=2026-02-06&sr=b&scid=3fb3ffce-adf6-5042-b248-5cfcd12cc088&skoid=1e4bb9ed-6bb5-424a-a3aa-79f21566e722&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-11T00%3A59%3A24Z&ske=2026-10-12T00%3A59%3A24Z&sks=b&skv=2026-02-06&sig=NA0jXEVuUKLpSmQ2DX9efYGjqx7mFVJLJeJOg9/qzTg%3D'
+        run: |
+          python3 - <<'PY'
+          import os, hashlib, pathlib, urllib.request
+          target=pathlib.Path('music-japan-site-trace/next/public/wahran/index.html')
+          if target.exists():
+              raise SystemExit('Refusing to overwrite an existing app')
+          with urllib.request.urlopen(os.environ['SOURCE_URL'], timeout=40) as response:
+              content=response.read(300000)
+          expected='996f48eb35ed437ad7656c960938aff717e0c10181fd041aafcde7c13e98c4e4'
+          assert len(content)==214525, 'Unexpected source size'
+          assert hashlib.sha256(content).hexdigest()==expected, 'Source integrity failed'
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_bytes(content)
+          print('Verified Wahran HTML:', len(content), 'bytes; sha256', expected)
+          PY
+      - name: Commit only the verified new application
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- music-japan-site-trace/next/public/wahran/index.html
+          git commit -m 'feat(wahran): add verified smartphone learning app'
+          git push origin HEAD:chatgpt/wahran-mobile-public-20261011
