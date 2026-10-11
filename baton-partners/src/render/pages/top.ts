@@ -109,6 +109,8 @@ ${header(p, 'top')}
 
   ${marketSection(p)}
 
+  ${inviteSection(p)}
+
   ${tracklistSection(p)}
 
   ${serpSection(p)}
@@ -142,6 +144,8 @@ ${header(p, 'top')}
   </section>
 
   ${filmSection(p)}
+
+  ${cardSection(p)}
 
   ${storySection(p)}
 
@@ -182,6 +186,8 @@ ${header(p, 'top')}
   ${mediaSection(p)}
 
   ${missionSection(p)}
+
+  ${cheerSection(p)}
 
   <section class="sec sec-quote" aria-labelledby="about-teaser-h">
     <div class="wrap quote-in">
@@ -1050,6 +1056,186 @@ function eventsSection(p: Partner): string {
         )
         .join('')}</ol>
       <p class="fine">${jp(e.note)}</p>
+    </div>
+  </section>`;
+}
+
+
+/* ─────────────────────────────────────────────
+   cheer の世界観（Presence など）の部品：招待状・トレーディングカード・応援ボタン
+   ───────────────────────────────────────────── */
+
+/** 尖った頂点が上下にくる六角形（亀甲）の頂点。中心 (cx, cy)、外接円の半径 r */
+function hexPoints(cx: number, cy: number, r: number): string {
+  return Array.from({ length: 6 }, (_, k) => {
+    const a = (Math.PI / 3) * k + Math.PI / 6;
+    return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`;
+  }).join(' ');
+}
+
+/** 四つの角をもつ星（✦）。ロゴのカメがまとう星にならう */
+function sparklePath(cx: number, cy: number, r: number): string {
+  const k = r * 0.22;
+  return `M${cx} ${cy - r}C${cx + k} ${cy - k} ${cx + k} ${cy - k} ${cx + r} ${cy}C${cx + k} ${cy + k} ${cx + k} ${cy + k} ${cx} ${cy + r}C${cx - k} ${cy + k} ${cx - k} ${cy + k} ${cx - r} ${cy}C${cx - k} ${cy - k} ${cx - k} ${cy - k} ${cx} ${cy - r}Z`;
+}
+
+/**
+ * 亀甲の甲羅（半径 rings の六角形の集まり）。中心から外へ順番をつけ、data-cell に入れる（応援ボタンが一つずつ灯す）。
+ * 作るのは六角形の集まりと星だけ。会社のロゴ（カメ）は描かない
+ */
+function shellSvg(opts: { rings: number; size: number; className: string; stars?: boolean }): { svg: string; cells: number } {
+  const { rings, size } = opts;
+  const cells: { x: number; y: number; d: number; a: number }[] = [];
+  for (let q = -rings; q <= rings; q++) {
+    for (let r = Math.max(-rings, -q - rings); r <= Math.min(rings, -q + rings); r++) {
+      const x = size * Math.sqrt(3) * (q + r / 2);
+      const y = size * 1.5 * r;
+      cells.push({ x, y, d: Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r)), a: Math.atan2(y, x) });
+    }
+  }
+  cells.sort((a, b) => a.d - b.d || a.a - b.a);
+  const w = size * Math.sqrt(3) * (rings * 2 + 1) + size;
+  const h = size * (rings * 3 + 2) + size;
+  const body = cells
+    .map(
+      (c, i) => `<g class="cell" data-cell="${i}" style="--i:${i};--d:${c.d}"><polygon points="${hexPoints(c.x, c.y, size * 0.93)}" />${
+        opts.stars === false ? '' : `<path class="cell-star" d="${sparklePath(c.x, c.y, size * 0.42)}" />`
+      }</g>`,
+    )
+    .join('');
+  return {
+    svg: `<svg class="${opts.className}" viewBox="${(-w / 2).toFixed(1)} ${(-h / 2).toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}" aria-hidden="true" focusable="false">${body}</svg>`,
+    cells: cells.length,
+  };
+}
+
+/** 招待状。表は経営者のコミュニティ、裏はもう一つの会。横に、判子を押された名刺 */
+function inviteSection(p: Partner): string {
+  const v = p.top.invite;
+  if (!v) return '';
+  const emblem = shellSvg({ rings: 1, size: 22, className: 'iv-emblem' }).svg;
+  const face = (side: 'front' | 'back', f: { name: string; sub: string; line: string }) => `
+          <span class="iv-face iv-${side}" aria-hidden="true">
+            <span class="iv-main">
+              <span class="iv-top"><span class="iv-serial">${esc(v.card.serial)}</span><span class="iv-bp">${bpNo(p)}</span></span>
+              ${emblem}
+              <span class="iv-sub">${esc(f.sub)}</span>
+              <span class="iv-name">${esc(f.name)}</span>
+              <span class="iv-line">${esc(f.line)}</span>
+              <span class="iv-host">Hosted by ${esc(p.company.nameEn)}</span>
+            </span>
+            <span class="iv-stub"><span>Admit one</span><span class="iv-stub-star">${'✦'}</span><span>${side === 'front' ? 'Side A' : 'Side B'}</span></span>
+          </span>`;
+  return `
+  <section class="sec sec-invite" aria-labelledby="invite-h">
+    <div class="wrap iv-in">
+      <header class="iv-head rv">
+        <p class="kicker">${esc(v.kicker)}</p>
+        <h2 id="invite-h" class="sec-h">${heading(v.title)}</h2>
+        <p class="iv-lead">${jp(v.lead)}</p>
+      </header>
+      <div class="iv-stage rv">
+        <div class="iv-meishi" aria-hidden="true">
+          <span class="iv-m-co">${esc(p.company.nameEn)} Co., Ltd.</span>
+          <span class="iv-m-title">代表取締役</span>
+          <span class="iv-m-name">名刺 太郎</span>
+          <span class="iv-m-lines"><i></i><i></i><i></i></span>
+          <span class="iv-stamp"><span>${esc(v.stamp)}</span></span>
+        </div>
+        <button class="iv-card" type="button" data-flip aria-pressed="false" aria-label="招待状を裏返す（表：${esc(v.card.name)}、裏：${esc(v.card.back.name)}）">
+          <span class="iv-card-in">${face('front', v.card)}${face('back', v.card.back)}</span>
+        </button>
+        <p class="iv-hint" aria-hidden="true">Tap to flip ↻</p>
+      </div>
+      <ol class="iv-rules">${v.rules
+        .map(
+          (r, i) => `
+        <li class="iv-rule rv" style="--i:${i}">
+          <span class="iv-no">${esc(r.no)}</span>
+          <h3 class="iv-rule-h">${heading(r.title)}</h3>
+          <p class="iv-rule-p">${jp(r.text)}</p>
+        </li>`,
+        )
+        .join('')}</ol>
+      <p class="fine rv">${jp(v.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** 代表のトレーディングカード。表は写真（なければ写真待ちの面）、裏は公開プロフィール。押すと返る */
+function cardSection(p: Partner): string {
+  const c = p.top.card;
+  const l = p.leader;
+  if (!c || !l) return '';
+  const initials = l.nameEn
+    .split(/\s+/)
+    .map((w) => w[0])
+    .join('');
+  const photo =
+    l.photo && l.photoSize
+      ? `<img src="${l.photo}" alt="" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />`
+      : `<span class="tc-pending">${shellSvg({ rings: 3, size: 16, className: 'tc-hex', stars: false }).svg}<span class="tc-mono">${esc(initials)}</span><span class="tc-soon">${esc(c.pending)}</span></span>`;
+  return `
+  <section class="sec sec-card" aria-labelledby="card-h">
+    <div class="wrap tc-in">
+      <div class="tc-stage rv">
+        <button class="tc" type="button" data-flip data-tilt aria-pressed="false" aria-label="${esc(l.name)}さんのカードを裏返す">
+          <span class="tc-card">
+            <span class="tc-face tc-front" aria-hidden="true">
+              <span class="tc-top"><span class="tc-team">${esc(c.team)}</span><span class="tc-no">${bpNo(p)}</span></span>
+              <span class="tc-photo">${photo}</span>
+              <span class="tc-plate">
+                <span class="tc-pos">${esc(c.position)}</span>
+                <span class="tc-name">${esc(l.name)}</span>
+                <span class="tc-en">${esc(l.nameEn)}</span>
+              </span>
+              <span class="tc-tags">${c.tags.map((t) => `<span>${esc(t)}</span>`).join('')}</span>
+              <span class="tc-holo"></span>
+            </span>
+            <span class="tc-face tc-back" aria-hidden="true">
+              <span class="tc-back-top"><span>Profile</span><span>${esc(c.team)}</span></span>
+              <span class="tc-back-name">${esc(l.nameEn)}</span>
+              <span class="tc-rows">${c.back.map((r) => `<span class="tc-row"><span class="tc-k">${esc(r.label)}</span><span class="tc-v">${esc(r.value)}</span></span>`).join('')}</span>
+              ${l.motto ? `<span class="tc-motto"><span>${esc(l.motto.label)}</span>${esc(l.motto.text)}</span>` : ''}
+            </span>
+          </span>
+        </button>
+        <p class="tc-hint" aria-hidden="true">Tap to flip ↻</p>
+      </div>
+      <div class="tc-body rv">
+        <p class="kicker">${esc(c.kicker)}</p>
+        <h2 id="card-h" class="sec-h">${heading(c.title)}</h2>
+        <p class="tc-lead">${jp(c.lead)}</p>
+        <dl class="tc-list">${c.back.map((r) => `<div><dt>${esc(r.label)}</dt><dd>${jp(r.value)}</dd></div>`).join('')}</dl>
+        <p class="fine">${jp(c.note)}</p>
+      </div>
+    </div>
+  </section>`;
+}
+
+/** 応援ボタン。押すたびに甲羅の星が一つずつ灯る（client/cheer.ts）。回数はこの端末の中だけ */
+function cheerSection(p: Partner): string {
+  const c = p.top.cheer;
+  if (!c) return '';
+  const shell = shellSvg({ rings: 2, size: 30, className: 'ch-shell' });
+  return `
+  <section class="sec sec-cheer" aria-labelledby="cheer-h">
+    <div class="wrap ch-in">
+      <div class="ch-body rv">
+        <p class="kicker">${esc(c.kicker)}</p>
+        <h2 id="cheer-h" class="sec-h">${heading(c.title)}</h2>
+        <p class="ch-lead">${jp(c.lead)}</p>
+        <p class="fine">${jp(c.note)}</p>
+        ${c.link ? `<a class="link-arrow" href="${c.link.url}" target="_blank" rel="noopener"><span>${esc(c.link.label)}</span><span class="arrow" aria-hidden="true">↗</span></a>` : ''}
+      </div>
+      <div class="ch-stage rv" data-cheer data-cells="${shell.cells}" data-key="bp-cheer-${p.slug}">
+        <div class="ch-glow" aria-hidden="true"></div>
+        ${shell.svg}
+        <button class="ch-btn" type="button" data-cheer-btn><span class="ch-btn-ring" aria-hidden="true"></span><span class="ch-btn-t">${esc(c.button)}</span></button>
+        <p class="ch-count" aria-live="polite"><span class="ch-num" data-cheer-count>0</span><span class="ch-unit">回の応援</span></p>
+        <p class="ch-done" data-cheer-done>${esc(c.done)}</p>
+        <div class="ch-fx" data-cheer-fx aria-hidden="true"></div>
+      </div>
     </div>
   </section>`;
 }

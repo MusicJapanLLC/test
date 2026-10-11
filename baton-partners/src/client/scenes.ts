@@ -26,6 +26,7 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
     | typeof import('./vinyl').VinylScene
     | typeof import('./feed').FeedScene
     | typeof import('./pair').PairScene
+    | typeof import('./enjin').EnjinScene
   > | null = null;
   const sceneClass = () =>
     (load ??=
@@ -42,7 +43,9 @@ export function mountScenes(onTop?: (scene: PhasedScene) => void): void {
                 ? import('./feed').then((m) => m.FeedScene)
                 : document.body.dataset.worldScene === 'pair'
                   ? import('./pair').then((m) => m.PairScene)
-                  : import('./scene').then((m) => m.NetworkScene));
+                  : document.body.dataset.worldScene === 'enjin'
+                    ? import('./enjin').then((m) => m.EnjinScene)
+                    : import('./scene').then((m) => m.NetworkScene));
 
   const mount = async (host: HTMLElement) => {
     const Scene = await sceneClass();

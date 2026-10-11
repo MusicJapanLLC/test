@@ -30,7 +30,7 @@ export function renderService(p: Partner, env: BuildEnv): string {
       <li class="flow-step rv" style="--d:${i}">
         <span class="flow-dot" aria-hidden="true"></span>
         <p class="flow-en">${esc(f.en)}</p>
-        <p class="flow-stage">${esc(f.stage)}</p>
+        <p class="flow-stage">${jp(f.stage)}</p>
         <p class="flow-feat">${esc(f.feature)}</p>
       </li>`,
     )

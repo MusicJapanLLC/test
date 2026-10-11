@@ -251,7 +251,58 @@ ${it.photo ? `<div class="photo"><img src="${file(it.photo)}" alt=""><i class="m
   <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
 </div></body></html>`;
 }
+// cheer（Presence など）は白地に亀甲の地紋。右に、星をまとった紺の甲羅（六角形の集まり）と金の光。見出しは極太のゴシック、「禁止」は赤い判子
+const SHELL = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='-183.5 -171.0 367.1 342.0'><polygon points='-101.0,17.7 -131.6,35.3 -162.2,17.7 -162.2,-17.7 -131.6,-35.3 -101.0,-17.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-131.6 -15.2C-128.3 -3.3 -128.3 -3.3 -116.4 0.0C-128.3 3.3 -128.3 3.3 -131.6 15.2C-135.0 3.3 -135.0 3.3 -146.8 0.0C-135.0 -3.3 -135.0 -3.3 -131.6 -15.2Z' fill='#FFB81C'/><polygon points='-68.1,74.7 -98.7,92.3 -129.3,74.7 -129.3,39.3 -98.7,21.7 -68.1,39.3' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-98.7 41.8C-95.4 53.7 -95.4 53.7 -83.5 57.0C-95.4 60.3 -95.4 60.3 -98.7 72.2C-102.1 60.3 -102.1 60.3 -113.9 57.0C-102.1 53.7 -102.1 53.7 -98.7 41.8Z' fill='#FFB81C'/><polygon points='-35.2,131.7 -65.8,149.3 -96.4,131.7 -96.4,96.3 -65.8,78.7 -35.2,96.3' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-65.8 98.8C-62.5 110.7 -62.5 110.7 -50.6 114.0C-62.5 117.3 -62.5 117.3 -65.8 129.2C-69.2 117.3 -69.2 117.3 -81.0 114.0C-69.2 110.7 -69.2 110.7 -65.8 98.8Z' fill='#FFB81C'/><polygon points='-68.1,-39.3 -98.7,-21.7 -129.3,-39.3 -129.3,-74.7 -98.7,-92.3 -68.1,-74.7' fill='#FF8001' stroke='#FFB81C' stroke-width='3'/><path d='M-98.7 -72.2C-95.4 -60.3 -95.4 -60.3 -83.5 -57.0C-95.4 -53.7 -95.4 -53.7 -98.7 -41.8C-102.1 -53.7 -102.1 -53.7 -113.9 -57.0C-102.1 -60.3 -102.1 -60.3 -98.7 -72.2Z' fill='#FFFFFF'/><polygon points='-35.2,17.7 -65.8,35.3 -96.4,17.7 -96.4,-17.7 -65.8,-35.3 -35.2,-17.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-65.8 -15.2C-62.5 -3.3 -62.5 -3.3 -50.6 0.0C-62.5 3.3 -62.5 3.3 -65.8 15.2C-69.2 3.3 -69.2 3.3 -81.0 0.0C-69.2 -3.3 -69.2 -3.3 -65.8 -15.2Z' fill='#FFB81C'/><polygon points='-2.3,74.7 -32.9,92.3 -63.5,74.7 -63.5,39.3 -32.9,21.7 -2.3,39.3' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-32.9 41.8C-29.6 53.7 -29.6 53.7 -17.7 57.0C-29.6 60.3 -29.6 60.3 -32.9 72.2C-36.3 60.3 -36.3 60.3 -48.1 57.0C-36.3 53.7 -36.3 53.7 -32.9 41.8Z' fill='#FFB81C'/><polygon points='30.6,131.7 0.0,149.3 -30.6,131.7 -30.6,96.3 -0.0,78.7 30.6,96.3' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M0.0 98.8C3.3 110.7 3.3 110.7 15.2 114.0C3.3 117.3 3.3 117.3 0.0 129.2C-3.3 117.3 -3.3 117.3 -15.2 114.0C-3.3 110.7 -3.3 110.7 0.0 98.8Z' fill='#FFB81C'/><polygon points='-35.2,-96.3 -65.8,-78.7 -96.4,-96.3 -96.4,-131.7 -65.8,-149.3 -35.2,-131.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-65.8 -129.2C-62.5 -117.3 -62.5 -117.3 -50.6 -114.0C-62.5 -110.7 -62.5 -110.7 -65.8 -98.8C-69.2 -110.7 -69.2 -110.7 -81.0 -114.0C-69.2 -117.3 -69.2 -117.3 -65.8 -129.2Z' fill='#FFB81C'/><polygon points='-2.3,-39.3 -32.9,-21.7 -63.5,-39.3 -63.5,-74.7 -32.9,-92.3 -2.3,-74.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M-32.9 -72.2C-29.6 -60.3 -29.6 -60.3 -17.7 -57.0C-29.6 -53.7 -29.6 -53.7 -32.9 -41.8C-36.3 -53.7 -36.3 -53.7 -48.1 -57.0C-36.3 -60.3 -36.3 -60.3 -32.9 -72.2Z' fill='#FFB81C'/><polygon points='30.6,17.7 0.0,35.3 -30.6,17.7 -30.6,-17.7 -0.0,-35.3 30.6,-17.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M0.0 -15.2C3.3 -3.3 3.3 -3.3 15.2 0.0C3.3 3.3 3.3 3.3 0.0 15.2C-3.3 3.3 -3.3 3.3 -15.2 0.0C-3.3 -3.3 -3.3 -3.3 0.0 -15.2Z' fill='#FFB81C'/><polygon points='63.5,74.7 32.9,92.3 2.3,74.7 2.3,39.3 32.9,21.7 63.5,39.3' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M32.9 41.8C36.3 53.7 36.3 53.7 48.1 57.0C36.3 60.3 36.3 60.3 32.9 72.2C29.6 60.3 29.6 60.3 17.7 57.0C29.6 53.7 29.6 53.7 32.9 41.8Z' fill='#FFB81C'/><polygon points='96.4,131.7 65.8,149.3 35.2,131.7 35.2,96.3 65.8,78.7 96.4,96.3' fill='#FF8001' stroke='#FFB81C' stroke-width='3'/><path d='M65.8 98.8C69.2 110.7 69.2 110.7 81.0 114.0C69.2 117.3 69.2 117.3 65.8 129.2C62.5 117.3 62.5 117.3 50.6 114.0C62.5 110.7 62.5 110.7 65.8 98.8Z' fill='#FFFFFF'/><polygon points='30.6,-96.3 0.0,-78.7 -30.6,-96.3 -30.6,-131.7 -0.0,-149.3 30.6,-131.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M0.0 -129.2C3.3 -117.3 3.3 -117.3 15.2 -114.0C3.3 -110.7 3.3 -110.7 0.0 -98.8C-3.3 -110.7 -3.3 -110.7 -15.2 -114.0C-3.3 -117.3 -3.3 -117.3 0.0 -129.2Z' fill='#FFB81C'/><polygon points='63.5,-39.3 32.9,-21.7 2.3,-39.3 2.3,-74.7 32.9,-92.3 63.5,-74.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M32.9 -72.2C36.3 -60.3 36.3 -60.3 48.1 -57.0C36.3 -53.7 36.3 -53.7 32.9 -41.8C29.6 -53.7 29.6 -53.7 17.7 -57.0C29.6 -60.3 29.6 -60.3 32.9 -72.2Z' fill='#FFB81C'/><polygon points='96.4,17.7 65.8,35.3 35.2,17.7 35.2,-17.7 65.8,-35.3 96.4,-17.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M65.8 -15.2C69.2 -3.3 69.2 -3.3 81.0 0.0C69.2 3.3 69.2 3.3 65.8 15.2C62.5 3.3 62.5 3.3 50.6 0.0C62.5 -3.3 62.5 -3.3 65.8 -15.2Z' fill='#FFB81C'/><polygon points='129.3,74.7 98.7,92.3 68.1,74.7 68.1,39.3 98.7,21.7 129.3,39.3' fill='#FF8001' stroke='#FFB81C' stroke-width='3'/><path d='M98.7 41.8C102.1 53.7 102.1 53.7 113.9 57.0C102.1 60.3 102.1 60.3 98.7 72.2C95.4 60.3 95.4 60.3 83.5 57.0C95.4 53.7 95.4 53.7 98.7 41.8Z' fill='#FFFFFF'/><polygon points='96.4,-96.3 65.8,-78.7 35.2,-96.3 35.2,-131.7 65.8,-149.3 96.4,-131.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M65.8 -129.2C69.2 -117.3 69.2 -117.3 81.0 -114.0C69.2 -110.7 69.2 -110.7 65.8 -98.8C62.5 -110.7 62.5 -110.7 50.6 -114.0C62.5 -117.3 62.5 -117.3 65.8 -129.2Z' fill='#FFB81C'/><polygon points='129.3,-39.3 98.7,-21.7 68.1,-39.3 68.1,-74.7 98.7,-92.3 129.3,-74.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M98.7 -72.2C102.1 -60.3 102.1 -60.3 113.9 -57.0C102.1 -53.7 102.1 -53.7 98.7 -41.8C95.4 -53.7 95.4 -53.7 83.5 -57.0C95.4 -60.3 95.4 -60.3 98.7 -72.2Z' fill='#FFB81C'/><polygon points='162.2,17.7 131.6,35.3 101.0,17.7 101.0,-17.7 131.6,-35.3 162.2,-17.7' fill='#03417A' stroke='#FFB81C' stroke-width='3'/><path d='M131.6 -15.2C135.0 -3.3 135.0 -3.3 146.8 0.0C135.0 3.3 135.0 3.3 131.6 15.2C128.3 3.3 128.3 3.3 116.4 0.0C128.3 -3.3 128.3 -3.3 131.6 -15.2Z' fill='#FFB81C'/></svg>`;
+function cheer(it) {
+  const navy = it.brand ?? '#03417A';
+  const orange = it.accent ?? '#FF8001';
+  // 句点（。）で行を分け、長すぎる行だけ読点（、）でも分ける。いちばん長い行が幅に収まる大きさに
+  const lines = it.heading
+    .split(/(?<=。)/)
+    .flatMap((l) => ([...l].length > 15 ? l.split(/(?<=、)/) : [l]))
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0) + (l.includes('禁止') ? 0.6 : 0);
+  const fit = { size: Math.min(80, Math.floor(640 / Math.max(...lines.map(len)))) };
+  const head = lines.map((l) => `<span style="display:block;white-space:nowrap">${esc(l).replace(/禁止/g, '<b class="stamp">禁止</b>')}</span>`).join('');
+  const kikko = readFileSync(resolve(root, 'src/styles/theme-cheer.css'), 'utf8').match(/--kikko:\s*url\("([^"]+)"\)/)?.[1] ?? '';
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'ZKh';font-weight:900;src:url('${fontFile('zen-kaku-gothic-new-900-h.woff2')}') format('woff2')}
+  @font-face{font-family:'ZKr';font-weight:900;src:url('${fontFile('zen-kaku-gothic-new-900.woff2')}') format('woff2')}
+  @font-face{font-family:'UB';font-weight:200 900;src:url('${fsv('unbounded', 'unbounded-latin-wght-normal.woff2')}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:#0B1F3A;position:relative;overflow:hidden}
+  .sky{position:absolute;right:-120px;top:-60px;width:760px;height:760px;border-radius:50%;background:radial-gradient(circle,#e6f1fc,transparent 68%)}
+  .kk{position:absolute;inset:0;background:url("${kikko}") 0 0/27.71px 48px;opacity:.14;-webkit-mask:radial-gradient(ellipse 42% 75% at 82% 50%,#000,transparent 78%);mask:radial-gradient(ellipse 42% 75% at 82% 50%,#000,transparent 78%)}
+  .glow{position:absolute;right:70px;top:110px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,#FFB81C66,#FF800122 45%,transparent 70%)}
+  .shell{position:absolute;right:92px;top:132px;width:376px;filter:drop-shadow(0 24px 30px #022a5244)}
+  .ring{position:absolute;right:40px;top:470px;width:480px;height:70px;border-radius:50%;border:2px solid ${orange}66}
+  .stars i{position:absolute;width:14px;height:14px;background:#FFB81C;clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:12px;background:repeating-linear-gradient(90deg,${orange} 0 60px,${navy} 60px 120px)}
+  .in{position:absolute;inset:60px 540px 58px 80px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:22px}
+  .top img{height:40px;width:auto}
+  .label{font-family:'UB',sans-serif;font-weight:700;font-size:17px;letter-spacing:.12em;text-transform:uppercase;color:${navy};display:flex;align-items:center;gap:12px}
+  .label::before{content:'';width:18px;height:18px;background:${orange};clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
+  h1{font-family:'ZKh','ZKr','Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:${fit.size}px;line-height:1.32;letter-spacing:.01em;width:calc(100% + 120px)}
+  .stamp{display:inline-block;margin-left:.06em;padding:0 .12em .04em;color:#DC3232;border:.07em solid #DC3232;border-radius:.14em;box-shadow:inset 0 0 0 .03em #fff,inset 0 0 0 .05em #DC3232;transform:rotate(-5deg);line-height:1.05}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:21px;font-weight:700;color:#3a4b64;width:calc(100% + 460px)}
+  .foot svg{height:38px;width:auto}
+</style></head><body>
+<div class="sky"></div><div class="kk"></div><div class="glow"></div><div class="ring"></div>
+<div class="stars"><i style="right:520px;top:96px"></i><i style="right:96px;top:84px;transform:scale(.7)"></i><i style="right:40px;top:300px;transform:scale(1.2)"></i><i style="right:470px;top:420px;transform:scale(.6)"></i></div>
+<img class="shell" src="data:image/svg+xml,${encodeURIComponent(SHELL)}" alt="">
+<div class="bar"></div>
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}</div>
+  <div><p class="label">${esc(it.label)}</p><h1 style="margin-top:16px">${head}</h1></div>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</div></body></html>`;
+}
 function html(it) {
+  if (it.theme === 'cheer') return cheer(it);
   if (it.theme === 'minka') return minka(it);
   if (it.theme === 'needle') return needle(it);
   if (it.theme === 'studio') return studio(it);

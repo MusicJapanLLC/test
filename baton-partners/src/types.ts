@@ -91,6 +91,8 @@ export type Partner = {
    *          'studio'    … 撮影スタジオと漫画のヒーロー。墨とロゴの青、極太の見出し、網点・集中線・ファインダー・吹き出し（Smartaleck）
    *          'match'     … Empro のロゴ（赤と水色の三角が重なる）。白地に赤・水色・重なりのワイン、丸ゴシックの見出し、
    *                        通知のトースト・選考ボード・面談の記録カード（エボルグ）
+   *          'cheer'     … 応援と、星をまとったカメ。白地に紺とオレンジ、亀甲（六角形）の地紋、星のきらめき、
+   *                        招待状・ステッカー・トレーディングカード・応援ボタン（Presence）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'pair'      … 赤い三角（求職者）と水色の三角（求人）。散らばる→表に並ぶ→線でつながる→重なって大きな Empro の印になる
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
@@ -98,10 +100,11 @@ export type Partner = {
    *          'en'        … 縁（散らばった検索の札が格子に並び、赤い糸で一つのサイトに結ばれる）
    *          'feed'      … 画面の壁（散らばったリール・動画・トーク画面が壁に並び、集中線になって中心の一点に集まる）
    *          'vinyl'     … 公式シンボルのレコード（CUTで溝が刻まれ、SPINでジャケットが回り、DROPで針が落ちて波形になる）
+   *          'enjin'     … 円陣（縁陣）。六角形のタイル（人）が散らばる→亀甲に並び、縁の糸でつながる→円陣を組んで光る甲羅になる
    */
   world: {
-    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair';
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match' | 'cheer';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
@@ -292,6 +295,42 @@ export type Partner = {
       points: { name: string; sub: string; bearing: number; ring: number; event?: string }[];
       note: string;
     };
+    /**
+     * 招待状（cheer の世界観）。コミュニティのきまりを、表と裏のある招待状のカードで見せる。
+     * 横には、判子を押された名刺（「名刺交換は、しない」の印）。文言は公開されている告知の範囲で
+     */
+    invite?: {
+      kicker: string;
+      title: string;
+      lead: string;
+      /** 招待状の表（経営者のコミュニティ）と裏（もう一つの会）。押すと返る */
+      card: { name: string; sub: string; line: string; serial: string; back: { name: string; sub: string; line: string } };
+      rules: { no: string; title: string; text: string }[];
+      /** 名刺に押す判子の文字（2〜3字） */
+      stamp: string;
+      note: string;
+    };
+    /**
+     * 代表のトレーディングカード（cheer の世界観）。表は写真（leader.photo）、裏は公開プロフィールの項目。
+     * 写真を受け取る前は、写真待ちの面を出す（作った写真や似顔絵は置かない）
+     */
+    card?: {
+      kicker: string;
+      title: string;
+      lead: string;
+      team: string;
+      position: string;
+      tags: string[];
+      back: { label: string; value: string }[];
+      /** 写真がないときに表に出す一言 */
+      pending: string;
+      note: string;
+    };
+    /**
+     * 応援ボタン（cheer の世界観）。押すたびに甲羅の星が一つずつ灯り、紙吹雪が舞う。
+     * 押した回数はこの端末の中（localStorage）にだけ残し、どこにも送らない
+     */
+    cheer?: { kicker: string; title: string; lead: string; button: string; done: string; note: string; link?: { label: string; url: string } };
     /** 登壇・主催・共催・伴走の記録を、チケットのようなカードで（公開されている告知の範囲で） */
     events?: {
       title: string;
