@@ -109,17 +109,59 @@ function loadCmu() {
     if (!CMU.has(w)) CMU.set(w, rest);
   }
 }
-function ipaWord(word) {
-  const w = word.toLowerCase().replace(/[’]/g, "'").replace(/^[^a-z']+|[^a-z']+$/g, '');
+// words CMU doesn't know yet (slang, new tech words) — hand-checked American pronunciations
+const IPA_EXTRA = {
+  clingy: 'ˈklɪŋi', hangry: 'ˈhæŋɡri', influencer: 'ˈɪnfluənsɚ', upsell: 'ˈʌpˌsɛl', lowkey: 'ˈloʊˌki', highkey: 'ˈhaɪˌki',
+  rizz: 'rɪz', doomscroll: 'ˈdumˌskroʊl', fomo: 'ˈfoʊmoʊ', simp: 'sɪmp', situationship: 'ˌsɪtʃuˈeɪʃənʃɪp', ick: 'ɪk',
+  swole: 'swoʊl', adulting: 'əˈdʌltɪŋ', ghosting: 'ˈɡoʊstɪŋ', bussin: 'ˈbʌsɪn', deadass: 'ˈdɛdˌæs', fam: 'fæm',
+  homie: 'ˈhoʊmi', noob: 'nub', emoji: 'ɪˈmoʊdʒi', oof: 'uf', meh: 'mɛ', hella: 'ˈhɛlə', sorta: 'ˈsɔrtə',
+  'entrée': 'ˈɑnˌtreɪ', flirty: 'ˈflɝti', chatbot: 'ˈtʃætˌbɑt', livestream: 'ˈlaɪvˌstrim', remix: 'ˈriˌmɪks',
+  overthink: 'ˌoʊvɚˈθɪŋk', setlist: 'ˈsɛtˌlɪst', merch: 'mɝtʃ', deadlift: 'ˈdɛdˌlɪft', gonna: 'ˈɡɑnə', wanna: 'ˈwɑnə', gotta: 'ˈɡɑtə',
+  lemme: 'ˈlɛmi', gimme: 'ˈɡɪmi', kinda: 'ˈkaɪndə', dunno: 'dəˈnoʊ', ya: 'jə', "y'all": 'jɔl', "ain't": 'eɪnt',
+};
+// spoken as letters: EOD, KPI, B2B, DM, brb, gg …
+const LETTER = {
+  a: 'eɪ', b: 'bi', c: 'si', d: 'di', e: 'i', f: 'ɛf', g: 'dʒi', h: 'eɪtʃ', i: 'aɪ', j: 'dʒeɪ', k: 'keɪ', l: 'ɛl', m: 'ɛm',
+  n: 'ɛn', o: 'oʊ', p: 'pi', q: 'kju', r: 'ɑr', s: 'ɛs', t: 'ti', u: 'ju', v: 'vi', w: 'ˈdʌbəlju', x: 'ɛks', y: 'waɪ', z: 'zi', 2: 'tu',
+};
+const SAID_AS_LETTERS = new Set(['eod', 'kpi', 'b2b', 'npc', 'tmi', 'irl', 'dm', 'dms', 'jk', 'gg', 'afk', 'brb', 'wtf', 'af', 'ceo', 'roi', 'seo', 'fyi', 'asap', 'id', 'ai', 'ok']);
+function spellOut(w) {
+  const plural = w.length > 2 && w.endsWith('s') && SAID_AS_LETTERS.has(w.slice(0, -1));
+  const sounds = [...(plural ? w.slice(0, -1) : w)].map((ch) => LETTER[ch]);
+  if (!sounds.length || sounds.some((x) => !x)) return null;
+  const last = sounds.length - 1;
+  return sounds.map((x, i) => (i === last ? 'ˈ' : 'ˌ') + x.replace(/^ˈ/, '')).join('') + (plural ? 'z' : '');
+}
+function ipaWord(word, pos = '') {
+  const w = word.toLowerCase().replace(/[’]/g, "'").replace(/^[^a-z0-9']+|[^a-z0-9'é]+$/g, '');
   if (!w) return '';
+  if (IPA_EXTRA[w]) return IPA_EXTRA[w];
+  const bare = word.replace(/[^A-Za-z0-9]/g, '');
+  if ((SAID_AS_LETTERS.has(w) || (w.endsWith('s') && SAID_AS_LETTERS.has(w.slice(0, -1)))) && (/^[A-Z0-9]+s?$/.test(bare) || !CMU.has(w))) return spellOut(w);
   const p = CMU.get(w);
-  return p ? arpaToIpa(p) : null;
+  if (p) return arpaToIpa(p);
+  // compounds: well-done, to-go, warm-up, two-factor …
+  if (w.includes('-')) {
+    const words = w.split('-').filter(Boolean);
+    const parts = words.map((x) => ipaWord(x));
+    if (!parts.every(Boolean)) return null;
+    // compound nouns stress the first part (WARM-up), compound adjectives the last (well-DONE)
+    const weak = new Set(['to', 'it', 'a', 'the', 'of', 'in', 'and']);
+    const content = words.map((x, i) => (weak.has(x) ? -1 : i)).filter((i) => i >= 0);
+    const main = pos === 'n' ? content[0] : content[content.length - 1];
+    return parts.map((ip, i) => {
+      if (weak.has(words[i])) return ip.replace(/[ˈˌ]/g, '');
+      const marked = /[ˈˌ]/.test(ip) ? ip : 'ˈ' + ip;
+      return i === main ? marked : marked.replace(/ˈ/g, 'ˌ');
+    }).join('');
+  }
+  return null;
 }
 function ipaPhrase(text) {
   const words = text.replace(/[~…/()]/g, ' ').replace(/\b(sb|sth|someone|something)\b/gi, '$1').split(/\s+/).filter(Boolean);
   const parts = [];
   for (const w of words) {
-    if (/^[A-Z]+$/.test(w) && w.length > 1 && !CMU.has(w.toLowerCase())) return null;
+    if (/^[A-Z]+$/.test(w) && w.length > 1 && !CMU.has(w.toLowerCase()) && !SAID_AS_LETTERS.has(w.toLowerCase())) return null;
     const ip = ipaWord(w);
     if (ip === null) return null;
     if (ip) parts.push(ip);
@@ -267,7 +309,7 @@ for (const w of words) {
   let id = `w-${slug(w.head)}`;
   if (ids.has(id)) id = `${id}-2`;
   ids.add(id);
-  const ipa = w.head.includes(' ') ? ipaPhrase(w.head) : ipaWord(w.head);
+  const ipa = w.head.includes(' ') ? ipaPhrase(w.head) : ipaWord(w.head, w.pos);
   if (!ipa) noIpa++;
   const o = { id, k: 'w', s: 'words', sc: w.sc, h: w.head, pos: w.pos, ja: w.ja, d: w.d, l: [['', w.ex]], t: w.tier };
   if (ipa) o.ipa = ipa;

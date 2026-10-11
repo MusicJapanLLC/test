@@ -1,0 +1,190 @@
+// Core verbs you can't avoid (and that listening tests love)
+accept | v | 受け入れる | say yes to / agree to take | I accept the offer. | business
+achieve | v | 達成する | succeed in doing | You can achieve a lot in a year. | study
+adjust | v | 調整する・慣れる | change a little / get used to | I'm still adjusting to the night shift. | work
+agree | v | 賛成する | have the same opinion | I totally agree. | daily
+allow | v | 許す・許可する | let someone do | Dogs aren't allowed inside. | daily
+announce | v | 発表する | tell people officially | They announced the winner. | business
+arrange | v | 手配する・並べる | plan or organize | I'll arrange a meeting. | work
+arrive | v | 到着する | reach a place | When does your flight arrive? | travel
+attend | v | 出席する | go to an event | Will you attend the meeting? | work
+behave | v | 振る舞う | act in a certain way | Behave yourself. | friends
+believe | v | 信じる | think something is true | I can't believe it's Friday already. | daily
+belong | v | 属する・〜のものである | be owned by / fit in a place | Does this belong to you? | daily
+breathe | v | 呼吸する | take air in and out | Just breathe. You got this. | health
+chase | v | 追いかける | run after | Stop chasing people who don't text back. | crush
+claim | v | 主張する・請求する | say something is true / ask for | He claims he's never late. | conflict
+collect | v | 集める | gather together | I collect old vinyl records. | music
+compare | v | 比べる | look at differences | Don't compare yourself to others. | feelings
+compete | v | 競う | try to win against others | We compete on quality, not price. | business
+complete | v | 完了する | finish | Please complete the form. | paperwork
+concentrate | v | 集中する | focus your mind | I can't concentrate with this noise. | study
+consider | v | 検討する・考慮する | think about carefully | We'll consider your proposal. | business
+contact | v | 連絡する | get in touch with | Feel free to contact me anytime. | business
+continue | v | 続ける | keep going | Let's continue tomorrow. | work
+create | v | 作り出す | make something new | I create music and videos. | music
+damage | v | 傷つける・損害を与える | harm or break | The rain damaged my shoes. | daily
+decide | v | 決める | make a choice | I can't decide what to order. | food
+deliver | v | 届ける・やり遂げる | bring / do what you promised | We always deliver on time. | business
+deny | v | 否定する | say something isn't true | He denied everything. | conflict
+depend | v | 次第である・頼る | be decided by / rely on | It depends on the weather. | daily
+describe | v | 説明する・描写する | say what something is like | Describe your perfect weekend. | daily
+destroy | v | 破壊する・ボコボコにする | ruin completely | The new update destroyed my battery. | online
+develop | v | 開発する・発達させる | build or grow | We're developing a new app. | business
+disagree | v | 反対する | have a different opinion | I respectfully disagree. | conflict
+discover | v | 発見する | find for the first time | I discovered this band last week. | music
+discuss | v | 話し合う | talk about | Let's discuss it over lunch. | work
+escape | v | 逃げる・抜け出す | get away | I need to escape the city this weekend. | travel
+exchange | v | 交換する・両替する | give and receive | Can I exchange this for a bigger size? | shopping
+exist | v | 存在する | be real | Does a perfect job even exist? | feelings
+forget | v | 忘れる | not remember | Don't forget your charger. | daily
+gain | v | 得る・増える | get / increase | I gained five kilos in Osaka. Worth it. | food
+guarantee | v | 保証する | promise something will happen | I can't guarantee it'll work. | business
+hate | v | 大嫌いである | strongly dislike | I hate waking up early. | daily
+heal | v | 癒える・治る | become healthy again | Time heals everything. Mostly. | health
+hide | v | 隠す・隠れる | put out of sight | Where did you hide the snacks? | daily
+hurt | v | 痛む・傷つける | cause pain | My legs hurt from leg day. | gym
+imagine | v | 想像する | picture in your mind | Imagine living in New York. | feelings
+include | v | 含む | have as part | Does the price include tax? | money
+influence | v | 影響を与える | change how someone thinks | Music influences my mood a lot. | music
+inform | v | 知らせる | tell officially | We'll inform you by email. | business
+inspire | v | 刺激する・やる気を与える | make someone want to do | Your story really inspired me. | feelings
+involve | v | 伴う・巻き込む | include as a necessary part | The job involves a lot of travel. | work
+join | v | 参加する | become part of | Want to join us for dinner? | friends
+lose | v | 失う・負ける | not have anymore / not win | I lost my keys again. | daily
+maintain | v | 維持する | keep in good condition | It's hard to maintain a streak. | study
+measure | v | 測る | find the size or amount | How do you measure success? | business
+overcome | v | 乗り越える | succeed despite problems | You can overcome anything with time. | faith
+own | v | 所有する | have as your property | I don't own a car. | money
+participate | v | 参加する | take part | Everyone needs to participate. | study
+perform | v | 演奏する・行う | play music on stage / do | We're performing live on Friday. | music
+predict | v | 予測する | say what will happen | Nobody can predict the market. | money
+prepare | v | 準備する | get ready | I need to prepare for the interview. | work
+prevent | v | 防ぐ | stop from happening | Stretching prevents injury. | gym
+produce | v | 制作する・生産する | make (music, goods) | He produces beats for rappers. | music
+protect | v | 守る | keep safe | Protect your energy. | feelings
+provide | v | 提供する | give something needed | We provide free Wi-Fi. | business
+publish | v | 出版する・公開する | make public | I published my first article. | online
+recover | v | 回復する | get better | I'm still recovering from the weekend. | health
+reduce | v | 減らす | make smaller | Try to reduce sugar. | health
+relax | v | くつろぐ | rest and feel calm | Relax. It's not that deep. | feelings
+remember | v | 覚えている・思い出す | keep in memory | Do you remember me? | friends
+remove | v | 取り除く | take away | Please remove your shoes. | daily
+repair | v | 修理する | fix | Can you repair my phone screen? | shopping
+repeat | v | 繰り返す | say or do again | Could you repeat that, please? | study
+replace | v | 交換する・取って代わる | put something new instead | AI won't replace you. Someone using AI might. | online
+require | v | 必要とする | need officially | The job requires English. | work
+respect | v | 尊敬する・尊重する | admire / treat well | I respect your honesty. | friends
+respond | v | 返答する・反応する | answer | She hasn't responded yet. | dm
+rest | v | 休む | stop and relax | Rest day today. | gym
+retire | v | 引退する | stop working forever | I'm never retiring. I'll just get weirder. | work
+reveal | v | 明かす | show something hidden | The trailer revealed too much. | online
+ruin | v | 台無しにする | destroy, spoil | You ruined the ending for me! | online
+save | v | 救う・貯める・保存する | rescue / keep money / store | Save your work before it crashes. | online
+search | v | 探す・検索する | look for | I searched everywhere. | online
+serve | v | 提供する・仕える | give food / help | Breakfast is served until 10. | food
+shake | v | 振る・揺れる | move quickly back and forth | My hands were shaking before the show. | music
+steal | v | 盗む | take without permission | Someone stole my bike. | daily
+suffer | v | 苦しむ | feel pain | No need to suffer in silence. | health
+support | v | 支える・応援する | help / encourage | Thanks for supporting my music. | music
+switch | v | 切り替える | change from one to another | Let's switch seats. | daily
+taste | v | 味がする | have a flavor | This tastes amazing. | food
+tend to | v | 〜しがちである | usually do | I tend to talk too fast when I'm nervous. | feelings
+threaten | v | 脅す | say you'll hurt someone | Are you threatening me? | conflict
+tolerate | v | 我慢する | accept something unpleasant | I can't tolerate rude customers. | work
+trigger | v | 引き起こす | start a reaction | Loud noises trigger my headaches. | health
+upgrade | v | アップグレードする | make better | I upgraded my plan. | online
+vote | v | 投票する | choose in an election | Did you vote? | daily
+warn | v | 警告する | tell about danger | I warned you about the spicy sauce. | food
+wonder if | phr | 〜かなと思う | ask yourself politely | I was wondering if you're free Friday. | crush
+// Feelings & describing — the everyday adjectives
+afraid | adj | 怖い・恐れている | scared | I'm afraid of heights. | feelings
+alive | adj | 生きている | living | I feel so alive after a workout. | gym
+alone | adj | 一人で | without others | I like eating alone sometimes. | daily
+angry | adj | 怒った | mad | Why are you angry at me? | conflict
+brave | adj | 勇敢な | not afraid | That was brave. | feelings
+bright | adj | 明るい・頭がいい | full of light / smart | She's really bright. | study
+calm | adj | 落ち着いた | peaceful, not upset | Stay calm. | feelings
+careful | adj | 注意深い | paying attention to avoid danger | Be careful, it's hot. | daily
+careless | adj | 不注意な | not careful | That was a careless mistake. | work
+certain | adj | 確信している・ある〜 | sure / particular | Are you certain? | daily
+cheerful | adj | 陽気な | happy and positive | You're cheerful for a Monday. | daily
+clever | adj | 賢い・うまい | smart, inventive | That's a clever idea. | business
+confused | adj | 混乱した | not understanding | I'm confused. Can you explain again? | study
+dark | adj | 暗い・ダークな | without light / grim | I love dark humor. | friends
+deep | adj | 深い | far down / serious | Whoa, that's deep. | feelings
+dirty | adj | 汚い | not clean | My shoes are dirty. | daily
+dull | adj | 退屈な・鈍い | boring / not sharp | The meeting was dull. | work
+eager | adj | 熱心な・したくてたまらない | very wanting | I'm eager to learn. | study
+elegant | adj | 上品な | graceful and stylish | What an elegant restaurant. | food
+familiar | adj | 見覚えのある・よく知っている | known | You look familiar. | pickup
+fragile | adj | 壊れやすい | easily broken | Handle with care, it's fragile. | shopping
+harsh | adj | 厳しい・きつい | cruel or too strong | That's a bit harsh. | conflict
+hungry | adj | お腹が空いた | wanting food | I'm hungry. Let's eat. | food
+kind | adj | 親切な | nice to others | That's so kind of you. | friends
+lame | adj | ダサい・しょぼい | boring, uncool | That excuse is lame. | friends
+loyal | adj | 忠実な・義理堅い | faithful to someone | Dogs are loyal. | friends
+mysterious | adj | 謎めいた | hard to understand | He's kind of mysterious. | crush
+nasty | adj | 嫌な・ひどい | very unpleasant | That's a nasty cut. | health
+odd | adj | 変な・奇数の | strange | That's odd. | daily
+painful | adj | 痛い・つらい | causing pain | Watching that was painful. | feelings
+peaceful | adj | 穏やかな | quiet and calm | The beach was so peaceful. | travel
+pleasant | adj | 心地よい | nice, enjoyable | Have a pleasant evening. | daily
+poor | adj | 貧しい・かわいそうな | having little money / unlucky | Poor guy. He missed the train. | money
+precious | adj | 貴重な | very valuable | Time is precious. | feelings
+rich | adj | 金持ちの・濃厚な | wealthy / heavy (food) | This sauce is so rich. | food
+sad | adj | 悲しい | unhappy | Don't be sad. | feelings
+scared | adj | 怖がっている | afraid | I was so scared. | feelings
+sharp | adj | 鋭い・きっかり | pointed / exactly on time | The meeting starts at nine sharp. | work
+silly | adj | ばかげた・おちゃめな | foolish in a funny way | Don't be silly. | friends
+smart | adj | 頭がいい・おしゃれな | intelligent / stylish | Smart move. | daily
+sticky | adj | べたべたした | gluey / humid | It's so sticky today. | daily
+stupid | adj | ばかな | not smart | That was a stupid idea. My idea. | friends
+sure | adj | 確かな | certain | Are you sure? | daily
+tense | adj | 張り詰めた | nervous, stressful | The room got tense. | conflict
+thick | adj | 厚い・濃い・訛りが強い | wide / heavy / strong accent | He has a thick accent. | travel
+tired | adj | 疲れた | needing rest | I'm tired of waiting. | daily
+ugly | adj | 醜い・ひどい | not pretty / unpleasant | It got ugly fast. | conflict
+valuable | adj | 価値のある | worth a lot | Thanks, that's valuable feedback. | business
+warm | adj | 温かい | a little hot / friendly | Thanks for the warm welcome. | friends
+wise | adj | 賢明な | having good judgment | That's a wise decision. | faith
+worried | adj | 心配している | anxious | I'm worried about you. | feelings
+wrong | adj | 間違った | not correct | Wrong number. | phone
+// Work, music & night life — the stuff you actually talk about
+night shift | n | 夜勤 | work at night | I'm on the night shift this week. | work
+day shift | n | 日勤 | work during the day | I switched to the day shift. | work
+part-time | adj | パートの・アルバイトの | working fewer hours | I work part-time at a café. | work
+full-time | adj | 正社員の・フルタイムの | working all week | Is this a full-time job? | work
+side hustle | n | 副業 | extra work for money | Music is my side hustle. For now. | money
+boss move | n | デキる行動 | a confident, smart action | Paying off your debt early? Boss move. | money
+producer | n | プロデューサー | someone who makes records | My producer wants another take. | music
+songwriter | n | 作詞作曲家 | someone who writes songs | I'm a songwriter first, singer second. | music
+copyright | n | 著作権 | legal right to creative work | Who owns the copyright? | music
+license | n | ライセンス・許可 | official permission | You need a license to use that song. | music
+trademark | n | 商標 | a protected brand name or logo | We registered the trademark. | business
+take | n | テイク | one recording attempt | Let's do one more take. | music
+demo track | n | デモ音源 | a rough recording of a song | Send me the demo track. | music
+open mic | n | オープンマイク | an event anyone can perform at | I'm doing an open mic tonight. | music
+crowd | n | 観客・人混み | a large group of people | The crowd went wild. | music
+stage fright | n | あがり症 | fear of performing | I still get stage fright. | music
+rehearsal | n | リハーサル | practice before a show | Rehearsal starts at five. | music
+setlist | n | セットリスト | the list of songs for a show | What's on the setlist? | music
+merch | n | グッズ | merchandise | Buy the merch, support the artist. | music
+fan base | n | ファン層 | all of your fans | We're growing our fan base. | music
+tax return | n | 確定申告 | yearly tax report | I need to file my tax return. | paperwork
+// Faith & big feelings
+blessing | n | 恵み・祝福 | a gift from God / something good | My family is a blessing. | faith
+pastor | n | 牧師 | a church leader | Our pastor tells great stories. | faith
+worship | n | 礼拝・賛美 | praising God | Worship music hits different at night. | faith
+verse | n | 聖句・節 | a short part of the Bible | This verse helped me a lot. | faith
+sin | n | 罪 | wrongdoing against God | We all sin. | faith
+mercy | n | 慈悲・情け | kindness instead of punishment | Have mercy. | faith
+soul | n | 魂 | the spiritual part of a person | This song has soul. | music
+heaven | n | 天国 | where God lives | This ramen is heaven. | food
+miracle | n | 奇跡 | an amazing event | It's a miracle I woke up on time. | faith
+spiritual | adj | 霊的な・スピリチュアルな | about the soul | It was a spiritual experience. | faith
+humility | n | 謙虚さ | being humble | Humility is strength. | faith
+courage | n | 勇気 | bravery | It takes courage to start over. | feelings
+regret | n | 後悔 | sadness about what you did | No regrets. | feelings
+loneliness | n | 孤独 | being sad from being alone | Loneliness is real in big cities. | feelings
+peace | n | 平和・安らぎ | calm, no fighting | I just want some peace and quiet. | faith
