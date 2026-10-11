@@ -1,0 +1,118 @@
+name: Wahran live mobile verification
+on:
+  push:
+    branches: [chatgpt/wahran-live-verification-20261011]
+    paths: [.github/workflows/wahran-live-verification.yml]
+permissions:
+  contents: read
+jobs:
+  live-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install pinned browser test runner
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium webkit
+      - name: Test public course; no server writes or account login
+        run: |
+          mkdir -p evidence
+          python - <<'PY'
+          import json, hashlib, pathlib, datetime
+          from playwright.sync_api import sync_playwright, expect
+          OUT=pathlib.Path('evidence')
+          URL='https://music-japan.com/wahran/'
+          report={'url':URL,'at':datetime.datetime.now(datetime.timezone.utc).isoformat(),'browsers':{},'limits':['Virtual Linux browsers, not a physical iPhone','Microphone test uses generated fake input, not a human speaker','Device synthesis availability is observed; no native Oran pronunciation claim']}
+          failures=[]
+          def save():
+              OUT.joinpath('live-report.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          with sync_playwright() as p:
+              for name in ['chromium','webkit']:
+                  row={'checks':[]};report['browsers'][name]=row
+                  b=None
+                  try:
+                      args=['--use-fake-ui-for-media-stream','--use-fake-device-for-media-stream'] if name=='chromium' else []
+                      b=getattr(p,name).launch(headless=True,args=args)
+                      kwargs={'viewport':{'width':390,'height':844},'is_mobile':True,'has_touch':True}
+                      if name=='chromium':kwargs['permissions']=['microphone']
+                      ctx=b.new_context(**kwargs);page=ctx.new_page();page.set_default_timeout(15000)
+                      errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
+                      response=page.goto(URL,wait_until='networkidle',timeout=60000)
+                      assert response and response.status==200, 'Public page must return HTTP 200'
+                      row['status']=response.status;row['final_url']=page.url
+                      row['headers']=response.all_headers()
+                      assert page.url.startswith(URL), 'Unexpected redirect'
+                      source=response.body();row['html_sha256']=hashlib.sha256(source).hexdigest()
+                      assert row['html_sha256']=='996f48eb35ed437ad7656c960938aff717e0c10181fd041aafcde7c13e98c4e4','Unexpected deployed course source'
+                      expect(page.get_by_role('heading',name='Speak in Oran',exact=True)).to_be_visible()
+                      assert page.evaluate('isSecureContext')
+                      policy=row['headers'].get('permissions-policy','')
+                      assert 'microphone=()' not in policy.replace(' ',''), 'Global microphone denial leaked onto the app'
+                      row['checks'].append('HTTPS, live HTML identity, public rendering, microphone policy')
+                      course=page.locator('#course-data').text_content();d=json.loads(course)
+                      assert len(d['words'])==500 and sum(len(x['lines']) for x in d['lessons'])==160
+                      combos=page.evaluate('''() => {const e=WahranEngine.create(JSON.parse(document.querySelector('#course-data').textContent));return new Set(Array.from({length:10000},(_,n)=>e.combo(n).ar)).size}''')
+                      assert combos==10000;row['checks'].append('500 words, 160 examples, 10000 unique Arabic combinations')
+                      page.screenshot(path=str(OUT/f'{name}-home.png'),full_page=False)
+                      page.get_by_role('button',name='Start speaking',exact=False).click()
+                      assert page.locator('.phrase').count()==8
+                      for cls in ['ar','ipa','en']:expect(page.locator('.phrase .'+cls).first).to_be_visible()
+                      page.screenshot(path=str(OUT/f'{name}-lesson.png'),full_page=False)
+                      row['checks'].append('Start speaking opens 8 simultaneous Arabic/IPA/English lines')
+                      row['speech_capability']=page.evaluate('''() => ({api:!!window.speechSynthesis,voices:window.speechSynthesis?.getVoices().map(v=>({name:v.name,lang:v.lang}))||[]})''')
+                      page.locator('[data-play="l01-01"]').first.click();page.wait_for_timeout(1000)
+                      row['audio_observation']={'status':page.locator('#audio-status').inner_text(),'notice':page.locator('#toast').inner_text(),'playing_bar':page.locator('#audio-bar').is_visible()}
+                      row['checks'].append('Listen button observed without claiming an audible native result')
+                      page.locator('[data-practice="l01-01"]').click()
+                      expect(page.get_by_role('button',name='Record my voice',exact=True)).to_be_visible()
+                      assert page.evaluate('!!navigator.mediaDevices?.getUserMedia')
+                      if name=='chromium':
+                          page.get_by_role('button',name='Record my voice',exact=True).click()
+                          expect(page.locator('#record-button')).to_contain_text('Stop recording')
+                          page.wait_for_timeout(1200);page.locator('#record-button').click()
+                          page.wait_for_selector('#learner-audio audio')
+                          page.wait_for_function('document.querySelector("#learner-audio audio").readyState >= 1')
+                          row['recording']={'blob_url':page.locator('#learner-audio audio').get_attribute('src').startswith('blob:'),'decodable':True,'input':'Chromium fake audio device'}
+                          row['checks'].append('Real MediaRecorder API creates browser-decodable clip from fake microphone')
+                      page.locator('[data-action="close-dialog"]').click()
+                      page.locator('.bottom-nav [data-tab="words"]').click();page.locator('#word-search').fill('Oran')
+                      assert page.locator('.word-row').count()>0;page.locator('#word-search').fill('');page.locator('#word-topic').select_option('food')
+                      assert page.locator('.word-row').count()==25
+                      page.locator('#word-topic').select_option('all');page.locator('[data-open="w001"]').click();page.locator('dialog [data-save="w001"]').click()
+                      page.reload(wait_until='networkidle');page.locator('.bottom-nav [data-tab="words"]').click();page.locator('#word-scope').select_option('saved')
+                      assert page.locator('.word-row').count()==1;row['checks'].append('Word search, topic filter and actual localStorage persistence across reload')
+                      page.locator('.bottom-nav [data-tab="build"]').click()
+                      for selector,value in [('family','4'),('frame','9'),('item','19'),('context','9')]:page.locator('#'+selector).select_option(value)
+                      expect(page.locator('[data-combo-id="c09999"]')).to_be_visible()
+                      page.locator('[data-action="chunk-current"]').click()
+                      for i in [0,1,2]:page.locator(f'[data-pick="{i}"]').click()
+                      page.locator('[data-action="check-chunks"]').click();expect(page.locator('#chunk-feedback')).to_contain_text('You built it')
+                      page.locator('[data-action="close-dialog"]').click();row['checks'].append('10000th combination and correct three-chunk exercise')
+                      page.locator('.bottom-nav [data-tab="speak"]').click();page.locator('[data-action="quiz-read"]').click();page.locator('[data-choice]').first.click()
+                      assert page.locator('#quiz-feedback').inner_text();page.locator('[data-action="quiz-next"]').click();assert page.locator('[data-choice]').count()==4
+                      page.locator('[data-action="close-dialog"]').click();row['checks'].append('Meaning quiz feedback and next question')
+                      for width in [320,390,430]:
+                          page.set_viewport_size({'width':width,'height':844})
+                          for tab in ['learn','words','build','speak','culture']:
+                              page.locator('.bottom-nav [data-tab="'+tab+'"]').click()
+                              assert page.evaluate('document.documentElement.scrollWidth <= innerWidth'),f'{name} overflow at {width} on {tab}'
+                      assert page.locator('.culture-card').count()==14
+                      assert not errors,errors
+                      row['checks'].append('Five tabs at three smartphone widths; 14 culture notes; no page exceptions')
+                      row['outcome']='PASS';ctx.close()
+                  except Exception as e:
+                      row['outcome']='FAIL';row['error']=str(e);failures.append(name+': '+str(e))
+                  finally:
+                      if b:b.close()
+                      save()
+          print('WAHRAN_LIVE_REPORT_BEGIN')
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          print('WAHRAN_LIVE_REPORT_END')
+          if failures:raise SystemExit('\n'.join(failures))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: wahran-live-mobile-evidence
+          path: evidence/
+          retention-days: 14
