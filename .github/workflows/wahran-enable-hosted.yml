@@ -19,10 +19,11 @@ jobs:
         run: python3 music-japan-site-trace/scripts/wahran-enable-hosted.py
       - name: Recheck complete audio and publication tests after patch
         run: node --test music-japan-site-trace/tests/wahran-hosted-audio.test.mjs music-japan-site-trace/tests/wahran-publication.test.mjs
-      - name: Commit the verified source transition only
+      - name: Commit verified app source within contents-only permission
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- music-japan-site-trace/next/public/wahran/index.html music-japan-site-trace/scripts/publish-wahran.mjs .github/workflows/wahran-publication.yml
+          # The authenticated owner separately updates CI configuration; this job only writes app source.
+          git add -- music-japan-site-trace/next/public/wahran/index.html music-japan-site-trace/scripts/publish-wahran.mjs
           git commit -m 'fix(wahran): play included MP3s and remove device voice setup'
           git push origin HEAD:chatgpt/wahran-hosted-audio-20261011
