@@ -217,13 +217,15 @@ function parseWords(file) {
     if (parts.length < 5) return fail(where, `word line needs 5 fields: ${line.slice(0, 40)}`);
     const [head, pos, ja, d, ex, tags = ''] = parts;
     if (!POS.includes(pos)) fail(where, `bad pos ${pos}`);
-    const sc = tags.split(',').map((s) => s.trim()).filter(Boolean);
+    const all = tags.split(',').map((s) => s.trim()).filter(Boolean);
+    const explicit = all.includes('explicit');
+    const sc = all.filter((s) => s !== 'explicit');
     for (const s of sc) if (!SCENES.includes(s)) fail(where, `bad scene ${s}`);
     if (!ja || !d || !ex) fail(where, 'empty field');
     const lw = head.toLowerCase();
     const stem = lw.length > 4 ? lw.slice(0, Math.max(3, lw.length - 3)) : lw;
     if (!ex.toLowerCase().includes(stem.split(' ')[0])) warn.push(`${where}: "${head}" not in example`);
-    words.push({ head, pos, ja, d, ex, sc, tier, where });
+    words.push({ head, pos, ja, d, ex, sc, tier, where, explicit });
   });
   return words;
 }
@@ -269,6 +271,7 @@ for (const w of words) {
   if (!ipa) noIpa++;
   const o = { id, k: 'w', s: 'words', sc: w.sc, h: w.head, pos: w.pos, ja: w.ja, d: w.d, l: [['', w.ex]], t: w.tier };
   if (ipa) o.ipa = ipa;
+  if (w.explicit) o.e = 1;
   outWords.push(o);
 }
 

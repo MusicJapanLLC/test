@@ -1,0 +1,82 @@
+// Travel, housing & paperwork
+passport | n | パスポート | official travel document | Don't forget your passport. | travel
+visa | n | ビザ | permission to enter a country | I need a working holiday visa. | travel
+boarding pass | n | 搭乗券 | ticket to board a plane | Here's my boarding pass. | travel
+gate | n | 搭乗口 | where you board a plane | We're at gate 32. | travel
+layover | n | 乗り継ぎ | a stop between flights | I have a three-hour layover in Seoul. | travel
+delay | n | 遅延 | waiting longer than planned | There's a two-hour delay. | travel
+luggage | n | 荷物 | bags for travel | My luggage didn't arrive. | travel
+round trip | n | 往復 | going and coming back | A round trip to Sydney is pricey. | travel
+one-way | adj | 片道の | going only one direction | Just a one-way ticket. | travel
+customs | n | 税関 | checking goods at the border | We went through customs. | travel
+souvenir | n | お土産 | something to remember a trip | I bought souvenirs for my family. | travel
+sightseeing | n | 観光 | visiting famous places | We spent the day sightseeing. | travel
+tourist trap | n | 観光客向けのぼったくり場所 | an overpriced place for tourists | That street is a tourist trap. | travel
+local | n | 地元の人 | someone who lives in the area | Ask a local where to eat. | travel
+downtown | n | 中心街 | the city center (US) | Let's go downtown. | travel
+neighborhood | n | 近所・地域 | an area of a city | It's a safe neighborhood. | travel
+block | n | 区画・ブロック | the distance between streets | It's two blocks away. | travel
+subway | n | 地下鉄（米） | underground train | Take the subway. | travel
+ride | n | 乗せること・乗り物 | a trip in a vehicle | Do you need a ride? | travel
+hostel | n | ホステル | cheap shared accommodation | I stayed in a hostel. | travel
+check-in | n | チェックイン | arrival process at a hotel | Check-in is at 3 p.m. | travel
+apartment | n | アパート・マンション | a home in a building | I'm looking for an apartment. | paperwork
+landlord | n | 大家 | the owner who rents a home | My landlord raised the rent. | paperwork
+tenant | n | 入居者 | someone who rents a home | Tenants have rights too. | paperwork
+rent | n | 家賃 | money paid to live somewhere | Rent is due on the 1st. | paperwork
+utilities | n | 光熱費 | electricity, water, gas | Are utilities included? | paperwork
+furnished | adj | 家具付きの | with furniture | Is it furnished? | paperwork
+roommate wanted | phr | ルームメイト募集 | looking for someone to share | I saw a "roommate wanted" post. | paperwork
+form | n | 書類・用紙 | a document to fill in | Please fill out this form. | paperwork
+signature | n | 署名 | your written name | We need your signature here. | paperwork
+ID | n | 身分証 | identification | Can I see your ID? | paperwork
+address | n | 住所 | where you live | What's your address? | paperwork
+bank account | n | 銀行口座 | money stored at a bank | I opened a bank account. | money
+paperwork | n | 書類仕事 | official documents | The paperwork took all day. | paperwork
+application | n | 申し込み・アプリ | a formal request / app | My application was approved. | paperwork
+approved | adj | 承認された | officially accepted | Your visa is approved. | paperwork
+deadline extension | n | 締め切りの延長 | more time to finish | Can I get a deadline extension? | paperwork
+emergency | n | 緊急事態 | a dangerous situation | Call 911 in an emergency. | paperwork
+// Tech & AI
+app | n | アプリ | an application | There's an app for that. | online
+update | v | 更新する | make newer | Update your phone. | online
+password | n | パスワード | secret word to log in | I forgot my password again. | online
+account | n | アカウント | a user profile | I made a new account. | online
+settings | n | 設定 | options to change | Check your settings. | online
+notification | n | 通知 | a message alert | Turn off notifications at night. | online
+battery | n | 電池 | stored power | My battery is at 3%. | online
+charger | n | 充電器 | a device to charge | Can I borrow your charger? | online
+outlet | n | コンセント | a wall socket (US) | Is there an outlet near here? | cafe
+Wi-Fi | n | ワイファイ | wireless internet | The Wi-Fi is down. | online
+screen | n | 画面 | display | My screen is cracked. | online
+laptop | n | ノートパソコン | a portable computer | I work from my laptop. | online
+device | n | 端末 | a phone, tablet, etc. | Log in on any device. | online
+browser | n | ブラウザ | program for websites | Open it in your browser. | online
+website | n | ウェブサイト | pages on the internet | Our new website is live. | online
+domain | n | ドメイン | a website address | We bought the domain. | online
+server | n | サーバー | a computer that serves data | The server crashed. | online
+crash | v | 落ちる・クラッシュする | stop working suddenly | The app keeps crashing. | online
+glitch | n | 不具合 | a small error | It's just a glitch. | online
+cloud | n | クラウド | online storage | It's saved in the cloud. | online
+backup | n | バックアップ | a saved copy | Always keep a backup. | online
+privacy | n | プライバシー | keeping personal info private | Check the privacy settings. | online
+data | n | データ | information | Where is my data stored? | online
+AI | abbr | 人工知能 | artificial intelligence | I use AI to check my emails. | online
+chatbot | n | チャットボット | a program that chats | The chatbot didn't help. | online
+prompt | n | プロンプト・指示文 | instructions given to an AI | Write a clear prompt. | online
+code | n | コード | instructions for computers | I'm learning to code. | online
+developer | n | 開発者 | someone who writes software | We need a developer. | online
+designer | n | デザイナー | someone who designs | Our designer made the logo. | business
+automate | v | 自動化する | make work happen by itself | Automate the boring stuff. | work
+deploy | v | 公開する・デプロイする | put software live | We deployed the new version. | online
+tech-savvy | adj | ITに強い | good with technology | My grandma is surprisingly tech-savvy. | online
+user-friendly | adj | 使いやすい | easy to use | The app is very user-friendly. | online
+offline | adj | オフラインの | not connected | I'll be offline this weekend. | online
+online | adj | オンラインの | connected to the internet | Are you online? | online
+livestream | n | ライブ配信 | a live video online | I'm doing a livestream tonight. | online
+podcast | n | ポッドキャスト | an audio show online | I listen to podcasts at the gym. | online
+playlist | n | プレイリスト | a list of songs | Make me a playlist. | music
+algorithmic | adj | アルゴリズムによる | decided by algorithms | Algorithmic feeds keep you scrolling. | online
+scam | n | 詐欺 | a dishonest trick for money | That email is a scam. | online
+hacked | adj | 乗っ取られた | broken into by a hacker | My account got hacked. | online
+two-factor authentication | n | 二段階認証 | a second login check | Turn on two-factor authentication. | online

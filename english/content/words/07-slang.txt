@@ -1,0 +1,118 @@
+// Slang & internet English (US, 2020s). Explicit words are marked in the Japanese gloss.
+vibe | n | 雰囲気・ノリ | the feeling of a place or person | This café has a good vibe. | friends
+vibes | n | 雰囲気（複数形で多用） | general feeling | Bad vibes. Let's leave. | friends
+lowkey | adv | ちょっと・密かに | a little, secretly | I'm lowkey nervous. | friends
+highkey | adv | めっちゃ・堂々と | very, openly | I highkey love this song. | friends
+no cap | phr | ガチで・嘘じゃない | no lie, for real | This is the best ramen in Osaka, no cap. | friends
+cap | n | 嘘 | a lie | That's cap. You didn't run 20K. | friends
+slay | v | キマってる・最高にやる | do something amazingly | You slayed that presentation. | friends
+goat | n | 史上最高の人（GOAT） | greatest of all time | Messi is the GOAT. | friends
+W | n | 勝ち・最高（W） | a win, something good | Free upgrade? Huge W. | online
+L | n | 負け・最悪（L） | a loss, something bad | Missed the train again. Big L. | online
+rizz | n | 口説く力・モテ力 | charm, flirting skill | He's got zero rizz. | pickup
+sus | adj | 怪しい | suspicious | That link looks sus. | online
+ratio | n | 炎上（返信が元投稿より伸びる） | when replies beat the original post | That tweet got ratioed. | online
+bet | int | 了解・OK | okay, sure | Meet at 8? — Bet. | dm
+say less | phr | 了解、それ以上言わなくていい | I understand, I'm in | Free pizza at my place. — Say less. | friends
+it's giving | phr | 〜っぽい・〜感ある | it looks like / feels like | This outfit? It's giving rock star. | friends
+main character | n | 主人公（気取り） | someone acting like the star | He walks in like he's the main character. | online
+NPC | n | モブ（自分で考えない人） | someone who acts like a game background character | Stop being an NPC. Have an opinion. | online
+touch grass | phr | 外に出ろ（ネットやりすぎ） | go outside, stop being online | You've been gaming for 12 hours. Touch grass. | online
+chronically online | adj | ネット中毒の | always on the internet | He's so chronically online. | online
+doomscroll | v | 暗いニュースを延々見る | scroll bad news endlessly | Stop doomscrolling and sleep. | online
+FOMO | n | 取り残される不安 | fear of missing out | I have FOMO when everyone's at the party. | feelings
+YOLO | phr | 人生一度きり | you only live once | Skydiving? YOLO. | friends
+TMI | abbr | 聞きたくない情報（言いすぎ） | too much information | Okay, TMI. I didn't need to know that. | friends
+IRL | abbr | 現実で | in real life | We met online, but we're meeting IRL tomorrow. | online
+DM | n | ダイレクトメッセージ | a private message | Slide into my DMs. | dm
+slide into the DMs | phr | DMで口説く | message someone to flirt | He slid into her DMs. | crush
+receipts | n | 証拠（スクショ） | proof, usually screenshots | You said that. I have receipts. | online
+tea | n | 噂話・ゴシップ | gossip | Spill the tea. What happened? | friends
+spill the tea | phr | 噂を話す | share gossip | Come on, spill the tea. | friends
+shade | n | 嫌味・ディス | subtle insults | Was that shade? | friends
+throw shade | phr | 遠回しにディスる | insult indirectly | She's throwing shade at her ex. | friends
+flex | v | 見せびらかす | show off | He's flexing his new watch. | friends
+weird flex but ok | phr | 変な自慢だけど…まあいいよ | odd thing to brag about | I've never read a book. — Weird flex, but okay. | friends
+clout | n | 影響力・注目 | fame, influence | He's just doing it for clout. | online
+simp | n | 好きな人に尽くしすぎる人 | someone who tries too hard for a crush | Stop being a simp. She's not texting back. | crush
+situationship | n | 曖昧な関係 | a relationship without a label | We're in a situationship. | crush
+ick | n | 冷める瞬間 | a sudden turn-off | He chewed with his mouth open. Instant ick. | crush
+red flag | n | 危険信号 | a warning sign | No eye contact is a red flag. | crush
+green flag | n | 安心ポイント | a good sign | He's nice to waiters. Green flag. | crush
+glow up | n | 見違えるほどの変身 | a big improvement in looks or life | Bro had a serious glow-up. | gym
+gains | n | 筋肉の成長 | muscle growth | Look at those gains! | gym
+swole | adj | ムキムキの | very muscular | He got swole over the summer. | gym
+beast mode | n | 本気モード | very intense effort | I'm in beast mode today. | gym
+foodie | n | グルメ | someone who loves food | She's a total foodie. | food
+brunch | n | ブランチ | late breakfast + lunch | Let's do brunch on Sunday. | food
+adulting | n | 大人の仕事（家事・手続き） | doing grown-up tasks | Paid bills, did laundry. Adulting is hard. | daily
+broke | adj | 金欠の | having no money | I'm broke till Friday. | money
+loaded | adj | 金持ちの | very rich | His family is loaded. | money
+bougie | adj | 気取った・高級志向の | fancy, trying to look rich | $9 water? That's so bougie. | money
+ghosting | n | 音信不通にすること | suddenly stopping all contact | Ghosting is so rude. | crush
+cringe | n | 痛さ・共感性羞恥 | something embarrassing to watch | That video is pure cringe. | online
+vibe check | n | ノリチェック | checking someone's mood | Vibe check: how's everyone feeling? | friends
+bussin | adj | めっちゃうまい（スラング） | very delicious | This burger is bussin. | food
+deadass | adv | マジで | seriously | Deadass, I'm not joking. | friends
+fam | n | 仲間・家族 | close friends | What's up, fam? | friends
+homie | n | ダチ・仲間 | close friend | He's my homie. | friends
+squad | n | 仲間グループ | your group of friends | The squad's going to Kyoto. | friends
+bae | n | 恋人・大好きな人 | boyfriend or girlfriend | Dinner with bae tonight. | crush
+OG | n | 古参・元祖 | original, old-school | He's an OG in the music scene. | music
+newbie | n | 初心者 | a beginner | I'm a newbie at the gym. | gym
+noob | n | 下手くそ・初心者（ゲーム） | a beginner, often in games | Don't be a noob. | online
+troll | n | 荒らし | someone who posts to upset people | Don't feed the trolls. | online
+hater | n | アンチ | someone who criticizes you | Haters gonna hate. | online
+meme | n | ミーム | a funny image or idea that spreads | That meme is everywhere. | online
+viral | adj | バズった | spreading fast online | The video went viral. | online
+trending | adj | トレンド入りした | popular right now | It's trending on X. | online
+hashtag | n | ハッシュタグ | a tag with # | Use the hashtag in your post. | online
+caption | n | キャプション | text under a photo | I can't think of a caption. | online
+selfie | n | 自撮り | a photo of yourself | Let's take a selfie. | online
+filter | n | フィルター・加工 | an effect on a photo | Is that a filter? | online
+algorithm | n | アルゴリズム | rules that decide what you see | The algorithm loves short videos. | online
+content | n | コンテンツ | posts, videos, articles | I make music content. | online
+creator | n | クリエイター | someone who makes online content | She's a full-time creator. | online
+streamer | n | 配信者 | someone who livestreams | He's a streamer. Three nights a week. | online
+clip | n | 切り抜き | a short part of a video | That clip has a million views. | online
+reaction | n | リアクション | a response | I love his reaction videos. | online
+spoiler | n | ネタバレ | information that ruins a surprise | No spoilers! | online
+binge | n | 一気見・暴食 | doing too much at once | I went on a Netflix binge. | online
+emoji | n | 絵文字 | a small picture in texts | Too many emojis look childish in work emails. | dm
+screenshot | n | スクショ | a picture of your screen | Send me a screenshot. | online
+link in bio | phr | プロフのリンクから | the link is in the profile | Tickets? Link in bio. | online
+btw | abbr | ちなみに | by the way | Btw, I'm running late. | dm
+imo | abbr | 私の意見では | in my opinion | Imo, the first season was better. | dm
+smh | abbr | あきれる（首を振る） | shaking my head | He forgot again, smh. | dm
+ikr | abbr | だよね！ | I know, right? | This weather is perfect. — Ikr! | dm
+jk | abbr | 冗談だよ | just kidding | You're the worst. Jk. | dm
+nvm | abbr | やっぱいいや | never mind | Wait, nvm, found it. | dm
+ty | abbr | ありがと | thank you | ty! | dm
+np | abbr | どういたしまして | no problem | Thanks! — np | dm
+gg | abbr | お疲れ・いい試合だった | good game | gg, that was close. | online
+afk | abbr | 離席中 | away from keyboard | brb, afk five minutes. | online
+brb | abbr | すぐ戻る | be right back | brb, getting food. | online
+wtf | abbr | 何だよ（下品） | shock or anger (rude) | wtf just happened? | online, explicit
+af | abbr | めちゃくちゃ（下品） | very (rude) | I'm tired af. | online, explicit
+damn | int | くそ・すげえ | expression of anger or surprise | Damn, that's expensive. | friends
+dang | int | ちぇっ・すげえ（マイルド） | a softer "damn" | Dang, I missed it. | friends
+shoot | int | しまった | mild "oh no" | Shoot, I forgot my keys. | daily
+oops | int | おっと | small mistake | Oops, wrong button. | daily
+yikes | int | うわ、やば | something awkward or bad | Yikes. That's a lot of money. | friends
+oof | int | うっ（痛い・気まずい） | sympathy for something bad | Oof, that sounds painful. | friends
+ugh | int | うえっ・はあ（嫌） | annoyance | Ugh, Monday again. | daily
+meh | int | 微妙 | not interested, average | How was it? — Meh. | friends
+yay | int | やった！ | happiness | Yay, it's Friday! | friends
+whoa | int | うおっ | surprise | Whoa, slow down! | daily
+phew | int | ふう（安心） | relief | Phew, I made it. | daily
+nah | adv | いや・ううん | no (casual) | Nah, I'm good. | friends
+yep | adv | うん | yes (casual) | Yep, that's me. | friends
+nope | adv | ううん・いや | no (casual) | Nope, not today. | friends
+legit | adv | マジで | really, truly | That was legit the best day ever. | friends
+literally | adv | 文字通り・マジで | exactly / very (emphasis) | I literally just woke up. | friends
+totally | adv | 完全に・ほんとに | completely | I totally forgot. | friends
+super | adv | すごく | very | It's super easy. | friends
+hella | adv | めっちゃ（西海岸） | very, a lot | That's hella expensive. | friends
+mad | adv | めっちゃ（東海岸） | very | It's mad cold today. | friends
+kinda | adv | ちょっと・なんか | kind of | I'm kinda hungry. | daily
+sorta | adv | ある意味・ちょっと | sort of | It's sorta like a bar, sorta like a café. | daily

@@ -1,0 +1,106 @@
+// Food & cafe
+appetizer | n | 前菜 | a small dish before the main meal | Let's share an appetizer. | food
+entrée | n | メイン料理（米国） | the main dish (US) | What entrée did you get? | food
+side | n | サイドメニュー | a small extra dish | Fries or salad on the side? | food
+leftovers | n | 残り物 | food left after a meal | I'm eating leftovers for lunch. | food
+takeout | n | テイクアウト | food you take home | Let's just get takeout. | food
+delivery | n | デリバリー・配達 | food brought to you | Delivery takes forty minutes. | food
+to-go box | n | 持ち帰り容器 | a container for leftovers | Can I get a to-go box? | food
+refill | n | おかわり | another serving of a drink | Free refills! | food
+tip | n | チップ | extra money for service | How much should I tip? | money
+check | n | お会計（米） | the bill at a restaurant | Can we get the check? | food
+reservation | n | 予約 | a booked table | I have a reservation for 7. | food
+menu | n | メニュー | the list of food | Can I see the menu? | food
+special | n | 本日のおすすめ | a dish offered today | What's today's special? | food
+portion | n | 一人前・量 | the amount of food | The portions here are huge. | food
+craving | n | 無性に食べたい気持ち | a strong desire for food | I have a craving for tacos. | food
+snack | n | おやつ・軽食 | a small amount of food | Want a snack? | food
+dessert | n | デザート | sweet food after a meal | Save room for dessert. | food
+latte | n | ラテ | coffee with steamed milk | One oat latte, please. | cafe
+decaf | n | カフェインレス | coffee without caffeine | Is there decaf? | cafe
+espresso | n | エスプレッソ | strong small coffee | A double espresso, please. | cafe
+cold brew | n | コールドブリュー | coffee made with cold water | I'll get a cold brew. | cafe
+barista | n | バリスタ | someone who makes coffee | The barista spelled my name wrong. | cafe
+oat milk | n | オーツミルク | milk made from oats | Can I get it with oat milk? | cafe
+caffeine | n | カフェイン | the stimulant in coffee | I need caffeine. | cafe
+vegan | adj | ヴィーガンの | with no animal products | Is this vegan? | food
+gluten-free | adj | グルテンフリーの | without wheat protein | Do you have gluten-free bread? | food
+homemade | adj | 手作りの | made at home | Homemade cookies hit different. | food
+well-done | adj | よく焼いた | cooked completely | Steak, well-done please. | food
+medium rare | adj | ミディアムレア | cooked lightly, pink inside | Medium rare, please. | food
+crispy | adj | カリカリの | hard and crunchy | I love crispy fries. | food
+juicy | adj | ジューシーな | full of juice | This burger is so juicy. | food
+filling | adj | お腹にたまる | making you full | Ramen is really filling. | food
+starving | adj | 腹ペコの | very hungry | I'm starving. Let's eat. | food
+stuffed | adj | お腹いっぱいの | very full | No more, I'm stuffed. | food
+full | adj | 満腹の・満員の | having eaten enough / no space | I'm full, thanks. | food
+thirsty | adj | 喉が渇いた | wanting a drink | I'm so thirsty after the gym. | gym
+sip | v | すする・少しずつ飲む | drink a little at a time | Sip it. It's hot. | cafe
+grab | v | さっと取る・食べる | get quickly | Let's grab lunch. | food
+cook | v | 料理する | make food | I don't cook. I microwave. | food
+bake | v | 焼く（パン・お菓子） | cook in an oven | My mom bakes bread every Sunday. | food
+// Health & gym
+workout | n | ワークアウト・運動 | a session of exercise | Great workout today. | gym
+rep | n | 回数 | one repetition | Do ten reps. | gym
+set | n | セット | a group of reps | Three sets of ten. | gym
+warm-up | n | ウォームアップ | light exercise before training | Never skip the warm-up. | gym
+cardio | n | 有酸素運動 | exercise like running | I hate cardio. | gym
+weights | n | ウエイト | heavy objects for training | I lift weights four times a week. | gym
+treadmill | n | ランニングマシン | a running machine | I walked on the treadmill for 30 minutes. | gym
+bench press | n | ベンチプレス | a chest exercise | What's your bench press? | gym
+squat | n | スクワット | a leg exercise | Squats are the king of exercises. | gym
+deadlift | n | デッドリフト | lifting weight from the floor | Keep your back straight on deadlifts. | gym
+pull-up | n | 懸垂 | pulling your body up to a bar | I can do five pull-ups now. | gym
+push-up | n | 腕立て伏せ | pushing your body up from the floor | Twenty push-ups every morning. | gym
+stretch | v | ストレッチする | extend your muscles | Stretch after your workout. | gym
+sweat | v | 汗をかく | release water through skin | I'm sweating like crazy. | gym
+muscle | n | 筋肉 | body tissue that moves you | I want to build muscle. | gym
+protein | n | タンパク質 | nutrient for muscles | I need more protein. | gym
+calories | n | カロリー | energy in food | How many calories is this? | health
+diet | n | 食事・ダイエット | what you eat / eating plan | I'm on a diet. | health
+fit | adj | 健康で引き締まった | healthy and strong | You look fit! | gym
+in shape | phr | 体型が良い・体調がいい | physically fit | I'm trying to get in shape. | gym
+out of shape | phr | なまってる | not physically fit | I'm so out of shape. | gym
+injury | n | ケガ | physical harm | Rest the injury. | health
+pull a muscle | phr | 筋を痛める | hurt a muscle by stretching it too much | I pulled a muscle doing deadlifts. | gym
+headache | n | 頭痛 | pain in the head | I have a headache. | health
+hangover | n | 二日酔い | feeling sick after drinking | I have a terrible hangover. | health
+fever | n | 熱 | high body temperature | I have a fever. | health
+cold | n | 風邪 | a minor illness | I think I'm catching a cold. | health
+allergic | adj | アレルギーの | having an allergy | I'm allergic to cats. | health
+prescription | n | 処方箋 | a doctor's order for medicine | You need a prescription for that. | health
+pharmacy | n | 薬局 | a store selling medicine | Is there a pharmacy near here? | health
+appointment | n | 予約（病院・美容院） | a planned visit | I have a doctor's appointment. | health
+checkup | n | 健康診断 | a medical examination | I go for a checkup once a year. | health
+insurance | n | 保険 | protection paid in advance | Do you have travel insurance? | health
+sleep schedule | n | 睡眠リズム | the times you sleep and wake | My sleep schedule is a mess. | health
+insomnia | n | 不眠症 | trouble sleeping | I have insomnia before big days. | health
+mental health | n | メンタルヘルス | emotional well-being | Mental health matters. | health
+therapy | n | セラピー・カウンセリング | treatment by talking to a professional | Therapy really helped me. | health
+self-care | n | セルフケア | taking care of yourself | Sunday is self-care day. | health
+// Dating & relationships
+date | n | デート・相手 | a romantic meeting / the person | I have a date tonight. | crush
+first date | n | 初デート | the first romantic meeting | Where should we go for a first date? | crush
+relationship | n | 恋愛関係・関係 | a romantic connection | I'm not ready for a relationship. | crush
+boyfriend | n | 彼氏 | a male partner | Her boyfriend is a chef. | crush
+girlfriend | n | 彼女 | a female partner | My girlfriend loves horror movies. | crush
+single | adj | 独身の・フリーの | not in a relationship | Are you single? | crush
+taken | adj | 恋人がいる | in a relationship | Sorry, he's taken. | crush
+flirt | v | いちゃつく・口説く | act in a romantic, playful way | Is she flirting with me? | crush
+flirty | adj | 色っぽい・気がありそうな | playfully romantic | Her texts are kind of flirty. | crush
+chemistry | n | 相性・化学反応 | natural attraction | We had great chemistry. | crush
+spark | n | ときめき | a feeling of attraction | There was no spark. | crush
+attractive | adj | 魅力的な | good-looking or appealing | I find confidence attractive. | crush
+charming | adj | 魅力的な・感じがいい | pleasant and attractive | He's charming. Everyone likes him. | crush
+romantic | adj | ロマンチックな | about love | That's so romantic. | crush
+heartbreak | n | 失恋 | deep sadness after love ends | Heartbreak makes the best songs. | music
+jealousy | n | 嫉妬 | feeling jealous | Jealousy ruins relationships. | crush
+commitment | n | 本気・約束 | promise to stay together | He's scared of commitment. | crush
+long-distance | adj | 遠距離の | living far apart | We're in a long-distance relationship. | crush
+anniversary | n | 記念日 | the yearly date of an event | Happy anniversary! | crush
+propose | v | プロポーズする | ask someone to marry you | He proposed on the beach. | crush
+engaged | adj | 婚約した | agreed to marry | We just got engaged! | crush
+wedding | n | 結婚式 | a marriage ceremony | The wedding is in June. | crush
+divorce | n | 離婚 | ending a marriage | They're getting a divorce. | crush
+ex-girlfriend | n | 元カノ | a former girlfriend | My ex-girlfriend still has my hoodie. | crush
+matchmaking | n | お見合い・マッチング | arranging couples | Dating apps are matchmaking with math. | crush

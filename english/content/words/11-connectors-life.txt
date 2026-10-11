@@ -1,0 +1,128 @@
+// Connectors & adverbs — the glue of speaking (and the words you must catch when listening)
+actually | adv | 実は・実際は | in fact | Actually, I'm from Osaka. | daily
+basically | adv | 基本的に・要するに | in simple terms | Basically, we need more time. | daily
+honestly | adv | 正直に | truthfully | Honestly, I'm tired. | daily
+seriously | adv | 本気で・マジで | really, not joking | Seriously? That's amazing. | daily
+obviously | adv | 明らかに・もちろん | clearly | Obviously, I said yes. | daily
+definitely | adv | 絶対に・間違いなく | certainly | I'm definitely coming. | daily
+probably | adv | たぶん | likely | I'll probably be late. | daily
+maybe | adv | たぶん・もしかしたら | perhaps | Maybe next time. | daily
+hopefully | adv | うまくいけば | if things go well | Hopefully, it won't rain. | daily
+eventually | adv | 最終的に・いずれ | in the end, after time | You'll eventually get used to it. | daily
+finally | adv | ついに・最後に | at last | I finally finished! | daily
+anyway | adv | とにかく・それはさておき | changing topic / despite that | Anyway, how was your weekend? | daily
+though | adv | でも・けど（文末） | however (at the end) | It's expensive. Worth it, though. | daily
+although | conj | 〜だけれども | even though | Although it rained, we had fun. | daily
+however | adv | しかしながら | but (formal) | However, the budget is limited. | business
+instead | adv | 代わりに | as a replacement | Let's walk instead. | daily
+otherwise | adv | さもないと・それ以外は | if not / apart from that | Hurry, otherwise we'll miss it. | daily
+besides | adv | それに・その上 | also, in addition | Besides, it's too late now. | daily
+meanwhile | adv | その間に・一方 | at the same time | Meanwhile, I'll make coffee. | daily
+lately | adv | 最近 | recently | I've been tired lately. | daily
+recently | adv | 最近 | not long ago | I recently started boxing. | daily
+nowadays | adv | 今どき | these days | Nowadays, everyone pays by phone. | daily
+these days | adv | 最近は | nowadays | What are you up to these days? | daily
+so far | adv | 今のところ | until now | So far, so good. | daily
+at least | adv | 少なくとも | not less than / one good thing | At least it's Friday. | daily
+at first | adv | 最初は | in the beginning | At first, I hated coffee. | daily
+in the end | adv | 結局 | finally | In the end, we stayed home. | daily
+on purpose | adv | わざと | intentionally | Did you do that on purpose? | conflict
+by accident | adv | 偶然・うっかり | not intentionally | I deleted it by accident. | daily
+in a way | adv | ある意味 | partly | In a way, it was a good thing. | daily
+for sure | adv | 確かに・もちろん | definitely | I'll be there, for sure. | friends
+no wonder | phr | どうりで | it's not surprising | You worked all night? No wonder you're tired. | daily
+just in case | phr | 念のため | as a precaution | Bring an umbrella, just in case. | daily
+as soon as | conj | 〜したらすぐ | immediately when | Call me as soon as you land. | daily
+as long as | conj | 〜する限り | if, provided that | As long as you're happy. | daily
+even if | conj | たとえ〜でも | regardless of whether | Even if it rains, we're going. | daily
+unless | conj | 〜でない限り | except if | Don't call unless it's urgent. | daily
+whether | conj | 〜かどうか | if (or not) | I don't know whether he's coming. | daily
+whenever | conj | 〜するときはいつでも | any time that | Call me whenever. | daily
+wherever | conj | どこでも | any place that | Sit wherever you want. | daily
+whatever | pron | 何でも | anything | Order whatever you want. | daily
+almost | adv | ほとんど・もう少しで | nearly | I almost missed the train. | daily
+barely | adv | かろうじて | only just | I barely slept. | daily
+hardly | adv | ほとんど〜ない | almost not | I can hardly hear you. | daily
+pretty | adv | かなり | fairly, quite | It's pretty good. | daily
+quite | adv | かなり・まったく | very / completely | It's quite cold today. | daily
+rather | adv | むしろ・かなり | instead / fairly | I'd rather stay home. | daily
+fairly | adv | かなり・まあまあ | quite | It's fairly easy. | daily
+extremely | adv | 極めて | very, very | It's extremely important. | business
+absolutely | adv | 絶対に・まったくその通り | completely / yes, definitely | Absolutely! Let's do it. | daily
+exactly | adv | まさに・その通り | precisely | Exactly what I needed. | daily
+especially | adv | 特に | particularly | I love sushi, especially tuna. | daily
+mostly | adv | ほとんど・主に | mainly | I mostly work from cafés. | daily
+usually | adv | たいてい | normally | I usually wake up at six. | daily
+rarely | adv | めったに〜ない | not often | I rarely eat breakfast. | daily
+constantly | adv | 絶えず | all the time | My phone is constantly buzzing. | daily
+suddenly | adv | 突然 | very quickly, unexpectedly | Suddenly, the lights went out. | daily
+immediately | adv | すぐに | right away | Please reply immediately. | business
+right away | adv | すぐに | immediately | I'll do it right away. | work
+in advance | adv | 前もって | beforehand | Book in advance. | travel
+on time | adv | 時間通りに | at the planned time | The train was on time. | travel
+in time | adv | 間に合って | early enough | We made it in time. | daily
+// Daily life nouns
+alarm | n | 目覚まし・警報 | a sound to wake you | I didn't hear my alarm. | daily
+errand | n | 用事・お使い | a small task outside | I have some errands to run. | daily
+chores | n | 家事 | housework | I hate doing chores. | daily
+laundry | n | 洗濯物 | clothes to wash | I need to do laundry. | daily
+dishes | n | 皿洗い・食器 | plates to wash | Whose turn is it to do the dishes? | daily
+trash | n | ゴミ | garbage (US) | Take out the trash. | daily
+grocery store | n | スーパー | a food store | I'm going to the grocery store. | shopping
+groceries | n | 食料品 | food you buy | I spent $80 on groceries. | shopping
+convenience store | n | コンビニ | a small 24-hour shop | Japanese convenience stores are amazing. | shopping
+mall | n | ショッピングモール | a big shopping center | Let's meet at the mall. | shopping
+cash | n | 現金 | paper money and coins | Do you take cash? | money
+change | n | お釣り・小銭 | money back / coins | Keep the change. | money
+wallet | n | 財布 | holder for money and cards | I left my wallet at home. | daily
+keys | n | 鍵 | things to open doors | Have you seen my keys? | daily
+umbrella | n | 傘 | rain protection | Take an umbrella. | daily
+weekend | n | 週末 | Saturday and Sunday | Any plans for the weekend? | daily
+weekday | n | 平日 | Monday to Friday | The gym is empty on weekdays. | daily
+holiday | n | 祝日・休暇 | a special day off | Is Monday a holiday? | daily
+birthday | n | 誕生日 | the day you were born | Happy birthday! | friends
+plan | n | 予定・計画 | something you intend to do | What's the plan? | daily
+habit | n | 習慣 | something you do regularly | Coffee is a habit, not a need. | daily
+routine | n | 日課 | your usual way of doing things | What's your morning routine? | daily
+mood | n | 気分 | how you feel | I'm in a great mood. | feelings
+stress | n | ストレス | worry and pressure | Work stress is killing me. | feelings
+energy | n | 元気・エネルギー | strength to do things | I have no energy today. | feelings
+excuse | n | 言い訳 | a reason (often fake) | No excuses! | conflict
+mistake | n | 間違い | something wrong | Everyone makes mistakes. | study
+favor | n | お願い・親切 | a kind act | Can I ask you a favor? | friends
+advice | n | アドバイス | suggestion about what to do | Can I give you some advice? | friends
+opinion | n | 意見 | what you think | In my opinion, it's too expensive. | daily
+decision | n | 決断 | a choice | It's your decision. | daily
+chance | n | 機会・可能性 | opportunity / possibility | Give me a chance. | daily
+luck | n | 運 | chance of good things | Good luck! | daily
+secret | n | 秘密 | something hidden | Can you keep a secret? | friends
+rumor | n | 噂 | unconfirmed information | Is that rumor true? | friends
+surprise | n | 驚き・サプライズ | something unexpected | Surprise! | friends
+gift | n | プレゼント・才能 | a present / a talent | Thanks for the gift. | friends
+memory | n | 記憶・思い出 | something remembered | Good memories. | feelings
+dream | n | 夢 | images in sleep / a goal | My dream is to perform in New York. | feelings
+problem | n | 問題 | a difficulty | No problem. | daily
+// Money
+savings | n | 貯金 | money you keep | I used my savings for the trip. | money
+debt | n | 借金 | money you owe | I'm finally out of debt. | money
+loan | n | ローン・貸付 | borrowed money | I took out a loan. | money
+credit card | n | クレジットカード | a card for paying later | Do you take credit cards? | money
+bill | n | 請求書・お札 | a request for payment / paper money | I paid the electricity bill. | money
+payment | n | 支払い | money paid | The payment went through. | money
+balance | n | 残高 | money in your account | Check your balance. | money
+income | n | 収入 | money you earn | My income isn't stable yet. | money
+paycheck | n | 給料（小切手） | money from your job | I live paycheck to paycheck. | money
+raise | n | 昇給 | an increase in pay | I asked for a raise. | money
+bonus | n | ボーナス | extra pay | We got a bonus this year. | money
+price | n | 値段 | how much something costs | What's the price? | money
+deal | n | お得な買い物 | a good price | That's a good deal. | money
+bargain | n | 掘り出し物・格安 | something cheap for its value | It was a bargain. | money
+sale | n | セール・販売 | lower prices / selling | Everything's on sale. | shopping
+coupon | n | クーポン | a voucher for a discount | I have a coupon. | shopping
+installment | n | 分割払い | one of several payments | I paid in installments. | money
+crypto | n | 暗号資産 | cryptocurrency | He lost money on crypto. | money
+stock | n | 株・在庫 | company shares / items in store | It's out of stock. | money
+investment | n | 投資 | money put in to earn more | Good shoes are an investment. | money
+wealthy | adj | 裕福な | rich | Wealthy people still clip coupons. | money
+frugal | adj | 倹約家の | careful with money | I'm frugal, not cheap. | money
+worth | adj | 価値がある | having value | Is it worth it? | money
