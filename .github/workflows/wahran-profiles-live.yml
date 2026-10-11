@@ -1,0 +1,46 @@
+name: Wahran 1.2 public HTTPS acceptance
+on:
+  push:
+    branches: [chatgpt/wahran-conversation-profiles-20261011]
+    paths: [.github/workflows/wahran-profiles-live.yml]
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 23edfcb8469b09afd42632842e92b25881816c9e
+          persist-credentials: false
+      - name: Confirm exact deployed release, not just the merge
+        run: |
+          python - <<'PY'
+          import urllib.request,time,pathlib,re,hashlib
+          expected=pathlib.Path('music-japan-site-trace/next/public/wahran/index.html').read_bytes()
+          assert hashlib.sha256(expected).hexdigest()=='8738826cb4dd06301b837fb61592fde36faed534cfb49eb8f5ef075b1cb6d4fe'
+          beacon=b'''<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a85d5764223a4d2ba9be0d38c9111758"}'></script><!-- Cloudflare Pages Analytics -->'''
+          for attempt in range(13):
+              with urllib.request.urlopen('https://music-japan.com/wahran/',timeout=30) as r:body=r.read()
+              if body.count(beacon)<=1 and body.replace(beacon,b'')==expected:break
+              if attempt==12:raise SystemExit('Public source still differs from accepted release')
+              time.sleep(10)
+          print('PUBLIC RELEASE SOURCE VERIFIED',len(body),hashlib.sha256(body).hexdigest())
+          PY
+      - name: Install fixed browser runners
+        run: |
+          python -m pip install playwright==1.57.0 --quiet
+          python -m playwright install --with-deps chromium webkit > /tmp/browsers.log 2>&1 || { tail -60 /tmp/browsers.log; exit 1; }
+      - name: Real live site with all four profiles and actual bundled audio
+        env:
+          WAHRAN_URL: https://music-japan.com/wahran/
+          BROWSERS: chromium,webkit
+          EVIDENCE_DIR: evidence
+        run: python music-japan-site-trace/scripts/verify-wahran-profiles.py
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: wahran-1.2-public-evidence
+          path: evidence/
+          retention-days: 14
