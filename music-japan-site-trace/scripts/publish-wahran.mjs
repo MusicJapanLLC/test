@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync, cpSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const EXPECTED_SHA256='1c38d002512ab978f8ecc27949963745fe5df6567eb8cfaf445fd751f7cd27ae';
+const EXPECTED_SHA256='8738826cb4dd06301b837fb61592fde36faed534cfb49eb8f5ef075b1cb6d4fe';
 const RULE='\n# BEGIN WAHRAN MOBILE\n/wahran/*\n  ! Permissions-Policy\n  X-Robots-Tag: noindex, nofollow\n# END WAHRAN MOBILE\n';
 export function publishWahran(root=fileURLToPath(new URL('..',import.meta.url))) {
   const source=readFileSync(join(root,'next/public/wahran/index.html'));
