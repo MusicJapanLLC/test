@@ -1,0 +1,118 @@
+// Everyday verbs
+afford | v | 余裕がある（金・時間） | have enough money or time for | I can't afford a new laptop right now. | money
+admit | v | 認める | say something is true, often unwillingly | I'll admit it, I was wrong. | conflict
+apologize | v | 謝る | say sorry | You should apologize to her. | conflict
+appreciate | v | 感謝する・価値がわかる | be thankful for | I really appreciate your help. | business
+argue | v | 言い争う・主張する | disagree with angry words | We argued about money again. | conflict
+assume | v | 思い込む・想定する | think something is true without proof | Don't assume he's angry. Ask him. | work
+avoid | v | 避ける | stay away from | I avoid the gym on Mondays. Too crowded. | daily
+blame | v | 責める・〜のせいにする | say someone caused a problem | Don't blame the Wi-Fi. You forgot to save. | conflict
+borrow | v | 借りる | take and give back later | Can I borrow your charger? | daily
+lend | v | 貸す | give something that will be returned | Can you lend me five bucks? | money
+bother | v | 邪魔する・悩ます | annoy or trouble someone | Sorry to bother you. Quick question. | daily
+brag | v | 自慢する | talk too proudly about yourself | He brags about his car all the time. | friends
+browse | v | 見て回る・ざっと見る | look around without a goal | I'm just browsing. | shopping
+cancel | v | 取り消す・キャンセルする | stop a plan | They canceled the concert. | daily
+catch | v | 捕まえる・聞き取る・間に合う | get, hear or reach in time | Sorry, I didn't catch your name. | study
+celebrate | v | 祝う | do something special for a happy event | Let's celebrate your new job. | friends
+cheat | v | ズルをする・浮気する | break rules / be unfaithful | He cheated on his girlfriend. | crush
+choose | v | 選ぶ | pick from options | Choose one. You can't have both. | daily
+complain | v | 文句を言う | say you're unhappy about something | Stop complaining and help me. | conflict
+convince | v | 説得する・納得させる | make someone believe | You convinced me. Let's do it. | business
+deal | v | 対処する | handle a problem (deal with) | I can't deal with this right now. | feelings
+deserve | v | 〜に値する | should get because of what you did | You deserve a break. | feelings
+disappoint | v | がっかりさせる | make someone sad by not meeting hopes | I don't want to disappoint my parents. | feelings
+doubt | v | 疑う | not be sure | I doubt he'll show up. | daily
+earn | v | 稼ぐ・得る | get money or respect for work | You have to earn their trust. | money
+encourage | v | 励ます | give someone confidence | My coach always encourages me. | gym
+exaggerate | v | 大げさに言う | make something sound bigger than it is | You're exaggerating. It wasn't a two-hour line. | friends
+expect | v | 期待する・予想する | think something will happen | I didn't expect you to come! | daily
+explain | v | 説明する | make something clear | Can you explain that again? | study
+fail | v | 失敗する・落ちる | not succeed | I failed my driving test twice. | study
+forgive | v | 許す | stop being angry with someone | I forgive you. But I'm not forgetting. | conflict
+gossip | v | 噂話をする | talk about others' private lives | Stop gossiping about the new guy. | friends
+guess | v | 推測する・〜だと思う | give an answer without being sure | I guess you're right. | daily
+hesitate | v | ためらう | pause before doing something | Don't hesitate to ask. | business
+hurry | v | 急ぐ | do something fast | Hurry up, the train's leaving! | daily
+ignore | v | 無視する | pay no attention | Ignore the haters. | online
+impress | v | 感心させる・いい印象を与える | make someone admire you | I want to impress the client. | business
+improve | v | 上達する・改善する | get better | My listening is slowly improving. | study
+insist | v | 言い張る・どうしてもと言う | say firmly | She insisted on paying. | daily
+interrupt | v | 話をさえぎる | stop someone while they're talking | Sorry to interrupt, but we're out of time. | business
+invite | v | 招待する | ask someone to come | Thanks for inviting me. | friends
+judge | v | 決めつける・評価する | form an opinion, often unfairly | Don't judge me. I like pineapple pizza. | conflict
+mention | v | 言及する・ちょっと言う | say briefly | You never mentioned you had a brother! | daily
+miss | v | 恋しい・逃す・乗り遅れる | feel sad someone is gone / fail to catch | I missed the bus. / I miss Osaka. | feelings
+mess up | v | 台無しにする・ミスする | make a mistake | I messed up the order. My bad. | work
+negotiate | v | 交渉する | discuss to reach an agreement | We negotiated a better price. | business
+notice | v | 気づく | see or become aware | Did you notice my new haircut? | daily
+offer | v | 申し出る・提供する | say you'll give or do something | He offered to drive me home. | daily
+owe | v | 借りがある | need to pay back | I owe you one. | money
+persuade | v | 説得する | make someone agree | I persuaded my boss to try it. | business
+pretend | v | ふりをする | act like something is true | Just pretend you're confident. | feelings
+prefer | v | 〜の方が好き | like better | I prefer tea in the morning. | daily
+promise | v | 約束する | say you'll definitely do something | I promise I'll call you back. | daily
+prove | v | 証明する | show something is true | Prove it. Show me the receipt. | conflict
+quit | v | やめる | stop doing something | I quit smoking last year. | health
+realize | v | 気づく・実感する | understand suddenly | I just realized I left my wallet at home. | daily
+recommend | v | おすすめする | suggest something good | What do you recommend? | food
+refuse | v | 断る・拒む | say no firmly | He refused to pay the fee. | conflict
+regret | v | 後悔する | feel sorry about something you did | I regret not learning English earlier. | feelings
+reject | v | 却下する・断る | say no to something offered | They rejected my proposal. | business
+remind | v | 思い出させる・念押しする | help someone remember | Remind me to buy milk. | daily
+rely | v | 頼る | depend on (rely on) | You can rely on her. | work
+rush | v | 急ぐ・急がせる | do something too quickly | Don't rush. We have time. | daily
+scroll | v | スクロールする | move up and down on a screen | I scrolled for two hours. Again. | online
+share | v | 分ける・共有する | let others use or know | Can you share the file? | work
+show off | v | 見せびらかす | try to impress people | He's showing off his new watch. | friends
+skip | v | 飛ばす・サボる | not do something | I skipped breakfast. | daily
+solve | v | 解決する | find an answer to a problem | We solved it in ten minutes. | work
+spend | v | 使う・過ごす | use money or time | I spend too much on coffee. | money
+struggle | v | 苦労する | try hard with difficulty | I struggle with fast English. | study
+succeed | v | 成功する | get the result you wanted | You'll succeed if you keep going. | business
+suggest | v | 提案する | give an idea | I suggest we take a break. | work
+suppose | v | 思う・仮定する | think something is probably true | I suppose you're right. | daily
+survive | v | 生き延びる・乗り切る | continue to live or exist through difficulty | I survived the week. Barely. | feelings
+trust | v | 信頼する | believe someone is honest | Trust me, it's worth it. | friends
+waste | v | 無駄にする | use badly | Don't waste your money on that. | money
+whisper | v | ささやく | talk very quietly | Why are you whispering? | daily
+wonder | v | 〜かなと思う | want to know | I wonder if she likes me. | crush
+worry | v | 心配する | feel nervous about problems | Don't worry about it. | feelings
+yell | v | 叫ぶ・怒鳴る | shout loudly | My coach yelled at me to keep going. | gym
+hang out | v | ぶらぶらする・遊ぶ | spend time with friends | Wanna hang out this weekend? | friends
+chill | v | まったりする | relax | I'm just chilling at home. | friends
+vent | v | 愚痴る・吐き出す | talk about frustrations | Sorry, I just need to vent for a minute. | feelings
+ghost | v | 急に連絡を絶つ | stop replying without explaining | She ghosted me after two dates. | crush
+binge | v | 一気に〜する | do too much at once | I binged the whole season. | online
+crave | v | 無性に欲しくなる | want very strongly | I'm craving ramen. | food
+nap | v | 昼寝する | sleep a short time in the day | I napped for twenty minutes. | health
+oversleep | v | 寝坊する | sleep too long | I overslept and missed the meeting. | daily
+commute | v | 通勤する | travel to work | I commute an hour each way. | work
+reply | v | 返信する | answer a message | Sorry I didn't reply. | dm
+text | v | メッセージを送る | send a phone message | Text me when you're outside. | dm
+post | v | 投稿する | put something online | Did you post the video yet? | online
+upload | v | アップロードする | put a file online | I'll upload the photos tonight. | online
+download | v | ダウンロードする | get a file from the internet | Download the app first. | online
+subscribe | v | 登録する・購読する | sign up to get something regularly | Subscribe for more! | online
+order | v | 注文する | ask for food or goods | I ordered a pizza. | food
+pay | v | 払う | give money for something | Can I pay by card? | money
+charge | v | 請求する・充電する | ask money / fill a battery | They charged me twice. / I need to charge my phone. | money
+refund | v | 返金する | give money back | Can you refund it? | money
+book | v | 予約する | reserve | I booked a table for two. | travel
+pack | v | 荷造りする | put things in a bag for a trip | I haven't packed yet. | travel
+rent | v | 借りる（有料で） | pay to use | We rented a car in LA. | travel
+move | v | 引っ越す・動く | change where you live | I'm moving to a new apartment. | paperwork
+sign | v | サインする・署名する | write your name | Please sign here. | paperwork
+apply | v | 申し込む・応募する | ask formally for a job or service | I applied for a visa. | paperwork
+hire | v | 雇う | give someone a job | We're hiring two designers. | business
+fire | v | クビにする | end someone's job | He got fired for being late. | work
+promote | v | 昇進させる・宣伝する | give a higher job / advertise | She got promoted. / We need to promote the song. | work
+launch | v | 開始する・発売する | start or release | We're launching the app next week. | business
+manage | v | なんとかする・管理する | succeed in doing / control | I managed to finish on time. | work
+handle | v | 対処する・扱う | deal with | Can you handle the client call? | work
+focus | v | 集中する | give all your attention | I can't focus with this noise. | study
+practice | v | 練習する | do again and again to improve | Practice a little every day. | study
+memorize | v | 暗記する | learn by heart | Don't memorize words alone. Memorize chunks. | study
+pronounce | v | 発音する | say a word | How do you pronounce this? | study
+translate | v | 翻訳する | change into another language | Can you translate this for me? | study
+mean | v | 意味する・本気で言う | have as a meaning / be serious | What does this mean? / I mean it. | study

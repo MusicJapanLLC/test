@@ -258,7 +258,8 @@ const seenWords = new Map();
 const outWords = [];
 let noIpa = 0;
 for (const w of words) {
-  const key = w.head.toLowerCase();
+  // the same spelling can be a separate card if it is a different part of speech or a clearly different sense
+  const key = `${w.head.toLowerCase()}|${w.pos}|${w.ja.slice(0, 2)}`;
   if (seenWords.has(key)) { fail(w.where, `duplicate word "${w.head}" (also ${seenWords.get(key)})`); continue; }
   seenWords.set(key, w.where);
   let id = `w-${slug(w.head)}`;
