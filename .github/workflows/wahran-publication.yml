@@ -1,7 +1,7 @@
 name: Wahran publication checks
 on:
   push:
-    branches: [chatgpt/wahran-mobile-public-20261011, music-japan-production]
+    branches: [chatgpt/wahran-mobile-public-20261011, chatgpt/wahran-hosted-audio-20261011, music-japan-production]
     paths: ['music-japan-site-trace/**', '.github/workflows/wahran-publication.yml']
   pull_request:
     branches: [music-japan-production]
@@ -28,11 +28,16 @@ jobs:
       - name: Verify deployable application bytes and isolated policy
         run: |
           node --input-type=module - <<'JS'
-          import { readFileSync } from 'node:fs';
+          import { readFileSync, statSync } from 'node:fs';
           import { createHash } from 'node:crypto';
           import assert from 'node:assert/strict';
+          import vm from 'node:vm';
           const bytes=readFileSync('deploy-dist/wahran/index.html');
-          assert.equal(createHash('sha256').update(bytes).digest('hex'),'996f48eb35ed437ad7656c960938aff717e0c10181fd041aafcde7c13e98c4e4');
+          assert.equal(createHash('sha256').update(bytes).digest('hex'),'1c38d002512ab978f8ecc27949963745fe5df6567eb8cfaf445fd751f7cd27ae');
           assert.ok(readFileSync('deploy-dist/_headers','utf8').includes('/wahran/*\n  ! Permissions-Policy'));
-          console.log('Verified actual publication output:', bytes.length, 'bytes');
+          const c={window:{}};vm.runInNewContext(readFileSync('deploy-dist/wahran/audio-manifest.js','utf8'),c);
+          const m=c.window.WahranFiles;assert.equal(m.entriesCount,660);assert.equal(m.combinationCount,10000);
+          for(const p of Object.values(m.entries))assert.ok(statSync('deploy-dist/wahran/'+p).size>=1000);
+          assert.ok(statSync('deploy-dist/wahran/hosted-audio.js').size>1000);
+          console.log('Verified publication output:', bytes.length, 'HTML bytes;', m.filesCount, 'MP3 files;',m.voice);
           JS
