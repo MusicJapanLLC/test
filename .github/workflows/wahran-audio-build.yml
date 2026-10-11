@@ -1,0 +1,84 @@
+name: Build Wahran hosted audio
+on:
+  push:
+    branches: [chatgpt/wahran-hosted-audio-20261011]
+    paths: [.github/workflows/wahran-audio-build.yml]
+permissions:
+  contents: write
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: chatgpt/wahran-hosted-audio-20261011
+      - name: Install pinned speech generation client
+        run: python3 -m pip install edge-tts==7.2.8
+      - name: Generate course audio and complete chunk inventory
+        run: |
+          python3 -u - <<'PY'
+          import asyncio, datetime, hashlib, json, pathlib, re
+          import edge_tts
+          root=pathlib.Path('music-japan-site-trace/next/public/wahran')
+          text=(root/'index.html').read_text()
+          data=json.loads(re.search(r'<script id="course-data" type="application/json">(.*?)</script>',text,re.S).group(1))
+          fixed=data['words']+[x for lesson in data['lessons'] for x in lesson['lines']]
+          assert len(data['words'])==500 and len(fixed)==660
+          audio=root/'audio'; audio.mkdir(exist_ok=True)
+          jobs={}
+          def ref(text):
+              text=text.strip()
+              assert text and '{' not in text
+              key=hashlib.sha256(text.encode()).hexdigest()[:24]
+              assert key not in jobs or jobs[key]==text, 'Audio key collision'
+              jobs[key]=text
+              return 'audio/'+key+'.mp3'
+          manifest={'version':2,'nativeOranReviewed':False,'entries':{x['id']:ref(x['ar']) for x in fixed},'families':[]}
+          for family in data['families']:
+              assert len(family['frames'])==10 and len(family['items'])==20 and len(family['contexts'])==10
+              frames=[]
+              for frame in family['frames']:
+                  assert re.fullmatch(r'.+ \{x\} \{c\}[؟?]?',frame['ar'])
+                  frames.append(ref(frame['ar'].split('{x}')[0]))
+              manifest['families'].append({'frames':frames,'items':[ref(x['ar']) for x in family['items']],'contexts':[ref(x['ar']) for x in family['contexts']]})
+          async def main():
+              voices=await edge_tts.list_voices()
+              candidates=[v for v in voices if v.get('Locale')=='ar-DZ']
+              assert candidates, 'No Algerian Arabic voice is available; refusing another dialect'
+              voice=next((v for v in candidates if v.get('Gender')=='Male'),candidates[0])['ShortName']
+              manifest['voice']=voice
+              print('Provider voice:',voice,'; unique audio files:',len(jobs),flush=True)
+              semaphore=asyncio.Semaphore(3)
+              complete=0
+              async def one(key,phrase):
+                  nonlocal complete
+                  async with semaphore:
+                      path=audio/(key+'.mp3')
+                      if not path.exists() or path.stat().st_size<1000:
+                          await asyncio.wait_for(edge_tts.Communicate(phrase,voice,rate='-5%').save(str(path)),60)
+                      assert path.stat().st_size>=1000, 'Empty or incomplete speech file'
+                      complete+=1
+                      if complete%50==0 or complete==len(jobs):print('Generated',complete,'/',len(jobs),flush=True)
+                      await asyncio.sleep(.15)
+              # Probe one real request before starting bounded concurrent generation.
+              first=next(iter(jobs));await one(first,jobs[first])
+              await asyncio.gather(*(one(k,v) for k,v in jobs.items() if k!=first))
+              manifest['generatedAt']=datetime.datetime.now(datetime.timezone.utc).isoformat()
+              manifest['filesCount']=len(jobs)
+              manifest['bytes']=sum((audio/(key+'.mp3')).stat().st_size for key in jobs)
+              manifest['entriesCount']=len(fixed)
+              manifest['chunkCount']=200
+              manifest['combinationCount']=10000
+              output='window.WahranFiles='+json.dumps(manifest,ensure_ascii=False,separators=(',',':')).replace('<','\\u003c')+';\n'
+              (root/'audio-manifest.js').write_text(output)
+              print('AUDIO_BUILD_SUCCESS',json.dumps({k:v for k,v in manifest.items() if k not in ['entries','families']}),flush=True)
+          asyncio.run(main())
+          PY
+      - name: Commit only complete hosted audio assets
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- music-japan-site-trace/next/public/wahran/audio music-japan-site-trace/next/public/wahran/audio-manifest.js
+          git commit -m 'feat(wahran): include 660 spoken entries and all combination chunks'
+          git push origin HEAD:chatgpt/wahran-hosted-audio-20261011
