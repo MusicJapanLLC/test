@@ -1,0 +1,28 @@
+name: Enable and verify Wahran hosted audio
+on:
+  push:
+    branches: [chatgpt/wahran-hosted-audio-20261011]
+    paths: [.github/workflows/wahran-enable-hosted.yml]
+permissions:
+  contents: write
+jobs:
+  enable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: chatgpt/wahran-hosted-audio-20261011
+      - name: Verify real 660-entry and 10000-combination audio coverage
+        run: node --test music-japan-site-trace/tests/wahran-hosted-audio.test.mjs
+      - name: Enable hosted playback and update integrity pins
+        run: python3 music-japan-site-trace/scripts/wahran-enable-hosted.py
+      - name: Recheck complete audio and publication tests after patch
+        run: node --test music-japan-site-trace/tests/wahran-hosted-audio.test.mjs music-japan-site-trace/tests/wahran-publication.test.mjs
+      - name: Commit the verified source transition only
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- music-japan-site-trace/next/public/wahran/index.html music-japan-site-trace/scripts/publish-wahran.mjs .github/workflows/wahran-publication.yml
+          git commit -m 'fix(wahran): play included MP3s and remove device voice setup'
+          git push origin HEAD:chatgpt/wahran-hosted-audio-20261011
