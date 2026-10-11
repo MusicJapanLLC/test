@@ -1,0 +1,257 @@
+// Real Talk — Work. Coworkers, deadlines, being busy, asking for help.
+
+# I'm swamped.
+@ talk | work, feelings | real | chill | 3
+= 仕事が山積み
+A: Lunch today?
+B: Can't, I'm swamped. Tomorrow?
+- I'm swamped this week, but next week is wide open.
+? swamped ＝沼にはまったように忙しい。busy より実感がこもる。
+
+# I'm slammed.
+@ talk | work | real | chill | 2
+= 激務でパンパン
+A: How's work?
+B: Slammed. We have three launches this month.
+
+# on my plate
+@ talk | work, business | real | worksafe | 3
+= 抱えてる仕事
+A: Can you take this project?
+B: I have a lot on my plate right now.
+- What's on your plate this week?
+? 皿の上＝自分の担当。断るときに角が立たない。
+
+# I'm running behind.
+@ talk | work, daily | real | worksafe | 3
+= 押してる・遅れてる
+A: Are we still on for 3?
+B: I'm running behind. Can we do 3:30?
+- Sorry, I'm running a few minutes behind.
+
+# Are we still on for
+@ talk | work, friends, business | real | worksafe | 3
+= 〜の予定、まだ大丈夫？
+A: Are we still on for Friday?
+B: Yep, see you then.
+- Are we still on for lunch?
+
+# Can we push it to
+@ talk | work, business | real | worksafe | 3
+= 〜に延ばせる？
+A: Can we push the meeting to Thursday?
+B: Sure, what time works?
+? push back / push to ＝後ろにずらす。move up ＝前倒し。
+
+# What time works for you?
+@ talk | work, business | real | worksafe, warm | 3
+= 何時がいいですか？
+A: Let's meet next week.
+B: Sounds good. What time works for you?
+A: Tuesday afternoon works.
+? 「〜で大丈夫」は 〜 works (for me). が自然。Tuesday is OK. より柔らかい。
+
+# That works for me.
+@ talk | work, business, friends | real | worksafe | 3
+= それで大丈夫です
+A: How about 2 p.m.?
+B: That works for me.
+
+# Let me get back to you.
+@ talk | work, business | real | worksafe | 3
+= 確認して折り返します
+A: Can you do it for $500?
+B: Let me get back to you on that.
+- I'll get back to you by end of day.
+! 即答できないときの最強の返し。「持ち帰ります」の英語版。
+
+# by end of day
+@ talk | work, business | real | worksafe | 3
+= 今日中に（EOD）
+A: When can you send it?
+B: By end of day.
+- I'll have it to you by EOD.
+? EOD ＝ end of day、EOW ＝ end of week。
+
+# Can you give me a hand?
+@ talk | work, daily, friends | real | warm | 3
+= ちょっと手伝ってくれる？
+A: Can you give me a hand with these boxes?
+B: Sure, where do they go?
+
+# I'll take care of it.
+@ talk | work, business | real | worksafe, warm | 3
+= 私がやっておきます
+A: Someone needs to call the client.
+B: I'll take care of it.
+
+# Heads up
+@ talk | work, business, dm | real | worksafe | 3
+= お知らせ・前もって言っとくと
+- Heads up: the client is coming in early.
+- Just a heads up, I'll be offline tomorrow.
+? 「注意して」というより「前もって伝えておくね」。メールの冒頭で頻出。
+
+# Let's touch base
+@ talk | work, business | real | worksafe | 2
+= ちょっと連絡を取り合おう／軽く確認しよう
+A: Let's touch base next week.
+B: Sounds good. I'll send an invite.
+! ビジネス用語っぽさが強く、使いすぎると「意識高い系」に聞こえるとネタにされることも。
+
+# circle back
+@ talk | work, business | real | worksafe | 2
+= 後でまたこの話に戻る
+A: What about the budget?
+B: Let's circle back to that.
+! これもビジネス用語の代表。ネイティブ同士では「出た、circle back」と笑われがち。
+
+# on the same page
+@ talk | work, business, friends | real | worksafe | 3
+= 認識がそろってる
+A: Just so we're on the same page, the deadline is Friday, right?
+B: Right. Friday at noon.
+
+# Just to clarify
+@ talk | work, business | real | worksafe | 3
+= 念のため確認ですが
+- Just to clarify, do you want one page or five?
+- Just to clarify, the price includes tax?
+
+# I dropped the ball.
+@ talk | work, conflict | real | worksafe | 2
+= やらかした（自分のミス）
+A: Did you send the files?
+B: Oh no. I dropped the ball on that. Sending them now.
+? 自分の失敗を認める定番。That's on me. もセット。
+
+# That's on me.
+@ talk | work, conflict, friends | real | worksafe, warm | 3
+= それは俺のせい
+A: The client got the wrong price.
+B: That's on me. I'll fix it.
+! 言い訳せずにこう言える人はアメリカの職場で信頼される。
+
+# my bad
+@ talk | friends, daily, work | real | chill | 3
+= ごめん、俺のミス
+A: You took my coffee.
+B: Oh, my bad! Here.
+? 軽いミスの「ごめん」。大事なミスには使わない（軽すぎる）。
+
+# Good call.
+@ talk | work, friends | real | warm | 3
+= いい判断だね
+A: I booked the earlier train just in case.
+B: Good call.
+
+# fair enough
+@ talk | friends, work, business | real | chill | 3
+= まあ、そうだね（納得）
+A: I can't come. My kid is sick.
+B: Fair enough.
+? 相手の言い分に納得したとき。完全同意じゃなくても「それはわかる」。
+
+# I'm off tomorrow.
+@ talk | work | real | chill | 3
+= 明日休み
+A: See you tomorrow?
+B: I'm off tomorrow. Back on Monday.
+? day off ＝休みの日。I'm off. だけで「今日はもう上がる」の意味にも。
+
+# I'm heading out for the day.
+@ talk | work | real | worksafe | 2
+= 今日はこれで上がります
+A: I'm heading out for the day.
+B: Have a good night!
+
+# night shift
+@ talk | work | real | chill | 2
+= 夜勤
+A: You look tired.
+B: I worked the night shift. I'm running on coffee.
+? running on 〜 ＝〜で動いてる。running on fumes ＝ガス欠寸前。
+
+# running on fumes
+@ talk | work, feelings | real | funny | 2
+= ガス欠寸前・限界
+A: How are you still awake?
+B: I'm not. I'm running on fumes.
+
+# work from home
+@ talk | work, online | real | chill | 3
+= 在宅勤務（WFH）
+A: Are you coming to the office?
+B: No, I'm working from home today.
+
+# Can I pick your brain?
+@ talk | work, business | real | warm, worksafe | 2
+= ちょっと知恵を借りていい？
+A: Can I pick your brain about marketing?
+B: Sure, what's up?
+? pick 人's brain ＝相手の知識を借りる。相談のお願いでよく使う。
+
+# Long story short
+@ talk | work, friends | real | chill | 3
+= 要するに／手短に言うと
+- Long story short, we lost the client.
+- Long story short, I missed my flight.
+
+# It slipped my mind.
+@ talk | work, friends, conflict | real | warm | 3
+= うっかり忘れてた
+A: Did you call the bank?
+B: Oh no, it totally slipped my mind.
+✗ I forgot it. | textbook | 間違いではないけど、こっちの方が柔らかい
+
+# That makes sense.
+@ talk | work, friends, business | real | worksafe | 3
+= なるほど、納得
+A: We moved the launch because the server wasn't ready.
+B: That makes sense.
+? 相槌として超頻出。I see. より「理解した」感が強い。
+
+# Makes sense.
+@ talk | work, friends | real | chill | 3
+= なるほどね
+A: I'm taking the train, it's faster.
+B: Makes sense.
+
+# I'm on it.
+@ talk | work | real | worksafe | 3
+= 今やってます／任せて
+A: The website is down!
+B: I'm on it.
+
+# Keep me posted.
+@ talk | work, business, friends | real | worksafe | 3
+= 進捗教えてね
+A: I'll talk to the client tomorrow.
+B: Great, keep me posted.
+? keep me in the loop も同じ「情報共有してね」。
+
+# keep me in the loop
+@ talk | work, business | real | worksafe | 3
+= 情報共有しておいて
+- Please keep me in the loop on the contract.
+- Can you loop me in? ＝ その件、私も入れておいて。
+
+# burned out
+@ talk | work, feelings, health | real | deep | 3
+= 燃え尽きた
+A: Are you okay? You seem off.
+B: I think I'm just burned out. I haven't had a day off in a month.
+! アメリカでは燃え尽きを言葉にするのは普通。休むことは悪いことじゃない。
+
+# You seem off.
+@ talk | friends, work, feelings | real | warm | 2
+= なんか調子悪そう
+A: You seem off today. Everything okay?
+B: Just didn't sleep much.
+
+# I'll figure it out.
+@ talk | work, daily | real | chill | 3
+= なんとかするよ
+A: Do you know how to fix it?
+B: Not yet, but I'll figure it out.
+? figure out ＝考えて解決する。人生の多くのことに使える。

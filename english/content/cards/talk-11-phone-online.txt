@@ -1,0 +1,189 @@
+// Real Talk — Phone calls, online, streaming, tech.
+
+# Can you hear me?
+@ talk | phone, online, business | real | worksafe | 3
+= 聞こえますか？
+A: Can you hear me okay?
+B: You're breaking up a little.
+A: How about now?
+B: Better.
+
+# You're breaking up.
+@ talk | phone, online | real | worksafe | 3
+= 音が途切れてます
+A: So the plan is... and then we...
+B: Sorry, you're breaking up.
+? 通話の音声が途切れるとき。You cut out for a second. も同じ。
+
+# You're on mute.
+@ talk | online, business | real | funny, worksafe | 3
+= ミュートになってるよ
+A: (talking)
+B: You're on mute.
+A: ...Sorry, I was on mute. As I was saying.
+! オンライン会議で世界一言われてるフレーズ。
+
+# Let me share my screen.
+@ talk | online, business | real | worksafe | 3
+= 画面共有しますね
+A: Let me share my screen. Can you see it?
+B: Yep, we can see it.
+
+# Can you see my screen?
+@ talk | online, business | real | worksafe | 2
+= 画面見えてますか？
+A: Can you see my screen?
+B: We see your desktop. And your search history.
+A: Okay, let me fix that.
+
+# I'll call you back.
+@ talk | phone, business, friends | real | worksafe | 3
+= 折り返すね
+A: Hey, is now a good time?
+B: I'm driving. I'll call you back in ten.
+
+# Who's calling?
+@ talk | phone, business | real | worksafe | 2
+= どちら様ですか？（電話で）
+A: Can I speak to the manager?
+B: May I ask who's calling?
+? 電話で「どちら様」は Who's calling? / May I ask who's calling?。Who are you? は失礼。
+
+# Speaking.
+@ talk | phone, business | real | worksafe | 2
+= 私です（電話で本人が出たとき）
+A: Hi, is this Alex?
+B: Speaking.
+? This is he/she. も昔は使われたが、今は Speaking. か This is Alex. が自然。
+
+# Sorry, wrong number.
+@ talk | phone | real | worksafe | 2
+= 番号間違いです
+A: Hi, is this Pizza Palace?
+B: Sorry, wrong number.
+
+# Can I leave a message?
+@ talk | phone, business | real | worksafe | 2
+= 伝言お願いできますか？
+A: He's not in right now.
+B: Can I leave a message?
+A: Sure, go ahead.
+
+# I'm going live.
+@ talk | online, music | real | chill | 3
+= 配信始めるよ
+A: What are you doing tonight?
+B: I'm going live at nine. Come hang out in the chat.
+? go live ＝ライブ配信を始める。
+
+# Thanks for the follow!
+@ talk | online, music | real | warm | 3
+= フォローありがとう！
+- Thanks for the follow! Welcome in.
+- Thank you for the sub, appreciate you!
+! 配信者の定番。sub ＝ subscription（チャンネル登録・サブスク）。
+
+# Appreciate you.
+@ talk | online, friends | real | warm | 3
+= ありがとね（感謝してる）
+- Thanks for coming tonight. Appreciate you.
+- Appreciate you, man.
+? I appreciate you. ＝「あなたの存在に感謝」。配信やSNSで今っぽい言い方。
+
+# Welcome in!
+@ talk | online, music | real | warm | 2
+= いらっしゃい！（配信に来た人へ）
+- Welcome in, welcome in! How's everybody doing?
+- Oh, welcome in! First time here?
+
+# Drop it in the chat.
+@ talk | online, music | real | chill | 2
+= チャットに書いて
+- What song should I play next? Drop it in the chat.
+- Where are you watching from? Drop it in the chat.
+
+# I'll drop the link.
+@ talk | online, business, dm | real | chill | 3
+= リンク貼るね
+A: Where can I find the playlist?
+B: I'll drop the link in the description.
+? drop ＝さっと置く・投稿する。drop a song ＝曲をリリースする。
+
+# drop a new song
+@ talk | online, music | real | chill | 2
+= 新曲を出す
+A: When are you dropping the new song?
+B: Friday at midnight.
+! 音楽業界では「リリース」を drop と言うのが普通。Drake dropped a new album.
+
+# It's going viral.
+@ talk | online | real | chill | 3
+= バズってる
+A: Did you see the video?
+B: Yeah, it's going viral. Two million views.
+? go viral ＝バズる。blow up も同じ。
+
+# blow up
+@ talk | online, music | real | chill | 2
+= 急に人気が出る・バズる
+- That song blew up on TikTok.
+- His channel blew up overnight.
+
+# My Wi-Fi is acting up.
+@ talk | online, daily | real | chill | 2
+= Wi-Fiの調子が悪い
+A: You froze.
+B: Sorry, my Wi-Fi is acting up.
+? act up ＝（機械や体が）調子悪い。My knee is acting up.
+
+# Have you tried turning it off and on again?
+@ talk | online, work | real | funny | 2
+= 一回電源切って入れ直した？
+A: My laptop won't connect.
+B: Have you tried turning it off and on again?
+! IT担当の定番セリフ。イギリスのコメディ The IT Crowd でも有名なネタ。
+
+# It's not loading.
+@ talk | online, daily | real | chill | 2
+= 読み込まない
+A: The page is just white.
+B: Yeah, it's not loading for me either.
+
+# Can you send me the link?
+@ talk | online, dm, business | real | worksafe | 3
+= リンク送ってもらえる？
+A: I'll be on the call in five.
+B: Can you send me the link? I lost it.
+
+# Let me look it up.
+@ talk | online, daily, study | real | chill | 3
+= 調べてみる
+A: When did that movie come out?
+B: No idea. Let me look it up.
+? look up ＝調べる。Google it. も同じ意味の口語。
+
+# Just Google it.
+@ talk | online, daily | real | chill | 2
+= ググって
+A: What does "salty" mean?
+B: Just Google it.
+A: I'm asking you. You're my Google.
+
+# I'm addicted to
+@ talk | online, feelings | real | chill | 3
+= 〜にハマりすぎてる
+- I'm addicted to this game.
+- I'm addicted to short videos. I need help.
+? hooked on 〜 も同じ。I'm hooked.
+
+# doomscrolling
+@ talk | online, feelings | real | deep | 2
+= 悪いニュースを延々スクロールし続けること
+A: You're still up?
+B: Yeah, I was doomscrolling. I need to stop.
+
+# AI-generated
+@ talk | online, work | real | chill | 2
+= AIが作った
+- This picture is AI-generated. Look at the hands.
+- I can tell this email is AI-generated.

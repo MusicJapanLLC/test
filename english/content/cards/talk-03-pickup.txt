@@ -1,0 +1,220 @@
+// Real Talk — Pickup. Starting a conversation with a stranger. Natural lines, reading signals, taking a no well.
+
+# Hey, sorry to bother you.
+@ talk | pickup, daily | real | warm | 3
+= ちょっとごめんね（話しかけ方の基本）
+A: Hey, sorry to bother you. I just had to say, I love your jacket.
+B: Oh, thanks! It's vintage.
+A: It suits you. Where'd you find it?
+! いきなり口説かず「具体的なモノ」を褒めると自然。見た目（体）ではなく、選んだもの（服・本・靴）を褒めるのがコツ。
+
+# I just had to say
+@ talk | pickup, crush, daily | real | warm, flirty | 2
+= どうしても言いたくて
+A: I just had to say, you have a great laugh.
+B: Oh my God, was I that loud?
+A: A little. It's a good thing.
+? I just had to 〜 ＝「〜せずにいられなかった」。勢いと素直さが伝わる。
+
+# Where'd you find it?
+@ talk | pickup, shopping, friends | real | warm | 2
+= それどこで見つけたの？
+A: I love your bag. Where'd you find it?
+B: A little shop in Brooklyn.
+~ "WHERE-joo FINE-dit"
+? Where did you → Where'd you。会話では d がくっつく。
+
+# Mind if I join you?
+@ talk | pickup, bar, cafe | real | warm, flirty | 2
+= 一緒にいい？
+A: Mind if I join you?
+B: Sure, grab a seat.
+- Mind if I join you guys?
+
+# I'm Ken, by the way.
+@ talk | pickup, business, friends | real | warm | 3
+= ちなみに俺はトモ（名乗り）
+A: I'm Ken, by the way.
+B: Nice to meet you, Ken. I'm Jess.
+A: Nice to meet you, Jess.
+? by the way を付けると、会話の流れでさらっと名乗れる。名前を一度口に出すと覚えやすい。
+
+# What brings you here?
+@ talk | pickup, bar, travel | real | warm | 3
+= 今日はどうしてここに？
+A: So what brings you here tonight?
+B: My friend's birthday. You?
+A: Honestly? I just wanted good tacos.
+✗ Why are you here? | textbook | 「なんでいるの？」と責めてるように聞こえる
+
+# Are you from around here?
+@ talk | pickup, travel | real | warm | 2
+= この辺の人？
+A: Are you from around here?
+B: Born and raised. You're not, I'm guessing?
+A: What gave it away?
+! What gave it away? ＝「なんでバレた？」。自分の訛りをネタにできると強い。
+
+# What gave it away?
+@ talk | pickup, friends | real | funny | 2
+= なんでバレた？
+A: You're not from here, are you?
+B: What gave it away? The accent or the map in my hand?
+
+# You have a great smile.
+@ talk | pickup, crush | real | flirty, warm | 2
+= 笑顔いいね
+A: Can I say something? You have a great smile.
+B: Aw, thank you.
+✗ You are very beautiful woman. | cringe | 冠詞もないし、いきなり重い
+! 外見を褒めるなら、体じゃなくて表情（smile, laugh, style）にするとキモくならない。
+
+# Are you here with anyone?
+@ talk | pickup, bar | real | flirty | 2
+= 誰かと来てるの？
+A: Are you here with anyone?
+B: My friends are over there.
+A: Cool. I won't keep you long, then.
+! 「彼氏いる？」と直接聞くより自然。友達と来てるなら長居しないのがマナー。
+
+# I won't keep you.
+@ talk | pickup, business, phone | real | warm, worksafe | 2
+= 長く引き止めないから
+A: I know you're busy, so I won't keep you.
+B: No, it's fine. What's up?
+- I won't keep you long. Just one quick question.
+
+# Can I get your number?
+@ talk | pickup, crush | real | flirty | 3
+= 番号聞いてもいい？
+A: This was fun. Can I get your number?
+B: Sure. Here, put yours in.
+✗ May I have your number? | textbook | 丁寧すぎてビジネスっぽい
+✓ Want to swap Instagrams? | 最近はインスタ交換の方がハードルが低い
+
+# Want to swap Instagrams?
+@ talk | pickup, crush, online | real | flirty, chill | 3
+= インスタ交換しない？
+A: Want to swap Instagrams?
+B: Yeah, what's yours?
+A: I'll find you. What's your handle?
+? handle ＝SNSのユーザー名（@の後ろ）。
+
+# I'd love to see you again.
+@ talk | pickup, crush | real | flirty, warm | 2
+= また会いたいな
+A: I'd love to see you again.
+B: I'd like that too.
+- I'd love to take you out sometime.
+? take 人 out ＝「デートに連れて行く」。
+
+# No worries, have a good night.
+@ talk | pickup, bar | real | warm | 3
+= 全然大丈夫、良い夜を（断られた時の返し）
+A: Sorry, I'm actually seeing someone.
+B: Oh, no worries. Have a good night!
+! 断られたら笑顔で即撤退。これが一番カッコいい。食い下がるとアメリカでは一発で「ヤバい人」認定。
+
+# I'm actually seeing someone.
+@ talk | pickup, crush | real | cold | 2
+= 実は付き合ってる人がいて
+A: Can I get your number?
+B: That's sweet, but I'm actually seeing someone.
+A: Ah, lucky guy. Have a good one.
+? be seeing someone ＝「付き合っている（デート中の人がいる）」。断り文句としても定番。
+
+# She's out of my league.
+@ talk | crush, friends | real | funny | 2
+= 高嶺の花だわ
+A: Go talk to her.
+B: Are you kidding? She's way out of my league.
+A: Says who?
+? out of one's league ＝「自分とはレベルが違う」。野球のリーグから。
+
+# Says who?
+@ talk | friends | real | funny, chill | 2
+= 誰が決めたんだよ
+A: Guys can't wear pink.
+B: Says who?
+
+# She's not into me.
+@ talk | crush, friends | real | chill | 3
+= 脈なしだな
+A: How'd it go?
+B: She's not into me. She kept checking her phone.
+? be into 人 ＝「〜に気がある」。I think he's into you. ＝「あいつ君に気があるよ」。
+
+# I think she's into you.
+@ talk | crush, friends | real | flirty | 3
+= あの子、お前に気あるって
+A: I think she's into you.
+B: You think? She laughed at my joke about taxes.
+A: Exactly. Nobody laughs at taxes.
+
+# reading the room
+@ talk | pickup, business, friends | real | deep | 2
+= 空気を読む
+A: I told a dark joke at the funeral.
+B: Dude. Read the room.
+- Good salespeople are great at reading the room.
+? read the room ＝空気を読む。日本語の「空気読め」とほぼ同じ感覚で使える。
+
+# Shoot your shot.
+@ talk | pickup, crush, friends | real | funny | 2
+= 当たって砕けろ
+A: Should I ask her out?
+B: Shoot your shot, man. Worst case, she says no.
+! バスケから来た言葉。「ダメ元でいけ」。
+
+# Worst case
+@ talk | friends, business, daily | real | chill | 3
+= 最悪でも
+A: What if the client says no?
+B: Worst case, we learn something.
+- Worst-case scenario, we take the train.
+
+# Smooth.
+@ talk | pickup, friends | real | funny | 2
+= スマートだね（皮肉にも）
+A: I tripped walking up to her and spilled my drink.
+B: Smooth.
+? 本当にスマートなときにも、ダサい失敗への皮肉にも使う。言い方で判断。
+
+# Was that a pickup line?
+@ talk | pickup | real | funny, flirty | 2
+= それ口説き文句？
+A: Are you a parking ticket? Because you've got fine written all over you.
+B: Was that a pickup line?
+A: A bad one. I'm committed now.
+! わざとダサい口説き文句（cheesy pickup line）を言って笑わせるのは、アメリカでは一つの文化。
+
+# cheesy
+@ talk | pickup, crush | real | funny | 2
+= ベタな・クサい
+A: I brought you a rose.
+B: That's so cheesy. I love it.
+- That movie was cheesy, but fun.
+
+# Are you a magician?
+@ talk | pickup | cringe | flirty, funny | 1
+= 君はマジシャン？（ベタすぎる口説き文句）
+A: Are you a magician? Because whenever I look at you, everyone else disappears.
+B: ...Okay, that one's bad.
+✓ That was terrible, but I'm committed now. | 自分でダサさを認めると笑いになる
+! ネタとして言うならアリ。本気で言うと事故。
+
+# Let me buy you a drink.
+@ talk | pickup, bar | real | flirty | 2
+= 一杯おごらせて
+A: Let me buy you a drink.
+B: That's nice, but I'm good. Thanks though.
+A: No problem!
+! 断られても No problem! で引くのが鉄則。
+
+# Can I walk you to your car?
+@ talk | crush, pickup | real | warm | 1
+= 車まで送っていこうか？
+A: It's pretty dark. Can I walk you to your car?
+B: That's sweet, I'm good. It's right there.
+A: Cool. Get home safe.
+? Get home safe. ＝「気をつけて帰ってね」。

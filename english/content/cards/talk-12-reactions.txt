@@ -1,0 +1,388 @@
+// Real Talk — Everyday reactions. The tiny phrases that make up half of real conversation.
+
+# No way!
+@ talk | friends, daily | real | warm, funny | 3
+= うそでしょ！マジで！
+A: I got the job!
+B: No way! Congrats!
+? 驚き・喜び。本当に信じてないわけじゃない。
+
+# For real?
+@ talk | friends, daily | real | chill | 3
+= マジで？
+A: She quit yesterday.
+B: For real? Why?
+~ "fer-REEL?"
+
+# Are you serious?
+@ talk | friends, daily, conflict | real | chill | 3
+= 本気で言ってる？
+A: The concert's sold out.
+B: Are you serious? I set an alarm for this.
+! 良いニュースにも悪いニュースにも。怒ってる時は Are you serious right now?
+
+# Get out of here!
+@ talk | friends | real | funny | 2
+= うっそ〜！（信じられない）
+A: I met Bruno Mars at the airport.
+B: Get out of here!
+? 文字通りの「出ていけ」ではない。喜びの驚き。言い方で判断。
+
+# Shut up!
+@ talk | friends | real | funny | 2
+= うそ！マジ！？（驚き）
+A: I'm getting married.
+B: Shut up! When?
+! 嬉しい驚きの Shut up! は「黙れ」ではない。ただ、真顔で言うと普通に「黙れ」。
+
+# That's wild.
+@ talk | friends, daily | real | chill | 3
+= ヤバいね（驚き）
+A: He flew to Paris just for a croissant.
+B: That's wild.
+? crazy, insane とほぼ同じ。今のアメリカで頻出。
+
+# That's crazy.
+@ talk | friends, daily | real | chill | 3
+= ヤバいね／すごいね
+A: I slept 14 hours.
+B: That's crazy.
+
+# I know, right?
+@ talk | friends, daily | real | warm | 3
+= だよね！
+A: This pizza is amazing.
+B: I know, right?
+~ "I know, RIGHT?"
+
+# Same.
+@ talk | friends, dm | real | chill | 3
+= わかる（自分も）
+A: I could sleep for a week.
+B: Same.
+? Me too. のカジュアル版。Same here. も。
+
+# Me neither.
+@ talk | friends, daily | real | chill | 3
+= 私も〜じゃない
+A: I don't like horror movies.
+B: Me neither.
+✗ Me too. | textbook | 否定文への同意は Me neither. 日本人がよくミスる
+
+# Tell me about it.
+@ talk | friends, work | real | chill | 2
+= ほんとそれ（わかりすぎる）
+A: Mondays are the worst.
+B: Tell me about it.
+? 「詳しく教えて」ではなく「言われなくてもわかる」。
+
+# I feel you.
+@ talk | friends, feelings | real | warm | 3
+= わかるよ（気持ち）
+A: I'm so tired of looking for an apartment.
+B: I feel you. It took me three months.
+
+# That sucks.
+@ talk | friends, feelings | real | chill | 3
+= 最悪だね／ついてないね
+A: My phone fell in the toilet.
+B: Oh, that sucks.
+? 共感の定番。もっと丁寧に言うなら I'm sorry to hear that.
+
+# Good for you!
+@ talk | friends, work | real | warm | 3
+= よかったね！
+A: I finally quit smoking.
+B: Good for you!
+! 皮肉で使うこともある（Good for you. と冷たく言うと「あっそ」）。
+
+# Congrats!
+@ talk | friends, work, dm | real | warm | 3
+= おめでとう！
+A: We just launched the new site.
+B: Congrats! It looks great.
+
+# You deserve it.
+@ talk | friends, work | real | warm | 3
+= 当然だよ（頑張ったもんね）
+A: I got promoted.
+B: You deserve it, man.
+
+# Oh, nice!
+@ talk | friends, daily | real | warm | 3
+= お、いいね！
+A: I'm going to Australia in December.
+B: Oh, nice! For how long?
+
+# Not bad.
+@ talk | friends, daily | real | chill | 3
+= 悪くない（＝結構いい）
+A: How's the new place?
+B: Not bad. Small, but not bad.
+? 控えめなほめ言葉。Not bad at all! なら「かなりいい」。
+
+# Fair.
+@ talk | friends, dm | real | chill | 2
+= まあ、確かに
+A: I'm not cooking. I cooked yesterday.
+B: Fair.
+
+# Good point.
+@ talk | friends, work | real | worksafe | 3
+= 確かに、いい指摘
+A: If we leave now, we'll beat the traffic.
+B: Good point.
+
+# Exactly.
+@ talk | friends, work | real | chill | 3
+= その通り
+A: So we should just ask them?
+B: Exactly.
+
+# Totally.
+@ talk | friends | real | chill | 3
+= 完全に／ほんとに
+A: That was the best concert ever.
+B: Totally.
+
+# Right?
+@ talk | friends | real | chill | 3
+= でしょ？
+A: This place is so good.
+B: Right? I told you.
+
+# I told you.
+@ talk | friends | real | funny | 3
+= だから言ったじゃん
+A: It's raining.
+B: I told you to bring an umbrella.
+? I told you so. ＝「ほら言ったでしょ」（ちょっと嫌味）。
+
+# You're kidding.
+@ talk | friends, daily | real | chill | 3
+= 冗談でしょ
+A: They canceled the flight.
+B: You're kidding.
+? You're kidding me. / Are you kidding me? も同じ。
+
+# I'm just kidding.
+@ talk | friends | real | funny | 3
+= 冗談だよ
+A: Your haircut is... interesting.
+B: What?
+A: I'm just kidding! It looks great.
+? jk（just kidding）とテキストで書くことも。
+
+# All good.
+@ talk | friends, daily | real | chill | 3
+= 全然大丈夫
+A: Sorry, did I bump you?
+B: All good.
+
+# My pleasure.
+@ talk | work, business, daily | real | warm, worksafe | 3
+= どういたしまして（喜んで）
+A: Thanks for the ride.
+B: My pleasure.
+
+# Anytime.
+@ talk | friends, work | real | warm | 3
+= いつでもどうぞ
+A: Thanks for listening.
+B: Anytime.
+
+# No problem.
+@ talk | daily | real | chill | 3
+= いいよ／どういたしまして
+A: Thanks!
+B: No problem.
+! お礼への返事として超定番。年配の人には You're welcome. の方が丁寧に聞こえることもある。
+
+# Sure thing.
+@ talk | daily, work | real | chill | 2
+= もちろん
+A: Can you hand me that?
+B: Sure thing.
+
+# Of course.
+@ talk | daily, work | real | warm | 3
+= もちろん
+A: Can I ask you something?
+B: Of course.
+! 「当然でしょ」に聞こえることもあるので、トーンに注意。明るく言えばOK。
+
+# Hang on.
+@ talk | daily, phone | real | chill | 3
+= ちょっと待って
+A: Are you ready?
+B: Hang on, one sec.
+? Hold on. も同じ。one sec ＝ちょっとだけ。
+
+# One sec.
+@ talk | daily, phone, work | real | chill | 3
+= ちょっと待って
+A: Are you coming?
+B: One sec!
+
+# Never mind.
+@ talk | daily, friends | real | chill | 3
+= やっぱいいや
+A: What did you say?
+B: Never mind. It's not important.
+? 「気にしないで」の意味では使わない（日本語の「ドンマイ」は英語では Don't worry about it.）。
+
+# Don't worry about it.
+@ talk | friends, daily | real | warm | 3
+= ドンマイ／気にしないで
+A: I dropped your pen.
+B: Don't worry about it.
+✗ Don't mind. | cringe | 和製英語。ネイティブには意味不明
+
+# Whatever.
+@ talk | friends, conflict | real | rude | 3
+= どうでもいい／勝手にすれば
+A: You're always late.
+B: Whatever.
+! 投げやりで失礼に聞こえる。Whatever you want. ＝「なんでもいいよ」なら優しい。
+
+# Whatever works.
+@ talk | friends, work | real | chill | 2
+= なんでも合わせるよ
+A: Should we meet at 6 or 7?
+B: Whatever works for you.
+
+# It is what it is.
+@ talk | friends, feelings | real | deep | 3
+= まあ、しょうがない
+A: You lost the deal?
+B: Yeah. It is what it is.
+? 変えられないことを受け入れる言葉。仕方がない、に近い。
+
+# Here we go.
+@ talk | friends, daily | real | funny | 3
+= さあ、いくぞ／また始まった
+A: Okay, here we go. First day at the new gym.
+- Oh, here we go again. He's talking about crypto.
+! マリオの "Here we go!" は「いくぞ！」の方。
+
+# Here you go.
+@ talk | daily, cafe | real | warm | 3
+= はい、どうぞ（手渡し）
+A: Can I borrow a pen?
+B: Here you go.
+? Here you are. も同じだけど少し丁寧。Here you go. の方が日常的。
+
+# There you go.
+@ talk | daily, study | real | warm | 2
+= そう、その調子／ほらね
+A: Is it like this?
+B: There you go! Perfect.
+
+# Good to see you!
+@ talk | friends, business | real | warm | 3
+= 会えてうれしい（2回目以降）
+A: Hey! Good to see you!
+B: Good to see you too, man.
+? 初対面は Nice to meet you. 2回目以降は Good to see you.
+
+# Long time no see!
+@ talk | friends | real | warm | 2
+= 久しぶり！
+A: Long time no see!
+B: I know! How have you been?
+
+# How have you been?
+@ talk | friends, business | real | warm | 3
+= 元気にしてた？
+A: How have you been?
+B: Busy, but good. You?
+~ "how-v-ya BIN?"
+
+# What's up?
+@ talk | friends, daily | real | chill | 3
+= よう／どうした？
+A: Hey, what's up?
+B: Not much. You?
+! What's up? の答えは "Not much." が定番。真面目に近況報告しなくていい。
+
+# Not much.
+@ talk | friends, daily | real | chill | 3
+= 特に何も
+A: What's up?
+B: Not much, just chilling.
+
+# How's it going?
+@ talk | friends, daily, business | real | chill | 3
+= 調子どう？
+A: How's it going?
+B: Pretty good. You?
+✗ How are you? I'm fine, thank you. And you? | textbook | 教科書の典型。今のアメリカ人はほぼ言わない
+
+# Pretty good.
+@ talk | daily | real | chill | 3
+= まあまあいいよ
+A: How are you?
+B: Pretty good, thanks. How about you?
+? How are you? には Good. / Pretty good. / Not bad. が自然。
+
+# What have you been up to?
+@ talk | friends | real | warm | 3
+= 最近何してた？
+A: What have you been up to?
+B: Mostly work. And I started making music again.
+
+# Same old, same old.
+@ talk | friends | real | chill | 2
+= 相変わらずだよ
+A: What's new?
+B: Same old, same old. Work, gym, sleep.
+
+# You good?
+@ talk | friends | real | warm | 3
+= 大丈夫？
+A: You good?
+B: Yeah, just tired.
+? Are you okay? のカジュアル版。You good? にYeah, I'm good. と返す。
+
+# Bless you.
+@ talk | daily | real | warm | 3
+= お大事に（くしゃみの後）
+A: (sneezes)
+B: Bless you.
+A: Thanks.
+! アメリカではくしゃみの後に知らない人でも Bless you. と言う。言われたら Thanks.
+
+# Excuse me.
+@ talk | daily | real | worksafe | 3
+= 失礼／すみません（通る・聞き返す）
+- Excuse me, can I get through?
+- Excuse me? What did you just say?
+! 強く上がり調子の Excuse me? は「今なんて言った？（怒）」。
+
+# Sorry, what was that?
+@ talk | daily, phone, study | real | warm | 3
+= ごめん、今なんて？
+A: The meeting is at...
+B: Sorry, what was that?
+A: Two-thirty.
+✗ Pardon? | textbook | 間違いではないけど少し古い・かしこまる
+! 聞き取れなかった時の万能フレーズ。何回言ってもいい。
+
+# Come again?
+@ talk | daily, friends | real | funny | 2
+= もう一回言って？
+A: I adopted three cats.
+B: Come again?
+
+# Could you say that again?
+@ talk | daily, business, study | real | worksafe | 3
+= もう一度言ってもらえますか？
+A: Could you say that again? A little slower?
+B: Sure. The code is four, seven, two.
+! 聞き返すのは失礼じゃない。わかったふりの方がよっぽどトラブルになる。
+
+# What do you mean?
+@ talk | daily, friends, work | real | chill | 3
+= どういう意味？
+A: The project is kind of on hold.
+B: What do you mean, kind of?

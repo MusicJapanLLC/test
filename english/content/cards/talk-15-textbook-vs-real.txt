@@ -1,0 +1,224 @@
+// Textbook vs Real. Things we learned at school that make native speakers smile (or wince).
+
+# I'm fine, thank you. And you?
+@ talk | daily | textbook | chill | 3
+= 元気です、ありがとう。あなたは？
+- How are you? — I'm fine, thank you. And you?
+✓ Good, you? | 一番自然
+✓ Pretty good. How about you? | 少し丁寧
+✓ Not bad! | 軽く
+! 日本の教科書の象徴。間違いではないけどロボットっぽく聞こえる。
+
+# It's raining cats and dogs.
+@ talk | daily | cringe | funny | 2
+= 土砂降りだ（古いイディオム）
+- Wow, it's raining cats and dogs!
+✓ It's pouring. | 普通はこれ
+✓ It's coming down hard. | 口語
+! 日本の教科書で有名だけど、今のアメリカ人はまず言わない。言うと「おじいちゃん？」となる。
+
+# How do you do?
+@ talk | business | textbook | worksafe | 2
+= はじめまして（古くて堅い）
+- How do you do? My name is...
+✓ Nice to meet you. | 普通の初対面
+✓ Hi, I'm Ken. Good to meet you. | カジュアル
+! イギリスの古い挨拶。アメリカでは映画の執事くらいしか言わない。
+
+# What is your hobby?
+@ talk | friends | textbook | chill | 3
+= 趣味は何ですか？
+- What is your hobby?
+✓ What do you do for fun? | 自然な聞き方
+✓ What are you into? | 何にハマってる？
+! hobby は「本格的な趣味」の響き。日常会話ではあまり聞かない。
+
+# My hobby is watching movies.
+@ talk | friends | textbook | chill | 2
+= 趣味は映画鑑賞です
+- My hobby is watching movies.
+✓ I'm really into movies. | 自然
+✓ I watch a ton of movies. | もっと口語
+! 映画鑑賞は hobby というほどのものじゃない、という感覚。
+
+# I am Japanese.
+@ talk | daily, travel | real | chill | 3
+= 日本人です
+- Where are you from? — I'm from Japan. Osaka.
+- I'm Japanese, but I grew up in Australia.
+✓ I'm from Japan. | 出身を聞かれたらこっちが自然
+? これは実は自然な英語。ただ出身を聞かれたら I'm from 〜 の方がスムーズ。
+
+# Do you understand?
+@ talk | work, business | textbook | cold | 3
+= わかりましたか？（上から目線に聞こえる）
+- Do you understand?
+✓ Does that make sense? | 柔らかく確認できる
+✓ Any questions so far? | 説明の途中で
+! Do you understand? は先生が生徒に言うような響き。ビジネスだと失礼になることも。
+
+# Does that make sense?
+@ talk | work, business | real | worksafe, warm | 3
+= ここまで大丈夫ですか？（伝わってる？）
+- So we'll pay you on the 25th. Does that make sense?
+- I talked fast. Does that make sense?
+
+# Please teach me English.
+@ talk | study | textbook | chill | 2
+= 英語を教えてください
+- Please teach me English.
+✓ Could you help me with my English? | 自然
+✓ Can you correct me if I say something weird? | 会話中ならこれが最強
+! teach は「授業として教える」。会話で直してほしいなら correct me を。
+
+# Can you correct me if I say something weird?
+@ talk | study, friends | real | warm | 2
+= 変なこと言ったら直してくれる？
+- My English isn't perfect, so can you correct me if I say something weird?
+! 自分から頼むと、相手も遠慮なく自然な言い方を教えてくれる。
+
+# I'm sorry, my English is bad.
+@ talk | study, travel | textbook | chill | 3
+= すみません、英語が下手で
+- I'm sorry, my English is bad.
+✓ Sorry, I'm still learning English. | 前向きで印象がいい
+✓ English is my second language, so bear with me. | 余裕がある
+! 謝りすぎると相手も気を使う。「勉強中」と言う方が前向き。
+
+# Let's enjoy!
+@ talk | friends | cringe | funny | 2
+= 楽しもう！（和製）
+- Let's enjoy!
+✓ Let's have fun! | 普通はこれ
+✓ Enjoy! | 相手に向けてならOK
+? enjoy は目的語が必要。Let's enjoy the party! ならOK。
+
+# I'm looking forward to see you.
+@ talk | dm, business | textbook | worksafe | 2
+= お会いできるのを楽しみにしています（文法ミス）
+- I'm looking forward to see you.
+✓ Looking forward to seeing you! | to の後ろは -ing
+✓ Can't wait to see you! | 友達ならこれ
+? look forward to の to は前置詞。だから後ろは名詞か -ing。
+
+# I'm boring.
+@ talk | feelings | cringe | funny | 3
+= （退屈って言いたかったのに）私はつまらない人間です
+- I'm boring.
+✓ I'm bored. | 「退屈してる」はこっち
+? boring ＝退屈させる側、bored ＝退屈してる側。I'm boring. は自虐になる。
+
+# I'm exciting!
+@ talk | feelings | cringe | funny | 2
+= （ワクワクしてる、のつもりが）私はエキサイティングな人間！
+- I'm exciting!
+✓ I'm excited! | 「ワクワクしてる」はこっち
+? -ing は「させる側」、-ed は「させられる側」。interesting / interested も同じ。
+
+# He is very kind man.
+@ talk | daily | textbook | warm | 2
+= 彼はとても親切な人です（冠詞抜け）
+- He is very kind man.
+✓ He's a really nice guy. | 冠詞 a ＋ 口語
+✓ He's super sweet. | もっとカジュアル
+? 数えられる名詞の単数には a / the が必要。kind より nice / sweet が会話的。
+
+# I have a question.
+@ talk | business, study | real | worksafe | 3
+= 質問があります
+- Sorry, I have a quick question.
+- I have a question about the invoice.
+✓ Quick question: | もっとカジュアル
+? これは自然。quick を入れると相手の負担感が下がる。
+
+# Please give me your name card.
+@ talk | business | textbook | worksafe | 2
+= 名刺をください
+- Please give me your name card.
+✓ Do you have a business card? | 自然
+✓ Can I get your card? | カジュアル
+! name card は和製英語寄り。英語では business card。
+
+# Mansion
+@ talk | daily, paperwork | cringe | funny | 2
+= マンション（和製英語）
+- I live in a mansion.
+✓ I live in an apartment. | 普通の集合住宅
+✓ I live in a condo. | 分譲マンション
+! mansion は豪邸。「マンションに住んでる」と言うと大富豪だと思われる。
+
+# I'm a salaryman.
+@ talk | work | textbook | funny | 2
+= サラリーマンです
+- I'm a salaryman.
+✓ I work in an office. | 自然
+✓ I work in sales. | 職種を言うのが普通
+! salaryman は「日本の会社員」という外来語として通じるけど、自分のことを言うときは職種を言う方が会話が広がる。
+
+# Claim
+@ talk | business, conflict | textbook | worksafe | 2
+= クレーム（和製英語の意味で）
+- The customer made a claim.
+✓ The customer complained. | 苦情はこれ
+✓ We got a complaint. | 名詞なら complaint
+! claim は「主張する・請求する」。日本語の「クレーム」は complaint。
+
+# Smart
+@ talk | daily | textbook | funny | 2
+= スマート（細い、の意味で）
+- She's so smart. She's very thin.
+✓ She's slim. | 細い
+✓ She's in great shape. | 引き締まってる
+? 英語の smart は「頭がいい」。細いは slim / thin。
+
+# Naive
+@ talk | feelings | textbook | cold | 2
+= ナイーブ（繊細、の意味で）
+- I'm naive, so please be gentle.
+✓ I'm sensitive. | 繊細
+? 英語の naive は「世間知らず・甘い」。ほめ言葉ではない。
+
+# Tension
+@ talk | feelings, friends | cringe | funny | 2
+= テンション（高い・低い）
+- My tension is high today!
+✓ I'm so hyped today! | テンション高い
+✓ I'm in a good mood. | 機嫌がいい
+✓ I'm not feeling it today. | テンション低い
+! tension は「緊張・張り詰めた空気」。My tension is high は「めっちゃピリピリしてます」になる。
+
+# Fight!
+@ talk | friends | cringe | funny | 2
+= ファイト！（がんばれ）
+- Fight!
+✓ You got this! | 応援
+✓ Good luck! | 幸運を
+! Fight! は「喧嘩しろ！」。応援のつもりで言うと誤解される。
+
+# I'll do my best.
+@ talk | work | real | worksafe | 3
+= 頑張ります
+- I'll do my best, but I can't promise.
+- Thanks for the chance. I'll do my best.
+? これは自然。ただアメリカでは「できない言い訳」に聞こえる場面もあるので、I'll get it done. と言い切る方が信頼されることも。
+
+# I'll get it done.
+@ talk | work, business | real | worksafe | 3
+= やり遂げます
+A: Can you finish by Friday?
+B: I'll get it done.
+
+# See you again.
+@ talk | daily | textbook | warm | 2
+= またね
+- See you again!
+✓ See you later! | 普通の「またね」
+✓ See ya! | もっとカジュアル
+✓ Catch you later! | くだけた言い方
+! See you again. はもう会わないかもしれない人に言う響きがある。
+
+# Let me see
+@ talk | daily, work | real | chill | 3
+= えーっと
+- Let me see... I think it's on Tuesday.
+? 考えるときの「えーと」。Let me think. / Hmm. も。

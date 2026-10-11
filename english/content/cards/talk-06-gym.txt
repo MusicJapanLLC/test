@@ -1,0 +1,203 @@
+// Real Talk — Gym. Sharing equipment, spotting, small talk, progress.
+
+# Are you using this?
+@ talk | gym | real | chill | 3
+= これ使ってます？
+A: Are you using this?
+B: Yeah, I've got two more sets.
+A: Mind if I work in?
+B: Go for it.
+! ジムでの基本会話。マシンやベンチの横にタオルや水があったら、まずこれ。
+
+# Mind if I work in?
+@ talk | gym | real | chill, warm | 2
+= 交代で使ってもいい？
+A: Mind if I work in?
+B: Sure. I'm doing 60s.
+A: I'll swap the plates back after.
+? work in ＝相手のセットの合間に交互で使う。ジム用語。
+
+# How many sets do you have left?
+@ talk | gym | real | chill | 3
+= あと何セット？
+A: How many sets do you have left?
+B: Just one.
+A: Cool, I'll wait.
+
+# Can you spot me?
+@ talk | gym | real | warm | 3
+= 補助してもらえる？
+A: Hey, can you spot me real quick?
+B: Sure. How many reps?
+A: Going for eight.
+? spot ＝ベンチプレスなどで補助する。spotter ＝補助する人。
+
+# How many reps?
+@ talk | gym | real | chill | 2
+= 何回やる？
+A: How many reps are you going for?
+B: Ten, maybe twelve.
+? rep ＝ repetition（1回）。set ＝セット。3 sets of 10 reps のように言う。
+
+# I'm almost done.
+@ talk | gym, work, daily | real | chill | 3
+= もうすぐ終わる
+A: You need the bench?
+B: I'm almost done. Two minutes.
+
+# Leg day
+@ talk | gym | real | funny | 3
+= 脚の日
+A: Why are you walking like that?
+B: Leg day.
+A: Say no more.
+! 「脚トレの翌日は歩き方が変」はジム勢の共通ネタ。Never skip leg day. は定番ジョーク。
+
+# Never skip leg day.
+@ talk | gym, friends | real | funny | 2
+= 脚トレはサボるな
+A: Look at those arms!
+B: Yeah, but look at those chicken legs. Never skip leg day.
+
+# Say no more.
+@ talk | friends, gym | real | chill, funny | 2
+= 皆まで言うな／了解
+A: I need a burger.
+B: Say no more.
+
+# I'm so sore.
+@ talk | gym, health | real | chill | 3
+= 筋肉痛ヤバい
+A: How was the workout?
+B: Great. But I'm so sore I can't lift my arms.
+? sore ＝筋肉痛で痛い。I'm sore all over. ＝全身筋肉痛。
+
+# no pain, no gain
+@ talk | gym, work | real | funny | 2
+= 痛みなくして成長なし
+A: My whole body hurts.
+B: No pain, no gain.
+A: I'd like some gain with less pain, please.
+
+# PR
+@ talk | gym | real | chill | 2
+= 自己ベスト（personal record）
+A: I hit a PR on deadlifts today!
+B: Let's go! How much?
+? PR / PB（personal best）＝自己ベスト。
+
+# Let's go!
+@ talk | gym, friends, music | real | warm | 3
+= よっしゃ！いいね！
+A: I finally got the job!
+B: Let's go!
+~ "LEZ-GO!"
+? 応援・祝福の万能フレーズ。Let's gooo! と伸ばすほどテンション高い。
+
+# You got this.
+@ talk | gym, friends, work | real | warm | 3
+= いける、いける！
+A: I don't think I can do one more.
+B: Come on, you got this!
+? You've got this. の口語。試験や面接の前の応援にも。
+
+# One more!
+@ talk | gym | real | warm | 2
+= あと1回！
+A: Come on, one more!
+B: That's what you said three reps ago.
+
+# How long have you been lifting?
+@ talk | gym, friends | real | chill | 2
+= 筋トレ歴どれくらい？
+A: How long have you been lifting?
+B: About three months. Still a beginner.
+A: Three months? You're making progress, man.
+? lifting ＝ウエイトトレーニング。lift（動詞）で「筋トレする」。
+
+# I'm cutting.
+@ talk | gym, food | real | chill | 2
+= 減量中
+A: Want some pizza?
+B: Can't. I'm cutting.
+? cut ＝減量期、bulk ＝増量期。I'm bulking. なら「増量中だから食べる」。
+
+# I'm bulking.
+@ talk | gym, food | real | funny | 2
+= 増量中
+A: That's your third burger.
+B: I'm bulking.
+A: You've been bulking for four years.
+
+# protein shake
+@ talk | gym, food | real | chill | 2
+= プロテイン
+A: What's in the bottle?
+B: Protein shake. Chocolate. It tastes like regret.
+! 英語で「プロテイン」だけだと栄養素の意味。飲み物は protein shake と言う。
+
+# Let me grab my towel.
+@ talk | gym | real | chill | 2
+= タオル取ってくる
+A: You done with the bench?
+B: Yeah, let me just grab my towel.
+! 使い終わったらマシンを拭くのがアメリカのジムのマナー。Wipe down the equipment.
+
+# wipe down
+@ talk | gym, work | real | worksafe | 2
+= 拭き取る
+A: Please wipe down the machine after you use it.
+B: Oh, sorry. On it.
+
+# rest day
+@ talk | gym, health | real | chill | 2
+= 休養日
+A: No gym today?
+B: Rest day. My body needs it.
+
+# I'm out of breath.
+@ talk | gym, health | real | chill | 2
+= 息が上がってる
+A: How was the run?
+B: Give me a sec. I'm out of breath.
+
+# I'm getting back into
+@ talk | gym, study, daily | real | chill | 2
+= また〜を再開してる
+A: You look good, man.
+B: Thanks. I'm getting back into the gym.
+- I'm getting back into reading.
+
+# work out
+@ talk | gym, health | real | chill | 3
+= 運動する・筋トレする
+A: Do you work out?
+B: Five days a week. It keeps me sane.
+? work out（動詞）、workout（名詞）。It worked out. だと「うまくいった」という別の意味。
+
+# It keeps me sane.
+@ talk | gym, feelings | real | deep | 2
+= これで正気を保ってる
+A: Why do you go every day?
+B: Honestly, it keeps me sane.
+! 「メンタルのため」を軽く言う定番。
+
+# You're making progress.
+@ talk | gym, study, work | real | warm | 3
+= 成長してるよ
+A: I still can't do a pull-up.
+B: Last month you couldn't hang for five seconds. You're making progress.
+- Your English is making progress. I can tell.
+
+# gym bro
+@ talk | gym, friends | real | funny | 2
+= ジム仲間・筋トレ兄貴
+A: Who's that?
+B: My gym bro. We spot each other on Mondays.
+
+# Do you even lift?
+@ talk | gym, friends | real | funny | 1
+= お前、筋トレしてんの？（煽りネタ）
+A: Can you help me move this couch?
+B: Do you even lift, bro?
+! ネットミーム発祥の煽り文句。仲のいい友達にだけ冗談で。

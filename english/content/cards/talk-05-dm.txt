@@ -1,0 +1,238 @@
+// Real Talk — DMs & texting. How people actually type.
+
+# Sorry for the late reply!
+@ talk | dm, business, friends | real | warm, worksafe | 3
+= 返信遅れてごめん！
+- Sorry for the late reply! Crazy week.
+- Sorry for the late reply. Yes, Thursday works for me.
+✗ I am sorry for my late reply. | textbook | 硬すぎる。ビジネスでも I'm sorry for the late reply で十分
+! 遅れたことを謝りすぎない。一言謝って、すぐ本題に入るのがアメリカ流。
+
+# No rush.
+@ talk | dm, business, work | real | warm, worksafe | 3
+= 急がなくて大丈夫
+- Can you send it when you get a chance? No rush.
+- No rush at all. Whenever works for you.
+? when you get a chance ＝「手が空いたときに」。セットで使うと優しい。
+
+# when you get a chance
+@ talk | dm, business, work | real | worksafe | 3
+= 手が空いたときに
+- Can you look at this when you get a chance?
+- When you get a chance, send me the invoice.
+
+# Just checking in.
+@ talk | dm, business | real | worksafe, warm | 3
+= ちょっと様子伺いです（催促をやわらかく）
+- Hey! Just checking in. Did you get a chance to look at the proposal?
+- Just checking in to see how you're doing.
+✗ Why didn't you reply? | cringe | 責めてるように聞こえる
+! 返事が来ないときの催促は Just checking in. か Just following up. が定番。
+
+# lmk
+@ talk | dm, friends, business | real | chill | 3
+= 教えてね（let me know）
+- Lmk if you're coming tonight.
+- Let me know what you think!
+? lmk ＝ let me know。友達同士はlmk、仕事なら Let me know. とフルで書く。
+
+# Sounds good!
+@ talk | dm, business, friends | real | warm, worksafe | 3
+= いいね！了解！
+- Friday at 3? — Sounds good!
+- Sounds good, see you then.
+! ビジネスでも友達でも使える最強の「了解」。Okay. より明るく、Noted. より柔らかい。
+
+# k
+@ talk | dm, friends, conflict | real | cold | 3
+= りょ（怒ってる？に見える）
+- I'm going out with the guys tonight. — k
+✓ Okay! Have fun! | 明るく返すならこっち
+! 1文字の k は「怒ってる・どうでもいい」に見える。ok でもやや冷たい。Okay! や Sounds good! が安全。
+
+# lol
+@ talk | dm, friends | real | funny, chill | 3
+= 笑（w）
+- I fell asleep on the train and ended up at the last stop lol
+? lol は「w」くらいの軽さ。本当に笑ってなくても付ける。もっと笑ったら lmao。
+
+# lmao
+@ talk | dm, friends | real | funny | 3 | explicit
+= 爆笑（www）
+- He tried to pay with a coupon from 2019 lmao
+? laughing my ass off の略。lol より強い。仕事では使わない。
+
+# ngl
+@ talk | dm, friends | real | chill | 3
+= 正直（not gonna lie）
+- Ngl that movie was kind of mid.
+- Ngl, I'm a little nervous.
+? ngl ＝ not gonna lie。tbh（to be honest）とほぼ同じ。
+
+# tbh
+@ talk | dm, friends | real | chill | 3
+= 正直に言うと
+- Tbh I'd rather stay in tonight.
+- I don't really care tbh.
+
+# idk
+@ talk | dm, friends | real | chill | 3
+= わかんない
+- Where do you want to eat? — idk, you pick.
+- Idk if I can make it.
+
+# omw
+@ talk | dm, friends | real | chill | 3
+= 今向かってる（on my way）
+- omw! 10 min
+- Omw, sorry I'm late.
+! 「omw」と送ってまだ家にいるのは、世界共通のあるある。
+
+# wyd
+@ talk | dm, friends, crush | real | chill, flirty | 2
+= 何してる？（what are you doing）
+- wyd tonight?
+- Hey wyd
+! 夜に wyd? が来たら、遊びの誘いか、ちょっと気がある合図のことが多い。
+
+# hbu
+@ talk | dm, friends | real | chill | 2
+= そっちは？（how about you）
+- Just got home. hbu?
+- I'm good, hbu?
+
+# rn
+@ talk | dm, friends | real | chill | 2
+= 今（right now）
+- Can't talk rn, in a meeting.
+- I'm so tired rn.
+
+# fr
+@ talk | dm, friends | real | chill | 2
+= ガチで（for real）
+- That's so true fr
+- Fr? You quit?
+? fr ＝ for real。ガチ・マジ。fr fr と重ねるとさらに強調。
+
+# Bet.
+@ talk | dm, friends | real | chill | 2
+= 了解・OK（スラング）
+- Meet at 8? — Bet.
+- Bet, see you there.
+! 若い世代のスラング。「OK、乗った」。年上や仕事では使わない。
+
+# On it.
+@ talk | dm, work, business | real | worksafe, chill | 3
+= すぐやります
+- Can you fix the typo on the homepage? — On it.
+- On it. Will send it in 10.
+
+# Will send it over.
+@ talk | dm, business, work | real | worksafe | 3
+= 送りますね
+- Got it. Will send it over by tonight.
+- I'll send it over in a sec.
+? send over ＝「（相手のところへ）送る」。メールで自然。
+
+# Quick question
+@ talk | dm, business, work | real | worksafe | 3
+= ちょっと質問なんだけど
+- Quick question: is the meeting still at 3?
+- Hey, quick question about the invoice.
+
+# Happy to help!
+@ talk | dm, business | real | warm, worksafe | 3
+= お役に立ててよかったです！
+- Thanks so much! — Happy to help!
+- Happy to help anytime.
+✗ You're welcome. | textbook | 間違いではないけど、ビジネスDMでは Happy to help! の方が感じがいい
+
+# No worries!
+@ talk | dm, friends, business | real | warm | 3
+= 気にしないで！
+- Sorry, I'm running late! — No worries!
+- No worries at all.
+? 謝られたときにも、お礼を言われたときにも使える。
+
+# Haha
+@ talk | dm, friends | real | warm, chill | 3
+= はは（文末を柔らかくする）
+- Running a bit late haha
+- That's a lot of coffee haha
+! 英語のテキストでは haha が「〜です😊」くらいの緩衝材。無いと冷たく見えることも。hahaha が多いほど本気の笑い。
+
+# Typing this from the gym.
+@ talk | dm, gym | real | funny | 1
+= ジムから送ってる（言い訳）
+- Sorry for the typos, typing this from the gym.
+- Typing this between sets, so bear with me.
+? bear with me ＝「少々お待ちを／ご辛抱を」。
+
+# Bear with me.
+@ talk | dm, business, work | real | worksafe | 3
+= ちょっと待ってね／ご辛抱ください
+- Bear with me, I'm still new to this.
+- Bear with me for a sec while I find the file.
+
+# Can we hop on a call?
+@ talk | dm, business, work | real | worksafe | 3
+= ちょっと電話できる？
+- This is getting long. Can we hop on a call?
+- Can we hop on a quick call tomorrow?
+? hop on ＝さっと参加する。hop on Zoom なども。
+
+# Talk soon!
+@ talk | dm, business, friends | real | warm | 3
+= またね！（メールの締めにも）
+- Thanks again. Talk soon!
+- Great meeting you. Talk soon.
+
+# Thanks in advance!
+@ talk | dm, business | real | worksafe | 2
+= よろしくお願いします（先にお礼）
+- Could you send the contract by Friday? Thanks in advance!
+! 日本語の「よろしくお願いします」に一番近いメールの締め。ただし多用すると圧に感じる人もいる。
+
+# Looking forward to it!
+@ talk | dm, business, friends | real | warm, worksafe | 3
+= 楽しみにしてます！
+- See you Thursday! Looking forward to it.
+- Looking forward to working with you.
+? look forward to の後ろは名詞か -ing。to work ではなく to working。
+
+# Hope you're doing well.
+@ talk | dm, business | real | warm, worksafe | 3
+= お元気でしょうか（メールの書き出し）
+- Hi Sarah, hope you're doing well.
+- Hope you had a great weekend!
+! メールの最初の一言。「お世話になっております」の英語版。
+
+# Just following up
+@ talk | dm, business | real | worksafe | 3
+= 先日の件、念のための確認です
+- Just following up on my email from last week.
+- Just following up to see if you had any questions.
+
+# Totally understand.
+@ talk | dm, business, friends | real | warm, worksafe | 3
+= 全然わかります（断りを受け入れる）
+- Sorry, we went with another vendor. — Totally understand. Thanks for letting me know!
+- Totally understand if you can't make it.
+
+# You up?
+@ talk | dm, crush | real | flirty | 2 | explicit
+= 起きてる？（深夜の誘い）
+- You up?
+! 深夜にこれが来たら、だいたい下心。アメリカでは「深夜の You up? はブーティーコール」というのがお約束のジョーク。
+
+# Is this a good time?
+@ talk | phone, dm, business | real | worksafe | 3
+= 今大丈夫ですか？
+- Hey, is this a good time to talk?
+- Is now a good time, or should I call back later?
+
+# Got it, thanks!
+@ talk | dm, business, work | real | worksafe | 3
+= 了解です、ありがとう！
+- The meeting moved to 4. — Got it, thanks!
+- Got it. I'll update the slides.

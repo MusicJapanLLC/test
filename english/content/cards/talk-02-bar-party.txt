@@ -1,0 +1,269 @@
+// Real Talk — Bar & Party.
+
+# What are you drinking?
+@ talk | bar | real | warm, chill | 3
+= 何飲んでるの？（おごる前の定番）
+A: What are you drinking?
+B: Just a beer. Why?
+A: Next one's on me.
+! 知らない人に話しかけるきっかけにも、おごる合図にもなる。
+
+# It's on me.
+@ talk | bar, food, friends | real | warm | 3
+= 俺のおごり
+A: How much do I owe you?
+B: Don't worry about it. It's on me.
+- This round's on me.
+✗ I will treat you. | textbook | 意味は通じるけどぎこちない
+? on me ＝「俺の負担で」。This one's on the house. はお店のおごり（サービス）。
+
+# I'll get the next one.
+@ talk | bar, food, friends | real | warm | 3
+= 次は俺が出すわ
+A: I got this round.
+B: Okay, but I'll get the next one.
+! アメリカの飲み会は「ラウンド」制。順番におごり合うのが普通。
+
+# Let's split it.
+@ talk | bar, food, money, friends | real | chill | 3
+= 割り勘にしよう
+A: Should we split it?
+B: Yeah, let's just split it down the middle.
+- Can we split the check?
+✗ Let's go Dutch. | textbook | 通じるけど古い。若い人はほぼ言わない
+
+# Can we get the check?
+@ talk | bar, food, money | real | worksafe | 3
+= お会計お願いします
+A: Can we get the check, please?
+B: Sure, one check or separate?
+A: Separate, please.
+? アメリカは check、イギリスは bill。指でサインする仕草でも通じる。
+
+# What's the occasion?
+@ talk | bar, friends | real | warm | 2
+= 何のお祝い？
+A: Champagne? What's the occasion?
+B: I closed my first big deal today.
+A: No way! Congrats, man.
+
+# Cheers!
+@ talk | bar, friends | real | warm | 3
+= 乾杯！
+A: To the weekend!
+B: Cheers!
+- Cheers to that.
+! 乾杯の音頭は To 〜!（〜に！）。グラスを合わせるときは相手の目を見るのがマナー。
+
+# I'm a lightweight.
+@ talk | bar | real | funny, chill | 2
+= お酒弱いんだよね
+A: Another one?
+B: I'm good. I'm a lightweight. Two beers and I'm done.
+? lightweight ＝お酒に弱い人。反対は can hold (one's) liquor.
+
+# I'm buzzed.
+@ talk | bar | real | funny | 2
+= ほろ酔いだわ
+A: You okay?
+B: Yeah, I'm just a little buzzed.
+- He's not drunk, he's just buzzed.
+? tipsy もほぼ同じ。drunk（酔っ払い）、wasted / hammered（泥酔）の順に強くなる。
+
+# I'm wasted.
+@ talk | bar | real | funny, rude | 2 | explicit
+= ベロベロだわ
+A: Dude, you're swaying.
+B: I'm wasted. I need water and a burrito.
+? wasted / hammered / smashed は全部「泥酔」。仕事の場では言わない。
+
+# Do you come here often?
+@ talk | bar, pickup | cringe | flirty, funny | 2
+= よく来るの？（古すぎるナンパ文句）
+A: So... do you come here often?
+B: Wow. Okay, that's a classic.
+✓ Is this place always this packed? | 状況にツッコむ方が自然
+✓ First time here? What's good? | 「おすすめ何？」で会話になる
+! ナンパの決まり文句すぎてジョーク扱い。わざとネタとして言うならアリ。
+
+# Is this place always this packed?
+@ talk | bar, pickup | real | chill, flirty | 2
+= ここっていつもこんなに混んでるの？
+A: Is this place always this packed?
+B: Only on Fridays. You're new here?
+A: Yeah, first time.
+! 天気・場所・音楽など「その場の共通のもの」にコメントするのが、自然な話しかけ方。
+
+# How do you know the host?
+@ talk | bar, friends | real | warm | 3
+= ホストとはどういう知り合い？
+A: So how do you know the host?
+B: We used to work together. You?
+A: College roommate.
+! ホームパーティーで初対面の人と話す最強の一言。
+
+# I'm gonna head out.
+@ talk | bar, friends, daily | real | chill | 3
+= そろそろ帰るわ
+A: I'm gonna head out.
+B: Already? It's not even eleven.
+A: Early start tomorrow.
+~ "I'm-uh HED-out"
+✗ I will go home now. | textbook | 意味は同じでも硬い
+
+# Irish goodbye
+@ talk | bar, friends | real | funny | 2
+= 黙って帰ること（挨拶なしで消える）
+A: Where's Jake?
+B: He pulled an Irish goodbye. Didn't say a word.
+! 大人数のパーティーで誰にも言わずにスッと帰ること。French exit とも言う。
+
+# Let's call it a night.
+@ talk | bar, friends, work | real | chill | 3
+= 今日はお開きにしよう
+A: It's almost two.
+B: Yeah, let's call it a night.
+- Let's call it a day. We can finish tomorrow.
+? call it a night（夜の場合）／call it a day（仕事の終わり）。
+
+# I'm down.
+@ talk | friends, bar | real | chill | 3
+= いいね、乗った
+A: Karaoke after this?
+B: I'm down.
+- I'm down for whatever.
+? I'm down for 〜 ＝「〜ならやる」。I'm in. もほぼ同じ。
+
+# Count me in.
+@ talk | friends, bar, work | real | warm | 3
+= 俺も入れて／参加する
+A: We're doing a barbecue Saturday.
+B: Count me in.
+A: And count me out of the cleanup.
+? count me out ＝「俺は抜けとく」。
+
+# I'm gonna grab another drink. Want anything?
+@ talk | bar, friends | real | warm | 3
+= もう一杯取ってくるけど、何かいる？
+A: I'm gonna grab another drink. Want anything?
+B: Water would be great, thanks.
+! 自分が席を立つときに一言聞くのが気遣い。
+
+# What do you do?
+@ talk | bar, business, pickup | real | chill | 3
+= 仕事何してるの？
+A: So what do you do?
+B: I run a small music company in Osaka.
+A: Oh, that's cool. What kind of music?
+✗ What is your job? | textbook | 尋問っぽく聞こえる
+! 初対面のアメリカ人がほぼ100%聞いてくる質問。答えを1行で言えるように準備しておくと強い。
+
+# What do you do for fun?
+@ talk | bar, pickup, crush, friends | real | warm | 3
+= 休みの日は何してるの？
+A: What do you do for fun?
+B: Gym, mostly. And I make music.
+A: Wait, what kind of music?
+✗ What is your hobby? | textbook | 日本人っぽさ全開。ネイティブはあまり聞かない
+? hobby は「切手収集」みたいな本格的な趣味のイメージ。普段は What do you do for fun? と聞く。
+
+# I'm not much of a drinker.
+@ talk | bar | real | chill | 2
+= あんまり飲まないんだ
+A: Wanna do shots?
+B: I'm not much of a drinker, but go ahead.
+? not much of a 〜 ＝「大した〜じゃない」。I'm not much of a dancer. なども。
+
+# Let's get this party started.
+@ talk | bar, music, friends | real | funny | 2
+= さあ盛り上がろうぜ
+A: Everybody's here?
+B: Yep.
+A: Then let's get this party started.
+
+# It's getting late.
+@ talk | bar, friends, daily | real | chill | 3
+= 遅くなってきたね（そろそろ帰る合図）
+A: It's getting late.
+B: Yeah, I should get going too.
+? I should get going. ＝「そろそろ行かなきゃ」。帰りたいときの丁寧な合図。
+
+# I should get going.
+@ talk | bar, friends, daily, work | real | warm, worksafe | 3
+= そろそろ行かなきゃ
+A: This was fun. I should get going, though.
+B: Yeah, me too. Text me when you get home.
+- Anyway, I should get going. Talk soon!
+
+# Text me when you get home.
+@ talk | bar, friends, crush | real | warm | 2
+= 家着いたら連絡してね
+A: Okay, I'm heading out.
+B: Text me when you get home.
+A: Will do.
+! アメリカでも夜の帰り道を心配するのは普通。Will do. ＝「了解、そうする」。
+
+# Will do.
+@ talk | daily, work, friends | real | chill, worksafe | 3
+= 了解、そうする
+A: Lock the door when you leave.
+B: Will do.
+- Send me the file when it's ready. — Will do.
+
+# shots
+@ talk | bar | real | funny | 2
+= ショット（一気飲みの小さいグラス）
+A: Who wants shots?
+B: Not me. Last time I did shots I woke up in the bathtub.
+! パーティーで誰かが「ショット！」と言い出したら覚悟。断ってOK。
+
+# Wanna dance?
+@ talk | bar, pickup, music | real | flirty, chill | 2
+= 踊らない？
+A: Wanna dance?
+B: I'm a terrible dancer.
+A: Perfect. Me too.
+
+# The vibe is off.
+@ talk | bar, friends, feelings | real | chill | 2
+= なんか空気が変／ノリが微妙
+A: Wanna leave?
+B: Yeah, the vibe is off tonight.
+- Good food, good music, good vibes.
+? vibe ＝雰囲気・ノリ。vibe with 〜 ＝「〜と気が合う」。
+
+# I vibe with
+@ talk | friends, music, crush | real | chill | 2
+= 〜と気が合う／しっくりくる
+A: What do you think of the new guy?
+B: I don't know, I don't really vibe with him.
+- I really vibe with this song.
+
+# Who's DJing?
+@ talk | bar, music | real | chill | 2
+= 誰がDJやってるの？
+A: Who's DJing tonight?
+B: Some guy from Brooklyn. He's good.
+A: He's playing all the 2000s stuff. I'm in heaven.
+
+# Rain check?
+@ talk | bar, friends, crush, work | real | warm | 2
+= また今度にしていい？
+A: Drinks tonight?
+B: Can I take a rain check? I'm wiped.
+A: No worries. Next week?
+? take a rain check ＝「今回はパスで、次回に」。断るけど次に繋げる優しい言い方。
+
+# I'm wiped.
+@ talk | daily, gym, work | real | chill | 2
+= クタクタ
+A: You coming out tonight?
+B: I'm wiped. I worked a double shift.
+? wiped out も同じ。exhausted よりカジュアル。
+
+# Hit me up.
+@ talk | friends, dm, bar | real | chill | 3
+= 連絡してよ
+A: If you're ever in Osaka, hit me up.
+B: For sure. I'll hit you up.
+? hit 〜 up ＝「連絡する」。text me / call me のカジュアル版。

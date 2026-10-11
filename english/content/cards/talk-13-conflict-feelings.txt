@@ -1,0 +1,225 @@
+// Real Talk — Fights, apologies, feelings, comfort.
+
+# I owe you an apology.
+@ talk | conflict, work | real | deep, worksafe | 2
+= 君に謝らなきゃいけない
+A: Hey, I owe you an apology. I was out of line yesterday.
+B: I appreciate that. Thanks.
+? out of line ＝度を越えてた・言い過ぎた。
+
+# I was out of line.
+@ talk | conflict | real | deep | 2
+= 言い過ぎた
+- What I said was out of line. I'm sorry.
+- Sorry, that was out of line.
+
+# I didn't mean it.
+@ talk | conflict, crush | real | deep | 3
+= 本気で言ったんじゃない
+A: You said I'm lazy.
+B: I didn't mean it. I was just frustrated.
+? I didn't mean to 〜 ＝「〜するつもりはなかった」。I didn't mean to hurt you.
+
+# I didn't mean to
+@ talk | conflict, daily | real | warm | 3
+= 〜するつもりじゃなかった
+- Sorry, I didn't mean to interrupt.
+- I didn't mean to make you wait.
+
+# I'm sorry. That's on me.
+@ talk | conflict, work | real | deep | 2
+= ごめん、俺が悪い
+A: You forgot again.
+B: I'm sorry. That's on me. It won't happen again.
+
+# It won't happen again.
+@ talk | conflict, work | real | worksafe | 3
+= 二度としません
+A: The client was really upset.
+B: I understand. It won't happen again.
+
+# Can we talk?
+@ talk | conflict, crush | real | deep | 3
+= ちょっと話せる？
+A: Can we talk?
+B: Uh oh. That sounds serious.
+! 恋人に言われると誰でも身構える一言。ネタにもなる。
+
+# Where is this coming from?
+@ talk | conflict, crush | real | deep | 2
+= 急にどうしたの？（何が原因？）
+A: You never listen to me.
+B: Where is this coming from?
+
+# I'm not mad, I'm just disappointed.
+@ talk | conflict | real | funny, cold | 2
+= 怒ってない、がっかりしてるだけ
+A: I ate your leftovers.
+B: I'm not mad. I'm just disappointed.
+! 親のお説教の定番セリフ。怒られるより効く、とよくネタにされる。
+
+# Calm down.
+@ talk | conflict | real | rude | 3
+= 落ち着いて（逆効果）
+A: I'm so angry right now!
+B: Calm down.
+A: Don't tell me to calm down!
+✓ Okay, I hear you. What happened? | 先に気持ちを受け止める方が落ち着く
+! 怒ってる人に Calm down. と言うと100%逆効果、は英語圏の常識。
+
+# Let's agree to disagree.
+@ talk | conflict, friends, business | real | chill | 2
+= 意見が違うってことで終わりにしよう
+A: Pineapple belongs on pizza.
+B: Let's agree to disagree.
+
+# I see where you're coming from.
+@ talk | conflict, business | real | warm, worksafe | 2
+= あなたの立場はわかる
+A: We need more time, not more money.
+B: I see where you're coming from, but the deadline won't move.
+
+# That's not what I said.
+@ talk | conflict | real | cold | 3
+= そんなこと言ってない
+A: So you think I'm a bad friend?
+B: That's not what I said.
+
+# You don't have to
+@ talk | friends, feelings | real | warm | 3
+= 〜しなくていいよ
+- You don't have to apologize.
+- You don't have to explain. I get it.
+
+# I get it.
+@ talk | friends, feelings, work | real | warm | 3
+= わかるよ
+A: I just need some space.
+B: I get it. Take your time.
+
+# I need some space.
+@ talk | crush, conflict, feelings | real | deep | 2
+= 少し距離を置きたい
+A: Are we okay?
+B: I just need some space right now.
+
+# I'm here for you.
+@ talk | friends, feelings | real | warm, deep | 3
+= 私がいるからね
+A: I don't know what to do.
+B: Hey. Whatever happens, I'm here for you.
+
+# Do you want to talk about it?
+@ talk | friends, feelings | real | warm | 3
+= 話聞こうか？
+A: Bad day.
+B: Do you want to talk about it?
+A: Not really. But thanks.
+
+# It's not your fault.
+@ talk | friends, feelings | real | warm, deep | 3
+= 君のせいじゃない
+A: If I had left earlier, this wouldn't have happened.
+B: It's not your fault.
+
+# Hang in there.
+@ talk | friends, work, feelings | real | warm | 3
+= がんばれ／踏ん張れ
+A: Two more weeks of night shifts.
+B: Hang in there.
+? 大変な状況にいる人への「がんばれ」。Good luck より寄り添う感じ。
+
+# Take care of yourself.
+@ talk | friends, health, feelings | real | warm | 3
+= 体に気をつけて／自分を大事にね
+A: I'll be okay.
+B: Take care of yourself, okay?
+
+# I'm proud of you.
+@ talk | friends, feelings, work | real | warm, deep | 3
+= 誇りに思うよ
+A: I finished my first song.
+B: That's huge. I'm proud of you.
+! 家族だけでなく友達や同僚にもよく言う。言われたら Thanks, that means a lot.
+
+# That means a lot.
+@ talk | friends, feelings, business | real | warm | 3
+= すごく嬉しい（その言葉が響く）
+A: You're the most hardworking person I know.
+B: That means a lot. Thank you.
+
+# I'm a mess.
+@ talk | feelings | real | deep | 2
+= ボロボロだよ
+A: How are you holding up?
+B: Honestly? I'm a mess.
+
+# How are you holding up?
+@ talk | feelings, friends | real | warm | 2
+= 大丈夫？（つらい時期の人に）
+A: How are you holding up?
+B: Day by day.
+
+# day by day
+@ talk | feelings, study | real | deep | 2
+= 一日一日／日に日に
+A: How's recovery going?
+B: Day by day.
+- My English is getting better day by day.
+
+# I've been there.
+@ talk | friends, feelings | real | warm | 3
+= 俺も経験あるよ
+A: I'm so broke right now.
+B: I've been there, man. It gets better.
+
+# It gets better.
+@ talk | feelings | real | warm, deep | 2
+= だんだん良くなるよ
+A: The first year abroad is so hard.
+B: It gets better. I promise.
+
+# I'm stressed out.
+@ talk | feelings, work | real | chill | 3
+= ストレス溜まってる
+A: You okay?
+B: I'm stressed out. Taxes are due and my laptop died.
+
+# It's getting to me.
+@ talk | feelings, work | real | deep | 2
+= 精神的にこたえてる
+A: You've been quiet lately.
+B: The workload is getting to me.
+
+# I'm over it.
+@ talk | feelings, crush | real | chill | 3
+= もう吹っ切れた／もううんざり
+A: Still mad about the ex?
+B: Nah, I'm over it.
+? 「吹っ切れた」と「うんざり」の両方で使う。文脈で判断。
+
+# I'm freaking out.
+@ talk | feelings | real | chill | 3
+= パニクってる
+A: The interview is in ten minutes.
+B: I'm freaking out.
+A: Breathe. You got this.
+
+# Breathe.
+@ talk | feelings, health | real | warm | 2
+= 深呼吸して
+A: I can't do this.
+B: Breathe. One thing at a time.
+? one thing at a time ＝「一つずつ」。
+
+# one thing at a time
+@ talk | feelings, work, study | real | warm | 3
+= 一つずつ
+- Don't panic. One thing at a time.
+- Let's take it one thing at a time.
+
+# Why the long face?
+@ talk | friends, feelings | real | warm | 1
+= なんで浮かない顔してるの？
+A: Why the long face?
+B: My team lost. Again.

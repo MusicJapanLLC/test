@@ -1,0 +1,281 @@
+// Real Talk — Crush & dating. Asking out, dates, feelings, breakups.
+
+# Are you free this weekend?
+@ talk | crush, friends | real | warm, flirty | 3
+= 今週末空いてる？
+A: Are you free this weekend?
+B: Saturday, yeah. Why?
+A: There's a jazz bar I've been wanting to try.
+? 誘う前にまず空いてるか聞くのが自然な流れ。
+
+# Do you want to get dinner sometime?
+@ talk | crush | real | flirty, warm | 3
+= 今度ご飯行かない？
+A: Do you want to get dinner sometime?
+B: Like, a date?
+A: Yeah. Like a date.
+B: I'd like that.
+! アメリカでは「デートかどうか」をはっきりさせるのが普通。Like a date? と聞かれたら素直に Yeah. で大丈夫。
+
+# Is this a date?
+@ talk | crush | real | flirty, funny | 2
+= これってデート？
+A: So... is this a date?
+B: Do you want it to be?
+A: I mean, I wore my good shirt.
+
+# I had a really good time.
+@ talk | crush, friends | real | warm | 3
+= 今日はすごく楽しかった
+A: I had a really good time tonight.
+B: Me too. We should do this again.
+✗ Today was very fun. | textbook | 伝わるけど子どもっぽい
+
+# We should do this again.
+@ talk | crush, friends, business | real | warm | 3
+= またやろうね
+A: That was fun.
+B: Yeah, we should do this again.
+- We should do this again soon. Maybe next month?
+
+# I can't stop thinking about you.
+@ talk | crush, dm | real | flirty, deep | 2
+= 君のことばっかり考えちゃう
+A: Random, but I can't stop thinking about you.
+B: That's not random. Same.
+! 重く聞こえないように Random, but... を前に付けるのが今っぽい。
+
+# I like you.
+@ talk | crush | real | flirty, deep | 3
+= 好きだよ（恋愛の）
+A: Can I be honest? I like you. Like, like-like you.
+B: I was hoping you'd say that.
+? 英語の I like you. は文脈で恋愛の「好き」になる。強調したいときに like-like と言うのは子どもっぽいけど可愛い言い方。
+
+# Do you want to be my girlfriend?
+@ talk | crush | real | flirty, deep | 2
+= 付き合ってくれる？
+A: I don't want to see anyone else. Do you want to be my girlfriend?
+B: Yes. Obviously yes.
+! アメリカは告白文化が弱く、何回かデートしてから「付き合う？」を確認する流れが多い。それを define the relationship（DTR）と言う。
+
+# What are we?
+@ talk | crush | real | deep | 2
+= 私たちって何？（関係を確認する）
+A: Can I ask you something? What are we?
+B: I mean, I'm not seeing anyone else.
+A: So... we're exclusive?
+? exclusive ＝お互いだけ（他の人とはデートしない）。付き合う一歩手前の確認。
+
+# We're exclusive.
+@ talk | crush | real | deep | 2
+= お互いだけって決めてる
+A: Are you two official?
+B: We're exclusive, but we haven't put a label on it.
+? put a label on it ＝「関係に名前を付ける」。
+
+# It's complicated.
+@ talk | crush, feelings | real | deep | 3
+= 複雑なんだよね
+A: Are you guys together?
+B: It's complicated.
+! 恋愛関係を説明したくないときの便利フレーズ。言われたらそれ以上聞かないのが大人。
+
+# She ghosted me.
+@ talk | crush, dm | real | chill | 3
+= 急に連絡が途絶えた（既読無視どころか消えた）
+A: Whatever happened with that girl?
+B: She ghosted me. Three dates, then nothing.
+A: Brutal.
+? ghost ＝何も言わずに連絡を絶つ。動詞として使う。
+
+# Brutal.
+@ talk | friends | real | funny | 3
+= キツいな／エグい
+A: My flight got canceled and they lost my bag.
+B: Brutal.
+? 相手の不運へのひと言リアクション。Oof. / That sucks. も同じ場面で使える。
+
+# leave me on read
+@ talk | crush, dm | real | chill | 3
+= 既読スルーする
+A: Did she text back?
+B: Nope. She left me on read.
+- Don't leave me on read, man.
+
+# She's playing hard to get.
+@ talk | crush, friends | real | flirty | 2
+= 気のないふりしてる（駆け引き中）
+A: She takes four hours to reply.
+B: She's playing hard to get.
+A: Or she's just busy.
+
+# I'm head over heels.
+@ talk | crush, feelings | real | deep, warm | 2
+= ベタ惚れ
+A: You've been smiling at your phone all day.
+B: I'm head over heels, man. It's embarrassing.
+
+# I have a crush on
+@ talk | crush, friends | real | flirty | 3
+= 〜が気になってる
+A: I have a crush on someone at the gym.
+B: Talk to her! Wait, have you talked to her?
+A: We've exchanged nods.
+? crush ＝片思い・気になる人。He's my crush. のように名詞でも使う。
+
+# Let's take it slow.
+@ talk | crush | real | warm, deep | 2
+= ゆっくり進めよう
+A: Do you want to meet my parents?
+B: Let's take it slow. It's been two weeks.
+
+# I'm not looking for anything serious.
+@ talk | crush, dm | real | cold | 2
+= 真剣な関係は求めてない
+A: What are you looking for?
+B: Honestly? Nothing serious right now.
+- I'm not looking for anything serious. I just got out of a relationship.
+! マッチングアプリでよく聞くフレーズ。相手と温度感が違ったら早めに確認。
+
+# We broke up.
+@ talk | crush, feelings | real | deep | 3
+= 別れた
+A: How's your girlfriend?
+B: We broke up last month.
+A: Oh, man. I'm sorry.
+? break up with 人 ＝「人と別れる」。split up も同じ。
+
+# I'm sorry to hear that.
+@ talk | feelings, friends, business | real | warm, worksafe | 3
+= それは大変だったね／残念だね
+A: My grandma passed away last week.
+B: I'm so sorry to hear that.
+- I'm sorry to hear you've been sick.
+✗ That's too bad. | textbook | 軽く聞こえることがある。重い話には sorry to hear を
+
+# It's not you, it's me.
+@ talk | crush | real | funny, cold | 2
+= 君は悪くない、俺の問題なんだ（別れの決まり文句）
+A: It's not you, it's me.
+B: Did you really just say that?
+! 定番すぎて今は逆にジョーク扱い。本気で使うと相手をもっと怒らせる。
+
+# I miss you.
+@ talk | crush, dm, feelings | real | warm, deep | 3
+= 会いたい／寂しい
+A: When are you back?
+B: Friday. Why?
+A: I miss you.
+? I miss you. は「会いたい」「いなくて寂しい」両方。日本語より気軽に使う。
+
+# I'm into you.
+@ talk | crush | real | flirty | 2
+= 君のこと気になってる
+A: I'm gonna be honest. I'm into you.
+B: Good. Because I'm into you too.
+
+# Netflix and chill
+@ talk | crush, dm | real | flirty | 2 | explicit
+= （家で映画を見る＝の名目で）家に誘う
+A: Want to come over and watch Netflix?
+B: Like, actually watch it? Or Netflix and chill?
+! 「家で映画見よう」が下心の意味で受け取られるようになったネットスラング。誘い方に注意。
+
+# Can I kiss you?
+@ talk | crush | real | flirty, warm | 2
+= キスしていい？
+A: Can I kiss you?
+B: I thought you'd never ask.
+! アメリカでは「聞く」こと自体がちゃんとした大人の振る舞い（consent）と受け取られる。ダサくない。
+
+# I thought you'd never ask.
+@ talk | crush, friends | real | flirty, funny | 2
+= やっと聞いてくれた
+A: Do you want to dance?
+B: I thought you'd never ask.
+
+# You look amazing.
+@ talk | crush | real | warm, flirty | 3
+= すごく素敵
+A: Wow. You look amazing.
+B: You clean up nice yourself.
+? clean up nice ＝「ちゃんとするとカッコいいね」（普段とのギャップを褒める）。
+
+# get back together
+@ talk | crush, friends | real | deep | 2
+= よりを戻す
+A: Are they back together?
+B: Yeah, they got back together last week. Again.
+! Taylor Swift の曲名 We Are Never Ever Getting Back Together でも有名。
+
+# She's the one.
+@ talk | crush, feelings | real | deep | 2
+= 運命の人だ
+A: How do you know she's the one?
+B: I don't. But I want to find out.
+
+# I'm seeing someone.
+@ talk | crush | real | chill | 3
+= 付き合ってる人がいる
+A: Are you single?
+B: I'm seeing someone, actually.
+? 「今デートしてる人がいる」くらいの温度。正式な彼氏彼女なら I have a girlfriend/boyfriend.
+
+# We're just friends.
+@ talk | crush, friends | real | chill | 3
+= ただの友達だよ
+A: So you two are...?
+B: We're just friends.
+A: Sure you are.
+? Sure you are. ＝「はいはい（信じてない）」。
+
+# friend-zoned
+@ talk | crush, friends | real | funny | 2
+= 友達止まりにされた
+A: She said I'm like a brother to her.
+B: Oof. You got friend-zoned.
+
+# blind date
+@ talk | crush | real | chill | 2
+= ブラインドデート（紹介で初対面のデート）
+A: My cousin set me up on a blind date.
+B: How'd it go?
+A: He brought his mom.
+? set 人 up ＝「人を紹介してくっつける」。
+
+# dating app
+@ talk | crush, online | real | chill | 3
+= マッチングアプリ
+A: Where'd you two meet?
+B: On a dating app. Don't judge.
+A: Who's judging? That's how everyone meets now.
+! アメリカではマッチングアプリで出会うのはごく普通。恥ずかしがらなくていい。
+
+# swipe right
+@ talk | crush, online | real | flirty | 2
+= 右スワイプ（いいね）
+A: Would you swipe right on him?
+B: Too many fish pictures. Swipe left.
+! 「釣った魚と写ってる男性の写真」はアメリカのアプリで定番のネタ。
+
+# a red flag
+@ talk | crush, business, feelings | real | chill | 3
+= 危険信号・地雷サイン
+A: He was rude to the waiter.
+B: That's a huge red flag.
+- No contract? Red flag.
+? 反対は green flag（安心できるサイン）。恋愛にも仕事にも使う。
+
+# a green flag
+@ talk | crush, friends | real | warm | 2
+= いいサイン・安心ポイント
+A: He remembered my coffee order.
+B: Green flag.
+
+# move on
+@ talk | crush, feelings, work | real | deep | 3
+= 吹っ切る・次に進む
+A: It's been a year. You need to move on.
+B: I know. I'm trying.
+- Let's move on to the next topic.

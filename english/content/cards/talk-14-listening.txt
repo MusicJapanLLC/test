@@ -1,0 +1,254 @@
+// Real Talk — Listening. Fillers and squeezed sounds. If you can't catch it, it's usually one of these.
+
+# gonna
+@ talk | daily, study | real | chill | 3
+= going to（〜するつもり）の発音
+- I'm gonna grab lunch.
+- It's gonna rain.
+~ "gun-uh"
+? 話し言葉ではほぼ100% gonna。I'm gonna は「アムナ」くらいまで縮むことも。
+
+# wanna
+@ talk | daily, study | real | chill | 3
+= want to の発音
+- Wanna go?
+- I don't wanna talk about it.
+~ "WAH-nuh"
+? Do you want to → "D'ya wanna" → "Wanna" と、主語まで消える。
+
+# gotta
+@ talk | daily, study | real | chill | 3
+= have got to（〜しなきゃ）の発音
+- I gotta go.
+- You gotta try this.
+~ "GAH-duh"
+? t がラ行っぽくなって「ガラ」に聞こえる。
+
+# kinda
+@ talk | daily, study | real | chill | 3
+= kind of（ちょっと・なんか）
+- I'm kinda tired.
+- It's kinda weird, right?
+~ "KINE-duh"
+
+# sorta
+@ talk | daily, study | real | chill | 2
+= sort of（ある意味・ちょっと）
+- It's sorta like a café, but with books.
+~ "SORE-duh"
+
+# lemme
+@ talk | daily, study | real | chill | 3
+= let me
+- Lemme see.
+- Lemme think about it.
+~ "LEM-ee"
+
+# gimme
+@ talk | daily, study | real | chill | 3
+= give me
+- Gimme a sec.
+- Gimme a call later.
+~ "GIM-ee"
+
+# dunno
+@ talk | daily, study | real | chill | 3
+= I don't know
+- Where is he? — Dunno.
+- I dunno, maybe tomorrow?
+~ "duh-NO"
+? I don't know は会話で "I dunno" → "ah-dunno" まで縮む。
+
+# whatcha
+@ talk | daily, study | real | chill | 2
+= what are you / what have you
+- Whatcha doing?
+- Whatcha got there?
+~ "WHAH-chuh"
+
+# didja
+@ talk | daily, study | real | chill | 2
+= did you
+- Didja eat yet?
+- Where didja park?
+~ "DID-juh"
+? did you, would you, could you は d + you が「ジュ」になる。Would you → "wudja"。
+
+# Did you eat yet?
+@ talk | daily, food, friends | real | warm | 2
+= ご飯食べた？
+- Did you eat yet? I'm starving.
+~ "jeet-YET?"
+! 早口だと "Jeet yet?" "No, joo?"（Did you eat yet? No, did you?）まで縮む。アメリカで有名なネタ。
+
+# y'all
+@ talk | daily, friends | real | warm | 2
+= you all（みんな・あなたたち）
+- Y'all ready?
+- What are y'all doing tonight?
+! 南部の言葉だったけど、今はアメリカ全体でネットでも使われる「you の複数形」。
+
+# you guys
+@ talk | daily, friends | real | chill | 3
+= みんな・あなたたち
+- Are you guys hungry?
+- Thanks, you guys!
+? 男女関係なく使える you の複数形。
+
+# 'cause
+@ talk | daily, study | real | chill | 3
+= because
+- I'm staying in 'cause I'm broke.
+- 'Cause I said so.
+~ "kuz"
+? because の be が消える。テキストでは cuz / bc とも書く。
+
+# tryna
+@ talk | daily, friends | real | chill | 2
+= trying to
+- I'm tryna sleep.
+- What are you tryna do tonight?
+~ "TRY-nuh"
+
+# outta
+@ talk | daily, study | real | chill | 2
+= out of
+- I'm outta here.
+- Get outta here!
+~ "OW-duh"
+
+# a lotta
+@ talk | daily, study | real | chill | 2
+= a lot of
+- That's a lotta money.
+~ "uh-LAH-duh"
+
+# you know
+@ talk | daily, study | real | chill | 3
+= ほら／なんていうか（つなぎ言葉）
+- It's just, you know, a lot.
+- I was, you know, kind of nervous.
+? 意味はほぼない「間」をつなぐ言葉。聞き取るときは無視してOK。
+
+# I mean
+@ talk | daily, study | real | chill | 3
+= っていうか／いや、つまり
+- I mean, it's not bad.
+- It was good. I mean, not great, but good.
+? 言い直す・やわらげるときのクッション。
+
+# like
+@ talk | daily, study | real | chill | 3
+= なんか／〜みたいな（つなぎ言葉）
+- It was, like, so weird.
+- He was like, "No way," and I was like, "Yes way."
+? be like 〜 ＝「〜って言った・反応した」。若い人の会話で超頻出。
+
+# basically
+@ talk | daily, study, work | real | chill | 3
+= 要するに
+- Basically, we need more time.
+- He basically told me to quit.
+
+# literally
+@ talk | daily, study | real | chill | 3
+= マジで（強調）
+- I'm literally starving.
+- I literally just got here.
+! 本来は「文字通り」だけど、今は強調語として乱用されている。ネイティブ同士でもツッコミのネタ。
+
+# honestly
+@ talk | daily, friends | real | chill | 3
+= 正直
+- Honestly, I don't care.
+- Honestly? It was the best day of my life.
+
+# to be fair
+@ talk | daily, friends, work | real | chill | 3
+= 公平に言えば・まあ、とはいえ
+- To be fair, he did warn us.
+- He's late a lot. To be fair, the trains are terrible.
+
+# at the end of the day
+@ talk | daily, work, business | real | worksafe | 3
+= 結局のところ
+- At the end of the day, it's your decision.
+- At the end of the day, customers want results.
+
+# Anyway
+@ talk | daily, friends | real | chill | 3
+= まあ、それはともかく（話を戻す・終える）
+- Anyway, what was I saying?
+- Anyway, I should go.
+~ "EN-ee-way"
+
+# kind of a big deal
+@ talk | daily, friends | real | funny | 2
+= ちょっとした大物／大事
+- I'm kind of a big deal at my gym.
+- This is kind of a big deal for us.
+
+# What's that supposed to mean?
+@ talk | conflict | real | cold | 2
+= それどういう意味よ？（ムッとして）
+A: You look different. Like, rested.
+B: What's that supposed to mean?
+? be supposed to ＝「〜のはず・〜することになってる」。What's that supposed to mean? は不満の決まり文句。
+
+# I'm supposed to
+@ talk | daily, work | real | chill | 3
+= 〜することになってる
+- I'm supposed to be at work by nine.
+- You're not supposed to park here.
+~ "I'm s'POSE-tuh"
+? supposed to の d はほぼ聞こえない。「サポウストゥ」くらい。
+
+# used to
+@ talk | daily | real | chill | 3
+= 昔は〜してた
+- I used to smoke.
+- We used to live in Fukuoka.
+~ "YOOS-tuh"
+? used to（昔〜してた）と be used to（〜に慣れてる）は別物。I'm used to it. ＝「慣れてる」。
+
+# I'm used to it.
+@ talk | daily, work | real | chill | 3
+= もう慣れてる
+A: Doesn't the noise bother you?
+B: Not really. I'm used to it.
+
+# could've
+@ talk | daily, study | real | chill | 2
+= could have（〜できたのに）
+- You could've told me!
+- I could've been a doctor. Probably not.
+~ "COULD-uh"
+? could have は "could of" に聞こえる。ネイティブも could of と書き間違えるくらい。
+
+# should've
+@ talk | daily, study, feelings | real | chill | 3
+= should have（〜すべきだった）
+- I should've listened to you.
+- You should've seen his face.
+~ "SHOULD-uh"
+
+# What do you wanna do?
+@ talk | daily, friends | real | chill | 3
+= 何したい？
+- What do you wanna do tonight?
+~ "WHADDYA-wanna-do?"
+? What do you は "Whaddya" → "Whatcha" まで縮む。
+
+# How's it goin'?
+@ talk | daily, friends | real | chill | 2
+= 調子どう？（めちゃくちゃ縮んで聞こえる）
+- Hey man, how's it goin'?
+~ "HOWZ-ih-GOIN?"
+! 実際は「ハウズィゴーイン」くらい。一語に聞こえたらこれ。
+
+# I don't know if
+@ talk | daily, feelings | real | chill | 3
+= 〜かどうかわからない
+- I don't know if I can make it.
+- I don't know if this is a good idea.
+~ "I-dunno-if"

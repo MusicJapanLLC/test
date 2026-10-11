@@ -1,0 +1,193 @@
+// Real Talk — Money. Prices, budgets, broke, paying back, deals.
+
+# I'm broke.
+@ talk | money, friends | real | chill, funny | 3
+= 金欠
+A: Wanna go to the concert?
+B: I'd love to, but I'm broke until payday.
+- I'm so broke I'm eating cereal for dinner.
+? broke ＝お金がない（一時的）。poor は「貧しい」で重い。
+
+# payday
+@ talk | money, work | real | chill | 2
+= 給料日
+A: Dinner on Friday?
+B: Friday's payday. I'm in.
+
+# It's a rip-off.
+@ talk | money, shopping | real | chill | 3
+= ぼったくりだ
+A: Twelve dollars for a coffee?
+B: It's a total rip-off.
+? rip-off（名詞）、rip 人 off（動詞）＝ぼったくる。I got ripped off.
+
+# I got ripped off.
+@ talk | money, shopping, travel | real | chill | 2
+= ぼったくられた
+A: How much was the taxi?
+B: Eighty bucks. I definitely got ripped off.
+
+# bucks
+@ talk | money, daily | real | chill | 3
+= ドル（口語）
+A: How much?
+B: Twenty bucks.
+- I'll give you five bucks if you carry my bag.
+? 会話では dollars より bucks が多い。a grand ＝1000ドル。
+
+# a grand
+@ talk | money | real | chill | 2
+= 1000ドル
+A: How much was the laptop?
+B: About two grand.
+
+# It's worth it.
+@ talk | money, shopping, daily | real | chill | 3
+= その価値はある
+A: The course is expensive.
+B: Yeah, but it's worth it.
+- Is it worth the money?
+
+# It's not worth it.
+@ talk | money, daily, conflict | real | chill | 3
+= 割に合わない
+A: Should I fight the parking ticket?
+B: It's not worth it. Just pay it.
+
+# I'll pay you back.
+@ talk | money, friends | real | warm | 3
+= 返すね
+A: Can you spot me twenty? I'll pay you back tomorrow.
+B: Sure, no rush.
+? spot 人 money ＝ちょっと貸す・立て替える（ジムの spot とは別）。
+
+# Can you spot me twenty?
+@ talk | money, friends | real | chill | 2
+= ちょっと立て替えてくれる？
+A: I forgot my wallet. Can you spot me twenty?
+B: Classic. Yeah, I got you.
+! ジムの spot（補助）と同じ単語。場面で判断。
+
+# I got you.
+@ talk | friends, money | real | warm | 3
+= 任せて／わかったよ
+A: Can you cover lunch? I'll Venmo you.
+B: I got you.
+? I got you. ＝「俺が払う」「理解した」「助けるよ」と幅広い。I gotchu. とも。
+
+# Venmo me
+@ talk | money, dm, friends | real | chill | 2
+= Venmoで送って（送金して）
+A: I paid for the tickets.
+B: Cool, I'll Venmo you.
+! アメリカの個人送金アプリ。日本の「PayPayで送る」に近い感覚。アプリ名が動詞になってる。
+
+# on a budget
+@ talk | money, travel, shopping | real | chill | 3
+= 予算が限られてる
+A: Where do you want to eat?
+B: Somewhere cheap. I'm on a budget this month.
+
+# I can't afford it.
+@ talk | money | real | chill | 3
+= 買えない（余裕がない）
+A: Are you getting the new iPhone?
+B: I can't afford it right now.
+? afford は「金銭的に余裕がある」。時間にも使う: I can't afford to wait.
+
+# I'm saving up for
+@ talk | money | real | chill | 2
+= 〜のために貯金してる
+A: You're not eating out?
+B: I'm saving up for a trip to Australia.
+
+# splurge
+@ talk | money, shopping | real | chill | 2
+= 奮発する
+A: Nice watch!
+B: I splurged. First big check from a client.
+? splurge on 〜 ＝〜に奮発する。treat yourself（自分へのご褒美）と近い。
+
+# It was a steal.
+@ talk | money, shopping | real | chill | 2
+= めちゃくちゃ安かった（掘り出し物）
+A: How much were the shoes?
+B: Forty bucks. It was a steal.
+
+# Is there a discount?
+@ talk | money, shopping | real | worksafe | 2
+= 割引ありますか？
+A: Is there a student discount?
+B: Ten percent with your ID.
+
+# Can you do any better on the price?
+@ talk | money, business, shopping | real | worksafe | 2
+= もう少しお安くなりませんか？
+A: That's a little high. Can you do any better on the price?
+B: I can do ten percent off if you pay upfront.
+? upfront ＝前払いで・先に。
+
+# upfront
+@ talk | money, business | real | worksafe | 2
+= 前もって・前払いで
+- We ask for 50 percent upfront.
+- I'll be upfront with you: we're small.
+? be upfront ＝率直に言う、の意味にもなる。
+
+# That's out of my price range.
+@ talk | money, shopping | real | worksafe | 2
+= 予算オーバーです
+A: This model is $2,000.
+B: That's a bit out of my price range.
+
+# break the bank
+@ talk | money | real | chill | 2
+= 大金がかかる
+- A good haircut doesn't have to break the bank.
+- Dinner was nice, and it didn't break the bank.
+
+# cost an arm and a leg
+@ talk | money | real | funny | 2
+= めちゃくちゃ高い
+- Rent in New York costs an arm and a leg.
+
+# make ends meet
+@ talk | money, work | real | deep | 2
+= やりくりする・生活費をまかなう
+- He works nights to make ends meet.
+- It's hard to make ends meet in a big city.
+
+# side hustle
+@ talk | money, work, online | real | chill | 3
+= 副業
+A: Is streaming your full-time job?
+B: It started as a side hustle.
+
+# passive income
+@ talk | money, business | real | chill | 2
+= 不労所得
+- Everyone online wants passive income.
+- Music royalties are kind of passive income.
+
+# I'm good for it.
+@ talk | money, friends | real | warm | 2
+= ちゃんと返すから大丈夫
+A: Can you lend me fifty? I'm good for it.
+B: You said that last time.
+
+# Money talks.
+@ talk | money, business | real | chill | 1
+= 金がものを言う
+A: How did he get the best table?
+B: Money talks.
+
+# I'm in the red.
+@ talk | money, business | real | deep | 1
+= 赤字だ
+- We were in the red for the first year.
+? in the black ＝黒字。会計の赤字・黒字は日本語と同じ発想。
+
+# break even
+@ talk | money, business | real | worksafe | 2
+= トントン（損益分岐）
+- We'll break even in about six months.

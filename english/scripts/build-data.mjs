@@ -197,7 +197,7 @@ function checkCard(c) {
   if (c.q && c.q[0].split(/\s+/).length > 40) fail(w, 'quote too long (keep quotes to one short line)');
   // the chunk should appear in at least one example (loose match: first 2 content words)
   if (c.re === 'real') {
-    const core = c.head.toLowerCase().replace(/\(.*?\)/g, '').replace(/[~…]/g, ' ').replace(/\b(sb|sth|someone|something|one's|your|my)\b/g, ' ').split(/[^a-z']+/).filter((x) => x.length > 2).slice(0, 2);
+    const core = c.head.toLowerCase().replace(/\(.*?\)/g, '').replace(/[~…]/g, ' ').replace(/\b(sb|sth|someone|something|one's|your|my)\b/g, ' ').split(/[^a-z']+/).filter((x) => x.length > 2 && !['the', 'and', "i'm", 'you', 'are', 'for'].includes(x)).slice(0, 2);
     const all = [...c.l.map((l) => l[1]), c.q?.[0] ?? ''].join(' ').toLowerCase();
     if (core.length && !core.every((k) => all.includes(k.replace(/'s$/, '')))) warn.push(`${w}: "${c.head}" not clearly used in examples`);
   }

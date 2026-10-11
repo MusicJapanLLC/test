@@ -1,0 +1,202 @@
+// Real Talk — Paperwork, housing, travel.
+
+# emergency contact
+@ talk | paperwork | real | worksafe | 2
+= 緊急連絡先
+A: The form asks for an emergency contact.
+B: You can put me down if you want.
+- Can I ask you to be my emergency contact?
+? put 人 down ＝（書類に）人の名前を書く。
+
+# fill out
+@ talk | paperwork | real | worksafe | 3
+= （書類を）記入する
+A: Please fill out this form.
+B: Do I need to fill out both sides?
+? fill in も同じ。アメリカは fill out が多い。
+
+# proof of income
+@ talk | paperwork, money | real | worksafe | 2
+= 収入証明
+A: For the apartment, we need proof of income.
+B: Will bank statements work?
+A: Yes, the last three months.
+
+# Will that work?
+@ talk | paperwork, business | real | worksafe | 2
+= それで大丈夫ですか？
+A: I can send a PDF tonight. Will that work?
+B: That works.
+
+# lease
+@ talk | paperwork, money | real | worksafe | 2
+= 賃貸契約
+A: How long is the lease?
+B: Twelve months. You can renew after that.
+
+# security deposit
+@ talk | paperwork, money | real | worksafe | 2
+= 敷金
+A: Is the security deposit refundable?
+B: Yes, as long as there's no damage.
+
+# utilities included
+@ talk | paperwork, money | real | worksafe | 2
+= 光熱費込み
+A: Is that utilities included?
+B: Water and trash, yes. Electric is separate.
+
+# I'm just looking.
+@ talk | shopping | real | chill | 3
+= 見てるだけです
+A: Can I help you find anything?
+B: I'm just looking, thanks.
+
+# Do you have this in a medium?
+@ talk | shopping | real | worksafe | 2
+= これのMサイズありますか？
+A: Do you have this in a medium?
+B: Let me check in the back.
+
+# I'll take it.
+@ talk | shopping, money | real | chill | 3
+= これにします
+A: It's the last one in your size.
+B: I'll take it.
+
+# Where's the restroom?
+@ talk | travel, cafe, daily | real | worksafe | 3
+= トイレどこですか？
+A: Excuse me, where's the restroom?
+B: Down the hall, on the left.
+✗ Where is the toilet? | textbook | アメリカで toilet は便器そのもの。restroom / bathroom が普通
+
+# Do you know where
+@ talk | travel, daily | real | warm | 3
+= 〜がどこか知ってますか？
+- Do you know where the train station is?
+- Sorry, do you know where I can get a SIM card?
+
+# I'm here on vacation.
+@ talk | travel | real | chill | 3
+= 観光で来ています
+A: Business or pleasure?
+B: Pleasure. I'm here on vacation.
+? 入国審査や現地の人との会話で。Business or pleasure? ＝「仕事？観光？」
+
+# Business or pleasure?
+@ talk | travel | real | chill | 2
+= お仕事ですか？観光ですか？
+A: Business or pleasure?
+B: A little of both.
+
+# I'm a little lost.
+@ talk | travel | real | warm | 2
+= ちょっと迷っちゃって
+A: Sorry, I'm a little lost. Is this the way to the pier?
+B: You're close. Just go straight two blocks.
+
+# It's about a ten-minute walk.
+@ talk | travel, daily | real | chill | 2
+= 歩いて10分くらい
+A: Is it far?
+B: Not really. It's about a ten-minute walk.
+
+# My flight got delayed.
+@ talk | travel | real | chill | 3
+= 便が遅れた
+A: Where are you?
+B: Still at the airport. My flight got delayed two hours.
+
+# I missed my flight.
+@ talk | travel | real | deep | 2
+= 飛行機に乗り遅れた
+A: What happened?
+B: I missed my flight. Long story.
+
+# carry-on
+@ talk | travel | real | worksafe | 2
+= 機内持ち込み荷物
+A: Is this a carry-on?
+B: Yes, it fits under the seat.
+
+# jet lag
+@ talk | travel, health | real | chill | 3
+= 時差ボケ
+A: You look tired.
+B: Jet lag. My body thinks it's 4 a.m.
+- I'm still jet-lagged.
+
+# Is this seat taken?
+@ talk | travel, cafe | real | warm | 3
+= この席空いてますか？
+A: Is this seat taken?
+B: Nope, all yours.
+? All yours. ＝「どうぞどうぞ」。
+
+# All yours.
+@ talk | daily, cafe, work | real | warm | 3
+= どうぞ（使っていいよ）
+A: Are you done with the printer?
+B: Yep, all yours.
+
+# Can you take a picture of us?
+@ talk | travel, friends | real | warm | 2
+= 写真撮ってもらえますか？
+A: Sorry, can you take a picture of us?
+B: Sure! Say cheese!
+- Do you want one with the bridge in the background?
+
+# check in
+@ talk | travel, paperwork | real | worksafe | 3
+= チェックインする
+A: Hi, I'm checking in. The reservation's under Tanaka.
+B: Great, I just need your ID.
+? The reservation is under 〜 ＝「〜の名前で予約してます」。
+
+# The reservation's under
+@ talk | travel, food | real | worksafe | 2
+= 〜の名前で予約しています
+A: Do you have a reservation?
+B: Yes, it's under Sato. Party of two.
+
+# Party of two
+@ talk | food, travel | real | worksafe | 2
+= 2名です
+A: How many?
+B: Party of two, please.
+A: Right this way.
+? レストランで人数を言うとき。Table for two. でもOK。
+
+# I'm allergic to
+@ talk | food, health, travel | real | worksafe | 2
+= 〜アレルギーです
+- I'm allergic to shellfish. Is there any in this?
+- I'm not allergic, I just don't like it.
+
+# Could you call me a cab?
+@ talk | travel | real | worksafe | 1
+= タクシーを呼んでもらえますか？
+A: Could you call me a cab?
+B: Sure. Or you can use the app, it's faster.
+! 「Call me a cab」は「私をタクシーと呼んで」と取れるので、昔からの言葉遊びジョーク（"Okay, you're a cab."）がある。
+
+# I'll get an Uber.
+@ talk | travel | real | chill | 3
+= Uber呼ぶわ
+A: How are you getting home?
+B: I'll just get an Uber.
+! 配車アプリ名がそのまま動詞のように使われる。Lyft も同じ。
+
+# What's the best way to get to
+@ talk | travel | real | warm | 2
+= 〜へ行くにはどうするのが一番いい？
+A: What's the best way to get to downtown?
+B: Take the subway. Traffic is awful.
+
+# Traffic is awful.
+@ talk | travel, daily | real | chill | 2
+= 道がめちゃ混み
+A: Where are you?
+B: Stuck on the freeway. Traffic is awful.
+? 渋滞は traffic jam。「混んでる」は Traffic is bad/heavy.

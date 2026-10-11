@@ -1,0 +1,272 @@
+// Real Talk — Business. Sales calls, meetings, intros, proposals, negotiating, invoices.
+
+# Thanks for taking the time.
+@ talk | business | real | worksafe, warm | 3
+= お時間いただきありがとうございます
+A: Thanks for taking the time today.
+B: Of course. Happy to chat.
+- Thanks for taking the time to meet with me.
+! 商談の最初と最後の定番。日本語の「本日はお時間いただき…」に一番近い。
+
+# Happy to chat.
+@ talk | business | real | worksafe, warm | 2
+= ぜひお話ししましょう
+A: Would you be open to a quick call?
+B: Sure, happy to chat.
+
+# Would you be open to
+@ talk | business, dm | real | worksafe | 3
+= 〜はいかがでしょう？（押し付けない提案）
+- Would you be open to a 15-minute call next week?
+- Would you be open to trying a free version first?
+? 相手に「NO」と言いやすい余地を残す聞き方。営業メールで一番使える。
+
+# Let me give you some context.
+@ talk | business, work | real | worksafe | 3
+= 少し背景を説明させてください
+A: Why are you reaching out?
+B: Let me give you some context. We help small companies get referrals.
+
+# reach out
+@ talk | business, dm | real | worksafe | 3
+= 連絡する（ビジネスで）
+- Thanks for reaching out!
+- I'm reaching out because a friend mentioned your company.
+- Feel free to reach out anytime.
+? contact より柔らかい。メールの書き出しの定番。
+
+# Feel free to
+@ talk | business, dm | real | worksafe, warm | 3
+= お気軽に〜してください
+- Feel free to call me anytime.
+- Feel free to share this with your team.
+
+# The bottom line is
+@ talk | business, work | real | worksafe | 2
+= 結論から言うと
+- The bottom line is, we need more leads.
+- Bottom line? It works.
+? bottom line は損益計算書の一番下の行（純利益）から。「要点・結論」。
+
+# What's the budget?
+@ talk | business, money | real | worksafe | 3
+= ご予算は？
+A: We need a new website.
+B: Great. What's the budget?
+A: Honestly, we don't have one yet.
+! アメリカの商談では予算を早めに聞くのが普通。遠回しにしすぎない。
+
+# ballpark
+@ talk | business, money | real | worksafe | 2
+= ざっくりの見積もり
+A: Can you give me a ballpark?
+B: Somewhere between three and five thousand.
+? ballpark figure ＝概算。野球場（ballpark）の広さから「だいたいこの範囲」。
+
+# How does that sound?
+@ talk | business, work | real | worksafe, warm | 3
+= それでいかがですか？
+A: We can start next Monday and deliver in two weeks. How does that sound?
+B: That sounds great.
+
+# That's a fair point.
+@ talk | business, work | real | worksafe | 3
+= おっしゃる通りですね
+A: Your price is higher than the others.
+B: That's a fair point. Let me explain what's included.
+! 反論されたときにまず受け止める一言。いきなり But... と言わない。
+
+# I hear you.
+@ talk | business, friends, conflict | real | warm | 3
+= わかります（気持ちは受け止めた）
+A: We're worried about the timeline.
+B: I hear you. Let's look at what we can move.
+? 同意ではなく「聞いてるよ、理解してる」。
+
+# win-win
+@ talk | business | real | worksafe | 3
+= お互いに得
+- If you send us clients, we'll send you clients. It's a win-win.
+
+# Let's make it happen.
+@ talk | business, work | real | warm | 2
+= 実現させましょう
+A: So we're good to go?
+B: Let's make it happen.
+
+# We're good to go.
+@ talk | business, work | real | worksafe | 3
+= 準備OK、進めましょう
+A: Contract's signed.
+B: Great, we're good to go.
+
+# I'll loop you in.
+@ talk | business, dm | real | worksafe | 2
+= あなたもCCに入れておきます／共有しておきます
+- I'll loop you in with our designer.
+- Looping in Jake, who handles billing.
+! 人を紹介するメールで頻出。Looping in 〜 で始まるメールはよくある。
+
+# I'd love to introduce you to
+@ talk | business, dm | real | warm, worksafe | 3
+= 〜さんをご紹介したいです
+- I'd love to introduce you to a friend who builds websites.
+- I'd love to introduce you two. I think you'd get along.
+! 紹介の英語の基本形。紹介した後は I'll let you two take it from here.（あとはお二人で）で締める。
+
+# I'll let you two take it from here.
+@ talk | business, dm | real | warm, worksafe | 2
+= あとはお二人で（紹介メールの締め）
+- I'll let you two take it from here. Have a great chat!
+- I'll step back and let you two take it from here.
+
+# moving forward
+@ talk | business, work | real | worksafe | 3
+= 今後は
+- Moving forward, let's send invoices on the 25th.
+- How do you want to handle this moving forward?
+
+# Does that work for you?
+@ talk | business, work | real | worksafe | 3
+= それで問題ないですか？
+- We'll send the draft Friday. Does that work for you?
+
+# I'm afraid
+@ talk | business, work | real | worksafe | 3
+= 恐れ入りますが／残念ながら
+- I'm afraid we can't go lower than that.
+- I'm afraid I won't be able to make it.
+? 悪い知らせを丁寧に言う前置き。怖いという意味ではない。
+
+# Unfortunately
+@ talk | business, dm | real | worksafe | 3
+= 残念ながら
+- Unfortunately, we're fully booked this month.
+- Unfortunately, that's outside our budget.
+
+# Let's put a pin in it.
+@ talk | business, work | real | worksafe | 2
+= いったん保留にしよう
+A: What about the logo?
+B: Let's put a pin in it and come back next week.
+
+# the next steps
+@ talk | business, work | real | worksafe | 3
+= 次のステップ
+A: So what are the next steps?
+B: I'll send a proposal, and you'll review it with your team.
+! 商談の最後に必ず次のステップを確認するのがアメリカ流。
+
+# I'll send over a proposal.
+@ talk | business | real | worksafe | 3
+= 提案書をお送りします
+A: Can you send something in writing?
+B: Sure, I'll send over a proposal by Friday.
+
+# follow up
+@ talk | business, dm | real | worksafe | 3
+= フォローアップする・追って連絡する
+- I'll follow up with an email.
+- Thanks for the call! Following up with the slides.
+
+# close the deal
+@ talk | business, money | real | worksafe | 2
+= 契約をまとめる
+A: Did you close the deal?
+B: Closed it this morning!
+A: Let's go!
+
+# a no-brainer
+@ talk | business, daily | real | chill | 2
+= 考えるまでもない（簡単な判断）
+- Free trial, no contract? It's a no-brainer.
+- Taking the job was a no-brainer.
+
+# under the table
+@ talk | business, money | real | cold | 1
+= 裏で・帳簿外で（違法っぽい）
+- He wanted to be paid under the table. I said no.
+! アンダーテーブル＝税金を逃れる裏取引のニュアンス。言われたら要注意。
+
+# the elevator pitch
+@ talk | business | real | worksafe | 2
+= 30秒の自己（事業）紹介
+A: What's your elevator pitch?
+B: We turn small companies into names people trust.
+! エレベーターで偉い人と乗り合わせた30秒で話せる紹介文、から。用意しておくと強い。
+
+# I'll keep that in mind.
+@ talk | business, work | real | worksafe | 3
+= 覚えておきます／参考にします
+A: Our busy season is March.
+B: Good to know. I'll keep that in mind.
+
+# Good to know.
+@ talk | business, work, friends | real | worksafe | 3
+= いい情報ありがとう／なるほど
+A: The parking lot closes at 9.
+B: Good to know.
+
+# Thanks for having me.
+@ talk | business, friends | real | warm | 3
+= 呼んでくれてありがとう（招かれた側）
+A: Welcome to the show!
+B: Thanks for having me.
+! ポッドキャストやインタビュー、ホームパーティーで招かれた側の第一声。
+
+# It was great meeting you.
+@ talk | business, friends | real | warm | 3
+= お会いできてよかったです
+A: It was great meeting you.
+B: You too. Let's keep in touch.
+? 別れ際は meeting（過去の会った出来事）。最初の挨拶は Nice to meet you.
+
+# Let's keep in touch.
+@ talk | business, friends | real | warm | 3
+= これからも連絡取りましょう
+A: I'm moving to Australia next month.
+B: Let's keep in touch!
+
+# invoice
+@ talk | business, money | real | worksafe | 3
+= 請求書
+A: When should I send the invoice?
+B: End of the month is fine. Net 30.
+? Net 30 ＝請求書受領から30日以内の支払い。米国の一般的な支払い条件。
+
+# The check is in the mail.
+@ talk | business, money | real | funny | 1
+= 支払いはもう送ったよ（言い訳の定番）
+A: Where's my payment?
+B: The check is in the mail.
+A: You said that last month.
+! 「小切手は郵送済み」は払ってない人の定番の言い訳として有名。
+
+# get the ball rolling
+@ talk | business, work | real | worksafe | 2
+= 始める・動き出す
+- Let's get the ball rolling with a quick kickoff call.
+- To get the ball rolling, just fill out this form.
+
+# kickoff call
+@ talk | business, work | real | worksafe | 2
+= キックオフミーティング
+- We'll start with a 30-minute kickoff call.
+
+# word of mouth
+@ talk | business | real | worksafe | 2
+= 口コミ
+- Most of our clients come from word of mouth.
+
+# referral
+@ talk | business, money | real | worksafe | 3
+= 紹介
+A: How did you find us?
+B: It was a referral from a friend.
+- We pay a referral fee for every new client.
+
+# a warm intro
+@ talk | business | real | worksafe | 2
+= 知り合い経由の紹介（温かい紹介）
+- A warm intro works ten times better than a cold email.
+? 反対は cold email / cold call（面識ゼロの営業）。

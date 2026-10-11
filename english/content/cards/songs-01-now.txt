@@ -1,0 +1,792 @@
+// Songs — phrases from song titles (2000s–now). We never reproduce lyrics: title + our own examples only.
+
+# count on me
+@ songs | friends, feelings | real | warm | 3
+> Bruno Mars — "Count on Me"
+= 頼りにしていいよ
+- You can always count on me.
+- Can I count on you for Saturday?
+? count on 人 ＝人を頼りにする。rely on よりカジュアル。
+
+# just the way you are
+@ songs | crush, feelings | real | warm, flirty | 2
+> Bruno Mars — "Just the Way You Are"
+= 今のままの君で
+- Don't change anything. I like you just the way you are.
+- The website is perfect just the way it is.
+? the way 〜 ＝「〜のままの状態で」。the way it is ＝「そのまま」。
+
+# that's what I like
+@ songs | daily, friends | real | chill | 2
+> Bruno Mars — "That's What I Like"
+= それそれ、そういうのが好き
+- Free coffee and fast Wi-Fi? That's what I like.
+- You finished early? That's what I like to hear.
+
+# locked out
+@ songs | daily, travel | real | chill | 2
+> Bruno Mars — "Locked Out of Heaven"
+= 締め出された（鍵がなくて入れない）
+- I locked myself out of my apartment again.
+- I got locked out of my account. Wrong password three times.
+! 曲名は「天国から締め出された」。日常では鍵を忘れて家に入れない時の定番。
+
+# leave the door open
+@ songs | crush, business | real | flirty, warm | 2
+> Silk Sonic — "Leave the Door Open"
+= ドアを開けておく（可能性を残す）
+- They said no for now, but they left the door open.
+- I'm not saying yes, but I'll leave the door open.
+? 比喩で「チャンスを残しておく」。ビジネスでも使える。
+
+# thinking out loud
+@ songs | work, daily | real | chill | 3
+> Ed Sheeran — "Thinking Out Loud"
+= 独り言だけど・考えながら言ってるだけ
+- I'm just thinking out loud, but what if we raised the price?
+- Ignore me, I'm thinking out loud.
+! 会議で「思いつきだけど」と前置きするのに便利。
+
+# bad habits
+@ songs | feelings, health | real | chill | 2
+> Ed Sheeran — "Bad Habits"
+= 悪い癖
+- Staying up till 4 a.m. is my worst bad habit.
+- Old habits die hard.
+? Old habits die hard. ＝「長年の癖はなかなか抜けない」。
+
+# shake it off
+@ songs | feelings, friends | real | warm | 3
+> Taylor Swift — "Shake It Off"
+= 気にしない・振り払う
+- The client was rude, but I just shook it off.
+- Bad day? Shake it off. Tomorrow's new.
+
+# look what you made me do
+@ songs | conflict, friends | real | funny | 2
+> Taylor Swift — "Look What You Made Me Do"
+= ほら、お前のせいでこうなった
+- I ate the whole cake. Look what you made me do.
+? make 人 do ＝人に〜させる。make me do（原形）。to は付けない。
+
+# bad blood
+@ songs | conflict, work | real | cold | 2
+> Taylor Swift — "Bad Blood"
+= 確執・わだかまり
+- There's bad blood between those two companies.
+- No bad blood. We're cool.
+
+# out of the woods
+@ songs | business, health | real | worksafe | 2
+> Taylor Swift — "Out of the Woods"
+= 危機を脱した
+- Sales are up, but we're not out of the woods yet.
+- The doctor says he's out of the woods.
+? 森から出た＝危ない状況を抜けた。not out of the woods yet ＝「まだ油断できない」。
+
+# go easy on me
+@ songs | conflict, gym, feelings | real | warm | 3
+> Adele — "Easy on Me"
+= 手加減して／優しくして
+- It's my first time, so go easy on me.
+- Go easy on him. He's new.
+- Go easy on the salt.
+? go easy on 〜 ＝手加減する。「（物を）控えめにして」の意味にも。
+
+# turn the tables
+@ songs | business, conflict | real | chill | 2
+> Adele — "Turning Tables"
+= 形勢を逆転する
+- We were losing, but we turned the tables in the second half.
+- Let's turn the tables and ask them a question.
+
+# never say never
+@ songs | feelings, friends | real | warm | 3
+> Justin Bieber — "Never Say Never"
+= 絶対なんてない
+- Will you ever move abroad? — Never say never.
+
+# I can't feel my face.
+@ songs | daily, health | real | funny | 2
+> The Weeknd — "Can't Feel My Face"
+= 顔の感覚がない（寒すぎ・笑いすぎ）
+- It's so cold I can't feel my face.
+- I laughed so hard I can't feel my face.
+! 曲は別の意味（恋がクスリのよう）で有名。日常では寒い日の定番。
+
+# one more time
+@ songs | study, daily | real | chill | 3
+> Daft Punk — "One More Time"
+= もう一回
+- Sorry, can you say that one more time?
+- One more time, from the top.
+? from the top ＝最初から（音楽のリハで頻出）。
+
+# get lucky
+@ songs | daily, crush | real | funny, flirty | 2 | explicit
+> Daft Punk — "Get Lucky"
+= ついてる／（口語）いい夜になる
+- We got lucky with the weather.
+- He thinks he's gonna get lucky tonight. He's not.
+! 普通は「運がいい」。夜の文脈だと「（異性と）うまくいく」の意味になるので注意。
+
+# harder, better, faster, stronger
+@ songs | gym, work, study | real | funny | 1
+> Daft Punk — "Harder, Better, Faster, Stronger"
+= より強く、より良く、より速く
+- Every week at the gym: harder, better, faster, stronger. In theory.
+? 比較級の連続。-er が付く短い形容詞の比較級はこう作る。
+
+# take a bow
+@ songs | work, music | real | warm | 2
+> Rihanna — "Take a Bow"
+= お辞儀して拍手を受けて（よくやった）
+- Great presentation. Take a bow!
+- Everyone who worked on the launch, take a bow.
+! 曲は皮肉の「お見事でした」。普段は素直なほめ言葉。
+
+# on the brain
+@ songs | feelings, crush | real | chill | 2
+> Rihanna — "Love on the Brain"
+= 頭から離れない
+- I've had pizza on the brain all day.
+- Sorry, I've got work on the brain.
+
+# shut up and
+@ songs | friends | real | funny | 2
+> Rihanna — "Shut Up and Drive"
+= いいから黙って〜しろ（親しみの命令）
+- Shut up and take my money!
+- Shut up and dance.
+! Shut up and take my money! は「欲しすぎる！買う！」というネットミーム。
+
+# crazy in love
+@ songs | crush, feelings | real | flirty | 2
+> Beyoncé — "Crazy in Love"
+= 恋に夢中
+- They're crazy in love. It's kind of gross.
+- I'm crazy about this song.
+? crazy about 〜 ＝〜に夢中。
+
+# put a ring on it
+@ songs | crush | real | funny | 2
+> Beyoncé — "Single Ladies (Put a Ring on It)"
+= 指輪をはめる（結婚する）
+- Seven years together? Put a ring on it already.
+! 「本気なら結婚しなよ」の意味で、今も冗談でよく引用される。
+
+# If I were
+@ songs | feelings, study | real | deep | 3
+> Beyoncé — "If I Were a Boy"
+= もし私が〜だったら（仮定）
+- If I were you, I'd take the job.
+- If I were rich, I'd still drive a cheap car.
+? 現実と違う仮定は If I were 〜。If I was 〜 も会話では聞くけど、If I were you は決まり文句。
+
+# run the world
+@ songs | business | real | chill | 1
+> Beyoncé — "Run the World (Girls)"
+= 世界を回す（仕切る）
+- Coffee runs the world.
+- Small businesses run this town.
+? run ＝経営する・仕切る。run a company ＝会社を経営する。
+
+# God's plan
+@ songs | faith, feelings | real | deep | 2
+> Drake — "God's Plan"
+= 神様の計画（なるようになる）
+- I lost the deal, but maybe it's God's plan.
+- Everything happens for a reason.
+! アメリカでは宗教を問わず「起きることには意味がある」と言うことが多い。Everything happens for a reason. もセットで。
+
+# start from the bottom
+@ songs | business, work | real | deep | 2
+> Drake — "Started from the Bottom"
+= どん底からのスタート
+- We started from the bottom. Two laptops and no clients.
+- Everyone starts from the bottom.
+
+# in my feelings
+@ songs | feelings | real | chill | 2
+> Drake — "In My Feelings"
+= エモくなってる・感傷的
+- This song has me in my feelings.
+- Don't text me, I'm in my feelings tonight.
+? スラング。in one's feelings ＝感情的になってる、落ち込んでる。
+
+# laugh now, cry later
+@ songs | feelings, money | real | funny | 1
+> Drake — "Laugh Now Cry Later"
+= 今笑って、後で泣く（後先考えない）
+- Ordering the expensive steak. Laugh now, cry later.
+
+# the best I ever had
+@ songs | food, feelings | real | warm | 2
+> Drake — "Best I Ever Had"
+= 今までで最高
+- This is the best ramen I've ever had.
+- Best coffee I've ever had.
+? the best 〜 I've ever had ＝「今まで食べた（飲んだ）中で最高」。現在完了＋ever の定番。
+
+# lose yourself
+@ songs | music, study | real | deep | 2
+> Eminem — "Lose Yourself"
+= 没頭する・我を忘れる
+- When I make music, I lose myself in it.
+- Lose yourself in a good book.
+
+# till I collapse
+@ songs | gym, work | real | funny | 1
+> Eminem — "Till I Collapse"
+= 倒れるまで
+- I'm training till I collapse. Or till 7. Whichever comes first.
+? till ＝ until の口語。
+
+# be humble
+@ songs | feelings | real | chill | 2
+> Kendrick Lamar — "HUMBLE."
+= 謙虚でいろ
+- Stay humble. You won one game.
+- He's rich but super humble.
+
+# it's gonna be alright
+@ songs | feelings | real | warm | 3
+> Kendrick Lamar — "Alright"
+= きっと大丈夫
+- Don't worry. It's gonna be alright.
+- We'll be alright.
+
+# better now
+@ songs | feelings, health | real | warm | 2
+> Post Malone — "Better Now"
+= 今は良くなった
+- I was sick last week, but I'm better now.
+- Are you feeling better now?
+
+# fall apart
+@ songs | feelings, work | real | deep | 2
+> Post Malone — "I Fall Apart"
+= ボロボロになる・崩れる
+- After the breakup, I kind of fell apart.
+- The deal fell apart at the last minute.
+
+# going in circles
+@ songs | work, conflict | real | chill | 2
+> Post Malone — "Circles"
+= 堂々巡り
+- We've been going in circles for an hour. Let's decide.
+- This conversation is going in circles.
+
+# the bad guy
+@ songs | conflict, work | real | chill | 2
+> Billie Eilish — "bad guy"
+= 悪者
+- I don't want to be the bad guy, but we need to cut costs.
+- Why am I always the bad guy?
+
+# happier than ever
+@ songs | feelings | real | warm | 2
+> Billie Eilish — "Happier Than Ever"
+= 今までで一番幸せ
+- I quit that job and I'm happier than ever.
+? 比較級 + than ever ＝「これまでのどの時よりも」。busier than ever, better than ever.
+
+# what was I made for?
+@ songs | feelings, faith | real | deep | 1
+> Billie Eilish — "What Was I Made For?"
+= 私は何のために生まれたの？
+- Some days I wonder what I was made for.
+- You were made for this job.
+? be made for 〜 ＝「〜のために作られた・〜にぴったり」。
+
+# when the party's over
+@ songs | bar, feelings | real | deep | 1
+> Billie Eilish — "when the party's over"
+= パーティーが終わったら（祭りの後）
+- When the party's over, someone has to clean up.
+
+# birds of a feather
+@ songs | friends | real | chill | 2
+> Billie Eilish — "Birds of a Feather"
+= 類は友を呼ぶ
+- They're both workaholics. Birds of a feather.
+? 元のことわざは Birds of a feather flock together.（同じ羽の鳥は群れる）。
+
+# good 4 u
+@ songs | friends, conflict | real | rude | 2
+> Olivia Rodrigo — "good 4 u"
+= よかったね（皮肉）
+- Oh, you got a new girlfriend? Good for you. (said coldly)
+! Good for you! は本気なら「よかったね！」、冷たく言うと「あっそ、よかったね」。この曲は後者の代表。
+
+# get him back
+@ songs | crush, conflict | real | funny | 1
+> Olivia Rodrigo — "get him back!"
+= 取り戻す／仕返しする
+- I want to get him back. — Like, date him again, or ruin his life?
+! get back は「取り戻す」と「仕返しする（get back at）」の両方。曲はこのダブルミーニングで遊んでいる。
+
+# paint the town red
+@ songs | bar, friends | real | funny | 2
+> Doja Cat — "Paint the Town Red"
+= 派手に遊び回る
+- It's Friday and I got paid. Let's paint the town red.
+
+# the truth hurts
+@ songs | feelings, conflict | real | deep | 2
+> Lizzo — "Truth Hurts"
+= 真実は痛い
+- Your demo isn't ready. Sorry, the truth hurts.
+
+# It's about time.
+@ songs | daily, work | real | chill | 3
+> Lizzo — "About Damn Time"
+= やっとか／遅いよ
+- You finally cleaned your room? It's about time.
+- It's about time we got paid.
+? It's about time 〜 ＝「そろそろ〜してもいい頃」。後ろは過去形（It's about time we left.）。
+
+# a sign of the times
+@ songs | business, online | real | deep | 1
+> Harry Styles — "Sign of the Times"
+= 時代の象徴
+- Everyone working from cafés is a sign of the times.
+
+# Don't start.
+@ songs | conflict, friends | real | rude | 2
+> Dua Lipa — "Don't Start Now"
+= やめてよ、その話（始めないで）
+- Don't start. I know I'm late.
+- Don't start with me today.
+
+# pull a Houdini
+@ songs | friends | real | funny | 1
+> Dua Lipa — "Houdini"
+= 消える・こっそり逃げる
+- He pulled a Houdini right before the check came.
+! 脱出マジシャン Harry Houdini から。pull a 〜 ＝「〜みたいなことをする」。
+
+# Please, please, please
+@ songs | friends, crush | real | funny | 2
+> Sabrina Carpenter — "Please Please Please"
+= お願いだから！
+- Please, please, please don't tell my mom.
+
+# man-child
+@ songs | crush, feelings | real | rude | 1
+> Sabrina Carpenter — "Manchild"
+= 子どもみたいな大人の男
+- He's 35 and can't do laundry. Total man-child.
+
+# good luck, babe
+@ songs | crush, conflict | real | rude | 1
+> Chappell Roan — "Good Luck, Babe!"
+= せいぜい頑張って（皮肉）
+- You think you can fix him? Good luck with that.
+? Good luck with that. は「無理だと思うけど」という皮肉の定番。
+
+# hit snooze
+@ songs | daily | real | chill | 2
+> SZA — "Snooze"
+= スヌーズを押す（二度寝）
+- I hit snooze five times this morning.
+
+# Nobody gets me.
+@ songs | feelings | real | deep | 2
+> SZA — "Nobody Gets Me"
+= 誰もわかってくれない
+- Nobody gets me like you do.
+- You get me. You really get me.
+? get 人 ＝人を理解する。I get it. と同じ get。
+
+# the adventure of a lifetime
+@ songs | travel | real | warm | 1
+> Coldplay — "Adventure of a Lifetime"
+= 一生に一度の冒険
+- Six months in Australia? That's the adventure of a lifetime.
+? of a lifetime ＝一生に一度の。the chance of a lifetime.
+
+# got moves
+@ songs | bar, music | real | funny | 2
+> Maroon 5 — "Moves Like Jagger"
+= ダンスがうまい
+- Whoa, you've got moves!
+- Show me your moves.
+
+# makes me wonder
+@ songs | daily, feelings | real | chill | 2
+> Maroon 5 — "Makes Me Wonder"
+= 考えさせられる・ふと思う
+- It makes me wonder why we even have meetings.
+
+# whatever it takes
+@ songs | work, business, gym | real | deep | 3
+> Imagine Dragons — "Whatever It Takes"
+= 何があってもやる
+- I'll do whatever it takes to make this work.
+
+# on top of the world
+@ songs | feelings | real | warm | 2
+> Imagine Dragons — "On Top of the World"
+= 最高の気分
+- I closed two deals today. I'm on top of the world.
+
+# I ain't worried
+@ songs | feelings | real | chill | 2
+> OneRepublic — "I Ain't Worried"
+= 気にしてない
+- Ain't nobody got time for that.
+- I ain't worried about it.
+? ain't ＝ am not / isn't / haven't の口語。正式な場では使わない。
+
+# the good life
+@ songs | money, feelings | real | chill | 2
+> OneRepublic — "Good Life"
+= いい人生・贅沢な暮らし
+- Beach, coffee, no emails. This is the good life.
+
+# We don't talk anymore.
+@ songs | friends, crush | real | deep | 3
+> Charlie Puth — "We Don't Talk Anymore"
+= もう話さなくなった
+- We used to be close, but we don't talk anymore.
+- I don't smoke anymore.
+? not 〜 anymore ＝「もう〜しない」。already（もう〜した）と混ぜない。You're not here anymore. が正しく、You're not here already. は間違い。
+
+# one call away
+@ songs | friends | real | warm | 2
+> Charlie Puth — "One Call Away"
+= 電話一本で駆けつける
+- If you need anything, I'm one call away.
+
+# left and right
+@ songs | work, business | real | chill | 2
+> Charlie Puth — "Left and Right"
+= あちこちで・次々と
+- People are quitting left and right.
+- The phone's been ringing left and right.
+
+# treat you better
+@ songs | crush | real | warm | 2
+> Shawn Mendes — "Treat You Better"
+= もっと大事にする
+- You deserve someone who treats you better.
+? treat 人 well/badly ＝人を大事にする／ぞんざいに扱う。
+
+# nothing's holding me back
+@ songs | feelings, work | real | deep | 2
+> Shawn Mendes — "There's Nothing Holdin' Me Back"
+= もう何も止めるものはない
+- The kids are grown. Nothing's holding me back now.
+? hold back ＝引き止める・抑える。Don't hold back. ＝遠慮しないで。
+
+# It's in my blood.
+@ songs | music, feelings | real | deep | 2
+> Shawn Mendes — "In My Blood"
+= 血に流れてる（生まれつき）
+- My dad played guitar. Music's in my blood.
+
+# lost in
+@ songs | travel, feelings | real | chill | 2
+> Shawn Mendes — "Lost in Japan"
+= 〜で迷子／〜に夢中
+- I got lost in Shibuya station for an hour.
+- I was so lost in my work I forgot to eat.
+
+# poker face
+@ songs | business, friends | real | chill | 2
+> Lady Gaga — "Poker Face"
+= ポーカーフェイス・無表情
+- Keep a poker face when they say the price.
+- You have the worst poker face.
+
+# born this way
+@ songs | feelings | real | warm | 2
+> Lady Gaga — "Born This Way"
+= 生まれつきこう
+- I can't whisper. I was born this way.
+
+# a million reasons
+@ songs | feelings | real | chill | 2
+> Lady Gaga — "Million Reasons"
+= 理由は山ほど
+- There are a million reasons to quit, but one reason to stay.
+
+# hot and cold
+@ songs | crush | real | chill | 2
+> Katy Perry — "Hot n Cold"
+= 態度がコロコロ変わる
+- She's so hot and cold with me. One day sweet, the next day nothing.
+
+# TGIF
+@ songs | work, friends | real | chill | 2
+> Katy Perry — "Last Friday Night (T.G.I.F.)"
+= やっと金曜日！（Thank God it's Friday）
+- TGIF! Drinks?
+- Thank God it's Friday.
+
+# wide awake
+@ songs | daily, health | real | chill | 2
+> Katy Perry — "Wide Awake"
+= 完全に目が覚めてる
+- It's 3 a.m. and I'm wide awake.
+
+# a dark horse
+@ songs | business, friends | real | chill | 1
+> Katy Perry — "Dark Horse"
+= ダークホース・意外な実力者
+- The new guy is a dark horse. He's quiet but he's closing deals.
+
+# the one that got away
+@ songs | crush, feelings | real | deep | 2
+> Katy Perry — "The One That Got Away"
+= 逃した魚（忘れられない元恋人）
+- Everyone has the one that got away.
+! 釣りの「逃した大物」から。恋愛や逃したチャンスに使う。
+
+# thank u, next
+@ songs | crush, feelings | real | funny | 2
+> Ariana Grande — "thank u, next"
+= ありがとう、次！（前向きに切り替え）
+- Another rejection email? Thank you, next.
+! 失恋やダメだったことを笑い飛ばす今っぽい言い方として定着した。
+
+# yes, and
+@ songs | business, friends | real | warm | 1
+> Ariana Grande — "yes, and?"
+= そうだね、それで？（受け入れて広げる）
+- In meetings, try "yes, and" instead of "no, but."
+! 即興コメディの基本ルール「否定せずに乗っかって広げる」。ビジネス研修でも使われる考え方。
+
+# too good at goodbyes
+@ songs | crush, feelings | real | deep | 1
+> Sam Smith — "Too Good at Goodbyes"
+= 別れに慣れすぎてる
+- I've moved so many times, I'm too good at goodbyes.
+? be good at 〜 ＝〜が得意。too good at 〜 ＝慣れすぎてる（悲しい意味）。
+
+# I'm not the only one.
+@ songs | feelings, work | real | chill | 3
+> Sam Smith — "I'm Not the Only One"
+= 私だけじゃない
+- I'm not the only one who thinks the meeting was useless.
+
+# the writing's on the wall
+@ songs | business | real | deep | 1
+> Sam Smith — "Writing's on the Wall"
+= 悪い兆しがはっきり見えてる
+- Sales dropped three months in a row. The writing's on the wall.
+! 旧約聖書ダニエル書の「壁に書かれた文字」が語源。
+
+# before you go
+@ songs | daily, work | real | warm | 3
+> Lewis Capaldi — "Before You Go"
+= 帰る前に・行く前に
+- Before you go, can you sign this?
+- Oh, one more thing before you go.
+
+# I'm yours.
+@ songs | crush | real | flirty | 2
+> Jason Mraz — "I'm Yours"
+= 君のものだよ
+- Here's my number. Day or night, I'm yours.
+
+# I won't give up.
+@ songs | feelings, study | real | deep | 3
+> Jason Mraz — "I Won't Give Up"
+= 諦めない
+- English is hard, but I won't give up.
+
+# greedy
+@ songs | money, feelings | real | chill | 2
+> Tate McRae — "greedy"
+= 欲ばりな
+- Don't be greedy. Leave some fries for me.
+- Greedy landlords keep raising the rent.
+
+# That's so true.
+@ songs | friends | real | chill | 3
+> Gracie Abrams — "That's So True"
+= ほんとそれ
+- Coffee tastes better when someone else makes it. — That's so true.
+
+# tipsy
+@ songs | bar | real | funny | 2
+> Shaboozey — "A Bar Song (Tipsy)"
+= ほろ酔い
+- After two beers I'm already tipsy.
+
+# Sorry not sorry.
+@ songs | friends | real | funny | 2
+> Demi Lovato — "Sorry Not Sorry"
+= ごめんね（反省してない）
+- I ate the last slice. Sorry not sorry.
+
+# come and get it
+@ songs | food, friends | real | chill | 2
+> Selena Gomez — "Come & Get It"
+= できたよ、取りにおいで
+- Dinner's ready! Come and get it!
+
+# a price tag
+@ songs | money, shopping | real | chill | 2
+> Jessie J — "Price Tag"
+= 値札・値段
+- I love it, but look at the price tag.
+- You can't put a price tag on friendship.
+
+# complicated
+@ songs | crush, feelings | real | chill | 2
+> Avril Lavigne — "Complicated"
+= ややこしい
+- Why do you have to make things so complicated?
+
+# all the small things
+@ songs | crush, daily | real | warm | 1
+> blink-182 — "All the Small Things"
+= 小さなこと全部
+- It's the small things that make a good date.
+? It's the little things. ＝「大事なのは小さなこと」。
+
+# What's my age again?
+@ songs | friends | real | funny | 1
+> blink-182 — "What's My Age Again?"
+= 俺何歳だっけ？（いい大人なのに子どもっぽい）
+- I still eat cereal for dinner. What's my age again?
+
+# Hot girl summer
+@ songs | friends, online | real | funny | 1
+> Megan Thee Stallion — "Hot Girl Summer"
+= 自分らしく楽しむ夏（スラング）
+- No more crying over my ex. It's hot girl summer.
+
+# Whatcha say?
+@ songs | daily | real | chill | 2
+> Jason Derulo — "Whatcha Say"
+= 何て言った？
+- Whatcha say? I couldn't hear you.
+~ "WHAH-chuh SAY?"
+
+# the time of my life
+@ songs | travel, friends | real | warm | 2
+> Bill Medley & Jennifer Warnes — "(I've Had) The Time of My Life"
+= 最高に楽しい時間
+- We had the time of our lives in Bali.
+? have the time of one's life ＝人生最高に楽しい時を過ごす。
+
+# somebody that I used to know
+@ songs | crush, friends | real | deep | 2
+> Gotye — "Somebody That I Used to Know"
+= 昔知ってた人（今は他人）
+- Now she's just somebody that I used to know.
+? used to know ＝昔は知ってた。used to の使い方を覚えるのにちょうどいい曲名。
+
+# Call me maybe.
+@ songs | crush, pickup | real | flirty, funny | 2
+> Carly Rae Jepsen — "Call Me Maybe"
+= よかったら電話して
+- Here's my number. Call me maybe?
+! 2012年の大ヒット曲。番号を渡す時に冗談で引用する人は今もいる。
+
+# I really like you.
+@ songs | crush | real | flirty | 2
+> Carly Rae Jepsen — "I Really Like You"
+= ほんとに好き（大好き、の手前）
+- I really, really like you. Not love yet. But close.
+? like と love の間の段階。really like you は付き合い始めによく使う。
+
+# all about
+@ songs | daily | real | chill | 3
+> Meghan Trainor — "All About That Bass"
+= 〜に夢中・〜がすべて
+- I'm all about good coffee.
+- This weekend is all about rest.
+? be all about 〜 ＝「〜が大好き、〜重視」。
+
+# Made you look!
+@ songs | friends | real | funny | 2
+> Meghan Trainor — "Made You Look"
+= ひっかかった！（見たな！）
+- Hey, there's a spider on your— made you look!
+
+# let go
+@ songs | feelings, work | real | deep | 3
+> Passenger — "Let Her Go"
+= 手放す・解雇する
+- You have to let go of the past.
+- They let him go last week.
+? let 人 go は仕事の文脈では「解雇する」のやわらかい言い方。
+
+# goosebumps
+@ songs | music, feelings | real | chill | 2
+> Travis Scott — "goosebumps"
+= 鳥肌
+- That chorus gives me goosebumps.
+
+# heat wave
+@ songs | daily | real | chill | 2
+> Glass Animals — "Heat Waves"
+= 熱波
+- There's a heat wave in Osaka. 38 degrees.
+
+# give the green light
+@ songs | business, work | real | worksafe | 2
+> Lorde — "Green Light"
+= ゴーサインを出す
+- The boss gave us the green light.
+- We got the green light on the new project.
+
+# wake me up when
+@ songs | daily | real | chill | 2
+> Avicii — "Wake Me Up"
+= 〜になったら起こして
+- Wake me up when we get there.
+- Wake me up when it's over.
+
+# This is what you came for.
+@ songs | music, bar | real | chill | 1
+> Calvin Harris — "This Is What You Came For"
+= これを求めて来たんでしょ
+- Free samples! This is what you came for.
+
+# Don't let me down.
+@ songs | work, friends | real | warm | 3
+> The Chainsmokers — "Don't Let Me Down"
+= がっかりさせないでね
+- I'm counting on you. Don't let me down.
+? let 人 down ＝がっかりさせる・期待を裏切る。
+
+# I'd rather be
+@ songs | daily, feelings | real | chill | 3
+> Clean Bandit — "Rather Be"
+= 〜の方がいい
+- I'd rather be home than at this party.
+- I'd rather not talk about it.
+? would rather A than B ＝「BよりAの方がいい」。I'd rather not. ＝「やめておきたい」。
+
+# I'm a sucker for
+@ songs | feelings, music | real | chill | 3
+> Jonas Brothers — "Sucker"
+= 〜に弱いんだよね
+- I'm a sucker for sad songs.
+- I'm a sucker for a good sale.
+
+# high hopes
+@ songs | business, feelings | real | warm | 2
+> Panic! at the Disco — "High Hopes"
+= 大きな期待
+- I have high hopes for this project.
+
+# I made it!
+@ songs | work, feelings | real | warm | 3
+> Panic! at the Disco — "Hey Look Ma, I Made It"
+= やり遂げた！／間に合った！
+- I made it! Sorry, the train was late.
+- He finally made it as a musician.
+? make it ＝間に合う／成功する／（予定に）来られる。超多用途。
+
+# thanks for the memories
+@ songs | friends | real | warm | 1
+> Fall Out Boy — "Thnks fr th Mmrs"
+= 思い出をありがとう
+- Last day at the office. Thanks for the memories, everyone.
