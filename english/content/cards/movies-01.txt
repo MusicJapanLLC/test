@@ -1,0 +1,880 @@
+// Movies & TV — one famous line per card (quoted for commentary, with title and year), then how people use it now.
+
+# Here's looking at you, kid.
+@ movies | bar, crush | real | warm | 1
+" Here's looking at you, kid.
+— Casablanca (1942)
+= 君の瞳に乾杯（キザな乾杯）
+- (raising a glass) Here's looking at you.
+! 日本語訳「君の瞳に乾杯」で有名。今はわざとキザに乾杯するときの冗談。
+
+# the beginning of a beautiful friendship
+@ movies | friends, business | real | warm | 2
+" Louis, I think this is the beginning of a beautiful friendship.
+— Casablanca (1942)
+= 美しい友情の始まり
+- You like spicy ramen too? This is the beginning of a beautiful friendship.
+
+# the usual suspects
+@ movies | work, friends | real | funny | 2
+" Round up the usual suspects.
+— Casablanca (1942)
+= いつものメンツ
+- Who's coming tonight? — The usual suspects.
+
+# I don't give a damn.
+@ movies | conflict | real | rude | 2 | explicit
+" Frankly, my dear, I don't give a damn.
+— Gone with the Wind (1939)
+= 知ったことか
+- I don't give a damn what they think.
+? I don't care. の強い版。damn が入るので丁寧な場では使わない。
+
+# Tomorrow is another day.
+@ movies | feelings | real | warm | 2
+" After all, tomorrow is another day!
+— Gone with the Wind (1939)
+= 明日は明日の風が吹く
+- Rough day. But tomorrow is another day.
+
+# We're not in Kansas anymore.
+@ movies | travel | real | funny | 2
+" Toto, I've a feeling we're not in Kansas anymore.
+— The Wizard of Oz (1939)
+= もう知ってる世界じゃない（場違い感）
+- First day in New York: everyone's yelling, rats are huge. We're not in Kansas anymore.
+! 見慣れない場所や状況に放り込まれたときの定番の引用。
+
+# There's no place like home.
+@ movies | travel, feelings | real | warm | 2
+" There's no place like home.
+— The Wizard of Oz (1939)
+= 我が家が一番
+- Two weeks of hotels. There's no place like home.
+
+# an offer you can't refuse
+@ movies | business, money | real | funny | 2
+" I'm gonna make him an offer he can't refuse.
+— The Godfather (1972)
+= 断れない条件
+- Free coffee for a year if you sign today? That's an offer I can't refuse.
+
+# It's not personal. It's business.
+@ movies | business, conflict | real | cold | 2
+" It's not personal, Sonny. It's strictly business.
+— The Godfather (1972)
+= 個人的な恨みじゃない、ビジネスだ
+- We had to pick the cheaper vendor. It's not personal, it's business.
+
+# Keep your friends close and your enemies closer.
+@ movies | business | real | deep | 2
+" Keep your friends close, but your enemies closer.
+— The Godfather Part II (1974)
+= 友は近くに、敵はもっと近くに
+- I'm having lunch with our competitor. Keep your enemies closer, right?
+
+# They pull me back in.
+@ movies | work, friends | real | funny | 1
+" Just when I thought I was out, they pull me back in.
+— The Godfather Part III (1990)
+= 足を洗ったと思ったら、また引き戻される
+- I quit social media. Then my friend sent me one video. Just when I thought I was out...
+
+# May the Force be with you.
+@ movies | friends, work | real | warm | 2
+" May the Force be with you.
+— Star Wars (1977)
+= フォースと共にあらんことを（がんばれ）
+- Big presentation today? May the Force be with you.
+! 5月4日は "May the Fourth be with you." のダジャレで Star Wars の日。
+
+# I've got a bad feeling about this.
+@ movies | daily, work | real | funny | 3
+> Star Wars (a line repeated across the films)
+= 嫌な予感がする
+- The client wants a "quick call" on Friday at 6. I've got a bad feeling about this.
+
+# Do or do not. There is no try.
+@ movies | gym, study, work | real | deep | 2
+" Do. Or do not. There is no try.
+— The Empire Strikes Back (1980)
+= やるか、やらないか。「やってみる」はない
+- I'll try to go to the gym tomorrow. — Do or do not. There is no try.
+
+# I am your father.
+@ movies | friends | real | funny | 2
+" No, I am your father.
+— The Empire Strikes Back (1980)
+= わたしがお前の父だ
+- Everyone quotes it as "Luke, I am your father," but that's not the line.
+! 有名な誤引用。実際のセリフに Luke は入っていない。
+
+# Never tell me the odds.
+@ movies | business, feelings | real | chill | 1
+" Never tell me the odds!
+— The Empire Strikes Back (1980)
+= 確率なんか聞きたくない
+- Ninety percent of startups fail. — Never tell me the odds.
+
+# It's a trap!
+@ movies | business, friends | real | funny | 2
+" It's a trap!
+— Return of the Jedi (1983)
+= 罠だ！
+- "Free" trial, credit card required? It's a trap!
+
+# This isn't the X you're looking for.
+@ movies | friends | real | funny | 1
+" These aren't the droids you're looking for.
+— Star Wars (1977)
+= これは探してる〜じゃない（ごまかし）
+- Did you eat my donut? — These aren't the crumbs you're looking for.
+
+# I'll be back.
+@ movies | daily, work | real | funny | 3
+" I'll be back.
+— The Terminator (1984)
+= すぐ戻る
+- (leaving for lunch) I'll be back.
+! 席を外すときにシュワちゃんの声マネで言う人は多い。
+
+# Hasta la vista, baby.
+@ movies | friends | real | funny | 1
+" Hasta la vista, baby.
+— Terminator 2: Judgment Day (1991)
+= あばよ、ベイビー
+- Bye, old laptop. Hasta la vista, baby.
+
+# You talkin' to me?
+@ movies | conflict, friends | real | funny | 2
+" You talkin' to me?
+— Taxi Driver (1976)
+= 俺に言ってんのか？
+- Someone said "Hey, handsome." I turned around like, "You talkin' to me?"
+
+# Make my day.
+@ movies | conflict, friends | real | funny | 2
+" Go ahead, make my day.
+— Sudden Impact (1983)
+= やれるもんならやってみろ／最高の一日にしてくれ
+- You brought me coffee? You just made my day.
+? You made my day. ＝「おかげで最高の一日になった」。映画は挑発の意味だけど、日常では嬉しい意味で使うことが多い。
+
+# You're gonna need a bigger boat.
+@ movies | work, business | real | funny | 2
+" You're gonna need a bigger boat.
+— Jaws (1975)
+= これじゃ全然足りないぞ
+- 300 orders on day one? We're gonna need a bigger boat.
+! 想定以上の問題やボリュームに直面したときの定番引用。
+
+# phone home
+@ movies | phone, travel | real | funny | 1
+" E.T. phone home.
+— E.T. the Extra-Terrestrial (1982)
+= 家に電話する
+- I should phone home. My mom thinks I'm missing.
+
+# Wax on, wax off.
+@ movies | study, gym | real | funny | 1
+" Wax on, wax off.
+— The Karate Kid (1984)
+= ワックスをかけて、ふき取って（地味な反復練習）
+- Shadowing the same sentence 50 times? Wax on, wax off.
+! 地味な反復が実は一番大事、という比喩。
+
+# Where we're going, we don't need roads.
+@ movies | travel, business | real | funny | 1
+" Roads? Where we're going, we don't need roads.
+— Back to the Future (1985)
+= 俺たちが行く先に、道なんていらない
+- No map? Where we're going, we don't need maps.
+
+# Great Scott!
+@ movies | daily | real | funny | 1
+" Great Scott!
+— Back to the Future (1985)
+= なんてこった！
+- Great Scott! It's already midnight.
+! 古風な驚きの表現。今は冗談でしか言わない。
+
+# Life moves pretty fast.
+@ movies | feelings | real | deep | 2
+" Life moves pretty fast. If you don't stop and look around once in a while, you could miss it.
+— Ferris Bueller's Day Off (1986)
+= 人生はあっという間。たまに立ち止まらないと見逃すよ
+- Put your phone down for a sec. Life moves pretty fast.
+
+# Bueller? Bueller?
+@ movies | study, work | real | funny | 1
+" Bueller? ...Bueller?
+— Ferris Bueller's Day Off (1986)
+= （誰も答えない時の）……誰か？
+- Who wants to take notes? ...Anyone? Bueller?
+! 会議や授業で誰も反応しないときの定番ネタ。
+
+# Nobody puts Baby in a corner.
+@ movies | conflict, friends | real | funny | 1
+" Nobody puts Baby in a corner.
+— Dirty Dancing (1987)
+= ベイビーを隅っこに置くな（仲間を軽んじるな）
+- They gave you the worst desk? Nobody puts Baby in a corner.
+
+# I feel the need for speed.
+@ movies | travel | real | funny | 1
+" I feel the need... the need for speed!
+— Top Gun (1986)
+= スピードが欲しい
+- Fiber internet installed. I feel the need for speed.
+
+# Seize the day.
+@ movies | feelings, study | real | deep | 2
+" Carpe diem. Seize the day, boys. Make your lives extraordinary.
+— Dead Poets Society (1989)
+= 今日をつかめ
+- You only live once. Seize the day.
+? carpe diem はラテン語。YOLO（You only live once）の昔版。
+
+# I'll have what she's having.
+@ movies | food, cafe | real | funny | 3
+" I'll have what she's having.
+— When Harry Met Sally... (1989)
+= 彼女と同じものを
+- (at a café) That looks good. I'll have what she's having.
+! 普通の注文フレーズとしても使えるけど、映画の有名なシーンのせいでちょっと笑いが起きることがある。
+
+# You can't handle the truth!
+@ movies | conflict | real | funny | 2
+" You can't handle the truth!
+— A Few Good Men (1992)
+= お前に真実は受け止められない！
+- Do you really want to know what I think of your haircut? You can't handle the truth.
+
+# Houston, we have a problem.
+@ movies | work, business | real | funny | 3
+" Houston, we have a problem.
+— Apollo 13 (1995)
+= 問題発生だ
+- (opening the fridge) Houston, we have a problem. No milk.
+! トラブル報告の定番ジョーク。実際の交信は "Houston, we've had a problem." だった。
+
+# Failure is not an option.
+@ movies | work, business | real | deep | 2
+" Failure is not an option.
+— Apollo 13 (1995)
+= 失敗は許されない
+- It's our biggest client. Failure is not an option.
+
+# Show me the money!
+@ movies | money, business | real | funny | 2
+" Show me the money!
+— Jerry Maguire (1996)
+= 金を見せろ！（口だけじゃなく結果で）
+- Nice proposal. But show me the money.
+
+# You had me at hello.
+@ movies | crush, business | real | flirty, funny | 2
+" You had me at hello.
+— Jerry Maguire (1996)
+= 最初の一言で落ちてた
+- Free shipping? You had me at "free."
+? You had me at 〜 ＝「〜の時点で心をつかまれた」。いろんな言葉に置き換えて遊べる。
+
+# Help me help you.
+@ movies | business, work | real | chill | 2
+" Help me help you.
+— Jerry Maguire (1996)
+= 助けたいから、協力してくれ
+- I can't fix it if you don't tell me what happened. Help me help you.
+
+# I'm the king of the world!
+@ movies | feelings, travel | real | funny | 2
+" I'm the king of the world!
+— Titanic (1997)
+= 俺は世界の王だ！
+- (closing a big deal) I'm the king of the world!
+
+# You never know what you're gonna get.
+@ movies | feelings, daily | real | warm | 2
+" My mama always said life was like a box of chocolates. You never know what you're gonna get.
+— Forrest Gump (1994)
+= 開けてみるまでわからない
+- New city, new job. You never know what you're gonna get.
+
+# Stupid is as stupid does.
+@ movies | friends | real | funny | 1
+" Stupid is as stupid does.
+— Forrest Gump (1994)
+= バカなことをする人がバカなんだ
+- He's not dumb. He just did a dumb thing. Stupid is as stupid does.
+
+# Life finds a way.
+@ movies | feelings, business | real | deep | 2
+" Life, uh... finds a way.
+— Jurassic Park (1993)
+= 生命は道を見つける
+- We lost the client, but life finds a way.
+! "uh..." の間まで真似するのがお約束。
+
+# Hold on to your butts.
+@ movies | work, travel | real | funny | 1
+" Hold on to your butts.
+— Jurassic Park (1993)
+= しっかりつかまってろ
+- Okay, launching the new site. Hold on to your butts.
+
+# I see dead people.
+@ movies | friends | real | funny | 1
+" I see dead people.
+— The Sixth Sense (1999)
+= 死んだ人が見える
+- (looking at the office on Monday morning) I see dead people.
+
+# The first rule of
+@ movies | friends, work | real | funny | 2
+" The first rule of Fight Club is: you do not talk about Fight Club.
+— Fight Club (1999)
+= 〇〇の第一のルールは…
+- The first rule of the surprise party: you don't talk about the surprise party.
+
+# Why so serious?
+@ movies | friends | real | funny | 2
+" Why so serious?
+— The Dark Knight (2008)
+= なんでそんな真剣なんだ？
+- It's just a game. Why so serious?
+
+# live long enough to see yourself become the villain
+@ movies | business | real | deep | 1
+" You either die a hero, or you live long enough to see yourself become the villain.
+— The Dark Knight (2008)
+= 英雄として死ぬか、長生きして悪役になるか
+- That startup used to fight big tech. Now it is big tech. Live long enough to become the villain.
+
+# watch the world burn
+@ movies | conflict | real | funny | 1
+" Some men just want to watch the world burn.
+— The Dark Knight (2008)
+= 世界が燃えるのを見たいだけの人もいる
+- Who puts pineapple on sushi? Some people just want to watch the world burn.
+
+# pick yourself up
+@ movies | feelings, gym | real | deep | 3
+" Why do we fall, Bruce? So we can learn to pick ourselves up.
+— Batman Begins (2005)
+= 立ち直る
+- Everyone fails. What matters is how fast you pick yourself up.
+
+# With great power comes great responsibility.
+@ movies | work | real | funny | 2
+" With great power comes great responsibility.
+— Spider-Man (2002)
+= 大いなる力には大いなる責任が伴う
+- You're the group chat admin now. With great power comes great responsibility.
+
+# I am Groot.
+@ movies | friends | real | funny | 1
+" I am Groot.
+— Guardians of the Galaxy (2014)
+= 僕はグルート（それしか言えない）
+- My English when I'm tired: "I am Groot."
+
+# I love you 3000.
+@ movies | crush, friends | real | warm | 2
+" I love you 3000.
+— Avengers: Endgame (2019)
+= 3000回愛してる
+- Thanks for the snacks. Love you 3000.
+
+# I can do this all day.
+@ movies | gym, work | real | funny | 2
+" I can do this all day.
+— Captain America: The First Avenger (2011)
+= 一日中でもやれる
+- (after 5 push-ups) I can do this all day. (after 6) Okay, maybe not.
+
+# On your left.
+@ movies | gym | real | funny | 1
+" On your left.
+— Captain America: The Winter Soldier (2014)
+= 左から抜くよ
+- (passing your friend on a run) On your left!
+! ランナーや自転車が追い越すときの実際の声かけでもある。
+
+# Wakanda forever!
+@ movies | friends | real | warm | 1
+" Wakanda forever!
+— Black Panther (2018)
+= ワカンダよ永遠に
+! 胸の前で腕をクロスするポーズとセットで、仲間意識を表すジェスチャーとして広まった。
+- (team photo, arms crossed) Wakanda forever!
+
+# Just keep swimming.
+@ movies | feelings, work, study | real | warm | 3
+" Just keep swimming.
+— Finding Nemo (2003)
+= とにかく泳ぎ続けて（止まらずに）
+- Two more weeks of night shifts. Just keep swimming.
+
+# To infinity and beyond!
+@ movies | friends | real | funny | 2
+" To infinity and beyond!
+— Toy Story (1995)
+= 無限の彼方へ、さあ行くぞ！
+- Next stop, Australia! To infinity and beyond!
+
+# Adventure is out there!
+@ movies | travel | real | warm | 1
+" Adventure is out there!
+— Up (2009)
+= 冒険はすぐそこにある！
+- Let's take the train with no plan. Adventure is out there!
+
+# Squirrel!
+@ movies | work, friends | real | funny | 2
+" Squirrel!
+— Up (2009)
+= （気が散った）あ、リス！
+- Sorry, I got distracted. Squirrel moment.
+! 話の途中で気が散ることを Squirrel! と言うのは、この映画の犬から。
+
+# Hakuna matata
+@ movies | feelings | real | warm | 2
+> The Lion King (1994)
+= 気にしない、くよくよしない
+- Missed the train? Hakuna matata. There's another one.
+? スワヒリ語で「問題ない」。英語の No worries. と同じ感覚。
+
+# Remember who you are.
+@ movies | feelings | real | deep | 1
+" Remember who you are.
+— The Lion King (1994)
+= 自分が何者か思い出せ
+- When you're lost, remember who you are and why you started.
+
+# Nobody gets left behind.
+@ movies | friends, work | real | warm | 2
+" Ohana means family. Family means nobody gets left behind—or forgotten.
+— Lilo & Stitch (2002)
+= 誰も置いていかない
+- We all finish together. Nobody gets left behind.
+
+# Some people are worth melting for.
+@ movies | crush, friends | real | warm | 1
+" Some people are worth melting for.
+— Frozen (2013)
+= 溶けてもいいと思える人がいる
+- You drove two hours to help me? Some people are worth melting for.
+? worth 〜ing ＝〜する価値がある。
+
+# You shall not pass!
+@ movies | work, friends | real | funny | 2
+" You shall not pass!
+— The Lord of the Rings: The Fellowship of the Ring (2001)
+= ここは通さん！
+- (blocking the fridge) You shall not pass. I'm cutting.
+
+# One does not simply
+@ movies | online | real | funny | 2
+" One does not simply walk into Mordor.
+— The Lord of the Rings: The Fellowship of the Ring (2001)
+= そう簡単に〜できるものではない
+- One does not simply eat just one chip.
+! ミームの定番。One does not simply 〜 で何でも作れる。
+
+# Shaken, not stirred.
+@ movies | bar | real | funny | 1
+" A martini. Shaken, not stirred.
+— Goldfinger (1964)
+= ステアでなく、シェイクで
+- (ordering a protein shake) Shaken, not stirred.
+
+# Inconceivable!
+@ movies | friends | real | funny | 1
+" Inconceivable!
+— The Princess Bride (1987)
+= ありえない！
+- The printer works on the first try? Inconceivable!
+
+# I don't think it means what you think it means.
+@ movies | study, friends | real | funny | 2
+" You keep using that word. I do not think it means what you think it means.
+— The Princess Bride (1987)
+= その言葉、君が思ってる意味じゃないと思うよ
+- You keep saying "literally." I don't think it means what you think it means.
+! 言葉の誤用にツッコむときの定番。英語学習者のための名セリフ。
+
+# As you wish.
+@ movies | crush | real | flirty | 1
+" As you wish.
+— The Princess Bride (1987)
+= 仰せのままに（＝愛してる）
+- Can you get me a coffee? — As you wish.
+
+# a failure to communicate
+@ movies | work, conflict | real | chill | 2
+" What we've got here is failure to communicate.
+— Cool Hand Luke (1967)
+= 意思疎通の失敗
+- The client wanted blue, we made red. What we've got here is a failure to communicate.
+
+# Nobody's perfect.
+@ movies | feelings, friends | real | warm | 3
+" Well, nobody's perfect.
+— Some Like It Hot (1959)
+= 完璧な人なんていない
+- I made three typos in one email. Nobody's perfect.
+
+# It's going to be a bumpy night.
+@ movies | work, bar | real | funny | 1
+" Fasten your seatbelts. It's going to be a bumpy night.
+— All About Eve (1950)
+= 荒れる夜になるぞ
+- Both of my exes are at this party. Fasten your seatbelts.
+
+# I'm walking here!
+@ movies | travel, conflict | real | funny | 1
+" I'm walking here!
+— Midnight Cowboy (1969)
+= 歩いてんだよ！（ニューヨーク的な文句）
+- (a cab almost hits you) Hey! I'm walking here!
+
+# for lack of a better word
+@ movies | business, work | real | worksafe | 2
+" Greed, for lack of a better word, is good.
+— Wall Street (1987)
+= うまい言葉が見つからないけど
+- The meeting was, for lack of a better word, chaotic.
+
+# Coffee's for closers.
+@ movies | business, money | real | funny | 1
+" Put that coffee down! Coffee's for closers only.
+— Glengarry Glen Ross (1992)
+= コーヒーは契約を取った奴だけ
+- No deals this week? Sorry, coffee's for closers.
+! 営業界隈ではスパルタ営業の象徴としてよく引用される（半分冗談）。
+
+# Always be closing.
+@ movies | business, money | real | chill | 1
+" A-B-C. A-Always, B-Be, C-Closing. Always be closing.
+— Glengarry Glen Ross (1992)
+= 常にクロージングを意識しろ（ABC）
+- Even at lunch, he's pitching. Always be closing.
+
+# Sell me this pen.
+@ movies | business | real | chill | 2
+" Sell me this pen.
+— The Wolf of Wall Street (2013)
+= このペンを俺に売ってみろ
+! 営業面接の定番課題として有名になった。答えのコツは「まず相手のニーズを聞く」。
+- In the interview, they literally said, "Sell me this pen."
+
+# A billion dollars.
+@ movies | money, business | real | funny | 1
+" A million dollars isn't cool. You know what's cool? A billion dollars.
+— The Social Network (2010)
+= 百万ドルはクールじゃない。十億ドルがクールだ
+- Ten followers isn't cool. You know what's cool? A hundred.
+
+# How do you like them apples?
+@ movies | conflict, friends | real | funny | 2
+" How do you like them apples?
+— Good Will Hunting (1997)
+= どうだ、参ったか
+- I got the job you said I'd never get. How do you like them apples?
+! 文法的には those apples だが、方言っぽい them で決まり文句になっている。
+
+# keep moving forward
+@ movies | gym, feelings | real | deep | 3
+" It ain't about how hard you hit. It's about how hard you can get hit and keep moving forward.
+— Rocky Balboa (2006)
+= 打たれても前に進み続ける
+- Rejections are part of sales. Keep moving forward.
+
+# Don't let anybody tell you you can't do something.
+@ movies | feelings, study | real | deep | 2
+" Don't ever let somebody tell you you can't do something.
+— The Pursuit of Happyness (2006)
+= 誰にも「お前には無理」と言わせるな
+- They said I'd never speak English. Don't let anybody tell you you can't do something.
+
+# There's no crying in
+@ movies | gym, work | real | funny | 1
+" There's no crying in baseball!
+— A League of Their Own (1992)
+= 〇〇で泣くんじゃない！
+- There's no crying in accounting. Okay, maybe a little.
+
+# If you build it, they will come.
+@ movies | business | real | deep | 2
+" If you build it, he will come.
+— Field of Dreams (1989)
+= 作れば、人は来る
+- Our new website: if you build it, they will come. (They didn't. We needed marketing.)
+! よく they will come と誤引用される。実際のセリフは he。ビジネスでは「作るだけじゃ客は来ない」の反面教師として使われることも。
+
+# Say hello to my little friend!
+@ movies | friends | real | funny | 1
+" Say hello to my little friend!
+— Scarface (1983)
+= 俺の相棒にあいさつしな！
+- (pulling out a giant burrito) Say hello to my little friend!
+
+# I'm not even supposed to be here today!
+@ movies | work | real | funny | 2
+" I'm not even supposed to be here today!
+— Clerks (1994)
+= 今日シフトじゃないのに！
+- I'm covering for someone and the register just broke. I'm not even supposed to be here today!
+
+# That'll do.
+@ movies | work | real | warm | 2
+" That'll do, pig. That'll do.
+— Babe (1995)
+= それでいい、よくやった
+- Is this enough? — That'll do.
+
+# It's alive!
+@ movies | online, work | real | funny | 2
+" It's alive! It's alive!
+— Frankenstein (1931)
+= 生きてる！動いた！
+- (the old laptop turns on) It's alive!
+
+# ready for my close-up
+@ movies | online, music | real | funny | 1
+" All right, Mr. DeMille, I'm ready for my close-up.
+— Sunset Boulevard (1950)
+= アップの準備はできてるわ
+- (fixing hair before a video call) Okay, I'm ready for my close-up.
+
+# Why'd it have to be
+@ movies | daily | real | funny | 1
+" Snakes. Why'd it have to be snakes?
+— Raiders of the Lost Ark (1981)
+= よりによってなんで〜なんだ
+- The only seat left is next to the crying baby. Why'd it have to be a baby?
+
+# That belongs in a museum!
+@ movies | friends | real | funny | 1
+" That belongs in a museum!
+— Indiana Jones and the Last Crusade (1989)
+= それは博物館に置くべきだ！（古すぎ）
+- You still use a flip phone? That belongs in a museum.
+
+# I'm the captain now.
+@ movies | work, online | real | funny | 1
+" Look at me. I'm the captain now.
+— Captain Phillips (2013)
+= 今から俺が船長だ
+- (taking the TV remote) Look at me. I'm the captain now.
+
+# This is Sparta!
+@ movies | gym | real | funny | 1
+" This is Sparta!
+— 300 (2006)
+= これがスパルタだ！
+- (leg day) This is Sparta!
+
+# Are you not entertained?
+@ movies | music, online | real | funny | 1
+" Are you not entertained?
+— Gladiator (2000)
+= これでも楽しくないのか？
+- (after a two-hour stream) Are you not entertained?
+
+# I volunteer as tribute!
+@ movies | work, friends | real | funny | 2
+" I volunteer as tribute!
+— The Hunger Games (2012)
+= 私が代わりに行きます！
+- Who wants the last slice? — I volunteer as tribute!
+! 本来は命がけの場面。今は「私やります！」を大げさに言う冗談として定着。
+
+# May the odds be ever in your favor.
+@ movies | work, study | real | funny | 1
+" May the odds be ever in your favor.
+— The Hunger Games (2012)
+= 幸運を祈る（皮肉気味に）
+- Good luck with the job interview. May the odds be ever in your favor.
+
+# Always.
+@ movies | crush, friends | real | deep | 1
+" After all this time? Always.
+— Harry Potter and the Deathly Hallows – Part 2 (2011)
+= ずっと
+- Will you still be my friend when I'm old and grumpy? — Always.
+
+# It's LeviOsa, not LevioSA.
+@ movies | study | real | funny | 2
+> Harry Potter and the Philosopher's Stone (2001)
+= アクセントの位置が違う！
+- It's "e-CON-o-my," not "eco-NO-my." Stress matters, just like LeviOsa.
+! 英語は「どこを強く読むか」で通じるかが決まる。発音記号の ˈ（強勢）を見る癖をつけると聞き取りも楽になる。
+
+# Mischief managed.
+@ movies | friends | real | funny | 1
+" Mischief managed.
+— Harry Potter and the Prisoner of Azkaban (2004)
+= いたずら完了
+- (hiding the last cookie) Mischief managed.
+
+# I know what love is.
+@ movies | crush, feelings | real | deep | 1
+" I'm not a smart man, but I know what love is.
+— Forrest Gump (1994)
+= 賢くはないけど、愛が何かは知ってる
+- I don't know much about wine, but I know what I like.
+
+# Groundhog Day
+@ movies | work, daily | real | chill | 2
+> Groundhog Day (1993)
+= 同じ日の繰り返し
+- Same emails, same meetings. It's like Groundhog Day.
+! 同じ一日を繰り返す主人公の映画から。毎日が同じに感じるときの定番表現。
+
+# a catch-22
+@ movies | business, paperwork | real | chill | 2
+> Catch-22 (1970), from the 1961 novel
+= どっちに転んでもダメな状況（堂々巡り）
+- You need experience to get a job, but you need a job to get experience. It's a catch-22.
+
+# jump the shark
+@ movies | online, business | real | chill | 1
+> Happy Days (TV, 1977 episode)
+= 人気が落ちる転換点を迎える・迷走する
+- The show jumped the shark in season 6.
+! ドラマで主人公が水上スキーでサメを飛び越えた回から「ネタ切れで迷走し始めた」の意味に。
+
+# spoiler alert
+@ movies | online, friends | real | chill | 3
+> TV & movie culture
+= ネタバレ注意
+- Spoiler alert: everyone dies.
+- No spoilers! I haven't seen it yet.
+
+# binge-watch
+@ movies | online | real | chill | 3
+> TV & streaming culture
+= 一気見する
+- I binge-watched the whole season in one night.
+
+# a plot twist
+@ movies | daily, friends | real | funny | 3
+> TV & movie culture
+= どんでん返し
+- Plot twist: the meeting was canceled after I drove an hour.
+
+# a cliffhanger
+@ movies | online | real | chill | 2
+> TV & movie culture
+= 続きが気になる終わり方
+- The season ended on a cliffhanger. I need the next one now.
+
+# main character energy
+@ movies | online, feelings | real | funny | 2
+> Internet & movie culture
+= 主人公オーラ
+- Walking through the rain with headphones on. Main character energy.
+
+# There is no spoon.
+@ movies | study, work | real | deep | 1
+" There is no spoon.
+— The Matrix (1999)
+= スプーンなど存在しない（思い込みを捨てろ）
+- Stop thinking "I'm bad at English." There is no spoon.
+
+# take the red pill
+@ movies | online | real | chill | 1
+" You take the red pill, you stay in Wonderland, and I show you how deep the rabbit hole goes.
+— The Matrix (1999)
+= 真実を知る道を選ぶ
+- Once you learn how the music business works, it's like taking the red pill.
+
+# Don't think. Just do.
+@ movies | gym, work | real | deep | 2
+" Don't think. Just do.
+— Top Gun: Maverick (2022)
+= 考えるな、やれ
+- Afraid to speak English? Don't think. Just do.
+
+# That escalated quickly.
+@ movies | conflict, friends | real | funny | 3
+" Boy, that escalated quickly.
+— Anchorman: The Legend of Ron Burgundy (2004)
+= 急に話が大きくなったな
+- We were talking about lunch and now you're quitting? That escalated quickly.
+
+# That's just, like, your opinion, man.
+@ movies | conflict, friends | real | funny | 2
+" Yeah, well, you know, that's just, like, uh, your opinion, man.
+— The Big Lebowski (1998)
+= それってあなたの感想ですよね（ゆるく）
+- The movie was bad. — That's just, like, your opinion, man.
+
+# Did you get the memo?
+@ movies | work, daily | real | funny | 2
+> Office Space (1999)
+= 例の通知見た？（知らないの？）
+- Casual Friday was canceled. Didn't you get the memo?
+? didn't get the memo ＝「みんな知ってることを知らない」の皮肉にも。
+
+# I'm gonna need you to come in on Saturday.
+@ movies | work | real | funny | 1
+> Office Space (1999)
+= 土曜も出勤してくれる？（嫌な上司の言い方）
+- Yeah, I'm gonna need you to go ahead and finish that tonight. (said like a bad boss)
+! 回りくどい嫌味な上司の話し方の代名詞。
+
+# Keep the change, ya filthy animal.
+@ movies | money | real | funny | 1
+" Keep the change, ya filthy animal.
+— Home Alone (1990)
+= 釣りはとっとけ、このケダモノめ
+- (tipping the pizza guy) Keep the change, ya filthy animal. Kidding! Thank you!
+
+# Ogres are like onions.
+@ movies | feelings | real | funny | 1
+" Ogres are like onions.
+— Shrek (2001)
+= 怪物は玉ねぎと同じ（何層にもなってる）
+- I'm not simple. I'm like an onion. I have layers.
+! "Ogres have layers."（人には色んな面がある）のくだりが有名。
+
+# Son of a nutcracker!
+@ movies | daily | real | funny | 1
+" Son of a nutcracker!
+— Elf (2003)
+= ちくしょう！（子ども向けの悪態）
+- (dropping your phone) Son of a nutcracker!
+! 悪い言葉を言わないための言い換え。Shoot! / Darn! / Fudge! も同じ使い方。
+
+# Stop trying to make fetch happen.
+@ movies | friends, online | real | funny | 2
+" Stop trying to make fetch happen. It's not going to happen.
+— Mean Girls (2004)
+= その言葉流行らせようとするのやめな
+- You keep saying "cheugy." Stop trying to make fetch happen.
+
+# She doesn't even go here!
+@ movies | friends | real | funny | 1
+" She doesn't even go here!
+— Mean Girls (2004)
+= あの子ここの生徒じゃないし！（部外者がなぜ？）
+- Why is he in our team meeting? He doesn't even work here!
+
+# That's all.
+@ movies | work | real | cold | 2
+" That's all.
+— The Devil Wears Prada (2006)
+= 以上（下がってよし）
+- Send me the numbers by noon. That's all.
+! 冷たいボスの決めゼリフ。普段使うと怖がられる。
+
+# Florals? For spring? Groundbreaking.
+@ movies | business, online | real | funny | 1
+" Florals? For spring? Groundbreaking.
+— The Devil Wears Prada (2006)
+= 春に花柄？画期的ね（皮肉）
+- A coffee shop with a minimalist logo? Groundbreaking.
+? groundbreaking ＝画期的な。皮肉で「ありきたり」を突っ込むのに使われる。

@@ -1,0 +1,877 @@
+// Songs — classics (50s–90s). Title phrases + original examples. No lyrics reproduced.
+
+# Don't stop me now.
+@ songs | work, gym, feelings | real | funny | 2
+> Queen — "Don't Stop Me Now"
+= 今の俺を止めるな
+- I just finished three tasks before 9 a.m. Don't stop me now.
+
+# bite the dust
+@ songs | business, daily | real | funny | 2
+> Queen — "Another One Bites the Dust"
+= くたばる・ダメになる
+- Another startup bit the dust.
+- My third umbrella this month just bit the dust.
+? 人だけでなく、壊れた物や潰れた会社にも冗談っぽく使える。
+
+# under pressure
+@ songs | work, feelings | real | deep | 3
+> Queen & David Bowie — "Under Pressure"
+= プレッシャーの中で
+- I work better under pressure.
+- She stays calm under pressure.
+
+# break free
+@ songs | feelings, work | real | deep | 2
+> Queen — "I Want to Break Free"
+= 自由になる・抜け出す
+- I wanted to break free from my 9-to-5.
+- It's hard to break free from old habits.
+
+# The show must go on.
+@ songs | work, music | real | deep | 2
+> Queen — "The Show Must Go On"
+= 何があっても続けなきゃ
+- The singer's sick, the mic's broken, but the show must go on.
+
+# Let it be.
+@ songs | feelings | real | deep | 2
+> The Beatles — "Let It Be"
+= 放っておこう・なるようになる
+- You can't control everything. Just let it be.
+
+# come together
+@ songs | business, friends | real | warm | 2
+> The Beatles — "Come Together"
+= まとまる・集まる
+- The whole team came together to finish on time.
+- It's all coming together.
+? It's all coming together. ＝「全部うまくまとまってきた」。
+
+# Here comes
+@ songs | daily | real | chill | 3
+> The Beatles — "Here Comes the Sun"
+= 〜が来た
+- Here comes the bus!
+- Here comes the boss. Look busy.
+
+# with a little help from my friends
+@ songs | friends | real | warm | 2
+> The Beatles — "With a Little Help from My Friends"
+= 友達のちょっとした助けで
+- I moved apartments in one day, with a little help from my friends.
+
+# work it out
+@ songs | conflict, business | real | warm | 3
+> The Beatles — "We Can Work It Out"
+= 解決する・うまくやる
+- Let's sit down and work it out.
+- Don't worry, we'll work it out.
+? work out の「解決する」。運動の work out と同じ形なので文脈で判断。
+
+# Money can't buy
+@ songs | money, feelings | real | deep | 2
+> The Beatles — "Can't Buy Me Love"
+= お金じゃ買えない
+- Money can't buy happiness. But it can buy coffee.
+
+# get back
+@ songs | daily, work | real | chill | 3
+> The Beatles — "Get Back"
+= 戻る
+- What time did you get back last night?
+- I'll get back to you tomorrow.
+
+# All you need is
+@ songs | daily, feelings | real | chill | 2
+> The Beatles — "All You Need Is Love"
+= 必要なのは〜だけ
+- All you need is a laptop and Wi-Fi.
+
+# Beat it.
+@ songs | conflict | real | rude | 2
+> Michael Jackson — "Beat It"
+= あっち行け
+- Beat it, kid. This is a private party.
+! 「失せろ」に近い。冗談でも結構きつい。
+
+# You're not alone.
+@ songs | feelings, friends | real | warm, deep | 3
+> Michael Jackson — "You Are Not Alone"
+= ひとりじゃないよ
+- Lots of people struggle with English listening. You're not alone.
+
+# Lean on me.
+@ songs | friends, feelings | real | warm | 2
+> Bill Withers — "Lean on Me"
+= 頼ってくれていい
+- If things get hard, lean on me.
+? lean on 〜 ＝寄りかかる→頼る。
+
+# ain't no
+@ songs | daily, study | real | chill | 2
+> Bill Withers — "Ain't No Sunshine"
+= 全然〜ない（二重否定の口語）
+- Ain't no way I'm working this weekend.
+- There ain't nothing wrong with that.
+? 口語では否定を重ねても「強い否定」になる。文法的には正しくないので書き言葉では使わない。
+
+# just the two of us
+@ songs | crush | real | warm | 2
+> Grover Washington Jr. & Bill Withers — "Just the Two of Us"
+= 二人きりで
+- Dinner tonight? Just the two of us.
+
+# No woman, no cry
+@ songs | music, study | real | deep | 1
+> Bob Marley & The Wailers — "No Woman, No Cry"
+= 女なしで泣くことなし……ではない！
+- People think it means "no woman, no problems," but it means "No, woman, don't cry."
+! よくある勘違い。カンマの位置で意味が変わる例として有名。
+
+# stand up for
+@ songs | conflict, feelings | real | deep | 3
+> Bob Marley & The Wailers — "Get Up, Stand Up"
+= 〜を守る・〜のために立ち上がる
+- Stand up for yourself.
+- He always stands up for his team.
+
+# I wanna dance with somebody.
+@ songs | bar, music | real | warm | 2
+> Whitney Houston — "I Wanna Dance with Somebody (Who Loves Me)"
+= 誰かと踊りたい
+- Put on some music. I wanna dance with somebody.
+
+# How will I know?
+@ songs | crush, feelings | real | deep | 2
+> Whitney Houston — "How Will I Know"
+= どうやったらわかるの？
+- How will I know if she likes me?
+- How will I know when it's ready?
+
+# Don't stop believing.
+@ songs | feelings, study | real | warm | 2
+> Journey — "Don't Stop Believin'"
+= 信じ続けて
+- Four months of English every day. Don't stop believing.
+? 曲名の Believin' は g を落とした口語の綴り。発音も「ビリーヴィン」。
+
+# living on a prayer
+@ songs | money, feelings | real | deep | 1
+> Bon Jovi — "Livin' on a Prayer"
+= 祈るだけで生きてる（ギリギリの生活）
+- No savings, no plan. We're living on a prayer.
+
+# It's my life.
+@ songs | feelings | real | deep | 2
+> Bon Jovi — "It's My Life"
+= 俺の人生だ
+- My parents want me to get a normal job, but it's my life.
+
+# I will survive.
+@ songs | feelings, crush | real | funny | 2
+> Gloria Gaynor — "I Will Survive"
+= 生き延びてやる
+- The breakup sucked, but I will survive.
+- Twelve-hour shift? I will survive.
+
+# respect
+@ songs | work, conflict | real | deep | 3
+> Aretha Franklin — "Respect"
+= 敬意・リスペクト
+- I have a lot of respect for him.
+- Respect. That was a great set.
+? Respect. 一語で「すごいね、敬意を払うよ」。
+
+# I just called to say
+@ songs | phone, crush, friends | real | warm | 2
+> Stevie Wonder — "I Just Called to Say I Love You"
+= 〜って言いたくて電話しただけ
+- I just called to say good luck tomorrow.
+- No reason. I just called to say hi.
+
+# signed, sealed, delivered
+@ songs | business, paperwork | real | chill | 1
+> Stevie Wonder — "Signed, Sealed, Delivered I'm Yours"
+= 完了・全部済んだ
+- The contract? Signed, sealed, delivered.
+
+# Isn't she lovely?
+@ songs | crush, daily | real | warm | 1
+> Stevie Wonder — "Isn't She Lovely"
+= 素敵じゃない？（否定疑問の感嘆）
+- Look at this view. Isn't it beautiful?
+? Isn't it 〜? は質問ではなく「〜だよね！」という感嘆。答えは Yeah!
+
+# ain't no mountain high enough
+@ songs | crush, friends | real | warm | 1
+> Marvin Gaye & Tammi Terrell — "Ain't No Mountain High Enough"
+= どんな山も高すぎない（どこへでも行く）
+- You need me at 3 a.m.? Ain't no mountain high enough.
+
+# What's going on?
+@ songs | daily, friends | real | chill | 3
+> Marvin Gaye — "What's Going On"
+= どうなってるの？／どうしたの？
+- What's going on? Why is everyone outside?
+- What's going on with you lately?
+
+# hear it through the grapevine
+@ songs | work, friends | real | chill | 2
+> Marvin Gaye — "I Heard It Through the Grapevine"
+= 噂で聞いた
+- I heard it through the grapevine that you're leaving.
+- I heard through the grapevine they're hiring.
+! ブドウのつる＝噂の伝わる道。職場のうわさ話で今もよく使う。
+
+# do it my way
+@ songs | work, feelings | real | deep | 2
+> Frank Sinatra — "My Way"
+= 自分のやり方でやる
+- Thanks for the advice, but I'm gonna do it my way.
+
+# That's life.
+@ songs | feelings | real | deep | 3
+> Frank Sinatra — "That's Life"
+= それが人生さ
+- You win some, you lose some. That's life.
+? You win some, you lose some. ＝「勝つ時もあれば負ける時もある」。
+
+# get under my skin
+@ songs | conflict, crush | real | chill | 2
+> Frank Sinatra — "I've Got You Under My Skin"
+= イライラさせる（／心から離れない）
+- Don't let him get under your skin.
+! 曲は「君が心に染みついて離れない」という恋の意味。日常では「イラつかせる」の方がよく使う。
+
+# What a
+@ songs | daily | real | warm | 3
+> Louis Armstrong — "What a Wonderful World"
+= なんて〜なんだ！
+- What a day!
+- What a view!
+- What a mess.
+? What a ＋名詞 ＝感嘆。良いことにも悪いことにも使える。
+
+# I can't help
+@ songs | crush, feelings | real | warm | 3
+> Elvis Presley — "Can't Help Falling in Love"
+= つい〜しちゃう
+- I can't help laughing every time I see that video.
+- I can't help it. I love sweets.
+? can't help 〜ing ＝「〜せずにいられない」。I can't help it. ＝「しょうがないんだもん」。
+
+# It's now or never.
+@ songs | business, crush | real | deep | 2
+> Elvis Presley — "It's Now or Never"
+= 今しかない
+- Ask her out. It's now or never.
+
+# all shook up
+@ songs | feelings | real | chill | 1
+> Elvis Presley — "All Shook Up"
+= 動揺してる
+- After the accident, I was all shook up.
+? 正しい文法は shaken だけど、口語では shook up も使う。I'm shook. は今のスラングで「衝撃受けた」。
+
+# take a chance on
+@ songs | business, crush | real | warm | 2
+> ABBA — "Take a Chance on Me"
+= 〜に賭けてみる
+- Thanks for taking a chance on a small company like us.
+
+# The winner takes it all.
+@ songs | business | real | deep | 1
+> ABBA — "The Winner Takes It All"
+= 勝者総取り
+- In tech, the winner takes it all.
+
+# I want it that way.
+@ songs | daily | real | chill | 2
+> Backstreet Boys — "I Want It That Way"
+= そうしたいんだ（そのやり方がいい）
+- Medium rare, no onions. I want it that way.
+
+# Quit playing games.
+@ songs | crush, conflict | real | cold | 2
+> Backstreet Boys — "Quit Playing Games (with My Heart)"
+= 駆け引きはやめて
+- Just tell me if you like me. Quit playing games.
+
+# as long as
+@ songs | daily, business | real | chill | 3
+> Backstreet Boys — "As Long as You Love Me"
+= 〜さえすれば・〜する限り
+- You can borrow it, as long as you give it back.
+- As long as we're done by five, I'm happy.
+
+# It's gonna be me.
+@ songs | friends, online | real | funny | 1
+> *NSYNC — "It's Gonna Be Me"
+= それは僕になる（＝5月のミーム）
+- Every April 30th, everyone posts "It's gonna be May."
+! 歌の発音が「メイ（May）」に聞こえるので、毎年4月末に It's gonna be May. の画像が出回るネット文化。
+
+# wannabe
+@ songs | music, friends | real | chill | 2
+> Spice Girls — "Wannabe"
+= なりたがり・〜気取り
+- He's a wannabe rapper.
+- She's not a wannabe. She's the real thing.
+
+# Oops, I did it again.
+@ songs | daily, friends | real | funny | 2
+> Britney Spears — "Oops!... I Did It Again"
+= あ、またやっちゃった
+- I bought another pair of sneakers. Oops, I did it again.
+
+# scrub
+@ songs | crush | real | rude | 1
+> TLC — "No Scrubs"
+= ダメ男（金も目標もない男）
+- I don't date scrubs.
+! 90年代のスラング。今も歌詞のせいで通じる。
+
+# You got it bad.
+@ songs | crush, friends | real | funny | 2
+> Usher — "U Got It Bad"
+= 完全にベタ惚れじゃん
+- You've checked your phone 20 times. You got it bad.
+
+# OMG
+@ songs | dm, friends | real | chill | 3
+> Usher — "OMG"
+= うそ！やば！（Oh my God）
+- OMG, did you see this?
+! 宗教的な理由で Oh my God を避けて Oh my gosh / Oh my goodness と言う人も多い。
+
+# I've got a feeling
+@ songs | feelings | real | warm | 2
+> Black Eyed Peas — "I Gotta Feeling"
+= 〜な予感がする
+- I've got a feeling tonight's gonna be fun.
+- I've got a bad feeling about this.
+
+# Let's get it started.
+@ songs | work, music | real | chill | 2
+> Black Eyed Peas — "Let's Get It Started"
+= さあ始めよう
+- Everybody's here. Let's get it started.
+
+# meet halfway
+@ songs | business, conflict | real | worksafe | 3
+> Black Eyed Peas — "Meet Me Halfway"
+= 歩み寄る・折衷する
+- You want $1,000, I offered $600. Let's meet halfway at $800.
+- I'll meet you halfway on the deadline.
+! 交渉で超使える。お互い真ん中まで歩み寄る、の意味。
+
+# a state of mind
+@ songs | feelings | real | deep | 2
+> Jay-Z & Alicia Keys — "Empire State of Mind"
+= 心の持ちよう・気分
+- Happiness is a state of mind.
+- I'm not in the right state of mind for this.
+
+# so fresh, so clean
+@ songs | daily | real | funny | 1
+> OutKast — "So Fresh, So Clean"
+= さっぱり、ピカピカ
+- New haircut, new shirt. So fresh, so clean.
+
+# dilemma
+@ songs | feelings | real | chill | 2
+> Nelly & Kelly Rowland — "Dilemma"
+= ジレンマ・板挟み
+- Pizza or burgers? Big dilemma.
+
+# thrift shop
+@ songs | shopping, money | real | chill | 2
+> Macklemore & Ryan Lewis — "Thrift Shop"
+= 古着屋・リサイクルショップ
+- I got this jacket at a thrift shop for eight bucks.
+
+# the good old days
+@ songs | feelings | real | deep | 2
+> Macklemore — "Good Old Days"
+= 古き良き時代
+- Remember when phones didn't have cameras? The good old days.
+
+# How deep is your love?
+@ songs | crush | real | flirty | 1
+> Bee Gees — "How Deep Is Your Love"
+= 君の愛はどれくらい深い？
+- How deep is your love for pizza? Enough to share?
+
+# stayin' alive
+@ songs | work, health | real | funny | 2
+> Bee Gees — "Stayin' Alive"
+= なんとか生きてる
+- How are you? — Stayin' alive.
+! 心臓マッサージのリズム（1分100回ちょっと）にちょうどいい曲として有名。
+
+# You can't always get what you want.
+@ songs | feelings, business | real | deep | 2
+> The Rolling Stones — "You Can't Always Get What You Want"
+= いつも欲しいものが手に入るとは限らない
+- They picked another vendor. You can't always get what you want.
+
+# I can't get no satisfaction.
+@ songs | study, feelings | real | funny | 1
+> The Rolling Stones — "(I Can't Get No) Satisfaction"
+= 全然満足できない（二重否定）
+- The grammar's wrong, but everyone knows what it means.
+! can't + no の二重否定。文法的には「満足できなくはない」になりそうだが、口語では強い否定。
+
+# Start me up.
+@ songs | daily, work | real | funny | 1
+> The Rolling Stones — "Start Me Up"
+= エンジンかけて（やる気出させて）
+- Coffee, please. Start me up.
+
+# Take it easy.
+@ songs | daily, friends, health | real | warm, chill | 3
+> Eagles — "Take It Easy"
+= 気楽にね／じゃあね
+- Take it easy, man. See you tomorrow.
+- Take it easy on the stairs. They're slippery.
+? 別れの挨拶としても使う。Take it easy on 〜 ＝〜は控えめにね。
+
+# life in the fast lane
+@ songs | work, money | real | chill | 1
+> Eagles — "Life in the Fast Lane"
+= 刺激的で忙しい生活
+- Three jobs, no sleep. Life in the fast lane.
+
+# go your own way
+@ songs | feelings, work | real | deep | 2
+> Fleetwood Mac — "Go Your Own Way"
+= 自分の道を行く
+- After college, we all went our own ways.
+? go one's separate ways ＝別々の道を行く（別れる）。
+
+# Hold the line.
+@ songs | phone, business | real | worksafe | 1
+> Toto — "Hold the Line"
+= 電話を切らずにお待ちください／踏ん張れ
+- Please hold the line. I'll transfer you.
+- Prices are rising, but hold the line.
+
+# Girls just want to have fun.
+@ songs | friends | real | funny | 1
+> Cyndi Lauper — "Girls Just Want to Have Fun"
+= 女の子はただ楽しみたいだけ
+- No plans, no drama. We just want to have fun.
+
+# time after time
+@ songs | daily | real | chill | 2
+> Cyndi Lauper — "Time After Time"
+= 何度も何度も
+- Time after time, he's late.
+? again and again と同じ意味。
+
+# show your true colors
+@ songs | conflict, friends | real | deep | 2
+> Cyndi Lauper — "True Colors"
+= 本性を表す
+- He showed his true colors when money got involved.
+! 歌は「本当のあなたを見せて」と優しい意味。慣用句としては悪い意味で使うことが多い。
+
+# Express yourself.
+@ songs | music, study | real | warm | 2
+> Madonna — "Express Yourself"
+= 自分を表現して
+- Don't worry about grammar. Just express yourself.
+
+# Never gonna give you up.
+@ songs | online, friends | real | funny | 2
+> Rick Astley — "Never Gonna Give You Up"
+= 絶対に諦めない（＝リックロール）
+- I clicked the link and got rickrolled.
+! 関係ない動画のふりをしてこの曲のMVに飛ばすイタズラ＝Rickroll。ネット最古級のミーム。
+
+# take on
+@ songs | work, business | real | worksafe | 3
+> a-ha — "Take On Me"
+= 引き受ける・挑む
+- I can't take on another project right now.
+- We're taking on a big client.
+
+# all I want for
+@ songs | daily | real | warm | 2
+> Mariah Carey — "All I Want for Christmas Is You"
+= 〜に欲しいのは…だけ
+- All I want for my birthday is a nap.
+
+# It's all coming back to me now.
+@ songs | study, feelings | real | chill | 2
+> Celine Dion — "It's All Coming Back to Me Now"
+= 全部思い出してきた
+- I haven't played guitar in years, but it's all coming back to me now.
+
+# You're still the one.
+@ songs | crush | real | warm | 1
+> Shania Twain — "You're Still the One"
+= 今でも君しかいない
+- Twenty years later, you're still the one.
+
+# That don't impress me much.
+@ songs | friends | real | funny | 1
+> Shania Twain — "That Don't Impress Me Much"
+= 別に大したことないね
+- You've got a fancy car? That doesn't impress me much.
+! 曲名は方言的な文法（doesn't → don't）。普通に言うなら That doesn't impress me much.
+
+# ironic
+@ songs | study, friends | real | funny | 2
+> Alanis Morissette — "Ironic"
+= 皮肉な
+- A fire station burned down. Ironic, right?
+! この曲の例は「皮肉じゃなくてただの不運では？」と長年ツッコまれていることで有名。ironic の本当の意味は「予想と逆になる皮肉」。
+
+# You ought to
+@ songs | daily, study | real | chill | 2
+> Alanis Morissette — "You Oughta Know"
+= 〜すべきだ（should に近い）
+- You ought to see a doctor.
+- You oughta try this place.
+~ "AW-duh"
+? ought to ＝ should とほぼ同じ。会話では oughta と縮む。
+
+# Don't speak.
+@ songs | conflict, crush | real | deep | 1
+> No Doubt — "Don't Speak"
+= 何も言わないで
+- Don't speak. I know what you're going to say.
+
+# losing my religion
+@ songs | faith, feelings | real | deep | 1
+> R.E.M. — "Losing My Religion"
+= 堪忍袋の緒が切れそう（南部の言い回し）
+- This traffic has me losing my religion.
+! 信仰を失うという意味ではなく、アメリカ南部の言い回しで「我慢の限界・キレそう」。
+
+# Everybody hurts.
+@ songs | feelings | real | warm | 2
+> R.E.M. — "Everybody Hurts"
+= 誰だってつらい時はある
+- It's okay to have a bad day. Everybody hurts sometimes.
+
+# the end of the world as we know it
+@ songs | online, feelings | real | funny | 1
+> R.E.M. — "It's the End of the World as We Know It (And I Feel Fine)"
+= これまでの世界の終わり
+- The Wi-Fi is down. It's the end of the world as we know it.
+
+# That's the way I like it.
+@ songs | food, daily | real | chill | 2
+> KC and the Sunshine Band — "That's the Way (I Like It)"
+= それが好きなんだ
+- Extra spicy. That's the way I like it.
+
+# Hit the road.
+@ songs | travel, daily | real | chill | 3
+> Ray Charles — "Hit the Road Jack"
+= 出発する／出て行け
+- It's late. Let's hit the road.
+- We hit the road at 6 a.m.
+! 歌は「出て行け」だけど、普段は「出発しよう」の意味で一番使う。
+
+# on my mind
+@ songs | feelings, crush | real | warm | 3
+> Ray Charles — "Georgia on My Mind"
+= 頭にある・気になってる
+- What's on your mind?
+- You've been on my mind all day.
+? What's on your mind? ＝「何考えてるの？何か気になる？」
+
+# Don't worry, be happy.
+@ songs | feelings | real | warm | 2
+> Bobby McFerrin — "Don't Worry, Be Happy"
+= 気にすんな、ハッピーにいこう
+- Lost your umbrella? Don't worry, be happy. It's just rain.
+
+# Nothing's gonna stop us now.
+@ songs | business, feelings | real | warm | 1
+> Starship — "Nothing's Gonna Stop Us Now"
+= もう誰にも止められない
+- Funding's in, team's ready. Nothing's gonna stop us now.
+
+# If I could turn back time
+@ songs | feelings | real | deep | 2
+> Cher — "If I Could Turn Back Time"
+= もし時間を戻せたら
+- If I could turn back time, I'd study English at 15.
+? If I could 〜, I'd 〜. ＝現実とは違う仮定。
+
+# hold out for
+@ songs | business, crush | real | chill | 2
+> Bonnie Tyler — "Holding Out for a Hero"
+= 〜を（諦めずに）待つ
+- I'm holding out for a better offer.
+
+# What's that got to do with it?
+@ songs | conflict, business | real | cold | 2
+> Tina Turner — "What's Love Got to Do with It"
+= それが何の関係があるの？
+- I'm late because of traffic. — What's that got to do with the report?
+? have to do with 〜 ＝〜と関係がある。What does it have to do with me? ＝「私に何の関係が？」
+
+# simply the best
+@ songs | friends, work | real | warm | 2
+> Tina Turner — "The Best"
+= とにかく最高
+- Your mom's cooking is simply the best.
+
+# Hit me with your best shot.
+@ songs | conflict, business, gym | real | funny | 2
+> Pat Benatar — "Hit Me with Your Best Shot"
+= 全力でかかってこい
+- You think you can beat me at ping-pong? Hit me with your best shot.
+- Okay, tough questions. Hit me with your best shot.
+
+# We didn't start the fire.
+@ songs | conflict | real | funny | 1
+> Billy Joel — "We Didn't Start the Fire"
+= 俺らのせいじゃない
+- The project was already late when we joined. We didn't start the fire.
+
+# Only the good die young.
+@ songs | feelings | real | deep | 1
+> Billy Joel — "Only the Good Die Young"
+= 善人ほど早死にする
+- He was 28. Only the good die young.
+
+# I'm still standing.
+@ songs | feelings, business | real | warm | 2
+> Elton John — "I'm Still Standing"
+= まだ立ってる（負けてない）
+- Three rejections this week, but I'm still standing.
+
+# Sorry seems to be the hardest word.
+@ songs | conflict | real | deep | 1
+> Elton John — "Sorry Seems to Be the Hardest Word"
+= ごめんが一番言いにくい
+- Why is "sorry" always the hardest word for him?
+
+# You can't hurry love.
+@ songs | crush | real | warm | 1
+> The Supremes — "You Can't Hurry Love"
+= 恋は急げない
+- Relax. You can't hurry love. Or bread.
+
+# I want you back.
+@ songs | crush | real | deep | 2
+> The Jackson 5 — "I Want You Back"
+= 戻ってきてほしい
+- I know I messed up. I want you back.
+
+# easy as ABC
+@ songs | study | real | chill | 2
+> The Jackson 5 — "ABC"
+= 超簡単
+- Setting it up is easy as ABC.
+? as easy as pie / a piece of cake も同じ意味。
+
+# I'll be there.
+@ songs | friends | real | warm | 3
+> The Jackson 5 — "I'll Be There"
+= 行くよ／そばにいるよ
+- Your show is Friday? I'll be there.
+
+# Don't stand so close to me.
+@ songs | daily | real | chill | 1
+> The Police — "Don't Stand So Close to Me"
+= そんなに近づかないで
+- Sorry, could you give me a little space? I'm claustrophobic.
+? give 人 space ＝距離をとる。
+
+# a message in a bottle
+@ songs | online | real | chill | 1
+> The Police — "Message in a Bottle"
+= ボトルメール（届くかわからないメッセージ）
+- Posting on my blog feels like sending a message in a bottle.
+
+# I still haven't found what I'm looking for.
+@ songs | feelings, work | real | deep | 2
+> U2 — "I Still Haven't Found What I'm Looking For"
+= まだ探しものが見つからない
+- I've tried five jobs. I still haven't found what I'm looking for.
+? still haven't ＝「まだ〜してない」。現在完了の否定に still を付けると強調。
+
+# with or without
+@ songs | daily | real | chill | 2
+> U2 — "With or Without You"
+= 〜があってもなくても
+- I'm going, with or without you.
+- Coffee with or without milk?
+
+# I don't want to miss a thing.
+@ songs | crush, music | real | warm | 2
+> Aerosmith — "I Don't Want to Miss a Thing"
+= 何一つ見逃したくない
+- I'm not sleeping on the plane. I don't want to miss a thing.
+
+# Dream on.
+@ songs | conflict, friends | real | funny | 2
+> Aerosmith — "Dream On"
+= 夢でも見てろ（無理だね）
+- You think I'll lend you my car? Dream on.
+! 歌は「夢を見続けろ」という前向きな意味。日常では皮肉の「ありえない」で使うことが多い。
+
+# born to
+@ songs | music, work | real | deep | 2
+> Bruce Springsteen — "Born to Run"
+= 〜するために生まれた
+- She was born to sing.
+- I was born to sleep in.
+
+# I won't back down.
+@ songs | conflict, business | real | deep | 2
+> Tom Petty — "I Won't Back Down"
+= 引き下がらない
+- They threatened to sue, but we won't back down.
+? back down ＝引き下がる・折れる。
+
+# Should I stay or should I go?
+@ songs | feelings, work | real | chill | 2
+> The Clash — "Should I Stay or Should I Go"
+= 残るべき？行くべき？
+- Good salary, boring job. Should I stay or should I go?
+
+# I wish you were here.
+@ songs | feelings, dm | real | warm | 3
+> Pink Floyd — "Wish You Were Here"
+= あなたがここにいたらいいのに
+- The beach is amazing. Wish you were here!
+? I wish 〜 were ＝現実と違う願い。旅先からのメッセージの定番。
+
+# comfortably numb
+@ songs | feelings | real | deep | 1
+> Pink Floyd — "Comfortably Numb"
+= 心地よく麻痺してる（何も感じない）
+- After ten hours of meetings, I'm comfortably numb.
+
+# Have you ever seen
+@ songs | daily, study | real | chill | 3
+> Creedence Clearwater Revival — "Have You Ever Seen the Rain?"
+= 〜を見たことある？
+- Have you ever seen snow?
+- Have you ever been to Australia?
+? Have you ever 〜? ＝経験を聞く現在完了。
+
+# walk the line
+@ songs | work, conflict | real | deep | 1
+> Johnny Cash — "I Walk the Line"
+= 真っ当に生きる・ルールを守る
+- After the warning, he's walking the line.
+? toe the line ＝規則に従う、も近い。
+
+# a nine-to-five
+@ songs | work | real | chill | 3
+> Dolly Parton — "9 to 5"
+= 9時5時の仕事（普通の会社勤め）
+- I don't want a nine-to-five.
+- He quit his nine-to-five to start a band.
+
+# leaving on a jet plane
+@ songs | travel | real | warm | 1
+> John Denver — "Leaving on a Jet Plane"
+= 飛行機で旅立つ
+- I'm leaving on a jet plane tomorrow. Six months in Australia.
+
+# good vibes
+@ songs | friends, music | real | chill | 3
+> The Beach Boys — "Good Vibrations"
+= いい雰囲気・いいノリ
+- Good music, good people, good vibes.
+- I'm getting good vibes from this place.
+
+# Wouldn't it be nice?
+@ songs | daily, feelings | real | warm | 2
+> The Beach Boys — "Wouldn't It Be Nice"
+= 〜だったら素敵じゃない？
+- Wouldn't it be nice to have a four-day work week?
+
+# God only knows.
+@ songs | daily, faith | real | chill | 2
+> The Beach Boys — "God Only Knows"
+= 神のみぞ知る（誰にもわからない）
+- When will the train come? God only knows.
+
+# Stand by me.
+@ songs | friends, crush | real | warm | 2
+> Ben E. King — "Stand by Me"
+= そばにいて／味方でいて
+- Whatever happens, I'll stand by you.
+? stand by 人 ＝人の味方でいる。stand by（待機）とは別。
+
+# I'm a believer.
+@ songs | feelings | real | warm | 2
+> The Monkees — "I'm a Believer"
+= 信じるようになった
+- I didn't think meditation worked. Now I'm a believer.
+
+# You've lost that lovin' feeling.
+@ songs | crush | real | deep | 1
+> The Righteous Brothers — "You've Lost That Lovin' Feelin'"
+= 気持ちが冷めちゃったね
+- I don't feel excited about this job anymore. I've lost that lovin' feeling.
+
+# A change is gonna come.
+@ songs | feelings, faith | real | deep | 1
+> Sam Cooke — "A Change Is Gonna Come"
+= 変化はきっと来る
+- It's hard right now, but a change is gonna come.
+
+# brand new
+@ songs | shopping, daily | real | chill | 3
+> James Brown — "Papa's Got a Brand New Bag"
+= 新品の・まったく新しい
+- Is that a brand-new phone?
+- I feel like a brand-new person.
+
+# the times are changing
+@ songs | business, online | real | deep | 2
+> Bob Dylan — "The Times They Are a-Changin'"
+= 時代は変わっている
+- Nobody uses fax anymore. The times are changing.
+
+# a rolling stone
+@ songs | travel, feelings | real | deep | 1
+> Bob Dylan — "Like a Rolling Stone"
+= 転がる石（定住しない人）
+- He's lived in six countries. A real rolling stone.
+? ことわざ A rolling stone gathers no moss.（転がる石に苔むさず）から。
+
+# knocking on heaven's door
+@ songs | health, feelings | real | funny | 1
+> Bob Dylan — "Knockin' on Heaven's Door"
+= 死にそう（大げさ）
+- After that hike, I was knocking on heaven's door.
+
+# Let's dance.
+@ songs | bar, crush | real | flirty | 2
+> David Bowie — "Let's Dance"
+= 踊ろう
+- Enough talking. Let's dance.
+
+# changes
+@ songs | work, feelings | real | chill | 2
+> David Bowie — "Changes"
+= 変化
+- We're making some changes to the website.
+- No more changes, please. This is version twelve.
+
+# You really got me.
+@ songs | friends | real | funny | 2
+> The Kinks — "You Really Got Me"
+= 完全にやられた（だまされた）
+- That prank? You really got me.
+? You got me. ＝「一本取られた」「だまされた」。
+
+# simply irresistible
+@ songs | food, crush | real | funny | 1
+> Robert Palmer — "Simply Irresistible"
+= とにかくたまらない
+- Fresh donuts at 7 a.m.? Simply irresistible.

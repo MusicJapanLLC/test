@@ -1,0 +1,433 @@
+// Movies & TV — sitcoms and series. One line each, quoted for commentary.
+
+# How you doin'?
+@ movies | pickup, friends | real | flirty, funny | 2
+" How you doin'?
+— Joey, Friends (TV)
+= 元気？（＝口説き文句）
+- (in Joey's voice, to your friend) How you doin'?
+! 普通の「元気？」も、この言い方だと口説き文句のパロディになる。90年代に最も真似されたセリフの一つ。
+
+# We were on a break!
+@ movies | crush, conflict | real | funny | 2
+" We were on a break!
+— Ross, Friends (TV)
+= あの時は距離を置いてたんだ！
+- I ate your fries because I thought we were on a break. From sharing.
+? on a break ＝（恋人が）一時的に距離を置いている。
+
+# Pivot!
+@ movies | work, daily | real | funny | 2
+" Pivot! Pivot! Pivot!
+— Ross, Friends (TV)
+= 回転！（＝方向転換！）
+- The plan isn't working. Pivot!
+! ビジネスの pivot（事業の方向転換）を言うと、ネイティブはだいたいこのシーンを思い出して笑う。
+
+# Could I be any more
+@ movies | friends | real | funny | 2
+" Could I BE wearing any more clothes?
+— Joey, Friends (TV)
+= これ以上〜になれる？（強調の言い回し）
+- Could this meeting BE any longer?
+- Could I BE any more tired?
+? BE を強く読むのがポイント。Chandler の話し方として有名。
+
+# Joey doesn't share food!
+@ movies | food, friends | real | funny | 2
+" Joey doesn't share food!
+— Joey, Friends (TV)
+= ジョーイは食べ物を分けない！
+- Don't touch my fries. Joey doesn't share food.
+
+# Oh. My. God.
+@ movies | friends, dm | real | funny | 2
+" Oh. My. God.
+— Janice, Friends (TV)
+= オー・マイ・ゴッド（区切って強調）
+- Oh. My. God. They opened a ramen shop next to the gym.
+
+# They know that we know
+@ movies | friends, work | real | funny | 1
+" They don't know that we know they know we know!
+— Phoebe, Friends (TV)
+= あっちは、こっちが知ってることを知ってるのを、こっちが知ってることを知らない！
+- Wait, does the boss know that we know? This is getting very Phoebe.
+
+# Can I interest you in a sarcastic comment?
+@ movies | friends, feelings | real | funny | 2
+" I'm not great at the advice. Can I interest you in a sarcastic comment?
+— Chandler, Friends (TV)
+= アドバイスは苦手でさ。代わりに皮肉はどう？
+- I don't know how to fix your love life. Can I interest you in a sarcastic comment?
+? Can I interest you in 〜? ＝店員の「〜はいかがですか？」の決まり文句。それをボケに使ってる。
+
+# Welcome to the real world.
+@ movies | work, money | real | funny | 2
+" Welcome to the real world. It sucks. You're gonna love it!
+— Monica, Friends (TV)
+= 現実の世界へようこそ
+- First rent check? Welcome to the real world.
+
+# a moo point
+@ movies | friends | real | funny | 1
+" It's a moo point. It's like a cow's opinion. It just doesn't matter.
+— Joey, Friends (TV)
+= 意味のない話（moot point の言い間違い）
+- Whether we take a cab or Uber is a moot point. We're already late.
+! 正しくは moot point（議論しても意味のない点）。Joey の勘違いがあまりに有名で、ネイティブも冗談で moo point と言う。
+
+# That's what she said.
+@ movies | friends, work | real | funny | 2 | explicit
+" That's what she said.
+— Michael Scott, The Office (TV)
+= 「って、彼女も言ってた」（下ネタのツッコミ）
+- This is way too hard. — That's what she said.
+! 何でもない一言を下ネタに変える定番ギャグ。職場で言うと怒られる（ドラマの中でも怒られてる）。
+
+# a little stitious
+@ movies | daily | real | funny | 1
+" I'm not superstitious, but I am a little stitious.
+— Michael Scott, The Office (TV)
+= 迷信深くはないけど、ちょっと迷信深い
+- Do you believe in luck? — I'm not superstitious, but I'm a little stitious.
+! super を「すごく」だと勘違いした言葉遊び。
+
+# Identity theft is not a joke!
+@ movies | online, money | real | funny | 1
+" Identity theft is not a joke, Jim!
+— Dwight, The Office (TV)
+= なりすましは冗談じゃないぞ！
+- Someone used my card in Ohio. Identity theft is not a joke!
+
+# I declare bankruptcy!
+@ movies | money | real | funny | 1
+" I declare bankruptcy!
+— Michael Scott, The Office (TV)
+= 破産を宣言する！
+- (looking at your bank app) I declare bankruptcy!
+! 叫べば破産できると思ってるボケ。ちなみに本当の破産は file for bankruptcy。
+
+# Would I rather be feared or loved?
+@ movies | business, work | real | funny | 1
+" Would I rather be feared or loved? Easy. Both.
+— Michael Scott, The Office (TV)
+= 恐れられたいか、愛されたいか？簡単だ、両方
+- Would I rather have money or free time? Easy. Both.
+? Would you rather A or B? ＝「AとBどっちがいい？」の定番の聞き方。
+
+# yada yada yada
+@ movies | friends | real | chill | 2
+> Seinfeld (TV), "The Yada Yada"
+= なんだかんだで（細かいことは省略）
+- We met at a party, yada yada yada, now we're married.
+
+# No soup for you!
+@ movies | food, friends | real | funny | 1
+" No soup for you!
+— The Soup Nazi, Seinfeld (TV)
+= お前にスープはない！
+- You didn't help clean? No pizza for you!
+
+# Not that there's anything wrong with that.
+@ movies | friends | real | funny | 2
+" Not that there's anything wrong with that.
+— Seinfeld (TV)
+= 別にそれが悪いってわけじゃないけど
+- He still lives with his mom. Not that there's anything wrong with that.
+! 余計なフォローを入れて逆に気まずくなる、の典型としてネタになっている。
+
+# Serenity now!
+@ movies | feelings, work | real | funny | 1
+" Serenity now!
+— Frank Costanza, Seinfeld (TV)
+= 心よ静まれ！
+- The printer jammed again. Serenity now!
+
+# It's not a lie if you believe it.
+@ movies | friends | real | funny | 1
+" Jerry, just remember: it's not a lie if you believe it.
+— George, Seinfeld (TV)
+= 自分が信じてれば嘘じゃない
+- I'm definitely going to the gym tomorrow. It's not a lie if you believe it.
+
+# Suit up!
+@ movies | bar, work | real | funny | 2
+" Suit up!
+— Barney, How I Met Your Mother (TV)
+= スーツに着替えろ（気合い入れろ）
+- Big meeting tomorrow. Suit up!
+
+# Wait for it
+@ movies | friends | real | funny | 2
+" It's going to be legen—wait for it—dary!
+— Barney, How I Met Your Mother (TV)
+= ちょっと待って（オチまで）
+- The best part? Wait for it... free parking.
+? 盛り上げてからオチを言うときのフレーズ。
+
+# Challenge accepted.
+@ movies | friends, gym | real | funny | 3
+" Challenge accepted.
+— Barney, How I Met Your Mother (TV)
+= その挑戦、受けて立つ
+- Bet you can't eat ten dumplings. — Challenge accepted.
+
+# Have you met
+@ movies | pickup, friends | real | warm | 2
+" Haaave you met Ted?
+— Barney, How I Met Your Mother (TV)
+= 〜にはもう会った？（友達を紹介する）
+- Hey, have you met my friend Ken? He makes music.
+! 友達をさりげなく紹介する口実として使える。
+
+# True story.
+@ movies | friends | real | chill | 3
+" True story.
+— Barney, How I Met Your Mother (TV)
+= ガチの話
+- I once fell asleep standing up on the train. True story.
+
+# Cool cool cool cool cool.
+@ movies | friends, feelings | real | funny | 2
+" Cool, cool, cool, cool, cool. No doubt, no doubt, no doubt.
+— Jake, Brooklyn Nine-Nine (TV)
+= うん、うん、大丈夫（全然大丈夫じゃない）
+- The client wants it by tomorrow? Cool cool cool cool cool.
+! cool を連呼するほど「本当はパニック」の意味になる。
+
+# Noice.
+@ movies | friends | real | funny | 2
+" Noice.
+— Jake, Brooklyn Nine-Nine (TV)
+= ナイス（わざと変な発音）
+- Free upgrade to first class? Noice.
+
+# Title of your sex tape.
+@ movies | friends | real | funny | 1 | explicit
+" Title of your sex tape.
+— Jake, Brooklyn Nine-Nine (TV)
+= それ、お前のエロ動画のタイトルな
+- I just can't get it to fit. — Title of your sex tape.
+! That's what she said. と同じ系統の下ネタツッコミ。仲のいい友達とだけ。
+
+# D'oh!
+@ movies | daily | real | funny | 3
+" D'oh!
+— Homer, The Simpsons (TV)
+= しまった！
+- (forgetting your keys) D'oh!
+! 辞書（Oxford English Dictionary）にも載っている。自分のドジに使う。
+
+# Don't have a cow.
+@ movies | conflict, friends | real | funny | 2
+" Don't have a cow, man!
+— Bart, The Simpsons (TV)
+= そんなにカッカするなよ
+- I'm five minutes late, don't have a cow.
+? have a cow ＝大騒ぎする、怒る。
+
+# Eat my shorts!
+@ movies | conflict | real | rude | 1
+" Eat my shorts!
+— Bart, The Simpsons (TV)
+= くたばれ（子どもっぽい悪態）
+- Eat my shorts, homework!
+
+# Excellent.
+@ movies | business | real | funny | 2
+" Excellent.
+— Mr. Burns, The Simpsons (TV)
+= 素晴らしい……（悪だくみ風に）
+- (fingertips together) Our competitor raised their prices. Excellent.
+! 指先を合わせて悪役っぽくゆっくり言うのがお約束。
+
+# Mmm... donuts.
+@ movies | food | real | funny | 1
+" Mmm... donuts.
+— Homer, The Simpsons (TV)
+= んー、ドーナツ……
+- Mmm... free samples.
+
+# Treat yo' self.
+@ movies | money, shopping | real | funny | 3
+" Treat yo' self!
+— Parks and Recreation (TV)
+= 自分へのご褒美！
+- Finished the project. Treat yo' self: one fancy coffee.
+? treat yourself ＝自分にご褒美をあげる。yo' は your の崩し。
+
+# Whole-ass one thing.
+@ movies | work, study | real | deep | 1 | explicit
+" Never half-ass two things. Whole-ass one thing.
+— Ron Swanson, Parks and Recreation (TV)
+= 二つを中途半端にやるな。一つを全力でやれ
+- Stop learning five languages at once. Whole-ass one thing.
+? half-ass ＝手を抜く（下品寄り）。仕事では do a half-hearted job。
+
+# Literally.
+@ movies | daily | real | funny | 2
+" Literally.
+— Chris Traeger, Parks and Recreation (TV)
+= 文字通り（明るく大げさに）
+- This is literally the best salad I have ever eaten.
+
+# Ew, David!
+@ movies | friends | real | funny | 1
+" Ew, David!
+— Alexis, Schitt's Creek (TV)
+= うわ、デヴィッド！（きょうだいへの「キモ」）
+- (when your brother eats cereal with water) Ew!
+
+# Just fold in the cheese.
+@ movies | food, work | real | funny | 1
+" You just fold it in.
+— David, Schitt's Creek (TV)
+= 「チーズを混ぜ込む」って何！？
+- The instructions say "fold in." What does that mean? Do I fold the cheese?
+! 料理の fold in（さっくり混ぜる）を知らない二人のコント。説明になってない説明の代名詞。
+
+# Be curious, not judgmental.
+@ movies | business, feelings | real | deep | 2
+" Be curious, not judgmental.
+— Ted Lasso (TV)
+= 決めつけるな、興味を持て
+- Before you say no to the client's idea, be curious, not judgmental.
+! 劇中ではウォルト・ホイットマンの言葉として紹介されるが、実際にはホイットマンの言葉という根拠は見つかっていない。
+
+# Winter is coming.
+@ movies | business, daily | real | funny | 2
+" Winter is coming.
+— Game of Thrones (TV)
+= 冬が来る（＝厳しい時期が来るぞ）
+- Tax season starts next month. Winter is coming.
+
+# You know nothing.
+@ movies | friends | real | funny | 1
+" You know nothing, Jon Snow.
+— Ygritte, Game of Thrones (TV)
+= あなたは何もわかってない
+- You think ramen is just noodles? You know nothing.
+
+# I drink and I know things.
+@ movies | bar, friends | real | funny | 2
+" That's what I do. I drink and I know things.
+— Tyrion, Game of Thrones (TV)
+= 俺は飲んで、物を知る。それが仕事だ
+- Why are you always right about gossip? — I drink and I know things.
+
+# always pays his debts
+@ movies | money, business | real | chill | 1
+" A Lannister always pays his debts.
+— Game of Thrones (TV)
+= 借りは必ず返す
+- Thanks for lunch. I'll get the next one. I always pay my debts.
+
+# Say my name.
+@ movies | music, friends | real | funny | 1
+" Say my name.
+— Walter White, Breaking Bad (TV)
+= 俺の名を言ってみろ
+- Who made the best curry in the office? Say my name.
+
+# I am the one who knocks.
+@ movies | friends | real | funny | 1
+" I am the one who knocks!
+— Walter White, Breaking Bad (TV)
+= 俺こそがノックする側だ（俺が脅す側だ）
+- (knocking on your roommate's door at 7 a.m.) I am the one who knocks.
+
+# Yeah, science!
+@ movies | study | real | funny | 2
+" Yeah, Mr. White! Yeah, science!
+— Jesse, Breaking Bad (TV)
+= よっしゃ、科学！
+- The new protein shake recipe worked. Yeah, science!
+
+# Friends don't lie.
+@ movies | friends | real | warm | 2
+" Friends don't lie.
+— Stranger Things (TV)
+= 友達は嘘をつかない
+- Did you eat my chocolate? Friends don't lie.
+
+# mouth-breather
+@ movies | friends | real | rude | 1
+" Mouth-breather.
+— Stranger Things (TV)
+= バカ（口で息するやつ）
+- Some mouth-breather parked across two spots.
+
+# This is the way.
+@ movies | work, faith | real | chill | 2
+" This is the way.
+— The Mandalorian (TV)
+= これが我らの道
+- Gym at 6 a.m., coffee at 7. This is the way.
+! 「これが正解」「これでいく」をカッコよく言うミームとして定着。
+
+# Yes, chef!
+@ movies | work, food | real | worksafe | 2
+" Yes, chef!
+— The Bear (TV)
+= はい、シェフ！
+- (to your boss, joking) Yes, chef!
+! 厨房では指示に「Yes, chef!」と即答するのが文化。ドラマのヒットで日常のノリでも使われる。
+
+# Make it so.
+@ movies | business, work | real | chill | 1
+" Make it so.
+— Captain Picard, Star Trek: The Next Generation (TV)
+= そのように進めよ
+- Move the launch to Monday? Make it so.
+
+# Live long and prosper.
+@ movies | friends | real | warm | 1
+" Live long and prosper.
+— Spock, Star Trek (TV)
+= 長寿と繁栄を
+- Happy birthday! Live long and prosper.
+
+# Resistance is futile.
+@ movies | food, friends | real | funny | 1
+" Resistance is futile.
+— The Borg, Star Trek: The Next Generation (TV)
+= 抵抗は無意味だ
+- Free donuts in the break room. Resistance is futile.
+
+# I've made a huge mistake.
+@ movies | daily, feelings | real | funny | 2
+" I've made a huge mistake.
+— Arrested Development (TV)
+= とんでもない間違いをした
+- (after eating the spiciest ramen) I've made a huge mistake.
+
+# There's always money in the banana stand.
+@ movies | money, business | real | funny | 1
+" There's always money in the banana stand.
+— Arrested Development (TV)
+= バナナスタンドにはいつも金がある（意外なところに資産）
+! 劇中では文字通り「スタンドの壁の中に現金が隠してあった」というオチ。
+- Check your old jacket pockets. There's always money in the banana stand.
+
+# pretty, pretty, pretty good
+@ movies | daily | real | funny | 2
+" Pretty, pretty, pretty good.
+— Larry David, Curb Your Enthusiasm (TV)
+= まあ、かなり、かなり良い
+- How was the trip? — Pretty, pretty, pretty good.
+
+# I'm ready!
+@ movies | work | real | funny | 2
+" I'm ready! I'm ready! I'm ready!
+— SpongeBob SquarePants (TV)
+= 準備OK！
+- First day at the new job. I'm ready! I'm ready!
+
+# Is mayonnaise an instrument?
+@ movies | music | real | funny | 1
+" Is mayonnaise an instrument?
+— Patrick, SpongeBob SquarePants (TV)
+= マヨネーズって楽器？
+- (in band practice) Is the triangle an instrument? — Is mayonnaise an instrument?
+! 的外れな質問の代名詞としてミームになっている。
