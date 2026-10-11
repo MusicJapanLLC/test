@@ -193,7 +193,7 @@ function checkCard(c) {
   if (c.s === 'books' && !(c.q && c.q[1])) fail(w, 'books card needs a quote with attribution');
   if (c.s === 'movies' && !(c.q && c.q[1]) && !c.r) fail(w, 'movies card needs a quote or reference');
   if (c.s === 'songs' && !c.r) fail(w, 'songs card needs > reference');
-  if (c.s === 'science' && !c.c) fail(w, 'science card needs ^ citation');
+  if (c.s === 'science' && !c.c) warn.push(`${w}: science card without citation (ok for general science vocabulary)`);
   if (c.q && c.q[0].split(/\s+/).length > 40) fail(w, 'quote too long (keep quotes to one short line)');
   // the chunk should appear in at least one example (loose match: first 2 content words)
   if (c.re === 'real') {

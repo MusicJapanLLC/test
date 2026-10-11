@@ -1,0 +1,609 @@
+// Classic Books — only works in the public domain in BOTH the US and Japan
+// (rule: published by 1930 and author/translator died by 1950). Quotes are checked against Project Gutenberg texts
+// with scripts/verify-quotes.mjs. Keep each quote to one short passage.
+
+# It is a truth universally acknowledged
+@ books | crush, friends | real | funny | 2
+" It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.
+— Jane Austen, Pride and Prejudice (1813)
+= 〜というのは世間一般に認められた真理である（皮肉っぽく）
+- It is a truth universally acknowledged that the printer breaks right before a deadline.
+! 英文学で一番有名な書き出し。わざと大げさに「誰もが知ってること」を言う冗談の型として使われる。
+
+# forgive his pride
+@ books | crush, conflict | real | deep | 1
+" I could easily forgive his pride, if he had not mortified mine.
+— Jane Austen, Pride and Prejudice (1813)
+= 彼のプライドは許せた、私のプライドを傷つけなければ
+- I could forgive him being late, if he hadn't blamed me for it.
+? If he had not 〜 ＝「もし〜していなければ」（過去の仮定）。
+
+# old sport
+@ books | friends | real | funny | 1
+" Whenever you feel like criticizing anyone… just remember that all the people in this world haven't had the advantages that you've had.
+— F. Scott Fitzgerald, The Great Gatsby (1925)
+= 人を批判したくなったら、みんなが自分と同じ恵まれた環境にいたわけじゃないと思い出せ
+- Before you judge him, remember not everyone had the advantages you had.
+! ギャツビーの口ぐせ old sport（「やあ、君」）は1920年代の上流階級風の言い回し。今言うと完全にネタ。
+
+# boats against the current
+@ books | feelings | real | deep | 1
+" So we beat on, boats against the current, borne back ceaselessly into the past.
+— F. Scott Fitzgerald, The Great Gatsby (1925)
+= 流れに逆らう舟のように、絶えず過去へと押し戻されながら
+- Every year I promise to change, then I'm back to my old habits. Boats against the current.
+
+# Can't repeat the past?
+@ books | crush, feelings | real | deep | 1
+" Can't repeat the past?… Why of course you can!
+— F. Scott Fitzgerald, The Great Gatsby (1925)
+= 過去は繰り返せない？もちろん繰り返せるさ！
+- Get back with my ex? You can't repeat the past. — Why, of course you can!
+? Why, 〜! の Why は「なぜ」ではなく「おや・もちろん」という驚きの間投詞（古風）。
+
+# curiouser and curiouser
+@ books | daily | real | funny | 2
+" Curiouser and curiouser!
+— Lewis Carroll, Alice's Adventures in Wonderland (1865)
+= ますます奇妙！
+- The client said yes, then no, then maybe. Curiouser and curiouser.
+! 文法的には more and more curious が正しい。アリスが驚きすぎて言い間違えた、という言葉遊び。
+
+# We're all mad here.
+@ books | work, friends | real | funny | 2
+" Oh, you can't help that… we're all mad here.
+— Lewis Carroll, Alice's Adventures in Wonderland (1865)
+= ここではみんなイカれてるのさ
+- Welcome to the startup. We're all mad here.
+
+# down the rabbit hole
+@ books | online, study | real | chill | 3
+" Down the Rabbit-Hole
+— Lewis Carroll, Alice's Adventures in Wonderland (1865), chapter title
+= 沼にハマる（調べ始めて止まらない）
+- I went down a rabbit hole about sharks and it's 3 a.m.
+- YouTube rabbit hole again.
+! ウサギの穴に落ちたアリスから。ネットで延々と調べ物をしてしまう時の超定番表現。
+
+# Begin at the beginning
+@ books | work, study | real | chill | 2
+" Begin at the beginning… and go on till you come to the end: then stop.
+— Lewis Carroll, Alice's Adventures in Wonderland (1865)
+= 最初から始めて、最後まで行ったら、止まりなさい
+- How do I write the proposal? — Begin at the beginning.
+
+# Off with her head!
+@ books | work, conflict | real | funny | 1
+" Off with her head!
+— Lewis Carroll, Alice's Adventures in Wonderland (1865)
+= 首をはねよ！（すぐキレる人）
+- One typo and the boss goes full "off with his head."
+
+# six impossible things before breakfast
+@ books | business, feelings | real | warm | 1
+" Why, sometimes I've believed as many as six impossible things before breakfast.
+— Lewis Carroll, Through the Looking-Glass (1871)
+= 朝食前に、ありえないことを6つも信じたことがある
+- Startup founders believe six impossible things before breakfast.
+
+# all the running you can do
+@ books | business, work | real | deep | 1
+" Now, here, you see, it takes all the running you can do, to keep in the same place.
+— Lewis Carroll, Through the Looking-Glass (1871)
+= 同じ場所にとどまるには、全力で走り続けなければならない
+- Everyone's improving, so just keeping up takes all the running you can do.
+! 「赤の女王仮説」として生物学やビジネスでも引用される。
+
+# You see, but you do not observe.
+@ books | study, work | real | deep | 2
+" You see, but you do not observe.
+— Arthur Conan Doyle, A Scandal in Bohemia (1891)
+= 君は見ているが、観察していない
+- You've watched that movie ten times, but did you notice the phrases? You see, but you do not observe.
+? see（目に入る）と observe（注意して観察する）の違い。listen と hear の関係に似ている。
+
+# theorize before you have data
+@ books | business, work | real | worksafe | 2
+" It is a capital mistake to theorise before one has data.
+— Arthur Conan Doyle, A Scandal in Bohemia (1891)
+= データもないのに理論を立てるのは大きな誤りだ
+- Let's not guess why sales dropped. It's a mistake to theorize before you have data.
+? capital mistake ＝重大な誤り（capital ＝最重要の）。
+
+# eliminate the impossible
+@ books | work, study | real | deep | 2
+" When you have eliminated the impossible, whatever remains, however improbable, must be the truth.
+— Arthur Conan Doyle, The Sign of the Four (1890)
+= ありえないことを除外すれば、残ったものが、どんなにありそうになくても真実だ
+- It's not the Wi-Fi, not the cable, not the laptop. Eliminate the impossible: someone unplugged the router.
+
+# The game is afoot.
+@ books | work, business | real | funny | 1
+" Come, Watson, come!… The game is afoot.
+— Arthur Conan Doyle, The Adventure of the Abbey Grange (1904)
+= さあ、事件が始まったぞ
+- New client, big budget, tight deadline. The game is afoot.
+
+# Elementary.
+@ books | study | real | funny | 2
+" Elementary, said he.
+— Arthur Conan Doyle, The Crooked Man (1893)
+= 初歩的なことだよ
+- How did you know I was hungry? — Elementary. You've been staring at the vending machine.
+! 有名な "Elementary, my dear Watson." は原作に一度も出てこない。後の映画などで広まった言い回し。
+
+# worse than being talked about
+@ books | online, business | real | funny | 2
+" There is only one thing in the world worse than being talked about, and that is not being talked about.
+— Oscar Wilde, The Picture of Dorian Gray (1890)
+= 噂されるより悪いことが一つだけある。噂されないことだ
+- Bad reviews? At least people are talking. There's only one thing worse than being talked about.
+! SNS時代にぴったりの一言として、今もマーケティングでよく引用される。
+
+# The only way to get rid of a temptation is to yield to it.
+@ books | food, feelings | real | funny | 2
+" The only way to get rid of a temptation is to yield to it.
+— Oscar Wilde, The Picture of Dorian Gray (1890)
+= 誘惑を断ち切る唯一の方法は、それに負けることだ
+- (buying the cake) The only way to get rid of a temptation is to yield to it.
+? yield to 〜 ＝〜に屈する。
+
+# I can resist everything except temptation.
+@ books | food, feelings | real | funny | 2
+" I can resist everything except temptation.
+— Oscar Wilde, Lady Windermere's Fan (1892)
+= 誘惑以外なら何にでも抵抗できる
+- I can resist anything except free coffee.
+? I can resist anything except 〜 ＝「〜には勝てない」の型で遊べる。
+
+# looking at the stars
+@ books | feelings, faith | real | deep | 2
+" We are all in the gutter, but some of us are looking at the stars.
+— Oscar Wilde, Lady Windermere's Fan (1892)
+= 我々はみな溝の中にいる。だが星を見上げている者もいる
+- No money, no office, but big dreams. We're in the gutter, looking at the stars.
+
+# The truth is rarely pure and never simple.
+@ books | conflict, feelings | real | deep | 1
+" The truth is rarely pure and never simple.
+— Oscar Wilde, The Importance of Being Earnest (1895)
+= 真実が純粋なことはまれで、単純なことは決してない
+- Who was right in the fight? The truth is rarely pure and never simple.
+
+# looks like carelessness
+@ books | friends | real | funny | 1
+" To lose one parent, Mr. Worthing, may be regarded as a misfortune; to lose both looks like carelessness.
+— Oscar Wilde, The Importance of Being Earnest (1895)
+= 片方の親を失うのは不運。両方となると不注意ね
+- Losing one umbrella is bad luck. Losing three looks like carelessness.
+! 英国式の毒のあるユーモアの代表例。「〜は不運、〜は不注意」の型でよく真似される。
+
+# a lifelong romance
+@ books | feelings | real | warm | 1
+" To love oneself is the beginning of a lifelong romance.
+— Oscar Wilde, An Ideal Husband (1895)
+= 自分を愛することは、生涯続くロマンスの始まり
+- Self-care Sunday. To love oneself is the beginning of a lifelong romance.
+
+# the best of times, the worst of times
+@ books | feelings, business | real | deep | 2
+" It was the best of times, it was the worst of times,
+— Charles Dickens, A Tale of Two Cities (1859)
+= 最良の時代であり、最悪の時代でもあった
+- Starting a company: it's the best of times and the worst of times.
+
+# Bah, humbug!
+@ books | daily | real | funny | 2
+" Bah! said Scrooge, Humbug!
+— Charles Dickens, A Christmas Carol (1843)
+= ふん、くだらん！
+- Valentine's Day? Bah, humbug.
+! ケチで冷たい人を Scrooge（スクルージ）と呼ぶのもこの小説から。
+
+# God bless us, every one!
+@ books | faith, friends | real | warm | 1
+" God bless Us, Every One!
+— Charles Dickens, A Christmas Carol (1843)
+= 神様、みんなに祝福を！
+- Merry Christmas, everybody. God bless us, every one!
+
+# Please, sir, I want some more.
+@ books | food | real | funny | 2
+" Please, sir, I want some more.
+— Charles Dickens, Oliver Twist (1838)
+= お願いです、もう少しください
+- (holding out an empty plate) Please, sir, I want some more.
+! 孤児院でおかわりを頼んで大騒ぎになる場面。おかわりを冗談っぽく頼むときに使われる。
+
+# Work is whatever you're obliged to do.
+@ books | work | real | funny | 1
+" Work consists of whatever a body is obliged to do, and that Play consists of whatever a body is not obliged to do.
+— Mark Twain, The Adventures of Tom Sawyer (1876)
+= 仕事とはやらなきゃいけないこと。遊びとはやらなくていいこと
+- Making music is work if someone pays you, play if no one does.
+! トムがペンキ塗りの罰を「楽しい遊び」に見せて友達にやらせる名場面から。マーケティングの教科書にも出てくる。
+
+# No longer talk about what a good man should be. Be one.
+@ books | faith, work | real | deep | 2
+" Make it not any longer a matter of dispute or discourse, what are the signs and proprieties of a good man, but really and actually to be such.
+— Marcus Aurelius, Meditations (trans. Meric Casaubon, 1634)
+= 善い人とはどうあるべきかを語るのはもうやめて、そうなれ
+- Stop reading about productivity. Be productive.
+
+# lives of quiet desperation
+@ books | work, feelings | real | deep | 1
+" The mass of men lead lives of quiet desperation.
+— Henry David Thoreau, Walden (1854)
+= 大多数の人は、静かな絶望の人生を送っている
+- I don't want a life of quiet desperation in an office I hate.
+
+# live deliberately
+@ books | feelings, faith | real | deep | 1
+" I went to the woods because I wished to live deliberately,
+— Henry David Thoreau, Walden (1854)
+= 森へ行ったのは、意識的に生きたかったからだ
+- I deleted social media. I want to live more deliberately.
+
+# To be great is to be misunderstood.
+@ books | business, feelings | real | deep | 1
+" To be great is to be misunderstood.
+— Ralph Waldo Emerson, Self-Reliance (1841)
+= 偉大であることは、誤解されることだ
+- Everyone laughed at the idea. To be great is to be misunderstood. Or I'm just wrong.
+
+# Neither a borrower nor a lender be.
+@ books | money, friends | real | deep | 2
+" Neither a borrower nor a lender be;
+— William Shakespeare, Hamlet
+= 金は借りるな、貸すな
+- Lend him money? Neither a borrower nor a lender be.
+? 古い語順（be が最後）。今の英語なら Don't be a borrower or a lender.
+
+# To thine own self be true.
+@ books | feelings, faith | real | deep | 2
+" This above all: to thine own self be true,
+— William Shakespeare, Hamlet
+= 何よりも、自分自身に正直であれ
+- Do the music you love. To thine own self be true.
+? thine ＝ your（古語）。
+
+# Brevity is the soul of wit.
+@ books | business, dm | real | worksafe | 2
+" Brevity is the soul of wit,
+— William Shakespeare, Hamlet
+= 簡潔さこそ知恵の真髄
+- Your email is four pages. Brevity is the soul of wit.
+! 言ったのが長話で有名なキャラクターだという皮肉がある。
+
+# doth protest too much
+@ books | conflict, crush | real | funny | 2
+" The lady protests too much, methinks.
+— William Shakespeare, Hamlet
+= 否定しすぎて逆に怪しい
+- "I don't like him. At all. Not even a little." — Methinks the lady doth protest too much.
+! 必死に否定するほど本心がバレる、の決まり文句。男女関係なく使う。版によって protests / doth protest があり、引用では doth protest の形がよく使われる。
+
+# To be, or not to be
+@ books | feelings | real | funny | 2
+" To be, or not to be, that is the question:
+— William Shakespeare, Hamlet
+= 生きるべきか、死ぬべきか（〜か否か、それが問題だ）
+- To nap or not to nap, that is the question.
+! 「〜すべきか否か」のパロディで日常的に使われる型。
+
+# All that glitters is not gold.
+@ books | money, business | real | deep | 2
+" All that glisters is not gold;
+— William Shakespeare, The Merchant of Venice
+= 光るもの必ずしも金ならず
+- The offer looks amazing, but all that glitters is not gold.
+? 原文は古語の glisters。今は glitters と言うのが普通。
+
+# Love is blind.
+@ books | crush | real | chill | 2
+" But love is blind, and lovers cannot see
+— William Shakespeare, The Merchant of Venice
+= 恋は盲目
+- She thinks his singing is good. Love is blind.
+
+# It's Greek to me.
+@ books | study, work | real | funny | 3
+" it was Greek to me.
+— William Shakespeare, Julius Caesar
+= さっぱりわからない
+- The contract is full of legal terms. It's all Greek to me.
+! 日本語の「チンプンカンプン」。ここから広まった言い回し。
+
+# The world is your oyster.
+@ books | feelings, travel | real | warm | 2
+" Why, then the world's mine oyster,
+— William Shakespeare, The Merry Wives of Windsor
+= 世界は思いのまま
+- You're young and you speak two languages. The world is your oyster.
+
+# wear your heart on your sleeve
+@ books | feelings, crush | real | warm | 2
+" I will wear my heart upon my sleeve
+— William Shakespeare, Othello
+= 感情を隠さない
+- He wears his heart on his sleeve. You always know what he feels.
+
+# the green-eyed monster
+@ books | crush, feelings | real | chill | 1
+" It is the green-ey'd monster which doth mock
+— William Shakespeare, Othello
+= 嫉妬（緑の目の怪物）
+- Uh oh, the green-eyed monster is back. He saw her texting another guy.
+
+# What's done is done.
+@ books | feelings, conflict | real | deep | 3
+" what's done is done.
+— William Shakespeare, Macbeth
+= 済んだことは仕方ない
+- I sent the email with the typo. What's done is done.
+
+# Knock, knock! Who's there?
+@ books | friends | real | funny | 2
+" Knock, knock, knock! Who's there, i' th' name of Belzebub?
+— William Shakespeare, Macbeth
+= トントン！誰だ？（ノックノックジョークの祖先）
+- Knock knock. — Who's there? — Interrupting cow. — Interrupting c— — MOO!
+! アメリカの子どもが大好きな knock-knock joke。その元祖とも言われる場面がマクベスの門番のセリフ。
+
+# too much of a good thing
+@ books | food, health | real | chill | 2
+" Why then, can one desire too much of a good thing?
+— William Shakespeare, As You Like It
+= いいものも過ぎれば毒
+- Three coffees is fine. Six is too much of a good thing.
+
+# All the world's a stage.
+@ books | music, feelings | real | deep | 2
+" All the world's a stage,
+— William Shakespeare, As You Like It
+= この世はすべて舞台
+- Live streaming every night? All the world's a stage.
+
+# break the ice
+@ books | business, pickup | real | chill | 3
+" And if you break the ice and do this feat,
+— William Shakespeare, The Taming of the Shrew
+= 場を和ませる・きっかけを作る
+- Let's start with a quick game to break the ice.
+- A good joke breaks the ice.
+
+# a wild-goose chase
+@ books | work | real | chill | 2
+" Nay, if thy wits run the wild-goose chase, I am done.
+— William Shakespeare, Romeo and Juliet
+= 無駄骨・見込みのない追跡
+- They sent me to three offices for one stamp. Total wild-goose chase.
+
+# What's in a name?
+@ books | business, crush | real | deep | 2
+" What's in a name? That which we call a rose By any other name would smell as sweet;
+— William Shakespeare, Romeo and Juliet
+= 名前に何の意味がある？
+- They renamed the company, but it's the same product. What's in a name?
+
+# Parting is such sweet sorrow.
+@ books | crush, friends | real | warm | 1
+" Parting is such sweet sorrow
+— William Shakespeare, Romeo and Juliet
+= 別れはこんなにも甘く切ない
+- (leaving the party) Goodnight, everyone. Parting is such sweet sorrow.
+
+# in a pickle
+@ books | daily, work | real | funny | 2
+" How cam'st thou in this pickle?
+— William Shakespeare, The Tempest
+= 困った状況・ピンチ
+- I double-booked two clients. I'm in a pickle.
+
+# good riddance
+@ books | conflict, feelings | real | rude | 2
+" A good riddance.
+— William Shakespeare, Troilus and Cressida
+= せいせいした・厄介払いできた
+- He quit? Good riddance.
+! 嫌な人や物がいなくなった時の一言。本人の前では言わない。
+
+# There's no place like home.
+@ books | travel, feelings | real | warm | 1
+" There is no place like home.
+— L. Frank Baum, The Wonderful Wizard of Oz (1900)
+= 我が家が一番
+- Hotels are nice, but there's no place like home.
+
+# an awfully big adventure
+@ books | feelings, travel | real | deep | 1
+" To die will be an awfully big adventure.
+— J. M. Barrie, Peter Pan (1911)
+= 死ぬことは、とても大きな冒険だろう
+- Moving abroad alone will be an awfully big adventure.
+? awfully ＝とても（口語の強調）。awful（ひどい）とは逆に、良い意味にも使う。
+
+# All children, except one, grow up.
+@ books | feelings | real | funny | 1
+" All children, except one, grow up.
+— J. M. Barrie, Peter Pan (1911)
+= 子どもはみんな大人になる、一人を除いて
+- I still eat cereal for dinner. All children, except one, grow up.
+
+# a new day with no mistakes in it
+@ books | feelings, study | real | warm | 2
+" Isn't it nice to think that tomorrow is a new day with no mistakes in it yet?
+— L. M. Montgomery, Anne of Green Gables (1908)
+= 明日はまだ何の失敗もしていない新しい日だと思うと素敵じゃない？
+- Bad English day? Tomorrow is a new day with no mistakes in it yet.
+
+# Call me Ishmael.
+@ books | business | real | funny | 1
+" Call me Ishmael.
+— Herman Melville, Moby-Dick (1851)
+= 我をイシュメールと呼べ（自己紹介の書き出し）
+- Call me Ken. I'm the guy with the robot stickers.
+? Call me 〜 ＝「〜って呼んで」。自己紹介で普通に使う。
+
+# I'm learning how to sail my ship.
+@ books | feelings, study | real | deep | 1
+" I'm not afraid of storms, for I'm learning how to sail my ship.
+— Louisa May Alcott, Little Women (1868)
+= 嵐は怖くない、自分の船の操り方を学んでいるから
+- New country, new language. I'm not afraid of storms.
+
+# I am no bird.
+@ books | feelings | real | deep | 1
+" I am no bird; and no net ensnares me:
+— Charlotte Brontë, Jane Eyre (1847)
+= 私は鳥ではない、どんな網も私を捕えられない
+- They tried to make me sign a three-year contract. I am no bird.
+? I am no 〜 ＝「私は決して〜ではない」（not a より強い否定）。
+
+# fearless, and therefore powerful
+@ books | feelings, gym | real | deep | 1
+" Beware; for I am fearless, and therefore powerful.
+— Mary Shelley, Frankenstein (1818)
+= 用心しろ。私は恐れを知らない、だから強い
+- (before leg day) Beware, for I am fearless, and therefore powerful.
+
+# of the people, by the people, for the people
+@ books | business | real | deep | 2
+" government of the people… by the people… for the people… shall not perish from this earth.
+— Abraham Lincoln, Gettysburg Address (1863)
+= 人民の、人民による、人民のための
+- A community app of the people, by the people, for the people.
+! リンカーンのゲティスバーグ演説。of/by/for の三つの前置詞の型は今もパロディされる。
+
+# The only thing we have to fear is fear itself.
+@ books | business, feelings | real | deep | 2
+" the only thing we have to fear is fear itself
+— Franklin D. Roosevelt, First Inaugural Address (1933)
+= 恐れるべき唯一のものは、恐れそのものだ
+- Afraid to call the client? The only thing to fear is fear itself.
+
+# Ask not what X can do for you.
+@ books | business | real | funny | 1
+" ask not what your country can do for you—ask what you can do for your country.
+— John F. Kennedy, Inaugural Address (1961)
+= 何をしてもらえるかではなく、何ができるかを問え
+- Ask not what the team can do for you. Ask what snacks you can bring.
+! 米国大統領の公務としての演説は著作権の対象外（米国政府の著作物）。
+
+# go the extra mile
+@ books | work, business, faith | real | worksafe | 3
+" And whosoever shall compel thee to go a mile, go with him twain.
+— The Bible (King James Version, 1611), Matthew 5:41
+= 期待以上のことをする・ひと手間かける
+- Great service means going the extra mile.
+- She always goes the extra mile for clients.
+! 「1マイル行けと言われたら2マイル行け」という聖書の言葉から生まれた表現。
+
+# the salt of the earth
+@ books | faith, friends | real | warm | 2
+" Ye are the salt of the earth:
+— The Bible (King James Version, 1611), Matthew 5:13
+= 地の塩（誠実で善良な人）
+- My grandpa was a farmer. Salt of the earth.
+
+# by the skin of my teeth
+@ books | daily, study | real | chill | 3
+" I am escaped with the skin of my teeth.
+— The Bible (King James Version, 1611), Job 19:20
+= ギリギリで
+- I caught the last train by the skin of my teeth.
+- He passed the exam by the skin of his teeth.
+
+# nothing new under the sun
+@ books | business, faith | real | deep | 2
+" there is no new thing under the sun.
+— The Bible (King James Version, 1611), Ecclesiastes 1:9
+= 日の下に新しいものなし
+- Every "new" app is a remix of an old idea. Nothing new under the sun.
+
+# the blind leading the blind
+@ books | work, study | real | chill | 2
+" And if the blind lead the blind, both shall fall into the ditch.
+— The Bible (King James Version, 1611), Matthew 15:14
+= 素人が素人を導く
+- Two beginners teaching each other to code? The blind leading the blind.
+
+# Seek and you shall find.
+@ books | faith, study | real | warm | 2
+" seek, and ye shall find;
+— The Bible (King James Version, 1611), Matthew 7:7
+= 求めよ、さらば見出さん
+- Can't find a good café? Seek and you shall find.
+
+# a labor of love
+@ books | work, music | real | warm | 2
+" your work of faith, and labour of love,
+— The Bible (King James Version, 1611), 1 Thessalonians 1:3
+= 好きだからこそできる仕事
+- This album was a labor of love. Two years, no budget.
+
+# Am I my brother's keeper?
+@ books | faith, conflict | real | deep | 1
+" Am I my brother's keeper?
+— The Bible (King James Version, 1611), Genesis 4:9
+= 俺は弟の番人なのか？（他人の責任まで負えない）
+- Where's Jake? — Am I my brother's keeper? I don't know.
+
+# turn the other cheek
+@ books | faith, conflict | real | deep | 2
+" whosoever shall smite thee on thy right cheek, turn to him the other also.
+— The Bible (King James Version, 1611), Matthew 5:39
+= 右の頬を打たれたら左の頬も差し出す（やり返さない）
+- He insulted me online, but I turned the other cheek.
+
+# an eye for an eye
+@ books | conflict, faith | real | deep | 2
+" Eye for eye, tooth for tooth,
+— The Bible (King James Version, 1611), Exodus 21:24
+= 目には目を
+- An eye for an eye just makes everyone blind.
+
+# the powers that be
+@ books | work, business | real | chill | 2
+" the powers that be are ordained of God.
+— The Bible (King James Version, 1611), Romans 13:1
+= お偉いさん・権力者たち
+- The powers that be decided we're all coming back to the office.
+
+# A house divided cannot stand.
+@ books | business, conflict | real | deep | 1
+" if a house be divided against itself, that house cannot stand.
+— The Bible (King James Version, 1611), Mark 3:25
+= 内輪もめする組織はもたない
+- If the founders keep fighting, the company won't last. A house divided cannot stand.
+! リンカーンが奴隷制をめぐる演説で引用したことでも有名。
+
+# Physician, heal thyself.
+@ books | work, health | real | funny | 1
+" Physician, heal thyself:
+— The Bible (King James Version, 1611), Luke 4:23
+= 医者の不養生（人に言う前に自分を直せ）
+- The trainer who skips leg day: physician, heal thyself.
+
+# fight the good fight
+@ books | faith, work | real | deep | 2
+" Fight the good fight of faith,
+— The Bible (King James Version, 1611), 1 Timothy 6:12
+= 正しいことのために戦い続ける
+- Keep fighting the good fight. The music industry needs honest people.
+
+# The spirit is willing, but the flesh is weak.
+@ books | gym, health, faith | real | funny | 2
+" the spirit indeed is willing, but the flesh is weak.
+— The Bible (King James Version, 1611), Matthew 26:41
+= 心は燃えても肉体は弱い（やる気はあるけど体がついてこない）
+- I want to run 10K, but the spirit is willing and the flesh is weak.
+! ジムに行きたいのに布団から出られない朝にぴったりの、聖書由来の決まり文句。
+
+# Faith, hope, love
+@ books | faith, crush | real | deep | 2
+" And now abideth faith, hope, charity, these three; but the greatest of these is charity.
+— The Bible (King James Version, 1611), 1 Corinthians 13:13
+= 信仰、希望、愛。その中で最も大いなるものは愛
+- The wedding speech ended with "the greatest of these is love."
+! 結婚式で最もよく読まれる一節。現代の訳では charity が love になっている。

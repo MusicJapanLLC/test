@@ -1,0 +1,325 @@
+// Science — research ideas everyone talks about, the English to talk about them, and the original paper.
+// We cite (not quote) papers. Links go to a Google Scholar search for the exact title.
+
+# the spacing effect
+@ science | study | real | deep | 2
+= 分散効果（間隔をあけて復習すると覚えやすい）
+- Don't cram. Spread it out. It's called the spacing effect.
+- Reviewing a word tomorrow, then next week, beats ten times tonight.
+! 同じ回数でも、一夜漬けより間をあけて復習した方が長く残る。このアプリの「Review」はこの仕組みで出題している。
+^ Cepeda, N. J., et al. (2006). Distributed practice in verbal recall tasks: A review and quantitative synthesis. Psychological Bulletin, 132(3), 354–380. | https://scholar.google.com/scholar?q=Distributed+practice+in+verbal+recall+tasks+a+review+and+quantitative+synthesis
+
+# retrieval practice
+@ science | study | real | deep | 2
+= 想起練習（思い出す練習で記憶が強くなる）
+- Rereading feels productive, but testing yourself works better. That's retrieval practice.
+- Close the book and try to remember. It's supposed to feel hard.
+! 読み返すより「思い出そうとする」方が記憶に残る（テスト効果）。フィードの途中にクイズが出るのはこのため。
+^ Roediger, H. L., & Karpicke, J. D. (2006). Test-enhanced learning: Taking memory tests improves long-term retention. Psychological Science, 17(3), 249–255. | https://scholar.google.com/scholar?q=Test-enhanced+learning+taking+memory+tests+improves+long-term+retention
+
+# the forgetting curve
+@ science | study | real | deep | 2
+= 忘却曲線
+- According to the forgetting curve, I'll forget half of this by tomorrow.
+- Beat the forgetting curve: review before you forget.
+! 人は覚えた直後から急速に忘れる、と自分自身を実験台にして示した19世紀の研究。
+^ Ebbinghaus, H. (1885). Über das Gedächtnis [Memory: A Contribution to Experimental Psychology]. Leipzig: Duncker & Humblot. | https://scholar.google.com/scholar?q=Ebbinghaus+1885+memory+a+contribution+to+experimental+psychology
+
+# chunking
+@ science | study | real | deep | 3
+= チャンク化（まとまりで覚える）
+- Phone numbers are easier to remember in chunks: 090, 1234, 5678.
+- Learn "I'm gonna head out" as one chunk, not five words.
+! 短期記憶は「まとまり（チャンク）」単位で数えられる。単語をバラで覚えるより、よく一緒に使うかたまりで覚える方が話すのも聞くのも速くなる。
+^ Miller, G. A. (1956). The magical number seven, plus or minus two: Some limits on our capacity for processing information. Psychological Review, 63(2), 81–97. | https://scholar.google.com/scholar?q=The+magical+number+seven+plus+or+minus+two
+
+# native-like fluency
+@ science | study | real | deep | 2
+= ネイティブらしい流暢さ
+- Native-like fluency comes from thousands of ready-made phrases, not grammar rules.
+! ネイティブが速く話せるのは、文法で毎回組み立てずに「決まった言い回し」を大量にストックしているから、という有名な論文。このアプリがチャンク中心なのはこの考え方に基づいている。
+^ Pawley, A., & Syder, F. H. (1983). Two puzzles for linguistic theory: Nativelike selection and nativelike fluency. In J. C. Richards & R. W. Schmidt (Eds.), Language and Communication (pp. 191–226). Longman. | https://scholar.google.com/scholar?q=Two+puzzles+for+linguistic+theory+nativelike+selection+and+nativelike+fluency
+
+# word families
+@ science | study | real | deep | 2
+= ワードファミリー（同じ語の変化形のまとまり）
+- To follow movies, you need around 6,000 to 7,000 word families.
+- "Decide," "decision" and "decisive" are one word family.
+! 映画や会話を聞き取るには約6,000〜7,000ワードファミリーが必要、という推定。単語力が聞き取りの土台になる。
+^ Nation, I. S. P. (2006). How large a vocabulary is needed for reading and listening? Canadian Modern Language Review, 63(1), 59–82. | https://scholar.google.com/scholar?q=How+large+a+vocabulary+is+needed+for+reading+and+listening
+
+# How many words do we know?
+@ science | study | real | deep | 2
+= 私たちはいくつ単語を知ってる？
+- An average 20-year-old American knows about 42,000 words.
+- Don't panic. You don't need 42,000. Start with the common ones.
+! 20歳の米国人は見出し語で約4万2千語を知っている、という推定。ただし日常会話の大部分はずっと少ない語でまかなえる。
+^ Brysbaert, M., Stevens, M., Mandera, P., & Keuleers, E. (2016). How many words do we know? Frontiers in Psychology, 7, 1116. | https://scholar.google.com/scholar?q=How+many+words+do+we+know+Brysbaert+2016
+
+# comprehensible input
+@ science | study | real | deep | 2
+= 理解可能なインプット（少しだけ難しいのを大量に）
+- Watch shows you can mostly understand. That's comprehensible input.
+- Subtitles in English, not Japanese. Slightly hard is perfect.
+! 「ほぼ分かるけど少し難しい」英語を大量に浴びると習得が進む、という仮説。賛否はあるが、学習法として広く使われている。
+^ Krashen, S. D. (1982). Principles and Practice in Second Language Acquisition. Pergamon. | https://scholar.google.com/scholar?q=Krashen+1982+Principles+and+Practice+in+Second+Language+Acquisition
+
+# the mere exposure effect
+@ science | crush, business, music | real | deep | 2
+= 単純接触効果（何度も見ると好きになる）
+- The song annoyed me at first. Now I love it. Mere exposure effect.
+- Post every day. People start trusting faces they see often.
+^ Zajonc, R. B. (1968). Attitudinal effects of mere exposure. Journal of Personality and Social Psychology, 9(2, Pt. 2), 1–27. | https://scholar.google.com/scholar?q=Attitudinal+effects+of+mere+exposure
+
+# It takes about 66 days to build a habit.
+@ science | gym, study, health | real | deep | 3
+= 習慣化には平均66日かかる
+- It's not 21 days. On average, it takes about 66 days to build a habit.
+- Missing one day didn't ruin the habit, so relax.
+! よく言う「21日」には根拠がなく、この研究では平均66日（人によって18〜254日）。1日休んでも習慣化への影響は小さかった。
+^ Lally, P., van Jaarsveld, C. H. M., Potts, H. W. W., & Wardle, J. (2010). How are habits formed: Modelling habit formation in the real world. European Journal of Social Psychology, 40(6), 998–1009. | https://scholar.google.com/scholar?q=How+are+habits+formed+modelling+habit+formation+in+the+real+world
+
+# the Dunning-Kruger effect
+@ science | work, study | real | funny | 3
+= ダニング＝クルーガー効果（できない人ほど自信過剰）
+- He watched one video and thinks he's an expert. Classic Dunning-Kruger.
+- The more I learn English, the more I realize I don't know.
+! 能力が低い人ほど自分を過大評価しやすい、という研究。ネットでは悪口として乱用されがちなので使いどころに注意。
+^ Kruger, J., & Dunning, D. (1999). Unskilled and unaware of it: How difficulties in recognizing one's own incompetence lead to inflated self-assessments. Journal of Personality and Social Psychology, 77(6), 1121–1134. | https://scholar.google.com/scholar?q=Unskilled+and+unaware+of+it
+
+# confirmation bias
+@ science | business, online | real | deep | 3
+= 確証バイアス（信じたい情報だけ集める）
+- You only read reviews that agree with you. That's confirmation bias.
+- Look for evidence that you're wrong, too.
+^ Wason, P. C. (1960). On the failure to eliminate hypotheses in a conceptual task. Quarterly Journal of Experimental Psychology, 12(3), 129–140. | https://scholar.google.com/scholar?q=On+the+failure+to+eliminate+hypotheses+in+a+conceptual+task
+
+# Losses loom larger than gains.
+@ science | money, business | real | deep | 2
+= 損失は利得より大きく感じる（損失回避）
+- Losing $100 hurts more than finding $100 feels good.
+- "Don't lose your discount" works better than "get a discount."
+! プロスペクト理論。同じ金額でも、損する痛みは得する喜びの約2倍と言われる。営業やマーケティングでよく使われる。
+^ Kahneman, D., & Tversky, A. (1979). Prospect theory: An analysis of decision under risk. Econometrica, 47(2), 263–291. | https://scholar.google.com/scholar?q=Prospect+theory+an+analysis+of+decision+under+risk
+
+# choice overload
+@ science | business, shopping | real | deep | 2
+= 選択肢が多すぎると選べない
+- Twenty-four flavors and I bought nothing. Choice overload.
+- Give clients three options, not ten.
+! ジャム24種類より6種類の方が売れた、という有名な実験。ただし追試では効果がはっきりしない場合もある。
+^ Iyengar, S. S., & Lepper, M. R. (2000). When choice is demotivating: Can one desire too much of a good thing? Journal of Personality and Social Psychology, 79(6), 995–1006. | https://scholar.google.com/scholar?q=When+choice+is+demotivating+can+one+desire+too+much+of+a+good+thing
+
+# A fine is a price.
+@ science | business, money | real | deep | 1
+= 罰金は「料金」になる
+- They charged parents for picking kids up late, and lateness went up. A fine is a price.
+! 保育園でお迎え遅刻に罰金を導入したら、遅刻が増えた。罰金が「お金を払えば遅れていい」に変わったから、という研究。
+^ Gneezy, U., & Rustichini, A. (2000). A fine is a price. The Journal of Legal Studies, 29(1), 1–17. | https://scholar.google.com/scholar?q=Gneezy+Rustichini+A+fine+is+a+price
+
+# delayed gratification
+@ science | money, study | real | deep | 2
+= 欲求の先延ばし（あとのご褒美のために今がまんする）
+- Saving instead of buying sneakers? That's delayed gratification.
+- The marshmallow test is about delayed gratification.
+! 有名な「マシュマロ・テスト」。のちの大規模な追試では、将来への影響は当初の報告よりかなり小さかった。
+^ Mischel, W., Shoda, Y., & Rodriguez, M. L. (1989). Delay of gratification in children. Science, 244(4907), 933–938. | https://scholar.google.com/scholar?q=Mischel+Shoda+Rodriguez+1989+Delay+of+gratification+in+children
+
+# A wandering mind is an unhappy mind.
+@ science | feelings, health | real | deep | 2
+= さまよう心は不幸な心
+- I'm happier when I focus on one thing. A wandering mind is an unhappy mind.
+! スマホで調べた研究。人は起きている時間の約半分、目の前と関係ないことを考えていて、その時の方が幸福度が低かった。
+^ Killingsworth, M. A., & Gilbert, D. T. (2010). A wandering mind is an unhappy mind. Science, 330(6006), 932. | https://scholar.google.com/scholar?q=A+wandering+mind+is+an+unhappy+mind
+
+# Give your ideas some legs.
+@ science | work, health | real | chill | 2
+= アイデアに足を（歩くと発想が出る）
+- Stuck on a song? Go for a walk. Give your ideas some legs.
+! 座っているより歩いている時の方が、アイデアを多く出せたという実験。
+^ Oppezzo, M., & Schwartz, D. L. (2014). Give your ideas some legs: The positive effect of walking on creative thinking. Journal of Experimental Psychology: Learning, Memory, and Cognition, 40(4), 1142–1152. | https://scholar.google.com/scholar?q=Give+your+ideas+some+legs
+
+# chills
+@ science | music, feelings | real | deep | 2
+= （音楽で）ゾクッとする
+- That drop gave me chills.
+- Music chills come with a dopamine release in the brain.
+! 音楽でゾクッとする瞬間に、脳でドーパミンが出ていることを示した研究。
+^ Salimpoor, V. N., Benovoy, M., Larcher, K., Dagher, A., & Zatorre, R. J. (2011). Anatomically distinct dopamine release during anticipation and experience of peak emotion to music. Nature Neuroscience, 14(2), 257–262. | https://scholar.google.com/scholar?q=Anatomically+distinct+dopamine+release+during+anticipation+and+experience+of+peak+emotion+to+music
+
+# an earworm
+@ science | music | real | chill | 3
+= 頭から離れない曲
+- That jingle is such an earworm.
+- I've had this earworm stuck in my head all day.
+! ドイツ語 Ohrwurm（耳の虫）から。速めのテンポ、よくある音型に少し意外な動きがある曲がなりやすい、という研究がある。
+^ Jakubowski, K., Finkel, S., Stewart, L., & Müllensiefen, D. (2017). Dissecting an earworm: Melodic features and song popularity predict involuntary musical imagery. Psychology of Aesthetics, Creativity, and the Arts, 11(2), 122–135. | https://scholar.google.com/scholar?q=Dissecting+an+earworm
+
+# twice a week
+@ science | gym | real | chill | 3
+= 週2回（同じ部位を）
+- Training each muscle twice a week works better than once.
+- Leg day twice a week? Science says yes.
+! 同じ筋肉を週1回より週2回以上トレーニングした方が筋肥大に有利だった、というメタ分析。
+^ Schoenfeld, B. J., Ogborn, D., & Krieger, J. W. (2016). Effects of resistance training frequency on measures of muscle hypertrophy: A systematic review and meta-analysis. Sports Medicine, 46(11), 1689–1697. | https://scholar.google.com/scholar?q=Effects+of+resistance+training+frequency+on+measures+of+muscle+hypertrophy
+
+# grams of protein per kilo
+@ science | gym, food, health | real | chill | 2
+= 体重1kgあたり〜gのタンパク質
+- How much protein do I need? About 1.6 grams per kilo of body weight.
+- I weigh 70 kilos, so roughly 110 grams of protein a day.
+! 筋トレと組み合わせる場合、約1.6g/kg/日までは効果が上がり、それ以上はほぼ頭打ちだった、というメタ分析。
+^ Morton, R. W., et al. (2018). A systematic review, meta-analysis and meta-regression of the effect of protein supplementation on resistance training-induced gains in muscle mass and strength in healthy adults. British Journal of Sports Medicine, 52(6), 376–384. | https://scholar.google.com/scholar?q=Morton+2018+protein+supplementation+resistance+training+meta-regression
+
+# sleep on it
+@ science | study, work, health | real | deep | 3
+= 一晩寝かせる（寝てから決める）
+- Don't decide now. Sleep on it.
+- I studied before bed and slept on it. It stuck.
+! 睡眠中に記憶が整理・定着される（記憶の固定化）という研究の総説。寝る前に復習すると効率がいい。
+^ Stickgold, R. (2005). Sleep-dependent memory consolidation. Nature, 437(7063), 1272–1278. | https://scholar.google.com/scholar?q=Sleep-dependent+memory+consolidation+Stickgold
+
+# Dunbar's number
+@ science | friends, business | real | deep | 2
+= ダンバー数（安定した関係を保てる人数は約150人）
+- You can't stay close to 2,000 followers. Dunbar's number is about 150.
+^ Dunbar, R. I. M. (1992). Neocortex size as a constraint on group size in primates. Journal of Human Evolution, 22(6), 469–493. | https://scholar.google.com/scholar?q=Neocortex+size+as+a+constraint+on+group+size+in+primates
+
+# How many hours does it take to make a friend?
+@ science | friends | real | warm | 2
+= 友達になるには何時間かかる？
+- It takes about 50 hours to go from acquaintance to casual friend.
+- Close friends take more than 200 hours together.
+! 知り合い→友達は約50時間、友達→親友は200時間以上、という研究。大人の友達作りは時間の投資。
+^ Hall, J. A. (2019). How many hours does it take to make a friend? Journal of Social and Personal Relationships, 36(4), 1278–1296. | https://scholar.google.com/scholar?q=How+many+hours+does+it+take+to+make+a+friend
+
+# the 36 questions
+@ science | crush, friends | real | flirty | 2
+= 36の質問（親密になるための質問リスト）
+- On our second date we tried the 36 questions. It got deep fast.
+- Question one: "Given the choice of anyone in the world, whom would you want as a dinner guest?"
+! 初対面の二人が段階的に深い質問をし合うと親密さが高まった、という実験。2015年に NYT のコラムで話題になった。
+^ Aron, A., Melinat, E., Aron, E. N., Vallone, R. D., & Bator, R. J. (1997). The experimental generation of interpersonal closeness: A procedure and some preliminary findings. Personality and Social Psychology Bulletin, 23(4), 363–377. | https://scholar.google.com/scholar?q=The+experimental+generation+of+interpersonal+closeness
+
+# the suspension bridge effect
+@ science | crush | real | flirty | 2
+= 吊り橋効果
+- Take her to a scary movie. Suspension bridge effect.
+- Your heart's racing because of the roller coaster, not me. Probably.
+! 揺れる吊り橋の上で会った相手に魅力を感じやすかった、という実験。ドキドキの原因を恋と勘違いする（arousal の誤帰属）。
+^ Dutton, D. G., & Aron, A. P. (1974). Some evidence for heightened sexual attraction under conditions of high anxiety. Journal of Personality and Social Psychology, 30(4), 510–517. | https://scholar.google.com/scholar?q=Some+evidence+for+heightened+sexual+attraction+under+conditions+of+high+anxiety
+
+# contempt
+@ science | crush, conflict | real | deep | 2
+= 軽蔑（関係を壊す一番の要因）
+- Eye-rolling during a fight is a sign of contempt.
+- Complain about the problem, not the person.
+! 夫婦研究で有名なゴットマンは、批判・軽蔑・自己防衛・無視を「関係を壊す4つの行動」と呼んだ。中でも軽蔑が最も強い危険信号。
+^ Gottman, J. M. (1994). What Predicts Divorce? The Relationship Between Marital Processes and Marital Outcomes. Lawrence Erlbaum. | https://scholar.google.com/scholar?q=Gottman+1994+What+predicts+divorce
+
+# expressive writing
+@ science | feelings, health, music | real | deep | 2
+= 表現的筆記（つらい気持ちを書き出す）
+- Writing lyrics about the breakup helped more than talking about it.
+- Write for 15 minutes about what's bothering you.
+! 数日間、つらい体験について気持ちを書き出した人は、その後の体調が良かったという研究。作詞や日記も同じ効果があるかも。
+^ Pennebaker, J. W., & Beall, S. K. (1986). Confronting a traumatic event: Toward an understanding of inhibition and disease. Journal of Abnormal Psychology, 95(3), 274–281. | https://scholar.google.com/scholar?q=Confronting+a+traumatic+event+toward+an+understanding+of+inhibition+and+disease
+
+# Correlation is not causation.
+@ science | business, online | real | deep | 3
+= 相関は因果ではない
+- Countries that eat more chocolate have more Nobel Prizes. Correlation is not causation.
+- Ice cream sales and shark attacks both go up in summer.
+! チョコレート消費量とノーベル賞受賞者数が相関する、という半分冗談の論文が有名。一緒に増えても、片方が原因とは限らない。
+^ Messerli, F. H. (2012). Chocolate consumption, cognitive function, and Nobel laureates. New England Journal of Medicine, 367(16), 1562–1564. | https://scholar.google.com/scholar?q=Chocolate+consumption+cognitive+function+and+Nobel+laureates
+
+# the 7-38-55 myth
+@ science | business | real | deep | 2
+= 「言葉は7%しか伝わらない」は誤解
+- "Only 7% of communication is words" is a myth. That study was about feelings, not all communication.
+! メラビアンの研究は「好き嫌いの感情」を一言で伝える特殊な実験。言葉が7%しか伝わらないという意味ではない。セミナーでよく誤用される。
+^ Mehrabian, A. (1971). Silent Messages. Wadsworth. | https://scholar.google.com/scholar?q=Mehrabian+1971+Silent+Messages
+
+# deliberate practice
+@ science | study, music, gym | real | deep | 2
+= 意図的な練習（弱点を狙った練習）
+- Playing songs you already know isn't deliberate practice.
+- The 10,000-hour rule is a simplification. It's about how you practice.
+! 「1万時間の法則」の元になった研究。大事なのは時間よりも、弱点に絞ってフィードバックを受けながら練習すること。
+^ Ericsson, K. A., Krampe, R. T., & Tesch-Römer, C. (1993). The role of deliberate practice in the acquisition of expert performance. Psychological Review, 100(3), 363–406. | https://scholar.google.com/scholar?q=The+role+of+deliberate+practice+in+the+acquisition+of+expert+performance
+
+# the IKEA effect
+@ science | business, shopping | real | chill | 2
+= IKEA効果（自分で作ったものを高く評価する）
+- My crooked shelf is worth a million dollars to me. The IKEA effect.
+- Let clients help design it. They'll love it more.
+^ Norton, M. I., Mochon, D., & Ariely, D. (2012). The IKEA effect: When labor leads to love. Journal of Consumer Psychology, 22(3), 453–460. | https://scholar.google.com/scholar?q=The+IKEA+effect+when+labor+leads+to+love
+
+# the peak-end rule
+@ science | business, travel | real | deep | 2
+= ピーク・エンドの法則（体験は最高点と最後で記憶される）
+- End the meeting on a high note. Peak-end rule.
+- The trip was rough, but the last night was amazing, so I remember it as great.
+^ Kahneman, D., Fredrickson, B. L., Schreiber, C. A., & Redelmeier, D. A. (1993). When more pain is preferred to less: Adding a better end. Psychological Science, 4(6), 401–405. | https://scholar.google.com/scholar?q=When+more+pain+is+preferred+to+less+adding+a+better+end
+
+# the Zeigarnik effect
+@ science | online, study | real | chill | 2
+= ツァイガルニク効果（やりかけのことは気になる）
+- Cliffhangers work because of the Zeigarnik effect.
+- Stop studying in the middle of a chapter. You'll want to come back.
+^ Zeigarnik, B. (1927). Das Behalten erledigter und unerledigter Handlungen. Psychologische Forschung, 9, 1–85. | https://scholar.google.com/scholar?q=Zeigarnik+1927+Das+Behalten+erledigter+und+unerledigter+Handlungen
+
+# social jet lag
+@ science | work, health | real | deep | 2
+= 社会的時差ボケ（平日と休日の睡眠時間のズレ）
+- After night shifts, my weekends feel like social jet lag.
+- Same wake-up time every day helps with social jet lag.
+^ Wittmann, M., Dinich, J., Merrow, M., & Roenneberg, T. (2006). Social jetlag: Misalignment of biological and social time. Chronobiology International, 23(1–2), 497–509. | https://scholar.google.com/scholar?q=Social+jetlag+misalignment+of+biological+and+social+time
+
+# as impaired as being drunk
+@ science | health, work | real | deep | 2
+= 酒に酔ったのと同じくらい判断力が落ちる
+- After 18 hours awake, you're about as impaired as someone who's had a few drinks.
+- Don't drive home after a double shift.
+! 起きて17〜19時間経つと、血中アルコール濃度0.05%と同程度の能力低下がみられた、という研究。
+^ Williamson, A. M., & Feyer, A.-M. (2000). Moderate sleep deprivation produces impairments in cognitive and motor performance equivalent to legally prescribed levels of alcohol intoxication. Occupational and Environmental Medicine, 57(10), 649–655. | https://scholar.google.com/scholar?q=Moderate+sleep+deprivation+produces+impairments+in+cognitive+and+motor+performance+equivalent
+
+# the placebo effect
+@ science | health | real | deep | 2
+= プラセボ効果（思い込みで効く）
+- The pill was sugar, but I felt better. Placebo effect.
+- Is this energy drink working, or is it just the placebo effect?
+^ Beecher, H. K. (1955). The powerful placebo. Journal of the American Medical Association, 159(17), 1602–1606. | https://scholar.google.com/scholar?q=Beecher+1955+The+powerful+placebo
+
+# the Pygmalion effect
+@ science | work, study | real | warm | 2
+= ピグマリオン効果（期待されると伸びる）
+- My boss believed in me, so I worked harder. Pygmalion effect.
+^ Rosenthal, R., & Jacobson, L. (1968). Pygmalion in the Classroom: Teacher Expectation and Pupils' Intellectual Development. Holt, Rinehart & Winston. | https://scholar.google.com/scholar?q=Pygmalion+in+the+classroom+Rosenthal+Jacobson
+
+# the illusion of fluency
+@ science | study | real | deep | 2
+= わかったつもり（読み返すと覚えた気になる）
+- Rereading my notes gives me the illusion of fluency. I can't actually say any of it.
+! 学生の多くは「読み返し」で勉強した気になるが、思い出す練習の方が効果的、という調査。
+^ Karpicke, J. D., Butler, A. C., & Roediger, H. L. (2009). Metacognitive strategies in student learning: Do students practise retrieval when they study on their own? Memory, 17(4), 471–479. | https://scholar.google.com/scholar?q=Metacognitive+strategies+in+student+learning+do+students+practise+retrieval
+
+# Science says
+@ science | study, online | real | chill | 3
+= 研究によると
+- Science says you should sleep on it.
+- Studies show that... — Which studies?
+? Studies show / Research suggests / According to a study ＝研究を引用する定番の言い方。suggest は「示唆する」で断定より控えめ。
+
+# peer-reviewed
+@ science | study, online | real | worksafe | 2
+= 査読済みの
+- Is that study peer-reviewed, or just a blog post?
+! 専門家のチェックを通った論文のこと。ネットの「研究によると」は、まず peer-reviewed かを確認。
+
+# a small sample size
+@ science | study, business | real | worksafe | 2
+= サンプルが小さい
+- Three customers liked it? That's a small sample size.
+- The study only had 20 people, so take it with a grain of salt.
+? take it with a grain of salt ＝話半分に聞く。

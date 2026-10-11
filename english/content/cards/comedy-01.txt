@@ -1,0 +1,295 @@
+// Comedy — stand-up words, joke structures and original jokes. We never copy comedians' material.
+
+# the punchline
+@ comedy | friends | real | funny | 3
+= オチ
+- I forgot the punchline halfway through the joke.
+- The punchline is the last word, so don't rush it.
+? setup（フリ）→ punchline（オチ）がジョークの基本構造。
+
+# the setup
+@ comedy | friends | real | funny | 2
+= フリ
+- The setup was too long. People got bored before the punchline.
+
+# a bit
+@ comedy | friends, music | real | chill | 2
+= ネタ・持ちネタ
+- That airport bit always kills.
+- Is this a bit, or are you serious?
+? Is this a bit? ＝「それネタ？本気？」と聞くときにも使う。
+
+# a callback
+@ comedy | friends | real | funny | 2
+= 前に出たネタを後でもう一回使うこと（天丼）
+- He made a callback to the burrito joke at the end. Huge laugh.
+! 会話でも「さっきの〜」を後で拾うと一気に場が温まる。
+
+# You killed it!
+@ comedy | music, work | real | warm | 3
+= 最高だった！（大ウケ・大成功）
+- Great set, man. You killed it!
+- She killed it in the presentation.
+? kill ＝大ウケさせる・大成功する。殺すの意味ではない。
+
+# I bombed.
+@ comedy | work, music | real | chill | 2
+= スベった
+- How did the open mic go? — I bombed. Nobody laughed. Not even my mom.
+! アメリカ英語の bomb は「大失敗」。イギリス英語だと「大成功（It went down a bomb）」になることもあるので注意。
+
+# Tough crowd.
+@ comedy | friends, work | real | funny | 3
+= 手強い客だな（誰も笑わない時）
+- (nobody laughs) Wow. Tough crowd.
+! 自分のジョークが滑った時に、客のせいにして笑いに変える定番の返し。
+
+# Is this thing on?
+@ comedy | music, online | real | funny | 2
+= マイク入ってる？（ウケない時のボケ）
+- (tapping the mic after a joke dies) Is this thing on?
+
+# I'm here all week.
+@ comedy | friends | real | funny | 2
+= 今週ずっと出てるんで（ダジャレの後の自虐）
+- (after a terrible pun) Thank you, I'm here all week.
+
+# I'll show myself out.
+@ comedy | friends, online | real | funny | 3
+= 自分で出ていきます（寒いダジャレの後）
+- Why don't skeletons fight? They don't have the guts. ...I'll show myself out.
+! ひどいダジャレを言った後の定番セルフツッコミ。ネットのコメントでも頻出。
+
+# ba dum tss
+@ comedy | friends, online | real | funny | 2
+= ドンドン、チャーン（オチの効果音）
+- I'm worried about the calendar. Its days are numbered. Ba dum tss.
+! ジョークの後のドラムの音（rimshot）を口で言う。
+
+# a dad joke
+@ comedy | friends | real | funny | 3
+= おやじギャグ
+- I'm reading a book about anti-gravity. I can't put it down.
+- That was a dad joke, and I'm proud of it.
+! わざと寒い親父ギャグ。groan（うーんとうなる）されたら成功。
+
+# a pun
+@ comedy | friends, study | real | funny | 3
+= ダジャレ
+- I used to be a banker, but I lost interest.
+- No pun intended.
+? interest ＝興味／利子。同じ単語の二重の意味で遊ぶのが英語の pun。
+
+# No pun intended.
+@ comedy | friends, work | real | funny | 2
+= ダジャレのつもりはない（けど言っちゃった）
+- The bakery business is on a roll, no pun intended.
+? 狙ってたら Pun intended. と言うのもアリ。
+
+# a roast
+@ comedy | friends | real | funny | 2
+= ロースト（愛のあるいじり大会）
+- For his 30th birthday, we roasted him. He cried laughing.
+- Roast me. I can take it.
+! 本人の前で容赦なくいじり倒す、アメリカのコメディ文化。愛がある前提。
+
+# a heckler
+@ comedy | music | real | chill | 1
+= ヤジを飛ばす客
+- A heckler yelled during my set, so I made him part of the show.
+
+# crowd work
+@ comedy | music, business | real | chill | 2
+= 客いじり
+- Good crowd work starts with a simple question: "Where are you from?"
+! 客との即興のやりとり。配信者のコメント返しにもそのまま使える技術。
+
+# an open mic
+@ comedy | music | real | chill | 2
+= オープンマイク（誰でも出られるライブ）
+- I'm doing an open mic on Tuesday. Five minutes. I'm terrified.
+
+# a tight five
+@ comedy | music, business | real | chill | 1
+= 確実にウケる5分ネタ
+- Every comic needs a tight five.
+- Your elevator pitch should be your tight five.
+
+# deadpan
+@ comedy | friends | real | funny | 2
+= 真顔のボケ（無表情で言う）
+- She said it totally deadpan, so I couldn't tell if she was joking.
+
+# dark humor
+@ comedy | friends | real | funny | 2
+= ブラックジョーク
+- I love dark humor, but not at funerals.
+- His dark humor isn't for everyone.
+? 英語では dark humor が一般的。black humor も通じるが少し文学的。
+
+# Too soon?
+@ comedy | friends | real | funny | 3
+= まだ早すぎた？（不謹慎ネタの後）
+- (joking about the breakup a day later) Too soon?
+! 不謹慎なジョークの後にこれを付けると、一応「わかってて言った」というクッションになる。
+
+# self-deprecating humor
+@ comedy | friends, business | real | warm | 2
+= 自虐ネタ
+- Self-deprecating humor works great in speeches. Just don't overdo it.
+- My English is like my gym schedule: strong start, then it disappears.
+
+# sarcasm
+@ comedy | friends, conflict | real | funny | 3
+= 皮肉
+- Oh great, another meeting. Just what I needed.
+- Wow, thanks for the help. (said after no help)
+! アメリカ人は皮肉を言う時、声のトーンが平坦になる。字面だけだと分からないので、メッセージでは /s を付けて皮肉と示すこともある。
+
+# Oh, great.
+@ comedy | daily, conflict | real | funny | 3
+= あーあ、最高だね（＝最悪）
+- The train is delayed again. Oh, great.
+- Oh, great. It's raining and I just washed my car.
+
+# understatement
+@ comedy | daily | real | funny | 2
+= 控えめな言い方（でボケる）
+- (in a snowstorm) It's a bit chilly.
+- (after a 12-hour shift) Bit of a long day.
+! イギリス人が得意な笑い。大変なことを「ちょっと」で済ませる。
+
+# exaggeration
+@ comedy | friends | real | funny | 2
+= 大げさ（で笑わせる）
+- I've told you a million times.
+- This bag weighs a ton.
+- I'm so hungry I could eat a horse.
+
+# I could eat a horse.
+@ comedy | food | real | funny | 2
+= 腹ペコ（馬一頭でも食える）
+- When's dinner? I could eat a horse.
+
+# the rule of three
+@ comedy | business, friends | real | chill | 2
+= 三段オチ
+- I need three things in life: coffee, Wi-Fi, and someone to tell me I'm doing great.
+! 2つで「パターン」を作って、3つ目で裏切る。スピーチやコピーライティングでも使う基本形。
+
+# misdirection
+@ comedy | friends | real | funny | 1
+= ミスリード（予想を裏切る）
+- I finally got my life together. Then I dropped it.
+- I told my boss I need a raise because three companies are after me. The electric, gas and water companies.
+
+# What's the deal with
+@ comedy | daily | real | funny | 2
+= 〜ってなんなの？（あるあるネタの入り）
+- What's the deal with "Reply All"? Nobody wants your "Thanks!"
+- What's the deal with airport food? Twenty bucks for a sad sandwich.
+! 日常の小さな理不尽にツッコむ「観察コメディ」の入り方として定番。
+
+# Have you ever noticed
+@ comedy | daily | real | funny | 2
+= 気づいたことある？（あるある）
+- Have you ever noticed that "be right back" always means twenty minutes?
+
+# Why did the chicken cross the road?
+@ comedy | friends | real | funny | 2
+= ニワトリはなぜ道を渡った？（定番なぞなぞ）
+- Why did the chicken cross the road? To get to the other side.
+! オチが当たり前すぎるのがオチ（アンチジョーク）。誰でも知っているので、パロディの元ネタになる。
+
+# A guy walks into a bar
+@ comedy | bar | real | funny | 2
+= 男がバーに入ってきて…（ジョークの定番の入り）
+- A guy walks into a bar. Ouch. It was an iron bar.
+! この一言でみんな「ジョークが始まる」と身構える。
+
+# I just flew in, and boy are my arms tired.
+@ comedy | travel | cringe | funny | 1
+= 飛行機で来たんだけど、腕がもうクタクタ（化石級ギャグ）
+- I just flew in from Osaka, and boy are my arms tired.
+✓ Long flight. My legs forgot how to work. | 普通に疲れを言う方がウケる
+! 古すぎて逆に「わざと言ってる」とわかる時だけ笑いになる。hacky（使い古された）ネタの代表。
+
+# hacky
+@ comedy | friends, business | real | chill | 1
+= 使い古された・ベタすぎる
+- Airline food jokes are so hacky.
+- That ad is hacky. Everyone uses that line.
+
+# You had to be there.
+@ comedy | friends | real | chill | 3
+= その場にいないとわからない
+- And then he fell into the pool with his phone... okay, you had to be there.
+
+# an inside joke
+@ comedy | friends | real | warm | 2
+= 内輪ネタ
+- Sorry, it's an inside joke from college.
+
+# Don't quit your day job.
+@ comedy | music, friends | real | funny | 2
+= 本業はやめないほうがいいね（才能ないよ）
+- I tried stand-up last night. — How'd it go? — My friend said don't quit your day job.
+! 軽いいじり。本気で言うとかなり失礼。
+
+# I'm dead.
+@ comedy | friends, dm | real | funny | 3
+= 死ぬほど笑った（www）
+- He tripped on the red carpet. I'm dead. 💀
+? I'm dying. / I'm crying. も同じ「爆笑」の意味。テキストではドクロの絵文字 💀 で表す。
+
+# Stop, I can't breathe.
+@ comedy | friends | real | funny | 2
+= やめて、息できない（笑いすぎ）
+- (laughing) Stop, I can't breathe.
+
+# I can't even.
+@ comedy | friends, online | real | funny | 2
+= もう無理（言葉にならない）
+- He proposed with a ring pop. I can't even.
+
+# The joke's on you.
+@ comedy | friends | real | funny | 2
+= バカを見たのはお前だ
+- You thought I'd be upset you ate my lunch? Joke's on you, it was expired.
+
+# just kidding... unless?
+@ comedy | online, crush | real | flirty, funny | 1
+= 冗談だよ……それとも？
+- We should get married lol. Just kidding... unless?
+! 冗談めかして本音を混ぜるネットの言い回し。
+
+# Lost in translation
+@ comedy | study, travel | real | funny | 2
+= 訳すと伝わらない（訳で失われる）
+- The joke was hilarious in Japanese. It got lost in translation.
+- In English, "May I have your name?" just sounds polite. No one thinks you'll eat it.
+! 直訳すると変になる言葉のズレは、それ自体が最高のネタになる。
+
+# Knock knock. — Who's there?
+@ comedy | friends | real | funny | 2
+= トントン。—どなた？（ノックノックジョーク）
+- Knock knock. — Who's there? — Lettuce. — Lettuce who? — Lettuce in, it's cold out here!
+? Lettuce in ＝ Let us in（入れて）のダジャレ。名前当てのやりとりに必ず答えるのがルール。
+
+# a groaner
+@ comedy | friends | real | funny | 1
+= うーんとうなりたくなるダジャレ
+- What do you call a fake noodle? An impasta. — Ugh, that's a groaner.
+? impasta ＝ impostor（偽物）＋ pasta。
+
+# That's hilarious.
+@ comedy | friends | real | warm | 3
+= めっちゃ面白い
+- You sent the email to your mom instead of your boss? That's hilarious.
+? funny より強い。sarcastic に Hilarious. と平坦に言うと「全然面白くない」。
+
+# I'm not laughing with you, I'm laughing at you.
+@ comedy | friends | real | rude | 1
+= 一緒に笑ってるんじゃない、お前を笑ってるんだ
+- (to a friend who slipped) Sorry, I'm not laughing with you, I'm laughing at you.
+? laugh with 人 ＝一緒に笑う／laugh at 人 ＝人を笑う（バカにする）。前置詞一つで意味が真逆。
