@@ -7,3 +7,7 @@ if (process.env.MJ_SITE === "legacy") {
 } else {
   await import("./build-next.mjs");
 }
+
+// Keep the mobile learning app available with either official-site edition.
+const { publishWahran } = await import("./publish-wahran.mjs");
+publishWahran();

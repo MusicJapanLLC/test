@@ -1,0 +1,38 @@
+name: Wahran publication checks
+on:
+  push:
+    branches: [chatgpt/wahran-mobile-public-20261011, music-japan-production]
+    paths: ['music-japan-site-trace/**', '.github/workflows/wahran-publication.yml']
+  pull_request:
+    branches: [music-japan-production]
+    paths: ['music-japan-site-trace/**', '.github/workflows/wahran-publication.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: music-japan-site-trace
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install locked site dependencies
+        run: npm ci --ignore-scripts
+      - name: Run official site and Wahran publication tests
+        run: npm test
+      - name: Build actual Cloudflare publication output
+        run: npm run build:deploy
+      - name: Verify deployable application bytes and isolated policy
+        run: |
+          node --input-type=module - <<'JS'
+          import { readFileSync } from 'node:fs';
+          import { createHash } from 'node:crypto';
+          import assert from 'node:assert/strict';
+          const bytes=readFileSync('deploy-dist/wahran/index.html');
+          assert.equal(createHash('sha256').update(bytes).digest('hex'),'996f48eb35ed437ad7656c960938aff717e0c10181fd041aafcde7c13e98c4e4');
+          assert.ok(readFileSync('deploy-dist/_headers','utf8').includes('/wahran/*\n  ! Permissions-Policy'));
+          console.log('Verified actual publication output:', bytes.length, 'bytes');
+          JS
