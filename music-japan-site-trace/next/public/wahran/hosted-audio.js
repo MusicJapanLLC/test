@@ -39,7 +39,8 @@
       this.stop();
       if(!Array.isArray(paths)||!paths.length||paths.some(p=>!validPath(p)))return Promise.reject(new Error('This item has no included audio file. Reload the page.'));
       const queue=paths.slice(),token=this.token,a=this.audio;let index=0;
-      a.playbackRate=Number.isFinite(rate)?Math.max(.55,Math.min(1.4,rate)):1;a.preservesPitch=true;
+      const speed=Number.isFinite(rate)?Math.max(.55,Math.min(1.4,rate)):1;
+      a.defaultPlaybackRate=speed;a.playbackRate=speed;a.preservesPitch=true;
       return new Promise((resolve,reject)=>{
         this.settle=resolve;
         const finish=(ok,error)=>{if(token!==this.token)return;this.detach();this.settle=null;if(error)a.pause();error?reject(new Error(error)):resolve(ok)};
@@ -47,7 +48,7 @@
           if(token!==this.token)return;
           this.detach();
           if(index>=queue.length){finish(true);return}
-          a.src=queue[index++];
+          a.src=queue[index++];a.playbackRate=speed;
           a.onplaying=()=>{if(token===this.token)onPlaying(index,queue.length)};
           a.onerror=()=>finish(false,'The included audio file could not be loaded. Check your connection and tap Listen again.');
           a.onended=next;
