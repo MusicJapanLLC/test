@@ -212,6 +212,20 @@ html.js [data-theme='cheer'] .kicker .kicker-rule {
 }
 
 /* ── ヘッダー ── */
+/* 仮のワードマークは横長なので、高さを控えめに（公式ロゴに差し替えたら見直す） */
+[data-theme='cheer'] .brand-logo {
+  height: 26px;
+}
+[data-theme='cheer'] .menu-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+@media (max-width: 959px) {
+  [data-theme='cheer'] .brand-logo {
+    height: 21px;
+  }
+}
 [data-theme='cheer'] .hdr.is-scrolled {
   border-bottom-color: var(--rule);
 }
