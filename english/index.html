@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>MJ ENGLISH — Real English, in reels</title>
+  <meta name="description" content="Learn the English people actually say. Words and chunks from songs, movies, classic books, science, comedy and real talk, in a swipeable feed. By Music Japan LLC." />
+  <meta name="theme-color" content="#0b0b0e" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#f6f3ee" media="(prefers-color-scheme: light)" />
+  <meta name="color-scheme" content="dark light" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="MJ ENGLISH" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="MJ ENGLISH" />
+  <meta property="og:title" content="MJ ENGLISH — Real English, in reels" />
+  <meta property="og:description" content="The English people actually say. Swipe through chunks from songs, movies, classic books, science, comedy and real talk." />
+  <meta property="og:image" content="og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+  <div id="app" class="app" data-view="feed">
+    <aside class="brand">
+      <a class="logo" href="#/" aria-label="MJ ENGLISH home"><span class="logo__mark">MJ</span><span class="logo__word">ENGLISH</span></a>
+      <p class="brand__tag">Real English, in reels.</p>
+    </aside>
+
+    <header class="top">
+      <a class="logo logo--mini" href="#/" aria-label="MJ ENGLISH home"><span class="logo__mark">MJ</span></a>
+      <div class="filters" role="toolbar" aria-label="Feed filter"></div>
+      <div class="hud">
+        <span class="combo" hidden><b data-hud="combo">×0</b></span>
+        <span class="ring" title="Today's goal" aria-label="Today's goal">
+          <svg viewBox="0 0 36 36" aria-hidden="true"><circle class="ring__bg" cx="18" cy="18" r="15.5"/><circle class="ring__bar" cx="18" cy="18" r="15.5"/></svg>
+          <small data-hud="done">0/20</small>
+        </span>
+        <span class="streak" title="Day streak">🔥<b data-hud="streak">0</b></span>
+      </div>
+    </header>
+
+    <main class="views">
+      <section id="view-feed" class="view view--feed" aria-label="Feed"><div id="feed" class="feed"></div></section>
+      <section id="view-review" class="view" aria-label="Review" hidden></section>
+      <section id="view-search" class="view" aria-label="Search" hidden></section>
+      <section id="view-me" class="view" aria-label="You" hidden></section>
+    </main>
+
+    <nav class="tabs" aria-label="Main">
+      <a href="#/" data-tab="feed" aria-current="true"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="3" fill="none" stroke-width="2"/><path d="M10 9v6l5-3z"/></svg><span>Feed</span></a>
+      <a href="#/review" data-tab="review"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7" fill="none" stroke-width="2" stroke-linecap="round"/><path d="M3 3v5h5z"/></svg><span>Review</span><i class="badge" data-hud="due" hidden></i></a>
+      <a href="#/search" data-tab="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke-width="2"/><path d="M15.5 15.5L21 21" stroke-width="2.4" stroke-linecap="round"/></svg><span>Search</span></a>
+      <a href="#/me" data-tab="me"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z"/></svg><span>You</span></a>
+    </nav>
+
+    <aside class="stage" aria-label="Today">
+      <div class="stage__card">
+        <p class="kicker">Today</p>
+        <div class="stage__today">
+          <span class="ring ring--big"><svg viewBox="0 0 36 36" aria-hidden="true"><circle class="ring__bg" cx="18" cy="18" r="15.5"/><circle class="ring__bar" cx="18" cy="18" r="15.5"/></svg><small data-hud="done">0/20</small></span>
+          <dl>
+            <div><dt>Streak</dt><dd>🔥 <b data-hud="streak">0</b> days</dd></div>
+            <div><dt>Level</dt><dd>Lv <b data-hud="level">1</b> · <b data-hud="xp">0</b> XP</dd></div>
+            <div class="combo" hidden><dt>Combo</dt><dd><b data-hud="combo">×0</b></dd></div>
+          </dl>
+        </div>
+      </div>
+      <div class="stage__card">
+        <p class="kicker">The crew</p>
+        <div id="stage-crew" class="stage__crew"></div>
+      </div>
+      <div class="stage__card stage__keys">
+        <p class="kicker">Keys</p>
+        <ul><li><kbd>↓</kbd><kbd>↑</kbd> next / back</li><li><kbd>Space</kbd> flip</li><li><kbd>S</kbd> save</li><li><kbd>P</kbd> listen</li><li><kbd>1</kbd>–<kbd>4</kbd> answer</li></ul>
+      </div>
+    </aside>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="party" class="party" hidden></div>
+  <dialog id="sheet" class="sheet"></dialog>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

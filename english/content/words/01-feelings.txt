@@ -1,0 +1,76 @@
+// Feelings & mood. word | pos | 日本語 | short English | example | scenes
+greedy | adj | 欲ばりな・がめつい | wanting more than you need | Don't be greedy. Leave me one slice. | feelings, money
+annoying | adj | うざい・イラッとする | making you a little angry | That notification sound is so annoying. | feelings
+awkward | adj | 気まずい・ぎこちない | uncomfortable and weird | That silence in the elevator was so awkward. | feelings, daily
+overwhelmed | adj | いっぱいいっぱい・圧倒された | feeling there's too much to handle | I've got five deadlines this week. I'm a little overwhelmed. | feelings, work
+frustrated | adj | もどかしい・イライラした | annoyed because something isn't working | I'm frustrated because I can't catch what people say. | feelings, study
+relieved | adj | ホッとした | happy because a worry is gone | I'm so relieved the meeting got moved. | feelings
+embarrassed | adj | 恥ずかしい（気まずくて） | feeling silly in front of others | I waved back at someone who wasn't waving at me. So embarrassed. | feelings
+ashamed | adj | 恥じている（罪悪感で） | feeling bad about something wrong you did | I'm not ashamed of where I started. | feelings
+jealous | adj | 嫉妬して・うらやましい | upset that someone has what you want | Are you jealous, or just hungry? | feelings, crush
+insecure | adj | 自信がない・不安な | not confident about yourself | I used to be insecure about my accent. | feelings
+confident | adj | 自信がある | sure about yourself | Speak like you're confident, even if you're not. | feelings, business
+nervous | adj | 緊張して | a little scared before something | I always get nervous before a sales call. | feelings, business
+anxious | adj | 不安な・心配な | worried about what might happen | I get anxious when my phone is at 1%. | feelings, health
+excited | adj | ワクワクして | happy about something coming | I'm so excited for the weekend. | feelings
+thrilled | adj | 大喜びの | very, very happy | They were thrilled with the new website. | feelings, business
+bored | adj | 退屈した（自分が） | feeling nothing is interesting | I'm bored. Let's go somewhere. | feelings
+boring | adj | 退屈な（ものが） | not interesting | The meeting was so boring I counted ceiling lights. | feelings
+exhausted | adj | へとへとの | extremely tired | After the night shift, I'm exhausted. | feelings, health
+burned out | adj | 燃え尽きた | tired from too much work for too long | I was burned out, so I took a week off. | feelings, work
+hyped | adj | アガってる・テンション高い | very excited | I'm so hyped for this concert. | feelings, music
+upset | adj | 動揺して・怒って | unhappy or angry | Are you upset with me? | feelings, conflict
+heartbroken | adj | 失恋して・傷心の | very sad because of love or loss | She was heartbroken after the breakup. | feelings, crush
+homesick | adj | ホームシックの | missing home | Two weeks in, I got really homesick. | feelings, travel
+nostalgic | adj | 懐かしい気持ちの | happy and sad about the past | This song makes me so nostalgic. | feelings, music
+grateful | adj | 感謝している | feeling thankful | I'm grateful you gave me a chance. | feelings, business
+proud | adj | 誇りに思う | happy about what you or others did | I'm proud of you, man. | feelings
+stubborn | adj | 頑固な | not willing to change your mind | My dad is stubborn, and so am I. | feelings
+picky | adj | 好みにうるさい | hard to please, choosy | I'm picky about coffee. | feelings, food
+moody | adj | 気分屋の | changing mood often | He's moody in the morning. Don't talk to him before ten. | feelings
+grumpy | adj | 不機嫌な | in a bad mood, complaining | Sorry I'm grumpy. I haven't eaten. | feelings
+clingy | adj | ベタベタした・依存気味の | wanting to be close too much | Is it clingy if I text her twice? | feelings, crush
+salty | adj | 根に持ってる・不機嫌な（スラング） | bitter or annoyed about something small | He's still salty about losing at cards. | feelings, friends
+petty | adj | 器が小さい・せこい | caring too much about small things | Unfollowing him over a joke was kind of petty. | feelings
+chill | adj | 落ち着いた・ゆるい | relaxed and easygoing | My boss is pretty chill. | feelings, friends
+hangry | adj | 空腹でイライラした | angry because you're hungry | Feed me before I get hangry. | feelings, food
+bummed | adj | がっかりした | disappointed | I'm bummed the show got canceled. | feelings
+stoked | adj | めっちゃ嬉しい・アガる | very excited and happy | I'm stoked you're coming! | feelings
+pumped | adj | やる気満々の | full of energy and excitement | I'm pumped for leg day. | feelings, gym
+freaked out | adj | ビビった・パニクった | very scared or shocked | I freaked out when I saw the bill. | feelings
+over it | phr | もううんざり・吹っ切れた | tired of something / no longer upset | I'm over it. Let's move on. | feelings
+fed up | adj | うんざりして | annoyed after too much of something | I'm fed up with this slow Wi-Fi. | feelings
+in a good mood | phr | 機嫌がいい | feeling happy | You're in a good mood today. What happened? | feelings
+lonely | adj | 寂しい | sad because you're alone | Big cities can feel lonely. | feelings
+content | adj | 満ち足りた | quietly happy with what you have | I'm content with a simple life. | feelings
+motivated | adj | やる気がある | wanting to do something | I'm more motivated in the morning. | feelings, work
+lazy | adj | 怠けた・だるい | not wanting to do anything | It's Sunday. I'm allowed to be lazy. | feelings
+determined | adj | 決意した | not stopping until you succeed | I'm determined to understand movies without subtitles. | feelings, study
+desperate | adj | 必死な・切羽詰まった | needing something very badly | Don't sound desperate in the email. | feelings, business
+curious | adj | 好奇心がある・気になる | wanting to know | Just curious, how did you two meet? | feelings
+suspicious | adj | 怪しい・疑っている | not trusting | That deal sounds suspicious. | feelings, money
+sketchy | adj | 怪しい・ヤバそうな | looks unsafe or not honest | That website looks sketchy. Don't put your card in. | feelings, online
+legit | adj | 本物の・ちゃんとした | real, honest, good | Is this guy legit? | feelings, online
+weird | adj | 変な | strange | Is it weird if I eat ramen for breakfast? | feelings
+creepy | adj | 不気味な・キモい | strange in a scary way | That guy staring at us is creepy. | feelings
+cringe | adj | 痛い・共感性羞恥 | so awkward it hurts to watch | His pickup line was so cringe. | feelings, pickup
+wholesome | adj | ほっこりする・健全な | pure and good | That video of the dog and the baby is so wholesome. | feelings
+savage | adj | 容赦ない・キレキレの | brutally honest or harsh (slang: impressive) | Her comeback was savage. | feelings, friends
+toxic | adj | 有害な・人を消耗させる | harmful to people around you | That workplace was toxic. | feelings, work
+humble | adj | 謙虚な | not showing off | He's rich but super humble. | feelings
+cocky | adj | 調子に乗った | too confident in an annoying way | Don't get cocky. You won one game. | feelings
+shy | adj | 人見知りの・恥ずかしがりの | nervous with new people | I'm shy at first, then I don't stop talking. | feelings
+outgoing | adj | 社交的な | friendly and likes meeting people | You seem outgoing. | feelings, friends
+introvert | n | 内向的な人 | someone who recharges alone | I'm an introvert, but I love karaoke. | feelings
+extrovert | n | 外向的な人 | someone who recharges with people | Extroverts love group chats. | feelings
+mixed feelings | phr | 複雑な気持ち | good and bad feelings together | I have mixed feelings about moving. | feelings
+guilty | adj | 罪悪感がある | feeling you did something wrong | I feel guilty for not calling my mom. | feelings
+sore | adj | 筋肉痛の・ヒリヒリする | painful after exercise | My legs are so sore from yesterday. | gym, health
+restless | adj | そわそわした | can't stay still or relax | I get restless if I don't move. | feelings
+patient | adj | 我慢強い・気長な | calm when waiting | Be patient with yourself. Listening takes time. | feelings, study
+impatient | adj | せっかちな | hating to wait | I'm impatient in lines. | feelings
+generous | adj | 気前がいい | happy to give | Thanks, that's really generous. | feelings, money
+cheap | adj | ケチな・安い | not wanting to spend money | Don't be cheap. Tip the guy. | feelings, money
+spoiled | adj | 甘やかされた | used to getting everything | The dog is so spoiled. | feelings
+reliable | adj | 頼れる | you can trust them to do it | She's the most reliable person on the team. | feelings, work
+flaky | adj | ドタキャンしがちな・当てにならない | often cancels plans | He's flaky. Make a backup plan. | feelings, friends

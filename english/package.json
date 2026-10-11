@@ -1,0 +1,19 @@
+{
+  "name": "mj-english",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "MJ ENGLISH — real English in reels. Words and chunks from songs, movies, classic books, science, comedy and real talk.",
+  "scripts": {
+    "data": "node scripts/build-data.mjs",
+    "validate": "node scripts/build-data.mjs --check",
+    "dev": "node scripts/build-data.mjs && vite",
+    "build": "node scripts/build-data.mjs && tsc --noEmit && vite build && node scripts/pages.mjs",
+    "preview": "vite preview --port 4190"
+  },
+  "devDependencies": {
+    "@fontsource-variable/archivo": "^5.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1"
+  }
+}

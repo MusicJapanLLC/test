@@ -1,0 +1,230 @@
+// Real Talk — Cafe. Ordering, seats, Wi-Fi, small talk with baristas.
+
+# Can I get a
+@ talk | cafe, food | real | chill | 3
+= 〜ください（注文の基本形）
+: The normal way to order anything in the US.
+A: Hey, what can I get you?
+B: Can I get a large iced latte?
+A: Sure. Anything else?
+B: That's it, thanks.
+~ "k'nai GED-uh"
+✗ I want a latte. | textbook | 子どもっぽく聞こえる。間違いではないけど幼い
+✗ Give me a latte. | cringe | 命令口調。店員さんの顔が曇る
+? Can I get 〜? は「もらえますか？」。I'll have 〜. も同じくらい自然。
+
+# For here or to go?
+@ talk | cafe, food | real | chill | 3
+= 店内ですか？お持ち帰りですか？
+A: For here or to go?
+B: To go, please.
+~ "fer HEER er duh GO?"
+! アメリカのカフェでほぼ100%聞かれる。早口で「ふぇひゃーらごー？」くらいに聞こえる。聞き取れたら勝ち。
+✗ Will you eat here or take out? | textbook | 伝わるけど店員は言わない
+
+# What name should I put down?
+@ talk | cafe | real | chill | 2
+= お名前は何にしますか？（カップに書く名前）
+A: What name should I put down?
+B: Just put "Tom." It's easier.
+A: Got it.
+! 本名が長かったり聞き取りにくかったら、カフェ用の短い名前を用意しておくと楽。みんなやってる。
+
+# I'm good, thanks.
+@ talk | cafe, daily | real | chill, warm | 3
+= 大丈夫です（いらないです）
+: A friendly way to say "no thanks."
+A: Do you want room for milk?
+B: I'm good, thanks.
+A: Want your receipt?
+B: Nah, I'm good.
+✗ No, thank you. I don't need it. | textbook | ちょっと冷たく聞こえる
+? I'm good. は「元気」じゃなくて「（それは）いらない」の意味でめちゃくちゃ使う。
+
+# Is anyone sitting here?
+@ talk | cafe, daily | real | chill | 3
+= ここ、誰か座ってます？
+A: Hey, is anyone sitting here?
+B: Nah, go for it.
+A: Appreciate it.
+~ "izz-ENNY-wun SIDDin' here?"
+✗ Is this seat vacant? | textbook | 電車のアナウンスみたい
+? sitting の t は「ディ」寄りに聞こえる（アメリカ英語のtの弾み）。
+
+# go for it
+@ talk | cafe, daily, friends | real | chill, warm | 3
+= どうぞ／やっちゃえ
+: Sure, do it.
+A: Mind if I take this chair?
+B: Go for it.
+- I'm thinking about quitting my job. — Honestly? Go for it.
+~ "GO-fer-it"
+! 許可の「どうぞ」にも、背中を押す「やっちゃえ」にも使える万能フレーズ。
+
+# Mind if I
+@ talk | cafe, daily | real | warm, chill | 3
+= 〜してもいい？
+A: Mind if I plug my laptop in here?
+B: Not at all.
+A: Thanks, it's on 5%.
+? Mind if 〜? は「〜したら嫌？」と聞いてる。だから OK のときは Not at all.（全然嫌じゃない）か Go ahead. と答える。Yes. と言うと「嫌です」になるので注意。
+
+# Not at all.
+@ talk | cafe, daily | real | warm | 3
+= 全然いいよ（Mind if〜?への「どうぞ」）
+A: Do you mind if I sit here?
+B: Not at all.
+A: Do you mind turning the music down a bit?
+B: Oh, not at all. Sorry!
+? Do you mind 〜? に「どうぞ」と言いたいときは No／Not at all。日本人が一番ミスるところ。
+
+# You're a lifesaver.
+@ talk | cafe, daily, friends | real | warm, funny | 3
+= 助かった！命の恩人！
+A: There's an outlet right behind you.
+B: Dude, you're a lifesaver.
+- You brought snacks? You're a lifesaver.
+! 大げさに感謝するのがアメリカ流。ちょっとしたことでも普通に言う。
+
+# Classic me.
+@ talk | daily, friends | real | funny, chill | 2
+= いつもの俺／俺らしいわ（自虐）
+A: Where's your charger?
+B: At home. Classic me.
+- Forgot my wallet again. Classic me.
+! 自分のドジを軽く笑うときの定番。Classic 〜 で「〜らしい」。Classic Monday. なども言う。
+
+# My phone's dying.
+@ talk | cafe, daily | real | chill | 3
+= 充電が切れそう
+A: Can I borrow your charger? My phone's dying.
+B: Yeah, here. It's a little slow, though.
+- My laptop's about to die.
+? 電池が切れそう＝dying。完全に切れた＝My phone died.
+
+# Can I swap it for
+@ talk | cafe, food | real | chill | 2
+= 〜に変更できますか？
+A: Can I swap the milk for oat milk?
+B: Sure, that's an extra 70 cents.
+A: That's fine.
+? swap A for B で「AをBに替える」。substitute より会話的。
+
+# Could I get a refill?
+@ talk | cafe, food | real | warm | 2
+= おかわりもらえますか？
+A: Sorry, could I get a refill?
+B: Of course. Same thing?
+A: Yes, please.
+! アメリカのダイナーはドリップコーヒーおかわり無料のことが多い。
+
+# Sorry, I think that one's mine.
+@ talk | cafe | real | warm | 2
+= すみません、それ私のだと思います
+A: Oat latte for Mike?
+B: Sorry, I think that one's mine. I ordered an oat latte too.
+A: Oh! My bad.
+? Sorry, I think 〜 で角が立たない。Excuse me, that's mine. だと少しきつい。
+
+# Keep the change.
+@ talk | cafe, money, food | real | warm | 2
+= お釣りはいらないです
+A: That's $4.50.
+B: Here's five. Keep the change.
+A: Thanks, man.
+
+# Are you in line?
+@ talk | cafe, shopping | real | warm | 3
+= 並んでますか？
+A: Sorry, are you in line?
+B: Oh, no, I'm just waiting on a drink.
+A: Cool, thanks.
+✗ Are you queuing? | textbook | イギリス英語。アメリカでは line
+? アメリカは line、イギリスは queue。
+
+# waiting on
+@ talk | cafe, daily | real | chill | 2
+= 〜待ち（届くのを待ってる）
+A: Are you ready to go?
+B: Almost. I'm just waiting on my drink.
+- We're still waiting on the client's reply.
+? wait for と同じ意味。アメリカでは wait on もめっちゃ使う（ビジネスでも）。
+
+# Take your time.
+@ talk | cafe, daily, work | real | warm | 3
+= ごゆっくり／急がなくていいよ
+A: Sorry, I'm still deciding.
+B: No worries, take your time.
+- Take your time with the report. Friday is fine.
+
+# That hits the spot.
+@ talk | cafe, food | real | chill | 2
+= これこれ！最高（欲しかったものが来た）
+A: How's the coffee?
+B: Man, that hits the spot.
+- Cold beer after the gym? That really hits the spot.
+! 飲み物や食べ物が「ちょうど欲しかったやつ！」のときに言う。
+
+# We should grab a coffee sometime.
+@ talk | cafe, crush, friends, business | real | warm, flirty | 3
+= 今度コーヒーでも行こうよ
+A: It was really nice talking to you.
+B: Yeah, we should grab a coffee sometime.
+A: I'd like that.
+? grab ＝さくっと（食べる・飲む）。grab lunch, grab a drink も同じ。
+! デートの誘いにも、仕事の軽い打ち合わせの誘いにもなる便利な一言。
+
+# Tap or insert?
+@ talk | cafe, shopping, money | real | chill | 3
+= タッチ決済ですか？カード差し込みですか？
+A: Tap or insert?
+B: I'll just tap.
+A: Perfect. You're all set.
+? You're all set. ＝「これで完了です」。会計の最後にほぼ必ず言われる。
+
+# You're all set.
+@ talk | cafe, shopping, paperwork | real | chill, worksafe | 3
+= これで完了です／準備OKです
+A: Okay, you're all set.
+B: Thanks, have a good one.
+- Your appointment is booked. You're all set for Friday.
+
+# Have a good one.
+@ talk | cafe, daily, shopping | real | warm, chill | 3
+= じゃあね／良い一日を
+A: Here's your drink.
+B: Thanks, have a good one.
+A: You too!
+✗ Have a nice day. | textbook | 間違いではないけど少しかしこまる
+? 時間帯を気にしなくていい万能の「さよなら」。返事は You too!
+
+# You too!
+@ talk | cafe, daily | real | warm | 3
+= あなたも！
+A: Enjoy your coffee!
+B: Thanks, you too!
+B: ...wait, you're not having coffee.
+! 店員さんの Enjoy your meal! に反射で You too! と返してしまうのは、ネイティブも毎日やる「あるある」。
+
+# What's the Wi-Fi password?
+@ talk | cafe, online | real | chill | 2
+= Wi-Fiのパスワード何ですか？
+A: Sorry, what's the Wi-Fi password?
+B: It's on the receipt, at the bottom.
+A: Oh, got it. Thanks.
+~ "WHY-fy"
+
+# Do I tip here?
+@ talk | cafe, money | real | chill | 2
+= ここってチップいる？
+A: The screen is asking for a tip. Do I tip here?
+B: It's up to you. For just a coffee, a dollar is fine.
+! アメリカはレジの画面で15%・20%・25%と選ばされることが多い。カウンターのカフェは「任意」寄り。テーブルサービスのレストランは15〜20%が普通。
+
+# It's up to you.
+@ talk | daily, friends, cafe | real | chill | 3
+= あなた次第／お好きにどうぞ
+A: Should we sit inside or outside?
+B: It's up to you.
+- It's totally up to you. I'm fine either way.
+? be up to 人 ＝「人に任されている」。I'm fine either way.（どっちでもいい）とセットでよく使う。
