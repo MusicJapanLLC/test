@@ -5,7 +5,7 @@ import { cardState, state } from './store';
 import { speak, speakLines, canSpeak } from './tts';
 
 export const ACCENT: Record<Source, string> = {
-  talk: '#f3eee6', words: '#b9a8ff', movies: '#ff2e3e', books: '#ffb43d', songs: '#3fd8ff', science: '#7dff8e', comedy: '#ff7ad8',
+  talk: 'var(--talk)', words: '#b9a8ff', movies: '#ff2e3e', books: '#ffb43d', songs: '#3fd8ff', science: '#7dff8e', comedy: '#ff7ad8',
 };
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -45,7 +45,7 @@ export function cardBack(c: Card): string {
   if (c.v?.length) parts.push(`<ul class="alts">${c.v.map(([t, n]) => `<li class="alt alt--real"><b>✓ ${esc(t)}</b>${n ? `<small lang="ja">${esc(n)}</small>` : ''}</li>`).join('')}</ul>`);
   if (c.x?.length) parts.push(`<ul class="alts">${c.x.map(([t, lab, n]) => `<li class="alt alt--${lab}"><b>${lab === 'cringe' ? '✗' : '⚠'} ${esc(t)}</b>${n ? `<small lang="ja">${esc(n)}</small>` : ''}</li>`).join('')}</ul>`);
   if (c.y) parts.push(`<div class="why"><p class="label">Why it works</p><p lang="ja">${esc(c.y).replace(/\n/g, '<br>')}</p></div>`);
-  if (c.n) parts.push(`<div class="note"><p class="label">Culture</p><p lang="ja">${esc(c.n).replace(/\n/g, '<br>')}</p></div>`);
+  if (c.n) parts.push(`<div class="note"><p class="label">${c.s === 'science' ? 'The science' : 'Culture'}</p><p lang="ja">${esc(c.n).replace(/\n/g, '<br>')}</p></div>`);
   if (c.c) parts.push(`<p class="cite">Source: ${esc(c.c)}${c.u ? ` <a href="${esc(c.u)}" target="_blank" rel="noopener">Read ↗</a>` : ''}</p>`);
   return parts.join('');
 }
@@ -120,9 +120,21 @@ export function renderCard(c: Card, h: CardHandlers, opts: { review?: boolean } 
   el.querySelector('.rail__bot')!.append(bot.canvas);
   (el as HTMLElement & { bot?: Bot }).bot = bot;
 
+  const main = card.querySelector<HTMLElement>('.card__main');
+  // slide the front up so the meaning panel doesn't cover the examples (only as far as the tag row allows)
+  const lift = () => {
+    if (!main?.firstElementChild) return;
+    const top = (card.querySelector('.card__top') ?? card).getBoundingClientRect().bottom + 8;
+    const first = main.firstElementChild.getBoundingClientRect().top;
+    const last = main.lastElementChild!.getBoundingClientRect().bottom;
+    const overlap = last - back.getBoundingClientRect().top + 10;
+    const room = first - top;
+    main.style.transform = overlap > 0 && room > 0 ? `translateY(${-Math.round(Math.min(overlap, room))}px)` : '';
+  };
   const setOpen = (v: boolean) => {
     card.classList.toggle('is-open', v);
     back.hidden = !v;
+    if (main) { if (v) requestAnimationFrame(lift); else main.style.transform = ''; }
     jaBtn.setAttribute('aria-pressed', String(v));
     h.onFlip(c, v);
     if (v) bot.act(c.re && c.re !== 'real' ? (c.re === 'cringe' ? 'dizzy' : 'think') : 'wow');

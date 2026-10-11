@@ -420,7 +420,7 @@ function drawMe() {
       <section>
         <h2 class="page__h">The crew</h2>
         <ul class="crew-list">${CREW.map((m) => `<li style="--acc:${m.color}"><span class="crew-list__bot" data-bot="${m.id}"></span><b>${m.name}</b><small>${m.role}</small></li>`).join('')}
-          <li style="--acc:${ACCENT.talk}"><span class="crew-list__bot" data-bot="all"></span><b>ALL</b><small>Real Talk</small></li></ul>
+          <li class="crew-list__all" style="--acc:var(--ink)"><span class="crew-list__dots">${CREW.map((m) => `<i style="background:${m.color}"></i>`).join('')}</span><b>EVERYONE</b><small>Real Talk &amp; Words</small></li></ul>
       </section>
       <section class="settings">
         <h2 class="page__h">Settings</h2>
@@ -444,9 +444,8 @@ function drawMe() {
         <p>Pronunciation (IPA) comes from the CMU Pronouncing Dictionary. Voices use your device's built-in speech.</p>
       </section>
     </div>`;
-  host.querySelectorAll<HTMLElement>('[data-bot]').forEach((h, i) => {
-    const id = h.dataset.bot === 'all' ? CREW[i % 5].id : (h.dataset.bot as 'tune');
-    const b = new Bot(id);
+  host.querySelectorAll<HTMLElement>('[data-bot]').forEach((h) => {
+    const b = new Bot(h.dataset.bot as 'tune');
     h.append(b.canvas);
     h.addEventListener('click', () => { b.act(['jump', 'laugh', 'love', 'float', 'wave'][Math.floor(Math.random() * 5)] as 'jump'); sfx.tap(); });
   });

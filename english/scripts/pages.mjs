@@ -51,6 +51,13 @@ for (const c of items) {
   fs.mkdirSync(dir, { recursive: true });
   fs.writeFileSync(path.join(dir, 'index.html'), page(c));
 }
+// the app shell: absolute share image + canonical (social crawlers ignore relative og:image)
+const indexFile = path.join(dist, 'index.html');
+let shell = fs.readFileSync(indexFile, 'utf8')
+  .replace('<meta property="og:image" content="og.png" />', `<meta property="og:image" content="${SITE}/og.png" />\n  <meta property="og:url" content="${SITE}/" />\n  <link rel="canonical" href="${SITE}/" />`);
+if (noindex) shell = shell.replace('<meta charset="utf-8" />', '<meta charset="utf-8" />\n  <meta name="robots" content="noindex,nofollow" />');
+fs.writeFileSync(indexFile, shell);
+
 const urls = [`${SITE}/`, ...items.map((c) => `${SITE}/c/${c.id}/`)];
 fs.writeFileSync(path.join(dist, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${u}</loc></url>`).join('\n')}\n</urlset>\n`);
 fs.writeFileSync(path.join(dist, 'robots.txt'), noindex ? 'User-agent: *\nDisallow: /\n' : `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`);
