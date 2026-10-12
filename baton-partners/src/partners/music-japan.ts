@@ -16,7 +16,7 @@ import type { Partner } from '../types';
  *   このサイトの実装 …………………… 5ページの構成、robots.txt で許可しているAIクローラー12種、llms.txt、紹介の流れ（gas/Code.gs）
  *   ミラエラ（miraerror.jp）……… 2020年から運営、450社超の経営者インタビュー、掲載企業（オーナーの案内文より）
  *   Batonの代表プロフィール ………… 「学び、紡ぎ、繋いでいく。」
- * パートナー企業のロゴ：エボルグ・Central AX・Smartaleck は掲載了承済み（黒地なので白抜き版を使う）。
+ * パートナー企業のロゴ：エボルグ・Central AX・Smartaleck・Presence は掲載了承済み（黒地なので白抜き版を使う。Presence はいまは仮のワードマーク）。
  */
 export const musicJapan: Partner = {
   slug: 'music-japan',
@@ -200,6 +200,7 @@ export const musicJapan: Partner = {
         { name: '株式会社エボルグ', no: 'BP-001', href: '/evorg/', tint: '#e83c4f', logo: { src: '/partners/evorg/logo-light.png', size: [517, 137] } },
         { name: '株式会社Central AX', no: 'BP-002', href: '/central-ax/', tint: '#5b6170', logo: { src: '/partners/central-ax/logo-white.png', size: [691, 210] } },
         { name: '株式会社Smartaleck', no: 'BP-005', href: '/smartaleck/', tint: '#1f92ca', logo: { src: '/partners/smartaleck/logo-light.png', size: [800, 126] } },
+        { name: 'Presence株式会社', no: 'BP-006', href: '/presence/', tint: '#03417a', logo: { src: '/partners/presence/logo-light.png', size: [948, 148] } },
       ],
       note: 'ロゴと社名は、各社の了承を得て掲載しています。',
     },
@@ -234,7 +235,7 @@ export const musicJapan: Partner = {
       },
       {
         heading: '1社ずつ、見た目を変える',
-        body: 'エボルグのページは紙と明朝体、Central AXは白黒の建築模型、Smartaleckは漫画のヒーロー。どれも、その会社のロゴと、代表がよく使う言葉から決めました。同じ型の色違いにすると、どの会社も同じに見えてしまうからです。',
+        body: 'エボルグのページは紙と明朝体、Central AXは白黒の建築模型、Smartaleckは漫画のヒーロー、Presenceは星をまとったカメの甲羅と招待状。どれも、その会社のロゴと、代表がよく使う言葉から決めました。同じ型の色違いにすると、どの会社も同じに見えてしまうからです。',
       },
     ],
     stanceTitle: '決めていること',
@@ -405,7 +406,7 @@ export const musicJapan: Partner = {
               '紹介：相談はMusic Japanが先に読み、双方の了承を得てからおつなぎ',
             ],
           },
-          { type: 'p', text: 'いま公開しているページは、[エボルグ](/evorg/)、[Central AX](/central-ax/)、[Smartaleck](/smartaleck/)の3社です。どれも、その会社のロゴと言葉から色と書体を決めています。' },
+          { type: 'p', text: 'いま公開しているページは、[エボルグ](/evorg/)、[Central AX](/central-ax/)、[Smartaleck](/smartaleck/)、[Presence](/presence/)の4社です。どれも、その会社のロゴと言葉から色と書体を決めています。' },
         ],
       },
       {
@@ -444,7 +445,7 @@ export const musicJapan: Partner = {
         },
         {
           q: '掲載している会社と話してみたいときは？',
-          a: '[エボルグ](/evorg/contact/)、[Central AX](/central-ax/contact/)、[Smartaleck](/smartaleck/contact/)など、各社のページにある「話してみる」から相談できます。',
+          a: '[エボルグ](/evorg/contact/)、[Central AX](/central-ax/contact/)、[Smartaleck](/smartaleck/contact/)、[Presence](/presence/contact/)など、各社のページにある「話してみる」から相談できます。',
         },
         { q: 'ミラエラの取材について聞くこともできますか。', a: 'できます。取材の流れや、どんな記事になるのかをお話しします。' },
       ],

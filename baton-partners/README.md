@@ -110,16 +110,14 @@ npm run preview   # http://localhost:4174/evorg/
 - [ ] 事業内容の書き方（Emproと組織・採用支援の両方を載せてよいか）
 - [ ] 記事の内容（エボルグ側の監修を入れるか）
 
-## 確認待ち（Presence・BP-006）
+## Presence（BP-006）の残り
 
-`draft: true`。プレビュー（*.vercel.app）にだけ出る。金子さんの確認が取れたら外して本番へ。
+金子さんの掲載許可を得て公開（draft を外した）。あとから差し替えるもの：
 
 - [ ] 代表の写真（受け取ったら `leader.photo` / `photoSize` に入れる。トレーディングカードと取り組みページに出る）
-- [ ] 公式ロゴ（星をまとったカメ）。いまは仮のワードマーク（`public/partners/presence/logo.png` / `logo-light.png`）。差し替えてから draft を外す
+- [ ] 公式ロゴ（星をまとったカメ）。いまは仮のワードマーク（`public/partners/presence/logo.png` / `logo-light.png`）。同じファイル名で差し替え、`logoSize` を実寸に
 - [ ] P-ENJIN のロゴ（あれば）。いまは仮のワードマーク（`p-enjin.png`）
-- [ ] コミュニティの正式な表記・対象・始めた時期（P-ENJIN／縁陣会。SNSの告知の範囲で書いている）
-- [ ] 面談でうかがった話の掲載可否（紹介は「一発一中」、学生時代の野球部キャプテン・応援団長・DJ、「一番ワクワクすることは」と聞くこと）
-- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `presence` を足す
-- [ ] music-japan.com/partners への会社名の掲載（了承済み。本番公開と同じタイミングで）
+- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `presence` を足す（足すまで、このページからの送信は記録されない）
+- [ ] music-japan.com/partners への会社名の掲載
 
 公式サイト（presences.info）は作業環境から直接開けないため、文言は検索エンジン経由（Firecrawl）で確認した公式の記載を使っている。

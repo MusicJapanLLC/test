@@ -24,14 +24,14 @@ import type { Partner } from '../types';
  *   doda の企業情報（2025年11月時点の求人より） … Presence Award、上京支援、社内ベンチャー・独立支援
  *   2026年10月8日の面談 … 紹介の考え方（数より一発一中、記憶力）、「一番ワクワクすることは」と聞くこと、学生時代（野球部キャプテン・応援団長・DJ）
  *   株式会社経営参謀の調査（PR TIMES 2026年5月25日） … 記事とトップの「その後」の数字
- * 写真：ご本人から受け取るまでは載せない（トレーディングカードは写真待ちの面）。受け取ったら leader.photo / photoSize に入れる
- * ロゴ：公式のカメのロゴを受け取るまでは、仮のワードマーク（public/partners/presence/）。差し替えてから draft を外す
+ * 公開：金子さんの掲載許可を得て公開（2026年10月12日、オーナーの指示）。
+ * 写真：ご本人から受け取るまでは載せない（トレーディングカードは頭文字の面）。受け取ったら leader.photo / photoSize に入れる
+ * ロゴ：公式のカメのロゴを受け取るまでは、仮のワードマーク（public/partners/presence/）。受け取ったら同じファイル名で差し替え、logoSize を実寸に
  * 載せないもの：料金・契約条件（Baton Partners の方針）、面談で出た金額や人数の自己申告（月に会う人数など）、本人の発言の創作、
  *   第三者の記事にある個人的な経緯
  */
 export const presence: Partner = {
   slug: 'presence',
-  draft: true,
   no: '06',
   catalog: {
     base: '東京・丸の内',
@@ -196,7 +196,7 @@ export const presence: Partner = {
         { label: '実績', value: '2社で販売実績日本一' },
         { label: '主宰', value: 'P-ENJIN（経営者）・縁陣会（独立支援）' },
       ],
-      pending: 'Photo coming soon',
+      pending: 'Presence CEO',
       note: 'プロフィールは、金子さんがSNS（Instagram・Threads）で公開している内容と、2026年10月の面談でうかがった話にもとづきます。',
     },
     stats: [
