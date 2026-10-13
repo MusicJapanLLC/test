@@ -1,0 +1,5 @@
+/* needle の世界観（Music Japan）でだけ読み込む。公式サイト music-japan.com と同じ組み合わせ：
+   見出しは Zen Kaku Gothic New 900、欧文の大きな文字は Archivo（字幅を広げた極太）、小さな英字は JetBrains Mono */
+@import './fonts-faces-mono.css';
+@import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';

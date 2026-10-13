@@ -2389,10 +2389,17 @@ html.js .phero-h .ph {
 }
 .bph-nav {
   margin-left: auto;
+  /* 掲載企業が増えて入りきらないときは、ナビの中だけ横にスクロールする（ページは横にはみ出さない） */
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.bph-nav::-webkit-scrollbar {
+  display: none;
 }
 .bph-nav ul {
   display: flex;
-  gap: 30px;
+  gap: clamp(18px, 2vw, 30px);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.06em;
