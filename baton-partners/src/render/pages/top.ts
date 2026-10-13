@@ -777,7 +777,7 @@ function marketSection(p: Partner): string {
         <h2 id="market-h" class="sec-h">${heading(m.title)}</h2>
         <p class="mk-lead">${jp(m.lead)}</p>
         <dl class="mk-facts">${m.facts
-          .map((f) => `<div class="mk-fact"><dt>${esc(f.label)}</dt><dd><span class="mk-fv">${esc(f.value)}</span><span class="mk-fu">${esc(f.unit)}</span></dd>${f.note ? `<dd class="mk-fn">${jp(f.note)}</dd>` : ''}</div>`)
+          .map((f) => `<div class="mk-fact"><dt>${jp(f.label)}</dt><dd><span class="mk-fv">${esc(f.value)}</span><span class="mk-fu">${esc(f.unit)}</span></dd>${f.note ? `<dd class="mk-fn">${jp(f.note)}</dd>` : ''}</div>`)
           .join('')}</dl>
       </header>
       <figure class="mk-fig rv" aria-label="${esc(m.big.label)}：${esc(m.shareLabel)}が約${m.share}%">
