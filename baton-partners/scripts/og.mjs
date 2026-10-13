@@ -283,7 +283,7 @@ function cheer(it) {
   .bar{position:absolute;left:0;right:0;bottom:0;height:12px;background:repeating-linear-gradient(90deg,${orange} 0 60px,${navy} 60px 120px)}
   .in{position:absolute;inset:60px 540px 58px 80px;display:flex;flex-direction:column;justify-content:space-between}
   .top{display:flex;align-items:center;gap:22px}
-  .top img{height:40px;width:auto}
+  .top img{height:58px;width:auto}
   .label{font-family:'UB',sans-serif;font-weight:700;font-size:17px;letter-spacing:.12em;text-transform:uppercase;color:${navy};display:flex;align-items:center;gap:12px}
   .label::before{content:'';width:18px;height:18px;background:${orange};clip-path:polygon(50% 0,61% 39%,100% 50%,61% 61%,50% 100%,39% 61%,0 50%,39% 39%)}
   h1{font-family:'ZKh','ZKr','Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:${fit.size}px;line-height:1.32;letter-spacing:.01em;width:calc(100% + 120px)}
