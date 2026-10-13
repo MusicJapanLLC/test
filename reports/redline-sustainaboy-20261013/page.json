@@ -1,0 +1,19 @@
+{
+  "schema": "redline-selected-page/v1",
+  "checked_at": "2026-10-13T03:05:10.090Z",
+  "target": "https://sustainaboy-works.onrender.com/about/",
+  "method": "GET",
+  "status": 200,
+  "redirect_followed": false,
+  "redirect_blocked": false,
+  "headers": {
+    "content-type": "text/html; charset=utf-8",
+    "strict-transport-security": "max-age=315360000; includeSubdomains; preload",
+    "x-content-type-options": "nosniff"
+  },
+  "body_bytes": 10356,
+  "body_limit_bytes": 300000,
+  "body_truncated": false,
+  "body_sha256": "5e9ce660c3f190f0b7f3e92b18f919d4ced24fcb946aa50b7824cefcf839c6f9",
+  "note": "HTTP observation only; not an authorization test or proof of deployment revision."
+}

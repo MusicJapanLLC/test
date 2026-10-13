@@ -3,6 +3,13 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "redline:locate": "node scripts/redline-target-map.mjs",
+    "redline:check": "node --check scripts/redline-target-map.mjs && node --check scripts/redline-target-evidence.mjs && node --check scripts/redline-target-evidence.test.mjs",
+    "redline:evidence:test": "node --test scripts/redline-target-evidence.test.mjs",
+    "redline:evidence": "node scripts/redline-target-evidence.mjs",
+    "redline:evidence:script": "node scripts/redline-target-evidence.mjs --script"
+  },
   "dependencies": {
     "ai": "^6.0.0",
     "better-sqlite3": "^13.0.3"
