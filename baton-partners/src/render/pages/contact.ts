@@ -187,7 +187,7 @@ ${header(p, 'contact')}
 
           <label class="agree">
             <input type="checkbox" name="agree" required />
-            <span>${jp(`お名前・ご連絡先を${name}へ共有するのは、双方の了承後のみです。`)}<a href="${routes.privacy()}" target="_blank" rel="noopener">プライバシーポリシー</a>に同意のうえ送信します。</span>
+            <span>${jp(`お名前・ご連絡先を${name}へ共有するのは、双方の了承後のみです。`)}<a href="${routes.privacy()}" target="_blank" rel="noopener">プライバシーポリシー</a>${jp('に同意のうえ送信します。')}</span>
           </label>
 
           <p class="form-err" role="alert" data-form-err hidden></p>
