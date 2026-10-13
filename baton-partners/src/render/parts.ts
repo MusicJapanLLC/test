@@ -71,6 +71,14 @@ export function leaderSection(p: Partner): string {
       <h2 id="leader-h" class="leader-name">${esc(l.name)}</h2>
       <p class="leader-en" aria-hidden="true">${esc(l.nameEn)}</p>
       <div class="leader-text">${l.body.map((t) => `<p>${jp(t)}</p>`).join('')}</div>
+      ${
+        // cheer の世界観で写真と年表の両方があるときは、年表を本文の下にも出す（写真がないときは、写真の場所に年表を出している）
+        p.world.theme === 'cheer' && l.photo && l.timeline?.length
+          ? `<ol class="leader-timeline leader-timeline-sub" aria-label="${esc(l.name)}さんの歩み">${l.timeline
+              .map((t) => `<li><span class="lt-y">${esc(t.year)}</span><span class="lt-t">${jp(t.text)}</span></li>`)
+              .join('')}</ol>`
+          : ''
+      }
       ${l.motto ? `<p class="leader-motto"><span>${esc(l.motto.label)}</span><strong>${esc(l.motto.text)}</strong></p>` : ''}
     </div>
   </div>

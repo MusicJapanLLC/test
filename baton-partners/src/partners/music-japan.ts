@@ -16,7 +16,7 @@ import type { Partner } from '../types';
  *   このサイトの実装 …………………… 5ページの構成、robots.txt で許可しているAIクローラー12種、llms.txt、紹介の流れ（gas/Code.gs）
  *   ミラエラ（miraerror.jp）……… 2020年から運営、450社超の経営者インタビュー、掲載企業（オーナーの案内文より）
  *   Batonの代表プロフィール ………… 「学び、紡ぎ、繋いでいく。」
- * パートナー企業のロゴ：エボルグ・Central AX・Smartaleck・Presence は掲載了承済み（黒地なので白抜き版を使う。Presence はいまは仮のワードマーク）。
+ * パートナー企業のロゴ：エボルグ・Central AX・Smartaleck・Presence は掲載了承済み（黒地なので白抜き版を使う）。
  */
 export const musicJapan: Partner = {
   slug: 'music-japan',
@@ -200,7 +200,7 @@ export const musicJapan: Partner = {
         { name: '株式会社エボルグ', no: 'BP-001', href: '/evorg/', tint: '#e83c4f', logo: { src: '/partners/evorg/logo-light.png', size: [517, 137] } },
         { name: '株式会社Central AX', no: 'BP-002', href: '/central-ax/', tint: '#5b6170', logo: { src: '/partners/central-ax/logo-white.png', size: [691, 210] } },
         { name: '株式会社Smartaleck', no: 'BP-005', href: '/smartaleck/', tint: '#1f92ca', logo: { src: '/partners/smartaleck/logo-light.png', size: [800, 126] } },
-        { name: 'Presence株式会社', no: 'BP-006', href: '/presence/', tint: '#03417a', logo: { src: '/partners/presence/logo-light.png', size: [948, 148] } },
+        { name: 'Presence株式会社', no: 'BP-006', href: '/presence/', tint: '#03417a', logo: { src: '/partners/presence/logo-light.png', size: [702, 160] } },
       ],
       note: 'ロゴと社名は、各社の了承を得て掲載しています。',
     },
