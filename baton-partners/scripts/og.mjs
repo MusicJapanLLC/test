@@ -301,7 +301,71 @@ function cheer(it) {
   <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
 </div></body></html>`;
 }
+// orbit（ZETTAICHI / n1a など）は白地に星の点と、傾いた3本の軌道。右に、水色とピンクの吹き出しが重なり、重なりが藍。真ん中に「…」
+function orbit(it) {
+  const sky = '#3799E8';
+  const pink = it.accent ?? '#DE59EC';
+  const indigo = it.brand ?? '#3035D9';
+  const navy = '#001E44';
+  // 句読点で区切った語を、1行が長くなりすぎない範囲でつなげる（「分析し、つなぐ。」を1行に）
+  const parts = it.heading.split(/(?<=[、。])/).map((x) => x.trim()).filter(Boolean);
+  const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0);
+  const lines = [];
+  for (const part of parts) {
+    const last = lines.at(-1);
+    if (last !== undefined && !last.endsWith('。') && len(last + part) <= 13) lines[lines.length - 1] = last + part;
+    else if (last !== undefined && last.endsWith('。') && len(last + part) <= 9) lines[lines.length - 1] = last + part;
+    else lines.push(part);
+  }
+  const fit = {
+    size: Math.min(62, Math.floor(620 / Math.max(...lines.map(len)))),
+    html: lines.map((l) => `<span style="display:block;white-space:nowrap">${esc(l)}</span>`).join(''),
+  };
+  const ell = (rx, ry, o) => `<ellipse rx="${rx}" ry="${ry}" fill="none" stroke="${navy}" stroke-opacity="${o}" stroke-width="2"/>`;
+  const orbits = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-330 -220 660 440" width="660" height="440"><g transform="rotate(-12)">${ell(150, 48, 0.16)}${ell(232, 76, 0.13)}${ell(318, 104, 0.1)}</g></svg>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'MPRh';font-weight:800;src:url('${fontFile('m-plus-rounded-1c-800-h.woff2')}') format('woff2')}
+  @font-face{font-family:'MPRr';font-weight:800;src:url('${fontFile('m-plus-rounded-1c-800.woff2')}') format('woff2')}
+  @font-face{font-family:'MCH';font-weight:400;src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource/michroma/files/michroma-latin-400-normal.woff2')).href}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#fff;font-family:'Zen Kaku Gothic New',sans-serif;color:${navy};position:relative;overflow:hidden}
+  .stars{position:absolute;inset:0;background:radial-gradient(circle,#001E4424 1.3px,transparent 1.8px) 0 0/26px 26px;-webkit-mask:radial-gradient(ellipse 50% 80% at 80% 50%,#000,transparent 80%);mask:radial-gradient(ellipse 50% 80% at 80% 50%,#000,transparent 80%)}
+  .glow{position:absolute;right:40px;top:80px;width:520px;height:470px;border-radius:50%;background:radial-gradient(circle at 40% 45%,${sky}26,transparent 60%),radial-gradient(circle at 65% 60%,${pink}26,transparent 60%)}
+  .orbits{position:absolute;right:-40px;top:96px}
+  .bub{position:absolute;width:230px;height:200px;border-radius:58px 58px 58px 18px;mix-blend-mode:multiply}
+  .b1{right:250px;top:150px;background:${sky}}
+  .b2{right:170px;top:230px;background:${pink};border-radius:58px 58px 18px 58px}
+  .ear{position:absolute;width:0;height:0;mix-blend-mode:multiply}
+  .e1{right:420px;top:118px;border-left:0 solid transparent;border-right:72px solid transparent;border-bottom:60px solid ${sky}}
+  .e2{right:170px;top:186px;border-left:72px solid transparent;border-bottom:60px solid ${pink}}
+  .dots{position:absolute;right:236px;top:282px;display:flex;gap:22px}
+  .dots i{width:26px;height:26px;border-radius:6px;background:#fff}
+  .planet{position:absolute;border-radius:50%}
+  .p1{right:92px;top:120px;width:22px;height:22px;background:${pink};box-shadow:0 0 0 8px ${pink}22}
+  .p2{right:560px;top:430px;width:16px;height:16px;background:${sky}}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:10px;background:linear-gradient(90deg,${sky},${indigo} 50%,${pink})}
+  .in{position:absolute;inset:62px 560px 58px 80px;display:flex;flex-direction:column;justify-content:space-between}
+  .top{display:flex;align-items:center;gap:22px}
+  .top img{height:26px;width:auto}
+  .label{font-family:'MCH',sans-serif;font-size:16px;letter-spacing:.16em;text-transform:uppercase;display:flex;align-items:center;gap:14px}
+  .label::before{content:'';width:22px;height:22px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Crect width='13' height='13' rx='3.5' fill='%233799E8'/%3E%3Crect x='7' y='7' width='13' height='13' rx='3.5' fill='%23DE59EC'/%3E%3Cpath d='M7 10.5A3.5 3.5 0 0 1 10.5 7H13v2.5A3.5 3.5 0 0 1 9.5 13H7Z' fill='%233035D9'/%3E%3C/svg%3E") center/contain no-repeat}
+  h1{font-family:'MPRh','MPRr','Zen Kaku Gothic New',sans-serif;font-weight:800;font-size:${fit.size}px;line-height:1.36;letter-spacing:.02em;width:calc(100% + 80px)}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:21px;font-weight:700;color:#33405c;width:calc(100% + 480px)}
+  .foot svg{height:38px;width:auto}
+</style></head><body>
+<div class="stars"></div><div class="glow"></div><div class="orbits">${orbits}</div>
+<div class="bub b1"></div><div class="ear e1"></div><div class="bub b2"></div><div class="ear e2"></div><div class="dots"><i></i><i></i><i></i></div>
+<div class="planet p1"></div><div class="planet p2"></div><div class="bar"></div>
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}</div>
+  <div><p class="label">${esc(it.label)}</p><h1 style="margin-top:18px">${fit.html}</h1></div>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogo}</div>
+</div></body></html>`;
+}
 function html(it) {
+  if (it.theme === 'orbit') return orbit(it);
   if (it.theme === 'cheer') return cheer(it);
   if (it.theme === 'minka') return minka(it);
   if (it.theme === 'needle') return needle(it);
