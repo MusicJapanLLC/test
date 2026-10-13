@@ -12,6 +12,33 @@ export const site = {
     address: '大阪府大阪市北区梅田1丁目2番2号 大阪駅前第2ビル12-12',
     email: 'music.japan.llc@gmail.com',
     url: 'https://music-japan.com/',
+    corporateNumber: '8120003031493',
+    logo: { src: '/partners/music-japan/logo.png', size: [809, 190] as [number, number] },
+    /** 構造化データの説明文。Baton Partners の運営会社として、サービスの中身で説明する */
+    description:
+      '大阪・梅田の会社。法人向けサービス「Baton Partners」で会社ごとの専用ページをつくり、検索とAIに見つかるよう整えて、話してみたい人どうしをおつなぎしています。',
+    sameAs: ['https://x.com/Music_Japan_LLC', 'https://www.instagram.com/music.japan.llc2/'],
+    /** 代表者。music-japan.com・Baton のプロフィールと同じ人物として、同じ @id でつなぐ */
+    founder: {
+      name: '壁谷友生',
+      alternateName: ['壁谷 友生', 'かべや ともき', 'Tomoki Kabeya'],
+      jobTitle: '代表社員',
+      image: '/partners/music-japan/kabeya.webp',
+      profile: 'https://music-japan.com/profile/',
+      sameAs: [
+        'https://baton.music-japan.com/profile/kabeya/',
+        'https://www.linkedin.com/in/%E5%8F%8B%E7%94%9F-%E5%A3%81%E8%B0%B7-4096373a7/',
+      ],
+      description:
+        '合同会社Music Japan 代表社員。法人向けサービス「Baton Partners」を運営し、経営者メディア『ミラエラ』の認定インタビュアーとして経営者への取材もしている。',
+      knowsAbout: ['SEO', 'AIO', 'LLMO', 'BtoBの集客', 'ランディングページ', '経営者インタビュー', '紹介'],
+    },
+  },
+  /** Baton Partners（サービス）の紹介ページ。運営会社自身のページ（/music-japan/）にある */
+  service: {
+    name: 'Baton Partners',
+    alternateName: 'バトンパートナーズ',
+    slug: 'music-japan',
   },
   /** 本体サイト（music-japan.com）のメニュー。パートナーのページも同じ並びで見せる */
   mainNav: [
