@@ -201,6 +201,7 @@ export const musicJapan: Partner = {
         { name: '株式会社Central AX', no: 'BP-002', href: '/central-ax/', tint: '#5b6170', logo: { src: '/partners/central-ax/logo-white.png', size: [691, 210] } },
         { name: '株式会社Smartaleck', no: 'BP-005', href: '/smartaleck/', tint: '#1f92ca', logo: { src: '/partners/smartaleck/logo-light.png', size: [800, 126] } },
         { name: 'Presence株式会社', no: 'BP-006', href: '/presence/', tint: '#03417a', logo: { src: '/partners/presence/logo-light.png', size: [702, 160] } },
+        { name: '株式会社ZETTAICHI', no: 'BP-007', href: '/zettaichi/', tint: '#001e44', logo: { src: '/partners/zettaichi/logo-light.png', size: [1030, 88] } },
       ],
       note: 'ロゴと社名は、各社の了承を得て掲載しています。',
     },
