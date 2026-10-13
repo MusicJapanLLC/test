@@ -10,6 +10,7 @@ import '../styles/theme-needle.css';
 import '../styles/theme-studio.css';
 import '../styles/theme-match.css';
 import '../styles/theme-cheer.css';
+import '../styles/theme-orbit.css';
 import { setupContact } from './contact';
 import { setupFx } from './fx';
 import { mountScenes } from './scenes';
@@ -29,6 +30,7 @@ if (!__GOOGLE_FONTS__) {
   if (document.body.dataset.theme === 'studio') void import('../styles/fonts-studio.css');
   if (document.body.dataset.theme === 'match') void import('../styles/fonts-match.css');
   if (document.body.dataset.theme === 'cheer') void import('../styles/fonts-cheer.css');
+  if (document.body.dataset.theme === 'orbit') void import('../styles/fonts-orbit.css');
 }
 
 setupHeader();
@@ -46,6 +48,8 @@ setupTracklist();
 if (document.body.dataset.theme === 'studio') void import('./studio').then((m) => m.setupStudio());
 // cheer の世界観だけの演出（招待状とカードを裏返す・応援ボタン）
 if (document.body.dataset.theme === 'cheer') void import('./cheer').then((m) => m.setupCheer());
+// orbit の世界観だけの演出（人柄の五角形を重ねる図）
+if (document.body.dataset.theme === 'orbit') void import('./orbit').then((m) => m.setupOrbit());
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));
