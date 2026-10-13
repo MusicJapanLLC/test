@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { routes, site } from '../config/site';
 import { bpMark } from './logo';
-import { partners } from '../partners';
+import { partners, sites } from '../partners';
 import type { BuildEnv } from './layout';
 import { renderAbout } from './pages/about';
 import { renderContact } from './pages/contact';
@@ -13,7 +13,7 @@ import { renderTop } from './pages/top';
 import { shortName } from './layout';
 import { plain } from './text';
 
-export type GeneratedPage = { key: string; path: string; file: string; lastmod?: string };
+export type GeneratedPage = { key: string; path: string; file: string; lastmod?: string; indexable: boolean };
 
 /**
  * src/ のテンプレートと企業データから、各ページの index.html を書き出す。
@@ -28,7 +28,7 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
     { key: '404', path: '/404.html', html: renderNotFound(partners, env), file: '404.html' },
   ];
 
-  for (const p of partners) {
+  for (const p of sites) {
     const lastmod = p.seo.updated;
     out.push(
       { key: `${p.slug}-top`, path: routes.top(p.slug), html: renderTop(p, env), lastmod },
@@ -47,7 +47,9 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
     const file = resolve(root, name ?? `.${path}/index.html`);
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, html);
-    return { key, path, file, lastmod };
+    const indexable = !env.noindex && !/<meta\b[^>]*name="robots"[^>]*content="[^"]*noindex/i.test(html);
+    if (indexable && !lastmod) throw new Error(`Indexable page has no lastmod: ${path}`);
+    return { key, path, file, lastmod, indexable };
   });
 }
 
@@ -58,8 +60,8 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
 function writeOgManifest(root: string) {
   const items = [
     { key: 'site', label: 'Music Japan Partners', heading: 'パートナー｜事業の強みを知り、次のつながりへ。', company: '合同会社Music Japan のパートナー企業' },
-    ...partners.flatMap((p) => {
-      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme };
+    ...sites.flatMap((p) => {
+      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme, photo: p.leader?.photo };
       return [
         { ...base, key: `${p.slug}-top`, label: `Music Japan Partners — BP-${p.no.padStart(3, '0')}`, heading: plain(p.top.title) },
         { ...base, key: `${p.slug}-about`, label: 'About', heading: plain(p.about.title) },
@@ -84,40 +86,16 @@ function checkFontCharset(root: string, html: string) {
     return;
   }
   const have = new Set(charset);
-  const text = htmlTextForFontAudit(html);
+  const text = html.replace(/<[^>]+>/g, '');
   const missing = [...new Set(text)].filter((c) => /[\u3000-\u9fff\uff00-\uffef]/.test(c) && !have.has(c));
   if (missing.length) {
     console.warn(`\n[fonts] フォントにない文字が ${missing.length} 字あります：${missing.join('')}\n→ npm run fonts でフォントを作り直してください\n`);
   }
 }
 
-/**
- * Build-time only text extraction for the font character audit.
- * This is deliberately not an HTML sanitizer: generated markup is trusted build output.
- * A small state machine avoids regex-based multi-character sanitization warnings while
- * preserving the previous behavior of counting text outside tag delimiters.
- */
-function htmlTextForFontAudit(html: string): string {
-  let text = '';
-  let inTag = false;
-  for (const ch of html) {
-    if (ch === '<') {
-      inTag = true;
-      continue;
-    }
-    if (ch === '>') {
-      inTag = false;
-      text += ' ';
-      continue;
-    }
-    if (!inTag) text += ch;
-  }
-  return text;
-}
-
 /** 一覧ページの更新日は、掲載企業の中でいちばん新しい日 */
 function latest(): string {
-  return [site.updated, ...partners.map((p) => p.seo.updated)].sort().at(-1) ?? site.updated;
+  return [site.updated, ...sites.map((p) => p.seo.updated)].sort().at(-1) ?? site.updated;
 }
 
 /**
