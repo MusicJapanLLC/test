@@ -93,6 +93,8 @@ export type Partner = {
    *                        通知のトースト・選考ボード・面談の記録カード（エボルグ）
    *          'cheer'     … 応援と、星をまとったカメ。白地に紺とオレンジ、亀甲（六角形）の地紋、星のきらめき、
    *                        招待状・ステッカー・トレーディングカード・応援ボタン（Presence）
+   *          'orbit'     … 絶対値と、波長。白地に ZETTAICHI の紺と n1a の藍・水色・ピンク、惑星の軌道、絶対値の縦棒 | |、
+   *                        重なる吹き出し・Big Five の五角形・数直線・プロフィールカード（ZETTAICHI / n1a）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'pair'      … 赤い三角（求職者）と水色の三角（求人）。散らばる→表に並ぶ→線でつながる→重なって大きな Empro の印になる
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
@@ -101,10 +103,11 @@ export type Partner = {
    *          'feed'      … 画面の壁（散らばったリール・動画・トーク画面が壁に並び、集中線になって中心の一点に集まる）
    *          'vinyl'     … 公式シンボルのレコード（CUTで溝が刻まれ、SPINでジャケットが回り、DROPで針が落ちて波形になる）
    *          'enjin'     … 円陣（縁陣）。六角形のタイル（人）が散らばる→亀甲に並び、縁の糸でつながる→円陣を組んで光る甲羅になる
+   *          'wave'      … 波長。人柄の五角形（Big Five）が漂う→惑星の軌道に並び、合う二人を波の糸が結ぶ→重なる吹き出しの点描になる
    */
   world: {
-    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match' | 'cheer';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin';
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match' | 'cheer' | 'orbit';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin' | 'wave';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
@@ -345,6 +348,44 @@ export type Partner = {
      * 押した回数はこの端末の中（localStorage）にだけ残し、どこにも送らない
      */
     cheer?: { kicker: string; title: string; lead: string; button: string; done: string; note: string; link?: { label: string; url: string } };
+    /**
+     * 絶対値の数直線（orbit の世界観）。会社の PHILOSOPHY を引用し、マイナスの側に置いた言葉が
+     * 0 を軸に折り返されて、プラスの側の一つの言葉（value）になる。lines は公式サイトの原文のまま
+     */
+    absolute?: { kicker: string; title: string; lines: string[]; cite: string; marks: string[]; value: string; body: string; note: string };
+    /** 事業を惑星として並べる（orbit の世界観。公式サイトの PLANET A / B / C の呼び方にならう） */
+    planets?: {
+      title: string;
+      lead: string;
+      items: { planet: string; en: string; ja: string; title: string; body: string; points: string[]; url?: string; status?: string }[];
+      note: string;
+    };
+    /**
+     * 2人の Big Five を五角形で描いて重ねる図（イメージ）。重なった所はロゴの藍色、はみ出した所は水色とピンク。
+     * 数値は説明のための例（実在の人の診断結果ではない）。topic は「話すと盛り上がりそうなテーマ」の例
+     */
+    tune?: {
+      kicker: string;
+      title: string;
+      lead: string;
+      axes: string[];
+      pairs: { label: string; a: { role: string; v: number[] }; b: { role: string; v: number[] }; topic: string }[];
+      note: string;
+    };
+    /** サービスのプロフィール画面にならったカード（代表の公開情報だけ）。写真は leader.photo */
+    profile?: {
+      kicker: string;
+      title: string;
+      lead: string;
+      company: string;
+      role: string;
+      rows: { k: string; v: string }[];
+      tags: string[];
+      hobby: string;
+      /** カードに載せる小さな写真（なければ leader.photo） */
+      photo?: { src: string; size: [number, number] };
+      note: string;
+    };
     /** 登壇・主催・共催・伴走の記録を、チケットのようなカードで（公開されている告知の範囲で） */
     events?: {
       title: string;
@@ -356,7 +397,7 @@ export type Partner = {
         host: string;
         body: string;
         figure?: { value: string; unit: string; label: string };
-        art: 'ledger' | 'shield' | 'office' | 'hall' | 'cheers' | 'studio';
+        art: 'ledger' | 'shield' | 'office' | 'hall' | 'cheers' | 'studio' | 'summit' | 'grill' | 'mystery' | 'wolf' | 'pad';
         url?: string;
       }[];
       note: string;

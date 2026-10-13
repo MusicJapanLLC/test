@@ -6,8 +6,9 @@ import { evorg } from './evorg';
 import { musicJapan } from './music-japan';
 import { presence } from './presence';
 import { smartaleck } from './smartaleck';
+import { zettaichi } from './zettaichi';
 
-const all: Partner[] = [evorg, centralAx, dpPartners, cominka, smartaleck, presence];
+const all: Partner[] = [evorg, centralAx, dpPartners, cominka, smartaleck, presence, zettaichi];
 
 /**
  * 準備中（draft）の企業は、プレビュー（*.vercel.app）とローカルにだけ出す。
