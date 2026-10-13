@@ -62,6 +62,8 @@ if (document.body.dataset.theme === 'orbit') {
   }
   void import('./orbit').then((m) => m.setupOrbit());
 }
+// console の世界観だけの演出（切り替えの日の図・控えの置き場所の「乗っ取られたら？」）
+if (document.body.dataset.theme === 'console') void import('./console').then((m) => m.setupConsole());
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));
