@@ -116,7 +116,17 @@
 }
 html.js [data-theme='cheer'] .rv .kicker-rule,
 html.js [data-theme='cheer'] .kicker .kicker-rule {
+  /* 共通の「線が伸びる」演出は左端が軸。星は真ん中を軸に回さないと、上下にぶれて文字とずれる */
+  transform-origin: 50% 50%;
+  flex-shrink: 0;
   animation: cheer-twinkle 2.8s var(--ease) infinite;
+}
+/* スマホのヒーロー：社名は2行目に、1行目の文字と頭をそろえて置く（星の下に潜らせない） */
+@media (max-width: 599px) {
+  [data-theme='cheer'] .hero .kicker-co {
+    flex-basis: 100%;
+    padding-left: calc(14px + 0.9em);
+  }
 }
 @keyframes cheer-twinkle {
   0%,
@@ -2171,7 +2181,8 @@ html.js .iv-stage.is-in .iv-stamp {
 }
 [data-theme='cheer'] .leader-photo img {
   aspect-ratio: 4 / 5;
-  object-position: 50% 28%;
+  /* 元の写真は横長で、金子さんは左から4割ほどの位置。縦に切り抜くと右の観葉植物が真ん中に来るので、左へ寄せる */
+  object-position: 30% 50%;
   filter: none;
   border-radius: 22px;
   box-shadow:
@@ -2179,6 +2190,14 @@ html.js .iv-stage.is-in .iv-stamp {
     10px 12px 0 6px var(--navy),
     0 30px 50px -24px rgba(3, 42, 82, 0.55);
   transform: rotate(-1.5deg);
+}
+@media (max-width: 767px) {
+  /* 右下にずらした紺の影のぶんだけ左へ寄せて、影まで含めて画面の真ん中に */
+  [data-theme='cheer'] .leader-photo {
+    width: min(84%, 340px);
+    margin-inline: auto;
+    translate: -8px 0;
+  }
 }
 [data-theme='cheer'] .leader-frame {
   inset: auto -14px -14px auto;
@@ -2232,7 +2251,8 @@ html.js .iv-stage.is-in .iv-stamp {
   border-radius: 50%;
   filter: none;
   border: 3px solid var(--orange);
-  object-position: 50% 26%;
+  /* 横長の写真を丸く切るので、金子さん（左から4割ほど）が真ん中に来るように */
+  object-position: 19% 50%;
 }
 
 /* ═════ チームの写真：テープで留めた大きな一枚と、星のステッカー ═════ */
@@ -2367,4 +2387,27 @@ html.js .iv-stage.is-in .iv-stamp {
     height: 46px;
     top: -16px;
   }
+}
+
+/* ═════ 文字のズレ止め ═════ */
+/* 話してみる：ステップの番号（02〜05）が、丸く幅の広い Unbounded だと2行に割れていた */
+[data-theme='cheer'] .step-no {
+  white-space: nowrap;
+}
+@media (max-width: 1023px) {
+  [data-theme='cheer'] .step {
+    grid-template-columns: 4.4rem minmax(0, 1fr);
+  }
+  [data-theme='cheer'] .step-no {
+    font-size: 1.75rem;
+  }
+}
+/* 記事の表：スマホでは項目名を折り返し、割合（37.3% など）は1行のまま右の列に */
+[data-theme='cheer'] .a-table tbody th {
+  white-space: normal;
+}
+[data-theme='cheer'] .a-table td,
+[data-theme='cheer'] .a-table thead th:last-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
