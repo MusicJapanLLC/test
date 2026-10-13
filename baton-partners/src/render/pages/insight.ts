@@ -21,7 +21,7 @@ function block(b: Block): string {
         .join('')}</ol>`;
     case 'table':
       return `<div class="a-table-wrap"><table class="a-table"><thead><tr><th scope="col">${esc(b.head[0])}</th><th scope="col">${esc(b.head[1])}</th></tr></thead><tbody>${b.rows
-        .map((r) => `<tr><th scope="row">${esc(r[0])}</th><td>${jp(r[1])}</td></tr>`)
+        .map((r) => `<tr><th scope="row">${jp(r[0])}</th><td>${jp(r[1])}</td></tr>`)
         .join('')}</tbody></table></div>`;
   }
 }

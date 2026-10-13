@@ -116,7 +116,17 @@
 }
 html.js [data-theme='cheer'] .rv .kicker-rule,
 html.js [data-theme='cheer'] .kicker .kicker-rule {
+  /* 共通の「線が伸びる」演出は左端が軸。星は真ん中を軸に回さないと、上下にぶれて文字とずれる */
+  transform-origin: 50% 50%;
+  flex-shrink: 0;
   animation: cheer-twinkle 2.8s var(--ease) infinite;
+}
+/* スマホのヒーロー：社名は2行目に、1行目の文字と頭をそろえて置く（星の下に潜らせない） */
+@media (max-width: 599px) {
+  [data-theme='cheer'] .hero .kicker-co {
+    flex-basis: 100%;
+    padding-left: calc(14px + 0.9em);
+  }
 }
 @keyframes cheer-twinkle {
   0%,
@@ -212,9 +222,9 @@ html.js [data-theme='cheer'] .kicker .kicker-rule {
 }
 
 /* ── ヘッダー ── */
-/* 仮のワードマークは横長なので、高さを控えめに（公式ロゴに差し替えたら見直す） */
+/* 公式ロゴ（左にカメ、右に Presence の横組み） */
 [data-theme='cheer'] .brand-logo {
-  height: 26px;
+  height: 44px;
 }
 [data-theme='cheer'] .menu-label {
   font-size: 0.8rem;
@@ -223,7 +233,7 @@ html.js [data-theme='cheer'] .kicker .kicker-rule {
 }
 @media (max-width: 959px) {
   [data-theme='cheer'] .brand-logo {
-    height: 21px;
+    height: 34px;
   }
 }
 [data-theme='cheer'] .hdr.is-scrolled {
@@ -2163,4 +2173,241 @@ html.js .iv-stage.is-in .iv-stamp {
 [data-theme='cheer'] .a-num li:nth-child(2n)::before {
   background: var(--orange);
   color: var(--navy-ink);
+}
+
+/* ═════ 代表の写真：カラーのまま、白い縁のステッカーと金の星 ═════ */
+[data-theme='cheer'] .leader-photo {
+  padding: 0;
+}
+[data-theme='cheer'] .leader-photo img {
+  aspect-ratio: 4 / 5;
+  /* 元の写真は横長で、金子さんは左から4割ほどの位置。縦に切り抜くと右の観葉植物が真ん中に来るので、左へ寄せる */
+  object-position: 30% 50%;
+  filter: none;
+  border-radius: 22px;
+  box-shadow:
+    0 0 0 6px #fff,
+    10px 12px 0 6px var(--navy),
+    0 30px 50px -24px rgba(3, 42, 82, 0.55);
+  transform: rotate(-1.5deg);
+}
+@media (max-width: 767px) {
+  /* 右下にずらした紺の影のぶんだけ左へ寄せて、影まで含めて画面の真ん中に */
+  [data-theme='cheer'] .leader-photo {
+    width: min(84%, 340px);
+    margin-inline: auto;
+    translate: -8px 0;
+  }
+}
+[data-theme='cheer'] .leader-frame {
+  inset: auto -14px -14px auto;
+  width: 54px;
+  height: 54px;
+  border: 0;
+  background: var(--gold);
+  clip-path: var(--star);
+  animation: cheer-twinkle 3.2s var(--ease) infinite;
+}
+[data-theme='cheer'] .leader-frame::before,
+[data-theme='cheer'] .leader-frame::after {
+  display: none;
+}
+[data-theme='cheer'] .leader-motto {
+  border: 2px solid var(--navy);
+  border-radius: 16px;
+  flex-wrap: wrap;
+}
+/* 写真の下の短い年表。ほかの世界観の .leader-timeline（点と縦線つきのカード）は打ち消す */
+[data-theme='cheer'] .leader-timeline-sub {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 0;
+  border-top: 2px solid var(--navy);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+[data-theme='cheer'] .leader-timeline-sub li {
+  display: grid;
+  grid-template-columns: 5.6em minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.9rem;
+}
+[data-theme='cheer'] .leader-timeline-sub li::before {
+  content: none;
+}
+[data-theme='cheer'] .leader-timeline-sub .lt-y {
+  font-size: 0.8rem;
+  line-height: 1.9;
+}
+[data-theme='cheer'] .quote-leader img {
+  border-radius: 50%;
+  filter: none;
+  border: 3px solid var(--orange);
+  /* 横長の写真を丸く切るので、金子さん（左から4割ほど）が真ん中に来るように */
+  object-position: 19% 50%;
+}
+
+/* ═════ チームの写真：テープで留めた大きな一枚と、星のステッカー ═════ */
+[data-theme='cheer'] .sec-team {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 40% 60% at 20% 50%, var(--orange-pale), transparent 72%),
+    #fff;
+}
+.tm-in {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(40px, 6vw, 96px);
+  align-items: center;
+}
+.tm-photo {
+  position: relative;
+  margin: 0;
+  padding: 14px 14px 52px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow:
+    0 0 0 1px var(--rule),
+    0 30px 60px -28px rgba(3, 42, 82, 0.55);
+  transform: rotate(-1.8deg);
+  transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+.tm-photo:hover {
+  transform: rotate(0) scale(1.01);
+}
+.tm-photo img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.tm-tape {
+  position: absolute;
+  z-index: 1;
+  width: 120px;
+  height: 30px;
+  background: color-mix(in srgb, var(--orange) 55%, transparent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+.tm-tape-a {
+  left: -26px;
+  top: 18px;
+  transform: rotate(-38deg);
+}
+.tm-tape-b {
+  right: -26px;
+  bottom: 70px;
+  transform: rotate(-38deg);
+  background: color-mix(in srgb, var(--sky-deep) 45%, transparent);
+}
+.tm-star {
+  position: absolute;
+  z-index: 1;
+  right: 26px;
+  top: -22px;
+  width: 64px;
+  height: 64px;
+  background: var(--gold);
+  clip-path: var(--star);
+  animation: cheer-twinkle 3s var(--ease) infinite;
+}
+.tm-cap {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 14px;
+  font-family: var(--f-latin);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--navy);
+}
+.tm-body {
+  display: grid;
+  gap: 16px;
+  justify-items: start;
+}
+.tm-body .sec-h {
+  margin-top: 0;
+}
+.tm-p {
+  color: var(--ink-2);
+}
+.tm-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.tm-tags li {
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font-weight: 900;
+  font-size: 0.86rem;
+  box-shadow: var(--sticker);
+  transform: rotate(calc((var(--i) - 1) * 2deg));
+}
+.tm-tags li:nth-child(2) {
+  background: var(--orange);
+  color: var(--navy-ink);
+}
+@media (max-width: 959px) {
+  .tm-in {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tm-photo {
+    padding: 10px 10px 44px;
+  }
+  .tm-tape {
+    width: 90px;
+    height: 24px;
+  }
+  .tm-tape-a {
+    left: -18px;
+  }
+  .tm-tape-b {
+    right: -18px;
+  }
+  .tm-star {
+    width: 46px;
+    height: 46px;
+    top: -16px;
+  }
+}
+
+/* ═════ 文字のズレ止め ═════ */
+/* 話してみる：ステップの番号（02〜05）が、丸く幅の広い Unbounded だと2行に割れていた */
+[data-theme='cheer'] .step-no {
+  white-space: nowrap;
+}
+@media (max-width: 1023px) {
+  [data-theme='cheer'] .step {
+    grid-template-columns: 4.4rem minmax(0, 1fr);
+  }
+  [data-theme='cheer'] .step-no {
+    font-size: 1.75rem;
+  }
+}
+/* 記事の表：スマホでは項目名を折り返し、割合（37.3% など）は1行のまま右の列に */
+[data-theme='cheer'] .a-table tbody th {
+  white-space: normal;
+}
+[data-theme='cheer'] .a-table td,
+[data-theme='cheer'] .a-table thead th:last-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }

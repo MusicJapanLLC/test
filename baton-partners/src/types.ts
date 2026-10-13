@@ -322,9 +322,23 @@ export type Partner = {
       position: string;
       tags: string[];
       back: { label: string; value: string }[];
+      /** カードの表の写真（なければ leader.photo）。focus は object-position（%） */
+      photo?: { src: string; size: [number, number]; focus?: [number, number] };
       /** 写真がないときに表に出す一言 */
       pending: string;
       note: string;
+    };
+    /**
+     * チームの写真（cheer の世界観）。ステッカーで留めた大きな写真と、短い本文。
+     * 写真は会社から受け取ったものだけ。写っている人の名前は、会社が公開している人だけ書く
+     */
+    team?: {
+      kicker: string;
+      title: string;
+      body: string[];
+      photo: { src: string; small: string; size: [number, number]; alt: string; focus?: [number, number] };
+      caption: string;
+      tags: string[];
     };
     /**
      * 応援ボタン（cheer の世界観）。押すたびに甲羅の星が一つずつ灯り、紙吹雪が舞う。
