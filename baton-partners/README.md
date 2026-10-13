@@ -121,3 +121,17 @@ npm run preview   # http://localhost:4174/evorg/
 - [ ] music-japan.com/partners への会社名の掲載
 
 公式サイト（presences.info）は作業環境から直接開けないため、文言は検索エンジン経由（Firecrawl）で確認した公式の記載を使っている。
+
+## ZETTAICHI（BP-007）の残り
+
+株式会社ZETTAICHI と、代表の宮本康太さんが立ち上げている経営者マッチング「n1a（ニア）」のページ。世界観は orbit（絶対値と波長）、シーンは wave。
+ロゴ（ZETTAICHI・n1a）と宮本さんの写真は、オーナー経由で受け取ったもの（2026-10-13）。いまは `draft: true`（プレビューにだけ出る）。
+
+- [ ] 宮本さんにプレビューを見てもらい、掲載の了承をもらう → `draft` を外して本番へ
+- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `zettaichi` を足す（足すまで、このページからの送信は記録されない）
+- [ ] n1a の提供が始まったら「制作中」「COMING SOON」の書き方を、トップ・サービス・FAQ・記事で直す
+- [ ] music-japan.com/partners への会社名の掲載
+- [ ] 本人の希望：AddBox 時代の交流会の名前は使わない（経営者交流会は Biz Summit! と ASOBMENT で紹介）
+
+文言は公式サイト（zettaichi.co.jp・n1a-cxo.com・asobment.studio.site・biz-summit.studio.site）を検索エンジン経由（Firecrawl）で確認した表現を使い、
+経歴と考え方は 2026年1月のインタビュー（ツナカレメディア、AddBox 取締役COO の時期）にもとづく。

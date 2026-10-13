@@ -121,6 +121,8 @@ ${header(p, 'top')}
 
   ${boardSection(p)}
 
+  ${tuneSection(p)}
+
   <section class="sec sec-highlight" aria-labelledby="hl-h">
     ${p.world.theme === 'needle' ? discHtml('lp-hl') : `<div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'feed' ? '2.0' : p.world.scene === 'pair' ? '0.0' : '1.0'}"${p.world.scene === 'pair' ? ' data-sleep="1"' : ''} aria-hidden="true"><canvas></canvas></div>`}
     <div class="wrap hl-in">
@@ -142,6 +144,8 @@ ${header(p, 'top')}
       <p class="fine rv">${jp(t.highlight.note)}</p>
     </div>
   </section>
+
+  ${planetsSection(p)}
 
   ${filmSection(p)}
 
@@ -185,9 +189,13 @@ ${header(p, 'top')}
 
   ${founderSection(p)}
 
+  ${profileSection(p)}
+
   ${mediaSection(p)}
 
   ${missionSection(p)}
+
+  ${absoluteSection(p)}
 
   ${cheerSection(p)}
 
@@ -1021,6 +1029,17 @@ function eventArt(kind: NonNullable<Partner['top']['events']>['items'][number]['
       return `<span class="ea-stage"></span><span class="ea-seats">${Array.from({ length: 30 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</span>`;
     case 'cheers':
       return `<span class="ea-net">${Array.from({ length: 7 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</span>`;
+    // orbit の世界観（ZETTAICHI など）：交流会とゲームの絵
+    case 'summit':
+      return `<span class="ea-spot"></span><span class="ea-podium"></span><span class="ea-crowd">${Array.from({ length: 18 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</span>`;
+    case 'grill':
+      return `<span class="ea-smoke"><i></i><i></i><i></i></span><span class="ea-grill"><i></i><i></i><i></i></span><span class="ea-legs"></span>`;
+    case 'mystery':
+      return `<span class="ea-card"><b>?</b></span><span class="ea-card ea-card-2"><b>!</b></span><span class="ea-lens"></span>`;
+    case 'wolf':
+      return `<span class="ea-moon"></span><span class="ea-eyes"><i></i><i></i></span><span class="ea-votes">${Array.from({ length: 5 }, (_, i) => `<i style="--i:${i}"></i>`).join('')}</span>`;
+    case 'pad':
+      return `<span class="ea-pad"><i class="ea-dpad"></i><i class="ea-btn"></i><i class="ea-btn ea-btn-2"></i></span><span class="ea-bomb"></span>`;
     default:
       return `<span class="ea-term"><i></i><i></i><i></i><b></b></span>`;
   }
@@ -1264,6 +1283,200 @@ function teamSection(p: Partner): string {
         <h2 id="team-h" class="sec-h">${heading(t.title)}</h2>
         ${t.body.map((b) => `<p class="tm-p">${jp(b)}</p>`).join('')}
         <ul class="tm-tags">${t.tags.map((g, i) => `<li style="--i:${i}">${esc(g)}</li>`).join('')}</ul>
+      </div>
+    </div>
+  </section>`;
+}
+
+
+/* ─────────────────────────────────────────────
+   orbit の世界観（ZETTAICHI / n1a など）の部品：
+   人柄の五角形を重ねる図・3つの惑星・プロフィールカード・絶対値の数直線
+   ───────────────────────────────────────────── */
+
+/** 五角形の頂点（上から時計回り）。v は 0〜100、r は 100 のときの半径 */
+function pentagon(v: number[], r = 100): string {
+  return v
+    .map((x, i) => {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / v.length;
+      const k = (Math.max(0, Math.min(100, x)) / 100) * r;
+      return `${(Math.cos(a) * k).toFixed(1)},${(Math.sin(a) * k).toFixed(1)}`;
+    })
+    .join(' ');
+}
+
+/**
+ * 2人の Big Five を五角形で描いて重ねる（イメージ）。水色とピンクを乗算で重ねると、重なった所が n1a の藍色になる。
+ * 組み合わせのボタンで切り替え、五角形は client/orbit.ts がなめらかに形を変える。JSなしでは最初の組み合わせだけ
+ */
+function tuneSection(p: Partner): string {
+  const t = p.top.tune;
+  if (!t) return '';
+  const first = t.pairs[0];
+  const n = t.axes.length;
+  const grid = [20, 40, 60, 80, 100].map((r) => `<polygon points="${pentagon(Array(n).fill(100), r)}" />`).join('');
+  const axes = t.axes
+    .map((_, i) => {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / n;
+      return `<line x1="0" y1="0" x2="${(Math.cos(a) * 100).toFixed(1)}" y2="${(Math.sin(a) * 100).toFixed(1)}" />`;
+    })
+    .join('');
+  const labels = t.axes
+    .map((label, i) => {
+      const a = -Math.PI / 2 + (i * Math.PI * 2) / n;
+      const x = Math.cos(a) * 122;
+      const y = Math.sin(a) * 118 + 5;
+      const anchor = Math.abs(x) < 8 ? 'middle' : x > 0 ? 'start' : 'end';
+      return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="${anchor}">${esc(label)}</text>`;
+    })
+    .join('');
+  const data = esc(JSON.stringify(t.pairs.map((pr) => ({ a: pr.a, b: pr.b, topic: pr.topic }))));
+  return `
+  <section class="sec sec-tune" aria-labelledby="tune-h">
+    <div class="wrap tune-in">
+      <header class="tune-head rv">
+        <p class="kicker">${esc(t.kicker)}</p>
+        <h2 id="tune-h" class="sec-h">${heading(t.title)}</h2>
+        <p class="tune-lead">${jp(t.lead)}</p>
+        <div class="tune-tabs" role="group" aria-label="2人の組み合わせを選ぶ">${t.pairs
+          .map(
+            (pr, i) =>
+              `<button type="button" class="tune-tab" data-tune-pick="${i}" aria-pressed="${i === 0}"><span class="tt-no">0${i + 1}</span><span class="tt-l">${esc(pr.label)}</span></button>`,
+          )
+          .join('')}</div>
+      </header>
+      <figure class="tune-fig rv" data-tune data-pairs="${data}">
+        <div class="tune-chart">
+          <svg viewBox="-170 -140 340 282" role="img" aria-label="Big Fiveの5つの軸で描いた2人の人柄を、重ねたイメージ図">
+            <g class="tn-grid">${grid}</g>
+            <g class="tn-axes">${axes}</g>
+            <g class="tn-shapes">
+              <polygon class="tn-a" data-tune-poly="a" points="${pentagon(first.a.v)}" />
+              <polygon class="tn-b" data-tune-poly="b" points="${pentagon(first.b.v)}" />
+            </g>
+            <g class="tn-labels">${labels}</g>
+          </svg>
+        </div>
+        <figcaption class="tune-legend">
+          <span class="tl tl-a"><i aria-hidden="true"></i><b data-tune-role="a">${esc(first.a.role)}</b></span>
+          <span class="tl tl-b"><i aria-hidden="true"></i><b data-tune-role="b">${esc(first.b.role)}</b></span>
+          <span class="tl tl-m"><i aria-hidden="true"></i><b>重なり</b></span>
+        </figcaption>
+        <div class="tune-chat">
+          <p class="tq-k">話すと盛り上がりそうなテーマ（例）</p>
+          <p class="tq-b" aria-live="polite"><span class="tq-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tq-t" data-tune-topic>${esc(first.topic)}</span></p>
+        </div>
+      </figure>
+    </div>
+    <p class="wrap fine rv">${jp(t.note)}</p>
+  </section>`;
+}
+
+/** 3つの事業を惑星として並べる（公式サイトの PLANET A / B / C） */
+function planetsSection(p: Partner): string {
+  const pl = p.top.planets;
+  if (!pl) return '';
+  return `
+  <section class="sec sec-planets" aria-labelledby="pl-h">
+    <div class="pl-sky" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">Three planets</p>
+        <h2 id="pl-h" class="sec-h">${heading(pl.title)}</h2>
+      </header>
+      <p class="pls-lead rv">${jp(pl.lead)}</p>
+      <ol class="pls">${pl.items
+        .map(
+          (it, i) => `
+        <li class="pl rv" style="--d:${i}" data-planet="${esc(it.planet)}">
+          <div class="pl-orb" aria-hidden="true"><span class="pl-ring"></span><span class="pl-ball"><b>${esc(it.planet)}</b></span><span class="pl-moon"></span></div>
+          <p class="pl-meta"><span>Planet ${esc(it.planet)}</span><span class="pl-en">${esc(it.en)}</span>${it.status ? `<span class="pl-status">${esc(it.status)}</span>` : ''}</p>
+          <p class="pl-ja">${esc(it.ja)}</p>
+          <h3 class="pl-h">${heading(it.title)}</h3>
+          <p class="pl-p">${jp(it.body)}</p>
+          <ul class="pl-points">${it.points.map((pt) => `<li>${esc(pt)}</li>`).join('')}</ul>
+          ${it.url ? `<a class="pl-link" href="${it.url}" target="_blank" rel="noopener"><span>公式サイトを見る</span><span aria-hidden="true">↗</span></a>` : ''}
+        </li>`,
+        )
+        .join('')}</ol>
+      <p class="fine rv">${jp(pl.note)}</p>
+    </div>
+  </section>`;
+}
+
+/** サービスのプロフィール画面にならったカード。代表の公開情報だけを並べる */
+function profileSection(p: Partner): string {
+  const f = p.top.profile;
+  const l = p.leader;
+  if (!f || !l) return '';
+  const photo = f.photo ?? (l.photo && l.photoSize ? { src: l.photo, size: l.photoSize } : null);
+  return `
+  <section class="sec sec-profile" aria-labelledby="pf-h">
+    <div class="wrap pf-in">
+      <div class="pf-body rv">
+        <p class="kicker">${esc(f.kicker)}</p>
+        <h2 id="pf-h" class="sec-h">${heading(f.title)}</h2>
+        <p class="pf-lead">${jp(f.lead)}</p>
+        <a class="link-arrow" href="${routes.about(p.slug)}"><span>${esc(l.name.replace(' ', ''))}さんの歩みを読む</span><span class="arrow" aria-hidden="true">→</span></a>
+        <p class="fine">${jp(f.note)}</p>
+      </div>
+      <article class="pf-card rv" aria-label="${esc(l.name)}さんのプロフィール">
+        <span class="pf-orbit" aria-hidden="true"><i></i></span>
+        <header class="pf-top">
+          <span class="pf-co">${esc(f.company)}</span>
+          <img class="pf-mark" src="${p.service.logo}" alt="" width="${p.service.logoSize[0]}" height="${p.service.logoSize[1]}" loading="lazy" />
+        </header>
+        <div class="pf-id">
+          ${photo ? `<img class="pf-photo" src="${photo.src}" alt="${esc(l.role)} ${esc(l.name)}" width="${photo.size[0]}" height="${photo.size[1]}" loading="lazy" decoding="async" />` : ''}
+          <div>
+            <p class="pf-name">${esc(l.name)}</p>
+            <p class="pf-en">${esc(l.nameEn)}</p>
+            <p class="pf-role">${esc(f.role)}</p>
+          </div>
+        </div>
+        <dl class="pf-rows">${f.rows.map((r) => `<div><dt>${esc(r.k)}</dt><dd>${esc(r.v)}</dd></div>`).join('')}</dl>
+        <p class="pf-k">インタビューで使っていた言葉</p>
+        <ul class="pf-tags">${f.tags.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+        <p class="pf-hobby"><span class="pf-pad" aria-hidden="true"><i></i></span><span><small>Game</small>${esc(f.hobby)}</span></p>
+      </article>
+    </div>
+  </section>`;
+}
+
+/**
+ * 絶対値の数直線。マイナスの側の言葉が、見えたときに 0 を軸に一つずつ折り返されて、プラスの側へ渡る。
+ * 渡りきると「|経験|」が浮かぶ。動きを減らす設定・JSなしでは、渡りきった形で見せる
+ */
+function absoluteSection(p: Partner): string {
+  const a = p.top.absolute;
+  if (!a) return '';
+  const ticks = Array.from({ length: 11 }, (_, i) => i - 5)
+    .map((v) => `<i style="--v:${v}"${v === 0 ? ' class="is-zero"' : ''}><b>${v < 0 ? `−${-v}` : v}</b></i>`)
+    .join('');
+  return `
+  <section class="sec sec-absolute" aria-labelledby="abs-h">
+    <p class="abs-glyph" aria-hidden="true">|x|</p>
+    <div class="wrap abs-in">
+      <header class="abs-head rv">
+        <p class="kicker">${esc(a.kicker)}</p>
+        <h2 id="abs-h" class="sec-h">${heading(a.title)}</h2>
+      </header>
+      <blockquote class="abs-poem rv">
+        <p>${a.lines.map((ln) => `<span>${esc(ln)}</span>`).join('')}</p>
+        <cite>${esc(a.cite)}</cite>
+      </blockquote>
+      <figure class="abs-line rv" aria-label="数直線の図。マイナスの側にある${esc(a.marks.join('・'))}が、0を軸に折り返されてプラスの側に移り、「${esc(a.value)}」になる">
+        <div class="al-track" aria-hidden="true">
+          <span class="al-axis"></span>
+          <span class="al-ticks">${ticks}</span>
+          <ul class="al-marks">${a.marks.map((m, i) => `<li style="--x:${-(a.marks.length - i)};--i:${i}"><span>${esc(m)}</span></li>`).join('')}</ul>
+        </div>
+        <p class="al-value"><span class="al-bar" aria-hidden="true"></span><b>${esc(a.value)}</b><span class="al-bar" aria-hidden="true"></span></p>
+        <p class="al-formula" aria-hidden="true">|−x| = x</p>
+      </figure>
+      <div class="abs-body rv">
+        <p>${jp(a.body)}</p>
+        <p class="fine">${jp(a.note)}</p>
       </div>
     </div>
   </section>`;
