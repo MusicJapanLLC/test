@@ -25,8 +25,8 @@ import type { Partner } from '../types';
  *   2026年10月8日の面談 … 紹介の考え方（数より一発一中、記憶力）、「一番ワクワクすることは」と聞くこと、学生時代（野球部キャプテン・応援団長・DJ）
  *   株式会社経営参謀の調査（PR TIMES 2026年5月25日） … 記事とトップの「その後」の数字
  * 公開：金子さんの掲載許可を得て公開（2026年10月12日、オーナーの指示）。
- * 写真：ご本人から受け取るまでは載せない（トレーディングカードは頭文字の面）。受け取ったら leader.photo / photoSize に入れる
- * ロゴ：公式のカメのロゴを受け取るまでは、仮のワードマーク（public/partners/presence/）。受け取ったら同じファイル名で差し替え、logoSize を実寸に
+ * 写真・ロゴ：オーナー経由で受け取ったもの（2026年10月13日）。ロゴは公式の縦組みから、公式サイトのヘッダーと同じ横組み（左にカメ、右に Presence）を作った。
+ *   黒地用（logo-light.png）は文字だけ白抜き。代表の写真は、取り組みページ＝デスクの写真、トレーディングカード＝笑顔の立ち姿、トップ＝チームの写真（中央が金子さん）
  * 載せないもの：料金・契約条件（Baton Partners の方針）、面談で出た金額や人数の自己申告（月に会う人数など）、本人の発言の創作、
  *   第三者の記事にある個人的な経緯
  */
@@ -39,7 +39,7 @@ export const presence: Partner = {
     catch: '肩書きより先に、人柄でつながる。',
     lead: '「日本一儲かる会社よりも、日本一応援される会社に」。採用支援を中心に、販売促進やアパレルまで手がける東京・丸の内の会社です。代表の金子将土さんは、名刺交換も営業も禁止した経営者コミュニティ「P-ENJIN」を主宰しています。',
     service: 'P-ENJIN',
-    logos: [{ src: '/partners/presence/logo-light.png', alt: 'Presence', size: [948, 148] }],
+    logos: [{ src: '/partners/presence/logo-light.png', alt: 'Presence', size: [702, 160] }],
   },
   company: {
     name: 'Presence株式会社',
@@ -65,7 +65,7 @@ export const presence: Partner = {
     accent: '#FF8001',
     logo: '/partners/presence/logo.png',
     logoAlt: 'Presence株式会社',
-    logoSize: [948, 148],
+    logoSize: [702, 160],
     scene: { a: '#03417A', b: '#FF8001', match: '#FFB81C' },
   },
   world: { theme: 'cheer', scene: 'enjin' },
@@ -73,6 +73,8 @@ export const presence: Partner = {
     name: '金子 将土',
     nameEn: 'Masato Kaneko',
     role: '代表取締役社長',
+    photo: '/partners/presence/kaneko.jpg',
+    photoSize: [1179, 767],
     timeline: [
       { year: '学生時代', text: '野球部でキャプテン、応援団長も務める。DJをしていた時期もあるそうです' },
       { year: '営業', text: '自分を変えたい一心で、飛び込み営業へ。のちに2社で販売実績日本一を経験' },
@@ -196,6 +198,7 @@ export const presence: Partner = {
         { label: '実績', value: '2社で販売実績日本一' },
         { label: '主宰', value: 'P-ENJIN（経営者）・縁陣会（独立支援）' },
       ],
+      photo: { src: '/partners/presence/kaneko-smile.jpg', size: [1180, 786], focus: [51, 20] },
       pending: 'Presence CEO',
       note: 'プロフィールは、金子さんがSNS（Instagram・Threads）で公開している内容と、2026年10月の面談でうかがった話にもとづきます。',
     },
@@ -206,6 +209,23 @@ export const presence: Partner = {
       { label: 'HRM事業部の売上', value: '632', unit: '%', note: '昨年度との比較' },
     ],
     statsNote: '数字は、Presence株式会社の公式サイト（会社概要・HRM事業部・販売促進支援のページ）に掲載されている内容です（2026年10月時点）。',
+    team: {
+      kicker: 'Team',
+      title: '採用も、営業も、{主役は人。}',
+      body: [
+        'Presenceで一緒に働く人は、業務委託の方を含めて92名。採用の支援も、販売促進も、オーダースーツとアパレルも、事業は幅広いけれど、公式サイトには「多彩な事業のすべてに共通しているのは“人が主役”という信念」とあります。',
+        '社名のPresenceは「存在感」。誰もが自分の存在感を発揮できる場をつくりたい、という想いが込められています。',
+      ],
+      photo: {
+        src: '/partners/presence/team.jpg',
+        small: '/partners/presence/team-720.jpg',
+        size: [1180, 786],
+        alt: '並木道で手を振るPresence株式会社のメンバー。中央が代表取締役社長の金子将土さん',
+        focus: [50, 40],
+      },
+      caption: 'Presenceのみなさん（中央が金子さん）',
+      tags: ['人が主役', '92名（業務委託を含む）', '東京・丸の内'],
+    },
     mission: {
       glyph: '応',
       title: '日本一儲かる会社よりも、日本一応援される会社に',

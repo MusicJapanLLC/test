@@ -114,8 +114,8 @@ npm run preview   # http://localhost:4174/evorg/
 
 金子さんの掲載許可を得て公開（draft を外した）。あとから差し替えるもの：
 
-- [ ] 代表の写真（受け取ったら `leader.photo` / `photoSize` に入れる。トレーディングカードと取り組みページに出る）
-- [ ] 公式ロゴ（星をまとったカメ）。いまは仮のワードマーク（`public/partners/presence/logo.png` / `logo-light.png`）。同じファイル名で差し替え、`logoSize` を実寸に
+- [x] 代表の写真（2026-10-13 受け取り。`kaneko.jpg` = 取り組みページと引用、`kaneko-smile.jpg` = トレーディングカード、`team.jpg` / `team-720.jpg` = トップの「Team」）
+- [x] 公式ロゴ（星をまとったカメ）。縦組みの公式ロゴを横組みに並べ直したもの（`logo.png` / `logo-light.png`、702×160。`logo-light.png` は文字だけ白）。OG 画像も作り直した
 - [ ] P-ENJIN のロゴ（あれば）。いまは仮のワードマーク（`p-enjin.png`）
 - [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `presence` を足す（足すまで、このページからの送信は記録されない）
 - [ ] music-japan.com/partners への会社名の掲載
