@@ -1,0 +1,7 @@
+/*
+ * cheer の世界観（Presence など）でだけ読み込む。
+ *   見出し：Zen Kaku Gothic New 900（公式サイトと同じ書体の極太。使う文字だけのファイルは fonts-faces-mono.css と共通）
+ *   欧文　：Unbounded（丸く太い幾何学の書体。ロゴの斜体の「Presence」にならい、CSS で少し傾けて使う）
+ */
+@import './fonts-faces-mono.css';
+@import '@fontsource-variable/unbounded/wght.css';

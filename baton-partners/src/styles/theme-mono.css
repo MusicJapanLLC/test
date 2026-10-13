@@ -506,3 +506,611 @@
 [data-theme='mono'] .in-link {
   text-decoration-color: var(--accent, var(--brand-2));
 }
+
+/* ═════════════════════════════════════════════
+   mono の世界観の強化（Central AX）
+   「Central」＝名古屋が真ん中。座標と十字線、同心円の地図、端末、チケットの半券。
+   黒い面と白抜き、細い方眼、信号の青（--brand-2）は「いま動いているもの」だけに使う。
+   ═════════════════════════════════════════════ */
+[data-theme='mono'] {
+  --f-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  --signal: var(--brand-2);
+  --marks:
+    linear-gradient(var(--ink), var(--ink)) top left / 18px 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) top left / 2px 18px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) top right / 18px 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) top right / 2px 18px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) bottom left / 18px 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) bottom left / 2px 18px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) bottom right / 18px 2px no-repeat,
+    linear-gradient(var(--ink), var(--ink)) bottom right / 2px 18px no-repeat;
+}
+
+/* ── ヒーロー：右上に名古屋駅の座標、右側の立方体には十字線と走査線 ── */
+[data-theme='mono'] .hero-deck {
+  position: absolute;
+  top: calc(var(--hdr) + 28px);
+  right: var(--gutter);
+  z-index: 2;
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  font-family: var(--f-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+}
+[data-theme='mono'] .hero-deck span:first-child::before {
+  content: '';
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 8px;
+  background: var(--signal);
+  vertical-align: 0;
+  animation: mono-blink 1.4s steps(2, jump-none) infinite;
+}
+[data-theme='mono'] .hero-deck span:last-child {
+  color: var(--ink-3);
+}
+@keyframes mono-blink {
+  50% {
+    opacity: 0.2;
+  }
+}
+html:not(.js-stage) [data-theme='mono'] .hero-deck {
+  position: static;
+  justify-items: start;
+  margin-bottom: 10px;
+}
+html.js-stage [data-theme='mono'] .hero-deck {
+  transition: opacity 0.6s var(--ease);
+}
+@media (max-width: 767px) {
+  [data-theme='mono'] .hero-deck {
+    display: none;
+  }
+}
+/* 十字線：画面の右側の中心（立方体の真ん中）を通る */
+[data-theme='mono'] .stage-sticky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(var(--ink), var(--ink)) 72% 0 / 1px 100% no-repeat,
+    linear-gradient(var(--ink), var(--ink)) 0 50% / 100% 1px no-repeat;
+  opacity: 0.12;
+  -webkit-mask-image: linear-gradient(90deg, transparent 44%, #000 60%);
+  mask-image: linear-gradient(90deg, transparent 44%, #000 60%);
+}
+/* 走査線：信号の青が、上から下へゆっくり通る */
+[data-theme='mono'] .stage-sticky::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  right: 0;
+  top: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--signal) 30%, var(--signal) 70%, transparent);
+  box-shadow: 0 0 18px 2px color-mix(in srgb, var(--signal) 45%, transparent);
+  opacity: 0.55;
+  animation: mono-scan 6.5s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+@keyframes mono-scan {
+  from {
+    transform: translateY(8vh);
+  }
+  to {
+    transform: translateY(92vh);
+  }
+}
+@media (max-width: 959px) {
+  [data-theme='mono'] .stage-sticky::after {
+    background:
+      linear-gradient(var(--ink), var(--ink)) 50% 0 / 1px 46% no-repeat,
+      linear-gradient(var(--ink), var(--ink)) 0 24% / 100% 1px no-repeat;
+    -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 50%);
+    mask-image: linear-gradient(180deg, #000 30%, transparent 50%);
+  }
+  [data-theme='mono'] .stage-sticky::before {
+    left: 0;
+    animation-name: mono-scan-sp;
+  }
+  @keyframes mono-scan-sp {
+    from {
+      transform: translateY(8vh);
+    }
+    to {
+      transform: translateY(46vh);
+    }
+  }
+}
+[data-theme='mono'] .hero-h {
+  font-size: clamp(1.9rem, 0.9rem + 3.6vw, 4.6rem);
+}
+[data-theme='mono'] .hero-h .ln + .ln {
+  position: relative;
+}
+/* 黒帯の右下に、ロゴの四角い枠の切れ目 */
+[data-theme='mono'] .hero-h .ln + .ln::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 22px;
+  height: 22px;
+  border-right: 3px solid var(--signal);
+  border-bottom: 3px solid var(--signal);
+}
+[data-theme='mono'] .btn-ink:hover {
+  background: var(--signal);
+  border-color: var(--signal);
+}
+[data-theme='mono'] .verb-no::after {
+  height: 3px;
+  width: 36px;
+  background: var(--signal);
+}
+[data-theme='mono'] .stage-progress {
+  height: 3px;
+  background: var(--rule);
+}
+[data-theme='mono'] .stage-progress i {
+  background: var(--ink);
+}
+[data-theme='mono'] .stage-step {
+  font-family: var(--f-mono);
+  font-weight: 600;
+}
+
+/* ── 流れる帯：黒い面に、白い大文字。区切りは信号の青い四角 ── */
+[data-theme='mono'] .mq:not(.mq-md) {
+  background: var(--ink);
+  border-block: 0;
+}
+[data-theme='mono'] .mq:not(.mq-md) .mq-item {
+  color: #fff;
+}
+[data-theme='mono'] .mq:not(.mq-md) .mq-item:nth-child(4n + 3) {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.9);
+}
+[data-theme='mono'] .mq:not(.mq-md) .mq-sep {
+  font-size: 0;
+}
+[data-theme='mono'] .mq:not(.mq-md) .mq-sep::before {
+  content: '';
+  display: inline-block;
+  width: clamp(10px, 0.5rem + 0.6vw, 18px);
+  height: clamp(10px, 0.5rem + 0.6vw, 18px);
+  background: var(--signal);
+  vertical-align: middle;
+}
+
+/* ── 課題：点検表のように、四隅にトンボ ── */
+[data-theme='mono'] .issues {
+  gap: 14px;
+}
+[data-theme='mono'] .issue {
+  border-top: 0;
+  padding: 24px 26px 28px;
+  background: var(--marks), #fff;
+  border: 1px solid var(--rule);
+}
+
+/* ── 端末：黒い画面、等幅の文字、信号の青のカーソル ── */
+[data-theme='mono'] .sec-term {
+  background-color: #fff;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+[data-theme='mono'] .tm {
+  background: #0b0c0f;
+  color: #e9ebf0;
+  box-shadow:
+    14px 14px 0 var(--ink),
+    14px 14px 0 1px var(--ink);
+  outline: 1px solid var(--ink);
+}
+[data-theme='mono'] .tm-bar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  font-family: var(--f-mono);
+  color: rgba(255, 255, 255, 0.6);
+}
+[data-theme='mono'] .tm-lines {
+  font-family: var(--f-mono);
+  font-size: 0.8rem;
+  line-height: 1.75;
+}
+[data-theme='mono'] .tm-lines .tm-t {
+  font-family: var(--f-sans);
+  font-size: 0.86rem;
+}
+[data-theme='mono'] .tm-who {
+  font-family: var(--f-mono);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+}
+[data-theme='mono'] .tm-you .tm-who {
+  color: #fff;
+}
+[data-theme='mono'] .tm-you .tm-who::before {
+  content: '› ';
+  color: var(--signal);
+}
+[data-theme='mono'] .tm-you .tm-t {
+  color: #fff;
+  font-weight: 700;
+}
+[data-theme='mono'] .tm-ai .tm-t {
+  color: rgba(233, 235, 240, 0.82);
+}
+[data-theme='mono'] .tm-ok .tm-who,
+[data-theme='mono'] .tm-ok .tm-t {
+  color: #59e08f;
+}
+[data-theme='mono'] .tm-ask .tm-who,
+[data-theme='mono'] .tm-ask .tm-t {
+  color: #8ea2ff;
+}
+[data-theme='mono'] .tm-cursor {
+  font-family: var(--f-mono);
+  color: var(--signal);
+}
+[data-theme='mono'] .tm-cursor i {
+  background: var(--signal);
+}
+[data-theme='mono'] .tm > .fine {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.5);
+}
+[data-theme='mono'] .tm-pno {
+  font-family: var(--f-latin);
+  font-weight: 800;
+}
+[data-theme='mono'] .tm-pno::before {
+  content: '[';
+  font-weight: 300;
+}
+[data-theme='mono'] .tm-pno::after {
+  content: ']';
+  font-weight: 300;
+}
+[data-theme='mono'] .tm-points li {
+  padding-top: 14px;
+  border-top: 1px solid var(--ink);
+}
+@media (max-width: 599px) {
+  [data-theme='mono'] .tm {
+    box-shadow: 8px 8px 0 var(--ink);
+  }
+  [data-theme='mono'] .tm-lines li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
+  }
+}
+
+/* ── 登壇・主催の記録：チケットの半券 ── */
+[data-theme='mono'] .sec-events {
+  background: var(--paper-2);
+}
+[data-theme='mono'] .ev-in {
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+[data-theme='mono'] .ev-in:hover {
+  transform: translate(-4px, -4px);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+[data-theme='mono'] .ev-art {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    var(--ink);
+  background-size: 16px 16px;
+  color: #fff;
+  border-bottom: 1.5px dashed var(--ink);
+}
+/* 切り取り線の丸い切り欠き */
+[data-theme='mono'] .ev-art::before,
+[data-theme='mono'] .ev-art::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--paper-2);
+  border: 1.5px solid var(--ink);
+  z-index: 1;
+}
+[data-theme='mono'] .ev-art::before {
+  left: -9px;
+}
+[data-theme='mono'] .ev-art::after {
+  right: -9px;
+}
+[data-theme='mono'] .ev-art .hl {
+  background: var(--signal) !important;
+}
+[data-theme='mono'] .ea-apps i {
+  color: var(--ink);
+}
+[data-theme='mono'] .ea-count {
+  font-family: var(--f-latin);
+  color: var(--signal);
+}
+[data-theme='mono'] .ea-check {
+  color: #59e08f;
+}
+[data-theme='mono'] .ea-net i:nth-child(3n + 1) {
+  background: var(--signal);
+}
+[data-theme='mono'] .ev-stub {
+  font-family: var(--f-mono);
+  color: rgba(255, 255, 255, 0.7);
+}
+[data-theme='mono'] .ev-meta {
+  font-family: var(--f-mono);
+  font-weight: 600;
+  font-size: 0.72rem;
+}
+[data-theme='mono'] .ev-kind {
+  border: 0;
+  background: var(--ink);
+  color: #fff;
+  font-family: var(--f-sans);
+}
+[data-theme='mono'] .ev-fig b {
+  font-family: var(--f-latin);
+  font-weight: 900;
+  font-stretch: 112%;
+  letter-spacing: -0.03em;
+}
+[data-theme='mono'] .ev-fig small {
+  font-family: var(--f-serif);
+  font-weight: 900;
+}
+[data-theme='mono'] .ev-link:hover {
+  color: var(--signal);
+}
+
+/* ── 同心円の地図：名古屋・名駅が真ん中。走査は信号の青 ── */
+[data-theme='mono'] .sec-radar {
+  background-color: #fff;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+[data-theme='mono'] .rd-map {
+  background: radial-gradient(circle, #fff 0 69%, transparent 70%);
+}
+[data-theme='mono'] .rd-ring {
+  border-color: var(--ink);
+  border-style: solid;
+}
+[data-theme='mono'] .rd-ring:nth-child(2) {
+  border-style: dashed;
+}
+[data-theme='mono'] .rd-ring:nth-child(3) {
+  border-color: var(--rule-2);
+}
+[data-theme='mono'] .rd-ring i {
+  font-family: var(--f-mono);
+  background: #fff;
+  color: var(--ink);
+  font-weight: 600;
+}
+[data-theme='mono'] .rd-axis {
+  background: var(--ink);
+  opacity: 0.25;
+}
+[data-theme='mono'] .rd-n {
+  font-family: var(--f-mono);
+}
+[data-theme='mono'] .rd-pt-in i {
+  border-radius: 0;
+  width: 10px;
+  height: 10px;
+}
+[data-theme='mono'] .rd-pt.is-ev .rd-pt-in i {
+  border-radius: 0;
+  animation: mono-ping 2.4s var(--ease) infinite;
+}
+@keyframes mono-ping {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--signal) 40%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 12px transparent;
+  }
+}
+[data-theme='mono'] .rd-pt-in b {
+  font-weight: 900;
+  background: #fff;
+  padding: 0 4px;
+}
+[data-theme='mono'] .rd-pt-in small {
+  font-family: var(--f-mono);
+  background: #fff;
+  padding: 0 4px;
+}
+/* 真ん中の印は、ロゴの「右辺が途切れた四角」 */
+[data-theme='mono'] .rd-center i {
+  width: 30px;
+  height: 30px;
+  background: none;
+  border: 4px solid var(--ink);
+  border-right-color: transparent;
+  box-shadow: inset 0 0 0 5px #fff, inset 0 0 0 30px var(--ink);
+}
+[data-theme='mono'] .rd-center b {
+  margin-top: 4px;
+  padding: 2px 8px;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 900;
+}
+[data-theme='mono'] .rd-center small {
+  font-family: var(--f-mono);
+  letter-spacing: 0.14em;
+}
+[data-theme='mono'] .rd-list li {
+  border-top-color: var(--ink);
+}
+[data-theme='mono'] .rd-list li b {
+  font-weight: 900;
+}
+
+/* ── 代表：トンボと座標の写真、相棒の名刺、四角い印の年表 ── */
+[data-theme='mono'] .sec-founder {
+  background: #fff;
+}
+[data-theme='mono'] .fd-photo {
+  padding: 18px;
+  background: var(--marks);
+}
+[data-theme='mono'] .fd-photo img {
+  filter: grayscale(1) contrast(1.06);
+  transition: filter 0.8s var(--ease);
+}
+[data-theme='mono'] .fd-photo:hover img {
+  filter: grayscale(0);
+}
+[data-theme='mono'] .fd-photo figcaption {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--f-mono);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+[data-theme='mono'] .fd-photo figcaption span {
+  color: var(--ink);
+}
+[data-theme='mono'] .fd-marks i {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border: 0 solid var(--signal);
+}
+[data-theme='mono'] .fd-marks i:nth-child(1) {
+  left: 36px;
+  top: 36px;
+  border-left-width: 3px;
+  border-top-width: 3px;
+}
+[data-theme='mono'] .fd-marks i:nth-child(2) {
+  right: 36px;
+  top: 36px;
+  border-right-width: 3px;
+  border-top-width: 3px;
+}
+[data-theme='mono'] .fd-marks i:nth-child(3) {
+  left: 36px;
+  bottom: 66px;
+  border-left-width: 3px;
+  border-bottom-width: 3px;
+}
+[data-theme='mono'] .fd-marks i:nth-child(4) {
+  right: 36px;
+  bottom: 66px;
+  border-right-width: 3px;
+  border-bottom-width: 3px;
+}
+[data-theme='mono'] .fd-quote {
+  border-left: 0;
+  padding: 14px 18px;
+  background: var(--ink);
+}
+[data-theme='mono'] .fd-quote p {
+  color: #fff;
+  font-weight: 900;
+}
+[data-theme='mono'] .fd-quote p::before {
+  content: '「';
+}
+[data-theme='mono'] .fd-quote p::after {
+  content: '」';
+}
+[data-theme='mono'] .fd-quote cite {
+  color: rgba(255, 255, 255, 0.65);
+}
+[data-theme='mono'] .fd-partner {
+  border: 1.5px solid var(--ink);
+  background: var(--marks), #fff;
+  padding: 20px 22px;
+}
+[data-theme='mono'] .fd-pn {
+  font-size: 1.3rem;
+}
+[data-theme='mono'] .fd-tl li {
+  border-top: 2px solid var(--ink);
+}
+[data-theme='mono'] .fd-tl li::before {
+  border-radius: 0;
+  top: -8px;
+  width: 14px;
+  height: 14px;
+  background: var(--ink);
+}
+[data-theme='mono'] .fd-tl li:last-child::before {
+  background: var(--signal);
+}
+[data-theme='mono'] .fdt-y {
+  font-family: var(--f-mono);
+  font-weight: 700;
+  font-size: 1.02rem;
+}
+@media (max-width: 899px) {
+  [data-theme='mono'] .fd-tl {
+    border-left: 2px solid var(--ink);
+  }
+  [data-theme='mono'] .fd-tl li {
+    border-top: 0;
+  }
+  [data-theme='mono'] .fd-tl li::before {
+    left: -27px;
+    top: 2px;
+  }
+}
+
+/* ── 発表と発信 ── */
+[data-theme='mono'] .media {
+  border-top: 2px solid var(--ink);
+}
+[data-theme='mono'] .media-kind {
+  border-radius: 0;
+  background: var(--ink);
+  color: #fff;
+}
+[data-theme='mono'] .media-date {
+  font-family: var(--f-mono);
+}
+
+/* 動きを減らす設定：走査線と点滅を止める */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='mono'] .stage-sticky::before,
+  [data-theme='mono'] .hero-deck span:first-child::before,
+  [data-theme='mono'] .rd-pt.is-ev .rd-pt-in i {
+    animation: none;
+  }
+  [data-theme='mono'] .stage-sticky::before {
+    display: none;
+  }
+}
+html.js-stage [data-theme='mono'] .stage:not([data-state='0']) .hero-deck {
+  opacity: 0;
+}
