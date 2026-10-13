@@ -46,6 +46,8 @@ setupTracklist();
 if (document.body.dataset.theme === 'studio') void import('./studio').then((m) => m.setupStudio());
 // cheer の世界観だけの演出（招待状とカードを裏返す・応援ボタン）
 if (document.body.dataset.theme === 'cheer') void import('./cheer').then((m) => m.setupCheer());
+// console の世界観だけの演出（切り替えの日の図・控えの置き場所の「乗っ取られたら？」）
+if (document.body.dataset.theme === 'console') void import('./console').then((m) => m.setupConsole());
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));

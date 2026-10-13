@@ -199,6 +199,7 @@ export const musicJapan: Partner = {
       items: [
         { name: '株式会社エボルグ', no: 'BP-001', href: '/evorg/', tint: '#e83c4f', logo: { src: '/partners/evorg/logo-light.png', size: [517, 137] } },
         { name: '株式会社Central AX', no: 'BP-002', href: '/central-ax/', tint: '#5b6170', logo: { src: '/partners/central-ax/logo-white.png', size: [691, 210] } },
+        { name: '株式会社DPパートナーズ', no: 'BP-003', href: '/dp-partners/', tint: '#0086c7', logo: { src: '/partners/dp-partners/logo-light.png', size: [1000, 203] } },
         { name: '株式会社Smartaleck', no: 'BP-005', href: '/smartaleck/', tint: '#1f92ca', logo: { src: '/partners/smartaleck/logo-light.png', size: [800, 126] } },
         { name: 'Presence株式会社', no: 'BP-006', href: '/presence/', tint: '#03417a', logo: { src: '/partners/presence/logo-light.png', size: [702, 160] } },
       ],
@@ -518,7 +519,7 @@ export const musicJapan: Partner = {
     },
     insightTitle: 'ホームページから問い合わせが来ない4つの理由と、直す順番',
     insightQuestion: 'この記事の要点',
-    updated: '2026-10-02',
+    updated: '2026-10-13',
     org: {
       type: 'Organization',
       address: { region: '大阪府', locality: '大阪市北区', street: '梅田1丁目2番2号 大阪駅前第2ビル12-12' },
