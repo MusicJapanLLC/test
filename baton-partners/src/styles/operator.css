@@ -1,0 +1,373 @@
+/* ═════════════════════════════════════════════
+   運営会社のページ（/music-japan/・BP-000）と、一覧から BP-000 への入口で使う部品。
+   世界観（theme）に依らない土台。見た目の味つけは theme-needle.css で行う
+   ═════════════════════════════════════════════ */
+
+/* ── 外部メディアの紹介（top.spotlight） ── */
+.sec-spot {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  border-top: 0;
+  background:
+    radial-gradient(60% 50% at 12% 0%, rgba(255, 255, 255, 0.1), transparent 70%),
+    radial-gradient(60% 50% at 88% 0%, rgba(255, 255, 255, 0.08), transparent 70%),
+    linear-gradient(180deg, #0d0d0f, #17171b);
+}
+.spot-in {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(36px, 6vw, 96px);
+  align-items: start;
+}
+.spot-head {
+  position: sticky;
+  top: calc(var(--hdr) + 36px);
+  display: grid;
+  gap: 22px;
+  justify-items: start;
+}
+.spot-h {
+  font-size: clamp(1.6rem, 0.9rem + 2.4vw, 3.2rem);
+  color: #fff;
+}
+.spot-h .ln + .ln {
+  color: var(--red-hot, #ff3a48);
+}
+.spot-lead {
+  color: rgba(255, 255, 255, 0.8);
+}
+.spot-link {
+  color: #fff;
+}
+.spot-link .arrow {
+  color: rgba(255, 255, 255, 0.6);
+}
+.board {
+  position: relative;
+  padding: clamp(18px, 2.4vw, 30px);
+  border-radius: 6px;
+  background:
+    radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1.4px) 0 0 / 6px 6px,
+    #111114;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    inset 0 0 0 8px #0a0a0c,
+    inset 0 0 0 9px rgba(255, 255, 255, 0.06),
+    0 40px 80px -40px rgba(0, 0, 0, 0.8);
+}
+.board-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 6px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.board-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--red-hot, #ff3a48);
+  box-shadow: 0 0 10px var(--red-hot, #ff3a48);
+  animation: board-blink 1.4s steps(2) infinite;
+}
+@keyframes board-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+.board-live {
+  margin-left: auto;
+  font-family: var(--f-latin);
+  font-weight: 800;
+  font-size: 0.8rem;
+  letter-spacing: 0.24em;
+  color: var(--red-hot, #ff3a48);
+}
+.board-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.board-fact {
+  display: grid;
+  gap: 6px;
+  padding: 20px 8px 22px;
+}
+.board-fact + .board-fact {
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  padding-left: clamp(14px, 2vw, 28px);
+}
+.board-fact dt {
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.62);
+}
+.board-fact dd {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+/* 数字は光の粒で */
+.board-num {
+  font-weight: 800;
+  font-size: clamp(3.6rem, 2rem + 5vw, 7.4rem);
+  line-height: 0.85;
+  letter-spacing: 0.02em;
+  color: transparent;
+  background: radial-gradient(circle, var(--red-hot, #ff3a48) 0 44%, rgba(232, 33, 63, 0.14) 48%, transparent 54%) 0 0 / 0.07em 0.07em;
+  -webkit-background-clip: text;
+  background-clip: text;
+  filter: drop-shadow(0 0 0.08em rgba(255, 40, 60, 0.55));
+  font-variant-numeric: tabular-nums;
+}
+.board-unit {
+  font-weight: 900;
+  font-size: clamp(1rem, 0.8rem + 0.6vw, 1.4rem);
+}
+.board-t {
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 10px;
+}
+.board-q {
+  padding: 20px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.board-q ol {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+  font-size: clamp(1rem, 0.92rem + 0.3vw, 1.18rem);
+}
+.board-names {
+  padding: 20px 6px 6px;
+}
+.board-names ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 22px;
+}
+.board-names li {
+  display: grid;
+  gap: 2px;
+  padding-left: 14px;
+  border-left: 2px solid var(--red-hot, #ff3a48);
+}
+.board-names strong {
+  font-size: 0.94rem;
+  letter-spacing: 0.04em;
+}
+.board-names span {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.62);
+}
+.fine-light {
+  color: rgba(255, 255, 255, 0.6);
+}
+@media (max-width: 959px) {
+  .spot-in {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .spot-head {
+    position: static;
+  }
+}
+@media (max-width: 639px) {
+  .board-num {
+    font-size: clamp(3rem, 1rem + 10vw, 4.4rem);
+  }
+  .board-fact dd {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 479px) {
+  .board-names ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .board-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .board-fact + .board-fact {
+    border-left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 8px;
+  }
+}
+
+
+/* ═════════════════════════════════════════════
+   話してみる（予約ページで日程を選ぶ形）
+   ═════════════════════════════════════════════ */
+.book-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(28px, 5vw, 80px);
+  align-items: center;
+}
+.book-card {
+  position: relative;
+  display: grid;
+  gap: 18px;
+  justify-items: start;
+  padding: clamp(28px, 4vw, 56px);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  background: var(--card);
+  overflow: hidden;
+}
+/* 上辺に、墨と地の色の帯 */
+.book-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 10px;
+  background: repeating-linear-gradient(90deg, var(--ink) 0 18px, var(--paper) 18px 36px);
+}
+.book-h {
+  font-size: clamp(1.7rem, 1rem + 2.4vw, 3.2rem);
+  line-height: 1.25;
+}
+.book-p {
+  color: var(--ink-2);
+  max-width: 34em;
+}
+.book-btn {
+  margin-top: 8px;
+  min-height: 72px;
+  font-size: 1.1rem;
+}
+.book-sub {
+  font-size: 0.82rem;
+  color: var(--ink-3);
+}
+.book-alt {
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  width: 100%;
+  font-size: 0.9rem;
+  color: var(--ink-2);
+}
+.book-person {
+  position: relative;
+  margin: 0;
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+}
+.book-person img {
+  width: min(320px, 72%);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  object-position: 50% 24%;
+  border-radius: 50%;
+  filter: grayscale(1) contrast(1.06);
+  box-shadow:
+    0 0 0 6px var(--paper),
+    0 0 0 8px var(--red, #c8102e);
+  transition: filter 0.8s var(--ease);
+}
+.book-person:hover img {
+  filter: none;
+}
+.book-person figcaption {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+.book-person figcaption span {
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  color: var(--ink-3);
+}
+.book-person figcaption strong {
+  font-size: 1.5rem;
+  letter-spacing: 0.14em;
+}
+.book-person figcaption em {
+  font-style: normal;
+  font-size: 0.84rem;
+  color: var(--ink-2);
+}
+.steps-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+}
+@media (max-width: 959px) {
+  .book-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .book-person {
+    order: -1;
+  }
+  .book-person img {
+    width: min(220px, 56%);
+  }
+}
+@media (max-width: 767px) {
+  .steps-3 {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* ═════════════════════════════════════════════
+   Baton Partners の一覧（/）から、運営会社のページ（BP-000）へ
+   ═════════════════════════════════════════════ */
+.bpx-origin {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'no t arrow'
+    'no s arrow';
+  align-items: center;
+  column-gap: 16px;
+  margin-top: 28px;
+  padding: 14px 22px 14px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  color: #fff;
+  max-width: 100%;
+  transition:
+    background-color 0.4s var(--ease),
+    border-color 0.4s var(--ease);
+}
+.bpx-origin:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #fff;
+}
+.bpx-origin b {
+  grid-area: no;
+  display: grid;
+  place-items: center;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: #c8102e;
+  font-family: 'Archivo Variable', 'Archivo', Arial, sans-serif;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+}
+.bpx-origin-t {
+  grid-area: t;
+  font-weight: 900;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+}
+.bpx-origin-s {
+  grid-area: s;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.66);
+  letter-spacing: 0.04em;
+}
+.bpx-origin .arrow {
+  grid-area: arrow;
+}
+
