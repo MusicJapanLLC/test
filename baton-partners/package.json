@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && node scripts/seo-check.mjs",
+    "seo:check": "node scripts/seo-check.mjs",
     "preview": "vite preview --port 4174",
     "indexnow": "node scripts/indexnow.mjs",
     "og": "node scripts/og.mjs",
@@ -16,6 +17,8 @@
     "@fontsource-variable/fraunces": "^5.3.0",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "@fontsource-variable/oswald": "^5.3.0",
+    "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
+    "@fontsource-variable/unbounded": "^5.3.0",
     "@fontsource/zen-kaku-gothic-new": "^5.3.0",
     "@fontsource/zen-old-mincho": "^5.3.0",
     "budoux": "^0.9.3",
