@@ -1,3 +1,4 @@
-/* mono の世界観（Central AX など）でだけ読み込む。ロゴの太いゴシックに寄せる */
+/* mono の世界観（Central AX など）でだけ読み込む。ロゴの太いゴシックに寄せる。座標や端末の文字は JetBrains Mono */
 @import './fonts-faces-mono.css';
 @import '@fontsource-variable/archivo/wdth.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
