@@ -1,6 +1,6 @@
 import { routes, site } from '../../config/site';
 import type { Partner } from '../../types';
-import { partners } from '../../partners';
+import { operatorPartner, partners } from '../../partners';
 import { bpMark } from '../logo';
 import { bpHeader, bpNo, breadcrumb, document, footer, shortName, type BuildEnv } from '../layout';
 import { answerBox } from '../parts';
@@ -87,6 +87,12 @@ ${bpHeader(list, 'index')}
       <h1 class="bpx-h1">パートナー</h1>
       <p class="bpx-sub">${jp('事業の強みを知り、次のつながりへ。')}</p>
       <p class="bpx-count"><strong>${count}</strong><span>社 — BATON PARTNERS / MUSIC JAPAN</span></p>
+      <a class="bpx-origin" href="${routes.top(operatorPartner.slug)}">
+        <b>${bpNo(operatorPartner)}</b>
+        <span class="bpx-origin-t">Baton Partnersとは</span>
+        <span class="bpx-origin-s">${esc(`運営：${operatorPartner.company.name}　専用LP × SEO × AIO × 紹介`)}</span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
     </div>
   </section>
   <div class="bpx-logos" aria-hidden="true"><div class="bpx-logos-track">${logoRun}${logoRun}</div></div>
@@ -189,6 +195,10 @@ ${bpHeader(list, 'editorial')}
       <p>${jp('話してみたい会社があれば、各社の「話してみる」ページから、公式LINEの追加とアンケートへの回答をお願いしています。Music Japanが内容を確かめ、ご相談の概要を先方に共有したうえで、双方の了承がそろったらLINEグループでおつなぎします。お名前や連絡先が先方に伝わるのは、その時点です。')}</p>
     </section>
     <section class="pv-sec">
+      <h2 class="pv-h">Baton Partnersについて</h2>
+      <p>${jp(`Baton Partnersのサービス内容と、運営会社・代表者については、[Baton Partnersとは](${routes.top(operatorPartner.slug)})のページにまとめています。`)}</p>
+    </section>
+    <section class="pv-sec">
       <h2 class="pv-h">パートナー企業</h2>
       <ul>${partners}</ul>
     </section>
@@ -287,6 +297,15 @@ const PRIVACY: { h: string; body: string[]; list?: string[] }[] = [
     h: '6. お問い合わせ窓口',
     body: [`${site.operator.name}　${site.operator.representative}`, `所在地：${site.operator.address}`, `メール：${site.operator.email}`],
   },
+  {
+    h: '7. Cookie・アクセス解析について',
+    body: [
+      '本サイトはGoogle LLCのGoogle アナリティクス 4を利用し、閲覧ページ、アクセス日時、端末・ブラウザ情報等をCookieとともに取得して、サイトと企業ページの閲覧数の把握と改善に使用します。フォームの氏名・連絡先・回答内容はアクセス解析に送信しません。URLのクエリ文字列・フラグメントは計測対象から除き、広告パーソナライズは無効にしています。',
+      'Googleの情報利用について：https://policies.google.com/technologies/partner-sites?hl=ja',
+      'Google アナリティクス オプトアウト アドオン：https://tools.google.com/dlpage/gaoptout?hl=ja',
+      '改定日：2026年10月3日',
+    ],
+  },
 ];
 
 export function renderPrivacy(env: BuildEnv): string {
@@ -294,7 +313,7 @@ export function renderPrivacy(env: BuildEnv): string {
     (b) => `
     <section class="pv-sec">
       <h2 class="pv-h">${esc(b.h)}</h2>
-      ${b.body.map((t) => `<p>${jp(t)}</p>`).join('')}
+      ${b.body.map((t) => `<p>${t.includes('https://policies.google.com/') || t.includes('https://tools.google.com/') ? esc(t).replace(/https:\/\/(?:policies\.google\.com\/technologies\/partner-sites|tools\.google\.com\/dlpage\/gaoptout)\?hl=ja/g, (url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`) : jp(t)}</p>`).join('')}
       ${b.list ? `<ul>${b.list.map((t) => `<li>${jp(t)}</li>`).join('')}</ul>` : ''}
     </section>`,
   ).join('');
