@@ -162,6 +162,8 @@ ${header(p, 'top')}
     </div>
   </section>
 
+  ${teamSection(p)}
+
   ${eventsSection(p)}
 
   ${radarSection(p)}
@@ -1171,9 +1173,9 @@ function cardSection(p: Partner): string {
     .split(/\s+/)
     .map((w) => w[0])
     .join('');
-  const photo =
-    l.photo && l.photoSize
-      ? `<img src="${l.photo}" alt="" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />`
+  const ph = c.photo ?? (l.photo && l.photoSize ? { src: l.photo, size: l.photoSize, focus: undefined } : undefined);
+  const photo = ph
+      ? `<img src="${ph.src}" alt="" width="${ph.size[0]}" height="${ph.size[1]}" loading="lazy" decoding="async"${ph.focus ? ` style="object-position:${ph.focus[0]}% ${ph.focus[1]}%"` : ''} />`
       : `<span class="tc-pending">${shellSvg({ rings: 3, size: 16, className: 'tc-hex', stars: false }).svg}<span class="tc-mono">${esc(initials)}</span><span class="tc-soon">${esc(c.pending)}</span></span>`;
   return `
   <section class="sec sec-card" aria-labelledby="card-h">
@@ -1235,6 +1237,33 @@ function cheerSection(p: Partner): string {
         <p class="ch-count" aria-live="polite"><span class="ch-num" data-cheer-count>0</span><span class="ch-unit">回の応援</span></p>
         <p class="ch-done" data-cheer-done>${esc(c.done)}</p>
         <div class="ch-fx" data-cheer-fx aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>`;
+}
+
+/** チームの写真。ステッカーとテープで留めた大きな写真と、短い本文（cheer の世界観） */
+function teamSection(p: Partner): string {
+  const t = p.top.team;
+  if (!t) return '';
+  const [fx, fy] = t.photo.focus ?? [50, 40];
+  return `
+  <section class="sec sec-team" aria-labelledby="team-h">
+    <div class="wrap tm-in">
+      <figure class="tm-photo rv">
+        <span class="tm-tape tm-tape-a" aria-hidden="true"></span><span class="tm-tape tm-tape-b" aria-hidden="true"></span>
+        <picture>
+          <source media="(max-width: 767px)" srcset="${t.photo.small}" />
+          <img src="${t.photo.src}" alt="${esc(t.photo.alt)}" width="${t.photo.size[0]}" height="${t.photo.size[1]}" loading="lazy" decoding="async" style="object-position:${fx}% ${fy}%" />
+        </picture>
+        <span class="tm-star" aria-hidden="true"></span>
+        <figcaption class="tm-cap">${esc(t.caption)}</figcaption>
+      </figure>
+      <div class="tm-body rv">
+        <p class="kicker">${esc(t.kicker)}</p>
+        <h2 id="team-h" class="sec-h">${heading(t.title)}</h2>
+        ${t.body.map((b) => `<p class="tm-p">${jp(b)}</p>`).join('')}
+        <ul class="tm-tags">${t.tags.map((g, i) => `<li style="--i:${i}">${esc(g)}</li>`).join('')}</ul>
       </div>
     </div>
   </section>`;
