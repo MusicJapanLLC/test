@@ -1,0 +1,9 @@
+/*
+ * orbit の世界観（ZETTAICHI / n1a など）でだけ読み込む。
+ *   見出し：M PLUS Rounded 1c 800（n1a のロゴの、角の丸い文字にならう。使う文字だけのファイルは scripts/fonts.py が生成）
+ *   欧文　：Michroma（幅の広い幾何学の書体。ZETTAICHI のロゴの字形にならう）
+ *   数式　：JetBrains Mono（|x| や数直線の目盛り）
+ */
+@import './fonts-faces-orbit.css';
+@import '@fontsource/michroma/latin-400.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';
