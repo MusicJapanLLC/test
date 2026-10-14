@@ -28,6 +28,46 @@ export type Activity = {
 
 export const activity: Activity[] = [
   {
+    date: '2026-10-14',
+    type: 'BUILD LOG',
+    source: 'Baton Partners',
+    title: 'DPパートナーズ、Central AX、Presenceのページの世界観を描き直しました',
+    body: '会社ごとに背景の色とヒーローの動きを変えました。DPパートナーズは青空と引越しのトラック、Central AXは名駅の発車標、Presenceは夜のスタジアムと「禁止。」の判子です。スマホの表示も見直しています。',
+    href: 'https://partners.music-japan.com/',
+  },
+  {
+    date: '2026-10-13',
+    type: 'LATEST',
+    source: 'Baton Partners',
+    title: 'ZETTAICHIの専用ページを公開しました',
+    body: '経営者どうしを人柄でつなぐ「n1a」を手がける、東京・狛江の会社です。公式サイトの黒い宇宙にならい、Big Fiveの五角形でできた惑星と、合う二人を結ぶ波を3Dで動かしています。',
+    href: 'https://partners.music-japan.com/zettaichi/',
+  },
+  {
+    date: '2026-10-13',
+    type: 'LATEST',
+    source: 'Baton Partners',
+    title: 'DPパートナーズ（サイト引越し屋さん）の専用ページを公開しました',
+    body: 'WordPressの引越しと保守を引き受ける、東京・代々木の会社です。トップでは、引越しのトラックと監視の線、壊れても控えから戻る様子を3Dで動かしています。',
+    href: 'https://partners.music-japan.com/dp-partners/',
+  },
+  {
+    date: '2026-10-12',
+    type: 'LATEST',
+    source: 'Baton Partners',
+    title: 'Presenceの専用ページを公開しました',
+    body: '代表の金子将土さんが主宰する、名刺交換も営業も禁止した経営者コミュニティ「P-ENJIN」が主役のページです。',
+    href: 'https://partners.music-japan.com/presence/',
+  },
+  {
+    date: '2026-10-11',
+    type: 'LATEST',
+    source: 'Baton Partners',
+    title: 'Smartaleckの専用ページを公開しました',
+    body: 'SNS、動画、LINE、採用の支援を一社で受け持つ、大阪・淀屋橋の会社です。',
+    href: 'https://partners.music-japan.com/smartaleck/',
+  },
+  {
     date: '2026-10-02',
     type: 'BUILD LOG',
     source: 'Music Japan',
