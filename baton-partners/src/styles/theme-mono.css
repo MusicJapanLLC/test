@@ -1114,3 +1114,199 @@ html.js-stage [data-theme='mono'] .hero-deck {
 html.js-stage [data-theme='mono'] .stage:not([data-state='0']) .hero-deck {
   opacity: 0;
 }
+
+/* ═════════════════════════════════════════════
+   2026-10：名駅の発車標（オーナーの指示「ヒーローのサイズ感と世界観をもっと大胆に。モーションも会社ごとに」）
+   地は駅のコンコースのような明るいコンクリート色。見出しは黒い発車標の板で、1文字ずつのフラップ。
+   読み込むと、フラップがパタパタと入れ替わってから止まる（client/mono.ts）。2行目は公式サイトの青（#1559C2）の札。
+   キッカーは駅の案内サインのような青い帯、右上は駅名と座標と、いまの時刻。
+   ═════════════════════════════════════════════ */
+[data-theme='mono'] {
+  --concrete: #ecebe6;
+  --cax-blue: #1559c2;
+  --board: #141619;
+}
+[data-theme='mono'] .stage,
+[data-theme='mono'] .phero {
+  background-color: var(--concrete);
+}
+[data-theme='mono'] .stage-shade {
+  background: linear-gradient(90deg, var(--concrete) 0%, rgba(236, 235, 230, 0.86) 40%, rgba(236, 235, 230, 0.35) 56%, transparent 70%);
+}
+@media (max-width: 959px) {
+  [data-theme='mono'] .stage-shade {
+    background: linear-gradient(180deg, transparent 0%, rgba(236, 235, 230, 0.35) 24%, rgba(236, 235, 230, 0.9) 44%, var(--concrete) 64%);
+  }
+}
+[data-theme='mono'][data-page='top'] .hdr:not(.is-scrolled),
+[data-theme='mono'][data-page='about'] .hdr:not(.is-scrolled),
+[data-theme='mono'][data-page='service'] .hdr:not(.is-scrolled),
+[data-theme='mono'][data-page='contact'] .hdr:not(.is-scrolled) {
+  background: color-mix(in srgb, var(--concrete) 70%, transparent);
+}
+
+/* キッカー：駅の案内サインのような、青い帯に白抜き */
+[data-theme='mono'] .hero .kicker,
+[data-theme='mono'] .phero .kicker {
+  display: inline-flex;
+  width: fit-content;
+  padding: 7px 12px 6px;
+  background: var(--cax-blue);
+  color: #fff;
+}
+[data-theme='mono'] .hero .kicker .kicker-rule,
+[data-theme='mono'] .phero .kicker .kicker-rule {
+  background: #fff;
+}
+[data-theme='mono'] .hero .kicker-co {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* ── 見出し：黒い発車標の板。1文字ずつのフラップ ── */
+@media (min-width: 960px) {
+  html.js-stage [data-theme='mono'] .hero {
+    max-width: min(1100px, 78vw);
+  }
+}
+[data-theme='mono'] .hero-h,
+[data-theme='mono'] .phero-h {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 18px;
+  padding: 0.24em 0.26em 0.28em;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1c1f23, var(--board) 40%, #0c0d0f);
+  box-shadow:
+    0 0 0 3px #2b2f35,
+    0 0 0 4px rgba(255, 255, 255, 0.06),
+    0 40px 70px -40px rgba(14, 15, 18, 0.75);
+  color: #f3f1ea;
+  font-size: clamp(1.9rem, 0.5rem + 4.2vw, 6rem);
+  line-height: 1.16;
+  letter-spacing: 0;
+}
+[data-theme='mono'] .phero-h {
+  font-size: clamp(1.7rem, 0.6rem + 3vw, 4.2rem);
+}
+/* 横に広くて背の低い画面では、板が上の見出しラベルやヘッダーにぶつからないよう、高さでも大きさを抑える */
+@media (min-width: 960px) {
+  [data-theme='mono'] .hero-h {
+    font-size: min(clamp(1.9rem, 0.5rem + 4.2vw, 6rem), 7.4svh);
+  }
+  [data-theme='mono'] .phero-h {
+    font-size: min(clamp(1.7rem, 0.6rem + 3vw, 4.2rem), 6.4svh);
+  }
+}
+[data-theme='mono'] .hero-h .ln + .ln,
+[data-theme='mono'] .phero-h .ln + .ln {
+  display: block;
+  margin-top: 0.1em;
+  padding: 0;
+  background: none;
+}
+[data-theme='mono'] .hero-h .ln + .ln::after {
+  display: none;
+}
+[data-theme='mono'] .hero-h .ch,
+[data-theme='mono'] .phero-h .ch {
+  position: relative;
+  min-width: 0.66em;
+  margin: 0.03em 0.025em;
+  padding: 0.02em 0.06em 0.05em;
+  border-radius: 0.07em;
+  text-align: center;
+  background: linear-gradient(180deg, #2a2e34 0%, #202328 49.2%, #050607 49.2%, #050607 50.8%, #1d2025 50.8%, #17191d 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.07),
+    0 0.04em 0 rgba(0, 0, 0, 0.6);
+  color: #f3f1ea;
+  overflow: hidden;
+}
+/* 2行目は、公式サイトの青の札 */
+[data-theme='mono'] .hero-h .ln + .ln .ch,
+[data-theme='mono'] .phero-h .ln + .ln .ch {
+  background: linear-gradient(180deg, #2a6ad6 0%, var(--cax-blue) 49.2%, #0a2c66 49.2%, #0a2c66 50.8%, #1453b8 50.8%, #0f4aa8 100%);
+  color: #fff;
+}
+/* 読み込みの入り方：fx.css の立ち上がりをやめ、板の札はすぐ見せる（文字の入れ替えは mono.ts） */
+html.js [data-theme='mono'] .split .ch {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  animation: none;
+}
+html.js [data-theme='mono'] .split .ch.is-wait {
+  color: transparent;
+}
+html.js [data-theme='mono'] .split .ch.is-flip {
+  animation: cax-flip 0.07s linear;
+}
+html.js [data-theme='mono'] .split .ch.is-set {
+  animation: cax-land 0.32s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes cax-flip {
+  from {
+    transform: perspective(200px) rotateX(-70deg);
+    filter: brightness(1.5);
+  }
+}
+@keyframes cax-land {
+  0% {
+    transform: perspective(200px) rotateX(-40deg);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+/* 右上：駅名と座標と、いまの時刻 */
+[data-theme='mono'] .hero-deck {
+  padding: 8px 12px;
+  background: var(--board);
+  color: #f3f1ea;
+  border-radius: 6px;
+}
+[data-theme='mono'] .hero-deck span:last-child,
+[data-theme='mono'] .hero-deck .deck-clock {
+  color: rgba(243, 241, 234, 0.6);
+}
+[data-theme='mono'] .hero-deck .deck-clock {
+  color: #ffb300;
+  font-weight: 700;
+}
+
+[data-theme='mono'] .hero-lead {
+  max-width: 34em;
+}
+@media (min-width: 960px) and (max-height: 860px) {
+  [data-theme='mono'] .hero .badges {
+    display: none;
+  }
+}
+@media (max-width: 959px) {
+  [data-theme='mono'] .hero-h {
+    padding: 0.2em 0.18em 0.24em;
+    border-radius: 8px;
+  }
+  html.js-stage [data-theme='mono'] .hero-lead {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin-top: 18px;
+    font-size: 0.88rem;
+    line-height: 1.85;
+  }
+  html.js-stage [data-theme='mono'] .hero .badges {
+    display: none;
+  }
+  html.js-stage [data-theme='mono'] .hero .kicker-co {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-theme='mono'] .split .ch.is-flip,
+  html.js [data-theme='mono'] .split .ch.is-set {
+    animation: none;
+  }
+}
