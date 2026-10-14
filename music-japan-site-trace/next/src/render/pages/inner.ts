@@ -1,4 +1,4 @@
-import { brandNames, businesses, facts, partners, profile } from '../../content/company';
+import { brandNames, businesses, facts, operatorCard, partners, profile } from '../../content/company';
 import { privacy } from '../../content/privacy';
 import type { Locale } from '../../content/releases';
 import { BATON_PARTNERS_URL, copy, EMAIL, path, SITE_URL, SOCIAL_IMAGE, TIMEREX_URL } from '../../content/site';
@@ -74,6 +74,17 @@ ${ctaBlock(locale)}`;
   });
 }
 
+/**
+ * 社名の見出し。「株式会社」「合同会社」は別の文節にして、そこで折り返せるようにする
+ * （BudouX は「株式会社DPパートナーズ」を1文節にするので、スマホで画面からはみ出す）
+ */
+const companyName = (name: string) =>
+  name
+    .split(/(株式会社|合同会社|有限会社)/)
+    .filter(Boolean)
+    .map((part) => phrases(part))
+    .join('');
+
 export function renderPartners(locale: Locale) {
   const p = copy[locale].pages.partners;
   const ja = locale === 'ja';
@@ -83,10 +94,10 @@ export function renderPartners(locale: Locale) {
     <a class="roster-sleeve" href="${pt.href}" aria-label="${esc(`${pt.name[locale]} — ${ja ? '事業を見る' : 'Explore'}`)}" data-cursor-label="OPEN">${partnerSleeve(locale, i)}</a>
     <div class="roster-copy">
       <p class="roster-no"><span>${pt.no}</span><i></i><span>${esc(pt.category[locale])}</span></p>
-      <h2 class="roster-name" data-split>${phrases(pt.name[locale])}</h2>
+      <h2 class="roster-name" data-split>${companyName(pt.name[locale])}</h2>
       <p class="roster-title">${prose(pt.title[locale])}</p>
       <p class="roster-body">${prose(pt.body[locale])}</p>
-      <dl class="roster-facts"><div><dt>BASE</dt><dd>${esc(pt.base[locale])}</dd></div>${pt.service ? `<div><dt>SERVICE</dt><dd>${esc(pt.service.name)}</dd></div>` : ''}<div><dt>SERIES</dt><dd>BATON PARTNERS</dd></div></dl>
+      <dl class="roster-facts"><div><dt>BASE</dt><dd>${esc(pt.base[locale])}</dd></div>${pt.service ? `<div><dt>SERVICE</dt><dd>${esc(pt.service)}</dd></div>` : ''}<div><dt>SERIES</dt><dd>BATON PARTNERS</dd></div></dl>
       ${button(ja ? `${pt.name.ja.replace('株式会社', '')}を見る` : `Explore ${pt.name.en.replace(' Inc.', '')}`, pt.href)}
     </div>
   </article>`,
@@ -96,19 +107,17 @@ export function renderPartners(locale: Locale) {
   const join = `<article class="roster roster--join" id="baton-partners" style="--c1:#e1222f;--c2:#ff3a48" data-reveal>
     <a class="roster-sleeve" href="${BATON_PARTNERS_URL}" target="_blank" rel="noopener" aria-label="${esc(ja ? 'Baton Partnersを見る（新しいタブで開きます）' : 'Visit Baton Partners (opens in a new tab)')}" data-cursor-label="VISIT">${joinSleeve(locale)}</a>
     <div class="roster-copy">
-      <p class="roster-no"><span>BP-000</span><i></i><span>${ja ? '専用LP / SEO / AIO / 紹介' : 'LP / SEO / AIO / REFERRAL'}</span></p>
+      <p class="roster-no"><span>${operatorCard.no}</span><i></i><span>${esc(operatorCard.category[locale])}</span></p>
       <h2 class="roster-name" data-split>Baton Partners</h2>
       <p class="roster-title">${prose(ja ? '検索から、商談まで。バトンをつなぐ。' : 'From search to a first meeting, we pass the baton.')}</p>
-      <p class="roster-body">${prose(ja ? '会社ごとの専用ページを5枚つくり、Googleの検索結果とAIの答えに出るよう整えます。ページを読んで「話してみたい」と思った人の相談は、Music Japanが確かめてからおつなぎします。上の各社のページも、Baton Partnersでつくりました。' : 'We build five dedicated pages for each company and shape them to be found in Google results and AI answers. When a reader wants to talk, Music Japan reviews the request and makes the introduction. Every partner page above was made with Baton Partners.')}</p>
+      <p class="roster-body">${prose(ja ? '専用LP × SEO × ブランディングのサービスです。会社ごとに専用のページを5枚つくり、ロゴの色と書体から見た目を決めて、Googleの検索結果とAIの答えに出るよう整えます。上の各社のページも、Baton Partnersでつくりました。' : 'Dedicated landing pages, SEO and branding. We build five pages for each company, design them from its logo colors and typefaces, and shape them to be found in Google results and AI answers. Every partner page above was made with Baton Partners.')}</p>
       <dl class="roster-facts"><div><dt>BASE</dt><dd>${ja ? '大阪・梅田' : 'UMEDA, OSAKA'}</dd></div><div><dt>BY</dt><dd>MUSIC JAPAN</dd></div><div><dt>SERIES</dt><dd>BATON PARTNERS</dd></div></dl>
       ${button(ja ? 'Baton Partnersを見る' : 'Visit Baton Partners', BATON_PARTNERS_URL, 'solid', locale)}
     </div>
   </article>`;
-  const logos = [
-    ...partners.map((pt) => ({ src: pt.logo, w: pt.logoW, h: pt.logoH, alt: pt.name[locale] })),
-    { src: '/partners/empro-white.png', w: 525, h: 154, alt: 'Empro' },
-  ];
-  const strip = logos.map((l) => `<span class="lg-item"><img src="${l.src}" alt="" width="${l.w}" height="${l.h}" loading="lazy" decoding="async">${mark({ id: `lg${l.w}`, cls: 'mj-mark lg-sep' })}</span>`).join('');
+  // 会社のロゴと、サービスのロゴ（Empro・サイト引越し屋さんなど）。どちらも Baton Partners の一覧と同じもの
+  const logos = partners.flatMap((pt) => pt.logos);
+  const strip = logos.map((l, i) => `<span class="lg-item"><img src="${l.src}" alt="" width="${l.w}" height="${l.h}" loading="lazy" decoding="async">${mark({ id: `lg${i}`, cls: 'mj-mark lg-sep' })}</span>`).join('');
   const body = `${innerHero(locale, 'partners', `<p class="ih-note"><span>${partners.length.toString().padStart(2, '0')}</span>${ja ? '社 — BATON PARTNERS / MUSIC JAPAN' : 'COMPANIES — BATON PARTNERS / MUSIC JAPAN'}</p>`)}
 <section class="lg" aria-label="${ja ? 'パートナー企業とサービス' : 'Partner companies and services'}">
   <div class="lg-track" data-velocity-marquee>${strip.repeat(4)}</div>

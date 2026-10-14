@@ -1,0 +1,300 @@
+{
+  "version": 1,
+  "name": "Baton Partners",
+  "url": "https://partners.music-japan.com/",
+  "updated": "2026-10-14",
+  "operator": {
+    "id": "music-japan",
+    "no": "BP-000",
+    "href": "https://partners.music-japan.com/music-japan/",
+    "website": "https://music-japan.com/",
+    "name": {
+      "ja": "合同会社Music Japan",
+      "en": "Music Japan LLC"
+    },
+    "base": {
+      "ja": "大阪・梅田",
+      "en": "UMEDA, OSAKA"
+    },
+    "category": {
+      "ja": "専用LP / SEO / ブランディング",
+      "en": "LP / SEO / BRANDING"
+    },
+    "title": {
+      "ja": "検索から、商談まで。",
+      "en": "From search to a first meeting."
+    },
+    "body": {
+      "ja": "Baton Partnersを運営する、大阪・梅田の会社です。会社ごとの専用LPをつくり、ロゴの色と書体から見た目を決めて、検索とAIに見つかるよう整えます。",
+      "en": "The company behind Baton Partners, based in Umeda, Osaka. We build dedicated pages for each company, design them from its logo and words, and shape them to be found in search and AI answers."
+    },
+    "service": "Baton Partners",
+    "logos": [
+      {
+        "src": "https://partners.music-japan.com/partners/music-japan/logo-white.png",
+        "alt": "MUSIC JAPAN LLC",
+        "width": 809,
+        "height": 190
+      }
+    ],
+    "colors": [
+      "#e1222f",
+      "#ff3a48"
+    ],
+    "updated": "2026-10-13"
+  },
+  "partners": [
+    {
+      "id": "evorg",
+      "no": "BP-001",
+      "href": "https://partners.music-japan.com/evorg/",
+      "website": "https://www.evorg.co.jp/",
+      "name": {
+        "ja": "株式会社エボルグ",
+        "en": "Evorg Inc."
+      },
+      "base": {
+        "ja": "福岡",
+        "en": "FUKUOKA"
+      },
+      "category": {
+        "ja": "人材紹介 / CRM・MA",
+        "en": "RECRUITMENT / CRM & MA"
+      },
+      "title": {
+        "ja": "人材紹介の可能性を、次の成長へ。",
+        "en": "Helping recruitment businesses grow."
+      },
+      "body": {
+        "ja": "人材紹介会社向けのワンストップCRM・MA「Empro」を提供。データとAI、専任コンサルタントの伴走を通じて、採用決定と事業の成長を支援します。",
+        "en": "Evorg provides Empro, a CRM and marketing automation platform for recruitment agencies, combining data, AI and dedicated consulting to support placements and business growth."
+      },
+      "service": "Empro",
+      "logos": [
+        {
+          "src": "https://partners.music-japan.com/partners/evorg/logo-light.png",
+          "alt": "Evorg",
+          "width": 517,
+          "height": 137
+        },
+        {
+          "src": "https://partners.music-japan.com/partners/evorg/empro-light.png",
+          "alt": "Empro",
+          "width": 525,
+          "height": 154
+        }
+      ],
+      "colors": [
+        "#e0142f",
+        "#1fb5d6"
+      ],
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "central-ax",
+      "no": "BP-002",
+      "href": "https://partners.music-japan.com/central-ax/",
+      "website": "https://central-ax.co.jp/",
+      "name": {
+        "ja": "株式会社Central AX",
+        "en": "Central AX Inc."
+      },
+      "base": {
+        "ja": "名古屋",
+        "en": "NAGOYA"
+      },
+      "category": {
+        "ja": "AI研修 / 開発・業務改善",
+        "en": "AI TRAINING / DEVELOPMENT"
+      },
+      "title": {
+        "ja": "AIを学ぶ、その先の実装まで。",
+        "en": "From learning AI to putting it to work."
+      },
+      "body": {
+        "ja": "生成AI研修、AI受託開発・業務改善、LLMO対策を手がけるAI実装支援会社。名古屋を拠点に、全国の企業のAI活用を支援します。",
+        "en": "Based in Nagoya and serving companies across Japan, Central AX supports generative AI training, custom AI development, workflow improvements and AI search optimization."
+      },
+      "service": null,
+      "logos": [
+        {
+          "src": "https://partners.music-japan.com/partners/central-ax/logo-white.png",
+          "alt": "CENTRAL AX",
+          "width": 691,
+          "height": 210
+        }
+      ],
+      "colors": [
+        "#eeeef2",
+        "#5b5bf0"
+      ],
+      "updated": "2026-10-03"
+    },
+    {
+      "id": "dp-partners",
+      "no": "BP-003",
+      "href": "https://partners.music-japan.com/dp-partners/",
+      "website": "https://dp-partners.co.jp/",
+      "name": {
+        "ja": "株式会社DPパートナーズ",
+        "en": "DP Partners Inc."
+      },
+      "base": {
+        "ja": "東京",
+        "en": "TOKYO"
+      },
+      "category": {
+        "ja": "WordPress移転 / 保守・復旧",
+        "en": "WORDPRESS MIGRATION / MAINTENANCE"
+      },
+      "title": {
+        "ja": "Webサイトを、資産にする。",
+        "en": "Turning websites into assets."
+      },
+      "body": {
+        "ja": "WordPressの引越し代行と保守管理『サイト引越し屋さん』を運営。累計3,500件を超える案件の経験をもとに、サーバー移転から24時間365日の監視、万が一の復旧まで引き受けます。",
+        "en": "DP Partners runs Site Hikkoshi-ya-san, a WordPress migration and maintenance service. Drawing on more than 3,500 projects, it handles everything from server moves to round-the-clock monitoring, and recovery if something goes wrong."
+      },
+      "service": "サイト引越し屋さん",
+      "logos": [
+        {
+          "src": "https://partners.music-japan.com/partners/dp-partners/logo-light.png",
+          "alt": "株式会社DPパートナーズ",
+          "width": 1000,
+          "height": 203
+        },
+        {
+          "src": "https://partners.music-japan.com/partners/dp-partners/service-light.png",
+          "alt": "サイト引越し屋さん",
+          "width": 1000,
+          "height": 242
+        }
+      ],
+      "colors": [
+        "#0086C7",
+        "#FF8317"
+      ],
+      "updated": "2026-10-13"
+    },
+    {
+      "id": "smartaleck",
+      "no": "BP-005",
+      "href": "https://partners.music-japan.com/smartaleck/",
+      "website": "https://www.smartaleck.co.jp/",
+      "name": {
+        "ja": "株式会社Smartaleck",
+        "en": "Smartaleck Inc."
+      },
+      "base": {
+        "ja": "大阪",
+        "en": "OSAKA"
+      },
+      "category": {
+        "ja": "SNS・動画 / デジタルマーケティング",
+        "en": "SOCIAL & VIDEO / DIGITAL MARKETING"
+      },
+      "title": {
+        "ja": "採用も、認知も、スマホの画面から。",
+        "en": "Hiring and awareness, from the smartphone screen."
+      },
+      "body": {
+        "ja": "Instagram、YouTube、インフルエンサー、LINE公式アカウント、AIの検索。企業の採用と集客を、企画から撮影、運用、分析までまとめて引き受ける大阪・淀屋橋の会社です。",
+        "en": "Instagram, YouTube, influencers, LINE official accounts and AI search. Based in Yodoyabashi, Osaka, Smartaleck takes on hiring and marketing for companies, from planning and filming to operation and analysis."
+      },
+      "service": null,
+      "logos": [
+        {
+          "src": "https://partners.music-japan.com/partners/smartaleck/logo-light.png",
+          "alt": "Smartaleck",
+          "width": 800,
+          "height": 126
+        }
+      ],
+      "colors": [
+        "#1f92ca",
+        "#7fd3f7"
+      ],
+      "updated": "2026-10-02"
+    },
+    {
+      "id": "presence",
+      "no": "BP-006",
+      "href": "https://partners.music-japan.com/presence/",
+      "website": "https://presences.info/",
+      "name": {
+        "ja": "Presence株式会社",
+        "en": "Presence Inc."
+      },
+      "base": {
+        "ja": "東京・丸の内",
+        "en": "MARUNOUCHI, TOKYO"
+      },
+      "category": {
+        "ja": "経営者コミュニティ / 採用支援",
+        "en": "EXECUTIVE COMMUNITY / RECRUITMENT"
+      },
+      "title": {
+        "ja": "肩書きより先に、人柄でつながる。",
+        "en": "Connecting through character before titles."
+      },
+      "body": {
+        "ja": "「日本一儲かる会社よりも、日本一応援される会社に」。採用支援を中心に、販売促進やアパレルまで手がける東京・丸の内の会社です。代表の金子将土さんは、名刺交換も営業も禁止した経営者コミュニティ「P-ENJIN」を主宰しています。",
+        "en": "“Rather than the most profitable company in Japan, the most supported one.” Based in Marunouchi, Tokyo, Presence centers on recruitment support and also works in sales promotion and apparel. Its president, Masato Kaneko, hosts P-ENJIN, an executive community where exchanging business cards and selling are both off the table."
+      },
+      "service": "P-ENJIN",
+      "logos": [
+        {
+          "src": "https://partners.music-japan.com/partners/presence/logo-light.png",
+          "alt": "Presence",
+          "width": 702,
+          "height": 160
+        }
+      ],
+      "colors": [
+        "#ff8001",
+        "#3d7cc9"
+      ],
+      "updated": "2026-10-14"
+    },
+    {
+      "id": "zettaichi",
+      "no": "BP-007",
+      "href": "https://partners.music-japan.com/zettaichi/",
+      "website": "https://zettaichi.co.jp/",
+      "name": {
+        "ja": "株式会社ZETTAICHI",
+        "en": "ZETTAICHI Inc."
+      },
+      "base": {
+        "ja": "東京・狛江",
+        "en": "KOMAE, TOKYO"
+      },
+      "category": {
+        "ja": "経営者マッチング / 営業支援",
+        "en": "EXECUTIVE MATCHING / SALES SUPPORT"
+      },
+      "title": {
+        "ja": "BtoBも、結局は人と人。",
+        "en": "Even B2B comes down to people."
+      },
+      "body": {
+        "ja": "「世の中に、絶対的価値を。」を掲げて2026年7月に設立された会社です。代表の宮本康太さんがいま力を入れているのは、Big Five診断と商談での発言をもとに、人柄の合う経営者どうしをつなぐ「n1a（ニア）」。決裁者との商談をつくる営業支援と、経営者が出会う場づくりも手がけています。",
+        "en": "Founded in July 2026 with the motto “Absolute value for the world.” Its representative, Kota Miyamoto, is now focused on n1a, which connects executives with compatible personalities based on Big Five assessments and what they say in meetings. ZETTAICHI also sets up meetings with decision-makers and runs events where executives meet."
+      },
+      "service": "n1a",
+      "logos": [
+        {
+          "src": "https://partners.music-japan.com/partners/zettaichi/logo-light.png",
+          "alt": "ZETTAICHI",
+          "width": 1030,
+          "height": 88
+        }
+      ],
+      "colors": [
+        "#2F7BFF",
+        "#EF72FF"
+      ],
+      "updated": "2026-10-13"
+    }
+  ]
+}

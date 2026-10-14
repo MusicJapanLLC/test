@@ -148,6 +148,18 @@ export function joinSleeve(locale: Locale, size: 'lg' | 'sm' = 'lg') {
   </div>`;
 }
 
+/**
+ * 社名の折り返し位置（CSS は keep-all）。「株式会社」の前後と、英字からかな・漢字に変わるところだけで折り返す
+ * （「株式会社 / DPパートナーズ」、狭ければ「DP / パートナーズ」。「パートナー / ズ」のように切らない）
+ */
+function nameBreaks(name: string) {
+  return esc(name)
+    .replace(/(株式会社|合同会社|有限会社)/g, '<wbr>$1<wbr>')
+    .replace(/([A-Za-z0-9])(?=[\u3040-\u30ff\u4e00-\u9fff])/g, '$1<wbr>')
+    .replace(/^(<wbr>)+|(<wbr>)+$/g, '')
+    .replace(/(<wbr>)+/g, '<wbr>');
+}
+
 export function partnersTeaser(locale: Locale) {
   const t = copy[locale].partnersTeaser;
   return `<section class="pt" data-world-zone="ambient" aria-labelledby="pt-title">
@@ -158,7 +170,7 @@ export function partnersTeaser(locale: Locale) {
   </div>
   <div class="pt-row">${partners
     .map(
-      (p, i) => `<a class="pt-item" href="${path(locale, 'partners')}#${p.id}" data-reveal data-cursor-label="OPEN">${partnerSleeve(locale, i, 'sm')}<span class="pt-meta"><span class="pt-no">${p.no}</span><strong>${esc(p.name[locale])}</strong><span>${esc(p.category[locale])}</span></span></a>`,
+      (p, i) => `<a class="pt-item" href="${path(locale, 'partners')}#${p.id}" data-reveal data-cursor-label="OPEN">${partnerSleeve(locale, i, 'sm')}<span class="pt-meta"><span class="pt-no">${p.no}</span><strong>${nameBreaks(p.name[locale])}</strong><span>${esc(p.category[locale])}</span></span></a>`,
     )
     .join('')}<a class="pt-item pt-item--join" href="${BATON_PARTNERS_URL}" target="_blank" rel="noopener" data-reveal data-cursor-label="VISIT">${joinSleeve(locale, 'sm')}<span class="pt-meta"><span class="pt-no">BP-000</span><strong>${esc(t.join.title)}<span class="pt-ext" aria-hidden="true">↗</span></strong><span>${esc(t.join.meta)}</span></span><span class="sr">${copy[locale].newTab}</span></a></div>
   <div class="sec-cta">${button(t.cta, path(locale, 'partners'), 'line')}</div>

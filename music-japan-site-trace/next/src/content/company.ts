@@ -1,3 +1,4 @@
+import feed from './partners.json';
 import type { L10n } from './releases';
 
 export const facts: { label: L10n; value: L10n; href?: string }[] = [
@@ -44,6 +45,29 @@ export const profile = {
   },
 };
 
+/**
+ * パートナー（Baton Partners の掲載企業）。中身は partners.music-japan.com/partners.json の写し（partners.json）。
+ * 社名・拠点・紹介文・ロゴは Baton Partners 側（baton-partners/src/partners/）だけで直す。ここには書かない。
+ * ビルドのたびに scripts/sync-partners.mjs が最新を取りにいき、取れなかったときはこの写しのまま作る。
+ * ロゴは同じパス（/partners/<slug>/...）で next/public/ に置く（同期のときに一緒に取ってくる）。
+ */
+type FeedLogo = { src: string; alt: string; width: number; height: number };
+type FeedEntry = {
+  id: string;
+  no: string;
+  href: string;
+  name: L10n;
+  base: L10n;
+  category: L10n;
+  title: L10n;
+  body: L10n;
+  service: string | null;
+  logos: FeedLogo[];
+  colors: string[];
+};
+
+export type Logo = { src: string; alt: string; w: number; h: number };
+
 export type Partner = {
   id: string;
   no: string;
@@ -51,7 +75,9 @@ export type Partner = {
   logo: string;
   logoW: number;
   logoH: number;
-  service?: { name: string; logo: string; w: number; h: number };
+  /** ロゴの帯に流すロゴ（会社のロゴと、あればサービスのロゴ） */
+  logos: Logo[];
+  service?: string;
   category: L10n;
   title: L10n;
   body: L10n;
@@ -60,57 +86,34 @@ export type Partner = {
   colors: [string, string];
 };
 
-export const partners: Partner[] = [
-  {
-    id: 'evorg',
-    no: 'BP-001',
-    name: { ja: '株式会社エボルグ', en: 'Evorg Inc.' },
-    logo: '/partners/evorg-white.png',
-    logoW: 517,
-    logoH: 137,
-    service: { name: 'Empro', logo: '/partners/empro-white.png', w: 525, h: 154 },
-    category: { ja: '人材紹介 / CRM・MA', en: 'RECRUITMENT / CRM & MA' },
-    title: { ja: '人材紹介の可能性を、次の成長へ。', en: 'Helping recruitment businesses grow.' },
-    body: {
-      ja: '人材紹介会社向けのワンストップCRM・MA「Empro」を提供。データとAI、専任コンサルタントの伴走を通じて、採用決定と事業の成長を支援します。',
-      en: 'Evorg provides Empro, a CRM and marketing automation platform for recruitment agencies, combining data, AI and dedicated consulting to support placements and business growth.',
-    },
-    base: { ja: '福岡', en: 'FUKUOKA' },
-    href: 'https://partners.music-japan.com/evorg/',
-    colors: ['#e0142f', '#1fb5d6'],
-  },
-  {
-    id: 'central-ax',
-    no: 'BP-002',
-    name: { ja: '株式会社Central AX', en: 'Central AX Inc.' },
-    logo: '/partners/central-ax-white.png',
-    logoW: 691,
-    logoH: 210,
-    category: { ja: 'AI研修 / 開発・業務改善', en: 'AI TRAINING / DEVELOPMENT' },
-    title: { ja: 'AIを学ぶ、その先の実装まで。', en: 'From learning AI to putting it to work.' },
-    body: {
-      ja: '生成AI研修、AI受託開発・業務改善、LLMO対策を手がけるAI実装支援会社。名古屋を拠点に、全国の企業のAI活用を支援します。',
-      en: 'Based in Nagoya and serving companies across Japan, Central AX supports generative AI training, custom AI development, workflow improvements and AI search optimization.',
-    },
-    base: { ja: '名古屋', en: 'NAGOYA' },
-    href: 'https://partners.music-japan.com/central-ax/',
-    colors: ['#eeeef2', '#5b5bf0'],
-  },
-  {
-    id: 'smartaleck',
-    no: 'BP-005',
-    name: { ja: '株式会社Smartaleck', en: 'Smartaleck Inc.' },
-    logo: '/partners/smartaleck-white.png',
-    logoW: 800,
-    logoH: 126,
-    category: { ja: 'SNS・動画 / デジタルマーケティング', en: 'SOCIAL & VIDEO / DIGITAL MARKETING' },
-    title: { ja: 'WEBマーケティングのHERO。', en: 'The hero of web marketing.' },
-    body: {
-      ja: 'Instagram・YouTube・LINE公式アカウントの運用、インフルエンサーマーケティング、採用マーケティングを手がけるデジタルマーケティング会社。大阪・淀屋橋を拠点に、企画から撮影、運用、分析までを支援します。',
-      en: 'Based in Yodoyabashi, Osaka, Smartaleck runs Instagram, YouTube and LINE official accounts, influencer marketing and recruitment marketing for companies, from planning and filming to operation and analysis.',
-    },
-    base: { ja: '大阪', en: 'OSAKA' },
-    href: 'https://partners.music-japan.com/smartaleck/',
-    colors: ['#1f92ca', '#7fd3f7'],
-  },
-];
+/** 写しのURL（https://partners.music-japan.com/partners/...）を、このサイトに置いたロゴのパスにする */
+const local = (src: string) => new URL(src).pathname;
+
+function toPartner(e: FeedEntry): Partner {
+  const logos = e.logos.map((l) => ({ src: local(l.src), alt: l.alt, w: l.width, h: l.height }));
+  return {
+    id: e.id,
+    no: e.no,
+    name: e.name,
+    logo: logos[0].src,
+    logoW: logos[0].w,
+    logoH: logos[0].h,
+    logos,
+    ...(e.service ? { service: e.service } : {}),
+    category: e.category,
+    title: e.title,
+    body: e.body,
+    base: e.base,
+    href: e.href,
+    colors: [e.colors[0], e.colors[1] ?? e.colors[0]],
+  };
+}
+
+/** 掲載企業（番号順）。件数・並び・文言は Baton Partners の公開中の一覧と同じ */
+export const partners: Partner[] = (feed.partners as FeedEntry[]).map(toPartner);
+
+/** Baton Partners そのもの（BP-000・運営：Music Japan）。掲載企業の最後に、別の札として置く */
+export const operatorCard: Partner = toPartner(feed.operator as FeedEntry);
+
+/** 写しの更新日（掲載企業の中でいちばん新しい日） */
+export const PARTNERS_UPDATED: string = feed.updated;
