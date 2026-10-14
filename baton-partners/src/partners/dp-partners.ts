@@ -35,6 +35,13 @@ export const dpPartners: Partner = {
       { src: '/partners/dp-partners/logo-light.png', alt: '株式会社DPパートナーズ', size: [1000, 203] },
       { src: '/partners/dp-partners/service-light.png', alt: 'サイト引越し屋さん', size: [1000, 242] },
     ],
+    en: {
+      name: 'DP Partners Inc.',
+      base: 'TOKYO',
+      category: 'WORDPRESS MIGRATION / MAINTENANCE',
+      catch: 'Turning websites into assets.',
+      lead: 'DP Partners runs Site Hikkoshi-ya-san, a WordPress migration and maintenance service. Drawing on more than 3,500 projects, it handles everything from server moves to round-the-clock monitoring, and recovery if something goes wrong.',
+    },
   },
   company: {
     name: '株式会社DPパートナーズ',

@@ -1,5 +1,6 @@
 import { routes } from '../../config/site';
 import type { Partner } from '../../types';
+import { partners } from '../../partners';
 import { bpNo, breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
 import { answerBox, discHtml, marquee, nextReads } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
@@ -641,7 +642,17 @@ function spotlightSection(p: Partner): string {
 function partnerLogosSection(p: Partner): string {
   const l = p.top.partnerLogos;
   if (!l) return '';
-  const items = l.items
+  const list =
+    l.items ??
+    partners.map((c) => ({
+      name: c.company.name,
+      no: bpNo(c),
+      href: routes.top(c.slug),
+      status: undefined as string | undefined,
+      tint: l.tints?.[c.slug] ?? c.brand.primary,
+      logo: { src: c.catalog.logos[0].src, size: c.catalog.logos[0].size },
+    }));
+  const items = list
     .map((it, i) => {
       const inner = `
           <span class="sleeve-art">
