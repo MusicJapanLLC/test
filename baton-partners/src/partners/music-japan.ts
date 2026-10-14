@@ -16,7 +16,7 @@ import type { Partner } from '../types';
  *   このサイトの実装 …………………… 5ページの構成、robots.txt で許可しているAIクローラー12種、llms.txt、紹介の流れ（gas/Code.gs）
  *   ミラエラ（miraerror.jp）……… 2020年から運営、450社超の経営者インタビュー、掲載企業（オーナーの案内文より）
  *   Batonの代表プロフィール ………… 「学び、紡ぎ、繋いでいく。」
- * パートナー企業のロゴ：エボルグ・Central AX・Smartaleck・Presence は掲載了承済み（黒地なので白抜き版を使う）。
+ * パートナー企業のロゴ：公開中（draft を外した＝掲載了承済み）の会社を自動で並べる。黒地なので catalog.logos の白抜き版を使う。
  */
 export const musicJapan: Partner = {
   slug: 'music-japan',
@@ -24,11 +24,18 @@ export const musicJapan: Partner = {
   no: '00',
   catalog: {
     base: '大阪・梅田',
-    category: '専用LP / SEO / AIO / 紹介',
+    category: '専用LP / SEO / ブランディング',
     catch: '検索から、商談まで。',
-    lead: 'Baton Partnersを運営する、大阪・梅田の会社です。会社ごとの専用ページをつくり、検索とAIに見つかるよう整えて、話してみたい人どうしをおつなぎします。',
+    lead: 'Baton Partnersを運営する、大阪・梅田の会社です。会社ごとの専用LPをつくり、ロゴの色と書体から見た目を決めて、検索とAIに見つかるよう整えます。',
     service: 'Baton Partners',
     logos: [{ src: '/partners/music-japan/logo-white.png', alt: 'MUSIC JAPAN LLC', size: [809, 190] }],
+    en: {
+      name: 'Music Japan LLC',
+      base: 'UMEDA, OSAKA',
+      category: 'LP / SEO / BRANDING',
+      catch: 'From search to a first meeting.',
+      lead: 'The company behind Baton Partners, based in Umeda, Osaka. We build dedicated pages for each company, design them from its logo and words, and shape them to be found in search and AI answers.',
+    },
   },
   company: {
     name: '合同会社Music Japan',
@@ -73,9 +80,9 @@ export const musicJapan: Partner = {
     display: ['PASS', 'THE', 'BATON.'],
     deck: ['45 RPM', 'SIDE A', 'NOW SPINNING — BP-000'],
     title: ['検索から、商談まで。', 'バトンをつなぐ。'],
-    lead: 'Baton Partnersは大阪・梅田の合同会社Music Japanが運営する、法人向けのサービスです。御社のためだけのページを5枚つくり、Googleの検索結果とAIの答えに出るよう整えます。読んだ人から「話してみたい」と声がかかれば、私たちが間に入っておつなぎします。',
+    lead: 'Baton Partnersは、大阪・梅田の合同会社Music Japanが手がける、専用LP × SEO × ブランディングの法人向けサービスです。御社のためだけのページを5枚つくり、ロゴの色と書体から見た目を決めて、Googleの検索結果とAIの答えに出るよう整えます。',
     badges: ['大阪・梅田', '1社につき5ページ', '全国オンライン対応'],
-    marquee: ['Baton Partners', 'Landing Page', 'SEO', 'AIO', 'LLMO', 'Referral', 'Structured Data', 'llms.txt', 'Umeda, Osaka'],
+    marquee: ['Baton Partners', 'Landing Page', 'SEO', 'Branding', 'AIO', 'LLMO', 'Structured Data', 'llms.txt', 'Umeda, Osaka'],
     numbersTitle: 'ページの裏側を、{数字で}。',
     verbs: [
       {
@@ -102,7 +109,7 @@ export const musicJapan: Partner = {
       { title: '社名で検索しても、{出てこない}', detail: '名刺を渡した相手があとで調べても、公式サイトは3ページ目。似た名前の別の会社が先に出てくる。' },
       { title: 'ホームページが、{会社案内のまま}', detail: '事業内容と会社概要は載っている。でも、お客さんが抱えている悩みには、どこにも答えていない。' },
       { title: 'AIに聞いても、{名前が挙がらない}', detail: '「大阪でSEOに強い会社は？」とChatGPTに聞いてみる。返ってくるのは、いつも同じ大手の名前ばかり。' },
-      { title: '紹介が、{たまにしか来ない}', detail: '紹介で決まった仕事は話が早い。ただ、その紹介がいつ来るかは、相手しだいになっている。' },
+      { title: 'ホームページが、{どこかで見た形}', detail: 'テンプレートの色を変えただけで、同業の会社と見分けがつかない。社名を覚えてもらう前に、ページを閉じられてしまう。' },
     ],
     stats: [
       { label: '1社ぶんの専用ページ', value: '5', unit: '枚', note: 'トップ、取り組み、記事、サービス、話してみる' },
@@ -135,9 +142,9 @@ export const musicJapan: Partner = {
       note: 'イメージ図です。順位や表示のされ方を約束するものではありません。',
     },
     tracklist: {
-      title: ['専用LP×SEO×AIO×紹介。', '{4つを}、{ひとつの窓口で}。'],
-      lead: 'ページをつくる会社、記事を書く会社、AI検索の対策をする会社、紹介してくれる人。ふつうは別々に頼むものを、Baton Partnersではまとめて引き受けます。頼む先が分かれていると、途中で話が止まりやすいからです。',
-      jacket: { title: 'BATON PARTNERS', sub: 'LP × SEO × AIO × REFERRAL' },
+      title: ['専用LP×SEO×ブランディング。', '{ひとつの窓口で}。'],
+      lead: 'ページをつくる会社、記事を書く会社、AI検索の対策をする会社、見た目を決めるデザイナー。ふつうは別々に頼むものを、Baton Partnersではまとめて引き受けます。頼む先が分かれていると、途中で話が止まりやすいからです。',
+      jacket: { title: 'BATON PARTNERS', sub: 'LP × SEO × BRANDING' },
       tracks: [
         {
           no: 'A1',
@@ -162,10 +169,10 @@ export const musicJapan: Partner = {
         },
         {
           no: 'B2',
-          name: '紹介',
-          meta: 'REFERRAL',
-          title: '紹介を、{待つだけにしない}。',
-          body: 'ページを読んで「話してみたい」と思った人の相談を、Music Japanが先に読みます。合いそうなら御社に確かめて、双方が了承したらLINEでおつなぎします。',
+          name: 'ブランディング',
+          meta: 'DESIGN',
+          title: '1社ずつ、{見た目から変える}。',
+          body: '色と書体と動きは、御社のロゴと、代表がよく使う言葉を見て決めます。ほかの会社の色違いにはしません。検索から来た人が最初に見るページなので、会社の印象がそのまま伝わる形にします。',
         },
       ],
       note: '公開先は https://partners.music-japan.com/ です。社名のURLで、1社につき5ページを公開します。',
@@ -196,14 +203,15 @@ export const musicJapan: Partner = {
     partnerLogos: {
       title: 'Baton Partnersに、{載っている会社}。',
       lead: '公開しているページは、どれも1社ずつ、色と書体を決めてつくっています。',
-      items: [
-        { name: '株式会社エボルグ', no: 'BP-001', href: '/evorg/', tint: '#e83c4f', logo: { src: '/partners/evorg/logo-light.png', size: [517, 137] } },
-        { name: '株式会社Central AX', no: 'BP-002', href: '/central-ax/', tint: '#5b6170', logo: { src: '/partners/central-ax/logo-white.png', size: [691, 210] } },
-        { name: '株式会社DPパートナーズ', no: 'BP-003', href: '/dp-partners/', tint: '#0086c7', logo: { src: '/partners/dp-partners/logo-light.png', size: [1000, 203] } },
-        { name: '株式会社Smartaleck', no: 'BP-005', href: '/smartaleck/', tint: '#1f92ca', logo: { src: '/partners/smartaleck/logo-light.png', size: [800, 126] } },
-        { name: 'Presence株式会社', no: 'BP-006', href: '/presence/', tint: '#03417a', logo: { src: '/partners/presence/logo-light.png', size: [702, 160] } },
-        { name: '株式会社ZETTAICHI', no: 'BP-007', href: '/zettaichi/', tint: '#001e44', logo: { src: '/partners/zettaichi/logo-light.png', size: [1030, 88] } },
-      ],
+      // 並べる会社は、公開中の掲載企業から自動で決まる（partners/index.ts）。ここでは、にじみの色だけを決める
+      tints: {
+        'evorg': '#e83c4f',
+        'central-ax': '#5b6170',
+        'dp-partners': '#0086c7',
+        'smartaleck': '#1f92ca',
+        'presence': '#03417a',
+        'zettaichi': '#001e44',
+      },
       note: 'ロゴと社名は、各社の了承を得て掲載しています。',
     },
     crate: {
@@ -225,7 +233,7 @@ export const musicJapan: Partner = {
 
   about: {
     title: ['会う前に、', '{読んでもらう}。'],
-    lead: '合同会社Music Japanは、大阪・梅田の会社です。会社と経営者のページをつくり、検索で見つかるように整えて、話してみたい人どうしをおつなぎしています。Baton Partnersは、そのうち会社のためのサービスです。',
+    lead: '合同会社Music Japanは、大阪・梅田の会社です。会社と経営者のページをつくり、検索で見つかるように整えています。Baton Partnersは、そのうち会社のための、専用LP × SEO × ブランディングのサービスです。',
     story: [
       {
         heading: 'ページは、会う前の名刺がわり',
@@ -237,7 +245,7 @@ export const musicJapan: Partner = {
       },
       {
         heading: '1社ずつ、見た目を変える',
-        body: 'エボルグのページは紙と明朝体、Central AXは白黒の建築模型、Smartaleckは漫画のヒーロー、Presenceは星をまとったカメの甲羅と招待状。どれも、その会社のロゴと、代表がよく使う言葉から決めました。同じ型の色違いにすると、どの会社も同じに見えてしまうからです。',
+        body: 'エボルグのページは赤と水色の三角、Central AXは名古屋駅の発車標、DPパートナーズは青空と引越しのトラック、Smartaleckは漫画のヒーロー、Presenceは夜のスタジアムと星をまとったカメ、ZETTAICHIは黒い宇宙と惑星。どれも、その会社のロゴと、代表がよく使う言葉から決めました。同じ型の色違いにすると、どの会社も同じに見えてしまうからです。',
       },
     ],
     stanceTitle: '決めていること',
@@ -255,37 +263,37 @@ export const musicJapan: Partner = {
     logo: '/brand/baton-partners-logo-white.svg',
     logoAlt: 'Baton Partners',
     logoSize: [330, 64],
-    category: '{専用LP・}{SEO・}{AIO・}{紹介}',
-    tagline: '見つけてもらって、紹介でつなぐ。',
+    category: '{専用LP・}{SEO・}{ブランディング}',
+    tagline: '検索で見つかる、自社だけのページ。',
     description:
-      'Baton Partnersは、会社ごとの専用ページを5枚つくり、検索とAIの答えに出るよう整え、読んだ人からの相談をMusic Japanが確かめておつなぎするサービスです。ページづくりから紹介までを、ひとつの窓口で引き受けます。',
+      'Baton Partnersは、会社ごとの専用ページを5枚つくり、ロゴの色と書体から見た目を決めて、検索とAIの答えに出るよう整えるサービスです。ページづくりから、公開したあとの書き足しまで、ひとつの窓口で引き受けます。',
     url: 'https://partners.music-japan.com/',
     solutions: [
       { problem: '社名で検索しても、公式サイトしか出てこない', answer: '公式サイトの隣に並ぶ、御社を説明するページを5枚つくる', feature: '専用LP' },
       { problem: 'ホームページに来た人が、何も聞かずに帰っていく', answer: 'お客さんの悩みから入る記事を書き、サービスと相談へつなげる', feature: 'SEO記事' },
       { problem: 'AIに業界名で聞いても、名前が挙がらない', answer: '問いと答え、構造化データ、llms.txtで、AIが読める形に整える', feature: 'AIO' },
-      { problem: '紹介が、たまにしか来ない', answer: 'ページを読んで興味を持った人を、Music Japanが確かめてからおつなぎする', feature: '紹介' },
+      { problem: 'ホームページが、同業の会社と同じに見える', answer: 'ロゴの色と書体から、御社だけの見た目と動きを決める', feature: 'ブランディング' },
     ],
     flow: [
       { stage: '話を聞く', en: 'Step 01', feature: 'まずはオンラインで' },
       { stage: '調べる', en: 'Step 02', feature: '公式サイトと資料を読む' },
       { stage: 'つくる', en: 'Step 03', feature: '色・書体・3D・文章' },
       { stage: '公開する', en: 'Step 04', feature: '5ページと記事を公開' },
-      { stage: 'つなぐ', en: 'Step 05', feature: '紹介と、記事の追加' },
+      { stage: '育てる', en: 'Step 05', feature: '記事の追加と、相談の受付' },
     ],
     features: [
       { en: '5 Pages', title: '専用ページ5枚', detail: 'トップ、取り組み、記事、サービス、話してみる。御社のことが、ひと通りわかる枚数です。' },
-      { en: 'Design', title: '色と書体と3D', detail: 'ロゴの色から配色を決め、書体と3Dの演出も御社のためにつくります。スマホでも1画面ずつ確かめます。' },
+      { en: 'Branding', title: '色と書体と3D', detail: 'ロゴの色から配色を決め、書体と3Dの演出も御社のためにつくります。スマホでも1画面ずつ確かめます。' },
       { en: 'SEO', title: '検索の土台', detail: 'タイトル、説明文、見出し、内部リンク、sitemap.xml。検索エンジンに正しく読まれるための基本を、全ページでそろえます。' },
       { en: 'Article', title: '悩みから入る記事', detail: 'お客さんが検索しそうな悩みを選び、記事を1本書きます。数字と事例は、公表されているものだけを使います。' },
       { en: 'AIO', title: 'AIに読まれる形', detail: 'ページ冒頭の問いと答え、構造化データ、よくある質問、llms.txt。ChatGPTやGeminiが答えをつくるときに拾いやすくします。' },
-      { en: 'Referral', title: '人が確かめる紹介', detail: '相談はMusic Japanが先に読み、双方の了承を得てからLINEでおつなぎします。御社には通知と受付番号が届きます。' },
+      { en: 'Inquiry', title: '人が読む相談窓口', detail: 'ページから届いた相談はMusic Japanが先に読み、双方の了承を得てからLINEでおつなぎします。御社には通知と受付番号が届きます。' },
     ],
     fits: [
       'いい仕事をしているのに、社名で検索しても情報が少ない',
       'ホームページはあるけれど、問い合わせにつながっていない',
       'ChatGPTに業界名で聞いても、自社の名前が出てこない',
-      '紹介で決まる仕事が多く、その入口を増やしたい',
+      '会社の見せ方を、ほかの会社と違う形で整えたい',
       '記事を書きたいけれど、社内に書く人も時間もない',
       '営業メールばかり届く問い合わせ窓口に、疲れている',
     ],
@@ -458,7 +466,7 @@ export const musicJapan: Partner = {
   faq: [
     {
       q: 'Baton Partnersとは、何ですか。',
-      a: '合同会社Music Japanが運営する法人向けのサービスです。会社ごとに専用のページを5枚つくり、SEOとAIO（AI検索への対策）で見つかるように整え、ページを読んで興味を持った人を、Music Japanが確かめてからおつなぎします。',
+      a: '合同会社Music Japanが手がける、専用LP × SEO × ブランディングの法人向けサービスです。会社ごとに専用のページを5枚つくり、ロゴの色と書体から見た目を決めて、SEOとAIO（AI検索への対策）で見つかるように整えます。',
     },
     {
       q: '公式サイトがあるのに、別のページをつくる意味はありますか。',
@@ -483,30 +491,30 @@ export const musicJapan: Partner = {
 
   seo: {
     top: {
-      title: 'Baton Partners｜専用LP・SEO・AIO・紹介で問い合わせを増やす',
+      title: 'Baton Partnersとは｜専用LPとSEOで、検索に強い会社のページを持つ',
       description:
-        'Baton Partners（バトンパートナーズ）は、大阪・梅田の合同会社Music Japanが運営する法人向けサービスです。会社ごとの専用ページを5枚つくり、検索とAIの答えに出るよう整え、読んだ人からの相談をおつなぎします。代表は壁谷友生。',
+        'Baton Partners（バトンパートナーズ）は、大阪・梅田の合同会社Music Japanが手がける、専用LP × SEO × ブランディングのサービスです。会社ごとの専用ページを5枚つくり、ロゴの色と書体から見た目を決めて、検索とAIの答えに出るよう整えます。代表は壁谷友生。',
       answer: {
         q: 'Baton Partnersとは？',
-        a: 'Baton Partners（バトンパートナーズ）は、合同会社Music Japan（大阪・梅田、代表社員 壁谷友生）が運営する法人向けのサービスです。会社ごとに専用のページを5枚つくり、SEOとAIO（AI検索への対策）で見つかるように整え、ページを読んで興味を持った人を、Music Japanが内容を確かめてからおつなぎします。',
+        a: 'Baton Partners（バトンパートナーズ）は、合同会社Music Japan（大阪・梅田、代表社員 壁谷友生）が手がける、専用LP × SEO × ブランディングの法人向けサービスです。会社ごとに専用のページを5枚つくり、ロゴの色と書体から見た目を決めて、SEOとAIO（AI検索への対策）で見つかるように整えます。',
       },
     },
     about: {
       title: '合同会社Music Japanとは｜代表 壁谷友生とBaton Partners',
       description:
-        '合同会社Music Japanは、大阪・梅田の会社です。代表社員は壁谷友生。会社の専用ページと紹介「Baton Partners」、経営者の招待制プロフィール「Baton」を運営し、経営者メディア『ミラエラ』の認定インタビュアーとしても取材をしています。',
+        '合同会社Music Japanは、大阪・梅田の会社です。代表社員は壁谷友生。専用LP × SEO × ブランディングの「Baton Partners」と、経営者の招待制プロフィール「Baton」を運営し、経営者メディア『ミラエラ』の認定インタビュアーとしても取材をしています。',
       answer: {
         q: '合同会社Music Japanは、どんな会社？',
-        a: '大阪市北区梅田に拠点を置く会社です。代表社員は壁谷友生（かべや ともき）。法人向けの「Baton Partners」で会社ごとの専用ページをつくり、検索とAIの答えに出るよう整えて、話してみたい人どうしをおつなぎしています。壁谷は経営者メディア『ミラエラ』の認定インタビュアーでもあります。',
+        a: '大阪市北区梅田に拠点を置く会社です。代表社員は壁谷友生（かべや ともき）。法人向けの「Baton Partners」で、会社ごとの専用LPをつくり、ロゴの色と書体から見た目を決めて、検索とAIの答えに出るよう整えています。壁谷は経営者メディア『ミラエラ』の認定インタビュアーでもあります。',
       },
     },
     service: {
-      title: 'Baton Partnersのサービス内容｜専用LP・SEO・AIO・紹介',
+      title: 'Baton Partnersのサービス内容｜専用LP・SEO・ブランディング・AIO',
       description:
-        '1社につき5枚の専用ページ、悩みの言葉から書くSEO記事、AI検索に読まれる構造化データとllms.txt、Music Japanが確かめてからの紹介。Baton Partnersで引き受けることと、公開までの流れをまとめました。',
+        '1社につき5枚の専用LP、ロゴの色と書体から決めるデザイン、悩みの言葉から書くSEO記事、AI検索に読まれる構造化データとllms.txt。Baton Partnersで引き受けることと、公開までの流れをまとめました。',
       answer: {
         q: 'Baton Partnersには、何を頼める？',
-        a: '会社ごとの専用ページ5枚（トップ・取り組み・記事・サービス・話してみる）の制作、悩みの言葉から書くSEO記事、AI検索に読まれるための構造化データやllms.txtの整備、そしてページから届いた相談の確認とおつなぎです。ご希望があれば、経営者メディア『ミラエラ』のインタビューもご案内します。',
+        a: '会社ごとの専用ページ5枚（トップ・取り組み・記事・サービス・話してみる）の制作と、ロゴから決める色・書体・動きのデザイン、悩みの言葉から書くSEO記事、AI検索に読まれるための構造化データやllms.txtの整備です。ページから届いた相談の受付も、こちらで引き受けます。ご希望があれば、経営者メディア『ミラエラ』のインタビューもご案内します。',
       },
     },
     contact: {

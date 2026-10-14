@@ -64,6 +64,13 @@ export type Partner = {
     service?: string;
     /** 一覧の流れるロゴ帯に出す、黒背景用のロゴ */
     logos: { src: string; alt: string; size: [number, number] }[];
+    /**
+     * music-japan.com のパートナー欄（レコードのスリーブ）の2色。盤の溝とラベルに使う。
+     * 省くと brand.primary / accent。黒地で沈む色の会社だけ明るい色を入れる
+     */
+    colors?: [string, string];
+    /** music-japan.com の英語ページ（/en/partners/）に出す文言。日本語の base / category / catch / lead と同じ内容 */
+    en: { name: string; base: string; category: string; catch: string; lead: string };
   };
   company: {
     name: string;
@@ -256,7 +263,10 @@ export type Partner = {
     partnerLogos?: {
       title: string;
       lead: string;
-      items: { name: string; no: string; href?: string; status?: string; tint: string; logo: { src: string; size: [number, number] } }[];
+      /** 省くと、公開中の掲載企業（draft を除く）から自動で並べる。企業を足せば、ここにも並ぶ */
+      items?: { name: string; no: string; href?: string; status?: string; tint: string; logo: { src: string; size: [number, number] } }[];
+      /** 自動で並べるときの、会社ごとのにじみの色（slug → 色）。省くと brand.primary */
+      tints?: Record<string, string>;
       note: string;
     };
     /** ジャケット写真の棚（公式サイトのジャケット。飾りとして流す） */

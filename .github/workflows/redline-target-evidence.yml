@@ -4,8 +4,10 @@ on:
   pull_request:
     paths:
       - 'scripts/redline-target-map.mjs'
+      - 'scripts/redline-target-map.test.mjs'
       - 'scripts/redline-target-evidence.mjs'
       - 'scripts/redline-target-evidence.test.mjs'
+      - 'scripts/redline-evidence-integrity.test.mjs'
       - 'reports/redline-sustainaboy-20261013/**'
       - 'package.json'
       - '.github/workflows/redline-target-evidence.yml'
@@ -31,7 +33,9 @@ jobs:
       - name: Check diagnostic syntax
         run: |
           node --check scripts/redline-target-map.mjs
+          node --check scripts/redline-target-map.test.mjs
           node --check scripts/redline-target-evidence.mjs
           node --check scripts/redline-target-evidence.test.mjs
+          node --check scripts/redline-evidence-integrity.test.mjs
       - name: Test fixed scope and evidence handling with local fixtures
-        run: node --test scripts/redline-target-evidence.test.mjs
+        run: node --test scripts/redline-target-evidence.test.mjs scripts/redline-target-map.test.mjs scripts/redline-evidence-integrity.test.mjs

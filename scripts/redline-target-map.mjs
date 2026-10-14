@@ -1,7 +1,35 @@
-import { readdir, readFile, stat } from 'node:fs/promises';
+import { readdir, open } from 'node:fs/promises';
 import path from 'node:path';
 
 // Read-only source discovery. No target requests or repository code execution.
+const MAX_SOURCE_BYTES = 1048576;
+
+async function readBoundedSource(filename) {
+  const handle = await open(filename, 'r');
+  try {
+    // Inspect and read the opened file, without reopening its pathname.
+    const metadata = await handle.stat();
+    if (!metadata.isFile()) {
+      const error = new Error('not_regular_file');
+      error.code = 'ENOTFILE';
+      throw error;
+    }
+    if (metadata.size > MAX_SOURCE_BYTES) return null;
+    // One extra byte detects growth after stat without an unbounded read.
+    const bytes = Buffer.alloc(MAX_SOURCE_BYTES + 1);
+    let used = 0;
+    while (used < bytes.length) {
+      const { bytesRead } = await handle.read(bytes, used, bytes.length - used, used);
+      if (bytesRead === 0) break;
+      used += bytesRead;
+    }
+    if (used > MAX_SOURCE_BYTES) return null;
+    return bytes.subarray(0, used).toString('utf8');
+  } finally {
+    await handle.close();
+  }
+}
+
 const root = process.cwd();
 const ignored = new Set(['.git', 'node_modules', '.next', '.venv', 'venv', 'dist', 'build', 'coverage', '__pycache__', '.cache']);
 const terms = ['standment-redteam-console', 'STANDMENT // REDTEAM', '認可ターゲット未登録', 'scope=authorized-only', 'sustainaboy-works.onrender.com', 'SUSTAINABOY WORKS'];
@@ -33,8 +61,8 @@ while (queue.length && !capped) {
     if (!readable.test(entry.name)) continue;
     try {
       const filename = path.join(root, relative);
-      if ((await stat(filename)).size > 1048576) { oversized++; continue; }
-      const content = await readFile(filename, 'utf8');
+      const content = await readBoundedSource(filename);
+      if (content === null) { oversized++; continue; }
       if (!terms.some(term => content.toLowerCase().includes(term.toLowerCase()))) continue;
       const lines = content.split(/\r?\n/);
       const found = new Set();

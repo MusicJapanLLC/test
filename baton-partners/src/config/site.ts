@@ -4,7 +4,7 @@ export const site = {
   /** パンくずの先頭・一覧ページの呼び名（本体サイトの「パートナー」と同じ位置づけ） */
   hubName: 'Baton Partners',
   description:
-    '合同会社Music Japanのパートナー企業。各社の事業とサービスを、一社ずつ専用のページで紹介しています。',
+    'Baton Partners（バトンパートナーズ）は、合同会社Music Japanの法人向けサービスです。専用LP × SEO × ブランディングで、会社ごとに検索に強いページをつくります。',
   operator: {
     name: '合同会社Music Japan',
     nameEn: 'Music Japan LLC',
@@ -16,7 +16,7 @@ export const site = {
     logo: { src: '/partners/music-japan/logo.png', size: [809, 190] as [number, number] },
     /** 構造化データの説明文。Baton Partners の運営会社として、サービスの中身で説明する */
     description:
-      '大阪・梅田の会社。法人向けサービス「Baton Partners」で会社ごとの専用ページをつくり、検索とAIに見つかるよう整えて、話してみたい人どうしをおつなぎしています。',
+      '大阪・梅田の会社。法人向けサービス「Baton Partners」で、専用LP × SEO × ブランディングを手がけています。会社ごとに専用のページをつくり、ロゴの色と書体から見た目を決めて、検索とAIの答えに見つかるよう整えます。',
     sameAs: ['https://x.com/Music_Japan_LLC', 'https://www.instagram.com/music.japan.llc2/'],
     /** 代表者。music-japan.com・Baton のプロフィールと同じ人物として、同じ @id でつなぐ */
     founder: {
@@ -31,7 +31,7 @@ export const site = {
       ],
       description:
         '合同会社Music Japan 代表社員。法人向けサービス「Baton Partners」を運営し、経営者メディア『ミラエラ』の認定インタビュアーとして経営者への取材もしている。',
-      knowsAbout: ['SEO', 'AIO', 'LLMO', 'BtoBの集客', 'ランディングページ', '経営者インタビュー', '紹介'],
+      knowsAbout: ['SEO', 'AIO', 'LLMO', 'ランディングページ', 'ブランディング', 'BtoBの集客', '経営者インタビュー'],
     },
   },
   /** Baton Partners（サービス）の紹介ページ。運営会社自身のページ（/music-japan/）にある */

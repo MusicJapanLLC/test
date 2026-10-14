@@ -227,8 +227,8 @@ export function footer(p?: Partner): string {
         p
           ? `<p class="ftr-about">${jp(
               p.operator
-                ? `このページは、合同会社Music Japanが運営する「Baton Partners」の紹介です。掲載しているパートナー企業のページは、各社の公式情報をもとに制作しています。`
-                : `${p.company.name}は、合同会社Music Japanのパートナー企業です。このページは Music Japan が制作・運営し、掲載内容は${shortName(p)}の公式情報をもとにしています。`,
+                ? `このページは、合同会社Music Japanが手がける専用LP × SEO × ブランディングのサービス「Baton Partners」の紹介です。掲載している会社のページは、各社の公式情報をもとに制作しています。`
+                : `このページは、${p.company.name}の専用ページとして、Baton Partners（合同会社Music Japan）が制作・運営しています。掲載内容は${shortName(p)}の公式情報をもとにしています。`,
             )}</p>`
           : ''
       }
@@ -245,7 +245,7 @@ export function footer(p?: Partner): string {
       <p class="ftr-k">Partners</p>
       <ul class="ftr-links">
         <li><a href="${routes.top(site.service.slug)}">Baton Partnersとは</a></li>
-        <li><a href="/">パートナー企業の一覧</a></li>
+        <li><a href="/">掲載企業の一覧</a></li>
         <li><a href="${routes.editorial()}">編集部について</a></li>
         <li><a href="${routes.privacy()}">プライバシーポリシー</a></li>
       </ul>

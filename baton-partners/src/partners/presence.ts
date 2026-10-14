@@ -43,6 +43,14 @@ export const presence: Partner = {
     lead: '「日本一儲かる会社よりも、日本一応援される会社に」。採用支援を中心に、販売促進やアパレルまで手がける東京・丸の内の会社です。代表の金子将土さんは、名刺交換も営業も禁止した経営者コミュニティ「P-ENJIN」を主宰しています。',
     service: 'P-ENJIN',
     logos: [{ src: '/partners/presence/logo-light.png', alt: 'Presence', size: [702, 160] }],
+    colors: ['#ff8001', '#3d7cc9'],
+    en: {
+      name: 'Presence Inc.',
+      base: 'MARUNOUCHI, TOKYO',
+      category: 'EXECUTIVE COMMUNITY / RECRUITMENT',
+      catch: 'Connecting through character before titles.',
+      lead: '“Rather than the most profitable company in Japan, the most supported one.” Based in Marunouchi, Tokyo, Presence centers on recruitment support and also works in sales promotion and apparel. Its president, Masato Kaneko, hosts P-ENJIN, an executive community where exchanging business cards and selling are both off the table.',
+    },
   },
   company: {
     name: 'Presence株式会社',

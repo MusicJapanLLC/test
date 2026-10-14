@@ -26,6 +26,14 @@ export const centralAx: Partner = {
     catch: 'AIを学ぶ、その先の実装まで。',
     lead: '生成AI研修、AI受託開発・業務改善、LLMO対策を手がけるAI実装支援会社。名古屋を拠点に、全国の企業のAI活用を支援します。',
     logos: [{ src: '/partners/central-ax/logo-white.png', alt: 'CENTRAL AX', size: [691, 210] }],
+    colors: ['#eeeef2', '#5b5bf0'],
+    en: {
+      name: 'Central AX Inc.',
+      base: 'NAGOYA',
+      category: 'AI TRAINING / DEVELOPMENT',
+      catch: 'From learning AI to putting it to work.',
+      lead: 'Based in Nagoya and serving companies across Japan, Central AX supports generative AI training, custom AI development, workflow improvements and AI search optimization.',
+    },
   },
   company: {
     name: '株式会社Central AX',

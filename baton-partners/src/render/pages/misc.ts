@@ -7,12 +7,21 @@ import { answerBox } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd } from '../seo';
 import { esc, heading, jp } from '../text';
 
+/**
+ * 一覧（/）は「Baton Partners」というサービスの入口。検索結果では「Music Japanが紹介する会社」ではなく、
+ * 専用LP × SEO × ブランディングのサービスとして見えるようにする（オーナーの指示 2026-10-14）。
+ * 並んでいる会社は、そのサービスでつくったページ。社名を本文に直書きせず、件数は掲載企業のデータから出す
+ */
 const SITE_ANSWER = {
   q: 'Baton Partnersとは？',
-  a: '合同会社Music Japanのパートナー企業を、一社ずつ番号をつけて紹介するページです。各社の事業とサービスを、専用のページにまとめています。',
+  a: 'Baton Partners（バトンパートナーズ）は、合同会社Music Japanが手がける、専用LP × SEO × ブランディングの法人向けサービスです。会社ごとに専用のページを5枚つくり、ロゴの色と書体から見た目を決めて、社名や悩みの言葉で検索されたときの入口にします。ここに並んでいるのは、Baton Partnersでつくった会社のページです。',
 };
 
-const INDEX_TITLE = 'Baton Partners｜合同会社Music Japanのパートナー企業';
+const INDEX_TITLE = 'Baton Partners｜専用LP × SEO × ブランディング｜合同会社Music Japan';
+
+/** 検索結果に出す説明文。件数は公開中の会社の数から出す（会社を足しても古い数字が残らないように） */
+const indexDescription = (count: number) =>
+  `Baton Partners（バトンパートナーズ）は、専用LPとSEOで、検索に強い自社のページを持てる法人向けサービスです。ロゴの色と書体から1社ずつデザインし、記事とAI検索への対策まで整えます。運営は合同会社Music Japan。いま${count}社のページを公開しています。`;
 
 /** 傾いたレコード盤（CSSで描く。動きを減らす設定では止まる） */
 function disc(cls: string): string {
@@ -83,14 +92,15 @@ ${bpHeader(list, 'index')}
     ${disc('bpx-disc')}
     <div class="wrap bpx-hero-in">
       <nav class="bpx-crumb" aria-label="パンくずリスト"><ol><li><a href="${site.operator.url}">Music Japan</a></li><li><span aria-current="page">Baton Partners</span></li></ol></nav>
-      <p class="bpx-kicker">BATON PARTNERS / CONNECTIONS</p>
-      <h1 class="bpx-h1">パートナー</h1>
-      <p class="bpx-sub">${jp('事業の強みを知り、次のつながりへ。')}</p>
+      <p class="bpx-kicker">BATON PARTNERS / LP × SEO × BRANDING</p>
+      <h1 class="bpx-h1">Baton<br />Partners</h1>
+      <p class="bpx-sub">${jp('専用LP × SEO × ブランディング。')}</p>
+      <p class="bpx-lead bpx-hero-lead">${jp('会社ごとに専用のページを5枚つくり、ロゴの色と書体から見た目を決めて、検索とAIの答えに出るよう整えます。ここに並んでいるのは、Baton Partnersでつくった会社のページです。')}</p>
       <p class="bpx-count"><strong>${count}</strong><span>社 — BATON PARTNERS / MUSIC JAPAN</span></p>
       <a class="bpx-origin" href="${routes.top(operatorPartner.slug)}">
         <b>${bpNo(operatorPartner)}</b>
         <span class="bpx-origin-t">Baton Partnersとは</span>
-        <span class="bpx-origin-s">${esc(`運営：${operatorPartner.company.name}　専用LP × SEO × AIO × 紹介`)}</span>
+        <span class="bpx-origin-s">${esc(`運営：${operatorPartner.company.name}　専用LP × SEO × ブランディング`)}</span>
         <span class="arrow" aria-hidden="true">→</span>
       </a>
     </div>
@@ -100,16 +110,16 @@ ${bpHeader(list, 'index')}
     <div class="wrap">
       <p class="bpx-sec-k"><i>01</i>CATALOG — BATON PARTNERS</p>
       <h2 id="cat-h" class="bpx-h2">${heading(['一社ずつ、', '盤に刻むように。'])}</h2>
-      <p class="bpx-lead">${jp('一社ずつ、レコードのように番号をつけて並べています。それぞれの事業とサービスは、各社のページで詳しくご覧いただけます。')}</p>
+      <p class="bpx-lead">${jp('色も書体も動きも、その会社のロゴと言葉から決めているので、同じつくりのページは一枚もありません。番号はレコードの品番のつもりでつけています。事業とサービスの中身は、各社のページでどうぞ。')}</p>
       <ol class="rcs">${cards}</ol>
     </div>
   </section>
   <section class="bpx-band" aria-labelledby="band-h">
     <div class="wrap bpx-band-in">
       <p class="bpx-sec-k">CONTACT / COLLABORATE</p>
-      <h2 id="band-h" class="bpx-h2">${heading(['次の音を、', '一緒につくろう。'])}</h2>
-      <p class="bpx-lead">${jp('パートナー企業とのおつなぎや、Baton Partnersへの掲載、協業のご相談はこちらから。内容を確認後、担当よりご連絡します。')}</p>
-      <a class="bpx-btn" href="https://music-japan.com/contact/">話を始める<span class="arrow" aria-hidden="true">→</span></a>
+      <h2 id="band-h" class="bpx-h2">${heading(['御社の専用LPを、', '一緒につくろう。'])}</h2>
+      <p class="bpx-lead">${jp('社名で検索されたときに出るページを増やしたい。会社の見せ方を、検索に強い形で整えたい。そんな話から始められます。日程は、Baton Partnersの「話してみる」のページで選べます。')}</p>
+      <a class="bpx-btn" href="${routes.contact(operatorPartner.slug)}">話してみる<span class="arrow" aria-hidden="true">→</span></a>
     </div>
   </section>
 </main>
@@ -119,8 +129,7 @@ ${footer()}`;
       kind: 'index',
       path: '/',
       title: INDEX_TITLE,
-      description:
-        '合同会社Music Japanのパートナー企業。福岡で人材紹介会社向けCRM・MA「Empro」を提供するエボルグ、名古屋でAI研修と開発を手がけるCentral AX。各社の事業とサービスを、一社ずつ専用のページで紹介しています。',
+      description: indexDescription(list.length),
       og: '/og/site.png',
       jsonLd: [
         pageLd(env, {
@@ -134,7 +143,7 @@ ${footer()}`;
         {
           '@type': 'ItemList',
           '@id': `${env.siteUrl}/#partners`,
-          name: 'Music Japan のパートナー企業',
+          name: 'Baton Partnersでつくった会社のページ',
           itemListElement: list.map((p, i) => ({
             '@type': 'ListItem',
             position: i + 1,
@@ -173,7 +182,7 @@ ${bpHeader(list, 'editorial')}
   <div class="wrap pv">
     ${breadcrumb([{ name: 'Baton Partners 編集部' }])}
     <h1 class="pv-h1">Baton Partners 編集部について</h1>
-    <p>${jp('Baton Partnersは、合同会社Music Japanのパートナー企業を紹介するページです。編集部は、各社のページと記事の制作を担当しています。')}</p>
+    <p>${jp('Baton Partnersは、合同会社Music Japanが手がける専用LP × SEO × ブランディングのサービスです。編集部は、各社のページと記事の制作を担当しています。')}</p>
   </div>
   ${answerBox(answer, 'editorial-answer')}
   <div class="wrap pv">
