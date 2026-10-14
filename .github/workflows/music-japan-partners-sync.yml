@@ -1,0 +1,64 @@
+# Keeps the partner section on music-japan.com in step with Baton Partners.
+#
+# Baton Partners publishes its list at https://partners.music-japan.com/partners.json (baton-partners/src/render/feed.ts).
+# Every music-japan.com build pulls that list (music-japan-site-trace/scripts/sync-partners.mjs) and also publishes
+# the copy it used at https://music-japan.com/baton-partners.json. When the two differ, this job asks Cloudflare
+# Pages to rebuild music-japan.com, so a company added or edited on the partner site shows up on the official site.
+#
+# One-time setup: Cloudflare Pages → the music-japan.com project → Settings → Builds → Deploy hooks →
+# add a hook for the production branch (music-japan-production), and save its URL as the repository
+# secret MJ_SITE_DEPLOY_HOOK. Until then the job only reports that the official site is behind.
+name: music-japan.com partners sync
+
+on:
+  schedule:
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: music-japan-partners-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Compare the partner site with the official site
+        id: diff
+        run: |
+          set -euo pipefail
+          curl -fsS --retry 3 --max-time 20 https://partners.music-japan.com/partners.json -o live.json
+          if ! curl -fsS --retry 3 --max-time 20 https://music-japan.com/baton-partners.json -o site.json; then
+            echo '{}' > site.json
+          fi
+          # only the parts the official site renders; "updated" alone is not worth a rebuild
+          pick='{operator, partners: [.partners[] | del(.updated)]} | .operator |= del(.updated)'
+          jq -S "$pick" live.json > a.json
+          jq -S "$pick" site.json > b.json 2>/dev/null || echo '{}' > b.json
+          if cmp -s a.json b.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "music-japan.com is in sync with Baton Partners ($(jq '.partners | length' live.json) companies)." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            {
+              echo "Baton Partners: $(jq -r '[.partners[].no] | join(", ")' live.json)"
+              echo ""
+              echo "music-japan.com: $(jq -r '[(.partners // [])[].no] | join(", ")' site.json)"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Rebuild music-japan.com
+        if: steps.diff.outputs.changed == 'true'
+        env:
+          HOOK: ${{ secrets.MJ_SITE_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::music-japan.com is behind Baton Partners. Add the MJ_SITE_DEPLOY_HOOK secret (Cloudflare Pages deploy hook) to rebuild it automatically."
+            exit 0
+          fi
+          curl -fsS -X POST --max-time 20 "$HOOK" > /dev/null
+          echo "Asked Cloudflare Pages to rebuild music-japan.com." >> "$GITHUB_STEP_SUMMARY"

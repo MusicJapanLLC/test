@@ -8,7 +8,7 @@
 
 ## 運営会社のページ（BP-000）
 
-`/music-japan/` は、合同会社Music Japan が運営する Baton Partners そのものの紹介（専用LP × SEO × AIO × 紹介）。
+`/music-japan/` は、合同会社Music Japan が運営する Baton Partners そのものの紹介（専用LP × SEO × ブランディング）。
 同じ5ページの骨組みに、独自の世界観（relay：トラックとバトン）と、予約ページ（TimeRex）で日程を選ぶ「話してみる」を載せている。
 詳しい決まりは `CLAUDE.md` の「運営会社のページ」。
 
@@ -80,6 +80,12 @@ npm run preview   # http://localhost:4174/evorg/
 - **SEO**：ページごとの title / description / canonical / OGP、構造化データ（Organization・WebPage・AboutPage・Service・FAQPage・Article・BreadcrumbList）、sitemap.xml。
   本番は Vercel の production 環境でビルドする。プレビューの検索除外は維持する。
 
+## 公式サイト（music-japan.com）のパートナー欄
+
+ビルドで `dist/partners.json`（公開中の掲載企業の一覧）を書き出し、`https://partners.music-japan.com/partners.json` で公開する。
+music-japan.com はビルドのたびにこれを読んでパートナー欄を作り直し、ずれていれば GitHub Actions（`music-japan-partners-sync.yml`）が公式サイトを作り直す。
+会社を足す・直すのは `src/partners/` だけでよい。詳しくは `CLAUDE.md` の「公式サイトへの反映」。
+
 ## 企業追加とサイトマップ
 
 `src/partners/index.ts` の企業データから、LP・一覧への内部リンク・構造化データ・llms ファイル・サイトマップを同じビルドで生成する。確認中の企業は `draft: true` にし、公開情報と更新日を確認してから公開する。
@@ -120,7 +126,7 @@ npm run preview   # http://localhost:4174/evorg/
 - [x] ヒーローの送り状、切り替えの日（DNS）、控えの置き場所（権限）、代表の名刺と年表、WebGL（トラック・監視の線・地球）
 - [x] SEO：title / description を「WordPress引越し代行・保守」「サイト引越し屋さん」で揃え、120字以内に。「引っ越し」の表記ゆれと「サーバー移転」はFAQで拾う
 - [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `dp-partners` を足す（足すまで、このページからの送信は記録されない）
-- [ ] music-japan.com/partners への会社名の掲載（このリポジトリの外）
+- [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動。CLAUDE.md「公式サイトへの反映」）
 
 ## Presence（BP-006）の残り
 
@@ -130,7 +136,7 @@ npm run preview   # http://localhost:4174/evorg/
 - [x] 公式ロゴ（星をまとったカメ）。縦組みの公式ロゴを横組みに並べ直したもの（`logo.png` / `logo-light.png`、702×160。`logo-light.png` は文字だけ白）。OG 画像も作り直した
 - [ ] P-ENJIN のロゴ（あれば）。いまは仮のワードマーク（`p-enjin.png`）
 - [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `presence` を足す（足すまで、このページからの送信は記録されない）
-- [ ] music-japan.com/partners への会社名の掲載
+- [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動）
 
 公式サイト（presences.info）は作業環境から直接開けないため、文言は検索エンジン経由（Firecrawl）で確認した公式の記載を使っている。
 
@@ -142,7 +148,7 @@ npm run preview   # http://localhost:4174/evorg/
 - [x] 宮本さんの掲載許可を確認し、`draft` を解除
 - [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `zettaichi` を足す（足すまで、このページからの送信は記録されない）
 - [ ] n1a の提供が始まったら「制作中」「COMING SOON」の書き方を、トップ・サービス・FAQ・記事で直す
-- [ ] music-japan.com/partners への会社名の掲載
+- [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動）
 - [ ] 本人の希望：AddBox 時代の交流会の名前は使わない（経営者交流会は Biz Summit! と ASOBMENT で紹介）
 
 文言は公式サイト（zettaichi.co.jp・n1a-cxo.com・asobment.studio.site・biz-summit.studio.site）を検索エンジン経由（Firecrawl）で確認した表現を使い、

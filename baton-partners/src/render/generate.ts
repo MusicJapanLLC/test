@@ -59,7 +59,7 @@ export async function generatePages(root: string, env: BuildEnv): Promise<Genera
  */
 function writeOgManifest(root: string) {
   const items = [
-    { key: 'site', label: 'Music Japan Partners', heading: 'パートナー｜事業の強みを知り、次のつながりへ。', company: '合同会社Music Japan のパートナー企業' },
+    { key: 'site', label: 'Baton Partners', heading: '専用LP × SEO × ブランディング', company: 'Baton Partners（合同会社Music Japan）' },
     ...sites.flatMap((p) => {
       const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme, photo: p.leader?.photo };
       return [
