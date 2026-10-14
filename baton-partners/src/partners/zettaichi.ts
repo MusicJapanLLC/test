@@ -40,6 +40,13 @@ export const zettaichi: Partner = {
     lead: '「世の中に、絶対的価値を。」を掲げて2026年7月に設立された会社です。代表の宮本康太さんがいま力を入れているのは、Big Five診断と商談での発言をもとに、人柄の合う経営者どうしをつなぐ「n1a（ニア）」。決裁者との商談をつくる営業支援と、経営者が出会う場づくりも手がけています。',
     service: 'n1a',
     logos: [{ src: '/partners/zettaichi/logo-light.png', alt: 'ZETTAICHI', size: [1030, 88] }],
+    en: {
+      name: 'ZETTAICHI Inc.',
+      base: 'KOMAE, TOKYO',
+      category: 'EXECUTIVE MATCHING / SALES SUPPORT',
+      catch: 'Even B2B comes down to people.',
+      lead: 'Founded in July 2026 with the motto “Absolute value for the world.” Its representative, Kota Miyamoto, is now focused on n1a, which connects executives with compatible personalities based on Big Five assessments and what they say in meetings. ZETTAICHI also sets up meetings with decision-makers and runs events where executives meet.',
+    },
   },
   company: {
     name: '株式会社ZETTAICHI',

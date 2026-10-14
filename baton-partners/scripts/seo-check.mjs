@@ -56,4 +56,14 @@ for (const url of indexable) {
   const path = new URL(url).pathname;
   if (path !== '/') assert.ok(links.has(path) || links.has(url), `Orphan page: ${path}`);
 }
-console.log(`SEO check: ${indexable.length} indexable pages; sitemap, lastmod, canonical, metadata, schemas and links OK`);
+// partners.json (read by music-japan.com) must list exactly the companies in the catalog on /, with a page each.
+const feed = JSON.parse(readFileSync(join(root, 'partners.json'), 'utf8'));
+const catalog = [...readFileSync(join(root, 'index.html'), 'utf8').matchAll(/<li class="rc"[\s\S]*?<a class="rc-sleeve" href="\/([^/"]+)\/"/g)].map((m) => m[1]);
+assert.deepEqual(feed.partners.map((p) => p.id), catalog, 'partners.json must match the catalog on /');
+for (const p of [feed.operator, ...feed.partners]) {
+  for (const key of ['name', 'base', 'category', 'title', 'body']) assert.ok(p[key]?.ja && p[key]?.en, `partners.json ${p.id}: missing ${key}`);
+  assert.match(p.no, /^BP-\d{3}$/, `partners.json ${p.id}: bad no`);
+  assert.ok(p.logos.length && p.logos.every((l) => l.width > 0 && l.height > 0), `partners.json ${p.id}: logos`);
+  assert.ok(pages.some((f) => f.endsWith(join(p.id, 'index.html'))), `partners.json ${p.id}: page missing`);
+}
+console.log(`SEO check: ${indexable.length} indexable pages; sitemap, lastmod, canonical, metadata, schemas and links OK; partners.json ${feed.partners.length} companies`);

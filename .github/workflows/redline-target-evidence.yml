@@ -1,0 +1,41 @@
+name: REDLINE target evidence
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/redline-target-map.mjs'
+      - 'scripts/redline-target-map.test.mjs'
+      - 'scripts/redline-target-evidence.mjs'
+      - 'scripts/redline-target-evidence.test.mjs'
+      - 'scripts/redline-evidence-integrity.test.mjs'
+      - 'reports/redline-sustainaboy-20261013/**'
+      - 'package.json'
+      - '.github/workflows/redline-target-evidence.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: redline-target-evidence-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Check diagnostic syntax
+        run: |
+          node --check scripts/redline-target-map.mjs
+          node --check scripts/redline-target-map.test.mjs
+          node --check scripts/redline-target-evidence.mjs
+          node --check scripts/redline-target-evidence.test.mjs
+          node --check scripts/redline-evidence-integrity.test.mjs
+      - name: Test fixed scope and evidence handling with local fixtures
+        run: node --test scripts/redline-target-evidence.test.mjs scripts/redline-target-map.test.mjs scripts/redline-evidence-integrity.test.mjs

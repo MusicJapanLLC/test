@@ -29,6 +29,14 @@ export const smartaleck: Partner = {
     catch: '採用も、認知も、スマホの画面から。',
     lead: 'Instagram、YouTube、インフルエンサー、LINE公式アカウント、AIの検索。企業の採用と集客を、企画から撮影、運用、分析までまとめて引き受ける大阪・淀屋橋の会社です。',
     logos: [{ src: '/partners/smartaleck/logo-light.png', alt: 'Smartaleck', size: [800, 126] }],
+    colors: ['#1f92ca', '#7fd3f7'],
+    en: {
+      name: 'Smartaleck Inc.',
+      base: 'OSAKA',
+      category: 'SOCIAL & VIDEO / DIGITAL MARKETING',
+      catch: 'Hiring and awareness, from the smartphone screen.',
+      lead: 'Instagram, YouTube, influencers, LINE official accounts and AI search. Based in Yodoyabashi, Osaka, Smartaleck takes on hiring and marketing for companies, from planning and filming to operation and analysis.',
+    },
   },
   company: {
     name: '株式会社Smartaleck',

@@ -1,0 +1,3 @@
+# Preserve captured HTTP response bytes without Git newline conversion.
+about.html -text
+site.js -text
