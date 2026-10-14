@@ -46,13 +46,21 @@ const rich = (s: string): string => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1
 const LINK = /\[([^\]]+)\]\(((?:\/|https:\/\/)[^)\s]*)\)/;
 const LINK_SPLIT = /(\[[^\]]+\]\((?:\/|https:\/\/)[^)\s]*\))/g;
 
+/**
+ * 「P-ENJIN」「IPIP-50」のような英数字とハイフンの語は、ハイフンの後ろで折り返さない（「P-」と「ENJIN」に割れないように）。
+ * 囲むのは専用のタグ（bp-nobr）。span にすると、目次の番号（.toc a span）などの既存のスタイルに巻き込まれる
+ */
+const nobr = (html: string): string => html.replace(/[A-Za-z0-9]+(?:-[A-Za-z0-9]+)+/g, '<bp-nobr>$&</bp-nobr>');
+
 function jpText(text: string): string {
   return text
     .split(/(\*\*.+?\*\*)/g)
     .map((chunk) => {
       const bold = /^\*\*(.+)\*\*$/.exec(chunk);
       const body = bold ? bold[1] : chunk;
-      const html = phrases(body).map(esc).join('<wbr>');
+      const html = phrases(body)
+        .map((ph) => nobr(esc(ph)))
+        .join('<wbr>');
       return bold ? `<strong>${html}</strong>` : html;
     })
     .join('');

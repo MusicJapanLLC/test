@@ -5,7 +5,7 @@ import { nextReads, sourcesList } from '../parts';
 import { abs, breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp, text } from '../text';
 
-function block(b: Block): string {
+function block(b: Block, p: Partner): string {
   switch (b.type) {
     case 'p':
       return `<p>${jp(b.text)}</p>`;
@@ -23,7 +23,30 @@ function block(b: Block): string {
       return `<div class="a-table-wrap"><table class="a-table"><thead><tr><th scope="col">${esc(b.head[0])}</th><th scope="col">${esc(b.head[1])}</th></tr></thead><tbody>${b.rows
         .map((r) => `<tr><th scope="row">${jp(r[0])}</th><td>${jp(r[1])}</td></tr>`)
         .join('')}</tbody></table></div>`;
+    case 'person':
+      return personCard(p, b.text);
   }
+}
+
+/** この記事に登場する人。写真は正方形の顔写真（avatar）、なければトレーディングカードの写真、代表の写真の順 */
+function personCard(p: Partner, note: string): string {
+  const l = p.leader;
+  if (!l) return '';
+  const ph = l.avatar
+    ? { src: l.avatar, size: [320, 320] as [number, number], focus: undefined }
+    : (p.top.card?.photo ?? (l.photo && l.photoSize ? { src: l.photo, size: l.photoSize, focus: undefined } : undefined));
+  const img = ph
+    ? `<img class="a-person-img" src="${ph.src}" alt="${esc(p.company.name)} ${esc(l.role)} ${esc(l.name)}" width="${ph.size[0]}" height="${ph.size[1]}" loading="lazy" decoding="async"${ph.focus ? ` style="object-position:${ph.focus[0]}% ${ph.focus[1]}%"` : ''} />`
+    : '';
+  return `<aside class="a-person" aria-label="この記事に登場する人">
+          ${img}
+          <div class="a-person-body">
+            <p class="a-person-k">この記事に登場する人</p>
+            <p class="a-person-name"><a href="${routes.about(p.slug)}">${esc(l.name)}</a><span class="a-person-en">${esc(l.nameEn)}</span></p>
+            <p class="a-person-role">${esc(p.company.name)} ${esc(l.role)}</p>
+            <p class="a-person-p">${jp(note)}</p>
+          </div>
+        </aside>`;
 }
 
 export function renderInsight(p: Partner, env: BuildEnv): string {
@@ -34,7 +57,8 @@ export function renderInsight(p: Partner, env: BuildEnv): string {
   const og = `/og/${p.slug}-insight.png`;
 
   const toc = a.sections
-    .map((s, i) => `<li><a href="#${s.id}"><span>${String(i + 1).padStart(2, '0')}</span>${jp(s.heading)}</a></li>`)
+        // 目次のリンクは「番号｜見出し」の2列のグリッド。見出しは1つの要素に入れて、中の <bp-nobr>（P-ENJIN など）が別の列に分かれないように
+    .map((s, i) => `<li><a href="#${s.id}"><span>${String(i + 1).padStart(2, '0')}</span><bp-tx>${jp(s.heading)}</bp-tx></a></li>`)
     .join('');
 
   const sections = a.sections
@@ -42,7 +66,7 @@ export function renderInsight(p: Partner, env: BuildEnv): string {
       (s, i) => `
       <section class="a-sec" id="${s.id}" aria-labelledby="${s.id}-h">
         <h2 id="${s.id}-h" class="a-h2"><span class="a-h2-no">${String(i + 1).padStart(2, '0')}</span>${heading(s.heading)}</h2>
-        ${s.blocks.map(block).join('\n')}
+        ${s.blocks.map((b) => block(b, p)).join('\n')}
       </section>`,
     )
     .join('');
@@ -150,7 +174,11 @@ ${footer(p)}`;
           author: { '@id': ids.editorial(env) },
           publisher: { '@id': ids.operator },
           about: { '@id': ids.org(env, p) },
-          mentions: [{ '@id': ids.service(env, p) }],
+          // 本文に代表の名前が出てくる記事は、代表（Person）にも触れていることを書く
+          mentions: [
+            { '@id': ids.service(env, p) },
+            ...(p.seo.org.leader && !p.operator && JSON.stringify(a).includes(p.seo.org.leader.name) ? [{ '@id': ids.founder(env, p) }] : []),
+          ],
           citation: a.sources.map((s) => s.url),
         },
         breadcrumbLd(env, path, [
