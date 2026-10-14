@@ -29,6 +29,13 @@ export const cominka: Partner = {
     lead: 'SEOコンサルティングを軸に、MEO・広告・SNS・Web制作まで一貫して支援。自社開発のAI SEOツール「yoriaiSEO」も手がける、大阪・谷町の会社です。',
     service: 'yoriai',
     logos: [{ src: '/partners/cominka/logo-light.png', alt: 'cominka', size: [1985, 480] }],
+    en: {
+      name: 'Cominka Inc.',
+      base: 'OSAKA',
+      category: 'SEO / WEB MARKETING',
+      catch: 'From search traffic to inquiries and purchases.',
+      lead: 'Centered on SEO consulting, Cominka also supports MEO, advertising, social media and web production, and develops its own AI SEO tool, yoriaiSEO. The company is based in Tanimachi, Osaka.',
+    },
   },
   company: {
     name: '株式会社Cominka',

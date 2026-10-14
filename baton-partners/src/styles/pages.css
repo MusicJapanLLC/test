@@ -2633,6 +2633,11 @@ body[data-page='index'] .progress i {
   font-weight: 700;
   color: var(--bx-ink);
 }
+.bpx-lead.bpx-hero-lead {
+  max-width: 34em;
+  margin-top: 12px;
+  font-size: 0.95rem;
+}
 .bpx-count {
   display: flex;
   flex-wrap: wrap;

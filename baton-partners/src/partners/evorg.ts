@@ -32,6 +32,14 @@ export const evorg: Partner = {
       { src: '/partners/evorg/logo-light.png', alt: 'Evorg', size: [517, 137] },
       { src: '/partners/evorg/empro-light.png', alt: 'Empro', size: [525, 154] },
     ],
+    colors: ['#e0142f', '#1fb5d6'],
+    en: {
+      name: 'Evorg Inc.',
+      base: 'FUKUOKA',
+      category: 'RECRUITMENT / CRM & MA',
+      catch: 'Helping recruitment businesses grow.',
+      lead: 'Evorg provides Empro, a CRM and marketing automation platform for recruitment agencies, combining data, AI and dedicated consulting to support placements and business growth.',
+    },
   },
   company: {
     name: '株式会社エボルグ',

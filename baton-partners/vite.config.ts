@@ -1,6 +1,9 @@
 import { defineConfig, type Plugin } from 'vite';
 import { generatePages, type GeneratedPage } from './src/render/generate';
 import { llmsFullTxt, llmsTxt } from './src/render/llms';
+import { partnersFeed } from './src/render/feed';
+import { operatorPartner, partners } from './src/partners';
+import { site } from './src/config/site';
 import type { BuildEnv } from './src/render/layout';
 
 const root = process.cwd();
@@ -81,6 +84,9 @@ function seoFiles(pages: GeneratedPage[]): Plugin {
       });
       this.emitFile({ type: 'asset', fileName: 'llms.txt', source: llmsTxt(env) });
       this.emitFile({ type: 'asset', fileName: 'llms-full.txt', source: llmsFullTxt(env) });
+      // 公式サイト（music-japan.com）のパートナー欄が読む一覧。企業を足すと、公式サイトの次のビルドで反映される
+      const updated = [site.updated, ...partners.map((p) => p.seo.updated)].sort().at(-1) ?? site.updated;
+      this.emitFile({ type: 'asset', fileName: 'partners.json', source: partnersFeed(partners, operatorPartner, env, updated) });
     },
   };
 }
