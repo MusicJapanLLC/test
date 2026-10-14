@@ -4,11 +4,13 @@ import type { Partner } from '../types';
  * 株式会社ZETTAICHI（ゼッタイチ）／ n1a（ニア）
  *
  * 世界観：社名の由来の「絶対値」と、n1a の「経営者の見えない波長を、分析し、つなぐ。」。
- *   白地に、ZETTAICHI のロゴの紺（#001E44）と、n1a のロゴの藍（#3035D9）・水色（#3799E8）・ピンク（#DE59EC）。
- *   公式サイトが事業を PLANET A / B / C と呼ぶのにならって惑星の軌道、絶対値の縦棒 | |、n1a の重なる吹き出しと「…」。
- *   見出しは丸い M PLUS Rounded 1c の太字（n1a のロゴの丸い文字にならう）、欧文は幅の広い Michroma（ZETTAICHI のロゴの字形にならう）、
- *   数式とラベルは JetBrains Mono。
- *   WebGL は「波長」：人柄の五角形（Big Five）が漂う → 惑星の軌道に並び、合う二人を波の糸が結ぶ → 重なる吹き出しの点描になる。
+ *   公式サイト（zettaichi.co.jp）と同じ、星の散る宇宙の黒（#05060C）と ZETTAICHI の青（#2F7BFF）。
+ *   そこに n1a のロゴの水色・ピンク・重なりの藍を、黒地で光るように少し明るくして重ねる。
+ *   公式サイトが事業を PLANET A / B / C と呼ぶのにならって、輪のある惑星と軌道、絶対値の縦棒 | |、n1a の重なる吹き出しと「…」。
+ *   見出しは公式サイトと同じ Zen Kaku Gothic New の極太、欧文は幅の広い Michroma（ZETTAICHI のロゴの字形にならう）、
+ *   数式とラベルは JetBrains Mono。ヒーローは公式サイトのように、中央の巨大な見出しと、その後ろの惑星。
+ *   WebGL は「波長」：人柄の五角形（Big Five）でできた輪のある惑星 → ほどけて3本の軌道に並び、合う二人を波の糸が結ぶ
+ *   → 重なる吹き出しの点描になる。
  * 主役：中心は n1a と、代表の宮本康太さんの考え方。営業支援（SALES）と経営者交流会（Biz Summit!・ASOBMENT）は 3つの事業として紹介する。
  *
  * 事実の出どころ（2026年10月13日に確認）：
@@ -55,13 +57,14 @@ export const zettaichi: Partner = {
     ],
   },
   brand: {
-    // n1a のロゴの藍とピンク。シーンは 点（五角形）＝水色、輪（波の糸）＝ピンク、重なり＝藍
-    primary: '#3035D9',
-    accent: '#DE59EC',
-    logo: '/partners/zettaichi/logo.png',
+    // 公式サイトの宇宙の黒に映える、ZETTAICHI の青（#2F7BFF）と n1a のピンク。
+    // シーンは 五角形＝水色、波の糸＝ピンク、重なり＝藍（どれも黒地で光るように、ロゴの色を少し明るく）
+    primary: '#2F7BFF',
+    accent: '#EF72FF',
+    logo: '/partners/zettaichi/logo-light.png',
     logoAlt: '株式会社ZETTAICHI',
     logoSize: [1030, 88],
-    scene: { a: '#3799E8', b: '#DE59EC', match: '#3035D9' },
+    scene: { a: '#4FB0FF', b: '#EF72FF', match: '#5A60FF' },
   },
   world: { theme: 'orbit', scene: 'wave' },
   leader: {

@@ -105,8 +105,10 @@ function navHref(p: Partner, kind: PageKind): string {
   }
 }
 
-/** 黒地の世界観（needle）。ヘッダーの Baton Partners のロゴを白抜きにする */
+/** 黒地の世界観（needle）。レコードの盤とちびロボを出す */
 const dark = (p: Partner) => p.world.theme === 'needle';
+/** 黒地の世界観（needle・orbit）。ヘッダーの Baton Partners のロゴを白抜きにする */
+const darkUi = (p: Partner) => p.world.theme === 'needle' || p.world.theme === 'orbit';
 const CREW_IDS = ['tune', 'spin', 'pod', 'reel', 'mic'] as const;
 
 export function header(p: Partner, current: PageKind): string {
@@ -132,7 +134,7 @@ export function header(p: Partner, current: PageKind): string {
     <a class="brand" href="${routes.top(p.slug)}" aria-label="${esc(p.company.name)} トップへ">
       <img class="brand-logo" src="${p.brand.logo}" alt="${esc(p.brand.logoAlt)}" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
       <span class="brand-sep" aria-hidden="true"></span>
-      ${bpLogo({ size: 26, className: "brand-bp", tone: dark(p) ? 'paper' : 'ink' })}
+      ${bpLogo({ size: 26, className: "brand-bp", tone: darkUi(p) ? 'paper' : 'ink' })}
     </a>
     <nav class="nav" aria-label="メインメニュー"><ul>${items}</ul></nav>
     <a class="btn btn-cta hdr-cta" href="${routes.contact(p.slug)}"${current === 'contact' ? ' aria-current="page"' : ''} data-cursor="Talk"><span>話してみる</span><span class="arrow" aria-hidden="true">→</span></a>
