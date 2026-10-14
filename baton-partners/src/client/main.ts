@@ -44,6 +44,8 @@ setupFx();
 // ちびロボ（needle の世界観）。いるページでだけ読み込む
 if (document.querySelector('[data-bot]')) void import('./robots').then((m) => m.setupRobots());
 setupTracklist();
+// mono の世界観（Central AX）だけの演出：見出しを名駅の発車標のように、1文字ずつパタパタと止める
+if (document.body.dataset.theme === 'mono') void import('./mono').then((m) => m.setupMono());
 
 // studio の世界観だけの小さな演出（ファインダーのタイムコードなど）
 if (document.body.dataset.theme === 'studio') void import('./studio').then((m) => m.setupStudio());
