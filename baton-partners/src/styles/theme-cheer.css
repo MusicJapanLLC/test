@@ -2098,6 +2098,43 @@ html.js .iv-stage.is-in .iv-stamp {
 [data-theme='cheer'] .toc-side a.is-active {
   color: var(--orange-deep);
 }
+/* 登場する人：トレーディングカードのように、紺の縁とずらした影、オレンジの輪の顔写真と金の星 */
+[data-theme='cheer'] .a-person {
+  position: relative;
+  border: 2px solid var(--navy);
+  border-radius: 20px;
+  box-shadow: 6px 6px 0 var(--navy);
+}
+[data-theme='cheer'] .a-person::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  right: 18px;
+  width: 26px;
+  height: 26px;
+  background: var(--gold);
+  clip-path: var(--star);
+}
+[data-theme='cheer'] .a-person-img {
+  border: 3px solid var(--orange);
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--navy);
+}
+[data-theme='cheer'] .a-person-k {
+  font-weight: 700;
+  color: var(--orange-deep);
+}
+[data-theme='cheer'] .a-person-name {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  color: var(--navy-ink);
+}
+[data-theme='cheer'] .a-person-name a {
+  border-bottom: 3px solid var(--orange);
+}
+[data-theme='cheer'] .a-person-en {
+  font-family: var(--f-latin);
+  color: var(--navy);
+}
 
 /* ═════ カーソルと進捗 ═════ */
 [data-theme='cheer'] .progress i {
@@ -2253,6 +2290,9 @@ html.js .iv-stage.is-in .iv-stamp {
   border: 3px solid var(--orange);
   /* 横長の写真を丸く切るので、金子さん（左から4割ほど）が真ん中に来るように */
   object-position: 19% 50%;
+}
+[data-theme='cheer'] .quote-leader.has-avatar img {
+  object-position: 50% 50%;
 }
 
 /* ═════ チームの写真：テープで留めた大きな一枚と、星のステッカー ═════ */
