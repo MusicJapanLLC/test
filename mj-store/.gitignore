@@ -1,0 +1,5 @@
+node_modules/
+dist/
+.env.local
+# ストアページは src/data/games.ts から自動生成する
+games/*/
