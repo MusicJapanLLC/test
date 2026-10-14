@@ -138,7 +138,7 @@
     }
   },
   "vuln_class_hits": {},
-  "last_nuclei_ingest": "2026-10-13T21:13:39.441200+00:00",
+  "last_nuclei_ingest": "2026-10-14T01:10:12.480641+00:00",
   "nuclei_severity_hits": {},
   "last_nuclei_target_count": 8
 }
