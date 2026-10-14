@@ -12,13 +12,18 @@
  *      → 送れなかった通知は「企業通知」列に「失敗」と残し、retryPartnerNotices で送り直す
  *      → 企業が通知を望まない場合は、PARTNERS の notify を false にすれば止まる
  *   4. 月初に、前月の件数を各企業と社長へ送る（sendMonthlySummary をトリガー登録）
+ *   5. 社長がステータスを「紹介済み」にした相談だけ、その企業との共有管理表（案件のタブ）へ1行足す
+ *      → 紹介日・紹介企業・氏名・進捗「日程調整中」・受付番号を書く。双方の了承後なので、ここで初めて社名と氏名が先方に見える
+ *      → 共有管理表がない企業（PARTNERS に sheetId がない）は何もしない。足した行は「共有表」列に記録し、二度足さない
+ *      → 1時間おきの retryPartnerNotices の最後に実行する（すぐ反映したいときはメニューから）
  *
  * 設置手順
  *   1. 記録用のスプレッドシートを作り、［拡張機能］→［Apps Script］にこのファイルを貼る
  *   2. ［プロジェクトの設定］→［スクリプト プロパティ］に次の2つを登録する
  *        OWNER_EMAIL = 社長のメールアドレス
- *        PARTNERS    = {"evorg":{"name":"株式会社エボルグ","emails":["担当者@evorg.co.jp"],"notify":true}}
+ *        PARTNERS    = {"evorg":{"name":"株式会社エボルグ","emails":["担当者@evorg.co.jp"],"notify":true,"sheetId":"共有管理表のID（任意）"}}
  *      （企業のメールアドレスはリポジトリに置かない。ここにだけ書く）
+ *      PARTNERS は、スプレッドシートのメニュー［Baton Partners］→［企業を追加・更新］からも足せる（JSONを手で書かなくてよい）
  *      任意：FILES_FOLDER_ID = 添付資料を置くドライブのフォルダID（未設定なら初回に自動で作る）
  *   3. setupSheets() を1回実行して、シートと見出しを作る（ドライブの権限もここで許可する）
  *   4. ［デプロイ］→［新しいデプロイ］→ 種類「ウェブアプリ」
@@ -26,6 +31,10 @@
  *      表示された URL を、サイトの環境変数 VITE_GAS_ENDPOINT に設定する
  *   5. ［トリガー］で sendMonthlySummary を「月ベースのタイマー / 1日 / 午前9〜10時」に登録する
  *   6. ［トリガー］で retryPartnerNotices を「時間ベースのタイマー / 1時間おき」に登録する
+ *
+ * コードを貼り替えたとき（すでに設置済みの場合）
+ *   ・setupSheets() をもう一度実行する（見出しに「共有表」列が増える。共有管理表を開く権限もここで許可する）
+ *   ・［デプロイ］→［デプロイを管理］→ 鉛筆 →［バージョン：新バージョン］→［デプロイ］。URL は変わらない
  */
 
 const SHEET_NAME = '相談';
@@ -33,7 +42,7 @@ const HEADERS = [
   '受付日時', '受付番号', '企業ID', '企業名', '流入',
   '会社名', 'お名前', 'メールアドレス', '役職',
   '回答', 'ひとこと', 'ポートフォリオURL', '資料', 'ページ', '企業通知',
-  'ステータス', '商談化', 'メモ',
+  'ステータス', '商談化', 'メモ', '共有表',
 ];
 const MAX_LEN = 2000;
 // 添付の上限（サイト側の client/submit.ts と揃える）
@@ -41,6 +50,8 @@ const FILE_MAX_TOTAL = 30 * 1024 * 1024;
 const FILE_MAX_COUNT = 5;
 const FILE_EXT = /\.(pdf|pptx?|key|docx?|xlsx?|csv|png|jpe?g|gif|webp|zip)$/i;
 const FILES_FOLDER_NAME = 'Baton Partners｜相談の添付資料';
+// 企業との共有管理表：見出しの行（「紹介日」がある行）を、上から何行目まで探すか
+const SHARED_HEAD_SCAN = 12;
 
 function setupSheets() {
   const ss = SpreadsheetApp.getActive();
@@ -83,7 +94,7 @@ function doPost(e) {
         now, receiptId, clean_(data.partnerId), partner.name, clean_(data.source),
         clean_(p.company), clean_(p.name), clean_(p.email), clean_(p.role),
         clean_(answers), clean_(data.comment), portfolioUrl, saved.folderUrl, clean_(data.page), '未送信',
-        '未確認', false, '',
+        '未確認', false, '', '',
       ]);
       row = sheet.getLastRow();
       monthCount = countFor_(sheet, data.partnerId, now.getFullYear(), now.getMonth());
@@ -184,6 +195,125 @@ function retryPartnerNotices() {
     const count = countFor_(sheet, r[c('企業ID')], d.getFullYear(), d.getMonth());
     setNotice_(sheet, i + 1, notifyPartner_(partner, r[c('受付番号')], d, count));
   }
+  // 「紹介済み」にした相談を、企業との共有管理表へ（失敗しても通知の再送は止めない）
+  try {
+    syncSharedSheets();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+/**
+ * ステータスが「紹介済み」で、まだ共有管理表に足していない相談を、企業ごとの共有管理表へ1行ずつ足す。
+ * 共有管理表は、見出しに「紹介日」「紹介企業」「氏名」「商談日」「進捗／結果」「備考」がある表（列の順番は問わない）。
+ * 書くもの：紹介日＝反映した日、紹介企業＝会社名、氏名＝お名前＋様、進捗＝日程調整中、備考＝受付番号。商談日は空欄（社長か先方が入れる）。
+ * 回答内容・メールアドレス・資料は書かない。
+ */
+function syncSharedSheets() {
+  const sheet = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  if (!sheet) return;
+  const partners = getPartners_();
+  const values = sheet.getDataRange().getValues();
+  const c = function (name) { return HEADERS.indexOf(name); };
+  const opened = {};
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    for (let i = 1; i < values.length; i++) {
+      const r = values[i];
+      if (r[c('ステータス')] !== '紹介済み' || String(r[c('共有表')] || '') !== '') continue;
+      const partner = partners[r[c('企業ID')]];
+      if (!partner || !partner.sheetId) continue;
+      let state;
+      try {
+        const target = opened[partner.sheetId] || (opened[partner.sheetId] = sharedTable_(partner));
+        state = appendShared_(target, String(r[c('受付番号')]), String(r[c('会社名')]), String(r[c('お名前')]));
+      } catch (err) {
+        console.error(err);
+        state = `失敗：${String(err && err.message || err).slice(0, 80)}`;
+      }
+      sheet.getRange(i + 1, c('共有表') + 1).setValue(state);
+    }
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * 任意：［トリガー］→「スプレッドシートから / 編集時」で onStatusEdit を登録すると、
+ * ステータスを「紹介済み」にした直後に共有管理表へ反映する（登録しなくても1時間以内に反映される）
+ */
+function onStatusEdit(e) {
+  if (!e || !e.range || e.range.getSheet().getName() !== SHEET_NAME) return;
+  if (e.range.getColumn() !== HEADERS.indexOf('ステータス') + 1 || e.value !== '紹介済み') return;
+  syncSharedSheets();
+}
+
+// ── スプレッドシートのメニュー：企業の登録（PARTNERS を手で書かなくてよいように） ──
+
+function onOpen() {
+  SpreadsheetApp.getUi()
+    .createMenu('Baton Partners')
+    .addItem('企業を追加・更新', 'addOrUpdatePartner')
+    .addItem('登録済みの企業を見る', 'showPartners')
+    .addSeparator()
+    .addItem('紹介済みを共有管理表へ反映', 'syncSharedSheets')
+    .addToUi();
+}
+
+/**
+ * 企業IDから順に聞いて、PARTNERS に足す（同じIDなら上書き）。空欄のまま OK を押した項目は、登録済みの値をそのまま使う。
+ * 共有管理表の URL を入れると、開けるか・見出しがあるかをその場で確かめる。
+ */
+function addOrUpdatePartner() {
+  const ui = SpreadsheetApp.getUi();
+  const ask = function (title, hint) {
+    const res = ui.prompt(title, hint, ui.ButtonSet.OK_CANCEL);
+    if (res.getSelectedButton() !== ui.Button.OK) throw new Error('cancel');
+    return res.getResponseText().trim();
+  };
+  try {
+    const id = ask('企業ID', 'サイトのURLの企業ID（例：dp-partners）');
+    if (!/^[a-z0-9-]+$/.test(id)) return ui.alert('企業IDは半角の英小文字・数字・ハイフンだけです。');
+    const partners = getPartners_();
+    const now = partners[id] || {};
+    const keep = function (v, old) { return v === '' ? old : v; };
+    const name = keep(ask('企業名', `正式な社名（いま：${now.name || '未登録'}）`), now.name);
+    if (!name) return ui.alert('企業名が空です。');
+    const mails = keep(ask('通知先のメールアドレス', `カンマ区切りで複数可（いま：${(now.emails || []).join(', ') || '未登録'}）`), (now.emails || []).join(','));
+    const emails = String(mails || '').split(/[,、\s]+/).filter(Boolean);
+    const bad = emails.filter(function (m) { return !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(m); });
+    if (bad.length) return ui.alert(`メールアドレスの形が正しくありません：${bad.join(', ')}`);
+    const notify = ui.alert('通知', `${name} へ「新しい相談が1件」と月初の件数を送りますか？`, ui.ButtonSet.YES_NO) === ui.Button.YES;
+    const url = ask('共有管理表（任意）', `「紹介済み」の相談を足す共有スプレッドシートのURL。ないときは空欄、外すときは「なし」（いま：${now.sheetId ? '登録済み' : '未登録'}）`);
+    const sheetId = url === 'なし' ? '' : url === '' ? now.sheetId || '' : (url.match(/\/d\/([a-zA-Z0-9_-]+)/) || [])[1] || url;
+    const entry = { name: name, emails: emails, notify: notify };
+    if (sheetId) {
+      entry.sheetId = sheetId;
+      const t = sharedTable_(entry); // 開けない・見出しがないときは、ここで止まって理由を出す
+      entry.sheetTab = t.sheet.getName();
+    }
+    partners[id] = entry;
+    PropertiesService.getScriptProperties().setProperty('PARTNERS', JSON.stringify(partners));
+    ui.alert('登録しました', describePartner_(id, entry), ui.ButtonSet.OK);
+  } catch (err) {
+    if (String(err && err.message) === 'cancel') return;
+    ui.alert(`登録できませんでした：${String(err && err.message || err)}`);
+  }
+}
+
+function showPartners() {
+  const partners = getPartners_();
+  const ids = Object.keys(partners);
+  SpreadsheetApp.getUi().alert('登録済みの企業', ids.length ? ids.map(function (id) { return describePartner_(id, partners[id]); }).join('\n\n') : 'まだありません。', SpreadsheetApp.getUi().ButtonSet.OK);
+}
+
+function describePartner_(id, p) {
+  return [
+    `${id}｜${p.name}`,
+    `通知：${p.notify === false ? '止めている' : '送る'}（${(p.emails || []).join(', ') || '宛先なし'}）`,
+    `共有管理表：${p.sheetId ? `あり（${p.sheetTab || '自動で探す'}）` : 'なし'}`,
+  ].join('\n');
 }
 
 /** 月初に実行：前月の件数を各企業と社長へ */
@@ -258,6 +388,54 @@ function filesRoot_() {
   const folder = DriveApp.createFolder(FILES_FOLDER_NAME);
   props.setProperty('FILES_FOLDER_ID', folder.getId());
   return folder;
+}
+
+/** 企業の共有管理表を開き、「紹介日」の見出しがあるタブと列の位置を返す */
+function sharedTable_(partner) {
+  const ss = SpreadsheetApp.openById(partner.sheetId);
+  const tabs = partner.sheetTab ? [ss.getSheetByName(partner.sheetTab)].filter(Boolean) : ss.getSheets();
+  for (let t = 0; t < tabs.length; t++) {
+    const sh = tabs[t];
+    const rows = Math.min(SHARED_HEAD_SCAN, sh.getLastRow());
+    if (rows < 1) continue;
+    const head = sh.getRange(1, 1, rows, sh.getLastColumn()).getValues();
+    for (let r = 0; r < head.length; r++) {
+      const cols = head[r].map(function (v) { return String(v).trim(); });
+      if (cols.indexOf('紹介日') === -1 || cols.indexOf('紹介企業') === -1) continue;
+      const at = function (names) {
+        for (let k = 0; k < names.length; k++) if (cols.indexOf(names[k]) !== -1) return cols.indexOf(names[k]);
+        return -1;
+      };
+      return {
+        sheet: sh,
+        headRow: r + 1,
+        width: cols.length,
+        col: { date: at(['紹介日']), company: at(['紹介企業']), name: at(['氏名', 'お名前']), status: at(['進捗／結果', '進捗/結果', '進捗']), note: at(['備考']) },
+      };
+    }
+  }
+  throw new Error(`共有管理表に「紹介日」「紹介企業」の見出しが見つかりません（${ss.getName()}）`);
+}
+
+/** 共有管理表の最後の行の下へ1行足す。備考に同じ受付番号があれば足さない */
+function appendShared_(t, receiptId, company, person) {
+  const sh = t.sheet;
+  const last = sh.getLastRow();
+  if (t.col.note !== -1 && last > t.headRow) {
+    const notes = sh.getRange(t.headRow + 1, t.col.note + 1, last - t.headRow, 1).getValues();
+    if (notes.some(function (r) { return String(r[0]).indexOf(receiptId) !== -1; })) return '反映済み（すでにあり）';
+  }
+  const row = new Array(t.width).fill('');
+  const today = new Date();
+  row[t.col.date] = today;
+  row[t.col.company] = clean_(company);
+  if (t.col.name !== -1) row[t.col.name] = clean_(/様$/.test(person) ? person : `${person}様`);
+  if (t.col.status !== -1) row[t.col.status] = '日程調整中';
+  if (t.col.note !== -1) row[t.col.note] = `Baton Partners 経由（受付番号 ${receiptId}）`;
+  const at = Math.max(last, t.headRow) + 1;
+  sh.getRange(at, 1, 1, t.width).setValues([row]);
+  sh.getRange(at, t.col.date + 1).setNumberFormat('yyyy/m/d');
+  return `反映済み ${Utilities.formatDate(today, 'Asia/Tokyo', 'yyyy/MM/dd')}`;
 }
 
 function getPartners_() {
