@@ -66,6 +66,7 @@ export const presence: Partner = {
     logo: '/partners/presence/logo.png',
     logoAlt: 'Presence株式会社',
     logoSize: [702, 160],
+    logoOnDark: '/partners/presence/logo-light.png',
     scene: { a: '#03417A', b: '#FF8001', match: '#FFB81C' },
   },
   world: { theme: 'cheer', scene: 'enjin' },

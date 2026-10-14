@@ -82,6 +82,7 @@ ${header(p, 'top')}
           <h2 class="sr-only">${esc(shortName(p))}が支える3つのこと</h2>
           ${verbs}
         </div>
+        ${waybillBlock(p)}
         <div class="stage-foot" aria-hidden="true">
           <span class="scroll-cue"><i></i>Scroll</span>
           <span class="stage-progress"><i data-progress></i></span>
@@ -124,6 +125,8 @@ ${header(p, 'top')}
 
   ${tuneSection(p)}
 
+  ${cutoverSection(p)}
+
   <section class="sec sec-highlight" aria-labelledby="hl-h">
     ${p.world.theme === 'needle' ? discHtml('lp-hl') : `<div class="scene scene-hl" data-scene="network" data-count="900" data-phase="${p.world.scene === 'vault' || p.world.scene === 'en' || p.world.scene === 'feed' ? '2.0' : p.world.scene === 'pair' ? '0.0' : '1.0'}"${p.world.scene === 'pair' ? ' data-sleep="1"' : ''} aria-hidden="true"><canvas></canvas></div>`}
     <div class="wrap hl-in">
@@ -147,6 +150,8 @@ ${header(p, 'top')}
   </section>
 
   ${planetsSection(p)}
+
+  ${lockerSection(p)}
 
   ${filmSection(p)}
 
@@ -1504,4 +1509,162 @@ function orbitHeroExtras(p: Partner): string {
         <p class="oi-n"><i class="oi-bar"></i><b data-orb-count>−100</b><small>%</small><i class="oi-bar"></i></p>
         <p class="oi-f">|−x| = x</p>
       </div>`;
+}
+
+/* ─────────────────────────────────────────────
+   console の世界観（DPパートナーズなど）の部品：送り状・切り替えの日・控えの置き場所
+   ───────────────────────────────────────────── */
+
+/** サイト引越し屋さんのロゴにならった、荷台のある小さなトラック（線画） */
+function truckSvg(className: string): string {
+  return `<svg class="${className}" viewBox="0 0 64 36" aria-hidden="true" focusable="false"><path class="tk-bed" d="M3 8h34v18H3z"/><path class="tk-cab" d="M37 13h12l9 8v5H37z"/><path class="tk-win" d="M41 16h7l5 5H41z"/><circle class="tk-wh" cx="13" cy="28" r="5"/><circle class="tk-wh" cx="49" cy="28" r="5"/><path class="tk-box" d="M10 11l7-3 7 3v8l-7 3-7-3z M10 11l7 3 7-3 M17 14v8"/></svg>`;
+}
+
+/** 伝票番号から、毎回同じ形になるバーコード（飾り） */
+function barcodeSvg(seed: string): string {
+  let x = 0;
+  const bars: string[] = [];
+  const codes = [...seed].map((c) => c.charCodeAt(0));
+  for (let i = 0; i < 46; i++) {
+    const c = codes[i % codes.length] + i * 7;
+    const w = 1 + (c % 3);
+    if (i % 2 === 0) bars.push(`<rect x="${x}" y="0" width="${w}" height="24"/>`);
+    x += w + ((c >> 2) % 2);
+  }
+  return `<svg class="wb-code" viewBox="0 0 ${x} 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">${bars.join('')}</svg>`;
+}
+
+/**
+ * ヒーローの送り状。スクロールでステージの段階が進むと、追跡の欄が1つずつ進み、トラックが走る（CSSだけ）。
+ * 動きを減らす設定・WebGLなしでは、ヒーローの下に、全部の欄が済んだ伝票として置く
+ */
+function waybillBlock(p: Partner): string {
+  const w = p.top.waybill;
+  if (!w) return '';
+  return `
+        <aside class="wb" aria-label="${esc(w.label)}（${esc(w.note)}）">
+          <div class="wb-in">
+            <p class="wb-top"><span class="wb-label">${esc(w.label)}</span><span class="wb-no">${esc(w.no)}</span></p>
+            ${barcodeSvg(w.no)}
+            <dl class="wb-route">
+              <div class="wb-end wb-from"><dt>${esc(w.from.k)}</dt><dd>${esc(w.from.v)}</dd></div>
+              <div class="wb-road" aria-hidden="true"><i class="wb-line"></i>${truckSvg('wb-truck')}</div>
+              <div class="wb-end wb-to"><dt>${esc(w.to.k)}</dt><dd>${esc(w.to.v)}</dd></div>
+            </dl>
+            <p class="wb-items"><span class="wb-items-k">品名</span><span class="wb-items-v">${w.items.map((it) => `<span>${esc(it)}</span>`).join('')}</span></p>
+            <ol class="wb-track">${w.track
+              .map((tr, i) => `<li data-k="${i}"><span class="wb-dot" aria-hidden="true"></span><b>${esc(tr.en)}</b><span>${esc(tr.ja)}</span></li>`)
+              .join('')}</ol>
+            <p class="wb-foot"><span class="wb-note">${esc(w.note)}</span><span class="wb-care" aria-hidden="true">${w.care.map((c, i) => `<span style="--i:${i}">${esc(c)}</span>`).join('')}</span></p>
+          </div>
+        </aside>
+        <div class="wb-intro" aria-hidden="true"><span class="wb-dust"></span>${truckSvg('wb-intro-truck')}</div>`;
+}
+
+/** 0〜1 の、毎回同じになる疑似乱数（点の並びと切り替わる順番に使う） */
+function hash01(i: number): number {
+  const s = Math.sin(i * 127.1 + 311.7) * 43758.5453;
+  return s - Math.floor(s);
+}
+
+/**
+ * 切り替えの日。DNS を切り替えたあと、見に来る人（点）が古いサーバーから新しいサーバーへ、ばらばらに移っていく（イメージ図）。
+ * 画面に入ったら1回だけ流れる。「もう一度」で巻き戻す（client/console.ts）。動きを減らす設定では、移っている途中の状態で止める
+ */
+function cutoverSection(p: Partner): string {
+  const c = p.top.cutover;
+  if (!c) return '';
+  const N = 60;
+  const dots = Array.from({ length: N }, (_, i) => {
+    const d = hash01(i + 3);
+    return `<li style="--d:${(d * 4.2).toFixed(2)}s"${d < 0.5 ? ' class="is-early"' : ''}></li>`;
+  }).join('');
+  return `
+  <section class="sec sec-cutover" aria-labelledby="cut-h">
+    <div class="wrap">
+      <header class="sec-head sec-head-row rv">
+        <p class="kicker">${esc(c.kicker)}</p>
+        <h2 id="cut-h" class="sec-h">${heading(c.title)}</h2>
+      </header>
+      <p class="co-lead rv">${jp(c.lead)}</p>
+      <div class="co-in">
+        <figure class="co rv" data-cutover aria-label="DNSを切り替えたあと、見に来る人が新しいサーバーへ移っていく様子（イメージ図）">
+          <p class="co-bar" aria-hidden="true"><span class="co-dot"></span><span>dns / cutover</span><span class="co-ttl">TTL</span></p>
+          <div class="co-map" aria-hidden="true">
+            <div class="co-srv co-old"><span class="co-srv-k">OLD</span><b>${esc(c.old.name)}</b><small>${esc(c.old.sub)}</small><span class="co-led"></span></div>
+            <ol class="co-grid">${dots}</ol>
+            <div class="co-srv co-new"><span class="co-srv-k">NEW</span><b>${esc(c.next.name)}</b><small>${esc(c.next.sub)}</small><span class="co-led"></span></div>
+          </div>
+          <div class="co-foot">
+            <p class="co-legend"><span class="co-key is-old"><i aria-hidden="true"></i>${esc(c.legend.before)}</span><span class="co-key is-new"><i aria-hidden="true"></i>${esc(c.legend.after)}</span></p>
+            <p class="co-time" aria-hidden="true"><span>切り替え</span><i></i><span>しばらくして</span></p>
+            <button class="co-replay" type="button" data-cutover-replay>もう一度</button>
+          </div>
+          <figcaption class="fine">${jp(c.note)}</figcaption>
+        </figure>
+        <ol class="co-steps">${c.steps
+          .map(
+            (s, i) => `
+          <li class="co-step rv" style="--d:${i}">
+            <span class="co-no">${String(i + 1).padStart(2, '0')}</span>
+            <h3 class="co-h">${heading(s.title)}</h3>
+            <p class="co-p">${jp(s.detail)}</p>
+            ${s.link ? `<a class="link-arrow co-link" href="${s.link.url}" target="_blank" rel="noopener"><span>${esc(s.link.label)}</span><span class="arrow" aria-hidden="true">↗</span></a>` : ''}
+          </li>`,
+          )
+          .join('')}</ol>
+      </div>
+    </div>
+  </section>`;
+}
+
+/**
+ * 控えの置き場所。左に WordPress、右にサイトごとの棚が並ぶ保管庫、あいだに渡している権限。
+ * 「乗っ取られたら？」を押すと、WordPress 側が赤くなり、削除の指示が門で止まる（client/console.ts）。
+ * JSなしでは、権限の表と説明だけで読める
+ */
+function lockerSection(p: Partner): string {
+  const l = p.top.locker;
+  if (!l) return '';
+  return `
+  <section class="sec sec-locker" aria-labelledby="locker-h">
+    <div class="wrap lk-in">
+      <header class="lk-head rv">
+        <p class="kicker">${esc(l.kicker)}</p>
+        <h2 id="locker-h" class="sec-h">${heading(l.title)}</h2>
+        <p class="lk-lead">${jp(l.lead)}</p>
+        <ol class="lk-points">${l.points
+          .map((pt, i) => `<li><span class="lk-pno">${String(i + 1).padStart(2, '0')}</span><h3 class="lk-ph">${heading(pt.title)}</h3><p class="lk-pp">${jp(pt.detail)}</p></li>`)
+          .join('')}</ol>
+      </header>
+      <figure class="lk rv" data-locker aria-label="WordPressとバックアップの保管庫の関係（イメージ図）">
+        <div class="lk-map">
+          <div class="lk-node lk-server" aria-hidden="true">
+            <span class="lk-k">Web server</span>
+            <span class="lk-win"><i></i><i></i><i></i></span>
+            <b>${esc(l.server.name)}</b><small>${esc(l.server.sub)}</small>
+            <span class="lk-alarm">ALERT</span>
+          </div>
+          <div class="lk-gate">
+            <p class="lk-gate-k" aria-hidden="true">Access</p>
+            <ul class="lk-perms">${l.perms
+              .map((pm) => `<li class="${pm.ok ? 'is-ok' : 'is-no'}"><span class="lk-mark" aria-hidden="true">${pm.ok ? '✓' : '×'}</span><span class="lk-pl">${esc(pm.label)}</span><span class="sr-only">${pm.ok ? '：渡している' : '：渡していない'}</span></li>`)
+              .join('')}</ul>
+            <span class="lk-flow" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="lk-bounce" aria-hidden="true">DELETE ×</span>
+          </div>
+          <div class="lk-node lk-store" aria-hidden="true">
+            <span class="lk-k">Storage</span>
+            <b>${esc(l.store.name)}</b><small>${esc(l.store.sub)}</small>
+            <ul class="lk-shelves">${l.sites.map((s, i) => `<li style="--i:${i}"><span class="lk-key"></span><span class="lk-sn">${esc(s)}</span><span class="lk-lock"></span></li>`).join('')}</ul>
+          </div>
+        </div>
+        <div class="lk-ctl">
+          <button class="lk-btn" type="button" data-locker-btn aria-pressed="false" data-on="${esc(l.attack.reset)}" data-off="${esc(l.attack.button)}">${esc(l.attack.button)}</button>
+          <p class="lk-log" data-locker-log aria-live="polite" data-done="${esc(l.attack.done)}"></p>
+        </div>
+        <figcaption class="fine">${jp(l.note)}${l.source ? ` <a class="in-link" href="${l.source.url}" target="_blank" rel="noopener">${esc(l.source.label)}</a>` : ''}</figcaption>
+      </figure>
+    </div>
+  </section>`;
 }

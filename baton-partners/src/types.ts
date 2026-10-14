@@ -78,6 +78,8 @@ export type Partner = {
     logoAlt: string;
     /** ロゴ画像の実寸（幅, 高さ）。レイアウトのずれ防止用 */
     logoSize: [number, number];
+    /** 暗い背景の上（ヒーローが夜の色の世界観）で、スクロール前のヘッダーに出す白抜きのロゴ。logo と同じ実寸 */
+    logoOnDark?: string;
     /** WebGLシーンの色。a=求職者の点、b=求人の輪、match=決定したとき */
     scene: { a: string; b: string; match: string };
   };
@@ -142,6 +144,54 @@ export type Partner = {
     highlight: { en: string; title: string[]; lead: string; steps: Pair[]; note: string };
     /** ヒーローに添える作業ログ風の一覧（console の世界観）。数字は入れず、扱う作業の名前だけ */
     console?: { label: string; lines: { k: string; v: string; ok?: boolean }[] };
+    /**
+     * 送り状（console の世界観）。ヒーローに貼る、サイトの引越しの伝票（イメージ）。
+     * 追跡の欄はトップのステージの段階（0〜3）と同じ数だけ並べ、スクロールに合わせて1つずつ進む。
+     * 動きを減らす設定・WebGLなしでは、ヒーローの下に置いた伝票として全部の欄を読める
+     */
+    waybill?: {
+      label: string;
+      no: string;
+      from: { k: string; v: string };
+      to: { k: string; v: string };
+      items: string[];
+      /** 取扱注意の判子（2〜4字） */
+      care: string[];
+      track: { en: string; ja: string }[];
+      note: string;
+    };
+    /**
+     * 控えの置き場所（console の世界観）。WordPress とバックアップの保管庫を分け、削除の権限を渡さない仕組みの図。
+     * 「乗っ取られたら」を押すと、WordPress 側が赤くなり、削除が通らない様子を見せる（client/console.ts）。中身は公式の発表の範囲で
+     */
+    locker?: {
+      kicker: string;
+      title: string;
+      lead: string;
+      server: { name: string; sub: string };
+      store: { name: string; sub: string };
+      perms: { label: string; ok: boolean }[];
+      /** 保管庫の中の、サイトごとの棚 */
+      sites: string[];
+      attack: { button: string; reset: string; done: string };
+      points: Pair[];
+      note: string;
+      source?: { label: string; url: string };
+    };
+    /**
+     * 切り替えの日（console の世界観）。DNS を切り替えたあと、見に来る人が古いサーバーから新しいサーバーへ
+     * 少しずつ移っていく様子（イメージ図）と、引越しの前後で確かめること。手順の詳しい解説は公式の記事へ
+     */
+    cutover?: {
+      kicker: string;
+      title: string;
+      lead: string;
+      old: { name: string; sub: string };
+      next: { name: string; sub: string };
+      legend: { before: string; after: string };
+      steps: { title: string; detail: string; link?: { label: string; url: string } }[];
+      note: string;
+    };
     /** 公式サイトに掲載されているお客様の声（掲載許可を得たものとして公表されている範囲で、出典つき） */
     voices?: { title: string; note: string; items: { who: string; text: string }[] };
     /** 公開されている導入事例（企業名・期間・比較条件つき）。数字はグラフで見せる */
