@@ -85,6 +85,20 @@ function projectRow(p: Project, i: number, full: boolean): string {
 </article>`;
 }
 
+/** 公開中の会社を、画面の写真のカードで一覧に（トップと Baton Partners のページ） */
+function miniWorks(): string {
+  return `<div class="mw-grid">${projects
+    .map(
+      (p) => `<a class="mw" ${ext(p.href)} style="--c1:${p.palette[0]}" data-reveal>
+      <span class="mw-shot"><img src="${p.shots.desktop}" alt="${esc(p.name)}のBaton Partnersページ" width="1440" height="900" loading="lazy" decoding="async"></span>
+      <span class="mw-no">${esc(p.no)}</span>
+      <span class="mw-name">${esc(p.name)}</span>
+      <span class="mw-meta">${esc(p.category)}　${esc(p.base)}</span>
+    </a>`,
+    )
+    .join('')}</div>`;
+}
+
 function newsRow(a: Activity): string {
   const label = C.news.types[a.type] ?? a.type;
   const inner = `<time datetime="${a.date}">${dotDate(a.date)}</time><span class="nr-type" data-type="${a.type}">${esc(label)}</span><span class="nr-title">${jp(a.title)}</span>${a.href ? arrow('up-right') : ''}`;
@@ -141,7 +155,11 @@ function top(): string {
 <section class="sec showcase is-dark" aria-labelledby="works-title">
   <div class="wrap">
     ${secHead({ id: 'works-title', label: T.works.label, title: T.works.title, lead: T.works.lead })}
-    ${projects.map((p, i) => projectRow(p, i, false)).join('')}
+    ${projects
+      .filter((p) => p.featured)
+      .map((p, i) => projectRow(p, i, false))
+      .join('')}
+    ${miniWorks()}
     <p class="showcase-more">${more('/works/', T.works.more)}</p>
   </div>
 </section>
@@ -234,16 +252,7 @@ function partners(): string {
 <section class="sec mini-works" aria-labelledby="mw-title">
   <div class="wrap">
     ${secHead({ id: 'mw-title', label: P.works.label, title: P.works.title })}
-    <div class="mw-grid">${projects
-      .map(
-        (p) => `<a class="mw" ${ext(p.href)} style="--c1:${p.palette[0]}" data-reveal>
-      <span class="mw-shot"><img src="${p.shots.desktop}" alt="${esc(p.name)}のBaton Partnersページ" width="1440" height="900" loading="lazy" decoding="async"></span>
-      <span class="mw-no">${esc(p.no)}</span>
-      <span class="mw-name">${esc(p.name)}</span>
-      <span class="mw-meta">${esc(p.category)}　${esc(p.base)}</span>
-    </a>`,
-      )
-      .join('')}</div>
+    ${miniWorks()}
     <p class="mw-more">${more('/works/', P.works.more)}</p>
   </div>
 </section>
