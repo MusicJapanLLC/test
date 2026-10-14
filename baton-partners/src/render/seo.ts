@@ -109,7 +109,7 @@ export function orgLd(env: BuildEnv, p: Partner): Ld[] {
     '@type': o.type,
     '@id': ids.org(env, p),
     name: p.company.name,
-    alternateName: p.company.nameEn,
+    alternateName: o.alternateName?.length ? [p.company.nameEn, ...o.alternateName] : p.company.nameEn,
     url: p.company.url,
     logo: { '@type': 'ImageObject', url: abs(env, p.brand.logo), width: p.brand.logoSize[0], height: p.brand.logoSize[1] },
     sameAs: o.sameAs,
@@ -121,16 +121,24 @@ export function orgLd(env: BuildEnv, p: Partner): Ld[] {
       streetAddress: o.address.street,
     },
     description: text(p.seo.about.answer.a),
+    ...(o.foundingDate ? { foundingDate: o.foundingDate } : {}),
+    ...(o.numberOfEmployees ? { numberOfEmployees: { '@type': 'QuantitativeValue', value: o.numberOfEmployees } } : {}),
   };
   if (o.leader) {
-    org[o.leader.relation] = { '@id': ids.founder(env, p) };
+    const l = o.leader;
+    org[l.relation] = { '@id': ids.founder(env, p) };
     people.push({
       '@type': 'Person',
       '@id': ids.founder(env, p),
-      name: o.leader.name,
-      jobTitle: o.leader.jobTitle,
+      name: l.name,
+      ...(l.alternateName?.length ? { alternateName: l.alternateName } : {}),
+      jobTitle: l.jobTitle,
+      ...(l.description ? { description: l.description } : {}),
       worksFor: { '@id': ids.org(env, p) },
+      // 代表の紹介は取り組みページ（写真・年表・本文）にある
+      ...(p.leader ? { url: abs(env, routes.about(p.slug)) } : {}),
       ...(p.leader?.photo ? { image: abs(env, p.leader.photo) } : {}),
+      ...(l.sameAs?.length ? { sameAs: l.sameAs } : {}),
     });
   }
   return [org, ...people];
