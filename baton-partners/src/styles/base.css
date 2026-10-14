@@ -338,6 +338,10 @@ p {
   height: 32px;
   width: auto;
 }
+/* 暗いヒーローの上でだけ使う白抜きのロゴ（brand.logoOnDark）。ふだんは出さない。出し分けは各テーマのCSS */
+.brand-logo-dark {
+  display: none;
+}
 .brand-sep {
   width: 1px;
   height: 24px;
