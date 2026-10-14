@@ -1509,6 +1509,26 @@ html.build-swipe .build-track {
 .mw-more {
   margin-top: 36px;
 }
+/* トップの暗い面（公開中のページ）に置くとき：大きく見せた会社の下に、全社をカードで */
+.showcase .mw-grid {
+  margin-top: clamp(56px, 8vw, 104px);
+  padding-top: clamp(40px, 5vw, 64px);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+.showcase .mw-shot {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1), 0 30px 60px -40px rgba(0, 0, 0, 0.8);
+}
+.showcase .mw-no,
+.showcase .mw-meta {
+  color: rgba(255, 255, 255, 0.55);
+}
+.showcase .mw-name {
+  color: #fff;
+}
+.showcase .mw:hover .mw-name {
+  color: var(--c1, var(--accent));
+}
 
 /* ───────── よくある質問 ───────── */
 .faq {

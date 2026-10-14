@@ -15,7 +15,7 @@
 | `/baton-partners/` | 会社の専用ページ。5枚のページ、一社のページができるまで（横に流れる8工程）、公開したあと、よくある質問 |
 | `/baton/` | 経営者の招待制プロフィール。決まり、申請からおつなぎまで、Baton Partnersとの違い |
 | `/second-take/` | 経営者インタビュー。1回の取材でできるもの、聞き方の決まり、いまのこと |
-| `/works/` | 公開中のページ（エボルグ／Central AX）。色・書体・3D・5枚のページ |
+| `/works/` | 公開中のページ（エボルグ／Central AX／DPパートナーズ／Smartaleck／Presence／ZETTAICHI）。色・書体・3D・5枚のページ。トップには `featured` の会社を大きく、その下に全社をカードで |
 | `/news/` | お知らせ（種類で絞り込み、RSS・JSON Feed） |
 | `/about/` | 会社概要、代表、よくある質問 |
 | `/talk/` | 話してみる（TimeRexの予約ページへのボタンはここだけ） |
@@ -28,7 +28,7 @@
 | よくある質問 | `src/content/faq.ts`（画面・構造化データ・llms.txt に同じものが入る） |
 | ページのタイトル・説明文・URL | `src/content/pages.ts` |
 | お知らせを足す | `src/content/activity.ts`（1件足すと、一覧・`/feed.xml`・`/activity.json` に反映） |
-| 公開中の会社を足す | `src/content/projects.ts`（画像は `npm run shots` で撮る） |
+| 公開中の会社を足す | `src/content/projects.ts`（画像は `npm run shots` で撮る。撮る会社は `scripts/shots.mjs` の一覧に足す。確認中の会社は載せない） |
 | 予約ページ・連絡先・SNS | `src/content/site.ts` |
 | 挿し絵（線画） | `src/render/illust.ts` |
 
