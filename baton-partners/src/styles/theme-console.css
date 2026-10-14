@@ -2148,3 +2148,364 @@ html:not(.js) .lk-btn {
     opacity: 1;
   }
 }
+
+/* ═════════════════════════════════════════════
+   2026-10 その2：青空とトラック（オーナーの指示「ヒーローのサイズ感と世界観を、もっと大胆に」）
+   DPの公式トップの青空と、サイト引越し屋さんのオレンジのトラック。トップの1画面目だけ、地を空にする。
+   見出しは画面いっぱいの大きさで、1文字ずつ段ボールに入って届き、箱が開いて文字が出る（開梱）。
+   最初の一度だけ、オレンジのトラックが画面を横切り、通ったあとから荷物（文字）が降ろされる。
+   ═════════════════════════════════════════════ */
+[data-theme='console'] {
+  --sky-top: #2f9ce2;
+  --sky-mid: #79c5f1;
+  --sky-low: #c4e8fa;
+  --sky-floor: #eef8fe;
+  --kraft: #c99a62;
+  --kraft-2: #b5844d;
+}
+[data-theme='console'] .stage {
+  background-color: var(--sky-low);
+  background-image: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 30%, var(--sky-low) 58%, var(--sky-floor) 82%, #f8fcff 100%);
+}
+/* 雲：ゆっくり流れる。太陽の光は右上から */
+[data-theme='console'] .stage-sticky::before {
+  content: '';
+  position: absolute;
+  inset: 0 -20% 34% -20%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 9% 4.5% at 12% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 7% 4% at 17% 27%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 12% 4% at 15% 33%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 10% 4.5% at 58% 18%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 7% 3.6% at 63% 15%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 13% 4% at 61% 21%, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 8% 3.6% at 88% 44%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 11% 3.6% at 91% 47%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 6% 3% at 36% 52%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 9% 3% at 39% 55%, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0) 70%);
+  animation: dp-clouds 70s linear infinite alternate;
+}
+[data-theme='console'] .stage-sticky::after {
+  content: '';
+  position: absolute;
+  right: -10%;
+  top: -30%;
+  width: 70%;
+  height: 90%;
+  pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 252, 235, 0.7), rgba(255, 236, 190, 0.18) 55%, transparent 100%);
+}
+@keyframes dp-clouds {
+  to {
+    transform: translateX(12%);
+  }
+}
+html.js-stage [data-theme='console'] .stage-ui {
+  z-index: 1;
+}
+[data-theme='console'] .stage-shade {
+  background: radial-gradient(ellipse 52% 62% at 22% 56%, rgba(214, 239, 252, 0.72), rgba(214, 239, 252, 0.3) 60%, transparent 100%);
+}
+@media (max-width: 959px) {
+  [data-theme='console'] .stage-shade {
+    background: linear-gradient(180deg, transparent 0%, transparent 30%, rgba(225, 243, 253, 0.6) 46%, rgba(238, 248, 254, 0.94) 60%, #f6fbfe 100%);
+  }
+}
+/* トップのヘッダーは、空の上では透明 */
+[data-theme='console'][data-page='top'] .hdr:not(.is-scrolled) {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* ── 見出し：画面いっぱい。2行目はオレンジの梱包テープ ── */
+@media (min-width: 960px) {
+  html.js-stage [data-theme='console'] .hero {
+    max-width: min(1180px, 74vw);
+  }
+}
+[data-theme='console'] .hero .kicker {
+  color: var(--ink);
+}
+[data-theme='console'] .hero-h {
+  margin-top: 18px;
+  font-size: clamp(2.6rem, 0.6rem + 7.2vw, 8.8rem);
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  color: var(--ink);
+  text-shadow: 0 0.04em 0 rgba(255, 255, 255, 0.35);
+}
+[data-theme='console'] .hero-h .ln + .ln,
+[data-theme='console'] .phero-h .ln + .ln {
+  margin-top: 0.08em;
+  padding: 0.02em 0.22em 0.08em 0.16em;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0 2px, transparent 2px 9px),
+    linear-gradient(180deg, #ff9636, #ff7a0a);
+  color: #fff;
+  transform: rotate(-1.6deg);
+  transform-origin: 0 50%;
+  box-shadow:
+    0 0.05em 0 rgba(160, 70, 0, 0.35),
+    0.12em 0.16em 0 rgba(10, 37, 64, 0.16);
+  clip-path: polygon(0 4%, 1.2% 0, 3% 6%, 5% 0, 100% 2%, 99% 50%, 100% 98%, 96% 100%, 94% 94%, 92% 100%, 0 97%, 1% 50%);
+}
+[data-theme='console'] .hero-h .ln:last-child::after,
+[data-theme='console'] .phero-h .ln:last-child::after {
+  background: var(--ink);
+}
+[data-theme='console'] .hero-lead {
+  max-width: 34em;
+  color: #173a5c;
+  font-weight: 500;
+}
+[data-theme='console'] .hero-actions .btn-ink {
+  background: var(--ink);
+  border-color: var(--ink);
+}
+[data-theme='console'] .hero-actions .btn-line {
+  background: rgba(255, 255, 255, 0.85);
+}
+@media (min-width: 960px) and (max-height: 860px) {
+  [data-theme='console'] .hero .badges {
+    display: none;
+  }
+  [data-theme='console'] .hero-h {
+    font-size: clamp(2.4rem, 0.6rem + 6.2vw, 7.6rem);
+  }
+}
+
+/* ── 1文字ずつ、段ボールで届いて開梱される ── */
+html.js [data-theme='console'] .hero-h.split .ch {
+  position: relative;
+  opacity: 0;
+  filter: none;
+  transform: translateY(-0.7em) rotate(-8deg);
+  transform-origin: 50% 100%;
+  animation: dp-drop 0.62s cubic-bezier(0.3, 1.5, 0.5, 1) forwards;
+  animation-delay: calc(var(--c) * 52ms + 260ms);
+}
+html.js [data-theme='console'] .hero-h.split .ch::before {
+  content: '';
+  position: absolute;
+  inset: 0.1em -0.02em 0.02em;
+  border-radius: 0.04em;
+  background:
+    linear-gradient(90deg, transparent 0 42%, rgba(255, 131, 23, 0.95) 42% 58%, transparent 58%),
+    repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.05) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, var(--kraft), var(--kraft-2));
+  box-shadow: inset 0 0 0 0.03em rgba(90, 55, 20, 0.45);
+  transform-origin: 50% 0;
+  animation: dp-unbox 0.5s cubic-bezier(0.6, 0, 0.4, 1) forwards;
+  animation-delay: calc(var(--c) * 52ms + 760ms);
+  pointer-events: none;
+}
+@keyframes dp-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-0.7em) rotate(-8deg);
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes dp-unbox {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  60% {
+    transform: perspective(300px) rotateX(-80deg) translateY(-0.2em);
+    opacity: 1;
+  }
+  100% {
+    transform: perspective(300px) rotateX(-90deg) translateY(-0.3em);
+    opacity: 0;
+  }
+}
+
+/* ── 最初の一度だけ：トラックが画面を横切る ── */
+.wb-intro {
+  display: none;
+}
+html.is-dp-intro [data-theme='console'] .wb-intro {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 58%;
+  height: clamp(70px, 9vw, 130px);
+  pointer-events: none;
+  z-index: 3;
+}
+html.is-dp-intro [data-theme='console'] .wb-intro-truck {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: clamp(120px, 15vw, 220px);
+  height: auto;
+  filter: drop-shadow(0 12px 10px rgba(10, 37, 64, 0.25));
+  animation: dp-truck 2.3s cubic-bezier(0.45, 0.05, 0.4, 1) 0.15s both;
+}
+html.is-dp-intro [data-theme='console'] .wb-dust {
+  position: absolute;
+  bottom: 4px;
+  left: 0;
+  height: 10px;
+  width: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85) 30%, rgba(255, 255, 255, 0.4) 70%, transparent);
+  border-radius: 99px;
+  transform-origin: 0 50%;
+  animation: dp-dust 2.3s cubic-bezier(0.45, 0.05, 0.4, 1) 0.15s both;
+}
+@keyframes dp-truck {
+  0% {
+    transform: translateX(-30vw);
+  }
+  100% {
+    transform: translateX(115vw);
+  }
+}
+@keyframes dp-dust {
+  0% {
+    transform: scaleX(0);
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: scaleX(1);
+    opacity: 0;
+  }
+}
+/* トラックが通ったあとから、文字が届く */
+html.is-dp-intro [data-theme='console'] .hero-h.split .ch {
+  animation-delay: calc(var(--c) * 70ms + 700ms);
+}
+html.is-dp-intro [data-theme='console'] .hero-h.split .ch::before {
+  animation-delay: calc(var(--c) * 70ms + 1200ms);
+}
+html.is-dp-intro [data-theme='console'] .hero .kicker,
+html.is-dp-intro [data-theme='console'] .hero-lead,
+html.is-dp-intro [data-theme='console'] .hero-actions,
+html.is-dp-intro [data-theme='console'] .badges {
+  animation-delay: 1.9s;
+}
+html.is-dp-intro [data-theme='console'] .wb {
+  animation-delay: 2.3s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='console'] .stage-sticky::before {
+    animation: none;
+  }
+  html.js [data-theme='console'] .hero-h.split .ch {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+  html.js [data-theme='console'] .hero-h.split .ch::before {
+    display: none;
+  }
+}
+/* 空の上のヘッダー：ロゴは白抜き（スクロールして白い帯になったら元の色） */
+[data-theme='console'][data-page='top'] .hdr:not(.is-scrolled) .brand-logo {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 6px rgba(10, 60, 110, 0.35));
+}
+[data-theme='console'][data-page='top'] .hdr:not(.is-scrolled) .brand-sep {
+  background: rgba(255, 255, 255, 0.55);
+}
+/* スマホ：棚とトラックは上半分、見出しは下半分。リードは短く切り、全文は直後の「一言で答える」で読める */
+@media (max-width: 959px) {
+  html.js-stage [data-theme='console'] .hero {
+    bottom: 76px;
+  }
+  html.js-stage [data-theme='console'] .hero-lead {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin-top: 18px;
+    font-size: 0.88rem;
+    line-height: 1.85;
+  }
+  html.js-stage [data-theme='console'] .hero .badges {
+    display: none;
+  }
+  html.js-stage [data-theme='console'] .hero-actions {
+    margin-top: 22px;
+  }
+  [data-theme='console'] .hero-h {
+    line-height: 1.16;
+  }
+  html.is-dp-intro [data-theme='console'] .wb-intro {
+    top: 44%;
+  }
+}
+@media (max-width: 959px) and (max-height: 720px) {
+  html.js-stage [data-theme='console'] .hero-lead {
+    -webkit-line-clamp: 2;
+  }
+}
+/* 2行目の梱包テープは、左から貼られてから文字が届く */
+html.js [data-theme='console'] .hero-h.split .ln + .ln {
+  animation: dp-tape 0.55s cubic-bezier(0.6, 0, 0.3, 1) 0.45s both;
+}
+html.is-dp-intro [data-theme='console'] .hero-h.split .ln + .ln {
+  animation-delay: 1.15s;
+}
+@keyframes dp-tape {
+  from {
+    transform: rotate(-1.6deg) scaleX(0);
+  }
+  to {
+    transform: rotate(-1.6deg) scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js [data-theme='console'] .hero-h.split .ln + .ln {
+    animation: none;
+  }
+}
+/* 最初の演出の大きなトラックは、荷台も塗る */
+.wb-intro-truck .tk-bed {
+  fill: var(--dp-orange, #ff8317);
+  stroke: #c45f00;
+  stroke-width: 1.2;
+  stroke-dasharray: none;
+}
+.wb-intro-truck .tk-cab {
+  stroke: #c45f00;
+  stroke-width: 1.2;
+}
+/* 下層ページの冒頭と、ページ末の「話してみる」の帯も空にそろえる */
+[data-theme='console'] .phero,
+[data-theme='console'] .cta-band {
+  background-color: var(--sky-low);
+  background-image:
+    radial-gradient(ellipse 14% 6% at 14% 24%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 18% 6% at 70% 18%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 12% 5% at 88% 62%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, #5fb4ec 0%, #9ed6f5 46%, #d9f0fc 78%, #f3faff 100%);
+}
+[data-theme='console'] .phero-h {
+  font-size: clamp(2.1rem, 0.9rem + 3.8vw, 5rem);
+}
+[data-theme='console'][data-page='about'] .hdr:not(.is-scrolled),
+[data-theme='console'][data-page='service'] .hdr:not(.is-scrolled),
+[data-theme='console'][data-page='contact'] .hdr:not(.is-scrolled) {
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-theme='console'][data-page='about'] .hdr:not(.is-scrolled) .brand-logo,
+[data-theme='console'][data-page='service'] .hdr:not(.is-scrolled) .brand-logo,
+[data-theme='console'][data-page='contact'] .hdr:not(.is-scrolled) .brand-logo {
+  filter: brightness(0) invert(1) drop-shadow(0 1px 6px rgba(10, 60, 110, 0.35));
+}

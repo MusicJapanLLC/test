@@ -1557,7 +1557,8 @@ function waybillBlock(p: Partner): string {
               .join('')}</ol>
             <p class="wb-foot"><span class="wb-note">${esc(w.note)}</span><span class="wb-care" aria-hidden="true">${w.care.map((c, i) => `<span style="--i:${i}">${esc(c)}</span>`).join('')}</span></p>
           </div>
-        </aside>`;
+        </aside>
+        <div class="wb-intro" aria-hidden="true"><span class="wb-dust"></span>${truckSvg('wb-intro-truck')}</div>`;
 }
 
 /** 0〜1 の、毎回同じになる疑似乱数（点の並びと切り替わる順番に使う） */

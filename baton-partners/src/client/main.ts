@@ -63,7 +63,18 @@ if (document.body.dataset.theme === 'orbit') {
   void import('./orbit').then((m) => m.setupOrbit());
 }
 // console の世界観だけの演出（切り替えの日の図・控えの置き場所の「乗っ取られたら？」）
-if (document.body.dataset.theme === 'console') void import('./console').then((m) => m.setupConsole());
+// 最初の一度だけ、トラックが走ってきて見出しの荷物を降ろす（2回目からとページ移動の幕のあとは出さない）
+if (document.body.dataset.theme === 'console') {
+  if (document.querySelector('.wb-intro') && !document.documentElement.classList.contains('is-entering') && !prefersReducedMotion()) {
+    try {
+      if (sessionStorage.getItem('bp-dp-intro') !== '1') document.documentElement.classList.add('is-dp-intro');
+      sessionStorage.setItem('bp-dp-intro', '1');
+    } catch {
+      document.documentElement.classList.add('is-dp-intro');
+    }
+  }
+  void import('./console').then((m) => m.setupConsole());
+}
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));

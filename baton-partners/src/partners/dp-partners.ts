@@ -61,7 +61,7 @@ export const dpPartners: Partner = {
     logo: '/partners/dp-partners/logo.png',
     logoAlt: '株式会社DPパートナーズ',
     logoSize: [1000, 203],
-    scene: { a: '#0A3A66', b: '#FF8317', match: '#00B1E9' },
+    scene: { a: '#0A3A66', b: '#FF8317', match: '#0A6DC2' },
   },
   world: { theme: 'console', scene: 'vault' },
   leader: {
