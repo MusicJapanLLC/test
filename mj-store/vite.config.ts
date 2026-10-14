@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync, type Dirent } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { faqOf, gameBySlug, gameDef, games } from './src/data/games';
@@ -31,18 +31,34 @@ const GAME_SHELL = `<!doctype html>
 </html>
 `;
 
+/** ファイルを読む。無ければ null（「あるか確かめてから読む」の間にファイルが変わる隙を作らない） */
+function readText(file: string): string | null {
+  try {
+    return readFileSync(file, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
 function writeGameShells(): void {
   const dir = resolve(root, 'games');
   const slugs = new Set(games.map((g) => g.slug));
+  let entries: Dirent[] = [];
+  try {
+    entries = readdirSync(dir, { withFileTypes: true });
+  } catch {
+    entries = [];
+  }
   /* games.ts から消えた作品の雛形は片付ける（自動生成したものだけ） */
-  for (const name of existsSync(dir) ? readdirSync(dir, { withFileTypes: true }) : []) {
+  for (const name of entries) {
     if (!name.isDirectory() || slugs.has(name.name)) continue;
-    const file = resolve(dir, name.name, 'index.html');
-    if (existsSync(file) && readFileSync(file, 'utf8') === GAME_SHELL) rmSync(resolve(dir, name.name), { recursive: true });
+    if (readText(resolve(dir, name.name, 'index.html')) === GAME_SHELL) {
+      rmSync(resolve(dir, name.name), { recursive: true, force: true });
+    }
   }
   for (const g of games) {
     const file = resolve(dir, g.slug, 'index.html');
-    if (existsSync(file) && readFileSync(file, 'utf8') === GAME_SHELL) continue;
+    if (readText(file) === GAME_SHELL) continue;
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(file, GAME_SHELL);
   }

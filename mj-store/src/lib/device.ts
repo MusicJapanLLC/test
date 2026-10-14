@@ -30,23 +30,27 @@ export function initDevices(scope: ParentNode = document): void {
 export function initLightbox(): void {
   const root = document.querySelector<HTMLElement>('[data-lightbox-root]');
   if (!root) return;
-  const data = JSON.parse(root.querySelector('[data-lb-data]')?.textContent ?? '[]') as {
-    src: string;
-    alt: string;
-    cap: string;
-  }[];
-  if (!data.length) return;
-  const img = root.querySelector<HTMLImageElement>('[data-lb-img]')!;
+  /* 拡大する画像は、ページの「実際の画面」にある <img> をそのまま複製する（URL の文字列は扱わない） */
+  const sources = Array.from(document.querySelectorAll<HTMLImageElement>('[data-shots] .shot__img'));
+  const caps = Array.from(document.querySelectorAll<HTMLElement>('[data-shots] .shot__cap')).map((c) =>
+    (c.lastChild?.textContent ?? '').trim(),
+  );
+  if (!sources.length) return;
+  let img = root.querySelector<HTMLImageElement>('[data-lb-img]')!;
   const cap = root.querySelector<HTMLElement>('[data-lb-cap]')!;
   let index = 0;
   let opener: HTMLElement | null = null;
 
   const show = (i: number) => {
-    index = (i + data.length) % data.length;
-    const d = data[index];
-    img.src = d.src;
-    img.alt = d.alt;
-    cap.textContent = `${String(index + 1).padStart(2, '0')} / ${String(data.length).padStart(2, '0')}　${d.cap}`;
+    index = (i + sources.length) % sources.length;
+    const next = sources[index].cloneNode() as HTMLImageElement;
+    next.className = 'lightbox__img';
+    next.removeAttribute('loading');
+    next.removeAttribute('style');
+    next.setAttribute('data-lb-img', '');
+    img.replaceWith(next);
+    img = next;
+    cap.textContent = `${String(index + 1).padStart(2, '0')} / ${String(sources.length).padStart(2, '0')}　${caps[index] ?? ''}`;
   };
   const open = (i: number, from: HTMLElement | null) => {
     opener = from;

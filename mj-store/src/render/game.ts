@@ -280,7 +280,7 @@ function buybarHtml(g: Game): string {
   </div>`;
 }
 
-function lightboxHtml(ctx: RenderCtx, g: Game): string {
+function lightboxHtml(g: Game): string {
   return `
   <div class="lightbox" data-lightbox-root hidden role="dialog" aria-modal="true" aria-label="${esc(g.title)}の画面">
     <button type="button" class="lightbox__close" data-lb-close aria-label="閉じる">${icon.close}</button>
@@ -290,9 +290,6 @@ function lightboxHtml(ctx: RenderCtx, g: Game): string {
       <figcaption class="lightbox__cap" data-lb-cap></figcaption>
     </figure>
     <button type="button" class="lightbox__nav lightbox__nav--next" data-lb-next aria-label="次の画面">→</button>
-    <script type="application/json" data-lb-data>${JSON.stringify(
-      g.shots.map((s) => ({ src: href(ctx, s.src), alt: s.alt, cap: s.caption })),
-    ).replace(/</g, '\\u003c')}</script>
   </div>`;
 }
 
@@ -310,7 +307,7 @@ export function gameBody(ctx: RenderCtx, g: Game): string {
     ${moreHtml(ctx, g)}
   </main>
   ${buybarHtml(g)}
-  ${lightboxHtml(ctx, g)}`;
+  ${lightboxHtml(g)}`;
 }
 
 /** ストアページの構造化データ：ゲーム本体・パンくず・よくある質問 */
