@@ -11,6 +11,7 @@
  *      → 同じ受付番号が2回届いても、記録・通知は1回だけ（送信の再試行による重複を防ぐ）
  *      → 送れなかった通知は「企業通知」列に「失敗」と残し、retryPartnerNotices で送り直す
  *      → 企業が通知を望まない場合は、PARTNERS の notify を false にすれば止まる
+ *      → 企業設定に未登録の企業IDで届いた相談も、記録と社長への通知はする（企業通知は「未登録」。登録後も過去の分は送らない）
  *   4. 月初に、前月の件数を各企業と社長へ送る（sendMonthlySummary をトリガー登録）
  *   5. 社長がステータスを「紹介済み」にした相談だけ、その企業との共有管理表（案件のタブ）へ1行足す
  *      → 紹介日・紹介企業・氏名・進捗「日程調整中」・受付番号を書く。双方の了承後なので、ここで初めて社名と氏名が先方に見える
@@ -23,7 +24,11 @@
  *        OWNER_EMAIL = 社長のメールアドレス
  *        PARTNERS    = {"evorg":{"name":"株式会社エボルグ","emails":["担当者@evorg.co.jp"],"notify":true,"sheetId":"共有管理表のID（任意）"}}
  *      （企業のメールアドレスはリポジトリに置かない。ここにだけ書く）
- *      PARTNERS は、スプレッドシートのメニュー［Baton Partners］→［企業を追加・更新］からも足せる（JSONを手で書かなくてよい）
+ *      企業の設定は、ドライブのスプレッドシート「Baton Partners｜企業設定」に1社1行で書いてもよい（こちらが優先）
+ *        列：企業ID / 企業名 / 通知先メール（カンマ区切り） / 通知（TRUE・FALSE） / 共有管理表ID / 共有管理表のタブ / メモ
+ *        名前で自動で探す。別の名前にしたときは、スクリプトプロパティ PARTNERS_SHEET_ID にそのIDを入れる
+ *        同じ企業IDが PARTNERS にもあるときは、企業設定の行を使う。書き換えは5分以内に反映される
+ *      どちらも、スプレッドシートのメニュー［Baton Partners］→［企業を追加・更新］から足せる（企業設定があればそちらへ書く）
  *      任意：FILES_FOLDER_ID = 添付資料を置くドライブのフォルダID（未設定なら初回に自動で作る）
  *   3. setupSheets() を1回実行して、シートと見出しを作る（ドライブの権限もここで許可する）
  *   4. ［デプロイ］→［新しいデプロイ］→ 種類「ウェブアプリ」
@@ -52,6 +57,10 @@ const FILE_EXT = /\.(pdf|pptx?|key|docx?|xlsx?|csv|png|jpe?g|gif|webp|zip)$/i;
 const FILES_FOLDER_NAME = 'Baton Partners｜相談の添付資料';
 // 企業との共有管理表：見出しの行（「紹介日」がある行）を、上から何行目まで探すか
 const SHARED_HEAD_SCAN = 12;
+// 企業設定のスプレッドシート（ドライブで名前から探す）と、その見出し
+const REGISTRY_NAME = 'Baton Partners｜企業設定';
+const REGISTRY_HEADERS = ['企業ID', '企業名', '通知先メール', '通知', '共有管理表ID', '共有管理表のタブ', 'メモ'];
+const REGISTRY_CACHE_SEC = 300;
 
 function setupSheets() {
   const ss = SpreadsheetApp.getActive();
@@ -71,8 +80,13 @@ function doPost(e) {
   try {
     const data = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     const partners = getPartners_();
-    const partner = partners[data.partnerId];
-    if (!partner) return json_({ ok: false, error: 'unknown partner' });
+    let partner = partners[data.partnerId];
+    if (!partner) {
+      // 企業設定に未登録の企業でも、相談は捨てない（サイトは no-cors で送るため、ここで断っても画面には「送信完了」と出てしまう）。
+      // 記録して社長へは全文を送り、企業への通知だけ「未登録」にする
+      if (!/^[a-z0-9-]{2,40}$/.test(String(data.partnerId || ''))) return json_({ ok: false, error: 'unknown partner' });
+      partner = { name: `${data.partnerId}（企業設定に未登録）`, emails: [], notify: false, unregistered: true };
+    }
 
     const p = data.profile || {};
     if (!p.company || !p.name || !p.email) return json_({ ok: false, error: 'missing fields' });
@@ -151,6 +165,7 @@ function notifyOwner_(partner, receiptId, now, p, answers, data, portfolioUrl, s
  * 戻り値は「企業通知」列に書く状態（送信済み / 停止中 / 宛先なし / 失敗：理由）。
  */
 function notifyPartner_(partner, receiptId, now, monthCount) {
+  if (partner.unregistered) return '未登録';
   if (partner.notify === false) return '停止中';
   if (!partner.emails || !partner.emails.length) return '宛先なし';
   const body = [
@@ -293,9 +308,16 @@ function addOrUpdatePartner() {
       const t = sharedTable_(entry); // 開けない・見出しがないときは、ここで止まって理由を出す
       entry.sheetTab = t.sheet.getName();
     }
-    partners[id] = entry;
-    PropertiesService.getScriptProperties().setProperty('PARTNERS', JSON.stringify(partners));
-    ui.alert('登録しました', describePartner_(id, entry), ui.ButtonSet.OK);
+    const reg = registrySheet_();
+    if (reg) {
+      writeRegistry_(reg, id, entry);
+    } else {
+      const own = propPartners_();
+      own[id] = entry;
+      PropertiesService.getScriptProperties().setProperty('PARTNERS', JSON.stringify(own));
+    }
+    CacheService.getScriptCache().remove('registry');
+    ui.alert('登録しました', `${describePartner_(id, entry)}\n保存先：${reg ? REGISTRY_NAME : 'スクリプトプロパティ PARTNERS'}`, ui.ButtonSet.OK);
   } catch (err) {
     if (String(err && err.message) === 'cancel') return;
     ui.alert(`登録できませんでした：${String(err && err.message || err)}`);
@@ -310,7 +332,7 @@ function showPartners() {
 
 function describePartner_(id, p) {
   return [
-    `${id}｜${p.name}`,
+    `${id}｜${p.name}${p.from ? `（${p.from}）` : ''}`,
     `通知：${p.notify === false ? '止めている' : '送る'}（${(p.emails || []).join(', ') || '宛先なし'}）`,
     `共有管理表：${p.sheetId ? `あり（${p.sheetTab || '自動で探す'}）` : 'なし'}`,
   ].join('\n');
@@ -438,9 +460,100 @@ function appendShared_(t, receiptId, company, person) {
   return `反映済み ${Utilities.formatDate(today, 'Asia/Tokyo', 'yyyy/MM/dd')}`;
 }
 
+/** 企業の設定：スクリプトプロパティ PARTNERS に、企業設定のスプレッドシートの行を重ねる（同じIDは企業設定が優先） */
 function getPartners_() {
+  const partners = propPartners_();
+  Object.keys(partners).forEach(function (id) { partners[id].from = 'スクリプトプロパティ'; });
+  const reg = readRegistry_();
+  Object.keys(reg).forEach(function (id) { partners[id] = reg[id]; });
+  return partners;
+}
+
+function propPartners_() {
   const raw = PropertiesService.getScriptProperties().getProperty('PARTNERS') || '{}';
   return JSON.parse(raw);
+}
+
+/** 企業設定のスプレッドシート。PARTNERS_SHEET_ID があればそれ、なければドライブで名前から探す。ないときは null */
+function registrySheet_() {
+  const id = PropertiesService.getScriptProperties().getProperty('PARTNERS_SHEET_ID');
+  let ss = null;
+  if (id) {
+    ss = SpreadsheetApp.openById(id);
+  } else {
+    const files = DriveApp.getFilesByName(REGISTRY_NAME);
+    while (files.hasNext()) {
+      const f = files.next();
+      if (f.getMimeType() === MimeType.GOOGLE_SHEETS && !f.isTrashed()) {
+        ss = SpreadsheetApp.openById(f.getId());
+        break;
+      }
+    }
+  }
+  return ss ? ss.getSheets()[0] : null;
+}
+
+/** 企業設定の行を読む（5分キャッシュ）。読めないときは空のまま進め、PARTNERS だけで動く */
+function readRegistry_() {
+  const cache = CacheService.getScriptCache();
+  const hit = cache.get('registry');
+  if (hit) return JSON.parse(hit);
+  const out = {};
+  try {
+    const sh = registrySheet_();
+    if (sh && sh.getLastRow() > 1) {
+      const values = sh.getDataRange().getValues();
+      const head = values[0].map(function (v) { return String(v).trim(); });
+      const c = function (name) { return head.indexOf(name); };
+      values.slice(1).forEach(function (r) {
+        const id = String(r[c('企業ID')] || '').trim();
+        if (!/^[a-z0-9-]+$/.test(id)) return;
+        const flag = String(r[c('通知')]).trim().toUpperCase();
+        const entry = {
+          name: String(r[c('企業名')] || id).trim(),
+          emails: String(r[c('通知先メール')] || '').split(/[,、\s]+/).filter(Boolean),
+          notify: !(flag === 'FALSE' || flag === 'いいえ' || flag === '止める' || r[c('通知')] === false),
+          from: REGISTRY_NAME,
+        };
+        const sheetId = c('共有管理表ID') === -1 ? '' : String(r[c('共有管理表ID')] || '').trim();
+        if (sheetId) entry.sheetId = (sheetId.match(/\/d\/([a-zA-Z0-9_-]+)/) || [])[1] || sheetId;
+        const tab = c('共有管理表のタブ') === -1 ? '' : String(r[c('共有管理表のタブ')] || '').trim();
+        if (tab) entry.sheetTab = tab;
+        out[id] = entry;
+      });
+    }
+  } catch (err) {
+    console.error(err);
+  }
+  cache.put('registry', JSON.stringify(out), REGISTRY_CACHE_SEC);
+  return out;
+}
+
+/** 企業設定に1行書く（同じ企業IDの行があれば上書き、なければ最後に足す） */
+function writeRegistry_(sh, id, entry) {
+  const values = sh.getDataRange().getValues();
+  let head = values[0].map(function (v) { return String(v).trim(); });
+  if (head.indexOf('企業ID') === -1) {
+    sh.getRange(1, 1, 1, REGISTRY_HEADERS.length).setValues([REGISTRY_HEADERS]).setFontWeight('bold');
+    head = REGISTRY_HEADERS.slice();
+  }
+  const c = function (name) { return head.indexOf(name); };
+  const row = head.map(function () { return ''; });
+  let at = sh.getLastRow() + 1;
+  for (let i = 1; i < values.length; i++) {
+    if (String(values[i][c('企業ID')]).trim() === id) {
+      at = i + 1;
+      values[i].forEach(function (v, k) { row[k] = v; });
+      break;
+    }
+  }
+  row[c('企業ID')] = id;
+  row[c('企業名')] = entry.name;
+  row[c('通知先メール')] = (entry.emails || []).join(', ');
+  row[c('通知')] = entry.notify !== false;
+  if (c('共有管理表ID') !== -1) row[c('共有管理表ID')] = entry.sheetId || '';
+  if (c('共有管理表のタブ') !== -1) row[c('共有管理表のタブ')] = entry.sheetTab || '';
+  sh.getRange(at, 1, 1, row.length).setValues([row]);
 }
 
 function rowsFor_(sheet, partnerId, year, month) {
