@@ -12,6 +12,7 @@ import '../styles/theme-match.css';
 import '../styles/theme-cheer.css';
 import '../styles/theme-orbit.css';
 import { setupContact } from './contact';
+import { prefersReducedMotion } from './env';
 import { setupFx } from './fx';
 import { mountScenes } from './scenes';
 import { setupStage } from './stage';
@@ -48,8 +49,19 @@ setupTracklist();
 if (document.body.dataset.theme === 'studio') void import('./studio').then((m) => m.setupStudio());
 // cheer の世界観だけの演出（招待状とカードを裏返す・応援ボタン）
 if (document.body.dataset.theme === 'cheer') void import('./cheer').then((m) => m.setupCheer());
-// orbit の世界観だけの演出（人柄の五角形を重ねる図）
-if (document.body.dataset.theme === 'orbit') void import('./orbit').then((m) => m.setupOrbit());
+// orbit の世界観だけの演出（最初の絶対値のカウンター・人柄の五角形を重ねる図）
+// カウンターの幕は、読み込みを待たずにここで出す（2回目からとページ移動の幕のあとは出さない）
+if (document.body.dataset.theme === 'orbit') {
+  if (document.querySelector('[data-orb-intro]') && !document.documentElement.classList.contains('is-entering') && !prefersReducedMotion()) {
+    try {
+      if (sessionStorage.getItem('bp-orb-intro') !== '1') document.documentElement.classList.add('is-orb-intro');
+      sessionStorage.setItem('bp-orb-intro', '1');
+    } catch {
+      document.documentElement.classList.add('is-orb-intro');
+    }
+  }
+  void import('./orbit').then((m) => m.setupOrbit());
+}
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));
