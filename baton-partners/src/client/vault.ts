@@ -14,6 +14,7 @@ import {
   LineSegments,
   Matrix4,
   Mesh,
+  MeshBasicMaterial,
   PerspectiveCamera,
   PlaneGeometry,
   Points,
@@ -38,6 +39,11 @@ import type { SceneOptions } from './scene';
  *              緑に光りながら元の場所に収まる（戻す：壊れても、別の場所の控えから戻る）。クリックでも起こせる
  *
  * 板は1つのジオメトリを instancing で並べ、面は白・辺は紺をフラグメントで描く（線画の設計図に見える）。
+ *
+ * 2026-10 の追加（サイト引越し屋さんのロゴから）：
+ *   ・足もとの道を、オレンジのトラックが DP の箱（ロゴの立方体）を積んで往復する。移し終えると新しいサーバーの横に停まる
+ *   ・新しいサーバーの上に、心拍のような監視の線。壊れた瞬間は赤く乱れて平らになり、控えが戻ると打ち直す
+ *   ・奥に、ロゴの地球の経線と緯線がゆっくり回る
  */
 
 const TILE = new Vector3(0.66, 0.2, 0.74);
@@ -284,6 +290,37 @@ uniform float uOpacity;
 void main() { gl_FragColor = vec4(uCol, uOpacity); }
 `;
 
+/** 監視の線（心拍）。帯の両端は薄く消し、走査の先頭だけ明るくする */
+const PULSE_VERT = /* glsl */ `
+attribute float aU;
+varying float vU;
+void main() {
+  vU = aU;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+const PULSE_FRAG = /* glsl */ `
+uniform vec3 uCol;
+uniform float uOpacity;
+uniform float uHead;
+varying float vU;
+void main() {
+  float a = smoothstep(0.0, 0.1, vU) * smoothstep(1.0, 0.9, vU);
+  float d = uHead - vU;
+  // 走査の先頭のすぐ後ろは明るく、離れるほど少し薄く（モニターの残像）
+  float trail = d >= 0.0 ? mix(1.0, 0.45, clamp(d * 1.6, 0.0, 1.0)) : mix(0.45, 0.3, clamp(-d * 2.0, 0.0, 1.0));
+  float alpha = a * trail * uOpacity;
+  if (alpha < 0.01) discard;
+  gl_FragColor = vec4(uCol, alpha);
+}
+`;
+
+/** 心電図の1拍（0〜1）。P波・QRS・T波をガウスの山で足す */
+function beat(q: number): number {
+  const g = (c: number, w: number) => Math.exp(-((q - c) * (q - c)) / (2 * w * w));
+  return 0.12 * g(0.16, 0.035) - 0.16 * g(0.42, 0.012) + 1.0 * g(0.455, 0.014) - 0.32 * g(0.49, 0.013) + 0.24 * g(0.72, 0.05);
+}
+
 /** データの粒：古い→新しい（移す）／新しい→保管庫（控え）／保管庫→新しい（戻す） */
 const DOT_VERT = /* glsl */ `
 attribute vec4 aSeed; // x: ずらし, y/z: 流れの幅, w: 経路 0/1/2
@@ -349,6 +386,20 @@ export class VaultScene {
   private vaultFrame: LineBasicMaterial;
   private dome: LineSegments;
   private bucket: LineSegments;
+  /** 道とトラック（荷台に DP の箱） */
+  private road: { a: Vector3; c: Vector3; b: Vector3 } = { a: new Vector3(), c: new Vector3(), b: new Vector3() };
+  private park = new Vector3();
+  private truck = new Group();
+  private cargo = new Group();
+  private wheels: Mesh[] = [];
+  private roadMat: LineBasicMaterial;
+  private truckMats: { m: MeshBasicMaterial | LineBasicMaterial; o: number }[] = [];
+  private hazard: MeshBasicMaterial;
+  private truckYaw = 0;
+  /** 監視の線 */
+  private pulse: { geo: BufferGeometry; pos: Float32Array; n: number; u: Record<string, { value: unknown }>; frame: LineBasicMaterial; origin: Vector3; len: number };
+  /** ロゴの地球（経線と緯線） */
+  private globe: LineSegments;
   private newBase = new Vector3();
   private raf = 0;
   private visible = true;
@@ -551,6 +602,168 @@ export class VaultScene {
     this.dome.position.copy(this.newBase);
     this.world.add(this.dome);
 
+    // ── 道：古いサーバーの前から、新しいサーバーの前へ。点線（線分を1つおきに）で描く ──
+    this.road.a.set(OLD.x + 0.4, 0.01, OLD.z + D / 2 + 1.25);
+    this.road.b.set(NEW.x - 0.2, 0.01, NEW.z + D / 2 + 1.35);
+    this.road.c.set((OLD.x + NEW.x) / 2 - 0.4, 0.01, Math.max(this.road.a.z, this.road.b.z) + 2.4);
+    this.park.set(NEW.x + W / 2 + 1.5, 0, NEW.z + D / 2 + 0.6);
+    const roadPts: number[] = [];
+    const RS = 46;
+    const at = (k: number) => this.roadAt(k);
+    for (let r = 0; r < RS; r += 2) {
+      const p0 = at(r / RS);
+      const p1 = at((r + 1) / RS);
+      roadPts.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z);
+    }
+    for (const side of [-0.62, 0.62]) {
+      for (let r = 0; r < RS; r++) {
+        const p0 = at(r / RS);
+        const p1 = at((r + 1) / RS);
+        const n0 = this.roadNormal(r / RS).multiplyScalar(side);
+        const n1 = this.roadNormal((r + 1) / RS).multiplyScalar(side);
+        roadPts.push(p0.x + n0.x, 0.01, p0.z + n0.z, p1.x + n1.x, 0.01, p1.z + n1.z);
+      }
+    }
+    const roadGeo = new BufferGeometry();
+    roadGeo.setAttribute('position', new BufferAttribute(new Float32Array(roadPts), 3));
+    this.roadMat = new LineBasicMaterial({ color: ink, transparent: true, opacity: 0.4 });
+    this.world.add(new LineSegments(roadGeo, this.roadMat));
+
+    // ── トラック：サイト引越し屋さんのロゴの、オレンジの荷台つきトラック。面は塗り、辺は紺の線 ──
+    const orange = new Color(getComputedStyle(document.documentElement).getPropertyValue('--dp-orange').trim() || '#FF8317');
+    const part = (w: number, h: number, d: number, fill: Color | MeshBasicMaterial[], x: number, y: number, z: number, parent: Group) => {
+      const g = new BoxGeometry(w, h, d);
+      const mats = Array.isArray(fill) ? fill : [new MeshBasicMaterial({ color: fill, transparent: true })];
+      const mesh = new Mesh(g, Array.isArray(fill) ? mats : mats[0]);
+      mesh.position.set(x, y, z);
+      const edge = new LineSegments(new EdgesGeometry(g), new LineBasicMaterial({ color: ink, transparent: true }));
+      edge.position.copy(mesh.position);
+      parent.add(mesh, edge);
+      mats.forEach((m) => this.truckMats.push({ m, o: 1 }));
+      this.truckMats.push({ m: edge.material as LineBasicMaterial, o: 0.9 });
+      return mesh;
+    };
+    part(1.9, 0.14, 1.0, orange, -0.38, 0.38, 0, this.truck); // 荷台
+    part(0.78, 0.78, 1.0, orange, 0.97, 0.7, 0, this.truck); // 運転席
+    part(0.06, 0.34, 0.86, new Color('#ffffff'), 1.37, 0.84, 0, this.truck); // 窓
+    part(0.08, 0.36, 1.0, orange, -1.31, 0.6, 0, this.truck); // あおり（後ろ）
+    const wheelGeo = new CylinderGeometry(0.21, 0.21, 0.14, 16);
+    wheelGeo.rotateX(Math.PI / 2);
+    for (const [x, z] of [
+      [-0.85, 0.5],
+      [-0.85, -0.5],
+      [0.95, 0.5],
+      [0.95, -0.5],
+    ]) {
+      const wm = new MeshBasicMaterial({ color: ink, transparent: true });
+      const w = new Mesh(wheelGeo, wm);
+      w.position.set(x, 0.21, z);
+      this.truckMats.push({ m: wm, o: 1 });
+      this.wheels.push(w);
+      this.truck.add(w);
+    }
+    // ハザード（停まったら点滅）
+    this.hazard = new MeshBasicMaterial({ color: orange, transparent: true, opacity: 0 });
+    const hz = new Mesh(new PlaneGeometry(0.12, 0.08), this.hazard);
+    hz.position.set(-1.36, 0.5, 0.36);
+    hz.rotation.y = -Math.PI / 2;
+    const hz2 = hz.clone();
+    hz2.position.z = -0.36;
+    this.truck.add(hz, hz2);
+    // 荷物：DPのロゴの箱（上面が淡い空色、側面がDPの青と空色）
+    const sky = new Color('#00B1E9');
+    const top = new Color('#8ADCF7');
+    const dp = new Color('#0086C7');
+    const boxMats = [sky, sky, top, top, dp, dp].map((c) => new MeshBasicMaterial({ color: c, transparent: true }));
+    part(0.74, 0.74, 0.74, boxMats, 0, 0, 0, this.cargo);
+    // 箱の上面に、ロゴの矢印（上向き）を線で
+    const arrow = new BufferGeometry();
+    arrow.setAttribute(
+      'position',
+      new BufferAttribute(new Float32Array([0, 0.375, 0.2, 0, 0.375, -0.22, 0, 0.375, -0.22, -0.13, 0.375, -0.06, 0, 0.375, -0.22, 0.13, 0.375, -0.06]), 3),
+    );
+    const arrowMat = new LineBasicMaterial({ color: '#ffffff', transparent: true });
+    this.truckMats.push({ m: arrowMat, o: 1 });
+    const arrowLine = new LineSegments(arrow, arrowMat);
+    arrowLine.rotation.y = Math.PI / 2;
+    this.cargo.add(arrowLine);
+    this.cargo.position.set(-0.4, 0.82, 0);
+    this.truck.add(this.cargo);
+    this.truck.scale.setScalar(0.92);
+    this.world.add(this.truck);
+
+    // ── 監視の線：新しいサーバーの上に浮かぶモニター。心拍のように打つ ──
+    const PN = 150;
+    const pPos = new Float32Array(PN * 2 * 3);
+    const pU = new Float32Array(PN * 2);
+    const pIdx: number[] = [];
+    for (let k = 0; k < PN; k++) {
+      pU[k * 2] = pU[k * 2 + 1] = k / (PN - 1);
+      if (k < PN - 1) pIdx.push(k * 2, k * 2 + 1, k * 2 + 2, k * 2 + 1, k * 2 + 3, k * 2 + 2);
+    }
+    const pGeo = new BufferGeometry();
+    pGeo.setAttribute('position', new BufferAttribute(pPos, 3));
+    pGeo.setAttribute('aU', new BufferAttribute(pU, 1));
+    pGeo.setIndex(pIdx);
+    const pulseU = { uCol: { value: okC.clone() }, uOpacity: { value: 0 }, uHead: { value: 0 } };
+    const pulseMesh = new Mesh(
+      pGeo,
+      new ShaderMaterial({ uniforms: pulseU, vertexShader: PULSE_VERT, fragmentShader: PULSE_FRAG, transparent: true, depthWrite: false, side: DoubleSide }),
+    );
+    pulseMesh.frustumCulled = false;
+    // 古いサーバーの上から、新しいサーバーの真上まで（移し終えたあとは、あいだの空がちょうど空く）
+    const len = NEW.x - OLD.x + 0.4;
+    const origin = new Vector3(OLD.x - 0.4, H + 1.05, (OLD.z + NEW.z) / 2 + D / 2);
+    // モニターの枠（四隅のかぎ）
+    const fr: number[] = [];
+    const fx0 = origin.x - 0.2;
+    const fx1 = origin.x + len + 0.2;
+    const fy0 = origin.y - 0.55;
+    const fy1 = origin.y + 1.25;
+    const c = 0.35;
+    for (const [x, y, dx, dy] of [
+      [fx0, fy0, 1, 1],
+      [fx1, fy0, -1, 1],
+      [fx0, fy1, 1, -1],
+      [fx1, fy1, -1, -1],
+    ]) fr.push(x, y, origin.z, x + c * dx, y, origin.z, x, y, origin.z, x, y + c * dy, origin.z);
+    const frGeo = new BufferGeometry();
+    frGeo.setAttribute('position', new BufferAttribute(new Float32Array(fr), 3));
+    const frame = new LineBasicMaterial({ color: okC, transparent: true, opacity: 0 });
+    this.world.add(pulseMesh, new LineSegments(frGeo, frame));
+    this.pulse = { geo: pGeo, pos: pPos, n: PN, u: pulseU, frame, origin, len };
+
+    // ── ロゴの地球：奥で、経線と緯線がゆっくり回る ──
+    const gl: number[] = [];
+    const GR = 5.6;
+    const SEG = 64;
+    for (let lat = -60; lat <= 60; lat += 30) {
+      const y = GR * Math.sin((lat * Math.PI) / 180);
+      const r = GR * Math.cos((lat * Math.PI) / 180);
+      for (let k = 0; k < SEG; k++) {
+        const a0 = (k / SEG) * Math.PI * 2;
+        const a1 = ((k + 1) / SEG) * Math.PI * 2;
+        gl.push(r * Math.cos(a0), y, r * Math.sin(a0), r * Math.cos(a1), y, r * Math.sin(a1));
+      }
+    }
+    for (let lon = 0; lon < 180; lon += 30) {
+      const a = (lon * Math.PI) / 180;
+      for (let k = 0; k < SEG; k++) {
+        const b0 = (k / SEG) * Math.PI * 2;
+        const b1 = ((k + 1) / SEG) * Math.PI * 2;
+        gl.push(
+          GR * Math.cos(b0) * Math.cos(a), GR * Math.sin(b0), GR * Math.cos(b0) * Math.sin(a),
+          GR * Math.cos(b1) * Math.cos(a), GR * Math.sin(b1), GR * Math.cos(b1) * Math.sin(a),
+        );
+      }
+    }
+    const globeGeo = new BufferGeometry();
+    globeGeo.setAttribute('position', new BufferAttribute(new Float32Array(gl), 3));
+    this.globe = new LineSegments(globeGeo, new LineBasicMaterial({ color: orange, transparent: true, opacity: 0, depthWrite: false }));
+    this.globe.position.set(-1.4, 4.6, -10.5);
+    this.globe.rotation.z = 0.32;
+    this.world.add(this.globe);
+
     // データの粒
     const DOTS = 3 * 70;
     const dSeed = new Float32Array(DOTS * 4);
@@ -599,6 +812,116 @@ export class VaultScene {
       this.render(CYCLE * 0.9);
     }
     o.host.classList.add('is-ready');
+  }
+
+  /** 道の上の位置（0＝古いサーバーの前、1＝新しいサーバーの前） */
+  private roadAt(k: number, out = new Vector3()): Vector3 {
+    const { a, c, b } = this.road;
+    const u = 1 - k;
+    return out.set(u * u * a.x + 2 * u * k * c.x + k * k * b.x, 0.01, u * u * a.z + 2 * u * k * c.z + k * k * b.z);
+  }
+
+  /** 道の向き（xz 平面の単位ベクトル） */
+  private roadDir(k: number): Vector3 {
+    const { a, c, b } = this.road;
+    const u = 1 - k;
+    return new Vector3(2 * u * (c.x - a.x) + 2 * k * (b.x - c.x), 0, 2 * u * (c.z - a.z) + 2 * k * (b.z - c.z)).normalize();
+  }
+
+  private roadNormal(k: number): Vector3 {
+    const d = this.roadDir(k);
+    return new Vector3(-d.z, 0, d.x);
+  }
+
+  /**
+   * トラック：移している間は往復する（行きは箱を積み、着いたら降ろし、帰りは空）。移し終えたら新しいサーバーの横に停まり、ハザードを点ける。
+   * 壊れて戻る場面では、警告のあいだハザードが速く点滅する
+   */
+  private driveTruck(t: number, ph: number, intro: number, alert: number) {
+    const sm = (a: number, b: number, x: number) => {
+      const k = Math.min(1, Math.max(0, (x - a) / (b - a)));
+      return k * k * (3 - 2 * k);
+    };
+    const TRIP = 4.6;
+    const u = (((t / TRIP) % 1) + 1) % 1;
+    let s: number;
+    let back: boolean;
+    let load: number;
+    if (u < 0.44) {
+      s = sm(0, 0.44, u);
+      back = false;
+      load = 1;
+    } else if (u < 0.56) {
+      s = 1;
+      back = sm(0.47, 0.56, u) > 0.5;
+      load = 1 - sm(0.46, 0.52, u);
+    } else if (u < 0.94) {
+      s = 1 - sm(0.56, 0.94, u);
+      back = true;
+      load = 0;
+    } else {
+      s = 0;
+      back = sm(0.95, 1, u) < 0.5;
+      load = sm(0.96, 1, u);
+    }
+    const park = sm(0.86, 1.0, ph);
+    const pos = this.roadAt(s);
+    const dir = this.roadDir(s);
+    let yaw = Math.atan2(-dir.z, dir.x) + (back ? Math.PI : 0);
+    // 停まるときは、新しいサーバーの横で道の向きにそろえる
+    const pDir = this.roadDir(1);
+    const parkYaw = Math.atan2(-pDir.z, pDir.x);
+    pos.lerp(this.park, park);
+    yaw = yaw + (parkYaw - yaw) * park;
+    // 向きは急に変えず、少しずつ回す（切り返し）
+    let dy = yaw - this.truckYaw;
+    dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+    this.truckYaw += dy * (this.o.animate ? 0.14 : 1);
+    this.truck.position.copy(pos);
+    const moving = (u < 0.44 || (u > 0.56 && u < 0.94)) && park < 0.5 ? 1 : 0;
+    this.truck.position.y = Math.abs(Math.sin(t * 22)) * 0.025 * moving;
+    this.truck.rotation.set(0, this.truckYaw, 0);
+    for (const w of this.wheels) w.rotation.z = -t * 9 * moving;
+    // 荷物：着いたら持ち上がって消え、出発前にまた現れる（移し終えたら積まない）
+    const carry = load * (1 - park);
+    this.cargo.scale.setScalar(Math.max(0.001, carry));
+    this.cargo.position.y = 0.82 + (1 - carry) * 0.5;
+    const blink = alert > 0.05 ? (Math.sin(t * 22) > 0 ? 1 : 0.15) : Math.sin(t * 5.5) > 0 ? 1 : 0.1;
+    this.hazard.opacity = park * blink;
+    for (const tm of this.truckMats) tm.m.opacity = tm.o * intro;
+  }
+
+  /** 監視の線を描き直す。alert で乱れ、down で平らになり、戻ると打ち直す */
+  private drawPulse(t: number, guard: number, alert: number, down: number, ok: number, ink: Color) {
+    const P = this.pulse;
+    const HEAD_SPEED = 0.28;
+    const head = (t * HEAD_SPEED) % 1;
+    for (let k = 0; k < P.n; k++) {
+      const x = k / (P.n - 1);
+      // 2拍ぶんを横に並べ、左から右へ流す
+      const q = (((x * 2.2 - t * 0.62) % 1) + 1) % 1;
+      let y = beat(q) * (1 - down);
+      y += alert * (Math.sin(x * 90 + t * 37) * 0.22 + Math.sin(x * 41 - t * 23) * 0.18) * (1 - down);
+      const px = P.origin.x + x * P.len;
+      const py = P.origin.y + y * 0.9;
+      const w = 0.045;
+      const o = k * 6;
+      P.pos[o] = px;
+      P.pos[o + 1] = py - w;
+      P.pos[o + 2] = P.origin.z;
+      P.pos[o + 3] = px;
+      P.pos[o + 4] = py + w;
+      P.pos[o + 5] = P.origin.z;
+    }
+    P.geo.attributes.position.needsUpdate = true;
+    const alertC = this.tileU.uAlert.value as Color;
+    const okC = this.tileU.uOk.value as Color;
+    const col = P.u.uCol.value as Color;
+    col.copy(okC).lerp(alertC, Math.min(1, alert + down)).lerp(okC, ok * 0.3);
+    P.u.uOpacity.value = guard;
+    P.u.uHead.value = head;
+    P.frame.color.copy(col).lerp(ink, 0.35);
+    P.frame.opacity = guard * 0.7;
   }
 
   private onPointer = (e: PointerEvent) => {
@@ -671,6 +994,17 @@ export class VaultScene {
     this.bucket.rotation.y = t * 0.25;
     this.dome.rotation.y = -t * 0.06;
     (this.dome.material as LineBasicMaterial).opacity = 0.16 * guard;
+
+    const intro = this.tileU.uIntro.value as number;
+    // 壊れて戻る1周の中の、警告・停止・復旧（シェーダーと同じ区切り）
+    const alertW = restore * sm(0.12, 0.15, cycle) * (1 - sm(0.27, 0.3, cycle));
+    const downW = restore * (cycle >= 0.27 && cycle < 0.6 ? sm(0.27, 0.32, cycle) * (1 - sm(0.5, 0.6, cycle)) : 0);
+    const okW = restore * (cycle >= 0.44 ? 1 - sm(0.82, 1.0, cycle) : 0);
+    this.driveTruck(t, this.o.mode === 'aurora' ? 0 : ph, intro, alertW);
+    this.roadMat.opacity = 0.42 * intro * (1 - 0.5 * sm(0.9, 1.0, ph));
+    this.drawPulse(t, guard * intro, alertW, downW, okW, this.tileU.uInk.value as Color);
+    this.globe.rotation.y = t * 0.05;
+    (this.globe.material as LineBasicMaterial).opacity = 0.16 * intro;
 
     this.radarU.uOpacity.value = guard * 0.9;
     this.radarU.uTime.value = t;
