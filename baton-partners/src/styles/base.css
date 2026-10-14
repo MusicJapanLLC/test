@@ -165,6 +165,10 @@ h3,
 p {
   text-wrap: pretty;
 }
+/* 英数字とハイフンの語（P-ENJIN など）を、ハイフンの後ろで折り返さない（src/render/text.ts の jp） */
+bp-nobr {
+  white-space: nowrap;
+}
 
 .kicker {
   display: flex;

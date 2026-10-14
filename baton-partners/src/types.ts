@@ -17,7 +17,9 @@ export type Block =
   | { type: 'check'; items: string[] }
   | { type: 'callout'; title: string; text: string }
   | { type: 'table'; head: [string, string]; rows: [string, string][] }
-  | { type: 'numbered'; items: Pair[] };
+  | { type: 'numbered'; items: Pair[] }
+  /** この記事に登場する人：掲載企業の代表のカード（写真・会社名・役職・名前と、取り組みページへのリンク）。text は一言の紹介 */
+  | { type: 'person'; text: string };
 
 export type ArticleSection = { id: string; heading: string; blocks: Block[] };
 
@@ -116,6 +118,8 @@ export type Partner = {
     name: string;
     nameEn: string;
     role: string;
+    /** 正方形の顔写真（丸く切り抜いて使う：記事の「登場する人」、トップの引用）。なければ photo を使う */
+    avatar?: string;
     /** 写真がない企業は、写真の代わりに経歴の年表を出す（timeline） */
     photo?: string;
     photoSize?: [number, number];
@@ -537,7 +541,23 @@ export type Partner = {
       type: 'Corporation' | 'Organization';
       address: { region: string; locality: string; street: string };
       /** 代表者。創業が公式に書かれていれば founder、そうでなければ employee */
-      leader?: { name: string; jobTitle: string; relation: 'founder' | 'employee' };
+      leader?: {
+        name: string;
+        jobTitle: string;
+        relation: 'founder' | 'employee';
+        /** 名前の別の書き方（スペース入り・ローマ字など）。ページに出ているものだけ */
+        alternateName?: string[];
+        /** 本人の公開プロフィール（SNS など）。ページからリンクしているものだけ */
+        sameAs?: string[];
+        /** 人物の短い紹介。ページに書いてある内容の範囲で */
+        description?: string;
+      };
+      /** 社名の別の書き方（カタカナなど）。ページに出ているものだけ */
+      alternateName?: string[];
+      /** 設立日（YYYY-MM-DD）。会社概要に載っているときだけ */
+      foundingDate?: string;
+      /** 従業員数。会社概要に載っているときだけ */
+      numberOfEmployees?: number;
       /** 公式サイト・サービスサイトなど、同じ会社を指すURL */
       sameAs: string[];
       /** 提供地域（Service.areaServed） */
