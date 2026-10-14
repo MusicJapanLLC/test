@@ -37,6 +37,9 @@ const shots = [
   ['presence-desktop', '/presence/', 1440, 900, 0, 4200],
   ['presence-desktop-2', '/presence/', 1440, 900, '.sec-highlight', 3200],
   ['presence-mobile', '/presence/', 390, 844, 0, 4200],
+  ['zettaichi-desktop', '/zettaichi/', 1440, 900, 0, 6500],
+  ['zettaichi-desktop-2', '/zettaichi/', 1440, 900, '.sec-highlight', 3200],
+  ['zettaichi-mobile', '/zettaichi/', 390, 844, 0, 6500],
 ];
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const [name, path, w, h, pos, wait] of shots) {

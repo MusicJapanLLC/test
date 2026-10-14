@@ -61,7 +61,7 @@ export const PAGES: PageMeta[] = [
     crumb: '公開中のページ',
     title: '公開中のページ｜Baton Partnersの実績｜Music Japan',
     description:
-      'Baton Partnersで公開中の会社の専用ページです。エボルグ、Central AX、DPパートナーズ、Smartaleck、Presenceの5社のページを、色と書体と3Dをどう考えてつくったかと合わせて紹介します。',
+      'Baton Partnersで公開中の会社の専用ページです。エボルグ、Central AX、DPパートナーズ、Smartaleck、Presence、ZETTAICHIの6社のページを、色と書体と3Dをどう考えてつくったかと合わせて紹介します。',
     priority: '0.8',
     changefreq: 'monthly',
   },
