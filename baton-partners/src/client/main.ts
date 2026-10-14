@@ -44,6 +44,8 @@ setupFx();
 // ちびロボ（needle の世界観）。いるページでだけ読み込む
 if (document.querySelector('[data-bot]')) void import('./robots').then((m) => m.setupRobots());
 setupTracklist();
+// mono の世界観（Central AX）だけの演出：見出しを名駅の発車標のように、1文字ずつパタパタと止める
+if (document.body.dataset.theme === 'mono') void import('./mono').then((m) => m.setupMono());
 
 // studio の世界観だけの小さな演出（ファインダーのタイムコードなど）
 if (document.body.dataset.theme === 'studio') void import('./studio').then((m) => m.setupStudio());
@@ -61,6 +63,19 @@ if (document.body.dataset.theme === 'orbit') {
     }
   }
   void import('./orbit').then((m) => m.setupOrbit());
+}
+// console の世界観だけの演出（切り替えの日の図・控えの置き場所の「乗っ取られたら？」）
+// 最初の一度だけ、トラックが走ってきて見出しの荷物を降ろす（2回目からとページ移動の幕のあとは出さない）
+if (document.body.dataset.theme === 'console') {
+  if (document.querySelector('.wb-intro') && !document.documentElement.classList.contains('is-entering') && !prefersReducedMotion()) {
+    try {
+      if (sessionStorage.getItem('bp-dp-intro') !== '1') document.documentElement.classList.add('is-dp-intro');
+      sessionStorage.setItem('bp-dp-intro', '1');
+    } catch {
+      document.documentElement.classList.add('is-dp-intro');
+    }
+  }
+  void import('./console').then((m) => m.setupConsole());
 }
 
 const stage = setupStage();
