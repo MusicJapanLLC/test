@@ -78,6 +78,8 @@ export type Partner = {
     logoAlt: string;
     /** ロゴ画像の実寸（幅, 高さ）。レイアウトのずれ防止用 */
     logoSize: [number, number];
+    /** 暗い背景の上（ヒーローが夜の色の世界観）で、スクロール前のヘッダーに出す白抜きのロゴ。logo と同じ実寸 */
+    logoOnDark?: string;
     /** WebGLシーンの色。a=求職者の点、b=求人の輪、match=決定したとき */
     scene: { a: string; b: string; match: string };
   };
