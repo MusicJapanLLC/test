@@ -3,6 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "research:sustainaboy": "node security/redline-sustainaboy-research.mjs",
+    "test:sustainaboy": "node --test security/redline-sustainaboy-research.test.mjs"
+  },
   "dependencies": {
     "ai": "^6.0.0",
     "better-sqlite3": "^13.0.3"
