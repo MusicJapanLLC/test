@@ -2411,3 +2411,576 @@ html.js .iv-stage.is-in .iv-stamp {
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+
+/* ═════════════════════════════════════════════
+   2026-10：夜のスタジアム（オーナーの指示「ヒーローのサイズ感と世界観をもっと大胆に。全部同じモーションでいいとは言ってない」）
+   ヒーロー（トップのステージ・下層ページ）とヘッダーを、夜の紺のスタジアムにする。本文の白い面はそのまま。
+   ・照明塔の光が2本、ゆっくり振れる。下のスタンドでは、ときどきフラッシュが光る
+   ・見出しは画面いっぱいの白に、オレンジの影。文字は応援のウェーブのように1文字ずつ立ち上がり、ときどきもう一度ウェーブする
+   ・「禁止。」は白い紙に押した赤い判子。上から叩きつけられ、見出しが揺れ、紙吹雪が舞う（cheer.ts）
+   ・円陣のシーンは、遠くのタイルを紺に溶かし、甲羅の後ろの光を強める（--scene-fog / --scene-glow を enjin.ts が読む）
+   ═════════════════════════════════════════════ */
+[data-theme='cheer'] {
+  --night: #021a36;
+  --night-2: #05305f;
+  --flood: 255, 243, 214;
+  --paper-stamp: #fffaf0;
+}
+[data-theme='cheer'] .stage .scene,
+[data-theme='cheer'] .phero .scene {
+  --scene-fog: #031d3d;
+  --scene-glow: 1.8;
+}
+
+/* ── ヘッダー：夜の紺。夜のヒーローの上では透明にして、白抜きのロゴ ── */
+[data-theme='cheer'] .hdr,
+[data-theme='cheer'] .hdr.is-scrolled {
+  background: color-mix(in srgb, var(--night) 92%, transparent);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+html:not(.menu-open) [data-theme='cheer']:is([data-page='top'], [data-page='about'], [data-page='service'], [data-page='contact']) .hdr:not(.is-scrolled) {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-theme='cheer'] .hdr .brand-logo:has(+ .brand-logo-dark) {
+  display: none;
+}
+[data-theme='cheer'] .hdr .brand-logo-dark {
+  display: block;
+}
+[data-theme='cheer'] .hdr .brand-sep {
+  background: rgba(255, 255, 255, 0.3);
+}
+[data-theme='cheer'] .hdr .bpl-baton {
+  color: #fff;
+}
+[data-theme='cheer'] .hdr .bpl-partners {
+  background-image: linear-gradient(100deg, #ff6b7d 0%, #e2334f 60%, #ff8a99 100%);
+}
+[data-theme='cheer'] .hdr .nav-en {
+  color: #fff;
+}
+[data-theme='cheer'] .hdr .nav-no,
+[data-theme='cheer'] .hdr .nav-ja {
+  color: rgba(255, 255, 255, 0.6);
+}
+[data-theme='cheer'] .hdr .nav a::after {
+  background: var(--orange);
+}
+[data-theme='cheer'] .hdr .nav a[aria-current='page'] .nav-en {
+  color: var(--orange);
+}
+[data-theme='cheer'] .hdr .menu-lines i {
+  background: #fff;
+}
+[data-theme='cheer'] .hdr .menu-label {
+  color: #fff;
+}
+
+/* ── ステージ：夜のスタジアム ── */
+[data-theme='cheer'] .stage {
+  background:
+    radial-gradient(ellipse 46% 52% at 74% 58%, rgba(14, 96, 176, 0.55), transparent 70%),
+    radial-gradient(ellipse 110% 50% at 50% 115%, #0a4588, transparent 70%),
+    linear-gradient(180deg, #010f25 0%, var(--night) 42%, var(--night-2) 100%);
+  color: #fff;
+}
+[data-theme='cheer'] .stage-sticky::before {
+  background: var(--kikko-w) 0 0 / var(--kikko-size);
+  opacity: 0.07;
+}
+/* 照明塔の光：左上と右上から2本。ゆっくり振れる。読み込んだときに、パッ、パッと点く */
+@property --pr-sweep {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+[data-theme='cheer'] .stage-sticky::after,
+[data-theme='cheer'] .phero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 6% -4%, rgba(var(--flood), 0.55), rgba(var(--flood), 0.12) 4%, transparent 12%),
+    radial-gradient(circle at 94% -4%, rgba(var(--flood), 0.55), rgba(var(--flood), 0.12) 4%, transparent 12%),
+    conic-gradient(from calc(128deg + var(--pr-sweep)) at 6% -4%, transparent 0deg, rgba(var(--flood), 0.05) 6deg, rgba(var(--flood), 0.17) 13deg, rgba(var(--flood), 0.05) 20deg, transparent 26deg),
+    conic-gradient(from calc(206deg - var(--pr-sweep)) at 94% -4%, transparent 0deg, rgba(var(--flood), 0.05) 6deg, rgba(var(--flood), 0.17) 13deg, rgba(var(--flood), 0.05) 20deg, transparent 26deg);
+  mix-blend-mode: screen;
+  animation:
+    pr-lights 0.9s steps(1, end) 0.15s both,
+    pr-sweep 11s ease-in-out 1s infinite alternate;
+}
+@keyframes pr-lights {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.55;
+  }
+  45% {
+    opacity: 0.1;
+  }
+  60% {
+    opacity: 1;
+  }
+}
+@keyframes pr-sweep {
+  from {
+    --pr-sweep: -7deg;
+  }
+  to {
+    --pr-sweep: 9deg;
+  }
+}
+[data-theme='cheer'] .stage-ui,
+[data-theme='cheer'] .phero-in {
+  z-index: 1;
+}
+/* スタンドのフラッシュ：画面の下のほうで、ときどき光る */
+[data-theme='cheer'] .stage-shade::before,
+[data-theme='cheer'] .stage-shade::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 30%;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 1px, transparent 2px),
+    radial-gradient(circle, rgba(255, 220, 160, 0.9) 0 1px, transparent 2px);
+  background-size:
+    97px 41px,
+    151px 59px;
+  background-position:
+    13px 7px,
+    71px 29px;
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 70%);
+  mask-image: linear-gradient(180deg, transparent, #000 70%);
+  opacity: 0;
+  animation: pr-flash 3.7s steps(1, end) 2s infinite;
+}
+[data-theme='cheer'] .stage-shade::after {
+  background-size:
+    131px 47px,
+    83px 67px;
+  background-position:
+    41px 19px,
+    7px 3px;
+  animation-duration: 5.3s;
+  animation-delay: 2.8s;
+}
+@keyframes pr-flash {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.8;
+  }
+  12% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.45;
+  }
+  53% {
+    opacity: 0;
+  }
+}
+[data-theme='cheer'] .stage-shade {
+  background: linear-gradient(90deg, rgba(2, 18, 40, 0.9) 0%, rgba(2, 22, 48, 0.62) 34%, transparent 62%);
+}
+
+/* ── 見出し：画面いっぱい。応援幕の文字 ── */
+@media (min-width: 960px) {
+  html.js-stage [data-theme='cheer'] .hero,
+  [data-theme='cheer'] .hero {
+    max-width: min(1240px, 80vw);
+  }
+}
+[data-theme='cheer'] .hero-h {
+  margin-top: 22px;
+  font-size: min(clamp(2.3rem, 0.6rem + 6.9vw, 9rem), 13svh);
+  line-height: 1.26;
+  letter-spacing: 0;
+  color: #fff;
+  text-shadow:
+    0.05em 0.05em 0 var(--orange),
+    0 0.3em 0.8em rgba(0, 8, 24, 0.5);
+}
+[data-theme='cheer'] .hero-h .ln + .ln {
+  color: #fff;
+}
+/* 判子ではない句は、応援幕の文字のように前へ傾ける */
+[data-theme='cheer'] .hero-h .ln .ph:not(:last-child) {
+  transform: skewX(-7deg);
+  transform-origin: 0 100%;
+}
+/* 「禁止。」：白い紙に押した、赤い判子 */
+[data-theme='cheer'] .hero-h .ln .ph:last-child {
+  margin-left: 0.14em;
+  padding: 0.05em 0.16em 0.09em;
+  font-size: 0.86em;
+  vertical-align: 0.08em;
+  color: var(--red);
+  background: var(--paper-stamp);
+  border: 0.06em solid currentColor;
+  border-radius: 0.12em;
+  box-shadow:
+    inset 0 0 0 0.035em var(--paper-stamp),
+    inset 0 0 0 0.055em currentColor,
+    0 0.14em 0.4em rgba(0, 6, 20, 0.45);
+  text-shadow: none;
+  transform: rotate(-6deg);
+}
+[data-theme='cheer'] .hero-h .ln + .ln .ph:last-child {
+  transform: rotate(5deg);
+}
+/* 判子の中の文字は、ふつうの立ち上がりをせず、判子といっしょに落ちてくる */
+html.js [data-theme='cheer'] .hero-h.split .ph:last-child .ch {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  animation: none;
+}
+/* 判子ではない文字：スタジアムのウェーブのように1文字ずつ立ち上がり、そのあとも7秒ごとにウェーブする */
+html.js [data-theme='cheer'] .hero-h.split .ph:not(:last-child) .ch {
+  opacity: 0;
+  filter: none;
+  transform: translate3d(0, 0.8em, 0) scale(0.5);
+  transform-origin: 50% 100%;
+  animation:
+    pr-rise 0.62s cubic-bezier(0.3, 1.6, 0.5, 1) forwards,
+    pr-wave 7s ease-in-out infinite;
+  animation-delay:
+    calc(var(--c) * 60ms + 200ms),
+    calc(var(--c) * 70ms + 3.6s);
+}
+@keyframes pr-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pr-wave {
+  0%,
+  10%,
+  100% {
+    transform: none;
+  }
+  4% {
+    transform: translate3d(0, -0.16em, 0) rotate(-4deg);
+  }
+}
+/* 判子：上から叩きつける（叩きついた瞬間に cheer.ts が揺らして紙吹雪を出す）→ 少しつぶれて戻る */
+html.js [data-theme='cheer'] .hero-h .ln .ph:last-child {
+  animation:
+    pr-slam-a 0.34s cubic-bezier(0.55, 0, 0.85, 0.3) 1.2s both,
+    pr-squash-a 0.36s cubic-bezier(0.3, 1.6, 0.5, 1) 1.54s;
+}
+html.js [data-theme='cheer'] .hero-h .ln + .ln .ph:last-child {
+  animation:
+    pr-slam-b 0.34s cubic-bezier(0.55, 0, 0.85, 0.3) 1.75s both,
+    pr-squash-b 0.36s cubic-bezier(0.3, 1.6, 0.5, 1) 2.09s;
+}
+@keyframes pr-slam-a {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -0.5em, 0) rotate(-20deg) scale(2.8);
+    filter: blur(6px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-6deg);
+    filter: blur(0);
+  }
+}
+@keyframes pr-slam-b {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, -0.5em, 0) rotate(20deg) scale(2.8);
+    filter: blur(6px);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(5deg);
+    filter: blur(0);
+  }
+}
+@keyframes pr-squash-a {
+  0% {
+    transform: rotate(-6deg) scale(1.08, 0.86);
+  }
+  100% {
+    transform: rotate(-6deg);
+  }
+}
+@keyframes pr-squash-b {
+  0% {
+    transform: rotate(5deg) scale(1.08, 0.86);
+  }
+  100% {
+    transform: rotate(5deg);
+  }
+}
+/* 叩きついたときの衝撃の輪 */
+[data-theme='cheer'] .hero-h .ln .ph:last-child::after {
+  content: '';
+  position: absolute;
+  inset: -0.08em;
+  border: 0.05em solid var(--gold);
+  border-radius: 0.2em;
+  opacity: 0;
+  pointer-events: none;
+}
+html.js [data-theme='cheer'] .hero-h .ln .ph:last-child::after {
+  animation: pr-ring 0.7s cubic-bezier(0.2, 0.8, 0.3, 1) 1.54s;
+}
+html.js [data-theme='cheer'] .hero-h .ln + .ln .ph:last-child::after {
+  animation-delay: 2.09s;
+}
+@keyframes pr-ring {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.92);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7, 2.1);
+  }
+}
+/* 見出しの揺れ（cheer.ts が .is-thud を付ける） */
+[data-theme='cheer'] .hero.is-thud .hero-h {
+  animation: pr-thud 0.36s linear;
+}
+@keyframes pr-thud {
+  0% {
+    transform: none;
+  }
+  18% {
+    transform: translate3d(-4px, 5px, 0);
+  }
+  36% {
+    transform: translate3d(4px, -3px, 0);
+  }
+  54% {
+    transform: translate3d(-3px, 2px, 0);
+  }
+  72% {
+    transform: translate3d(2px, -1px, 0);
+  }
+  100% {
+    transform: none;
+  }
+}
+/* 判子のまわりの紙吹雪（cheer.ts が判子の中心に置く） */
+.pr-burst {
+  position: absolute;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.pr-burst i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  animation: ch-fly 1.3s cubic-bezier(0.2, 0.8, 0.3, 1) forwards;
+}
+
+/* 背の低いPCの画面：バッジは本文と重なる内容なので省き、見出しの迫力を残す */
+@media (min-width: 960px) and (max-height: 960px) {
+  html.js-stage [data-theme='cheer'] .hero .badges {
+    display: none;
+  }
+}
+
+/* ── ヒーローの文字とボタン：夜の上で ── */
+[data-theme='cheer'] .stage .kicker,
+[data-theme='cheer'] .phero .kicker {
+  color: var(--gold);
+}
+[data-theme='cheer'] .stage .kicker-co {
+  color: rgba(255, 255, 255, 0.55);
+}
+[data-theme='cheer'] .stage .hero-lead {
+  color: rgba(255, 255, 255, 0.84);
+}
+[data-theme='cheer'] .stage .ticker-k {
+  color: #fff;
+}
+[data-theme='cheer'] .stage .ticker-b {
+  background: var(--orange);
+  color: var(--navy-ink);
+}
+[data-theme='cheer'] .stage .ticker-b::before {
+  background: var(--navy-ink);
+}
+[data-theme='cheer'] .stage .badges li {
+  border-color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+[data-theme='cheer'] .stage .btn-ink,
+[data-theme='cheer'] .stage .btn-ink:hover {
+  background: var(--orange);
+  color: var(--navy-ink);
+  box-shadow: 0 var(--depth) 0 var(--orange-deep), 0 calc(var(--depth) + 10px) 26px -10px rgba(255, 128, 1, 0.55);
+}
+[data-theme='cheer'] .stage .btn-line,
+[data-theme='cheer'] .stage .btn-line:hover {
+  background: transparent;
+  color: #fff;
+  box-shadow: inset 0 0 0 2px #fff, 0 var(--depth) 0 rgba(255, 255, 255, 0.35);
+}
+[data-theme='cheer'] .stage .verb-no,
+[data-theme='cheer'] .stage .verb-ja {
+  color: var(--gold);
+}
+[data-theme='cheer'] .stage .verb-en {
+  color: #fff;
+}
+[data-theme='cheer'] .stage .verb-h {
+  color: #fff;
+}
+[data-theme='cheer'] .stage .verb-p {
+  color: rgba(255, 255, 255, 0.82);
+}
+[data-theme='cheer'] .stage .stage-foot {
+  color: rgba(255, 255, 255, 0.7);
+}
+[data-theme='cheer'] .stage .stage-progress {
+  background: rgba(255, 255, 255, 0.14);
+}
+[data-theme='cheer'] .stage .scroll-cue i {
+  background: var(--orange);
+}
+
+/* ── 下層ページのヒーロー：同じ夜のスタジアム ── */
+[data-theme='cheer'] .phero {
+  background:
+    radial-gradient(ellipse 42% 70% at 80% 45%, rgba(14, 96, 176, 0.55), transparent 72%),
+    linear-gradient(180deg, #010f25 0%, var(--night) 46%, var(--night-2) 100%);
+  color: #fff;
+}
+[data-theme='cheer'] .phero::before {
+  background: var(--kikko-w) 0 0 / var(--kikko-size);
+  opacity: 0.07;
+}
+[data-theme='cheer'] .phero-h {
+  font-size: min(clamp(2.1rem, 0.8rem + 4.4vw, 5.6rem), 10svh);
+  color: #fff;
+  text-shadow: 0.05em 0.05em 0 var(--orange);
+}
+[data-theme='cheer'] .phero-h .ln + .ln .ph {
+  background: none;
+}
+[data-theme='cheer'] .phero-h .ln + .ln {
+  color: var(--orange);
+  text-shadow: 0.05em 0.05em 0 rgba(0, 8, 24, 0.6);
+}
+[data-theme='cheer'] .phero-lead {
+  color: rgba(255, 255, 255, 0.84);
+}
+[data-theme='cheer'] .phero .crumb,
+[data-theme='cheer'] .phero .crumb a {
+  color: rgba(255, 255, 255, 0.7);
+}
+[data-theme='cheer'] .phero .crumb li + li::before {
+  color: rgba(255, 255, 255, 0.4);
+}
+/* サービスのロゴ（紺の文字）は、白いステッカーに貼って */
+[data-theme='cheer'] .phero-logo img {
+  box-sizing: content-box;
+  padding: 10px 16px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 5px 0 var(--orange);
+  transform: rotate(-2deg);
+}
+
+/* ── スマホ ── */
+@media (max-width: 959px) {
+  [data-theme='cheer'] .stage-shade {
+    background: linear-gradient(180deg, transparent 0%, rgba(2, 26, 54, 0.2) 22%, rgba(2, 26, 54, 0.78) 44%, rgba(2, 26, 54, 0.94) 62%, var(--night) 100%);
+  }
+  html.js-stage [data-theme='cheer'] .stage[data-state='0'] .scene.is-ready canvas {
+    opacity: 0.9;
+  }
+  html.js-stage [data-theme='cheer'] .hero-lead {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin-top: 18px;
+    font-size: 0.9rem;
+    line-height: 1.85;
+  }
+  html.js-stage [data-theme='cheer'] .hero .badges,
+  html.js-stage [data-theme='cheer'] .hero .ticker {
+    display: none;
+  }
+  html.js-stage [data-theme='cheer'] .hero-actions {
+    margin-top: 24px;
+  }
+  /* 下層ページ：右上のタイルが、パンくずと見出しの白い文字とぶつからないよう少し沈める */
+  [data-theme='cheer'] .phero .scene-sub {
+    opacity: 0.55;
+  }
+  [data-theme='cheer'] .stage-sticky::after,
+  [data-theme='cheer'] .phero::after {
+    background:
+      radial-gradient(circle at 4% -2%, rgba(var(--flood), 0.5), rgba(var(--flood), 0.1) 6%, transparent 16%),
+      radial-gradient(circle at 96% -2%, rgba(var(--flood), 0.5), rgba(var(--flood), 0.1) 6%, transparent 16%),
+      conic-gradient(from calc(138deg + var(--pr-sweep)) at 4% -2%, transparent 0deg, rgba(var(--flood), 0.05) 5deg, rgba(var(--flood), 0.16) 11deg, rgba(var(--flood), 0.05) 17deg, transparent 22deg),
+      conic-gradient(from calc(200deg - var(--pr-sweep)) at 96% -2%, transparent 0deg, rgba(var(--flood), 0.05) 5deg, rgba(var(--flood), 0.16) 11deg, rgba(var(--flood), 0.05) 17deg, transparent 22deg);
+  }
+}
+@media (max-width: 599px) {
+  /* 1行目「名刺交換、禁止。」がちょうど1行に収まるいちばん大きな文字（判子は 0.86em） */
+  [data-theme='cheer'] .hero-h {
+    font-size: clamp(2.2rem, 0.2rem + 10.2vw, 3.4rem);
+  }
+  html.js-stage [data-theme='cheer'] .hero .kicker-co {
+    display: none;
+  }
+  [data-theme='cheer'] .phero-h {
+    font-size: clamp(1.9rem, 0.6rem + 6.4vw, 2.8rem);
+  }
+  [data-theme='cheer'] .phero-logo img {
+    height: 40px;
+  }
+}
+
+/* ── 動きを減らす設定：光は点けたまま止め、文字と判子ははじめから置く ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='cheer'] .stage-sticky::after,
+  [data-theme='cheer'] .phero::after,
+  [data-theme='cheer'] .stage-shade::before,
+  [data-theme='cheer'] .stage-shade::after {
+    animation: none;
+  }
+  html.js [data-theme='cheer'] .hero-h.split .ph:not(:last-child) .ch,
+  html.js [data-theme='cheer'] .hero-h .ln .ph:last-child,
+  html.js [data-theme='cheer'] .hero-h .ln .ph:last-child::after {
+    opacity: 1;
+    animation: none;
+  }
+  html.js [data-theme='cheer'] .hero-h.split .ph:not(:last-child) .ch {
+    transform: none;
+  }
+  html.js [data-theme='cheer'] .hero-h .ln .ph:last-child::after {
+    opacity: 0;
+  }
+}

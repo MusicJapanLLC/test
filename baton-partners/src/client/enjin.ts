@@ -172,6 +172,7 @@ const TILE_FRAG = /* glsl */ `
 uniform vec3 uNavy;
 uniform vec3 uOrange;
 uniform vec3 uGold;
+uniform vec3 uFog;
 uniform float uTime;
 uniform float uAmbient;
 varying vec3 vN;
@@ -233,7 +234,7 @@ void main() {
 
   // ウェーブ・応援の波・マウスで浮いたタイルは、オレンジと金に光る
   col = mix(col, paper, clamp(vLift, 0.0, 1.0) * 0.12);
-  col = mix(col, paper, vFog * 0.8);
+  col = mix(col, uFog, vFog * 0.8);
   // 背景用（CTA帯など）は半透明で、ゆっくり漂うだけ
   gl_FragColor = vec4(col, uAmbient > 0.5 ? 0.3 : 1.0);
 }
@@ -362,6 +363,7 @@ export class EnjinScene {
   private lineU: U;
   private starU: U;
   private glowU: U;
+  private glowK = 1;
   private glow: Mesh;
   private rings: { mesh: Mesh; u: U; offset: number }[] = [];
   private raf = 0;
@@ -414,6 +416,11 @@ export class EnjinScene {
     const navy = new Color(o.ink);
     const orange = new Color(o.brand);
     const gold = new Color(o.red);
+    // 遠くのタイルが溶けこむ色と、甲羅の後ろの光の強さ。背景が夜の紺のページ（theme-cheer.css の --scene-fog / --scene-glow）では、紺に溶かして光を強める
+    const css = getComputedStyle(o.host);
+    const fogVar = css.getPropertyValue('--scene-fog').trim();
+    const fog = new Color(fogVar || '#ffffff');
+    this.glowK = Number(css.getPropertyValue('--scene-glow').trim()) || 1;
     const ambient = o.mode === 'aurora';
     const small = window.matchMedia('(max-width: 767px)').matches;
 
@@ -481,6 +488,7 @@ export class EnjinScene {
       uNavy: { value: navy },
       uOrange: { value: orange },
       uGold: { value: gold },
+      uFog: { value: fog },
     };
     const tiles = new Mesh(
       geo,
@@ -727,7 +735,7 @@ export class EnjinScene {
     this.starU.uShow.value = dome;
     this.starU.uKick.value = this.kick;
     this.glowU.uTime.value = t;
-    this.glowU.uGlow.value = dome;
+    this.glowU.uGlow.value = dome * this.glowK;
     for (const r of this.rings) {
       const k = (t * 0.22 + r.offset) % 1;
       r.mesh.scale.setScalar(RD * (1.02 + k * 0.95));
