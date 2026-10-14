@@ -133,6 +133,7 @@ export function header(p: Partner, current: PageKind): string {
   <div class="hdr-in">
     <a class="brand" href="${routes.top(p.slug)}" aria-label="${esc(p.company.name)} トップへ">
       <img class="brand-logo" src="${p.brand.logo}" alt="${esc(p.brand.logoAlt)}" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />
+      ${p.brand.logoOnDark ? `<img class="brand-logo brand-logo-dark" src="${p.brand.logoOnDark}" alt="" width="${p.brand.logoSize[0]}" height="${p.brand.logoSize[1]}" />` : ''}
       <span class="brand-sep" aria-hidden="true"></span>
       ${bpLogo({ size: 26, className: "brand-bp", tone: darkUi(p) ? 'paper' : 'ink' })}
     </a>
