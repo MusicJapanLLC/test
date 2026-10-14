@@ -4,6 +4,10 @@
 
 - `npm run build:deploy` → 新サイトを `deploy-dist/` に生成（Cloudflare Pages のビルド）
 - Cloudflare Pages のビルド変数 `MJ_SITE=legacy` で再デプロイすると、コード変更なしで以前のサイトに戻ります（`npm run build:legacy` と同じ）
+- パートナー欄（トップの BATON PARTNERS・`/partners/`・英語版・llms.txt）は、Baton Partners の一覧 `https://partners.music-japan.com/partners.json` から作ります。
+  ビルドのたびに `scripts/sync-partners.mjs` が最新を取り、ロゴと一緒に `next/src/content/partners.json`・`next/public/partners/<slug>/` に写します。取れなければ写しのままビルドします（`MJ_PARTNERS_STRICT=1` で失敗にする、`MJ_PARTNERS_SYNC=off` で取りにいかない）。
+  社名・紹介文・ロゴはここでは直さず、Baton Partners 側（`baton-partners/src/partners/`）で直します。ビルドで使った写しは `/baton-partners.json` に出し、
+  GitHub Actions（`music-japan-partners-sync.yml`）が Baton Partners とずれていれば Cloudflare Pages のデプロイフック（シークレット `MJ_SITE_DEPLOY_HOOK`）で作り直します
 - 以下は以前のサイト（保存スナップショット + 演出レイヤー）の説明です。`dist/` `src/` `scripts/build-legacy.mjs` はそのまま残しています
 
 ---

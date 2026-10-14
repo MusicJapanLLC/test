@@ -113,7 +113,7 @@ ${releases.map((r) => `- [${r.title} — ${r.artist}](${SITE_URL}${workPath('ja'
 
 - SECOND TAKE（経営者メディア / Podcast・インタビュー）: ${SECOND_TAKE_URL}
 - Baton（招待制の紹介サービス）: ${BATON_URL}
-- Baton Partners（会社の専用LP・SEO・AIO・紹介）: ${BATON_PARTNERS_URL}
+- Baton Partners（会社の専用LP × SEO × ブランディング）: ${BATON_PARTNERS_URL}
 
 ## よくある質問
 

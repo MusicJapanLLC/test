@@ -243,7 +243,7 @@ a.news-item:hover time, a.news-item:hover .news-label { color: #fff; }
 .pt-item:hover { border-color: var(--line-2); }
 .pt-meta { display: grid; gap: 8px; }
 .pt-no { font-family: var(--f-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--red-hot); }
-.pt-meta strong { font-size: clamp(20px, 2vw, 28px); font-weight: 900; line-height: 1.3; }
+.pt-meta strong { font-size: clamp(18px, 2vw, 28px); font-weight: 900; line-height: 1.3; word-break: keep-all; overflow-wrap: anywhere; }
 .pt-meta span:last-child { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--mute); }
 @media (max-width: 860px) { .pt-row { grid-template-columns: 1fr; } }
 
