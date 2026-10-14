@@ -213,7 +213,7 @@ ${header(p, 'top')}
         ${t.aboutQuoteCite ? `<p class="quote-cite">${jp(t.aboutQuoteCite)}</p>` : ''}
       </blockquote>
       <div class="quote-side rv">
-        ${p.leader?.photo && p.leader.photoSize ? `<figure class="quote-leader"><img src="${p.leader.photo}" alt="" width="${p.leader.photoSize[0]}" height="${p.leader.photoSize[1]}" loading="lazy" decoding="async" /><figcaption><span>${esc(p.leader.role)}</span>${esc(p.leader.name)}</figcaption></figure>` : ''}
+        ${p.leader?.photo && p.leader.photoSize ? `<figure class="quote-leader${p.leader.avatar ? ' has-avatar' : ''}"><img src="${p.leader.avatar ?? p.leader.photo}" alt="" width="${p.leader.avatar ? 320 : p.leader.photoSize[0]}" height="${p.leader.avatar ? 320 : p.leader.photoSize[1]}" loading="lazy" decoding="async" /><figcaption><span>${esc(p.leader.role)}</span>${esc(p.leader.name)}</figcaption></figure>` : ''}
         <p>${jp(p.about.lead)}</p>
         <a class="link-arrow" href="${routes.about(p.slug)}"><span>${esc(shortName(p))}の取り組みを読む</span><span class="arrow" aria-hidden="true">→</span></a>
       </div>
@@ -921,7 +921,7 @@ function founderSection(p: Partner): string {
   const visual =
     l.photo && l.photoSize
       ? `<figure class="fd-photo">
-          <img src="${l.photo}" alt="${esc(l.role)} ${esc(l.name)}" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />
+          <img src="${l.photo}" alt="${esc(p.company.name)} ${esc(l.role)} ${esc(l.name)}" width="${l.photoSize[0]}" height="${l.photoSize[1]}" loading="lazy" decoding="async" />
           <span class="fd-marks" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <figcaption><span>${esc(l.role)}</span>${esc(l.name)}</figcaption>
         </figure>`
@@ -1200,7 +1200,7 @@ function cardSection(p: Partner): string {
     .join('');
   const ph = c.photo ?? (l.photo && l.photoSize ? { src: l.photo, size: l.photoSize, focus: undefined } : undefined);
   const photo = ph
-      ? `<img src="${ph.src}" alt="" width="${ph.size[0]}" height="${ph.size[1]}" loading="lazy" decoding="async"${ph.focus ? ` style="object-position:${ph.focus[0]}% ${ph.focus[1]}%"` : ''} />`
+      ? `<img src="${ph.src}" alt="${esc(p.company.name)} ${esc(l.role)} ${esc(l.name)}" width="${ph.size[0]}" height="${ph.size[1]}" loading="lazy" decoding="async"${ph.focus ? ` style="object-position:${ph.focus[0]}% ${ph.focus[1]}%"` : ''} />`
       : `<span class="tc-pending">${shellSvg({ rings: 3, size: 16, className: 'tc-hex', stars: false }).svg}<span class="tc-mono">${esc(initials)}</span><span class="tc-soon">${esc(c.pending)}</span></span>`;
   return `
   <section class="sec sec-card" aria-labelledby="card-h">
@@ -1435,7 +1435,7 @@ function profileSection(p: Partner): string {
           <img class="pf-mark" src="${p.service.logo}" alt="" width="${p.service.logoSize[0]}" height="${p.service.logoSize[1]}" loading="lazy" />
         </header>
         <div class="pf-id">
-          ${photo ? `<img class="pf-photo" src="${photo.src}" alt="${esc(l.role)} ${esc(l.name)}" width="${photo.size[0]}" height="${photo.size[1]}" loading="lazy" decoding="async" />` : ''}
+          ${photo ? `<img class="pf-photo" src="${photo.src}" alt="${esc(p.company.name)} ${esc(l.role)} ${esc(l.name)}" width="${photo.size[0]}" height="${photo.size[1]}" loading="lazy" decoding="async" />` : ''}
           <div>
             <p class="pf-name">${esc(l.name)}</p>
             <p class="pf-en">${esc(l.nameEn)}</p>
