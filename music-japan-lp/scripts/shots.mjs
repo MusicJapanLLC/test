@@ -28,6 +28,18 @@ const shots = [
   ['central-ax-desktop', '/central-ax/', 1440, 900, 0, 4200],
   ['central-ax-desktop-2', '/central-ax/', 1440, 900, '.sec-highlight', 3200],
   ['central-ax-mobile', '/central-ax/', 390, 844, 0, 4200],
+  ['dp-partners-desktop', '/dp-partners/', 1440, 900, 0, 6000],
+  ['dp-partners-desktop-2', '/dp-partners/', 1440, 900, '.sec-locker', 3200],
+  ['dp-partners-mobile', '/dp-partners/', 390, 844, 0, 6000],
+  ['smartaleck-desktop', '/smartaleck/', 1440, 900, 0, 4200],
+  ['smartaleck-desktop-2', '/smartaleck/', 1440, 900, '.sec-highlight', 3200],
+  ['smartaleck-mobile', '/smartaleck/', 390, 844, 0, 4200],
+  ['presence-desktop', '/presence/', 1440, 900, 0, 4200],
+  ['presence-desktop-2', '/presence/', 1440, 900, '.sec-highlight', 3200],
+  ['presence-mobile', '/presence/', 390, 844, 0, 4200],
+  ['zettaichi-desktop', '/zettaichi/', 1440, 900, 0, 6500],
+  ['zettaichi-desktop-2', '/zettaichi/', 1440, 900, '.sec-highlight', 3200],
+  ['zettaichi-mobile', '/zettaichi/', 390, 844, 0, 6500],
 ];
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 for (const [name, path, w, h, pos, wait] of shots) {
