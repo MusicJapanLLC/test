@@ -62,6 +62,7 @@ ${header(p, 'top')}
     <div class="stage-sticky">
       <div class="scene" data-scene="network" data-count="3200" aria-hidden="true"><canvas></canvas></div>
       <div class="stage-shade" aria-hidden="true"></div>
+      ${p.world.theme === 'orbit' ? orbitHeroExtras(p) : ''}
       <div class="wrap stage-ui">
         ${t.deck ? `<p class="hero-deck" aria-hidden="true">${t.deck.map((l) => `<span>${esc(l)}</span>`).join('')}</p>` : ''}
         <div class="hero" data-hero>
@@ -1306,7 +1307,7 @@ function pentagon(v: number[], r = 100): string {
 }
 
 /**
- * 2人の Big Five を五角形で描いて重ねる（イメージ）。水色とピンクを乗算で重ねると、重なった所が n1a の藍色になる。
+ * 2人の Big Five を五角形で描いて重ねる（イメージ）。水色とピンクの重なった所（2つの五角形の共通部分）は、n1a のロゴと同じ藍色。
  * 組み合わせのボタンで切り替え、五角形は client/orbit.ts がなめらかに形を変える。JSなしでは最初の組み合わせだけ
  */
 function tuneSection(p: Partner): string {
@@ -1350,9 +1351,11 @@ function tuneSection(p: Partner): string {
           <svg viewBox="-170 -140 340 282" role="img" aria-label="Big Fiveの5つの軸で描いた2人の人柄を、重ねたイメージ図">
             <g class="tn-grid">${grid}</g>
             <g class="tn-axes">${axes}</g>
+            <defs><clipPath id="tn-clip-b"><polygon data-tune-poly="b" points="${pentagon(first.b.v)}" /></clipPath></defs>
             <g class="tn-shapes">
               <polygon class="tn-a" data-tune-poly="a" points="${pentagon(first.a.v)}" />
               <polygon class="tn-b" data-tune-poly="b" points="${pentagon(first.b.v)}" />
+              <polygon class="tn-m" data-tune-poly="a" points="${pentagon(first.a.v)}" clip-path="url(#tn-clip-b)" />
             </g>
             <g class="tn-labels">${labels}</g>
           </svg>
@@ -1480,4 +1483,25 @@ function absoluteSection(p: Partner): string {
       </div>
     </div>
   </section>`;
+}
+
+
+/**
+ * orbit の世界観のヒーローに足すもの。
+ *   ・右下でゆっくり回る円形の文字（公式サイトの「ZETTAICHI • SINCE 2026 • ABSOLUTE VALUE」の輪にならう）
+ *   ・最初の一度だけ出る、絶対値のカウンター（−100 から 0 を通って |−100| = 100 へ）。client/orbit.ts が動かす。
+ *     JSなし・動きを減らす設定では出さない
+ */
+function orbitHeroExtras(p: Partner): string {
+  const ring = `${p.company.nameEn} ✦ ${p.service.name} ✦ ABSOLUTE VALUE ✦ SINCE 2026 ✦ `;
+  return `
+      <div class="orb-seal" aria-hidden="true">
+        <svg viewBox="0 0 200 200"><defs><path id="orb-seal-path" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs><text><textPath href="#orb-seal-path" textLength="488">${esc(ring)}</textPath></text></svg>
+        <span class="orb-seal-c">|x|</span>
+      </div>
+      <div class="orb-intro" data-orb-intro aria-hidden="true">
+        <p class="oi-k">Loading ${esc(p.service.name)}</p>
+        <p class="oi-n"><i class="oi-bar"></i><b data-orb-count>−100</b><small>%</small><i class="oi-bar"></i></p>
+        <p class="oi-f">|−x| = x</p>
+      </div>`;
 }

@@ -1,5 +1,6 @@
 import { onPerfLevel, perfLevel, reportFrame } from './perf';
 import {
+  AdditiveBlending,
   BufferAttribute,
   BufferGeometry,
   CircleGeometry,
@@ -12,6 +13,7 @@ import {
   Matrix3,
   Matrix4,
   Mesh,
+  NormalBlending,
   PerspectiveCamera,
   PlaneGeometry,
   RingGeometry,
@@ -24,16 +26,17 @@ import {
 import type { SceneOptions } from './scene';
 
 /**
- * 「波長」のシーン（ZETTAICHI / n1a など orbit の世界観用）。
+ * 「波長」のシーン（ZETTAICHI / n1a など orbit の世界観用）。黒い宇宙で光る。
  *
- *  phase 0〜1  一人ひとりの人柄の五角形（Big Five の5つの軸の長さがそれぞれちがう）が、宙を漂う（知る）
- *  phase 1     五角形が3本の惑星の軌道（公式サイトの PLANET A / B / C にならう）に並んで回る。
- *              ちがう軌道の二人を波の糸が結び、波長がそろうと糸が藍色に静まって、二人が灯る（合わせる）
- *  phase 2     五角形が角の丸い四角に変わり、水色とピンクの吹き出しが重なる点描になる。
- *              重なった所は藍色、真ん中の3つの「…」が入力中のように跳ねる（出会う）
+ *  phase 0〜0.6 一人ひとりの人柄の五角形（Big Five の5つの軸の長さがそれぞれちがう）が集まって、輪のある惑星になって回っている。
+ *               公式サイトのヒーローの「輪のある惑星」へのオマージュ（知る前）
+ *  phase 1      惑星がほどけて、五角形が3本の軌道（PLANET A / B / C）に散る。ちがう軌道の二人を波の糸が結び、
+ *               波長がそろうと糸が静まって二人が灯る（合わせる）
+ *  phase 2      五角形が角の丸い四角に変わり、水色とピンクの吹き出しが重なる点描になる。重なりは藍、真ん中の「…」が跳ねる（出会う）
  *
- * 色はロゴの3色（水色・ピンク・重なりの藍）。点描の形は n1a のロゴの吹き出しにならう（ロゴの画像そのものは使わない）。
- * マウスを近づけると五角形が少しふくらみ、クリックすると中心から波が広がって「…」が跳ねる。
+ * 色はロゴの3色（水色・ピンク・重なりの藍）を、黒地で光るように少し明るく。光は加算で重ねる（ネオンのように）。
+ * マウスを近づけると五角形がふくらみ、クリックすると中心から波が広がって「…」が跳ねる。
+ * 吹き出しの形は n1a のロゴにならった点描（ロゴの画像そのものは使わない）。
  */
 
 /** ロゴの座標（画素）→ シーンの座標。中心と縮尺 */
@@ -41,19 +44,24 @@ const CX = 635;
 const CY = 705;
 const K = 1 / 100;
 /** 軌道の傾き（手前に倒して楕円に見せる）と、少しの回転 */
-const TILT = -1.08;
-const ROLL = 0.22;
-const RADII = [1.55, 2.5, 3.45];
+const TILT = -1.12;
+const ROLL = 0.24;
+const RADII = [1.6, 2.6, 3.6];
 const SPEEDS = [0.34, 0.22, 0.15];
+/** 惑星の半径と、輪の内側・外側 */
+const RS = 2.0;
+const RING_IN = 2.75;
+const RING_OUT = 4.2;
 
 const TILE_VERT = /* glsl */ `
 attribute vec3 aMark;
 attribute vec3 aScatter;
-attribute vec3 aOrbit; // x: 半径, y: 初めの角度, z: 速さ
-attribute vec4 aInfo;  // x: 種類(0=水色 1=ピンク 2=藍 3=「…」), y: 乱数, z: 中心からの距離(0〜1), w: 乱数（「…」は順番）
-attribute vec4 aTa;    // 5つの軸の長さ（前の4つ）
-attribute vec2 aTb;    // x: 5つめの軸, y: 大きさの乱数
-attribute float aLink; // 波の糸の端（糸の乱数）。ふつうは -1
+attribute vec3 aOrbit;  // x: 半径, y: 初めの角度, z: 速さ
+attribute vec4 aPlanet; // xyz: 惑星の上の位置（輪は輪の面の上）, w: 0=表面 1=輪
+attribute vec4 aInfo;   // x: 種類(0=水色 1=ピンク 2=藍 3=「…」), y: 乱数, z: 中心からの距離(0〜1), w: 乱数（「…」は順番）
+attribute vec4 aTa;     // 5つの軸の長さ（前の4つ）
+attribute vec2 aTb;     // x: 5つめの軸, y: 大きさの乱数
+attribute float aLink;  // 波の糸の端（糸の乱数）。ふつうは -1
 uniform float uTime;
 uniform float uPhase;
 uniform float uIntro;
@@ -64,10 +72,12 @@ uniform float uKick;
 uniform float uCell;
 uniform float uRigS;
 uniform float uAirS;
+uniform float uSpin;
 uniform vec2 uScatter;
 uniform vec2 uScatterC;
 uniform vec2 uMouse;
 uniform mat3 uOrbitR;
+uniform mat3 uPlanetR;
 uniform mat4 uRig;
 varying vec2 vUv;
 varying vec4 vTa;
@@ -78,50 +88,66 @@ varying float vOrbitE;
 varying float vNear;
 varying float vLink;
 varying float vSeed;
+varying float vDim;
 mat2 rot2(float a) { float c = cos(a), s = sin(a); return mat2(c, s, -s, c); }
+vec3 rotY(vec3 p, float a) { float c = cos(a), s = sin(a); return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z); }
 
 void main() {
   float t = uTime;
   float d = aInfo.z;
-  float e1 = smoothstep(0.0, 1.0, clamp((uPhase * 1.3 - d * 0.45 - 0.12) / 0.55, 0.0, 1.0));
+  float e1 = smoothstep(0.0, 1.0, clamp((uPhase - 0.5 - d * 0.2) / 0.3, 0.0, 1.0));
   float e2 = smoothstep(0.0, 1.0, clamp((uPhase - 1.0 - d * 0.35) / 0.6, 0.0, 1.0));
   float isDot = step(2.5, aInfo.x);
+  float isRing = step(0.5, aPlanet.w);
 
-  // 漂う：文字のない側に寄せて、ゆっくり
-  vec3 sc = vec3(uScatterC + aScatter.xy * uScatter * (1.0 + (1.0 - uIntro) * 0.6), aScatter.z * 3.0 - 1.2);
-  sc += vec3(sin(t * 0.23 + aInfo.y * 40.0), cos(t * 0.19 + aInfo.w * 30.0), 0.0) * 0.38;
+  // クリックの波：中心から外へ広がる輪
+  float ring = exp(-pow(d - (1.0 - uKick) * 1.3, 2.0) * 22.0) * uKick;
+
+  // 輪のある惑星：表面は自転、輪はゆっくり回る。全体を傾ける
+  vec3 pl = rotY(aPlanet.xyz, uSpin * mix(1.0, 0.55, isRing));
+  pl *= 1.0 + ring * 0.18;
+  pl = uPlanetR * pl;
+  // 奥（カメラから遠い半球）は暗く。輪は明るいまま
+  float zN = pl.z / ${RS.toFixed(2)};
+  float dim = mix(0.18 + 0.82 * smoothstep(-0.9, 0.7, zN), 1.0, isRing);
 
   // 惑星の軌道
   float a = aOrbit.y + t * aOrbit.z;
   vec3 orb = uOrbitR * vec3(cos(a) * aOrbit.x, 0.0, sin(a) * aOrbit.x);
 
-  // 重なる吹き出しの点描。クリックの波が中心から広がり、「…」は順に跳ねる
-  float ring = exp(-pow(d - (1.0 - uKick) * 1.3, 2.0) * 22.0) * uKick;
+  // 重なる吹き出しの点描。「…」は順に跳ねる
   vec3 mk = aMark;
   float hop = pow(max(0.0, sin(t * 3.4 - aInfo.w * 1.05)), 6.0);
   mk.y += isDot * (hop * 0.15 + uKick * 0.12);
   mk.z += ring * 0.5;
 
-  vec3 local = mix(orb, mk, e2);
+  // 惑星がほどけるとき、外へ弾けてから軌道に入る
+  vec3 burst = normalize(pl + vec3(1e-3)) * sin(e1 * 3.14159) * 1.1;
+  vec3 local = mix(mix(pl, orb, e1) + burst, mk, e2);
   vec3 placed = (uRig * vec4(local, 1.0)).xyz;
-  vec3 c = mix(sc, placed, e1);
-  c = mix(c, sc, uAmbient);
+
+  // 漂う（背景用）：文字のない側に寄せて、ゆっくり
+  vec3 sc = vec3(uScatterC + aScatter.xy * uScatter * (1.0 + (1.0 - uIntro) * 0.6), aScatter.z * 3.0 - 1.2);
+  sc += vec3(sin(t * 0.23 + aInfo.y * 40.0), cos(t * 0.19 + aInfo.w * 30.0), 0.0) * 0.38;
+  vec3 c = mix(placed, sc, uAmbient);
 
   vec4 clip = projectionMatrix * modelViewMatrix * vec4(c, 1.0);
   vec2 dm = clip.xy / clip.w - uMouse;
   dm.x *= uAspect;
-  float near = smoothstep(0.32, 0.0, length(dm)) * uHover * (1.0 - uAmbient);
+  float near = smoothstep(0.3, 0.0, length(dm)) * uHover * (1.0 - uAmbient);
 
   // 波の糸の端の二人：波長がそろうと灯る（糸のシェーダーと同じ式）
   float orbitShow = e1 * (1.0 - e2) * (1.0 - uAmbient);
   float link = aLink < 0.0 ? 0.0 : smoothstep(0.55, 0.95, 0.5 + 0.5 * sin(t * 0.45 + aLink * 6.2832)) * orbitShow;
 
-  // 漂う五角形は、小さいものが多く、ときどき大きいもの
-  float sAir = (0.11 + pow(aTb.y, 3.0) * 0.4) * uAirS;
-  float sOrb = (0.075 + aTb.y * 0.055) * uRigS;
+  float sPlanet = (0.075 + aTb.y * 0.06 + isRing * 0.02) * uRigS;
+  float sOrb = (0.08 + aTb.y * 0.06) * uRigS;
   float sMark = uCell * 0.5 * uRigS * (isDot > 0.5 ? 1.9 : 0.94);
-  float size = mix(mix(sAir, sOrb, e1), sMark, e2) * uIntro * (1.0 + near * 0.45 + ring * 0.5 + link * 0.4);
+  float sAir = (0.11 + pow(aTb.y, 3.0) * 0.36) * uAirS;
+  float size = mix(mix(sPlanet, sOrb, e1), sMark, e2) * uIntro * (1.0 + near * 0.6 + ring * 0.5 + link * 0.45);
   size = mix(size, sAir * uIntro, uAmbient);
+  // 光のにじみの分だけ、四角形を大きく取る（形は frag で 1/1.7 に縮めて描く）
+  size *= 1.7;
 
   float spin = t * (aInfo.y - 0.5) * 0.5 + aInfo.w * 6.2832;
   float rot = mix(mix(spin, spin * 0.3, e1), 0.0, e2);
@@ -130,7 +156,7 @@ void main() {
   vec4 mv = modelViewMatrix * vec4(c + vec3(q, 0.0), 1.0);
   gl_Position = projectionMatrix * mv;
 
-  vUv = position.xy;
+  vUv = position.xy * 1.7;
   vTa = aTa;
   vTb = aTb.x;
   vKind = aInfo.x;
@@ -139,6 +165,7 @@ void main() {
   vNear = near;
   vLink = link;
   vSeed = aInfo.y;
+  vDim = mix(mix(dim, 1.0, e1), 1.0, uAmbient);
 }
 `;
 
@@ -157,6 +184,7 @@ varying float vOrbitE;
 varying float vNear;
 varying float vLink;
 varying float vSeed;
+varying float vDim;
 
 float axisR(int i) {
   if (i == 0) return vTa.x;
@@ -204,34 +232,29 @@ void main() {
   vec3 base = vKind < 0.5 ? uSky : vKind < 1.5 ? uPink : uIndigo;
   // 「…」は、点描になると白く抜ける
   if (vKind > 2.5) base = mix(uIndigo, vec3(1.0), vMorph);
-  // 漂っている間は、少し明るく、中心から縁へ淡い光
-  vec3 col = mix(base, vec3(1.0), (1.0 - vMorph) * 0.16 * (1.0 - length(p) * 0.8));
-  col = mix(col, vec3(1.0), vNear * 0.18);
+  // 中心ほど白く光る芯
+  vec3 core = mix(base, vec3(1.0), (1.0 - vMorph) * 0.32 * (1.0 - length(p) * 0.9));
+  core = mix(core, vec3(1.0), vNear * 0.35);
 
-  // 枠：5つの軸がそろったときの正五角形（漂っている間だけ、細い線で）
-  float fd = abs(frameD(p));
-  float frame = (1.0 - smoothstep(0.0, fw * 1.6 + 0.012, fd)) * (1.0 - vMorph) * 0.55;
-  // 灯った二人：まわりに藍色の輪
-  float halo = (1.0 - smoothstep(0.0, fw * 2.0 + 0.03, abs(length(p) - 0.94))) * vLink;
+  // 外へにじむ光（加算で重なる）
+  float glow = exp(-max(d, 0.0) * 6.0) * (1.0 - fill) * mix(0.42, 0.24, vMorph);
+  // 枠：5つの軸がそろったときの正五角形（惑星と軌道の間だけ、細い線で）
+  float frame = (1.0 - smoothstep(0.0, fw * 1.6 + 0.014, abs(frameD(p)))) * (1.0 - vMorph) * 0.5;
+  // 灯った二人：まわりに白い輪
+  float halo = (1.0 - smoothstep(0.0, fw * 2.0 + 0.03, abs(length(p) - 1.05))) * vLink;
 
-  float alpha = fill * mix(0.86, 1.0, vMorph);
-  vec3 outCol = col;
-  float outA = alpha;
-  if (frame > 0.001 && fill < 0.5) {
-    outCol = mix(base, uIndigo, 0.4);
-    outA = max(outA, frame * mix(0.55, 0.0, vOrbitE * 0.6));
-  }
-  if (halo > 0.001) {
-    outCol = mix(outCol, uIndigo, halo * (1.0 - fill));
-    outA = max(outA, halo);
-  }
-  if (outA < 0.01) discard;
+  vec3 col = core * fill + base * glow + mix(base, vec3(1.0), 0.5) * frame * (1.0 - fill) + vec3(1.0) * halo * (1.0 - fill);
+  float a = fill * mix(0.92, 1.0, vMorph) + glow + frame * (1.0 - fill) + halo;
+  // 奥の半球は暗く
+  col *= vDim;
+  a *= vDim;
+  if (a < 0.01) discard;
   // 背景用（CTA帯など）は淡く漂うだけ
-  gl_FragColor = vec4(outCol, outA * (uAmbient > 0.5 ? 0.32 : 1.0));
+  gl_FragColor = vec4(col, min(a, 1.0) * (uAmbient > 0.5 ? 0.5 : 1.0));
 }
 `;
 
-/** 波の糸：ちがう軌道の二人を結ぶ。波長がそろう（振れ幅が小さくなる）と、ピンクから藍に静まる */
+/** 波の糸：ちがう軌道の二人を結ぶ。波長がそろう（振れ幅が小さくなる）と、ピンクから白く静まる */
 const LINE_VERT = /* glsl */ `
 attribute vec3 aOA;
 attribute vec3 aOB;
@@ -253,11 +276,11 @@ void main() {
   vec3 dir = normalize(B - A + 1e-4);
   vec3 n = normalize(cross(dir, vec3(0.0, 0.0, 1.0)) + vec3(0.0, 1e-4, 0.0));
   float tune = smoothstep(0.55, 0.95, 0.5 + 0.5 * sin(uTime * 0.45 + k * 6.2832));
-  float amp = mix(0.24, 0.03, tune) * sin(3.14159 * s);
+  float amp = mix(0.26, 0.03, tune) * sin(3.14159 * s);
   float freq = mix(2.5 + k * 3.0, 1.5, tune);
   P += n * sin(s * 6.2832 * freq - uTime * (2.2 + k) + k * 10.0) * amp;
-  float show = smoothstep(0.55, 0.95, uPhase) * (1.0 - smoothstep(1.12, 1.5, uPhase));
-  vA = show * smoothstep(0.0, 0.05, s) * smoothstep(1.0, 0.95, s) * mix(0.32, 0.92, tune);
+  float show = smoothstep(0.75, 1.0, uPhase) * (1.0 - smoothstep(1.12, 1.5, uPhase));
+  vA = show * smoothstep(0.0, 0.05, s) * smoothstep(1.0, 0.95, s) * mix(0.4, 1.0, tune);
   vTuned = tune;
   gl_Position = projectionMatrix * modelViewMatrix * vec4(P, 1.0);
   gl_Position.xy += aOff * (2.0 / uRes) * gl_Position.w;
@@ -266,12 +289,12 @@ void main() {
 
 const LINE_FRAG = /* glsl */ `
 uniform vec3 uPink;
-uniform vec3 uIndigo;
+uniform vec3 uSky;
 varying float vA;
 varying float vTuned;
 void main() {
   if (vA < 0.01) discard;
-  gl_FragColor = vec4(mix(uPink, uIndigo, vTuned), vA);
+  gl_FragColor = vec4(mix(uPink, mix(uSky, vec3(1.0), 0.55), vTuned), vA);
 }
 `;
 
@@ -280,15 +303,34 @@ varying vec2 vUv;
 void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
 `;
 
-/** 軌道の線：ごく淡い紺 */
+/** 軌道の線：淡い青白 */
 const RING_FRAG = /* glsl */ `
 uniform vec3 uCol;
 uniform float uOpacity;
 void main() { gl_FragColor = vec4(uCol, uOpacity); }
 `;
 
-/** 真ん中の光：水色とピンクの淡いにじみ（白地を濁さない程度に） */
+/** 惑星の芯：宇宙を少し隠す暗い円盤と、ZETTAICHI の青の縁の光（公式サイトの惑星の縁の光にならう） */
+const CORE_FRAG = /* glsl */ `
+uniform vec3 uBlue;
+uniform float uShow;
+uniform float uTime;
+varying vec2 vUv;
+void main() {
+  vec2 c = vUv - 0.5;
+  float r = length(c) * 2.0;
+  if (r > 1.0) discard;
+  float body = 1.0 - smoothstep(0.86, 1.0, r);
+  // 左上から光が当たる縁
+  float lit = smoothstep(0.55, 1.0, r) * (0.55 + 0.45 * dot(normalize(c + 1e-4), normalize(vec2(-0.6, 0.8))));
+  vec3 col = mix(vec3(0.02, 0.03, 0.07), uBlue, clamp(lit, 0.0, 1.0) * 0.9);
+  gl_FragColor = vec4(col, body * uShow * 0.92);
+}
+`;
+
+/** まわりの光：ZETTAICHI の青と n1a の水色・ピンクのにじみ */
 const GLOW_FRAG = /* glsl */ `
+uniform vec3 uBlue;
 uniform vec3 uSky;
 uniform vec3 uPink;
 uniform float uGlow;
@@ -297,10 +339,11 @@ varying vec2 vUv;
 void main() {
   vec2 c = vUv - 0.5;
   float r = length(c) * 2.0;
-  float halo = 1.0 - smoothstep(0.0, 1.0, r);
-  float side = 0.5 + 0.5 * sin(atan(c.y, c.x) + uTime * 0.2);
-  vec3 col = mix(uSky, uPink, side);
-  gl_FragColor = vec4(col, halo * halo * 0.2 * uGlow);
+  float halo = pow(1.0 - smoothstep(0.0, 1.0, r), 2.0);
+  float band = exp(-pow((r - 0.42) * 7.0, 2.0)) * 0.5;
+  float side = 0.5 + 0.5 * sin(atan(c.y, c.x) + uTime * 0.25);
+  vec3 col = mix(uBlue, mix(uSky, uPink, side), 0.45);
+  gl_FragColor = vec4(col, (halo * 0.55 + band) * uGlow);
 }
 `;
 
@@ -364,6 +407,7 @@ export class WaveScene {
   private tileU: U;
   private lineU: U;
   private glowU: U;
+  private coreU: U;
   private rings: { mesh: Mesh; u: U }[] = [];
   private raf = 0;
   private visible = true;
@@ -374,6 +418,8 @@ export class WaveScene {
   private hoverTarget = 0;
   private kick = 0;
   private offset = new Vector3();
+  /** 動詞の場面（Know / Tune / Meet）で、左の文字をよけて惑星を右へ寄せる幅 */
+  private sideX = 0;
   private baseScale = 0.6;
   phase: number;
   private goal = 0;
@@ -393,9 +439,9 @@ export class WaveScene {
   }
 
   constructor(private o: SceneOptions) {
-    // 「動きを減らす」設定のトップでは、スクロールで場面が進まない。いちばん伝わる一枚（重なる吹き出し）で止める
+    // 「動きを減らす」設定のトップでは、スクロールで場面が進まない。いちばん伝わる一枚（輪のある惑星）で止める
     const still = !o.animate && o.layout === 'right' && o.host.closest('[data-stage]') !== null;
-    this.phase = still ? 2 : o.phase;
+    this.phase = still ? 0.45 : o.phase;
     this.goal = this.phase;
     this.renderer = new WebGLRenderer({ canvas: o.canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.setClearColor(0x000000, 0);
@@ -414,15 +460,17 @@ export class WaveScene {
     const sky = new Color(o.ink);
     const pink = new Color(o.brand);
     const indigo = new Color(o.red);
-    const navy = new Color('#001E44');
+    const blue = new Color('#2F7BFF');
     const ambient = o.mode === 'aurora';
     const small = window.matchMedia('(max-width: 767px)').matches;
 
-    // 軌道の傾き
+    // 軌道と惑星の傾き
     const orbitG = new Group();
     orbitG.rotation.set(TILT, 0, ROLL);
     orbitG.updateMatrix();
     const orbitR = new Matrix3().setFromMatrix4(new Matrix4().makeRotationFromEuler(orbitG.rotation));
+    const planetEuler = new Group().rotation.set(0.32, 0, -0.34);
+    const planetR = new Matrix3().setFromMatrix4(new Matrix4().makeRotationFromEuler(planetEuler));
 
     // ── 点描のマス目（吹き出しの中だけ）。「…」の所は抜いて、別に3つ置く ──
     const STEP = small ? 26 : 19;
@@ -443,21 +491,36 @@ export class WaveScene {
     const aMark = new Float32Array(n * 3);
     const aScatter = new Float32Array(n * 3);
     const aOrbit = new Float32Array(n * 3);
+    const aPlanet = new Float32Array(n * 4);
     const aInfo = new Float32Array(n * 4);
     const aTa = new Float32Array(n * 4);
     const aTb = new Float32Array(n * 2);
     const orbits: number[][] = [];
+    // 惑星の表面はフィボナッチ球で均等に。3割ほどは輪に
+    const ringCount = Math.round(n * 0.34);
+    const surfCount = n - ringCount;
+    const order = [...Array(n).keys()].sort(() => Math.random() - 0.5);
     let dot = 0;
     cells.forEach((c, i) => {
       aMark.set([(c.x - CX) * K, -(c.y - CY) * K, 0], i * 3);
       aScatter.set([Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random()], i * 3);
-      // 軌道は内側ほど少なめに
       const roll = Math.random();
-      const ring = roll < 0.24 ? 0 : roll < 0.6 ? 1 : 2;
+      const ringIdx = roll < 0.24 ? 0 : roll < 0.6 ? 1 : 2;
       // 軌道は線ではなく帯に。半径を少しずつずらす
-      const ob = [RADII[ring] + (Math.random() - 0.5) * 0.5, Math.random() * Math.PI * 2, SPEEDS[ring] * (0.9 + Math.random() * 0.2)];
+      const ob = [RADII[ringIdx] + (Math.random() - 0.5) * 0.5, Math.random() * Math.PI * 2, SPEEDS[ringIdx] * (0.9 + Math.random() * 0.2)];
       orbits.push(ob);
       aOrbit.set(ob, i * 3);
+      const slot = order[i];
+      if (slot < surfCount) {
+        const k = slot + 0.5;
+        const phi = Math.acos(1 - (2 * k) / surfCount);
+        const theta = Math.PI * (1 + Math.sqrt(5)) * k;
+        aPlanet.set([RS * Math.sin(phi) * Math.cos(theta), RS * Math.cos(phi), RS * Math.sin(phi) * Math.sin(theta), 0], i * 4);
+      } else {
+        const r = RING_IN + Math.pow(Math.random(), 0.8) * (RING_OUT - RING_IN);
+        const th = Math.random() * Math.PI * 2;
+        aPlanet.set([Math.cos(th) * r, (Math.random() - 0.5) * 0.06, Math.sin(th) * r, 1], i * 4);
+      }
       const w = c.kind === 3 ? dot++ : Math.random();
       aInfo.set([c.kind, Math.random(), Math.hypot(c.x - CX, c.y - CY) / maxD, w], i * 4);
       // 5つの軸の長さ（人柄）。少しだけ尖りを出す
@@ -465,6 +528,7 @@ export class WaveScene {
       aTa.set(tr.slice(0, 4), i * 4);
       aTb.set([tr[4], Math.random()], i * 2);
     });
+    // 輪は惑星の赤道面に（惑星と同じ傾きで回す）。輪の面は xz なので、表面と同じ uPlanetR で傾く
 
     const quad = new PlaneGeometry(2, 2);
     const geo = new InstancedBufferGeometry();
@@ -473,10 +537,11 @@ export class WaveScene {
     geo.setAttribute('aMark', new InstancedBufferAttribute(aMark, 3));
     geo.setAttribute('aScatter', new InstancedBufferAttribute(aScatter, 3));
     geo.setAttribute('aOrbit', new InstancedBufferAttribute(aOrbit, 3));
+    geo.setAttribute('aPlanet', new InstancedBufferAttribute(aPlanet, 4));
     geo.setAttribute('aInfo', new InstancedBufferAttribute(aInfo, 4));
     geo.setAttribute('aTa', new InstancedBufferAttribute(aTa, 4));
     geo.setAttribute('aTb', new InstancedBufferAttribute(aTb, 2));
-    geo.instanceCount = ambient ? Math.round(n * (small ? 0.12 : 0.18)) : n;
+    geo.instanceCount = ambient ? Math.round(n * (small ? 0.14 : 0.2)) : n;
 
     this.tileU = {
       uTime: { value: 0 },
@@ -490,10 +555,12 @@ export class WaveScene {
       uRigS: { value: 1 },
       // スマホでは漂う五角形を小さめに（文字の上に重なるので）
       uAirS: { value: small ? 0.68 : 1 },
+      uSpin: { value: 0 },
       uScatter: { value: new Vector2(8, 5) },
       uScatterC: { value: new Vector2(0, 0) },
       uMouse: { value: new Vector2(9, 9) },
       uOrbitR: { value: orbitR },
+      uPlanetR: { value: planetR },
       uRig: { value: new Matrix4() },
       uSky: { value: sky },
       uPink: { value: pink },
@@ -508,6 +575,7 @@ export class WaveScene {
         transparent: true,
         depthWrite: false,
         depthTest: false,
+        blending: AdditiveBlending,
       }),
     );
     tiles.frustumCulled = false;
@@ -563,41 +631,84 @@ export class WaveScene {
       uOrbitR: { value: orbitR },
       uRes: { value: new Vector2(1, 1) },
       uPink: { value: pink },
-      uIndigo: { value: indigo },
+      uSky: { value: sky },
     };
     const lines = new LineSegments(
       lgeo,
-      new ShaderMaterial({ uniforms: this.lineU, vertexShader: LINE_VERT, fragmentShader: LINE_FRAG, transparent: true, depthWrite: false, depthTest: false }),
+      new ShaderMaterial({
+        uniforms: this.lineU,
+        vertexShader: LINE_VERT,
+        fragmentShader: LINE_FRAG,
+        transparent: true,
+        depthWrite: false,
+        depthTest: false,
+        blending: AdditiveBlending,
+      }),
     );
     lines.frustumCulled = false;
     lines.renderOrder = 1;
     this.rig.add(lines);
 
-    // ── 3本の軌道（PLANET A / B / C）と、真ん中の淡い光 ──
+    // ── 3本の軌道（PLANET A / B / C） ──
     RADII.forEach((r) => {
-      const u = { uCol: { value: navy }, uOpacity: { value: 0 } };
+      const u = { uCol: { value: new Color('#9FB8FF') }, uOpacity: { value: 0 } };
       const g = new RingGeometry(r - 0.008, r + 0.008, 160);
       g.rotateX(Math.PI / 2);
       const mesh = new Mesh(
         g,
-        new ShaderMaterial({ uniforms: u, vertexShader: BASIC_VERT, fragmentShader: RING_FRAG, transparent: true, depthWrite: false, depthTest: false, side: DoubleSide }),
+        new ShaderMaterial({
+          uniforms: u,
+          vertexShader: BASIC_VERT,
+          fragmentShader: RING_FRAG,
+          transparent: true,
+          depthWrite: false,
+          depthTest: false,
+          side: DoubleSide,
+          blending: AdditiveBlending,
+        }),
       );
       orbitG.add(mesh);
       this.rings.push({ mesh, u });
     });
     this.rig.add(orbitG);
-    this.glowU = { uSky: { value: sky }, uPink: { value: pink }, uGlow: { value: 0 }, uTime: { value: 0 } };
+
+    // ── まわりの光と、惑星の芯 ──
+    this.glowU = { uBlue: { value: blue }, uSky: { value: sky }, uPink: { value: pink }, uGlow: { value: 0 }, uTime: { value: 0 } };
     const glow = new Mesh(
-      new CircleGeometry(4.6, 64),
-      new ShaderMaterial({ uniforms: this.glowU, vertexShader: BASIC_VERT, fragmentShader: GLOW_FRAG, transparent: true, depthWrite: false, depthTest: false }),
+      new CircleGeometry(6.4, 64),
+      new ShaderMaterial({
+        uniforms: this.glowU,
+        vertexShader: BASIC_VERT,
+        fragmentShader: GLOW_FRAG,
+        transparent: true,
+        depthWrite: false,
+        depthTest: false,
+        blending: AdditiveBlending,
+      }),
     );
-    glow.position.z = -1.5;
-    glow.renderOrder = -1;
+    glow.position.z = -2;
+    glow.renderOrder = -2;
     this.rig.add(glow);
+    this.coreU = { uBlue: { value: blue }, uShow: { value: 1 }, uTime: { value: 0 } };
+    const core = new Mesh(
+      new CircleGeometry(RS * 0.98, 64),
+      new ShaderMaterial({
+        uniforms: this.coreU,
+        vertexShader: BASIC_VERT,
+        fragmentShader: CORE_FRAG,
+        transparent: true,
+        depthWrite: false,
+        depthTest: false,
+        blending: NormalBlending,
+      }),
+    );
+    core.renderOrder = -1;
+    this.rig.add(core);
 
     if (ambient) {
       lines.visible = false;
       glow.visible = false;
+      core.visible = false;
       orbitG.visible = false;
     }
     this.scene.add(this.rig);
@@ -645,31 +756,26 @@ export class WaveScene {
     const halfH = Math.tan((this.camera.fov * Math.PI) / 360) * this.camera.position.z;
     const halfW = halfH * this.camera.aspect;
     this.tileU.uAspect.value = this.camera.aspect;
-    const wide = this.o.layout === 'right' && this.camera.aspect > 1.15;
+    const stage = this.o.layout === 'right';
+    const wide = this.camera.aspect > 1.15;
     const sc = this.tileU.uScatter.value as Vector2;
     const scc = this.tileU.uScatterC.value as Vector2;
-    if (wide) {
-      sc.set(halfW * 0.44, halfH * 0.98);
-      scc.set(halfW * 0.52, 0);
-    } else if (this.o.layout === 'right') {
-      sc.set(halfW * 1.02, halfH * 0.36);
-      scc.set(0, halfH * 0.6);
-    } else {
-      // 下層ページ・CTA帯：キャンバスの中ほどに。端のぼかし（mask）にかからないように
-      sc.set(halfW * 0.78, halfH * 0.8);
-      scc.set(halfW * 0.08, 0);
-    }
-    // 軌道の直径はおよそ 7、吹き出しは幅 5.3・高さ 4.2
-    if (wide) {
-      this.offset.set(halfW * 0.48, -halfH * 0.02, 0);
-      this.baseScale = Math.min(0.95, (halfW * 0.5) / 3.7, (halfH * 1.55) / 4.6);
-    } else if (this.o.layout === 'right') {
-      // スマホ：文字は下半分に来るので、上の空いた場所に
-      this.offset.set(0, halfH * 0.5, 0);
-      this.baseScale = Math.min(0.72, (halfW * 1.6) / 7.2, (halfH * 0.66) / 4.4);
+    sc.set(halfW * 0.86, halfH * 0.86);
+    scc.set(0, 0);
+    // 惑星と輪はおよそ幅 8.4・高さ 5、軌道は直径 7.2、吹き出しは幅 5.3
+    this.sideX = 0;
+    if (stage && wide) {
+      // トップ：公式サイトのヒーローのように、巨大な見出しの真後ろに惑星
+      this.offset.set(0, -halfH * 0.02, 0);
+      this.sideX = halfW * 0.36;
+      this.baseScale = Math.min(1.15, (halfW * 1.2) / 4.4, (halfH * 1.42) / 4.2);
+    } else if (stage) {
+      // スマホ：見出しの後ろ、少し上に。輪は画面の端から少しはみ出す
+      this.offset.set(0, halfH * 0.3, 0);
+      this.baseScale = Math.min(0.78, (halfW * 1.5) / 4.4, (halfH * 0.9) / 4.2);
     } else {
       this.offset.set(0, 0, 0);
-      this.baseScale = Math.min(0.82, (halfW * 0.86) / 3.7, (halfH * 1.5) / 4.6);
+      this.baseScale = Math.min(0.92, (halfW * 0.9) / 4.4, (halfH * 1.4) / 4.4);
     }
     (this.lineU.uRes.value as Vector2).set(w, h);
     if (!this.o.animate) this.render(6);
@@ -681,24 +787,29 @@ export class WaveScene {
       const k = Math.min(1, Math.max(0, (x - a) / (b - a)));
       return k * k * (3 - 2 * k);
     };
-    const orbit = sm(0.45, 0.95, ph) * (1 - sm(1.15, 1.7, ph));
+    const planet = 1 - sm(0.55, 0.9, ph);
+    const orbit = sm(0.7, 1.0, ph) * (1 - sm(1.15, 1.7, ph));
     const mark = sm(1.2, 1.9, ph);
-    this.rig.position.copy(this.offset);
-    this.rig.scale.setScalar(this.baseScale);
-    // 軌道は少し回りながら、マウスで傾く。吹き出しは正面を向く
-    this.rig.rotation.set(-this.mouse.y * 0.1 * (1 - mark * 0.6), this.mouse.x * 0.22 * (1 - mark * 0.6), (1 - mark) * Math.sin(t * 0.15) * 0.04, 'XYZ');
+    const side = sm(0.6, 0.85, ph);
+    this.rig.position.set(this.offset.x + this.sideX * side, this.offset.y, this.offset.z);
+    const scale = this.baseScale * (1 - side * (this.sideX ? 0.12 : 0));
+    this.rig.scale.setScalar(scale);
+    // マウスで傾く。吹き出しは正面を向く
+    this.rig.rotation.set(-this.mouse.y * 0.12 * (1 - mark * 0.6), this.mouse.x * 0.26 * (1 - mark * 0.6), (1 - mark) * Math.sin(t * 0.15) * 0.04, 'XYZ');
     this.rig.updateMatrixWorld(true);
     (this.tileU.uRig.value as Matrix4).copy(this.rig.matrixWorld);
-    this.tileU.uRigS.value = this.baseScale;
+    this.tileU.uRigS.value = scale;
 
     this.tileU.uTime.value = t;
     this.tileU.uPhase.value = ph;
     this.tileU.uKick.value = this.kick;
+    this.tileU.uSpin.value = t * 0.16;
     this.lineU.uTime.value = t;
     this.lineU.uPhase.value = ph;
     this.glowU.uTime.value = t;
-    this.glowU.uGlow.value = Math.max(orbit, mark * 0.6);
-    this.rings.forEach((r, i) => (r.u.uOpacity.value = orbit * (0.16 - i * 0.03)));
+    this.glowU.uGlow.value = Math.max(planet * 0.95, orbit * 0.7, mark * 0.55);
+    this.coreU.uShow.value = planet;
+    this.rings.forEach((r, i) => (r.u.uOpacity.value = orbit * (0.3 - i * 0.06)));
     this.renderer.render(this.scene, this.camera);
   }
 
