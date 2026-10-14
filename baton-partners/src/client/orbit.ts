@@ -10,7 +10,51 @@ type Person = { role: string; v: number[] };
 type PairData = { a: Person; b: Person; topic: string };
 
 export function setupOrbit(): void {
+  setupIntro();
   document.querySelectorAll<HTMLElement>('[data-tune]').forEach(setupTune);
+}
+
+/**
+ * 最初の一度だけの、絶対値のカウンター。−100 から 0 を通って +100 へ数え、光って上へ抜ける。
+ * 出すかどうかは main.ts が先に決めて html.is-orb-intro を付ける（2回目・ページ移動の幕のあと・動きを減らす設定では出さない）。
+ * 画面に触れる・キーを押す・スクロールすると、すぐに抜ける
+ */
+function setupIntro() {
+  const html = document.documentElement;
+  const el = document.querySelector<HTMLElement>('[data-orb-intro]');
+  const num = el?.querySelector<HTMLElement>('[data-orb-count]');
+  if (!el || !num) return;
+  if (!html.classList.contains('is-orb-intro')) {
+    el.remove();
+    return;
+  }
+  let done = false;
+  const finish = () => {
+    if (done) return;
+    done = true;
+    el.classList.add('is-out');
+    // html.is-orb-intro は外さない（見出しの登場の遅れが途中で変わって、文字が跳ねないように）
+    window.setTimeout(() => el.remove(), 1000);
+  };
+  const skip = () => finish();
+  ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach((t) => window.addEventListener(t, skip, { once: true, passive: true }));
+  const start = performance.now();
+  const dur = 1300;
+  const tick = (now: number) => {
+    if (done) return;
+    const t = Math.min(1, (now - start) / dur);
+    // 0 の手前で少しゆっくり（符号が消える瞬間を見せる）
+    const e = t < 0.5 ? 0.5 * Math.pow(t * 2, 1.6) : 1 - 0.5 * Math.pow((1 - t) * 2, 1.6);
+    const v = Math.round(-100 + e * 200);
+    num.textContent = v < 0 ? `−${-v}` : String(v);
+    el.classList.toggle('is-plus', v >= 0);
+    if (t < 1) requestAnimationFrame(tick);
+    else {
+      el.classList.add('is-done');
+      window.setTimeout(finish, 420);
+    }
+  };
+  requestAnimationFrame(tick);
 }
 
 function points(v: number[]): [number, number][] {
@@ -34,13 +78,16 @@ function setupTune(fig: HTMLElement) {
   const still = prefersReducedMotion();
   const section = fig.closest('section');
   const tabs = [...(section?.querySelectorAll<HTMLButtonElement>('[data-tune-pick]') ?? [])];
-  const polyA = fig.querySelector<SVGPolygonElement>('[data-tune-poly="a"]');
-  const polyB = fig.querySelector<SVGPolygonElement>('[data-tune-poly="b"]');
+  // a は水色の五角形と「重なり」、b はピンクの五角形と重なりの切り抜き。同じ形を持つものをまとめて動かす
+  const polysA = [...fig.querySelectorAll<SVGPolygonElement>('[data-tune-poly="a"]')];
+  const polysB = [...fig.querySelectorAll<SVGPolygonElement>('[data-tune-poly="b"]')];
+  const setA = (v: string) => polysA.forEach((el) => el.setAttribute('points', v));
+  const setB = (v: string) => polysB.forEach((el) => el.setAttribute('points', v));
   const roleA = fig.querySelector<HTMLElement>('[data-tune-role="a"]');
   const roleB = fig.querySelector<HTMLElement>('[data-tune-role="b"]');
   const topic = fig.querySelector<HTMLElement>('[data-tune-topic]');
   const bubble = topic?.closest<HTMLElement>('.tq-b');
-  if (!polyA || !polyB) return;
+  if (!polysA.length || !polysB.length) return;
 
   let current = 0;
   let curA = points(pairs[0].a.v);
@@ -56,8 +103,8 @@ function setupTune(fig: HTMLElement) {
     if (still) {
       curA = toA;
       curB = toB;
-      polyA.setAttribute('points', attr(curA));
-      polyB.setAttribute('points', attr(curB));
+      setA(attr(curA));
+      setB(attr(curB));
       return;
     }
     const fromA = curA;
@@ -67,8 +114,8 @@ function setupTune(fig: HTMLElement) {
       const t = ease(Math.min(1, (now - start) / 760));
       curA = fromA.map(([x, y], i) => [x + (toA[i][0] - x) * t, y + (toA[i][1] - y) * t]);
       curB = fromB.map(([x, y], i) => [x + (toB[i][0] - x) * t, y + (toB[i][1] - y) * t]);
-      polyA.setAttribute('points', attr(curA));
-      polyB.setAttribute('points', attr(curB));
+      setA(attr(curA));
+      setB(attr(curB));
       if (t < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
