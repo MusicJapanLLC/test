@@ -1,0 +1,151 @@
+{
+  "meta": {
+    "htmlLang": "ko",
+    "dir": "ltr",
+    "ogLocale": "ko_KR",
+    "title": "테우치 라멘 이요마루 스이산｜홋카이도 후라노 수제 라멘",
+    "description": "홋카이도 후라노, JR 후라노역에서 도보 2~3분. 어부 직영 라멘집으로 후라노산 밀로 만든 수제 면과 갓 잡은 신선한 해산물을 맛볼 수 있습니다.",
+    "ogTitle": "테우치 라멘 이요마루 스이산｜후라노 수제 라멘",
+    "ogDescription": "후라노산 밀로 만든 수제 면과, 어부가 직접 잡아 올리는 신선한 해산물."
+  },
+  "a11y": {
+    "skipToContent": "본문 바로가기",
+    "openMenu": "메뉴 열기",
+    "closeMenu": "메뉴 닫기",
+    "openLightbox": "이미지 크게 보기",
+    "closeLightbox": "닫기",
+    "prevImage": "이전 사진",
+    "nextImage": "다음 사진",
+    "langSwitcherLabel": "언어 선택"
+  },
+  "nav": {
+    "menu": "메뉴",
+    "concept": "이요마루의 정성",
+    "hours": "영업시간·오시는 길",
+    "gallery": "매장 분위기",
+    "news": "공지사항",
+    "call": "전화하기"
+  },
+  "langSwitcher": { "ja": "日本語", "en": "English", "zh": "简体中文", "ko": "한국어" },
+  "hero": {
+    "eyebrow": "홋카이도 후라노",
+    "titleLines": ["테우치 라멘", "이요마루 스이산"],
+    "tagline": "후라노의 재료와 어부의 정성을, 한 그릇에 담았습니다.",
+    "ctaMenu": "메뉴 보기",
+    "ctaHours": "영업시간·오시는 길",
+    "scrollHint": "SCROLL",
+    "ratingBadge": "구글 평점 4.4 (리뷰 328개)",
+    "ratingNote": "평점과 리뷰 수는 변동될 수 있습니다. 최신 정보는 구글 지도를 확인해 주세요."
+  },
+  "concept": {
+    "eyebrow": "이요마루의 정성",
+    "title": "우리가 다른 이유",
+    "items": [
+      {
+        "icon": "wheat",
+        "title": "후라노산 밀로 만든 수제 면",
+        "text": "후라노산 밀 「하루유타카」와 현지산 달걀로 매일 직접 반죽하는 수제 면. 쫄깃한 식감과 목넘김에 신경 썼습니다."
+      },
+      {
+        "icon": "field",
+        "title": "후라노산 식재료 고집",
+        "text": "밀부터 달걀까지, 가능한 한 후라노산 재료를 사용합니다. 홋카이도 대지가 키운 맛을 한 그릇에 담아냅니다."
+      },
+      {
+        "icon": "fish",
+        "title": "어부가 직접 운영하는 신선함",
+        "text": "사장님이 직접 어부이기 때문에 해산물의 신선도가 다릅니다. 새우, 문어, 게 등을 유통 단계 없이 넉넉하게 올려드립니다."
+      }
+    ]
+  },
+  "menu": {
+    "eyebrow": "메뉴",
+    "title": "대표 메뉴",
+    "priceNote": "메뉴 가격은 확정 전 임시 표기입니다. 정확한 가격은 매장 또는 전화로 문의해 주세요.",
+    "items": [
+      {
+        "tag": "대표 메뉴",
+        "name": "게 육수 미소라멘",
+        "desc": "털게와 킹크랩으로 정성껏 우려낸 육수에 감칠맛 나는 자가제 미소를 더한 한 그릇. 바다의 풍미가 가득합니다.",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "대표 메뉴",
+        "name": "등지방 미소라멘",
+        "desc": "감칠맛 가득한 등지방을 올린 진한 미소라멘. 후라노산 수제 면과 궁합이 좋습니다.",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "명물",
+        "name": "이요마루 SPECIAL",
+        "desc": "히다카산 해산물 3종을 아낌없이 올린, 어부 직영점만의 자신작입니다.",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "사이드",
+        "name": "문어 솥밥",
+        "desc": "문어의 감칠맛이 배어든 든든한 문어 솥밥. 라멘과 함께 즐겨보세요.",
+        "price": "¥○○○"
+      }
+    ]
+  },
+  "hours": {
+    "eyebrow": "영업시간·오시는 길",
+    "title": "영업시간·오시는 길",
+    "hoursLabel": "영업시간",
+    "days": [
+      { "label": "월", "hours": "11:00–21:00", "closed": false },
+      { "label": "화", "hours": "11:00–21:00", "closed": false },
+      { "label": "수", "hours": "11:00–21:00", "closed": false },
+      { "label": "목", "hours": "11:00–21:00", "closed": false },
+      { "label": "금", "hours": "정기휴무", "closed": true },
+      { "label": "토", "hours": "11:00–21:30", "closed": false },
+      { "label": "일", "hours": "11:00–21:30", "closed": false }
+    ],
+    "closedNote": "정기휴무: 금요일",
+    "varyNote": "영업시간은 계절에 따라 변경될 수 있으니, 방문 전 전화로 확인해 주세요.",
+    "addressLabel": "주소",
+    "address": "〒076-0025 홋카이도 후라노시 히노데마치 11-5",
+    "accessLabel": "오시는 길",
+    "access": "JR 후라노역에서 도보 2~3분 (아사히카와 신용금고 맞은편)",
+    "parkingLabel": "주차장",
+    "parking": "전용 주차장 있음 (인근 「뎃판야키 마사야」 뒤편, 약 5대)",
+    "seatsLabel": "좌석",
+    "seats": "총 14석 (카운터 4석 + 테이블석) / 20명 이하 단체 대관 가능",
+    "featuresLabel": "편의시설",
+    "features": ["전 좌석 금연", "무료 Wi-Fi 완비", "콘센트 있음", "차분하고 편안한 매장 분위기"],
+    "paymentLabel": "결제 수단",
+    "payments": ["신용카드", "교통카드 등 전자화폐", "PayPay, Alipay, WeChat Pay 등 각종 QR 결제"],
+    "mapCaption": "지도 앱에서 열기",
+    "callCta": "전화 걸기"
+  },
+  "gallery": {
+    "eyebrow": "매장 분위기",
+    "title": "매장 분위기",
+    "items": [
+      { "caption": "차분한 카운터석" },
+      { "caption": "후라노산 밀로 만든 수제 면" },
+      { "caption": "정성껏 우려낸 육수" },
+      { "caption": "어부 직영점만의 신선한 해산물" },
+      { "caption": "테이블석이 있는 매장" },
+      { "caption": "JR 후라노역에서 도보로 이동" }
+    ]
+  },
+  "news": {
+    "eyebrow": "공지사항",
+    "title": "공지사항",
+    "items": [
+      { "date": "2024.06.30", "text": "후라노시 야마베에서 현재 위치(히노데마치)로 이전 오픈하였습니다." },
+      { "date": "2026.08.27", "text": "공식 홈페이지를 새롭게 개편하였습니다." }
+    ]
+  },
+  "footer": {
+    "instagramLabel": "Instagram",
+    "phoneLabel": "전화",
+    "addressLabel": "주소",
+    "note": "또 찾아주시는 분들 덕분에 오늘도 국물을 끓입니다. 단골이 되어주세요 :)",
+    "rightsText": "© 2026 테우치 라멘 이요마루 스이산",
+    "disclaimer": "매장 사정에 따라 내용이 변경될 수 있습니다. 최신 정보는 매장으로 문의해 주세요."
+  },
+  "ui": { "showPaymentBadge": false, "paymentBadgeText": "" }
+}

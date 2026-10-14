@@ -79,6 +79,10 @@ export interface Game {
   /** 正式な副題（ゲームのタイトル画面の表記） */
   subtitle: string;
   titleEn: string;
+  /** 読みがな（検索で読みを打つ人のため。タイトル・構造化データ・llms.txt に出す） */
+  kana: string;
+  /** 「〜の◯◯ゲーム」と一文で言うときの種類（タイトルタグ・説明文・定義文に使う） */
+  kind: string;
   /** でっかく出すキャッチコピー。1要素が1行 */
   catch: string[];
   /** キャッチの下に小さく添える一言 */

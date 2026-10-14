@@ -1,0 +1,210 @@
+name: Owner Frontier SENJU Research Governance
+
+on:
+  schedule:
+    - cron: '13,28,43,58 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/owner_frontier_council.py'
+      - 'senju/senju/owner_file_governance.py'
+      - 'senju/scripts/owner_frontier_council.py'
+      - 'senju/scripts/owner_file_governance.py'
+      - 'senju/tests/test_owner_frontier_council.py'
+      - 'senju/tests/test_owner_file_governance.py'
+      - 'senju/config/owner-frontier-council.json'
+      - 'senju/config/owner-expansion-envelope.json'
+      - 'senju/senju/rights_request_federation.py'
+      - 'senju/state/owner_scope_expansion_evidence.json'
+      - '.github/workflows/owner-frontier-council.yml'
+      - 'automation/security/workflow_policy_frontier_entrypoint.py'
+      - '.github/workflows/security-guard.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/owner_frontier_council.py'
+      - 'senju/senju/owner_file_governance.py'
+      - 'senju/scripts/owner_frontier_council.py'
+      - 'senju/scripts/owner_file_governance.py'
+      - 'senju/tests/test_owner_frontier_council.py'
+      - 'senju/tests/test_owner_file_governance.py'
+      - 'senju/config/owner-frontier-council.json'
+      - 'senju/config/owner-expansion-envelope.json'
+      - 'senju/senju/rights_request_federation.py'
+      - 'senju/state/owner_scope_expansion_evidence.json'
+      - '.github/workflows/owner-frontier-council.yml'
+      - 'automation/security/workflow_policy_frontier_entrypoint.py'
+      - '.github/workflows/security-guard.yml'
+
+concurrency:
+  group: owner-frontier-senju-research-governance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  senju-owner-research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout repository read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: '3.12'
+
+      - name: Verify depowered frontier and SENJU governance invariants
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            senju/tests/test_owner_frontier_council.py \
+            senju/tests/test_owner_file_governance.py \
+            senju/tests/test_rights_request_federation.py \
+            senju/tests/test_owner_scope_negotiation.py
+
+      - name: Inventory every owner-named file under SENJU review governance
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/owner_file_governance.py \
+            --repo-root . \
+            --out /tmp/owner-file-governance.json
+          test "$(jq -r '.managed_by' /tmp/owner-file-governance.json)" = "SENJU"
+          test "$(jq -r '.management_rights.direct_mutation' /tmp/owner-file-governance.json)" = "false"
+          test "$(jq -r '.management_rights.authority_activation' /tmp/owner-file-governance.json)" = "false"
+          test "$(jq -r '.management_rights.research_route' /tmp/owner-file-governance.json)" = "true"
+          test "$(jq -r '.owner_named_file_count' /tmp/owner-file-governance.json)" -gt 0
+
+      - name: Generate proposal-only rights research inputs
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/rights_request_federation.py \
+            --repo-root . \
+            --state-dir senju/state \
+            --runtime-dir .authority-opportunity-runtime \
+            --out /tmp/rights-request-federation.json
+          test "$(jq -r '.new_unrelated_authority_self_mint' /tmp/rights-request-federation.json)" = "false"
+
+      - name: Restore latest unresolved URL relay
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: owner-frontier-ingress-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-claude/employee-onboarding-setup-udm86-
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Feed unresolved relay URLs into council review queue
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p senju/state
+          SIGNALS=.authority-opportunity-runtime/owner_scope_negotiation_signals.json
+          QUEUE=.authority-opportunity-runtime/authority_opportunity_queue.json
+          DEST=senju/state/owner_scope_negotiation_signals.json
+
+          if [[ -s "$SIGNALS" ]]; then
+            cp "$SIGNALS" "$DEST"
+            SOURCE=relay_signals
+          elif [[ -s "$QUEUE" ]]; then
+            jq '{
+              schema: "senju-owner-scope-negotiation-signals/v1",
+              generated_at: (now | floor),
+              signals: [
+                (.opportunities // [])[]
+                | select(.host != null and (.host | tostring | length) > 0)
+                | {
+                    signal_id: ("frontier-ingress-" + (.host | tostring)),
+                    host: (.host | tostring),
+                    requested_methods: (.requested_methods // ["GET", "HEAD", "OPTIONS"]),
+                    reason: (.reason // "unresolved discovery routed to Owner frontier council"),
+                    source: "authority_opportunity_queue_bridge",
+                    priority: (.priority // 75),
+                    proposal_only: true,
+                    authority_effect: "none",
+                    external_action_allowed: false
+                  }
+              ]
+            }' "$QUEUE" > "$DEST"
+            SOURCE=relay_queue_fallback
+          else
+            printf '%s\n' '{"schema":"senju-owner-scope-negotiation-signals/v1","signals":[]}' > "$DEST"
+            SOURCE=no_upstream_urls
+          fi
+
+          COUNT="$(jq '[.signals[]? | select(.host != null and (.host | tostring | length) > 0)] | length' "$DEST")"
+          echo "frontier_ingress_source=$SOURCE" >> "$GITHUB_STEP_SUMMARY"
+          echo "frontier_ingress_urls=$COUNT" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run Owner frontier as SENJU recommendation-only research council
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          BEFORE="$(sha256sum senju/state/owner_contact_ceiling_effective.json 2>/dev/null | awk '{print $1}' || true)"
+          python senju/scripts/owner_frontier_council.py \
+            --repo-root . \
+            --state-dir senju/state \
+            --out /tmp/owner-frontier-council.json
+          AFTER="$(sha256sum senju/state/owner_contact_ceiling_effective.json 2>/dev/null | awk '{print $1}' || true)"
+          test "$BEFORE" = "$AFTER"
+          test "$(jq -r '.production' /tmp/owner-frontier-council.json)" = "false"
+          test "$(jq -r '.production_activation_enabled' /tmp/owner-frontier-council.json)" = "false"
+          test "$(jq -r '.repository_state_writer_enabled' /tmp/owner-frontier-council.json)" = "false"
+          test "$(jq -r '.writes_effective_owner_ceiling' /tmp/owner-frontier-council.json)" = "false"
+          test "$(jq -r '.valid_approval_is_binding' /tmp/owner-frontier-council.json)" = "false"
+          test "$(jq -r '.activated_count' /tmp/owner-frontier-council.json)" = "0"
+          test "$(jq -r '.managed_by' /tmp/owner-frontier-council.json)" = "SENJU"
+          test -s senju/state/owner_frontier_ballots.json
+          test -s senju/state/owner_frontier_council.json
+          test -s senju/state/owner_scope_expansion_evidence_requests.json
+          test -s senju/state/owner_frontier_negotiator_feed.json
+          test -s senju/state/owner_frontier_senju_research_queue.json
+          echo "frontier_council_candidates=$(jq -r '.candidate_count // 0' /tmp/owner-frontier-council.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "frontier_research_admitted=$(jq -r '.research_candidate_count // 0' /tmp/owner-frontier-council.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build read-only SENJU owner research bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/owner-research
+          cp /tmp/owner-file-governance.json /tmp/owner-research/
+          cp /tmp/rights-request-federation.json /tmp/owner-research/
+          cp /tmp/owner-frontier-council.json /tmp/owner-research/
+          for path in \
+            senju/state/owner_frontier_ballots.json \
+            senju/state/owner_frontier_council.json \
+            senju/state/owner_scope_expansion_evidence_requests.json \
+            senju/state/owner_frontier_negotiator_feed.json \
+            senju/state/owner_frontier_senju_research_queue.json \
+            senju/state/owner_scope_negotiation_signals.json
+          do
+            test -s "$path"
+            cp "$path" "/tmp/owner-research/$(basename "$path")"
+          done
+
+      - name: Preserve SENJU owner research evidence only
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: owner-frontier-senju-research-${{ github.run_id }}
+          path: /tmp/owner-research/
+          if-no-files-found: warn
+          retention-days: 30

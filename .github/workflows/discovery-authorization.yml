@@ -1,0 +1,53 @@
+name: Discovery Authorization
+
+on:
+  push:
+    paths:
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/human_intent_inference.py'
+      - 'automation/codegen/engine/authority_reviewer.py'
+      - 'automation/codegen/tests/test_discovery_authorization.py'
+      - 'automation/codegen/tests/test_discovery_human_intent_integration.py'
+      - 'automation/codegen/tests/test_authority_reviewer.py'
+      - '.github/workflows/discovery-authorization.yml'
+  pull_request:
+    paths:
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/human_intent_inference.py'
+      - 'automation/codegen/engine/authority_reviewer.py'
+      - 'automation/codegen/tests/test_discovery_authorization.py'
+      - 'automation/codegen/tests/test_discovery_human_intent_integration.py'
+      - 'automation/codegen/tests/test_authority_reviewer.py'
+      - '.github/workflows/discovery-authorization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  discovery-authorization-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check pytest
+
+      - name: Run discovery authorization tests
+        run: |
+          PYTHONPATH=. pytest -q \
+            automation/codegen/tests/test_discovery_authorization.py \
+            automation/codegen/tests/test_discovery_human_intent_integration.py \
+            automation/codegen/tests/test_authority_reviewer.py
+
+      - name: Compile discovery authorization modules
+        run: python -m py_compile automation/codegen/engine/discovery_authorization.py automation/codegen/engine/human_intent_inference.py automation/codegen/engine/authority_reviewer.py

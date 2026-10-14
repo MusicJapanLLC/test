@@ -1,0 +1,18 @@
+{
+  "scenario_name": "default-web",
+  "description": "汎用Webアプリ標的。8種の脆弱性クラスをランダム配置した仮想標的で攻防を回す。",
+  "arena": {
+    "red_action_budget": 12,
+    "blue_action_budget": 12,
+    "seed": null
+  },
+  "evolution": {
+    "population_size": 24,
+    "generations": 10,
+    "matches_per_generation": 60,
+    "survivor_fraction": 0.5,
+    "mutation_rate": 0.15,
+    "elite_count": 2,
+    "seed": null
+  }
+}

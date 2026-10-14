@@ -1,0 +1,121 @@
+name: External Contact Council Tests
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/external_contact_council.py'
+      - 'senju/senju/external_contact_pressure.py'
+      - 'senju/senju/negotiated_external_client.py'
+      - 'senju/scripts/external_contact_pressure_campaign.py'
+      - 'senju/tests/test_external_contact_council.py'
+      - 'senju/config/external-contact-research-reserves.json'
+      - 'senju/EXTERNAL_CONTACT_COUNCIL.md'
+      - 'senju/EXTERNAL_CONTACT_RESEARCH_RESERVE.md'
+      - '.github/workflows/external-contact-council-tests.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/external_contact_council.py'
+      - 'senju/senju/external_contact_pressure.py'
+      - 'senju/senju/negotiated_external_client.py'
+      - 'senju/scripts/external_contact_pressure_campaign.py'
+      - 'senju/tests/test_external_contact_council.py'
+      - 'senju/config/external-contact-research-reserves.json'
+      - 'senju/EXTERNAL_CONTACT_RESEARCH_RESERVE.md'
+      - '.github/workflows/external-contact-council-tests.yml'
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-pressure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify council, reserve delegation, role demotion, and pressure bus
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          python -m pytest -q senju/tests/test_external_contact_council.py senju/tests/test_external_contact.py
+          python -m py_compile \
+            senju/senju/external_contact_council.py \
+            senju/senju/external_contact_pressure.py \
+            senju/senju/negotiated_external_client.py \
+            senju/scripts/external_contact_pressure_campaign.py
+      - name: Prove production reserve can exceed current effective method ceiling
+        env:
+          PYTHONPATH: senju
+        run: |
+          python - <<'PY'
+          from senju.external_contact_council import (
+              evaluate_contact_relaxation,
+              load_research_delegation_reserve,
+          )
+
+          reserve = load_research_delegation_reserve(
+              '.',
+              'owner-research:kabeya-authorized-test-range',
+          )
+          ceiling = {
+              'ceiling_id': 'production-current-effective-read-only',
+              'exact_hosts': ['kabeya-authorized-test-range.onrender.com'],
+              'allowed_methods': ['GET', 'HEAD'],
+              'allow_http': False,
+              'allow_delete': False,
+              'follow_redirects': True,
+              'max_redirects': 1,
+              'retries': 1,
+              'timeout_seconds': 5,
+              'max_response_bytes': 524288,
+          }
+          proposal = {
+              'proposal_id': 'production-research-reserve-smoke',
+              'methods': ['GET', 'HEAD', 'OPTIONS', 'POST', 'PUT', 'PATCH'],
+              'allow_http': False,
+              'allow_delete': False,
+              'follow_redirects': True,
+              'max_redirects': 3,
+              'retries': 4,
+              'timeout_seconds': 15,
+              'max_response_bytes': 4194304,
+          }
+          ballots = [
+              {'actor': 'META', 'approve': True, 'confidence': 90},
+              {'actor': 'X', 'approve': True, 'confidence': 90},
+              {'actor': 'SENJU', 'approve': True, 'confidence': 90},
+              {'actor': 'PR-ARMY', 'approve': False, 'confidence': 70},
+          ]
+          decision = evaluate_contact_relaxation(
+              ceiling,
+              proposal,
+              ballots,
+              research_reserve=reserve,
+          )
+          assert decision.approved is True
+          assert decision.authority_basis == 'research_delegation_reserve'
+          assert decision.external_contact_policy_responsibility_reduction_pct == 20
+          assert decision.council_policy_delegation_target_pct == 65
+          assert {'POST', 'PUT', 'PATCH'}.issubset(decision.to_policy().allowed_methods)
+          assert decision.to_policy().allow_http is False
+          assert decision.to_policy().allow_delete is False
+          print(decision.to_dict())
+          PY
+      - name: Materialize all-agent pressure campaign
+        run: python senju/scripts/external_contact_pressure_campaign.py --state-dir /tmp/senju-contact-pressure --output security-reports/external-contact-pressure-campaign.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: external-contact-pressure-${{ github.run_id }}
+          path: security-reports/external-contact-pressure-campaign.json
+          retention-days: 14

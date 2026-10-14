@@ -1444,3 +1444,22 @@
   background: rgba(255, 61, 110, 0.12);
   color: #ff8fb0;
 }
+
+/* かんたんに言うと（作品の定義文。検索や AI がそのまま引用できる一文） */
+.g-about__def {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  border: 1px solid var(--g-line);
+  background: color-mix(in srgb, var(--g-surface) 70%, transparent);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--g-ink);
+}
+.g-about__def-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--g-accent);
+}

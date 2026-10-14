@@ -1,0 +1,77 @@
+name: THE WORLD - Child Private Workstation
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 * * * *'
+
+concurrency:
+  group: child-private-workstation
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  local-lab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Validate workstation charter
+        run: python -m unittest company-society/test_workstation_lab.py -v
+
+      - name: Give one child the workstation for this cycle
+        run: |
+          python company-society/workstation_lab.py \
+            --registry company-society/child_workstations.json \
+            --seed "${{ github.run_id }}" \
+            --status child-workstation-status.json
+          python - <<'PY'
+          import json, os
+          d=json.load(open('child-workstation-status.json', encoding='utf-8'))
+          a=d['actual_runtime']; g=a.get('gpu') or {}
+          with open(os.environ['GITHUB_STEP_SUMMARY'],'a',encoding='utf-8') as f:
+              f.write('# CHILD PRIVATE WORKSTATION\n\n')
+              f.write(f"Child: **{d['child']}**\n\n")
+              f.write(f"Entitlement: **{d['workstation_class']}** (target RAM {d['target']['ram_gb']} GB / VRAM {d['target']['vram_gb']} GB)\n\n")
+              f.write(f"Actual runner: RAM {a.get('ram_gb')} GB / CPU {a.get('cpu_count')} / GPU {g.get('name') or 'none'}\n\n")
+              f.write('Private scratch contents were not uploaded or inspected.\n')
+          PY
+
+      - name: Preserve health metadata only
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: child-workstation-health-${{ github.run_id }}
+          path: child-workstation-status.json
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Tell playground only that a lab session happened
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ -z "${TOMOKI_SLACK_WEBHOOK_URL:-}" ]]; then exit 0; fi
+          python - <<'PY'
+          import json, os, urllib.request
+          d=json.load(open('child-workstation-status.json', encoding='utf-8'))
+          a=d['actual_runtime']; g=a.get('gpu') or {}
+          text=(
+            f"*🧪 CHILD PRIVATE LAB*\n"
+            f"{d['child']} が自分のPCでローカル実験を1回やったよ。\n"
+            f"TITAN権利={d['workstation_class']} / 今回の実ランナー RAM={a.get('ram_gb')}GB / GPU={g.get('name') or 'none'}\n"
+            "中身は本人の研究室なのでアップロードしてません。公開したくなったら本人が持ってきます。"
+          )
+          req=urllib.request.Request(os.environ['TOMOKI_SLACK_WEBHOOK_URL'],data=json.dumps({'text':text},ensure_ascii=False).encode(),headers={'Content-Type':'application/json'})
+          with urllib.request.urlopen(req,timeout=10) as r: print(r.status)
+          PY

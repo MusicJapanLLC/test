@@ -1,0 +1,172 @@
+name: Gmail Autonomous Sorter
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Classify without changing Gmail"
+        required: false
+        default: false
+        type: boolean
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "automation/gmail_sorter/**"
+      - "automation/reporting/ceo_report.py"
+      - ".github/workflows/gmail-autonomous-sorter.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gmail-autonomous-sorter
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Rules test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+      - name: Run deterministic rule tests
+        run: python -m unittest automation.gmail_sorter.test_sorter -v
+
+  sort:
+    name: Gmail worker
+    if: github.event_name != 'push'
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+      GOOGLE_REFRESH_TOKEN: ${{ secrets.GOOGLE_REFRESH_TOKEN }}
+      CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Preflight Gmail credentials
+        id: preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${GOOGLE_CLIENT_ID:-}" || -z "${GOOGLE_CLIENT_SECRET:-}" || -z "${GOOGLE_REFRESH_TOKEN:-}" ]]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Gmail OAuth secrets are not configured in GitHub yet." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run Gmail sorter
+        id: sorter
+        if: steps.preflight.outputs.ready == 'true'
+        continue-on-error: true
+        shell: bash
+        env:
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+          EXTRA=""
+          if [[ "$DRY_RUN" == "true" ]]; then EXTRA="--dry-run"; fi
+          python automation/gmail_sorter/sorter.py $EXTRA | tee /tmp/gmail-sorter-output.txt
+
+      - name: Write blocked event when Gmail OAuth is missing
+        if: steps.preflight.outputs.ready != 'true'
+        shell: bash
+        run: |
+          mkdir -p reports/ceo-events
+          cat > reports/ceo-events/gmail-sorter-latest.json <<'JSON'
+          {
+            "schema": "ai-factory-ceo-event/v1",
+            "project": "Gmail Autonomous Sorter",
+            "state": "BLOCKED",
+            "privacy": "aggregate-only; no email content",
+            "counts": {},
+            "priorities": {},
+            "owner_action": "GitHub Secrets に Gmail OAuth 3項目を設定",
+            "business_effect": "コードと分類ルールはGitHub常駐済み。OAuth接続後はChatGPTなしで15分ごとに自動整理する。",
+            "next_improvement": "OAuth接続後に初回実測し、未分類だけAI fallbackへ回す。"
+          }
+          JSON
+
+      - name: Write blocked event when Gmail worker fails
+        if: steps.preflight.outputs.ready == 'true' && steps.sorter.outcome == 'failure'
+        shell: bash
+        run: |
+          mkdir -p reports/ceo-events
+          cat > reports/ceo-events/gmail-sorter-latest.json <<'JSON'
+          {
+            "schema": "ai-factory-ceo-event/v1",
+            "project": "Gmail Autonomous Sorter",
+            "state": "BLOCKED",
+            "privacy": "aggregate-only; no email content",
+            "counts": {},
+            "priorities": {},
+            "owner_action": "NONE",
+            "business_effect": "Gmail自動整理workerが実行時エラーで停止。メール内容や認証情報はCEOレポートへ出していない。",
+            "next_improvement": "GitHub Actionsの技術ログで原因を修復し、同じ分類テストを通して再実行する。"
+          }
+          JSON
+
+      - name: Publish aggregate result to job summary
+        if: always()
+        shell: bash
+        run: |
+          if [[ -f reports/ceo-events/gmail-sorter-latest.json ]]; then
+            python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d=json.load(open('reports/ceo-events/gmail-sorter-latest.json', encoding='utf-8'))
+          print(f"## {d.get('project')} — {d.get('state')}\n")
+          print(f"- counts: `{json.dumps(d.get('counts', {}), ensure_ascii=False)}`")
+          print(f"- priorities: `{json.dumps(d.get('priorities', {}), ensure_ascii=False)}`")
+          print(f"- owner action: {d.get('owner_action', 'NONE')}")
+          PY
+          fi
+
+      - name: Decide whether CEO channel needs an immediate update
+        if: always()
+        id: notify
+        shell: bash
+        run: |
+          if [[ ! -f reports/ceo-events/gmail-sorter-latest.json ]]; then
+            echo "needed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          d=json.load(open('reports/ceo-events/gmail-sorter-latest.json', encoding='utf-8'))
+          p=d.get('priorities', {})
+          urgent=int(p.get('critical',0) or 0)+int(p.get('high',0) or 0)
+          blocked=d.get('state') == 'BLOCKED'
+          print('needed=' + ('true' if blocked or urgent > 0 else 'false'))
+          PY
+
+      - name: Send material outcome to CEO Reporting Layer
+        if: always() && steps.notify.outputs.needed == 'true' && env.CEO_REPORT_WEBHOOK_URL != ''
+        run: python automation/reporting/ceo_report.py reports/ceo-events/gmail-sorter-latest.json
+
+      - name: Upload aggregate evidence
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: gmail-sorter-ceo-event
+          retention-days: 14
+          if-no-files-found: ignore
+          path: reports/ceo-events/gmail-sorter-latest.json
+
+      - name: Fail job after reporting worker failure
+        if: steps.preflight.outputs.ready == 'true' && steps.sorter.outcome == 'failure'
+        run: exit 1

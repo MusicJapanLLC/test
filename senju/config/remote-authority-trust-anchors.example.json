@@ -1,0 +1,11 @@
+{
+  "schema": "meta-remote-authority-trust-anchors/v1",
+  "anchors": {
+    "a.example.com": {
+      "kty": "RSA",
+      "alg": "RS256",
+      "n": "<base64url-encoded-2048-bit-or-larger-RSA-modulus>",
+      "e": "AQAB"
+    }
+  }
+}

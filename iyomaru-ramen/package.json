@@ -1,0 +1,15 @@
+{
+  "name": "iyomaru-ramen-website",
+  "version": "1.0.0",
+  "private": true,
+  "description": "てうちラーメン いよ丸水産 公式サイト（静的サイト / 日英中韓4言語対応）",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --serve",
+    "serve": "node build.mjs --serve"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

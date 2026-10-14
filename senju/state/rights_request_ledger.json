@@ -1,0 +1,24 @@
+{
+  "active_request_count": 0,
+  "closed_loop": true,
+  "closed_request_count": 0,
+  "generated_at": 1788192615,
+  "generation": 2,
+  "negotiators": [
+    "META",
+    "X",
+    "SENJU"
+  ],
+  "owner_review_persistent_count": 0,
+  "request_count": 0,
+  "requests": [],
+  "schema": "senju-rights-request-ledger/v1",
+  "shared_with": [
+    "META",
+    "X",
+    "SENJU",
+    "CHILD",
+    "AI",
+    "PR-ARMY"
+  ]
+}

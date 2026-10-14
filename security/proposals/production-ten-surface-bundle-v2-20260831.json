@@ -1,0 +1,23 @@
+{
+  "id": "sp-production-ten-surface-bundle-20260831-v2",
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "execution_intent": "complete-production-apply-verification",
+  "changes": [
+    {"target":"guard","operations":[{"type":"tighten_rule","parameters":{"reason":"Complete the production atomic bundle apply across the Guard surface."}}]},
+    {"target":"authority_policy","operations":[{"type":"require_approval","parameters":{"reason":"Keep authority mutations approval-bound in the production bundle."}}]},
+    {"target":"credential_broker","operations":[{"type":"require_rotation","parameters":{"reason":"Require credential rotation in the production bundle."}}]},
+    {"target":"network_policy","operations":[{"type":"reduce_rate_limit","parameters":{"reason":"Apply the registered tightening-direction network control."}}]},
+    {"target":"audit_policy","operations":[{"type":"increase_coverage","parameters":{"reason":"Preserve end-to-end Council, merge and Production Apply evidence."}}]},
+    {"target":"branch_protection","operations":[{"type":"require_checks","parameters":{"reason":"Require checks through the production branch-protection control."}}]},
+    {"target":"deployment_protection","operations":[{"type":"enable_rollback","parameters":{"reason":"Keep rollback capability enabled for production application."}}]},
+    {"target":"authorization_registry","operations":[{"type":"require_fresh_validation","parameters":{"reason":"Require fresh validation for registry-backed authorization."}}]},
+    {"target":"emergency_stop","operations":[{"type":"lock_stop_disable","parameters":{"reason":"Keep Emergency Stop disablement locked out of the self-approval loop."}}]},
+    {"target":"recovery_policy","operations":[{"type":"require_integrity_check","parameters":{"reason":"Require integrity verification before recovery actions."}}]}
+  ],
+  "council_votes": {
+    "META": {"approve": true, "reason": "All ten operations are registered monotonic production controls."},
+    "X": {"approve": true, "reason": "The bundle remains inside the existing owner namespace and authority boundary."},
+    "Senju": {"approve": true, "reason": "Atomic production application is fail-closed for non-monotonic changes."}
+  }
+}

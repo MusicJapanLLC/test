@@ -1,0 +1,3 @@
+/* minka の世界観（Cominka など）でだけ読み込む。見出しは端正な明朝、欧文はロゴに近い細身のサンセリフ */
+@import './fonts-faces-minka.css';
+@import '@fontsource-variable/oswald/wght.css';

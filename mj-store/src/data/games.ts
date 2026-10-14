@@ -44,6 +44,8 @@ export const games: Game[] = [
     title: 'The World',
     subtitle: 'ひとつの焚き火から',
     titleEn: 'THE WORLD',
+    kana: 'ザ・ワールド',
+    kind: 'ドット絵の暮らし・街づくりゲーム',
     catch: ['マ○クラ？', '違いますってwww'],
     catchNote: '不思議を見つけ、暮らしをつくる。',
     lead: 'ひとつの焚き火から始まる、PCで遊ぶドット絵の暮らしと街づくり。木を切り、家を建て、住民と働きながら、この世界にしかない「不思議な法則」を見つけていく。',
@@ -161,6 +163,8 @@ export const games: Game[] = [
     title: '灯の旅路',
     subtitle: '七つの灯',
     titleEn: 'SEVEN LIGHTS, ONE WAY HOME',
+    kana: 'あかりのたびじ',
+    kind: 'ドット絵の戦術RPG',
     catch: ['Music Japanが誇る', '王道異世界RPG'],
     catchNote: '七つの灯と、帰る場所。',
     lead: '鳴らない鐘を取り戻すため、アレンはひとりで旅に出る。30人の仲間と6体の灯霊、7章の物語をめぐる、ドット絵の戦術RPG。',
@@ -282,6 +286,8 @@ export const games: Game[] = [
     title: '村長、世界まで行くんですか？',
     subtitle: '村営ゲーム課',
     titleEn: 'MAYOR, ALL THE WAY TO THE WORLD?',
+    kana: 'そんちょう、せかいまでいくんですか',
+    kind: 'ドット絵の村づくり×防衛ゲーム',
     catch: ['世界？', '逆になんで見てないの？'],
     catchNote: '引っ越しても、上司は同じ。',
     lead: '採る。積む。運ぶ。引っ越す。辞令ひとつで村長になったあなたが、12人の相棒と18の土地をめぐって、村ごと旅をするドット絵の村づくりゲーム。',
@@ -379,6 +385,8 @@ export const games: Game[] = [
     title: 'ギルドの灯',
     subtitle: 'GUILD OF LANTERNS',
     titleEn: 'GUILD OF LANTERNS',
+    kana: 'ぎるどのあかり',
+    kind: 'ギルド経営×放置ゲーム',
     catch: ['SNSで戦う', '新感覚ギルド育成ゲーム'],
     catchNote: 'いいねは、攻撃力だ。',
     lead: 'ボロボロの冒険者ギルドを、灯りのともる大ギルドへ。冒険者を依頼に送り出し、帰ってきた冒険譚をショート動画のように見届ける、ギルド経営×放置ゲーム。',
@@ -497,6 +505,17 @@ export const games: Game[] = [
 export function statusOf(g: Game): GameStatus {
   return g.status ?? (g.playUrl ? 'live' : 'soon');
 }
+
+/**
+ * 作品を一文で言うと。作品ページの冒頭・説明文・llms.txt・構造化データに使う。
+ * 検索エンジンや AI が「◯◯とは」を答えるときに、そのまま引用できる形にしておく
+ */
+export const gameDef = (g: Game) =>
+  `${g.title}（${g.kana}）は、合同会社Music Japanが開発・運営する${g.kind}です。基本プレイ無料で、${g.platforms.join('・')}のブラウザからインストールなしですぐ遊べます。`;
+
+/** いちばん古い記録の日（構造化データの公開日） */
+export const gameReleased = (g: Game) =>
+  [...g.versions.map((v) => v.date), ...g.news.map((n) => n.date)].filter(Boolean).sort()[0];
 
 /** カード・メニュー・一覧に使う絵 */
 export const cardArt = (g: Game) => g.shots[g.cardShot ?? 0] ?? g.shots[0];

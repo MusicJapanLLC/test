@@ -1,0 +1,71 @@
+name: MADLAB DeepGuard - CI (tests + health)
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'madlab-deepguard/**'
+      - '.github/workflows/madlab-deepguard-ci.yml'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - 'madlab-deepguard/**'
+      - '.github/workflows/madlab-deepguard-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '20'
+
+      - name: Install MADLAB DeepGuard dependencies
+        working-directory: madlab-deepguard
+        run: npm install --no-audit --no-fund
+
+      - name: Unit tests (node --test) — Action Fabric / Bridge Kit / Research Adapter
+        working-directory: madlab-deepguard
+        run: |
+          set -euo pipefail
+          node --test tests/ 2>&1 | tee /tmp/madlab-tests.log
+          echo "MADLAB_TESTS_RAN=true" >> "$GITHUB_ENV"
+
+      - name: Live server health smoke test
+        working-directory: madlab-deepguard
+        run: |
+          set -euo pipefail
+          PORT=19123 node server.js >/tmp/madlab-server.log 2>&1 &
+          SRV=$!
+          trap 'kill $SRV 2>/dev/null || true' EXIT
+          for i in {1..20}; do
+            if curl -fsS --max-time 3 http://127.0.0.1:19123/api/health > /tmp/madlab-health.json 2>/dev/null; then break; fi
+            sleep 1
+          done
+          test -s /tmp/madlab-health.json
+          OK=$(sed -n 's/.*"ok":\(true\|false\).*/\1/p' /tmp/madlab-health.json | head -1)
+          test "$OK" = "true"
+          echo "MADLAB_HEALTH_OK=true" >> "$GITHUB_ENV"
+          echo "health:"; cat /tmp/madlab-health.json
+
+      - name: Publish MADLAB evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: madlab-deepguard-ci-${{ github.run_id }}
+          path: |
+            /tmp/madlab-tests.log
+            /tmp/madlab-server.log
+            /tmp/madlab-health.json
+          retention-days: 30
+          if-no-files-found: warn

@@ -1,0 +1,32 @@
+# Senju 隔離ラボ — 意図的に脆弱な標的を「外部遮断ネットワーク」で動かす。
+#
+# 安全の要:
+#   - network 'labnet' は internal: true。コンテナは外部インターネットへ出られない。
+#   - 標的はホストにポートを公開しない（ports: を書かない）。
+#   - Senjuランナーも同じ labnet に接続し、ラボ内からのみ標的へ到達する。
+#
+# 使い方:
+#   docker compose -f lab/docker-compose.internal.yml up -d
+#   # 標的の攻撃面構造は lab/targets/*.manifest.json で宣言（host をコンテナIPに合わせる）
+#
+# 注意: ここで扱うのは「学習用に意図的に脆弱化された公開OSS」だけ。
+#       本番資産・第三者資産は絶対に置かない。
+services:
+  juice-shop:
+    image: bkimminich/juice-shop:v17.1.0
+    container_name: senju-juice-shop
+    networks:
+      - labnet
+    # ports: を意図的に書かない = ホスト/外部からは直接触れない。
+    restart: unless-stopped
+
+  # 追加標的の例（コメントアウト）。攻撃面は manifest 側で宣言する。
+  # dvwa:
+  #   image: vulnerables/web-dvwa
+  #   networks: [labnet]
+  #   restart: unless-stopped
+
+networks:
+  labnet:
+    driver: bridge
+    internal: true   # ★ 外部への egress を物理的に遮断

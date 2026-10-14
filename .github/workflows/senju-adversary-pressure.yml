@@ -1,0 +1,136 @@
+name: Senju Adversary Pressure
+
+on:
+  pull_request:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "senju/**"
+      - "scripts/security/**"
+      - ".github/workflows/security-guard.yml"
+      - ".github/workflows/senju-adversary-pressure.yml"
+      - ".github/workflows/senju-autonomous-boundary-research.yml"
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: senju-adversary-pressure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pressure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SENJU_ADVERSARY_STATE: ${{ runner.temp }}/senju-adversary-state
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install boundary research test runtime
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Verify autonomous boundary research contract
+        working-directory: senju
+        run: python -m pytest tests/test_boundary_research_loop.py -q
+
+      - name: Compile adversary and boundary research bridge
+        run: |
+          PYTHONPATH=senju python -m py_compile \
+            senju/senju/real_surface_adversary.py \
+            senju/senju/autonomy/engine.py \
+            senju/senju/autonomy/adversary_loop.py \
+            senju/senju/autonomy/boundary_research_loop.py
+
+      - name: Join latest autonomous boundary counterexamples
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$SENJU_ADVERSARY_STATE" reports/security /tmp/senju-boundary-research-shared
+          RUN_ID="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Senju Autonomous Boundary Research" \
+            --status success \
+            --limit 20 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$RUN_ID" ]]; then
+            gh run download "$RUN_ID" \
+              --repo "$GITHUB_REPOSITORY" \
+              --name senju-boundary-research-state \
+              --dir /tmp/senju-boundary-research-shared || true
+          fi
+          HANDOFF="$(find /tmp/senju-boundary-research-shared -type f -name boundary_research_handoff.json -print -quit || true)"
+          if [[ -n "$HANDOFF" ]]; then
+            PYTHONPATH=senju python -m senju.autonomy.boundary_research_loop \
+              --state-dir "$SENJU_ADVERSARY_STATE" \
+              --import-handoff "$HANDOFF" \
+              --json reports/security/senju-boundary-research-import.json
+          else
+            printf '%s\n' '{"schema":"senju-boundary-research-import/v1","findings_seen":0,"items_queued":0}' \
+              > reports/security/senju-boundary-research-import.json
+          fi
+
+      - name: Run repeated Senju real-surface pressure
+        run: |
+          set -euo pipefail
+          PYTHONPATH=senju python -m senju.autonomy.adversary_loop \
+            --state-dir "$SENJU_ADVERSARY_STATE" \
+            --cycles 3 \
+            --rounds-per-cycle 2 \
+            --senju-joins-per-round 3 \
+            --json reports/security/senju-adversary-pressure.json
+
+      - name: Collect attack-effect stream and Senju state evidence
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          STATE_ROOT="$SENJU_ADVERSARY_STATE"
+          mkdir -p reports/security/senju-adversary-state
+          EFFECT_LOG="$STATE_ROOT/autonomy_reports/real_surface_adversary/attack_effects.jsonl"
+          if [[ -f "$EFFECT_LOG" ]]; then
+            cp "$EFFECT_LOG" reports/security/senju-attack-effects.jsonl
+          fi
+          if [[ -f "$STATE_ROOT/autonomy_queue.json" ]]; then
+            cp "$STATE_ROOT/autonomy_queue.json" reports/security/senju-adversary-state/autonomy_queue.json
+          fi
+          if [[ -f "$STATE_ROOT/real_surface_adversary_queue.json" ]]; then
+            cp "$STATE_ROOT/real_surface_adversary_queue.json" reports/security/senju-adversary-state/real_surface_adversary_queue.json
+          fi
+          if [[ -d "$STATE_ROOT/autonomy_reports/adversary_feedback" ]]; then
+            cp -R "$STATE_ROOT/autonomy_reports/adversary_feedback" reports/security/senju-adversary-state/
+          fi
+
+      - name: Print pressure summary
+        if: always()
+        shell: bash
+        run: |
+          cat reports/security/senju-boundary-research-import.json 2>/dev/null || true
+          cat reports/security/senju-adversary-pressure.json 2>/dev/null || true
+          if [[ -f reports/security/senju-attack-effects.jsonl ]]; then
+            echo "--- latest controlled attack effects shared with Senju ---"
+            tail -n 20 reports/security/senju-attack-effects.jsonl
+          fi
+
+      - name: Upload Senju adversary evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: senju-adversary-evidence-${{ github.run_id }}
+          path: reports/security/
+          if-no-files-found: warn
+          retention-days: 14

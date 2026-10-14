@@ -1,0 +1,76 @@
+name: THE WORLD Public Browser
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 * * * *"
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "outside-world/public_browser_scout.py"
+      - "outside-world/external_presence.py"
+      - "outside-world/supabase_directory.py"
+      - ".github/workflows/the-world-public-browser.yml"
+
+concurrency:
+  group: the-world-public-browser
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  browse-public-world:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      SUPABASE_URL: https://czwdtjgunsafcifjhpwt.supabase.co
+      SUPABASE_PUBLISHABLE_KEY: sb_publishable_vvPbYKjFFrc-OPM2yHFKaQ_9dtTu2EM
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+
+      - name: Install parser only
+        run: python -m pip install --disable-pip-version-check --no-cache-dir beautifulsoup4==4.13.4
+
+      - name: Load canonical citizens and issue external missions
+        run: |
+          set -euo pipefail
+          python outside-world/supabase_directory.py --out world-citizens.json --require-min 100
+          python outside-world/external_presence.py \
+            --citizens world-citizens.json \
+            --policy outside-world/presence_policy.json \
+            --seed "browser-${{ github.run_id }}-${{ github.run_attempt }}" \
+            --json outside-world-presence-plan.json \
+            --report outside-world-presence-report.md \
+            --decisions outside-world-action-decisions.json
+
+      - name: Open public sites in headless Chrome and assign evidence
+        run: |
+          set -euo pipefail
+          python outside-world/public_browser_scout.py \
+            --plan outside-world-presence-plan.json \
+            --json outside-world-browser-evidence.json \
+            --report outside-world-browser-report.md
+          cat outside-world-browser-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Preserve observed public evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-world-public-browser
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            world-citizens.json
+            outside-world-presence-plan.json
+            outside-world-browser-evidence.json
+            outside-world-browser-report.md

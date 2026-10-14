@@ -1,0 +1,67 @@
+name: Shared Discovery Authority Tests
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/authorized_site_authority_accelerator.py'
+      - 'automation/codegen/engine/bounded_owner_delegation.py'
+      - 'automation/codegen/engine/owner_authority_opportunity.py'
+      - 'automation/codegen/engine/third_party_authority_research.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_actions.py'
+      - 'automation/codegen/engine/authority_coordination.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
+      - 'automation/codegen/orchestrator.py'
+      - 'automation/codegen/tests/test_shared_discovery_authority.py'
+      - 'automation/codegen/tests/test_authorized_site_authority_accelerator.py'
+      - 'automation/codegen/tests/test_bounded_owner_delegation.py'
+      - 'automation/codegen/tests/test_owner_authority_opportunity.py'
+      - 'automation/codegen/tests/test_third_party_authority_research.py'
+      - 'automation/codegen/tests/test_discovery_probe_runner.py'
+      - 'automation/codegen/tests/test_discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_actions.py'
+      - 'automation/codegen/tests/test_discovery_generated_source_exclusion.py'
+      - 'automation/codegen/tests/test_authority_coordination.py'
+      - 'automation/codegen/tests/test_production_discovery_policy.py'
+      - 'automation/codegen/AUTHORITY_COORDINATION_PROTOCOL.md'
+      - '.github/workflows/shared-discovery-authority-tests.yml'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run shared discovery authority tests
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python -m py_compile automation/codegen/engine/authorized_site_authority_accelerator.py
+          python -m pytest -q \
+            automation/codegen/tests/test_shared_discovery_authority.py \
+            automation/codegen/tests/test_authorized_site_authority_accelerator.py \
+            automation/codegen/tests/test_bounded_owner_delegation.py \
+            automation/codegen/tests/test_owner_authority_opportunity.py \
+            automation/codegen/tests/test_third_party_authority_research.py \
+            automation/codegen/tests/test_discovery_probe_runner.py \
+            automation/codegen/tests/test_discovery_capability_leases.py \
+            automation/codegen/tests/test_discovery_external_actions.py \
+            automation/codegen/tests/test_discovery_generated_source_exclusion.py \
+            automation/codegen/tests/test_authority_coordination.py \
+            automation/codegen/tests/test_production_discovery_policy.py

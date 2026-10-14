@@ -1,0 +1,133 @@
+name: Executive Research Acceleration
+
+on:
+  schedule:
+    - cron: '*/4 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/config/authority_approval_constitution.json'
+      - 'automation/codegen/engine/authority_approval_constitution.py'
+      - 'automation/codegen/engine/executive_research_acceleration.py'
+      - 'automation/codegen/run_executive_research_acceleration.py'
+      - 'automation/codegen/tests/test_executive_research_acceleration.py'
+      - '.github/workflows/executive-research-acceleration.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/config/authority_approval_constitution.json'
+      - 'automation/codegen/engine/authority_approval_constitution.py'
+      - 'automation/codegen/engine/executive_research_acceleration.py'
+      - 'automation/codegen/run_executive_research_acceleration.py'
+      - 'automation/codegen/tests/test_executive_research_acceleration.py'
+      - '.github/workflows/executive-research-acceleration.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: executive-research-acceleration
+  cancel-in-progress: false
+
+jobs:
+  accelerate-executive-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout repository read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify executive acceleration invariants
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            automation/codegen/tests/test_executive_research_acceleration.py \
+            automation/codegen/tests/test_formal_authority_intake.py \
+            automation/codegen/tests/test_negotiation_submission_accelerator.py
+          python -m py_compile \
+            automation/codegen/engine/authority_approval_constitution.py \
+            automation/codegen/engine/executive_research_acceleration.py \
+            automation/codegen/run_executive_research_acceleration.py
+          python -m json.tool automation/codegen/config/authority_approval_constitution.json >/dev/null
+
+      - name: Restore shared formal-review memory
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-exec-accel
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Refresh formal intake before acceleration
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          mkdir -p .authority-opportunity-runtime
+          python automation/codegen/run_formal_authority_intake.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/formal_authority_intake_run.json
+
+      - name: Accelerate META X SENJU research and formal review
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          set -euo pipefail
+          python automation/codegen/run_executive_research_acceleration.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/executive_research_acceleration_run.json
+
+          test "$(jq -r '.research_capacity_multiplier' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "1.3"
+          test "$(jq -r '.formal_review_influence_multiplier' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "1.5"
+          test "$(jq -r '.target_loop_minutes' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "4"
+          test "$(jq -r '.owner_formal_review_admission_weight' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "0.0"
+          test "$(jq -r '.owner_formal_review_priority_weight' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "0.0"
+          test "$(jq -r '.secondary_owner_or_standing_evidence_required_for_formal_intake' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "false"
+          test "$(jq -r '.authority_effect' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "none"
+          test "$(jq -r '.authority_activated' .authority-opportunity-runtime/executive_research_acceleration_run.json)" = "false"
+          test -s .authority-opportunity-runtime/formal_root_authority_approval_queue.json
+          test -s .authority-opportunity-runtime/executive_review_priority_queue.json
+          test -s .authority-opportunity-runtime/executive_research_tasks.json
+
+          echo "accelerated_candidates=$(jq -r '.candidate_count' .authority-opportunity-runtime/executive_research_acceleration_run.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "research_tasks=$(jq -r '.research_task_count' .authority-opportunity-runtime/executive_research_acceleration_run.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Save accelerated review continuity
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}-exec-accel
+
+      - name: Preserve executive acceleration evidence
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: executive-research-acceleration-${{ github.run_id }}
+          path: |
+            automation/codegen/config/authority_approval_constitution.json
+            .authority-opportunity-runtime/formal_root_authority_approval_queue.json
+            .authority-opportunity-runtime/executive_review_priority_queue.json
+            .authority-opportunity-runtime/executive_research_tasks.json
+            .authority-opportunity-runtime/executive_research_acceleration_result.json
+            .authority-opportunity-runtime/executive_research_acceleration_run.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

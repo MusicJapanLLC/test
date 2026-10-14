@@ -3,6 +3,8 @@ import type { NewsItem } from './types';
 export const site = {
   name: 'MJ STORE',
   nameJa: 'MJストア',
+  /** 読み・別名（検索と構造化データ用） */
+  alternateNames: ['MJストア', 'エムジェイストア', 'Music Japan Games', 'Music Japanのゲームストア'],
   tagline: 'Music Japanのゲームストア',
   description:
     '合同会社Music Japanが音楽も物語もシステムも一から作ったゲームだけが並ぶ、公式ゲームストア。The World、灯の旅路、村長、世界まで行くんですか？、ギルドの灯。全作品ブラウザで遊べて、基本プレイ無料。',
@@ -19,7 +21,15 @@ export const site = {
     nameEn: 'Music Japan LLC',
     url: 'https://music-japan.com/',
     /** 同じ組織を指す公式ページ（構造化データの sameAs） */
-    sameAs: ['https://music-japan.com/', 'https://music-japan.com/en/', 'https://partners.music-japan.com/'],
+    sameAs: [
+      'https://music-japan.com/',
+      'https://music-japan.com/en/',
+      'https://partners.music-japan.com/',
+      'https://x.com/Music_Japan_LLC',
+      'https://www.instagram.com/music.japan.llc2/',
+    ],
+    /** X（旧Twitter）のアカウント。twitter:site に出す */
+    x: '@Music_Japan_LLC',
     address: { locality: '大阪市', region: '大阪府', country: 'JP' },
   },
   year: 2026,

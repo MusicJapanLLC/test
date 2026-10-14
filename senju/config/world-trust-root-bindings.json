@@ -1,0 +1,24 @@
+{
+  "schema": "senju-world-trust-root-bindings/v1",
+  "semantics": "binding_only_existing_authority_never_mints_authority",
+  "records": [
+    {
+      "root_id": "world:kabeya-authorized-test-range",
+      "owner": "MusicJapanLLC",
+      "target_host": "kabeya-authorized-test-range.onrender.com",
+      "standing_authorization_reference": "canonical:kabeya-authorized-test-range",
+      "autonomous_authority_council_reference": "META-X-SENJU:owner-envelope-council",
+      "credentialed_write_authorization_reference": "owner:write:github:MusicJapanLLC/test:commit-status",
+      "credentialed_write_target": "github:MusicJapanLLC/test:current-commit-status",
+      "security_self_approval_reference": "owner:security:self-approval:monotonic-only",
+      "deployment_authorization_reference": "owner:deploy:kabeya-authorized-test-range:worker-fleet",
+      "recovery_authorization_reference": "owner:recovery:MusicJapanLLC/test:the-world-unified-loop",
+      "network_policy_reference": "automation/codegen/meta_state/network_policy_envelope.json",
+      "unified_loop_workflow": "the-world-unified-loop.yml",
+      "checkpoint_issue_reference": "github:MusicJapanLLC/test#505",
+      "max_replica_target": 16,
+      "max_credential_replica_depth": 4,
+      "revoked": false
+    }
+  ]
+}

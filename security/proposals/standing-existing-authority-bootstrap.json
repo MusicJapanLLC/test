@@ -1,0 +1,34 @@
+{
+  "id": "sp-standing-existing-authority-bootstrap-20260831",
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "changes": [
+    {
+      "target": "authority_policy",
+      "operations": [
+        {
+          "type": "add_external_host",
+          "parameters": {
+            "host": "kabeya-authorized-test-range.onrender.com"
+          }
+        }
+      ]
+    },
+    {
+      "target": "deployment_protection",
+      "operations": [
+        {
+          "type": "add_deploy_target",
+          "parameters": {
+            "target_host": "kabeya-authorized-test-range.onrender.com"
+          }
+        }
+      ]
+    }
+  ],
+  "council_votes": {
+    "META": {"approve": true},
+    "X": {"approve": true},
+    "Senju": {"approve": true}
+  }
+}

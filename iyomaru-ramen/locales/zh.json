@@ -1,0 +1,154 @@
+{
+  "meta": {
+    "htmlLang": "zh-Hans",
+    "dir": "ltr",
+    "ogLocale": "zh_CN",
+    "title": "手打拉面 伊予丸水产｜北海道富良野手工拉面",
+    "description": "北海道富良野的渔夫直营拉面店，距JR富良野站步行2-3分钟。富良野产小麦手打面，搭配渔夫直送的新鲜海鲜。支持支付宝、微信支付。",
+    "ogTitle": "手打拉面 伊予丸水产｜富良野手工拉面",
+    "ogDescription": "富良野产小麦手打面，渔夫直营的新鲜海味。支持支付宝、微信支付。"
+  },
+  "a11y": {
+    "skipToContent": "跳至正文",
+    "openMenu": "打开菜单",
+    "closeMenu": "关闭菜单",
+    "openLightbox": "查看大图",
+    "closeLightbox": "关闭",
+    "prevImage": "上一张",
+    "nextImage": "下一张",
+    "langSwitcherLabel": "选择语言"
+  },
+  "nav": {
+    "menu": "菜单",
+    "concept": "用心之处",
+    "hours": "营业时间与交通",
+    "gallery": "店内环境",
+    "news": "最新消息",
+    "call": "致电"
+  },
+  "langSwitcher": { "ja": "日本語", "en": "English", "zh": "简体中文", "ko": "한국어" },
+  "hero": {
+    "eyebrow": "北海道・富良野",
+    "titleLines": ["手打拉面", "伊予丸水产"],
+    "tagline": "渔夫直营，富良野手打面，海味鲜到极致。",
+    "ctaMenu": "查看菜单",
+    "ctaHours": "营业时间与交通",
+    "scrollHint": "SCROLL",
+    "ratingBadge": "Google评分 4.4（328条评价）",
+    "ratingNote": "评分及数量会随时间变化，请以Google地图最新信息为准。"
+  },
+  "concept": {
+    "eyebrow": "用心之处",
+    "title": "我们的坚持",
+    "items": [
+      {
+        "icon": "wheat",
+        "title": "富良野产小麦手打面",
+        "text": "选用富良野产小麦「春丰」与当地鸡蛋，每日手工现制。追求富有嚼劲、顺滑爽口的口感。"
+      },
+      {
+        "icon": "field",
+        "title": "坚持富良野时令食材",
+        "text": "从小麦到鸡蛋，尽可能选用富良野本地食材，把北海道大地的味道，浓缩进每一碗汤面之中。"
+      },
+      {
+        "icon": "fish",
+        "title": "渔夫直营的新鲜海味",
+        "text": "店主本身就是渔夫，海鲜的新鲜度自然与众不同。虾、章鱼、螃蟹……不经中间商，直接为您奉上。"
+      }
+    ]
+  },
+  "menu": {
+    "eyebrow": "菜单",
+    "title": "招牌拉面",
+    "priceNote": "菜单价格为暂定显示，正式价格请以店内或电话咨询为准。",
+    "items": [
+      {
+        "tag": "招牌",
+        "name": "蟹汤味噌拉面",
+        "desc": "以毛蟹、帝王蟹熬制的浓郁蟹汤为底，搭配自家秘制味噌，鲜味满溢的一碗。",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "招牌",
+        "name": "背脂味噌拉面",
+        "desc": "加入浓香背脂的浓郁味噌拉面，与富良野产手打面堪称绝配。",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "招牌名物",
+        "name": "伊予丸SPECIAL",
+        "desc": "奢华铺满日高产三种海鲜，是渔夫直营店才能呈现的自信之作。",
+        "price": "¥○,○○○"
+      },
+      {
+        "tag": "配菜",
+        "name": "章鱼饭",
+        "desc": "米饭吸满章鱼鲜味，软糯可口，是拉面的最佳搭档。",
+        "price": "¥○○○"
+      }
+    ]
+  },
+  "hours": {
+    "eyebrow": "营业时间与交通",
+    "title": "营业时间与交通",
+    "hoursLabel": "营业时间",
+    "days": [
+      { "label": "周一", "hours": "11:00–21:00", "closed": false },
+      { "label": "周二", "hours": "11:00–21:00", "closed": false },
+      { "label": "周三", "hours": "11:00–21:00", "closed": false },
+      { "label": "周四", "hours": "11:00–21:00", "closed": false },
+      { "label": "周五", "hours": "定休", "closed": true },
+      { "label": "周六", "hours": "11:00–21:30", "closed": false },
+      { "label": "周日", "hours": "11:00–21:30", "closed": false }
+    ],
+    "closedNote": "定休日：每周五",
+    "varyNote": "营业时间可能因季节调整，来店前请致电确认。",
+    "addressLabel": "地址",
+    "address": "〒076-0025 北海道富良野市日之出町11-5",
+    "accessLabel": "交通",
+    "access": "距JR富良野站步行2-3分钟（旭川信用金库对面）",
+    "parkingLabel": "停车场",
+    "parking": "设有专用停车场（约5个车位，位于附近「铁板烧Masaya」后方）",
+    "seatsLabel": "座位",
+    "seats": "共14席（吧台4席，另设桌席）／可包场（20人以内）",
+    "featuresLabel": "设施",
+    "features": ["全席禁烟", "免费Wi-Fi", "设有电源插座", "舒适宁静的用餐空间"],
+    "paymentLabel": "支付方式",
+    "payments": ["信用卡", "IC交通卡等电子货币", "支付宝、微信支付、PayPay 等扫码支付"],
+    "mapCaption": "在地图中打开",
+    "callCta": "拨打电话"
+  },
+  "gallery": {
+    "eyebrow": "店内环境",
+    "title": "店内环境",
+    "items": [
+      { "caption": "安静的吧台座位" },
+      { "caption": "富良野产小麦手打面" },
+      { "caption": "自家秘制汤底" },
+      { "caption": "渔夫直营才有的新鲜海味" },
+      { "caption": "设有桌席的店内" },
+      { "caption": "紧邻JR富良野站" }
+    ]
+  },
+  "news": {
+    "eyebrow": "最新消息",
+    "title": "最新消息",
+    "items": [
+      { "date": "2024.06.30", "text": "本店已从富良野市山部迁至现址（日之出町）并重新开业。" },
+      { "date": "2026.08.27", "text": "官方网站已全新改版。" }
+    ]
+  },
+  "footer": {
+    "instagramLabel": "Instagram",
+    "phoneLabel": "电话",
+    "addressLabel": "地址",
+    "note": "",
+    "rightsText": "© 2026 手打拉面 伊予丸水产",
+    "disclaimer": "以上信息如有变更恕不另行通知，详情请以店内咨询为准。"
+  },
+  "ui": {
+    "showPaymentBadge": true,
+    "paymentBadgeText": "支持支付宝 / 微信支付 及银联卡等多种支付方式"
+  }
+}

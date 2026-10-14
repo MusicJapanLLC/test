@@ -1,4 +1,4 @@
-import { faqOf, games, statusOf } from '../data/games';
+import { cardArt, faqOf, gameDef, gameReleased, games, statusOf } from '../data/games';
 import { site } from '../data/site';
 import type { Game } from '../data/types';
 import { botHtml } from './brand';
@@ -78,6 +78,7 @@ function aboutHtml(g: Game): string {
     </header>
     <div class="g-about__grid">
       <div class="g-about__text" data-reveal>
+        <p class="g-about__def"><span class="g-about__def-label">かんたんに言うと</span>${ph(gameDef(g))}</p>
         <p class="g-about__lead">${ph(g.lead)}</p>
         ${g.description.map((p) => `<p>${esc(p)}</p>`).join('')}
         <ul class="tags">${g.tags.map((t) => `<li>#${esc(t)}</li>`).join('')}</ul>
@@ -321,8 +322,11 @@ export function gameJsonLd(ctx: RenderCtx, g: Game): Record<string, unknown>[] {
     '@type': ['VideoGame', 'SoftwareApplication'],
     '@id': `${url}#game`,
     name: g.title,
-    alternateName: [g.titleEn, `${g.title} ${g.subtitle}`],
-    description: `${g.lead} ${g.description.join(' ')}`,
+    alternateName: [g.kana, g.titleEn, `${g.title} ${g.subtitle}`],
+    description: `${gameDef(g)}${g.lead} ${g.description.join(' ')}`,
+    mainEntityOfPage: { '@id': `${url}#webpage` },
+    applicationSubCategory: g.genre,
+    thumbnailUrl: abs(ctx, (cardArt(g) ?? g.shots[0]).src),
     url,
     genre: g.genre,
     keywords: g.tags.join(', '),
@@ -358,6 +362,8 @@ export function gameJsonLd(ctx: RenderCtx, g: Game): Record<string, unknown>[] {
     game.sameAs = [g.playUrl];
     game.potentialAction = { '@type': 'PlayAction', target: g.playUrl };
   }
+  const released = gameReleased(g);
+  if (released) game.datePublished = released;
   if (latest) {
     game.dateModified = latest.date;
     game.releaseNotes = `${latest.version} ${latest.title}：${latest.notes.join('／')}`;

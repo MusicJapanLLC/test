@@ -1,0 +1,51 @@
+{
+  "activated_count": 0,
+  "candidate_count": 0,
+  "council_members": [
+    "META",
+    "X",
+    "SENJU",
+    "PR-ARMY"
+  ],
+  "current_effective_ceiling": {
+    "allow_delete": false,
+    "allow_http": false,
+    "allowed_methods": [
+      "GET",
+      "HEAD",
+      "OPTIONS"
+    ],
+    "ceiling_id": "owner-standing-derived:frontier-four-party:frontier-four-party",
+    "exact_hosts": [
+      "kabeya-authorized-test-range.onrender.com"
+    ],
+    "follow_redirects": true,
+    "max_redirects": 5,
+    "max_response_bytes": 10485760,
+    "per_host_methods": {
+      "kabeya-authorized-test-range.onrender.com": [
+        "GET",
+        "HEAD",
+        "OPTIONS"
+      ]
+    },
+    "retries": 5,
+    "timeout_seconds": 20.0
+  },
+  "decisions": [],
+  "four_party_quorum": 4,
+  "generated_at": 1788192615,
+  "hard_limits": [
+    "discovery_alone_never_activates_host",
+    "verified_owner_evidence_required",
+    "four_of_four_required",
+    "hard_deny_and_revocation_are_terminal",
+    "new_hosts_get_read_probe_methods_only",
+    "no_credentials_http_delete_or_private_network_expansion"
+  ],
+  "min_confidence": 75,
+  "ownership_verification_request_count": 0,
+  "production": true,
+  "schema": "senju-owner-frontier-council/v1",
+  "unknown_host_without_verified_evidence_auto_activated": false
+}

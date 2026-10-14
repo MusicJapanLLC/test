@@ -1,0 +1,131 @@
+{
+  "id": "sp-production-ten-surface-bundle-20260831-v1",
+  "environment": "production",
+  "owner_namespace": "MusicJapanLLC/test",
+  "changes": [
+    {
+      "target": "guard",
+      "operations": [
+        {
+          "type": "tighten_rule",
+          "parameters": {
+            "reason": "Exercise the production atomic Security Proposal closed loop across the Guard surface without weakening existing enforcement."
+          }
+        }
+      ]
+    },
+    {
+      "target": "authority_policy",
+      "operations": [
+        {
+          "type": "require_approval",
+          "parameters": {
+            "reason": "Keep authority mutations bound to an explicit approval decision while exercising the production bundle path."
+          }
+        }
+      ]
+    },
+    {
+      "target": "credential_broker",
+      "operations": [
+        {
+          "type": "require_rotation",
+          "parameters": {
+            "reason": "Require credential rotation as the monotonic credential-broker production control."
+          }
+        }
+      ]
+    },
+    {
+      "target": "network_policy",
+      "operations": [
+        {
+          "type": "reduce_rate_limit",
+          "parameters": {
+            "reason": "Exercise the network-policy production control in the tightening direction."
+          }
+        }
+      ]
+    },
+    {
+      "target": "audit_policy",
+      "operations": [
+        {
+          "type": "increase_coverage",
+          "parameters": {
+            "reason": "Record full proposal, Council, Self-Approval, merge and Production Apply evidence."
+          }
+        }
+      ]
+    },
+    {
+      "target": "branch_protection",
+      "operations": [
+        {
+          "type": "require_checks",
+          "parameters": {
+            "reason": "Exercise branch-protection coverage through the production bundle."
+          }
+        }
+      ]
+    },
+    {
+      "target": "deployment_protection",
+      "operations": [
+        {
+          "type": "enable_rollback",
+          "parameters": {
+            "reason": "Keep rollback capability enabled for production application."
+          }
+        }
+      ]
+    },
+    {
+      "target": "authorization_registry",
+      "operations": [
+        {
+          "type": "require_fresh_validation",
+          "parameters": {
+            "reason": "Require fresh validation for registry-backed authorization."
+          }
+        }
+      ]
+    },
+    {
+      "target": "emergency_stop",
+      "operations": [
+        {
+          "type": "lock_stop_disable",
+          "parameters": {
+            "reason": "Exercise Emergency Stop production control while preventing disablement by the self-approval loop."
+          }
+        }
+      ]
+    },
+    {
+      "target": "recovery_policy",
+      "operations": [
+        {
+          "type": "require_integrity_check",
+          "parameters": {
+            "reason": "Require integrity verification before recovery actions."
+          }
+        }
+      ]
+    }
+  ],
+  "council_votes": {
+    "META": {
+      "approve": true,
+      "reason": "Atomic production bundle contains only registered monotonic controls."
+    },
+    "X": {
+      "approve": true,
+      "reason": "All ten security surfaces remain inside the existing owner namespace and approved operation registry."
+    },
+    "Senju": {
+      "approve": true,
+      "reason": "Production bundle is atomic, auditable and fail-closed for any non-monotonic operation."
+    }
+  }
+}

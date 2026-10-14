@@ -1,0 +1,163 @@
+# activation: preserve exact read-only capability while forcing default-branch registration
+name: THE WORLD - Adversarial Boundary Growth Lab
+on:
+  pull_request:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "automation/security/adversarial_boundary_lab.py"
+      - "automation/security/test_adversarial_boundary_lab.py"
+      - "automation/security/authority_balance_policy.py"
+      - "automation/security/test_authority_balance_policy.py"
+      - ".github/workflows/adversarial-boundary-growth-lab.yml"
+      - ".github/workflows/authority-balance-council.yml"
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - "automation/security/adversarial_boundary_lab.py"
+      - "automation/security/test_adversarial_boundary_lab.py"
+      - "automation/security/authority_balance_policy.py"
+      - "automation/security/test_authority_balance_policy.py"
+      - ".github/workflows/adversarial-boundary-growth-lab.yml"
+      - ".github/workflows/authority-balance-council.yml"
+  schedule:
+    - cron: "11,31,51 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: adversarial-boundary-growth-lab-${{ github.ref }}
+  cancel-in-progress: false
+env:
+  GH_TOKEN: ${{ github.token }}
+  LAB_DIR: /tmp/adversarial-boundary-growth-lab
+jobs:
+  evolve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.12"
+      - name: Verify growth engine and council boundary
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest==9.1.1
+          python -m pytest \
+            automation/security/test_adversarial_boundary_lab.py \
+            automation/security/test_authority_balance_policy.py \
+            -q
+          python -m py_compile \
+            automation/security/adversarial_boundary_lab.py \
+            automation/security/authority_balance_policy.py
+          python automation/security/authority_balance_policy.py --require-approved \
+            --out /tmp/authority-balance-council-decision.json
+      - name: Restore previous learning corpus
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          rm -rf "$LAB_DIR"
+          mkdir -p "$LAB_DIR/evidence" "$LAB_DIR/state"
+          previous="$(gh run list \
+            --workflow adversarial-boundary-growth-lab.yml \
+            --branch claude/employee-onboarding-setup-udm86 \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$previous" ]]; then
+            mkdir -p "$LAB_DIR/previous"
+            gh run download "$previous" \
+              --name adversarial-boundary-growth-corpus \
+              --dir "$LAB_DIR/previous" || true
+            if [[ -f "$LAB_DIR/previous/corpus.json" ]]; then
+              cp "$LAB_DIR/previous/corpus.json" "$LAB_DIR/state/corpus.json"
+            fi
+          fi
+          [[ -f "$LAB_DIR/state/corpus.json" ]] || printf '{"scenarios":[]}\n' > "$LAB_DIR/state/corpus.json"
+      - name: Ingest real production evidence read-only
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          mkdir -p "$LAB_DIR/evidence"
+          for wf in \
+            live-production-chaos-canary.yml \
+            vulnerability-data-hub.yml \
+            security-continuous-whitehat.yml
+          do
+            run_id="$(gh run list \
+              --workflow "$wf" \
+              --branch claude/employee-onboarding-setup-udm86 \
+              --status success \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run_id" ]]; then
+              mkdir -p "$LAB_DIR/evidence/$wf"
+              gh run download "$run_id" --dir "$LAB_DIR/evidence/$wf" || true
+            fi
+          done
+          find "$LAB_DIR/evidence" -type f -name '*.json' -print | head -100
+      - name: Evolve evidence-backed boundary counterexamples with council tuning
+        if: github.event_name != 'pull_request'
+        run: |
+          set -euo pipefail
+          read generations corpus_budget <<EOF
+          $(python - <<'PY'
+          from automation.security.authority_balance_policy import active_tuning
+          tuning = active_tuning()
+          print(tuning['research_generations_per_cycle'], tuning['research_hypothesis_budget'])
+          PY
+          )
+          EOF
+          export ADVERSARIAL_LAB_MAX_CORPUS="$corpus_budget"
+          echo "Council-approved research generations=$generations corpus_budget=$corpus_budget"
+          for generation in $(seq 1 "$generations"); do
+            python automation/security/adversarial_boundary_lab.py \
+              --evidence-dir "$LAB_DIR/evidence" \
+              --corpus "$LAB_DIR/state/corpus.json" \
+              --out "$LAB_DIR/state/report.json" \
+              --seed "${GITHUB_RUN_ID}:${GITHUB_RUN_ATTEMPT}:${generation}"
+          done
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from automation.security.authority_balance_policy import active_tuning
+          root=Path(os.environ['LAB_DIR'])/'state'
+          report=json.loads((root/'report.json').read_text())
+          tuning=active_tuning()
+          b=report['capability_boundary']
+          assert b['reads_real_production_evidence'] is True
+          assert b['evolves_attack_hypotheses'] is True
+          assert b['persists_learning_artifact'] is True
+          assert b['network_write'] is False
+          assert b['production_authority_mutation'] is False
+          assert b['revoked_authority_restore'] is False
+          assert b['raw_credential_access'] is False
+          assert b['emergency_stop_override'] is False
+          assert b['generated_actions_executable'] is False
+          assert report['promotion_contract']['automatic_promotion'] is False
+          assert report['corpus_size'] <= tuning['research_hypothesis_budget']
+          print('BOUNDARY_GROWTH_LAB_OK', report['generation_max'], report['corpus_size'])
+          print('COUNCIL_TUNING', json.dumps(tuning, sort_keys=True))
+          for row in report['top_hypotheses'][:8]:
+              print(row['family'], row['score'], ','.join(row['preconditions']))
+          PY
+          cat "$LAB_DIR/state/report.json" >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve evolving corpus
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: adversarial-boundary-growth-corpus
+          retention-days: 90
+          if-no-files-found: error
+          path: |
+            /tmp/adversarial-boundary-growth-lab/state/corpus.json
+            /tmp/adversarial-boundary-growth-lab/state/report.json

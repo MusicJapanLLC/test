@@ -147,8 +147,14 @@ export function topBody(ctx: RenderCtx): string {
   return `
   ${bootHtml()}
   <main id="main" class="store">
-    <h1 class="sr">${site.name}｜${site.tagline}</h1>
     ${featureHtml(ctx)}
+
+    <section class="store-lead container" aria-labelledby="store-lead-title">
+      <h1 class="store-lead__title" id="store-lead-title">${ph('無料で遊べる、Music Japanのブラウザゲーム。')}</h1>
+      <p class="store-lead__text">MJ STORE（エムジェイストア）は、合同会社Music Japanがつくったゲームを遊べる公式ストアです。${games
+        .map((g, i) => `${i ? '、' : ''}${esc(g.genre)}の<a href="${gameHref(ctx, g)}">${esc(g.title)}</a>`)
+        .join('')}。全作品、スマホでもPCでも、インストールなしで今すぐ遊べます。</p>
+    </section>
 
     <section class="shelf container">
       ${secHead({

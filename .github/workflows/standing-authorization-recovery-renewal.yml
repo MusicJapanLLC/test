@@ -1,0 +1,98 @@
+name: Standing Authorization Recovery Renewal
+
+# Recovery-signal evaluation lane. This workflow may assess renewal candidates,
+# but it does not persist or restore production authorization from stale/uncertain state.
+on:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - '.github/workflows/standing-authorization-recovery-renewal.yml'
+      - 'senju/senju/meta/standing_authorization.py'
+      - 'senju/senju/meta/renewal_recovery.py'
+      - 'automation/recovery/renew_standing_authorizations.py'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Recovery signal source
+        required: true
+        default: recovery_worker
+        type: choice
+        options:
+          - stale_cache
+          - old_checkpoint
+          - replica
+          - recovery_worker
+          - owner_state_unknown
+          - revocation_unconfirmed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: standing-authorization-recovery-renewal
+  cancel-in-progress: false
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: claude/employee-onboarding-setup-udm86
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Evaluate current explicit authority and recovery signals
+        env:
+          RECOVERY_SOURCE: ${{ github.event.inputs.source || 'recovery_worker' }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import sys
+          import tempfile
+          from pathlib import Path
+
+          root = Path.cwd()
+          sys.path.insert(0, str(root / 'senju'))
+
+          from senju.meta.standing_authorization import sync_canonical_explicit_authorizations
+          from senju.meta.renewal_recovery import renew_all_active_from_recovery_signal
+
+          source = os.environ['RECOVERY_SOURCE']
+          with tempfile.TemporaryDirectory() as tmp:
+              tmp = Path(tmp)
+              registry = tmp / 'standing_authorizations.json'
+              lease_log = tmp / 'standing_authorization_leases.ndjson'
+
+              sync_canonical_explicit_authorizations(
+                  repo_root=root,
+                  registry_path=registry,
+              )
+
+              summary = {'source': source, 'mode': 'read-only-evaluation', 'actors': {}}
+              for actor in ('META', 'X'):
+                  report = renew_all_active_from_recovery_signal(
+                      source=source,
+                      actor=actor,
+                      registry_path=registry,
+                      lease_log_path=lease_log,
+                      reason='still_needed',
+                  )
+                  summary['actors'][actor] = {
+                      'candidates': [r.authorization_reference for r in report.renewed],
+                      'skipped_revoked': list(report.skipped_revoked),
+                      'failed': list(report.failed),
+                  }
+                  if report.failed:
+                      raise SystemExit(f'{actor} renewal evaluation failures: {report.failed}')
+
+              print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+          PY

@@ -1,0 +1,831 @@
+{
+  "admitted_hosts": [],
+  "authority_from_general_web_discovery": false,
+  "authority_rule": "already_authorized_exact_host_plus_operator_route_seed_only",
+  "discovered_profiles": [
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/netsparker-test-app-net/",
+      "host": "aspnet.testsparker.com",
+      "id": "registry-netsparker-test-app-dotnet",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://aspnet.testsparker.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/authlab/",
+      "host": "authlab.digi.ninja",
+      "id": "registry-authlab-public-challenges",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://authlab.digi.ninja/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/broken-crystals/",
+      "host": "brokencrystals.com",
+      "id": "registry-broken-crystals-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://brokencrystals.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/",
+      "host": "bugbait.io",
+      "id": "registry-bugbait-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://bugbait.io/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/burp-bounty-lab/",
+      "host": "burpbountylab.com",
+      "id": "registry-burp-bounty-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://burpbountylab.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/cyber-scavenger-hunt/",
+      "host": "cyberscavengerhunt.com",
+      "id": "registry-cyber-scavenger-hunt-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://cyberscavengerhunt.com/"
+    },
+    {
+      "authorization_evidence": "https://owasp.org/www-project-juice-shop/",
+      "id": "auto-owasp-juice-shop-3fa327d82374",
+      "operator": "OWASP",
+      "provider_id": "owasp-juice-shop",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://demo.owasp-juice.shop/"
+    },
+    {
+      "authorization_evidence": "https://www.zaproxy.org/docs/testapps/altoroj/",
+      "host": "demo.testfire.net",
+      "id": "registry-altoro-testfire-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://demo.testfire.net/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/duck-store/",
+      "host": "duck-store.escape.tech",
+      "id": "registry-duck-store-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://duck-store.escape.tech/"
+    },
+    {
+      "authorization_evidence": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
+      "id": "auto-portswigger-gin-and-juice-33294f0e82d6",
+      "operator": "PortSwigger",
+      "provider_id": "portswigger-gin-and-juice",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://ginandjuice.shop/"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-081db3698be6",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-f04510fbb95e",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/code/"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-592f1b9d0120",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/gruyere-code.zip"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-d0cf22082aab",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/resetbutton/123"
+    },
+    {
+      "authorization_evidence": "https://google-gruyere.appspot.com/part1",
+      "id": "auto-google-gruyere-0b72c6e0d1ad",
+      "operator": "Google",
+      "provider_id": "google-gruyere",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://google-gruyere.appspot.com/start"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/hackyourselffirst/",
+      "host": "hack-yourself-first.com",
+      "id": "registry-hack-yourself-first-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://hack-yourself-first.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/hackxpert/",
+      "host": "labs.hackxpert.com",
+      "id": "registry-hackxpert-public-labs",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://labs.hackxpert.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/openvault-bank/",
+      "host": "openvaultbank.com",
+      "id": "registry-openvault-bank-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://openvaultbank.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/pentest-ground/",
+      "host": "pentest-ground.com",
+      "id": "registry-pentest-ground-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://pentest-ground.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/netsparker-test-app-php/",
+      "host": "php.testsparker.com",
+      "id": "registry-netsparker-test-app-php",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://php.testsparker.com/"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "auto-google-firing-range-a4ed9833cabe",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "shared_instance": true,
+      "source": "operator_evidence_page",
+      "url": "https://public-firing-range.appspot.com/"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-d01369abb81b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/address"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-d3a3f0a44bae",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/badscriptimport"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-bbc646d77b54",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/cors"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-21b1316d893b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/cors/alloworigin/allowInsecureScheme"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-4846598a262c",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/cors/alloworigin/allowNullOrigin"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-cf10319ae922",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/cors/alloworigin/dynamicAllowOrigin"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-7fba6d69292e",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/dom/dompropagation"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-2f96346abf3b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/dom/eventtriggering"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-e8b9c230e30b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/dom/javascripturi.html"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-fe4d693baabd",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/dom/toxicdom"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-724e3a18d9b1",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/dom/toxicdomscripts"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-b9ddb4073929",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/escape/js"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-6f7d582995c8",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/escape/serverside"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-d76ccad41bd8",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/flashinjection"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-c8a5eb913928",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-bbde25d6e45b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/frameancestorsnonenoxfodeny"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-7b45acc0eb8a",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/frameancestorsnoxfoallowfrom"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-c9969ed1790b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/frameancestorsselfnoxfosameorigin"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-62bc45c5ed22",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/xfoallowfromnocoverdomain"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-072b6f683c2d",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/xfoallowfromnoframeancestors"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-663d84fee27f",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/xfodenynoframeancestorsnone"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-9ad772c6794a",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/invalidframingconfig/xfosameoriginnoframeancestorsself"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-e89f76d1e5d3",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/leakedcookie"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-316ec0679278",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/mixedcontent"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-f0a60929a973",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/redirect"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-5d227fd03c72",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/redirect/meta"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-4c9a9d3aa3da",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/redirect/parameter"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-7cb18c987962",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/contentsniffing"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-fa3689614440",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/escapedparameter"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-4a7481fc7890",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/filteredcharsets"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-1105b3bd62ab",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/filteredstrings"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-b8e73985006b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/jsoncallback"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-e6134e899b8e",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/parameter"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-92a04a03053c",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reflected/url"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-ca07019b0ce7",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/remoteinclude/object_hash.html"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-1b696dd9287d",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/remoteinclude/parameter"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-1b6b109dbb68",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/remoteinclude/script_hash.html"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-424a7ea15785",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reverseclickjacking"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-4f43dac3f1f3",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reverseclickjacking/jsonpendpoint"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-73a7addc1c4f",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reverseclickjacking/multipage"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-0c02d4744416",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/reverseclickjacking/singlepage"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-3ed4c2eb8e65",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/tags"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-5cc8eba8c09b",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/tags/expression"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-9b25322a5c82",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/tags/multiline"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-0a98020fc66d",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/urldom/jsonp"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-4d3f04daf603",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/urldom/location"
+    },
+    {
+      "authorization_evidence": "https://github.com/google/firing-range",
+      "id": "seed-google-firing-range-d157af5c4e2a",
+      "operator": "Google",
+      "provider_id": "google-firing-range",
+      "route_source": "https://raw.githubusercontent.com/google/firing-range/master/WEB-INF/web.xml",
+      "shared_instance": true,
+      "source": "operator_route_seed_catalog",
+      "url": "https://public-firing-range.appspot.com/urldom/redirect"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/owasp-skf-labs/",
+      "host": "secureby.design",
+      "id": "registry-owasp-skf-public-labs",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://secureby.design/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/vulnbank/",
+      "host": "vulnbank.org",
+      "id": "registry-vulnbank-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://vulnbank.org/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/wrongsecrets/",
+      "host": "wrongsecrets.herokuapp.com",
+      "id": "registry-wrongsecrets-public-demo",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://wrongsecrets.herokuapp.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/damn-vulnerable-ai-bank-dvaib/",
+      "host": "www.dvaib.com",
+      "id": "registry-dvaib-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://www.dvaib.com/"
+    },
+    {
+      "authorization_evidence": "https://vwad.owasp.org/app/zero-bank/",
+      "host": "zero.webappsecurity.com",
+      "id": "registry-zero-bank-public-lab",
+      "operator": "public security lab operator",
+      "provider_id": "curated-public-red-registry",
+      "shared_instance": true,
+      "source": "curated_public_red_lab_registry",
+      "url": "https://zero.webappsecurity.com/"
+    }
+  ],
+  "effective_host_count": 30,
+  "expanded_unique_url_count": 99,
+  "minimum_profile_target": 60,
+  "newly_discovered_urls": [],
+  "provider_checks": [
+    {
+      "evidence_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "final_url": "https://www.acunetix.com/support/docs/what-is-a-target/",
+      "matched_urls": [],
+      "provider_id": "acunetix-vulnweb",
+      "reachable": true
+    },
+    {
+      "evidence_url": "https://github.com/google/firing-range",
+      "final_url": "https://github.com/google/firing-range",
+      "matched_urls": [
+        "https://public-firing-range.appspot.com/",
+        "https://public-firing-range.appspot.com/"
+      ],
+      "provider_id": "google-firing-range",
+      "reachable": true
+    },
+    {
+      "error": "HTTPError: HTTP Error 429: Too Many Requests",
+      "evidence_url": "https://security.googleblog.com/2014/11/ready-aim-fire-open-source-tool-to-test.html",
+      "matched_urls": [],
+      "provider_id": "google-firing-range",
+      "reachable": false
+    },
+    {
+      "evidence_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
+      "final_url": "https://security.googleblog.com/2010/05/do-know-evil-web-application.html",
+      "matched_urls": [],
+      "provider_id": "google-gruyere",
+      "reachable": true
+    },
+    {
+      "evidence_url": "https://google-gruyere.appspot.com/part1",
+      "final_url": "https://google-gruyere.appspot.com/part1",
+      "matched_urls": [
+        "https://google-gruyere.appspot.com/start",
+        "https://google-gruyere.appspot.com/",
+        "https://google-gruyere.appspot.com/code/",
+        "https://google-gruyere.appspot.com/gruyere-code.zip",
+        "https://google-gruyere.appspot.com/gruyere-code.zip",
+        "https://google-gruyere.appspot.com/resetbutton/123"
+      ],
+      "provider_id": "google-gruyere",
+      "reachable": true
+    },
+    {
+      "created": false,
+      "error": "ValueError: instance factory did not return a distinct same-provider sandbox URL",
+      "instance_factory_url": "https://google-gruyere.appspot.com/start",
+      "provider_id": "google-gruyere"
+    },
+    {
+      "evidence_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
+      "final_url": "https://portswigger.net/burp/documentation/desktop/testing-workflow",
+      "matched_urls": [],
+      "provider_id": "portswigger-gin-and-juice",
+      "reachable": true
+    },
+    {
+      "evidence_url": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
+      "final_url": "https://portswigger.net/blog/gin-and-juice-shop-put-your-scanner-to-the-test",
+      "matched_urls": [
+        "https://ginandjuice.shop/",
+        "https://ginandjuice.shop/",
+        "https://ginandjuice.shop/"
+      ],
+      "provider_id": "portswigger-gin-and-juice",
+      "reachable": true
+    },
+    {
+      "evidence_url": "https://owasp.org/www-project-juice-shop/",
+      "final_url": "https://owasp.org/www-project-juice-shop/",
+      "matched_urls": [
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/",
+        "https://demo.owasp-juice.shop/"
+      ],
+      "provider_id": "owasp-juice-shop",
+      "reachable": true
+    }
+  ],
+  "route_seed_added_count": 0,
+  "schema": "senju-public-red-discovery/v2",
+  "updated_at_utc": "2026-09-01T08:38:22.285298+00:00"
+}

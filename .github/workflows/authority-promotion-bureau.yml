@@ -1,0 +1,184 @@
+name: Authority Promotion Bureau
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/authority_promotion_bureau.py'
+      - 'senju/scripts/run_authority_promotion_bureau.py'
+      - 'senju/tests/test_authority_promotion_bureau.py'
+      - 'senju/AUTHORITY_PROMOTION_BUREAU.md'
+      - '.github/workflows/authority-promotion-bureau.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/authority_promotion_bureau.py'
+      - 'senju/scripts/run_authority_promotion_bureau.py'
+      - 'senju/tests/test_authority_promotion_bureau.py'
+      - 'senju/AUTHORITY_PROMOTION_BUREAU.md'
+      - '.github/workflows/authority-promotion-bureau.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: authority-promotion-bureau
+  cancel-in-progress: false
+
+jobs:
+  promotion-bureau:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout production lineage read-only
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify promotion bureau invariants
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            senju/tests/test_authority_promotion_bureau.py \
+            senju/tests/test_reviewed_authority_lifecycle.py \
+            automation/codegen/tests/test_authority_reviewer.py
+          python -m py_compile \
+            senju/senju/authority_promotion_bureau.py \
+            senju/scripts/run_authority_promotion_bureau.py
+
+      - name: Restore promotion bureau memory
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-promotion-runtime/
+          key: authority-promotion-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-promotion-${{ github.ref_name }}-
+            authority-promotion-
+
+      - name: Collect latest reviewed Authority and formal approval state
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE_BRANCH: claude/employee-onboarding-setup-udm86
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/promotion-upstream/{reviewed,formal}
+
+          restore_latest() {
+            local workflow="$1" dest="$2"
+            local run_id
+            run_id="$(gh run list \
+              --repo "$GITHUB_REPOSITORY" \
+              --workflow "$workflow" \
+              --branch "$BASE_BRANCH" \
+              --status success \
+              --limit 8 \
+              --json databaseId \
+              --jq '.[0].databaseId // empty' || true)"
+            if [[ -n "$run_id" ]]; then
+              gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --dir "$dest" || true
+            fi
+            echo "$workflow=${run_id:-none}" >> "$GITHUB_STEP_SUMMARY"
+          }
+
+          restore_latest "Reviewed Authority Closed Loop" /tmp/promotion-upstream/reviewed
+          restore_latest "Formal Authority Intake" /tmp/promotion-upstream/formal
+
+      - name: Hydrate current promotion inputs
+        if: github.event_name != 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p senju/state automation/codegen/meta_state .authority-promotion-runtime
+
+          REVIEWED_LEASES="$(find /tmp/promotion-upstream/reviewed -name reviewed_authority_operational_leases.json -print -quit || true)"
+          if [[ -n "$REVIEWED_LEASES" ]]; then
+            cp "$REVIEWED_LEASES" senju/state/reviewed_authority_operational_leases.json
+          fi
+
+          REVIEWED_GRANTS="$(find /tmp/promotion-upstream/reviewed -name authority_reviewed_grants.json -print -quit || true)"
+          if [[ -n "$REVIEWED_GRANTS" ]]; then
+            cp "$REVIEWED_GRANTS" senju/state/authority_reviewed_grants.json
+          fi
+
+          FORMAL_QUEUE="$(find /tmp/promotion-upstream/formal -name formal_root_authority_approval_queue.json -print -quit || true)"
+          if [[ -n "$FORMAL_QUEUE" ]]; then
+            cp "$FORMAL_QUEUE" automation/codegen/meta_state/formal_root_authority_approval_queue.json
+          fi
+
+          if [[ ! -s senju/state/reviewed_authority_operational_leases.json ]]; then
+            printf '%s\n' '{"schema":"senju-reviewed-authority-operational-leases/v1","leases":[]}' > senju/state/reviewed_authority_operational_leases.json
+          fi
+          if [[ ! -s automation/codegen/meta_state/formal_root_authority_approval_queue.json ]]; then
+            printf '%s\n' '{"schema":"the-world-formal-root-authority-approval-queue/v1","candidates":[]}' > automation/codegen/meta_state/formal_root_authority_approval_queue.json
+          fi
+
+      - name: Promote approved reviewed Authority and attend AI owners
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: senju:automation/codegen
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_authority_promotion_bureau.py \
+            --state-dir senju/state \
+            --meta-state-dir automation/codegen/meta_state \
+            --output-dir .authority-promotion-runtime \
+            --stalled-after-seconds 1200 \
+            --out /tmp/authority-promotion-bureau.json
+
+          test "$(jq -r '.independent_promotion_bureau' /tmp/authority-promotion-bureau.json)" = "true"
+          test "$(jq -r '.new_root_minted' .authority-promotion-runtime/promotion_bureau_leases.json)" = "false"
+          test "$(jq -r '.authority_widened' .authority-promotion-runtime/promotion_bureau_leases.json)" = "false"
+          test "$(jq -r '.canonical_trust_roots_modified' .authority-promotion-runtime/promotion_bureau_approved_hosts.json)" = "false"
+          test "$(jq -r '.auto_approval' .authority-promotion-runtime/stalled_approval_research_queue.json)" = "false"
+          test -s .authority-promotion-runtime/senju_approved_authority_feed.json
+
+          cp .authority-promotion-runtime/senju_approved_authority_feed.json senju/state/senju_approved_authority_feed.json
+          cp .authority-promotion-runtime/promotion_bureau_assignments.json senju/state/promotion_bureau_assignments.json
+          cp .authority-promotion-runtime/stalled_approval_research_queue.json senju/state/stalled_approval_research_queue.json
+
+          echo "approved_runtime_hosts=$(jq -r '.approved_runtime_host_count' /tmp/authority-promotion-bureau.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "assignments=$(jq -r '.assignment_count' /tmp/authority-promotion-bureau.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "stalled_candidates=$(jq -r '.stalled_candidate_count' /tmp/authority-promotion-bureau.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "stalled_research_tasks=$(jq -r '.stalled_research_task_count' /tmp/authority-promotion-bureau.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Persist promotion bureau memory
+        if: github.event_name != 'pull_request'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-promotion-runtime/
+          key: authority-promotion-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve approved list, assignments, and stalled-review queue
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: authority-promotion-bureau-${{ github.run_id }}
+          path: |
+            /tmp/authority-promotion-bureau.json
+            .authority-promotion-runtime/promotion_bureau_approved_hosts.json
+            .authority-promotion-runtime/promotion_bureau_leases.json
+            .authority-promotion-runtime/promotion_bureau_assignments.json
+            .authority-promotion-runtime/stalled_approval_research_queue.json
+            .authority-promotion-runtime/senju_approved_authority_feed.json
+            senju/state/senju_approved_authority_feed.json
+            senju/state/promotion_bureau_assignments.json
+            senju/state/stalled_approval_research_queue.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

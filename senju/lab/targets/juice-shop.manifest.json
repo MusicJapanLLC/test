@@ -1,0 +1,15 @@
+{
+  "archetype": "web_app",
+  "host": "10.13.0.5",
+  "note": "OWASP Juice Shop（意図的に脆弱な学習用アプリ）の攻撃面構造宣言。攻撃コードは含まない。",
+  "surfaces": [
+    {"name": "login", "vuln_class": "sqli", "difficulty": 0.35},
+    {"name": "search", "vuln_class": "xss", "difficulty": 0.4},
+    {"name": "basket", "vuln_class": "idor", "difficulty": 0.5},
+    {"name": "profile-image-url", "vuln_class": "ssrf", "difficulty": 0.7},
+    {"name": "feedback", "vuln_class": "xss", "difficulty": 0.45},
+    {"name": "admin-section", "vuln_class": "auth_bypass", "difficulty": 0.6},
+    {"name": "file-upload", "vuln_class": "path_trav", "difficulty": 0.75},
+    {"name": "token", "vuln_class": "jwt_weak", "difficulty": 0.65}
+  ]
+}

@@ -1,0 +1,234 @@
+name: Authority Opportunity + Improvement Loop
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/authority_opportunity_explorer.py'
+      - 'automation/codegen/engine/authority_improvement_bus.py'
+      - 'automation/codegen/engine/improvement_evidence_import.py'
+      - 'automation/codegen/engine/authority_candidate_council.py'
+      - 'automation/codegen/engine/authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/engine/unknown_link_authority_research.py'
+      - 'automation/codegen/run_authority_opportunity_explorer.py'
+      - 'automation/codegen/run_authority_improvement_bus.py'
+      - 'automation/codegen/run_authority_candidate_council.py'
+      - 'automation/codegen/run_unknown_link_authority_research.py'
+      - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
+      - 'automation/codegen/tests/test_authority_improvement_bus.py'
+      - 'automation/codegen/tests/test_improvement_evidence_import.py'
+      - 'automation/codegen/tests/test_authority_candidate_council.py'
+      - 'automation/codegen/tests/test_authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/tests/test_unknown_link_authority_research.py'
+      - 'senju/senju/meta/trust_derived_autonomy.py'
+      - 'senju/tests/test_trust_derived_improvement_capabilities.py'
+      - '.github/workflows/authority-opportunity-explorer.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/authority_opportunity_explorer.py'
+      - 'automation/codegen/engine/authority_improvement_bus.py'
+      - 'automation/codegen/engine/improvement_evidence_import.py'
+      - 'automation/codegen/engine/authority_candidate_council.py'
+      - 'automation/codegen/engine/authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/engine/unknown_link_authority_research.py'
+      - 'automation/codegen/run_authority_opportunity_explorer.py'
+      - 'automation/codegen/run_authority_improvement_bus.py'
+      - 'automation/codegen/run_authority_candidate_council.py'
+      - 'automation/codegen/run_unknown_link_authority_research.py'
+      - 'automation/codegen/tests/test_authority_opportunity_explorer.py'
+      - 'automation/codegen/tests/test_authority_improvement_bus.py'
+      - 'automation/codegen/tests/test_improvement_evidence_import.py'
+      - 'automation/codegen/tests/test_authority_candidate_council.py'
+      - 'automation/codegen/tests/test_authority_candidate_improvement_bridge.py'
+      - 'automation/codegen/tests/test_unknown_link_authority_research.py'
+      - 'senju/senju/meta/trust_derived_autonomy.py'
+      - 'senju/tests/test_trust_derived_improvement_capabilities.py'
+      - '.github/workflows/authority-opportunity-explorer.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: authority-opportunity-improvement-loop
+  cancel-in-progress: false
+
+jobs:
+  explore-and-improve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore opportunity and improvement memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Verify explorer, candidate council, improvement, import, research, and trust invariants
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            automation/codegen/tests/test_authority_opportunity_explorer.py \
+            automation/codegen/tests/test_authority_improvement_bus.py \
+            automation/codegen/tests/test_improvement_evidence_import.py \
+            automation/codegen/tests/test_authority_candidate_council.py \
+            automation/codegen/tests/test_authority_candidate_improvement_bridge.py \
+            automation/codegen/tests/test_unknown_link_authority_research.py \
+            senju/tests/test_trust_derived_improvement_capabilities.py
+
+      - name: Import latest sanitized The World evidence
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PYTHONPATH: automation/codegen
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.improvement_evidence_import import import_latest_world_evidence
+
+          result = import_latest_world_evidence(Path('.authority-opportunity-runtime'))
+          print(result)
+          assert result.get('authority_imported') is False
+          assert result.get('generated_authority_imported', False) is False
+          assert result.get('credentials_imported', False) is False
+          assert result.get('raw_secrets_imported', False) is False
+          PY
+
+      - name: Refresh trusted owner state, discovery, leases, and fixed authorized actions
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.production_state_bootstrap import bootstrap_owner_runtime_state
+          from engine.discovery_closed_loop import run_discovery_closed_loop
+          from engine.discovery_capability_leases import issue_discovery_capability_leases
+          from engine.discovery_external_action import run_discovery_external_actions
+
+          state = Path('.authority-opportunity-runtime')
+          bootstrap = bootstrap_owner_runtime_state(state, repo_root='.')
+          discovery = run_discovery_closed_loop(
+              state,
+              repo_root='.',
+              max_rounds=2,
+              max_targets_per_round=40,
+          )
+          leases = issue_discovery_capability_leases(state)
+          actions = run_discovery_external_actions(state, repo_root='.', max_actions=4)
+          print({
+              'bootstrap': bootstrap.get('authority_source'),
+              'shared': discovery.get('final_shared_discovery_count', 0),
+              'authorized': discovery.get('final_authorized_count', 0),
+              'leases': leases.get('lease_count', 0),
+              'actions_attempted': actions.get('attempted', 0),
+              'actions_succeeded': actions.get('succeeded', 0),
+          })
+          PY
+
+      - name: Explore authority opportunities
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_authority_opportunity_explorer.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --bootstrap-owner-state \
+            --json-out .authority-opportunity-runtime/authority_opportunity_run.json
+          test "$(jq -r '.global_rules.discovery_is_opportunity_not_root_authority' .authority-opportunity-runtime/authority_opportunity_run.json)" = "true"
+          test "$(jq -r '.global_rules.hard_denial_requires_new_independent_evidence_for_reconsideration' .authority-opportunity-runtime/authority_opportunity_run.json)" = "true"
+          test "$(jq -r '.global_rules.alternate_identity_bypass' .authority-opportunity-runtime/authority_opportunity_run.json)" = "false"
+
+      - name: Build multi-agent root candidate and HARD_DENY reconsideration dossiers
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_authority_candidate_council.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --json-out .authority-opportunity-runtime/authority_candidate_council_run.json
+          test "$(jq -r '.new_root_self_mint' .authority-opportunity-runtime/authority_candidate_council_run.json)" = "false"
+          test "$(jq -r '.hard_deny_identity_bypass' .authority-opportunity-runtime/authority_candidate_council_run.json)" = "false"
+          test "$(jq -r '.explicit_revocation_reactivation' .authority-opportunity-runtime/authority_candidate_council_run.json)" = "false"
+          test -s .authority-opportunity-runtime/authority_reconsideration_queue.json
+          echo "root_review_ready=$(jq -r '.review_ready_count' .authority-opportunity-runtime/authority_candidate_council_run.json)"
+          echo "hard_deny_reconsideration_ready=$(jq -r '.hard_deny_reconsideration_ready_count' .authority-opportunity-runtime/authority_candidate_council_run.json)"
+
+      - name: Fuse PR-army evidence into shared continuous-improvement work
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_authority_improvement_bus.py \
+            --state .authority-opportunity-runtime \
+            --json-out .authority-opportunity-runtime/authority_improvement_run.json
+          test "$(jq -r '.continuous_improvement' .authority-opportunity-runtime/authority_improvement_run.json)" = "true"
+          test "$(jq -r '.new_unrelated_root_self_mint' .authority-opportunity-runtime/authority_improvement_run.json)" = "false"
+          test "$(jq -r '.hard_denial_identity_bypass' .authority-opportunity-runtime/authority_improvement_run.json)" = "false"
+
+      - name: Connect candidate council to META X SENJU CHILD and PR-Army improvement tasks
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python - <<'PY'
+          from engine.authority_candidate_improvement_bridge import bridge_candidate_council_to_improvement_bus
+
+          result = bridge_candidate_council_to_improvement_bus('.authority-opportunity-runtime')
+          print(result)
+          assert result['continuous_improvement'] is True
+          assert result['new_unrelated_root_self_mint'] is False
+          assert result['hard_deny_identity_bypass'] is False
+          assert 'PR-ARMY' in result['shared_with']
+          PY
+          test -s .authority-opportunity-runtime/authority_improvement_tasks.json
+          echo "improvement_tasks=$(jq -r '.task_count' .authority-opportunity-runtime/authority_improvement_tasks.json)"
+
+      - name: Run closed-loop unknown-link authority research and council routing
+        env:
+          PYTHONPATH: automation/codegen
+        run: |
+          python automation/codegen/run_unknown_link_authority_research.py \
+            --state .authority-opportunity-runtime \
+            --chaos-rate 0.03 \
+            --json-out .authority-opportunity-runtime/unknown_link_authority_research_run.json
+          test "$(jq -r '.closed_loop' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "true"
+          test "$(jq -r '.new_authority_minted' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "false"
+          test "$(jq -r '.external_post_executed' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "false"
+          test "$(jq -r '.synthetic_reports_truth_labeled' .authority-opportunity-runtime/unknown_link_authority_research_run.json)" = "true"
+          test -s .authority-opportunity-runtime/unknown_link_council_review_requests.json
+          test -s .authority-opportunity-runtime/synthetic_chaos_reports.json
+          echo "unknown_link_review_ready=$(jq -r '.review_ready_count' .authority-opportunity-runtime/unknown_link_authority_research_run.json)"
+          echo "synthetic_chaos_reports=$(jq -r '.synthetic_report_count' .authority-opportunity-runtime/unknown_link_authority_research_run.json)"
+
+      - name: Save opportunity and improvement memory
+        if: always()
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: authority-opportunity-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve shared improvement evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: authority-opportunity-improvement-${{ github.run_id }}
+          path: .authority-opportunity-runtime/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

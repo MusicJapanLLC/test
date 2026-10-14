@@ -1,0 +1,146 @@
+name: THE WORLD - Autonomous Research Fabric
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/the-world-autonomous-research-fabric.yml'
+      - 'automation/world/research_fabric.py'
+      - 'automation/world/test_research_fabric.py'
+      - 'automation/world/task_worker.py'
+
+concurrency:
+  group: the-world-autonomous-research-fabric
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  research-fabric:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify closed research engine
+        working-directory: automation/world
+        run: |
+          set -euo pipefail
+          python -m unittest -v test_research_fabric.py
+
+      - name: Load shared research memory and live World snapshot
+        run: |
+          set -euo pipefail
+          python automation/world/task_worker.py research-config \
+            --out /tmp/world-research-config.json \
+            --history-limit 120
+          python - <<'PY'
+          import json
+          d=json.load(open('/tmp/world-research-config.json',encoding='utf-8'))
+          assert isinstance(d.get('programs'),list) and len(d['programs']) == 8
+          assert int((d.get('resident_snapshot') or {}).get('active_count') or 0) > 0
+          print('research config verified')
+          PY
+
+      - name: Run all due autonomous research labs
+        run: |
+          set -euo pipefail
+          python automation/world/research_fabric.py \
+            --config /tmp/world-research-config.json \
+            --out /tmp/world-research \
+            --run-id "$GITHUB_RUN_ID" \
+            --max-programs 8
+          cat /tmp/world-research/report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate research evidence boundary
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, pathlib
+          root=pathlib.Path('/tmp/world-research')
+          batch=json.load(open(root/'batch.json',encoding='utf-8'))
+          assert batch.get('closed_model') is True
+          assert 0 <= int(batch.get('program_count') or 0) <= 8
+          assert int(batch.get('trial_count') or 0) >= 0
+          for cycle in batch.get('cycles') or []:
+              assert cycle.get('program_key') in {'LEARNING','COORDINATION','RESILIENCE','MEMORY','SOCIETY','ECONOMY','CREATIVITY','GOVERNANCE'}
+              assert int(cycle.get('trial_count') or 0) >= 100
+              assert cycle.get('artifact',{}).get('closed_model') is True
+              assert 0 <= float(cycle.get('novelty') or 0) <= 1
+              assert 0 <= float(cycle.get('confidence') or 0) <= 1
+              assert 0 <= float(cycle.get('reproducibility') or 0) <= 1
+              assert len(cycle.get('selected_resident_keys') or []) >= 1
+              for f in cycle.get('findings') or []:
+                  assert f.get('evidence',{}).get('closed_model') is True
+          print(f"validated labs={batch['program_count']} trials={batch['trial_count']}")
+          PY
+
+      - name: Record every cycle into shared research memory
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/world-research-records
+          shopt -s nullglob
+          files=(/tmp/world-research/cycles/*.json)
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo 'No labs were due this cycle.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          for f in "${files[@]}"; do
+            base="$(basename "$f" .json)"
+            python automation/world/task_worker.py record-research \
+              --result "$f" \
+              --out "/tmp/world-research-records/${base}.json"
+          done
+          echo "Recorded ${#files[@]} research cycles into shared memory." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build collaboration digest
+        if: always()
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('/tmp/world-research/batch.json')
+          if not p.exists():
+              raise SystemExit(0)
+          d=json.loads(p.read_text(encoding='utf-8'))
+          rows=[]
+          for c in d.get('cycles') or []:
+              rows.append({
+                  'program':c.get('program_key'),'mode':c.get('mode'),'trials':c.get('trial_count'),
+                  'delta':(c.get('artifact') or {}).get('holdout_delta'),
+                  'novelty':c.get('novelty'),'confidence':c.get('confidence'),'reproducibility':c.get('reproducibility'),
+                  'fellows':c.get('selected_resident_keys') or [],
+                  'replicate_of':c.get('replicate_of_finding_id'),'inspired_by':c.get('inspired_by_finding_id'),
+                  'replication_outcome':c.get('replication_outcome'),
+              })
+          out={'schema':'the-world-research-collaboration-digest/v1','github_run_id':d.get('github_run_id'),'total_trials':d.get('trial_count'),'labs':rows}
+          pathlib.Path('/tmp/world-research/collaboration-digest.json').write_text(json.dumps(out,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+          PY
+
+      - name: Preserve full research evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: the-world-research-fabric-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: warn
+          path: |
+            /tmp/world-research-config.json
+            /tmp/world-research/batch.json
+            /tmp/world-research/report.md
+            /tmp/world-research/collaboration-digest.json
+            /tmp/world-research/cycles/*.json
+            /tmp/world-research-records/*.json

@@ -1,0 +1,74 @@
+name: Senju External Denial Learning
+
+on:
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/senju/external_denial_learning.py"
+      - "senju/senju/guard_denial_feedback.py"
+      - "senju/senju/external_recovery_closed_loop.py"
+      - "senju/senju/external_recovery_cycle.py"
+      - "senju/senju/external.py"
+      - "senju/tests/test_external_denial_learning.py"
+      - "senju/tests/test_guard_denial_feedback.py"
+      - "senju/tests/test_external_recovery_closed_loop.py"
+      - "senju/tests/test_external_recovery_cycle.py"
+      - ".github/workflows/senju-external-denial-learning.yml"
+      - ".github/workflows/senju-external-recovery-cycle.yml"
+  pull_request:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "senju/senju/external_denial_learning.py"
+      - "senju/senju/guard_denial_feedback.py"
+      - "senju/senju/external_recovery_closed_loop.py"
+      - "senju/senju/external_recovery_cycle.py"
+      - "senju/senju/external.py"
+      - "senju/tests/test_external_denial_learning.py"
+      - "senju/tests/test_guard_denial_feedback.py"
+      - "senju/tests/test_external_recovery_closed_loop.py"
+      - "senju/tests/test_external_recovery_cycle.py"
+      - ".github/workflows/senju-external-denial-learning.yml"
+      - ".github/workflows/senju-external-recovery-cycle.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  denial-learning:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check pytest==9.1.1
+
+      - name: Verify denial learning, guard pressure, and authority-preserving recovery
+        working-directory: senju
+        run: >-
+          python -m pytest
+          tests/test_external_denial_learning.py
+          tests/test_guard_denial_feedback.py
+          tests/test_external_recovery_closed_loop.py
+          tests/test_external_recovery_cycle.py
+          -q
+
+      - name: Compile production modules
+        run: >-
+          python -m py_compile
+          senju/senju/external_denial_learning.py
+          senju/senju/guard_denial_feedback.py
+          senju/senju/external_recovery_closed_loop.py
+          senju/senju/external_recovery_cycle.py
+          senju/senju/external.py

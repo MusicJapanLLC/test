@@ -1,0 +1,12 @@
+{
+  "ballots_by_proposal": {},
+  "council_members": [
+    "META",
+    "X",
+    "SENJU",
+    "PR-ARMY"
+  ],
+  "generated_at": 1788192615,
+  "quorum": 4,
+  "schema": "senju-owner-frontier-ballots/v1"
+}

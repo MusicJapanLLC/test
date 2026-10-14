@@ -1,0 +1,49 @@
+name: Distributed Authority Tests
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/meta/distributed_authority.py'
+      - 'senju/senju/meta/autonomous_authority_council.py'
+      - 'senju/senju/distributed_egress.py'
+      - 'senju/tests/test_distributed_authority.py'
+      - 'senju/tests/test_autonomous_authority_council.py'
+      - 'senju/DISTRIBUTED_AUTHORITY_POLICY.md'
+      - '.github/workflows/distributed-authority-tests.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/meta/distributed_authority.py'
+      - 'senju/senju/meta/autonomous_authority_council.py'
+      - 'senju/senju/distributed_egress.py'
+      - 'senju/tests/test_distributed_authority.py'
+      - 'senju/tests/test_autonomous_authority_council.py'
+      - 'senju/DISTRIBUTED_AUTHORITY_POLICY.md'
+      - '.github/workflows/distributed-authority-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Run distributed authority, AI council, and transport regression tests
+        env:
+          PYTHONPATH: senju
+        run: >-
+          python -m pytest -q
+          senju/tests/test_distributed_authority.py
+          senju/tests/test_autonomous_authority_council.py
+          senju/tests/test_guarded_multi_egress.py

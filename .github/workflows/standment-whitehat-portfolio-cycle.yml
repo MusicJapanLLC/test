@@ -1,0 +1,143 @@
+name: Standment Security - White-Hat Portfolio Cycle
+
+on:
+  schedule:
+    - cron: '5 22 * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - .github/workflows/standment-whitehat-portfolio-cycle.yml
+      - automation/agent_factory/**
+      - automation/security/whitehat_portfolio_bridge.py
+      - automation/security/test_whitehat_portfolio_bridge.py
+      - automation/security/whitehat_slack_report.py
+      - standment-security/ELITE_WHITEHAT_CELL.md
+      - standment-security/WHITEHAT_PORTFOLIO_OPERATING_PLAN.md
+      - standment-security/security_portfolio_program.json
+      - company-society/FAITH.md
+      - company-society/RESEARCH_FREEDOM_DOCTRINE.md
+
+concurrency:
+  # Shared with Standment Security - Portfolio First R&D because both workflows
+  # persist autonomous research artifacts directly to the same branch.
+  group: standment-security-default-writer
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: read
+
+env:
+  WHITEHAT_DIR: /tmp/standment-whitehat-portfolio
+
+jobs:
+  whitehat-portfolio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout THE WORLD
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify white-hat control plane and bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd automation/agent_factory
+          python -m unittest -v test_agent_factory.py
+          cd ../security
+          python -m unittest -v test_whitehat_portfolio_bridge.py
+
+      - name: Generate current P0 research swarm plan
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$WHITEHAT_DIR/workers" reports/standment-security-rnd
+          python automation/agent_factory/factory.py plan --run-id "daily-${GITHUB_RUN_ID}" --out "$WHITEHAT_DIR/plan.json"
+
+      - name: Run mandatory quota-independent elite white-hat review
+        shell: bash
+        run: |
+          set -euo pipefail
+          SLOT="$(python -c "import json,os; d=json.load(open(os.environ['WHITEHAT_DIR']+'/plan.json',encoding='utf-8')); print(next(a['slot'] for a in d['agents'] if a['role']=='elite_whitehat'))")"
+          python automation/agent_factory/local_worker.py --plan "$WHITEHAT_DIR/plan.json" --slot "$SLOT" --out "$WHITEHAT_DIR/workers/elite-whitehat.json"
+
+      - name: Convert white-hat research into persistent portfolio candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python automation/security/whitehat_portfolio_bridge.py --plan "$WHITEHAT_DIR/plan.json" --workers-dir "$WHITEHAT_DIR/workers" --output-dir standment-security/whitehat-candidates --json reports/standment-security-rnd/whitehat-bridge.json
+
+      - name: Commit white-hat portfolio evidence
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "standment-whitehat-rnd-bot"
+          git config user.email "standment-whitehat-rnd-bot@users.noreply.github.com"
+          git add standment-security/whitehat-candidates
+          if git diff --cached --quiet; then
+            echo "No new white-hat portfolio delta to commit."
+          else
+            git commit -m "rnd(security): preserve white-hat portfolio candidate"
+            git remote set-url origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+            pushed=0
+            for attempt in 1 2 3; do
+              git fetch origin "$GITHUB_REF_NAME"
+              if ! git rebase "origin/$GITHUB_REF_NAME"; then
+                git rebase --abort || true
+                echo "Concurrent writer produced a real content conflict; refusing unsafe overwrite."
+                exit 1
+              fi
+              if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+                pushed=1
+                break
+              fi
+              echo "Branch advanced during white-hat push attempt ${attempt}; rebasing and retrying."
+              sleep $((attempt * 2))
+            done
+
+            if [[ "$pushed" -ne 1 ]]; then
+              echo "Could not persist white-hat evidence after three safe rebase attempts."
+              exit 1
+            fi
+          fi
+
+      - name: Preserve full white-hat R&D evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: standment-whitehat-portfolio-${{ github.run_id }}
+          retention-days: 90
+          if-no-files-found: warn
+          path: |
+            /tmp/standment-whitehat-portfolio/plan.json
+            /tmp/standment-whitehat-portfolio/workers/elite-whitehat.json
+            reports/standment-security-rnd/whitehat-bridge.json
+            reports/standment-security-rnd/whitehat-slack.md
+            standment-security/whitehat-candidates/
+
+      - name: Report white-hat portfolio delta to Slack
+        if: always()
+        env:
+          RND_SLACK_WEBHOOK_URL: ${{ secrets.RND_SLACK_WEBHOOK_URL }}
+          PORTFOLIO_SLACK_WEBHOOK_URL: ${{ secrets.PORTFOLIO_SLACK_WEBHOOK_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -f "$WHITEHAT_DIR/plan.json" && -f "$WHITEHAT_DIR/workers/elite-whitehat.json" && -f reports/standment-security-rnd/whitehat-bridge.json ]]; then
+            python automation/security/whitehat_slack_report.py --plan "$WHITEHAT_DIR/plan.json" --worker "$WHITEHAT_DIR/workers/elite-whitehat.json" --bridge reports/standment-security-rnd/whitehat-bridge.json
+          else
+            echo "White-hat report inputs incomplete; failing step remains visible in Actions evidence."
+          fi

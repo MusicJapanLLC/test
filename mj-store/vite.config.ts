@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, relative, resolve } from 'node:path';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
-import { faqOf, gameBySlug, games } from './src/data/games';
+import { faqOf, gameBySlug, gameDef, games } from './src/data/games';
 import { site } from './src/data/site';
 import { gameBody, gameJsonLd } from './src/render/game';
 import { footerHtml, headerHtml, headHtml, type NavKey, type PageMeta } from './src/render/layout';
@@ -82,8 +82,12 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
   if (rel === 'index.html') {
     return {
       meta: {
-        title: `${site.name}｜Music Japanのゲームストア ─ ブラウザで遊べる基本無料のゲーム`,
+        title: `Music Japanの無料ブラウザゲーム｜${site.name}（公式ゲームストア）`,
+        ogTitle: `${site.name}｜Music Japanのゲームストア`,
         description: desc,
+        pageType: 'CollectionPage',
+        mainEntity: `${ctx.siteUrl}/#games`,
+        dateModified: storeUpdated(),
         path: '/',
         themeColor: '#0C0C0E',
         image: 'og/store.jpg',
@@ -100,8 +104,12 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
   if (rel === 'games/index.html') {
     return {
       meta: {
-        title: `作品一覧｜${games.map((g) => g.title).join('・')} - ${site.name}`,
-        description: `MJ STOREの全作品。${games.map((g) => `${g.title}（${g.genre}）`).join('、')}。全作品ブラウザで遊べて、基本プレイ無料。`,
+        title: `作品一覧｜Music Japanの無料ブラウザゲーム全${games.length}作 - ${site.name}`,
+        description: `Music Japanのゲーム全${games.length}作品。${games.map((g) => `${g.title}（${g.genre}）`).join('、')}。全作品、スマホ・PCのブラウザでインストールなしに遊べて、基本プレイ無料です。`,
+        pageType: 'CollectionPage',
+        mainEntity: `${abs(ctx, 'games/')}#list`,
+        breadcrumb: true,
+        dateModified: storeUpdated(),
         path: '/games/',
         themeColor: '#0C0C0E',
         image: 'og/store.jpg',
@@ -110,6 +118,7 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
           { ...itemList(ctx), '@id': `${abs(ctx, 'games/')}#list` },
           {
             '@type': 'BreadcrumbList',
+            '@id': `${abs(ctx, 'games/')}#breadcrumb`,
             itemListElement: [
               { '@type': 'ListItem', position: 1, name: site.name, item: `${ctx.siteUrl}/` },
               { '@type': 'ListItem', position: 2, name: '作品一覧', item: abs(ctx, 'games/') },
@@ -126,7 +135,9 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
   if (rel === 'request/index.html') {
     return {
       meta: {
-        title: `ご要望・バグ報告 - ${site.name}`,
+        title: `ご要望・バグ報告｜Music Japanのゲーム - ${site.name}`,
+        pageType: 'ContactPage',
+        breadcrumb: true,
         description:
           'バグの報告も、「こうしたらいいやん」も、「ここが好き」も。MJ STOREの作品への声は、ここから開発チームに直接届きます。',
         path: '/request/',
@@ -135,14 +146,8 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
         imageAlt: 'MJ STORE ご要望・バグ報告',
         jsonLd: [
           {
-            '@type': 'ContactPage',
-            '@id': `${abs(ctx, 'request/')}#page`,
-            name: 'ご要望・バグ報告',
-            url: abs(ctx, 'request/'),
-            about: { '@id': `${ctx.siteUrl}/#website` },
-          },
-          {
             '@type': 'BreadcrumbList',
+            '@id': `${abs(ctx, 'request/')}#breadcrumb`,
             itemListElement: [
               { '@type': 'ListItem', position: 1, name: site.name, item: `${ctx.siteUrl}/` },
               { '@type': 'ListItem', position: 2, name: 'ご要望・バグ報告', item: abs(ctx, 'request/') },
@@ -160,24 +165,35 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
     const url = abs(ctx, 'news/');
     return {
       meta: {
-        title: `お知らせ・アップデート情報｜${games.map((g) => g.title).join('・')} - ${site.name}`,
+        title: `お知らせ・アップデート情報｜Music Japanのゲーム - ${site.name}`,
         description: `MJ STOREと全作品（${games.map((g) => g.title).join('、')}）のお知らせと、バージョン履歴（アップデート内容）をまとめて読めるページです。`,
+        pageType: 'CollectionPage',
+        mainEntity: `${url}#updates`,
+        breadcrumb: true,
+        dateModified: storeUpdated(),
         path: '/news/',
         themeColor: '#0C0C0E',
         image: 'og/store.jpg',
         imageAlt: 'MJ STORE お知らせ・更新',
         jsonLd: [
           {
-            '@type': 'CollectionPage',
-            '@id': `${url}#page`,
-            name: 'お知らせ・更新',
-            url,
-            dateModified: storeUpdated(),
-            about: { '@id': `${ctx.siteUrl}/#website` },
-            hasPart: games.map((g) => ({ '@id': `${abs(ctx, `games/${g.slug}/`)}#game` })),
+            '@type': 'ItemList',
+            '@id': `${url}#updates`,
+            name: 'Music Japanのゲームのアップデート',
+            itemListOrder: 'https://schema.org/ItemListOrderDescending',
+            itemListElement: games
+              .flatMap((g) => g.versions.map((v) => ({ g, v })))
+              .sort((a, b) => (a.v.date < b.v.date ? 1 : -1))
+              .map(({ g, v }, i) => ({
+                '@type': 'ListItem',
+                position: i + 1,
+                name: `${g.title} ${v.version}：${v.title}`,
+                url: `${abs(ctx, `games/${g.slug}/`)}#versions`,
+              })),
           },
           {
             '@type': 'BreadcrumbList',
+            '@id': `${url}#breadcrumb`,
             itemListElement: [
               { '@type': 'ListItem', position: 1, name: site.name, item: `${ctx.siteUrl}/` },
               { '@type': 'ListItem', position: 2, name: 'お知らせ・更新', item: url },
@@ -213,8 +229,13 @@ function pageFor(rel: string, ctx: RenderCtx): Page | null {
   if (g) {
     return {
       meta: {
-        title: `${g.title}｜${g.catch.join('')} - 基本プレイ無料のブラウザゲーム｜${site.name}`,
-        description: `${g.lead} 基本プレイ無料（ゲーム内課金あり）。インストール不要、ブラウザですぐ遊べます。`,
+        title: `${g.title}（${g.kana}）｜無料で遊べる${g.kind}｜Music Japan`,
+        ogTitle: `${g.title}｜${g.catch.join('')}`,
+        description: `${g.title}（${g.kana}）は、Music Japanの無料${g.kind}。${g.lead}`,
+        pageType: 'ItemPage',
+        mainEntity: `${abs(ctx, `games/${g.slug}/`)}#game`,
+        breadcrumb: true,
+        dateModified: gameUpdated(g),
         path: `/games/${g.slug}/`,
         themeColor: g.theme.bg,
         image: `og/${g.slug}.jpg`,
@@ -259,14 +280,17 @@ function llmsTxt(ctx: RenderCtx): string {
 
 > ${site.description}
 
-${site.name}は、${site.operator.name}（${site.operator.nameEn}、大阪）が運営する公式ゲームストアです。並んでいるのは、音楽・物語・システムまですべて自社で制作したゲームだけです。全作品ブラウザで動き、インストール不要・基本プレイ無料（ゲーム内課金あり）。
+${site.name}（読み：エムジェイストア）は、${site.operator.name}（${site.operator.nameEn}、大阪）が運営する公式ゲームストアです。並んでいるのは、音楽・物語・システムまで Music Japan が制作したゲームだけです。全作品ブラウザで動き、インストール不要・基本プレイ無料（ゲーム内課金あり）。スマホでもPCでも遊べます。
+
+- 別名: ${site.alternateNames.join('、')}
+- 注意: セガの『セガNET麻雀 MJ』や、その公式ストアとは関係ありません
 
 ## 作品
 
 ${games
   .map(
     (g) =>
-      `- [${g.title}](${abs(ctx, `games/${g.slug}/`)}): ${g.genre}。${g.lead} 遊ぶ: ${g.playUrl}（${g.platforms.join('・')}）`,
+      `- [${g.title}（${g.kana}）](${abs(ctx, `games/${g.slug}/`)}): ${gameDef(g)}${g.lead} 遊ぶ: ${g.playUrl}`,
   )
   .join('\n')}
 
@@ -290,6 +314,9 @@ function llmsFullTxt(ctx: RenderCtx): string {
       const faq = faqOf(g, abs(ctx, 'request/'));
       return `## ${g.title}（${g.subtitle}）
 
+${gameDef(g)}
+
+- 読み: ${g.kana}
 - ストアページ: ${abs(ctx, `games/${g.slug}/`)}
 - 遊べる場所: ${g.playUrl}
 - 英語表記: ${g.titleEn}
@@ -298,7 +325,8 @@ function llmsFullTxt(ctx: RenderCtx): string {
 - 言語: ${g.languages.join('・')}
 - 価格: 基本プレイ無料（ゲーム内課金あり）
 - 最新版: ${g.currentVersion}
-- 開発・運営: ${site.operator.name}（音楽・物語・システムすべて自社制作）
+- 開発・運営: ${site.operator.name}（音楽・物語・システムすべて Music Japan が制作）
+- 種類: ${g.kind}
 - キャッチコピー: ${g.catch.join('')}
 
 ### 概要

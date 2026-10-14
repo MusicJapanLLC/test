@@ -1,0 +1,387 @@
+{
+  "version": 1,
+  "updated_at": "2026-08-30T12:41:23+00:00",
+  "strategy": {
+    "population": 120,
+    "generations": 16,
+    "matches": 500,
+    "mutation_rate": 0.06,
+    "red_budget": 16,
+    "blue_budget": 16,
+    "seed": 20260829
+  },
+  "score": 255.175,
+  "evaluation": {
+    "score": 255.175,
+    "safe": true,
+    "rating_gain": 404.5,
+    "balance": 0.736,
+    "learning_signal": 1.0,
+    "reason": "safe balanced learning run"
+  },
+  "red_champion": {
+    "side": "red",
+    "rating": 6232.5,
+    "resources": 34.380711343823165,
+    "generation": 30,
+    "genome": {
+      "kind": "red",
+      "focus": {
+        "sqli": 0.179,
+        "nosqli": 0.7,
+        "xss": 1.0,
+        "csrf": 0.344,
+        "auth_bypass": 0.784,
+        "jwt_weak": 0.48,
+        "idor": 0.84,
+        "priv_esc": 0.96,
+        "ssrf": 0.809,
+        "rce": 0.506,
+        "path_trav": 0.82,
+        "deserial": 0.628,
+        "xxe": 0.149,
+        "ssti": 0.458,
+        "race_condition": 0.346,
+        "secrets_exposure": 0.752,
+        "misconfig": 0.233
+      },
+      "skill": 0.821,
+      "stealth": 1.0,
+      "aggression": 0.189
+    }
+  },
+  "blue_champion": {
+    "side": "blue",
+    "rating": 6093.3,
+    "resources": 34.4756732093277,
+    "generation": 8,
+    "genome": {
+      "kind": "blue",
+      "harden": {
+        "sqli": 0.468,
+        "nosqli": 0.396,
+        "xss": 1.0,
+        "csrf": 0.713,
+        "auth_bypass": 0.75,
+        "jwt_weak": 0.881,
+        "idor": 1.0,
+        "priv_esc": 0.809,
+        "ssrf": 0.712,
+        "rce": 0.29,
+        "path_trav": 1.0,
+        "deserial": 1.0,
+        "xxe": 0.612,
+        "ssti": 0.575,
+        "race_condition": 0.864,
+        "secrets_exposure": 0.369,
+        "misconfig": 0.677
+      },
+      "detection": 0.862,
+      "patch_speed": 0.567,
+      "coverage": 0.612
+    }
+  },
+  "history": [
+    {
+      "at": "2026-08-29T09:48:42+00:00",
+      "baseline_score": 192.57,
+      "best_score": 192.57,
+      "selected_score": 192.57,
+      "accepted_strategy_change": false,
+      "changes": [
+        "no strategy change"
+      ]
+    },
+    {
+      "at": "2026-08-29T10:50:53+00:00",
+      "baseline_score": 163.425,
+      "best_score": 202.84,
+      "selected_score": 202.84,
+      "accepted_strategy_change": true,
+      "changes": [
+        "mutation_rate: 0.15 -> 0.18"
+      ]
+    },
+    {
+      "at": "2026-08-29T11:46:01+00:00",
+      "baseline_score": 212.985,
+      "best_score": 223.74,
+      "selected_score": 223.74,
+      "accepted_strategy_change": true,
+      "changes": [
+        "mutation_rate: 0.18 -> 0.15"
+      ]
+    },
+    {
+      "at": "2026-08-29T11:47:08+00:00",
+      "baseline_score": 231.0,
+      "best_score": 233.575,
+      "selected_score": 233.575,
+      "accepted_strategy_change": true,
+      "changes": [
+        "mutation_rate: 0.15 -> 0.12"
+      ]
+    },
+    {
+      "at": "2026-08-29T11:51:03+00:00",
+      "baseline_score": 217.685,
+      "best_score": 252.18,
+      "selected_score": 252.18,
+      "accepted_strategy_change": true,
+      "changes": [
+        "mutation_rate: 0.12 -> 0.09"
+      ]
+    },
+    {
+      "at": "2026-08-29T11:52:54+00:00",
+      "baseline_score": 209.43,
+      "best_score": 225.11,
+      "selected_score": 225.11,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T11:53:22+00:00",
+      "baseline_score": 216.32,
+      "best_score": 240.17,
+      "selected_score": 240.17,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:05:59+00:00",
+      "baseline_score": 227.32,
+      "best_score": 266.68,
+      "selected_score": 266.68,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:06:34+00:00",
+      "baseline_score": 261.825,
+      "best_score": 261.825,
+      "selected_score": 261.825,
+      "accepted_strategy_change": false,
+      "changes": [
+        "no strategy change"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:07:34+00:00",
+      "baseline_score": 217.48,
+      "best_score": 273.865,
+      "selected_score": 273.865,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:08:20+00:00",
+      "baseline_score": 213.57,
+      "best_score": 268.015,
+      "selected_score": 268.015,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:09:32+00:00",
+      "baseline_score": 210.345,
+      "best_score": 243.695,
+      "selected_score": 243.695,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:09:58+00:00",
+      "baseline_score": 238.395,
+      "best_score": 265.99,
+      "selected_score": 265.99,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:10:28+00:00",
+      "baseline_score": 234.485,
+      "best_score": 255.865,
+      "selected_score": 255.865,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:11:29+00:00",
+      "baseline_score": 205.03,
+      "best_score": 241.99,
+      "selected_score": 241.99,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:12:17+00:00",
+      "baseline_score": 235.685,
+      "best_score": 247.09,
+      "selected_score": 247.09,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:12:45+00:00",
+      "baseline_score": 239.355,
+      "best_score": 255.89,
+      "selected_score": 255.89,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T12:40:24+00:00",
+      "baseline_score": 219.23,
+      "best_score": 225.815,
+      "selected_score": 225.815,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-29T13:11:19+00:00",
+      "baseline_score": 214.95,
+      "best_score": 256.555,
+      "selected_score": 256.555,
+      "accepted_strategy_change": true,
+      "changes": [
+        "red_budget: 14 -> 16",
+        "blue_budget: 14 -> 16"
+      ]
+    },
+    {
+      "at": "2026-08-29T13:31:02+00:00",
+      "baseline_score": 215.54,
+      "best_score": 222.525,
+      "selected_score": 222.525,
+      "accepted_strategy_change": true,
+      "changes": [
+        "mutation_rate: 0.09 -> 0.06"
+      ]
+    },
+    {
+      "at": "2026-08-29T23:42:55+00:00",
+      "baseline_score": 194.97,
+      "best_score": 222.97,
+      "selected_score": 222.97,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T11:40:30+00:00",
+      "baseline_score": 218.82,
+      "best_score": 262.345,
+      "selected_score": 262.345,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T11:43:28+00:00",
+      "baseline_score": 245.98,
+      "best_score": 263.32,
+      "selected_score": 263.32,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T11:47:23+00:00",
+      "baseline_score": 185.5,
+      "best_score": 221.655,
+      "selected_score": 221.655,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T11:55:51+00:00",
+      "baseline_score": 218.04,
+      "best_score": 237.7,
+      "selected_score": 237.7,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T12:03:52+00:00",
+      "baseline_score": 205.745,
+      "best_score": 251.895,
+      "selected_score": 251.895,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T12:14:24+00:00",
+      "baseline_score": 196.35,
+      "best_score": 257.07,
+      "selected_score": 257.07,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T12:15:31+00:00",
+      "baseline_score": 209.75,
+      "best_score": 231.575,
+      "selected_score": 231.575,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T12:16:02+00:00",
+      "baseline_score": 221.15,
+      "best_score": 237.98,
+      "selected_score": 237.98,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    },
+    {
+      "at": "2026-08-30T12:41:23+00:00",
+      "baseline_score": 228.205,
+      "best_score": 255.175,
+      "selected_score": 255.175,
+      "accepted_strategy_change": true,
+      "changes": [
+        "matches: 400 -> 500"
+      ]
+    }
+  ]
+}

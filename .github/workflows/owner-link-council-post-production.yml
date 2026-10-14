@@ -1,0 +1,101 @@
+name: Owner Link Council POST Authority Production
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/owner_link_council_authority.py'
+      - 'automation/world/run_owner_link_council_authority.py'
+      - 'automation/world/state/owner_authorized_links.json'
+      - 'automation/world/state/council_link_post_requests.json'
+      - 'automation/world/state/distributed_internal_ballots.json'
+      - 'automation/world/state/distributed_internal_policy.json'
+      - '.github/workflows/owner-link-council-post-production.yml'
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/world/owner_link_council_authority.py'
+      - 'automation/world/run_owner_link_council_authority.py'
+      - 'automation/world/test_owner_link_council_authority.py'
+      - '.github/workflows/owner-link-council-post-production.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: owner-link-council-post-production
+  cancel-in-progress: false
+
+jobs:
+  issue-and-execute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Restore consumed Authority ledger
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .council-link-authority-runtime/
+          key: council-link-authority-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            council-link-authority-${{ github.ref_name }}-
+            council-link-authority-
+
+      - name: Verify exact-link Authority invariants
+        env:
+          PYTHONPATH: .:senju
+        run: |
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/world/test_owner_link_council_authority.py
+
+      - name: Evaluate only on pull requests
+        if: github.event_name == 'pull_request'
+        env:
+          PYTHONPATH: .:senju
+        run: |
+          python automation/world/run_owner_link_council_authority.py \
+            --state-dir automation/world/state \
+            --runtime-dir .council-link-authority-runtime
+
+      - name: Issue fresh Action Authorities and execute production POSTs
+        if: github.event_name != 'pull_request'
+        env:
+          PYTHONPATH: .:senju
+        run: |
+          python automation/world/run_owner_link_council_authority.py \
+            --state-dir automation/world/state \
+            --runtime-dir .council-link-authority-runtime \
+            --execute-approved
+          test "$(jq -r '.rules.owner_exact_link_required' .council-link-authority-runtime/council_link_authority_run.json)" = "true"
+          test "$(jq -r '.rules.council_quorum_required' .council-link-authority-runtime/council_link_authority_run.json)" = "true"
+          test "$(jq -r '.rules.fresh_action_authority_generated' .council-link-authority-runtime/council_link_authority_run.json)" = "true"
+          test "$(jq -r '.rules.post_execution_enabled' .council-link-authority-runtime/council_link_authority_run.json)" = "true"
+          test "$(jq -r '.rules.general_root_authority' .council-link-authority-runtime/council_link_authority_run.json)" = "false"
+
+      - name: Save consumed Authority ledger
+        if: always() && github.event_name != 'pull_request'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .council-link-authority-runtime/
+          key: council-link-authority-${{ github.ref_name }}-${{ github.run_id }}
+
+      - name: Preserve production Authority and POST receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: owner-link-council-post-${{ github.run_id }}
+          path: .council-link-authority-runtime/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 30

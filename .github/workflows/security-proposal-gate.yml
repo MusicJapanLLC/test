@@ -1,0 +1,83 @@
+name: AI Security Proposal Gate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - 'security/proposals/**.json'
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ai-security-proposal-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  security-proposal-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout trusted base evaluator
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: trusted
+          persist-credentials: false
+
+      - name: Checkout candidate proposal
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          path: candidate
+          persist-credentials: false
+
+      - name: Collect changed proposal files
+        id: collect
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd candidate
+          git fetch --no-tags origin "$BASE_SHA" --depth=1 || true
+          mapfile -t files < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" -- 'security/proposals/*.json')
+          if [ "${#files[@]}" -eq 0 ]; then
+            echo 'has_proposals=false' >> "$GITHUB_OUTPUT"
+            echo 'No security proposal JSON changed in this PR.'
+            exit 0
+          fi
+          echo 'has_proposals=true' >> "$GITHUB_OUTPUT"
+          printf '%s\n' "${files[@]}" > /tmp/security-proposals.txt
+          cat /tmp/security-proposals.txt
+
+      - name: AI Council -> standing delegation / reviewed production eligibility gate
+        if: steps.collect.outputs.has_proposals == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mapfile -t rels < /tmp/security-proposals.txt
+          files=()
+          for rel in "${rels[@]}"; do
+            files+=("candidate/$rel")
+          done
+          PYTHONPATH=trusted/automation/codegen \
+            python trusted/automation/codegen/security_proposal_loop.py \
+              "${files[@]}" \
+              --standing-envelope-dir trusted/security/authority_envelopes \
+              --github-pr-number '${{ github.event.pull_request.number }}' \
+              --github-repo '${{ github.repository }}' \
+              --decision-dir /tmp/security-proposal-decisions
+
+      - name: Preserve council/delegation/review evidence
+        if: always() && steps.collect.outputs.has_proposals == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: security-proposal-gate-${{ github.run_id }}
+          path: /tmp/security-proposal-decisions
+          if-no-files-found: ignore
+          retention-days: 30

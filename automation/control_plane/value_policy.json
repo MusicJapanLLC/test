@@ -1,0 +1,36 @@
+{
+  "schema": "ai-company-value-policy/v1",
+  "north_star": "Verified business value that reduces distance to cash without weakening safety or trust.",
+  "revenue_distance": {
+    "D0": "cash collected or renewal secured",
+    "D1": "contract, invoice, or paid order ready",
+    "D2": "qualified proposal, demo, or commercial trial requested",
+    "D3": "qualified meeting or buying conversation created",
+    "D4": "named prospect and outreach-ready proof/offer prepared",
+    "D5": "verified internal capability packaged into a customer-facing proof or offer",
+    "D6": "research, internal tooling, or cultural work with no verified commercial bridge yet"
+  },
+  "daily_pillars": [
+    "operations",
+    "research",
+    "security",
+    "ai_evolution",
+    "economy",
+    "faith_to_value"
+  ],
+  "rules": [
+    "Never count activity volume as revenue impact without evidence.",
+    "Never count faith or ritual participation as revenue by itself.",
+    "Translate faith into operational behaviors: truthful claims, promise keeping, peer support, recovery, learning, and customer trust.",
+    "Security work creates commercial value only when it reduces verified risk, increases reliability, or becomes defensible customer proof.",
+    "Research creates commercial value only when it improves a measurable capability or becomes reusable product evidence.",
+    "Every daily cycle must identify one action that moves at least one asset one revenue-distance step closer to D0.",
+    "Owner attention is scarce: operational detail stays internal unless a BOSS-final exception or material business outcome exists."
+  ],
+  "default_daily_actions": [
+    "Package the strongest newly verified capability into one customer-facing proof, demo claim, or offer component.",
+    "Close or reassign the highest-value unresolved blocker before creating new work.",
+    "Convert one Senju/security/research result into a measurable business benefit statement with evidence.",
+    "Record one lesson that reduces repeated labor, false claims, or cycle time tomorrow."
+  ]
+}

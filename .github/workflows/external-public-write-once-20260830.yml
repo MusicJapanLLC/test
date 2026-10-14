@@ -1,0 +1,115 @@
+name: THE WORLD External SaaS Write Proof
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 0 * * *'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/external-public-write-once-20260830.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: the-world-external-saas-write-proof
+  cancel-in-progress: false
+
+jobs:
+  write-slack-and-record-provider-ack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      AI_DEV_SLACK_WEBHOOK_URL: ${{ secrets.AI_DEV_SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Preflight real external provider capability
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${AI_DEV_SLACK_WEBHOOK_URL:-}" ]]; then
+            echo 'BLOCKED: AI_DEV_SLACK_WEBHOOK_URL is not configured.' | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Write one real message to Slack
+        id: publish
+        shell: bash
+        run: |
+          set -euo pipefail
+          MARKER="WORLD-REAL-SAAS-WRITE-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          RUN_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          export MARKER RUN_URL
+
+          python - <<'PY'
+          import json, os
+          text = (
+              '*[THE WORLD / REAL EXTERNAL WRITE PROOF]*\n'
+              f"marker: `{os.environ['MARKER']}`\n"
+              'provider: Slack\n'
+              'writer: GitHub Actions\n'
+              'proof type: third-party SaaS write with provider acknowledgement\n'
+              f"run: {os.environ['RUN_URL']}\n"
+              'anti-fake: self-hosted/AppDeploy proof pages are not counted as external proof'
+          )
+          with open('/tmp/slack-payload.json', 'w', encoding='utf-8') as f:
+              json.dump({'text': text}, f, ensure_ascii=False)
+          PY
+
+          http_code="$(curl --silent --show-error --retry 2 --retry-all-errors \
+            --output /tmp/slack-response.txt \
+            --write-out '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            --data-binary @/tmp/slack-payload.json \
+            "$AI_DEV_SLACK_WEBHOOK_URL")"
+          response="$(cat /tmp/slack-response.txt)"
+
+          if [[ "$http_code" -lt 200 || "$http_code" -ge 300 ]]; then
+            echo "Slack rejected write: HTTP ${http_code}: ${response}" >&2
+            exit 1
+          fi
+          if [[ "$response" != "ok" ]]; then
+            echo "Slack returned unexpected acknowledgement: ${response}" >&2
+            exit 1
+          fi
+
+          echo "marker=$MARKER" >> "$GITHUB_OUTPUT"
+          echo "http_code=$http_code" >> "$GITHUB_OUTPUT"
+          echo "Slack provider acknowledgement: HTTP ${http_code} / ${response}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Record truthful receipt
+        env:
+          MARKER: ${{ steps.publish.outputs.marker }}
+          HTTP_CODE: ${{ steps.publish.outputs.http_code }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          receipt = {
+              'schema': 'the-world-real-external-write-proof/v2',
+              'status': 'PROVIDER_ACCEPTED_EXTERNAL_WRITE',
+              'provider': 'Slack',
+              'transport': 'Slack Incoming Webhook',
+              'marker': os.environ['MARKER'],
+              'writer': 'github-actions[bot]',
+              'provider_http_status': int(os.environ['HTTP_CODE']),
+              'provider_acknowledgement_verified': True,
+              'independent_readback_verified': False,
+              'self_hosted_or_appdeploy_targets_count_as_external_proof': False,
+              'claim_boundary': 'This run proves Slack accepted a real external write. Independent readback is a separate verification step and is not fabricated here.',
+          }
+          with open('external-saas-write-receipt.json', 'w', encoding='utf-8') as f:
+              json.dump(receipt, f, ensure_ascii=False, indent=2)
+              f.write('\n')
+          print(json.dumps(receipt, ensure_ascii=False))
+          PY
+
+      - name: Preserve external-write receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: external-saas-write-proof-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: external-saas-write-receipt.json

@@ -1,0 +1,50 @@
+name: THE WORLD - Citizen Registry
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '13 */6 * * *'
+
+concurrency:
+  group: world-citizen-registry
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build-directory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Build federated citizen directory
+        run: |
+          python company-society/citizen_registry.py \
+            --json world-citizens.json \
+            --report world-citizens.md
+          cat world-citizens.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate society behavior
+        run: python -m unittest discover -s company-society -p 'test_*.py' -v
+
+      - name: Preserve citizen evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: world-citizens-${{ github.run_id }}
+          path: |
+            world-citizens.json
+            world-citizens.md
+          retention-days: 30
+          if-no-files-found: warn

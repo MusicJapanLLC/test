@@ -1,0 +1,246 @@
+name: Senju - RED Owner-Verified Boost
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - "claude/employee-onboarding-setup-udm86"
+    paths:
+      - "AUTHORIZED_TEST_TARGETS.json"
+      - "senju/state/verified_control_attestations.json"
+      - "senju/senju/owner_authorization_pool.py"
+      - "senju/senju/red_owner_pool_bridge.py"
+      - "senju/senju/red_expedition.py"
+      - "senju/senju/world_red_closed_loop.py"
+      - "senju/scripts/owner_authorization_pool.py"
+      - "senju/scripts/red_negotiation_bridge.py"
+      - "senju/scripts/red_owner_pool_bridge.py"
+      - "senju/scripts/world_red_closed_loop.py"
+      - ".github/workflows/senju-red-owner-verified-boost.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: senju-red-owner-verified-boost-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  red-owner-verified-boost:
+    name: Expand owner-verified coverage -> observe -> learn -> persist
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Restore persistent RED strategy memory
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: /tmp/senju-red-owner-verified-memory
+          key: senju-red-owner-verified-memory-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            senju-red-owner-verified-memory-${{ github.ref_name }}-
+            senju-red-owner-verified-memory-
+
+      - name: Refresh the full verified owner Authorization pool
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/senju-red-owner-verified/{scopes,reports} /tmp/senju-red-owner-verified-memory
+          PYTHONPATH=senju python senju/scripts/owner_authorization_pool.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --target-count 256 \
+            --ttl-minutes 1440 \
+            --renew-before-minutes 60 \
+            | tee /tmp/senju-red-owner-verified/owner-authorization-pool.json
+          python senju/scripts/red_negotiation_bridge.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --standing-authorizations senju/state/standing_authorizations.json \
+            --rotation "${GITHUB_RUN_NUMBER}" \
+            --out /tmp/senju-red-owner-verified/bridge.json
+          python senju/scripts/red_owner_pool_bridge.py \
+            --state-dir senju/state \
+            --out /tmp/senju-red-owner-verified/red-owner-pool-bridge.json
+
+      - name: Build rotating exact-host scopes from active verified cloud control
+        env:
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.parse import urlsplit
+
+          state = Path('senju/state')
+          attest = json.loads((state / 'verified_control_attestations.json').read_text())
+          pool = json.loads((state / 'owner_authorization_pool.json').read_text())
+          pool_index = {
+              str(row.get('host') or '').lower().rstrip('.'): row
+              for row in pool.get('entries', [])
+              if isinstance(row, dict)
+          }
+
+          eligible = []
+          for row in attest.get('records', []):
+              if not isinstance(row, dict):
+                  continue
+              host = str(row.get('host') or '').lower().rstrip('.')
+              service_url = str(row.get('service_url') or '').strip()
+              parsed = urlsplit(service_url)
+              if not host or parsed.scheme.lower() != 'https' or (parsed.hostname or '').lower().rstrip('.') != host:
+                  continue
+              if row.get('provider_control_verified') is not True or row.get('owner_authorized') is not True:
+                  continue
+              if row.get('transport_eligible') is not True or row.get('private_network') is True:
+                  continue
+              if str(row.get('credential_scope', 'none')).lower() != 'none':
+                  continue
+              entry = pool_index.get(host)
+              auth = entry.get('authorization', {}) if isinstance(entry, dict) else {}
+              if not isinstance(entry, dict) or entry.get('transport_eligible') is not True:
+                  continue
+              if str(auth.get('host') or '').lower().rstrip('.') != host:
+                  continue
+              if str(auth.get('credential_scope', 'none')).lower() != 'none' or auth.get('private_network') is True:
+                  continue
+              methods = {str(x).upper() for x in auth.get('allowed_methods', [])}
+              if not methods.intersection({'GET', 'HEAD'}):
+                  continue
+              eligible.append({'host': host, 'seed_url': service_url, 'provider': row.get('provider')})
+
+          eligible.sort(key=lambda item: (str(item.get('provider') or ''), item['host']))
+          if not eligible:
+              raise SystemExit('No active verified owner-controlled targets are currently transport eligible')
+
+          run_number = int(os.environ.get('RUN_NUMBER', '0') or 0)
+          window = min(12, len(eligible))
+          start = run_number % len(eligible)
+          selected = [eligible[(start + i) % len(eligible)] for i in range(window)]
+
+          out_dir = Path('/tmp/senju-red-owner-verified/scopes')
+          out_dir.mkdir(parents=True, exist_ok=True)
+          selected_urls = []
+          for idx, item in enumerate(selected):
+              scope = {
+                  'schema': 'senju-red-expedition-scope/v1',
+                  'scope_id': f"owner-verified-{idx:02d}-{item['host']}",
+                  'allowed_hosts': [item['host']],
+                  'seed_urls': [item['seed_url']],
+                  'max_contacts': 12,
+                  'discovery_depth': 3,
+                  'max_links_per_response': 50,
+                  'allow_http': False,
+                  'retries': 2,
+                  'timeout_seconds': 6,
+              }
+              (out_dir / f'{idx:02d}.json').write_text(json.dumps(scope, ensure_ascii=False, indent=2) + '\n')
+              selected_urls.append({'url': item['seed_url'], 'host': item['host'], 'source': 'verified_owner_control'})
+
+          url_pool = {
+              'schema': 'senju-red-authorized-url-pool/v1',
+              'authorized_host_count': len(selected),
+              'selected_urls': selected_urls,
+              'urls': selected_urls,
+          }
+          Path('/tmp/senju-red-owner-verified/owner-verified-url-pool.json').write_text(
+              json.dumps(url_pool, ensure_ascii=False, indent=2) + '\n'
+          )
+          Path('/tmp/senju-red-owner-verified/selected-targets.json').write_text(
+              json.dumps({'eligible_count': len(eligible), 'selected_count': len(selected), 'selected': selected}, ensure_ascii=False, indent=2) + '\n'
+          )
+          print('SENJU_RED_OWNER_VERIFIED_SCOPE', 'eligible=', len(eligible), 'selected=', len(selected))
+          PY
+
+      - name: Run a bounded RED expedition for every selected owner-controlled host
+        run: |
+          set -euo pipefail
+          index=0
+          for scope in /tmp/senju-red-owner-verified/scopes/*.json; do
+            out="/tmp/senju-red-owner-verified/reports/$(basename "$scope")"
+            PYTHONPATH=senju python -m senju.red_expedition \
+              --scope "$scope" \
+              --out "$out" \
+              --cycles 24 \
+              --seed "$((GITHUB_RUN_ID + index))"
+            index=$((index + 1))
+          done
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          reports = []
+          for path in sorted(Path('/tmp/senju-red-owner-verified/reports').glob('*.json')):
+              report = json.loads(path.read_text())
+              assert report['authority_self_expansion'] is False
+              assert report['credential_guessing'] is False
+              assert report['exploit_delivery'] is False
+              assert report['destructive_requests'] is False
+              assert report['contact_count'] <= 12
+              reports.append(report)
+          print('SENJU_RED_OWNER_VERIFIED_EXPEDITIONS', 'reports=', len(reports), 'contacts=', sum(r['contact_count'] for r in reports))
+          PY
+
+      - name: Consolidate all owner-verified responses into persistent RED strategy memory
+        run: |
+          set -euo pipefail
+          REPORT_ARGS=()
+          for report in /tmp/senju-red-owner-verified/reports/*.json; do
+            [ -s "$report" ] && REPORT_ARGS+=(--red-report "$report")
+          done
+          PREVIOUS_ARGS=()
+          if [ -s /tmp/senju-red-owner-verified-memory/world_red_strategy_memory.json ]; then
+            PREVIOUS_ARGS+=(--previous-memory /tmp/senju-red-owner-verified-memory/world_red_strategy_memory.json)
+          fi
+          PYTHONPATH=senju python senju/scripts/world_red_closed_loop.py \
+            --state-dir senju/state \
+            --owner-pool senju/state/owner_authorization_pool.json \
+            --target-queue senju/state/red_authorized_target_queue.json \
+            --url-pool /tmp/senju-red-owner-verified/owner-verified-url-pool.json \
+            "${REPORT_ARGS[@]}" \
+            "${PREVIOUS_ARGS[@]}" \
+            --out /tmp/senju-red-owner-verified/world-red-closed-loop.json
+          cp senju/state/world_red_strategy_memory.json /tmp/senju-red-owner-verified-memory/world_red_strategy_memory.json
+          cp senju/state/world_red_strategy_memory.json /tmp/senju-red-owner-verified/world-red-strategy-memory.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          selected = json.loads(Path('/tmp/senju-red-owner-verified/selected-targets.json').read_text())
+          closed = json.loads(Path('/tmp/senju-red-owner-verified/world-red-closed-loop.json').read_text())
+          assert closed['closed_loop'] is True
+          assert closed['capabilities']['response_to_red_learning'] is True
+          assert closed['capabilities']['automatic_safe_retry_planning'] is True
+          assert closed['capabilities']['real_credential_inheritance'] is False
+          assert closed['capabilities']['post_put_patch_exploit_execution'] is False
+          assert closed['capabilities']['guard_self_approval'] is False
+          print(
+              'WORLD_RED_OWNER_VERIFIED_BOOST_READY',
+              'eligible=', selected['eligible_count'],
+              'selected=', selected['selected_count'],
+              'closed_loop_hosts=', closed['authorized_host_count'],
+              'retry=', len(closed['retry_plan']),
+          )
+          PY
+
+      - name: Publish owner-verified RED boost evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: senju-red-owner-verified-boost-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            /tmp/senju-red-owner-verified/*.json
+            /tmp/senju-red-owner-verified/reports/*.json
+            /tmp/senju-red-owner-verified/scopes/*.json

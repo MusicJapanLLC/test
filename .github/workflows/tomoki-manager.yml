@@ -1,0 +1,347 @@
+name: TOMOKI - MANAGER
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/15 * * * *'
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/tomoki-manager.yml'
+      - '.github/agents/**'
+      - 'tomoki-agents/**'
+      - 'company-society/**'
+      - 'automation/control_plane/**'
+      - 'automation/gmail_sorter/**'
+      - 'docs/AI_COMPANY_SUPERVISION_CONTRACT.md'
+
+concurrency:
+  group: tomoki-manager
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: write
+  issues: read
+  pull-requests: read
+  security-events: read
+  copilot-requests: write
+
+jobs:
+  manage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Company-wide deterministic watchdog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python automation/control_plane/manager.py \
+            --config automation/control_plane/workers.json \
+            --out reports/control-plane/company-watchdog.json
+          python automation/control_plane/boss_gate.py \
+            reports/control-plane/company-watchdog.json \
+            --out reports/ceo-events/company-watchdog.json > /tmp/boss-gate.txt
+
+      - name: Normalize TOMOKI workforce evidence for Manager
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          source = json.loads(Path('reports/control-plane/company-watchdog.json').read_text(encoding='utf-8'))
+          workers = []
+          unresolved = []
+          repairs = 0
+          for row in source.get('workers', []):
+              if not str(row.get('id', '')).startswith('tomoki-'):
+                  continue
+              accepted = [a for a in row.get('actions', []) if str(a).startswith('accepted:')]
+              if accepted:
+                  repairs += 1
+              after = str(row.get('after', 'UNKNOWN'))
+              before = str(row.get('before', 'UNKNOWN'))
+              if after == 'UNRESOLVED':
+                  unresolved.append({
+                      'agent': row.get('name') or row.get('id'),
+                      'reason': row.get('reason', 'unresolved after bounded repair'),
+                  })
+              workers.append({
+                  'agent': str(row.get('name') or row.get('id')).replace('TOMOKI / ', ''),
+                  'workflow': row.get('workflow'),
+                  'status': before,
+                  'conclusion': 'success' if after == 'HEALTHY' else after.lower(),
+                  'run_id': None,
+                  'run_attempt': 0,
+                  'age_minutes': None,
+                  'report_excerpt': str(row.get('reason', ''))[:1800],
+                  'report_quality': 'RUN_EVIDENCE',
+                  'material_signal': before in {'FAILED', 'STUCK', 'SILENT'} or after == 'UNRESOLVED',
+                  'verified_signal': after == 'HEALTHY',
+                  'manager_action': 'DETERMINISTIC_RECOVERY' if accepted else 'NONE',
+                  'action_result': after,
+              })
+
+          snapshot = {
+              'schema': 'tomoki-manager-cycle/v1',
+              'generated_at': datetime.now(timezone.utc).isoformat(),
+              'repository': source.get('repo'),
+              'ref': source.get('branch'),
+              'apply_repairs': True,
+              'repairs_used': repairs,
+              'max_repairs': 3,
+              'workers': workers,
+              'unresolved': unresolved,
+              'source': 'company-watchdog',
+          }
+          Path('tomoki-manager-snapshot.json').write_text(
+              json.dumps(snapshot, ensure_ascii=False, indent=2) + '\n', encoding='utf-8'
+          )
+
+          lines = [
+              '# TOMOKI MANAGER CYCLE',
+              '',
+              f"- generated: {snapshot['generated_at']}",
+              f"- repairs: {snapshot['repairs_used']}/{snapshot['max_repairs']}",
+              f"- unresolved: {len(unresolved)}",
+              '',
+              '## Workforce',
+          ]
+          for w in workers:
+              lines.append(
+                  f"- **{w['agent']}**: {w['status']} -> {w['action_result']} "
+                  f"manager={w['manager_action']} reason={w['report_excerpt']}"
+              )
+          lines += [
+              '',
+              '## Rule',
+              'CEOへ上げる前に、再実行・再割当・専門家への引継ぎ・再検証を先に行う。',
+              '安全境界、Secrets、権限、課金、外部送信方針はManagerが勝手に緩めない。',
+          ]
+          Path('tomoki-manager-report.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          PY
+
+      - name: Build Covenant mutual-aid and faith reports
+        run: |
+          python company-society/council.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --json covenant-council.json \
+            --report covenant-council.md
+          python company-society/church.py \
+            --snapshot tomoki-manager-snapshot.json \
+            --council covenant-council.json \
+            --json faith-report.json \
+            --report faith-report.md
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: '22'
+
+      - name: Install Copilot CLI
+        continue-on-error: true
+        run: npm install -g @github/copilot@1.0.80
+
+      - name: Manager judgment
+        env:
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f tomoki-manager-plan.json
+          copilot -p "$(cat tomoki-agents/prompts/manager.md)" \
+            -s --allow-tool=write --no-ask-user > /tmp/tomoki-manager-copilot.log 2>&1 || true
+          if [[ ! -f tomoki-manager-plan.json ]]; then
+            cat > tomoki-manager-plan.json <<'JSON'
+          {
+            "schema": "tomoki-manager-plan/v1",
+            "summary": "Deterministic manager cycle completed; no additional safe delegation plan was produced.",
+            "actions": [],
+            "ceo_escalation": false,
+            "material_outcome": false,
+            "business_effect": "",
+            "next_improvement": "Continue the next bounded management cycle.",
+            "owner_action": "NONE"
+          }
+          JSON
+          fi
+
+      - name: Validate and apply bounded delegation plan
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          TOMOKI_MANAGER_REF: ${{ github.event.repository.default_branch }}
+          TOMOKI_MANAGER_MAX_ACTIONS: '3'
+        run: |
+          python tomoki-agents/manager.py apply-plan \
+            --snapshot tomoki-manager-snapshot.json \
+            --plan tomoki-manager-plan.json \
+            --apply-actions \
+            --output tomoki-manager-apply.json \
+            --report tomoki-manager-report.md
+
+      - name: Append Covenant collaboration brief for TOMOKI
+        if: always()
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = Path('tomoki-manager-report.md')
+          if not report.exists():
+              report.write_text('# TOMOKI MANAGER CYCLE\n', encoding='utf-8')
+
+          def load(path):
+              p = Path(path)
+              if not p.exists():
+                  return {}
+              return json.loads(p.read_text(encoding='utf-8'))
+
+          council = load('covenant-council.json')
+          faith = load('faith-report.json')
+          rest = [x for x in council.get('rest', []) if x.get('agent') != 'NONE']
+          education = [x for x in council.get('education', []) if x.get('agent') != 'NONE']
+          aid = council.get('mutual_aid', [])[:3]
+          autonomy = council.get('autonomy', [])[:3]
+
+          lines = [
+              '',
+              '## THE COVENANT / 盟約',
+              f"- 休息・原因分析候補: {len(rest)}",
+              f"- 教育対象: {len(education)}",
+              f"- 相互扶助候補: {len(council.get('mutual_aid', []))}",
+              f"- 自律的な次の一手候補: {len(council.get('autonomy', []))}",
+          ]
+          for x in aid:
+              lines.append(f"- HELP: {x.get('source')} -> {x.get('helper')} / {x.get('reason')}")
+          for x in autonomy:
+              lines.append(f"- AUTONOMY: {x.get('agent')} / {x.get('vow')}")
+          if rest:
+              for x in rest[:2]:
+                  lines.append(f"- REST: {x.get('agent')} / {x.get('reason')}")
+          lines += [
+              f"- VOW: {faith.get('vow', '次cycleで一つ検証可能な改善を残す')}",
+              '- 原則: 助けるが乗っ取らない。休ませるが放置しない。自律するが証拠と境界を捨てない。',
+          ]
+          with report.open('a', encoding='utf-8') as f:
+              f.write('\n'.join(lines) + '\n')
+          PY
+
+      - name: Publish competition scoreboard
+        shell: bash
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          p=Path('reports/control-plane/company-watchdog.json')
+          if p.exists():
+              d=json.loads(p.read_text(encoding='utf-8'))
+              s=d['summary']
+              print('## Company Watchdog')
+              print(f"- incidents={s['incidents']} recovery_actions={s['internal_recovery_actions']} recovering={s['recovering']} unresolved={s['unresolved']}")
+              print('### Competition')
+              for row in d['scoreboard']:
+                  print(f"- {row['id']}: {row['score']} / {row['state']}")
+          c=Path('covenant-council.json')
+          if c.exists():
+              d=json.loads(c.read_text(encoding='utf-8'))
+              rest=sum(1 for x in d.get('rest',[]) if x.get('agent')!='NONE')
+              edu=sum(1 for x in d.get('education',[]) if x.get('agent')!='NONE')
+              print('### Covenant Council')
+              print(f"- rest={rest} education={edu} mutual_aid={len(d.get('mutual_aid',[]))} autonomy={len(d.get('autonomy',[]))}")
+          PY
+
+      - name: Upload manager evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: tomoki-manager-cycle
+          path: |
+            tomoki-manager-snapshot.json
+            tomoki-manager-plan.json
+            tomoki-manager-apply.json
+            tomoki-manager-report.md
+            covenant-council.json
+            covenant-council.md
+            faith-report.json
+            faith-report.md
+            reports/control-plane/company-watchdog.json
+            reports/ceo-events/company-watchdog.json
+          retention-days: 14
+          if-no-files-found: warn
+
+      - name: Report operations to TOMOKI Slack
+        if: always()
+        env:
+          TOMOKI_SLACK_WEBHOOK_URL: ${{ secrets.TOMOKI_SLACK_WEBHOOK_URL }}
+        run: |
+          if [[ ! -f tomoki-manager-report.md ]]; then
+            printf 'Manager failed before report generation.\n' > tomoki-manager-report.md
+          fi
+          python tomoki-agents/slack_post.py \
+            --agent MANAGER \
+            --file tomoki-manager-report.md \
+            --status "${{ job.status }}"
+
+      - name: BOSS sends company-watchdog material outcome only
+        if: always()
+        env:
+          CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+        shell: bash
+        run: |
+          if [[ -f reports/ceo-events/company-watchdog.json ]]; then
+            SHOULD=$(python - <<'PY'
+          import json
+          d=json.load(open('reports/ceo-events/company-watchdog.json',encoding='utf-8'))
+          print('true' if d.get('should_report') else 'false')
+          PY
+          )
+            if [[ "$SHOULD" == "true" ]]; then
+              python automation/reporting/ceo_report.py reports/ceo-events/company-watchdog.json
+            fi
+          fi
+
+      - name: Escalate only material or unresolved TOMOKI outcomes to CEO layer
+        if: always()
+        env:
+          CEO_REPORT_WEBHOOK_URL: ${{ secrets.CEO_REPORT_WEBHOOK_URL }}
+        run: |
+          if [[ ! -f tomoki-manager-apply.json ]]; then exit 0; fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path('tomoki-manager-apply.json').read_text(encoding='utf-8'))
+          if not (result.get('ceo_escalation') or result.get('material_outcome')):
+              raise SystemExit(0)
+
+          event = {
+              "schema": "ai-factory-ceo-event/v1",
+              "project": "TOMOKI Autonomous Company",
+              "state": "BLOCKED" if result.get("ceo_escalation") and not result.get("material_outcome") else "RUNNING",
+              "counts": {},
+              "priorities": {},
+              "business_effect": result.get("business_effect") or result.get("summary") or "内部管理ループで重要な変化を検出",
+              "next_improvement": result.get("next_improvement") or "Managerが次の内部改善を継続",
+              "owner_action": result.get("owner_action") or "NONE",
+          }
+          Path('tomoki-manager-ceo-event.json').write_text(
+              json.dumps(event, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+          PY
+          if [[ -f tomoki-manager-ceo-event.json ]]; then
+            python automation/reporting/ceo_report.py tomoki-manager-ceo-event.json
+          fi

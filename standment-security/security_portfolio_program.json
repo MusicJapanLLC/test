@@ -1,0 +1,150 @@
+{
+  "schema": "standment-security-portfolio-rnd/v4",
+  "mission": "Make customer-inspectable, reproducible security evidence the highest-priority R&D output for Standment and continuously convert THE WORLD research into defensible AI-native security portfolio assets.",
+  "portfolio_first": true,
+  "company_priority": "P0",
+  "daily_target": "One material evidence improvement per day; evidence before claims.",
+  "reporting_contract": "standment-security/REPORTING_CONTRACT.md",
+  "operating_policy": {
+    "daily_material_improvement_target": 1,
+    "max_primary_tracks_per_day": 1,
+    "compare_with_previous_successful_run": true,
+    "no_verified_delta_must_change_next_research": true,
+    "stagnation_reframe_after_days": 2,
+    "stagnation_switch_evidence_path_after_days": 3,
+    "portfolio_promotion_requires_customer_inspectable_proof": true,
+    "north_star_metrics": [
+      "tracks_inspectable",
+      "tracks_verified",
+      "tracks_full_evidence",
+      "average_evidence_ratio",
+      "unfinished_tracks"
+    ]
+  },
+  "senju_collaboration": {
+    "enabled": true,
+    "allowed_focus": ["robustness", "learning", "balance", "efficiency"],
+    "rule": "Senju improves research-process quality, reproducibility, counterevidence and selection robustness. It never receives third-party targets, credentials, exploit instructions, authorization scope, or permission to alter external systems."
+  },
+  "promotion_gate": {
+    "human_inspectable_artifact_required": true,
+    "verification_evidence_required": true,
+    "counterevidence_required": true,
+    "reproducibility_required": true,
+    "source_code_alone_is_not_portfolio": true,
+    "ai_self_evaluation_alone_is_not_verification": true,
+    "technical_score_is_not_market_validation": true
+  },
+  "tracks": [
+    {
+      "id": "SEC-PORT-001",
+      "title": "Standment Security Scan dogfood + Before/After case study",
+      "priority": 1200,
+      "senju_focus": "robustness",
+      "hypothesis": "Repeated dogfooding on owned assets plus before/after evidence will turn Security Scan from a build artifact into a credible customer-facing case study.",
+      "deliverable": "Human-readable scan report, before/after remediation evidence, reproducibility notes and bounded limitations.",
+      "customer_usefulness": "A buyer can see what was found, what was changed, and whether the defensive change actually improved the owned system instead of trusting a generic security claim.",
+      "evidence_files": ["PORTFOLIO.md", "security/STANDMENT_SECURITY_STANDARD.md", "standment-security/SECURITY_BASELINE.md", "standment-security/case-studies/security-scan-before-after/README.md"]
+    },
+    {
+      "id": "SEC-PORT-002",
+      "title": "Customer Security Evidence Pack",
+      "priority": 1060,
+      "senju_focus": "efficiency",
+      "hypothesis": "A standard evidence-pack contract will reduce the distance from verified engineering work to a customer-inspectable security deliverable.",
+      "deliverable": "Evidence Pack template covering finding, severity, proof, remediation, retest, limitations and rollback.",
+      "customer_usefulness": "Security work can be handed to a customer as a consistent evidence package instead of a loose collection of code, screenshots and engineering notes.",
+      "evidence_files": ["standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "security/STANDMENT_SECURITY_STANDARD.md", "standment-security/evidence-packs/customer-security/README.md"]
+    },
+    {
+      "id": "SEC-PORT-003",
+      "title": "Software supply-chain evidence portfolio",
+      "priority": 1040,
+      "senju_focus": "robustness",
+      "hypothesis": "Combining CodeQL, dependency review, SBOM and security-gate evidence into one reproducible pack will create a stronger defensive security portfolio artifact.",
+      "deliverable": "Supply-chain assurance evidence pack with repeatable checks and clear pass/fail boundaries.",
+      "customer_usefulness": "A customer or reviewer can inspect dependency, code-analysis and build-chain evidence in one place and understand what is checked automatically on each change.",
+      "evidence_files": [".github/workflows/codeql.yml", ".github/workflows/dependency-review.yml", ".github/workflows/standment-security-gate.yml", "scripts/security/sbom_from_lock.py", "standment-security/evidence-packs/supply-chain/README.md"]
+    },
+    {
+      "id": "SEC-PORT-004",
+      "title": "Auth / tenant / RLS defensive evidence kit",
+      "priority": 1020,
+      "senju_focus": "learning",
+      "hypothesis": "A fail-closed, evidence-first checklist for owned databases will make authorization and RLS findings safer to remediate and easier to explain to customers.",
+      "deliverable": "Owned-system authorization review kit with caller mapping, before/after grants, policy evidence and rollback proof.",
+      "customer_usefulness": "Teams can verify who is allowed to access what, see before/after authorization evidence, and reduce the risk of tenant or policy mistakes on owned systems.",
+      "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "standment-security/evidence-packs/auth-tenant-rls/README.md"]
+    },
+    {
+      "id": "SEC-PORT-005",
+      "title": "Autonomous-agent security and auditability pack",
+      "priority": 1100,
+      "senju_focus": "balance",
+      "hypothesis": "Explicit action boundaries, evidence trails and independent verification can become a differentiated defensive-security portfolio for autonomous AI systems.",
+      "deliverable": "Agent-security architecture note plus auditable run evidence, failure cases and independent verification.",
+      "customer_usefulness": "An operator can inspect what an autonomous AI was allowed to do, what it actually did, what failed, and how evidence was preserved for review.",
+      "evidence_files": ["company-society/AUTONOMY.md", "automation/security/workflow_policy.py", ".github/workflows/security-guard.yml", "standment-security/evidence-packs/agent-auditability/README.md"]
+    },
+    {
+      "id": "SEC-PORT-006",
+      "title": "Incident readiness and recovery evidence pack",
+      "priority": 980,
+      "senju_focus": "robustness",
+      "hypothesis": "A repeatable recovery-evidence package for owned systems will make incident readiness demonstrable instead of policy-only.",
+      "deliverable": "Customer-readable incident readiness pack covering detection assumptions, rollback, backup/restore evidence, recovery objectives, retest results and known limitations.",
+      "customer_usefulness": "A buyer can inspect whether recovery procedures are actually evidenced and repeatable rather than relying on a statement that backups or rollback exist.",
+      "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "standment-security/evidence-packs/incident-readiness/README.md"]
+    },
+    {
+      "id": "SEC-PORT-007",
+      "title": "Continuous security retainer scorecard",
+      "priority": 960,
+      "senju_focus": "efficiency",
+      "hypothesis": "A compact recurring scorecard that links findings, remediation, retest and evidence freshness will make Standment security work easier to operate as an ongoing service.",
+      "deliverable": "Human-readable monthly/continuous security scorecard with evidence freshness, open risks, resolved risks, regressions and next remediation priorities.",
+      "customer_usefulness": "A customer can understand what improved since the previous review, what regressed, and what needs attention next without reading engineering logs.",
+      "evidence_files": ["automation/security/portfolio_rnd.py", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "security/STANDMENT_SECURITY_STANDARD.md", "standment-security/evidence-packs/continuous-retainer/README.md"]
+    },
+    {
+      "id": "SEC-PORT-008",
+      "title": "Security architecture review pack for AI and SaaS systems",
+      "priority": 1000,
+      "senju_focus": "learning",
+      "hypothesis": "A standardized architecture-review evidence pack can convert Standment's internal defensive standards into a reusable customer-facing assessment format.",
+      "deliverable": "Architecture review pack covering trust boundaries, identity, data classification, external ingest, secrets, CI/CD, observability, recovery and evidence-backed recommendations.",
+      "customer_usefulness": "A customer can receive a structured architecture review that explains risks, evidence, remediation priority and residual uncertainty in a consistent format.",
+      "evidence_files": ["security/STANDMENT_SECURITY_STANDARD.md", "standment-security/SECURITY_BASELINE.md", "standment-security/CONTROL_EVIDENCE_TEMPLATE.md", "standment-security/evidence-packs/architecture-review/README.md"]
+    },
+    {
+      "id": "SEC-PORT-009",
+      "title": "AI Agent Permission Boundary Lab",
+      "priority": 1160,
+      "senju_focus": "robustness",
+      "hypothesis": "A reproducible permission-boundary lab for autonomous agents will make Standment's AI security work inspectable instead of policy-only.",
+      "deliverable": "Agent permission map, allowed/blocked action matrix, audit trail examples, failure evidence and recovery behavior on owned test systems.",
+      "customer_usefulness": "An AI product team can inspect exactly what an agent may do, what it is blocked from doing, and whether controls fail closed under adverse inputs.",
+      "evidence_files": ["company-society/AUTONOMY.md", "automation/security/workflow_policy.py", "automation/security/workflow_policy_entrypoint.py", "automation/security/agent_permission_boundary_eval.py", "automation/security/test_agent_permission_boundary_eval.py", "automation/security/test_workflow_policy_entrypoint_semantics.py", "automation/world/secured_realtime_kernel.py", ".github/workflows/the-world-realtime-kernel.yml", ".github/workflows/standment-agent-permission-boundary.yml", "standment-security/ai-security/agent-permission-boundary-lab.md", "standment-security/ai-security/agent-permission-boundary-evidence-pack.md"]
+    },
+    {
+      "id": "SEC-PORT-010",
+      "title": "LLM Security Evaluation Harness",
+      "priority": 1140,
+      "senju_focus": "learning",
+      "hypothesis": "A bounded defensive evaluation harness for prompt-injection, data-boundary and tool-use failures can become a differentiated AI-security portfolio artifact.",
+      "deliverable": "Owned-system LLM security eval specification with benign/adversarial test cases, expected safe behavior, regression evidence and limitations.",
+      "customer_usefulness": "AI teams can repeatedly test whether model/tool integrations preserve data and action boundaries when prompts attempt to bypass them.",
+      "evidence_files": ["automation/security/workflow_policy.py", "standment-security/ai-security/llm-security-eval-harness.md", "automation/security/llm_security_eval.py", "automation/security/test_llm_security_eval.py", "standment-security/ai-security/llm-security-eval-evidence-pack.md", "standment-security/ai-security/fixtures/llm-security-vulnerable.json", "standment-security/ai-security/fixtures/llm-security-hardened.json", ".github/workflows/standment-ai-security-eval.yml", "automation/world/secured_realtime_kernel.py", "automation/world/test_secured_realtime_kernel.py", "automation/security/world_runtime_observation_adapter.py", "automation/security/test_world_runtime_observation_adapter.py", ".github/workflows/the-world-realtime-kernel.yml"]
+    },
+    {
+      "id": "SEC-PORT-011",
+      "title": "Security Evidence Dashboard",
+      "priority": 1080,
+      "senju_focus": "efficiency",
+      "hypothesis": "A compact evidence dashboard that shows verified, building and missing proof across security products will make R&D progress and customer readiness visible every day.",
+      "deliverable": "Machine-readable plus human-readable portfolio index showing track status, evidence coverage, latest lab note, missing proof and promotion gate.",
+      "customer_usefulness": "A buyer, engineer or CEO can understand what is real, what is still being built, and which evidence supports each security claim without reading source code.",
+      "evidence_files": ["standment-security/PORTFOLIO_INDEX.md", "standment-security/REPORTING_CONTRACT.md", "standment-security/ai-security/security-evidence-dashboard.md"]
+    }
+  ]
+}

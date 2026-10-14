@@ -70,6 +70,15 @@ npm run preview
 
 ## SEO / LLMO
 
+検索で「MJ STORE」は、セガの『セガNET麻雀 MJ』の公式ストアとぶつかる。だから名前ではなく、**作品名・読みがな・ジャンル・「Music Japan」** で見つけてもらう設計にしている。
+
+- タイトル：作品ページは「灯の旅路（あかりのたびじ）｜無料で遊べるドット絵の戦術RPG｜Music Japan」の形（`games.ts` の `kana` と `kind`）。トップは「Music Japanの無料ブラウザゲーム｜MJ STORE」
+- 作品ページの冒頭に「かんたんに言うと」の一文（`gameDef()`）。検索エンジンや AI が「◯◯とは」をそのまま引用できる
+- トップには見える h1 と、作品名へのリンクを含むストアの説明
+- 構造化データ：全ページに WebPage（ItemPage / CollectionPage / ContactPage）、作品は VideoGame（読みがな・公開日・更新日・サムネイル）、運営は Organization（PNG のロゴ・X・Instagram）
+- アイコン：`favicon.svg` に加えて PNG（apple-touch-icon・192・512）と `site.webmanifest`
+- 公開のたびに GitHub Actions（`.github/workflows/mj-store-indexnow.yml`）が、本番の全ページを自己診断（200・noindex なし・canonical・構造化データ）してから IndexNow に送る
+
 - 検索エンジンへの更新の知らせ（IndexNow）：鍵は `public/1fa70acfeb4fd7854ee4a403215aa477.txt`。更新したページを `https://api.indexnow.org/indexnow?url=<URL>&key=1fa70acfeb4fd7854ee4a403215aa477` に送ると、Bing などにすぐ届く
 - `*.pages.dev`（Cloudflare のプレビュー）は `public/_headers` で検索に載せない
 

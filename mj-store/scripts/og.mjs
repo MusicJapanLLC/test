@@ -7,7 +7,7 @@
  *
  * Playwright（Chromium）が必要。
  */
-import { mkdirSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -171,5 +171,25 @@ for (const [name, html] of jobs) {
   await page.screenshot({ path: out, type: 'jpeg', quality: 86 });
   console.log('wrote', out);
 }
+/* アイコン（検索結果・ホーム画面用の PNG）。favicon.svg をそのまま描く */
+const icons = [
+  ['apple-touch-icon.png', 180, '#0c0c0e'],
+  ['brand/icon-192.png', 192, null],
+  ['brand/icon-512.png', 512, null],
+  ['brand/icon-maskable-512.png', 512, '#0c0c0e'],
+];
+for (const [name, size, bg] of icons) {
+  const pad = bg ? Math.round(size * 0.12) : 0;
+  const svg = readFileSync(resolve(root, 'public/favicon.svg'), 'utf8');
+  await page.setViewportSize({ width: size, height: size });
+  await page.setContent(
+    `<html><body style="margin:0;width:${size}px;height:${size}px;display:grid;place-items:center;background:${bg ?? 'transparent'}">
+      <div style="width:${size - pad * 2}px;height:${size - pad * 2}px">${svg.replace('<svg ', '<svg width="100%" height="100%" ')}</div>
+    </body></html>`,
+  );
+  await page.screenshot({ path: resolve(root, 'public', name), omitBackground: !bg });
+  console.log('wrote', name);
+}
+
 await browser.close();
 rmSync(tmp, { recursive: true, force: true });

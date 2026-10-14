@@ -1,0 +1,83 @@
+name: Discovery External Action Planner
+
+on:
+  schedule:
+    - cron: '7,17,27,37,47,57 * * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/plan_discovery_external_actions.py'
+      - 'automation/codegen/engine/discovery_external_action.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_action_planner.py'
+      - '.github/workflows/discovery-action-planner.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/plan_discovery_external_actions.py'
+      - 'automation/codegen/engine/discovery_external_action.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/tests/test_discovery_external_action_planner.py'
+      - '.github/workflows/discovery-action-planner.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: discovery-external-action-planner
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify planner never executes transport
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q automation/codegen/tests/test_discovery_external_action_planner.py
+
+      - name: Restore discovery runtime memory
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .authority-opportunity-runtime/
+          key: discovery-action-plan-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: |
+            authority-opportunity-${{ github.ref_name }}-
+            authority-opportunity-
+
+      - name: Build 300-slot authorized action candidate plan
+        env:
+          PYTHONPATH: automation/codegen:senju
+        run: |
+          set -euo pipefail
+          python automation/codegen/plan_discovery_external_actions.py \
+            --state .authority-opportunity-runtime \
+            --repo-root . \
+            --max-candidates 300 \
+            --out /tmp/discovery-external-action-plan.json
+          test "$(jq -r '.max_candidates' /tmp/discovery-external-action-plan.json)" = "300"
+          test "$(jq -r '.network_io_attempted' /tmp/discovery-external-action-plan.json)" = "false"
+          test "$(jq -r '.authority_minted' /tmp/discovery-external-action-plan.json)" = "false"
+
+      - name: Upload inspectable action plan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: discovery-external-action-plan-${{ github.run_id }}
+          path: /tmp/discovery-external-action-plan.json
+          if-no-files-found: error
+          retention-days: 14

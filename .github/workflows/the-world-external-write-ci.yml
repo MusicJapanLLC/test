@@ -1,0 +1,61 @@
+name: THE WORLD External Write CI
+
+on:
+  pull_request:
+    paths:
+      - "outside-world/external_write_router.py"
+      - "outside-world/external_write_targets.json"
+      - "outside-world/test_external_write_router.py"
+      - "outside-world/reality_policy.json"
+      - ".github/workflows/the-world-external-write-*.yml"
+  push:
+    branches: ["claude/employee-onboarding-setup-udm86"]
+    paths:
+      - "outside-world/external_write_router.py"
+      - "outside-world/external_write_targets.json"
+      - "outside-world/test_external_write_router.py"
+      - "outside-world/reality_policy.json"
+      - ".github/workflows/the-world-external-write-*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Compile external writer
+        run: python -m py_compile outside-world/external_write_router.py
+
+      - name: Unit tests
+        run: python -m unittest outside-world/test_external_write_router.py -v
+
+      - name: Validate bounded auto-write policy
+        run: |
+          python - <<'PY'
+          import json
+          policy=json.load(open("outside-world/reality_policy.json", encoding="utf-8"))
+          targets=json.load(open("outside-world/external_write_targets.json", encoding="utf-8"))
+          assert policy["actions"]["external_post_allowlisted_account"] == "AUTO_ALLOWLIST"
+          assert policy["actions"]["general_external_post"] == "APPROVAL"
+          allowed=set(policy["allowlists"]["external_write_target_ids"])
+          configured={x["id"] for x in targets["platforms"] if x.get("enabled")}
+          assert configured <= allowed, (configured, allowed)
+          assert targets["max_total_writes_per_run"] <= 2
+          assert targets["dedupe_hours"] >= 24
+          for target in targets["platforms"]:
+              assert target["max_per_day"] > 0
+              assert target.get("required_env")
+          print("bounded external auto-write policy OK")
+          PY

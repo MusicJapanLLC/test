@@ -1,0 +1,171 @@
+name: Senju 100x Mass Shadow Learning
+# measured-100x-v3-true-micro
+
+on:
+  schedule:
+    - cron: '17 * * * *'
+  workflow_dispatch:
+  push:
+    branches: ['claude/employee-onboarding-setup-udm86']
+    paths:
+      - '.github/workflows/senju-mass-shadow-learning.yml'
+      - 'senju/scripts/mass_shadow_factory.py'
+      - 'senju/scripts/mass_shadow_factory_v2.py'
+      - 'senju/tests/test_mass_shadow_factory.py'
+      - 'senju/tests/test_mass_shadow_factory_v2.py'
+      - 'automation/world/task_worker.py'
+
+concurrency:
+  group: senju-100x-mass-shadow-learning
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  actions: read
+  id-token: write
+
+jobs:
+  mass-shadow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.12'
+
+      - name: Verify experiment engine and true micro bypass
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m pip install pytest==9.1.1
+          python -m pytest \
+            tests/test_mass_shadow_factory.py \
+            tests/test_mass_shadow_factory_v2.py \
+            tests/test_shadow_selector.py \
+            tests/test_shadow_league.py -q
+          python -m senju.cli safety-check sim://mass-shadow
+          if python -m senju.cli safety-check https://example.com; then exit 1; fi
+
+      - name: Load learned experiment policy
+        run: |
+          set -euo pipefail
+          python automation/world/task_worker.py experiment-config \
+            --policy-key SENJU_MASS_SHADOW \
+            --out /tmp/world-experiment-config.json
+          cat /tmp/world-experiment-config.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run measured 100x true-micro closed-simulator factory
+        working-directory: senju
+        run: |
+          set -euo pipefail
+          python -m scripts.mass_shadow_factory_v2 \
+            --state state/champion.json \
+            --strategy state/strategy.json \
+            --out /tmp/mass-shadow \
+            --selected /tmp/mass-shadow-selected.json \
+            --config /tmp/world-experiment-config.json
+          cat /tmp/mass-shadow/selection.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Validate bounded strategy and measured 100x count
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          s=json.load(open('/tmp/mass-shadow-selected.json'))
+          bounds={
+            'population':(40,240),'generations':(6,40),'matches':(100,1200),
+            'mutation_rate':(0.05,0.35),'red_budget':(6,24),'blue_budget':(6,24),
+            'seed':(1,2147483647),
+          }
+          assert set(s)==set(bounds)
+          for k,(lo,hi) in bounds.items(): assert lo <= float(s[k]) <= hi, (k,s[k])
+          report=json.load(open('/tmp/mass-shadow/selection.json'))
+          target=int(report['base_reference_trials']) * int(report['trial_multiplier_target'])
+          assert report.get('schema') == 'senju-mass-shadow-factory/v2'
+          assert int(report['trial_multiplier_target']) == 100
+          assert int(report['micro_trial_count']) >= target, (report['micro_trial_count'], target)
+          assert int(report['raw_trial_count']) >= target, (report['raw_trial_count'], target)
+          assert float(report['realized_multiplier']) >= 100.0, report['realized_multiplier']
+          assert report.get('safe') is True
+          cfg=report.get('micro_runtime_config') or {}
+          assert cfg == {'population':12,'generations':1,'matches':20,'salts_per_candidate':5}, cfg
+          forbidden=('target','network','credential','secret','permission')
+          surface=json.dumps({'strategy':s,'effects':report.get('parameter_effects')},ensure_ascii=False).lower()
+          for word in forbidden:
+            assert word not in surface, word
+          print(f"MEASURED_100X raw={report['raw_trial_count']} micro={report['micro_trial_count']} multiplier={report['realized_multiplier']}x")
+          PY
+
+      - name: Record experiment data into The World learning fabric
+        run: |
+          set -euo pipefail
+          python automation/world/task_worker.py record-experiment \
+            --selection /tmp/mass-shadow/selection.json \
+            --workflow senju-mass-shadow-learning.yml \
+            --policy-key SENJU_MASS_SHADOW \
+            --out /tmp/world-experiment-record.json
+          cat /tmp/world-experiment-record.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload full trial evidence
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        with:
+          name: senju-100x-mass-shadow-${{ github.run_id }}
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            /tmp/world-experiment-config.json
+            /tmp/world-experiment-record.json
+            /tmp/mass-shadow/selection.json
+            /tmp/mass-shadow/selection.md
+            /tmp/mass-shadow/trials.jsonl
+            /tmp/mass-shadow-selected.json
+
+      - name: Promote only a full-evaluation and unseen-holdout winner
+        shell: bash
+        run: |
+          set -euo pipefail
+          SELECTED="$(python - <<'PY'
+          import json
+          print('true' if json.load(open('/tmp/mass-shadow/selection.json')).get('selected') else 'false')
+          PY
+          )"
+          if [[ "$SELECTED" != 'true' ]]; then
+            echo 'Measured 100x evidence retained current champion strategy; no promotion.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          REPO="$GITHUB_REPOSITORY"
+          BASE="$GITHUB_REF_NAME"
+          BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+          BRANCH="senju/mass-shadow-${GITHUB_RUN_ID}"
+          gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BRANCH" -f sha="$BASE_SHA" >/dev/null
+          CONTENT="$(base64 -w0 /tmp/mass-shadow-selected.json)"
+          OLD_SHA="$(gh api "repos/$REPO/contents/senju/state/strategy.json?ref=$BRANCH" --jq '.sha')"
+          gh api -X PUT "repos/$REPO/contents/senju/state/strategy.json" \
+            -f message="chore(senju): promote verified 100x mass-shadow winner [run $GITHUB_RUN_ID]" \
+            -f content="$CONTENT" -f branch="$BRANCH" -f sha="$OLD_SHA" >/dev/null
+          HEAD_SHA="$(gh api "repos/$REPO/git/ref/heads/$BRANCH" --jq '.object.sha')"
+          CURRENT_BASE_SHA="$(gh api "repos/$REPO/git/ref/heads/$BASE" --jq '.object.sha')"
+          if [[ "$CURRENT_BASE_SHA" != "$BASE_SHA" ]]; then
+            gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+            echo 'Base moved; safe promotion deferred to next experiment.' >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          CHANGED="$(gh api "repos/$REPO/compare/$BASE_SHA...$HEAD_SHA" --jq '[.files[].filename]')"
+          if [[ "$CHANGED" != '["senju/state/strategy.json"]' ]]; then
+            echo "Unexpected diff: $CHANGED"
+            exit 1
+          fi
+          gh api -X PATCH "repos/$REPO/git/refs/heads/$BASE" -f sha="$HEAD_SHA" -F force=false >/dev/null
+          gh api -X DELETE "repos/$REPO/git/refs/heads/$BRANCH" >/dev/null || true
+          echo "Promoted verified measured-100x winner at $HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"

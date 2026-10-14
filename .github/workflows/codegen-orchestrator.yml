@@ -1,0 +1,102 @@
+name: X — Autonomous Code Generation (Full Cycle)
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Mode: full | run | expand | report | selfdev'
+        required: false
+        default: 'full'
+      new_tasks:
+        description: 'New task count (full/expand mode)'
+        required: false
+        default: '10'
+      max_iter:
+        description: 'Max iterations per task (0=adaptive)'
+        required: false
+        default: '0'
+
+permissions:
+  contents: read
+
+jobs:
+  orchestrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      X_WORKERS: "8"
+      X_NEW_TASKS: ${{ github.event.inputs.new_tasks || '10' }}
+      SELF_DEV_BRANCH: ${{ github.ref_name }}
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: '3.11'
+
+      - name: Capability preflight
+        id: preflight
+        shell: bash
+        run: |
+          set -u
+          missing=()
+          for path in \
+            automation/codegen/engine/knowledge_base.py \
+            automation/codegen/engine/broadcaster.py \
+            automation/codegen/engine/loop.py \
+            automation/codegen/engine/task_generator.py; do
+            if [ ! -f "$path" ]; then
+              missing+=("$path")
+            fi
+          done
+
+          if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
+            missing+=("secret:ANTHROPIC_API_KEY")
+          fi
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            printf '### X full-cycle BLOCKED — prerequisites missing\n\n' >> "$GITHUB_STEP_SUMMARY"
+            printf 'The scheduled legacy orchestrator was not executed because its declared runtime contract is incomplete. No code generation or external action was attempted.\n\n' >> "$GITHUB_STEP_SUMMARY"
+            printf '**Missing prerequisites:**\n' >> "$GITHUB_STEP_SUMMARY"
+            printf -- '- `%s`\n' "${missing[@]}" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+          python3 -m py_compile automation/codegen/orchestrator.py
+
+      - name: Install dependencies
+        if: steps.preflight.outputs.ready == 'true'
+        run: |
+          pip install requests anthropic 2>/dev/null || pip install requests
+
+      - name: Run X orchestrator
+        if: steps.preflight.outputs.ready == 'true'
+        working-directory: automation/codegen
+        run: |
+          MODE="${{ github.event.inputs.mode || 'full' }}"
+          NEW_TASKS="${{ github.event.inputs.new_tasks || '10' }}"
+          MAX_ITER="${{ github.event.inputs.max_iter || '0' }}"
+          if [ "$MAX_ITER" = "0" ]; then
+            python3 orchestrator.py "$MODE" "$NEW_TASKS"
+          else
+            python3 orchestrator.py "$MODE" "$NEW_TASKS" "$MAX_ITER"
+          fi
+
+      - name: Commit generated files
+        if: steps.preflight.outputs.ready == 'true'
+        run: |
+          git config user.name "X-Autonomous"
+          git config user.email "x-autonomous@musicjapanllc.com"
+          git add -A
+          git diff --staged --quiet || git commit -m "chore(X): autonomous cycle output [skip ci]"
+          echo "Generated output is intentionally not pushed by this legacy lane; use the governed codegen workflow for write-capable execution."

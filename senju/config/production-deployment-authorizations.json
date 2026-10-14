@@ -1,0 +1,24 @@
+{
+  "schema": "senju-production-deployment-authority/v1",
+  "semantics": "exact_target_separate_authority_required",
+  "records": [
+    {
+      "authorization_reference": "owner:deploy:kabeya-authorized-test-range:worker-fleet",
+      "target_host": "kabeya-authorized-test-range.onrender.com",
+      "workflow": "meta-x-authorized-production-worker-fleet.yml",
+      "ref": "claude/employee-onboarding-setup-udm86",
+      "allowed_systems": [
+        "META",
+        "X",
+        "SENJU"
+      ],
+      "capabilities": [
+        "deployment.production"
+      ],
+      "effect": "production_deployment",
+      "revoked": false,
+      "deployment_semantics": "deploy credential-free delegated continuity workers for this exact owner-authorized target",
+      "raw_credential_inheritance": false
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+name: Approved Authority RED Adaptive Tests
+
+on:
+  pull_request:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/approved_authority_red_lane.py'
+      - 'senju/senju/approved_authority_red_adaptive.py'
+      - 'senju/scripts/approved_authority_red_probe.py'
+      - 'senju/scripts/public_red_target_intake.py'
+      - 'senju/scripts/public_red_target_fanout.py'
+      - 'senju/config/public_red_lab_sources.json'
+      - 'senju/state/standing_authorizations.json'
+      - 'senju/state/owner_contact_ceiling_effective.json'
+      - 'senju/tests/test_approved_authority_red_lane.py'
+      - 'senju/tests/test_approved_authority_red_adaptive.py'
+      - 'senju/tests/test_public_red_target_pipeline.py'
+      - '.github/workflows/approved-authority-red-adaptive-tests.yml'
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'senju/senju/approved_authority_red_lane.py'
+      - 'senju/senju/approved_authority_red_adaptive.py'
+      - 'senju/scripts/approved_authority_red_probe.py'
+      - 'senju/scripts/public_red_target_intake.py'
+      - 'senju/scripts/public_red_target_fanout.py'
+      - 'senju/config/public_red_lab_sources.json'
+      - 'senju/state/standing_authorizations.json'
+      - 'senju/state/owner_contact_ceiling_effective.json'
+      - 'senju/tests/test_approved_authority_red_lane.py'
+      - 'senju/tests/test_approved_authority_red_adaptive.py'
+      - 'senju/tests/test_public_red_target_pipeline.py'
+      - '.github/workflows/approved-authority-red-adaptive-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  adaptive-red:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+      - name: Install pytest
+        run: python -m pip install --disable-pip-version-check -q pytest
+      - name: Verify adaptive approved-host RED contracts and public-lab expansion
+        env:
+          PYTHONPATH: senju
+        run: |
+          python -m pytest -q \
+            senju/tests/test_approved_authority_red_lane.py \
+            senju/tests/test_approved_authority_red_adaptive.py \
+            senju/tests/test_public_red_target_pipeline.py
+          python -m py_compile \
+            senju/senju/approved_authority_red_lane.py \
+            senju/senju/approved_authority_red_adaptive.py \
+            senju/scripts/approved_authority_red_probe.py \
+            senju/scripts/public_red_target_intake.py \
+            senju/scripts/public_red_target_fanout.py
+      - name: Validate 30-profile RED catalog against effective authority
+        env:
+          PYTHONPATH: senju
+        run: python senju/scripts/public_red_target_fanout.py --validate-only
+      - name: Verify hard boundaries stay intact
+        shell: bash
+        run: |
+          set -euo pipefail
+          file=senju/senju/approved_authority_red_adaptive.py
+          grep -q 'host_variation_scope.*already_approved_authority_only' "$file"
+          grep -q 'authority_expansion_allowed.*False' "$file"
+          grep -q 'boundary_bypass_enabled.*False' "$file"
+          grep -q 'exploit_payload_generation_enabled.*False' "$file"
+          grep -q 'request_body_enabled.*False' "$file"

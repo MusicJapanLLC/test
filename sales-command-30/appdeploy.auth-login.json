@@ -1,0 +1,14 @@
+{
+  "methods": ["google"],
+  "headline": "Revenue Recovery AI",
+  "subtitle": "止まった商談を見つけ、売上機会に戻す",
+  "style": {
+    "mode": "light",
+    "accentColor": "#171816",
+    "backgroundColor": "#f6f6f2",
+    "panelColor": "#ffffff",
+    "textColor": "#171816",
+    "fontFamily": "Inter, system-ui, sans-serif",
+    "borderRadius": 16
+  }
+}

@@ -1,0 +1,9 @@
+/*
+ * orbit の世界観（ZETTAICHI / n1a など）でだけ読み込む。公式サイト zettaichi.co.jp と同じ見出しの書体：
+ *   見出し：Zen Kaku Gothic New 900（使う文字だけのファイルは scripts/fonts.py が生成）
+ *   欧文　：Michroma（幅の広い幾何学の書体。ZETTAICHI のロゴの字形にならう）
+ *   数式　：JetBrains Mono（|x| や数直線の目盛り）
+ */
+@import './fonts-faces-mono.css';
+@import '@fontsource/michroma/latin-400.css';
+@import '@fontsource-variable/jetbrains-mono/wght.css';

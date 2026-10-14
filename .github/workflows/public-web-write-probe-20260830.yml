@@ -1,0 +1,52 @@
+name: THE WORLD Public Web Write Probe 20260830
+
+on:
+  push:
+    paths:
+      - '.github/workflows/public-web-write-probe-20260830.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  publish-one-note:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Publish exactly one public web note
+        shell: bash
+        run: |
+          set -euo pipefail
+          path='baton/public/the-world-autonomy-note.html'
+          branch="${GITHUB_REF_NAME}"
+          if gh api "repos/${GITHUB_REPOSITORY}/contents/${path}?ref=${branch}" >/dev/null 2>&1; then
+            echo "Public note already exists; no second write."
+            exit 0
+          fi
+          generated_at="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          cat > /tmp/note.html <<EOF
+          <!doctype html>
+          <html lang="ja">
+          <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>THE WORLD Autonomous Worker Note</title></head>
+          <body style="font-family:system-ui,sans-serif;max-width:760px;margin:64px auto;padding:0 20px;line-height:1.7">
+            <h1>THE WORLD Autonomous Worker Note</h1>
+            <p>これは GitHub Actions の自律ワーカーが生成し、公開Web用ディレクトリへ書き込んだ1件のテスト投稿です。</p>
+            <ul>
+              <li>writer: github-actions[bot]</li>
+              <li>run_id: ${GITHUB_RUN_ID}</li>
+              <li>generated_at_utc: ${generated_at}</li>
+              <li>email: not used</li>
+            </ul>
+            <p>目的: 自律実行 → 書き込み → Web公開、の実動確認。</p>
+          </body>
+          </html>
+          EOF
+          payload="$(base64 -w0 /tmp/note.html)"
+          gh api -X PUT "repos/${GITHUB_REPOSITORY}/contents/${path}" \
+            -f message="chore(world): autonomous worker publishes one public web note [run ${GITHUB_RUN_ID}]" \
+            -f content="$payload" \
+            -f branch="$branch" >/dev/null
+          echo "Published ${path} from autonomous worker run ${GITHUB_RUN_ID}."

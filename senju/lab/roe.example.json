@@ -1,0 +1,8 @@
+{
+  "engagement_name": "local-lab-juice-shop",
+  "authorized_by": "self (own isolated lab)",
+  "allow_private_network": true,
+  "allow_hosts": ["10.13.0.5"],
+  "max_intensity": "lab-only",
+  "notes": "この交戦規定(RoE)は隔離ラボ内の学習用標的のみを対象とする。公開資産・第三者資産は対象外。ScopeGuardがこの許可リスト以外を全拒否する。"
+}

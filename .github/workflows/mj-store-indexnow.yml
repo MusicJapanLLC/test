@@ -1,11 +1,15 @@
-# MJ STORE（store.music-japan.com）を更新したら、検索エンジンに知らせる（IndexNow）。
-# Bing・Yandex・Naver・Seznam などが、サイトマップの全ページをすぐ読みに来る。
-# Cloudflare Pages の公開が終わるのを待ってから、公開中の sitemap.xml の URL を送る。
+# MJ STORE（store.music-japan.com）を更新したら、
+#  1. 公開中のサイトが検索に載る状態か確かめる（SEO の自己診断）
+#  2. 検索エンジンに更新を知らせる（IndexNow。Bing・Yandex・Naver・Seznam などがすぐ読みに来る）
+# Cloudflare Pages の公開が終わるのを待ってから、公開中の sitemap.xml の URL を調べて送る。
 name: MJ STORE IndexNow
 
 on:
   push:
-    branches: [main, claude/music-japan-game-site-sbuax7]
+    branches:
+      - claude/employee-onboarding-setup-udm86
+      - main
+      - claude/music-japan-game-site-sbuax7
     paths:
       - 'mj-store/**'
       - '.github/workflows/mj-store-indexnow.yml'
@@ -28,11 +32,28 @@ jobs:
       - name: Cloudflare Pages の公開を待つ
         run: sleep 180
 
-      - name: 鍵のファイルが公開されているか確かめる
+      - name: 検索に載る状態か確かめる（SEO の自己診断）
         run: |
-          test "$(curl -fsSL "https://$HOST/$KEY.txt")" = "$KEY"
+          set -euo pipefail
+          fail=0
+          check() { echo "  $1"; }
+          test "$(curl -fsSL "https://$HOST/$KEY.txt")" = "$KEY" || { echo "::error::IndexNow の鍵が公開されていない"; fail=1; }
+          curl -fsSL "https://$HOST/robots.txt" | grep -q "Sitemap: https://$HOST/sitemap.xml" || { echo "::error::robots.txt に sitemap がない"; fail=1; }
+          curl -fsSL "https://$HOST/llms.txt" > /dev/null || { echo "::error::llms.txt が開けない"; fail=1; }
+          for url in $(curl -fsSL "https://$HOST/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g'); do
+            headers=$(curl -sSIL "$url")
+            code=$(curl -s -o page.html -w '%{http_code}' "$url")
+            [ "$code" = 200 ] || { echo "::error::$url が $code"; fail=1; continue; }
+            if echo "$headers" | grep -iq '^x-robots-tag:.*noindex'; then echo "::error::$url に X-Robots-Tag: noindex"; fail=1; fi
+            grep -q "<link rel=\"canonical\" href=\"$url\"" page.html || { echo "::error::$url の canonical が自分を指していない"; fail=1; }
+            grep -q 'name="robots" content="index' page.html || { echo "::error::$url の robots が index でない"; fail=1; }
+            grep -q 'application/ld+json' page.html || { echo "::error::$url に構造化データがない"; fail=1; }
+            title=$(grep -o '<title>[^<]*</title>' page.html | head -1)
+            check "OK $url  $title"
+          done
+          exit $fail
 
-      - name: サイトマップの URL を送る
+      - name: サイトマップの URL を検索エンジンに送る（IndexNow）
         run: |
           set -euo pipefail
           urls=$(curl -fsSL "https://$HOST/sitemap.xml" | grep -o '<loc>[^<]*</loc>' | sed 's/<[^>]*>//g' | jq -R . | jq -s -c .)

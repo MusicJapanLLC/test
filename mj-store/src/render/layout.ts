@@ -31,6 +31,15 @@ export interface PageMeta {
   /** 最初に見える画像（LCP）の先読み */
   preloadImage?: string;
   noindex?: boolean;
+  /** SNS で見せる題名（省略時は title）。作品ページはキャッチコピー入り */
+  ogTitle?: string;
+  /** ページの種類（構造化データの WebPage の型） */
+  pageType?: 'WebPage' | 'CollectionPage' | 'ItemPage' | 'ContactPage';
+  /** このページが主に扱うもの（構造化データの @id） */
+  mainEntity?: string;
+  /** パンくず（BreadcrumbList）を jsonLd に入れたページ */
+  breadcrumb?: boolean;
+  dateModified?: string;
 }
 
 /** すべてのページに入れる、組織とサイトの構造化データ */
@@ -42,7 +51,15 @@ export function baseGraph(ctx: RenderCtx): Record<string, unknown>[] {
       name: site.operator.name,
       alternateName: site.operator.nameEn,
       url: site.operator.url,
-      logo: abs(ctx, 'favicon.svg'),
+      logo: {
+        '@type': 'ImageObject',
+        '@id': `${ctx.siteUrl}/#logo`,
+        url: abs(ctx, 'brand/music-japan-logo.png'),
+        width: 1500,
+        height: 500,
+        caption: site.operator.name,
+      },
+      image: { '@id': `${ctx.siteUrl}/#logo` },
       sameAs: site.operator.sameAs,
       address: {
         '@type': 'PostalAddress',
@@ -55,7 +72,7 @@ export function baseGraph(ctx: RenderCtx): Record<string, unknown>[] {
       '@type': 'WebSite',
       '@id': `${ctx.siteUrl}/#website`,
       name: site.name,
-      alternateName: site.nameJa,
+      alternateName: site.alternateNames,
       description: site.description,
       url: `${ctx.siteUrl}/`,
       inLanguage: 'ja',
@@ -67,7 +84,25 @@ export function baseGraph(ctx: RenderCtx): Record<string, unknown>[] {
 export function headHtml(ctx: RenderCtx, m: PageMeta): string {
   const url = abs(ctx, m.path);
   const image = abs(ctx, m.image);
-  const graph = { '@context': 'https://schema.org', '@graph': [...baseGraph(ctx), ...(m.jsonLd ?? [])] };
+  /* どのページにも「このページは何か」を1つ置く（WebPage / CollectionPage など） */
+  const page: Record<string, unknown> = {
+    '@type': m.pageType ?? 'WebPage',
+    '@id': `${url}#webpage`,
+    url,
+    name: m.title,
+    description: m.description,
+    inLanguage: 'ja',
+    isPartOf: { '@id': `${ctx.siteUrl}/#website` },
+    publisher: { '@id': `${ctx.siteUrl}/#organization` },
+    primaryImageOfPage: { '@type': 'ImageObject', url: image, width: 1200, height: 630 },
+  };
+  if (m.breadcrumb) page.breadcrumb = { '@id': `${url}#breadcrumb` };
+  if (m.mainEntity) page.mainEntity = { '@id': m.mainEntity };
+  if (m.dateModified) page.dateModified = m.dateModified;
+  const graph = {
+    '@context': 'https://schema.org',
+    '@graph': [...baseGraph(ctx), ...(m.noindex ? [] : [page]), ...(m.jsonLd ?? [])],
+  };
   return `
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -85,17 +120,22 @@ export function headHtml(ctx: RenderCtx, m: PageMeta): string {
     <meta property="og:type" content="${m.ogType ?? 'website'}" />
     <meta property="og:site_name" content="${site.name}" />
     <meta property="og:locale" content="${site.locale}" />
-    <meta property="og:title" content="${esc(m.title)}" />
+    <meta property="og:title" content="${esc(m.ogTitle ?? m.title)}" />
     <meta property="og:description" content="${esc(m.description)}" />
     <meta property="og:url" content="${url}" />
     <meta property="og:image" content="${image}" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/jpeg" />
     <meta property="og:image:alt" content="${esc(m.imageAlt)}" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="${esc(m.title)}" />
+    <meta name="twitter:site" content="${site.operator.x}" />
+    <meta name="twitter:title" content="${esc(m.ogTitle ?? m.title)}" />
     <meta name="twitter:description" content="${esc(m.description)}" />
     <meta name="twitter:image" content="${image}" />
+    <link rel="apple-touch-icon" href="${href(ctx, 'apple-touch-icon.png')}" />
+    <link rel="icon" type="image/png" sizes="192x192" href="${href(ctx, 'brand/icon-192.png')}" />
+    <link rel="manifest" href="${href(ctx, 'site.webmanifest')}" />
     <link rel="alternate" type="text/plain" href="${href(ctx, 'llms.txt')}" title="LLM向けのサイト概要" />
     <link rel="sitemap" type="application/xml" href="${href(ctx, 'sitemap.xml')}" />
     <script type="application/ld+json">${JSON.stringify(graph).replace(/</g, '\\u003c')}</script>`.trim();

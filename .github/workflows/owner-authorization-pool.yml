@@ -1,0 +1,133 @@
+name: Owner Authorization Pool 50
+# Activation marker: the workflow is now present on the base branch; this push starts the first closed-loop run.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+  push:
+    branches:
+      - claude/employee-onboarding-setup-udm86
+    paths:
+      - 'senju/senju/owner_authorization_pool.py'
+      - 'senju/scripts/owner_authorization_pool.py'
+      - 'senju/state/verified_control_attestations.json'
+      - 'AUTHORIZED_TEST_TARGETS.json'
+      - 'senju/senju/authority_promotion_bureau.py'
+      - 'senju/scripts/run_authority_promotion_bureau.py'
+      - 'tests/test_owner_authorization_pool.py'
+      - '.github/workflows/owner-authorization-pool.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: owner-authorization-pool-50
+  cancel-in-progress: false
+
+jobs:
+  maintain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          ref: claude/employee-onboarding-setup-udm86
+
+      - name: Setup Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Restore previous pool evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/previous-pool
+          run_id="$(gh run list \
+            --repo "$GITHUB_REPOSITORY" \
+            --workflow "Owner Authorization Pool 50" \
+            --branch claude/employee-onboarding-setup-udm86 \
+            --status success \
+            --limit 1 \
+            --json databaseId \
+            --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$run_id" ]]; then
+            gh run download "$run_id" --repo "$GITHUB_REPOSITORY" --dir /tmp/previous-pool || true
+            previous="$(find /tmp/previous-pool -name owner_authorization_pool.json -type f | head -n1 || true)"
+            if [[ -n "$previous" ]]; then
+              cp "$previous" senju/state/owner_authorization_pool.json
+            fi
+          fi
+
+      - name: Maintain fifty bounded Authorization grants
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/owner_authorization_pool.py \
+            --state-dir senju/state \
+            --canonical-targets AUTHORIZED_TEST_TARGETS.json \
+            --verified-attestations senju/state/verified_control_attestations.json \
+            --target-count 50 \
+            --ttl-minutes 1440 \
+            --renew-before-minutes 60 \
+            | tee /tmp/owner-authorization-pool.json
+
+          test "$(jq -r '.target_met' /tmp/owner-authorization-pool.json)" = "true"
+          test "$(jq -r '.authorized_count' /tmp/owner-authorization-pool.json)" -ge 50
+
+          echo "## Owner Authorization Pool" >> "$GITHUB_STEP_SUMMARY"
+          echo "- verified candidates: $(jq -r '.verified_candidate_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- authorized: $(jq -r '.authorized_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- transport-eligible by provider/canonical state: $(jq -r '.transport_eligible_count' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- issued this cycle: $(jq -r '.issued_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- reused this cycle: $(jq -r '.reused_this_cycle' /tmp/owner-authorization-pool.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Promote pool into existing SENJU Authority feed
+        env:
+          PYTHONPATH: senju
+        run: |
+          set -euo pipefail
+          python senju/scripts/run_authority_promotion_bureau.py \
+            --state-dir senju/state \
+            --meta-state-dir automation/codegen/meta_state \
+            --output-dir senju/state \
+            | tee /tmp/owner-authorization-promotion.json
+
+          test "$(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" -ge 50
+          test "$(jq -r '.promotion_lease_count' /tmp/owner-authorization-promotion.json)" -ge 50
+          echo "- promoted runtime hosts: $(jq -r '.approved_runtime_host_count' /tmp/owner-authorization-promotion.json)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run focused tests
+        env:
+          PYTHONPATH: senju
+        run: |
+          python -m pip install --disable-pip-version-check pytest
+          pytest -q \
+            tests/test_owner_authorization_pool.py \
+            tests/test_authorization_issuance_bureau.py \
+            senju/tests/test_authority_promotion_bureau.py
+
+      - name: Preserve closed-loop evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: owner-authorization-pool-${{ github.run_id }}
+          path: |
+            /tmp/owner-authorization-pool.json
+            /tmp/owner-authorization-promotion.json
+            senju/state/owner_authorization_pool.json
+            senju/state/owner_authorization_pool_handoffs.json
+            senju/state/reviewed_authority_operational_leases.json
+            senju/state/promotion_bureau_approved_hosts.json
+            senju/state/promotion_bureau_leases.json
+            senju/state/promotion_bureau_assignments.json
+            senju/state/senju_approved_authority_feed.json
+          if-no-files-found: warn
+          retention-days: 30

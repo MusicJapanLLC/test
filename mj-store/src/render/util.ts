@@ -21,7 +21,12 @@ const budoux = loadDefaultJapaneseParser();
  * 見出し・題名用。文節の切れ目にだけ <wbr> を入れる。
  * CSS の word-break: keep-all と組み合わせて、「ここ／にある」のような途中の改行を防ぐ（iPhone の Safari でも効く）
  */
-export const ph = (s: string): string => budoux.parse(s).map(esc).join('<wbr>');
+export const ph = (s: string): string =>
+  budoux
+    .parse(s)
+    /* 「Music Japan」「The World」のような英語の名前は、空白でも折り返さない */
+    .map((p) => esc(p).replace(/([A-Za-z0-9]) (?=[A-Za-z0-9])/g, '$1\u00a0'))
+    .join('<wbr>');
 
 export const pad2 = (n: number): string => String(n).padStart(2, '0');
 

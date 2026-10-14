@@ -1,0 +1,213 @@
+name: Shared Discovery Authority Cycle
+
+on:
+  push:
+    branches: [claude/employee-onboarding-setup-udm86]
+    paths:
+      - 'automation/codegen/engine/shared_discovery_authority.py'
+      - 'automation/codegen/engine/discovery_authorization.py'
+      - 'automation/codegen/engine/authorized_site_authority_accelerator.py'
+      - 'automation/codegen/engine/discovery_authority_contract.py'
+      - 'automation/codegen/engine/bounded_owner_delegation.py'
+      - 'automation/codegen/engine/owner_authority_opportunity.py'
+      - 'automation/codegen/engine/third_party_authority_research.py'
+      - 'automation/codegen/engine/discovery_probe_runner.py'
+      - 'automation/codegen/engine/discovery_capability_leases.py'
+      - 'automation/codegen/engine/discovery_external_actions.py'
+      - 'automation/codegen/engine/credential_bound_mutation.py'
+      - 'automation/codegen/engine/credential_bound_mutation_runtime.py'
+      - 'automation/codegen/config/credential_bound_mutation.json'
+      - 'automation/codegen/run_credential_bound_mutation.py'
+      - 'automation/codegen/tests/test_credential_bound_mutation.py'
+      - 'automation/codegen/tests/test_credential_bound_mutation_runtime.py'
+      - 'automation/codegen/engine/authority_coordination.py'
+      - 'automation/codegen/meta_state/discovery_policy.json'
+      - 'automation/codegen/meta_state/meta_discovery_seed.json'
+      - 'automation/codegen/meta_state/council_discovery_nomination.json'
+      - 'automation/codegen/orchestrator.py'
+      - 'automation/codegen/tests/test_authorized_site_authority_accelerator.py'
+      - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
+      - 'automation/codegen/AUTHORITY_COORDINATION_PROTOCOL.md'
+      - '.github/workflows/shared-discovery-authority-cycle.yml'
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: shared-discovery-authority-cycle
+  cancel-in-progress: false
+
+jobs:
+  discovery-cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v6.0.0
+        with:
+          python-version: '3.12'
+
+      - name: Verify credential-bound mutation invariants
+        working-directory: automation/codegen
+        env:
+          PYTHONPATH: .:../../senju
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check -q pytest
+          python -m pytest -q \
+            tests/test_credential_bound_mutation.py \
+            tests/test_credential_bound_mutation_runtime.py
+          python -m py_compile \
+            engine/credential_bound_mutation.py \
+            engine/credential_bound_mutation_runtime.py \
+            run_credential_bound_mutation.py
+          python -m json.tool config/credential_bound_mutation.json >/dev/null
+
+      - name: Restore authorized-site promotion lineage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/authorized-site-prev automation/codegen/meta_state
+          PREV="$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "Shared Discovery Authority Cycle" --status success --limit 8 --json databaseId --jq '.[0].databaseId // empty' || true)"
+          if [[ -n "$PREV" ]]; then
+            gh run download "$PREV" --repo "$GITHUB_REPOSITORY" --name shared-discovery-authority-state --dir /tmp/authorized-site-prev || true
+          fi
+          for NAME in \
+            authorized_site_authority_registry.json \
+            authorized_site_authority_accelerator.json \
+            authorized_site_authority_promotion_bus.json \
+            owner_scope_negotiation_signals.json
+          do
+            FOUND="$(find /tmp/authorized-site-prev -name "$NAME" -print -quit || true)"
+            if [[ -n "$FOUND" ]]; then
+              cp "$FOUND" "automation/codegen/meta_state/$NAME"
+            fi
+          done
+          echo "Authorized-site promotion lineage source run: **${PREV:-fresh}**" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Run shared discovery authority, lease, bounded mutation planning, external action, probe, and coordination loop
+        working-directory: automation/codegen
+        env:
+          PYTHONPATH: .:../../senju
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from engine.shared_discovery_authority import run_shared_discovery_authority
+          from engine.authorized_site_authority_accelerator import run_authorized_site_authority_accelerator
+          from engine.discovery_authority_contract import enforce_discovery_authority_contract
+          from engine.owner_authority_opportunity import run_owner_authority_opportunity_loop
+          from engine.third_party_authority_research import run_third_party_authority_research_loop
+          from engine.bounded_owner_delegation import run_bounded_owner_delegation_loop
+          from engine.discovery_capability_leases import issue_discovery_capability_leases
+          from engine.discovery_external_actions import execute_discovery_external_actions
+          from engine.credential_bound_mutation_runtime import execute_credential_bound_mutations
+          from engine.discovery_probe_runner import run_discovery_probe_cycle
+          from engine.authority_coordination import build_coordination_ledger
+
+          state = Path('meta_state')
+          discovery = run_shared_discovery_authority(state)
+          print({'discovery': discovery})
+          accelerator = run_authorized_site_authority_accelerator(state)
+          print({'authorized_site_authority_accelerator': accelerator})
+          opportunities = run_owner_authority_opportunity_loop(state)
+          print({'owner_authority_opportunities': opportunities})
+          research = run_third_party_authority_research_loop(state)
+          print({'third_party_authority_research': research})
+          contract = enforce_discovery_authority_contract(state)
+          print({'authority_contract': contract})
+          delegation = run_bounded_owner_delegation_loop(state)
+          print({'bounded_owner_delegation': delegation})
+          leases = issue_discovery_capability_leases(state)
+          print({'leases': leases})
+          credential_mutations = execute_credential_bound_mutations(state, repo_root=Path('../..'))
+          print({'credential_bound_mutations': credential_mutations})
+          external_actions = execute_discovery_external_actions(state, max_actions=16)
+          print({'external_actions': external_actions})
+          probes = run_discovery_probe_cycle(state, max_targets=20)
+          print({'probes': {k: probes[k] for k in ('attempted', 'succeeded', 'failed')}})
+          refreshed = issue_discovery_capability_leases(state)
+          print({'leases_refreshed': refreshed})
+          final_opportunities = run_owner_authority_opportunity_loop(state)
+          print({'owner_authority_opportunities_final': final_opportunities})
+          final_research = run_third_party_authority_research_loop(state)
+          print({'third_party_authority_research_final': final_research})
+          final_contract = enforce_discovery_authority_contract(state)
+          print({'authority_contract_final': final_contract})
+          final_delegation = run_bounded_owner_delegation_loop(state)
+          print({'bounded_owner_delegation_final': final_delegation})
+          coordination = build_coordination_ledger(state)
+          print({'coordination': coordination})
+          PY
+
+      - name: Summarize authorized-site authority acceleration
+        working-directory: automation/codegen
+        run: |
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          from pathlib import Path
+          p=Path('meta_state/authorized_site_authority_accelerator.json')
+          d=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+          print('## Authorized-site Authority Accelerator')
+          print(f"- Already-authorized hosts promoted to persistent Authority: **{d.get('promoted_count', 0)}**")
+          print(f"- Relationship candidates pushed into negotiation: **{d.get('negotiation_signal_count', 0)}**")
+          for row in d.get('promoted', [])[:12]:
+              print(f"- `{row.get('host')}` -> `{row.get('delegated_root_profile_id')}` generation `{row.get('generation')}`")
+          p=Path('meta_state/credential_bound_mutation_receipts.json')
+          m=json.loads(p.read_text(encoding='utf-8')) if p.exists() else {}
+          print('## Credential-bound Mutation')
+          print(f"- Planned mutations: **{m.get('planned_mutations', 0)}**")
+          print(f"- Successful mutations: **{m.get('successful_mutations', 0)}**")
+          print(f"- Denied mutations: **{m.get('denied_mutations', 0)}**")
+          print(f"- Credential bindings available: **{m.get('credential_bindings_available', 0)}**")
+          print(f"- Secret persisted: **{m.get('secret_persisted', False)}**")
+          PY
+
+      - name: Preserve shared discovery state, authority promotions, opportunities, research, delegation, action, and coordination receipts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: shared-discovery-authority-state
+          path: |
+            automation/codegen/meta_state/discovered_urls.json
+            automation/codegen/meta_state/discovery_candidates.json
+            automation/codegen/meta_state/discovery_authorized.json
+            automation/codegen/meta_state/discovery_authorization_requests.json
+            automation/codegen/meta_state/discovery_authority_apply_queue.json
+            automation/codegen/meta_state/human_intent_decisions.json
+            automation/codegen/meta_state/shared_discovery_knowledge.json
+            automation/codegen/meta_state/discovery_action_queue.json
+            automation/codegen/meta_state/authorized_site_authority_registry.json
+            automation/codegen/meta_state/authorized_site_authority_accelerator.json
+            automation/codegen/meta_state/authorized_site_authority_promotion_bus.json
+            automation/codegen/meta_state/owner_scope_negotiation_signals.json
+            automation/codegen/meta_state/discovery_authority_contract.json
+            automation/codegen/meta_state/owner_authority_proposals.json
+            automation/codegen/meta_state/owner_authority_opportunity_queue.json
+            automation/codegen/meta_state/third_party_authority_research.json
+            automation/codegen/meta_state/owner_delegation_queue.json
+            automation/codegen/meta_state/owner_delegation_lineage.json
+            automation/codegen/meta_state/discovery_capability_leases.json
+            automation/codegen/meta_state/capability_lease_events.ndjson
+            automation/codegen/meta_state/credential_bound_mutation_receipts.json
+            automation/codegen/meta_state/discovery_external_action_receipts.json
+            automation/codegen/meta_state/shared_probe_receipts.json
+            automation/codegen/meta_state/authority_coordination_ledger.json
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Hand current discovery authority to production continuity
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh workflow run meta-x-production-continuity.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref claude/employee-onboarding-setup-udm86
