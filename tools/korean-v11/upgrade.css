@@ -1,0 +1,64 @@
+/* Korean 1.1: keep the existing palette and comfortable mobile typography. */
+.reading{min-width:0;max-width:100%;text-align:left;overflow-wrap:anywhere}
+.reading>.kana{font-size:.76rem;font-weight:400;line-height:1.65;letter-spacing:.035em;color:var(--muted);margin:0 0 5px;overflow-wrap:anywhere}
+.reading>.ar{margin:0;line-height:1.45}
+.reading>.ipa{font-family:"Charis SIL","Doulos SIL","Times New Roman",serif;font-size:.84rem;font-weight:400;line-height:1.6;letter-spacing:.02em;color:var(--muted);margin:4px 0 12px;overflow-wrap:anywhere}
+.reading .guide-scope{font:inherit;font-size:.72rem;color:var(--muted)}
+.hide-kana .reading>.kana,.hide-ipa .reading>.ipa{display:none}
+.reading-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 24px 12px;color:var(--muted);font-size:.75rem;border-bottom:1px solid var(--line)}
+.reading-toolbar>span{margin-right:auto}
+.reading-toolbar button{min-height:36px;padding:6px 12px;border:1px solid var(--line);border-radius:20px;font-size:.76rem;font-weight:700;background:var(--bg)}
+.reading-toolbar button[aria-pressed="true"]{background:var(--soft);border-color:var(--green);color:var(--green)}
+.word-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:19px;margin:0 0 14px;min-width:0}
+.word-card .word-row{margin:0;padding:0;border:0;align-items:flex-start;background:transparent}
+.word-card .word-main{min-width:0;max-width:calc(100% - 48px);padding:0;text-align:left}
+.word-card .word-main .reading>.ar{font-size:1.65rem}
+.word-card .word-main .reading>.ipa{margin-bottom:6px}
+.word-card .word-row>.icon-button{flex:0 0 44px}
+.usage-preview{border-top:1px solid var(--line);padding-top:14px;margin-top:14px;min-width:0}
+.usage-caption{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px;color:var(--muted);font-size:.68rem;font-weight:700;letter-spacing:.055em;text-transform:uppercase}
+.usage-caption span:last-child{font-weight:400;letter-spacing:0;text-transform:none}
+.usage-preview .reading>.ar{font-size:1.06rem;font-weight:500;line-height:1.55}
+.usage-preview .reading>.kana{font-size:.68rem;margin-bottom:3px}
+.usage-preview .reading>.ipa{font-size:.75rem;margin-bottom:8px}
+.usage-preview .en{font-size:.94rem;margin:5px 0;line-height:1.55}
+.usage-preview .ja-inline{font-size:.76rem;line-height:1.55}
+.usage-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.usage-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:9px 12px;border-radius:14px;background:var(--soft);color:var(--green);font-size:.79rem;font-weight:700}
+.usage-actions button svg{width:16px;height:16px}
+.conversation-list{display:grid;gap:12px}
+.conversation-card{display:block;width:100%;text-align:left;border:1px solid var(--line);border-radius:20px;padding:19px;background:#fff}
+.conversation-card:hover{border-color:var(--green)}
+.conversation-card strong{display:block;margin:8px 0;font-size:1rem;line-height:1.45}
+.conversation-card small{display:block;color:var(--muted);font-size:.78rem;line-height:1.6}
+.conversation-card .row{font-size:.68rem;color:var(--green);letter-spacing:.03em}
+.conversation-intro{margin-bottom:18px}
+.conversation-intro h2{font-size:1.45rem;line-height:1.35;margin:10px 0}
+.conversation-intro .help{margin:8px 0}
+.conversation-controls{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.conversation-controls button{min-height:44px;padding:9px 13px;border:1px solid var(--line);border-radius:14px;font-size:.82rem}
+.conversation-controls button[aria-pressed="true"]{background:var(--green);color:white;border-color:var(--green)}
+.conversation-role-label{font-size:.76rem;color:var(--muted);line-height:1.6}
+.conversation-step{padding:18px 0 8px;border-top:1px solid var(--line)}
+.conversation-badge{display:inline-flex;align-items:center;gap:7px;font-size:.72rem;font-weight:700;letter-spacing:.04em;color:var(--green);margin-bottom:10px}
+.conversation-prompt{border:1px dashed var(--line);border-radius:20px;padding:22px;margin:12px 0;background:var(--soft)}
+.conversation-prompt .en{font-size:1.15rem;line-height:1.55}
+.conversation-navigation{display:grid;grid-template-columns:auto 1fr;gap:9px;margin:18px 0}
+.conversation-navigation button{min-height:48px}
+.conversation-transcript{display:grid;gap:15px;margin-top:20px}
+.conversation-turn{padding:10px;border-radius:24px;border:2px solid transparent;min-width:0}
+.conversation-turn[data-speaker="B"]{background:var(--soft)}
+.conversation-turn.is-playing{border-color:var(--green)}
+.conversation-turn .phrase{margin:0}
+.conversation-turn .reading>.ar{font-size:1.25rem}
+.conversation-turn .phrase .en{font-size:1rem}
+.conversation-turn .phrase .kana{font-size:.71rem}
+.conversation-turn .phrase .ipa{font-size:.78rem}
+.conversation-complete{padding:24px 0;text-align:center}
+.conversation-complete h2{line-height:1.4}
+.chunk-preview>.reading>.ar{font-size:1rem}
+.chunk-preview>.reading>.kana,.chunk-preview>.reading>.ipa{font-size:.72rem}
+.reading-help{font-size:.78rem;line-height:1.65;color:var(--muted)}
+@media(min-width:720px){.conversation-list{grid-template-columns:1fr 1fr}.word-card{padding:23px}.reading-toolbar{padding-left:32px;padding-right:32px}}
+@media(max-width:380px){.reading-toolbar{padding-left:18px;padding-right:18px;gap:6px}.word-card{padding:15px}.usage-actions button{padding:9px 10px}.conversation-controls button{padding:9px 11px}}
+@media(prefers-reduced-motion:reduce){.conversation-turn{scroll-behavior:auto}}
