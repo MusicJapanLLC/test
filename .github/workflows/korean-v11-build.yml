@@ -2,7 +2,7 @@ name: Korean v1.1 build and browser gates
 on:
   push:
     branches: [codex/korean-reading-dialogues-20261015]
-    paths: ['.github/workflows/korean-v11-build.yml']
+    paths: ['.github/workflows/korean-v11-build.yml', 'tools/korean-v11/**']
 permissions:
   contents: write
 defaults:
