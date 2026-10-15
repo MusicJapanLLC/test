@@ -16,7 +16,7 @@ def payloads(b):return re.findall(rb'<style[^>]*>(.*?)</style>',b,re.S)+re.finda
 def identity(response):
     for payload in payloads(source):assert payload in payloads(response),'Published payload differs from tested source'
 
-audio_stub="""(()=>{window.__spoken=[];let timers=[];const stop=()=>{timers.forEach(clearTimeout);timers=[]};Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{getVoices:()=>[{name:'Test Korean transport',lang:'ko-KR',voiceURI:'mock-ko',localService:true}],cancel:stop,addEventListener:()=>{},speak:u=>{window.__spoken.push(u.text);timers.push(setTimeout(()=>u.onstart?.(),0));timers.push(setTimeout(()=>u.onend?.(),35))}});window.SpeechSynthesisUtterance=class{constructor(text){this.text=text}}})()"""
+audio_stub="""(()=>{window.__spoken=[];let timers=[];const stop=()=>{timers.forEach(clearTimeout);timers=[]};Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{getVoices:()=>[{name:'Test Korean transport',lang:'ko-KR',voiceURI:'mock-ko',localService:true}],cancel:stop,addEventListener:()=>{},speak:u=>{window.__spoken.push(u.text);timers.push(setTimeout(()=>u.onstart?.(),0));timers.push(setTimeout(()=>u.onend?.(),35))}}});window.SpeechSynthesisUtterance=class{constructor(text){this.text=text}}})()"""
 with sync_playwright() as p:
     launch={'headless':True}
     if os.environ.get('CHROMIUM_PATH'):launch['executable_path']=os.environ['CHROMIUM_PATH']
@@ -117,7 +117,7 @@ with sync_playwright() as p:
     passed('real browser reload preserves old saved words, reviews, totals and lesson position in all three style stores')
     context.close()
     # Transport-only audio checks. These do NOT prove physical sound or accent.
-    context=browser.new_context(viewport={'width':390,'height':844});context.add_init_script(audio_stub);page=context.new_page();page.goto(url)
+    context=browser.new_context(viewport={'width':390,'height':844});context.add_init_script(audio_stub);page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(url);assert page.evaluate('Array.isArray(window.__spoken)'),errors
     page.locator('.bottom-nav [data-tab="speak"]').click();page.locator('[data-dialogue="cafe-order"]').click();page.locator('[data-conversation-play]').click()
     page.wait_for_function('window.__spoken.length===8 && document.querySelector("[data-conversation-play]").getAttribute("aria-pressed")==="false"',timeout=20000)
     assert page.evaluate('window.__spoken')==[t['ar'] for t in data['dialogues'][1]['turns']]
