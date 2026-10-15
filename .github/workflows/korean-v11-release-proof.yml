@@ -104,7 +104,7 @@ jobs:
                       for i in order:page.locator('[data-pick="'+str(i)+'"]').click()
                       page.locator('[data-action="check-chunks"]').click()
                       text=page.locator('#chunk-feedback').inner_text()
-                      assert ('Correct' in text)==correct,text
+                      assert ('You built it.' if correct else 'Here is a model order.') in text,text
                       page.locator('[data-action="close-dialog"]').first.click()
                   tab('words');page.locator('#word-search').fill('');page.locator('#word-topic').select_option('music')
                   page.locator('.word-card').first.scroll_into_view_if_needed()
