@@ -11,3 +11,7 @@ if (process.env.MJ_SITE === "legacy") {
 // Keep the mobile learning app available with either official-site edition.
 const { publishWahran } = await import("./publish-wahran.mjs");
 publishWahran();
+
+// Keep Korean available in both production site editions.
+const { publishKorean } = await import("./publish-korean.mjs");
+publishKorean();
