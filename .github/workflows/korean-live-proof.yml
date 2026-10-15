@@ -17,7 +17,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: music-japan-production
-          fetch-depth: 8
+          fetch-depth: 12
           persist-credentials: false
       - name: Install real browser test dependencies
         run: |
@@ -31,7 +31,7 @@ jobs:
           from pathlib import Path
           historic=subprocess.check_output(['git','show','f73047693ba39386874a0323caf0fd6f7d1ad71c:.github/workflows/korean-live-proof.yml'],text=True)
           config=yaml.safe_load(historic)
-          step=next(s for s in config['jobs']['verify']['steps'] if s['name']=='Verify app payload identity and production browser interactions')
+          step=next(s for s in config['jobs']['verify']['steps'] if s.get('name')=='Verify app payload identity and production browser interactions')
           script=step['run'].split("\n",1)[1].rsplit('\nPY',1)[0]
           old="body=(out/'live-response.html').read_bytes();identity(body)"
           assert script.count(old)==1
@@ -47,6 +47,7 @@ jobs:
               identity(response_body)"""
           assert script.count(old)==1
           script=script.replace(old,new)
+          compile(script,'live-proof.py','exec')
           Path('korean-release-evidence/live-proof.py').write_text(script)
           PY
           python -u korean-release-evidence/live-proof.py 2>&1 | tee korean-release-evidence/browser-log.txt
