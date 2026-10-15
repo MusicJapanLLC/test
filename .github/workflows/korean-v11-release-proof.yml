@@ -1,0 +1,133 @@
+name: Korean v1.1 release proof
+on:
+  push:
+    branches: [codex/korean-reading-dialogues-20261015, music-japan-production]
+    paths: ['.github/workflows/korean-v11-release-proof.yml', 'music-japan-site-trace/learning/korean/index.html']
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    env:
+      KOREAN_URL: ${{ github.ref_name == 'music-japan-production' && 'https://music-japan.com/korean/' || 'http://127.0.0.1:8174/' }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify the integrated source and production publisher
+        run: |
+          mkdir -p korean-release-v11
+          git rev-parse HEAD > korean-release-v11/commit.txt
+          node --test tools/korean-v11/acceptance.test.mjs 2>&1 | tee korean-release-v11/acceptance-tests.txt
+          cd music-japan-site-trace
+          npm ci
+          npm test 2>&1 | tee ../korean-release-v11/site-tests.txt
+          npm run build:deploy 2>&1 | tee ../korean-release-v11/site-build.txt
+      - name: Install two real browser engines
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium webkit
+          python -m http.server 8174 --directory music-japan-site-trace/learning/korean > /tmp/korean-http.log 2>&1 &
+      - name: Wait for the requested deployment without assuming a commit means publication
+        run: |
+          python - <<'PY' 2>&1 | tee korean-release-v11/payload-match-log.txt
+          import os,re,time,json,datetime,hashlib
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          source=Path('music-japan-site-trace/learning/korean/index.html').read_bytes()
+          def payloads(b):return re.findall(rb'<style[^>]*>(.*?)</style>',b,re.S)+re.findall(rb'<script(?: id="[^"]*")?(?: type="[^"]*")?>(.*?)</script>',b,re.S)
+          expected=payloads(source);assert expected
+          url=os.environ['KOREAN_URL'];observations=[]
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True);page=b.new_page()
+              for attempt in range(24):
+                  try:
+                      r=page.goto(url,wait_until='load',timeout=30000);body=r.body()
+                      ok=r.status==200 and all(part in payloads(body) for part in expected)
+                      observations.append({'attempt':attempt+1,'status':r.status,'matches':ok,'responseSha256':hashlib.sha256(body).hexdigest()})
+                      if ok:
+                          Path('korean-release-v11/deployment-match.json').write_text(json.dumps({'url':r.url,'verifiedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'sourceSha256':hashlib.sha256(source).hexdigest(),'observations':observations},indent=2))
+                          print('Observed the exact requested inline app payload at',r.url,flush=True)
+                          break
+                  except Exception as e:
+                      observations.append({'attempt':attempt+1,'error':str(e)[:250]})
+                  print(json.dumps(observations[-1]),flush=True)
+                  time.sleep(10)
+              else:raise RuntimeError('The requested source was not observed at the target URL; publication is unverified')
+              b.close()
+          PY
+      - name: Chromium interaction, persistence and explicitly stubbed audio transport
+        run: |
+          KOREAN_BROWSER=chromium python tools/korean-v11/browser-proof.py 2>&1 | tee korean-release-v11/chromium-log.txt
+          test -s korean-v11-evidence/browser-verification.json
+          mv korean-v11-evidence korean-release-v11/chromium
+      - name: WebKit interaction, persistence and explicitly stubbed audio transport
+        run: |
+          KOREAN_BROWSER=webkit python tools/korean-v11/browser-proof.py 2>&1 | tee korean-release-v11/webkit-log.txt
+          test -s korean-v11-evidence/browser-verification.json
+          mv korean-v11-evidence korean-release-v11/webkit
+      - name: Preserve legacy lessons, trilingual search, generated chunks and mobile views
+        run: |
+          python - <<'PY' 2>&1 | tee korean-release-v11/legacy-log.txt
+          import os,re,json,datetime
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          raw=Path('music-japan-site-trace/learning/korean/index.html').read_text()
+          data=json.loads(re.search(r'<script id="course-data" type="application/json">(.*?)</script>',raw,re.S)[1])
+          reports=[]
+          with sync_playwright() as p:
+              for engine in ['chromium','webkit']:
+                  b=getattr(p,engine).launch(headless=True)
+                  c=b.new_context(viewport={'width':390,'height':844},is_mobile=True,has_touch=True)
+                  page=c.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.goto(os.environ['KOREAN_URL'],wait_until='load')
+                  def tab(t):page.locator('.bottom-nav [data-tab="'+t+'"]').click()
+                  for l in data['lessons']:
+                      tab('learn');page.locator('.lesson-list [data-lesson="'+l['id']+'"]').click();assert page.locator('#main .phrase').count()==8
+                  tab('words');w=data['words'][-1]
+                  for q in [w['ar'],w['en'],w['ja']]:
+                      page.locator('#word-search').fill(q);assert page.locator('[data-open="w1000"]').count()==1
+                  tab('build')
+                  for sel,val in [('family','4'),('frame','9'),('item','19'),('context','9')]:page.locator('#'+sel).select_option(val)
+                  assert page.locator('#main .phrase').get_attribute('data-combo-id')=='c09999'
+                  for order,correct in [([2,1,0],False),([0,1,2],True)]:
+                      page.locator('[data-action="chunk-current"]').click()
+                      for i in order:page.locator('[data-pick="'+str(i)+'"]').click()
+                      page.locator('[data-action="check-chunks"]').click()
+                      text=page.locator('#chunk-feedback').inner_text()
+                      assert ('Correct' in text)==correct,text
+                      page.locator('[data-action="close-dialog"]').first.click()
+                  tab('words');page.locator('#word-search').fill('');page.locator('#word-topic').select_option('music')
+                  page.locator('.word-card').first.scroll_into_view_if_needed()
+                  page.screenshot(path='korean-release-v11/'+engine+'-mobile-words.png')
+                  tab('learn');page.locator('.hero [data-lesson]').click();page.locator('#main .phrase').first.scroll_into_view_if_needed()
+                  page.screenshot(path='korean-release-v11/'+engine+'-mobile-lesson.png')
+                  tab('speak');page.locator('[data-dialogue="first-meeting"]').click();page.locator('[data-conversation-reveal]').click()
+                  page.screenshot(path='korean-release-v11/'+engine+'-mobile-conversation.png')
+                  assert not errors,errors
+                  reports.append({'engine':engine,'mobileViewport':True,'hasTouch':True,'physicalDevice':False,'lessonsOpened':20,'searchLanguages':3,'generatedCombo':'c09999','wordOrderCases':['wrong','correct'],'pageErrors':errors})
+                  c.close();b.close()
+          Path('korean-release-v11/legacy-mobile-verification.json').write_text(json.dumps({'verifiedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'url':os.environ['KOREAN_URL'],'reports':reports},indent=2))
+          print(json.dumps(reports,indent=2),flush=True)
+          PY
+      - name: Keep partial evidence without calling failed checks successful
+        if: always()
+        run: |
+          mkdir -p korean-release-v11
+          if [ -d korean-v11-evidence ]; then mv korean-v11-evidence korean-release-v11/unfinished-browser; fi
+          cp music-japan-site-trace/learning/korean/index.html korean-release-v11/tested-app.html
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: korean-v11-release-proof
+          path: korean-release-v11/
+          retention-days: 14
