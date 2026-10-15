@@ -15,12 +15,17 @@ def passed(label):checks.append(label);print('PASS:',label,flush=True)
 def payloads(b):return re.findall(rb'<style[^>]*>(.*?)</style>',b,re.S)+re.findall(rb'<script(?: id="[^"]*")?(?: type="[^"]*")?>(.*?)</script>',b,re.S)
 def identity(response):
     for payload in payloads(source):assert payload in payloads(response),'Published payload differs from tested source'
+def wait_for_test(predicate,timeout=20):
+    deadline=time.monotonic()+timeout
+    while not predicate():
+        if time.monotonic()>deadline:raise AssertionError('Timed out waiting for test transport state')
+        time.sleep(.05)
 
 audio_stub="""(()=>{window.__spoken=[];let timers=[];const stop=()=>{timers.forEach(clearTimeout);timers=[]};Object.defineProperty(window,'speechSynthesis',{configurable:true,value:{getVoices:()=>[{name:'Test Korean transport',lang:'ko-KR',voiceURI:'mock-ko',localService:true}],cancel:stop,addEventListener:()=>{},speak:u=>{window.__spoken.push(u.text);timers.push(setTimeout(()=>u.onstart?.(),0));timers.push(setTimeout(()=>u.onend?.(),35))}}});window.SpeechSynthesisUtterance=class{constructor(text){this.text=text}}})()"""
 with sync_playwright() as p:
     launch={'headless':True}
     if os.environ.get('CHROMIUM_PATH'):launch['executable_path']=os.environ['CHROMIUM_PATH']
-    browser=p.chromium.launch(**launch)
+    browser=getattr(p,os.environ.get('KOREAN_BROWSER','chromium')).launch(**launch)
     context=browser.new_context(viewport={'width':390,'height':844})
     page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)))
     def tab(name):page.locator('.bottom-nav [data-tab="'+name+'"]').click()
@@ -103,7 +108,6 @@ with sync_playwright() as p:
         page.screenshot(path=str(out/'last-screen.png'),full_page=True)
         (out/'partial-browser-report.json').write_text(json.dumps({'passed':checks,'pageErrors':errors},indent=2))
         context.close()
-    # Existing state and register-specific data are tested in a clean context.
     context=browser.new_context(viewport={'width':390,'height':844});page=context.new_page();page.goto(url)
     seeds={}
     for mode in ['polite','casual','formal']:
@@ -119,12 +123,12 @@ with sync_playwright() as p:
     # Transport-only audio checks. These do NOT prove physical sound or accent.
     context=browser.new_context(viewport={'width':390,'height':844});context.add_init_script(audio_stub);page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));page.goto(url);assert page.evaluate('Array.isArray(window.__spoken)'),errors
     page.locator('.bottom-nav [data-tab="speak"]').click();page.locator('[data-dialogue="cafe-order"]').click();page.locator('[data-conversation-play]').click()
-    page.wait_for_function('window.__spoken.length===8 && document.querySelector("[data-conversation-play]").getAttribute("aria-pressed")==="false"',timeout=20000)
+    wait_for_test(lambda:page.evaluate('window.__spoken.length')==8 and page.locator('[data-conversation-play]').get_attribute('aria-pressed')=='false')
     assert page.evaluate('window.__spoken')==[t['ar'] for t in data['dialogues'][1]['turns']]
     passed('stubbed Korean audio transport plays every conversation turn in the authored order')
-    page.evaluate('window.__spoken=[]');page.locator('[data-conversation-play]').click();page.wait_for_function('window.__spoken.length===1');page.locator('[data-action="close-dialog"]').click();page.wait_for_timeout(1100)
+    page.evaluate('window.__spoken=[]');page.locator('[data-conversation-play]').click();wait_for_test(lambda:page.evaluate('window.__spoken.length')==1);page.locator('[data-action="close-dialog"]').click();page.wait_for_timeout(1100)
     assert page.evaluate('window.__spoken.length')==1
-    page.locator('[data-dialogue="first-meeting"]').click();page.locator('[data-conversation-play]').click();page.wait_for_function('window.__spoken.length===2');page.locator('[data-conversation-play]').click();page.wait_for_timeout(1100)
+    page.locator('[data-dialogue="first-meeting"]').click();page.locator('[data-conversation-play]').click();wait_for_test(lambda:page.evaluate('window.__spoken.length')==2);page.locator('[data-conversation-play]').click();page.wait_for_timeout(1100)
     assert page.evaluate('window.__spoken.length')==2
     passed('closing the dialog or pressing Stop cancels pending conversation audio without stale later lines (stubbed transport)')
     context.close()
@@ -132,6 +136,6 @@ with sync_playwright() as p:
     assert 'No Korean voice' in page.locator('#toast').inner_text();assert page.locator('.hero .ipa').is_visible()
     passed('missing Korean voice produces actionable feedback while reading practice remains usable (forced missing-voice case)')
     context.close();browser.close()
-report={'url':url,'verifiedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'sourceSha256':hashlib.sha256(source).hexdigest(),'passed':checks,'count':len(checks),'pageErrors':errors,'audioTransport':'separately tested with explicit stub; not proof of physical sound','unverified':['physical iPhone Safari audio and microphone','complete native-speaker review','fine phonetic accuracy and intonation']}
+report={'url':url,'browser':os.environ.get('KOREAN_BROWSER','chromium'),'verifiedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'sourceSha256':hashlib.sha256(source).hexdigest(),'passed':checks,'count':len(checks),'pageErrors':errors,'audioTransport':'separately tested with explicit stub; not proof of physical sound','unverified':['physical iPhone Safari audio and microphone','complete native-speaker review','fine phonetic accuracy and intonation']}
 (out/'browser-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
 print(json.dumps(report,ensure_ascii=False,indent=2),flush=True)
