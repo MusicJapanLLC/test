@@ -34,7 +34,7 @@ jobs:
           from pathlib import Path
           a=Path('learning/korean/index.html').read_bytes()
           b=Path('deploy-dist/korean/index.html').read_bytes()
-          expected='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3'
+          expected='3ff48194aec4f932d964c7d17cb02e1236f3a8c0a17080dce581220840b4b2e0'
           assert a==b and hashlib.sha256(b).hexdigest()==expected
           h=Path('deploy-dist/_headers').read_text()
           assert '/korean/*\n  ! Permissions-Policy\n' in h
