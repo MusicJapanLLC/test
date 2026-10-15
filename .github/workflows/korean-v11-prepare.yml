@@ -1,0 +1,46 @@
+name: Korean v1.1 preparation
+on:
+  push:
+    branches: [codex/korean-reading-dialogues-20261015]
+    paths: ['.github/workflows/korean-v11-prepare.yml']
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Preserve public project baseline and install build-time phonology
+        run: |
+          mkdir -p /tmp/korean-v11-tools/wheels
+          git archive HEAD music-japan-site-trace | gzip > /tmp/korean-v11-tools/site-source.tar.gz
+          python -m pip download g2pk2==0.0.3 --dest /tmp/korean-v11-tools/wheels
+          python -m pip install --no-index --find-links=/tmp/korean-v11-tools/wheels g2pk2==0.0.3
+          python - <<'PY'
+          import nltk,json
+          nltk.download('cmudict',download_dir='/tmp/korean-v11-tools/nltk_data',quiet=True,raise_on_error=True)
+          nltk.data.path.insert(0,'/tmp/korean-v11-tools/nltk_data')
+          from g2pk2 import G2p
+          g=G2p()
+          results={s:g(s) for s in ['안녕하세요.','감사합니다.','한국어를 공부해요.','좋아요.','같이 가요.','학교','읽다','저는 음악을 만들어요.']}
+          print(json.dumps(results,ensure_ascii=False,indent=2))
+          open('/tmp/korean-v11-tools/phonology-smoke.json','w').write(json.dumps(results,ensure_ascii=False,indent=2))
+          PY
+      - name: Run current site tests before changing application code
+        working-directory: music-japan-site-trace
+        run: node --test tests/*.test.mjs 2>&1 | tee /tmp/korean-v11-tools/baseline-tests.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: korean-v11-development-tools
+          path: /tmp/korean-v11-tools/
+          retention-days: 7
