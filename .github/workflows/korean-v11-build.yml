@@ -1,0 +1,81 @@
+name: Korean v1.1 build and browser gates
+on:
+  push:
+    branches: [codex/korean-reading-dialogues-20261015]
+    paths: ['.github/workflows/korean-v11-build.yml']
+permissions:
+  contents: write
+defaults:
+  run:
+    shell: bash
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Preserve baseline and install original site dependencies
+        run: |
+          mkdir -p korean-v11-evidence
+          git rev-parse HEAD > korean-v11-evidence/input-commit.txt
+          cp music-japan-site-trace/learning/korean/index.html korean-v11-evidence/baseline.html
+          cd music-japan-site-trace
+          npm ci
+          npm test 2>&1 | tee ../korean-v11-evidence/baseline-tests.txt
+      - name: Generate Korean sound changes and assemble candidate
+        run: |
+          python -m pip install g2pk2==0.0.3 python-mecab-ko playwright
+          python -m pip freeze > korean-v11-evidence/python-versions.txt
+          python - <<'PY' 2>&1 | tee korean-v11-evidence/build-log.txt
+          import nltk,sys,json
+          from pathlib import Path
+          nltk.download('cmudict',quiet=True,raise_on_error=True)
+          sys.path.insert(0,'tools/korean-v11')
+          import build
+          original=build.build_data
+          def recorded(data):
+              result=original(data)
+              Path('korean-v11-evidence/enriched-data.json').write_text(json.dumps(result,ensure_ascii=False),encoding='utf-8')
+              return result
+          build.build_data=recorded
+          build.main()
+          PY
+      - name: Acceptance, original site regression and production build
+        run: |
+          node --test tools/korean-v11/acceptance.test.mjs 2>&1 | tee korean-v11-evidence/acceptance-tests.txt
+          cd music-japan-site-trace
+          npm test 2>&1 | tee ../korean-v11-evidence/site-tests.txt
+          npm run build:deploy 2>&1 | tee ../korean-v11-evidence/site-build.txt
+      - name: Actual browser rendering and interaction checks
+        run: |
+          python -m playwright install --with-deps chromium
+          python -m http.server 8174 --directory music-japan-site-trace/learning/korean > /tmp/korean-v11-http.log 2>&1 &
+          python tools/korean-v11/browser-proof.py 2>&1 | tee korean-v11-evidence/browser-log.txt
+          test -s korean-v11-evidence/browser-verification.json
+      - name: Commit only the verified Korean candidate to the feature branch
+        run: |
+          branch='codex/korean-reading-dialogues-20261015'
+          test "$(git ls-remote origin refs/heads/$branch | cut -f1)" = "$(cat korean-v11-evidence/input-commit.txt)"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add music-japan-site-trace/learning/korean/index.html music-japan-site-trace/scripts/publish-korean.mjs music-japan-site-trace/tests/korean-publication.test.mjs
+          git commit -m 'feat(korean): package tested reading hints, 1000 examples and 12 conversations'
+          git push origin HEAD:refs/heads/$branch
+          git rev-parse HEAD > korean-v11-evidence/candidate-commit.txt
+      - name: Package observations even if a gate failed
+        if: always()
+        run: |
+          mkdir -p korean-v11-evidence
+          tar --exclude=node_modules --exclude=deploy-dist --exclude=.git -czf korean-v11-evidence/candidate-source.tar.gz tools/korean-v11 music-japan-site-trace
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: korean-v11-candidate-proof
+          path: korean-v11-evidence/
+          retention-days: 14
