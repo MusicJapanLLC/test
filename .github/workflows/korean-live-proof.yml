@@ -6,121 +6,52 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
+defaults:
+  run:
+    shell: bash
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           ref: music-japan-production
+          fetch-depth: 8
           persist-credentials: false
-      - name: Compare live response with committed app
-        run: |
-          mkdir -p korean-release-evidence
-          python -u - <<'PY'
-          import urllib.request,hashlib,json,re
-          from pathlib import Path
-          source=Path('music-japan-site-trace/learning/korean/index.html').read_bytes()
-          results=[]
-          for url in ['https://music-japan.com/korean/','https://music-japan.com/korean/?release=ko-v1','https://f34c1540.music-japan.pages.dev/korean/']:
-              try:
-                  with urllib.request.urlopen(url,timeout=25) as r:body=r.read();headers=dict(r.headers);status=r.status
-                  i=next((i for i,(a,b) in enumerate(zip(source,body)) if a!=b),min(len(source),len(body)))
-                  item={'url':url,'status':status,'length':len(body),'sha256':hashlib.sha256(body).hexdigest(),'headers':headers,'firstDifference':i,'originalContext':source[max(0,i-100):i+300].decode('utf8','replace'),'responseContext':body[max(0,i-100):i+2000].decode('utf8','replace'),'tail':body[-1200:].decode('utf8','replace')}
-                  if url=='https://music-japan.com/korean/':Path('korean-release-evidence/live-response.html').write_bytes(body)
-                  results.append(item)
-              except Exception as e:results.append({'url':url,'error':repr(e)})
-          Path('korean-release-evidence/response-comparison.json').write_text(json.dumps(results,indent=2,ensure_ascii=False))
-          print(json.dumps(results,indent=2,ensure_ascii=False))
-          PY
       - name: Install real browser test dependencies
         run: |
           python -m pip install playwright pyyaml
           python -m playwright install --with-deps chromium
-      - name: Verify app payload identity and production browser interactions
+      - name: Verify actual public navigation before checking UI
         run: |
-          python -u - <<'PY' 2>&1 | tee korean-release-evidence/browser-log.txt
-          import re,json,hashlib,datetime,yaml
+          mkdir -p korean-release-evidence
+          python - <<'PY'
+          import subprocess,yaml
           from pathlib import Path
-          from playwright.sync_api import sync_playwright
-          source=Path('music-japan-site-trace/learning/korean/index.html').read_bytes()
-          out=Path('korean-release-evidence');checks=[]
-          def payloads(b):
-              return re.findall(rb'<style[^>]*>(.*?)</style>',b,re.S)+re.findall(rb'<script(?: id="[^"]*")?(?: type="[^"]*")?>(.*?)</script>',b,re.S)
-          def identity(live):
-              original=payloads(source)
-              assert original,'Missing original inline payloads'
-              live_payloads=payloads(live)
-              for item in original:assert item in live_payloads,'Original course, CSS or JavaScript was changed in transit'
-          body=(out/'live-response.html').read_bytes();identity(body)
-          data=json.loads(re.search(rb'<script id="course-data" type="application/json">(.*?)</script>',body,re.S).group(1))
-          def passed(s):checks.append(s);print('PASS:',s,flush=True)
-          passed('every original course, CSS and inline app script preserved exactly in public response')
-          assert len(data['words'])==1000 and len({w['ar'] for w in data['words']})==1000;passed('1000 distinct headwords')
-          assert sum(len(l['lines']) for l in data['lessons'])==160;passed('160 lesson meanings')
-          with sync_playwright() as p:
-              b=p.chromium.launch(headless=True);c=b.new_context(viewport={'width':390,'height':844});page=c.new_page();errors=[]
-              page.on('pageerror',lambda e:errors.append(str(e)))
-              r=page.goto('https://music-japan.com/korean/',wait_until='load');assert r.status==200;identity(r.body())
-              passed('HTTP200 and real browser response preserves all original app payloads')
-              def tab(t):page.locator('.bottom-nav [data-tab="'+t+'"]').click()
-              try:
-                  for width in [320,390,768,1440]:
-                      page.set_viewport_size({'width':width,'height':844})
-                      for t in ['learn','build','speak','words','culture']:
-                          tab(t);assert page.locator('.bottom-nav button').count()==5
-                          assert not page.evaluate('document.documentElement.scrollWidth > innerWidth')
-                  passed('five screens at four widths without horizontal overflow')
-                  tab('learn')
-                  for mode in ['casual','formal','polite']:
-                      page.locator('[data-register="'+mode+'"]').click()
-                      assert page.locator('.hero .ar').inner_text()==data['lessons'][0]['lines'][0]['forms'][mode]
-                  passed('casual, formal and polite forms match authored Korean data')
-                  for l in data['lessons']:
-                      tab('learn');page.locator('.lesson-list [data-lesson="'+l['id']+'"]').click()
-                      assert page.locator('#main .phrase').count()==8
-                  passed('all 20 lessons open with eight phrases each')
-                  tab('words')
-                  for t in data['topics']:
-                      page.locator('#word-topic').select_option(t['id'])
-                      assert '50 words' in page.locator('#word-results .count').inner_text()
-                  passed('20 vocabulary topics have 50 entries each')
-                  page.locator('#word-topic').select_option('all');w=data['words'][-1]
-                  for q in [w['ar'],w['en'],w['ja']]:
-                      page.locator('#word-search').fill(q);assert page.locator('[data-open="w1000"]').count()==1
-                  passed('Korean English and Japanese vocabulary search')
-                  page.locator('[data-open="w1000"]').click();page.locator('[data-save="w1000"]').click()
-                  assert page.locator('[data-save="w1000"]').get_attribute('aria-pressed')=='true'
-                  page.locator('[data-action="close-dialog"]').first.click();page.reload(wait_until='load')
-                  tab('words');page.locator('#word-scope').select_option('saved');assert page.locator('[data-open="w1000"]').count()==1
-                  passed('saved word persists through actual page reload')
-                  page.locator('[data-register="formal"]').click();page.reload(wait_until='load')
-                  assert page.locator('[data-register="formal"]').get_attribute('aria-pressed')=='true'
-                  page.locator('[data-register="polite"]').click();passed('speaking style persists through actual page reload')
-                  tab('build')
-                  for sel,val in [('family','4'),('frame','9'),('item','19'),('context','9')]:page.locator('#'+sel).select_option(val)
-                  assert page.locator('#main .phrase').get_attribute('data-combo-id')=='c09999'
-                  for order,correct in [([2,1,0],False),([0,1,2],True)]:
-                      page.locator('[data-action="chunk-current"]').click()
-                      for i in order:page.locator('[data-pick="'+str(i)+'"]').click()
-                      page.locator('[data-action="check-chunks"]').click()
-                      assert ('You built it.' if correct else 'Here is a model order.') in page.locator('#chunk-feedback').inner_text()
-                      page.locator('[data-action="close-dialog"]').first.click()
-                  passed('10000th combination and right/wrong word-order feedback')
-                  page.set_viewport_size({'width':390,'height':844});tab('learn');page.screenshot(path=str(out/'public-mobile.png'),full_page=True)
-                  page.locator('.hero [data-lesson]').click();page.screenshot(path=str(out/'public-lesson.png'),full_page=True)
-                  assert errors==[];passed('no JavaScript page errors during tested flows')
-              finally:
-                  page.screenshot(path=str(out/'last-screen.png'),full_page=True)
-                  (out/'page-text.txt').write_text(page.locator('body').inner_text(),encoding='utf8')
-                  (out/'partial-live-proof.json').write_text(json.dumps({'passed':checks,'errors':errors},indent=2))
-                  c.close();b.close()
-          report={'url':'https://music-japan.com/korean/','verifiedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'passed':checks,'count':len(checks),'unverified':['physical iPhone','real Korean speech sound','physical microphone','native-speaker review']}
-          (out/'live-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
-          print(json.dumps(report,ensure_ascii=False,indent=2))
+          historic=subprocess.check_output(['git','show','f73047693ba39386874a0323caf0fd6f7d1ad71c:.github/workflows/korean-live-proof.yml'],text=True)
+          config=yaml.safe_load(historic)
+          step=next(s for s in config['jobs']['verify']['steps'] if s['name']=='Verify app payload identity and production browser interactions')
+          script=step['run'].split("\n",1)[1].rsplit('\nPY',1)[0]
+          old="body=(out/'live-response.html').read_bytes();identity(body)"
+          assert script.count(old)==1
+          script=script.replace(old,'body=source')
+          script=script.replace("passed('every original course, CSS and inline app script preserved exactly in public response')",'')
+          old="r=page.goto('https://music-japan.com/korean/',wait_until='load');assert r.status==200;identity(r.body())"
+          new="""r=page.goto('https://music-japan.com/korean/',wait_until='load')
+              response_body=r.body()
+              (out/'live-response.html').write_bytes(response_body)
+              (out/'http-result.json').write_text(json.dumps({'status':r.status,'headers':r.all_headers(),'url':r.url,'sha256':hashlib.sha256(response_body).hexdigest(),'originalSha256':hashlib.sha256(source).hexdigest()},indent=2))
+              page.screenshot(path=str(out/'initial-screen.png'),full_page=True)
+              assert r.status==200, 'Public browser request returned '+str(r.status)
+              identity(response_body)"""
+          assert script.count(old)==1
+          script=script.replace(old,new)
+          Path('korean-release-evidence/live-proof.py').write_text(script)
           PY
-      - name: Preserve real observations
+          python -u korean-release-evidence/live-proof.py 2>&1 | tee korean-release-evidence/browser-log.txt
+          test -s korean-release-evidence/live-verification.json
+      - name: Preserve real observations including failed checks
         if: always()
         uses: actions/upload-artifact@v4
         with:
