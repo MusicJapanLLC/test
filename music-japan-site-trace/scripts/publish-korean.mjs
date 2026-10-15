@@ -3,7 +3,7 @@ import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
-const SHA256='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3';
+const SHA256='3ff48194aec4f932d964c7d17cb02e1236f3a8c0a17080dce581220840b4b2e0';
 const RULE='\n# BEGIN KOREAN MOBILE\n/korean/*\n  ! Permissions-Policy\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: public, max-age=0, must-revalidate\n# END KOREAN MOBILE\n';
 export function publishKorean(root=fileURLToPath(new URL('..',import.meta.url))){
   const source=readFileSync(join(root,'learning/korean/index.html'));

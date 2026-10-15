@@ -7,7 +7,7 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 const root=fileURLToPath(new URL('..',import.meta.url));
 const publisher=new URL('../scripts/publish-korean.mjs',import.meta.url);
-const sha='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3';
+const sha='3ff48194aec4f932d964c7d17cb02e1236f3a8c0a17080dce581220840b4b2e0';
 const baseline='/*\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n/wahran/*\n  ! Permissions-Policy\n';
 async function fixture(fn){
   assert.ok(existsSync(publisher),'Korean production publisher must exist');
