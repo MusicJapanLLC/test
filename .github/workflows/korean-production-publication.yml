@@ -1,0 +1,232 @@
+name: Korean production publication
+on:
+  push:
+    branches: [music-japan-production]
+    paths: ['.github/workflows/korean-production-publication.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: korean-production-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: music-japan-production
+      - name: Obtain the owner-approved bundle and verify its digest
+        env:
+          SOURCE_URL: 'https://sdmntprkoreacentral.oaiusercontent.com/files/00000000-4d5c-8206-bd85-f691958e45a4/raw?se=2026-10-15T06%3A12%3A03Z&sp=r&sv=2026-02-06&sr=b&scid=7315288b-a9c2-5f52-b3d1-62bd65b71b69&skoid=1e4bb9ed-6bb5-424a-a3aa-79f21566e722&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-10-14T23%3A00%3A30Z&ske=2026-10-15T23%3A00%3A30Z&sks=b&skv=2026-02-06&sig=osEIJJ8kGePqeX8jvtk5ny2pw3ckqkAC3GKxu5j1xTw%3D'
+        run: |
+          mkdir -p korean-release-evidence
+          python - <<'PY'
+          import os,hashlib,urllib.request
+          from pathlib import Path
+          p=Path('music-japan-site-trace/learning/korean/index.html')
+          data=p.read_bytes() if p.exists() else urllib.request.urlopen(os.environ['SOURCE_URL'],timeout=60).read()
+          assert hashlib.sha256(data).hexdigest()=='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3','Wrong source bytes'
+          p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(data)
+          print('Verified approved Korean HTML:',len(data),'bytes')
+          PY
+      - name: Write publication tests and observe the missing-feature failure
+        run: |
+          cat > music-japan-site-trace/tests/korean-publication.test.mjs <<'JS'
+          import test from 'node:test';
+          import assert from 'node:assert/strict';
+          import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,existsSync,rmSync} from 'node:fs';
+          import {tmpdir} from 'node:os';
+          import {join} from 'node:path';
+          import {fileURLToPath} from 'node:url';
+          import {createHash} from 'node:crypto';
+          const root=fileURLToPath(new URL('..',import.meta.url));
+          const publisher=new URL('../scripts/publish-korean.mjs',import.meta.url);
+          const sha='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3';
+          const baseline='/*\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n/wahran/*\n  ! Permissions-Policy\n';
+          async function fixture(fn){
+            assert.ok(existsSync(publisher),'Korean production publisher must exist');
+            const {publishKorean}=await import(publisher);
+            const d=mkdtempSync(join(tmpdir(),'mj-korean-'));
+            mkdirSync(join(d,'learning/korean'),{recursive:true});mkdirSync(join(d,'deploy-dist'),{recursive:true});
+            writeFileSync(join(d,'learning/korean/index.html'),readFileSync(join(root,'learning/korean/index.html')));
+            writeFileSync(join(d,'deploy-dist/_headers'),baseline);
+            try{await fn(d,publishKorean);}finally{rmSync(d,{recursive:true,force:true});}
+          }
+          test('Korean bundle is published byte-for-byte',()=>fixture((d,publish)=>{
+            publish(d);assert.equal(createHash('sha256').update(readFileSync(join(d,'deploy-dist/korean/index.html'))).digest('hex'),sha);
+          }));
+          test('Microphone exception is scoped and existing headers stay intact',()=>fixture((d,publish)=>{
+            publish(d);const h=readFileSync(join(d,'deploy-dist/_headers'),'utf8');
+            assert.ok(h.startsWith(baseline));assert.match(h,/\/korean\/\*\n  ! Permissions-Policy\n/);
+            assert.match(h,/X-Robots-Tag: noindex, nofollow/);
+          }));
+          test('Publication is idempotent',()=>fixture((d,publish)=>{
+            publish(d);const h=readFileSync(join(d,'deploy-dist/_headers'),'utf8');publish(d);
+            assert.equal(readFileSync(join(d,'deploy-dist/_headers'),'utf8'),h);
+          }));
+          test('Altered source fails before publishing',()=>fixture((d,publish)=>{
+            writeFileSync(join(d,'learning/korean/index.html'),'wrong bytes');assert.throws(()=>publish(d),/integrity/);
+            assert.equal(existsSync(join(d,'deploy-dist/korean/index.html')),false);
+            assert.equal(readFileSync(join(d,'deploy-dist/_headers'),'utf8'),baseline);
+          }));
+          test('Both site editions run Korean publication',()=>{
+            const s=readFileSync(join(root,'scripts/build-deploy.mjs'),'utf8');
+            assert.match(s,/publish-korean\.mjs/);assert.match(s,/publishKorean\(\)/);
+          });
+          JS
+          if test -f music-japan-site-trace/scripts/publish-korean.mjs; then
+            echo 'Existing implementation found; preserving prior red-cycle evidence'
+          else
+            if node --test music-japan-site-trace/tests/korean-publication.test.mjs > korean-release-evidence/red.txt 2>&1; then
+              echo 'Expected missing-feature failure, not success'; exit 1
+            fi
+            cat korean-release-evidence/red.txt
+          fi
+      - name: Add the isolated Korean publication step
+        run: |
+          cat > music-japan-site-trace/scripts/publish-korean.mjs <<'JS'
+          // Byte-verified Korean learning app. No private source logs are deployed.
+          import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
+          import {createHash} from 'node:crypto';
+          import {join} from 'node:path';
+          import {fileURLToPath} from 'node:url';
+          const SHA256='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3';
+          const RULE='\n# BEGIN KOREAN MOBILE\n/korean/*\n  ! Permissions-Policy\n  X-Robots-Tag: noindex, nofollow\n  Cache-Control: public, max-age=0, must-revalidate\n# END KOREAN MOBILE\n';
+          export function publishKorean(root=fileURLToPath(new URL('..',import.meta.url))){
+            const source=readFileSync(join(root,'learning/korean/index.html'));
+            const hash=createHash('sha256').update(source).digest('hex');
+            if(hash!==SHA256)throw new Error('Korean source integrity check failed');
+            const output=join(root,'deploy-dist'),path=join(output,'_headers');
+            const headers=readFileSync(path,'utf8').replace(/\r?\n# BEGIN KOREAN MOBILE\r?\n[\s\S]*?# END KOREAN MOBILE\r?\n/g,'');
+            mkdirSync(join(output,'korean'),{recursive:true});
+            writeFileSync(join(output,'korean/index.html'),source);
+            // Browser microphone permission is still required. Other paths remain unchanged.
+            writeFileSync(path,headers+RULE);
+            console.log(`Korean ready at /korean/: ${source.length} bytes; sha256 ${hash}`);
+          }
+          JS
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('music-japan-site-trace/scripts/build-deploy.mjs');b=p.read_bytes()
+          assert b'publishWahran();' in b,'Unexpected production entrypoint'
+          if b'publish-korean.mjs' not in b:
+              p.write_bytes(b+b'\n// Keep Korean available in both production site editions.\nconst { publishKorean } = await import("./publish-korean.mjs");\npublishKorean();\n')
+          PY
+      - name: Test the whole site and build actual production output
+        working-directory: music-japan-site-trace
+        run: |
+          npm ci --ignore-scripts
+          npm test 2>&1 | tee ../korean-release-evidence/site-tests.txt
+          npm run build:deploy 2>&1 | tee ../korean-release-evidence/build.txt
+          sha256sum deploy-dist/korean/index.html | tee ../korean-release-evidence/bundle.sha256
+          git diff --exit-code -- next/public/wahran
+      - name: Commit only the approved publication paths
+        run: |
+          git config user.name 'Music Japan publication'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add music-japan-site-trace/learning/korean/index.html music-japan-site-trace/scripts/publish-korean.mjs music-japan-site-trace/scripts/build-deploy.mjs music-japan-site-trace/tests/korean-publication.test.mjs
+          git diff --cached --stat
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: publish Korean learning app at /korean/'
+            git push origin HEAD:music-japan-production
+          fi
+          git rev-parse HEAD | tee korean-release-evidence/production-commit.txt
+      - name: Prepare browser checks
+        run: |
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+      - name: Verify the real public URL and persistent learning state
+        run: |
+          python - <<'PY'
+          import hashlib,json,time,urllib.request,re,datetime
+          from pathlib import Path
+          from playwright.sync_api import sync_playwright
+          url='https://music-japan.com/korean/'
+          expected='3da5e732b47401cea010b64ded1086d9af773688f1b1c03f88e50dd5e90650c3'
+          out=Path('korean-release-evidence');found=False
+          for attempt in range(80):
+              try:
+                  with urllib.request.urlopen(url+'?release=ko-v1',timeout=20) as r:
+                      body=r.read();headers=dict(r.headers);status=r.status
+                  if hashlib.sha256(body).hexdigest()==expected:found=True;break
+              except Exception as e:print('Waiting for production:',type(e).__name__,flush=True)
+              time.sleep(5)
+          assert found,'Approved Korean HTML is not live at the production URL'
+          data=json.loads(re.search(rb'<script id="course-data" type="application/json">(.*?)</script>',body,re.S).group(1))
+          checks=[]
+          def passed(name):checks.append(name);print('PASS:',name,flush=True)
+          assert status==200;passed('production HTTP 200 and exact SHA256')
+          assert len(data['words'])==1000 and len({w['ar'] for w in data['words']})==1000;passed('1000 distinct headwords')
+          assert sum(len(l['lines']) for l in data['lessons'])==160;passed('160 lesson meanings')
+          assert 'noindex' in next((v for k,v in headers.items() if k.lower()=='x-robots-tag'),'');passed('public response noindex header')
+          assert 'microphone=()' not in next((v for k,v in headers.items() if k.lower()=='permissions-policy'),'');passed('microphone not denied by site-wide response policy')
+          with sync_playwright() as p:
+              b=p.chromium.launch(headless=True)
+              c=b.new_context(viewport={'width':390,'height':844});page=c.new_page();errors=[]
+              page.on('pageerror',lambda e:errors.append(str(e)))
+              response=page.goto(url,wait_until='load');assert response.status==200
+              assert hashlib.sha256(response.body()).hexdigest()==expected;passed('real Chromium navigated to exact production bundle')
+              def tab(t):page.locator('.bottom-nav [data-tab="'+t+'"]').click()
+              for width in [320,390,768,1440]:
+                  page.set_viewport_size({'width':width,'height':844})
+                  for t in ['learn','build','speak','words','culture']:
+                      tab(t);assert page.locator('.bottom-nav button').count()==5
+                      assert not page.evaluate('document.documentElement.scrollWidth > innerWidth')
+              passed('five screens at four viewport widths without horizontal overflow')
+              tab('learn')
+              for mode in ['casual','formal','polite']:
+                  page.locator('[data-register="'+mode+'"]').click()
+                  assert page.locator('.hero .ar').inner_text()==data['lessons'][0]['lines'][0]['forms'][mode]
+              passed('three authored Korean speaking styles')
+              for l in data['lessons']:
+                  tab('learn');page.locator('.lesson-list [data-lesson="'+l['id']+'"]').click()
+                  assert page.locator('#main .phrase').count()==8
+              passed('all 20 lessons open with eight phrases')
+              tab('words')
+              for t in data['topics']:
+                  page.locator('#word-topic').select_option(t['id'])
+                  assert '50 words' in page.locator('#word-results .count').inner_text()
+              passed('all 20 word topics have 50 entries')
+              page.locator('#word-topic').select_option('all')
+              w=data['words'][-1]
+              for q in [w['ar'],w['en'],w['ja']]:
+                  page.locator('#word-search').fill(q);assert page.locator('[data-open="w1000"]').count()==1
+              passed('search in Korean, English and Japanese')
+              page.locator('[data-open="w1000"]').click();page.locator('[data-save="w1000"]').click()
+              assert page.locator('[data-save="w1000"]').get_attribute('aria-pressed')=='true'
+              page.locator('[data-action="close-dialog"]').first.click();page.reload(wait_until='load')
+              tab('words');page.locator('#word-scope').select_option('saved');assert page.locator('[data-open="w1000"]').count()==1
+              passed('saved word survives an actual page reload')
+              page.locator('[data-register="formal"]').click();page.reload(wait_until='load')
+              assert page.locator('[data-register="formal"]').get_attribute('aria-pressed')=='true'
+              page.locator('[data-register="polite"]').click();passed('speaking style persists after reload')
+              tab('build')
+              for sel,val in [('family','4'),('frame','9'),('item','19'),('context','9')]:page.locator('#'+sel).select_option(val)
+              assert page.locator('#main .phrase').get_attribute('data-combo-id')=='c09999'
+              for order,correct in [([2,1,0],False),([0,1,2],True)]:
+                  page.locator('[data-action="chunk-current"]').click()
+                  for i in order:page.locator('[data-pick="'+str(i)+'"]').click()
+                  page.locator('[data-action="check-chunks"]').click()
+                  assert ('You built it.' if correct else 'Here is a model order.') in page.locator('#chunk-feedback').inner_text()
+                  page.locator('[data-action="close-dialog"]').first.click()
+              passed('10000th combination and word-order right/wrong handling')
+              page.set_viewport_size({'width':390,'height':844});tab('learn');page.screenshot(path=str(out/'public-mobile.png'),full_page=True)
+              page.locator('.hero [data-lesson]').click();page.screenshot(path=str(out/'public-lesson.png'),full_page=True)
+              assert errors==[];passed('no JavaScript page errors during the tested flows')
+              c.close();b.close()
+          for path,expected_sha in [('/wahran/','7169587709a6ae0d77ff2843a332de208f18f976fa68876b2554a09250bc7be6')]:
+              with urllib.request.urlopen('https://music-japan.com'+path,timeout=30) as r:assert hashlib.sha256(r.read()).hexdigest()==expected_sha
+          passed('original Wahran remains byte-identical')
+          report={'url':url,'verifiedAtUtc':datetime.datetime.now(datetime.timezone.utc).isoformat(),'sha256':expected,'passed':checks,'count':len(checks),'unverified':['physical iPhone','real Korean speech sound','physical microphone','native-speaker review']}
+          (out/'live-verification.json').write_text(json.dumps(report,ensure_ascii=False,indent=2))
+          print(json.dumps(report,ensure_ascii=False,indent=2))
+          PY
+      - name: Preserve observed verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: korean-production-evidence
+          path: korean-release-evidence/
+          retention-days: 30
