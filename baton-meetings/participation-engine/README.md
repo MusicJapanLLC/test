@@ -11,7 +11,7 @@
 ## Critical limits
 
 - This release has not joined a real meeting. Do not label it production ready.
-- The browser adapter currently ends its context after the join probe; it is not yet a resident in-call agent. Resident session lifecycle must be added before a real end-to-end acceptance.
+- The browser adapter now keeps a verified session open while a resident watch observes the in-call control. It allows up to 2 sequential reconnects after confirmed disconnect, closing the old browser before restarting. Real platform E2E is still unverified.
 - Browser OAuth/permissions require the user to authorize the dedicated profile. Never use someone else's signed-in profile or bypass a host denial.
 - Only stop/fallback on a verified technical failure. A waiting room, host refusal, auth requirement, or uncertain bot state MUST NOT trigger a second simultaneous attendee.
 - In-call audio capture and transcription are not yet integrated; an observed audio track count is diagnostic only.
@@ -37,7 +37,7 @@ Do not paste sensitive URLs/API keys into logs or GitHub. Encrypted secret confi
 ## Acceptance sequence
 
 1. Validate synthetic route selection and no false-positive joins via `node --test tests/*.test.mjs`.
-2. Add resident browser session lifecycle and state checks while a meeting stays active.
+2. Verify the resident browser lifecycle (session stays open after join; disconnect detection and bounded reconnect) with platform-specific live tests.
 3. Join one owner-controlled test Zoom room with permission, confirm attendee in host UI and outbound/inbound media.
 4. Repeat with Google Meet and Teams. Confirm waiting room, refused entry, auth expiry, technical failure, and reconnection separately.
 5. Link the verified meeting session ID to Baton Minutes and DataHub with tenant isolation, consent provenance, retention and deletion.
