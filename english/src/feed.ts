@@ -1,20 +1,61 @@
-import type { Card, Quiz, QuizKind, Slide, Source } from './types';
-import { cardState, isDue, state } from './store';
-import { canSpeak } from './tts';
+import type { Card, Quiz, QuizKind, RecordMeta, Slide, Source } from './types';
+import { cardState, isDue, state, status } from './store';
 
-export const DB = { cards: [] as Card[], words: [] as Card[], all: [] as Card[], byId: new Map<string, Card>() };
+export const DB = {
+  cards: [] as Card[], words: [] as Card[], all: [] as Card[], byId: new Map<string, Card>(),
+  records: [] as RecordMeta[], recById: new Map<string, RecordMeta>(), byRec: new Map<string, Card[]>(),
+};
 
 export async function loadData() {
-  const get = async (f: string) => {
+  const get = async <T>(f: string) => {
     const r = await fetch(`data/${f}`, { cache: 'no-cache' });
     if (!r.ok) throw new Error(`${f} ${r.status}`);
-    return (await r.json()) as Card[];
+    return (await r.json()) as T;
   };
-  const [cards, words] = await Promise.all([get('cards.json'), get('words.json')]);
+  const [cards, words, meta] = await Promise.all([get<Card[]>('cards.json'), get<Card[]>('words.json'), get<{ records: RecordMeta[] }>('meta.json')]);
   DB.cards = cards;
   DB.words = words;
   DB.all = [...cards, ...words];
-  for (const c of DB.all) DB.byId.set(c.id, c);
+  DB.records = meta.records;
+  for (const r of meta.records) { DB.recById.set(r.id, r); DB.byRec.set(r.id, []); }
+  for (const c of DB.all) { DB.byId.set(c.id, c); DB.byRec.get(c.rec)?.push(c); }
+}
+
+/* ── records ── */
+
+export const recCards = (rec: string) => (DB.byRec.get(rec) ?? []).filter((c) => allowed(c));
+
+export function recStats(rec: string) {
+  const cards = recCards(rec);
+  let fresh = 0, learning = 0, known = 0, due = 0;
+  for (const c of cards) {
+    const st = status(c.id);
+    if (st === 'new') fresh++; else if (st === 'known') known++; else learning++;
+    if (isDue(state.cards[c.id])) due++;
+  }
+  return { n: cards.length, fresh, learning, known, due, done: cards.length - fresh };
+}
+
+/** the next new cards of a record, in the record's own order */
+export const newCards = (rec: string, n: number) => recCards(rec).filter((c) => status(c.id) === 'new').slice(0, n);
+
+export const dueCards = (rec?: string, limit = 40) =>
+  shuffle(DB.all.filter((c) => allowed(c) && (!rec || c.rec === rec) && isDue(state.cards[c.id]))).slice(0, limit);
+
+/** the next record on the shelf that still has new cards */
+export function nextRecord(after: string): RecordMeta | undefined {
+  const i = DB.records.findIndex((r) => r.id === after);
+  const order = [...DB.records.slice(i + 1), ...DB.records.slice(0, i + 1)];
+  return order.find((r) => recStats(r.id).fresh > 0);
+}
+
+/** Today = everything due (up to 20) + the next new cards from the current record */
+export function todayPlan() {
+  let rec = DB.recById.get(state.cur) ?? DB.records[0];
+  if (!recStats(rec.id).fresh) rec = nextRecord(rec.id) ?? rec;
+  const due = dueCards(undefined, 20);
+  const fresh = newCards(rec.id, state.settings.size);
+  return { rec, due, fresh };
 }
 
 const rand = (n: number) => Math.floor(Math.random() * n);
@@ -80,7 +121,7 @@ export function makeQuiz(c: Card, review = false): Quiz | null {
     if (c.re !== 'real' || c.x?.length) kinds.push(['real', 3]);
     if (c.vb?.some((v) => ['rude', 'flirty', 'worksafe', 'cold', 'warm'].includes(v))) kinds.push(['vibe', 1]);
   }
-  if (canSpeak() && c.l.length) kinds.push(['listen', 2]);
+  if (c.l.length) kinds.push(['listen', 2]);
   let r = Math.random() * kinds.reduce((s, k) => s + k[1], 0);
   let kind = kinds[0][0];
   for (const [k, w] of kinds) { if ((r -= w) <= 0) { kind = k; break; } }
@@ -126,10 +167,11 @@ export function makeQuiz(c: Card, review = false): Quiz | null {
       return { kind, card: c, prompt: "What's the vibe?", line, options, answer, review };
     }
     case 'listen': {
-      const line = pickOne(c.l.filter((l) => l[1].split(' ').length <= 16).map((l) => l[1])) ?? c.l[0][1];
-      const others = shuffle(DB.cards.filter((x) => x.id !== c.id && allowed(x)).flatMap((x) => x.l.map((l) => l[1])).filter((t) => t.split(' ').length <= 16 && Math.abs(t.length - line.length) < 26)).slice(0, 3);
+      const idx = c.l.slice(0, 4).map((l, i) => [l[1], i] as const).filter(([t]) => t.split(' ').length <= 16);
+      const [line, li] = idx.length ? pickOne(idx) : [c.l[0][1], 0];
+      const others = shuffle(DB.all.filter((x) => x.id !== c.id && allowed(x)).flatMap((x) => x.l.map((l) => l[1])).filter((t) => t !== line && t.split(' ').length <= 16 && Math.abs(t.length - line.length) < 26)).slice(0, 3);
       const { options, answer } = withAnswer(line, others);
-      return { kind, card: c, prompt: 'What did you hear?', line, options, answer, review };
+      return { kind, card: c, prompt: 'What did you hear?', line, options, answer, review, key: `l${li}` };
     }
   }
   return null;

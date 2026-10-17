@@ -183,7 +183,7 @@ function parseCards(file) {
     const where = `${rel}:${n + 1}`;
     if (!line.trim() || line.startsWith('//')) return;
     if (line.startsWith('# ')) {
-      c = { head: line.slice(2).trim(), where, l: [], x: [], v: [] };
+      c = { head: line.slice(2).trim(), where, rec: path.basename(file, '.txt'), l: [], x: [], v: [] };
       cards.push(c);
       lastQuote = null;
       return;
@@ -267,7 +267,7 @@ function parseWords(file) {
     const lw = head.toLowerCase();
     const stem = lw.length > 4 ? lw.slice(0, Math.max(3, lw.length - 3)) : lw;
     if (!ex.toLowerCase().includes(stem.split(' ')[0])) warn.push(`${where}: "${head}" not in example`);
-    words.push({ head, pos, ja, d, ex, sc, tier, where, explicit });
+    words.push({ head, pos, ja, d, ex, sc, tier, where, explicit, rec: `words-${path.basename(file, '.txt')}` });
   });
   return words;
 }
@@ -290,7 +290,7 @@ for (const c of cards) {
   while (ids.has(id)) id = `${slug(c.head)}-${k++}`;
   ids.add(id);
   const ipa = c.ipa ?? (c.re === 'real' ? ipaPhrase(c.head.replace(/\(.*?\)/g, '')) : null);
-  const o = { id, k: 'c', s: c.s, sc: c.sc, h: c.head, ja: c.ja, l: c.l, re: c.re, vb: c.vb, f: c.f };
+  const o = { id, k: 'c', rec: c.rec, s: c.s, sc: c.sc, h: c.head, ja: c.ja, l: c.l, re: c.re, vb: c.vb, f: c.f };
   if (ipa) o.ipa = ipa;
   for (const key of ['d', 'sl', 'y', 'n', 'q', 'r', 'c', 'u', 'rare', 'e']) if (c[key] !== undefined) o[key] = c[key];
   if (c.x.length) o.x = c.x;
@@ -311,7 +311,7 @@ for (const w of words) {
   ids.add(id);
   const ipa = w.head.includes(' ') ? ipaPhrase(w.head) : ipaWord(w.head, w.pos);
   if (!ipa) noIpa++;
-  const o = { id, k: 'w', s: 'words', sc: w.sc, h: w.head, pos: w.pos, ja: w.ja, d: w.d, l: [['', w.ex]], t: w.tier };
+  const o = { id, k: 'w', rec: w.rec, s: 'words', sc: w.sc, h: w.head, pos: w.pos, ja: w.ja, d: w.d, l: [['', w.ex]], t: w.tier };
   if (ipa) o.ipa = ipa;
   if (w.explicit) o.e = 1;
   outWords.push(o);
@@ -338,4 +338,50 @@ const outDir = path.join(root, 'public/data');
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, 'cards.json'), JSON.stringify(outCards));
 fs.writeFileSync(path.join(outDir, 'words.json'), JSON.stringify(outWords));
-fs.writeFileSync(path.join(outDir, 'meta.json'), JSON.stringify({ cards: outCards.length, words: outWords.length, sources: stats, built: new Date().toISOString().slice(0, 10) }));
+// Records = one content file each (a "record" in the app, its cards are the tracks). Order here is shelf order.
+const RECORDS = [
+  ['talk-01-cafe', 'Cafe', 'Order, grab a seat, chat with the barista'],
+  ['talk-12-reactions', 'Reactions', 'The tiny phrases that make up half a conversation'],
+  ['talk-14-listening', 'Listening Traps', 'Fillers and squeezed sounds you keep missing'],
+  ['talk-03-pickup', 'Pickup', 'Starting a conversation with a stranger'],
+  ['talk-04-crush', 'Crush', 'Asking out, dates, feelings, breakups'],
+  ['talk-05-dm', 'DMs & Texts', 'How people actually type'],
+  ['talk-02-bar-party', 'Bar & Party', 'Drinks, toasts, leaving early'],
+  ['talk-06-gym', 'Gym', 'Sharing equipment, spotting, progress'],
+  ['talk-07-work', 'Work', 'Coworkers, deadlines, asking for help'],
+  ['talk-08-business', 'Business', 'Sales calls, meetings, proposals, invoices'],
+  ['talk-09-money', 'Money', 'Prices, budgets, broke, paying back'],
+  ['talk-10-paperwork-travel', 'Travel & Paperwork', 'Airports, apartments, forms'],
+  ['talk-11-phone-online', 'Phone & Online', 'Calls, streaming, tech'],
+  ['talk-13-conflict-feelings', 'Conflict & Feelings', 'Fights, apologies, comfort'],
+  ['talk-15-textbook-vs-real', 'Textbook vs Real', 'School English that makes people smile'],
+  ['songs-01-now', 'Songs: Now', 'Title phrases from the 2000s to now'],
+  ['songs-02-classics', 'Songs: Classics', 'Title phrases from the 50s to the 90s'],
+  ['movies-01', 'Movie Lines', 'One famous line each, and how people use it now'],
+  ['movies-02-tv', 'TV Lines', 'Sitcoms and series'],
+  ['books-01', 'Classic Books', 'Public-domain quotes, word for word'],
+  ['comedy-01', 'Comedy', 'How jokes work in English'],
+  ['science-01', 'Science', 'Research everyone talks about'],
+  ['words-13-core-verbs-adjectives', 'Everyday Verbs', 'Verbs and adjectives you hear all day'],
+  ['words-03-verbs', 'Core Verbs', 'The verbs you use most'],
+  ['words-04-phrasal-verbs', 'Phrasal Verbs', 'The backbone of spoken English'],
+  ['words-11-connectors-life', 'Connectors', 'Actually, basically, though: the glue words'],
+  ['words-01-feelings', 'Feelings', 'Mood and emotions'],
+  ['words-02-people', 'People', 'Personality and relationships'],
+  ['words-05-describing', 'Describing', 'Adjectives for everything'],
+  ['words-07-slang', 'Slang', 'Internet and street English, 2020s'],
+  ['words-12-idioms-more', 'Idioms', 'Expressions people actually use'],
+  ['words-08-food-health', 'Food, Gym & Dating', 'Cafe, workouts, relationships'],
+  ['words-09-travel-tech', 'Travel & Tech', 'Trips, housing, apps, AI'],
+  ['words-06-business', 'Business Words', 'Sales, meetings, contracts, startups'],
+  ['words-10-news-music', 'News & Music', 'Words you hear on podcasts and in studios'],
+];
+const all = [...outCards, ...outWords];
+const counts = {};
+for (const c of all) counts[c.rec] = (counts[c.rec] ?? 0) + 1;
+for (const id of Object.keys(counts)) if (!RECORDS.some(([r]) => r === id)) fail(id, 'content file has no RECORDS entry');
+const records = RECORDS.filter(([id]) => counts[id]).map(([id, t, sub], i) => {
+  const first = all.find((c) => c.rec === id);
+  return { id, no: i + 1, t, sub, s: first.s, n: counts[id] };
+});
+fs.writeFileSync(path.join(outDir, 'meta.json'), JSON.stringify({ cards: outCards.length, words: outWords.length, sources: stats, records, built: new Date().toISOString().slice(0, 10) }));

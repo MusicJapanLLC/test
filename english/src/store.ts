@@ -12,10 +12,22 @@ export interface CardState {
 }
 
 export interface Settings {
+  /** Japanese meaning: behind a button, or always shown */
   ja: 'tap' | 'show';
   explicit: boolean;
+  /** device-voice speed (fallback only; recorded audio has its own slow version) */
   rate: number;
   autoVoice: boolean;
+  /** play the recorded voice as soon as a card appears */
+  autoplay: boolean;
+  /** play the slow recording first */
+  slow: boolean;
+  /** new cards per session */
+  size: number;
+  /** red sheet: hide meanings in track lists */
+  sheet: boolean;
+  /** card front: English (listen + understand) or Japanese (recall + say it) */
+  front: 'en' | 'ja';
   sound: boolean;
   goal: number;
   theme: 'auto' | 'dark' | 'light';
@@ -31,6 +43,10 @@ export interface State {
   bestCombo: number;
   settings: Settings;
   introSeen: boolean;
+  /** record the Today session draws new cards from */
+  cur: string;
+  /** per day: n = new cards learned, r = reviews, a = answers right in checks */
+  log: Record<string, { n: number; r: number }>;
 }
 
 const KEY = 'mj-english:v1';
@@ -47,8 +63,10 @@ const fresh = (): State => ({
   lastDay: '',
   day: { date: today(), done: 0, right: 0, wrong: 0, goalHit: false },
   bestCombo: 0,
-  settings: { ja: 'tap', explicit: false, rate: 0.95, autoVoice: false, sound: true, goal: 20, theme: 'auto' },
+  settings: { ja: 'tap', explicit: false, rate: 0.95, autoVoice: false, autoplay: true, slow: false, size: 10, sheet: false, front: 'en', sound: true, goal: 20, theme: 'auto' },
   introSeen: false,
+  cur: 'talk-01-cafe',
+  log: {},
 });
 
 function load(): State {
@@ -57,7 +75,7 @@ function load(): State {
     if (!raw) return fresh();
     const s = JSON.parse(raw) as State;
     const base = fresh();
-    return { ...base, ...s, settings: { ...base.settings, ...s.settings }, day: { ...base.day, ...s.day } };
+    return { ...base, ...s, settings: { ...base.settings, ...s.settings }, day: { ...base.day, ...s.day }, log: s.log ?? {} };
   } catch {
     return fresh();
   }
@@ -95,8 +113,24 @@ export function grade(id: string, ok: boolean) {
   save();
 }
 
+/** studied (or saved) cards come back when their interval is up */
 export function isDue(s: CardState | undefined) {
-  return !!s && (s.saved || s.wrong > 0) && s.due <= Date.now();
+  return !!s && (s.box > 0 || s.wrong > 0 || !!s.saved) && s.due <= Date.now();
+}
+
+export type Status = 'new' | 'learning' | 'known';
+/** known = survived three reviews in a row (5+ days out) */
+export function status(id: string): Status {
+  const s = state.cards[id];
+  if (!s || (s.box === 0 && s.wrong === 0 && !s.right)) return 'new';
+  return s.box >= 3 ? 'known' : 'learning';
+}
+
+export function logDay(kind: 'n' | 'r') {
+  const t = today();
+  const d = (state.log[t] ??= { n: 0, r: 0 });
+  d[kind]++;
+  save();
 }
 
 export function markGoal(): boolean {

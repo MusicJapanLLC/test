@@ -13,12 +13,12 @@ const items = [...read('cards.json'), ...read('words.json')];
 const esc = (s = '') => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const LABEL = { talk: 'Real Talk', songs: 'Songs', movies: 'Movies & TV', books: 'Classic Books', science: 'Science', comedy: 'Comedy', words: 'Words' };
 
-const css = `body{margin:0;background:#0b0b0e;color:#f3eee6;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Hiragino Sans','Noto Sans JP',sans-serif}
+const css = `body{margin:0;background:#060607;color:#efe9e0;font:16px/1.6 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Hiragino Sans','Noto Sans JP',sans-serif}
 main{max-width:640px;margin:0 auto;padding:32px 18px 64px}a{color:inherit}.k{font:700 12px sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8f897f}
 h1{font:900 clamp(36px,9vw,60px)/1.05 'Arial Black',Arial,sans-serif;letter-spacing:-.02em;margin:8px 0}.ipa{color:#8f897f;margin:0}.ja{font-size:20px;font-weight:800}
-ol{padding-left:20px}blockquote{margin:0;padding:10px 14px;border-left:3px solid #ff2e3e;background:rgba(255,255,255,.04)}.n{color:#c9c2b8;font-size:14px}
-.go{display:inline-block;margin-top:20px;padding:14px 22px;border-radius:99px;background:#ff2e3e;color:#fff;font-weight:800;text-decoration:none}
-@media(prefers-color-scheme:light){body{background:#f6f3ee;color:#141413}.n{color:#3d3a35}}`;
+ol{padding-left:20px}blockquote{margin:0;padding:10px 14px;border-left:3px solid #e1222f;background:rgba(255,255,255,.04)}.n{color:#c9c2b8;font-size:14px}
+.go{display:inline-block;margin-top:20px;padding:14px 22px;border-radius:99px;background:#e1222f;color:#fff;font-weight:800;text-decoration:none}
+@media(prefers-color-scheme:light){body{background:#efe9e0;color:#0b0b0c}.n{color:#3d3a35}}`;
 
 function page(c) {
   const url = `${SITE}/c/${c.id}/`;
@@ -41,8 +41,8 @@ ${c.q ? `<blockquote>“${esc(c.q[0])}”<br><small>— ${esc(c.q[1])}</small></
 ${c.r ? `<p>Reference: ${esc(c.r)}</p>` : ''}
 ${lines ? `<ol>${lines}</ol>` : ''}${alts ? `<ul>${alts}</ul>` : ''}
 ${c.y ? `<p class="n" lang="ja">${esc(c.y)}</p>` : ''}${c.n ? `<p class="n" lang="ja">${esc(c.n)}</p>` : ''}${c.c ? `<p class="n">Source: ${esc(c.c)}</p>` : ''}
-<a class="go" href="../../#/c/${c.id}">Learn it in the feed →</a>
-<p class="n" style="margin-top:28px">MJ ENGLISH by Music Japan LLC — real English, in reels.</p>
+<a class="go" href="../../#/c/${c.id}">Learn it with the voice →</a>
+<p class="n" style="margin-top:28px">MJ ENGLISH by Music Japan LLC — real English, on record.</p>
 </main></body></html>`;
 }
 

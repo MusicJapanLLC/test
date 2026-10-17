@@ -1,13 +1,13 @@
 {
-  "name": "MJ ENGLISH — Real English, in reels",
+  "name": "MJ ENGLISH — Real English, on record",
   "short_name": "MJ ENGLISH",
-  "description": "The English people actually say. Words and chunks from songs, movies, classic books, science, comedy and real talk.",
+  "description": "Phrases and words from real talk, songs, film and books. Every card has a voice. By Music Japan LLC.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0b0b0e",
-  "theme_color": "#0b0b0e",
+  "background_color": "#060607",
+  "theme_color": "#060607",
   "lang": "en",
   "icons": [
     { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },

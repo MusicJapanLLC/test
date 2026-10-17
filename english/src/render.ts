@@ -1,25 +1,30 @@
-import type { Card, Quiz, Source } from './types';
-import { SCENE_LABEL, SOURCE_ICON, SOURCE_LABEL, VIBE_LABEL } from './types';
-import { Bot, memberFor } from './robots/crew';
+/* Shared pieces: card text, meaning panel, quizzes, the reel card for Shuffle. */
+import type { Card, Quiz, RecordMeta, Source } from './types';
+import { SCENE_LABEL, SOURCE_CODE, VIBE_LABEL } from './types';
+import { Bot, CREW, type Member } from './robots/crew';
 import { cardState, state } from './store';
-import { speak, speakLines, canSpeak } from './tts';
+import { lineKeys, play, playSeq } from './audio';
+import { I } from './icons';
+import { DB } from './feed';
 
+/** label colours = the crew's screen colours; Real Talk uses the page ink */
 export const ACCENT: Record<Source, string> = {
-  talk: 'var(--talk)', words: '#b9a8ff', movies: '#ff2e3e', books: '#ffb43d', songs: '#3fd8ff', science: '#7dff8e', comedy: '#ff7ad8',
+  talk: 'var(--ink)', words: '#b7a6ff', movies: '#ff3b47', books: '#ffb43d', songs: '#3fd8ff', science: '#7dff8e', comedy: '#ff7ad8',
 };
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
 
-const ICON = {
-  save: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4.5L6 21z"/></svg>',
-  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke-width="2" stroke-linecap="round"/></svg>',
-  share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l5 5h-3.5v7h-3V8H7z"/><path d="M5 13v7h14v-7" fill="none" stroke-width="2.2"/></svg>',
-};
+const HOST: Partial<Record<Source, Member['id']>> = { movies: 'tune', books: 'spin', songs: 'pod', science: 'reel', comedy: 'mic' };
+/** which crew member hosts a record (fixed, so a record always has the same face) */
+export const hostOf = (r: RecordMeta | undefined): Member['id'] => (r && HOST[r.s]) || CREW[((r?.no ?? 1) - 1) % CREW.length].id;
+export const recOf = (c: Card) => DB.recById.get(c.rec);
+export const recCode = (r: RecordMeta | undefined) => `MJ-EN ${String(r?.no ?? 0).padStart(3, '0')}`;
+export const accentOf = (r: RecordMeta | undefined) => (r && r.s !== 'talk' && r.s !== 'words' ? ACCENT[r.s] : CREW.find((m) => m.id === hostOf(r))!.color);
 
-/** run when a slide becomes the active one (autoplay listening, robot hello) */
+/** onActive: run when a reel slide becomes the visible one */
 export const onActive = new WeakMap<HTMLElement, () => void>();
 
-function mark(line: string, head: string) {
+export function mark(line: string, head: string) {
   const h = head.replace(/\(.*?\)/g, '').replace(/[.!?,]+$/, '').trim();
   const safe = esc(line);
   if (!h || /\b(sb|sth)\b|~|…|\//.test(h) || h.length < 3) return safe;
@@ -28,193 +33,99 @@ function mark(line: string, head: string) {
   return esc(line.slice(0, i)) + '<mark>' + esc(line.slice(i, i + h.length)) + '</mark>' + esc(line.slice(i + h.length));
 }
 
-const realStamp = (re?: string) =>
-  re === 'textbook' ? '<span class="stamp stamp--textbook">⚠ Textbook</span>'
-    : re === 'cringe' ? '<span class="stamp stamp--cringe">✗ Cringe</span>'
-      : '<span class="stamp stamp--real">✓ Real</span>';
+export function headSize(h: string) {
+  const longest = Math.max(...h.split(/\s+/).map((w) => w.length));
+  return h.length > 42 || longest > 12 ? 'xl' : h.length > 26 || longest > 9 ? 'l' : h.length > 14 || longest > 7 ? 'm' : 's';
+}
+
+const stamp = (c: Card) =>
+  c.k === 'w' ? `<span class="stamp">${esc(c.pos ?? 'word')}</span>`
+    : c.re === 'textbook' ? '<span class="stamp stamp--warn">Textbook</span>'
+      : c.re === 'cringe' ? '<span class="stamp stamp--bad">Cringe</span>'
+        : '<span class="stamp stamp--good">Real</span>';
+
+/** mono label row: SONG · CRUSH  REAL */
+export function metaRow(c: Card, extra = '') {
+  const scene = c.sc[0] ? ` · ${esc((SCENE_LABEL[c.sc[0]] ?? c.sc[0]).toUpperCase())}` : '';
+  return `<p class="meta"><span class="meta__code">${SOURCE_CODE[c.s]}${scene}</span>${stamp(c)}${c.rare ? '<span class="stamp stamp--rare">Deep cut</span>' : ''}${c.e ? '<span class="stamp">Explicit</span>' : ''}${extra}</p>`;
+}
 
 const ytSearch = (q: string) => `https://www.youtube.com/results?search_query=${encodeURIComponent(q)}`;
 
-export function cardBack(c: Card): string {
-  const parts: string[] = [];
-  parts.push(`<p class="ja" lang="ja">${esc(c.ja)}</p>`);
-  if (c.d) parts.push(`<p class="def">${esc(c.d)}</p>`);
-  if (c.re && c.re !== 'real') {
-    parts.push(`<p class="verdict verdict--${c.re}">${c.re === 'textbook' ? 'Understood, but sounds like a textbook.' : 'Nobody says this. You’ll get a look.'}</p>`);
-  }
-  if (c.v?.length) parts.push(`<ul class="alts">${c.v.map(([t, n]) => `<li class="alt alt--real"><b>✓ ${esc(t)}</b>${n ? `<small lang="ja">${esc(n)}</small>` : ''}</li>`).join('')}</ul>`);
-  if (c.x?.length) parts.push(`<ul class="alts">${c.x.map(([t, lab, n]) => `<li class="alt alt--${lab}"><b>${lab === 'cringe' ? '✗' : '⚠'} ${esc(t)}</b>${n ? `<small lang="ja">${esc(n)}</small>` : ''}</li>`).join('')}</ul>`);
-  if (c.y) parts.push(`<div class="why"><p class="label">Why it works</p><p lang="ja">${esc(c.y).replace(/\n/g, '<br>')}</p></div>`);
-  if (c.n) parts.push(`<div class="note"><p class="label">${c.s === 'science' ? 'The science' : 'Culture'}</p><p lang="ja">${esc(c.n).replace(/\n/g, '<br>')}</p></div>`);
-  if (c.c) parts.push(`<p class="cite">Source: ${esc(c.c)}${c.u ? ` <a href="${esc(c.u)}" target="_blank" rel="noopener">Read ↗</a>` : ''}</p>`);
-  return parts.join('');
+export function sourceHtml(c: Card) {
+  const out: string[] = [];
+  if (c.q) out.push(`<blockquote class="quote"><p>“${esc(c.q[0])}”</p><cite>${esc(c.q[1])}</cite></blockquote>`);
+  if (c.r) out.push(`<a class="ref" href="${ytSearch(c.r)}" target="_blank" rel="noopener">${c.s === 'songs' ? 'Listen' : c.s === 'movies' ? 'Watch' : 'Look up'}: ${esc(c.r)} ${I.next}</a>`);
+  return out.join('');
 }
 
-export function cardFront(c: Card): string {
-  const tags = [
-    `<span class="src">${SOURCE_ICON[c.s]} ${SOURCE_LABEL[c.s]}</span>`,
-    ...c.sc.slice(0, 2).map((s) => `<span class="tag">${esc(SCENE_LABEL[s] ?? s)}</span>`),
-    c.k === 'c' ? realStamp(c.re) : '',
-    c.rare ? '<span class="stamp stamp--rare">✦ Deep cut</span>' : '',
-    c.e ? '<span class="stamp stamp--explicit">Explicit</span>' : '',
-  ].join('');
-  const kicker = c.k === 'w' ? `Word · ${esc(c.pos ?? '')}` : c.re && c.re !== 'real' ? 'Real or nah?' : 'Chunk';
-  const body: string[] = [];
-  if (c.q) body.push(`<blockquote class="quote"><p>“${esc(c.q[0])}”</p><cite>— ${esc(c.q[1])}</cite></blockquote>`);
-  if (c.r) {
-    const label = c.s === 'songs' ? '🎵' : c.s === 'movies' ? '🎬' : '↗';
-    body.push(`<p class="ref"><a href="${ytSearch(c.r)}" target="_blank" rel="noopener">${label} ${esc(c.r)}</a></p>`);
-  }
-  if (c.l.length) {
-    const dialog = c.l.some((l) => l[0]);
-    body.push(`<ol class="lines${dialog ? ' lines--talk' : ''}">${c.l.map(([who, t]) => `<li${who ? ` class="who-${who.toLowerCase()}"` : ''}>${who ? `<b>${who}</b>` : ''}<span>${mark(t, c.h)}</span></li>`).join('')}</ol>`);
-  }
-  if (c.vb?.length) body.push(`<p class="vibes">${c.vb.map((v) => `<span>${esc(VIBE_LABEL[v] ?? v)}</span>`).join('')}</p>`);
-  const longest = Math.max(...c.h.split(/\s+/).map((w) => w.length));
-  const size = c.h.length > 42 || longest > 11 ? 'xl' : c.h.length > 26 || longest > 8 ? 'l' : c.h.length > 14 || longest > 6 ? 'm' : 's';
-  return `
-    <header class="card__top">${tags}</header>
-    <div class="card__main">
-      <p class="kicker">${kicker}</p>
-      <h2 class="head head--${size}${c.re && c.re !== 'real' ? ' head--strike' : ''}">${esc(c.h)}</h2>
-      ${c.ipa ? `<p class="ipa">/${esc(c.ipa)}/</p>` : ''}
-      ${c.k === 'w' && c.d ? `<p class="wdef">${esc(c.d)}</p>` : ''}
-      ${c.sl ? `<p class="sounds">Sounds like <b>${esc(c.sl)}</b></p>` : ''}
-      ${body.join('')}
-    </div>`;
+/** example / dialogue lines; each one plays its own recording */
+export function linesHtml(c: Card) {
+  if (!c.l.length) return '';
+  const dialog = c.l.some((l) => l[0]);
+  return `<ol class="lines${dialog ? ' lines--talk' : ''}">${c.l.map(([who, t], i) => `
+    <li><button type="button" class="line" data-key="l${i}" aria-label="Play line">
+      ${who ? `<b class="who who--${who.toLowerCase()}">${who}</b>` : ''}<span class="line__t">${mark(t, c.h)}</span>${I.speaker}
+    </button></li>`).join('')}</ol>`;
 }
 
-export interface CardHandlers {
-  onSave(c: Card, saved: boolean, el: HTMLElement): void;
-  onFlip(c: Card, open: boolean): void;
-  onShare(c: Card): void;
+export function meaningHtml(c: Card) {
+  const p: string[] = [];
+  p.push(`<p class="ja" lang="ja">${esc(c.ja)}</p>`);
+  if (c.d && c.k === 'c') p.push(`<p class="def">${esc(c.d)}</p>`);
+  if (c.re && c.re !== 'real') p.push(`<p class="verdict verdict--${c.re}">${c.re === 'textbook' ? 'People understand it, but it sounds like a textbook.' : 'Nobody says this. You will get a look.'}</p>`);
+  const alts = [
+    ...(c.v ?? []).map(([t, n], i) => `<li class="alt alt--good"><button type="button" class="alt__say" ${i === 0 && c.re && c.re !== 'real' ? 'data-key="v0"' : ''}>${I.check}<b>${esc(t)}</b></button>${n ? `<small lang="ja">${esc(n)}</small>` : ''}</li>`),
+    ...(c.x ?? []).map(([t, lab, n]) => `<li class="alt alt--${lab === 'cringe' ? 'bad' : 'warn'}">${I.close}<b>${esc(t)}</b>${n ? `<small lang="ja">${esc(n)}</small>` : ''}</li>`),
+  ];
+  if (alts.length) p.push(`<ul class="alts">${alts.join('')}</ul>`);
+  const more: string[] = [];
+  if (c.sl) more.push(`<p><span class="label">Sounds like</span> ${esc(c.sl)}</p>`);
+  if (c.y) more.push(`<p><span class="label">Why it works</span><span lang="ja">${esc(c.y).replace(/\n/g, '<br>')}</span></p>`);
+  if (c.n) more.push(`<p><span class="label">${c.s === 'science' ? 'The science' : 'Culture'}</span><span lang="ja">${esc(c.n).replace(/\n/g, '<br>')}</span></p>`);
+  if (c.c) more.push(`<p class="cite"><span class="label">Source</span>${esc(c.c)}${c.u ? ` <a href="${esc(c.u)}" target="_blank" rel="noopener">Read the paper</a>` : ''}</p>`);
+  if (c.vb?.length) more.push(`<p class="vibes">${c.vb.map((v) => `<span>${esc(VIBE_LABEL[v] ?? v)}</span>`).join('')}</p>`);
+  if (more.length) p.push(`<details class="more"><summary>More ${I.next}</summary>${more.join('')}</details>`);
+  return p.join('');
 }
 
-export function renderCard(c: Card, h: CardHandlers, opts: { review?: boolean } = {}): HTMLElement {
-  const el = document.createElement('section');
-  el.className = `slide slide--card${c.rare ? ' is-rare' : ''}`;
-  el.dataset.id = c.id;
-  el.style.setProperty('--acc', ACCENT[c.s]);
-  const open = state.settings.ja === 'show';
-  const saved = !!state.cards[c.id]?.saved;
-  el.innerHTML = `
-    <article class="card${open ? ' is-open' : ''}" tabindex="-1">
-      ${opts.review ? '<p class="badge-review">↺ Back for review</p>' : ''}
-      ${cardFront(c)}
-      <div class="card__back" ${open ? '' : 'hidden'}>${cardBack(c)}</div>
-      <p class="hint">${open ? 'Double-tap to save' : 'Tap to flip · Double-tap to save'}</p>
-      <span class="burst" aria-hidden="true"></span>
-    </article>
-    <aside class="rail" aria-label="Card actions">
-      <span class="rail__bot"></span>
-      <button type="button" class="rbtn rbtn--save" aria-pressed="${saved}" aria-label="Save">${ICON.save}<span>${saved ? 'Saved' : 'Save'}</span></button>
-      ${canSpeak() ? `<button type="button" class="rbtn rbtn--play" aria-label="Listen">${ICON.play}<span>Listen</span></button>` : ''}
-      <button type="button" class="rbtn rbtn--ja" aria-pressed="${open}" aria-label="Show meaning"><i lang="ja">あ</i><span>Meaning</span></button>
-      <button type="button" class="rbtn rbtn--share" aria-label="Share">${ICON.share}<span>Share</span></button>
-    </aside>`;
-  const card = el.querySelector<HTMLElement>('.card')!;
-  const back = el.querySelector<HTMLElement>('.card__back')!;
-  const saveBtn = el.querySelector<HTMLButtonElement>('.rbtn--save')!;
-  const jaBtn = el.querySelector<HTMLButtonElement>('.rbtn--ja')!;
-  const bot = new Bot(memberFor(c.s), { auto: true });
-  el.querySelector('.rail__bot')!.append(bot.canvas);
-  (el as HTMLElement & { bot?: Bot }).bot = bot;
-
-  const main = card.querySelector<HTMLElement>('.card__main');
-  // slide the front up so the meaning panel doesn't cover the examples (only as far as the tag row allows)
-  const lift = () => {
-    if (!main?.firstElementChild) return;
-    const top = (card.querySelector('.card__top') ?? card).getBoundingClientRect().bottom + 8;
-    const first = main.firstElementChild.getBoundingClientRect().top;
-    const last = main.lastElementChild!.getBoundingClientRect().bottom;
-    const overlap = last - back.getBoundingClientRect().top + 10;
-    const room = first - top;
-    main.style.transform = overlap > 0 && room > 0 ? `translateY(${-Math.round(Math.min(overlap, room))}px)` : '';
-  };
-  const setOpen = (v: boolean) => {
-    card.classList.toggle('is-open', v);
-    back.hidden = !v;
-    if (main) { if (v) requestAnimationFrame(lift); else main.style.transform = ''; }
-    jaBtn.setAttribute('aria-pressed', String(v));
-    h.onFlip(c, v);
-    if (v) bot.act(c.re && c.re !== 'real' ? (c.re === 'cringe' ? 'dizzy' : 'think') : 'wow');
-  };
-  const setSaved = (v: boolean) => {
-    const s = cardState(c.id);
-    s.saved = v;
-    if (v && !s.due) s.due = Date.now() + 12 * 3600 * 1000;
-    saveBtn.setAttribute('aria-pressed', String(v));
-    saveBtn.querySelector('span')!.textContent = v ? 'Saved' : 'Save';
-    h.onSave(c, v, el);
-    if (v) {
-      bot.act('rec', 1600);
-      card.classList.remove('is-burst');
-      void card.offsetWidth;
-      card.classList.add('is-burst');
-    }
-  };
-  (el as HTMLElement & { toggleOpen?: () => void; toggleSave?: () => void }).toggleOpen = () => setOpen(!card.classList.contains('is-open'));
-  (el as HTMLElement & { toggleSave?: () => void }).toggleSave = () => setSaved(!state.cards[c.id]?.saved);
-
-  let lastTap = 0;
-  let tapTimer = 0;
-  card.addEventListener('click', (e) => {
-    if ((e.target as HTMLElement).closest('a,button')) return;
-    const now = performance.now();
-    if (now - lastTap < 280) {
-      clearTimeout(tapTimer);
-      lastTap = 0;
-      if (!state.cards[c.id]?.saved) setSaved(true);
-      else { card.classList.remove('is-burst'); void card.offsetWidth; card.classList.add('is-burst'); }
-      return;
-    }
-    lastTap = now;
-    tapTimer = window.setTimeout(() => setOpen(!card.classList.contains('is-open')), 240);
-  });
-  saveBtn.addEventListener('click', () => setSaved(!state.cards[c.id]?.saved));
-  jaBtn.addEventListener('click', () => setOpen(!card.classList.contains('is-open')));
-  el.querySelector('.rbtn--play')?.addEventListener('click', () => {
-    bot.act('dance', 2400);
-    speakLines(c.k === 'w' ? [c.h, c.l[0][1]] : [c.h, ...c.l.map((l) => l[1])]);
-  });
-  el.querySelector('.rbtn--share')!.addEventListener('click', () => h.onShare(c));
-  bot.canvas.addEventListener('click', () => bot.act(['jump', 'laugh', 'wave', 'float', 'love'][Math.floor(Math.random() * 5)] as 'jump'));
-  onActive.set(el, () => {
-    if (state.settings.autoVoice) speak(c.h);
-    if (c.rare) bot.act('star');
-  });
-  return el;
+/** wire the play buttons inside a rendered card body */
+export function wireAudio(root: HTMLElement, c: Card, onPlay?: () => void) {
+  root.querySelectorAll<HTMLButtonElement>('[data-key]').forEach((b) => b.addEventListener('click', (e) => {
+    e.stopPropagation();
+    root.querySelectorAll('.is-playing').forEach((x) => x.classList.remove('is-playing'));
+    b.classList.add('is-playing');
+    onPlay?.();
+    void play(c, b.dataset.key!).then(() => b.classList.remove('is-playing'));
+  }));
 }
 
-/* ── quiz slides ── */
-
-export interface QuizHandlers {
-  onAnswer(q: Quiz, ok: boolean, el: HTMLElement): void;
-}
+/* ── quizzes ── */
 
 const KIND_LABEL: Record<Quiz['kind'], string> = {
-  meaning: 'Quick check', gap: 'Fill the gap', real: 'Real or Cringe?', vibe: 'Vibe check', listen: 'Listening', build: 'Build it', word: 'Word check',
+  meaning: 'Quick check', gap: 'Fill the gap', real: 'Real or cringe?', vibe: 'Vibe check', listen: 'Listening', build: 'Build it', word: 'Word check',
 };
+const REAL_OPTS = ['Real', 'Textbook', 'Cringe'];
 
-export function renderQuiz(q: Quiz, h: QuizHandlers): HTMLElement {
+export function renderQuiz(q: Quiz, onAnswer: (q: Quiz, ok: boolean, el: HTMLElement) => void, opts: { slide?: boolean } = {}): HTMLElement {
   const el = document.createElement('section');
-  el.className = `slide slide--quiz quiz--${q.kind}`;
+  el.className = `${opts.slide ? 'slide slide--quiz ' : ''}quiz quiz--${q.kind}`;
   el.style.setProperty('--acc', ACCENT[q.card.s]);
   const isListen = q.kind === 'listen';
   const lineHtml = q.kind === 'build'
     ? `<p class="quiz__line quiz__line--ja" lang="ja">${esc(q.line ?? '')}</p>`
     : isListen
-      ? `<button type="button" class="listen-btn" aria-label="Play again">${ICON.play}<span>Tap to listen</span></button>`
-      : q.line ? `<p class="quiz__line">${esc(q.line)}</p>` : '';
-  const opts = q.kind === 'build'
-    ? `<div class="build"><p class="build__ans" aria-live="polite"></p><div class="build__tiles">${q.tiles!.map((t, i) => `<button type="button" class="tile" data-i="${i}">${esc(t)}</button>`).join('')}</div><button type="button" class="btn-check" disabled>Check</button></div>`
-    : `<div class="quiz__opts${q.kind === 'real' ? ' quiz__opts--real' : ''}">${q.options.map((o, i) => `<button type="button" class="opt" data-i="${i}" ${/[ぁ-んァ-ン一-龥]/.test(o) ? 'lang="ja"' : ''}><kbd>${i + 1}</kbd><span>${esc(q.kind === 'vibe' ? VIBE_LABEL[o] ?? o : o)}</span></button>`).join('')}</div>`;
+      ? `<button type="button" class="listen-btn">${I.speaker}<span>Play again</span></button>`
+      : q.line ? `<p class="quiz__line"${/[ぁ-んァ-ン一-龥]/.test(q.line) ? ' lang="ja"' : ''}>${esc(q.line)}</p>` : '';
+  const opts2 = q.kind === 'build'
+    ? `<div class="build"><p class="build__ans" aria-live="polite"></p><div class="build__tiles">${q.tiles!.map((t, i) => `<button type="button" class="tile" data-i="${i}">${esc(t)}</button>`).join('')}</div><button type="button" class="btn btn--primary btn-check" disabled>Check</button></div>`
+    : `<div class="opts${q.kind === 'real' ? ' opts--row' : ''}">${q.options.map((o, i) => `<button type="button" class="opt" data-i="${i}" ${/[ぁ-んァ-ン一-龥]/.test(o) ? 'lang="ja"' : ''}><kbd>${i + 1}</kbd><span>${esc(q.kind === 'vibe' ? VIBE_LABEL[o] ?? o : q.kind === 'real' ? REAL_OPTS[i] : o)}</span></button>`).join('')}</div>`;
   el.innerHTML = `
-    <div class="quiz">
-      <p class="quiz__kind">${q.review ? '↺ Review · ' : ''}${KIND_LABEL[q.kind]}</p>
+    <div class="quiz__in">
+      <p class="eyebrow">${q.review ? 'Review · ' : ''}${KIND_LABEL[q.kind]}</p>
       <h3 class="quiz__prompt">${esc(q.prompt)}</h3>
       ${lineHtml}
-      ${opts}
+      ${opts2}
       <div class="quiz__after" hidden></div>
       <div class="quiz__crew" aria-hidden="true"></div>
     </div>`;
@@ -225,14 +136,13 @@ export function renderQuiz(q: Quiz, h: QuizHandlers): HTMLElement {
     done = true;
     el.classList.add(ok ? 'is-right' : 'is-wrong', 'is-done');
     const c = q.card;
-    const example = c.l.find((l) => !q.line || l[1] !== q.line)?.[1] ?? c.l[0]?.[1] ?? '';
     after.innerHTML = `
-      <p class="after__verdict">${ok ? 'Nice.' : 'Not quite.'}</p>
-      <p class="after__head">${esc(c.h)} <span lang="ja">${esc(c.ja)}</span></p>
-      ${isListen ? `<p class="after__line">“${esc(q.line ?? '')}”</p>` : example ? `<p class="after__line">${mark(example, c.h)}</p>` : ''}
-      <p class="after__next">Swipe up ↑</p>`;
+      <p class="after__verdict">${ok ? `${I.check} Nice.` : `${I.close} Not quite.`}</p>
+      <button type="button" class="after__head" data-key="h">${I.speaker}<b>${esc(c.h)}</b><span lang="ja">${esc(c.ja)}</span></button>
+      ${isListen ? `<p class="after__line">“${esc(q.line ?? '')}”</p>` : ''}`;
+    wireAudio(after, c);
     after.hidden = false;
-    h.onAnswer(q, ok, el);
+    onAnswer(q, ok, el);
   };
   if (q.kind === 'build') {
     const ans = el.querySelector<HTMLElement>('.build__ans')!;
@@ -253,7 +163,7 @@ export function renderQuiz(q: Quiz, h: QuizHandlers): HTMLElement {
     }));
     check.addEventListener('click', () => {
       const ok = picked.map((i) => q.tiles![i]).join(' ').toLowerCase() === q.options[0].toLowerCase();
-      if (!ok) ans.innerHTML += `<small>→ ${esc(q.options[0])}</small>`;
+      if (!ok) ans.innerHTML += `<small>${esc(q.options[0])}</small>`;
       finish(ok);
     });
   } else {
@@ -266,22 +176,99 @@ export function renderQuiz(q: Quiz, h: QuizHandlers): HTMLElement {
     }));
   }
   if (isListen) {
-    const play = () => speak(q.line ?? '', { rate: Math.min(state.settings.rate, 0.92) });
-    el.querySelector('.listen-btn')!.addEventListener('click', play);
-    onActive.set(el, () => window.setTimeout(play, 350));
+    const btn = el.querySelector<HTMLButtonElement>('.listen-btn')!;
+    const go = () => { btn.classList.add('is-playing'); void play(q.card, q.key ?? 'l0').then(() => btn.classList.remove('is-playing')); };
+    btn.addEventListener('click', go);
+    onActive.set(el, () => window.setTimeout(go, 300));
   }
-  (el as HTMLElement & { pick?: (i: number) => void }).pick = (i: number) => {
-    el.querySelectorAll<HTMLButtonElement>('.opt')[i]?.click();
-  };
+  (el as HTMLElement & { pick?: (i: number) => void }).pick = (i: number) => el.querySelectorAll<HTMLButtonElement>('.opt')[i]?.click();
   return el;
 }
 
 export function crewDance(host: HTMLElement, n: number, mood: 'dance' | 'dizzy' = 'dance') {
   host.replaceChildren();
-  const ids = ['tune', 'spin', 'pod', 'reel', 'mic'] as const;
   for (let i = 0; i < Math.min(5, n); i++) {
-    const b = new Bot(ids[i], { auto: false });
+    const b = new Bot(CREW[i].id, { auto: false });
     host.append(b.canvas);
     b.act(mood, mood === 'dance' ? 4000 : 1400);
   }
+}
+
+/* ── reel card (Shuffle) ── */
+
+export interface ReelHandlers {
+  onSave(c: Card, saved: boolean): void;
+  onOpen(c: Card): void;
+  onShare(c: Card): void;
+}
+
+export function renderReel(c: Card, h: ReelHandlers): HTMLElement {
+  const r = recOf(c);
+  const el = document.createElement('section');
+  el.className = `slide slide--card${c.rare ? ' is-rare' : ''}`;
+  el.dataset.id = c.id;
+  el.style.setProperty('--acc', ACCENT[c.s]);
+  const open = state.settings.ja === 'show';
+  const saved = !!state.cards[c.id]?.saved;
+  el.innerHTML = `
+    <article class="reel${open ? ' is-open' : ''}">
+      ${metaRow(c)}
+      <div class="reel__main">
+        <h2 class="head head--${headSize(c.h)}${c.re && c.re !== 'real' ? ' head--strike' : ''}">${esc(c.h)}</h2>
+        ${c.ipa ? `<p class="ipa">/${esc(c.ipa)}/</p>` : ''}
+        ${c.k === 'w' && c.d ? `<p class="wdef">${esc(c.d)}</p>` : ''}
+        ${sourceHtml(c)}
+        ${linesHtml(c)}
+      </div>
+      <div class="reel__ja" ${open ? '' : 'hidden'}>${meaningHtml(c)}</div>
+      <button type="button" class="reel__reveal" ${open ? 'hidden' : ''}>Show meaning</button>
+      <p class="reel__from">${esc(recCode(r))} · ${esc(r?.t ?? '')}</p>
+    </article>
+    <aside class="rail" aria-label="Card actions">
+      <span class="rail__bot"></span>
+      <button type="button" class="rbtn rbtn--play" aria-label="Play">${I.speaker}<span>Play</span></button>
+      <button type="button" class="rbtn rbtn--save" aria-pressed="${saved}" aria-label="Save">${I.bookmark}<span>${saved ? 'Saved' : 'Save'}</span></button>
+      <button type="button" class="rbtn rbtn--share" aria-label="Share">${I.share}<span>Share</span></button>
+    </aside>`;
+  const card = el.querySelector<HTMLElement>('.reel')!;
+  const ja = el.querySelector<HTMLElement>('.reel__ja')!;
+  const reveal = el.querySelector<HTMLButtonElement>('.reel__reveal')!;
+  const saveBtn = el.querySelector<HTMLButtonElement>('.rbtn--save')!;
+  const bot = new Bot(hostOf(r), { auto: true });
+  el.querySelector('.rail__bot')!.append(bot.canvas);
+  wireAudio(card, c, () => bot.act('dance', 1800));
+  reveal.addEventListener('click', () => {
+    card.classList.add('is-open'); ja.hidden = false; reveal.hidden = true;
+    bot.act(c.re && c.re !== 'real' ? (c.re === 'cringe' ? 'dizzy' : 'think') : 'wow');
+    cardState(c.id).last ||= 0;
+  });
+  const setSaved = (v: boolean) => {
+    cardState(c.id).saved = v;
+    if (v && !cardState(c.id).due) cardState(c.id).due = Date.now() + 12 * 3600 * 1000;
+    saveBtn.setAttribute('aria-pressed', String(v));
+    saveBtn.querySelector('span')!.textContent = v ? 'Saved' : 'Save';
+    h.onSave(c, v);
+    if (v) bot.act('rec', 1600);
+  };
+  saveBtn.addEventListener('click', () => setSaved(!state.cards[c.id]?.saved));
+  el.querySelector('.rbtn--play')!.addEventListener('click', () => {
+    bot.act('dance', 2600);
+    void playSeq(c, ['h', ...lineKeys(c)]);
+  });
+  el.querySelector('.rbtn--share')!.addEventListener('click', () => h.onShare(c));
+  let lastTap = 0;
+  card.addEventListener('click', (e) => {
+    if ((e.target as HTMLElement).closest('a,button,summary')) return;
+    const now = performance.now();
+    if (now - lastTap < 300) { lastTap = 0; if (!state.cards[c.id]?.saved) setSaved(true); return; }
+    lastTap = now;
+  });
+  bot.canvas.addEventListener('click', () => bot.act(['jump', 'laugh', 'wave', 'float', 'love'][Math.floor(Math.random() * 5)] as 'jump'));
+  onActive.set(el, () => {
+    if (state.settings.autoplay) void play(c, state.settings.slow ? 'hs' : 'h');
+    if (c.rare) bot.act('star');
+  });
+  (el as HTMLElement & { reveal?: () => void; toggleSave?: () => void }).reveal = () => reveal.click();
+  (el as HTMLElement & { toggleSave?: () => void }).toggleSave = () => setSaved(!state.cards[c.id]?.saved);
+  return el;
 }

@@ -5,6 +5,8 @@ export type Real = 'real' | 'textbook' | 'cringe';
 export interface Card {
   id: string;
   k: 'c' | 'w';
+  /** record (= content file) this card belongs to */
+  rec: string;
   s: Source;
   sc: string[];
   h: string;
@@ -41,6 +43,8 @@ export interface Quiz {
   answer: number;
   /** for the build quiz: shuffled tiles */
   tiles?: string[];
+  /** listening quiz: which recorded line to play (l0, l1 …) */
+  key?: string;
   review?: boolean;
 }
 
@@ -60,9 +64,20 @@ export const SOURCE_LABEL: Record<Source, string> = {
   words: 'Words',
 };
 
-export const SOURCE_ICON: Record<Source, string> = {
-  talk: '💬', songs: '🎵', movies: '🎬', books: '📚', science: '🔬', comedy: '🎤', words: '🔤',
+/** short label-style codes, printed in mono like a record catalogue */
+export const SOURCE_CODE: Record<Source, string> = {
+  talk: 'TALK', songs: 'SONG', movies: 'FILM', books: 'BOOK', science: 'LAB', comedy: 'LIVE', words: 'WORD',
 };
+
+/** One record = one themed set of cards (a content file). */
+export interface RecordMeta {
+  id: string;
+  no: number;
+  t: string;
+  sub: string;
+  s: Source;
+  n: number;
+}
 
 export const SCENE_LABEL: Record<string, string> = {
   cafe: 'Cafe', bar: 'Bar & Party', pickup: 'Pickup', crush: 'Crush', dm: 'DMs & Texts', gym: 'Gym', work: 'Work',
