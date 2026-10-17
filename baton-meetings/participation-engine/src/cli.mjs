@@ -67,7 +67,7 @@ async function main() {
       adapters,
       audit: createAuditWriter(join(stateDir, 'attempts.jsonl')),
     });
-    const result = await runner.join({
+    const params = {
       meetingUrl,
       live: has('--live'),
       authorized: has('--authorized'),
@@ -77,9 +77,36 @@ async function main() {
       browserChannel: value('--browser-channel') || 'msedge',
       browserProfile: profile,
       joinTimeoutMs: Number(value('--timeout-ms')) || 90000,
-    });
-    publicJson(result);
-    if (result.status !== 'JOINED_VERIFIED') process.exitCode = 2;
+    };
+    let reconnects = 0;
+    while (true) {
+      const result = await runner.join(params);
+      publicJson(result);
+      if (result.status !== 'JOINED_VERIFIED') {
+        process.exitCode = 2;
+        break;
+      }
+      if (result.route !== 'browser') break; // Hosted Recall bot has its own lifecycle.
+      const abort = new AbortController();
+      const stop = () => abort.abort();
+      process.once('SIGINT', stop);
+      process.once('SIGTERM', stop);
+      let sessionResult;
+      try {
+        sessionResult = await adapters.browser.maintain({ signal: abort.signal });
+        publicJson({ phase: 'RESIDENT_SESSION_ENDED', ...sessionResult });
+      } finally {
+        process.removeListener('SIGINT', stop);
+        process.removeListener('SIGTERM', stop);
+        await adapters.browser.close();
+      }
+      if (sessionResult?.state === 'SESSION_DISCONNECTED' && reconnects < 2 && !has('--no-reconnect')) {
+        reconnects++;
+        continue; // Only after the old browser has been closed.
+      }
+      if (sessionResult?.state !== 'OPERATOR_STOPPED') process.exitCode = 3;
+      break;
+    }
   } finally {
     await lock.close();
     await rm(lockPath, { force: true });
