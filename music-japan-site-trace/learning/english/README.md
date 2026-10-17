@@ -17,7 +17,7 @@ CEFR labels are editorial estimates. Original lesson examples are not source quo
 
 ## Build / verify
 
-`node scripts/publish-english.mjs` builds `/english/` and eight readable topic pages, sources, guide, sitemap and a convenience `llms.txt` index. It requires the production output skeleton in `deploy-dist/`. The `build:deploy` package script runs it after the existing official-site builder and other publishers. The publisher adds an English card to an existing Learning hub, or creates the hub when absent.
+`node scripts/publish-english.mjs` builds `/english/` and eight readable topic pages, sources, guide, sitemap and a convenience `llms.txt` index. It requires the production output skeleton in `deploy-dist/`. The official-site builder runs it after the existing Korean, Wahran and Learning publishers and before the final site SEO audit. The publisher adds an English card to an existing Learning hub, or creates the hub when absent.
 
 `node tests/english-engine.test.mjs` checks the actual shared review/filter/restore logic. Additional acceptance and browser checks exercise authored data and UI behavior. These tests do not certify every pronunciation or an individual's CEFR level.
 

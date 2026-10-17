@@ -89,6 +89,7 @@ const server = createServer((request, response) => {
 
   response.writeHead(200, {
     "content-type": types[extname(file).toLowerCase()] || "application/octet-stream",
+    "content-length": statSync(file).size,
     "cache-control": "no-store"
   });
   createReadStream(file).pipe(response);

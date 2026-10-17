@@ -13,7 +13,7 @@ for(const route of manifest.urls){const path=join(out,route,'index.html');if(!ex
  if(!head.includes(`rel="canonical" href="https://music-japan.com${route}"`))errors.push('Canonical '+route);
  if(!sitemap.includes(`<loc>https://music-japan.com${route}</loc>`))errors.push('Sitemap '+route);
  if((html.match(/<h1[\s>]/g)||[]).length!==1)errors.push('H1 '+route);
- if(!html.includes('aria-label="パンくず"'))errors.push('Visible breadcrumb '+route);
+ if(!/<nav\b[^>]*class="[^"]*\b(?:crumbs|learning-breadcrumb)\b/.test(html))errors.push('Visible breadcrumb '+route);
  for(const match of html.matchAll(/(?:href|src)="(\/(?!\/)[^"]+)"/g)){const target=match[1].split(/[?#]/)[0],file=join(out,target,target.endsWith('/')?'index.html':'');if(!existsSync(file))errors.push(`${route}: missing ${target}`);}
  const graph=JSON.parse(head.match(/<script type="application\/ld\+json">([\s\S]+?)<\/script>/)?.[1]||'{}')['@graph'];if(!graph?.some(x=>x['@type']==='BreadcrumbList'))errors.push('Breadcrumb data '+route);
  if(/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/.test(head))errors.push('Noindex '+route);

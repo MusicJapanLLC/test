@@ -46,6 +46,7 @@ jobs:
           npm test 2>&1 | tee artifacts/english-browser/site-tests.txt
           npm run build:deploy 2>&1 | tee artifacts/english-browser/build.txt
           node scripts/check-english.mjs 2>&1 | tee artifacts/english-browser/english-audit.txt
+          node scripts/seo-audit.mjs deploy-dist 2>&1 | tee artifacts/english-browser/final-site-seo.txt
           cp deploy-dist/english/build-manifest.json artifacts/english-browser/build-manifest.json
       - name: Install the browser verification runtime
         run: |
