@@ -49,7 +49,7 @@ test('claims without exact segment IDs are excluded',()=>{
   assert.equal(out.decisions.length,0);
   assert.equal(out.summary.evidence_ids[0],'seg_a0');
 });
-test('explicit final decision can be included with its evidence',()=>{
+test('explicit final decision can be included with its evidence',async()=>{
   const t={...transcript,segments:[...transcript.segments,
     {evidence_id:'seg_d0',speaker_id:'remote@remote-00000:A',start_s:16,end_s:20,text:'We decided to proceed with the prototype.'}]};
   const out=await generateMinutes({transcript:t});
