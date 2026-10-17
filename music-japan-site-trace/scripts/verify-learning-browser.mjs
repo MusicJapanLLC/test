@@ -79,9 +79,13 @@ async function wahran(page, context) {
   const audioURL = new URL(file, url('/wahran/')).href; const response = await context.request.get(audioURL);
   const bytes = (await response.body()).length; assert.equal(response.status(), 200); assert.match(response.headers()['content-type'], /^audio\/(mpeg|mp3)(;|$)/i); assert.ok(bytes >= 1000);
   const duration = await page.evaluate(src => new Promise((resolve, reject) => {
-    const audio = new Audio(); const timer = setTimeout(() => { audio.removeAttribute('src'); audio.load(); reject(new Error('Audio metadata timed out')); }, 12000);
-    const finish = fn => { clearTimeout(timer); audio.onloadedmetadata = audio.onerror = null; audio.removeAttribute('src'); audio.load(); fn(); };
-    audio.preload = 'metadata'; audio.onloadedmetadata = () => { const d = audio.duration; finish(() => resolve(d)); }; audio.onerror = () => finish(() => reject(new Error('Audio metadata could not load'))); audio.src = src; audio.load();
+    const audio = new Audio(); let settled = false;
+    const finish = fn => { if (settled) return; settled = true; clearTimeout(timer); audio.onloadedmetadata = audio.ondurationchange = audio.onloadeddata = audio.oncanplay = audio.onerror = null; audio.removeAttribute('src'); audio.load(); fn(); };
+    const timer = setTimeout(() => { const detail = `duration=${String(audio.duration)}, readyState=${audio.readyState}, networkState=${audio.networkState}`; finish(() => reject(new Error(`Audio duration did not become available (${detail})`))); }, 12000);
+    const ready = () => { const duration = audio.duration; if (Number.isFinite(duration) && duration > 0) finish(() => resolve(duration)); };
+    // WebKit can emit loadedmetadata with duration=0 before durationchange.
+    audio.preload = 'auto'; audio.onloadedmetadata = audio.ondurationchange = audio.onloadeddata = audio.oncanplay = ready;
+    audio.onerror = () => finish(() => reject(new Error('Audio metadata could not load'))); audio.src = src; audio.load();
   }), audioURL);
   assert.ok(Number.isFinite(duration) && duration > 0, `MP3 metadata duration must be finite and positive; received ${String(duration)}`); report.http.push({ url: audioURL, status: response.status(), contentType: response.headers()['content-type'], bytes, browserMetadataDuration: duration, playedAudibly: false });
 }
