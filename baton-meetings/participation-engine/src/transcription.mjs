@@ -138,6 +138,8 @@ export async function buildTranscript({
     throw new AudioPipelineError('EXTERNAL_STT_REQUIRES_CLOUD_CONSENT_AND_BILLING_AUTHORIZATION');
   if (!['openai','deepgram','assemblyai'].includes(provider))
     throw new AudioPipelineError('UNSUPPORTED_TRANSCRIPTION_PROVIDER');
+  const envKey = {openai:'OPENAI_API_KEY',deepgram:'DEEPGRAM_API_KEY',assemblyai:'ASSEMBLYAI_API_KEY'}[provider];
+  if (!env?.[envKey]) throw new AudioPipelineError('STT_PROVIDER_KEY_MISSING');
   const manifestPath=await realpath(preparedManifestPath);
   const folder=dirname(manifestPath);
   const manifest=JSON.parse(await readFile(manifestPath,'utf8'));
