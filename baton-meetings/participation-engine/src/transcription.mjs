@@ -145,8 +145,10 @@ export async function buildTranscript({
   const manifest=JSON.parse(await readFile(manifestPath,'utf8'));
   if (manifest.schema_version!==1 || !Array.isArray(manifest.chunks) || manifest.chunks.length===0)
     throw new AudioPipelineError('PREPARED_MANIFEST_INVALID');
-  const capture=JSON.parse(await readFile(join(folder,'manifest.json'),'utf8'));
+  const captureBytes=await readFile(join(folder,'manifest.json'));
+  const capture=JSON.parse(captureBytes.toString('utf8'));
   if (capture.consent_confirmed_by_operator!==true) throw new AudioPipelineError('RECORDING_CONSENT_MISSING');
+  if (sha(captureBytes)!==manifest.source_capture_manifest_sha256) throw new AudioPipelineError('CAPTURE_MANIFEST_HASH_MISMATCH');
   const preparedDir=await realpath(join(folder,'prepared'));
   const checkpoints=join(folder,'transcription-checkpoints');
   await mkdir(checkpoints,{recursive:true});
@@ -194,8 +196,8 @@ export async function buildTranscript({
   if (!normalized.length) throw new AudioPipelineError('NO_DIARIZED_SEGMENTS');
   const transcript={
     schema_version:1,status:'TRANSCRIBED_REQUIRES_HUMAN_REVIEW',
-    created_at:new Date().toISOString(),provider,synthetic:false,
-    recording_manifest_sha256:sha(await readFile(join(folder,'manifest.json'))),
+    created_at:new Date().toISOString(),provider,synthetic:Boolean(capture.test_fixture),
+    recording_manifest_sha256:sha(captureBytes),
     prepared_manifest_sha256:sha(await readFile(manifestPath)),
     speaker_identification:'anonymous_per_chunk_unless_confirmed',segments:normalized,
   };
