@@ -1,0 +1,2192 @@
+[
+  {
+    "id": "bd-01",
+    "title": "A conversation that leads somewhere",
+    "titleJa": "交流会で仕事の話を具体的な接点に変える",
+    "category": "business",
+    "level": "B2",
+    "scenarioJa": "交流会で紹介事業の代表と制作会社の担当者が話し始め、互いに合う顧客や協力できる点を探す",
+    "roles": {
+      "A": "制作会社の担当者",
+      "B": "紹介事業の代表"
+    },
+    "goals": [
+      "肩書きだけでなく提供する価値を説明する",
+      "相手の顧客像と参加目的を聞く",
+      "次の接点を無理なく作る"
+    ],
+    "notes": [
+      "仕事の説明→顧客像→違い→参加目的→次の行動という流れで練習する",
+      "相手の返答を聞いてから次の質問を選び、質問票のように読み上げない"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Hi, I don't think we've met. What kind of work brings you to this event?",
+        "ja": "こんにちは、まだお会いしていないですよね、どんなお仕事でこのイベントに参加されたんですか",
+        "ipa": "haɪ, aɪ doʊnt θɪŋk wiːv met. wʌt kaɪnd əv wɝːk brɪŋz juː tə ðɪs ɪˈvent?",
+        "note": "What brings you to...?は参加のきっかけを自然に聞く型"
+      },
+      {
+        "role": "B",
+        "en": "What I do is help small businesses find partners they can actually build a relationship with.",
+        "ja": "小さな会社が実際に関係を築ける協業相手を見つける支援をしています",
+        "ipa": "wʌt aɪ duː ɪz help smɔːl ˈbɪznəsɪz faɪnd ˈpɑrtnərz ðeɪ kən ˈæktʃuəli bɪld ə rɪˈleɪʃənʃɪp wɪð."
+      },
+      {
+        "role": "A",
+        "en": "Who do you usually work with? We mainly build websites for companies that are expanding into new markets.",
+        "ja": "普段はどんな相手と仕事をしていますか、私たちは主に新しい市場へ展開する会社のサイトを作っています",
+        "ipa": "huː duː juː ˈjuːʒuəli wɝːk wɪð? wiː ˈmeɪnli bɪld ˈwebˌsaɪts fər ˈkʌmpəniz ðæt ɑːr ɪkˈspændɪŋ ˈɪntu nuː ˈmɑrkəts."
+      },
+      {
+        "role": "B",
+        "en": "Mostly small teams that have a useful service but limited time to develop new business relationships.",
+        "ja": "主に、役立つサービスはあるものの、新しい仕事上の関係を作る時間が限られている少人数のチームです",
+        "ipa": "ˈmoʊstli smɔːl tiːmz ðæt hæv ə ˈjuːsfəl ˈsɝːvəs bʌt ˈlɪmɪtɪd taɪm tə dɪˈveləp nuː ˈbɪznəs rɪˈleɪʃənʃɪps."
+      },
+      {
+        "role": "A",
+        "en": "That sounds relevant to our clients. What sets your approach apart from a typical networking event?",
+        "ja": "私たちの顧客にも関係がありそうです、一般的な交流会と比べて、やり方にはどんな違いがありますか",
+        "ipa": "ðæt saʊndz ˈreləvənt tə aʊr ˈklaɪənts. wʌt sets jʊr əˈproʊtʃ əˈpɑrt frʌm ə ˈtɪpəkəl ˈnetˌwɝːkɪŋ ɪˈvent?"
+      },
+      {
+        "role": "B",
+        "en": "We spend time understanding both sides before making an introduction, and we check whether they actually want to speak.",
+        "ja": "紹介する前に双方を理解する時間を取り、実際に話したいと思っているかを確認します",
+        "ipa": "wiː spend taɪm ˌʌndərˈstændɪŋ boʊθ saɪdz bɪˈfɔr ˈmeɪkɪŋ ən ˌɪntrəˈdʌkʃən, ənd wiː tʃek ˈweðər ðeɪ ˈæktʃuəli wɑːnt tə spiːk."
+      },
+      {
+        "role": "A",
+        "en": "What are you hoping to get out of the event today?",
+        "ja": "今日のイベントでは何を得たいと思っていますか",
+        "ipa": "wʌt ɑːr juː ˈhoʊpɪŋ tə ɡet aʊt əv ði ɪˈvent təˈdeɪ?"
+      },
+      {
+        "role": "B",
+        "en": "Ideally, a few conversations with people who have complementary skills. I would rather find a good fit than collect contacts.",
+        "ja": "できれば、互いを補える専門性を持つ方と何件か話したいです、連絡先を集めるより相性のよい相手を見つけたいですね",
+        "ipa": "aɪˈdiːəli, ə fjuː ˌkɑːnvərˈseɪʃənz wɪð ˈpiːpəl huː hæv ˌkɑːmpləˈmentəri skɪlz. aɪ wʊd ˈræðər faɪnd ə ɡʊd fɪt ðæn kəˈlekt ˈkɑːntækts."
+      },
+      {
+        "role": "A",
+        "en": "I may know someone worth speaking to. Could you send me a short explanation I can share with them?",
+        "ja": "話す価値のありそうな方を知っているかもしれません、相手に共有できる短い説明を送ってもらえますか",
+        "ipa": "aɪ meɪ noʊ ˈsʌmwʌn wɝːθ ˈspiːkɪŋ tuː. kʊd juː send miː ə ʃɔrt ˌekspləˈneɪʃən aɪ kən ʃer wɪð ðem?"
+      },
+      {
+        "role": "B",
+        "en": "Absolutely. I'll send it tomorrow, and you can decide whether an introduction would be useful for both sides.",
+        "ja": "もちろんです、明日送るので、双方にとって役立つ紹介になりそうか判断していただければと思います",
+        "ipa": "ˌæbsəˈluːtli. aɪl send ɪt təˈmɑːroʊ, ənd juː kən ˌdɪˈsaɪd ˈweðər ən ˌɪntrəˈdʌkʃən wʊd biː ˈjuːsfəl fər boʊθ saɪdz.",
+        "note": "紹介はまだ成立していない、という終わり方"
+      }
+    ],
+    "unitIds": [
+      "b-001",
+      "b-002",
+      "b-003",
+      "b-007"
+    ]
+  },
+  {
+    "id": "bd-02",
+    "title": "A thoughtful introduction",
+    "titleJa": "紹介を頼み、双方の意向を確認する",
+    "category": "business",
+    "level": "B2",
+    "scenarioJa": "共通の知人に担当者を紹介してもらいたいが、適合性と相手の都合を確かめてから進める",
+    "roles": {
+      "A": "紹介をお願いする人",
+      "B": "共通の知人"
+    },
+    "goals": [
+      "紹介の目的と必要な相手を具体的に説明する",
+      "紹介者と紹介先の意向を尊重する",
+      "確認待ちと紹介決定を区別する"
+    ],
+    "notes": [
+      "連絡先を直接要求する前に、どういう接点を求めているか説明する",
+      "Would you be comfortable...?は相手が断れる形だが、その後の応答も尊重する"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Would you be comfortable introducing me to the person who manages partnerships at your company?",
+        "ja": "御社の提携を担当する方に紹介していただくことは可能でしょうか",
+        "ipa": "wʊd juː biː ˈkʌmftəbəl ˌɪntrəˈduːsɪŋ miː tə ðə ˈpɝːsən huː ˈmænɪdʒɪz ˈpɑrtnərˌʃɪps æt jʊr ˈkʌmpəni?"
+      },
+      {
+        "role": "B",
+        "en": "Possibly. What would you want to discuss with them?",
+        "ja": "できるかもしれません、どんなことを話したいですか",
+        "ipa": "ˈpɑːsəbli. wʌt wʊd juː wɑːnt tə dɪˈskʌs wɪð ðem?"
+      },
+      {
+        "role": "A",
+        "en": "I'm exploring a small referral partnership for clients who need both technical support and help developing business relationships.",
+        "ja": "技術面の支援と仕事上の関係作りの両方が必要な顧客向けに、小規模な紹介の提携を検討しています",
+        "ipa": "aɪm ɪkˈsplɔrɪŋ ə smɔːl rɪˈfɝːrəl ˈpɑrtnərˌʃɪp fər ˈklaɪənts huː niːd boʊθ ˈteknɪkəl səˈpɔrt ənd help dɪˈveləpɪŋ ˈbɪznəs rɪˈleɪʃənʃɪps."
+      },
+      {
+        "role": "B",
+        "en": "That could be relevant, but they are quite busy this month. Are you hoping for an immediate decision?",
+        "ja": "関係はありそうですが、今月はかなり忙しい方です、すぐに判断してもらいたい感じですか",
+        "ipa": "ðæt kʊd biː ˈreləvənt, bʌt ðeɪ ɑːr kwaɪt ˈbɪzi ðɪs mʌnθ. ɑːr juː ˈhoʊpɪŋ fər ən ɪˈmiːdiət dɪˈsɪʒən?"
+      },
+      {
+        "role": "A",
+        "en": "No, I'm mainly hoping to understand their priorities and see whether there might be a fit.",
+        "ja": "いえ、まず相手が何を重視しているかを知り、合う可能性があるかを確かめたいと思っています",
+        "ipa": "noʊ, aɪm ˈmeɪnli ˈhoʊpɪŋ tə ˌʌndərˈstænd ðer praɪˈɔrətiz ənd siː ˈweðər ðer maɪt biː ə fɪt."
+      },
+      {
+        "role": "B",
+        "en": "In that case, send me a few sentences about the idea. I'll check with them first.",
+        "ja": "それなら案について数文送ってください、まず相手に確認します",
+        "ipa": "ɪn ðæt keɪs, send miː ə fjuː ˈsentənsɪz əˈbaʊt ði aɪˈdiːə. aɪl tʃek wɪð ðem fɝːst."
+      },
+      {
+        "role": "A",
+        "en": "Of course. I don't want to assume they are looking for new partners, so there is no pressure if the timing is wrong.",
+        "ja": "もちろんです、新しい協業相手を探していると決めつけたくないので、時期が合わなければ無理にお願いするつもりはありません",
+        "ipa": "əv kɔrs. aɪ doʊnt wɑːnt tə əˈsuːm ðeɪ ɑːr ˈlʊkɪŋ fər nuː ˈpɑrtnərz, soʊ ðer ɪz noʊ ˈpreʃər ɪf ðə ˈtaɪmɪŋ ɪz rɔːŋ."
+      },
+      {
+        "role": "B",
+        "en": "Thanks. If they're interested, I can introduce you by email and let you arrange the conversation directly.",
+        "ja": "ありがとうございます、関心があればメールで紹介して、その後の話し合いは直接調整してもらえます",
+        "ipa": "θæŋks. ɪf ðer ˈɪntrəstɪd, aɪ kən ˌɪntrəˈduːs juː baɪ iˈmeɪl ənd let juː əˈreɪndʒ ðə ˌkɑːnvərˈseɪʃən dəˈrektli."
+      },
+      {
+        "role": "A",
+        "en": "That works for me. Is there anything specific you would like me to include in the introduction?",
+        "ja": "それで大丈夫です、紹介用の説明に何か特に入れておいたほうがよいことはありますか",
+        "ipa": "ðæt wɝːks fər miː. ɪz ðer ˈeniθɪŋ spəˈsɪfɪk juː wʊd laɪk miː tə ɪnˈkluːd ɪn ði ˌɪntrəˈdʌkʃən?"
+      },
+      {
+        "role": "B",
+        "en": "A clear description of who you help and one example of a situation where the partnership could be useful.",
+        "ja": "どんな相手を支援しているかの明確な説明と、この提携が役立ちそうな状況を一つお願いします",
+        "ipa": "ə klɪr dɪˈskrɪpʃən əv huː juː help ənd wʌn ɪɡˈzæmpəl əv ə ˌsɪtʃuˈeɪʃən wer ðə ˈpɑrtnərˌʃɪp kʊd biː ˈjuːsfəl."
+      }
+    ],
+    "unitIds": [
+      "b-004",
+      "b-005",
+      "b-049",
+      "b-063"
+    ]
+  },
+  {
+    "id": "bd-03",
+    "title": "Finding the real problem",
+    "titleJa": "提案の前に相手の困りごとを掘る",
+    "category": "business",
+    "level": "B2",
+    "scenarioJa": "顧客が新しい仕組みを求めているが、担当者は直近の具体的な困りごとから現状を理解する",
+    "roles": {
+      "A": "相談を受ける担当者",
+      "B": "顧客"
+    },
+    "goals": [
+      "現在の手順を順番に説明してもらう",
+      "抽象的な不満を直近の出来事に戻す",
+      "推測を言い換えて確認する"
+    ],
+    "notes": [
+      "質問は一度に一つずつ聞くと返答が具体的になりやすい",
+      "架空の顧客インタビューであり、実在企業の実績ではない"
+    ],
+    "lines": [
+      {
+        "role": "B",
+        "en": "We need a better way to manage inquiries. Too many things get lost between the first message and the actual meeting.",
+        "ja": "問い合わせを管理するもっとよい方法が必要です、最初の連絡から実際の面談までの間に、多くのことが抜け落ちています",
+        "ipa": "wiː niːd ə ˈbetər weɪ tə ˈmænədʒ ˈɪnkwəriz. tuː ˈmeni θɪŋz ɡet lɔːst bɪˈtwiːn ðə fɝːst ˈmesɪdʒ ənd ði ˈæktʃəwəl ˈmiːtɪŋ."
+      },
+      {
+        "role": "A",
+        "en": "How are you handling that at the moment?",
+        "ja": "今はそれにどう対応していますか",
+        "ipa": "haʊ ɑːr juː ˈhændlɪŋ ðæt æt ðə ˈmoʊmənt?"
+      },
+      {
+        "role": "B",
+        "en": "We use a shared spreadsheet, but people update it at different times and sometimes forget to add the latest conversation.",
+        "ja": "共有の表を使っていますが、更新する時期が人によって違い、最新のやり取りを入れ忘れることもあります",
+        "ipa": "wiː juːz ə ʃerd ˈspredˌʃiːt, bʌt ˈpiːpəl ʌpˈdeɪt ɪt æt ˈdɪfrənt taɪmz ənd ˈsʌmtaɪmz fərˈɡet tə æd ðə ˈleɪtəst ˌkɑːnvərˈseɪʃən."
+      },
+      {
+        "role": "A",
+        "en": "Could you walk me through the last time that caused a problem?",
+        "ja": "それで問題が起きた直近の出来事を、順に説明してもらえますか",
+        "ipa": "kʊd juː wɔːk miː θruː ðə læst taɪm ðæt kɑːzd ə ˈprɑːbləm?"
+      },
+      {
+        "role": "B",
+        "en": "Last week, two people contacted the same client with different suggested dates. The client thought we had not spoken to each other.",
+        "ja": "先週、二人が同じ顧客へ違う候補日を連絡しました、顧客は私たちが社内で話していないと思ったようです",
+        "ipa": "læst wiːk, tuː ˈpiːpəl ˈkɑːntæktɪd ðə seɪm ˈklaɪənt wɪð ˈdɪfrənt səˈdʒestɪd deɪts. ðə ˈklaɪənt θɔːt wiː hæd nɑːt ˈspoʊkən tə iːtʃ ˈʌðər."
+      },
+      {
+        "role": "A",
+        "en": "What happened after you noticed the duplicate messages?",
+        "ja": "連絡の重複に気づいた後はどうなりましたか",
+        "ipa": "wʌt ˈhæpənd ˈæftər juː ˈnoʊtɪst ðə ˈduːpləkət ˈmesɪdʒɪz?"
+      },
+      {
+        "role": "B",
+        "en": "We apologized and arranged the meeting, but someone had to spend an hour checking the earlier messages.",
+        "ja": "謝罪して面談を設定しましたが、一人が一時間かけて以前の連絡を確認する必要がありました",
+        "ipa": "wiː əˈpɑːləˌdʒaɪzd ənd əˈreɪndʒd ðə ˈmiːtɪŋ, bʌt ˈsʌmwʌn hæd tə spend ən ˈaʊər ˈtʃekɪŋ ði ˈɝːliər ˈmesɪdʒɪz."
+      },
+      {
+        "role": "A",
+        "en": "Just so I'm clear, the main problem is knowing who owns the next action, rather than simply storing more information.",
+        "ja": "認識を確認したいのですが、主な問題は単にもっと情報を保存することよりも、次の行動を誰が担当するかわかることなのですね",
+        "ipa": "dʒʌst soʊ aɪm klɪr, ðə meɪn ˈprɑːbləm ɪz ˈnoʊɪŋ huː oʊnz ðə nekst ˈækʃən, ˈræðər ðæn ˈsɪmpli ˈstɔrɪŋ mɔr ˌɪnfərˈmeɪʃən."
+      },
+      {
+        "role": "B",
+        "en": "Exactly. A simple process that people actually follow would help more than another complicated tool.",
+        "ja": "そのとおりです、さらに複雑な道具を増やすより、実際にみんなが守れる簡単な手順のほうが役立ちます",
+        "ipa": "ɪɡˈzæktli. ə ˈsɪmpəl ˈprɑːses ðæt ˈpiːpəl ˈæktʃuəli ˈfɑːloʊ wʊd help mɔr ðæn əˈnʌðər ˈkɑːmpləkeɪtɪd tuːl."
+      },
+      {
+        "role": "A",
+        "en": "That gives me a clearer picture. I'll summarize what we discussed before suggesting any changes.",
+        "ja": "よりはっきり状況がわかりました、変更を提案する前に、話した内容をまとめます",
+        "ipa": "ðæt ɡɪvz miː ə ˈklɪrər ˈpɪktʃər. aɪl ˈsʌməraɪz wʌt wiː dɪˈskʌst bɪˈfɔr səˈdʒestɪŋ ˈeni ˈtʃeɪndʒɪz."
+      }
+    ],
+    "unitIds": [
+      "b-008",
+      "b-009",
+      "b-021",
+      "b-066",
+      "b-068"
+    ]
+  },
+  {
+    "id": "bd-04",
+    "title": "A conditional offer",
+    "titleJa": "値下げを対応範囲と条件の相談に変える",
+    "category": "negotiation",
+    "level": "B2",
+    "scenarioJa": "サービスの月額が予算を超えているため、双方が必要な範囲と条件を明確にして試行案を作る",
+    "roles": {
+      "A": "顧客",
+      "B": "サービス提供者"
+    },
+    "goals": [
+      "価格以外の条件も交渉する",
+      "譲歩する条件を明確に述べる",
+      "検討中と合意済みを区別する"
+    ],
+    "notes": [
+      "金額を出す練習ではなく、条件の関係を説明する練習",
+      "最後は確認用の提案を送る段階で、契約したと断定しない"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "The service looks useful, but the monthly fee is higher than we had planned. Is there any flexibility on that?",
+        "ja": "サービスは役に立ちそうですが、月額が想定より高いです、その点に調整の余地はありますか",
+        "ipa": "ðə ˈsɝːvəs lʊks ˈjuːsfəl, bʌt ðə ˈmʌnθli fiː ɪz ˈhaɪər ðæn wiː hæd plænd. ɪz ðer ˈeni ˌfleksəˈbɪləti ɑːn ðæt?"
+      },
+      {
+        "role": "B",
+        "en": "Possibly. Could we first clarify which parts of the service your team would use most?",
+        "ja": "あるかもしれません、まずサービスのどの部分をチームが最も使いそうかを明確にできますか",
+        "ipa": "ˈpɑːsəbli. kʊd wiː fɝːst ˈklerəfaɪ wɪtʃ pɑrts əv ðə ˈsɝːvəs jʊr tiːm wʊd juːz moʊst?"
+      },
+      {
+        "role": "A",
+        "en": "The introductions matter most. We probably do not need a weekly planning meeting during the first stage.",
+        "ja": "紹介が一番重要です、最初の段階では毎週の計画会議はおそらく必要ありません",
+        "ipa": "ði ˌɪntrəˈdʌkʃənz ˈmætər moʊst. wiː ˈprɑːbəbli duː nɑːt niːd ə ˈwiːkli ˈplænɪŋ ˈmiːtɪŋ ˈdʊrɪŋ ðə fɝːst steɪdʒ."
+      },
+      {
+        "role": "B",
+        "en": "I'd be open to a lower fee, provided that we remove the weekly meeting and keep the number of active requests limited.",
+        "ja": "毎週の会議を外し、同時に対応する依頼の数を制限することを条件に、料金を下げることは検討できます",
+        "ipa": "aɪd biː ˈoʊpən tə ə ˈloʊər fiː, prəˈvaɪdɪd ðæt wiː riˈmuːv ðə ˈwiːkli ˈmiːtɪŋ ənd kiːp ðə ˈnʌmbər əv ˈæktɪv rɪˈkwests ˈlɪmɪtɪd."
+      },
+      {
+        "role": "A",
+        "en": "That sounds reasonable. Could we start with a smaller scope for the first three months?",
+        "ja": "それは妥当に思います、最初の三か月は対応範囲を絞って始められますか",
+        "ipa": "ðæt saʊndz ˈriːzənəbəl. kʊd wiː stɑrt wɪð ə ˈsmɔːlər skoʊp fər ðə fɝːst θriː mʌnθs?"
+      },
+      {
+        "role": "B",
+        "en": "Yes, as a proposal. My concern is that we should define what counts as a completed introduction before we agree.",
+        "ja": "はい、提案としては可能です、気になっているのは、何を紹介完了とするかを合意前に定義する必要があることです",
+        "ipa": "jes, æz ə prəˈpoʊzəl. maɪ kənˈsɝːn ɪz ðæt wiː ʃʊd dɪˈfaɪn wʌt kaʊnts æz ə kəmˈpliːtɪd ˌɪntrəˈdʌkʃən bɪˈfɔr wiː əˈɡriː."
+      },
+      {
+        "role": "A",
+        "en": "For us, it would mean a meeting with someone who has agreed to discuss a relevant business need.",
+        "ja": "私たちにとっては、関係する仕事上の必要について話すことに同意した相手との面談です",
+        "ipa": "fər ʌs, ɪt wʊd miːn ə ˈmiːtɪŋ wɪð ˈsʌmwʌn huː hæz əˈɡriːd tə dɪˈskʌs ə ˈreləvənt ˈbɪznəs niːd."
+      },
+      {
+        "role": "B",
+        "en": "Thanks. I'm not comfortable committing to a guaranteed result yet, but I can explain the process and the limits clearly.",
+        "ja": "ありがとうございます、結果の保証を今約束することはできませんが、進め方と限界は明確に説明できます",
+        "ipa": "θæŋks. aɪm nɑːt ˈkʌmftəbəl kəˈmɪtɪŋ tə ə ˌɡerənˈtiːd rɪˈzʌlt jet, bʌt aɪ kən ɪkˈspleɪn ðə ˈprɑːses ənd ðə ˈlɪməts ˈklɪrli."
+      },
+      {
+        "role": "A",
+        "en": "That would help. Please send the revised scope and the proposed terms so we can review them together.",
+        "ja": "それがあると助かります、見直した範囲と提案条件を送ってください、一緒に確認しましょう",
+        "ipa": "ðæt wʊd help. pliːz send ðə rɪˈvaɪzd skoʊp ənd ðə prəˈpoʊzd tɝːmz soʊ wiː kən ˌriːˈvjuː ðem təˈɡeðər."
+      },
+      {
+        "role": "B",
+        "en": "I'll get back to you by tomorrow afternoon with a written proposal and the points we still need to confirm.",
+        "ja": "明日の午後までに、書面の提案とまだ確認が必要な点をお返しします",
+        "ipa": "aɪl ɡet bæk tə juː baɪ təˈmɑːroʊ ˌæftərˈnuːn wɪð ə ˈrɪtən prəˈpoʊzəl ənd ðə pɔɪnts wiː stɪl niːd tə kənˈfɝːm."
+      }
+    ],
+    "unitIds": [
+      "b-012",
+      "b-013",
+      "b-015",
+      "b-016",
+      "b-017",
+      "b-020",
+      "b-032",
+      "b-053",
+      "b-054",
+      "b-060"
+    ]
+  },
+  {
+    "id": "bd-05",
+    "title": "Agreeing on the work",
+    "titleJa": "担当・成果物・期限をそろえる",
+    "category": "work",
+    "level": "B2",
+    "scenarioJa": "小さな共同案件の開始会議で、担当と納品物を決めながら、今ある仕事との両立を相談する",
+    "roles": {
+      "A": "案件の進行担当",
+      "B": "制作担当"
+    },
+    "goals": [
+      "対応範囲と具体的な成果物を確認する",
+      "余力と得意分野を分けて説明する",
+      "会議の終わりに担当と期限を復唱する"
+    ],
+    "notes": [
+      "能力があることと今すぐ時間を割けることを区別する",
+      "日付は架空の会話上の予定で、実際の予定表とは関係しない"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Before we begin, can we clarify the scope and the first deliverable?",
+        "ja": "始める前に、対応範囲と最初の提出物を明確にできますか",
+        "ipa": "bɪˈfɔr wiː bɪˈɡɪn, kən wiː ˈklerəfaɪ ðə skoʊp ənd ðə fɝːst dɪˈlɪvərəbəl?"
+      },
+      {
+        "role": "B",
+        "en": "I understand the first deliverable is a working booking page, with a short guide for the people who will manage it.",
+        "ja": "最初の提出物は動く予約ページと、管理する人向けの短い説明書だと理解しています",
+        "ipa": "aɪ ˌʌndərˈstænd ðə fɝːst dɪˈlɪvərəbəl ɪz ə ˈwɝːkɪŋ ˈbʊkɪŋ peɪdʒ, wɪð ə ʃɔrt ɡaɪd fər ðə ˈpiːpəl huː wɪl ˈmænədʒ ɪt."
+      },
+      {
+        "role": "A",
+        "en": "That's right. I can take care of the wording and collect feedback from the people who will use it.",
+        "ja": "そのとおりです、文言と実際に使う人からの意見集めは私が対応できます",
+        "ipa": "ðæts raɪt. aɪ kən teɪk ker əv ðə ˈwɝːdɪŋ ənd kəˈlekt ˈfiːdbæk frʌm ðə ˈpiːpəl huː wɪl juːz ɪt."
+      },
+      {
+        "role": "B",
+        "en": "I can build the page, but I'm tied up with another project until Wednesday. I don't have much capacity before then.",
+        "ja": "ページは作れますが、水曜までは別の案件で手が離せません、それまではあまり余力がありません",
+        "ipa": "aɪ kən bɪld ðə peɪdʒ, bʌt aɪm taɪd ʌp wɪð əˈnʌðər ˈprɑːdʒekt ənˈtɪl ˈwenzdeɪ. aɪ doʊnt hæv mʌtʃ kəˈpæsəti bɪˈfɔr ðen."
+      },
+      {
+        "role": "A",
+        "en": "Would a first draft next Tuesday be feasible, or would that put too much pressure on your current work?",
+        "ja": "来週火曜の最初の下書きは実行可能ですか、それとも現在の仕事に負担がかかりすぎますか",
+        "ipa": "wʊd ə fɝːst dræft nekst ˈtuːzdeɪ biː ˈfiːzəbəl, ɔr wʊd ðæt pʊt tuː mʌtʃ ˈpreʃər ɑːn jʊr ˈkɝːrənt wɝːk?"
+      },
+      {
+        "role": "B",
+        "en": "That could work if I receive the wording by Thursday. I would also need one person to approve the final version.",
+        "ja": "木曜までに文言を受け取れれば可能そうです、最終版を承認する人も一人必要です",
+        "ipa": "ðæt kʊd wɝːk ɪf aɪ rɪˈsiːv ðə ˈwɝːdɪŋ baɪ ˈθɝːzdeɪ. aɪ wʊd ˈɔːlsoʊ niːd wʌn ˈpɝːsən tə əˈpruːv ðə ˈfaɪnəl ˈvɝːʒən."
+      },
+      {
+        "role": "A",
+        "en": "I'll be accountable for the final approval. If feedback conflicts, I'll resolve it before sending you revisions.",
+        "ja": "最終承認の責任は私が持ちます、意見が食い違った場合は、修正内容を送る前に私が整理します",
+        "ipa": "aɪl biː əˈkaʊntəbəl fər ðə ˈfaɪnəl əˈpruːvəl. ɪf ˈfiːdbæk kənˈflɪkts, aɪl riˈzɑːlv ɪt bɪˈfɔr ˈsendɪŋ juː riˈvɪʒənz."
+      },
+      {
+        "role": "B",
+        "en": "Great. Does the scope include ongoing changes after launch, or should we discuss those separately?",
+        "ja": "わかりました、対応範囲には公開後の継続的な変更も含まれますか、それとも別に話し合うべきですか",
+        "ipa": "ɡreɪt. dʌz ðə skoʊp ɪnˈkluːd ˈɑːnˌɡoʊɪŋ ˈtʃeɪndʒɪz ˈæftər lɔːntʃ, ɔr ʃʊd wiː dɪˈskʌs ðoʊz ˈsepərətli?"
+      },
+      {
+        "role": "A",
+        "en": "Separately. For now, let’s focus on the page, the guide, and one agreed review before launch.",
+        "ja": "別にしましょう、今はページ、説明書、公開前に合意した一回の確認に集中しましょう",
+        "ipa": "ˈsepərətli. fər naʊ, lets ˈfoʊkəs ɑːn ðə peɪdʒ, ðə ɡaɪd, ənd wʌn əˈɡriːd ˌriːˈvjuː bɪˈfɔr lɔːntʃ."
+      },
+      {
+        "role": "B",
+        "en": "Understood. You'll send the wording by Thursday, and I'll prepare the first draft for next Tuesday.",
+        "ja": "了解です、木曜までに文言を送ってもらい、私は来週火曜に向けて最初の下書きを用意します",
+        "ipa": "ˌʌndərˈstʊd. juːl send ðə ˈwɝːdɪŋ baɪ ˈθɝːzdeɪ, ənd aɪl prɪˈper ðə fɝːst dræft fər nekst ˈtuːzdeɪ."
+      }
+    ],
+    "unitIds": [
+      "b-020",
+      "b-030",
+      "b-031",
+      "b-035",
+      "b-051",
+      "b-054",
+      "b-056",
+      "b-057",
+      "b-061"
+    ]
+  },
+  {
+    "id": "bd-06",
+    "title": "Owning a mistake and repairing it",
+    "titleJa": "ミスを認めて修正の進め方を伝える",
+    "category": "work",
+    "level": "B2",
+    "scenarioJa": "古い資料を送った担当者が、自分の責任を認め、顧客の確認負担も含めた修正案を伝える",
+    "roles": {
+      "A": "資料を受け取った顧客",
+      "B": "送付担当者"
+    },
+    "goals": [
+      "ミスの内容を具体的に認める",
+      "言い訳を重ねず修正の手順を示す",
+      "返答期限と修正完了の予定を分ける"
+    ],
+    "notes": [
+      "That’s on meは比較的くだけた表現なので、正式な謝罪では別の表現も使う",
+      "説明責任は、自分に関係のない責任まで背負うことではない"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "I noticed the proposal still includes the option we removed last week. Am I looking at the right version?",
+        "ja": "先週外した選択肢が提案書にまだ入っています、正しい版を見ていますか",
+        "ipa": "aɪ ˈnoʊtɪst ðə prəˈpoʊzəl stɪl ɪnˈkluːdz ði ˈɑːpʃən wiː riˈmuːvd læst wiːk. æm aɪ ˈlʊkɪŋ æt ðə raɪt ˈvɝːʒən?"
+      },
+      {
+        "role": "B",
+        "en": "That's on me. I sent the earlier file by mistake, and I'm sorry for the confusion.",
+        "ja": "それは私の責任です、誤って前のファイルを送り、混乱させてしまい申し訳ありません",
+        "ipa": "ðæts ɑːn miː. aɪ sent ði ˈɝːliər faɪl baɪ mɪˈsteɪk, ənd aɪm ˈsɑri fər ðə kənˈfjuːʒən."
+      },
+      {
+        "role": "A",
+        "en": "Thanks for checking. We had already started reviewing it, so I need to know which parts have changed.",
+        "ja": "確認ありがとうございます、すでに確認を始めていたので、どの部分が変わったのか知る必要があります",
+        "ipa": "θæŋks fər ˈtʃekɪŋ. wiː hæd ɔːlˈredi ˈstɑrtɪd riˈvjuːɪŋ ɪt, soʊ aɪ niːd tə noʊ wɪtʃ pɑrts hæv tʃeɪndʒd."
+      },
+      {
+        "role": "B",
+        "en": "I'll send the corrected version with a short change summary, so you do not have to compare every page yourself.",
+        "ja": "修正版に短い変更点の要約を添えて送ります、全ページを自分で比較しなくてもよいようにします",
+        "ipa": "aɪl send ðə kəˈrektɪd ˈvɝːʒən wɪð ə ʃɔrt tʃeɪndʒ ˈsʌməri, soʊ juː duː nɑːt hæv tə kəmˈper ˈevəri peɪdʒ jərˈself."
+      },
+      {
+        "role": "A",
+        "en": "Can you get that to us this afternoon? Our internal review is tomorrow morning.",
+        "ja": "今日の午後に送れますか、社内の確認は明日の朝です",
+        "ipa": "kən juː ɡet ðæt tə ʌs ðɪs ˌæftərˈnuːn? aʊr ɪnˈtɝːnəl ˌriːˈvjuː ɪz təˈmɑːroʊ ˈmɔrnɪŋ."
+      },
+      {
+        "role": "B",
+        "en": "I don't want to promise that before checking the figures. I'll confirm the timing within an hour.",
+        "ja": "数字を確認する前に約束することは避けたいので、一時間以内に送れる時刻を確認します",
+        "ipa": "aɪ doʊnt wɑːnt tə ˈprɑːməs ðæt bɪˈfɔr ˈtʃekɪŋ ðə ˈfɪɡjərz. aɪl kənˈfɝːm ðə ˈtaɪmɪŋ wɪˈðɪn ən ˈaʊər."
+      },
+      {
+        "role": "A",
+        "en": "That is fine, but please let us know as soon as possible if the review needs to move.",
+        "ja": "それで大丈夫ですが、確認の日程を動かす必要があれば、できるだけ早く教えてください",
+        "ipa": "ðæt ɪz faɪn, bʌt pliːz let ʌs noʊ æz suːn æz ˈpɑːsəbəl ɪf ðə ˌriːˈvjuː niːdz tə muːv."
+      },
+      {
+        "role": "B",
+        "en": "Absolutely. I will also mark the earlier file as outdated so no one accidentally uses it again.",
+        "ja": "承知しました、前のファイルも古い版とわかるようにして、誰かがまた誤って使わないようにします",
+        "ipa": "ˌæbsəˈluːtli. aɪ wɪl ˈɔːlsoʊ mɑrk ði ˈɝːliər faɪl æz ˈaʊtˌdeɪtɪd soʊ noʊ wʌn ˌæksəˈdentəli ˈjuːsəz ɪt əˈɡen."
+      },
+      {
+        "role": "A",
+        "en": "Good. A clear version name and the summary should be enough for our team.",
+        "ja": "わかりました、明確な版の名前と要約があれば、私たちのチームには十分です",
+        "ipa": "ɡʊd. ə klɪr ˈvɝːʒən neɪm ənd ðə ˈsʌməri ʃʊd biː ɪˈnʌf fər aʊr tiːm."
+      },
+      {
+        "role": "B",
+        "en": "Understood. I'll send a timing update first, then the reviewed document and the summary once they are ready.",
+        "ja": "了解です、先に時刻の見込みを送り、その後、準備ができたら確認済みの文書と要約を送ります",
+        "ipa": "ˌʌndərˈstʊd. aɪl send ə ˈtaɪmɪŋ ˈʌpdeɪt fɝːst, ðen ðə riˈvjuːd ˈdɑːkjəmənt ənd ðə ˈsʌməri wʌns ðeɪ ɑːr ˈredi."
+      }
+    ],
+    "unitIds": [
+      "b-026",
+      "b-032",
+      "b-034",
+      "b-059",
+      "b-080"
+    ]
+  },
+  {
+    "id": "bd-07",
+    "title": "Clarifying a remote meeting",
+    "titleJa": "聞き取れないまま会議を進めない",
+    "category": "work",
+    "level": "B2",
+    "scenarioJa": "通信が不安定なオンライン会議で、聞き取れた部分とわからない部分を分け、納期と承認の違いを確認する",
+    "roles": {
+      "A": "進行担当",
+      "B": "共同作業者"
+    },
+    "goals": [
+      "聞き逃しと意味の不明点を区別する",
+      "疑問の内容を言い換えて確認する",
+      "誤解をその場で修正する"
+    ],
+    "notes": [
+      "聞き返しを一回で終えようとせず、どこまでわかったかを伝える",
+      "draftとapproved versionのように、仕事の状態を表す語にも注意する"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "We need the draft by Friday, but the final approval can wait until the following Wednesday.",
+        "ja": "金曜までに下書きが必要ですが、最終承認は翌週水曜まで待てます",
+        "ipa": "wiː niːd ðə dræft baɪ ˈfraɪdi, bʌt ðə ˈfaɪnəl əˈpruːvəl kən weɪt ənˈtɪl ðə ˈfɑːloʊɪŋ ˈwenzdeɪ."
+      },
+      {
+        "role": "B",
+        "en": "Sorry, I didn't quite catch the last part. The connection dropped after you mentioned Friday.",
+        "ja": "すみません、最後の部分をうまく聞き取れませんでした、金曜とおっしゃった後に通信が途切れました",
+        "ipa": "ˈsɑri, aɪ ˈdɪdənt kwaɪt kætʃ ðə læst pɑrt. ðə kəˈnekʃən drɑːpt ˈæftər juː ˈmenʃənd ˈfraɪdi."
+      },
+      {
+        "role": "A",
+        "en": "The draft is due Friday. The approved version is not due until next Wednesday.",
+        "ja": "下書きの期限は金曜です、承認済みの版の期限は来週水曜です",
+        "ipa": "ðə dræft ɪz duː ˈfraɪdi. ði əˈpruːvd ˈvɝːʒən ɪz nɑːt duː ənˈtɪl nekst ˈwenzdeɪ."
+      },
+      {
+        "role": "B",
+        "en": "Just so I’m clear, we have time to review the draft together before the client sees the final version.",
+        "ja": "認識を確認すると、顧客が最終版を見る前に、下書きを一緒に確認する時間があるのですね",
+        "ipa": "dʒʌst soʊ aɪm klɪr, wiː hæv taɪm tə ˌriːˈvjuː ðə dræft təˈɡeðər bɪˈfɔr ðə ˈklaɪənt siːz ðə ˈfaɪnəl ˈvɝːʒən."
+      },
+      {
+        "role": "A",
+        "en": "Exactly. We should use that time to check the assumptions and make any necessary changes.",
+        "ja": "そのとおりです、その時間を使って前提を確かめ、必要な変更を行うべきです",
+        "ipa": "ɪɡˈzæktli. wiː ʃʊd juːz ðæt taɪm tə tʃek ði əˈsʌmpʃənz ənd meɪk ˈeni ˈnesəseri ˈtʃeɪndʒɪz."
+      },
+      {
+        "role": "B",
+        "en": "When you say assumptions, are we talking about the estimated costs or the customer numbers?",
+        "ja": "前提とおっしゃると、概算費用の話ですか、それとも顧客数の話ですか",
+        "ipa": "wen juː seɪ əˈsʌmpʃənz, ɑːr wiː ˈtɔːkɪŋ əˈbaʊt ði ˈestəmeɪtɪd kɑːsts ɔr ðə ˈkʌstəmər ˈnʌmbərz?"
+      },
+      {
+        "role": "A",
+        "en": "Both, but the customer numbers matter most because they affect the amount of support we would need to provide.",
+        "ja": "両方です、ただ顧客数が提供する支援の量に影響するので、特に重要です",
+        "ipa": "boʊθ, bʌt ðə ˈkʌstəmər ˈnʌmbərz ˈmætər moʊst bɪˈkɔːz ðeɪ əˈfekt ði əˈmaʊnt əv səˈpɔrt wiː wʊd niːd tə prəˈvaɪd."
+      },
+      {
+        "role": "B",
+        "en": "Could you say that another way? Do you mean the number of new customers each month?",
+        "ja": "別の言い方で説明してもらえますか、毎月の新規顧客の数という意味ですか",
+        "ipa": "kʊd juː seɪ ðæt əˈnʌðər weɪ? duː juː miːn ðə ˈnʌmbər əv nuː ˈkʌstəmərz iːtʃ mʌnθ?"
+      },
+      {
+        "role": "A",
+        "en": "Let me rephrase that. I mean the total number of active customers, including people who signed up in earlier months.",
+        "ja": "言い方を変えますね、以前の月に登録した人も含む、利用中の顧客の総数という意味です",
+        "ipa": "let miː ˌriːˈfreɪz ðæt. aɪ miːn ðə ˈtoʊtəl ˈnʌmbər əv ˈæktɪv ˈkʌstəmərz, ɪnˈkluːdɪŋ ˈpiːpəl huː saɪnd ʌp ɪn ˈɝːliər mʌnθs."
+      },
+      {
+        "role": "B",
+        "en": "Got it. I'll update that figure in the draft and clearly separate it from the number of new sign-ups.",
+        "ja": "わかりました、下書きではその数字を更新し、新規登録の数とは明確に分けて示します",
+        "ipa": "ɡɑːt ɪt. aɪl ʌpˈdeɪt ðæt ˈfɪɡjər ɪn ðə dræft ənd ˈklɪrli ˈsepəreɪt ɪt frʌm ðə ˈnʌmbər əv nuː ˈsaɪnʌps."
+      }
+    ],
+    "unitIds": [
+      "b-021",
+      "b-022",
+      "b-023",
+      "b-024",
+      "b-025",
+      "b-066"
+    ]
+  },
+  {
+    "id": "bd-08",
+    "title": "Explaining what you can bring",
+    "titleJa": "面接で経験を役割につなげる",
+    "category": "work",
+    "level": "B2",
+    "scenarioJa": "海外での仕事を想定し、候補者が経験を説明しながら、求められる成果や役割の範囲を尋ねる",
+    "roles": {
+      "A": "面接担当者",
+      "B": "候補者"
+    },
+    "goals": [
+      "過去の経験を具体的な行動で説明する",
+      "わからない分野を認めて対応方法を話す",
+      "入社後の成果基準を聞く"
+    ],
+    "notes": [
+      "架空の面接なので、実際の経験に合わせて言葉を置き換えて練習する",
+      "実績を誇張するための例文ではなく、自分が何をしたかを伝える型"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Could you give me an overview of the work you have been doing recently?",
+        "ja": "最近取り組んできた仕事の概要を説明してもらえますか",
+        "ipa": "kʊd juː ɡɪv miː ən ˈoʊvərˌvjuː əv ðə wɝːk juː hæv bɪn ˈduːɪŋ ˈriːsəntli?"
+      },
+      {
+        "role": "B",
+        "en": "I've been working with small businesses, helping them clarify their needs and coordinate projects with outside specialists.",
+        "ja": "小規模な会社と仕事をし、要望を明確にしたり、外部の専門家との案件を調整したりしてきました",
+        "ipa": "aɪv bɪn ˈwɝːkɪŋ wɪð smɔːl ˈbɪznəsɪz, ˈhelpɪŋ ðem ˈklerəfaɪ ðer niːdz ənd koʊˈɔːrdəneɪt ˈprɑːdʒekts wɪð ˌaʊtˈsaɪd ˈspeʃəlɪsts."
+      },
+      {
+        "role": "A",
+        "en": "What would you say is your main strength in that kind of role?",
+        "ja": "そのような役割で、主な強みは何だと思いますか",
+        "ipa": "wʌt wʊd juː seɪ ɪz jʊr meɪn streŋkθ ɪn ðæt kaɪnd əv roʊl?"
+      },
+      {
+        "role": "B",
+        "en": "I can turn a vague conversation into clear next steps, while making sure each person understands what they have agreed to do.",
+        "ja": "曖昧な話を具体的な次の行動へ変え、それぞれが何を引き受けたのかを理解している状態にできます",
+        "ipa": "aɪ kən tɝːn ə veɪɡ ˌkɑːnvərˈseɪʃən ˈɪntu klɪr nekst steps, waɪl ˈmeɪkɪŋ ʃʊr iːtʃ ˈpɝːsən ˌʌndərˈstændz wʌt ðeɪ hæv əˈɡriːd tə duː."
+      },
+      {
+        "role": "A",
+        "en": "How do you handle a request that is outside your area of expertise?",
+        "ja": "自分の専門外の依頼にはどう対応しますか",
+        "ipa": "haʊ duː juː ˈhændəl ə rɪˈkwest ðæt ɪz ˌaʊtˈsaɪd jʊr ˈeriə əv ˌekspɝːˈtiːz?"
+      },
+      {
+        "role": "B",
+        "en": "I clarify what is needed, identify the right specialist, and stay responsible for keeping the communication clear. I do not pretend to know everything.",
+        "ja": "何が必要かを明確にして適切な専門家を探し、やり取りが明確に続くよう責任を持ちます、何でも知っているふりはしません",
+        "ipa": "aɪ ˈklerəfaɪ wʌt ɪz ˈniːdəd, aɪˈdentəfaɪ ðə raɪt ˈspeʃəlɪst, ənd steɪ rɪˈspɑːnsəbəl fər ˈkiːpɪŋ ðə kəˌmjuːnəˈkeɪʃən klɪr. aɪ duː nɑːt prɪˈtend tə noʊ ˈevriθɪŋ."
+      },
+      {
+        "role": "A",
+        "en": "This team works across different time zones. What might be challenging about that for you?",
+        "ja": "このチームは異なる時間帯をまたいで働きます、その点であなたにとって難しそうなことは何ですか",
+        "ipa": "ðɪs tiːm wɝːks əˈkrɔːs ˈdɪfrənt taɪm zoʊnz. wʌt maɪt biː ˈtʃæləndʒɪŋ əˈbaʊt ðæt fər juː?"
+      },
+      {
+        "role": "B",
+        "en": "I'd need to get used to documenting decisions more consistently, so people can keep moving without waiting for a live conversation.",
+        "ja": "リアルタイムの会話を待たずに作業を進められるよう、判断をより一貫して記録することに慣れる必要があります",
+        "ipa": "aɪd niːd tə ɡet juːst tə ˈdɑːkjəmentɪŋ dɪˈsɪʒənz mɔr kənˈsɪstəntli, soʊ ˈpiːpəl kən kiːp ˈmuːvɪŋ wɪˈðaʊt ˈweɪtɪŋ fər ə laɪv ˌkɑːnvərˈseɪʃən."
+      },
+      {
+        "role": "A",
+        "en": "That makes sense. Is there anything you would like to ask us about the role?",
+        "ja": "なるほど、この役割について私たちに聞きたいことはありますか",
+        "ipa": "ðæt meɪks sens. ɪz ðer ˈeniθɪŋ juː wʊd laɪk tə æsk ʌs əˈbaʊt ðə roʊl?"
+      },
+      {
+        "role": "B",
+        "en": "Yes. What would successful performance look like after the first three months, and who would I work with most closely?",
+        "ja": "はい、最初の三か月を終えた時点で、どんな状態ならよい働きができたと見なされますか、また誰と最も密接に働きますか",
+        "ipa": "jes. wʌt wʊd səkˈsesfəl pərˈfɔrməns lʊk laɪk ˈæftər ðə fɝːst θriː mʌnθs, ənd huː wʊd aɪ wɝːk wɪð moʊst ˈkloʊsli?"
+      }
+    ],
+    "unitIds": [
+      "b-001",
+      "b-035",
+      "b-058",
+      "b-069",
+      "b-082",
+      "b-094"
+    ]
+  },
+  {
+    "id": "bd-09",
+    "title": "Freedom and stability",
+    "titleJa": "自由と安定について二択で終わらず話す",
+    "category": "deep",
+    "level": "B2",
+    "scenarioJa": "海外へ移るか考えている友人同士が、自由、安定、人との関係のどこを大切にするか話す",
+    "roles": {
+      "A": "話を聞く友人",
+      "B": "海外で働くことを考えている人"
+    },
+    "goals": [
+      "相反する気持ちを両方説明する",
+      "相手の見方に理解を示しながら自分の意見を話す",
+      "抽象語を具体的な生活の話へ戻す"
+    ],
+    "notes": [
+      "正解を決める議論ではなく、価値観の違いを理解する会話",
+      "税金や在留資格などの手続きの説明は含まない"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "You have mentioned working abroad a few times. What appeals to you most about it?",
+        "ja": "海外で働く話を何度かしていますね、どこに一番魅力を感じていますか",
+        "ipa": "juː hæv ˈmenʃənd ˈwɝːkɪŋ əˈbrɔːd ə fjuː taɪmz. wʌt əˈpiːlz tə juː moʊst əˈbaʊt ɪt?"
+      },
+      {
+        "role": "B",
+        "en": "Part of me wants a completely new challenge, but another part worries about leaving the relationships I have built here.",
+        "ja": "まったく新しい挑戦をしたい気持ちと、ここで築いた関係から離れることへの心配の両方があります",
+        "ipa": "pɑrt əv miː wɑːnts ə kəmˈpliːtli nuː ˈtʃæləndʒ, bʌt əˈnʌðər pɑrt ˈwɝːiz əˈbaʊt ˈliːvɪŋ ðə rɪˈleɪʃənʃɪps aɪ hæv bɪlt hiːr."
+      },
+      {
+        "role": "A",
+        "en": "What makes you feel that the challenge needs to happen in another country?",
+        "ja": "なぜその挑戦をほかの国で行う必要があると感じるのですか",
+        "ipa": "wʌt meɪks juː fiːl ðæt ðə ˈtʃæləndʒ niːdz tə ˈhæpən ɪn əˈnʌðər ˈkʌntri?"
+      },
+      {
+        "role": "B",
+        "en": "The way I see it, living somewhere unfamiliar would force me to question habits that currently feel automatic.",
+        "ja": "私の見方では、馴染みのない場所で暮らせば、今は無意識にしている習慣を問い直すことになると思うんです",
+        "ipa": "ðə weɪ aɪ siː ɪt, ˈlɪvɪŋ ˈsʌmwer ˌʌnfəˈmɪljər wʊd fɔrs miː tə ˈkwestʃən ˈhæbəts ðæt ˈkɝːrəntli fiːl ˌɔːtəˈmætɪk."
+      },
+      {
+        "role": "A",
+        "en": "I can understand why that matters, even though I usually feel more creative when my daily life is stable.",
+        "ja": "それが大切な理由はわかります、私は普段、日常生活が安定しているときのほうが創造的になれますが",
+        "ipa": "aɪ kən ˌʌndərˈstænd waɪ ðæt ˈmætərz, ˈiːvɪn ðoʊ aɪ ˈjuːʒuəli fiːl mɔr kriˈeɪtɪv wen maɪ ˈdeɪli laɪf ɪz ˈsteɪbəl."
+      },
+      {
+        "role": "B",
+        "en": "I wouldn't necessarily say I want an unpredictable life. It's more about choosing which parts of my life I can change.",
+        "ja": "予測できない生活がしたいとまでは言わないですね、どちらかというと人生のどの部分を変えられるかを自分で選ぶことです",
+        "ipa": "aɪ ˈwʊdənt ˌnesəˈserəli seɪ aɪ wɑːnt ən ˌʌnprɪˈdɪktəbəl laɪf. ɪts mɔr əˈbaʊt ˈtʃuːzɪŋ wɪtʃ pɑrts əv maɪ laɪf aɪ kən tʃeɪndʒ."
+      },
+      {
+        "role": "A",
+        "en": "So freedom means having choices for you, rather than avoiding every kind of commitment.",
+        "ja": "あなたにとって自由は、あらゆる約束を避けることよりも、選択肢を持つことなんですね",
+        "ipa": "soʊ ˈfriːdəm miːnz ˈhævɪŋ ˈtʃɔɪsɪz fər juː, ˈræðər ðæn əˈvɔɪdɪŋ ˈevəri kaɪnd əv kəˈmɪtmənt."
+      },
+      {
+        "role": "B",
+        "en": "Exactly. A reliable relationship or a steady income could actually give me more room to take meaningful risks.",
+        "ja": "そのとおりです、信頼できる関係や安定した収入があることで、意味のある挑戦をする余地が増えることもあります",
+        "ipa": "ɪɡˈzæktli. ə rɪˈlaɪəbəl rɪˈleɪʃənʃɪp ɔr ə ˈstedi ˈɪnˌkʌm kʊd ˈæktʃuəli ɡɪv miː mɔr ruːm tə teɪk ˈmiːnɪŋfəl rɪsks."
+      },
+      {
+        "role": "A",
+        "en": "That gives me a different perspective. Maybe the question is which kind of stability supports the life you want.",
+        "ja": "違う見方ができました、どんな種類の安定なら望む生活を支えてくれるのかが問いなのかもしれませんね",
+        "ipa": "ðæt ɡɪvz miː ə ˈdɪfrənt pərˈspektɪv. ˈmeɪbi ðə ˈkwestʃən ɪz wɪtʃ kaɪnd əv stəˈbɪlɪti səˈpɔrts ðə laɪf juː wɑːnt."
+      },
+      {
+        "role": "B",
+        "en": "Yes. I feel less pressure to decide everything at once when I think about it that way.",
+        "ja": "そうですね、そのように考えると、一度に全部決めなければという気持ちが少し弱まります",
+        "ipa": "jes. aɪ fiːl les ˈpreʃər tə ˌdɪˈsaɪd ˈevriθɪŋ æt wʌns wen aɪ θɪŋk əˈbaʊt ɪt ðæt weɪ."
+      }
+    ],
+    "unitIds": [
+      "b-036",
+      "b-037",
+      "b-038",
+      "b-043",
+      "b-046",
+      "b-060",
+      "b-072",
+      "b-076"
+    ]
+  },
+  {
+    "id": "bd-10",
+    "title": "Naming what feels difficult",
+    "titleJa": "気持ちを細かく言葉にして、聞いてほしいことを伝える",
+    "category": "deep",
+    "level": "B2",
+    "scenarioJa": "仕事が増えた人が、うれしさと負担の両方を友人に話し、助言よりまず話を聞いてほしいと伝える",
+    "roles": {
+      "A": "友人",
+      "B": "仕事の負担を話す人"
+    },
+    "goals": [
+      "うれしいとつらいを同時に表現する",
+      "能力、余力、断る怖さを区別する",
+      "欲しい反応を相手に伝える"
+    ],
+    "notes": [
+      "通常の気持ちの会話であり、診断や治療の説明ではない",
+      "支援を申し出る側も、すぐに解決策を出す前に本人の希望を聞く"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "How are things going? You sounded excited about the new projects last week.",
+        "ja": "最近どうですか、先週は新しい案件を楽しみにしているようでしたね",
+        "ipa": "haʊ ɑːr θɪŋz ˈɡoʊɪŋ? juː ˈsaʊndɪd ɪkˈsaɪtəd əˈbaʊt ðə nuː ˈprɑːdʒekts læst wiːk."
+      },
+      {
+        "role": "B",
+        "en": "I still am, but I feel overwhelmed by how many decisions I need to make every day.",
+        "ja": "今も楽しみですが、毎日決めることが多すぎて、気持ちに余裕がなくなっています",
+        "ipa": "aɪ stɪl æm, bʌt aɪ fiːl ˌoʊvərˈwelmd baɪ haʊ ˈmeni dɪˈsɪʒənz aɪ niːd tə meɪk ˈevəri deɪ."
+      },
+      {
+        "role": "A",
+        "en": "Is the work itself difficult, or is it the amount you are trying to manage?",
+        "ja": "仕事自体が難しいんですか、それとも抱えている量の問題ですか",
+        "ipa": "ɪz ðə wɝːk ˌɪtˈself ˈdɪfəkəlt, ɔr ɪz ɪt ði əˈmaʊnt juː ɑːr ˈtraɪɪŋ tə ˈmænədʒ?"
+      },
+      {
+        "role": "B",
+        "en": "What I struggle with is admitting that I do not have the capacity to do everything well at the same time.",
+        "ja": "私が苦戦しているのは、同時にすべてをうまくこなす余力はないと認めることです",
+        "ipa": "wʌt aɪ ˈstrʌɡəl wɪð ɪz ædˈmɪtɪŋ ðæt aɪ duː nɑːt hæv ðə kəˈpæsəti tə duː ˈevriθɪŋ wel æt ðə seɪm taɪm."
+      },
+      {
+        "role": "A",
+        "en": "What makes that difficult to admit?",
+        "ja": "それを認めることの何が難しいんですか",
+        "ipa": "wʌt meɪks ðæt ˈdɪfəkəlt tə ədˈmɪt?"
+      },
+      {
+        "role": "B",
+        "en": "I worry that people will stop trusting me if I say no, even when the request is more than I can realistically handle.",
+        "ja": "現実的に対応できる範囲を超えた依頼でも、断ると信頼されなくなるのではと心配になります",
+        "ipa": "aɪ ˈwɝːi ðæt ˈpiːpəl wɪl stɑːp ˈtrʌstɪŋ miː ɪf aɪ seɪ noʊ, ˈiːvɪn wen ðə rɪˈkwest ɪz mɔr ðæn aɪ kən ˌriːəˈlɪstɪkli ˈhændəl."
+      },
+      {
+        "role": "A",
+        "en": "Would you like to think through what you could say, or would it help more if I just listened?",
+        "ja": "どう言えばよいか一緒に考えたいですか、それとも今はただ聞くほうが助けになりますか",
+        "ipa": "wʊd juː laɪk tə θɪŋk θruː wʌt juː kʊd seɪ, ɔr wʊd ɪt help mɔr ɪf aɪ dʒʌst ˈlɪsənd?"
+      },
+      {
+        "role": "B",
+        "en": "For now, I would rather talk it through. It takes me a while to articulate what is actually bothering me.",
+        "ja": "今はまず話しながら整理したいです、実際に何が引っかかっているかを言葉にするのに少し時間がかかります",
+        "ipa": "fər naʊ, aɪ wʊd ˈræðər tɔːk ɪt θruː. ɪt teɪks miː ə waɪl tə ɑːrˈtɪkjəleɪt wʌt ɪz ˈæktʃuəli ˈbɑːðərɪŋ miː."
+      },
+      {
+        "role": "A",
+        "en": "Of course. I'm here, and you do not need to turn this into a plan before you are ready.",
+        "ja": "もちろんです、聞いています、準備ができる前に無理に計画へまとめなくて大丈夫です",
+        "ipa": "əv kɔrs. aɪm hiːr, ənd juː duː nɑːt niːd tə tɝːn ðɪs ˈɪntu ə plæn bɪˈfɔr juː ɑːr ˈredi."
+      },
+      {
+        "role": "B",
+        "en": "Thanks. I think what I need is a more sustainable pace, rather than another way to squeeze more work into the day.",
+        "ja": "ありがとう、一日にもっと仕事を詰め込む方法よりも、続けられるペースが必要なのだと思います",
+        "ipa": "θæŋks. aɪ θɪŋk wʌt aɪ niːd ɪz ə mɔr səˈsteɪnəbəl peɪs, ˈræðər ðæn əˈnʌðər weɪ tə skwiːz mɔr wɝːk ˈɪntu ðə deɪ."
+      }
+    ],
+    "unitIds": [
+      "b-040",
+      "b-046",
+      "b-057",
+      "b-065",
+      "b-073",
+      "b-079",
+      "b-083",
+      "b-098"
+    ]
+  },
+  {
+    "id": "bd-11",
+    "title": "Talking about creative work",
+    "titleJa": "取材で作品の背景を深く語る",
+    "category": "deep",
+    "level": "B2",
+    "scenarioJa": "取材者が音楽を作る人に、作品が生まれた気持ちや表現の難しさ、聴き手への期待を尋ねる",
+    "roles": {
+      "A": "取材者",
+      "B": "制作者"
+    },
+    "goals": [
+      "作品の背景を単純な好き嫌い以上に説明する",
+      "変化した考え方を現在完了で語る",
+      "相手の体験から言葉の意味を掘る"
+    ],
+    "notes": [
+      "架空の作品についての会話／実在作品の歌詞や他人の発言は転載していない",
+      "難しい語を並べるより、具体的な場面や気持ちに結びつけて話す"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "What were you trying to express when you started working on this piece?",
+        "ja": "この作品に取りかかったとき、何を表現しようとしていましたか",
+        "ipa": "wʌt wɝː juː ˈtraɪɪŋ tə ɪkˈspres wen juː ˈstɑrtɪd ˈwɝːkɪŋ ɑːn ðɪs piːs?"
+      },
+      {
+        "role": "B",
+        "en": "I wanted to capture the feeling of meeting someone who makes an ordinary day feel slightly different.",
+        "ja": "誰かに出会ったことで、普通の一日が少し違って感じられる、その感覚を捉えたいと思いました",
+        "ipa": "aɪ ˈwɔːntɪd tə ˈkæptʃər ðə ˈfiːlɪŋ əv ˈmiːtɪŋ ˈsʌmwʌn huː meɪks ən ˈɔrdəˌneri deɪ fiːl ˈslaɪtli ˈdɪfrənt."
+      },
+      {
+        "role": "A",
+        "en": "Was that feeling easy to put into words?",
+        "ja": "その感覚を言葉にするのは簡単でしたか",
+        "ipa": "wɑːz ðæt ˈfiːlɪŋ ˈiːzi tə pʊt ˈɪntu wɝːdz?"
+      },
+      {
+        "role": "B",
+        "en": "Not really. I could describe what happened, but I struggled to explain why it stayed with me afterward.",
+        "ja": "そうでもありませんでした、何が起きたかは説明できても、なぜその後も心に残ったのかを説明するのに苦労しました",
+        "ipa": "nɑːt ˈrɪli. aɪ kʊd dɪˈskraɪb wʌt ˈhæpənd, bʌt aɪ ˈstrʌɡəld tə ɪkˈspleɪn waɪ ɪt steɪd wɪð miː ˈæftərwərd."
+      },
+      {
+        "role": "A",
+        "en": "What helped you find a way to express it?",
+        "ja": "表現する方法を見つけるうえで、何が役立ちましたか",
+        "ipa": "wʌt helpt juː faɪnd ə weɪ tə ɪkˈspres ɪt?"
+      },
+      {
+        "role": "B",
+        "en": "I stopped trying to explain every emotion directly and focused on small details, like the light in the room and a pause in conversation.",
+        "ja": "すべての感情を直接説明しようとするのをやめ、部屋の光や会話の間のような小さな細部に目を向けました",
+        "ipa": "aɪ stɑːpt ˈtraɪɪŋ tə ɪkˈspleɪn ˈevəri ɪˈmoʊʃən dəˈrektli ənd ˈfoʊkəst ɑːn smɔːl ˈdiːteɪlz, laɪk ðə laɪt ɪn ðə ruːm ənd ə pɔːz ɪn ˌkɑːnvərˈseɪʃən."
+      },
+      {
+        "role": "A",
+        "en": "Has that changed the way you approach new work?",
+        "ja": "それによって新しい作品への取り組み方は変わりましたか",
+        "ipa": "hæz ðæt tʃeɪndʒd ðə weɪ juː əˈproʊtʃ nuː wɝːk?"
+      },
+      {
+        "role": "B",
+        "en": "Yes. I've come to realize that leaving some space can help listeners connect the music to their own experience.",
+        "ja": "はい、少し余白を残すことで、聴く人が音楽を自分自身の経験につなげられるのだとわかるようになりました",
+        "ipa": "jes. aɪv kʌm tə ˈriːəˌlaɪz ðæt ˈliːvɪŋ sʌm speɪs kən help ˈlɪsənərz kəˈnekt ðə ˈmjuːzɪk tə ðer oʊn ɪkˈspɪriəns."
+      },
+      {
+        "role": "A",
+        "en": "How do you feel when someone interprets the piece differently from what you intended?",
+        "ja": "意図したことと違う解釈をされると、どんな気持ちになりますか",
+        "ipa": "haʊ duː juː fiːl wen ˈsʌmwʌn ɪnˈtɝːprɪts ðə piːs ˈdɪfrəntli frʌm wʌt juː ɪnˈtendɪd?"
+      },
+      {
+        "role": "B",
+        "en": "A little vulnerable at first, but also curious. What matters is whether it gives them something meaningful, even if that meaning is different from mine.",
+        "ja": "最初は少し無防備な気持ちになりますが、興味も湧きます、大切なのは、私とは意味が違っても、相手にとって大切なものを届けられるかです",
+        "ipa": "ə ˈlɪtəl ˈvʌlnərəbəl æt fɝːst, bʌt ˈɔːlsoʊ ˈkjʊriəs. wʌt ˈmætərz ɪz ˈweðər ɪt ɡɪvz ðem ˈsʌmθɪŋ ˈmiːnɪŋfəl, ˈiːvɪn ɪf ðæt ˈmiːnɪŋ ɪz ˈdɪfrənt frʌm maɪn."
+      }
+    ],
+    "unitIds": [
+      "b-040",
+      "b-041",
+      "b-047",
+      "b-071",
+      "b-073",
+      "b-074",
+      "b-083"
+    ]
+  },
+  {
+    "id": "bd-12",
+    "title": "Disagreeing without losing the conversation",
+    "titleJa": "反対意見を言い直して会話を続ける",
+    "category": "deep",
+    "level": "C1",
+    "scenarioJa": "挑戦的な案について話した二人の間で、時期への懸念が案全体への否定として伝わったことを修正する",
+    "roles": {
+      "A": "新しい案を出した人",
+      "B": "懸念を伝えた人"
+    },
+    "goals": [
+      "誤解された点を具体的に言い直す",
+      "理解と賛成を区別する",
+      "条件を変えた代案へ進める"
+    ],
+    "notes": [
+      "自分の意図だけでなく、相手にどう聞こえたかにも返事をする",
+      "I’m not saying...は強くなりすぎない声で練習する"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "When you said the plan was unrealistic, it sounded as though you thought the whole idea was pointless.",
+        "ja": "計画は現実的でないと言われたとき、案全体に意味がないと思っているように聞こえました",
+        "ipa": "wen juː sed ðə plæn wɑːz ənˌriːˈlɪstɪk, ɪt ˈsaʊndɪd æz ðoʊ juː θɔːt ðə hoʊl aɪˈdiːə wɑːz ˈpɔɪntləs."
+      },
+      {
+        "role": "B",
+        "en": "That wasn't quite what I meant, but I can see why it came across that way.",
+        "ja": "それは少し意図と違いましたが、そう聞こえた理由はわかります",
+        "ipa": "ðæt ˈwɑːzənt kwaɪt wʌt aɪ ment, bʌt aɪ kən siː waɪ ɪt keɪm əˈkrɔːs ðæt weɪ."
+      },
+      {
+        "role": "A",
+        "en": "Then what is your main concern?",
+        "ja": "では一番の懸念は何ですか",
+        "ipa": "ðen wʌt ɪz jʊr meɪn kənˈsɝːn?"
+      },
+      {
+        "role": "B",
+        "en": "I'm not saying the idea has no value. I'm saying the current deadline gives us almost no room to test the assumptions.",
+        "ja": "案に価値がないと言っているのではありません、今の締め切りだと前提を確かめる余地がほとんどないと言っています",
+        "ipa": "aɪm nɑːt ˈseɪɪŋ ði aɪˈdiːə hæz noʊ ˈvælju. aɪm ˈseɪɪŋ ðə ˈkɝːrənt ˈdedlaɪn ɡɪvz ʌs ˈɔːlˌmoʊst noʊ ruːm tə test ði əˈsʌmpʃənz."
+      },
+      {
+        "role": "A",
+        "en": "I understand, but I worry that waiting for perfect information means we will never start.",
+        "ja": "わかります、ただ完全な情報を待っていたら、いつまでも始められないのではと心配です",
+        "ipa": "aɪ ˌʌndərˈstænd, bʌt aɪ ˈwɝːi ðæt ˈweɪtɪŋ fər ˈpɝːfɪkt ˌɪnfərˈmeɪʃən miːnz wiː wɪl ˈnevər stɑrt."
+      },
+      {
+        "role": "B",
+        "en": "I can appreciate that without agreeing with the current timeline. There is a difference between accepting uncertainty and ignoring avoidable problems.",
+        "ja": "その点は理解できますが、今の日程に賛成するかは別です、不確実さを受け入れることと、避けられる問題を無視することには違いがあります",
+        "ipa": "aɪ kən əˈpriːʃieɪt ðæt wɪˈðaʊt əˈɡriːɪŋ wɪð ðə ˈkɝːrənt ˈtaɪmlaɪn. ðer ɪz ə ˈdɪfrəns bɪˈtwiːn ækˈseptɪŋ ənˈsɝːtənti ənd ɪɡˈnɔːrɪŋ əˈvɔɪdəbəl ˈprɑːbləmz."
+      },
+      {
+        "role": "A",
+        "en": "What would need to happen for you to feel comfortable starting?",
+        "ja": "安心して始められるようになるには、何が必要ですか",
+        "ipa": "wʌt wʊd niːd tə ˈhæpən fər juː tə fiːl ˈkʌmftəbəl ˈstɑrtɪŋ?"
+      },
+      {
+        "role": "B",
+        "en": "If we tested a smaller version with a few customers first, we could learn something useful without committing the whole team.",
+        "ja": "先に数人の顧客と小さな版を試せば、チーム全体を投入せずに役立つことを学べます",
+        "ipa": "ɪf wiː ˈtestɪd ə ˈsmɔːlər ˈvɝːʒən wɪð ə fjuː ˈkʌstəmərz fɝːst, wiː kʊd lɝːn ˈsʌmθɪŋ ˈjuːsfəl wɪˈðaʊt kəˈmɪtɪŋ ðə hoʊl tiːm."
+      },
+      {
+        "role": "A",
+        "en": "That sounds like a reasonable compromise. We could keep moving while reducing the size of the first commitment.",
+        "ja": "妥当な折衷案に思えます、最初に引き受ける範囲を小さくしながら前に進めますね",
+        "ipa": "ðæt saʊndz laɪk ə ˈriːzənəbəl ˈkɑːmprəmaɪz. wiː kʊd kiːp ˈmuːvɪŋ waɪl rəˈduːsɪŋ ðə saɪz əv ðə fɝːst kəˈmɪtmənt."
+      },
+      {
+        "role": "B",
+        "en": "Exactly. I do want to help make this work; I just want us to be clear about what we are testing first.",
+        "ja": "そのとおりです、実現を手伝いたい気持ちはあります、ただ最初に何を試すのかを明確にしたいのです",
+        "ipa": "ɪɡˈzæktli. aɪ duː wɑːnt tə help meɪk ðɪs wɝːk; aɪ dʒʌst wɑːnt ʌs tə biː klɪr əˈbaʊt wʌt wiː ɑːr ˈtestɪŋ fɝːst."
+      }
+    ],
+    "unitIds": [
+      "b-017",
+      "b-029",
+      "b-044",
+      "b-045",
+      "b-048",
+      "b-050",
+      "b-066",
+      "b-084",
+      "b-089"
+    ]
+  },
+  {
+    "id": "pd-01",
+    "title": "At passport control",
+    "titleJa": "入国審査で旅の予定を説明する",
+    "category": "travel",
+    "level": "B1+",
+    "scenarioJa": "観光と友人訪問のために到着した、架空の旅行者の会話です\n滞在予定・宿泊先・帰りの予約について、本人の実際の予定に合わせて答える練習です",
+    "roles": {
+      "A": "入国審査官",
+      "B": "旅行者"
+    },
+    "goals": [
+      "訪問目的と滞在期間を簡潔に伝える",
+      "複数の宿泊先を順序立てて説明する",
+      "求められた予約情報を示す"
+    ],
+    "notes": [
+      "入国審査は本人確認や入国条件の確認、税関・検疫は持ち込む物の確認が中心です\n実際の窓口では手続きが連続することもあります",
+      "観光・友人訪問・商用などは実際の目的どおりに伝えます\nこの会話の回答が入国を保証するわけではなく、就労や滞在の条件は渡航先の公式案内で確認します",
+      "数字・日付・住所は暗記した例のまま答えず、自分の旅程に置き換えます"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Good afternoon. May I see your passport, please?",
+        "ja": "こんにちは\nパスポートを見せていただけますか",
+        "ipa": "ɡʊd ˌæftɚˈnun meɪ aɪ si jɚ ˈpæspɔɹt pliz"
+      },
+      {
+        "role": "B",
+        "en": "Of course. Here it is.",
+        "ja": "もちろんです\nこちらです",
+        "ipa": "əv kɔɹs hɪɹ ɪt ɪz"
+      },
+      {
+        "role": "A",
+        "en": "What's the purpose of your visit?",
+        "ja": "今回の訪問の目的は何ですか",
+        "ipa": "wʌts ðə ˈpɝpəs əv jɚ ˈvɪzɪt"
+      },
+      {
+        "role": "B",
+        "en": "I'm here for sightseeing, and I'm visiting a friend for a few days.",
+        "ja": "観光で来ました\n数日間、友人を訪ねる予定もあります",
+        "ipa": "aɪm hɪɹ fɚ ˈsaɪtˌsiɪŋ ænd aɪm ˈvɪzɪtɪŋ ə fɹɛnd fɚ ə fju deɪz"
+      },
+      {
+        "role": "A",
+        "en": "How long are you planning to stay?",
+        "ja": "どのくらい滞在する予定ですか",
+        "ipa": "haʊ lɔŋ ɚ ju ˈplænɪŋ tə steɪ"
+      },
+      {
+        "role": "B",
+        "en": "Twelve nights. My return flight is booked for the thirtieth.",
+        "ja": "12泊です\n帰りの便は30日で予約しています",
+        "ipa": "twɛlv naɪts maɪ ɹɪˈtɝn flaɪt ɪz bʊkt fɚ ðə ˈθɝtiəθ"
+      },
+      {
+        "role": "A",
+        "en": "Where will you be staying?",
+        "ja": "どちらに宿泊する予定ですか",
+        "ipa": "wɛɹ wɪl ju bi ˈsteɪɪŋ"
+      },
+      {
+        "role": "B",
+        "en": "At a hotel in the city for the first four nights, then with my friend.",
+        "ja": "最初の4泊は市内のホテルで、そのあとは友人の家です",
+        "ipa": "æt ə hoʊˈtɛl ɪn ðə ˈsɪti fɚ ðə fɝst fɔɹ naɪts ðɛn wɪð maɪ fɹɛnd"
+      },
+      {
+        "role": "A",
+        "en": "Do you have the address and your return booking?",
+        "ja": "宿泊先の住所と、帰りの予約情報はありますか",
+        "ipa": "du ju hæv ði əˈdɹɛs ænd jɚ ɹɪˈtɝn ˈbʊkɪŋ"
+      },
+      {
+        "role": "B",
+        "en": "Yes. I have both here, and I can show you the confirmations.",
+        "ja": "はい\nどちらもこちらにあるので、予約確認をお見せできます",
+        "ipa": "jɛs aɪ hæv boʊθ hɪɹ ænd aɪ kæn ʃoʊ ju ðə ˌkɑnfɚˈmeɪʃənz"
+      }
+    ],
+    "unitIds": [
+      "p-001",
+      "p-002",
+      "p-051",
+      "p-053"
+    ]
+  },
+  {
+    "id": "pd-02",
+    "title": "Declaring food and a souvenir",
+    "titleJa": "食品とお土産について申告する",
+    "category": "travel",
+    "level": "B2",
+    "scenarioJa": "オーストラリアの税関・検疫案内を参考にした架空の到着場面です\n食品と木製のお土産が入った荷物について、分からない点も隠さず係員に伝えます",
+    "roles": {
+      "A": "係員",
+      "B": "旅行者"
+    },
+    "goals": [
+      "持ち物の種類を具体的に説明する",
+      "持ち込み可能か分からないことを伝える",
+      "何を見せればよいか確認する"
+    ],
+    "notes": [
+      "申告が必要な物や手続きは渡航先と品物によって異なります\n最新の公式案内を確認し、申告書には正確に記入します",
+      "申告したことと、持ち込みが許可されることは別です\nこの会話は個別の食品や木製品の持ち込みを認める案内ではありません",
+      "分からないときは I’m not sure whether ... で確認できます\n何もないと決めつける練習にはしません"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Do you have any food or other items to declare?",
+        "ja": "申告する食品や、その他の物はありますか",
+        "ipa": "du ju hæv ˈɛni fud ɔɹ ˈʌðɚ ˈaɪtəmz tə dɪˈklɛɹ"
+      },
+      {
+        "role": "B",
+        "en": "Yes. I have packaged snacks, and I'm not sure whether they're allowed.",
+        "ja": "はい\n包装されたお菓子がありますが、持ち込み可能か分かりません",
+        "ipa": "jɛs aɪ hæv ˈpækɪdʒd snæks ænd aɪm nɑt ʃʊɹ ˈwɛðɚ ðɛɹ əˈlaʊd"
+      },
+      {
+        "role": "A",
+        "en": "What kind of food is it?",
+        "ja": "どのような食品ですか",
+        "ipa": "wʌt kaɪnd əv fud ɪz ɪt"
+      },
+      {
+        "role": "B",
+        "en": "They're commercially packaged biscuits. The packaging lists the ingredients in English.",
+        "ja": "市販の包装されたビスケットです\n原材料は包装に英語で表示されています",
+        "ipa": "ðɛɹ kəˈmɝʃəli ˈpækɪdʒd ˈbɪskɪts ðə ˈpækɪdʒɪŋ lɪsts ði ɪnˈɡɹidiənts ɪn ˈɪŋɡlɪʃ",
+        "note": "biscuits はここではオーストラリア英語で、米語の cookies に近い意味です\n実際には食品の名称や原材料を具体的に示します"
+      },
+      {
+        "role": "A",
+        "en": "Could you take them out of your bag?",
+        "ja": "かばんから出していただけますか",
+        "ipa": "kʊd ju teɪk ðəm aʊt əv jɚ bæɡ"
+      },
+      {
+        "role": "B",
+        "en": "Certainly. I also want to mention a wooden souvenir in the side pocket.",
+        "ja": "はい\nそれから、横のポケットに木製のお土産が入っていることもお伝えしたいです",
+        "ipa": "ˈsɝtənli aɪ ˈɔlsoʊ wɑnt tə ˈmɛnʃən ə ˈwʊdən ˌsuvəˈnɪɹ ɪn ðə saɪd ˈpɑkɪt"
+      },
+      {
+        "role": "A",
+        "en": "Thank you. I'll need to inspect those items.",
+        "ja": "ありがとうございます\nその品物を確認する必要があります",
+        "ipa": "θæŋk ju aɪl nid tə ɪnˈspɛkt ðoʊz ˈaɪtəmz"
+      },
+      {
+        "role": "B",
+        "en": "Of course. Please let me know if you need any other information.",
+        "ja": "もちろんです\nほかに必要な情報があれば教えてください",
+        "ipa": "əv kɔɹs pliz lɛt mi noʊ ɪf ju nid ˈɛni ˈʌðɚ ˌɪnfɚˈmeɪʃən"
+      },
+      {
+        "role": "A",
+        "en": "Is there anything else you're unsure about?",
+        "ja": "ほかに、申告すべきか分からない物はありますか",
+        "ipa": "ɪz ðɛɹ ˈɛniθɪŋ ɛls jɚ ʌnˈʃʊɹ əˈbaʊt"
+      },
+      {
+        "role": "B",
+        "en": "I don't think so, but could you clarify which items you want me to show you?",
+        "ja": "ほかにはないと思いますが、どの品物をお見せすればよいか、はっきり教えていただけますか",
+        "ipa": "aɪ doʊnt θɪŋk soʊ bət kʊd ju ˈklɛɹəˌfaɪ wɪtʃ ˈaɪtəmz ju wɑnt mi tə ʃoʊ ju"
+      }
+    ],
+    "unitIds": [
+      "p-004",
+      "p-055",
+      "p-060"
+    ]
+  },
+  {
+    "id": "pd-03",
+    "title": "Checking a connecting itinerary",
+    "titleJa": "乗り継ぎと預け荷物を確認する",
+    "category": "travel",
+    "level": "B2",
+    "scenarioJa": "シンガポールを経由してメルボルンへ向かう架空の予約です\nこの予約では乗り継ぎ地で預け荷物を受け取らないと、担当者が確認している設定です",
+    "roles": {
+      "A": "旅行者",
+      "B": "航空会社の担当者"
+    },
+    "goals": [
+      "荷物が最終目的地まで預けられているか尋ねる",
+      "聞いた内容を自分の言葉で確認する",
+      "乗り継ぎが心配なときの相談先を尋ねる"
+    ],
+    "notes": [
+      "預け荷物の受け取り・再預け入れの要否は、空港・航空会社・旅程・入国手続きによって変わります\n荷札だけで自己判断せず、自分の予約について確認します",
+      "checked through to ... は荷物の扱い、connecting gate は次の便の搭乗口を表します",
+      "Just to make sure ... は、重要な点を再確認する場面で役立ちます"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Could you check whether my bag is checked through to my final destination?",
+        "ja": "預け荷物が最終目的地まで預けられているか、確認していただけますか",
+        "ipa": "kʊd ju tʃɛk ˈwɛðɚ maɪ bæɡ ɪz tʃɛkt θɹu tə maɪ ˈfaɪnəl ˌdɛstəˈneɪʃən"
+      },
+      {
+        "role": "B",
+        "en": "Let me look at your booking. You're connecting in Singapore, correct?",
+        "ja": "予約を確認しますね\nシンガポールで乗り継ぐのですね",
+        "ipa": "lɛt mi lʊk æt jɚ ˈbʊkɪŋ jɚ kəˈnɛktɪŋ ɪn ˈsɪŋəˌpɔɹ kəˈɹɛkt"
+      },
+      {
+        "role": "A",
+        "en": "Yes. Do I need to collect the bag there?",
+        "ja": "はい\nそこで荷物を受け取る必要はありますか",
+        "ipa": "jɛs du aɪ nid tə kəˈlɛkt ðə bæɡ ðɛɹ"
+      },
+      {
+        "role": "B",
+        "en": "Let me confirm that for your itinerary. The baggage tag shows Melbourne as the destination.",
+        "ja": "お客様の旅程について確認しますね\n荷物のタグでは目的地がメルボルンになっています",
+        "ipa": "lɛt mi kənˈfɝm ðæt fɚ jɚ aɪˈtɪnəˌɹɛɹi ðə ˈbæɡɪdʒ tæɡ ʃoʊz ˈmɛlbɚn æz ðə ˌdɛstəˈneɪʃən"
+      },
+      {
+        "role": "A",
+        "en": "Just to make sure I've understood, I don't collect it during the layover?",
+        "ja": "理解が合っているか確認ですが、乗り継ぎ中は受け取らなくてよいのですか",
+        "ipa": "dʒʌst tə meɪk ʃʊɹ aɪv ˌʌndɚˈstʊd aɪ doʊnt kəˈlɛkt ɪt ˈdʊɹɪŋ ðə ˈleɪˌoʊvɚ"
+      },
+      {
+        "role": "B",
+        "en": "I've confirmed that you won't need to collect it there on this itinerary. Follow the transfer instructions when you land.",
+        "ja": "この旅程では、そこで受け取る必要がないことを確認できました\n到着したら乗り継ぎの案内に従ってください",
+        "ipa": "aɪv kənˈfɝmd ðæt ju woʊnt nid tə kəˈlɛkt ɪt ðɛɹ ɑn ðɪs aɪˈtɪnəˌɹɛɹi ˈfɑloʊ ðə ˈtɹænsfɚ ɪnˈstɹʌkʃənz wɛn ju lænd"
+      },
+      {
+        "role": "A",
+        "en": "Thanks. Is the connecting gate already available?",
+        "ja": "ありがとうございます\n乗り継ぎ便の搭乗口はもう分かりますか",
+        "ipa": "θæŋks ɪz ðə kəˈnɛktɪŋ ɡeɪt ɔlˈɹɛdi əˈveɪləbəl"
+      },
+      {
+        "role": "B",
+        "en": "Not yet. It should appear on the airport screens after you land.",
+        "ja": "まだです\n到着後、空港の案内画面に表示されるはずです",
+        "ipa": "nɑt jɛt ɪt ʃʊd əˈpɪɹ ɑn ði ˈɛɹpɔɹt skɹinz ˈæftɚ ju lænd"
+      },
+      {
+        "role": "A",
+        "en": "If the first flight is delayed, who should I speak to?",
+        "ja": "最初の便が遅れたら、どなたに相談すればよいですか",
+        "ipa": "ɪf ðə fɝst flaɪt ɪz dɪˈleɪd hu ʃʊd aɪ spik tə"
+      },
+      {
+        "role": "B",
+        "en": "The transfer desk can check your connection and explain the available options.",
+        "ja": "乗り継ぎ窓口で接続便を確認し、利用できる選択肢をご説明できます",
+        "ipa": "ðə ˈtɹænsfɚ dɛsk kæn tʃɛk jɚ kəˈnɛkʃən ænd ɪkˈspleɪn ði əˈveɪləbəl ˈɑpʃənz"
+      }
+    ],
+    "unitIds": [
+      "p-005",
+      "p-052",
+      "p-082"
+    ]
+  },
+  {
+    "id": "pd-04",
+    "title": "When a delay threatens your connection",
+    "titleJa": "遅延で乗り継ぎが心配になったら",
+    "category": "travel",
+    "level": "B2",
+    "scenarioJa": "最初の便が遅れ、次の便に間に合うか分からない場面です\n別経路を提案してもらい、変更する前に料金と到着時刻を確認します",
+    "roles": {
+      "A": "旅行者",
+      "B": "航空会社の担当者"
+    },
+    "goals": [
+      "心配していることと時間を具体的に伝える",
+      "当日到着できる代案を求める",
+      "変更の条件を聞いてから決める"
+    ],
+    "notes": [
+      "I’m concerned I might ... は、確定していない問題を落ち着いて伝える形です",
+      "運賃条件や振替の扱いは予約ごとに異なります\nこの会話は無料変更や補償を約束するものではありません",
+      "提案を聞くことと変更に同意することを分け、before making any change で確認の順番を明確にしています"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "I'm concerned I might miss my connecting flight.",
+        "ja": "乗り継ぎ便に間に合わないかもしれないのが心配です",
+        "ipa": "aɪm kənˈsɝnd aɪ maɪt mɪs maɪ kəˈnɛktɪŋ flaɪt"
+      },
+      {
+        "role": "B",
+        "en": "How much time was there between the flights originally?",
+        "ja": "もともとは便と便の間にどのくらい時間がありましたか",
+        "ipa": "haʊ mʌtʃ taɪm wəz ðɛɹ bɪˈtwin ðə flaɪts əˈɹɪdʒənəli"
+      },
+      {
+        "role": "A",
+        "en": "Ninety minutes, but the first flight is now delayed by an hour.",
+        "ja": "90分でしたが、最初の便が今は1時間遅れています",
+        "ipa": "ˈnaɪnti ˈmɪnɪts bət ðə fɝst flaɪt ɪz naʊ dɪˈleɪd baɪ ən aʊɚ"
+      },
+      {
+        "role": "B",
+        "en": "I can check the current arrival estimate and the next available connections.",
+        "ja": "現在の到着見込みと、その後に利用できる接続便を確認できます",
+        "ipa": "aɪ kæn tʃɛk ðə ˈkɝənt əˈɹaɪvəl ˈɛstəmət ænd ðə nɛkst əˈveɪləbəl kəˈnɛkʃənz"
+      },
+      {
+        "role": "A",
+        "en": "Are there any alternatives that would still get me there today?",
+        "ja": "それでも今日中に到着できる代案はありますか",
+        "ipa": "ɚ ðɛɹ ˈɛni ɔlˈtɝnətɪvz ðæt wʊd stɪl ɡɛt mi ðɛɹ təˈdeɪ"
+      },
+      {
+        "role": "B",
+        "en": "There's one possible route with a longer layover. I'll need to confirm the seats.",
+        "ja": "乗り継ぎ時間が長くなる経路が一つ考えられます\n座席の空きは確認が必要です",
+        "ipa": "ðɛɹz wʌn ˈpɑsəbəl ɹut wɪð ə ˈlɔŋɡɚ ˈleɪˌoʊvɚ aɪl nid tə kənˈfɝm ðə sits"
+      },
+      {
+        "role": "A",
+        "en": "Would changing the route involve an additional charge?",
+        "ja": "経路を変更すると追加料金はかかりますか",
+        "ipa": "wʊd ˈtʃeɪndʒɪŋ ðə ɹut ɪnˈvɑlv ən əˈdɪʃənəl tʃɑɹdʒ"
+      },
+      {
+        "role": "B",
+        "en": "I'll check the conditions on your ticket before making any change.",
+        "ja": "変更する前に、お客様の航空券の条件を確認します",
+        "ipa": "aɪl tʃɛk ðə kənˈdɪʃənz ɑn jɚ ˈtɪkɪt bɪˈfɔɹ ˈmeɪkɪŋ ˈɛni tʃeɪndʒ"
+      },
+      {
+        "role": "A",
+        "en": "Thank you. Please confirm the total cost and arrival time first.",
+        "ja": "ありがとうございます\nまず総額と到着時刻を確認してください",
+        "ipa": "θæŋk ju pliz kənˈfɝm ðə ˈtoʊtəl kɔst ænd əˈɹaɪvəl taɪm fɝst"
+      },
+      {
+        "role": "B",
+        "en": "Of course. I'll explain the options, and you can decide.",
+        "ja": "もちろんです\n選択肢をご説明しますので、そのうえでお決めください",
+        "ipa": "əv kɔɹs aɪl ɪkˈspleɪn ði ˈɑpʃənz ænd ju kæn dɪˈsaɪd"
+      }
+    ],
+    "unitIds": [
+      "p-006",
+      "p-007",
+      "p-056",
+      "p-059"
+    ]
+  },
+  {
+    "id": "pd-05",
+    "title": "Checking in and understanding charges",
+    "titleJa": "ホテルのチェックインで料金を確かめる",
+    "category": "travel",
+    "level": "B2",
+    "scenarioJa": "夜遅くホテルに到着した架空の旅行者が、予約と料金の内訳を確認します\nこのホテルでは付随費用に備えた一時的な利用枠の確保がある、という設定です",
+    "roles": {
+      "A": "宿泊客",
+      "B": "フロント担当者"
+    },
+    "goals": [
+      "予約名を伝えてチェックインする",
+      "料金に何が含まれるか確認する",
+      "incidentals と料金の内訳について尋ねる"
+    ],
+    "notes": [
+      "a reservation under ... の under のあとには、予約に登録した名前を入れます",
+      "temporary hold はこの場面では一時的な利用枠の確保を表します\n支払い・保証金・解除時期などの扱いは施設や決済条件によって異なるため、自分の予約で確認します",
+      "Could I have a written breakdown ...? で、項目ごとの金額を文字で確認できます"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "I have a reservation under Alex Kim for three nights.",
+        "ja": "Alex Kim の名前で3泊の予約をしています",
+        "ipa": "aɪ hæv ə ˌɹɛzɚˈveɪʃən ˈʌndɚ ˈælɪks kɪm fɚ θɹi naɪts"
+      },
+      {
+        "role": "B",
+        "en": "Welcome. Could I see your identification and booking confirmation?",
+        "ja": "ようこそお越しくださいました\n身分証明書と予約確認を拝見できますか",
+        "ipa": "ˈwɛlkəm kʊd aɪ si jɚ aɪˌdɛntəfəˈkeɪʃən ænd ˈbʊkɪŋ ˌkɑnfɚˈmeɪʃən"
+      },
+      {
+        "role": "A",
+        "en": "Of course. I emailed yesterday to say I'd be arriving late.",
+        "ja": "はい\n到着が遅くなると、昨日メールでお知らせしました",
+        "ipa": "əv kɔɹs aɪ ˈimeɪld ˈjɛstɚdeɪ tə seɪ aɪd bi əˈɹaɪvɪŋ leɪt"
+      },
+      {
+        "role": "B",
+        "en": "I see the note. Would you like me to explain the charges before we continue?",
+        "ja": "連絡を確認できました\n手続きを進める前に、料金をご説明しましょうか",
+        "ipa": "aɪ si ðə noʊt wʊd ju laɪk mi tə ɪkˈspleɪn ðə ˈtʃɑɹdʒɪz bɪˈfɔɹ wi kənˈtɪnju"
+      },
+      {
+        "role": "A",
+        "en": "Yes, please. Does the total include all taxes and service charges?",
+        "ja": "お願いします\n総額には税金とサービス料がすべて含まれていますか",
+        "ipa": "jɛs pliz dʌz ðə ˈtoʊtəl ɪnˈklud ɔl ˈtæksɪz ænd ˈsɝvɪs ˈtʃɑɹdʒɪz"
+      },
+      {
+        "role": "B",
+        "en": "The room total does. There's also a temporary hold for incidentals.",
+        "ja": "客室料金の総額には含まれています\nそれとは別に、付随費用に備えて一時的に利用枠を確保します",
+        "ipa": "ðə ɹum ˈtoʊtəl dʌz ðɛɹz ˈɔlsoʊ ə ˈtɛmpəˌɹɛɹi hoʊld fɚ ˌɪnsəˈdɛntəlz"
+      },
+      {
+        "role": "A",
+        "en": "Could you explain what counts as incidentals here?",
+        "ja": "こちらでは何が付随費用に当たるのか、説明していただけますか",
+        "ipa": "kʊd ju ɪkˈspleɪn wʌt kaʊnts æz ˌɪnsəˈdɛntəlz hɪɹ"
+      },
+      {
+        "role": "B",
+        "en": "Any optional services you use, such as room service, are charged separately.",
+        "ja": "ルームサービスなど、ご利用になる追加のサービスは別途請求されます",
+        "ipa": "ˈɛni ˈɑpʃənəl ˈsɝvɪsɪz ju juz sʌtʃ æz ɹum ˈsɝvɪs ɚ tʃɑɹdʒd ˈsɛpɚətli"
+      },
+      {
+        "role": "A",
+        "en": "Thanks. Could I have a written breakdown of the total and the hold?",
+        "ja": "ありがとうございます\n総額と一時的に確保する利用枠について、書面で内訳をいただけますか",
+        "ipa": "θæŋks kʊd aɪ hæv ə ˈɹɪtən ˈbɹeɪkˌdaʊn əv ðə ˈtoʊtəl ænd ðə hoʊld"
+      },
+      {
+        "role": "B",
+        "en": "Certainly. Let me show you the details before you authorize anything.",
+        "ja": "もちろんです\nご了承いただく前に、詳細をお見せします",
+        "ipa": "ˈsɝtənli lɛt mi ʃoʊ ju ðə dɪˈteɪlz bɪˈfɔɹ ju ˈɔθəˌɹaɪz ˈɛniθɪŋ"
+      }
+    ],
+    "unitIds": [
+      "p-003",
+      "p-013",
+      "p-015",
+      "p-058",
+      "p-060"
+    ]
+  },
+  {
+    "id": "pd-06",
+    "title": "Resolving a problem with your room",
+    "titleJa": "部屋の不具合と明細の疑問を相談する",
+    "category": "travel",
+    "level": "B2",
+    "scenarioJa": "空調の音が気になる宿泊客が、部屋の変更を相談する場面です\n追加料金の確認をしたあとで、明細にある朝食代についても尋ねます",
+    "roles": {
+      "A": "宿泊客",
+      "B": "フロント担当者"
+    },
+    "goals": [
+      "不具合の状態と始まった時点を説明する",
+      "希望する解決策を丁寧に伝える",
+      "部屋の変更と料金確認を順番に進める"
+    ],
+    "notes": [
+      "There’s an issue with ... で問題を落ち着いて切り出し、具体的な状態を続けます",
+      "I have an early start は、翌朝早く行動を始める必要があるという意味です\n単に early morning と置くだけでは、この事情が伝わりにくくなります",
+      "対応方法や追加料金は空室状況・予約条件などによって変わるため、変更の前に確認します"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "There's an issue with the air conditioning in my room.",
+        "ja": "部屋の空調に問題があります",
+        "ipa": "ðɛɹz ən ˈɪʃu wɪð ði ɛɹ kənˈdɪʃənɪŋ ɪn maɪ ɹum"
+      },
+      {
+        "role": "B",
+        "en": "I'm sorry to hear that. What exactly is happening?",
+        "ja": "それは申し訳ありません\n具体的にどのような状態でしょうか",
+        "ipa": "aɪm ˈsɑɹi tə hɪɹ ðæt wʌt ɪɡˈzæktli ɪz ˈhæpənɪŋ"
+      },
+      {
+        "role": "A",
+        "en": "It's been making a loud noise since I checked in, even when I turn it down.",
+        "ja": "チェックインしたときから大きな音がしていて、設定を弱くしても続いています",
+        "ipa": "ɪts bɪn ˈmeɪkɪŋ ə laʊd nɔɪz sɪns aɪ tʃɛkt ɪn ˈivən wɛn aɪ tɝn ɪt daʊn"
+      },
+      {
+        "role": "B",
+        "en": "We can ask someone to take a look, or check whether another room is available.",
+        "ja": "担当者に確認させるか、ほかの部屋が空いているかお調べできます",
+        "ipa": "wi kæn æsk ˈsʌmwʌn tə teɪk ə lʊk ɔɹ tʃɛk ˈwɛðɚ əˈnʌðɚ ɹum ɪz əˈveɪləbəl"
+      },
+      {
+        "role": "A",
+        "en": "Would it be possible to move to a quieter room? I have an early start.",
+        "ja": "もう少し静かな部屋に移ることは可能ですか\n明日の朝は早く出る予定なので",
+        "ipa": "wʊd ɪt bi ˈpɑsəbəl tə muv tə ə ˈkwaɪətɚ ɹum aɪ hæv ən ˈɝli stɑɹt"
+      },
+      {
+        "role": "B",
+        "en": "I'll check. Would you like a room away from the elevator?",
+        "ja": "確認しますね\nエレベーターから離れたお部屋がよろしいですか",
+        "ipa": "aɪl tʃɛk wʊd ju laɪk ə ɹum əˈweɪ fɹəm ði ˈɛləˌveɪtɚ"
+      },
+      {
+        "role": "A",
+        "en": "Yes, if possible. Would there be any additional charge?",
+        "ja": "はい、できればお願いします\n追加料金はありますか",
+        "ipa": "jɛs ɪf ˈpɑsəbəl wʊd ðɛɹ bi ˈɛni əˈdɪʃənəl tʃɑɹdʒ"
+      },
+      {
+        "role": "B",
+        "en": "I'll confirm that before arranging a move.",
+        "ja": "移動を手配する前に、その点を確認します",
+        "ipa": "aɪl kənˈfɝm ðæt bɪˈfɔɹ əˈɹeɪndʒɪŋ ə muv"
+      },
+      {
+        "role": "A",
+        "en": "Thank you. I'd also like to ask about a breakfast charge on my bill.",
+        "ja": "ありがとうございます\nそれから、明細にある朝食代についてもお聞きしたいです",
+        "ipa": "θæŋk ju aɪd ˈɔlsoʊ laɪk tə æsk əˈbaʊt ə ˈbɹɛkfəst tʃɑɹdʒ ɑn maɪ bɪl"
+      },
+      {
+        "role": "B",
+        "en": "Let's look at your booking first, then go through the bill together.",
+        "ja": "まず予約内容を確認して、それから一緒に明細を見ていきましょう",
+        "ipa": "lɛts lʊk æt jɚ ˈbʊkɪŋ fɝst ðɛn ɡoʊ θɹu ðə bɪl təˈɡɛðɚ"
+      }
+    ],
+    "unitIds": [
+      "p-008",
+      "p-009",
+      "p-010",
+      "p-015"
+    ]
+  },
+  {
+    "id": "pd-07",
+    "title": "From a hobby to a deeper conversation",
+    "titleJa": "趣味の話から、暮らしや価値観の話へ",
+    "category": "social",
+    "level": "B2",
+    "scenarioJa": "知り合ったばかりの大人同士が、写真の趣味をきっかけに引っ越しや海外生活への気持ちを話します\n相手の答えを受け止めながら、自分の経験や迷いも少しずつ伝えます",
+    "roles": {
+      "A": "友人 A",
+      "B": "友人 B"
+    },
+    "goals": [
+      "趣味を始めたきっかけを尋ねる",
+      "相手の経験を本人がどう感じたか聞く",
+      "共感と自分の迷いを言葉にする"
+    ],
+    "notes": [
+      "What was that like for you? は、事実の追加情報よりも、本人の経験や感じ方を尋ねます\n話したくなさそうなら、別の話題へ移れます",
+      "I can relate to that. のあとに短い自分の経験を添えると、共感の根拠が伝わります\n相手の話をすぐ自分の話に置き換えないようにします",
+      "Part of me wants ... は、一つの気持ちだけでは決めきれないことを自然に表せます"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "What got you into photography in the first place?",
+        "ja": "そもそも、写真を始めたきっかけは何だったの",
+        "ipa": "wʌt ɡɑt ju ˈɪntu fəˈtɑɡɹəfi ɪn ðə fɝst pleɪs"
+      },
+      {
+        "role": "B",
+        "en": "I started taking pictures when I moved away from home and wanted to notice my new surroundings.",
+        "ja": "実家を離れて、新しい周りの景色に目を向けたいと思ったときに、写真を撮り始めたんだ",
+        "ipa": "aɪ ˈstɑɹtɪd ˈteɪkɪŋ ˈpɪktʃɚz wɛn aɪ muvd əˈweɪ fɹəm hoʊm ænd ˈwɑntɪd tə ˈnoʊtɪs maɪ nu səˈɹaʊndɪŋz"
+      },
+      {
+        "role": "A",
+        "en": "What was that like for you, moving somewhere you didn't know anyone?",
+        "ja": "知っている人が誰もいない場所に移るのは、あなたにとってどんな経験だった",
+        "ipa": "wʌt wəz ðæt laɪk fɚ ju ˈmuvɪŋ ˈsʌmwɛɹ ju ˈdɪdənt noʊ ˈɛniwʌn"
+      },
+      {
+        "role": "B",
+        "en": "I liked the freedom, but I was lonelier than I expected.",
+        "ja": "自由なのはよかったけど、思っていたより寂しかった",
+        "ipa": "aɪ laɪkt ðə ˈfɹidəm bət aɪ wəz ˈloʊnliɚ ðæn aɪ ɪkˈspɛktɪd"
+      },
+      {
+        "role": "A",
+        "en": "I can relate to that. Part of me wants to live abroad, but I'd miss the people here.",
+        "ja": "その気持ちは分かるな\n海外で暮らしたい気持ちもあるけど、ここの人たちに会えなくなるのは寂しいと思う",
+        "ipa": "aɪ kæn ɹɪˈleɪt tə ðæt pɑɹt əv mi wɑnts tə lɪv əˈbɹɔd bət aɪd mɪs ðə ˈpipəl hɪɹ"
+      },
+      {
+        "role": "B",
+        "en": "What matters most to you when you think about making that move?",
+        "ja": "そういう引っ越しを考えるときに、一番大切にしたいことは何",
+        "ipa": "wʌt ˈmætɚz moʊst tə ju wɛn ju θɪŋk əˈbaʊt ˈmeɪkɪŋ ðæt muv"
+      },
+      {
+        "role": "A",
+        "en": "Having room to grow without feeling that I have to start my whole life again.",
+        "ja": "人生を全部一からやり直さなきゃ、とは感じずに、成長できる余地があることかな",
+        "ipa": "ˈhævɪŋ ɹum tə ɡɹoʊ wɪˈðaʊt ˈfilɪŋ ðæt aɪ hæv tə stɑɹt maɪ hoʊl laɪf əˈɡɛn"
+      },
+      {
+        "role": "B",
+        "en": "Maybe it would help to think about what you want to keep in your life, as well as what you want to change.",
+        "ja": "変えたいことと一緒に、自分の生活に残しておきたいことも考えてみるといいかもしれないね",
+        "ipa": "ˈmeɪbi ɪt wʊd hɛlp tə θɪŋk əˈbaʊt wʌt ju wɑnt tə kip ɪn jɚ laɪf æz wɛl æz wʌt ju wɑnt tə tʃeɪndʒ"
+      },
+      {
+        "role": "A",
+        "en": "I hadn't thought about it that way. Keeping some routines might help.",
+        "ja": "そういうふうには考えたことがなかった\nいくつか習慣を残しておくとよさそうだね",
+        "ipa": "aɪ ˈhædənt θɔt əˈbaʊt ɪt ðæt weɪ ˈkipɪŋ səm ɹuˈtinz maɪt hɛlp"
+      },
+      {
+        "role": "B",
+        "en": "Exactly. A new place doesn't have to mean becoming a completely different person.",
+        "ja": "そうそう\n新しい場所に行くからといって、まったく別の人間になる必要はないよね",
+        "ipa": "ɪɡˈzæktli ə nu pleɪs ˈdʌzənt hæv tə min bɪˈkʌmɪŋ ə kəmˈplitli ˈdɪfɚənt ˈpɝsən"
+      }
+    ],
+    "unitIds": [
+      "p-026",
+      "p-027",
+      "p-028",
+      "p-030",
+      "p-038"
+    ]
+  },
+  {
+    "id": "pd-08",
+    "title": "What freedom at work means to you",
+    "titleJa": "仕事の自由と、暮らしの優先順位",
+    "category": "social",
+    "level": "C1",
+    "scenarioJa": "友人同士が、自分で働き方を決められることと、仕事から離れる時間を持つことの違いを話します\n前提を見直しながら、自分の価値観の変化を説明する会話です",
+    "roles": {
+      "A": "友人 A",
+      "B": "友人 B"
+    },
+    "goals": [
+      "相手の経験を聞いて自分の前提を見直す",
+      "利点と難しさを一緒に説明する",
+      "抽象的な価値観を具体的な行動につなげて話す"
+    ],
+    "notes": [
+      "Not necessarily. は、always などの強い一般化に対して「必ずしもそうではない」と応じる形です",
+      "switch off はこの文脈では仕事を頭から離してくつろぐことです\n電源を切るという文字どおりの意味だけで覚えないようにします",
+      "I do enjoy ... の do は enjoy を強め、忙しさを楽しむ気持ちは実際にある、と認めています"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "Do you think working for yourself always gives you more freedom?",
+        "ja": "自分で仕事をするようになると、必ず自由が増えると思う",
+        "ipa": "du ju θɪŋk ˈwɝkɪŋ fɚ jɚˈsɛlf ˈɔlweɪz ɡɪvz ju mɔɹ ˈfɹidəm"
+      },
+      {
+        "role": "B",
+        "en": "Not necessarily. I have more control over my time, but I also find it harder to switch off.",
+        "ja": "必ずしもそうではないかな\n時間は自分で決めやすくなったけど、仕事から頭を切り替えるのは難しくなった",
+        "ipa": "nɑt ˌnɛsəˈsɛɹəli aɪ hæv mɔɹ kənˈtɹoʊl ˈoʊvɚ maɪ taɪm bət aɪ ˈɔlsoʊ faɪnd ɪt ˈhɑɹdɚ tə swɪtʃ ɔf"
+      },
+      {
+        "role": "A",
+        "en": "That's interesting. I assumed choosing your own hours meant having more time to yourself.",
+        "ja": "それは面白いね\n働く時間を選べるなら、自分のための時間も増えると思い込んでいた",
+        "ipa": "ðæts ˈɪntɹəstɪŋ aɪ əˈsumd ˈtʃuzɪŋ jɚ oʊn aʊɚz mɛnt ˈhævɪŋ mɔɹ taɪm tə jɚˈsɛlf"
+      },
+      {
+        "role": "B",
+        "en": "I used to think that too. What changed my perspective was realizing that work can expand into every free hour.",
+        "ja": "前は私もそう思っていた\n見方が変わったのは、仕事って空いている時間を全部埋めてしまうこともある、と気づいたから",
+        "ipa": "aɪ just tə θɪŋk ðæt tu wʌt tʃeɪndʒd maɪ pɚˈspɛktɪv wəz ˈɹiəˌlaɪzɪŋ ðæt wɝk kæn ɪkˈspænd ˈɪntu ˈɛvɹi fɹi aʊɚ"
+      },
+      {
+        "role": "A",
+        "en": "So, for you, it comes down to protecting time outside work?",
+        "ja": "じゃあ、あなたにとっては、結局、仕事以外の時間を守ることが大事なのかな",
+        "ipa": "soʊ fɚ ju ɪt kʌmz daʊn tə pɹəˈtɛktɪŋ taɪm ˌaʊtˈsaɪd wɝk"
+      },
+      {
+        "role": "B",
+        "en": "Partly. I'm still figuring out what a sustainable balance looks like.",
+        "ja": "それもあるね\n無理なく続けられるバランスがどういうものかは、まだ考えているところ",
+        "ipa": "ˈpɑɹtli aɪm stɪl ˈfɪɡjɚɪŋ aʊt wʌt ə səˈsteɪnəbəl ˈbæləns lʊks laɪk"
+      },
+      {
+        "role": "A",
+        "en": "Would you say your priorities have changed since you started?",
+        "ja": "始めてから、自分の優先順位も変わったと思う",
+        "ipa": "wʊd ju seɪ jɚ pɹaɪˈɔɹətiz hæv tʃeɪndʒd sɪns ju ˈstɑɹtɪd"
+      },
+      {
+        "role": "B",
+        "en": "Yes. I'm more intentional about making plans with friends instead of waiting until work is finished.",
+        "ja": "うん\n仕事が終わるまで待つのではなく、友人との予定を意識して入れるようになった",
+        "ipa": "jɛs aɪm mɔɹ ɪnˈtɛnʃənəl əˈbaʊt ˈmeɪkɪŋ plænz wɪð fɹɛndz ɪnˈstɛd əv ˈweɪtɪŋ ənˈtɪl wɝk ɪz ˈfɪnɪʃt"
+      },
+      {
+        "role": "A",
+        "en": "That makes sense. I do enjoy being busy, but I don't want every conversation to become about work.",
+        "ja": "それは分かるな\n忙しくしているのは確かに好きだけど、どの会話も仕事の話になるのは避けたい",
+        "ipa": "ðæt meɪks sɛns aɪ du ɪnˈdʒɔɪ ˈbiɪŋ ˈbɪzi bət aɪ doʊnt wɑnt ˈɛvɹi ˌkɑnvɚˈseɪʃən tə bɪˈkʌm əˈbaʊt wɝk"
+      },
+      {
+        "role": "B",
+        "en": "Same here. What have you been enjoying lately that has nothing to do with work?",
+        "ja": "私も同じ\n最近、仕事と関係なく楽しんでいることはある",
+        "ipa": "seɪm hɪɹ wʌt hæv ju bɪn ɪnˈdʒɔɪɪŋ ˈleɪtli ðæt hæz ˈnʌθɪŋ tə du wɪð wɝk"
+      }
+    ],
+    "unitIds": [
+      "p-031",
+      "p-033",
+      "p-037",
+      "p-080"
+    ]
+  },
+  {
+    "id": "pd-09",
+    "title": "Clearing up a misunderstanding",
+    "titleJa": "相手の言葉を決めつけずに確かめる",
+    "category": "repair",
+    "level": "B2",
+    "scenarioJa": "親しい友人同士が、少し一人の時間がほしい、という言葉の意味を確認する場面です\n気持ちを決めつけず、具体的にどのくらいの予定なら無理がないか話します",
+    "roles": {
+      "A": "少し休みたい友人",
+      "B": "意味を確認する友人"
+    },
+    "goals": [
+      "相手の意図を確認し、早合点したことを認める",
+      "抽象的な言葉を具体的な予定に言い換える",
+      "自分にとって無理のない範囲を伝える"
+    ],
+    "notes": [
+      "I need a little space. は文脈によって幅があります\n単に今週休みたい場合も、関係に距離を置きたい場合もあるため、この一文だけで結論を出しません",
+      "read too much into ... は、ある言葉や行動に必要以上の意味を読み込むことです",
+      "as long as ... で条件を示し、I’d rather ask than guess ... で確認する姿勢を伝えています"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "I need a little space this week.",
+        "ja": "今週は、少し一人の時間がほしいんだ",
+        "ipa": "aɪ nid ə ˈlɪtəl speɪs ðɪs wik"
+      },
+      {
+        "role": "B",
+        "en": "Do you mean you don't want to spend time together anymore?",
+        "ja": "もう一緒に過ごしたくない、という意味",
+        "ipa": "du ju min ju doʊnt wɑnt tə spɛnd taɪm təˈɡɛðɚ ˌɛniˈmɔɹ"
+      },
+      {
+        "role": "A",
+        "en": "No, that's not what I meant. I've been feeling overwhelmed, and I need a couple of quiet evenings.",
+        "ja": "ううん、そういう意味ではないよ\n最近余裕がなくて、夜を2日くらい静かに過ごしたいんだ",
+        "ipa": "noʊ ðæts nɑt wʌt aɪ mɛnt aɪv bɪn ˈfilɪŋ ˌoʊvɚˈwɛlmd ænd aɪ nid ə ˈkʌpəl əv ˈkwaɪət ˈivnɪŋz"
+      },
+      {
+        "role": "B",
+        "en": "Thanks for clarifying. I may have read too much into the word space.",
+        "ja": "はっきり説明してくれてありがとう\nspace という言葉を深読みしすぎたかもしれない",
+        "ipa": "θæŋks fɚ ˈklɛɹəˌfaɪɪŋ aɪ meɪ hæv ɹɛd tu mʌtʃ ˈɪntu ðə wɝd speɪs"
+      },
+      {
+        "role": "A",
+        "en": "Let me put it another way: I'd still like to see you, but I can't make plans every evening.",
+        "ja": "別の言い方をすると、会いたい気持ちはあるけど、毎晩予定を入れるのは難しい、ということ",
+        "ipa": "lɛt mi pʊt ɪt əˈnʌðɚ weɪ aɪd stɪl laɪk tə si ju bət aɪ kænt meɪk plænz ˈɛvɹi ˈivnɪŋ"
+      },
+      {
+        "role": "B",
+        "en": "I understand. Would one evening this weekend feel manageable?",
+        "ja": "分かった\n今週末に一晩なら、無理なく会えそうかな",
+        "ipa": "aɪ ˌʌndɚˈstænd wʊd wʌn ˈivnɪŋ ðɪs ˈwikˌɛnd fil ˈmænɪdʒəbəl"
+      },
+      {
+        "role": "A",
+        "en": "Yes. Saturday would work, as long as we keep it fairly relaxed.",
+        "ja": "うん\nゆったり過ごす感じなら、土曜日は大丈夫",
+        "ipa": "jɛs ˈsætɚdeɪ wʊd wɝk æz lɔŋ æz wi kip ɪt ˈfɛɹli ɹɪˈlækst"
+      },
+      {
+        "role": "B",
+        "en": "Of course. I'd rather ask than guess what you need.",
+        "ja": "もちろん\n何が必要か、推測するより聞いておきたいから",
+        "ipa": "əv kɔɹs aɪd ˈɹæðɚ æsk ðæn ɡɛs wʌt ju nid"
+      },
+      {
+        "role": "A",
+        "en": "I appreciate that. It's easier to be honest when I don't feel rushed.",
+        "ja": "そう言ってもらえるとありがたい\n急かされていないと感じると、正直に話しやすい",
+        "ipa": "aɪ əˈpɹiʃiˌeɪt ðæt ɪts ˈiziɚ tə bi ˈɑnəst wɛn aɪ doʊnt fil ɹʌʃt"
+      },
+      {
+        "role": "B",
+        "en": "Then let's keep checking in with each other instead of making assumptions.",
+        "ja": "じゃあ、決めつけるのではなく、これからもお互いに確認していこう",
+        "ipa": "ðɛn lɛts kip ˈtʃɛkɪŋ ɪn wɪð itʃ ˈʌðɚ ɪnˈstɛd əv ˈmeɪkɪŋ əˈsʌmpʃənz"
+      }
+    ],
+    "unitIds": [
+      "p-022",
+      "p-023",
+      "p-060",
+      "p-062",
+      "p-067",
+      "p-100"
+    ]
+  },
+  {
+    "id": "pd-10",
+    "title": "Asking someone on a coffee date",
+    "titleJa": "自然に、意味が伝わるようにデートへ誘う",
+    "category": "flirting",
+    "level": "B2",
+    "scenarioJa": "会話を楽しんだ大人同士が、もう一度会う約束をする場面です\n片方がデートとして誘い、相手が前向きに応じたあとで、時間と場所を相談します",
+    "roles": {
+      "A": "誘う人",
+      "B": "誘いに応じる人"
+    },
+    "goals": [
+      "一緒に話していてよかった点を素直に伝える",
+      "デートとして会いたい意図を明確にする",
+      "相手の都合を聞いて予定を決める"
+    ],
+    "notes": [
+      "You’re easy to talk to. は、人として話しやすいという意味にもなります\nこの一言だけで恋愛感情を判断することはできません",
+      "coffee だけでは友人としての誘いか曖昧な場合があるため、この会話では a coffee date と明確にしています",
+      "相手が断ったり返答を保留したりした場合は、その返答を受け止めます\nここでは承諾したあとの自然な予定調整を練習します"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "I really enjoyed hearing about your trip. You're easy to talk to.",
+        "ja": "旅行の話を聞けて、とても楽しかった\nあなたとは話しやすいね",
+        "ipa": "aɪ ˈɹiəli ɪnˈdʒɔɪd ˈhɪɹɪŋ əˈbaʊt jɚ tɹɪp jɚ ˈizi tə tɔk tə"
+      },
+      {
+        "role": "B",
+        "en": "I was thinking the same thing. We somehow went from train stations to childhood dreams.",
+        "ja": "私も同じことを思っていた\nいつの間にか、駅の話から子どものころの夢の話になっていたね",
+        "ipa": "aɪ wəz ˈθɪŋkɪŋ ðə seɪm θɪŋ wi ˈsʌmhaʊ wɛnt fɹəm tɹeɪn ˈsteɪʃənz tə ˈtʃaɪldˌhʊd dɹimz"
+      },
+      {
+        "role": "A",
+        "en": "That might be my favorite kind of conversation.",
+        "ja": "そういう会話が、一番好きかもしれない",
+        "ipa": "ðæt maɪt bi maɪ ˈfeɪvɚɪt kaɪnd əv ˌkɑnvɚˈseɪʃən"
+      },
+      {
+        "role": "B",
+        "en": "Mine too. I didn't realize how late it had gotten.",
+        "ja": "私も\nこんな時間になっていたとは気づかなかった",
+        "ipa": "maɪn tu aɪ ˈdɪdənt ˈɹiəˌlaɪz haʊ leɪt ɪt hæd ˈɡɑtən"
+      },
+      {
+        "role": "A",
+        "en": "I'd like to keep getting to know you. Would you be up for a coffee date this weekend?",
+        "ja": "もっとあなたのことを知りたいな\n今週末、コーヒーを飲みにデートしない",
+        "ipa": "aɪd laɪk tə kip ˈɡɛtɪŋ tə noʊ ju wʊd ju bi ʌp fɚ ə ˈkɔfi deɪt ðɪs ˈwikˌɛnd"
+      },
+      {
+        "role": "B",
+        "en": "Yes, I'd like that. What did you have in mind?",
+        "ja": "うん、いいね\nどんなところを考えているの",
+        "ipa": "jɛs aɪd laɪk ðæt wʌt dɪd ju hæv ɪn maɪnd"
+      },
+      {
+        "role": "A",
+        "en": "Somewhere quiet enough to talk. Would Saturday afternoon work?",
+        "ja": "ゆっくり話せるくらい静かな場所かな\n土曜の午後はどう",
+        "ipa": "ˈsʌmwɛɹ ˈkwaɪət ɪˈnʌf tə tɔk wʊd ˈsætɚdeɪ ˌæftɚˈnun wɝk"
+      },
+      {
+        "role": "B",
+        "en": "Saturday's good, but I only have about an hour.",
+        "ja": "土曜は大丈夫だけど、1時間くらいしか時間がないんだ",
+        "ipa": "ˈsætɚdeɪz ɡʊd bət aɪ ˈoʊnli hæv əˈbaʊt ən aʊɚ"
+      },
+      {
+        "role": "A",
+        "en": "That works for me. I'll send you a couple of places and you can tell me what suits you.",
+        "ja": "それで大丈夫\nお店をいくつか送るから、どこが都合がよいか教えて",
+        "ipa": "ðæt wɝks fɚ mi aɪl sɛnd ju ə ˈkʌpəl əv ˈpleɪsɪz ænd ju kæn tɛl mi wʌt suts ju"
+      },
+      {
+        "role": "B",
+        "en": "Sounds good. I'm looking forward to it.",
+        "ja": "いいね\n楽しみにしている",
+        "ipa": "saʊndz ɡʊd aɪm ˈlʊkɪŋ ˈfɔɹwɚd tə ɪt"
+      }
+    ],
+    "unitIds": [
+      "p-041",
+      "p-042",
+      "p-043",
+      "p-092"
+    ]
+  },
+  {
+    "id": "pd-11",
+    "title": "A little playful conversation",
+    "titleJa": "大げさにせず、軽くふざけて距離を縮める",
+    "category": "flirting",
+    "level": "B2",
+    "scenarioJa": "何度か会っていて、お互いに冗談を楽しめる大人同士の会話です\n外見をからかったり相手を試したりせず、話し方や一緒にいる時間を好意的に受け止めています",
+    "roles": {
+      "A": "話し相手 A",
+      "B": "話し相手 B"
+    },
+    "goals": [
+      "相手の話し方やユーモアを具体的に褒める",
+      "軽い自虐に無理のない冗談で返す",
+      "好意を少しだけ言葉にする"
+    ],
+    "notes": [
+      "この場面の haircut の話は B 自身が出した自分の過去の話です\n初対面で相手の外見をからかうための型ではありません",
+      "I’m enjoying getting to know you, though. は、冗談の流れから本心を少し添える言い方です\nthough を文末に置いた対比にも注目します",
+      "同じ表現でも関係や声の調子で受け取り方が変わります\n相手が乗ってこなければ、冗談を重ねず話題を変えます"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "You always manage to make an ordinary story entertaining.",
+        "ja": "何でもない話でも、いつも面白く聞かせるね",
+        "ipa": "ju ˈɔlweɪz ˈmænɪdʒ tə meɪk ən ˈɔɹdəˌnɛɹi ˈstɔɹi ˌɛntɚˈteɪnɪŋ"
+      },
+      {
+        "role": "B",
+        "en": "I'm glad someone appreciates my extremely limited collection of stories.",
+        "ja": "私のものすごく少ない持ちネタを評価してくれる人がいてよかった",
+        "ipa": "aɪm ɡlæd ˈsʌmwʌn əˈpɹiʃiˌeɪts maɪ ɪkˈstɹimli ˈlɪmɪtɪd kəˈlɛkʃən əv ˈstɔɹiz"
+      },
+      {
+        "role": "A",
+        "en": "Limited? You haven't even told me the one about the terrible haircut yet.",
+        "ja": "少ないの\nひどい髪型になったときの話だって、まだ聞いていないよ",
+        "ipa": "ˈlɪmɪtɪd ju ˈhævənt ˈivən toʊld mi ðə wʌn əˈbaʊt ðə ˈtɛɹəbəl ˈhɛɹˌkʌt jɛt"
+      },
+      {
+        "role": "B",
+        "en": "That story requires coffee and a level of trust we haven't reached.",
+        "ja": "その話にはコーヒーと、私たちがまだ到達していないレベルの信頼が必要なの",
+        "ipa": "ðæt ˈstɔɹi ɹɪˈkwaɪɚz ˈkɔfi ænd ə ˈlɛvəl əv tɹʌst wi ˈhævənt ɹitʃt"
+      },
+      {
+        "role": "A",
+        "en": "Fair enough. I like the way you keep a little mystery.",
+        "ja": "それなら仕方ないね\n少し謎を残しておく、その感じは好きだな",
+        "ipa": "fɛɹ ɪˈnʌf aɪ laɪk ðə weɪ ju kip ə ˈlɪtəl ˈmɪstɚi"
+      },
+      {
+        "role": "B",
+        "en": "Mostly because I don't have photographic evidence.",
+        "ja": "主に、証拠の写真が残っていないからなんだけどね",
+        "ipa": "ˈmoʊstli bɪˈkɔz aɪ doʊnt hæv ˌfoʊtəˈɡɹæfɪk ˈɛvədəns"
+      },
+      {
+        "role": "A",
+        "en": "Probably for the best. I am enjoying getting to know you, though.",
+        "ja": "そのほうがよいのかもね\nでも、あなたのことを知っていくのは楽しいよ",
+        "ipa": "ˈpɹɑbəbli fɚ ðə bɛst aɪ æm ɪnˈdʒɔɪɪŋ ˈɡɛtɪŋ tə noʊ ju ðoʊ"
+      },
+      {
+        "role": "B",
+        "en": "Me too. I like that we can joke around without having to impress each other.",
+        "ja": "私も\nお互いによく見せようとしなくても、冗談を言い合えるのがいいな",
+        "ipa": "mi tu aɪ laɪk ðæt wi kæn dʒoʊk əˈɹaʊnd wɪˈðaʊt ˈhævɪŋ tə ɪmˈpɹɛs itʃ ˈʌðɚ"
+      },
+      {
+        "role": "A",
+        "en": "Exactly. Tell me if a joke ever goes too far.",
+        "ja": "そうだね\nもし冗談が行きすぎたら言ってね",
+        "ipa": "ɪɡˈzæktli tɛl mi ɪf ə dʒoʊk ˈɛvɚ ɡoʊz tu fɑɹ"
+      },
+      {
+        "role": "B",
+        "en": "I will. You can do the same.",
+        "ja": "うん、そうする\nそちらも同じように言ってね",
+        "ipa": "aɪ wɪl ju kæn du ðə seɪm"
+      }
+    ],
+    "unitIds": [
+      "p-044",
+      "p-045",
+      "p-075",
+      "p-077",
+      "p-089"
+    ]
+  },
+  {
+    "id": "pd-12",
+    "title": "Being clear about what you want",
+    "titleJa": "求める関係が違うとき、誠実に伝える",
+    "category": "flirting",
+    "level": "B2",
+    "scenarioJa": "何度かデートした大人同士が、今後どのような関係を望んでいるか話します\nペースの希望と、交際する意思があるかどうかを分けて確認し、違いを受け止めます",
+    "roles": {
+      "A": "いずれ交際を望む人",
+      "B": "交際を望んでいない人"
+    },
+    "goals": [
+      "関係をどう進めたいか率直に尋ねる",
+      "相手を責めずに希望の違いを伝える",
+      "断りや距離を置く希望を受け止める"
+    ],
+    "notes": [
+      "take things slowly は進め方のペースを指し、それだけで交際の意思があるかどうかは決まりません\n次の発言で自分の希望を具体的にしています",
+      "something casual はこの文脈では、真剣な交際を前提にしない関係を表します\nどこまでを指すかは本人同士の認識を確認します",
+      "友人でい続けることも、すぐに返事をすることも義務ではありません\nI’d prefer to take a little space. という希望を、そのまま受け止めて会話を終えます"
+    ],
+    "lines": [
+      {
+        "role": "A",
+        "en": "I've enjoyed spending time with you, and I wanted to ask what you're looking for.",
+        "ja": "一緒に過ごす時間を楽しんできたし、どんな関係を望んでいるのか聞きたかったんだ",
+        "ipa": "aɪv ɪnˈdʒɔɪd ˈspɛndɪŋ taɪm wɪð ju ænd aɪ ˈwɑntɪd tə æsk wʌt jɚ ˈlʊkɪŋ fɚ"
+      },
+      {
+        "role": "B",
+        "en": "I'm enjoying it too, but I'd like to take things slowly.",
+        "ja": "私も楽しんでいるよ\nでも、ゆっくり進めたいと思っている",
+        "ipa": "aɪm ɪnˈdʒɔɪɪŋ ɪt tu bət aɪd laɪk tə teɪk θɪŋz ˈsloʊli"
+      },
+      {
+        "role": "A",
+        "en": "That works for me. I'm interested in a relationship eventually, rather than something casual.",
+        "ja": "ペースについては、それで大丈夫\n私は気軽な関係よりも、いずれはきちんと交際したいと思っている",
+        "ipa": "ðæt wɝks fɚ mi aɪm ˈɪntɹəstɪd ɪn ə ɹɪˈleɪʃənˌʃɪp ɪˈvɛntʃuəli ˈɹæðɚ ðæn ˈsʌmθɪŋ ˈkæʒuəl"
+      },
+      {
+        "role": "B",
+        "en": "Thanks for being clear. I'm not looking for a relationship, and I don't want to give you the wrong impression.",
+        "ja": "はっきり伝えてくれてありがとう\n私は交際を望んでいないから、誤解させたくないんだ",
+        "ipa": "θæŋks fɚ ˈbiɪŋ klɪɹ aɪm nɑt ˈlʊkɪŋ fɚ ə ɹɪˈleɪʃənˌʃɪp ænd aɪ doʊnt wɑnt tə ɡɪv ju ðə ɹɔŋ ɪmˈpɹɛʃən"
+      },
+      {
+        "role": "A",
+        "en": "I appreciate you being honest. I don't think we're looking for the same thing.",
+        "ja": "正直に話してくれてありがとう\n私たちは同じものを求めているわけではなさそうだね",
+        "ipa": "aɪ əˈpɹiʃiˌeɪt ju ˈbiɪŋ ˈɑnəst aɪ doʊnt θɪŋk wɪɹ ˈlʊkɪŋ fɚ ðə seɪm θɪŋ"
+      },
+      {
+        "role": "B",
+        "en": "I understand. I was worried about making this awkward.",
+        "ja": "そうだね\n気まずくしてしまわないか心配だった",
+        "ipa": "aɪ ˌʌndɚˈstænd aɪ wəz ˈwɝid əˈbaʊt ˈmeɪkɪŋ ðɪs ˈɔkwɚd"
+      },
+      {
+        "role": "A",
+        "en": "It's disappointing, but I'd rather know than keep making assumptions.",
+        "ja": "残念だけど、思い込みを続けるより、分かったほうがいいよ",
+        "ipa": "ɪts ˌdɪsəˈpɔɪntɪŋ bət aɪd ˈɹæðɚ noʊ ðæn kip ˈmeɪkɪŋ əˈsʌmpʃənz"
+      },
+      {
+        "role": "B",
+        "en": "Would you want to stay in touch as friends?",
+        "ja": "友人として連絡を取り続けるのはどうかな",
+        "ipa": "wʊd ju wɑnt tə steɪ ɪn tʌtʃ æz fɹɛndz"
+      },
+      {
+        "role": "A",
+        "en": "Maybe later. For now, I'd prefer to take a little space.",
+        "ja": "またいつかなら、そう思えるかもしれない\n今は少し距離を置きたい",
+        "ipa": "ˈmeɪbi ˈleɪtɚ fɚ naʊ aɪd pɹɪˈfɝ tə teɪk ə ˈlɪtəl speɪs"
+      },
+      {
+        "role": "B",
+        "en": "Of course. Thanks for telling me what you need.",
+        "ja": "もちろん\nどうしたいかを教えてくれてありがとう",
+        "ipa": "əv kɔɹs θæŋks fɚ ˈtɛlɪŋ mi wʌt ju nid"
+      }
+    ],
+    "unitIds": [
+      "p-047",
+      "p-048",
+      "p-049",
+      "p-050",
+      "p-078",
+      "p-079",
+      "p-080"
+    ]
+  }
+]

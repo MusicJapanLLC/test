@@ -20,7 +20,11 @@ publishKorean();
 const { publishLearning } = await import("./publish-learning.mjs");
 publishLearning();
 
-// Audit the files that will actually ship, including both apps and their headers.
+// Add English lessons and hub discovery before auditing the complete deploy output.
+const { publishEnglish } = await import("./publish-english.mjs");
+publishEnglish();
+
+// Audit the files that will actually ship, including all learning apps and their headers.
 // The legacy edition retains its existing edition-specific validation.
 if (process.env.MJ_SITE !== "legacy") {
   const { audit } = await import("./seo-audit.mjs");

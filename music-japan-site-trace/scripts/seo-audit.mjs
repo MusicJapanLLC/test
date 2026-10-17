@@ -103,7 +103,7 @@ export function audit(out) {
     // Existing translated corporate pages keep their complete reciprocal set.
     // The learning pages are distinct courses, not translations of each other.
     const alts = Object.fromEntries([...head.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((a) => [a[1], a[2]]));
-    if (!SINGLE_URL_COURSES.has(p) || Object.keys(alts).length) {
+    if ((!SINGLE_URL_COURSES.has(p) && !p.startsWith("/english/")) || Object.keys(alts).length) {
       for (const h of ["ja-JP", "en", "x-default"]) if (!alts[h]) err(p, `hreflang ${h} missing`);
       if (alts["ja-JP"] !== url && alts.en !== url) err(p, "hreflang set does not include itself");
     }
