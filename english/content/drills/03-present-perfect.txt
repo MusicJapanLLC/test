@@ -1,0 +1,36 @@
+//! Present Perfect | Have done: experience, done, so far | build
+! have + 過去分詞＝過去の出来事を「今」につなげて話す形。経験・完了・継続の3パターン。
+! 経験 I've been to ~ / Have you ever ~?　完了 I've just / already ~ / Have you ~ yet?　継続 I've known him since ~
+! yesterday, last week, ~ ago, When ~? みたいに過去の一点を示す言葉とは使えない。そのときは過去形。
+! 「行ったことある」は been to。gone to は「行っちゃって今ここにいない」。
+! for＋期間（for two years）、since＋始まった時点（since March / since I was a kid）。
+I've been to Seoul twice. | ソウルには2回行ったことある。 | 経験の「行った」は been to
+I've never ridden a motorcycle. | バイク乗ったことない。 | ride → rode → ridden
+Have you ever been to a gospel concert? | ゴスペルのコンサートって行ったことある？
+I've just finished my shift. | ちょうど今シフト終わった。 | just は have と過去分詞の間
+Have you eaten yet? | もうご飯食べた？ | yet は疑問・否定の文末
+I haven't decided yet. | まだ決めてない。
+Don't worry, I've already paid. | 大丈夫、もう払っといたよ。 | already も have と過去分詞の間
+Have you seen my headphones? | 俺のヘッドホン見なかった？ | 探し物の定番
+I think I've lost my wallet. | 財布なくしたっぽい。 | 今も見つかってない→現在完了
+Has the package arrived yet? | 荷物もう届いた？
+Have you sent the invoice yet? | 請求書もう送った？
+My roommate's gone home for the weekend. | ルームメイト、週末は実家に帰っちゃってる。 | gone＝行ってしまって今いない
+I've known him since high school. | あいつとは高校からの付き合い。 | since＋始まった時点
+We've been together for three years. | 付き合って3年になる。 | for＋期間
+How long have you lived in Osaka? | 大阪に住んでどれくらい？ | 今も住んでる→現在完了
+I've lived here since I was a kid. | 子どもの頃からずっとここに住んでる。
+I've worked here for about two years. | ここで働いて2年くらいになる。
+We've sold thirty shirts so far. | 今のところTシャツ30枚売れた。 | so far＝今のところ
+I've already had three coffees today. | 今日はもうコーヒー3杯飲んでる。 | today がまだ続いてる→現在完了
+I haven't seen you in ages! | ほんと久しぶり！ずっと会ってなかったよね。 | in ages＝ずっと長いこと
+Have you two met before? | 二人って前に会ったことあったっけ？
+This is the best ramen I've ever had. | 今まで食べた中で一番うまいラーメンだ。 | 最上級＋I've ever
+I've never been this tired. | こんなに疲れたの初めて。
+We haven't had a day off since March. | 3月から一日も休みがない。
+How many times have you seen them live? | あのバンド、ライブで何回見たことある？
+It's been a long week. | 今週はほんと長かったな。 | It's been＝It has been
+My bench has gone up twenty kilos since January. | 1月からベンチの重量が20キロ伸びた。
+I've gotten so many messages since the stream. | 配信のあとからメッセージがめっちゃ来てる。 | gotten はアメリカ英語
+I saw that movie last week. | その映画、先週見た。 | last week があるので過去形（I've seen ✗）
+When did you get back? | いつ帰ってきたの？ | When ~? は過去形で聞く（When have you ✗）

@@ -1,0 +1,448 @@
+//! Banter & Sarcasm | Tease, roast and joke back | levelup
+
+# Yeah, right.
+@ talk | friends, daily | real | funny | 3
+= はいはい、絶対ウソでしょ
+: A sarcastic way to say you don't believe something.
+A: I'm going to the gym every day this week.
+B: Yeah, right.
+A: I'm serious this time!
+- He said he'd pay me back on Friday. Yeah, right.
+✗ Yes, right. | textbook | 文字通り「はい、正しい」になって皮肉が消える
+? 肯定の言葉を二つ重ねて否定になる、英語の皮肉の代表例。right を下げ調子でゆっくり言うと「信じてない」。明るく早く言うと普通の「そうだね」になることも。
+! 仲のいい相手ならじゃれ合い。上司や初対面に言うとバカにしているように聞こえるので注意。
+
+# Look who's talking.
+@ talk | friends | real | funny | 3
+= お前が言うな
+: Points out that someone has the same fault.
+A: You're always on your phone.
+B: Look who's talking. You've had yours out all dinner.
+- Look who's talking, Mr. Five Coffees a Day.
+✗ You are the same. | textbook | 意味は近いけどユーモアがない
+✓ Says the guy who | 「〜するやつが言う？」と具体的に突っ込む型
+? 「誰がしゃべってるか見てみろ」＝同じことしてる人が言うな。言い返しとして即使える。Says the guy who sleeps till noon. のように具体的に突っ込む型もセットで。
+! 笑いながら言えば軽いツッコミ。真顔だとケンカの合図になる。
+
+# You don't say.
+@ talk | friends, work | real | funny | 2
+= へえ〜知らなかった〜（棒読み：当たり前でしょ）
+: A sarcastic reply to obvious information.
+A: Traffic's bad on a Friday night.
+B: You don't say.
+- The new manager is strict? You don't say.
+✗ Don't say. | textbook | 「言うな」という命令になる
+? 文字通りは「まさか」だけど、9割は皮肉で「そんなの知ってるよ」。抑揚なく言うのがコツ。本当に驚いたときは No way! や Really? を使う方が安全。
+! 仕事の場で使うと失礼に聞こえることも。同僚との雑談くらいまで。
+
+# Says you.
+@ talk | friends | real | funny, chill | 2
+= それはお前の意見だろ
+: Dismisses someone's opinion in a playful way.
+A: Your beats are kind of mid.
+B: Says you. My mom loves them.
+- Says you. I think pineapple on pizza is genius.
+✗ It is only your opinion. | textbook | 言いたいことは同じだが、硬くて喧嘩腰
+? 「それを言ってるのはお前だけ」と軽く跳ね返す。Says who?（誰が言った？）と違って、相手本人を名指しで否定する感じ。じゃれ合い向き。
+! mid ＝微妙・普通（ネットスラング）。悪口っぽいけど友達同士ではよくある。
+
+# Who hurt you?
+@ talk | friends, online | real | funny | 2
+= 何があったの…（そんなにひねくれて）
+: A joking reply to someone who sounds bitter or cynical.
+A: Love is just chemicals. It doesn't mean anything.
+B: Wow. Who hurt you?
+- You hate birthdays? Who hurt you?
+✗ What happened in your past? | textbook | 本気で心配してるみたいで重い
+? 相手が冷めたこと・ひねくれたことを言ったときの冗談のツッコミ。「誰にこんなにされたの？」と大げさに心配するフリ。ネット発祥で今は会話でも普通。
+! 本当に失恋直後の人や、つらい過去がありそうな話題では絶対に使わない。冗談が刺さってしまう。
+
+# Bold of you to assume
+@ talk | friends, online | real | funny | 2
+= 〜だと思ってるなんて、大胆だね（自虐・ツッコミ）
+: A joking way to say someone's assumption is wrong.
+A: Did you finish your homework already?
+B: Bold of you to assume I started it.
+- Bold of you to assume I have plans on a Friday night.
+✗ Your assumption is wrong. | textbook | 正しいけど冷たくて笑いにならない
+? ネット発祥の言い方で「その前提がそもそも間違ってるよ」を面白く言う。自虐に使うと安全。相手の見た目や能力に使うと嫌味になる。
+! 文頭の It's と、assume のあとの that が省略された形。
+
+# I'll allow it.
+@ talk | friends | real | funny | 2
+= まあ、許そう（ちょっと偉そうに）
+: A playful way to approve a joke, excuse or idea.
+A: Sorry I'm late. I stopped to get us both tacos.
+B: Hmm. I'll allow it.
+- That pun was terrible, but I'll allow it.
+✗ I permit you. | textbook | 本当に許可を出す偉い人みたい
+? 裁判官のように偉そうに「認めよう」と言うふざけた言い方。相手の言い訳やダジャレが「ギリ許せる」ときに使う。上から目線ごっこなので、友達同士で。
+! 少しため（Hmm...）を入れてから言うと面白い。
+
+# rent-free in my head
+@ talk | friends, online, feelings | real | funny | 2
+= 頭から離れない（タダで住みついてる）
+: When something stays in your mind all the time.
+A: Remember the guy who sang off-key at karaoke?
+B: That performance lives rent-free in my head.
+- That one awkward comment has been living rent-free in my head all week.
+- Wow, I'm living rent-free in your head, huh?
+✗ I can't forget it. | textbook | 普通すぎて面白さゼロ
+? 家賃なしで頭の中に住みついている＝ずっと考えてしまう。面白いこと、恥ずかしいこと、ムカつくことにも。相手が自分の悪口をずっと言っているときの I'm living rent-free in your head. は強烈な返し。
+! 返しとして使うとかなりの煽りになる。ネットのケンカで多い表現。
+
+# Thanks, I hate it.
+@ talk | friends, online | real | funny | 2
+= ありがとう、最悪（見たくなかった）
+: A joking reaction to something weird or cursed.
+A: Look, I made a little cat out of natto.
+B: Thanks, I hate it.
+- A pizza with gummy bears on top? Thanks, I hate it.
+✗ Thank you, but I don't like it. | textbook | 本当に丁寧に断ってるみたい
+? お礼＋全否定のギャップで笑いを取るネット発祥のフレーズ。気持ち悪いもの、変な発明、ゾッとする画像を見せられたときに。本気で傷つける意味はない。
+! 相手が本気で作ったもの（料理・作品）に使うと普通に失礼なので注意。
+
+# Wow, rude.
+@ talk | friends, dm | real | funny | 3
+= ひどっ（傷ついたフリ）
+: A playful reaction when someone teases you.
+A: You look like you haven't slept in three days.
+B: Wow, rude. Accurate, but rude.
+- Wow, rude. I was gonna share my fries with you.
+✗ That is impolite. | textbook | 本気で怒っている先生みたい
+? 本当に怒っているのではなく、傷ついたフリで返すじゃれ合い。Accurate, but rude.（正しいけど失礼）と続けると自虐の笑いになる。
+! 本当に嫌だったときは、笑わずに Not cool. と言うとトーンが変わる。
+
+# Must be nice.
+@ talk | friends, work | real | funny, cold | 3
+= いいご身分だね（うらやましい皮肉）
+: A sarcastic way to show you're jealous.
+A: I'm taking the whole week off to go to Okinawa.
+B: Must be nice. I'm working nights all week.
+- You slept nine hours? Must be nice.
+✗ I am jealous of you. | textbook | 素直すぎて皮肉にならない
+? It must be nice. の It が省略された形。「さぞかしいいでしょうね」という軽い嫉妬・皮肉。笑いながら言えばじゃれ合い、冷たく言うと本気の嫌味になる。
+! 相手が苦労して手に入れたもの（昇進・休み）に使うと関係が悪くなりがち。ちょっとしたラッキーに使う程度で。
+
+# Thanks, Captain Obvious.
+@ talk | friends | real | funny | 2
+= どうも、当たり前の天才さん
+: Teases someone for stating something obvious.
+A: Hey, it's raining.
+B: Thanks, Captain Obvious. I'm literally soaked.
+- Okay, Captain Obvious, we know the train's late.
+✗ That's obvious information. | textbook | 冷たくて笑いがない
+? 当たり前のことを言った人を「明白船長」と呼ぶ定番のツッコミ。キャラ名風にすることで、悪口がやわらかくなる。
+! 仲のいい人向け。職場の会議で言うとかなり失礼。
+
+# No kidding.
+@ talk | friends, work | real | chill | 3
+= そりゃそうだ／だよね（皮肉にも同意にも）
+: Agrees strongly, often sarcastically, that something is obvious.
+A: This line is really long.
+B: No kidding. We've been here forty minutes.
+- You're tired after a twelve-hour shift? No kidding.
+✗ Are you kidding? | textbook | 「冗談でしょ？」と驚く意味になって逆
+? 「冗談じゃなく本当にそう」＝強い同意。言い方次第で「当たり前じゃん」という皮肉にもなる。No kidding? と上げ調子だと「マジで？」という驚き。
+! 下げ調子＝同意・皮肉、上げ調子＝驚き。イントネーションで意味が変わる典型。
+
+# Big if true.
+@ talk | friends, online | real | funny | 2
+= 本当ならデカいね（たぶん嘘だけど）
+: A joking reply to a dramatic claim you doubt.
+A: I heard the cafe is giving free coffee for a year to the first fifty people.
+B: Big if true.
+- My roommate says he's going to start waking up at five. Big if true.
+✗ If it is true, it is big news. | textbook | 長くて冗談として成立しない
+? ネット発祥。「本当ならすごいけど…」という半信半疑のツッコミ。大げさなウワサ、怪しいニュース、友達の宣言などに。短く言い切るのが面白さのポイント。
+! SNSのリプでもそのまま使える。
+
+# Cool story, bro.
+@ talk | friends, online | real | rude, funny | 2
+= へえ、で？（興味ない話へのツッコミ）
+: A mocking way to say someone's story is boring.
+A: So then I switched from almond milk to oat milk, and...
+B: Cool story, bro.
+A: Hey, let me finish!
+- He talked about his crypto wallet for an hour. Cool story, bro.
+✗ Your story is boring. | textbook | 直球すぎてただの悪口
+? 「いい話だね」と言いつつ「どうでもいい」という皮肉。少し古いネットスラングで、今は半分ネタとして使われる。言われた側は笑うか、軽く傷つく。
+! 初対面の人や、相手が真剣な話をしているときは厳禁。完全に感じの悪い人になる。
+
+# Shots fired.
+@ talk | friends, online | real | funny | 2
+= おっと、攻撃きました（ディスへの実況）
+: Points out that someone just made a cutting remark.
+A: At least my band has fans.
+B: Whoa, shots fired.
+- Shots fired! You gonna take that?
+✗ He attacked you with words. | textbook | 説明しすぎて実況にならない
+? 誰かが誰かを軽くディスったとき、周りが「撃った！」と実況する感じ。当事者でも外野でも使える。場を盛り上げるツッコミ。
+! 本気のケンカに使うと火に油。冗談のやり取りのときだけ。
+
+# You walked right into that.
+@ talk | friends | real | funny | 2
+= 自分から突っ込まれにいったね
+: Says someone set themselves up to be teased.
+A: Does this shirt make me look old?
+B: Do you want the honest answer?
+A: Okay, I walked right into that.
+- You asked for a roast. You walked right into that one.
+✗ It was your mistake. | textbook | 真面目すぎる
+? 自分で言ったことがツッコミのチャンスを作ってしまったとき。言った本人が I walked right into that. と言うと潔い自虐になる。
+! イジられたときに笑ってこれを言えると、英語でもユーモアのある人に見える。
+
+# Don't flatter yourself.
+@ talk | friends, crush | real | funny, cold | 2
+= うぬぼれんなよ
+: Tells someone they're not as important as they think.
+A: Did you get that haircut for me?
+B: Don't flatter yourself. I had a photo shoot.
+- Don't flatter yourself. I'm only here for the free pizza.
+✗ Don't be conceited. | textbook | 辞書の訳。会話では硬すぎる
+? flatter ＝お世辞を言う。「自分にお世辞を言うな」＝勘違いするな。じゃれ合いや、軽い恋愛のかけ引きで使える。
+! 冷たく言うとかなりキツい。笑顔とセットで。
+
+# Speak for yourself.
+@ talk | friends, work | real | chill | 3
+= それはあなたの場合でしょ
+: Says you don't share someone's opinion or situation.
+A: We all hate leg day.
+B: Speak for yourself. Leg day is my favorite.
+- Speak for yourself. I slept great.
+✗ I am different from you. | textbook | ズレた返事に聞こえる
+? 相手が「みんな〜だよね」と勝手にまとめたときに「自分は違う」と返す一言。軽い反論として日常的に使う。
+! トーン次第でケンカ腰にもなる。笑いながら言えばツッコミ。
+
+# Get a room.
+@ talk | friends, crush | real | funny | 2
+= よそでやって（イチャイチャすんな）
+: Teases a couple for being too affectionate in public.
+A: Babe, you look so cute today.
+B: No, you look cute.
+C: Okay, get a room, you two.
+- They held hands through the whole movie. Get a room.
+✗ Please don't be romantic here. | textbook | 真剣に注意してるみたい
+? 「部屋でも取れよ」＝人前でいちゃつくなという友達同士のツッコミ。本気で怒っているわけではなく、冷やかし。
+! 友達カップル向け。知らない人に言うと普通に失礼。
+
+# I'm wounded.
+@ talk | friends | real | funny | 2
+= 傷ついたわ〜（大げさに）
+: A dramatic, joking reaction to being teased.
+A: Your cooking is... edible.
+B: Edible? Wow. I'm wounded.
+- I'm wounded. Truly. I'll need a whole cake to recover.
+✗ I am injured. | textbook | 本当にケガをした意味になる
+? wounded ＝負傷した。胸に手を当てて大げさに言うのが定番。本当に傷ついたわけではないと伝わるので、イジりを笑いに変えられる。
+! 本当に傷ついたときは That kind of hurt, actually. と真面目に言う方がいい。
+
+# That's a choice.
+@ talk | friends, online | real | funny | 2
+= それはまた…独特な選択だね
+: A polite-sounding way to say something is a strange decision.
+A: I'm going to dye my hair neon green before the interview.
+B: That's... a choice.
+- Socks with sandals at a wedding. That's a choice.
+✗ That is a bad decision. | textbook | 直接すぎて攻撃的
+? 「選択だね」とだけ言って評価をしない＝実は否定。直接けなさない上品な皮肉。間（…）を空けるのが大事。
+! 本人がノリノリのときに言うと笑いになる。悩んで決めたことに言うと傷つける。
+
+# Bless your heart.
+@ talk | friends, daily | real | warm, cold | 2
+= あらまあ（優しさ／実は見下し）
+: A Southern US phrase that can be sweet or secretly insulting.
+A: I tried to fix the sink myself and flooded the kitchen.
+B: Oh, bless your heart.
+- He thinks he can learn Japanese in a month. Bless his heart.
+✓ Aw, you poor thing. | 素直な同情
+? アメリカ南部の言い方。本当に同情しているときにも使うけど、「かわいそうに（おバカさんね）」という皮肉で有名。Bless his heart. のように第三者に使うと、だいたい皮肉。
+! くしゃみの Bless you. とは別物。自分から使うのは上級者向け。
+
+# You wish.
+@ talk | friends, crush | real | funny | 3
+= 残念でした〜（そうだったらいいのにね）
+: Says what someone wants is not going to happen.
+A: You're totally checking me out.
+B: You wish.
+- You think you'll beat me at arm wrestling? You wish.
+✗ It is your hope. | textbook | 意味が通じない
+✓ In your dreams. | 夢の中でね。もっと強め
+? 「そう願ってるだけでしょ」と相手の勘違いを笑って否定する。軽い恋愛のかけ引きや、勝負事の煽り合いで定番。
+! 短く、少し笑いながら言うのがコツ。
+
+# Nice going.
+@ talk | friends, work | real | funny, cold | 2
+= お見事（＝やらかしたね）
+: Sarcastically says someone did something badly.
+A: I locked the keys in the car.
+B: Nice going.
+- Nice going. Now the whole group chat knows.
+✓ Way to go. | 褒め言葉にも皮肉にも使える
+? 本来は「よくやった」だけど、ミスした人に言うと皮肉。トーンと状況で判断される。
+! 本気でミスに落ち込んでいる人に言うと冷たい。軽いミスへのツッコミ限定で。
+
+# Real mature.
+@ talk | friends, conflict | real | cold, funny | 2
+= 大人だね〜（＝子どもっぽい）
+: Sarcastically says someone is acting childish.
+A: I put your phone on airplane mode so you'd miss your alarm. Ha!
+B: Real mature.
+- He blocked me because I beat him at a video game. Real mature.
+✗ You are very childish. | textbook | 直接的で喧嘩になる
+? Really mature. の会話版（real ＝ really）。子どもっぽい行動に「大人だね」と逆を言う皮肉。冗談にも本気の嫌味にもなる。
+! 本気のケンカで使うと火に油。仲のいい相手のふざけた行動にだけ。
+
+# Keep telling yourself that.
+@ talk | friends | real | funny | 2
+= そう思い込んでれば？
+: Says someone is fooling themselves.
+A: I'm not addicted to coffee. I can quit anytime.
+B: Keep telling yourself that.
+- Just one more episode, huh? Keep telling yourself that.
+✗ You are lying to yourself. | textbook | 重くて説教っぽい
+? 「自分にそう言い聞かせ続けな」＝それ、自分をごまかしてるだけでしょ。言い訳への定番ツッコミ。
+! 軽い言い訳（ダイエット、夜更かし、課金）に使うと笑いになる。深刻な悩みには使わない。
+
+# Couldn't be me.
+@ talk | friends, online | real | funny | 2
+= 自分にはありえないね
+: A joking way to say you'd never be in that situation.
+A: He paid five hundred dollars for a concert ticket and then overslept.
+B: Couldn't be me.
+- People who wake up at five to work out? Couldn't be me.
+✗ That is not my case. | textbook | 意味が伝わりにくい
+? SNS発祥の言い方。「それが自分だったら…ありえない」と軽くマウントしたり、自分には無理と自虐したりする。主語の That が省略された形。
+! 相手の本当の不幸に使うと冷たい。軽い話題で。
+
+# The audacity.
+@ talk | friends, online | real | funny | 2
+= なんて図々しい！
+: Expresses shock at someone's nerve, often jokingly.
+A: My roommate ate my leftovers and left a note saying they needed salt.
+B: The audacity.
+- He asked me to pay for his drink on our first date. The audacity.
+✗ He is very bold. | textbook | 褒め言葉に聞こえる可能性もある
+? audacity ＝ずうずうしさ。大げさに The audacity. とだけ言うのが今っぽい。半分ネタとして、小さなムカつきを大げさに嘆くときに使う。
+! The nerve. も同じ意味。The audacity of this guy. のように続けることも。
+
+# Someone's in a mood.
+@ talk | friends, work | real | funny | 2
+= 誰かさん、ご機嫌ななめだね
+: Teasingly points out that someone is grumpy.
+A: Don't talk to me before coffee.
+B: Whoa. Someone's in a mood.
+- Someone's in a mood today. Rough night shift?
+✗ You are angry person today. | textbook | 冠詞抜け＋本気で責めてる感じ
+? 本人に向かって someone（誰かさん）と言うことで、ストレートに責めずにからかえる。in a mood だけで「機嫌が悪い」の意味になる。
+! 相手が本当に落ち込んでいるときは逆効果。軽く不機嫌なときに。
+
+# Easy, tiger.
+@ talk | friends, gym, crush | real | funny, flirty | 2
+= 落ち着けって、ガツガツしすぎ
+: Tells someone to calm down when they're too eager.
+A: Let's do five more sets!
+B: Easy, tiger. We've been here two hours.
+- Easy, tiger. It's only the first date.
+✗ Please calm yourself. | textbook | 硬くて上から目線
+? 興奮しすぎ・前のめりすぎの人をからかって落ち着かせる言い方。tiger は親しみを込めた呼びかけ。ジム、恋愛、仕事のやる気に。
+! 怒っている人に Calm down. は逆効果だけど、これは冗談っぽいので角が立ちにくい。
+
+# Low blow.
+@ talk | friends, conflict | real | funny, cold | 2
+= それは反則だろ（痛いところ突くなよ）
+: Says a joke or comment was unfair or too personal.
+A: At least I don't still live with my parents.
+B: Ouch. Low blow.
+- Bringing up my ex? That's a low blow.
+✗ Your joke is foul. | textbook | foul の使い方がずれて伝わりにくい
+? ボクシングでベルトより下を打つ反則から。イジりがラインを越えたときに言う。冗談っぽく言えば「おい〜」、真顔なら「それは言いすぎ」。
+! 言われたら Sorry, too far? と軽く謝るのが大人の対応。
+
+# Love that for you.
+@ talk | friends, online | real | warm, funny | 2
+= いいじゃん、よかったね（本気でも皮肉でも）
+: Supports someone's news, sincerely or sarcastically.
+A: I finally booked a solo trip to Seoul!
+B: Love that for you.
+- You're adopting a third cat? Okay, love that for you.
+✗ I love it for you. | textbook | it が入ると不自然
+? I love that for you. の I が省略された今どきの言い方。本気で応援しているときにも、変な決断への軽い皮肉にもなる。トーンで判断。
+! 迷ったら笑顔で言えば、ほぼ褒め言葉として受け取られる。
+
+# Shocker.
+@ talk | friends, work | real | funny | 2
+= びっくり〜（棒読み：予想通り）
+: A deadpan way to say something was totally predictable.
+A: The bus is late again.
+B: Shocker.
+- He forgot his wallet. Again. Shocker.
+✗ I'm very surprised. | textbook | 皮肉に聞こえず、本当に驚いてるみたい
+? 「衝撃的！」と言いながら全く驚いていない、典型的なデッドパン（無表情ギャグ）。予想通りの残念な結果に。What a shocker. とも言う。
+! 声のテンションを上げないのがコツ。上げると本当に驚いたように聞こえる。
+
+# Very funny.
+@ talk | friends | real | chill | 3
+= はいはい、面白い面白い
+: Says a prank or joke wasn't funny to you.
+A: I changed your phone language to Russian.
+B: Very funny. Now change it back.
+- Ha ha, very funny. Where are my shoes?
+✗ It is a very interesting joke. | textbook | interesting は「興味深い」。皮肉にならない
+? 「とても面白い」と言いつつ「全然面白くない」。いたずらされたときの定番の返し。Ha ha, very funny. と乾いた笑いを入れるとさらに分かりやすい。
+! 本当に笑ったときは That's hilarious. や I'm dead. を使う。
+
+# No offense, but
+@ talk | friends, conflict | real | rude | 3
+= 悪気はないんだけど（＝これから失礼なこと言う）
+: Introduces a comment that will probably offend.
+A: No offense, but your playlist is kind of boring.
+B: Offense taken.
+- No offense, but you should probably let someone else drive.
+✗ Don't get angry, but | textbook | 「怒らないで」は命令っぽく、逆にきつい
+? 前置きしても失礼さは消えないことで有名。ネイティブも None taken.（気にしてないよ）や Offense taken.（気にしたわ）と冗談で返す。返し方とセットで覚える。
+! 本当に気をつかうなら I could be wrong, but... や Can I be honest? の方がまだ安全。
+
+# Touché.
+@ talk | friends, work | real | chill, funny | 2
+= 一本取られた
+: Admits someone made a clever point against you.
+A: You say I spend too much on coffee, but you bought three keyboards this year.
+B: Touché.
+- Okay, touché. I'll stop talking about your sleep schedule.
+✗ You win the debate. | textbook | 大げさで硬い
+? フェンシングの「一本！」から来たフランス語。言い返されて反論できないとき、潔く認める一言。悔しさとユーモアが混ざる。発音は「トゥーシェイ」。
+! 負けを認めつつ笑いにできるので、議論が険悪にならない。
+
+# Where's the lie?
+@ talk | friends, online | real | funny | 2
+= 何も間違ってないけど？
+: Says that what was said is actually true.
+A: You only text me when you need a ride.
+B: I mean... where's the lie?
+- Night shift workers run on snacks and spite. Where's the lie?
+✗ It is a true statement. | textbook | 笑いがない
+? 「どこが嘘なの？」＝正直その通り。自虐ネタやイジられたときに、開き直って認める今どきの返し。ネット発祥で会話でも使う。
+! I mean... を前に置くと「言われてみれば」感が出てさらに自然。
+
+# That aged like milk.
+@ talk | friends, online | real | funny | 2
+= 見事にフラグ回収したね（すぐ外れた発言）
+: Says a statement or prediction quickly turned out wrong.
+A: Remember when you said you'd never move back to Osaka?
+B: Okay, that aged like milk.
+- His post about winning easily aged like milk.
+✗ That became wrong. | textbook | 意味は近いけど面白くない
+? 牛乳のようにすぐ腐った＝時間がたって恥ずかしい発言になった。逆にどんどん正しくなったものは aged like fine wine（ワインのように熟成した）。
+! 過去のSNS投稿や、自信満々の予言へのツッコミで大人気。
+
+# Not the flex you think it is.
+@ talk | friends, online | real | funny, cold | 2
+= それ、自慢になってないよ
+: Says someone is proud of something that isn't impressive.
+A: I haven't read a book since high school.
+B: That's not the flex you think it is.
+- Sleeping three hours a night is not the flex you think it is.
+✗ That is not a good boast. | textbook | boast は硬くて会話では使われにくい
+? flex ＝見せびらかす・自慢（筋肉を見せる動きから）。自慢げに言われた残念なことへのツッコミ。睡眠不足自慢、徹夜自慢によく使われる。
+! 夜勤明けで寝てない自慢をしがちな人にも刺さる一言。体は大事に。

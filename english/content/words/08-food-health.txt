@@ -1,106 +1,106 @@
 // Food & cafe
-appetizer | n | 前菜 | a small dish before the main meal | Let's share an appetizer. | food
-entrée | n | メイン料理（米国） | the main dish (US) | What entrée did you get? | food
-side | n | サイドメニュー | a small extra dish | Fries or salad on the side? | food
-leftovers | n | 残り物 | food left after a meal | I'm eating leftovers for lunch. | food
-takeout | n | テイクアウト | food you take home | Let's just get takeout. | food
-delivery | n | デリバリー・配達 | food brought to you | Delivery takes forty minutes. | food
-to-go box | n | 持ち帰り容器 | a container for leftovers | Can I get a to-go box? | food
-refill | n | おかわり | another serving of a drink | Free refills! | food
-tip | n | チップ | extra money for service | How much should I tip? | money
-check | n | お会計（米） | the bill at a restaurant | Can we get the check? | food
-reservation | n | 予約 | a booked table | I have a reservation for 7. | food
-menu | n | メニュー | the list of food | Can I see the menu? | food
-special | n | 本日のおすすめ | a dish offered today | What's today's special? | food
-portion | n | 一人前・量 | the amount of food | The portions here are huge. | food
-craving | n | 無性に食べたい気持ち | a strong desire for food | I have a craving for tacos. | food
-snack | n | おやつ・軽食 | a small amount of food | Want a snack? | food
-dessert | n | デザート | sweet food after a meal | Save room for dessert. | food
-latte | n | ラテ | coffee with steamed milk | One oat latte, please. | cafe
-decaf | n | カフェインレス | coffee without caffeine | Is there decaf? | cafe
-espresso | n | エスプレッソ | strong small coffee | A double espresso, please. | cafe
-cold brew | n | コールドブリュー | coffee made with cold water | I'll get a cold brew. | cafe
-barista | n | バリスタ | someone who makes coffee | The barista spelled my name wrong. | cafe
-oat milk | n | オーツミルク | milk made from oats | Can I get it with oat milk? | cafe
-caffeine | n | カフェイン | the stimulant in coffee | I need caffeine. | cafe
-vegan | adj | ヴィーガンの | with no animal products | Is this vegan? | food
-gluten-free | adj | グルテンフリーの | without wheat protein | Do you have gluten-free bread? | food
-homemade | adj | 手作りの | made at home | Homemade cookies hit different. | food
-well-done | adj | よく焼いた | cooked completely | Steak, well-done please. | food
-medium rare | adj | ミディアムレア | cooked lightly, pink inside | Medium rare, please. | food
-crispy | adj | カリカリの | hard and crunchy | I love crispy fries. | food
-juicy | adj | ジューシーな | full of juice | This burger is so juicy. | food
-filling | adj | お腹にたまる | making you full | Ramen is really filling. | food
-starving | adj | 腹ペコの | very hungry | I'm starving. Let's eat. | food
-stuffed | adj | お腹いっぱいの | very full | No more, I'm stuffed. | food
-full | adj | 満腹の・満員の | having eaten enough / no space | I'm full, thanks. | food
-thirsty | adj | 喉が渇いた | wanting a drink | I'm so thirsty after the gym. | gym
-sip | v | すする・少しずつ飲む | drink a little at a time | Sip it. It's hot. | cafe
-grab | v | さっと取る・食べる | get quickly | Let's grab lunch. | food
-cook | v | 料理する | make food | I don't cook. I microwave. | food
-bake | v | 焼く（パン・お菓子） | cook in an oven | My mom bakes bread every Sunday. | food
+appetizer | n | 前菜 | a small dish before the main meal | Let's share an appetizer. || We ordered three appetizers and skipped the mains. || The opening act was just the appetizer. | food | アメリカでは appetizer、イギリスでは starter。order an appetizer で「前菜を頼む」。
+entrée | n | メイン料理（米国） | the main dish (US) | What entrée did you get? || All the entrées come with a side and a drink. | food | アメリカでは entrée＝メイン料理。フランス語やイギリス英語だと「前菜」なので注意。
+side | n | サイドメニュー | a small extra dish | Fries or salad on the side? || Can I get the dressing on the side? || I'll get the chicken with a side of rice. | food | on the side で「別添えで」。a side of + 料理名 でサイドを頼む。
+leftovers | n | 残り物 | food left after a meal | I'm eating leftovers for lunch. || Want to take the leftovers home? || My night shift dinner is just leftovers in a plastic box. | food | ふつう複数形。There's some pizza left over. のように left over（余った）とも言う。
+takeout | n | テイクアウト | food you take home | Let's just get takeout. || I'm too tired to cook. Takeout again? || Half our cafe orders are takeout now. | food | アメリカは takeout、イギリスは takeaway。店では For here or to go? と聞かれる。
+delivery | n | デリバリー・配達 | food brought to you | Delivery takes forty minutes. || I spend way too much on food delivery after night shifts. || Is delivery free over twenty bucks? | food | order delivery / get delivery で「デリバリーを頼む」。宅配便の配達も delivery。
+to-go box | n | 持ち帰り容器 | a container for leftovers | Can I get a to-go box? || The portions were huge, so we asked for two to-go boxes. | food | アメリカでは残したら持ち帰りが普通。doggy bag は少し古い言い方。
+refill | n | おかわり | another serving of a drink | Free refills! || Can I get a refill on my coffee? || I'm on my third refill and still not awake. | food | get a refill on ~ で飲み物のおかわり。食べ物のおかわりは seconds。
+tip | n | チップ | extra money for service | How much should I tip? || We split the bill and left a twenty percent tip. || Tips at the cafe barely cover my train fare. | money | leave a tip / tip the server の両方OK。アメリカでは15〜20%が目安。
+check | n | お会計（米） | the bill at a restaurant | Can we get the check? || Dinner's on me. I'll grab the check. || The check came and nobody moved. | food | アメリカは check、イギリスは bill。Check, please. だけでも通じる。
+reservation | n | 予約 | a booked table | I have a reservation for 7. || Do we need a reservation, or can we just walk in? || I made a reservation for four on Friday night. | food | レストランやホテルは reservation。病院や美容院は appointment。
+menu | n | メニュー | the list of food | Can I see the menu? || Do you have an English menu? || We're changing the cafe menu for winter. | food | 日本語の「メニュー（料理名）」は dish と言うほうが自然なことも多い。
+special | n | 本日のおすすめ | a dish offered today | What's today's special? || The lunch special is curry and a drink for eight bucks. || Any specials tonight? | food | daily special / lunch special の形でよく使う。店員に Any specials? と聞くと通っぽい。
+portion | n | 一人前・量 | the amount of food | The portions here are huge. || Can I get a smaller portion? || Portion control is the hardest part of my diet. | food | portion size / portion control が定番。アメリカの一人前は日本の感覚よりかなり多い。
+craving | n | 無性に食べたい気持ち | a strong desire for food | I have a craving for tacos. || Late-night ramen cravings are the worst part of night shifts. || I'm craving takoyaki so bad right now. | food | have a craving for ~ より、会話では I'm craving ~ のほうが自然。
+snack | n | おやつ・軽食 | a small amount of food | Want a snack? || I always pack a snack for the studio. || Convenience store snacks are dangerous at 3 a.m. | food | 動詞で snack on ~（〜をつまむ）とも言う。時間を問わず「軽く食べる物」全般。
+dessert | n | デザート | sweet food after a meal | Save room for dessert. || Dessert's on me. || Let's skip dinner and go straight to dessert. | food | desert（砂漠）と混同しやすい。dessert は後ろにアクセント。
+latte | n | ラテ | coffee with steamed milk | One oat latte, please. || I made forty lattes before noon today. || Can you do latte art? | cafe | 発音は「ラーテイ」に近い。iced latte / oat latte のように前に付けて注文する。
+decaf | n | カフェインレス | coffee without caffeine | Is there decaf? || I switch to decaf after 3 p.m. || Decaf after midnight. I still need to sleep after my shift. | cafe | decaffeinated の略。decaf latte のように形容詞的にも使う。
+espresso | n | エスプレッソ | strong small coffee | A double espresso, please. || I pull about two hundred espresso shots a day. || An espresso before leg day hits different. | cafe | expresso と言うのはよくある間違い。1杯分は a shot of espresso。
+cold brew | n | コールドブリュー | coffee made with cold water | I'll get a cold brew. || Cold brew takes like twelve hours to make. || Cold brew is my night shift fuel. | cafe | iced coffee（熱く淹れて冷やす）とは別物。cold brew は水で長時間抽出したもの。
+barista | n | バリスタ | someone who makes coffee | The barista spelled my name wrong. || I've been a barista for three years. || Tip your barista. We remember. | cafe | 男女どちらにも使う。カフェ店員全般なら cafe worker でもOK。
+oat milk | n | オーツミルク | milk made from oats | Can I get it with oat milk? || Oat milk is fifty cents extra. || We ran out of oat milk again. | cafe | 注文は with oat milk。sub oat milk（オーツに変更）もよく聞く。
+caffeine | n | カフェイン | the stimulant in coffee | I need caffeine. || Too much caffeine makes my hands shake. || I'm running on caffeine and two hours of sleep. | cafe | 発音は「キャフィーン」。running on caffeine で「カフェインで持ってる」。
+vegan | adj | ヴィーガンの | with no animal products | Is this vegan? || Do you have any vegan options? || My drummer went vegan last year. | food | go vegan で「ヴィーガンになる」。vegetarian は肉魚なし、vegan は卵や乳製品もなし。
+gluten-free | adj | グルテンフリーの | without wheat protein | Do you have gluten-free bread? || Is the pizza crust gluten-free? || We just added a gluten-free muffin to the menu. | food | 〜-free は「〜なし」。sugar-free, alcohol-free も同じ形。
+homemade | adj | 手作りの | made at home | Homemade cookies hit different. || The curry is homemade. My mom's recipe. || Is this sauce homemade? | food | 店の料理にも使える（自家製）。handmade は手作業で作った物（革小物など）。
+well-done | adj | よく焼いた | cooked completely | Steak, well-done please. || Well-done steak is a crime, honestly. || I like my burgers well-done. | food | Well done!（よくやった）は別の意味。焼き加減は rare → medium rare → medium → well-done。
+medium rare | adj | ミディアムレア | cooked lightly, pink inside | Medium rare, please. || I'll have the steak, medium rare. || Medium rare is the only way to eat wagyu. | food | How would you like your steak? と聞かれたら焼き加減だけ答えればOK。
+crispy | adj | カリカリの | hard and crunchy | I love crispy fries. || The fried chicken is crispy outside and juicy inside. || Reheat it in the oven so it stays crispy. | food | crisp はレタスやポテチのパリッと感、crispy は揚げ物のカリッと感によく使う。
+juicy | adj | ジューシーな | full of juice | This burger is so juicy. || These peaches are super juicy. || Ooh, that's some juicy gossip. | food | 比喩で juicy gossip（おいしい噂話）とも言う。
+filling | adj | お腹にたまる | making you full | Ramen is really filling. || Oatmeal is cheap and filling. || I need something filling before a twelve-hour shift. | food | 「腹持ちがいい」は filling 一語でOK。名詞の filling は「具・詰め物」。
+starving | adj | 腹ペコの | very hungry | I'm starving. Let's eat. || I skipped lunch and now I'm starving. || After leg day I'm always starving. | food | 会話では誇張の「腹ペコ」。I'm hungry より強い。
+stuffed | adj | お腹いっぱいの | very full | No more, I'm stuffed. || I'm so stuffed I can't move. || I still sleep with a stuffed bear. Don't judge. | food | 名詞の前では stuffed animal（ぬいぐるみ）、stuffed peppers（詰め物料理）の意味。
+full | adj | 満腹の・満員の | having eaten enough / no space | I'm full, thanks. || The venue was full by eight. || The train was so full I couldn't breathe. | food | 満腹は I'm full。full of ~（〜でいっぱい）の形も頻出。
+thirsty | adj | 喉が渇いた | wanting a drink | I'm so thirsty after the gym. || Can I get some water? I'm so thirsty. || His comments on her posts are kind of thirsty. | gym | スラングで「がっついてる・かまってほしくて必死」の意味もある。
+sip | v | すする・少しずつ飲む | drink a little at a time | Sip it. It's hot. || I sipped my coffee and pretended to read emails. || Take a sip and tell me what you think. | cafe | 名詞で take a sip（ひと口飲む）。ごくごく飲むのは gulp。
+grab | v | さっと取る・食べる | get quickly | Let's grab lunch. || Want to grab a coffee after church? || Can you grab me a towel? | food | grab a coffee / grab a bite は「軽く〜する」の定番。eat lunch よりカジュアル。
+cook | v | 料理する | make food | I don't cook. I microwave. || Who's cooking tonight? || My roommate cooks way better than me. | food | 火を使う料理が cook。サラダやサンドイッチは make。「料理人」は cooker ではなく cook。
+bake | v | 焼く（パン・お菓子） | cook in an oven | My mom bakes bread every Sunday. || We bake fresh muffins at the cafe every morning. || I'm baking cookies for the church bake sale. | food | オーブンで焼くのが bake。網焼きは grill、パンを焼くのは toast。
 // Health & gym
-workout | n | ワークアウト・運動 | a session of exercise | Great workout today. | gym
-rep | n | 回数 | one repetition | Do ten reps. | gym
-set | n | セット | a group of reps | Three sets of ten. | gym
-warm-up | n | ウォームアップ | light exercise before training | Never skip the warm-up. | gym
-cardio | n | 有酸素運動 | exercise like running | I hate cardio. | gym
-weights | n | ウエイト | heavy objects for training | I lift weights four times a week. | gym
-treadmill | n | ランニングマシン | a running machine | I walked on the treadmill for 30 minutes. | gym
-bench press | n | ベンチプレス | a chest exercise | What's your bench press? | gym
-squat | n | スクワット | a leg exercise | Squats are the king of exercises. | gym
-deadlift | n | デッドリフト | lifting weight from the floor | Keep your back straight on deadlifts. | gym
-pull-up | n | 懸垂 | pulling your body up to a bar | I can do five pull-ups now. | gym
-push-up | n | 腕立て伏せ | pushing your body up from the floor | Twenty push-ups every morning. | gym
-stretch | v | ストレッチする | extend your muscles | Stretch after your workout. | gym
-sweat | v | 汗をかく | release water through skin | I'm sweating like crazy. | gym
-muscle | n | 筋肉 | body tissue that moves you | I want to build muscle. | gym
-protein | n | タンパク質 | nutrient for muscles | I need more protein. | gym
-calories | n | カロリー | energy in food | How many calories is this? | health
-diet | n | 食事・ダイエット | what you eat / eating plan | I'm on a diet. | health
-fit | adj | 健康で引き締まった | healthy and strong | You look fit! | gym
-in shape | phr | 体型が良い・体調がいい | physically fit | I'm trying to get in shape. | gym
-out of shape | phr | なまってる | not physically fit | I'm so out of shape. | gym
-injury | n | ケガ | physical harm | Rest the injury. | health
-pull a muscle | phr | 筋を痛める | hurt a muscle by stretching it too much | I pulled a muscle doing deadlifts. | gym
-headache | n | 頭痛 | pain in the head | I have a headache. | health
-hangover | n | 二日酔い | feeling sick after drinking | I have a terrible hangover. | health
-fever | n | 熱 | high body temperature | I have a fever. | health
-cold | n | 風邪 | a minor illness | I think I'm catching a cold. | health
-allergic | adj | アレルギーの | having an allergy | I'm allergic to cats. | health
-prescription | n | 処方箋 | a doctor's order for medicine | You need a prescription for that. | health
-pharmacy | n | 薬局 | a store selling medicine | Is there a pharmacy near here? | health
-appointment | n | 予約（病院・美容院） | a planned visit | I have a doctor's appointment. | health
-checkup | n | 健康診断 | a medical examination | I go for a checkup once a year. | health
-insurance | n | 保険 | protection paid in advance | Do you have travel insurance? | health
-sleep schedule | n | 睡眠リズム | the times you sleep and wake | My sleep schedule is a mess. | health
-insomnia | n | 不眠症 | trouble sleeping | I have insomnia before big days. | health
-mental health | n | メンタルヘルス | emotional well-being | Mental health matters. | health
-therapy | n | セラピー・カウンセリング | treatment by talking to a professional | Therapy really helped me. | health
-self-care | n | セルフケア | taking care of yourself | Sunday is self-care day. | health
+workout | n | ワークアウト・運動 | a session of exercise | Great workout today. || I do a quick workout before my night shift. || What's your workout split? | gym | 名詞は workout（1語）、動詞は work out（2語）。
+rep | n | 回数 | one repetition | Do ten reps. || Two more reps. Come on! || I hit eight reps at a hundred kilos today. | gym | repetition の略。high reps / low reps で回数の多い少ないを言う。
+set | n | セット | a group of reps | Three sets of ten. || How many sets are you doing? || Rest a minute between sets. | gym | 3 sets of 10 のように使う。ライブやDJの「持ち時間」も set。
+warm-up | n | ウォームアップ | light exercise before training | Never skip the warm-up. || My warm-up is ten minutes on the bike. || The first song is basically a vocal warm-up. | gym | 名詞は warm-up、動詞は warm up（2語）。
+cardio | n | 有酸素運動 | exercise like running | I hate cardio. || I do cardio after weights, not before. || Carrying gear up three flights of stairs counts as cardio. | gym | cardiovascular の略。会話では aerobic より cardio が普通。
+weights | n | ウエイト | heavy objects for training | I lift weights four times a week. || Put your weights back when you're done. || Free weights or machines? | gym | lift weights で「筋トレする」。重さそのものは weight（単数）。
+treadmill | n | ランニングマシン | a running machine | I walked on the treadmill for 30 minutes. || All the treadmills are taken after work. || My job feels like a treadmill. Running hard, going nowhere. | gym | 「ランニングマシン」は和製英語。比喩で「抜け出せない繰り返し」の意味にも。
+bench press | n | ベンチプレス | a chest exercise | What's your bench press? || How much do you bench? || Can you spot me on the bench press? | gym | 会話では How much do you bench? と動詞で聞くことが多い。spot は補助すること。
+squat | n | スクワット | a leg exercise | Squats are the king of exercises. || I squatted my body weight for the first time. || Go lower on your squats. | gym | 「スクワットする」は do squats。動詞で squat 100 kilos とも言える。
+deadlift | n | デッドリフト | lifting weight from the floor | Keep your back straight on deadlifts. || I deadlifted 150 kilos today. Don't tell my back. || Deadlift day is my favorite day. | gym | 名詞でも動詞でも使う。PR（自己ベスト）とセットでよく話題になる。
+pull-up | n | 懸垂 | pulling your body up to a bar | I can do five pull-ups now. || I couldn't do a single pull-up last year. || I put a pull-up bar in my doorway. | gym | 手のひらが自分向きなら chin-up、外向きなら pull-up。会話では混同されがち。
+push-up | n | 腕立て伏せ | pushing your body up from the floor | Twenty push-ups every morning. || I do push-ups between takes to wake myself up. || Push-ups are free. No gym needed. | gym | イギリスでは press-up とも。do push-ups の形で使う。
+stretch | v | ストレッチする | extend your muscles | Stretch after your workout. || I stretch for ten minutes after every shift. || Can we stretch the budget a little? | gym | 比喩で stretch the budget（やりくりする）、That's a stretch.（無理がある）も頻出。
+sweat | v | 汗をかく | release water through skin | I'm sweating like crazy. || Don't sweat it. It's fine. || I sweat through my shirt on stage. | gym | Don't sweat it.（気にするな）は超定番。発音は「スウェット」。
+muscle | n | 筋肉 | body tissue that moves you | I want to build muscle. || My muscles are so sore from yesterday. || Muscle memory kicks in after a few weeks. | gym | build muscle / gain muscle が定番。c は発音しない（マッスル）。
+protein | n | タンパク質 | nutrient for muscles | I need more protein. || I have a protein shake after every workout. || How much protein do you eat a day? | gym | 粉のプロテインは protein powder / protein shake。protein だけだと栄養素。
+calories | n | カロリー | energy in food | How many calories is this? || I burned five hundred calories on the bike. || Calories don't count on your birthday. | health | 単数は calorie。burn calories / count calories の形でよく使う。
+diet | n | 食事・ダイエット | what you eat / eating plan | I'm on a diet. || My diet is basically rice and chicken. || A good diet matters more than the gym. | health | diet は「普段の食事」の意味も。減量中なら be on a diet。
+fit | adj | 健康で引き締まった | healthy and strong | You look fit! || I want to stay fit, not huge. || Staying fit on night shifts is hard. | gym | stay fit / keep fit で「健康を保つ」。イギリスでは fit が「セクシー」の意味にもなる。
+in shape | phr | 体型が良い・体調がいい | physically fit | I'm trying to get in shape. || You're in great shape. What's your secret? || I need to get in shape before summer. | gym | get in shape（体を作る）、stay in shape（維持する）。in good shape は物や状況にも使う。
+out of shape | phr | なまってる | not physically fit | I'm so out of shape. || Two flights of stairs and I'm dead. So out of shape. || I got out of shape during the busy season. | gym | 体力が落ちた状態。服などの「型崩れ」の意味もある。
+injury | n | ケガ | physical harm | Rest the injury. || I'm out for two weeks with a knee injury. || Bad form leads to injuries. | health | injury は事故やスポーツのケガ。wound は刃物などによる傷。
+pull a muscle | phr | 筋を痛める | hurt a muscle by stretching it too much | I pulled a muscle doing deadlifts. || Don't laugh. I pulled a muscle sneezing. || Warm up first or you'll pull a muscle. | gym | 「筋を痛めた」は I pulled a muscle が一番自然。injure my muscle は硬い。
+headache | n | 頭痛 | pain in the head | I have a headache. || Night shifts give me headaches. || This tax stuff is a total headache. | health | 比喩で「頭痛の種・面倒なこと」の意味でもよく使う。
+hangover | n | 二日酔い | feeling sick after drinking | I have a terrible hangover. || Ramen is the best hangover cure. || I've got a hangover and a 9 a.m. meeting. | health | 形容詞は hungover（I'm hungover.）。hangover cure も定番。
+fever | n | 熱 | high body temperature | I have a fever. || I'm running a fever, so I'm calling in sick. | health | have a fever / run a fever。「熱がある」に hot は使わない。
+cold | n | 風邪 | a minor illness | I think I'm catching a cold. || I caught a cold from my roommate. || Stay home if you have a cold. | health | catch a cold（ひく）、have a cold（ひいている）。インフルエンザは the flu。
+allergic | adj | アレルギーの | having an allergy | I'm allergic to cats. || Are you allergic to anything? || I'm allergic to Monday mornings. | health | allergic to ~ で「〜にアレルギー」。名詞 allergy は「アラジー」と発音。
+prescription | n | 処方箋 | a doctor's order for medicine | You need a prescription for that. || I need to pick up my prescription after work. || Can I get this without a prescription? | health | 処方薬は prescription drugs、市販薬は over-the-counter drugs。
+pharmacy | n | 薬局 | a store selling medicine | Is there a pharmacy near here? || The pharmacy closes at nine. || I grabbed some cold medicine at the pharmacy. | health | アメリカでは drugstore もほぼ同じ意味。薬剤師は pharmacist。
+appointment | n | 予約（病院・美容院） | a planned visit | I have a doctor's appointment. || I made an appointment for a haircut. || Can we move my appointment to Friday? | health | 病院・美容院・面会は appointment。レストランは reservation、友達との約束は plans。
+checkup | n | 健康診断 | a medical examination | I go for a checkup once a year. || The company pays for a yearly checkup. || My dentist wants me back for a checkup. | health | get a checkup / go for a checkup。check-up と書くこともある。
+insurance | n | 保険 | protection paid in advance | Do you have travel insurance? || Does your insurance cover dental? || Health insurance for freelancers is so expensive. | health | insurance は数えない名詞。cover（補償する）とよく一緒に使う。
+sleep schedule | n | 睡眠リズム | the times you sleep and wake | My sleep schedule is a mess. || Night shifts wrecked my sleep schedule. || I'm trying to fix my sleep schedule before the trip. | health | 「生活リズム」は sleep schedule が自然。fix / mess up my sleep schedule の形で使う。
+insomnia | n | 不眠症 | trouble sleeping | I have insomnia before big days. || Insomnia after a late show is the worst. || I've had insomnia since I started night shifts. | health | やや医学っぽい語。日常では I can't sleep. のほうが多い。
+mental health | n | メンタルヘルス | emotional well-being | Mental health matters. || I took a mental health day off work. || Lifting is good for my mental health. | health | mental health day（心の休養日）はアメリカで定着した言い方。
+therapy | n | セラピー・カウンセリング | treatment by talking to a professional | Therapy really helped me. || I've been going to therapy for a year. || Playing piano at night is my therapy. | health | go to therapy / be in therapy。アメリカでは隠すことではなく普通の話題。
+self-care | n | セルフケア | taking care of yourself | Sunday is self-care day. || Self-care isn't selfish. || My self-care is a long bath and a bad movie. | health | 美容だけでなく休養や趣味も含む「自分を大事にする行動」全般。
 // Dating & relationships
-date | n | デート・相手 | a romantic meeting / the person | I have a date tonight. | crush
-first date | n | 初デート | the first romantic meeting | Where should we go for a first date? | crush
-relationship | n | 恋愛関係・関係 | a romantic connection | I'm not ready for a relationship. | crush
-boyfriend | n | 彼氏 | a male partner | Her boyfriend is a chef. | crush
-girlfriend | n | 彼女 | a female partner | My girlfriend loves horror movies. | crush
-single | adj | 独身の・フリーの | not in a relationship | Are you single? | crush
-taken | adj | 恋人がいる | in a relationship | Sorry, he's taken. | crush
-flirt | v | いちゃつく・口説く | act in a romantic, playful way | Is she flirting with me? | crush
-flirty | adj | 色っぽい・気がありそうな | playfully romantic | Her texts are kind of flirty. | crush
-chemistry | n | 相性・化学反応 | natural attraction | We had great chemistry. | crush
-spark | n | ときめき | a feeling of attraction | There was no spark. | crush
-attractive | adj | 魅力的な | good-looking or appealing | I find confidence attractive. | crush
-charming | adj | 魅力的な・感じがいい | pleasant and attractive | He's charming. Everyone likes him. | crush
-romantic | adj | ロマンチックな | about love | That's so romantic. | crush
-heartbreak | n | 失恋 | deep sadness after love ends | Heartbreak makes the best songs. | music
-jealousy | n | 嫉妬 | feeling jealous | Jealousy ruins relationships. | crush
-commitment | n | 本気・約束 | promise to stay together | He's scared of commitment. | crush
-long-distance | adj | 遠距離の | living far apart | We're in a long-distance relationship. | crush
-anniversary | n | 記念日 | the yearly date of an event | Happy anniversary! | crush
-propose | v | プロポーズする | ask someone to marry you | He proposed on the beach. | crush
-engaged | adj | 婚約した | agreed to marry | We just got engaged! | crush
-wedding | n | 結婚式 | a marriage ceremony | The wedding is in June. | crush
-divorce | n | 離婚 | ending a marriage | They're getting a divorce. | crush
-ex-girlfriend | n | 元カノ | a former girlfriend | My ex-girlfriend still has my hoodie. | crush
-matchmaking | n | お見合い・マッチング | arranging couples | Dating apps are matchmaking with math. | crush
+date | n | デート・相手 | a romantic meeting / the person | I have a date tonight. || Is this a date or just dinner? || My date showed up forty minutes late. | crush | 「デート」と「デートの相手」の両方の意味。ask someone out on a date で「デートに誘う」。
+first date | n | 初デート | the first romantic meeting | Where should we go for a first date? || Coffee is the safest first date. || On our first date, we talked till the cafe closed. | crush | first date の支払いは割り勘か誘った側か、人によって考えが違う。
+relationship | n | 恋愛関係・関係 | a romantic connection | I'm not ready for a relationship. || We're in a relationship, but we keep it low-key. || I have a good relationship with my boss. | crush | 恋愛にも仕事の関係にも使う。be in a relationship で「付き合っている」。
+boyfriend | n | 彼氏 | a male partner | Her boyfriend is a chef. || Does she have a boyfriend? || My boyfriend surprised me with concert tickets. | crush | 男友達は boyfriend ではなく guy friend。誤解されやすいので注意。
+girlfriend | n | 彼女 | a female partner | My girlfriend loves horror movies. || Are you bringing your girlfriend to the show? || I'm going shopping with my girlfriend this weekend. | crush | 女性が女友達を girlfriends と呼ぶことはあるが、男性が言うと恋人の意味になる。
+single | adj | 独身の・フリーの | not in a relationship | Are you single? || I've been single for two years and I'm fine. || Is your bassist single? | crush | single（フリー）、taken（相手あり）、it's complicated などが会話の定番。
+taken | adj | 恋人がいる | in a relationship | Sorry, he's taken. || All the good ones are taken. || Is this seat taken? | crush | Is this seat taken?（この席空いてますか）でも使う。恋愛では「相手がいる」。
+flirt | v | いちゃつく・口説く | act in a romantic, playful way | Is she flirting with me? || Stop flirting with the customers. || I can't flirt to save my life. | crush | flirt with ~ の形。名詞で He's a flirt.（チャラい人）とも言う。
+flirty | adj | 色っぽい・気がありそうな | playfully romantic | Her texts are kind of flirty. || Was that flirty, or just friendly? || She sent a flirty emoji and I overthought it all day. | crush | sexy ほど強くない「気がありそう・ちょっかい出す感じ」。
+chemistry | n | 相性・化学反応 | natural attraction | We had great chemistry. || The band has amazing chemistry on stage. || You can't fake chemistry. | crush | 恋愛だけでなくバンドやチームの相性にも使う。
+spark | n | ときめき | a feeling of attraction | There was no spark. || We tried, but the spark just wasn't there. || That breakup was the spark for my best song. | crush | no spark は「ときめきがない」の定番。別れの理由によく出る。
+attractive | adj | 魅力的な | good-looking or appealing | I find confidence attractive. || Honesty is attractive. || The price is attractive, but the contract isn't. | crush | 人にも条件やオファーにも使う。good-looking は見た目だけ。
+charming | adj | 魅力的な・感じがいい | pleasant and attractive | He's charming. Everyone likes him. || The cafe is small but charming. || Don't try to charm your way out of this. | crush | 人にも場所にも使う褒め言葉。人に使うと「口がうまい」の含みが出ることも。
+romantic | adj | ロマンチックな | about love | That's so romantic. || A dinner cruise in Osaka sounds so romantic. || I'm a hopeless romantic, honestly. | crush | hopeless romantic（夢見がちな恋愛体質）は定番の言い方。
+heartbreak | n | 失恋 | deep sadness after love ends | Heartbreak makes the best songs. || She wrote the whole album after a heartbreak. || Nobody warned me that heartbreak feels physical. | music | 形容詞 heartbroken（失恋して落ち込んだ）とセットで覚える。
+jealousy | n | 嫉妬 | feeling jealous | Jealousy ruins relationships. || A little jealousy is normal. || That's not love, that's jealousy. | crush | 形容詞は jealous。envy は他人の物をうらやむ気持ち、jealousy は奪われる不安も含む。
+commitment | n | 本気・約束 | promise to stay together | He's scared of commitment. || Running a business is a huge commitment. || I can't make that commitment right now. | crush | 恋愛では「真剣な関係」、仕事では「専念・責任ある約束」。commitment issues もよく聞く。
+long-distance | adj | 遠距離の | living far apart | We're in a long-distance relationship. || Long-distance is hard, but video calls help. || I'm doing long-distance with someone in Seoul. | crush | 会話では long-distance だけで「遠距離恋愛」を指す。
+anniversary | n | 記念日 | the yearly date of an event | Happy anniversary! || It's our five-year anniversary. || The cafe's tenth anniversary is next month. | crush | 恋人や夫婦だけでなく、店や会社の周年にも使う。
+propose | v | プロポーズする | ask someone to marry you | He proposed on the beach. || I'm going to propose at the restaurant where we met. || I propose we take a break and eat. | crush | propose to 人 で「プロポーズする」。会議では「提案する」の意味。
+engaged | adj | 婚約した | agreed to marry | We just got engaged! || My sister is engaged to a pastor. || The crowd was really engaged tonight. | crush | get engaged で「婚約する」。仕事や客席では「熱心に関わっている」の意味にも。
+wedding | n | 結婚式 | a marriage ceremony | The wedding is in June. || We played at a friend's wedding last weekend. || I'm a groomsman at my cousin's wedding. | crush | 式は wedding、結婚生活や結婚という状態は marriage。
+divorce | n | 離婚 | ending a marriage | They're getting a divorce. || My parents got divorced when I was ten. || The band breakup felt like a divorce. | crush | 会話では get divorced（離婚する）の形が一番多い。
+ex-girlfriend | n | 元カノ | a former girlfriend | My ex-girlfriend still has my hoodie. || Is that song about your ex-girlfriend? || I ran into my ex-girlfriend at the convenience store. | crush | 会話では my ex だけで済ませることが多い。元彼は ex-boyfriend。
+matchmaking | n | お見合い・マッチング | arranging couples | Dating apps are matchmaking with math. || My aunt is really into matchmaking. Help me. || The church is hosting a matchmaking event for singles. | crush | 仲人・縁結び役は matchmaker。お見合いは arranged meeting とも説明できる。

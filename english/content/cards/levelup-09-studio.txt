@@ -1,0 +1,508 @@
+//! Studio & Creative Work | Talk shop with producers, artists and clients | levelup
+
+# Let's run it from the top.
+@ talk | music, work | real | worksafe, chill | 3
+= 頭からもう一回やろう
+: Let's start again from the very beginning.
+A: I messed up the second verse.
+B: All good. Let's run it from the top.
+A: Ready when you are.
+- One more time from the top, and this time, relax your shoulders.
+✗ Let's do it again from the start point. | textbook | 意味は通じるけど現場っぽくない
+✓ Run it back. | 若い世代のカジュアル版
+? the top ＝曲の頭。リハーサル、録音、ダンス、演劇など「通しでやり直す」ときの定番。
+! from the chorus や from the bridge のように途中から指定することもできる。
+
+# Can you punch me in at the chorus?
+@ talk | music | real | worksafe | 2
+= サビから録り直し（パンチイン）してくれる？
+: Can you start recording me again from the chorus?
+A: The verse was good, but I want to redo the hook.
+B: Cool. From where?
+A: Can you punch me in at the chorus? With two bars of pre-roll?
+B: You got it.
+✗ Please record only the chorus again. | textbook | 伝わるけど用語を知らない感じ
+✓ Can we punch in from the chorus? | 主語を we にした言い方
+? punch in ＝録音済みの途中から、その部分だけ録り直すこと。全部歌い直さなくていいので時間の節約になる。
+! pre-roll ＝パンチイン前に流す数小節。これがあると入りのタイミングを合わせやすい。
+
+# One more for safety.
+@ talk | music, work | real | worksafe, chill | 3
+= 保険でもう一テイク
+: Let's record one more take just in case.
+A: That take was great.
+B: Love it. Let's do one more for safety.
+A: You always say that.
+B: And you always nail the safety take.
+✗ One more time for insurance. | textbook | 直訳で伝わりにくい
+✓ Let's grab a backup take. | 意味は同じ
+? 良いテイクが録れても、念のためもう一本。後で編集するときの選択肢になる。映像の撮影でも使う。
+! 実はこの保険テイクが一番リラックスしていて良かった、というのはよくある話。
+
+# That take was fire.
+@ talk | music, friends | real | funny, warm | 3
+= 今のテイク最高！
+: That recording was amazing.
+A: How was that?
+B: Bro, that take was fire. Don't touch it.
+A: Should I do one more?
+B: No way. That's the one.
+✗ That take was very good quality. | textbook | 機械的な評価に聞こえる
+✓ That was the one. | 「それで決まり」
+? fire ＝最高・アツい（スラング）。音楽の現場では褒め言葉の定番。This beat is fire. のようにも使う。
+! 褒めるときは具体的に。The ad-libs at the end were fire. のように言うとアーティストのやる気が上がる。
+
+# That's a keeper.
+@ talk | music, work, daily | real | warm | 3
+= それ採用！（取っておこう）
+: That one is good enough to keep.
+A: What about that guitar part I just played?
+B: That's a keeper. Save it.
+- That photo's a keeper. Use it for the cover.
+✗ We will use that one. | textbook | 事務的
+✓ Keep that. | 一番短い
+? keeper ＝取っておく価値のあるもの。テイク、写真、アイデアなど何でも OK。
+! 恋人を褒めて She's a keeper. （絶対に手放しちゃダメ）とも言う。
+
+# Let's lay down a scratch vocal.
+@ talk | music | real | worksafe | 2
+= 仮歌を録っておこう
+: Let's record a rough guide vocal for now.
+A: The lyrics aren't finished yet.
+B: That's fine. Let's lay down a scratch vocal so the band has something to play to.
+A: Okay, I'll just mumble the second verse.
+✗ Let's record a temporary song. | textbook | 意味がずれる
+✓ Let's put down a guide vocal. | 同じ意味
+? scratch ＝仮の・下書きの。lay down ＝録音する。本番前の目安として録る歌で、後で差し替える前提。
+! 仮歌の方が雰囲気が良くて結局そのまま採用される、というのはスタジオあるある。
+
+# Let's comp the vocals.
+@ talk | music | real | worksafe | 2
+= ボーカルのいいとこ取りで繋ごう
+: Let's combine the best parts of several takes into one.
+A: I did five takes. Which one do we use?
+B: All of them, kind of. Let's comp the vocals.
+A: So the best line from each take?
+B: Exactly.
+✗ Let's mix the good parts. | textbook | mix は別の作業を指す
+✓ Let's make a comp. | 名詞として
+? comp ＝composite（合成）の略。複数のテイクからフレーズ単位で一番いい部分を選んで繋ぐ作業。
+! mix（音量バランスなどの調整）とは別の工程。混同しないように。
+
+# Can I get more me in the headphones?
+@ talk | music | real | worksafe | 2
+= ヘッドホンの自分の声、もっと上げてくれる？
+: Please turn up my voice in my headphone mix.
+A: How's the headphone mix?
+B: Can I get more me in the headphones? And a little less click.
+A: Sure. How's that?
+B: Perfect.
+✗ Please make my voice volume big. | textbook | 意味は伝わるけど不自然
+✓ Can you turn me up in my cans? | cans ＝ヘッドホンのスラング
+? more me ＝文法的には崩れてるけど、録音現場では普通の言い方。自分の声が聞こえないと音程がズレやすい。
+! click ＝クリック（メトロノーム）。less click や more guitar なども同じパターンで頼める。
+
+# You're rushing a little.
+@ talk | music | real | worksafe | 2
+= ちょっと走ってる（テンポが前のめり）
+: You're playing or singing slightly ahead of the beat.
+A: How was the bass line?
+B: Great feel, but you're rushing a little in the chorus.
+A: Ah, I always get excited there.
+- Now you're dragging. Somewhere in between.
+✗ Your speed is too fast. | textbook | テンポ全体の話に聞こえる
+✓ You're a little ahead of the beat. | 説明的に
+? rushing ＝走る（前のめり）、dragging ＝もたる（遅れる）。日本語の「走る・もたる」と同じ感覚で使える。
+! 指摘するときは Great feel, but... と先に褒めるのが現場のマナー。
+
+# That's right in the pocket.
+@ talk | music | real | warm | 2
+= グルーヴがドンピシャ
+: The rhythm feels perfectly locked in and groovy.
+A: How did the drums feel?
+B: That's right in the pocket. Don't change a thing.
+- The bass and the kick are sitting in the pocket now.
+✗ The rhythm is correct. | textbook | ただ正確なだけに聞こえる
+✓ That grooves. | シンプル
+? in the pocket ＝リズムが気持ちいい位置にハマっている状態。正確さより「ノリ」を褒める言葉。
+! ファンク、R&B、ヒップホップの現場で特によく使う。
+
+# It needs more low end.
+@ talk | music | real | worksafe | 3
+= 低音がもっと欲しい
+: The track needs more bass frequencies.
+A: How does the mix sound in the car?
+B: Pretty good, but it needs more low end.
+A: More kick or more bass?
+B: The bass. The kick is fine.
+✗ It needs more bass sound. | textbook | 楽器のベースか周波数か曖昧
+✓ It needs more weight. | 「重さ」で表す言い方
+? low end ＝低音域（周波数）。bass と言うと楽器のベースと紛らわしいので、エンジニアは low end を使う。
+! 高音域は top end や high end。クラブ向けなら low end、スマホ向けなら中音域が大事。
+
+# It's muddy.
+@ talk | music | real | worksafe | 3
+= こもってる（低中域がごちゃっとしてる）
+: The sound is unclear because the low mids are crowded.
+A: What do you think of the mix?
+B: It's a little muddy. The guitars and keys are fighting.
+A: Should I cut some low mids?
+B: Yeah, try that.
+✗ The sound is dirty. | textbook | わざと歪ませた音の意味に取られる
+✓ It's not very clear. | 一般的な言い方
+? muddy ＝泥っぽい。200〜500Hz あたりが渋滞して輪郭がぼやけた状態。EQ で削るのが定番の対処。
+! 反対は clear や crisp。dirty は「わざと歪ませた（良い意味）」でも使うので注意。
+
+# It sounds thin.
+@ talk | music | real | worksafe | 3
+= 音が細い（薄っぺらい）
+: The sound lacks body and fullness.
+A: I recorded the guitar at home.
+B: It sounds thin. Did you use the little practice amp?
+A: Yeah, the neighbors complain.
+B: Let's double it and see.
+✗ The sound is weak. | textbook | 音量が小さい意味に取られる
+✓ It needs more body. | 「厚み」が足りない
+? thin ＝細い・薄い。音の厚み（body）がない状態。音量の大小とは別の話。
+! 大阪のワンルームで録った音あるある。重ね録り（double）でかなり改善する。
+
+# It's clipping.
+@ talk | music, online | real | worksafe | 3
+= 音が割れてる（クリップしてる）
+: The signal is too loud and distorting.
+A: Why does the vocal crackle there?
+B: It's clipping. Your input gain is too hot.
+A: So turn it down and redo it?
+B: Yeah. Leave yourself some room.
+✗ The sound is broken. | textbook | 機材が壊れた意味になる
+✓ It's distorting. | 一般的な言い方
+? clip ＝入力が大きすぎて波形の頭が切れ、バリッと割れること。too hot ＝入力が熱すぎる＝大きすぎる。
+! 配信でも同じ。叫んだ瞬間に音が割れるなら、マイクのゲインを下げるのが先。
+
+# The vocal's getting buried.
+@ talk | music | real | worksafe | 2
+= ボーカルが埋もれてる
+: The vocal is hard to hear under the other instruments.
+A: The chorus feels huge now.
+B: It does, but the vocal's getting buried.
+A: I'll pull the synths back a bit.
+✗ The voice is hidden. | textbook | 意味が伝わりにくい
+✓ I can't hear the vocal. | 一番直接的
+? buried ＝埋められた。他の楽器に飲み込まれて聞き取れない状態。理想はボーカルが上に乗る（sit on top）こと。
+! 解決策はボーカルを上げるより、ぶつかる楽器を下げる・削ることが多い。
+
+# The kick and the bass are fighting.
+@ talk | music | real | worksafe | 2
+= キックとベースがぶつかってる
+: The kick drum and the bass clash in the same frequency range.
+A: Why is the low end so messy?
+B: The kick and the bass are fighting.
+A: Should I sidechain the bass?
+B: Try that first.
+✗ The kick and the bass are bad together. | textbook | 原因が伝わらない
+✓ They're clashing. | 同じ意味
+? fight ＝同じ周波数帯を取り合っていること。sidechain や EQ でお互いのスペースを分けるのが定石。
+! 楽器同士が fight する、は音作りでよく使う擬人化表現。
+
+# It's too busy.
+@ talk | music, work | real | worksafe | 3
+= 音（要素）を詰め込みすぎ
+: There's too much going on at once.
+A: I added strings, a pad, two synths and a choir.
+B: It's too busy. The vocal has no space.
+A: Okay, which one goes?
+B: Start with the choir.
+✗ There are too many sounds. | textbook | 伝わるけど幼い
+✓ There's too much going on. | 同じ意味
+? busy ＝忙しい→「要素が多すぎてうるさい」。音楽にもデザインにも使う。デザイナーへのフィードバックでも定番。
+! 初心者ほど足し算しがち。プロは引き算で勝負する。
+
+# Let's strip it back.
+@ talk | music, work | real | worksafe | 2
+= 要素を削ってシンプルにしよう
+: Let's remove parts so it's simpler.
+A: The bridge feels crowded.
+B: Let's strip it back. Just piano and vocal.
+A: Oh, that hits way harder.
+- We stripped the logo back to just one color.
+✗ Let's make it simple by deleting. | textbook | 直訳
+✓ Less is more. | 有名な格言
+? strip back ＝はがして骨組みだけに戻す。アコースティック版を stripped-back version とも言う。
+! 曲の後半を盛り上げるために、あえて一度 strip back するのはアレンジの定番テク。
+
+# The chorus needs to lift.
+@ talk | music | real | worksafe | 2
+= サビでもっと上がってほしい
+: The chorus should feel bigger and more exciting than the verse.
+A: Something's missing in the chorus.
+B: Yeah, the chorus needs to lift. Right now it's the same energy as the verse.
+A: Maybe add a higher harmony?
+✗ The chorus should be more exciting feeling. | textbook | 文法が崩れてる
+✓ The chorus needs to hit harder. | 同じ意味
+? lift ＝持ち上がる。サビで景色が開ける感じ。音域を上げる、楽器を足す、ドラムを変えるなどで作る。
+! drop は EDM のサビ的な爆発部分。lift はもっと広い意味での「盛り上がり」。
+
+# Let's double that line.
+@ talk | music | real | worksafe | 2
+= そのラインを重ね録りしよう
+: Let's record the same part again and layer it.
+A: The last line of the hook feels weak.
+B: Let's double that line. It'll sound bigger.
+A: Same exact way, or with a harmony?
+B: Same way first.
+✗ Let's record the same thing two times. | textbook | 意図が伝わらない
+✓ Let's stack it. | stack ＝重ねる
+? double ＝同じパートをもう一度録って重ねること（ダブリング）。声が太く、広がって聞こえる。
+! ad-lib はあえて重ねないことも多い。全部 double すると逆にうるさい。
+
+# That note was pitchy.
+@ talk | music | real | worksafe | 2
+= 今の音、ピッチが甘い
+: That note was a little out of tune.
+A: How was the high note?
+B: Close, but that note was pitchy.
+A: Sharp or flat?
+B: A little flat. Try it again.
+✗ Your voice is out of tune. | textbook | 全部ダメみたいに聞こえる
+✓ That was a little flat. | 低いときは flat、高いときは sharp
+? pitchy ＝ピッチがフラフラ不安定。完全に外れてはいないけど気になる状態。flat ＝低め、sharp ＝高め。
+! ボーカルに伝えるときは一音単位で具体的に。全体を pitchy と言われると誰でも凹む。
+
+# Let me hear it in context.
+@ talk | music | real | worksafe | 2
+= 曲全体の中で聴かせて
+: Let me hear the part with the rest of the track.
+A: Listen to this snare by itself. Crazy, right?
+B: Sounds cool soloed. Let me hear it in context.
+A: Oh. It's kind of lost in the mix.
+✗ Please play it with all. | textbook | 意味が通じにくい
+✓ Play it with the track. | シンプル
+? solo（単体）で良い音が、曲の中で良いとは限らない。in context ＝全体の中で、は判断の基本。
+! in context は仕事全般でも使う。Let me read the whole email in context. など。
+
+# It doesn't translate.
+@ talk | music, online | real | worksafe | 2
+= （他の環境で）うまく再現されない
+: It doesn't sound good on other speakers or devices.
+A: The mix sounds amazing in the studio.
+B: Check it on your phone. It doesn't translate.
+A: Ugh, the bass disappeared.
+✗ It doesn't sound same in other places. | textbook | 文法ミス
+✓ It falls apart on phone speakers. | 具体的に言うと
+? translate ＝翻訳する→「別の環境に移しても同じ印象で伝わる」。スタジオ、車、スマホ、イヤホンで確認するのが基本。
+! 今はほとんどのリスナーがスマホとイヤホン。スタジオだけで判断しないこと。
+
+# Leave some headroom.
+@ talk | music | real | worksafe | 2
+= 余裕（ヘッドルーム）を残しておいて
+: Keep the levels low enough so there's space before clipping.
+A: Should I make the mix as loud as possible before I send it?
+B: No, leave some headroom for mastering.
+A: How much?
+B: Peaks around minus six is fine.
+✗ Don't make it max volume. | textbook | 伝わるけど用語を知らない感じ
+✓ Don't slam the master bus. | エンジニアっぽい言い方
+? headroom ＝頭上の余白。最大音量までの余裕のこと。マスタリングエンジニアにミックスを送るときの基本ルール。
+! 配信の音声設定でも同じ考え方。ギリギリまで上げると叫んだ瞬間に割れる。
+
+# Let's print it.
+@ talk | music | real | worksafe | 1
+= 音を確定して焼き付けよう
+: Let's record the effect or part as final audio.
+A: Should we keep tweaking the reverb?
+B: No, I like it. Let's print it and move on.
+A: Committing feels scary.
+B: That's the point.
+✗ Let's save it. | textbook | 「保存」とは意味が違う
+✓ Let's commit to it. | 同じ意味でより一般的
+? print ＝エフェクトなどを音声として焼き付けて、後から変えられない状態にすること。迷いを断ち切る作業。
+! commit ＝腹を決める。いつまでも修正できると曲は完成しない。
+
+# Bounce me a rough mix.
+@ talk | music, online | real | worksafe | 2
+= ラフミックスを書き出して送って
+: Export a quick, unfinished mix and send it to me.
+A: Bounce me a rough mix when you can. I want to listen in the car.
+B: Sure. Give me ten minutes.
+A: Just a rough. No need to be perfect.
+✗ Please output a temporary mix. | textbook | 意味は通じるが不自然
+✓ Send me a rough. | 名詞の rough だけでも通じる
+? bounce ＝DAW で音声ファイルに書き出すこと。rough mix ＝仮ミックス。確認用なので完璧じゃなくていい。
+! export より bounce の方が現場っぽい。v1、v2 と番号を付けて送ると混乱しない。
+
+# Send me the stems.
+@ talk | music, business, online | real | worksafe | 3
+= パラデータ（ステム）を送って
+: Send me the separate audio tracks of the song.
+A: I want to remix your track.
+B: Nice! What do you need?
+A: Send me the stems. Drums, bass, vocals and music.
+B: I'll upload them tonight.
+✗ Please send me the parts of the song. | textbook | 曖昧
+✓ Can you send the multitracks? | もっと細かく分けたデータ
+? stems ＝ドラム、ベース、ボーカルなどグループごとに書き出した音声。リミックスやミックス依頼の基本。
+! 送るときは全部同じ長さ・同じ頭から書き出すのがマナー。ズレていると相手が困る。
+
+# What key is it in?
+@ talk | music | real | worksafe | 3
+= キーは何？
+: What musical key is the song in?
+A: I want to add a guitar part.
+B: Cool. Here's the track.
+A: What key is it in?
+B: F minor. Tempo's ninety-two.
+✗ What is the song's key? | textbook | 間違いじゃないけど少し硬い
+✓ What key are we in? | 演奏中ならこっち
+? 答えは in F minor のように前置詞 in を使う。質問の最後の in を忘れがちなので注意。
+! 歌う人のためにキーを下げたいときは Can we drop it a half step? と言う。
+
+# What's the tempo?
+@ talk | music | real | worksafe | 3
+= テンポ（BPM）いくつ？
+: How fast is the song in beats per minute?
+A: What's the tempo?
+B: About one forty, but it feels like seventy.
+A: Half-time vibe. Got it.
+✗ How much is the speed? | textbook | 値段を聞いてるみたい
+✓ What's the BPM? | 同じ意味でよく使う
+? BPM はそのまま「ビーピーエム」と読む。半分のノリで感じるリズムを half-time と言う。
+! 数字は one forty（140）のように区切って読むのがネイティブ流。
+
+# Do you have a reference track?
+@ talk | music, business | real | worksafe | 3
+= 参考にしてる曲ある？
+: Is there a song I can use as an example of the sound you want?
+A: I want it to sound, like, big but also intimate.
+B: Got it. Do you have a reference track?
+A: Yeah, I'll send you a playlist.
+✗ Do you have a sample song? | textbook | sample は別の意味になる
+✓ What's the vibe you're going for? | 雰囲気を聞く言い方
+? reference ＝参考音源。言葉で説明しにくい「音のイメージ」を共有するための必須アイテム。
+! 依頼を受けるときは最初に聞く。ここを飛ばすと修正地獄になる。
+
+# It's giving demo energy.
+@ talk | music, online, friends | real | funny | 2
+= デモっぽさが抜けてない
+: It still sounds rough and unfinished.
+A: Be honest. Is the mix ready?
+B: Honestly? It's giving demo energy.
+A: Ouch. Fair, though.
+- The cover art is cool, but the font's giving demo energy.
+✗ It is like a demo. | textbook | 間違いではないけど面白みがない
+✓ It still feels rough. | 普通の言い方
+? It's giving 〜 ＝「〜っぽさが出てる」という2020年代のスラング。〜 energy と組み合わせるのが今っぽい。
+! 親しい人同士の冗談ベース。クライアントに言うと失礼なので注意。
+
+# The hook goes hard.
+@ talk | music, friends | real | funny, warm | 3
+= フック（サビ）がめっちゃアガる
+: The catchiest part of the song is really strong.
+A: What do you think of the new one?
+B: The verse is cool, but the hook goes hard.
+A: I wrote it on the night shift.
+- This beat goes so hard.
+✗ The hook is very strong and good. | textbook | 説明的すぎる
+✓ The hook slaps. | 同じくスラング
+? go hard ＝激しい・最高にアガる（スラング）。hook ＝耳に残るキャッチーな部分。サビ全体を指すことが多い。
+! 褒め言葉として使うのがほとんど。ジムでも He went hard today. のように使える。
+
+# It slaps.
+@ talk | music, friends, food | real | funny | 3
+= めっちゃいい（特に音楽が最高）
+: It's really good, especially music.
+A: Did you listen to the track I sent?
+B: Yeah. It slaps. I played it three times.
+A: Wait, really?
+- This ramen slaps.
+✗ This song is very nice. | textbook | 感情が伝わりにくい
+✓ It's a banger. | アガる曲の定番スラング
+? slap ＝平手打ち→「ガツンと来るほどいい」。もとは音楽、今は食べ物などにも使う。
+! 若者言葉なので、ビジネスメールでは使わないこと。
+
+# Make it pop.
+@ talk | music, work, business | real | funny, worksafe | 3
+= もっと目立たせて（あいまいなクライアント指示）
+: A vague request to make something more exciting or eye-catching.
+A: The client says the design is good, but can we make it pop?
+B: Make it pop how? Brighter colors? Bigger text?
+A: They didn't say.
+B: Of course they didn't.
+✗ Please make it more impact. | textbook | 和製英語っぽい
+✓ Can you make it stand out more? | 具体的な言い方
+? pop ＝飛び出す→目立つ・印象的にする。クリエイターが一番困る「ふわっとした指示」の代表。
+! 言われたら具体的に聞き返すのがプロ。What does pop mean to you? と笑顔で聞こう。
+
+# What's the turnaround?
+@ talk | work, business, music | real | worksafe | 3
+= 納期（作業期間）はどれくらい？
+: How long will it take to finish and deliver?
+A: I need a jingle for my cafe. What's the turnaround?
+B: Usually ten days.
+A: Any chance you could do a week?
+B: Sure, with a rush fee.
+✗ How many days do you need for making? | textbook | 不自然
+✓ How soon do you need it? | 依頼者に聞くなら
+? turnaround ＝受けてから納品までの時間。quick turnaround ＝短納期。依頼する側も受ける側も使う。
+! 短納期は追加料金（rush fee）を取るのが普通。最初に決めておくと揉めない。
+
+# How many rounds of revisions?
+@ talk | work, business, money | real | worksafe | 2
+= 修正は何回まで？
+: How many times can the client ask for changes?
+A: The price includes the mix and the master.
+B: Great. How many rounds of revisions?
+A: Two rounds. After that, it's extra.
+✗ How many times can I say fix it? | textbook | 失礼に聞こえる
+✓ How many revisions are included? | 丁寧な言い方
+? round ＝回。修正回数を最初に決めないと、無限修正地獄になる。フリーランスの必須確認事項。
+! 見積もりや契約書に two rounds of revisions のように書いておくと安心。
+
+# I'm in a creative rut.
+@ talk | music, work, feelings | real | deep | 2
+= スランプでアイデアが出ない
+: I keep making the same stuff and can't find new ideas.
+A: How's the new album coming?
+B: Honestly, I'm in a creative rut. Every beat sounds like my last one.
+A: Try something weird. Different tempo, different gear.
+- Getting out of a rut usually starts with changing one small thing.
+✗ I am in a slump of creating. | textbook | 不自然な直訳
+✓ I'm stuck. | 一番シンプル
+? rut ＝車輪の跡のくぼみ。同じ溝を回り続けて抜け出せない状態。slump は成績や調子の低迷、writer's block は書けない状態。
+! 抜け出すコツを聞かれたら change it up（何か一つ変えてみる）が定番のアドバイス。
+
+# Who owns the masters?
+@ talk | music, business, money | real | worksafe | 2
+= 原盤権は誰が持つの？
+: Who legally owns the original recordings?
+A: The label wants to sign me for two singles.
+B: Nice. But who owns the masters?
+A: I... didn't ask.
+B: Ask before you sign anything.
+✗ Who has the song's copyright? | textbook | 楽曲の著作権と原盤権は別物
+✓ Do I keep my masters? | アーティスト側の確認
+? masters ＝原盤（マスター音源）の権利。曲の著作権（publishing）とは別。お金の流れに直結する重要ポイント。
+! 契約書にサインする前に必ず確認。分からなければ専門家に相談。
+
+# Let's talk splits.
+@ talk | music, business, money | real | worksafe | 2
+= 取り分（権利の配分）の話をしよう
+: Let's agree on how we share the songwriting credit and money.
+A: The song's done. Should we put it out?
+B: First, let's talk splits. Fifty-fifty on the writing?
+A: Fair. You did the beat, I did the lyrics.
+✗ Let's decide the money distribution. | textbook | 硬い
+✓ How are we splitting this? | カジュアル
+? splits ＝共作者の間の権利・印税の配分。曲が売れる前に決めるのが鉄則。売れてから話すと揉める。
+! 友達同士ほど先に決めておく。気まずいのは一瞬、揉めるのは一生。
+
+# How do you want to be credited?
+@ talk | music, work, online | real | worksafe, warm | 2
+= クレジット表記はどうする？
+: What name should we use when we list your work?
+A: Thanks for mixing the track. How do you want to be credited?
+B: Just my producer name is fine.
+A: Got it. I'll tag you when it drops.
+✗ What name do you want me to write? | textbook | 伝わるけどプロっぽくない
+✓ What name should I put in the credits? | 同じ意味
+? credit ＝作品にクレジットされる名前。本名かアーティスト名か、どちらで載せるかを確認するのはマナー。
+! drop ＝リリースされる。SNS でタグ付けするかも一緒に確認すると親切。

@@ -1,0 +1,36 @@
+//! Advice & Rules | Should, had better, have to, don't have to | build
+! should＝「〜した方がいいよ」の普通のアドバイス。迷ったらこれ。
+! had better（You'd better）＝「〜しないとヤバいよ」という警告。「〜した方がいい」を全部 had better で言うのは日本人あるある。目上に使うと脅しっぽい。
+! have to＝ルールや状況で「〜しなきゃ」。会話では must より have to / have got to が普通。
+! don't have to＝「〜しなくていい」（不要）。can't＝「〜しちゃダメ」（禁止）。意味が真逆なので注意。
+! 過去は had to。「〜すればよかった」は should have + 過去分詞。
+You should try the cheesecake. | チーズケーキ食べてみなよ。
+You should get some sleep. | ちょっと寝た方がいいよ。
+Should I bring anything? | 何か持ってった方がいい？
+What should I wear to church? | 教会って何着ていけばいい？
+Maybe you should take a day off. | 一日休み取った方がいいんじゃない？ | Maybe を付けると柔らかい
+You should see a doctor about that. | それ、医者に診てもらった方がいいよ。
+You shouldn't lift on an empty stomach. | 空腹で筋トレはしない方がいいよ。
+Should I text her first or wait? | あの子に俺から先に連絡した方がいい？それとも待つ？
+You have to try this ramen. | このラーメン絶対食べてみて。 | have to は強いおすすめにも使う
+I have to work tomorrow. | 明日は仕事しなきゃいけないんだ。
+I don't have to work tomorrow! | 明日仕事行かなくていいんだ！ | don't have to＝しなくていい
+Sorry, I've got to go. | ごめん、もう行かなきゃ。 | have got to＝会話の have to
+Do I have to sign up first? | 先に登録しなきゃダメ？
+What time do I have to be there? | 何時に着いてなきゃダメ？
+Do we have to pay for parking? | 駐車場ってお金払わなきゃいけないの？
+Customers have to order at the counter. | お客さんはカウンターで注文する決まりです。 | ルールの have to
+We have to clean the espresso machine every night. | エスプレッソマシンは毎晩掃除しなきゃいけない。
+Does your roommate have to work on Christmas? | ルームメイト、クリスマスも仕事しなきゃいけないの？ | 三人称は Does ~ have to
+You can't smoke in here. | ここでタバコ吸っちゃダメだよ。 | 禁止は can't
+You're not supposed to eat in the studio. | スタジオは飲食しちゃいけないことになってる。 | be supposed to＝ルール上そうなってる
+You don't have to pay me back. | 返さなくていいよ。
+You don't have to come if you're tired. | 疲れてるなら来なくていいよ。
+You don't have to apologize. | 謝らなくていいって。
+You don't have to be perfect. | 完璧じゃなくていいんだよ。
+We'd better get going. | そろそろ行かないとマズい。 | had better＝しないと困ったことになる
+You'd better hurry, or you'll miss the train. | 急がないと電車乗り遅れるよ。 | had better ~, or ...＝さもないと
+You'd better not tell my boss. | 俺の上司には言わない方が身のためだぞ。 | 否定は had better not
+I had to work a double shift yesterday. | 昨日はシフト2つぶっ通しで入らなきゃいけなかった。 | have to の過去は had to
+You should have told me earlier. | もっと早く言ってくれればよかったのに。 | should have + 過去分詞＝〜すべきだった
+I shouldn't have eaten that. | あれ、食べなきゃよかった。

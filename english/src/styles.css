@@ -214,6 +214,8 @@ canvas.bot { display: block; width: calc(32px * var(--s, 2)); height: calc(48px 
 .counts { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 500 12px var(--mono); color: var(--ink-2); }
 .counts span { display: inline-flex; align-items: center; gap: 6px; }
 .record__actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.grammar { display: grid; gap: 6px; padding: 14px 16px; border-left: 3px solid var(--acc, var(--red)); background: var(--bg-1); border-radius: 0 8px 8px 0; }
+.grammar p[lang='ja'] { font-size: 15px; line-height: 1.6; }
 .record__actions .btn--primary { flex: 1 1 200px; }
 .tracks__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .tracks__head .shelf__h { flex: 1; }
@@ -354,7 +356,13 @@ mark { background: none; color: var(--acc-ink); font-weight: 800; box-shadow: in
 .build { display: grid; gap: 12px; }
 .build__ans { min-height: 52px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px; border-radius: 8px; border: 1px dashed var(--line-2); }
 .build__ans em { color: var(--mute); font-style: normal; font-size: 14px; }
-.build__ans span { padding: 6px 10px; border-radius: 6px; background: var(--bg-3); font-weight: 700; }
+.build__ans span, .chipw { padding: 8px 12px; min-height: 40px; border-radius: 6px; background: var(--bg-3); font-weight: 700; font-size: 16px; }
+.quiz--build .quiz__line { font-family: var(--ja); font-size: 22px; }
+.quiz--build .tile { font-size: 16px; }
+.after__note { font-size: 14px; color: var(--ink-2); }
+.sess__meta { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-right: 54px; min-height: 30px; }
+.sess__bot { position: absolute; right: 0; top: -6px; }
+.sess__bot canvas.bot { --s: 1.2; }
 .build__ans small { flex-basis: 100%; color: var(--good); font-weight: 700; }
 .build__tiles { display: flex; flex-wrap: wrap; gap: 8px; }
 .tile { min-height: 44px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line-2); font-weight: 700; }

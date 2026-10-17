@@ -1,0 +1,36 @@
+//! If... | Real and unreal conditionals, if I were you | build
+! 起こりうる話＝ If ＋現在形, will ～。If it rains, I'll stay in. 未来の話でも if の中に will は入れない。
+! 今の現実と違う仮定＝ If ＋過去形, would ～。形は過去形なのに「今」の話、がポイント。I'd ＝ I would。
+! 過去の後悔＝ If ＋ had ＋過去分詞, would have ＋過去分詞。会話では If I'd ～, I would've ～ と縮める。
+! If I were you, I'd ～ は助言の決まり文句。主語が I でも were が定番。
+! 日本語の「～たら」は全部同じ形。現実にありえるか、ありえないかで英語の形を選ぶのがコツ。
+If it rains tomorrow, I'll skip the gym. | 明日雨だったらジム休むわ。 | 未来の話でも if の中は現在形
+If you're hungry, there's curry in the fridge. | お腹すいてたら、冷蔵庫にカレーあるよ。
+If you're free tonight, come to the show. | 今夜ヒマならライブ来てよ。
+I'll call you if I'm running late. | 遅れそうだったら電話するね。 | if のカタマリは後ろに置いてもOK
+If I drink coffee after six, I can't sleep. | 6時過ぎにコーヒー飲むと、寝れなくなるんだよね。 | いつもの話は現在形＋現在形
+If you text me, I'll pick you up at the station. | 連絡くれたら駅まで迎えに行くよ。
+Unless you're busy, let's grab lunch. | 忙しくなければ、昼メシ行こうよ。 | unless ＝ if not
+What if the bank says no? | 銀行に断られたらどうすんの？ | What if ～? だけで「～だったらどうする？」
+Even if it rains, I'm still going. | 雨降っても、俺は行くからね。 | even if ＝たとえ～でも
+If nobody shows up, we'll just stream it. | 誰も来なかったら、配信だけでやるわ。
+If you're gonna be late, at least text me. | 遅れるなら、せめて連絡くらいしてよ。 | gonna ＝ going to
+If I had more time, I'd learn piano. | もっと時間あったら、ピアノ習うのになあ。 | 今の現実と違うので過去形
+If I had the money, I'd quit tomorrow. | 金さえあれば、明日にでも辞めるのに。
+If I lived closer, I'd come every week. | もっと近くに住んでたら、毎週来るのに。
+If I were you, I'd just ask her out. | 俺だったら、普通にデート誘うけどね。 | I でも were が定番
+If I were you, I'd raise my prices. | 俺がお前の立場なら、値上げするね。
+I wouldn't do that if I were you. | 俺ならそれはやめとくけどな。 | 遠回しな警告の定番
+What would you do if you won the lottery? | 宝くじ当たったらどうする？ | ほぼありえない話なので過去形
+If I didn't work nights, I'd go to church more. | 夜勤じゃなかったら、もっと教会行くのになあ。
+If I had a better mic, my streams would sound way better. | もっといいマイクがあれば、配信の音がずっと良くなるのに。 | way ＝ずっと（比較級を強める）
+If it weren't for coffee, I'd be dead by now. | コーヒーがなかったら、俺とっくに死んでるわ。 | If it weren't for ～ ＝～がなかったら
+I'd be lying if I said I wasn't nervous. | 緊張してないって言ったら嘘になる。 | 本音を言う前置きの定番
+If I'd known, I would've come earlier. | 知ってたら、もっと早く来たのに。 | I'd known ＝ I had known
+If you'd told me, I could've helped. | 言ってくれてたら、手伝えたのに。 | could've ＝できたのに
+If I hadn't saved the session, I would've lost everything. | セッション保存してなかったら、全部飛んでたわ。
+If I'd left on time, I wouldn't have missed the train. | 時間通りに出てれば、電車に乗り遅れなかったのに。
+What would you have done if I hadn't shown up? | 俺が来てなかったら、どうしてたの？
+We wouldn't have gotten the gig if you hadn't called. | お前が電話してくれなかったら、あのライブの仕事は取れてなかった。 | gotten はアメリカ英語の過去分詞
+If I'd gone to bed earlier, I wouldn't be so tired now. | もっと早く寝てたら、今こんなに眠くなかったのに。 | 過去の仮定＋今の結果のミックス型
+If I hadn't moved to Osaka, I wouldn't know you. | 大阪に引っ越してなかったら、今お前と知り合ってないんだよな。 | 後半は今の話なので would ＋原形

@@ -1,10 +1,11 @@
-export type Source = 'talk' | 'songs' | 'movies' | 'books' | 'science' | 'comedy' | 'words';
+export type Source = 'talk' | 'songs' | 'movies' | 'books' | 'science' | 'comedy' | 'words' | 'drill';
 export type Real = 'real' | 'textbook' | 'cringe';
 
 /** One learnable item (chunk card or word). Keys are short because the data ships as one JSON file. */
 export interface Card {
   id: string;
-  k: 'c' | 'w';
+  /** c = chunk, w = word, d = drill sentence (build it from tiles) */
+  k: 'c' | 'w' | 'd';
   /** record (= content file) this card belongs to */
   rec: string;
   s: Source;
@@ -62,11 +63,12 @@ export const SOURCE_LABEL: Record<Source, string> = {
   science: 'Science',
   comedy: 'Comedy',
   words: 'Words',
+  drill: 'Build It',
 };
 
 /** short label-style codes, printed in mono like a record catalogue */
 export const SOURCE_CODE: Record<Source, string> = {
-  talk: 'TALK', songs: 'SONG', movies: 'FILM', books: 'BOOK', science: 'LAB', comedy: 'LIVE', words: 'WORD',
+  talk: 'TALK', songs: 'SONG', movies: 'FILM', books: 'BOOK', science: 'LAB', comedy: 'LIVE', words: 'WORD', drill: 'BUILD',
 };
 
 /** One record = one themed set of cards (a content file). */
@@ -77,6 +79,10 @@ export interface RecordMeta {
   sub: string;
   s: Source;
   n: number;
+  /** core, levelup (harder), build (grammar drills) */
+  lv?: 'core' | 'levelup' | 'build';
+  /** grammar explanation lines (drills) */
+  ex?: string[];
 }
 
 export const SCENE_LABEL: Record<string, string> = {

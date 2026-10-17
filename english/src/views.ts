@@ -57,11 +57,18 @@ export function refreshHud() {
   for (const e of $$('[data-hud=due]')) { e.textContent = due ? String(due) : ''; e.hidden = !due; }
 }
 
+/** the grammar drill record to continue: the first one with due or new sentences */
+function nextBuild(): RecordMeta | undefined {
+  const drills = DB.records.filter((r) => r.lv === 'build');
+  return drills.find((r) => recStats(r.id).due) ?? drills.find((r) => recStats(r.id).fresh) ?? drills[0];
+}
+
 /* ── Today ── */
 
 function renderToday() {
   const { rec, due, fresh } = todayPlan();
   const st = recStats(rec.id);
+  const buildRec = nextBuild();
   const total = due.length + fresh.length;
   const learned = DB.all.filter((c) => (state.cards[c.id]?.box ?? 0) > 0).length;
   const day = new Date().toLocaleDateString('en-US', { weekday: 'long' }).toUpperCase();
@@ -96,6 +103,7 @@ function renderToday() {
         <nav class="today__more" aria-label="More ways to study">
           <button type="button" class="row" data-review ${due.length ? '' : 'disabled'}>${I.repeat}<span><b>Review only</b><small>${due.length ? `${due.length} cards due` : 'Nothing due right now'}</small></span>${I.next}</button>
           <button type="button" class="row" data-drill>${I.headphones}<span><b>Listening drill</b><small>Play ${esc(rec.t)} like a playlist. Shadow it.</small></span>${I.next}</button>
+          ${buildRec ? `<button type="button" class="row" data-build>${I.key}<span><b>Build It · 瞬間英作文</b><small>${esc(buildRec.t)}: Japanese in, English out, from word tiles</small></span>${I.next}</button>` : ''}
           <a class="row" href="#/shuffle">${I.shuffle}<span><b>Shuffle</b><small>Swipe through everything, reel style</small></span>${I.next}</a>
         </nav>
         ${band()}
@@ -105,14 +113,18 @@ function renderToday() {
   view().querySelector('[data-start]')?.addEventListener('click', () => play(todaySpec()));
   $('[data-review]').addEventListener('click', () => play({ title: 'Review', cards: dueCards(undefined, 40), back: '#/' }));
   $('[data-drill]').addEventListener('click', () => openDrill(rec, () => render()));
+  view().querySelector('[data-build]')?.addEventListener('click', () => { if (buildRec) play(recordSpec(buildRec)); });
   for (const c of fresh.slice(0, 2)) void preload(c);
 }
 
 /* ── Records (shelf + search) ── */
 
 const SHELVES: [string, (r: RecordMeta) => boolean][] = [
-  ['Real Talk', (r) => r.s === 'talk'],
-  ['Words', (r) => r.s === 'words'],
+  ['Real Talk', (r) => r.s === 'talk' && r.lv !== 'levelup'],
+  ['Level Up', (r) => r.lv === 'levelup' && r.s === 'talk'],
+  ['Build It · 瞬間英作文', (r) => r.lv === 'build'],
+  ['Words', (r) => r.s === 'words' && r.lv !== 'levelup'],
+  ['Level Up Words', (r) => r.s === 'words' && r.lv === 'levelup'],
   ['Songs, Film & Books', (r) => ['songs', 'movies', 'books'].includes(r.s)],
   ['Comedy & Science', (r) => ['comedy', 'science'].includes(r.s)],
 ];
@@ -170,8 +182,9 @@ function renderRecord(id: string) {
           <p class="counts"><span><i class="dot dot--new"></i>${st.fresh} new</span><span><i class="dot dot--learning"></i>${st.learning} learning</span><span><i class="dot dot--known"></i>${st.known} known</span></p>
         </div>
       </div>
+      ${r.ex?.length ? `<section class="grammar"><p class="eyebrow">The point</p>${r.ex.map((x) => `<p lang="ja">${esc(x)}</p>`).join('')}</section>` : ''}
       <div class="record__actions">
-        <button type="button" class="btn btn--primary" data-learn ${fresh || st.due ? '' : 'disabled'}>${I.play}<span>${fresh ? `Learn ${fresh} new` : st.due ? `Review ${st.due}` : 'All learned'}</span></button>
+        <button type="button" class="btn btn--primary" data-learn ${fresh || st.due ? '' : 'disabled'}>${I.play}<span>${fresh ? `${r.lv === 'build' ? 'Build' : 'Learn'} ${fresh} new` : st.due ? `Review ${st.due}` : 'All learned'}</span></button>
         <button type="button" class="btn btn--ghost" data-drill>${I.headphones}<span>Listen</span></button>
         ${st.due && fresh ? `<button type="button" class="btn btn--ghost" data-review>${I.repeat}<span>Review ${st.due}</span></button>` : ''}
         <button type="button" class="btn btn--ghost" data-test>${I.check}<span>Test</span></button>

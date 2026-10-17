@@ -1,0 +1,36 @@
+//! Passive & Get | Was made, got fired, is being fixed | build
+! 受け身＝ be ＋過去分詞。「誰がやったか」より「何が起きたか」を言いたいときに使う。by ～ は必要なときだけ。
+! 会話では be の代わりに get もよく使う：got fired / got hired / got stolen。急な変化やハプニングっぽさが出る。
+! 今まさに進行中＝ is being ～（is being fixed）、もう済んだ状態＝ has been ～（has been canceled）。
+! 「自転車を盗まれた」を I was stolen my bike にするのは定番ミス。主語は盗まれた物：My bike got stolen.
+! get / have ＋物＋過去分詞＝人にやってもらう：I got my hair cut.（自分で切ったなら I cut my hair.）
+My bike got stolen last night. | 昨日の夜、チャリ盗まれた。 | 主語は盗まれた物
+I got fired from my first job. | 最初の仕事、クビになったんだよね。 | get fired ＝クビになる
+I was born and raised in Osaka. | 大阪生まれ、大阪育ち。 | born も受け身の形
+I got hired at the new ramen place. | 新しくできたラーメン屋で採用された。
+I finally got paid today. | 今日やっと給料入った。 | get paid ＝給料をもらう
+I don't wanna get hurt again. | もう傷つきたくない。 | get hurt ＝傷つく
+These beans are roasted in Kyoto. | この豆、京都で焙煎されてるんだ。
+My card got declined at the register. | レジでカード通らなかった。 | 地味に恥ずかしいやつ
+The show was canceled because of the typhoon. | 台風でライブ中止になった。
+My flight's been delayed again. | 飛行機、また遅延してる。 | has been ＝もうそうなってる状態
+The elevator is being fixed. | エレベーター、今修理中だよ。 | is being ＝まさに今
+I got stuck in traffic for an hour. | 1時間渋滞にハマってた。 | get stuck は get の定番
+I got my hair cut yesterday. | 昨日、髪切ってもらった。 | 美容院なら get ＋物＋過去分詞
+I need to get my screen fixed. | スマホの画面、修理してもらわなきゃ。
+Is breakfast included in the price? | 朝食って料金に含まれてる？
+The contract hasn't been signed yet. | 契約書、まだサインされてない。
+The wedding's been moved to Saturday. | 結婚式、土曜に変更になった。 | wedding's ＝ wedding has
+My stream got taken down for copyright. | 配信が著作権で消された。 | take down ＝削除する
+We got kicked out of the bar at two. | 夜中の2時にバー追い出された。 | get kicked out ＝追い出される
+Everyone got invited except me. | 俺以外、みんな招待された。
+Your drink is being made right now. | お客様のドリンク、今お作りしてます。 | カフェ店員の定番
+This church was built over a hundred years ago. | この教会、100年以上前に建てられたんだよ。
+He got caught sleeping on the night shift. | あいつ、夜勤中に寝てるとこ見つかった。 | get caught -ing ＝～してるところを見つかる
+My account got hacked, so ignore those messages. | アカウント乗っ取られたから、あのメッセージ無視して。
+Have you ever been asked out by a customer? | お客さんにデート誘われたことある？ | by ＝誰に
+The new menu will be announced next week. | 新メニューは来週発表されます。 | will be ＋過去分詞
+The whole album was recorded on a phone. | アルバム全部、スマホで録られたんだよ。
+Our track was used in an ad without permission. | 俺らの曲、許可なしで広告に使われた。
+I think I'm being followed by a cat. | なんか俺、猫につけられてる気がする。 | is being ～ ＋ by
+Was this song written for someone special? | この曲って、誰か特別な人のために書かれたの？

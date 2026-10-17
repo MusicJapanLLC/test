@@ -1,136 +1,136 @@
 // Describing things — adjectives you hear every day
-amazing | adj | すごい・最高の | very good | This view is amazing. | daily
-awesome | adj | 最高の | very good (casual) | Awesome, see you then! | friends
-incredible | adj | 信じられないほどの | hard to believe, very good | The food was incredible. | food
-terrible | adj | ひどい | very bad | The traffic was terrible. | daily
-awful | adj | ひどい | very bad | I feel awful about yesterday. | feelings
-gross | adj | キモい・まずそう | disgusting | Ew, that's gross. | food
-disgusting | adj | 気持ち悪い・ひどい | very unpleasant | The bathroom was disgusting. | daily
-cute | adj | かわいい | attractive in a sweet way | Your dog is so cute. | daily
-gorgeous | adj | 超きれいな | very beautiful | The sunset was gorgeous. | travel
-handsome | adj | ハンサムな | good-looking (usually men) | Your brother is handsome. | crush
-hot | adj | 暑い・セクシーな・辛い | very warm / attractive / spicy | It's so hot today. | daily
-spicy | adj | 辛い | hot with spice | Is this spicy? | food
-bland | adj | 味が薄い・つまらない | without much flavor | The soup is a little bland. | food
-crowded | adj | 混んでいる | full of people | The train was so crowded. | travel
-packed | adj | ぎゅうぎゅうの | very crowded | The bar was packed. | bar
-empty | adj | 空の・がらがらの | with nothing or no one inside | The gym is empty at 6 a.m. | gym
-quiet | adj | 静かな | with little noise | Is there a quiet café near here? | cafe
-noisy | adj | うるさい | full of noise | My neighbors are so noisy. | daily
-expensive | adj | 高い（値段） | costing a lot | Tokyo is expensive. | money
-cheap | adj | 安い | not costing much | The tacos were cheap and great. | money
-pricey | adj | 割高な | a bit expensive | That café is kind of pricey. | money
-affordable | adj | 手頃な | not too expensive | We need affordable housing. | money
-convenient | adj | 便利な | easy and useful | The station is really convenient. | daily
-inconvenient | adj | 不便な | causing trouble | Sorry, is this an inconvenient time? | business
-comfortable | adj | 快適な | making you feel relaxed | These shoes are so comfortable. | daily
-uncomfortable | adj | 居心地が悪い | not relaxed | That question made me uncomfortable. | feelings
-dangerous | adj | 危険な | could hurt you | That road is dangerous at night. | travel
-safe | adj | 安全な | not dangerous | Get home safe. | travel
-fancy | adj | 高級な・おしゃれな | expensive and stylish | Let's go somewhere fancy. | food
-casual | adj | カジュアルな・気軽な | relaxed, not formal | It's a casual dinner. Wear whatever. | daily
-formal | adj | フォーマルな | following official rules | The email sounds too formal. | business
-fresh | adj | 新鮮な・爽やかな | new, not old | Fresh bread smells amazing. | food
-stale | adj | 古くなった | no longer fresh | The chips are stale. | food
-huge | adj | 巨大な・すごい | very big / very important | That's huge news! | daily
-tiny | adj | 小さい | very small | My apartment is tiny. | daily
-massive | adj | でかい | very large | They have a massive TV. | daily
-quick | adj | 速い・手短な | fast, short | Quick question. | work
-slow | adj | 遅い | not fast | The Wi-Fi is so slow. | online
-easy | adj | 簡単な | not hard | It's easy once you get it. | study
-tricky | adj | 厄介な・ややこしい | difficult in a confusing way | This grammar point is tricky. | study
-complicated | adj | 複雑な | with many parts | It's complicated. | feelings
-simple | adj | シンプルな | easy, not complex | Keep it simple. | business
-obvious | adj | 明らかな | easy to see | Isn't it obvious? She likes you. | crush
-clear | adj | 明確な・晴れた | easy to understand / no clouds | Is that clear? | work
-vague | adj | 曖昧な | not clear | His answer was vague. | business
-useful | adj | 役に立つ | helpful | This app is really useful. | study
-useless | adj | 役に立たない | not helpful at all | This umbrella is useless in this wind. | daily
-helpful | adj | 助かる・親切な | giving help | The staff was super helpful. | travel
-serious | adj | 真剣な・深刻な | not joking / important | Are you serious? | daily
-funny | adj | 面白い | making you laugh | That's so funny. | friends
-hilarious | adj | 爆笑の | very funny | The movie was hilarious. | friends
-interesting | adj | 興味深い | holding your attention | That's an interesting idea. | business
-fascinating | adj | 魅力的な・すごく面白い | extremely interesting | The documentary was fascinating. | study
-exhausting | adj | 疲れる | making you very tired | Moving is exhausting. | daily
-relaxing | adj | リラックスできる | making you calm | The onsen was so relaxing. | travel
-stressful | adj | ストレスの多い | causing stress | Tax season is stressful. | work
-rewarding | adj | やりがいのある | making you feel good about doing it | Teaching is hard but rewarding. | work
-challenging | adj | やりがいのある・難しい | difficult but interesting | The new job is challenging. | work
-impressive | adj | 印象的な・見事な | causing admiration | Your English is impressive. | study
-disappointing | adj | 期待外れの | not as good as hoped | The sequel was disappointing. | daily
-satisfying | adj | 満足のいく | giving satisfaction | Finishing a big project is so satisfying. | work
-strange | adj | 奇妙な | unusual | It's strange that he didn't call. | daily
-normal | adj | 普通の | usual | Is it normal to tip here? | travel
-typical | adj | 典型的な・ありがちな | usual, as expected | Typical Monday. | daily
-rare | adj | 珍しい・レアな | not common | Free parking in Osaka? That's rare. | daily
-common | adj | よくある | happening often | It's a common mistake. | study
-popular | adj | 人気のある | liked by many | This song is really popular right now. | music
-famous | adj | 有名な | known by many | Is this place famous for anything? | travel
-classic | adj | 定番の・典型的な | very typical / timeless | That's a classic mistake. | daily
-legendary | adj | 伝説的な | very famous and great | That party was legendary. | friends
-iconic | adj | 象徴的な | very famous and recognizable | That's an iconic photo. | online
-basic | adj | 基本的な・平凡な（スラング） | simple / unoriginal | Pumpkin spice? So basic. | online
-random | adj | ランダムな・脈絡のない | without a pattern / unexpected | Random question: do you like karaoke? | friends
-specific | adj | 具体的な | exact, detailed | Can you be more specific? | business
-general | adj | 一般的な | not detailed | Just give me a general idea. | business
-flexible | adj | 柔軟な | able to change easily | My schedule is flexible this week. | work
-strict | adj | 厳しい | with firm rules | My coach is strict. | gym
-fair | adj | 公平な | treating everyone equally | That's not fair. | conflict
-unfair | adj | 不公平な | not fair | It's unfair to blame him. | conflict
-reasonable | adj | 妥当な・手頃な | sensible / fairly priced | The price is reasonable. | business
-ridiculous | adj | ばかげた | silly, unreasonable | That rule is ridiculous. | conflict
-crazy | adj | ヤバい・狂った | wild, surprising | That's crazy! | friends
-insane | adj | 半端ない | extremely surprising or extreme | The line was insane. | friends
-wild | adj | 信じられない・ヤバい | surprising, extreme | That story is wild. | friends
-cozy | adj | 居心地のいい | warm and comfortable | What a cozy café. | cafe
-fancy-looking | adj | 高そうな見た目の | looks expensive | That's a fancy-looking cake. | food
-delicious | adj | おいしい | very tasty | This is delicious. | food
-tasty | adj | おいしい | having good flavor | These snacks are tasty. | food
-greasy | adj | 脂っこい | full of oil | I need something greasy after drinking. | food
-healthy | adj | 健康的な | good for your body | I'm trying to eat healthy. | health
-sweet | adj | 甘い・優しい・いいね | sugary / kind / cool | That's so sweet of you. | food
-sour | adj | 酸っぱい | sharp taste like lemon | This yogurt is sour. | food
-bitter | adj | 苦い・恨んでいる | sharp unpleasant taste / resentful | Black coffee is too bitter for me. | food
-salty | adj | しょっぱい | containing a lot of salt | The ramen was too salty. | food
-broken | adj | 壊れた | not working | The elevator's broken. | daily
-dead | adj | 電池切れの・死んだ | out of battery / not alive | My phone's dead. | daily
-loud | adj | うるさい・声が大きい | making a lot of noise | Osaka people are loud and proud. | daily
-soft | adj | 柔らかい・静かな | not hard / quiet | Can you speak a little softer? | daily
-tight | adj | きつい・余裕がない | close-fitting / limited | Money is tight this month. | money
-loose | adj | 緩い | not tight | This shirt is loose. | shopping
-fake | n | 偽物 | a copy pretending to be real | That bag is a fake. | shopping
-brand-new | adj | 新品の | completely new | Is this phone brand-new? | shopping
-used | adj | 中古の | owned before | I bought a used car. | shopping
-outdated | adj | 時代遅れの | old-fashioned | The website looks outdated. | business
-up-to-date | adj | 最新の | current, modern | Is this information up-to-date? | business
-sold out | adj | 売り切れの | none left to buy | The concert is sold out. | music
-available | adj | 利用できる・空いている | free to use / free in time | Are you available on Friday? | work
-busy | adj | 忙しい・混んでいる | having lots to do | Sorry, I'm busy this week. | work
-free | adj | 暇な・無料の | not busy / costing nothing | Are you free tonight? / It's free. | daily
-ready | adj | 準備ができた | prepared | Are you ready? | daily
-late | adj | 遅れた・遅い | after the right time | Sorry I'm late. | daily
-early | adj | 早い | before the usual time | You're early! | daily
-overdue | adj | 期限切れの・遅れた | late (payment, task) | The invoice is overdue. | business
-urgent | adj | 緊急の | needing action now | Is it urgent, or can it wait? | business
-important | adj | 重要な | mattering a lot | This is important. | work
-essential | adj | 不可欠な | absolutely necessary | Coffee is essential. | daily
-optional | adj | 任意の | not required | The tip is optional. | money
-similar | adj | 似ている | almost the same | Our ideas are similar. | business
-different | adj | 違う | not the same | American and British English are a little different. | study
-exact | adj | 正確な | completely correct | What's the exact price? | money
-accurate | adj | 正確な | correct, without mistakes | Is the translation accurate? | study
-whole | adj | 全体の | complete | I ate the whole pizza. | food
-entire | adj | 全部の | whole | I spent the entire day in bed. | daily
-extra | adj | 追加の・やりすぎの（スラング） | additional / too much | Can I get extra cheese? / She's so extra. | food
-lucky | adj | 運がいい | having good luck | Lucky you! | daily
-unlucky | adj | 運が悪い | having bad luck | So unlucky. It rained on my day off. | daily
-smooth | adj | スムーズな・なめらかな | without problems / even | The launch went smooth. | business
-rough | adj | 大変な・荒い | difficult / not smooth | Rough day? | feelings
-solid | adj | しっかりした・堅実な | strong, reliable, good | That's a solid plan. | business
-decent | adj | まあまあいい・ちゃんとした | good enough / respectable | The pay is decent. | work
-mid | adj | 微妙な・普通の（スラング） | average, not great | The movie was kind of mid. | online
-fire | adj | 最高の（スラング） | excellent | This track is fire. | music
-lit | adj | 盛り上がってる（スラング） | exciting, fun | The party was lit. | bar
-dope | adj | かっこいい（スラング） | cool | Dope shoes, man. | friends
-sick | adj | 病気の・すごい（スラング） | ill / amazing | I'm sick today. / That trick was sick! | friends
+amazing | adj | すごい・最高の | very good | This view is amazing. || You made this beat in an hour? That's amazing. || The staff at that tiny hotel were amazing. | daily | もともと強い語なので very amazing とは言わない。absolutely amazing や so amazing が自然。
+awesome | adj | 最高の | very good (casual) | Awesome, see you then! || You got us a table? Awesome. || The new gym has an awesome view of the river. | friends | 「いいね・了解」の相づちにも使う。仕事メールなら great の方が無難。
+incredible | adj | 信じられないほどの | hard to believe, very good | The food was incredible. || The crowd tonight was incredible. || It's incredible how fast you picked up the language. | food | 元は「信じられない」。It's incredible how ~ で「〜なんてすごい」。
+terrible | adj | ひどい | very bad | The traffic was terrible. || I'm terrible at remembering names. || The sound at that venue was terrible. | daily | be terrible at ~ で「〜が超苦手」。自虐でよく使う。
+awful | adj | ひどい | very bad | I feel awful about yesterday. || This coffee tastes awful. Did someone burn it? || You look awful. Go home and rest. | feelings | feel awful は「気分が悪い」と「申し訳なく思う」の両方。look awful は体調が悪そうな時に。
+gross | adj | キモい・まずそう | disgusting | Ew, that's gross. || Don't leave your sweaty towel on the bench. Gross. || Gross, there's a hair in my soup. | food | 口語で「キモい・汚い」。ビジネスの gross profit（粗利）は別の意味。
+disgusting | adj | 気持ち悪い・ひどい | very unpleasant | The bathroom was disgusting. || Some guy spit on the platform. Disgusting. || Racist comments in my chat are disgusting. I ban them right away. | daily | 見た目や味だけでなく、行動を強く非難する時にも使う。gross より強い。
+cute | adj | かわいい | attractive in a sweet way | Your dog is so cute. || That little cafe on the corner is so cute. || You think she's cute? Go talk to her. | daily | 人には「かわいい・感じがいい」。小物や店にも使える。
+gorgeous | adj | 超きれいな | very beautiful | The sunset was gorgeous. || Your girlfriend looks gorgeous tonight. || The church has a gorgeous old organ. | travel | very beautiful より強い褒め言葉。人・景色・物に使える。
+handsome | adj | ハンサムな | good-looking (usually men) | Your brother is handsome. || You look handsome in that suit. || We made a handsome profit from the pop-up shop. | crush | 普通は男性に使う。a handsome profit / sum は「かなりの額」。
+hot | adj | 暑い・セクシーな・辛い | very warm / attractive / spicy | It's so hot today. || This mic gets hot after an hour. || Careful, the cup is hot. | daily | 「暑い・熱い」「辛い」「セクシー」と意味が多い。辛さをはっきり言うなら spicy。
+spicy | adj | 辛い | hot with spice | Is this spicy? || This curry is way too spicy for me. || I like my ramen extra spicy. | food | hot は「熱い」と紛らわしいので、辛さは spicy が確実。反対は mild。
+bland | adj | 味が薄い・つまらない | without much flavor | The soup is a little bland. || The new soup is kind of bland. It needs salt. || The design is too bland. Add some color. | food | 味だけでなく、デザインや人が「無難すぎてつまらない」にも使う。
+crowded | adj | 混んでいる | full of people | The train was so crowded. || Dotonbori gets crowded on weekends. || The gym is crowded right after work. | travel | crowded with ~ の形。混んだ電車は a crowded train。
+packed | adj | ぎゅうぎゅうの | very crowded | The bar was packed. || The church was packed on Christmas Eve. || My schedule is packed this week. | bar | crowded より「ぎっしり」。予定がいっぱいの時にも使える。
+empty | adj | 空の・がらがらの | with nothing or no one inside | The gym is empty at 6 a.m. || The cafe is empty after three. Perfect for studying. || Don't lift on an empty stomach. | gym | on an empty stomach（空腹で）は定番。empty promise は「口だけの約束」。
+quiet | adj | 静かな | with little noise | Is there a quiet café near here? || Keep it quiet. The baby's sleeping. || Business is quiet on rainy days. | cafe | 「静か」だけでなく、店が「暇・客が少ない」にも使える。
+noisy | adj | うるさい | full of noise | My neighbors are so noisy. || This street is too noisy to record vocals. || The AC is so noisy you can hear it on the mic. | daily | 騒音で「うるさい」。人がしつこくて「うるさい」は annoying。
+expensive | adj | 高い（値段） | costing a lot | Tokyo is expensive. || Rent near the station is so expensive. || Cheap gear ends up being expensive. | money | price（価格）には high を使い、物には expensive。The price is expensive. は不自然。
+cheap | adj | 安い | not costing much | The tacos were cheap and great. || Cheap headphones break fast. || Flights are cheap if you book early. | money | 「安っぽい」の悪い響きもあるので、褒めるなら affordable や a good price。
+pricey | adj | 割高な | a bit expensive | That café is kind of pricey. || Good mics are pricey, but worth it. || That neighborhood's getting pricey. | money | expensive より軽い「ちょっと高め」。カジュアルな会話向け。
+affordable | adj | 手頃な | not too expensive | We need affordable housing. || We kept the lunch set affordable for students. || Is there an affordable studio near Namba? | money | cheap より上品な「お手頃」。広告やビジネスでよく使う。
+convenient | adj | 便利な | easy and useful | The station is really convenient. || Is Tuesday convenient for you? || Konbini are so convenient at 3 a.m. | daily | 人を主語に I'm convenient. とは言わない。Is it convenient for you? が正しい。
+inconvenient | adj | 不便な | causing trouble | Sorry, is this an inconvenient time? || The new opening hours are inconvenient for night workers. || Sorry, I know it's inconvenient, but can we move the call? | business | 名詞は inconvenience。Sorry for the inconvenience. はお詫びの定番。
+comfortable | adj | 快適な | making you feel relaxed | These shoes are so comfortable. || Make yourself comfortable. I'll get some tea. || I'm not comfortable sharing my salary. | daily | Make yourself comfortable. は「楽にしてね」。not comfortable -ing は「〜するのは抵抗がある」。
+uncomfortable | adj | 居心地が悪い | not relaxed | That question made me uncomfortable. || These chairs are so uncomfortable. || Sorry if I made you uncomfortable. | feelings | 物の「座り心地が悪い」と、人の「居心地が悪い・気まずい」の両方。
+dangerous | adj | 危険な | could hurt you | That road is dangerous at night. || Lifting heavy without a spotter is dangerous. || It's dangerous to sign a contract you don't understand. | travel | It's dangerous to ~ の形。risky は「リスクがある」でもう少し軽い。
+safe | adj | 安全な | not dangerous | Get home safe. || Is it safe to leave my bag here? || Better safe than sorry. Back up your files. | travel | Get home safe. / Stay safe. は別れ際の挨拶。safe に「安心した」の意味はない。
+fancy | adj | 高級な・おしゃれな | expensive and stylish | Let's go somewhere fancy. || We don't need a fancy logo. Just a clean one. || Fancy coffee is our whole business. | food | 「高級な」の他に「凝った・手の込んだ」。Nothing fancy. は「大したものじゃないよ」。
+casual | adj | カジュアルな・気軽な | relaxed, not formal | It's a casual dinner. Wear whatever. || We're pretty casual here. Call me by my first name. || It's just a casual thing. We're not dating. | daily | casual relationship は「軽い関係」。dress code: casual は普段着OK。
+formal | adj | フォーマルな | following official rules | The email sounds too formal. || Do I need to wear something formal to the wedding? || Don't be so formal. Just text me. | business | 服装・言葉づかい・手続きに使う。メールが硬すぎる時は too formal。
+fresh | adj | 新鮮な・爽やかな | new, not old | Fresh bread smells amazing. || The bread's fresh out of the oven. || Get some fresh air. You've been in the studio all day. | food | fresh air、fresh start（再出発）など食べ物以外にも幅広く使う。
+stale | adj | 古くなった | no longer fresh | The chips are stale. || Don't serve stale croissants. Toss them. || The joke got stale after the third time. | food | パンやお菓子の「湿気た・古くなった」。ネタやアイデアが「新鮮味がない」にも。
+huge | adj | 巨大な・すごい | very big / very important | That's huge news! || I'm a huge fan of your work. || Getting that client was huge for us. | daily | 大きさだけでなく「重大な・大事な」。huge fan は「大ファン」。
+tiny | adj | 小さい | very small | My apartment is tiny. || The kitchen is tiny, but we make it work. || There's a tiny scratch on the screen. | daily | very small の口語。teeny-tiny は「ちっちゃい」の可愛い言い方。
+massive | adj | でかい | very large | They have a massive TV. || We got a massive order from a hotel. || That bass sounds massive on big speakers. | daily | huge とほぼ同じ。イギリス英語や若者言葉でよく聞く。
+quick | adj | 速い・手短な | fast, short | Quick question. || Can I grab a quick coffee before we start? || She's a quick learner. | work | fast はスピード、quick は「短時間でさっと」。Quick question. は質問の前置き。
+slow | adj | 遅い | not fast | The Wi-Fi is so slow. || Tuesday nights are slow at the bar. || The new barista is slow but careful. | online | 店が「暇」な時も slow。Take it slow. は「ゆっくりでいいよ」。
+easy | adj | 簡単な | not hard | It's easy once you get it. || Easy on the sugar, please. || Take it easy. You just got out of the hospital. | study | Take it easy. は「無理しないで・じゃあね」。easy on ~ は「〜は控えめに」。
+tricky | adj | 厄介な・ややこしい | difficult in a confusing way | This grammar point is tricky. || Parking near the venue is tricky. || Asking for a raise is tricky. Timing matters. | study | difficult より「クセがあって難しい」。上手な扱いが必要な感じ。
+complicated | adj | 複雑な | with many parts | It's complicated. || The tax forms are so complicated. || Our relationship is complicated right now. | feelings | It's complicated. は恋愛などで「説明しにくい」とはぐらかす決まり文句。
+simple | adj | シンプルな | easy, not complex | Keep it simple. || Simple question. Do you want the job or not? || The menu is simple: five drinks and two cakes. | business | Keep it simple. は「シンプルにいこう」。plain（地味な）とはニュアンスが違う。
+obvious | adj | 明らかな | easy to see | Isn't it obvious? She likes you. || It's obvious he's nervous. Look at his hands. || Sorry if this is obvious, but did you restart it? | crush | 相手に Obviously. と言うと「当然でしょ」と嫌味に聞こえることがある。
+clear | adj | 明確な・晴れた | easy to understand / no clouds | Is that clear? || Let me be clear. We don't do refunds after a week. || The sky's clear. Let's go up to the roof. | work | Let me be clear. は大事な話の前置き。Clear? は「わかった？」で少し強い。
+vague | adj | 曖昧な | not clear | His answer was vague. || The client's feedback was too vague to use. || I have a vague memory of that night. | business | vague answer / vague idea が定番。ambiguous は「2通りに取れる」で少し違う。
+useful | adj | 役に立つ | helpful | This app is really useful. || Learning a few Korean phrases was useful at work. || Here's a useful tip: save every version. | study | 物や情報に使う。人が「役に立つ・助かる」なら helpful が自然。
+useless | adj | 役に立たない | not helpful at all | This umbrella is useless in this wind. || I'm useless before coffee. || This app is useless without Wi-Fi. | daily | 人に使うと「役立たず」でかなりキツい。自虐なら軽く使える。
+helpful | adj | 助かる・親切な | giving help | The staff was super helpful. || Thanks, that's really helpful. || The video was helpful, but I still don't get it. | travel | 人にも情報にも使える。Thanks, that's helpful. はお礼の定番。
+serious | adj | 真剣な・深刻な | not joking / important | Are you serious? || Are you serious about opening a second shop? || Don't worry, it's nothing serious. | daily | Are you serious? は「マジで？」。nothing serious は「大したことない」。
+funny | adj | 面白い | making you laugh | That's so funny. || The funny thing is, nobody noticed. || My stomach feels funny. | friends | 「面白い」の他に「変な・調子がおかしい」。fun（楽しい）と混同しないこと。
+hilarious | adj | 爆笑の | very funny | The movie was hilarious. || My roommate's impression of our boss is hilarious. || The comments on that video are hilarious. | friends | very funny より強い。very hilarious とは言わない。
+interesting | adj | 興味深い | holding your attention | That's an interesting idea. || Interesting. Tell me more. || That's an interesting choice of color. | business | 本当に興味がある時と、やんわり否定する時の両方に使う。口調で判断。
+fascinating | adj | 魅力的な・すごく面白い | extremely interesting | The documentary was fascinating. || It's fascinating how coffee is made in different countries. || I find old Osaka history fascinating. | study | very interesting より強い。I find ~ fascinating の形も自然。
+exhausting | adj | 疲れる | making you very tired | Moving is exhausting. || Pretending to be happy at work is exhausting. || Back-to-back shows are exhausting but fun. | daily | exhausting は「疲れさせる」もの、exhausted は「疲れた」人。boring と bored と同じ関係。
+relaxing | adj | リラックスできる | making you calm | The onsen was so relaxing. || A hot bath after leg day is so relaxing. || The music at this cafe is really relaxing. | travel | relaxing は「リラックスさせる」もの、relaxed は人の状態。
+stressful | adj | ストレスの多い | causing stress | Tax season is stressful. || Opening a business is stressful. || Night shifts are less stressful than you'd think. | work | stressful は状況、stressed (out) は人。I'm stressful. は間違い。
+rewarding | adj | やりがいのある | making you feel good about doing it | Teaching is hard but rewarding. || Running my own shop is stressful but rewarding. || Teaching kids music at church is really rewarding. | work | お金ではなく満足感の「やりがい」。work と相性がいい。
+challenging | adj | やりがいのある・難しい | difficult but interesting | The new job is challenging. || Singing in English is challenging, but I love it. || It's a challenging time for small shops. | work | difficult の前向きな言い方。仕事では hard より challenging が好まれる。
+impressive | adj | 印象的な・見事な | causing admiration | Your English is impressive. || Your sales numbers are impressive. || That's an impressive record collection. | study | impressed は人が「感心した」、impressive は「見事な」もの。
+disappointing | adj | 期待外れの | not as good as hoped | The sequel was disappointing. || The turnout was disappointing. || It's disappointing, but we'll try again next month. | daily | disappointing はもの・こと。I'm disappointing. だと「俺は残念な人間」になる。
+satisfying | adj | 満足のいく | giving satisfaction | Finishing a big project is so satisfying. || There's nothing more satisfying than a clean mix. || Watching latte art videos is weirdly satisfying. | work | weirdly satisfying（妙に気持ちいい）はネットの定番表現。
+strange | adj | 奇妙な | unusual | It's strange that he didn't call. || Strange. The door was locked this morning. || It feels strange being back in my hometown. | daily | weird とほぼ同じで少し丁寧。stranger（知らない人）の元の語。
+normal | adj | 普通の | usual | Is it normal to tip here? || Is it normal for the machine to make that noise? || Things are back to normal at the shop. | travel | back to normal（元通り）が定番。usual とほぼ同じ。
+typical | adj | 典型的な・ありがちな | usual, as expected | Typical Monday. || It's typical for small cafes to lose money the first year. || Typical. The train's late again. | daily | Typical! は「いつものことだ」と呆れる一言。
+rare | adj | 珍しい・レアな | not common | Free parking in Osaka? That's rare. || It's rare to find a good bassist in this town. || I found a rare record at a flea market. | daily | 肉の焼き方の rare も同じ単語。pretty rare / super rare などで使う。
+common | adj | よくある | happening often | It's a common mistake. || It's common to feel nervous before a show. || Common sense says don't sign it. | study | common sense（常識）も定番。ordinary は「普通の」で少し違う。
+popular | adj | 人気のある | liked by many | This song is really popular right now. || This blend is popular with older customers. || Being popular online doesn't pay the rent. | music | popular with / among ~ の形。famous は「知られている」、popular は「好かれている」。
+famous | adj | 有名な | known by many | Is this place famous for anything? || Osaka is famous for street food. || He's famous online, but nobody knows him here. | travel | be famous for ~ の形。悪い意味で有名なら infamous / notorious。
+classic | adj | 定番の・典型的な | very typical / timeless | That's a classic mistake. || The classic latte is still our best seller. || Forgot your wallet again? Classic. | daily | Classic! は「いつものお前らしいな」というツッコミ。classical は「クラシック音楽の」。
+legendary | adj | 伝説的な | very famous and great | That party was legendary. || His barbecue at church events is legendary. || That bar had a legendary jukebox. | friends | legend の形容詞形。冗談で大げさに褒める時にも使う。
+iconic | adj | 象徴的な | very famous and recognizable | That's an iconic photo. || The neon signs in Dotonbori are iconic. || That bassline is iconic. | online | 誰もが知っている「象徴的な」。ネットでは大げさな褒め言葉にもなる。
+basic | adj | 基本的な・平凡な（スラング） | simple / unoriginal | Pumpkin spice? So basic. || I only know basic Spanish. || Don't be basic. Order something new. | online | 「基本的な」の他に、スラングで「ありきたり・流行に乗るだけ」という悪口にもなる。
+random | adj | ランダムな・脈絡のない | without a pattern / unexpected | Random question: do you like karaoke? || Some random guy started singing on the train. || I get random cravings for curry at 2 a.m. | friends | 「脈絡のない」「知らない（人）」の意味。Random question, ~ は話題を変える前置き。
+specific | adj | 具体的な | exact, detailed | Can you be more specific? || Do you have a specific date in mind? || Be specific in the email. What do you need? | business | Can you be more specific? は質問の定番。
+general | adj | 一般的な | not detailed | Just give me a general idea. || In general, Tuesdays are slow. || Can you give me a general idea of the budget? | business | in general（一般に・たいてい）が便利。general manager は「総支配人」。
+flexible | adj | 柔軟な | able to change easily | My schedule is flexible this week. || We offer flexible hours for students. || Stay flexible. Plans change. | work | 時間や考え方が柔軟。体が柔らかい意味もある（I'm not flexible.）。
+strict | adj | 厳しい | with firm rules | My coach is strict. || The venue is strict about the noise limit. || My parents were strict about curfew. | gym | strict about ~ の形。strict diet は「厳しい食事制限」。
+fair | adj | 公平な | treating everyone equally | That's not fair. || Fair enough. Let's do it your way. || Is fifty-fifty fair? | conflict | Fair enough. は「それなら納得」の相づちで超便利。To be fair, ~ は「公平に言えば」。
+unfair | adj | 不公平な | not fair | It's unfair to blame him. || It's unfair that the night crew gets no bonus. || Life's unfair. Keep going. | conflict | unfair to 人 の形。子どもっぽく言うなら That's not fair!
+reasonable | adj | 妥当な・手頃な | sensible / fairly priced | The price is reasonable. || Be reasonable. We can't open seven days a week. || Their rates are reasonable for a big studio. | business | 「理にかなった」と「（値段が）手頃な」の2つ。Be reasonable. は「冷静になって」。
+ridiculous | adj | ばかげた | silly, unreasonable | That rule is ridiculous. || Ten thousand yen for a T-shirt? That's ridiculous. || I look ridiculous in this hat. | conflict | That's ridiculous! は「ありえない」と呆れる時。funny と違って笑えない場合も多い。
+crazy | adj | ヤバい・狂った | wild, surprising | That's crazy! || I'm crazy about this new coffee. || Work has been crazy this month. | friends | crazy about ~ は「〜に夢中」。人の心の病気の話には使わない。
+insane | adj | 半端ない | extremely surprising or extreme | The line was insane. || The line for the new bakery is insane. || You ran ten kilometers before work? Insane. | friends | crazy より強い若者言葉。驚きや称賛にも使う。
+wild | adj | 信じられない・ヤバい | surprising, extreme | That story is wild. || That's wild. I was just thinking about you. || The crowd went wild when we played the new song. | friends | That's wild. は「ヤバいね」くらいの驚き。go wild は「熱狂する」。
+cozy | adj | 居心地のいい | warm and comfortable | What a cozy café. || It's a cozy little bar with only eight seats. || Let's stay in and get cozy. It's raining. | cafe | イギリス綴りは cosy。小さくて暖かい場所を褒める定番。
+fancy-looking | adj | 高そうな見た目の | looks expensive | That's a fancy-looking cake. || We have a fancy-looking menu, but the food's cheap. || Who's the fancy-looking guy at the bar? | food | -looking をつけると「〜な見た目の」。sketchy-looking なども作れる。
+delicious | adj | おいしい | very tasty | This is delicious. || Your mom's curry is delicious. || This looks delicious. Can I take a picture? | food | very delicious とはあまり言わない。会話では so good もよく使う。
+tasty | adj | おいしい | having good flavor | These snacks are tasty. || We have some tasty new snacks at the counter. || That's a tasty little beat. | food | delicious よりカジュアル。音楽などに「いい感じ」の意味でも使う。
+greasy | adj | 脂っこい | full of oil | I need something greasy after drinking. || The fries were way too greasy. || Wash your hands. They're greasy from the pizza. | food | 食べ物以外に、髪や手が「脂っぽい」にも使う。
+healthy | adj | 健康的な | good for your body | I'm trying to eat healthy. || Is this smoothie actually healthy? || It's not healthy to work seven nights a week. | health | eat healthy は口語でよく使う。healthy relationship は「健全な関係」。
+sweet | adj | 甘い・優しい・いいね | sugary / kind / cool | That's so sweet of you. || This cake is too sweet for me. || Sweet! You got the tickets? | food | That's so sweet. は「優しいね」。Sweet! 単独で「いいね！」。
+sour | adj | 酸っぱい | sharp taste like lemon | This yogurt is sour. || The lemon tart is really sour. || Things went sour with our supplier. | food | go sour で「（関係が）こじれる」。sour face は「不機嫌な顔」。
+bitter | adj | 苦い・恨んでいる | sharp unpleasant taste / resentful | Black coffee is too bitter for me. || The coffee tastes bitter. Try a coarser grind. || He's still bitter about losing his job. | food | 味の「苦い」と、人の「恨んでいる」。スラングの salty より深い恨み。
+salty | adj | しょっぱい | containing a lot of salt | The ramen was too salty. || These chips are too salty. || The broth is a little salty, but I like it. | food | 味の「しょっぱい」。スラングの salty（ムッとした）とは別の意味。
+broken | adj | 壊れた | not working | The elevator's broken. || The coffee machine is broken again. || Sorry for my broken English. | daily | broken English は「片言の英語」。張り紙の「故障中」は out of order。
+dead | adj | 電池切れの・死んだ | out of battery / not alive | My phone's dead. || The bar was dead tonight. || My headphones are dead. Can I borrow yours? | daily | 電池切れの他に、店や町が「ガラガラ・閑散」にも使う。
+loud | adj | うるさい・声が大きい | making a lot of noise | Osaka people are loud and proud. || Turn it down. It's too loud. || That shirt is a little loud for a funeral. | daily | 音だけでなく、服や色が「派手な」にも使う。
+soft | adj | 柔らかい・静かな | not hard / quiet | Can you speak a little softer? || These towels are so soft. || Play the intro soft, then build up. | daily | soft music（静かな音楽）。人が soft だと「甘い・優しすぎる」にもなる。
+tight | adj | きつい・余裕がない | close-fitting / limited | Money is tight this month. || These jeans are tight after the holidays. || The schedule is tight, but we can do it. | money | 服が「きつい」、予定やお金に「余裕がない」。スラングで仲が「親密」の意味も。
+loose | adj | 緩い | not tight | This shirt is loose. || The screw on the mic stand is loose. || Wear something loose to the gym. | shopping | lose（失う）とつづりも発音も違う。loose は濁らず「ルース」。
+fake | n | 偽物 | a copy pretending to be real | That bag is a fake. || Is that a fake or the real thing? || Half the reviews on that site are fakes. | shopping | 名詞の a fake は「偽物」。形容詞なら a fake bag のように前に置く。
+brand-new | adj | 新品の | completely new | Is this phone brand-new? || My car is brand-new, so please don't eat in it. || We just got brand-new speakers for the bar. | shopping | new を強調した「新品の」。brand new とハイフンなしでも書く。
+used | adj | 中古の | owned before | I bought a used car. || Used gear is a great way to start making music. || We bought a used espresso machine to save money. | shopping | 中古は used / secondhand。be used to ~（〜に慣れている）とは別物。
+outdated | adj | 時代遅れの | old-fashioned | The website looks outdated. || Our menu photos look outdated. || That rule is totally outdated. | business | old-fashioned は「昔風の（良い意味も）」、outdated は「時代遅れでダメ」。
+up-to-date | adj | 最新の | current, modern | Is this information up-to-date? || Keep the price list up-to-date. || Is your phone software up-to-date? | business | 名詞の前では up-to-date、文の最後では up to date とハイフンなしで書くことも多い。
+sold out | adj | 売り切れの | none left to buy | The concert is sold out. || The new merch was sold out in an hour. || Sorry, we're sold out of croissants. | music | sold out of ~ で「〜が売り切れ」。動詞 sell out は「売り切れる」と「魂を売る」。
+available | adj | 利用できる・空いている | free to use / free in time | Are you available on Friday? || Is this seat available? || The new single is available everywhere tomorrow. | work | 人に使うと「空いている・都合がつく」。恋愛では「フリー」の意味にもなる。
+busy | adj | 忙しい・混んでいる | having lots to do | Sorry, I'm busy this week. || Saturday mornings are busy at the cafe. || The line was busy, so I'll call back later. | work | 店が「混んでいる」、電話が「話し中」にも使う。busy with ~ の形。
+free | adj | 暇な・無料の | not busy / costing nothing | Are you free tonight? / It's free. || Feel free to ask me anything. || The second coffee is free. | daily | Feel free to ~ は「遠慮なく〜して」。free は「暇・無料・自由」と幅広い。
+ready | adj | 準備ができた | prepared | Are you ready? || Your order's ready! || I'm not ready to quit my day job yet. | daily | ready to ~ / ready for ~ の形。Ready when you are. は「いつでもいいよ」。
+late | adj | 遅れた・遅い | after the right time | Sorry I'm late. || We're open late on Fridays. || It's getting late. I should head home. | daily | 副詞でも使う（work late）。lately は「最近」で別の意味。
+early | adj | 早い | before the usual time | You're early! || Let's get there early to set up. || It's too early to tell if the shop will make it. | daily | It's too early to tell. は「まだ何とも言えない」。
+overdue | adj | 期限切れの・遅れた | late (payment, task) | The invoice is overdue. || My library book is overdue. || This haircut is long overdue. | business | long overdue は「とっくにやるべきだった」で、「やっとだね」の意味にも。
+urgent | adj | 緊急の | needing action now | Is it urgent, or can it wait? || Sorry to call so late. It's urgent. || Mark it urgent so they see it first. | business | 「すぐ対応が必要」。メールで乱用すると印象が悪い。
+important | adj | 重要な | mattering a lot | This is important. || It's important to rest between sets. || Nothing's more important than family. | work | It's important to ~ の形。「大事な人」は special person の方が自然なことも。
+essential | adj | 不可欠な | absolutely necessary | Coffee is essential. || A good chair is essential for long editing sessions. || Only essential staff are working tonight. | daily | important より強い「不可欠な」。名詞 essentials で「必需品」。
+optional | adj | 任意の | not required | The tip is optional. || Dress code is casual. Ties are optional. || Extra shots are optional, but they cost more. | money | 「任意の」。反対は required / mandatory。
+similar | adj | 似ている | almost the same | Our ideas are similar. || Your logo is similar to the shop next door. || We have similar taste in music. | business | similar to ~ の形。same（同じ）とは違い「似ている」。
+different | adj | 違う | not the same | American and British English are a little different. || This version sounds different. Did you change the drums? || Osaka is so different from Tokyo. | study | different from ~ が基本形。口語では different than も聞く。
+exact | adj | 正確な | completely correct | What's the exact price? || Do you have exact change? || That's the exact same shirt I have! | money | exact change は「ぴったりの小銭」。the exact same は強調の口語。
+accurate | adj | 正確な | correct, without mistakes | Is the translation accurate? || Is the clock on the wall accurate? || The reviews are pretty accurate. | study | 「正確な・的確な」。数字が「ぴったり」なら exact が多い。
+whole | adj | 全体の | complete | I ate the whole pizza. || The whole team came to my show. || I listened to the whole album on the train. | food | the whole + 単数名詞 の語順。all the とは語順が違う。
+entire | adj | 全部の | whole | I spent the entire day in bed. || The entire neighborhood lost power. || I've lived in Osaka my entire life. | daily | whole より少しフォーマルで強調的。my entire life は「生まれてからずっと」。
+extra | adj | 追加の・やりすぎの（スラング） | additional / too much | Can I get extra cheese? / She's so extra. || Can I get an extra shot in my latte? || A limo to the gym? That's so extra. | food | スラングの extra は「やりすぎ・大げさ」。extra charge は「追加料金」。
+lucky | adj | 運がいい | having good luck | Lucky you! || You're lucky you got a seat. || Lucky for us, the rain stopped before the show. | daily | Lucky for us ~ で「運よく」。Lucky you! は「いいなー」。
+unlucky | adj | 運が悪い | having bad luck | So unlucky. It rained on my day off. || We were unlucky with the weather. || It's not about being unlucky. You need a plan. | daily | unfortunate は少し丁寧な「残念な」。
+smooth | adj | スムーズな・なめらかな | without problems / even | The launch went smooth. || The coffee here is really smooth. || Smooth move. You forgot the tickets. | business | 「なめらか・順調」の他、Smooth move. は皮肉で「やっちゃったね」。
+rough | adj | 大変な・荒い | difficult / not smooth | Rough day? || The first year of business was rough. || This is just a rough mix. Don't share it. | feelings | rough draft / rough mix は「下書き・ラフ」。Rough day? は相手をいたわる一言。
+solid | adj | しっかりした・堅実な | strong, reliable, good | That's a solid plan. || He's a solid guy. You can trust him. || We had a solid month at the shop. | business | 口語で「しっかりした・堅実な・いい」。褒め言葉として使いやすい。
+decent | adj | まあまあいい・ちゃんとした | good enough / respectable | The pay is decent. || Is there a decent ramen place near here? || Put on something decent. We're meeting her parents. | work | 「まあまあいい」と「ちゃんとした（服装・人柄）」の2つ。
+mid | adj | 微妙な・普通の（スラング） | average, not great | The movie was kind of mid. || The new burger place is mid at best. || Honestly, the sequel was mid. | online | ネットスラングで「微妙・普通」。仕事や目上には使わない。
+fire | adj | 最高の（スラング） | excellent | This track is fire. || Your new beat is fire. || That outfit is fire. | music | スラングで「最高」。on fire は「絶好調」。
+lit | adj | 盛り上がってる（スラング） | exciting, fun | The party was lit. || Friday night in Namba was lit. || The place got lit when the DJ came on. | bar | スラングで「盛り上がってる」。「酔っ払った」の意味にもなる。
+dope | adj | かっこいい（スラング） | cool | Dope shoes, man. || That's a dope logo. || Dope set last night, man. | friends | スラングで「かっこいい」。本来は「麻薬」の意味もあるので場面に注意。
+sick | adj | 病気の・すごい（スラング） | ill / amazing | I'm sick today. / That trick was sick! || That guitar solo was sick. || I called in sick today. | friends | call in sick は「病欠の連絡をする」。スラングの sick は「ヤバい・すごい」。

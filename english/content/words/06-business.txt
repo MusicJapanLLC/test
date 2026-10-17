@@ -1,158 +1,158 @@
 // Business — sales, meetings, contracts, marketing, startups
-proposal | n | 提案書 | a written plan offered to a client | I'll send the proposal by Friday. | business
-quote | n | 見積もり | a price offer | Can you send me a quote? | business
-estimate | n | 概算・見積もり | a rough calculation | It's just an estimate. | business
-invoice | n | 請求書 | a bill for work done | Please pay the invoice within 30 days. | money
-receipt | n | 領収書・レシート | proof of payment | Can I get a receipt? | money
-contract | n | 契約書 | a legal agreement | Read the contract before you sign. | business
-agreement | n | 合意・契約 | a deal people accept | We reached an agreement. | business
-deal | n | 取引・契約 | a business arrangement | It's a deal! | business
-terms | n | 条件 | the conditions of a deal | What are the payment terms? | business
-deadline | n | 締め切り | the latest time to finish | The deadline is Friday at noon. | work
-milestone | n | 節目・重要な段階 | an important stage | We hit a big milestone: 100 clients. | business
-launch | n | ローンチ・発売 | the start of a product | The launch went well. | business
-pitch | n | 売り込み・提案 | a short talk to sell an idea | Nice pitch. They loved it. | business
-lead | n | 見込み客 | a possible customer | We got ten new leads this week. | business
-prospect | n | 見込み客・見通し | a possible client / chance | She's a strong prospect. | business
-referral | n | 紹介 | sending someone to a business | Most of our work comes from referrals. | business
-commission | n | 手数料・歩合 | money paid per sale | I get a 10% commission. | money
-fee | n | 料金・手数料 | money charged for a service | There's a small booking fee. | money
-budget | n | 予算 | planned amount of money | What's your budget? | money
-revenue | n | 売上・収益 | money a company brings in | Revenue grew 20% this year. | money
-profit | n | 利益 | money left after costs | We made a small profit. | money
-loss | n | 損失 | money lost | We took a loss on that project. | money
-margin | n | 利幅・マージン | profit percentage | The margins are thin. | money
-cost | n | 費用 | money needed | The cost includes tax. | money
-expense | n | 経費 | money spent for business | Keep receipts for expenses. | money
-cash flow | n | キャッシュフロー・資金繰り | money coming in and going out | Cash flow is tight this month. | money
-investor | n | 投資家 | someone who puts money into a business | We're meeting an investor tomorrow. | business
-funding | n | 資金調達 | money given to a business | They raised funding last year. | business
-startup | n | スタートアップ | a new company | I work at a small startup. | business
-founder | n | 創業者 | someone who starts a company | She's the founder and CEO. | business
-CEO | abbr | 最高経営責任者 | chief executive officer | The CEO joined the call. | business
-stakeholder | n | 利害関係者 | anyone affected by a project | Let's update the stakeholders. | business
-competitor | n | 競合 | a rival company | Our competitor cut their prices. | business
-market | n | 市場 | where things are bought and sold | The market for apps is huge. | business
-target audience | n | ターゲット層 | the people you sell to | Who's your target audience? | business
-brand | n | ブランド | a company's name and image | We need to build our brand. | business
-branding | n | ブランディング | creating a brand image | Good branding builds trust. | business
-marketing | n | マーケティング | promoting and selling products | We spend a lot on marketing. | business
-campaign | n | キャンペーン | an organized promotion | The campaign starts Monday. | business
-ad | n | 広告 | an advertisement | I saw your ad on Instagram. | online
-engagement | n | エンゲージメント・反応 | likes, comments, shares | Engagement is up this week. | online
-reach | n | リーチ・届く人数 | how many people see something | The post had a reach of 50,000. | online
-conversion | n | 成約・コンバージョン | when a visitor becomes a customer | Our conversion rate is 3%. | business
-landing page | n | ランディングページ | a single page made to sell something | We built a landing page for the event. | online
-SEO | abbr | 検索エンジン最適化 | search engine optimization | Good SEO brings free traffic. | online
-traffic | n | アクセス数・交通 | visitors to a website / cars | Website traffic doubled. | online
-feedback | n | フィードバック・意見 | comments about how good something is | Thanks for the feedback. | work
-review | n | レビュー・見直し | an evaluation | We got a five-star review. | business
-meeting | n | 会議・打ち合わせ | a planned discussion | I have back-to-back meetings. | work
-agenda | n | 議題 | a list of topics for a meeting | What's on the agenda? | work
-minutes | n | 議事録 | written notes of a meeting | Who's taking minutes? | work
-follow-up | n | フォローアップ | a later message or action | I'll send a follow-up email. | business
-update | n | 近況・進捗報告 | new information | Any updates on the project? | work
-progress | n | 進捗 | movement toward a goal | We're making progress. | work
-priority | n | 優先事項 | the most important thing | What's your top priority? | work
-goal | n | 目標 | something you want to achieve | Our goal is 100 clients. | business
-strategy | n | 戦略 | a plan to reach a goal | What's the strategy? | business
-plan B | n | 代案・保険 | a backup plan | Always have a plan B. | business
-risk | n | リスク | chance of something bad | It's a risk, but worth it. | business
-opportunity | n | 機会・チャンス | a good chance | This is a huge opportunity. | business
-challenge | n | 課題・挑戦 | a difficult task | Our biggest challenge is hiring. | business
-solution | n | 解決策 | a way to solve a problem | We offer a simple solution. | business
-issue | n | 問題・課題 | a problem | Is there an issue with the payment? | business
-bug | n | バグ | an error in software | We found a bug in the app. | online
-fix | n | 修正 | a solution to a problem | The fix is live. | online
-feature | n | 機能 | a part of a product | We added a new feature. | online
-user | n | ユーザー | a person who uses a product | We have 1,000 users. | online
-demo | n | デモ | a showing of a product | Can I see a demo? | business
-trial | n | 試用・お試し | a test period | Try the free trial. | business
-subscription | n | サブスク・定額 | regular payment for a service | I canceled three subscriptions. | money
-discount | n | 割引 | a lower price | We can give you a 10% discount. | money
-deposit | n | 手付金・預金 | money paid first | We need a 50% deposit. | money
-refund | n | 返金 | money returned | I asked for a refund. | money
-negotiation | n | 交渉 | discussion to agree | The negotiation took weeks. | business
-compromise | n | 妥協・歩み寄り | an agreement where both give up something | Let's find a compromise. | business
-partnership | n | 提携・パートナーシップ | working together as partners | We're excited about this partnership. | business
-collaboration | n | コラボ・共同作業 | working together | This song is a collaboration. | music
-networking | n | 人脈作り | meeting people for business | I go to networking events every month. | business
-connection | n | つながり・人脈 | someone you know who can help | He has great connections. | business
-introduction | n | 紹介 | presenting one person to another | Thanks for the introduction! | business
-reputation | n | 評判 | what people think of you | Reputation is everything in this business. | business
-credibility | n | 信頼性 | being believed and trusted | Case studies build credibility. | business
-case study | n | 事例 | a detailed example of success | Can you share a case study? | business
-portfolio | n | 実績集・ポートフォリオ | examples of your work | Here's a link to my portfolio. | business
-resume | n | 履歴書 | a summary of your work history | Send me your resume. | work
-interview | n | 面接・インタビュー | a formal meeting to ask questions | I have a job interview tomorrow. | work
-salary | n | 給料 | yearly pay | The salary is negotiable. | money
-freelancer | n | フリーランス | someone who works for themselves | I'm a freelancer. | work
-side project | n | 副業・個人プロジェクト | work outside your main job | This app started as a side project. | work
-workload | n | 仕事量 | the amount of work | My workload is crazy right now. | work
-overtime | n | 残業 | extra hours of work | I worked overtime all week. | work
-shift | n | シフト・勤務時間 | a set period of work | I have a night shift tomorrow. | work
-day off | n | 休日 | a day not working | It's my day off. | work
-vacation | n | 休暇・旅行 | time off for rest or travel | I'm on vacation next week. | travel
-team | n | チーム | a group working together | Great job, team. | work
-manager | n | マネージャー・上司 | someone who leads a team | Talk to my manager. | work
-colleague | n | 同僚 | a coworker (formal) | My colleague will help you. | work
-department | n | 部署 | a section of a company | Which department are you in? | work
-headquarters | n | 本社 | main office | Our headquarters is in Osaka. | business
-remote | adj | リモートの | working from somewhere else | The job is fully remote. | work
-on-site | adj | 現地の・出社の | at the workplace | The meeting is on-site. | work
-negotiable | adj | 交渉可能な | can be discussed | The price is negotiable. | business
-confidential | adj | 機密の | secret | This is confidential. | business
-efficient | adj | 効率的な | working well without waste | It's more efficient to batch your emails. | work
-productive | adj | 生産的な | getting a lot done | I had a productive morning. | work
-profitable | adj | 利益が出る | making money | Is the business profitable yet? | money
-sustainable | adj | 持続可能な | can continue long-term | Working 16 hours a day isn't sustainable. | work
-scalable | adj | 拡大可能な | can grow easily | Is this model scalable? | business
-professional | adj | プロらしい・きちんとした | showing skill and good manners | The website looks professional. | business
-approve | v | 承認する | officially agree | The boss approved the budget. | business
-confirm | v | 確認する・確定する | say something is definitely true | Can you confirm the time? | business
-schedule | v | 予定を組む | plan a time | Let's schedule a call. | business
-reschedule | v | 日程を変更する | change the time | Can we reschedule to Thursday? | business
-postpone | v | 延期する | move to a later time | The launch is postponed. | business
-attach | v | 添付する | add a file to an email | I've attached the invoice. | business
-forward | v | 転送する | send on to another person | I'll forward you the email. | business
-cc | v | CCに入れる | copy someone on an email | Please cc my assistant. | business
-collaborate | v | 協力する | work together | Let's collaborate on a song. | music
-delegate | v | 任せる | give work to others | Learn to delegate. | work
-prioritize | v | 優先する | decide what's most important | Prioritize the client work. | work
-outsource | v | 外注する | pay another company to do work | We outsource the design. | business
-invest | v | 投資する | put money in for profit | I invested in better equipment. | money
-budget | v | 予算を組む | plan how to spend money | I need to budget better. | money
-pitch | v | 売り込む・提案する | present an idea to sell | We pitched to five companies. | business
-close | v | 成約する・閉める | complete a sale / shut | We closed three deals this month. | business
-upsell | v | アップセルする | sell a more expensive version | Don't upsell too hard. | business
-target | v | 狙う・ターゲットにする | aim at | We're targeting small businesses. | business
-brainstorm | v | アイデアを出し合う | think of ideas as a group | Let's brainstorm names. | business
-streamline | v | 効率化する | make simpler and faster | We streamlined the sign-up process. | business
-leverage | v | 活用する | use to your advantage | Leverage your network. | business
-pivot | v | 方向転換する | change direction | The company pivoted to AI. | business
-scale | v | 規模を拡大する | grow | We need to scale before hiring. | business
-onboard | v | 受け入れる・導入する | help a new person or client start | We onboarded three new clients. | business
-ASAP | abbr | 至急 | as soon as possible | Please reply ASAP. | business
-FYI | abbr | 参考までに | for your information | FYI, the office is closed Monday. | business
-EOD | abbr | 今日中 | end of day | I'll send it by EOD. | business
-ROI | abbr | 投資利益率 | return on investment | What's the ROI on ads? | money
-KPI | abbr | 重要業績評価指標 | key performance indicator | Our main KPI is new clients. | business
-B2B | abbr | 企業間取引 | business to business | We're a B2B company. | business
-win-win | adj | お互いに得な | good for both sides | It's a win-win deal. | business
-cold email | n | 面識のない相手への営業メール | an email to someone you don't know | Cold emails rarely work. | business
-pain point | n | 顧客の悩み | a problem customers have | What's their biggest pain point? | business
-value proposition | n | 提供価値 | why customers should choose you | What's your value proposition? | business
-word of mouth | n | 口コミ | people telling others | Word of mouth is our best marketing. | business
-small talk | n | 雑談 | light, casual conversation | Americans start meetings with small talk. | business
-handshake | n | 握手 | shaking hands | A firm handshake matters in the US. | business
-business card | n | 名刺 | a card with your contact info | Do you have a business card? | business
-LinkedIn | n | リンクトイン | a professional social network | Let's connect on LinkedIn. | online
-inbox | n | 受信箱 | where emails arrive | My inbox is a disaster. | online
-calendar invite | n | カレンダー招待 | a meeting request by email | I'll send you a calendar invite. | business
-time zone | n | 時差・タイムゾーン | a region with the same time | What time zone are you in? | travel
-headcount | n | 人数・人員 | number of people | What's the headcount for dinner? | business
-bottleneck | n | ボトルネック・障害 | something that slows progress | Approval is the bottleneck. | work
-burnout | n | 燃え尽き | exhaustion from overwork | Burnout is real. Take a break. | work
-work-life balance | n | ワークライフバランス | balance between job and personal life | I need better work-life balance. | work
-hustle | n | 頑張り・ハッスル | hard, energetic work | I respect the hustle. | work
-grind | n | 地道な努力・毎日の仕事 | hard, repetitive work | Back to the grind. | work
+proposal | n | 提案書 | a written plan offered to a client | I'll send the proposal by Friday. || The client liked the proposal but wants a lower price. || Can you look over my proposal before I send it? | business | send / submit a proposal が定番。結婚の「プロポーズ」も同じ単語で、文脈で区別する。
+quote | n | 見積もり | a price offer | Can you send me a quote? || I got three quotes for the new sign. This one's the cheapest. || The quote includes delivery and setup. | business | get a quote / send a quote の形。「引用」の quote と同じ単語。
+estimate | n | 概算・見積もり | a rough calculation | It's just an estimate. || Can you give me a rough estimate? || My estimate was way off. It took twice as long. | business | quote より「ざっくり」。名詞と動詞で語尾の発音が少し違う。
+invoice | n | 請求書 | a bill for work done | Please pay the invoice within 30 days. || I'll send you the invoice after the gig. || The invoice is overdue. Can you check with accounting? | money | 払う前が invoice、払った後が receipt。send / pay an invoice の形。
+receipt | n | 領収書・レシート | proof of payment | Can I get a receipt? || Keep the receipt in case it doesn't fit. || Do you need a receipt for your expenses? | money | 発音は ri-SEET で p は読まない。レシートと領収書の両方の意味。
+contract | n | 契約書 | a legal agreement | Read the contract before you sign. || We signed a one-year contract with the bakery. || Is that in the contract, or did he just say it? | business | sign a contract / break a contract の形。動詞の contract は後ろにアクセント。
+agreement | n | 合意・契約 | a deal people accept | We reached an agreement. || We have a verbal agreement, but get it in writing. || We're in agreement on the price. | business | reach an agreement（合意に達する）、in agreement（同意している）が定番。
+deal | n | 取引・契約 | a business arrangement | It's a deal! || Twenty percent off if you buy two? That's a good deal. || We just closed a deal with a hotel chain. | business | It's a deal! は「決まり！」。good deal は「お得」、big deal は「大ごと」。
+terms | n | 条件 | the conditions of a deal | What are the payment terms? || Read the terms before you click agree. || We're on good terms with our landlord. | business | on good terms with 人 で「良好な関係」。terms and conditions は「利用規約」。
+deadline | n | 締め切り | the latest time to finish | The deadline is Friday at noon. || I work best under a deadline. || We missed the deadline by one day. | work | meet a deadline（間に合う）、miss a deadline（落とす）が定番。
+milestone | n | 節目・重要な段階 | an important stage | We hit a big milestone: 100 clients. || Ten thousand subscribers is a huge milestone. || Our first profitable month was a real milestone. | business | hit / reach a milestone の形。人生の節目にも使う。
+launch | n | ローンチ・発売 | the start of a product | The launch went well. || We're throwing a party for the launch. || The app launch got pushed to next month. | business | 名詞でも動詞でも使う。launch party は「リリース記念パーティー」。
+pitch | n | 売り込み・提案 | a short talk to sell an idea | Nice pitch. They loved it. || I have five minutes to make my pitch. || Your pitch is too long. Cut it to one minute. | business | elevator pitch は「短い売り込み」。音楽の pitch（音程）と同じ単語。
+lead | n | 見込み客 | a possible customer | We got ten new leads this week. || That lead came from our booth at the market. || Follow up with every lead within a day. | business | 「見込み客・手がかり」の lead は「リード」と読む。金属の lead（鉛）は「レッド」。
+prospect | n | 見込み客・見通し | a possible client / chance | She's a strong prospect. || The prospect of opening a second shop excites me. || We have three good prospects for the catering job. | business | 「見込み客」と「見通し・可能性」。job prospects は「就職の見込み」。
+referral | n | 紹介 | sending someone to a business | Most of our work comes from referrals. || Thanks for the referral. The client signed today. || We give a free coffee for every referral. | business | 動詞は refer（紹介する）。referral program は「紹介キャンペーン」。
+commission | n | 手数料・歩合 | money paid per sale | I get a 10% commission. || Real estate agents work on commission. || I got a commission to write a song for a wedding. | money | 「歩合」と「（作品の）依頼」の2つ。on commission で「歩合制で」。
+fee | n | 料金・手数料 | money charged for a service | There's a small booking fee. || Is there a fee for paying by card? || My lawyer's fee was more than the fine. | money | fee はサービスの料金・手数料。運賃は fare、物の値段は price。
+budget | n | 予算 | planned amount of money | What's your budget? || We're over budget again. || We have a tight budget for the music video. | money | on budget / over budget の形。low-budget は「低予算の」。
+revenue | n | 売上・収益 | money a company brings in | Revenue grew 20% this year. || Most of our revenue comes from coffee beans, not drinks. || Streaming revenue is tiny unless you get millions of plays. | money | revenue は売上全体、profit は利益。混同すると数字の話で誤解を生む。
+profit | n | 利益 | money left after costs | We made a small profit. || We barely made a profit this month. || Merch is where small artists actually make a profit. | money | make a profit の形。revenue からコストを引いた残り。
+loss | n | 損失 | money lost | We took a loss on that project. || We sold the old stock at a loss. || Losing that client was a big loss. | money | at a loss は「赤字で」と「途方に暮れて」の2つの意味。
+margin | n | 利幅・マージン | profit percentage | The margins are thin. || Our margin on bottled drinks is tiny. || Coffee beans have a better margin than milk drinks. | money | 正式には profit margin。thin margins（薄利）が定番。
+cost | n | 費用 | money needed | The cost includes tax. || The cost of milk went up again. || We need to cut costs before winter. | money | cut costs（コスト削減）が定番。at all costs は「何としても」。
+expense | n | 経費 | money spent for business | Keep receipts for expenses. || Is this lunch a business expense? || Our biggest expense is rent. | money | 経費精算は expense report。at my expense は「私の負担で・私をネタに」。
+cash flow | n | キャッシュフロー・資金繰り | money coming in and going out | Cash flow is tight this month. || Cash flow is the reason most small shops close. || We have good sales but bad cash flow. | money | 売上があっても入金が遅いと資金繰りが苦しくなる。tight cash flow は「資金繰りがきつい」。
+investor | n | 投資家 | someone who puts money into a business | We're meeting an investor tomorrow. || An investor wants to buy into the cafe. || Don't take money from an investor you don't trust. | business | angel investor は個人の投資家。動詞 invest とセットで覚えよう。
+funding | n | 資金調達 | money given to a business | They raised funding last year. || We're looking for funding to open a second location. || The city has funding for small businesses. | business | raise funding / get funding の形。fund（資金）の派生語。
+startup | n | スタートアップ | a new company | I work at a small startup. || Working at a startup means doing a bit of everything. || The startup ran out of money in a year. | business | 名詞は一語の startup。動詞句 start up と区別する。日本語の「ベンチャー」に近い。
+founder | n | 創業者 | someone who starts a company | She's the founder and CEO. || The founder still works the register on Saturdays. || As a founder, you're also the janitor. | business | co-founder は共同創業者。found（創立する）は find の過去形とは別の動詞。
+CEO | abbr | 最高経営責任者 | chief executive officer | The CEO joined the call. || Running a two-person shop makes me the CEO and the dishwasher. || The CEO answered customer emails himself. | business | アルファベット読みで C-E-O。小さい会社では冗談でもよく使う。
+stakeholder | n | 利害関係者 | anyone affected by a project | Let's update the stakeholders. || Get every stakeholder in one meeting. || Our customers are stakeholders too. | business | 株主（shareholder）だけでなく、従業員や客など関係者全員を含む。
+competitor | n | 競合 | a rival company | Our competitor cut their prices. || A new competitor opened across the street. || Don't copy your competitors. Do it better. | business | 「競合店」は competitor。rival は個人的な対抗心が強い語。
+market | n | 市場 | where things are bought and sold | The market for apps is huge. || There's a big market for vegan sweets in Osaka. || We need to test the market before we spend more. | business | 市場全般。on the market で「売りに出ている」。
+target audience | n | ターゲット層 | the people you sell to | Who's your target audience? || Our target audience is night workers and students. || Your ads aren't reaching your target audience. | business | target customers とも言う。広告やSNS運用の話で必須の表現。
+brand | n | ブランド | a company's name and image | We need to build our brand. || Your personal brand matters more than your gear. || What brand of headphones do you use? | business | 高級品だけでなくメーカー名全般が brand。personal brand は「個人のブランド力」。
+branding | n | ブランディング | creating a brand image | Good branding builds trust. || The branding is great, but the coffee is average. || We spent more on branding than on the espresso machine. | business | ロゴだけでなく、色・言葉・雰囲気を含むイメージ作り全般。
+marketing | n | マーケティング | promoting and selling products | We spend a lot on marketing. || Word of mouth is free marketing. || I'm good at music but bad at marketing. | business | 不可算名詞なので a marketing とは言わない。marketing budget のように使う。
+campaign | n | キャンペーン | an organized promotion | The campaign starts Monday. || Our summer campaign doubled sales. || The ad campaign totally flopped. | business | 日本語の「キャンペーン（割引）」より広く、宣伝活動全体。選挙運動も campaign。
+ad | n | 広告 | an advertisement | I saw your ad on Instagram. || I skip every ad I can. || We ran an ad for two weeks and got nothing. | online | advertisement の略。run an ad（広告を出す）が定番。
+engagement | n | エンゲージメント・反応 | likes, comments, shares | Engagement is up this week. || Engagement drops when I post at noon. || Questions in your captions boost engagement. | online | SNSの「反応率」。婚約の engagement と同じ単語。
+reach | n | リーチ・届く人数 | how many people see something | The post had a reach of 50,000. || Paid ads increased our reach, but not our sales. || Collabs are the easiest way to grow your reach. | online | 名詞の reach は「届いた人数・影響範囲」。動詞の reach out（連絡する）も重要。
+conversion | n | 成約・コンバージョン | when a visitor becomes a customer | Our conversion rate is 3%. || Lots of visitors, but low conversion. || Free samples help conversion at the counter. | business | conversion rate は「成約率」。通貨の換算も conversion。
+landing page | n | ランディングページ | a single page made to sell something | We built a landing page for the event. || The landing page loads too slowly. || Put the price on the landing page. | online | 広告から最初に来るページ。LP と略すこともある。
+SEO | abbr | 検索エンジン最適化 | search engine optimization | Good SEO brings free traffic. || We hired someone to fix our SEO. || SEO takes months to work. | online | エス・イー・オーと読む。お店のサイトやブログの検索順位対策。
+traffic | n | アクセス数・交通 | visitors to a website / cars | Website traffic doubled. || Most of our traffic comes from short videos. || Traffic was terrible on the way to the venue. | online | 道路の「交通量」とウェブの「アクセス数」の両方。不可算名詞。
+feedback | n | フィードバック・意見 | comments about how good something is | Thanks for the feedback. || Any feedback on the new latte? || Honest feedback hurts, but it helps. | work | 不可算名詞なので feedbacks は間違い。some feedback / a piece of feedback。
+review | n | レビュー・見直し | an evaluation | We got a five-star review. || One bad review scared off new customers. || My annual review is next week. | business | write a review（レビューを書く）。performance review は「人事評価」。
+meeting | n | 会議・打ち合わせ | a planned discussion | I have back-to-back meetings. || Can we keep this meeting short? || This meeting could have been an email. | work | have a meeting / be in a meeting の形。打ち合わせも meeting でOK。
+agenda | n | 議題 | a list of topics for a meeting | What's on the agenda? || Let's stick to the agenda. || What's on the agenda for the weekend? | work | 会議の「議題」の他、「予定」や hidden agenda（隠れた狙い）にも使う。
+minutes | n | 議事録 | written notes of a meeting | Who's taking minutes? || Can you send the minutes after the call? || I'll take minutes today. | work | 議事録はいつも複数形 minutes。take minutes が定番。
+follow-up | n | フォローアップ | a later message or action | I'll send a follow-up email. || Send a follow-up if they don't reply in three days. || We have a follow-up meeting next Tuesday. | business | 名詞はハイフンあり follow-up、動詞はハイフンなし follow up。
+update | n | 近況・進捗報告 | new information | Any updates on the project? || Quick update: the shop opens at nine tomorrow. || Keep me updated on the delivery. | work | Keep me updated / posted. は「進捗教えて」。Any updates? は催促の定番。
+progress | n | 進捗 | movement toward a goal | We're making progress. || Small progress is still progress. || How's the album coming along? Any progress? | work | 不可算名詞なので a progress は間違い。make progress の形。
+priority | n | 優先事項 | the most important thing | What's your top priority? || Family is my priority right now. || Let's make the website a priority this month. | work | top priority（最優先）が定番。複数なら priorities。
+goal | n | 目標 | something you want to achieve | Our goal is 100 clients. || My goal is to quit night shifts by next year. || Set a small goal for every stream. | business | set a goal / reach a goal の形。サッカーの goal と同じ単語。
+strategy | n | 戦略 | a plan to reach a goal | What's the strategy? || Our strategy is simple: great coffee, fast service. || What's your strategy for growing the channel? | business | strategy は全体の戦略、tactic は具体的な作戦。
+plan B | n | 代案・保険 | a backup plan | Always have a plan B. || If the venue cancels, what's our plan B? || Music is my plan A. The cafe is my plan B. | business | 予備の案。会話でよく使うくだけた表現。
+risk | n | リスク | chance of something bad | It's a risk, but worth it. || Quitting your job is a risk, but so is staying. || There's always a risk when you open a shop. | business | take a risk（リスクを取る）が定番。at risk は「危険にさらされて」。
+opportunity | n | 機会・チャンス | a good chance | This is a huge opportunity. || Opening for a bigger band is a great opportunity. || Every complaint is an opportunity to improve. | business | chance より少しフォーマル。job opportunity は「仕事の機会・求人」。
+challenge | n | 課題・挑戦 | a difficult task | Our biggest challenge is hiring. || Finding good staff is a challenge in this area. || I like a challenge. | business | 名詞は「難題」。日本語の「チャレンジする」は英語では try が自然。
+solution | n | 解決策 | a way to solve a problem | We offer a simple solution. || Is there a cheaper solution? || The solution was simple: open an hour earlier. | business | solution to ~ の形が基本。answer より「解決策」寄り。
+issue | n | 問題・課題 | a problem | Is there an issue with the payment? || We had an issue with the delivery. || That's not an issue. We can fix it. | business | problem の柔らかい言い方。Not an issue. は「問題ないよ」。
+bug | n | バグ | an error in software | We found a bug in the app. || There's a bug in the booking system. || I think I caught a bug at the gym. | online | 「バグ」の他に「虫」「（軽い）風邪」。It bugs me. は「イライラする」。
+fix | n | 修正 | a solution to a problem | The fix is live. || There's no quick fix for bad reviews. || That was an easy fix. | online | quick fix は「その場しのぎの解決」。動詞の fix も超頻出。
+feature | n | 機能 | a part of a product | We added a new feature. || The new feature lets customers order ahead. || Can you add a dark mode feature? | online | 製品の「機能」の他、音楽の feat.（客演）も feature の略。
+user | n | ユーザー | a person who uses a product | We have 1,000 users. || Most of our users are on their phones. || Ask real users before you change the design. | online | user-friendly は「使いやすい」。end user は「最終利用者」。
+demo | n | デモ | a showing of a product | Can I see a demo? || I made a quick demo of the song. || The demo crashed in front of the client. | business | 音楽の「デモ音源」と製品の「デモ」の両方。
+trial | n | 試用・お試し | a test period | Try the free trial. || The free trial ends tomorrow. Cancel it. || We're hiring her on a two-week trial. | business | free trial（無料お試し）が定番。trial and error は「試行錯誤」。
+subscription | n | サブスク・定額 | regular payment for a service | I canceled three subscriptions. || Our coffee subscription ships every two weeks. || Cancel your subscription before it renews. | money | 「サブスク」の元の語。動詞 subscribe とセットで覚えよう。
+discount | n | 割引 | a lower price | We can give you a 10% discount. || Students get a ten percent discount. || Can you give me a discount if I buy three? | money | get / give a discount の形。discount code は「クーポンコード」。
+deposit | n | 手付金・預金 | money paid first | We need a 50% deposit. || We lost the deposit when we canceled the venue. || I'll make a deposit at the bank tomorrow. | money | 「手付金・敷金」と「預金」の2つ。security deposit は「敷金」。
+refund | n | 返金 | money returned | I asked for a refund. || We gave her a full refund. || No refunds after thirty days. | money | get / give a refund の形。full refund は「全額返金」。
+negotiation | n | 交渉 | discussion to agree | The negotiation took weeks. || Negotiation is easier when you can walk away. || Rent is always open to negotiation. | business | open to negotiation（交渉の余地あり）。動詞は negotiate。
+compromise | n | 妥協・歩み寄り | an agreement where both give up something | Let's find a compromise. || We made a compromise. Smaller sign, better spot. || Good relationships need compromise. | business | 日本語の「妥協」より前向きで「歩み寄り」の感じ。make a compromise の形。
+partnership | n | 提携・パートナーシップ | working together as partners | We're excited about this partnership. || We started a partnership with a local bakery. || Running a business with a friend is a tricky partnership. | business | form / start a partnership の形。in partnership with ~ で「〜と提携して」。
+collaboration | n | コラボ・共同作業 | working together | This song is a collaboration. || Our collaboration with the brewery sold out. || Collaboration beats competition in a small town. | music | 会話では collab（コラボ）と略すことが多い。
+networking | n | 人脈作り | meeting people for business | I go to networking events every month. || Networking feels fake, but it works. || I met my producer at a networking event. | business | 不可算名詞。動詞 network（人脈を作る）もある。
+connection | n | つながり・人脈 | someone you know who can help | He has great connections. || My cousin has connections at the radio station. || We had an instant connection on the first date. | business | 「コネ・人脈」と「心のつながり」の両方。ネットの接続も connection。
+introduction | n | 紹介 | presenting one person to another | Thanks for the introduction! || Can you make an introduction? I'd love to meet her. || The introduction to the song is way too long. | business | make an introduction で「人を紹介する」。曲の intro はこの略。
+reputation | n | 評判 | what people think of you | Reputation is everything in this business. || We built our reputation one cup at a time. || He has a reputation for being late. | business | have a reputation for ~ で「〜で知られている」。良い意味にも悪い意味にも使う。
+credibility | n | 信頼性 | being believed and trusted | Case studies build credibility. || Fake reviews kill your credibility. || Having big clients gives you credibility. | business | 「信用・説得力」。build / lose credibility の形。
+case study | n | 事例 | a detailed example of success | Can you share a case study? || We wrote a case study about the hotel project. || Use a real case study in your pitch. | business | 実例・成功事例の資料。営業でよく求められる。
+portfolio | n | 実績集・ポートフォリオ | examples of your work | Here's a link to my portfolio. || My portfolio is mostly music for small brands. || Update your portfolio before you apply. | business | クリエイターの「作品集」の他、投資の「保有資産」の意味もある。
+resume | n | 履歴書 | a summary of your work history | Send me your resume. || Keep your resume to one page. || I put my cafe experience on my resume. | work | résumé とも書き、発音は REZ-oo-may。動詞 resume（再開する）とは別物。
+interview | n | 面接・インタビュー | a formal meeting to ask questions | I have a job interview tomorrow. || How did the interview go? || A podcast wants to interview me about the shop. | work | job interview（面接）とメディアの「取材」の両方。
+salary | n | 給料 | yearly pay | The salary is negotiable. || The salary is low, but the hours are good. || Do they pay a monthly salary or by the hour? | money | salary は固定給。時給は hourly wage、給料日は payday。
+freelancer | n | フリーランス | someone who works for themselves | I'm a freelancer. || As a freelancer, I chase invoices a lot. || We hired a freelancer to design the menu. | work | I work freelance. も自然な言い方。
+side project | n | 副業・個人プロジェクト | work outside your main job | This app started as a side project. || My side project makes more than my day job now. || Don't let your side project eat your sleep. | work | お金目的の副業は side hustle もよく使う。side project は趣味寄りのことも。
+workload | n | 仕事量 | the amount of work | My workload is crazy right now. || My workload doubles in December. || Can we split the workload more evenly? | work | heavy workload（仕事量が多い）が定番。不可算名詞。
+overtime | n | 残業 | extra hours of work | I worked overtime all week. || Overtime pays more, but I'm tired. || Do you get paid for overtime? | work | work overtime（残業する）の形。スポーツの「延長戦」も overtime。
+shift | n | シフト・勤務時間 | a set period of work | I have a night shift tomorrow. || Can you cover my shift on Friday? || The early shift starts at six. | work | cover a shift（シフトを代わる）、work a double shift（連続勤務）が定番。
+day off | n | 休日 | a day not working | It's my day off. || What do you do on your day off? || I need a day off. I'm exhausted. | work | take a day off（休みを取る）。複数は days off。
+vacation | n | 休暇・旅行 | time off for rest or travel | I'm on vacation next week. || I haven't taken a vacation in two years. || The shop is closed for summer vacation. | travel | アメリカは vacation、イギリスは holiday。on vacation で「休暇中」。
+team | n | チーム | a group working together | Great job, team. || Our team is small, but we work hard. || The night team always leaves the place clean. | work | アメリカでは team を単数扱い（The team is ~）。team player は「協調性のある人」。
+manager | n | マネージャー・上司 | someone who leads a team | Talk to my manager. || I'd like to speak to the manager. || Our manager lets us pick the playlist. | work | 店長も manager。I'd like to speak to the manager. はクレームの定番フレーズ。
+colleague | n | 同僚 | a coworker (formal) | My colleague will help you. || A colleague of mine recommended your studio. || I respect my colleagues more than my boss. | work | coworker より少しフォーマル。a colleague of mine の形が自然。
+department | n | 部署 | a section of a company | Which department are you in? || That's not my department. || The sales department wants new numbers by Friday. | work | That's not my department. は「それは私の担当じゃない」の決まり文句。
+headquarters | n | 本社 | main office | Our headquarters is in Osaka. || The headquarters moved to Tokyo. || My apartment is basically our headquarters. | business | いつも s がつく。HQ と略すことが多い。
+remote | adj | リモートの | working from somewhere else | The job is fully remote. || I do remote work for a design agency. || Remote meetings make it easy to stay in pajamas. | work | work remotely も同じ意味。テレビのリモコンは the remote。
+on-site | adj | 現地の・出社の | at the workplace | The meeting is on-site. || We have on-site parking. || The technician needs to come on-site to fix it. | work | 反対は off-site。on-site training は「現場研修」。
+negotiable | adj | 交渉可能な | can be discussed | The price is negotiable. || Rent is negotiable if you sign for two years. || Hours are negotiable. Pay isn't. | business | Price negotiable. は売買の定番表記。non-negotiable は「譲れない」。
+confidential | adj | 機密の | secret | This is confidential. || Keep the numbers confidential for now. || Everything you tell me stays confidential. | business | confidential information（機密情報）。secret よりビジネス寄り。
+efficient | adj | 効率的な | working well without waste | It's more efficient to batch your emails. || The new grinder is way more efficient. || Be efficient with your time before the doors open. | work | efficient は「無駄がない」、effective は「効果がある」。混同しやすい。
+productive | adj | 生産的な | getting a lot done | I had a productive morning. || I'm most productive after midnight. || That meeting was actually productive. | work | 自分が「はかどる」時にも使える。反対は unproductive。
+profitable | adj | 利益が出る | making money | Is the business profitable yet? || The weekend shifts are the most profitable. || It took two years to become profitable. | money | 「儲かる」。もっと強い「ぼろ儲け」は lucrative。
+sustainable | adj | 持続可能な | can continue long-term | Working 16 hours a day isn't sustainable. || Is this pace sustainable? || We only use sustainable packaging. | work | 「無理なく続けられる」と「環境に優しい」の両方の意味。
+scalable | adj | 拡大可能な | can grow easily | Is this model scalable? || A one-person service isn't very scalable. || Online lessons are more scalable than private ones. | business | 「規模を大きくしやすい」。スタートアップ用語として頻出。
+professional | adj | プロらしい・きちんとした | showing skill and good manners | The website looks professional. || Always be professional, even with rude clients. || That photo makes the shop look professional. | business | 「プロの」と「きちんとした」の両方。日本語の「プロ」よりマナーの意味が強い。
+approve | v | 承認する | officially agree | The boss approved the budget. || The landlord approved our new sign. || Does your partner need to approve it first? | business | approve of ~ は「〜を良いと認める」（親が恋人を認める等）。
+confirm | v | 確認する・確定する | say something is definitely true | Can you confirm the time? || I'll confirm the booking by email. || Can you confirm you got the files? | business | Just to confirm, ~ は確認の前置き。check は「調べる」、confirm は「確定させる」。
+schedule | v | 予定を組む | plan a time | Let's schedule a call. || Let's schedule the shoot for next week. || I scheduled my posts for the whole month. | business | 動詞でも名詞でも使う。アメリカ発音は SKE-jool。
+reschedule | v | 日程を変更する | change the time | Can we reschedule to Thursday? || Sorry, I need to reschedule our call. || The show got rescheduled because of the typhoon. | business | postpone は「延期」、reschedule は「別の日時にする」で前倒しもあり得る。
+postpone | v | 延期する | move to a later time | The launch is postponed. || Let's postpone the meeting until the numbers are ready. || We postponed the opening by a week. | business | put off の硬い言い方。cancel と違い、後でやる前提。
+attach | v | 添付する | add a file to an email | I've attached the invoice. || I forgot to attach the file. Sending it now. || Please see the attached invoice. | business | attached file / attachment（添付ファイル）。Please find attached ~ はメールの定番。
+forward | v | 転送する | send on to another person | I'll forward you the email. || Can you forward me the client's email? || I forwarded your demo to my producer. | business | forward A to B の形。メール件名の Fwd: はこの略。
+cc | v | CCに入れる | copy someone on an email | Please cc my assistant. || Cc me on the email to the landlord. || Who did you cc on that message? | business | 過去形は cc'd と書く。bcc は相手に見えない宛先。
+collaborate | v | 協力する | work together | Let's collaborate on a song. || We collaborated with a local artist on the cups. || I'd love to collaborate with you on a track. | music | collaborate with 人 on ~ の形。会話では collab とも言う。
+delegate | v | 任せる | give work to others | Learn to delegate. || You can't do everything. Delegate the social media. || I delegated the ordering to my manager. | work | 名詞の delegate は「代表者」。動詞の「任せる」はリーダーの必須スキル。
+prioritize | v | 優先する | decide what's most important | Prioritize the client work. || Prioritize sleep. Seriously. || We need to prioritize repeat customers. | work | prioritize A over B で「BよりAを優先する」。名詞は priority。
+outsource | v | 外注する | pay another company to do work | We outsource the design. || We outsource our accounting. || Don't outsource your voice. Write your own captions. | business | 反対は in-house（社内で）。
+invest | v | 投資する | put money in for profit | I invested in better equipment. || Invest in good shoes if you stand all day. || We invested everything in this cafe. | money | invest in ~ の形。お金だけでなく時間や努力にも使える。
+budget | v | 予算を組む | plan how to spend money | I need to budget better. || Budget for the slow months, not just the busy ones. || We budgeted fifty thousand yen for ads. | money | budget for ~ で「〜の分の予算を取っておく」。
+pitch | v | 売り込む・提案する | present an idea to sell | We pitched to five companies. || I pitched the idea to my boss, and she said yes. || We're pitching our beans to three hotels this week. | business | pitch A to B の形。名詞の pitch（売り込み）とセットで。
+close | v | 成約する・閉める | complete a sale / shut | We closed three deals this month. || She closed the deal over coffee. || We close at ten on weeknights. | business | 営業の「成約する」と店を「閉める」。closer は「契約を決められる人」。
+upsell | v | アップセルする | sell a more expensive version | Don't upsell too hard. || Try to upsell a pastry with every coffee. || I hate it when waiters upsell the expensive wine. | business | 高い方を勧める。cross-sell は関連商品を勧めること。
+target | v | 狙う・ターゲットにする | aim at | We're targeting small businesses. || Our ads target people who work late. || Who are you targeting with this song? | business | 名詞でも動詞でも使う。発音は TAR-get。
+brainstorm | v | アイデアを出し合う | think of ideas as a group | Let's brainstorm names. || Let's brainstorm ideas for the anniversary party. || We brainstormed fifty names and picked none. | business | 名詞の brainstorming session もよく使う。
+streamline | v | 効率化する | make simpler and faster | We streamlined the sign-up process. || We streamlined the menu from twenty drinks to ten. || This app streamlines the whole ordering process. | business | 無駄を省いて流れを良くする。simplify より「効率化」寄り。
+leverage | v | 活用する | use to your advantage | Leverage your network. || Leverage your followers to sell the merch. || We leveraged one big client to land three more. | business | ビジネス用語っぽい響き。友達との会話では use の方が自然。
+pivot | v | 方向転換する | change direction | The company pivoted to AI. || We pivoted from a cafe to a coffee bean shop. || When sales dropped, we had to pivot fast. | business | スタートアップの「方向転換」。バスケのピボットと同じ語。
+scale | v | 規模を拡大する | grow | We need to scale before hiring. || We can't scale without more staff. || Scale slowly. Don't open three shops at once. | business | scale up（拡大）/ scale back（縮小）の形も多い。
+onboard | v | 受け入れる・導入する | help a new person or client start | We onboarded three new clients. || We onboard new baristas in two days. || It took a week to onboard the new client. | business | 名詞は onboarding（新人研修・導入）。
+ASAP | abbr | 至急 | as soon as possible | Please reply ASAP. || Call me back ASAP. || We need more cups ASAP. | business | エイサップ、またはエイ・エス・エイ・ピーと読む。目上には as soon as you can の方が柔らかい。
+FYI | abbr | 参考までに | for your information | FYI, the office is closed Monday. || FYI, the delivery is late. || Just FYI, the client hates the color red. | business | 軽く情報を共有する一言。少しそっけなく聞こえることもある。
+EOD | abbr | 今日中 | end of day | I'll send it by EOD. || Can you send the mix by EOD? || I need an answer by EOD Friday. | business | end of day の略。EOW は「今週中」。
+ROI | abbr | 投資利益率 | return on investment | What's the ROI on ads? || The ROI on that ad was terrible. || What's the ROI on a new espresso machine? | money | 投資に対する見返り。会話なら Is it worth it? でも言える。
+KPI | abbr | 重要業績評価指標 | key performance indicator | Our main KPI is new clients. || Our KPIs are repeat customers and average spend. || Don't drown in KPIs. Focus on one. | business | 複数形 KPIs もよく使う。目標を数字で測る指標。
+B2B | abbr | 企業間取引 | business to business | We're a B2B company. || B2B sales take longer, but the orders are bigger. || We're shifting to B2B because the margins are better. | business | 一般消費者向けは B2C。英語ではこの表記が普通。
+win-win | adj | お互いに得な | good for both sides | It's a win-win deal. || If you share my post, I'll share yours. Win-win. || A win-win deal keeps both sides happy. | business | win-win situation が定番。lose-lose は「どちらも損」。
+cold email | n | 面識のない相手への営業メール | an email to someone you don't know | Cold emails rarely work. || I sent fifty cold emails and got two replies. || Keep your cold email short and personal. | business | 電話なら cold call。知り合い経由は warm intro。
+pain point | n | 顧客の悩み | a problem customers have | What's their biggest pain point? || Long lines are our customers' biggest pain point. || Find the pain point, then sell the fix. | business | マーケティング用語で「顧客の悩み・不満」。
+value proposition | n | 提供価値 | why customers should choose you | What's your value proposition? || Our value proposition is simple: fast, cheap, and friendly. || If you can't explain your value proposition in one sentence, rework it. | business | 「なぜ選ぶべきか」という提供価値。pitch の中心になる。
+word of mouth | n | 口コミ | people telling others | Word of mouth is our best marketing. || We grew by word of mouth, not ads. || Word of mouth spreads fast in this neighborhood. | business | by word of mouth（口コミで）の形。日本語の「口コミサイト」は reviews。
+small talk | n | 雑談 | light, casual conversation | Americans start meetings with small talk. || I'm bad at small talk with customers. || Skip the small talk. What do you need? | business | make small talk の形。天気・週末・仕事などの軽い雑談。
+handshake | n | 握手 | shaking hands | A firm handshake matters in the US. || Agree on a handshake, then put it in writing. || His handshake was weak, but his pitch was strong. | business | firm handshake（しっかりした握手）が好印象。handshake deal は「口約束の取引」。
+business card | n | 名刺 | a card with your contact info | Do you have a business card? || I ran out of business cards at the event. || Put your social media on your business card. | business | name card も通じるが、英語圏では business card が普通。
+LinkedIn | n | リンクトイン | a professional social network | Let's connect on LinkedIn. || A recruiter messaged me on LinkedIn. || Update your LinkedIn before you start applying. | online | ビジネス用SNS。connect on LinkedIn（つながる）が定番表現。
+inbox | n | 受信箱 | where emails arrive | My inbox is a disaster. || I have three hundred unread emails in my inbox. || Check your inbox. I just sent the contract. | online | inbox zero は「受信箱を空にする」習慣。DMの受信箱にも使う。
+calendar invite | n | カレンダー招待 | a meeting request by email | I'll send you a calendar invite. || Did you get my calendar invite? || Accept the calendar invite so it shows up on your phone. | business | send / accept a calendar invite の形。invite は口語で名詞としても使う。
+time zone | n | 時差・タイムゾーン | a region with the same time | What time zone are you in? || Let's find a time that works in both time zones. || My producer's in another time zone, so we email a lot. | travel | What time zone are you in? は海外との仕事で必須。
+headcount | n | 人数・人員 | number of people | What's the headcount for dinner? || What's the headcount for the church picnic? || We can't increase headcount this year. | business | 「人数」と「社員数」の両方。headcount freeze は「採用凍結」。
+bottleneck | n | ボトルネック・障害 | something that slows progress | Approval is the bottleneck. || The espresso machine is our bottleneck at lunch. || Mixing is always the bottleneck on my releases. | work | 全体を遅らせる一点。瓶の首が細いイメージ。
+burnout | n | 燃え尽き | exhaustion from overwork | Burnout is real. Take a break. || Burnout hit me after a year of double shifts. || Regular days off help prevent burnout. | work | 名詞は一語の burnout。形容詞は burned out / burnt out。
+work-life balance | n | ワークライフバランス | balance between job and personal life | I need better work-life balance. || Night shifts destroyed my work-life balance. || Running a shop with good work-life balance is tough. | work | 一つの名詞として使う。have / find work-life balance の形。
+hustle | n | 頑張り・ハッスル | hard, energetic work | I respect the hustle. || Side hustle money paid for my new mic. || The hustle is real when you run a small shop. | work | side hustle（副業）が超頻出。hustler は良くも悪くも「やり手」。
+grind | n | 地道な努力・毎日の仕事 | hard, repetitive work | Back to the grind. || Monday again. Back to the grind. || Success is mostly the daily grind. | work | the daily grind（毎日の単調な仕事）が定番。豆を「挽く」の grind と同じ単語。

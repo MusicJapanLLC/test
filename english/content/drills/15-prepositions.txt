@@ -1,0 +1,36 @@
+//! In, On, At | Time and place prepositions | build
+! 時間：at ＝時刻・点（at seven, at night）、on ＝日付・曜日（on Friday）、in ＝月・年・長めの時間帯（in May, in the morning）。
+! 場所：at ＝地点（at the station, at work）、in ＝中・エリア（in Osaka, in the car）、on ＝面や乗り物（on the wall, on the train）。
+! 乗り物：立って歩ける電車・バス・飛行機は on、座るだけのタクシー・車は in。
+! next / last / this / every の前には前置詞を付けない：See you next Friday.（on next Friday はNG）
+! in ten minutes ＝「10分後に」。「以内に」は within、期限の「までに」は by、ずっと続く「まで」は until。
+See you at seven. | じゃあ7時にね。 | 時刻は at
+My birthday is in May. | 誕生日は5月。 | 月は in
+The gig is on Saturday. | ライブは土曜日だよ。 | 曜日は on
+Let's meet at the station. | 駅で待ち合わせしよう。 | 地点は at
+I'm on the train right now. | 今、電車の中。 | 電車は on
+Get in the car. | 車乗って。 | 車は in
+Your phone is on the table. | スマホ、テーブルの上にあるよ。 | 面の上は on
+I left my wallet in the taxi. | タクシーに財布忘れた。 | タクシーは in
+I usually lift in the morning. | 筋トレはだいたい朝やってる。 | 朝・午後は in the ～
+I work at night and sleep during the day. | 夜働いて、昼間寝てる。 | 夜だけは at night
+See you next Friday. | また来週の金曜ね。 | next の前に on は付けない
+The cafe is closed on Mondays. | カフェは毎週月曜休み。 | 毎週の曜日は on ～s
+What are you doing on Christmas Eve? | クリスマスイブ、何してる？ | 特定の日は on
+I'll be there in ten minutes. | 10分後に着く。 | in ＝～後に
+He's waiting for you at the entrance. | あいつ、入口でお前のこと待ってるよ。
+My name's not on the list. | 俺の名前、リストに載ってない。 | リストは on
+I saw it on the news. | ニュースで見た。 | on the news / on TV
+She's on the phone with a client. | 彼女、今クライアントと電話中。 | on the phone ＝電話中
+Let's sit in the corner. | 隅っこに座ろう。 | 部屋の隅は in the corner
+Are you in a band or something? | バンドとかやってるの？ | バンドに所属＝ in a band
+Sorry, I'm already in bed. | ごめん、もう布団入ってる。 | in bed は冠詞なし
+The pharmacy is on the second floor. | 薬局は2階だよ。 | 階は on
+Turn left at the next light. | 次の信号を左ね。 | 曲がる地点は at
+We met at a friend's wedding. | 友達の結婚式で知り合ったんだ。 | イベントは at
+I've been working nights since April. | 4月からずっと夜勤やってる。 | since ＝～から（ずっと）
+I'll pay you back by Friday. | 金曜までに返すよ。 | by ＝期限
+I have to work until midnight. | 夜12時まで働かなきゃ。 | until ＝ずっと続く
+The package should arrive within three days. | 荷物は3日以内に届くはず。 | within ＝以内
+I got here on time, for once. | 珍しく時間通りに着いた。 | on time ＝時間ぴったり
+We made it just in time for the last train. | 終電にギリギリ間に合った。 | in time ＝間に合って

@@ -1,94 +1,94 @@
 // News, society & podcasts — words you hear when listening
-economy | n | 経済 | money, trade and jobs of a country | The economy is slowing down. | business
-inflation | n | インフレ | prices going up | Inflation makes everything expensive. | money
-recession | n | 不況 | a period when the economy shrinks | Are we heading into a recession? | money
-interest rate | n | 金利 | the cost of borrowing money | The bank raised interest rates. | money
-tax | n | 税金 | money paid to the government | Is tax included? | money
-government | n | 政府 | the group that runs a country | The government announced new rules. | daily
-election | n | 選挙 | voting for leaders | The election is next month. | daily
-policy | n | 政策・方針 | a plan or rule | The new policy starts in April. | business
-law | n | 法律 | official rules | It's against the law. | daily
-rights | n | 権利 | what people are allowed | Know your rights as a tenant. | paperwork
-debate | n | 議論・討論 | discussion with different opinions | There's a big debate about AI. | online
-controversy | n | 論争・炎上 | public disagreement | The ad caused a controversy. | online
-scandal | n | スキャンダル | a shocking public event | The scandal hit the news. | online
-headline | n | 見出し | the title of a news story | Don't just read the headlines. | online
-breaking news | n | 速報 | news happening right now | Breaking news: the bridge is closed. | online
-report | n | 報告・報道 | an account of facts | According to the report, sales fell. | business
-survey | n | 調査・アンケート | questions asked to many people | A survey says most people hate meetings. | business
-statistics | n | 統計 | numbers that describe facts | The statistics are surprising. | study
-trend | n | 傾向・流行 | a general direction | Remote work is a big trend. | business
-climate change | n | 気候変動 | long-term change in weather | Climate change affects everyone. | daily
-environment | n | 環境 | the natural world / surroundings | We need a better work environment. | work
-pollution | n | 汚染 | dirty air or water | Air pollution is bad today. | daily
-population | n | 人口 | number of people | Japan's population is shrinking. | daily
-generation | n | 世代 | people born around the same time | My generation grew up online. | online
-community | n | コミュニティ・地域社会 | a group of people | The online community is super supportive. | online
-culture | n | 文化 | ways of life of a group | Tipping culture is confusing. | travel
-tradition | n | 伝統 | custom passed down | It's a family tradition. | daily
-immigrant | n | 移民 | someone who moves to a new country | The US is a country of immigrants. | travel
-diversity | n | 多様性 | variety of people | The city's diversity is amazing. | daily
-equality | n | 平等 | being equal | They fight for equality. | daily
-crisis | n | 危機 | a dangerous or very difficult time | It's a housing crisis. | daily
-disaster | n | 災害・大失敗 | a terrible event | The party was a total disaster. | daily
-earthquake | n | 地震 | shaking of the ground | Japan has a lot of earthquakes. | daily
-typhoon | n | 台風 | a strong tropical storm | The typhoon canceled my flight. | travel
-forecast | n | 予報 | prediction (often weather) | The forecast says rain. | daily
-research | n | 研究 | careful study | Research shows sleep helps memory. | study
-study | n | 研究・勉強 | research / learning | A new study found that... | study
-evidence | n | 証拠 | facts that prove something | There's no evidence for that. | study
-theory | n | 理論・説 | an idea that explains something | It's just a theory. | study
-expert | n | 専門家 | someone with special knowledge | Experts disagree. | study
-according to | prep | 〜によると | as said by | According to the news, it'll snow. | study
-apparently | adv | どうやら〜らしい | it seems (from what I heard) | Apparently, the meeting is canceled. | daily
-allegedly | adv | 〜とされる・らしい | said but not proven | He allegedly stole the idea. | online
-officially | adv | 正式に | formally | It's officially summer. | daily
-reportedly | adv | 伝えられるところでは | according to reports | The company is reportedly hiring. | business
+economy | n | 経済 | money, trade and jobs of a country | The economy is slowing down. || The local economy depends on tourists. || Everyone blames the economy when sales drop. | business | economic（経済の）と economical（節約になる）を混同しやすいので注意。
+inflation | n | インフレ | prices going up | Inflation makes everything expensive. || With inflation, our coffee beans cost thirty percent more. || My paycheck isn't keeping up with inflation. | money | keep up with inflation（インフレに追いつく）が定番。「インフレ」と略さない。
+recession | n | 不況 | a period when the economy shrinks | Are we heading into a recession? || My dad started his shop during a recession. || Live music is the first thing people cut in a recession. | money | 景気後退。depression はもっと深刻な大不況。
+interest rate | n | 金利 | the cost of borrowing money | The bank raised interest rates. || What's the interest rate on this loan? || Low interest rates are why everyone's buying houses. | money | raise / cut interest rates の形でニュースに頻出。会話では rates だけでも通じる。
+tax | n | 税金 | money paid to the government | Is tax included? || Sales tax in Japan is ten percent. || I owe a lot of tax this year because of my side hustle. | money | tax included（税込）、before tax（税抜き）。動詞の tax は「課税する」。
+government | n | 政府 | the group that runs a country | The government announced new rules. || The government is offering grants for small businesses. || Nobody at the bar wants to talk about the government. | daily | the government と the を付けるのが普通。発音は n が弱く「ガヴァメント」。
+election | n | 選挙 | voting for leaders | The election is next month. || Are you voting in the election? || Don't bring up the election at Thanksgiving dinner. | daily | hold / win an election。選挙の話題は職場では避けがち。
+policy | n | 政策・方針 | a plan or rule | The new policy starts in April. || Our refund policy is pretty simple. || No phones on stage. That's my policy. | business | 店や会社のルールにも使う（return policy）。politics（政治）と混同しない。
+law | n | 法律 | official rules | It's against the law. || My cousin is in law school. || There should be a law against reply-all emails. | daily | break the law / against the law が定番。弁護士は lawyer。
+rights | n | 権利 | what people are allowed | Know your rights as a tenant. || We own the rights to all our songs. || Workers have rights, even on night shifts. | paperwork | 権利の意味ではふつう複数形。the rights to a song で「楽曲の権利」。
+debate | n | 議論・討論 | discussion with different opinions | There's a big debate about AI. || We had a heated debate about pineapple on pizza. || It's still up for debate. | online | up for debate（議論の余地あり）、heated debate（白熱した議論）が便利。
+controversy | n | 論争・炎上 | public disagreement | The ad caused a controversy. || The new logo sparked a lot of controversy online. || I try to stay away from controversy on my stream. | online | 「炎上」は controversy / backlash。形容詞 controversial も頻出。
+scandal | n | スキャンダル | a shocking public event | The scandal hit the news. || A tax scandal brought down the whole company. || Fifty dollars for a T-shirt? That's a scandal. | online | 恋愛ネタに限らず汚職や不正全般。日本語の「スキャンダル」より重い響き。
+headline | n | 見出し | the title of a news story | Don't just read the headlines. || Our show made the headlines in the local paper. || The headline was clickbait. The article said nothing. | online | make the headlines で「ニュースになる」。clickbait（釣り見出し）も覚えておく。
+breaking news | n | 速報 | news happening right now | Breaking news: the bridge is closed. || Breaking news: my roommate finally did the dishes. || I saw the breaking news on my phone during my break. | online | ニュース用語だが、身近な出来事に冗談で使うとウケる。
+report | n | 報告・報道 | an account of facts | According to the report, sales fell. || I have to finish the monthly report tonight. || The police report took two hours. | business | write / submit a report が定番。動詞で report a problem（問題を報告する）。
+survey | n | 調査・アンケート | questions asked to many people | A survey says most people hate meetings. || Can you fill out a quick survey for our cafe? || We did a survey of our fans to pick the next single. | business | fill out a survey で「アンケートに答える」。「アンケート」はフランス語由来の言い方。
+statistics | n | 統計 | numbers that describe facts | The statistics are surprising. || I don't trust statistics I didn't make myself. || The statistics from my stream say people leave after ten minutes. | study | 会話では stats と略すことが多い。単数 statistic は「1つの統計値」。
+trend | n | 傾向・流行 | a general direction | Remote work is a big trend. || That song started a dance trend online. || Sales are trending up this month. | business | 動詞で trending（流行っている）。trending on social media はSNSの定番。
+climate change | n | 気候変動 | long-term change in weather | Climate change affects everyone. || Summers in Osaka feel hotter every year. Climate change is real. || Our coffee supplier says climate change is hurting the harvest. | daily | global warming より広い言い方で、ニュースでは climate change が主流。
+environment | n | 環境 | the natural world / surroundings | We need a better work environment. || Paper cups are bad for the environment. || I write better in a quiet environment. | work | the environment で「自然環境」、a quiet environment のように「〜な環境」にも使う。
+pollution | n | 汚染 | dirty air or water | Air pollution is bad today. || Noise pollution from the bar next door keeps me up. || Light pollution makes it hard to see stars in the city. | daily | air / noise / light pollution のように種類を前に付ける。
+population | n | 人口 | number of people | Japan's population is shrinking. || The town's population is mostly older people. || A small population means fewer customers for the shop. | daily | 人口の多い少ないは large / small。many / few は使わない。
+generation | n | 世代 | people born around the same time | My generation grew up online. || My parents' generation never talks about mental health. || The shop has been in the family for three generations. | online | Gen Z（Z世代）、millennials（ミレニアル世代）もよく聞く。
+community | n | コミュニティ・地域社会 | a group of people | The online community is super supportive. || Our church community helped me when I moved here. || Building a community around your music takes time. | online | 地域社会だけでなくファンや趣味の集まりにも使う。build a community が定番。
+culture | n | 文化 | ways of life of a group | Tipping culture is confusing. || Work culture in Japan is intense. || Our cafe has a chill culture. No yelling. | travel | 国の文化だけでなく会社や業界の「空気・ノリ」にも使う（company culture）。
+tradition | n | 伝統 | custom passed down | It's a family tradition. || Takoyaki after church is our little tradition. || Some traditions are worth breaking. | daily | 形容詞は traditional。break with tradition（伝統を破る）。
+immigrant | n | 移民 | someone who moves to a new country | The US is a country of immigrants. || My grandparents were immigrants from Korea. || A lot of immigrants work night shifts in this city. | travel | 入ってくる人が immigrant、出ていく人が emigrant。デリケートな話題なので言い方に注意。
+diversity | n | 多様性 | variety of people | The city's diversity is amazing. || Our church has a lot of diversity. || The festival lineup has real diversity this year. | daily | 人の多様性だけでなく、ジャンルや種類の幅にも使う。
+equality | n | 平等 | being equal | They fight for equality. || Gender equality at work still has a long way to go. || Equality doesn't mean everyone gets the exact same thing. | daily | 形容詞は equal。equity（公平）と区別して話されることもある。
+crisis | n | 危機 | a dangerous or very difficult time | It's a housing crisis. || I think I'm having a quarter-life crisis. || The cafe ran out of milk at rush hour. Total crisis. | daily | 複数形は crises。midlife crisis / quarter-life crisis はネタでもよく使う。
+disaster | n | 災害・大失敗 | a terrible event | The party was a total disaster. || Natural disasters are part of life in Japan. || My first open mic was a disaster. | daily | natural disaster（自然災害）。会話では「大失敗」の誇張でよく使う。
+earthquake | n | 地震 | shaking of the ground | Japan has a lot of earthquakes. || Did you feel the earthquake last night? || Keep a bag ready in case of an earthquake. | daily | 会話では quake と略すことも。揺れた直後は Did you feel that? が自然。
+typhoon | n | 台風 | a strong tropical storm | The typhoon canceled my flight. || Stay inside. The typhoon hits tonight. || The gig got canceled because of the typhoon. | travel | 太平洋の台風が typhoon、大西洋では hurricane。中身は同じ。
+forecast | n | 予報 | prediction (often weather) | The forecast says rain. || The sales forecast for next quarter looks good. || What's the forecast for the weekend? | daily | weather forecast だけでなく sales forecast（売上予測）にも使う。
+research | n | 研究 | careful study | Research shows sleep helps memory. || I did some research before buying the mic. || Do your own research before you invest. | study | 数えない名詞。a research ではなく some research / a study と言う。
+study | n | 研究・勉強 | research / learning | A new study found that... || A study says coffee might help you live longer. || There's a study on why sad songs feel good. | study | 1つの研究は a study（数えられる）。研究全般は research（数えない）。
+evidence | n | 証拠 | facts that prove something | There's no evidence for that. || Do you have any evidence, or is it just a feeling? || The empty pizza box is all the evidence I need. | study | 数えない名詞。1つなら a piece of evidence。proof は「決定的な証拠」。
+theory | n | 理論・説 | an idea that explains something | It's just a theory. || My theory is he's secretly a great singer. || In theory, it works. In practice, not so much. | study | in theory（理論上は）↔ in practice（実際は）のセットが便利。
+expert | n | 専門家 | someone with special knowledge | Experts disagree. || I'm no expert, but that mix sounds muddy. || She's an expert at handling angry customers. | study | I'm no expert, but ~（素人意見だけど）は謙遜の定番。expert at / on ~。
+according to | prep | 〜によると | as said by | According to the news, it'll snow. || According to my boss, we're getting a raise. We'll see. || According to the app, the train's ten minutes late. | study | 他人や情報源に使う。according to me とは言わず in my opinion と言う。
+apparently | adv | どうやら〜らしい | it seems (from what I heard) | Apparently, the meeting is canceled. || Apparently, my song is popular in Brazil. || So apparently I'm working Christmas. | daily | 聞いた話を伝える「〜らしいよ」。驚きや皮肉を込めることも多い。
+allegedly | adv | 〜とされる・らしい | said but not proven | He allegedly stole the idea. || Someone allegedly ate my yogurt from the staff fridge. || The singer allegedly lip-synced the whole show. | online | 証明されていないことを言うときの保険の言葉。冗談でもよく使う。
+officially | adv | 正式に | formally | It's officially summer. || We're officially open! || I'm officially done with dating apps. | daily | 会話では「ついに・正式に〜になった」の強調でよく使う。
+reportedly | adv | 伝えられるところでは | according to reports | The company is reportedly hiring. || The band is reportedly working on a new album. || Rent in the area has reportedly gone up twenty percent. | business | ニュース口調の語。会話なら apparently や I heard のほうが自然。
 // Music & entertainment
-track | n | 曲・トラック | a song on an album | This is my favorite track. | music
-album | n | アルバム | a collection of songs | Their new album drops Friday. | music
-single | n | シングル | one song released alone | The single hit number one. | music
-lyrics | n | 歌詞 | the words of a song | I wrote the lyrics myself. | music
-chorus | n | サビ | the repeated main part | The chorus is so catchy. | music
-verse | n | Aメロ・ヴァース | part of a song between choruses | The second verse hits harder. | music
-bridge | n | Cメロ・ブリッジ | a different section before the last chorus | The bridge gives me chills. | music
-hook | n | フック（耳に残る部分） | the catchy part | You need a strong hook. | music
-beat | n | ビート | rhythm / instrumental track | I made this beat last night. | music
-melody | n | メロディー | the tune | Hum the melody for me. | music
-catchy | adj | キャッチーな | easy to remember | That song is so catchy. | music
-remix | n | リミックス | a new version of a song | The remix is better than the original. | music
-cover | n | カバー | your version of another's song | I did a cover of a Bruno Mars song. | music
-release | v | リリースする | make public | We're releasing it on Friday. | music
-streaming | n | ストリーミング | playing music or video online | Streaming pays artists very little. | music
-royalties | n | 印税 | money paid for each use | I got my first royalties check. | money
-label | n | レーベル | a music company | Are you signed to a label? | music
-independent | adj | 独立した・インディーの | not part of a big company | I'm an independent artist. | music
-gig | n | ライブ・仕事 | a performance / a job | I have a gig on Saturday. | music
-concert | n | コンサート | a live music show | The concert was sold out. | music
-venue | n | 会場 | a place for events | The venue holds 500 people. | music
-lineup | n | 出演者 | performers at an event | The festival lineup is insane. | music
-encore | n | アンコール | an extra song at the end | They played two encores. | music
-genre | n | ジャンル | a type of music or film | What genre do you make? | music
-vocals | n | ボーカル | the singing part | The vocals are a little quiet. | music
-studio | n | スタジオ | a room for recording | I'm in the studio all day. | music
-mic | n | マイク | microphone | Is the mic on? | music
-headphones | n | ヘッドホン | speakers worn on the ears | I can't work without headphones. | music
-volume | n | 音量 | loudness | Turn down the volume. | music
-soundtrack | n | サウンドトラック | music for a movie | The soundtrack is amazing. | online
-sequel | n | 続編 | the next part of a movie | The sequel is coming out next year. | online
-trailer | n | 予告編 | a short preview of a movie | Have you seen the trailer? | online
-episode | n | エピソード・回 | one part of a series | I watched three episodes last night. | online
-season | n | シーズン | a set of episodes | Season two is better. | online
-series | n | シリーズ・連続ドラマ | a show with many episodes | It's a great series. | online
-documentary | n | ドキュメンタリー | a film about real events | I watched a documentary about sharks. | online
-subtitles | n | 字幕 | text of what's said on screen | Watch with English subtitles. | study
-dubbed | adj | 吹き替えの | with voices in another language | I prefer subtitles to dubbed movies. | online
-plot | n | あらすじ・筋 | the story | The plot was confusing. | online
-character | n | 登場人物・性格 | a person in a story / personality | Who's your favorite character? | online
-scene | n | 場面 | a part of a film | That scene made me cry. | online
-ending | n | 結末 | how a story finishes | I hated the ending. | online
-director | n | 監督 | person who makes a film | Who's the director? | online
-review | v | 批評する | judge a film or product | Critics reviewed it badly. | online
-rating | n | 評価 | a score | It has a 90% rating. | online
-stand-up | n | スタンダップ・コメディ | solo comedy on stage | I love watching stand-up. | music
-comedian | n | コメディアン | someone who does comedy | He's my favorite comedian. | music
+track | n | 曲・トラック | a song on an album | This is my favorite track. || I finished the drum track last night. || We're on track to finish by Friday. | music | on track（順調に進んでいる）、lose track of time（時間を忘れる）も頻出。
+album | n | アルバム | a collection of songs | Their new album drops Friday. || I've been working on this album for two years. || Listen to the whole album in order. Trust me. | music | The album drops Friday. のように drop（出る）は今っぽい言い方。
+single | n | シングル | one song released alone | The single hit number one. || We're dropping a single before the album. || The first single did better than we expected. | music | drop / release a single。恋人がいない single（形容詞）と区別。
+lyrics | n | 歌詞 | the words of a song | I wrote the lyrics myself. || I can never remember the lyrics at karaoke. || The lyrics hit way too close to home. | music | 歌詞はふつう複数形。1行なら a line。
+chorus | n | サビ | the repeated main part | The chorus is so catchy. || Everyone sings along on the chorus. || The chorus comes in way too late. | music | 日本語の「サビ」は chorus。合唱団は choir（クワイア）。
+verse | n | Aメロ・ヴァース | part of a song between choruses | The second verse hits harder. || I wrote the first verse on the train. || Can you rap the second verse? | music | 曲のAメロ・Bメロ部分。聖書の「節」も verse。
+bridge | n | Cメロ・ブリッジ | a different section before the last chorus | The bridge gives me chills. || The song needs a bridge before the last chorus. || The bridge changes key and everyone loses it. | music | 日本の「Cメロ」にあたる。橋の bridge と同じ単語。
+hook | n | フック（耳に残る部分） | the catchy part | You need a strong hook. || The hook got stuck in my head all day. || Every good pitch needs a hook. | music | 音楽以外でも「人を引きつける要素」に使う。catchy hook が定番。
+beat | n | ビート | rhythm / instrumental track | I made this beat last night. || Can you send me the beat? || I'm beat. Let's call it a night. | music | I'm beat. は「クタクタ」の意味。動詞の beat は「打ち負かす」。
+melody | n | メロディー | the tune | Hum the melody for me. || The melody came to me in the shower. || The lyrics are fine, but the melody is forgettable. | music | tune もほぼ同じ意味でカジュアル。重ねる音は harmony。
+catchy | adj | キャッチーな | easy to remember | That song is so catchy. || I need a catchy name for the cafe. || The jingle is annoying but catchy. | music | 音楽以外に catchy name / catchy slogan にも使う。
+remix | n | リミックス | a new version of a song | The remix is better than the original. || Can I remix your track? || A producer from Berlin is doing a remix of our single. | music | 動詞でも使う。official remix / a remix of ~ の形。
+cover | n | カバー | your version of another's song | I did a cover of a Bruno Mars song. || We play mostly covers at weddings. || This cover is better than the original. Fight me. | music | do a cover of ~ / cover a song。cover band はカバー専門バンド。
+release | v | リリースする | make public | We're releasing it on Friday. || The release date got pushed back. || Writing that song was such a release. | music | 名詞で release date（発売日）。感情の「解放・スッキリ」の意味もある。
+streaming | n | ストリーミング | playing music or video online | Streaming pays artists very little. || I make more from streaming than from CDs now. || I'm streaming tonight at nine. | music | 音楽配信にもゲーム配信にも使う。stream 単体で動詞・名詞にもなる。
+royalties | n | 印税 | money paid for each use | I got my first royalties check. || Royalties from streaming barely buy a coffee. || Who collects the royalties when the song plays on the radio? | money | 印税・使用料はふつう複数形。単数 royalty には「王族」の意味もある。
+label | n | レーベル | a music company | Are you signed to a label? || Three labels reached out after the show. || I'd rather stay independent than sign a bad label deal. | music | be signed to a label / sign with a label。服のタグも label。
+independent | adj | 独立した・インディーの | not part of a big company | I'm an independent artist. || I've been independent since I was eighteen. || Support independent coffee shops. | music | 略して indie。independent of ~ で「〜から独立して」。
+gig | n | ライブ・仕事 | a performance / a job | I have a gig on Saturday. || Delivery is just a side gig. || The gig paid in beer and exposure. | music | 単発の仕事にも使う（gig work / side gig）。ライブは show とも言う。
+concert | n | コンサート | a live music show | The concert was sold out. || The church is having a Christmas concert. || I cried at the concert. No shame. | music | 大きめの公演は concert、ライブハウス規模は show / gig が自然。「ライブ」は live show。
+venue | n | 会場 | a place for events | The venue holds 500 people. || We need a bigger venue next time. || The venue's sound guy was amazing. | music | ライブ会場だけでなく結婚式やイベントの会場にも使う。
+lineup | n | 出演者 | performers at an event | The festival lineup is insane. || We're second on the lineup. || The cafe's new lineup of desserts is great. | music | 出演者以外に商品の「ラインナップ」にも使う。
+encore | n | アンコール | an extra song at the end | They played two encores. || The crowd screamed for an encore. || We didn't plan an encore, so we just played the first song again. | music | 発音は「アーンコー」に近い。客は One more song! と叫ぶことも多い。
+genre | n | ジャンル | a type of music or film | What genre do you make? || I don't stick to one genre. || Lo-fi is a whole genre now. | music | 発音は「ジャーンラ」に近い。genre-bending（ジャンルを超えた）も使う。
+vocals | n | ボーカル | the singing part | The vocals are a little quiet. || I'm recording the vocals tonight. || Who's on vocals? | music | on vocals で「ボーカル担当」。歌手本人は vocalist / singer。
+studio | n | スタジオ | a room for recording | I'm in the studio all day. || We booked the studio for three hours. || My studio is just a closet with foam on the walls. | music | in the studio で「制作中」。studio apartment はワンルームのこと。
+mic | n | マイク | microphone | Is the mic on? || Bring the mic closer to your mouth. || Mic check, one two. | music | microphone の略で「マイク」と読む。open mic は誰でも出られるライブ。
+headphones | n | ヘッドホン | speakers worn on the ears | I can't work without headphones. || Can you hear me? My headphones are acting up. || I mix on headphones at night so I don't wake the neighbors. | music | ふつう複数形。耳に入れるタイプは earbuds / earphones。
+volume | n | 音量 | loudness | Turn down the volume. || Can you turn up the volume on the vocals? || The volume of orders doubled this month. | music | turn up / turn down the volume。量の意味で sales volume とも言う。
+soundtrack | n | サウンドトラック | music for a movie | The soundtrack is amazing. || Rain is the soundtrack of my night shifts. || I listen to game soundtracks while I work. | online | 比喩で「〜のBGM」の意味でもよく使う。
+sequel | n | 続編 | the next part of a movie | The sequel is coming out next year. || The sequel was worse than the first one. || Is this a sequel or a prequel? | online | 前作より前の話は prequel。sequel は「シークウェル」と発音。
+trailer | n | 予告編 | a short preview of a movie | Have you seen the trailer? || The trailer showed every good scene. || We made a trailer for our new album. | online | 予告編のほか、車で引く「トレーラー」の意味もある。
+episode | n | エピソード・回 | one part of a series | I watched three episodes last night. || The new episode drops on Thursday. || I had a little panic episode at work. | online | 病気の「発作」や出来事の「一件」の意味でも使う。
+season | n | シーズン | a set of episodes | Season two is better. || It's peak tourist season in Osaka. || Busy season at the cafe starts in December. | online | busy season / off-season も便利。動詞の season は「味付けする」。
+series | n | シリーズ・連続ドラマ | a show with many episodes | It's a great series. || I binge-watched the whole series in two days. || We're doing a series of live shows this summer. | online | 単複同形（a series / two series）。テレビ番組は show とも言う。
+documentary | n | ドキュメンタリー | a film about real events | I watched a documentary about sharks. || There's a great documentary about the Osaka music scene. || Someone should make a documentary about our cafe. | online | 略して doc とも言う。a documentary on / about ~。
+subtitles | n | 字幕 | text of what's said on screen | Watch with English subtitles. || Can you turn on the subtitles? || Subtitles help me catch fast slang. | study | 字幕はふつう複数形。アメリカでは captions とも言う。
+dubbed | adj | 吹き替えの | with voices in another language | I prefer subtitles to dubbed movies. || The dubbed version sounds so weird. || My favorite anime was dubbed into English. | online | 動詞 dub（吹き替える）の過去分詞。dubbed into English で「英語吹き替えの」。
+plot | n | あらすじ・筋 | the story | The plot was confusing. || Don't tell me the plot! || Plot twist: the barista was the owner the whole time. | online | plot twist（予想外の展開）は日常会話でも冗談で使う。
+character | n | 登場人物・性格 | a person in a story / personality | Who's your favorite character? || My boss is a real character. || It takes character to admit you're wrong. | online | He's a character.（個性的で面白い人）という言い方も覚えておく。
+scene | n | 場面 | a part of a film | That scene made me cry. || The music scene in Osaka is underrated. || Don't make a scene. | online | music scene（音楽シーン）、make a scene（騒ぎを起こす）が頻出。
+ending | n | 結末 | how a story finishes | I hated the ending. || No spoilers about the ending, please. || The song needs a stronger ending. | online | happy ending / sad ending。end より「結末・終わり方」に焦点がある。
+director | n | 監督 | person who makes a film | Who's the director? || The music video director wants to shoot at night. || The music director at church picks the songs. | online | 映画監督のほか、部門の責任者や役員にも使う。
+review | v | 批評する | judge a film or product | Critics reviewed it badly. || Can you review my lyrics before I record? || Someone left a nasty review about our cafe. | online | leave a review（レビューを書く）。review は「見直す・確認する」の意味も。
+rating | n | 評価 | a score | It has a 90% rating. || Our cafe has a 4.8 rating online. || Always check the rating before you book. | online | rating は点数、review は文章の感想。star rating（星の数）も定番。
+stand-up | n | スタンダップ・コメディ | solo comedy on stage | I love watching stand-up. || I tried stand-up at an open mic. Never again. || His stand-up is all dark humor. | music | stand-up comedy の略。ピン芸人は stand-up comedian。
+comedian | n | コメディアン | someone who does comedy | He's my favorite comedian. || My coworker should be a comedian. || Osaka has the best comedians in Japan. | music | 発音は「コミーディアン」。漫才コンビは comedy duo と説明できる。

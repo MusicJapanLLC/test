@@ -1,0 +1,36 @@
+//! Past & Used To | Past simple, used to, would | build
+! 過去形＝終わった出来事。yesterday, last night, ~ ago, in 2019 など「いつ」がはっきりしてる。
+! used to + 動詞の原形＝「昔は〜してた（今は違う）」。習慣にも状態（live, have, like, be）にも使える。
+! would も「昔よく〜したもんだ」になるけど、動作の習慣だけ。状態には使えない（I would live in Kyoto ✗）。
+! 否定は didn't use to、疑問は Did you use to ~?（-d が消える）。
+! be used to ~（〜に慣れてる）は全くの別物。I'm used to it.＝もう慣れてる。
+I quit my job last month. | 先月、仕事辞めた。 | quit は過去形も quit
+We met at church. | 俺たち、教会で出会ったんだ。
+I didn't sleep at all last night. | 昨日の夜、全然寝てない。 | 日本語は「寝てない」でも last night があるので過去形
+Did you go to the gym yesterday? | 昨日ジム行った？
+The show sold out in two days. | ライブ、2日でソールドアウトした。
+I left my apron at home. | エプロン、家に置いてきちゃった。 | 物を「忘れてきた」は forget より leave
+The customer left without paying. | そのお客さん、お金払わずに帰った。
+I ran into my ex at the station. | 駅で元カノにばったり会った。 | run into＝偶然会う
+We broke up two years ago. | 2年前に別れた。 | ago は過去形とセット
+When did you start lifting? | 筋トレいつ始めたの？
+Where did you two meet? | 二人はどこで出会ったの？
+I couldn't find parking, so I was late. | 駐車場が見つからなくて遅刻した。 | can の過去は couldn't
+I used to live in Kyoto. | 昔、京都に住んでた。 | 状態は used to（would は不可）
+I used to hate coffee. | 昔はコーヒー嫌いだった。
+My manager used to be a barista. | 店長って昔バリスタだったんだよ。
+There used to be a record shop here. | ここ、昔はレコード屋があったんだよ。 | There used to be＝昔は〜があった
+I used to have long hair. | 昔は髪長かった。 | have（状態）も used to
+I didn't use to like jazz. | 昔はジャズ好きじゃなかった。 | 否定は didn't use to（d なし）
+Did you use to play in a band? | 昔バンドやってたの？ | 疑問も use to
+She used to text me every night. | 前はあの子、毎晩メッセージくれてたのに。
+I used to think church was boring. | 昔は教会って退屈だと思ってた。 | think に合わせて was
+Back then, we didn't have any money. | あの頃は金なんて全然なかった。
+I used to get nervous before every show. | 昔はライブの前、毎回緊張してた。
+We used to stay up all night making music. | 昔はよく徹夜で曲作ってた。 | stay up all night＝徹夜する
+After school, we'd go to the arcade. | 放課後はよくゲーセンに行ったもんだ。 | we'd＝we would（昔の習慣）
+I would practice guitar for hours every night. | 毎晩何時間もギター練習したもんだ。 | 動作の習慣は would もOK
+My grandma would always make extra rice for me. | おばあちゃん、いつも俺の分のご飯を多めに作ってくれたなあ。
+My dad would take me fishing every summer. | 毎年夏になると、父さんが釣りに連れてってくれたもんだ。
+I'm used to night shifts now. | 夜勤にはもう慣れた。 | be used to＝慣れてる。昔の used to とは別物
+You used to be so shy! | 昔はめっちゃシャイだったのに！

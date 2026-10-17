@@ -1,118 +1,118 @@
 // Everyday verbs
-afford | v | 余裕がある（金・時間） | have enough money or time for | I can't afford a new laptop right now. | money
-admit | v | 認める | say something is true, often unwillingly | I'll admit it, I was wrong. | conflict
-apologize | v | 謝る | say sorry | You should apologize to her. | conflict
-appreciate | v | 感謝する・価値がわかる | be thankful for | I really appreciate your help. | business
-argue | v | 言い争う・主張する | disagree with angry words | We argued about money again. | conflict
-assume | v | 思い込む・想定する | think something is true without proof | Don't assume he's angry. Ask him. | work
-avoid | v | 避ける | stay away from | I avoid the gym on Mondays. Too crowded. | daily
-blame | v | 責める・〜のせいにする | say someone caused a problem | Don't blame the Wi-Fi. You forgot to save. | conflict
-borrow | v | 借りる | take and give back later | Can I borrow your charger? | daily
-lend | v | 貸す | give something that will be returned | Can you lend me five bucks? | money
-bother | v | 邪魔する・悩ます | annoy or trouble someone | Sorry to bother you. Quick question. | daily
-brag | v | 自慢する | talk too proudly about yourself | He brags about his car all the time. | friends
-browse | v | 見て回る・ざっと見る | look around without a goal | I'm just browsing. | shopping
-cancel | v | 取り消す・キャンセルする | stop a plan | They canceled the concert. | daily
-catch | v | 捕まえる・聞き取る・間に合う | get, hear or reach in time | Sorry, I didn't catch your name. | study
-celebrate | v | 祝う | do something special for a happy event | Let's celebrate your new job. | friends
-cheat | v | ズルをする・浮気する | break rules / be unfaithful | He cheated on his girlfriend. | crush
-choose | v | 選ぶ | pick from options | Choose one. You can't have both. | daily
-complain | v | 文句を言う | say you're unhappy about something | Stop complaining and help me. | conflict
-convince | v | 説得する・納得させる | make someone believe | You convinced me. Let's do it. | business
-deal | v | 対処する | handle a problem (deal with) | I can't deal with this right now. | feelings
-deserve | v | 〜に値する | should get because of what you did | You deserve a break. | feelings
-disappoint | v | がっかりさせる | make someone sad by not meeting hopes | I don't want to disappoint my parents. | feelings
-doubt | v | 疑う | not be sure | I doubt he'll show up. | daily
-earn | v | 稼ぐ・得る | get money or respect for work | You have to earn their trust. | money
-encourage | v | 励ます | give someone confidence | My coach always encourages me. | gym
-exaggerate | v | 大げさに言う | make something sound bigger than it is | You're exaggerating. It wasn't a two-hour line. | friends
-expect | v | 期待する・予想する | think something will happen | I didn't expect you to come! | daily
-explain | v | 説明する | make something clear | Can you explain that again? | study
-fail | v | 失敗する・落ちる | not succeed | I failed my driving test twice. | study
-forgive | v | 許す | stop being angry with someone | I forgive you. But I'm not forgetting. | conflict
-gossip | v | 噂話をする | talk about others' private lives | Stop gossiping about the new guy. | friends
-guess | v | 推測する・〜だと思う | give an answer without being sure | I guess you're right. | daily
-hesitate | v | ためらう | pause before doing something | Don't hesitate to ask. | business
-hurry | v | 急ぐ | do something fast | Hurry up, the train's leaving! | daily
-ignore | v | 無視する | pay no attention | Ignore the haters. | online
-impress | v | 感心させる・いい印象を与える | make someone admire you | I want to impress the client. | business
-improve | v | 上達する・改善する | get better | My listening is slowly improving. | study
-insist | v | 言い張る・どうしてもと言う | say firmly | She insisted on paying. | daily
-interrupt | v | 話をさえぎる | stop someone while they're talking | Sorry to interrupt, but we're out of time. | business
-invite | v | 招待する | ask someone to come | Thanks for inviting me. | friends
-judge | v | 決めつける・評価する | form an opinion, often unfairly | Don't judge me. I like pineapple pizza. | conflict
-mention | v | 言及する・ちょっと言う | say briefly | You never mentioned you had a brother! | daily
-miss | v | 恋しい・逃す・乗り遅れる | feel sad someone is gone / fail to catch | I missed the bus. / I miss Osaka. | feelings
-mess up | v | 台無しにする・ミスする | make a mistake | I messed up the order. My bad. | work
-negotiate | v | 交渉する | discuss to reach an agreement | We negotiated a better price. | business
-notice | v | 気づく | see or become aware | Did you notice my new haircut? | daily
-offer | v | 申し出る・提供する | say you'll give or do something | He offered to drive me home. | daily
-owe | v | 借りがある | need to pay back | I owe you one. | money
-persuade | v | 説得する | make someone agree | I persuaded my boss to try it. | business
-pretend | v | ふりをする | act like something is true | Just pretend you're confident. | feelings
-prefer | v | 〜の方が好き | like better | I prefer tea in the morning. | daily
-promise | v | 約束する | say you'll definitely do something | I promise I'll call you back. | daily
-prove | v | 証明する | show something is true | Prove it. Show me the receipt. | conflict
-quit | v | やめる | stop doing something | I quit smoking last year. | health
-realize | v | 気づく・実感する | understand suddenly | I just realized I left my wallet at home. | daily
-recommend | v | おすすめする | suggest something good | What do you recommend? | food
-refuse | v | 断る・拒む | say no firmly | He refused to pay the fee. | conflict
-regret | v | 後悔する | feel sorry about something you did | I regret not learning English earlier. | feelings
-reject | v | 却下する・断る | say no to something offered | They rejected my proposal. | business
-remind | v | 思い出させる・念押しする | help someone remember | Remind me to buy milk. | daily
-rely | v | 頼る | depend on (rely on) | You can rely on her. | work
-rush | v | 急ぐ・急がせる | do something too quickly | Don't rush. We have time. | daily
-scroll | v | スクロールする | move up and down on a screen | I scrolled for two hours. Again. | online
-share | v | 分ける・共有する | let others use or know | Can you share the file? | work
-show off | v | 見せびらかす | try to impress people | He's showing off his new watch. | friends
-skip | v | 飛ばす・サボる | not do something | I skipped breakfast. | daily
-solve | v | 解決する | find an answer to a problem | We solved it in ten minutes. | work
-spend | v | 使う・過ごす | use money or time | I spend too much on coffee. | money
-struggle | v | 苦労する | try hard with difficulty | I struggle with fast English. | study
-succeed | v | 成功する | get the result you wanted | You'll succeed if you keep going. | business
-suggest | v | 提案する | give an idea | I suggest we take a break. | work
-suppose | v | 思う・仮定する | think something is probably true | I suppose you're right. | daily
-survive | v | 生き延びる・乗り切る | continue to live or exist through difficulty | I survived the week. Barely. | feelings
-trust | v | 信頼する | believe someone is honest | Trust me, it's worth it. | friends
-waste | v | 無駄にする | use badly | Don't waste your money on that. | money
-whisper | v | ささやく | talk very quietly | Why are you whispering? | daily
-wonder | v | 〜かなと思う | want to know | I wonder if she likes me. | crush
-worry | v | 心配する | feel nervous about problems | Don't worry about it. | feelings
-yell | v | 叫ぶ・怒鳴る | shout loudly | My coach yelled at me to keep going. | gym
-hang out | v | ぶらぶらする・遊ぶ | spend time with friends | Wanna hang out this weekend? | friends
-chill | v | まったりする | relax | I'm just chilling at home. | friends
-vent | v | 愚痴る・吐き出す | talk about frustrations | Sorry, I just need to vent for a minute. | feelings
-ghost | v | 急に連絡を絶つ | stop replying without explaining | She ghosted me after two dates. | crush
-binge | v | 一気に〜する | do too much at once | I binged the whole season. | online
-crave | v | 無性に欲しくなる | want very strongly | I'm craving ramen. | food
-nap | v | 昼寝する | sleep a short time in the day | I napped for twenty minutes. | health
-oversleep | v | 寝坊する | sleep too long | I overslept and missed the meeting. | daily
-commute | v | 通勤する | travel to work | I commute an hour each way. | work
-reply | v | 返信する | answer a message | Sorry I didn't reply. | dm
-text | v | メッセージを送る | send a phone message | Text me when you're outside. | dm
-post | v | 投稿する | put something online | Did you post the video yet? | online
-upload | v | アップロードする | put a file online | I'll upload the photos tonight. | online
-download | v | ダウンロードする | get a file from the internet | Download the app first. | online
-subscribe | v | 登録する・購読する | sign up to get something regularly | Subscribe for more! | online
-order | v | 注文する | ask for food or goods | I ordered a pizza. | food
-pay | v | 払う | give money for something | Can I pay by card? | money
-charge | v | 請求する・充電する | ask money / fill a battery | They charged me twice. / I need to charge my phone. | money
-refund | v | 返金する | give money back | Can you refund it? | money
-book | v | 予約する | reserve | I booked a table for two. | travel
-pack | v | 荷造りする | put things in a bag for a trip | I haven't packed yet. | travel
-rent | v | 借りる（有料で） | pay to use | We rented a car in LA. | travel
-move | v | 引っ越す・動く | change where you live | I'm moving to a new apartment. | paperwork
-sign | v | サインする・署名する | write your name | Please sign here. | paperwork
-apply | v | 申し込む・応募する | ask formally for a job or service | I applied for a visa. | paperwork
-hire | v | 雇う | give someone a job | We're hiring two designers. | business
-fire | v | クビにする | end someone's job | He got fired for being late. | work
-promote | v | 昇進させる・宣伝する | give a higher job / advertise | She got promoted. / We need to promote the song. | work
-launch | v | 開始する・発売する | start or release | We're launching the app next week. | business
-manage | v | なんとかする・管理する | succeed in doing / control | I managed to finish on time. | work
-handle | v | 対処する・扱う | deal with | Can you handle the client call? | work
-focus | v | 集中する | give all your attention | I can't focus with this noise. | study
-practice | v | 練習する | do again and again to improve | Practice a little every day. | study
-memorize | v | 暗記する | learn by heart | Don't memorize words alone. Memorize chunks. | study
-pronounce | v | 発音する | say a word | How do you pronounce this? | study
-translate | v | 翻訳する | change into another language | Can you translate this for me? | study
-mean | v | 意味する・本気で言う | have as a meaning / be serious | What does this mean? / I mean it. | study
+afford | v | 余裕がある（金・時間） | have enough money or time for | I can't afford a new laptop right now. || We can't afford to lose this client. || Can you afford to take a week off? | money | can't afford to ~ で「〜する余裕がない」。お金だけでなく時間やリスクにも使える。
+admit | v | 認める | say something is true, often unwillingly | I'll admit it, I was wrong. || Admit it, you cried at the end. || He finally admitted he forgot to order the milk. | conflict | admit -ing / admit that ~ の形。Admit it. は「認めなよ」で軽い冗談にも使える。
+apologize | v | 謝る | say sorry | You should apologize to her. || I apologize for the wait. Your drink is on us. || Don't apologize. It wasn't your fault. | conflict | apologize to 人 for ~ の形で、to を抜くミスが多い。会話では I'm sorry の方が普通で、apologize は少し丁寧。
+appreciate | v | 感謝する・価値がわかる | be thankful for | I really appreciate your help. || I appreciate you coming all the way to Osaka. || You don't appreciate good bread until you live abroad. | business | 「ありがたい」と「良さがわかる」の2つの意味。I appreciate it. は Thank you より少し丁寧。
+argue | v | 言い争う・主張する | disagree with angry words | We argued about money again. || We argued over the mix for an hour. || My roommate will argue about anything, even pizza toppings. | conflict | argue with 人 about ~ の形。日本語の「議論」より「口論」寄りなので、冷静な話し合いは discuss。
+assume | v | 思い込む・想定する | think something is true without proof | Don't assume he's angry. Ask him. || I assumed the shop was closed on Sundays. || Never assume the client read your email. | work | 根拠なしに思い込むニュアンス。Don't assume. は「決めつけないで」。
+avoid | v | 避ける | stay away from | I avoid the gym on Mondays. Too crowded. || I avoid Umeda Station at rush hour. || Try to avoid caffeine after 3 p.m. | daily | avoid -ing の形で、avoid to ~ は間違い。超定番のミス。
+blame | v | 責める・〜のせいにする | say someone caused a problem | Don't blame the Wi-Fi. You forgot to save. || I don't blame you for quitting. || The client blamed us for the delay. | conflict | blame 人 for ~ の形。I don't blame you. は「無理もないよ」という共感。
+borrow | v | 借りる | take and give back later | Can I borrow your charger? || Mind if I borrow your headphones for a sec? || We borrowed money from my uncle to open the shop. | daily | borrow は「借りる」で無料が前提。お金を払うなら rent。lend（貸す）と逆なので注意。
+lend | v | 貸す | give something that will be returned | Can you lend me five bucks? || My cousin lent me his car for the weekend. || Could you lend me a hand with these boxes? | money | lend 人 物 で「貸す」。過去形は lent。lend a hand は「手を貸す」の決まり文句。
+bother | v | 邪魔する・悩ます | annoy or trouble someone | Sorry to bother you. Quick question. || Does the music bother you? || Don't bother cooking. Let's order in. | daily | Don't bother. / Don't bother -ing は「わざわざしなくていいよ」。
+brag | v | 自慢する | talk too proudly about yourself | He brags about his car all the time. || I'm not bragging, but my bread sold out in an hour. || Stop bragging about your bench press. | friends | brag about ~ の形。I don't mean to brag, but ~ は自慢の前置きとして冗談っぽく使う。
+browse | v | 見て回る・ざっと見る | look around without a goal | I'm just browsing. || I spent the night browsing used gear online. || Feel free to browse. Let me know if you need anything. | shopping | 店員に声をかけられたら I'm just browsing. が定番。ネットを見て回る時にも使う。
+cancel | v | 取り消す・キャンセルする | stop a plan | They canceled the concert. || Sorry, I have to cancel tonight. I got called in for a shift. || Cancel my subscription, please. I never use it. | daily | アメリカ英語は canceled、イギリス英語は cancelled。「ドタキャン」は cancel last minute。
+catch | v | 捕まえる・聞き取る・間に合う | get, hear or reach in time | Sorry, I didn't catch your name. || I caught the last train by ten seconds. || I think I'm catching a cold. | study | 「捕まえる」「聞き取る」「間に合う」「（風邪を）ひく」と意味が広い。
+celebrate | v | 祝う | do something special for a happy event | Let's celebrate your new job. || We celebrated our first year in business with cheap champagne. || Don't celebrate yet. The payment hasn't cleared. | friends | 祝う出来事を目的語に置く。celebrate your birthday は自然だが、celebrate you は特別な言い方。
+cheat | v | ズルをする・浮気する | break rules / be unfaithful | He cheated on his girlfriend. || Don't cheat on your diet. Okay, maybe on Sunday. || He got caught cheating on the test. | crush | cheat on 人 で「浮気」、cheat on a test で「カンニング」。英語の cunning は「ずる賢い」なので注意。
+choose | v | 選ぶ | pick from options | Choose one. You can't have both. || You don't choose your family, but you choose your friends. || Why'd you choose this bar? It's so loud. | daily | choose は「じっくり選ぶ」感じ。会話では pick の方が軽くてよく使う。
+complain | v | 文句を言う | say you're unhappy about something | Stop complaining and help me. || A customer complained that the latte was too hot. || I'm not complaining. Just saying. | conflict | complain about ~ の形。名詞は complaint で、日本語の「クレーム」はこれ。claim は「主張する」。
+convince | v | 説得する・納得させる | make someone believe | You convinced me. Let's do it. || Convince me. Why should I switch banks? || I'm not convinced this logo works. | business | be convinced で「確信している」。convince は「納得させる」、persuade は「説得して行動させる」。
+deal | v | 対処する | handle a problem (deal with) | I can't deal with this right now. || How do you deal with rude customers? || I'll deal with the invoice tomorrow. | feelings | deal with ~ の形で使う。I can't deal. だけで「もう無理」というくだけた言い方にもなる。
+deserve | v | 〜に値する | should get because of what you did | You deserve a break. || You don't deserve to be treated like that. || After that set, you deserve a drink. | feelings | You deserve it. は「当然のごほうび」と「自業自得」の両方。口調で判断。
+disappoint | v | がっかりさせる | make someone sad by not meeting hopes | I don't want to disappoint my parents. || Sorry to disappoint you, but we're out of croissants. || The new update really disappointed me. | feelings | 自分ががっかりした時は I'm disappointed. と受け身。I disappoint. とは言わない。
+doubt | v | 疑う | not be sure | I doubt he'll show up. || I doubt the shop will stay open past ten. || Never doubt yourself on stage. | daily | doubt は「〜じゃないと思う」寄り。I doubt it. は「それはないと思う」。
+earn | v | 稼ぐ・得る | get money or respect for work | You have to earn their trust. || I earn more on night shifts. || She earned every follower she has. | money | earn money / earn respect の形。お金なら会話では make money の方が多い。
+encourage | v | 励ます | give someone confidence | My coach always encourages me. || My pastor encouraged me to sing at the service. || We encourage customers to bring their own cups. | gym | encourage 人 to ~ の形。店の掲示では「〜にご協力ください」の意味でよく使う。
+exaggerate | v | 大げさに言う | make something sound bigger than it is | You're exaggerating. It wasn't a two-hour line. || I'm not exaggerating. The line went around the block. || Don't exaggerate the numbers in the pitch. | friends | I'm not exaggerating. は本当にすごい時の決まり文句。発音は ig-ZAJ-er-ate。
+expect | v | 期待する・予想する | think something will happen | I didn't expect you to come! || Expect a long line on Saturday. || What did you expect? It's a free app. | daily | expect は「予想する」寄り。ワクワクの期待は look forward to。She's expecting. は「妊娠中」の意味。
+explain | v | 説明する | make something clear | Can you explain that again? || Let me explain before you get mad. || Can you explain to me how this app makes money? | study | explain to 人 の形で、explain me は間違い。超定番のミス。
+fail | v | 失敗する・落ちる | not succeed | I failed my driving test twice. || Don't be scared to fail. That's how you learn. || The payment failed. Can you try another card? | study | fail a test（試験に落ちる）、fail to ~（〜しそこなう）。機械や支払いの「エラー」にも使う。
+forgive | v | 許す | stop being angry with someone | I forgive you. But I'm not forgetting. || Forgive me, I forgot your name. || It took me years to forgive my dad. | conflict | Forgive me. は軽い「すみません」にも使える。forgive and forget は「水に流す」。
+gossip | v | 噂話をする | talk about others' private lives | Stop gossiping about the new guy. || The regulars love to gossip about the staff. || I'm not gossiping. I'm just sharing information. | friends | 名詞でも動詞でも使う。gossip about ~ の形。
+guess | v | 推測する・〜だと思う | give an answer without being sure | I guess you're right. || Guess who just walked into the cafe. || I guess I'll just order delivery again. | daily | I guess ~ は「たぶん・まあ〜かな」と口癖のように使う。Guess what! は「ねえ聞いて！」。
+hesitate | v | ためらう | pause before doing something | Don't hesitate to ask. || I hesitated before hitting send. || If you hesitate, someone else will take the deal. | business | Don't hesitate to ~ はメールの決まり文句で「遠慮なく〜して」。
+hurry | v | 急ぐ | do something fast | Hurry up, the train's leaving! || We had to hurry to set up before the doors opened. || Don't hurry the dough. It needs time. | daily | Hurry up! は急かす言い方で少し強め。No hurry.（急がなくていいよ）は名詞の使い方。
+ignore | v | 無視する | pay no attention | Ignore the haters. || He ignored my texts all week. || Just ignore the noise from upstairs. | online | ignore は「わざと無視する」。気づかなかっただけなら I didn't notice. を使う。
+impress | v | 感心させる・いい印象を与える | make someone admire you | I want to impress the client. || Your English really impressed the client. || You don't have to impress anyone. Just be yourself. | business | be impressed by / with ~ の形も多い。名詞は impression（印象）。
+improve | v | 上達する・改善する | get better | My listening is slowly improving. || The coffee here has really improved. || How can I improve my mixing? | study | 自動詞でも他動詞でも使える。会話では get better の方が気軽。
+insist | v | 言い張る・どうしてもと言う | say firmly | She insisted on paying. || If you insist. I'll take the last slice. || He insisted the mic was broken, but it was just muted. | daily | If you insist. は「そこまで言うなら」の決まり文句。insist on -ing の形もよく使う。
+interrupt | v | 話をさえぎる | stop someone while they're talking | Sorry to interrupt, but we're out of time. || Sorry, didn't mean to interrupt. || My cat interrupted the stream again. | business | Sorry to interrupt, but ~ は会話に割り込む時の定番。
+invite | v | 招待する | ask someone to come | Thanks for inviting me. || We invited a few regulars to the tasting. || Who invited this guy? | friends | invite 人 to ~ の形。invite に「おごる」の意味はないので、おごるなら It's on me. や treat を使う。
+judge | v | 決めつける・評価する | form an opinion, often unfairly | Don't judge me. I like pineapple pizza. || I'm not judging. I just wanna know why. || The crowd will judge you in the first ten seconds. | conflict | Don't judge me. は軽い冗談でよく使う。名詞の judge は「裁判官・審査員」。
+mention | v | 言及する・ちょっと言う | say briefly | You never mentioned you had a brother! || Did I mention we're closed on Mondays? || Don't mention it. It was nothing. | daily | Don't mention it. は「どういたしまして」。mention about ~ と about をつけるミスが多い。
+miss | v | 恋しい・逃す・乗り遅れる | feel sad someone is gone / fail to catch | I missed the bus. / I miss Osaka. || You missed a spot. || I miss playing live. | feelings | 「恋しい」「逃す」「乗り遅れる」「見落とす」と意味が広い。I miss you. は「会いたい」。
+mess up | v | 台無しにする・ミスする | make a mistake | I messed up the order. My bad. || Don't mess up the order this time. || Sorry, I messed up your name on the cup. | work | 「やらかす」の口語。軽く謝るなら My bad. もセットで覚えよう。
+negotiate | v | 交渉する | discuss to reach an agreement | We negotiated a better price. || Never accept the first offer. Always negotiate. || Can we negotiate the delivery fee? | business | negotiate with 人 / negotiate a price の形。値切るのは haggle とも言う。
+notice | v | 気づく | see or become aware | Did you notice my new haircut? || Nobody noticed I changed the recipe. || I noticed you've been quiet lately. You okay? | daily | notice は「見て・聞いて気づく」。考えて気づくのは realize。
+offer | v | 申し出る・提供する | say you'll give or do something | He offered to drive me home. || Can I offer you something to drink? || They offered me a full-time job! | daily | offer to ~（〜すると申し出る）、offer 人 物（〜を提供する）の形。名詞でも使う。
+owe | v | 借りがある | need to pay back | I owe you one. || You owe me a coffee. || We still owe the supplier for last month. | money | owe 人 物 の形。I owe you one. は「借りができたね」。
+persuade | v | 説得する | make someone agree | I persuaded my boss to try it. || Nothing could persuade him to wear a suit. || Can you persuade the landlord to fix the AC? | business | persuade 人 to ~ の形。convince は「納得させる」、persuade は「説得して動かす」。
+pretend | v | ふりをする | act like something is true | Just pretend you're confident. || Let's pretend that never happened. || I pretended to know the song. Big mistake. | feelings | pretend to ~ / pretend (that) ~ の形。「知らないふり」は play dumb とも言う。
+prefer | v | 〜の方が好き | like better | I prefer tea in the morning. || Would you prefer a window seat? || I prefer working nights. It's quieter. | daily | prefer A to B の形で、than は使わない。I'd prefer ~ は丁寧な希望。
+promise | v | 約束する | say you'll definitely do something | I promise I'll call you back. || I can't promise anything, but I'll try. || You promised you'd come to my show. | daily | can't promise anything は「保証はできない」の便利な言い方。
+prove | v | 証明する | show something is true | Prove it. Show me the receipt. || I've got nothing to prove to anyone. || Prove me wrong. | conflict | prove 人 wrong（〜が間違いだと示す）がよく使われる。名詞は proof。
+quit | v | やめる | stop doing something | I quit smoking last year. || I quit my job to start the cafe. || Don't quit now. You're so close. | health | 過去形も quit。仕事を辞めるのは quit、retire は「引退」なので混同注意。
+realize | v | 気づく・実感する | understand suddenly | I just realized I left my wallet at home. || I didn't realize you worked here! || I didn't realize how tired I was until I sat down. | daily | realize は「頭で気づく・わかる」。目や耳で気づくのは notice。
+recommend | v | おすすめする | suggest something good | What do you recommend? || I'd recommend booking a table. It gets busy. || Can you recommend a good dentist around here? | food | recommend -ing / recommend that ~ の形。recommend 人 to ~ は不自然になりやすい。
+refuse | v | 断る・拒む | say no firmly | He refused to pay the fee. || The landlord refused to lower the rent. || I refuse to pay ten bucks for a sandwich. | conflict | refuse to ~ の形。reject より「断固として」。I refuse. は強めの拒否。
+regret | v | 後悔する | feel sorry about something you did | I regret not learning English earlier. || Don't regret it. You did your best. || I'll regret this tomorrow, but one more drink. | feelings | regret -ing（〜したことを後悔）の形。We regret to inform you は「残念ながら」の硬い表現。
+reject | v | 却下する・断る | say no to something offered | They rejected my proposal. || My demo got rejected by every label. || Getting rejected is part of the job in sales. | business | 応募・提案・告白を「却下する」。カードが通らない時は declined の方が普通。
+remind | v | 思い出させる・念押しする | help someone remember | Remind me to buy milk. || That smell reminds me of my grandma's house. || Can you remind me of your name? | daily | remind 人 of ~（思い出させる）と remind 人 to ~（念押しする）の2つの形。
+rely | v | 頼る | depend on (rely on) | You can rely on her. || Don't rely on one client for all your income. || We rely on word of mouth. | work | rely on ~ の形で使う。depend on ~ とほぼ同じ。
+rush | v | 急ぐ・急がせる | do something too quickly | Don't rush. We have time. || Don't rush the mix. It's the most important part. || Sorry to rush you, but we're closing in five minutes. | daily | rush hour の rush。Sorry to rush you. は急かす時のクッション。
+scroll | v | スクロールする | move up and down on a screen | I scrolled for two hours. Again. || Stop scrolling and go to sleep. || Scroll down. The price is at the bottom. | online | scroll through ~ で「〜をスクロールして見る」。doomscrolling は悪いニュースを見続けること。
+share | v | 分ける・共有する | let others use or know | Can you share the file? || Can I share your post? || Do you mind sharing a table? | work | 「分け合う」と「共有する・話す」の両方。Thanks for sharing. は話を聞いた後の決まり文句。
+show off | v | 見せびらかす | try to impress people | He's showing off his new watch. || Stop showing off and just lift. || He bought a sports car just to show off. | friends | 名詞の show-off は「目立ちたがり屋」。
+skip | v | 飛ばす・サボる | not do something | I skipped breakfast. || Never skip leg day. || Can we skip the small talk? | daily | skip class（授業をサボる）、skip a meal（食事を抜く）が定番。
+solve | v | 解決する | find an answer to a problem | We solved it in ten minutes. || Money won't solve everything. || Restarting the router solved the problem. | work | solve a problem / solve a mystery の形。人間関係の対立を解決するなら resolve の方が合う。
+spend | v | 使う・過ごす | use money or time | I spend too much on coffee. || How do you spend your days off? || We spent way too much on the opening party. | money | spend 時間 -ing の形が便利（I spent two hours fixing it.）。お金にも時間にも使う。
+struggle | v | 苦労する | try hard with difficulty | I struggle with fast English. || A lot of small shops are struggling this year. || I struggled to wake up for church today. | study | struggle with ~ / struggle to ~ の形。努力しているのに苦戦している感じ。
+succeed | v | 成功する | get the result you wanted | You'll succeed if you keep going. || We finally succeeded in getting the permit. || To succeed in business, you need patience. | business | succeed in -ing の形。名詞は success、形容詞は successful。
+suggest | v | 提案する | give an idea | I suggest we take a break. || Can I suggest something? Lower the vocals a bit. || My doctor suggested I cut down on coffee. | work | suggest -ing / suggest (that) 人 ~ の形。suggest 人 to ~ は間違いになりやすい。
+suppose | v | 思う・仮定する | think something is probably true | I suppose you're right. || I suppose we could close early tonight. || You're supposed to tip here. | daily | be supposed to ~（〜することになっている）が会話で超頻出。I suppose so. は「まあ、そうだね」。
+survive | v | 生き延びる・乗り切る | continue to live or exist through difficulty | I survived the week. Barely. || Coffee is how I survive night shifts. || Only half of new cafes survive the first year. | feelings | 他動詞なので survive the week のように前置詞なしで使う。
+trust | v | 信頼する | believe someone is honest | Trust me, it's worth it. || Do you trust the new guy with the register? || I don't trust online reviews anymore. | friends | trust 人 with ~（〜を任せる）の形も便利。Trust me. は「マジで、信じて」。
+waste | v | 無駄にする | use badly | Don't waste your money on that. || Stop wasting time on haters. || We waste so much milk every night. | money | waste time / waste money が定番。What a waste! は「もったいない！」。
+whisper | v | ささやく | talk very quietly | Why are you whispering? || She whispered something to the pastor. || You don't have to whisper. The baby's awake. | daily | whisper to 人 の形。小声で話すだけなら talk quietly とも言う。
+wonder | v | 〜かなと思う | want to know | I wonder if she likes me. || I was wondering if you're free Friday. || No wonder you're tired. You worked a double. | crush | I was wondering if ~ は丁寧なお願い・誘いの定番。No wonder ~ は「どうりで」。
+worry | v | 心配する | feel nervous about problems | Don't worry about it. || I'm worried about my mom's health. || Worry about your own mix, man. | feelings | worry about ~ の形。Don't worry about it. は「気にしないで」で、謝られた時の返しにもなる。
+yell | v | 叫ぶ・怒鳴る | shout loudly | My coach yelled at me to keep going. || Don't yell. I'm right here. || Some guy yelled at the barista over a wrong order. | gym | yell at 人 は「怒鳴りつける」、yell to 人 は「大声で呼ぶ」。
+hang out | v | ぶらぶらする・遊ぶ | spend time with friends | Wanna hang out this weekend? || Let's hang out after your shift. || Where do you usually hang out in Osaka? | friends | hang out with 人 の形。大人が play with と言うと子どもの遊びに聞こえるので hang out を使う。
+chill | v | まったりする | relax | I'm just chilling at home. || Let's just chill and watch something. || We were chilling at the cafe until closing. | friends | I'm just chilling. は「ダラダラしてるだけ」の定番返し。Chill out. は「落ち着け」。
+vent | v | 愚痴る・吐き出す | talk about frustrations | Sorry, I just need to vent for a minute. || Thanks for letting me vent. || He vents to the bartender every Friday. | feelings | vent to 人 / vent about ~ の形。アドバイスより「聞いてほしいだけ」の時に使う。
+ghost | v | 急に連絡を絶つ | stop replying without explaining | She ghosted me after two dates. || Don't ghost the client. Just say no. || I think my landlord is ghosting me. | crush | ghost 人 / get ghosted の形。恋愛だけでなく仕事の連絡が途絶える時にも使う。
+binge | v | 一気に〜する | do too much at once | I binged the whole season. || I binged three seasons on my day off. || Don't binge on snacks after a night shift. | online | binge-watch（一気見）がよく使われる。binge eating は「ドカ食い」。
+crave | v | 無性に欲しくなる | want very strongly | I'm craving ramen. || After leg day, I crave carbs. || Customers crave something sweet in the afternoon. | food | 普通は be craving ~ と進行形でも言う。名詞は craving。
+nap | v | 昼寝する | sleep a short time in the day | I napped for twenty minutes. || I napped on the train and missed my stop. || Let me nap for twenty minutes before the stream. | health | take a nap とも言う。power nap は「短い仮眠」。
+oversleep | v | 寝坊する | sleep too long | I overslept and missed the meeting. || Don't oversleep. Church starts at ten. || I set three alarms so I don't oversleep. | daily | 過去形は overslept。sleep in は「わざとゆっくり寝る」でポジティブ。
+commute | v | 通勤する | travel to work | I commute an hour each way. || I commute by bike. It's my cardio. || How long does it take you to commute? | work | 名詞でも使う（a long commute）。commute to work の形。
+reply | v | 返信する | answer a message | Sorry I didn't reply. || She replied with just a thumbs-up. || Please reply to the email by Friday. | dm | reply to ~ の形で、to を忘れがち。answer は to なしで使える。
+text | v | メッセージを送る | send a phone message | Text me when you're outside. || I'll text you the address. || Stop texting during the sermon. | dm | text 人 で「〜にメッセージを送る」。アプリに関係なく text で通じる。
+post | v | 投稿する | put something online | Did you post the video yet? || I post a new beat every Friday. || Don't post anything about the launch yet. | online | post on ~ でSNSに投稿。名詞の a post も同じ形。
+upload | v | アップロードする | put a file online | I'll upload the photos tonight. || It takes forever to upload a full stream. || Can you upload the files to the shared drive? | online | upload to ~ の形。上げる＝upload、落とす＝download。
+download | v | ダウンロードする | get a file from the internet | Download the app first. || I downloaded the menu, but it won't open. || Download the stems and send me your mix. | online | download from ~ の形。「ダウンロードできない」は It won't download.
+subscribe | v | 登録する・購読する | sign up to get something regularly | Subscribe for more! || I subscribed to three streaming services, and I use one. || Hit subscribe if this helped you. | online | subscribe to ~ の形。「サブスク解約」は cancel a subscription。
+order | v | 注文する | ask for food or goods | I ordered a pizza. || Are you ready to order? || We ordered more cups, but they're late. | food | Are you ready to order? は店員の決まり文句。名詞で「注文・順番」の意味も。
+pay | v | 払う | give money for something | Can I pay by card? || We'll split it. I'll pay for the drinks. || Freelance work pays well, but never on time. | money | pay for 物 / pay 人 の形。It pays well. は「割がいい」。
+charge | v | 請求する・充電する | ask money / fill a battery | They charged me twice. / I need to charge my phone. || They charge extra for oat milk. || Leave your phone here to charge. | money | 「請求する」と「充電する」の2つ。free of charge で「無料」。
+refund | v | 返金する | give money back | Can you refund it? || They refunded the tickets after the show got canceled. || We can't refund opened items. | money | 名詞でもよく使う（get a refund）。refund 人 money の形。
+book | v | 予約する | reserve | I booked a table for two. || Book early. Hotels in Osaka fill up during festivals. || I booked a studio for Saturday. | travel | reserve より口語的で、ホテル・店・スタジオ何にでも使える。
+pack | v | 荷造りする | put things in a bag for a trip | I haven't packed yet. || Pack light. We're only staying two nights. || Can you help me pack up the gear after the show? | travel | pack light（荷物を少なく）、pack up（片付ける）が定番。
+rent | v | 借りる（有料で） | pay to use | We rented a car in LA. || I rent a small studio by the hour. || Renting is cheaper than buying a car in Osaka. | travel | rent は「お金を払って借りる」、rent out は「貸し出す」。無料なら borrow。
+move | v | 引っ越す・動く | change where you live | I'm moving to a new apartment. || We're moving the shop to a bigger space. || Move over. I need to sit down. | paperwork | move to ~ で「〜に引っ越す」。Move over. は「詰めて」。
+sign | v | サインする・署名する | write your name | Please sign here. || Don't sign anything you haven't read. || Can you sign my record? | paperwork | 有名人の「サイン」は名詞なら autograph。名詞の sign は「看板・標識」。
+apply | v | 申し込む・応募する | ask formally for a job or service | I applied for a visa. || I'm applying for a business loan. || Apply sunscreen before you go out. | paperwork | apply for 職・許可、apply to 会社・学校 の形。クリームを「塗る」の意味もある。
+hire | v | 雇う | give someone a job | We're hiring two designers. || We need to hire someone for weekends. || Hire a pro to do your taxes. | business | get hired（雇われる）の形も多い。イギリスでは hire a car で「レンタルする」の意味もある。
+fire | v | クビにする | end someone's job | He got fired for being late. || You can't fire me. I quit. || They fired half the staff after the merger. | work | get fired の形でよく使う。業績悪化による解雇は lay off で、本人の責任ではない。
+promote | v | 昇進させる・宣伝する | give a higher job / advertise | She got promoted. / We need to promote the song. || We promoted the event on every platform. || He got promoted to manager after a year. | work | get promoted（昇進する）と promote（宣伝する）の2つ。宣伝は promo と略す。
+launch | v | 開始する・発売する | start or release | We're launching the app next week. || We launched the shop with just two products. || When are you launching the new merch? | business | 新商品・サービス・キャンペーンの「開始」。名詞の launch もよく使う。
+manage | v | なんとかする・管理する | succeed in doing / control | I managed to finish on time. || How do you manage work, music, and the gym? || She manages a small team of five. | work | manage to ~ は「なんとか〜できた」。管理する人は manager。
+handle | v | 対処する・扱う | deal with | Can you handle the client call? || I can't handle spicy food. || Let me handle the angry customer. | work | I can't handle ~ は「〜は無理」。SNSの handle は「ユーザー名」の意味。
+focus | v | 集中する | give all your attention | I can't focus with this noise. || Focus on one goal this month. || I focus better with music on. | study | focus on ~ の形。concentrate より口語的で使いやすい。
+practice | v | 練習する | do again and again to improve | Practice a little every day. || I practice scales for twenty minutes before work. || Practice the pitch until you can say it without notes. | study | practice -ing の形。イギリスでは動詞を practise と綴る。
+memorize | v | 暗記する | learn by heart | Don't memorize words alone. Memorize chunks. || I memorized the menu in two days. || Memorize the opening line of your pitch. | study | 丸暗記のニュアンス。learn by heart も同じ意味。
+pronounce | v | 発音する | say a word | How do you pronounce this? || I can't pronounce the name of this cheese. || Am I pronouncing your name right? | study | 名詞は pronunciation で、つづりが pronounce と違うので注意。
+translate | v | 翻訳する | change into another language | Can you translate this for me? || Can you translate the menu into English for tourists? || Some jokes don't translate. | study | translate into ~ の形。Some jokes don't translate. は「訳すと面白さが伝わらない」。
+mean | v | 意味する・本気で言う | have as a meaning / be serious | What does this mean? / I mean it. || I didn't mean to hurt you. || What do you mean, sold out? | study | I didn't mean to ~（そんなつもりじゃなかった）、I mean（っていうか）が超頻出。形容詞の mean は「意地悪な」。

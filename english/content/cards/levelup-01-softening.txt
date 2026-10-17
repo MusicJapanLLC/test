@@ -1,0 +1,481 @@
+//! Softening & Hedging | Say it without sounding blunt | levelup
+
+# I might be wrong, but
+@ talk | work, friends | real | worksafe, warm | 3
+= 間違ってたらごめんだけど
+: Softens a statement by admitting you could be wrong.
+A: The show starts at eight, right?
+B: I might be wrong, but I think doors open at eight and the show's at nine.
+A: Oh, good catch.
+- I might be wrong, but didn't we already pay for this?
+✗ Maybe I am wrong, but | textbook | 文法はOKでも硬くて不自然
+✓ I could be wrong, but | ほぼ同じ意味。どちらも自然
+? 自分の意見の前に「保険」をかけるクッション。言い切ると強すぎる場面で、相手が訂正しやすい空気を作れる。実はけっこう自信があるときにも使うのがネイティブ流。
+! 日本語の「間違ってたらすみません」に近いけど、謝る感じはない。sorry は付けなくていい。
+
+# Not to be that guy, but
+@ talk | friends, work | real | funny, chill | 3
+= うるさいやつになりたくないけど
+: Used before a small complaint or correction so you don't sound annoying.
+A: Not to be that guy, but you still owe me for the ramen.
+B: Ugh, I know. Sending it now.
+- Not to be that guy, but the meeting was at ten, not ten thirty.
+- Not to be that guy, but can we turn the music down a little?
+✗ I am sorry to say this, but | textbook | 重すぎて深刻な話に聞こえる
+✓ Not to be annoying, but | 同じ意味、少しストレート
+? that guy ＝「みんなが嫌がるタイプの人」（細かい・空気読まない人）。自分で先にネタにすることで、細かい指摘でも角が立たない。女性なら Not to be that girl, but も使う。
+! 言ったあとに結局その「細かい指摘」をするのがお約束。ちょっと笑いが起きるくらいの軽いフレーズ。
+
+# I'm not complaining, but
+@ talk | work, friends, food | real | funny, chill | 2
+= 文句じゃないんだけど
+: Softens a complaint, often with humor.
+A: I'm not complaining, but this is the third time we've had curry this week.
+B: You love curry.
+A: I do. I'm just saying.
+- I'm not complaining, but the AC has been off for an hour.
+✗ I have a complaint. | textbook | クレームっぽく重い
+✓ Not to complain, but | 同じ意味
+? 「文句じゃないけど」と言いながら、だいたい文句を言うのがお約束。軽い不満をユーモアで伝えるクッション。本気のクレームには使わない。
+
+# Don't take this the wrong way, but
+@ talk | friends, work, conflict | real | warm, worksafe | 3
+= 悪く取らないでほしいんだけど
+: Asks someone not to feel hurt by what comes next.
+A: Don't take this the wrong way, but you seem really tired lately.
+B: Yeah. The night shifts are catching up with me.
+A: Maybe take a day off?
+✗ Please understand my true meaning. | textbook | 意味が伝わらず重い
+✓ I say this with love, but | 親しい相手への冗談まじりの言い方
+? the wrong way ＝「悪い意味で」。相手を心配しての指摘や、言いにくいフィードバックの前置き。No offense よりずっと丁寧で、仕事でも使える。
+
+# With all due respect,
+@ talk | work, conflict, business | real | cold, worksafe | 2
+= お言葉ですが
+: A formal cushion before disagreeing, which often sounds sharp.
+A: We should just copy what the competition is doing.
+B: With all due respect, that's how we got into this mess.
+- With all due respect, you haven't seen the numbers.
+✗ With all due respect, you're an idiot. | cringe | ドラマでよくあるギャグ。リアルで言うと大惨事
+✓ I see it a little differently. | 本当にやわらかく反対したいとき
+? 直訳は「十分な敬意を払った上で」。でも実際は「これから反論します」の合図で、かなりトゲがある。日本語の「お言葉ですが」とほぼ同じ温度感。
+! 上司に使うと「喧嘩売ってる」と受け取られることも。やわらかくしたいなら I might be wrong, but の方が無難。
+
+# I hate to say it, but
+@ talk | friends, work, feelings | real | deep, warm | 3
+= 言いにくいんだけど
+: Introduces bad news or an uncomfortable truth.
+A: Do you think the band will get back together?
+B: I hate to say it, but I don't think so.
+- I hate to say it, but he might be right.
+- I hate to say it, but we need to raise our prices.
+✗ It is sad, but | textbook | 気持ちは伝わるが不自然
+✓ I hate to break it to you, but | 相手にとって悪いニュースを伝えるとき
+? 「本当は言いたくないんだけど」と前置きして、悪いニュースや認めたくない事実をやわらげる。I hate to admit it, but（認めたくないけど）も同じ仲間。
+
+# I don't want to overstep, but
+@ talk | work, friends, business | real | warm, worksafe | 2
+= 出しゃばるつもりはないんだけど
+: Used before giving advice that isn't really your place to give.
+A: I don't want to overstep, but have you talked to a lawyer about the contract?
+B: Not yet. Should I?
+A: Honestly, yeah.
+✗ I'm sorry for being rude, but | textbook | 失礼と決めつけて謝ってしまう
+✓ Feel free to ignore me, but | もっとカジュアル
+? overstep ＝「（立場の）線を越える」。頼まれてないアドバイスや、人の家庭・お金の話に口を出すときの丁寧なクッション。後輩から先輩にも使える。
+
+# This might be a dumb question, but
+@ talk | work, study, business | real | warm, worksafe | 3
+= バカな質問かもしれないけど
+: Makes it easier to ask a basic question.
+A: This might be a dumb question, but what does "net thirty" mean?
+B: Not dumb at all. It means they pay within thirty days.
+- This might be a dumb question, but why is the bass so quiet?
+✗ Sorry, my question is stupid. | textbook | 自分を下げすぎて相手が困る
+✓ Quick question, probably a dumb one. | もっと軽い言い方
+? 質問のハードルを下げる定番。言われた側は Not dumb at all. / There are no dumb questions. と返すのがお約束。学習者が使うと聞き返しやすくなって会話がラクになる。
+! 日本人は謝りすぎがち。sorry より this might be a dumb question の方が前向きに聞こえる。
+
+# If you don't mind me asking,
+@ talk | friends, business, pickup | real | warm, worksafe | 3
+= もし差し支えなければ（聞いてもいい？）
+: Softens a personal or sensitive question.
+A: If you don't mind me asking, how much did the mic cost?
+B: Around six hundred bucks. Worth every penny.
+- What do you do for work, if you don't mind me asking?
+✗ Can I ask a private question? | textbook | 身構えさせてしまう
+✓ If that's not too personal, | 年齢や恋愛の話のとき
+? 値段・年齢・仕事・恋愛など、ちょっと踏み込んだ質問の前後に付ける。文の最後に付けても自然。mind me asking と me が入るのが口語。
+! アメリカでも給料や家賃を直接聞くのはややデリケート。このクッションがあるだけで印象が全然違う。
+
+# If anything,
+@ talk | friends, work, health | real | chill | 2
+= むしろ
+: Suggests that the opposite is more likely true.
+A: Did you gain weight on your trip?
+B: If anything, I lost weight. I walked everywhere.
+- It's not too spicy. If anything, it needs more heat.
+- If anything, the break made my voice stronger.
+✗ Rather, I lost weight. | textbook | Rather 単独で文頭は硬い
+✓ Actually, I lost weight. | よりシンプル
+? 相手の予想を「むしろ逆」とやんわり訂正する言い方。いきなり No から入らないので角が立たない。「どちらかと言えば」の感覚でも使える。
+
+# It's not that..., it's just that
+@ talk | crush, friends, conflict | real | deep, warm | 3
+= 〜ってわけじゃなくて、ただ〜なだけ
+: Rejects a harsh reason and gives the real, softer one.
+A: You don't like my cooking?
+B: It's not that I don't like it, it's just that I'm full.
+- It's not that I'm mad. It's just that you didn't call.
+- It's not that the song's bad, it's just that it's too long.
+✗ I don't dislike it, but | textbook | 二重否定で分かりにくい
+✓ It's not so much the price as the timing. | ちょっと上級の同じ型
+? 相手が想像している「キツい理由」を先に否定してから、本当の理由を出す型。気持ちを説明するときの超定番。It's not that のあとは文（I don't like it など）が来る。
+
+# I'd lean toward
+@ talk | work, business, shopping | real | worksafe, chill | 3
+= どちらかと言えば〜かな
+: Gives a preference without sounding too strong.
+A: Black or white for the merch?
+B: I'd lean toward black. It sells better at shows.
+- If it were up to me, I'd lean toward the cheaper plan.
+- I'd lean toward waiting until spring.
+✗ I prefer black strongly. | textbook | 語順も強さも不自然
+✓ I'm leaning toward | 今まさに迷い中のとき
+? lean ＝「傾く」。決定ではなく「気持ちが傾いてる」なので、相手が反対しやすい余地を残せる。toward のあとは名詞か -ing。
+
+# Ideally,
+@ talk | work, business, money | real | worksafe | 3
+= 理想を言えば
+: Says what you want while admitting it might not happen.
+A: When do you need the mix?
+B: Ideally, by Friday. But Monday works too.
+- Ideally, we'd split the rent three ways.
+- Ideally, I'd sleep eight hours. Realistically, five.
+✗ My hope is Friday. | textbook | 直訳っぽく不自然
+✓ If possible, | 少しフォーマル
+? 希望を伝えつつ「無理なら大丈夫」というニュアンスを残せる。Ideally, ... But ... の流れで、妥協案もセットで言うとスマート。Realistically,（現実的には）と対で使うと笑いも取れる。
+
+# If it's not too much trouble,
+@ talk | business, cafe, travel | real | warm, worksafe | 2
+= もしご面倒でなければ
+: A polite cushion before asking for a small favor.
+A: If it's not too much trouble, could I get the dressing on the side?
+B: No trouble at all.
+- If it's not too much trouble, could you send the invoice again?
+- Could you take a picture of us, if it's not too much trouble?
+✗ If possible, please do this for me. | textbook | 命令っぽく聞こえる
+✓ Would you mind... | 同じくらい丁寧な定番
+? お店・お客さん・目上の人へのお願いに使える丁寧なクッション。返事は No trouble at all.（全然いいですよ）が決まり文句。友達同士だと少し丁寧すぎる。
+
+# Any chance you could
+@ talk | work, friends, dm | real | warm, chill | 3
+= 〜してもらえたりする？
+: A casual, polite way to ask for a favor.
+A: Any chance you could send me the stems tonight?
+B: Tonight's tough. Tomorrow morning?
+A: Works for me.
+- Any chance you could pick up milk on the way home?
+✗ Can you do it? | textbook | 直球すぎて命令っぽい
+✓ Is there any way you could | 少し丁寧、無理を承知で
+? 「可能性ある？」と聞く形なので、相手が断りやすい。Could you だけより軽くて、DM や同僚へのお願いにぴったり。
+
+# I was kind of hoping
+@ talk | crush, work, friends | real | warm | 2
+= 実はちょっと〜したいなと思ってて
+: A gentle way to say what you want.
+A: Where do you want to eat?
+B: I was kind of hoping we could try that new ramen place.
+- I was kind of hoping to leave early today.
+- Honestly, I was kind of hoping you'd ask.
+✗ I want to try ramen. | textbook | 間違いではないが強く聞こえる
+✓ I was wondering if we could | 少し丁寧
+? 過去進行形 was hoping にすると「今そう思ってる」より控えめになる、英語の丁寧テクニック。kind of でさらにやわらげる。I was wondering if も同じ仕組み。
+
+# Would it be crazy if
+@ talk | work, friends, music | real | chill, funny | 2
+= 〜したらおかしいかな？
+: Suggests a bold idea in a soft, testing way.
+A: Would it be crazy if we dropped the single next week?
+B: Next week? That's fast. But not crazy.
+- Would it be crazy if I quit my day job?
+- Would it be crazy if we just ordered pizza?
+✗ I have a crazy idea. Please listen. | textbook | 前置きが重い
+✓ Would it be weird if | 「変かな？」もう少し軽い
+? 大胆な提案を「変かな？」と相手に判断を委ねる形で出す。断られてもダメージが小さい。Is it crazy if...? も同じ使い方。
+
+# Just so you know,
+@ talk | work, friends, dm | real | warm, worksafe | 3
+= 一応言っておくと
+: Shares useful information in a friendly, low-key way.
+A: Just so you know, the boss is in a mood today.
+B: Thanks for the warning.
+- Just so you know, I'll be ten minutes late.
+- Just so you know, the card machine's broken. Cash only.
+✗ Please be informed that | textbook | 業務メールのような硬さ
+✓ FYI, | チャットやメールでの略し方
+? 相手が知っておくと助かる情報を、軽く前置きして伝える。命令や注意っぽくならないのがポイント。ただし強めの口調で言うと「言っとくけどね」という警告にもなる。
+
+# No worries if not.
+@ talk | dm, friends, work | real | warm, chill | 3
+= 無理なら全然大丈夫！
+: Added after a request so saying no feels easy.
+A: Any chance you have a spare cable? No worries if not.
+B: I do, actually. Here.
+- Can you cover my shift Friday? No worries if not!
+- Want to grab lunch? No worries if not.
+✗ If you can't, it's okay. | textbook | 間違いじゃないけど少し硬い
+✓ All good if not. | よりカジュアル
+? お願いのあとに付けると、相手の断る負担がぐっと減る。チャットや DM で特によく使う。この一言があるかどうかで印象がかなり変わる。
+
+# For what it's worth,
+@ talk | friends, feelings, work | real | warm, deep | 3
+= 参考になるか分からないけど／一応言っておくと
+: Offers an opinion or comfort modestly.
+A: I bombed the audition.
+B: For what it's worth, I thought you sounded great.
+A: Thanks. That actually helps.
+- For what it's worth, I'd take the job.
+✗ My opinion is not important, but | textbook | 自分を下げすぎ
+✓ If it helps, | 励ますときのシンプル版
+? 直訳は「価値があるかは分からないけど」。自分の意見を控えめに差し出す言い方で、励ましにもアドバイスにも使える。文末に付けてもOK。チャットの略語は FWIW。
+
+# Is it just me, or
+@ talk | friends, daily, work | real | funny, chill | 3
+= 気のせいかもだけど／私だけ？
+: Shares an opinion while checking if others feel the same.
+A: Is it just me, or is it freezing in here?
+B: It's not just you. The heater's broken.
+- Is it just me, or is this song everywhere lately?
+- Is it just me, or did the coffee get worse?
+✗ I feel it is cold. Do you feel the same? | textbook | 説明的すぎる
+✓ Am I the only one who | 少しだけ強い言い方
+? or のあとに疑問文の続きが来る（Is it just me, or is it cold?）。意見を「自分だけかも」とぼかしつつ、相手の同意を取りにいける便利な型。返しは It's not just you.
+
+# Just putting it out there.
+@ talk | friends, work, crush | real | chill, funny | 2
+= 一応言ってみただけ
+: Shares an idea without pushing it.
+A: We could always open a second location. Just putting it out there.
+B: Let's survive the first one first.
+- I'm free Saturday. Just putting it out there.
+✗ This is only my idea. | textbook | 意味は通じるが不自然
+✓ Just throwing it out there. | 同じ意味のバリエーション
+? put it out there ＝「場に出しておく」。提案や誘いを押しつけずに置いておく感じ。恋愛でさりげなく誘うときにも使える。
+
+# Just a thought.
+@ talk | work, friends, music | real | chill, worksafe | 3
+= ただの思いつきだけど
+: Signals that your suggestion is optional.
+A: What if we add strings in the last chorus? Just a thought.
+B: Ooh. Let's try it.
+- Just a thought, but maybe ask the landlord first.
+- Just a thought: what if we close on Mondays?
+✗ I have one suggestion. | textbook | 堅くて会議っぽい
+✓ Food for thought. | 「考えるヒントとして」少し知的
+? 提案の前か後に付けて「採用しなくてもいいよ」と伝える。会議でもチャットでもOK。Just a thought, but... と前置きにも使える。
+
+# I'm just saying.
+@ talk | friends, conflict | real | chill, funny | 3
+= いや、言ってみただけ／事実を言ったまでよ
+: Defends a blunt comment as just an observation.
+A: You've been late three times this week. I'm just saying.
+B: Okay, okay. Point taken.
+- That's your third coffee. I'm just saying.
+- She's never texted first. I'm just saying.
+✗ I only told the truth. | textbook | 開き直りに聞こえる
+✓ Just an observation. | もっと冷静な言い方
+? ズバッと言ったあとに付けて「深い意味はないよ」とやわらげる……ふりをする言い方。実際はけっこう言いたいことがあるときに使う。言い方次第で嫌味にもなるので注意。
+
+# if that makes sense
+@ talk | work, study, feelings | real | warm, worksafe | 3
+= （伝わってるかな？）って感じなんだけど
+: Added at the end to soften what you said and check you were understood.
+A: I like him, but not like that, if that makes sense.
+B: Totally makes sense.
+- I want it to sound raw, but not messy, if that makes sense.
+- I'm happy, but also kind of scared, if that makes sense.
+✗ Do you understand? | textbook | 上から目線に聞こえる
+✓ ...if you know what I mean. | 同じくらい自然
+? 説明しにくい気持ちやイメージを言ったあとに付けるクッション。相手を試す Do you understand? と違い、「自分の説明で伝わったかな」というニュアンス。使いすぎると自信なさげに聞こえるので、1回の会話で1〜2回まで。
+
+# a little on the pricey side
+@ talk | shopping, food, money | real | worksafe, chill | 2
+= ちょっとお高め
+: A soft way to say something is too expensive.
+A: How was the new sushi place?
+B: Good, but a little on the pricey side.
+- The jacket's nice, but it's a little on the pricey side.
+- The soup was a little on the salty side.
+✗ It's too expensive. | textbook | 間違いじゃないけどストレート
+✓ a bit out of my budget | 自分の予算の話にずらす言い方
+? on the ___ side ＝「〜寄り」。too ___ と言うより遠回しで上品。pricey 以外にも on the small side（小さめ）、on the quiet side（おとなしめ）など何でも入る。
+
+# not exactly
+@ talk | friends, money, daily | real | funny, chill | 3
+= 全然〜じゃない（皮肉な控えめ表現）
+: An understatement that really means "not at all."
+A: Is the new gym close to your place?
+B: Not exactly. It's forty minutes by train.
+- It's not exactly cheap.
+- He's not exactly a morning person.
+✗ It is very expensive. | textbook | 正しいけど面白みゼロ
+✓ It's not the cheapest. | 同じ控えめ表現
+? 「ちょっと違う」ではなく、実際は「全然違う」をやわらかく、皮肉っぽく言う表現。It's not exactly cheap. ＝「かなり高い」。ネイティブが大好きな控えめ表現（understatement）の代表。
+
+# That's not ideal.
+@ talk | work, travel, daily | real | worksafe, funny | 3
+= それはあんまり良くないね（＝かなりマズい）
+: A calm, understated way to say something is bad.
+A: The client wants the files by tomorrow morning.
+B: Tomorrow? That's not ideal.
+- My train got canceled and my phone's at two percent. Not ideal.
+- That's not ideal, but we'll figure it out.
+✗ That's a big problem! | textbook | 焦りが伝わりすぎる
+✓ Not great. | もっと短い言い方
+? 実際はかなり困っている状況を、冷静に控えめに言う大人の言い方。職場で慌てずに問題を共有するのに便利。大惨事にわざと使うと笑いになる。
+
+# I'm not a huge fan of
+@ talk | food, music, friends | real | warm, chill | 3
+= 〜はあんまり得意じゃない
+: A soft way to say you don't like something.
+A: Want some natto?
+B: I'm not a huge fan of natto, honestly.
+- I'm not a huge fan of crowds.
+- I'm not a huge fan of how he talks to the staff.
+✗ I hate natto. | textbook | 強すぎて相手が引く
+✓ It isn't really for me. | 「自分向きじゃない」
+? I don't like より遠回しで、相手の好きなものを否定せずに済む。huge を big に変えても同じ。人の態度ややり方への不満をやわらかく言うときにも使える。
+
+# It's a little rough around the edges.
+@ talk | music, work, business | real | warm, worksafe | 2
+= まだ荒削りだけど
+: Says something has potential but isn't polished yet.
+A: What do you think of the demo?
+B: I love it. It's a little rough around the edges, but the hook is there.
+- The app's a little rough around the edges, but it works.
+- He's rough around the edges, but he's a good guy.
+✗ It has many mistakes. | textbook | ダメ出しにしか聞こえない
+✓ It just needs some polish. | 「仕上げが足りないだけ」
+? rough around the edges ＝「端がまだ荒い」＝基本は良いけど完成度が足りない。人に使うと「ぶっきらぼうだけど根はいい」。フィードバックで褒めと指摘を同時にできる。
+
+# That's one way to do it.
+@ talk | friends, work, food | real | funny, cold | 2
+= そういうやり方もあるね（遠回しなツッコミ）
+: A polite or sarcastic way to say someone's method is strange.
+A: I put ketchup in my curry.
+B: Huh. That's one way to do it.
+- You fixed the leak with tape? That's one way to do it.
+- That's one way to do it, but there's an easier way.
+✗ Your way is wrong. | textbook | 直球すぎる
+✓ Interesting choice. | 同じく皮肉っぽい言い方
+? 字面は「それも一つのやり方だね」でも、実際は「変わったやり方だな」という遠回しなツッコミ。言い方次第で褒め言葉にも皮肉にもなる。
+
+# It might be worth
+@ talk | work, business, health | real | worksafe, warm | 3
+= 〜してみる価値はあるかも
+: A soft way to suggest something.
+A: My shoulder still hurts when I bench.
+B: It might be worth seeing a physical therapist.
+- It might be worth asking the landlord first.
+- It might be worth double-checking the numbers.
+✗ You should go to the hospital. | textbook | 命令っぽく聞こえることがある
+✓ Might be worth a shot. | もっとカジュアル
+? worth のあとは -ing（worth asking）。You should より押しつけが弱く、目上の人やお客さんへの提案にも使える。
+
+# Have you thought about
+@ talk | work, friends, business | real | warm, worksafe | 3
+= 〜って考えてみた？
+: Suggests an idea as a question instead of advice.
+A: I can't get more views on my streams.
+B: Have you thought about streaming at a different time?
+- Have you thought about raising your prices?
+- Have you thought about just asking her?
+✗ You must change your time. | textbook | must は命令・強制に近い
+✓ Have you considered | 少し丁寧、仕事向け
+? アドバイスを質問の形にするだけで、相手のプライドを傷つけない。相手が自分で決めた感じになるので受け入れられやすい。about のあとは -ing か名詞。
+
+# to some extent
+@ talk | work, study, friends | real | worksafe | 2
+= ある程度は
+: Agrees partly, but not completely.
+A: Is talent more important than practice?
+B: To some extent. But practice wins in the long run.
+- I agree with you to some extent.
+- To some extent, we're all faking it.
+✗ I agree with you a little. | textbook | 意味は通じるけど幼い
+✓ to a certain extent | 同じ意味、少しフォーマル
+? extent ＝「程度・範囲」。完全に同意も否定もしないときの便利なヘッジ。I agree to some extent, but... で「部分的には賛成だけど」とやんわり反論できる。
+
+# for the most part
+@ talk | work, daily, travel | real | chill, worksafe | 3
+= だいたいは／ほとんどは
+: Says something is mostly true, with some exceptions.
+A: How was the trip?
+B: Great, for the most part. Except the flight.
+- For the most part, the customers are really nice.
+- The new system works, for the most part.
+✗ Almost all is good. | textbook | 文法的に不自然
+✓ mostly | 一語で言うならこれ
+? 100%とは言い切らずに「基本的には」とぼかすヘッジ。文頭でも文末でもOK。例外があることを匂わせられるので、話が広がりやすい。
+
+# I'd rather not.
+@ talk | friends, work, crush | real | warm, chill | 3
+= できれば遠慮したい
+: A polite but clear way to say no.
+A: Want to sing first?
+B: I'd rather not. Let me warm up with a drink.
+- I'd rather not talk about it right now.
+- I'd rather not post that photo, if that's okay.
+✗ I don't want. | textbook | 目的語がなく不完全で、幼く聞こえる
+✓ I'd prefer not to. | 少しだけ丁寧
+? I'd rather not ＝ I would rather not。「どちらかと言えばしたくない」で、No より柔らかいけど意思ははっきり伝わる。後ろに動詞の原形を続けられる（I'd rather not say.）。
+
+# It's not for everyone.
+@ talk | food, music, shopping | real | warm, chill | 3
+= 好みが分かれるかも
+: A gentle way to say something isn't great, or is an acquired taste.
+A: How's the black garlic ice cream?
+B: It's... not for everyone.
+- The new album is pretty experimental. It's not for everyone.
+- Living above a bar isn't for everyone.
+✗ Many people will hate it. | textbook | ストレートすぎる
+✓ It's an acquired taste. | 「慣れるとハマる味」
+? 自分が嫌いとは言わずに「人を選ぶ」とぼかす言い方。相手が好きなものに使えば否定にならないし、自分が微妙だと思ったものにも使える便利な表現。
+
+# That's not really my thing.
+@ talk | friends, pickup, music | real | chill | 3
+= あんまり自分向きじゃないんだよね
+: A soft way to say you're not into something.
+A: Do you want to come to the club tonight?
+B: Clubs aren't really my thing. But I'm down for a bar.
+- Golf? That's not really my thing.
+- Horror movies aren't really my thing.
+✗ I am not interested in it. | textbook | 突き放した感じ
+✓ I'm more of a bar person. | 代わりに好きなものを言う
+? my thing ＝「自分の好きなもの・得意分野」。相手の趣味を否定せず、自分の好みの話にするのがポイント。断ったあとに代案（But I'm down for...）を出すとさらに感じがいい。
+
+# Let's just say
+@ talk | friends, crush, work | real | funny, chill | 3
+= まあ、〜とだけ言っておこう
+: Hints at something without giving all the details.
+A: How was the blind date?
+B: Let's just say I was home by eight.
+- Let's just say the client wasn't thrilled.
+- Let's just say I won't be drinking tequila again.
+✗ I don't want to explain the details. | textbook | 説明的すぎる
+✓ I'll spare you the details. | 「詳細は省くね」
+? 全部言わずに結果だけ匂わせる言い方。気まずい話や失敗談をユーモアでぼかすときにぴったり。聞き手は察して笑う。
+
+# I won't sugarcoat it.
+@ talk | work, friends, business | real | deep, worksafe | 2
+= はっきり言うね／オブラートに包まずに言うと
+: Warns that you're about to be direct.
+A: How bad is the damage?
+B: I won't sugarcoat it. The repair costs more than the car.
+- I'm not gonna sugarcoat it. Sales were bad this month.
+- Don't sugarcoat it. Just tell me.
+✗ I will speak frankly to you. | textbook | ドラマの台詞みたいに硬い
+✓ I'll be straight with you. | 同じ意味、よく使う
+? sugarcoat ＝「砂糖でコーティングする」＝悪い話を甘く包む。それをしないと先に宣言することで、相手が心の準備をできる。Don't sugarcoat it.（遠回しにしないで）と頼むこともできる。
+! やわらかく言う技術とセットで覚えたい「はっきり言う」の合図。場面を選べば、むしろ信頼される。

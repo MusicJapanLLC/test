@@ -1,0 +1,483 @@
+//! Storytelling | Tell a story people actually listen to | levelup
+
+# So get this.
+@ talk | friends, work, daily | real | funny, chill | 3
+= ちょっと聞いてよ（すごい話があって）
+: Grabs attention before a surprising story.
+A: So get this. My landlord wants to raise the rent and paint my door pink.
+B: Pink? Why?
+A: Nobody knows.
+- So get this: the client paid early.
+✗ Please listen to my story. | textbook | 丁寧すぎて逆に退屈そう
+✓ Get this. | So を省いた短い版
+? get this ＝「これ、分かる？／聞いて」。驚く話や信じられない話の前に付けて、相手の注意を一気に引く。チャットでは Get this: のようにコロンで本題につなぐ。
+
+# You're not gonna believe this.
+@ talk | friends, dm, work | real | funny, warm | 3
+= 信じられない話なんだけど
+: Builds excitement before big news.
+A: You're not gonna believe this.
+B: What? Tell me.
+A: The label wants to sign us.
+- You're not gonna believe who I just ran into.
+✗ This is an unbelievable story. | textbook | 説明的で盛り上がらない
+✓ You'll never guess what happened. | 同じ温度感
+? 話の前に相手の期待を上げる定番の振り。who / what / where を続けて You're not gonna believe who I saw. のようにも使える。声のテンションを上げるのがコツ。
+
+# Guess what?
+@ talk | friends, crush, dm | real | warm, funny | 3
+= ねえ聞いて！／なんだと思う？
+: Opens a conversation with exciting news.
+A: Guess what?
+B: What?
+A: I passed the interview!
+- Guess what? I finally finished the album.
+✗ Please guess. | textbook | クイズみたいで不自然
+✓ Guess who I saw today? | 人の話のとき
+? 本当に当ててほしいわけではなく、「ニュースがあるよ」の合図。返しは What? が定番。Guess what I found / Guess who called のように後ろに続けることもできる。
+! 子どもっぽいかなと思うかもしれないけど、大人も普通に使う。嬉しいニュースのときにぴったり。
+
+# Did I ever tell you about
+@ talk | friends, bar, crush | real | warm, chill | 3
+= 〜の話ってしたっけ？
+: Opens a story you might have told before.
+A: Did I ever tell you about the time I got locked out in Seoul?
+B: No! What happened?
+- Did I ever tell you about my first gig?
+- Stop me if I've told you this before.
+✗ I will tell you a story. | textbook | 先生の朗読みたい
+✓ Have I told you about | ほぼ同じ意味
+? 話を始める自然な入り方。the time I 〜（〜したときのこと）とセットで使うことが多い。前に話したかも、というときは Stop me if I've told you this before. と付けると親切。
+
+# This one time,
+@ talk | friends, bar, travel | real | funny, chill | 3
+= 前にさ、こんなことがあって
+: Starts a story about a specific past event.
+A: This one time, I fell asleep on the last train and woke up in Nara.
+B: No way. What did you do?
+A: Walked around with the deer until morning.
+- This one time, a customer paid for a latte in ten-yen coins.
+✗ One day in the past, | textbook | 童話っぽい
+✓ One time, | this なしでも同じ
+? 過去のエピソードを話し始めるときの一番カジュアルな言い方。Once upon a time は昔話専用なので、普通の会話では使わない。
+
+# So what happened was
+@ talk | friends, work, conflict | real | chill | 3
+= えっとね、何があったかっていうと
+: Starts explaining a situation from the beginning.
+A: Why are you two not talking?
+B: So what happened was, he borrowed my amp and never gave it back.
+- So what happened was, the train stopped for an hour.
+- Okay, so what happened was, I forgot the password.
+✗ The thing that happened is this. | textbook | 不自然に硬い
+✓ So basically, | もっとざっくり説明するとき
+? 経緯や言い訳を説明するときの入り方。文法的には what happened was 〜 で「起きたことは〜」。ネイティブは was のあとに少し間を置いてから話す。
+
+# Picture this:
+@ talk | friends, business, music | real | funny, warm | 2
+= 想像してみて：
+: Asks the listener to imagine a scene.
+A: Picture this: rooftop show, sunset, the whole city behind you.
+B: Okay, I'm in.
+- Picture this: me, in a suit, at the gym.
+- Picture this: you wake up, and the coffee's already made.
+✗ Please imagine this situation. | textbook | 説明会みたい
+✓ Imagine this: | 同じ意味
+? 聞き手の頭に映像を作らせる語り出し。話を盛り上げたり、提案を魅力的に見せたりするのに使える。名詞を並べるだけ（rooftop, sunset...）でも成立するのがポイント。
+
+# So there I was,
+@ talk | friends, bar, travel | real | funny | 2
+= で、気づけばこんな状況でさ
+: Sets the scene at the key moment of a story.
+A: So there I was, on stage, and my guitar strap snaps.
+B: Oh no.
+A: Right in the middle of the solo.
+- So there I was, locked out, in my pajamas, at three in the morning.
+✗ At that time I was there. | textbook | 意味がぼやける
+✓ And there I am, | 現在形でさらに臨場感
+? 物語の山場の直前に「その場面」へ聞き手を連れていく言い方。続く文を現在形（my strap snaps）にすると、まるで今起きているような臨場感が出る。英語の語りでよく使うテクニック。
+
+# All of a sudden,
+@ talk | friends, daily, travel | real | chill | 3
+= 突然、
+: Says something happened very suddenly.
+A: We were just eating, and all of a sudden, the lights went out.
+B: An earthquake?
+A: No, the owner forgot to pay the bill.
+- All of a sudden, everyone started clapping.
+✗ Suddenly, | textbook | 間違いではないけど書き言葉っぽい
+✓ Out of nowhere, | 「どこからともなく」
+? suddenly は文章っぽく、会話では all of a sudden の方がよく聞く。話のリズムを作るために、直前で少し間を置くと効果的。
+
+# Out of nowhere,
+@ talk | friends, travel, crush | real | chill, funny | 3
+= どこからともなく／いきなり
+: Says something appeared or happened unexpectedly.
+A: Out of nowhere, this guy walks up and asks if I'm the singer.
+B: Were you?
+A: No. I was just buying coffee.
+- Out of nowhere, she texted me after two years.
+- This cat came out of nowhere and sat on my keyboard.
+✗ From no place, | textbook | 直訳で意味不明
+✓ Out of the blue, | 連絡や発言が「突然」のとき
+? 予想外の人・物・出来事が急に現れたときに使う。came out of nowhere の形でもよく使う。out of the blue は特に「連絡や話が突然」に使うことが多い。
+
+# Next thing I know,
+@ talk | friends, bar, travel | real | funny | 3
+= 気づいたら〜してた
+: Jumps to a surprising result in a story.
+A: I said yes to one drink. Next thing I know, it's 5 a.m. and I'm singing at karaoke.
+B: Classic.
+- I closed my eyes for a second. Next thing I know, we're in Kyoto.
+- Next thing I know, I'm signing a two-year contract.
+✗ After that, suddenly I found that | textbook | 長くて話がもたつく
+✓ Next thing you know, | 一般論や予測にも使う
+? 途中経過をすっ飛ばして「気づいたらこうなってた」と展開を早める言い方。後ろは現在形（it's 5 a.m.）にするとテンポが良くなる。
+
+# Before I knew it,
+@ talk | friends, work, feelings | real | warm, deep | 3
+= 気づけば／あっという間に
+: Says time passed or something happened very quickly.
+A: How long did you live in New York?
+B: I went for three months, and before I knew it, it was five years.
+- Before I knew it, the whole bag of chips was gone.
+- Before I knew it, I was crying in the car.
+✗ I didn't notice, and | textbook | 意味がずれる
+✓ In no time, | 「あっという間に」
+? 時間の速さや、自分でも気づかないうちに何かが起きたことを表す。Next thing I know より少し落ち着いた語り口で、しんみりした話にも使える。
+
+# And that's when
+@ talk | friends, crush, work | real | deep, funny | 3
+= で、その時だよ
+: Marks the turning point of a story.
+A: We were packing up after the show. And that's when I saw her.
+B: Who?
+A: The producer from the label.
+- And that's when I realized I left my passport at home.
+✗ At that timing, | textbook | timing の誤用（和製英語的）
+✓ That's when it hit me. | 「その時気づいた」
+? 話の山場・転換点を示す合図。that's when のあとに出来事や気づき（I realized / it hit me）が来る。声を少し落として間を置くと効果的。
+
+# Little did I know,
+@ talk | friends, crush, work | real | funny, deep | 2
+= その時の俺はまだ知らなかった
+: Hints that something unexpected was coming.
+A: I thought it was just a normal shift. Little did I know, the owner was selling the place.
+B: That night?
+A: That night.
+- Little did I know, she was the boss's daughter.
+✗ I didn't know at that time. | textbook | ドラマ性ゼロ
+✓ What I didn't know was | 少し普通の語り
+? 主語と動詞がひっくり返る倒置（did I know）で、物語っぽいドラマチックな雰囲気になる。わざと大げさに使ってユーモアにするのが今っぽい使い方。
+
+# Turns out,
+@ talk | friends, work, daily | real | chill | 3
+= 結局〜だったんだよね
+: Reveals what was actually true in the end.
+A: Did you find your wallet?
+B: Yeah. Turns out, it was in the fridge.
+- Turns out, the "free" trial wasn't free.
+- Turns out she's a producer too.
+✗ The result was that | textbook | 報告書っぽい
+✓ It turns out that | 少しきちんとした形
+? It turns out の It を省いた口語。予想と違う「真相」を明かすときに使う。話のオチや意外な事実にぴったり。
+
+# Sure enough,
+@ talk | friends, work, daily | real | chill, funny | 2
+= 案の定
+: Says something happened just as expected.
+A: I had a feeling the train would be late. Sure enough, forty minutes.
+B: Of course it was.
+- I said it would rain. Sure enough, it poured.
+- Sure enough, the printer jammed again.
+✗ As I expected, | textbook | 通じるけど硬い
+✓ Of course, | 皮肉っぽく言うとき
+? 「予想通り」「思った通り」。悪い予感が当たったときによく使う。日本語の「案の定」とかなり近い。
+
+# As luck would have it,
+@ talk | friends, travel, business | real | warm, funny | 2
+= 運よく（運悪く）、たまたま
+: Says something happened by chance, good or bad.
+A: I missed the last train, but as luck would have it, my coworker lives nearby.
+B: Lucky you.
+- As luck would have it, the guy next to me was a sound engineer.
+- As luck would have it, it rained on our one day off.
+✗ By good fortune, | textbook | 古めかしい
+✓ Luckily, | シンプルに幸運なとき
+? 「運命のいたずらで」という語り口。良い偶然にも悪い偶然にも使える。少し文学的な響きがあるので、話を盛り上げたいときに。
+
+# Just my luck.
+@ talk | friends, daily, shopping | real | funny, cold | 3
+= ついてないなあ（いつもこうだ）
+: A sarcastic comment about your own bad luck.
+A: Did you get the limited sneakers?
+B: Sold out five minutes before I got there. Just my luck.
+- It started raining the second I left. Just my luck.
+- Just my luck. The only seat left was next to the speaker.
+✗ I am very unlucky. | textbook | 重く聞こえる
+✓ Of course. | 皮肉な一言で同じ意味
+? 字面は「まさに私の運」だけど、意味は「ほらね、いつもツイてない」という自虐。軽い不運にぼやくときの定番。
+
+# Of all people,
+@ talk | friends, work, crush | real | funny | 2
+= よりによって
+: Stresses that someone was the most unexpected person.
+A: Guess who walked into the cafe? My ex. Of all people.
+B: No way.
+- And of all people, my boss sat next to me at the concert.
+- Of all places, we ran into each other at the dentist.
+✗ Especially him, | textbook | 意味がずれる
+✓ of all places | 場所でも同じ型
+? 「数ある中でよりによって」。意外すぎる人・場所・タイミングを強調する。of all places（よりによってあの場所で）、of all days（よりによってその日に）とアレンジできる。
+
+# For some reason,
+@ talk | friends, daily, work | real | chill, funny | 3
+= なぜか
+: Says you don't know why something happened.
+A: For some reason, my phone only gets signal in the bathroom.
+B: That's not normal.
+- For some reason, everyone at the gym knows my name.
+- He was weirdly nice to me today, for some reason.
+✗ I don't know why, but | textbook | 間違いではないけど長い
+✓ Weirdly, | 「妙なことに」
+? 理由が分からない出来事を話すときの便利な前置き。「なぜか」をそのまま言える。文末に付けてもOK。
+
+# The thing is,
+@ talk | friends, work, feelings | real | deep, chill | 3
+= 問題はさ／実はね
+: Introduces the real issue or an important explanation.
+A: Why don't you just quit?
+B: The thing is, I need the money until the album's out.
+- The thing is, nobody told me.
+- I'd love to come. The thing is, I'm working that night.
+✗ The problem point is | textbook | 和製英語っぽい
+✓ Here's the thing: | もっと強調したいとき
+? 理由・事情・本題を切り出す合図。言い訳や断りの前にも使える。The thing is のあとに少し間を置くと自然。
+
+# To make matters worse,
+@ talk | friends, travel, work | real | funny, deep | 2
+= さらに悪いことに
+: Adds another bad thing to a story.
+A: My flight was canceled. To make matters worse, my phone died.
+B: Oh no. What did you do?
+- To make matters worse, it was raining.
+- To make matters worse, the client called while I was asleep.
+✗ And more bad thing happened. | textbook | 文法的に崩れている
+✓ On top of that, | 「その上」少しカジュアル
+? 不運が重なった話を盛り上げる定番のつなぎ。悪いことを一つずつ積み上げていくと、聞き手は笑ったり同情したりしてくれる。
+
+# It gets worse.
+@ talk | friends, crush, bar | real | funny | 3
+= まだあるんだよ（もっとひどくなる）
+: Teases that the story has an even worse part.
+A: So my date showed up an hour late.
+B: Oof.
+A: It gets worse. She brought her ex.
+- Wait, it gets worse.
+✗ The story continues to be bad. | textbook | 不自然
+✓ And that's not even the worst part. | 同じ予告の長い版
+? 話の途中で「まだ終わらない、もっとひどい」と予告して聞き手を引き込む。返しは No... / Oh no. が定番。
+
+# Here's the kicker:
+@ talk | friends, work, business | real | funny, chill | 2
+= で、極めつけはね
+: Introduces the most surprising or ironic part.
+A: The landlord raised the rent, fixed nothing, and here's the kicker: he wants a thank-you gift.
+B: You're kidding.
+- Here's the kicker: the meeting could have been an email.
+- And here's the kicker. He was the one who called the police.
+✗ The most important point is | textbook | プレゼンっぽい
+✓ And get this: | 同じく驚きを予告する言い方
+? kicker ＝「意外なオチ・とどめ」。話の最後に皮肉や驚きの事実を出すときの前置き。the best part / the worst part のパワーアップ版。
+
+# And the best part?
+@ talk | friends, crush, work | real | funny, warm | 3
+= で、一番いいところは？
+: Builds up to the best detail of a story.
+A: The new apartment is huge. And the best part? It's above a bakery.
+B: Stop. I'm moving in.
+- And the best part? He didn't even charge me.
+- The best part was the look on her face.
+✗ The most good point is | textbook | 文法ミス
+✓ And the worst part? | 悪い話バージョン
+? 自分で質問して自分で答える形で、一番おいしい部分に注目を集める。皮肉で悪い話に使うこともある（And the best part? It's raining.）。
+
+# I kid you not.
+@ talk | friends, bar, cafe | real | funny | 2
+= マジで（冗談じゃなく）
+: Insists that your surprising story is true.
+A: The guy ordered twelve shots of espresso. I kid you not.
+B: In one cup?
+A: In one cup.
+- I kid you not, the line was three hours long.
+✗ This is a true story, not a joke. | textbook | 説明的すぎ
+✓ I'm not even kidding. | もう少し普通の言い方
+? kid ＝「からかう・冗談を言う」。語順が少し古風（I don't kid you ではなく I kid you not）なのが逆に面白みになっている。信じられない話を強調するときに。
+
+# And he goes,
+@ talk | friends, work, bar | real | chill, funny | 3
+= で、そいつがさ〜って言うの
+: Introduces what someone said in a story.
+A: So I ask for a discount, and he goes, "That is the discount."
+B: Ha! Brutal.
+- And she goes, "Wait, you're the DJ?"
+- Then my boss goes, "We need to talk."
+✗ And he said to me that | textbook | 間接話法で臨場感が消える
+✓ And he was like, | もっと若者っぽい言い方
+? 会話で人のセリフを再現するとき、said の代わりに goes（現在形）を使うのが口語の定番。be like と同じく、声やテンションをマネして言うと話が生き生きする。
+
+# Dead silence.
+@ talk | friends, work, music | real | funny | 2
+= シーン…（完全な沈黙）
+: Describes an awkward moment when nobody said anything.
+A: I told my best joke at the wedding.
+B: And?
+A: Dead silence. Just a fork hitting a plate.
+- I asked if anyone had questions. Dead silence.
+✗ Nobody said any word. | textbook | 文法的に不自然
+✓ Crickets. | ネットでよく使う「シーン」
+? dead ＝「完全な」。滑ったジョークや気まずい質問のあとの沈黙を一言で表す。Crickets.（コオロギの鳴き声しか聞こえない）も同じ意味のスラング。
+
+# The last thing I expected
+@ talk | friends, crush, work | real | deep, funny | 2
+= 一番予想してなかったのは
+: Introduces a very unexpected event.
+A: The last thing I expected was a hug from the angry customer.
+B: Wait, why?
+A: Turns out he was just having a bad day.
+- Honestly, that was the last thing I expected.
+✗ I didn't expect it at all. | textbook | 間違いではないが語りとして弱い
+✓ I did not see that coming. | 「まったく予想外」
+? 「一番予想してなかったこと」＝全く予想外。物語の意外な展開を強調できる。The last thing I expected was 〜 の形でよく使う。
+
+# Fast-forward to
+@ talk | friends, work, music | real | chill | 3
+= 時は流れて〜
+: Skips ahead in time in a story.
+A: We met at a jazz bar in Osaka. Fast-forward to now, we're married with a dog.
+B: That's adorable.
+- Fast-forward three years, and I own the cafe.
+- Fast-forward to the end of the night. Nobody can find the car keys.
+✗ After some time passed, | textbook | 説明的
+✓ Cut to | 映像っぽい「場面転換」
+? 動画の早送りのように、途中を飛ばして時間を進める語り方。Fast-forward to 〜 / Fast-forward three years のどちらの形でも使える。話をテンポよくするのに便利。
+
+# Where was I?
+@ talk | friends, work, study | real | chill | 3
+= どこまで話したっけ？
+: Asks where you stopped in your story.
+A: Sorry, go on.
+B: Where was I? Oh, right. The guy with the snake.
+- Okay, where was I?
+- Sorry, I lost my train of thought. Where was I?
+✗ What did I say before? | textbook | 不自然
+✓ Now, where were we? | 会議や授業で中断から戻るとき
+? 話が中断されたあとに自分の話を再開するときのひと言。lose my train of thought（話の流れを見失う）とセットで覚えると便利。
+
+# I'm getting to that.
+@ talk | friends, work | real | chill, funny | 3
+= 今その話するとこ
+: Asks someone to be patient about a part of your story.
+A: Wait, so did you get the job or not?
+B: I'm getting to that! Let me finish.
+- I'm getting to that part.
+- Patience. I'm getting to the good part.
+✗ Please wait, I will say it later. | textbook | 遠回しで硬い
+✓ Hold on, I'm getting there. | 同じ意味
+? せっかちな聞き手に「その話はこれから」と返す言い方。get to 〜 ＝「〜にたどり着く」。笑いながら言うと場が和む。
+
+# Needless to say,
+@ talk | friends, work, travel | real | funny, deep | 2
+= 言うまでもなく
+: Introduces an obvious result.
+A: The band showed up two hours late. Needless to say, the owner wasn't happy.
+B: Did they get paid?
+- Needless to say, I never ate there again.
+- Needless to say, we didn't get the contract.
+✗ Of course I don't need to say, but | textbook | 直訳で冗長
+✓ Obviously, | シンプルな言い方
+? 「言うまでもないけど」と言いつつ結果を言うのがお約束。話のオチをさらっと締めるときに使う。少しドライなユーモアになる。
+
+# Looking back,
+@ talk | feelings, work, friends | real | deep, warm | 3
+= 今振り返ると
+: Reflects on the past with what you know now.
+A: Do you regret quitting your job?
+B: Looking back, it was the best decision I ever made.
+- Looking back, I was way too hard on myself.
+- Looking back, the signs were all there.
+✗ When I see the past, | textbook | 直訳で意味不明
+✓ In hindsight, | 少し知的な言い方
+? 今の視点で過去を振り返るときの前置き。後悔にも感謝にも使える。In hindsight（後から思えば）はもう少し硬めで、仕事の振り返りにも合う。
+
+# Moral of the story:
+@ talk | friends, work, money | real | funny, chill | 2
+= 教訓：
+: Ends a story with a lesson, often a funny one.
+A: And that's how I lost my deposit.
+B: Moral of the story?
+A: Read the contract. Always read the contract.
+- Moral of the story: never trust a free trial.
+✗ The lesson I learned is | textbook | 真面目すぎて硬い
+✓ Lesson learned. | 自分の失敗談の締め
+? 寓話の「この話の教訓は」から来た言い方。自分の失敗談の最後に付けて、笑いに変える締めとして使うのが今っぽい。The moral of the story is 〜 のフル形もある。
+
+# And that was that.
+@ talk | friends, crush, work | real | deep, chill | 2
+= で、それっきり（それで終わり）
+: Ends a story firmly; nothing more happened.
+A: What happened with the band?
+B: The singer moved to LA, and that was that.
+- We had one fight about money, and that was that.
+- She said no, and that was that.
+✗ That is the end of the story. | textbook | 朗読の締めみたい
+✓ End of story. | 「以上、終わり」もっと強い
+? 話の結末を短く言い切る締め。「それ以上は何もなかった」という余韻が出る。少し寂しい話や、あっさり終わった話に合う。
+
+# So yeah.
+@ talk | friends, feelings, crush | real | chill | 3
+= まあ、そんな感じ
+: Signals that your story is over.
+A: And then I missed the last train. So yeah.
+B: Wow. Long night.
+- So yeah, that's why I'm tired.
+- So yeah. That's my week.
+✗ That's all. Thank you for listening. | textbook | スピーチの締め
+✓ Anyway. | 話を終わらせて次へ
+? 話の終わりに付ける「以上です」の超カジュアル版。言いにくい話のあとに使うと、気まずさを流す効果もある。聞き手はここで何か反応するのがマナー。
+
+# It was a whole thing.
+@ talk | friends, conflict, work | real | chill, funny | 3
+= いろいろあって大変だったんだよ
+: Says something was complicated or dramatic, without details.
+A: Why did you move out?
+B: Ugh, it was a whole thing.
+- The wedding was a whole thing. Two families, one microphone.
+- Don't get me started. It was a whole thing.
+✗ It was a very complicated situation. | textbook | 重く聞こえる
+✓ It was a whole saga. | もっと大げさな言い方
+? whole thing ＝「一大事・ちょっとした騒動」。詳しく話したくないけど大変だったことを伝えられる、今っぽい言い方。相手が興味を示したら詳しく話せばいい。
+
+# Don't ask.
+@ talk | friends, work, daily | real | funny, chill | 3
+= 聞かないで（ひどかった）
+: Says something went badly and you don't want to explain.
+A: How was the first day at the new job?
+B: Don't ask.
+- Why is your shirt wet? Don't ask.
+- Don't ask. Just pour me a drink.
+✗ Please don't ask me about it. | textbook | 本気で拒絶してるように聞こえる
+✓ You don't wanna know. | 「知らない方がいいよ」
+? ひどい出来事をユーモアでかわす一言。言われた側が笑って That bad? と返すと、結局話が始まることも多い。
+
+# It's a long story.
+@ talk | friends, crush, work | real | chill, deep | 3
+= 話すと長くなるんだけど
+: Says the explanation would take too long, or you'd rather not explain.
+A: Why are you living at the studio?
+B: It's a long story.
+A: I've got time.
+- It's a long story, but basically we got evicted.
+✗ The explanation is very long. | textbook | 不自然な直訳
+✓ Long story. | さらに短い言い方
+? 説明を避けたいときにも、これから長い話を始めるときにも使える。相手が I've got time.（時間あるよ）と返したら話してOKのサイン。Long story short（手短に言うと）とは別物。

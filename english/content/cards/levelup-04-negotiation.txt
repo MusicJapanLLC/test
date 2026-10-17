@@ -1,0 +1,485 @@
+//! Negotiation & Persuasion | Get to yes without being pushy | levelup
+
+# Is there any wiggle room?
+@ talk | business, money | real | worksafe, chill | 3
+= 少し融通ききますか？（値段・条件の交渉余地）
+: A soft way to ask if a price or term can change.
+A: The rent is sixty-five thousand yen a month.
+B: Is there any wiggle room on that?
+A: I might be able to do sixty-two.
+- Is there any wiggle room on the deadline?
+✗ Please discount. | textbook | 命令形で不躾。値切りっぽさも強すぎる
+✓ Is there any flexibility on the price? | 少しフォーマル。メール向き
+? wiggle room ＝「くねくね動ける余地」。値段だけでなく締切・条件にも使える。疑問文なので相手がNOと言いやすく、押し付けがましくない。
+! 値段交渉はアメリカでは失礼じゃない。家賃、フリーランスの単価、引っ越し業者など、聞くだけならタダ。
+
+# Here's what I can do.
+@ talk | business, money | real | worksafe | 3
+= こうしましょう（こちらの譲歩案を出す）
+: Used to offer a counterproposal or compromise.
+A: Eight hundred for the music video edit is too much for us.
+B: Here's what I can do. Six fifty, and you get two rounds of revisions.
+A: Okay, that works.
+- I can't do the full discount, but here's what I can do.
+✗ I can do discount. | textbook | 冠詞抜け＋何をするのか不明
+✓ How about this? | もっとカジュアルな切り出し
+? 「できません」で終わらず、自分から代案を出すときの合図。会話の主導権を握れる。後ろに具体的な数字・条件を短く続けるのがコツ。
+! NOを言いつつ関係を壊さない、交渉で一番使えるフレーズの一つ。
+
+# That's a non-starter.
+@ talk | business, work | real | worksafe, cold | 2
+= それは論外です／その条件では話にならない
+: Said when a condition is completely unacceptable.
+A: We'd want full rights to your track, forever, for free.
+B: That's a non-starter for me.
+A: Okay, what if we pay a licensing fee?
+- Working weekends unpaid is a non-starter.
+✗ That is impossible absolutely. | textbook | 語順が不自然で、ただ強いだけ
+✓ That's not going to work for me. | もう少し柔らかい言い方
+? non-starter ＝スタートラインにも立てない案。怒らずに「この条件は絶対ダメ」と冷静に線を引ける。ビジネスでよく使う表現。
+! 強い言葉なので、言った後に What else could work? と聞くと交渉が続く。
+
+# Let's split the difference.
+@ talk | business, money | real | worksafe, chill | 2
+= 間を取りましょう
+: To agree on a number halfway between two offers.
+A: I said three hundred, you said two hundred.
+B: Let's split the difference. Two fifty?
+A: Deal.
+- We could split the difference and meet at Shin-Osaka.
+✗ Let's take between. | textbook | 「間を取る」の直訳。通じない
+✓ Meet me halfway? | 同じ意味でよりカジュアル
+? difference ＝二つの数字の差。その差を半分に割る＝真ん中で決着。値段だけでなく、待ち合わせ場所や時間にも使える。
+! 最初に少し高め（安め）に言っておいて、最後にこれを言うのは定番の交渉術。
+
+# What would it take to
+@ talk | business, money | real | worksafe | 3
+= どうすれば〜してもらえますか？
+: Asks what conditions would make the other person agree.
+A: I really want to book you for our launch party.
+B: I'm pretty busy that month.
+A: What would it take to get you there?
+- What would it take to get the rent down a bit?
+✗ Please tell me your condition. | textbook | 硬くて、要求を突きつけてる感じ
+? 相手に条件を言わせる質問。こちらから値下げを提案するより、相手が本当に欲しいものが分かるので有利になる。to のあとは動詞の原形。
+! 営業の現場でも、友達を冗談っぽく誘うときにも使える。
+
+# I'll have to pass.
+@ talk | business, work | real | worksafe | 3
+= 今回は遠慮しておきます
+: A polite, firm way to say no to an offer.
+A: Can you do the full album mix for five hundred?
+B: At that price, I'll have to pass. But thanks for thinking of me.
+- I'll have to pass on this one, but keep me in mind for the next project.
+✗ No, I don't want. | textbook | 目的語抜け＋ぶっきらぼう
+✓ I'm gonna pass. | 少しカジュアル
+? I'll have to ＝「（事情で）〜せざるを得ない」。断る理由を状況のせいにできるので角が立たない。最後に thanks for thinking of me を足すと完璧。
+! 断ってもドアは開けておく、が英語の交渉マナー。
+
+# Let me run it by my partner.
+@ talk | business, work | real | worksafe | 3
+= パートナーに確認させてください
+: Says you need to check with someone before deciding.
+A: So, can we sign today?
+B: Let me run it by my partner first. I'll get back to you tomorrow.
+- I'll run it by my producer and let you know.
+✗ I must ask my boss permission. | textbook | 子どもっぽく、立場も弱く見える
+✓ Let me check with my team. | 同じくらい自然
+? run A by B ＝AをBに見せて意見を聞く。即決を避けたいときの定番の時間稼ぎ。my partner は恋人ではなく「共同経営者」の意味でもよく使う。
+! 言われた側は Of course. When can I expect to hear back? と返すとスムーズ。
+
+# That's my final offer.
+@ talk | business, money | real | worksafe, cold | 2
+= これ以上は出せません（最終提示）
+: Means you won't change your number anymore.
+A: Can you do forty thousand yen?
+B: Thirty-five thousand. That's my final offer.
+A: Okay, okay. You win.
+- Two hundred bucks for the camera and the lens. That's my final offer.
+✗ This is last price. | textbook | 冠詞抜け。the last price でも硬い
+✓ That's the best I can do. | 柔らかい最終提示
+? final offer は本当に最後の時だけ使う。言った後に引くと、次から信用されない。柔らかくしたいなら That's the best I can do.
+! フリマや中古ショップ、個人間の売り買いでよく聞く。
+
+# What's your rate for
+@ talk | business, money, music | real | worksafe | 3
+= 〜の料金はいくらですか？（フリーランスの単価）
+: Asks a freelancer or creator how much they charge.
+A: What's your rate for mixing one song?
+B: I usually charge two hundred per track, including two revisions.
+- What's your rate for a three-minute promo video?
+✗ How much is your salary? | textbook | salary は会社員の給料。フリーランスには使わない
+✓ What do you charge for | 同じ意味でよりカジュアル
+? rate ＝単価・料金。クリエイターへの質問は rate か charge が自然。per track（1曲あたり）、per hour、per day もセットで覚える。
+! 答える側は I charge X per ~ / My day rate is ~ と即答できるように準備しておくとプロっぽい。
+
+# That's a bit steep.
+@ talk | money, shopping, business | real | worksafe, chill | 3
+= ちょっと高いですね
+: Politely says a price is higher than you expected.
+A: The studio is sixty dollars an hour.
+B: Hmm, that's a bit steep for me.
+A: We have a night rate. Forty after ten.
+- Twenty bucks for a smoothie? That's a little steep.
+✗ It's too expensive! | textbook | 間違いではないけど、交渉の場では相手を否定しているように響く
+✓ That's more than I was hoping to spend. | もっと丁寧
+? steep ＝坂が急な→値段が急に高い。a bit をつけると柔らかく、交渉の入り口になる。相手に代案を出させやすい。
+! 言った後に少し黙ると、相手から値下げ案を出してくれることも多い。
+
+# Can you work with me here?
+@ talk | business, money | real | worksafe, warm | 2
+= ちょっと歩み寄ってもらえませんか？
+: A friendly request for the other person to be flexible.
+A: The deposit is two months' rent.
+B: That's tough for me right now. Can you work with me here?
+A: Maybe we can split it into two payments.
+- I'm a regular. Can you work with me on the price?
+✗ Please make it cheap for me. | textbook | 子どもっぽく、要求だけに聞こえる
+? work with someone ＝相手と協力して調整する。「値下げして」と直接言わずに、一緒に解決策を探す姿勢を見せられる。押し付けがましくない頼み方。
+! 常連であること、すぐ払えることなど、理由を一つ添えると通りやすい。
+
+# That's as low as I can go.
+@ talk | money, business, shopping | real | worksafe | 3
+= これ以上は下げられません
+: Says you can't reduce the price any further.
+A: Could you do one fifty?
+B: Sorry, one seventy. That's as low as I can go.
+A: Alright, one seventy.
+- I'd love to help, but that's as low as I can go.
+✗ I can't more discount. | textbook | more の位置が不自然
+✓ That's rock bottom. | 「底値です」。カジュアル
+? as low as I can go ＝自分が行ける一番低いところ。売る側の決まり文句。買う側なら as high as I can go（これ以上は出せない）と言える。
+! final offer より柔らかく、関係を保ったまま線を引ける。
+
+# Take it or leave it.
+@ talk | money, business | real | cold | 2
+= 嫌ならやめていい（これ以上は譲らない）
+: Means the offer won't change; accept it or walk away.
+A: Can you throw in the case for free?
+B: Fifteen thousand for everything. Take it or leave it.
+- The landlord basically said take it or leave it.
+✗ You must accept this. | textbook | 命令口調で、ただ偉そう
+✓ It's the best I can offer. | 同じ内容を丁寧に
+? 交渉を打ち切る強い一言。言われたら、本当にそれ以上は動かない合図。自分が使うとかなり強気に聞こえるので、関係を大事にしたい相手には避ける。
+! 言われた側は Then I'll leave it. と返して立ち去るのもアリ。相手が折れることもある。
+
+# How did you land on that number?
+@ talk | business, money | real | worksafe | 2
+= その金額はどうやって出したんですか？
+: Asks someone to explain how they got their price.
+A: We're quoting four thousand for the website.
+B: Okay. How did you land on that number?
+A: It's about forty hours of work.
+- Before I say yes, how did you land on that number?
+✗ Why so expensive? | textbook | 責めているように聞こえる
+✓ Can you walk me through the pricing? | 丁寧版
+? land on ＝（考えた末に）〜に落ち着く。金額の根拠を聞くと、削れる部分（作業時間・オプション）が見えて自然に交渉に入れる。責めずに聞けるのがポイント。
+! 見積もりをもらったら即答しないで、まずこれ。
+
+# I was thinking more like
+@ talk | business, money | real | worksafe, chill | 3
+= こちらとしては〜くらいを考えていました
+: A soft way to make a counteroffer.
+A: My rate for the logo is five hundred.
+B: Hmm, I was thinking more like three hundred.
+A: How about four?
+- I was thinking more like Friday, if that works.
+✗ Your price is wrong. Three hundred. | textbook | 否定から入ると相手が身構える
+? 過去進行形 was thinking にすると「もう決めた」ではなく「考えていた」になって柔らかい。カウンターオファーの一番自然な出し方。値段以外（日程・量）にも使える。
+! 数字は少し低め（高め）から始めて、間を取る余地を残すのがコツ。
+
+# Let's not get ahead of ourselves.
+@ talk | business, work | real | worksafe | 2
+= 先走りすぎないようにしましょう
+: Means slow down and handle the current step first.
+A: After this deal, we can open a second shop!
+B: Let's not get ahead of ourselves. We haven't signed anything yet.
+- Let's not get ahead of ourselves and talk price before we see the demo.
+✗ Wait, it's too fast. | textbook | 何が速いのか伝わらない
+✓ One step at a time. | 一歩ずつ。短くカジュアル
+? get ahead of oneself ＝自分より先に行ってしまう＝先走る。ourselves にすると「私たち」なので相手を責めない。ブレーキをかける上品な言い方。
+! 相手が条件を急いで詰めてきたときに、主導権を取り戻せる。
+
+# What does that include?
+@ talk | business, money, shopping | real | worksafe | 3
+= それには何が含まれていますか？
+: Asks what you actually get for the price.
+A: The package is twelve hundred.
+B: What does that include, exactly?
+A: Filming, editing, and color grading. Music is extra.
+- Before we talk price, what does that include?
+✗ What is inside the price? | textbook | 直訳っぽく不自然
+✓ What's included? | 短くカジュアル
+? 値段を下げてもらう代わりに「中身」を確認するのも交渉。含まれない部分（extra）が分かれば、それを外して安くしてもらえる。exactly をつけると具体的な答えをもらいやすい。
+! アメリカの見積もりは「〜は別料金」が多い。Is tax included? / Is that extra? もセットで。
+
+# You've got yourself a deal.
+@ talk | business, money | real | warm | 2
+= 交渉成立！それで決まり
+: A friendly way to agree to an offer.
+A: Two hundred, and I'll throw in the cables.
+B: You've got yourself a deal.
+A: Nice doing business with you.
+- If you can start Monday, you've got yourself a deal.
+✗ I agree with your proposal. | textbook | 間違いではないけど硬すぎてテンションが低い
+✓ Deal. | 一言でOK
+? 合意の瞬間を明るく締める決まり文句。yourself が入ると少し芝居がかって楽しい感じになる。握手しながら言うイメージ。
+! 返しは Pleasure doing business with you. が定番。
+
+# Can I get that in writing?
+@ talk | business, paperwork | real | worksafe | 3
+= それを書面でもらえますか？
+: Asks for an agreement to be written down.
+A: Sure, we'll fix the air conditioner before you move in.
+B: Great. Can I get that in writing?
+A: I'll add it to the lease.
+- Can I get that in writing, just so we're both clear?
+✗ Please make a document. | textbook | 何の書類かも分からない
+? 口約束を証拠に残す一言。疑っているように聞こえないよう、just so we're both clear（お互いはっきりさせるために）を添えると角が立たない。メールで送ってもらうのも in writing。
+! 大家さんや取引先との約束は必ず書面に。「書いてないことは存在しない」が基本。
+
+# We're not that far apart.
+@ talk | business, money | real | worksafe, warm | 2
+= そんなに差はないですよね
+: Says the two sides are close to agreeing.
+A: You're at five, I'm at four.
+B: We're not that far apart. I'm sure we can figure this out.
+- Honestly, we're not that far apart on the timeline.
+✗ The difference is small. | textbook | 事実を言うだけで、前向きさがない
+? 数字の差を「小さい」と強調して、合意の空気を作る。we を主語にすることで「対立」ではなく「チーム」の感覚になる。
+! これを言った後に Let's split the difference. が続く流れは定番。
+
+# I need to crunch the numbers.
+@ talk | business, money | real | worksafe | 2
+= ちょっと計算させてください
+: Means you need time to do the math before deciding.
+A: So can you do the event for that price?
+B: Maybe. I need to crunch the numbers first.
+- Let me crunch the numbers and get back to you tonight.
+✗ I will calculate. | textbook | 硬くて機械っぽい
+? crunch ＝バリバリ噛み砕く。数字を細かく計算・検討すること。即答を避けて時間をもらう自然な言い方。
+! 一人で事業をしているなら、ここで本当に原価と時間を計算するクセを。安請け合いは後で自分が苦しむ。
+
+# I'm willing to walk away.
+@ talk | business, money | real | cold | 2
+= 決まらなくても構いません（降りる覚悟がある）
+: Shows you're ready to say no if the deal isn't good.
+A: That's the price. No changes.
+B: Then I'm willing to walk away. There are other apartments.
+- Always go into a negotiation willing to walk away.
+✗ I will go home. | textbook | 物理的に帰るだけの意味になる
+✓ I think I'll pass, then. | 静かに断る
+? walk away ＝交渉の席を立つ。本気で言うと強いカードになる。ハッタリで使うと見抜かれるので、本当に他の選択肢がある時だけ。
+! 交渉で一番強いのは「なくても困らない人」。他の候補を持っておくことが本当の交渉力。
+
+# I'll throw in
+@ talk | business, money, shopping | real | warm | 3
+= おまけで〜もつけます
+: Offers something extra for free to close a deal.
+A: I'm still on the fence about the price.
+B: Tell you what. I'll throw in a thirty-second cut for social media.
+A: Okay, now we're talking.
+- Buy two shirts and I'll throw in a sticker pack.
+✗ I give you service. | textbook | 「サービス」は和製英語。英語の service は無料の意味にならない
+✓ It's on the house. | 店のおごり・無料
+? throw in ＝（おまけとして）投げ込む。値段を下げずに価値を足す、上手な交渉方法。Tell you what,（じゃあこうしよう）と一緒によく使う。
+! 「サービスします」をそのまま service と言っても通じない。throw in か for free を使う。
+
+# a deal-breaker
+@ talk | business, crush | real | chill | 3
+= それがあったら無理（決定的なNG条件）
+: A thing that makes you reject a deal or a person.
+A: The apartment's great, but no pets allowed.
+B: That's a deal-breaker for me. I have a cat.
+- Smoking is a total deal-breaker.
+- Is the long commute a deal-breaker for you?
+✗ It is NG for me. | textbook | NGは和製英語。英語では通じない
+? 「それだけで全部ナシになる条件」。物件、仕事、恋愛まで幅広く使う。for me をつけると相手を否定せず、自分の基準として言える。
+! 反対は a must-have（絶対必要なもの）。マッチングアプリのプロフィールでもよく見る。
+
+# I'm not in a position to
+@ talk | business, work | real | worksafe | 2
+= 〜できる立場にない／今は〜できない
+: A professional way to say you can't do something.
+A: Could you lower the price by twenty percent?
+B: I'm not in a position to do that right now.
+A: Understood. What about ten?
+- I'm not in a position to make that call. I'll ask my manager.
+✗ I have no power. | textbook | 「私は無力です」みたいで変
+? 自分の能力ではなく「立場・状況」のせいにして断れる、相手を否定しないビジネス英語の基本。right now をつけると「今後は可能かも」という含みが出る。
+! メールでも I'm not in a position to offer a discount at this time. がよく使われる。
+
+# Can we revisit this
+@ talk | business, work | real | worksafe | 2
+= これ、また後で見直せますか？
+: Asks to discuss something again later.
+A: I can't raise your rate right now.
+B: Okay. Can we revisit this in three months?
+A: Sure, let's put it on the calendar.
+- Can we revisit this after the launch?
+✗ Please think again later. | textbook | 指示っぽく、いつなのかも不明
+? revisit ＝もう一度話し合う。今すぐ勝てない交渉でも、次の約束を取り付ければ負けではない。in three months / after ~ など時期を一緒に言うのがコツ。
+! 単価アップの交渉では「NO」を「NOT YET」に変える一言として最強。
+
+# That's the going rate.
+@ talk | business, money, music | real | worksafe | 2
+= それが相場です
+: Means it's the normal market price.
+A: Three hundred for a beat seems high.
+B: Honestly, that's the going rate for custom work.
+- What's the going rate for a wedding videographer in Osaka?
+✗ It is a market price. | textbook | 「時価」みたいに聞こえる
+? going rate ＝今出回っている相場。自分の値段が高くないことを、個人の意見ではなく市場の基準として説明できる。逆に What's the going rate? で相場を聞ける。
+! 相場を調べてから交渉に入るのが基本。知っていれば買い叩かれない。
+
+# You get what you pay for.
+@ talk | business, money, shopping | real | worksafe | 3
+= 値段相応／安物買いの銭失い
+: Cheap things are usually lower quality.
+A: Why not just use a cheaper editor?
+B: You can, but you get what you pay for.
+- I bought the cheapest headphones. Broke in a week. You get what you pay for.
+✗ Cheap things are bad things. | textbook | 言い切りすぎて子どもっぽい
+? 「払った分だけのものが手に入る」。自分の値段を説明するときにも、安物で失敗したときの愚痴にも使える。相手の選択を見下すように言うと嫌味なので注意。
+! クリエイターが単価を下げないときの、角の立たない理由づけ。
+
+# lowball
+@ talk | business, money | real | chill | 2
+= 安すぎる額を提示する（買い叩く）
+: To offer a price that's unfairly low.
+A: They offered fifty bucks for the whole track.
+B: They're lowballing you. Don't take it.
+- I don't want to lowball you, but my budget is tight.
+- Honestly, that's a lowball offer.
+✗ They are cheating my price. | textbook | cheat は「だます・浮気する」で意味がずれる
+? lowball は動詞にも形容詞的にもなる（a lowball offer）。I don't want to lowball you, but... は「失礼な額かもしれないけど」と前置きして安い提案をする大人の言い方。
+! 反対は overcharge（ぼったくる）。
+
+# Let's go fifty-fifty.
+@ talk | money, friends, food | real | chill | 3
+= 半分ずつにしよう（割り勘）
+: Means each person pays half.
+A: The studio was eighty dollars.
+B: Let's go fifty-fifty. We both used it.
+- We went fifty-fifty on the new mic.
+- Fifty-fifty on gas sounds fair.
+✗ Let's do warikan. | cringe | 日本語は通じない
+✓ Let's split it down the middle. | 同じ意味
+? fifty-fifty ＝50%ずつ。割り勘、共同購入、ルームメイトの光熱費など。go fifty-fifty on ~ で「〜を半分ずつ出す」。
+! 食べた量が違うなら Let's just pay for what we each had.（自分の分は自分で）もよく言う。
+
+# Can you knock a little off?
+@ talk | money, shopping, business | real | chill | 2
+= 少しまけてもらえませんか？
+: Asks for a small discount.
+A: It's twelve thousand yen.
+B: I'm paying cash. Can you knock a little off?
+A: I can knock off a thousand.
+- If I sign a two-year lease, could you knock fifty off the rent?
+✗ Please make it cheaper. | textbook | 命令形で雑な印象
+? knock off ＝（値段から）叩き落とす。knock fifty off のように具体的な額も入れられる。現金払い、まとめ買い、長期契約などの理由をつけると通りやすい。
+! 古着屋、フリマ、個人売買でよく使う。チェーン店では普通は無理。
+
+# I'll sign today if
+@ talk | business, paperwork | real | worksafe | 2
+= 〜してくれるなら今日サインします
+: Offers a quick yes in exchange for one condition.
+A: So, what do you think of the lease?
+B: I'll sign today if you can include the parking spot.
+A: Let me ask the owner. I think that's doable.
+- I'll sign today if we can move the start date to April.
+✗ If you do this, I sign. | textbook | 時制が崩れて乱暴に聞こえる
+? 「即決」というカードと引き換えに条件を一つ通す、上級者の言い方。if のあとは現在形。相手のメリット（今日決まる）がはっきりしているので通りやすい。
+! 条件は一つだけ。たくさん並べると逆効果。
+
+# No pressure.
+@ talk | business, friends, dm | real | warm | 3
+= 無理しなくていいよ（押し付けるつもりはない）
+: Tells someone they're free to say no.
+A: Want to join the project? No pressure.
+B: Let me think about it.
+- No pressure, but we only have two spots left.
+- Take a look at the demo. No pressure at all.
+✗ Don't feel pressure. | textbook | 命令っぽく、逆にプレッシャーになる
+? 相手にNOと言える余地を残すことで、かえってYESをもらいやすくなる。No pressure, but... で「でもこういう事情はある」と柔らかく伝えるのも定番。
+! 押し売りに見えないための一言。本当にNOを受け入れる気持ちで言うこと。
+
+# I don't want to waste your time.
+@ talk | business, work | real | worksafe | 2
+= お時間を無駄にしたくないので（率直に言います）
+: Used before being direct about budget or fit.
+A: Before we go further, I don't want to waste your time. Our budget is five hundred.
+B: I appreciate that. Let's see what we can do.
+- I don't want to waste your time, so let me be clear about the deadline.
+✗ Time is money, so hurry. | textbook | 急かしているだけで失礼
+? 予算や条件を早めに正直に言うための前置き。相手を気づかう姿勢になるので、厳しい条件でも受け入れられやすい。
+! 合わないと分かったら早めに引くのがプロ。お互いの時間を尊重する文化。
+
+# Can you match that?
+@ talk | business, money, shopping | real | worksafe | 2
+= 同じ値段にしてもらえますか？
+: Asks a seller to equal a competitor's price.
+A: Another studio quoted me forty an hour. Can you match that?
+B: I can't match it, but I can give you an extra hour for free.
+- The shop across the street has it cheaper. Can you match that?
+✗ Please same price. | textbook | 文になっていない
+? match ＝（他社の値段に）合わせる。他の見積もりを根拠に出せるので、ただ「安くして」より強い。price match（価格保証）という言い方もある。
+! 嘘の見積もりで言うと信用を失う。本当にある数字だけで。
+
+# Hear me out.
+@ talk | business, friends, work | real | chill | 3
+= まあ最後まで聞いて
+: Asks someone to listen fully before rejecting an idea.
+A: Another price increase? No way.
+B: Hear me out. You'd get priority booking and faster delivery.
+A: Okay, I'm listening.
+- I know it sounds crazy, but hear me out.
+✗ Please listen to my explanation. | textbook | 長くて先生っぽい
+? 相手がNOと言いかけたときに、話を最後まで聞いてもらうための一言。友達同士で変なアイデアを提案するときにも超よく使う。
+! 言ったあとは短く要点だけ話すこと。長くなると逆効果。
+
+# That's a big ask.
+@ talk | business, work, friends | real | worksafe | 2
+= それはなかなか大きなお願いですね
+: Says a request is a lot to expect.
+A: Could you deliver all ten videos by Monday?
+B: That's a big ask. I can do five by Monday and five by Thursday.
+- I know it's a big ask, but could you cover my shift?
+✗ That is a big request for me. | textbook | 間違いではないが硬い
+? ask を名詞で使う上級表現。「無理です」と言わずに大変さを伝えて、代案につなげられる。自分が頼む側なら I know it's a big ask, but... で謙虚に頼める。
+! ビジネスでも友達同士でも使える、大人っぽい言い方。
+
+# I'm sure we can work something out.
+@ talk | business, money | real | warm, worksafe | 3
+= きっと何とかなりますよ（調整できるはず）
+: Expresses confidence that you'll find a solution together.
+A: I can't pay the full deposit this month.
+B: I'm sure we can work something out. How about half now, half next month?
+- Let's talk. I'm sure we can work something out.
+✗ No problem, anything is OK. | textbook | 「何でもOK」と言うと交渉で不利
+? work something out ＝話し合って何か解決策を作る。相手を安心させつつ、具体的な案はこれから決める余地を残せる。
+! 相手が困っているときに言うと信頼がぐっと上がる。
+
+# Let me be straight with you.
+@ talk | business, work, friends | real | worksafe | 3
+= 正直に言いますね
+: Introduces an honest, direct statement.
+A: So, do we have a deal?
+B: Let me be straight with you. Your offer is the lowest we got.
+A: Okay. What would it take to win you over?
+- Let me be straight with you. I can't afford the full package.
+✗ Frankly speaking, | textbook | 間違いではないけど古くて硬い
+✓ I'll be honest with you. | 同じ意味
+? straight ＝まっすぐ・遠回しにしない。悪いニュースや厳しい条件を言う前のクッション。正直さを先に宣言するので、相手は身構えずに聞ける。
+! 教科書の Frankly speaking より、会話では Honestly, や I'll be honest. の方が自然。
+
+# a rush fee
+@ talk | business, money, music | real | worksafe | 2
+= 特急料金
+: An extra charge for doing work faster than normal.
+A: Can you finish the edit by tomorrow?
+B: I can, but there's a rush fee. Fifty percent extra.
+- No rush fee if you send the files by Friday.
+✓ a rush job | 急ぎの仕事そのもの
+? 急ぎの仕事に上乗せする料金。クリエイターが自分の時間を安売りしないための言い方。late fee（延滞料）、cancellation fee（キャンセル料）もセットで覚える。
+! 「急ぎだけど同じ値段で頑張ります」は長く続かない。急ぎは高い、をはっきり伝えるのがプロ。

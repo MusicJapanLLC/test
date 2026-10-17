@@ -1,0 +1,498 @@
+//! Meetings & Work Talk | Sound sharp on calls, in Slack and with clients | levelup
+
+# Let's take this offline.
+@ talk | work, business | real | worksafe | 3
+= この件は（会議の外で）別途話そう
+: Let's discuss this later, just the people involved, not in this meeting.
+A: Wait, are we still using the old invoice template?
+B: Good question. Let's take this offline so we don't hold everyone up.
+A: Sure. I'll message you after the call.
+- That's a bigger conversation. Let's take it offline.
+✗ Let's talk about it later by ourselves. | textbook | 意味は通じるけど会議っぽさがない
+✓ Let's chat after the call. | もっとカジュアル
+? offline ＝「会議の場の外で」。ネットが切れる意味じゃない。関係者だけで後で話そう、という合図。
+! 便利だけど「その話、今はやめて」というやんわりした打ち切りでもある。言われたら素直に引くのが大人。
+
+# Just to piggyback on that,
+@ talk | work, business | real | worksafe | 2
+= 今の話に乗っかると
+: Used to add your point to what someone just said.
+A: I think the new menu should go on the website first.
+B: Just to piggyback on that, we should post it on Instagram the same day.
+A: Love it. Let's do both.
+✗ I want to add an opinion to your opinion. | textbook | 直訳っぽくて固い
+✓ Building on that, | 少しフォーマル
+✓ To add to that, | 一番無難
+? piggyback ＝おんぶ。人の意見に「おんぶ」して自分の意見を足すイメージ。反論じゃなく、賛成＋追加のときに使う。
+! 会議で黙ってしまいがちな人には最強の入り口。相手を立てつつ発言できる。ただ毎回言うと口癖っぽい。
+
+# I don't have the bandwidth.
+@ talk | work, business | real | worksafe | 3
+= 今は手が回らない（余力がない）
+: I don't have enough time or energy to take this on right now.
+A: Can you also handle the social media this month?
+B: Honestly, I don't have the bandwidth right now. Maybe next month?
+- I'd love to help, but I don't have the bandwidth this week.
+- Do you have the bandwidth to review this by Friday?
+✗ I'm too busy, so I can't. | textbook | 突き放した印象になる
+✓ I'm at capacity right now. | 同じ意味でややフォーマル
+? bandwidth ＝通信の帯域→「人の処理能力・余力」。busy より「キャパの問題」として断れるので角が立たない。
+! IT 由来のビジネス用語。少し気取って聞こえるけど、アメリカの職場では普通。友達同士で使うと笑われる。
+
+# What's the timeline?
+@ talk | work, business | real | worksafe | 3
+= スケジュール感は？（いつまでに、どういう流れで？）
+: When does this need to happen, and in what steps?
+A: We want a new logo and a teaser video.
+B: Sounds fun. What's the timeline?
+A: Ideally everything before the launch on the twentieth.
+- What's the timeline looking like on your end?
+✗ When is the deadline day? | textbook | 間違いじゃないけど硬い
+✓ When do you need it by? | 締め切りだけ聞くならこれ
+? timeline は締め切りの一点じゃなく「全体の流れ・段取り」。依頼を受けるときに最初に聞くと仕事ができる人に見える。
+! クライアントに金額より先に timeline を聞くと、無理な案件を見抜きやすい。
+
+# Correct me if I'm wrong,
+@ talk | work, business, conflict | real | worksafe | 3
+= 間違ってたら言ってほしいんだけど
+: A soft way to say something you think is true, or to point out a problem.
+A: Correct me if I'm wrong, but didn't we agree on two revisions, not five?
+B: Hmm, you're right. That was in the contract.
+- Correct me if I'm wrong, but the shop opens at ten now?
+✗ I think you are wrong. | textbook | 直球すぎて喧嘩腰
+✓ Unless I'm missing something, | 同じクッション
+? 謙虚な前置きに見えて、実は「たぶん私が正しい」ときに使うことが多い。相手のミスをやんわり指摘できる。
+! 本当に自信がないときは I might be wrong, but... の方が素直に聞こえる。
+
+# Who owns this?
+@ talk | work, business | real | worksafe | 3
+= これの担当（責任者）は誰？
+: Who is responsible for this task?
+A: The supplier still hasn't been paid.
+B: Okay, who owns this? Is it accounting or us?
+A: Technically us. I'll take it.
+- Let's make sure every task has someone who owns it.
+✗ Who is the person in charge of this? | textbook | 正しいけど長い
+✓ Who's on this? | カジュアル
+? own ＝持つ→「責任を持つ」。担当があいまいなまま会議が終わるのを防ぐひと言。
+! アメリカの職場は「誰が owner か」をはっきりさせる文化。自分から手を挙げる人は評価が上がる。
+
+# I have a hard stop at
+@ talk | work, business, online | real | worksafe | 3
+= 〜時には絶対抜けないといけない
+: I must leave at that exact time, no matter what.
+A: Before we start, I have a hard stop at three.
+B: No problem. We'll keep it tight.
+- Sorry, I have a hard stop at noon. Can we wrap up?
+✗ I must leave at three o'clock exactly. | textbook | 伝わるけど不自然
+✓ I need to jump off at three. | オンライン会議のカジュアル版
+? hard stop ＝延長できない終了時刻。会議の最初に言っておくのがマナー。途中で急に抜けるより印象がいい。
+! 次の予定の中身は言わなくていい。I have a hard stop. だけで十分な理由になる。
+
+# Sorry, go ahead.
+@ talk | work, online, phone | real | worksafe, warm | 3
+= あ、どうぞ（話がかぶったとき）
+: Said when two people start talking at the same time.
+A: So I think we should—
+B: Oh, sorry, go ahead.
+A: No, no, you go.
+B: Okay, I was just gonna say the file's ready.
+✗ Please speak first. | textbook | 丁寧すぎて逆に変
+✓ You go. | 一番短い
+? オンライン会議の「被り」は日常茶飯事。Sorry, go ahead. と No, you go. の譲り合いはセットで覚える。
+! 譲られたら遠慮しすぎず話すのが英語圏のテンポ。三回譲り合うと気まずい沈黙になる。
+
+# Can I jump in here?
+@ talk | work, business, online | real | worksafe | 3
+= ちょっと口を挟んでもいい？
+: A polite way to interrupt so you can say something.
+A: And then we'd need to redo the whole page.
+B: Sorry, can I jump in here? I think we can reuse the old layout.
+A: Oh, good point. Go on.
+✗ Excuse me, may I say something? | textbook | 学校の授業っぽい
+✓ Can I just add something real quick? | 柔らかい
+? jump in ＝会話に飛び込む。割り込む前にひと言断るのが英語のマナー。黙って待っていると発言のチャンスは永遠に来ない。
+! 英語の会議は「間」を待ってくれない。自分から jump in しないと「意見がない人」扱いされがち。
+
+# To your point,
+@ talk | work, business | real | worksafe | 3
+= さっきのあなたの話につなげると
+: Used to connect what you say to someone's earlier point.
+A: Customers keep asking for oat milk.
+B: To your point, oat lattes were our top seller last month.
+A: Then let's put it on the main menu.
+- To your point about the budget, I found a cheaper printer.
+✗ About what you said before, | textbook | 間違いじゃないけど回りくどい
+✓ Like you said, | カジュアル
+? 相手の発言を拾ってから自分の話をつなぐ。ちゃんと聞いてたよ、のサインになるので印象がいい。
+! 賛成にも反論にも使える。To your point, though... で「でもね」と反論の入り口にもなる。
+
+# I'd push back on that.
+@ talk | work, business, conflict | real | worksafe | 2
+= そこはちょっと異論があって
+: I'd like to disagree with that, respectfully.
+A: We should cut the night shift to save money.
+B: I'd push back on that a little. Night sales cover most of our rent.
+A: Okay, show me the numbers.
+- I'm gonna push back a bit on the price.
+✗ I disagree with you. | textbook | 正しいけど冷たく聞こえる
+✓ I'm not sure I agree. | 柔らかい反論
+? push back ＝押し返す→「反論する・抵抗する」。a little や a bit を付けると角が取れる。
+! 名詞 pushback も頻出。We got some pushback from the client. ＝クライアントから反発があった。
+
+# I'm not sure I follow.
+@ talk | work, business, study | real | worksafe | 3
+= ちょっと話についていけてないかも
+: I don't fully understand what you mean.
+A: So we move the margin into the bundle and offset the fee.
+B: Sorry, I'm not sure I follow. Can you say that another way?
+A: Sure. Basically, we raise the price and include shipping.
+✗ I can't understand your English. | textbook | 相手のせいに聞こえて失礼
+✓ You lost me there. | カジュアル
+? follow ＝話の流れについていく。「分からない」を自分側の問題として言えるので、聞き返しても失礼にならない。
+! 分からないまま Yes. と言うのが一番危ない。ネイティブ同士でもこのフレーズは普通に使う。
+
+# Can you walk me through it?
+@ talk | work, business | real | worksafe, warm | 3
+= 順を追って説明してくれる？
+: Please explain it to me step by step.
+A: The new booking system is live.
+B: Nice. Can you walk me through it?
+A: Sure. First, the customer picks a time slot.
+- Walk me through what happened last night.
+✗ Please explain it in detail. | textbook | 命令っぽく硬い
+✓ Can you show me how it works? | もっとシンプル
+? walk 人 through ＝一緒に歩くように一歩ずつ説明する。システム、契約書、トラブルの経緯など何にでも使える。
+! 説明する側は Let me walk you through it. と言う。プレゼンの最初のひと言にも最適。
+
+# What's the ask?
+@ talk | work, business | real | worksafe | 2
+= で、要望は何？（結局何をしてほしい？）
+: What exactly do you want from me or us?
+A: So the label liked the demo, and they have a big campaign coming up.
+B: That's great. So what's the ask?
+A: They want an exclusive track by June.
+✗ What is your request? | textbook | 正しいけど硬い
+✓ What do you need from us? | 自然で柔らかい
+? ask を名詞にして「依頼・要望」。前置きが長い相手に「で、本題は？」と聞ける。
+! 少しドライに聞こえるので、目上の人には So what do you need from us? の方が無難。
+
+# What are the next steps?
+@ talk | work, business | real | worksafe | 3
+= 次にやることは？
+: What should happen after this meeting?
+A: I think that covers everything.
+B: Great. Before we go, what are the next steps?
+A: I'll send the quote, and you confirm the dates.
+✗ What should we do from now? | textbook | 少し漠然としている
+✓ So what's next? | カジュアル
+? 会議の締めにこれを聞くだけで「仕事ができる人」に見える。誰が・何を・いつまでに、を確認する合図。
+! 英語の会議は決めっぱなしにせず、最後に next steps を言葉にするのが基本。
+
+# I'll send a recap.
+@ talk | work, business, online | real | worksafe | 3
+= あとでまとめを送ります
+: I'll send a short summary of what we discussed.
+A: Thanks, everyone. That was a good call.
+B: I'll send a recap with the action items tonight.
+A: Perfect, thanks.
+- Quick recap: the shoot is Friday, and we need two outfits.
+✗ I will send the minutes of the meeting. | textbook | 正式な議事録ならアリ。普段は重い
+✓ I'll send a quick summary. | 同じ意味
+? recap ＝要約・おさらい。メールの件名に Recap と書くのも定番。
+! action items ＝やることリスト。recap とセットで送ると信頼される。
+
+# In the interest of time,
+@ talk | work, business | real | worksafe | 2
+= 時間の都合上
+: Because we're short on time.
+A: In the interest of time, let's skip the intros.
+B: Works for me.
+- In the interest of time, I'll just email you the details.
+✗ Because we don't have time, | textbook | 焦ってる感じが出る
+✓ To save time, | シンプル版
+? 話を切り上げたり飛ばしたりする理由を丁寧に言える。脱線した人を本題に戻すときにも使える。
+! 会議を仕切る立場で使うとプロっぽい。友達との会話で使うと大げさ。
+
+# Let's table this.
+@ talk | work, business | real | worksafe | 2
+= この件はいったん保留にしよう
+: Let's stop discussing this for now and come back later.
+A: We still haven't decided on the new uniforms.
+B: Let's table this until next week. We're out of time.
+A: Fair. I'll add it to the next agenda.
+✗ Let's hold this topic. | textbook | 意味は通じるけど不自然
+✓ Let's come back to this. | 誰にでも通じる
+? アメリカ英語の table ＝「保留・後回し」。イギリス英語では逆に「議題に出す」の意味になるので要注意。
+! 国際的なチームでは誤解のもと。迷ったら Let's come back to this. が安全。
+
+# Let's take a step back.
+@ talk | work, business, conflict | real | worksafe, deep | 3
+= いったん引いて全体を見よう
+: Let's stop and think about the bigger picture.
+A: The font, the colors, the logo, nothing works.
+B: Okay, let's take a step back. Who is this design for?
+A: Young people in Osaka, mostly.
+B: Right. Let's start there.
+✗ Let's return to the beginning. | textbook | 意図が伝わりにくい
+✓ Let's zoom out for a second. | 同じ意味でカジュアル
+? 細部で行き詰まったときに、目的に立ち返るひと言。議論が熱くなったときのクールダウンにもなる。
+! 仕事だけでなく、恋愛や人生の相談でも使える。
+
+# That's out of scope.
+@ talk | work, business | real | worksafe, cold | 2
+= それは作業範囲外です
+: That isn't part of what we agreed to do.
+A: Can you also redesign our menu while you're at it?
+B: That's out of scope for this project, but I can quote it separately.
+A: Oh, okay. Send me a number.
+✗ That is not my job. | textbook | 冷たく聞こえて関係が悪くなる
+✓ That's not included, but I can add it. | 柔らかい言い方
+? scope ＝作業範囲。フリーランスの命綱フレーズ。「ついでに」の頼まれごとを無料で受けないための言い方。
+! scope creep ＝作業範囲がじわじわ広がること。小さな仕事をしている人ほど覚えておきたい。
+
+# It's on my radar.
+@ talk | work, business | real | worksafe | 2
+= 把握してます（気にかけてます）
+: I'm aware of it and keeping an eye on it.
+A: Did you see the shipping delay?
+B: Yeah, it's on my radar. I'm calling the supplier tomorrow.
+- Taxes are due next month, so that's on my radar too.
+✗ I know it already. | textbook | 「知ってるよ」とぶっきらぼうに聞こえる
+✓ I'm aware. | 短く丁寧
+? レーダーに映っている＝把握済み。まだ手はつけてないけど忘れてない、というニュアンス。
+! 逆に not on my radar ＝全然気にしてなかった・知らなかった。
+
+# I'll flag it.
+@ talk | work, business | real | worksafe | 3
+= 指摘しておきます（共有しておきます）
+: I'll point it out to the right people.
+A: The price on the poster is wrong.
+B: Good catch. I'll flag it with the designer.
+- I'll flag it for my boss before we send anything.
+✗ I will report it. | textbook | 大ごとに聞こえる
+✓ I'll let them know. | もっとシンプル
+? flag ＝旗を立てて目印をつける→「問題として注意を促す」。告げ口っぽさはなく、ただの共有。
+! red flag（危険信号）とは別物。動詞の flag は「指摘する」。
+
+# Thanks for flagging.
+@ talk | work, business, online | real | worksafe, warm | 3
+= 指摘ありがとう
+: Thanks for pointing that out.
+A: Hey, the link in the newsletter is broken.
+B: Oh no, thanks for flagging! Fixing it now.
+- Thanks for flagging this. I'll take a look.
+✗ Thank you for your pointing out. | textbook | 文法的にも不自然
+✓ Good catch. | 「よく気づいたね」
+? ミスを指摘されたときの大人の返し。言い訳より先にお礼を言うと、相手も次から言いやすくなる。
+! Slack やメールの返信で超頻出。Thanks for flagging! だけで一つの返事になる。
+
+# I'll ping you.
+@ talk | work, online, dm | real | chill | 3
+= あとで連絡するね（チャットで）
+: I'll send you a quick message.
+A: When should I start setting up for the stream?
+B: I'll ping you when the room's ready.
+- Ping me if you need anything.
+✗ I will contact you by chat. | textbook | 硬すぎる
+✓ I'll hit you up. | 友達同士ならこっち
+? ping ＝ネットワークの疎通確認から来た言葉。チャットで軽く一言送る感じ。メールより軽い。
+! 仕事の Slack でも友達の DM でも使える便利な動詞。
+
+# Any blockers?
+@ talk | work, online | real | worksafe | 2
+= 何か詰まってることある？
+: Is anything stopping you from making progress?
+A: Okay, quick round. Any blockers?
+B: Yeah, I'm blocked on the logo. Still waiting on the client.
+A: Got it. I'll nudge them today.
+✗ Do you have any problems? | textbook | 漠然としすぎる
+✓ Anything slowing you down? | 柔らかい
+? blocker ＝作業を止めている原因。朝会（スタンドアップ）の定番質問。答えるときは I'm blocked on 〜. の形。
+! IT やスタートアップ系の言葉。カフェのバイト中に言うと少し浮く。
+
+# Let's sync up.
+@ talk | work, business, online | real | worksafe | 2
+= 一度すり合わせよう
+: Let's meet briefly to share updates.
+A: I have a lot of questions about the merch drop.
+B: Let's sync up tomorrow morning. Fifteen minutes?
+A: Perfect.
+- Can we do a quick sync before the client call?
+✗ Let's have a meeting to share information. | textbook | 長くて重い
+✓ Let's catch up tomorrow. | もっとカジュアル
+? sync ＝同期する。お互いの状況を合わせる短い打ち合わせ。名詞で a quick sync とも言う。
+! 職場ではよく使うけど、連発するとビジネス用語っぽさが鼻につく。
+
+# Per my last email,
+@ talk | work, business, conflict | real | worksafe, cold | 2
+= 前回のメールでもお伝えしましたが
+: A polite-sounding way to say "I already told you this."
+A: Per my last email, the invoice is attached.
+B: Yikes. Someone's annoyed.
+- Per my last email, the deadline is Friday.
+- As per my last email, the files are in the shared folder.
+✗ You didn't read my email, right? | textbook | 直接的すぎて喧嘩になる
+✓ Just to recap what I sent earlier, | もう少し柔らかい
+? 表面は丁寧、中身は「読んでないでしょ？」というイラ立ち。英語圏ではネットミームになるほど有名な皮肉。
+! 自分が書くのは本気でイラッとしたときだけ。受け取ったら、相手はたぶん怒ってる。
+
+# Just a friendly reminder
+@ talk | work, business, money | real | worksafe | 3
+= 念のためのリマインドです
+: A soft way to remind someone of something.
+A: Just a friendly reminder about the invoice.
+B: Oh! Sorry, paying it today.
+- Just a friendly reminder that rent is due on Friday.
+- Friendly reminder: the studio closes at midnight.
+✗ Please don't forget to pay. | textbook | 命令っぽい
+✓ Just a quick reminder | 少し中立
+? friendly を付けると圧が下がる…はずが、二回目以降は逆に「催促」感が強まる。
+! 支払い催促の一通目はこれで十分。三通目の friendly reminder はもう friendly じゃない。
+
+# That's above my pay grade.
+@ talk | work, business | real | funny | 2
+= それは俺が決めることじゃない（給料以上の話）
+: That decision is for someone more senior than me.
+A: Should we open a second shop in Kobe?
+B: Ha, that's above my pay grade. Ask the owner.
+- Honestly, that question is way above my pay grade.
+✗ I don't have the authority to decide that. | textbook | 正しいけど硬すぎる
+✓ That's not my call. | シンプル
+? pay grade ＝給与等級。「この給料じゃ判断できません」と冗談っぽく責任範囲外を伝える。
+! 自虐ユーモアとして好かれる。ただ、自分の担当のことに使うとただの逃げに聞こえる。
+
+# Let me play devil's advocate.
+@ talk | work, business, friends | real | worksafe, funny | 2
+= あえて反対の立場で言うと
+: I'll argue the other side, even if I don't believe it.
+A: Everyone loves the new logo.
+B: Let me play devil's advocate. Is it too similar to the old one?
+A: Hmm. Maybe a little.
+✗ I will say the opposite opinion on purpose. | textbook | 直訳
+✓ Just to argue the other side, | 説明的な言い方
+? devil's advocate ＝悪魔の代弁者。全員賛成のときに、あえて穴を探す役。反論の前置きにすると角が立たない。
+! もとはカトリック教会の聖人認定で、あえて反対意見を出す役職。本当は自分の意見なのにこう言ってごまかす人もいる。
+
+# Let's not reinvent the wheel.
+@ talk | work, business | real | worksafe | 2
+= ゼロから作り直すのはやめよう
+: Let's use what already works instead of starting over.
+A: Should we build our own booking app?
+B: Let's not reinvent the wheel. There are apps that already do this.
+A: True. Way cheaper too.
+✗ Let's not make it from zero. | textbook | 意味は通じるが不自然
+✓ Let's use what's already out there. | 説明的
+? reinvent the wheel ＝車輪を再発明する→すでにあるものを無駄に作り直す。時間とお金の節約を提案するときに。
+! ビジネスでよく聞くけど、少し決まり文句感はある。言い方次第で嫌味にもなる。
+
+# low-hanging fruit
+@ talk | work, business | real | worksafe | 2
+= すぐ取れる成果・簡単な改善点
+: Easy wins that need little effort.
+A: Where should we start with the website?
+B: The low-hanging fruit is the menu photos. They're blurry.
+- Fix the low-hanging fruit first, then the big stuff.
+✗ the easy goals | textbook | 伝わるけどピンと来ない
+✓ quick wins | 同じ意味でより今っぽい
+? 低い枝の果物＝手を伸ばせば取れる。少ない労力ですぐ結果が出ることを指す。
+! 典型的な企業用語（corporate jargon）。便利だけど連発すると「意識高い系」に聞こえる。一回の会議で一度まで。
+
+# It's a moving target.
+@ talk | work, business | real | worksafe | 2
+= ゴールがコロコロ変わる
+: The goal or details keep changing.
+A: When can you finish the mix?
+B: Honestly, it's a moving target. The artist keeps changing the lyrics.
+- The budget is a moving target right now.
+✗ The goal changes many times. | textbook | 説明的で弱い
+✓ Things keep changing. | シンプル
+? 動く的は狙えない→締め切りや仕様が定まらない状態。自分のせいじゃない遅れを説明するときに便利。
+! 遠回しに「先に決めてくれ」と伝える意味もある。
+
+# That's a big lift.
+@ talk | work, business | real | worksafe | 2
+= それはかなり大がかりな作業だ
+: That would take a lot of work.
+A: Can we translate the whole site into English?
+B: That's a big lift. Maybe start with the main page?
+A: Okay, let's do that first.
+- Moving the whole shop online is a heavy lift.
+✗ That is very hard work. | textbook | 大変さだけが強調される
+✓ That's a lot of work. | 普通の言い方
+? lift ＝持ち上げる→作業量。heavy lift とも言う。「無理」と言わずに規模感を伝えられる。
+! 最近のアメリカの職場用語。気取って聞こえることもあるが、断る前のクッションとして優秀。
+
+# Let's double-click on that.
+@ talk | work, business | real | funny | 1
+= そこをもうちょっと掘り下げよう（企業用語）
+: Corporate speak for "let's talk about that in more detail."
+A: Our sales dropped in March.
+B: Let's double-click on that. What happened in March?
+A: Did you just say double-click?
+✗ Let's double-click on that and circle back offline. | cringe | 用語を詰め込むとコントになる
+✓ Can we dig into that? | 普通に言うならこれ
+? クリックで中身を開く→詳しく見る。意味は通じるけど、典型的なコーポレート語として笑われがち。
+! 聞いて理解できれば十分。自分で言うなら Let's dig into that. の方がずっと自然。
+
+# Let's leverage our synergies.
+@ talk | work, business | cringe | funny | 1
+= 相乗効果を活用しよう（中身ゼロの企業用語）
+: A classic example of empty corporate buzzwords.
+A: Let's leverage our synergies to move the needle.
+B: Sorry, what does that actually mean?
+A: Honestly? No idea.
+✓ Let's work together on this. | 普通に言えばこれで十分
+✓ Your shop and my studio could help each other. | 具体的に言うと伝わる
+? leverage, synergy, move the needle は「何か言ってるようで何も言ってない」の代表。ネイティブはこれを聞くと笑うか警戒する。
+! 英語ができる人ほどシンプルに具体的に話す。buzzword は聞き取れれば OK、使わなくていい。
+
+# Great question.
+@ talk | work, business | real | worksafe | 3
+= いい質問ですね（考える時間稼ぎ）
+: Said to praise a question, or to buy a few seconds to think.
+A: How do you plan to make money from streaming?
+B: Great question. So, right now it's mostly ads and memberships.
+- That's a great question. Let me check and get back to you.
+✗ Your question is very good. | textbook | 先生っぽい
+✓ Good question. | 少しカジュアル
+? 本気で褒めることもあるが、実は「考える数秒」を稼ぐ定番テク。英語で詰まりそうなときに使える。
+! 毎回言うとバレる。三回に一回くらいが自然。
+
+# Let's wrap it up.
+@ talk | work, business, online | real | worksafe | 3
+= そろそろ締めよう
+: Let's finish the meeting or task.
+A: We're almost at time. Let's wrap it up.
+B: Sure. Any last questions?
+- Let's wrap up here and pick it up tomorrow.
+✗ Let's finish the meeting now. | textbook | 唐突に聞こえる
+✓ Let's call it here. | 同じくらい自然
+? wrap up ＝包んで終わらせる。会議・撮影・作業の締めに。That's a wrap. は撮影現場の「終了！」。
+! 締めの合図を出せる人は会議を仕切れる人。最後に next steps の確認と組み合わせると完璧。
+
+# I'll own that.
+@ talk | work, business, conflict | real | worksafe, deep | 2
+= それは私が責任を持ちます
+: I take responsibility for that mistake or task.
+A: The client got the wrong file.
+B: That was my mistake, and I'll own that. I'm sending the right one now.
+A: Thanks for being upfront.
+- I'll own the follow-up with the venue.
+✗ It is my responsibility, I'm sorry. | textbook | 謝るだけで終わって弱い
+✓ That's on me. | 同じ意味でカジュアル
+? own ＝自分のものとして引き受ける。ミスを認める＋すぐ行動、がセットになると信頼される。
+! Who owns this? への答えとしても使える。I'll own it. ＝「私が担当します」。
+
+# I'll keep it brief.
+@ talk | work, business, online | real | worksafe | 3
+= 手短に話します
+: I'll say this quickly so I don't take up too much time.
+A: Do you have a minute before we wrap up?
+B: Sure, go ahead.
+A: Thanks, I'll keep it brief. The shoot moved to Saturday.
+- I know everyone's tired, so I'll keep it brief.
+✗ I will speak shortly. | textbook | 「もうすぐ話します」の意味になってしまう
+✓ I'll make it quick. | カジュアル
+? 時間を気にしている相手への気づかい。発言の最初に言うと、みんなが聞く体勢になってくれる。
+! 言ったら本当に短く。I'll keep it brief. から十分話すと、次から誰も信じてくれない。

@@ -2,7 +2,7 @@ import type { Card, Quiz, QuizKind, RecordMeta, Slide, Source } from './types';
 import { cardState, isDue, state, status } from './store';
 
 export const DB = {
-  cards: [] as Card[], words: [] as Card[], all: [] as Card[], byId: new Map<string, Card>(),
+  cards: [] as Card[], words: [] as Card[], drills: [] as Card[], all: [] as Card[], byId: new Map<string, Card>(),
   records: [] as RecordMeta[], recById: new Map<string, RecordMeta>(), byRec: new Map<string, Card[]>(),
 };
 
@@ -12,10 +12,11 @@ export async function loadData() {
     if (!r.ok) throw new Error(`${f} ${r.status}`);
     return (await r.json()) as T;
   };
-  const [cards, words, meta] = await Promise.all([get<Card[]>('cards.json'), get<Card[]>('words.json'), get<{ records: RecordMeta[] }>('meta.json')]);
+  const [cards, words, drills, meta] = await Promise.all([get<Card[]>('cards.json'), get<Card[]>('words.json'), get<Card[]>('drills.json').catch(() => []), get<{ records: RecordMeta[] }>('meta.json')]);
   DB.cards = cards;
   DB.words = words;
-  DB.all = [...cards, ...words];
+  DB.drills = drills;
+  DB.all = [...cards, ...words, ...drills];
   DB.records = meta.records;
   for (const r of meta.records) { DB.recById.set(r.id, r); DB.byRec.set(r.id, []); }
   for (const c of DB.all) { DB.byId.set(c.id, c); DB.byRec.get(c.rec)?.push(c); }
@@ -68,7 +69,7 @@ export function shuffle<T>(a: T[]): T[] {
 
 export const allowed = (c: Card) => state.settings.explicit || !c.e;
 
-const WEIGHTS: Record<Source, number> = { talk: 30, words: 22, movies: 12, songs: 10, comedy: 10, books: 8, science: 8 };
+const WEIGHTS: Record<Source, number> = { talk: 30, words: 22, movies: 12, songs: 10, comedy: 10, books: 8, science: 8, drill: 10 };
 
 /* ── quizzes ── */
 
@@ -111,6 +112,7 @@ function withAnswer(right: string, wrong: string[]) {
 }
 
 export function makeQuiz(c: Card, review = false): Quiz | null {
+  if (c.k === 'd') return makeBuild(c, review);
   const kinds: [QuizKind, number][] = [];
   if (c.k === 'w') kinds.push(['word', 4]);
   else {
@@ -145,10 +147,8 @@ export function makeQuiz(c: Card, review = false): Quiz | null {
       return { kind, card: c, prompt: 'Fill the gap', line: blank(line, c.h), options, answer, review };
     }
     case 'build': {
-      const words = c.h.replace(/[.!?,]+$/, '').split(' ');
-      let tiles = shuffle(words);
-      for (let i = 0; i < 4 && tiles.join(' ') === words.join(' '); i++) tiles = shuffle(words);
-      return { kind, card: c, prompt: 'Put it in order', line: c.ja, options: [words.join(' ')], answer: 0, tiles, review };
+      const q = makeBuild(c, review);
+      return { ...q, prompt: 'Put it in order' };
     }
     case 'real': {
       const pool: [string, number][] = [];
@@ -175,6 +175,59 @@ export function makeQuiz(c: Card, review = false): Quiz | null {
     }
   }
   return null;
+}
+
+/* ── build it (瞬間英作文): Japanese → English from word tiles, with a few wrong tiles mixed in ── */
+
+/** tiles: words of the sentence without end punctuation or commas (case kept for display) */
+export const tilesOf = (en: string) => en.replace(/[.!?]+$/, '').replace(/[,;:]/g, '').split(/\s+/).filter(Boolean);
+export const normBuild = (s: string) => s.toLowerCase().replace(/[’]/g, "'").replace(/[^a-z0-9' ]+/g, ' ').replace(/\s+/g, ' ').trim();
+
+// grammar look-alikes: if the answer has the left word, offer a right word as a trap
+const SWAPS: Record<string, string[]> = {
+  have: ['has', 'had'], has: ['have'], had: ['have', 'has'], do: ['does', 'did'], does: ['do'], did: ['do', 'done'], done: ['did'],
+  is: ['are', 'was'], are: ['is', 'were'], was: ['were', 'is'], were: ['was'], been: ['being', 'be'], being: ['been'], be: ['being'],
+  a: ['the', 'an'], an: ['a', 'the'], the: ['a'], in: ['on', 'at'], on: ['in', 'at'], at: ['in', 'on'], to: ['for', 'at'], for: ['to', 'since'],
+  since: ['for'], will: ['would', 'going'], would: ['will'], can: ['could'], could: ['can'], should: ['must'], much: ['many'], many: ['much'],
+  some: ['any'], any: ['some'], who: ['which', 'whose'], which: ['who', 'what'], where: ['which', 'when'], whose: ["who's"], what: ['which'],
+  more: ['most'], most: ['more'], than: ['then', 'as'], as: ['than', 'like'], like: ['as'], me: ['my', 'I'], my: ['me'], i: ['me'],
+  him: ['he', 'his'], her: ['she'], them: ['they', 'their'], their: ['there'], going: ['go'], doing: ['do', 'to'], used: ['use'],
+  if: ['when'], when: ['if'], wish: ['hope'], hope: ['wish'], rather: ['better'], better: ['best'], told: ['said'], said: ['told'],
+  say: ['tell'], tell: ['say'], make: ['do'], get: ['got'], got: ['get', 'gotten'], go: ['went'], went: ['gone', 'go'], gone: ['went'],
+  "i'll": ["I'd"], "i'd": ["I'll"], "i'm": ["I've"], "i've": ["I'm"], "it's": ['its'], its: ["it's"], "don't": ["doesn't", "didn't"],
+  "doesn't": ["don't"], "didn't": ["don't"], "won't": ["don't"], "haven't": ["hasn't"], "hasn't": ["haven't"], "isn't": ["aren't"],
+  "wasn't": ["weren't"], "weren't": ["wasn't"], by: ['until'], until: ['by'], during: ['while'], while: ['during'], ago: ['before'],
+  yet: ['already'], already: ['yet'], ever: ['never'], fewer: ['less'], less: ['fewer'], of: ['for'], about: ['of'], with: ['to'],
+};
+
+const NO_SHAPE = new Set(['always', 'christmas', 'news', 'series', 'species', 'thanks', 'perhaps', 'besides', 'sometimes', 'nowadays', 'afterwards', 'towards']);
+
+/** extra look-alikes from the word shape: rains → rain, stopped → stop */
+function shapeTraps(w: string): string[] {
+  const l = w.toLowerCase();
+  if (!/^[a-z]+$/.test(l) || l.length < 4 || NO_SHAPE.has(l)) return [];
+  if (/(x|z|ch|sh|ss)es$/.test(l)) return [w.slice(0, -2)];
+  if (/oes$/.test(l)) return l === 'goes' ? ['go'] : [];
+  if (/[^s]s$/.test(l) && !/(us|is|ous)$/.test(l)) return [w.slice(0, -1)];
+  if (/([bdgmnprt])\1ed$/.test(l)) return [w.slice(0, -3)];
+  if (/[bcdfgklmnprstxz][bdfgklmnpstxz]ed$/.test(l)) return [w.slice(0, -2)];
+  return [];
+}
+
+export function makeBuild(c: Card, review = false): Quiz {
+  const words = tilesOf(c.h);
+  const lower = new Set(words.map((w) => w.toLowerCase()));
+  const traps: string[] = [];
+  const add = (t: string) => { if (!lower.has(t.toLowerCase()) && !traps.some((x) => x.toLowerCase() === t.toLowerCase())) traps.push(t); };
+  for (const w of shuffle(words)) for (const t of [...(SWAPS[w.toLowerCase()] ?? []), ...shapeTraps(w)]) add(t);
+  // plus a word or two from other sentences of the same record
+  const others = shuffle((DB.byRec.get(c.rec) ?? []).filter((x) => x.id !== c.id).flatMap((x) => tilesOf(x.h))).filter((w) => !lower.has(w.toLowerCase()) && w.length > 1);
+  // longer sentences get more traps; grammar look-alikes first, then one stray word from the same record
+  const want = words.length <= 4 ? 3 : words.length <= 8 ? 4 : 5;
+  const extra = [...traps.slice(0, want - 1), ...others, ...traps.slice(want - 1)].filter((w, i, a) => a.findIndex((x) => x.toLowerCase() === w.toLowerCase()) === i).slice(0, want);
+  let tiles = shuffle([...words, ...extra]);
+  for (let i = 0; i < 4 && tiles.slice(0, words.length).join(' ') === words.join(' '); i++) tiles = shuffle(tiles);
+  return { kind: 'build', card: c, prompt: 'Say it in English', line: c.ja, options: [words.join(' ')], answer: 0, tiles, review };
 }
 
 /* ── the endless feed ── */
@@ -245,6 +298,7 @@ export class Feed {
     }
     const c = this.pickCard();
     if (!c) return { type: 'intro' };
+    if (c.k === 'd') { this.used.add(c.id); return { type: 'quiz', quiz: makeBuild(c) }; }
     this.used.add(c.id);
     this.recent.push(c);
     if (this.recent.length > 40) this.recent.shift();

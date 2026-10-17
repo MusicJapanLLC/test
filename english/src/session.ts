@@ -2,7 +2,7 @@
    then "Again" or "Got it" (or swipe). Cards you miss come back later in the same session.
    It ends with a short check (max 5 questions) and a result screen with the crew. */
 import type { Card, Quiz } from './types';
-import { makeQuiz, shuffle } from './feed';
+import { makeBuild, makeQuiz, shuffle } from './feed';
 import { ACCENT, crewDance, esc, headSize, hostOf, linesHtml, meaningHtml, metaRow, onActive, recCode, recOf, renderQuiz, sourceHtml, wireAudio } from './render';
 import { Bot } from './robots/crew';
 import { grade, level, logDay, markGoal, rollDay, save, state, status } from './store';
@@ -125,7 +125,7 @@ function nextCard() {
   if (!current) { checkRound(); return; }
   if (queue[0]) void preload(queue[0].c);
   progress();
-  renderCurrent();
+  if (current.c.k === 'd') renderBuild(); else renderCurrent();
 }
 
 function autoPlay(card: HTMLElement, c: Card) {
@@ -216,11 +216,10 @@ function reveal() {
   });
 }
 
-function answer(ok: boolean) {
-  if (!current) return;
-  const it = current;
-  const card = $('.scard', host);
-  const bot = ($('.scard__bot', host) as HTMLElement & { bot?: Bot }).bot;
+/** record the result of the current item (flashcard or build) */
+function score(ok: boolean, el: HTMLElement) {
+  const it = current!;
+  const bot = (host.querySelector('.scard__bot, .sess__bot') as HTMLElement & { bot?: Bot } | null)?.bot;
   rollDay();
   grade(it.c.id, ok);
   if (ok) {
@@ -235,9 +234,8 @@ function answer(ok: boolean) {
     sfx.right(Math.min(inRow, 8));
     vibrate(12);
     bot?.act(inRow >= 3 ? 'star' : Math.random() < 0.5 ? 'jump' : 'love');
-    floatXP(xp, card);
+    floatXP(xp, el);
     if (inRow === 3 || inRow === 5 || inRow % 10 === 0) toast(`${inRow} in a row`);
-    card.classList.add('fly-right');
   } else {
     missed.add(it.c.id);
     inRow = 0;
@@ -246,15 +244,46 @@ function answer(ok: boolean) {
     sfx.wrong();
     vibrate([30, 30, 30]);
     bot?.act('dizzy');
-    card.classList.add('fly-left');
     // back in 3 cards, at most twice
     if (it.again < 2) queue.splice(Math.min(3, queue.length), 0, { ...it, again: it.again + 1 });
     else doneN++;
   }
   if (markGoal()) setTimeout(() => party(), 450);
   save();
+}
+
+function answer(ok: boolean) {
+  if (!current) return;
+  const card = $('.scard', host);
+  score(ok, card);
+  card.classList.add(ok ? 'fly-right' : 'fly-left');
   current = null;
   setTimeout(nextCard, 260);
+}
+
+/* build-it items (瞬間英作文): Japanese on top, word tiles, Check, then Next */
+function renderBuild() {
+  stop();
+  const it = current!;
+  const r = recOf(it.c);
+  const stage = $('.sess__stage', host);
+  const el = renderQuiz(makeBuild(it.c, !it.fresh), (_q, ok, node) => {
+    score(ok, node);
+    const foot = $('.sess__actions', host);
+    foot.innerHTML = `<button type="button" class="btn btn--got btn--wide" data-next>${ok ? 'Next' : 'Got it, next'}${I.next}<kbd>Enter</kbd></button>`;
+    $('[data-next]', foot).addEventListener('click', () => { current = null; nextCard(); });
+  });
+  el.insertAdjacentHTML('afterbegin', `<div class="sess__meta"><p class="scard__rec mono">${esc(recCode(r))} · ${esc((r?.t ?? '').toUpperCase())}</p><span class="pill ${it.again ? 'pill--again' : it.fresh ? 'pill--new' : 'pill--rev'}">${it.again ? 'Again' : it.fresh ? 'New' : 'Review'}</span><span class="sess__bot" data-bot="${hostOf(r)}"></span></div>`);
+  stage.replaceChildren(el);
+  mountBots(stage, { auto: false });
+  stage.scrollTop = 0;
+  const foot = $('.sess__actions', host);
+  foot.innerHTML = `<button type="button" class="btn btn--again btn--wide" data-giveup>Show me the answer</button>`;
+  $('[data-giveup]', foot).addEventListener('click', () => {
+    // giving up counts as a miss: show the answer like a wrong check
+    const q = el as HTMLElement & { reveal?: () => void };
+    q.reveal?.();
+  });
 }
 
 /* swipe right = got it, left = again (only after the meaning was shown or on a review) */
@@ -290,7 +319,7 @@ let checkQs: Quiz[] = [];
 let checkRight = 0;
 
 function checkRound(n = 5) {
-  const seen = spec.cards;
+  const seen = spec.quiz ? spec.cards : spec.cards.filter((c) => c.k !== 'd');
   const pool = [...seen.filter((c) => missed.has(c.id)), ...shuffle(seen.filter((c) => !missed.has(c.id)))];
   checkQs = pool.slice(0, n).map((c) => makeQuiz(c, false)).filter((q): q is Quiz => !!q);
   checkRight = 0;
@@ -356,6 +385,14 @@ function onKey(e: KeyboardEvent) {
   const k = e.key.toLowerCase();
   if (k === 'escape') { endSession(); return; }
   const quiz = host.querySelector<HTMLElement & { pick?: (i: number) => void }>('.quiz');
+  if (quiz && quiz.classList.contains('quiz--build')) {
+    if (k === 'enter') {
+      e.preventDefault();
+      const next = host.querySelector<HTMLButtonElement>('[data-next]');
+      if (next) next.click(); else host.querySelector<HTMLButtonElement>('.btn-check:not([disabled])')?.click();
+    }
+    return;
+  }
   if (quiz) {
     if (/^[1-4]$/.test(k) && !quiz.classList.contains('is-done')) { quiz.pick?.(Number(k) - 1); e.preventDefault(); }
     else if ((k === 'enter' || k === ' ') && quiz.classList.contains('is-done')) { host.querySelector<HTMLButtonElement>('[data-next]')?.click(); e.preventDefault(); }

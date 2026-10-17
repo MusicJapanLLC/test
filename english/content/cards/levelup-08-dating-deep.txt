@@ -1,0 +1,499 @@
+//! Dating, Deeper | Mixed signals, real talk and saying how you feel | levelup
+
+# I like where this is going.
+@ talk | crush, feelings | real | warm, flirty | 2
+= この関係、いい感じだと思う
+: I'm happy with how our relationship is developing.
+A: This is our fourth date, right?
+B: Fifth. But who's counting?
+A: Honestly? I like where this is going.
+B: Me too.
+✗ I am satisfied with our relationship. | textbook | 契約更新みたいに聞こえる
+✓ I'm really enjoying this. | もっとシンプル
+? 重くならずに「前向きだよ」と伝えられる絶妙な距離感。告白の一歩手前で使える。
+! 相手の反応を見ながら言えるので、温度差があっても気まずくなりにくい。
+
+# Let's see where it goes.
+@ talk | crush, feelings | real | chill | 3
+= 流れに任せてみよう
+: Let's not label it yet and see what happens.
+A: So are we, like, a thing now?
+B: Let's not overthink it. Let's see where it goes.
+- We're just hanging out and seeing where it goes.
+✗ We will decide our relationship later. | textbook | 事務的すぎる
+✓ Let's just go with the flow. | 同じ温度感
+? ポジティブにも「まだ本気じゃない」にも聞こえる言葉。言った人の態度で意味が変わる。
+! 何か月も see where it goes のままなら、一度ちゃんと行き先を確認した方がいい。
+
+# Where do you see this going?
+@ talk | crush, feelings | real | deep | 2
+= この関係、どうなっていくと思う？
+: What do you want this relationship to become?
+A: Can I ask you something kind of serious?
+B: Sure.
+A: Where do you see this going? Like, us.
+B: Honestly, I was hoping you'd ask.
+✗ What is the future of our relationship? | textbook | 面接みたいで重い
+✓ What are we doing here? | ストレートでカジュアル
+? 関係の行き先を聞く質問。What are we? より少し柔らかく、未来の話として聞ける。
+! 聞くのは何回かデートした後が自然。初デートで聞くと重い。
+
+# Should we make it official?
+@ talk | crush | real | warm, deep | 2
+= ちゃんと付き合わない？
+: Should we officially become a couple?
+A: I deleted the dating apps.
+B: Wait, me too.
+A: So... should we make it official?
+B: Yeah. Let's make it official.
+✗ Please become my lover. | textbook | 古風で大げさ
+✓ Do you want to be exclusive? | 一歩手前の確認
+? official ＝公式→「正式に付き合う」。SNS で関係を公開することを Instagram official と言うことも。
+! アメリカは告白より「確認」の文化。何度か会ってから make it official するのが自然な流れ。
+
+# Are you seeing other people?
+@ talk | crush, feelings | real | deep | 2
+= 他の人ともデートしてる？
+: Are you dating anyone else right now?
+A: Can I ask, are you seeing other people?
+B: I was, but not anymore. You?
+A: Just you.
+✗ Do you have another boyfriend? | textbook | 浮気を疑ってるように聞こえる
+✓ Are you talking to anyone else? | アプリ世代の言い方
+? アメリカでは付き合う前に複数の人とデートするのは普通。責めるニュアンスなしで確認できる質問。
+! 聞く前に自分の気持ちを決めておくと、答えを聞いても慌てずに済む。
+
+# What are you looking for?
+@ talk | crush, dm, online | real | chill | 3
+= どんな関係を求めてる？
+: What kind of relationship do you want?
+A: So what are you looking for on here?
+B: Something real, honestly. Not just texting forever.
+A: Same. I'm tired of having pen pals.
+✗ What is your ideal type of relationship? | textbook | アンケートみたい
+✓ What are you hoping to find? | 少し丁寧な言い方
+? マッチングアプリの最初の確認。真剣交際か気軽な関係か、温度感を早めに合わせるための質問。
+! 自分も正直に答えるのがマナー。ぼかすと後で揉める。
+
+# I'm catching feelings.
+@ talk | crush, feelings | real | deep, funny | 2
+= 本気で好きになりかけてる
+: I'm starting to have real romantic feelings.
+A: You said it was just casual.
+B: It was. But I'm catching feelings, man.
+A: Oh no. Here we go.
+- I didn't plan on catching feelings.
+✗ I am beginning to love her. | textbook | 重くて芝居っぽい
+✓ I'm starting to really like her. | 普通の言い方
+? 風邪をひく（catch a cold）みたいに、気持ちに「かかってしまう」。軽い関係のはずが本気になったときに使う。
+! 少し照れ隠しのユーモアがある言い方。友達に打ち明けるときにぴったり。
+
+# I'm falling for you.
+@ talk | crush, feelings | real | deep, flirty | 2
+= 君のこと好きになってる
+: I'm starting to fall in love with you.
+A: Can I tell you something?
+B: Of course.
+A: I think I'm falling for you.
+B: Good. Because I fell a while ago.
+✗ I fell in love to you. | textbook | 前置詞ミス。正しくは in love with
+✓ I'm really into you. | もう少し軽い
+? fall for 人 ＝人に惚れる。I love you. の一歩手前で、進行形が「今まさに落ちてる」感じを出す。
+! fall for it ＝（嘘や罠に）引っかかる、の意味もある。文脈で判断。
+
+# We just clicked.
+@ talk | crush, friends | real | warm | 3
+= 一瞬で意気投合した
+: We connected right away.
+A: How was the date?
+B: So good. We just clicked. We talked for four hours.
+- We clicked over our weird taste in music.
+✗ Our feelings matched immediately. | textbook | 不自然な直訳
+✓ We hit it off. | 同じ意味の定番
+? click ＝カチッとはまる。会話のテンポや笑いのツボが合った感覚。恋愛でも友達でも仕事でも使える。
+! 否定形 We just didn't click. は「合わなかった」の一番やさしい言い方。
+
+# I still get butterflies.
+@ talk | crush, feelings | real | warm, deep | 2
+= 今でもドキドキする
+: I still feel nervous excitement around that person.
+A: You've been together two years. Still nervous?
+B: Honestly, I still get butterflies when she texts.
+A: That's adorable. Gross, but adorable.
+✗ My heart beats fast. | textbook | 医学的に聞こえる
+✓ I get nervous around her. | シンプル
+? butterflies (in my stomach) ＝お腹の中で蝶が舞うような緊張とときめき。恋愛にも本番前の緊張にも使う。
+! ライブ前の緊張にも I've got butterflies. と言える。
+
+# I can be myself around you.
+@ talk | crush, feelings, friends | real | warm, deep | 2
+= 君の前だと素の自分でいられる
+: I feel comfortable and don't have to pretend with you.
+A: You're quieter on dates than you are with me.
+B: I don't know. I can be myself around you.
+A: That's actually really sweet.
+- It's rare to find someone you can be yourself around.
+✗ I can show my true face to you. | textbook | 直訳で不自然
+✓ I feel comfortable with you. | 素直な言い方
+? 最高の褒め言葉の一つ。見た目より「安心できる」を伝えるので、長く続く関係で特に響く。
+! 恋人だけでなく親友にも使える。
+
+# I'm all in.
+@ talk | crush, feelings, business | real | deep | 2
+= 本気だよ（全部賭けてる）
+: I'm fully committed.
+A: I know the distance is hard. Are you sure about this?
+B: I'm all in. Osaka to Seoul is just a short flight.
+- If we're doing this, I'm all in.
+✗ I give you my everything. | textbook | 大げさで芝居っぽい
+✓ I'm serious about this. | 落ち着いた言い方
+? ポーカーの「オールイン（全額賭け）」から。迷いがない本気度を伝える。仕事のプロジェクトにも使える。
+! 言ったら態度で示すこと。口だけの all in は一番信用を失う。
+
+# I'm getting mixed signals.
+@ talk | crush, dm, feelings | real | deep | 3
+= 気があるのかないのか分からない
+: Their words and actions say different things.
+A: She texts me every night but cancels every plan.
+B: Yeah, those are mixed signals.
+A: I'm getting mixed signals, and it's driving me crazy.
+✗ Her signal is not clear. | textbook | 電波の話みたい
+✓ I can't read her. | 「読めない」
+? 言葉と行動がバラバラで、脈ありか判断できない状態。send mixed signals ＝思わせぶりな態度をとる。
+! 悩むより聞くのが早い。I'm getting mixed signals. Are we good? と直接言えるのが大人。
+
+# We're on different pages.
+@ talk | crush, feelings, conflict | real | deep | 2
+= 気持ち（考え）がすれ違ってる
+: We want or expect different things.
+A: I thought we were getting serious.
+B: I think we're on different pages. I'm not ready for that.
+A: Okay. Thanks for telling me.
+✗ Our opinions are different. | textbook | 議論みたいに聞こえる
+✓ We're not on the same page. | 同じ意味
+? on the same page（認識が一致）の反対。恋愛の温度差を、どちらも責めずに言える。
+! 仕事でも使える。認識のズレには早く気づくのが一番大事。
+
+# I think we want different things.
+@ talk | crush, feelings, conflict | real | deep, cold | 2
+= お互い求めてるものが違うと思う
+: Our goals for the relationship don't match.
+A: You want to move to Tokyo, and I want to stay here.
+B: Yeah. I think we want different things.
+A: That doesn't make it hurt less.
+✗ Our purposes are not same. | textbook | 文法も硬さも不自然
+✓ We're just not a match. | アプリ的な言い方
+? 別れ話の定番で、誰も悪者にしない言い方。結婚、子ども、住む場所など大きな違いに使う。
+! 定番すぎて言い訳に聞こえることも。具体的な理由を一つ添えると誠実に伝わる。
+
+# situationship
+@ talk | crush, friends | real | funny, deep | 2
+= 付き合ってるのかよく分からない関係
+: A romantic relationship with no clear label.
+A: Are you two dating?
+B: It's more of a situationship.
+A: So you see each other every weekend, but it's not a relationship?
+B: Exactly. Don't ask.
+✗ We have a vague relationship. | textbook | 意味は通じるが今っぽくない
+✓ It's undefined. | 少し真面目な言い方
+? situation＋relationship の造語。2020年代に定着したスラング。恋人ほどの約束はないけど、友達以上。
+! 自虐的に使われることが多い。本人がモヤモヤしているサインでもある。
+
+# the talking stage
+@ talk | crush, dm, online | real | chill | 2
+= 付き合う前のやりとり期間
+: The early phase of texting and dating before a relationship.
+A: Is she your girlfriend now?
+B: No, we're still in the talking stage.
+A: How long is the talking stage? It's been three months.
+✗ We are in the before-dating period. | textbook | 存在しない言い方
+✓ We're just talking. | 一番短い
+? talking ＝ここでは「（恋愛目的で）やりとりしてる」。デートはしてるけど交際はまだ、の期間。
+! 日本語の「いい感じ」に近い。長引くと situationship になる。
+
+# breadcrumbing
+@ talk | crush, dm | real | cold | 2
+= 気を持たせるだけの小出しの連絡
+: Giving someone small bits of attention to keep them interested, without real commitment.
+A: He likes my posts and sends a heart once a week. That's it.
+B: Sounds like breadcrumbing.
+A: So he's just keeping me on the hook?
+B: Pretty much.
+✗ He gives me little love. | textbook | 意味が伝わりにくい
+✓ He's stringing me along. | 同じく「キープしてる」
+? パンくずを少しずつ落として相手を引き留める→その気がないのに最低限の連絡だけ続けること。ghost の親戚。
+! 気づいたら距離を置くのが一番。自分がやっていないかも要チェック。
+
+# I don't play games.
+@ talk | crush, dm | real | deep | 2
+= 駆け引きはしない
+: I'm direct and don't use dating tricks.
+A: Should I wait a day before I text him back?
+B: Why? I don't play games. If I like someone, I text them.
+- I'm too old to play games. I'll just say it.
+✗ I don't do tactics. | textbook | 意味不明に聞こえる
+✓ I'm pretty straightforward. | 自分の性格として言う
+? play games ＝恋愛の駆け引き（わざと返信を遅らせる、気のないふりをする等）。それをしない＝正直にいくよ、の宣言。
+! 言うだけなら簡単。返信を三日放置した人が言うと説得力ゼロ。
+
+# I don't want to lead you on.
+@ talk | crush, feelings | real | deep, warm | 2
+= 期待させるようなことはしたくない
+: I don't want to give you false hope.
+A: Do you want to get dinner again this weekend?
+B: I had a good time, but I don't want to lead you on. I just see you as a friend.
+A: Oh. Okay. I appreciate you saying that.
+✗ I don't want to make you expect. | textbook | 文法的に不完全
+✓ I don't want to give you the wrong idea. | もっとやわらかい
+? lead 人 on ＝その気がないのに期待させる。断るときに「あなたのためを思って」が伝わる誠実な言い方。
+! はっきり言う方が結果的に優しい、というのが英語圏の感覚。
+
+# It's not you, it's timing.
+@ talk | crush, feelings | real | deep | 2
+= あなたが悪いんじゃなくて、タイミングの問題
+: The person is great, but the moment in life is wrong.
+A: I really like you, but I'm moving to Canada in two months.
+B: So it's not me, it's timing?
+A: Honestly? Yeah. It's not you, it's timing.
+✗ It's not you, it's me. | cringe | 定番すぎて今は冗談扱い
+✓ The timing just isn't right. | 落ち着いた言い方
+? 有名な It's not you, it's me. のアレンジ。転勤、留学、仕事の忙しさなど、本当に状況が理由のときに使う。
+! 本当の理由が別にあるときに使うとバレる。言い訳の道具にしないこと。
+
+# I'm not in a good place right now.
+@ talk | crush, feelings, health | real | deep | 2
+= 今、気持ち的に余裕がない
+: I'm struggling emotionally and can't give much right now.
+A: Do you want to go out this weekend?
+B: I'm sorry. I'm not in a good place right now. Work's been rough.
+A: No worries. I'm here if you want to talk.
+✗ My condition is bad. | textbook | 体調の話に聞こえる
+✓ I've got a lot going on right now. | もう少し軽め
+? 心の状態が良くない、を正直かつ短く言える。理由を全部説明しなくても相手は察してくれる。
+! 言われたら深掘りせず I'm here if you need anything. と返すのが優しい。
+
+# I'm still not over my ex.
+@ talk | crush, feelings | real | deep | 2
+= まだ元恋人を引きずってる
+: I still have feelings for my former partner.
+A: Why'd you cancel the date?
+B: Honestly, I'm still not over my ex. It wouldn't be fair to her.
+A: That's actually really mature.
+✗ I still love my past girlfriend. | textbook | ex を使う方が自然
+✓ I'm still hung up on my ex. | よりくだけた言い方
+? be over 人 ＝その人を吹っ切れた。not over ＝引きずってる。ex は元恋人・元配偶者の万能語。
+! 正直に言えるのは誠実さ。新しい相手を中途半端に巻き込まないのが大事。
+
+# I don't want to be a rebound.
+@ talk | crush, feelings | real | deep | 2
+= 失恋の穴埋めにされたくない
+: I don't want to be someone you date just to get over your ex.
+A: My last relationship ended a month ago, but I really like you.
+B: I like you too. I just don't want to be a rebound.
+A: Fair. Let's not rush anything.
+✗ I don't want to be a substitute. | textbook | 代役っぽくて冷たい
+✓ I want to make sure you're ready. | 相手を気づかう言い方
+? rebound ＝跳ね返り→失恋直後の勢いで始める関係。自分を守りつつ、相手を責めない言い方。
+! バスケのリバウンドと同じ単語。友達同士の会話でネタにされることも多い。
+
+# I didn't feel a spark.
+@ talk | crush, friends | real | chill, deep | 3
+= ときめきがなかった
+: There was no romantic chemistry.
+A: He seemed perfect on paper.
+B: He was nice, but I didn't feel a spark.
+A: Yeah, you can't fake that.
+✗ I didn't feel love. | textbook | 一回のデートには重すぎる
+✓ There was no chemistry. | 同じ意味
+? spark ＝火花。いい人だけど恋愛としては何も起きなかった、を一言で。chemistry とほぼ同じ。
+! 本人に言うより、友達への報告で使うことが多い。本人には I don't think we're a match. くらいが優しい。
+
+# I'm just not feeling it.
+@ talk | crush, friends, music | real | chill | 3
+= なんかピンと来ない
+: It's not working for me, and I can't fully explain why.
+A: Are you going on a second date?
+B: I don't think so. I'm just not feeling it.
+- I tried the new beat, but I'm just not feeling it.
+✗ I don't have good feeling. | textbook | 文法も不自然
+✓ It's just not for me. | やんわり断る
+? feel it ＝しっくり来る。理由をうまく説明できない「なんか違う」を言える便利フレーズ。恋愛にも音楽にも使う。
+! 理由を聞かれても It's just a vibe thing. で済ませることも多い。
+
+# No hard feelings.
+@ talk | crush, friends, conflict | real | warm | 3
+= 気にしてないよ（恨みっこなし）
+: I'm not angry or upset about it.
+A: Sorry I said no to a second date.
+B: No hard feelings. Seriously.
+A: Friends?
+B: Friends.
+✗ I'm not angry, don't worry. | textbook | かえって怒ってるように聞こえる
+✓ All good. | 一番カジュアル
+? hard feelings ＝わだかまり・恨み。断られた側も断った側も使える、関係をきれいに終わらせるひと言。
+! 仕事で負けたとき、交渉がまとまらなかったときにも使える。
+
+# I respect that.
+@ talk | crush, friends, conflict | real | warm, deep | 3
+= その気持ち、尊重するよ
+: I accept your decision without arguing.
+A: I just don't think we should date.
+B: Okay. I respect that.
+A: Thanks for not making it weird.
+- You want to focus on your music? I respect that.
+✗ I understand your decision. | textbook | 間違いではないが事務的
+✓ That's fair. | 軽めの言い方
+? 断られたときに一番かっこいい返し。食い下がらずに受け止めることで、相手の印象が一気に良くなる。
+! 本当に尊重するなら、その後しつこく連絡しないこと。
+
+# Thanks for being honest.
+@ talk | crush, friends, work | real | warm | 3
+= 正直に言ってくれてありがとう
+: I appreciate that you told me the truth.
+A: I'm not ready for a relationship. I'm sorry.
+B: That sucks, but thanks for being honest.
+A: You deserved to know.
+- Thanks for being honest with me about the mix.
+✗ Thank you for your honesty opinion. | textbook | 文法ミス
+✓ I appreciate you telling me. | 少し丁寧
+? 聞きたくない話でも、まずお礼。英語圏では正直さそのものが誠実さとして評価される。
+! 悔しいときほどこれを言える人は大人に見える。
+
+# He's emotionally unavailable.
+@ talk | crush, feelings | real | deep, cold | 2
+= 気持ちの面で向き合ってくれない人
+: He can't or won't connect on a deeper emotional level.
+A: Every time I bring up feelings, he changes the subject.
+B: Sounds like he's emotionally unavailable.
+A: So it's not just me?
+B: It's not you. Some people just aren't ready.
+✗ He has no heart. | textbook | 冷酷な人という意味になってしまう
+✓ He keeps everything surface-level. | 具体的な言い方
+? emotionally unavailable ＝気持ちの話になると逃げる・深い関係を築けない状態。性格を責めるより「今はそういう状態」というニュアンス。
+! 自分に当てはまると気づいたら I'm not great at talking about feelings. と正直に言うだけでも関係は変わる。
+
+# Can I be honest with you?
+@ talk | crush, feelings, friends | real | deep | 3
+= 正直に言ってもいい？
+: A gentle way to start saying something serious or vulnerable.
+A: Can I be honest with you?
+B: Always.
+A: I get jealous when you talk about him.
+B: Thanks for telling me. Let's talk about it.
+✗ I will tell you the truth now. | textbook | 告白か自白みたい
+✓ Can I be real with you? | よりカジュアル
+? 本音を言う前のクッション。相手に心の準備をさせるので、重い話でも聞いてもらいやすい。
+! 前置きが長すぎると相手が不安になる。言ったらすぐ本題へ。
+
+# I've been meaning to tell you
+@ talk | crush, feelings, friends | real | deep, warm | 3
+= ずっと言おうと思ってたんだけど
+: Something I've wanted to say for a while.
+A: I've been meaning to tell you, I really like spending time with you.
+B: Same here. I was just too shy to say it.
+- I've been meaning to tell you, I'm moving next month.
+✗ I wanted to tell you since before. | textbook | 時制が不自然
+✓ I've wanted to say this for a while. | 同じ意味
+? have been meaning to 〜 ＝ずっと〜するつもりだった。言いそびれていたことを切り出す完璧な導入。
+! いい話にも悪い話にも使えるので、言われた方はちょっとドキッとする。
+
+# I'm sorry I made you feel that way.
+@ talk | crush, feelings, conflict | real | deep, warm | 2
+= そんな気持ちにさせてごめん
+: A real apology that takes responsibility for how the other person feels.
+A: When you didn't text back all weekend, I felt like I didn't matter.
+B: I'm sorry I made you feel that way. That wasn't fair to you.
+A: Thank you for saying that.
+✗ I'm sorry if you feel that way. | textbook | 「あなたの感じ方の問題」と聞こえる最悪の謝り方
+✓ I hurt you, and I'm sorry. | よりストレート
+? I made you feel ＝自分の行動が原因だと認める。if you feel that way は責任を相手に返す「謝ってない謝罪」。
+! 英語圏ではこの違いにとても敏感。一語の違いでケンカが終わるか長引くかが決まる。
+
+# What do you need from me?
+@ talk | crush, feelings, conflict | real | deep, warm | 2
+= 僕に何をしてほしい？
+: How can I support you or make this better?
+A: I'm just so stressed, and you keep joking around.
+B: Okay, I hear you. What do you need from me right now?
+A: Honestly? Just a hug.
+✗ What should I do for you? | textbook | 少し他人行儀
+✓ How can I help? | 一般的な言い方
+? 相手が怒ってる・落ち込んでるとき、解決策を押しつけずに聞ける最強の質問。
+! 答えが「話を聞いてほしいだけ」のことも多い。アドバイスはその後で。
+
+# I just need some reassurance.
+@ talk | crush, feelings | real | deep | 2
+= ちょっと安心させてほしいだけ
+: I need you to tell me things are okay between us.
+A: You've been quiet lately. Are we okay?
+B: Of course. Why?
+A: I don't know. I just need some reassurance sometimes.
+B: Fair. I'm not going anywhere.
+✗ Please make me feel safe. | textbook | 大げさに聞こえる
+✓ Can you tell me we're good? | もっと具体的
+? reassurance ＝安心させる言葉。不安を責めずに、何がほしいかを具体的に伝えられる。
+! I'm not going anywhere. ＝「どこにも行かないよ」は安心させる定番の返し。
+
+# I'd rather say this in person.
+@ talk | crush, dm, feelings | real | deep | 2
+= これは直接会って話したい
+: This is too important to say over text.
+A: You said we need to talk. What's up?
+B: I'd rather say this in person. Can I come by tonight?
+A: Okay, now I'm nervous.
+B: Don't be. It's good news, I promise.
+✗ I want to tell you by face. | textbook | by face という言い方は存在しない
+✓ Can we talk face to face? | 同じ意味
+? 大事な話（告白、別れ、謝罪）を LINE や DM で済ませないための一言。in person ＝直接会って。
+! 英語圏ではテキストで別れを告げるのはかなり失礼とされる。誠実さを見せたいときこそ in person。
+
+# What's your love language?
+@ talk | crush, friends | real | warm, funny | 2
+= あなたの愛情表現のタイプは？
+: How do you most like to give and receive love?
+A: What's your love language?
+B: Probably quality time. And snacks.
+A: Snacks isn't a love language.
+B: It is if you love me.
+✗ How do you express your love normally? | textbook | 意味は通じるけど流行語を知らない感じ
+✓ How do you like to show love? | 説明的に言うなら
+? 「言葉・時間・プレゼント・行動・スキンシップ」の5タイプがあるという考え方から来た、2020年代の定番トピック。
+! デートの話題作りに便利。真剣な診断というより、会話のネタとして使われる。
+
+# We've been drifting apart.
+@ talk | crush, friends, feelings | real | deep | 2
+= だんだん心が離れてきた
+: We've slowly become less close.
+A: You two used to be inseparable.
+B: Yeah. We've been drifting apart since I started working nights.
+A: That happens. Have you talked about it?
+✗ Our distance is getting bigger. | textbook | 物理的な距離に聞こえる
+✓ We're not as close as we used to be. | 説明的
+? drift ＝漂う。誰も悪くないのに自然に離れていく感じ。恋人にも友達にも使う。
+! ケンカではなく、時間や環境の変化が原因というニュアンス。
+
+# I got cold feet.
+@ talk | crush, feelings, business | real | chill | 2
+= 直前で怖気づいた
+: I got nervous and backed out at the last minute.
+A: Did you ask her out?
+B: I was going to, but I got cold feet.
+A: Again? Bro.
+- He got cold feet a week before the wedding.
+✗ I became scared at the last moment. | textbook | 意味は通じるけど弱い
+✓ I chickened out. | もっとくだけた自虐
+? cold feet ＝足がすくむ。告白、結婚、契約、転職など大きな決断の直前で怖くなること。
+! 結婚式直前の花嫁・花婿に使われる定番表現でもある。
+
+# I'd love for you to meet my friends.
+@ talk | crush, friends | real | warm | 2
+= 友達に紹介したいな
+: I want to introduce you to the people close to me.
+A: My friends are having a barbecue on Sunday.
+B: Oh, nice. Have fun.
+A: Actually, I'd love for you to meet my friends. Only if you want.
+B: I'd like that.
+✗ I want to show you to my friends. | textbook | 物を見せるような言い方
+✓ Come hang out with my friends. | 気軽な誘い
+? 友達や家族に紹介する＝関係を真剣に考えているサイン。I'd love for you to 〜 は丁寧で温かい誘い方。
+! アメリカでは「友達に紹介」が付き合う前後の大事なステップ。

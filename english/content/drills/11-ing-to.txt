@@ -1,0 +1,35 @@
+//! -ing or to? | Gerunds vs infinitives: enjoy doing, want to, stop doing | build
+! 動詞のあとが -ing か to ～ かは動詞で決まる。ざっくり -ing ＝「もうやってること」、to ＝「これからやること」。
+! -ing 派：enjoy, finish, mind, avoid, keep, quit, suggest, consider, can't help。to 派：want, need, decide, plan, hope, refuse, can't afford。
+! 意味が変わる組：stop -ing（やめる）／stop to（～するために止まる）、remember -ing（した記憶）／remember to（忘れずにする）、try -ing（試しにやる）／try to（やろうとする）。
+! 前置詞のあとは必ず -ing：Thanks for coming. / I'm good at ～ing。I'm used to ～ と look forward to ～ の to も前置詞なので -ing。
+I want to start a podcast. | ポッドキャスト始めたいんだよね。 | want は to
+I quit drinking last year. | 去年、酒やめた。 | quit は -ing
+Do you mind waiting a few minutes? | 何分か待ってもらってもいい？ | mind は -ing
+I decided to quit my day job. | 昼の仕事、辞めるって決めた。 | decide は to
+I actually enjoy cooking on my days off. | 休みの日に料理するの、けっこう楽しいんだよね。 | enjoy to はNG
+I keep making the same mistake. | 何回も同じミスしちゃうんだよね。 | keep -ing ＝何度も・ずっと
+Stop checking your phone during dinner. | ご飯中にスマホ見るのやめて。 | stop -ing ＝やめる
+I finished mixing the track at four in the morning. | 朝4時にトラックのミックス終わらせた。 | finish は -ing
+Thanks for coming out tonight. | 今夜は来てくれてありがとう。 | for のあとは -ing
+I forgot to send the invoice. | 請求書送るの忘れてた。 | forget to ＝やり忘れる
+Remember to lock the back door. | 裏口の鍵、閉め忘れないでね。 | remember to ＝忘れずに～する
+I don't remember saying that. | そんなこと言った覚えないんだけど。 | remember -ing ＝した記憶
+Try restarting the app. | 試しにアプリ再起動してみて。 | try -ing ＝試しにやってみる
+I tried to call you, but it didn't go through. | 電話しようとしたんだけど、つながらなかった。 | try to ＝やろうとした
+I stopped to grab coffee on the way. | 途中でコーヒー買うために寄った。 | stop to ＝～するために止まる
+I'm good at remembering faces, not names. | 顔は覚えるの得意だけど、名前はダメ。 | at のあとは -ing
+I'm thinking about opening a second store. | 2店舗目を出そうか考えてる。 | about のあとは -ing
+I'm used to working nights. | 夜勤にはもう慣れてる。 | この to は前置詞なので -ing
+I'm looking forward to seeing you this weekend. | 週末会えるの楽しみにしてる。 | look forward to のあとも -ing
+I'd love to collab with you sometime. | いつか一緒にコラボしたいな。 | would love to ＋原形
+He suggested going to karaoke. | カラオケ行こうって、あいつが提案してきた。 | suggest to go はNG
+She refused to let me pay. | 彼女、どうしても俺に払わせてくれなかった。 | refuse は to
+I couldn't help laughing during the sermon. | 説教中に思わず笑っちゃった。 | can't help -ing ＝思わず～しちゃう
+I try to avoid eating carbs late at night. | 夜遅くは炭水化物を食べないようにしてる。 | try to ＋ avoid -ing のセット
+It's not worth arguing about. | それ、言い合うほどのことじゃないよ。 | worth -ing ＝～する価値がある
+Would you consider lowering the price a bit? | 少し値下げを検討してもらえませんか？ | consider -ing、丁寧な交渉
+I gave up trying to explain it. | 説明しようとするのは、もう諦めた。 | give up -ing
+I'll never forget playing my first show. | 初めてライブやった時のこと、一生忘れない。 | forget -ing ＝したことを忘れる
+I regret not going to her show. | 彼女のライブに行かなかったの、後悔してる。 | not は -ing の前
+I can't afford to lose this client. | このクライアントを失うわけにはいかない。 | can't afford to ＝～する余裕がない

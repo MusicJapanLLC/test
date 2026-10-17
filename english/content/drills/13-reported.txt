@@ -1,0 +1,36 @@
+//! He Said, She Said | Reported speech and told me to | build
+! 人の話を伝えるときは said / told / asked。told には必ず「誰に」が付く：He told me ～。He said me ～ はNG。
+! 伝えるときは時制を一つ過去にずらすのが基本："I'm tired." → She said she was tired.（will → would、can → could）
+! 命令・お願いは told / asked ＋人＋ to ～。「～するな」は not to ～：He told me not to worry.
+! 質問は asked ＋ if または疑問詞、そのあとは普通の語順：She asked where I lived.（where did I live にしない）
+! 今も変わらない話や今の話なら、時制はずらさなくてOK：He says he's on his way.
+She said she was tired. | 彼女、疲れたって言ってた。 | 時制を一つずらす
+He told me he was quitting. | あいつ、辞めるって俺に言ってきた。 | told には「人」が必要
+My boss told me to come in early. | 店長に早く来いって言われた。 | told ＋人＋ to
+He said he'd call me back. | あいつ、折り返すって言ってた。 | will → would
+I told you I'd be late. | 遅れるって言ったじゃん。
+You said you'd pay me back. | 返すって言ったよね。
+She asked me to wait outside. | 彼女に、外で待っててって頼まれた。 | asked ＋人＋ to ＝頼む
+He told me not to tell anyone. | あいつに、誰にも言うなって言われた。 | not to の語順
+The doctor told me not to lift for a week. | 医者に、1週間は筋トレ禁止って言われた。
+My landlord told me to keep it down. | 大家さんに、静かにしろって言われた。 | keep it down ＝静かにする
+She asked if I was single. | 彼女に、俺がフリーかどうか聞かれた。 | Yes/No の質問は if
+He asked me what I wanted to drink. | あいつに、何飲みたいか聞かれた。 | 疑問詞のあとは普通の語順
+A customer asked where the bathroom was. | お客さんに、トイレどこか聞かれた。
+My mom asked when I was coming home. | 母さんに、いつ帰ってくるのか聞かれた。
+She said she'd think about it. | 彼女、考えとくって言ってた。 | だいたいダメなパターン
+The pastor said everyone was welcome. | 牧師さんが、誰でも歓迎だって言ってた。
+The client said the demo was perfect. | クライアントが、デモ完璧だって言ってた。
+He said he'd be here by eight. | あいつ、8時までにはここ来るって言ってたんだけど。
+I asked him if he wanted to collab. | あいつに、コラボしたいか聞いてみた。
+She warned me not to date coworkers. | 職場の人とは付き合うなって、彼女に忠告された。 | warn ＋人＋ not to
+He promised he wouldn't be late again. | あいつ、もう遅刻しないって約束したんだけどね。 | won't → wouldn't
+She told me she'd been to Osaka before. | 彼女、前に大阪来たことあるって教えてくれた。 | 現在完了 → had ＋過去分詞
+She asked me why I'd left so early. | なんであんなに早く帰ったのか、彼女に聞かれた。 | 過去形 → had ＋過去分詞
+He asked if I'd ever streamed before. | あいつに、配信やったことあるか聞かれた。
+They told me the position had been filled. | その仕事、もう人が決まったって言われた。 | 受け身もずれて had been
+The bank asked how much I made a month. | 銀行に、月収いくらか聞かれた。
+She told me she didn't want anything serious. | 彼女に、真剣な付き合いはしたくないって言われた。
+Did he say what time it starts? | 何時に始まるか、あいつ言ってた？ | これからの話なので現在形のまま
+My manager wants to know if you can cover Friday. | 店長が、金曜のシフト入れるか知りたがってる。 | 今の話なので時制はそのまま
+Everyone said it was impossible, but we did it. | みんな無理だって言ってたけど、やってのけた。

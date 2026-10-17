@@ -118,13 +118,15 @@ const IPA_EXTRA = {
   'entrée': 'ˈɑnˌtreɪ', flirty: 'ˈflɝti', chatbot: 'ˈtʃætˌbɑt', livestream: 'ˈlaɪvˌstrim', remix: 'ˈriˌmɪks',
   overthink: 'ˌoʊvɚˈθɪŋk', setlist: 'ˈsɛtˌlɪst', merch: 'mɝtʃ', deadlift: 'ˈdɛdˌlɪft', gonna: 'ˈɡɑnə', wanna: 'ˈwɑnə', gotta: 'ˈɡɑtə',
   lemme: 'ˈlɛmi', gimme: 'ˈɡɪmi', kinda: 'ˈkaɪndə', dunno: 'dəˈnoʊ', ya: 'jə', "y'all": 'jɔl', "ain't": 'eɪnt',
+  overshare: 'ˌoʊvɚˈʃɛr', mortifying: 'ˈmɔrtəˌfaɪɪŋ', relatable: 'rɪˈleɪtəbəl', tailwinds: 'ˈteɪlˌwɪndz', paywall: 'ˈpeɪˌwɔl',
+  greenwashing: 'ˈɡrinˌwɑʃɪŋ', veg: 'vɛdʒ', 'touché': 'tuˈʃeɪ',
 };
 // spoken as letters: EOD, KPI, B2B, DM, brb, gg …
 const LETTER = {
   a: 'eɪ', b: 'bi', c: 'si', d: 'di', e: 'i', f: 'ɛf', g: 'dʒi', h: 'eɪtʃ', i: 'aɪ', j: 'dʒeɪ', k: 'keɪ', l: 'ɛl', m: 'ɛm',
   n: 'ɛn', o: 'oʊ', p: 'pi', q: 'kju', r: 'ɑr', s: 'ɛs', t: 'ti', u: 'ju', v: 'vi', w: 'ˈdʌbəlju', x: 'ɛks', y: 'waɪ', z: 'zi', 2: 'tu',
 };
-const SAID_AS_LETTERS = new Set(['eod', 'kpi', 'b2b', 'npc', 'tmi', 'irl', 'dm', 'dms', 'jk', 'gg', 'afk', 'brb', 'wtf', 'af', 'ceo', 'roi', 'seo', 'fyi', 'asap', 'id', 'ai', 'ok']);
+const SAID_AS_LETTERS = new Set(['ipo', 'eod', 'kpi', 'b2b', 'npc', 'tmi', 'irl', 'dm', 'dms', 'jk', 'gg', 'afk', 'brb', 'wtf', 'af', 'ceo', 'roi', 'seo', 'fyi', 'asap', 'id', 'ai', 'ok']);
 function spellOut(w) {
   const plural = w.length > 2 && w.endsWith('s') && SAID_AS_LETTERS.has(w.slice(0, -1));
   const sounds = [...(plural ? w.slice(0, -1) : w)].map((ch) => LETTER[ch]);
@@ -169,11 +171,21 @@ function ipaPhrase(text) {
   return parts.join(' ');
 }
 
+// optional first-line header of a content file: //! Title | Subtitle | level (core, levelup, build)
+const fileMeta = {};
+function readHeader(file, rec) {
+  const first = fs.readFileSync(file, 'utf8').split('\n')[0];
+  if (!first.startsWith('//!')) return;
+  const [t, sub = '', lv = 'core'] = first.slice(3).split('|').map((x) => x.trim());
+  fileMeta[rec] = { t, sub, lv, ex: [] };
+}
+
 const slug = (s) => s.toLowerCase().replace(/[’']/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) || 'x';
 
 // ── parse cards ──
 function parseCards(file) {
   const rel = path.relative(root, file);
+  readHeader(file, path.basename(file, '.txt'));
   const text = fs.readFileSync(file, 'utf8').replace(/\r/g, '');
   const cards = [];
   let c = null;
@@ -248,6 +260,7 @@ function checkCard(c) {
 // ── parse words ──
 function parseWords(file) {
   const rel = path.relative(root, file);
+  readHeader(file, `words-${path.basename(file, '.txt')}`);
   const words = [];
   let tier = path.basename(file, '.txt').replace(/^\d+-/, '');
   fs.readFileSync(file, 'utf8').replace(/\r/g, '').split('\n').forEach((raw, n) => {
@@ -255,21 +268,48 @@ function parseWords(file) {
     const where = `${rel}:${n + 1}`;
     if (!line || line.startsWith('//')) return;
     if (line.startsWith('@tier')) { tier = line.slice(5).trim(); return; }
-    const parts = line.split('|').map((s) => s.trim());
+    // protect the || example separator before splitting fields on single pipes
+    const parts = line.replace(/\|\|/g, '\u0001').split('|').map((s) => s.trim().replace(/\u0001/g, '||'));
     if (parts.length < 5) return fail(where, `word line needs 5 fields: ${line.slice(0, 40)}`);
-    const [head, pos, ja, d, ex, tags = ''] = parts;
+    const [head, pos, ja, d, ex, tags = '', note = ''] = parts;
     if (!POS.includes(pos)) fail(where, `bad pos ${pos}`);
     const all = tags.split(',').map((s) => s.trim()).filter(Boolean);
     const explicit = all.includes('explicit');
     const sc = all.filter((s) => s !== 'explicit');
     for (const s of sc) if (!SCENES.includes(s)) fail(where, `bad scene ${s}`);
     if (!ja || !d || !ex) fail(where, 'empty field');
+    // several examples are separated by ||
+    const exs = ex.split('||').map((x) => x.trim()).filter(Boolean);
     const lw = head.toLowerCase();
     const stem = lw.length > 4 ? lw.slice(0, Math.max(3, lw.length - 3)) : lw;
-    if (!ex.toLowerCase().includes(stem.split(' ')[0])) warn.push(`${where}: "${head}" not in example`);
-    words.push({ head, pos, ja, d, ex, sc, tier, where, explicit, rec: `words-${path.basename(file, '.txt')}` });
+    if (!exs.some((x) => x.toLowerCase().includes(stem.split(' ')[0]))) warn.push(`${where}: "${head}" not in example`);
+    words.push({ head, pos, ja, d, exs, note, sc, tier, where, explicit, rec: `words-${path.basename(file, '.txt')}` });
   });
   return words;
+}
+
+// ── parse grammar drills (瞬間英作文): //! header, ! explanation lines, then  English | 日本語 | note ──
+function parseDrills(file) {
+  const rel = path.relative(root, file);
+  const rec = `drills-${path.basename(file, '.txt')}`;
+  readHeader(file, rec);
+  if (!fileMeta[rec]) fail(rel, 'drill file needs a //! Title | Subtitle | build header');
+  const out = [];
+  fs.readFileSync(file, 'utf8').replace(/\r/g, '').split('\n').forEach((raw, n) => {
+    const line = raw.trim();
+    const where = `${rel}:${n + 1}`;
+    if (!line || line.startsWith('//')) return;
+    if (line.startsWith('!')) { fileMeta[rec]?.ex.push(line.slice(1).trim()); return; }
+    const [en, ja, note = ''] = line.split('|').map((x) => x.trim());
+    if (!en || !ja) return fail(where, 'drill line needs English | 日本語');
+    if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(en)) fail(where, 'Japanese inside the English sentence');
+    if (!/[\u3040-\u30ff\u4e00-\u9fff]/.test(ja)) fail(where, 'the Japanese side has no Japanese');
+    const n2 = en.split(/\s+/).length;
+    if (n2 < 3 || n2 > 16) warn.push(`${where}: ${n2} words (aim for 3–16)`);
+    if (!/[.!?]$/.test(en)) fail(where, 'English sentence should end with . ! or ?');
+    out.push({ en, ja, note, rec, where });
+  });
+  return out;
 }
 
 const list = (dir) => (fs.existsSync(dir) ? fs.readdirSync(dir).filter((f) => f.endsWith('.txt')).sort().map((f) => path.join(dir, f)) : []);
@@ -279,6 +319,7 @@ loadCmu();
 
 const cards = list(path.join(root, 'content/cards')).flatMap(parseCards);
 const words = list(path.join(root, 'content/words')).flatMap(parseWords);
+const drills = list(path.join(root, 'content/drills')).flatMap(parseDrills);
 
 const ids = new Set();
 const outCards = [];
@@ -311,10 +352,26 @@ for (const w of words) {
   ids.add(id);
   const ipa = w.head.includes(' ') ? ipaPhrase(w.head) : ipaWord(w.head, w.pos);
   if (!ipa) noIpa++;
-  const o = { id, k: 'w', rec: w.rec, s: 'words', sc: w.sc, h: w.head, pos: w.pos, ja: w.ja, d: w.d, l: [['', w.ex]], t: w.tier };
+  const o = { id, k: 'w', rec: w.rec, s: 'words', sc: w.sc, h: w.head, pos: w.pos, ja: w.ja, d: w.d, l: w.exs.map((x) => ['', x]), t: w.tier };
   if (ipa) o.ipa = ipa;
+  if (w.note) o.y = w.note;
   if (w.explicit) o.e = 1;
   outWords.push(o);
+}
+
+const outDrills = [];
+const seenDrill = new Set();
+for (const d of drills) {
+  const key = d.en.toLowerCase();
+  if (seenDrill.has(key)) { fail(d.where, `duplicate drill sentence "${d.en}"`); continue; }
+  seenDrill.add(key);
+  let id = `d-${slug(d.en)}`;
+  let k = 2;
+  while (ids.has(id)) id = `d-${slug(d.en)}-${k++}`;
+  ids.add(id);
+  const o = { id, k: 'd', rec: d.rec, s: 'drill', sc: [], h: d.en, ja: d.ja, l: [] };
+  if (d.note) o.n = d.note;
+  outDrills.push(o);
 }
 
 // duplicate heads across cards (same phrase twice)
@@ -332,7 +389,7 @@ for (const c of [...outCards, ...outWords]) {
 
 const stats = {};
 for (const c of outCards) stats[c.s] = (stats[c.s] ?? 0) + 1;
-console.log(`cards ${outCards.length} ${JSON.stringify(stats)} · words ${outWords.length} (no IPA: ${noIpa})`);
+console.log(`cards ${outCards.length} ${JSON.stringify(stats)} · words ${outWords.length} (no IPA: ${noIpa}) · drills ${outDrills.length}`);
 if (warn.length) console.log(`warnings ${warn.length}${CHECK ? '\n  ' + warn.slice(0, 40).join('\n  ') : ''}`);
 if (errors.length) {
   console.error(`errors ${errors.length}\n  ${errors.slice(0, 80).join('\n  ')}`);
@@ -343,6 +400,7 @@ const outDir = path.join(root, 'public/data');
 fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(path.join(outDir, 'cards.json'), JSON.stringify(outCards));
 fs.writeFileSync(path.join(outDir, 'words.json'), JSON.stringify(outWords));
+fs.writeFileSync(path.join(outDir, 'drills.json'), JSON.stringify(outDrills));
 // Records = one content file each (a "record" in the app, its cards are the tracks). Order here is shelf order.
 const RECORDS = [
   ['talk-01-cafe', 'Cafe', 'Order, grab a seat, chat with the barista'],
@@ -381,12 +439,19 @@ const RECORDS = [
   ['words-06-business', 'Business Words', 'Sales, meetings, contracts, startups'],
   ['words-10-news-music', 'News & Music', 'Words you hear on podcasts and in studios'],
 ];
-const all = [...outCards, ...outWords];
+const all = [...outCards, ...outWords, ...outDrills];
 const counts = {};
 for (const c of all) counts[c.rec] = (counts[c.rec] ?? 0) + 1;
-for (const id of Object.keys(counts)) if (!RECORDS.some(([r]) => r === id)) fail(id, 'content file has no RECORDS entry');
-const records = RECORDS.filter(([id]) => counts[id]).map(([id, t, sub], i) => {
+const order = RECORDS.map(([id, t, sub]) => [id, fileMeta[id]?.t ?? t, fileMeta[id]?.sub ?? sub, fileMeta[id]?.lv ?? 'core']);
+for (const id of Object.keys(counts)) {
+  if (order.some(([r]) => r === id)) continue;
+  if (!fileMeta[id]) { console.error(`errors 1\n  ${id}: new content file needs a //! Title | Subtitle | level header`); process.exit(1); }
+  order.push([id, fileMeta[id].t, fileMeta[id].sub, fileMeta[id].lv]);
+}
+const records = order.filter(([id]) => counts[id]).map(([id, t, sub, lv], i) => {
   const first = all.find((c) => c.rec === id);
-  return { id, no: i + 1, t, sub, s: first.s, n: counts[id] };
+  const r = { id, no: i + 1, t, sub, s: first.s, n: counts[id], lv };
+  if (fileMeta[id]?.ex.length) r.ex = fileMeta[id].ex;
+  return r;
 });
-fs.writeFileSync(path.join(outDir, 'meta.json'), JSON.stringify({ cards: outCards.length, words: outWords.length, sources: stats, records, built: new Date().toISOString().slice(0, 10) }));
+fs.writeFileSync(path.join(outDir, 'meta.json'), JSON.stringify({ cards: outCards.length, words: outWords.length, drills: outDrills.length, sources: stats, records, built: new Date().toISOString().slice(0, 10) }));

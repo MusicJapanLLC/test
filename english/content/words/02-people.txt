@@ -1,68 +1,68 @@
 // People & personality
-friendly | adj | 人当たりのいい | nice to people you meet | Everyone at the café is super friendly. | daily
-easygoing | adj | おおらかな | relaxed, not easily upset | My roommate is easygoing. Nothing bothers him. | friends
-laid-back | adj | のんびりした | calm and relaxed | Osaka people are loud but laid-back. | friends
-uptight | adj | 堅苦しい・ピリピリした | too nervous or strict | Don't be so uptight. It's a party. | friends
-bossy | adj | 偉そうな・仕切りたがる | always telling others what to do | My older sister is bossy. | friends
-nosy | adj | 詮索好きな | too interested in others' private lives | My neighbor is so nosy. | daily
-rude | adj | 失礼な | not polite | It's rude to look at your phone during dinner. | daily
-polite | adj | 礼儀正しい | showing good manners | He's polite but kind of cold. | daily
-honest | adj | 正直な | telling the truth | I'll be honest, I didn't read it. | daily
-trustworthy | adj | 信頼できる | someone you can trust | Pick a partner who's trustworthy, not just smart. | business
-fake | adj | 嘘っぽい・偽物の | not real or sincere | Her smile felt fake. | friends
-genuine | adj | 本物の・心からの | real and sincere | He's a genuine guy. What you see is what you get. | friends
-ambitious | adj | 野心的な | wanting big success | She's young and super ambitious. | work
-hardworking | adj | 勤勉な | working with lots of effort | He's the most hardworking guy at the gym. | work
-talented | adj | 才能がある | naturally good at something | You're talented. Don't waste it. | music
-gifted | adj | 天才的な・才能に恵まれた | very naturally talented | She's a gifted singer. | music
-clumsy | adj | 不器用な・ドジな | often dropping or breaking things | I'm so clumsy. I broke another glass. | daily
-forgetful | adj | 忘れっぽい | often forgetting things | I'm forgetful, so I set five alarms. | daily
-messy | adj | 散らかった・だらしない | not clean or organized | My desk is messy, but I know where everything is. | daily
-neat | adj | きちんとした | clean and organized | Your handwriting is so neat. | daily
-organized | adj | 整理された・段取りのいい | able to plan and keep things in order | She's really organized. Everything has a folder. | work
-arrogant | adj | 傲慢な | thinking you're better than others | He's talented but arrogant. | conflict
-modest | adj | 控えめな | not talking about your success | Don't be so modest. Your song is great. | friends
-selfish | adj | 自己中な | thinking only about yourself | It was selfish to eat all the snacks. | conflict
-considerate | adj | 気配りのできる | thinking about others' feelings | Thanks for texting. That was considerate. | friends
-thoughtful | adj | 思いやりのある | kind and caring | What a thoughtful gift. | friends
-mature | adj | 大人な | acting like a responsible adult | That was a mature way to handle it. | feelings
-immature | adj | 子どもっぽい | acting like a child | Unfollowing him was kind of immature. | conflict
-open-minded | adj | 偏見のない | willing to try new ideas | Be open-minded about the food here. | travel
-narrow-minded | adj | 視野の狭い | not open to new ideas | Some old managers are narrow-minded. | work
-introverted | adj | 内向的な | quiet, gets energy alone | I'm introverted, but I love talking one-on-one. | feelings
-extroverted | adj | 外向的な | social, gets energy from people | She's extroverted. Parties charge her up. | feelings
-sensitive | adj | 繊細な・敏感な | easily hurt or affected | He's sensitive about his accent. | feelings
-tough | adj | タフな・強い | strong, not easily hurt | My grandma is tough. She still works. | feelings
-weirdo | n | 変人 | a strange person (friendly or rude) | You're a weirdo, and I love it. | friends
-nerd | n | オタク・ガリ勉 | someone very into a subject | I'm a music nerd. | friends
-geek | n | マニア・オタク | someone who loves tech or a hobby | He's a computer geek. | online
-jerk | n | 嫌なやつ | an annoying, unkind person | Don't be a jerk. Say sorry. | conflict
-sweetheart | n | 優しい人・あなた（呼びかけ） | a kind person / dear | He's a sweetheart. | crush
-legend | n | 伝説・すごいやつ | an amazing person (casual praise) | You brought pizza? You're a legend. | friends
-buddy | n | 相棒・友達 | a friend | Thanks, buddy. | friends
-dude | n | ヤツ・お前（呼びかけ） | a guy / casual way to call a friend | Dude, look at this. | friends
-bro | n | ブロ・兄弟（友達） | a close male friend | Thanks, bro. I owe you. | friends
-coworker | n | 同僚 | someone you work with | My coworker covered my shift. | work
-roommate | n | ルームメイト | someone who shares your home | My roommate eats my food. | daily
-neighbor | n | 隣人 | someone who lives near you | Our neighbor plays drums at midnight. | daily
-stranger | n | 知らない人 | someone you don't know | Don't follow strangers' links. | daily
-acquaintance | n | 知り合い | someone you know a little | He's more of an acquaintance than a friend. | friends
-crush | n | 好きな人・片思い | someone you secretly like | She's my gym crush. | crush
-ex | n | 元恋人 | a former partner | My ex texted me "happy birthday." | crush
-partner | n | パートナー（恋人・仕事） | a romantic or business partner | My partner handles the money side. | business
-boss | n | 上司 | the person you work for | My boss is surprisingly chill. | work
-client | n | 顧客・クライアント | a person or company you work for | The client loved the design. | business
-customer | n | お客さん | someone who buys from a shop | The customer is always right. Supposedly. | shopping
-host | n | 主催者・司会 | someone who invites guests or leads a show | Thank the host before you leave. | bar
-guest | n | ゲスト・客 | someone who is invited | We have a special guest on the stream tonight. | online
-influencer | n | インフルエンサー | someone famous online who affects others | She's an influencer with 2 million followers. | online
-follower | n | フォロワー | someone who follows you online | I hit 10,000 followers! | online
-fan | n | ファン | someone who loves an artist or team | I'm a huge fan of 90s R&B. | music
-know-it-all | n | 知ったかぶりの人 | someone who acts like they know everything | Nobody likes a know-it-all. | friends
-people person | n | 人付き合いが得意な人 | someone who enjoys being with people | I'm not a morning person, but I'm a people person. | work
-morning person | n | 朝型の人 | someone who feels good early | I'm not a morning person. Talk to me after coffee. | daily
-night owl | n | 夜型の人 | someone who stays up late | I'm a night owl. My best ideas come at 2 a.m. | daily
-role model | n | お手本の人 | someone you want to be like | My dad is my role model. | feelings
-mentor | n | 師匠・メンター | an experienced person who guides you | Find a mentor who's done it before. | business
-rookie | n | 新人 | a beginner, someone new | Rookie mistake. Don't worry. | work
-veteran | n | ベテラン | someone with lots of experience | She's a veteran in the music business. | work
+friendly | adj | 人当たりのいい | nice to people you meet | Everyone at the café is super friendly. || The barista at my local spot is so friendly. She remembers my order. || Is this a friendly game, or are we playing for money? | daily | friendly は性格、kind は「親切な行動」寄り。user-friendly（使いやすい）も一緒に覚えよう。
+easygoing | adj | おおらかな | relaxed, not easily upset | My roommate is easygoing. Nothing bothers him. || Our new manager seems easygoing, thank God. || I'm pretty easygoing about food. Pick anywhere. | friends | easygoing about ~ で「〜にこだわらない」。laid-back とほぼ同じ意味。
+laid-back | adj | のんびりした | calm and relaxed | Osaka people are loud but laid-back. || I like the laid-back vibe at the Sunday service. || The studio's laid-back, so wear whatever you want. | friends | 人にも場所・雰囲気にも使える。chill を少し大人っぽくした言い方。
+uptight | adj | 堅苦しい・ピリピリした | too nervous or strict | Don't be so uptight. It's a party. || My old boss was so uptight about five-minute breaks. || Sorry if I was uptight earlier. I was stressed about the launch. | friends | uptight about ~ の形。「真面目」のつもりで使うと悪口になるので注意。
+bossy | adj | 偉そうな・仕切りたがる | always telling others what to do | My older sister is bossy. || She's not bossy. She's just good at running things. || Sorry to sound bossy, but can everyone wash their own cups? | friends | Sorry to sound bossy, but ~ は頼み事の前置き。リーダー性を褒めるなら She takes charge. が自然。
+nosy | adj | 詮索好きな | too interested in others' private lives | My neighbor is so nosy. || Sorry to be nosy, but are you two dating? || My aunt gets nosy about my salary every New Year. | daily | Sorry to be nosy, but ~ はプライベートな質問の前置きの定番。nosey とも書く。
+rude | adj | 失礼な | not polite | It's rude to look at your phone during dinner. || Sorry, that came out rude. I didn't mean it like that. || A customer was rude to our new hire, so I stepped in. | daily | rude to 人 の形。That came out rude. で「失礼な言い方になっちゃった」。
+polite | adj | 礼儀正しい | showing good manners | He's polite but kind of cold. || She's polite to everyone, even rude customers. || Just say no. You don't have to be polite to scammers. | daily | polite は丁寧なマナー。kind（優しい）とは別物で、polite でも冷たい人はいる。
+honest | adj | 正直な | telling the truth | I'll be honest, I didn't read it. || Be honest. Is the chorus too long? || To be honest, I'd rather stay home tonight. | daily | To be honest / Honestly, ~ は本音の前置き。チャットでは TBH と略す。
+trustworthy | adj | 信頼できる | someone you can trust | Pick a partner who's trustworthy, not just smart. || It's hard to find a trustworthy mechanic. || The reviews say the seller is trustworthy. | business | reliable は「ちゃんとやる」、trustworthy は「嘘をつかない・任せられる」という人柄。
+fake | adj | 嘘っぽい・偽物の | not real or sincere | Her smile felt fake. || Those designer sneakers are fake. || I can't do fake smiles at work all day. | friends | 物の偽物にも、うわべだけの人にも使う。fake it till you make it（できるフリから始めろ）も有名。
+genuine | adj | 本物の・心からの | real and sincere | He's a genuine guy. What you see is what you get. || The compliment felt genuine, not just polite. || Is this genuine leather? | friends | 「心からの」と「本物の（素材）」の両方。real より少し丁寧な響き。
+ambitious | adj | 野心的な | wanting big success | She's young and super ambitious. || Ten tracks in one month is ambitious, man. || We have an ambitious plan for a second shop. | work | 人だけでなく計画にも使う。計画に使うと「攻めてる、ちょっと無理かも」という含みもある。
+hardworking | adj | 勤勉な | working with lots of effort | He's the most hardworking guy at the gym. || Our night crew is small but hardworking. || My parents were hardworking people who never complained. | work | hard-working とも書く。会話では He works hard. と動詞で言うことの方が多い。
+talented | adj | 才能がある | naturally good at something | You're talented. Don't waste it. || This city is full of talented kids with no money. || Your barista is talented. Look at that latte art. | music | talented at / in ~ とも言える。gifted より気軽に褒められる。
+gifted | adj | 天才的な・才能に恵まれた | very naturally talented | She's a gifted singer. || He's a gifted drummer, but he never practices. || Gifted or not, you still have to put in the hours. | music | 「生まれつきの才能」で talented より格上の響き。学校の gifted program は「英才教育」。
+clumsy | adj | 不器用な・ドジな | often dropping or breaking things | I'm so clumsy. I broke another glass. || Sorry, I'm clumsy. I spilled the oat milk again. || My first try at a latte heart was pretty clumsy. | daily | 物を落とす・壊すドジの他、動きや言い方が「ぎこちない」時にも使える。
+forgetful | adj | 忘れっぽい | often forgetting things | I'm forgetful, so I set five alarms. || My grandpa's getting forgetful, so we put notes on the fridge. || I get forgetful when I don't sleep after night shifts. | daily | 性格・状態を表す語。一回忘れただけなら I forgot. で十分。
+messy | adj | 散らかった・だらしない | not clean or organized | My desk is messy, but I know where everything is. || The breakup was messy. || Sorry, my studio's messy. Watch the cables. | daily | 部屋だけでなく、別れや状況の「泥沼・ごちゃごちゃ」にも使う。messy hair は「ボサボサ髪」。
+neat | adj | きちんとした | clean and organized | Your handwriting is so neat. || Keep the counter neat during the rush. || You built your own website? That's neat. | daily | 「きちんとした」の他に、口語で「いいね・すごい」（cool の少し古めな言い方）。
+organized | adj | 整理された・段取りのいい | able to plan and keep things in order | She's really organized. Everything has a folder. || Get organized before tax season. || The church event was super organized. They had name tags and everything. | work | get organized（段取りを組む）が便利。organized crime（組織犯罪）は別の意味。
+arrogant | adj | 傲慢な | thinking you're better than others | He's talented but arrogant. || Don't be arrogant with clients, even if you're right. || He's not arrogant. He's just confident. | conflict | 人を見下す傲慢さ。cocky より重く、真剣な批判になる。
+modest | adj | 控えめな | not talking about your success | Don't be so modest. Your song is great. || It's a modest apartment, but the light is great. || Our sales were modest this month, but we're growing. | friends | 人の「控えめ」と、量や金額の「ささやかな」の両方。人柄なら humble もほぼ同じ。
+selfish | adj | 自己中な | thinking only about yourself | It was selfish to eat all the snacks. || Sorry, I was being selfish. You pick the movie. || Is it selfish to skip the party to finish my album? | conflict | 「自己中」で強めの批判。self-centered もほぼ同じ意味。
+considerate | adj | 気配りのできる | thinking about others' feelings | Thanks for texting. That was considerate. || It's considerate to text if you're running late. || Thanks for keeping the music low. Very considerate. | friends | considerate of ~ の形。thoughtful は「心がこもった」、considerate は「周りへの配慮」。
+thoughtful | adj | 思いやりのある | kind and caring | What a thoughtful gift. || That's a thoughtful question. Let me think. || My roommate left me dinner after my night shift. So thoughtful. | friends | 「思いやりがある」と「よく考えられた」の両方。That's so thoughtful of you. はお礼の定番。
+mature | adj | 大人な | acting like a responsible adult | That was a mature way to handle it. || She's really mature for twenty. || The new mix sounds more mature than your old stuff. | feelings | 人の「大人な」の他、音楽や作品の「洗練された」にも使える。
+immature | adj | 子どもっぽい | acting like a child | Unfollowing him was kind of immature. || Prank calling your ex is so immature. || The plan's still immature. Let's talk next month. | conflict | 人に使うと軽い批判。childish もほぼ同じだが、もっと馬鹿にした響き。
+open-minded | adj | 偏見のない | willing to try new ideas | Be open-minded about the food here. || The pastor's surprisingly open-minded about music in church. || Try to stay open-minded about feedback. | travel | be / stay open-minded about ~ の形。食べ物・文化・意見によく使う。
+narrow-minded | adj | 視野の狭い | not open to new ideas | Some old managers are narrow-minded. || Don't be narrow-minded. Rap can be gospel too. || It's narrow-minded to judge people by their tattoos. | work | 強めの批判。closed-minded もほぼ同じ意味。
+introverted | adj | 内向的な | quiet, gets energy alone | I'm introverted, but I love talking one-on-one. || Introverted people can still be great at sales. || I'm more introverted after a long shift. | feelings | introverted は形容詞、introvert は名詞。I'm introverted. も I'm an introvert. もOK。
+extroverted | adj | 外向的な | social, gets energy from people | She's extroverted. Parties charge her up. || Extroverted customers love chatting at the counter. || You seem extroverted on stream, but quiet in person. | feelings | 形容詞。日本語の「陽キャ」に近いが、英語では皮肉っぽさはない。
+sensitive | adj | 繊細な・敏感な | easily hurt or affected | He's sensitive about his accent. || I have sensitive teeth. No iced drinks for me. || This is a sensitive topic, so let's talk in private. | feelings | sensitive topic（デリケートな話題）、sensitive skin（敏感肌）が定番。sensible（分別がある）と混同注意。
+tough | adj | タフな・強い | strong, not easily hurt | My grandma is tough. She still works. || Night shifts are tough, but the pay's good. || It's a tough market for small cafes right now. | feelings | 人の「強い」と状況の「きつい」の両方。That's tough. は相手の苦労に「それはキツいね」。
+weirdo | n | 変人 | a strange person (friendly or rude) | You're a weirdo, and I love it. || Some weirdo kept yelling at the vending machine. || We're all weirdos at the studio. You'll fit in. | friends | 親しい人に使えば愛情表現、知らない人に使うと悪口。
+nerd | n | オタク・ガリ勉 | someone very into a subject | I'm a music nerd. || My accountant is a total spreadsheet nerd. || Gym nerds love talking about protein. | friends | ○○ nerd で「○○オタク」。今は自虐や褒め言葉としても使われ、昔ほど悪口ではない。
+geek | n | マニア・オタク | someone who loves tech or a hobby | He's a computer geek. || I'm a bit of a coffee geek. Ask me about beans. || The guy at the repair shop is a total geek. He fixed my laptop in ten minutes. | online | 特定の趣味や技術に詳しい人。nerd とほぼ同じで、geek の方がややポジティブ。
+jerk | n | 嫌なやつ | an annoying, unkind person | Don't be a jerk. Say sorry. || He cut in line like a total jerk. || Sorry I was a jerk yesterday. | conflict | Don't be a jerk. / I was a jerk. が定番。もっと汚い言葉より柔らかく、職場でもギリギリ使える。
+sweetheart | n | 優しい人・あなた（呼びかけ） | a kind person / dear | He's a sweetheart. || The old lady at the bakery calls everyone sweetheart. || Our new delivery guy is a total sweetheart. | crush | 呼びかけの sweetheart は年上が使うことが多い。若い男性が知らない人に使うと馴れ馴れしい。
+legend | n | 伝説・すごいやつ | an amazing person (casual praise) | You brought pizza? You're a legend. || You fixed the espresso machine? Legend. || That old record shop is a local legend. | friends | You're a legend. は「神！」くらいの軽い感謝。本来の「伝説」の意味でも使う。
+buddy | n | 相棒・友達 | a friend | Thanks, buddy. || Hey buddy, you dropped your wallet. || My gym buddy didn't show up today. | friends | gym buddy / workout buddy の形が多い。知らない男性への呼びかけにもなるが、口調次第で挑発的。
+dude | n | ヤツ・お前（呼びかけ） | a guy / casual way to call a friend | Dude, look at this. || Dude, you're late again. || Some dude at the bar bought us drinks. | friends | 男性への呼びかけで、今は女性同士でも使う。目上や仕事相手には使わない。
+bro | n | ブロ・兄弟（友達） | a close male friend | Thanks, bro. I owe you. || Bro, that beat is crazy. || No offense, bro, but your mix is too loud. | friends | 男友達への呼びかけ。ジム好きの男を gym bro と呼ぶこともある。
+coworker | n | 同僚 | someone you work with | My coworker covered my shift. || My coworker and I take turns closing the shop. || Don't date a coworker. Trust me. | work | 同じ職場の人全般。colleague は少しフォーマルで、同じ専門職のニュアンス。
+roommate | n | ルームメイト | someone who shares your home | My roommate eats my food. || My roommate's girlfriend basically lives here now. || Looking for a roommate near Umeda. Anyone? | daily | アメリカは roommate、イギリスは flatmate が多い。同じ部屋とは限らない。
+neighbor | n | 隣人 | someone who lives near you | Our neighbor plays drums at midnight. || Our neighbor complained about my bass. || Be nice to the neighbors. They watch your packages. | daily | イギリス綴りは neighbour。next-door neighbor で「お隣さん」。
+stranger | n | 知らない人 | someone you don't know | Don't follow strangers' links. || A stranger on the train helped me with my bags. || It's weird how you can tell a stranger more than your family. | daily | 「知らない人」の意味で、「よそ者」ではない。I'm a stranger here.（この辺は初めて）とも言う。
+acquaintance | n | 知り合い | someone you know a little | He's more of an acquaintance than a friend. || We're just acquaintances from church. || An acquaintance of mine runs a print shop. I'll ask him. | friends | an acquaintance of mine の形が自然。会話では someone I know の方が軽い。
+crush | n | 好きな人・片思い | someone you secretly like | She's my gym crush. || I have a crush on the girl who works at the bakery. || Your crush liked your story? Go for it. | crush | have a crush on ~ が定番の形。動詞の crush（つぶす）と同じ単語。
+ex | n | 元恋人 | a former partner | My ex texted me "happy birthday." || Never text your ex at 2 a.m. || My ex and I are still friends, kind of. | crush | my ex だけで元恋人。ex-boss / ex-wife のように前につけても使える。
+partner | n | パートナー（恋人・仕事） | a romantic or business partner | My partner handles the money side. || My partner and I split the rent. || We're looking for a partner to sell our beans in Kyoto. | business | 恋人を性別を出さずに言う時にも使う。仕事なら business partner。
+boss | n | 上司 | the person you work for | My boss is surprisingly chill. || My boss lets me leave early on church days. || Being your own boss sounds great until tax season. | work | be your own boss（自営業をする）も定番。会話では manager より boss が普通。
+client | n | 顧客・クライアント | a person or company you work for | The client loved the design. || One client wants twelve revisions on a two-minute song. || Can I call you back? I'm with a client. | business | 継続的にサービスを受ける相手。お店で物を買う人は customer。
+customer | n | お客さん | someone who buys from a shop | The customer is always right. Supposedly. || Regular customers get a free refill. || We lost a customer because the Wi-Fi was down. | shopping | お店の客は customer。弁護士や制作など専門サービスの客は client。
+host | n | 主催者・司会 | someone who invites guests or leads a show | Thank the host before you leave. || Tonight's host is my old producer. || Thanks for hosting. The food was amazing. | bar | 動詞 host（主催する）もよく使う。配信やイベントの「司会」も host。
+guest | n | ゲスト・客 | someone who is invited | We have a special guest on the stream tonight. || You're our guest. Sit down, I'll get the drinks. || Guests can find the Wi-Fi password on the board. | online | 招かれた人。Be my guest. は「どうぞご自由に」という決まり文句。
+influencer | n | インフルエンサー | someone famous online who affects others | She's an influencer with 2 million followers. || An influencer posted our latte, and we sold out by noon. || Everyone wants to be an influencer now. | online | 発音は IN-fluencer と頭が強い。小規模なら micro-influencer とも言う。
+follower | n | フォロワー | someone who follows you online | I hit 10,000 followers! || I lost a hundred followers after that post. || Real followers comment. Bots just like. | online | gain / lose followers の形でよく使う。「フォロバ」は follow back。
+fan | n | ファン | someone who loves an artist or team | I'm a huge fan of 90s R&B. || Not a big fan of mornings. || A fan recognized me at the gym today. | music | I'm not a big fan of ~ は「〜はちょっと苦手」の遠回しな言い方で超便利。
+know-it-all | n | 知ったかぶりの人 | someone who acts like they know everything | Nobody likes a know-it-all. || Don't be a know-it-all in the meeting. Ask questions. || The new guy's a know-it-all, but he's usually right. | friends | 「知ったかぶり・物知り顔の人」。ハイフンでつないで一つの名詞。
+people person | n | 人付き合いが得意な人 | someone who enjoys being with people | I'm not a morning person, but I'm a people person. || You're a people person. You'd crush it in sales. || I'm a people person, just not before nine. | work | 面接で I'm a people person. はよく聞く。「人と関わるのが好き」という性格。
+morning person | n | 朝型の人 | someone who feels good early | I'm not a morning person. Talk to me after coffee. || Since I quit night shifts, I'm kind of a morning person. || Are you a morning person or a night owl? | daily | I'm not a morning person. と否定で言うことが多い。night owl とセットで覚えよう。
+night owl | n | 夜型の人 | someone who stays up late | I'm a night owl. My best ideas come at 2 a.m. || Night owls do better on night shifts. || My producer's a night owl, so we record at midnight. | daily | 早起きの人は early bird。night person とも言う。
+role model | n | お手本の人 | someone you want to be like | My dad is my role model. || Be a good role model for the younger kids at church. || I didn't have a role model in music, so I just watched videos. | feelings | be a (good) role model for ~ の形。尊敬する人を「お手本」として言う時に使う。
+mentor | n | 師匠・メンター | an experienced person who guides you | Find a mentor who's done it before. || My mentor told me to raise my prices. || She was my mentor when I started at the cafe. | business | 動詞でも使える（mentor someone）。teacher より、仕事や人生の相談役のイメージ。
+rookie | n | 新人 | a beginner, someone new | Rookie mistake. Don't worry. || He's a rookie, but he learns fast. || Forgot to save the session? Classic rookie move. | work | rookie mistake / rookie move が定番。ネットやゲームでは newbie もよく使う。
+veteran | n | ベテラン | someone with lots of experience | She's a veteran in the music business. || The veteran baristas can make ten drinks at once. || He's a veteran of the Osaka club scene. | work | 経験豊富な人。アメリカでは「退役軍人」の意味でもよく使い、vet と略される。

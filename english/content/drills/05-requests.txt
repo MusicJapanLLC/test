@@ -1,0 +1,36 @@
+//! Asking Nicely | Can, could, would you mind, mind if I | build
+! Can you ~? ＝友達・同僚にカジュアルに。Could you ~? ＝少し丁寧で、店員さんや上司にも使える万能形。
+! Would you mind ~ing? ＝かなり丁寧な「〜していただけますか」。mind のあとは必ず -ing。
+! Do you mind if I ~? ＝「〜してもいい？」と自分がする許可。「いいよ」は No, not at all. / Go ahead.（Yes だと「嫌だ」の意味になる）
+! please を付けても命令文は命令。Please send it. より Could you send it? の方がずっと柔らかい。
+! 注文は Can I get ~? が定番。I want ~ は子どもっぽく聞こえる。
+Can you pass the salt? | 塩取ってくれる？
+Can I sit here? | ここ座っていい？
+Can I get a large iced coffee? | アイスコーヒーのLサイズください。 | 注文の定番。I want ~ は✗
+Can I ask you something? | ちょっと聞いてもいい？
+Can you hold this for a second? | これちょっと持っててくれる？
+Can you keep an eye on my bag? | ちょっとカバン見ててくれる？ | keep an eye on＝見張っておく
+Can you text me when you get there? | 着いたら連絡くれる？ | when の中は現在形
+Can you send me the file tonight? | 今夜ファイル送ってくれる？
+Can you give me a hand with these chairs? | この椅子運ぶの、ちょっと手伝ってくれる？ | give me a hand＝手を貸して
+Could you say that again? | もう一回言ってもらえますか？ | 聞き返しは Pardon? より自然
+Could you speak a little slower? | もう少しゆっくり話してもらえますか？
+Could I have the check, please? | お会計お願いできますか？ | check＝お会計（アメリカ）
+Could you take a picture of us? | 私たちの写真撮ってもらえますか？
+Could you do me a favor? | ひとつお願いがあるんですけど。 | 頼みごとの前置き
+Could I borrow your charger for a sec? | 充電器ちょっとだけ借りてもいいですか？ | for a sec＝ちょっとだけ
+Could you let me know by Friday? | 金曜までに教えてもらえますか？ | let me know＝知らせて
+Could you make it a little sweeter? | もうちょっと甘めにしてもらえますか？
+Is it okay if I leave early today? | 今日ちょっと早めに上がってもいいですか？
+Do you mind if I bring a friend? | 友達連れてってもいい？
+Do you mind if I open the window? | 窓開けてもいいですか？
+Mind if I join you? | ご一緒してもいい？ | Do you を省いたカジュアル版
+No, not at all. Go ahead. | うん、全然いいよ。どうぞ。 | mind への「いいよ」は No で答える
+Would you mind waiting a few minutes? | 数分お待ちいただいてもよろしいですか？ | mind のあとは -ing
+Would you mind turning the music down? | 音楽ちょっと下げてもらえませんか？
+Would you mind sending me the details? | 詳細を送っていただけますか？
+Would you mind not filming here? | ここでの撮影はご遠慮いただけますか？ | not + -ing で「〜しないで」
+Would you mind if I recorded this? | これ、録音してもかまいませんか？ | Would you mind if I のあとは過去形
+Would you be able to cover my shift on Friday? | 金曜のシフト、代わってもらえたりしますか？
+Would it be possible to change the date? | 日程を変更していただくことは可能でしょうか？ | ビジネスメールでも使える
+I was wondering if you could help me. | ちょっと手伝っていただけないかなと思いまして。 | 一番丁寧な頼み方のひとつ

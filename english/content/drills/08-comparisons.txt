@@ -1,0 +1,36 @@
+//! Comparisons | -er, more, the most, as ... as | build
+! 短い形容詞は -er / the -est（cheap → cheaper → the cheapest）、長い形容詞は more / the most（more expensive）。
+! 不規則：good → better → the best、bad → worse → the worst。more better ✗ みたいな二重比較は日本人あるある。
+! 比べる相手は than で：bigger than mine。強調は much / way / a lot（very better ✗）。
+! as ... as＝「同じくらい」。not as ... as＝「〜ほど…じゃない」。
+! The 比較級, the 比較級＝「〜すればするほど…」。
+This one is cheaper. | こっちの方が安い。
+Osaka is cheaper than Tokyo. | 大阪は東京より物価が安い。
+My new mic is way better. | 新しいマイクの方が断然いい。 | way＝ずっと（会話）。very better ✗
+I feel a lot better than yesterday. | 昨日よりだいぶ体調いい。 | good の比較級は better
+Today's crowd was bigger than last time. | 今日のお客さん、前回より多かった。 | crowd の多さは big で表す
+Taking the train is faster than driving. | 車で行くより電車の方が早い。
+Night shifts pay more than day shifts. | 夜勤の方が日勤より給料いい。
+This one is a lot easier to use. | こっちの方がずっと使いやすい。
+Let's find a quieter place to talk. | もっと静かな場所探して話そう。
+It's getting colder and colder. | どんどん寒くなってきてる。 | 比較級 and 比較級＝どんどん
+Which one's better, red or black? | 赤と黒、どっちがいい？
+Honestly, he's more talented than me. | 正直、あいつの方が俺より才能ある。 | 会話では than me が普通
+This is more fun than I expected. | 思ってたより楽しい。 | fun は funner ではなく more fun
+Your English is better than you think. | 君の英語、自分で思ってるよりうまいよ。
+That was the worst shift ever. | 過去最悪のシフトだった。 | bad → worse → the worst
+This place has the best coffee in town. | この辺でコーヒーが一番うまいのはここ。
+It's the most expensive thing on the menu. | それ、メニューで一番高いやつだよ。 | 長い形容詞は the most
+It's the cheapest gym near the station. | 駅の近くで一番安いジムだよ。
+My roommate is the funniest person I know. | ルームメイトは俺の知り合いの中で一番面白い。 | funny → funniest
+This is the hardest song I've ever written. | 今まで書いた中で一番難しい曲だ。
+I'm stronger than I was last year. | 去年の自分より今の方が強い。
+This bag is heavier than it looks. | このカバン、見た目より重い。
+The remix is just as good as the original. | リミックスも原曲と同じくらいいい。 | as ... as＝同じくらい
+It's not as hard as you think. | 思ってるほど難しくないよ。 | not as ... as＝〜ほどじゃない
+My producer isn't as scary as he looks. | うちのプロデューサー、見た目ほど怖くないよ。
+I'm not as young as I used to be. | もう昔ほど若くないんだよ。
+This place is twice as big as our old shop. | ここ、前の店の2倍の広さだ。 | 倍数＋as ... as
+The sooner, the better. | 早ければ早いほどいい。
+The more I practice, the better I get. | 練習すればするほどうまくなる。 | The 比較級, the 比較級
+The less I sleep, the worse my mixes get. | 寝る時間が減るほど、ミックスがひどくなる。

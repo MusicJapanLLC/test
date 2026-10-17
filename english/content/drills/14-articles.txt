@@ -1,0 +1,36 @@
+//! A, The, Some | Articles and quantifiers Japanese speakers miss | build
+! 初めて出てくる1つ＝ a、お互いどれのことか分かってる＝ the。「その」「いつもの」と言える感じなら the。
+! 数えられない名詞（advice, money, music, furniture, paperwork）には a も s も付かない。量は some / much / a lot of。
+! 一般論は複数形か無冠詞：I love dogs. / Music is life. ここに the を付けると「特定のそれ」になる。
+! some は肯定と勧め（Want some ～?）、any は否定と質問。a few / a little ＝「少しある」、few / little ＝「ほとんどない」。
+! go to bed / go to church / after work のように、本来の目的で行く場所は冠詞なしの決まった形がある。
+Can I get a coffee to go? | コーヒー1つ、テイクアウトで。 | 注文の a coffee ＝1杯
+Where's the TV remote? | テレビのリモコンどこ？ | お互い分かってる物は the
+I have a meeting at three. | 3時に打ち合わせが一件ある。
+There's a guy outside asking for you. | 外に、お前のこと探してる人がいるよ。 | 初登場は a
+The guy outside says he knows you. | 外にいるその人、お前のこと知ってるって。 | 2回目からは the
+Can you give me some advice? | ちょっとアドバイスくれない？ | an advice はNG
+I don't have any money right now. | 今、お金全然ない。 | 否定は any
+Want some more coffee? | コーヒーもっといる？ | 勧めるときは some
+I'm on the night shift this week. | 今週は夜勤。 | this week の前に前置詞なし
+How much money do you need? | お金いくら必要？ | money は much
+How many people are coming? | 何人来るの？ | people は many
+I love cats, but I'm allergic. | 猫好きなんだけど、アレルギーなんだよね。 | 一般論は複数形
+I'm going to the gym after work. | 仕事終わったらジム行く。 | いつものジム＝ the gym
+I go to church every Sunday. | 毎週日曜は教会に行ってる。 | 礼拝なら church に冠詞なし
+I usually go to bed around six in the morning. | だいたい朝6時くらいに寝てる。 | go to bed は冠詞なし
+Is there a convenience store near here? | この近くにコンビニある？
+There's a little milk left. | 牛乳、ちょっとだけ残ってるよ。 | a little ＝少しある
+I have a few friends in Tokyo. | 東京に何人か友達いるよ。 | a few ＝何人かいる
+Very few people know about this place. | この店のこと知ってる人、ほとんどいないんだよ。 | few ＝ほとんどいない
+The music in this cafe is too loud. | このカフェの音楽、うるさすぎ。 | 特定の音楽なので the
+Music is the only thing that keeps me sane. | 俺の正気を保ってくれてるのは音楽だけ。 | 一般論の music は無冠詞
+We bought some new furniture for the shop. | 店用に新しい家具をいくつか買った。 | furniture は数えられない
+I've got so much paperwork to do. | やらなきゃいけない書類がめっちゃある。 | paperwork は数えられない
+Can I get the check, please? | お会計お願いします。 | 自分のテーブルの会計なので the
+It's an honor to play here. | ここで演奏できるなんて光栄です。 | h を読まないので an
+She works at a university in Kyoto. | 彼女、京都の大学で働いてる。 | 「ユ」の音なので an じゃなく a
+That was the best ramen I've ever had. | 今まで食べた中で一番うまいラーメンだった。 | 最上級は the
+Most people don't read the terms. | ほとんどの人、利用規約なんて読まない。 | most of people はNG
+I had an amazing time last night. | 昨日の夜、めっちゃ楽しかった。 | 「楽しいひととき」の time には a が付く
+I need some time to think about it. | ちょっと考える時間が欲しい。 | 「時間」の time は数えない

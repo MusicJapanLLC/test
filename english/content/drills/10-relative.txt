@@ -1,0 +1,36 @@
+//! Who, Which, Where | Relative clauses that connect ideas | build
+! 関係詞は名詞のうしろに「説明」をくっつける道具。人＝ who、物＝ which / that、場所＝ where。
+! 日本語は説明が前（昨日会った人）、英語は後ろ（the guy I met yesterday）。語順をひっくり返すのがコツ。
+! 会話では that が最強で、人にも物にも使える。目的語になるときは省略が普通：the song (that) I made。
+! whose ＝「その人の」、what ＝「～なこと・もの」（What I need is sleep.）。
+! カンマ付きの , which は補足説明で、that は使えない。前の文全体を受ける , which means ～ も会話でよく出る。
+That's the guy who works at the bakery. | あれ、パン屋で働いてる人だよ。 | 人の説明は who
+This is the song I made last night. | これ、昨日の夜作った曲。 | 目的語の that は省略が自然
+Do you know a place where we can talk? | どこか話せる場所知ってる？ | 場所の説明は where
+The cafe where I work closes at nine. | 俺が働いてるカフェ、9時閉店なんだ。
+Is this the bus that goes to Umeda? | これって梅田に行くバス？
+I need a phone that doesn't die by noon. | 昼までに電池が切れないスマホが必要なんだよ。 | die ＝（電池が）切れる
+That's not what I meant. | そういう意味じゃないって。 | what ＝ the thing that
+What I really need is a nap. | 今ほんとに必要なのは昼寝。
+Everything I own fits in one bag. | 俺の持ち物、全部カバン一個に収まる。 | everything のあとの that は省略
+Remember the bar where we first met? | 初めて会ったバー、覚えてる？
+The beat you sent me is crazy good. | 送ってくれたビート、めちゃくちゃいいじゃん。 | crazy ＝めちゃくちゃ（口語）
+The people I work with are pretty chill. | 一緒に働いてる人たち、けっこうゆるいよ。 | with が最後に残る
+I'm looking for someone who can mix vocals. | ボーカルのミックスができる人を探してる。
+She's the one who got me into lifting. | 俺を筋トレにハマらせたのは彼女なんだよ。 | get someone into ～ ＝ハマらせる
+The guy who fixed my laptop didn't charge me. | ノートパソコン直してくれた人、お金取らなかったんだよ。
+I finally found a gym that's open 24 hours. | やっと24時間開いてるジム見つけた。
+That's the reason I quit my last job. | それが前の仕事を辞めた理由。 | reason のあとの why は省略できる
+This is the studio where we recorded the EP. | ここが、俺らがEP録ったスタジオ。
+Is that the guy whose car got towed? | あれって、車レッカーされた人？ | whose ＝その人の
+I met a guy whose dad owns three bars. | 親父がバーを3軒やってる奴と知り合った。
+Is there anything I can do to help? | 何か俺に手伝えることある？
+The client I told you about wants a demo. | 前に話したクライアントが、デモ欲しいって。 | about が最後に残る
+I miss the days when we had no bills. | 請求書が一枚もなかった頃が恋しいわ。 | 時の説明は when
+That's the church where my parents got married. | あれが、うちの両親が結婚式挙げた教会。
+The only thing I regret is not starting sooner. | 唯一後悔してるのは、もっと早く始めなかったこと。
+Anyone who's been to Osaka knows the food is insane. | 大阪行ったことある人なら、メシがヤバいの知ってるでしょ。 | who's ＝ who has
+The girl I've been talking to wants to meet my friends. | 最近いい感じの子が、俺の友達に会いたいって。 | talking to ＝付き合う前のやり取り中
+My roommate, who never cleans, complained about the kitchen. | 全然掃除しないルームメイトが、キッチン汚いって文句言ってきた。 | カンマ付きは補足説明
+He canceled again, which is so typical. | あいつまたドタキャンだよ、ほんとあいつらしい。 | , which ＝前の文全体を受ける
+My shift got moved, which means I can come tonight. | シフトずれたから、今夜行けるってこと。 | , which means ～ ＝ってことは～

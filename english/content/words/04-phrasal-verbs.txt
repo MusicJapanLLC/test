@@ -1,145 +1,145 @@
 // Phrasal verbs — the backbone of spoken English (and listening)
-figure out | v | 解決する・理解する | understand or solve by thinking | I can't figure out this app. | daily
-find out | v | 知る・調べてわかる | learn a fact | I found out he's from Osaka too. | daily
-turn out | v | 結局〜になる | end up being | It turned out to be a great day. | daily
-end up | v | 結局〜する羽目になる | finally be in a situation | We ended up staying till 3 a.m. | friends
-show up | v | 現れる・来る | arrive, appear | He didn't show up to the meeting. | work
-come up | v | （話題・問題が）出てくる | appear, be mentioned | Something came up. Can we reschedule? | work
-come up with | v | 思いつく | think of an idea | She came up with a great name. | business
-come across | v | 出くわす・〜な印象を与える | find by chance / seem | You come across as confident. | business
-come back | v | 戻る | return | I'll come back later. | daily
-come over | v | 家に来る | visit someone's home | Wanna come over tonight? | friends
-come on | int | ほら・頼むよ・まさか | hurry, encourage, or disbelief | Come on, we're late! | friends
-go on | v | 続ける・起こる | continue / happen | Go on, I'm listening. / What's going on? | daily
-go out | v | 出かける・付き合う | leave home for fun / date | Are you two going out? | crush
-go over | v | 確認する・見直す | review | Let's go over the plan one more time. | work
-go through | v | 経験する・目を通す | experience / check carefully | He's going through a tough time. | feelings
-go ahead | v | どうぞ・進める | proceed | Go ahead, take the last one. | daily
-get along | v | 仲良くやる | have a good relationship | Do you get along with your boss? | work
-get over | v | 乗り越える・立ち直る | recover from | It took me a year to get over her. | crush
-get up | v | 起きる | leave bed | I get up at six for the gym. | daily
-get back | v | 戻る・取り戻す | return / receive again | When did you get back from Tokyo? | travel
-get back to | v | 折り返し連絡する | reply later | I'll get back to you tomorrow. | business
-get rid of | v | 処分する・取り除く | throw away / remove | I need to get rid of these old clothes. | daily
-get away with | v | 罰されずに済む | not be punished for | You won't get away with this. | conflict
-get by | v | なんとかやっていく | manage with little | I get by with basic English. | money
-get in | v | 乗る・入る | enter a car or place | Get in, we're late. | travel
-get out | v | 出る・降りる | leave | Get out of the car. | travel
-get on | v | （電車・バスに）乗る | board | Get on the train at Umeda. | travel
-get off | v | 降りる | leave a bus or train | Get off at the next stop. | travel
-get into | v | ハマる・入る | become interested in | I got into jazz last year. | music
-give up | v | 諦める・やめる | stop trying | Don't give up on your English. | study
-give back | v | 返す | return | Give me back my phone! | daily
-give in | v | 折れる・屈する | stop resisting | I gave in and bought the shoes. | shopping
-hang up | v | 電話を切る | end a phone call | Don't hang up! | phone
-hold on | v | 待つ | wait | Hold on, let me check. | phone
-look after | v | 世話をする | take care of | Can you look after my cat this weekend? | daily
-look for | v | 探す | try to find | I'm looking for a cheap gym. | daily
-look forward to | v | 楽しみにする | be excited about | I'm looking forward to the trip. | travel
-look into | v | 調べる | investigate | I'll look into it and get back to you. | business
-look out | v | 気をつける | be careful | Look out! A bike! | daily
-look up | v | 調べる | search for information | Look it up online. | study
-look up to | v | 尊敬する | admire | I look up to my older brother. | feelings
-make up | v | 仲直りする・でっち上げる | become friends again / invent | They fought but made up. / He made up an excuse. | conflict
-make it | v | 間に合う・成功する・来られる | arrive in time / succeed | Can you make it to the party? | friends
-make out | v | 理解する・いちゃつく | understand / kiss for a long time | I can't make out what he's saying. | crush
-pick up | v | 拾う・迎えに行く・覚える | lift / collect / learn | I'll pick you up at seven. / You'll pick up English fast. | daily
-pick out | v | 選ぶ | choose | Help me pick out a shirt. | shopping
-put off | v | 先延ばしにする | delay | Stop putting off the dentist. | health
-put up with | v | 我慢する | tolerate | I can't put up with the noise anymore. | conflict
-put on | v | 着る・つける | wear / turn on | Put on a jacket. It's cold. | daily
-run into | v | ばったり会う | meet by chance | I ran into my ex at the supermarket. | daily
-run out of | v | 使い切る・切らす | have no more | We ran out of coffee. | daily
-set up | v | 設定する・準備する・紹介する | arrange / prepare | Can you set up the meeting? | work
-show-off | n | 目立ちたがり | a person who shows off | Don't be a show-off. | friends
-sort out | v | 解決する・整理する | fix or organize | Let's sort out the details tomorrow. | work
-take off | v | 脱ぐ・離陸する・うまくいき始める | remove / leave the ground / suddenly succeed | Our business really took off this year. | business
-take over | v | 引き継ぐ・乗っ取る | take control | Can you take over while I'm out? | work
-take care of | v | 対応する・世話をする | handle / look after | I'll take care of the bill. | money
-take back | v | 撤回する・返品する | withdraw words / return | I take it back. You're not lazy. | conflict
-talk into | v | 説得して〜させる | persuade | She talked me into karaoke. | friends
-talk out of | v | 説得してやめさせる | persuade not to | My friend talked me out of quitting. | friends
-think over | v | よく考える | consider carefully | Let me think it over. | business
-throw away | v | 捨てる | put in the trash | Don't throw away the receipt. | daily
-try on | v | 試着する | wear to check size | Can I try this on? | shopping
-turn down | v | 断る・音量を下げる | refuse / lower | She turned down the offer. / Turn the music down. | business
-turn up | v | 音量を上げる・現れる | make louder / appear | Turn it up! I love this song. | music
-turn on | v | つける | start a machine | Turn on the lights. | daily
-turn off | v | 消す・萎えさせる | stop a machine / make uninterested | Bad breath is a turn-off. | crush
-wake up | v | 目を覚ます | stop sleeping | I woke up at noon. | daily
-work out | v | 運動する・うまくいく | exercise / succeed | I work out five days a week. / It all worked out. | gym
-back up | v | 支持する・バックアップする | support / copy files | Back me up in the meeting. / Back up your files. | work
-break down | v | 故障する・泣き崩れる | stop working / lose control emotionally | My car broke down on the highway. | travel
-break up | v | 別れる | end a relationship | They broke up last week. | crush
-bring up | v | 話題に出す・育てる | mention / raise a child | Don't bring up politics at dinner. | conflict
-call off | v | 中止する | cancel | They called off the game because of rain. | daily
-calm down | v | 落ち着く | become relaxed | Calm down, it's just a test. | feelings
-carry on | v | 続ける | continue | Carry on. Don't let me stop you. | work
-catch up | v | 追いつく・近況を話す | reach the same level / talk about recent news | Let's catch up over coffee. | friends
-check out | v | 見てみる・チェックアウトする | look at / leave a hotel | Check out this video. | online
-cheer up | v | 元気づける・元気出す | become or make happier | Cheer up! It's Friday. | feelings
-chip in | v | お金を出し合う | contribute money | Let's all chip in for her gift. | money
-clean up | v | 片付ける | make tidy | Help me clean up after the party. | daily
-cut down on | v | 減らす | reduce | I'm cutting down on sugar. | health
-deal with | v | 対処する | handle | I'll deal with it tomorrow. | work
-drop by | v | 立ち寄る | visit briefly | I'll drop by after work. | friends
-drop off | v | 送り届ける・降ろす | take somewhere and leave | Can you drop me off at the station? | travel
-eat out | v | 外食する | eat at a restaurant | Let's eat out tonight. | food
-fall for | v | 惚れる・だまされる | fall in love with / be tricked | I fell for her the first day. / Don't fall for that scam. | crush
-fill in | v | 代わりをする・記入する | replace someone / complete | Can you fill in for me tomorrow? | work
-fit in | v | 溶け込む | feel part of a group | It took me a while to fit in. | feelings
-freak out | v | パニクる・ビビる | become very upset or scared | Don't freak out, but I broke your mug. | feelings
-grow up | v | 成長する・大人になる | become an adult | I grew up in Fukuoka. / Grow up! | daily
-hang on | v | ちょっと待つ・しがみつく | wait / hold tightly | Hang on, I'm almost ready. | daily
-head out | v | 出発する | leave | I'm gonna head out. | daily
-hit up | v | 連絡する | contact | Hit me up when you're free. | dm
-keep up | v | ついていく・続ける | stay at the same speed / continue | Keep up the good work! | work
-let down | v | がっかりさせる | disappoint | I won't let you down. | work
-log in | v | ログインする | sign into an account | I can't log in. | online
-mix up | v | 混同する | confuse two things | I always mix up "bored" and "boring." | study
-move on | v | 先に進む・吹っ切る | go to the next thing / stop being sad | It's time to move on. | feelings
-open up | v | 心を開く | share feelings | It took him months to open up. | feelings
-pass out | v | 気を失う・寝落ちする | faint / fall asleep | I passed out on the couch. | health
-pay back | v | 返済する・仕返しする | return money / take revenge | I'll pay you back on Friday. | money
-point out | v | 指摘する | show or mention | Thanks for pointing out the typo. | work
-pull off | v | やってのける | succeed at something hard | I can't believe we pulled it off! | business
-reach out | v | 連絡する・手を差し伸べる | contact | Feel free to reach out anytime. | business
-run late | v | 遅れる | be behind schedule | I'm running late. Start without me. | daily
-screw up | v | しくじる | make a big mistake | I screwed up the presentation. | work
-settle down | v | 落ち着く・身を固める | relax / start a stable life | He wants to settle down and have kids. | crush
-show around | v | 案内する | give a tour | Let me show you around Osaka. | travel
-sign up | v | 登録する・申し込む | register | I signed up for a free trial. | online
-sleep in | v | 朝寝坊する（わざと） | sleep late on purpose | It's Sunday. I'm sleeping in. | daily
-speak up | v | はっきり言う・大きな声で話す | talk louder / give your opinion | Speak up if you disagree. | business
-stand out | v | 目立つ | be easy to notice | Your logo really stands out. | business
-stay up | v | 夜更かしする | not go to bed | I stayed up till 4 again. | health
-stick to | v | 守る・続ける | continue with a plan | Stick to the plan. | work
-stop by | v | 立ち寄る | visit for a short time | Stop by the office anytime. | work
-take up | v | 始める・場所を取る | start a hobby / use space | I took up boxing. | gym
-tell off | v | 叱る | speak angrily to someone | My boss told me off for being late. | work
-throw up | v | 吐く | vomit | I drank too much and threw up. | health
-warm up | v | ウォームアップする・打ち解ける | prepare body / become friendly | Always warm up before lifting. | gym
-wear out | v | 疲れ果てさせる・すり減る | make very tired / damage by use | These shoes are worn out. | daily
-write down | v | 書き留める | note on paper | Write it down so you don't forget. | study
-zone out | v | ぼーっとする | stop paying attention | Sorry, I zoned out. What did you say? | study
-blow off | v | すっぽかす・無視する | skip or ignore | He blew off our meeting. | work
-burn out | v | 燃え尽きる | become exhausted from overwork | Take breaks so you don't burn out. | work
-cash in | v | 換金する・利用して稼ぐ | turn into money / profit from | Brands cash in on viral trends. | money
-chill out | v | 落ち着く・まったりする | relax | Chill out. We have time. | friends
-count on | v | 頼りにする | rely on | You can count on me. | friends
-cut off | v | 切る・遮る | stop / interrupt | Sorry, you got cut off. | phone
-fall apart | v | バラバラになる | break into pieces | My old wallet is falling apart. | daily
-follow up | v | 追って確認する | check again later | I'll follow up next week. | business
-hold back | v | 抑える・遠慮する | stop yourself | Don't hold back. Tell me what you think. | feelings
-kick off | v | 始まる・始める | start | The meeting kicks off at ten. | business
-lay off | v | 解雇する | end jobs because of no work | They laid off 200 people. | work
-look down on | v | 見下す | think you're better than | Don't look down on people with accents. | conflict
-mess around | v | ふざける・遊び半分でやる | play around, not be serious | Stop messing around and help. | friends
-miss out | v | 逃す・損する | lose a chance | You're missing out on great tacos. | food
-pull over | v | 車を路肩に停める | stop a car at the side | Pull over here. | travel
-put together | v | まとめる・組み立てる | prepare or assemble | I'll put together a proposal. | business
-rip off | v | ぼったくる・パクる | overcharge / copy | That shop ripped me off. | money
-shut down | v | 閉鎖する・電源を切る | close / turn off | The site shut down last year. | business
-slow down | v | ペースを落とす | go slower | Can you slow down a little? | study
-speed up | v | 速める | go faster | Can we speed this up? | work
-wrap up | v | 終える・まとめる | finish | Let's wrap up. We're over time. | business
+figure out | v | 解決する・理解する | understand or solve by thinking | I can't figure out this app. || Give me a minute. I'll figure it out. || I'm still figuring out what I want to do with my life. | daily | 目的語が代名詞なら figure it out と間に挟む。understand より「自分で考えて解く」感じ。
+find out | v | 知る・調べてわかる | learn a fact | I found out he's from Osaka too. || Find out what time the shop opens. || My mom found out about my tattoo from a photo online. | daily | find は物を見つける、find out は情報や事実を知る。
+turn out | v | 結局〜になる | end up being | It turned out to be a great day. || The new guy turned out to be a great drummer. || It turns out the cafe was closed for a private event. | daily | It turns out (that) ~ で「実は〜だった」。turned out to be ~ の形も定番。
+end up | v | 結局〜する羽目になる | finally be in a situation | We ended up staying till 3 a.m. || If you skip warm-ups, you'll end up injured. || I ended up working a double shift. | friends | end up -ing / end up + 場所 の形。予定外の結果に使う。
+show up | v | 現れる・来る | arrive, appear | He didn't show up to the meeting. || Only five people showed up to the open mic. || Just show up on time. That's half the job. | work | come の口語で「顔を出す」感じ。Thanks for showing up. のようにも使う。
+come up | v | （話題・問題が）出てくる | appear, be mentioned | Something came up. Can we reschedule? || If anything comes up, call me. || Your name came up in the meeting. | work | Something came up. は予定キャンセルの決まり文句で、理由をぼかせる。
+come up with | v | 思いつく | think of an idea | She came up with a great name. || We need to come up with a name for the new blend. || Who came up with this idea? | business | think of に近いが、アイデアや解決策を「ひねり出す」感じ。
+come across | v | 出くわす・〜な印象を与える | find by chance / seem | You come across as confident. || I came across your music on a playlist. || Don't come across as too pushy in the email. | business | come across as ~ で「〜という印象を与える」。偶然見つける意味もある。
+come back | v | 戻る | return | I'll come back later. || Come back anytime. We're open till ten. || That sound is coming back. Everyone's using it again. | daily | 流行が「再ブーム」になる時にも使う。名詞は comeback。
+come over | v | 家に来る | visit someone's home | Wanna come over tonight? || My parents are coming over for dinner. || Come over after your shift. I'll cook. | friends | come over は「家に来る」。相手の家に行くのは go over to your place。
+come on | int | ほら・頼むよ・まさか | hurry, encourage, or disbelief | Come on, we're late! || Come on, one more rep! || Oh, come on. You said you'd be here at eight. | friends | 「頑張れ」「早く」「勘弁してよ」と口調で意味が変わる。
+go on | v | 続ける・起こる | continue / happen | Go on, I'm listening. / What's going on? || What's going on with the Wi-Fi? || Sorry, go on. What were you saying? | daily | What's going on? は「どうしたの？」。go on -ing は「〜し続ける」。
+go out | v | 出かける・付き合う | leave home for fun / date | Are you two going out? || Let's go out for drinks after the show. || How long have you two been going out? | crush | go out with 人 で「付き合う」。go out だけなら「出かける」。
+go over | v | 確認する・見直す | review | Let's go over the plan one more time. || Can we go over the numbers before the meeting? || Let me go over your lyrics once more. | work | review の口語。go over the details / the plan が定番。
+go through | v | 経験する・目を通す | experience / check carefully | He's going through a tough time. || Go through your receipts before tax season. || Every new cafe goes through a slow month. | feelings | go through a hard time（つらい時期を過ごす）と「ひと通り目を通す」の2つ。
+go ahead | v | どうぞ・進める | proceed | Go ahead, take the last one. || Go ahead and start without me. || If you want the mic, go ahead. | daily | Go ahead. は許可の「どうぞ」。go ahead and ~ は「先に〜しちゃって」。
+get along | v | 仲良くやる | have a good relationship | Do you get along with your boss? || My cat and my roommate don't get along. || We get along great in the studio. | work | get along with 人 の形。大人同士の関係にも自然に使える。
+get over | v | 乗り越える・立ち直る | recover from | It took me a year to get over her. || You'll get over it. Give it time. || I can't get over how good this coffee is. | crush | can't get over ~ は「〜がすごすぎて信じられない」という意味にもなる。
+get up | v | 起きる | leave bed | I get up at six for the gym. || I have to get up at four for the morning shift. || Get up. We're going to the gym. | daily | wake up は目が覚める、get up は起き上がる。順番は wake up → get up。
+get back | v | 戻る・取り戻す | return / receive again | When did you get back from Tokyo? || I just got back from the gym. || Did you get your deposit back? | travel | get back from ~（戻る）と get ~ back（取り戻す）の2つの形。
+get back to | v | 折り返し連絡する | reply later | I'll get back to you tomorrow. || Let me check and get back to you. || Sorry, I never got back to you about Friday. | business | 仕事でも友達でも使える「折り返す・あとで返事する」の定番。
+get rid of | v | 処分する・取り除く | throw away / remove | I need to get rid of these old clothes. || We got rid of the old espresso machine. || How do I get rid of this headache? | daily | 物を捨てる以外に、痛み・習慣・人を「追い払う」にも使える。
+get away with | v | 罰されずに済む | not be punished for | You won't get away with this. || He thinks he can get away with being late every day. || Don't let him get away with it. | conflict | get away with -ing の形で「〜してもお咎めなし」。
+get by | v | なんとかやっていく | manage with little | I get by with basic English. || We can get by on one income for now. || How do you get by on four hours of sleep? | money | get by on ~ の形。「なんとか暮らす・やっていく」。
+get in | v | 乗る・入る | enter a car or place | Get in, we're late. || Get in. I'll drive you to the station. || What time did you get in last night? | travel | 車やタクシーは get in、電車やバスは get on。「帰宅する・到着する」の意味もある。
+get out | v | 出る・降りる | leave | Get out of the car. || Get out of here! You won the contest? || Let's get out of the city this weekend. | travel | Get out of here! は「マジで！？」という驚きにもなる。口調に注意。
+get on | v | （電車・バスに）乗る | board | Get on the train at Umeda. || I'll get on the train at Namba. || Get on the next bus. It's faster. | travel | 電車・バス・飛行機・自転車は get on。車やタクシーは get in。
+get off | v | 降りる | leave a bus or train | Get off at the next stop. || Get off the train at Shin-Osaka. || What time do you get off work? | travel | get off work（仕事が終わる）も超よく使う。
+get into | v | ハマる・入る | become interested in | I got into jazz last year. || How did you get into making beats? || Get into the habit of saving your files. | music | How did you get into ~? は趣味の始まりを聞く定番。get into the habit of ~ は「〜を習慣にする」。
+give up | v | 諦める・やめる | stop trying | Don't give up on your English. || I gave up sugar for a month. || Never give up on the people you love. | study | give up on ~（見切りをつける）、give up -ing（やめる）の形。
+give back | v | 返す | return | Give me back my phone! || I want to give back to the neighborhood that helped me. || Give back my hoodie when you're done. | daily | give back to ~ で「（地域や社会に）恩返しする」。
+give in | v | 折れる・屈する | stop resisting | I gave in and bought the shoes. || Don't give in to the haters. || My kid cried until I gave in. | shopping | give in to ~ の形。誘惑やプレッシャーに「負ける・折れる」。
+hang up | v | 電話を切る | end a phone call | Don't hang up! || She hung up on me in the middle of a sentence. || Let me hang up. My boss is calling. | phone | hang up on 人 で「ガチャ切りする」。
+hold on | v | 待つ | wait | Hold on, let me check. || Hold on a sec. I'm writing this down. || Hold on tight. The bus is packed. | phone | 電話や会話の「ちょっと待って」。Wait! より柔らかい。
+look after | v | 世話をする | take care of | Can you look after my cat this weekend? || Who's looking after the shop while you're away? || Look after yourself. You've been working too much. | daily | take care of とほぼ同じ。look after yourself は別れ際の「体に気をつけて」にも。
+look for | v | 探す | try to find | I'm looking for a cheap gym. || We're looking for a part-time barista. || What are you looking for? Maybe I can help. | daily | 探している最中は look for、見つけたら find。
+look forward to | v | 楽しみにする | be excited about | I'm looking forward to the trip. || I'm looking forward to seeing you at church. || Looking forward to working with you. | travel | to の後は名詞か -ing。look forward to see は超定番のミス。
+look into | v | 調べる | investigate | I'll look into it and get back to you. || We're looking into opening on Sundays. || Can you look into why the card reader keeps failing? | business | 調査・検討の言い方。仕事の I'll look into it. はとても便利。
+look out | v | 気をつける | be careful | Look out! A bike! || Look out for pickpockets near the station. || Look out, the floor's wet. | daily | look out for ~ で「〜に気をつける」。叫ぶなら Watch out! も同じ。
+look up | v | 調べる | search for information | Look it up online. || I looked up the lyrics after the show. || Things are looking up for the shop. | study | look ~ up で「調べる」。Things are looking up. は「状況が良くなってきた」。
+look up to | v | 尊敬する | admire | I look up to my older brother. || The younger guys at the gym look up to you. || Who did you look up to as a kid? | feelings | look down on（見下す）の反対。respect より口語的。
+make up | v | 仲直りする・でっち上げる | become friends again / invent | They fought but made up. / He made up an excuse. || Let's make up. I hate fighting. || Don't make up numbers in the report. | conflict | 「仲直り」「でっち上げ」「化粧（makeup）」と意味が多い。make up for ~ は「埋め合わせる」。
+make it | v | 間に合う・成功する・来られる | arrive in time / succeed | Can you make it to the party? || We made it! The flight hasn't left. || Sorry, I can't make it tonight. | friends | I can't make it. は誘いを断る定番。make it big は「大成功する」。
+make out | v | 理解する・いちゃつく | understand / kiss for a long time | I can't make out what he's saying. || I can't make out the words on this sign. || They were making out in the back of the bus. | crush | 「判読する」と「いちゃつく」という全然違う意味。文脈に注意。
+pick up | v | 拾う・迎えに行く・覚える | lift / collect / learn | I'll pick you up at seven. / You'll pick up English fast. || Can you pick up some milk on the way? || I picked up a few Spanish words at work. | daily | 「拾う」「迎えに行く」「買ってくる」「自然に覚える」と幅広い。pick up the phone は「電話に出る」。
+pick out | v | 選ぶ | choose | Help me pick out a shirt. || She picked out a nice shirt for my show. || Pick out any cake you want. It's on me. | shopping | たくさんの中から「選び出す」。choose より日常的。
+put off | v | 先延ばしにする | delay | Stop putting off the dentist. || I keep putting off my taxes. || Don't put off the call. Just do it. | health | put off -ing の形。procrastinate（先延ばしにする）の口語版。
+put up with | v | 我慢する | tolerate | I can't put up with the noise anymore. || How do you put up with that noise every night? || I put up with a lot for this job. | conflict | tolerate の口語。I can't stand it. も「我慢できない」でよく使う。
+put on | v | 着る・つける | wear / turn on | Put on a jacket. It's cold. || Put on some music while we clean. || I put on three kilos over the holidays. | daily | 「着る」の他、音楽をかける・体重が増える（put on weight）にも。着ている状態は wear。
+run into | v | ばったり会う | meet by chance | I ran into my ex at the supermarket. || Did you run into anyone interesting at the party? || We ran into some problems with the payment system. | daily | 人にばったり会う以外に、run into problems（問題にぶつかる）も定番。
+run out of | v | 使い切る・切らす | have no more | We ran out of coffee. || We're running out of time. || Don't run out of milk during the morning rush. | daily | 進行形 running out of ~ で「なくなりかけ」。
+set up | v | 設定する・準備する・紹介する | arrange / prepare | Can you set up the meeting? || We set up the gear in twenty minutes. || My friend set me up on a blind date. | work | 準備・設定の他に「（人を）紹介してくっつける」の意味もある。名詞は setup。
+show-off | n | 目立ちたがり | a person who shows off | Don't be a show-off. || He's doing one-arm pull-ups again. What a show-off. || I'm not a show-off. I just like nice shoes. | friends | 名詞は show-off（ハイフンあり）、動詞は show off（ハイフンなし）。
+sort out | v | 解決する・整理する | fix or organize | Let's sort out the details tomorrow. || Let me sort out my receipts first. || Don't worry, we'll sort it out. | work | 問題を「片付ける・解決する」。イギリス英語で特によく聞く。
+take off | v | 脱ぐ・離陸する・うまくいき始める | remove / leave the ground / suddenly succeed | Our business really took off this year. || Take off your shoes at the door. || When does your flight take off? | business | 「脱ぐ」「離陸する」「急にブレイクする」の3つ。take a day off は「一日休む」。
+take over | v | 引き継ぐ・乗っ取る | take control | Can you take over while I'm out? || I'll take over the register. Go take your break. || Bots are taking over the comments. | work | 「引き継ぐ」と「乗っ取る・占拠する」の2つ。名詞は takeover。
+take care of | v | 対応する・世話をする | handle / look after | I'll take care of the bill. || Take care of yourself. || I'll take care of the music. You handle the food. | money | Take care. は別れの挨拶。「対応する・引き受ける」の意味は仕事で便利。
+take back | v | 撤回する・返品する | withdraw words / return | I take it back. You're not lazy. || Can I take back these shoes? They don't fit. || Take that back! | conflict | I take it back. で「さっきの発言取り消す」。返品にも使える。
+talk into | v | 説得して〜させる | persuade | She talked me into karaoke. || Don't let him talk you into a second drink. || My friend talked me into opening a shop. | friends | talk 人 into -ing の形。persuade より口語的で、押し切られた感じがある。
+talk out of | v | 説得してやめさせる | persuade not to | My friend talked me out of quitting. || Can you talk him out of quitting? || I almost bought it, but my wife talked me out of it. | friends | talk 人 out of -ing の形。talk into の反対。
+think over | v | よく考える | consider carefully | Let me think it over. || Think it over and tell me tomorrow. || I need to think over the offer before I sign. | business | 代名詞なら think it over。即答を避ける時のクッションになる。
+throw away | v | 捨てる | put in the trash | Don't throw away the receipt. || Don't throw away the old mixes. You never know. || We throw away too much bread at closing. | daily | throw out も同じ意味。throw away a chance は「チャンスを棒に振る」。
+try on | v | 試着する | wear to check size | Can I try this on? || Try on a size bigger. || Can I try these shoes on? | shopping | 代名詞なら try it on。服や靴専用で、食べ物は try だけ。
+turn down | v | 断る・音量を下げる | refuse / lower | She turned down the offer. / Turn the music down. || Turn down the bass. The neighbors are complaining. || I turned down a gig to go to church with my mom. | business | 「断る」と「音量を下げる」の2つ。turn down an offer / a job が定番。
+turn up | v | 音量を上げる・現れる | make louder / appear | Turn it up! I love this song. || Turn up the mic a little. || My lost wallet turned up at the cafe. | music | 「音量を上げる」の他に「（なくした物が）出てくる」。
+turn on | v | つける | start a machine | Turn on the lights. || Turn on the oven before you open. || Can you turn on subtitles? | daily | 機械やライトを「つける」。名詞の turn-on は「グッとくるポイント」なので注意。
+turn off | v | 消す・萎えさせる | stop a machine / make uninterested | Bad breath is a turn-off. || Turn off your phone during the service. || Arrogance is a total turn-off. | crush | 「消す」の他に、名詞 turn-off で「萎える要素」。
+wake up | v | 目を覚ます | stop sleeping | I woke up at noon. || Wake up! We're gonna miss the train. || I wake up at 3 p.m. on night-shift days. | daily | wake up は目が覚める、get up は起き上がる。過去形は woke up。
+work out | v | 運動する・うまくいく | exercise / succeed | I work out five days a week. / It all worked out. || Don't worry, it'll work out. || I work out before my cafe shift. | gym | 「運動する」「うまくいく」「（答えを）出す」の3つ。名詞は workout。
+back up | v | 支持する・バックアップする | support / copy files | Back me up in the meeting. / Back up your files. || My bandmates backed me up when the venue tried to cut our pay. || Back up a little. You're blocking the door. | work | 「味方する」「データを保存する」「後ろに下がる」。名詞は backup。
+break down | v | 故障する・泣き崩れる | stop working / lose control emotionally | My car broke down on the highway. || If the machine breaks down again, call the repair guy. || Let me break down the costs for you. | travel | 「故障する」「泣き崩れる」の他、数字を「細かく分けて説明する」にも。名詞は breakdown。
+break up | v | 別れる | end a relationship | They broke up last week. || Why did you two break up? || The cops came to break up the fight. | crush | break up with 人 で「〜と別れる」。喧嘩や集まりを「解散させる」意味も。
+bring up | v | 話題に出す・育てる | mention / raise a child | Don't bring up politics at dinner. || Don't bring up money on a first date. || I was brought up in a small town near Nara. | conflict | 「話題に出す」と「育てる（be brought up）」の2つ。
+call off | v | 中止する | cancel | They called off the game because of rain. || We had to call off the show because of the typhoon. || Call off the search. I found my keys. | daily | cancel の口語。イベント・試合などを「中止にする」。
+calm down | v | 落ち着く | become relaxed | Calm down, it's just a test. || Calm down and tell me what happened. || It took a while for the shop to calm down after the rush. | feelings | 怒っている人に Calm down! と言うと逆効果のことも。Take a breath. の方が優しい。
+carry on | v | 続ける | continue | Carry on. Don't let me stop you. || Sorry, carry on with what you were saying. || If you carry on like this, you'll burn out. | work | carry on with ~ / carry on -ing の形。carry-on は「機内持ち込み荷物」。
+catch up | v | 追いつく・近況を話す | reach the same level / talk about recent news | Let's catch up over coffee. || I need to catch up on sleep this weekend. || You go ahead. I'll catch up. | friends | catch up on ~ は「遅れを取り戻す」、catch up with 人 は「追いつく・近況を話す」。
+check out | v | 見てみる・チェックアウトする | look at / leave a hotel | Check out this video. || What time do we have to check out? || Check out the new menu. We added a matcha latte. | online | 「見てみる」と「ホテルを出る」。Check this out! は「これ見て！」。
+cheer up | v | 元気づける・元気出す | become or make happier | Cheer up! It's Friday. || Cheer up. The weekend's almost here. || I bought her flowers to cheer her up. | feelings | cheer 人 up で「元気づける」。cheer for は「応援する」で別の意味。
+chip in | v | お金を出し合う | contribute money | Let's all chip in for her gift. || Everyone chipped in for the new speakers. || Can I chip in for gas? | money | 少しずつお金を出し合う時の口語。ちょっと手伝う意味もある。
+clean up | v | 片付ける | make tidy | Help me clean up after the party. || Clean up your station before you clock out. || The streets got cleaned up after the festival. | daily | clean up after 人 で「〜の後片付けをする」。
+cut down on | v | 減らす | reduce | I'm cutting down on sugar. || I'm trying to cut down on energy drinks. || We cut down on paper cups by giving a discount for your own mug. | health | 量を「減らす」。完全にやめるなら quit / cut out。
+deal with | v | 対処する | handle | I'll deal with it tomorrow. || I deal with angry customers every day. || How are you dealing with the stress? | work | handle の口語。Deal with it. は「我慢しろ」とキツく聞こえることがある。
+drop by | v | 立ち寄る | visit briefly | I'll drop by after work. || Drop by the cafe anytime. Coffee's on me. || My aunt dropped by without calling first. | friends | drop by / stop by / swing by はほぼ同じ「ちょっと寄る」。
+drop off | v | 送り届ける・降ろす | take somewhere and leave | Can you drop me off at the station? || I'll drop off the samples at your office. || Drop me off at the corner. I'll walk. | travel | 人や物を「降ろす・届ける」。反対は pick up。
+eat out | v | 外食する | eat at a restaurant | Let's eat out tonight. || We eat out too much. Let's cook tonight. || Eating out in Osaka is cheap if you know where to go. | food | eat out は「外食する」。eat outside は「屋外で食べる」で別の意味。
+fall for | v | 惚れる・だまされる | fall in love with / be tricked | I fell for her the first day. / Don't fall for that scam. || I fell for that fake delivery text. || Don't fall for his charm. He's like that with everyone. | crush | 「惚れる」と「だまされる」の2つ。fall in love with より軽い。
+fill in | v | 代わりをする・記入する | replace someone / complete | Can you fill in for me tomorrow? || Fill in your name and address here. || Who's filling in for the drummer tonight? | work | fill in for 人 で「代わりを務める」。用紙の記入は fill out もよく使う。
+fit in | v | 溶け込む | feel part of a group | It took me a while to fit in. || I felt like I didn't fit in at my old job. || Can we fit in one more song before closing? | feelings | 「なじむ」と「（予定に）入れ込む」の2つ。fit in with ~ の形もある。
+freak out | v | パニクる・ビビる | become very upset or scared | Don't freak out, but I broke your mug. || My mom freaked out when I dyed my hair. || The dog freaks out during thunderstorms. | feelings | 驚き・怒り・恐怖で「パニクる」。freak 人 out は「〜をビビらせる」。
+grow up | v | 成長する・大人になる | become an adult | I grew up in Fukuoka. / Grow up! || Where did you grow up? || I grew up listening to my dad's old records. | daily | Where did you grow up? は出身を聞く自然な質問。Grow up! は「大人になれ」と叱る言い方。
+hang on | v | ちょっと待つ・しがみつく | wait / hold tightly | Hang on, I'm almost ready. || Hang on, let me get my wallet. || Hang on to your receipt in case you need a refund. | daily | Hang on. は Hold on. とほぼ同じ。hang on to ~ は「手放さずに持っておく」。
+head out | v | 出発する | leave | I'm gonna head out. || We should head out before traffic gets bad. || What time are you heading out tomorrow? | daily | leave の口語。I'm gonna head out. は帰る時の自然な一言。
+hit up | v | 連絡する | contact | Hit me up when you're free. || Hit up my producer. He's looking for singers. || She hit me up after the show. | dm | 若者の口語で「連絡する」。仕事のメールでは使わない。
+keep up | v | ついていく・続ける | stay at the same speed / continue | Keep up the good work! || Slow down, I can't keep up! || It's hard to keep up with all the new apps. | work | keep up with ~ で「ついていく」。Keep it up! は「その調子！」。
+let down | v | がっかりさせる | disappoint | I won't let you down. || Don't let the team down tonight. || I felt let down when they canceled. | work | let 人 down で「期待を裏切る」。feel let down は「がっかりする」。
+log in | v | ログインする | sign into an account | I can't log in. || Log in with your email. || Someone tried to log in to my account from overseas. | online | log in to ~ の形。名詞は login。sign in もほぼ同じ。
+mix up | v | 混同する | confuse two things | I always mix up "bored" and "boring." || Sorry, I mixed up the orders. || Don't mix up the two invoices. | study | mix up A and B / mix A up with B の形。名詞の mix-up は「手違い」。
+move on | v | 先に進む・吹っ切る | go to the next thing / stop being sad | It's time to move on. || Let's move on to the next song. || It's been a year. You need to move on. | feelings | 「次の話題に進む」と「吹っ切って前に進む」の両方。
+open up | v | 心を開く | share feelings | It took him months to open up. || He finally opened up about his divorce. || A new cafe is opening up next to the station. | feelings | open up to 人 / about ~ で「心を開いて話す」。店が「オープンする」にも。
+pass out | v | 気を失う・寝落ちする | faint / fall asleep | I passed out on the couch. || He passed out in the heat at the festival. || Drink water so you don't pass out at the gym. | health | faint の口語。疲れて「寝落ちする」意味でもよく使う。
+pay back | v | 返済する・仕返しする | return money / take revenge | I'll pay you back on Friday. || Can I pay you back next week? || Someday I'll pay back everyone who helped me. | money | pay 人 back の形。仕返しは名詞 payback でも言う。
+point out | v | 指摘する | show or mention | Thanks for pointing out the typo. || My producer pointed out a timing issue in the second verse. || Thanks for pointing that out. | work | point out that ~ の形。指摘へのお礼は Thanks for pointing that out. が自然。
+pull off | v | やってのける | succeed at something hard | I can't believe we pulled it off! || Not everyone can pull off a pink suit. || We pulled off the event on a tiny budget. | business | 難しいことを「やってのける」と、服を「着こなす」の2つ。
+reach out | v | 連絡する・手を差し伸べる | contact | Feel free to reach out anytime. || Reach out if you need help with the move. || A label reached out after hearing my track. | business | contact の柔らかい言い方。ビジネスメールの定番。
+run late | v | 遅れる | be behind schedule | I'm running late. Start without me. || Running late. Save me a seat. || The bus is running late again. | daily | 進行形 I'm running late. が基本。遅刻連絡の定番。
+screw up | v | しくじる | make a big mistake | I screwed up the presentation. || Don't screw up the coffee order. The boss is here. || I screwed up big time. | work | mess up より強めでくだけた言い方。フォーマルな場では make a mistake。
+settle down | v | 落ち着く・身を固める | relax / start a stable life | He wants to settle down and have kids. || Settle down, everyone. The show's starting. || I'm not ready to settle down yet. | crush | 「静かにする」と「身を固める・定住する」の2つ。settle in は新しい場所に「慣れる」。
+show around | v | 案内する | give a tour | Let me show you around Osaka. || Can you show the new guy around the kitchen? || I showed my cousin around Dotonbori. | travel | show 人 around 場所 の形。案内してまわるイメージ。
+sign up | v | 登録する・申し込む | register | I signed up for a free trial. || Sign up for our newsletter and get ten percent off. || I signed up for a boxing class. | online | sign up for ~ の形。sign in（ログイン）と区別しよう。
+sleep in | v | 朝寝坊する（わざと） | sleep late on purpose | It's Sunday. I'm sleeping in. || Let's sleep in tomorrow. No alarms. || I can't sleep in anymore. My body wakes up at six. | daily | oversleep（うっかり寝坊）と違い、わざとゆっくり寝ること。
+speak up | v | はっきり言う・大きな声で話す | talk louder / give your opinion | Speak up if you disagree. || Speak up. I can't hear you over the music. || If the price is wrong, speak up. | business | 「大きな声で話す」と「声を上げる・意見を言う」の2つ。
+stand out | v | 目立つ | be easy to notice | Your logo really stands out. || Wear something that makes you stand out on stage. || Her voice stands out in any mix. | business | stand out from the crowd が定番。たいてい良い意味の「目立つ」。
+stay up | v | 夜更かしする | not go to bed | I stayed up till 4 again. || Don't stay up too late. You have work. || We stayed up talking until sunrise. | health | stay up late が定番。夜ふかしは stay up、寝坊は oversleep。
+stick to | v | 守る・続ける | continue with a plan | Stick to the plan. || Stick to what you're good at. || I'm trying to stick to my budget. | work | stick to the plan / a budget が定番。stick with ~ も近い意味。
+stop by | v | 立ち寄る | visit for a short time | Stop by the office anytime. || Stop by the shop and say hi. || Can you stop by the bank on your way? | work | drop by とほぼ同じ。Stop by anytime. は社交辞令のこともある。
+take up | v | 始める・場所を取る | start a hobby / use space | I took up boxing. || This sofa takes up too much space. || I want to take up the guitar this year. | gym | 趣味を「始める」と、場所や時間を「取る」の2つ。
+tell off | v | 叱る | speak angrily to someone | My boss told me off for being late. || Don't tell him off in front of the customers. || The coach told us off for being late. | work | tell 人 off の形で「叱りつける」。scold は少し硬い。
+throw up | v | 吐く | vomit | I drank too much and threw up. || I think I'm gonna throw up. || The kid threw up on the bus. | health | vomit の口語。puke はもっとくだけた言い方。
+warm up | v | ウォームアップする・打ち解ける | prepare body / become friendly | Always warm up before lifting. || Warm up your voice before you go on. || The crowd took a while to warm up. | gym | 体だけでなく、声・エンジン・観客が「温まる」にも。名詞は warm-up。
+wear out | v | 疲れ果てさせる・すり減る | make very tired / damage by use | These shoes are worn out. || You'll wear out your voice if you shout every night. || The kids wore me out today. | daily | wear 人 out で「くたくたにさせる」。worn out は「疲れ切った・すり減った」。
+write down | v | 書き留める | note on paper | Write it down so you don't forget. || Write down the customer's name on the cup. || I write down every idea before I forget it. | study | 代名詞なら write it down。note down も同じ意味。
+zone out | v | ぼーっとする | stop paying attention | Sorry, I zoned out. What did you say? || I zone out during long meetings. || He zoned out on the train and missed his stop. | study | space out もほぼ同じ。集中が切れて「ぼーっとする」。
+blow off | v | すっぽかす・無視する | skip or ignore | He blew off our meeting. || Don't blow off the dentist again. || He blew off some steam at the gym. | work | 予定や人を「すっぽかす」。blow off steam は「うっぷんを晴らす」。
+burn out | v | 燃え尽きる | become exhausted from overwork | Take breaks so you don't burn out. || Streamers burn out fast if they never take a day off. || Pace yourself. Don't burn out in the first month. | work | 名詞は burnout。形容詞の burned out（燃え尽きた）とセットで覚えよう。
+cash in | v | 換金する・利用して稼ぐ | turn into money / profit from | Brands cash in on viral trends. || Some bars cash in on big games. || I cashed in my points for a free coffee. | money | cash in on ~ で「〜に乗じて稼ぐ」。ポイントを換金する意味でも使う。
+chill out | v | 落ち着く・まったりする | relax | Chill out. We have time. || Chill out, it's just a typo. || We chilled out by the river after the gig. | friends | 怒っている人に言うと少し失礼なこともある。友達同士向け。
+count on | v | 頼りにする | rely on | You can count on me. || Can I count on you for Saturday? || Don't count on the bus. It's always late. | friends | count on 人 で「頼りにする」。rely on とほぼ同じで口語的。
+cut off | v | 切る・遮る | stop / interrupt | Sorry, you got cut off. || The call cut off. Can you hear me now? || They cut off our power because we forgot the bill. | phone | 電話が「切れる」、話を「遮る」、電気などを「止める」。
+fall apart | v | バラバラになる | break into pieces | My old wallet is falling apart. || The deal fell apart at the last minute. || I felt like I was falling apart after the breakup. | daily | 物が壊れる以外に、計画や人の心が「崩れる」にも使う。
+follow up | v | 追って確認する | check again later | I'll follow up next week. || Follow up with the client tomorrow. || Just following up on my last email. | business | Just following up on ~ はビジネスメールの定番の書き出し。名詞は follow-up。
+hold back | v | 抑える・遠慮する | stop yourself | Don't hold back. Tell me what you think. || I held back tears at the funeral. || The band held back the new song for the encore. | feelings | hold back tears（涙をこらえる）が定番。Don't hold back. は「遠慮しないで」。
+kick off | v | 始まる・始める | start | The meeting kicks off at ten. || Let's kick off the stream with a new beat. || The festival kicks off next Friday. | business | 元はサッカーのキックオフ。イベントや会議の開始に使う。
+lay off | v | 解雇する | end jobs because of no work | They laid off 200 people. || The factory had to lay off half its workers. || Lay off the sugar for a week and see how you feel. | work | 業績悪化による解雇で、本人の落ち度ではない。lay off ~ は「〜を控える」の口語にも。
+look down on | v | 見下す | think you're better than | Don't look down on people with accents. || Never look down on the cleaning staff. || Some people look down on night-shift workers. | conflict | look up to（尊敬する）の反対。
+mess around | v | ふざける・遊び半分でやる | play around, not be serious | Stop messing around and help. || Stop messing around on your phone. || We were just messing around on the keyboard when we found the hook. | friends | mess around with ~ は「いじくる」。恋愛の mess around は「遊びの関係」の意味にもなる。
+miss out | v | 逃す・損する | lose a chance | You're missing out on great tacos. || Don't miss out on the early-bird price. || I feel like I'm missing out when I skip parties. | food | miss out on ~ の形。FOMO（fear of missing out）は「取り残される不安」。
+pull over | v | 車を路肩に停める | stop a car at the side | Pull over here. || The cop told me to pull over. || Pull over. I think we have a flat tire. | travel | 車を路肩に寄せる。警察に止められるのは get pulled over。
+put together | v | まとめる・組み立てる | prepare or assemble | I'll put together a proposal. || Can you put together a playlist for the cafe? || It took me two hours to put this desk together. | business | 「まとめる・企画する」と「組み立てる」。put together a team / a plan など。
+rip off | v | ぼったくる・パクる | overcharge / copy | That shop ripped me off. || Ten bucks for a coffee? That's a rip-off. || Someone ripped off our logo. | money | 名詞の rip-off は「ぼったくり」。デザインや曲を「パクる」の意味もある。
+shut down | v | 閉鎖する・電源を切る | close / turn off | The site shut down last year. || Shut down your computer before you leave. || Our favorite bar shut down during the pandemic. | business | 店や会社の「閉鎖」とパソコンの「電源を切る」。人を shut down は「一蹴する」。
+slow down | v | ペースを落とす | go slower | Can you slow down a little? || Slow down, you're eating too fast. || Business always slows down in August. | study | 速度だけでなく、ビジネスやペースの「鈍化」にも使う。
+speed up | v | 速める | go faster | Can we speed this up? || Can you speed up the payment process? || Speed up the tempo a bit. | work | speed up the process が仕事の定番。反対は slow down。
+wrap up | v | 終える・まとめる | finish | Let's wrap up. We're over time. || Let's wrap up this meeting. || Can you wrap this up? It's a gift. | business | 会議や作業を「まとめて終える」と、物を「包む」の2つ。

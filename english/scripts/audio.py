@@ -115,7 +115,7 @@ def encode(parts, rec_id, n):
 
 
 def record(rec_id):
-    items = [c for f in ('cards.json', 'words.json') for c in json.loads((DATA / f).read_text()) if c.get('rec') == rec_id]
+    items = [c for f in ('cards.json', 'words.json', 'drills.json') for c in json.loads((DATA / f).read_text()) if c.get('rec') == rec_id]
     OUT.mkdir(parents=True, exist_ok=True)
     for old in OUT.glob(f'{rec_id}.*mp3'):
         old.unlink()

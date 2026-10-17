@@ -1,0 +1,36 @@
+//! Questions | Wh-questions and "Do you know where..." | build
+! 基本は「疑問詞＋do/does/did＋主語＋動詞」：Where do you work? / What did you say?
+! 疑問詞そのものが主語なら do はいらない：Who made this?（Who did make ✗）/ What happened?
+! Do you know / Can you tell me / I don't know の後ろは普通の語順に戻る：Do you know where the station is?（where is the station ✗）
+! Yes/No で答える中身を入れるときは if：Do you know if it's open?
+! 前置詞は最後に残るのが自然：Who did you go with? / What are you looking for?
+Where do you work? | どこで働いてるの？
+How was your weekend? | 週末どうだった？
+What time do you get off? | 何時に上がるの？ | get off＝仕事が終わる
+Whose phone is this? | これ誰のスマホ？
+What's the Wi-Fi password? | Wi-Fiのパスワードって何？
+Who made this beat? | このビート誰が作ったの？ | 疑問詞が主語→do なし
+What happened to your arm? | その腕どうしたの？ | What が主語→did なし
+Which train goes to Namba? | 難波に行くのはどの電車？ | Which train が主語→does なし
+Who's coming to the party? | パーティー誰が来るの？
+Why did you leave so early? | なんであんなに早く帰ったの？
+How long does it take to get there? | そこまでどれくらいかかる？
+How much do I owe you? | いくら払えばいい？ | 立て替えてもらったときの定番
+What kind of music do you make? | どんな音楽作ってるの？
+How often do you go to church? | 教会にはどれくらいのペースで行ってるの？
+What does your roommate do? | ルームメイトって何の仕事してるの？ | 三人称は does
+Where did you get those shoes? | その靴どこで買ったの？ | 会話では buy より get が多い
+How did you get into music? | どうやって音楽にハマったの？ | get into＝ハマる・始める
+Who did you go with? | 誰と行ったの？ | with は最後に残す
+What are you looking for? | 何探してるの？
+What do you mean by that? | それってどういう意味？
+How come you're still awake? | なんでまだ起きてるの？ | How come のあとは普通の語順
+Do you know where the bathroom is? | トイレどこか知ってる？ | where is the bathroom ✗
+Do you know what time it starts? | 何時に始まるか知ってる？
+Do you know if the gym is open today? | 今日ジム開いてるか知ってる？ | Yes/No の中身は if
+Can you tell me how to get to the station? | 駅までの行き方、教えてもらえますか？
+Could you tell me what this charge is for? | この料金が何の分か教えていただけますか？ | 普通の語順＋for が最後
+Do you remember where we parked? | どこに車停めたか覚えてる？
+I don't know what my boss wants. | 上司が何を求めてるのか分からない。 | what does my boss want ✗
+I wonder why she hasn't texted back. | なんであの子から返信来ないんだろう。 | I wonder の後ろも普通の語順
+Do you have any idea how much this costs? | これがいくらするか見当つく？

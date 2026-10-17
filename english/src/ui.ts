@@ -1,7 +1,7 @@
 /* Small shared UI helpers: toasts, XP pop, the goal party, the bottom sheet, record sleeves and track rows. */
 import type { Card, RecordMeta } from './types';
 import { DB, recStats } from './feed';
-import { ACCENT, accentOf, esc, hostOf, meaningHtml, metaRow, linesHtml, sourceHtml, wireAudio, recCode, recOf, headSize } from './render';
+import { ACCENT, accentOf, esc, hostOf, kindOf, meaningHtml, metaRow, linesHtml, sourceHtml, wireAudio, recCode, recOf, headSize } from './render';
 import { Bot, CREW } from './robots/crew';
 import { cardState, liveStreak, save, state, status } from './store';
 import { play, preload, stop } from './audio';
@@ -72,7 +72,7 @@ export function sleeve(r: RecordMeta, opts: { big?: boolean; href?: boolean; now
     <span class="sleeve__art">
       <span class="sleeve__disc" aria-hidden="true"></span>
       <span class="sleeve__no">${esc(recCode(r))}</span>
-      <span class="sleeve__kind">${r.s === 'words' ? 'WORDS' : r.s === 'talk' ? 'REAL TALK' : esc(({ songs: 'SONGS', movies: 'FILM & TV', books: 'BOOKS', science: 'SCIENCE', comedy: 'COMEDY' } as Record<string, string>)[r.s] ?? '')}</span>
+      <span class="sleeve__kind">${esc(kindOf(r))}</span>
       <span class="sleeve__bot" data-bot="${hostOf(r)}"></span>
       ${opts.now ? '<span class="sleeve__now">Now playing</span>' : ''}
     </span>

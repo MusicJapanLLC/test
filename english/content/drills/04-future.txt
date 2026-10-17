@@ -1,0 +1,36 @@
+//! Future Plans | Will, going to, and -ing for plans | build
+! will＝その場で決めたこと・申し出・約束・予想（I'll get it! / It'll be fine.）。
+! be going to＝前から決めてた「つもり」と、目の前の証拠からの予測（Look at those clouds. It's going to rain.）。
+! 現在進行形 I'm meeting ~＝人と約束済み・予約済みの予定。カレンダーに書いてある感じ。
+! 前から決めてた予定を will で言うと「今決めた」っぽく聞こえる。これが日本人あるある。
+! when / if の中は未来でも現在形：I'll call you when I get home.（when I will get ✗）
+I'll get the door. | （チャイムが鳴って）俺出るよ。 | その場で決めた→will
+I'll have an iced latte, please. | アイスラテでお願いします。 | 注文の I'll have
+Okay, I'll text you later. | 了解、あとで連絡する。
+I think it'll be fine. | 大丈夫だと思うよ。 | 予想の will
+I'll grab you a coffee. | コーヒー買ってきてあげるよ。 | 申し出の will
+I won't tell anyone. I promise. | 誰にも言わない。約束する。 | 約束の will。won't＝will not
+Wait, I'll help you carry that. | 待って、それ運ぶの手伝うよ。
+I'll probably stay home tonight. | 今夜はたぶん家にいる。 | probably は will のすぐ後
+I'm going to quit drinking. | お酒やめるつもり。 | 前から決めてる→going to
+I'm going to start a podcast this year. | 今年ポッドキャスト始めるつもり。
+Are you going to tell your boss? | 上司に言うつもり？
+I'm going to ask her out after church. | 礼拝のあと、あの子をデートに誘うつもり。 | ask out＝デートに誘う
+Look at those clouds. It's going to rain. | あの雲見て。これ雨降るよ。 | 証拠がある予測は going to
+It's going to be a long night. | 長い夜になりそう。
+I'm going to need more coffee. | これはコーヒーもっと要るな。
+Sorry, I'm going to be late. | ごめん、遅れそう。 | 会話では gonna とよく縮む
+I'm meeting my producer tomorrow. | 明日プロデューサーと会う約束してる。 | 約束済み→進行形
+What are you doing this weekend? | 今週末なにするの？ | 予定を聞く定番
+We're flying to Taipei on Friday. | 金曜、飛行機で台北行くんだ（もう予約済み）。
+My sister's having a baby in May. | 姉ちゃん、5月に出産予定なんだ。
+We're having a release party on Saturday. | 土曜にリリースパーティーやるんだ。
+Are you coming to the show tonight? | 今夜のライブ来る？
+I'm not working this Sunday. | 今週の日曜はシフト入ってない。 | 決まってる予定の否定も進行形
+The new menu starts next Monday. | 新メニューは来週の月曜から。 | 公式スケジュールは現在形
+What time does your shift start tomorrow? | 明日のシフト何時から？ | シフト表も現在形
+I'll call you when I get home. | 家着いたら電話する。 | when の中は現在形
+If it rains, we'll stay home. | 雨降ったら、家にいることにしよう。 | if の中も現在形
+This time next year, I'll be in New York. | 来年の今ごろはニューヨークにいるよ。
+When I finish this album, I'm taking a week off. | このアルバム終わったら、1週間休み取るんだ。 | 決めてある予定→進行形
+I'll have it done by Friday. | 金曜までには仕上げとくよ。 | have it done＝終わらせておく

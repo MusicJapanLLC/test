@@ -1,0 +1,36 @@
+//! Wish & Would Rather | I wish, I'd rather, it's time | build
+! I wish ＋過去形＝今の現実と違うことを願う：I wish I spoke French.（今、話せない）。I wish I will ～ はNG。
+! I wish ＋ had ＋過去分詞＝過去の後悔：I wish I'd said something.（言えばよかった）。If only ～ は wish のさらに強い版。
+! I wish you'd ～（you would）＝相手へのイライラ・やめてほしいこと。実現しそうな願いなら wish じゃなく hope。
+! I'd rather ＋動詞の原形＝むしろ～したい（than で比較）。相手にしてほしいなら I'd rather you ＋過去形。
+! It's time ＋過去形＝もう～すべき時（It's time we left.）。It's about time ～ だと「いい加減」の苛立ちが入る。
+I wish I could sing. | 歌えたらいいのになあ。 | 能力は could
+I wish I didn't have work tomorrow. | 明日、仕事なければいいのに。 | 否定は didn't
+I wish it was Friday already. | もう金曜だったらいいのに。 | 口語では were より was が普通
+I wish I lived closer to the ocean. | 海の近くに住んでたらなあ。
+I wish I knew what to say. | 何て言えばいいか、分かればいいのに。
+I hope you feel better soon. | 早く良くなるといいね。 | 実現しそうなら hope
+I hope it doesn't rain on Saturday. | 土曜、雨降らないといいな。 | hope のあとは現在形でOK
+I'd rather stay home tonight. | 今夜はむしろ家にいたいな。 | I'd rather ＋原形
+I'd rather not talk about it. | その話は、あんまりしたくない。 | 否定は rather not
+I'd rather walk than wait for the bus. | バス待つくらいなら歩くわ。 | than で比較
+Would you rather go out or stay in? | 出かけるのと家でゆっくりするの、どっちがいい？
+I wish I'd started lifting sooner. | もっと早く筋トレ始めればよかった。 | 過去の後悔は had ＋過去分詞
+I wish I hadn't said that. | あんなこと言わなきゃよかった。
+I wish you'd told me earlier. | もっと早く言ってくれればよかったのに。 | この you'd は you had
+I wish you'd stop texting me in the middle of the night. | 夜中にメッセージ送ってくるの、やめてほしいんだけど。 | この you'd は you would
+If only I had a car. | 車さえあればなあ。 | If only ＝ wish の強い版
+If only I'd saved that file. | あのファイル、保存してさえいれば。
+I wish I could be there tonight. | 今夜そっちに行けたらいいんだけど。 | 行けない前提
+I wish we had more customers on weekdays. | 平日にもっとお客さんがいればなあ。
+I wish I didn't care so much. | こんなに気にしなければいいのに。
+I'd rather you didn't tell anyone. | 誰にも言わないでもらえるとありがたい。 | I'd rather you ＋過去形
+I'd rather die than sing karaoke sober. | シラフでカラオケ歌うくらいなら死んだほうがマシ。
+I'd rather pay more for better beans. | 多めに払ってでも、もっといい豆がいい。
+Would you rather I came tomorrow? | それとも、明日来たほうがいい？ | would you rather ＋ I ＋過去形
+Do you ever wish you'd stayed in Tokyo? | 東京に残ればよかったって思うことある？
+I wish I'd never downloaded that app. | あのアプリ、入れなきゃよかった。
+It's time to call it a night. | そろそろお開きの時間だね。 | call it a night ＝今日はここまで
+It's time we raised our prices. | そろそろ値上げすべき時だな。 | It's time ＋過去形
+It's about time you got a real bed. | いい加減ちゃんとしたベッド買えよ。 | It's about time ＝いい加減～しろ
+I'd rather be broke and happy than rich and miserable. | 金持ちで不幸より、貧乏で幸せのほうがいい。

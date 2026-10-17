@@ -5,11 +5,11 @@ import { Bot, CREW, type Member } from './robots/crew';
 import { cardState, state } from './store';
 import { lineKeys, play, playSeq } from './audio';
 import { I } from './icons';
-import { DB } from './feed';
+import { DB, normBuild } from './feed';
 
 /** label colours = the crew's screen colours; Real Talk uses the page ink */
 export const ACCENT: Record<Source, string> = {
-  talk: 'var(--ink)', words: '#b7a6ff', movies: '#ff3b47', books: '#ffb43d', songs: '#3fd8ff', science: '#7dff8e', comedy: '#ff7ad8',
+  talk: 'var(--ink)', words: '#b7a6ff', movies: '#ff3b47', books: '#ffb43d', songs: '#3fd8ff', science: '#7dff8e', comedy: '#ff7ad8', drill: '#ff9f45',
 };
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
@@ -20,6 +20,9 @@ export const hostOf = (r: RecordMeta | undefined): Member['id'] => (r && HOST[r.
 export const recOf = (c: Card) => DB.recById.get(c.rec);
 export const recCode = (r: RecordMeta | undefined) => `MJ-EN ${String(r?.no ?? 0).padStart(3, '0')}`;
 export const accentOf = (r: RecordMeta | undefined) => (r && r.s !== 'talk' && r.s !== 'words' ? ACCENT[r.s] : CREW.find((m) => m.id === hostOf(r))!.color);
+export const kindOf = (r: RecordMeta) =>
+  r.lv === 'build' ? 'BUILD IT' : r.lv === 'levelup' ? 'LEVEL UP' : r.s === 'words' ? 'WORDS' : r.s === 'talk' ? 'REAL TALK'
+    : ({ songs: 'SONGS', movies: 'FILM & TV', books: 'BOOKS', science: 'SCIENCE', comedy: 'COMEDY' } as Record<string, string>)[r.s] ?? '';
 
 /** onActive: run when a reel slide becomes the visible one */
 export const onActive = new WeakMap<HTMLElement, () => void>();
@@ -85,8 +88,8 @@ export function meaningHtml(c: Card) {
   if (alts.length) p.push(`<ul class="alts">${alts.join('')}</ul>`);
   const more: string[] = [];
   if (c.sl) more.push(`<p><span class="label">Sounds like</span> ${esc(c.sl)}</p>`);
-  if (c.y) more.push(`<p><span class="label">Why it works</span><span lang="ja">${esc(c.y).replace(/\n/g, '<br>')}</span></p>`);
-  if (c.n) more.push(`<p><span class="label">${c.s === 'science' ? 'The science' : 'Culture'}</span><span lang="ja">${esc(c.n).replace(/\n/g, '<br>')}</span></p>`);
+  if (c.y) more.push(`<p><span class="label">${c.k === 'w' ? 'Usage' : 'Why it works'}</span><span lang="ja">${esc(c.y).replace(/\n/g, '<br>')}</span></p>`);
+  if (c.n) more.push(`<p><span class="label">${c.s === 'science' ? 'The science' : c.k === 'd' ? 'Note' : 'Culture'}</span><span lang="ja">${esc(c.n).replace(/\n/g, '<br>')}</span></p>`);
   if (c.c) more.push(`<p class="cite"><span class="label">Source</span>${esc(c.c)}${c.u ? ` <a href="${esc(c.u)}" target="_blank" rel="noopener">Read the paper</a>` : ''}</p>`);
   if (c.vb?.length) more.push(`<p class="vibes">${c.vb.map((v) => `<span>${esc(VIBE_LABEL[v] ?? v)}</span>`).join('')}</p>`);
   if (more.length) p.push(`<details class="more"><summary>More ${I.next}</summary>${more.join('')}</details>`);
@@ -107,7 +110,7 @@ export function wireAudio(root: HTMLElement, c: Card, onPlay?: () => void) {
 /* ── quizzes ── */
 
 const KIND_LABEL: Record<Quiz['kind'], string> = {
-  meaning: 'Quick check', gap: 'Fill the gap', real: 'Real or cringe?', vibe: 'Vibe check', listen: 'Listening', build: 'Build it', word: 'Word check',
+  meaning: 'Quick check', gap: 'Fill the gap', real: 'Real or cringe?', vibe: 'Vibe check', listen: 'Listening', build: 'Build it · 瞬間英作文', word: 'Word check',
 };
 const REAL_OPTS = ['Real', 'Textbook', 'Cringe'];
 
@@ -143,33 +146,48 @@ export function renderQuiz(q: Quiz, onAnswer: (q: Quiz, ok: boolean, el: HTMLEle
     after.innerHTML = `
       <p class="after__verdict">${ok ? `${I.check} Nice.` : `${I.close} Not quite.`}</p>
       <button type="button" class="after__head" data-key="h">${I.speaker}<b>${esc(c.h)}</b><span lang="ja">${esc(c.ja)}</span></button>
-      ${isListen ? `<p class="after__line">“${esc(q.line ?? '')}”</p>` : ''}`;
+      ${isListen ? `<p class="after__line">“${esc(q.line ?? '')}”</p>` : ''}
+      ${c.k === 'd' && c.n ? `<p class="after__note" lang="ja">${esc(c.n)}</p>` : ''}`;
     wireAudio(after, c);
     after.hidden = false;
+    if (q.kind === 'build' && state.settings.autoplay) void play(c, 'h');
     onAnswer(q, ok, el);
   };
   if (q.kind === 'build') {
     const ans = el.querySelector<HTMLElement>('.build__ans')!;
     const check = el.querySelector<HTMLButtonElement>('.btn-check')!;
     const picked: number[] = [];
+    const tiles = [...el.querySelectorAll<HTMLButtonElement>('.tile')];
     const draw = () => {
-      ans.innerHTML = picked.map((i) => `<span>${esc(q.tiles![i])}</span>`).join('') || '<em>Tap the words in order</em>';
-      check.disabled = picked.length !== q.tiles!.length;
+      ans.innerHTML = picked.map((i, k) => `<button type="button" class="chipw" data-k="${k}">${esc(q.tiles![i])}</button>`).join('') || '<em>Tap the words in order</em>';
+      tiles.forEach((b, i) => b.classList.toggle('is-used', picked.includes(i)));
+      check.disabled = !picked.length;
     };
     draw();
-    el.querySelectorAll<HTMLButtonElement>('.tile').forEach((b) => b.addEventListener('click', () => {
-      if (done) return;
-      const i = Number(b.dataset.i);
-      const at = picked.indexOf(i);
-      if (at >= 0) picked.splice(at, 1); else picked.push(i);
-      b.classList.toggle('is-used', at < 0);
+    tiles.forEach((b, i) => b.addEventListener('click', () => {
+      if (done || picked.includes(i)) return;
+      picked.push(i);
       draw();
     }));
+    ans.addEventListener('click', (e) => {
+      const k = (e.target as HTMLElement).closest<HTMLElement>('.chipw')?.dataset.k;
+      if (done || k === undefined) return;
+      picked.splice(Number(k), 1);
+      draw();
+    });
     check.addEventListener('click', () => {
-      const ok = picked.map((i) => q.tiles![i]).join(' ').toLowerCase() === q.options[0].toLowerCase();
-      if (!ok) ans.innerHTML += `<small>${esc(q.options[0])}</small>`;
+      const ok = normBuild(picked.map((i) => q.tiles![i]).join(' ')) === normBuild(q.options[0]);
+      if (!ok) ans.innerHTML += `<small>${esc(q.card.k === 'd' ? q.card.h : q.options[0])}</small>`;
+      check.hidden = true;
       finish(ok);
     });
+    (el as HTMLElement & { tap?: (i: number) => void }).tap = (i: number) => tiles[i]?.click();
+    (el as HTMLElement & { reveal?: () => void }).reveal = () => {
+      if (done) return;
+      ans.innerHTML = `<small>${esc(q.card.k === 'd' ? q.card.h : q.options[0])}</small>`;
+      check.hidden = true;
+      finish(false);
+    };
   } else {
     el.querySelectorAll<HTMLButtonElement>('.opt').forEach((b) => b.addEventListener('click', () => {
       if (done) return;

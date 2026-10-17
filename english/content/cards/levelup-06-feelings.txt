@@ -1,0 +1,450 @@
+//! Feelings, Said Better | Name what you feel without sounding like a textbook | levelup
+
+# I'm torn.
+@ talk | feelings, friends | real | deep | 3
+= 迷ってる（気持ちが二つに引き裂かれてる）
+: Means you can't decide between two choices.
+A: Are you taking the Tokyo job?
+B: I'm torn. The money's better, but my whole life is in Osaka.
+- I'm torn between staying in the band and going solo.
+✗ I am confused which to choose. | textbook | confused は「混乱」で意味がずれる
+✓ I'm on the fence. | 決めかねてる。もう少し軽い
+? torn ＝tear（引き裂く）の過去分詞。気持ちが二つに引き裂かれている。between A and B で何と何で迷っているかを言える。
+! ただの「迷う」より感情的な葛藤がある。大事な決断の話で使う。
+
+# It's been weighing on me.
+@ talk | feelings, friends | real | deep | 2
+= ずっと気になってる（心に重くのしかかってる）
+: Something has been worrying you for a while.
+A: You've been quiet lately. What's up?
+B: I still owe my brother money, and it's been weighing on me.
+- Honestly, that conversation has been weighing on me all week.
+✗ I am worrying about it heavily. | textbook | 不自然な直訳
+? weigh on ＝重さが上にかかる。現在完了進行形で「最近ずっと」の継続を表す。悩みを打ち明けるときの自然な入り方。
+! 言われたら Do you want to talk about it? と聞いてあげると優しい。
+
+# I'm not gonna lie,
+@ talk | feelings, friends, dm | real | chill | 3
+= 正直言うと（ぶっちゃけ）
+: Introduces an honest feeling or opinion.
+A: How was the date?
+B: I'm not gonna lie, I was super nervous.
+- Not gonna lie, that sermon hit me hard today.
+- I'm not gonna lie, I almost cried.
+✗ To tell the truth, | textbook | 間違いではないけど古くて硬い
+? 本音を言う前の前置き。感情を素直に言うのが恥ずかしいときのクッションになる。テキストでは ngl と略す。I'm を省いて Not gonna lie, とも。
+! 悪口の前置きにも使えるけど、気持ちを打ち明けるときに使うと一気にネイティブっぽい。
+
+# It hit different.
+@ talk | feelings, music, friends | real | deep, chill | 2
+= いつもと違って刺さった
+: Something felt unusually powerful or meaningful.
+A: You've heard that song a hundred times.
+B: I know, but tonight it hit different.
+- Ramen at four in the morning after a night shift just hits different.
+✗ It hit differently. | textbook | 文法的には正しいけど、このスラングとしては不自然
+? 普段と同じもののはずなのに、状況のせいで特別に響いたとき。文法的には differently が正しいけど、この言い方では different のまま使う。
+! 現在形の hits different も超よく使う。
+
+# I'm running on empty.
+@ talk | feelings, work, health | real | deep | 2
+= もう燃料切れ（心も体も空っぽ）
+: You have no energy left, physically or emotionally.
+A: How was the night shift?
+B: Third one in a row. I'm running on empty.
+- I've been giving everything to this album. I'm running on empty.
+✗ I have no energy power. | textbook | 不自然
+✓ I'm running on fumes. | ガソリンの残り香で走ってる。ほぼ同じ意味
+? ガソリンタンクが空っぽのまま走っているイメージ。体の疲れだけでなく、心の余裕がない状態にも。running on no sleep（寝ないまま動いてる）も夜勤明けによく言う。
+! この状態が続くなら休むサイン。英語圏では「頑張りすぎ」を自慢しない方向に変わってきている。
+
+# I needed that.
+@ talk | feelings, friends | real | warm | 3
+= それ、まさに必要だった（救われた）
+: Something made you feel much better at the right time.
+A: You looked stressed, so I got you a coffee.
+B: Oh man, thank you. I needed that.
+- That nap? I needed that.
+- Thanks for the talk last night. I really needed that.
+✗ It was necessary for me. | textbook | 事務的すぎる
+? 励ましの言葉、笑い、ご飯、休みなど、ちょうど欲しかったものをもらったときの感謝。過去形なのがポイント（もらった後に言う）。
+! ハグや大笑いの後に言うと、ぐっと距離が縮まる。
+
+# It's a lot.
+@ talk | feelings, work, friends | real | deep | 3
+= いろいろ重なってしんどい
+: Something is overwhelming emotionally or mentally.
+A: How's everything with the move and the new job?
+B: Honestly? It's a lot.
+A: Do you need a hand this weekend?
+- I know it's a lot right now. Take it one day at a time.
+✗ It's many things. | textbook | 意味不明に聞こえる
+? 具体的に説明しなくても「キャパオーバー」が伝わる、今とてもよく使う表現。相手に言われたら That sounds like a lot.（大変そうだね）と返すと共感になる。
+! 「大丈夫？」と聞かれて無理に Fine. と言うより、こっちの方が本音を伝えられる。
+
+# That stung.
+@ talk | feelings, friends, conflict | real | deep | 2
+= あれはちょっと刺さった（傷ついた）
+: A comment or event hurt your feelings a little.
+A: Sorry about what I said yesterday.
+B: Thanks. Not gonna lie, that stung.
+- Getting rejected by that label stung more than I expected.
+✗ I was damaged by your words. | textbook | damaged は物が壊れる感じ
+? sting ＝（ハチなどが）刺す。過去形は stung。大げさに「傷ついた」と言うより軽いけど、正直に気持ちを伝えられる。
+! 言いにくい「傷ついた」をサラッと伝えられるので、関係を壊さずに本音を言える。
+
+# I've made peace with it.
+@ talk | feelings, faith | real | deep | 2
+= もう受け入れてる（心の整理はついた）
+: You've accepted something difficult and feel calm about it.
+A: Are you still upset about the shop closing?
+B: Not really. I've made peace with it.
+- It took a while, but I've made peace with the breakup.
+✗ I accepted it already. | textbook | 意味は通じるが感情の深みが消える
+? make peace with ~ ＝〜と和解する。変えられない過去や現実を、心の中で受け入れたとき。「もう吹っ切れた」より穏やかで深い。
+! 祈りや時間を通して気持ちが落ち着いたときに。教会の証し（testimony）でもよく聞く。
+
+# I'm not doing great.
+@ talk | feelings, friends | real | deep | 3
+= 正直あんまり元気じゃない
+: An honest answer when you're not okay.
+A: Hey, how are you?
+B: Honestly, I'm not doing great.
+A: I'm sorry. Want to talk?
+- I'm not doing great, but I'll be okay.
+✗ I'm fine, thank you. | textbook | 本当は辛いのに反射で言ってしまう教科書の型
+? How are you? に毎回 Fine. と言う必要はない。親しい人には正直に。I'm bad. より柔らかく、相手も話を聞きやすい。
+! 職場なら Hanging in there. くらいがちょうどいい。
+
+# I've been better.
+@ talk | feelings, daily | real | chill | 3
+= まあ、ベストではないね
+: An understated way to say you're not doing well.
+A: How's it going?
+B: I've been better. My back's killing me.
+- I've been better, but thanks for asking.
+✗ My condition is bad. | textbook | condition は体調の意味では不自然
+? 「もっといいときもあった」＝今はイマイチ。重くなりすぎずに不調を伝えられる控えめな表現。詳しく話すかは相手に任せられる。
+! 「調子悪い」を condition と訳すミスが多い。I'm not feeling well. や I've been better. が自然。
+
+# I'm on edge.
+@ talk | feelings, work | real | deep | 2
+= ピリピリしてる（落ち着かない）
+: You feel nervous, tense or easily irritated.
+A: You okay? You jumped when I came in.
+B: Sorry, I'm a little on edge. The client's deciding today.
+- Too much coffee always puts me on edge.
+✓ I'm a nervous wreck. | 緊張で完全にボロボロ。もっと強い
+? 崖っぷちにいるような落ち着かない状態。不安と、イライラしやすい感じの両方を含む。put someone on edge ＝ピリピリさせる。
+! 機嫌が悪い理由を先に伝えると誤解されにくい。Sorry, I'm on edge. は便利な一言。
+
+# I'm not myself today.
+@ talk | feelings, work, friends | real | deep | 2
+= 今日はなんか調子が出ない（いつもの自分じゃない）
+: You feel or act differently from normal.
+A: You mixed up two orders. Everything okay?
+B: Sorry, I'm not myself today. Didn't sleep.
+- I've been snapping at people. I'm just not myself lately.
+✗ Today I am a different person. | textbook | 別人になった話みたい
+? いつもの自分らしくない＝体調・気分がおかしい。自分の失敗やイライラを謝るときのクッションにもなる。
+! 相手には You don't seem like yourself.（いつもと違うね）と言える。
+
+# I'm in a funk.
+@ talk | feelings, friends, music | real | deep, chill | 2
+= なんか気分が沈んでる（ノれない時期）
+: You feel low or unmotivated for a while.
+A: You haven't posted any new tracks lately.
+B: Yeah, I've been in a funk. Nothing sounds good to me.
+- A long walk usually gets me out of a funk.
+✗ I'm in a slump of mind. | textbook | 不自然な合成
+? funk ＝なんとなく続く落ち込み・やる気のなさ。深刻なうつではなく、数日〜数週間の「ノれない」感じ。get out of a funk ＝抜け出す。
+! 音楽のファンク（funk）とは別の意味。in a funk の形で覚える。
+
+# I'm bummed.
+@ talk | feelings, friends | real | chill | 3
+= がっかり（へこむわ〜）
+: You feel disappointed about something.
+A: The show got canceled.
+B: Ugh, I'm so bummed. I bought tickets months ago.
+- I'm bummed I missed your birthday.
+✗ I'm disappointing. | textbook | 「私はがっかりさせる人です」という意味になる
+? disappointed のカジュアル版。軽めのがっかりに使える。bummed about ~ / bummed that ~ の形で。
+! disappointing（がっかりさせる）と disappointed（がっかりした）の混同は日本人の定番ミス。bummed なら間違えない。
+
+# I'm crushed.
+@ talk | feelings, music | real | deep | 2
+= 打ちのめされた
+: You feel extremely sad or disappointed.
+A: Did you hear back from the audition?
+B: They went with someone else. I'm crushed.
+- My roommate was crushed when his dog passed away.
+✗ I'm very very sad. | textbook | very を重ねると子どもっぽい
+? crush ＝押しつぶす。期待が大きかった分、ぺしゃんこにされた気持ち。bummed より何倍も重い。
+! 好きな人の意味の crush とは別。I have a crush. と混同しないこと。
+
+# That's a weight off my shoulders.
+@ talk | feelings, work | real | warm, deep | 2
+= 肩の荷が下りた
+: You feel relieved after a burden is gone.
+A: The client finally paid the invoice.
+B: That's a weight off my shoulders.
+- Telling my parents the truth was a huge weight off my shoulders.
+✗ My shoulder became light. | textbook | 直訳で意味が伝わらない
+? 日本語の「肩の荷が下りた」とほぼ同じ発想。a huge weight / a load off my mind のバリエーションも。
+! 心配事が片付いたときの安堵を一言で表せる。
+
+# I'm in over my head.
+@ talk | feelings, work, business | real | deep | 2
+= 手に負えない（自分の力を超えてる）
+: You're dealing with something too difficult for you.
+A: How's the new app project going?
+B: Honestly, I'm in over my head. I've never built anything this big.
+- I think I'm in over my head with all this lease stuff.
+✗ It's over my capacity. | textbook | 「キャパオーバー」の直訳で不自然
+? 水が頭の上まで来て、足がつかない状態。経験や能力を超えたことを引き受けてしまったとき。助けを求める前置きにもなる。
+! 弱みを認めるのは恥ずかしくない。言うことで助けをもらいやすくなる。
+
+# I can't shake the feeling
+@ talk | feelings, work, friends | real | deep | 2
+= どうしても〜な気がしてならない
+: A feeling stays with you even if you try to ignore it.
+A: The deal's done. Why do you look worried?
+B: I can't shake the feeling that something's off.
+- I can't shake the feeling I forgot something.
+✗ I can't stop the feeling. | textbook | 意味は近いが不自然
+? shake ＝振り払う。嫌な予感・違和感が振り払えないとき。後ろに that 節で何を感じているかを続ける。
+! 理由ははっきりしないけど直感がある、というときにぴったり。
+
+# I keep beating myself up.
+@ talk | feelings, friends | real | deep | 2
+= ずっと自分を責めてる
+: You keep blaming yourself for a mistake.
+A: It was one bad show. Let it go.
+B: I know, but I keep beating myself up about it.
+A: Hey. Don't beat yourself up. Everyone has off nights.
+- I keep beating myself up over that text I sent.
+✗ I'm hitting myself. | textbook | 物理的に自分を殴っている意味になる
+? beat oneself up ＝（心の中で）自分を責め続ける。about / over で理由を続ける。言われた側は Don't beat yourself up.（自分を責めないで）と返すのが定番。
+! 慰めのフレーズとセットで覚えると、両方の立場で使える。
+
+# I'm genuinely touched.
+@ talk | feelings, friends | real | warm | 2
+= 本当に感動した（心に響いた）
+: Someone's kindness moved you emotionally.
+A: We all chipped in and got you a new guitar strap.
+B: Wait, really? I'm genuinely touched.
+- I'm genuinely touched that you remembered.
+✗ I'm moving. | textbook | 「引っ越します」という意味になる
+✓ That's so sweet of you. | もう少し軽い感謝
+? touched ＝心に触れられた＝感動した。人の優しさや気づかいに使う。genuinely をつけると「お世辞じゃなく本当に」の気持ちが強く出る。
+! 「感動した」は I was moved. とも言えるけど、I'm moving. は全く別の意味になるので注意。
+
+# That made my day.
+@ talk | feelings, friends, dm | real | warm | 3
+= おかげで最高の一日になった
+: Something small made you really happy.
+A: Your latest track is my new favorite.
+B: Seriously? That made my day.
+- A customer left a sweet note in the tip jar. Made my day.
+✗ I became happy today. | textbook | 不自然で感情が伝わらない
+? 小さな良い出来事で一日が明るくなったとき。メッセージの返信にも使える。You made my day! と相手を主語にすると感謝が強まる。
+! 褒められたときに Thank you. だけで終わらず、これを足すと会話が温かくなる。
+
+# I've got butterflies.
+@ talk | feelings, crush, music | real | warm, flirty | 2
+= ドキドキしてる（緊張・恋）
+: You feel nervous excitement in your stomach.
+A: Are you ready for your first live show?
+B: Kind of. I've got butterflies.
+- Every time I see her name pop up, I get butterflies.
+✗ My heart is doki-doki. | cringe | 日本語の擬音は通じない
+? お腹の中で蝶が舞っているような感覚。良い緊張（本番前、デート前、恋）に使う。恐怖ではなく、ワクワク混じりの緊張。
+! 悪い緊張（不安）なら I'm nervous. / I'm anxious. の方が合う。
+
+# I'm not in the right headspace.
+@ talk | feelings, work, friends | real | deep | 2
+= 今そういう心の状態じゃない
+: Your mind isn't ready to deal with something right now.
+A: Want to talk about the budget tonight?
+B: Can we do it tomorrow? I'm not in the right headspace.
+- I wasn't in the right headspace to write, so I went to the gym.
+✗ My head is not ready. | textbook | 不自然
+? headspace ＝心の状態・精神的な余裕。断るときに「気分じゃない」より大人っぽく、相手を否定しない。I'm in a good headspace. で「メンタルがいい状態」。
+! メンタルヘルスの話題で今よく使われる言葉。
+
+# I'm all over the place.
+@ talk | feelings, work | real | chill | 2
+= 頭がとっちらかってる
+: Your thoughts or emotions are scattered.
+A: You started three sentences and finished none.
+B: Sorry, I'm all over the place today.
+- My emotions are all over the place this week.
+✗ My head is scattered. | textbook | 意味は伝わるが不自然
+? 考えがあちこちに散らばっている状態。気持ちが安定しない、集中できないときに。My schedule is all over the place.（バラバラ）とも使える。
+! 夜勤明けで頭が回らないときの言い訳としても自然。
+
+# It caught me off guard.
+@ talk | feelings, work, friends | real | chill | 3
+= 不意を突かれた
+: Something surprised you when you weren't ready.
+A: Why did you go quiet when he asked about your dad?
+B: It just caught me off guard.
+- The compliment caught me off guard. I didn't know what to say.
+✗ I was surprised suddenly. | textbook | 副詞の位置も意味も不自然
+? guard ＝防御。防御していないところを突かれた＝不意打ち。良い驚きにも悪い驚きにも使える。
+! 返事に詰まったときに Sorry, that caught me off guard. と言えば自然に時間がもらえる。
+
+# I'm still processing.
+@ talk | feelings, friends | real | deep | 2
+= まだ気持ちの整理がついてない
+: You need time to understand your feelings about something.
+A: How do you feel about the news?
+B: I don't know yet. I'm still processing.
+- I'm still processing everything that happened last night.
+✗ I'm still thinking about my feelings. | textbook | 長くて硬い
+? process ＝（情報や感情を）処理する。大きなニュースやショックの直後に、すぐ答えられないときに使う。無理に気持ちを言葉にしなくていい。
+! 相手に「少し時間をちょうだい」と伝えるやさしい言い方。
+
+# I'm barely holding it together.
+@ talk | feelings, work | real | deep | 2
+= なんとか持ちこたえてる（ギリギリ）
+: You're close to breaking down emotionally.
+A: How are you handling everything?
+B: I'm barely holding it together, to be honest.
+- I was barely holding it together until my mom hugged me.
+✗ I'm almost breaking. | textbook | 物が壊れそうな感じ
+? hold it together ＝崩れないように保つ。barely（かろうじて）がつくと限界ギリギリ。人前で泣きそうなとき、ストレスが限界のときに。
+! これを言われたら、アドバイスより I'm right here.（そばにいるよ）が一番効く。
+
+# I don't take it for granted.
+@ talk | feelings, faith | real | deep, warm | 2
+= 当たり前だと思ってない（感謝してる）
+: You appreciate something and don't assume it will always be there.
+A: Your friends really show up for you.
+B: They do. I don't take it for granted.
+- I've got a roof, a job and people who love me. I don't take any of it for granted.
+✗ I don't think it is natural. | textbook | 「自然ではない」の意味になる
+? take ~ for granted ＝〜を当然のものとして扱う。否定にすると感謝の深さが伝わる。家族、健康、仲間、信仰の話で自然に使える。
+! 日本語の「当たり前じゃない」はこれ。natural や normal では訳せない。
+
+# Feeling blessed.
+@ talk | feelings, faith, online | real | warm | 2
+= 恵まれてるなあ（感謝の気持ち）
+: You feel thankful for the good things in your life.
+A: How was the release party?
+B: Packed. Honestly, I'm feeling blessed.
+- New job, good friends, my health. Feeling blessed.
+✗ I'm lucky person. | textbook | 冠詞抜け＋運だけの話になる
+? 自分の人生の良いことに感謝する気持ち。クリスチャンには「神様に恵まれた」という信仰の感覚もある。SNSでは軽くハッシュタグで使われることも。
+! 自慢っぽく聞こえないように、感謝のトーンで。教会では God is good. とセットで聞くことも多い。
+
+# I'm praying for you.
+@ talk | faith, feelings, friends | real | warm, deep | 2
+= あなたのために祈ってるよ
+: Tells someone you care and are praying for them.
+A: My mom goes into surgery tomorrow.
+B: I'm praying for you and your family.
+- Good luck at the interview. I'm praying for you.
+✗ I pray you. | textbook | for が抜けると意味が変わる
+✓ You're in my prayers. | 同じ意味で少し丁寧
+? 信仰がある人同士では心からの励まし。信仰がない相手には I'm thinking of you.（気にかけてるよ）の方が自然なこともある。
+! アメリカでは広く使われるけど、相手を見て選ぶのが思いやり。
+
+# I'm fried.
+@ talk | feelings, work, health | real | chill | 3
+= 頭が焼き切れた（もう無理）
+: You're mentally exhausted and can't think.
+A: Want to work on the mix tonight?
+B: Can't. Double shift. I'm fried.
+- My brain is completely fried after that exam.
+✗ My brain is tired very much. | textbook | 語順が不自然
+? fry ＝揚げる・焼く。脳がオーバーヒートした状態。体より頭の疲れに使う。I'm wiped.（体力ゼロ）とセットで覚えると便利。
+! 夜勤明けで頭が回らないときはまさにこれ。
+
+# I'm in a weird place right now.
+@ talk | feelings, friends, crush | real | deep | 2
+= 今ちょっと心の状態が微妙で
+: Your life or feelings are unclear and unsettled.
+A: Do you want to go out again this weekend?
+B: I like you, but I'm in a weird place right now.
+- Since I quit my job, I've been in a weird place.
+✗ My mind is strange now. | textbook | おかしい人みたいに聞こえる
+? 説明しにくい心の不安定さを、詳しく言わずに伝えられる。恋愛の誘いをやんわり断る理由としてもよく使われる。
+! 言われた側は深追いせず No worries. Take your time. が大人の対応。
+
+# I felt left out.
+@ talk | feelings, friends | real | deep | 2
+= 仲間外れにされた気がした
+: You felt excluded by others.
+A: Why were you so quiet at the party?
+B: Everyone had inside jokes. I kind of felt left out.
+- I don't want anyone to feel left out, so let's invite the new guy.
+✗ I was alone feeling. | textbook | 意味が伝わらない
+? left out ＝（輪から）外された。直接責めずに自分の気持ちとして伝えられる。I felt ~ の形は、相手を攻撃せずに本音を言う基本の型。
+! You left me out!（外したでしょ！）より I felt left out. の方がケンカになりにくい。
+
+# I'm on cloud nine.
+@ talk | feelings, crush | real | warm | 2
+= 最高に幸せ（舞い上がってる）
+: You feel extremely happy.
+A: You're smiling at your phone again.
+B: She said yes to dinner. I'm on cloud nine.
+- After the show sold out, I was on cloud nine for a week.
+✗ I'm in heaven feeling. | textbook | 不自然
+? 「9番目の雲の上」＝天にも昇る気持ち。恋愛、合格、成功など大きな喜びに。少しレトロだけど今でも普通に使う。
+! 似た表現に over the moon（めちゃくちゃ嬉しい）。
+
+# It's bittersweet.
+@ talk | feelings, friends, work | real | deep | 2
+= うれしいけど寂しい（ほろ苦い）
+: Happy and sad at the same time.
+A: How does it feel to leave the cafe after five years?
+B: It's bittersweet. I'm excited, but I'll miss everyone.
+- Graduation was so bittersweet.
+✗ I'm happy and sad. | textbook | 間違いではないけど幼い
+? bitter（苦い）＋ sweet（甘い）。卒業、転職、引っ越し、別れなど、前向きだけど寂しい場面にぴったり。
+! 日本語で「エモい」と言いたくなる場面の多くはこれで言える。
+
+# I'm feeling homesick.
+@ talk | feelings, travel | real | deep | 2
+= ホームシックになってる
+: You miss your home or family while you're away.
+A: How's life in Vancouver?
+B: Good, but I'm feeling homesick. I miss real takoyaki.
+- I get homesick every time I hear someone speak Osaka dialect.
+✗ I'm homesick for home. | textbook | home が重複
+? homesick はカタカナと同じ意味で通じる。feeling をつけると「今ちょっと」というニュアンス。miss ~ で具体的に何が恋しいか言うと会話が広がる。
+! 外国で暮らす人同士の定番の話題。
+
+# I just need a minute.
+@ talk | feelings, conflict | real | deep | 3
+= ちょっとだけ一人にさせて（気持ちを落ち着かせたい）
+: You need a short break to calm down.
+A: Are you okay? Do you want to talk?
+B: I just need a minute.
+- Sorry, I just need a minute. I'll be right back.
+✗ Please leave me alone. | textbook | 突き放す感じが強い
+? 感情が高ぶったとき、ケンカの途中、悪い知らせの後に。「1分」ではなく「少しの時間」。相手を拒絶せずにスペースをもらえる。
+! 言われた側は Take your time. I'm right here. と返すと優しい。
+
+# My heart sank.
+@ talk | feelings | real | deep | 2
+= 血の気が引いた（ガーンとなった）
+: You suddenly felt shock or sadness.
+A: What happened when you saw the email?
+B: My heart sank. The first word was "unfortunately."
+- When I saw the empty bike rack, my heart sank.
+✗ My heart went down. | textbook | 直訳で不自然
+? sink（沈む）の過去形 sank。悪い知らせを見た瞬間の、胸がずしんと沈む感覚。体験談を話すときに使うと臨場感が出る。
+! 反対に、嬉しくてドキッとするのは My heart skipped a beat.
+
+# My faith keeps me going.
+@ talk | faith, feelings | real | deep, warm | 2
+= 信仰が支えになってる
+: Your belief gives you strength in hard times.
+A: How do you handle working nights and making music?
+B: Honestly, my faith keeps me going. And coffee.
+- On the hard weeks, my faith is what keeps me going.
+✗ My religion gives me power. | textbook | 意味は通じるが硬く、少しずれる
+? keep someone going ＝人を前に進ませ続ける。何が自分の支えかを語るときの自然な形。faith の代わりに my family や music なども入る。
+! 信仰の話はアメリカでは比較的オープン。押し付けずに自分の話として言えば自然に受け止められる。

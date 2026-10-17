@@ -1,0 +1,36 @@
+//! Now vs Usually | Present simple vs present continuous | build
+! 現在形＝いつもの習慣・ずっと変わらない事実（I work nights.）。進行形＝今まさに・最近だけの一時的なこと（I'm working nights this month.）。
+! usually, every day, on Sundays なら現在形。right now, these days, this week なら進行形になりやすい。
+! know, want, need, like, mean, have（持ってる）などの状態動詞は基本 -ing にしない。I'm knowing ✗ → I know ✓
+! 日本語の「〜してる」はどっちにもなる。「毎朝コーヒー飲んでる」は習慣だから I drink。ここが一番のワナ。
+! always + 進行形は「いっつも〜してばっかり」という文句のニュアンスになる。
+I drink coffee every morning. | 毎朝コーヒー飲んでる。 | 「〜してる」でも習慣なら現在形
+I'm drinking a latte right now. | 今ちょうどラテ飲んでる。
+My roommate works nights. | ルームメイトは夜勤の仕事してる。 | works nights＝いつも夜勤の人
+I'm working nights this month. | 今月は夜勤やってる。 | this month だけの一時的な状態→進行形
+What do you do? | 仕事は何してるの？ | 職業を聞く定番。What are you doing? は「今なにしてる？」
+What are you doing right now? | 今なにしてるの？
+The gym opens at six. | ジムは6時に開く。 | 営業時間・時刻表は現在形
+I go to the gym three times a week. | ジムには週3で通ってる。
+I don't usually eat breakfast. | 普段は朝ごはん食べない。 | usually は don't の後ろ
+My boss doesn't drink coffee at all. | 上司はコーヒーを一切飲まない。 | 三人称は doesn't
+Ugh, it's raining again. | うわ、また雨降ってる。
+It rains a lot in June. | 6月は雨がよく降る。 | 毎年のこと→現在形
+I know what you mean. | 言いたいこと分かるよ。 | know は進行形にしない
+This coffee tastes amazing. | このコーヒー、めちゃくちゃうまい。 | taste（味がする）は状態動詞
+What does this word mean? | この単語ってどういう意味？ | mean も状態動詞。does を忘れずに
+Do you want anything from the convenience store? | コンビニでなんか要る？
+Which part of Osaka do you live in? | 大阪のどのへんに住んでるの？ | 最後の in を忘れがち
+I'm staying at a friend's place this week. | 今週は友達の家に泊まってる。
+Are you working on anything new? | 最近なんか新しいの作ってる？ | work on＝取り組んでる途中
+Sorry, I can't talk. I'm streaming. | ごめん、今話せない。配信中なんだ。
+I'm saving up for a new mic. | 新しいマイク買うために貯金中。
+I'm trying to cut back on sugar these days. | 最近、砂糖を控えようとしてる。 | these days＝最近だけ→進行形
+We're getting more customers these days. | 最近お客さん増えてきてる。 | 変化の途中は進行形
+Does your church have an English service? | 君の教会って英語の礼拝ある？ | have（ある・持ってる）は状態
+I'm thinking about quitting my job. | 仕事辞めようか考え中。 | 「検討中」の think は進行形OK
+I think that's a great idea. | それ、いいアイデアだと思う。 | 意見の think は現在形
+My girlfriend doesn't eat meat, but she eats fish. | 彼女、肉は食べないけど魚は食べるよ。
+My producer is always changing the deadline. | プロデューサー、いっつも締め切り変えてくるんだよ。 | always + 進行形＝文句
+I usually take the train, but today I'm biking. | 普段は電車なんだけど、今日はチャリ。 | いつも＝現在形、今日だけ＝進行形
+Why are you being so quiet today? | 今日なんでそんなに静かなの？ | 普段と違う一時的な態度は be の進行形
