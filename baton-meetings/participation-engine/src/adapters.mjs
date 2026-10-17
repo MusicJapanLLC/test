@@ -137,7 +137,7 @@ function countAttachedAudioTracks(page) {
   }).catch(() => 0);
 }
 
-export function createBrowserAdapter({ playwrightProvider = loadPlaywright, pause = sleep, now = () => new Date() } = {}) {
+export function createBrowserAdapter({ playwrightProvider = loadPlaywright, pause = sleep, now = () => new Date(), channel = null } = {}) {
   let active = null;
   return {
     name: 'browser',
@@ -155,19 +155,21 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
       let browser;
       let keepAlive = false;
       try {
-        browser = await pw.chromium.launchPersistentContext(resolve(ctx.browserProfile), {
-          channel: ctx.browserChannel,
+        const selectedChannel = channel || ctx.browserChannel || 'msedge';
+        browser = await pw.chromium.launchPersistentContext(resolve(ctx.browserProfile, selectedChannel), {
+          channel: selectedChannel,
           headless: ctx.testFixture === true, // only synthetic local E2E may opt into headless
           viewport: { width: 1260, height: 860 },
           args: ['--no-first-run'],
           acceptDownloads: false,
         });
         const page = browser.pages()[0] || await browser.newPage();
-        await page.goto(ctx.meetingUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        const navigation = await page.goto(ctx.meetingUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+        if (navigation?.status?.() === 403) return { state: 'FAILED', code: 'BROWSER_HTTP_403' };
         await pause(2200);
         if (ctx.platform === 'zoom') {
-          await clickByRole(page, 'link', /join from your browser|ブラウザから参加/i);
-          await clickByRole(page, 'button', /join from your browser|ブラウザから参加/i);
+          await clickByRole(page, 'link', /join from (?:your )?browser|ブラウザから参加/i);
+          await clickByRole(page, 'button', /join from (?:your )?browser|ブラウザから参加/i);
         }
         await maybeFillGuestName(page, ctx.displayName);
         let current = await classifyPage(page, ctx.platform);
@@ -190,7 +192,10 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
           if (current === 'REQUIRES_HUMAN') return { state: 'REQUIRES_HUMAN', code: 'SIGN_IN_REQUIRED' };
           await pause(2000);
         }
-        return { state: current === 'WAITING_ADMISSION' ? 'WAITING_ADMISSION' : 'UNCERTAIN', code: 'BROWSER_JOIN_NOT_VERIFIED' };
+        if (current === 'WAITING_ADMISSION') return { state: 'WAITING_ADMISSION', code: 'HOST_ADMISSION_PENDING' };
+        if (ctx.platform === 'zoom' && await visibleByRole(page,'button',/join from (?:your )?browser/i))
+          return { state: 'FAILED', code: 'ZOOM_WEB_ENTRY_STALLED' };
+        return { state: 'UNCERTAIN', code: 'BROWSER_JOIN_NOT_VERIFIED' };
       } catch {
         return { state: 'FAILED', code: 'BROWSER_LAUNCH_OR_JOIN_FAILED' };
       } finally {
@@ -253,6 +258,8 @@ export function createDesktopAdapter({ launcher = spawn, platform = process.plat
 export function createAdapters() {
   return {
     browser: createBrowserAdapter(),
+    edge: createBrowserAdapter({ channel: 'msedge' }),
+    chrome: createBrowserAdapter({ channel: 'chrome' }),
     recall: createRecallAdapter(),
     desktop: createDesktopAdapter(),
   };
