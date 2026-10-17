@@ -1,0 +1,11 @@
+{
+  "name": "@music-japan/meeting-participation-engine",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {"node": ">=20"},
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "doctor": "node src/cli.mjs doctor"
+  }
+}
