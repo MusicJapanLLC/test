@@ -166,7 +166,12 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
           displayName: ctx.displayName,
           pause,
         });
-        if (['HOST_DENIED', 'POLICY_BLOCKED', 'WAITING_ADMISSION', 'REQUIRES_HUMAN'].includes(prejoin.state)) {
+        if (prejoin.state === 'WAITING_ADMISSION') {
+          active = { browser, page, platform: ctx.platform, phase: 'lobby' };
+          keepAlive = true;
+          return { state: 'WAITING_ADMISSION', code: 'HOST_ADMISSION_PENDING' };
+        }
+        if (['HOST_DENIED', 'POLICY_BLOCKED', 'REQUIRES_HUMAN'].includes(prejoin.state)) {
           return { state: prejoin.state, code: prejoin.code };
         }
         if (prejoin.state === 'UNSUPPORTED') {
@@ -178,7 +183,7 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
           current = await classifyPage(page, ctx.platform);
           if (current === 'JOINED') {
             const audioTracks = await countAttachedAudioTracks(page);
-            active = { browser, page, platform: ctx.platform };
+            active = { browser, page, platform: ctx.platform, phase: 'in_call' };
             keepAlive = true;
             return {
               state: 'JOINED', code: 'BROWSER_JOINED',
@@ -189,7 +194,11 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
           if (current === 'REQUIRES_HUMAN') return { state: 'REQUIRES_HUMAN', code: 'SIGN_IN_REQUIRED' };
           await pause(2000);
         }
-        if (current === 'WAITING_ADMISSION') return { state: 'WAITING_ADMISSION', code: 'HOST_ADMISSION_PENDING' };
+        if (current === 'WAITING_ADMISSION') {
+          active = { browser, page, platform: ctx.platform, phase: 'lobby' };
+          keepAlive = true;
+          return { state: 'WAITING_ADMISSION', code: 'HOST_ADMISSION_PENDING' };
+        }
         if (ctx.platform === 'zoom' && await visibleByRole(page,'button',/join from (?:your )?browser/i))
           return { state: 'FAILED', code: 'ZOOM_WEB_ENTRY_STALLED' };
         return { state: 'UNCERTAIN', code: 'BROWSER_JOIN_NOT_VERIFIED' };
@@ -200,7 +209,29 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
         if (browser && !keepAlive) await browser.close().catch(() => {});
       }
     },
+    async awaitAdmission({ signal, intervalMs = 3000, maxLobbyMs = 30 * 60 * 1000 } = {}) {
+      if (!active || active.phase !== 'lobby') return { state: 'NO_PENDING_ADMISSION' };
+      const until = Date.now() + maxLobbyMs;
+      while (Date.now() < until && !signal?.aborted) {
+        if (active.page.isClosed()) return { state: 'SESSION_DISCONNECTED', code: 'LOBBY_PAGE_CLOSED' };
+        const state = await classifyPage(active.page, active.platform);
+        if (state === 'HOST_DENIED' || state === 'POLICY_BLOCKED' || state === 'REQUIRES_HUMAN')
+          return { state, code: state };
+        if (state === 'JOINED') {
+          active.phase = 'in_call';
+          const tracks = await countAttachedAudioTracks(active.page);
+          return {
+            state: 'JOINED', code: 'HOST_ADMITTED',
+            proof: { type: 'IN_CALL_LEAVE_CONTROL', observedAt: now().toISOString(), audioTracksDetected: tracks },
+          };
+        }
+        await pause(intervalMs);
+      }
+      return { state: signal?.aborted ? 'OPERATOR_STOPPED' : 'WAITING_ADMISSION',
+        code: signal?.aborted ? 'OPERATOR_STOPPED' : 'HOST_ADMISSION_TIMEOUT' };
+    },
     async maintain({ signal, intervalMs = 3000, maxSessionMs = 4 * 60 * 60 * 1000 } = {}) {
+      if (active?.phase !== 'in_call') return { state: 'NO_JOINED_SESSION' };
       if (!active) return { state: 'NO_ACTIVE_SESSION' };
       const until = Date.now() + maxSessionMs;
       let missing = 0;
