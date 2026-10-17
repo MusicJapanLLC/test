@@ -25,3 +25,10 @@ jobs:
       - name: Assert mock participation invariants
         working-directory: baton-meetings/participation-engine
         run: node --test
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify audio PCM preparation and consent guard
+        working-directory: baton-meetings/participation-engine
+        run: python -m unittest discover -s tests -p 'test_*.py' -v
