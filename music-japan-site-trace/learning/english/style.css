@@ -8,4 +8,6 @@ html{scroll-behavior:smooth}body{background:#e9eeec}a{text-underline-offset:4px}
 
 .brand{text-decoration:none;color:var(--ink)}
 
+.translation,.prompt-ja{white-space:pre-line}
+
 .crumbs{padding:12px 22px 0;display:flex;gap:8px;font-size:10px;color:var(--muted);align-items:center}.crumbs a{color:var(--muted)}@media(min-width:720px){.crumbs{padding-left:34px}}
