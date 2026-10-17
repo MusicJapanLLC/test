@@ -188,7 +188,9 @@ async function assertNoOverflow(page, label) {
 async function screenshot(page, engine, size, name, fullPage = true) {
   await assertNoOverflow(page, `${engine}/${size}/${name}`);
   const path = join(OUT, `${engine}-${size}-${name}.png`);
-  await page.screenshot({path, fullPage, animations: 'disabled'});
+  // Use the app's reduced-motion CSS. Playwright's caret-hiding stylesheet
+  // triggers WebKit CSP errors, so screenshots must not inject that stylesheet.
+  await page.screenshot({path, fullPage, animations: 'allow', caret: 'initial'});
   return relative(OUT, path);
 }
 
@@ -316,7 +318,7 @@ async function runCase(browser, engine, name, body, {size = 'mobile', unsupporte
     record.url = page.url();
     const stem = `${engine}-${size}-${safeName(name)}`;
     try {
-      await page.screenshot({path: join(OUT, `${stem}-failure.png`), fullPage: true, animations: 'disabled'});
+      await page.screenshot({path: join(OUT, `${stem}-failure.png`), fullPage: true, animations: 'allow', caret: 'initial'});
       record.failureScreenshot = `${stem}-failure.png`;
     } catch (captureError) { record.screenshotError = String(captureError); }
     try {
