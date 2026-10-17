@@ -104,7 +104,7 @@ canvas.bot { display: block; width: calc(32px * var(--s, 2)); height: calc(48px 
 .link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; font: 600 12px var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); text-decoration: none; }
 .link .i { width: 16px; height: 16px; }
 .seg { display: inline-flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line-2); gap: 2px; flex-wrap: wrap; }
-.seg button { min-height: 40px; padding: 0 14px; border-radius: 999px; font: 600 13px var(--body); color: var(--ink-2); }
+.seg button { min-height: 40px; min-width: 44px; padding: 0 14px; border-radius: 999px; font: 600 13px var(--body); color: var(--ink-2); }
 .seg button[aria-pressed='true'] { background: var(--ink); color: var(--bg); }
 .pill { font: 700 10.5px var(--mono); letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; border: 1px solid currentColor; }
 .pill--new { color: var(--red); }
@@ -243,7 +243,7 @@ canvas.bot { display: block; width: calc(32px * var(--s, 2)); height: calc(48px 
 .quote { padding: 12px 14px; border-left: 3px solid var(--acc); background: color-mix(in srgb, var(--acc) 8%, transparent); }
 .quote p { font: italic 500 17px/1.45 var(--body); }
 .quote cite { display: block; margin-top: 6px; font: 500 11px var(--mono); letter-spacing: 0.04em; font-style: normal; color: var(--mute); }
-.ref { display: inline-flex; align-items: center; gap: 6px; justify-self: start; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2); font: 600 12px var(--mono); text-decoration: none; }
+.ref { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; justify-self: start; padding: 8px 14px; border-radius: 999px; border: 1px solid var(--line-2); font: 600 12px var(--mono); text-decoration: none; }
 .ref .i { width: 15px; height: 15px; }
 .lines { display: grid; gap: 4px; }
 .line { display: grid; grid-template-columns: auto minmax(0, 1fr) 22px; align-items: start; gap: 10px; width: 100%; padding: 10px 10px; margin: 0 -10px; width: calc(100% + 20px); border-radius: 6px; text-align: left; font-size: 17px; line-height: 1.45; }
