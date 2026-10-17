@@ -80,10 +80,11 @@ async function wahran(page, context) {
   const bytes = (await response.body()).length; assert.equal(response.status(), 200); assert.match(response.headers()['content-type'], /^audio\/(mpeg|mp3)(;|$)/i); assert.ok(bytes >= 1000);
   const duration = await page.evaluate(src => new Promise((resolve, reject) => {
     const audio = new Audio(); let settled = false;
-    const finish = fn => { if (settled) return; settled = true; clearTimeout(timer); audio.onloadedmetadata = audio.ondurationchange = audio.onloadeddata = audio.oncanplay = audio.onerror = null; audio.removeAttribute('src'); audio.load(); fn(); };
+    const finish = fn => { if (settled) return; settled = true; clearTimeout(timer); clearInterval(probe); audio.onloadedmetadata = audio.ondurationchange = audio.onloadeddata = audio.oncanplay = audio.onerror = null; audio.removeAttribute('src'); audio.load(); fn(); };
     const timer = setTimeout(() => { const detail = `duration=${String(audio.duration)}, readyState=${audio.readyState}, networkState=${audio.networkState}`; finish(() => reject(new Error(`Audio duration did not become available (${detail})`))); }, 12000);
     const ready = () => { const duration = audio.duration; if (Number.isFinite(duration) && duration > 0) finish(() => resolve(duration)); };
-    // WebKit can emit loadedmetadata with duration=0 before durationchange.
+    // Detached WebKit audio may update duration after its readiness events.
+    const probe = setInterval(ready, 100);
     audio.preload = 'auto'; audio.onloadedmetadata = audio.ondurationchange = audio.onloadeddata = audio.oncanplay = ready;
     audio.onerror = () => finish(() => reject(new Error('Audio metadata could not load'))); audio.src = src; audio.load();
   }), audioURL);
