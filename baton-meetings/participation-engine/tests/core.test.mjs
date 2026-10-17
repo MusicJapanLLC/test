@@ -31,7 +31,14 @@ test('redacts Zoom passcodes with hash-only audit identifier', () => {
   const parsed = parseMeetingUrl(zoom);
   assert.equal(parsed.meetingHash.length, 20);
   assert.ok(!parsed.meetingHash.includes('topsecret'));
-  assert.equal(defaultRoutes('zoom').length, 3);
+  assert.equal(defaultRoutes('zoom').length, 4);
+});
+test('same Zoom meeting ignores join-link token differences for duplication protection', () => {
+  const first = parseMeetingUrl('https://us05web.zoom.us/j/81906526578?pwd=first');
+  const second = parseMeetingUrl('https://zoom.us/j/81906526578?pwd=second');
+  assert.equal(first.meetingHash, second.meetingHash);
+  const different = parseMeetingUrl('https://zoom.us/j/81906526579?pwd=first');
+  assert.notEqual(first.meetingHash, different.meetingHash);
 });
 test('requires authorized live consent before any action', async () => {
   let launched = 0;
