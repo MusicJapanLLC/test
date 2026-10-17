@@ -9,6 +9,12 @@ function hash(s){return createHash("sha256").update(s).digest("hex")}
 function utc(v) {
   if(typeof v!=="string"||!datePattern.test(v)||v.length>55) throw new Error("TIMESTAMP_TIMEZONE_REQUIRED");
   const n=Date.parse(v);if(!Number.isFinite(n))throw new Error("TIMESTAMP_INVALID");
+  const date=/^(\d{4})-(\d{2})-(\d{2})T/.exec(v);
+  if(!date)throw new Error("TIMESTAMP_INVALID");
+  const year=Number(date[1]),month=Number(date[2]),day=Number(date[3]);
+  const leap=year%4===0&&(year%100!==0||year%400===0);
+  const maxDay=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31][month-1];
+  if(day<1||day>maxDay)throw new Error("TIMESTAMP_INVALID");
   return new Date(n).toISOString();
 }
 function safeId(v,kind){if(typeof v!=="string"||!idPattern.test(v))throw new Error(kind+"_INVALID");return v;}

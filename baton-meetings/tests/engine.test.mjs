@@ -39,6 +39,12 @@ test("ambiguous timezones rejected",()=>{
  const a=sample();a.turns[0].start="2026-10-18T00:00:00";
  assert.throws(()=>normalizeTranscript(a),/TIMEZONE/);
 });
+test("impossible calendar dates rejected",()=>{
+ const a=sample();
+ a.turns[0].start="2026-02-30T00:00:00Z";
+ a.turns[0].end="2026-02-30T00:00:04Z";
+ assert.throws(()=>normalizeTranscript(a),/TIMESTAMP_INVALID/);
+});
 test("no ungrounded action on uncertain language",()=>{
  const a=sample();a.turns[1].text="Maybe I can do something";
  assert.equal(normalizeTranscript(a).draft.action_candidates.length,0);
