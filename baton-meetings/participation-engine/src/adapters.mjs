@@ -138,6 +138,7 @@ function countAttachedAudioTracks(page) {
 }
 
 export function createBrowserAdapter({ playwrightProvider = loadPlaywright, pause = sleep, now = () => new Date() } = {}) {
+  let active = null;
   return {
     name: 'browser',
     async probe() {
@@ -152,6 +153,7 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
       const pw = await playwrightProvider();
       if (!ctx.browserProfile) return { state: 'REQUIRES_HUMAN', code: 'DEDICATED_PROFILE_NOT_CONFIGURED' };
       let browser;
+      let keepAlive = false;
       try {
         browser = await pw.chromium.launchPersistentContext(resolve(ctx.browserProfile), {
           channel: ctx.browserChannel,
@@ -177,6 +179,8 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
           current = await classifyPage(page, ctx.platform);
           if (current === 'JOINED') {
             const audioTracks = await countAttachedAudioTracks(page);
+            active = { browser, page, platform: ctx.platform };
+            keepAlive = true;
             return {
               state: 'JOINED', code: 'BROWSER_JOINED',
               proof: { type: 'IN_CALL_LEAVE_CONTROL', observedAt: now().toISOString(), audioTracksDetected: audioTracks },
@@ -190,10 +194,33 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
       } catch {
         return { state: 'FAILED', code: 'BROWSER_LAUNCH_OR_JOIN_FAILED' };
       } finally {
-        // A verified join must be kept alive by a resident session worker in the next increment.
-        // This CLI adapter cannot promise persistent attendance after the process exits.
-        if (browser) await browser.close().catch(() => {});
+        // Stay in the conference after admission. Only close an unsuccessful attempt.
+        if (browser && !keepAlive) await browser.close().catch(() => {});
       }
+    },
+    async maintain({ signal, intervalMs = 3000, maxSessionMs = 4 * 60 * 60 * 1000 } = {}) {
+      if (!active) return { state: 'NO_ACTIVE_SESSION' };
+      const until = Date.now() + maxSessionMs;
+      let missing = 0;
+      let ticks = 0;
+      while (Date.now() < until && !signal?.aborted) {
+        if (active.page.isClosed()) return { state: 'SESSION_DISCONNECTED', reason: 'PAGE_CLOSED' };
+        const state = await classifyPage(active.page, active.platform);
+        if (state === 'HOST_DENIED') return { state: 'HOST_DENIED' };
+        if (state === 'JOINED') { missing = 0; ticks++; }
+        else {
+          missing++;
+          if (missing >= 3) return { state: 'SESSION_DISCONNECTED', reason: 'LEAVE_CONTROL_MISSING' };
+        }
+        await pause(intervalMs);
+      }
+      return { state: signal?.aborted ? 'OPERATOR_STOPPED' : 'SESSION_MAX_DURATION', healthyChecks: ticks };
+    },
+    async close() {
+      if (!active) return;
+      const old = active;
+      active = null;
+      await old.browser.close().catch(() => {});
     },
   };
 }
