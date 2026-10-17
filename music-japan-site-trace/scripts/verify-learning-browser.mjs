@@ -83,7 +83,7 @@ async function wahran(page, context) {
     const finish = fn => { clearTimeout(timer); audio.onloadedmetadata = audio.onerror = null; audio.removeAttribute('src'); audio.load(); fn(); };
     audio.preload = 'metadata'; audio.onloadedmetadata = () => { const d = audio.duration; finish(() => resolve(d)); }; audio.onerror = () => finish(() => reject(new Error('Audio metadata could not load'))); audio.src = src; audio.load();
   }), audioURL);
-  assert.ok(Number.isFinite(duration) && duration > 0); report.http.push({ url: audioURL, status: response.status(), contentType: response.headers()['content-type'], bytes, browserMetadataDuration: duration, playedAudibly: false });
+  assert.ok(Number.isFinite(duration) && duration > 0, `MP3 metadata duration must be finite and positive; received ${String(duration)}`); report.http.push({ url: audioURL, status: response.status(), contentType: response.headers()['content-type'], bytes, browserMetadataDuration: duration, playedAudibly: false });
 }
 async function courseLinks(page) {
   for (const path of ['/korean/', '/wahran/']) {
