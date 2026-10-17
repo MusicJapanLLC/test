@@ -1,4 +1,4 @@
-/** Read-only release check against the explicit official English-app URL. */
+﻿/** Read-only release check against the explicit official English-app URL. */
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {readFile, writeFile, mkdir} from 'node:fs/promises';
@@ -33,7 +33,7 @@ try{
   }
   assert.equal(observed?.revision,expected.revision,'The official domain did not serve this tested English revision');
   report.observedManifest=observed;
-  for(const file of ['base.css','style.css','app.js','engine.js','course.js','og.png','icon.svg','manifest.webmanifest','CMU-LICENSE.txt']){
+  for(const file of ['base.css','style.css','app.js','arcade.js','engine.js','course.js','og.png','icon.svg','manifest.webmanifest','CMU-LICENSE.txt']){
     const actual=Buffer.from(await (await get('/english/'+file+'?release='+expected.revision)).arrayBuffer());
     const local=await readFile(join(dir,file));
     assert.equal(createHash('sha256').update(actual).digest('hex'),createHash('sha256').update(local).digest('hex'),`Live asset mismatch: ${file}`);

@@ -6,11 +6,11 @@ import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
 import {loadEnglish,validateEnglish,publishEnglish} from '../scripts/publish-english.mjs';
 const root=fileURLToPath(new URL('..',import.meta.url)),data=loadEnglish(root);
-test('complete authored curriculum:200 distinct targets,24 conversations,IPA and exact example chunks',()=>{
- const counts=validateEnglish(data);assert.equal(counts.units,200);assert.equal(counts.dialogues,24);assert.equal(counts.lines,240);
+test('complete authored curriculum:264 distinct targets,24 conversations,IPA and exact example chunks',()=>{
+ const counts=validateEnglish(data);assert.equal(counts.units,264);assert.equal(counts.dialogues,24);assert.equal(counts.lines,240);
  const keys=data.units.map(u=>u.en.toLowerCase().replace(/[.…]/g,'').replace(/\s+/g,' ').trim());
- assert.equal(new Set(keys).size,200,'Learning targets must not be counted twice');
- assert.equal(data.units.filter(u=>u.kind==='chunk').length,100);assert.equal(data.units.filter(u=>u.kind==='vocabulary').length,60);assert.equal(data.units.filter(u=>u.kind==='grammar').length,40);
+ assert.equal(new Set(keys).size,264,'Learning targets must not be counted twice');
+ assert.equal(data.units.filter(u=>u.kind==='chunk').length,148);assert.equal(data.units.filter(u=>u.kind==='vocabulary').length,76);assert.equal(data.units.filter(u=>u.kind==='grammar').length,40);
  for(const u of data.units)for(const x of u.examples){assert.ok(x.en.split(/\s+/).length>=16,`${u.id} should demonstrate a developed sentence`);assert.ok(u.explanation.length>=50,`${u.id} needs useful Japanese teaching`);assert.doesNotMatch(u.en+x.en+u.ipa+x.ipa,/[\u3040-\u30ff]/);}
  const urls=data.sources.filter(s=>s.status==='reviewed').map(s=>new URL(s.url).href.replace(/\/$/,''));assert.equal(new Set(urls).size,urls.length,'Source counts must be deduplicated');
 });

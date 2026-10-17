@@ -4,7 +4,7 @@
  const DAY=86400000;
  const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
  const object=o=>!!o&&typeof o==='object'&&!Array.isArray(o);
- function emptyState(){return {app:'mj-english',version:1,saved:[],reviews:{},history:{},settings:{ipa:true,japanese:true,speed:1,voice:'',accent:'en-US'},lastUnit:null};}
+ function emptyState(){return {app:'mj-english',version:1,saved:[],reviews:{},history:{},settings:{ipa:true,japanese:true,speed:1,voice:'',accent:'en-US',effects:false},lastUnit:null,game:{xp:0,streak:0,best:0,answered:0,correct:0}};}
  function normalize(value){return String(value||'').normalize('NFKC').toLocaleLowerCase('en-US').replace(/[’‘]/g,"'").replace(/[^\p{L}\p{N}'\s]/gu,'').replace(/\s+/g,' ').trim();}
  function sameAnswer(a,b){return !!normalize(a)&&normalize(a)===normalize(b);}
  function localDay(now){const d=new Date(now);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
@@ -44,8 +44,9 @@
   if(object(raw.settings)){const s=raw.settings;if(typeof s.ipa==='boolean')state.settings.ipa=s.ipa;if(typeof s.japanese==='boolean')state.settings.japanese=s.japanese;
    if([.7,.85,1,1.1].includes(s.speed))state.settings.speed=s.speed;
    if(typeof s.voice==='string'&&s.voice.length<300)state.settings.voice=s.voice;
-   if(['en-US','en-GB','en-AU'].includes(s.accent))state.settings.accent=s.accent;
+   if(['en-US','en-GB','en-AU'].includes(s.accent))state.settings.accent=s.accent;if(typeof s.effects==='boolean')state.settings.effects=s.effects;
   }
+  if(object(raw.game)){for(const k of ['xp','streak','best','answered','correct'])if(Number.isInteger(raw.game[k])&&raw.game[k]>=0&&raw.game[k]<=100000000)state.game[k]=raw.game[k];state.game.correct=Math.min(state.game.correct,state.game.answered);}
   if(ids.has(raw.lastUnit))state.lastUnit=raw.lastUnit;
   return state;
  }

@@ -18,6 +18,6 @@ for(const route of manifest.urls){const path=join(out,route,'index.html');if(!ex
  const graph=JSON.parse(head.match(/<script type="application\/ld\+json">([\s\S]+?)<\/script>/)?.[1]||'{}')['@graph'];if(!graph?.some(x=>x['@type']==='BreadcrumbList'))errors.push('Breadcrumb data '+route);
  if(/<meta[^>]+name="robots"[^>]+content="[^"]*noindex/.test(head))errors.push('Noindex '+route);
 }
-for(const file of ['course.js','engine.js','app.js','style.css','base.css','og.png','CMU-LICENSE.txt','llms.txt','sitemap.xml','manifest.webmanifest'])if(!existsSync(join(out,'english',file)))errors.push('Asset '+file);
+for(const file of ['course.js','engine.js','arcade.js','app.js','style.css','base.css','og.png','CMU-LICENSE.txt','llms.txt','sitemap.xml','manifest.webmanifest'])if(!existsSync(join(out,'english',file)))errors.push('Asset '+file);
 for(const file of ['llms.txt','llms-full.txt'])if(!readFileSync(join(out,file),'utf8').includes('https://music-japan.com/english/'))errors.push('Root discovery '+file);
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1;}else console.log(JSON.stringify({status:'PASS',scope:'English pages and discovery integration',revision:manifest.revision,...counts,pages:manifest.urls.length,errors:0}));

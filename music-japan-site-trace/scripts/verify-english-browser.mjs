@@ -1014,7 +1014,7 @@ async function startServer() {
 }
 
 async function preflight() {
-  const names = ['index.html', 'app.js', 'engine.js', 'course.js', 'style.css', 'base.css', 'CMU-LICENSE.txt', 'build-manifest.json', 'manifest.webmanifest', 'sitemap.xml', 'llms.txt'];
+  const names = ['index.html', 'app.js', 'arcade.js', 'engine.js', 'course.js', 'style.css', 'base.css', 'CMU-LICENSE.txt', 'build-manifest.json', 'manifest.webmanifest', 'sitemap.xml', 'llms.txt'];
   const content = Object.fromEntries(await Promise.all(names.map(async name => [name, await readFile(join(DIST, 'english', name), 'utf8')])));
   const match = content['course.js'].match(/^globalThis\.ENGLISH_COURSE\s*=\s*([\s\S]*);\s*$/);
   assert.ok(match, 'course.js must be the generated curriculum payload');
@@ -1036,9 +1036,110 @@ async function preflight() {
     assert.ok(content['sitemap.xml'].includes(`<loc>https://music-japan.com${path}</loc>`), `English sitemap should contain ${path}`);
     if (path !== '/english/') assert.ok(content['llms.txt'].includes(`https://music-japan.com${path}`), `LLM index should link ${path}`);
   }
-  report.build = {...manifest, sha256: Object.fromEntries(['app.js', 'engine.js', 'course.js', 'style.css', 'base.css'].map(name => [name, createHash('sha256').update(content[name]).digest('hex')]))};
+  report.build = {...manifest, sha256: Object.fromEntries(['app.js', 'arcade.js', 'engine.js', 'course.js', 'style.css', 'base.css'].map(name => [name, createHash('sha256').update(content[name]).digest('hex')]))};
   console.log(`Built English app: ${manifest.units} entries, ${manifest.dialogues} dialogues, revision ${manifest.revision}`);
   console.log(SPEECH_LABEL);
+}
+
+
+async function questScenario(page){
+  await go(page,'learn');
+  await visible(page.locator('.quest-hero'));
+  await page.locator('.quest-hero [data-action="quest-start"]').click();
+  await visible(page.locator('.quest-shell'));
+  await textIs(page.locator('.quest-step-label span:last-child'),'QUESTION 1 / 5');
+  assert.ok(await page.locator('.quest-bank .quest-tile').count()>4);
+  // Author's correct first words are displayed among deliberately shuffled distractors.
+  const wordAnswer=[];let length=0;let parts=0;
+  for(const chunk of course.units[0].examples[0].chunks){wordAnswer.push(...chunk.en.split(/\s+/));length+=chunk.en.split(/\s+/).length;parts++;if(length>=10||parts>=3)break;}
+  assert.ok((await page.locator('.quest-bank .quest-tile').count())>wordAnswer.length);
+  for(const word of wordAnswer){
+    const buttons=page.locator('.quest-bank .quest-tile:not([disabled])'),values=await buttons.allTextContents();
+    const i=values.findIndex(v=>v.trim()===word);
+    assert.ok(i>=0,'Missing target tile '+word+' in '+JSON.stringify(values));
+    await buttons.nth(i).click();
+  }
+  await visible(action(page,'quest-check'));
+  await action(page,'quest-check').click();
+  await visible(page.locator('.quest-feedback.is-right'));
+  assert.ok((await page.locator('.quest-feedback').innerText()).includes(course.units[0].examples[0].en));
+  const initial=JSON.parse(await page.evaluate(() => localStorage.getItem('mj-english-progress-v1')));
+  assert.equal(initial.game.xp,15);
+  assert.equal(initial.game.answered,1);
+  assert.equal(initial.reviews[course.units[0].id].attempts,1);
+  await action(page,'quest-next').click();
+  await countIs(page.locator('.quest-choice-grid .quest-tile'),4);
+  const bad=page.locator('.quest-choice-grid .quest-tile').filter({hasNotText:course.units[1].ja}).first();
+  await bad.click();
+  await action(page,'quest-check').click();
+  await visible(page.locator('.quest-feedback.is-wrong'));
+  const afterWrong=JSON.parse(await page.evaluate(() => localStorage.getItem('mj-english-progress-v1')));
+  assert.equal(afterWrong.game.answered,2);
+  assert.equal(afterWrong.game.correct,1);
+  assert.equal(afterWrong.game.streak,0);
+  assert.ok(afterWrong.reviews[course.units[1].id].due > Date.now());
+  await action(page,'quest-next').click();
+  assert.ok((await page.locator('.quest-bank .quest-tile').count())>course.units[2].examples[0].chunks.length);
+  for(const chunk of course.units[2].examples[0].chunks){
+    const buttons=page.locator('.quest-bank .quest-tile:not([disabled])'),values=await buttons.allTextContents();
+    const i=values.findIndex(v=>v.trim()===chunk.en);
+    assert.ok(i>=0,'Missing chunk tile '+chunk.en);
+    await buttons.nth(i).click();
+  }
+  await action(page,'quest-check').click();
+  await visible(page.locator('.quest-feedback.is-right'));
+  await action(page,'quest-next').click();
+  await action(page,'quest-hint').click();
+  await visible(page.locator('.quest-hint-text'));
+  // Wrong answer is accepted as an attempt, never as a correct grade.
+  const targetCount=await page.locator('.quest-answer-lane .quest-answer-chip').count();
+  assert.equal(targetCount,0);
+  const buttons=page.locator('.quest-bank .quest-tile:not([disabled])');
+  const pickCount=await page.locator('.quest-bottom-tip').count();
+  assert.equal(pickCount,1);
+  const answerWords=[];let wcount=0;let pcount=0;
+  for(const c of course.units[3].examples[0].chunks){answerWords.push(...c.en.split(/\s+/));wcount+=c.en.split(/\s+/).length;pcount++;if(wcount>=10||pcount>=3)break;}
+  const available=await page.locator('.quest-bank .quest-tile').allTextContents();
+  assert.ok(available.length>answerWords.length);
+  // Complete the answer using the actual generated target, not a keyboard cheat.
+  for(const word of answerWords){
+    const left=page.locator('.quest-bank .quest-tile:not([disabled])'),labels=await left.allTextContents(),ix=labels.findIndex(v=>v.trim()===word);
+    assert.ok(ix>=0,'Word missing '+word);
+    await left.nth(ix).click();
+  }
+  await action(page,'quest-check').click();
+  await visible(page.locator('.quest-feedback.is-right'));
+  await action(page,'quest-next').click();
+  await visible(action(page,'quest-play'));
+  await action(page,'quest-play').click();
+  const logs=await speech(page);
+  assert.ok(speakEvents(logs).some(x=>x.text===course.units[4].en),'Listening should speak the headword');
+  await action(page,'quest-alt-audio').click();
+  await countIs(page.locator('.quest-choice-grid .quest-tile'),4);
+  const right=page.locator('.quest-choice-grid .quest-tile').filter({hasText:course.units[4].ja}).first();
+  await right.click();
+  await action(page,'quest-check').click();
+  await visible(page.locator('.quest-feedback.is-right'));
+  await action(page,'quest-next').click();
+  await visible(page.locator('.quest-done'));
+  assert.ok((await page.locator('.quest-done').innerText()).includes('5問中'));
+  await action(page,'quest-retry').click();
+  await visible(page.locator('.quest-shell'));
+  await textIs(page.locator('.quest-step-label span:last-child'),'QUESTION 1 / 1');
+  await assertNoOverflow(page,'word-tile game');
+}
+async function questSettingsAndBackup(page){
+  await go(page,'learn');
+  await page.locator('.quest-hero [data-action="quest-start"]').click();
+  await action(page,'quest-sound').click();
+  const state=JSON.parse(await page.evaluate(() => localStorage.getItem('mj-english-progress-v1')));
+  assert.equal(state.settings.effects,true);
+  await page.reload({waitUntil:'domcontentloaded'});
+  await go(page,'practice');
+  await page.locator('.quest-invite [data-action="quest-start"][data-count="10"]').click();
+  await textIs(page.locator('.quest-step-label span:last-child'),'QUESTION 1 / 10');
+  await visible(page.locator('.quest-board'));
+  await assertNoOverflow(page,'10-question game');
 }
 
 async function main() {
@@ -1057,6 +1158,9 @@ async function main() {
         continue;
       }
       try {
+        await runCase(browser, engine, 'five-question arcade: shuffled tiles, wrong choices, explanation, SRS and retry', questScenario);
+        await runCase(browser, engine, 'ten-question arcade: sound preference persists and responsive layout', questSettingsAndBackup);
+        if(process.argv.includes('--arcade-only'))continue;
         await runCase(browser, engine, 'navigation, every topic and every unit', navRoutes);
         await runCase(browser, engine, 'English and Japanese search, pagination and combined filters', searchAndFilters);
         await runCase(browser, engine, 'IPA, Japanese and voice preferences persist after reload', preferences);
