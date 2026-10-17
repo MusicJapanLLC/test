@@ -1,0 +1,2434 @@
+[
+  {
+    "id": "b-101",
+    "kind": "chunk",
+    "category": "business",
+    "level": "B2",
+    "en": "follow through",
+    "ipa": "ˈfɑloʊ θru",
+    "ja": "約束したことを最後まで実行する",
+    "explanation": "follow through on a promise のように on を伴うことが多い。単に返事をするのではなく、その後の実行まで含めて信頼を示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "紹介後のフォローアップを説明するとき",
+    "caution": "follow up は連絡を取ること、follow through はやり切ることに重点がある",
+    "examples": [
+      {
+        "en": "We try to follow through on every introduction, even when the timing changes at the last minute, because people remember what happens after the initial promise.",
+        "ja": "私たちは一件一件の紹介を最後までやり切るようにしています、直前に予定が変わったとしても、人は最初の約束よりその後の対応を覚えているからです",
+        "ipa": "wi traɪ tɪ ˈfɑloʊ θru ɔn ˈɛvəri ˌɪntrəˈdəkʃən, ˈivɪn wɪn ðə ˈtaɪmɪŋ ˈʧeɪnʤɪz æt ðə læst ˈmɪnət, bɪˈkəz ˈpipəl rɪˈmɛmbər wət ˈhæpənz ˈæftər ðə ˌɪˈnɪʃəl ˈprɑməs.",
+        "chunks": [
+          {
+            "en": "We try to follow through on every introduction,",
+            "ja": "私たちは一件一件の紹介を最後までやり切るようにしています、"
+          },
+          {
+            "en": "even when the timing changes at the last minute,",
+            "ja": "直前に予定が変わったとしても、"
+          },
+          {
+            "en": "because people remember what happens after the initial promise.",
+            "ja": "人は最初の約束よりその後の対応を覚えているからです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-102",
+    "kind": "chunk",
+    "category": "business",
+    "level": "B2",
+    "en": "touch base",
+    "ipa": "təʧ beɪs",
+    "ja": "短く連絡を取り合って状況を確認する",
+    "explanation": "touch base with someone は、長時間の会議よりも短い確認や近況共有でよく使う口語的なビジネス表現\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "進捗確認の連絡を提案するとき",
+    "caution": "目上の相手への非常に改まった文書では check in や follow up のほうが無難な場合がある",
+    "examples": [
+      {
+        "en": "Could we touch base early next week, once you've had a chance to review the proposal, so that we can agree on the next practical step together?",
+        "ja": "来週の前半に短く状況を確認できますか、提案書をご確認いただいたあとで、次の具体的な行動を一緒に決められるようにしたいのです",
+        "ipa": "kʊd wi təʧ beɪs ˈərli nɛkst wik, wəns juv hæd ə ʧæns tɪ ˌrivˈju ðə prəˈpoʊzəl, soʊ ðət wi kən əˈgri ɔn ðə nɛkst ˈpræktɪkəl stɛp təˈgɛðər?",
+        "chunks": [
+          {
+            "en": "Could we touch base early next week,",
+            "ja": "来週の前半に短く状況を確認できますか、"
+          },
+          {
+            "en": "once you've had a chance to review the proposal,",
+            "ja": "提案書をご確認いただいたあとで、"
+          },
+          {
+            "en": "so that we can agree on the next practical step together?",
+            "ja": "次の具体的な行動を一緒に決められるようにしたいのです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-103",
+    "kind": "chunk",
+    "category": "business",
+    "level": "B2",
+    "en": "build on that",
+    "ipa": "bɪld ɔn ðət",
+    "ja": "その話を土台にしてさらに発展させる",
+    "explanation": "build on that は相手の発言を受け止めてから追加案を出すときの柔らかなつなぎ。議論を奪うより共同作業の印象になる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "相手の提案に自分のアイデアを重ねるとき",
+    "caution": "相手の主張を理解せずに使うと、聞き流して次の話をしている印象になる",
+    "examples": [
+      {
+        "en": "I'd like to build on that idea, because we already know several people who need a similar service, and a small pilot might tell us whether the demand is real.",
+        "ja": "そのアイデアをさらに発展させたいです、似たサービスを必要としている方を何人か知っているので、小さな試行で実際の需要を確かめられると思います",
+        "ipa": "aɪd laɪk tɪ bɪld ɔn ðət aɪˈdiə, bɪˈkəz wi ɔˈrɛdi noʊ ˈsɛvərəl ˈpipəl hu nid ə ˈsɪmələr ˈsərvɪs, ənd ə smɔl ˈpaɪlət maɪt tɛl ˈjuˈɛs ˈwɛðər ðə dɪˈmænd ɪz ril.",
+        "chunks": [
+          {
+            "en": "I'd like to build on that idea,",
+            "ja": "そのアイデアをさらに発展させたいです、"
+          },
+          {
+            "en": "because we already know several people who need a similar service,",
+            "ja": "似たサービスを必要としている方を何人か知っているので、"
+          },
+          {
+            "en": "and a small pilot might tell us whether the demand is real.",
+            "ja": "小さな試行で実際の需要を確かめられると思います"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B06"
+    ]
+  },
+  {
+    "id": "b-104",
+    "kind": "chunk",
+    "category": "business",
+    "level": "B2",
+    "en": "make a case for",
+    "ipa": "meɪk ə keɪs fər",
+    "ja": "理由や根拠を示して提案を支持する",
+    "explanation": "make a case for は裁判に限らず、投資や採用などの意思決定で理由を並べて説得する言い回し。単なる好みとは区別する\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "新しい企画の投資価値を伝えるとき",
+    "caution": "強く言い切るよりも、比較材料や実例を示してから使う",
+    "examples": [
+      {
+        "en": "I can make a case for testing the service with a small group first, rather than committing the entire budget immediately, because we still need evidence that customers will return.",
+        "ja": "まず少人数でこのサービスを試すべき理由を説明できます、最初から予算全額を投じるのではなく、顧客が継続利用するという根拠がまだ必要だからです",
+        "ipa": "aɪ kən meɪk ə keɪs fər ˈtɛstɪŋ ðə ˈsərvɪs wɪθ ə smɔl grup fərst, ˈrəðər ðən kəˈmɪtɪŋ ðə ɪnˈtaɪər ˈbəʤɪt ˌɪˈmiˌdiətli, bɪˈkəz wi stɪl nid ˈɛvədəns ðət ˈkəstəmərz wɪl rɪˈtərn.",
+        "chunks": [
+          {
+            "en": "I can make a case for testing the service with a small group first,",
+            "ja": "まず少人数でこのサービスを試すべき理由を説明できます、"
+          },
+          {
+            "en": "rather than committing the entire budget immediately,",
+            "ja": "最初から予算全額を投じるのではなく、"
+          },
+          {
+            "en": "because we still need evidence that customers will return.",
+            "ja": "顧客が継続利用するという根拠がまだ必要だからです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B10"
+    ]
+  },
+  {
+    "id": "b-105",
+    "kind": "chunk",
+    "category": "business",
+    "level": "B2",
+    "en": "circle back",
+    "ipa": "ˈsərkəl bæk",
+    "ja": "後でもう一度その話題に戻る",
+    "explanation": "circle back to a topic は会議でいったん保留した論点に戻る口語表現。放置せずいつ戻るか添えると明確になる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "未決事項を後で確認するとき",
+    "caution": "期限を示さない circle back は曖昧な先延ばしに聞こえることがある",
+    "examples": [
+      {
+        "en": "Let's circle back to the pricing question on Thursday, after both teams have checked their actual costs, so we can make a decision without relying on guesses.",
+        "ja": "料金の件は木曜日にもう一度話しましょう、双方のチームが実際の費用を確認したあとで、推測に頼らず判断できるようにしたいです",
+        "ipa": "lɛts ˈsərkəl bæk tɪ ðə ˈpraɪsɪŋ kˈwɛʃən ɔn ˈθərzˌdeɪ, ˈæftər boʊθ timz hæv ʧɛkt ðɛr ˈækʧəwəl kɔsts, soʊ wi kən meɪk ə dɪˈsɪʒən wɪˈθaʊt riˈlaɪɪŋ ɔn ˈgɛsɪz.",
+        "chunks": [
+          {
+            "en": "Let's circle back to the pricing question on Thursday,",
+            "ja": "料金の件は木曜日にもう一度話しましょう、"
+          },
+          {
+            "en": "after both teams have checked their actual costs,",
+            "ja": "双方のチームが実際の費用を確認したあとで、"
+          },
+          {
+            "en": "so we can make a decision without relying on guesses.",
+            "ja": "推測に頼らず判断できるようにしたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-106",
+    "kind": "chunk",
+    "category": "business",
+    "level": "B2",
+    "en": "on the same page",
+    "ipa": "ɔn ðə seɪm peɪʤ",
+    "ja": "認識や理解が一致している",
+    "explanation": "be on the same page は意見が完全に同じというより、目的や前提を共有できているか確認する表現\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "共同案件の役割や範囲を確認するとき",
+    "caution": "同意を強要するニュアンスにしないよう、具体的な確認項目を添える",
+    "examples": [
+      {
+        "en": "Before we introduce the two companies, I want to make sure we're on the same page about what each side expects, especially around timing, responsibilities, and confidentiality.",
+        "ja": "二社を紹介する前に、双方の期待について認識を揃えておきたいです、特に時期と役割、秘密保持の点です",
+        "ipa": "ˌbiˈfɔr wi ˌɪntrəˈdus ðə tu ˈkəmpəˌniz, aɪ wɔnt tɪ meɪk ʃʊr wɪr ɔn ðə seɪm peɪʤ əˈbaʊt wət iʧ saɪd ɪkˈspɛkts, əˈspɛʃəli əraʊnd ˈtaɪmɪŋ, riˌspɑnsəˈbɪlətiz, ənd ˌkɑnfəˌdɛnʃiˈæləti.",
+        "chunks": [
+          {
+            "en": "Before we introduce the two companies,",
+            "ja": "二社を紹介する前に、"
+          },
+          {
+            "en": "I want to make sure we're on the same page about what each side expects,",
+            "ja": "双方の期待について認識を揃えておきたいです、"
+          },
+          {
+            "en": "especially around timing, responsibilities, and confidentiality.",
+            "ja": "特に時期と役割、秘密保持の点です"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-107",
+    "kind": "vocabulary",
+    "category": "business",
+    "level": "C1",
+    "en": "traction",
+    "ipa": "ˈtrækʃən",
+    "ja": "手応え、支持や利用が増えている兆し",
+    "explanation": "traction は事業や商品が市場に受け入れられ始めた兆候。売上がすでに安定しているという証明ではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "新しいサービスの初期反応を説明するとき",
+    "caution": "少数の好意的な反応だけで強い traction があると断定しない",
+    "examples": [
+      {
+        "en": "We're starting to see some traction with the new service, but I don't want to confuse interest with recurring revenue, so we're tracking what happens after each first meeting.",
+        "ja": "新しいサービスには少しずつ手応えが出てきています、ただし関心と継続的な売上を混同したくないので、初回面談のあとの動きを確認しています",
+        "ipa": "wɪr ˈstɑrtɪŋ tɪ si səm ˈtrækʃən wɪθ ðə nu ˈsərvɪs, bət aɪ doʊnt wɔnt tɪ kənfˈjuz ˈɪntəˌrɛst wɪθ rɪˈkərɪŋ ˈrɛvəˌnu, soʊ wɪr ˈtrækɪŋ wət ˈhæpənz ˈæftər iʧ fərst ˈmitɪŋ.",
+        "chunks": [
+          {
+            "en": "We're starting to see some traction with the new service,",
+            "ja": "新しいサービスには少しずつ手応えが出てきています、"
+          },
+          {
+            "en": "but I don't want to confuse interest with recurring revenue,",
+            "ja": "ただし関心と継続的な売上を混同したくないので、"
+          },
+          {
+            "en": "so we're tracking what happens after each first meeting.",
+            "ja": "初回面談のあとの動きを確認しています"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B06"
+    ]
+  },
+  {
+    "id": "b-108",
+    "kind": "vocabulary",
+    "category": "business",
+    "level": "B2",
+    "en": "reduce friction",
+    "ipa": "rɪˈdus ˈfrɪkʃən",
+    "ja": "手間や摩擦、物事を進めにくくする障害",
+    "explanation": "friction は人間関係の対立だけでなく、申し込みや商談の途中に生じる負担にも使う。reduce friction はよくある組み合わせ\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "問い合わせから契約までの手間を減らす相談で",
+    "caution": "friction と disagreement は同義ではなく、不便さや手続き上の障害も含む",
+    "examples": [
+      {
+        "en": "We noticed unnecessary friction in the onboarding process, especially when new partners have to enter the same details twice, so we're simplifying the first steps before adding new features.",
+        "ja": "利用開始までの手続きに不要な手間があると気づきました、特に新規パートナーが同じ情報を二度入力する点です、そこで新機能を増やす前に最初の手順を簡単にしています",
+        "ipa": "wi ˈnoʊtɪst ənˈnɛsəˌsɛri ˈfrɪkʃən ɪn ðə ˈɑnˌbɔrdɪŋ ˈprɔˌsɛs, əˈspɛʃəli wɪn nu ˈpɑrtnərz hæv tɪ ˈɛnər ðə seɪm ˈditeɪlz twaɪs, soʊ wɪr ˈsɪmpləˌfaɪɪŋ ðə fərst stɛps ˌbiˈfɔr ˈædɪŋ nu ˈfiʧərz.",
+        "chunks": [
+          {
+            "en": "We noticed unnecessary friction in the onboarding process,",
+            "ja": "利用開始までの手続きに不要な手間があると気づきました、"
+          },
+          {
+            "en": "especially when new partners have to enter the same details twice,",
+            "ja": "特に新規パートナーが同じ情報を二度入力する点です、"
+          },
+          {
+            "en": "so we're simplifying the first steps before adding new features.",
+            "ja": "そこで新機能を増やす前に最初の手順を簡単にしています"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-109",
+    "kind": "chunk",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "meet halfway",
+    "ipa": "mit ˈhæfˈweɪ",
+    "ja": "お互いが譲歩して折り合う",
+    "explanation": "meet someone halfway は双方に歩み寄りを求める表現。単純に金額を半分にする意味とは限らない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "条件交渉で互いの負担を調整するとき",
+    "caution": "何を譲れるか具体的に示さなければ抽象的な妥協提案になってしまう",
+    "examples": [
+      {
+        "en": "We might be able to meet halfway on the monthly fee, if we keep the initial scope narrow, and review the results together after the first six weeks.",
+        "ja": "月額料金については折り合えるかもしれません、最初の提供範囲を絞るのであれば、最初の六週間後に成果を一緒に確認する形でどうでしょう",
+        "ipa": "wi maɪt bi ˈeɪbəl tɪ mit ˈhæfˈweɪ ɔn ðə ˈmənθli fi, ɪf wi kip ðə ˌɪˈnɪʃəl skoʊp ˈnɛroʊ, ənd ˌrivˈju ðə rɪˈzəlts təˈgɛðər ˈæftər ðə fərst sɪks wiks.",
+        "chunks": [
+          {
+            "en": "We might be able to meet halfway on the monthly fee,",
+            "ja": "月額料金については折り合えるかもしれません、"
+          },
+          {
+            "en": "if we keep the initial scope narrow,",
+            "ja": "最初の提供範囲を絞るのであれば、"
+          },
+          {
+            "en": "and review the results together after the first six weeks.",
+            "ja": "最初の六週間後に成果を一緒に確認する形でどうでしょう"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B36"
+    ]
+  },
+  {
+    "id": "b-110",
+    "kind": "chunk",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "put it on the table",
+    "ipa": "pʊt ɪt ɔn ðə ˈteɪbəl",
+    "ja": "案として話し合いの場に出す",
+    "explanation": "put an option on the table はまだ決定していない案を検討対象として提示する意味。約束や合意と混同しない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "新しい料金案を検討用に提示するとき",
+    "caution": "on the table は提案可能という意味で、相手が承認したという意味ではない",
+    "examples": [
+      {
+        "en": "I'd like to put another option on the table, where we start with fewer introductions at a lower fixed fee, and expand only if the first month shows a good fit.",
+        "ja": "別の案も検討に出したいと思います、固定費を抑えて紹介件数を少なく始め、最初の月の相性が良ければ拡大する形です",
+        "ipa": "aɪd laɪk tɪ pʊt əˈnəðər ˈɔpʃən ɔn ðə ˈteɪbəl, wɛr wi stɑrt wɪθ fjuər ˌɪntrəˈdəkʃənz æt ə loʊər fɪkst fi, ənd ɪkˈspænd ˈoʊnli ɪf ðə fərst mənθ ʃoʊz ə gʊd fɪt.",
+        "chunks": [
+          {
+            "en": "I'd like to put another option on the table,",
+            "ja": "別の案も検討に出したいと思います、"
+          },
+          {
+            "en": "where we start with fewer introductions at a lower fixed fee,",
+            "ja": "固定費を抑えて紹介件数を少なく始め、"
+          },
+          {
+            "en": "and expand only if the first month shows a good fit.",
+            "ja": "最初の月の相性が良ければ拡大する形です"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-111",
+    "kind": "chunk",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "iron out the details",
+    "ipa": "aɪərn aʊt ðə ˈditeɪlz",
+    "ja": "細かな問題や未決事項を解決する",
+    "explanation": "iron out はしわを伸ばす比喩から、協議や計画の細部を調整して問題を解消する意味で使う\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "大筋合意のあとで細部を詰めるとき",
+    "caution": "大事な価格条件が未合意なら details と小さく表現しないほうがよい",
+    "examples": [
+      {
+        "en": "We seem to agree on the overall direction, but let's iron out the details around payment and cancellation, before either side treats this as a final agreement.",
+        "ja": "大まかな方向性では合意できそうですね、ただし支払いと解約の細部を詰めましょう、どちらかが最終合意と受け取る前に確認したいです",
+        "ipa": "wi sim tɪ əˈgri ɔn ðə ˈoʊvərˌɔl dɪˈrɛkʃɪn, bət lɛts aɪərn aʊt ðə ˈditeɪlz əraʊnd ˈpeɪmənt ənd ˌkænsəˈleɪʃən, ˌbiˈfɔr ˈiðər saɪd trits ðɪs ɛz ə ˈfaɪnəl əˈgrimənt.",
+        "chunks": [
+          {
+            "en": "We seem to agree on the overall direction,",
+            "ja": "大まかな方向性では合意できそうですね、"
+          },
+          {
+            "en": "but let's iron out the details around payment and cancellation,",
+            "ja": "ただし支払いと解約の細部を詰めましょう、"
+          },
+          {
+            "en": "before either side treats this as a final agreement.",
+            "ja": "どちらかが最終合意と受け取る前に確認したいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-112",
+    "kind": "chunk",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "leave room for",
+    "ipa": "liv rum fər",
+    "ja": "〜の余地を残しておく",
+    "explanation": "leave room for は日程・価格・意見などが後から変わる可能性を認める柔らかな表現\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "不確定な成果や条件に柔軟性を持たせたいとき",
+    "caution": "不明確な条件の放置ではなく、見直しの条件や時期を合わせて示す",
+    "examples": [
+      {
+        "en": "We should leave room for adjustments in the first month, because neither of us knows the exact workload yet, and we can revisit the terms once we have real numbers.",
+        "ja": "初月は調整の余地を残しておくべきだと思います、双方とも正確な作業量がまだ分からないので、実際の数字が出たら条件を再検討できます",
+        "ipa": "wi ʃʊd liv rum fər əˈʤəstmənts ɪn ðə fərst mənθ, bɪˈkəz ˈniðər əv ˈjuˈɛs noʊz ðə ɪgˈzækt ˈwərˌkloʊd jɛt, ənd wi kən riˈvɪzɪt ðə tərmz wəns wi hæv ril ˈnəmbərz.",
+        "chunks": [
+          {
+            "en": "We should leave room for adjustments in the first month,",
+            "ja": "初月は調整の余地を残しておくべきだと思います、"
+          },
+          {
+            "en": "because neither of us knows the exact workload yet,",
+            "ja": "双方とも正確な作業量がまだ分からないので、"
+          },
+          {
+            "en": "and we can revisit the terms once we have real numbers.",
+            "ja": "実際の数字が出たら条件を再検討できます"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B36"
+    ]
+  },
+  {
+    "id": "b-113",
+    "kind": "chunk",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "not a deal breaker",
+    "ipa": "nɑt ə dil ˈbreɪkər",
+    "ja": "契約や合意を断念するほどの問題ではない",
+    "explanation": "deal breaker は交渉を終わらせる決定的な障害。not a deal breaker は課題を認めつつ交渉継続できると伝える\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "相手の条件に不満はあるが交渉可能なとき",
+    "caution": "問題がなくなったという意味ではないので、代替条件を続ける",
+    "examples": [
+      {
+        "en": "The later start date isn't a deal breaker for us, as long as we agree on the first deliverables now, and have a clear way to handle changes afterward.",
+        "ja": "開始日が遅くなること自体は大きな問題ではありません、最初の納品物を今の段階で決められるなら、その後の変更の扱いも明確にしておきたいです",
+        "ipa": "ðə ˈleɪtər stɑrt deɪt ˈɪzənt ə dil ˈbreɪkər fər ˈjuˈɛs, ɛz lɔŋ ɛz wi əˈgri ɔn ðə fərst dɪˈlɪvərəbəlz naʊ, ənd hæv ə klɪr weɪ tɪ ˈhændəl ˈʧeɪnʤɪz ˈæftərwərd.",
+        "chunks": [
+          {
+            "en": "The later start date isn't a deal breaker for us,",
+            "ja": "開始日が遅くなること自体は大きな問題ではありません、"
+          },
+          {
+            "en": "as long as we agree on the first deliverables now,",
+            "ja": "最初の納品物を今の段階で決められるなら、"
+          },
+          {
+            "en": "and have a clear way to handle changes afterward.",
+            "ja": "その後の変更の扱いも明確にしておきたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B19"
+    ]
+  },
+  {
+    "id": "b-114",
+    "kind": "chunk",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "in principle",
+    "ipa": "ɪn ˈprɪnsəpəl",
+    "ja": "原則として、大枠では",
+    "explanation": "agree in principle は細部の条件を残して大筋で同意すること。正式な契約成立を意味しない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "条件付きの賛同を表明するとき",
+    "caution": "in principle を省くと全面的な同意と受け取られやすい",
+    "examples": [
+      {
+        "en": "We're happy to proceed in principle, provided that the written agreement reflects the scope we discussed, and both parties confirm the final price before signing.",
+        "ja": "原則として進めることには前向きです、ただし書面が話し合った業務範囲を正しく反映していて、署名前に双方が最終価格を確認することが条件です",
+        "ipa": "wɪr ˈhæpi tɪ pərˈsid ɪn ˈprɪnsəpəl, prəˈvaɪdɪd ðət ðə ˈrɪtən əˈgrimənt rɪˈflɛkts ðə skoʊp wi dɪˈskəst, ənd boʊθ ˈpɑrtiz kənˈfərm ðə ˈfaɪnəl praɪs ˌbiˈfɔr ˈsaɪnɪŋ.",
+        "chunks": [
+          {
+            "en": "We're happy to proceed in principle,",
+            "ja": "原則として進めることには前向きです、"
+          },
+          {
+            "en": "provided that the written agreement reflects the scope we discussed,",
+            "ja": "ただし書面が話し合った業務範囲を正しく反映していて、"
+          },
+          {
+            "en": "and both parties confirm the final price before signing.",
+            "ja": "署名前に双方が最終価格を確認することが条件です"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B36"
+    ]
+  },
+  {
+    "id": "b-115",
+    "kind": "vocabulary",
+    "category": "negotiation",
+    "level": "B2",
+    "en": "concession",
+    "ipa": "kənˈsɛʃən",
+    "ja": "譲歩、相手に認める条件",
+    "explanation": "concession は交渉で自分の希望条件を一部譲ること。必ずしも敗北や一方的な損失を意味しない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "価格や納期の譲歩を具体的に相談するとき",
+    "caution": "譲歩をした側の価値も明確にし、見返りが自動的にあるとは想定しない",
+    "examples": [
+      {
+        "en": "Reducing the setup fee would be a meaningful concession on our side, so we'd like to discuss a longer minimum term in return, rather than changing the price without reviewing the work involved.",
+        "ja": "初期費用を下げるのは私たちにとって大きな譲歩です、その代わり最低契約期間を延ばせないか相談したく、必要な作業を確認せず価格だけ変えることは避けたいです",
+        "ipa": "rɪˈdusɪŋ ðə ˈsɛˌtəp fi wʊd bi ə ˈminɪŋfəl kənˈsɛʃən ɔn ɑr saɪd, soʊ wid laɪk tɪ dɪˈskəs ə ˈlɔŋgər ˈmɪnəməm tərm ɪn rɪˈtərn, ˈrəðər ðən ˈʧeɪnʤɪŋ ðə praɪs wɪˈθaʊt rivˈjuɪŋ ðə wərk ˌɪnˈvɑlvd.",
+        "chunks": [
+          {
+            "en": "Reducing the setup fee would be a meaningful concession on our side,",
+            "ja": "初期費用を下げるのは私たちにとって大きな譲歩です、"
+          },
+          {
+            "en": "so we'd like to discuss a longer minimum term in return,",
+            "ja": "その代わり最低契約期間を延ばせないか相談したく、"
+          },
+          {
+            "en": "rather than changing the price without reviewing the work involved.",
+            "ja": "必要な作業を確認せず価格だけ変えることは避けたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B19"
+    ]
+  },
+  {
+    "id": "b-116",
+    "kind": "vocabulary",
+    "category": "negotiation",
+    "level": "C1",
+    "en": "a contingency plan",
+    "ipa": "ə kənˈtɪnʤənsi plæn",
+    "ja": "不測の事態への備え、予備策",
+    "explanation": "contingency plan は予定がうまくいかなかった場合の代替策。現実の障害が起きたと断定する語ではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "商談の遅延や紹介数不足に備えるとき",
+    "caution": "常に起きる出来事ではなく、もし起きた場合に備える想定として話す",
+    "examples": [
+      {
+        "en": "We should agree on a simple contingency plan before launch, in case the first introductions take longer than expected, so neither team has to invent a solution under pressure.",
+        "ja": "開始前に簡単な予備策を合意しておきましょう、最初の紹介が予想以上に時間を要した場合に備えて、どちらのチームも焦って対応策を考えずに済むようにしたいです",
+        "ipa": "wi ʃʊd əˈgri ɔn ə ˈsɪmpəl kənˈtɪnʤənsi plæn ˌbiˈfɔr lɔnʧ, ɪn keɪs ðə fərst ˌɪntrəˈdəkʃənz teɪk ˈlɔŋgər ðən ɪkˈspɛktɪd, soʊ ˈniðər tim həz tɪ ˌɪnˈvɛnt ə səˈluʃən ˈəndər ˈprɛʃər.",
+        "chunks": [
+          {
+            "en": "We should agree on a simple contingency plan before launch,",
+            "ja": "開始前に簡単な予備策を合意しておきましょう、"
+          },
+          {
+            "en": "in case the first introductions take longer than expected,",
+            "ja": "最初の紹介が予想以上に時間を要した場合に備えて、"
+          },
+          {
+            "en": "so neither team has to invent a solution under pressure.",
+            "ja": "どちらのチームも焦って対応策を考えずに済むようにしたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B20"
+    ]
+  },
+  {
+    "id": "b-117",
+    "kind": "chunk",
+    "category": "work",
+    "level": "B2",
+    "en": "take ownership of",
+    "ipa": "teɪk ˈoʊnərˌʃɪp əv",
+    "ja": "自分が責任を持って引き受ける",
+    "explanation": "take ownership of は役割を与えられたというだけでなく、自分から責任を引き受けて完了まで関わる姿勢を示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "海外のチームで担当範囲を明確にするとき",
+    "caution": "すべてを一人で抱える意味ではないので支援が必要な点も伝える",
+    "examples": [
+      {
+        "en": "I'm happy to take ownership of the initial client communication, provided we agree on who approves the final proposal, so decisions don't get delayed when several teams are involved.",
+        "ja": "最初の顧客とのやりとりは私が責任を持って担当します、ただし最終提案を誰が承認するか合意できていて、複数チームが関わっても判断が遅れないようにしたいです",
+        "ipa": "əm ˈhæpi tɪ teɪk ˈoʊnərˌʃɪp əv ðə ˌɪˈnɪʃəl klaɪənt kəmˌjunəˈkeɪʃən, prəˈvaɪdɪd wi əˈgri ɔn hu əˈpruvz ðə ˈfaɪnəl prəˈpoʊzəl, soʊ dɪˈsɪʒənz doʊnt gɪt dɪˈleɪd wɪn ˈsɛvərəl timz ər ˌɪnˈvɑlvd.",
+        "chunks": [
+          {
+            "en": "I'm happy to take ownership of the initial client communication,",
+            "ja": "最初の顧客とのやりとりは私が責任を持って担当します、"
+          },
+          {
+            "en": "provided we agree on who approves the final proposal,",
+            "ja": "ただし最終提案を誰が承認するか合意できていて、"
+          },
+          {
+            "en": "so decisions don't get delayed when several teams are involved.",
+            "ja": "複数チームが関わっても判断が遅れないようにしたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-118",
+    "kind": "chunk",
+    "category": "work",
+    "level": "B2",
+    "en": "flag it early",
+    "ipa": "flæg ɪt ˈərli",
+    "ja": "問題を早めに知らせる",
+    "explanation": "flag a risk や flag it early は問題が大きくなる前に注意を向ける言い方。報告を責める目的ではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "納期が危うくなりそうなとき",
+    "caution": "まだ発生していない懸念と、すでに起きた問題は区別して説明する",
+    "examples": [
+      {
+        "en": "If something might affect the deadline, please flag it early rather than waiting until the last day, because we can usually adjust the plan before the problem grows.",
+        "ja": "何かが期限に影響する可能性があれば、最終日まで待たず早めに教えてください、問題が大きくなる前なら計画を調整できることが多いので",
+        "ipa": "ɪf ˈsəmθɪŋ maɪt əˈfɛkt ðə ˈdɛˌdlaɪn, pliz flæg ɪt ˈərli ˈrəðər ðən ˈweɪtɪŋ ənˈtɪl ðə læst deɪ, bɪˈkəz wi kən ˈjuʒəwəli əˈʤəst ðə plæn ˌbiˈfɔr ðə ˈprɑbləm groʊz.",
+        "chunks": [
+          {
+            "en": "If something might affect the deadline,",
+            "ja": "何かが期限に影響する可能性があれば、"
+          },
+          {
+            "en": "please flag it early rather than waiting until the last day,",
+            "ja": "最終日まで待たず早めに教えてください、"
+          },
+          {
+            "en": "because we can usually adjust the plan before the problem grows.",
+            "ja": "問題が大きくなる前なら計画を調整できることが多いので"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-119",
+    "kind": "chunk",
+    "category": "work",
+    "level": "B2",
+    "en": "keep an eye on",
+    "ipa": "kip ən aɪ ɔn",
+    "ja": "しばらく様子を見て注意しておく",
+    "explanation": "keep an eye on は厳密な監視というより、変化に気付けるよう気にかける表現。人にも数字にも使える\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "公開後の反応や障害を見守るとき",
+    "caution": "継続的に検査する義務まで示したいなら monitor と担当を明示する",
+    "examples": [
+      {
+        "en": "Let's keep an eye on the early feedback after launch, especially if users are struggling with the first few steps, and make small improvements before introducing more features.",
+        "ja": "公開後の初期反応をしばらく見ておきましょう、特に利用者が最初の数段階でつまずいていないか確認して、機能を増やす前に小さな改善をしたいです",
+        "ipa": "lɛts kip ən aɪ ɔn ðə ˈərli ˈfidˌbæk ˈæftər lɔnʧ, əˈspɛʃəli ɪf ˈjuzərz ər ˈstrəgəlɪŋ wɪθ ðə fərst fju stɛps, ənd meɪk smɔl ˌɪmˈpruvmənts ˌbiˈfɔr ˌɪntrəˈdusɪŋ mɔr ˈfiʧərz.",
+        "chunks": [
+          {
+            "en": "Let's keep an eye on the early feedback after launch,",
+            "ja": "公開後の初期反応をしばらく見ておきましょう、"
+          },
+          {
+            "en": "especially if users are struggling with the first few steps,",
+            "ja": "特に利用者が最初の数段階でつまずいていないか確認して、"
+          },
+          {
+            "en": "and make small improvements before introducing more features.",
+            "ja": "機能を増やす前に小さな改善をしたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-120",
+    "kind": "chunk",
+    "category": "work",
+    "level": "B2",
+    "en": "stretched thin",
+    "ipa": "strɛʧt θɪn",
+    "ja": "余裕がなく手が回らない",
+    "explanation": "be stretched thin は同時に抱える仕事が多く、時間や人手に余裕がない状態。個人の能力を否定する言葉ではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "海外勤務で仕事量を相談するとき",
+    "caution": "忙しいだけでなく何が影響を受けるかを伝えると相談が具体的になる",
+    "examples": [
+      {
+        "en": "Our team is a little stretched thin this week, so I can handle the urgent support requests first, but the optional redesign may need to wait until Monday.",
+        "ja": "今週はチームに少し余裕がありません、ですので緊急の問い合わせを先に対応できますが、任意のデザイン改修は月曜日まで待つ必要がありそうです",
+        "ipa": "ɑr tim ɪz ə ˈlɪtəl strɛʧt θɪn ðɪs wik, soʊ aɪ kən ˈhændəl ðə ˈərʤənt səˈpɔrt rɪkˈwɛsts fərst, bət ðə ˈɔpʃənəl ˌridɪˈzaɪn meɪ nid tɪ weɪt ənˈtɪl ˈmənˌdeɪ.",
+        "chunks": [
+          {
+            "en": "Our team is a little stretched thin this week,",
+            "ja": "今週はチームに少し余裕がありません、"
+          },
+          {
+            "en": "so I can handle the urgent support requests first,",
+            "ja": "ですので緊急の問い合わせを先に対応できますが、"
+          },
+          {
+            "en": "but the optional redesign may need to wait until Monday.",
+            "ja": "任意のデザイン改修は月曜日まで待つ必要がありそうです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B14"
+    ]
+  },
+  {
+    "id": "b-121",
+    "kind": "chunk",
+    "category": "work",
+    "level": "B2",
+    "en": "at short notice",
+    "ipa": "æt ʃɔrt ˈnoʊtɪs",
+    "ja": "直前の連絡で、急な依頼にもかかわらず",
+    "explanation": "at short notice は依頼から実行まで時間が短いことを示す。感謝や謝罪を添えると自然\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "急な会議招集や予定変更を相談するとき",
+    "caution": "short notice と short time を無理に置き換えない",
+    "examples": [
+      {
+        "en": "Thanks for making time at such short notice, especially when I know you already have a full schedule, and I'll keep this discussion focused on the two decisions we need.",
+        "ja": "急なお願いにもかかわらず時間を取ってくださりありがとうございます、すでに予定が詰まっていると分かっているので、今回の話は必要な二つの判断に絞ります",
+        "ipa": "θæŋks fər ˈmeɪkɪŋ taɪm æt səʧ ʃɔrt ˈnoʊtɪs, əˈspɛʃəli wɪn aɪ noʊ ju ɔˈrɛdi hæv ə fʊl ˈskɛʤʊl, ənd aɪl kip ðɪs dɪˈskəʃən ˈfoʊkɪst ɔn ðə tu dɪˈsɪʒənz wi nid.",
+        "chunks": [
+          {
+            "en": "Thanks for making time at such short notice,",
+            "ja": "急なお願いにもかかわらず時間を取ってくださりありがとうございます、"
+          },
+          {
+            "en": "especially when I know you already have a full schedule,",
+            "ja": "すでに予定が詰まっていると分かっているので、"
+          },
+          {
+            "en": "and I'll keep this discussion focused on the two decisions we need.",
+            "ja": "今回の話は必要な二つの判断に絞ります"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-122",
+    "kind": "chunk",
+    "category": "work",
+    "level": "B2",
+    "en": "hand over",
+    "ipa": "hænd ˈoʊvər",
+    "ja": "担当や情報を引き継ぐ",
+    "explanation": "hand over は物の受け渡しだけでなく責任や業務の引き継ぎにも使う。hand over to で相手を示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "新しい担当者に案件を渡すとき",
+    "caution": "引き継ぎ完了と、引き継ぎを提案しただけの段階を混同しない",
+    "examples": [
+      {
+        "en": "Before I hand over this project to the new team, I'd like to walk them through the current decisions and open questions, so they don't have to reconstruct everything from scattered messages.",
+        "ja": "この案件を新しいチームに引き継ぐ前に、現在の決定事項と未解決の点を一緒に確認して、ばらばらのメッセージからすべてを復元させずに済むようにしたいです",
+        "ipa": "ˌbiˈfɔr aɪ hænd ˈoʊvər ðɪs ˈprɑʤɛkt tɪ ðə nu tim, aɪd laɪk tɪ wɔk ðɛm θru ðə ˈkɑrənt dɪˈsɪʒənz ənd ˈoʊpən kˈwɛsʧənz, soʊ ðeɪ doʊnt hæv tɪ ˌrikənˈstrəkt ˈɛvriˌθɪŋ frəm ˈskætərd ˈmɛsɪʤɪz.",
+        "chunks": [
+          {
+            "en": "Before I hand over this project to the new team,",
+            "ja": "この案件を新しいチームに引き継ぐ前に、"
+          },
+          {
+            "en": "I'd like to walk them through the current decisions and open questions,",
+            "ja": "現在の決定事項と未解決の点を一緒に確認して、"
+          },
+          {
+            "en": "so they don't have to reconstruct everything from scattered messages.",
+            "ja": "ばらばらのメッセージからすべてを復元させずに済むようにしたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-123",
+    "kind": "vocabulary",
+    "category": "work",
+    "level": "B2",
+    "en": "workload",
+    "ipa": "ˈwərˌkloʊd",
+    "ja": "仕事量、担当する業務の負担",
+    "explanation": "workload は個人やチームが抱える業務量。忙しさを感情だけでなく調整すべき量として話せる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "作業量と期限を調整するとき",
+    "caution": "capacity は対応できる余力、workload は現在抱えている仕事量に重点がある",
+    "examples": [
+      {
+        "en": "The workload has increased since we added another client, but we haven't changed the number of people supporting the project, so we need to decide which tasks matter most this month.",
+        "ja": "新しい顧客が増えてから仕事量が増えています、一方で支援する人数は変わっていないため、今月どの仕事を優先するか決める必要があります",
+        "ipa": "ðə ˈwərˌkloʊd həz ˌɪnˈkrist sɪns wi ˈædɪd əˈnəðər klaɪənt, bət wi ˈhævənt ʧeɪnʤd ðə ˈnəmbər əv ˈpipəl səˈpɔrtɪŋ ðə ˈprɑʤɛkt, soʊ wi nid tɪ ˌdɪˈsaɪd wɪʧ tæsks ˈmætər moʊst ðɪs mənθ.",
+        "chunks": [
+          {
+            "en": "The workload has increased since we added another client,",
+            "ja": "新しい顧客が増えてから仕事量が増えています、"
+          },
+          {
+            "en": "but we haven't changed the number of people supporting the project,",
+            "ja": "一方で支援する人数は変わっていないため、"
+          },
+          {
+            "en": "so we need to decide which tasks matter most this month.",
+            "ja": "今月どの仕事を優先するか決める必要があります"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B13"
+    ]
+  },
+  {
+    "id": "b-124",
+    "kind": "vocabulary",
+    "category": "work",
+    "level": "B2",
+    "en": "alignment",
+    "ipa": "əˈlaɪnmənt",
+    "ja": "認識や方向性が揃っていること",
+    "explanation": "alignment は意見が一語一句同じことではなく、目的や優先順位が一致している状態を指すビジネス語\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "国際チームとの目標調整を話すとき",
+    "caution": "agreement は個別の合意、alignment は継続的な方向性の一致にも使う",
+    "examples": [
+      {
+        "en": "We have general alignment on the goals for this quarter, but the teams still disagree about which features should come first, and that decision needs a separate discussion before development starts.",
+        "ja": "今四半期の目標については大筋で認識が揃っています、ただしどの機能を先にすべきかはチーム間で意見が違うので、開発開始前にその点は別に話し合う必要があります",
+        "ipa": "wi hæv ˈʤɛnərəl əˈlaɪnmənt ɔn ðə goʊlz fər ðɪs kˈwɔrtər, bət ðə timz stɪl dɪsəˈgri əˈbaʊt wɪʧ ˈfiʧərz ʃʊd kəm fərst, ənd ðət dɪˈsɪʒən nidz ə ˈsɛpərˌeɪt dɪˈskəʃən ˌbiˈfɔr dɪˈvɛləpmənt stɑrts.",
+        "chunks": [
+          {
+            "en": "We have general alignment on the goals for this quarter,",
+            "ja": "今四半期の目標については大筋で認識が揃っています、"
+          },
+          {
+            "en": "but the teams still disagree about which features should come first,",
+            "ja": "ただしどの機能を先にすべきかはチーム間で意見が違うので、"
+          },
+          {
+            "en": "and that decision needs a separate discussion before development starts.",
+            "ja": "開発開始前にその点は別に話し合う必要があります"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B03"
+    ]
+  },
+  {
+    "id": "b-125",
+    "kind": "chunk",
+    "category": "deep",
+    "level": "B2",
+    "en": "put things into perspective",
+    "ipa": "pʊt θɪŋz ˈɪntu pərˈspɛktɪv",
+    "ja": "物事を少し距離を置いて捉え直す",
+    "explanation": "put something into perspective は一つの出来事の大きさや意味を、他の事情と比べて捉え直すときに使う\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "失敗や不安を冷静に振り返るとき",
+    "caution": "相手が困っているときにすぐ言うと、悩みを小さく扱う印象になることがある",
+    "examples": [
+      {
+        "en": "Looking back on the past few months helps me put things into perspective, because one difficult conversation doesn't erase the progress we've made, even when it feels overwhelming in the moment.",
+        "ja": "この数か月を振り返ると物事を落ち着いて捉え直せます、難しい会話が一度あっただけで積み重ねた前進が消えるわけではなく、その瞬間には圧倒されるように感じてもそう思えます",
+        "ipa": "ˈlʊkɪŋ bæk ɔn ðə pæst fju mənθs hɛlps mi pʊt θɪŋz ˈɪntu pərˈspɛktɪv, bɪˈkəz wən ˈdɪfəkəlt ˌkɑnvərˈseɪʃən ˈdəzənt ɪˈreɪs ðə ˈprɑˌgrɛs wiv meɪd, ˈivɪn wɪn ɪt filz ˌoʊvərˈwɛlmɪŋ ɪn ðə ˈmoʊmənt.",
+        "chunks": [
+          {
+            "en": "Looking back on the past few months helps me put things into perspective,",
+            "ja": "この数か月を振り返ると物事を落ち着いて捉え直せます、"
+          },
+          {
+            "en": "because one difficult conversation doesn't erase the progress we've made,",
+            "ja": "難しい会話が一度あっただけで積み重ねた前進が消えるわけではなく、"
+          },
+          {
+            "en": "even when it feels overwhelming in the moment.",
+            "ja": "その瞬間には圧倒されるように感じてもそう思えます"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B35"
+    ]
+  },
+  {
+    "id": "b-126",
+    "kind": "chunk",
+    "category": "deep",
+    "level": "B2",
+    "en": "still figuring it out",
+    "ipa": "stɪl ˈfɪgjərɪŋ ɪt aʊt",
+    "ja": "まだ答えを探している途中",
+    "explanation": "I'm still figuring it out は十分に理解や判断ができていない状態を自然に表す。無責任な態度とは限らない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "将来や人間関係の答えがまだ出ないとき",
+    "caution": "重要な仕事の回答なら、いつまでに確認するかも添える",
+    "examples": [
+      {
+        "en": "I'm still figuring out what kind of life I want to build abroad, because the idea excites me but also raises practical questions, and I don't want to pretend I have all the answers already.",
+        "ja": "海外でどんな生活を築きたいのかまだ考えている途中です、魅力を感じる一方で現実的な疑問も浮かぶので、もう答えが全部出ているふりはしたくありません",
+        "ipa": "əm stɪl ˈfɪgjərɪŋ aʊt wət kaɪnd əv laɪf aɪ wɔnt tɪ bɪld əˈbrɔd, bɪˈkəz ðə aɪˈdiə ɪkˈsaɪts mi bət ˈɔlsoʊ ˈreɪzɪz ˈpræktɪkəl kˈwɛsʧənz, ənd aɪ doʊnt wɔnt tɪ priˈtɛnd aɪ hæv ɔl ðə ˈænsərz ɔˈrɛdi.",
+        "chunks": [
+          {
+            "en": "I'm still figuring out what kind of life I want to build abroad,",
+            "ja": "海外でどんな生活を築きたいのかまだ考えている途中です、"
+          },
+          {
+            "en": "because the idea excites me but also raises practical questions,",
+            "ja": "魅力を感じる一方で現実的な疑問も浮かぶので、"
+          },
+          {
+            "en": "and I don't want to pretend I have all the answers already.",
+            "ja": "もう答えが全部出ているふりはしたくありません"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B35"
+    ]
+  },
+  {
+    "id": "b-127",
+    "kind": "chunk",
+    "category": "deep",
+    "level": "B2",
+    "en": "sit with that feeling",
+    "ipa": "sɪt wɪθ ðət ˈfilɪŋ",
+    "ja": "その感情をすぐ否定せず、しばらく受け止める",
+    "explanation": "sit with a feeling は感情を直ちに解決しようとせずに向き合う比喩。日常会話では少し内省的に響く\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "複雑な感情を率直に話すとき",
+    "caution": "相手に対して一方的に助言するより、自分の経験として使うのが無難",
+    "examples": [
+      {
+        "en": "Sometimes I need to sit with that feeling for a while, instead of trying to turn every disappointment into a lesson immediately, because not everything becomes clear the same day.",
+        "ja": "ときにはその気持ちをしばらく受け止める必要があります、失望するたびすぐ教訓に変えようとするのではなく、すべてがその日のうちに明確になるわけではないからです",
+        "ipa": "ˈsəmˌtaɪmz aɪ nid tɪ sɪt wɪθ ðət ˈfilɪŋ fər ə waɪl, ˌɪnˈstɛd əv traɪɪŋ tɪ tərn ˈɛvəri ˌdɪsəˈpɔɪntmənt ˈɪntu ə ˈlɛsən ˌɪˈmiˌdiətli, bɪˈkəz nɑt ˈɛvriˌθɪŋ bɪˈkəmz klɪr ðə seɪm deɪ.",
+        "chunks": [
+          {
+            "en": "Sometimes I need to sit with that feeling for a while,",
+            "ja": "ときにはその気持ちをしばらく受け止める必要があります、"
+          },
+          {
+            "en": "instead of trying to turn every disappointment into a lesson immediately,",
+            "ja": "失望するたびすぐ教訓に変えようとするのではなく、"
+          },
+          {
+            "en": "because not everything becomes clear the same day.",
+            "ja": "すべてがその日のうちに明確になるわけではないからです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B35"
+    ]
+  },
+  {
+    "id": "b-128",
+    "kind": "chunk",
+    "category": "deep",
+    "level": "B2",
+    "en": "grow apart",
+    "ipa": "groʊ əˈpɑrt",
+    "ja": "以前は近かった関係が自然に離れていく",
+    "explanation": "grow apart は時間とともに距離ができること。大きな喧嘩や突然の決別とは限らない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "昔の友人や恋人との変化を振り返るとき",
+    "caution": "関係が終わった理由を勝手に決めつける表現として使わない",
+    "examples": [
+      {
+        "en": "We didn't have a dramatic argument or a clear ending, but over time we started to grow apart as our lives changed, and I think both of us noticed it in different ways.",
+        "ja": "大きな喧嘩もはっきりした終わり方もありませんでした、ただ暮らしが変わる中で少しずつ離れていき、お互いに違う形でその変化に気づいていたと思います",
+        "ipa": "wi ˈdɪdənt hæv ə drəˈmætɪk ˈɑrgjəmənt ər ə klɪr ˈɛndɪŋ, bət ˈoʊvər taɪm wi ˈstɑrtɪd tɪ groʊ əˈpɑrt ɛz ɑr lɪvz ʧeɪnʤd, ənd aɪ θɪŋk boʊθ əv ˈjuˈɛs ˈnoʊtɪst ɪt ɪn ˈdɪfərənt weɪz.",
+        "chunks": [
+          {
+            "en": "We didn't have a dramatic argument or a clear ending,",
+            "ja": "大きな喧嘩もはっきりした終わり方もありませんでした、"
+          },
+          {
+            "en": "but over time we started to grow apart as our lives changed,",
+            "ja": "ただ暮らしが変わる中で少しずつ離れていき、"
+          },
+          {
+            "en": "and I think both of us noticed it in different ways.",
+            "ja": "お互いに違う形でその変化に気づいていたと思います"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B35"
+    ]
+  },
+  {
+    "id": "b-129",
+    "kind": "chunk",
+    "category": "deep",
+    "level": "B2",
+    "en": "take it personally",
+    "ipa": "teɪk ɪt ˈpərsənəli",
+    "ja": "自分への批判や攻撃として受け取る",
+    "explanation": "take something personally は意見や拒否を自分の価値への評価と結び付けてしまうこと。否定形もよく使う\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "断られた経験を落ち着いて話すとき",
+    "caution": "don't take it personally は相手の痛みを軽視する印象もあるので言い方に気を付ける",
+    "examples": [
+      {
+        "en": "I used to take every rejection personally, but now I try to separate someone's decision from my worth, even if the disappointment still takes a little time to fade.",
+        "ja": "以前は断られるたび自分自身を否定されたように感じていました、でも今は相手の判断と自分の価値を分けて考えるようにしていて、失望が消えるまで少し時間がかかるとしてもそうしています",
+        "ipa": "aɪ juzd tɪ teɪk ˈɛvəri rɪˈʤɛkʃən ˈpərsənəli, bət naʊ aɪ traɪ tɪ ˈsɛpərˌeɪt ˈsəmˌwənz dɪˈsɪʒən frəm maɪ wərθ, ˈivɪn ɪf ðə ˌdɪsəˈpɔɪntmənt stɪl teɪks ə ˈlɪtəl taɪm tɪ feɪd.",
+        "chunks": [
+          {
+            "en": "I used to take every rejection personally,",
+            "ja": "以前は断られるたび自分自身を否定されたように感じていました、"
+          },
+          {
+            "en": "but now I try to separate someone's decision from my worth,",
+            "ja": "でも今は相手の判断と自分の価値を分けて考えるようにしていて、"
+          },
+          {
+            "en": "even if the disappointment still takes a little time to fade.",
+            "ja": "失望が消えるまで少し時間がかかるとしてもそうしています"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B04"
+    ]
+  },
+  {
+    "id": "b-130",
+    "kind": "chunk",
+    "category": "deep",
+    "level": "B2",
+    "en": "on the fence",
+    "ipa": "ɔn ðə fɛns",
+    "ja": "まだ決めかねている",
+    "explanation": "be on the fence は二つ以上の選択肢の間で判断がつかない状態。中立の立場を積極的に選ぶのとは少し異なる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "大きな決断について迷いを話すとき",
+    "caution": "仕事で期限がある決定なら、迷いだけでなく決定の予定も伝える",
+    "examples": [
+      {
+        "en": "I'm still on the fence about moving to another country next year, because the professional opportunity is exciting but the personal costs are real, and I want to think carefully before I commit.",
+        "ja": "来年別の国に移るかどうか、まだ決めかねています、仕事の機会には惹かれる一方、生活面の負担も現実にあるので、決める前によく考えたいと思っています",
+        "ipa": "əm stɪl ɔn ðə fɛns əˈbaʊt ˈmuvɪŋ tɪ əˈnəðər ˈkəntri nɛkst jɪr, bɪˈkəz ðə prəˈfɛʃənəl ˌɑpərˈtunəti ɪz ɪkˈsaɪtɪŋ bət ðə ˈpərsɪnəl kɔsts ər ril, ənd aɪ wɔnt tɪ θɪŋk ˈkɛrfəli ˌbiˈfɔr aɪ kəˈmɪt.",
+        "chunks": [
+          {
+            "en": "I'm still on the fence about moving to another country next year,",
+            "ja": "来年別の国に移るかどうか、まだ決めかねています、"
+          },
+          {
+            "en": "because the professional opportunity is exciting but the personal costs are real,",
+            "ja": "仕事の機会には惹かれる一方、生活面の負担も現実にあるので、"
+          },
+          {
+            "en": "and I want to think carefully before I commit.",
+            "ja": "決める前によく考えたいと思っています"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B04"
+    ]
+  },
+  {
+    "id": "b-131",
+    "kind": "vocabulary",
+    "category": "deep",
+    "level": "C1",
+    "en": "vulnerability",
+    "ipa": "ˌvəlnərəˈbɪlɪti",
+    "ja": "弱さや不安を見せること、傷つきやすさ",
+    "explanation": "vulnerability は欠点というより、傷つく可能性を含めて自分を開示することにも使う抽象語\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "心を開くことについて深く話すとき",
+    "caution": "文脈により脆弱性という技術的意味もあるので対象を明確にする",
+    "examples": [
+      {
+        "en": "I used to think vulnerability meant giving someone too much power over me, but now I see that honest conversations often require some risk, especially when trust is still being built.",
+        "ja": "以前は弱さを見せることは相手に力を与えすぎることだと思っていました、でも今は正直な会話にはある程度のリスクが必要だと感じていて、特に信頼関係を築いている途中ならなおさらです",
+        "ipa": "aɪ juzd tɪ θɪŋk ˌvəlnərəˈbɪlɪti mɛnt ˈgɪvɪŋ ˈsəmˌwən tu məʧ paʊər ˈoʊvər mi, bət naʊ aɪ si ðət ˈɑnəst ˌkɑnvərˈseɪʃənz ˈɔfən ˌrikˈwaɪər səm rɪsk, əˈspɛʃəli wɪn trəst ɪz stɪl biɪŋ bɪlt.",
+        "chunks": [
+          {
+            "en": "I used to think vulnerability meant giving someone too much power over me,",
+            "ja": "以前は弱さを見せることは相手に力を与えすぎることだと思っていました、"
+          },
+          {
+            "en": "but now I see that honest conversations often require some risk,",
+            "ja": "でも今は正直な会話にはある程度のリスクが必要だと感じていて、"
+          },
+          {
+            "en": "especially when trust is still being built.",
+            "ja": "特に信頼関係を築いている途中ならなおさらです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B35"
+    ]
+  },
+  {
+    "id": "b-132",
+    "kind": "vocabulary",
+    "category": "deep",
+    "level": "B2",
+    "en": "resentment",
+    "ipa": "rɪˈzɛntmənt",
+    "ja": "不満や怒りが蓄積した気持ち",
+    "explanation": "resentment は一時的な怒りというより、納得できない出来事への気持ちが残り続けることを示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "長く続いた人間関係のわだかまりを話すとき",
+    "caution": "anger より時間をかけて積もった感情を示すことが多い",
+    "examples": [
+      {
+        "en": "I didn't realize how much resentment I had been carrying, until a small disagreement brought back several older memories, and I knew we needed a more honest conversation.",
+        "ja": "自分がどれほどのわだかまりを抱えていたか気づいていませんでした、小さな意見の違いで昔の記憶がいくつもよみがえるまでは、もっと正直に話し合う必要があると分かったのです",
+        "ipa": "aɪ ˈdɪdənt ˈriəˌlaɪz haʊ məʧ rɪˈzɛntmənt aɪ hæd bɪn ˈkɛriɪŋ, ənˈtɪl ə smɔl dɪsəˈgrimənt brɔt bæk ˈsɛvərəl ˈoʊldər ˈmɛməriz, ənd aɪ nu wi ˈnidɪd ə mɔr ˈɑnəst ˌkɑnvərˈseɪʃən.",
+        "chunks": [
+          {
+            "en": "I didn't realize how much resentment I had been carrying,",
+            "ja": "自分がどれほどのわだかまりを抱えていたか気づいていませんでした、"
+          },
+          {
+            "en": "until a small disagreement brought back several older memories,",
+            "ja": "小さな意見の違いで昔の記憶がいくつもよみがえるまでは、"
+          },
+          {
+            "en": "and I knew we needed a more honest conversation.",
+            "ja": "もっと正直に話し合う必要があると分かったのです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B35"
+    ]
+  },
+  {
+    "id": "b-133",
+    "kind": "chunk",
+    "category": "travel",
+    "level": "B2",
+    "en": "at the border",
+    "ipa": "æt ðə ˈbɔrdər",
+    "ja": "国境や入国審査の場所で",
+    "explanation": "at the border は国境での状況を述べる表現。入国審査と税関で聞かれることは異なるため答える内容も分けて考える\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "入国目的や旅程を正確に説明する場面",
+    "caution": "入国審査では滞在目的や期間を、税関では持ち込み品の申告を求められることがある",
+    "examples": [
+      {
+        "en": "At the border, I can explain the purpose of my visit clearly, including where I plan to stay and how long I'll be in the country, and I'll answer any follow-up questions using my actual travel plans.",
+        "ja": "入国審査では訪問目的をはっきり説明できます、宿泊予定の場所や滞在期間も含めて伝えられます、追加の質問には実際の旅程に基づいて答えます",
+        "ipa": "æt ðə ˈbɔrdər, aɪ kən ɪkˈspleɪn ðə ˈpərpəs əv maɪ ˈvɪzɪt ˈklɪrli, ˌɪnˈkludɪŋ wɛr aɪ plæn tɪ steɪ ənd haʊ lɔŋ aɪl bi ɪn ðə ˈkəntri, ənd aɪl ˈænsər ˈɛni ˈfɑloʊˌəp kˈwɛsʧənz ˈjuzɪŋ maɪ ˈækʧəwəl ˈtrævəl plænz.",
+        "chunks": [
+          {
+            "en": "At the border, I can explain the purpose of my visit clearly,",
+            "ja": "入国審査では訪問目的をはっきり説明できます、"
+          },
+          {
+            "en": "including where I plan to stay and how long I'll be in the country,",
+            "ja": "宿泊予定の場所や滞在期間も含めて伝えられます、"
+          },
+          {
+            "en": "and I'll answer any follow-up questions using my actual travel plans.",
+            "ja": "追加の質問には実際の旅程に基づいて答えます"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P01"
+    ]
+  },
+  {
+    "id": "b-134",
+    "kind": "chunk",
+    "category": "travel",
+    "level": "B2",
+    "en": "connecting flight",
+    "ipa": "kəˈnɛktɪŋ flaɪt",
+    "ja": "乗り継ぎ便",
+    "explanation": "a connecting flight は目的地へ向かう途中で乗り換える便。乗り継ぎ便と最終目的地を区別して確認する\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "航空会社や空港で乗り継ぎを確認するとき",
+    "caution": "乗り継ぎがあるだけで通過国に入国できるとは限らないので渡航条件を確認する",
+    "examples": [
+      {
+        "en": "I have a connecting flight this afternoon, and I'd like to confirm whether my checked baggage goes straight through to the final destination, because the booking information isn't completely clear to me.",
+        "ja": "今日の午後には乗り継ぎ便があります、預けた荷物が最終目的地まで直接運ばれるか確認したいです、予約情報だけでははっきり分からないためです",
+        "ipa": "aɪ hæv ə kəˈnɛktɪŋ flaɪt ðɪs ˌæftərˈnun, ənd aɪd laɪk tɪ kənˈfərm ˈwɛðər maɪ ʧɛkt ˈbægɪʤ goʊz streɪt θru tɪ ðə ˈfaɪnəl ˌdɛstɪˈneɪʃən, bɪˈkəz ðə ˈbʊkɪŋ ˌɪnˌfɔrˈmeɪʃən ˈɪzənt kəmˈplitli klɪr tɪ mi.",
+        "chunks": [
+          {
+            "en": "I have a connecting flight this afternoon,",
+            "ja": "今日の午後には乗り継ぎ便があります、"
+          },
+          {
+            "en": "and I'd like to confirm whether my checked baggage goes straight through to the final destination,",
+            "ja": "預けた荷物が最終目的地まで直接運ばれるか確認したいです、"
+          },
+          {
+            "en": "because the booking information isn't completely clear to me.",
+            "ja": "予約情報だけでははっきり分からないためです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P01"
+    ]
+  },
+  {
+    "id": "b-135",
+    "kind": "chunk",
+    "category": "travel",
+    "level": "B2",
+    "en": "make a declaration",
+    "ipa": "meɪk ə ˌdɛklərˈeɪʃən",
+    "ja": "申告をする",
+    "explanation": "make a declaration は税関などで求められる物品や情報を正式に申告すること。単なる質問への返事と区別する\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "食品や物品の税関申告について尋ねるとき",
+    "caution": "何を申告するかは国や品目で異なり、申告不要だと勝手に決めない",
+    "examples": [
+      {
+        "en": "I'd like to make a declaration about some packaged food in my bag, but I'm not sure which category it belongs to on this form, so could you tell me where I should record it?",
+        "ja": "荷物に入っている包装済み食品について申告したいです、ただしこの書類のどの項目に当たるか分からないので、どこに記入すればよいか教えていただけますか",
+        "ipa": "aɪd laɪk tɪ meɪk ə ˌdɛklərˈeɪʃən əˈbaʊt səm ˈpækɪʤd fud ɪn maɪ bæg, bət əm nɑt ʃʊr wɪʧ ˈkætəˌgɔri ɪt bɪˈlɔŋz tɪ ɔn ðɪs fɔrm, soʊ kʊd ju tɛl mi wɛr aɪ ʃʊd ˈrɛkərd ɪt?",
+        "chunks": [
+          {
+            "en": "I'd like to make a declaration about some packaged food in my bag,",
+            "ja": "荷物に入っている包装済み食品について申告したいです、"
+          },
+          {
+            "en": "but I'm not sure which category it belongs to on this form,",
+            "ja": "ただしこの書類のどの項目に当たるか分からないので、"
+          },
+          {
+            "en": "so could you tell me where I should record it?",
+            "ja": "どこに記入すればよいか教えていただけますか"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P01"
+    ]
+  },
+  {
+    "id": "b-136",
+    "kind": "chunk",
+    "category": "travel",
+    "level": "B2",
+    "en": "subject to availability",
+    "ipa": "ˈsəbʤɪkt tɪ əˌveɪləˈbɪlɪti",
+    "ja": "空き状況によっては可能",
+    "explanation": "subject to availability は予約や変更が確約ではなく在庫・空席・空室によるという条件を示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "ホテルの部屋や航空便の変更を相談するとき",
+    "caution": "available だけでは保証にならない。追加料金や条件も確認する",
+    "examples": [
+      {
+        "en": "I understand that an early check-in is subject to availability, but could you let me know whether a room is ready when I arrive, and if there would be any additional charge?",
+        "ja": "早めのチェックインは空室状況次第だと理解しています、ただ到着時に部屋の準備ができているか教えていただけますか、追加料金があるかどうかも確認したいです",
+        "ipa": "aɪ ˌəndərˈstænd ðət ən ˈərli ˈtʃɛk ɪn ɪz ˈsəbʤɪkt tɪ əˌveɪləˈbɪlɪti, bət kʊd ju lɛt mi noʊ ˈwɛðər ə rum ɪz ˈrɛdi wɪn aɪ əraɪv, ənd ɪf ðɛr wʊd bi ˈɛni əˈdɪʃənəl ʧɑrʤ?",
+        "chunks": [
+          {
+            "en": "I understand that an early check-in is subject to availability,",
+            "ja": "早めのチェックインは空室状況次第だと理解しています、"
+          },
+          {
+            "en": "but could you let me know whether a room is ready when I arrive,",
+            "ja": "ただ到着時に部屋の準備ができているか教えていただけますか、"
+          },
+          {
+            "en": "and if there would be any additional charge?",
+            "ja": "追加料金があるかどうかも確認したいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P27"
+    ]
+  },
+  {
+    "id": "b-137",
+    "kind": "chunk",
+    "category": "travel",
+    "level": "B2",
+    "en": "take into account",
+    "ipa": "teɪk ˈɪntu əˈkaʊnt",
+    "ja": "判断するときに考慮に入れる",
+    "explanation": "take something into account は条件や事情を判断に織り込むこと。個人的な希望だけでなく制限にも使える\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "旅行計画を交通や時間に合わせて変えるとき",
+    "caution": "account for は説明する・割合を占める等の別の用法がある",
+    "examples": [
+      {
+        "en": "We need to take the transfer time into account, especially because we'll have to collect our luggage and check in again, rather than assuming the next flight will be easy to catch.",
+        "ja": "乗り継ぎ時間を考慮する必要があります、荷物を受け取り再びチェックインしなければならないため、次の便に簡単に間に合うと決めつけないほうがよいです",
+        "ipa": "wi nid tɪ teɪk ðə ˈtrænsfər taɪm ˈɪntu əˈkaʊnt, əˈspɛʃəli bɪˈkəz wɪl hæv tɪ kəˈlɛkt ɑr ˈləgɪʤ ənd ʧɛk ɪn əˈgɛn, ˈrəðər ðən əˈsumɪŋ ðə nɛkst flaɪt wɪl bi ˈizi tɪ kæʧ.",
+        "chunks": [
+          {
+            "en": "We need to take the transfer time into account,",
+            "ja": "乗り継ぎ時間を考慮する必要があります、"
+          },
+          {
+            "en": "especially because we'll have to collect our luggage and check in again,",
+            "ja": "荷物を受け取り再びチェックインしなければならないため、"
+          },
+          {
+            "en": "rather than assuming the next flight will be easy to catch.",
+            "ja": "次の便に簡単に間に合うと決めつけないほうがよいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P13"
+    ]
+  },
+  {
+    "id": "b-138",
+    "kind": "chunk",
+    "category": "travel",
+    "level": "B2",
+    "en": "carry-on allowance",
+    "ipa": "ˈkæri ɑn əˈlaʊəns",
+    "ja": "機内持ち込みの許容量",
+    "explanation": "carry-on allowance は航空会社が認める機内持ち込みの個数や重さ。預け入れ手荷物の allowance とは別\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "航空会社の荷物制限を確認するとき",
+    "caution": "国際線・航空会社・運賃種別で規定が違うので現行の公式条件を確認する",
+    "examples": [
+      {
+        "en": "Could you confirm the carry-on allowance for this ticket, including whether the small personal bag counts as a separate item, because I want to check the rules before arriving at the gate.",
+        "ja": "この航空券の機内持ち込み許容量を確認していただけますか、小さな身の回り品が別枠かどうかも含めて、ゲートに行く前にルールを確認したいからです",
+        "ipa": "kʊd ju kənˈfərm ðə ˈkæri ɑn əˈlaʊəns fər ðɪs ˈtɪkɪt, ˌɪnˈkludɪŋ ˈwɛðər ðə smɔl ˈpərsɪnəl bæg kaʊnts ɛz ə ˈsɛpərˌeɪt ˈaɪtəm, bɪˈkəz aɪ wɔnt tɪ ʧɛk ðə rulz ˌbiˈfɔr ərˈaɪvɪŋ æt ðə geɪt.",
+        "chunks": [
+          {
+            "en": "Could you confirm the carry-on allowance for this ticket,",
+            "ja": "この航空券の機内持ち込み許容量を確認していただけますか、"
+          },
+          {
+            "en": "including whether the small personal bag counts as a separate item,",
+            "ja": "小さな身の回り品が別枠かどうかも含めて、"
+          },
+          {
+            "en": "because I want to check the rules before arriving at the gate.",
+            "ja": "ゲートに行く前にルールを確認したいからです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P01"
+    ]
+  },
+  {
+    "id": "b-139",
+    "kind": "vocabulary",
+    "category": "travel",
+    "level": "B2",
+    "en": "during the layover",
+    "ipa": "ˈdʊrɪŋ ðə ˈleɪˌoʊvər",
+    "ja": "乗り継ぎ時の待ち時間",
+    "explanation": "layover は旅程の途中で次の便を待つ時間。乗り継ぎで入国が必要かどうかは別問題\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "長時間の乗り継ぎについて話すとき",
+    "caution": "stopover との区別は航空券規則によって変わる場合がある",
+    "examples": [
+      {
+        "en": "We have a long layover between the two flights, so I'd like to check whether we can stay in the transit area, and whether any additional documents are required for the connection.",
+        "ja": "二つの便の間に長い乗り継ぎ待ちがあります、そのため乗り継ぎエリアにいられるかを確認したいです、接続便に追加の書類が必要かも知りたいです",
+        "ipa": "wi hæv ə lɔŋ ˈleɪˌoʊvər bɪtˈwin ðə tu flaɪts, soʊ aɪd laɪk tɪ ʧɛk ˈwɛðər wi kən steɪ ɪn ðə ˈtrænzɪt ˈɛriə, ənd ˈwɛðər ˈɛni əˈdɪʃənəl ˈdɑkjəmənts ər rikˈwaɪərd fər ðə kəˈnɛkʃən.",
+        "chunks": [
+          {
+            "en": "We have a long layover between the two flights,",
+            "ja": "二つの便の間に長い乗り継ぎ待ちがあります、"
+          },
+          {
+            "en": "so I'd like to check whether we can stay in the transit area,",
+            "ja": "そのため乗り継ぎエリアにいられるかを確認したいです、"
+          },
+          {
+            "en": "and whether any additional documents are required for the connection.",
+            "ja": "接続便に追加の書類が必要かも知りたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P01"
+    ]
+  },
+  {
+    "id": "b-140",
+    "kind": "vocabulary",
+    "category": "travel",
+    "level": "C1",
+    "en": "travel itinerary",
+    "ipa": "ˈtrævəl aɪˈtɪnərˌɛri",
+    "ja": "旅行の日程や移動計画",
+    "explanation": "itinerary は訪問先や移動日時を含む旅程。航空券そのものを意味するわけではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "入国審査で旅行計画を説明するとき",
+    "caution": "予約済みと予定段階を混同せずに説明する",
+    "examples": [
+      {
+        "en": "I can show you my travel itinerary if that would help, including the hotels I've booked and the date I expect to leave, although one domestic train journey is still being arranged.",
+        "ja": "必要であれば旅行日程をお見せできます、予約したホテルと出国予定日を含むものです、ただし国内の鉄道移動一件はまだ手配中です",
+        "ipa": "aɪ kən ʃoʊ ju maɪ ˈtrævəl aɪˈtɪnərˌɛri ɪf ðət wʊd hɛlp, ˌɪnˈkludɪŋ ðə hoʊˈtɛlz aɪv bʊkt ənd ðə deɪt aɪ ɪkˈspɛkt tɪ liv, ˌɔlˈðoʊ wən dəˈmɛstɪk treɪn ˈʤərni ɪz stɪl biɪŋ əreɪnʤd.",
+        "chunks": [
+          {
+            "en": "I can show you my travel itinerary if that would help,",
+            "ja": "必要であれば旅行日程をお見せできます、"
+          },
+          {
+            "en": "including the hotels I've booked and the date I expect to leave,",
+            "ja": "予約したホテルと出国予定日を含むものです、"
+          },
+          {
+            "en": "although one domestic train journey is still being arranged.",
+            "ja": "ただし国内の鉄道移動一件はまだ手配中です"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P01"
+    ]
+  },
+  {
+    "id": "b-141",
+    "kind": "chunk",
+    "category": "social",
+    "level": "B2",
+    "en": "that reminds me",
+    "ipa": "ðət riˈmaɪndz mi",
+    "ja": "それで思い出したんだけど",
+    "explanation": "that reminds me は相手の話を受けて関連する話題へ移る橋渡し。関係のない話へ飛ばないようつながりを示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "雑談で自然に自分の経験を話すとき",
+    "caution": "相手の話を遮って話題を奪うのではなく、区切りで入れる",
+    "examples": [
+      {
+        "en": "That reminds me of a conversation I had with a friend last week, when we realized we'd both changed our minds about working overseas, even though we had started from completely different experiences.",
+        "ja": "それで先週友人とした会話を思い出しました、海外で働くことについて二人とも考えが変わったと気づいたときの話で、出発点の経験はまったく違っていたんです",
+        "ipa": "ðət riˈmaɪndz mi əv ə ˌkɑnvərˈseɪʃən aɪ hæd wɪθ ə frɛnd læst wik, wɪn wi ˈriəˌlaɪzd wid boʊθ ʧeɪnʤd ɑr maɪndz əˈbaʊt ˈwərkɪŋ ˈoʊvərˈsiz, ˈivɪn ðoʊ wi hæd ˈstɑrtɪd frəm kəmˈplitli ˈdɪfərənt ɪkˈspɪriənsɪz.",
+        "chunks": [
+          {
+            "en": "That reminds me of a conversation I had with a friend last week,",
+            "ja": "それで先週友人とした会話を思い出しました、"
+          },
+          {
+            "en": "when we realized we'd both changed our minds about working overseas,",
+            "ja": "海外で働くことについて二人とも考えが変わったと気づいたときの話で、"
+          },
+          {
+            "en": "even though we had started from completely different experiences.",
+            "ja": "出発点の経験はまったく違っていたんです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P17"
+    ]
+  },
+  {
+    "id": "b-142",
+    "kind": "chunk",
+    "category": "social",
+    "level": "B2",
+    "en": "how did that come about",
+    "ipa": "haʊ dɪd ðət kəm əˈbaʊt",
+    "ja": "どういう経緯でそうなったの？",
+    "explanation": "How did that come about? は結果だけでなく、そこに至った流れやきっかけを自然に尋ねる表現\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "相手の転職や引っ越しの話を深掘りするとき",
+    "caution": "驚きを責める口調ではなく好奇心として柔らかく聞く",
+    "examples": [
+      {
+        "en": "You mentioned that you ended up living in three different countries, and I'm genuinely curious how that came about, because it sounds like a very different journey from the one I know.",
+        "ja": "三つの国で暮らすことになったと話していましたよね、どういう経緯だったのか本当に気になります、私の知っている経験とはかなり違う道のりに聞こえるので",
+        "ipa": "ju ˈmɛnʃənd ðət ju ˈɛndɪd əp ˈlɪvɪŋ ɪn θri ˈdɪfərənt ˈkəntriz, ənd əm ˈʤɛnjuˌaɪnli ˈkjʊriəs haʊ ðət keɪm əˈbaʊt, bɪˈkəz ɪt saʊnz laɪk ə ˈvɛri ˈdɪfərənt ˈʤərni frəm ðə wən aɪ noʊ.",
+        "chunks": [
+          {
+            "en": "You mentioned that you ended up living in three different countries,",
+            "ja": "三つの国で暮らすことになったと話していましたよね、"
+          },
+          {
+            "en": "and I'm genuinely curious how that came about,",
+            "ja": "どういう経緯だったのか本当に気になります、"
+          },
+          {
+            "en": "because it sounds like a very different journey from the one I know.",
+            "ja": "私の知っている経験とはかなり違う道のりに聞こえるので"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P17"
+    ]
+  },
+  {
+    "id": "b-143",
+    "kind": "chunk",
+    "category": "social",
+    "level": "B2",
+    "en": "pick up where we left off",
+    "ipa": "pɪk əp wɛr wi lɛft ɔf",
+    "ja": "前に話した続きから再開する",
+    "explanation": "pick up where we left off は中断した会話や作業を再開する定番。久しぶりのやりとりでも自然\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "前回の話の続きを気軽に再開するとき",
+    "caution": "前回の内容を相手が覚えている前提で押し付けず、少し思い出せる文脈を添える",
+    "examples": [
+      {
+        "en": "I'd love to pick up where we left off the other day, especially the part about the places you still want to visit, if you have time for another conversation this weekend.",
+        "ja": "この前の話の続きをまたできたら嬉しいです、特にこれから訪れたい場所についての話を、今週末また話す時間があればぜひ聞きたいです",
+        "ipa": "aɪd ləv tɪ pɪk əp wɛr wi lɛft ɔf ðə ˈəðər deɪ, əˈspɛʃəli ðə pɑrt əˈbaʊt ðə ˈpleɪsɪz ju stɪl wɔnt tɪ ˈvɪzɪt, ɪf ju hæv taɪm fər əˈnəðər ˌkɑnvərˈseɪʃən ðɪs ˈwiˌkɪnd.",
+        "chunks": [
+          {
+            "en": "I'd love to pick up where we left off the other day,",
+            "ja": "この前の話の続きをまたできたら嬉しいです、"
+          },
+          {
+            "en": "especially the part about the places you still want to visit,",
+            "ja": "特にこれから訪れたい場所についての話を、"
+          },
+          {
+            "en": "if you have time for another conversation this weekend.",
+            "ja": "今週末また話す時間があればぜひ聞きたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P17"
+    ]
+  },
+  {
+    "id": "b-144",
+    "kind": "chunk",
+    "category": "social",
+    "level": "B2",
+    "en": "good to hear",
+    "ipa": "gʊd tɪ hir",
+    "ja": "それはよかったね、聞けて嬉しい",
+    "explanation": "That's good to hear は相手の近況を聞いたときの自然な反応。過度な感動を演出せず喜びを共有できる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "相手の良いニュースに短く返すとき",
+    "caution": "具体的に何が良かったかも添えると定型句で終わらない",
+    "examples": [
+      {
+        "en": "That's really good to hear, especially after you said you were worried about the interview last week, and I'm glad you finally have an answer you can plan around.",
+        "ja": "それは本当によかったです、先週面接を心配していると話していたのでなおさらです、これで予定を立てられる答えが出てよかったですね",
+        "ipa": "ðæts ˈrɪli gʊd tɪ hir, əˈspɛʃəli ˈæftər ju sɛd ju wər ˈwərid əˈbaʊt ðə ˈɪntərvˌju læst wik, ənd əm glæd ju ˈfaɪnəli hæv ən ˈænsər ju kən plæn əraʊnd.",
+        "chunks": [
+          {
+            "en": "That's really good to hear,",
+            "ja": "それは本当によかったです、"
+          },
+          {
+            "en": "especially after you said you were worried about the interview last week,",
+            "ja": "先週面接を心配していると話していたのでなおさらです、"
+          },
+          {
+            "en": "and I'm glad you finally have an answer you can plan around.",
+            "ja": "これで予定を立てられる答えが出てよかったですね"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P17"
+    ]
+  },
+  {
+    "id": "b-145",
+    "kind": "chunk",
+    "category": "social",
+    "level": "B2",
+    "en": "no pressure at all",
+    "ipa": "noʊ ˈprɛʃər æt ɔl",
+    "ja": "全然無理しなくていいよ",
+    "explanation": "no pressure は相手に返事や行動を強いないと伝える言い方。言葉だけでなく実際に断れる余地も必要\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "会う約束や予定を提案するとき",
+    "caution": "繰り返し誘いながら no pressure と言っても相手の負担は減らない",
+    "examples": [
+      {
+        "en": "If you'd like to join us for coffee on Sunday, you're more than welcome, but there's no pressure at all, and we can always catch up another time if you're busy.",
+        "ja": "日曜日に一緒にコーヒーを飲みたければ、もちろん歓迎です、でも全然無理しなくて大丈夫で、忙しければまた別の機会に近況を話しましょう",
+        "ipa": "ɪf jʊd laɪk tɪ ʤɔɪn ˈjuˈɛs fər ˈkɔfi ɔn ˈsənˌdi, jʊr mɔr ðən ˈwɛlkəm, bət ðɛrz noʊ ˈprɛʃər æt ɔl, ənd wi kən ˈɔlˌweɪz kæʧ əp əˈnəðər taɪm ɪf jʊr ˈbɪzi.",
+        "chunks": [
+          {
+            "en": "If you'd like to join us for coffee on Sunday,",
+            "ja": "日曜日に一緒にコーヒーを飲みたければ、"
+          },
+          {
+            "en": "you're more than welcome, but there's no pressure at all,",
+            "ja": "もちろん歓迎です、でも全然無理しなくて大丈夫で、"
+          },
+          {
+            "en": "and we can always catch up another time if you're busy.",
+            "ja": "忙しければまた別の機会に近況を話しましょう"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P18"
+    ]
+  },
+  {
+    "id": "b-146",
+    "kind": "chunk",
+    "category": "social",
+    "level": "B2",
+    "en": "I see where you're coming from",
+    "ipa": "aɪ si wɛr jʊr ˈkəmɪŋ frəm",
+    "ja": "言いたいことやそう感じる理由は分かるよ",
+    "explanation": "I see where you're coming from は相手の背景や考えを理解できるという反応。同意とは限らない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "意見が異なる相手にも尊重して返すとき",
+    "caution": "but を続ける場合はすぐ否定しないで理解した具体的な点を先に示す",
+    "examples": [
+      {
+        "en": "I see where you're coming from about taking a safer route, especially when there are people depending on the decision, although I'm still interested in what we might gain by trying something new.",
+        "ja": "より安全な道を選びたいという考えは分かります、その決断に頼る人がいるならなおさらです、それでも新しいことを試す可能性にも興味があります",
+        "ipa": "aɪ si wɛr jʊr ˈkəmɪŋ frəm əˈbaʊt ˈteɪkɪŋ ə ˈseɪfər rut, əˈspɛʃəli wɪn ðɛr ər ˈpipəl dɪˈpɛndɪŋ ɔn ðə dɪˈsɪʒən, ˌɔlˈðoʊ əm stɪl ˈɪntəˌrɛstɪd ɪn wət wi maɪt geɪn baɪ traɪɪŋ ˈsəmθɪŋ nu.",
+        "chunks": [
+          {
+            "en": "I see where you're coming from about taking a safer route,",
+            "ja": "より安全な道を選びたいという考えは分かります、"
+          },
+          {
+            "en": "especially when there are people depending on the decision,",
+            "ja": "その決断に頼る人がいるならなおさらです、"
+          },
+          {
+            "en": "although I'm still interested in what we might gain by trying something new.",
+            "ja": "それでも新しいことを試す可能性にも興味があります"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "B04"
+    ]
+  },
+  {
+    "id": "b-147",
+    "kind": "vocabulary",
+    "category": "social",
+    "level": "B2",
+    "en": "be spontaneous",
+    "ipa": "bi spɑnˈteɪniəs",
+    "ja": "思いつきで自然に行動する、計画にとらわれない",
+    "explanation": "spontaneous はその場の気持ちで自然に動くこと。無責任に適当に行動するという意味だけではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "予定外の外出や会話が楽しかった理由を話すとき",
+    "caution": "仕事の正式な意思決定に使うなら計画性との違いを意識する",
+    "examples": [
+      {
+        "en": "I like spontaneous plans when there's no deadline or obligation involved, because some of my favorite conversations happened on evenings I hadn't planned, but I still prefer clear arrangements for work.",
+        "ja": "締め切りや義務がないときの思いつきの計画は好きです、予定していなかった夜に最高の会話が生まれたこともあるので、ただし仕事では予定を明確にするほうが好きです",
+        "ipa": "aɪ laɪk spɑnˈteɪniəs plænz wɪn ðɛrz noʊ ˈdɛˌdlaɪn ər ˌɑbləˈgeɪʃən ˌɪnˈvɑlvd, bɪˈkəz səm əv maɪ ˈfeɪvərɪt ˌkɑnvərˈseɪʃənz ˈhæpənd ɔn ˈivnɪŋz aɪ ˈhædənt plænd, bət aɪ stɪl prɪˈfər klɪr ərˈeɪnʤmənts fər wərk.",
+        "chunks": [
+          {
+            "en": "I like spontaneous plans when there's no deadline or obligation involved,",
+            "ja": "締め切りや義務がないときの思いつきの計画は好きです、"
+          },
+          {
+            "en": "because some of my favorite conversations happened on evenings I hadn't planned,",
+            "ja": "予定していなかった夜に最高の会話が生まれたこともあるので、"
+          },
+          {
+            "en": "but I still prefer clear arrangements for work.",
+            "ja": "ただし仕事では予定を明確にするほうが好きです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P17"
+    ]
+  },
+  {
+    "id": "b-148",
+    "kind": "vocabulary",
+    "category": "social",
+    "level": "B2",
+    "en": "low-key",
+    "ipa": "ˌloʊ ˈki",
+    "ja": "控えめな、気負わない、あまり大げさでない",
+    "explanation": "low-key はカジュアルな会話で控えめ・落ち着いた雰囲気を示す。副詞的に感情を軽く打ち明ける用法もある\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "週末の予定や会う場所の雰囲気を伝えるとき",
+    "caution": "正式なビジネス文書では informal に響くことがある",
+    "examples": [
+      {
+        "en": "I'm in the mood for something low-key this weekend, maybe a quiet cafe where we can actually hear each other speak, rather than another crowded event with loud music.",
+        "ja": "今週末は落ち着いたことをしたい気分です、たとえば互いの声がちゃんと聞こえる静かなカフェとか、音楽が大きい混雑したイベントよりそういう場所がいいです",
+        "ipa": "əm ɪn ðə mud fər ˈsəmθɪŋ ˌloʊ ˈki ðɪs ˈwiˌkɪnd, ˈmeɪbi ə kwaɪət kəˈfeɪ wɛr wi kən ˈæˌkʧuəli hir iʧ ˈəðər spik, ˈrəðər ðən əˈnəðər ˈkraʊdɪd ɪˈvɛnt wɪθ laʊd mˈjuzɪk.",
+        "chunks": [
+          {
+            "en": "I'm in the mood for something low-key this weekend,",
+            "ja": "今週末は落ち着いたことをしたい気分です、"
+          },
+          {
+            "en": "maybe a quiet cafe where we can actually hear each other speak,",
+            "ja": "たとえば互いの声がちゃんと聞こえる静かなカフェとか、"
+          },
+          {
+            "en": "rather than another crowded event with loud music.",
+            "ja": "音楽が大きい混雑したイベントよりそういう場所がいいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P17"
+    ]
+  },
+  {
+    "id": "b-149",
+    "kind": "chunk",
+    "category": "flirting",
+    "level": "B2",
+    "en": "would you be up for",
+    "ipa": "wʊd ju bi əp fər",
+    "ja": "〜してみない？、その気はある？",
+    "explanation": "be up for something は予定や活動に前向きかをカジュアルに尋ねる。相手が断りやすい開かれた誘いに向く\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "気軽にコーヒーや散歩に誘うとき",
+    "caution": "初対面で急に親密な提案をせず、相手の反応や予定を尊重する",
+    "examples": [
+      {
+        "en": "Would you be up for getting coffee sometime next week, if you're free and feel like talking a little more, and no worries at all if your schedule is already full.",
+        "ja": "来週どこかでコーヒーでもどうですか、時間があってもう少し話したい気分なら、もう予定がいっぱいなら全然気にしないでください",
+        "ipa": "wʊd ju bi əp fər ˈgɪtɪŋ ˈkɔfi ˈsəmˌtaɪm nɛkst wik, ɪf jʊr fri ənd fil laɪk ˈtɔkɪŋ ə ˈlɪtəl mɔr, ənd noʊ ˈwəriz æt ɔl ɪf jʊr ˈskɛʤʊl ɪz ɔˈrɛdi fʊl.",
+        "chunks": [
+          {
+            "en": "Would you be up for getting coffee sometime next week,",
+            "ja": "来週どこかでコーヒーでもどうですか、"
+          },
+          {
+            "en": "if you're free and feel like talking a little more,",
+            "ja": "時間があってもう少し話したい気分なら、"
+          },
+          {
+            "en": "and no worries at all if your schedule is already full.",
+            "ja": "もう予定がいっぱいなら全然気にしないでください"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P05"
+    ]
+  },
+  {
+    "id": "b-150",
+    "kind": "chunk",
+    "category": "flirting",
+    "level": "B2",
+    "en": "I enjoy your company",
+    "ipa": "aɪ ˌɛnˈʤɔɪ jʊr ˈkəmpəˌni",
+    "ja": "一緒にいる時間が楽しい",
+    "explanation": "enjoy someone's company は相手と過ごす時間を心地よく感じる表現。外見を過度に褒めず好意を伝えられる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "少し親しくなった相手に軽く好意を伝えるとき",
+    "caution": "友好的な意味にも使えるので、これだけで恋愛関係の約束にはならない",
+    "examples": [
+      {
+        "en": "I really enjoy your company, because I never feel like I have to force the conversation, and I'd be happy to see you again when it works for you.",
+        "ja": "あなたと一緒に過ごす時間が本当に楽しいです、会話を無理に続けようとしなくても自然に話せるので、都合が合うときにまた会えたら嬉しいです",
+        "ipa": "aɪ ˈrɪli ˌɛnˈʤɔɪ jʊr ˈkəmpəˌni, bɪˈkəz aɪ ˈnɛvər fil laɪk aɪ hæv tɪ fɔrs ðə ˌkɑnvərˈseɪʃən, ənd aɪd bi ˈhæpi tɪ si ju əˈgɛn wɪn ɪt wərks fər ju.",
+        "chunks": [
+          {
+            "en": "I really enjoy your company,",
+            "ja": "あなたと一緒に過ごす時間が本当に楽しいです、"
+          },
+          {
+            "en": "because I never feel like I have to force the conversation,",
+            "ja": "会話を無理に続けようとしなくても自然に話せるので、"
+          },
+          {
+            "en": "and I'd be happy to see you again when it works for you.",
+            "ja": "都合が合うときにまた会えたら嬉しいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P19"
+    ]
+  },
+  {
+    "id": "b-151",
+    "kind": "chunk",
+    "category": "flirting",
+    "level": "B2",
+    "en": "we should do this again",
+    "ipa": "wi ʃʊd du ðɪs əˈgɛn",
+    "ja": "またこうして会おうよ",
+    "explanation": "we should do this again は楽しかった時間を自然に締めくくる言い方。必ずしも具体的な約束の成立ではない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "デートや楽しい会話の帰り際に伝えるとき",
+    "caution": "具体的な日程を決めていない場合は社交辞令にもなり得る",
+    "examples": [
+      {
+        "en": "I had a really nice time talking with you today, and I think we should do this again sometime, if you'd be interested in another quiet afternoon together.",
+        "ja": "今日は話せて本当に楽しかったです、またこうして会えたらいいなと思います、また一緒にゆっくりした午後を過ごす気持ちがあるなら",
+        "ipa": "aɪ hæd ə ˈrɪli nis taɪm ˈtɔkɪŋ wɪθ ju təˈdeɪ, ənd aɪ θɪŋk wi ʃʊd du ðɪs əˈgɛn ˈsəmˌtaɪm, ɪf jʊd bi ˈɪntəˌrɛstɪd ɪn əˈnəðər kwaɪət ˌæftərˈnun təˈgɛðər.",
+        "chunks": [
+          {
+            "en": "I had a really nice time talking with you today,",
+            "ja": "今日は話せて本当に楽しかったです、"
+          },
+          {
+            "en": "and I think we should do this again sometime,",
+            "ja": "またこうして会えたらいいなと思います、"
+          },
+          {
+            "en": "if you'd be interested in another quiet afternoon together.",
+            "ja": "また一緒にゆっくりした午後を過ごす気持ちがあるなら"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P18"
+    ]
+  },
+  {
+    "id": "b-152",
+    "kind": "chunk",
+    "category": "flirting",
+    "level": "B2",
+    "en": "keep it casual",
+    "ipa": "kip ɪt ˈkæʒəwəl",
+    "ja": "気負わず気軽な雰囲気にする",
+    "explanation": "keep something casual は会うことや関係に大げさな意味を持たせず気楽に進める言い方。恋愛の文脈では意図の確認が大切\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "まだ関係を決めず軽い外出を提案するとき",
+    "caution": "相手が真剣な関係を望む可能性もあるため、期待が異なれば率直に話す",
+    "examples": [
+      {
+        "en": "We could keep it casual and just grab a drink after work, without making it into some elaborate plan, and see whether we both feel like meeting again afterward.",
+        "ja": "仕事のあとに気軽に一杯飲むだけでもいいですね、大がかりな計画にしないで、そのあとまた会いたいかはお互いの気持ちで決めましょう",
+        "ipa": "wi kʊd kip ɪt ˈkæʒəwəl ənd ʤɪst græb ə drɪŋk ˈæftər wərk, wɪˈθaʊt ˈmeɪkɪŋ ɪt ˈɪntu səm ɪˈlæbərˌeɪt plæn, ənd si ˈwɛðər wi boʊθ fil laɪk ˈmitɪŋ əˈgɛn ˈæftərwərd.",
+        "chunks": [
+          {
+            "en": "We could keep it casual and just grab a drink after work,",
+            "ja": "仕事のあとに気軽に一杯飲むだけでもいいですね、"
+          },
+          {
+            "en": "without making it into some elaborate plan,",
+            "ja": "大がかりな計画にしないで、"
+          },
+          {
+            "en": "and see whether we both feel like meeting again afterward.",
+            "ja": "そのあとまた会いたいかはお互いの気持ちで決めましょう"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P18"
+    ]
+  },
+  {
+    "id": "b-153",
+    "kind": "chunk",
+    "category": "flirting",
+    "level": "B2",
+    "en": "you caught me off guard",
+    "ipa": "ju kɔt mi ɔf gɑrd",
+    "ja": "不意を突かれてびっくりした",
+    "explanation": "catch someone off guard は予期していなかった言葉や出来事で驚くこと。好意的にも否定的にも使われる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "思いがけない褒め言葉に軽く照れて返すとき",
+    "caution": "相手が不快だという意味にもなり得るので表情や後続の文を意識する",
+    "examples": [
+      {
+        "en": "You caught me off guard with that compliment, but in a good way because I wasn't expecting you to notice that, and I honestly don't know what to say right now.",
+        "ja": "そんな褒め言葉を言われると思わなくて驚きました、でもその点に気づいてくれると思わなかったので嬉しい驚きで、正直いま何と言えばいいか分かりません",
+        "ipa": "ju kɔt mi ɔf gɑrd wɪθ ðət ˈkɑmpləmɛnt, bət ɪn ə gʊd weɪ bɪˈkəz aɪ ˈwəzənt ɪkˈspɛktɪŋ ju tɪ ˈnoʊtɪs ðət, ənd aɪ ˈɑnəstli doʊnt noʊ wət tɪ seɪ raɪt naʊ.",
+        "chunks": [
+          {
+            "en": "You caught me off guard with that compliment,",
+            "ja": "そんな褒め言葉を言われると思わなくて驚きました、"
+          },
+          {
+            "en": "but in a good way because I wasn't expecting you to notice that,",
+            "ja": "でもその点に気づいてくれると思わなかったので嬉しい驚きで、"
+          },
+          {
+            "en": "and I honestly don't know what to say right now.",
+            "ja": "正直いま何と言えばいいか分かりません"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P19"
+    ]
+  },
+  {
+    "id": "b-154",
+    "kind": "chunk",
+    "category": "flirting",
+    "level": "B2",
+    "en": "I'd rather ask than assume",
+    "ipa": "aɪd ˈrəðər æsk ðən əˈsum",
+    "ja": "勝手に決めつけたくない",
+    "explanation": "I don't want to assume は自分の推測と相手の意思を分け、直接確かめようとするときの柔らかな前置き\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "誘いがデートか友人としての外出か確かめたいとき",
+    "caution": "相手に答えを迫らず、違う意図だった場合も受け入れる",
+    "examples": [
+      {
+        "en": "I don't want to assume we're thinking about this the same way, so I wanted to ask whether you see tomorrow as a date or just a friendly coffee, and either answer is completely okay with me.",
+        "ja": "このことを同じように考えていると勝手に決めつけたくありません、だから明日はデートなのか友人としてのコーヒーなのか聞いてみたくて、どちらの答えでも本当に大丈夫です",
+        "ipa": "aɪ doʊnt wɔnt tɪ əˈsum wɪr ˈθɪŋkɪŋ əˈbaʊt ðɪs ðə seɪm weɪ, soʊ aɪ ˈwɔntɪd tɪ æsk ˈwɛðər ju si təˈmɑˌroʊ ɛz ə deɪt ər ʤɪst ə ˈfrɛndli ˈkɔfi, ənd ˈiðər ˈænsər ɪz kəmˈplitli ˌoʊˈkeɪ wɪθ mi.",
+        "chunks": [
+          {
+            "en": "I don't want to assume we're thinking about this the same way,",
+            "ja": "このことを同じように考えていると勝手に決めつけたくありません、"
+          },
+          {
+            "en": "so I wanted to ask whether you see tomorrow as a date or just a friendly coffee,",
+            "ja": "だから明日はデートなのか友人としてのコーヒーなのか聞いてみたくて、"
+          },
+          {
+            "en": "and either answer is completely okay with me.",
+            "ja": "どちらの答えでも本当に大丈夫です"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P16"
+    ]
+  },
+  {
+    "id": "b-155",
+    "kind": "vocabulary",
+    "category": "flirting",
+    "level": "C1",
+    "en": "feel some chemistry",
+    "ipa": "fil səm ˈkɛmɪstri",
+    "ja": "人との相性、自然に惹かれ合う感覚",
+    "explanation": "chemistry は理科の化学だけでなく、二人の間で自然な親しさや惹かれ合う感覚も示す\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "会話が自然に弾む感覚を話すとき",
+    "caution": "自分が chemistry を感じても相手が同じ気持ちとは限らない",
+    "examples": [
+      {
+        "en": "I felt some chemistry when we were talking the other evening, but I'd rather get to know you gradually than jump to conclusions, because one great conversation doesn't tell us everything.",
+        "ja": "先日の夜に話していたとき、少し特別な相性の良さを感じました、でもすぐ結論を出すより少しずつ知っていきたくて、素敵な会話一回だけですべてが分かるわけではないからです",
+        "ipa": "aɪ fɛlt səm ˈkɛmɪstri wɪn wi wər ˈtɔkɪŋ ðə ˈəðər ˈivnɪŋ, bət aɪd ˈrəðər gɪt tɪ noʊ ju ˈgræʤuəli ðən ʤəmp tɪ kənˈkluʒənz, bɪˈkəz wən greɪt ˌkɑnvərˈseɪʃən ˈdəzənt tɛl ˈjuˈɛs ˈɛvriˌθɪŋ.",
+        "chunks": [
+          {
+            "en": "I felt some chemistry when we were talking the other evening,",
+            "ja": "先日の夜に話していたとき、少し特別な相性の良さを感じました、"
+          },
+          {
+            "en": "but I'd rather get to know you gradually than jump to conclusions,",
+            "ja": "でもすぐ結論を出すより少しずつ知っていきたくて、"
+          },
+          {
+            "en": "because one great conversation doesn't tell us everything.",
+            "ja": "素敵な会話一回だけですべてが分かるわけではないからです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P19"
+    ]
+  },
+  {
+    "id": "b-156",
+    "kind": "vocabulary",
+    "category": "flirting",
+    "level": "B2",
+    "en": "mutual interest",
+    "ipa": "mˈjuʧuəl ˈɪntəˌrɛst",
+    "ja": "お互いに共有されている、双方の",
+    "explanation": "mutual interest や mutual respect のように、気持ちや利益が双方にあることを示す。片思いと区別できる\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "casual",
+    "useWhen": "相手にも同じ意思があるか丁寧に確かめるとき",
+    "caution": "mutual は双方で共有しているという意味なので、確認前に決めつけない",
+    "examples": [
+      {
+        "en": "I think any plan to spend more time together should feel mutual, rather than one person trying to persuade the other, so it's completely fine to say no if you're unsure.",
+        "ja": "もっと一緒に過ごす予定はお互いの希望であるべきだと思います、片方がもう片方を説得し続ける形ではなく、迷いがあれば断ってもまったく構いません",
+        "ipa": "aɪ θɪŋk ˈɛni plæn tɪ spɛnd mɔr taɪm təˈgɛðər ʃʊd fil mˈjuʧuəl, ˈrəðər ðən wən ˈpərsən traɪɪŋ tɪ pərsˈweɪd ðə ˈəðər, soʊ ɪts kəmˈplitli faɪn tɪ seɪ noʊ ɪf jʊr ənˈʃʊr.",
+        "chunks": [
+          {
+            "en": "I think any plan to spend more time together should feel mutual,",
+            "ja": "もっと一緒に過ごす予定はお互いの希望であるべきだと思います、"
+          },
+          {
+            "en": "rather than one person trying to persuade the other,",
+            "ja": "片方がもう片方を説得し続ける形ではなく、"
+          },
+          {
+            "en": "so it's completely fine to say no if you're unsure.",
+            "ja": "迷いがあれば断ってもまったく構いません"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P47"
+    ]
+  },
+  {
+    "id": "b-157",
+    "kind": "chunk",
+    "category": "repair",
+    "level": "B2",
+    "en": "let me put it differently",
+    "ipa": "lɛt mi pʊt ɪt ˈdɪfərˈɛntli",
+    "ja": "別の言い方で説明させて",
+    "explanation": "Let me rephrase that は自分の言い方が伝わっていないかもしれないときに、別表現で説明し直す前置き\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "仕事の会議で説明が伝わらなかったとき",
+    "caution": "言い換えた後に同じ難しい単語を繰り返さず、短く具体化する",
+    "examples": [
+      {
+        "en": "Let me rephrase that in a simpler way, we're not promising a specific outcome for every introduction, but we are promising a clear process and honest updates.",
+        "ja": "もっと簡単に言い換えさせてください、私たちはすべての紹介で特定の結果を保証しているわけではなく、明確な進め方と正直な進捗報告をお約束しています",
+        "ipa": "lɛt mi riˈfreɪz ðət ɪn ə ˈsɪmpələr weɪ, wɪr nɑt ˈprɑməsɪŋ ə spɪˈsɪfɪk ˈaʊtˌkəm fər ˈɛvəri ˌɪntrəˈdəkʃən, bət wi ər ˈprɑməsɪŋ ə klɪr ˈprɔˌsɛs ənd ˈɑnəst ˈəpˌdeɪts.",
+        "chunks": [
+          {
+            "en": "Let me rephrase that in a simpler way,",
+            "ja": "もっと簡単に言い換えさせてください、"
+          },
+          {
+            "en": "we're not promising a specific outcome for every introduction,",
+            "ja": "私たちはすべての紹介で特定の結果を保証しているわけではなく、"
+          },
+          {
+            "en": "but we are promising a clear process and honest updates.",
+            "ja": "明確な進め方と正直な進捗報告をお約束しています"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  },
+  {
+    "id": "b-158",
+    "kind": "chunk",
+    "category": "repair",
+    "level": "B2",
+    "en": "to put it another way",
+    "ipa": "tɪ pʊt ɪt əˈnəðər weɪ",
+    "ja": "言い換えると",
+    "explanation": "to put it another way は相手が理解しやすい角度へ説明を変える接続句。前後で意味を勝手に変えない\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "説明を具体的な例に置き換えるとき",
+    "caution": "別の結論へすり替えるのではなく、同じ内容をより平易に表す",
+    "examples": [
+      {
+        "en": "To put it another way, we're looking for a genuine fit, rather than sending the same message to as many people as possible, because the quality of the conversation matters more to us.",
+        "ja": "言い換えると本当に相性のよい相手を探しているんです、できるだけ多くの人に同じメッセージを送るのではなく、会話の質の方が私たちには重要だからです",
+        "ipa": "tɪ pʊt ɪt əˈnəðər weɪ, wɪr ˈlʊkɪŋ fər ə ˈʤɛnjuˌaɪn fɪt, ˈrəðər ðən ˈsɛndɪŋ ðə seɪm ˈmɛsɪʤ tɪ ɛz ˈmɛni ˈpipəl ɛz ˈpɑsəbəl, bɪˈkəz ðə kˈwɑləti əv ðə ˌkɑnvərˈseɪʃən ˈmætərz mɔr tɪ ˈjuˈɛs.",
+        "chunks": [
+          {
+            "en": "To put it another way, we're looking for a genuine fit,",
+            "ja": "言い換えると本当に相性のよい相手を探しているんです、"
+          },
+          {
+            "en": "rather than sending the same message to as many people as possible,",
+            "ja": "できるだけ多くの人に同じメッセージを送るのではなく、"
+          },
+          {
+            "en": "because the quality of the conversation matters more to us.",
+            "ja": "会話の質の方が私たちには重要だからです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  },
+  {
+    "id": "b-159",
+    "kind": "chunk",
+    "category": "repair",
+    "level": "B2",
+    "en": "I might have gotten that wrong",
+    "ipa": "aɪ maɪt hæv ˈgɔtən ðət rɔŋ",
+    "ja": "私が誤解したかもしれません",
+    "explanation": "I may have misunderstood は自分の理解が間違っている可能性を認める、衝突を和らげる表現\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "依頼や予定の食い違いがあったとき",
+    "caution": "相手のミスが確定していない場合に責任を決めつけない",
+    "examples": [
+      {
+        "en": "I may have misunderstood what you meant by the deadline, because I thought you were referring to the draft rather than the final version, so could we confirm which one needs to be ready first?",
+        "ja": "期限についてのお話を私が誤解したかもしれません、最終版ではなく下書きのことだと受け取っていたためです、どちらを先に用意すべきか確認できますか",
+        "ipa": "aɪ meɪ hæv ˌmɪsəndərˈstʊd wət ju mɛnt baɪ ðə ˈdɛˌdlaɪn, bɪˈkəz aɪ θɔt ju wər rɪˈfərɪŋ tɪ ðə dræft ˈrəðər ðən ðə ˈfaɪnəl ˈvərʒən, soʊ kʊd wi kənˈfərm wɪʧ wən nidz tɪ bi ˈrɛdi fərst?",
+        "chunks": [
+          {
+            "en": "I may have misunderstood what you meant by the deadline,",
+            "ja": "期限についてのお話を私が誤解したかもしれません、"
+          },
+          {
+            "en": "because I thought you were referring to the draft rather than the final version,",
+            "ja": "最終版ではなく下書きのことだと受け取っていたためです、"
+          },
+          {
+            "en": "so could we confirm which one needs to be ready first?",
+            "ja": "どちらを先に用意すべきか確認できますか"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  },
+  {
+    "id": "b-160",
+    "kind": "chunk",
+    "category": "repair",
+    "level": "B2",
+    "en": "correct me if I'm wrong",
+    "ipa": "kərˈɛkt mi ɪf əm rɔŋ",
+    "ja": "もし違っていたら教えてください",
+    "explanation": "correct me if I'm wrong は自分の理解を確認する前置き。断言を弱め、相手に訂正しやすい余地を作る\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "料金や日程の認識をすり合わせるとき",
+    "caution": "後ろの内容が重要な場合は推測ではなく具体的な数字を確認する",
+    "examples": [
+      {
+        "en": "Correct me if I'm wrong, but I understood that the first payment is due next month, rather than immediately after the meeting, and I'd like to confirm that before sending the invoice.",
+        "ja": "もし違っていたら教えてください、最初のお支払いは来月の期限だと理解していました、会議の直後ではなく、請求書を送る前に確認したいです",
+        "ipa": "kərˈɛkt mi ɪf əm rɔŋ, bət aɪ ˌəndərˈstʊd ðət ðə fərst ˈpeɪmənt ɪz du nɛkst mənθ, ˈrəðər ðən ˌɪˈmiˌdiətli ˈæftər ðə ˈmitɪŋ, ənd aɪd laɪk tɪ kənˈfərm ðət ˌbiˈfɔr ˈsɛndɪŋ ðə ˈɪnvɔɪs.",
+        "chunks": [
+          {
+            "en": "Correct me if I'm wrong, but I understood that the first payment is due next month,",
+            "ja": "もし違っていたら教えてください、最初のお支払いは来月の期限だと理解していました、"
+          },
+          {
+            "en": "rather than immediately after the meeting,",
+            "ja": "会議の直後ではなく、"
+          },
+          {
+            "en": "and I'd like to confirm that before sending the invoice.",
+            "ja": "請求書を送る前に確認したいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  },
+  {
+    "id": "b-161",
+    "kind": "chunk",
+    "category": "repair",
+    "level": "B2",
+    "en": "bear with me",
+    "ipa": "bɛr wɪθ mi",
+    "ja": "少し待ってください、少し付き合ってください",
+    "explanation": "bear with me は説明や操作に少し時間がかかる間、相手に辛抱してもらう丁寧な口語表現\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "英語の言葉を探すときや資料を開くとき",
+    "caution": "相手を長く待たせる場合は具体的な目安や代案も示す",
+    "examples": [
+      {
+        "en": "Bear with me for a moment while I find the right word, because the idea makes sense in Japanese but is harder to explain in English, and I want to make sure I express it accurately.",
+        "ja": "適切な言葉を探す間、少しだけ待ってください、日本語では分かる考えなのに英語で説明しにくくて、できるだけ正確に伝えたいんです",
+        "ipa": "bɛr wɪθ mi fər ə ˈmoʊmənt waɪl aɪ faɪnd ðə raɪt wərd, bɪˈkəz ðə aɪˈdiə meɪks sɛns ɪn ˌʤæpəˈniz bət ɪz ˈhɑrdər tɪ ɪkˈspleɪn ɪn ˈɪŋlɪʃ, ənd aɪ wɔnt tɪ meɪk ʃʊr aɪ ɪkˈsprɛs ɪt ˈækjərətli.",
+        "chunks": [
+          {
+            "en": "Bear with me for a moment while I find the right word,",
+            "ja": "適切な言葉を探す間、少しだけ待ってください、"
+          },
+          {
+            "en": "because the idea makes sense in Japanese but is harder to explain in English,",
+            "ja": "日本語では分かる考えなのに英語で説明しにくくて、"
+          },
+          {
+            "en": "and I want to make sure I express it accurately.",
+            "ja": "できるだけ正確に伝えたいんです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P05"
+    ]
+  },
+  {
+    "id": "b-162",
+    "kind": "chunk",
+    "category": "repair",
+    "level": "B2",
+    "en": "what I meant was",
+    "ipa": "wət aɪ mɛnt wɑz",
+    "ja": "私が言いたかったのは〜です",
+    "explanation": "what I meant was は誤って伝わった内容を正すときの型。相手の受け取り方を否定する前に自分の意図を整理する\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "冗談や仕事上の発言を言い直すとき",
+    "caution": "直後は意味の核を短く説明する。長い弁解を重ねると却って混乱する",
+    "examples": [
+      {
+        "en": "What I meant was that we could explore the idea together, not that you'd already agreed to take part in the project, and I'm sorry if my earlier wording suggested otherwise.",
+        "ja": "私が言いたかったのは一緒にその案を検討できるということです、あなたがすでに参加に同意したという意味ではなく、先ほどの言い方がそう聞こえたならすみません",
+        "ipa": "wət aɪ mɛnt wɑz ðət wi kʊd ɪkˈsplɔr ðə aɪˈdiə təˈgɛðər, nɑt ðət jʊd ɔˈrɛdi əˈgrid tɪ teɪk pɑrt ɪn ðə ˈprɑʤɛkt, ənd əm ˈsɑri ɪf maɪ ˈərliər ˈwərdɪŋ səˈʤɛstɪd ˈəðərˌwaɪz.",
+        "chunks": [
+          {
+            "en": "What I meant was that we could explore the idea together,",
+            "ja": "私が言いたかったのは一緒にその案を検討できるということです、"
+          },
+          {
+            "en": "not that you'd already agreed to take part in the project,",
+            "ja": "あなたがすでに参加に同意したという意味ではなく、"
+          },
+          {
+            "en": "and I'm sorry if my earlier wording suggested otherwise.",
+            "ja": "先ほどの言い方がそう聞こえたならすみません"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  },
+  {
+    "id": "b-163",
+    "kind": "vocabulary",
+    "category": "repair",
+    "level": "B2",
+    "en": "ambiguous",
+    "ipa": "æmˈbɪgjuəs",
+    "ja": "意味が一つに定まらない、曖昧な",
+    "explanation": "ambiguous は複数の解釈が成り立ち得る状態。単に説明不足というより誤解の余地に注目する\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "契約書の文言やメールの意味を確認するとき",
+    "caution": "曖昧だと指摘したら、どの部分に二通りの解釈があるか示す",
+    "examples": [
+      {
+        "en": "The wording in the current proposal seems a little ambiguous to me, because it isn't clear whether the fee includes follow-up support, and I'd prefer to settle that question before anyone signs.",
+        "ja": "今の提案書の表現は少し曖昧に感じます、料金に事後対応が含まれるか明確ではないので、誰かが署名する前にその点をはっきりさせたいです",
+        "ipa": "ðə ˈwərdɪŋ ɪn ðə ˈkɑrənt prəˈpoʊzəl simz ə ˈlɪtəl æmˈbɪgjuəs tɪ mi, bɪˈkəz ɪt ˈɪzənt klɪr ˈwɛðər ðə fi ˌɪnˈkludz ˈfɑloʊˌəp səˈpɔrt, ənd aɪd prɪˈfər tɪ ˈsɛtəl ðət kˈwɛʃən ˌbiˈfɔr ˈɛniˌwən saɪnz.",
+        "chunks": [
+          {
+            "en": "The wording in the current proposal seems a little ambiguous to me,",
+            "ja": "今の提案書の表現は少し曖昧に感じます、"
+          },
+          {
+            "en": "because it isn't clear whether the fee includes follow-up support,",
+            "ja": "料金に事後対応が含まれるか明確ではないので、"
+          },
+          {
+            "en": "and I'd prefer to settle that question before anyone signs.",
+            "ja": "誰かが署名する前にその点をはっきりさせたいです"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  },
+  {
+    "id": "b-164",
+    "kind": "vocabulary",
+    "category": "repair",
+    "level": "C1",
+    "en": "pick up on the nuance",
+    "ipa": "pɪk əp ɔn ðə nuɑns",
+    "ja": "言葉や態度にある細かな意味合い",
+    "explanation": "nuance は言葉の辞書的意味だけでは表せない微妙な違い。英語での距離感や含みを説明するときに役立つ\n日本語訳だけでは言い方の強さや前提が抜けやすいので、長めの例文で前後の流れを含めて理解する",
+    "register": "neutral",
+    "useWhen": "褒め言葉や断り方の微妙な違いを質問するとき",
+    "caution": "nuance を便利な万能語にせず、具体的に何が違って聞こえるか尋ねる",
+    "examples": [
+      {
+        "en": "I understand the basic meaning of the sentence, but I'm not sure about the nuance when someone says it to a close friend, so could you explain how it might sound in that situation?",
+        "ja": "その文の基本的な意味は分かります、でも親しい友人に向かって言うときのニュアンスはまだ分からなくて、その場面でどう聞こえるのか教えてもらえますか",
+        "ipa": "aɪ ˌəndərˈstænd ðə ˈbeɪsɪk ˈminɪŋ əv ðə ˈsɛntəns, bət əm nɑt ʃʊr əˈbaʊt ðə nuɑns wɪn ˈsəmˌwən sɪz ɪt tɪ ə kloʊz frɛnd, soʊ kʊd ju ɪkˈspleɪn haʊ ɪt maɪt saʊnd ɪn ðət ˌsɪʧuˈeɪʃən?",
+        "chunks": [
+          {
+            "en": "I understand the basic meaning of the sentence,",
+            "ja": "その文の基本的な意味は分かります、"
+          },
+          {
+            "en": "but I'm not sure about the nuance when someone says it to a close friend,",
+            "ja": "でも親しい友人に向かって言うときのニュアンスはまだ分からなくて、"
+          },
+          {
+            "en": "so could you explain how it might sound in that situation?",
+            "ja": "その場面でどう聞こえるのか教えてもらえますか"
+          }
+        ]
+      }
+    ],
+    "related": [],
+    "sourceIds": [
+      "P51"
+    ]
+  }
+]

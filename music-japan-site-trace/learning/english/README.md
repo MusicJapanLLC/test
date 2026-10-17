@@ -9,6 +9,8 @@ English counterpart to the Korean / Wahran mobile apps, authored for intermediat
 ## Curriculum
 
 - `catalog.json`: version and eight practical situations
+- `expansion.json`: 64 new contextual advanced expressions for eight topics (48 chunks and 16 collocations/vocabulary), with IPA and original Japanese teaching notes
+- `arcade.cjs`: four-choice and tile-bank generator (all 264 targets; 4 question modes per target)
 - `units.json`: original vocabulary, reusable chunks, conversational grammar, Japanese explanations, examples, IPA and exact contiguous chunks
 - `dialogues.json`: original role-play conversations
 - `sources.json`: inspected public reference sources and separate retrieval gaps
