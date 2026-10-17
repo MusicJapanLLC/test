@@ -1,0 +1,65 @@
+name: English learning publication
+
+on:
+  push:
+    branches: [codex/english-learning-20261017, music-japan-production]
+    paths:
+      - '.github/workflows/english-learning-publication.yml'
+      - 'music-japan-site-trace/learning/english/**'
+      - 'music-japan-site-trace/scripts/*english*'
+      - 'music-japan-site-trace/tests/english-*.test.mjs'
+      - 'music-japan-site-trace/package.json'
+      - 'music-japan-site-trace/package-lock.json'
+      - 'music-japan-site-trace/scripts/build-deploy.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: english-learning-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: music-japan-site-trace
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: music-japan-site-trace/package-lock.json
+      - name: Install locked site dependencies
+        run: npm ci
+      - name: Test and build the site
+        run: |
+          mkdir -p artifacts/english-browser
+          npm test 2>&1 | tee artifacts/english-browser/site-tests.txt
+          npm run build:deploy 2>&1 | tee artifacts/english-browser/build.txt
+          node scripts/check-english.mjs 2>&1 | tee artifacts/english-browser/english-audit.txt
+          cp deploy-dist/english/build-manifest.json artifacts/english-browser/build-manifest.json
+      - name: Install the browser verification runtime
+        run: |
+          npm install --no-save --package-lock=false playwright@1.62.1
+          npx playwright install --with-deps chromium webkit
+      - name: Exercise mobile and desktop English learning flows
+        run: node scripts/verify-english-browser.mjs
+      - name: Verify the published production bytes
+        if: github.ref == 'refs/heads/music-japan-production'
+        run: node scripts/verify-english-live.mjs
+      - name: Preserve verification results and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: english-learning-evidence-${{ github.sha }}
+          path: music-japan-site-trace/artifacts/english-browser/
+          retention-days: 30

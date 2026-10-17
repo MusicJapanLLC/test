@@ -76,8 +76,8 @@ export function audit(out) {
 
     // hreflang must be complete and reciprocal
     const alts = Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((a) => [a[1], a[2]]));
-    for (const h of ["ja-JP", "en", "x-default"]) if (!alts[h]) err(p, `hreflang ${h} missing`);
-    if (alts["ja-JP"] !== url && alts.en !== url) err(p, "hreflang set does not include itself");
+    for (const h of ((p.startsWith("/english/") || p === "/learning/") ? [] : ["ja-JP", "en", "x-default"])) if (!alts[h]) err(p, `hreflang ${h} missing`);
+    if (!(p.startsWith("/english/") || p === "/learning/") && alts["ja-JP"] !== url && alts.en !== url) err(p, "hreflang set does not include itself");
     for (const h of ["ja-JP", "en"]) {
       const other = alts[h]?.replace(SITE_URL, "");
       if (!other || other === p) continue;

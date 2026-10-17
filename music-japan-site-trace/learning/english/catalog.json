@@ -1,0 +1,14 @@
+{
+ "version":"1.0.0",
+ "published":"2026-10-17",
+ "categories":[
+  {"id":"business","title":"Business","short":"MAKE CONNECTIONS","ja":"仕事の説明・紹介・打ち合わせ","description":"自分の仕事を具体的に説明し、相手の課題を聞き、次の話につなげる表現"},
+  {"id":"negotiation","title":"Negotiation","short":"FIND COMMON GROUND","ja":"提案・条件調整・丁寧な反論","description":"条件を確かめながら提案する、代案を出す、無理な約束をせずに合意を探す表現"},
+  {"id":"work","title":"Working abroad","short":"WORK TOGETHER","ja":"海外の職場・進捗・期待の調整","description":"分からないことを確認し、進捗と懸念を共有して、チームで仕事を進める表現"},
+  {"id":"deep","title":"Deeper talks","short":"SAY WHAT YOU MEAN","ja":"価値観・理由・複雑な気持ち","description":"感想を一言で終わらせず、理由や迷い、過去からの変化まで伝える表現"},
+  {"id":"travel","title":"Travel","short":"GO SOMEWHERE","ja":"入国審査・税関・旅先の対応","description":"入国審査と荷物の申告を区別し、自分の実際の予定を説明する 旅先で条件を確認する表現"},
+  {"id":"social","title":"Social life","short":"KEEP IT GOING","ja":"初対面・友人・自然な雑談","description":"話題を広げ、相手の話を引き出し、会話の温度に合った返しをする表現"},
+  {"id":"flirting","title":"A little chemistry","short":"KEEP IT NATURAL","ja":"自然な好意・軽い誘い・距離感","description":"大げさな口説き文句に頼らず、好意を伝えて誘い、相手の返答を受け止める表現"},
+  {"id":"repair","title":"When words fail","short":"GET UNSTUCK","ja":"聞き返し・言い直し・トラブル","description":"言葉が出てこない時、聞き取れない時、行き違いが起きた時に会話を続ける表現"}
+ ]
+}
