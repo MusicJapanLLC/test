@@ -86,19 +86,20 @@ async function main() {
         process.exitCode = 2;
         break;
       }
-      if (result.route !== 'browser') break; // Hosted Recall bot has its own lifecycle.
+      const resident = adapters[result.route];
+      if (typeof resident?.maintain !== 'function') break; // Hosted Recall bot has its own lifecycle.
       const abort = new AbortController();
       const stop = () => abort.abort();
       process.once('SIGINT', stop);
       process.once('SIGTERM', stop);
       let sessionResult;
       try {
-        sessionResult = await adapters.browser.maintain({ signal: abort.signal });
+        sessionResult = await resident.maintain({ signal: abort.signal });
         publicJson({ phase: 'RESIDENT_SESSION_ENDED', ...sessionResult });
       } finally {
         process.removeListener('SIGINT', stop);
         process.removeListener('SIGTERM', stop);
-        await adapters.browser.close();
+        await resident.close();
       }
       if (sessionResult?.state === 'SESSION_DISCONNECTED' && reconnects < 2 && !has('--no-reconnect')) {
         reconnects++;
