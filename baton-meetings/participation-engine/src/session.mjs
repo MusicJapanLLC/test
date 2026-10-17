@@ -38,6 +38,7 @@ export function classifySessionOutcome(joined,capture,transcript,minutes) {
   if(!capture?.tracks?.some(t=>t.ok && (t.non_silent_blocks||0)>0))return 'AUDIO_CAPTURE_NOT_VERIFIED';
   if(!transcript || !Array.isArray(transcript.segments) || transcript.segments.length===0)return 'AWAITING_DIARIZED_TRANSCRIPT';
   if(!minutes || minutes.status!=='draft')return 'AWAITING_MINUTES_DRAFT';
+  if(transcript.synthetic || minutes.synthetic)return 'SYNTHETIC_TEST_ONLY';
   return 'MINUTES_DRAFT_READY_FOR_HUMAN_REVIEW';
 }
 export async function runMeetingSession({
@@ -46,7 +47,7 @@ export async function runMeetingSession({
   includeMicrophone=true,routes=['edge','chrome'],privateBase=join(base,'private','sessions'),
   adapters=createAdapters(),engine=null,recordWorker=worker,
   prepare=prepareAudio,transcribe=buildTranscript,makeMinutes=generateMinutes,storeMinutes=saveMinutes,
-  now=()=>new Date(),
+  now=()=>new Date(),getFreeBytes=()=>os.freemem(),minimumFreeMemoryBytes=450*1024*1024,
 }={}) {
   const meeting=parseMeetingUrl(meetingUrl);
   if(authorized!==true || recordingConsentConfirmed!==true || live!==true)
@@ -55,7 +56,7 @@ export async function runMeetingSession({
     throw new Error('MEETING_DURATION_OUT_OF_RANGE');
   if(!Array.isArray(routes) || routes.length===0 || routes.some(r=>!['edge','chrome'].includes(r)))
     throw new Error('RESIDENT_AUDIO_REQUIRES_APPROVED_BROWSER_ROUTE');
-  if(os.freemem() < 450*1024*1024)throw new Error('INSUFFICIENT_FREE_MEMORY_FOR_MEETING');
+  if(getFreeBytes() < minimumFreeMemoryBytes)throw new Error('INSUFFICIENT_FREE_MEMORY_FOR_MEETING');
   const dir=resolve(privateBase);
   const locks=join(dir,'locks');
   await mkdir(locks,{recursive:true});
