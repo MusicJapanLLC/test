@@ -1,7 +1,7 @@
 import os from 'node:os';
 import { join, resolve } from 'node:path';
 import { readFile, open, mkdir, rm } from 'node:fs/promises';
-import { parseMeetingUrl, defaultRoutes, createAuditWriter, ParticipationEngine } from './core.mjs';
+import { parseMeetingUrl, defaultRoutes, createAuditWriter, ParticipationEngine, isVerifiedJoin } from './core.mjs';
 import { createAdapters } from './adapters.mjs';
 
 const argv = process.argv.slice(2);
@@ -80,8 +80,34 @@ async function main() {
     };
     let reconnects = 0;
     while (true) {
-      const result = await runner.join(params);
+      let result = await runner.join(params);
       publicJson(result);
+      if (result.status === 'WAITING_ADMISSION') {
+        const pendingAdapter = adapters[result.route];
+        if (typeof pendingAdapter?.awaitAdmission !== 'function') {
+          process.exitCode = 2;
+          break;
+        }
+        const lobbyAbort = new AbortController();
+        const stopLobby = () => lobbyAbort.abort();
+        process.once('SIGINT', stopLobby);
+        process.once('SIGTERM', stopLobby);
+        let admission;
+        try {
+          admission = await pendingAdapter.awaitAdmission({ signal: lobbyAbort.signal });
+          publicJson({ phase: 'LOBBY_RESOLVED', ...admission });
+        } finally {
+          process.removeListener('SIGINT', stopLobby);
+          process.removeListener('SIGTERM', stopLobby);
+        }
+        if (isVerifiedJoin(admission)) {
+          result = { ...result, status: 'JOINED_VERIFIED', proof: admission.proof };
+        } else {
+          await pendingAdapter.close();
+          process.exitCode = admission?.state === 'OPERATOR_STOPPED' ? 0 : 2;
+          break; // Do not retry with another identity while host admission is pending.
+        }
+      }
       if (result.status !== 'JOINED_VERIFIED') {
         process.exitCode = 2;
         break;
