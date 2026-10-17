@@ -33,7 +33,7 @@ jobs:
           import assert from 'node:assert/strict';
           import vm from 'node:vm';
           const bytes=readFileSync('deploy-dist/wahran/index.html');
-          assert.equal(createHash('sha256').update(bytes).digest('hex'),'7169587709a6ae0d77ff2843a332de208f18f976fa68876b2554a09250bc7be6');
+          assert.equal(createHash('sha256').update(bytes).digest('hex'),'7096b2e56fc298274dc9489e424336fa16a1ed5b67063265e864ad0bd8fed2f0');
           assert.ok(readFileSync('deploy-dist/_headers','utf8').includes('/wahran/*\n  ! Permissions-Policy'));
           const c={window:{}};vm.runInNewContext(readFileSync('deploy-dist/wahran/audio-manifest.js','utf8'),c);
           const m=c.window.WahranFiles;assert.equal(m.entriesCount,940);assert.equal(m.combinationCount,10000);

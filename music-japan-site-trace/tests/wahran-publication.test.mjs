@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { createHash } from 'node:crypto';
 const moduleURL = new URL('../scripts/publish-wahran.mjs', import.meta.url);
 const source = readFileSync(new URL('../next/public/wahran/index.html', import.meta.url));
-const originalHeaders='/*\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n';
+const sha='7096b2e56fc298274dc9489e424336fa16a1ed5b67063265e864ad0bd8fed2f0';
+const originalHeaders='/*\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\nhttps://:project.pages.dev/*\n  X-Robots-Tag: noindex\nhttps://:version.:project.pages.dev/*\n  X-Robots-Tag: noindex\n';
 function fixture(t) {
   const root=mkdtempSync(join(tmpdir(),'wahran-publish-'));
   t.after(()=>rmSync(root,{recursive:true,force:true}));
@@ -20,13 +22,17 @@ async function installer() { assert.ok(existsSync(moduleURL),'Publication module
 test('publishes exact course and preserves official home page',async t=>{
   const root=fixture(t);(await installer())(root);
   assert.deepEqual(readFileSync(join(root,'deploy-dist/wahran/index.html')),source);
+  assert.equal(createHash('sha256').update(source).digest('hex'),sha);
   assert.equal(readFileSync(join(root,'deploy-dist/index.html'),'utf8'),'UNRELATED OFFICIAL SITE');
 });
-test('microphone exemption is restricted to Wahran path',async t=>{
+test('public course is indexable; microphone exemption is scoped and preview rules stay intact',async t=>{
   const root=fixture(t);(await installer())(root);
   const headers=readFileSync(join(root,'deploy-dist/_headers'),'utf8');
   assert.ok(headers.startsWith(originalHeaders));
-  assert.ok(headers.includes('/wahran/*\n  ! Permissions-Policy\n  X-Robots-Tag: noindex, nofollow'));
+  assert.ok(headers.includes('/wahran/*\n  ! Permissions-Policy\n'));
+  const rule=headers.match(/# BEGIN WAHRAN MOBILE\n([\s\S]*?)# END WAHRAN MOBILE/)[1];
+  assert.doesNotMatch(rule,/X-Robots-Tag|noindex|nofollow/i);
+  assert.match(rule,/Cache-Control: public, max-age=0, must-revalidate/);
 });
 test('repeated publication does not duplicate header rules',async t=>{
   const root=fixture(t);const install=await installer();install(root);
