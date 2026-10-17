@@ -149,10 +149,12 @@ function renderRecords(q = '') {
 /* ── one record ── */
 
 let trackFilter: 'all' | 'new' | 'learning' | 'known' = 'all';
+let filterFor = '';
 
 function renderRecord(id: string) {
   const r = DB.recById.get(id);
   if (!r) { go('#/records'); return; }
+  if (filterFor !== id) { trackFilter = 'all'; filterFor = id; }
   const st = recStats(r.id);
   const cards = recCards(r.id);
   const fresh = Math.min(st.fresh, state.settings.size);

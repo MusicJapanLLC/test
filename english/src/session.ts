@@ -5,11 +5,11 @@ import type { Card, Quiz } from './types';
 import { makeQuiz, shuffle } from './feed';
 import { ACCENT, crewDance, esc, headSize, hostOf, linesHtml, meaningHtml, metaRow, onActive, recCode, recOf, renderQuiz, sourceHtml, wireAudio } from './render';
 import { Bot } from './robots/crew';
-import { grade, logDay, markGoal, rollDay, save, state, status } from './store';
+import { grade, level, logDay, markGoal, rollDay, save, state, status } from './store';
 import { play, preload, stop } from './audio';
 import { sfx } from './sfx';
 import { I } from './icons';
-import { $, band, floatXP, mountBots, party, vibrate } from './ui';
+import { $, band, floatXP, mountBots, party, toast, vibrate } from './ui';
 
 export interface SessionSpec {
   title: string;
@@ -32,6 +32,8 @@ let doneN = 0;
 let learned = 0;
 let reviewed = 0;
 let missed = new Set<string>();
+let inRow = 0;
+let xpGained = 0;
 let current: Item | null = null;
 let revealed = false;
 /** this card is shown Japanese-first (recall mode) */
@@ -50,7 +52,7 @@ export function startSession(s: SessionSpec, close: () => void) {
   document.body.classList.add('in-session');
   queue = s.cards.map((c) => ({ c, fresh: status(c.id) === 'new', again: 0 }));
   total = queue.length;
-  doneN = 0; learned = 0; reviewed = 0; missed = new Set();
+  doneN = 0; learned = 0; reviewed = 0; missed = new Set(); inRow = 0; xpGained = 0;
   host.innerHTML = `
     <div class="sess">
       <header class="sess__top">
@@ -223,17 +225,22 @@ function answer(ok: boolean) {
   grade(it.c.id, ok);
   if (ok) {
     if (it.fresh) { learned++; logDay('n'); } else { reviewed++; logDay('r'); }
-    state.xp += it.fresh ? 10 : 6;
+    inRow++;
+    const xp = (it.fresh ? 10 : 6) + Math.min(inRow - 1, 5);
+    state.xp += xp;
+    xpGained += xp;
     state.day.right++;
     doneN++;
     state.day.done++;
-    sfx.right(1);
+    sfx.right(Math.min(inRow, 8));
     vibrate(12);
-    bot?.act(Math.random() < 0.5 ? 'jump' : 'love');
-    floatXP(it.fresh ? 10 : 6, card);
+    bot?.act(inRow >= 3 ? 'star' : Math.random() < 0.5 ? 'jump' : 'love');
+    floatXP(xp, card);
+    if (inRow === 3 || inRow === 5 || inRow % 10 === 0) toast(`${inRow} in a row`);
     card.classList.add('fly-right');
   } else {
     missed.add(it.c.id);
+    inRow = 0;
     state.day.wrong++;
     state.xp += 1;
     sfx.wrong();
@@ -302,7 +309,7 @@ function nextQuiz(i: number) {
   foot.innerHTML = `<p class="mono sess__qn">Check ${i + 1} / ${checkQs.length}</p>`;
   const el = renderQuiz(q, (qq, ok, node) => {
     grade(qq.card.id, ok);
-    if (ok) { checkRight++; state.xp += 8; sfx.right(checkRight); crewDance($('.quiz__crew', node), checkRight); floatXP(8, node); }
+    if (ok) { checkRight++; state.xp += 8; xpGained += 8; sfx.right(checkRight); crewDance($('.quiz__crew', node), checkRight); floatXP(8, node); }
     else { sfx.wrong(); crewDance($('.quiz__crew', node), 1, 'dizzy'); }
     save();
     foot.innerHTML = `<button type="button" class="btn btn--got btn--wide" data-next>${i + 1 < checkQs.length ? 'Next' : 'See results'}${I.next}<kbd>Enter</kbd></button>`;
@@ -328,6 +335,7 @@ function finish() {
         <div><dt>Check</dt><dd>${acc === null ? '–' : `${acc}%`}</dd></div>
         <div><dt>Today</dt><dd>${state.day.done}<small>/${state.settings.goal}</small></dd></div>
       </dl>
+      <p class="result__xp mono">+${xpGained} XP · Level ${level()}</p>
       ${missed.size ? `<p class="result__note">${missed.size} card${missed.size > 1 ? 's' : ''} you missed will come back tomorrow.</p>` : ''}
     </section>`;
   mountBots(stage, { tap: true });

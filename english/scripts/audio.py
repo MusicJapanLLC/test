@@ -53,6 +53,7 @@ def speakable(text):
     t = t.replace('…', ', ').replace('~', ' something ').replace('&', ' and ')
     t = re.sub(r'\s*/\s*', ', or ', t)
     t = re.sub(r'[“”"]', '', t)
+    t = re.sub('[\U0001F300-\U0001FAFF\u2600-\u27BF]', '', t)  # emoji are not read aloud
     t = SAY_RE.sub(lambda m: SAY[m.group(1)], t)
     t = re.sub(r'\s+', ' ', t).strip(' ,')
     return t if re.search(r'[A-Za-z]', t) else ''

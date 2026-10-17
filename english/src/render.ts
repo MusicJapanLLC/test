@@ -38,8 +38,12 @@ export function headSize(h: string) {
   return h.length > 42 || longest > 12 ? 'xl' : h.length > 26 || longest > 9 ? 'l' : h.length > 14 || longest > 7 ? 'm' : 's';
 }
 
+const POS: Record<string, string> = {
+  n: 'noun', v: 'verb', adj: 'adjective', adv: 'adverb', phr: 'phrase', int: 'interjection', prep: 'preposition',
+  conj: 'conjunction', pron: 'pronoun', det: 'determiner', abbr: 'abbreviation',
+};
 const stamp = (c: Card) =>
-  c.k === 'w' ? `<span class="stamp">${esc(c.pos ?? 'word')}</span>`
+  c.k === 'w' ? `<span class="stamp">${esc(POS[c.pos ?? ''] ?? c.pos ?? 'word')}</span>`
     : c.re === 'textbook' ? '<span class="stamp stamp--warn">Textbook</span>'
       : c.re === 'cringe' ? '<span class="stamp stamp--bad">Cringe</span>'
         : '<span class="stamp stamp--good">Real</span>';

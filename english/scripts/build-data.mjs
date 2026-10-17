@@ -325,6 +325,11 @@ for (const c of outCards) {
   heads.set(k, c);
 }
 
+// English lines are read aloud by the voice: Japanese inside them would be garbled
+for (const c of [...outCards, ...outWords]) {
+  for (const [, t] of c.l) if (/[\u3040-\u30ff\u4e00-\u9fff]/.test(t)) fail(c.id, `Japanese inside an English line: ${t.slice(0, 40)}`);
+}
+
 const stats = {};
 for (const c of outCards) stats[c.s] = (stats[c.s] ?? 0) + 1;
 console.log(`cards ${outCards.length} ${JSON.stringify(stats)} · words ${outWords.length} (no IPA: ${noIpa})`);

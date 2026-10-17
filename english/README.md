@@ -1,30 +1,29 @@
-# MJ ENGLISH — Real English, in reels
+# MJ ENGLISH — Real English, on record
 
-A phone-first (PC works too) vocabulary app by Music Japan LLC. You swipe through **chunks** (whole phrases people actually say) and **words**, taken from:
+A phone-first (PC works too) vocabulary app by Music Japan LLC, in the music-japan.com look: near-black, cream and one red, the MJ record mark, Archivo extended, Zen Kaku Gothic New and mono labels. Every phrase and word has a recorded voice.
+
+## How it works
+
+- **Today**: one button starts today's session: everything due for review plus the next new cards from the record you are on.
+- **Records**: each themed set is a "record" (35 so far). A record page shows progress, the track list (tap a track to open it, tap the speaker to hear it), a red-sheet toggle that hides meanings, filters (New / Learning / Known), a **Test** (10 quick questions) and a **Listening drill**.
+- **Session**: one card at a time. The voice plays as the card appears (normal or slow). **Show meaning**, then **Again** or **Got it** (buttons, keys 1/2, or swipe left/right). Missed cards come back later in the same session. A 5-question check and a result screen with the crew close the session. The ⋯ menu switches the card front to 日本語 (recall: see the meaning, say it in English, then check), meaning always-on, voice and speed.
+- **Listening drill**: plays a record like a playlist. *Listen* = short pauses, *Shadow* = a pause as long as the line so you can say it back. *Hide text* makes it an ear test.
+- **Shuffle**: the reel feed (swipe through everything, quizzes mixed in).
+- **You**: learned / known counts, streak, level, the week, settings, backup code.
 
 | Source | Host robot | What's on the card |
 |---|---|---|
-| Real Talk | everyone | cafe, bar, pickup, crush, DMs, gym, work, money, travel… |
+| Real Talk | rotates | cafe, bar, pickup, crush, DMs, gym, work, money, travel… |
 | Songs | POD | song title + artist, and the phrase taught with our own examples (no lyrics) |
 | Movies & TV | TUNE | one famous line (title + year) or a reference only |
 | Classic Books | SPIN | an exact public-domain quote, verified against Project Gutenberg |
 | Science | REEL | a finding with its citation (paper link) |
 | Comedy | MIC | jokes, hacky jokes ("Cringe") and how humor works in English |
-| Words | everyone | single words, phrasal verbs, slang and idioms |
-
-No CEFR levels and no "basic/business" split. Cards carry **scene tags** (cafe, pickup, crush, work…), a **Real / Textbook / Cringe** stamp, and **vibes** (warm, chill, flirty, work-safe…).
+| Words | rotates | single words, phrasal verbs, slang and idioms |
 
 The robot crew (TUNE / SPIN / POD / REEL / MIC) is drawn with the same pixel engine as music-japan.com. They never talk: no speech bubbles and none of their original lines, only faces, moves and tiny screen icons.
 
-## Learning loop
-
-- Snap-scroll feed. Tap to flip (Japanese meaning is hidden until you ask), double-tap to save.
-- A quiz every 3–5 cards: meaning, gap fill, build the phrase, real-or-cringe, vibe, listening (device TTS), word.
-- Combo, XP, levels, daily goal ring, streak.
-- Saved and missed cards come back on a spaced-repetition schedule (0 → 12h → 2d → 5d → 12d → 30d → 75d) in the feed and in **Review**.
-- Search, settings (meaning display, explicit cards, voice speed, auto voice, sounds, daily goal, theme), and export/import of progress as a code. Everything stays in the browser (localStorage); there are no accounts and no tracking.
-- PWA: installable, works offline after the first visit.
-- Keyboard on PC: ↑/↓ or j/k, Space flip, S save, P listen, 1–4 answer.
+Spaced repetition: Got it moves a card up a box (12 h → 2 d → 5 d → 12 d → 30 d → 75 d), Again sends it back to the start. Known = three reviews in a row. Progress stays in the browser (localStorage); a backup code moves it between devices. No accounts, no tracking. PWA: installable, and voice chunks you have played work offline.
 
 ## Develop
 
@@ -34,6 +33,7 @@ npm run dev            # http://localhost:5173
 npm run validate       # content checks (fails on errors, prints warnings)
 npm run verify-quotes  # book quotes vs Project Gutenberg texts in .cache/pg/
 npm run build          # data → typecheck → vite build → static card pages + sitemap
+python scripts/audio.py [record …]   # record voices (see "Voice" below)
 npm run preview        # http://localhost:4190
 ```
 
@@ -80,6 +80,17 @@ word | pos | 日本語 | short English | example sentence | scene[, explicit]
 
 `pos` is one of `n v adj adv phr int prep conj pron det abbr`. The same spelling can appear twice only for a different part of speech or a clearly different sense.
 
+### Voice
+
+Every card is recorded ahead of time with **Kokoro-82M** (Apache-2.0), run locally with `kokoro-onnx`; nothing is sent to an online voice service. `scripts/audio.py` renders, per card: the phrase, the phrase slow (speed 0.78), up to four example/dialogue lines (A = female voice `af_heart`, B = male voice `am_michael`) and, for textbook/cringe cards, the natural version. Clips are packed into ~45 s MP3 chunks per record with 0.25 s gaps (`public/audio/<record>.<n>.<hash>.mp3`) plus an index (`public/audio/<record>.json`). The app fetches and decodes one chunk at a time and plays clips exactly. Clips are cached in `.cache/tts/` by text + voice + speed, so after editing content only new or changed lines are recorded. `SAY` in the script fixes words the phonemizer gets wrong (rizz, lowkey, smh…). If a clip is missing, the device's own voice reads it instead.
+
+```bash
+pip install kokoro-onnx soundfile
+KOKORO_MODEL=kokoro-v1.0.onnx KOKORO_VOICES=voices.npz python scripts/audio.py --workers 2
+```
+
+`voices.npz` holds `af_heart`, `am_michael`, `af_bella` and `am_puck` as `(510, 1, 256)` float32 arrays (the voice files from the Kokoro release).
+
 ### Pronunciation
 
 American IPA is generated from the CMU Pronouncing Dictionary (downloaded once to `.cache/cmudict.dict`). Slang and new words CMU doesn't know are in `IPA_EXTRA` in `build-data.mjs`; abbreviations said letter by letter (DM, EOD, brb) are spelled out automatically. Texting-only abbreviations (btw, smh, ikr…) have no IPA on purpose.
@@ -94,4 +105,4 @@ American IPA is generated from the CMU Pronouncing Dictionary (downloaded once t
 
 ## Assets
 
-`public/icons/*.png` and `public/og.png` are rendered from the robot crew drawing code with headless Chromium. `public/icon.svg` is the favicon.
+`public/icon.svg`, `public/icons/*.png` and `public/og.png` use the official Music Japan record mark (and, on the share image, the crew), rendered with headless Chromium.

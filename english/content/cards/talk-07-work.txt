@@ -234,7 +234,8 @@ B: Great, keep me posted.
 @ talk | work, business | real | worksafe | 3
 = 情報共有しておいて
 - Please keep me in the loop on the contract.
-- Can you loop me in? ＝ その件、私も入れておいて。
+- Can you loop me in on the new client?
+? loop me in ＝「その件、私も入れておいて」。CC に入れて、のニュアンスでもよく使う。
 
 # burned out
 @ talk | work, feelings, health | real | deep | 3
