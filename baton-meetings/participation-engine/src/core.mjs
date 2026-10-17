@@ -25,7 +25,13 @@ export function parseMeetingUrl(value) {
   return {
     platform,
     meetingUrl: u.toString(),
-    meetingHash: createHash('sha256').update(u.toString()).digest('hex').slice(0, 20),
+    // Joining links may carry different passcodes for the *same* meeting.
+    // Deduplicate by stable meeting identity, not query credentials.
+    meetingHash: createHash('sha256').update(
+      platform === 'zoom'
+        ? 'zoom:' + (u.pathname.match(/^\/(?:j|s)\/(\d{9,12})(?:\/|$)/)?.[1] ?? u.pathname.replace(/\/+$/,''))
+        : platform + ':' + u.pathname.replace(/\/+$/,'').toLowerCase()
+    ).digest('hex').slice(0, 20),
   };
 }
 
@@ -37,7 +43,7 @@ export function isVerifiedJoin(outcome) {
 
 export function defaultRoutes(platform) {
   if (!['zoom','google_meet','teams'].includes(platform)) return [];
-  return ['browser', 'recall', 'desktop'];
+  return ['edge', 'chrome', 'recall', 'desktop'];
 }
 
 export function createAuditWriter(filePath) {
