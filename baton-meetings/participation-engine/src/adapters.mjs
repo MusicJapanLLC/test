@@ -157,7 +157,7 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
       try {
         browser = await pw.chromium.launchPersistentContext(resolve(ctx.browserProfile), {
           channel: ctx.browserChannel,
-          headless: false,
+          headless: ctx.testFixture === true, // only synthetic local E2E may opt into headless
           viewport: { width: 1260, height: 860 },
           args: ['--no-first-run'],
           acceptDownloads: false,
