@@ -20,7 +20,7 @@ test('accepts only explicit supported HTTPS meeting origins', () => {
   assert.equal(parseMeetingUrl(meet).platform, 'google_meet');
   assert.equal(parseMeetingUrl(zoom).platform, 'zoom');
   assert.equal(parseMeetingUrl(teams).platform, 'teams');
-  assert.equal(parseMeetingUrl('https://zoom.us.evil.invalid/j/123').platform, undefined);
+  assert.throws(() => parseMeetingUrl('https://zoom.us.evil.invalid/j/123'), /UNSUPPORTED_PLATFORM/);
 });
 test('rejects dangerous or invalid URLs', () => {
   for (const url of ['http://meet.google.com/abc', 'https://zoom.us/', 'https://evil.test/j/123', 'https://user:pwd@zoom.us/j/1', 'https://meet.google.com/abc#x', 'javascript:alert(1)']) {
