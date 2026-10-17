@@ -2,6 +2,7 @@ import os from 'node:os';
 import { spawn } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { classifyPlatformState, performPlatformPrejoin } from './platform-flows.mjs';
 
 const RECALL_REGIONS = new Set(['us-east-1', 'us-west-2', 'eu-central-1', 'ap-northeast-1']);
 const sleep = (ms) => new Promise((resolveWait) => setTimeout(resolveWait, ms));
@@ -107,13 +108,7 @@ async function clickByRole(page, role, regex) {
   return false;
 }
 async function classifyPage(page, platform) {
-  if (await visibleByRole(page, 'button', leaveLabels[platform])) return 'JOINED';
-  let words = '';
-  try { words = (await page.locator('body').innerText({ timeout: 3000 })).slice(0, 15000); } catch {}
-  if (/(you were denied|host denied|request was denied|参加を拒否され|参加が拒否され)/i.test(words)) return 'HOST_DENIED';
-  if (/(waiting room|waiting to be admitted|asking to join|waiting for the host to let you in|承認待ち|参加リクエストを送信|ホストが参加を許可するまで)/i.test(words)) return 'WAITING_ADMISSION';
-  if (/(you need to sign in|sign in to join|サインインする必要|ログインする必要)/i.test(words)) return 'REQUIRES_HUMAN';
-  return 'UNKNOWN';
+  return classifyPlatformState(page, platform);
 }
 async function maybeFillGuestName(page, name) {
   const names = [/your name|display name|名前を入力|名前を入力してください/i];
@@ -167,15 +162,17 @@ export function createBrowserAdapter({ playwrightProvider = loadPlaywright, paus
         const navigation = await page.goto(ctx.meetingUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
         if (navigation?.status?.() === 403) return { state: 'FAILED', code: 'BROWSER_HTTP_403' };
         await pause(2200);
-        if (ctx.platform === 'zoom') {
-          await clickByRole(page, 'link', /join from (?:your )?browser|ブラウザから参加/i);
-          await clickByRole(page, 'button', /join from (?:your )?browser|ブラウザから参加/i);
+        const prejoin = await performPlatformPrejoin(page, ctx.platform, {
+          displayName: ctx.displayName,
+          pause,
+        });
+        if (['HOST_DENIED', 'POLICY_BLOCKED', 'WAITING_ADMISSION', 'REQUIRES_HUMAN'].includes(prejoin.state)) {
+          return { state: prejoin.state, code: prejoin.code };
         }
-        await maybeFillGuestName(page, ctx.displayName);
+        if (prejoin.state === 'UNSUPPORTED') {
+          return { state: 'UNAVAILABLE', code: 'UNSUPPORTED_PLATFORM' };
+        }
         let current = await classifyPage(page, ctx.platform);
-        if (current !== 'JOINED' && current !== 'WAITING_ADMISSION' && current !== 'HOST_DENIED') {
-          await clickByRole(page, 'button', joinLabels[ctx.platform]);
-        }
         const until = Date.now() + ctx.joinTimeoutMs;
         while (Date.now() < until) {
           current = await classifyPage(page, ctx.platform);
