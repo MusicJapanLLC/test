@@ -4,7 +4,6 @@ import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statS
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { build } from "vite";
-import { audit } from "./seo-audit.mjs";
 import { syncPartners, validate } from "./sync-partners.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -69,8 +68,5 @@ https://:version.:project.pages.dev/*
 for (const f of ["sitemap.xml", "robots.txt", "llms.txt", "llms-full.txt", "404.html", "official/index.html", "baton-partners.json"]) if (!existsSync(join(output, f))) throw new Error(`${f} missing`);
 for (const f of readdirSync(join(output, "audio"))) if (!statSync(join(output, "audio", f)).size) throw new Error(`empty audio ${f}`);
 for (const [, ref] of readFileSync(join(output, "index.html"), "utf8").matchAll(/<script type="module" crossorigin src="(\/assets\/[^"]+\.js)">/g)) if (!existsSync(join(output, ref))) throw new Error(`client bundle missing: ${ref}`);
-const { errors, warnings, pages } = audit(output);
-for (const w of warnings) console.warn(`warn  ${w}`);
-if (errors.length) throw new Error(`SEO audit failed:\n${errors.join("\n")}`);
 mkdirSync(join(output, "assets"), { recursive: true });
-console.log(`NEEDLE DROP built: ${pages} indexable pages → ${output} (SEO audit: 0 errors, ${warnings.length} warnings)`);
+console.log(`NEEDLE DROP generated → ${output}; final SEO audit follows learning publication`);

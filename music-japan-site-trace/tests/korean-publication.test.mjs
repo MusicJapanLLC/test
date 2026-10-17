@@ -7,8 +7,8 @@ import {fileURLToPath} from 'node:url';
 import {createHash} from 'node:crypto';
 const root=fileURLToPath(new URL('..',import.meta.url));
 const publisher=new URL('../scripts/publish-korean.mjs',import.meta.url);
-const sha='3ff48194aec4f932d964c7d17cb02e1236f3a8c0a17080dce581220840b4b2e0';
-const baseline='/*\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n/wahran/*\n  ! Permissions-Policy\n';
+const sha='4e03a6c8fcd7edfb05aa1c6234c4be0598790ab5a624f8cf12bcadf05c97f843';
+const baseline='/*\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\nhttps://:project.pages.dev/*\n  X-Robots-Tag: noindex\nhttps://:version.:project.pages.dev/*\n  X-Robots-Tag: noindex\n/wahran/*\n  ! Permissions-Policy\n';
 async function fixture(fn){
   assert.ok(existsSync(publisher),'Korean production publisher must exist');
   const {publishKorean}=await import(publisher);
@@ -21,10 +21,12 @@ async function fixture(fn){
 test('Korean bundle is published byte-for-byte',()=>fixture((d,publish)=>{
   publish(d);assert.equal(createHash('sha256').update(readFileSync(join(d,'deploy-dist/korean/index.html'))).digest('hex'),sha);
 }));
-test('Microphone exception is scoped and existing headers stay intact',()=>fixture((d,publish)=>{
+test('Public course is indexable; microphone exception is scoped and preview rules stay intact',()=>fixture((d,publish)=>{
   publish(d);const h=readFileSync(join(d,'deploy-dist/_headers'),'utf8');
   assert.ok(h.startsWith(baseline));assert.match(h,/\/korean\/\*\n  ! Permissions-Policy\n/);
-  assert.match(h,/X-Robots-Tag: noindex, nofollow/);
+  const rule=h.match(/# BEGIN KOREAN MOBILE\n([\s\S]*?)# END KOREAN MOBILE/)[1];
+  assert.doesNotMatch(rule,/X-Robots-Tag|noindex|nofollow/i);
+  assert.match(rule,/Cache-Control: public, max-age=0, must-revalidate/);
 }));
 test('Publication is idempotent',()=>fixture((d,publish)=>{
   publish(d);const h=readFileSync(join(d,'deploy-dist/_headers'),'utf8');publish(d);

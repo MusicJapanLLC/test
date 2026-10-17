@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const SITE_URL = "https://music-japan.com";
+const SINGLE_URL_COURSES = new Set(['/learning/', '/korean/', '/wahran/']);
 
 const attr = (tag, name) => tag.match(new RegExp(`${name}="([^"]*)"`))?.[1];
 const metas = (html) => {
@@ -17,6 +18,26 @@ const metas = (html) => {
 };
 const decode = (s) => s.replaceAll("&amp;", "&").replaceAll("&quot;", '"').replaceAll("&#39;", "'").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
 const text = (s) => decode(s.replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+
+/** Evaluate published Cloudflare header scopes for one URL, including preview hosts.
+ * A preview-host noindex must not be mistaken for a custom-domain restriction.
+ */
+export function headerNoindex(headers, url) {
+  const target = new URL(url);
+  let applies = false;
+  let noindex = false;
+  for (const line of headers.split(/\r?\n/)) {
+    if (!line.trim() || line.trimStart().startsWith('#')) continue;
+    if (!/^\s/.test(line)) {
+      const rule = line.trim();
+      const expression = rule.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replaceAll('\\*', '.*').replace(/:[a-zA-Z][a-zA-Z0-9_-]*/g, '[^/.]+');
+      applies = new RegExp(`^${expression}$`).test(rule.startsWith('/') ? target.pathname : target.href);
+    } else if (applies && /^\s*X-Robots-Tag:\s*.*\bnoindex\b/i.test(line)) {
+      noindex = true;
+    }
+  }
+  return noindex;
+}
 
 /** URL path → built file (directories resolve to index.html). */
 function fileFor(out, p) {
@@ -35,6 +56,7 @@ export function audit(out) {
   const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
   if (new Set(locs).size !== locs.length) err("sitemap.xml", "duplicate <loc>");
   const robots = readFileSync(join(out, "robots.txt"), "utf8");
+  const headers = existsSync(join(out, '_headers')) ? readFileSync(join(out, '_headers'), 'utf8') : '';
   if (!robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`)) err("robots.txt", "Sitemap line missing");
   if (/^Disallow: \/\s*$/m.test(robots)) err("robots.txt", "blocks the whole site");
 
@@ -54,9 +76,11 @@ export function audit(out) {
   const heads = new Map();
   for (const p of built) {
     const html = readFileSync(fileFor(out, p), "utf8");
-    const m = metas(html);
-    const noindex = /noindex/.test(m.robots ?? "");
+    const head = html.match(/<head\b[^>]*>([\s\S]*?)<\/head>/i)?.[1] ?? '';
+    const staticHtml = html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '');
+    const m = metas(head);
     const url = `${SITE_URL}${p}`;
+    const noindex = /noindex/i.test(m.robots ?? "") || headerNoindex(headers, url);
     if (noindex) { if (locs.includes(url)) err(p, "noindex page listed in sitemap"); continue; }
     if (!locs.includes(url)) err(p, "indexable page missing from sitemap");
 
@@ -69,15 +93,20 @@ export function audit(out) {
     if (desc.length < 30) err(p, "meta description missing or too short");
     else if (desc.length > 160) warn(p, `description is ${desc.length} chars`);
     if (descriptions.has(desc)) err(p, `duplicate description with ${descriptions.get(desc)}`); else descriptions.set(desc, p);
-    const canonical = html.match(/<link rel="canonical" href="([^"]+)">/)?.[1];
+    const canonicalTags = [...head.matchAll(/<link\b[^>]*\brel="canonical"[^>]*>/g)];
+    if (canonicalTags.length !== 1) err(p, `${canonicalTags.length} canonical tags`);
+    const canonical = canonicalTags.length ? attr(canonicalTags[0][0], 'href') : undefined;
     if (canonical !== url) err(p, `canonical ${canonical} ≠ ${url}`);
     const lang = html.match(/<html lang="([^"]+)"/)?.[1];
     if (!lang) err(p, "no <html lang>");
 
-    // hreflang must be complete and reciprocal
-    const alts = Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((a) => [a[1], a[2]]));
-    for (const h of ["ja-JP", "en", "x-default"]) if (!alts[h]) err(p, `hreflang ${h} missing`);
-    if (alts["ja-JP"] !== url && alts.en !== url) err(p, "hreflang set does not include itself");
+    // Existing translated corporate pages keep their complete reciprocal set.
+    // The learning pages are distinct courses, not translations of each other.
+    const alts = Object.fromEntries([...head.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)">/g)].map((a) => [a[1], a[2]]));
+    if (!SINGLE_URL_COURSES.has(p) || Object.keys(alts).length) {
+      for (const h of ["ja-JP", "en", "x-default"]) if (!alts[h]) err(p, `hreflang ${h} missing`);
+      if (alts["ja-JP"] !== url && alts.en !== url) err(p, "hreflang set does not include itself");
+    }
     for (const h of ["ja-JP", "en"]) {
       const other = alts[h]?.replace(SITE_URL, "");
       if (!other || other === p) continue;
@@ -92,16 +121,16 @@ export function audit(out) {
     if (m["og:image"]?.startsWith(SITE_URL) && !existsSync(fileFor(out, m["og:image"].slice(SITE_URL.length)))) err(p, `og:image file missing: ${m["og:image"]}`);
 
     // content structure
-    const h1s = html.match(/<h1[\s>]/g)?.length ?? 0;
+    const h1s = staticHtml.match(/<h1[\s>]/g)?.length ?? 0;
     if (h1s !== 1) err(p, `${h1s} <h1> elements`);
-    const bodyText = text(html.replace(/<(script|style|svg)[\s\S]*?<\/\1>/g, "").match(/<main[\s\S]*<\/main>/)?.[0] ?? "");
+    const bodyText = text(staticHtml.replace(/<svg\b[\s\S]*?<\/svg>/g, '').match(SINGLE_URL_COURSES.has(p) ? /<body[\s\S]*<\/body>/ : /<main[\s\S]*<\/main>/)?.[0] ?? "");
     if (bodyText.length < 250) warn(p, `thin content (${bodyText.length} chars in <main>)`);
     heads.set(p, html);
-    for (const [tag] of html.matchAll(/<img\b[^>]*>/g)) if (attr(tag, "alt") === undefined) err(p, `img without alt: ${tag.slice(0, 80)}`);
-    if (!/<nav class="crumbs"/.test(html) && p !== "/" && p !== "/en/") err(p, "no visible breadcrumb");
+    for (const [tag] of staticHtml.matchAll(/<img\b[^>]*>/g)) if (attr(tag, "alt") === undefined) err(p, `img without alt: ${tag.slice(0, 80)}`);
+    if (!/<nav\b[^>]*class="[^"]*\b(?:crumbs|learning-breadcrumb)\b/.test(staticHtml) && p !== "/" && p !== "/en/") err(p, "no visible breadcrumb");
 
     // structured data
-    const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)];
+    const blocks = [...head.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)];
     if (blocks.length !== 1) { err(p, `${blocks.length} JSON-LD blocks`); continue; }
     let graph;
     try { graph = JSON.parse(blocks[0][1])["@graph"]; } catch (e) { err(p, `JSON-LD does not parse: ${e.message}`); continue; }
@@ -117,14 +146,15 @@ export function audit(out) {
     };
     visit(graph);
     for (const r of refs) if (!defined.has(r)) err(p, `JSON-LD references undefined @id ${r}`);
-    const types = new Set(graph.map((n) => n["@type"]));
+    if (!Array.isArray(graph)) { err(p, 'JSON-LD @graph must be an array'); continue; }
+    const types = new Set(graph.flatMap((n) => n["@type"]));
     for (const t of ["Corporation", "WebSite"]) if (!types.has(t)) err(p, `JSON-LD ${t} missing`);
     if (p !== "/" && p !== "/en/" && !types.has("BreadcrumbList")) err(p, "JSON-LD BreadcrumbList missing");
     const page = graph.find((n) => n["@id"] === `${url}#webpage`);
     if (!page) err(p, "JSON-LD WebPage node missing");
 
     // internal links resolve
-    for (const [, href] of html.matchAll(/href="(\/(?!\/)[^"]*)"/g)) {
+    for (const [, href] of staticHtml.matchAll(/href="(\/(?!\/)[^"]*)"/g)) {
       if (!existsSync(fileFor(out, href))) err(p, `broken internal link ${href}`);
     }
   }

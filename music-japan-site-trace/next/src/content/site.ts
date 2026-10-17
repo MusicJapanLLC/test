@@ -13,7 +13,7 @@ export const BATON_URL = 'https://baton.music-japan.com/profile/';
 export const BATON_PARTNERS_URL = 'https://partners.music-japan.com/music-japan/';
 export const TIMEREX_URL = 'https://timerex.net/s/music.japan.llc_5445/2f8e527f';
 export const SOCIAL_IMAGE = '/music-japan-logo.png?v=20260921';
-export const LAST_MODIFIED = '2026-10-14';
+export const LAST_MODIFIED = '2026-10-17';
 
 export type PageKey = 'home' | 'business' | 'works' | 'company' | 'profile' | 'partners' | 'contact' | 'privacy';
 
@@ -62,6 +62,7 @@ export const copy = {
       kicker: 'NEWS',
       title: 'お知らせ',
       items: [
+        { date: '2026.10.17', label: 'LEARNING', title: '韓国語・アルジェリアDarijaを無料で学べるMusic Japan Learningを公開しました', href: '/learning/' },
         { date: '2026.10.14', label: 'PARTNERS', title: 'パートナーに株式会社DPパートナーズ、Presence株式会社、株式会社ZETTAICHIが加わりました', href: '/partners/' },
         { date: '2026.10.02', label: 'BATON PARTNERS', title: 'Baton Partnersの紹介ページを公開しました', href: BATON_PARTNERS_URL },
         { date: '2026.10.02', label: 'PARTNERS', title: 'パートナーに株式会社Smartaleckが加わりました', href: '/partners/#smartaleck' },
@@ -173,6 +174,7 @@ export const copy = {
       kicker: 'NEWS',
       title: 'Latest updates',
       items: [
+        { date: '2026.10.17', label: 'LEARNING', title: 'Music Japan Learning is now open: free Korean and Algerian Darija practice', href: '/learning/' },
         { date: '2026.10.14', label: 'PARTNERS', title: 'DP Partners, Presence and ZETTAICHI have joined our partners', href: '/en/partners/' },
         { date: '2026.10.02', label: 'BATON PARTNERS', title: 'Our Baton Partners service page is now live', href: BATON_PARTNERS_URL },
         { date: '2026.10.02', label: 'PARTNERS', title: 'Smartaleck has joined our partners', href: '/en/partners/#smartaleck' },

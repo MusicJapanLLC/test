@@ -68,7 +68,7 @@ function footer(locale: Locale): string {
   <div class="ft-marquee" aria-hidden="true" data-velocity-marquee><div class="ft-marquee__track">${line.repeat(4)}</div></div>
   <div class="ft-grid">
     <div class="ft-id">${mark({ id: 'ftm', cls: 'mj-mark ft-mark' })}<p class="ft-name">${locale === 'ja' ? '合同会社Music Japan' : 'Music Japan LLC'}</p><p class="ft-addr">${locale === 'ja' ? '大阪府大阪市北区梅田1丁目2番2号<br>大阪駅前第2ビル12-12' : 'Osaka Ekimae No. 2 Building 12-12<br>1-2-2 Umeda, Kita-ku, Osaka, Japan'}</p><a class="ft-mail" href="mailto:${EMAIL}">${EMAIL}</a></div>
-    <nav class="ft-nav" aria-label="${locale === 'ja' ? 'フッター' : 'Footer'}">${(['home', ...nav, 'privacy'] as PageKey[]).map((k) => `<a href="${path(locale, k)}">${c.navLabels[k]}</a>`).join('')}</nav>
+    <nav class="ft-nav" aria-label="${locale === 'ja' ? 'フッター' : 'Footer'}">${(['home', ...nav, 'privacy'] as PageKey[]).map((k) => `<a href="${path(locale, k)}">${c.navLabels[k]}</a>`).join('')}<a href="/learning/">${locale === 'ja' ? '言語学習 — Music Japan Learning' : 'Music Japan Learning (Japanese)'}</a></nav>
     <div class="ft-social"><p>${c.footer.follow}</p><div>${socials.map((s) => `<a href="${s.href}" target="_blank" rel="noopener noreferrer" aria-label="${s.name}${c.newTab}"><svg viewBox="0 0 24 24" aria-hidden="true">${socialIcon[s.name]}</svg></a>`).join('')}</div></div>
   </div>
   <div class="ft-bottom"><span>${c.footer.rights}</span><span>MUSIC &amp; MEDIA — OSAKA / JAPAN</span><a href="#top" data-top>${c.footer.top} ↑</a></div>
@@ -100,7 +100,7 @@ export function organization(locale: Locale) {
     areaServed: { '@type': 'Country', name: 'Japan' },
     location: { '@type': 'Place', name: '大阪府大阪市北区梅田', address: { '@id': `${SITE_URL}/#address` } },
     contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: EMAIL, telephone: '+81-70-3175-7567', availableLanguage: ['ja', 'en'], url: `${SITE_URL}${path(locale, 'contact')}` },
-    brand: ['Yuma', 'Cozy Cafe Jazz BGM', 'Relaxing Classical Music Live', 'Deep Sleep Music Radio', 'SECOND TAKE', 'Baton', 'Baton Partners'].map((name) => ({ '@type': 'Brand', name })),
+    brand: ['Yuma', 'Cozy Cafe Jazz BGM', 'Relaxing Classical Music Live', 'Deep Sleep Music Radio', 'SECOND TAKE', 'Baton', 'Baton Partners', 'Music Japan Learning'].map((name) => ({ '@type': 'Brand', name })),
     owns: [{ '@id': `${SECOND_TAKE_URL}#podcast-series` }, { '@id': `${BATON_URL}#service` }, { '@id': BP_SERVICE_ID }],
     knowsAbout: ['音楽制作', '楽曲配信', 'BGM制作', 'Podcast制作', '経営者インタビュー', 'メディア企画'],
     sameAs: socials.map((s) => s.href),
