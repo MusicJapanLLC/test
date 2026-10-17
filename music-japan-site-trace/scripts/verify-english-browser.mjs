@@ -29,6 +29,7 @@ const DAY = 86_400_000;
 const MOBILE = {width: 390, height: 844};
 const DESKTOP = {width: 1365, height: 900};
 const SPEECH_LABEL = 'STUB: speech lifecycle only; no real audio or pronunciation validation';
+const WEBKIT_CAPTURE_LIMIT = 'Pixel capture omitted: Playwright 1.62.1 WebKit injects an inline synchronization stylesheet that violates the app CSP. All visual-route, layout and functional assertions still run; CSP diagnostics remain fatal.';
 const FOREIGN_STORAGE = {
   'wahran-v1': '{"qaSentinel":"existing Arabic progress must be untouched"}',
   'wahran-korean-polite-v1': '{"qaSentinel":"existing Korean progress must be untouched"}',
@@ -78,6 +79,7 @@ const report = {
     'Speech synthesis is explicitly stubbed. Audible output and OS voice installation need device listening checks.',
     'pagehide listener cancellation is dispatched as a lifecycle event; browser back/forward-cache behavior is not certified.',
     'Screenshot capture and layout assertions do not replace human visual review or assistive-technology testing.',
+    WEBKIT_CAPTURE_LIMIT,
   ],
   engines: [],
   cases: [],
@@ -187,11 +189,12 @@ async function assertNoOverflow(page, label) {
 
 async function screenshot(page, engine, size, name, fullPage = true) {
   await assertNoOverflow(page, `${engine}/${size}/${name}`);
+  if (engine === 'webkit') return {page: name, layout: 'passed', capture: 'omitted', reason: WEBKIT_CAPTURE_LIMIT};
   const path = join(OUT, `${engine}-${size}-${name}.png`);
-  // Use the app's reduced-motion CSS. Playwright's caret-hiding stylesheet
-  // triggers WebKit CSP errors, so screenshots must not inject that stylesheet.
+  // WebKit unconditionally injects a synchronization style before honoring
+  // these options. Keep its full assertions, and save pixels only in Chromium.
   await page.screenshot({path, fullPage, animations: 'allow', caret: 'initial'});
-  return relative(OUT, path);
+  return {page: name, layout: 'passed', capture: 'saved', path: relative(OUT, path)};
 }
 
 function installSpeechStub({unsupported}) {
@@ -317,10 +320,13 @@ async function runCase(browser, engine, name, body, {size = 'mobile', unsupporte
     record.error = error.stack || String(error);
     record.url = page.url();
     const stem = `${engine}-${size}-${safeName(name)}`;
-    try {
-      await page.screenshot({path: join(OUT, `${stem}-failure.png`), fullPage: true, animations: 'allow', caret: 'initial'});
-      record.failureScreenshot = `${stem}-failure.png`;
-    } catch (captureError) { record.screenshotError = String(captureError); }
+    if (engine === 'webkit') record.failureScreenshotOmitted = WEBKIT_CAPTURE_LIMIT;
+    else {
+      try {
+        await page.screenshot({path: join(OUT, `${stem}-failure.png`), fullPage: true, animations: 'allow', caret: 'initial'});
+        record.failureScreenshot = `${stem}-failure.png`;
+      } catch (captureError) { record.screenshotError = String(captureError); }
+    }
     try {
       await context.tracing.stop({path: join(OUT, `${stem}-trace.zip`)});
       record.trace = `${stem}-trace.zip`;
@@ -1063,7 +1069,7 @@ async function main() {
         await runCase(browser, engine, 'speech STUB sequencing, replacement, navigation, close and pagehide cancellation', speechLifecycle);
         await runCase(browser, engine, 'unsupported speech remains usable without a microphone', unsupportedSpeech, {unsupported: true});
         await runCase(browser, engine, 'real backup download, invalid rejection, preview, restore and other-app isolation', page => backups(page, engine));
-        for (const size of ['mobile', 'desktop']) await runCase(browser, engine, 'home, library, unit, roleplay and settings screenshots', (page, record) => visualPages(page, record, engine, size), {size});
+        for (const size of ['mobile', 'desktop']) await runCase(browser, engine, 'home, library, unit, roleplay and settings visual routes and layout', (page, record) => visualPages(page, record, engine, size), {size});
         await runCase(browser, engine, 'readable topic pages and metadata with JavaScript disabled', readablePages, {javascript: false});
       } finally { await browser.close(); }
     }

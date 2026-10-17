@@ -6,7 +6,7 @@ Review date: 2026-10-17.
 
 - **Passed locally:** `node --check scripts/verify-english-browser.mjs`, `node --check learning/english/app.js` and `node --check scripts/publish-english.mjs`.
 - **Passed locally:** `node --test tests/english-engine.test.mjs` exited with status 0 after the English backup identifier fix.
-- **Browser execution: not run in the local workspace.** Chromium and WebKit executables are unavailable here. The script is prepared for GitHub Actions; its assertions and screenshots must not be described as having passed until the generated report confirms it.
+- **Browser execution is provided by GitHub Actions.** Chromium and WebKit executables are unavailable in the local workspace. Run `39032989909` at app revision `eb319964b7ea` passed 74 of 76 cases: all curriculum, dialogue and functional cases passed; the two WebKit visual cases reported the screenshot-tool CSP issue documented below. Chromium mobile and desktop captures were also inspected. The final release still requires the complete 76-case gate; its generated report is the authority for the final status.
 - Reviewed source: `learning/english/app.js`, `engine.cjs`, `style.css`, the inherited `base.css`, `scripts/publish-english.mjs`, and `tests/english-engine.test.mjs`.
 - The initial review added this document and `scripts/verify-english-browser.mjs`. At the owner's request, the reviewer then fixed the reported issues in `learning/english/app.js` and `scripts/publish-english.mjs`. Curriculum data and the CI workflow were not edited.
 
@@ -24,7 +24,7 @@ The initial `publishEnglish` copy list did not include `CMU-LICENSE.txt`, althou
 
 ### Fixed before CI: explicitly allow the linked web manifest in CSP
 
-The generated page linked `manifest.webmanifest` while the meta CSP had `default-src 'none'` without `manifest-src`. The publisher now declares `manifest-src 'self'`. It also includes the actual `/learning/` hub URL in the English LLM index, matching the hub entry added to `manifest.urls` by the owner. The browser suite checks the published index and treats CSP console errors as failures; actual browser execution is still pending CI.
+The generated page linked `manifest.webmanifest` while the meta CSP had `default-src 'none'` without `manifest-src`. The publisher now declares `manifest-src 'self'`. It also includes the actual `/learning/` hub URL in the English LLM index, matching the hub entry added to `manifest.urls` by the owner. The browser suite checks the published index and treats CSP console errors as failures.
 
 ### Fixed before CI: concurrent file reads could show a stale import preview
 
@@ -55,7 +55,7 @@ The modal's close behavior still cancels speech. Audible output and actual mobil
 - Recall and listening answers are absent from their answer panel before reveal. Role play omits the learner's English, IPA and line-audio button until reveal, while keeping the Japanese hint.
 - The publisher emits readable topic pages with the full original examples and explanations, a canonical URL, descriptive metadata, JSON-LD, sitemap entries and an LLM-readable index. Those pages remain useful without JavaScript.
 
-These are source-review observations, not a claim of successful real-browser or real-device execution.
+These are source-review observations. The browser-run status is recorded above; they are not a claim of real-device execution.
 
 ## How to run the browser suite
 
@@ -99,7 +99,7 @@ With 24 dialogues, the default run contains 38 cases per engine, 76 cases in tot
 | Unsupported speech | API-unavailable guidance and continued text practice/grading; no microphone requested |
 | Backups | Real Blob download and JSON contents; no export mutation; all invalid cases leave state untouched; valid file preview before confirmation; cancellation; invalid-after-valid; deduplication and unknown-ID stripping; confirmed replacement; reload and actual-download round trip |
 | Readable content | App/guide/sources/all topic pages with JavaScript disabled; full lesson content; canonical URL, robots and JSON-LD; sitemap/LLM-index build checks |
-| Layout and diagnostics | 390×844 mobile in both engines; desktop screenshots at 1365×900; document/main/modal horizontal overflow; primary navigation targets; console errors, page errors, HTTP errors and unexpected external requests |
+| Layout and diagnostics | 390×844 mobile and 1365×900 desktop in both engines; document/main/modal horizontal overflow; primary navigation targets; console errors, page errors, HTTP errors and unexpected external requests; pixel captures in Chromium |
 
 ## Evidence and limits
 
@@ -108,9 +108,11 @@ The report includes browser versions, the build revision and hashes of the app, 
 Output is written to `artifacts/english-browser/` by default:
 
 - `report.json`: pass/fail per case, browser launches, diagnostics, timings and build identity.
-- `{engine}-{mobile|desktop}-{home|library|unit|roleplay|roleplay-revealed|settings}.png`: 24 scheduled screenshots in the full matrix. Library and settings use a viewport capture; the other pages use full-page captures.
-- `{case}-failure.png` and `{case}-trace.zip`: additional evidence for failed cases.
+- `chromium-{mobile|desktop}-{home|library|unit|roleplay|roleplay-revealed|settings}.png`: 12 scheduled screenshots. Library and settings use a viewport capture; the other pages use full-page captures. Each visual-page record states whether the pixels were saved or omitted; layout assertions run in both engines.
+- `{case}-failure.png` (Chromium) and `{case}-trace.zip` (both engines): additional evidence for failed cases.
 - `{engine}-exported-backup.json`: synthetic learner-state export from the download test.
+
+**WebKit pixel-capture limitation:** Playwright Core 1.62.1 calls `inPagePrepareForScreenshots`, which inserts an inline `body {}` style when `syncAnimations` is true, before checking the requested animation and caret options. WebKit's `shouldToggleStyleSheetToSyncAnimations()` always returns true. This is visible in the installed `playwright-core/lib/coreBundle.js` at lines 21080–21089, 21312 and 47532–47534. That test-tool preparation violates the application's strict CSP even with `animations: 'allow', caret: 'initial'`. The suite therefore saves pixels only in Chromium. WebKit still runs every visual route, expected-element assertion, overflow check, navigation-target check and all functional cases. CSP is unchanged; no console errors are ignored, and no application APIs are bypassed. Failure traces remain available in both engines.
 
 **Speech is the only API stub.** It holds utterances until the test emits a completion or error, exposes clearly named fictional voices, and records `speak`/`cancel` calls. It produces no sound and cannot validate actual pronunciation, voice quality, volume, OS voice availability or browser restrictions on a physical phone. `Date`, randomness, file reading, JSON downloads, application state logic, curriculum and DOM rendering are not replaced. Due-date fixtures are explicit synthetic progress records.
 
