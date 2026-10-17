@@ -4,7 +4,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseMeetingUrl, ParticipationError, ParticipationEngine, createAuditWriter, isVerifiedJoin, defaultRoutes } from '../src/core.mjs';
-import { extractRecallStatus, createRecallAdapter, createDesktopAdapter } from '../src/adapters.mjs';
+import { extractRecallStatus, createRecallAdapter, createDesktopAdapter, createBrowserAdapter } from '../src/adapters.mjs';
 
 const meet = 'https://meet.google.com/abc-defg-hij';
 const zoom = 'https://us06web.zoom.us/j/123456789?pwd=topsecret';
@@ -125,4 +125,55 @@ test('Recall API mocked join uses provider status, not 201 response as success',
     if (prevKey === undefined) delete process.env.RECALL_API_KEY; else process.env.RECALL_API_KEY = prevKey;
     if (prevRegion === undefined) delete process.env.RECALL_REGION; else process.env.RECALL_REGION = prevRegion;
   }
+});
+
+test('browser adapter retains the confirmed session and releases it on stop', async () => {
+  let inside = false, closes = 0;
+  const page = {
+    getByRole: (role, { name }) => ({ first: () => ({
+      isVisible: async () => role === 'button' && name.test(inside ? 'Leave call' : 'Join now'),
+      click: async () => { inside = true; },
+      fill: async () => {},
+    }) }),
+    locator: () => ({ innerText: async () => '' }),
+    goto: async () => {},
+    isClosed: () => false,
+    evaluate: async () => 2,
+  };
+  const context = { pages: () => [page], newPage: async () => page, close: async () => { closes++; } };
+  const abort = new AbortController();
+  const adapter = createBrowserAdapter({
+    playwrightProvider: async () => ({ chromium: { launchPersistentContext: async () => context } }),
+    pause: async () => { if (inside) abort.abort(); },
+  });
+  const state = await adapter.join({ meetingUrl: meet, platform: 'google_meet', browserProfile: 'mock-profile', browserChannel: 'msedge', displayName: 'Music Japan AI', joinTimeoutMs: 1500 });
+  assert.equal(state.state, 'JOINED');
+  assert.equal(state.proof.audioTracksDetected, 2);
+  assert.equal(closes, 0, 'admitted meeting must not be disconnected at success');
+  const resident = await adapter.maintain({ signal: abort.signal, intervalMs: 1 });
+  assert.equal(resident.state, 'OPERATOR_STOPPED');
+  await adapter.close();
+  assert.equal(closes, 1);
+});
+test('resident session flags lost leave control before relaunch', async () => {
+  let inside = false, closes = 0;
+  const page = {
+    getByRole: (role, { name }) => ({ first: () => ({
+      isVisible: async () => role === 'button' && name.test(inside ? 'Leave call' : 'Join now'),
+      click: async () => { inside = true; },
+      fill: async () => {},
+    }) }),
+    locator: () => ({ innerText: async () => '' }),
+    goto: async () => {},
+    isClosed: () => false,
+    evaluate: async () => 0,
+  };
+  const browser = { pages: () => [page], close: async () => { closes++; } };
+  const adapter = createBrowserAdapter({ playwrightProvider: async () => ({ chromium: { launchPersistentContext: async () => browser } }), pause: async () => {} });
+  await adapter.join({ meetingUrl: meet, platform: 'google_meet', browserProfile: 'mock-profile', browserChannel: 'msedge', displayName: 'Music Japan AI', joinTimeoutMs: 1000 });
+  inside = false;
+  const monitor = await adapter.maintain({ intervalMs: 1, maxSessionMs: 1000 });
+  assert.equal(monitor.state, 'SESSION_DISCONNECTED');
+  await adapter.close();
+  assert.equal(closes, 1);
 });
