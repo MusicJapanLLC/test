@@ -93,10 +93,12 @@ export async function runMeetingSession({
     if(admitted.status!=='JOINED_VERIFIED')throw new Error('JOIN_NOT_VERIFIED');
     if(typeof adapter?.maintain!=='function')throw new Error('NO_RESIDENT_SESSION_MONITOR');
     session=join(dir,meeting.meetingHash+'-'+randomUUID().slice(0,8));
+    await mkdir(session,{recursive:false});
+    const audioDir=join(session,'capture');
     await emit('JOINED_UI_VERIFIED',{route:admitted.route});
     const stopFile=join(dir,'record-stop-'+meeting.meetingHash+'.flag');
     try{await rm(stopFile,{force:true});}catch{}
-    const recordArgs=['--output-dir',session,'--duration',String(durationSeconds),'--stop-file',stopFile,'--authorized','--consent'];
+    const recordArgs=['--output-dir',audioDir,'--duration',String(durationSeconds),'--stop-file',stopFile,'--authorized','--consent'];
     if(includeMicrophone)recordArgs.push('--microphone');
     captureWorker=await recordWorker('record.py',recordArgs);
     monitorAbort=new AbortController();
@@ -118,7 +120,7 @@ export async function runMeetingSession({
     await emit('RECORDER_FINISHED',{status:capture?.status});
     if(recordedResult.exit!==0 || capture?.status!=='CAPTURE_COMPLETED')
       throw new Error('AUDIO_CAPTURE_FAILED');
-    const manifest=join(session,'manifest.json');
+    const manifest=join(audioDir,'manifest.json');
     const prepared=await prepare(manifest);
     await emit('AUDIO_PREPARED');
     let transcript=null,minutes=null;
@@ -128,16 +130,16 @@ export async function runMeetingSession({
         allowBillable,cloudConsent,
       });
       await emit('TRANSCRIPTION_COMPLETE',{segmentCount:res.segments});
-      transcript=JSON.parse(await readFile(join(session,'transcript.json'),'utf8'));
+      transcript=JSON.parse(await readFile(join(audioDir,'transcript.json'),'utf8'));
       minutes=await makeMinutes({transcript,provider:minutesProvider,cloudConsent,allowBillable});
-      await storeMinutes({sessionFolder:session,transcript,minutes});
+      await storeMinutes({sessionFolder:audioDir,transcript,minutes});
       await emit('MINUTES_DRAFT_CREATED',{provider:minutesProvider});
     } else await emit('AWAITING_STT_CONFIGURATION');
     return {
       status:classifySessionOutcome(admitted,capture,transcript,minutes),
-      session,meetingHash:meeting.meetingHash,platform:meeting.platform,
+      session:audioDir,eventLog:join(session,'events.jsonl'),meetingHash:meeting.meetingHash,platform:meeting.platform,
       audioTracks:capture.tracks,sttProvider:sttProvider||null,
-      draftFile:minutes?join(session,'minutes.draft.json'):null,
+      draftFile:minutes?join(audioDir,'minutes.draft.json'):null,
       caveat:'UI admission alone is not proof of microphone and remote speech quality.',
     };
   } finally {
