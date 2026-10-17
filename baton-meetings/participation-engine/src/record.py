@@ -165,6 +165,7 @@ def main():
     cli.add_argument("--microphone", action="store_true")
     cli.add_argument("--loopback-index", type=int)
     cli.add_argument("--mic-index", type=int)
+    cli.add_argument("--stop-file", type=Path)
     args = cli.parse_args()
     pa = _pyaudio()
     p = pa.PyAudio()
@@ -210,7 +211,13 @@ def main():
                 STOP.set()
                 raise RuntimeError("AUDIO_DEVICE_START_TIMEOUT")
         until = time.monotonic() + args.duration
+        stop_file = args.stop_file.resolve() if args.stop_file else None
+        if stop_file and stop_file.exists():
+            raise RuntimeError("STOP_FILE_ALREADY_PRESENT")
         while time.monotonic() < until and not STOP.is_set():
+            if stop_file and stop_file.exists():
+                STOP.set()
+                break
             time.sleep(min(0.25, until - time.monotonic()))
         STOP.set()
         for worker in workers:
