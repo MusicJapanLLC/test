@@ -1,8 +1,6 @@
 name: Senju Guard Pressure Learning
 
 on:
-  schedule:
-    - cron: "47 */6 * * *"
   workflow_dispatch:
     inputs:
       iterations_per_seed:

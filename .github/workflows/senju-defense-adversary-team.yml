@@ -17,8 +17,6 @@ on:
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/standment-security-gate.yml"
       - ".github/workflows/senju-defense-adversary-team.yml"
-  schedule:
-    - cron: "41 2 * * *"
   workflow_dispatch:
 
 permissions:

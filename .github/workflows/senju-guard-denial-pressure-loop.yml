@@ -1,8 +1,6 @@
 name: Senju Guard Denial Pressure Loop
 
 on:
-  schedule:
-    - cron: "47 */2 * * *"
   workflow_dispatch:
   push:
     branches:
