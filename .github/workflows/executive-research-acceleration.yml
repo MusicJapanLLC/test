@@ -1,8 +1,6 @@
 name: Executive Research Acceleration
 
 on:
-  schedule:
-    - cron: '*/4 * * * *'
   workflow_dispatch:
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]

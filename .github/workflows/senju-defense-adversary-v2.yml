@@ -15,8 +15,6 @@ on:
       - "scripts/security/artifact_guard.py"
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/senju-defense-adversary-v2.yml"
-  schedule:
-    - cron: "17 3 * * *"
   workflow_dispatch:
 
 permissions:

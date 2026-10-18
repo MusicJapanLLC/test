@@ -19,8 +19,6 @@ on:
       - "automation/security/workflow_policy_entrypoint.py"
       - ".github/workflows/security-guard.yml"
       - ".github/workflows/senju-live-guard-adversary.yml"
-  schedule:
-    - cron: "7 * * * *"
   workflow_dispatch:
 
 permissions:

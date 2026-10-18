@@ -1,8 +1,6 @@
 name: Senju Authorized Outward Loop
 
 on:
-  schedule:
-    - cron: '11 */4 * * *'
   workflow_dispatch:
 
 permissions:

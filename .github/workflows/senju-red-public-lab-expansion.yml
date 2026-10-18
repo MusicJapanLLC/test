@@ -19,8 +19,6 @@ on:
       - 'senju/tests/test_public_red_target_pipeline.py'
       - 'senju/tests/test_public_red_url_expansion.py'
       - '.github/workflows/senju-red-public-lab-expansion.yml'
-  schedule:
-    - cron: '17 * * * *'
   workflow_dispatch:
 
 permissions:

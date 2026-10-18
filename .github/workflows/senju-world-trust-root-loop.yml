@@ -22,8 +22,6 @@ on:
       - "senju/config/production-deployment-authorizations.json"
       - "senju/state/standing_authorizations.json"
       - ".github/workflows/senju-world-trust-root-loop.yml"
-  schedule:
-    - cron: "41 */2 * * *"
   workflow_dispatch:
 
 permissions:

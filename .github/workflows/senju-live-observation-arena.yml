@@ -1,8 +1,6 @@
 name: Senju Live Observation Arena
 
 on:
-  schedule:
-    - cron: "20 */6 * * *"
   workflow_dispatch:
   push:
     branches:

@@ -21,8 +21,6 @@ on:
       - "automation/security/test_authority_balance_policy.py"
       - ".github/workflows/adversarial-boundary-growth-lab.yml"
       - ".github/workflows/authority-balance-council.yml"
-  schedule:
-    - cron: "11,31,51 * * * *"
   workflow_dispatch:
 permissions:
   contents: read

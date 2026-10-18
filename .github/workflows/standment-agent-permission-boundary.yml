@@ -1,9 +1,6 @@
 name: Standment - Agent Permission Boundary Evidence
 
 on:
-  schedule:
-    # Four independent evidence closure opportunities per hour.
-    - cron: '7,22,37,52 * * * *'
   workflow_dispatch:
   pull_request:
     branches: ['claude/employee-onboarding-setup-udm86']

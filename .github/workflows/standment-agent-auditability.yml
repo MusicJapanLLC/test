@@ -1,8 +1,6 @@
 name: Standment - Autonomous Agent Auditability Evidence
 
 on:
-  schedule:
-    - cron: '7,27,47 * * * *'
   workflow_dispatch:
   pull_request:
     branches: ['claude/employee-onboarding-setup-udm86']

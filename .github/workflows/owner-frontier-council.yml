@@ -1,8 +1,6 @@
 name: Owner Frontier SENJU Research Governance
 
 on:
-  schedule:
-    - cron: '13,28,43,58 * * * *'
   workflow_dispatch:
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]

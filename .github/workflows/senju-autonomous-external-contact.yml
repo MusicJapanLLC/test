@@ -1,8 +1,6 @@
 name: Senju RED Autonomous External Contact
 
 on:
-  schedule:
-    - cron: "41 */2 * * *"
   workflow_dispatch:
   push:
     branches:

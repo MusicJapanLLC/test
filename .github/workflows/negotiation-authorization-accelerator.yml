@@ -2,8 +2,6 @@ name: Negotiation Authorization Accelerator
 # Owner Authorization pool closed-loop validation: formal intake -> Authorization -> promotion -> RED frontier.
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
   push:
     branches:

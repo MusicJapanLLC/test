@@ -21,8 +21,6 @@ on:
       - 'automation/codegen/engine/security_proposal.py'
       - 'security/authority_envelopes/**'
       - '.github/workflows/production-security-change-loop.yml'
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 concurrency:

@@ -81,8 +81,6 @@ on:
       - 'automation/codegen/tests/test_discovery_replica_continuity.py'
       - 'senju/DISCOVERY_AUTHORIZATION_CLOSED_LOOP.md'
       - '.github/workflows/discovery-authority-closed-loop.yml'
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:

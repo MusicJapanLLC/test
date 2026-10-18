@@ -10,8 +10,6 @@ on:
       - claude/employee-onboarding-setup-udm86
       - main
       - master
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:

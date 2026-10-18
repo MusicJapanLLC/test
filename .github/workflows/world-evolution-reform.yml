@@ -19,9 +19,6 @@ on:
         description: Experiments per agent per generation
         required: false
         default: "10"
-  schedule:
-    - cron: "*/15 * * * *"
-
 permissions:
   contents: read
 
