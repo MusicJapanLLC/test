@@ -29,8 +29,6 @@ on:
       - 'automation/codegen/SHARED_DISCOVERY_AUTHORITY.md'
       - 'automation/codegen/AUTHORITY_COORDINATION_PROTOCOL.md'
       - '.github/workflows/shared-discovery-authority-cycle.yml'
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 permissions:

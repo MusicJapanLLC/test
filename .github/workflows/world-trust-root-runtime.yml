@@ -1,8 +1,6 @@
 name: WORLD Trust Root Runtime
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"
   workflow_dispatch:
   push:
     branches:

@@ -1,8 +1,6 @@
 name: PR Traffic Controller
 
 on:
-  schedule:
-    - cron: '*/30 * * * *'
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
   workflow_dispatch:
