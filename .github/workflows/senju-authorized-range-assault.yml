@@ -2,8 +2,6 @@ name: Senju - Authorized Range Assault
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '*/15 * * * *'
   push:
     branches:
       - claude/employee-onboarding-setup-udm86

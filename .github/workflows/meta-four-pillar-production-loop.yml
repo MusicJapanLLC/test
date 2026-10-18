@@ -1,8 +1,6 @@
 name: META Four Pillar Production Loop
 
 on:
-  schedule:
-    - cron: "19,49 * * * *"
   workflow_dispatch:
 
 permissions:

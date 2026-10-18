@@ -1,8 +1,6 @@
 name: Senju Blitz — Parallel Adversary Surge
 
 on:
-  schedule:
-    - cron: "*/20 * * * *"  # every 20 minutes
   workflow_dispatch:
     inputs:
       slots:

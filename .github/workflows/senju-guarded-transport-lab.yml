@@ -11,9 +11,6 @@ on:
         description: "Strategy rounds per target (1-10)"
         required: false
         default: "2"
-  schedule:
-    - cron: "17 */6 * * *"
-
 permissions:
   contents: read
 

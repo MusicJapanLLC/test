@@ -1,8 +1,6 @@
 name: META X Senju Delegated Root Factory
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
   push:
     branches:

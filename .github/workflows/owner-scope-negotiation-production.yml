@@ -1,8 +1,6 @@
 name: Owner Scope Negotiation Production
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
   push:
     branches: [claude/employee-onboarding-setup-udm86]

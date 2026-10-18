@@ -2,9 +2,6 @@ name: Production Evolution Auto Cycle
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "17 * * * *"
-
 permissions:
   contents: read
   actions: read

@@ -1,8 +1,6 @@
 name: THE WORLD - Runtime Density Booster v2
 
 on:
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
   push:
     branches: ['claude/employee-onboarding-setup-udm86']

@@ -10,9 +10,6 @@ on:
       - ".github/workflows/senju-adversary-pressure.yml"
       - ".github/workflows/senju-adversary-full-join.yml"
   workflow_dispatch:
-  schedule:
-    - cron: "47 */3 * * *"  # every 3 hours
-
 permissions:
   contents: read
 

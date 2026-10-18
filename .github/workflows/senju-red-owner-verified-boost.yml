@@ -1,8 +1,6 @@
 name: Senju - RED Owner-Verified Boost
 
 on:
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
   push:
     branches:

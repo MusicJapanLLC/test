@@ -40,9 +40,6 @@ on:
         required: true
         default: "500000"
         type: string
-  schedule:
-    - cron: "*/15 * * * *"
-
 permissions:
   contents: read
   actions: read

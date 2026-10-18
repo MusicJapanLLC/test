@@ -1,8 +1,6 @@
 name: Senju SPEAR Continuous Authorized Assessment
 
 on:
-  schedule:
-    - cron: "41 */6 * * *"
   workflow_dispatch:
   pull_request:
     paths:

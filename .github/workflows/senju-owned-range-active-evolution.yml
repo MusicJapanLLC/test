@@ -1,8 +1,6 @@
 name: Senju Owned Range Active Evolution
 
 on:
-  schedule:
-    - cron: "4,19,34,49 * * * *" # feeds Agency Orchestrator at 7,22,37,52
   workflow_dispatch:
     inputs:
       max_pages:

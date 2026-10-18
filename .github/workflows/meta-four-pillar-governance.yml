@@ -1,8 +1,6 @@
 name: META Four Pillar Governance
 
 on:
-  schedule:
-    - cron: "11,41 * * * *"
   workflow_dispatch:
 
 permissions:

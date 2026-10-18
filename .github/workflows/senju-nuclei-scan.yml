@@ -1,8 +1,6 @@
 name: Senju Real Scan — Nuclei against own endpoints
 
 on:
-  schedule:
-    - cron: "7 * * * *"  # hourly owned-surface research
   workflow_dispatch:
     inputs:
       target_url:

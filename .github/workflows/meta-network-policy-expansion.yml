@@ -17,8 +17,6 @@ on:
       - automation/codegen/tests/test_network_policy_acceleration.py
       - automation/codegen/tests/test_network_persistent_replicas.py
       - .github/workflows/meta-network-policy-expansion.yml
-  schedule:
-    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 permissions:
