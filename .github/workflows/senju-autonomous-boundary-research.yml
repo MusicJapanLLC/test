@@ -38,9 +38,6 @@ on:
       - ".github/workflows/senju-autonomous-boundary-research.yml"
       - ".github/workflows/senju-adversary-pressure.yml"
   workflow_dispatch:
-  schedule:
-    - cron: "*/15 * * * *"
-
 permissions:
   contents: read
   actions: read

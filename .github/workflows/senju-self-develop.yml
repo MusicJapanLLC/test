@@ -1,8 +1,6 @@
 name: Senju Autonomous Self-Development Loop
 
 on:
-  schedule:
-    - cron: "*/15 * * * *"   # four autonomous research cycles per hour
   workflow_dispatch:
 
 concurrency:
