@@ -15,8 +15,6 @@ on:
       - automation/recovery/test_recovery_tuner.py
       - .github/workflows/meta-production-stop-learning.yml
       - .github/workflows/owned-self-recovery-worker.yml
-  schedule:
-    - cron: "7,37 * * * *"
   workflow_dispatch:
 
 permissions:
