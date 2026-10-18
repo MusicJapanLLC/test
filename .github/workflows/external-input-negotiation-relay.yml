@@ -12,8 +12,6 @@ on:
       - 'automation/codegen/engine/external_input_negotiation_relay.py'
       - 'automation/codegen/tests/test_external_input_negotiation_relay.py'
       - '.github/workflows/external-input-negotiation-relay.yml'
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 permissions:
