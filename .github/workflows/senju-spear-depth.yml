@@ -1,8 +1,6 @@
 name: Senju SPEAR Phase 5 Depth Observation
 
 on:
-  schedule:
-    - cron: "53 */6 * * *"
   workflow_dispatch:
   pull_request:
     paths:
