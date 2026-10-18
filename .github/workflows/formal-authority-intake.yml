@@ -1,8 +1,6 @@
 name: Formal Authority Intake
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
   pull_request:
     branches: [claude/employee-onboarding-setup-udm86]

@@ -12,8 +12,6 @@ on:
       - 'senju/DISTRIBUTED_AUTHORITY_POLICY.md'
       - 'AUTHORIZED_TEST_TARGETS.json'
       - '.github/workflows/autonomous-authority-council-cycle.yml'
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 permissions:

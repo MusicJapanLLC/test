@@ -2,8 +2,6 @@ name: Owner Authorization Pool 50
 # Activation marker: the workflow is now present on the base branch; this push starts the first closed-loop run.
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
   workflow_dispatch:
   push:
     branches:
