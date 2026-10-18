@@ -2,8 +2,6 @@ name: Senju - Offense First R&D Canary
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "41 */6 * * *"
   push:
     branches:
       - claude/employee-onboarding-setup-udm86

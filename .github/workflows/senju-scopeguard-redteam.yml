@@ -18,9 +18,6 @@ on:
         description: "ScopeGuard adversarial cases"
         required: false
         default: "100000"
-  schedule:
-    - cron: "41 */6 * * *"
-
 permissions:
   contents: read
 
