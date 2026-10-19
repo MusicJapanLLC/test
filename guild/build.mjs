@@ -27,6 +27,7 @@ const standalone = html
   .replace(/(<link rel="stylesheet" href="css\/[^"]+">\n?)+/, () => `<style>\n${css}\n</style>\n`)
   .replace(/(<script src="[^"]+"><\/script>\n?)+/, () => `<script>\n${safeJs}\n</script>\n`);
 writeFileSync(join(root, 'dist/index.html'), standalone);
+copyFileSync(join(root, 'analytics.js'), join(root, 'dist/analytics.js'));
 
 const artifact = `<meta charset="utf-8">
 ${title}
