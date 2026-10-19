@@ -7,8 +7,9 @@
 // Only production builds are indexable (VERCEL_ENV=production or MJ_INDEX=1).
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dist = path.join(root, 'dist');
 const SITE = (process.env.MJ_EN_URL || 'https://english.music-japan.com').replace(/\/$/, '');
 const INDEX = process.env.VERCEL_ENV === 'production' || process.env.MJ_INDEX === '1';
@@ -105,10 +106,11 @@ function page({ p, title, desc, body, ld = [], lang = 'ja', type = 'website' }) 
 ${INDEX ? '<meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1">' : '<meta name="robots" content="noindex,nofollow">'}
 <meta property="og:type" content="${type}"><meta property="og:site_name" content="MJ ENGLISH"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${url}"><meta property="og:image" content="${SITE}/og.png"><meta property="og:locale" content="ja_JP"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content="@Music_Japan_LLC">
 <link rel="icon" href="/icon.svg"><link rel="alternate" type="text/plain" href="/llms.txt" title="llms.txt"><meta name="theme-color" content="#060607"><style>${CSS}</style>
+<script defer src="/analytics.js?v=20261020" data-ga4-id="G-S2P0JCW50M" data-ga4-host="english.music-japan.com"></script>
 <script type="application/ld+json">${json(graph)}</script></head><body>
 <header class="top"><a class="brand" href="/">ENGLISH<span>MUSIC JAPAN</span></a><nav class="top"><a href="/records/">Records</a><a href="/about/">About</a><a href="/#/">App</a></nav></header>
 <main>${body}</main>
-<footer>MJ ENGLISH — Real English, on record. by <a href="https://music-japan.com/">Music Japan LLC</a>（大阪）· <a href="/about/">MJ ENGLISHについて</a> · <a href="/llms.txt">llms.txt</a></footer>
+<footer>MJ ENGLISH — Real English, on record. by <a href="https://music-japan.com/">Music Japan LLC</a>（大阪）· <a href="/about/">MJ ENGLISHについて</a> · <a href="https://music-japan.com/privacy/">プライバシーポリシー・アクセス解析</a> · <a href="/llms.txt">llms.txt</a></footer>
 </body></html>`;
 }
 
@@ -237,7 +239,7 @@ function aboutPage() {
 <h2>学び方</h2><p>Today のボタンひとつで、その日の復習と新しいカードが始まります。英語を聞いて、意味を確認して、Again か Got it で自分を判定。覚えたカードは 12時間 → 2日 → 5日 → 12日 → 30日 → 75日の間隔で戻ってきます（間隔反復）。日本語を見て英語で言う「日本語→英語」モード、単語タイルを並べる瞬間英作文、レコードを連続再生するリスニングドリル（シャドーイング対応）もあります。</p>
 <h2>音声</h2><p>全カードを、オープンなニューラル音声モデル Kokoro（Apache-2.0）で事前に録音しています。見出しのゆっくり版と、会話の A・B は別の声です。発音記号はカーネギーメロン大学の CMU Pronouncing Dictionary をもとにした米国英語の IPA です。</p>
 <h2>引用のルール</h2><p>名著の引用は、米国と日本の両方でパブリックドメインになっている作品だけを、Project Gutenberg の原文と一字一句照合して掲載しています。映画・ドラマは作品名と年を明記して一行だけ引用し、洋楽の歌詞は掲載しません（曲名とアーティスト名を挙げ、例文はすべてオリジナル）。研究のカードには元の論文を記載しています。</p>
-<h2>データ</h2><p>学習の記録はブラウザの中だけに保存されます。アカウント登録はありません。</p>
+<h2>データ</h2><p>学習の記録はブラウザの中だけに保存されます。アカウント登録はありません。公開ページ・画面の閲覧数をGoogle Analytics 4で計測します。学習の進捗や回答、録音データは送信しません。<a href="https://music-japan.com/privacy/">アクセス解析について</a></p>
 <h2>運営</h2><p>合同会社Music Japan（Music Japan LLC）— 大阪。音楽制作・配信、Podcast、インタビューを軸にした音楽・メディア会社です。<a href="https://music-japan.com/">music-japan.com</a></p>`;
   write('about/index.html', page({ p, title, desc, body, ld: [crumbsLd([['MJ ENGLISH', '/'], ['About', p]])] }));
   return p;

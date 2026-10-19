@@ -430,6 +430,7 @@ function renderMe() {
       <div class="about">
         <p class="about__brand">${mjMark('about__mark')}<span>MJ ENGLISH is made by Music Japan LLC in Osaka. ${DB.cards.length.toLocaleString()} phrases and ${DB.words.length.toLocaleString()} words, with more records coming.</span></p>
         <p>Voice: every card is recorded with Kokoro, an open neural voice model (Apache-2.0), rendered on our side. Pronunciation symbols come from the CMU Pronouncing Dictionary.</p>
+        <p>Public page and screen views use Google Analytics 4. Your progress, answers and recordings are not sent. <a href="https://music-japan.com/privacy/" target="_blank" rel="noopener">Privacy &amp; analytics</a></p>
         <p>Quoting: classic-book quotes come only from works in the public domain in both the US and Japan. Movie and TV lines are quoted one line at a time, with the title. Song lyrics are never reproduced; we name the song and teach the phrase with our own examples. Science cards cite the paper. All example sentences are original.</p>
       </div>
     </section>`;

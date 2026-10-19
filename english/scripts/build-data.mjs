@@ -23,8 +23,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import https from 'node:https';
+import { fileURLToPath } from 'node:url';
 
-const root = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const CHECK = process.argv.includes('--check');
 const SOURCES = ['talk', 'songs', 'movies', 'books', 'science', 'comedy'];
 const SCENES = [
