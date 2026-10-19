@@ -1,13 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "rewrites": [
+  "redirects": [
     {
       "source": "/lantern-journey",
-      "destination": "https://lantern-journey.vocal-shore-1441.chatgpt.site/"
+      "destination": "/fire/",
+      "permanent": false
     },
     {
       "source": "/lantern-journey/:path*",
-      "destination": "https://lantern-journey.vocal-shore-1441.chatgpt.site/:path*"
+      "destination": "/fire/:path*",
+      "permanent": false
     }
   ]
 }
