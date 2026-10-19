@@ -104,6 +104,7 @@ export function headHtml(ctx: RenderCtx, m: PageMeta): string {
     '@graph': [...baseGraph(ctx), ...(m.noindex ? [] : [page]), ...(m.jsonLd ?? [])],
   };
   return `
+    ${m.noindex ? '' : '<script defer src="/analytics.js?v=20261020" data-ga4-id="G-S2P0JCW50M" data-ga4-host="store.music-japan.com"></script>'}
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="${FONT_HREF}" />
@@ -238,6 +239,7 @@ export function footerHtml(ctx: RenderCtx): string {
         <a href="${href(ctx, 'games/')}">作品一覧</a>
         <a href="${href(ctx, 'news/')}">お知らせ・更新</a>
         <a href="${href(ctx, 'request/')}">ご要望・バグ報告</a>
+        <a href="https://music-japan.com/privacy/">プライバシーポリシー・アクセス解析</a>
         <a class="foot__corp" href="${esc(site.operator.url)}" target="_blank" rel="noopener">
           ${musicJapanLogo(ctx, 'foot__corp-logo')}
           <span class="foot__corp-name">${esc(site.operator.name)}<span class="foot__corp-go" aria-hidden="true">↗</span></span>
