@@ -13,15 +13,19 @@
     try { var url = new URL(value); return url.origin + url.pathname; }
     catch (_) { return ''; }
   }
-  function pageUrl() {
+  function pageInfo() {
     var url = publicUrl(location.href);
-    if (router !== 'learning') return url;
-    // Only these public app sections may become virtual page paths.
+    if (router !== 'learning') return {url: url, key: url};
+    // Send screen names only. Public content IDs stay in the browser.
     var route = location.hash.replace(/^#\/?/, '').replace(/\/$/, '');
-    if (/^(?:learn|lesson|words|word|review|saved|speak|phrases|dialogue|dialogues|settings|records|shuffle|me|r)(?:\/[a-z0-9_-]{1,80}){0,3}$/i.test(route)) {
-      return url.replace(/\/?$/, '/') + '_view/' + route;
+    if (!route && host === 'music-japan.com' && location.pathname === '/english/') route = 'learn';
+    if (/^(?:learn|lesson|library|practice|session|quest|topic|unit|words|word|review|saved|speak|phrases|dialogue|dialogues|settings|records|shuffle|me|r)(?:\/[a-z0-9_-]{1,80}){0,3}$/i.test(route)) {
+      var screen = route.split('/')[0].toLowerCase();
+      var page = url.replace(/\/?$/, '/') + '_view/' + screen;
+      var detail = /^(?:lesson|topic|unit|word|dialogue|r)$/.test(screen);
+      return {url: page, key: detail ? url + '#' + route : page};
     }
-    return url;
+    return {url: url, key: url};
   }
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -34,9 +38,11 @@
     allow_ad_personalization_signals: false
   });
   var previous = '';
+  var previousKey = '';
   function view() {
-    var current = pageUrl();
-    if (current === previous) return;
+    var info = pageInfo();
+    var current = info.url;
+    if (info.key === previousKey) return;
     window.gtag('event', 'page_view', {
       send_to: id,
       page_location: current,
@@ -44,6 +50,7 @@
       page_title: document.title
     });
     previous = current;
+    previousKey = info.key;
   }
   view();
   window.addEventListener('hashchange', view);

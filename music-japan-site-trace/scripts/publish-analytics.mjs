@@ -2,6 +2,17 @@ import {copyFileSync,readFileSync,readdirSync,writeFileSync} from 'node:fs';
 import {join,relative} from 'node:path';
 import {fileURLToPath} from 'node:url';
 
+function allowAnalytics(policy) {
+  const directives=new Map(policy.split(';').map(x=>x.trim().split(/\s+/)).filter(([name])=>name).map(([name,...sources])=>[name,sources]));
+  const google=['https://www.googletagmanager.com','https://*.google-analytics.com'];
+  for(const [name,added] of [['script-src',["'self'",google[0]]],['connect-src',[...google,'https://analytics.google.com','https://www.google.com']],['img-src',google]]) {
+    const old=directives.get(name)??directives.get('default-src')??[];
+    directives.set(name,[...new Set([...old.filter(x=>x!=="'none'"),...added])]);
+  }
+  if(directives.has('script-src-elem'))directives.set('script-src-elem',[...new Set([...directives.get('script-src-elem').filter(x=>x!=="'none'"),"'self'",google[0]])]);
+  return [...directives].map(([name,sources])=>[name,...sources].join(' ')).join('; ');
+}
+
 // Run after all app publishers: their verified source artifacts stay unchanged.
 export function publishAnalytics(root=fileURLToPath(new URL('..',import.meta.url))) {
   const output=join(root,'deploy-dist');
@@ -19,6 +30,7 @@ export function publishAnalytics(root=fileURLToPath(new URL('..',import.meta.url
       const tag=`<script defer src="/analytics.js?v=20261020" data-ga4-id="G-S2P0JCW50M" data-ga4-host="music-japan.com"${router}></script>`;
       html=html.replace(/<script\b[^>]*src=["'][^"']*\/analytics\.js[^"']*["'][^>]*><\/script>\s*/gi,'');
       html=html.replace(/<\/head>/i,tag+'\n</head>');
+      html=html.replace(/<meta\b(?=[^>]*http-equiv="Content-Security-Policy")[^>]*>/gi,meta=>meta.replace(/content="([^"]*)"/i,(_all,policy)=>`content="${allowAnalytics(policy)}"`));
       html=html.replaceAll('No account or app analytics.','No account. Public page views use Google Analytics 4; progress and recordings are not sent. Privacy: https://music-japan.com/privacy/.');
       writeFileSync(path,html);count++;
     }
