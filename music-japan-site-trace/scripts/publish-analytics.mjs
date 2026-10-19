@@ -32,6 +32,7 @@ export function publishAnalytics(root=fileURLToPath(new URL('..',import.meta.url
       html=html.replace(/<\/head>/i,tag+'\n</head>');
       html=html.replace(/<meta\b(?=[^>]*http-equiv="Content-Security-Policy")[^>]*>/gi,meta=>meta.replace(/content="([^"]*)"/i,(_all,policy)=>`content="${allowAnalytics(policy)}"`));
       html=html.replaceAll('No account or app analytics.','No account. Public page views use Google Analytics 4; progress and recordings are not sent. Privacy: https://music-japan.com/privacy/.');
+      html=html.replaceAll('The public hosting provider may add analytics independently of this offline app.','This public site uses Google Analytics 4 for page and screen views; progress and recordings are not sent. Privacy: https://music-japan.com/privacy/.');
       writeFileSync(path,html);count++;
     }
   }
