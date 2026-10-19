@@ -24,6 +24,10 @@ publishLearning();
 const { publishEnglish } = await import("./publish-english.mjs");
 publishEnglish();
 
+// Integrate public-page measurement after every learning app has been generated.
+const { publishAnalytics } = await import("./publish-analytics.mjs");
+publishAnalytics();
+
 // Audit the files that will actually ship, including all learning apps and their headers.
 // The legacy edition retains its existing edition-specific validation.
 if (process.env.MJ_SITE !== "legacy") {

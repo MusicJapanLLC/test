@@ -48,7 +48,7 @@ export const privacy = {
         "h": "5. Cookie等について",
         "p": [
           "当サイトは、表示機能の維持、利便性の向上、利用状況の把握等のため、Cookieまたはこれに類する技術を利用する場合があります。ブラウザの設定によりCookieを無効にできますが、その場合、一部の機能が正しく動作しないことがあります。",
-          "当社が運営するMusic Japan、Baton Partners、SECOND TAKE、Batonの公開ページでは、Google LLCのGoogle アナリティクス 4を利用し、閲覧ページ、アクセス日時、端末・ブラウザ情報等をCookieとともに取得して、サイトごとの閲覧数の把握と改善に使用します。フォームの氏名・連絡先・回答内容はアクセス解析に送信しません。URLのクエリ文字列・フラグメントは計測対象から除き、広告パーソナライズは無効にしています。",
+          "当社が運営するMusic Japan、Music Japan Learning（韓国語・Darija・英語）、MJ ENGLISH、Baton Partners、SECOND TAKE、Baton、MJ STOREと公開ゲームのページでは、Google LLCのGoogle アナリティクス 4を利用し、閲覧ページ、アクセス日時、端末・ブラウザ情報等をCookieとともに取得して、サイトごとの閲覧数の把握と改善に使用します。フォームの氏名・連絡先・回答内容、録音・学習記録はアクセス解析に送信しません。URLのクエリ文字列や非公開のフラグメントは送信せず、学習アプリでは公開された画面名のみをページとして数えます。広告パーソナライズは無効にしています。",
           "Googleの情報利用について：https://policies.google.com/technologies/partner-sites?hl=ja\nGoogle アナリティクス オプトアウト アドオン：https://tools.google.com/dlpage/gaoptout?hl=ja"
         ],
         "li": []
@@ -133,7 +133,7 @@ export const privacy = {
         "h": "5. Cookies and Similar Technologies",
         "p": [
           "Our website may use cookies or similar technologies to maintain functionality, improve convenience, and understand usage. You can control or disable cookies through your browser settings, although doing so may cause some features to operate incorrectly.",
-          "Public pages on Music Japan, Baton Partners, SECOND TAKE and Baton use Google Analytics 4, provided by Google LLC. Page views, access times and device/browser information are collected with cookies to understand traffic for each site and improve our websites. Names, contact details and form responses are not sent to analytics. URL query strings and fragments are excluded from measurement, and advertising personalization is disabled.",
+          "Public pages on Music Japan, Music Japan Learning (Korean, Darija and English), MJ ENGLISH, Baton Partners, SECOND TAKE, Baton, MJ STORE and our public games use Google Analytics 4, provided by Google LLC. Page views, access times and device/browser information are collected with cookies to understand traffic for each site and improve our websites. Names, contact details, form responses, recordings and learning progress are not sent to analytics. URL query strings and private fragments are not sent. Learning apps count only public screen names as virtual pages, and advertising personalization is disabled.",
           "How Google uses information: https://policies.google.com/technologies/partner-sites?hl=en\nGoogle Analytics Opt-out Browser Add-on: https://tools.google.com/dlpage/gaoptout?hl=en"
         ],
         "li": []
