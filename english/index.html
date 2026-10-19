@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" />
 </head>
 <body>
-  <div id="app" class="app">
+  <div id="app" class="app" lang="en">
     <header class="bar">
       <a class="bar__logo" href="#/" aria-label="MJ ENGLISH home" data-logo></a>
       <div class="hud">
@@ -36,10 +36,10 @@
     <main id="view" class="view" tabindex="-1"></main>
     <nav class="tabs" aria-label="Main" data-tabs></nav>
   </div>
-  <div id="session" class="session" hidden></div>
+  <div id="session" class="session" lang="en" hidden></div>
   <div id="toasts" class="toasts" aria-live="polite"></div>
-  <div id="party" class="party" hidden></div>
-  <dialog id="sheet" class="sheet"></dialog>
+  <div id="party" class="party" lang="en" hidden></div>
+  <dialog id="sheet" class="sheet" lang="en"></dialog>
   <script type="module" src="/src/main.ts"></script>
 </body>
 </html>

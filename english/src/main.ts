@@ -12,6 +12,8 @@ import { $, $$ } from './ui';
 
 applyTheme();
 applySheet();
+// the crawlable landing inside #view is Japanese; once the app takes over, the UI is English (Japanese parts carry lang="ja")
+$('#view').removeAttribute('lang');
 
 /* shell: logo + HUD on top, four tabs at the bottom (a side rail on wide screens) */
 $('[data-logo]').innerHTML = logo();

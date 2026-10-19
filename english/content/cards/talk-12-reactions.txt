@@ -24,7 +24,7 @@ B: Are you serious? I set an alarm for this.
 # Get out of here!
 @ talk | friends | real | funny | 2
 = うっそ〜！（信じられない）
-A: I met Bruno Mars at the airport.
+A: I met a famous rapper at the airport.
 B: Get out of here!
 ? 文字通りの「出ていけ」ではない。喜びの驚き。言い方で判断。
 

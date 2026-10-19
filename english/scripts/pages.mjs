@@ -262,7 +262,7 @@ function shell() {
 <p><a href="#/">Start today's session</a> · <a href="/records/">Records</a> · <a href="/about/">About</a></p>
 ${SHELVES.map(([name, fn]) => { const rs = records.filter(fn); return rs.length ? `<h2>${esc(name)}</h2><ul>${rs.map((r) => `<li><a href="/r/${r.id}/">${esc(r.t)}</a> — ${esc(rja(r))}</li>`).join('')}</ul>` : ''; }).join('')}
 </section>`;
-  html = html.replace('<main id="view" class="view" tabindex="-1"></main>', `<main id="view" class="view" tabindex="-1">${landing}</main>`);
+  html = html.replace('<main id="view" class="view" tabindex="-1"></main>', `<main id="view" class="view" tabindex="-1" lang="ja">${landing}</main>`);
   fs.writeFileSync(f, html);
 }
 
