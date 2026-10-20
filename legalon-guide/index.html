@@ -2017,6 +2017,8 @@ const hero = (function () {
     errBox.hidden = true;
     send.addEventListener('click', async () => {
       if (sending) return;
+      // Claude の共有リンク（Artifact）の中からは外へ送れないので、回答をコピーして返信してもらう画面へ
+      if (window.claude && typeof window.claude.use === 'function') { idx = TOTAL; progress(); swap(doneStep(false, p)); return; }
       sending = true;
       send.disabled = true;
       send.replaceChildren(h('span', { class: 'spin', 'aria-hidden': 'true' }), document.createTextNode('送信しています'));
