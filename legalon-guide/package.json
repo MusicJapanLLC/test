@@ -1,0 +1,6 @@
+{
+  "name": "legalon-guide",
+  "private": true,
+  "type": "commonjs",
+  "engines": { "node": ">=20" }
+}
