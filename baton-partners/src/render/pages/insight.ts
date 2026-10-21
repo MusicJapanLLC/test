@@ -113,7 +113,7 @@ ${header(p, 'insight')}
         ${sections}
         <aside class="a-end">
           <p class="a-end-k">この記事を読んだ方へ</p>
-          <p class="a-end-h">${heading(`まずは${p.service.name}を知る。気になったら、話してみる。`)}</p>
+          <p class="a-end-h">${heading(`まずは${p.service.name}を知る。{気になったら、}話してみる。`)}</p>
           <div class="a-end-actions">
             <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${esc(p.service.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
             <a class="btn btn-cta" href="${routes.contact(p.slug)}" data-cursor="Talk">話してみる</a>

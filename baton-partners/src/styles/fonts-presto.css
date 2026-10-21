@@ -1,0 +1,12 @@
+/*
+ * presto の世界観（BE.PRESTO など）でだけ読み込む。夜の楽譜：
+ *   見出し：しっぽり明朝 B1 800（使う文字だけのファイルは scripts/fonts.py が生成。minka と同じファイル）
+ *   欧文　：Bodoni Moda のイタリック（楽譜の速度記号「Presto」のような、コントラストの強いイタリック）
+ *   ラベル：Oswald（細長いサンセリフ。小節番号・目盛り・ラベル）
+ *   記号　：Noto Music（𝄞 ♩ ♪ だけ）
+ */
+@import './fonts-faces-minka.css';
+@import '@fontsource-variable/bodoni-moda/opsz.css';
+@import '@fontsource-variable/bodoni-moda/opsz-italic.css';
+@import '@fontsource-variable/oswald/wght.css';
+@import '@fontsource/noto-music/music-400.css';

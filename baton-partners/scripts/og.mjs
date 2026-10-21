@@ -361,7 +361,77 @@ function orbit(it) {
   <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
 </div></body></html>`;
 }
+const { loadDefaultJapaneseParser } = require('budoux');
+const jaParser = loadDefaultJapaneseParser();
+// presto（BE.PRESTO など）は夜の楽譜と鐘。黒地にかすかな五線、右に真鍮の鐘と青い波紋。見出しはしっぽり明朝 B1、最後の行は青→生成り→真鍮
+function presto(it) {
+  const blue = '#4FB8EC';
+  const brass = '#C9A15B';
+  const cream = '#F4EFE4';
+  const parts = it.heading.split(/(?<=[、。])/).map((x) => x.trim()).filter(Boolean);
+  const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0);
+  const lines = [];
+  for (const part of parts) {
+    const last = lines.at(-1);
+    if (last !== undefined && !last.endsWith('。') && len(last + part) <= 13) lines[lines.length - 1] = last + part;
+    else lines.push(part);
+  }
+  // 1行が長すぎるとき（記事の題など）は、文節の切れ目で長さが半々になるところで分ける
+  const halve = (l) => {
+    const ph = jaParser.parse(l);
+    let best = [l];
+    let diff = Infinity;
+    for (let i = 1; i < ph.length; i++) {
+      const a = ph.slice(0, i).join('');
+      const b = ph.slice(i).join('');
+      if (Math.abs(len(a) - len(b)) < diff) [best, diff] = [[a, b], Math.abs(len(a) - len(b))];
+    }
+    return best;
+  };
+  const wrapped = lines.flatMap((l) => (len(l) <= 16 ? [l] : halve(l)));
+  const size = Math.min(70, Math.floor(650 / Math.max(...wrapped.map(len))), wrapped.length > 3 ? 46 : 70);
+  const h1 = wrapped.map((l, i) => `<span class="${i === wrapped.length - 1 && wrapped.length > 1 ? 'g' : ''}">${esc(l)}</span>`).join('');
+  const staff = `<svg class="staff" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630"><g fill="none" stroke="${cream}" stroke-opacity=".12" stroke-width="1.4">${[0, 1, 2, 3, 4].map((i) => `<path d="M0 ${452 + i * 18} C 300 ${420 + i * 18}, 700 ${500 + i * 18}, 1200 ${430 + i * 18}"/>`).join('')}</g><g fill="${blue}">${[[120, 470, 0.35], [262, 446, 0.25], [404, 470, 0.3], [560, 480, 0.22]].map(([x, y, o]) => `<ellipse cx="${x}" cy="${y}" rx="9" ry="6.4" transform="rotate(-24 ${x} ${y})" fill-opacity="${o}"/>`).join('')}</g></svg>`;
+  const ripples = `<svg class="rip" xmlns="http://www.w3.org/2000/svg" viewBox="-300 -300 600 600" width="600" height="600"><g fill="none" stroke="${blue}">${[120, 170, 220, 270].map((r, i) => `<circle r="${r}" stroke-opacity="${0.42 - i * 0.09}" stroke-width="1.6"/>`).join('')}</g><circle r="120" fill="none" stroke="${brass}" stroke-opacity=".5" stroke-width="1.4" stroke-dasharray="2 10"/></svg>`;
+  const bell = `<svg class="bell" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="210" height="210"><defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ECCA8A"/><stop offset="1" stop-color="#8A6A32"/></linearGradient></defs><path d="M29 9.5a3 3 0 0 1 6 0" fill="none" stroke="url(#b)" stroke-width="2"/><path d="M32 10c-9.4 0-15.4 7.2-15.4 16.4v8.6L11.4 44h41.2l-5.2-9V26.4C47.4 17.2 41.4 10 32 10Z" fill="url(#b)"/><path d="M11.4 44h41.2" stroke="#ECCA8A" stroke-width="1.6"/><circle cx="32" cy="50" r="4.2" fill="#ECCA8A"/></svg>`;
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'SMB1h';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800-h.woff2')}') format('woff2')}
+  @font-face{font-family:'SMB1r';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800.woff2')}') format('woff2')}
+  @font-face{font-family:'BDN';font-style:italic;font-weight:400 900;src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource-variable/bodoni-moda/files/bodoni-moda-latin-wght-italic.woff2')).href}') format('woff2')}
+  @font-face{font-family:'NMU';src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource/noto-music/files/noto-music-music-400-normal.woff2')).href}') format('woff2')}
+  @font-face{font-family:'OSW';font-weight:200 700;src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource-variable/oswald/files/oswald-latin-wght-normal.woff2')).href}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:#0B0E0F;font-family:'Zen Kaku Gothic New',sans-serif;color:${cream};position:relative;overflow:hidden}
+  .neb{position:absolute;inset:0;background:radial-gradient(ellipse 40% 56% at 82% 46%,#1A91C944,transparent 70%),radial-gradient(ellipse 26% 30% at 96% 96%,${brass}2a,transparent 70%),radial-gradient(ellipse 30% 40% at 0% 0%,#1A91C91c,transparent 70%)}
+  .staff{position:absolute;inset:0}
+  .rip{position:absolute;left:${905 - 300}px;top:${300 - 300}px}
+  .bell{position:absolute;left:${905 - 105}px;top:${300 - 112}px;filter:drop-shadow(0 0 40px ${brass}88)}
+  .tempo{position:absolute;right:64px;top:54px;text-align:right;font-family:'BDN',serif;font-style:italic;font-weight:600;font-size:44px;line-height:1;color:${cream}}
+  .tempo i{font-family:'NMU',serif;font-style:normal;font-size:20px;letter-spacing:0;color:${brass}}
+  .tempo small{display:block;margin-top:10px;font-family:'OSW',sans-serif;font-style:normal;font-weight:400;font-size:14px;letter-spacing:.24em;color:#B9E2F6}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg,${blue},${cream} 52%,${brass});box-shadow:0 0 30px #1A91C9aa}
+  .in{position:absolute;inset:56px 470px 56px 76px;display:flex;flex-direction:column;justify-content:space-between}
+  .top img{height:62px;width:auto}
+  .label{font-family:'OSW',sans-serif;font-weight:500;font-size:17px;letter-spacing:.24em;text-transform:uppercase;color:#B9E2F6;display:flex;align-items:center;gap:12px}
+  .label::before{content:'';width:20px;height:20px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M14.6 2v12.2' stroke='%23C9A15B' stroke-width='1.8' stroke-linecap='round'/%3E%3Cellipse cx='10.4' cy='14.6' rx='4.6' ry='3.3' transform='rotate(-24 10.4 14.6)' fill='%234FB8EC'/%3E%3C/svg%3E") center/contain no-repeat}
+  h1{margin-top:18px;font-family:'SMB1h','SMB1r','Zen Old Mincho',serif;font-weight:800;font-size:${size}px;line-height:1.36;letter-spacing:.02em;width:calc(100% + 150px);text-shadow:0 0 40px #1A91C966}
+  h1 span{display:block;white-space:nowrap}
+  h1 .g{width:fit-content;background:linear-gradient(90deg,${blue},${cream} 55%,${brass});-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:20px;font-weight:700;color:#CFC9BC;width:calc(100% + 394px)}
+  .foot svg{height:36px;width:auto}
+</style></head><body>
+<div class="neb"></div>${staff}${ripples}${bell}
+<p class="tempo">Presto<small><i>&#9833;</i> = 184</small></p><div class="bar"></div>
+<div class="in">
+  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}</div>
+  <div><p class="label">${esc(it.label)}</p><h1>${h1}</h1></div>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
+</div></body></html>`;
+}
 function html(it) {
+  if (it.theme === 'presto') return presto(it);
   if (it.theme === 'orbit') return orbit(it);
   if (it.theme === 'cheer') return cheer(it);
   if (it.theme === 'minka') return minka(it);

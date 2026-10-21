@@ -11,6 +11,7 @@ import '../styles/theme-studio.css';
 import '../styles/theme-match.css';
 import '../styles/theme-cheer.css';
 import '../styles/theme-orbit.css';
+import '../styles/theme-presto.css';
 import { setupContact } from './contact';
 import { prefersReducedMotion } from './env';
 import { setupFx } from './fx';
@@ -32,6 +33,7 @@ if (!__GOOGLE_FONTS__) {
   if (document.body.dataset.theme === 'match') void import('../styles/fonts-match.css');
   if (document.body.dataset.theme === 'cheer') void import('../styles/fonts-cheer.css');
   if (document.body.dataset.theme === 'orbit') void import('../styles/fonts-orbit.css');
+  if (document.body.dataset.theme === 'presto') void import('../styles/fonts-presto.css');
 }
 
 setupHeader();
@@ -77,6 +79,9 @@ if (document.body.dataset.theme === 'console') {
   }
   void import('./console').then((m) => m.setupConsole());
 }
+
+// presto の世界観だけの演出（鐘と和音の音・メトロノーム・8小節のスコア・速度記号の目盛り・表紙の傾き）
+if (document.body.dataset.theme === 'presto') void import('./presto').then((m) => m.setupPresto());
 
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));

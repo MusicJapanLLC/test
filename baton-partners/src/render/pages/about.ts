@@ -3,7 +3,7 @@ import type { Partner } from '../../types';
 import { ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
 import { answerBox, botHtml, leaderSection, nextReads, pageHero } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd } from '../seo';
-import { esc, heading, jp } from '../text';
+import { esc, heading, jp, text } from '../text';
 
 export function renderAbout(p: Partner, env: BuildEnv): string {
   const a = p.about;
@@ -122,7 +122,7 @@ ${footer(p)}`;
           type: 'AboutPage',
           path,
           name: p.seo.about.title,
-          description: p.seo.about.description,
+          description: text(p.seo.about.description),
           image: `/og/${p.slug}-about.png`,
           partner: p,
           dateModified: p.seo.updated,

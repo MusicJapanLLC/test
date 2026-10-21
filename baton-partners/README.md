@@ -153,3 +153,17 @@ music-japan.com はビルドのたびにこれを読んでパートナー欄を�
 
 文言は公式サイト（zettaichi.co.jp・n1a-cxo.com・asobment.studio.site・biz-summit.studio.site）を検索エンジン経由（Firecrawl）で確認した表現を使い、
 経歴と考え方は 2026年1月のインタビュー（ツナカレメディア、AddBox 取締役COO の時期）にもとづく。
+
+## BE.PRESTO（BP-008）の残り
+
+BE.PRESTO株式会社（東京・荻窪、代表取締役CEO 子安魁さん）のページ。世界観は presto（夜の楽譜と鐘：ロゴの黒と BP の青、鐘の真鍮）、シーンは bell（散らばった音符→五線→鐘の形）。
+ロゴは公式の透過PNG（422×355）をなぞってベクターにしたもの（形と色はそのまま）。子安さんの写真はオーナー経由で受け取ったもの（2026-10-21）。オーナーが掲載許可を確認済みのため、`draft` を付けずに公開する。
+
+- [x] 子安さんの掲載許可を確認（オーナー）
+- [ ] 受付（GAS）の企業設定に1行（企業ID `bepresto`・BE.PRESTO株式会社・通知先メール）。通知先メールはオーナーから受け取り済み。リポジトリには書かない
+- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `bepresto` を足す（足すまで、このページからの送信は記録されない）
+- [ ] ロゴの元データ（AI・SVG・高解像度PNG）をもらえたら、`public/partners/bepresto/` を差し替える
+- [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動）
+
+文言は公式サイト（bepresto.co.jp・be-presto-saiyo.com・教育事業のページ）を検索エンジン経由（Firecrawl）で確認した表現を使い、
+経歴は子安さんが X などで公開しているプロフィールにもとづく。料金・契約条件はサイトに載せない。
