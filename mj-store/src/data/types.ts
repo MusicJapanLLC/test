@@ -96,6 +96,8 @@ export interface Game {
   /** 遊ぶ先の URL。空なら「近日配信」表示になる */
   playUrl: string;
   status?: GameStatus;
+  /** true なら非公開。ストアのどこにも出さない（作品ページ・一覧・町・sitemap など）。データは戻すときのために残す */
+  hidden?: boolean;
   /** 現在のバージョン（ゲーム内表記） */
   currentVersion: string;
   tags: string[];
