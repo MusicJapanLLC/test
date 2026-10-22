@@ -1,10 +1,7 @@
 /*
- * presto の世界観（BE.PRESTO など）でだけ読み込む。誌面『PRESTO』：
- *   見出し：しっぽり明朝 B1 800（使う文字だけのファイルは scripts/fonts.py が生成。minka と同じファイル）
- *   題字と大きな数字：Bodoni Moda（コントラストの強いディドン。表紙の題字は 900、柱の英字はイタリック）
- *   ラベル・柱：Oswald（BE.PRESTO の公式サイトと同じ、細長いサンセリフ）
+ * presto の世界観（BE.PRESTO など）でだけ読み込む。
+ *   見出し：Zen Kaku Gothic New 900（使う文字だけのファイルは fonts-faces-mono.css と共通）
+ *   欧文・数字・ラベル：Oswald（BE.PRESTO の公式サイトと同じ、細長いサンセリフ）
  */
-@import './fonts-faces-minka.css';
-@import '@fontsource-variable/bodoni-moda/opsz.css';
-@import '@fontsource-variable/bodoni-moda/opsz-italic.css';
+@import './fonts-faces-mono.css';
 @import '@fontsource-variable/oswald/wght.css';

@@ -80,8 +80,5 @@ if (document.body.dataset.theme === 'console') {
   void import('./console').then((m) => m.setupConsole());
 }
 
-// presto の世界観だけの演出（鐘と和音の音・メトロノーム・8小節のスコア・速度記号の目盛り・表紙の傾き）
-if (document.body.dataset.theme === 'presto') void import('./presto').then((m) => m.setupPresto());
-
 const stage = setupStage();
 mountScenes((scene) => stage?.attach(scene));

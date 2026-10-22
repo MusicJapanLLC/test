@@ -363,13 +363,11 @@ function orbit(it) {
 }
 const { loadDefaultJapaneseParser } = require('budoux');
 const jaParser = loadDefaultJapaneseParser();
-// presto（BE.PRESTO など）は、誌面『PRESTO』の表紙。黒地に Bodoni の題字、右に表紙の写真（網点を薄く重ねる）。
-// 見出しはしっぽり明朝 B1、最後の行だけ BP の青。ラベルは Oswald。右下にバーコード
+// presto（BE.PRESTO など）は、ロゴの黒の夜に、鐘から広がる青い点の輪。右に代表の写真（青い枠をずらして重ねる）。
+// 見出しは Zen Kaku Gothic New 900、最後の行だけ明るい青。ラベルは公式サイトと同じ Oswald
 function presto(it) {
-  const blue = '#4FB8EC';
-  const cream = '#F1ECE2';
-  const mh = it.masthead ?? { name: 'PRESTO', issue: '', date: '', tagline: '' };
-  const cover = it.cover ?? (it.photo ? { src: it.photo, focus: [50, 30] } : null);
+  const blue = '#1A91C9';
+  const hi = '#4FB8EC';
   const parts = it.heading.split(/(?<=[、。])/).map((x) => x.trim()).filter(Boolean);
   const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0);
   const lines = [];
@@ -395,58 +393,42 @@ function presto(it) {
   if (wrapped.length > 3) wrapped = lines.flatMap((l) => (len(l) <= 15.5 ? [l] : halve(l)));
   const size = Math.min(58, Math.floor(540 / Math.max(...wrapped.map(len))), wrapped.length > 3 ? 34 : 58);
   const h1 = wrapped.map((l, i) => `<span class="${i === wrapped.length - 1 && wrapped.length > 1 ? 'g' : ''}">${esc(l)}</span>`).join('');
-  // バーコード：見出しから決まる太さの並び（毎回同じ形）
-  let seed = [...it.key].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
-  let x = 0;
-  const bars = [];
-  while (x < 118) {
-    seed = (seed * 1103515245 + 12345) >>> 0;
-    const w = 1 + (seed % 3);
-    if ((seed >> 4) % 3) bars.push(`<rect x="${x}" width="${w}" height="44"/>`);
-    x += w + 1 + ((seed >> 8) % 2);
-  }
-  const code = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" width="120" height="44" fill="#0B0E0F">${bars.join('')}</svg>`;
-  const [fx, fy] = cover?.focus ?? [50, 30];
+  // 鐘から広がる点の輪：方眼の点に、輪の帯だけ明るい青を重ねる
+  const ring = (r, w, a) => `radial-gradient(circle at 1010px 300px,transparent ${r - w}px,rgba(79,184,236,${a}) ${r}px,transparent ${r + w}px)`;
+  const logoDark = it.logo?.replace(/logo\.png$/, 'logo-light.png');
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
 <style>
-  @font-face{font-family:'SMB1h';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800-h.woff2')}') format('woff2')}
-  @font-face{font-family:'SMB1r';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800.woff2')}') format('woff2')}
-  @font-face{font-family:'BDN';font-weight:400 900;src:url('${fsv('bodoni-moda', 'bodoni-moda-latin-opsz-normal.woff2')}') format('woff2')}
-  @font-face{font-family:'BDNi';font-style:italic;font-weight:400 900;src:url('${fsv('bodoni-moda', 'bodoni-moda-latin-opsz-italic.woff2')}') format('woff2')}
+  @font-face{font-family:'ZKh';font-weight:900;src:url('${fontFile('zen-kaku-gothic-new-900-h.woff2')}') format('woff2')}
+  @font-face{font-family:'ZKr';font-weight:900;src:url('${fontFile('zen-kaku-gothic-new-900.woff2')}') format('woff2')}
   @font-face{font-family:'OSW';font-weight:200 700;src:url('${fsv('oswald', 'oswald-latin-wght-normal.woff2')}') format('woff2')}
   *{margin:0;box-sizing:border-box}
-  body{width:1200px;height:630px;background:#0B0E0F;font-family:'Zen Kaku Gothic New',sans-serif;color:${cream};position:relative;overflow:hidden}
-  .ph{position:absolute;top:0;right:0;width:620px;height:630px;overflow:hidden;background:#15191b}
-  .ph img{width:100%;height:100%;object-fit:cover;object-position:${fx}% ${fy}%;filter:grayscale(.15) contrast(1.08)}
-  /* 網点（45度）と、左の黒へのつなぎ */
-  .ph::before{content:'';position:absolute;inset:-40%;background:radial-gradient(#0B0E0F 0.9px,transparent 1.5px) 0 0/5px 5px;transform:rotate(45deg);opacity:.28;mix-blend-mode:multiply}
-  .ph::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0B0E0F 0%,#0B0E0Fcc 14%,transparent 42%),linear-gradient(0deg,#0B0E0Fd0 0%,transparent 30%),linear-gradient(180deg,#0B0E0F88 0%,transparent 34%)}
-  .mast{position:absolute;left:52px;top:24px;font-family:'BDN',serif;font-weight:900;font-variation-settings:'opsz' 96;font-size:206px;line-height:.86;letter-spacing:-.01em;color:${cream};text-shadow:0 2px 30px #0008}
-  .rail{position:absolute;left:60px;right:48px;top:212px;display:flex;align-items:baseline;gap:18px;padding-top:10px;border-top:1px solid ${cream}55;font-family:'OSW',sans-serif;font-weight:400;font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:${cream}cc}
-  .rail i{font-family:'BDNi',serif;font-style:italic;font-weight:500;font-size:19px;letter-spacing:.01em;text-transform:none;color:${cream}}
-  .rail .r{margin-left:auto}
-  .in{position:absolute;left:64px;top:262px;bottom:44px;width:560px;display:flex;flex-direction:column;justify-content:space-between}
-  .label{font-family:'OSW',sans-serif;font-weight:500;font-size:16px;letter-spacing:.26em;text-transform:uppercase;color:${blue};display:flex;align-items:center;gap:12px}
-  .label::before{content:'';width:28px;height:2px;background:${blue}}
-  h1{margin-top:16px;font-family:'SMB1h','SMB1r',serif;font-weight:800;font-size:${size}px;line-height:1.32;letter-spacing:.02em;text-shadow:0 2px 24px #000a}
+  body{width:1200px;height:630px;background:linear-gradient(180deg,#040506,#07090A 45%,#101619);font-family:'Zen Kaku Gothic New',sans-serif;color:#fff;position:relative;overflow:hidden}
+  .glow{position:absolute;inset:0;background:radial-gradient(ellipse 40% 60% at 1010px 300px,rgba(26,145,201,.32),transparent 70%)}
+  .dots{position:absolute;inset:0;background:radial-gradient(circle,rgba(79,184,236,.5) 0 1.4px,transparent 2px) 0 0/13px 13px;-webkit-mask:${ring(110, 18, 1)},${ring(200, 22, 0.85)},${ring(300, 26, 0.6)},${ring(410, 30, 0.38)},radial-gradient(circle at 1010px 300px,rgba(0,0,0,.35),transparent 70%);mask:${ring(110, 18, 1)},${ring(200, 22, 0.85)},${ring(300, 26, 0.6)},${ring(410, 30, 0.38)},radial-gradient(circle at 1010px 300px,rgba(0,0,0,.35),transparent 70%)}
+  .bell{position:absolute;left:${1010 - 9}px;top:${300 - 9}px;width:18px;height:18px;border-radius:50%;background:${hi};box-shadow:0 0 0 10px rgba(79,184,236,.2),0 0 40px 10px rgba(79,184,236,.6)}
+  .ph{position:absolute;right:96px;top:120px;width:250px;height:312px;overflow:hidden;border-radius:2px;box-shadow:14px 14px 0 -1px #07090A,14px 14px 0 1px ${blue},0 30px 60px -20px #000}
+  .ph img{width:100%;height:100%;object-fit:cover;object-position:52% 30%}
+  .streak{position:absolute;left:0;top:178px;width:340px;height:1px;background:linear-gradient(90deg,transparent,${hi},transparent)}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(90deg,${blue},${hi})}
+  .in{position:absolute;left:72px;top:58px;bottom:54px;width:640px;display:flex;flex-direction:column;justify-content:space-between}
+  .top img{height:62px;width:auto}
+  .label{font-family:'OSW',sans-serif;font-weight:500;font-size:17px;letter-spacing:.24em;text-transform:uppercase;color:${hi};display:flex;align-items:center;gap:14px}
+  .label::before{content:'';width:10px;height:10px;border-radius:50%;background:${hi};box-shadow:0 0 0 5px rgba(79,184,236,.25)}
+  h1{margin-top:18px;font-family:'ZKh','ZKr','Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:${size}px;line-height:1.3;letter-spacing:.01em;text-shadow:0 4px 30px #000c}
   h1 span{display:block;white-space:nowrap}
-  h1 .g{color:${blue}}
-  .foot{display:flex;align-items:center;gap:22px;font-size:17px;font-weight:700;color:#CFC9BC}
-  .foot svg{height:30px;width:auto}
-  .foot .sep{width:1px;height:26px;background:${cream}44}
-  .code{position:absolute;right:40px;bottom:36px;background:${cream};padding:8px 10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'OSW',sans-serif;font-size:10px;letter-spacing:.2em;color:#0B0E0F}
-  .foot img{height:40px;width:auto}
+  h1 .g{color:${hi}}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:20px;font-weight:700;color:#C9D2D8;width:calc(100% + 420px)}
+  .foot svg{height:34px;width:auto}
 </style></head><body>
-${cover ? `<div class="ph"><img src="${file(cover.src)}" alt=""></div>` : ''}
-<p class="mast">${esc(mh.name)}</p>
-<p class="rail"><span>${esc(mh.issue)}</span><span>${esc(mh.date)}</span><i>${esc(mh.tagline)}</i><span class="r">partners.music-japan.com</span></p>
+<div class="glow"></div><div class="dots"></div><div class="bell"></div><div class="streak"></div>
+${it.photo ? `<div class="ph"><img src="${file(it.photo)}" alt=""></div>` : ''}
+<div class="bar"></div>
 <div class="in">
+  <div class="top">${logoDark ? `<img src="${file(logoDark)}" alt="">` : ''}</div>
   <div><p class="label">${esc(it.label)}</p><h1>${h1}</h1></div>
-  <div class="foot">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span>${esc(it.company)}</span><span class="sep"></span>${bpLogoWhite}</div>
-</div>
-<div class="code">${code}<span>${esc(mh.issue || 'PRESTO')}</span></div>
-</body></html>`;
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
+</div></body></html>`;
 }
 function html(it) {
   if (it.theme === 'presto') return presto(it);

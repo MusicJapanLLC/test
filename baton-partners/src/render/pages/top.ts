@@ -5,11 +5,8 @@ import { bpNo, breadcrumb, ctaBand, document, footer, header, shortName, type Bu
 import { answerBox, barcodeSvg, discHtml, marquee, nextReads } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp, text } from '../text';
-import { renderMagazine } from './magazine';
 
 export function renderTop(p: Partner, env: BuildEnv): string {
-  // presto の世界観は、トップを1冊の雑誌として組む（骨組みから違うので、別の関数で）
-  if (p.world.theme === 'presto' && p.top.magazine) return renderMagazine(p, env);
   const t = p.top;
   const s = p.service;
   const path = routes.top(p.slug);
@@ -1668,9 +1665,4 @@ function lockerSection(p: Partner): string {
     </div>
   </section>`;
 }
-
-/* ─────────────────────────────────────────────
-   presto の世界観（BE.PRESTO など）の部品：速度記号・メトロノーム・3つの鐘・8小節のスコア・和音・雑誌の表紙
-   音は押したときだけ鳴る（client/presto.ts の Web Audio）。動きを減らす設定・JSなしでも、すべて読める形で出す
-   ───────────────────────────────────────────── */
 

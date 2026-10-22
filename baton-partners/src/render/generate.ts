@@ -61,7 +61,7 @@ function writeOgManifest(root: string) {
   const items = [
     { key: 'site', label: 'Baton Partners', heading: '専用LP × SEO × ブランディング', company: 'Baton Partners（合同会社Music Japan）' },
     ...sites.flatMap((p) => {
-      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme, photo: p.leader?.photo, cover: p.top.magazine?.cover, masthead: p.top.magazine && { name: p.top.magazine.masthead, issue: p.top.magazine.issue, date: p.top.magazine.date, tagline: p.top.magazine.tagline } };
+      const base = { company: p.company.name, logo: p.brand.logo, brand: p.brand.primary, accent: p.brand.accent, theme: p.world.theme, photo: p.leader?.photo };
       return [
         { ...base, key: `${p.slug}-top`, label: `Music Japan Partners — BP-${p.no.padStart(3, '0')}`, heading: plain(p.top.title) },
         { ...base, key: `${p.slug}-about`, label: 'About', heading: plain(p.about.title) },

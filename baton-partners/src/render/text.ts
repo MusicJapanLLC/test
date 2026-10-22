@@ -100,7 +100,7 @@ export function heading(lines: string | string[], start = 0): string {
     .join('');
 }
 
-/** 「問い。副題」の形の題を、文ごとに分ける（presto の誌面で、見出しと袖見出しにする） */
+/** 「問い。副題」の形の題を、文ごとに分ける（presto の記事の題で、見出しと袖見出しにする） */
 export const sentences = (s: string): string[] => s.split(/(?<=。)(?=.)/);
 
 /** 見出しの文字列だけ（title や JSON-LD 用） */

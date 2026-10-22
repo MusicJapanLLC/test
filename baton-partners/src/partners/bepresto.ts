@@ -3,16 +3,17 @@ import type { Partner } from '../types';
 /**
  * BE.PRESTO株式会社（ビー・プレスト）
  *
- * 世界観：トップを1冊の雑誌『PRESTO』の誌面として組む（presto の世界観。src/render/pages/magazine.ts）。
- *   黒い表紙と生成りの誌面、ロゴの BP の青。題字は Bodoni Moda、ラベルは BE.PRESTO の公式サイトと同じ Oswald、見出しは明朝。
- *   WebGL は「印刷」：表紙の写真を網点で刷り、版ずれが合っていく。カーソルの下は網点が粗く見え、押すと波紋が広がる。
+ * 世界観：鐘を鳴らす、響く（presto の世界観・ring のシーン）。最新のテンプレート（ZETTAICHI・Presence・DPパートナーズと同じ骨組み）。
+ *   ヒーローとヘッダーはロゴの黒の夜。画面いっぱいの白い見出しに、2行目は BP の青。文字は右から速く走り込む（PRESTO＝速く）。
+ *   WebGL は「響く」：方眼の点の上で鐘が鳴り、音の輪が点を青く光らせる。採用SNS・AI研修・人材紹介の段階で輪の形が変わる。
+ *   本文の面は白。欧文と数字は公式サイトと同じ Oswald、見出しは Zen Kaku Gothic New 900。
+ *   2026-10-22：誌面『PRESTO』（雑誌の形）はオーナーの指示でやめた。「いつものテンプレートで。常に最新に」
  * 主役：採用SNS（物流・建設・介護などの会社の採用をリールやTikTokで手伝う）と、職務別のAI研修。
  *
  * 文章：AIっぽさを消すために（2026-10-22 オーナーの指示「AI感強い。書き方を調べてから書く」）
- *   ・誌面の仕掛けを本文で説明しない（「雑誌風に」「〜してみました」「〜にたとえました」は書かない）
+ *   ・仕掛けを本文で説明しない（「〜風に」「〜してみました」「〜にたとえました」は書かない）
  *   ・一般論ではなく、この会社にしかない具体を書く（業界、LINEを手で返す、応募の前の面談、20日、85分×8回）
- *   ・出典と注記は、各セクションの末尾に並べず、誌面のクレジットと奥付にまとめる
- *   ・文の長さを混ぜる。編集部の意見は、ところどころ一言だけ
+ *   ・文の長さを混ぜる。書き手の意見は、ところどころ一言だけ
  *
  * 事実の出どころ（2026年10月21〜22日に確認）：
  *   bepresto.co.jp … トップ（事業内容）、私たちについて（Be Fast to Ring the Bell・ミッション・ビジョン・バリュー・強み・代表メッセージ・会社概要）
@@ -62,16 +63,17 @@ export const bepresto: Partner = {
     ],
   },
   brand: {
-    // ロゴの BP の青（#1A91C9）。誌面の紙は生成り
+    // ロゴの BP の青（#1A91C9）と、ロゴの黒（#0B0E0F）
     primary: '#1A91C9',
-    accent: '#F1ECE2',
-    logo: '/partners/bepresto/logo-light.png',
+    accent: '#0B0E0F',
+    logo: '/partners/bepresto/logo.png',
+    logoOnDark: '/partners/bepresto/logo-light.png',
     logoAlt: 'BE.PRESTO株式会社',
     logoSize: [844, 710],
-    // シーン：網点のインク＝青、紙＝生成り、版の黒
-    scene: { a: '#4FB8EC', b: '#F1ECE2', match: '#0B0E0F' },
+    // シーン：まだ届いていない点＝青、輪＝明るい青、二つの輪の重なり＝白
+    scene: { a: '#1A91C9', b: '#4FB8EC', match: '#FFFFFF' },
   },
-  world: { theme: 'presto', scene: 'press' },
+  world: { theme: 'presto', scene: 'ring' },
   leader: {
     name: '子安 魁',
     nameEn: 'Kai Koyasu',
@@ -95,25 +97,30 @@ export const bepresto: Partner = {
   top: {
     title: ['価値が埋もれる前に、', '世の中へ{響かせる。}'],
     lead: 'BE.PRESTOは、東京・荻窪の会社です。物流や建設の会社の採用をSNSで手伝い、営業や経理の人に職務ごとのAI研修をして、20代の転職にも付き添う。2024年4月に、子安魁さんが立ち上げました。',
+    deck: ['Be Fast to Ring the Bell', 'Ogikubo, Tokyo — Since 2024'],
     badges: ['採用SNS', '法人向けAI研修', '人材紹介 BE.CAREER'],
-    marquee: ['Be Fast to Ring the Bell', '採用SNS', 'AI研修', 'BE.CAREER', '誠実・共創・挑戦'],
+    marquee: ['Be Fast to Ring the Bell', '採用SNS', 'Reels', 'TikTok', 'AI研修', 'ChatGPT', 'Gemini', 'Copilot', 'Claude', 'BE.CAREER', '誠実・共創・挑戦'],
     numbersTitle: '{数字で見る、}{BE.PRESTO。}',
-    // 誌面の「BE.PRESTOの仕事、3つ。」に使う
+    // ヒーローの下で入れ替わる札（採用SNSの公式サイトに書かれている中身）
+    ticker: {
+      label: '採用SNSで、届くもの',
+      items: ['リールで見せる、職場の空気', '採用専用のLINEに、手で返す返事', '応募の前に、BE.PRESTOと面談', '早ければ20日で、運用開始'],
+    },
     verbs: [
       {
-        en: 'Social Recruiting',
+        en: 'Show',
         ja: '採用SNS',
         title: '求人票の外で、{会社を見せる。}',
         body: 'Instagramのリール、TikTok、YouTubeショートで、職場の空気や働く人の顔が分かる動画を出す。気になった人とは、採用専用のLINEで一人ずつやりとりします。',
       },
       {
-        en: 'AI Training',
+        en: 'Train',
         ja: 'AI研修',
         title: '職務ごとに、{85分を8回。}',
         body: 'マーケ、経理、営業、人事、労務、製造・建設・運送の現場。職務ごとに中身の違う全8回の研修で、使うAIはChatGPT、Gemini、Copilot、Claudeから選べます。',
       },
       {
-        en: 'BE.CAREER',
+        en: 'Match',
         ja: '人材紹介',
         title: '20代の転職に、{付き添う。}',
         body: '有料職業紹介の許可（13-ユ-319150）をとって運営している人材紹介です。20代のキャリアの相談のほか、ハイクラスの営業職を採りたい会社の手伝いもしています。',
@@ -138,9 +145,8 @@ export const bepresto: Partner = {
         detail: '大事なのは分かっている。でも企画して、撮って、毎週出し続けられる人がいない。',
       },
     ],
-    // 誌面の時間割の「3部」の説明に使う
     highlight: {
-      en: 'Timetable',
+      en: 'Curriculum',
       title: ['職務ごとに、', '85分を8回。'],
       lead: '1〜2回目は全員共通、3〜5回目は職務別、6〜8回目はツール別。順番に進むと、最後は自分の会社のAIで回る仕組みが手元に残ります。',
       steps: [
@@ -168,173 +174,18 @@ export const bepresto: Partner = {
     statsNote: '採用SNSの公式サイトと、教育事業のページに載っている数字です（2026年10月時点）。',
     aboutQuote: '私たちは、伝え方ひとつで{未来は変わると}{信じています。}',
     aboutQuoteCite: 'BE.PRESTO 公式サイト「代表メッセージ」より',
-
-    magazine: {
-      masthead: 'PRESTO',
-      issue: 'No.08',
-      date: 'OCT. 2026',
-      tagline: 'Be Fast to Ring the Bell',
-      cover: { src: '/partners/bepresto/koyasu-cover.jpg', size: [1000, 1250], focus: [64, 38], alt: 'BE.PRESTO株式会社 代表取締役CEO 子安魁さん' },
-      coverLines: [
-        { k: '特集', t: '採用は、{ナビサイトから}{リールへ。}', href: '#recruit' },
-        { k: 'AI研修', t: '経理の人に、{営業の例題を}{解かせない。}', href: '#timetable' },
-        { k: '数字', t: '400社、1億回、20日。', href: '#numbers' },
+    // 代表の写真（leader.photo）・歩み・本文を使う。引用は公式サイトの代表メッセージの原文のまま
+    founder: {
+      kicker: 'Founder',
+      title: '{本気で生きている人が、}{報われる社会へ。}',
+      quote: {
+        text: '私たちの役割は、魅力を作ることではなく、本来そこにある価値を見つけ、言葉にし、社会へ届けることです。',
+        cite: 'BE.PRESTO公式サイト「代表メッセージ」より',
+      },
+      links: [
+        { label: 'BE.PRESTOの公式サイト', url: 'https://bepresto.co.jp/' },
+        { label: '子安さんのX', url: 'https://x.com/_KAI_KOYA_' },
       ],
-      contents: [
-        { page: '04', k: '特集', t: '採用は、{ナビサイトから}{リールへ。}', href: '#recruit' },
-        { page: '10', k: 'AI研修', t: '経理の人に、{営業の例題を}{解かせない。}', href: '#timetable' },
-        { page: '16', k: '数字', t: '400社、1億回、20日。', href: '#numbers' },
-        { page: '18', k: 'Message', t: '{本気で生きている人が、}{報われる社会へ。}', href: '#message' },
-        { page: '24', k: 'Index', t: 'BE.PRESTOの仕事、{3つ。}', href: '#index' },
-        { page: '28', k: 'Column', t: 'AI研修をしたのに、{現場で使われないのは}{なぜか。}', href: '#column' },
-        { page: '32', k: 'Talk', t: 'BE.PRESTOと、{話してみる。}', href: '#talk' },
-      ],
-      recruit: {
-        page: '04',
-        kicker: '特集 — Social Recruiting',
-        title: '採用は、{ナビサイトから}{リールへ。}',
-        lead: '物流、建設、介護。BE.PRESTOの採用SNSのページに導入企業として並んでいるのは、若い人がなかなか来ないと言われてきた業界の会社です。',
-        body: [
-          '大手の求人サイトに掲載しても、応募が来ない。紹介会社に頼むほど、一人あたりの採用単価が上がっていく。BE.PRESTOの採用SNSは、そういう会社のためにあります。',
-          'つくるのは、Instagramのリール、TikTok、YouTubeショートの動画です。職場の空気や、そこで働く人の顔が分かるものを出していく。どの媒体で何を出すかは、ヒアリングのあと会社ごとに決めます。早ければ、ヒアリングから20日で運用が始まります。',
-          '動画を見て気になった人のために、採用専用の公式LINEを用意します。返信は自動ではありません。BE.PRESTOのスタッフが人事の一員として、一人ずつ手で返していきます。',
-          '応募があったら、会社に渡す前にBE.PRESTOが本人と面談して、会社が探している人とずれていないかを確かめます。応募の数を増やすより、会ってみたら違った、を減らすほうに手間をかける。このサービスでいちばん面白いのは、たぶんこの順番です。',
-        ],
-        pull: '会ってみたら{違った、を減らす。}',
-        flow: [
-          { en: 'Reel', t: 'リール、TikTok、{ショートで}{会社を知る}' },
-          { en: 'LINE', t: '採用専用のLINEに、{手で返事が来る}' },
-          { en: 'Interview', t: '応募の前に、{BE.PRESTOと面談}' },
-          { en: 'Meet', t: '会社と{面接}' },
-        ],
-        industries: ['建設', '物流', '不動産', 'アパレル', '人材', '自動車関係'],
-        credit: '出典：BE.PRESTO「SNS採用運用代行サービス」。導入企業と対応業界も、同じページの掲載から。',
-        link: { label: '採用SNSの公式サイト', url: 'https://be-presto-saiyo.com/' },
-      },
-      timetable: {
-        page: '10',
-        kicker: 'AI研修 — Timetable',
-        title: '経理の人に、{営業の例題を}{解かせない。}',
-        lead: 'ChatGPTの使い方は一通り習った。なのに翌週には、誰も開いていない。BE.PRESTOのAI研修は、これを避けるために職務ごとに中身を分けています。職務は8つ、1回85分で全8回。使うAIは、ChatGPT、Gemini、Copilot、Claudeから選べます。',
-        howto: '職務とAIを選ぶと、8回の中身が入れ替わります。',
-        parts: ['共通', '職務別', 'ツール別'],
-        common: {
-          office: ['生成AIの基礎と、自社の利用ルールづくり', 'AIツールの使い分けと、活用業務の選定'],
-          field: ['生成AIの基礎と、現場での利用ルールづくり', 'スマホで使う生成AIと、活用作業の選定'],
-        },
-        jobs: [
-          {
-            name: 'マーケティング・販促',
-            parts: ['販促原稿・素材を生成AIで作る', '顧客の声と実績データを生成AIで分析する', '編集計画とレポートを生成AIで仕組み化する'],
-            outcomes: ['1か月分の投稿案を、テーマ別に振り分けた状態で用意する', '問い合わせと口コミから、よく使われている言い回しを抜き出す', '訴求軸ごとに広告文を書き分け、比較できる{一覧にする}', '月次レポートを、数字と次の打ち手を{セットにして}下書きする'],
-          },
-          {
-            name: '経理・財務',
-            parts: ['経理の定型文書と表計算を生成AIで効率化する', '試算表・帳票データを生成AIで読み解く', '月次締めとレポートを生成AIで仕組み化する'],
-            outcomes: ['売掛の滞留を年齢別に並べ、督促の文面まで用意する', '経費の増減が大きい科目を抜き出し、要因の当たりをつける', '表計算の集計・突合を、関数と手順ごとAIに書かせる', '月次締めの手順を、担当と期日入りの{チェックリストにする}'],
-          },
-          {
-            name: '営業・企画・提案',
-            parts: ['商談準備と営業文面を生成AIで効率化する', '商談記録と過去の提案書を生成AIで活用する', '提案の型とナレッジを生成AIで仕組み化する'],
-            outcomes: ['訪問前に、相手企業と業界の要点を1枚にまとめる', '商談の録音を、決まったことと持ち帰りが分かれた記録に変える', '過去の提案書を組み替えて、目の前の案件用の初稿を出す', '案件ごとの次アクションを、期日つきで洗い出す'],
-          },
-          {
-            name: '人事（採用・育成）',
-            parts: ['求人票と応募者対応を生成AIで効率化する', '面接設計と応募者データを生成AIで整理する', '採用フローと評価資料を生成AIで仕組み化する'],
-            outcomes: ['職種ごとの求人票とスカウト文を、訴求を変えて数パターン用意する', '面接で聞くことを、評価項目とひもづけた{質問リストにする}', '面接の記録を、候補者どうしを比べられる形に整える', '応募から入社までの連絡文を、状況別にひととおり揃える'],
-          },
-          {
-            name: '労務',
-            parts: ['社内通達と規程ドラフトを生成AIで作成する', '就業規則・勤怠データを生成AIで読み解く', '社内FAQと手続き手順を生成AIで仕組み化する'],
-            outcomes: ['社内通達や案内文を、対象者ごとに{書き分けて出す}', '規程の改訂で変わる箇所を、新旧対照の形に整える', '勤怠・残業データから、注意が要る部署と人を抜き出す', '{よくある}問い合わせを、社内が自分で引ける{形にまとめる}'],
-          },
-          {
-            name: '製造業の現場',
-            field: true,
-            parts: ['日報・作業記録を生成AIで{その場で作る}', '不具合報告と点検記録を生成AIで分析する', '作業手順書と教育資料を生成AIで仕組み化する'],
-            outcomes: ['{手書きメモや}写真から、日報と作業連絡を{その場で整える}', '不具合報告を集めて、繰り返し起きている事象を抜き出す', 'ベテランへの聞き取りを、そのまま読める手順書の{形にする}', '手順書と掲示物を、現場で使う言語に置き換える'],
-          },
-          {
-            name: '建設業の現場',
-            field: true,
-            parts: ['日報・所見・連絡文を生成AIで{その場で作る}', '打合せ記録と仕様書を生成AIで読み解く', '安全書類とチェックリストを生成AIで仕組み化する'],
-            outcomes: ['現場写真とメモから、日報と所見を{その場でまとめる}', '打合せの録音を、決まったことと持ち帰りに分けて残す', '仕様書・図面注記から、確認すべき点を洗い出す', '安全書類の作成手順を、抜けが出ない形に整える'],
-          },
-          {
-            name: '運送業の現場',
-            field: true,
-            parts: ['連絡文・日報を生成AIで{その場で作る}', '運行記録とヒヤリハットを生成AIで分析する', '点呼手順と教育資料を生成AIで仕組み化する'],
-            outcomes: ['点呼や日報の記録を、話した言葉から整える', '運行記録から、負荷が偏っている乗務員と路線を抜き出す', 'ヒヤリハット報告をまとめて、繰り返し起きている場所を特定する', '乗務員教育の資料を、自社の事故事例に基づいて作る'],
-          },
-        ],
-        tools: [
-          { name: 'ChatGPT', by: 'OpenAI', parts: ['ChatGPTの基本操作と、文書・ビジュアル作成', 'ファイル分析と{Deep Research}{による}情報活用', 'GPTsとタスク機能{による}業務の仕組み化'] },
-          { name: 'Gemini', by: 'Google', parts: ['Geminiの基本操作と、資料・ビジュアル作成', '{Google Workspace}連携とNotebookLM{による}情報活用', 'GemsとGAS{による}業務の自動化'] },
-          { name: 'Copilot', by: 'Microsoft', parts: ['Copilotの基本操作と、Word・PowerPointでの資料作成', '{Microsoft 365}連携{による}データ・情報活用', 'エージェントと{Copilot Studio}{による}業務の自動化'] },
-          { name: 'Claude', by: 'Anthropic', parts: ['Claudeの基本操作と、Artifacts{による}成果物作成', 'Cowork{による}作業の委任と外部連携', '{Claude Codeと}文脈設計{による}業務の仕組み化'] },
-        ],
-        credit: '出典：BE.PRESTO「教育事業のご案内」の職務別カリキュラムを、Baton Partnersが短くまとめました。',
-        link: { label: 'AI研修のページを読む', url: '/bepresto/service/' },
-      },
-      numbers: { page: '16', kicker: 'Numbers', title: '400社、{1億回、}{20日。}' },
-      message: {
-        page: '18',
-        kicker: 'Message — 子安 魁',
-        title: '{本気で生きている人が、}{報われる社会へ。}',
-        intro: '子安魁さんがBE.PRESTOを立ち上げたのは、2024年4月。公式サイトの代表メッセージは、事業を始めたきっかけから書き出されています。',
-        quotes: [
-          '世の中には、誤解や偏った情報によって、本気で努力している人や企業が正しく評価されない場面が多くあります。',
-          'どれだけ良い想いを持っていても、届かなければ存在していないのと同じになってしまう。',
-          '私たちの役割は、魅力を作ることではなく、本来そこにある価値を見つけ、言葉にし、社会へ届けることです。',
-        ],
-        after:
-          '「今後10年で、この会社や業界をどのように変えていきたいか」という問いには、「フェイクや冷笑文化が当たり前ではない、日本に変えていく存在でありたい」と書いています。採用の動画で職場をそのまま撮るのも、応募の前に会って確かめるのも、この言葉と同じ方を向いています。',
-        photo: { src: '/partners/bepresto/koyasu.jpg', size: [840, 1050], focus: [52, 30] },
-        facts: [
-          { k: '役職', v: 'BE.PRESTO株式会社 代表取締役CEO' },
-          { k: '設立', v: '2024年4月' },
-          { k: '拠点', v: '東京・荻窪' },
-          { k: 'X', v: '@_KAI_KOYA_', url: 'https://x.com/_KAI_KOYA_' },
-        ],
-        values: [
-          { name: '誠実', text: '偽りなく、リアルだけを届ける' },
-          { name: '共創', text: 'お客様も仲間も、共に主役' },
-          { name: '挑戦', text: '未だ見ぬ景色に、まず一歩踏み出す' },
-        ],
-        credit: '引用：BE.PRESTO公式サイト「代表メッセージ」「企業理念」',
-      },
-      index: {
-        page: '24',
-        kicker: 'Index',
-        title: 'BE.PRESTOの仕事、{3つ。}',
-        links: [
-          [
-            { label: '採用SNS', url: 'https://be-presto-saiyo.com/' },
-            { label: 'ショート動画集客', url: 'https://be-presto-short.com/' },
-          ],
-          [{ label: '教育事業', url: 'https://bepresto.co.jp/education-service/' }],
-          [
-            { label: '20代キャリア支援', url: 'https://be-career-tenshoku.com/' },
-            { label: 'ハイクラス営業採用', url: 'https://be-career-jobchange.com/' },
-          ],
-        ],
-      },
-      column: { page: '28', kicker: 'Column' },
-      back: {
-        page: '32',
-        title: 'BE.PRESTOと、{話してみる。}',
-        body: 'AI研修のことでも、SNSでの採用のことでも。相談の中身がまだ固まっていなくてかまいません。公式LINEで4つの質問に答えてもらうと、Music Japanが内容を確かめてから、BE.PRESTOにおつなぎします。お名前や連絡先を先方に伝えるのは、双方が了承してからです。',
-      },
-      colophon: {
-        rows: [
-          { k: '誌名', v: 'PRESTO No.08（2026年10月）' },
-          { k: '掲載', v: 'BE.PRESTO株式会社', url: 'https://bepresto.co.jp/' },
-          { k: '編集・発行', v: 'Baton Partners（合同会社Music Japan）' },
-          { k: '写真', v: 'BE.PRESTO提供' },
-          { k: '出典', v: 'bepresto.co.jp（私たちについて・教育事業のご案内）、be-presto-saiyo.com、子安魁さんのXのプロフィール' },
-        ],
-        note: '『PRESTO』は、このページのための誌名です。同じ名前の雑誌とは関係ありません。数字と引用は、2026年10月時点の公式サイトによります。',
-      },
     },
   },
 
@@ -578,7 +429,7 @@ export const bepresto: Partner = {
           },
           {
             type: 'p',
-            text: '企画から定着までをBE.PRESTOが受け持ち、AI研修とDX推進を専門とする講師が教える体制です。くわしくは[AI研修のページ](/bepresto/service/)に。トップページでは、職務とAIを選んで8回分の時間割を見比べられます。',
+            text: '企画から定着までをBE.PRESTOが受け持ち、AI研修とDX推進を専門とする講師が教える体制です。8回それぞれの中身は、[AI研修のページ](/bepresto/service/)にまとめています。',
           },
           { type: 'person', text: '2024年にBE.PRESTOを立ち上げ、採用SNSとAI研修、人材紹介を手がけている。' },
         ],
