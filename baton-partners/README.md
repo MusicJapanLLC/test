@@ -60,6 +60,10 @@ Webから来た人 → 公式LINEを追加 → アンケート回答（受付番
 
 設置手順は `gas/Code.gs` の先頭に書いてある。`VITE_GAS_ENDPOINT` が空の間は**デモモード**で、送信ボタンは動くが実際には送らない（完了画面にその旨を表示）。
 
+**GAS のコードを変えたら、必ず「デプロイを管理 → 鉛筆 → バージョン：新バージョン → デプロイ」まで行う。** 保存しただけでは、公開中の受付（ウェブアプリ）は古い版のまま動く。
+2026-10-22 に、10月1日の版のまま止まっていた受付を最新版（バージョン4）にした。それまでは企業設定シートを読まず、スクリプトプロパティ `PARTNERS` にない会社（Smartaleck・Presence・ZETTAICHI・DP・BE.PRESTO）の相談は「unknown partner」で記録されていなかった。
+受付のプロジェクトは Apps Script の「Baton Partners 受付」（スプレッドシート「Baton Partners｜相談受付」に紐づく）。
+
 ## 開発
 
 ```bash
@@ -125,7 +129,7 @@ music-japan.com はビルドのたびにこれを読んでパートナー欄を�
 - [x] 公式サイト（dp-partners.co.jp / site-hikkoshi.com）を読み直し、2026年10月8日更新の保守LP（お客様の声・専属担当とワンアドレス・名義のQ&A）とS3移行のお知らせ（参照と書き込みだけの権限）を反映
 - [x] ヒーローの送り状、切り替えの日（DNS）、控えの置き場所（権限）、代表の名刺と年表、WebGL（トラック・監視の線・地球）
 - [x] SEO：title / description を「WordPress引越し代行・保守」「サイト引越し屋さん」で揃え、120字以内に。「引っ越し」の表記ゆれと「サーバー移転」はFAQで拾う
-- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `dp-partners` を足す（足すまで、このページからの送信は記録されない）
+- [x] 受付（GAS）に登録：企業設定シートに `dp-partners` の行あり（2026-10-22、GAS を最新版にして確認）
 - [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動。CLAUDE.md「公式サイトへの反映」）
 
 ## Presence（BP-006）の残り
@@ -135,7 +139,7 @@ music-japan.com はビルドのたびにこれを読んでパートナー欄を�
 - [x] 代表の写真（2026-10-13 受け取り。`kaneko.jpg` = 取り組みページと引用、`kaneko-smile.jpg` = トレーディングカード、`team.jpg` / `team-720.jpg` = トップの「Team」）
 - [x] 公式ロゴ（星をまとったカメ）。縦組みの公式ロゴを横組みに並べ直したもの（`logo.png` / `logo-light.png`、702×160。`logo-light.png` は文字だけ白）。OG 画像も作り直した
 - [ ] P-ENJIN のロゴ（あれば）。いまは仮のワードマーク（`p-enjin.png`）
-- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `presence` を足す（足すまで、このページからの送信は記録されない）
+- [ ] 受付（GAS）の企業設定シートに `presence` の行を足す（通知先メールを社長に確認）。足すまでも相談は記録され、社長には届く（企業への通知だけ「未登録」）
 - [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動）
 
 公式サイト（presences.info）は作業環境から直接開けないため、文言は検索エンジン経由（Firecrawl）で確認した公式の記載を使っている。
@@ -146,7 +150,7 @@ music-japan.com はビルドのたびにこれを読んでパートナー欄を�
 ロゴ（ZETTAICHI・n1a）と宮本さんの写真は、オーナー経由で受け取ったもの（2026-10-13）。オーナーが掲載許可を確認済みのため、`draft` を外して本番公開する。
 
 - [x] 宮本さんの掲載許可を確認し、`draft` を解除
-- [ ] 受付（GAS）のスクリプトプロパティ `PARTNERS` に `zettaichi` を足す（足すまで、このページからの送信は記録されない）
+- [x] 受付（GAS）に登録：企業設定シートに `zettaichi` の行あり（2026-10-22、GAS を最新版にして確認）
 - [ ] n1a の提供が始まったら「制作中」「COMING SOON」の書き方を、トップ・サービス・FAQ・記事で直す
 - [x] music-japan.com/partners への会社名の掲載（`partners.json` から自動）
 - [ ] 本人の希望：AddBox 時代の交流会の名前は使わない（経営者交流会は Biz Summit! と ASOBMENT で紹介）

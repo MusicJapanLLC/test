@@ -72,7 +72,20 @@ function setupSheets() {
   sheet.getRange(2, HEADERS.indexOf('ステータス') + 1, rows, 1).setDataValidation(
     SpreadsheetApp.newDataValidation().requireValueInList(['未確認', '紹介先へ確認中', '紹介済み', '見送り'], true).build(),
   );
-  sheet.getRange(2, HEADERS.indexOf('商談化') + 1, rows, 1).insertCheckboxes();
+  // insertCheckboxes() は空の行にも FALSE を書き、シートの最終行が1000行目になって、次の相談が1001行目以降に足されてしまう。
+  // チェックボックスの入力規則だけを付け、値は書かない（appendRow の false でチェックボックスになる）
+  const deal = sheet.getRange(2, HEADERS.indexOf('商談化') + 1, rows, 1);
+  deal.setDataValidation(SpreadsheetApp.newDataValidation().requireCheckbox().build());
+  const lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    // 以前の insertCheckboxes() が空の行に残した FALSE を消す（受付日時か受付番号のある行はそのまま。入力規則は残る）
+    const used = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+    let last = 1;
+    used.forEach((r, i) => {
+      if (r[0] !== '' || r[1] !== '') last = i + 2;
+    });
+    if (last < sheet.getMaxRows()) sheet.getRange(last + 1, HEADERS.indexOf('商談化') + 1, sheet.getMaxRows() - last, 1).clearContent();
+  }
   filesRoot_(); // ドライブの権限確認と、保存先フォルダの用意
 }
 
