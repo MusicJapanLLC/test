@@ -104,7 +104,7 @@ function setupTempo(): void {
   const raw = box?.querySelector('[data-tempo-data]')?.textContent;
   const range = box?.querySelector<HTMLInputElement>('[data-tempo-range]');
   if (!box || !raw || !range) return;
-  const stages = JSON.parse(raw) as { name: string; bpm: number; jp: string; state: string; pain: string; fix: string }[];
+  const stages = JSON.parse(raw) as { name: string; bpm: number; jp: string; state: string }[];
   const out = box.querySelector<HTMLElement>('.tempo-out');
   const weight = box.querySelector<SVGRectElement>('.m-weight');
   const ticks = [...box.querySelectorAll<HTMLButtonElement>('[data-step]')];
@@ -128,13 +128,14 @@ function setupTempo(): void {
     put('bpm', String(s.bpm));
     put('jp', s.jp);
     put('state', s.state);
-    // pain・fix はビルド時に文節で区切った HTML（自分のデータだけ）
-    const html = (k: string, v: string) => {
+    // pain・fix はビルド時に文節で区切った <template> を写す
+    const copy = (k: string) => {
       const el = field(k);
-      if (el) el.innerHTML = v;
+      const tpl = box.querySelector<HTMLTemplateElement>(`template[data-tt="${k}-${i}"]`);
+      if (el && tpl) el.replaceChildren(tpl.content.cloneNode(true));
     };
-    html('pain', s.pain);
-    html('fix', s.fix);
+    copy('pain');
+    copy('fix');
     ticks.forEach((t) => t.classList.toggle('is-on', Number(t.dataset.step) === i));
     if (animate && out && !prefersReducedMotion()) flag(out, 'is-swap', 600);
   };
@@ -153,11 +154,12 @@ function setupScore(): void {
   const raw = box?.querySelector('[data-score-data]')?.textContent;
   if (!box || !raw) return;
   const data = JSON.parse(raw) as {
-    common: { office: string[]; field: string[] };
-    jobs: { name: string; field?: boolean; parts: string[]; outcomes: string[] }[];
-    tools: { name: string; parts: string[] }[];
+    common: { office: number[]; field: number[] };
+    jobs: { name: string; field?: boolean; parts: number[]; outcomes: number[] }[];
+    tools: { name: string; parts: number[] }[];
   };
-  // 小節の題と「できるようになること」は、ビルド時に文節で区切った HTML（自分のデータだけ）
+  // 小節の題と「できるようになること」は、ビルド時に文節で区切った <template> の番号
+  const frag = (n: number) => box.querySelector<HTMLTemplateElement>(`template[data-sf="${n}"]`)?.content.cloneNode(true) ?? '';
   let job = 0;
   let tool = 0;
   const cells = [...box.querySelectorAll<HTMLElement>('[data-bar]')];
@@ -174,7 +176,7 @@ function setupScore(): void {
     cells.forEach((c, i) => {
       if (shown[i] === titles[i]) return;
       shown[i] = titles[i];
-      c.innerHTML = titles[i];
+      c.replaceChildren(frag(titles[i]));
       const bar = c.closest('.bar');
       if (bar && !prefersReducedMotion()) flag(bar, 'is-swap', 700);
     });
@@ -182,7 +184,7 @@ function setupScore(): void {
       outcomes.replaceChildren(
         ...j.outcomes.map((o) => {
           const li = document.createElement('li');
-          li.innerHTML = o;
+          li.append(frag(o));
           return li;
         }),
       );

@@ -1786,7 +1786,8 @@ function tempoSection(p: Partner): string {
         .join('')}</ol>
       <p class="fine rv">${jp(t.note)}</p>
     </div>
-    <script type="application/json" data-tempo-data>${JSON.stringify(t.stages.map((s) => ({ ...s, pain: jp(s.pain), fix: jp(s.fix) }))).replace(/</g, '\\u003c')}</script>
+    <script type="application/json" data-tempo-data>${JSON.stringify(t.stages.map(({ pain: _p, fix: _f, ...s }) => s)).replace(/</g, '\\u003c')}</script>
+    ${t.stages.map((s, i) => `<template data-tt="pain-${i}">${jp(s.pain)}</template><template data-tt="fix-${i}">${jp(s.fix)}</template>`).join('')}
   </section>`;
 }
 
@@ -1836,10 +1837,17 @@ function scoreSection(p: Partner): string {
       .flatMap((ph) => ph.split(/(?<=[・ ])/))
       .map((ph) => `<bp-nobr>${ph}</bp-nobr>`)
       .join('<wbr>');
+  // 区切った HTML は <template> に置き、JSON には番号だけを渡す（ブラウザで文字列を HTML に戻さない）
+  const frags: string[] = [];
+  const ref = (html: string) => {
+    const i = frags.indexOf(html);
+    return i < 0 ? frags.push(html) - 1 : i;
+  };
+  const barRef = (s: string) => ref(bar(s));
   const scoreData = {
-    common: { office: sc.common.office.map(bar), field: sc.common.field.map(bar) },
-    jobs: sc.jobs.map((j) => ({ name: j.name, field: j.field, parts: j.parts.map(bar), outcomes: j.outcomes.map(jp) })),
-    tools: sc.tools.map((t) => ({ name: t.name, parts: t.parts.map(bar) })),
+    common: { office: sc.common.office.map(barRef), field: sc.common.field.map(barRef) },
+    jobs: sc.jobs.map((j) => ({ name: j.name, field: j.field, parts: j.parts.map(barRef), outcomes: j.outcomes.map((o) => ref(jp(o))) })),
+    tools: sc.tools.map((t) => ({ name: t.name, parts: t.parts.map(barRef) })),
   };
   const chip = (label: string, sub: string, on: boolean, attr: string) =>
     `<button type="button" aria-pressed="${on}" ${attr}>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
@@ -1877,6 +1885,7 @@ function scoreSection(p: Partner): string {
       <p class="fine rv">${jp(sc.note)}</p>
     </div>
     <script type="application/json" data-score-data>${JSON.stringify(scoreData).replace(/</g, '\\u003c')}</script>
+    ${frags.map((f, i) => `<template data-sf="${i}">${f}</template>`).join('')}
   </section>`;
 }
 
