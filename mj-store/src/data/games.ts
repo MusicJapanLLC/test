@@ -10,6 +10,7 @@ import type { Game, GameStatus, Shot } from './types';
  * - スクリーンショットは public/shots/<id>/ に置いて shots に並べる（1枚目がタイトル画面）
  * - playUrl を入れると「配信中」になり、プレイボタンが有効になる
  * - news / versions は新しい順に並べる。中身は実際の更新内容から書く
+ * - hidden: true にすると非公開（データは残したまま、ストアのどこにも出さない）
  */
 
 const phone = (dir: string, name: string, alt: string, caption: string): Shot => ({
@@ -37,7 +38,7 @@ const wide = (dir: string, name: string, alt: string, caption: string): Shot => 
   caption,
 });
 
-export const games: Game[] = [
+const allGames: Game[] = [
   {
     id: 'world',
     slug: 'the-world',
@@ -160,6 +161,8 @@ export const games: Game[] = [
   {
     id: 'akari',
     slug: 'akari-no-tabiji',
+    /* 2026-10-22 非公開：配信元（ChatGPT で作った版）が止まり、画像・音声の素材が手元に無いため */
+    hidden: true,
     title: '灯の旅路',
     subtitle: '七つの灯',
     titleEn: 'SEVEN LIGHTS, ONE WAY HOME',
@@ -501,6 +504,9 @@ export const games: Game[] = [
     ],
   },
 ];
+
+/** ストアに並べる作品（非公開のものは除く） */
+export const games: Game[] = allGames.filter((g) => !g.hidden);
 
 export function statusOf(g: Game): GameStatus {
   return g.status ?? (g.playUrl ? 'live' : 'soon');
