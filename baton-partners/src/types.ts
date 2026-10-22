@@ -106,8 +106,8 @@ export type Partner = {
    *                        招待状・ステッカー・トレーディングカード・応援ボタン（Presence）
    *          'orbit'     … 絶対値と、波長。白地に ZETTAICHI の紺と n1a の藍・水色・ピンク、惑星の軌道、絶対値の縦棒 | |、
    *                        重なる吹き出し・Big Five の五角形・数直線・プロフィールカード（ZETTAICHI / n1a）
-   *          'presto'    … 夜の楽譜と鐘。黒地にロゴの BP の青と鐘の真鍮、明朝＋速度記号のような Bodoni のイタリック、
-   *                        五線・速度記号・メトロノーム・8小節のスコア・和音・雑誌の表紙（BE.PRESTO）
+   *          'presto'    … 1冊の雑誌。黒い表紙と生成りの誌面、ロゴの BP の青。題字は Bodoni Moda、ラベルは Oswald、
+   *                        見出しは明朝。表紙・目次・特集・時間割・数字・メッセージ・奥付（BE.PRESTO）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'pair'      … 赤い三角（求職者）と水色の三角（求人）。散らばる→表に並ぶ→線でつながる→重なって大きな Empro の印になる
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
@@ -117,11 +117,12 @@ export type Partner = {
    *          'vinyl'     … 公式シンボルのレコード（CUTで溝が刻まれ、SPINでジャケットが回り、DROPで針が落ちて波形になる）
    *          'enjin'     … 円陣（縁陣）。六角形のタイル（人）が散らばる→亀甲に並び、縁の糸でつながる→円陣を組んで光る甲羅になる
    *          'wave'      … 波長。人柄の五角形（Big Five）が漂う→惑星の軌道に並び、合う二人を波の糸が結ぶ→重なる吹き出しの点描になる
-   *          'bell'      … 鐘。五線から外れて散らばった音符→五線に並んで楽譜になる→集まって鐘の形になり、波紋が広がる
+   *          'press'     … 印刷。表紙の写真を網点で刷り、版ずれが合っていく。カーソルの下は網点が粗く見え、押すと波紋が広がる。
+   *                        写真のない場所（下層のヒーロー・CTA帯）では、青い網点のインクがゆっくり動く
    */
   world: {
     theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match' | 'cheer' | 'orbit' | 'presto';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin' | 'wave' | 'bell';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin' | 'wave' | 'press';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {
@@ -454,58 +455,75 @@ export type Partner = {
       note: string;
     };
     /**
-     * 速度記号の目盛り（presto の世界観）。社名や合言葉にちなんだ音楽の言葉を、遅い順に並べて mark に鐘を止める。
-     * 社名の由来を会社が説明していないときは、そう書く
+     * トップを1冊の雑誌の誌面として組む（presto の世界観。src/render/pages/magazine.ts）。
+     * 表紙 → 目次 → 特集 → 時間割 → 数字 → 代表のメッセージ → 仕事の一覧 → コラム → 裏表紙と奥付。
+     * 写真は会社から受け取ったものだけ。引用は公式サイトの原文のまま。出典と誌名の注記は奥付にまとめる
      */
-    prologue?: { kicker: string; title: string; body: string[]; scale: { name: string; bpm: string }[]; mark: string; note: string };
-    /**
-     * メトロノーム（presto の世界観）。よくある悩みを遅い順に速度記号へ置き換え、つまみで切り替える（client/presto.ts）。
-     * 振り子の速さは bpm。動きを減らす設定では止めたまま、文字だけ切り替わる
-     */
-    tempo?: {
-      kicker: string;
-      title: string;
-      lead: string;
-      stages: { name: string; bpm: number; jp: string; state: string; pain: string; fix: string }[];
-      note: string;
-    };
-    /** 事業を3つの鐘として並べる（presto の世界観）。鐘を押すと pitch（Hz）の高さで鳴る。音は押したときだけ */
-    bells?: {
-      title: string;
-      lead: string;
-      items: { no: string; en: string; ja: string; title: string; body: string; points: string[]; url?: string; link?: string; pitch: number }[];
-      note: string;
-    };
-    /**
-     * 研修のカリキュラムを、8小節の楽譜で見せる（presto の世界観）。職務とツールを選ぶと小節の中身が入れ替わる。
-     * 小節 1〜2 は共通（field: true の職務は common.field）、3〜5 は職務、6〜8 はツール
-     */
-    score?: {
-      kicker: string;
-      title: string;
-      lead: string;
-      parts: [string, string, string];
-      common: { office: [string, string]; field: [string, string] };
-      jobs: { name: string; field?: boolean; parts: [string, string, string]; outcomes: string[] }[];
-      tools: { name: string; by: string; parts: [string, string, string] }[];
-      note: string;
-    };
-    /** 価値観を三和音で見せる（presto の世界観）。音符を押すとその音が鳴る。言葉は公式サイトの原文のまま */
-    chord?: { kicker: string; title: string; lead: string; button: string; notes: { name: string; text: string; pitch: number }[]; note: string };
-    /** 代表を雑誌の表紙風に（presto の世界観）。コピーは公開情報だけ。実在の雑誌ではないと書く */
-    cover?: {
-      kicker: string;
-      title: string;
-      lead: string;
+    magazine?: {
+      /** 誌名（表紙の題字）と号数・発行月 */
       masthead: string;
       issue: string;
       date: string;
-      kick: string;
-      headline: string;
-      side: { b: string; t: string }[];
-      facts: { k: string; v: string; url?: string }[];
-      photo: { src: string; size: [number, number]; focus?: [number, number] };
-      note: string;
+      /** 題字の上の一行（会社の合言葉） */
+      tagline: string;
+      /** 表紙の写真。small はスマホ用。focus は object-position（%） */
+      cover: { src: string; size: [number, number]; focus?: [number, number]; alt: string };
+      /** 表紙の見出し（左の柱）。href は誌面の中のページへ */
+      coverLines: { k: string; t: string; href: string }[];
+      /** 目次。page は誌面のノンブル */
+      contents: { page: string; k: string; t: string; href: string }[];
+      /** 特集：採用SNS */
+      recruit: {
+        page: string;
+        kicker: string;
+        title: string;
+        lead: string;
+        body: string[];
+        /** 本文の途中に大きく抜き出す一行 */
+        pull: string;
+        /** 求職者が会社にたどり着くまで */
+        flow: { en: string; t: string }[];
+        industries: string[];
+        credit: string;
+        link: { label: string; url: string };
+      };
+      /**
+       * AI研修の時間割。職務とツールを選ぶと、8回の中身が入れ替わる（client/presto.ts）。
+       * 1〜2回目は共通（field: true の職務は common.field）、3〜5回目は職務、6〜8回目はツール
+       */
+      timetable: {
+        page: string;
+        kicker: string;
+        title: string;
+        lead: string;
+        howto: string;
+        parts: [string, string, string];
+        common: { office: [string, string]; field: [string, string] };
+        jobs: { name: string; field?: boolean; parts: [string, string, string]; outcomes: string[] }[];
+        tools: { name: string; by: string; parts: [string, string, string] }[];
+        credit: string;
+        link: { label: string; url: string };
+      };
+      numbers: { page: string; kicker: string; title: string };
+      /** 代表のメッセージ。quotes は公式サイトの原文のまま */
+      message: {
+        page: string;
+        kicker: string;
+        title: string;
+        intro: string;
+        quotes: string[];
+        after: string;
+        photo: { src: string; size: [number, number]; focus?: [number, number] };
+        facts: { k: string; v: string; url?: string }[];
+        values: { name: string; text: string }[];
+        credit: string;
+      };
+      /** BE.PRESTO の仕事の一覧（top.verbs を使う）と、各サービスの公式サイト */
+      index: { page: string; kicker: string; title: string; links: { label: string; url: string }[][] };
+      column: { page: string; kicker: string };
+      back: { page: string; title: string; body: string };
+      /** 奥付。誌名の注記もここに書く */
+      colophon: { rows: { k: string; v: string; url?: string }[]; note: string };
     };
     /** 登壇・主催・共催・伴走の記録を、チケットのようなカードで（公開されている告知の範囲で） */
     events?: {

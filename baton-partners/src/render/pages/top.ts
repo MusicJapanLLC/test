@@ -2,11 +2,14 @@ import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { partners } from '../../partners';
 import { bpNo, breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
-import { answerBox, discHtml, marquee, nextReads } from '../parts';
+import { answerBox, barcodeSvg, discHtml, marquee, nextReads } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
 import { esc, heading, jp, text } from '../text';
+import { renderMagazine } from './magazine';
 
 export function renderTop(p: Partner, env: BuildEnv): string {
+  // presto の世界観は、トップを1冊の雑誌として組む（骨組みから違うので、別の関数で）
+  if (p.world.theme === 'presto' && p.top.magazine) return renderMagazine(p, env);
   const t = p.top;
   const s = p.service;
   const path = routes.top(p.slug);
@@ -64,7 +67,6 @@ ${header(p, 'top')}
       <div class="scene" data-scene="network" data-count="3200" aria-hidden="true"><canvas></canvas></div>
       <div class="stage-shade" aria-hidden="true"></div>
       ${p.world.theme === 'orbit' ? orbitHeroExtras(p) : ''}
-      ${p.world.theme === 'presto' ? prestoHeroExtras(p) : ''}
       <div class="wrap stage-ui">
         ${t.deck ? `<p class="hero-deck" aria-hidden="true">${t.deck.map((l) => `<span>${esc(l)}</span>`).join('')}</p>` : ''}
         <div class="hero" data-hero>
@@ -101,8 +103,6 @@ ${header(p, 'top')}
 
   ${consoleBand(p)}
 
-  ${prologueSection(p)}
-
   <section class="sec sec-issue" aria-labelledby="issue-h">
     <div class="wrap grid-sec">
       <header class="sec-head rv">
@@ -129,8 +129,6 @@ ${header(p, 'top')}
 
   ${tuneSection(p)}
 
-  ${tempoSection(p)}
-
   ${cutoverSection(p)}
 
   <section class="sec sec-highlight" aria-labelledby="hl-h">
@@ -156,10 +154,6 @@ ${header(p, 'top')}
   </section>
 
   ${planetsSection(p)}
-
-  ${bellsSection(p)}
-
-  ${scoreSection(p)}
 
   ${lockerSection(p)}
 
@@ -207,15 +201,11 @@ ${header(p, 'top')}
 
   ${profileSection(p)}
 
-  ${coverSection(p)}
-
   ${mediaSection(p)}
 
   ${missionSection(p)}
 
   ${absoluteSection(p)}
-
-  ${chordSection(p)}
 
   ${cheerSection(p)}
 
@@ -1544,20 +1534,6 @@ function truckSvg(className: string): string {
   return `<svg class="${className}" viewBox="0 0 64 36" aria-hidden="true" focusable="false"><path class="tk-bed" d="M3 8h34v18H3z"/><path class="tk-cab" d="M37 13h12l9 8v5H37z"/><path class="tk-win" d="M41 16h7l5 5H41z"/><circle class="tk-wh" cx="13" cy="28" r="5"/><circle class="tk-wh" cx="49" cy="28" r="5"/><path class="tk-box" d="M10 11l7-3 7 3v8l-7 3-7-3z M10 11l7 3 7-3 M17 14v8"/></svg>`;
 }
 
-/** 伝票番号から、毎回同じ形になるバーコード（飾り） */
-function barcodeSvg(seed: string): string {
-  let x = 0;
-  const bars: string[] = [];
-  const codes = [...seed].map((c) => c.charCodeAt(0));
-  for (let i = 0; i < 46; i++) {
-    const c = codes[i % codes.length] + i * 7;
-    const w = 1 + (c % 3);
-    if (i % 2 === 0) bars.push(`<rect x="${x}" y="0" width="${w}" height="24"/>`);
-    x += w + ((c >> 2) % 2);
-  }
-  return `<svg class="wb-code" viewBox="0 0 ${x} 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">${bars.join('')}</svg>`;
-}
-
 /**
  * ヒーローの送り状。スクロールでステージの段階が進むと、追跡の欄が1つずつ進み、トラックが走る（CSSだけ）。
  * 動きを減らす設定・WebGLなしでは、ヒーローの下に、全部の欄が済んだ伝票として置く
@@ -1698,260 +1674,3 @@ function lockerSection(p: Partner): string {
    音は押したときだけ鳴る（client/presto.ts の Web Audio）。動きを減らす設定・JSなしでも、すべて読める形で出す
    ───────────────────────────────────────────── */
 
-/** 鐘の線画（presto）。押すと揺れる */
-function bellSvg(className: string): string {
-  return `<svg class="${className}" viewBox="0 0 64 64" aria-hidden="true"><path class="bl-top" d="M29 9.5a3 3 0 0 1 6 0"/><path class="bl-body" d="M32 10c-9.4 0-15.4 7.2-15.4 16.4v8.6L11.4 44h41.2l-5.2-9V26.4C47.4 17.2 41.4 10 32 10Z"/><path class="bl-lip" d="M11.4 44h41.2"/><circle class="bl-clap" cx="32" cy="50" r="4.2"/></svg>`;
-}
-
-/** ヒーローに足す、回る円形の文字と鐘（押すと鳴る）。WebGL の波紋も広がる */
-function prestoHeroExtras(p: Partner): string {
-  const ring = `BE FAST TO RING THE BELL ✦ ${p.top.prologue?.mark.toUpperCase() ?? 'PRESTO'} ✦ BP-${p.no.padStart(3, '0')} ✦ `;
-  return `
-      <button class="pr-seal" type="button" data-ring="523.25" aria-label="鐘を鳴らす（音が出ます）">
-        <svg class="pr-seal-ring" viewBox="0 0 200 200" aria-hidden="true"><defs><path id="pr-seal-path" d="M100,100 m-78,0 a78,78 0 1,1 156,0 a78,78 0 1,1 -156,0" /></defs><text><textPath href="#pr-seal-path" textLength="488">${esc(ring)}</textPath></text></svg>
-        <span class="pr-seal-c">${bellSvg('pr-seal-bell')}</span>
-      </button>`;
-}
-
-function prologueSection(p: Partner): string {
-  const a = p.top.prologue;
-  if (!a) return '';
-  return `
-  <section class="sec sec-prologue" aria-labelledby="pro-h">
-    <div class="wrap pro-in">
-      <div class="pro-body rv">
-        <p class="kicker">${esc(a.kicker)}</p>
-        <h2 id="pro-h" class="sec-h">${heading(a.title)}</h2>
-        ${a.body.map((t) => `<p class="pro-p">${jp(t)}</p>`).join('')}
-      </div>
-      <figure class="pro-scale rv" data-pro-scale aria-label="速度記号の目安（遅い順）。${esc(a.mark)}に鐘が止まる">
-        <ol class="ps-list">${a.scale
-          .map((s) => `<li${s.name === a.mark ? ' class="is-mark" data-pro-mark' : ''}><b>${esc(s.name)}</b><span><i class="glyph">♩</i>=${esc(s.bpm)}</span></li>`)
-          .join('')}</ol>
-        <span class="ps-pin" data-pro-pin aria-hidden="true">${bellSvg('ps-bell')}</span>
-        <figcaption class="fine">${jp(a.note)}</figcaption>
-      </figure>
-    </div>
-  </section>`;
-}
-
-function tempoSection(p: Partner): string {
-  const t = p.top.tempo;
-  if (!t) return '';
-  const s0 = t.stages[0];
-  const last = t.stages.length - 1;
-  return `
-  <section class="sec sec-tempo" aria-labelledby="tempo-h" data-tempo style="--beat:${(60 / s0.bpm).toFixed(3)}s;--heat:0">
-    <div class="wrap">
-      <header class="sec-head tempo-head rv">
-        <p class="kicker">${esc(t.kicker)}</p>
-        <h2 id="tempo-h" class="sec-h">${heading(t.title)}</h2>
-        <p class="tempo-lead">${jp(t.lead)}</p>
-      </header>
-      <div class="tempo-grid rv">
-        <div class="metro" aria-hidden="true">
-          <svg class="metro-svg" viewBox="0 0 200 260">
-            <path class="m-body" d="M70 20h60l46 220H24Z"/>
-            <path class="m-face" d="M80 36h40l30 150H50Z"/>
-            <g class="m-scale"><line x1="100" y1="50" x2="100" y2="176"/>${[60, 80, 100, 120, 140, 160].map((y) => `<line x1="94" y1="${y}" x2="106" y2="${y}"/>`).join('')}</g>
-            <g class="m-arm"><line x1="100" y1="196" x2="100" y2="40"/><rect class="m-weight" x="88" y="56" width="24" height="18" rx="3"/></g>
-            <circle class="m-pivot" cx="100" cy="196" r="6"/>
-            <rect class="m-base" x="18" y="236" width="164" height="12" rx="3"/>
-          </svg>
-          <span class="metro-flash"></span>
-        </div>
-        <div class="metro-panel">
-          <p class="tr-read"><span class="tr-name" data-t="name">${esc(s0.name)}</span><span class="tr-bpm"><i class="glyph">♩</i> = <b data-t="bpm">${s0.bpm}</b></span><span class="tr-jp" data-t="jp">${esc(s0.jp)}</span></p>
-          <label class="sr-only" for="tempo-range">発信のテンポ</label>
-          <input id="tempo-range" class="tempo-range" type="range" min="0" max="${last}" step="1" value="0" data-tempo-range aria-valuetext="${esc(`${s0.name}、${s0.state}`)}" />
-          <ol class="tempo-ticks" aria-hidden="true">${t.stages.map((s, i) => `<li><button type="button" tabindex="-1" data-step="${i}"${i === 0 ? ' class="is-on"' : ''}>${esc(s.name)}</button></li>`).join('')}</ol>
-          <div class="tempo-out" aria-live="polite">
-            <div class="to-col">
-              <p class="to-label">いまの状態</p>
-              <p class="to-title" data-t="state">${esc(s0.state)}</p>
-              <p class="to-body" data-t="pain">${jp(s0.pain)}</p>
-            </div>
-            <div class="to-col to-col-fix">
-              <p class="to-label">${esc(shortName(p))}なら</p>
-              <p class="to-body" data-t="fix">${jp(s0.fix)}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      <ol class="tempo-all">${t.stages
-        .map(
-          (s) => `
-        <li><p class="ta-name">${esc(s.name)} <span><i class="glyph">♩</i>=${s.bpm}</span></p><p class="ta-state">${esc(s.state)}</p><p>${jp(s.pain)}</p><p class="ta-fix">${jp(s.fix)}</p></li>`,
-        )
-        .join('')}</ol>
-      <p class="fine rv">${jp(t.note)}</p>
-    </div>
-    <script type="application/json" data-tempo-data>${JSON.stringify(t.stages.map(({ pain: _p, fix: _f, ...s }) => s)).replace(/</g, '\\u003c')}</script>
-    ${t.stages.map((s, i) => `<template data-tt="pain-${i}">${jp(s.pain)}</template><template data-tt="fix-${i}">${jp(s.fix)}</template>`).join('')}
-  </section>`;
-}
-
-function bellsSection(p: Partner): string {
-  const b = p.top.bells;
-  if (!b) return '';
-  return `
-  <section class="sec sec-bells" aria-labelledby="bells-h">
-    <div class="wrap">
-      <header class="sec-head rv">
-        <p class="kicker">Three bells</p>
-        <h2 id="bells-h" class="sec-h">${heading(b.title)}</h2>
-        <p class="bells-lead">${jp(b.lead)}</p>
-      </header>
-      <ol class="bells">${b.items
-        .map(
-          (it, i) => `
-        <li class="bell-card rv${i === 1 ? ' is-center' : ''}" style="--d:${i}">
-          <button class="bc-bell" type="button" data-ring="${it.pitch}" aria-label="${esc(it.en)}の鐘を鳴らす（音が出ます）">${bellSvg('bc-svg')}</button>
-          <p class="bc-no"><span>Bell ${esc(it.no)}</span>${esc(it.en)}</p>
-          <p class="bc-ja">${esc(it.ja)}</p>
-          <h3 class="bc-h">${heading(it.title)}</h3>
-          <p class="bc-p">${jp(it.body)}</p>
-          <ul class="bc-tags">${it.points.map((pt) => `<li>${esc(pt)}</li>`).join('')}</ul>
-          ${it.url ? `<a class="link-arrow" href="${esc(it.url)}" target="_blank" rel="noopener"><span>${esc(it.link ?? '公式サイトを見る')}</span><span class="arrow" aria-hidden="true">↗</span><span class="sr-only">（新しいタブで開きます）</span></a>` : ''}
-        </li>`,
-        )
-        .join('')}</ol>
-      <p class="fine rv">${jp(b.note)}</p>
-    </div>
-  </section>`;
-}
-
-function scoreSection(p: Partner): string {
-  const sc = p.top.score;
-  if (!sc) return '';
-  const job = sc.jobs[0];
-  const tool = sc.tools[0];
-  const titles = [...(job.field ? sc.common.field : sc.common.office), ...job.parts, ...tool.parts];
-  const ny = [8, -4, 4, -8, 0, -6, 6, -2];
-  // 切り替えで入れ替わる文も、ビルド時に文節で区切った HTML で渡す（スマホで「に|よる」のように割れないように）。
-  // 小節の題は列が細いので、文節ごとに折り返さない塊にする（和文と英字の境目「生成|AI」でも割れないように）
-  // 長い文節（「試算表・帳票データを」「Google Workspace連携と」）は、「・」と空白の後ろでも折り返せるようにする
-  const bar = (s: string) =>
-    jp(s)
-      .split('<wbr>')
-      .flatMap((ph) => ph.split(/(?<=[・ ])/))
-      .map((ph) => `<bp-nobr>${ph}</bp-nobr>`)
-      .join('<wbr>');
-  // 区切った HTML は <template> に置き、JSON には番号だけを渡す（ブラウザで文字列を HTML に戻さない）
-  const frags: string[] = [];
-  const ref = (html: string) => {
-    const i = frags.indexOf(html);
-    return i < 0 ? frags.push(html) - 1 : i;
-  };
-  const barRef = (s: string) => ref(bar(s));
-  const scoreData = {
-    common: { office: sc.common.office.map(barRef), field: sc.common.field.map(barRef) },
-    jobs: sc.jobs.map((j) => ({ name: j.name, field: j.field, parts: j.parts.map(barRef), outcomes: j.outcomes.map((o) => ref(jp(o))) })),
-    tools: sc.tools.map((t) => ({ name: t.name, parts: t.parts.map(barRef) })),
-  };
-  const chip = (label: string, sub: string, on: boolean, attr: string) =>
-    `<button type="button" aria-pressed="${on}" ${attr}>${esc(label)}${sub ? `<small>${esc(sub)}</small>` : ''}</button>`;
-  return `
-  <section class="sec sec-score" id="score" aria-labelledby="score-h" data-score>
-    <div class="wrap">
-      <header class="sec-head rv">
-        <p class="kicker">${esc(sc.kicker)}</p>
-        <h2 id="score-h" class="sec-h">${heading(sc.title)}</h2>
-        <p class="score-lead">${jp(sc.lead)}</p>
-      </header>
-      <div class="score-ctrl rv">
-        <div class="sc-group"><p class="sc-label" id="sc-job">Step 01 — 職務を選ぶ</p><div class="sc-chips" role="group" aria-labelledby="sc-job">${sc.jobs.map((j, i) => chip(j.name, '', i === 0, `data-job="${i}"`)).join('')}</div></div>
-        <div class="sc-group"><p class="sc-label" id="sc-tool">Step 02 — AIツールを選ぶ</p><div class="sc-chips sc-chips-tool" role="group" aria-labelledby="sc-tool">${sc.tools.map((t, i) => chip(t.name, t.by, i === 0, `data-tool="${i}"`)).join('')}</div></div>
-      </div>
-      <div class="sheet rv">
-        <div class="sheet-head">
-          <p class="sheet-title" aria-live="polite"><span data-s="job">${esc(job.name)}</span><i aria-hidden="true">×</i><span data-s="tool">${esc(tool.name)}</span></p>
-          <p class="sheet-meta" aria-hidden="true"><i class="glyph">𝄞</i> 8 bars · 85 min each · 11h20m</p>
-        </div>
-        <div class="sheet-staff">
-          ${sc.parts.map((pt, i) => `<p class="mvt mvt-${i + 1}" aria-hidden="true">${esc(pt)}</p>`).join('')}
-          <ol class="bars">${titles
-            .map((ttl, i) => {
-              const part = i < 2 ? 1 : i < 5 ? 2 : 3;
-              return `<li class="bar" data-part="${part}" data-part-label="${esc(sc.parts[part - 1])}" style="--ny:${ny[i]}px"><p class="bar-vol">Vol.${i + 1}</p><p class="bar-t" data-bar="${i}">${bar(ttl)}</p></li>`;
-            })
-            .join('')}</ol>
-        </div>
-        <div class="sheet-foot">
-          <p class="sf-label">受講後にできるようになること</p>
-          <ul class="sf-list" data-outcomes>${job.outcomes.map((o) => `<li>${jp(o)}</li>`).join('')}</ul>
-        </div>
-      </div>
-      <p class="fine rv">${jp(sc.note)}</p>
-    </div>
-    <script type="application/json" data-score-data>${JSON.stringify(scoreData).replace(/</g, '\\u003c')}</script>
-    ${frags.map((f, i) => `<template data-sf="${i}">${f}</template>`).join('')}
-  </section>`;
-}
-
-function chordSection(p: Partner): string {
-  const c = p.top.chord;
-  if (!c) return '';
-  // 五線の位置（線と間を 1 ずつ）：ド＝下に加線、ミ＝第1線、ソ＝第2線
-  const steps = [-2, 0, 2];
-  return `
-  <section class="sec sec-chord" aria-labelledby="chord-h" data-chord>
-    <div class="wrap chord-in">
-      <div class="chord-body rv">
-        <p class="kicker">${esc(c.kicker)}</p>
-        <h2 id="chord-h" class="sec-h">${heading(c.title)}</h2>
-        <p class="chord-lead">${jp(c.lead)}</p>
-        <button class="btn btn-line chord-all" type="button" data-chord-all><span class="glyph" aria-hidden="true">♪</span><span>${esc(c.button)}</span><small>音が出ます</small></button>
-      </div>
-      <div class="chord-stage rv">
-        <div class="cs-staff" aria-hidden="true"><span class="cs-clef glyph">𝄞</span></div>
-        <ul class="cs-notes">${c.notes
-          .map((n, i) => `<li class="cn" style="--k:${steps[i] ?? i * 2}" data-note="${i}"><button type="button" class="nh" data-pitch="${n.pitch}" aria-describedby="cn-${i}"><span class="sr-only">${esc(n.name)}の音を鳴らす（音が出ます）</span></button></li>`)
-          .join('')}</ul>
-        <ul class="cs-labels">${c.notes
-          .map((n, i) => ({ n, i }))
-          .reverse()
-          .map(({ n, i }) => `<li class="cl" data-note="${i}" id="cn-${i}"><b>${esc(n.name)}</b><span>${esc(n.text)}</span></li>`)
-          .join('')}</ul>
-      </div>
-    </div>
-    <div class="wrap"><p class="fine rv">${jp(c.note)}</p></div>
-  </section>`;
-}
-
-function coverSection(p: Partner): string {
-  const c = p.top.cover;
-  const l = p.leader;
-  if (!c || !l) return '';
-  const [fx, fy] = c.photo.focus ?? [50, 40];
-  return `
-  <section class="sec sec-cover" aria-labelledby="cover-h">
-    <div class="wrap cover-in">
-      <div class="cover-body rv">
-        <p class="kicker">${esc(c.kicker)}</p>
-        <h2 id="cover-h" class="sec-h">${heading(c.title)}</h2>
-        <p class="cover-lead">${jp(c.lead)}</p>
-        <dl class="cover-facts">${c.facts
-          .map((f) => `<div><dt>${esc(f.k)}</dt><dd>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.v)}<span aria-hidden="true"> ↗</span><span class="sr-only">（新しいタブで開きます）</span></a>` : esc(f.v)}</dd></div>`)
-          .join('')}</dl>
-        <a class="link-arrow" href="${routes.about(p.slug)}"><span>${esc(l.name.replace(' ', ''))}さんの言葉を読む</span><span class="arrow" aria-hidden="true">→</span></a>
-        <p class="fine">${jp(c.note)}</p>
-      </div>
-      <figure class="mag rv" data-mag>
-        <div class="mag-in">
-          <img src="${c.photo.src}" alt="${esc(p.company.name)} ${esc(l.role)} ${esc(l.name)}さん" width="${c.photo.size[0]}" height="${c.photo.size[1]}" loading="lazy" decoding="async" style="object-position:${fx}% ${fy}%" />
-          <span class="mag-shade" aria-hidden="true"></span>
-          <p class="mag-top" aria-hidden="true"><span>${esc(c.issue)}</span><span>${esc(c.date)}</span></p>
-          <p class="mag-mast" aria-hidden="true">${esc(c.masthead)}</p>
-          <div class="mag-side" aria-hidden="true">${c.side.map((s) => `<p><b>${esc(s.b)}</b>${esc(s.t)}</p>`).join('')}</div>
-          <div class="mag-lines">
-            <p class="ml-kick" aria-hidden="true">${esc(c.kick)}</p>
-            <p class="ml-big">${heading(c.headline)}</p>
-            <p class="ml-name">${esc(l.name)}<span>${esc(p.company.nameEn)} ${esc(l.role)}</span></p>
-          </div>
-          <span class="mag-code" aria-hidden="true">${barcodeSvg(`BP-${p.no}`)}<b>BP—${esc(p.no.padStart(3, '0'))}</b></span>
-        </div>
-      </figure>
-    </div>
-  </section>`;
-}

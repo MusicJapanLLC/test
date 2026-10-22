@@ -150,3 +150,17 @@ export function sourcesList(sources: { label: string; url: string }[]): string {
 }
 
 export { botHtml, discHtml } from './robots';
+
+/** 伝票番号から、毎回同じ形になるバーコード（飾り） */
+export function barcodeSvg(seed: string, className = 'wb-code'): string {
+  let x = 0;
+  const bars: string[] = [];
+  const codes = [...seed].map((c) => c.charCodeAt(0));
+  for (let i = 0; i < 46; i++) {
+    const c = codes[i % codes.length] + i * 7;
+    const w = 1 + (c % 3);
+    if (i % 2 === 0) bars.push(`<rect x="${x}" y="0" width="${w}" height="24"/>`);
+    x += w + ((c >> 2) % 2);
+  }
+  return `<svg class="${className}" viewBox="0 0 ${x} 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">${bars.join('')}</svg>`;
+}

@@ -363,11 +363,13 @@ function orbit(it) {
 }
 const { loadDefaultJapaneseParser } = require('budoux');
 const jaParser = loadDefaultJapaneseParser();
-// presto（BE.PRESTO など）は夜の楽譜と鐘。黒地にかすかな五線、右に真鍮の鐘と青い波紋。見出しはしっぽり明朝 B1、最後の行は青→生成り→真鍮
+// presto（BE.PRESTO など）は、誌面『PRESTO』の表紙。黒地に Bodoni の題字、右に表紙の写真（網点を薄く重ねる）。
+// 見出しはしっぽり明朝 B1、最後の行だけ BP の青。ラベルは Oswald。右下にバーコード
 function presto(it) {
   const blue = '#4FB8EC';
-  const brass = '#C9A15B';
-  const cream = '#F4EFE4';
+  const cream = '#F1ECE2';
+  const mh = it.masthead ?? { name: 'PRESTO', issue: '', date: '', tagline: '' };
+  const cover = it.cover ?? (it.photo ? { src: it.photo, focus: [50, 30] } : null);
   const parts = it.heading.split(/(?<=[、。])/).map((x) => x.trim()).filter(Boolean);
   const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0);
   const lines = [];
@@ -388,47 +390,63 @@ function presto(it) {
     }
     return best;
   };
-  const wrapped = lines.flatMap((l) => (len(l) <= 16 ? [l] : halve(l)));
-  const size = Math.min(70, Math.floor(650 / Math.max(...wrapped.map(len))), wrapped.length > 3 ? 46 : 70);
+  // 左の段（幅 560px）に収まるよう、13字を超える行は文節で半分に。4行以上になる長い題（記事）は、1行を長く・字を小さく
+  let wrapped = lines.flatMap((l) => (len(l) <= 13 ? [l] : halve(l)));
+  if (wrapped.length > 3) wrapped = lines.flatMap((l) => (len(l) <= 15.5 ? [l] : halve(l)));
+  const size = Math.min(58, Math.floor(540 / Math.max(...wrapped.map(len))), wrapped.length > 3 ? 34 : 58);
   const h1 = wrapped.map((l, i) => `<span class="${i === wrapped.length - 1 && wrapped.length > 1 ? 'g' : ''}">${esc(l)}</span>`).join('');
-  const staff = `<svg class="staff" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630"><g fill="none" stroke="${cream}" stroke-opacity=".12" stroke-width="1.4">${[0, 1, 2, 3, 4].map((i) => `<path d="M0 ${452 + i * 18} C 300 ${420 + i * 18}, 700 ${500 + i * 18}, 1200 ${430 + i * 18}"/>`).join('')}</g><g fill="${blue}">${[[120, 470, 0.35], [262, 446, 0.25], [404, 470, 0.3], [560, 480, 0.22]].map(([x, y, o]) => `<ellipse cx="${x}" cy="${y}" rx="9" ry="6.4" transform="rotate(-24 ${x} ${y})" fill-opacity="${o}"/>`).join('')}</g></svg>`;
-  const ripples = `<svg class="rip" xmlns="http://www.w3.org/2000/svg" viewBox="-300 -300 600 600" width="600" height="600"><g fill="none" stroke="${blue}">${[120, 170, 220, 270].map((r, i) => `<circle r="${r}" stroke-opacity="${0.42 - i * 0.09}" stroke-width="1.6"/>`).join('')}</g><circle r="120" fill="none" stroke="${brass}" stroke-opacity=".5" stroke-width="1.4" stroke-dasharray="2 10"/></svg>`;
-  const bell = `<svg class="bell" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="210" height="210"><defs><linearGradient id="b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ECCA8A"/><stop offset="1" stop-color="#8A6A32"/></linearGradient></defs><path d="M29 9.5a3 3 0 0 1 6 0" fill="none" stroke="url(#b)" stroke-width="2"/><path d="M32 10c-9.4 0-15.4 7.2-15.4 16.4v8.6L11.4 44h41.2l-5.2-9V26.4C47.4 17.2 41.4 10 32 10Z" fill="url(#b)"/><path d="M11.4 44h41.2" stroke="#ECCA8A" stroke-width="1.6"/><circle cx="32" cy="50" r="4.2" fill="#ECCA8A"/></svg>`;
+  // バーコード：見出しから決まる太さの並び（毎回同じ形）
+  let seed = [...it.key].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
+  let x = 0;
+  const bars = [];
+  while (x < 118) {
+    seed = (seed * 1103515245 + 12345) >>> 0;
+    const w = 1 + (seed % 3);
+    if ((seed >> 4) % 3) bars.push(`<rect x="${x}" width="${w}" height="44"/>`);
+    x += w + 1 + ((seed >> 8) % 2);
+  }
+  const code = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" width="120" height="44" fill="#0B0E0F">${bars.join('')}</svg>`;
+  const [fx, fy] = cover?.focus ?? [50, 30];
   return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
 <link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
 <style>
   @font-face{font-family:'SMB1h';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800-h.woff2')}') format('woff2')}
   @font-face{font-family:'SMB1r';font-weight:800;src:url('${fontFile('shippori-mincho-b1-800.woff2')}') format('woff2')}
-  @font-face{font-family:'BDN';font-style:italic;font-weight:400 900;src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource-variable/bodoni-moda/files/bodoni-moda-latin-wght-italic.woff2')).href}') format('woff2')}
-  @font-face{font-family:'NMU';src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource/noto-music/files/noto-music-music-400-normal.woff2')).href}') format('woff2')}
-  @font-face{font-family:'OSW';font-weight:200 700;src:url('${pathToFileURL(resolve(root, 'node_modules/@fontsource-variable/oswald/files/oswald-latin-wght-normal.woff2')).href}') format('woff2')}
+  @font-face{font-family:'BDN';font-weight:400 900;src:url('${fsv('bodoni-moda', 'bodoni-moda-latin-opsz-normal.woff2')}') format('woff2')}
+  @font-face{font-family:'BDNi';font-style:italic;font-weight:400 900;src:url('${fsv('bodoni-moda', 'bodoni-moda-latin-opsz-italic.woff2')}') format('woff2')}
+  @font-face{font-family:'OSW';font-weight:200 700;src:url('${fsv('oswald', 'oswald-latin-wght-normal.woff2')}') format('woff2')}
   *{margin:0;box-sizing:border-box}
   body{width:1200px;height:630px;background:#0B0E0F;font-family:'Zen Kaku Gothic New',sans-serif;color:${cream};position:relative;overflow:hidden}
-  .neb{position:absolute;inset:0;background:radial-gradient(ellipse 40% 56% at 82% 46%,#1A91C944,transparent 70%),radial-gradient(ellipse 26% 30% at 96% 96%,${brass}2a,transparent 70%),radial-gradient(ellipse 30% 40% at 0% 0%,#1A91C91c,transparent 70%)}
-  .staff{position:absolute;inset:0}
-  .rip{position:absolute;left:${905 - 300}px;top:${300 - 300}px}
-  .bell{position:absolute;left:${905 - 105}px;top:${300 - 112}px;filter:drop-shadow(0 0 40px ${brass}88)}
-  .tempo{position:absolute;right:64px;top:54px;text-align:right;font-family:'BDN',serif;font-style:italic;font-weight:600;font-size:44px;line-height:1;color:${cream}}
-  .tempo i{font-family:'NMU',serif;font-style:normal;font-size:20px;letter-spacing:0;color:${brass}}
-  .tempo small{display:block;margin-top:10px;font-family:'OSW',sans-serif;font-style:normal;font-weight:400;font-size:14px;letter-spacing:.24em;color:#B9E2F6}
-  .bar{position:absolute;left:0;right:0;bottom:0;height:8px;background:linear-gradient(90deg,${blue},${cream} 52%,${brass});box-shadow:0 0 30px #1A91C9aa}
-  .in{position:absolute;inset:56px 470px 56px 76px;display:flex;flex-direction:column;justify-content:space-between}
-  .top img{height:62px;width:auto}
-  .label{font-family:'OSW',sans-serif;font-weight:500;font-size:17px;letter-spacing:.24em;text-transform:uppercase;color:#B9E2F6;display:flex;align-items:center;gap:12px}
-  .label::before{content:'';width:20px;height:20px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M14.6 2v12.2' stroke='%23C9A15B' stroke-width='1.8' stroke-linecap='round'/%3E%3Cellipse cx='10.4' cy='14.6' rx='4.6' ry='3.3' transform='rotate(-24 10.4 14.6)' fill='%234FB8EC'/%3E%3C/svg%3E") center/contain no-repeat}
-  h1{margin-top:18px;font-family:'SMB1h','SMB1r','Zen Old Mincho',serif;font-weight:800;font-size:${size}px;line-height:1.36;letter-spacing:.02em;width:calc(100% + 150px);text-shadow:0 0 40px #1A91C966}
+  .ph{position:absolute;top:0;right:0;width:620px;height:630px;overflow:hidden;background:#15191b}
+  .ph img{width:100%;height:100%;object-fit:cover;object-position:${fx}% ${fy}%;filter:grayscale(.15) contrast(1.08)}
+  /* 網点（45度）と、左の黒へのつなぎ */
+  .ph::before{content:'';position:absolute;inset:-40%;background:radial-gradient(#0B0E0F 0.9px,transparent 1.5px) 0 0/5px 5px;transform:rotate(45deg);opacity:.28;mix-blend-mode:multiply}
+  .ph::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#0B0E0F 0%,#0B0E0Fcc 14%,transparent 42%),linear-gradient(0deg,#0B0E0Fd0 0%,transparent 30%),linear-gradient(180deg,#0B0E0F88 0%,transparent 34%)}
+  .mast{position:absolute;left:52px;top:24px;font-family:'BDN',serif;font-weight:900;font-variation-settings:'opsz' 96;font-size:206px;line-height:.86;letter-spacing:-.01em;color:${cream};text-shadow:0 2px 30px #0008}
+  .rail{position:absolute;left:60px;right:48px;top:212px;display:flex;align-items:baseline;gap:18px;padding-top:10px;border-top:1px solid ${cream}55;font-family:'OSW',sans-serif;font-weight:400;font-size:14px;letter-spacing:.22em;text-transform:uppercase;color:${cream}cc}
+  .rail i{font-family:'BDNi',serif;font-style:italic;font-weight:500;font-size:19px;letter-spacing:.01em;text-transform:none;color:${cream}}
+  .rail .r{margin-left:auto}
+  .in{position:absolute;left:64px;top:262px;bottom:44px;width:560px;display:flex;flex-direction:column;justify-content:space-between}
+  .label{font-family:'OSW',sans-serif;font-weight:500;font-size:16px;letter-spacing:.26em;text-transform:uppercase;color:${blue};display:flex;align-items:center;gap:12px}
+  .label::before{content:'';width:28px;height:2px;background:${blue}}
+  h1{margin-top:16px;font-family:'SMB1h','SMB1r',serif;font-weight:800;font-size:${size}px;line-height:1.32;letter-spacing:.02em;text-shadow:0 2px 24px #000a}
   h1 span{display:block;white-space:nowrap}
-  h1 .g{width:fit-content;background:linear-gradient(90deg,${blue},${cream} 55%,${brass});-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none}
-  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:20px;font-weight:700;color:#CFC9BC;width:calc(100% + 394px)}
-  .foot svg{height:36px;width:auto}
+  h1 .g{color:${blue}}
+  .foot{display:flex;align-items:center;gap:22px;font-size:17px;font-weight:700;color:#CFC9BC}
+  .foot svg{height:30px;width:auto}
+  .foot .sep{width:1px;height:26px;background:${cream}44}
+  .code{position:absolute;right:40px;bottom:36px;background:${cream};padding:8px 10px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'OSW',sans-serif;font-size:10px;letter-spacing:.2em;color:#0B0E0F}
+  .foot img{height:40px;width:auto}
 </style></head><body>
-<div class="neb"></div>${staff}${ripples}${bell}
-<p class="tempo">Presto<small><i>&#9833;</i> = 184</small></p><div class="bar"></div>
+${cover ? `<div class="ph"><img src="${file(cover.src)}" alt=""></div>` : ''}
+<p class="mast">${esc(mh.name)}</p>
+<p class="rail"><span>${esc(mh.issue)}</span><span>${esc(mh.date)}</span><i>${esc(mh.tagline)}</i><span class="r">partners.music-japan.com</span></p>
 <div class="in">
-  <div class="top">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}</div>
   <div><p class="label">${esc(it.label)}</p><h1>${h1}</h1></div>
-  <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
-</div></body></html>`;
+  <div class="foot">${it.logo ? `<img src="${file(it.logo)}" alt="">` : ''}<span>${esc(it.company)}</span><span class="sep"></span>${bpLogoWhite}</div>
+</div>
+<div class="code">${code}<span>${esc(mh.issue || 'PRESTO')}</span></div>
+</body></html>`;
 }
 function html(it) {
   if (it.theme === 'presto') return presto(it);
