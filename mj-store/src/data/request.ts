@@ -19,7 +19,7 @@ export const REQUEST_TYPES = [
     id: 'love',
     label: 'ここが好き',
     note: '開発チームの燃料になります。',
-    placeholder: '好きなところを、好きなだけ。\n例）灯の旅路の宿屋のBGMが、ずっと聴いていられる。',
+    placeholder: '好きなところを、好きなだけ。\n例）ギルドの灯の酒場のBGMが、ずっと聴いていられる。',
   },
   {
     id: 'other',
