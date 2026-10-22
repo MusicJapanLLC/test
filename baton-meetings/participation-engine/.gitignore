@@ -1,0 +1,7 @@
+.state/
+*.lock
+*.secret
+.env
+*.meeting-url
+private/
+node_modules/
