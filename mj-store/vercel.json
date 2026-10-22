@@ -5,6 +5,10 @@
   "outputDirectory": "dist",
   "cleanUrls": true,
   "trailingSlash": true,
+  "redirects": [
+    { "source": "/games/akari-no-tabiji", "destination": "/games/", "permanent": false },
+    { "source": "/games/akari-no-tabiji/:path*", "destination": "/games/", "permanent": false }
+  ],
   "headers": [
     {
       "source": "/assets/(.*)",

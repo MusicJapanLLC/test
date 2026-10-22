@@ -47,7 +47,7 @@ export function initRequestForm(): void {
   const env = envSummary();
   envPreview.textContent = env;
 
-  /* URL で用件と作品を選んだ状態にする（?game=akari-no-tabiji&type=idea） */
+  /* URL で用件と作品を選んだ状態にする（?game=guild-no-akari&type=idea） */
   const params = new URLSearchParams(location.search);
   const pre = (name: string, value: string | null) => {
     if (!value) return;
