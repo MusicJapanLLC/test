@@ -2,7 +2,7 @@
 //   node guild/build.mjs
 //   dist/index.html    … そのままブラウザで開ける単体ファイル
 //   dist/artifact.html … claude.ai の Artifact 用（<html>/<head>/<body> を外した版）
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, cpSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -28,6 +28,8 @@ const standalone = html
   .replace(/(<script src="[^"]+"><\/script>\n?)+/, () => `<script>\n${safeJs}\n</script>\n`);
 writeFileSync(join(root, 'dist/index.html'), standalone);
 copyFileSync(join(root, 'analytics.js'), join(root, 'dist/analytics.js'));
+// 購入画面からリンクする特商法・資金決済法・規約のページ（販売の前提なので、公開物に必ず含める）
+cpSync(join(root, 'legal'), join(root, 'dist/legal'), { recursive: true });
 
 const artifact = `<meta charset="utf-8">
 ${title}

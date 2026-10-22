@@ -11,5 +11,11 @@
       "destination": "/fire/:path*",
       "permanent": false
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/mayor/pay/api/:fn",
+      "destination": "/api/mayor/:fn"
+    }
   ]
 }
