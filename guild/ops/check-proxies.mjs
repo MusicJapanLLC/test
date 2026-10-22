@@ -4,7 +4,7 @@ globalThis.HTMLRewriter=class {
   on(selector,handler){this.handlers.push([selector,handler]);return this;}
   async transform(response){let html=await response.text();for(const [selector,h] of this.handlers)h.element({append(value){html=html.replace(`</${selector}>`,value+`</${selector}>`);}});return new Response(html,response);}
 };
-for(const route of ['world','fire']){
+for(const route of ['world']){
   const {default:worker}=await import(`./${route}-proxy.mjs`);
   let observed;
   globalThis.fetch=async req=>{observed=req;return new Response('<html><head></head><body>Original game</body></html>',{headers:{'content-type':'text/html','set-cookie':'upstream=private'}});};
@@ -23,4 +23,18 @@ for(const route of ['world','fire']){
   assert.equal(redirect.status,308);
   assert.equal(redirect.headers.get('location'),`https://game.music-japan.com/${route}/`);
   console.log(`${route}: HTML tag, privacy link, unchanged assets, credential stripping and redirect passed`);
+}
+{
+  const {default:worker}=await import('./fire-proxy.mjs');
+  let called=false;
+  globalThis.fetch=async()=>{called=true;return new Response('upstream');};
+  for(const path of ['/fire','/fire/','/fire/game.js?v=19','/fire/api/commerce/status']){
+    const res=await worker.fetch(new Request(`https://game.music-japan.com${path}`,{headers:{cookie:'private=1'}}));
+    assert.equal(res.status,302);
+    assert.equal(res.headers.get('location'),'https://store.music-japan.com/games/');
+  }
+  assert.equal(called,false);
+  await worker.fetch(new Request('https://game.music-japan.com/firewood'));
+  assert.equal(called,true);
+  console.log('fire: closed, every /fire path redirects to the store without contacting the old upstream');
 }

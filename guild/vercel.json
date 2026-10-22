@@ -3,12 +3,12 @@
   "redirects": [
     {
       "source": "/lantern-journey",
-      "destination": "/fire/",
+      "destination": "https://store.music-japan.com/games/",
       "permanent": false
     },
     {
       "source": "/lantern-journey/:path*",
-      "destination": "/fire/:path*",
+      "destination": "https://store.music-japan.com/games/",
       "permanent": false
     }
   ],
