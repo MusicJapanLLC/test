@@ -1,7 +1,7 @@
 {
- "edition": "FUNPATCH4.1",
- "bytes": 776783,
- "sha256": "d56e85ebd2237a7e59bd862f59f985ca5c4eaa962f33dd9a65a79a2618b4c3e1",
+ "edition": "FUNPATCH4.2",
+ "bytes": 778475,
+ "sha256": "2fa29711fce2da04d1eab401d3d9f3e032ae907d62c978b3e2b2bbd14e0f6481",
  "built": "2026-10-25",
- "note": "v4.1 hotfix: chip rescue render/click, 12-branding text rewrite, arrival fallback, tier-0 decor, slot label fix"
+ "note": "v4.2: source-level fixes (bannerTimer var, title/menu 12-texts) + own handbook button with capture chip listener"
 }

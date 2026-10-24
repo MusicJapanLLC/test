@@ -2424,7 +2424,7 @@ const Campaign=(()=>{
 /* The village departure office. One tap starts sound and play; all progress autosaves. */
 (()=>{'use strict';if(!window.Campaign)return;
  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const root=document.createElement('section');root.id='caravan-title';root.setAttribute('aria-label','タイトル');root.innerHTML=`<div class="caravan-title-paper"><div class="caravan-title-top"><span>MUSIC JAPAN / 村営ゲーム課</span><b>辞令 第018号</b></div><div class="caravan-title-heading"><small>引っ越しても、上司は同じ</small><h1>村長、<br>世界まで<br><em>行くんですか？</em></h1><div class="caravan-red-stamp">定員12名<br>個性無制限</div></div><canvas id="caravan-title-art" width="420" height="170" aria-label="家と山積みの木を荷車で運ぶ村人"></canvas><div class="caravan-title-bottom"><p><b>採る。積む。運ぶ。引っ越す。</b><br>12人の相棒と18の土地。人数より、クセを育てる</p><button id="caravan-start">${state.workers.length||state.buildings.length?'続きの出勤をする':'村長に就任する'} <span>→</span></button><small id="caravan-title-save">${esc(Campaign.current().name)} / DAY ${state.day}<br>全部オートセーブ。セーブ係は雇わなくていい。</small></div><div class="caravan-ticket-edge"></div></div>`;document.body.append(root);document.body.dataset.caravanTitle='true';let open=true,signature='',paint=0,nearId=null,saveAt=0;
+ const root=document.createElement('section');root.id='caravan-title';root.setAttribute('aria-label','タイトル');root.innerHTML=`<div class="caravan-title-paper"><div class="caravan-title-top"><span>MUSIC JAPAN / 村営ゲーム課</span><b>辞令 第018号</b></div><div class="caravan-title-heading"><small>引っ越しても、上司は同じ</small><h1>村長、<br>世界まで<br><em>行くんですか？</em></h1><div class="caravan-red-stamp">定員は家しだい<br>個性無制限</div></div><canvas id="caravan-title-art" width="420" height="170" aria-label="家と山積みの木を荷車で運ぶ村人"></canvas><div class="caravan-title-bottom"><p><b>採る。積む。運ぶ。引っ越す。</b><br>相棒は家を建てるほど増える、18の土地。人数より、クセを育てる</p><button id="caravan-start">${state.workers.length||state.buildings.length?'続きの出勤をする':'村長に就任する'} <span>→</span></button><small id="caravan-title-save">${esc(Campaign.current().name)} / DAY ${state.day}<br>全部オートセーブ。セーブ係は雇わなくていい。</small></div><div class="caravan-ticket-edge"></div></div>`;document.body.append(root);document.body.dataset.caravanTitle='true';let open=true,signature='',paint=0,nearId=null,saveAt=0;
  // Inert keeps the paused game and its shortcuts out of keyboard/screen-reader navigation.
  const pausedNodes=[...document.body.children].filter(n=>n!==root&&n.tagName!=='SCRIPT');for(const n of pausedNodes)n.inert=true;
  function enter(){if(!open)return;VillageAudio.unlock();open=false;root.hidden=true;document.body.dataset.caravanTitle='false';for(const n of pausedNodes)n.inert=false;Pocket.clearInput();A.sfx('build');save();if(Campaign.report().settlement>=1&&Campaign.report().elapsed<5)window.LivingUI?.celebrate('到着。家は、まだない。',Campaign.current().name+' / 住民と荷物は全員いっしょ','festival');document.getElementById('game').focus({preventScroll:true})}
@@ -2501,7 +2501,7 @@ const Campaign=(()=>{
  archiveOverflow();for(const w of state.workers)ensure(w);
  const resident0=WorldGame.hasResident;WorldGame.hasResident=id=>resident0(id)||crew.retired.some(w=>w.id===id);
  maxWorkers=function(){return Math.min(12,Math.max(state.workers.length,houseCapacity()))};
- const hire0=hire;hire=function(role){if(state.workers.length>=12){toast('定員12人！ 次は住民手帳で、ひとりを育てよう');return}hire0(role);for(const w of state.workers)ensure(w)};
+ const hire0=hire;hire=function(role){if(state.workers.length>=12){toast('定員いっぱい！ 次は住民手帳で、ひとりを育てよう');return}hire0(role);for(const w of state.workers)ensure(w)};
  const legacyReassign=Citizens.reassign;Citizens.reassign=function(id,role){const ok=legacyReassign(id,role);if(ok){const w=state.workers.find(w=>w.id===id);if(w)ensure(w).job=role;save()}return ok};
  function changeJob(id,job){const w=state.workers.find(w=>w.id===id),d=jobs[job];if(!able(w)||!d)return false;if(job!==d.role&&Citizens.ensure(w).level<4){toast('専門職はLv.4で解禁 / 仕事か研修で育つ');return false}if(!legacyReassign(id,d.role))return false;ensure(w).job=job;save();toast(Citizens.ensure(w).name+'、'+title(w)+'に転職！');return true}
  function trainCost(w){return{wood:Math.min(90,12+Citizens.ensure(w).level*3),food:Math.min(100,12+Citizens.ensure(w).level*4)}}
@@ -2545,7 +2545,7 @@ const Campaign=(()=>{
  const buildPanel=$('panel-build'),buildNav=document.createElement('nav');buildNav.className='crew-build-tabs';buildNav.innerHTML=[['buildings','建物'],['equipment','設備強化'],['research','研究']].map(([id,t])=>`<button data-crew-build="${id}">${t}</button>`).join('');buildPanel.prepend(buildNav);buildPanel.dataset.crewBuild='buildings';
  function filterBuild(){const mode=buildPanel.dataset.crewBuild;for(const b of buildNav.querySelectorAll('button'))b.classList.toggle('selected',b.dataset.crewBuild===mode);for(const el of $('upgrade-grid').children){const tech=!!el.dataset.techUpgrade||el.textContent.includes('生産技術')||el.textContent.includes('MASTERED');el.hidden=mode==='research'?!tech:tech}for(const s of buildPanel.querySelectorAll('.section-title'))s.hidden=true;}
  const renderUpgrades0=renderUpgrades;renderUpgrades=function(){renderUpgrades0();filterBuild()};
- function handbook(){return `<div class="living-intro"><small>少数精鋭 / ${state.workers.length}人・定員12人</small><h2>人員削減？ 個性増員です</h2><p>Lv.4で専門職、Lv.10で達人 / 道具は8段階<br>相棒が近くにいると採集 +20%・移動 +12%</p></div>${crew.retired.length?`<div class="crew-ob-note">開拓OB ${crew.retired.length}人 / 研修券 ${crew.mentoring}枚<br>名前・経験・荷物・縁は保管中 / 下の交代で復帰</div>`:''}${state.workers.map(w=>{const n=Citizens.ensure(w),q=ensure(w),b=pair(w),rels=VillageSocial.relationFor(w.id),cost=trainCost(w),gc=gearCost(w);return `<article class="living-person crew-person"><header><canvas class="caravan-handbook-face" width="72" height="72" data-face="${esc(w.id)}"></canvas><div><small>${esc(Citizens.trait(w).name)} / Lv.${n.level}</small><h3>${esc(n.name)}</h3><span>${esc(title(w))} / ${q.injury?'療養 '+Math.ceil(q.injury)+'秒':w.expeditionId?'遠征中':esc(w.state==='working'?'採集中':w.state==='hauling'?'納品へ':w.state==='sleeping'?'睡眠中':'村で仕事中')}</span></div><b>${Math.round((strength(w)-1)*100)}%<small>職業・道具・連携</small></b></header><div class="chief-meter"><i style="width:${n.level>=20?100:n.xp/Citizens.nextXP(w)*100}%"></i></div><small class="crew-xp">${n.level>=20?'Lv.20 / 育成完了':`XP ${Math.floor(n.xp)} / ${Citizens.nextXP(w)} · ${n.level<4?'専門職まであと'+(4-n.level)+'Lv':n.level<10?'達人まであと'+(10-n.level)+'Lv':'達人の仕事はひと味違う'}`}</small><div class="crew-actions"><button data-crew-train="${esc(w.id)}" ${!able(w)||n.level>=20||(!crew.mentoring&&!hasCost(cost))?'disabled':''}>研修 +55% XP<small>${crew.mentoring?'OB研修券 1枚':fmtCost(cost)}</small></button><button data-crew-gear="${esc(w.id)}" ${!able(w)||q.gear>=8||!hasCost(gc)?'disabled':''}>道具 ${q.gear>=8?'MAX':'Lv.'+q.gear+' → '+(q.gear+1)}<small>${q.gear>=8?'鍛え上げた愛用品':fmtCost(gc)}</small></button></div><details><summary>転職・相棒・仕事の記録</summary><label>職業<select data-crew-job="${esc(w.id)}" ${!able(w)?'disabled':''}>${Object.entries(jobs).map(([id,j])=>`<option value="${id}" ${q.job===id?'selected':''} ${id!==j.role&&n.level<4||j.role==='guard'&&!state.buildings.some(b=>b.type==='barracks')?'disabled':''}>${j.name}${id!==j.role&&n.level<4?' / Lv.4':''}</option>`).join('')}</select></label><p>${esc(jobs[q.job].desc)} / 道具：採集 +${q.gear*8}%</p><label>いつもの相棒<select data-crew-buddy="${esc(w.id)}" ${w.expeditionId?'disabled':''}><option value="">いまはソロ</option>${state.workers.filter(a=>a!==w&&!a.expeditionId).map(a=>`<option value="${esc(a.id)}" ${q.buddy===a.id?'selected':''}>${esc(a.citizen.name)} / ${esc(title(a))}</option>`).join('')}</select></label><p>${b?'連携中！':'相棒が110歩以内で連携'} / 共同作業 ${Math.floor(q.joint)}回<br>積載 ${Logistics.cargoTotal(w).toFixed(1)} / 累計納品 ${Object.values(w.delivered||{}).reduce((a,b)=>a+b,0).toFixed(1)}</p><div class="living-bonds">${rels.map(r=>{const a=[...state.workers,...crew.retired].find(w=>w.id===r.id);return `<span>${esc(a?.citizen?.name||'旅の友')} / ${r.score>=3?'仲良し':r.score<=-3?'好敵手':'顔なじみ'}</span>`}).join('')||'これから縁が育つ'}</div>${VillageSocial.journalFor(w.id).slice(-2).map(e=>`<p>${esc(e.text)}</p>`).join('')}${crew.retired.length?`<label>開拓OBと交代<select data-crew-swap="${esc(w.id)}"><option value="">交代するOBを選ぶ</option>${crew.retired.map(a=>`<option value="${esc(a.id)}">${esc(a.citizen?.name||a.id)} / Lv.${a.citizen?.level||1}</option>`).join('')}</select></label><small>荷物・育成は本人と一緒に保管される</small>`:''}</details></article>`}).join('')||'<p class="living-note">小屋を建てたら、最初の仲間を迎えよう</p>'}<button class="living-wide" data-living-tab="hire">${state.workers.length>=12?'12人そろった！ 育成の時間':'仲間を迎える →'}</button>`}
+ function handbook(){return `<div class="living-intro"><small>少数精鋭 / ${state.workers.length}人・定員は家しだい</small><h2>人員削減？ 個性増員です</h2><p>Lv.4で専門職、Lv.10で達人 / 道具は8段階<br>相棒が近くにいると採集 +20%・移動 +12%</p></div>${crew.retired.length?`<div class="crew-ob-note">開拓OB ${crew.retired.length}人 / 研修券 ${crew.mentoring}枚<br>名前・経験・荷物・縁は保管中 / 下の交代で復帰</div>`:''}${state.workers.map(w=>{const n=Citizens.ensure(w),q=ensure(w),b=pair(w),rels=VillageSocial.relationFor(w.id),cost=trainCost(w),gc=gearCost(w);return `<article class="living-person crew-person"><header><canvas class="caravan-handbook-face" width="72" height="72" data-face="${esc(w.id)}"></canvas><div><small>${esc(Citizens.trait(w).name)} / Lv.${n.level}</small><h3>${esc(n.name)}</h3><span>${esc(title(w))} / ${q.injury?'療養 '+Math.ceil(q.injury)+'秒':w.expeditionId?'遠征中':esc(w.state==='working'?'採集中':w.state==='hauling'?'納品へ':w.state==='sleeping'?'睡眠中':'村で仕事中')}</span></div><b>${Math.round((strength(w)-1)*100)}%<small>職業・道具・連携</small></b></header><div class="chief-meter"><i style="width:${n.level>=20?100:n.xp/Citizens.nextXP(w)*100}%"></i></div><small class="crew-xp">${n.level>=20?'Lv.20 / 育成完了':`XP ${Math.floor(n.xp)} / ${Citizens.nextXP(w)} · ${n.level<4?'専門職まであと'+(4-n.level)+'Lv':n.level<10?'達人まであと'+(10-n.level)+'Lv':'達人の仕事はひと味違う'}`}</small><div class="crew-actions"><button data-crew-train="${esc(w.id)}" ${!able(w)||n.level>=20||(!crew.mentoring&&!hasCost(cost))?'disabled':''}>研修 +55% XP<small>${crew.mentoring?'OB研修券 1枚':fmtCost(cost)}</small></button><button data-crew-gear="${esc(w.id)}" ${!able(w)||q.gear>=8||!hasCost(gc)?'disabled':''}>道具 ${q.gear>=8?'MAX':'Lv.'+q.gear+' → '+(q.gear+1)}<small>${q.gear>=8?'鍛え上げた愛用品':fmtCost(gc)}</small></button></div><details><summary>転職・相棒・仕事の記録</summary><label>職業<select data-crew-job="${esc(w.id)}" ${!able(w)?'disabled':''}>${Object.entries(jobs).map(([id,j])=>`<option value="${id}" ${q.job===id?'selected':''} ${id!==j.role&&n.level<4||j.role==='guard'&&!state.buildings.some(b=>b.type==='barracks')?'disabled':''}>${j.name}${id!==j.role&&n.level<4?' / Lv.4':''}</option>`).join('')}</select></label><p>${esc(jobs[q.job].desc)} / 道具：採集 +${q.gear*8}%</p><label>いつもの相棒<select data-crew-buddy="${esc(w.id)}" ${w.expeditionId?'disabled':''}><option value="">いまはソロ</option>${state.workers.filter(a=>a!==w&&!a.expeditionId).map(a=>`<option value="${esc(a.id)}" ${q.buddy===a.id?'selected':''}>${esc(a.citizen.name)} / ${esc(title(a))}</option>`).join('')}</select></label><p>${b?'連携中！':'相棒が110歩以内で連携'} / 共同作業 ${Math.floor(q.joint)}回<br>積載 ${Logistics.cargoTotal(w).toFixed(1)} / 累計納品 ${Object.values(w.delivered||{}).reduce((a,b)=>a+b,0).toFixed(1)}</p><div class="living-bonds">${rels.map(r=>{const a=[...state.workers,...crew.retired].find(w=>w.id===r.id);return `<span>${esc(a?.citizen?.name||'旅の友')} / ${r.score>=3?'仲良し':r.score<=-3?'好敵手':'顔なじみ'}</span>`}).join('')||'これから縁が育つ'}</div>${VillageSocial.journalFor(w.id).slice(-2).map(e=>`<p>${esc(e.text)}</p>`).join('')}${crew.retired.length?`<label>開拓OBと交代<select data-crew-swap="${esc(w.id)}"><option value="">交代するOBを選ぶ</option>${crew.retired.map(a=>`<option value="${esc(a.id)}">${esc(a.citizen?.name||a.id)} / Lv.${a.citizen?.level||1}</option>`).join('')}</select></label><small>荷物・育成は本人と一緒に保管される</small>`:''}</details></article>`}).join('')||'<p class="living-note">小屋を建てたら、最初の仲間を迎えよう</p>'}<button class="living-wide" data-living-tab="hire">${state.workers.length>=12?'12人そろった！ 育成の時間':'仲間を迎える →'}</button>`}
  function update(){const count=state.workers.filter(w=>!w.dead).length;$('people').textContent=count+'/'+maxWorkers();$('people-caption').textContent=count>=12?'仲間を育てる':count+'/'+maxWorkers();if(currentPanel)$('sheet-kicker').textContent='村営事務所 / 12人開拓団 06';const p=state.player;hp.hidden=CaravanUI.isTitleOpen||!!currentPanel;hp.querySelector('span').textContent='村長 HP '+Math.ceil(p.hp)+' / '+p.maxHp;hp.querySelector('em').style.width=clamp(p.hp/p.maxHp*100,0,100)+'%';hp.classList.toggle('low',p.hp/p.maxHp<.3);downUI.hidden=p.down<=0||CaravanUI.isTitleOpen;downUI.innerHTML=`<small>村長、勤務続行は無理です</small><b>救助班、向かっています</b><span>${Math.ceil(p.down)}秒 / 救護ごはん −${crew.lastBill||0}</span>`;
   while(crew.guide<guides.length&&guides[crew.guide][2]())crew.guide++;guide.hidden=crew.guideHidden||crew.guide>=guides.length||CaravanUI.isTitleOpen||!!currentPanel||WorldGame.away||p.down>0;if(!guide.hidden){guide.querySelector('small').textContent='村長研修 '+(crew.guide+1)+'/6';guide.querySelector('b').textContent=guides[crew.guide][0];guide.querySelector('span').textContent=guides[crew.guide][1]}filterBuild();
   const note=$('people-lock');if(note){note.hidden=false;note.textContent=state.workers.length>=12?'12人そろった！ 住民手帳で道具・職業・相棒を育てよう':`現役 ${state.workers.length} / ${maxWorkers()}人（最大12人） / 小屋で仲間の席を増やす`}
@@ -2857,7 +2857,7 @@ setInterval(() => {
 }, 800);
 
 /* ---------- banner / panel ---------- */
-let bannerTimer = null;
+var bannerTimer = null;
 function showBanner(html) {
   banner.innerHTML = html + '<br><button id="fp-banner-open">村長手帳を開く</button>';
   banner.style.display = 'block';
@@ -3595,6 +3595,45 @@ setInterval(() => {
 }, 600);
 
 window.MayorFunPatch41 = { version: '4.1' };
+})();
+
+</script>
+<script>
+/* MAYOR FUN PATCH v4.2 — handbook access that definitely opens (2026-10-25)
+   The chip click did not reliably open the handbook in production checks,
+   so this layer adds its own handbook button (high z-index, capture-phase
+   chip listener as backup). Position lifts when the context card is up. */
+(() => {
+'use strict';
+const $id = id => document.getElementById(id);
+const css = document.createElement('style');
+css.textContent = `
+#fp6-book{position:fixed;z-index:70;right:10px;bottom:calc(158px + env(safe-area-inset-bottom));
+ background:#1d2a1ef2;border:1px solid #e5c47c;color:#ffeeb8;border-radius:999px;
+ padding:9px 14px;font-size:13px;font-weight:700;box-shadow:0 6px 16px #000a}
+#fp6-book:active{transform:scale(.96)}
+`;
+document.head.appendChild(css);
+const btn = document.createElement('button');
+btn.id = 'fp6-book'; btn.type = 'button'; btn.textContent = '📖 手帳';
+btn.addEventListener('click', ev => {
+  ev.stopPropagation();
+  try { window.MayorFunPatch?.open(); } catch (_) {}
+});
+document.body.appendChild(btn);
+setInterval(() => {
+  try {
+    const ctxCard = $id('context');
+    const up = ctxCard && getComputedStyle(ctxCard).display !== 'none' && ctxCard.offsetParent !== null;
+    btn.style.bottom = up ? 'calc(252px + env(safe-area-inset-bottom))' : 'calc(158px + env(safe-area-inset-bottom))';
+    const chip = $id('fp-chip');
+    if (chip && !chip.dataset.fp6) {
+      chip.dataset.fp6 = '1';
+      chip.addEventListener('click', () => { try { window.MayorFunPatch?.open(); } catch (_) {} }, true);
+    }
+  } catch (_) {}
+}, 900);
+window.MayorFunPatch42 = { version: '4.2' };
 })();
 
 </script>
