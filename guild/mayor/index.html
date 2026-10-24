@@ -2964,5 +2964,220 @@ window.MayorFunPatch = { version: '2.0', open: openPanel, data: () => FP };
 })();
 
 </script>
+<script>
+/* MAYOR FUN PATCH v3.0 — user feedback round 2 (2026-10-25)
+   1) Resident cap: the TWELVE layer's hard cap of 12 is lifted. The cap is
+      again house-driven (original design): huts raise it, rank raises the ceiling.
+   2) Moving house gets real departure conditions + a clear WIN bonus, so
+      finishing a village means something.
+   3) Build menu gets mini illustrations, and actions get sound / vibration /
+      confetti juice.
+   4) The v2 chip and round button overlapped the game's own UI (user
+      screenshot): the round button is removed, the chip moves to a slim bar
+      above the dock and yields when the context card is up. */
+(() => {
+'use strict';
+const $id = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const FP3_KEY = 'mayor-funpatch-v3';
+let F3 = { stageId: null, stageNights: 0, lastNights: 0, clearBonusFor: '' };
+try { Object.assign(F3, JSON.parse(localStorage.getItem(FP3_KEY) || '{}')); } catch (_) {}
+const persist3 = () => { try { localStorage.setItem(FP3_KEY, JSON.stringify(F3)); } catch (_) {} };
+
+/* ---------- style overrides: de-overlap + build icons + confetti ---------- */
+const st = document.createElement('style');
+st.textContent = `
+#fp-btn{display:none!important}
+#fp-chip{top:auto!important;bottom:calc(122px + env(safe-area-inset-bottom));left:8px;right:8px;max-width:none;
+ font-size:11px;line-height:1.45;padding:5px 10px;cursor:pointer}
+#fp-chip.fp-lift{bottom:calc(216px + env(safe-area-inset-bottom))}
+#fp-chip .fp-open{float:right;background:#6d5326;color:#ffeeb8;border:1px solid #e5c47c;border-radius:7px;padding:1px 8px;font-size:11px}
+#fp-banner{bottom:calc(238px + env(safe-area-inset-bottom))!important}
+.build-grid button .fp-ico,.hire-grid button .fp-ico{display:block;font-size:23px;line-height:1.15;margin-bottom:2px}
+.build-grid button:active,.hire-grid button:active{transform:scale(.96)}
+.build-grid button,.hire-grid button{transition:transform .08s ease}
+.fp-confetti{position:fixed;width:9px;height:13px;z-index:60;pointer-events:none;border-radius:2px}
+@keyframes fpFall{to{transform:translateY(46vh) rotate(560deg);opacity:0}}
+`;
+document.head.appendChild(st);
+
+/* ---------- 1) resident cap = houses x rank (original design) ---------- */
+try {
+  maxWorkers = function () { return Math.min(POP_CAP[rankIndex()], houseCapacity()); };
+  hire = function (role) {
+    const cap = Math.min(POP_CAP[rankIndex()], houseCapacity());
+    if (state.workers.length >= cap) {
+      toast(state.workers.length >= POP_CAP[rankIndex()] ? 'ランクを上げると上限が増える' : '家が足りないよ。小屋を建てる／育てると、もっと迎えられる', true);
+      return;
+    }
+    if (window.GUILD_V16 && GUILD_V16.hire) GUILD_V16.hire(role);
+    else toast('まずHOUSEを建てる');
+  };
+} catch (_) {}
+setInterval(() => {
+  try {
+    const note = $id('people-lock');
+    if (note) { note.hidden = false; note.textContent = '現役 ' + state.workers.filter(w => !w.dead).length + ' / 最大 ' + Math.min(POP_CAP[rankIndex()], houseCapacity()) + '人（小屋を建てる・育てると増える）'; }
+    const brand = document.querySelector('#chief-brand span');
+    if (brand && !brand.dataset.fp3) { brand.dataset.fp3 = '1'; }
+    if (brand) brand.innerHTML = '開拓団 <i>' + String(state.workers.filter(w => !w.dead).length).padStart(2, '0') + '</i>';
+  } catch (_) {}
+}, 1500);
+
+/* ---------- sound juice (WebAudio synth, starts on first touch) ---------- */
+let AC = null;
+addEventListener('pointerdown', () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (_) {} }, { passive: true });
+function tone(f, t0, dur, type, gain) {
+  if (!AC) return;
+  try {
+    const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + t0;
+    o.type = type || 'square'; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(gain || 0.05, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + 0.05);
+  } catch (_) {}
+}
+const sfxTap = () => tone(660, 0, 0.07, 'square', 0.03);
+const sfxBuild = () => { // プルルッ -> ウォーン
+  tone(880, 0, 0.06, 'square', 0.045); tone(880, 0.09, 0.06, 'square', 0.045); tone(1174, 0.18, 0.09, 'square', 0.05);
+  tone(196, 0.24, 0.55, 'sawtooth', 0.028); tone(294, 0.24, 0.55, 'triangle', 0.04); tone(392, 0.3, 0.45, 'triangle', 0.03);
+};
+const sfxDawn = () => { tone(523, 0, 0.12, 'triangle', 0.05); tone(659, 0.12, 0.12, 'triangle', 0.05); tone(784, 0.24, 0.22, 'triangle', 0.055); };
+const sfxWin = () => { [523, 659, 784, 1046].forEach((f, i) => tone(f, i * 0.11, 0.16, 'square', 0.045)); tone(262, 0.44, 0.5, 'sawtooth', 0.025); };
+function confetti() {
+  try {
+    const colors = ['#ffd977', '#e5c47c', '#8fce7a', '#e88ca0', '#8ab8e8'];
+    for (let i = 0; i < 16; i++) {
+      const d = document.createElement('div'); d.className = 'fp-confetti';
+      d.style.background = colors[i % colors.length];
+      d.style.left = (18 + Math.random() * 64) + 'vw'; d.style.top = (16 + Math.random() * 10) + 'vh';
+      d.style.animation = 'fpFall ' + (0.8 + Math.random() * 0.7) + 's ease-in forwards';
+      document.body.appendChild(d); setTimeout(() => d.remove(), 1700);
+    }
+  } catch (_) {}
+}
+function shake() { try { if (navigator.vibrate) navigator.vibrate(28); } catch (_) {} }
+
+/* ---------- 2) departure conditions + WIN bonus ---------- */
+function extraConditions() {
+  const alive = state.workers.filter(w => !w.dead).length;
+  let landmarksLeft = 0;
+  try { landmarksLeft = (Campaign.landmarks() || []).filter(p => !p.repaired).length; } catch (_) {}
+  const nights = F3.stageNights || 0;
+  return [
+    { name: '建物を5棟以上', ok: state.buildings.length >= 5, now: state.buildings.length + ' / 5棟' },
+    { name: '住民6人以上', ok: alive >= 6, now: alive + ' / 6人' },
+    { name: '名所を全部直す', ok: landmarksLeft === 0, now: landmarksLeft === 0 ? '完了' : 'あと' + landmarksLeft + '件' },
+    { name: 'この土地で夜を2回越える', ok: nights >= 2, now: Math.min(nights, 2) + ' / 2夜' },
+  ];
+}
+try {
+  const baseCanMove = Campaign.canMove.bind(Campaign);
+  Campaign.canMove = function (id) {
+    const base = baseCanMove(id);
+    if (!base.ok) return base;
+    const missing = extraConditions().filter(c => !c.ok);
+    if (missing.length) return { ok: false, reason: '出発条件がまだ：' + missing.map(c => c.name + '（' + c.now + '）').join('／') + ' ― 村を作り込むほど、制覇WINボーナスが増えるよ' };
+    return base;
+  };
+  const baseMigrate = Campaign.migrate.bind(Campaign);
+  Campaign.migrate = function (id) {
+    const chk = Campaign.canMove(id);
+    if (!chk.ok) return chk;
+    return baseMigrate(id);
+  };
+} catch (_) {}
+setInterval(() => {
+  try {
+    const sid = Campaign.state?.stageId;
+    if (sid && F3.stageId !== sid) {
+      const first = !F3.stageId;
+      F3.stageId = sid; F3.stageNights = 0; F3.lastNights = state.stats?.nights || 0;
+      if (!first && F3.clearBonusFor !== sid) {
+        F3.clearBonusFor = sid;
+        const b = 3 + Math.min(7, state.buildings.length);
+        grant2({ renown: 5, food: 20 });
+        sfxWin(); confetti(); shake();
+        showBanner3('前の村を制覇！ <b>制覇WINボーナス</b>：名声+5・食料+20<br>作り込んだ村ほど誇らしい出発になるね');
+      }
+      persist3();
+    }
+    const n = state.stats?.nights || 0;
+    if (F3.lastNights != null && n > F3.lastNights) { F3.stageNights = (F3.stageNights || 0) + (n - F3.lastNights); persist3(); }
+    F3.lastNights = n;
+  } catch (_) {}
+}, 1000);
+function grant2(map) {
+  try {
+    for (const [k, v] of Object.entries(map)) {
+      if (['wood', 'stone', 'food'].includes(k) && typeof addRes === 'function') addRes(k, v);
+      else state[k] = (state[k] || 0) + v;
+    }
+    if (typeof save === 'function') save();
+  } catch (_) {}
+}
+function showBanner3(html) {
+  const b = $id('fp-banner'); if (!b) return;
+  b.innerHTML = html + '<br><button onclick="this.parentElement.style.display=\'none\'">やった！</button>';
+  b.style.display = 'block'; setTimeout(() => b.style.display = 'none', 11000);
+}
+
+/* ---------- 3) build icons + action hooks ---------- */
+const ICONS = { hut: '🏠', warehouse: '📦', lumber: '🪓', quarry: '⛏️', forge: '🔥', barracks: '⚔️', palisade: '🧱', watchtower: '🗼', guild: '📜', lantern: '🏮' };
+setInterval(() => {
+  try {
+    document.querySelectorAll('.build-grid button[data-build]').forEach(b => {
+      if (b.querySelector('.fp-ico')) return;
+      const s = document.createElement('span'); s.className = 'fp-ico'; s.textContent = ICONS[b.dataset.build] || '🔨';
+      b.prepend(s);
+    });
+  } catch (_) {}
+}, 900);
+let prevBuildings = state.buildings.length, prevDay3 = state.day;
+setInterval(() => {
+  try {
+    if (state.buildings.length > prevBuildings) { sfxBuild(); confetti(); shake(); if (typeof toast === 'function') toast('建設完了！ 村が育った'); }
+    prevBuildings = state.buildings.length;
+    if (state.day !== prevDay3) { sfxDawn(); prevDay3 = state.day; }
+  } catch (_) {}
+}, 500);
+document.addEventListener('click', e => { if (e.target.closest('.build-grid button, .hire-grid button, #fp-chip')) sfxTap(); }, true);
+
+/* ---------- 4) chip behaviour: tap opens handbook, lifts over context card ---------- */
+setInterval(() => {
+  try {
+    const chip = $id('fp-chip'); if (!chip) return;
+    if (!chip.dataset.fp3) {
+      chip.dataset.fp3 = '1';
+      chip.title = 'タップで村長手帳';
+      chip.addEventListener('click', () => { const b = $id('fp-btn'); if (b) b.click(); });
+    }
+    const ctx = $id('context');
+    chip.classList.toggle('fp-lift', !!(ctx && !ctx.hidden));
+    const sheet = $id('sheet');
+    chip.style.opacity = (sheet && !sheet.hidden) ? '0' : '1';
+    chip.style.pointerEvents = (sheet && !sheet.hidden) ? 'none' : 'auto';
+  } catch (_) {}
+}, 700);
+
+/* ---------- handbook: add v3 section (conditions / how bonuses work) ---------- */
+const mo = new MutationObserver(() => {
+  try {
+    const panel = $id('fp-panel');
+    if (!panel || panel.style.display === 'none' || panel.querySelector('#fp3-section')) return;
+    const sec = document.createElement('div'); sec.id = 'fp3-section';
+    const conds = extraConditions();
+    sec.innerHTML = '<h3>次の土地への出発条件（v3）</h3>' +
+      conds.map(c => '<div class="row"><span>' + (c.ok ? '✓ ' : '○ ') + esc(c.name) + '</span><span>' + esc(c.now) + '</span></div>').join('') +
+      '<div class="dim">村の目標3つ（従来）＋この4つを満たすと出発できる。出発すると<b>制覇WINボーナス（名声+5・食料+20）</b>。中途半端な村からは引っ越せない代わりに、作り込む意味が出るよ<br>住民の上限は「謎の12人」制を廃止：<b>小屋の数と大きさ × ランク</b>で決まる。家を建てる意味はここにある</div>';
+    panel.appendChild(sec);
+  } catch (_) {}
+});
+mo.observe(document.body, { childList: true, subtree: true });
+
+window.MayorFunPatch3 = { version: '3.0', conditions: extraConditions };
+})();
+
+</script>
 </body>
 </html>
