@@ -2852,7 +2852,7 @@ setInterval(() => {
       const def = (state.buildings.filter(b => b.type === 'palisade' || b.type === 'watchtower' || b.type === 'barracks').length);
       nightTxt = ' ／ <b>もうすぐ夜</b>：防衛施設 ' + def + '（無い夜は灯りの輪と村長で守る）';
     } else if (state.phase === 'night') nightTxt = ' ／ <b>夜</b>：敵は赤い印、村長は金の輪が目印';
-    chip.innerHTML = 'DAY ' + state.day + '｜' + esc(guideTxt) + '<br>手帳：採集 <b>' + Math.min(m.gather, 30) + '/30</b>・建設 <b>' + Math.min(m.builds, 1) + '/1</b>・討伐 <b>' + Math.min(m.kills, 3) + '/3</b>' + (combo >= 5 ? ' ／ コンボ <b>' + combo + '</b>' : '') + nightTxt;
+    chip.innerHTML = 'DAY ' + state.day + '｜' + esc(guideTxt) + '<br>手帳：採集 <b>' + Math.min(m[0].now, 30) + '/30</b>・建設 <b>' + Math.min(m[1].now, 1) + '/1</b>・討伐 <b>' + Math.min(m[2].now, 3) + '/3</b>' + (combo >= 5 ? ' ／ コンボ <b>' + combo + '</b>' : '') + nightTxt;
   } catch (_) {}
 }, 800);
 
