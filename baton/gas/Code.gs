@@ -258,6 +258,15 @@ var BATON_PROFILES = {
     recipientEmail: 'k.miyamoto@zettaichi.co.jp',
     active: true
   },
+  saito: {
+    name: '齋藤 弘樹',
+    company: '株式会社Livune',
+    slug: 'saito',
+    // TODO: 齋藤様ご本人の受信用アドレスをOwnerから受け取るまで active は false のまま。
+    // 推測で本物らしいアドレスを書かないこと（ADDING_A_PROFILE.md）
+    recipientEmail: 'REPLACE_ME@example.com',
+    active: false
+  },
   yonemoto: {
     name: '米本 隆亮',
     company: '株式会社ワイワンプラスエンターレックワールド',
@@ -1008,6 +1017,34 @@ function testBatonFlowMiyamoto() {
   }
 }
 
+
+/**
+ * saitoプロフィール専用の動作確認用。
+ * 実行すると BATON_REQUESTS に1件入り、test@example.com 宛の認証メールが飛ぶ。
+ * そのリンクを開いて認証を完了すると、齋藤様ご本人（recipientEmail）宛に
+ * 承認/辞退の依頼メールが実際に届く。本人に迷惑がかかるので、実行前に
+ * 必ずOwnerに確認すること。
+ * ※ test@example.com が「申請許可リスト」に無いと not_allowed で止まる（正常な動作）。
+ */
+function testBatonFlowSaito() {
+  var result = batonSubmitTalk({
+    profileId: 'saito',
+    applicant: { name: 'テスト太郎', company: '【テスト】株式会社サンプル', title: '代表取締役', email: 'test@example.com' },
+    purposes: ['協業'],
+    comment: 'これは動作確認用のテスト送信です。',
+    note: '',
+    attachments: [],
+    hp: ''
+  });
+
+  Logger.log('結果: ' + JSON.stringify(result));
+  if (result.ok) {
+    batonToast(
+      'BATON_REQUESTS に1件入りました。test@example.com 宛の認証メールを確認してください', 'テスト成功', 8);
+  } else {
+    batonToast('失敗: ' + JSON.stringify(result), 'テスト', 8);
+  }
+}
 
 /**
  * yonemotoプロフィール専用の動作確認用。

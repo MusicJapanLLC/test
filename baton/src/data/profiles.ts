@@ -691,6 +691,144 @@ const miyamotoProfile: TalkProfile = {
 };
 
 /**
+ * 齋藤 弘樹（株式会社Livune）。
+ * 掲載内容は、Livune公式サイト（代表メッセージ・実績・会社概要）、PR TIMES の設立リリース（2026-05-20）と
+ * コルット正式リリース（2026-07-09）、ITキャリア推進協会の研究会リリース（2026-06-22、社名の由来）で
+ * 確認できた事実のみ。
+ *  - 資本金（企業スペック）→ 載せない（ADDING_A_PROFILE.md の方針）
+ *  - 研修・事務自動化の数値 → 「同社の公開事例では」と出典を添える
+ *  - 出身地・面談で聞いた構想など、公開されていない話 → 載せない
+ * X は「齋藤」名のアカウントが見つかったが本人と特定できないため載せていない。
+ */
+const saitoProfile: TalkProfile = {
+  id: 'saito',
+  slug: 'saito',
+  name: '齋藤 弘樹',
+  company: '株式会社Livune',
+  title: '代表取締役',
+  tagline: 'AIから、時間を返してもらう。',
+  photo: {
+    src: '/profile-saito.webp',
+    thumb: '/thumb/saito.webp',
+    focus: '42% 24%',
+    alt: '齋藤 弘樹',
+    caption: 'OSAKA / JAPAN · 2026',
+  },
+  bio:
+    'NTT西日本、キーエンスを経て、2026年に大阪・梅田で株式会社Livuneを設立。' +
+    '会社の作業をAIエージェントに任せる仕組みを、現場で使われるところまでつくっています。',
+  story: {
+    paragraphs: [
+      '新卒でNTT西日本へ。その後キーエンスでソフトウェア開発に携わり、大企業にAIが入っていく時期を現場で見てきました。',
+      'そこで見たのは、期待されて入ったAIが「たまに使うツール」で止まる姿。入れることより、使われることのほうがずっと難しい。それがLivuneを始めた理由です。',
+      '社名はLife（働き方）とtune（調律）から。いまは自分の会社の経営を毎日AIエージェントと回していて、本人いわく、AIに時間を渡したのではなく返してもらった。空いた時間で、人に会っています。',
+    ],
+    timeline: [
+      { org: 'NTT西日本', role: '新卒入社' },
+      { org: '株式会社キーエンス', role: 'ソフトウェア開発' },
+      { org: '株式会社Livune', role: '設立・代表取締役（2026年4月）' },
+    ],
+  },
+  businessTitle: '現在の事業',
+  business: [
+    '問い合わせにはチャットボット「コルット」、手順の決まった事務作業には事務AIエージェント、経営まわりの定型業務には経営者AIエージェント。ほかにAI駆動開発研修と受託開発も手がけます。',
+    'いきなり作らず、まず「どの業務ならAIに任せられるか」を切り分けて、1業務だけ作ってから広げます。経営者AIエージェントは自社で毎日動かしているもので、同社サイトのコラムもこれが毎日更新しています。',
+    '同社の公開事例では、NTT西日本でのAI駆動開発研修（80名×3回）や、週10〜15時間かかっていたレポート作成を30分程度にした事務の自動化があります。',
+  ],
+  about: {
+    title: '株式会社Livuneについて',
+    paragraphs: ['大阪・梅田のAIエージェントの会社。掲げる言葉は「使われないAIを、使えるAIに。」'],
+    facts: [
+      { term: '代表', value: '齋藤 弘樹（代表取締役）' },
+      { term: '設立', value: '2026年4月' },
+      { term: '所在地', value: '大阪市北区梅田' },
+      { term: '事業', value: 'AIエージェント開発・導入支援／AIチャットボット／AI駆動開発研修／システム開発' },
+    ],
+  },
+  servicesTitle: '事業領域',
+  services: [
+    { name: 'コルット', description: 'タグ1行、最短3日で置けるAIチャットボット' },
+    { name: '事務AIエージェント', description: '手順の決まった事務作業を任せる' },
+    { name: '経営者AIエージェント', description: '自社で毎日使っている仕組みを、そのまま' },
+    { name: '研修・受託開発', description: 'AIと一緒に作る進め方を、現場の題材で' },
+  ],
+  marquee: ['株式会社Livune', 'Life × tune', 'コルット', '事務AIエージェント', '経営者AIエージェント', 'OSAKA UMEDA'],
+  valuesTitle: '大切にしている考え方',
+  values: [
+    {
+      title: 'まず、自社で試す',
+      body: '代表メッセージにある言葉。自分たちが毎日使って、効くと確かめたものだけを渡す。',
+    },
+    {
+      title: '現場に、根づかせる',
+      body: '設立のときから掲げているのは「使われないAIを、使えるAIに。」',
+    },
+    {
+      title: '一社ずつ、調律する',
+      body: '社名のLivuneはLife×tuneから。会社ごとに、AIの形を合わせていく。',
+    },
+  ],
+  wantToMeet: {
+    lead: 'Batonから見て、齋藤さんと話すと面白いと思う方です。',
+    items: [
+      '問い合わせや電話の対応に、人手を取られている会社',
+      'AIを入れたのに、現場で使われていない会社',
+      '同じ事務作業を、毎週人が繰り返している会社',
+      '開発にAIを取り入れたいエンジニアチーム',
+    ],
+  },
+  media: [
+    {
+      label: 'AIチャットボット「コルット」正式リリース',
+      url: 'https://prtimes.jp/main/html/rd/p/000000004.000182498.html',
+      kind: '掲載',
+      date: '2026.07.09',
+      note: 'PR TIMES。効果を数字で確かめてから導入を決められるチャットボット。',
+      featured: true,
+    },
+    {
+      label: '株式会社Livune 設立',
+      url: 'https://prtimes.jp/main/html/rd/p/000000003.000182498.html',
+      kind: '掲載',
+      date: '2026.05.20',
+      note: 'PR TIMES。Livuneをつくった理由と代表コメント。',
+      featured: true,
+    },
+    {
+      label: 'AI導入・活用のコラム',
+      url: 'https://www.livune.jp/column/',
+      kind: '発信',
+      owner: 'company',
+      note: '自社の経営者AIエージェントが毎日1本ずつ公開している。',
+      featured: true,
+    },
+    {
+      label: '株式会社Livune 公式サイト',
+      url: 'https://www.livune.jp/',
+      kind: '公式',
+      owner: 'company',
+      note: 'サービス、これまでの仕事、代表メッセージ。',
+    },
+    {
+      label: 'コルット 製品サイト',
+      url: 'https://corutto.livune.jp/',
+      kind: '事業',
+      note: '料金プランもここで公開されている。',
+    },
+  ],
+  mediaTitle: '実績・メディア',
+  mediaLabel: 'Works & Media',
+  location: '大阪',
+  updatedAt: '2026-10-23',
+  listSummary: '会社の作業をAIエージェントに任せる',
+  businessTags: ['AIエージェント', 'チャットボット', 'AI研修'],
+  keywordTags: ['自社で実践', '元キーエンス', '現場定着'],
+  // 青いAIっぽさを避けて、紺に近い黒の地にブロンズ。ボタンの白文字が読める濃さ（4.5:1以上）にしてある
+  theme: { primary: '#9A6B40', accent: '#D4B48C', bg: '#0B0D12', text: '#ECE8E2' },
+  active: true,
+};
+
+/**
  * 米本 隆亮（株式会社ワイワンプラスエンターレックワールド）。
  * 掲載内容は、同社公式サイト（代表経歴・沿革・会社概要・実績・フリーパス交流会）と、
  * 公式サイトからリンクされたWEB集客塾「ツギノテ作戦」で確認できた事実、
@@ -856,6 +994,7 @@ export const profiles: TalkProfile[] = [
   matsuuraProfile,
   ishiiProfile,
   miyamotoProfile,
+  saitoProfile,
   yonemotoProfile,
 ];
 
