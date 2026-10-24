@@ -1,7 +1,7 @@
 {
- "edition": "FUNPATCH4",
- "bytes": 772100,
- "sha256": "9f9e5575b0a119a6cca84ed004d7984d64ba0c85b053a179ceadc1ee4346ff16",
+ "edition": "FUNPATCH4.1",
+ "bytes": 776783,
+ "sha256": "d56e85ebd2237a7e59bd862f59f985ca5c4eaa962f33dd9a65a79a2618b4c3e1",
  "built": "2026-10-25",
- "note": "v3: resident cap by houses, departure conditions + WIN bonus, build icons/juice, UI de-overlap. v4: stage palettes/seasons/weather particles, luxury decor, world grows per stage, enemy type sigils + earlier variety, gag visitors, daily slot (+supporter extra), rare drops"
+ "note": "v4.1 hotfix: chip rescue render/click, 12-branding text rewrite, arrival fallback, tier-0 decor, slot label fix"
 }

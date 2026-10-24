@@ -3483,5 +3483,120 @@ window.MayorFunPatch4 = { version: '4.0', stage: () => stageDef() };
 })();
 
 </script>
+<script>
+/* MAYOR FUN PATCH v4.1 — hotfix layer (2026-10-25)
+   Fixes from the first production check of v3+v4:
+   - chip stuck on 読み込み中 and not opening the handbook -> rescue render + click
+   - old "12人" branding left in title screen and menu headings -> text rewrite
+   - arrival banner sometimes missing after reload -> fallback re-show
+   - stage-1 village looked bare -> flowers/plaza drawn from tier 0
+   - slot button kept showing 残り1回 after a spin -> label corrected live */
+(() => {
+'use strict';
+const $id = id => document.getElementById(id);
+
+/* --- text rewrites (12-branding leftovers, handbook title) --- */
+const REPLACERS = [
+  [/定員12名/g, '定員は家の数しだい'],
+  [/12人の相棒と18の土地/g, '相棒は家を建てるほど増える、18の土地'],
+  [/12人開拓団/g, '開拓団'],
+  [/村長手帳（Fun Patch v2）/g, '村長手帳（Fun Patch v4）'],
+];
+function rewriteTexts() {
+  try {
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while ((n = walker.nextNode())) {
+      let t = n.nodeValue, changed = false;
+      for (const [re, to] of REPLACERS) { const u = t.replace(re, to); if (u !== t) { t = u; changed = true; } }
+      if (changed) n.nodeValue = t;
+    }
+  } catch (_) {}
+}
+setInterval(rewriteTexts, 1500);
+
+/* --- chip rescue --- */
+let chipStuckSince = 0;
+setInterval(() => {
+  try {
+    const chip = $id('fp-chip'); if (!chip) return;
+    chip.onclick = () => { try { window.MayorFunPatch?.open(); } catch (_) {} };
+    if ((chip.textContent || '').includes('読み込み中')) {
+      if (!chipStuckSince) chipStuckSince = Date.now();
+      if (Date.now() - chipStuckSince > 3000) {
+        const s = window.state || {};
+        const done = (s.stats?.buildings || 0) > 0 || (s.stats?.kills || 0) > 0;
+        chip.innerHTML = '📖 村長手帳 ｜ 討伐 ' + (s.stats?.kills || 0) + ' ・ 建設 ' + (s.buildings?.length || 0) + '棟' + (done ? '' : ' ｜ まずは木を集めよう');
+      }
+    } else chipStuckSince = 0;
+  } catch (_) {}
+}, 1000);
+
+/* --- arrival fallback --- */
+let arrivalSeen = false;
+const moA = new MutationObserver(() => {
+  const a = $id('fp4-arrival');
+  if (a && a.classList.contains('on')) arrivalSeen = true;
+});
+setTimeout(() => {
+  try {
+    moA.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+    setTimeout(() => {
+      try {
+        if (arrivalSeen) return;
+        const def = window.MayorFunPatch4?.stage?.();
+        const a = $id('fp4-arrival');
+        if (def && a) {
+          const SEASON = ['春', '夏', '秋', '冬'];
+          a.innerHTML = '<small>第' + (def.index + 1) + '章 ／ 季節は' + SEASON[def.index % 4] + '</small><h2>' + String(def.name).replace(/</g, '') + '</h2><p>' + String(def.gimmick || '').replace(/</g, '') + '</p>';
+          a.classList.add('on'); setTimeout(() => a.classList.remove('on'), 3200);
+        }
+      } catch (_) {}
+    }, 3500);
+  } catch (_) {}
+}, 600);
+
+/* --- decor from tier 0: flowers always, light plaza ring once building starts --- */
+function hashRand(seed) { const x = Math.sin(seed * 97.3) * 24634.6; return x - Math.floor(x); }
+try {
+  const drawPrev = draw;
+  draw = function () {
+    drawPrev();
+    try {
+      const cx = sx(0), cy = sy(0);
+      const cols = ['#e86a92', '#ffb340', '#b48ce8', '#ff7a59', '#f2f2f2'];
+      for (let i = 0; i < 30; i++) {
+        const a = hashRand(i * 3 + 11) * Math.PI * 2, r = 60 + hashRand(i * 7 + 5) * 250;
+        const x = sx(Math.cos(a) * r), y = sy(Math.sin(a) * r * 0.8);
+        if (x < -10 || y < -10 || x > innerWidth + 10 || y > innerHeight + 10) continue;
+        ctx.fillStyle = cols[i % cols.length];
+        ctx.beginPath(); ctx.arc(x, y, 2.6, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,235,150,.9)'; ctx.fillRect(x - 0.7, y - 0.7, 1.4, 1.4);
+      }
+      if ((state.buildings || []).length >= 3) {
+        ctx.strokeStyle = 'rgba(225,205,160,.30)'; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(cx, cy, 46, 0, Math.PI * 2); ctx.stroke();
+      }
+    } catch (_) {}
+  };
+} catch (_) {}
+
+/* --- slot button label: after a result appears, drop the stale counter --- */
+let lastOut = '';
+setInterval(() => {
+  try {
+    const btn = $id('fp4-spin'), out = $id('fp4-out');
+    if (!btn || !out) return;
+    const t = out.textContent || '';
+    if (t && t !== lastOut && !t.includes('終わり')) btn.textContent = 'まわす';
+    if (t.includes('終わり')) btn.textContent = '今日はおしまい';
+    lastOut = t;
+  } catch (_) {}
+}, 600);
+
+window.MayorFunPatch41 = { version: '4.1' };
+})();
+
+</script>
 </body>
 </html>
