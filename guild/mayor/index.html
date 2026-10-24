@@ -363,7 +363,7 @@ window.FrontierAudio=Object.freeze({enable,setMood:()=>{},setScene,sfx,voice,rep
 const $=id=>document.getElementById(id),canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});ctx.imageSmoothingEnabled=false;
 const A=window.FrontierAudio||{enable(){},toggle:async()=>true,setMood(){},sfx(){}};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,rnd=(a,b)=>a+Math.random()*(b-a),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
-const SAVE=document.body.dataset.save||'guild-infinity-v16-clean',BACKUP=SAVE+'-backup',WORLD={minX:-900,maxX:900,minY:-720,maxY:760};
+const SAVE=document.body.dataset.save||'guild-infinity-v16-clean',BACKUP=SAVE+'-backup',WORLD={minX:-1500,maxX:1500,minY:-1150,maxY:1200};
 const RANKS=['E','D','C','B','A','S'],POP_CAP=[20,45,80,130,200,300],WALL_CAP=[1,2,3,4,5,6];
 const BUILD={
  hut:{name:'HOUSE',base:{wood:30,stone:10},repeat:true,max:5,unlock:0},warehouse:{name:'WAREHOUSE',base:{wood:65,stone:42},repeat:false,max:5,unlock:1},watchtower:{name:'WATCHTOWER',base:{wood:80,stone:50,iron:1},repeat:true,max:5,unlock:1},barracks:{name:'BARRACKS',base:{wood:105,stone:72,iron:2},repeat:false,max:5,unlock:2},guild:{name:'GUILD HALL',base:{wood:110,stone:90,renown:4},repeat:false,max:5,unlock:0},lantern:{name:'LANTERN',base:{wood:18,stone:6},repeat:true,max:3,unlock:0},lumber:{name:'LUMBER',base:{wood:55,stone:22},repeat:false,max:3,unlock:0},quarry:{name:'QUARRY',base:{wood:48,stone:38},repeat:false,max:3,unlock:0}
@@ -466,7 +466,7 @@ function enemyType(i,wave){if(state.day%5===0&&wave===3&&i===0)return'warden';co
 function lanternRadius(b){return 130+(b.level||1)*38}
 function spawnSuppressed(x,y){for(const b of state.buildings){if(b.type!=='lantern')continue;if(Math.hypot(x-b.x,y-b.y)<=lanternRadius(b))return true}return false}
 function spawnPoint(i){const B=bounds(),side=i%4;return{x:side===0?B.l-150:side===1?B.r+150:rnd(B.l-180,B.r+180),y:side===2?B.t-140:side===3?B.b+155:rnd(B.t-130,B.b+130)}}
-function spawnWave(wave){const count=Math.min(18,3+wave+Math.floor(state.day*.55)+rankIndex());let spawned=0,blocked=0;for(let i=0;i<count;i++){let p=null;for(let attempt=0;attempt<10;attempt++){const q=spawnPoint(i+attempt);if(!spawnSuppressed(q.x,q.y)){p=q;break}}if(!p){blocked++;continue}const type=enemyType(i,wave),s=enemySpec(type,wave);state.enemies.push({id:'e'+Date.now()+i+Math.random(),type,x:p.x,y:p.y,hp:s.hp,maxHp:s.hp,spd:s.spd,dmg:s.dmg,anim:rnd(0,6),cool:rnd(0,.7),hit:0,dead:false,death:0,seed:i,sunBurn:false,burnFx:0});spawned++}if(spawned)toast(`NIGHT WAVE ${wave+1} · ${spawned}体${blocked?` · 灯火が${blocked}体を抑止`:''}`,true);else toast(`LANTERN SAFE ZONE · WAVE ${wave+1} を完全抑止`);A.setMood('night');A.sfx(blocked?'confirm':'warning')}
+function spawnWave(wave){const count=Math.min(18,2+wave+Math.floor(Math.max(0,state.day-2)*.55)+Math.floor(rankIndex()/2));let spawned=0,blocked=0;for(let i=0;i<count;i++){let p=null;for(let attempt=0;attempt<10;attempt++){const q=spawnPoint(i+attempt);if(!spawnSuppressed(q.x,q.y)){p=q;break}}if(!p){blocked++;continue}const type=enemyType(i,wave),s=enemySpec(type,wave);state.enemies.push({id:'e'+Date.now()+i+Math.random(),type,x:p.x,y:p.y,hp:s.hp,maxHp:s.hp,spd:s.spd,dmg:s.dmg,anim:rnd(0,6),cool:rnd(0,.7),hit:0,dead:false,death:0,seed:i,sunBurn:false,burnFx:0});spawned++}if(spawned)toast(`NIGHT WAVE ${wave+1} · ${spawned}体${blocked?` · 灯火が${blocked}体を抑止`:''}`,true);else toast(`LANTERN SAFE ZONE · WAVE ${wave+1} を完全抑止`);A.setMood('night');A.sfx(blocked?'confirm':'warning')}
 function nearestWallPoint(z){const B=bounds(),x=clamp(z.x,B.l,B.r),y=clamp(z.y,B.t,B.b),a=[{x,y:B.t},{x,y:B.b},{x:B.l,y},{x:B.r,y}];return a.sort((p,q)=>dist(z,p)-dist(z,q))[0]}
 function damageEnemy(e,dmg,ax=e.x,ay=e.y,guard=false){if(e.dead)return;e.hp-=dmg;e.hit=.12;const ang=Math.atan2(e.y-ay,e.x-ax);e.x+=Math.cos(ang)*4;e.y+=Math.sin(ang)*4;slash(e.x,e.y,ang,guard?'#d3d9c6':'#f0c278');fxBurst(e.x,e.y,'#d0b08c',6);floatText(e.x,e.y-22,'-'+Math.round(dmg),'#ffd19b');A.sfx('hit');if(e.hp<=0)killEnemy(e)}
 function killEnemy(e){if(e.dead)return;e.dead=true;e.death=.68;state.stats.kills++;const dropChance=e.type==='brute'?.7:e.type==='warden'?1:e.type==='spitter'?.45:.18;if(Math.random()<dropChance){const n=e.type==='warden'?3:1;state.iron+=n;floatText(e.x,e.y-30,'IRON +'+n,'#a9c4c1')}if(Math.random()<(e.type==='warden'?.9:.12)){state.renown++;floatText(e.x,e.y-40,'RENOWN +1','#e1bd6a')}fxBurst(e.x,e.y,e.sunBurn?'#dc8d4e':'#7b8f6a',18,1.25);toast(`${e.type.toUpperCase()} DOWN`);A.sfx('pickup')}
@@ -493,7 +493,7 @@ function repairTarget(){if(!state.palisade.built||state.palisade.hp>=state.palis
 function refreshContext(){$('context').hidden=!repairTarget();if(!$('context').hidden){$('context-main').textContent='REPAIR';$('context-sub').textContent='WOOD 5'}}
 function contextAct(){if(!repairTarget())return;state.wood-=5;state.palisade.hp=Math.min(state.palisade.maxHp,state.palisade.hp+90+state.palisade.level*18);fxBurst(state.player.x,state.player.y,'#d7b26e',8);A.sfx('build');toast('防壁を修理');save()}
 function updateVitalsHud(){const m=$('meta');if(m)m.textContent=`HP ${Math.ceil(state.player.hp)}/${state.player.maxHp} · IRON ${state.iron} · RENOWN ${state.renown}`}
-function phaseTick(dt){const prev=state.phase;state.cycle+=dt/125*state.boost;if(state.cycle>=1){state.cycle-=1;state.day++;nightWaveMask=0;state.stats.nights++;igniteDawnSurvivors();const upkeep=Math.ceil(state.workers.filter(w=>!w.dead).length*.72+state.buildings.length*.28);if(state.food>=upkeep){state.food-=upkeep;state.morale=Math.min(100,state.morale+4);toast(`DAWN · FOOD -${upkeep} · 士気回復`)}else{const miss=upkeep-state.food;state.food=0;state.morale=Math.max(25,state.morale-miss*2.2-7);toast(`食料不足 ${miss} · MORALE ${Math.round(state.morale)}`,true)}const survive=Math.max(0,Math.round((state.palisade.maxHp?state.palisade.hp/state.palisade.maxHp:0)*3));state.renown+=survive;A.setMood('day');A.sfx('dawn');save()}const[ph]=phaseInfo();state.phase=ph;if(ph==='night'){const thresholds=[.79,.85,.91,.97];thresholds.forEach((t,i)=>{if(state.cycle>=t&&!(nightWaveMask&(1<<i))){nightWaveMask|=1<<i;spawnWave(i)}})}if(prev!==ph&&ph==='dusk')toast(`DUSK · THREAT ${threat()} · 防衛準備`,true);if(state.boostUntil&&Date.now()>=state.boostUntil){state.boost=1;state.boostUntil=0;toast('砂時計の効果終了')}}
+function phaseTick(dt){const prev=state.phase;state.cycle+=dt/260*state.boost;if(state.cycle>=1){state.cycle-=1;state.day++;nightWaveMask=0;state.stats.nights++;igniteDawnSurvivors();const upkeep=Math.ceil(state.workers.filter(w=>!w.dead).length*.72+state.buildings.length*.28);if(state.food>=upkeep){state.food-=upkeep;state.morale=Math.min(100,state.morale+4);toast(`DAWN · FOOD -${upkeep} · 士気回復`)}else{const miss=upkeep-state.food;state.food=0;state.morale=Math.max(25,state.morale-miss*2.2-7);toast(`食料不足 ${miss} · MORALE ${Math.round(state.morale)}`,true)}const survive=Math.max(0,Math.round((state.palisade.maxHp?state.palisade.hp/state.palisade.maxHp:0)*3));state.renown+=survive;A.setMood('day');A.sfx('dawn');save()}const[ph]=phaseInfo();state.phase=ph;if(ph==='night'){const thresholds=[.79,.85,.91,.97];thresholds.forEach((t,i)=>{if(state.cycle>=t&&!(nightWaveMask&(1<<i))){nightWaveMask|=1<<i;spawnWave(i)}})}if(prev!==ph&&ph==='dusk')toast(`DUSK · THREAT ${threat()} · 防衛準備`,true);if(state.boostUntil&&Date.now()>=state.boostUntil){state.boost=1;state.boostUntil=0;toast('砂時計の効果終了')}}
 function draw(){drawGround();const items=[];for(const n of state.nodes)if(n.alive)items.push({y:n.y,fn:()=>drawNode(n)});for(const b of state.buildings)items.push({y:b.y+25,fn:()=>drawBuilding(b)});state.workers.forEach(w=>items.push({y:w.y+16,fn:()=>drawWorkerEntity(w)}));state.enemies.forEach(e=>items.push({y:e.y+16,fn:()=>drawEnemy(e)}));items.push({y:state.player.y+17,fn:drawPlayerEntity});items.sort((a,b)=>a.y-b.y).forEach(o=>o.fn());drawWall();state.projectiles.forEach(drawProjectile);if(state.phase==='night'){ctx.fillStyle='rgba(4,9,15,.26)';ctx.fillRect(0,0,W,H);for(const b of state.buildings)if(b.type==='lantern')glow(sx(b.x),sy(b.y)-28,lanternRadius(b),.16)}}
 function loop(now){const dt=Math.min(.033,(now-last)/1000||0);last=now;movement(dt);playerGather(dt);updateWorkers(dt);playerAutoCombat();updateEnemies(dt);updateHumanLife(dt);phaseTick(dt);refreshContext();updateHud();updateVitalsHud();draw();drawEffects(dt);requestAnimationFrame(loop)}
 function vec(e){let dx=e.clientX-origin.x,dy=e.clientY-origin.y,m=Math.hypot(dx,dy),max=64;if(m<7){input={x:0,y:0,mag:0};return}dragged=true;if(m>max){dx=dx/m*max;dy=dy/m*max;m=max}input={x:dx/max,y:dy/max,mag:m/max}}
@@ -2558,6 +2558,409 @@ const Campaign=(()=>{
  document.querySelector('[data-panel="people"] b').textContent='住民';
  window.Twelve={crew,jobs,ensure,title,handbook,train,gear,changeJob,buddy,swap,resting,targetBuddy,archiveOverflow,strength,update};
  update();save();
+})();
+
+</script>
+<script>
+/* MAYOR FUN PATCH v2.0 — Muse improvement layer (2026-10-25)
+   Additive layer loaded last, in the same style as the existing patch layers.
+   Own save key only: it never rewrites the main save structure.
+   Covers improvement list: 1-30 (see 村長_改善提案30_20261025.md).
+   Portrait-first: the world is wider than the screen, the camera follows,
+   and off-screen things are shown with arrows / minimap hints instead of
+   forcing landscape. */
+(() => {
+'use strict';
+const FP_KEY = 'mayor-funpatch-v2';
+const $id = id => document.getElementById(id);
+const clampN = (v, a, b) => Math.max(a, Math.min(b, v));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let FP = { lastSeen: 0, missions: null, claimed: {}, pendingDawn: false, pendingEvent: null,
+           eventAt: 0, roboUntil: 0, roboUsedDay: 0, roboGain: 0, feverDay: 0, feverCount: 0,
+           scrapClaimed: false, bossBonusDay: 0, guideStep: 0 };
+try { Object.assign(FP, JSON.parse(localStorage.getItem(FP_KEY) || '{}')); } catch (_) {}
+const persist = () => { FP.lastSeen = Date.now(); try { localStorage.setItem(FP_KEY, JSON.stringify(FP)); } catch (_) {} };
+
+/* ---------- style (portrait comfort, wooden-sign UI) ---------- */
+const style = document.createElement('style');
+style.textContent = `
+#fp-layer{position:fixed;inset:0;pointer-events:none;z-index:14;overflow:hidden}
+.fp-ring{position:absolute;width:46px;height:46px;margin:-34px 0 0 -23px;border:2px solid #e5c47c;border-radius:50%;
+ box-shadow:0 0 0 2px #0006,0 0 14px #e5c47c66;animation:fpPulse 1.6s ease-in-out infinite}
+.fp-ring small{position:absolute;left:50%;top:-17px;transform:translateX(-50%);background:#2c2416;color:#f2e3b2;
+ font-size:10px;padding:1px 6px;border:1px solid #a5874f;border-radius:8px;white-space:nowrap}
+@keyframes fpPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+.fp-node{position:absolute;transform:translate(-50%,-130%);background:#141d16ee;border:1px solid #a5874f;color:#f2e3b2;
+ font-size:11px;padding:3px 8px;border-radius:9px;white-space:nowrap}
+.fp-foe{position:absolute;width:12px;height:12px;margin:-6px 0 0 -6px;background:#e2544a;transform:rotate(45deg);
+ box-shadow:0 0 8px #e2544a;border:1px solid #ffd9d4}
+.fp-arrow{position:absolute;width:0;height:0;border-left:9px solid transparent;border-right:9px solid transparent;
+ border-bottom:16px solid #e5c47c;filter:drop-shadow(0 1px 2px #000)}
+.fp-glow{position:absolute;width:300px;height:300px;margin:-150px 0 0 -150px;border-radius:50%;mix-blend-mode:screen;
+ background:radial-gradient(circle,#ffca7a55 0%,#ffca7a18 45%,transparent 70%);opacity:0;transition:opacity .8s}
+#fp-chip{position:fixed;z-index:21;left:8px;top:calc(max(8px,env(safe-area-inset-top)) + 103px);max-width:min(92vw,430px);
+ background:#141d16e8;border:1px solid #a5874f;color:#f2e3b2;font-size:11.5px;line-height:1.5;
+ padding:5px 10px;border-radius:10px;box-shadow:0 4px 14px #0007}
+#fp-chip b{color:#ffd977}
+#fp-btn{position:fixed;z-index:22;right:10px;bottom:calc(168px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;
+ background:linear-gradient(160deg,#8a6b34,#5e451f);border:2px solid #e5c47c;color:#fff3cf;font-size:12px;font-weight:bold;
+ box-shadow:0 6px 16px #000a}
+#fp-btn:active{transform:scale(.94)}
+#fp-banner{position:fixed;z-index:23;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom));
+ width:min(92vw,430px);background:#1d2a1eee;border:1px solid #e5c47c;color:#f6ecd2;border-radius:12px;padding:10px 12px;
+ font-size:13px;line-height:1.6;box-shadow:0 8px 22px #000b;display:none}
+#fp-banner button,#fp-panel button.fp-act{background:#6d5326;color:#ffeeb8;border:1px solid #e5c47c;border-radius:8px;
+ padding:7px 12px;font-size:13px;margin:4px 4px 0 0}
+#fp-banner button:disabled,#fp-panel button.fp-act:disabled{opacity:.45}
+#fp-panel{position:fixed;z-index:40;left:0;right:0;bottom:0;max-height:80vh;overflow-y:auto;display:none;
+ background:#101812f7;border-top:2px solid #a5874f;color:#eee4c4;padding:14px 14px calc(18px + env(safe-area-inset-bottom));
+ font-size:13.5px;line-height:1.7;border-radius:16px 16px 0 0;box-shadow:0 -10px 30px #000c}
+#fp-panel h2{font-size:16px;margin:2px 0 8px;color:#ffd977}
+#fp-panel h3{font-size:13px;margin:14px 0 4px;color:#e5c47c;border-bottom:1px solid #a5874f55;padding-bottom:2px}
+#fp-panel .bar{height:8px;background:#2a332a;border-radius:4px;overflow:hidden;margin:2px 0 6px}
+#fp-panel .bar i{display:block;height:100%;background:linear-gradient(90deg,#c9a44e,#ffd977)}
+#fp-panel .row{display:flex;justify-content:space-between;gap:8px}
+#fp-panel .dim{color:#b8bfa8;font-size:12px}
+#fp-close{position:absolute;right:12px;top:10px;background:#2c2416;color:#f2e3b2;border:1px solid #a5874f;
+ border-radius:8px;padding:5px 11px;font-size:13px}
+.fp-pop{position:fixed;z-index:24;left:50%;top:34%;transform:translateX(-50%);font-size:21px;font-weight:bold;color:#ffd977;
+ text-shadow:0 2px 6px #000;animation:fpPop 1s ease-out forwards;pointer-events:none}
+@keyframes fpPop{from{opacity:0;margin-top:14px}25%{opacity:1}to{opacity:0;margin-top:-16px}}
+#topbar{font-size:13px}
+#dock button{min-height:54px}
+`;
+document.head.appendChild(style);
+
+/* ---------- DOM ---------- */
+const layer = document.createElement('div'); layer.id = 'fp-layer';
+layer.innerHTML = '<div class="fp-glow" id="fp-glow"></div><div class="fp-ring" id="fp-ring"><small>村長</small></div>' +
+  '<div class="fp-node" id="fp-node" style="display:none"></div><div class="fp-arrow" id="fp-arrow" style="display:none"></div>' +
+  '<div id="fp-foes"></div><div class="fp-node" id="fp-target" style="display:none"></div>';
+document.body.appendChild(layer);
+const chip = document.createElement('div'); chip.id = 'fp-chip'; chip.textContent = '村長手帳を読み込み中…';
+document.body.appendChild(chip);
+const btn = document.createElement('button'); btn.id = 'fp-btn'; btn.textContent = '手帳'; btn.setAttribute('aria-label', '村長手帳を開く');
+document.body.appendChild(btn);
+const banner = document.createElement('div'); banner.id = 'fp-banner'; document.body.appendChild(banner);
+const panel = document.createElement('div'); panel.id = 'fp-panel'; document.body.appendChild(panel);
+
+const S = () => (window.GUILD_V16 ? null : null) || state; // live global state of the base game
+const resTotal = () => state.wood + state.stone + state.food;
+function grant(map, why) {
+  FP.granting = true;
+  for (const [k, v] of Object.entries(map)) {
+    if (!v) continue;
+    if (['wood', 'stone', 'food'].includes(k) && typeof addRes === 'function') addRes(k, v);
+    else if (k === 'morale') state.morale = clampN((state.morale || 0) + v, 0, 100);
+    else state[k] = (state[k] || 0) + v;
+    pop((v > 0 ? '+' : '') + v + ' ' + ({wood:'木', stone:'石', food:'食料', iron:'鉄', renown:'名声', morale:'幸福'}[k] || k));
+  }
+  if (typeof save === 'function') save();
+  FP.granting = false;
+  if (why && typeof toast === 'function') toast(why);
+}
+function pop(text) {
+  const d = document.createElement('div'); d.className = 'fp-pop'; d.textContent = text;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1050);
+}
+
+/* ---------- first-3-buildings discount (23) ---------- */
+try {
+  const coreCostFor = costFor;
+  costFor = function (type, nextLevel) {
+    const c = coreCostFor(type, nextLevel);
+    if (c && typeof c === 'object' && state.buildings && state.buildings.length < 3) {
+      const out = { ...c };
+      for (const k of ['wood', 'stone', 'food', 'iron']) if (typeof out[k] === 'number') out[k] = Math.max(1, Math.floor(out[k] * 0.6));
+      return out;
+    }
+    return c;
+  };
+} catch (_) {}
+
+/* ---------- missions (12: handbook) ---------- */
+function missionsToday() {
+  const day = state.day;
+  if (!FP.missions || FP.missions.day !== day)
+    FP.missions = { day, base: resTotal(), baseKills: state.stats?.kills || 0, baseBuildings: state.buildings.length, gather: 0, kills: 0, builds: 0 };
+  const m = FP.missions;
+  m.gather = Math.max(m.gather, Math.floor(resTotal() - m.base));
+  m.kills = Math.max(0, (state.stats?.kills || 0) - m.baseKills);
+  m.builds = Math.max(0, state.buildings.length - m.baseBuildings);
+  return [
+    { id: 'gather', name: '資源を30集める', now: m.gather, target: 30, reward: { renown: 2 } },
+    { id: 'build', name: '建物を1棟建てる／強化する', now: m.builds, target: 1, reward: { wood: 20 } },
+    { id: 'fight', name: '敵を3体倒す（夜を越えると進む）', now: m.kills, target: 3, reward: { food: 15 } },
+  ];
+}
+
+/* ---------- offline earnings (13) ---------- */
+(function offline() {
+  const awaySec = FP.lastSeen ? (Date.now() - FP.lastSeen) / 1000 : 0;
+  if (awaySec > 180 && state.workers) {
+    const mins = Math.min(480, awaySec / 60);
+    const hands = Math.max(1, state.workers.filter(w => !w.dead).length);
+    const gain = Math.floor(mins * hands * 0.35);
+    if (gain >= 5) {
+      grant({ wood: gain, stone: Math.floor(gain / 2), food: Math.floor(gain / 3) });
+      showBanner('おかえり、村長！<br>留守のあいだ、住民' + hands + '人が働いて <b>木' + gain + '・石' + Math.floor(gain / 2) + '・食料' + Math.floor(gain / 3) + '</b> を集めてくれていたよ');
+    }
+  }
+})();
+
+/* ---------- guide: first 60 seconds (1,6,7) ---------- */
+const GUIDE = [
+  { text: '① 光る木へ近づいて止まると自動で伐るよ', done: () => state.wood >= 10 },
+  { text: '② 石も同じ。岩のそばで止まってみて', done: () => state.stone >= 6 },
+  { text: '③ 「建てる」から灯火を建てよう（最初の3棟は割引中）', done: () => state.buildings.length >= 1 },
+  { text: '④ 小屋を建てると住民を迎えられる', done: () => state.buildings.some(b => b.type === 'hut') },
+  { text: '⑤ 夕方までに防壁の準備。夜は灯りの輪の中が安全', done: () => state.day >= 2 },
+  { text: '⑥ 村長室の陳情を決裁してみよう。それがこの村の物語になる', done: () => state.day >= 2 && (state.renown || 0) > 0 },
+];
+
+/* ---------- click / tap to move (3) ---------- */
+let moveTarget = null, pDown = null;
+const cv = $id('game');
+if (cv) {
+  cv.addEventListener('pointerdown', e => { pDown = { t: Date.now(), x: e.clientX, y: e.clientY, moved: false }; });
+  cv.addEventListener('pointermove', e => { if (pDown && Math.hypot(e.clientX - pDown.x, e.clientY - pDown.y) > 12) pDown.moved = true; });
+  cv.addEventListener('pointerup', e => {
+    if (pDown && !pDown.moved && Date.now() - pDown.t < 300) {
+      moveTarget = { x: cam.x + (e.clientX - innerWidth / 2), y: cam.y + (e.clientY - innerHeight / 2) };
+      const tg = $id('fp-target'); tg.style.display = 'block'; tg.textContent = 'ここへ';
+      tg.style.left = e.clientX + 'px'; tg.style.top = e.clientY + 'px';
+      setTimeout(() => tg.style.display = 'none', 700);
+    }
+    pDown = null;
+  });
+}
+let lastFrame = performance.now();
+(function mover(now) {
+  const dt = Math.min(0.05, (now - lastFrame) / 1000); lastFrame = now;
+  try {
+    if (moveTarget && !pDown) {
+      const p = state.player, dx = moveTarget.x - p.x, dy = moveTarget.y - p.y, d = Math.hypot(dx, dy);
+      if (d < 10) moveTarget = null;
+      else { const step = Math.min(d, 175 * dt); p.x += dx / d * step; p.y += dy / d * step;
+             p.dir = Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'); p.walk = (p.walk || 0) + dt * 6; }
+    }
+  } catch (_) {}
+  requestAnimationFrame(mover);
+})(performance.now());
+
+/* ---------- markers, night vision, arrows (2,5,14,26) ---------- */
+const ring = $id('fp-ring'), nodeTip = $id('fp-node'), arrow = $id('fp-arrow'), glow = $id('fp-glow'), foes = $id('fp-foes');
+setInterval(() => {
+  try {
+    const p = state.player, px = sx(p.x), py = sy(p.y);
+    ring.style.left = px + 'px'; ring.style.top = py + 'px';
+    const night = state.phase === 'night' || state.phase === 'dusk';
+    glow.style.left = px + 'px'; glow.style.top = py + 'px'; glow.style.opacity = night ? '1' : '0';
+    // nearest harvestable node
+    let best = null, bd = 1e9;
+    for (const n of state.nodes || []) { if (!n.alive) continue; const d = Math.hypot(n.x - p.x, n.y - p.y); if (d < bd) { bd = d; best = n; } }
+    if (best && bd < 110) {
+      nodeTip.style.display = 'block'; nodeTip.style.left = sx(best.x) + 'px'; nodeTip.style.top = sy(best.y) + 'px';
+      nodeTip.textContent = ({tree:'木', rock:'石', food:'食料'}[best.type] || '資源') +
+        (bd < 52 ? '：採集中… そのまま止まってて' : '：もっと近づいて止まると自動で採る');
+    } else nodeTip.style.display = 'none';
+    // guide arrow to wood early game / to nearest node when poor
+    const needWood = state.wood < 18 && state.buildings.length === 0;
+    if (best && bd >= 110 && (needWood || bd > 260)) {
+      const ang = Math.atan2(best.y - p.y, best.x - p.x);
+      const ex = clampN(px + Math.cos(ang) * 120, 26, innerWidth - 26), ey = clampN(py + Math.sin(ang) * 120, 90, innerHeight - 120);
+      arrow.style.display = 'block'; arrow.style.left = (ex - 9) + 'px'; arrow.style.top = (ey - 8) + 'px';
+      arrow.style.transform = 'rotate(' + (ang * 180 / Math.PI + 90) + 'deg)';
+    } else arrow.style.display = 'none';
+    // night: enemy markers
+    if (night && state.enemies) {
+      foes.innerHTML = state.enemies.filter(e => !e.dead).slice(0, 24).map(e => {
+        const x = sx(e.x), y = sy(e.y); if (x < -20 || y < -20 || x > innerWidth + 20 || y > innerHeight + 20) return '';
+        return '<div class="fp-foe" style="left:' + x + 'px;top:' + (y - 16) + 'px"></div>';
+      }).join('');
+    } else if (foes.innerHTML) foes.innerHTML = '';
+  } catch (_) {}
+}, 120);
+
+/* ---------- combo fever (9) ---------- */
+let combo = 0, comboUntil = 0, prevRes = resTotal(), prevKills = state.stats?.kills || 0, prevDay = state.day, prevBuildings = state.buildings.length;
+setInterval(() => {
+  try {
+    const now = performance.now(), rt = resTotal();
+    if (!FP.granting && rt > prevRes) {
+      combo += Math.ceil(rt - prevRes); comboUntil = now + 5000;
+      if (combo >= 20 && FP.feverDay !== state.day * 100 + Math.floor(combo / 20)) {
+        FP.feverDay = state.day * 100 + Math.floor(combo / 20); FP.feverCount++;
+        grant({ renown: 1 }, '号令フィーバー！ 採集コンボで村が沸いた（名声+1）'); persist();
+      }
+    }
+    if (now > comboUntil) combo = 0;
+    prevRes = resTotal();
+    // day rollover: dawn reward (16) + boss bonus (19)
+    if (state.day !== prevDay) {
+      FP.pendingDawn = true;
+      if (prevDay % 7 === 0 && FP.bossBonusDay !== prevDay) { FP.bossBonusDay = prevDay; showBanner('ボス夜を越えた！ 村長手帳からごほうびを受け取ってね'); }
+      else showBanner('夜が明けたよ。村長手帳に「夜明けの3択ごほうび」が届いてる');
+      prevDay = state.day; persist();
+    }
+    missionsToday(); persist();
+  } catch (_) {}
+}, 600);
+
+/* ---------- random small events (11) ---------- */
+const EVENTS = [
+  { title: '流れの商人が来た', body: '「石10と、鉄2を交換しないかね？」', choices: [
+    { label: '交換する（石-10／鉄+2）', can: () => state.stone >= 10, run: () => grant({ stone: -10, iron: 2 }) },
+    { label: '丁重にお帰りいただく', run: () => grant({ renown: 1 }) }] },
+  { title: 'キノコが大量発生！', body: '森の端に、見たことない量のキノコ。', choices: [
+    { label: '全部採る（食料+18／幸福-3）', run: () => grant({ food: 18, morale: -3 }) },
+    { label: '村の夕刊のネタにする（名声+2）', run: () => grant({ renown: 2 }) }] },
+  { title: '迷子の旅人', body: '地図を逆さまに持った旅人が震えている。', choices: [
+    { label: 'ごはんを分ける（食料-8／名声+3）', can: () => state.food >= 8, run: () => grant({ food: -8, renown: 3 }) },
+    { label: '道だけ教える（名声+1）', run: () => grant({ renown: 1 }) }] },
+];
+setTimeout(() => { FP.eventAt = Date.now() + 150000; persist(); }, 1000);
+setInterval(() => {
+  try {
+    if (!FP.pendingEvent && !FP.pendingDawn && state.phase === 'day' && Date.now() > (FP.eventAt || 0) && document.visibilityState === 'visible') {
+      FP.pendingEvent = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+      showBanner('村で小さな出来事：<b>' + esc(FP.pendingEvent.title) + '</b><br>村長手帳から決裁してね');
+      persist();
+    }
+  } catch (_) {}
+}, 5000);
+
+/* ---------- trial robot assistant (29) ---------- */
+setInterval(() => {
+  try {
+    if (FP.roboUntil && Date.now() < FP.roboUntil && document.visibilityState === 'visible' && state.phase !== 'night') {
+      FP.roboGain = (FP.roboGain || 0) + 1;
+      if (FP.roboGain % 3 === 0) grant({ wood: 1 });
+    }
+  } catch (_) {}
+}, 900);
+
+/* ---------- chip (4,24,25) ---------- */
+setInterval(() => {
+  try {
+    const m = missionsToday();
+    const g = GUIDE[Math.min(FP.guideStep || 0, GUIDE.length - 1)];
+    if (FP.guideStep < GUIDE.length && g.done()) { FP.guideStep++; persist(); }
+    const guideTxt = FP.guideStep < GUIDE.length ? GUIDE[FP.guideStep].text : '今日の目標は村長手帳に';
+    let nightTxt = '';
+    if (state.phase === 'dusk') {
+      const def = (state.buildings.filter(b => b.type === 'palisade' || b.type === 'watchtower' || b.type === 'barracks').length);
+      nightTxt = ' ／ <b>もうすぐ夜</b>：防衛施設 ' + def + '（無い夜は灯りの輪と村長で守る）';
+    } else if (state.phase === 'night') nightTxt = ' ／ <b>夜</b>：敵は赤い印、村長は金の輪が目印';
+    chip.innerHTML = 'DAY ' + state.day + '｜' + esc(guideTxt) + '<br>手帳：採集 <b>' + Math.min(m.gather, 30) + '/30</b>・建設 <b>' + Math.min(m.builds, 1) + '/1</b>・討伐 <b>' + Math.min(m.kills, 3) + '/3</b>' + (combo >= 5 ? ' ／ コンボ <b>' + combo + '</b>' : '') + nightTxt;
+  } catch (_) {}
+}, 800);
+
+/* ---------- banner / panel ---------- */
+let bannerTimer = null;
+function showBanner(html) {
+  banner.innerHTML = html + '<br><button id="fp-banner-open">村長手帳を開く</button>';
+  banner.style.display = 'block';
+  $id('fp-banner-open').onclick = () => { banner.style.display = 'none'; openPanel(); };
+  clearTimeout(bannerTimer); bannerTimer = setTimeout(() => banner.style.display = 'none', 12000);
+}
+function rankInfo() {
+  const r = state.renown || 0;
+  return '名声 ' + r + '（陳情・納品・ごほうびで増える。ランクが上がると見張り台や兵舎が解禁）';
+}
+function renderPanel() {
+  const m = missionsToday();
+  const workers = (state.workers || []).filter(w => !w.dead);
+  const oshi = workers.length && window.Citizens ? workers[Math.floor(Math.random() * workers.length)] : null;
+  const oshiInfo = oshi ? Citizens.ensure(oshi) : null;
+  const oshiTrait = oshi ? Citizens.trait(oshi) : null;
+  const bossIn = 7 - (state.day % 7 || 7) + (state.day % 7 === 0 ? 0 : 0);
+  const nextBoss = state.day % 7 === 0 ? '今夜あたりが節目の夜' : 'あと ' + (7 - state.day % 7) + ' 日で節目のボス夜';
+  const stamps = (() => { try { return (window.Campaign?.state?.stamps || window.Campaign?.stamps || []).length || 0; } catch (_) { return 0; } })();
+  const buildRows = Object.entries(typeof BUILD === 'object' ? BUILD : {}).map(([k, v]) => {
+    const mine = state.buildings.filter(b => b.type === k);
+    return '<div class="row"><span>' + esc(v.name || k) + '</span><span>' + (mine.length ? mine.length + '棟／Lv合計 ' + mine.reduce((a, b) => a + (b.level || 1), 0) : '未建設') + '</span></div>';
+  }).join('');
+  panel.innerHTML =
+    '<button id="fp-close">閉じる</button><h2>村長手帳（Fun Patch v2）</h2>' +
+    '<div class="dim">スマホ縦長専用レイアウトのまま、世界は画面の外まで広がっているよ。村長は金の輪、夜の敵は赤い印が目印</div>' +
+    (FP.pendingDawn ? '<h3>夜明けの3択ごほうび（16）</h3>' +
+      '<button class="fp-act" data-dawn="a">資源セット 木+25・石+15</button>' +
+      '<button class="fp-act" data-dawn="b">村の朝ごはん 食料+25・幸福+5</button>' +
+      '<button class="fp-act" data-dawn="c">夕刊の一面 名声+3</button>' : '') +
+    (FP.pendingEvent ? '<h3>小さな出来事：' + esc(FP.pendingEvent.title) + '（11）</h3><div>' + esc(FP.pendingEvent.body) + '</div>' +
+      FP.pendingEvent.choices.map((c, i) => '<button class="fp-act" data-ev="' + i + '"' + (c.can && !c.can() ? ' disabled' : '') + '>' + esc(c.label) + '</button>').join('') : '') +
+    '<h3>今日の手帳（12）</h3>' + m.map(x =>
+      '<div class="row"><span>' + esc(x.name) + '</span><span>' + Math.min(x.now, x.target) + ' / ' + x.target + '</span></div>' +
+      '<div class="bar"><i style="width:' + clampN(x.now / x.target * 100, 0, 100) + '%"></i></div>' +
+      (x.now >= x.target ? (FP.claimed[state.day + '-' + x.id] ? '<div class="dim">受取済み</div>' : '<button class="fp-act" data-claim="' + x.id + '">ごほうびを受け取る</button>') : '')
+    ).join('') +
+    '<h3>推しの住民（17）</h3>' + (oshiInfo ?
+      '<div><b>' + esc(oshiInfo.name) + '</b> Lv.' + oshiInfo.level + '／' + esc(oshiTrait.name) + '「' + esc(oshiTrait.quote) + '」<br><span class="dim">' + esc(oshiTrait.desc) + ' ― 性格で得意な仕事が違う。配属は住民メニューから</span></div>' +
+      '<div class="dim">住民 ' + workers.length + '人。それぞれ名前・性格・レベルがあるので、数ではなく人で見ると村が好きになる</div>'
+      : '<div class="dim">まだ住民がいない。小屋を建てると仲間が来るよ</div>') +
+    '<h3>村の育ち具合（18・25）</h3>' + buildRows +
+    '<div class="dim">' + rankInfo() + '<br>防衛の節目：' + nextBoss + '。敵は速い役・硬い役など役割が違うので、灯火と見張り台で迎える準備を（19・20）</div>' +
+    '<h3>世界への旅（14・21・22）</h3>' +
+    '<div class="row"><span>開拓印</span><span>' + stamps + ' / 18</span></div><div class="bar"><i style="width:' + (stamps / 18 * 100) + '%"></i></div>' +
+    '<div class="dim">引っ越しは「世界」メニューから。荷物と住民を連れて次の土地へ行くのがこのゲームの本編。18の印の先の周回特権は次の辞令として準備中</div>' +
+    '<h3>夕刊スクラップ（15）</h3>' +
+    '<div class="row"><span>越えた夜</span><span>' + (state.stats?.nights || 0) + '</span></div>' +
+    '<div class="row"><span>倒した敵</span><span>' + (state.stats?.kills || 0) + '</span></div>' +
+    '<div class="row"><span>建てた建物（現在）</span><span>' + state.buildings.length + '棟</span></div>' +
+    '<h3>応援アイテムの正直な説明（29・30）</h3>' +
+    '<div class="dim">村長への差し入れ 300円＝王冠と称号（強さは上がらない、記念課金）<br>黄金の決裁印 980円＝村長の攻撃4倍＋黄金の衝撃波（永続）<br>村長ロボ 1,980円＝ピンチの45秒ごとに15秒出動、攻撃6倍＋ダメージ80%軽減<br>購入は村長室のショップから。まず無料で最後まで遊べるのが前提だよ</div>' +
+    (FP.roboUsedDay === state.day && !(FP.roboUntil && Date.now() < FP.roboUntil)
+      ? '<div class="dim">試作ロボの無料体験は今日は使用済み（また明日）</div>'
+      : '<button class="fp-act" id="fp-robo">試作ロボを3分だけ無料体験（自動で木を集める）</button>') +
+    '<h3>快適設定</h3><div class="dim">1日の長さは従来の約2倍に緩めた（昼に準備する時間がある）。最初の3棟は建設費4割引は自動で効いている。タップした場所へ村長が歩く移動も有効</div>';
+  $id('fp-close').onclick = closePanel;
+  panel.querySelectorAll('[data-claim]').forEach(b => b.onclick = () => {
+    const x = m.find(v => v.id === b.dataset.claim); if (!x) return;
+    FP.claimed[state.day + '-' + x.id] = 1; grant(x.reward, '手帳のごほうび！'); persist(); renderPanel();
+  });
+  panel.querySelectorAll('[data-dawn]').forEach(b => b.onclick = () => {
+    FP.pendingDawn = false;
+    grant(b.dataset.dawn === 'a' ? { wood: 25, stone: 15 } : b.dataset.dawn === 'b' ? { food: 25, morale: 5 } : { renown: 3 }, '夜明けのごほうび！');
+    persist(); renderPanel();
+  });
+  panel.querySelectorAll('[data-ev]').forEach(b => b.onclick = () => {
+    const ev = FP.pendingEvent; if (!ev) return; const c = ev.choices[+b.dataset.ev];
+    if (c && (!c.can || c.can())) c.run();
+    FP.pendingEvent = null; FP.eventAt = Date.now() + 240000; persist(); renderPanel();
+  });
+  const robo = $id('fp-robo');
+  if (robo) robo.onclick = () => { FP.roboUsedDay = state.day; FP.roboUntil = Date.now() + 180000; FP.roboGain = 0; persist(); pop('試作ロボ出動'); renderPanel(); };
+}
+function openPanel() { renderPanel(); panel.style.display = 'block'; }
+function closePanel() { panel.style.display = 'none'; }
+btn.onclick = openPanel;
+
+/* ---------- scattered resource clusters on the widened map (map expansion) ---------- */
+setTimeout(() => {
+  try {
+    if (FP.wideSeeded) return;
+    const kinds = [['tree', 18, '#'], ['rock', 26, '#'], ['food', 12, '#']];
+    let added = 0;
+    for (let ring = 0; ring < 10; ring++) {
+      const type = ['tree', 'rock', 'food'][ring % 3], hp = type === 'tree' ? 18 : type === 'rock' ? 26 : 12;
+      for (let j = 0; j < 4; j++) {
+        const ang = ring * 2.4 + j * 1.7, r = 950 + ring * 60 + j * 40;
+        const x = Math.cos(ang) * r, y = Math.sin(ang) * r * 0.8;
+        if (x < -1480 || x > 1480 || y < -1130 || y > 1180) continue;
+        state.nodes.push({ id: 'fp-' + ring + '-' + j, type, x, y, hp, maxHp: hp, alive: true, respawnAt: 0, starter: false, seed: Math.random() });
+        added++;
+      }
+    }
+    FP.wideSeeded = added; persist();
+    if (typeof toast === 'function') toast('村の外にも資源地帯が広がった（地図拡張）');
+  } catch (_) {}
+}, 2500);
+
+persist();
+setInterval(persist, 10000);
+addEventListener('visibilitychange', persist);
+window.MayorFunPatch = { version: '2.0', open: openPanel, data: () => FP };
 })();
 
 </script>
