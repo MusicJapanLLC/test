@@ -3179,5 +3179,309 @@ window.MayorFunPatch3 = { version: '3.0', conditions: extraConditions };
 })();
 
 </script>
+<script>
+/* MAYOR FUN PATCH v4.0 — stage identity, luxury, monsters, visitors, slot (2026-10-25)
+   Design: ~/workspace/mayor-game/v4設計_ステージと引っ越しの大改造_20261025.md
+   Moving house now changes the world's face: palette, weather particles,
+   decorations and map size all grow with the stage. Enemies get readable
+   types, visitors bring the bakage, and a daily slot feeds the dopamine. */
+(() => {
+'use strict';
+const $id = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const KEY = 'mayor-funpatch-v4';
+let F4 = { stageId: '', seeded: {}, slotDay: 0, slotUsed: 0, visits: 0 };
+try { Object.assign(F4, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (_) {}
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(F4)); } catch (_) {} };
+
+const st = document.createElement('style');
+st.textContent = `
+#game{transition:filter 1.2s ease}
+#fp4-arrival{position:fixed;z-index:35;left:50%;top:26%;transform:translateX(-50%) scale(.92);text-align:center;
+ background:#101812ee;border:2px solid #e5c47c;color:#f6ecd2;border-radius:16px;padding:16px 22px;opacity:0;
+ pointer-events:none;transition:all .45s ease;box-shadow:0 14px 40px #000c;max-width:88vw}
+#fp4-arrival.on{opacity:1;transform:translateX(-50%) scale(1)}
+#fp4-arrival small{color:#e5c47c;letter-spacing:.18em}
+#fp4-arrival h2{margin:4px 0;font-size:21px}
+#fp4-arrival p{margin:2px 0;font-size:12px;color:#cfd6bd}
+#fp4-weather{position:fixed;inset:0;pointer-events:none;z-index:13;overflow:hidden}
+.fp4-p{position:absolute;top:-4vh;animation:fp4fall linear infinite;opacity:.85}
+@keyframes fp4fall{to{transform:translateY(112vh) translateX(4vw) rotate(300deg)}}
+#fp4-banner{position:fixed;z-index:26;left:50%;transform:translateX(-50%);bottom:calc(292px + env(safe-area-inset-bottom));
+ width:min(92vw,430px);background:#1d2a1ef2;border:1px solid #e5c47c;color:#f6ecd2;border-radius:12px;padding:10px 12px;
+ font-size:13px;line-height:1.6;box-shadow:0 8px 22px #000b;display:none}
+#fp4-banner button{background:#6d5326;color:#ffeeb8;border:1px solid #e5c47c;border-radius:8px;padding:7px 12px;font-size:13px;margin:4px 4px 0 0}
+.fp4-reels{font-size:34px;letter-spacing:8px;text-align:center;background:#0d130eee;border:1px solid #a5874f;border-radius:10px;padding:8px 0;margin:6px 0}
+`;
+document.head.appendChild(st);
+const arrival = document.createElement('div'); arrival.id = 'fp4-arrival'; document.body.appendChild(arrival);
+const weatherBox = document.createElement('div'); weatherBox.id = 'fp4-weather'; document.body.appendChild(weatherBox);
+const banner4 = document.createElement('div'); banner4.id = 'fp4-banner'; document.body.appendChild(banner4);
+
+/* tiny synth (own, gesture-started) */
+let AC = null;
+addEventListener('pointerdown', () => { try { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); } catch (_) {} }, { passive: true });
+function tone(f, t0, dur, type, g0) {
+  if (!AC) return;
+  try { const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + t0;
+    o.type = type || 'triangle'; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(g0 || 0.04, t + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t + dur + 0.05); } catch (_) {}
+}
+const fanfare = () => [392, 523, 659, 784].forEach((f, i) => tone(f, i * 0.09, 0.18, 'square', 0.04));
+function confettiLite() {
+  try { const colors = ['#ffd977', '#e88ca0', '#8fce7a', '#8ab8e8'];
+    for (let i = 0; i < 12; i++) { const d = document.createElement('div');
+      d.style.cssText = 'position:fixed;z-index:60;width:8px;height:12px;border-radius:2px;pointer-events:none;background:' + colors[i % 4] + ';left:' + (20 + Math.random() * 60) + 'vw;top:20vh;animation:fpFall ' + (0.8 + Math.random() * 0.6) + 's ease-in forwards';
+      document.body.appendChild(d); setTimeout(() => d.remove(), 1600); } } catch (_) {}
+}
+function grant(map) {
+  try { for (const [k, v] of Object.entries(map)) {
+      if (['wood', 'stone', 'food'].includes(k) && typeof addRes === 'function') addRes(k, v);
+      else if (k === 'morale') state.morale = Math.max(0, Math.min(100, (state.morale || 0) + v));
+      else state[k] = (state[k] || 0) + v; }
+    if (typeof save === 'function') save(); } catch (_) {}
+}
+function popText(txt) {
+  const d = document.createElement('div'); d.className = 'fp-pop'; d.textContent = txt;
+  document.body.appendChild(d); setTimeout(() => d.remove(), 1050);
+}
+
+/* ---------- stage identity: palette, weather, expansion, decor ---------- */
+const PALETTES = [
+  'none', 'hue-rotate(-14deg) saturate(1.18)', 'sepia(.30) saturate(1.25)', 'brightness(1.13) saturate(.6)',
+  'sepia(.34) hue-rotate(-16deg) saturate(1.4)', 'hue-rotate(12deg) saturate(1.12) brightness(1.05)',
+  'saturate(1.2)', 'saturate(1.08) brightness(1.03)', 'brightness(.94) saturate(.85)',
+  'sepia(.22) saturate(1.15)', 'hue-rotate(-8deg) saturate(1.1)', 'brightness(1.05) saturate(.9)',
+  'hue-rotate(8deg) saturate(1.15)', 'brightness(.82) saturate(.8) hue-rotate(10deg)',
+  'hue-rotate(16deg) brightness(1.04)', 'hue-rotate(-24deg) saturate(1.3)', 'sepia(.18) saturate(1.2)',
+  'saturate(1.35) brightness(1.06)'];
+const SEASON = ['春', '夏', '秋', '冬'];
+function stageDef() { try { return Campaign.current(); } catch (_) { return null; } }
+function applyWeather(def) {
+  weatherBox.innerHTML = '';
+  if (!def) return;
+  const w = def.weather || 'none', b = def.biome || '';
+  let ch = '', n = 14, size = 13, dur = [5, 9];
+  if (w === 'rain' || w === 'spray') { ch = '💧'; n = 16; size = 10; }
+  else if (w === 'snow') { ch = '❄️'; n = 18; size = 12; }
+  else if (w === 'sand' || w === 'wind') { ch = '🍂'; n = 12; }
+  else if (w === 'ash') { ch = '🌋'; n = 8; size = 10; }
+  else if (w === 'steam') { ch = '💨'; n = 8; }
+  else if (w === 'fog') { ch = '🌫️'; n = 6; size = 18; }
+  else if (b === 'meadow' || def.index % 4 === 0) { ch = '🌸'; n = 10; size = 11; }
+  else if (b === 'mushroom') { ch = '✨'; n = 10; size = 10; }
+  if (!ch) return;
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('span'); s.className = 'fp4-p'; s.textContent = ch;
+    s.style.left = Math.random() * 100 + 'vw'; s.style.fontSize = size + Math.random() * 6 + 'px';
+    s.style.animationDuration = (dur[0] + Math.random() * (dur[1] - dur[0])) + 's';
+    s.style.animationDelay = (-Math.random() * 8) + 's';
+    weatherBox.appendChild(s);
+  }
+}
+function expandWorld(idx) {
+  try {
+    const e = idx * 120;
+    WORLD.minX = -1500 - e; WORLD.maxX = 1500 + e; WORLD.minY = -1150 - e; WORLD.maxY = 1200 + e;
+    if (F4.seeded[idx]) return;
+    F4.seeded[idx] = 1;
+    for (let j = 0; j < 22; j++) {
+      const type = ['tree', 'rock', 'food'][j % 3], hp = type === 'tree' ? 18 : type === 'rock' ? 26 : 12;
+      const ang = j * 2.39 + idx, r = 1330 + e + (j % 5) * 55;
+      const x = Math.cos(ang) * r, y = Math.sin(ang) * r * 0.78;
+      if (x < WORLD.minX + 30 || x > WORLD.maxX - 30 || y < WORLD.minY + 30 || y > WORLD.maxY - 30) continue;
+      state.nodes.push({ id: 'fp4-' + idx + '-' + j, type, x, y, hp, maxHp: hp, alive: true, respawnAt: 0, starter: false, seed: Math.random() });
+    }
+    persist();
+  } catch (_) {}
+}
+function showArrival(def, first) {
+  const crown = (window.ChiefShop && ChiefShop.owned && ChiefShop.owned('supporter')) ? '👑 ' : '';
+  arrival.innerHTML = '<small>' + crown + '第' + (def.index + 1) + '章 ／ 季節は' + SEASON[def.index % 4] + '</small><h2>' + esc(def.name) + '</h2><p>' + esc(def.description || '') + '<br>' + esc(def.gimmick || '') + '</p>';
+  arrival.classList.add('on'); fanfare();
+  setTimeout(() => arrival.classList.remove('on'), first ? 2600 : 4200);
+}
+let lastStage = '';
+setInterval(() => {
+  try {
+    const def = stageDef(); if (!def) return;
+    const cv = $id('game'); if (cv) cv.style.filter = PALETTES[def.index % PALETTES.length];
+    if (def.id !== lastStage) {
+      const first = !lastStage;
+      lastStage = def.id;
+      applyWeather(def); expandWorld(def.index);
+      showArrival(def, first);
+      if (!first && typeof toast === 'function') toast('世界が少し広がった（地図拡張 +' + def.index + '）');
+    }
+  } catch (_) {}
+}, 1200);
+
+/* decor drawn in world space: luxury grows with stage + buildings */
+function seededRand(seed) { const x = Math.sin(seed * 127.1) * 43758.5453; return x - Math.floor(x); }
+try {
+  const draw0 = draw;
+  draw = function () {
+    draw0();
+    try {
+      const def = stageDef(); if (!def) return;
+      const tier = Math.min(5, Math.floor(def.index / 3) + (state.buildings.length >= 8 ? 1 : 0));
+      const cx = sx(0), cy = sy(0);
+      if (tier >= 2) { ctx.strokeStyle = 'rgba(220,200,150,.35)'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx, cy, 52 + tier * 10, 0, Math.PI * 2); ctx.stroke(); }
+      for (let i = 0; i < 26 + tier * 10; i++) {
+        const a = seededRand(i * 3 + def.index * 91) * Math.PI * 2, r = 90 + seededRand(i * 7 + def.index) * 300;
+        const x = sx(Math.cos(a) * r), y = sy(Math.sin(a) * r * 0.8);
+        if (x < -20 || y < -20 || x > innerWidth + 20 || y > innerHeight + 20) continue;
+        const cols = ['#e88ca0', '#ffd977', '#b48ce8', '#8fce7a', '#f2f2f2'];
+        ctx.fillStyle = cols[i % cols.length] + 'cc';
+        if (tier >= 4 && i % 6 === 0) { ctx.beginPath(); ctx.arc(x, y, 3.4, 0, Math.PI * 2); ctx.fill(); }
+        else ctx.fillRect(x, y, 3, 3);
+      }
+      if (tier >= 3) for (const sgn of [-1, 1]) {
+        const x = sx(sgn * 130), y = sy(-80);
+        ctx.fillStyle = '#6b4f2a'; ctx.fillRect(x - 2, y - 26, 4, 30);
+        ctx.fillStyle = def.color || '#e5c47c';
+        ctx.beginPath(); ctx.moveTo(x + 2, y - 26); ctx.lineTo(x + 2 + sgn * 20, y - 19); ctx.lineTo(x + 2, y - 12); ctx.fill();
+      }
+      if (tier >= 5) { ctx.fillStyle = 'rgba(120,180,230,.5)';
+        ctx.beginPath(); ctx.arc(cx, cy + 66, 17, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.fillRect(cx - 1, cy + 44, 2, 12); }
+    } catch (_) {}
+  };
+} catch (_) {}
+
+/* ---------- enemies: readable types + earlier variety by stage ---------- */
+try {
+  const et0 = enemyType;
+  enemyType = function (i, wave) {
+    let t = et0(i, wave);
+    try {
+      const idx = stageDef()?.index || 0, r = Math.random();
+      if (t === 'walker') {
+        if (idx >= 3 && r < 0.10) t = 'spitter';
+        else if (idx >= 2 && r < 0.24) t = 'brute';
+        else if (idx >= 1 && r < 0.42) t = 'runner';
+      }
+    } catch (_) {}
+    return t;
+  };
+  const de0 = drawEnemy;
+  const SIGIL = { walker: ['🧟', '#7fae5a'], runner: ['💨', '#e8d44f'], brute: ['👹', '#e2544a'], spitter: ['🤢', '#9be15d'], warden: ['👑', '#ffd700'] };
+  drawEnemy = function (e) {
+    de0(e);
+    try {
+      if (e.dead) return;
+      const [icon, col] = SIGIL[e.type] || SIGIL.walker, x = sx(e.x), y = sy(e.y);
+      ctx.fillStyle = col + '55'; ctx.beginPath(); ctx.ellipse(x, y + 14, 13, 5, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.font = '13px serif'; ctx.textAlign = 'center'; ctx.fillText(icon, x, y - 38);
+    } catch (_) {}
+  };
+} catch (_) {}
+
+/* ---------- visitors: bakage guests ---------- */
+const VISITORS = [
+  { face: '🎒', name: '行商人カラスヤ', line: '「世界の端っこの土産があるよ」', a: ['土産を買う（食料-10／名声+3）', () => state.food >= 10, () => grant({ food: -10, renown: 3 })], b: ['値切り倒す（名声-1／木+15）', null, () => grant({ renown: -1, wood: 15 })] },
+  { face: '🔮', name: '占い師ミラ', line: '「今夜、赤いのが来る…たぶん」', a: ['占ってもらう（石-8／幸福+6）', () => state.stone >= 8, () => grant({ stone: -8, morale: 6 })], b: ['逆に占ってあげる（名声+2）', null, () => grant({ renown: 2 })] },
+  { face: '🎸', name: '吟遊詩人ポエム', line: '「村長の歌、作ったよ（未完成）」', a: ['村に広める（名声+3／食料-6）', () => state.food >= 6, () => grant({ renown: 3, food: -6 })], b: ['村長が歌う（幸福+5）', null, () => grant({ morale: 5 })] },
+  { face: '🎀', name: '謎の転校生サクラ', line: '「今日からこの村に転校してきました」', a: ['住民として迎える（食料-12／次の来客が楽しみに）', () => state.food >= 12, () => grant({ food: -12, renown: 2 })], b: ['転校先は隣の村だと教える', null, () => grant({ renown: 1 })] },
+  { face: '👽', name: '宇宙人（自称）', line: '「チキュウノ ムラ、カウ」', a: ['丁重にお断りする（鉄+2 なぜか置いていった）', null, () => grant({ iron: 2 })], b: ['村ごと売る交渉をする（名声+4／実現はしない）', null, () => grant({ renown: 4 })] },
+  { face: '🐸', name: 'カエルの王様', line: '「ケロ。井戸の使用料を払えケロ」', a: ['食料で払う（食料-8／幸福+4）', () => state.food >= 8, () => grant({ food: -8, morale: 4 })], b: ['村長がケロと返す（名声+1）', null, () => grant({ renown: 1 })] },
+];
+let visitAt = Date.now() + 200000;
+setInterval(() => {
+  try {
+    if (Date.now() < visitAt || state.phase !== 'day' || document.visibilityState !== 'visible') return;
+    if (banner4.style.display === 'block') return;
+    const v = VISITORS[Math.floor(Math.random() * VISITORS.length)];
+    F4.visits++; persist();
+    banner4.innerHTML = '<b>' + v.face + ' 来客：' + esc(v.name) + '</b><br>' + esc(v.line) + '<br>' +
+      '<button data-v="a"' + (v.a[1] && !v.a[1]() ? ' disabled' : '') + '>' + esc(v.a[0]) + '</button>' +
+      '<button data-v="b">' + esc(v.b[0]) + '</button><button data-v="x">また今度</button>';
+    banner4.style.display = 'block'; tone(740, 0, 0.1, 'sine', 0.05); tone(988, 0.12, 0.14, 'sine', 0.05);
+    banner4.querySelectorAll('[data-v]').forEach(btn => btn.onclick = () => {
+      const k = btn.dataset.v;
+      if (k === 'a') v.a[2](); else if (k === 'b') v.b[2]();
+      if (k !== 'x') popText(v.face + ' ' + v.name);
+      banner4.style.display = 'none'; visitAt = Date.now() + 260000;
+    });
+    setTimeout(() => { if (banner4.style.display === 'block') { banner4.style.display = 'none'; visitAt = Date.now() + 180000; } }, 25000);
+  } catch (_) {}
+}, 6000);
+
+/* ---------- rare drop + rank-up fanfare ---------- */
+let prevKills4 = state.stats?.kills || 0, prevRankTxt = '';
+setInterval(() => {
+  try {
+    const k = state.stats?.kills || 0;
+    if (k > prevKills4) {
+      for (let i = prevKills4; i < k; i++) if (Math.random() < 0.12) { grant({ iron: 1 }); popText('✨ レアドロップ 鉄+1'); tone(1318, 0, 0.15, 'sine', 0.05); }
+      prevKills4 = k;
+    }
+    const rt = $id('rank')?.textContent || '';
+    if (prevRankTxt && rt && rt !== prevRankTxt) { fanfare(); confettiLite(); popText('🎉 ' + rt); }
+    if (rt) prevRankTxt = rt;
+  } catch (_) {}
+}, 800);
+
+/* ---------- daily slot in the handbook ---------- */
+const REELS = ['🍒', '⭐', '💎', '🍋', '🔔', '🍇'];
+function slotAllowance() {
+  let n = 1;
+  try { if (window.ChiefShop?.owned?.('supporter')) n += 1; } catch (_) {}
+  return n;
+}
+function spinSlot(out) {
+  if (F4.slotDay !== state.day) { F4.slotDay = state.day; F4.slotUsed = 0; }
+  if (F4.slotUsed >= slotAllowance()) { out.textContent = '今日のスピンは終わり。差し入れ（300円）の所有者は毎日+1回まわせるよ'; return; }
+  F4.slotUsed++; persist();
+  let step = 0;
+  const iv = setInterval(() => {
+    out.textContent = REELS[Math.floor(Math.random() * 6)] + REELS[Math.floor(Math.random() * 6)] + REELS[Math.floor(Math.random() * 6)];
+    tone(500 + step * 40, 0, 0.05, 'square', 0.03);
+    if (++step > 11) {
+      clearInterval(iv);
+      const r = [REELS[Math.floor(Math.random() * 6)], REELS[Math.floor(Math.random() * 6)], REELS[Math.floor(Math.random() * 6)]];
+      const lucky = Math.random() < 0.30;
+      if (lucky) r[1] = r[0];
+      if (Math.random() < 0.10) r[2] = r[0];
+      out.textContent = r.join('');
+      if (r[0] === r[1] && r[1] === r[2]) {
+        if (r[0] === '💎') { grant({ renown: 5, iron: 3 }); out.textContent += ' 大当たり！名声+5・鉄+3'; }
+        else if (r[0] === '⭐') { grant({ wood: 30, stone: 30, food: 30 }); out.textContent += ' 当たり！資源+30ずつ'; }
+        else { grant({ food: 40 }); out.textContent += ' 当たり！食料+40'; }
+        fanfare(); confettiLite();
+      } else if (r[0] === r[1] || r[1] === r[2] || r[0] === r[2]) {
+        grant({ food: 10 }); out.textContent += ' 2つ揃った！食料+10'; tone(880, 0, 0.12, 'sine', 0.05);
+      } else {
+        grant({ morale: 1 }); out.textContent += ' ハズレ…でも村が少し笑った（幸福+1）';
+      }
+    }
+  }, 70);
+}
+const mo4 = new MutationObserver(() => {
+  try {
+    const panel = $id('fp-panel');
+    if (!panel || panel.style.display === 'none' || panel.querySelector('#fp4-section')) return;
+    const def = stageDef();
+    const sec = document.createElement('div'); sec.id = 'fp4-section';
+    sec.innerHTML = '<h3>村長スロット（1日' + slotAllowance() + '回）</h3>' +
+      '<div class="fp4-reels" id="fp4-reels">🍒⭐💎</div>' +
+      '<button class="fp-act" id="fp4-spin">まわす（残り ' + Math.max(0, slotAllowance() - (F4.slotDay === state.day ? F4.slotUsed : 0)) + '回）</button>' +
+      '<span class="dim" id="fp4-out"></span>' +
+      '<h3>いまの土地（v4）</h3><div class="dim">' +
+      (def ? '第' + (def.index + 1) + '章「' + esc(def.name) + '」／季節：' + SEASON[def.index % 4] + '／天気：' + esc(def.weather || 'なし') + ' ― ステージごとに色・天気・装飾・世界の広さが変わる。敵は記号で見分けられる（🧟歩行 💨疾走 👹巨漢 🤢毒吐き 👑ボス）。来客は累計 ' + F4.visits + '組' : '読み込み中') +
+      '<br>BGMはSunoで制作中。届いたらここに再生スイッチが出るよ</div>';
+    panel.appendChild(sec);
+    sec.querySelector('#fp4-spin').onclick = () => spinSlot(sec.querySelector('#fp4-out'));
+  } catch (_) {}
+});
+mo4.observe(document.body, { childList: true, subtree: true });
+
+window.MayorFunPatch4 = { version: '4.0', stage: () => stageDef() };
+})();
+
+</script>
 </body>
 </html>

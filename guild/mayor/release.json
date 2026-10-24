@@ -1,7 +1,7 @@
 {
-  "game": "村長、世界まで行くんですか？",
-  "edition": "FUNPATCH3",
-  "saveNamespace": "guild-chief-world-v3",
-  "sha256": "c819a4637bd64387b2f2e7a4b48434abe4fd22467923c02a040d6ca7a1c75fbe",
-  "bytes": 753677
+ "edition": "FUNPATCH4",
+ "bytes": 772100,
+ "sha256": "9f9e5575b0a119a6cca84ed004d7984d64ba0c85b053a179ceadc1ee4346ff16",
+ "built": "2026-10-25",
+ "note": "v3: resident cap by houses, departure conditions + WIN bonus, build icons/juice, UI de-overlap. v4: stage palettes/seasons/weather particles, luxury decor, world grows per stage, enemy type sigils + earlier variety, gag visitors, daily slot (+supporter extra), rare drops"
 }
