@@ -1,0 +1,1461 @@
+/* ═════════════════════════════════════════════
+   presto の世界観（BE.PRESTO など）
+   社名の PRESTO（楽譜で「速く」）と、公式サイトの「Be Fast to Ring the Bell」「価値が埋もれる前に、世の中へ響かせる。」
+   → 鐘を鳴らす、響く。最新のテンプレート（ZETTAICHI・Presence・DPパートナーズ）と同じ骨組みで、
+   ヒーロー（トップのステージ・下層ページ）とヘッダーはロゴの黒の夜、本文の面は白。
+   ・色：ロゴの黒 #0B0E0F と BP の青 #1A91C9、夜の上では明るい青 #4FB8EC
+   ・書体：見出しは Zen Kaku Gothic New 900、欧文・数字・ラベルは公式サイトと同じ Oswald
+   ・見出しの文字は右から速く走り込み、鐘が鳴るたびに光の輪が見出しを通る
+   ・WebGL は「響く」（client/ring.ts）：方眼の点の上で鐘が鳴り、音の輪が点を青く光らせる
+   2026-10-22：誌面『PRESTO』（雑誌の形）はやめた（オーナーの指示「いつものテンプレートで。常に最新に」）
+   ═════════════════════════════════════════════ */
+[data-theme='presto'] {
+  --night: #07090a;
+  --night-2: #0b0e0f;
+  --night-3: #101619;
+  --ink: #0b0e0f;
+  --ink-2: #353c40;
+  --ink-3: #6b747a;
+  --blue: #1a91c9;
+  --blue-hi: #4fb8ec;
+  --blue-deep: #11699a;
+  --blue-pale: #e9f5fb;
+  --paper-2: #f3f6f8;
+  --rule: rgba(11, 14, 15, 0.1);
+  --rule-2: rgba(11, 14, 15, 0.22);
+  --f-serif: 'Zen Kaku Gothic New', 'Hiragino Sans', 'Yu Gothic', system-ui, sans-serif;
+  --f-latin: 'Oswald Variable', 'Oswald', 'Zen Kaku Gothic New', system-ui, sans-serif;
+  /* 方眼の点（WebGL がないところでも、同じ点の並びを CSS で敷く） */
+  --dots: radial-gradient(circle, rgba(26, 145, 201, 0.28) 0 1px, transparent 1.6px);
+  --dots-w: radial-gradient(circle, rgba(79, 184, 236, 0.22) 0 1px, transparent 1.6px);
+  --dots-size: 13px 13px;
+  --lift: 0 22px 44px -24px rgba(11, 14, 15, 0.45);
+}
+[data-theme='presto'] ::selection {
+  background: var(--blue);
+  color: #fff;
+}
+[data-theme='presto'] :focus-visible {
+  outline-color: var(--blue);
+}
+
+/* ── 書体：見出しは極太のゴシック、欧文は細長い Oswald ── */
+[data-theme='presto'] h1,
+[data-theme='presto'] h2,
+[data-theme='presto'] h3,
+[data-theme='presto'] .sec-h,
+[data-theme='presto'] .quote-p,
+[data-theme='presto'] .cover-h,
+[data-theme='presto'] .statement-p,
+[data-theme='presto'] .sol-a,
+[data-theme='presto'] .flow-stage,
+[data-theme='presto'] .a-end-h,
+[data-theme='presto'] .done-h,
+[data-theme='presto'] .form-block-t,
+[data-theme='presto'] .answer-q,
+[data-theme='presto'] .next-t,
+[data-theme='presto'] .a-keys-h,
+[data-theme='presto'] .leader-name,
+[data-theme='presto'] .mission-h,
+[data-theme='presto'] .mission-p,
+[data-theme='presto'] .fd-name {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+[data-theme='presto'] .kicker,
+[data-theme='presto'] .verb-en,
+[data-theme='presto'] .verb-no,
+[data-theme='presto'] .stat-num,
+[data-theme='presto'] .issue-no,
+[data-theme='presto'] .story-no,
+[data-theme='presto'] .hl-no,
+[data-theme='presto'] .stance-no,
+[data-theme='presto'] .feat-meta,
+[data-theme='presto'] .flow-en,
+[data-theme='presto'] .sol-no,
+[data-theme='presto'] .nav-en,
+[data-theme='presto'] .nav-no,
+[data-theme='presto'] .m-en,
+[data-theme='presto'] .m-no,
+[data-theme='presto'] .mq-item,
+[data-theme='presto'] .menu-label,
+[data-theme='presto'] .scroll-cue,
+[data-theme='presto'] .stage-step,
+[data-theme='presto'] .toc-t,
+[data-theme='presto'] .a-h2-no,
+[data-theme='presto'] .q-no,
+[data-theme='presto'] .step-no,
+[data-theme='presto'] .next-k,
+[data-theme='presto'] .answer-k,
+[data-theme='presto'] .lt-y,
+[data-theme='presto'] .fdt-y,
+[data-theme='presto'] .hero-deck,
+[data-theme='presto'] .ticker-k,
+[data-theme='presto'] .cover-meta,
+[data-theme='presto'] .cursor-label {
+  font-family: var(--f-latin);
+  font-style: normal;
+  font-variation-settings: normal;
+}
+[data-theme='presto'] .kicker {
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+/* 見出しの上の印は、鳴っている鐘：青い点から輪が広がる */
+[data-theme='presto'] .kicker-rule,
+html.js [data-theme='presto'] .rv .kicker-rule,
+html.js [data-theme='presto'] .kicker .kicker-rule {
+  position: relative;
+  flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--blue);
+  transform-origin: 50% 50%;
+}
+[data-theme='presto'] .kicker-rule::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1.5px solid var(--blue);
+  animation: ps-bell 2.5s cubic-bezier(0.2, 0.7, 0.3, 1) infinite;
+}
+@keyframes ps-bell {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70%,
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+[data-theme='presto'] .kicker-co {
+  font-family: var(--f-latin);
+  letter-spacing: 0.18em;
+  color: var(--ink-3);
+}
+[data-theme='presto'] .kicker-light {
+  color: var(--blue-hi);
+}
+/* 見出しの2行目は、BP の青 */
+[data-theme='presto'] .sec-h .ln + .ln,
+[data-theme='presto'] .hl-h .ln + .ln {
+  color: var(--blue);
+}
+[data-theme='presto'] .sec-h-light .ln + .ln,
+[data-theme='presto'] .sec-ink .sec-h .ln + .ln {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .sec-h {
+  letter-spacing: 0.01em;
+}
+
+/* ── ボタン：公式サイトと同じ角ばったボタン。押すと青い輪が鳴る ── */
+[data-theme='presto'] .btn {
+  position: relative;
+  border-radius: 2px;
+  border: 0;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  transition:
+    transform 0.25s var(--ease),
+    box-shadow 0.25s var(--ease),
+    background-color 0.25s var(--ease),
+    color 0.25s var(--ease);
+}
+[data-theme='presto'] .btn:hover {
+  transform: translate3d(var(--mx, 0px), calc(var(--my, 0px) - 2px), 0);
+}
+[data-theme='presto'] .btn-cta,
+[data-theme='presto'] .btn-cta:hover,
+[data-theme='presto'] .btn-ink,
+[data-theme='presto'] .btn-ink:hover {
+  background: var(--blue);
+  color: #fff;
+  box-shadow: 0 14px 30px -14px rgba(26, 145, 201, 0.8);
+}
+[data-theme='presto'] .btn-cta:hover,
+[data-theme='presto'] .btn-ink:hover {
+  background: #1d9fdc;
+  box-shadow:
+    0 0 0 4px rgba(79, 184, 236, 0.25),
+    0 18px 34px -14px rgba(26, 145, 201, 0.9);
+}
+[data-theme='presto'] .btn-line,
+[data-theme='presto'] .btn-line:hover {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1.5px var(--ink);
+}
+[data-theme='presto'] .btn-line:hover {
+  background: var(--ink);
+  color: #fff;
+}
+[data-theme='presto'] .btn-line::after {
+  display: none;
+}
+[data-theme='presto'] .btn-paper,
+[data-theme='presto'] .btn-paper:hover {
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 14px 30px -16px rgba(0, 0, 0, 0.6);
+}
+[data-theme='presto'] .btn-paper:hover {
+  background: var(--blue-hi);
+  color: var(--night);
+}
+[data-theme='presto'] .hdr-cta {
+  min-height: 42px;
+}
+[data-theme='presto'] .link-arrow {
+  border-bottom: 2px solid var(--blue);
+  color: var(--ink);
+}
+[data-theme='presto'] .sec-ink .link-arrow {
+  color: #fff;
+  border-bottom-color: var(--blue-hi);
+}
+
+/* ═════ ヘッダー：いつもロゴの黒の夜。夜のヒーローの上では透明に、白抜きのロゴ ═════ */
+[data-theme='presto'] .hdr,
+[data-theme='presto'] .hdr.is-scrolled {
+  background: color-mix(in srgb, var(--night) 90%, transparent);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+html:not(.menu-open) [data-theme='presto']:is([data-page='top'], [data-page='about'], [data-page='service'], [data-page='contact']) .hdr:not(.is-scrolled) {
+  background: transparent;
+  border-bottom-color: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+[data-theme='presto'] .hdr .brand-logo {
+  height: 40px;
+}
+[data-theme='presto'] .hdr .brand-logo:has(+ .brand-logo-dark) {
+  display: none;
+}
+[data-theme='presto'] .hdr .brand-logo-dark {
+  display: block;
+}
+[data-theme='presto'] .hdr .brand-sep {
+  background: rgba(255, 255, 255, 0.25);
+}
+[data-theme='presto'] .hdr .nav-en {
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.86rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+[data-theme='presto'] .hdr .nav-no {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .hdr .nav-ja {
+  color: rgba(255, 255, 255, 0.55);
+}
+[data-theme='presto'] .hdr .nav a::after {
+  background: var(--blue-hi);
+}
+[data-theme='presto'] .hdr .nav a[aria-current='page'] .nav-en {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .hdr .menu-lines i {
+  background: #fff;
+}
+[data-theme='presto'] .hdr .menu-label {
+  color: #fff;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+@media (max-width: 959px) {
+  [data-theme='presto'] .hdr .brand-logo {
+    height: 32px;
+  }
+}
+
+/* ═════ ヒーロー：夜の黒に、鳴っている鐘 ═════ */
+[data-theme='presto'] .stage {
+  background:
+    radial-gradient(ellipse 44% 58% at 72% 50%, rgba(26, 145, 201, 0.2), transparent 70%),
+    radial-gradient(ellipse 90% 50% at 50% 118%, rgba(26, 145, 201, 0.18), transparent 70%),
+    linear-gradient(180deg, #040506 0%, var(--night) 40%, var(--night-3) 100%);
+  color: #fff;
+}
+/* うしろの方眼の点（WebGL の点と同じ間隔）。見出しの側では消す */
+[data-theme='presto'] .stage-sticky::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--dots-w) 0 0 / var(--dots-size);
+  opacity: 0.35;
+  -webkit-mask-image: radial-gradient(ellipse 60% 80% at 72% 50%, #000, transparent 80%);
+  mask-image: radial-gradient(ellipse 60% 80% at 72% 50%, #000, transparent 80%);
+  pointer-events: none;
+}
+/* 速さの線：右から左へ、ときどき細い光が走る（PRESTO＝速く） */
+[data-theme='presto'] .stage-sticky::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, transparent, rgba(79, 184, 236, 0.75), transparent) 0 31% / 22% 1px no-repeat,
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent) 0 64% / 14% 1px no-repeat,
+    linear-gradient(90deg, transparent, rgba(79, 184, 236, 0.5), transparent) 0 82% / 30% 1px no-repeat;
+  animation: ps-streak 6.5s cubic-bezier(0.6, 0, 0.2, 1) 1.4s infinite;
+  opacity: 0;
+}
+@keyframes ps-streak {
+  0% {
+    opacity: 0;
+    background-position:
+      130% 31%,
+      140% 64%,
+      150% 82%;
+  }
+  4% {
+    opacity: 1;
+  }
+  22% {
+    opacity: 1;
+    background-position:
+      -40% 31%,
+      -30% 64%,
+      -60% 82%;
+  }
+  23%,
+  100% {
+    opacity: 0;
+    background-position:
+      -40% 31%,
+      -30% 64%,
+      -60% 82%;
+  }
+}
+[data-theme='presto'] .stage-shade {
+  background: linear-gradient(90deg, rgba(4, 5, 6, 0.9) 0%, rgba(7, 9, 10, 0.6) 34%, transparent 62%);
+}
+[data-theme='presto'] .stage-ui {
+  z-index: 1;
+}
+[data-theme='presto'] .scene {
+  cursor: crosshair;
+}
+/* ヘッダーの文字と重ならないよう、上の端では点を消す */
+[data-theme='presto'] .stage .scene,
+[data-theme='presto'] .phero .scene {
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 calc(var(--hdr) + 90px));
+  mask-image: linear-gradient(180deg, transparent 0, #000 calc(var(--hdr) + 90px));
+}
+/* 右上の小さな英字 */
+[data-theme='presto'] .hero-deck {
+  position: absolute;
+  top: calc(var(--hdr) + 26px);
+  right: var(--gutter);
+  z-index: 2;
+  display: grid;
+  justify-items: end;
+  gap: 4px;
+  font-size: 0.74rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+}
+[data-theme='presto'] .hero-deck span:first-child {
+  color: #fff;
+}
+[data-theme='presto'] .hero-deck span:first-child::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background: var(--blue-hi);
+  box-shadow: 0 0 0 0 rgba(79, 184, 236, 0.7);
+  vertical-align: 0.1em;
+  animation: ps-ping 2.5s ease-out infinite;
+}
+@keyframes ps-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 184, 236, 0.7);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 12px rgba(79, 184, 236, 0);
+  }
+}
+html:not(.js-stage) [data-theme='presto'] .hero-deck {
+  position: static;
+  justify-items: start;
+  margin-bottom: 12px;
+}
+@media (max-width: 767px) {
+  [data-theme='presto'] .hero-deck {
+    display: none;
+  }
+}
+
+/* ── 見出し：画面いっぱい。白に、2行目は明るい青 ── */
+@media (min-width: 960px) {
+  html.js-stage [data-theme='presto'] .hero,
+  [data-theme='presto'] .hero {
+    max-width: min(1260px, 82vw);
+  }
+}
+[data-theme='presto'] .stage .kicker {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .stage .kicker-rule,
+[data-theme='presto'] .phero .kicker-rule {
+  background: var(--blue-hi);
+}
+[data-theme='presto'] .stage .kicker-rule::after,
+[data-theme='presto'] .phero .kicker-rule::after {
+  border-color: var(--blue-hi);
+}
+[data-theme='presto'] .stage .kicker-co {
+  color: rgba(255, 255, 255, 0.5);
+}
+[data-theme='presto'] .hero-h {
+  margin-top: 20px;
+  font-size: min(clamp(2.3rem, 0.5rem + 6.6vw, 8.6rem), 12.5svh);
+  line-height: 1.22;
+  letter-spacing: 0;
+  color: #fff;
+  text-shadow: 0 0.3em 0.9em rgba(0, 0, 0, 0.45);
+}
+[data-theme='presto'] .hero-h .ln + .ln {
+  color: var(--blue-hi);
+}
+/* 文字は右から速く走り込む（ぶれた残像から、止まる）。そのあと7.5秒ごとに、鐘の光が左から右へ通る */
+html.js [data-theme='presto'] .hero-h.split .ch,
+html.js [data-theme='presto'] .phero-h.split .ch {
+  opacity: 0;
+  transform: translate3d(1.6em, 0, 0) skewX(-22deg);
+  filter: blur(8px);
+  animation:
+    ps-dash 0.62s cubic-bezier(0.12, 0.9, 0.2, 1) forwards,
+    ps-ring 7.5s ease-in-out infinite;
+  animation-delay:
+    calc(var(--c) * 34ms + 180ms),
+    calc(var(--c) * 42ms + 3.2s);
+}
+html.js [data-theme='presto'] .phero-h.split .ch {
+  animation:
+    ps-dash 0.62s cubic-bezier(0.12, 0.9, 0.2, 1) forwards,
+    none;
+  animation-delay: calc(var(--c) * 28ms + 120ms);
+}
+@keyframes ps-dash {
+  55% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+@keyframes ps-ring {
+  0%,
+  7%,
+  100% {
+    text-shadow: 0 0.3em 0.9em rgba(0, 0, 0, 0.45);
+    transform: none;
+  }
+  3% {
+    text-shadow:
+      0 0 0.12em #fff,
+      0 0 0.45em rgba(79, 184, 236, 0.95),
+      0 0 1.1em rgba(26, 145, 201, 0.6);
+    transform: translate3d(0, -0.04em, 0);
+  }
+}
+[data-theme='presto'] .stage .hero-lead {
+  max-width: 36em;
+  margin-top: 24px;
+  color: rgba(255, 255, 255, 0.8);
+}
+/* 入れ替わる札：採用SNSで届くもの */
+[data-theme='presto'] .ticker {
+  margin-top: 22px;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+}
+[data-theme='presto'] .ticker-k {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.7);
+}
+[data-theme='presto'] .ticker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--blue-hi);
+  box-shadow: none;
+  animation: ps-ping 2.5s ease-out infinite;
+}
+[data-theme='presto'] .ticker-b {
+  padding: 9px 18px 10px 16px;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow:
+    inset 3px 0 0 var(--blue-hi),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+[data-theme='presto'] .badges li {
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 2px;
+  background: transparent;
+  color: #fff;
+  font-weight: 700;
+  padding: 6px 14px 6px 12px;
+}
+[data-theme='presto'] .badges li::before {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue-hi);
+  box-shadow: none;
+  animation: none;
+}
+[data-theme='presto'] .hero-actions {
+  margin-top: 34px;
+}
+[data-theme='presto'] .stage .btn-line,
+[data-theme='presto'] .stage .btn-line:hover {
+  color: #fff;
+  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.85);
+}
+[data-theme='presto'] .stage .btn-line:hover {
+  background: #fff;
+  color: var(--night);
+}
+@media (min-width: 960px) and (max-height: 960px) {
+  html.js-stage [data-theme='presto'] .hero .badges {
+    display: none;
+  }
+}
+@media (min-width: 960px) and (max-height: 820px) {
+  [data-theme='presto'] .ticker {
+    margin-top: 14px;
+  }
+  [data-theme='presto'] .hero-actions {
+    margin-top: 24px;
+  }
+}
+/* 動きを減らす設定・JSなし：ステージは縦に並ぶので、シーンは1画面目の高さに収める */
+html:not(.js-stage) [data-theme='presto'] .stage .scene {
+  bottom: auto;
+  height: 100svh;
+}
+
+/* 3つの動詞：Show / Train / Match を、細長い Oswald の大きな英字で */
+[data-theme='presto'] .verb-no {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .verb-no::after {
+  height: 1px;
+  background: var(--blue-hi);
+}
+[data-theme='presto'] .verb-ja {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.75);
+}
+[data-theme='presto'] .verb-en {
+  font-weight: 600;
+  font-size: clamp(4rem, 2rem + 9vw, 11rem);
+  line-height: 0.92;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0.035em 0.035em 0 var(--blue);
+  margin: 12px 0 20px;
+}
+[data-theme='presto'] .verb-h {
+  font-size: clamp(1.35rem, 1rem + 1.2vw, 2.1rem);
+  color: #fff;
+}
+[data-theme='presto'] .verb-p {
+  color: rgba(255, 255, 255, 0.8);
+}
+[data-theme='presto'] .stage-foot {
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: rgba(255, 255, 255, 0.65);
+}
+[data-theme='presto'] .stage-progress {
+  height: 2px;
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+}
+[data-theme='presto'] .stage-progress i {
+  background: linear-gradient(90deg, var(--blue), var(--blue-hi));
+}
+[data-theme='presto'] .scroll-cue i {
+  width: 1px;
+  background: var(--blue-hi);
+}
+
+/* スマホのヒーロー：鐘は見出しの上の空いたところで鳴り、見出しの側（下）は夜を濃く */
+@media (max-width: 959px) {
+  [data-theme='presto'] .stage-shade {
+    background: linear-gradient(180deg, transparent 0%, rgba(7, 9, 10, 0.2) 26%, rgba(7, 9, 10, 0.78) 46%, rgba(7, 9, 10, 0.94) 62%, var(--night) 100%);
+  }
+  html.js-stage [data-theme='presto'] .hero-lead {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 4;
+    overflow: hidden;
+    margin-top: 18px;
+    font-size: 0.9rem;
+    line-height: 1.85;
+  }
+  html.js-stage [data-theme='presto'] .hero .badges,
+  html.js-stage [data-theme='presto'] .hero .ticker {
+    display: none;
+  }
+  html.js-stage [data-theme='presto'] .hero-actions {
+    margin-top: 24px;
+  }
+  html:not(.js-stage) [data-theme='presto'] .stage .scene {
+    height: 44svh;
+  }
+  html:not(.js-stage) [data-theme='presto'] .stage .stage-ui {
+    padding-top: calc(var(--hdr) + 40svh);
+  }
+}
+@media (max-width: 599px) {
+  /* 1行目「価値が埋もれる前に、」（10字）が1行に収まるいちばん大きな文字 */
+  [data-theme='presto'] .hero-h {
+    font-size: min(8.6vw, 3.2rem);
+    line-height: 1.32;
+  }
+  html.js-stage [data-theme='presto'] .hero .kicker-co {
+    display: none;
+  }
+  [data-theme='presto'] .verb-en {
+    font-size: clamp(3.4rem, 1rem + 15vw, 5.4rem);
+  }
+}
+
+/* ═════ 一言の答え ═════ */
+[data-theme='presto'] .answer-in {
+  border: 0;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow:
+    inset 4px 0 0 var(--blue),
+    0 0 0 1px var(--rule),
+    var(--lift);
+}
+[data-theme='presto'] .answer-k {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0;
+  box-shadow: 0 0 0 4px var(--blue-pale);
+}
+
+/* ═════ 流れる帯：夜の帯に、細長い白い英字。区切りは青い点 ═════ */
+[data-theme='presto'] .mq {
+  background: var(--night);
+  color: #fff;
+  border-color: transparent;
+}
+[data-theme='presto'] .mq-item {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+}
+[data-theme='presto'] .mq-item:nth-child(4n + 1) {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255, 255, 255, 0.75);
+}
+[data-theme='presto'] .mq-item:nth-child(4n + 3) {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .mq-sep {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .mq-md {
+  background: var(--paper-2);
+  color: var(--ink);
+}
+[data-theme='presto'] .mq-md .mq-item,
+[data-theme='presto'] .mq-md .mq-item:nth-child(n) {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  text-transform: none;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  -webkit-text-stroke: 0;
+}
+[data-theme='presto'] .mq-md .mq-sep {
+  color: var(--blue);
+}
+
+/* ═════ 課題：白いカード。上に青い線、右上に小さな音の輪 ═════ */
+[data-theme='presto'] .issues {
+  gap: 14px;
+  border-top: 0;
+}
+[data-theme='presto'] .issue,
+[data-theme='presto'] .issue + .issue {
+  position: relative;
+  padding: 26px 24px 28px;
+  border: 0;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--rule);
+  transition:
+    transform 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+}
+[data-theme='presto'] .issue::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 44px;
+  height: 3px;
+  background: var(--blue);
+  transition: width 0.45s var(--ease);
+}
+[data-theme='presto'] .issue::after {
+  content: '';
+  position: absolute;
+  right: 20px;
+  top: 22px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--blue) 0 3px, transparent 3.5px),
+    radial-gradient(circle, transparent 0 7px, rgba(26, 145, 201, 0.4) 7.5px 8.5px, transparent 9px),
+    radial-gradient(circle, transparent 0 11.5px, rgba(26, 145, 201, 0.2) 12px 13px, transparent 13.5px);
+}
+[data-theme='presto'] .issue:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px rgba(26, 145, 201, 0.5),
+    var(--lift);
+}
+[data-theme='presto'] .issue:hover::before {
+  width: 100%;
+}
+[data-theme='presto'] .issue-no {
+  font-size: 2.6rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+[data-theme='presto'] .issue-h {
+  font-size: clamp(1.1rem, 0.95rem + 0.5vw, 1.35rem);
+  line-height: 1.5;
+}
+[data-theme='presto'] .issue-p {
+  color: var(--ink-2);
+}
+
+/* ═════ 看板（AI研修の3部）：夜の黒に、鐘の輪 ═════ */
+[data-theme='presto'] .sec-highlight {
+  background:
+    radial-gradient(ellipse 50% 70% at 82% 50%, rgba(26, 145, 201, 0.2), transparent 72%),
+    var(--night);
+  color: #fff;
+}
+[data-theme='presto'] .sec-highlight .kicker {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .hl-h {
+  color: #fff;
+}
+[data-theme='presto'] .hl-h .ln + .ln {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .hl-lead {
+  color: rgba(255, 255, 255, 0.8);
+}
+[data-theme='presto'] .hl-steps {
+  gap: 14px;
+  border-top: 0;
+  background: none;
+}
+[data-theme='presto'] .hl-step,
+[data-theme='presto'] .hl-step:first-child,
+[data-theme='presto'] .hl-step + .hl-step {
+  padding: 24px 24px 28px;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 var(--blue-hi),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+[data-theme='presto'] .hl-no {
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .hl-step-h {
+  color: #fff;
+}
+[data-theme='presto'] .hl-step-p {
+  color: rgba(255, 255, 255, 0.76);
+}
+[data-theme='presto'] .sec-highlight .fine {
+  color: rgba(255, 255, 255, 0.55);
+}
+@media (max-width: 767px) {
+  [data-theme='presto'] .sec-highlight .scene-hl {
+    opacity: 0.55;
+  }
+}
+
+/* ═════ 数字：白地に方眼の点、細長い大きな数字 ═════ */
+[data-theme='presto'] .sec-numbers {
+  background:
+    var(--dots) 0 0 / var(--dots-size),
+    #fff;
+}
+[data-theme='presto'] .sec-numbers::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.86) 45%, rgba(255, 255, 255, 0.78));
+  pointer-events: none;
+}
+[data-theme='presto'] .sec-numbers > .wrap {
+  position: relative;
+}
+[data-theme='presto'] .stats {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 2px solid var(--ink);
+}
+[data-theme='presto'] .stat-v {
+  white-space: nowrap;
+}
+[data-theme='presto'] .stat-num {
+  font-weight: 600;
+  font-size: clamp(3.4rem, 1.6rem + 4.6vw, 7rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+[data-theme='presto'] .stat-unit {
+  font-weight: 900;
+  color: var(--blue);
+}
+[data-theme='presto'] .stat-label {
+  font-weight: 700;
+  color: var(--ink-2);
+}
+@media (max-width: 1099px) {
+  [data-theme='presto'] .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  [data-theme='presto'] .stat:nth-child(3) {
+    border-left: 0;
+    padding-left: 0;
+  }
+  [data-theme='presto'] .stat:nth-child(n + 3) {
+    border-top: 1px solid var(--rule);
+  }
+}
+@media (max-width: 767px) {
+  [data-theme='presto'] .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ═════ 代表：写真はそのまま。青い枠をずらして重ね、歩みは青い点の線 ═════ */
+[data-theme='presto'] .sec-founder {
+  background:
+    radial-gradient(ellipse 40% 60% at 18% 40%, var(--blue-pale), transparent 72%),
+    #fff;
+}
+[data-theme='presto'] .fd-photo {
+  position: relative;
+}
+[data-theme='presto'] .fd-photo img {
+  border-radius: 2px;
+  filter: none;
+  box-shadow:
+    16px 16px 0 -1px #fff,
+    16px 16px 0 1px var(--blue),
+    var(--lift);
+}
+[data-theme='presto'] .fd-marks {
+  display: none;
+}
+[data-theme='presto'] .fd-photo figcaption {
+  font-weight: 900;
+  color: var(--ink);
+}
+[data-theme='presto'] .fd-photo figcaption span {
+  font-family: var(--f-latin);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--blue);
+}
+[data-theme='presto'] .fd-name {
+  color: var(--ink);
+}
+[data-theme='presto'] .fd-name span {
+  font-family: var(--f-latin);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--blue);
+}
+[data-theme='presto'] .fd-text {
+  color: var(--ink-2);
+}
+[data-theme='presto'] .fd-quote {
+  border-left: 3px solid var(--blue);
+  background: var(--paper-2);
+  padding: 18px 22px;
+}
+[data-theme='presto'] .fd-quote p {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  color: var(--ink);
+}
+[data-theme='presto'] .fd-quote cite {
+  color: var(--ink-3);
+}
+[data-theme='presto'] .fd-tl {
+  border-top: 2px solid var(--ink);
+}
+[data-theme='presto'] .fd-tl li::before {
+  background: var(--blue);
+  box-shadow: 0 0 0 4px var(--blue-pale);
+}
+[data-theme='presto'] .fdt-y {
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: var(--blue);
+}
+
+/* ═════ 取り組みへの導線：大きな引用符 ═════ */
+[data-theme='presto'] .sec-quote {
+  background: var(--paper-2);
+}
+[data-theme='presto'] .quote {
+  border-left: 0;
+  padding-left: 0;
+}
+[data-theme='presto'] .quote::before {
+  content: '“';
+  display: block;
+  font-family: var(--f-latin);
+  font-weight: 600;
+  font-size: 6rem;
+  line-height: 0.6;
+  height: 0.5em;
+  color: var(--blue);
+}
+[data-theme='presto'] .quote-p {
+  font-size: clamp(1.9rem, 1rem + 3.6vw, 4.4rem);
+  line-height: 1.32;
+  color: var(--ink);
+}
+[data-theme='presto'] .quote-p .ln + .ln {
+  color: var(--blue);
+}
+[data-theme='presto'] .quote-leader img {
+  border-radius: 50%;
+  filter: none;
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px var(--blue);
+}
+
+/* ═════ サービス（夜のセクション）：方眼の点と、明るい青の欧文 ═════ */
+[data-theme='presto'] .sec-ink {
+  background:
+    var(--dots-w) 0 0 / var(--dots-size),
+    radial-gradient(ellipse 60% 70% at 90% 10%, rgba(26, 145, 201, 0.28), transparent 70%),
+    var(--night-2);
+  color: #fff;
+}
+[data-theme='presto'] .logo-plate {
+  display: inline-block;
+  padding: 12px 18px;
+  border-radius: 2px;
+  background: #fff;
+  width: max-content;
+}
+[data-theme='presto'] .logo-plate img {
+  height: 52px;
+  width: auto;
+}
+[data-theme='presto'] .svc-lead {
+  color: rgba(255, 255, 255, 0.8);
+}
+[data-theme='presto'] .sec-ink .feats {
+  border-top: 0;
+  gap: 14px;
+}
+[data-theme='presto'] .sec-ink .feat,
+[data-theme='presto'] .sec-ink .feat:not(:nth-child(3n + 1)),
+[data-theme='presto'] .sec-ink .feat:nth-child(2n) {
+  padding: 22px 22px 26px;
+  border: 0;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.13);
+  transition:
+    background-color 0.3s var(--ease),
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+[data-theme='presto'] .sec-ink .feat:hover {
+  background: rgba(26, 145, 201, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(79, 184, 236, 0.55);
+  transform: translateY(-4px);
+}
+[data-theme='presto'] .feat-meta {
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--blue-hi);
+  text-transform: uppercase;
+}
+[data-theme='presto'] .feat-p {
+  color: rgba(255, 255, 255, 0.74);
+}
+[data-theme='presto'] .feats-light .feat-meta {
+  color: var(--blue);
+}
+[data-theme='presto'] .feats-light .feat-p {
+  color: var(--ink-2);
+}
+
+/* ═════ 記事カード・次に読む ═════ */
+[data-theme='presto'] .cover {
+  border: 0;
+  border-radius: 2px;
+  background:
+    var(--dots) 100% 0 / var(--dots-size),
+    #fff;
+  box-shadow:
+    0 0 0 1px var(--rule-2),
+    14px 14px 0 var(--blue-pale);
+  transition:
+    transform 0.35s var(--ease),
+    box-shadow 0.35s var(--ease);
+}
+[data-theme='presto'] .cover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px var(--blue),
+    14px 14px 0 rgba(26, 145, 201, 0.25);
+}
+[data-theme='presto'] .cover::before {
+  background: var(--blue);
+}
+[data-theme='presto'] .cover-meta {
+  letter-spacing: 0.12em;
+}
+[data-theme='presto'] .cover-meta span:first-child {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 2px;
+  padding: 2px 10px;
+}
+[data-theme='presto'] .next-card {
+  border: 0;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px var(--rule-2);
+  transition:
+    transform 0.3s var(--ease),
+    box-shadow 0.3s var(--ease);
+}
+[data-theme='presto'] .next-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 0 0 1px var(--blue),
+    var(--lift);
+}
+[data-theme='presto'] .next-k {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--blue);
+}
+
+/* ═════ CTA帯：夜の黒で、鐘が静かに鳴り続ける ═════ */
+[data-theme='presto'] .cta-band {
+  border-top: 0;
+  background:
+    radial-gradient(ellipse 46% 80% at 84% 50%, rgba(26, 145, 201, 0.26), transparent 70%),
+    var(--night);
+  color: #fff;
+}
+[data-theme='presto'] .cta-band::before {
+  height: 2px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(90deg, transparent, var(--blue-hi) 30%, var(--blue) 70%, transparent);
+}
+[data-theme='presto'] .cta-band-h {
+  color: #fff;
+}
+[data-theme='presto'] .cta-band-h .ln + .ln {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .cta-band-p,
+[data-theme='presto'] .cta-band .kicker-light {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* ═════ 下層ページのヒーロー：同じ夜の黒と、右寄りの鐘 ═════ */
+[data-theme='presto'] .phero {
+  background:
+    radial-gradient(ellipse 42% 70% at 82% 46%, rgba(26, 145, 201, 0.22), transparent 72%),
+    linear-gradient(180deg, #040506 0%, var(--night) 46%, var(--night-3) 100%);
+  color: #fff;
+}
+[data-theme='presto'] .phero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--dots-w) 0 0 / var(--dots-size);
+  opacity: 0.3;
+  -webkit-mask-image: radial-gradient(ellipse 45% 75% at 82% 46%, #000, transparent 78%);
+  mask-image: radial-gradient(ellipse 45% 75% at 82% 46%, #000, transparent 78%);
+  pointer-events: none;
+}
+[data-theme='presto'] .phero-in {
+  z-index: 1;
+}
+[data-theme='presto'] .scene-sub {
+  left: 40%;
+}
+[data-theme='presto'] .phero .kicker {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .phero-h {
+  font-size: min(clamp(2.1rem, 0.8rem + 4.4vw, 5.8rem), 10svh);
+  line-height: 1.26;
+  color: #fff;
+}
+[data-theme='presto'] .phero-h .ln + .ln {
+  color: var(--blue-hi);
+}
+[data-theme='presto'] .phero-lead {
+  color: rgba(255, 255, 255, 0.82);
+}
+[data-theme='presto'] .phero .crumb,
+[data-theme='presto'] .phero .crumb a {
+  color: rgba(255, 255, 255, 0.68);
+}
+[data-theme='presto'] .phero .crumb li + li::before {
+  color: rgba(255, 255, 255, 0.38);
+}
+/* サービスのロゴ（黒と青）は、白い板に載せて */
+[data-theme='presto'] .phero-logo img {
+  box-sizing: content-box;
+  height: 56px;
+  width: auto;
+  padding: 10px 14px;
+  border-radius: 2px;
+  background: #fff;
+}
+@media (min-width: 960px) {
+  [data-theme='presto'] .phero-in > * {
+    max-width: min(900px, 54vw);
+  }
+}
+@media (max-width: 959px) {
+  [data-theme='presto'] .phero .scene-sub {
+    left: 20%;
+    opacity: 0.55;
+  }
+}
+@media (max-width: 599px) {
+  [data-theme='presto'] .phero-h {
+    font-size: clamp(1.9rem, 0.6rem + 6.4vw, 2.8rem);
+  }
+  [data-theme='presto'] .phero-logo img {
+    height: 40px;
+  }
+}
+
+/* ═════ 取り組み ═════ */
+[data-theme='presto'] .statement-p {
+  color: var(--ink);
+}
+[data-theme='presto'] .statement-p::before {
+  background: var(--blue);
+}
+[data-theme='presto'] .story {
+  border-top: 2px solid var(--ink);
+}
+[data-theme='presto'] .story-no {
+  font-weight: 600;
+  font-size: 2.8rem;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--blue);
+}
+[data-theme='presto'] .stance {
+  border-radius: 2px;
+  box-shadow: inset 0 3px 0 var(--blue);
+}
+[data-theme='presto'] .stance-no {
+  font-weight: 600;
+  color: var(--blue);
+}
+[data-theme='presto'] .leader-name {
+  color: var(--ink);
+}
+[data-theme='presto'] .leader-photo {
+  padding: 0;
+}
+[data-theme='presto'] .leader-photo img {
+  aspect-ratio: 4 / 5;
+  object-position: 50% 30%;
+  filter: none;
+  border-radius: 2px;
+  box-shadow:
+    14px 14px 0 -1px #fff,
+    14px 14px 0 1px var(--blue),
+    var(--lift);
+}
+[data-theme='presto'] .leader-frame {
+  display: none;
+}
+[data-theme='presto'] .leader-timeline li {
+  border-color: var(--rule-2);
+}
+[data-theme='presto'] .lt-y {
+  font-weight: 600;
+  color: var(--blue);
+}
+[data-theme='presto'] .leader-motto {
+  border: 0;
+  border-radius: 2px;
+  box-shadow: inset 3px 0 0 var(--blue), 0 0 0 1px var(--rule);
+  flex-wrap: wrap;
+}
+[data-theme='presto'] .leader-motto strong {
+  color: var(--blue);
+}
+/* 写真の下の短い年表。ほかの世界観の .leader-timeline（点と縦線つきのカード）は打ち消す */
+[data-theme='presto'] .leader-timeline-sub {
+  display: grid;
+  gap: 0;
+  width: 100%;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+  border: 0;
+  border-top: 2px solid var(--ink);
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+[data-theme='presto'] .leader-timeline-sub li {
+  display: grid;
+  grid-template-columns: 4.4em minmax(0, 1fr);
+  gap: 12px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  font-size: 0.9rem;
+}
+[data-theme='presto'] .leader-timeline-sub li::before {
+  content: none;
+}
+[data-theme='presto'] .leader-timeline-sub .lt-y {
+  font-size: 0.9rem;
+  line-height: 1.9;
+}
+@media (max-width: 767px) {
+  [data-theme='presto'] .leader-photo {
+    width: min(84%, 340px);
+    margin-inline: auto;
+    translate: -8px 0;
+  }
+}
+
+/* ═════ サービスページ ═════ */
+[data-theme='presto'] .sol {
+  border-radius: 2px;
+}
+[data-theme='presto'] .sol-no,
+[data-theme='presto'] .flow-en {
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--blue);
+}
+[data-theme='presto'] .flow-dot {
+  border-radius: 50%;
+  background: var(--blue);
+  box-shadow: 0 0 0 5px var(--blue-pale);
+}
+[data-theme='presto'] .faq-item {
+  border-color: var(--rule-2);
+}
+[data-theme='presto'] .faq-icon {
+  color: var(--blue);
+}
+
+/* ═════ 記事 ═════ */
+[data-theme='presto'] .a-h2-no {
+  font-weight: 500;
+  color: var(--blue);
+}
+[data-theme='presto'] .a-callout {
+  border-radius: 2px;
+  border-color: var(--blue);
+  background: var(--blue-pale);
+}
+[data-theme='presto'] .toc-side a.is-active {
+  color: var(--blue);
+}
+[data-theme='presto'] .a-num li::before {
+  font-family: var(--f-latin);
+  font-style: normal;
+  font-weight: 600;
+  color: var(--blue);
+}
+[data-theme='presto'] .a-person {
+  border: 0;
+  border-radius: 2px;
+  box-shadow:
+    inset 4px 0 0 var(--blue),
+    0 0 0 1px var(--rule-2);
+}
+[data-theme='presto'] .a-person-img {
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 5px var(--blue);
+}
+[data-theme='presto'] .a-person-k {
+  font-family: var(--f-latin);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--blue);
+}
+[data-theme='presto'] .a-person-name {
+  font-family: var(--f-serif);
+  font-weight: 900;
+  color: var(--ink);
+}
+[data-theme='presto'] .a-person-name a {
+  border-bottom: 2px solid var(--blue);
+}
+[data-theme='presto'] .a-person-en {
+  font-family: var(--f-latin);
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+}
+/* 記事のヒーローの点の輪は、右に寄せる */
+[data-theme='presto'] .scene-article {
+  left: 58%;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 26%);
+}
+@media (max-width: 959px) {
+  [data-theme='presto'] .scene-article {
+    left: 30%;
+    opacity: 0.35;
+  }
+}
+
+/* ═════ 話してみる ═════ */
+[data-theme='presto'] .step-no {
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--blue);
+}
+[data-theme='presto'] .q-no {
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--blue);
+}
+
+/* ═════ カーソルと進捗 ═════ */
+[data-theme='presto'] .progress i {
+  background: linear-gradient(90deg, var(--blue), var(--blue-hi));
+}
+[data-theme='presto'] .cursor-dot {
+  background: var(--blue);
+}
+[data-theme='presto'] .cursor-ring {
+  border-color: color-mix(in srgb, var(--blue) 45%, transparent);
+}
+
+/* WebGLが使えないときの静的な代替：方眼の点と、鐘のまわりの輪 */
+[data-theme='presto'] .scene.is-fallback {
+  background:
+    radial-gradient(circle at 72% 50%, rgba(79, 184, 236, 0.55) 0 1.5%, transparent 2%),
+    repeating-radial-gradient(circle at 72% 50%, transparent 0 46px, rgba(79, 184, 236, 0.28) 47px 48px, transparent 49px 92px),
+    var(--dots-w) 0 0 / var(--dots-size);
+  -webkit-mask-image: radial-gradient(ellipse 45% 60% at 72% 50%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 45% 60% at 72% 50%, #000 30%, transparent 75%);
+}
+
+/* ── 動きを減らす設定：文字ははじめから置き、光の線と鐘の輪は止める ── */
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='presto'] .stage-sticky::after,
+  [data-theme='presto'] .kicker-rule::after,
+  [data-theme='presto'] .hero-deck span:first-child::before,
+  [data-theme='presto'] .ticker-dot {
+    animation: none;
+  }
+  html.js [data-theme='presto'] .hero-h.split .ch,
+  html.js [data-theme='presto'] .phero-h.split .ch {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    animation: none;
+  }
+  [data-theme='presto'] .ticker-list {
+    gap: 8px;
+  }
+  [data-theme='presto'] .ticker-list li {
+    grid-area: auto;
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+}

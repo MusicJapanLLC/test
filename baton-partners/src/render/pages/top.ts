@@ -2,9 +2,9 @@ import { routes } from '../../config/site';
 import type { Partner } from '../../types';
 import { partners } from '../../partners';
 import { bpNo, breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
-import { answerBox, discHtml, marquee, nextReads } from '../parts';
+import { answerBox, barcodeSvg, discHtml, marquee, nextReads } from '../parts';
 import { breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
-import { esc, heading, jp } from '../text';
+import { esc, heading, jp, text } from '../text';
 
 export function renderTop(p: Partner, env: BuildEnv): string {
   const t = p.top;
@@ -269,7 +269,7 @@ ${footer(p)}`;
         pageLd(env, {
           path,
           name: p.seo.top.title,
-          description: p.seo.top.description,
+          description: text(p.seo.top.description),
           image: `/og/${p.slug}-top.png`,
           partner: p,
           dateModified: p.seo.updated,
@@ -1531,20 +1531,6 @@ function truckSvg(className: string): string {
   return `<svg class="${className}" viewBox="0 0 64 36" aria-hidden="true" focusable="false"><path class="tk-bed" d="M3 8h34v18H3z"/><path class="tk-cab" d="M37 13h12l9 8v5H37z"/><path class="tk-win" d="M41 16h7l5 5H41z"/><circle class="tk-wh" cx="13" cy="28" r="5"/><circle class="tk-wh" cx="49" cy="28" r="5"/><path class="tk-box" d="M10 11l7-3 7 3v8l-7 3-7-3z M10 11l7 3 7-3 M17 14v8"/></svg>`;
 }
 
-/** 伝票番号から、毎回同じ形になるバーコード（飾り） */
-function barcodeSvg(seed: string): string {
-  let x = 0;
-  const bars: string[] = [];
-  const codes = [...seed].map((c) => c.charCodeAt(0));
-  for (let i = 0; i < 46; i++) {
-    const c = codes[i % codes.length] + i * 7;
-    const w = 1 + (c % 3);
-    if (i % 2 === 0) bars.push(`<rect x="${x}" y="0" width="${w}" height="24"/>`);
-    x += w + ((c >> 2) % 2);
-  }
-  return `<svg class="wb-code" viewBox="0 0 ${x} 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">${bars.join('')}</svg>`;
-}
-
 /**
  * ヒーローの送り状。スクロールでステージの段階が進むと、追跡の欄が1つずつ進み、トラックが走る（CSSだけ）。
  * 動きを減らす設定・WebGLなしでは、ヒーローの下に、全部の欄が済んだ伝票として置く
@@ -1679,3 +1665,4 @@ function lockerSection(p: Partner): string {
     </div>
   </section>`;
 }
+

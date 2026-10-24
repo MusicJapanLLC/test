@@ -106,6 +106,8 @@ export type Partner = {
    *                        招待状・ステッカー・トレーディングカード・応援ボタン（Presence）
    *          'orbit'     … 絶対値と、波長。白地に ZETTAICHI の紺と n1a の藍・水色・ピンク、惑星の軌道、絶対値の縦棒 | |、
    *                        重なる吹き出し・Big Five の五角形・数直線・プロフィールカード（ZETTAICHI / n1a）
+   *          'presto'    … 鐘を鳴らす、響く。ロゴの黒の夜に BP の青。見出しは Zen Kaku Gothic New 900、欧文は公式サイトと同じ Oswald。
+   *                        文字は右から速く走り込み、鐘が鳴るたびに光の輪が見出しを通る（BE.PRESTO）
    *   scene  'network'   … 点と線の球体（集める→つなぐ→決める）
    *          'pair'      … 赤い三角（求職者）と水色の三角（求人）。散らばる→表に並ぶ→線でつながる→重なって大きな Empro の印になる
    *          'lattice'   … 立方体の建築模型（散らばる→組み上がる→スキャンされ光の柱が立つ）
@@ -115,10 +117,12 @@ export type Partner = {
    *          'vinyl'     … 公式シンボルのレコード（CUTで溝が刻まれ、SPINでジャケットが回り、DROPで針が落ちて波形になる）
    *          'enjin'     … 円陣（縁陣）。六角形のタイル（人）が散らばる→亀甲に並び、縁の糸でつながる→円陣を組んで光る甲羅になる
    *          'wave'      … 波長。人柄の五角形（Big Five）が漂う→惑星の軌道に並び、合う二人を波の糸が結ぶ→重なる吹き出しの点描になる
+   *          'ring'      … 響く。方眼の点の上で鐘が鳴り、音の輪が点を青く光らせる。採用SNSでは点がリールの形に、
+   *                        AI研修では輪が四角に、人材紹介では鐘が二つ鳴って重なりが光る。押すとそこからも輪
    */
   world: {
-    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match' | 'cheer' | 'orbit';
-    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin' | 'wave';
+    theme: 'editorial' | 'mono' | 'console' | 'minka' | 'studio' | 'needle' | 'match' | 'cheer' | 'orbit' | 'presto';
+    scene: 'network' | 'lattice' | 'vault' | 'en' | 'feed' | 'vinyl' | 'pair' | 'enjin' | 'wave' | 'ring';
   };
   /** 代表の紹介（写真がある企業だけ）。発言は作らず、公開されている事実だけを書く */
   leader?: {

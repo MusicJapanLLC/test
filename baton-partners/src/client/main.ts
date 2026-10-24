@@ -11,6 +11,7 @@ import '../styles/theme-studio.css';
 import '../styles/theme-match.css';
 import '../styles/theme-cheer.css';
 import '../styles/theme-orbit.css';
+import '../styles/theme-presto.css';
 import { setupContact } from './contact';
 import { prefersReducedMotion } from './env';
 import { setupFx } from './fx';
@@ -32,6 +33,7 @@ if (!__GOOGLE_FONTS__) {
   if (document.body.dataset.theme === 'match') void import('../styles/fonts-match.css');
   if (document.body.dataset.theme === 'cheer') void import('../styles/fonts-cheer.css');
   if (document.body.dataset.theme === 'orbit') void import('../styles/fonts-orbit.css');
+  if (document.body.dataset.theme === 'presto') void import('../styles/fonts-presto.css');
 }
 
 setupHeader();

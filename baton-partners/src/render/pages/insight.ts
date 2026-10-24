@@ -3,7 +3,7 @@ import type { Block, Partner } from '../../types';
 import { breadcrumb, ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
 import { nextReads, sourcesList } from '../parts';
 import { abs, breadcrumbLd, ids, orgLd, pageLd, serviceLd } from '../seo';
-import { esc, heading, jp, text } from '../text';
+import { esc, heading, jp, sentences, text } from '../text';
 
 function block(b: Block, p: Partner): string {
   switch (b.type) {
@@ -89,7 +89,7 @@ ${header(p, 'insight')}
       <div class="wrap a-head-in">
         ${breadcrumb([{ name: shortName(p), href: routes.top(p.slug) }, { name: '記事' }])}
         <p class="kicker"><span class="kicker-rule" aria-hidden="true"></span>02 — Insights<span class="kicker-co">${esc(a.category)}</span></p>
-        <h1 class="a-h1">${heading(a.title)}</h1>
+        <h1 class="a-h1">${heading(p.world.theme === 'presto' ? sentences(a.title) : a.title)}</h1>
         <p class="a-meta">
           <span>公開 <time datetime="${a.published}">${date}</time></span>
           ${updated > a.published ? `<span>更新 <time datetime="${updated}">${updated.replace(/-/g, '.')}</time></span>` : ''}
@@ -113,7 +113,7 @@ ${header(p, 'insight')}
         ${sections}
         <aside class="a-end">
           <p class="a-end-k">この記事を読んだ方へ</p>
-          <p class="a-end-h">${heading(`まずは${p.service.name}を知る。気になったら、話してみる。`)}</p>
+          <p class="a-end-h">${heading(`まずは${p.service.name}を知る。{気になったら、}話してみる。`)}</p>
           <div class="a-end-actions">
             <a class="btn btn-ink" href="${routes.service(p.slug)}"><span>${esc(p.service.name)}を見る</span><span class="arrow" aria-hidden="true">→</span></a>
             <a class="btn btn-cta" href="${routes.contact(p.slug)}" data-cursor="Talk">話してみる</a>

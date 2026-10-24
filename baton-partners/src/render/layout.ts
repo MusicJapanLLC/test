@@ -107,8 +107,8 @@ function navHref(p: Partner, kind: PageKind): string {
 
 /** 黒地の世界観（needle）。レコードの盤とちびロボを出す */
 const dark = (p: Partner) => p.world.theme === 'needle';
-/** 黒地の世界観（needle・orbit）。ヘッダーの Baton Partners のロゴを白抜きにする */
-const darkUi = (p: Partner) => p.world.theme === 'needle' || p.world.theme === 'orbit';
+/** 黒地の世界観（needle・orbit・presto）。ヘッダーの Baton Partners のロゴを白抜きにする */
+const darkUi = (p: Partner) => p.world.theme === 'needle' || p.world.theme === 'orbit' || p.world.theme === 'presto';
 const CREW_IDS = ['tune', 'spin', 'pod', 'reel', 'mic'] as const;
 
 export function header(p: Partner, current: PageKind): string {

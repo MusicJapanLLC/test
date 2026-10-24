@@ -72,8 +72,8 @@ export function leaderSection(p: Partner): string {
       <p class="leader-en" aria-hidden="true">${esc(l.nameEn)}</p>
       <div class="leader-text">${l.body.map((t) => `<p>${jp(t)}</p>`).join('')}</div>
       ${
-        // cheer・orbit の世界観で写真と年表の両方があるときは、年表を本文の下にも出す（写真がないときは、写真の場所に年表を出している）
-        (p.world.theme === 'cheer' || p.world.theme === 'orbit') && l.photo && l.timeline?.length
+        // cheer・orbit・presto の世界観で写真と年表の両方があるときは、年表を本文の下にも出す（写真がないときは、写真の場所に年表を出している）
+        (p.world.theme === 'cheer' || p.world.theme === 'orbit' || p.world.theme === 'presto') && l.photo && l.timeline?.length
           ? `<ol class="leader-timeline leader-timeline-sub" aria-label="${esc(l.name)}さんの歩み">${l.timeline
               .map((t) => `<li><span class="lt-y">${esc(t.year)}</span><span class="lt-t">${jp(t.text)}</span></li>`)
               .join('')}</ol>`
@@ -133,7 +133,7 @@ export function nextReads(p: Partner, current: Kind): string {
 <nav class="sec next-reads" aria-labelledby="next-h">
   <div class="wrap">
     <p class="kicker rv">Next</p>
-    <h2 id="next-h" class="sec-h rv">${heading(`${shortName(p)}について、次に読む`)}</h2>
+    <h2 id="next-h" class="sec-h rv">${heading(`{${shortName(p)}について、}次に読む`)}</h2>
     <ul class="next-list rv">${cards}</ul>
   </div>
 </nav>`.trim();
@@ -150,3 +150,17 @@ export function sourcesList(sources: { label: string; url: string }[]): string {
 }
 
 export { botHtml, discHtml } from './robots';
+
+/** 伝票番号から、毎回同じ形になるバーコード（飾り） */
+export function barcodeSvg(seed: string, className = 'wb-code'): string {
+  let x = 0;
+  const bars: string[] = [];
+  const codes = [...seed].map((c) => c.charCodeAt(0));
+  for (let i = 0; i < 46; i++) {
+    const c = codes[i % codes.length] + i * 7;
+    const w = 1 + (c % 3);
+    if (i % 2 === 0) bars.push(`<rect x="${x}" y="0" width="${w}" height="24"/>`);
+    x += w + ((c >> 2) % 2);
+  }
+  return `<svg class="${className}" viewBox="0 0 ${x} 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">${bars.join('')}</svg>`;
+}

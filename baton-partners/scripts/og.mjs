@@ -361,7 +361,77 @@ function orbit(it) {
   <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
 </div></body></html>`;
 }
+const { loadDefaultJapaneseParser } = require('budoux');
+const jaParser = loadDefaultJapaneseParser();
+// presto（BE.PRESTO など）は、ロゴの黒の夜に、鐘から広がる青い点の輪。右に代表の写真（青い枠をずらして重ねる）。
+// 見出しは Zen Kaku Gothic New 900、最後の行だけ明るい青。ラベルは公式サイトと同じ Oswald
+function presto(it) {
+  const blue = '#1A91C9';
+  const hi = '#4FB8EC';
+  const parts = it.heading.split(/(?<=[、。])/).map((x) => x.trim()).filter(Boolean);
+  const len = (l) => [...l].reduce((n, c) => n + (/[ -~]/.test(c) ? 0.6 : 1), 0);
+  const lines = [];
+  for (const part of parts) {
+    const last = lines.at(-1);
+    if (last !== undefined && !last.endsWith('。') && len(last + part) <= 13) lines[lines.length - 1] = last + part;
+    else lines.push(part);
+  }
+  // 1行が長すぎるとき（記事の題など）は、文節の切れ目で長さが半々になるところで分ける
+  const halve = (l) => {
+    const ph = jaParser.parse(l);
+    let best = [l];
+    let diff = Infinity;
+    for (let i = 1; i < ph.length; i++) {
+      const a = ph.slice(0, i).join('');
+      const b = ph.slice(i).join('');
+      if (Math.abs(len(a) - len(b)) < diff) [best, diff] = [[a, b], Math.abs(len(a) - len(b))];
+    }
+    return best;
+  };
+  // 左の段（幅 560px）に収まるよう、13字を超える行は文節で半分に。4行以上になる長い題（記事）は、1行を長く・字を小さく
+  let wrapped = lines.flatMap((l) => (len(l) <= 13 ? [l] : halve(l)));
+  if (wrapped.length > 3) wrapped = lines.flatMap((l) => (len(l) <= 15.5 ? [l] : halve(l)));
+  const size = Math.min(58, Math.floor(540 / Math.max(...wrapped.map(len))), wrapped.length > 3 ? 34 : 58);
+  const h1 = wrapped.map((l, i) => `<span class="${i === wrapped.length - 1 && wrapped.length > 1 ? 'g' : ''}">${esc(l)}</span>`).join('');
+  // 鐘から広がる点の輪：方眼の点に、輪の帯だけ明るい青を重ねる
+  const ring = (r, w, a) => `radial-gradient(circle at 1010px 300px,transparent ${r - w}px,rgba(79,184,236,${a}) ${r}px,transparent ${r + w}px)`;
+  const logoDark = it.logo?.replace(/logo\.png$/, 'logo-light.png');
+  return `<!doctype html><html lang="ja"><head><meta charset="utf-8">
+<link rel="stylesheet" href="${font('zen-kaku-gothic-new', 700)}">
+<style>
+  @font-face{font-family:'ZKh';font-weight:900;src:url('${fontFile('zen-kaku-gothic-new-900-h.woff2')}') format('woff2')}
+  @font-face{font-family:'ZKr';font-weight:900;src:url('${fontFile('zen-kaku-gothic-new-900.woff2')}') format('woff2')}
+  @font-face{font-family:'OSW';font-weight:200 700;src:url('${fsv('oswald', 'oswald-latin-wght-normal.woff2')}') format('woff2')}
+  *{margin:0;box-sizing:border-box}
+  body{width:1200px;height:630px;background:linear-gradient(180deg,#040506,#07090A 45%,#101619);font-family:'Zen Kaku Gothic New',sans-serif;color:#fff;position:relative;overflow:hidden}
+  .glow{position:absolute;inset:0;background:radial-gradient(ellipse 40% 60% at 1010px 300px,rgba(26,145,201,.32),transparent 70%)}
+  .dots{position:absolute;inset:0;background:radial-gradient(circle,rgba(79,184,236,.5) 0 1.4px,transparent 2px) 0 0/13px 13px;-webkit-mask:${ring(110, 18, 1)},${ring(200, 22, 0.85)},${ring(300, 26, 0.6)},${ring(410, 30, 0.38)},radial-gradient(circle at 1010px 300px,rgba(0,0,0,.35),transparent 70%);mask:${ring(110, 18, 1)},${ring(200, 22, 0.85)},${ring(300, 26, 0.6)},${ring(410, 30, 0.38)},radial-gradient(circle at 1010px 300px,rgba(0,0,0,.35),transparent 70%)}
+  .bell{position:absolute;left:${1010 - 9}px;top:${300 - 9}px;width:18px;height:18px;border-radius:50%;background:${hi};box-shadow:0 0 0 10px rgba(79,184,236,.2),0 0 40px 10px rgba(79,184,236,.6)}
+  .ph{position:absolute;right:96px;top:120px;width:250px;height:312px;overflow:hidden;border-radius:2px;box-shadow:14px 14px 0 -1px #07090A,14px 14px 0 1px ${blue},0 30px 60px -20px #000}
+  .ph img{width:100%;height:100%;object-fit:cover;object-position:52% 30%}
+  .streak{position:absolute;left:0;top:178px;width:340px;height:1px;background:linear-gradient(90deg,transparent,${hi},transparent)}
+  .bar{position:absolute;left:0;right:0;bottom:0;height:6px;background:linear-gradient(90deg,${blue},${hi})}
+  .in{position:absolute;left:72px;top:58px;bottom:54px;width:640px;display:flex;flex-direction:column;justify-content:space-between}
+  .top img{height:62px;width:auto}
+  .label{font-family:'OSW',sans-serif;font-weight:500;font-size:17px;letter-spacing:.24em;text-transform:uppercase;color:${hi};display:flex;align-items:center;gap:14px}
+  .label::before{content:'';width:10px;height:10px;border-radius:50%;background:${hi};box-shadow:0 0 0 5px rgba(79,184,236,.25)}
+  h1{margin-top:18px;font-family:'ZKh','ZKr','Zen Kaku Gothic New',sans-serif;font-weight:900;font-size:${size}px;line-height:1.3;letter-spacing:.01em;text-shadow:0 4px 30px #000c}
+  h1 span{display:block;white-space:nowrap}
+  h1 .g{color:${hi}}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:40px;font-size:20px;font-weight:700;color:#C9D2D8;width:calc(100% + 420px)}
+  .foot svg{height:34px;width:auto}
+</style></head><body>
+<div class="glow"></div><div class="dots"></div><div class="bell"></div><div class="streak"></div>
+${it.photo ? `<div class="ph"><img src="${file(it.photo)}" alt=""></div>` : ''}
+<div class="bar"></div>
+<div class="in">
+  <div class="top">${logoDark ? `<img src="${file(logoDark)}" alt="">` : ''}</div>
+  <div><p class="label">${esc(it.label)}</p><h1>${h1}</h1></div>
+  <div class="foot"><span>${esc(it.company)}</span>${bpLogoWhite}</div>
+</div></body></html>`;
+}
 function html(it) {
+  if (it.theme === 'presto') return presto(it);
   if (it.theme === 'orbit') return orbit(it);
   if (it.theme === 'cheer') return cheer(it);
   if (it.theme === 'minka') return minka(it);

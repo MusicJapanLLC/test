@@ -3,7 +3,7 @@ import type { Partner } from '../../types';
 import { ctaBand, document, footer, header, shortName, type BuildEnv } from '../layout';
 import { answerBox, botHtml, marquee, nextReads, pageHero } from '../parts';
 import { breadcrumbLd, faqLd, ids, orgLd, pageLd, serviceLd } from '../seo';
-import { esc, heading, jp } from '../text';
+import { esc, heading, jp, text } from '../text';
 
 export function renderService(p: Partner, env: BuildEnv): string {
   const s = p.service;
@@ -197,7 +197,7 @@ ${footer(p)}`;
         pageLd(env, {
           path,
           name: p.seo.service.title,
-          description: p.seo.service.description,
+          description: text(p.seo.service.description),
           image: `/og/${p.slug}-service.png`,
           partner: p,
           dateModified: p.seo.updated,

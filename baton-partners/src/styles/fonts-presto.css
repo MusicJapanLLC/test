@@ -1,0 +1,7 @@
+/*
+ * presto の世界観（BE.PRESTO など）でだけ読み込む。
+ *   見出し：Zen Kaku Gothic New 900（使う文字だけのファイルは fonts-faces-mono.css と共通）
+ *   欧文・数字・ラベル：Oswald（BE.PRESTO の公式サイトと同じ、細長いサンセリフ）
+ */
+@import './fonts-faces-mono.css';
+@import '@fontsource-variable/oswald/wght.css';
