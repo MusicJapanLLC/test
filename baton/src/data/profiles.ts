@@ -828,7 +828,175 @@ const saitoProfile: TalkProfile = {
   active: true,
 };
 
-export const profiles: TalkProfile[] = [kabeyaProfile, matsuuraProfile, ishiiProfile, miyamotoProfile, saitoProfile];
+/**
+ * 米本 隆亮（株式会社ワイワンプラスエンターレックワールド）。
+ * 掲載内容は、同社公式サイト（代表経歴・沿革・会社概要・実績・フリーパス交流会）と、
+ * 公式サイトからリンクされたWEB集客塾「ツギノテ作戦」で確認できた事実、
+ * それにOwnerから受け取った紹介メモ（本人から聞いた数字）だけ。
+ *  - 紹介メモの数字（21社の立ち上げ・売却、1,500社以上の支援、月300件ほどの面談、
+ *    Google本社からの声がけ）は公開ページでは確認できないが、Ownerの判断で地の文として書く
+ *    （「本人によれば」は独りよがりに読めるため付けない。2026-10-24 Owner指示）
+ *  - 交流会の入会金は、紹介メモ（5,500円）と公式ページ（9,800円、2026年10月）で食い違い、
+ *    今後も変わりうるため金額は書かない（公式サイト参照）
+ *  - 「秘密結社」（社会貢献の会）は載せない（2026-10-24 Owner指示）
+ *  - 生年（1987年）は公式の代表経歴にあるが、年齢は毎年変わるため書かない
+ *  - 資本金・従業員数（企業スペック）→ 載せない（ADDING_A_PROFILE.md の方針）
+ * 本人個人のSNSは特定できなかったため、会社の公式Xだけを載せている。
+ */
+const yonemotoProfile: TalkProfile = {
+  id: 'yonemoto',
+  slug: 'yonemoto',
+  name: '米本 隆亮',
+  company: '株式会社ワイワンプラスエンターレックワールド',
+  title: '代表取締役',
+  tagline: '想いを、届くチカラに。',
+  photo: {
+    src: '/profile-yonemoto.webp',
+    thumb: '/thumb/yonemoto.webp',
+    focus: '56% 15%',
+    alt: '米本 隆亮',
+    caption: 'KUMAMOTO / JAPAN · 2026',
+  },
+  bio:
+    '広告運用と解析の現場から、2019年に熊本で株式会社ワイワンプラスエンターレックワールドを設立。' +
+    'SNSやYouTubeの運用からHP制作までWEB集客を引き受けながら、全国の経営者が出会う交流会も開いています。',
+  story: {
+    paragraphs: [
+      '大学を中退して、アフィリエイトの会社へ。広告を回し、数字を読み、どこで人が動くのかを確かめる仕事から始めました。その後は声をかけられて何社かを渡り歩き、2019年に熊本で独立します。',
+      '検索で上位に出るサイトを、自分でアルゴリズムを調べながらつくっていた時期もあります。手がけたサイトは3年間検索1位に居続け、それがきっかけでアメリカのGoogle本社から声がかかったこともありました。',
+      '独立してからは、会社をつくる速さが際立ちます。これまでに立ち上げて売却した法人は21社。いまも4社の代表を務め、毎月300件ほど、Zoomで経営者や個人事業主と話しています。「この人とこの人を会わせたら」「こんなサービスがあったら」。その会話から思いついたことを、そのまま形にしてしまう人です。',
+    ],
+    timeline: [
+      { org: 'アフィリエイト企業', role: '広告運用・解析分析', note: '大学中退後に入社' },
+      { org: '株式会社ワイワンプラスエンターレックワールド', role: '設立・代表取締役（2019年6月）' },
+      { org: '株式会社オプショニア／株式会社TRMYYY', role: '設立・代表取締役（2021年10月）' },
+      { org: '合同会社アミターバ', role: '執行役員（2023年4月）' },
+      { org: '株式会社EGG BOOKS', role: '執行役員（2025年4月）' },
+    ],
+  },
+  businessTitle: '現在の事業',
+  business: [
+    'ワイワンプラスエンターレックワールドは、WEB集客の会社です。Instagram、Threads、TikTok、YouTubeの運用代行、広告運用、SEO、HPやLP、アプリの制作まで、集客にかかわる仕事をまとめて引き受けます。これまでに支援した会社は1,500社を超えました。',
+    '同社の公開実績には、1年でフォロワー100万人まで育てたTikTokアカウントや、400万回以上再生されたYouTube動画が並びます。熊本の百貨店やスーパーの通販、地元のまんじゅう屋の売上づくりにも関わってきました。',
+    'もうひとつの柱は、人が出会う場です。毎週Zoomで開く「フリーパス交流会」は、入会金を一度払えば、その後は何度参加しても参加費がかからない仕組み。少人数のブレイクアウトルームで、メンバーを入れ替えながら話します。始めて1ヶ月で、会員は100名を超えました。',
+    'ほかに、SNS集客を実践しながら学ぶオンライン塾「ツギノテ作戦」と、人脈を起点に次の一手を一緒に探す「人脈お化けコンサルタント」も手がけています。',
+  ],
+  about: {
+    title: '株式会社ワイワンプラスエンターレックワールドについて',
+    paragraphs: [
+      '熊本のWEB集客の会社です。公式サイトでは、リスの「ジャック」が案内役になって、相談の入口まで連れていってくれます。',
+    ],
+    facts: [
+      { term: '代表', value: '米本 隆亮（代表取締役）' },
+      { term: '設立', value: '2019年6月' },
+      { term: '所在地', value: '熊本県熊本市北区' },
+      {
+        term: '事業',
+        value: 'SNS運用代行／YouTube・TikTokコンサルティング／広告運用・SEO／HP・LP・アプリ制作／交流会・コミュニティ運営',
+      },
+    ],
+  },
+  servicesTitle: '事業領域',
+  services: [
+    { name: 'SNS運用代行', description: 'Instagram・Threads・TikTokの企画から分析まで' },
+    { name: 'YouTube支援', description: 'チャンネルの設計から撮影・編集、改善まで' },
+    { name: '制作・広告', description: 'HP・LP・アプリの制作と、広告運用・SEO' },
+    { name: 'フリーパス交流会', description: '毎週Zoomで、全国の経営者と少人数で話す' },
+  ],
+  marquee: [
+    '株式会社ワイワンプラスエンターレックワールド',
+    'フリーパス交流会',
+    'ツギノテ作戦',
+    '人脈お化けコンサルタント',
+    'KUMAMOTO',
+  ],
+  valuesTitle: '大切にしている考え方',
+  values: [
+    {
+      title: '想いを、届くチカラに。',
+      body: '同社サイトの冒頭に掲げている言葉。商品やサービスに込めた想いを、届く形にするのがWEB集客の仕事です。',
+    },
+    {
+      title: '高いお金で、賭けをさせない',
+      body: '「ツギノテ作戦」を立ち上げた理由。誤った情報や高額なサービスによる集客の被害を、ひとつでも減らしたい。',
+    },
+    {
+      title: '会わせたら面白い、を形にする',
+      body: '毎月何百件もの会話から、人の組み合わせや新しいサービスを思いつく。交流会もコミュニティも、そこから生まれました。',
+    },
+  ],
+  wantToMeet: {
+    lead: 'Batonから見て、米本さんと話すと面白いと思う方です。',
+    items: [
+      'SNSやYouTubeを始めたのに、集客につながっていない会社',
+      '運用代行に任せるか、自分で覚えるかで迷っている経営者',
+      '業種の違う経営者と、続けて会える場がほしい方',
+      '熊本・九州で、店や事業の売上を伸ばしたい方',
+    ],
+  },
+  media: [
+    {
+      label: 'フリーパス交流会',
+      url: 'https://y-one.biz/?page_id=312',
+      kind: '主催',
+      note: '毎週Zoomで開く、全国の経営者・個人事業主のオンライン交流会。料金と日程は公式LINEで。',
+      featured: true,
+    },
+    {
+      label: 'ツギノテ作戦',
+      url: 'https://tgnt.jp/',
+      kind: '運営',
+      note: 'SNS集客を、知識ではなく実践で身につけるオンラインのWEB集客塾。',
+      featured: true,
+    },
+    {
+      label: '株式会社ワイワンプラスエンターレックワールド 公式サイト',
+      url: 'https://y-one.biz/',
+      kind: '公式',
+      owner: 'company',
+      note: 'サービスの一覧と、SNS・YouTube・TikTokの実績。',
+      featured: true,
+    },
+    {
+      label: '代表経歴',
+      url: 'https://y-one.biz/?p=49',
+      kind: '公式',
+      note: '大学中退からアフィリエイト企業、独立、執行役員就任まで。',
+    },
+    {
+      label: '株式会社EGG BOOKS',
+      url: 'https://eggbooks.net/',
+      kind: '役員',
+      note: '2025年4月から執行役員。',
+    },
+    {
+      label: 'X @y_one_21',
+      url: 'https://x.com/y_one_21',
+      kind: '発信',
+      owner: 'company',
+      note: '会社の公式アカウント。',
+    },
+  ],
+  mediaTitle: '実績・メディア',
+  mediaLabel: 'Works & Media',
+  location: '熊本',
+  updatedAt: '2026-10-24',
+  listSummary: 'WEB集客と、経営者が出会う場づくり',
+  businessTags: ['WEB集客', 'SNS運用', '交流会運営'],
+  keywordTags: ['熊本発', '人脈が広い', '元アフィリエイト'],
+  // 写真の窓枠の深い青緑を地に、くすんだティールを差す。ボタンの白文字は 6:1 程度
+  theme: { primary: '#2E6B6E', accent: '#A9CFC6', bg: '#081012', text: '#E8ECEA' },
+  active: true,
+};
+
+export const profiles: TalkProfile[] = [
+  kabeyaProfile,
+  matsuuraProfile,
+  ishiiProfile,
+  miyamotoProfile,
+  saitoProfile,
+  yonemotoProfile,
+];
 
 export const getProfile = (id: string): TalkProfile => {
   const found = profiles.find((p) => p.id === id);

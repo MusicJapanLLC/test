@@ -47,6 +47,7 @@ npm run preview              # ビルド結果の確認
 | `/profile/ishii/` | 石井 嵩大 / 株式会社C.C（Baton Talk） |
 | `/profile/miyamoto/` | 宮本 康太 / 株式会社ZETTAICHI（Baton Talk） |
 | `/profile/saito/` | 齋藤 弘樹 / 株式会社Livune（Baton Talk） |
+| `/profile/yonemoto/` | 米本 隆亮 / 株式会社ワイワンプラスエンターレックワールド（Baton Talk） |
 | `/faq/` | よくある質問（Batonの仕組み・運営者・紹介の流れ。フッターからリンク） |
 | `/privacy/` | プライバシーポリシー |
 
